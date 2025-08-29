@@ -1,0 +1,98 @@
+{
+  "layer": "top",
+  "position": "top",
+  "height": 48,
+  "modules-left": ["hyprland/workspaces", "hyprland/window"],
+  "modules-center": ["custom/clock_center"],
+  "modules-right": ["tray", "custom/weather", "custom/system_stats", "custom/net_rate", "custom/volume", "custom/player", "custom/bluetooth", "custom/temps"],
+
+  "hyprland/workspaces": {
+    "format": "{icon}",
+    "format-icons": {
+      "1": "󰲠",
+      "2": "󰲢", 
+      "3": "󰲤",
+      "4": "󰲦",
+      "5": "󰲨",
+      "6": "󰲪",
+      "active": "󰮯",
+      "default": "󰊠",
+      "empty": "󰑊"
+    },
+    "persistent-workspaces": {
+      "*": 6
+    },
+    "on-click": "activate",
+    "on-scroll-up": "hyprctl dispatch workspace e+1",
+    "on-scroll-down": "hyprctl dispatch workspace e-1"
+  },
+
+  "hyprland/window": {
+    "format": "{}",
+    "max-length": 50,
+    "separate-outputs": true,
+    "rewrite": {
+      "(.*) — Zen Browser": "🦊 $1",
+      "(.*) - Visual Studio Code": "💻 $1",
+      "(.*) - vim": "📝 $1",
+      "(.*) - nvim": "📝 $1"
+    }
+  },
+
+  "custom/hypr_ws": {
+    "exec": "~/.config/waybar/scripts/hyprland_workspaces.sh",
+    "interval": 1
+  },
+
+  "custom/clock_center": {
+    "exec": "~/.config/waybar/scripts/clock_center.sh",
+    "interval": 1,
+    "on-click": "hyprctl dispatch togglebar" 
+  },
+
+  "custom/net_rate": {
+    "exec": "~/.config/waybar/scripts/net_rate.sh",
+    "interval": 2
+  },
+
+  "custom/volume": {
+    "exec": "~/.config/waybar/scripts/volume.sh",
+    "interval": 2,
+    "on-click": "pavucontrol",
+    "on-scroll-up": "pactl set-sink-volume @DEFAULT_SINK@ +5%",
+    "on-scroll-down": "pactl set-sink-volume @DEFAULT_SINK@ -5%"
+  },
+
+  "custom/player": {
+    "exec": "~/.config/waybar/scripts/playerctl.sh",
+    "interval": 2,
+    "on-click": "playerctl play-pause",
+    "on-click-right": "playerctl stop",
+    "on-scroll-up": "playerctl next",
+    "on-scroll-down": "playerctl previous"
+  },
+
+  "custom/bluetooth": {
+    "exec": "~/.config/waybar/scripts/bluetooth_status.sh",
+    "interval": 5,
+    "on-click": "blueman-manager"
+  },
+
+  "custom/temps": {
+    "exec": "~/.config/waybar/scripts/cpu_gpu_temp.sh",
+    "interval": 5
+  },
+
+  "custom/weather": {
+    "exec": "~/.config/waybar/scripts/weather.sh",
+    "interval": 600,
+    "tooltip-format": "Clima em São Carlos/SP - Atualizado a cada 10 minutos",
+    "on-click": "xdg-open 'https://weather.com/pt-BR/weather/today/l/-22.02,-47.89'"
+  },
+
+  "custom/system_stats": {
+    "exec": "~/.config/waybar/scripts/system_stats.sh",
+    "interval": 3,
+    "tooltip-format": "Uso de CPU e RAM do sistema"
+  }
+}

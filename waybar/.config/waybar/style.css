@@ -9,7 +9,7 @@
 
 /* A barra em si */
 window#waybar {
-    background: rgba(26, 27, 38, 0.85); /* Fundo escuro com leve transparência */
+    background: rgba(26, 27, 38, 0.41); /* Fundo escuro com leve transparência */
     color: #cdd6f4; /* Cor do texto padrão */
 }
 

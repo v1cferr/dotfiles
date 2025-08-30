@@ -1,42 +1,40 @@
 {
-    // -------------------------------------------------------------------------
-    // Configurações Globais
-    // -------------------------------------------------------------------------
-    "layer": "top", // Sempre no topo
-    "position": "top", // Posição: top, bottom, left, right
-    "height": 32, // Altura da barra
+  // -------------------------------------------------------------------------
+  // Configurações Globais
+  // -------------------------------------------------------------------------
+  "layer": "top", // Sempre no topo
+  "position": "top", // Posição: top, bottom, left, right
+  "height": 32, // Altura da barra
 
-    // -------------------------------------------------------------------------
-    // Ordem e Posição dos Módulos
-    // -------------------------------------------------------------------------
-    "modules-left": [
-        "hyprland/workspaces"
-    ],
-    "modules-center": [
-        "clock"
-    ],
-    "modules-right": [
-        "tray"
-    ],
+  // -------------------------------------------------------------------------
+  // Ordem e Posição dos Módulos
+  // -------------------------------------------------------------------------
+  "modules-left": ["hyprland/workspaces"],
+  "modules-center": ["clock"],
+  "modules-right": ["cpu", "tray"],
 
-    // -------------------------------------------------------------------------
-    // Configuração Individual dos Módulos (Mínimo para funcionar)
-    // -------------------------------------------------------------------------
-    "hyprland/workspaces": {
-        "format": "{icon}",
-        "on-click": "activate",
-        "format-icons": {
-            "default": "", // Ícone padrão
-            "active": ""  // Ícone para o workspace ativo
-        }
-    },
-    "tray": {
-        "icon-size": 16,
-        "spacing": 10
-    },
-    "clock": {
-        "format": " {:%H:%M}", // Formato: Ícone de relógio e Hora:Minuto
-        "tooltip-format": "<big>{:%A, %d de %B de %Y}</big>", // Dica ao passar o mouse
-        "format-alt": " {:%d/%m/%Y}" // Formato alternativo ao rolar o mouse
+  // -------------------------------------------------------------------------
+  // Configuração Individual dos Módulos (Mínimo para funcionar)
+  // -------------------------------------------------------------------------
+  "hyprland/workspaces": {
+    "format": "{icon}",
+    "on-click": "activate",
+    "format-icons": {
+      "default": "", // Ícone padrão
+      "active": "" // Ícone para o workspace ativo
     }
+  },
+  "tray": {
+    "icon-size": 16,
+    "spacing": 10
+  },
+  "clock": {
+    "format": " {:%H:%M:%S}", // Formato: Ícone de relógio e Hora:Minuto
+    "tooltip-format": "<big>{:%A, %d de %B de %Y}</big>", // Dica ao passar o mouse
+    "format-alt": " {:%d/%m/%Y}" // Formato alternativo ao rolar o mouse
+  },
+  "cpu": {
+    "format": "CPU: {usage}%", // Exibe o uso da CPU em porcentagem
+    "tooltip-format": "<b>Uso da CPU:</b> {usage}%<br><b>Frequência:</b> {frequency} GHz<br><b>Núcleos:</b> {cores} cores" // Dica ao passar o mouse
+  }
 }

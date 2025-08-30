@@ -82,6 +82,9 @@ export XDG_CURRENT_DESKTOP=sway
 export XDG_SESSION_DESKTOP=sway
 export QT_QPA_PLATFORM=wayland
 
+# GTK Dark Theme configuration
+export GTK_THEME=Tokyonight-Dark
+
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment

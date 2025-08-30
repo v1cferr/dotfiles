@@ -10,3 +10,4 @@
 - [ ] Instalar um screenlock (estou sem, tirando do GNOME que vou desinstalar assim que meu ambiente Hyprland estiver estável)
 - [ ] Adicionar um "screen filter to reduce eye strain"
 - [ ] Adicionar um daemon de notificações decente
+- [ ] Instalar um historico de transferencias (clipboard history)

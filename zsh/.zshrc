@@ -76,6 +76,12 @@ source $ZSH/oh-my-zsh.sh
 
 # User configuration
 
+# Wayland environment variables for applications
+# Source: https://github.com/flameshot-org/flameshot/issues/2978#issuecomment-3205971576
+export XDG_CURRENT_DESKTOP=sway
+export XDG_SESSION_DESKTOP=sway
+export QT_QPA_PLATFORM=wayland
+
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment
@@ -102,6 +108,9 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+
+# Custom aliases
+alias screenshot="flameshot gui"
 
 # Enable zsh syntax highlighting (must be at the end of .zshrc)
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh

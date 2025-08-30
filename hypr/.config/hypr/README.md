@@ -5,7 +5,6 @@ Esta é uma configuração modular e organizada do Hyprland, separada em categor
 ## 📁 Estrutura de Pastas
 
 ```tree
-```tree
 ~/.config/hypr/
 ├── hyprland.conf              # Arquivo principal (imports)
 ├── README.md                 # Documentação da estrutura
@@ -28,7 +27,6 @@ Esta é uma configuração modular e organizada do Hyprland, separada em categor
     │   └── keybindings.conf # Atalhos de teclado
     └── rules/               # 📋 Regras e comportamentos
         └── window-rules.conf # Regras de janelas e workspaces
-```
 ```
 
 ## 🎯 Categorias

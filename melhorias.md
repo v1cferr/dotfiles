@@ -5,4 +5,4 @@
 - [X] Adicionar um border-size menor e diminuir os gaps das janelas
 - [ ] Verificar como tirar print no Hyprland com o Flameshot (isso pode ajudar: <https://www.reddit.com/r/hyprland/comments/11hr3hd/how_to_make_flameshot_work_on_hyprland/>)
 - [ ] Adicionar um loading (no cursor) sempre que abrir um app com o launcher (SUPER+Q) para ter feedback do andamento
-- [ ] Arrumar o clock da [Waybar](./waybar/) para contabilizar os segundos (prefiro assim)
+- [ ] Arrumar o clock (relógio) da [Waybar](./waybar/) para contabilizar os segundos (prefiro assim)

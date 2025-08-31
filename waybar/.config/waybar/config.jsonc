@@ -29,6 +29,7 @@
     "spacing": 10
   },
   "clock": {
+    "interval": 1, // Atualiza a cada 1 segundo para mostrar os segundos
     "format": " {:%H:%M:%S}", // Formato: Ícone de relógio e Hora:Minuto
     "tooltip-format": "<big>{:%A, %d de %B de %Y}</big>", // Dica ao passar o mouse
     "format-alt": " {:%d/%m/%Y}" // Formato alternativo ao rolar o mouse

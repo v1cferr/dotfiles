@@ -2,40 +2,220 @@
   // -------------------------------------------------------------------------
   // Configurações Globais
   // -------------------------------------------------------------------------
-  "layer": "top", // Sempre no topo
-  "position": "top", // Posição: top, bottom, left, right
-  "height": 32, // Altura da barra
+  "layer": "top",
+  "position": "top",
+  "height": 22,
+  "spacing": 1,
+  "margin": "2 8 -2 8",
+  "reload_style_on_change": true,
 
   // -------------------------------------------------------------------------
-  // Ordem e Posição dos Módulos
+  // Organização dos Módulos
   // -------------------------------------------------------------------------
-  "modules-left": ["hyprland/workspaces"],
-  "modules-center": ["clock"],
-  "modules-right": ["cpu", "tray"],
+  "modules-left": [
+    "hyprland/workspaces",
+    "hyprland/window",
+    "custom/spotify"
+  ],
+  "modules-center": [
+    "custom/weather",
+    "clock",
+    "custom/notification"
+  ],
+  "modules-right": [
+    "cpu",
+    "memory",
+    "network",
+    "pulseaudio",
+    "tray"
+  ],
 
   // -------------------------------------------------------------------------
-  // Configuração Individual dos Módulos (Mínimo para funcionar)
+  // CANTO ESQUERDO
   // -------------------------------------------------------------------------
   "hyprland/workspaces": {
     "format": "{icon}",
     "on-click": "activate",
+    "on-scroll-up": "hyprctl dispatch workspace e+1",
+    "on-scroll-down": "hyprctl dispatch workspace e-1",
+    "all-outputs": false,
+    "active-only": false,
     "format-icons": {
-      "default": "", // Ícone padrão
-      "active": "" // Ícone para o workspace ativo
+      "1": "1",
+      "2": "2", 
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "active": "●",
+      "default": "○",
+      "empty": "○",
+      "urgent": "!",
+      "persistent": "○"
+    },
+    "persistent-workspaces": {
+      "DP-1": [1, 2, 3, 4],
+      "HDMI-A-1": [5, 6, 7, 8]
+    },
+    "sort-by": "number"
+  },
+
+  "hyprland/window": {
+    "format": "{}",
+    "max-length": 50,
+    "separate-outputs": true,
+    "rewrite": {
+      "(.*) — Mozilla Firefox": "🌐 $1",
+      "(.*) - fish": " [$1]",
+      "(.*) - zsh": " [$1]",
+      "(.*) - bash": " [$1]",
+      "(.*) - Spotify": "🎵 $1",
+      "(.*) - Code": "󰨞 $1",
+      "(.*) - Visual Studio Code": "󰨞 $1"
     }
   },
-  "tray": {
-    "icon-size": 16,
-    "spacing": 10
+
+  "custom/spotify": {
+    "format": "♪ {}",
+    "max-length": 40,
+    "exec": "$HOME/.config/waybar/scripts/spotify.sh 2>/dev/null",
+    "exec-if": "pgrep spotify",
+    "return-type": "json",
+    "interval": 3,
+    "on-click": "playerctl --player=spotify play-pause",
+    "on-scroll-up": "playerctl --player=spotify next", 
+    "on-scroll-down": "playerctl --player=spotify previous",
+    "smooth-scrolling-threshold": 1
   },
+
+  // -------------------------------------------------------------------------
+  // CENTRO
+  // -------------------------------------------------------------------------
+  "custom/weather": {
+    "format": "🌡️ {}",
+    "tooltip": true,
+    "interval": 300,
+    "exec": "$HOME/.config/waybar/scripts/weather.sh",
+    "return-type": "json",
+    "on-click": "xdg-open 'https://wttr.in/São+Carlos'"
+  },
+
   "clock": {
-    "interval": 1, // Atualiza a cada 1 segundo para mostrar os segundos
-    "format": " {:%H:%M:%S}", // Formato: Ícone de relógio e Hora:Minuto
-    "tooltip-format": "<big>{:%A, %d de %B de %Y}</big>", // Dica ao passar o mouse
-    "format-alt": " {:%d/%m/%Y}" // Formato alternativo ao rolar o mouse
+    "interval": 1,
+    "format": "🕐 {:%H:%M:%S}",
+    "format-alt": "📅 {:%d/%m/%Y}",
+    "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+    "calendar": {
+      "mode": "year",
+      "mode-mon-col": 3,
+      "weeks-pos": "right",
+      "on-scroll": 1,
+      "format": {
+        "months": "<span color='#ffead3'><b>{}</b></span>",
+        "days": "<span color='#ecc6d9'>{}</span>",
+        "weeks": "<span color='#99ffdd'><b>W{}</b></span>",
+        "weekdays": "<span color='#ffcc66'><b>{}</b></span>",
+        "today": "<span color='#ff6699'><b><u>{}</u></b></span>"
+      }
+    },
+    "actions": {
+      "on-click-right": "mode",
+      "on-click-forward": "tz_up",
+      "on-click-backward": "tz_down",
+      "on-scroll-up": "shift_up",
+      "on-scroll-down": "shift_down"
+    }
   },
+
+  "custom/notification": {
+    "tooltip": true,
+    "format": "🔔 {text}",
+    "format-icons": {
+      "notification": "🔴",
+      "none": "",
+      "dnd-notification": "🔴",
+      "dnd-none": "",
+      "inhibited-notification": "🔴",
+      "inhibited-none": "",
+      "dnd-inhibited-notification": "🔴",
+      "dnd-inhibited-none": ""
+    },
+    "return-type": "json",
+    "exec-if": "which swaync-client",
+    "exec": "swaync-client -swb",
+    "on-click": "swaync-client -t -sw",
+    "on-click-right": "swaync-client -d -sw",
+    "escape": true
+  },
+
+  // -------------------------------------------------------------------------
+  // CANTO DIREITO
+  // -------------------------------------------------------------------------
+  "pulseaudio": {
+    "format": "{icon} {volume}%",
+    "format-muted": "🔇 {volume}%",
+    "format-icons": {
+      "headphone": "🎧",
+      "hands-free": "🎧",
+      "headset": "🎧",
+      "phone": "📱",
+      "portable": "📱",
+      "car": "🚗",
+      "default": ["🔈", "🔉", "🔊"]
+    },
+    "scroll-step": 5,
+    "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
+    "on-click-right": "pavucontrol",
+    "on-scroll-up": "pactl set-sink-volume @DEFAULT_SINK@ +5%",
+    "on-scroll-down": "pactl set-sink-volume @DEFAULT_SINK@ -5%",
+    "smooth-scrolling-threshold": 1,
+    "tooltip": true,
+    "tooltip-format": "Volume: {volume}%\nDispositivo: {desc}"
+  },
+
+  "network": {
+    "format-wifi": "📶 {signalStrength}%",
+    "format-ethernet": "🌐 Conectado",
+    "format-disconnected": "❌ Desconectado",
+    "format-alt": "{ifname}: {ipaddr}/{cidr}",
+    "tooltip-format": "Rede: {essid}\nIP: {ipaddr}\nVelocidade: {bandwidthDownBits} ⬇ {bandwidthUpBits} ⬆",
+    "tooltip-format-wifi": "WiFi: {essid} ({signalStrength}%)\nIP: {ipaddr}\nFrequência: {frequency}MHz\nVelocidade: {bandwidthDownBits} ⬇ {bandwidthUpBits} ⬆",
+    "tooltip-format-ethernet": "Ethernet: {ifname}\nIP: {ipaddr}\nVelocidade: {bandwidthDownBits} ⬇ {bandwidthUpBits} ⬆",
+    "tooltip-format-disconnected": "Rede desconectada",
+    "on-click": "nm-connection-editor",
+    "on-click-right": "nmcli device wifi rescan",
+    "interval": 5
+  },
+
   "cpu": {
-    "format": "CPU: {usage}%", // Exibe o uso da CPU em porcentagem
-    "tooltip-format": "<b>Uso da CPU:</b> {usage}%<br><b>Frequência:</b> {frequency} GHz<br><b>Núcleos:</b> {cores} cores" // Dica ao passar o mouse
+    "interval": 2,
+    "format": "💻 {usage}%",
+    "max-length": 10,
+    "states": {
+      "warning": 70,
+      "critical": 90
+    },
+    "tooltip": true,
+    "tooltip-format": "CPU: {usage}%\nFrequência: {frequency} GHz\nNúcleos: {cores} cores\nLoad: {load}\nTemperatura Sistema: $($HOME/.config/waybar/scripts/cpu-temp.sh)"
+  },
+
+  "memory": {
+    "interval": 5,
+    "format": "🧠 {percentage}%",
+    "max-length": 10,
+    "states": {
+      "warning": 70,
+      "critical": 90
+    },
+    "tooltip": true,
+    "tooltip-format": "RAM: {used:0.1f}GB / {total:0.1f}GB ({percentage}%)\nSwap: {swapUsed:0.1f}GB / {swapTotal:0.1f}GB ({swapPercentage}%)\nDisponível: {avail:0.1f}GB"
+  },
+
+  "tray": {
+    "icon-size": 18,
+    "spacing": 8,
+    "show-passive-items": true
   }
 }

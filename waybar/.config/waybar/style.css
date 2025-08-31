@@ -1,32 +1,266 @@
-/* Reseta estilos e define a fonte padrão */
+/* =========================================================================
+   WAYBAR ESTILO MINIMALISTA - FINO E LIMPO
+   ========================================================================= */
+
+/* Reset global e configurações de fonte */
 * {
     border: none;
     border-radius: 0;
-    font-family: "JetBrainsMono Nerd Font", sans-serif; /* IMPORTANTE: Tenha uma Nerd Font instalada */
-    font-size: 14px;
+    font-family: "JetBrainsMono Nerd Font", "FiraCode Nerd Font", "Symbols Nerd Font", monospace;
+    font-size: 11px;
+    font-weight: 400;
     min-height: 0;
+    margin: 0;
+    padding: 0;
 }
 
-/* A barra em si */
+/* Barra principal - fina e discreta */
 window#waybar {
-    background: rgba(26, 27, 38, 0.41); /* Fundo escuro com leve transparência */
-    color: #cdd6f4; /* Cor do texto padrão */
+    background: #1e1e2e;
+    color: #cdd6f4;
+    border-bottom: 1px solid #313244;
 }
 
-/* Estilo de cada módulo */
+/* Tooltip global */
+tooltip {
+    background: rgba(30, 30, 46, 0.95);
+    border: 1px solid #585b70;
+    border-radius: 4px;
+    color: #cdd6f4;
+    font-size: 11px;
+}
+
+tooltip label {
+    color: #cdd6f4;
+    padding: 2px 6px;
+}
+
+/* =========================================================================
+   ESTILO MINIMALISTA - MÓDULOS LIMPOS E FINOS
+   ========================================================================= */
+
+/* Módulos principais - estilo limpo */
 #workspaces,
+#window,
+#custom-spotify,
+#custom-weather,
 #clock,
+#custom-notification,
+#pulseaudio,
+#network,
+#cpu,
+#memory,
+#language,
 #tray {
-    padding: 0 10px;
+    background: transparent;
+    margin: 0 2px;
+    padding: 2px 8px;
+    color: #cdd6f4;
+    border-radius: 3px;
 }
 
-/* Estilo específico para os botões dos workspaces */
+/* Efeitos de hover sutis */
+#workspaces:hover,
+#window:hover,
+#custom-spotify:hover,
+#custom-weather:hover,
+#clock:hover,
+#custom-notification:hover,
+#pulseaudio:hover,
+#network:hover,
+#cpu:hover,
+#memory:hover,
+#language:hover,
+#tray:hover {
+    background: rgba(49, 50, 68, 0.5);
+}
+
+/* =========================================================================
+   CANTO ESQUERDO - WORKSPACES E SPOTIFY
+   ========================================================================= */
+
+/* Workspaces - minimalista */
+#workspaces {
+    padding: 0 4px;
+}
+
 #workspaces button {
-    padding: 0 5px;
-    background-color: transparent;
-    color: #7f849c; /* Cor para workspaces inativos */
+    background: transparent;
+    color: #6c7086;
+    border-radius: 2px;
+    margin: 0 1px;
+    padding: 2px 6px;
+    min-width: 18px;
+    font-size: 11px;
+    transition: all 0.2s ease;
 }
 
-#workspaces button.active {
-    color: #89b4fa; /* Cor para o workspace ativo */
+#workspaces button:hover {
+    background: rgba(116, 199, 236, 0.2);
+    color: #74c7ec;
+}
+
+#workspaces button.active,
+#workspaces button.focused {
+    background: #74c7ec;
+    color: #1e1e2e;
+    font-weight: 500;
+}
+
+#workspaces button.urgent {
+    background: #f38ba8;
+    color: #1e1e2e;
+}
+
+/* Hyprland Window - título limpo */
+#window {
+    color: #89dceb;
+    font-style: italic;
+    font-size: 11px;
+}
+
+/* Estados especiais para diferentes tipos de janelas */
+window#waybar.empty #window {
+    color: #6c7086;
+}
+
+window#waybar.solo #window {
+    color: #89dceb;
+}
+
+window#waybar.fullscreen #window {
+    color: #fab387;
+}
+
+/* Spotify - estados limpos */
+#custom-spotify {
+    color: #a6e3a1;
+}
+
+#custom-spotify.playing {
+    color: #a6e3a1;
+}
+
+#custom-spotify.paused {
+    color: #f9e2af;
+}
+
+#custom-spotify.stopped {
+    color: #6c7086;
+}
+
+/* =========================================================================
+   CENTRO - CLIMA, CLOCK E NOTIFICAÇÕES
+   ========================================================================= */
+
+/* Clima da cidade */
+#custom-weather {
+    color: #74c7ec;
+}
+
+#custom-weather.weather-error {
+    color: #f38ba8;
+}
+
+/* Clock - elemento central simples */
+#clock {
+    color: #cba6f7;
+    font-weight: 500;
+    padding: 2px 12px;
+    font-size: 12px;
+}
+
+/* Notificações */
+#custom-notification {
+    color: #fab387;
+}
+
+#custom-notification.notification {
+    color: #fab387;
+}
+
+/* =========================================================================
+   CANTO DIREITO - SISTEMA E RECURSOS
+   ========================================================================= */
+
+/* Áudio/Volume */
+#pulseaudio {
+    color: #89b4fa;
+}
+
+#pulseaudio.muted {
+    color: #6c7086;
+}
+
+/* Rede */
+#network {
+    color: #a6e3a1;
+}
+
+#network.disconnected {
+    color: #f38ba8;
+}
+
+#network.ethernet {
+    color: #94e2d5;
+}
+
+/* CPU com estados de alerta */
+#cpu {
+    color: #f9e2af;
+}
+
+#cpu.warning {
+    color: #fab387;
+}
+
+#cpu.critical {
+    color: #f38ba8;
+}
+
+/* Memória com estados de alerta */
+#memory {
+    color: #f5c2e7;
+}
+
+#memory.warning {
+    color: #fab387;
+}
+
+#memory.critical {
+    color: #f38ba8;
+}
+
+/* System Tray */
+#tray {
+    padding: 2px 6px;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+    color: #fab387;
+}
+
+/* Language/Idioma */
+#language {
+    color: #cba6f7;
+    font-weight: 500;
+    min-width: 25px;
+}
+
+/* =========================================================================
+   RESPONSIVIDADE E AJUSTES FINAIS
+   ========================================================================= */
+
+/* Estados especiais para melhoria da UX */
+.modules-left > widget:first-child > #workspaces {
+    margin-left: 0;
+}
+
+.modules-right > widget:last-child > #tray {
+    margin-right: 0;
 }

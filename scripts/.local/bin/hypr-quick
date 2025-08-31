@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+
+###########################################
+### HYPRLAND QUICK ACTIONS SCRIPT     ###
+###########################################
+
+# Script com ações rápidas para o Hyprland
+# Uso: hypr-quick [action]
+
+show_help() {
+    cat << EOF
+🚀 Hyprland Quick Actions
+
+Uso: $(basename "$0") [ACTION]
+
+ACTIONS:
+    reload          Recarregar configuração do Hyprland
+    restart-bar     Reiniciar Waybar
+    screenshot      Fazer screenshot com Flameshot
+    wallpaper       Trocar wallpaper aleatório
+    wallpaper-auto  Iniciar auto-troca de wallpapers
+    wallpaper-stop  Parar auto-troca de wallpapers
+    monitor-info    Mostrar informações dos monitores
+    workspaces      Listar workspaces ativos
+    kill-app        Matar aplicação ativa
+    help            Mostrar esta ajuda
+
+EXEMPLOS:
+    $(basename "$0") reload
+    $(basename "$0") screenshot
+    $(basename "$0") wallpaper
+
+EOF
+}
+
+case "$1" in
+    "reload")
+        echo "🔄 Recarregando Hyprland..."
+        hyprctl reload
+        ;;
+    "restart-bar")
+        echo "📊 Reiniciando Waybar..."
+        killall waybar 2>/dev/null
+        waybar &
+        ;;
+    "screenshot")
+        echo "📸 Abrindo Flameshot..."
+        flameshot gui
+        ;;
+    "wallpaper")
+        echo "🎨 Trocando wallpaper..."
+        ~/.config/hypr/scripts/change_wallpapers.sh -r
+        ;;
+    "wallpaper-auto")
+        echo "⏰ Iniciando auto-troca de wallpapers..."
+        ~/.config/hypr/scripts/auto_wallpaper.sh
+        ;;
+    "wallpaper-stop")
+        echo "⏹️ Parando auto-troca de wallpapers..."
+        ~/.config/hypr/scripts/auto_wallpaper.sh -s
+        ;;
+    "monitor-info")
+        echo "🖥️ Informações dos monitores:"
+        hyprctl monitors
+        ;;
+    "workspaces")
+        echo "🏠 Workspaces ativos:"
+        hyprctl workspaces
+        ;;
+    "kill-app")
+        echo "❌ Matando aplicação ativa..."
+        hyprctl dispatch killactive
+        ;;
+    "help"|"-h"|"--help"|"")
+        show_help
+        ;;
+    *)
+        echo "❌ Ação desconhecida: $1"
+        echo "💡 Use 'help' para ver ações disponíveis"
+        exit 1
+        ;;
+esac

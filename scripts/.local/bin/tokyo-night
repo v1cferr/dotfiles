@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+
+###########################################
+### TOKYO NIGHT THEME SWITCHER        ###
+###########################################
+
+# Script para aplicar tema Tokyo Night em várias aplicações
+# Uso: tokyo-night [app|all]
+
+TOKYO_NIGHT_BG="#1a1b26"
+TOKYO_NIGHT_FG="#c0caf5"
+TOKYO_NIGHT_BLUE="#7aa2f7"
+
+show_help() {
+    cat << EOF
+🌃 Tokyo Night Theme Switcher
+
+Aplica o tema Tokyo Night em várias aplicações de forma consistente.
+
+Uso: $(basename "$0") [TARGET]
+
+TARGETS:
+    gtk           Aplicar tema GTK (Thunar, etc.)
+    terminal      Configurar cores do terminal
+    rofi          Recarregar tema do Rofi
+    waybar        Recarregar Waybar
+    hyprland      Recarregar Hyprland
+    all           Aplicar em tudo
+    check         Verificar status dos temas
+    help          Mostrar esta ajuda
+
+EXEMPLOS:
+    $(basename "$0") gtk      # Só GTK
+    $(basename "$0") all      # Tudo
+    $(basename "$0") check    # Verificar
+
+🎨 Paleta Tokyo Night:
+  Background: $TOKYO_NIGHT_BG
+  Foreground: $TOKYO_NIGHT_FG
+  Blue:       $TOKYO_NIGHT_BLUE
+
+EOF
+}
+
+apply_gtk() {
+    echo "🎨 Aplicando tema Tokyo Night no GTK..."
+    export GTK_THEME=Tokyonight-Dark
+    
+    # Aplicar via gsettings também
+    if command -v gsettings >/dev/null 2>&1; then
+        gsettings set org.gnome.desktop.interface gtk-theme 'Tokyonight-Dark' 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
+    fi
+    
+    echo "✅ Tema GTK aplicado!"
+}
+
+reload_rofi() {
+    echo "🚀 Verificando tema do Rofi..."
+    if [ -f "$HOME/.config/rofi/tokyo-night.rasi" ]; then
+        echo "✅ Tema Tokyo Night do Rofi está configurado!"
+    else
+        echo "⚠️  Tema Tokyo Night do Rofi não encontrado"
+    fi
+}
+
+reload_waybar() {
+    echo "📊 Recarregando Waybar..."
+    killall waybar 2>/dev/null
+    sleep 1
+    waybar &
+    echo "✅ Waybar recarregado!"
+}
+
+reload_hyprland() {
+    echo "🖥️ Recarregando Hyprland..."
+    hyprctl reload
+    echo "✅ Hyprland recarregado!"
+}
+
+check_themes() {
+    echo "🔍 Verificando status dos temas Tokyo Night..."
+    echo ""
+    
+    # GTK Theme
+    if [ "$GTK_THEME" = "Tokyonight-Dark" ]; then
+        echo "✅ GTK_THEME: $GTK_THEME"
+    else
+        echo "❌ GTK_THEME: ${GTK_THEME:-não definido}"
+    fi
+    
+    # Rofi
+    if [ -f "$HOME/.config/rofi/tokyo-night.rasi" ]; then
+        echo "✅ Rofi: Tokyo Night theme encontrado"
+    else
+        echo "❌ Rofi: Tokyo Night theme não encontrado"
+    fi
+    
+    # Hyprland
+    if pgrep -x "Hyprland" >/dev/null; then
+        echo "✅ Hyprland: Rodando"
+    else
+        echo "❌ Hyprland: Não está rodando"
+    fi
+    
+    # Waybar
+    if pgrep -x "waybar" >/dev/null; then
+        echo "✅ Waybar: Rodando"
+    else
+        echo "❌ Waybar: Não está rodando"
+    fi
+    
+    echo ""
+    echo "🎨 Cores Tokyo Night:"
+    echo "  Background: $TOKYO_NIGHT_BG"
+    echo "  Foreground: $TOKYO_NIGHT_FG"
+    echo "  Blue:       $TOKYO_NIGHT_BLUE"
+}
+
+case "$1" in
+    "gtk")
+        apply_gtk
+        ;;
+    "rofi")
+        reload_rofi
+        ;;
+    "waybar")
+        reload_waybar
+        ;;
+    "hyprland")
+        reload_hyprland
+        ;;
+    "all")
+        echo "🌃 Aplicando tema Tokyo Night em tudo..."
+        apply_gtk
+        reload_rofi
+        reload_waybar
+        reload_hyprland
+        echo "✅ Tokyo Night aplicado em todas as aplicações!"
+        ;;
+    "check")
+        check_themes
+        ;;
+    "help"|"-h"|"--help"|"")
+        show_help
+        ;;
+    *)
+        echo "❌ Target desconhecido: $1"
+        echo "💡 Use 'help' para ver targets disponíveis"
+        exit 1
+        ;;
+esac

@@ -34,7 +34,9 @@ Este repositório contém todas as minhas configurações (dotfiles) para meu am
 ├── 🎨  gtk-3.0/        # Tema escuro para aplicações GTK-3
 ├── 🎨  gtk-4.0/        # Tema escuro para aplicações GTK-4
 ├── 📷  flameshot/      # Configuração do screenshot tool
-├── 📜  scripts/        # Scripts utilitários
+├── �️  wallpapers/     # Wallpapers + symlink para ~/Pictures/Wallpapers
+├── 🔧  git/            # Configuração do Git com aliases úteis
+├── �📜  scripts/        # Scripts utilitários personalizados
 ├── 📝  melhorias.md    # Lista de melhorias planejadas
 └── 📖  README.md       # Este arquivo
 ```
@@ -148,7 +150,7 @@ git clone https://github.com/v1cferr/dotfiles.git
 cd dotfiles
 
 # Aplicar todas as configurações
-stow hypr rofi waybar zsh gtk-3.0 gtk-4.0 flameshot
+stow hypr rofi waybar zsh gtk-3.0 gtk-4.0 flameshot wallpapers git scripts
 
 # Reiniciar o Hyprland ou relogar
 hyprctl reload
@@ -185,7 +187,26 @@ hyprctl reload
 
 ## 🛠️ Scripts Personalizados
 
-### 🎨 Sistema de Wallpapers
+### � Hyprland Quick Actions
+
+```bash
+# Ações rápidas do Hyprland
+hypr-quick reload          # Recarregar configuração
+hypr-quick screenshot      # Screenshot com Flameshot
+hypr-quick wallpaper       # Trocar wallpaper aleatório
+hypr-quick restart-bar     # Reiniciar Waybar
+```
+
+### 🌃 Tokyo Night Theme Manager
+
+```bash
+# Gerenciador de tema Tokyo Night
+tokyo-night all           # Aplicar tema em tudo
+tokyo-night gtk           # Só aplicações GTK
+tokyo-night check         # Verificar status dos temas
+```
+
+### �🎨 Sistema de Wallpapers
 
 Scripts avançados para gerenciamento de wallpapers:
 

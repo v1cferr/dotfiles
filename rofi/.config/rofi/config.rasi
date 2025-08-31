@@ -1,0 +1,35 @@
+configuration {
+    /*---------- General settings ----------*/
+    modi: "drun,run,window,ssh,filebrowser";
+    show-icons: true;
+    display-drun: " Apps";
+    display-run: " Run";
+    display-window: " Windows";
+    display-ssh: " SSH";
+    display-filebrowser: " Files";
+    
+    /*---------- Matching settings ----------*/
+    matching: "fuzzy";
+    case-sensitive: false;
+    
+    /*---------- SSH settings ----------*/
+    ssh-client: "ssh";
+    ssh-command: "{terminal} -e {ssh-client} {host} [-p {port}]";
+    
+    /*---------- Font ----------*/
+    font: "JetBrainsMono Nerd Font 12";
+    
+    /*---------- Display settings ----------*/
+    dpi: 0;
+    
+    /*---------- Behaviour ----------*/
+    auto-select: false;
+    scroll-method: 0;
+    normalize-match: true;
+    
+    /*---------- Keybindings ----------*/
+    kb-primary-paste: "Control+V,Shift+Insert";
+    kb-secondary-paste: "Control+v,Insert";
+}
+
+@theme "tokyo-night"

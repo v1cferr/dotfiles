@@ -1,0 +1,231 @@
+/**
+ * Tokyo Night theme for Rofi
+ * Inspired by the Tokyo Night color scheme
+ * Author: v1cferr
+ */
+
+* {
+    /* Tokyo Night Color Palette */
+    bg0: #1a1b26;     /* background */
+    bg1: #24283b;     /* background darker */
+    bg2: #414868;     /* background lighter */
+    bg3: #565f89;     /* comments */
+    fg0: #c0caf5;     /* foreground */
+    fg1: #a9b1d6;     /* foreground darker */
+    fg2: #737aa2;     /* foreground darker */
+    red: #f7768e;     /* red */
+    orange: #ff9e64;  /* orange */
+    yellow: #e0af68;  /* yellow */
+    green: #9ece6a;   /* green */
+    cyan: #73daca;    /* cyan */
+    blue: #7aa2f7;    /* blue */
+    purple: #bb9af7;  /* purple */
+    magenta: #c0caf5; /* magenta */
+    
+    /* Global Properties */
+    background-color: transparent;
+    text-color: @fg0;
+    
+    /* Window */
+    spacing: 0;
+    width: 600px;
+    border-radius: 12px;
+}
+
+window {
+    transparency: "real";
+    background-color: @bg0;
+    border: 2px solid;
+    border-color: @bg2;
+    border-radius: 12px;
+    padding: 0;
+    anchor: center;
+    location: center;
+    x-offset: 0;
+    y-offset: 0;
+}
+
+mainbox {
+    padding: 12px;
+    background-color: transparent;
+    spacing: 12px;
+}
+
+inputbar {
+    background-color: @bg1;
+    border: 2px solid;
+    border-color: @bg2;
+    border-radius: 8px;
+    padding: 8px 12px;
+    spacing: 8px;
+}
+
+prompt {
+    background-color: transparent;
+    text-color: @blue;
+    font: "JetBrainsMono Nerd Font Bold 13";
+}
+
+textbox-prompt-colon {
+    expand: false;
+    str: "";
+    background-color: transparent;
+    text-color: @blue;
+}
+
+entry {
+    background-color: transparent;
+    text-color: @fg0;
+    placeholder-color: @fg2;
+    placeholder: "Search applications...";
+    cursor: text;
+}
+
+case-indicator {
+    background-color: transparent;
+    text-color: @fg2;
+}
+
+listview {
+    background-color: transparent;
+    columns: 1;
+    lines: 8;
+    cycle: true;
+    dynamic: true;
+    scrollbar: false;
+    layout: vertical;
+    reverse: false;
+    fixed-height: true;
+    fixed-columns: true;
+    spacing: 4px;
+    margin: 8px 0px 0px 0px;
+}
+
+element {
+    background-color: transparent;
+    text-color: @fg1;
+    orientation: horizontal;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 0px;
+    cursor: pointer;
+}
+
+element normal.normal {
+    background-color: transparent;
+    text-color: @fg1;
+}
+
+element normal.urgent {
+    background-color: @red;
+    text-color: @bg0;
+}
+
+element normal.active {
+    background-color: @green;
+    text-color: @bg0;
+}
+
+element selected.normal {
+    background-color: @bg2;
+    text-color: @fg0;
+    border: 1px solid;
+    border-color: @blue;
+}
+
+element selected.urgent {
+    background-color: @red;
+    text-color: @bg0;
+}
+
+element selected.active {
+    background-color: @green;
+    text-color: @bg0;
+}
+
+element alternate.normal {
+    background-color: transparent;
+    text-color: @fg1;
+}
+
+element alternate.urgent {
+    background-color: @red;
+    text-color: @bg0;
+}
+
+element alternate.active {
+    background-color: @green;
+    text-color: @bg0;
+}
+
+element-icon {
+    background-color: transparent;
+    size: 24px;
+    cursor: inherit;
+}
+
+element-text {
+    background-color: transparent;
+    text-color: inherit;
+    cursor: inherit;
+    vertical-align: 0.5;
+    horizontal-align: 0.0;
+    margin: 0px 8px 0px 8px;
+}
+
+message {
+    background-color: @bg1;
+    border: 2px solid;
+    border-color: @bg2;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 8px 0px 0px 0px;
+}
+
+textbox {
+    background-color: transparent;
+    text-color: @fg0;
+    vertical-align: 0.5;
+    horizontal-align: 0.0;
+}
+
+error-message {
+    background-color: @red;
+    border: 2px solid;
+    border-color: @red;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 8px 0px 0px 0px;
+}
+
+mode-switcher {
+    background-color: transparent;
+    spacing: 8px;
+    margin: 8px 0px 0px 0px;
+}
+
+button {
+    background-color: @bg1;
+    text-color: @fg1;
+    border: 2px solid;
+    border-color: @bg2;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+button selected {
+    background-color: @blue;
+    text-color: @bg0;
+    border-color: @blue;
+}
+
+scrollbar {
+    width: 4px;
+    background-color: @bg2;
+    handle-color: @blue;
+    handle-width: 4px;
+    border: 0;
+    border-radius: 2px;
+    margin: 0px 0px 0px 4px;
+}

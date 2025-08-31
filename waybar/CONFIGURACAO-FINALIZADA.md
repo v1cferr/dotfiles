@@ -1,8 +1,9 @@
-# ✅ Configuração Finalizada com Sucesso!
+# ✅ Configuração Finalizada com Sucesso
 
 ## 🎯 **Problemas Resolvidos:**
 
 ### 1. **Ícones Corrigidos** ✅
+
 - ❌ **Antes**: Ícones Nerd Font não apareciam
 - ✅ **Depois**: Ícones emoji/unicode funcionais
   - Workspaces: `1`, `2`, `3`, etc.
@@ -16,6 +17,7 @@
   - Áudio: `🔈`/`🔉`/`🔊`/`🔇`
 
 ### 2. **Temperatura da Cidade** ✅
+
 - ❌ **Antes**: Temperatura do sistema no centro
 - ✅ **Depois**: Temperatura de **São Carlos/SP** no centro
   - Fonte: wttr.in (sem necessidade de API)
@@ -23,6 +25,7 @@
   - Click: abre forecast completo
 
 ### 3. **Temperatura do Sistema** ✅
+
 - ❌ **Antes**: Módulo separado no centro
 - ✅ **Depois**: No tooltip do CPU
   - Localização: Tooltip do módulo CPU
@@ -31,21 +34,24 @@
 
 ## 🎨 **Layout Final:**
 
-```
+```bash
 | 1 2 3 4 5 | [título_janela] | ♪ Spotify      || 🌡️ 26°C | 🕐 18:25 | 🔔 ||      💻 15% | 🧠 45% | 📶 89% | 🔊 75% | [tray] |
 ```
 
 ### **Esquerda:**
+
 - **Workspaces**: Números simples (1-8)
 - **Janela**: Título da janela ativa
 - **Spotify**: Player com controles
 
 ### **Centro:**
+
 - **Clima**: São Carlos/SP em tempo real
 - **Relógio**: Hora atual (click = data)
 - **Notificações**: SwayNC integrado
 
 ### **Direita:**
+
 - **CPU**: Uso + temperatura no tooltip
 - **Memória**: Uso da RAM
 - **Rede**: Status WiFi/Ethernet
@@ -79,6 +85,7 @@ pkill waybar && waybar &
 - **Notificações**: Click → centro de notificações
 
 ## ✨ **Resultado:**
+
 - ✅ Todos os ícones aparecendo
 - ✅ Temperatura da cidade funcionando
 - ✅ Temperatura do sistema no tooltip

@@ -125,6 +125,13 @@
   - **Configurar**: Automático baseado em horário
   - **Alternativas**: wlsunset, gammastep
 
+- [ ] **Window Animations & Effects**
+  - **Configurar**: bezier curves customizadas em ~/.config/hypr/configs/appearance/animations.conf
+  - **Implementar**: Animações suaves para windows, workspaces, borders e layers
+  - **Otimizar**: Balance entre performance e visual appeal
+  - **Incluir**: Fade in/out, slide effects, scale animations
+  - **Status**: 🎨 Base configurada, necessita fine-tuning para Tokyo Night aesthetic
+
 ### 🔧 **Advanced Configuration**
 
 - [ ] **Window Rules Avançadas**

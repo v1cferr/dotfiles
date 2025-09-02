@@ -24,9 +24,6 @@ NEVER_USED_WEIGHT="${NEVER_USED_WEIGHT:-10}"
 OLD_WALLPAPER_WEIGHT="${OLD_WALLPAPER_WEIGHT:-5}"
 RECENT_WALLPAPER_WEIGHT="${RECENT_WALLPAPER_WEIGHT:-1}"
 
-# Supported image formats
-FORMATS="jpg,jpeg,png,webp,bmp"
-
 # Initialize cache directory
 mkdir -p "$CACHE_DIR"
 
@@ -49,19 +46,7 @@ secure_random() {
     echo $((random_bytes % max))
 }
 
-# Function to shuffle array using Fisher-Yates algorithm
-shuffle_array() {
-    local -n arr=$1
-    local i j temp
-    
-    for ((i=${#arr[@]}-1; i>0; i--)); do
-        j=$(secure_random $((i+1)))
-        # Swap elements
-        temp="${arr[i]}"
-        arr[i]="${arr[j]}"
-        arr[j]="$temp"
-    done
-}
+
 
 # Function to validate image file
 validate_image() {
@@ -83,17 +68,7 @@ validate_image() {
         return 1
     fi
     
-    # Basic file type validation using file command
-    local file_type
-    file_type=$(file -b --mime-type "$file" 2>/dev/null)
-    case "$file_type" in
-        image/*)
-            return 0
-            ;;
-        *)
-            return 1
-            ;;
-    esac
+    return 0
 }
 
 # Function to get all valid wallpapers
@@ -157,55 +132,25 @@ add_to_history() {
     local wallpaper="$1"
     local temp_file="$HISTORY_FILE.tmp"
     
-    # Add new wallpaper to top of history
+    # Add new wallpaper to top
     echo "$wallpaper" > "$temp_file"
     
-    # Add existing history (excluding the new wallpaper if it exists)
+    # Add existing history (excluding duplicates)
     if [ -f "$HISTORY_FILE" ]; then
-        grep -v "^$wallpaper$" "$HISTORY_FILE" | head -n $((WALLPAPER_HISTORY_SIZE - 1)) >> "$temp_file"
+        grep -Fv "$wallpaper" "$HISTORY_FILE" | head -n $((WALLPAPER_HISTORY_SIZE - 1)) >> "$temp_file"
     fi
     
     mv "$temp_file" "$HISTORY_FILE"
 }
 
-# Function to check if wallpaper is in recent history
-is_in_recent_history() {
-    local wallpaper="$1"
-    local history
-    history=$(get_wallpaper_history)
-    
-    if [ -z "$history" ]; then
-        return 1
-    fi
-    
-    echo "$history" | grep -q "^$wallpaper$"
-}
+
 
 # Function to get current wallpaper
 get_current_wallpaper() {
-    # Try multiple methods to get current wallpaper
-    local current=""
-    
-    # Method 1: Get from history file (most recent)
+    # Get from history file (most recent)
     if [ -f "$HISTORY_FILE" ]; then
+        local current
         current=$(head -n 1 "$HISTORY_FILE" 2>/dev/null)
-        if [ -n "$current" ] && [ -f "$current" ]; then
-            echo "$current"
-            return 0
-        fi
-    fi
-    
-    # Method 2: Try hyprctl (may not always work reliably)
-    current=$(hyprctl hyprpaper listloaded 2>/dev/null | head -n 1)
-    if [ -n "$current" ] && [ -f "$current" ]; then
-        echo "$current"
-        return 0
-    fi
-    
-    # Method 3: Check hyprpaper config
-    local hyprpaper_conf="$HOME/.config/hypr/hyprpaper.conf"
-    if [ -f "$hyprpaper_conf" ]; then
-        current=$(grep "wallpaper.*=" "$hyprpaper_conf" | tail -n 1 | sed 's/.*=.*,//' | tr -d ' ')
         if [ -n "$current" ] && [ -f "$current" ]; then
             echo "$current"
             return 0
@@ -240,12 +185,12 @@ get_smart_random_wallpaper() {
             continue
         fi
         
-        if echo "$history" | grep -q "^$wallpaper$"; then
+        if echo "$history" | grep -Fq "$wallpaper"; then
             # Recently used - add with low weight
             for ((i=0; i<RECENT_WALLPAPER_WEIGHT; i++)); do
                 weighted_wallpapers+=("$wallpaper")
             done
-        elif [ -n "$history" ] && ! echo "$history" | grep -q "^$wallpaper$"; then
+        elif [ -n "$history" ] && ! echo "$history" | grep -Fq "$wallpaper"; then
             # Used before but not recently - add with medium weight
             for ((i=0; i<OLD_WALLPAPER_WEIGHT; i++)); do
                 weighted_wallpapers+=("$wallpaper")
@@ -311,9 +256,6 @@ get_pure_random_wallpaper() {
         log "⚠️ All wallpapers filtered out, using original list" >&2
         mapfile -t wallpapers < <(get_valid_wallpapers)
     fi
-    
-    # Shuffle array for extra randomness
-    shuffle_array wallpapers
     
     # Select random wallpaper
     local random_index
@@ -451,7 +393,7 @@ list_wallpapers() {
     local never_used=0
     
     for wallpaper in "${wallpapers[@]}"; do
-        if ! echo "$history" | grep -q "^$wallpaper$"; then
+        if ! echo "$history" | grep -Fq "$wallpaper"; then
             ((never_used++))
         fi
     done
@@ -470,9 +412,9 @@ list_wallpapers() {
         
         if [ "$wallpaper" = "$current_wallpaper" ]; then
             status=" [CURRENT]"
-        elif echo "$history" | head -n 5 | grep -q "^$wallpaper$"; then
+        elif echo "$history" | head -n 5 | grep -Fq "$wallpaper"; then
             status=" [RECENT]"
-        elif echo "$history" | grep -q "^$wallpaper$"; then
+        elif echo "$history" | grep -Fq "$wallpaper"; then
             status=" [USED]"
         else
             status=" [NEW]"
@@ -510,9 +452,9 @@ show_stats() {
     local never_used=0 recent=0 old_used=0
     
     for wallpaper in "${wallpapers[@]}"; do
-        if echo "$history" | head -n 5 | grep -q "^$wallpaper$"; then
+        if echo "$history" | head -n 5 | grep -Fq "$wallpaper"; then
             ((recent++))
-        elif echo "$history" | grep -q "^$wallpaper$"; then
+        elif echo "$history" | grep -Fq "$wallpaper"; then
             ((old_used++))
         else
             ((never_used++))

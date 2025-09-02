@@ -31,12 +31,13 @@ Este repositório contém todas as minhas configurações (dotfiles) para meu am
 ├── 🔧  rofi/           # Launcher personalizado (Tokyo Night)
 ├── 📊  waybar/         # Status bar minimalista
 ├── 🐚  zsh/            # Shell configuration (Oh My Zsh + Agnoster)
+├── 💻  vscode/         # Configurações do VS Code + extensões
 ├── 🎨  gtk-3.0/        # Tema escuro para aplicações GTK-3
 ├── 🎨  gtk-4.0/        # Tema escuro para aplicações GTK-4
 ├── 📷  flameshot/      # Configuração do screenshot tool
-├── �️  wallpapers/     # Wallpapers + symlink para ~/Pictures/Wallpapers
+├── 🖼️  wallpapers/     # Wallpapers + symlink para ~/Pictures/Wallpapers
 ├── 🔧  git/            # Configuração do Git com aliases úteis
-├── �📜  scripts/        # Scripts utilitários personalizados
+├── 📜  scripts/        # Scripts utilitários personalizados
 ├── 📝  melhorias.md    # Lista de melhorias planejadas
 └── 📖  README.md       # Este arquivo
 ```
@@ -119,6 +120,21 @@ Shell configurado com produtividade em mente:
 - **Plugins**: Syntax highlighting, autosuggestions
 - **Aliases**: Screenshots, temas GTK
 
+### 💻 VS Code - Configurações de Desenvolvimento
+
+Configurações do Visual Studio Code com tema Tokyo Night:
+
+- **Settings & Keybindings**: Configurações e atalhos personalizados
+- **Snippets**: Snippets customizados para desenvolvimento
+- **Extensions**: +70 extensões essenciais (GitHub Copilot, Tokyo Night, etc.)
+
+**Uso rápido:**
+
+```bash
+stow vscode  # Aplicar configurações
+cat vscode/extensions.txt | xargs -L1 code --install-extension  # Instalar extensões
+```
+
 ### 🎨 GTK Themes - Consistência Visual
 
 Tema escuro em todas as aplicações GTK:
@@ -150,7 +166,7 @@ git clone https://github.com/v1cferr/dotfiles.git
 cd dotfiles
 
 # Aplicar todas as configurações
-stow hypr rofi waybar zsh gtk-3.0 gtk-4.0 flameshot wallpapers git scripts
+stow hypr rofi waybar zsh vscode gtk-3.0 gtk-4.0 flameshot wallpapers git scripts
 
 # Reiniciar o Hyprland ou relogar
 hyprctl reload

@@ -1,1 +1,11 @@
+# Minhas anotações locais
 ANOTACOES.md
+
+# VS Code - cache e arquivos específicos da máquina
+vscode/.config/Code/User/globalStorage/
+vscode/.config/Code/User/workspaceStorage/
+vscode/.config/Code/User/History/
+vscode/.config/Code/User/sync/
+vscode/.config/Code/User/profiles/
+vscode/.config/Code/User/mcp/
+vscode/.config/Code/User/*.log

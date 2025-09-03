@@ -13,8 +13,7 @@
   // Organização dos Módulos em "Pílulas"
   // -------------------------------------------------------------------------
   "modules-left": [
-    "group/workspaces-window",
-    "group/spotify"
+    "group/workspaces-window-spotify"
   ],
   "modules-center": [
     "group/info-center"
@@ -239,24 +238,17 @@
   // GRUPOS DE MÓDULOS - SISTEMA DE "PÍLULAS"
   // -------------------------------------------------------------------------
   
-  // Pílula 1: Workspaces + Window juntos
-  "group/workspaces-window": {
+  // Pílula 1: Workspaces + Window + Spotify juntos
+  "group/workspaces-window-spotify": {
     "orientation": "horizontal",
     "modules": [
       "hyprland/workspaces",
-      "hyprland/window"
-    ]
-  },
-
-  // Pílula 2: Spotify isolado
-  "group/spotify": {
-    "orientation": "horizontal", 
-    "modules": [
+      "hyprland/window",
       "custom/spotify"
     ]
   },
 
-  // Pílula 3: Informações centrais
+  // Pílula 2: Informações centrais
   "group/info-center": {
     "orientation": "horizontal",
     "modules": [
@@ -266,7 +258,7 @@
     ]
   },
 
-  // Pílula 4: Status do sistema com pequenos gaps internos
+  // Pílula 3: Status do sistema com pequenos gaps internos
   "group/system-status": {
     "orientation": "horizontal",
     "modules": [
@@ -278,7 +270,7 @@
     ]
   },
 
-  // Pílula 5: Tray agrupado
+  // Pílula 4: Tray agrupado
   "group/tray-group": {
     "orientation": "horizontal",
     "modules": [

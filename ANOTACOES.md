@@ -25,7 +25,8 @@
     - <https://github.com/sejjy/mechabar>
 - [ ] Adicionar algum Clipboard Manager <https://wiki.hypr.land/Useful-Utilities/Clipboard-Managers/>
 - [ ] Verificar pq o cursor tá bugando na hora que o **Hyprsunset** ativa (fica com uma coloração mais destacada que o resto da tela)
-- [ ] Adicionar uma verificação e sumir quando não tiver nenhuma aplicação rodando em algum workspace
+- [ ] Adicionar uma verificação e sumir o `hyprland/window` quando não tiver nenhuma aplicação rodando em algum workspace (para não poluir a Waybar)
+- [ ] Personalizar meu **fastfetch** e colocar o simbolo da Alliance (WoW) invés da logo do Arch
 
 ### Nem tão importantes
 
@@ -36,3 +37,4 @@
 
 - [x] Aumentar a duração das notificações (10 segundos para dar tempo de ler)
 - [x] Configurar e documentar o [Hyprsunset](./hypr/.config/hypr/hyprsunset.conf)
+- [X] Aumentar levemente o gap entre as janelas quando estão uma ao lado da outra {deaef8161b723c0b4bc5b314331a17bd8ea3b75c}

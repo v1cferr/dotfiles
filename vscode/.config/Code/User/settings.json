@@ -102,9 +102,9 @@
     "redhat.telemetry.enabled": true,
     "dev.containers.mountWaylandSocket": false,
     "window.zoomLevel": -1.25,
-    "editor.fontFamily": "Fira Code",
+    "editor.fontFamily": "'JetBrainsMono Nerd Font', 'Fira Code', monospace",
     "editor.fontLigatures": true,
-    "terminal.integrated.fontFamily": "monospace",
+    "terminal.integrated.fontFamily": "'JetBrainsMono Nerd Font Mono', monospace",
     "workbench.colorTheme": "Tokyo Night",
     "workbench.iconTheme": "vscode-icons",
     "git.confirmSync": false,
@@ -122,5 +122,10 @@
     "github.copilot.nextEditSuggestions.enabled": true,
     "github.copilot.chat.codesearch.enabled": true,
     "github.copilot.chat.agent.thinkingTool": true,
-    "diffEditor.ignoreTrimWhitespace": false
+    "diffEditor.ignoreTrimWhitespace": false,
+    
+    // Configurações para melhor suporte a Nerd Fonts e ícones
+    "editor.renderWhitespace": "selection",
+    "terminal.integrated.fontWeight": "normal",
+    "editor.fontWeight": "normal"
 }

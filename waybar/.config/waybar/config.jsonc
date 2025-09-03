@@ -19,8 +19,7 @@
     "group/info-center"
   ],
   "modules-right": [
-    "group/system-status",
-    "group/tray-group"
+    "group/system-tray"
   ],
 
   // -------------------------------------------------------------------------
@@ -258,22 +257,15 @@
     ]
   },
 
-  // Pílula 3: Status do sistema com pequenos gaps internos
-  "group/system-status": {
+  // Pílula 3: Sistema e Tray unificados 
+  "group/system-tray": {
     "orientation": "horizontal",
     "modules": [
       "cpu",
       "memory", 
       "temperature",
       "network",
-      "pulseaudio"
-    ]
-  },
-
-  // Pílula 4: Tray agrupado
-  "group/tray-group": {
-    "orientation": "horizontal",
-    "modules": [
+      "pulseaudio",
       "tray"
     ]
   }

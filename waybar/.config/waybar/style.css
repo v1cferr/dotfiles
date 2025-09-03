@@ -115,60 +115,69 @@ tooltip label {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-/* Pílula 4: System Status - Mini-pílulas individuais com gaps */
+/* Container do grupo direito - Background unificador sutil */
+#group-system-tray {
+    background: rgba(26, 27, 38, 0.4);
+    border: 1px solid rgba(65, 72, 104, 0.2);
+    border-radius: 12px;
+    padding: 2px;
+    margin: 0 0 0 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Mini-pílulas do lado direito - Sistema e Tray integrados */
 #cpu {
-    background: rgba(26, 27, 38, 0.8);
-    border: 1px solid rgba(65, 72, 104, 0.3);
-    border-radius: 10px;
-    margin: 0 3px 0 0;
+    background: rgba(26, 27, 38, 0.9);
+    border: 1px solid rgba(65, 72, 104, 0.4);
+    border-radius: 8px;
+    margin: 0 1px 0 0;
     padding: 4px 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 #memory {
-    background: rgba(26, 27, 38, 0.8);
-    border: 1px solid rgba(65, 72, 104, 0.3);
-    border-radius: 10px;
-    margin: 0 3px;
+    background: rgba(26, 27, 38, 0.9);
+    border: 1px solid rgba(65, 72, 104, 0.4);
+    border-radius: 8px;
+    margin: 0 1px;
     padding: 4px 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 #temperature {
-    background: rgba(26, 27, 38, 0.8);
-    border: 1px solid rgba(65, 72, 104, 0.3);
-    border-radius: 10px;
-    margin: 0 3px;
+    background: rgba(26, 27, 38, 0.9);
+    border: 1px solid rgba(65, 72, 104, 0.4);
+    border-radius: 8px;
+    margin: 0 1px;
     padding: 4px 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 #network {
-    background: rgba(26, 27, 38, 0.8);
-    border: 1px solid rgba(65, 72, 104, 0.3);
-    border-radius: 10px;
-    margin: 0 3px;
+    background: rgba(26, 27, 38, 0.9);
+    border: 1px solid rgba(65, 72, 104, 0.4);
+    border-radius: 8px;
+    margin: 0 1px;
     padding: 4px 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 #pulseaudio {
-    background: rgba(26, 27, 38, 0.8);
-    border: 1px solid rgba(65, 72, 104, 0.3);
-    border-radius: 10px;
-    margin: 0 0 0 3px;
+    background: rgba(26, 27, 38, 0.9);
+    border: 1px solid rgba(65, 72, 104, 0.4);
+    border-radius: 8px;
+    margin: 0 1px;
     padding: 4px 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-/* Pílula 5: Tray */
 #tray {
-    background: rgba(26, 27, 38, 0.8);
-    border: 1px solid rgba(65, 72, 104, 0.3);
-    border-radius: 10px;
-    margin: 0 8px;
-    padding: 4px 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    background: rgba(26, 27, 38, 0.9);
+    border: 1px solid rgba(65, 72, 104, 0.4);
+    border-radius: 8px;
+    margin: 0 0 0 1px;
+    padding: 4px 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 /* Cor de texto consistente para todos os módulos */
@@ -193,8 +202,7 @@ tooltip label {
    ========================================================================= */
 
 /* Efeitos de hover para as pílulas */
-#workspaces:hover,
-#tray:hover {
+#workspaces:hover {
     background: rgba(26, 27, 38, 0.95);
     border-color: rgba(122, 162, 247, 0.5);
 }
@@ -203,6 +211,12 @@ tooltip label {
 #custom-spotify:hover {
     background: rgba(26, 27, 38, 0.95);
     border-color: rgba(122, 162, 247, 0.5);
+}
+
+/* Efeitos de hover para o grupo direito integrado */
+#group-system-tray:hover {
+    background: rgba(26, 27, 38, 0.6);
+    border-color: rgba(122, 162, 247, 0.3);
 }
 
 /* Efeitos de hover para o grupo esquerdo integrado */
@@ -224,14 +238,15 @@ tooltip label {
     border-color: rgba(122, 162, 247, 0.5);
 }
 
-/* Efeitos de hover para mini-pílulas do system-status */
+/* Efeitos de hover para mini-pílulas do grupo direito */
 #cpu:hover,
 #memory:hover,
 #temperature:hover, 
 #network:hover,
-#pulseaudio:hover {
+#pulseaudio:hover,
+#tray:hover {
     background: rgba(26, 27, 38, 0.95);
-    border-color: rgba(122, 162, 247, 0.4);
+    border-color: rgba(122, 162, 247, 0.5);
 }
 
 /* =========================================================================

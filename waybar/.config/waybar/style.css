@@ -69,33 +69,42 @@ tooltip label {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Pílula 3: Centro - Weather + Clock + Notification */
+/* Container do grupo central - Background unificador sutil */
+#group-info-center {
+    background: rgba(26, 27, 38, 0.4);
+    border: 1px solid rgba(65, 72, 104, 0.2);
+    border-radius: 12px;
+    padding: 2px;
+    margin: 0 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Mini-pílulas do centro - Integradas mas individuais */
 #custom-weather {
-    background: rgba(26, 27, 38, 0.8);
-    border: 1px solid rgba(65, 72, 104, 0.3);
-    border-radius: 10px 0 0 10px;
-    margin: 0;
-    padding: 4px 8px 4px 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    background: rgba(26, 27, 38, 0.9);
+    border: 1px solid rgba(65, 72, 104, 0.4);
+    border-radius: 8px;
+    margin: 0 1px 0 0;
+    padding: 4px 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 #clock {
-    background: rgba(26, 27, 38, 0.8);
-    border: 1px solid rgba(65, 72, 104, 0.3);
-    border-left: none;
-    border-right: none;
-    margin: 0;
-    padding: 4px 8px;
+    background: rgba(26, 27, 38, 0.9);
+    border: 1px solid rgba(65, 72, 104, 0.4);
+    border-radius: 8px;
+    margin: 0 1px;
+    padding: 4px 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 #custom-notification {
-    background: rgba(26, 27, 38, 0.8);
-    border: 1px solid rgba(65, 72, 104, 0.3);
-    border-left: none;
-    border-radius: 0 10px 10px 0;
-    margin: 0;
-    padding: 4px 12px 4px 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    background: rgba(26, 27, 38, 0.9);
+    border: 1px solid rgba(65, 72, 104, 0.4);
+    border-radius: 8px;
+    margin: 0 0 0 1px;
+    padding: 4px 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 /* Pílula 4: System Status - Mini-pílulas individuais com gaps */
@@ -178,7 +187,6 @@ tooltip label {
 /* Efeitos de hover para as pílulas */
 #workspaces:hover,
 #custom-spotify:hover,
-#custom-weather:hover,
 #tray:hover {
     background: rgba(26, 27, 38, 0.95);
     border-color: rgba(122, 162, 247, 0.4);
@@ -189,10 +197,17 @@ tooltip label {
     border-color: rgba(122, 162, 247, 0.4);
 }
 
+/* Efeitos de hover para o grupo central integrado */
+#group-info-center:hover {
+    background: rgba(26, 27, 38, 0.6);
+    border-color: rgba(122, 162, 247, 0.3);
+}
+
 #clock:hover,
-#custom-notification:hover {
+#custom-notification:hover,
+#custom-weather:hover {
     background: rgba(26, 27, 38, 0.95);
-    border-color: rgba(122, 162, 247, 0.4);
+    border-color: rgba(122, 162, 247, 0.5);
 }
 
 /* Efeitos de hover para mini-pílulas do system-status */

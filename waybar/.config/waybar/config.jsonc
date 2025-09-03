@@ -1,12 +1,12 @@
 {
   // -------------------------------------------------------------------------
-  // Configurações Globais - Simétrico com Hyprland
+  // Configurações Globais - Simétrico com Hyprland (margens reduzidas)
   // -------------------------------------------------------------------------
   "layer": "top",
   "position": "top",
   "height": 30,
   "spacing": 4,
-  "margin": "10 10 1 10",
+  "margin": "4 4 1 4",
   "reload_style_on_change": true,
 
   // -------------------------------------------------------------------------

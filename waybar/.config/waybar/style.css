@@ -14,32 +14,36 @@
     padding: 0;
 }
 
-/* Barra principal - fina e discreta */
+/* Barra principal - fina e discreta com bordas arredondadas */
 window#waybar {
     background: #1e1e2e;
     color: #cdd6f4;
-    border-bottom: 1px solid #313244;
+    border-radius: 10px;
+    margin: 4px 8px;
+    border: 1px solid #313244;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* Tooltip global */
+/* Tooltip global - harmonizado com Tokyo Night */
 tooltip {
-    background: rgba(30, 30, 46, 0.95);
-    border: 1px solid #585b70;
-    border-radius: 4px;
-    color: #cdd6f4;
+    background: rgba(26, 27, 38, 0.95);
+    border: 1px solid #414868;
+    border-radius: 8px;
+    color: #c0caf5;
     font-size: 11px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 tooltip label {
-    color: #cdd6f4;
-    padding: 2px 6px;
+    color: #c0caf5;
+    padding: 4px 8px;
 }
 
 /* =========================================================================
    ESTILO MINIMALISTA - MÓDULOS LIMPOS E FINOS
    ========================================================================= */
 
-/* Módulos principais - estilo limpo */
+/* Módulos principais - estilo limpo com bordas arredondadas */
 #workspaces,
 #window,
 #custom-spotify,
@@ -50,16 +54,18 @@ tooltip label {
 #network,
 #cpu,
 #memory,
+#temperature,
 #language,
 #tray {
     background: transparent;
     margin: 0 2px;
-    padding: 2px 8px;
-    color: #cdd6f4;
-    border-radius: 3px;
+    padding: 3px 10px;
+    color: #c0caf5;
+    border-radius: 6px;
+    transition: all 0.2s ease-in-out;
 }
 
-/* Efeitos de hover sutis */
+/* Efeitos de hover sutis com Tokyo Night */
 #workspaces:hover,
 #window:hover,
 #custom-spotify:hover,
@@ -70,9 +76,11 @@ tooltip label {
 #network:hover,
 #cpu:hover,
 #memory:hover,
+#temperature:hover,
 #language:hover,
 #tray:hover {
-    background: rgba(49, 50, 68, 0.5);
+    background: rgba(65, 72, 104, 0.4);
+    border-radius: 8px;
 }
 
 /* =========================================================================
@@ -86,30 +94,33 @@ tooltip label {
 
 #workspaces button {
     background: transparent;
-    color: #6c7086;
-    border-radius: 2px;
-    margin: 0 1px;
-    padding: 2px 6px;
-    min-width: 18px;
-    font-size: 11px;
-    transition: all 0.2s ease;
+    color: #565f89;
+    border-radius: 6px;
+    margin: 0 2px;
+    padding: 3px 8px;
+    min-width: 20px;
+    font-size: 12px;
+    transition: all 0.3s ease;
 }
 
 #workspaces button:hover {
-    background: rgba(116, 199, 236, 0.2);
-    color: #74c7ec;
+    background: rgba(122, 162, 247, 0.2);
+    color: #7aa2f7;
+    border-radius: 8px;
 }
 
 #workspaces button.active,
 #workspaces button.focused {
-    background: #74c7ec;
-    color: #1e1e2e;
+    background: #7aa2f7;
+    color: #1a1b26;
     font-weight: 500;
+    border-radius: 8px;
 }
 
 #workspaces button.urgent {
-    background: #f38ba8;
-    color: #1e1e2e;
+    background: #f7768e;
+    color: #1a1b26;
+    border-radius: 8px;
 }
 
 /* Hyprland Window - título limpo */

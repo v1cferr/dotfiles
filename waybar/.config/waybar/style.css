@@ -240,10 +240,10 @@ tooltip label {
 
 /* Workspaces - botões individuais como mini-pílulas harmoniosos */
 #workspaces button {
-    background: rgba(26, 27, 38, 0.94);
+    background: rgba(26, 27, 38, 0.86);
     border: 1px solid rgba(65, 72, 104, 0.35);
-    color: #565f89;
     border-radius: 8px;
+    color: #a9b1d6;
     margin: 0 3px;
     padding: 4px 10px;
     min-width: 24px;
@@ -254,10 +254,8 @@ tooltip label {
 }
 
 #workspaces button:hover {
-    background: rgba(122, 162, 247, 0.3);
+    background: rgba(26, 27, 38, 0.92);
     border-color: rgba(122, 162, 247, 0.5);
-    color: #7aa2f7;
-    box-shadow: 0 2px 4px rgba(122, 162, 247, 0.2);
 }
 
 #workspaces button.active,

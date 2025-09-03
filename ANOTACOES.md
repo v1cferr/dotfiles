@@ -25,7 +25,8 @@
 
 ### Stylish
 
-- [ ] Reduzir apenas um pouco a opacidade e blur das mini-pilulas na **Waybar** para ter simetria com o style das próprias janelas no **Hypr**
+- [X] Reduzir apenas um pouco a opacidade e blur das mini-pilulas na **Waybar** para ter simetria com o style das próprias janelas no **Hypr**
+  - {be02e75873a62572fb6dde5199f23efc0649c580}
 
 ### Menos importantes
 
@@ -36,7 +37,8 @@
 
 - [x] Aumentar a duração das notificações (10 segundos para dar tempo de ler)
 - [x] Configurar e documentar o [Hyprsunset](./hypr/.config/hypr/hyprsunset.conf)
-- [X] Aumentar levemente o gap entre as janelas quando estão uma ao lado da outra {deaef8161b723c0b4bc5b314331a17bd8ea3b75c}
+- [X] Aumentar levemente o gap entre as janelas quando estão uma ao lado da outra
+  - {deaef8161b723c0b4bc5b314331a17bd8ea3b75c}
 - - [x] Melhorar essa [Waybar](./waybar/) e deixar do jeito que eu quero
   - [x] Deixar o bg transparent (da propria waybar)
   - [x] Sistema de pílulas com ícones do mechabar

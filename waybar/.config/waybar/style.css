@@ -44,17 +44,17 @@ tooltip label {
     background: rgba(26, 27, 38, 0.4);
     border: 1px solid rgba(65, 72, 104, 0.2);
     border-radius: 12px;
-    padding: 2px;
+    padding: 4px;
     margin: 0 8px 0 0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Mini-pílulas do lado esquerdo - Integradas mas individuais */
+/* Mini-pílulas do lado esquerdo - Gaps simétricos para respiro */
 #workspaces {
     background: rgba(26, 27, 38, 0.9);
     border: 1px solid rgba(65, 72, 104, 0.4);
     border-radius: 8px;
-    margin: 0 1px 0 0;
+    margin: 0 3px 0 0;
     padding: 4px 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
@@ -63,7 +63,7 @@ tooltip label {
     background: rgba(26, 27, 38, 0.9);
     border: 1px solid rgba(65, 72, 104, 0.4);
     border-radius: 8px;
-    margin: 0 1px;
+    margin: 0 3px;
     padding: 4px 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
@@ -72,7 +72,7 @@ tooltip label {
     background: rgba(26, 27, 38, 0.9);
     border: 1px solid rgba(65, 72, 104, 0.4);
     border-radius: 8px;
-    margin: 0 0 0 1px;
+    margin: 0 0 0 3px;
     padding: 4px 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
@@ -82,17 +82,17 @@ tooltip label {
     background: rgba(26, 27, 38, 0.4);
     border: 1px solid rgba(65, 72, 104, 0.2);
     border-radius: 12px;
-    padding: 2px;
+    padding: 4px;
     margin: 0 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Mini-pílulas do centro - Integradas mas individuais */
+/* Mini-pílulas do centro - Gaps simétricos para respiro */
 #custom-weather {
     background: rgba(26, 27, 38, 0.9);
     border: 1px solid rgba(65, 72, 104, 0.4);
     border-radius: 8px;
-    margin: 0 1px 0 0;
+    margin: 0 3px 0 0;
     padding: 4px 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
@@ -101,7 +101,7 @@ tooltip label {
     background: rgba(26, 27, 38, 0.9);
     border: 1px solid rgba(65, 72, 104, 0.4);
     border-radius: 8px;
-    margin: 0 1px;
+    margin: 0 3px;
     padding: 4px 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
@@ -110,7 +110,7 @@ tooltip label {
     background: rgba(26, 27, 38, 0.9);
     border: 1px solid rgba(65, 72, 104, 0.4);
     border-radius: 8px;
-    margin: 0 0 0 1px;
+    margin: 0 0 0 3px;
     padding: 4px 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
@@ -120,17 +120,17 @@ tooltip label {
     background: rgba(26, 27, 38, 0.4);
     border: 1px solid rgba(65, 72, 104, 0.2);
     border-radius: 12px;
-    padding: 2px;
+    padding: 4px;
     margin: 0 0 0 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Mini-pílulas do lado direito - Sistema e Tray integrados */
+/* Mini-pílulas do lado direito - Gaps simétricos para respiro */
 #cpu {
     background: rgba(26, 27, 38, 0.9);
     border: 1px solid rgba(65, 72, 104, 0.4);
     border-radius: 8px;
-    margin: 0 1px 0 0;
+    margin: 0 3px 0 0;
     padding: 4px 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
@@ -139,7 +139,7 @@ tooltip label {
     background: rgba(26, 27, 38, 0.9);
     border: 1px solid rgba(65, 72, 104, 0.4);
     border-radius: 8px;
-    margin: 0 1px;
+    margin: 0 3px;
     padding: 4px 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
@@ -148,7 +148,7 @@ tooltip label {
     background: rgba(26, 27, 38, 0.9);
     border: 1px solid rgba(65, 72, 104, 0.4);
     border-radius: 8px;
-    margin: 0 1px;
+    margin: 0 3px;
     padding: 4px 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
@@ -157,7 +157,7 @@ tooltip label {
     background: rgba(26, 27, 38, 0.9);
     border: 1px solid rgba(65, 72, 104, 0.4);
     border-radius: 8px;
-    margin: 0 1px;
+    margin: 0 3px;
     padding: 4px 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
@@ -166,7 +166,7 @@ tooltip label {
     background: rgba(26, 27, 38, 0.9);
     border: 1px solid rgba(65, 72, 104, 0.4);
     border-radius: 8px;
-    margin: 0 1px;
+    margin: 0 3px;
     padding: 4px 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
@@ -175,7 +175,7 @@ tooltip label {
     background: rgba(26, 27, 38, 0.9);
     border: 1px solid rgba(65, 72, 104, 0.4);
     border-radius: 8px;
-    margin: 0 0 0 1px;
+    margin: 0 0 0 3px;
     padding: 4px 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }

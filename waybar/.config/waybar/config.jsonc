@@ -56,7 +56,7 @@
 
   "hyprland/window": {
     "format": "{}",
-    "max-length": 50,
+    "max-length": 35,
     "separate-outputs": true,
     "rewrite": {
       "(.*) — Mozilla Firefox": "󰈹 $1",
@@ -71,7 +71,7 @@
 
   "custom/spotify": {
     "format": "󰝚 {}",
-    "max-length": 40,
+    "max-length": 30,
     "exec": "$HOME/.config/waybar/scripts/spotify.sh 2>/dev/null",
     "exec-if": "pgrep spotify",
     "return-type": "json",

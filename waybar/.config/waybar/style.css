@@ -39,13 +39,13 @@ tooltip label {
    SISTEMA DE "PÍLULAS" - GRUPOS VISUAIS
    ========================================================================= */
 
-/* Container do grupo esquerdo - Background unificador sutil */
+/* Container do grupo esquerdo - Background unificador sutil com margem de segurança */
 #group-workspaces-window-spotify {
     background: rgba(26, 27, 38, 0.4);
     border: 1px solid rgba(65, 72, 104, 0.2);
     border-radius: 12px;
     padding: 4px;
-    margin: 0 8px 0 0;
+    margin: 0 20px 0 0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
@@ -289,10 +289,15 @@ tooltip label {
     border-radius: 8px;
 }
 
-/* Hyprland Window - título limpo */
+/* Hyprland Window - título limpo com limitação de texto */
 #window {
     color: #89dceb;
     font-style: italic;
+    font-size: 11px;
+}
+
+/* Spotify - controle básico */
+#custom-spotify {
     font-size: 11px;
 }
 

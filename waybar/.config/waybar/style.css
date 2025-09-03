@@ -14,14 +14,10 @@
     padding: 0;
 }
 
-/* Barra principal - fina e discreta com bordas arredondadas */
+/* Barra principal - transparente com bordas arredondadas */
 window#waybar {
-    background: #1e1e2e;
+    background: transparent;
     color: #cdd6f4;
-    border-radius: 10px;
-    margin: 4px 8px;
-    border: 1px solid #313244;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Tooltip global - harmonizado com Tokyo Night */
@@ -40,47 +36,173 @@ tooltip label {
 }
 
 /* =========================================================================
-   ESTILO MINIMALISTA - MÓDULOS LIMPOS E FINOS
+   SISTEMA DE "PÍLULAS" - GRUPOS VISUAIS
    ========================================================================= */
 
-/* Módulos principais - estilo limpo com bordas arredondadas */
+/* Pílula 1: Workspaces + Window */
+#workspaces {
+    background: rgba(26, 27, 38, 0.8);
+    border: 1px solid rgba(65, 72, 104, 0.3);
+    border-radius: 10px 0 0 10px;
+    margin: 0;
+    padding: 4px 8px 4px 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#window {
+    background: rgba(26, 27, 38, 0.8);
+    border: 1px solid rgba(65, 72, 104, 0.3);
+    border-left: none;
+    border-radius: 0 10px 10px 0;
+    margin: 0;
+    padding: 4px 12px 4px 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Pílula 2: Spotify */
+#custom-spotify {
+    background: rgba(26, 27, 38, 0.8);
+    border: 1px solid rgba(65, 72, 104, 0.3);
+    border-radius: 10px;
+    margin: 0 8px;
+    padding: 4px 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Pílula 3: Centro - Weather + Clock + Notification */
+#custom-weather {
+    background: rgba(26, 27, 38, 0.8);
+    border: 1px solid rgba(65, 72, 104, 0.3);
+    border-radius: 10px 0 0 10px;
+    margin: 0;
+    padding: 4px 8px 4px 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#clock {
+    background: rgba(26, 27, 38, 0.8);
+    border: 1px solid rgba(65, 72, 104, 0.3);
+    border-left: none;
+    border-right: none;
+    margin: 0;
+    padding: 4px 8px;
+}
+
+#custom-notification {
+    background: rgba(26, 27, 38, 0.8);
+    border: 1px solid rgba(65, 72, 104, 0.3);
+    border-left: none;
+    border-radius: 0 10px 10px 0;
+    margin: 0;
+    padding: 4px 12px 4px 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Pílula 4: System Status - Mini-pílulas individuais com gaps */
+#cpu {
+    background: rgba(26, 27, 38, 0.8);
+    border: 1px solid rgba(65, 72, 104, 0.3);
+    border-radius: 10px;
+    margin: 0 3px 0 0;
+    padding: 4px 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#memory {
+    background: rgba(26, 27, 38, 0.8);
+    border: 1px solid rgba(65, 72, 104, 0.3);
+    border-radius: 10px;
+    margin: 0 3px;
+    padding: 4px 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#temperature {
+    background: rgba(26, 27, 38, 0.8);
+    border: 1px solid rgba(65, 72, 104, 0.3);
+    border-radius: 10px;
+    margin: 0 3px;
+    padding: 4px 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#network {
+    background: rgba(26, 27, 38, 0.8);
+    border: 1px solid rgba(65, 72, 104, 0.3);
+    border-radius: 10px;
+    margin: 0 3px;
+    padding: 4px 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#pulseaudio {
+    background: rgba(26, 27, 38, 0.8);
+    border: 1px solid rgba(65, 72, 104, 0.3);
+    border-radius: 10px;
+    margin: 0 0 0 3px;
+    padding: 4px 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Pílula 5: Tray */
+#tray {
+    background: rgba(26, 27, 38, 0.8);
+    border: 1px solid rgba(65, 72, 104, 0.3);
+    border-radius: 10px;
+    margin: 0 8px;
+    padding: 4px 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Cor de texto consistente para todos os módulos */
 #workspaces,
 #window,
 #custom-spotify,
 #custom-weather,
 #clock,
 #custom-notification,
-#pulseaudio,
-#network,
 #cpu,
 #memory,
 #temperature,
-#language,
+#network,
+#pulseaudio,
 #tray {
-    background: transparent;
-    margin: 0 2px;
-    padding: 3px 10px;
     color: #c0caf5;
-    border-radius: 6px;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.3s ease-in-out;
 }
 
-/* Efeitos de hover sutis com Tokyo Night */
+/* =========================================================================
+   ESTILO MINIMALISTA - MÓDULOS LIMPOS E FINOS
+   ========================================================================= */
+
+/* Efeitos de hover para as pílulas */
 #workspaces:hover,
-#window:hover,
 #custom-spotify:hover,
 #custom-weather:hover,
+#tray:hover {
+    background: rgba(26, 27, 38, 0.95);
+    border-color: rgba(122, 162, 247, 0.4);
+}
+
+#window:hover {
+    background: rgba(26, 27, 38, 0.95);
+    border-color: rgba(122, 162, 247, 0.4);
+}
+
 #clock:hover,
-#custom-notification:hover,
-#pulseaudio:hover,
-#network:hover,
+#custom-notification:hover {
+    background: rgba(26, 27, 38, 0.95);
+    border-color: rgba(122, 162, 247, 0.4);
+}
+
+/* Efeitos de hover para mini-pílulas do system-status */
 #cpu:hover,
 #memory:hover,
-#temperature:hover,
-#language:hover,
-#tray:hover {
-    background: rgba(65, 72, 104, 0.4);
-    border-radius: 8px;
+#temperature:hover, 
+#network:hover,
+#pulseaudio:hover {
+    background: rgba(26, 27, 38, 0.95);
+    border-color: rgba(122, 162, 247, 0.4);
 }
 
 /* =========================================================================

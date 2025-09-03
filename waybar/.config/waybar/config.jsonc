@@ -4,31 +4,24 @@
   // -------------------------------------------------------------------------
   "layer": "top",
   "position": "top",
-  "height": 22,
-  "spacing": 1,
-  "margin": "4 8 0 8",
+  "height": 30,
+  "spacing": 4,
+  "margin": "4 8 10 8",
   "reload_style_on_change": true,
 
   // -------------------------------------------------------------------------
-  // Organização dos Módulos
+  // Organização dos Módulos em "Pílulas"
   // -------------------------------------------------------------------------
   "modules-left": [
-    "hyprland/workspaces",
-    "hyprland/window",
-    "custom/spotify"
+    "group/workspaces-window",
+    "group/spotify"
   ],
   "modules-center": [
-    "custom/weather",
-    "clock",
-    "custom/notification"
+    "group/info-center"
   ],
   "modules-right": [
-    "cpu",
-    "memory",
-    "temperature",
-    "network",
-    "pulseaudio",
-    "tray"
+    "group/system-status",
+    "group/tray-group"
   ],
 
   // -------------------------------------------------------------------------
@@ -240,5 +233,56 @@
     "tooltip": true,
     "tooltip-format": "Temperatura: {temperatureC}°C / {temperatureF}°F",
     "interval": 5
+  },
+
+  // -------------------------------------------------------------------------
+  // GRUPOS DE MÓDULOS - SISTEMA DE "PÍLULAS"
+  // -------------------------------------------------------------------------
+  
+  // Pílula 1: Workspaces + Window juntos
+  "group/workspaces-window": {
+    "orientation": "horizontal",
+    "modules": [
+      "hyprland/workspaces",
+      "hyprland/window"
+    ]
+  },
+
+  // Pílula 2: Spotify isolado
+  "group/spotify": {
+    "orientation": "horizontal", 
+    "modules": [
+      "custom/spotify"
+    ]
+  },
+
+  // Pílula 3: Informações centrais
+  "group/info-center": {
+    "orientation": "horizontal",
+    "modules": [
+      "custom/weather",
+      "clock", 
+      "custom/notification"
+    ]
+  },
+
+  // Pílula 4: Status do sistema com pequenos gaps internos
+  "group/system-status": {
+    "orientation": "horizontal",
+    "modules": [
+      "cpu",
+      "memory", 
+      "temperature",
+      "network",
+      "pulseaudio"
+    ]
+  },
+
+  // Pílula 5: Tray agrupado
+  "group/tray-group": {
+    "orientation": "horizontal",
+    "modules": [
+      "tray"
+    ]
   }
 }

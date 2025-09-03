@@ -288,7 +288,13 @@ tooltip label {
 
 /* Estados especiais para diferentes tipos de janelas */
 window#waybar.empty #window {
-    color: #6c7086;
+    color: transparent;
+    background: transparent;
+    border: none;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+    box-shadow: none;
 }
 
 window#waybar.solo #window {

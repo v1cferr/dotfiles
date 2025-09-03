@@ -55,9 +55,11 @@
   },
 
   "hyprland/window": {
-    "format": "{}",
+    "format": "{title}",
+    "format-empty": "",
     "max-length": 35,
     "separate-outputs": true,
+    "all-outputs": true,
     "rewrite": {
       "(.*) — Mozilla Firefox": "󰈹 $1",
       "(.*) - fish": "󰆍 [$1]",

@@ -49,16 +49,6 @@ tooltip label {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Mini-pílulas do lado esquerdo - Gaps simétricos para respiro */
-#workspaces {
-    background: rgba(26, 27, 38, 0.86);
-    border: 1px solid rgba(65, 72, 104, 0.35);
-    border-radius: 8px;
-    margin: 0 3px 0 0;
-    padding: 4px 10px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
 #window {
     background: rgba(26, 27, 38, 0.86);
     border: 1px solid rgba(65, 72, 104, 0.35);
@@ -201,15 +191,10 @@ tooltip label {
    ESTILO MINIMALISTA - MÓDULOS LIMPOS E FINOS
    ========================================================================= */
 
-/* Efeitos de hover para as pílulas */
-#workspaces:hover {
-    background: rgba(26, 27, 38, 0.92);
-    border-color: rgba(122, 162, 247, 0.5);
-}
-
+/* Efeitos de hover para as pílulas - workspaces individuais apenas */
 #window:hover,
 #custom-spotify:hover {
-    background: rgba(26, 27, 38, 0.92);
+    background: rgba(26, 27, 38, 0.98);
     border-color: rgba(122, 162, 247, 0.5);
 }
 
@@ -253,40 +238,42 @@ tooltip label {
    CANTO ESQUERDO - WORKSPACES E SPOTIFY
    ========================================================================= */
 
-/* Workspaces - minimalista */
-#workspaces {
-    padding: 0 4px;
-}
-
+/* Workspaces - botões individuais como mini-pílulas harmoniosos */
 #workspaces button {
-    background: transparent;
+    background: rgba(26, 27, 38, 0.94);
+    border: 1px solid rgba(65, 72, 104, 0.35);
     color: #565f89;
-    border-radius: 6px;
-    margin: 0 2px;
-    padding: 3px 8px;
-    min-width: 20px;
-    font-size: 12px;
+    border-radius: 8px;
+    margin: 0 3px;
+    padding: 4px 10px;
+    min-width: 24px;
+    font-size: 13px;
+    font-weight: 500;
     transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 #workspaces button:hover {
-    background: rgba(122, 162, 247, 0.2);
+    background: rgba(122, 162, 247, 0.3);
+    border-color: rgba(122, 162, 247, 0.5);
     color: #7aa2f7;
-    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(122, 162, 247, 0.2);
 }
 
 #workspaces button.active,
 #workspaces button.focused {
-    background: #7aa2f7;
+    background: rgba(122, 162, 247, 0.85);
+    border-color: rgba(122, 162, 247, 0.9);
     color: #1a1b26;
-    font-weight: 500;
-    border-radius: 8px;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(122, 162, 247, 0.3);
 }
 
 #workspaces button.urgent {
-    background: #f7768e;
+    background: rgba(247, 118, 142, 0.85);
+    border-color: rgba(247, 118, 142, 0.9);
     color: #1a1b26;
-    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(247, 118, 142, 0.3);
 }
 
 /* Hyprland Window - título limpo com limitação de texto */

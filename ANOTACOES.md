@@ -23,6 +23,7 @@
 - [ ] Adicionar uma verificação e sumir o `hyprland/window` quando não tiver nenhuma aplicação rodando em algum workspace (para não poluir a Waybar)
 - [ ] Personalizar meu **fastfetch** e colocar o simbolo da Alliance (WoW) invés da logo do Arch
   - <https://chatgpt.com/share/68b853fd-14e8-800e-ac3a-ac8b9fa01a24>
+- [ ] Adicionar o dia da semana (*e.g.: Seg 03/09/2025*) na topbar central
 
 ### Stylish
 
@@ -40,7 +41,7 @@
 - [x] Configurar e documentar o [Hyprsunset](./hypr/.config/hypr/hyprsunset.conf)
 - [X] Aumentar levemente o gap entre as janelas quando estão uma ao lado da outra
   - {deaef8161b723c0b4bc5b314331a17bd8ea3b75c}
-- - [x] Melhorar essa [Waybar](./waybar/) e deixar do jeito que eu quero
+- [x] Melhorar essa [Waybar](./waybar/) e deixar do jeito que eu quero
   - [x] Deixar o bg transparent (da propria waybar)
   - [x] Sistema de pílulas com ícones do mechabar
   - Inspirações:

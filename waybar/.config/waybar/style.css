@@ -41,8 +41,8 @@ tooltip label {
 
 /* Container do grupo esquerdo - Background unificador sutil com margem de segurança */
 #group-workspaces-window-spotify {
-    background: rgba(26, 27, 38, 0.4);
-    border: 1px solid rgba(65, 72, 104, 0.2);
+    background: rgba(26, 27, 38, 0.35);
+    border: 1px solid rgba(65, 72, 104, 0.18);
     border-radius: 12px;
     padding: 4px;
     margin: 0 20px 0 0;
@@ -51,8 +51,8 @@ tooltip label {
 
 /* Mini-pílulas do lado esquerdo - Gaps simétricos para respiro */
 #workspaces {
-    background: rgba(26, 27, 38, 0.9);
-    border: 1px solid rgba(65, 72, 104, 0.4);
+    background: rgba(26, 27, 38, 0.86);
+    border: 1px solid rgba(65, 72, 104, 0.35);
     border-radius: 8px;
     margin: 0 3px 0 0;
     padding: 4px 10px;
@@ -60,8 +60,8 @@ tooltip label {
 }
 
 #window {
-    background: rgba(26, 27, 38, 0.9);
-    border: 1px solid rgba(65, 72, 104, 0.4);
+    background: rgba(26, 27, 38, 0.86);
+    border: 1px solid rgba(65, 72, 104, 0.35);
     border-radius: 8px;
     margin: 0 3px;
     padding: 4px 10px;
@@ -69,8 +69,8 @@ tooltip label {
 }
 
 #custom-spotify {
-    background: rgba(26, 27, 38, 0.9);
-    border: 1px solid rgba(65, 72, 104, 0.4);
+    background: rgba(26, 27, 38, 0.86);
+    border: 1px solid rgba(65, 72, 104, 0.35);
     border-radius: 8px;
     margin: 0 0 0 3px;
     padding: 4px 10px;
@@ -79,8 +79,8 @@ tooltip label {
 
 /* Container do grupo central - Background unificador sutil */
 #group-info-center {
-    background: rgba(26, 27, 38, 0.4);
-    border: 1px solid rgba(65, 72, 104, 0.2);
+    background: rgba(26, 27, 38, 0.35);
+    border: 1px solid rgba(65, 72, 104, 0.18);
     border-radius: 12px;
     padding: 4px;
     margin: 0 8px;
@@ -89,8 +89,8 @@ tooltip label {
 
 /* Mini-pílulas do centro - Gaps simétricos para respiro */
 #custom-weather {
-    background: rgba(26, 27, 38, 0.9);
-    border: 1px solid rgba(65, 72, 104, 0.4);
+    background: rgba(26, 27, 38, 0.86);
+    border: 1px solid rgba(65, 72, 104, 0.35);
     border-radius: 8px;
     margin: 0 3px 0 0;
     padding: 4px 10px;
@@ -98,8 +98,8 @@ tooltip label {
 }
 
 #clock {
-    background: rgba(26, 27, 38, 0.9);
-    border: 1px solid rgba(65, 72, 104, 0.4);
+    background: rgba(26, 27, 38, 0.86);
+    border: 1px solid rgba(65, 72, 104, 0.35);
     border-radius: 8px;
     margin: 0 3px;
     padding: 4px 10px;
@@ -107,8 +107,8 @@ tooltip label {
 }
 
 #custom-notification {
-    background: rgba(26, 27, 38, 0.9);
-    border: 1px solid rgba(65, 72, 104, 0.4);
+    background: rgba(26, 27, 38, 0.86);
+    border: 1px solid rgba(65, 72, 104, 0.35);
     border-radius: 8px;
     margin: 0 0 0 3px;
     padding: 4px 10px;
@@ -117,8 +117,8 @@ tooltip label {
 
 /* Container do grupo direito - Background unificador sutil */
 #group-system-tray {
-    background: rgba(26, 27, 38, 0.4);
-    border: 1px solid rgba(65, 72, 104, 0.2);
+    background: rgba(26, 27, 38, 0.35);
+    border: 1px solid rgba(65, 72, 104, 0.18);
     border-radius: 12px;
     padding: 4px;
     margin: 0 0 0 8px;
@@ -127,8 +127,8 @@ tooltip label {
 
 /* Mini-pílulas do lado direito - Gaps simétricos para respiro */
 #cpu {
-    background: rgba(26, 27, 38, 0.9);
-    border: 1px solid rgba(65, 72, 104, 0.4);
+    background: rgba(26, 27, 38, 0.86);
+    border: 1px solid rgba(65, 72, 104, 0.35);
     border-radius: 8px;
     margin: 0 3px 0 0;
     padding: 4px 10px;
@@ -136,8 +136,8 @@ tooltip label {
 }
 
 #memory {
-    background: rgba(26, 27, 38, 0.9);
-    border: 1px solid rgba(65, 72, 104, 0.4);
+    background: rgba(26, 27, 38, 0.86);
+    border: 1px solid rgba(65, 72, 104, 0.35);
     border-radius: 8px;
     margin: 0 3px;
     padding: 4px 10px;
@@ -145,8 +145,8 @@ tooltip label {
 }
 
 #temperature {
-    background: rgba(26, 27, 38, 0.9);
-    border: 1px solid rgba(65, 72, 104, 0.4);
+    background: rgba(26, 27, 38, 0.86);
+    border: 1px solid rgba(65, 72, 104, 0.35);
     border-radius: 8px;
     margin: 0 3px;
     padding: 4px 10px;
@@ -154,8 +154,8 @@ tooltip label {
 }
 
 #network {
-    background: rgba(26, 27, 38, 0.9);
-    border: 1px solid rgba(65, 72, 104, 0.4);
+    background: rgba(26, 27, 38, 0.86);
+    border: 1px solid rgba(65, 72, 104, 0.35);
     border-radius: 8px;
     margin: 0 3px;
     padding: 4px 10px;
@@ -163,8 +163,8 @@ tooltip label {
 }
 
 #pulseaudio {
-    background: rgba(26, 27, 38, 0.9);
-    border: 1px solid rgba(65, 72, 104, 0.4);
+    background: rgba(26, 27, 38, 0.86);
+    border: 1px solid rgba(65, 72, 104, 0.35);
     border-radius: 8px;
     margin: 0 3px;
     padding: 4px 10px;
@@ -172,8 +172,8 @@ tooltip label {
 }
 
 #tray {
-    background: rgba(26, 27, 38, 0.9);
-    border: 1px solid rgba(65, 72, 104, 0.4);
+    background: rgba(26, 27, 38, 0.86);
+    border: 1px solid rgba(65, 72, 104, 0.35);
     border-radius: 8px;
     margin: 0 0 0 3px;
     padding: 4px 10px;
@@ -203,38 +203,38 @@ tooltip label {
 
 /* Efeitos de hover para as pílulas */
 #workspaces:hover {
-    background: rgba(26, 27, 38, 0.95);
+    background: rgba(26, 27, 38, 0.92);
     border-color: rgba(122, 162, 247, 0.5);
 }
 
 #window:hover,
 #custom-spotify:hover {
-    background: rgba(26, 27, 38, 0.95);
+    background: rgba(26, 27, 38, 0.92);
     border-color: rgba(122, 162, 247, 0.5);
 }
 
 /* Efeitos de hover para o grupo direito integrado */
 #group-system-tray:hover {
-    background: rgba(26, 27, 38, 0.6);
+    background: rgba(26, 27, 38, 0.5);
     border-color: rgba(122, 162, 247, 0.3);
 }
 
 /* Efeitos de hover para o grupo esquerdo integrado */
 #group-workspaces-window-spotify:hover {
-    background: rgba(26, 27, 38, 0.6);
+    background: rgba(26, 27, 38, 0.5);
     border-color: rgba(122, 162, 247, 0.3);
 }
 
 /* Efeitos de hover para o grupo central integrado */
 #group-info-center:hover {
-    background: rgba(26, 27, 38, 0.6);
+    background: rgba(26, 27, 38, 0.5);
     border-color: rgba(122, 162, 247, 0.3);
 }
 
 #clock:hover,
 #custom-notification:hover,
 #custom-weather:hover {
-    background: rgba(26, 27, 38, 0.95);
+    background: rgba(26, 27, 38, 0.92);
     border-color: rgba(122, 162, 247, 0.5);
 }
 
@@ -245,7 +245,7 @@ tooltip label {
 #network:hover,
 #pulseaudio:hover,
 #tray:hover {
-    background: rgba(26, 27, 38, 0.95);
+    background: rgba(26, 27, 38, 0.92);
     border-color: rgba(122, 162, 247, 0.5);
 }
 

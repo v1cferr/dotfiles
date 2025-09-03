@@ -28,6 +28,10 @@
 - [ ] Adicionar uma verificação e sumir o `hyprland/window` quando não tiver nenhuma aplicação rodando em algum workspace (para não poluir a Waybar)
 - [ ] Personalizar meu **fastfetch** e colocar o simbolo da Alliance (WoW) invés da logo do Arch
 
+### Stylish
+
+- [ ] Reduzir apenas um pouco a opacidade e blur das mini-pilulas na **Waybar** para ter simetria com o style das próprias janelas no **Hypr**
+
 ### Nem tão importantes
 
 - [ ] Verificar pq o cursor está bugado graficamente (fica cinza escuro sem textura) ao rodar o Hearthstone pelo `bottles-cli run -b "Battle.net" -p "Battle.net"`

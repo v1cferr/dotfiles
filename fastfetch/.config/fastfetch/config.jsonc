@@ -8,8 +8,8 @@
     "width": 25,
     "height": 20,
     "padding": {
-      "top": 2,
-      "left": 2
+      "top": 0,
+      "left": 0
     }
   },
 
@@ -29,27 +29,27 @@
     },
     {
       "type": "host",
-      "key": " PC",
+      "key": "PC",
       "keyColor": "blue"
     },
     {
       "type": "cpu", 
-      "key": "│ ├ ",
+      "key": "│ ├ CPU",
       "keyColor": "blue"
     },
     {
       "type": "gpu",
-      "key": "│ ├󰍛 ",
+      "key": "│ ├ GPU",
       "keyColor": "blue"
     },
     {
       "type": "memory",
-      "key": "│ ├ ",
+      "key": "│ ├ RAM",
       "keyColor": "blue"
     },
     {
       "type": "disk",
-      "key": "└ └ ",
+      "key": "└ └ Disk",
       "keyColor": "blue"
     },
     {
@@ -63,27 +63,27 @@
     },
     {
       "type": "os",
-      "key": " OS",
+      "key": "OS",
       "keyColor": "yellow"
     },
     {
       "type": "kernel",
-      "key": "│ ├ ",
+      "key": "│ ├ Kernel",
       "keyColor": "yellow"
     },
     {
       "type": "packages",
-      "key": "│ ├󰏖 ",
+      "key": "│ ├ Packages",
       "keyColor": "yellow"
     },
     {
       "type": "shell",
-      "key": "│ ├ ",
+      "key": "│ ├ Shell",
       "keyColor": "yellow"
     },
     {
       "type": "wm",
-      "key": "└ └ ",
+      "key": "└ └ WM",
       "keyColor": "yellow"
     },
     {
@@ -97,7 +97,7 @@
     },
     {
       "type": "uptime",
-      "key": " Uptime",
+      "key": "Uptime",
       "keyColor": "magenta"
     },
     {

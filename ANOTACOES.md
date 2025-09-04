@@ -32,11 +32,10 @@
 
 ### Menos importantes
 
-- [ ] Verificar pq o cursor está bugado graficamente (fica cinza escuro sem textura) ao rodar o Hearthstone pelo `bottles-cli run -b "Battle.net" -p "Battle.net"`
-  - <https://gemini.google.com/u/1/app/87ce7cfc9b526b61>
-
 ## Concluidos
 
+- [x] Verificar pq o cursor está bugado graficamente (fica cinza escuro sem textura) ao rodar o Hearthstone pelo `bottles-cli run -b "Battle.net" -p "Battle.net"`
+  - Adicionado `xwayland { force_zero_scaling = true }` no hyprland.conf
 - [x] Aumentar a duração das notificações (10 segundos para dar tempo de ler)
 - [x] Configurar e documentar o [Hyprsunset](./hypr/.config/hypr/hyprsunset.conf)
 - [X] Aumentar levemente o gap entre as janelas quando estão uma ao lado da outra

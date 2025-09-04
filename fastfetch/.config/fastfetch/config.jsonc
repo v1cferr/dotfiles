@@ -1,0 +1,34 @@
+{
+  // Fastfetch config by Victor (@v1cferr)
+  // Alliance Theme - Courage & Resilience
+
+  "logo": {
+    "source": "~/.config/fastfetch/alliance.txt",
+    "color": {
+      "1": "blue"
+    }
+  },
+
+  "display": {
+    "separator": "  ",
+    "color": {
+      "keys": "yellow",
+      "output": "blue"
+    }
+  },
+
+  "modules": [
+    "os",
+    "kernel",
+    "uptime",
+    "packages",
+    "shell",
+    "wm",
+    "de",
+    "display",
+    "cpu",
+    "gpu",
+    "memory",
+    "disk"
+  ]
+}

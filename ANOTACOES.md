@@ -21,8 +21,6 @@
 - [ ] Adicionar algum Clipboard Manager <https://wiki.hypr.land/Useful-Utilities/Clipboard-Managers/>
 - [ ] Verificar pq o cursor tá bugando na hora que o **Hyprsunset** ativa (fica com uma coloração mais destacada que o resto da tela)
 - [ ] Adicionar uma verificação e sumir o `hyprland/window` quando não tiver nenhuma aplicação rodando em algum workspace (para não poluir a Waybar)
-- [ ] Personalizar meu **fastfetch** e colocar o simbolo da Alliance (WoW) invés da logo do Arch
-  - <https://chatgpt.com/share/68b853fd-14e8-800e-ac3a-ac8b9fa01a24>
 - [ ] Adicionar o dia da semana (*e.g.: Seg 03/09/2025*) na topbar central
 
 ### Stylish
@@ -45,3 +43,4 @@
   - [x] Sistema de pílulas com ícones do mechabar
   - Inspirações:
     - <https://github.com/sejjy/mechabar>
+- [x] Personalizar meu **fastfetch** e colocar o simbolo da Alliance (WoW) invés da logo do Arch

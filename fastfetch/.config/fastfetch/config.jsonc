@@ -23,8 +23,8 @@
       "title": "bright_cyan"
     },
     "key": {
-      "width": 22,
-      "type": "icon"
+      "width": 30,
+      "type": "both"
     },
     "bar": {
       "width": 15,
@@ -49,28 +49,28 @@
     // ═══════════════════ HARDWARE SECTION ═══════════════════
     {
       "type": "custom",
-      "format": "\u001b[38;5;39m╭─ \u001b[1;37mHardware Information\u001b[0m \u001b[38;5;39m────────────────────────────────────────────────╮"
+      "format": "\u001b[1;96m󰍛 Hardware Information\u001b[0m"
     },
     {
       "type": "host",
-      "key": "│ ├─ \u001b[38;5;33m󰌢 Motherboard\u001b[0m",
+      "key": "├─ 󰌢 Motherboard",
       "keyColor": "blue"
     },
     {
       "type": "cpu",
-      "key": "│ ├─ \u001b[38;5;33m󰍛 Processor\u001b[0m",
+      "key": "├─ 󰍛 Processor",
       "keyColor": "blue",
       "format": "{name} ({cores-physical}C/{cores-logical}T) @ {freq-max}"
     },
     {
       "type": "gpu",
-      "key": "│ ├─ \u001b[38;5;33m󰾆 Graphics Card\u001b[0m",
+      "key": "├─ 󰾆 Graphics Card",
       "keyColor": "blue",
       "format": "{name} [{vendor}]"
     },
     {
       "type": "memory",
-      "key": "│ ├─ \u001b[38;5;33m󰑭 RAM Memory\u001b[0m",
+      "key": "├─ 󰑭 RAM Memory",
       "keyColor": "blue",
       "format": "{used} / {total} ({percentage})",
       "percent": {
@@ -81,162 +81,150 @@
     },
     {
       "type": "swap",
-      "key": "│ ├─ \u001b[38;5;33m󰓡 Swap Memory\u001b[0m",
+      "key": "├─ 󰓡 Swap Memory",
       "keyColor": "blue",
       "format": "{used} / {total} ({percentage})"
     },
     {
       "type": "command",
-      "key": "│ ├─ \u001b[38;5;33m󰾆 ZRAM Compression\u001b[0m",
+      "key": "├─ 󰾆 ZRAM Compression",
       "keyColor": "blue",
       "text": "if [ -f /proc/swaps ]; then grep zram /proc/swaps | awk '{total+=$3} END {if(total>0) printf \"%.1fGB Active\", total/1024/1024; else print \"Not Active\"}'; else echo \"Not Available\"; fi"
     },
     {
       "type": "disk",
-      "key": "│ ├─ \u001b[38;5;33m󰋊 Storage Drive\u001b[0m",
+      "key": "├─ 󰋊 Storage Drive",
       "keyColor": "blue",
       "folders": "/"
     },
     {
       "type": "command",
-      "key": "│ └─ \u001b[38;5;33m󰈸 CPU Temperature\u001b[0m",
+      "key": "└─ 󰈸 CPU Temperature",
       "keyColor": "blue",
       "text": "sensors 2>/dev/null | grep -E 'Core 0|Tctl|temp1' | head -1 | awk '{print $3}' | sed 's/+//g' || echo 'N/A'"
-    },
-    {
-      "type": "custom",
-      "format": "\u001b[38;5;39m╰────────────────────────────────────────────────────────────────────────╯"
     },
     "break",
 
     // ═══════════════════ SOFTWARE SECTION ═══════════════════
     {
       "type": "custom",
-      "format": "\u001b[38;5;220m╭─ \u001b[1;37mSoftware Environment\u001b[0m \u001b[38;5;220m────────────────────────────────────────────────╮"
+      "format": "\u001b[1;93m󰻀 Software Environment\u001b[0m"
     },
     {
       "type": "os",
-      "key": "│ ├─ \u001b[38;5;214m󰌽 Operating System\u001b[0m",
+      "key": "├─ 󰌽 Operating System",
       "keyColor": "yellow"
     },
     {
       "type": "kernel",
-      "key": "│ ├─ \u001b[38;5;214m󰌽 Kernel Version\u001b[0m",
+      "key": "├─ 󰌽 Kernel Version",
       "keyColor": "yellow"
     },
     {
       "type": "packages",
-      "key": "│ ├─ \u001b[38;5;214m󰏖 Package Count\u001b[0m",
+      "key": "├─ 󰏖 Package Count",
       "keyColor": "yellow"
     },
     {
       "type": "shell",
-      "key": "│ ├─ \u001b[38;5;214m󰞷 Shell Program\u001b[0m",
+      "key": "├─ 󰞷 Shell Program",
       "keyColor": "yellow"
     },
     {
       "type": "terminal",
-      "key": "│ ├─ \u001b[38;5;214m󰆍 Terminal App\u001b[0m",
+      "key": "├─ 󰆍 Terminal App",
       "keyColor": "yellow"
     },
     {
       "type": "de",
-      "key": "│ ├─ \u001b[38;5;214m󰧨 Desktop Environment\u001b[0m",
+      "key": "├─ 󰧨 Desktop Environment",
       "keyColor": "yellow"
     },
     {
       "type": "wm",
-      "key": "│ ├─ \u001b[38;5;214m󱂬 Window Manager\u001b[0m",
+      "key": "├─ 󱂬 Window Manager",
       "keyColor": "yellow"
     },
     {
       "type": "wmtheme",
-      "key": "│ ├─ \u001b[38;5;214m󰉼 Window Theme\u001b[0m",
+      "key": "├─ 󰉼 Window Theme",
       "keyColor": "yellow"
     },
     {
       "type": "icons",
-      "key": "│ ├─ \u001b[38;5;214m󰀻 Icon Pack\u001b[0m",
+      "key": "├─ 󰀻 Icon Pack",
       "keyColor": "yellow"
     },
     {
       "type": "cursor",
-      "key": "│ ├─ \u001b[38;5;214m󰇀 Cursor Theme\u001b[0m",
+      "key": "├─ 󰇀 Cursor Theme",
       "keyColor": "yellow"
     },
     {
       "type": "font",
-      "key": "│ └─ \u001b[38;5;214m󰛖 System Font\u001b[0m",
+      "key": "└─ 󰛖 System Font",
       "keyColor": "yellow"
-    },
-    {
-      "type": "custom",
-      "format": "\u001b[38;5;220m╰────────────────────────────────────────────────────────────────────────╯"
     },
     "break",
 
     // ═══════════════════ SYSTEM STATUS ═══════════════════
     {
       "type": "custom",
-      "format": "\u001b[38;5;207m╭─ \u001b[1;37mSystem Status & Information\u001b[0m \u001b[38;5;207m─────────────────────────────────────────╮"
+      "format": "\u001b[1;95m󰒋 System Status & Information\u001b[0m"
     },
     {
       "type": "uptime",
-      "key": "│ ├─ \u001b[38;5;201m󰅐 System Uptime\u001b[0m",
+      "key": "├─ 󰅐 System Uptime",
       "keyColor": "magenta"
     },
     {
       "type": "datetime",
-      "key": "│ ├─ \u001b[38;5;201m󰃭 Current Date\u001b[0m",
+      "key": "├─ 󰃭 Current Date",
       "keyColor": "magenta",
       "format": "{1}/{2}/{11} {3}:{4}"
     },
     {
       "type": "command",
-      "key": "│ ├─ \u001b[38;5;201m󰧑 Install Age\u001b[0m",
+      "key": "├─ 󰧑 Install Age",
       "keyColor": "magenta",
       "text": "birth_install=$(stat -c %W /); if [ \"$birth_install\" != \"0\" ]; then current=$(date +%s); time_progression=$((current - birth_install)); days_difference=$((time_progression / 86400)); echo \"$days_difference days\"; else echo \"Unknown\"; fi"
     },
     {
       "type": "processes",
-      "key": "│ ├─ \u001b[38;5;201m󰍉 Active Processes\u001b[0m",
+      "key": "├─ 󰍉 Active Processes",
       "keyColor": "magenta"
     },
     {
       "type": "loadavg",
-      "key": "│ ├─ \u001b[38;5;201m󰾆 Load Average\u001b[0m",
+      "key": "├─ 󰾆 Load Average",
       "keyColor": "magenta"
     },
     {
       "type": "command",
-      "key": "│ ├─ \u001b[38;5;201m󰦻 Network Interface\u001b[0m",
+      "key": "├─ 󰦻 Network Interface",
       "keyColor": "magenta", 
       "text": "ip route get 8.8.8.8 2>/dev/null | grep -Po '(?<=dev\\s)\\w+' | head -1 || echo 'Disconnected'"
     },
     {
       "type": "display",
-      "key": "│ ├─ \u001b[38;5;201m󰍹 Display Monitor\u001b[0m",
+      "key": "├─ 󰍹 Display Monitor",
       "keyColor": "magenta",
       "format": "{width}x{height} @ {refresh-rate}Hz ({name})"
     },
     {
       "type": "media",
-      "key": "│ ├─ \u001b[38;5;201m󰎆 Media Playing\u001b[0m",
+      "key": "├─ 󰎆 Media Playing",
       "keyColor": "magenta"
     },
     {
       "type": "locale",
-      "key": "│ ├─ \u001b[38;5;201m󰗊 System Locale\u001b[0m",
+      "key": "├─ 󰗊 System Locale",
       "keyColor": "magenta"
     },
     {
       "type": "users",
-      "key": "│ └─ \u001b[38;5;201m󰀉 Logged Users\u001b[0m",
+      "key": "└─ 󰀉 Logged Users",
       "keyColor": "magenta"
-    },
-    {
-      "type": "custom",
-      "format": "\u001b[38;5;207m╰────────────────────────────────────────────────────────────────────────╯"
     },
     "break",
 

@@ -24,7 +24,7 @@
     },
     "key": {
       "width": 30,
-      "type": "both"
+      "type": "string"
     },
     "bar": {
       "width": 15,
@@ -49,7 +49,7 @@
     // ═══════════════════ HARDWARE SECTION ═══════════════════
     {
       "type": "custom",
-      "format": "\u001b[1;96m󰍛 Hardware Information\u001b[0m"
+      "format": "\u001b[1;96mHardware Information\u001b[0m"
     },
     {
       "type": "host",
@@ -108,7 +108,7 @@
     // ═══════════════════ SOFTWARE SECTION ═══════════════════
     {
       "type": "custom",
-      "format": "\u001b[1;93m󰻀 Software Environment\u001b[0m"
+      "format": "\u001b[1;93mSoftware Environment\u001b[0m"
     },
     {
       "type": "os",
@@ -170,7 +170,7 @@
     // ═══════════════════ SYSTEM STATUS ═══════════════════
     {
       "type": "custom",
-      "format": "\u001b[1;95m󰒋 System Status & Information\u001b[0m"
+      "format": "\u001b[1;95mSystem Status & Information\u001b[0m"
     },
     {
       "type": "uptime",

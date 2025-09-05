@@ -90,7 +90,7 @@
   "custom/weather": {
     "format": "󰖕 {}",
     "tooltip": true,
-    "interval": 300,
+    "interval": 60,
     "exec": "$HOME/.config/waybar/scripts/weather.sh",
     "return-type": "json",
     "on-click": "xdg-open 'https://www.weatherapi.com/weather/q/sao-carlos-2658777'"

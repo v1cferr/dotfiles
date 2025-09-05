@@ -4,7 +4,20 @@
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
 
   "logo": {
-    "source": "none"
+    "type": "file",
+    "source": "~/.config/fastfetch/alliance.txt",
+    "width": 5,
+    "height": 5,
+    "color": {
+      "1": "blue",
+      "2": "cyan", 
+      "3": "bright_blue"
+    },
+    "padding": {
+      "top": 3,
+      "left": 2,
+      "right": 0
+    }
   },
 
   "display": {
@@ -34,7 +47,7 @@
     "break",
     {
       "type": "title",
-      "format": "\u001b[1;96m{user-name-colored}@{host-name-colored}"
+      "format": "\u001b[1;34m{user-name-colored}\u001b[0m\u001b[1;36m@\u001b[0m\u001b[1;94m{host-name-colored}\u001b[0m"
     },
     "separator",
     

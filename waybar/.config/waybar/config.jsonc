@@ -93,7 +93,7 @@
     "interval": 300,
     "exec": "$HOME/.config/waybar/scripts/weather.sh",
     "return-type": "json",
-    "on-click": "xdg-open 'https://wttr.in/São+Carlos'"
+    "on-click": "xdg-open 'https://www.weatherapi.com/weather/q/sao-carlos-2658777'"
   },
 
   "clock": {

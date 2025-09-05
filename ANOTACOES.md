@@ -16,7 +16,6 @@
 
 - [ ] Verificar pq na hora de tirar screenshot a waybar não respeita a área do print (**flameshot**)
   - Issue para consultar: <https://github.com/flameshot-org/flameshot/issues/2978#issuecomment-3205971576>
-- [ ] Trocar <https://wttr.in/S%C3%A3o+Carlos> pela API do Google Weather <https://developers.google.com/maps/documentation/weather>
 - [ ] Adicionar as configurações do VSCode (dotfiles) nesse repositório <https://github.com/v1cferr/dotfiles> (meu perfil é bem especifico)
 - [ ] Adicionar algum Clipboard Manager <https://wiki.hypr.land/Useful-Utilities/Clipboard-Managers/>
 - [ ] Verificar pq o cursor tá bugando na hora que o **Hyprsunset** ativa (fica com uma coloração mais destacada que o resto da tela)
@@ -44,3 +43,4 @@
   - Inspirações:
     - <https://github.com/sejjy/mechabar>
 - [x] Personalizar meu **fastfetch** e colocar o simbolo da Alliance (WoW) invés da logo do Arch
+- [x] Trocar <https://wttr.in/S%C3%A3o+Carlos> pela WeatherAPI.com <https://www.weatherapi.com/>

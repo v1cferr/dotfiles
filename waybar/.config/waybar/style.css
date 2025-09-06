@@ -120,7 +120,7 @@ tooltip label {
     background: rgba(26, 27, 38, 0.86);
     border: 1px solid rgba(65, 72, 104, 0.35);
     border-radius: 8px;
-    margin: 0 3px 0 0;
+    margin: 0 3px;
     padding: 4px 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
@@ -130,6 +130,24 @@ tooltip label {
     border: 1px solid rgba(65, 72, 104, 0.35);
     border-radius: 8px;
     margin: 0 3px;
+    padding: 4px 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+#disk {
+    background: rgba(26, 27, 38, 0.86);
+    border: 1px solid rgba(65, 72, 104, 0.35);
+    border-radius: 8px;
+    margin: 0 3px;
+    padding: 4px 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+#idle_inhibitor {
+    background: rgba(26, 27, 38, 0.86);
+    border: 1px solid rgba(65, 72, 104, 0.35);
+    border-radius: 8px;
+    margin: 0 3px 0 0;
     padding: 4px 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
@@ -177,8 +195,10 @@ tooltip label {
 #custom-weather,
 #clock,
 #custom-notification,
+#idle_inhibitor,
 #cpu,
 #memory,
+#disk,
 #temperature,
 #network,
 #pulseaudio,
@@ -224,8 +244,10 @@ tooltip label {
 }
 
 /* Efeitos de hover para mini-pílulas do grupo direito */
+#idle_inhibitor:hover,
 #cpu:hover,
 #memory:hover,
+#disk:hover,
 #temperature:hover, 
 #network:hover,
 #pulseaudio:hover,
@@ -356,6 +378,19 @@ window#waybar.fullscreen #window {
    CANTO DIREITO - SISTEMA E RECURSOS
    ========================================================================= */
 
+/* Idle Inhibitor */
+#idle_inhibitor {
+    color: #cba6f7;
+}
+
+#idle_inhibitor.activated {
+    color: #fab387;
+}
+
+#idle_inhibitor.deactivated {
+    color: #6c7086;
+}
+
 /* Áudio/Volume */
 #pulseaudio {
     color: #89b4fa;
@@ -401,6 +436,28 @@ window#waybar.fullscreen #window {
 }
 
 #memory.critical {
+    color: #f38ba8;
+}
+
+/* Disco com estados de alerta */
+#disk {
+    color: #94e2d5;
+}
+
+#disk.warning {
+    color: #fab387;
+}
+
+#disk.critical {
+    color: #f38ba8;
+}
+
+/* Temperatura com estados de alerta */
+#temperature {
+    color: #f9e2af;
+}
+
+#temperature.critical {
     color: #f38ba8;
 }
 

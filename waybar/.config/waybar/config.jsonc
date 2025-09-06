@@ -189,9 +189,9 @@
 
   "cpu": {
     "interval": 2,
-    "format": "󰍛 {usage}%",
-    "format-warning": "󰀨 {usage}%",
-    "format-critical": "󰀨 {usage}%",
+    "format": " {usage}%",
+    "format-warning": " {usage}%",
+    "format-critical": " {usage}%",
     "max-length": 10,
     "states": {
       "warning": 70,
@@ -203,9 +203,9 @@
 
   "memory": {
     "interval": 5,
-    "format": "󰘚 {percentage}%",
-    "format-warning": "󰀧 {percentage}%",
-    "format-critical": "󰀧 {percentage}%",
+    "format": " {percentage}%",
+    "format-warning": " {percentage}%",
+    "format-critical": " {percentage}%",
     "max-length": 10,
     "states": {
       "warning": 70,
@@ -235,6 +235,32 @@
     "interval": 5
   },
 
+  "disk": {
+    "interval": 30,
+    "format": "󰋊 {percentage_used}%",
+    "format-warning": "󰋊 {percentage_used}%", 
+    "format-critical": "󰋊 {percentage_used}%",
+    "path": "/",
+    "states": {
+      "warning": 70,
+      "critical": 90
+    },
+    "tooltip": true,
+    "tooltip-format": "Disco: {used} / {total} ({percentage_used}%)\nLivre: {free}\nPonto de montagem: {path}",
+    "unit": "GB"
+  },
+
+  "idle_inhibitor": {
+    "format": "{icon}",
+    "format-icons": {
+      "activated": "󰅶",
+      "deactivated": "󰾪"
+    },
+    "tooltip": true,
+    "tooltip-format-activated": "Idle Inhibitor: Ativado\n(Sistema não entrará em suspensão)",
+    "tooltip-format-deactivated": "Idle Inhibitor: Desativado\n(Sistema pode entrar em suspensão)"
+  },
+
   // -------------------------------------------------------------------------
   // GRUPOS DE MÓDULOS - SISTEMA DE "PÍLULAS"
   // -------------------------------------------------------------------------
@@ -259,12 +285,14 @@
     ]
   },
 
-  // Pílula 3: Sistema e Tray unificados 
+  // Pílula 3: Sistema e Tray para Desktop - Ordem lógica
   "group/system-tray": {
     "orientation": "horizontal",
     "modules": [
+      "idle_inhibitor",
       "cpu",
       "memory", 
+      "disk",
       "temperature",
       "network",
       "pulseaudio",

@@ -23,7 +23,7 @@
 - [ ] Adicionar o dia da semana (*e.g.: Seg 03/09/2025*) na topbar central
 - [ ] Adicionar e configurar meu [swaync](./swaync/) novamente
 - [ ] Programar o próximo [snapshot] pós-dotfiles
-- [ ] Verificar meus [MCPs](./vscode/.config/Code/User/mcp.json) essenciais no VSCode
+- [ ] Verificar meus [MCPs](./vscode/.config/Code/User/mcp.json) essenciais no VSCode <https://code.visualstudio.com/mcp>
 - [ ] Adicionar a fonte da JetBrains com icones hehe no terminal do VSCode e geral
 - [ ] Atualizar meu cursor e selecionar um legal <https://wiki.hypr.land/Hypr-Ecosystem/hyprcursor/>
 - [ ] Verificar se dá para rodar os jogos que quero no [Hydra Launcher](https://aur.archlinux.org/packages/hydra-launcher-bin)

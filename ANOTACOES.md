@@ -21,6 +21,13 @@
 - [ ] Verificar pq o cursor tá bugando na hora que o **Hyprsunset** ativa (fica com uma coloração mais destacada que o resto da tela)
 - [ ] Adicionar uma verificação e sumir o `hyprland/window` quando não tiver nenhuma aplicação rodando em algum workspace (para não poluir a Waybar)
 - [ ] Adicionar o dia da semana (*e.g.: Seg 03/09/2025*) na topbar central
+- [ ] Adicionar e configurar meu [swaync](./swaync/) novamente
+- [ ] Programar o próximo [snapshot] pós-dotfiles
+- [ ] Verificar meus [MCPs](./vscode/.config/Code/User/mcp.json) essenciais no VSCode
+- [ ] Adicionar a fonte da JetBrains com icones hehe no terminal do VSCode e geral
+- [ ] Atualizar meu cursor e selecionar um legal <https://wiki.hypr.land/Hypr-Ecosystem/hyprcursor/>
+- [ ] Verificar se dá para rodar os jogos que quero no [Hydra Launcher](https://aur.archlinux.org/packages/hydra-launcher-bin)
+- [ ] Configurar meu [hyprlock](https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/) (tela de bloqueio) e tempo de idle/suspensão do PC
 
 ### Stylish
 

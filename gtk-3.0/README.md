@@ -16,8 +16,12 @@ Esta pasta contém as configurações do GTK-3 para ativar o modo escuro em apli
 # Aplicar com stow (estando em ~/dotfiles)
 stow gtk-3.0 gtk-4.0
 
-# Testar funcionamento
-thunar
+# Configurar tema globalmente
+gsettings set org.gnome.desktop.interface gtk-theme 'Tokyonight-Dark'
+gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+
+# Reiniciar aplicações GTK para aplicar o tema
+pkill thunar && thunar &
 ```
 
 ## ✅ Persistência Configurada
@@ -25,8 +29,9 @@ thunar
 A configuração é persistente através de:
 
 1. **Arquivos GTK**: `~/.config/gtk-3.0/settings.ini` e `~/.config/gtk-4.0/settings.ini`
-2. **Variável de ambiente no Zsh**: `export GTK_THEME=Tokyonight-Dark` no `.zshrc`
-3. **Variável de ambiente no Hyprland**: `env = GTK_THEME,Tokyonight-Dark` no `environment.conf`
+2. **gsettings**: Tema configurado globalmente via gsettings
+3. **Variável de ambiente no Zsh**: `export GTK_THEME=Tokyonight-Dark` no `.zshrc`
+4. **Variável de ambiente no Hyprland**: `env = GTK_THEME,Tokyonight-Dark` no `environment.conf`
 
 ## 🎨 Tema Completo
 

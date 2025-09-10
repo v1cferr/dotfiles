@@ -20,15 +20,15 @@
 			"url": "https://mcp.deepwiki.com/sse",
 			"type": "http"
 		},
+		"github": {
+			"url": "https://api.githubcopilot.com/mcp/",
+			"type": "http"
+		},
 		"markitdown": {
 			"command": "uvx",
 			"args": [
 				"markitdown-mcp"
-			],
-			"type": "stdio"
-		},
-		"github": {
-			"url": "https://api.githubcopilot.com/mcp/"
+			]
 		}
 	},
 	"inputs": []

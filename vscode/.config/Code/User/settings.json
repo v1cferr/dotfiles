@@ -101,7 +101,7 @@
     },
     "redhat.telemetry.enabled": true,
     "dev.containers.mountWaylandSocket": false,
-    "window.zoomLevel": -1.25,
+    "window.zoomLevel": -1.75,
     "editor.fontFamily": "'JetBrainsMono Nerd Font', 'Fira Code', monospace",
     "editor.fontLigatures": true,
     "terminal.integrated.fontFamily": "'JetBrainsMono Nerd Font Mono', monospace",

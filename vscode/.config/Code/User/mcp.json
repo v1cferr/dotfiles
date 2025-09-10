@@ -24,7 +24,11 @@
 			"command": "uvx",
 			"args": [
 				"markitdown-mcp"
-			]
+			],
+			"type": "stdio"
+		},
+		"github": {
+			"url": "https://api.githubcopilot.com/mcp/"
 		}
 	},
 	"inputs": []

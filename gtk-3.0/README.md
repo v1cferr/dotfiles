@@ -5,7 +5,7 @@ Esta pasta contém as configurações do GTK-3 para ativar o modo escuro em apli
 ## 🌙 Configurações Aplicadas
 
 - `gtk-application-prefer-dark-theme=1` - Força modo escuro
-- `gtk-theme-name=Tokyonight-Dark` - Tema escuro Tokyonight
+- `gtk-theme-name=Tokyonight-Dark` - Tema escuro Tokyonight (Night, Borderless, MacOS buttons)
 - `gtk-icon-theme-name=Win11-dark` - Ícones do Windows 11 (versão escura)
 - `gtk-font-name=JetBrainsMono Nerd Font` - Fonte com ícones integrados
 - `gtk-cursor-theme-name=rose-pine-hyprcursor` - Cursor Rose Pine para Hyprcursor

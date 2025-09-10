@@ -8,7 +8,7 @@ Esta configuração garante que aplicações GTK-4 também usem o tema escuro.
 
 ## 🎨 Configurações Aplicadas
 
-- **Tema**: `Tokyonight-Dark`
+- **Tema**: `Tokyonight-Dark` (Night, Borderless, MacOS buttons)
 - **Preferência Dark**: `gtk-application-prefer-dark-theme=1`
 - **Ícones**: `breeze-dark`
 

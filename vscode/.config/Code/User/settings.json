@@ -127,5 +127,6 @@
     // Configurações para melhor suporte a Nerd Fonts e ícones
     "editor.renderWhitespace": "selection",
     "terminal.integrated.fontWeight": "normal",
-    "editor.fontWeight": "normal"
+    "editor.fontWeight": "normal",
+    "chat.mcp.autostart": "newAndOutdated"
 }

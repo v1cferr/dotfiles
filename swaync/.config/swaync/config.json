@@ -29,7 +29,7 @@
   "transition-time": 100,
   "hide-on-clear": false,
   "hide-on-action": true,
-  "text-empty": "Sem Notificações",
+  "text-empty": "No Notifications",
   "script-fail-notify": true,
   "scripts": {
     "example-script": {
@@ -55,17 +55,17 @@
       "vexpand": true
     },
     "inhibitors": {
-      "text": "Inibidores",
-      "button-text": "Limpar Tudo",
+      "text": "Inhibitors",
+      "button-text": "Clear All",
       "clear-all-button": true
     },
     "title": {
-      "text": "Notificações",
+      "text": "Notifications",
       "clear-all-button": true,
-      "button-text": "Limpar Tudo"
+      "button-text": "Clear All"
     },
     "dnd": {
-      "text": "Não Perturbe"
+      "text": "Do Not Disturb"
     }
   }
 }

@@ -21,7 +21,7 @@
 - [ ] Verificar pq o cursor tá bugando na hora que o **Hyprsunset** ativa (fica com uma coloração mais destacada que o resto da tela)
 - [ ] Adicionar uma verificação e sumir o `hyprland/window` quando não tiver nenhuma aplicação rodando em algum workspace (para não poluir a Waybar)
 - [ ] Adicionar o dia da semana (*e.g.: Seg 03/09/2025*) na topbar central
-- [ ] Adicionar e configurar meu [swaync](./swaync/) novamente
+- [x] Adicionar e configurar meu [swaync](./swaync/) novamente
 - [ ] Programar o próximo [snapshot] pós-dotfiles
 - [ ] Verificar meus [MCPs](./vscode/.config/Code/User/mcp.json) essenciais no VSCode <https://code.visualstudio.com/mcp>
 - [x] Adicionar a fonte da JetBrains com icones hehe no terminal do VSCode e geral

@@ -89,7 +89,7 @@ case-indicator {
 listview {
     background-color: transparent;
     columns: 1;
-    lines: 8;
+    lines: 6;
     cycle: true;
     dynamic: true;
     scrollbar: false;
@@ -106,8 +106,8 @@ element {
     text-color: @fg1;
     orientation: horizontal;
     border-radius: 6px;
-    padding: 8px 12px;
-    margin: 2px 0px;
+    padding: 12px 16px;
+    margin: 4px 0px;
     cursor: pointer;
 }
 
@@ -161,7 +161,7 @@ element alternate.active {
 
 element-icon {
     background-color: transparent;
-    size: 24px;
+    size: 64px;
     cursor: inherit;
 }
 

@@ -17,7 +17,7 @@ configuration {
     ssh-command: "{terminal} -e {ssh-client} {host} [-p {port}]";
     
     /*---------- Font ----------*/
-    font: "JetBrainsMono Nerd Font Bold 13";
+    font: "JetBrainsMono Nerd Font 12";
     
     /*---------- Display settings ----------*/
     dpi: 0;

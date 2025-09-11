@@ -25,7 +25,7 @@
 - [ ] Programar o próximo [snapshot] pós-dotfiles
 - [ ] Verificar meus [MCPs](./vscode/.config/Code/User/mcp.json) essenciais no VSCode <https://code.visualstudio.com/mcp>
 - [x] Adicionar a fonte da JetBrains com icones hehe no terminal do VSCode e geral
-- [ ] Atualizar meu cursor e selecionar um legal <https://wiki.hypr.land/Hypr-Ecosystem/hyprcursor/>
+- [x] Atualizar meu cursor e selecionar um legal <https://wiki.hypr.land/Hypr-Ecosystem/hyprcursor/>
 - [ ] Verificar se dá para rodar os jogos que quero no [Hydra Launcher](https://aur.archlinux.org/packages/hydra-launcher-bin)
 - [ ] Configurar meu [hyprlock](https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/) (tela de bloqueio) e tempo de idle/suspensão do PC
 

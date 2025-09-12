@@ -21,10 +21,15 @@
 - [ ] Verificar pq o cursor tá bugando na hora que o **Hyprsunset** ativa (fica com uma coloração mais destacada que o resto da tela)
 - [ ] Adicionar uma verificação e sumir o `hyprland/window` quando não tiver nenhuma aplicação rodando em algum workspace (para não poluir a Waybar)
 - [ ] Adicionar o dia da semana (*e.g.: Seg 03/09/2025*) na topbar central
-- [ ] Programar o próximo [snapshot] pós-dotfiles
 - [ ] Verificar meus [MCPs](./vscode/.config/Code/User/mcp.json) essenciais no VSCode <https://code.visualstudio.com/mcp>
 - [ ] Verificar se dá para rodar os jogos que quero no [Hydra Launcher](https://aur.archlinux.org/packages/hydra-launcher-bin)
 - [ ] Configurar meu [hyprlock](https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/) (tela de bloqueio) e tempo de idle/suspensão do PC
+
+### Backup
+
+- [ ] Criar um subvolume apenas para colocar/organizar os jogos
+- [ ] Programar o próximo **snapshot** pós-dotfiles
+  - Verificar qual foi meu último snapshot
 
 ### Stylish
 

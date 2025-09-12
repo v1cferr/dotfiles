@@ -25,11 +25,17 @@
 - [ ] Verificar se dá para rodar os jogos que quero no [Hydra Launcher](https://aur.archlinux.org/packages/hydra-launcher-bin)
 - [ ] Configurar meu [hyprlock](https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/) (tela de bloqueio) e tempo de idle/suspensão do PC
 
+### Performance
+
+- [ ] Verificar se compensa habilitar **zram**
+  - <https://wiki.archlinux.org/title/Zram>
+  - <https://www.reddit.com/r/linux/comments/11dkhz7/zswap_vs_zram_in_2023_whats_the_actual_practical/>
+  - <https://github.com/hakavlad/nohang>
+
 ### Backup
 
-- [ ] Criar um subvolume apenas para colocar/organizar os jogos
-- [ ] Programar o próximo **snapshot** pós-dotfiles
-  - Verificar qual foi meu último snapshot
+- [ ] Criar um subvolume apenas para colocar/organizar os jogos (Steam; Hydra Launcher; Bottles, no caso o Hearthstone)
+- [x] Programar o próximo **snapshot** pós-dotfiles
 
 ### Stylish
 
@@ -57,3 +63,12 @@
 - [x] Adicionar a fonte da JetBrains com icones hehe no terminal do VSCode e geral
 - [x] Atualizar meu cursor e selecionar um legal <https://wiki.hypr.land/Hypr-Ecosystem/hyprcursor/>
 - [x] Adicionar e configurar meu [swaync](./swaync/) novamente
+
+## Snapshots
+
+| Data | Nome | Descrição |
+|------|------|-----------|
+| 07/09/2025 | `clean-install_07-09-2025` | Instalação limpa do sistema |
+| 07/09/2025 | `fresh-hyprland_07-09-2025` | Sistema com Hyprland instalado |
+| 08/09/2025 | `pre-dotfiles_08-09-2025` | Antes da configuração dos dotfiles |
+| 12/09/2025 | `post-dotfiles_12-09-2025` | Após configuração majoritaria dos dotfiles |

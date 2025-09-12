@@ -39,6 +39,10 @@
 ### Stylish
 
 - [ ] Personalizar o CSS do meu Zen Browser para ter o tema TokyoNight
+- [ ] Adicionar a customização do "MacOS" para todas as janelas
+  - <https://github.com/Fausto-Korpsvart/Tokyonight-GTK-Theme>
+  - <https://www.gnome-look.org/p/1681315>
+  - Configs: Night, borderless, macos buttons
 
 ### Menos importantes
 

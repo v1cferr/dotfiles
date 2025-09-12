@@ -35,12 +35,9 @@
 ### Backup
 
 - [ ] Criar um subvolume apenas para colocar/organizar os jogos (Steam; Hydra Launcher; Bottles, no caso o Hearthstone)
-- [x] Programar o próximo **snapshot** pós-dotfiles
 
 ### Stylish
 
-- [x] Reduzir apenas um pouco a opacidade e blur das mini-pilulas na **Waybar** para ter simetria com o style das próprias janelas no **Hypr**
-  - {be02e75873a62572fb6dde5199f23efc0649c580}
 - [ ] Personalizar o CSS do meu Zen Browser para ter o tema TokyoNight
 
 ### Menos importantes
@@ -63,8 +60,24 @@
 - [x] Adicionar a fonte da JetBrains com icones hehe no terminal do VSCode e geral
 - [x] Atualizar meu cursor e selecionar um legal <https://wiki.hypr.land/Hypr-Ecosystem/hyprcursor/>
 - [x] Adicionar e configurar meu [swaync](./swaync/) novamente
+- [x] Reduzir apenas um pouco a opacidade e blur das mini-pilulas na **Waybar** para ter simetria com o style das próprias janelas no **Hypr**
+- [x] Programar o próximo **snapshot** pós-dotfiles
 
-## Snapshots
+## BTRFS
+
+### Subdiretórios
+
+| Subvolume | Ponto de Montagem | ID | Descrição |
+|-----------|-------------------|-----|-----------|
+| `@` | `/` | 256 | Sistema raiz principal |
+| `@home` | `/home` | 257 | Diretórios dos usuários |
+| `@var_log` | `/var/log` | 258 | Logs do sistema |
+| `@var_cache` | `/var/cache` | 259 | Cache de pacotes |
+| `@snapshots` | `/.snapshots` | 260 | Armazenamento de snapshots |
+
+**Opções de montagem:** `rw,noatime,compress=zstd:3,ssd,discard=async,space_cache=v2`
+
+### Snapshots
 
 | Data | Nome | Descrição |
 |------|------|-----------|

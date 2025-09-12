@@ -32,10 +32,6 @@
   - <https://www.reddit.com/r/linux/comments/11dkhz7/zswap_vs_zram_in_2023_whats_the_actual_practical/>
   - <https://github.com/hakavlad/nohang>
 
-### Backup
-
-- [ ] Criar um subvolume apenas para colocar/organizar os jogos (Steam; Hydra Launcher; Bottles, no caso o Hearthstone)
-
 ### Stylish
 
 - [ ] Personalizar o CSS do meu Zen Browser para ter o tema TokyoNight
@@ -66,6 +62,7 @@
 - [x] Adicionar e configurar meu [swaync](./swaync/) novamente
 - [x] Reduzir apenas um pouco a opacidade e blur das mini-pilulas na **Waybar** para ter simetria com o style das próprias janelas no **Hypr**
 - [x] Programar o próximo **snapshot** pós-dotfiles
+- [x] Criar um subvolume apenas para colocar/organizar os jogos (Steam; Hydra Launcher; Bottles, no caso o Hearthstone)
 
 ## BTRFS
 
@@ -78,6 +75,7 @@
 | `@var_log` | `/var/log` | 258 | Logs do sistema |
 | `@var_cache` | `/var/cache` | 259 | Cache de pacotes |
 | `@snapshots` | `/.snapshots` | 260 | Armazenamento de snapshots |
+| `@games` | `/games` | 269 | Jogos (Steam, Bottles, etc.) |
 
 **Opções de montagem:** `rw,noatime,compress=zstd:3,ssd,discard=async,space_cache=v2`
 

@@ -25,6 +25,12 @@
 - [ ] Verificar se dá para rodar os jogos que quero no [Hydra Launcher](https://aur.archlinux.org/packages/hydra-launcher-bin)
 - [ ] Configurar meu [hyprlock](https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/) (tela de bloqueio) e tempo de idle/suspensão do PC
 
+### Bugs
+
+- [ ] Verificar pq não está colando ao selecionar o dado no clipboard history
+- [ ] Verificar pq caracteres asiáticos (Chinês principalmente) não estão renderizando corretamente
+  - [[4K 60fps] 黃霄雲 Huang Xiaoyun - 生生世世愛 [Official Music Video] 官方完整版MV](https://youtu.be/5xijWQF8uIA)
+
 ### Performance
 
 - [ ] Verificar se compensa habilitar **zram**

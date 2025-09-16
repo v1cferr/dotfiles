@@ -34,11 +34,12 @@
 
 ### Stylish
 
-- [ ] Personalizar o CSS do meu Zen Browser para ter o tema TokyoNight
+- [ ] Personalizar o CSS do meu Zen Browser para ter o tema TokyoNight e diminuir o tamanho das fonts (+diminuir o zoom)
 - [ ] Adicionar a customização do "MacOS" para todas as janelas
   - <https://github.com/Fausto-Korpsvart/Tokyonight-GTK-Theme>
   - <https://www.gnome-look.org/p/1681315>
   - Configs: Night, borderless, macos buttons
+- [ ] Customizar meu Hyprlock (screenlock) com widgets e no segundo monitor não deixar input para senha
 
 ### Menos importantes
 

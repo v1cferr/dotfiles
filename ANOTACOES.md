@@ -33,10 +33,7 @@
 
 ### Performance
 
-- [ ] Verificar se compensa habilitar **zram**
-  - <https://wiki.archlinux.org/title/Zram>
-  - <https://www.reddit.com/r/linux/comments/11dkhz7/zswap_vs_zram_in_2023_whats_the_actual_practical/>
-  - <https://github.com/hakavlad/nohang>
+- [ ] Verificar pq está demorando para trocar de wallpaper com **SUPER+I**
 
 ### Stylish
 
@@ -70,6 +67,20 @@
 - [x] Reduzir apenas um pouco a opacidade e blur das mini-pilulas na **Waybar** para ter simetria com o style das próprias janelas no **Hypr**
 - [x] Programar o próximo **snapshot** pós-dotfiles
 - [x] Criar um subvolume apenas para colocar/organizar os jogos (Steam; Hydra Launcher; Bottles, no caso o Hearthstone)
+- [x] Habilitar **zram**
+  - <https://wiki.archlinux.org/title/Zram>
+  - <https://www.reddit.com/r/linux/comments/11dkhz7/zswap_vs_zram_in_2023_whats_the_actual_practical/>
+  - <https://github.com/hakavlad/nohang>
+
+```bash
+  grep -R . /sys/module/zswap/parameters
+  /sys/module/zswap/parameters/enabled:Y
+  /sys/module/zswap/parameters/shrinker_enabled:Y
+  /sys/module/zswap/parameters/max_pool_percent:25
+  /sys/module/zswap/parameters/compressor:zstd
+  /sys/module/zswap/parameters/zpool:zsmalloc
+  /sys/module/zswap/parameters/accept_threshold_percent:90
+```
 
 ## BTRFS
 

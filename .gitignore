@@ -10,3 +10,7 @@ vscode/.config/Code/User/*.log
 # Ignore files containing apikey or api-key in the name
 *apikey*
 *api-key*
+
+# Wallpapers - ignorar tudo em Pictures/ exceto Wallpapers/
+wallpapers/Pictures/*
+!wallpapers/Pictures/Wallpapers/

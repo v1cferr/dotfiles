@@ -23,17 +23,12 @@
 - [ ] Adicionar o dia da semana (*e.g.: Seg 03/09/2025*) na topbar central
 - [ ] Verificar meus [MCPs](./vscode/.config/Code/User/mcp.json) essenciais no VSCode <https://code.visualstudio.com/mcp>
 - [ ] Verificar se dá para rodar os jogos que quero no [Hydra Launcher](https://aur.archlinux.org/packages/hydra-launcher-bin)
-- [ ] Configurar meu [hyprlock](https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/) (tela de bloqueio) e tempo de idle/suspensão do PC
 
 ### Bugs
 
 - [ ] Verificar pq não está colando ao selecionar o dado no clipboard history
 - [ ] Verificar pq caracteres asiáticos (Chinês principalmente) não estão renderizando corretamente
   - [[4K 60fps] 黃霄雲 Huang Xiaoyun - 生生世世愛 [Official Music Video] 官方完整版MV](https://youtu.be/5xijWQF8uIA)
-
-### Performance
-
-- [ ] Verificar pq está demorando para trocar de wallpaper com **SUPER+I**
 
 ### Stylish
 
@@ -42,7 +37,14 @@
   - <https://github.com/Fausto-Korpsvart/Tokyonight-GTK-Theme>
   - <https://www.gnome-look.org/p/1681315>
   - Configs: Night, borderless, macos buttons
+- [ ] Configurar meu [hyprlock](https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/) (tela de bloqueio) e tempo de idle/suspensão do PC
 - [ ] Customizar meu Hyprlock (screenlock) com widgets e no segundo monitor não deixar input para senha
+
+### Quality of Life
+
+- [ ] Verificar pq está demorando para trocar de wallpaper com **SUPER+I** (delay +/- 5ms)
+- [ ] Aumentar a frequência de atualização das temperaturas (CPU/GPU) na [waybar](./waybar/)
+- [ ] Aumentar a frequencia de atualização do weather time
 
 ### Menos importantes
 

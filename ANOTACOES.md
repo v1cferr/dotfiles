@@ -46,7 +46,9 @@
 - [ ] Aumentar a frequência de atualização das temperaturas (CPU/GPU) na [waybar](./waybar/)
 - [ ] Aumentar a frequencia de atualização do weather time
 
-### Menos importantes
+### Games
+
+- [ ] Instalar o [Firestone](https://www.overwolf.com/app/sebastien_tromp-firestone) para o Hearthstone através do Bottles (pesquisar para ver como funciona e rodar ambos ao mesmo tempo)
 
 ## Concluidos
 
@@ -83,6 +85,8 @@
   /sys/module/zswap/parameters/zpool:zsmalloc
   /sys/module/zswap/parameters/accept_threshold_percent:90
 ```
+
+- [x] Thumbnails para imagens, videos e documentos no Thunar (<https://wiki.archlinux.org/title/Thunar#Plugins_and_addons>)
 
 ## BTRFS
 

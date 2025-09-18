@@ -26,7 +26,6 @@
 
 ### Bugs
 
-- [ ] Verificar pq não está colando ao selecionar o dado no clipboard history
 - [ ] Verificar pq caracteres asiáticos (Chinês principalmente) não estão renderizando corretamente
   - [[4K 60fps] 黃霄雲 Huang Xiaoyun - 生生世世愛 [Official Music Video] 官方完整版MV](https://youtu.be/5xijWQF8uIA)
 
@@ -45,6 +44,7 @@
 - [ ] Verificar pq está demorando para trocar de wallpaper com **SUPER+I** (delay +/- 5ms)
 - [ ] Aumentar a frequência de atualização das temperaturas (CPU/GPU) na [waybar](./waybar/)
 - [ ] Aumentar a frequencia de atualização do weather time
+- [ ] Configurar o [swaync](./swaync/) para aparecer a notificação no monitor on focus
 
 ### Games
 
@@ -87,6 +87,7 @@
 ```
 
 - [x] Thumbnails para imagens, videos e documentos no Thunar (<https://wiki.archlinux.org/title/Thunar#Plugins_and_addons>)
+- [x] Verificar pq não está colando ao selecionar o dado no clipboard history
 
 ## BTRFS
 

@@ -3,9 +3,21 @@
 tmp_dir="/tmp/cliphist"
 rm -rf "$tmp_dir"
 
+# Check if input is from stdin or argument
 if [[ -n "$1" ]]; then
-    cliphist decode <<<"$1" | wl-copy
+    # Extract the ID from the selected line (first field before any spaces)
+    cliphist_id=$(echo "$1" | cut -d' ' -f1)
+    printf "%s" "$cliphist_id" | cliphist decode | wl-copy
     exit
+elif [[ ! -t 0 ]]; then
+    # Input from pipe/stdin - read the entire input
+    input=$(cat)
+    if [[ -n "$input" ]]; then
+        # Extract just the ID (first field before spaces)
+        cliphist_id=$(echo "$input" | cut -d' ' -f1)
+        printf "%s" "$cliphist_id" | cliphist decode | wl-copy
+        exit
+    fi
 fi
 
 mkdir -p "$tmp_dir"

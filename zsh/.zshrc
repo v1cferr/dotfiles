@@ -94,6 +94,8 @@ export XDG_CURRENT_DESKTOP=sway
 export XDG_SESSION_DESKTOP=sway
 export QT_QPA_PLATFORM=wayland
 
+export LIBVIRT_DEFAULT_URI='qemu:///system'
+
 # GTK Dark Theme configuration
 export GTK_THEME=Tokyonight-Dark
 

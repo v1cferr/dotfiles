@@ -28,16 +28,18 @@
 
 - [ ] Verificar pq caracteres asiáticos (Chinês principalmente) não estão renderizando corretamente
   - [[4K 60fps] 黃霄雲 Huang Xiaoyun - 生生世世愛 [Official Music Video] 官方完整版MV](https://youtu.be/5xijWQF8uIA)
+- [ ] Não está aparecendo o [wallpaper](./hypr/.config/hypr/hyprpaper.conf) ao logar/entrar pela primeira vez no Hyprland
 
 ### Stylish
 
-- [ ] Personalizar o CSS do meu Zen Browser para ter o tema TokyoNight e diminuir o tamanho das fonts (+diminuir o zoom)
+- [ ] Personalizar o **CSS do meu Zen Browser** para ter o tema TokyoNight e diminuir o tamanho das fonts (78% zoom)
 - [ ] Adicionar a customização do "MacOS" para todas as janelas
   - <https://github.com/Fausto-Korpsvart/Tokyonight-GTK-Theme>
   - <https://www.gnome-look.org/p/1681315>
   - Configs: Night, borderless, macos buttons
 - [ ] Configurar meu [hyprlock](https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/) (tela de bloqueio) e tempo de idle/suspensão do PC
 - [ ] Customizar meu Hyprlock (screenlock) com widgets e no segundo monitor não deixar input para senha
+- [ ] Configurar o marketplace do [Spicetify](https://spicetify.app/) e adicionar o plugin/addon para melhorar a visualização das lyrics
 
 ### Quality of Life
 
@@ -45,6 +47,7 @@
 - [ ] Aumentar a frequência de atualização das temperaturas (CPU/GPU) na [waybar](./waybar/)
 - [ ] Aumentar a frequencia de atualização do weather time
 - [ ] Configurar o [swaync](./swaync/) para aparecer a notificação no monitor on focus
+- [ ] Configurar um **SDDM (Simple Desktop Display Manager)** ou **Hyprlock** para não precisar logar com TTY
 
 ### Games
 

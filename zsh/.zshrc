@@ -99,6 +99,8 @@ export LIBVIRT_DEFAULT_URI='qemu:///system'
 # GTK Dark Theme configuration
 export GTK_THEME=Tokyonight-Dark
 
+export PYENV_ROOT="$HOME/.pyenv"
+
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment
@@ -142,3 +144,6 @@ source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 if [ -f "$HOME/.local/bin/env" ]; then
     source "$HOME/.local/bin/env"
 fi
+
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"

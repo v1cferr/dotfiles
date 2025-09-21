@@ -1,27 +1,23 @@
 {
-	"inputs": [],
-	"servers": {
-		"playwright": {
-			"command": "npx",
-			"args": [
-				"@playwright/mcp@latest"
-			],
-			"type": "stdio"
-		},
-		"deepwiki": {
-			"url": "https://mcp.deepwiki.com/sse",
-			"type": "http"
-		},
-		"github": {
-			"url": "https://api.githubcopilot.com/mcp/",
-			"type": "http"
-		},
-		"markitdown": {
-			"command": "uvx",
-			"args": [
-				"markitdown-mcp"
-			],
-			"type": "stdio"
-		}
-	}
+  "inputs": [],
+  "servers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"],
+      "type": "stdio"
+    },
+    "deepwiki": {
+      "url": "https://mcp.deepwiki.com/sse",
+      "type": "http"
+    },
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "type": "http"
+    },
+    "markitdown": {
+      "command": "uvx",
+      "args": ["markitdown-mcp"],
+      "type": "stdio"
+    }
+  }
 }

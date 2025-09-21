@@ -10,7 +10,7 @@
     "height": 5,
     "color": {
       "1": "blue",
-      "2": "cyan", 
+      "2": "cyan",
       "3": "bright_blue"
     },
     "padding": {
@@ -50,7 +50,7 @@
       "format": "\u001b[1;34m{user-name-colored}\u001b[0m\u001b[1;36m@\u001b[0m\u001b[1;94m{host-name-colored}\u001b[0m"
     },
     "separator",
-    
+
     // ═══════════════════ HARDWARE SECTION ═══════════════════
     {
       "type": "custom",
@@ -104,9 +104,9 @@
     },
     {
       "type": "command",
-      "key": "└─ 󰈸 CPU Temperature",
+      "key": "└─ 󰈸 Temperatures",
       "keyColor": "blue",
-      "text": "sensors 2>/dev/null | grep -E 'Core 0|Tctl|temp1' | head -1 | awk '{print $3}' | sed 's/+//g' || echo 'N/A'"
+      "text": "cpu_temp=$(sensors 2>/dev/null | awk '/Core 0|Tctl|temp1/ {gsub(/[+°C]/, \"\", $3); printf \"%.0f°C\", $3; exit}' || echo 'N/A'); gpu_temp=$(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null | awk '{printf \"%.0f°C\", $1}' || echo 'N/A'); echo \"CPU: $cpu_temp | GPU: $gpu_temp\""
     },
     "break",
 
@@ -141,11 +141,6 @@
       "keyColor": "yellow"
     },
     {
-      "type": "de",
-      "key": "├─ 󰧨 Desktop Environment",
-      "keyColor": "yellow"
-    },
-    {
       "type": "wm",
       "key": "├─ 󱂬 Window Manager",
       "keyColor": "yellow"
@@ -175,7 +170,7 @@
     // ═══════════════════ SYSTEM STATUS ═══════════════════
     {
       "type": "custom",
-      "format": "\u001b[1;95mSystem Status & Information\u001b[0m"
+      "format": "\u001b[1;95mSystem Status\u001b[0m"
     },
     {
       "type": "uptime",
@@ -183,10 +178,10 @@
       "keyColor": "magenta"
     },
     {
-      "type": "datetime",
+      "type": "command",
       "key": "├─ 󰃭 Current Date",
       "keyColor": "magenta",
-      "format": "{1}/{2}/{11} {3}:{4}"
+      "text": "TZ='America/Sao_Paulo' date '+%d-%m-%Y %H:%M'"
     },
     {
       "type": "command",
@@ -207,7 +202,7 @@
     {
       "type": "command",
       "key": "├─ 󰦻 Network Interface",
-      "keyColor": "magenta", 
+      "keyColor": "magenta",
       "text": "ip route get 8.8.8.8 2>/dev/null | grep -Po '(?<=dev\\s)\\w+' | head -1 || echo 'Disconnected'"
     },
     {
@@ -223,12 +218,7 @@
     },
     {
       "type": "locale",
-      "key": "├─ 󰗊 System Locale",
-      "keyColor": "magenta"
-    },
-    {
-      "type": "users",
-      "key": "└─ 󰀉 Logged Users",
+      "key": "└─ 󰗊 System Locale",
       "keyColor": "magenta"
     },
     "break",

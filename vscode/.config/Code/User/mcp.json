@@ -1,14 +1,6 @@
 {
+	"inputs": [],
 	"servers": {
-		"context7": {
-			"type": "stdio",
-			"command": "npx",
-			"args": [
-				"-y",
-				"@upstash/context7-mcp@latest"
-			],
-			"gallery": true
-		},
 		"playwright": {
 			"command": "npx",
 			"args": [
@@ -28,8 +20,8 @@
 			"command": "uvx",
 			"args": [
 				"markitdown-mcp"
-			]
+			],
+			"type": "stdio"
 		}
-	},
-	"inputs": []
+	}
 }

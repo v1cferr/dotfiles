@@ -158,7 +158,6 @@
   "[github-actions-workflow]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
-  "chat.agent.thinkingStyle": "collapsedPreview",
   "chat.mcp.serverSampling": {
     "Global in Code: deepwiki": {
       "allowedModels": ["copilot/gpt-4.1"]

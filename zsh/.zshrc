@@ -89,9 +89,6 @@ source $ZSH/oh-my-zsh.sh
 # User configuration
 
 # Wayland environment variables for applications
-# Source: https://github.com/flameshot-org/flameshot/issues/2978#issuecomment-3205971576
-export XDG_CURRENT_DESKTOP=sway
-export XDG_SESSION_DESKTOP=sway
 export QT_QPA_PLATFORM=wayland
 
 export LIBVIRT_DEFAULT_URI='qemu:///system'
@@ -130,6 +127,7 @@ export PYENV_ROOT="$HOME/.pyenv"
 
 # Custom aliases
 alias screenshot="flameshot gui"
+alias stow-sync="~/dotfiles/scripts/stow-sync.sh"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
@@ -147,3 +145,18 @@ fi
 
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/home/v1cferr/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/home/v1cferr/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/home/v1cferr/miniconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/home/v1cferr/miniconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<

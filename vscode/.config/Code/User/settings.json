@@ -2,7 +2,7 @@
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
-    "//": "Last update at 9/30/2025, 9:35:21 AM",
+    "//": "Last update at 10/9/2025, 2:51:14 PM",
     ".clang-tidy": ".clang-format, .clangd, compile_commands.json",
     ".env": "*.env, .env.*, .envrc, env.d.ts",
     ".gitignore": ".gitattributes, .gitmodules, .gitmessage, .lfsconfig, .mailmap, .git-blame*",
@@ -170,5 +170,6 @@
       "source.organizeImports": "explicit"
     }
   },
-  "isort.args": ["--profile", "black"]
+  "isort.args": ["--profile", "black"],
+  "gitlens.launchpad.indicator.enabled": false // Desativa o indicador do GitLens Launchpad
 }

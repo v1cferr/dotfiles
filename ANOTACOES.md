@@ -29,6 +29,7 @@
 - [ ] Verificar pq caracteres asiáticos (Chinês principalmente) não estão renderizando corretamente
   - [[4K 60fps] 黃霄雲 Huang Xiaoyun - 生生世世愛 [Official Music Video] 官方完整版MV](https://youtu.be/5xijWQF8uIA)
 - [ ] Não está aparecendo o [wallpaper](./hypr/.config/hypr/hyprpaper.conf) ao logar/entrar pela primeira vez no Hyprland
+- [ ] Ver pq o tema do meu Obsidian não está aplicando (<https://forum.obsidian.md/t/obsidian-theme-either-not-changing-or-resetting-to-default-shortly-after/66132>)
 
 ### Stylish
 
@@ -96,22 +97,22 @@
 
 ### Subdiretórios
 
-| Subvolume | Ponto de Montagem | ID | Descrição |
-|-----------|-------------------|-----|-----------|
-| `@` | `/` | 256 | Sistema raiz principal |
-| `@home` | `/home` | 257 | Diretórios dos usuários |
-| `@var_log` | `/var/log` | 258 | Logs do sistema |
-| `@var_cache` | `/var/cache` | 259 | Cache de pacotes |
-| `@snapshots` | `/.snapshots` | 260 | Armazenamento de snapshots |
-| `@games` | `/games` | 269 | Jogos (Steam, Bottles, etc.) |
+| Subvolume    | Ponto de Montagem | ID  | Descrição                    |
+| ------------ | ----------------- | --- | ---------------------------- |
+| `@`          | `/`               | 256 | Sistema raiz principal       |
+| `@home`      | `/home`           | 257 | Diretórios dos usuários      |
+| `@var_log`   | `/var/log`        | 258 | Logs do sistema              |
+| `@var_cache` | `/var/cache`      | 259 | Cache de pacotes             |
+| `@snapshots` | `/.snapshots`     | 260 | Armazenamento de snapshots   |
+| `@games`     | `/games`          | 269 | Jogos (Steam, Bottles, etc.) |
 
 **Opções de montagem:** `rw,noatime,compress=zstd:3,ssd,discard=async,space_cache=v2`
 
 ### Snapshots
 
-| Data | Nome | Descrição |
-|------|------|-----------|
-| 07/09/2025 | `clean-install_07-09-2025` | Instalação limpa do sistema |
-| 07/09/2025 | `fresh-hyprland_07-09-2025` | Sistema com Hyprland instalado |
-| 08/09/2025 | `pre-dotfiles_08-09-2025` | Antes da configuração dos dotfiles |
-| 12/09/2025 | `post-dotfiles_12-09-2025` | Após configuração majoritaria dos dotfiles |
+| Data       | Nome                        | Descrição                                  |
+| ---------- | --------------------------- | ------------------------------------------ |
+| 07/09/2025 | `clean-install_07-09-2025`  | Instalação limpa do sistema                |
+| 07/09/2025 | `fresh-hyprland_07-09-2025` | Sistema com Hyprland instalado             |
+| 08/09/2025 | `pre-dotfiles_08-09-2025`   | Antes da configuração dos dotfiles         |
+| 12/09/2025 | `post-dotfiles_12-09-2025`  | Após configuração majoritaria dos dotfiles |

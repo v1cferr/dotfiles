@@ -18,6 +18,10 @@
       "command": "uvx",
       "args": ["markitdown-mcp"],
       "type": "stdio"
+    },
+    "render": {
+      "url": "https://mcp.render.com/mcp",
+      "type": "http"
     }
   }
 }

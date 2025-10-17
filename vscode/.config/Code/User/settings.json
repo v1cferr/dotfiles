@@ -2,7 +2,7 @@
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
-    "//": "Last update at 10/9/2025, 2:51:14 PM",
+    "//": "Last update at 10/15/2025, 12:02:07 AM",
     ".clang-tidy": ".clang-format, .clangd, compile_commands.json",
     ".env": "*.env, .env.*, .envrc, env.d.ts",
     ".gitignore": ".gitattributes, .gitmodules, .gitmessage, .lfsconfig, .mailmap, .git-blame*",
@@ -159,8 +159,8 @@
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
   "chat.mcp.serverSampling": {
-    "Global in Code: deepwiki": {
-      "allowedModels": ["copilot/gpt-4.1"]
+    "Global in Code: render": {
+      "allowedModels": ["copilot/gpt-4.1", "copilot/claude-sonnet-4"]
     }
   },
   "[python]": {

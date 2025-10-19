@@ -12,15 +12,9 @@
   // -------------------------------------------------------------------------
   // Organização dos Módulos em "Pílulas"
   // -------------------------------------------------------------------------
-  "modules-left": [
-    "group/workspaces-window-spotify"
-  ],
-  "modules-center": [
-    "group/info-center"
-  ],
-  "modules-right": [
-    "group/system-tray"
-  ],
+  "modules-left": ["group/workspaces-window-spotify"],
+  "modules-center": ["group/info-center"],
+  "modules-right": ["group/system-tray"],
 
   // -------------------------------------------------------------------------
   // CANTO ESQUERDO
@@ -34,7 +28,7 @@
     "active-only": false,
     "format-icons": {
       "1": "󰲠",
-      "2": "󰲢", 
+      "2": "󰲢",
       "3": "󰲤",
       "4": "󰲦",
       "5": "󰲨",
@@ -79,7 +73,7 @@
     "return-type": "json",
     "interval": 3,
     "on-click": "playerctl --player=spotify play-pause",
-    "on-scroll-up": "playerctl --player=spotify next", 
+    "on-scroll-up": "playerctl --player=spotify next",
     "on-scroll-down": "playerctl --player=spotify previous",
     "smooth-scrolling-threshold": 1
   },
@@ -174,9 +168,7 @@
     "format-ethernet": "󰈀",
     "format-disconnected": "󰤯",
     "format-disabled": "󰤮",
-    "format-icons": [
-      "󰤟", "󰤢", "󰤥", "󰤨"
-    ],
+    "format-icons": ["󰤟", "󰤢", "󰤥", "󰤨"],
     "format-alt": "{ifname}: {ipaddr}/{cidr}",
     "tooltip-format": "Rede: {essid}\nIP: {ipaddr}\nVelocidade: {bandwidthDownBits} ⬇ {bandwidthUpBits} ⬆",
     "tooltip-format-wifi": "WiFi: {essid} ({signalStrength}%)\nIP: {ipaddr}\nFrequência: {frequency}MHz\nVelocidade: {bandwidthDownBits} ⬇ {bandwidthUpBits} ⬆",
@@ -224,21 +216,28 @@
   // -------------------------------------------------------------------------
   // MÓDULOS EXTRAS INSPIRADOS NO MECHABAR
   // -------------------------------------------------------------------------
-  "temperature": {
-    "thermal-zone": 2,
-    "hwmon-path": "/sys/class/hwmon/hwmon2/temp1_input",
-    "critical-threshold": 80,
-    "format": "󰔏 {temperatureC}°C",
-    "format-critical": "󰸁 {temperatureC}°C",
+  "custom/cpu-temp": {
+    "format": " {}",
+    "interval": 3,
+    "exec": "$HOME/.config/waybar/scripts/cpu-temp.sh",
     "tooltip": true,
-    "tooltip-format": "Temperatura: {temperatureC}°C / {temperatureF}°F",
-    "interval": 5
+    "tooltip-format": "Temperatura da CPU: {}",
+    "return-type": ""
+  },
+
+  "custom/gpu-temp": {
+    "format": "󰢮 {}",
+    "interval": 3,
+    "exec": "$HOME/.config/waybar/scripts/gpu-temp.sh",
+    "tooltip": true,
+    "tooltip-format": "Temperatura da GPU: {}",
+    "return-type": ""
   },
 
   "disk": {
     "interval": 30,
     "format": "󰋊 {percentage_used}%",
-    "format-warning": "󰋊 {percentage_used}%", 
+    "format-warning": "󰋊 {percentage_used}%",
     "format-critical": "󰋊 {percentage_used}%",
     "path": "/",
     "states": {
@@ -250,52 +249,34 @@
     "unit": "GB"
   },
 
-  "idle_inhibitor": {
-    "format": "{icon}",
-    "format-icons": {
-      "activated": "󰅶",
-      "deactivated": "󰾪"
-    },
-    "tooltip": true,
-    "tooltip-format-activated": "Idle Inhibitor: Ativado\n(Sistema não entrará em suspensão)",
-    "tooltip-format-deactivated": "Idle Inhibitor: Desativado\n(Sistema pode entrar em suspensão)"
-  },
-
   // -------------------------------------------------------------------------
   // GRUPOS DE MÓDULOS - SISTEMA DE "PÍLULAS"
   // -------------------------------------------------------------------------
-  
+
   // Pílula 1: Workspaces + Window + Spotify juntos
   "group/workspaces-window-spotify": {
     "orientation": "horizontal",
-    "modules": [
-      "hyprland/workspaces",
-      "hyprland/window",
-      "custom/spotify"
-    ]
+    "modules": ["hyprland/workspaces", "hyprland/window", "custom/spotify"]
   },
 
   // Pílula 2: Informações centrais
   "group/info-center": {
     "orientation": "horizontal",
-    "modules": [
-      "custom/weather",
-      "clock", 
-      "custom/notification"
-    ]
+    "modules": ["custom/weather", "clock", "custom/notification"]
   },
 
   // Pílula 3: Sistema e Tray para Desktop - Ordem lógica
   "group/system-tray": {
     "orientation": "horizontal",
     "modules": [
-      "idle_inhibitor",
-      "cpu",
-      "memory", 
+      "cpu", // Uso da CPU
+      "custom/cpu-temp",
+      "memory",
+      // GPU (Uso da GPU)
+      "custom/gpu-temp",
       "disk",
-      "temperature",
-      "network",
       "pulseaudio",
+      "network",
       "tray"
     ]
   }

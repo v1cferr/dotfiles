@@ -7,8 +7,8 @@ get_cpu_temp() {
     
     # Método 1: sensors
     if command -v sensors >/dev/null 2>&1; then
-        temp=$(sensors 2>/dev/null | grep -E "(Core 0|Tctl|temp1)" | head -1 | awk '{print $3}' | sed 's/+//g' | sed 's/°C//g')
-        if [[ -n "$temp" && "$temp" =~ ^[0-9]+\.?[0-9]*$ ]]; then
+        temp=$(sensors 2>/dev/null | grep -E "(Core 0|Tctl|temp1)" | head -1 | awk '{print $3}' | sed 's/+//g' | sed 's/°C//g' | cut -d'.' -f1)
+        if [[ -n "$temp" && "$temp" =~ ^[0-9]+$ ]]; then
             echo "${temp}°C"
             return
         fi

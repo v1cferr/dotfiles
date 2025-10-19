@@ -230,7 +230,16 @@
     "interval": 3,
     "exec": "$HOME/.config/waybar/scripts/gpu-temp.sh",
     "tooltip": true,
-    "tooltip-format": "Temperatura da GPU: {}",
+    "tooltip-format": "GPU: $($HOME/.config/waybar/scripts/gpu-usage.sh)\nTemperatura: {}",
+    "return-type": ""
+  },
+
+  "custom/gpu-usage": {
+    "format": "󰾲 {}",
+    "interval": 2,
+    "exec": "$HOME/.config/waybar/scripts/gpu-usage.sh",
+    "tooltip": true,
+    "tooltip-format": "Uso da GPU: {}",
     "return-type": ""
   },
 
@@ -269,14 +278,14 @@
   "group/system-tray": {
     "orientation": "horizontal",
     "modules": [
-      "cpu", // Uso da CPU
+      "cpu",
       "custom/cpu-temp",
-      "memory",
-      // GPU (Uso da GPU)
+      "custom/gpu-usage",
       "custom/gpu-temp",
+      "memory",
       "disk",
-      "pulseaudio",
       "network",
+      "pulseaudio",
       "tray"
     ]
   }

@@ -134,6 +134,15 @@ tooltip label {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
+#custom-gpu-usage {
+  background: rgba(26, 27, 38, 0.86);
+  border: 1px solid rgba(65, 72, 104, 0.35);
+  border-radius: 8px;
+  margin: 0 3px;
+  padding: 4px 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
 #custom-gpu-temp {
   background: rgba(26, 27, 38, 0.86);
   border: 1px solid rgba(65, 72, 104, 0.35);
@@ -197,6 +206,7 @@ tooltip label {
 #custom-notification,
 #cpu,
 #custom-cpu-temp,
+#custom-gpu-usage,
 #custom-gpu-temp,
 #memory,
 #disk,
@@ -246,6 +256,7 @@ tooltip label {
 /* Efeitos de hover para mini-pílulas do grupo direito */
 #cpu:hover,
 #custom-cpu-temp:hover,
+#custom-gpu-usage:hover,
 #custom-gpu-temp:hover,
 #memory:hover,
 #disk:hover,
@@ -418,9 +429,14 @@ window#waybar.fullscreen #window {
   color: #fab387;
 }
 
+/* GPU Usage */
+#custom-gpu-usage {
+  color: #cba6f7;
+}
+
 /* Temperatura GPU */
 #custom-gpu-temp {
-  color: #cba6f7;
+  color: #b4befe;
 }
 
 /* Memória com estados de alerta */

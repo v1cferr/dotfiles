@@ -1,4 +1,18 @@
 {
+  "inputs": [
+    {
+      "id": "context7_api_key",
+      "type": "promptString",
+      "description": "Context7 API key (optional; increases rate limits). Get one at https://context7.com/dashboard",
+      "password": true
+    },
+    {
+      "id": "api_key",
+      "type": "promptString",
+      "description": "your API key",
+      "password": true
+    }
+  ],
   "servers": {
     "upstash/context7": {
       "type": "http",
@@ -16,31 +30,6 @@
       "gallery": "https://api.mcp.github.com/2025-09-15/v0/servers/41b79849-7e6c-4fc7-82c0-5a611ea21523",
       "version": "0.0.1-seed"
     },
-    "oraios/serena": {
-      "type": "stdio",
-      "command": "/home/v1cferr/.local/bin/uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/oraios/serena",
-        "serena",
-        "start-mcp-server",
-        "serena==latest",
-        "--context",
-        "ide-assistant"
-      ],
-      "gallery": "https://api.mcp.github.com/2025-09-15/v0/servers/0658e342-7ae7-493a-b378-a324363ee322",
-      "version": "1.0.0"
-    },
-    "firecrawl/firecrawl-mcp-server": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "firecrawl-mcp@latest"],
-      "env": {
-        "FIRECRAWL_API_KEY": "${input:api_key}"
-      },
-      "gallery": "https://api.mcp.github.com/2025-09-15/v0/servers/d586c74c-4aa1-4aa2-9aa3-046e58fcb84f",
-      "version": "1.0.0"
-    },
     "microsoft/markitdown": {
       "type": "stdio",
       "command": "/home/v1cferr/.local/bin/uvx",
@@ -48,19 +37,5 @@
       "gallery": "https://api.mcp.github.com/2025-09-15/v0/servers/976a2f68-e16c-4e2b-9709-7133487f8c14",
       "version": "1.0.0"
     }
-  },
-  "inputs": [
-    {
-      "id": "context7_api_key",
-      "type": "promptString",
-      "description": "Context7 API key (optional; increases rate limits). Get one at https://context7.com/dashboard",
-      "password": true
-    },
-    {
-      "id": "api_key",
-      "type": "promptString",
-      "description": "your API key",
-      "password": true
-    }
-  ]
+  }
 }

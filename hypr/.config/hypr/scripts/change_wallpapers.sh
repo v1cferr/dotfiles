@@ -103,7 +103,7 @@ get_valid_wallpapers() {
             wallpapers+=("$file")
             ((valid_count++))
         fi
-    done < <(find "$WALLPAPERS_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" -o -iname "*.bmp" \) -print0 2>/dev/null)
+    done < <(find -L "$WALLPAPERS_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" -o -iname "*.bmp" \) -print0 2>/dev/null)
     
     log "📊 Found $valid_count valid wallpapers out of $total_found total files"
     

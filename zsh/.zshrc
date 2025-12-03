@@ -1,49 +1,72 @@
 # ~/.zshrc
 
-# --- 1. Variáveis de Ambiente Básicas ---
+# --- 1. Variáveis de Ambiente ---
 export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
-export ZSH="$HOME/.oh-my-zsh"
-export TERMINAL="kitty" # Ou seu terminal preferido
+export TERMINAL="kitty"
 export EDITOR='nano'
 export LANG=en_US.UTF-8
 
-# --- 2. Oh My Zsh (Apenas libs básicas, sem tema) ---
-# Deixamos vazio para o Starship assumir o controle depois
-ZSH_THEME=""
+# --- 2. Histórico do Zsh (Configuração manual necessária sem o OMZ) ---
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=10000
+SAVEHIST=10000
+setopt EXTENDED_HISTORY
+setopt HIST_EXPIRE_DUPS_FIRST
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_SPACE
+setopt HIST_VERIFY
+setopt SHARE_HISTORY
 
-# Plugins básicos do OMZ (apenas git e sudo, os pesados carregamos via pacman abaixo)
-plugins=(git sudo)
-
-# Carrega o OMZ
-source $ZSH/oh-my-zsh.sh
-
-# --- 3. Plugins de Performance do Arch (Mais rápidos que via OMZ) ---
-# Certifique-se de ter instalado: sudo pacman -S zsh-syntax-highlighting zsh-autosuggestions
+# --- 3. Plugins Nativos do Arch (Performance Máxima) ---
+# Syntax Highlighting
 if [ -f /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
     source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
 
+# Autosuggestions
 if [ -f /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
     source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+    # Configuração de cor para sugestão (cinza claro para não confundir)
+    ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=60'
 fi
 
-# --- 4. Configurações de UI/UX ---
-# Correção de título e cores
-DISABLE_AUTO_TITLE="true"
-ENABLE_CORRECTION="true"
-COMPLETION_WAITING_DOTS="true"
+# --- 4. Keybindings Básicos (Para Home, End, Delete funcionarem) ---
+bindkey "^[[3~" delete-char
+bindkey "^[[H" beginning-of-line
+bindkey "^[[F" end-of-line
+bindkey "^[[1;5C" forward-word
+bindkey "^[[1;5D" backward-word
 
-# Tema GTK e Wayland
+# --- 5. UI/UX ---
 export GTK_THEME=Tokyonight-Dark
 export QT_QPA_PLATFORM=wayland
 export LIBVIRT_DEFAULT_URI='qemu:///system'
 
-# --- 5. Aliases ---
+# --- 6. Aliases ---
+alias ls='ls --color=auto'
+alias grep='grep --color=auto'
 alias screenshot="flameshot gui"
 alias stow-sync="~/dotfiles/scripts/stow-sync.sh"
-# Adicione mais aliases aqui...
+alias ll='ls -l'
+alias la='ls -la'
+# Alias útil para atualizar tudo (já que configuramos o pacman bonito)
+alias update='sudo pacman -Syu'
 
-# --- 6. Inicialização de Ambientes (Python, Java, etc) ---
+# --- 7. Funções Úteis (Substituindo plugins do OMZ) ---
+
+# Função "sudo" rápida: Aperte ESC duas vezes para adicionar sudo no começo da linha
+sudo-command-line() {
+    [[ -z $BUFFER ]] && zle up-history
+    if [[ $BUFFER == sudo\ * ]]; then
+        LBUFFER="${LBUFFER#sudo }"
+    else
+        LBUFFER="sudo $LBUFFER"
+    fi
+}
+zle -N sudo-command-line
+bindkey "\e\e" sudo-command-line
+
+# --- 8. Inicialização de Ambientes ---
 
 # Pyenv
 # export PYENV_ROOT="$HOME/.pyenv"
@@ -57,7 +80,7 @@ alias stow-sync="~/dotfiles/scripts/stow-sync.sh"
 #     source "$HOME/.local/bin/env"
 # fi
 
-# Conda (Bloco Otimizado)
+# Conda
 # if [ -f "/home/v1cferr/miniconda3/etc/profile.d/conda.sh" ]; then
 #     . "/home/v1cferr/miniconda3/etc/profile.d/conda.sh"
 # else
@@ -71,6 +94,5 @@ alias stow-sync="~/dotfiles/scripts/stow-sync.sh"
 # Dart/Flutter
 # [[ -f /home/v1cferr/.dart-cli-completion/zsh-config.zsh ]] && . /home/v1cferr/.dart-cli-completion/zsh-config.zsh || true
 
-# --- 7. Starship (O novo Prompt) ---
-# Inicializa o starship no final para garantir que ele sobrescreva qualquer prompt anterior
+# --- 9. Starship (Prompt) ---
 eval "$(starship init zsh)"

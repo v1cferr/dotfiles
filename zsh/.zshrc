@@ -3,7 +3,7 @@
 # --- 1. Variáveis de Ambiente ---
 export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 export TERMINAL="kitty"
-export EDITOR='nvim'
+export EDITOR='nano'
 export LANG=en_US.UTF-8
 
 # --- 2. Histórico do Zsh (Configuração manual necessária sem o OMZ) ---

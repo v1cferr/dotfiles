@@ -1,0 +1,69 @@
+# ~/.config/starship.toml
+
+# Espaçamento: Uma linha vazia antes do prompt deixa tudo menos "apertado"
+add_newline = true
+
+# Formato: Simples, em uma linha (ou duas se preferir)
+# Se quiser em duas linhas, coloque $line_break antes do $character
+format = """
+$directory\
+$git_branch\
+$git_status\
+$python\
+$rust\
+$golang\
+$nodejs\
+$cmd_duration\
+$line_break\
+$character"""
+
+# Timeout rápido para não travar o terminal em repositórios git gigantes
+command_timeout = 1000
+
+[character]
+success_symbol = "[❯](bold #c0caf5)"
+error_symbol = "[❯](bold #f7768e)"
+vimcmd_symbol = "[❮](bold #9ece6a)"
+
+[directory]
+style = "bold #7aa2f7"
+truncation_length = 3
+truncation_symbol = "…/"
+read_only = " 🔒"
+
+[git_branch]
+symbol = " "
+style = "bold #bb9af7"
+
+[git_status]
+style = "bold #f7768e"
+format = '([$all_status$ahead_behind]($style) )'
+
+[cmd_duration]
+min_time = 2000
+format = "[$duration]($style) "
+style = "dimmed white"
+
+# --- Linguagens (Só aparecem se os arquivos existirem na pasta) ---
+
+[python]
+symbol = " "
+style = "bold #ff9e64"
+# Descomente abaixo se não quiser ver a versão do python, só o ícone
+# format = '[$symbol]($style) '
+
+[nodejs]
+symbol = " "
+style = "bold #9ece6a"
+
+[rust]
+symbol = " "
+style = "bold #f7768e"
+
+[golang]
+symbol = " "
+style = "bold #7dcfff"
+
+# Desabilitar módulo de pacotes para performance (evita ler package.json gigante)
+[package]
+disabled = true

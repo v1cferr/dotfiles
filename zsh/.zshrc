@@ -3,7 +3,7 @@
 # --- 1. Variáveis de Ambiente ---
 export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 export TERMINAL="kitty"
-export EDITOR='nano'
+export EDITOR='nvim'
 export LANG=en_US.UTF-8
 
 # --- 2. Histórico do Zsh (Configuração manual necessária sem o OMZ) ---
@@ -68,30 +68,30 @@ bindkey "\e\e" sudo-command-line
 
 # --- 8. Inicialização de Ambientes ---
 
-# Pyenv
+# # Pyenv
 # export PYENV_ROOT="$HOME/.pyenv"
 # [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 # if command -v pyenv 1>/dev/null 2>&1; then
 #   eval "$(pyenv init -)"
 # fi
 
-# UV
+# # UV
 # if [ -f "$HOME/.local/bin/env" ]; then
 #     source "$HOME/.local/bin/env"
 # fi
 
-# Conda
+# # Conda
 # if [ -f "/home/v1cferr/miniconda3/etc/profile.d/conda.sh" ]; then
 #     . "/home/v1cferr/miniconda3/etc/profile.d/conda.sh"
 # else
 #     export PATH="/home/v1cferr/miniconda3/bin:$PATH"
 # fi
 
-# SDKMan
+# # SDKMan
 # export SDKMAN_DIR="$HOME/.sdkman"
 # [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 
-# Dart/Flutter
+# # Dart/Flutter
 # [[ -f /home/v1cferr/.dart-cli-completion/zsh-config.zsh ]] && . /home/v1cferr/.dart-cli-completion/zsh-config.zsh || true
 
 # --- 9. Starship (Prompt) ---

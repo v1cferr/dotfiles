@@ -1,0 +1,5 @@
+# GTK 4.0 Runtime Configuration
+# This file forces dark theme preference for all GTK4 applications
+
+# Force dark theme variant
+gtk-application-prefer-dark-theme = 1

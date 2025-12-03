@@ -1,0 +1,5 @@
+# GTK 3.0 Runtime Configuration
+# This file forces dark theme preference for all GTK3 applications
+
+# Force dark theme variant
+gtk-application-prefer-dark-theme = 1

@@ -96,3 +96,8 @@ bindkey "\e\e" sudo-command-line
 
 # --- 9. Starship (Prompt) ---
 eval "$(starship init zsh)"
+## [Completion]
+## Completion scripts setup. Remove the following line to uninstall
+[[ -f /home/v1cferr/.dart-cli-completion/zsh-config.zsh ]] && . /home/v1cferr/.dart-cli-completion/zsh-config.zsh || true
+## [/Completion]
+

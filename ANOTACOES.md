@@ -56,6 +56,7 @@
 
 ## Concluidos
 
+- [x] Configurar meu Cloudflare Tunnel de novo (para acessar via SSH de fora da minha rede local)
 - [x] Verificar pq o cursor está bugado graficamente (fica cinza escuro sem textura) ao rodar o Hearthstone pelo `bottles-cli run -b "Battle.net" -p "Battle.net"`
   - Adicionado `xwayland { force_zero_scaling = true }` no hyprland.conf
 - [x] Aumentar a duração das notificações (10 segundos para dar tempo de ler)

@@ -286,7 +286,20 @@
       "disk",
       "network",
       "pulseaudio",
+      "custom/hypridle",
       "tray"
     ]
+  },
+
+  // -------------------------------------------------------------------------
+  // CONTROLE DE IDLE
+  // -------------------------------------------------------------------------
+  "custom/hypridle": {
+    "format": "{}",
+    "exec": "$HOME/.config/waybar/scripts/toggle-hypridle.sh",
+    "return-type": "json",
+    "interval": 2,
+    "on-click": "$HOME/.config/waybar/scripts/toggle-hypridle.sh toggle",
+    "tooltip": true
   }
 }

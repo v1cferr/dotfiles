@@ -297,7 +297,7 @@ check_hyprpaper() {
     fi
 }
 
-# Function to change wallpaper using the new reload method
+# Function to change wallpaper using the new 0.8.0 IPC
 change_wallpaper() {
     local wallpaper="$1"
     local monitor="${2:-all}"
@@ -314,63 +314,41 @@ change_wallpaper() {
     # Add to history before changing
     add_to_history "$wallpaper"
     
-    # Use the new reload method which is more efficient
-    if [ "$monitor" = "all" ]; then
-        log "🖥️ Setting wallpaper on all monitors using reload..."
-        if hyprctl hyprpaper reload ",$wallpaper"; then
-            log "✅ Wallpaper changed successfully to: $wallpaper_name"
-            return 0
-        else
-            log "❌ Failed to change wallpaper using reload method, trying legacy method..."
-            # Fallback to legacy method
-            change_wallpaper_legacy "$wallpaper" "$monitor"
-            return $?
-        fi
-    else
-        log "🖥️ Setting wallpaper on monitor: $monitor using reload..."
-        if hyprctl hyprpaper reload "$monitor,$wallpaper"; then
-            log "✅ Wallpaper changed successfully to: $wallpaper_name"
-            return 0
-        else
-            log "❌ Failed to change wallpaper using reload method, trying legacy method..."
-            # Fallback to legacy method
-            change_wallpaper_legacy "$wallpaper" "$monitor"
-            return $?
-        fi
-    fi
-}
-
-# Legacy wallpaper change method (backup)
-change_wallpaper_legacy() {
-    local wallpaper="$1"
-    local monitor="${2:-all}"
-    
-    log "📥 Using legacy method: Preloading wallpaper..."
-    if ! hyprctl hyprpaper preload "$wallpaper"; then
-        log "❌ Failed to preload wallpaper"
-        return 1
-    fi
-    
-    # Wait a bit for preload to complete
-    sleep 0.5
-    
-    # Set wallpaper
+    # Use the new 0.8.0 IPC syntax: hyprctl hyprpaper wallpaper '[mon], [path], [fit_mode]'
     if [ "$monitor" = "all" ]; then
         log "🖥️ Setting wallpaper on all monitors..."
-        hyprctl hyprpaper wallpaper ",$wallpaper"
+        # Get all monitor names and apply wallpaper to each individually
+        local monitors
+        monitors=$(hyprctl monitors -j | jq -r '.[] | .name')
+        local failed=0
+        
+        while IFS= read -r mon; do
+            if [ -n "$mon" ]; then
+                log "  → Setting on $mon..."
+                if ! hyprctl hyprpaper wallpaper "$mon, $wallpaper, cover" 2>&1; then
+                    log "  ❌ Failed on $mon"
+                    ((failed++))
+                fi
+            fi
+        done <<< "$monitors"
+        
+        if [ $failed -eq 0 ]; then
+            log "✅ Wallpaper changed successfully on all monitors to: $wallpaper_name"
+            return 0
+        else
+            log "⚠️ Wallpaper changed with $failed failures"
+            return 1
+        fi
     else
         log "🖥️ Setting wallpaper on monitor: $monitor"
-        hyprctl hyprpaper wallpaper "$monitor,$wallpaper"
+        if hyprctl hyprpaper wallpaper "$monitor, $wallpaper, cover"; then
+            log "✅ Wallpaper changed successfully to: $wallpaper_name"
+            return 0
+        else
+            log "❌ Failed to change wallpaper"
+            return 1
+        fi
     fi
-    
-    # Wait a bit for wallpaper to be set
-    sleep 0.5
-    
-    # Clean up unused wallpapers
-    log "🧹 Cleaning up unused wallpapers..."
-    hyprctl hyprpaper unload unused
-    
-    log "✅ Wallpaper changed successfully!"
 }
 
 # Function to list available wallpapers

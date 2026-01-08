@@ -23,6 +23,7 @@
 - [ ] Adicionar o dia da semana (*e.g.: Seg 03/09/2025*) na topbar central
 - [ ] Verificar meus [MCPs](./vscode/.config/Code/User/mcp.json) essenciais no VSCode <https://code.visualstudio.com/mcp>
 - [ ] Verificar se dá para rodar os jogos que quero no [Hydra Launcher](https://aur.archlinux.org/packages/hydra-launcher-bin)
+- [ ] Adicionar o tema de TokyoNight no meu Spotify (Spicetify)
 
 ### Bugs
 
@@ -30,6 +31,8 @@
   - [[4K 60fps] 黃霄雲 Huang Xiaoyun - 生生世世愛 [Official Music Video] 官方完整版MV](https://youtu.be/5xijWQF8uIA)
 - [ ] Não está aparecendo o [wallpaper](./hypr/.config/hypr/hyprpaper.conf) ao logar/entrar pela primeira vez no Hyprland
 - [ ] Ver pq o tema do meu Obsidian não está aplicando (<https://forum.obsidian.md/t/obsidian-theme-either-not-changing-or-resetting-to-default-shortly-after/66132>)
+- [ ] Flameshot só tá dando screenshot no monitor secundário
+- [ ] Spotify não fecha para ficar apenas no tray (<https://www.reddit.com/r/hyprland/comments/1ps8kmu/spotify_doesnt_visually_minimize_to_tray_on/>)
 
 ### Stylish
 

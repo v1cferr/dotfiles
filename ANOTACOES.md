@@ -31,7 +31,6 @@
   - [[4K 60fps] 黃霄雲 Huang Xiaoyun - 生生世世愛 [Official Music Video] 官方完整版MV](https://youtu.be/5xijWQF8uIA)
 - [ ] Não está aparecendo o [wallpaper](./hypr/.config/hypr/hyprpaper.conf) ao logar/entrar pela primeira vez no Hyprland
 - [ ] Ver pq o tema do meu Obsidian não está aplicando (<https://forum.obsidian.md/t/obsidian-theme-either-not-changing-or-resetting-to-default-shortly-after/66132>)
-- [ ] Flameshot só tá dando screenshot no monitor secundário
 - [ ] Spotify não fecha para ficar apenas no tray (<https://www.reddit.com/r/hyprland/comments/1ps8kmu/spotify_doesnt_visually_minimize_to_tray_on/>)
 
 ### Stylish
@@ -59,6 +58,8 @@
 
 ## Concluidos
 
+- [x] Flameshot só tá dando screenshot no monitor secundário
+  - <https://flameshot.org/docs/guide/wayland-help/#multi-display-issue>
 - [x] Configurar meu Cloudflare Tunnel de novo (para acessar via SSH de fora da minha rede local)
 - [x] Verificar pq o cursor está bugado graficamente (fica cinza escuro sem textura) ao rodar o Hearthstone pelo `bottles-cli run -b "Battle.net" -p "Battle.net"`
   - Adicionado `xwayland { force_zero_scaling = true }` no hyprland.conf

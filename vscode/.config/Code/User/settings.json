@@ -137,7 +137,7 @@
   "terminal.integrated.fontWeight": "normal",
   "editor.fontWeight": "normal",
   "chat.mcp.autostart": "newAndOutdated",
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "github.copilot.enable": {
     "*": true,

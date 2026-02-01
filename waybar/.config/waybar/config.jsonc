@@ -82,7 +82,7 @@
   // CENTRO
   // -------------------------------------------------------------------------
   "custom/weather": {
-    "format": "󰖕 {}",
+    "format": "{}",
     "tooltip": true,
     "interval": 60,
     "exec": "$HOME/.config/waybar/scripts/weather.sh",

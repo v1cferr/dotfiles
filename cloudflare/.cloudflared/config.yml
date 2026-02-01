@@ -1,0 +1,7 @@
+tunnel: d53a2439-c539-4caf-9476-a204ebdcfe93
+credentials-file: /home/v1cferr/.cloudflared/d53a2439-c539-4caf-9476-a204ebdcfe93.json
+
+ingress:
+  - hostname: ssh.v1cferr.dev
+    service: ssh://localhost:2222
+  - service: http_status:404

@@ -87,7 +87,7 @@
     "interval": 60,
     "exec": "$HOME/.config/waybar/scripts/weather.sh",
     "return-type": "json",
-    "on-click": "xdg-open 'https://www.weatherapi.com/weather/q/sao-carlos-2658777'"
+    "on-click": "xdg-open 'https://www.msn.com/pt-br/clima/forecast/in-S%C3%A3o-Carlos,S%C3%A3o-Paulo'"
   },
 
   "clock": {

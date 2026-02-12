@@ -51,6 +51,8 @@ alias ll='ls -l'
 alias la='ls -la'
 # Alias útil para atualizar tudo (já que configuramos o pacman bonito)
 alias update='sudo pacman -Syu'
+# Alias para iniciar Hyprland com configurações apropriadas
+alias hyprland='start-hyprland'
 
 # --- 7. Funções Úteis (Substituindo plugins do OMZ) ---
 
@@ -140,3 +142,11 @@ conda() {
     conda "$@"
 }
 
+
+# pnpm
+export PNPM_HOME="/home/v1cferr/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end

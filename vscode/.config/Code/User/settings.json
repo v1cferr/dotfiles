@@ -2,7 +2,7 @@
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
-    "//": "Last update at 2/1/2026, 10:33:05 AM",
+    "//": "Last update at 2/12/2026, 7:03:17 PM",
     ".agent": ".agent, .claude, .cline, .codebuddy, .codex, .commandcode, .continue, .crush, .cursor, .factory, .gemini, .goose, .junie, .kilocode, .kiro, .kode, .mcpjam, .mux, .neovate, .opencode, .openhands, .pi, .pochi, .qoder, .qwen, .roo, .trae, .windsurf, .zencoder",
     ".clang-tidy": ".clang-format, .clangd, compile_commands.json",
     ".env": "*.env, .env.*, .envrc, env.d.ts",
@@ -102,7 +102,7 @@
     "*.vue": "$(capture).*.ts, $(capture).*.js, $(capture).story.vue",
     "*.w": "$(capture).*.w, I$(capture).w",
     "*.wat": "$(capture).wasm",
-    "*.xaml": "$(capture).xaml.cs",
+    "*.xaml": "$(capture).xaml.cs"
   },
   "redhat.telemetry.enabled": true,
   "dev.containers.mountWaylandSocket": false,

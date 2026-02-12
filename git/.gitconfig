@@ -1,3 +1,5 @@
 [user]
 	email = dev.victorferreira@gmail.com
 	name = v1cferr
+[init]
+	defaultBranch = main

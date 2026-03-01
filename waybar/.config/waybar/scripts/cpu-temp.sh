@@ -7,7 +7,13 @@ get_cpu_temp() {
     
     # Método 1: sensors
     if command -v sensors >/dev/null 2>&1; then
-        temp=$(sensors 2>/dev/null | grep -E "(Core 0|Tctl|temp1)" | head -1 | awk '{print $3}' | sed 's/+//g' | sed 's/°C//g' | cut -d'.' -f1)
+        # Preferencia: Package id 0 (Intel), Tctl/Tdie (AMD), Core 0
+        temp=$(sensors 2>/dev/null | awk '/Package id 0|Tctl|Tdie|Core 0/ {for(i=1;i<=NF;i++) if($i ~ /^\+[0-9]/) {gsub(/[+°C]/, "", $i); print $i; exit}}' | cut -d'.' -f1)
+        # Se falhou, tenta temp1 como fallback final
+        if [[ -z "$temp" || ! "$temp" =~ ^[0-9]+$ ]]; then
+            temp=$(sensors 2>/dev/null | awk '/temp1/ {for(i=1;i<=NF;i++) if($i ~ /^\+[0-9]/) {gsub(/[+°C]/, "", $i); print $i; exit}}' | cut -d'.' -f1)
+        fi
+        
         if [[ -n "$temp" && "$temp" =~ ^[0-9]+$ ]]; then
             echo "${temp}°C"
             return

@@ -110,7 +110,7 @@
       "type": "command",
       "key": "└─ 󰈸 Temperatures",
       "keyColor": "blue",
-      "text": "cpu_temp=$(sensors 2>/dev/null | awk '/Core 0|Tctl|temp1/ {gsub(/[+°C]/, \"\", $3); printf \"%.0f°C\", $3; exit}' || echo 'N/A'); gpu_temp=$(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null | awk '{printf \"%.0f°C\", $1}' || echo 'N/A'); echo \"CPU: $cpu_temp | GPU: $gpu_temp\""
+      "text": "cpu_temp=$(sensors 2>/dev/null | awk '/Package id 0|Tdie|Tctl|Core 0/ {for(i=1;i<=NF;i++) if($i ~ /^\\+[0-9]/) {gsub(/[+°C]/, \"\", $i); printf \"%.0f°C\", $i; exit}}' || echo 'N/A'); gpu_temp=$(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null | awk '{printf \"%.0f°C\", $1}' || echo 'N/A'); echo \"CPU: $cpu_temp | GPU: $gpu_temp\""
     },
     "break",
 

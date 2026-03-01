@@ -43,16 +43,25 @@ export QT_QPA_PLATFORM=wayland
 export LIBVIRT_DEFAULT_URI='qemu:///system'
 
 # --- 6. Aliases ---
-alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 alias screenshot="flameshot gui"
 alias stow-sync="~/dotfiles/scripts/stow-sync.sh"
-alias ll='ls -l'
-alias la='ls -la'
-# Alias útil para atualizar tudo (já que configuramos o pacman bonito)
-alias update='sudo pacman -Syu'
-# Alias para iniciar Hyprland com configurações apropriadas
 alias hyprland='start-hyprland'
+
+# Manutenção
+alias update='sudo pacman -Syu && yay -Syu'
+alias clean='sudo pacman -Rns $(pacman -Qtdq)'
+
+# Eza (Melhor que ls) - Instale com: sudo pacman -S eza
+if command -v eza >/dev/null 2>&1; then
+    alias ls='eza --icons --group-directories-first'
+    alias ll='eza -l --icons --group-directories-first'
+    alias la='eza -la --icons --group-directories-first'
+else
+    alias ls='ls --color=auto'
+    alias ll='ls -l'
+    alias la='ls -la'
+fi
 
 # --- 7. Funções Úteis (Substituindo plugins do OMZ) ---
 
@@ -72,6 +81,12 @@ bindkey "\e\e" sudo-command-line
 
 # Starship (Prompt)
 eval "$(starship init zsh)"
+
+# Zoxide (Substituto do cd) - Instale com: sudo pacman -S zoxide
+if command -v zoxide >/dev/null 2>&1; then
+    eval "$(zoxide init zsh)"
+    alias cd="z"
+fi
 
 # .NET
 export PATH="$HOME/.dotnet/tools:$PATH"

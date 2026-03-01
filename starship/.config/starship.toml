@@ -15,7 +15,7 @@ orange = "#ff9e64"
 
 
 # Inserts a blank line between shell prompts
-add_newline = true
+add_newline = "true"
 
 # Formato: Simples, em uma linha (ou duas se preferir)
 # Se quiser em duas linhas, coloque $line_break antes do $character
@@ -32,7 +32,7 @@ $line_break\
 $character"""
 
 # Timeout rápido para não travar o terminal em repositórios git gigantes
-command_timeout = 1000
+command_timeout = "1000"
 
 [character]
 success_symbol = "[❯](bold #c0caf5)"

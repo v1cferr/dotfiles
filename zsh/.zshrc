@@ -68,64 +68,27 @@ sudo-command-line() {
 zle -N sudo-command-line
 bindkey "\e\e" sudo-command-line
 
-# --- 8. Inicialização de Ambientes ---
+# --- 8. Inicialização de Ambientes e Ferramentas ---
 
-# # Pyenv
-# export PYENV_ROOT="$HOME/.pyenv"
-# [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-# if command -v pyenv 1>/dev/null 2>&1; then
-#   eval "$(pyenv init -)"
-# fi
-
-# # UV
-# if [ -f "$HOME/.local/bin/env" ]; then
-#     source "$HOME/.local/bin/env"
-# fi
-
-# # Conda
-# if [ -f "/home/v1cferr/miniconda3/etc/profile.d/conda.sh" ]; then
-#     . "/home/v1cferr/miniconda3/etc/profile.d/conda.sh"
-# else
-#     export PATH="/home/v1cferr/miniconda3/bin:$PATH"
-# fi
-
-# # SDKMan
-# export SDKMAN_DIR="$HOME/.sdkman"
-# [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
-
-# # Dart/Flutter
-# [[ -f /home/v1cferr/.dart-cli-completion/zsh-config.zsh ]] && . /home/v1cferr/.dart-cli-completion/zsh-config.zsh || true
-
-# --- 9. Starship (Prompt) ---
+# Starship (Prompt)
 eval "$(starship init zsh)"
-## [Completion]
-## Completion scripts setup. Remove the following line to uninstall
-[[ -f /home/v1cferr/.dart-cli-completion/zsh-config.zsh ]] && . /home/v1cferr/.dart-cli-completion/zsh-config.zsh || true
-## [/Completion]
 
+# .NET
 export PATH="$HOME/.dotnet/tools:$PATH"
 
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-# __conda_setup="$('/home/v1cferr/miniconda/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-# if [ $? -eq 0 ]; then
-#     eval "$__conda_setup"
-# else
-#     if [ -f "/home/v1cferr/miniconda/etc/profile.d/conda.sh" ]; then
-#         . "/home/v1cferr/miniconda/etc/profile.d/conda.sh"
-#     else
-#         export PATH="/home/v1cferr/miniconda/bin:$PATH"
-#     fi
-# fi
-# unset __conda_setup
-# <<< conda initialize <<<
+# Dart/Flutter Completion
+[[ -f /home/v1cferr/.dart-cli-completion/zsh-config.zsh ]] && . /home/v1cferr/.dart-cli-completion/zsh-config.zsh || true
 
-# Lazy load conda configuration
+# pnpm
+export PNPM_HOME="/home/v1cferr/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+
+# Lazy load conda (Opcional: se não usar, pode remover este bloco inteiro)
 conda() {
-    # Unset the function to avoid recursion
     unset -f conda
-    
-    # Run the conda initialization (original block content)
     __conda_setup="$('/home/v1cferr/miniconda/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
     if [ $? -eq 0 ]; then
         eval "$__conda_setup"
@@ -137,16 +100,12 @@ conda() {
         fi
     fi
     unset __conda_setup
-
-    # Execute the requested conda command
     conda "$@"
 }
 
+# --- 9. Startup ---
 
-# pnpm
-export PNPM_HOME="/home/v1cferr/.local/share/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end
+# Mostrar informações do sistema ao iniciar
+if [[ $- == *i* ]]; then
+  fastfetch
+fi

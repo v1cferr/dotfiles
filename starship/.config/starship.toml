@@ -1,6 +1,20 @@
 # ~/.config/starship.toml
+"$schema" = 'https://starship.rs/config-schema.json'
 
-# Espaçamento: Uma linha vazia antes do prompt deixa tudo menos "apertado"
+# palette to match Tokyo Night theme
+palette = "tokyonight"
+
+[palettes.tokyonight]
+blue = "#7aa2f7"
+cyan = "#7dcfff"
+purple = "#bb9af7"
+green = "#9ece6a"
+yellow = "#e0af68"
+red = "#f7768e"
+orange = "#ff9e64"
+
+
+# Inserts a blank line between shell prompts
 add_newline = true
 
 # Formato: Simples, em uma linha (ou duas se preferir)
@@ -37,7 +51,7 @@ style = "bold #bb9af7"
 
 [git_status]
 style = "bold #f7768e"
-format = '([$all_status$ahead_behind]($style) )'
+format = '([$all_status$ahead_behind]($style)) '
 
 [cmd_duration]
 min_time = 2000

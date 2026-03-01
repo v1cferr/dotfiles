@@ -2,7 +2,7 @@
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
-    "//": "Last update at 2/12/2026, 7:03:17 PM",
+    "//": "Last update at 2/28/2026, 8:42:16 PM",
     ".agent": ".agent, .claude, .cline, .codebuddy, .codex, .commandcode, .continue, .crush, .cursor, .factory, .gemini, .goose, .junie, .kilocode, .kiro, .kode, .mcpjam, .mux, .neovate, .opencode, .openhands, .pi, .pochi, .qoder, .qwen, .roo, .trae, .windsurf, .zencoder",
     ".clang-tidy": ".clang-format, .clangd, compile_commands.json",
     ".env": "*.env, .env.*, .envrc, env.d.ts",
@@ -118,13 +118,13 @@
   "git.confirmSync": false,
   "workbench.activityBar.location": "top",
   "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "explorer.confirmDelete": false,
   "explorer.confirmDragAndDrop": false,
   "diffEditor.renderSideBySide": false,
   "[markdown]": {
-    "editor.defaultFormatter": "yzhang.markdown-all-in-one",
+    "editor.defaultFormatter": "yzhang.markdown-all-in-one"
   },
   "github.copilot.selectedCompletionModel": "",
   "github.copilot.nextEditSuggestions.enabled": true,
@@ -137,13 +137,13 @@
   "terminal.integrated.fontWeight": "normal",
   "editor.fontWeight": "normal",
   "chat.mcp.autostart": "newAndOutdated",
-  "editor.formatOnSave": false,
+  "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "github.copilot.enable": {
     "*": true,
     "plaintext": false,
     "markdown": true,
-    "scminput": false,
+    "scminput": false
   },
   "gitlens.ai.model": "vscode",
   "gitlens.ai.vscode.model": "copilot:gpt-4.1",
@@ -156,24 +156,24 @@
     "editor.quickSuggestions": {
       "other": true,
       "comments": false,
-      "strings": true,
+      "strings": true
     },
-    "editor.defaultFormatter": "redhat.vscode-yaml",
+    "editor.defaultFormatter": "redhat.vscode-yaml"
   },
   "[github-actions-workflow]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml",
+    "editor.defaultFormatter": "redhat.vscode-yaml"
   },
   "chat.mcp.serverSampling": {
     "Global in Code: render": {
-      "allowedModels": ["copilot/gpt-4.1", "copilot/claude-sonnet-4"],
-    },
+      "allowedModels": ["copilot/gpt-4.1", "copilot/claude-sonnet-4"]
+    }
   },
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit",
-    },
+      "source.organizeImports": "explicit"
+    }
   },
   "isort.args": ["--profile", "black"],
   "gitlens.launchpad.indicator.enabled": false,
@@ -185,6 +185,17 @@
   "containers.containerClient": "com.microsoft.visualstudio.containers.docker",
   "containers.orchestratorClient": "com.microsoft.visualstudio.orchestrators.dockercompose",
   "[csharp]": {
-    "editor.defaultFormatter": "ms-dotnettools.csharp",
-  }, // Desativa o indicador do GitLens Launchpad
+    "editor.defaultFormatter": "ms-dotnettools.csharp"
+  },
+  "jdk.telemetry.enabled": false,
+  "[java]": {
+    "editor.defaultFormatter": "redhat.java"
+  },
+  "chat.viewSessions.orientation": "stacked",
+  "[xml]": {
+    "editor.defaultFormatter": "redhat.vscode-xml"
+  },
+  "[c]": {
+    "editor.defaultFormatter": "ms-vscode.cpptools"
+  } // Desativa o indicador do GitLens Launchpad
 }

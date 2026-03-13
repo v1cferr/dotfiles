@@ -47,6 +47,7 @@ alias grep='grep --color=auto'
 alias screenshot="flameshot gui"
 alias stow-sync="~/dotfiles/scripts/stow-sync.sh"
 alias hyprland='start-hyprland'
+alias nrd='npm run dev'
 
 # Manutenção
 alias update='sudo pacman -Syu && yay -Syu'

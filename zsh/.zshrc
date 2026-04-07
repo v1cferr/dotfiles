@@ -49,6 +49,12 @@ alias stow-sync="~/dotfiles/scripts/stow-sync.sh"
 alias hyprland='start-hyprland'
 alias nrd='npm run dev'
 
+# Busca apenas na HOME (Super rápido)
+alias fhome='cd $(dirname $(fd -t f --exclude node_modules --exclude .cache . ~ | fzf))'
+
+# Busca no PC inteiro (Raiz)
+alias froot='cd $(dirname $(fd -t f --exclude node_modules --exclude .cache . / 2>/dev/null | fzf))'
+
 # Manutenção
 alias update='sudo pacman -Syu && yay -Syu'
 alias clean='sudo pacman -Rns $(pacman -Qtdq)'

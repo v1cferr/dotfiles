@@ -25,6 +25,7 @@ TARGETS:
     rofi          Recarregar tema do Rofi
     waybar        Recarregar Waybar
     hyprland      Recarregar Hyprland
+    zen           Sincronizar tema do Zen Browser
     all           Aplicar em tudo
     check         Verificar status dos temas
     help          Mostrar esta ajuda
@@ -78,6 +79,17 @@ reload_hyprland() {
     echo "✅ Hyprland recarregado!"
 }
 
+sync_zen() {
+    echo "🌐 Sincronizando Tokyo Night no Zen Browser..."
+    if command -v zen-sync >/dev/null 2>&1; then
+        zen-sync
+        echo "✅ Tema do Zen Browser sincronizado!"
+    else
+        echo "⚠️  zen-sync não encontrado. Rode 'stow scripts' primeiro."
+        return 1
+    fi
+}
+
 check_themes() {
     echo "🔍 Verificando status dos temas Tokyo Night..."
     echo ""
@@ -109,6 +121,13 @@ check_themes() {
     else
         echo "❌ Waybar: Não está rodando"
     fi
+
+    # Zen Browser
+    if command -v zen-sync >/dev/null 2>&1; then
+        zen-sync check | sed 's/^/   /'
+    else
+        echo "❌ Zen Browser: zen-sync não encontrado"
+    fi
     
     echo ""
     echo "🎨 Cores Tokyo Night:"
@@ -130,12 +149,16 @@ case "$1" in
     "hyprland")
         reload_hyprland
         ;;
+    "zen")
+        sync_zen
+        ;;
     "all")
         echo "🌃 Aplicando tema Tokyo Night em tudo..."
         apply_gtk
         reload_rofi
         reload_waybar
         reload_hyprland
+        sync_zen
         echo "✅ Tokyo Night aplicado em todas as aplicações!"
         ;;
     "check")

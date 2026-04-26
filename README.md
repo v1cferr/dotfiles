@@ -35,6 +35,7 @@ Este repositório contém todas as minhas configurações (dotfiles) para meu am
 ├── 🎨  gtk-3.0/        # Tema escuro para aplicações GTK-3
 ├── 🎨  gtk-4.0/        # Tema escuro para aplicações GTK-4
 ├── 📷  flameshot/      # Configuração do screenshot tool
+├── 🌐  zen-browser/    # Tema Tokyo Night para o Zen Browser
 ├── 🖼️  wallpapers/     # Wallpapers + symlink para ~/Pictures/Wallpapers
 ├── 🔧  git/            # Configuração do Git com aliases úteis
 ├── 📜  scripts/        # Scripts utilitários personalizados
@@ -66,6 +67,7 @@ Cyan:         #73daca  🩵  Ciano sereno
 - ✅ **Waybar**: Status bar minimalista
 - ✅ **GTK Apps**: Thunar, file pickers, dialogs
 - ✅ **Terminal**: Theme integrado
+- ✅ **Zen Browser**: UI customizada com `userChrome.css`
 - ✅ **Cursors**: Rose Pine Hyprcursor (combina perfeitamente)
 
 ## 🖥️ Componentes Principais
@@ -176,29 +178,29 @@ hyprctl reload
 
 ### 🖥️ Hyprland
 
-| Atalho | Ação |
-|--------|------|
-| `Super + Q` | 🚀 Rofi Apps |
-| `Super + R` | 🔧 Rofi Run |
-| `Super + Return` | 💻 Terminal |
-| `Super + E` | 📁 File Manager |
-| `Super + C` | ❌ Fechar janela |
-| `Super + V` | 🎈 Toggle floating |
-| `Super + 1-9` | 🏠 Trocar workspace |
-| `Super + Shift + 1-9` | 📦 Mover janela |
+| Atalho                | Ação               |
+| --------------------- | ------------------ |
+| `Super + Q`           | 🚀 Rofi Apps        |
+| `Super + R`           | 🔧 Rofi Run         |
+| `Super + Return`      | 💻 Terminal         |
+| `Super + E`           | 📁 File Manager     |
+| `Super + C`           | ❌ Fechar janela    |
+| `Super + V`           | 🎈 Toggle floating  |
+| `Super + 1-9`         | 🏠 Trocar workspace |
+| `Super + Shift + 1-9` | 📦 Mover janela     |
 
 ### 🎨 Wallpapers
 
-| Atalho | Ação |
-|--------|------|
-| `Super + I` | 🎲 Wallpaper aleatório |
-| `Super + Shift + I` | ⏰ Auto-troca ON |
-| `Super + Ctrl + I` | ⏹️ Auto-troca OFF |
+| Atalho              | Ação                  |
+| ------------------- | --------------------- |
+| `Super + I`         | 🎲 Wallpaper aleatório |
+| `Super + Shift + I` | ⏰ Auto-troca ON       |
+| `Super + Ctrl + I`  | ⏹️ Auto-troca OFF      |
 
 ### 📷 Screenshots
 
-| Atalho | Ação |
-|--------|------|
+| Atalho              | Ação            |
+| ------------------- | --------------- |
 | `Super + Shift + S` | 📸 Flameshot GUI |
 
 ## 🛠️ Scripts Personalizados
@@ -218,6 +220,7 @@ hypr-quick restart-bar     # Reiniciar Waybar
 ```bash
 # Gerenciador de tema Tokyo Night
 tokyo-night all           # Aplicar tema em tudo
+tokyo-night zen           # Sincronizar tema do Zen Browser
 tokyo-night gtk           # Só aplicações GTK
 tokyo-night check         # Verificar status dos temas
 ```

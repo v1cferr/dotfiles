@@ -8,7 +8,8 @@ Scripts personalizados para facilitar o gerenciamento do ambiente Hyprland com t
 scripts/
 ├── .local/bin/              # Scripts executáveis
 │   ├── hypr-quick          # Ações rápidas do Hyprland
-│   └── tokyo-night         # Aplicador de tema Tokyo Night
+│   ├── tokyo-night         # Aplicador de tema Tokyo Night
+│   └── zen-sync            # Sincroniza o tema do Zen Browser
 └── README.md               # Este arquivo
 ```
 
@@ -41,8 +42,18 @@ tokyo-night gtk           # Tema GTK (Thunar, etc.)
 tokyo-night rofi          # Verificar Rofi
 tokyo-night waybar        # Recarregar Waybar
 tokyo-night hyprland      # Recarregar Hyprland
+tokyo-night zen           # Sincronizar Zen Browser
 tokyo-night all           # Aplicar em tudo
 tokyo-night check         # Verificar status
+```
+
+### 🌐 zen-sync
+
+Sincroniza o tema versionado do Zen Browser com o perfil padrão ativo.
+
+```bash
+zen-sync                 # Cria/atualiza os links para userChrome.css e user.js
+zen-sync check           # Mostra o perfil detectado e o estado dos links
 ```
 
 ## 🔧 Instalação
@@ -79,6 +90,7 @@ Estes scripts podem ser chamados de:
 - **Rofi** como aplicações
 - **Terminal** diretamente
 - **Waybar** com botões personalizados
+- **Zen Browser** via perfil padrão detectado automaticamente
 
 ### Exemplo de Keybindings
 

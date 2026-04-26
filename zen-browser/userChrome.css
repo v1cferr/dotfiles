@@ -1,0 +1,312 @@
+/* Tokyo Night for Zen Browser
+ * Palette derived from the official Tokyo Night theme JSON:
+ * https://github.com/tokyo-night/tokyo-night-vscode-theme/blob/master/themes/tokyo-night-color-theme.json
+ */
+
+:root {
+  --tn-bg: #1a1b26;
+  --tn-bg-alt: #16161e;
+  --tn-surface: #202330;
+  --tn-surface-2: #1e202e;
+  --tn-surface-3: #14141b;
+  --tn-border: #101014;
+  --tn-border-soft: #363b54;
+  --tn-border-clean: rgba(122, 162, 247, 0.18);
+  --tn-border-ultra-soft: rgba(122, 162, 247, 0.1);
+  --tn-comment: #51597d;
+  --tn-fg-muted: #9aa5ce;
+  --tn-fg: #a9b1d6;
+  --tn-fg-bright: #c0caf5;
+  --tn-blue: #7aa2f7;
+  --tn-blue-soft: #6183bb;
+  --tn-cyan: #73daca;
+  --tn-magenta: #bb9af7;
+  --tn-yellow: #e0af68;
+  --tn-red: #f7768e;
+  --tn-green: #9ece6a;
+
+  --zen-colors-primary: var(--tn-blue) !important;
+  --zen-colors-secondary: var(--tn-magenta) !important;
+  --zen-colors-tertiary: var(--tn-surface-2) !important;
+  --zen-colors-border: var(--tn-border-soft) !important;
+  --zen-dialog-background: var(--tn-bg-alt) !important;
+
+  --lwt-accent-color: var(--tn-bg-alt) !important;
+  --lwt-text-color: var(--tn-fg) !important;
+  --toolbar-bgcolor: var(--tn-bg-alt) !important;
+  --toolbar-color: var(--tn-fg) !important;
+  --toolbar-field-background-color: var(--tn-surface-3) !important;
+  --toolbar-field-color: var(--tn-fg) !important;
+  --toolbar-field-border-color: var(--tn-border) !important;
+  --toolbar-field-focus-border-color: var(--tn-blue-soft) !important;
+  --sidebar-background-color: var(--tn-bg-alt) !important;
+  --sidebar-text-color: var(--tn-fg) !important;
+  --tab-selected-bgcolor: var(--tn-surface) !important;
+  --tab-selected-textcolor: var(--tn-fg-bright) !important;
+  --tab-line-color: var(--tn-blue) !important;
+  --arrowpanel-background: var(--tn-bg-alt) !important;
+  --arrowpanel-color: var(--tn-fg) !important;
+  --arrowpanel-border-color: var(--tn-border) !important;
+  --panel-separator-color: var(--tn-border) !important;
+  --newtab-background-color: var(--tn-bg) !important;
+  --in-content-page-background: var(--tn-bg) !important;
+  --in-content-page-color: var(--tn-fg) !important;
+}
+
+#main-window,
+#navigator-toolbox,
+#titlebar,
+#TabsToolbar,
+#nav-bar,
+#PersonalToolbar,
+#zen-sidebar-web-panel,
+#sidebar-box,
+#sidebar,
+#appcontent,
+browser,
+panelview,
+menupopup,
+.panel-subview-body,
+.panel-subview-footer,
+.browserSidebarContainer {
+  background: var(--tn-bg-alt) !important;
+  color: var(--tn-fg) !important;
+}
+
+#urlbar-background,
+.searchbar-textbox {
+  background: var(--tn-surface-3) !important;
+  border: 1px solid var(--tn-border-ultra-soft) !important;
+  border-radius: 12px !important;
+}
+
+#urlbar:hover > #urlbar-background,
+#urlbar[open] > #urlbar-background,
+#urlbar[breakout][breakout-extend] > #urlbar-background,
+#urlbar[focused] > #urlbar-background,
+.searchbar-textbox:hover,
+.searchbar-textbox:focus-within {
+  background: linear-gradient(180deg, #202330 0%, #1e202e 100%) !important;
+  border-color: var(--tn-border-clean) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22) !important;
+}
+
+#urlbar-input,
+#searchbar,
+#searchbar input,
+#urlbar .urlbar-input,
+#urlbar .search-one-offs {
+  color: var(--tn-fg) !important;
+}
+
+#identity-box,
+#identity-icon-box,
+#tracking-protection-icon-container,
+#page-action-buttons,
+#star-button-box,
+.urlbarView-row[type="tip"],
+.urlbarView-url,
+.tab-icon-overlay,
+.toolbarbutton-icon,
+.toolbarbutton-text {
+  color: var(--tn-fg-muted) !important;
+}
+
+.urlbarView,
+.urlbarView-body-outer,
+.urlbarView-body-inner,
+.urlbarView-row,
+#urlbar-results,
+.search-panel-one-offs-container {
+  background: linear-gradient(180deg, #16161e 0%, #14141b 100%) !important;
+  color: var(--tn-fg) !important;
+  border-color: var(--tn-border-clean) !important;
+}
+
+#urlbar[open] .urlbarView,
+#urlbar[breakout][breakout-extend] .urlbarView {
+  border: 1px solid var(--tn-border-clean) !important;
+  border-top: 0 !important;
+  border-radius: 0 0 14px 14px !important;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.32) !important;
+}
+
+.urlbarView-row::before {
+  border-color: var(--tn-border-ultra-soft) !important;
+}
+
+.urlbarView-row[selected],
+.urlbarView-row:hover,
+.search-panel-header,
+.searchbar-engine-one-off-item:hover {
+  background: rgba(122, 162, 247, 0.14) !important;
+  color: var(--tn-fg-bright) !important;
+}
+
+.tabbrowser-tab .tab-background {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+.tabbrowser-tab:hover:not([selected="true"]) .tab-background,
+.tabbrowser-tab[multiselected="true"] .tab-background {
+  background: var(--tn-surface-2) !important;
+}
+
+.tabbrowser-tab[selected="true"] .tab-background {
+  background: linear-gradient(180deg, #202330 0%, #1e202e 100%) !important;
+  border-color: #29355a !important;
+  box-shadow: 0 0 0 1px rgba(122, 162, 247, 0.08) !important;
+}
+
+.tabbrowser-tab .tab-label,
+.tabbrowser-tab .tab-icon-image,
+.tabbrowser-tab .tab-close-button {
+  color: var(--tn-fg) !important;
+}
+
+.tabbrowser-tab[selected="true"] .tab-label,
+.tabbrowser-tab[selected="true"] .tab-icon-image,
+.tabbrowser-tab[selected="true"] .tab-close-button,
+.tabbrowser-tab:hover .tab-label {
+  color: var(--tn-fg-bright) !important;
+}
+
+#tabbrowser-tabs,
+#vertical-pinned-tabs-container,
+.zen-essentials-container,
+.zen-workspace-pinned-tabs-section,
+.pinned-tabs-container-separator,
+.sidebar-panel,
+#sidebar-header {
+  background: transparent !important;
+  border-color: var(--tn-border-clean) !important;
+}
+
+/* Improve readability in tab list/sidebar and right docked panel */
+.tabbrowser-tab .tab-label,
+.zen-workspace-tabs-section .tabbrowser-tab .tab-label,
+.zen-workspace-pinned-tabs-section .tabbrowser-tab .tab-label,
+.urlbarView-title,
+.urlbarView-url,
+.bookmark-item,
+.panel-header,
+.subview-subheader {
+  color: var(--tn-fg) !important;
+}
+
+.tabbrowser-tab:hover .tab-label,
+.tabbrowser-tab[selected="true"] .tab-label,
+.urlbarView-row[selected] .urlbarView-title,
+.urlbarView-row[selected] .urlbarView-url {
+  color: var(--tn-fg-bright) !important;
+}
+
+/* Remove the harsh black edge when sidebar is docked on the right */
+#sidebar-box,
+#sidebar,
+#sidebar-main,
+#zen-sidebar-web-panel,
+.browserSidebarContainer,
+#sidebar-box[sidebar-positionend] {
+  border: 0 !important;
+  border-inline-start: 0 !important;
+  border-inline-end: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Hide splitter/divider that can look like a thick black border */
+#sidebar-splitter,
+#zen-sidebar-splitter,
+splitter[orient="vertical"] {
+  border: 0 !important;
+  border-inline-start: 0 !important;
+  border-inline-end: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  min-width: 1px !important;
+  width: 1px !important;
+  opacity: 0.28 !important;
+}
+
+toolbarbutton:hover,
+.subviewbutton:hover,
+menuitem[_moz-menuactive="true"],
+menu[_moz-menuactive="true"],
+.webextension-browser-action:hover,
+.unified-extensions-item:hover {
+  background: var(--tn-surface-2) !important;
+  color: var(--tn-fg-bright) !important;
+}
+
+findbar,
+.findbar-container,
+#statuspanel-label,
+#customizationui-widget-panel,
+#appMenu-popup,
+#widget-overflow,
+.panel-viewstack,
+.panel-header,
+.panel-banner-item {
+  background: var(--tn-bg-alt) !important;
+  color: var(--tn-fg) !important;
+  border-color: var(--tn-border) !important;
+}
+
+.findbar-find-status,
+.findbar-label,
+.panel-header,
+.subview-subheader,
+.urlbarView-title-separator {
+  color: var(--tn-comment) !important;
+}
+
+.toolbarbutton-badge,
+.toolbarbutton-badge-stack .toolbarbutton-badge,
+.webextension-browser-action .toolbarbutton-badge,
+[id*="ublock0"] .toolbarbutton-badge,
+[id*="ublock"] .toolbarbutton-badge {
+  background: var(--tn-blue) !important;
+  color: var(--tn-bg) !important;
+  border: 1px solid rgba(169, 177, 214, 0.25) !important;
+  box-shadow: none !important;
+  font-weight: 700 !important;
+  text-shadow: none !important;
+}
+
+.findbar-textbox,
+.findbar-textbox[status="notfound"] {
+  background: var(--tn-surface-3) !important;
+  color: var(--tn-fg-bright) !important;
+  border-color: var(--tn-border-soft) !important;
+}
+
+.findbar-textbox[status="notfound"] {
+  border-color: var(--tn-red) !important;
+}
+
+#TabsToolbar .toolbarbutton-1[open="true"],
+#nav-bar .toolbarbutton-1[open="true"],
+#PersonalToolbar .toolbarbutton-1[open="true"],
+toolbarbutton[checked="true"] {
+  background: var(--tn-surface) !important;
+  color: var(--tn-blue) !important;
+}
+
+#downloads-indicator-progress-inner {
+  background: var(--tn-cyan) !important;
+}
+
+#statuspanel-label {
+  border-radius: 10px !important;
+}
+
+.titlebar-button:hover {
+  background: var(--tn-surface-2) !important;
+}
+
+.titlebar-close:hover {
+  background: color-mix(in srgb, var(--tn-red) 25%, transparent) !important;
+}

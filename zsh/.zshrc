@@ -6,10 +6,13 @@ export TERMINAL="kitty"
 export EDITOR='nano'
 export LANG=en_US.UTF-8
 
+# Desativa histórico do fzf
+export FZF_CTRL_R_COMMAND=
+
 # --- 2. Histórico do Zsh (Configuração manual necessária sem o OMZ) ---
 HISTFILE="$HOME/.zsh_history"
-HISTSIZE=10000
-SAVEHIST=10000
+HISTSIZE=100000
+SAVEHIST=100000
 setopt EXTENDED_HISTORY
 setopt HIST_EXPIRE_DUPS_FIRST
 setopt HIST_IGNORE_DUPS
@@ -86,7 +89,8 @@ bindkey "\e\e" sudo-command-line
 
 # --- 8. Inicialização de Ambientes e Ferramentas ---
 
-# Starship (Prompt)
+# Evals de inicialização (atuin, starship, zoxide)
+eval "$(atuin init zsh)"
 eval "$(starship init zsh)"
 
 # Zoxide (Substituto do cd) - Instale com: sudo pacman -S zoxide
@@ -131,3 +135,18 @@ conda() {
 if [[ $- == *i* ]]; then
   fastfetch
 fi
+
+# --- 10. Bindkeys ---
+
+bindkey '^[[A' up-line-or-history
+bindkey '^[[B' down-line-or-history
+
+fzf-history-widget() {
+  BUFFER=$(history -n 1 | tac | fzf --tac --height 40% --reverse)
+  CURSOR=$#BUFFER
+  zle reset-prompt
+}
+
+zle -N fzf-history-widget
+bindkey '^R' atuin-search
+bindkey '^[r' fzf-history-widget

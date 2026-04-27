@@ -13,7 +13,8 @@
   --tn-border-soft: #363b54;
   --tn-border-clean: rgba(122, 162, 247, 0.18);
   --tn-border-ultra-soft: rgba(122, 162, 247, 0.1);
-  --tn-overlay-soft: rgba(22, 22, 30, 0.94);
+  --tn-overlay-soft: rgba(44, 52, 82, 0.58);
+  --tn-overlay-deep: rgba(33, 39, 63, 0.72);
   --tn-comment: #51597d;
   --tn-fg-muted: #9aa5ce;
   --tn-fg: #a9b1d6;
@@ -76,13 +77,9 @@ menupopup,
 
 #urlbar-background,
 .searchbar-textbox {
-  background: color-mix(
-    in srgb,
-    var(--tn-surface-3) 88%,
-    #202330 12%
-  ) !important;
+  background: transparent !important;
   border: 1px solid var(--tn-border-ultra-soft) !important;
-  border-radius: 12px !important;
+  border-radius: 14px !important;
 }
 
 #urlbar:hover > #urlbar-background,
@@ -91,9 +88,14 @@ menupopup,
 #urlbar[focused] > #urlbar-background,
 .searchbar-textbox:hover,
 .searchbar-textbox:focus-within {
-  background: linear-gradient(180deg, #202330 0%, #1e202e 100%) !important;
+  background: transparent !important;
   border-color: var(--tn-border-clean) !important;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22) !important;
+}
+
+#urlbar,
+#urlbar-input-container {
+  border-radius: 14px !important;
 }
 
 #urlbar-input,
@@ -117,28 +119,30 @@ menupopup,
   color: var(--tn-fg-muted) !important;
 }
 
-.urlbarView,
-.urlbarView-body-outer,
 .urlbarView-body-inner,
 .urlbarView-row,
 #urlbar-results,
 .search-panel-one-offs-container {
-  background: var(--tn-overlay-soft) !important;
+  background: transparent !important;
   color: var(--tn-fg) !important;
   border-color: var(--tn-border-clean) !important;
 }
 
 #urlbar[open] .urlbarView,
 #urlbar[breakout][breakout-extend] .urlbarView {
+  background: rgba(26, 27, 38, 0.24) !important;
   border: 1px solid var(--tn-border-clean) !important;
   border-top: 0 !important;
-  border-radius: 0 0 14px 14px !important;
+  border-radius: 0 0 16px 16px !important;
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.32) !important;
+  backdrop-filter: blur(20px) saturate(145%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(145%) !important;
+  overflow: hidden !important;
 }
 
 #urlbar[breakout][breakout-extend],
 #urlbar[breakout][breakout-extend] #urlbar-background {
-  background: var(--tn-overlay-soft) !important;
+  background: transparent !important;
 }
 
 /* Keep rows clean and avoid dark stacked boxes in the url popup */
@@ -153,6 +157,21 @@ menupopup,
 .urlbarView-row > .urlbarView-row-inner {
   background: transparent !important;
   box-shadow: none !important;
+}
+
+/* Keep the bottom spacing without adding a dark strip */
+.urlbarView-body-outer {
+  background: transparent !important;
+  padding-bottom: 8px !important;
+}
+
+.urlbarView-row:last-of-type {
+  margin-bottom: 6px !important;
+}
+
+.urlbarView-body-outer,
+.urlbarView-results {
+  border-radius: 0 0 12px 12px !important;
 }
 
 .urlbarView-row {

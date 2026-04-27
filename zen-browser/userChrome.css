@@ -13,6 +13,7 @@
   --tn-border-soft: #363b54;
   --tn-border-clean: rgba(122, 162, 247, 0.18);
   --tn-border-ultra-soft: rgba(122, 162, 247, 0.1);
+  --tn-overlay-soft: rgba(22, 22, 30, 0.94);
   --tn-comment: #51597d;
   --tn-fg-muted: #9aa5ce;
   --tn-fg: #a9b1d6;
@@ -75,7 +76,11 @@ menupopup,
 
 #urlbar-background,
 .searchbar-textbox {
-  background: var(--tn-surface-3) !important;
+  background: color-mix(
+    in srgb,
+    var(--tn-surface-3) 88%,
+    #202330 12%
+  ) !important;
   border: 1px solid var(--tn-border-ultra-soft) !important;
   border-radius: 12px !important;
 }
@@ -118,7 +123,7 @@ menupopup,
 .urlbarView-row,
 #urlbar-results,
 .search-panel-one-offs-container {
-  background: linear-gradient(180deg, #16161e 0%, #14141b 100%) !important;
+  background: var(--tn-overlay-soft) !important;
   color: var(--tn-fg) !important;
   border-color: var(--tn-border-clean) !important;
 }
@@ -131,6 +136,29 @@ menupopup,
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.32) !important;
 }
 
+#urlbar[breakout][breakout-extend],
+#urlbar[breakout][breakout-extend] #urlbar-background {
+  background: var(--tn-overlay-soft) !important;
+}
+
+/* Keep rows clean and avoid dark stacked boxes in the url popup */
+.urlbarView-row {
+  background: transparent !important;
+}
+
+.urlbarView-results,
+.urlbarView-body-inner,
+.urlbarView-row-inner,
+.urlbarView-no-wrap,
+.urlbarView-row > .urlbarView-row-inner {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.urlbarView-row {
+  border: 0 !important;
+}
+
 .urlbarView-row::before {
   border-color: var(--tn-border-ultra-soft) !important;
 }
@@ -141,6 +169,13 @@ menupopup,
 .searchbar-engine-one-off-item:hover {
   background: rgba(122, 162, 247, 0.14) !important;
   color: var(--tn-fg-bright) !important;
+}
+
+#urlbar .urlbarView-title,
+#urlbar .urlbarView-url,
+#urlbar .search-panel-one-offs-header,
+#urlbar .urlbarView-no-wrap {
+  color: var(--tn-fg) !important;
 }
 
 .tabbrowser-tab .tab-background {
@@ -231,6 +266,21 @@ splitter[orient="vertical"] {
   opacity: 0.28 !important;
 }
 
+/* Small QoL gap and rounded page container */
+#appcontent,
+#tabbrowser-tabbox,
+#tabbrowser-tabpanels,
+.browserStack {
+  border-radius: 12px !important;
+}
+
+#appcontent {
+  margin-block-start: 4px !important;
+  margin-inline-end: 4px !important;
+  margin-block-end: 4px !important;
+  overflow: hidden !important;
+}
+
 toolbarbutton:hover,
 .subviewbutton:hover,
 menuitem[_moz-menuactive="true"],
@@ -268,11 +318,11 @@ findbar,
 .webextension-browser-action .toolbarbutton-badge,
 [id*="ublock0"] .toolbarbutton-badge,
 [id*="ublock"] .toolbarbutton-badge {
-  background: var(--tn-blue) !important;
-  color: var(--tn-bg) !important;
-  border: 1px solid rgba(169, 177, 214, 0.25) !important;
+  background: rgba(62, 69, 99, 0.92) !important;
+  color: var(--tn-fg-bright) !important;
+  border: 1px solid rgba(122, 162, 247, 0.28) !important;
   box-shadow: none !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   text-shadow: none !important;
 }
 

@@ -75,27 +75,46 @@ menupopup,
   color: var(--tn-fg) !important;
 }
 
-#urlbar-background,
-.searchbar-textbox {
-  background: transparent !important;
-  border: 1px solid var(--tn-border-ultra-soft) !important;
-  border-radius: 14px !important;
+#urlbar,
+#urlbar.urlbar,
+#urlbar .urlbar-input-container,
+#urlbar .urlbar-input-box {
+  border-radius: 18px !important;
 }
 
-#urlbar:hover > #urlbar-background,
-#urlbar[open] > #urlbar-background,
-#urlbar[breakout][breakout-extend] > #urlbar-background,
-#urlbar[focused] > #urlbar-background,
+#urlbar > .urlbar-background,
+#urlbar .urlbar-background,
+.searchbar-textbox {
+  background: rgba(30, 36, 58, 0.78) !important;
+  border: 1px solid var(--tn-border-ultra-soft) !important;
+  border-radius: 18px !important;
+  backdrop-filter: blur(8px) saturate(115%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(115%) !important;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.24) !important;
+}
+
+#urlbar:hover > .urlbar-background,
+#urlbar[open] > .urlbar-background,
+#urlbar[breakout][breakout-extend] > .urlbar-background,
+#urlbar[focused] > .urlbar-background,
 .searchbar-textbox:hover,
 .searchbar-textbox:focus-within {
-  background: transparent !important;
+  background: rgba(36, 43, 68, 0.84) !important;
   border-color: var(--tn-border-clean) !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3) !important;
 }
 
-#urlbar,
-#urlbar-input-container {
-  border-radius: 14px !important;
+#urlbar > .urlbar-input-container,
+#urlbar .urlbar-input-container {
+  background: transparent !important;
+  border-radius: 18px !important;
+  padding-inline: 10px !important;
+  gap: 6px !important;
+}
+
+#urlbar .urlbar-input-box {
+  background: transparent !important;
+  border-radius: 16px !important;
 }
 
 #urlbar-input,
@@ -104,6 +123,11 @@ menupopup,
 #urlbar .urlbar-input,
 #urlbar .search-one-offs {
   color: var(--tn-fg) !important;
+}
+
+#urlbar .urlbar-input::placeholder {
+  color: var(--tn-fg-muted) !important;
+  opacity: 0.92 !important;
 }
 
 #identity-box,
@@ -119,6 +143,38 @@ menupopup,
   color: var(--tn-fg-muted) !important;
 }
 
+#urlbar .searchmode-switcher,
+#urlbar #identity-icon-box,
+#urlbar #zen-site-data-icon-button,
+#urlbar #tracking-protection-icon-container,
+#urlbar .urlbar-page-action,
+#urlbar #zen-copy-url-button,
+#urlbar #star-button-box,
+#urlbar #pageActionButton {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  padding-inline: 4px !important;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease !important;
+}
+
+#urlbar .searchmode-switcher:hover,
+#urlbar #identity-icon-box:hover,
+#urlbar #zen-site-data-icon-button:hover,
+#urlbar #tracking-protection-icon-container:hover,
+#urlbar .urlbar-page-action:hover,
+#urlbar #zen-copy-url-button:hover,
+#urlbar #star-button-box:hover,
+#urlbar #pageActionButton:hover {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--tn-fg-bright) !important;
+}
+
 .urlbarView-body-inner,
 .urlbarView-row,
 #urlbar-results,
@@ -130,13 +186,13 @@ menupopup,
 
 #urlbar[open] .urlbarView,
 #urlbar[breakout][breakout-extend] .urlbarView {
-  background: rgba(26, 27, 38, 0.24) !important;
+  background: rgba(30, 36, 58, 0.78) !important;
   border: 1px solid var(--tn-border-clean) !important;
   border-top: 0 !important;
-  border-radius: 0 0 16px 16px !important;
+  border-radius: 0 0 18px 18px !important;
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.32) !important;
-  backdrop-filter: blur(20px) saturate(145%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(145%) !important;
+  backdrop-filter: blur(8px) saturate(115%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(115%) !important;
   overflow: hidden !important;
 }
 
@@ -385,8 +441,10 @@ toolbarbutton[checked="true"] {
   transform: none !important;
   scale: 1 !important;
   opacity: 1 !important;
-  filter: none !important;
-  transition: none !important;
+  filter: blur(3px) saturate(0.95) brightness(0.9) !important;
+  transition:
+    filter 0.18s ease,
+    opacity 0.18s ease !important;
 }
 
 .zen-glance-element-preview {
@@ -395,6 +453,13 @@ toolbarbutton[checked="true"] {
 
 .browserSidebarContainer.zen-glance-overlay .browserContainer browser {
   background: transparent !important;
+}
+
+.browserSidebarContainer.zen-glance-overlay .browserContainer .browserStack {
+  border: 1px solid rgba(122, 162, 247, 0.22) !important;
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(192, 202, 245, 0.05) !important;
 }
 
 /* Glance controls: improve icon/button legibility on right sidebar */

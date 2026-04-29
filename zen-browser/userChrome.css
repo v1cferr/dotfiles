@@ -26,6 +26,8 @@
   --tn-yellow: #e0af68;
   --tn-red: #f7768e;
   --tn-green: #9ece6a;
+  --tn-urlbar-bg: rgba(30, 36, 58, 0.86);
+  --tn-urlbar-bg-hover: rgba(34, 41, 64, 0.92);
 
   --zen-colors-primary: var(--tn-blue) !important;
   --zen-colors-secondary: var(--tn-magenta) !important;
@@ -79,13 +81,14 @@ menupopup,
 #urlbar.urlbar,
 #urlbar .urlbar-input-container,
 #urlbar .urlbar-input-box {
+  --urlbarView-separator-color: transparent !important;
   border-radius: 18px !important;
 }
 
 #urlbar > .urlbar-background,
 #urlbar .urlbar-background,
 .searchbar-textbox {
-  background: rgba(30, 36, 58, 0.78) !important;
+  background: var(--tn-urlbar-bg) !important;
   border: 1px solid var(--tn-border-ultra-soft) !important;
   border-radius: 18px !important;
   backdrop-filter: blur(8px) saturate(115%) !important;
@@ -99,7 +102,7 @@ menupopup,
 #urlbar[focused] > .urlbar-background,
 .searchbar-textbox:hover,
 .searchbar-textbox:focus-within {
-  background: rgba(36, 43, 68, 0.84) !important;
+  background: var(--tn-urlbar-bg-hover) !important;
   border-color: var(--tn-border-clean) !important;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3) !important;
 }
@@ -144,10 +147,22 @@ menupopup,
 }
 
 #urlbar .searchmode-switcher,
+#urlbar .searchmode-switcher > .toolbarbutton-icon,
+#urlbar .searchmode-switcher > .searchmode-switcher-dropmarker,
+#urlbar .searchmode-switcher > .searchmode-switcher-close,
+#urlbar .searchmode-switcher > .searchmode-switcher-close > .toolbarbutton-icon,
 #urlbar #identity-icon-box,
+#urlbar #identity-box,
+#urlbar #trust-icon-container,
+#urlbar #notification-popup-box,
+#urlbar #identity-permission-box,
+#urlbar #blocked-permissions-container,
+#urlbar .identity-box-button,
 #urlbar #zen-site-data-icon-button,
 #urlbar #tracking-protection-icon-container,
+#urlbar #tracking-protection-icon-box,
 #urlbar .urlbar-page-action,
+#urlbar #urlbar-zoom-button,
 #urlbar #zen-copy-url-button,
 #urlbar #star-button-box,
 #urlbar #pageActionButton {
@@ -163,7 +178,13 @@ menupopup,
 }
 
 #urlbar .searchmode-switcher:hover,
+#urlbar .searchmode-switcher > .toolbarbutton-icon:hover,
+#urlbar .searchmode-switcher > .searchmode-switcher-dropmarker:hover,
+#urlbar .searchmode-switcher > .searchmode-switcher-close:hover,
 #urlbar #identity-icon-box:hover,
+#urlbar #identity-box:hover,
+#urlbar #trust-icon-container:hover,
+#urlbar .identity-box-button:hover,
 #urlbar #zen-site-data-icon-button:hover,
 #urlbar #tracking-protection-icon-container:hover,
 #urlbar .urlbar-page-action:hover,
@@ -184,9 +205,19 @@ menupopup,
   border-color: var(--tn-border-clean) !important;
 }
 
+#urlbar[open] .urlbarView-body-outer,
+#urlbar[open] .urlbarView-body-inner,
+#urlbar[open] #urlbar-results,
+#urlbar[breakout][breakout-extend] .urlbarView-body-outer,
+#urlbar[breakout][breakout-extend] .urlbarView-body-inner,
+#urlbar[breakout][breakout-extend] #urlbar-results {
+  border-top: 0 !important;
+  outline: none !important;
+}
+
 #urlbar[open] .urlbarView,
 #urlbar[breakout][breakout-extend] .urlbarView {
-  background: rgba(30, 36, 58, 0.78) !important;
+  background: var(--tn-urlbar-bg) !important;
   border: 1px solid var(--tn-border-clean) !important;
   border-top: 0 !important;
   border-radius: 0 0 18px 18px !important;
@@ -218,11 +249,15 @@ menupopup,
 /* Keep the bottom spacing without adding a dark strip */
 .urlbarView-body-outer {
   background: transparent !important;
+  padding-bottom: 12px !important;
+}
+
+#urlbar-results {
   padding-bottom: 8px !important;
 }
 
 .urlbarView-row:last-of-type {
-  margin-bottom: 6px !important;
+  margin-bottom: 10px !important;
 }
 
 .urlbarView-body-outer,

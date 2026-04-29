@@ -372,6 +372,38 @@ toolbarbutton[checked="true"] {
   border-radius: 10px !important;
 }
 
+/* Glance: keep overlay transparent so previous page remains visible */
+.browserSidebarContainer.zen-glance-overlay,
+.browserSidebarContainer.zen-glance-background,
+.browserSidebarContainer.zen-glance-overlay .browserContainer,
+.browserSidebarContainer.zen-glance-overlay .browserContainer .browserStack {
+  background: transparent !important;
+}
+
+.browserSidebarContainer.zen-glance-overlay .browserContainer browser {
+  background: transparent !important;
+}
+
+/* Glance controls: improve icon/button legibility on right sidebar */
+.zen-glance-sidebar-container toolbarbutton {
+  background: rgba(26, 27, 38, 0.82) !important;
+  color: var(--tn-fg-bright) !important;
+  fill: currentColor !important;
+  border: 1px solid var(--tn-border-clean) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25) !important;
+}
+
+.zen-glance-sidebar-container toolbarbutton:hover {
+  background: rgba(44, 52, 82, 0.88) !important;
+  color: #ffffff !important;
+}
+
+.zen-glance-sidebar-container toolbarbutton image,
+.zen-glance-sidebar-container toolbarbutton .toolbarbutton-icon {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
 .titlebar-button:hover {
   background: var(--tn-surface-2) !important;
 }

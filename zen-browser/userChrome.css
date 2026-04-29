@@ -223,7 +223,7 @@ menupopup,
   border: 0 !important;
   border-top: 0 !important;
   border-radius: 0 0 18px 18px !important;
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.32) !important;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24) !important;
   backdrop-filter: blur(8px) saturate(115%) !important;
   -webkit-backdrop-filter: blur(8px) saturate(115%) !important;
   overflow: hidden !important;
@@ -333,8 +333,44 @@ menupopup,
 .urlbarView-row:hover,
 .search-panel-header,
 .searchbar-engine-one-off-item:hover {
-  background: rgba(122, 162, 247, 0.14) !important;
+  background: rgba(122, 162, 247, 0.09) !important;
   color: var(--tn-fg-bright) !important;
+}
+
+#urlbar .urlbarView-row {
+  min-height: 34px !important;
+}
+
+#urlbar .urlbarView-row-inner,
+#urlbar .urlbarView-row > .urlbarView-row-inner {
+  padding-block: 3px !important;
+}
+
+#urlbar .urlbarView-url,
+#urlbar .urlbarView-action,
+#urlbar .urlbarView-switchToTab {
+  color: var(--tn-fg-muted) !important;
+  opacity: 0.86 !important;
+}
+
+#urlbar #page-action-buttons .urlbar-icon,
+#urlbar .urlbar-page-action .urlbar-icon,
+#urlbar #zen-copy-url-button .urlbar-icon,
+#urlbar .urlbar-go-button,
+#urlbar #urlbar-zoom-button .toolbarbutton-icon,
+#urlbar .searchmode-switcher .toolbarbutton-icon {
+  width: 14px !important;
+  height: 14px !important;
+  opacity: 0.8 !important;
+}
+
+#urlbar #page-action-buttons .urlbar-icon:hover,
+#urlbar .urlbar-page-action:hover .urlbar-icon,
+#urlbar #zen-copy-url-button:hover .urlbar-icon,
+#urlbar .urlbar-go-button:hover,
+#urlbar #urlbar-zoom-button:hover .toolbarbutton-icon,
+#urlbar .searchmode-switcher:hover .toolbarbutton-icon {
+  opacity: 1 !important;
 }
 
 #urlbar .urlbarView-title,

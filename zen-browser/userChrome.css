@@ -202,7 +202,9 @@ menupopup,
 .search-panel-one-offs-container {
   background: transparent !important;
   color: var(--tn-fg) !important;
-  border-color: var(--tn-border-clean) !important;
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 #urlbar[open] .urlbarView-body-outer,
@@ -218,13 +220,34 @@ menupopup,
 #urlbar[open] .urlbarView,
 #urlbar[breakout][breakout-extend] .urlbarView {
   background: var(--tn-urlbar-bg) !important;
-  border: 1px solid var(--tn-border-clean) !important;
+  border: 0 !important;
   border-top: 0 !important;
   border-radius: 0 0 18px 18px !important;
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.32) !important;
   backdrop-filter: blur(8px) saturate(115%) !important;
   -webkit-backdrop-filter: blur(8px) saturate(115%) !important;
   overflow: hidden !important;
+}
+
+#urlbar[open] .urlbarView::before,
+#urlbar[open] .urlbarView::after,
+#urlbar[open] .urlbarView-body-outer::before,
+#urlbar[open] .urlbarView-body-outer::after,
+#urlbar[open] .urlbarView-body-inner::before,
+#urlbar[open] .urlbarView-body-inner::after,
+#urlbar[open] #urlbar-results::before,
+#urlbar[open] #urlbar-results::after,
+#urlbar[breakout][breakout-extend] .urlbarView::before,
+#urlbar[breakout][breakout-extend] .urlbarView::after,
+#urlbar[breakout][breakout-extend] .urlbarView-body-outer::before,
+#urlbar[breakout][breakout-extend] .urlbarView-body-outer::after,
+#urlbar[breakout][breakout-extend] .urlbarView-body-inner::before,
+#urlbar[breakout][breakout-extend] .urlbarView-body-inner::after,
+#urlbar[breakout][breakout-extend] #urlbar-results::before,
+#urlbar[breakout][breakout-extend] #urlbar-results::after {
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 #urlbar[breakout][breakout-extend],
@@ -243,6 +266,29 @@ menupopup,
 .urlbarView-no-wrap,
 .urlbarView-row > .urlbarView-row-inner {
   background: transparent !important;
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+#urlbar[open] .urlbarView-body-outer,
+#urlbar[open] .urlbarView-body-inner,
+#urlbar[open] .urlbarView-results,
+#urlbar[open] #urlbar-results,
+#urlbar[open] .urlbarView-row,
+#urlbar[open] .urlbarView-row-inner,
+#urlbar[open] .urlbarView-row-buttons,
+#urlbar[breakout][breakout-extend] .urlbarView-body-outer,
+#urlbar[breakout][breakout-extend] .urlbarView-body-inner,
+#urlbar[breakout][breakout-extend] .urlbarView-results,
+#urlbar[breakout][breakout-extend] #urlbar-results,
+#urlbar[breakout][breakout-extend] .urlbarView-row,
+#urlbar[breakout][breakout-extend] .urlbarView-row-inner,
+#urlbar[breakout][breakout-extend] .urlbarView-row-buttons {
+  border: 0 !important;
+  border-inline: 0 !important;
+  border-block: 0 !important;
+  outline: none !important;
   box-shadow: none !important;
 }
 
@@ -270,7 +316,17 @@ menupopup,
 }
 
 .urlbarView-row::before {
-  border-color: var(--tn-border-ultra-soft) !important;
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.urlbarView-row::after,
+.urlbarView-title-separator,
+.urlbarView-row-buttons {
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .urlbarView-row[selected],

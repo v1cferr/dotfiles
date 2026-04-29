@@ -380,6 +380,19 @@ toolbarbutton[checked="true"] {
   background: transparent !important;
 }
 
+/* Keep Glance animation, but prevent the page behind it from zooming/fading */
+.browserSidebarContainer.zen-glance-background {
+  transform: none !important;
+  scale: 1 !important;
+  opacity: 1 !important;
+  filter: none !important;
+  transition: none !important;
+}
+
+.zen-glance-element-preview {
+  display: none !important;
+}
+
 .browserSidebarContainer.zen-glance-overlay .browserContainer browser {
   background: transparent !important;
 }

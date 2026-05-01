@@ -150,3 +150,6 @@ fzf-history-widget() {
 zle -N fzf-history-widget
 bindkey '^R' atuin-search
 bindkey '^[r' fzf-history-widget
+
+# opencode
+export PATH=/home/v1cferr/.opencode/bin:$PATH

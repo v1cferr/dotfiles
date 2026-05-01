@@ -184,7 +184,6 @@
   ],
   "gitlens.launchpad.indicator.enabled": false,
   "workbench.editor.empty.hint": "hidden",
-  "editor.minimap.enabled": false,
   "tabnine.experimentalAutoImports": true,
   "editor.guides.bracketPairs": true,
   "chat.mcp.gallery.enabled": true,
@@ -241,5 +240,16 @@
   "workbench.editorAssociations": {
     "*.copilotmd": "vscode.markdown.preview.editor",
     "*.pdf": "pdf.preview"
+  },
+  "json.schemaDownload.trustedDomains": {
+    "https://developer.microsoft.com/json-schemas/": true,
+    "https://json-schema.org/": true,
+    "https://json.schemastore.org/": true,
+    "https://models.dev": true,
+    "https://opencode.ai/config.json": true,
+    "https://raw.githubusercontent.com/devcontainers/spec/": true,
+    "https://raw.githubusercontent.com/microsoft/vscode/": true,
+    "https://schemastore.azurewebsites.net/": true,
+    "https://www.schemastore.org/": true
   }, // Desativa o indicador do GitLens Launchpad
 }

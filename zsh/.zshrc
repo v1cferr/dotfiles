@@ -158,8 +158,19 @@ export PATH=/home/v1cferr/.opencode/bin:$PATH
 # YOUTUBE / MPV
 # ==============================
 
-alias ytmix='mpv --no-video --ytdl-format=bestaudio --shuffle "https://www.youtube.com/playlist?list=PLFxBBkriBXUVCKyD3LKYZRAACJX67A-ng"'
+YOUTUBE_PLAYLIST="https://www.youtube.com/playlist?list=PLFxBBkriBXUVCKyD3LKYZRAACJX67A-ng"
 
-alias ytvideo='mpv --shuffle "https://www.youtube.com/playlist?list=PLFxBBkriBXUVCKyD3LKYZRAACJX67A-ng"'
-
+# TUI do YouTube
 alias yttui='yt'
+
+# Tocar minha playlist apenas com áudio
+alias ytmix='mpv --no-video --force-window=no --save-position-on-quit=no --ytdl-format=bestaudio --shuffle "$YOUTUBE_PLAYLIST"'
+
+# Tocar minha playlist com vídeo até 1080p
+alias ytvideo='mpv --ytdl-format="bestvideo[height<=1080]+bestaudio/best[height<=1080]" --shuffle "$YOUTUBE_PLAYLIST"'
+
+# Tocar qualquer link do YouTube apenas com áudio
+alias ytaudio='mpv --no-video --force-window=no --ytdl-format=bestaudio'
+
+# Assistir qualquer link do YouTube com vídeo até 1080p
+alias ytwatch='mpv --ytdl-format="bestvideo[height<=1080]+bestaudio/best[height<=1080]"'

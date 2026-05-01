@@ -153,3 +153,13 @@ bindkey '^[r' fzf-history-widget
 
 # opencode
 export PATH=/home/v1cferr/.opencode/bin:$PATH
+
+# ==============================
+# YOUTUBE / MPV
+# ==============================
+
+alias ytmix='mpv --no-video --ytdl-format=bestaudio --shuffle "https://www.youtube.com/playlist?list=PLFxBBkriBXUVCKyD3LKYZRAACJX67A-ng"'
+
+alias ytvideo='mpv --shuffle "https://www.youtube.com/playlist?list=PLFxBBkriBXUVCKyD3LKYZRAACJX67A-ng"'
+
+alias yttui='yt'

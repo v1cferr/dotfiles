@@ -9,6 +9,26 @@
       ],
       "enabled": true,
       "type": "local"
+    },
+    "nextjs": {
+      "command": ["npx", "-y", "next-devtools-mcp@latest"],
+      "enabled": true,
+      "type": "local"
+    },
+    "shadcn": {
+      "command": ["npx", "-y", "@jpisnice/shadcn-ui-mcp-server"],
+      "enabled": true,
+      "type": "local"
+    },
+    "supabase": {
+      "enabled": true,
+      "type": "remote",
+      "url": "https://mcp.supabase.com/mcp?read_only=true"
+    },
+    "fastapi": {
+      "enabled": false,
+      "type": "remote",
+      "url": "http://localhost:8000/mcp"
     }
   }
 }

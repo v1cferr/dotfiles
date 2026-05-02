@@ -48,6 +48,8 @@ export LIBVIRT_DEFAULT_URI='qemu:///system'
 # --- 6. Aliases ---
 alias grep='grep --color=auto'
 alias screenshot="flameshot gui"
+alias scfull='flameshot full -c'
+alias sc1='flameshot screen --number 1 -c'
 alias stow-sync="~/dotfiles/scripts/stow-sync.sh"
 alias hyprland='start-hyprland'
 alias nrd='npm run dev'

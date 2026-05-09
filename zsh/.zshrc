@@ -169,10 +169,10 @@ alias yttui='yt'
 alias ytmix='mpv --no-video --force-window=no --save-position-on-quit=no --ytdl-format=bestaudio --shuffle "$YOUTUBE_PLAYLIST"'
 
 # Tocar minha playlist com vídeo até 1080p
-alias ytvideo='mpv --ytdl-format="bestvideo[height<=1080]+bestaudio/best[height<=1080]" --shuffle "$YOUTUBE_PLAYLIST"'
+alias ytvideo='mpv --profile=fast --hwdec=auto-safe --cache=yes --ytdl-raw-options="extractor-retries=3,fragment-retries=3,retries=3" --ytdl-format="bestvideo[vcodec!=av01][height<=1080]+bestaudio/bestvideo[height<=1080]+bestaudio/best[height<=1080]" --shuffle "$YOUTUBE_PLAYLIST"'
 
 # Tocar qualquer link do YouTube apenas com áudio
 alias ytaudio='mpv --no-video --force-window=no --ytdl-format=bestaudio'
 
 # Assistir qualquer link do YouTube com vídeo até 1080p
-alias ytwatch='mpv --ytdl-format="bestvideo[height<=1080]+bestaudio/best[height<=1080]"'
+alias ytwatch='mpv --profile=fast --hwdec=auto-safe --cache=yes --ytdl-raw-options="extractor-retries=3,fragment-retries=3,retries=3" --ytdl-format="bestvideo[vcodec!=av01][height<=1080]+bestaudio/bestvideo[height<=1080]+bestaudio/best[height<=1080]"'

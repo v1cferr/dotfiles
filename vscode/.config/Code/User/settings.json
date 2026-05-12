@@ -2,7 +2,7 @@
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
-    "//": "Last update at 5/6/2026, 6:29:43 PM",
+    "//": "Last update at 5/11/2026, 10:35:49 AM",
     ".agent": ".agent, .claude, .cline, .codebuddy, .codex, .commandcode, .continue, .crush, .cursor, .factory, .gemini, .goose, .junie, .kilocode, .kiro, .kode, .mcpjam, .mux, .neovate, .opencode, .openhands, .pi, .pochi, .qoder, .qwen, .roo, .trae, .windsurf, .zencoder",
     ".clang-tidy": ".clang-format, .clangd, compile_commands.json",
     ".env": "*.env, .env.*, .envrc, env.d.ts",
@@ -195,7 +195,6 @@
   "[java]": {
     "editor.defaultFormatter": "redhat.java",
   },
-  "chat.viewSessions.orientation": "stacked",
   "[xml]": {
     "editor.defaultFormatter": "redhat.vscode-xml",
   },
@@ -209,7 +208,8 @@
   },
   "chat.viewSessions.orientation": "stacked",
   "security.allowedUNCHosts": [
-    "wsl.localhost"
+    "wsl.localhost",
+    "FAIADM6246"
   ],
   "remote.autoForwardPortsSource": "hybrid",
   "workbench.settings.applyToAllProfiles": [
@@ -251,5 +251,6 @@
     "https://raw.githubusercontent.com/microsoft/vscode/": true,
     "https://schemastore.azurewebsites.net/": true,
     "https://www.schemastore.org/": true
-  }, // Desativa o indicador do GitLens Launchpad
+  },
+  "githubPullRequests.pullBranch": "never", // Desativa o indicador do GitLens Launchpad
 }

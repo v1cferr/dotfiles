@@ -14,3 +14,6 @@ vscode/.config/Code/User/*.log
 # Wallpapers - ignorar tudo em Pictures/ exceto Wallpapers/
 wallpapers/Pictures/*
 !wallpapers/Pictures/Wallpapers/
+
+# NetworkManager - senhas de VPN (declarativo mas não versionado)
+# networkmanager/.config/NetworkManager/system-connections/*.nmconnection

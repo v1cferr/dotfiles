@@ -261,6 +261,7 @@ show_status() {
         "$HOME/.config/hypr"
         "$HOME/.config/waybar"
         "$HOME/.config/rofi"
+        "$HOME/.config/NetworkManager/system-connections"
         "$HOME/.gitconfig"
         "$HOME/.config/swaync"
     )

@@ -1,0 +1,18 @@
+{
+	"profiles": [
+		{
+			"id": "1",
+			"default": "true",
+			"name": "FAI.UFSCAR",
+			"server": "200.133.233.101:4433",
+			"host": "200.133.233.101",
+			"port": "4433",
+			"username": "victor.ferreira",
+			"protocol": "auto",
+			"domain": "fai2008",
+			"domainType": "local",
+			"clientCert": "",
+			"trustCert": "a9db8493e30996c7336f4d05bafa1daa590e7701"
+		}
+	]
+}

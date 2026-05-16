@@ -178,7 +178,7 @@ tokyo-night check
 zen-sync check
 
 # Waybar
-~/.config/waybar/scripts/restart-waybar.sh
+~/scripts/restart-waybar.sh
 
 # Extensões VS Code
 cat vscode/extensions.txt | xargs -L1 code --install-extension

@@ -1,316 +1,230 @@
-# 🌃 v1cferr's Dotfiles - Tokyo Night Edition
+# v1cferr Dotfiles - Tokyo Night
 
-> **Configurações pessoais do meu ambiente Arch Linux + Hyprland**  
-> *Tokyo Night é simplesmente meu tema preferido e utilizo em tudo que consigo* 🌙
+Configurações pessoais para Arch Linux com Hyprland, organizadas com GNU Stow.
 
-![Hyprland](https://img.shields.io/badge/Hyprland-5e81ac?style=for-the-badge&logo=wayland&logoColor=white)
-![Tokyo Night](https://img.shields.io/badge/Tokyo%20Night-7aa2f7?style=for-the-badge&logo=moon&logoColor=white)
-![Arch Linux](https://img.shields.io/badge/Arch_Linux-1793d1?style=for-the-badge&logo=arch-linux&logoColor=white)
-![Stow](https://img.shields.io/badge/GNU%20Stow-a3be8c?style=for-the-badge&logo=gnu&logoColor=white)
+Este repositório reúne meus dotfiles com foco em consistência visual (Tokyo Night), produtividade e manutenção simples.
 
-Este repositório contém todas as minhas configurações (dotfiles) para meu ambiente Linux personalizado. Tudo é baseado no **tema Tokyo Night** porque é simplesmente o melhor tema escuro que existe! 🎨
+## Visão geral
 
-## 🚀 Visão Geral
+- Sistema operacional: Arch Linux
+- Compositor/WM: Hyprland (Wayland)
+- Tema base: Tokyo Night
+- Terminal principal: Kitty
+- Terminal secundário: Warp Terminal
+- Shell: Zsh + Starship + Atuin
+- Browser: Zen Browser
+- Launcher: Rofi
+- Barra: Waybar
+- Notificações: SwayNC
+- Screenshot: Flameshot (adapter grim)
+- Gerenciamento dos dotfiles: GNU Stow
 
-- **OS**: Arch Linux
-- **WM**: Hyprland (Wayland compositor)
-- **Theme**: Tokyo Night em **TUDO** 🌃
-- **Terminal**: Warp Terminal
-- **Browser**: Zen Browser  
-- **File Manager**: Thunar (com tema Tokyo Night)
-- **Status Bar**: Waybar
-- **App Launcher**: Rofi (customizado Tokyo Night)
-- **Screenshot**: Flameshot
-- **Gerenciamento**: GNU Stow
-
-## 📁 Estrutura do Repositório
+## Estrutura do repositório
 
 ```text
 ~/dotfiles/
-├── 🖥️  hypr/           # Configuração completa do Hyprland
-├── 🔧  rofi/           # Launcher personalizado (Tokyo Night)
-├── 📊  waybar/         # Status bar minimalista
-├── 🐚  zsh/            # Shell configuration (Oh My Zsh + Agnoster)
-├── 💻  vscode/         # Configurações do VS Code + extensões
-├── 🎨  gtk-3.0/        # Tema escuro para aplicações GTK-3
-├── 🎨  gtk-4.0/        # Tema escuro para aplicações GTK-4
-├── 📷  flameshot/      # Configuração do screenshot tool
-├── 🌐  zen-browser/    # Tema Tokyo Night para o Zen Browser
-├── 🖼️  wallpapers/     # Wallpapers + symlink para ~/Pictures/Wallpapers
-├── 🔧  git/            # Configuração do Git com aliases úteis
-├── 📜  scripts/        # Scripts utilitários personalizados
-├── 📝  melhorias.md    # Lista de melhorias planejadas
-└── 📖  README.md       # Este arquivo
+├── ANOTACOES.md
+├── README.md
+├── README.hyprland.md
+├── README.improvements.md
+├── README.stow.md
+├── README.waybar.md
+├── cloudflare/
+├── fastfetch/
+├── flameshot/
+├── git/
+├── gtk-3.0/
+├── gtk-4.0/
+├── hypr/
+├── kitty/
+├── netextender/
+├── networkmanager/
+├── opencode/
+├── rofi/
+├── scripts/
+├── starship/
+├── swaync/
+├── vscode/
+├── wallpapers/
+├── waybar/
+├── zen-browser/
+└── zsh/
 ```
 
-## 🎨 Tema Tokyo Night - Minha Paixão
+## Componentes e estado atual
 
-**Por que Tokyo Night?** Porque é simplesmente o tema mais elegante, moderno e confortável para os olhos que já usei!
+### Hyprland
 
-### 🌈 Paleta de Cores Consistente
+Configuração modular em `hypr/.config/hypr/`:
 
-```text
-Background:   #1a1b26  🌃  Escuro mas não preto total
-Foreground:   #c0caf5  ✨  Texto suave e legível
-Blue:         #7aa2f7  💙  Azul vibrante mas suave
-Red:          #f7768e  ❤️  Vermelho elegante
-Green:        #9ece6a  💚  Verde refrescante
-Yellow:       #e0af68  💛  Amarelo dourado
-Purple:       #bb9af7  💜  Roxo místico
-Cyan:         #73daca  🩵  Ciano sereno
-```
+- `configs/system/` para programas, ambiente, monitores e autostart
+- `configs/appearance/` para visual, blur, animações e hyprpaper
+- `configs/input/` para keybindings
+- `configs/rules/` para regras de janela
+- `scripts/` para wallpapers e utilitários
 
-### 🎯 Aplicações com Tokyo Night
+Destaques:
 
-- ✅ **Hyprland**: Bordas, decorações, animações
-- ✅ **Rofi**: Launcher completamente customizado
-- ✅ **Waybar**: Status bar minimalista
-- ✅ **GTK Apps**: Thunar, file pickers, dialogs
-- ✅ **Terminal**: Theme integrado
-- ✅ **Zen Browser**: UI customizada com `userChrome.css`
-- ✅ **Cursors**: Rose Pine Hyprcursor (combina perfeitamente)
+- Setup dual monitor:
+  - `HDMI-A-1` em `1920x1080@60` (workspaces 5-8)
+  - `DP-1` em `1920x1080@144` (workspaces 1-4)
+- Tema Tokyo Night com transparência e blur suave
+- Hyprsunset habilitado no autostart
+- Hypridle habilitado no autostart
+- Clipboard history via cliphist (`wl-paste --watch cliphist store`)
 
-## 🖥️ Componentes Principais
+### Waybar
 
-### 🏠 Hyprland Configuration
+Configuração em estilo de grupos/pílulas com 3 blocos principais:
 
-Configuração modular e super organizada:
+- Esquerda: workspaces + janela ativa + Spotify
+- Centro: clima + relógio + notificações
+- Direita: CPU, temperaturas CPU/GPU, uso GPU, RAM, disco, rede, áudio, hypridle e tray
 
-```text
-hypr/.config/hypr/
-├── hyprland.conf              # Arquivo principal
-├── configs/
-│   ├── system/               # Sistema e programas
-│   ├── appearance/           # Visual e wallpapers
-│   ├── input/               # Teclado e mouse
-│   └── rules/               # Regras de janelas
-└── scripts/                 # Scripts de wallpaper
-```
+Scripts auxiliares e módulos customizados ficam em `waybar/.config/waybar/scripts/`.
 
-**Recursos implementados:**
+### Rofi
 
-- ✅ Dual monitor setup (DP-1 + HDMI-A-1)
-- ✅ Workspaces por monitor (1-4 principal, 5-8 secundário)
-- ✅ Sistema avançado de wallpapers
-- ✅ Transparência sutil nas janelas
-- ✅ Animações suaves e modernas
-- ✅ Suporte completo NVIDIA + Wayland
+Tema Tokyo Night com:
 
-### 🚀 Rofi - App Launcher Personalizado
+- Fuzzy matching
+- Ícones Nerd Font
+- Modos `drun`, `run`, `window`, `ssh` e `filebrowser`
 
-Launcher completamente customizado com tema Tokyo Night:
+### Shell e terminal
 
-- **Design**: Transparente com bordas arredondadas
-- **Funcionalidades**: Apps, Run, Windows, SSH, Files
-- **Performance**: Fuzzy search + icons
-- **Keybinds**: `Super+Q` (apps), `Super+R` (run)
+- `zsh/.zshrc` com:
+  - `zsh-syntax-highlighting`
+  - `zsh-autosuggestions`
+  - Atuin, Starship e Zoxide
+  - aliases para Hyprland, screenshots, manutenção e MPV/YouTube
+- `kitty/.config/kitty/kitty.conf` com opacidade dinâmica, Wayland nativo e tema Tokyo Night
+- `starship/.config/starship.toml` com paleta Tokyo Night
 
-### 📊 Waybar - Status Bar Minimalista
+### GTK
 
-Status bar clean e funcional:
+- `gtk-3.0` e `gtk-4.0` configurados para `Tokyonight-Dark`
+- Fonte padrão com Nerd Font
+- Cursor configurado para `Bibata-Modern-Ice` no ambiente Hyprland
 
-- **Módulos**: Workspaces, Clock, CPU, Tray
-- **Design**: Transparente com fonte Nerd
-- **Integração**: Perfeitamente integrada ao Hyprland
+### Zen Browser
 
-### 🐚 Zsh - Shell Poderoso
+Tema versionado via:
 
-Shell configurado com produtividade em mente:
+- `zen-browser/userChrome.css`
+- `zen-browser/user.js`
 
-- **Framework**: Oh My Zsh
-- **Theme**: Agnoster (elegante)
-- **Plugins**: Syntax highlighting, autosuggestions
-- **Aliases**: Screenshots, temas GTK
+Sincronização feita por `zen-sync`, que detecta automaticamente o perfil padrão do Zen e cria os links necessários.
 
-### 💻 VS Code - Configurações de Desenvolvimento
+### VS Code
 
-Configurações do Visual Studio Code com tema Tokyo Night:
+Pacote dedicado em `vscode/` com:
 
-- **Settings & Keybindings**: Configurações e atalhos personalizados
-- **Snippets**: Snippets customizados para desenvolvimento
-- **Extensions**: +70 extensões essenciais (GitHub Copilot, Tokyo Night, etc.)
+- settings
+- keybindings
+- snippets
+- lista de extensões (`extensions.txt`)
 
-**Uso rápido:**
+### Rede e VPN
+
+- `networkmanager/` com perfil declarativo para `VPN_UFSCar_SCL` (openconnect/globalprotect)
+- `netextender/` com perfil SonicWall `FAI.UFSCAR`
+- Script de conexão para SonicWall em `scripts/fai-ufscar-vpn.sh`
+
+### Outros módulos do repositório
+
+- `cloudflare/`: configuração de tunnel (SSH publish)
+- `fastfetch/`: configuração personalizada com blocos de hardware/software/status
+- `flameshot/`: configuração Wayland com grim adapter
+- `git/`: `.gitconfig` versionado
+- `swaync/`: configuração do notification center
+- `wallpapers/`: link para `~/Pictures/Wallpapers`
+- `opencode/`: configuração MCP local/remota
+
+## Instalação
+
+### Pré-requisitos básicos
 
 ```bash
-stow vscode  # Aplicar configurações
-cat vscode/extensions.txt | xargs -L1 code --install-extension  # Instalar extensões
+sudo pacman -S stow hyprland waybar rofi kitty zsh starship flameshot thunar
 ```
 
-### 🎨 GTK Themes - Consistência Visual
+Pacotes adicionais variam conforme seus módulos (VPN, SwayNC, extensões, etc.).
 
-Tema escuro em todas as aplicações GTK:
-
-- **Theme**: Tokyonight-Dark (everywhere!)
-- **Icons**: Win11-dark (modernos)
-- **Font**: JetBrainsMono Nerd Font
-- **Cursor**: Rose Pine Hyprcursor
-
-## ⚡ Instalação Rápida
-
-### 📋 Pré-requisitos
+### Aplicar dotfiles com Stow
 
 ```bash
-# Instalar dependências principais
-sudo pacman -S hyprland waybar rofi thunar flameshot
-sudo pacman -S stow zsh oh-my-zsh-git
-sudo pacman -S ttf-jetbrains-mono-nerd
-
-# Para NVIDIA
-sudo pacman -S nvidia-dkms nvidia-utils
-```
-
-### 🔧 Instalação
-
-```bash
-# Clone o repositório
 git clone https://github.com/v1cferr/dotfiles.git
 cd dotfiles
 
-# Aplicar todas as configurações
-stow hypr rofi waybar zsh vscode gtk-3.0 gtk-4.0 flameshot wallpapers git scripts
+stow hypr rofi waybar zsh vscode gtk-3.0 gtk-4.0 flameshot wallpapers git scripts kitty starship swaync networkmanager netextender cloudflare fastfetch opencode zen-browser
+```
 
-# Reiniciar o Hyprland ou relogar
+Opcionalmente, usar:
+
+```bash
+./scripts/stow-sync.sh
+```
+
+## Comandos úteis
+
+```bash
+# Hyprland
 hyprctl reload
+
+# Scripts utilitários
+hypr-quick help
+tokyo-night check
+zen-sync check
+
+# Waybar
+~/.config/waybar/scripts/restart-waybar.sh
+
+# Extensões VS Code
+cat vscode/extensions.txt | xargs -L1 code --install-extension
 ```
 
-## ⌨️ Atalhos Principais
+## Atalhos principais (Hyprland)
 
-### 🖥️ Hyprland
+Atalhos definidos em `hypr/.config/hypr/configs/input/keybindings.conf`:
 
-| Atalho                | Ação               |
-| --------------------- | ------------------ |
-| `Super + Q`           | 🚀 Rofi Apps        |
-| `Super + R`           | 🔧 Rofi Run         |
-| `Super + Return`      | 💻 Terminal         |
-| `Super + E`           | 📁 File Manager     |
-| `Super + C`           | ❌ Fechar janela    |
-| `Super + V`           | 🎈 Toggle floating  |
-| `Super + 1-9`         | 🏠 Trocar workspace |
-| `Super + Shift + 1-9` | 📦 Mover janela     |
+- `Super + Q`: Rofi (`drun`)
+- `Super + R`: Rofi (`run`)
+- `Super + Return`: terminal padrão (`kitty`)
+- `Super + Backspace`: terminal secundário (`warp-terminal`)
+- `Super + E`: Thunar com tema GTK
+- `Super + C`: fecha janela ativa
+- `Super + V`: alterna floating
+- `Super + 1..8`: troca workspace
+- `Super + Shift + 1..8`: move janela para workspace
+- `Super + Shift + S`: Flameshot GUI
+- `Super + I`: troca wallpaper
+- `Super + Shift + I`: inicia auto wallpaper
+- `Super + Ctrl + I`: para auto wallpaper
+- `Super + F9`: toggle hyprsunset
 
-### 🎨 Wallpapers
+## Documentação por módulo
 
-| Atalho              | Ação                  |
-| ------------------- | --------------------- |
-| `Super + I`         | 🎲 Wallpaper aleatório |
-| `Super + Shift + I` | ⏰ Auto-troca ON       |
-| `Super + Ctrl + I`  | ⏹️ Auto-troca OFF      |
+- `README.hyprland.md`
+- `README.waybar.md`
+- `README.stow.md`
+- `README.improvements.md`
+- `scripts/README.md`
+- `vscode/README.md`
+- `networkmanager/README.md`
+- `netextender/README.md`
+- `zen-browser/README.md`
+- `wallpapers/README.md`
+- `rofi/README.md`
+- `waybar/README.md`
 
-### 📷 Screenshots
+## Roadmap
 
-| Atalho              | Ação            |
-| ------------------- | --------------- |
-| `Super + Shift + S` | 📸 Flameshot GUI |
+Lista consolidada de melhorias em:
 
-## 🛠️ Scripts Personalizados
+- `README.improvements.md`
+- `ANOTACOES.md`
 
-### � Hyprland Quick Actions
+## Licença
 
-```bash
-# Ações rápidas do Hyprland
-hypr-quick reload          # Recarregar configuração
-hypr-quick screenshot      # Screenshot com Flameshot
-hypr-quick wallpaper       # Trocar wallpaper aleatório
-hypr-quick restart-bar     # Reiniciar Waybar
-```
-
-### 🌃 Tokyo Night Theme Manager
-
-```bash
-# Gerenciador de tema Tokyo Night
-tokyo-night all           # Aplicar tema em tudo
-tokyo-night zen           # Sincronizar tema do Zen Browser
-tokyo-night gtk           # Só aplicações GTK
-tokyo-night check         # Verificar status dos temas
-```
-
-### �🎨 Sistema de Wallpapers
-
-Scripts avançados para gerenciamento de wallpapers:
-
-```bash
-# Trocar wallpaper aleatório
-~/.config/hypr/scripts/change_wallpapers.sh
-
-# Auto-troca a cada 5 minutos  
-~/.config/hypr/scripts/auto_wallpaper.sh
-
-# Diagnóstico do sistema
-~/.config/hypr/scripts/wallpaper_diagnostics.sh
-```
-
-## 🔤 Fontes (Em Experimentação)
-
-Atualmente estou **testando diferentes fontes** para encontrar a perfeita:
-
-### 🧪 Testando atualmente
-
-- **JetBrainsMono Nerd Font** (principal no momento)
-- **FiraCode Nerd Font** (considerando)
-- **CascadiaCode Nerd Font** (avaliando)
-- **Hack Nerd Font** (backup)
-
-> **Nota**: A fonte ainda não está 100% definida porque estou buscando a combinação perfeita de legibilidade, ícones e estética. JetBrains está ganhando por enquanto! ✨
-
-## 🎯 Recursos Especiais
-
-### 🖥️ Multi-Monitor Setup
-
-- **Monitor Principal (DP-1)**: 1920x1080@144Hz - Workspaces 1-4
-- **Monitor Secundário (HDMI-A-1)**: 1920x1080@60Hz - Workspaces 5-8
-- **Auto-assignment**: Workspaces fixos por monitor
-
-### 🎨 Transparência Inteligente
-
-- **Janelas ativas**: 97.5% opacity
-- **Janelas inativas**: 87.5% opacity  
-- **Background**: Transparência real no Rofi e Waybar
-
-### ⚡ Performance NVIDIA
-
-Configuração otimizada para placas NVIDIA + Wayland:
-
-- G-Sync habilitado
-- Hardware acceleration
-- Variáveis de ambiente otimizadas
-
-## 📝 Melhorias Planejadas
-
-Confira o arquivo [melhorias.md](./melhorias.md) para ver o que está no roadmap!
-
-Algumas coisas que quero implementar:
-
-- [ ] Loading indicator no launcher
-- [ ] Screen lock decente
-- [ ] Clipboard history
-- [ ] Blue light filter
-- [ ] Finalizar decisão da fonte perfeita
-
-## 🤝 Como Contribuir
-
-Sinta-se à vontade para:
-
-1. **Forks e PRs**: Melhorias são bem-vindas!
-2. **Issues**: Reporte bugs ou sugira features
-3. **Temas**: Adaptações para outros themes
-4. **Dotfiles sharing**: Compartilhe suas configurações
-
-## 📜 Licença
-
-Este repositório está disponível sob licença MIT. Use, modifique e compartilhe à vontade!
-
-## 🙏 Créditos
-
-- **Tokyo Night Theme**: [folke/tokyonight.nvim](https://github.com/folke/tokyonight.nvim)
-- **Hyprland**: [hyprwm/Hyprland](https://github.com/hyprwm/Hyprland)
-- **Rose Pine Cursor**: [nana-4/rose-pine-hyprcursor](https://github.com/nana-4/rose-pine-hyprcursor)
-- **JetBrains Mono**: [JetBrains/JetBrainsMono](https://github.com/JetBrains/JetBrainsMono)
-
----
-
-## 💝 Feito com ❤️ e muito café ☕
-
-*Se você gosta de Tokyo Night tanto quanto eu, deixe uma ⭐!*
-
-[🐧 Arch Linux](https://archlinux.org) · [🌙 Tokyo Night](https://github.com/folke/tokyonight.nvim) · [🏗️ Hyprland](https://hyprland.org)
+MIT.

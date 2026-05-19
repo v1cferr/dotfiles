@@ -56,4 +56,4 @@ if [ -n "$fallback_ifaces" ]; then
   exit 0
 fi
 
-emit_json "󰌾 VPN off" "disconnected" "Nenhuma VPN ativa"
+emit_json "" "disconnected" ""

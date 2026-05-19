@@ -179,6 +179,15 @@ tooltip label {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
+#custom-vpn {
+  background: rgba(26, 27, 38, 0.86);
+  border: 1px solid rgba(65, 72, 104, 0.35);
+  border-radius: 8px;
+  margin: 0 3px;
+  padding: 4px 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
 #pulseaudio {
   background: rgba(26, 27, 38, 0.86);
   border: 1px solid rgba(65, 72, 104, 0.35);
@@ -420,7 +429,13 @@ window#waybar.fullscreen #window {
 }
 
 #custom-vpn.disconnected {
-  color: #f38ba8;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  color: transparent;
 }
 
 #custom-vpn.connected {

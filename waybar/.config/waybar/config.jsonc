@@ -200,7 +200,8 @@
     "exec": "$HOME/.config/waybar/scripts/vpn-status.sh",
     "interval": 5,
     "tooltip": true,
-    "on-click": "nm-connection-editor"
+    "on-click": "$HOME/.config/waybar/scripts/vpn-menu.sh menu",
+    "on-click-right": "$HOME/.config/waybar/scripts/vpn-menu.sh toggle"
   },
   "cpu": {
     "interval": 2,

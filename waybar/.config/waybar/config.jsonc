@@ -8,14 +8,18 @@
   "spacing": 4,
   "margin": "4 4 1 4",
   "reload_style_on_change": true,
-
   // -------------------------------------------------------------------------
   // Organização dos Módulos em "Pílulas"
   // -------------------------------------------------------------------------
-  "modules-left": ["group/workspaces-window-spotify"],
-  "modules-center": ["group/info-center"],
-  "modules-right": ["group/system-tray"],
-
+  "modules-left": [
+    "group/workspaces-window-spotify"
+  ],
+  "modules-center": [
+    "group/info-center"
+  ],
+  "modules-right": [
+    "group/system-tray"
+  ],
   // -------------------------------------------------------------------------
   // CANTO ESQUERDO
   // -------------------------------------------------------------------------
@@ -42,12 +46,21 @@
       "persistent": "󰊠"
     },
     "persistent-workspaces": {
-      "DP-1": [1, 2, 3, 4],
-      "HDMI-A-1": [5, 6, 7, 8]
+      "DP-1": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "HDMI-A-1": [
+        5,
+        6,
+        7,
+        8
+      ]
     },
     "sort-by": "number"
   },
-
   "hyprland/window": {
     "format": "{title}",
     "format-empty": "",
@@ -64,7 +77,6 @@
       "(.*) - Visual Studio Code": "󰨞 $1"
     }
   },
-
   "custom/spotify": {
     "format": "󰝚 {}",
     "max-length": 30,
@@ -77,7 +89,6 @@
     "on-scroll-down": "playerctl --player=spotify previous",
     "smooth-scrolling-threshold": 1
   },
-
   // -------------------------------------------------------------------------
   // CENTRO
   // -------------------------------------------------------------------------
@@ -89,7 +100,6 @@
     "return-type": "json",
     "on-click": "xdg-open 'https://www.msn.com/pt-br/clima/forecast/in-S%C3%A3o-Carlos,S%C3%A3o-Paulo'"
   },
-
   "clock": {
     "interval": 1,
     "format": "󰥔 {:%H:%M:%S}",
@@ -116,7 +126,6 @@
       "on-scroll-down": "shift_down"
     }
   },
-
   "custom/notification": {
     "tooltip": true,
     "format": "󰂚 {text}",
@@ -137,7 +146,6 @@
     "on-click-right": "swaync-client -d -sw",
     "escape": true
   },
-
   // -------------------------------------------------------------------------
   // CANTO DIREITO
   // -------------------------------------------------------------------------
@@ -151,7 +159,11 @@
       "phone": "󰏲",
       "portable": "󰏲",
       "car": "󰄋",
-      "default": ["󰕿", "󰖀", "󰕾"]
+      "default": [
+        "󰕿",
+        "󰖀",
+        "󰕾"
+      ]
     },
     "scroll-step": 5,
     "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
@@ -162,13 +174,17 @@
     "tooltip": true,
     "tooltip-format": "Volume: {volume}%\nDispositivo: {desc}"
   },
-
   "network": {
     "format-wifi": "󰤨 {signalStrength}%",
     "format-ethernet": "󰈀",
     "format-disconnected": "󰤯",
     "format-disabled": "󰤮",
-    "format-icons": ["󰤟", "󰤢", "󰤥", "󰤨"],
+    "format-icons": [
+      "󰤟",
+      "󰤢",
+      "󰤥",
+      "󰤨"
+    ],
     "format-alt": "{ifname}: {ipaddr}/{cidr}",
     "tooltip-format": "Rede: {essid}\nIP: {ipaddr}\nVelocidade: {bandwidthDownBits} ⬇ {bandwidthUpBits} ⬆",
     "tooltip-format-wifi": "WiFi: {essid} ({signalStrength}%)\nIP: {ipaddr}\nFrequência: {frequency}MHz\nVelocidade: {bandwidthDownBits} ⬇ {bandwidthUpBits} ⬆",
@@ -178,7 +194,14 @@
     "on-click-right": "nmcli device wifi rescan",
     "interval": 5
   },
-
+  "custom/vpn": {
+    "format": "{}",
+    "return-type": "json",
+    "exec": "$HOME/.config/waybar/scripts/vpn-status.sh",
+    "interval": 5,
+    "tooltip": true,
+    "on-click": "nm-connection-editor"
+  },
   "cpu": {
     "interval": 2,
     "format": " {usage}%",
@@ -192,7 +215,6 @@
     "tooltip": true,
     "tooltip-format": "CPU: {usage}%\nFrequência: {frequency} GHz\nNúcleos: {cores} cores\nLoad: {load}\nTemperatura Sistema: $($HOME/.config/waybar/scripts/cpu-temp.sh)"
   },
-
   "memory": {
     "interval": 5,
     "format": " {percentage}%",
@@ -206,13 +228,11 @@
     "tooltip": true,
     "tooltip-format": "RAM: {used:0.1f}GB / {total:0.1f}GB ({percentage}%)\nSwap: {swapUsed:0.1f}GB / {swapTotal:0.1f}GB ({swapPercentage}%)\nDisponível: {avail:0.1f}GB"
   },
-
   "tray": {
     "icon-size": 18,
     "spacing": 8,
     "show-passive-items": true
   },
-
   // -------------------------------------------------------------------------
   // MÓDULOS EXTRAS INSPIRADOS NO MECHABAR
   // -------------------------------------------------------------------------
@@ -224,7 +244,6 @@
     "tooltip-format": "Temperatura da CPU: {}",
     "return-type": ""
   },
-
   "custom/gpu-temp": {
     "format": "󰢮 {}",
     "interval": 3,
@@ -233,7 +252,6 @@
     "tooltip-format": "GPU: $($HOME/.config/waybar/scripts/gpu-usage.sh)\nTemperatura: {}",
     "return-type": ""
   },
-
   "custom/gpu-usage": {
     "format": "󰾲 {}",
     "interval": 2,
@@ -242,7 +260,6 @@
     "tooltip-format": "Uso da GPU: {}",
     "return-type": ""
   },
-
   "disk": {
     "interval": 30,
     "format": "󰋊 {percentage_used}%",
@@ -257,23 +274,27 @@
     "tooltip-format": "Disco: {used} / {total} ({percentage_used}%)\nLivre: {free}\nPonto de montagem: {path}",
     "unit": "GB"
   },
-
   // -------------------------------------------------------------------------
   // GRUPOS DE MÓDULOS - SISTEMA DE "PÍLULAS"
   // -------------------------------------------------------------------------
-
   // Pílula 1: Workspaces + Window + Spotify juntos
   "group/workspaces-window-spotify": {
     "orientation": "horizontal",
-    "modules": ["hyprland/workspaces", "hyprland/window", "custom/spotify"]
+    "modules": [
+      "hyprland/workspaces",
+      "hyprland/window",
+      "custom/spotify"
+    ]
   },
-
   // Pílula 2: Informações centrais
   "group/info-center": {
     "orientation": "horizontal",
-    "modules": ["custom/weather", "clock", "custom/notification"]
+    "modules": [
+      "custom/weather",
+      "clock",
+      "custom/notification"
+    ]
   },
-
   // Pílula 3: Sistema e Tray para Desktop - Ordem lógica
   "group/system-tray": {
     "orientation": "horizontal",
@@ -284,13 +305,13 @@
       "custom/gpu-temp",
       "memory",
       "disk",
+      "custom/vpn",
       "network",
       "pulseaudio",
       "custom/hypridle",
       "tray"
     ]
   },
-
   // -------------------------------------------------------------------------
   // CONTROLE DE IDLE
   // -------------------------------------------------------------------------

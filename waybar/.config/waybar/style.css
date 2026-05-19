@@ -219,6 +219,7 @@ tooltip label {
 #custom-gpu-temp,
 #memory,
 #disk,
+#custom-vpn,
 #network,
 #pulseaudio,
 #custom-hypridle,
@@ -411,6 +412,18 @@ window#waybar.fullscreen #window {
 
 /* Rede */
 #network {
+  color: #a6e3a1;
+}
+
+#custom-vpn {
+  color: #a6e3a1;
+}
+
+#custom-vpn.disconnected {
+  color: #f38ba8;
+}
+
+#custom-vpn.connected {
   color: #a6e3a1;
 }
 

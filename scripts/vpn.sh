@@ -1,0 +1,285 @@
+#!/usr/bin/env bash
+
+set -u
+
+DOTFILES_ROOT="${DOTFILES_ROOT:-$HOME/dotfiles}"
+UFSCAR_PROFILE="${UFSCAR_PROFILE:-VPN_UFSCar_SCL}"
+FAI_PROFILE="${FAI_PROFILE:-FAI.UFSCAR}"
+TERMINAL_APP="${TERMINAL:-kitty}"
+
+notify() {
+  local msg="$1"
+  if command -v notify-send >/dev/null 2>&1; then
+    notify-send "VPN" "$msg"
+  else
+    printf '%s\n' "$msg"
+  fi
+}
+
+choose_launcher() {
+  if command -v rofi >/dev/null 2>&1; then
+    printf 'rofi\n'
+    return
+  fi
+
+  if command -v wofi >/dev/null 2>&1; then
+    printf 'wofi\n'
+    return
+  fi
+
+  printf 'none\n'
+}
+
+terminal_bin() {
+  if command -v "$TERMINAL_APP" >/dev/null 2>&1; then
+    printf '%s\n' "$TERMINAL_APP"
+    return
+  fi
+
+  if command -v kitty >/dev/null 2>&1; then
+    printf 'kitty\n'
+    return
+  fi
+
+  printf 'none\n'
+}
+
+open_terminal_command() {
+  local command_text="$1"
+  local term
+  term="$(terminal_bin)"
+
+  if [ "$term" = "none" ]; then
+    notify "Nenhum terminal encontrado para concluir a autenticacao"
+    exit 1
+  fi
+
+  "$term" sh -lc "$command_text; exit_code=\$?; printf '\n'; if [ \$exit_code -eq 0 ]; then echo 'Concluido.'; else echo 'Falhou com codigo ' \$exit_code; fi; printf 'Pressione Enter para fechar...'; read -r _" >/dev/null 2>&1 &
+}
+
+nm_profile_exists() {
+  local profile="$1"
+  command -v nmcli >/dev/null 2>&1 && nmcli -t -f NAME connection show 2>/dev/null | grep -Fxq "$profile"
+}
+
+nm_profile_active() {
+  local profile="$1"
+  command -v nmcli >/dev/null 2>&1 && nmcli -t -f TYPE,NAME connection show --active 2>/dev/null | awk -F: '$1=="vpn" || $1=="wireguard" {print $2}' | grep -Fxq "$profile"
+}
+
+netextender_status_output() {
+  if ! command -v netExtender >/dev/null 2>&1; then
+    return 0
+  fi
+
+  netExtender status 2>/dev/null || true
+}
+
+fai_active() {
+  netextender_status_output | grep -q "Connected!!!"
+}
+
+connect_ufscar() {
+  if ! nm_profile_exists "$UFSCAR_PROFILE"; then
+    notify "Perfil $UFSCAR_PROFILE nao encontrado no NetworkManager"
+    exit 1
+  fi
+
+  open_terminal_command "nmcli connection up id '$UFSCAR_PROFILE'"
+}
+
+disconnect_ufscar() {
+  if nm_profile_active "$UFSCAR_PROFILE"; then
+    if nmcli connection down id "$UFSCAR_PROFILE" >/dev/null 2>&1; then
+      notify "Desconectada: $UFSCAR_PROFILE"
+    else
+      notify "Falha ao desconectar: $UFSCAR_PROFILE"
+      exit 1
+    fi
+  fi
+}
+
+connect_fai() {
+  local script_path="$DOTFILES_ROOT/scripts/fai-ufscar-vpn.sh"
+
+  if [ ! -x "$script_path" ]; then
+    notify "Script da FAI nao encontrado ou sem permissao: $script_path"
+    exit 1
+  fi
+
+  open_terminal_command "'$script_path'"
+}
+
+disconnect_fai() {
+  if ! command -v netExtender >/dev/null 2>&1; then
+    notify "netExtender nao encontrado"
+    exit 1
+  fi
+
+  open_terminal_command "sudo netExtender disconnect"
+}
+
+list_active_labels() {
+  if nm_profile_active "$UFSCAR_PROFILE"; then
+    printf '%s\n' "$UFSCAR_PROFILE"
+  fi
+
+  if fai_active; then
+    printf '%s\n' "$FAI_PROFILE"
+  fi
+}
+
+disconnect_all() {
+  local any_disconnected=0
+
+  if nm_profile_active "$UFSCAR_PROFILE"; then
+    disconnect_ufscar
+    any_disconnected=1
+  fi
+
+  if fai_active; then
+    disconnect_fai
+    any_disconnected=1
+  fi
+
+  if [ "$any_disconnected" -eq 0 ]; then
+    notify "Nenhuma VPN ativa"
+  fi
+}
+
+toggle_vpn() {
+  local target="${1:-ufscar}"
+
+  if [ -n "$(list_active_labels)" ]; then
+    disconnect_all
+    exit 0
+  fi
+
+  case "$target" in
+    ufscar)
+      connect_ufscar
+      ;;
+    fai)
+      connect_fai
+      ;;
+    *)
+      printf 'Uso: %s toggle [ufscar|fai]\n' "$0"
+      exit 1
+      ;;
+  esac
+}
+
+show_menu() {
+  local launcher options choice
+  launcher="$(choose_launcher)"
+
+  if [ "$launcher" = "none" ]; then
+    notify "Instale rofi ou wofi para usar o menu de VPN"
+    exit 1
+  fi
+
+  options=""
+
+  if nm_profile_exists "$UFSCAR_PROFILE"; then
+    if nm_profile_active "$UFSCAR_PROFILE"; then
+      options="${options}Desconectar: ${UFSCAR_PROFILE}\n"
+    else
+      options="${options}Conectar: ${UFSCAR_PROFILE}\n"
+    fi
+  fi
+
+  if command -v netExtender >/dev/null 2>&1; then
+    if fai_active; then
+      options="${options}Desconectar: ${FAI_PROFILE}\n"
+    else
+      options="${options}Conectar: ${FAI_PROFILE}\n"
+    fi
+  fi
+
+  if [ -z "$options" ]; then
+    notify "Nenhuma VPN configurada foi encontrada"
+    exit 1
+  fi
+
+  if printf '%s' "$options" | grep -q '^Desconectar:'; then
+    options="Desconectar todas\n${options}"
+  fi
+
+  if [ "$launcher" = "rofi" ]; then
+    choice="$(printf '%b' "$options" | rofi -dmenu -i -p "VPN")"
+  else
+    choice="$(printf '%b' "$options" | wofi --dmenu --prompt "VPN")"
+  fi
+
+  [ -z "$choice" ] && exit 0
+
+  case "$choice" in
+    "Desconectar todas")
+      disconnect_all
+      ;;
+    "Conectar: ${UFSCAR_PROFILE}")
+      connect_ufscar
+      ;;
+    "Desconectar: ${UFSCAR_PROFILE}")
+      disconnect_ufscar
+      ;;
+    "Conectar: ${FAI_PROFILE}")
+      connect_fai
+      ;;
+    "Desconectar: ${FAI_PROFILE}")
+      disconnect_fai
+      ;;
+  esac
+}
+
+show_status() {
+  list_active_labels | paste -sd ',' -
+}
+
+mode="${1:-menu}"
+case "$mode" in
+  menu)
+    show_menu
+    ;;
+  connect)
+    case "${2:-}" in
+      ufscar)
+        connect_ufscar
+        ;;
+      fai)
+        connect_fai
+        ;;
+      *)
+        printf 'Uso: %s connect [ufscar|fai]\n' "$0"
+        exit 1
+        ;;
+    esac
+    ;;
+  disconnect)
+    case "${2:-}" in
+      ufscar)
+        disconnect_ufscar
+        ;;
+      fai)
+        disconnect_fai
+        ;;
+      all|"")
+        disconnect_all
+        ;;
+      *)
+        printf 'Uso: %s disconnect [ufscar|fai|all]\n' "$0"
+        exit 1
+        ;;
+    esac
+    ;;
+  toggle)
+    toggle_vpn "${2:-ufscar}"
+    ;;
+  status)
+    show_status
+    ;;
+  *)
+    printf 'Uso: %s [menu|connect|disconnect|toggle|status]\n' "$0"
+    exit 1
+    ;;
+esac

@@ -54,7 +54,10 @@ alias sc2='flameshot screen --number 0 -c'
 alias stow-sync="~/dotfiles/scripts/stow-sync.sh"
 alias hyprland='start-hyprland'
 alias nrd='npm run dev'
+alias vpn-status='$HOME/dotfiles/scripts/vpn.sh status'
+alias vpn-ufscar='$HOME/dotfiles/scripts/ufscar-vpn.sh'
 alias vpn-fai='$HOME/dotfiles/scripts/fai-ufscar-vpn.sh'
+alias vpn-off='$HOME/dotfiles/scripts/vpn-off.sh'
 
 # Busca apenas na HOME (Super rápido)
 alias fhome='cd $(dirname $(fd -t f --exclude node_modules --exclude .cache . ~ | fzf))'

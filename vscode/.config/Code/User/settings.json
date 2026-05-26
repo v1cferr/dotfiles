@@ -2,7 +2,7 @@
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
-    "//": "Last update at 5/17/2026, 3:57:20 PM",
+    "//": "Last update at 5/24/2026, 2:03:42 PM",
     ".agent": ".agent, .claude, .cline, .codebuddy, .codex, .commandcode, .continue, .crush, .cursor, .factory, .gemini, .goose, .junie, .kilocode, .kiro, .kode, .mcpjam, .mux, .neovate, .opencode, .openhands, .pi, .pochi, .qoder, .qwen, .roo, .trae, .windsurf, .zencoder",
     ".clang-tidy": ".clang-format, .clangd, compile_commands.json",
     ".env": "*.env, .env.*, .envrc, env.d.ts",
@@ -114,7 +114,7 @@
   "editor.fontSize": 14,
   "terminal.integrated.fontSize": 13,
   "workbench.tree.renderIndentGuides": "always",
-  "editor.fontFamily": "JetBrainsMono Nerd Font Mono",
+  "editor.fontFamily": "Fira Code",
   "terminal.integrated.fontFamily": "'JetBrainsMono Nerd Font Mono', 'Noto Color Emoji', 'Noto Sans CJK SC'",
   "git.confirmSync": false,
   "workbench.activityBar.location": "top",

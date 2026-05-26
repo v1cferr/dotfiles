@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 # Exibe status de VPN para módulo custom/vpn da Waybar.
-# Prioriza conexões do NetworkManager e faz fallback para interfaces tun/wg.
+# Prioriza conexões do NetworkManager, reconhece NetExtender e faz fallback
+# para interfaces tun/wg.
 
 set -u
 
@@ -25,9 +26,19 @@ if command -v nmcli >/dev/null 2>&1; then
   nm_vpns="$(nmcli -t -f TYPE,NAME connection show --active 2>/dev/null | awk -F: '$1=="vpn" || $1=="wireguard" {print $2}')"
 fi
 
-if [ -n "$nm_vpns" ]; then
-  vpn_count="$(printf '%s\n' "$nm_vpns" | sed '/^$/d' | wc -l | tr -d ' ')"
-  first_vpn="$(printf '%s\n' "$nm_vpns" | sed -n '1p')"
+netextender_vpn=""
+if command -v netExtender >/dev/null 2>&1; then
+  netextender_status="$(netExtender status 2>/dev/null || true)"
+  if printf '%s' "$netextender_status" | grep -q "Connected!!!"; then
+    netextender_vpn="FAI.UFSCAR"
+  fi
+fi
+
+combined_vpns="$(printf '%s\n%s\n' "$nm_vpns" "$netextender_vpn" | sed '/^$/d')"
+
+if [ -n "$combined_vpns" ]; then
+  vpn_count="$(printf '%s\n' "$combined_vpns" | sed '/^$/d' | wc -l | tr -d ' ')"
+  first_vpn="$(printf '%s\n' "$combined_vpns" | sed -n '1p')"
 
   if [ "$vpn_count" -gt 1 ]; then
     text="󰦝 ${first_vpn} +$((vpn_count - 1))"
@@ -35,7 +46,7 @@ if [ -n "$nm_vpns" ]; then
     text="󰦝 ${first_vpn}"
   fi
 
-  tooltip="VPN ativa(s):\n$(printf '%s\n' "$nm_vpns")"
+  tooltip="VPN ativa(s):\n$(printf '%s\n' "$combined_vpns")"
   emit_json "$text" "connected" "$tooltip"
   exit 0
 fi

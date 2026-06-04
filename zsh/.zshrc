@@ -59,6 +59,9 @@ alias vpn-ufscar='$HOME/dotfiles/scripts/ufscar-vpn.sh'
 alias vpn-fai='$HOME/dotfiles/scripts/fai-ufscar-vpn.sh'
 alias vpn-off='$HOME/dotfiles/scripts/vpn-off.sh'
 
+# Se o terminal for kitty, força o SSH a se identificar como xterm-256color
+alias ssh="TERM=xterm-256color ssh"
+
 # Busca apenas na HOME (Super rápido)
 alias fhome='cd $(dirname $(fd -t f --exclude node_modules --exclude .cache . ~ | fzf))'
 

@@ -2,7 +2,7 @@
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
-    "//": "Last update at 5/24/2026, 2:03:42 PM",
+    "//": "Last update at 6/4/2026, 10:38:26 AM",
     ".agent": ".agent, .claude, .cline, .codebuddy, .codex, .commandcode, .continue, .crush, .cursor, .factory, .gemini, .goose, .junie, .kilocode, .kiro, .kode, .mcpjam, .mux, .neovate, .opencode, .openhands, .pi, .pochi, .qoder, .qwen, .roo, .trae, .windsurf, .zencoder",
     ".clang-tidy": ".clang-format, .clangd, compile_commands.json",
     ".env": "*.env, .env.*, .envrc, env.d.ts",
@@ -206,7 +206,6 @@
   "remote.SSH.remotePlatform": {
     "ssh.v1cferr.dev": "linux",
   },
-  "chat.viewSessions.orientation": "stacked",
   "security.allowedUNCHosts": [
     "wsl.localhost",
     "FAIADM6246"
@@ -253,5 +252,6 @@
     "https://schemastore.azurewebsites.net/": true,
     "https://www.schemastore.org/": true
   },
-  "githubPullRequests.pullBranch": "never", // Desativa o indicador do GitLens Launchpad
+  "githubPullRequests.pullBranch": "never",
+  "chat.viewSessions.orientation": "stacked", // Desativa o indicador do GitLens Launchpad
 }

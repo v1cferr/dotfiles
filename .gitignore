@@ -19,3 +19,4 @@ wallpapers/Pictures/*
 # networkmanager/.config/NetworkManager/system-connections/*.nmconnection
 
 .env
+tmp/

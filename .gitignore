@@ -17,3 +17,5 @@ wallpapers/Pictures/*
 
 # NetworkManager - senhas de VPN (declarativo mas não versionado)
 # networkmanager/.config/NetworkManager/system-connections/*.nmconnection
+
+.env

@@ -26,8 +26,12 @@
     import cloudflare_dns
 
     # ---- IA / LLMs ----
+    # Ollama NÃO tem autenticação nativa — restrito à LAN (o open-webui o usa
+    # internamente). Acesso de fora da rede recebe 403.
     @ai host ai.v1cferr.dev
     handle @ai {
+        @ai_externo not remote_ip 192.168.1.0/24 127.0.0.1/8 ::1
+        respond @ai_externo "Forbidden" 403
         reverse_proxy 127.0.0.1:11434
     }
 
@@ -77,6 +81,15 @@
     @spendflow host spendflow.v1cferr.dev
     handle @spendflow {
         reverse_proxy 127.0.0.1:3001
+    }
+
+    # ---- Dashboard (Homepage) ----
+    # Expõe o mapa inteiro da infra → restrito à LAN (acesso externo recebe 403).
+    @dash host dash.v1cferr.dev
+    handle @dash {
+        @dash_externo not remote_ip 192.168.1.0/24 127.0.0.1/8 ::1
+        respond @dash_externo "Forbidden" 403
+        reverse_proxy 127.0.0.1:3003
     }
 
     # Subdomínio não mapeado -> 404 (em vez de erro feio)

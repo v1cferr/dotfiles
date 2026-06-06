@@ -1,0 +1,12 @@
+[sshd]
+enabled  = true
+# SSH roda na 2222 (ver /etc/ssh/sshd_config.d/99-custom.conf), não na 22.
+port     = 2222
+# Arch loga o sshd no journald, então o backend tem que ser systemd.
+backend  = systemd
+maxretry = 4
+findtime = 10m
+bantime  = 1h
+# bantime.increment = true   # descomente p/ banimentos progressivos (reincidência)
+# Não banir a própria LAN nem o loopback.
+ignoreip = 127.0.0.1/8 ::1 192.168.1.0/24

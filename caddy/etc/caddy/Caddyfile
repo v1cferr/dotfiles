@@ -1,0 +1,21 @@
+{
+    # Opcional: E-mail para avisos da Let's Encrypt
+    email {$CADDY_EMAIL}
+}
+
+(cloudflare_dns) {
+    tls {
+        dns cloudflare {$CLOUDFLARE_API_TOKEN}
+    }
+}
+
+# Aqui entram seus subdomínios
+torrent.v1cferr.dev {
+    import cloudflare_dns
+    reverse_proxy 127.0.0.1:8080
+}
+
+ai.v1cferr.dev {
+    import cloudflare_dns
+    reverse_proxy 127.0.0.1:11434
+}

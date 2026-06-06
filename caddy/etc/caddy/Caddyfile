@@ -84,11 +84,15 @@
     }
 
     # ---- Dashboard (Homepage) ----
-    # Expõe o mapa inteiro da infra → restrito à LAN (acesso externo recebe 403).
+    # Acessível de fora, mas como expõe o mapa da infra, exige login (basic_auth)
+    # para quem vem de FORA da LAN. Na LAN abre direto, sem senha.
+    # Hash em {$CADDY_DASH_HASH} (no .env, fora do repo). Usuário: v1cferr.
     @dash host dash.v1cferr.dev
     handle @dash {
         @dash_externo not remote_ip 192.168.1.0/24 127.0.0.1/8 ::1
-        respond @dash_externo "Forbidden" 403
+        basic_auth @dash_externo {
+            v1cferr {$CADDY_DASH_HASH}
+        }
         reverse_proxy 127.0.0.1:3003
     }
 

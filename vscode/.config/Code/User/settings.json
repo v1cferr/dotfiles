@@ -253,5 +253,6 @@
     "https://www.schemastore.org/": true
   },
   "githubPullRequests.pullBranch": "never",
-  "chat.viewSessions.orientation": "stacked", // Desativa o indicador do GitLens Launchpad
+  "chat.viewSessions.orientation": "stacked",
+  "terminal.integrated.enableMultiLinePasteWarning": "never", // Desativa o indicador do GitLens Launchpad
 }

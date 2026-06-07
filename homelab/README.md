@@ -20,9 +20,9 @@ Objetivo: se o PC falhar, dá pra reconstruir o homelab a partir do GitHub.
 > (`~/Projects/GitHub/v1cferr/spendflow`). O reverse-proxy é o **Caddy do
 > sistema** (versionado em `../caddy/`), não um container.
 
-## O que NÃO entra no git (ver `.gitignore` de cada stack)
+## O que NÃO entra no git (tudo no `.gitignore` central do root)
 
-- `jellyfin/.env` — `TUNNEL_TOKEN` + API keys. Use `.env.example` como modelo.
+- `jellyfin/.env` — `TUNNEL_TOKEN` + API keys (vive em `~/Projects/Local/jellyfin/.env`). Modelo: seção "Stacks Docker" do `~/dotfiles/.env.example`.
 - `jellyfin/config/` — ~700M de estado dos serviços (regenerável).
 - `filebrowser/database/` — banco de usuários/senhas.
 - `homepage/config/logs/` — logs runtime.
@@ -36,7 +36,8 @@ Objetivo: se o PC falhar, dá pra reconstruir o homelab a partir do GitHub.
 # Ex.: stack de mídia
 mkdir -p ~/homelab && cp -r ~/dotfiles/homelab/jellyfin ~/homelab/
 cd ~/homelab/jellyfin
-cp .env.example .env && $EDITOR .env      # preencha tokens/API keys
+# crie o .env a partir da seção "Stacks Docker" do ~/dotfiles/.env.example
+$EDITOR .env                              # preencha tokens/API keys
 docker compose up -d
 ```
 

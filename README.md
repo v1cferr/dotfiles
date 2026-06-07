@@ -46,6 +46,7 @@ Este repositório reúne meus dotfiles com foco em consistência visual (Tokyo N
 ├── rofi/
 ├── scripts/
 ├── starship/
+├── swap/
 ├── swaync/
 ├── vscode/
 ├── wallpapers/
@@ -163,6 +164,22 @@ sudo ~/dotfiles/scripts/caddy/deploy.sh
 sudo ~/dotfiles/scripts/fail2ban/deploy.sh
 ```
 
+## Swap (zram + swapfile)
+
+Swap em camadas para uso pesado de memória (16GB de RAM):
+
+- `zram0`: RAM comprimida (zstd), `zram-size = ram` (~16G), prioridade 100 — tier rápido, usado primeiro.
+- `/swapfile`: 16G no NVMe, prioridade 10 — overflow / rede de segurança contra OOM.
+
+O kernel enche o zram primeiro e só cai pro disco quando ele lota. A configuração fica em `swap/` e é aplicada por um deploy idempotente (o stow não cobre `/etc`; o `/swapfile` é criado pelo script e a entrada do `/etc/fstab` é garantida sem reescrever o arquivo):
+
+```bash
+sudo pacman -S zram-generator          # pré-requisito (uma vez)
+sudo ~/dotfiles/scripts/swap/deploy.sh
+```
+
+Detalhes em `swap/README.md`.
+
 ## Instalação
 
 ### Pré-requisitos básicos
@@ -208,6 +225,7 @@ vpn status
 # Deploy de configs de sistema (/etc) - requer root
 sudo ~/dotfiles/scripts/caddy/deploy.sh
 sudo ~/dotfiles/scripts/fail2ban/deploy.sh
+sudo ~/dotfiles/scripts/swap/deploy.sh
 
 # Extensões VS Code
 cat vscode/extensions.txt | xargs -L1 code --install-extension
@@ -240,6 +258,7 @@ Atalhos definidos em `hypr/.config/hypr/configs/input/keybindings.conf`:
 - `README.improvements.md`
 - `bin/README.md`
 - `scripts/README.md`
+- `swap/README.md`
 - `vscode/README.md`
 - `networkmanager/README.md`
 - `netextender/README.md`

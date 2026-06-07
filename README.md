@@ -32,6 +32,7 @@ Este repositório reúne meus dotfiles com foco em consistência visual (Tokyo N
 ├── bin/
 ├── caddy/
 ├── cloudflare/
+├── cloudflare-ddns/
 ├── fail2ban/
 ├── fastfetch/
 ├── flameshot/
@@ -180,6 +181,27 @@ sudo ~/dotfiles/scripts/swap/deploy.sh
 
 Detalhes em `swap/README.md`.
 
+## DNS dinâmico (Cloudflare DDNS)
+
+Atualizador que mantém um registro A do Cloudflare apontando para o IP público atual (usado no acesso SSH externo, `ssh.v1cferr.dev`). Roda como serviço de sistema (systemd timer). A configuração fica em `cloudflare-ddns/`; o token vive em `config/.env` (gitignored — só o `.env.example` é versionado).
+
+```bash
+cp ~/dotfiles/cloudflare-ddns/config/.env.example ~/dotfiles/cloudflare-ddns/config/.env  # preencha o token
+sudo ~/dotfiles/scripts/cloudflare-ddns/deploy.sh
+```
+
+Detalhes em `cloudflare-ddns/README.md`.
+
+## Lista de pacotes (atualização automática)
+
+As listas de pacotes instalados (oficiais + AUR, com versão) ficam em `scripts/packages/` e são regeneradas por um timer de usuário a cada 5min — para reprodução em outra máquina e revisão de pacotes inúteis. Não faz git automático: você revisa o diff e commita quando quiser.
+
+```bash
+~/dotfiles/scripts/packages/install.sh   # ativa o timer (sem sudo)
+```
+
+Detalhes em `scripts/packages/README.md`.
+
 ## Instalação
 
 ### Pré-requisitos básicos
@@ -226,6 +248,10 @@ vpn status
 sudo ~/dotfiles/scripts/caddy/deploy.sh
 sudo ~/dotfiles/scripts/fail2ban/deploy.sh
 sudo ~/dotfiles/scripts/swap/deploy.sh
+sudo ~/dotfiles/scripts/cloudflare-ddns/deploy.sh
+
+# Automação da lista de pacotes (timer de usuário, sem sudo)
+~/dotfiles/scripts/packages/install.sh
 
 # Extensões VS Code
 cat vscode/extensions.txt | xargs -L1 code --install-extension
@@ -258,7 +284,9 @@ Atalhos definidos em `hypr/.config/hypr/configs/input/keybindings.conf`:
 - `README.improvements.md`
 - `bin/README.md`
 - `scripts/README.md`
+- `scripts/packages/README.md`
 - `swap/README.md`
+- `cloudflare-ddns/README.md`
 - `vscode/README.md`
 - `networkmanager/README.md`
 - `netextender/README.md`

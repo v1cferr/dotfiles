@@ -1,0 +1,11 @@
+[Unit]
+Description=Atualiza as listas de pacotes a cada 5 minutos
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+# Roda ao ligar se ficou off no horário previsto
+Persistent=true
+
+[Install]
+WantedBy=timers.target

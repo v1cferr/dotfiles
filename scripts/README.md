@@ -10,6 +10,8 @@ Este diretório NÃO é aplicado com stow: o `stow-all` o ignora de propósito (
 - `caddy/deploy.sh` — copia o `Caddyfile` e o drop-in do systemd para `/etc` e recarrega o Caddy (o stow não cobre `/etc`). Requer root.
 - `fail2ban/deploy.sh` — copia as jails e filtros do fail2ban para `/etc` e reinicia o serviço. Requer root.
 - `swap/deploy.sh` — aplica o swap em camadas: copia o `zram-generator.conf` para `/etc/systemd/`, cria o `/swapfile` (16G) se faltar, garante a entrada no `/etc/fstab` e reativa o swap. Idempotente. Requer root.
+- `cloudflare-ddns/deploy.sh` — instala as units systemd do DDNS do Cloudflare em `/etc`, resolvendo o caminho do projeto. Requer root e o `cloudflare-ddns/config/.env` (gitignored).
+- `packages/` — automação que regenera as listas de pacotes (pacman + AUR) a cada 5min via timer de usuário. `install.sh` ativa (sem sudo); `sync.sh` é o worker. Ver `../scripts/packages/README.md`.
 - `fai-ufscar-vpn.sh` — conecta na VPN SonicWall da FAI.UFSCAR via netExtender. Usado pelo comando `vpn` e pelo alias `vpn-fai`.
 - `ufscar-vpn.sh` — conexão da VPN da UFSCar (alias `vpn-ufscar`).
 
@@ -24,4 +26,8 @@ Este diretório NÃO é aplicado com stow: o `stow-all` o ignora de propósito (
 sudo ~/dotfiles/scripts/caddy/deploy.sh
 sudo ~/dotfiles/scripts/fail2ban/deploy.sh
 sudo ~/dotfiles/scripts/swap/deploy.sh
+sudo ~/dotfiles/scripts/cloudflare-ddns/deploy.sh
+
+# Automação de pacotes (timer de usuário, SEM sudo)
+~/dotfiles/scripts/packages/install.sh
 ```

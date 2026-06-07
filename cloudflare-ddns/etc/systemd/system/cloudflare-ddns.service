@@ -1,0 +1,16 @@
+[Unit]
+Description=Cloudflare Dynamic DNS Updater
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+# __DDNS_DIR__ é resolvido pelo scripts/cloudflare-ddns/deploy.sh na instalação
+WorkingDirectory=__DDNS_DIR__
+ExecStart=__DDNS_DIR__/bin/cloudflare-ddns.sh
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

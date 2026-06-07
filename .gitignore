@@ -20,3 +20,11 @@ wallpapers/Pictures/*
 
 .env
 tmp/
+
+# --- Serviços versionados: configs ficam; estado/runtime/dados, não ---
+# (o '.env' acima já cobre qualquer .env em qualquer subpasta)
+cloudflare-ddns/logs/
+cloudflare-ddns/.current_ip
+homelab/jellyfin/config/
+homelab/homepage/config/logs/
+homelab/filebrowser/database/

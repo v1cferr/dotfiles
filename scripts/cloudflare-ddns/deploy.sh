@@ -29,11 +29,11 @@ PKG="${DOTFILES_DIR}/cloudflare-ddns"
 
 echo "[deploy] dotfiles: ${DOTFILES_DIR}"
 
-# 1) Pré-requisito: o .env com o token precisa existir (gitignored)
-if [[ ! -f "${PKG}/config/.env" ]]; then
-    echo "ERRO: ${PKG}/config/.env não encontrado." >&2
-    echo "      Crie a partir do modelo: cp ${PKG}/config/.env.example ${PKG}/config/.env" >&2
-    echo "      e preencha com o seu token do Cloudflare." >&2
+# 1) Pré-requisito: o .env centralizado (root dos dotfiles) precisa existir (gitignored)
+if [[ ! -f "${DOTFILES_DIR}/.env" ]]; then
+    echo "ERRO: ${DOTFILES_DIR}/.env não encontrado." >&2
+    echo "      Crie a partir do modelo: cp ${DOTFILES_DIR}/.env.example ${DOTFILES_DIR}/.env" >&2
+    echo "      e preencha API_TOKEN/ZONE_ID/RECORD_ID/RECORD_NAME." >&2
     exit 1
 fi
 

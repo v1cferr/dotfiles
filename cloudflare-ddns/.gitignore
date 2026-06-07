@@ -1,7 +1,0 @@
-# Segredos e runtime — NUNCA versionar
-config/.env
-config/.env.local
-
-# Logs e cache de IP gerados em runtime
-logs/
-.current_ip

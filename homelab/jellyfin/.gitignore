@@ -1,6 +1,0 @@
-# Segredos — NUNCA versionar
-.env
-
-# Estado/dados runtime dos serviços (./config/<app> dos bind mounts; ~700M,
-# regeneráveis). A mídia em si fica em /home/v1cferr/Videos/Jellyfin.
-config/

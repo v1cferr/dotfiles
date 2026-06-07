@@ -42,17 +42,22 @@ Este repositório reúne meus dotfiles com foco em consistência visual (Tokyo N
 ├── fastfetch/
 ├── flameshot/
 ├── fontconfig/
+├── gh/
 ├── git/
 ├── gtk-3.0/
 ├── gtk-4.0/
 ├── homelab/
 ├── hypr/
 ├── kitty/
+├── lazydocker/
 ├── mpv/
 ├── netextender/
 ├── networkmanager/
 ├── nvim/
 ├── opencode/
+├── openrazer/
+├── pacseek/
+├── polychromatic/
 ├── rofi/
 ├── scripts/
 ├── spicetify/
@@ -61,6 +66,8 @@ Este repositório reúne meus dotfiles com foco em consistência visual (Tokyo N
 ├── swap/
 ├── swaync/
 ├── system/
+├── uv/
+├── vlc/
 ├── vscode/
 ├── wallpapers/
 ├── waybar/
@@ -222,11 +229,13 @@ Outras configs de sistema versionadas (cada uma com deploy idempotente; ver o RE
 - `ssh/` — drop-in do SSH (porta 2222 + hardening). O deploy valida com `sshd -t` e faz reload (sem lockout).
 - `docker/` — `daemon.json` do daemon (runtime nvidia). O deploy não reinicia o Docker.
 - `system/` — `pacman.conf` + hook, `makepkg.conf` (+ drop-ins). `mkinitcpio.conf` e `boot/loader/` ficam só como **referência** (não auto-aplicados — risco de boot).
+- `netextender/` — perfil de VPN SonicWall (`/etc/SonicWall/...`). Tem estrutura de `/etc`, por isso é deploy e não stow.
 
 ```bash
 sudo ~/dotfiles/scripts/ssh/deploy.sh
 sudo ~/dotfiles/scripts/docker/deploy.sh
 sudo ~/dotfiles/scripts/system/deploy.sh
+sudo ~/dotfiles/scripts/netextender/deploy.sh
 ```
 
 ## Instalação
@@ -245,7 +254,7 @@ Pacotes adicionais variam conforme seus módulos (VPN, SwayNC, extensões, etc.)
 git clone https://github.com/v1cferr/dotfiles.git
 cd dotfiles
 
-stow hypr rofi waybar zsh vscode gtk-3.0 gtk-4.0 flameshot wallpapers git bin kitty starship swaync networkmanager netextender cloudflare fastfetch opencode zen-browser nvim mpv btop fontconfig spicetify easyeffects atuin autostart xsettingsd
+stow hypr rofi waybar zsh vscode gtk-3.0 gtk-4.0 flameshot wallpapers git bin kitty starship swaync networkmanager cloudflare fastfetch opencode zen-browser nvim mpv btop fontconfig spicetify easyeffects atuin autostart xsettingsd gh lazydocker uv openrazer polychromatic pacseek vlc
 ```
 
 Opcionalmente, usar:
@@ -279,6 +288,7 @@ sudo ~/dotfiles/scripts/cloudflare-ddns/deploy.sh
 sudo ~/dotfiles/scripts/ssh/deploy.sh
 sudo ~/dotfiles/scripts/docker/deploy.sh
 sudo ~/dotfiles/scripts/system/deploy.sh
+sudo ~/dotfiles/scripts/netextender/deploy.sh
 
 # Automação da lista de pacotes (timer de usuário, sem sudo)
 ~/dotfiles/scripts/packages/install.sh

@@ -14,6 +14,7 @@ Este diretório NÃO é aplicado com stow: o `stow-all` o ignora de propósito (
 - `ssh/deploy.sh` — instala o drop-in do SSH (porta 2222 + hardening); valida com `sshd -t` e faz reload (sem lockout). Requer root.
 - `docker/deploy.sh` — instala o `daemon.json` do Docker e recarrega (sem restart, pra não derrubar os containers). Requer root.
 - `system/deploy.sh` — instala `pacman.conf` + hook + `makepkg.conf`(.d). `mkinitcpio.conf` e `boot/` são só referência. Requer root.
+- `netextender/deploy.sh` — instala o perfil de VPN SonicWall em `/etc/SonicWall/` (não é stow, tem estrutura de `/etc`). Requer root.
 - `packages/` — automação que regenera as listas de pacotes (pacman + AUR) a cada 5min via timer de usuário. `install.sh` ativa (sem sudo); `sync.sh` é o worker. Ver `../scripts/packages/README.md`.
 - `fai-ufscar-vpn.sh` — conecta na VPN SonicWall da FAI.UFSCAR via netExtender. Usado pelo comando `vpn` e pelo alias `vpn-fai`.
 - `ufscar-vpn.sh` — conexão da VPN da UFSCar (alias `vpn-ufscar`).
@@ -33,6 +34,7 @@ sudo ~/dotfiles/scripts/cloudflare-ddns/deploy.sh
 sudo ~/dotfiles/scripts/ssh/deploy.sh
 sudo ~/dotfiles/scripts/docker/deploy.sh
 sudo ~/dotfiles/scripts/system/deploy.sh
+sudo ~/dotfiles/scripts/netextender/deploy.sh
 
 # Automação de pacotes (timer de usuário, SEM sudo)
 ~/dotfiles/scripts/packages/install.sh

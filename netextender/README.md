@@ -14,12 +14,10 @@ A VPN SonicWall requer o uso do cliente nativo `netextender` disponível no AUR 
 
 ## Aplicar o perfil salvo
 
-Como o NetExtender guarda suas configurações em diretórios do sistema `/etc`, nós utilizamos um comando para copiar o perfil rastreado no dotfiles direto para a pasta do daemon:
+Como o NetExtender guarda os perfis em `/etc/SonicWall`, este pacote **não é stow** (stowar criaria um `~/etc` errado). Use o deploy idempotente:
 
 ```bash
-cd ~/dotfiles
-sudo install -d -m 755 /etc/SonicWall/NetExtender/Config
-sudo install -m 644 netextender/etc/SonicWall/NetExtender/Config/profile.json /etc/SonicWall/NetExtender/Config/profile.json
+sudo ~/dotfiles/scripts/netextender/deploy.sh
 ```
 
 ## Conectar

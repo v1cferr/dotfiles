@@ -102,6 +102,14 @@
         reverse_proxy 127.0.0.1:3003
     }
 
+    # ---- Gerenciador de arquivos (FileBrowser) ----
+    # Tem login próprio; exposto na internet. Brute-force no login é barrado
+    # pela jail caddy-filebrowser do fail2ban.
+    @files host files.v1cferr.dev
+    handle @files {
+        reverse_proxy 127.0.0.1:3004
+    }
+
     # Subdomínio não mapeado -> 404 (em vez de erro feio)
     handle {
         respond "Subdomínio não configurado" 404

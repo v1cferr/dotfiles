@@ -29,25 +29,33 @@ Este repositório reúne meus dotfiles com foco em consistência visual (Tokyo N
 ├── README.improvements.md
 ├── README.stow.md
 ├── README.waybar.md
+├── atuin/
+├── autostart/
 ├── bin/
+├── btop/
 ├── caddy/
 ├── cloudflare/
 ├── cloudflare-ddns/
 ├── docker/
+├── easyeffects/
 ├── fail2ban/
 ├── fastfetch/
 ├── flameshot/
+├── fontconfig/
 ├── git/
 ├── gtk-3.0/
 ├── gtk-4.0/
 ├── homelab/
 ├── hypr/
 ├── kitty/
+├── mpv/
 ├── netextender/
 ├── networkmanager/
+├── nvim/
 ├── opencode/
 ├── rofi/
 ├── scripts/
+├── spicetify/
 ├── ssh/
 ├── starship/
 ├── swap/
@@ -56,6 +64,7 @@ Este repositório reúne meus dotfiles com foco em consistência visual (Tokyo N
 ├── vscode/
 ├── wallpapers/
 ├── waybar/
+├── xsettingsd/
 ├── zen-browser/
 └── zsh/
 ```
@@ -236,7 +245,7 @@ Pacotes adicionais variam conforme seus módulos (VPN, SwayNC, extensões, etc.)
 git clone https://github.com/v1cferr/dotfiles.git
 cd dotfiles
 
-stow hypr rofi waybar zsh vscode gtk-3.0 gtk-4.0 flameshot wallpapers git bin kitty starship swaync networkmanager netextender cloudflare fastfetch opencode zen-browser
+stow hypr rofi waybar zsh vscode gtk-3.0 gtk-4.0 flameshot wallpapers git bin kitty starship swaync networkmanager netextender cloudflare fastfetch opencode zen-browser nvim mpv btop fontconfig spicetify easyeffects atuin autostart xsettingsd
 ```
 
 Opcionalmente, usar:

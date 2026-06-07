@@ -28,3 +28,4 @@ cloudflare-ddns/.current_ip
 homelab/jellyfin/config/
 homelab/homepage/config/logs/
 homelab/filebrowser/database/
+homelab/rustdesk/data/

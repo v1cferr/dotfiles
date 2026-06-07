@@ -1,0 +1,10 @@
+[caddy-auth]
+enabled  = true
+backend  = systemd
+filter   = caddy-auth
+port     = http,https
+maxretry = 5
+findtime = 10m
+bantime  = 1h
+# Não banir a LAN nem o loopback (o basic_auth nem é exigido na LAN).
+ignoreip = 127.0.0.1/8 ::1 192.168.1.0/24

@@ -2,8 +2,8 @@
 # ============================================================================
 #  Deploy do fail2ban para o sistema (/etc)
 # ----------------------------------------------------------------------------
-#  Copia a jail dos dotfiles para /etc/fail2ban/jail.d/ e recarrega o
-#  fail2ban. Precisa de root.
+#  Copia TUDO de fail2ban/etc/ (jails em jail.d/, filtros em filter.d/) para
+#  /etc preservando a estrutura, e recarrega o fail2ban. Precisa de root.
 #
 #  Mesmo motivo do deploy do Caddy: o stow-sync aponta pro $HOME e não cobre
 #  /etc. Os caminhos são resolvidos pela LOCALIZAÇÃO do script, então rodar
@@ -23,11 +23,17 @@ SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 DOTFILES_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 PKG="${DOTFILES_DIR}/fail2ban"
 
-install -Dm0644 "${PKG}/etc/fail2ban/jail.d/sshd.local" /etc/fail2ban/jail.d/sshd.local
-echo "[deploy] jail.d/sshd.local copiado para /etc"
+# Copia cada arquivo de fail2ban/etc/... para /etc/... (jail.d, filter.d, etc.)
+while IFS= read -r -d '' src; do
+    dest="/etc/${src#"${PKG}/etc/"}"
+    install -Dm0644 "${src}" "${dest}"
+    echo "[deploy] ${dest}"
+done < <(find "${PKG}/etc" -type f -print0)
 
-# reload re-lê o jail.d; se falhar, restart.
-systemctl reload fail2ban 2>/dev/null || systemctl restart fail2ban
-echo "[deploy] fail2ban recarregado — status da jail sshd:"
-fail2ban-client status sshd 2>/dev/null | head -n 12 || \
-    echo "  (rode 'sudo fail2ban-client status sshd' em instantes; o socket pode levar 1s)"
+# Restart (não só reload) para garantir que jails novas com backend systemd
+# subam corretamente.
+systemctl restart fail2ban
+echo "[deploy] fail2ban reiniciado. Jails ativas:"
+sleep 1
+fail2ban-client status 2>/dev/null | sed 's/^/  /' || \
+    echo "  (rode 'sudo fail2ban-client status' em instantes; o socket pode levar 1s)"

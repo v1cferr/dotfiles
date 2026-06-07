@@ -115,7 +115,7 @@ list_packages() {
     for dir in */; do
         if [[ -d "$dir" && "$dir" != "scripts/" && "$dir" != "wallpapers/" && "$dir" != "tmp/" ]]; then
             echo "  - ${dir%/}"
-            ((count++))
+            count=$((count + 1))
         fi
     done
     
@@ -202,7 +202,7 @@ stow_all() {
     local failed=0
     for package in "${packages[@]}"; do
         if ! stow_package "$package"; then
-            ((failed++))
+            failed=$((failed + 1))
         fi
     done
     
@@ -239,7 +239,7 @@ restow_all() {
             success "✓ $package reaplicado"
         else
             error "✗ Falha ao reaplicar $package"
-            ((failed++))
+            failed=$((failed + 1))
         fi
     done
     
@@ -277,21 +277,21 @@ show_status() {
             if [[ "$target" == *"$DOTFILES_DIR"* ]]; then
                 if [[ -e "$target" ]]; then
                     echo -e "  ${GREEN}✓${NC} $file -> $target"
-                    ((managed++))
+                    managed=$((managed + 1))
                 else
                     echo -e "  ${RED}✗${NC} $file -> $target (link quebrado)"
-                    ((broken++))
+                    broken=$((broken + 1))
                 fi
             else
                 echo -e "  ${YELLOW}!${NC} $file -> $target (não gerenciado pelo dotfiles)"
-                ((unmanaged++))
+                unmanaged=$((unmanaged + 1))
             fi
         elif [[ -e "$file" ]]; then
             echo -e "  ${RED}✗${NC} $file (arquivo real, não é link simbólico)"
-            ((unmanaged++))
+            unmanaged=$((unmanaged + 1))
         else
             echo -e "  ${YELLOW}-${NC} $file (não existe)"
-            ((missing++))
+            missing=$((missing + 1))
         fi
     done
     

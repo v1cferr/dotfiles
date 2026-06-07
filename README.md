@@ -29,7 +29,10 @@ Este repositório reúne meus dotfiles com foco em consistência visual (Tokyo N
 ├── README.improvements.md
 ├── README.stow.md
 ├── README.waybar.md
+├── bin/
+├── caddy/
 ├── cloudflare/
+├── fail2ban/
 ├── fastfetch/
 ├── flameshot/
 ├── git/
@@ -141,6 +144,25 @@ Pacote dedicado em `vscode/` com:
 - `wallpapers/`: link para `~/Pictures/Wallpapers`
 - `opencode/`: configuração MCP local/remota
 
+## Homelab e proxy reverso (Caddy)
+
+O Caddy (serviço do sistema, via systemd) é o proxy reverso de todos os serviços self-hosted, servidos sob `*.v1cferr.dev` com certificado curinga da Let's Encrypt (desafio DNS-01 via Cloudflare). A configuração fica versionada em `caddy/`.
+
+- Serviços expostos: Jellyfin, Jellyseerr, Prowlarr, Radarr, Sonarr, Bazarr, qBittorrent, Ollama, Open WebUI, SpendFlow e o dashboard.
+- `dash.v1cferr.dev`: dashboard central (Homepage); exige basic_auth no acesso externo, aberto na LAN.
+- `ai.v1cferr.dev` (Ollama): restrito à LAN (sem autenticação nativa).
+- Acesso na LAN por nome via split-DNS no roteador (OpenWrt); acesso externo via port-forward 80/443.
+- `fail2ban/` protege o SSH (porta 2222) e o basic_auth do dashboard.
+
+Os stacks Docker dos serviços ficam fora deste repositório (em `~/Projects/Local/`); aqui mora apenas a configuração de proxy/segurança.
+
+Configurações de `/etc` não são cobertas pelo stow (que aponta para `$HOME`). Use os scripts de deploy, e mantenha os segredos em `~/dotfiles/.env` (fora do versionamento):
+
+```bash
+sudo ~/dotfiles/scripts/caddy/deploy.sh
+sudo ~/dotfiles/scripts/fail2ban/deploy.sh
+```
+
 ## Instalação
 
 ### Pré-requisitos básicos
@@ -157,7 +179,7 @@ Pacotes adicionais variam conforme seus módulos (VPN, SwayNC, extensões, etc.)
 git clone https://github.com/v1cferr/dotfiles.git
 cd dotfiles
 
-stow hypr rofi waybar zsh vscode gtk-3.0 gtk-4.0 flameshot wallpapers git scripts kitty starship swaync networkmanager netextender cloudflare fastfetch opencode zen-browser
+stow hypr rofi waybar zsh vscode gtk-3.0 gtk-4.0 flameshot wallpapers git bin kitty starship swaync networkmanager netextender cloudflare fastfetch opencode zen-browser
 ```
 
 Opcionalmente, usar:
@@ -178,7 +200,14 @@ tokyo-night check
 zen-sync check
 
 # Waybar
-~/scripts/restart-waybar.sh
+hypr-quick restart-bar
+
+# VPN
+vpn status
+
+# Deploy de configs de sistema (/etc) - requer root
+sudo ~/dotfiles/scripts/caddy/deploy.sh
+sudo ~/dotfiles/scripts/fail2ban/deploy.sh
 
 # Extensões VS Code
 cat vscode/extensions.txt | xargs -L1 code --install-extension
@@ -209,6 +238,7 @@ Atalhos definidos em `hypr/.config/hypr/configs/input/keybindings.conf`:
 - `README.waybar.md`
 - `README.stow.md`
 - `README.improvements.md`
+- `bin/README.md`
 - `scripts/README.md`
 - `vscode/README.md`
 - `networkmanager/README.md`

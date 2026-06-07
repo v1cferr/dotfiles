@@ -1,116 +1,25 @@
-# Scripts Utilitários - Tokyo Night Edition
+# scripts/
 
-Scripts personalizados para facilitar o gerenciamento do ambiente Hyprland com tema Tokyo Night.
+Scripts de administração, executados pelo caminho explícito (não vão para o PATH). Os comandos de uso diário ficam em `bin/` (ver `bin/README.md`).
 
-## 📁 Estrutura
+Este diretório NÃO é aplicado com stow: o `stow-all` o ignora de propósito (ele contém scripts chamados por caminho, não dotfiles que devem ir para o `$HOME`).
 
-```text
-scripts/
-├── .local/bin/              # Scripts executáveis
-│   ├── hypr-quick          # Ações rápidas do Hyprland
-│   ├── tokyo-night         # Aplicador de tema Tokyo Night
-│   └── zen-sync            # Sincroniza o tema do Zen Browser
-└── README.md               # Este arquivo
-```
+## Conteúdo
 
-## 🚀 Scripts Disponíveis
+- `stow-sync.sh` — gerencia os dotfiles com GNU Stow: `list`, `status`, `stow`, `unstow`, `stow-all`, `restow-all`, `info`. Ver `../README.stow.md`.
+- `caddy/deploy.sh` — copia o `Caddyfile` e o drop-in do systemd para `/etc` e recarrega o Caddy (o stow não cobre `/etc`). Requer root.
+- `fail2ban/deploy.sh` — copia as jails e filtros do fail2ban para `/etc` e reinicia o serviço. Requer root.
+- `fai-ufscar-vpn.sh` — conecta na VPN SonicWall da FAI.UFSCAR via netExtender. Usado pelo comando `vpn` e pelo alias `vpn-fai`.
+- `ufscar-vpn.sh` — conexão da VPN da UFSCar (alias `vpn-ufscar`).
 
-### 🏠 hypr-quick
-
-Script com ações rápidas para o Hyprland.
+## Uso
 
 ```bash
-# Ações disponíveis
-hypr-quick reload          # Recarregar configuração
-hypr-quick restart-bar     # Reiniciar Waybar
-hypr-quick screenshot      # Screenshot com Flameshot
-hypr-quick wallpaper       # Trocar wallpaper
-hypr-quick wallpaper-auto  # Auto-troca ON
-hypr-quick wallpaper-stop  # Auto-troca OFF
-hypr-quick monitor-info    # Info dos monitores
-hypr-quick workspaces      # Listar workspaces
-hypr-quick kill-app        # Matar app ativo
+# Dotfiles
+./stow-sync.sh list
+./stow-sync.sh stow-all
+
+# Deploy de configs de sistema (/etc) — requer root
+sudo ~/dotfiles/scripts/caddy/deploy.sh
+sudo ~/dotfiles/scripts/fail2ban/deploy.sh
 ```
-
-### 🌃 tokyo-night
-
-Aplicador consistente do tema Tokyo Night em várias aplicações.
-
-```bash
-# Targets disponíveis
-tokyo-night gtk           # Tema GTK (Thunar, etc.)
-tokyo-night rofi          # Verificar Rofi
-tokyo-night waybar        # Recarregar Waybar
-tokyo-night hyprland      # Recarregar Hyprland
-tokyo-night zen           # Sincronizar Zen Browser
-tokyo-night all           # Aplicar em tudo
-tokyo-night check         # Verificar status
-```
-
-### 🌐 zen-sync
-
-Sincroniza o tema versionado do Zen Browser com o perfil padrão ativo.
-
-```bash
-zen-sync                 # Cria/atualiza os links para userChrome.css e user.js
-zen-sync check           # Mostra o perfil detectado e o estado dos links
-```
-
-## 🔧 Instalação
-
-```bash
-# Aplicar com stow
-stow scripts
-
-# Verificar se está no PATH
-which hypr-quick
-which tokyo-night
-```
-
-## ⚡ Uso Rápido
-
-```bash
-# Setup inicial completo
-tokyo-night all
-
-# Ações do dia a dia
-hypr-quick wallpaper       # Novo wallpaper
-hypr-quick screenshot      # Print da tela
-hypr-quick reload          # Reload configs
-
-# Verificar temas
-tokyo-night check
-```
-
-## 🎯 Integrações
-
-Estes scripts podem ser chamados de:
-
-- **Keybindings** do Hyprland
-- **Rofi** como aplicações
-- **Terminal** diretamente
-- **Waybar** com botões personalizados
-- **Zen Browser** via perfil padrão detectado automaticamente
-
-### Exemplo de Keybindings
-
-```conf
-# No hyprland.conf
-bind = $mainMod SHIFT, R, exec, hypr-quick reload
-bind = $mainMod SHIFT, T, exec, tokyo-night all
-bind = $mainMod SHIFT, W, exec, hypr-quick wallpaper
-```
-
-## 🌈 Paleta Tokyo Night
-
-Os scripts usam a paleta oficial:
-
-- **Background**: #1a1b26
-- **Foreground**: #c0caf5  
-- **Blue**: #7aa2f7
-- **Red**: #f7768e
-- **Green**: #9ece6a
-
----
-
-*Scripts feitos com ❤️ para manter a consistência Tokyo Night!* 🌙

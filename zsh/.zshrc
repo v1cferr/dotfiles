@@ -54,10 +54,10 @@ alias sc2='flameshot screen --number 0 -c'
 alias stow-sync="~/dotfiles/scripts/stow-sync.sh"
 alias hyprland='start-hyprland'
 alias nrd='npm run dev'
-alias vpn-status='$HOME/dotfiles/scripts/vpn.sh status'
+alias vpn-status='vpn status'
 alias vpn-ufscar='$HOME/dotfiles/scripts/ufscar-vpn.sh'
 alias vpn-fai='$HOME/dotfiles/scripts/fai-ufscar-vpn.sh'
-alias vpn-off='$HOME/dotfiles/scripts/vpn-off.sh'
+# vpn-off agora é um comando no PATH (~/.local/bin/vpn-off) — sem alias.
 
 # Se o terminal for kitty, força o SSH a se identificar como xterm-256color
 alias ssh="TERM=xterm-256color ssh"

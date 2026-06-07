@@ -2,4 +2,4 @@
 
 set -u
 
-"$HOME/dotfiles/scripts/vpn.sh" "${1:-menu}" "${2:-}"
+"$HOME/.local/bin/vpn" "${1:-menu}" "${2:-}"

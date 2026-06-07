@@ -85,7 +85,7 @@ sync_zen() {
         zen-sync
         echo "✅ Tema do Zen Browser sincronizado!"
     else
-        echo "⚠️  zen-sync não encontrado. Rode 'stow scripts' primeiro."
+        echo "⚠️  zen-sync não encontrado. Rode 'stow bin' primeiro."
         return 1
     fi
 }

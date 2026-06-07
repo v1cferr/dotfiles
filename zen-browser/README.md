@@ -11,10 +11,10 @@ Tema customizado do Zen Browser baseado na paleta oficial do Tokyo Night, usando
 
 ## Como aplicar
 
-1. Aplique o pacote de scripts se ainda não estiver linkado:
+1. Aplique o pacote `bin` se ainda não estiver linkado (traz `zen-sync` e `tokyo-night` ao PATH):
 
 ```bash
-stow scripts
+stow bin
 ```
 
 2. Sincronize o tema com o perfil padrão do Zen:

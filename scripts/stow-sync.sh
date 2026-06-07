@@ -113,7 +113,7 @@ list_packages() {
     log "Pacotes disponíveis para stow:"
     local count=0
     for dir in */; do
-        if [[ -d "$dir" && "$dir" != "scripts/" && "$dir" != "wallpapers/" ]]; then
+        if [[ -d "$dir" && "$dir" != "scripts/" && "$dir" != "wallpapers/" && "$dir" != "tmp/" ]]; then
             echo "  - ${dir%/}"
             ((count++))
         fi
@@ -135,7 +135,7 @@ stow_package() {
     
     if [[ ! -d "$package" ]]; then
         error "Pacote '$package' não encontrado!"
-        log "Pacotes disponíveis: $(ls -d */ 2>/dev/null | grep -v 'scripts/\|wallpapers/' | tr '\n' ' ')"
+        log "Pacotes disponíveis: $(ls -d */ 2>/dev/null | grep -v 'scripts/\|wallpapers/\|tmp/' | tr '\n' ' ')"
         return 1
     fi
     
@@ -187,7 +187,7 @@ stow_all() {
     
     local packages=()
     for dir in */; do
-        if [[ -d "$dir" && "$dir" != "scripts/" && "$dir" != "wallpapers/" ]]; then
+        if [[ -d "$dir" && "$dir" != "scripts/" && "$dir" != "wallpapers/" && "$dir" != "tmp/" ]]; then
             packages+=("${dir%/}")
         fi
     done
@@ -222,7 +222,7 @@ restow_all() {
     
     local packages=()
     for dir in */; do
-        if [[ -d "$dir" && "$dir" != "scripts/" && "$dir" != "wallpapers/" ]]; then
+        if [[ -d "$dir" && "$dir" != "scripts/" && "$dir" != "wallpapers/" && "$dir" != "tmp/" ]]; then
             packages+=("${dir%/}")
         fi
     done

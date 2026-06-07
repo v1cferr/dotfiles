@@ -1,0 +1,15 @@
+---
+- resources:
+    label: Sistema
+    cpu: true
+    memory: true
+    disk: /
+    uptime: true
+- datetime:
+    text_size: l
+    format:
+      timeStyle: short
+      dateStyle: short
+- search:
+    provider: duckduckgo
+    target: _blank

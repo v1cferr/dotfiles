@@ -39,6 +39,7 @@ Este repositório reúne meus dotfiles com foco em consistência visual (Tokyo N
 ├── git/
 ├── gtk-3.0/
 ├── gtk-4.0/
+├── homelab/
 ├── hypr/
 ├── kitty/
 ├── netextender/
@@ -156,7 +157,7 @@ O Caddy (serviço do sistema, via systemd) é o proxy reverso de todos os servi�
 - Acesso na LAN por nome via split-DNS no roteador (OpenWrt); acesso externo via port-forward 80/443.
 - `fail2ban/` protege o SSH (porta 2222) e o basic_auth do dashboard.
 
-Os stacks Docker dos serviços ficam fora deste repositório (em `~/Projects/Local/`); aqui mora apenas a configuração de proxy/segurança.
+Os stacks Docker rodam de `~/Projects/Local/` (com seus dados), mas as **configs** deles (compose + dashboard) ficam versionadas em `homelab/` como backup para reconstrução — segredos (`.env`) e dados pesados (`config/`, `database/`) ficam no `.gitignore`. Ver `homelab/README.md`.
 
 Configurações de `/etc` não são cobertas pelo stow (que aponta para `$HOME`). Use os scripts de deploy, e mantenha os segredos em `~/dotfiles/.env` (fora do versionamento):
 
@@ -287,6 +288,7 @@ Atalhos definidos em `hypr/.config/hypr/configs/input/keybindings.conf`:
 - `scripts/packages/README.md`
 - `swap/README.md`
 - `cloudflare-ddns/README.md`
+- `homelab/README.md`
 - `vscode/README.md`
 - `networkmanager/README.md`
 - `netextender/README.md`

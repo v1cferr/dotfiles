@@ -1,0 +1,6 @@
+---
+# Integração via docker-socket-proxy (read-only). O Homepage usa isto para
+# mostrar status e consumo (CPU/RAM) dos containers nos tiles dos serviços.
+my-docker:
+  host: dockerproxy
+  port: 2375

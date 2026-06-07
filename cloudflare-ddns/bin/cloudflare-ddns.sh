@@ -9,7 +9,7 @@
 # Set the script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-ENV_FILE="${PROJECT_DIR}/config/.env"
+ENV_FILE="${PROJECT_DIR}/../.env"   # .env centralizado no root dos dotfiles
 LOG_FILE="${PROJECT_DIR}/logs/ddns.log"
 IP_CACHE_FILE="${PROJECT_DIR}/logs/.current_ip"
 

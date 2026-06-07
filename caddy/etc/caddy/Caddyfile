@@ -25,6 +25,12 @@
 *.v1cferr.dev {
     import cloudflare_dns
 
+    # Access log (JSON) -> journald. Usado pelo fail2ban (jail caddy-auth) para
+    # banir brute-force no basic_auth do dashboard.
+    log {
+        format json
+    }
+
     # ---- IA / LLMs ----
     # Ollama NÃO tem autenticação nativa — restrito à LAN (o open-webui o usa
     # internamente). Acesso de fora da rede recebe 403.

@@ -14,6 +14,7 @@ Objetivo: se o PC falhar, dá pra reconstruir o homelab a partir do GitHub.
 | `jellyfin/` | Jellyfin, Jellyseerr, Prowlarr, Radarr, Sonarr, Bazarr, qBittorrent, FlareSolverr, cloudflared | Caddy (`*.v1cferr.dev`) |
 | `homepage/` | Homepage (dashboard) + docker-socket-proxy | Caddy `dash.v1cferr.dev` (LAN) |
 | `filebrowser/` | FileBrowser | Caddy `files.v1cferr.dev` |
+| `rustdesk/` | RustDesk server (hbbs + hbbr) — relay self-hosted | host network · **parado no momento** |
 
 > O stack **spendflow** não está aqui: ele já é versionado no próprio repo
 > (`~/Projects/GitHub/v1cferr/spendflow`). O reverse-proxy é o **Caddy do
@@ -25,6 +26,7 @@ Objetivo: se o PC falhar, dá pra reconstruir o homelab a partir do GitHub.
 - `jellyfin/config/` — ~700M de estado dos serviços (regenerável).
 - `filebrowser/database/` — banco de usuários/senhas.
 - `homepage/config/logs/` — logs runtime.
+- `rustdesk/data/` — chave do relay (`id_ed25519`) + estado runtime.
 - Mídia (`/home/v1cferr/Videos/Jellyfin`) e pastas montadas no FileBrowser —
   ficam fora do repo por natureza (bind mounts absolutos).
 

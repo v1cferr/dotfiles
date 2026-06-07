@@ -33,6 +33,7 @@ Este repositório reúne meus dotfiles com foco em consistência visual (Tokyo N
 ├── caddy/
 ├── cloudflare/
 ├── cloudflare-ddns/
+├── docker/
 ├── fail2ban/
 ├── fastfetch/
 ├── flameshot/
@@ -47,9 +48,11 @@ Este repositório reúne meus dotfiles com foco em consistência visual (Tokyo N
 ├── opencode/
 ├── rofi/
 ├── scripts/
+├── ssh/
 ├── starship/
 ├── swap/
 ├── swaync/
+├── system/
 ├── vscode/
 ├── wallpapers/
 ├── waybar/
@@ -203,6 +206,20 @@ As listas de pacotes instalados (oficiais + AUR, com versão) ficam em `scripts/
 
 Detalhes em `scripts/packages/README.md`.
 
+## Configs de sistema (`/etc`)
+
+Outras configs de sistema versionadas (cada uma com deploy idempotente; ver o README do pacote):
+
+- `ssh/` — drop-in do SSH (porta 2222 + hardening). O deploy valida com `sshd -t` e faz reload (sem lockout).
+- `docker/` — `daemon.json` do daemon (runtime nvidia). O deploy não reinicia o Docker.
+- `system/` — `pacman.conf` + hook, `makepkg.conf` (+ drop-ins). `mkinitcpio.conf` e `boot/loader/` ficam só como **referência** (não auto-aplicados — risco de boot).
+
+```bash
+sudo ~/dotfiles/scripts/ssh/deploy.sh
+sudo ~/dotfiles/scripts/docker/deploy.sh
+sudo ~/dotfiles/scripts/system/deploy.sh
+```
+
 ## Instalação
 
 ### Pré-requisitos básicos
@@ -250,6 +267,9 @@ sudo ~/dotfiles/scripts/caddy/deploy.sh
 sudo ~/dotfiles/scripts/fail2ban/deploy.sh
 sudo ~/dotfiles/scripts/swap/deploy.sh
 sudo ~/dotfiles/scripts/cloudflare-ddns/deploy.sh
+sudo ~/dotfiles/scripts/ssh/deploy.sh
+sudo ~/dotfiles/scripts/docker/deploy.sh
+sudo ~/dotfiles/scripts/system/deploy.sh
 
 # Automação da lista de pacotes (timer de usuário, sem sudo)
 ~/dotfiles/scripts/packages/install.sh
@@ -288,7 +308,10 @@ Atalhos definidos em `hypr/.config/hypr/configs/input/keybindings.conf`:
 - `scripts/packages/README.md`
 - `swap/README.md`
 - `cloudflare-ddns/README.md`
+- `docker/README.md`
 - `homelab/README.md`
+- `ssh/README.md`
+- `system/README.md`
 - `vscode/README.md`
 - `networkmanager/README.md`
 - `netextender/README.md`

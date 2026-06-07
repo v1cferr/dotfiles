@@ -10,7 +10,10 @@ Este diretório NÃO é aplicado com stow: o `stow-all` o ignora de propósito (
 - `caddy/deploy.sh` — copia o `Caddyfile` e o drop-in do systemd para `/etc` e recarrega o Caddy (o stow não cobre `/etc`). Requer root.
 - `fail2ban/deploy.sh` — copia as jails e filtros do fail2ban para `/etc` e reinicia o serviço. Requer root.
 - `swap/deploy.sh` — aplica o swap em camadas: copia o `zram-generator.conf` para `/etc/systemd/`, cria o `/swapfile` (16G) se faltar, garante a entrada no `/etc/fstab` e reativa o swap. Idempotente. Requer root.
-- `cloudflare-ddns/deploy.sh` — instala as units systemd do DDNS do Cloudflare em `/etc`, resolvendo o caminho do projeto. Requer root e o `cloudflare-ddns/config/.env` (gitignored).
+- `cloudflare-ddns/deploy.sh` — instala as units systemd do DDNS do Cloudflare em `/etc`, resolvendo o caminho do projeto. Requer root e o `.env` centralizado no root (gitignored).
+- `ssh/deploy.sh` — instala o drop-in do SSH (porta 2222 + hardening); valida com `sshd -t` e faz reload (sem lockout). Requer root.
+- `docker/deploy.sh` — instala o `daemon.json` do Docker e recarrega (sem restart, pra não derrubar os containers). Requer root.
+- `system/deploy.sh` — instala `pacman.conf` + hook + `makepkg.conf`(.d). `mkinitcpio.conf` e `boot/` são só referência. Requer root.
 - `packages/` — automação que regenera as listas de pacotes (pacman + AUR) a cada 5min via timer de usuário. `install.sh` ativa (sem sudo); `sync.sh` é o worker. Ver `../scripts/packages/README.md`.
 - `fai-ufscar-vpn.sh` — conecta na VPN SonicWall da FAI.UFSCAR via netExtender. Usado pelo comando `vpn` e pelo alias `vpn-fai`.
 - `ufscar-vpn.sh` — conexão da VPN da UFSCar (alias `vpn-ufscar`).
@@ -27,6 +30,9 @@ sudo ~/dotfiles/scripts/caddy/deploy.sh
 sudo ~/dotfiles/scripts/fail2ban/deploy.sh
 sudo ~/dotfiles/scripts/swap/deploy.sh
 sudo ~/dotfiles/scripts/cloudflare-ddns/deploy.sh
+sudo ~/dotfiles/scripts/ssh/deploy.sh
+sudo ~/dotfiles/scripts/docker/deploy.sh
+sudo ~/dotfiles/scripts/system/deploy.sh
 
 # Automação de pacotes (timer de usuário, SEM sudo)
 ~/dotfiles/scripts/packages/install.sh

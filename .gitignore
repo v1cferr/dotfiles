@@ -33,3 +33,6 @@ homelab/rustdesk/data/
 # Configs stowados: token e ruído de estado de janela ficam fora do git
 gh/.config/gh/hosts.yml
 vlc/.config/vlc/vlc-qt-interface.conf
+
+# Backup criptografado de segredos (scripts/backup-secrets.sh) — NUNCA versionar
+secrets-backup-*.tar.gz.gpg

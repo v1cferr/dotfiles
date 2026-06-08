@@ -70,8 +70,8 @@ zen-sync   # (ou ~/dotfiles/zen-browser/... conforme o README do pacote)
 ## 6. Restaurar os SEGREDOS (antes dos deploys de /etc)
 
 ```bash
-# Traga o secrets-backup-*.tar.gz.gpg do seu Dropbox/HDD e:
-gpg -d secrets-backup-XXXX.tar.gz.gpg | tar -xzf - -C ~
+# Traga o secrets-backup.tar.gz.gpg do seu Dropbox/HDD e:
+gpg -d secrets-backup.tar.gz.gpg | tar -xzf - -C ~
 # Isto restaura ~/.ssh, ~/.gnupg, ~/dotfiles/.env, tokens, etc.
 chmod 700 ~/.ssh ~/.gnupg
 ```
@@ -110,7 +110,7 @@ de cada um (modelo na seção "Stacks Docker" do `.env.example`) e
 - [ ] `stow-sync.sh status` sem links quebrados
 - [ ] SSH/GPG funcionando (`ssh -T git@github.com`, `gpg -K`)
 - [ ] Caddy servindo `*.v1cferr.dev`; DDNS atualizando
-- [ ] Gere um novo backup de segredos: `~/dotfiles/scripts/backup-secrets.sh`
+- [ ] Reative o backup de segredos: `~/dotfiles/scripts/secrets/install.sh`
 
 ---
 

@@ -34,5 +34,5 @@ homelab/rustdesk/data/
 gh/.config/gh/hosts.yml
 vlc/.config/vlc/vlc-qt-interface.conf
 
-# Backup criptografado de segredos (scripts/backup-secrets.sh) — NUNCA versionar
-secrets-backup-*.tar.gz.gpg
+# Backup criptografado de segredos (scripts/secrets/) — NUNCA versionar
+secrets-backup*.tar.gz.gpg

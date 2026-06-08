@@ -15,7 +15,7 @@ Este diretório NÃO é aplicado com stow: o `stow-all` o ignora de propósito (
 - `docker/deploy.sh` — instala o `daemon.json` do Docker e recarrega (sem restart, pra não derrubar os containers). Requer root.
 - `system/deploy.sh` — instala `pacman.conf` + hook + `makepkg.conf`(.d). `mkinitcpio.conf` e `boot/` são só referência. Requer root.
 - `netextender/deploy.sh` — instala o perfil de VPN SonicWall em `/etc/SonicWall/` (não é stow, tem estrutura de `/etc`). Requer root.
-- `backup-secrets.sh` — gera um tarball CRIPTOGRAFADO (GPG/passphrase) dos segredos (SSH/GPG/`.env`/tokens) na raiz do dotfiles (gitignored). Mova pro Dropbox/HDD. Base do DR — ver `../RESTORE.md`.
+- `secrets/` — backup CRIPTOGRAFADO dos segredos (SSH/GPG/`.env`/tokens) num arquivo único `secrets-backup.tar.gz.gpg` na raiz (gitignored). `backup.sh` gera; `install.sh` ativa o timer diário (precisa de `~/.config/secrets-backup.passphrase`). Base do DR — ver `../RESTORE.md`.
 - `packages/` — automação que regenera as listas de pacotes (pacman + AUR) a cada 5min via timer de usuário. `install.sh` ativa (sem sudo); `sync.sh` é o worker. Ver `../scripts/packages/README.md`.
 - `fai-ufscar-vpn.sh` — conecta na VPN SonicWall da FAI.UFSCAR via netExtender. Usado pelo comando `vpn` e pelo alias `vpn-fai`.
 - `ufscar-vpn.sh` — conexão da VPN da UFSCar (alias `vpn-ufscar`).

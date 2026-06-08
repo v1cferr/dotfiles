@@ -245,7 +245,7 @@ sudo ~/dotfiles/scripts/netextender/deploy.sh
 
 Se o NVMe morrer, o **[RESTORE.md](RESTORE.md)** é o runbook passo-a-passo pra reconstruir tudo do zero: base Arch → pacotes (pacman + AUR) → `stow` dos dotfiles → deploys de `/etc` → segredos → serviços.
 
-⚠️ O repo **não guarda segredos** (chaves SSH/GPG, `.env`, tokens — todos gitignored). Gere um backup criptografado deles com `scripts/backup-secrets.sh` e mantenha **fora do disco** (Dropbox/HDD). Sem isso, o restore não recupera SSH/GPG/tokens.
+⚠️ O repo **não guarda segredos** (chaves SSH/GPG, `.env`, tokens — todos gitignored). O `scripts/secrets/` mantém um backup criptografado único (`secrets-backup.tar.gz.gpg`, gitignored) atualizado por um timer diário (`scripts/secrets/install.sh`); guarde-o **fora do disco** (Dropbox/HDD). Sem isso, o restore não recupera SSH/GPG/tokens.
 
 ## Instalação
 

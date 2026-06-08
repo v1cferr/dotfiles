@@ -8,6 +8,7 @@ coberto pelo stow; o que é seguro aplicar vai por `scripts/system/deploy.sh`.
 - `etc/pacman.conf` — config do pacman (repos, multilib, opções).
 - `etc/pacman.d/hooks/fix-appstream-data.hook` — hook custom do pacman.
 - `etc/makepkg.conf` + `etc/makepkg.conf.d/{rust,fortran}.conf` — build do AUR.
+- `etc/{locale.conf,vconsole.conf,environment}` — idioma, teclado do console e variáveis de ambiente do sistema.
 
 ```bash
 sudo ~/dotfiles/scripts/system/deploy.sh
@@ -19,6 +20,7 @@ O deploy valida o `pacman.conf` (`pacman-conf`) antes de sobrescrever.
 
 - `etc/mkinitcpio.conf` — HOOKS/MODULES do initramfs.
 - `boot/loader/` — entradas do systemd-boot. O `root=UUID` é **machine-specific**.
+- `etc/hostname` e `etc/hosts` — identidade da máquina (versionados como referência; numa máquina nova você ajusta o hostname).
 
 ⚠️ Aplicar esses errado pode **quebrar o boot**. Numa máquina nova: use como
 base, ajuste UUIDs/dispositivos e regenere (`mkinitcpio -P` e revise

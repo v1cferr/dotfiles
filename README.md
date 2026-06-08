@@ -29,8 +29,10 @@ Este repositório reúne meus dotfiles com foco em consistência visual (Tokyo N
 ├── README.improvements.md
 ├── README.stow.md
 ├── README.waybar.md
+├── RESTORE.md
 ├── atuin/
 ├── autostart/
+├── bash/
 ├── bin/
 ├── btop/
 ├── caddy/
@@ -51,6 +53,7 @@ Este repositório reúne meus dotfiles com foco em consistência visual (Tokyo N
 ├── kitty/
 ├── lazydocker/
 ├── mpv/
+├── nano/
 ├── netextender/
 ├── networkmanager/
 ├── nvim/
@@ -238,6 +241,12 @@ sudo ~/dotfiles/scripts/system/deploy.sh
 sudo ~/dotfiles/scripts/netextender/deploy.sh
 ```
 
+## Disaster Recovery
+
+Se o NVMe morrer, o **[RESTORE.md](RESTORE.md)** é o runbook passo-a-passo pra reconstruir tudo do zero: base Arch → pacotes (pacman + AUR) → `stow` dos dotfiles → deploys de `/etc` → segredos → serviços.
+
+⚠️ O repo **não guarda segredos** (chaves SSH/GPG, `.env`, tokens — todos gitignored). Gere um backup criptografado deles com `scripts/backup-secrets.sh` e mantenha **fora do disco** (Dropbox/HDD). Sem isso, o restore não recupera SSH/GPG/tokens.
+
 ## Instalação
 
 ### Pré-requisitos básicos
@@ -254,7 +263,7 @@ Pacotes adicionais variam conforme seus módulos (VPN, SwayNC, extensões, etc.)
 git clone https://github.com/v1cferr/dotfiles.git
 cd dotfiles
 
-stow hypr rofi waybar zsh vscode gtk-3.0 gtk-4.0 flameshot wallpapers git bin kitty starship swaync networkmanager cloudflare fastfetch opencode zen-browser nvim mpv btop fontconfig spicetify easyeffects atuin autostart xsettingsd gh lazydocker uv openrazer polychromatic pacseek vlc
+stow hypr rofi waybar zsh vscode gtk-3.0 gtk-4.0 flameshot wallpapers git bin kitty starship swaync networkmanager cloudflare fastfetch opencode zen-browser nvim mpv btop fontconfig spicetify easyeffects atuin autostart xsettingsd gh lazydocker uv openrazer polychromatic pacseek vlc bash nano
 ```
 
 Opcionalmente, usar:

@@ -30,4 +30,10 @@ for f in "${PKG}"/etc/makepkg.conf.d/*.conf; do
     install -Dm0644 "$f" "/etc/makepkg.conf.d/$(basename "$f")"
 done
 echo "[deploy] pacman.conf + hook + makepkg.conf(.d) instalados"
-echo "[deploy] mkinitcpio.conf e boot/ NÃO foram aplicados (são referência)"
+
+# Identidade/locale do sistema (reproduzível)
+for f in locale.conf vconsole.conf environment; do
+    [[ -e "${PKG}/etc/${f}" ]] && install -Dm0644 "${PKG}/etc/${f}" "/etc/${f}"
+done
+echo "[deploy] locale.conf + vconsole.conf + environment instalados"
+echo "[deploy] mkinitcpio.conf, boot/, hostname e hosts NÃO aplicados (referência/machine-specific)"

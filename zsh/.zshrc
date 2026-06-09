@@ -184,3 +184,31 @@ alias ytaudio='mpv --no-video --force-window=no --ytdl-format=bestaudio'
 
 # Assistir qualquer link do YouTube com vídeo até 1080p
 alias ytwatch='mpv --profile=fast --hwdec=auto-safe --cache=yes --ytdl-raw-options="extractor-retries=3,fragment-retries=3,retries=3" --ytdl-format="bestvideo[vcodec!=av01][height<=1080]+bestaudio/bestvideo[height<=1080]+bestaudio/best[height<=1080]"'
+
+# ==============================
+# CLAUDE CODE / MÚLTIPLAS CONTAS
+# ==============================
+# Cada conta usa um CLAUDE_CONFIG_DIR isolado (login, sessões, MCP, settings).
+#   ~/.claude          -> FAI / nonprofit (victor.ferreira@fai.ufscar.br)  [padrão]
+#   ~/.claude-pessoal  -> pessoal         (dragons10021@outlook.com)
+export CLAUDE_FAI_DIR="$HOME/.claude"
+export CLAUDE_PESSOAL_DIR="$HOME/.claude-pessoal"
+
+# Aliases diretos (aceitam argumentos extras normalmente)
+alias claude-fai='CLAUDE_CONFIG_DIR="$CLAUDE_FAI_DIR" claude'
+alias claude-pessoal='CLAUDE_CONFIG_DIR="$CLAUDE_PESSOAL_DIR" claude'
+
+# Seletor interativo: escolhe a conta na hora com fzf
+#   uso: claude-pick            (abre menu e inicia)
+#        claude-pick <args...>  (passa argumentos pro claude)
+claude-pick() {
+    local choice
+    choice=$(printf '%s\n%s' \
+        'FAI      (victor.ferreira@fai.ufscar.br)' \
+        'Pessoal  (dragons10021@outlook.com)' \
+        | fzf --prompt='Conta Claude > ' --height=25% --reverse) || return
+    case "$choice" in
+        FAI*)     CLAUDE_CONFIG_DIR="$CLAUDE_FAI_DIR" claude "$@" ;;
+        Pessoal*) CLAUDE_CONFIG_DIR="$CLAUDE_PESSOAL_DIR" claude "$@" ;;
+    esac
+}

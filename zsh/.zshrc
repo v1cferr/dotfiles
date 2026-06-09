@@ -188,10 +188,13 @@ alias ytwatch='mpv --profile=fast --hwdec=auto-safe --cache=yes --ytdl-raw-optio
 # ==============================
 # CLAUDE CODE / MÚLTIPLAS CONTAS
 # ==============================
-# Cada conta usa um CLAUDE_CONFIG_DIR isolado (login, sessões, MCP, settings).
-#   ~/.claude          -> FAI / nonprofit (victor.ferreira@fai.ufscar.br)  [padrão]
+# Cada conta usa um CLAUDE_CONFIG_DIR isolado e DEDICADO (login, sessões, MCP, settings).
+# Obs: NÃO reaproveitar ~/.claude aqui — o config padrão fica em ~/.claude.json (home),
+# então apontar CLAUDE_CONFIG_DIR pra ~/.claude criaria um 2º arquivo (~/.claude/.claude.json)
+# divergente. Por isso cada conta tem pasta própria; ~/.claude/~/.claude.json fica como padrão.
+#   ~/.claude-fai      -> FAI / nonprofit (victor.ferreira@fai.ufscar.br)
 #   ~/.claude-pessoal  -> pessoal         (dragons10021@outlook.com)
-export CLAUDE_FAI_DIR="$HOME/.claude"
+export CLAUDE_FAI_DIR="$HOME/.claude-fai"
 export CLAUDE_PESSOAL_DIR="$HOME/.claude-pessoal"
 
 # Aliases diretos (aceitam argumentos extras normalmente)

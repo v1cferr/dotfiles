@@ -200,8 +200,9 @@
     "exec": "$HOME/.config/waybar/scripts/vpn-status.sh",
     "interval": 5,
     "tooltip": true,
-    "on-click": "$HOME/.config/waybar/scripts/vpn-menu.sh menu",
-    "on-click-right": "$HOME/.config/waybar/scripts/vpn-menu.sh toggle"
+    "on-click": "$HOME/.config/waybar/scripts/vpn-panel.sh",
+    "on-click-right": "$HOME/.config/waybar/scripts/vpn-menu.sh menu",
+    "on-click-middle": "$HOME/.config/waybar/scripts/vpn-menu.sh toggle"
   },
   "cpu": {
     "interval": 2,

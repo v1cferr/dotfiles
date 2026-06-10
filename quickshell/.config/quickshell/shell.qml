@@ -85,6 +85,14 @@ ShellRoot {
         onTriggered: root.refresh()
     }
 
+    // Auto-fechar: some sozinho quando o mouse fica fora do painel
+    // (inclusive se nunca entrar). Nao fecha no meio de uma acao.
+    Timer {
+        interval: 2000
+        running: root.panelVisible && !panelHover.hovered && !root.busy
+        onTriggered: root.panelVisible = false
+    }
+
     PanelWindow {
         id: panel
         visible: root.panelVisible
@@ -110,6 +118,10 @@ ShellRoot {
             color: root.colBg
             border.color: root.colBorder
             border.width: 1
+
+            HoverHandler {
+                id: panelHover
+            }
 
             ColumnLayout {
                 id: content

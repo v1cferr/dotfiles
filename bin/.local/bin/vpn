@@ -16,6 +16,11 @@ notify() {
   fi
 }
 
+# Atualiza o modulo custom/vpn na hora (config.jsonc usa "signal": 8).
+refresh_waybar() {
+  pkill -RTMIN+8 -x waybar 2>/dev/null || true
+}
+
 choose_launcher() {
   if command -v rofi >/dev/null 2>&1; then
     printf 'rofi\n'
@@ -142,6 +147,7 @@ disconnect_ufscar() {
   if nm_profile_active "$UFSCAR_PROFILE"; then
     if nmcli connection down id "$UFSCAR_PROFILE" >/dev/null 2>&1; then
       notify "Desconectada: $UFSCAR_PROFILE"
+      refresh_waybar
     else
       notify "Falha ao desconectar: $UFSCAR_PROFILE"
       exit 1
@@ -170,6 +176,7 @@ connect_fai() {
     notify "Conectando: $FAI_PROFILE..."
     if connect_fai_auto "$pass"; then
       notify "Conectada: $FAI_PROFILE"
+      refresh_waybar
       return
     fi
     notify "Conexao automatica falhou; abrindo terminal interativo"
@@ -191,11 +198,13 @@ disconnect_fai() {
 
   if netextender_run "netExtender disconnect" >/dev/null 2>&1 && ! fai_active; then
     notify "Desconectada: $FAI_PROFILE"
+    refresh_waybar
     return
   fi
 
   if sudo -n true 2>/dev/null && netextender_run "sudo netExtender disconnect" >/dev/null 2>&1 && ! fai_active; then
     notify "Desconectada: $FAI_PROFILE"
+    refresh_waybar
     return
   fi
 

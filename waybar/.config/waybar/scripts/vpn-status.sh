@@ -68,4 +68,4 @@ if [ -n "$fallback_ifaces" ]; then
   exit 0
 fi
 
-emit_json "󰦝" "disconnected" "VPN desconectada\nEsq: conectar FAI | Dir: painel | Meio: menu"
+emit_json "󰦝" "disconnected" "VPN desconectada\nClique: painel de VPNs | Dir: menu rofi"

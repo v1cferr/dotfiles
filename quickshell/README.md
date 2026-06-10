@@ -24,12 +24,14 @@ qs &                        # ou relogar (autostart no hypr/configs/system/autos
 
 ```bash
 qs ipc call vpn toggle   # abre/fecha o painel (é o on-click do custom/vpn da Waybar)
-qs ipc call vpn show
+qs ipc call vpn open     # "open", não "show": "show" colide com o subcomando `qs ipc show`
 qs ipc call vpn hide
 ```
 
-Na Waybar (módulo `custom/vpn`):
+O painel lista **todas** as VPNs dinamicamente (`vpn status-json`): a FAI via
+netExtender + qualquer perfil vpn/wireguard do NetworkManager.
+
+Na Waybar (módulo `custom/vpn`, ícone 󰦝 sempre visível):
 
 - **clique esquerdo**: painel quickshell (fallback: menu rofi se o qs não estiver rodando)
 - **clique direito**: menu rofi
-- **clique do meio**: toggle direto (conecta UFSCar / desconecta todas)

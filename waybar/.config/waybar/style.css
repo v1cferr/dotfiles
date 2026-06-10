@@ -428,14 +428,9 @@ window#waybar.fullscreen #window {
   color: #a6e3a1;
 }
 
+/* Desconectado: ícone sempre visível (apagado) para conectar com um clique */
 #custom-vpn.disconnected {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  margin: 0;
-  padding: 0;
-  min-width: 0;
-  color: transparent;
+  color: #565f89;
 }
 
 #custom-vpn.connected {

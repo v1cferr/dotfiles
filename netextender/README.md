@@ -22,17 +22,31 @@ sudo ~/dotfiles/scripts/netextender/deploy.sh
 
 ## Conectar
 
-Utilize o script simplificado disponibilizado na pasta `scripts`:
+Jeito recomendado (sem prompt, usado pela Waybar e pelo painel quickshell):
+
+```bash
+vpn connect fai        # ~/.local/bin/vpn — lê FAI_VPN_PASSWORD do ~/dotfiles/.env
+vpn disconnect fai
+```
+
+Pré-requisitos do fluxo sem prompt:
+
+1. `sudo systemctl enable --now NEService` (o CLI fala com esse daemon na porta 51330)
+2. `FAI_VPN_PASSWORD` preenchida no `~/dotfiles/.env` (gitignored)
+
+Se a senha não estiver no `.env` ou a conexão automática falhar, o script abre
+um terminal e cai no fluxo interativo de sempre:
 
 ```bash
 ~/dotfiles/scripts/fai-ufscar-vpn.sh
-```
-
-Ou manualmente via CLI:
-
-```bash
+# ou manualmente:
 sudo netExtender connect FAI.UFSCAR
 ```
+
+> **Atenção:** o gateway da FAI é **SonicWall** (confirmado pelos headers HTTP).
+> O perfil `FAI.UFSCAR` que existe no NetworkManager (openconnect com
+> `protocol=fortinet`) **não funciona** — o openconnect não fala o protocolo do
+> SonicWall. Pode ser removido com `nmcli connection delete FAI.UFSCAR`.
 
 ## Dependências
 

@@ -67,16 +67,66 @@ nm_profile_active() {
   command -v nmcli >/dev/null 2>&1 && nmcli -t -f TYPE,NAME connection show --active 2>/dev/null | awk -F: '$1=="vpn" || $1=="wireguard" {print $2}' | grep -Fxq "$profile"
 }
 
+# O netExtender exige um TTY ("Failed to set terminal to raw mode" sem ele),
+# entao toda chamada passa por um pseudo-TTY alocado pelo script(1).
+netextender_run() {
+  script -qec "$1" /dev/null
+}
+
 netextender_status_output() {
   if ! command -v netExtender >/dev/null 2>&1; then
     return 0
   fi
 
-  netExtender status 2>/dev/null || true
+  netextender_run "netExtender status" 2>/dev/null || true
 }
 
 fai_active() {
-  netextender_status_output | grep -q "Connected!!!"
+  # "Connected!!!" = clientes antigos; "has been connected" = nxcli 10.3+
+  netextender_status_output | grep -qE "Connected!!!|has been connected"
+}
+
+neservice_running() {
+  systemctl is-active --quiet NEService 2>/dev/null
+}
+
+# Senha da FAI vem do .env central do dotfiles (gitignored), chave FAI_VPN_PASSWORD.
+fai_password() {
+  local env_file="$DOTFILES_ROOT/.env"
+  [ -r "$env_file" ] || return 1
+
+  local pass
+  pass="$(sed -n 's/^FAI_VPN_PASSWORD=//p' "$env_file" | tail -n 1)"
+  pass="${pass%\'}" pass="${pass#\'}" pass="${pass%\"}" pass="${pass#\"}"
+
+  [ -n "$pass" ] || return 1
+  printf '%s\n' "$pass"
+}
+
+# Conexao sem terminal: roda o netExtender em background (com pseudo-TTY) e
+# espera o status virar Connected. A senha vai por env var para nao aparecer
+# no ps. Retorna 1 se nao conectar em 35s.
+connect_fai_auto() {
+  local pass="$1"
+  local log="${XDG_RUNTIME_DIR:-/tmp}/netextender-fai.log"
+  local pid i
+
+  FAI_VPN_PASS="$pass" NX_PROFILE="$FAI_PROFILE" \
+    setsid script -qec 'netExtender connect "$NX_PROFILE" -p "$FAI_VPN_PASS"' /dev/null \
+    >"$log" 2>&1 &
+  pid=$!
+
+  for i in $(seq 1 35); do
+    if fai_active; then
+      return 0
+    fi
+    kill -0 "$pid" 2>/dev/null || break
+    sleep 1
+  done
+
+  fai_active && return 0
+  kill "$pid" 2>/dev/null
+  return 1
 }
 
 connect_ufscar() {
@@ -102,6 +152,29 @@ disconnect_ufscar() {
 connect_fai() {
   local script_path="$DOTFILES_ROOT/scripts/fai-ufscar-vpn.sh"
 
+  if ! command -v netExtender >/dev/null 2>&1; then
+    notify "netExtender nao encontrado. Instale com: yay -S netextender"
+    exit 1
+  fi
+
+  if ! neservice_running; then
+    if ! sudo -n systemctl start NEService >/dev/null 2>&1; then
+      notify "NEService parado; abrindo terminal para iniciar com sudo"
+      open_terminal_command "'$script_path'"
+      return
+    fi
+  fi
+
+  local pass
+  if pass="$(fai_password)"; then
+    notify "Conectando: $FAI_PROFILE..."
+    if connect_fai_auto "$pass"; then
+      notify "Conectada: $FAI_PROFILE"
+      return
+    fi
+    notify "Conexao automatica falhou; abrindo terminal interativo"
+  fi
+
   if [ ! -x "$script_path" ]; then
     notify "Script da FAI nao encontrado ou sem permissao: $script_path"
     exit 1
@@ -114,6 +187,16 @@ disconnect_fai() {
   if ! command -v netExtender >/dev/null 2>&1; then
     notify "netExtender nao encontrado"
     exit 1
+  fi
+
+  if netextender_run "netExtender disconnect" >/dev/null 2>&1 && ! fai_active; then
+    notify "Desconectada: $FAI_PROFILE"
+    return
+  fi
+
+  if sudo -n true 2>/dev/null && netextender_run "sudo netExtender disconnect" >/dev/null 2>&1 && ! fai_active; then
+    notify "Desconectada: $FAI_PROFILE"
+    return
   fi
 
   open_terminal_command "sudo netExtender disconnect"
@@ -236,6 +319,17 @@ show_status() {
   list_active_labels | paste -sd ',' -
 }
 
+# Saida estavel para o painel de VPN do quickshell.
+show_status_json() {
+  local ufscar=false fai=false neservice=false
+
+  nm_profile_active "$UFSCAR_PROFILE" && ufscar=true
+  fai_active && fai=true
+  neservice_running && neservice=true
+
+  printf '{"ufscar":%s,"fai":%s,"neservice":%s}\n' "$ufscar" "$fai" "$neservice"
+}
+
 mode="${1:-menu}"
 case "$mode" in
   menu)
@@ -278,8 +372,11 @@ case "$mode" in
   status)
     show_status
     ;;
+  status-json)
+    show_status_json
+    ;;
   *)
-    printf 'Uso: %s [menu|connect|disconnect|toggle|status]\n' "$0"
+    printf 'Uso: %s [menu|connect|disconnect|toggle|status|status-json]\n' "$0"
     exit 1
     ;;
 esac

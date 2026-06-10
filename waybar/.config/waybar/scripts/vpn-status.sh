@@ -28,8 +28,9 @@ fi
 
 netextender_vpn=""
 if command -v netExtender >/dev/null 2>&1; then
-  netextender_status="$(netExtender status 2>/dev/null || true)"
-  if printf '%s' "$netextender_status" | grep -q "Connected!!!"; then
+  # netExtender exige TTY; script(1) aloca um pseudo-TTY
+  netextender_status="$(script -qec "netExtender status" /dev/null 2>/dev/null || true)"
+  if printf '%s' "$netextender_status" | grep -qE "Connected!!!|has been connected"; then
     netextender_vpn="FAI.UFSCAR"
   fi
 fi

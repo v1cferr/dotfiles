@@ -1,6 +1,7 @@
-// Painel de controle de VPN (FAI.UFSCAR + VPN_UFSCar_SCL).
+// Painel de controle de VPN — lista dinâmica (FAI via netExtender + todos os
+// perfis vpn/wireguard do NetworkManager), cada uma com conectar/desconectar.
 // Toggle externo:  qs ipc call vpn toggle   (usado pelo módulo custom/vpn da Waybar)
-// Ações delegadas ao script ~/.local/bin/vpn (mesma lógica do menu rofi).
+// Ações e status delegados ao script ~/.local/bin/vpn (vpn status-json).
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -10,7 +11,7 @@ ShellRoot {
     id: root
 
     property bool panelVisible: false
-    property var vpnStatus: ({ ufscar: false, fai: false, neservice: false })
+    property var vpnStatus: ({ neservice: false, vpns: [] })
     property bool busy: false
 
     readonly property string vpnBin: Quickshell.env("HOME") + "/.local/bin/vpn"
@@ -43,7 +44,9 @@ ShellRoot {
                 root.refresh();
         }
 
-        function show(): void {
+        // "open" e nao "show": "show" colide com o subcomando `qs ipc show`
+        // e o CLI nunca chama a funcao.
+        function open(): void {
             root.panelVisible = true;
             root.refresh();
         }
@@ -155,24 +158,19 @@ ShellRoot {
                     opacity: 0.5
                 }
 
-                VpnRow {
-                    Layout.fillWidth: true
-                    name: "FAI.UFSCAR"
-                    subtitle: root.vpnStatus.neservice
-                        ? "SonicWall NetExtender"
-                        : "SonicWall NetExtender (NEService parado)"
-                    connected: root.vpnStatus.fai
-                    enabled: !root.busy
-                    onToggleRequested: root.runVpn(root.vpnStatus.fai ? "disconnect" : "connect", "fai")
+                Text {
+                    visible: (root.vpnStatus.vpns || []).length === 0
+                    text: "Nenhuma VPN configurada"
+                    color: root.colDim
+                    font.pixelSize: 12
                 }
 
-                VpnRow {
-                    Layout.fillWidth: true
-                    name: "VPN_UFSCar_SCL"
-                    subtitle: "OpenConnect via NetworkManager"
-                    connected: root.vpnStatus.ufscar
-                    enabled: !root.busy
-                    onToggleRequested: root.runVpn(root.vpnStatus.ufscar ? "disconnect" : "connect", "ufscar")
+                Repeater {
+                    model: root.vpnStatus.vpns || []
+
+                    VpnRow {
+                        Layout.fillWidth: true
+                    }
                 }
 
                 Text {
@@ -189,11 +187,14 @@ ShellRoot {
     component VpnRow: RowLayout {
         id: row
 
-        property string name
-        property string subtitle
-        property bool connected: false
+        required property var modelData
 
-        signal toggleRequested()
+        readonly property bool connected: modelData.connected
+        readonly property string subtitle: modelData.kind === "netextender"
+            ? (root.vpnStatus.neservice
+                ? "SonicWall NetExtender"
+                : "SonicWall NetExtender (NEService parado)")
+            : "NetworkManager"
 
         spacing: 10
 
@@ -210,7 +211,7 @@ ShellRoot {
             Layout.fillWidth: true
 
             Text {
-                text: row.name
+                text: row.modelData.name
                 color: root.colText
                 font.pixelSize: 13
                 font.bold: true
@@ -232,7 +233,7 @@ ShellRoot {
                 : "transparent"
             border.color: row.connected ? root.colRed : root.colGreen
             border.width: 1
-            opacity: row.enabled ? 1 : 0.4
+            opacity: root.busy ? 0.4 : 1
 
             Text {
                 id: btnLabel
@@ -246,8 +247,8 @@ ShellRoot {
                 id: btnArea
                 anchors.fill: parent
                 hoverEnabled: true
-                enabled: row.enabled
-                onClicked: row.toggleRequested()
+                enabled: !root.busy
+                onClicked: root.runVpn(row.connected ? "disconnect" : "connect", row.modelData.id)
             }
         }
     }

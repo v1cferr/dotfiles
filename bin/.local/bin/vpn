@@ -21,6 +21,10 @@ refresh_waybar() {
   pkill -RTMIN+8 -x waybar 2>/dev/null || true
 }
 
+json_escape() {
+  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+
 choose_launcher() {
   if command -v rofi >/dev/null 2>&1; then
     printf 'rofi\n'
@@ -62,6 +66,11 @@ open_terminal_command() {
   "$term" sh -lc "$command_text; exit_code=\$?; printf '\n'; if [ \$exit_code -eq 0 ]; then echo 'Concluido.'; else echo 'Falhou com codigo ' \$exit_code; fi; printf 'Pressione Enter para fechar...'; read -r _" >/dev/null 2>&1 &
 }
 
+# ---------------------------------------------------------------------------
+# NetworkManager: qualquer perfil vpn/wireguard entra no menu dinamicamente.
+# O nome do perfil da FAI fica de fora (a FAI conecta via netExtender).
+# ---------------------------------------------------------------------------
+
 nm_profile_exists() {
   local profile="$1"
   command -v nmcli >/dev/null 2>&1 && nmcli -t -f NAME connection show 2>/dev/null | grep -Fxq "$profile"
@@ -71,6 +80,50 @@ nm_profile_active() {
   local profile="$1"
   command -v nmcli >/dev/null 2>&1 && nmcli -t -f TYPE,NAME connection show --active 2>/dev/null | awk -F: '$1=="vpn" || $1=="wireguard" {print $2}' | grep -Fxq "$profile"
 }
+
+nm_vpn_profiles() {
+  command -v nmcli >/dev/null 2>&1 || return 0
+  nmcli -t -f NAME,TYPE connection show 2>/dev/null \
+    | awk -F: '$2=="vpn" || $2=="wireguard" {print $1}' \
+    | grep -Fxv "$FAI_PROFILE" || true
+}
+
+nm_active_vpns() {
+  command -v nmcli >/dev/null 2>&1 || return 0
+  nmcli -t -f TYPE,NAME connection show --active 2>/dev/null \
+    | awk -F: '$1=="vpn" || $1=="wireguard" {print $2}' \
+    | grep -Fxv "$FAI_PROFILE" || true
+}
+
+connect_nm() {
+  local profile="$1"
+
+  if ! nm_profile_exists "$profile"; then
+    notify "Perfil $profile nao encontrado no NetworkManager"
+    exit 1
+  fi
+
+  # nmcli pode pedir segredos; o terminal interativo cobre todos os casos
+  open_terminal_command "nmcli connection up id '$profile'"
+}
+
+disconnect_nm() {
+  local profile="$1"
+
+  if nm_profile_active "$profile"; then
+    if nmcli connection down id "$profile" >/dev/null 2>&1; then
+      notify "Desconectada: $profile"
+      refresh_waybar
+    else
+      notify "Falha ao desconectar: $profile"
+      exit 1
+    fi
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# FAI.UFSCAR: SonicWall, conecta pelo netExtender (nxcli) + daemon NEService.
+# ---------------------------------------------------------------------------
 
 # O netExtender exige um TTY ("Failed to set terminal to raw mode" sem ele),
 # entao toda chamada passa por um pseudo-TTY alocado pelo script(1).
@@ -134,27 +187,6 @@ connect_fai_auto() {
   return 1
 }
 
-connect_ufscar() {
-  if ! nm_profile_exists "$UFSCAR_PROFILE"; then
-    notify "Perfil $UFSCAR_PROFILE nao encontrado no NetworkManager"
-    exit 1
-  fi
-
-  open_terminal_command "nmcli connection up id '$UFSCAR_PROFILE'"
-}
-
-disconnect_ufscar() {
-  if nm_profile_active "$UFSCAR_PROFILE"; then
-    if nmcli connection down id "$UFSCAR_PROFILE" >/dev/null 2>&1; then
-      notify "Desconectada: $UFSCAR_PROFILE"
-      refresh_waybar
-    else
-      notify "Falha ao desconectar: $UFSCAR_PROFILE"
-      exit 1
-    fi
-  fi
-}
-
 connect_fai() {
   local script_path="$DOTFILES_ROOT/scripts/fai-ufscar-vpn.sh"
 
@@ -211,10 +243,48 @@ disconnect_fai() {
   open_terminal_command "sudo netExtender disconnect"
 }
 
+# ---------------------------------------------------------------------------
+# Operacoes por alvo: "fai", "ufscar" (atalho) ou o nome de qualquer perfil
+# VPN do NetworkManager.
+# ---------------------------------------------------------------------------
+
+connect_target() {
+  local target="$1"
+
+  case "$target" in
+    fai | "$FAI_PROFILE")
+      connect_fai
+      ;;
+    ufscar)
+      connect_nm "$UFSCAR_PROFILE"
+      ;;
+    *)
+      connect_nm "$target"
+      ;;
+  esac
+}
+
+disconnect_target() {
+  local target="$1"
+
+  case "$target" in
+    fai | "$FAI_PROFILE")
+      disconnect_fai
+      ;;
+    ufscar)
+      disconnect_nm "$UFSCAR_PROFILE"
+      ;;
+    all | "")
+      disconnect_all
+      ;;
+    *)
+      disconnect_nm "$target"
+      ;;
+  esac
+}
+
 list_active_labels() {
-  if nm_profile_active "$UFSCAR_PROFILE"; then
-    printf '%s\n' "$UFSCAR_PROFILE"
-  fi
+  nm_active_vpns
 
   if fai_active; then
     printf '%s\n' "$FAI_PROFILE"
@@ -222,12 +292,15 @@ list_active_labels() {
 }
 
 disconnect_all() {
-  local any_disconnected=0
+  local any_disconnected=0 profile
 
-  if nm_profile_active "$UFSCAR_PROFILE"; then
-    disconnect_ufscar
+  while IFS= read -r profile; do
+    [ -n "$profile" ] || continue
+    disconnect_nm "$profile"
     any_disconnected=1
-  fi
+  done <<EOF
+$(nm_active_vpns)
+EOF
 
   if fai_active; then
     disconnect_fai
@@ -240,29 +313,18 @@ disconnect_all() {
 }
 
 toggle_vpn() {
-  local target="${1:-ufscar}"
+  local target="${1:-fai}"
 
   if [ -n "$(list_active_labels)" ]; then
     disconnect_all
     exit 0
   fi
 
-  case "$target" in
-    ufscar)
-      connect_ufscar
-      ;;
-    fai)
-      connect_fai
-      ;;
-    *)
-      printf 'Uso: %s toggle [ufscar|fai]\n' "$0"
-      exit 1
-      ;;
-  esac
+  connect_target "$target"
 }
 
 show_menu() {
-  local launcher options choice
+  local launcher options choice profile
   launcher="$(choose_launcher)"
 
   if [ "$launcher" = "none" ]; then
@@ -272,14 +334,6 @@ show_menu() {
 
   options=""
 
-  if nm_profile_exists "$UFSCAR_PROFILE"; then
-    if nm_profile_active "$UFSCAR_PROFILE"; then
-      options="${options}Desconectar: ${UFSCAR_PROFILE}\n"
-    else
-      options="${options}Conectar: ${UFSCAR_PROFILE}\n"
-    fi
-  fi
-
   if command -v netExtender >/dev/null 2>&1; then
     if fai_active; then
       options="${options}Desconectar: ${FAI_PROFILE}\n"
@@ -288,12 +342,23 @@ show_menu() {
     fi
   fi
 
+  while IFS= read -r profile; do
+    [ -n "$profile" ] || continue
+    if nm_profile_active "$profile"; then
+      options="${options}Desconectar: ${profile}\n"
+    else
+      options="${options}Conectar: ${profile}\n"
+    fi
+  done <<EOF
+$(nm_vpn_profiles)
+EOF
+
   if [ -z "$options" ]; then
     notify "Nenhuma VPN configurada foi encontrada"
     exit 1
   fi
 
-  if printf '%s' "$options" | grep -q '^Desconectar:'; then
+  if printf '%b' "$options" | grep -q '^Desconectar:'; then
     options="Desconectar todas\n${options}"
   fi
 
@@ -309,17 +374,11 @@ show_menu() {
     "Desconectar todas")
       disconnect_all
       ;;
-    "Conectar: ${UFSCAR_PROFILE}")
-      connect_ufscar
+    "Conectar: "*)
+      connect_target "${choice#Conectar: }"
       ;;
-    "Desconectar: ${UFSCAR_PROFILE}")
-      disconnect_ufscar
-      ;;
-    "Conectar: ${FAI_PROFILE}")
-      connect_fai
-      ;;
-    "Desconectar: ${FAI_PROFILE}")
-      disconnect_fai
+    "Desconectar: "*)
+      disconnect_target "${choice#Desconectar: }"
       ;;
   esac
 }
@@ -328,15 +387,30 @@ show_status() {
   list_active_labels | paste -sd ',' -
 }
 
-# Saida estavel para o painel de VPN do quickshell.
+# Saida estavel para o painel de VPN do quickshell: lista todas as VPNs
+# (FAI via netExtender + perfis do NetworkManager) com o estado de cada uma.
 show_status_json() {
-  local ufscar=false fai=false neservice=false
+  local items="" profile state neservice=false
 
-  nm_profile_active "$UFSCAR_PROFILE" && ufscar=true
-  fai_active && fai=true
   neservice_running && neservice=true
 
-  printf '{"ufscar":%s,"fai":%s,"neservice":%s}\n' "$ufscar" "$fai" "$neservice"
+  if command -v netExtender >/dev/null 2>&1; then
+    state=false
+    fai_active && state=true
+    items="{\"id\":\"fai\",\"name\":\"$(json_escape "$FAI_PROFILE")\",\"kind\":\"netextender\",\"connected\":${state}}"
+  fi
+
+  while IFS= read -r profile; do
+    [ -n "$profile" ] || continue
+    state=false
+    nm_profile_active "$profile" && state=true
+    [ -n "$items" ] && items="${items},"
+    items="${items}{\"id\":\"$(json_escape "$profile")\",\"name\":\"$(json_escape "$profile")\",\"kind\":\"nm\",\"connected\":${state}}"
+  done <<EOF
+$(nm_vpn_profiles)
+EOF
+
+  printf '{"neservice":%s,"vpns":[%s]}\n' "$neservice" "$items"
 }
 
 mode="${1:-menu}"
@@ -345,38 +419,17 @@ case "$mode" in
     show_menu
     ;;
   connect)
-    case "${2:-}" in
-      ufscar)
-        connect_ufscar
-        ;;
-      fai)
-        connect_fai
-        ;;
-      *)
-        printf 'Uso: %s connect [ufscar|fai]\n' "$0"
-        exit 1
-        ;;
-    esac
+    if [ -z "${2:-}" ]; then
+      printf 'Uso: %s connect [fai|ufscar|<perfil-nm>]\n' "$0"
+      exit 1
+    fi
+    connect_target "$2"
     ;;
   disconnect)
-    case "${2:-}" in
-      ufscar)
-        disconnect_ufscar
-        ;;
-      fai)
-        disconnect_fai
-        ;;
-      all|"")
-        disconnect_all
-        ;;
-      *)
-        printf 'Uso: %s disconnect [ufscar|fai|all]\n' "$0"
-        exit 1
-        ;;
-    esac
+    disconnect_target "${2:-all}"
     ;;
   toggle)
-    toggle_vpn "${2:-ufscar}"
+    toggle_vpn "${2:-fai}"
     ;;
   status)
     show_status

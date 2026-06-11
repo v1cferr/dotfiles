@@ -47,7 +47,7 @@ gdb 17.2-1
 ghostwriter 26.04.2-1
 gimp 3.2.4-1
 git 2.54.0-1
-github-cli 2.93.0-1
+github-cli 2.94.0-1
 gnome-calculator 50.0-1
 gnome-clocks 50.0-2
 gnome-disk-utility 46.1-2
@@ -135,6 +135,7 @@ qt5-wayland 5.15.19+kde+r55-1
 qt6-wayland 6.11.1-1
 quickshell 0.3.0-2
 raylib 6.0-1
+rclone 1.74.3-1
 refind 0.14.2-3
 reflector 2023-5
 resvg 0.47.0-2
@@ -189,7 +190,7 @@ ttf-nerd-fonts-symbols-mono 3.4.0-1
 udiskie 2.6.2-1
 ufw 0.36.2-7
 unzip 6.0-23
-uv 0.11.19-1
+uv 0.11.20-1
 uwsm 0.26.4-1
 v4l2loopback-dkms 0.15.3-1
 vim 9.2.0600-1
@@ -201,7 +202,7 @@ vlc-plugins-all 3.0.23_2-6
 vulkan-intel 1:26.1.2-1
 vulkan-nouveau 1:26.1.2-1
 vulkan-radeon 1:26.1.2-1
-warp-terminal v0.2026.06.03.09.49.stable_02-1
+warp-terminal v0.2026.06.03.09.49.stable_04-1
 waybar 0.15.0-2
 wev 1.1.0-1
 wget 1.25.0-5

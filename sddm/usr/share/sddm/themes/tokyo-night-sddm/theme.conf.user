@@ -1,0 +1,41 @@
+[General]
+## Overrides do v1cferr por cima do theme.conf padrão (o SDDM lê o
+## theme.conf.user automaticamente). Só o que difere do padrão fica aqui.
+
+# Tokyo Tower à noite — combina com a paleta Tokyo Night
+Background="Backgrounds/tokyocity.png"
+DimBackgroundImage="0.2"
+
+# Form à esquerda com vidro fosco; a torre (lado direito da foto) fica visível
+FormPosition="left"
+BackgroundImageHAlignment="right"
+HaveFormBackground="true"
+PartialBlur="true"
+BlurRadius="80"
+
+# Paleta Tokyo Night
+MainColor="#c0caf5"
+AccentColor="#7aa2f7"
+BackgroundColor="#16161e"
+OverrideLoginButtonTextColor="#16161e"
+RoundCorners="16"
+
+Font="JetBrainsMono Nerd Font"
+
+# Relógio 24h e data em pt-BR (o sistema roda em en_US, então força o locale)
+Locale="pt_BR.UTF-8"
+HourFormat="HH:mm"
+DateFormat="dddd, d 'de' MMMM"
+
+HeaderText="Olá!"
+TranslatePlaceholderUsername="Usuário"
+TranslatePlaceholderPassword="Senha"
+TranslateShowPassword="Mostrar senha"
+TranslateLogin="Entrar"
+TranslateLoginFailedWarning="Falha no login — tente de novo"
+TranslateCapslockWarning="Caps Lock ativado"
+TranslateSession="Sessão"
+TranslateSuspend="Suspender"
+TranslateHibernate="Hibernar"
+TranslateReboot="Reiniciar"
+TranslateShutdown="Desligar"

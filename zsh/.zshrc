@@ -201,6 +201,11 @@ export CLAUDE_PESSOAL_DIR="$HOME/.claude-pessoal"
 alias claude-fai='CLAUDE_CONFIG_DIR="$CLAUDE_FAI_DIR" claude'
 alias claude-pessoal='CLAUDE_CONFIG_DIR="$CLAUDE_PESSOAL_DIR" claude'
 
+# Monitor de uso ao vivo (tokens/custo do bloco atual), atualiza a cada 1s
+alias claude-usage='watch -n 1 -c ccusage blocks --active --color'
+# Uso detalhado por sessão (tabela: tokens/custo de cada sessão)
+alias claude-usage-sessions='ccusage session --color'
+
 # Seletor interativo: escolhe a conta na hora com fzf
 #   uso: claude-pick            (abre menu e inicia)
 #        claude-pick <args...>  (passa argumentos pro claude)

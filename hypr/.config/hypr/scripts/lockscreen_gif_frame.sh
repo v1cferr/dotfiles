@@ -15,7 +15,9 @@
 set -u
 
 GIFDIR="${HOME}/Pictures/Wallpapers/lockscreen-gifs"
-FALLBACK="${HOME}/Pictures/Wallpapers/acoolrocket-dalle2-hokusai-non-prompt-landscape.png"
+# Placeholder escuro (mesma cor do background do monitor secundário) — mostrado
+# até o 1º frame do GIF carregar, pra não piscar nenhuma imagem contrastante.
+FALLBACK="${HOME}/.config/hypr/assets/lockscreen-placeholder.png"
 CACHE="${HOME}/.cache/hypr/lockgif"
 CURRENT="${CACHE}/.current"     # GIF escolhido no momento
 SESSION="${CACHE}/.session"     # marcador da sessão (pid+starttime do hyprlock)

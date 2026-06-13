@@ -22,20 +22,9 @@ RoundCorners="16"
 
 Font="JetBrainsMono Nerd Font"
 
-# Relógio 24h e data em pt-BR (o sistema roda em en_US, então força o locale)
-Locale="pt_BR.UTF-8"
+# Relógio 24h, data em en-US (locale do sistema; sem semana — Qt não tem
+# token de número de semana no formato de data, a week fica no hyprlock)
 HourFormat="HH:mm"
-DateFormat="dddd, d 'de' MMMM"
+DateFormat="dddd, MMMM d"
 
-HeaderText="Olá!"
-TranslatePlaceholderUsername="Usuário"
-TranslatePlaceholderPassword="Senha"
-TranslateShowPassword="Mostrar senha"
-TranslateLogin="Entrar"
-TranslateLoginFailedWarning="Falha no login — tente de novo"
-TranslateCapslockWarning="Caps Lock ativado"
-TranslateSession="Sessão"
-TranslateSuspend="Suspender"
-TranslateHibernate="Hibernar"
-TranslateReboot="Reiniciar"
-TranslateShutdown="Desligar"
+HeaderText="Welcome back!"

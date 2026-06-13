@@ -5,7 +5,8 @@
 #  O swaync só expõe a CONTAGEM (não o conteúdo), então mostramos só o número.
 #  Sem expor o texto das notificações na tela bloqueada.
 # ============================================================================
-n=$(swaync-client -c 2>/dev/null || echo 0)
+# --skip-wait: não trava esperando o swaync responder (aparece na hora)
+n=$(swaync-client -c -sw 2>/dev/null || echo 0)
 [[ ${n} =~ ^[0-9]+$ ]] || n=0
 
 if (( n > 0 )); then

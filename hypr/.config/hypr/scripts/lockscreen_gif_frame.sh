@@ -38,38 +38,48 @@ sid="none"
 
 # Avança a fila quando: (a) é um lock novo, ou (b) já passaram ROTATE segundos
 # desde que o GIF atual foi escolhido (troca periódica dentro do mesmo lock).
+#
+# TUDO sob flock: o hyprlock chama este script ~10x/s (load inicial + pacer
+# SIGUSR2), então sem o lock duas chamadas quase-simultâneas veriam "lock
+# novo" juntas e cada uma puxaria um GIF da fila — fazendo a tela mostrar um
+# GIF e pular pro outro na hora. Com flock a 2ª chamada espera, vê a sessão
+# já marcada e o .picked_at recente, e NÃO troca de novo.
 QUEUE="${CACHE}/.queue"
-advance=0
-if [[ ! -f ${SESSION} || "$(<"${SESSION}")" != "${sid}" ]]; then
-    advance=1                                   # lock novo
-elif [[ ! -f ${PICKED} || ! -f ${CURRENT} ]]; then
-    advance=1                                   # sem estado -> escolhe agora
-elif (( $(date +%s) - $(<"${PICKED}") >= ROTATE )); then
-    advance=1                                   # passou o tempo de troca
-fi
+exec 9>"${CACHE}/.advance.lock"
+if flock -w 2 9; then
+    advance=0
+    if [[ ! -f ${SESSION} || "$(<"${SESSION}")" != "${sid}" ]]; then
+        advance=1                               # lock novo
+    elif [[ ! -f ${PICKED} || ! -f ${CURRENT} ]]; then
+        advance=1                               # sem estado -> escolhe agora
+    elif (( $(date +%s) - $(<"${PICKED}") >= ROTATE )); then
+        advance=1                               # passou o tempo de troca
+    fi
 
-# Fila embaralhada (.queue): cada GIF aparece UMA vez antes de qualquer
-# repetição; quando esvazia, reembaralha — sem deixar o último mostrado
-# abrir o ciclo novo (repetição imediata na virada).
-if (( advance )); then
-    prev=""
-    [[ -f ${CURRENT} ]] && prev="$(<"${CURRENT}")"
-    pick=""
-    while [[ -z ${pick} ]]; do
-        if [[ ! -s ${QUEUE} ]]; then
-            printf '%s\n' "${gifs[@]}" | shuf >"${QUEUE}"
-            if (( ${#gifs[@]} > 1 )) && [[ "$(head -n1 "${QUEUE}")" == "${prev}" ]]; then
-                { tail -n +2 "${QUEUE}"; head -n1 "${QUEUE}"; } >"${QUEUE}.tmp" \
-                    && mv "${QUEUE}.tmp" "${QUEUE}"
+    # Fila embaralhada (.queue): cada GIF aparece UMA vez antes de qualquer
+    # repetição; quando esvazia, reembaralha — sem deixar o último mostrado
+    # abrir o ciclo novo (repetição imediata na virada).
+    if (( advance )); then
+        prev=""
+        [[ -f ${CURRENT} ]] && prev="$(<"${CURRENT}")"
+        pick=""
+        while [[ -z ${pick} ]]; do
+            if [[ ! -s ${QUEUE} ]]; then
+                printf '%s\n' "${gifs[@]}" | shuf >"${QUEUE}"
+                if (( ${#gifs[@]} > 1 )) && [[ "$(head -n1 "${QUEUE}")" == "${prev}" ]]; then
+                    { tail -n +2 "${QUEUE}"; head -n1 "${QUEUE}"; } >"${QUEUE}.tmp" \
+                        && mv "${QUEUE}.tmp" "${QUEUE}"
+                fi
             fi
-        fi
-        pick="$(head -n1 "${QUEUE}")"
-        sed -i '1d' "${QUEUE}"
-        [[ -f ${pick} ]] || pick=""   # GIF removido da pasta -> tenta o próximo
-    done
-    echo "${pick}" >"${CURRENT}"
-    echo "${sid}" >"${SESSION}"
-    date +%s >"${PICKED}"
+            pick="$(head -n1 "${QUEUE}")"
+            sed -i '1d' "${QUEUE}"
+            [[ -f ${pick} ]] || pick=""   # GIF removido da pasta -> tenta o próximo
+        done
+        echo "${pick}" >"${CURRENT}"
+        echo "${sid}" >"${SESSION}"
+        date +%s >"${PICKED}"
+    fi
+    flock -u 9
 fi
 
 gif="$(<"${CURRENT}")"

@@ -6,18 +6,21 @@
 #  usa reload_time=0 + reload_cmd apontando para cá, e este script devolve o
 #  frame correspondente ao instante atual.
 #
-#  A cada lock um GIF diferente é sorteado de ~/Pictures/Wallpapers/
-#  lockscreen-gifs/ (coleção do CtorW/Hypr-live-paperlls — basta jogar mais
-#  .gif na pasta). Os frames são extraídos sob demanda para o cache; enquanto
-#  a extração roda, devolve um wallpaper estático.
+#  Um GIF diferente é sorteado a cada lock novo E a cada 2.5 min dentro do
+#  mesmo lock (ROTATE) — de ~/Pictures/Wallpapers/lockscreen-gifs/ (coleção
+#  do CtorW/Hypr-live-paperlls — basta jogar mais .gif na pasta). Os frames
+#  são extraídos sob demanda para o cache; enquanto a extração roda, devolve
+#  um wallpaper estático.
 # ============================================================================
 set -u
 
 GIFDIR="${HOME}/Pictures/Wallpapers/lockscreen-gifs"
 FALLBACK="${HOME}/Pictures/Wallpapers/acoolrocket-dalle2-hokusai-non-prompt-landscape.png"
 CACHE="${HOME}/.cache/hypr/lockgif"
-CURRENT="${CACHE}/.current"   # GIF escolhido para a sessão de lock atual
-SESSION="${CACHE}/.session"   # marcador da sessão (pid+starttime do hyprlock)
+CURRENT="${CACHE}/.current"     # GIF escolhido no momento
+SESSION="${CACHE}/.session"     # marcador da sessão (pid+starttime do hyprlock)
+PICKED="${CACHE}/.picked_at"    # epoch de quando o GIF atual foi escolhido
+ROTATE=150                      # troca de GIF a cada 2.5 min no mesmo lock
 FPS=10
 
 mkdir -p "${CACHE}"
@@ -28,18 +31,27 @@ if [[ ! -e ${gifs[0]} ]]; then
     exit 0
 fi
 
-# Identifica a sessão de lock pelo pid+starttime do hyprlock; quando muda
-# (lock novo), avança a fila de GIFs.
+# Identifica a sessão de lock pelo pid+starttime do hyprlock.
 pid="$(pgrep -o -x hyprlock 2>/dev/null || true)"
 sid="none"
 [[ -n ${pid} ]] && sid="${pid}:$(awk '{print $22}' "/proc/${pid}/stat" 2>/dev/null)"
 
+# Avança a fila quando: (a) é um lock novo, ou (b) já passaram ROTATE segundos
+# desde que o GIF atual foi escolhido (troca periódica dentro do mesmo lock).
+QUEUE="${CACHE}/.queue"
+advance=0
+if [[ ! -f ${SESSION} || "$(<"${SESSION}")" != "${sid}" ]]; then
+    advance=1                                   # lock novo
+elif [[ ! -f ${PICKED} || ! -f ${CURRENT} ]]; then
+    advance=1                                   # sem estado -> escolhe agora
+elif (( $(date +%s) - $(<"${PICKED}") >= ROTATE )); then
+    advance=1                                   # passou o tempo de troca
+fi
+
 # Fila embaralhada (.queue): cada GIF aparece UMA vez antes de qualquer
 # repetição; quando esvazia, reembaralha — sem deixar o último mostrado
 # abrir o ciclo novo (repetição imediata na virada).
-QUEUE="${CACHE}/.queue"
-
-if [[ ! -f ${SESSION} || "$(<"${SESSION}")" != "${sid}" ]]; then
+if (( advance )); then
     prev=""
     [[ -f ${CURRENT} ]] && prev="$(<"${CURRENT}")"
     pick=""
@@ -57,6 +69,7 @@ if [[ ! -f ${SESSION} || "$(<"${SESSION}")" != "${sid}" ]]; then
     done
     echo "${pick}" >"${CURRENT}"
     echo "${sid}" >"${SESSION}"
+    date +%s >"${PICKED}"
 fi
 
 gif="$(<"${CURRENT}")"

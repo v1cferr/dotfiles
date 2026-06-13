@@ -15,6 +15,10 @@ vscode/.config/Code/User/*.log
 wallpapers/Pictures/*
 !wallpapers/Pictures/Wallpapers/
 
+# GIFs da tela de bloqueio (~400 MB) - versionados via manifesto, não em git.
+# Rebaixe com wallpapers/scripts/fetch-lockscreen-gifs.sh (ver lockscreen-gifs.txt)
+wallpapers/Pictures/Wallpapers/lockscreen-gifs/
+
 # NetworkManager - senhas de VPN (declarativo mas não versionado)
 # networkmanager/.config/NetworkManager/system-connections/*.nmconnection
 

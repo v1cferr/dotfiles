@@ -1,0 +1,38 @@
+# Manifesto dos GIFs da tela de bloqueio (hyprlock, monitor secundário).
+#
+# Os .gif em si NÃO são versionados (são ~400 MB e incharia o histórico do
+# git pra sempre) — ficam gitignorados em lockscreen-gifs/. Este arquivo é a
+# fonte da verdade: rode scripts/wallpapers/fetch-lockscreen-gifs.sh para
+# baixar tudo de novo num setup novo (disaster recovery).
+#
+# Curadoria: estética japonesa/anime (samurai, torii, cidades neon, paisagens,
+# dragões em tinta) — sem closeups de garota de anime. Fonte: coleções imgur
+# do CtorW/Hypr-live-paperlls (github.com/CtorW/Hypr-live-paperlls).
+#
+# Formato: <nome-do-arquivo>  <url>   (linhas em branco e # são ignoradas)
+
+coll5-LqMCoNu.gif      https://i.imgur.com/LqMCoNu.gif
+coll5-LQPEERz.gif      https://i.imgur.com/LQPEERz.gif
+coll5-ReeJOo3.gif      https://i.imgur.com/ReeJOo3.gif
+coll5-ziIklzS.gif      https://i.imgur.com/ziIklzS.gif
+coll6-EiQf8Uk.gif      https://i.imgur.com/EiQf8Uk.gif
+hires-h7YDd7g.gif      https://i.imgur.com/h7YDd7g.gif
+hires-ZHAC4yq.gif      https://i.imgur.com/ZHAC4yq.gif
+pixel-LCDQDGB.gif      https://i.imgur.com/LCDQDGB.gif
+pixel-SCT1fcD.gif      https://i.imgur.com/SCT1fcD.gif
+pixel-VJpGfck.gif      https://i.imgur.com/VJpGfck.gif
+pixel-XAWIekX.gif      https://i.imgur.com/XAWIekX.gif
+jp-village-night.gif   https://i.imgur.com/0ODN2E4.gif
+wolf-blue.gif          https://i.imgur.com/GbyVPy9.gif
+samurai-ink.gif        https://i.imgur.com/gIxT5ot.gif
+samurai-oni.gif        https://i.imgur.com/GLcTJWF.gif
+dragon-moon.gif        https://i.imgur.com/HWg68z1.gif
+neon-city.gif          https://i.imgur.com/IyGWtf7.gif
+swamp-blue.gif         https://i.imgur.com/JRdB9qB.gif
+torii-mist.gif         https://i.imgur.com/MvTf8vx.gif
+torii-neon.gif         https://i.imgur.com/NVujN3B.gif
+neon-alley.gif         https://i.imgur.com/pW1bMjY.gif
+dragon-ink.gif         https://i.imgur.com/X30bJkG.gif
+train-space.gif        https://i.imgur.com/XODDdJf.gif
+sakura-station.gif     https://i.imgur.com/yDxmZLk.gif
+zen-moon.gif           https://i.imgur.com/yyoXxQv.gif

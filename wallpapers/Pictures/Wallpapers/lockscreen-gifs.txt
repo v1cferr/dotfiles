@@ -21,14 +21,19 @@ samurai-wave.gif       https://i.imgur.com/6BMGxmg.gif
 samurai-pixel.gif      https://i.imgur.com/7pUpql7.gif
 samurai-archer.gif     https://i.imgur.com/WnnDiwq.gif
 sword-field.gif        https://i.imgur.com/rsS40mE.gif
+samurai-cavalry.gif    https://i.imgur.com/GF95fYW.gif
+samurai-poppy.gif      https://i.imgur.com/LE5hdm4.gif
+warrior-dusk.gif       https://i.imgur.com/QVKv3KE.gif
 
 # --- Torii / templos ---
 torii-mist.gif         https://i.imgur.com/MvTf8vx.gif
 torii-neon.gif         https://i.imgur.com/NVujN3B.gif
 
-# --- Dragões (tinta / sumi-e) ---
+# --- Dragões / feras (tinta / sumi-e) ---
 dragon-ink.gif         https://i.imgur.com/X30bJkG.gif
 dragon-moon.gif        https://i.imgur.com/HWg68z1.gif
+dragon-energy.gif      https://i.imgur.com/FVaIO2P.gif
+ink-beast.gif          https://i.imgur.com/p3MCekm.gif
 
 # --- Paisagem / cultura japonesa ---
 jp-village-night.gif   https://i.imgur.com/0ODN2E4.gif

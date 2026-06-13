@@ -277,4 +277,14 @@
     }
   },
   "terminal.integrated.defaultProfile.linux": "zsh", // Desativa o indicador do GitLens Launchpad
+  // Abas pinadas: impede fechar por teclado E mouse (não perde os pins sem querer)
+  "workbench.editor.preventPinnedEditorClose": "keyboardAndMouse",
+  // Mantém as abas pinadas numa linha separada no topo, sempre fixas à esquerda
+  "workbench.editor.pinnedTabsOnSeparateRow": true,
+  // Sempre reabre as janelas/pastas da última sessão (volta de onde parou)
+  "window.restoreWindows": "all",
+  // Mantém arquivos não salvos ao fechar a janela/sair (não perde trabalho)
+  "files.hotExit": "onExitAndWindowClose",
+  // Não abre a tela de boas-vindas no startup
+  "workbench.startupEditor": "none",
 }

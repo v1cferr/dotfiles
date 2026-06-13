@@ -3,7 +3,7 @@ anydesk-bin 8.0.2-1
 arch-update 3.20.0-1
 aur-sync-vote 0.2.3-1
 bibata-cursor-theme 2.0.7-1
-claude-code 2.1.175-1
+claude-code 2.1.177-1
 claude-desktop-appimage 2.0.19+claude1.11847.5-1
 dropbox 250.4.3245-1
 evince-no-gnome 48.4-1

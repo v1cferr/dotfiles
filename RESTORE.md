@@ -87,6 +87,11 @@ sudo ~/dotfiles/scripts/fail2ban/deploy.sh
 sudo ~/dotfiles/scripts/swap/deploy.sh           # zram + swapfile (pacman -S zram-generator antes)
 sudo ~/dotfiles/scripts/cloudflare-ddns/deploy.sh
 sudo ~/dotfiles/scripts/netextender/deploy.sh    # perfil VPN (se usar)
+
+# Display manager: greetd + greeter quickshell (substitui o SDDM)
+sudo pacman -S greetd
+sudo ~/dotfiles/scripts/greetd/deploy.sh         # configs + coletor de status
+sudo ~/dotfiles/scripts/greetd/switch-to-greetd.sh   # habilita greetd como DM
 ```
 
 ## 8. Automação + serviços
@@ -106,6 +111,9 @@ de cada um (modelo na seção "Stacks Docker" do `.env.example`) e
 
 ## 10. Checklist final
 
+- [ ] greetd sobe o greeter quickshell no boot; senha loga na sessão uwsm
+      (`readlink /etc/systemd/system/display-manager.service` → greetd; rollback:
+      `scripts/greetd/rollback-to-sddm.sh` enquanto o SDDM existir)
 - [ ] Hyprland sobe e os atalhos funcionam (ver `README.hyprland.md`)
 - [ ] `stow-sync.sh status` sem links quebrados
 - [ ] SSH/GPG funcionando (`ssh -T git@github.com`, `gpg -K`)

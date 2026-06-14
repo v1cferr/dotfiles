@@ -54,7 +54,7 @@ GIFS_JSON=$(for g in "${OUT_DIR}"/gif-*.gif; do [[ -e "${g}" ]] && printf '%s\n'
 # Escreve um JSON inicial JÁ com quote + GIFs (antes do loop lento do docker),
 # pra a frase e o GIF aparecerem na hora. ready=false => greeter mostra "carregando".
 jq -n --arg quote "${QUOTE_PT}" --arg author "${QUOTE_AUTHOR}" --argjson gifs "${GIFS_JSON:-[]}" \
-    '{ready:false, containers:[], up:0, total:0, cpu_pct:0, mem_pct:0, mem_used:"", mem_total:"",
+    '{ready:false, containers:[], processes:[], up:0, total:0, cpu_pct:0, mem_pct:0, mem_used:"", mem_total:"",
       cpu_temp:"", gpu_temp:"", ip:"", uptime:"", quote:$quote, author:$author, gifs:$gifs, alerts:[]}' \
     > "${TMP}" 2>/dev/null && mv "${TMP}" "${JSON}" && chmod 644 "${JSON}"
 
@@ -117,6 +117,14 @@ while true; do
 
     ct=$(cpu_temp); gt=$(gpu_temp); cp=$(cpu_pct)
     IFS=$'\t' read -r mem_pct mem_used mem_total < <(mem_info)
+
+    # --- top processos do sistema (mini-btop), agregados por nome, por MEM ---
+    procs=$(ps -eo comm,pmem,pcpu --no-headers 2>/dev/null \
+        | awk '{m[$1]+=$2; c[$1]+=$3} END{for(k in m) printf "%s\t%.1f\t%.1f\n", k, m[k], c[k]}' \
+        | sort -t"$(printf '\t')" -k2 -rn | head -n 8 \
+        | jq -R 'split("\t") | {name:.[0], mem:((.[1]//"0")|tonumber), cpu:((.[2]//"0")|tonumber)}' \
+        | jq -s '.' 2>/dev/null)
+    [[ -z "${procs}" ]] && procs='[]'
     ip=$(ip -4 -o addr show scope global 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -n1)
     up_pretty=$(uptime -p 2>/dev/null)
 
@@ -146,10 +154,11 @@ while true; do
         --arg quote "${QUOTE_PT}" --arg author "${QUOTE_AUTHOR}" \
         --argjson gifs "${GIFS_JSON:-[]}" \
         --argjson alerts "${alerts:-[]}" \
+        --argjson processes "${procs:-[]}" \
         '{ready:true, containers:$containers, up:$up, total:$total,
           cpu_pct:$cpu_pct, mem_pct:$mem_pct, mem_used:$mem_used, mem_total:$mem_total,
           cpu_temp:$cpu_temp, gpu_temp:$gpu_temp, ip:$ip, uptime:$uptime,
-          quote:$quote, author:$author, gifs:$gifs, alerts:$alerts}' \
+          quote:$quote, author:$author, gifs:$gifs, alerts:$alerts, processes:$processes}' \
         > "${TMP}" 2>/dev/null && mv "${TMP}" "${JSON}" && chmod 644 "${JSON}"
 
     sleep "${INTERVAL}"

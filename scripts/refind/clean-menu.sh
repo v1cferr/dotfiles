@@ -22,7 +22,9 @@ set -euo pipefail
 
 [[ ${EUID} -eq 0 ]] || { echo "Precisa de root. Rode: sudo $0" >&2; exit 1; }
 
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 CONF="/boot/EFI/BOOT/refind.conf"
+ICONS="/boot/EFI/BOOT/icons"
 ESP_ARCH="645b5013-100e-4726-8145-077dfdd875d8"   # nvme1n1p1 (/boot, systemd-boot)
 ESP_WIN="dd2d8e38-c28c-43fe-ada2-ddd248215d55"    # nvme0n1p1 (Windows 11 real)
 BEGIN="# >>> dotfiles: menu enxuto (managed, não editar à mão) >>>"
@@ -35,9 +37,11 @@ if [[ ! -f /boot/EFI/systemd/systemd-bootx64.efi ]]; then
     echo "ERRO: /boot/EFI/systemd/systemd-bootx64.efi não existe — abortando." >&2
     exit 1
 fi
-for ic in os_arch.png os_win.png; do
-    [[ -f "/boot/EFI/BOOT/icons/${ic}" ]] || { echo "ERRO: ícone ${ic} não encontrado." >&2; exit 1; }
-done
+[[ -f "${ICONS}/os_arch.png" ]] || { echo "ERRO: ícone os_arch.png não encontrado." >&2; exit 1; }
+[[ -f "${SCRIPT_DIR}/os_win11.png" ]] || { echo "ERRO: ${SCRIPT_DIR}/os_win11.png não encontrado." >&2; exit 1; }
+
+# Instala o ícone do Windows 11 (logo oficial, versionado no repo) na ESP
+install -Dm644 "${SCRIPT_DIR}/os_win11.png" "${ICONS}/os_win11.png"
 
 # Backups: .bak = original (nunca sobrescreve); .prev = antes desta execução
 [[ -f ${CONF}.bak ]] || cp -a "${CONF}" "${CONF}.bak"
@@ -69,7 +73,7 @@ menuentry "Arch Linux" {
 }
 
 menuentry "Windows 11" {
-    icon   /EFI/BOOT/icons/os_win.png
+    icon   /EFI/BOOT/icons/os_win11.png
     volume ${ESP_WIN}
     loader /EFI/Microsoft/Boot/bootmgfw.efi
 }

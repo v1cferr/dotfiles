@@ -172,7 +172,7 @@ ShellRoot {
                 asynchronous: true
                 source: "file:///etc/greetd/wallpaper.png"
             }
-            Rectangle { anchors.fill: parent; color: "#99000000" }  // dim p/ legibilidade
+            Rectangle { anchors.fill: parent; color: "#80000000" }  // dim p/ legibilidade
 
             // ----- coluna de login (centro-esquerda) -----
             ColumnLayout {

@@ -43,7 +43,7 @@ cp -rT "${PKG}/etc/greetd/quickshell" /etc/greetd/quickshell
 # Já sai borrado + escurecido aqui (o compositor do greeter tem blur desligado),
 # pra o login ganhar destaque. Ajuste o blur (0xN) / brilho (-N) a gosto.
 magick "${DOTFILES_DIR}/wallpapers/Pictures/Wallpapers/arch_hero_flipped.png" \
-       -blur 0x24 -brightness-contrast -32x-5 /etc/greetd/wallpaper.png
+       -blur 0x24 -brightness-contrast -18x-5 /etc/greetd/wallpaper.png
 # o usuário `greeter` precisa LER tudo em /etc/greetd
 chmod -R a+rX /etc/greetd
 echo "[deploy] /etc/greetd atualizado (incl. wallpaper.png)"

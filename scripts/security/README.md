@@ -35,9 +35,36 @@ sudo ~/dotfiles/scripts/security/aur-malware-check.sh
 
 # Ignora a janela de datas e varre todo o pacman.log
 ~/dotfiles/scripts/security/aur-malware-check.sh --all-time
+
+# Checa também as atualizações AUR PENDENTES (antes de baixar)
+~/dotfiles/scripts/security/aur-malware-check.sh --pending
 ```
 
 **Exit codes:** `0` limpo · `2` possível comprometimento · `1` erro.
+
+### Gate antes do `arch-update`
+
+O `.zshrc` (`zsh/.zshrc`) define um wrapper da função `arch-update` que roda
+`aur-malware-check.sh --refresh --pending` **antes** de aplicar qualquer
+update. Se algum pacote comprometido aparecer entre os pendentes ou instalados,
+ele aborta e exige confirmação explícita (`sim`) para prosseguir. Subcomandos
+de info (`-l`, `-c`, `--tray`…) passam direto, sem checagem.
+
+> `arch-update.conf` não tem hook nativo de pre-update, por isso o gate vive no
+> shell. A checagem só dispara em invocação interativa no terminal — o systray
+> chama o binário direto e não é afetado.
+
+### Timer semanal (safety net)
+
+`install.sh` instala um timer de usuário (`dotfiles-aur-malware-check.timer`,
+`OnCalendar=weekly`) que roda a checagem com `--refresh --all-time` e dispara um
+`notify-send` se achar algo. Log completo no journal:
+
+```bash
+~/dotfiles/scripts/security/install.sh                          # instala + ativa
+journalctl --user -u dotfiles-aur-malware-check                 # ver log
+systemctl --user list-timers dotfiles-aur-malware-check.timer   # próximas execuções
+```
 
 ### Dados (`data/`)
 

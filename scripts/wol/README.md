@@ -39,10 +39,37 @@ De **outra** máquina na LAN (o desktop tem que estar na tomada):
 ```
 
 Outras opções para acordar este desktop:
-- **OpenWrt** (router sempre ligado): pacote `luci-app-wol` ou
-  `etherwake -i br-lan 7c:10:c9:a1:f4:e5`. Bom para acordar de fora de casa
-  (combinar com port-forward/VPN para disparar o WoL pelo router).
-- **Celular:** qualquer app "Wake on LAN" com o MAC acima.
+- **Pelo router OpenWrt** (Cudy WR3000, sempre ligado) — ver abaixo. É o
+  caminho para acordar **de fora de casa**.
+- **Celular:** qualquer app "Wake on LAN" com o MAC acima (na LAN).
+
+## Router OpenWrt (relay do WoL)
+
+O router está sempre ligado, então é ele quem dispara o magic packet na LAN.
+Setup já feito (OpenWrt 25.12, apk; reproduzir num reflash):
+
+```sh
+# no router (como root / via sudo):
+apk update && apk add etherwake
+printf '#!/bin/sh\nexec /usr/bin/etherwake -i br-lan 7c:10:c9:a1:f4:e5\n' > /usr/bin/wake-desktop
+chmod 0755 /usr/bin/wake-desktop
+# rodar sem senha (pra disparar por script/remoto):
+printf 'v1cferr ALL=(root) NOPASSWD: /usr/bin/wake-desktop\n' | EDITOR='tee -a' visudo
+```
+
+Disparar (de qualquer máquina na LAN, ou via VPN):
+
+```sh
+ssh v1cferr@192.168.1.1 sudo -n wake-desktop
+# atalho versionado:
+~/dotfiles/scripts/wol/wake-via-router.sh
+```
+
+### De fora de casa
+O desktop está desligado quando você quer acordá-lo, então o SSH 2222 (que
+vai pro desktop) não serve — o alvo é o **router**. Opções:
+- **WireGuard no OpenWrt** (recomendado): conecta na VPN → `ssh v1cferr@192.168.1.1 sudo -n wake-desktop`. Nada novo exposto além da porta UDP do WG.
+- **Expor o SSH do router** (port-forward p/ 192.168.1.1:22, só por chave): mais simples, mais superfície de ataque.
 
 ## Notas
 

@@ -39,9 +39,12 @@ install -Dm0644 "${PKG}/etc/greetd/hyprland-greeter.conf" /etc/greetd/hyprland-g
 # árvore quickshell (conteúdo por cima, sem aninhar)
 mkdir -p /etc/greetd/quickshell
 cp -rT "${PKG}/etc/greetd/quickshell" /etc/greetd/quickshell
+# wallpaper FIXO do monitor primário (o greeter `greeter` não lê /home, que é 710)
+install -Dm0644 "${DOTFILES_DIR}/wallpapers/Pictures/Wallpapers/arch_hero_flipped.png" \
+                /etc/greetd/wallpaper.png
 # o usuário `greeter` precisa LER tudo em /etc/greetd
 chmod -R a+rX /etc/greetd
-echo "[deploy] /etc/greetd atualizado"
+echo "[deploy] /etc/greetd atualizado (incl. wallpaper.png)"
 
 # 3) Coletor root
 install -Dm0755 "${SCRIPT_DIR}/collect-status.sh" /usr/local/lib/greetd/collect-status.sh

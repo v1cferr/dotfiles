@@ -19,12 +19,10 @@ set -uo pipefail
 OUT_DIR="/run/greeter-status"
 JSON="${OUT_DIR}/status.json"
 TMP="${JSON}.tmp"
-BLUR_OUT="${OUT_DIR}/wallpaper-blur.png"
 
 USER_HOME="/home/v1cferr"
 QUOTES_TSV="${USER_HOME}/dotfiles/hypr/.config/hypr/scripts/lockscreen_quotes.tsv"
 GIF_SRC="${USER_HOME}/dotfiles/wallpapers/Pictures/Wallpapers/lockscreen-gifs"
-WP_HISTORY="${USER_HOME}/.cache/hypr/wallpaper_history"
 
 TEMP_HI=85          # °C — alerta de temperatura
 DISK_HI=90          # %  — alerta de disco cheio
@@ -56,18 +54,6 @@ GIFS_JSON=$(for g in "${OUT_DIR}"/gif-*.gif; do [[ -e "${g}" ]] && printf '%s\n'
 # ---------------------------------------------------------------------------
 #  Helpers
 # ---------------------------------------------------------------------------
-LAST_WP=""
-blur_wallpaper() {
-    local wp
-    wp=$(head -n1 "${WP_HISTORY}" 2>/dev/null)
-    [[ -n "${wp}" && -f "${wp}" ]] || return 0
-    [[ "${wp}" == "${LAST_WP}" && -f "${BLUR_OUT}" ]] && return 0
-    if magick "${wp}" -resize 1920x1080^ -gravity center -extent 1920x1080 \
-              -blur 0x18 "${BLUR_OUT}" 2>/dev/null; then
-        chmod 644 "${BLUR_OUT}"; LAST_WP="${wp}"
-    fi
-}
-
 cpu_temp() {  # imprime inteiro em °C, ou vazio
     local t
     if command -v sensors >/dev/null 2>&1; then
@@ -88,8 +74,6 @@ gpu_temp() {  # NVIDIA
 #  Loop principal
 # ---------------------------------------------------------------------------
 while true; do
-    blur_wallpaper
-
     # --- docker ---
     stats_raw=$(docker stats --no-stream --format '{{json .}}' 2>/dev/null)
     ps_raw=$(docker ps -a --format '{{json .}}' 2>/dev/null)

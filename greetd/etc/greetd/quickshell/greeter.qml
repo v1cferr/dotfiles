@@ -320,23 +320,28 @@ ShellRoot {
                 }
             }
 
-            // ----- painel de serviços (direita) -----
-            Rectangle {
+            // ----- coluna de painéis (direita): Serviços (docker) + Processos -----
+            ColumnLayout {
                 anchors.right: parent.right
-                anchors.rightMargin: parent.width * 0.06
+                anchors.rightMargin: parent.width * 0.05
                 anchors.verticalCenter: parent.verticalCenter
-                width: 400
-                height: Math.min(parent.height * 0.82, panelCol.implicitHeight + 36)
-                radius: 14
-                color: root.colPanel
-                border.color: root.colBorder
-                border.width: 1
+                width: 410
+                spacing: 14
+
+                // ===================== PAINEL 1: Serviços (docker) + sistema =====
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: p1.implicitHeight + 32
+                    radius: 14
+                    color: root.colPanel
+                    border.color: root.colBorder
+                    border.width: 1
 
                 ColumnLayout {
-                    id: panelCol
+                    id: p1
                     anchors.fill: parent
-                    anchors.margins: 18
-                    spacing: 10
+                    anchors.margins: 16
+                    spacing: 9
 
                     // cabeçalho: containers UP, IP, uptime
                     RowLayout {
@@ -463,9 +468,9 @@ ShellRoot {
                         Text { text: "CPU"; color: root.colDim; font.pixelSize: 10; Layout.preferredWidth: 48; horizontalAlignment: Text.AlignRight }
                     }
 
-                    // lista de containers ordenada por consumo de MEMÓRIA
+                    // lista de containers ordenada por consumo de MEMÓRIA (top 7)
                     Repeater {
-                        model: root.ready ? (root.status.containers || []) : []
+                        model: root.ready ? (root.status.containers || []).slice(0, 7) : []
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: 8
@@ -495,7 +500,76 @@ ShellRoot {
                         }
                     }
 
-                    Item { Layout.fillHeight: true }
+                    // +N containers além do top 7
+                    Text {
+                        visible: root.ready && (root.status.containers || []).length > 7
+                        text: "+ " + ((root.status.containers || []).length - 7) + " outros"
+                        color: root.colDim; font.pixelSize: 10; font.italic: true
+                    }
+                }
+                }
+
+                // ===================== PAINEL 2: Processos (mini-btop) =========
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: p2.implicitHeight + 32
+                    radius: 14
+                    color: root.colPanel
+                    border.color: root.colBorder
+                    border.width: 1
+
+                ColumnLayout {
+                    id: p2
+                    anchors.fill: parent
+                    anchors.margins: 16
+                    spacing: 6
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Text {
+                            text: "󰍛  Processos"
+                            color: root.colAccent; font.pixelSize: 17; font.bold: true
+                        }
+                        Item { Layout.fillWidth: true }
+                        Text { text: "por memória"; color: root.colDim; font.pixelSize: 11 }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true; spacing: 8
+                        visible: (root.status.processes || []).length > 0
+                        Text { Layout.fillWidth: true; text: "Processo"; color: root.colDim; font.pixelSize: 10 }
+                        Text { text: "MEM"; color: root.colDim; font.pixelSize: 10; Layout.preferredWidth: 54; horizontalAlignment: Text.AlignRight }
+                        Text { text: "CPU"; color: root.colDim; font.pixelSize: 10; Layout.preferredWidth: 48; horizontalAlignment: Text.AlignRight }
+                    }
+
+                    Text {
+                        visible: !root.ready
+                        text: "carregando…"
+                        color: root.colDim; font.pixelSize: 12; font.italic: true
+                    }
+
+                    Repeater {
+                        model: root.ready ? (root.status.processes || []) : []
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 8
+                            Text {
+                                Layout.fillWidth: true
+                                text: modelData.name
+                                color: root.colText; font.pixelSize: 12; elide: Text.ElideRight
+                            }
+                            Text {
+                                text: (modelData.mem !== undefined ? modelData.mem.toFixed(1) : "0.0") + "%"
+                                color: root.colGreen; font.pixelSize: 12
+                                horizontalAlignment: Text.AlignRight; Layout.preferredWidth: 54
+                            }
+                            Text {
+                                text: (modelData.cpu !== undefined ? modelData.cpu.toFixed(1) : "0.0") + "%"
+                                color: root.colDim; font.pixelSize: 11
+                                horizontalAlignment: Text.AlignRight; Layout.preferredWidth: 48
+                            }
+                        }
+                    }
+                }
                 }
             }
         }

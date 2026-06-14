@@ -4,7 +4,7 @@
 # ----------------------------------------------------------------------------
 #  O rEFInd autodetecta loaders demais (kernel solto + systemd-boot = 2 Linux;
 #  e bootmgfw em 2 ESPs = 2 Windows). Este script:
-#    - esconde os loaders autodetectados e a ESP do Windows velho (SanDisk);
+#    - desliga a autodetecção (scanfor manual) — só o que for manual aparece;
 #    - adiciona 2 entradas MANUAIS com nome e ícone certos;
 #    - fixa o Arch como padrão (boot desatendido / Wake-on-LAN).
 #
@@ -57,10 +57,10 @@ fi
 cat >> "${CONF}" <<EOF
 
 ${BEGIN}
-# Esconde os loaders autodetectados (substituídos pelas entradas manuais)
-dont_scan_files vmlinuz-linux,vmlinuz-linux-fallback,systemd-bootx64.efi,bootmgfw.efi
-# Esconde a ESP do Windows velho no SSD SanDisk (label "SYSTEM")
-dont_scan_volumes "SYSTEM"
+# Sem autodetecção: só as 2 entradas manuais abaixo aparecem (garante
+# exatamente Arch + Windows; some o kernel solto, o systemd-boot "vermelho"
+# e o Windows velho do SSD SanDisk). USB/live ainda boota pela BIOS.
+scanfor manual
 
 menuentry "Arch Linux" {
     icon   /EFI/BOOT/icons/os_arch.png

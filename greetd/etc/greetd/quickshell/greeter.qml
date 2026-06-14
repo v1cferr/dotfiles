@@ -35,7 +35,26 @@ ShellRoot {
     readonly property color colYellow: "#e0af68"
     readonly property color colAccent: "#7aa2f7"
 
-    // ---- feed de status: lê o JSON do coletor a cada 2s ---------------------
+    readonly property bool ready: root.status.ready === true
+
+    // ---- data em PT-BR, igual ao hyprlock (semana ISO + 1ª letra maiúscula) --
+    function isoWeek(date) {
+        var d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        var dayNum = (d.getUTCDay() + 6) % 7;
+        d.setUTCDate(d.getUTCDate() - dayNum + 3);
+        var firstThu = d.getTime();
+        d.setUTCMonth(0, 1);
+        if (d.getUTCDay() !== 4)
+            d.setUTCMonth(0, 1 + ((4 - d.getUTCDay()) + 7) % 7);
+        return 1 + Math.ceil((firstThu - d) / 604800000);
+    }
+    function fmtDate(d) {
+        var s = Qt.locale("pt_BR").toString(d, "dddd, dd 'de' MMMM 'de' yyyy");
+        s = s + "  ·  Semana " + root.isoWeek(d);
+        return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    // ---- feed de status: lê o JSON do coletor a cada 1s ---------------------
     Process {
         id: statusProc
         command: ["cat", "/run/greeter-status/status.json"]
@@ -46,7 +65,7 @@ ShellRoot {
         }
     }
     Timer {
-        interval: 2000; repeat: true; running: true; triggeredOnStart: true
+        interval: 1000; repeat: true; running: true; triggeredOnStart: true
         onTriggered: statusProc.running = true
     }
 
@@ -152,6 +171,21 @@ ShellRoot {
                 running: gifRoot.gifs.length > 1
                 onTriggered: gifRoot.idx++
             }
+
+            // loading enquanto os GIFs não foram copiados ainda
+            Text {
+                anchors.centerIn: parent
+                visible: gifRoot.gifs.length === 0
+                text: "carregando…"
+                color: root.colDim
+                font.pixelSize: 22
+                SequentialAnimation on opacity {
+                    running: gifRoot.gifs.length === 0
+                    loops: Animation.Infinite
+                    NumberAnimation { from: 0.3; to: 1.0; duration: 800 }
+                    NumberAnimation { from: 1.0; to: 0.3; duration: 800 }
+                }
+            }
         }
     }
 
@@ -182,14 +216,14 @@ ShellRoot {
                 width: 360
                 spacing: 18
 
-                // relógio
+                // relógio (com segundos, igual hyprlock)
                 Text {
                     id: clock
                     color: root.colText
                     font.pixelSize: 64
                     font.bold: true
                     property var now: new Date()
-                    text: Qt.formatDateTime(now, "HH:mm")
+                    text: Qt.formatDateTime(now, "HH:mm:ss")
                     Timer {
                         interval: 1000; repeat: true; running: true; triggeredOnStart: true
                         onTriggered: clock.now = new Date()
@@ -198,7 +232,7 @@ ShellRoot {
                 Text {
                     color: root.colDim
                     font.pixelSize: 18
-                    text: Qt.formatDateTime(clock.now, "dddd, d 'de' MMMM")
+                    text: root.fmtDate(clock.now)   // Quarta-feira, 14 de junho de 2026 · Semana 24
                 }
 
                 Item { height: 8 }
@@ -315,7 +349,7 @@ ShellRoot {
                         }
                         Item { Layout.fillWidth: true }
                         Text {
-                            text: (root.status.up || 0) + "/" + (root.status.total || 0) + " UP"
+                            text: root.ready ? ((root.status.up || 0) + "/" + (root.status.total || 0) + " UP") : "…"
                             color: (root.status.up || 0) === (root.status.total || 0) ? root.colGreen : root.colYellow
                             font.pixelSize: 14
                             font.bold: true
@@ -337,6 +371,46 @@ ShellRoot {
                             color: root.colDim; font.pixelSize: 12
                         }
                     }
+                    // medidores de sistema (CPU + RAM, estilo btop)
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 8
+                            Text { text: "CPU"; color: root.colDim; font.pixelSize: 11; Layout.preferredWidth: 32 }
+                            Rectangle {
+                                Layout.fillWidth: true; height: 8; radius: 4; color: "#33000000"
+                                Rectangle {
+                                    height: parent.height; radius: 4
+                                    width: parent.width * Math.min(1, (root.status.cpu_pct || 0) / 100)
+                                    color: (root.status.cpu_pct || 0) > 85 ? root.colRed : root.colAccent
+                                }
+                            }
+                            Text {
+                                text: (root.status.cpu_pct || 0) + "%"
+                                color: root.colText; font.pixelSize: 11
+                                Layout.preferredWidth: 40; horizontalAlignment: Text.AlignRight
+                            }
+                        }
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 8
+                            Text { text: "RAM"; color: root.colDim; font.pixelSize: 11; Layout.preferredWidth: 32 }
+                            Rectangle {
+                                Layout.fillWidth: true; height: 8; radius: 4; color: "#33000000"
+                                Rectangle {
+                                    height: parent.height; radius: 4
+                                    width: parent.width * Math.min(1, (root.status.mem_pct || 0) / 100)
+                                    color: (root.status.mem_pct || 0) > 85 ? root.colRed : root.colGreen
+                                }
+                            }
+                            Text {
+                                text: (root.status.mem_used || "–") + " / " + (root.status.mem_total || "–")
+                                color: root.colText; font.pixelSize: 11
+                                Layout.preferredWidth: 86; horizontalAlignment: Text.AlignRight
+                            }
+                        }
+                    }
+
                     Text {
                         Layout.fillWidth: true
                         text: root.status.uptime || ""
@@ -362,9 +436,36 @@ ShellRoot {
                         }
                     }
 
-                    // lista de containers por consumo de CPU
+                    // loading enquanto o coletor não terminou a 1ª leitura do docker
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: !root.ready
+                        spacing: 8
+                        Text {
+                            text: "carregando serviços…"
+                            color: root.colDim; font.pixelSize: 12; font.italic: true
+                            SequentialAnimation on opacity {
+                                running: !root.ready
+                                loops: Animation.Infinite
+                                NumberAnimation { from: 0.3; to: 1.0; duration: 800 }
+                                NumberAnimation { from: 1.0; to: 0.3; duration: 800 }
+                            }
+                        }
+                    }
+
+                    // cabeçalho de colunas (Docker, ordenado por memória)
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: root.ready && (root.status.containers || []).length > 0
+                        spacing: 8
+                        Text { Layout.fillWidth: true; text: "Container (docker)"; color: root.colDim; font.pixelSize: 10 }
+                        Text { text: "MEM"; color: root.colDim; font.pixelSize: 10; Layout.preferredWidth: 54; horizontalAlignment: Text.AlignRight }
+                        Text { text: "CPU"; color: root.colDim; font.pixelSize: 10; Layout.preferredWidth: 48; horizontalAlignment: Text.AlignRight }
+                    }
+
+                    // lista de containers ordenada por consumo de MEMÓRIA
                     Repeater {
-                        model: root.status.containers || []
+                        model: root.ready ? (root.status.containers || []) : []
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: 8
@@ -380,16 +481,16 @@ ShellRoot {
                                 elide: Text.ElideRight
                             }
                             Text {
-                                text: (modelData.cpu !== undefined ? modelData.cpu.toFixed(1) : "0.0") + "%"
-                                color: root.colYellow; font.pixelSize: 12
-                                horizontalAlignment: Text.AlignRight
-                                Layout.preferredWidth: 52
-                            }
-                            Text {
                                 text: modelData.mem || ""
-                                color: root.colDim; font.pixelSize: 11
+                                color: root.colGreen; font.pixelSize: 12
                                 horizontalAlignment: Text.AlignRight
                                 Layout.preferredWidth: 54
+                            }
+                            Text {
+                                text: (modelData.cpu !== undefined ? modelData.cpu.toFixed(1) : "0.0") + "%"
+                                color: root.colDim; font.pixelSize: 11
+                                horizontalAlignment: Text.AlignRight
+                                Layout.preferredWidth: 48
                             }
                         }
                     }

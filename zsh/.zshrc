@@ -72,6 +72,33 @@ alias froot='cd $(dirname $(fd -t f --exclude node_modules --exclude .cache . / 
 alias update='sudo pacman -Syu && yay -Syu'
 alias clean='sudo pacman -Rns $(pacman -Qtdq)'
 
+# Gate de segurança: roda o verificador do ataque de supply-chain da AUR
+# (jun/2026) ANTES de aplicar updates com arch-update. Se achar pacote
+# comprometido entre os pendentes/instalados, aborta e exige confirmação
+# explícita. Só intercepta a ação de update (sem args ou -d/--devel);
+# subcomandos de info (-l, -c, --tray, etc.) passam direto.
+arch-update() {
+    case "${1:-}" in
+        ""|-d|--devel)
+            local check="$HOME/dotfiles/scripts/security/aur-malware-check.sh"
+            if [[ -x "$check" ]]; then
+                echo "🛡️  Verificando ataque de supply-chain da AUR antes de atualizar..."
+                if ! "$check" --refresh --pending; then
+                    echo
+                    echo "⚠️  Verificação de malware FALHOU (veja acima). Update abortado."
+                    printf "Prosseguir mesmo assim? (digite 'sim' para continuar): "
+                    local ans; read -r ans
+                    [[ "$ans" == "sim" ]] || return 1
+                fi
+            fi
+            command arch-update "$@"
+            ;;
+        *)
+            command arch-update "$@"
+            ;;
+    esac
+}
+
 # Eza (Melhor que ls) - Instale com: sudo pacman -S eza
 if command -v eza >/dev/null 2>&1; then
     alias ls='eza --icons --group-directories-first'

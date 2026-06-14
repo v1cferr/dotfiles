@@ -37,11 +37,11 @@ if [[ ! -f /boot/EFI/systemd/systemd-bootx64.efi ]]; then
     echo "ERRO: /boot/EFI/systemd/systemd-bootx64.efi não existe — abortando." >&2
     exit 1
 fi
-[[ -f "${ICONS}/os_arch.png" ]] || { echo "ERRO: ícone os_arch.png não encontrado." >&2; exit 1; }
-[[ -f "${SCRIPT_DIR}/os_win11.png" ]] || { echo "ERRO: ${SCRIPT_DIR}/os_win11.png não encontrado." >&2; exit 1; }
-
-# Instala o ícone do Windows 11 (logo oficial, versionado no repo) na ESP
-install -Dm644 "${SCRIPT_DIR}/os_win11.png" "${ICONS}/os_win11.png"
+# Ícones modernos (logos oficiais em SVG → PNG, versionados no repo)
+for ic in os_arch_crystal.png os_win11.png; do
+    [[ -f "${SCRIPT_DIR}/${ic}" ]] || { echo "ERRO: ${SCRIPT_DIR}/${ic} não encontrado." >&2; exit 1; }
+    install -Dm644 "${SCRIPT_DIR}/${ic}" "${ICONS}/${ic}"
+done
 
 # Backups: .bak = original (nunca sobrescreve); .prev = antes desta execução
 [[ -f ${CONF}.bak ]] || cp -a "${CONF}" "${CONF}.bak"
@@ -67,7 +67,7 @@ ${BEGIN}
 scanfor manual
 
 menuentry "Arch Linux" {
-    icon   /EFI/BOOT/icons/os_arch.png
+    icon   /EFI/BOOT/icons/os_arch_crystal.png
     volume ${ESP_ARCH}
     loader /EFI/systemd/systemd-bootx64.efi
 }

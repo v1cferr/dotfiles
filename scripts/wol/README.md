@@ -21,6 +21,14 @@ Liga o desktop remotamente mandando um *magic packet* pela rede cabeada.
    sudo ~/dotfiles/scripts/wol/deploy.sh
    ```
    No fim ele mostra `Wake-on: g` se ficou ok.
+4. **Boot desatendido → sempre Linux** (dualboot Arch/Windows 11 com rEFInd):
+   ```sh
+   sudo ~/dotfiles/scripts/wol/boot-default-linux.sh
+   ```
+   Fixa `default_selection "Linux"` no `refind.conf` (casa por substring; nunca
+   pega o Windows). Não mexe em Secure Boot. Verifique no próximo boot que o
+   rEFInd destaca/auto-boota o Linux. Sem isso, o WoL pode subir no Windows e o
+   SSH não fica disponível.
 
 ## Acordar o desktop
 

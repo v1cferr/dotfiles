@@ -1,7 +1,7 @@
 # greetd — display manager + greeter quickshell
 
 Substitui o SDDM. O greetd lança um **Hyprland mínimo** (usuário `greeter`) que sobe
-um **greeter em quickshell** com cara de hyprlock: wallpaper borrado + login + quote
+um **greeter em quickshell** com cara de hyprlock: wallpaper fixo do Arch + login + quote
 PT-BR + painel de serviços ao vivo no monitor primário (DP-1), e GIF em tela cheia no
 secundário (HDMI-A-1). Ao autenticar, lança a sessão real via `uwsm` (segue uwsm-managed).
 
@@ -10,13 +10,14 @@ secundário (HDMI-A-1). Ao autenticar, lança a sessão real via `uwsm` (segue u
 ```
 boot → greetd (vt 2) → Hyprland mínimo (greeter) → qs greeter.qml
                                                        │ lê /run/greeter-status/status.json
-   root: greeter-status.service (loop ~3s) ───escreve──┘  (+ wallpaper-blur.png, gif-*.gif)
+   root: greeter-status.service (loop ~3s) ───escreve──┘  (+ gif-*.gif)
    login OK → Greetd.launch(["uwsm","start","-e","-D","Hyprland","hyprland.desktop"])
 ```
 
 O greeter roda sem privilégio (não acessa docker; `/home` é 710 e ele nem entra lá).
-Toda coleta privilegiada (docker stats, sensors, nvidia-smi, quote, blur do wallpaper,
-cópia de GIFs) é feita pelo **coletor root** e exposta via JSON mundo-legível em `/run`.
+Toda coleta privilegiada (docker stats, sensors, nvidia-smi, quote, cópia de GIFs) é
+feita pelo **coletor root** e exposta via JSON mundo-legível em `/run`. O wallpaper do
+primário é fixo (`arch_hero_flipped.png`), instalado em `/etc/greetd/wallpaper.png`.
 
 ## Arquivos
 

@@ -163,17 +163,16 @@ ShellRoot {
         Item {
             anchors.fill: parent
 
-            // fundo: wallpaper borrado (fallback = cor sólida)
+            // fundo: wallpaper fixo do Arch (instalado em /etc/greetd pelo deploy)
             Rectangle { anchors.fill: parent; color: root.colBg }
             Image {
                 anchors.fill: parent
                 fillMode: Image.PreserveAspectCrop
-                cache: false
+                cache: true
                 asynchronous: true
-                source: "file:///run/greeter-status/wallpaper-blur.png"
-                onStatusChanged: if (status === Image.Error) source = ""
+                source: "file:///etc/greetd/wallpaper.png"
             }
-            Rectangle { anchors.fill: parent; color: "#66000000" }  // dim
+            Rectangle { anchors.fill: parent; color: "#66000000" }  // dim p/ legibilidade
 
             // ----- coluna de login (centro-esquerda) -----
             ColumnLayout {

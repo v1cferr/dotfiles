@@ -52,19 +52,8 @@ de info (`-l`, `-c`, `--tray`…) passam direto, sem checagem.
 
 > `arch-update.conf` não tem hook nativo de pre-update, por isso o gate vive no
 > shell. A checagem só dispara em invocação interativa no terminal — o systray
-> chama o binário direto e não é afetado.
-
-### Timer semanal (safety net)
-
-`install.sh` instala um timer de usuário (`dotfiles-aur-malware-check.timer`,
-`OnCalendar=weekly`) que roda a checagem com `--refresh --all-time` e dispara um
-`notify-send` se achar algo. Log completo no journal:
-
-```bash
-~/dotfiles/scripts/security/install.sh                          # instala + ativa
-journalctl --user -u dotfiles-aur-malware-check                 # ver log
-systemctl --user list-timers dotfiles-aur-malware-check.timer   # próximas execuções
-```
+> chama o binário direto e não é afetado. Como a checagem roda a cada
+> `arch-update`, não há timer agendado: o gate já cobre o uso normal.
 
 ### Dados (`data/`)
 

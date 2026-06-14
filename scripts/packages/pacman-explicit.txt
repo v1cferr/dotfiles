@@ -79,6 +79,7 @@ lazydocker 0.25.2-1
 less 1:704-1
 libpulse 17.0+r98+gb096704c0-1
 libva-intel-driver 2.4.1-7
+libva-nvidia-driver 0.0.17-1
 libva-utils 2.23.0-1
 libvirt 1:12.4.0-1
 linux 7.0.11.arch1-1
@@ -141,6 +142,7 @@ reflector 2023-5
 resvg 0.47.0-2
 rofi 2.0.0-1
 rsync 3.4.4-1
+samba 2:4.24.3-1
 sassc 3.6.2-5
 sbctl 0.18-1
 sddm 0.21.0-7

@@ -66,8 +66,18 @@ Snapshot **versionado** das listas de IOCs para rodar offline / em DR:
 | `iocs.txt`                   | hashes ELF, C2, paths de persistência, contas |
 
 Fonte agregada: [`lenucksi/aur-malware-check`](https://github.com/lenucksi/aur-malware-check)
-(IFIN Discourse, Sonatype, Socket.dev). Use `--refresh` para sincronizar com o
-upstream.
+(IFIN Discourse, Sonatype, Socket.dev). O `--refresh` sincroniza do `HEAD` do
+upstream a cada run — o snapshot em `data/` é só fallback offline. Não pinamos
+um commit de propósito: numa lista de IOCs, frescor importa mais que
+reprodutibilidade (pinar a deixaria estagnada). A lista é só nomes comparados
+com `comm`/`grep`, não executa nada — o pior caso de um upstream ruim é um falso
+positivo/negativo, não execução de código.
+
+> ⚠️ **Fonte com prazo de validade.** Este repo é mantido por voluntários em
+> torno do incidente de **junho/2026**; em algum momento ele para de receber
+> updates. Para este ataque específico serve bem; para um ataque futuro
+> diferente, provavelmente surgirá outra fonte. **Revisar a relevância da fonte
+> ~dez/2026** e trocar/aposentar o script se o upstream estiver abandonado.
 
 > Em caso de detecção real: **troque todas as credenciais** (GitHub PAT, SSH,
 > tokens, cookies/sessões) e reinstale o sistema do zero — o payload é um

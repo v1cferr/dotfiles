@@ -51,9 +51,30 @@ if [[ -d "${GIF_SRC}" ]]; then
 fi
 GIFS_JSON=$(for g in "${OUT_DIR}"/gif-*.gif; do [[ -e "${g}" ]] && printf '%s\n' "${g}"; done | jq -R . | jq -s 'map(select(length>0))')
 
+# Escreve um JSON inicial JÁ com quote + GIFs (antes do loop lento do docker),
+# pra a frase e o GIF aparecerem na hora. ready=false => greeter mostra "carregando".
+jq -n --arg quote "${QUOTE_PT}" --arg author "${QUOTE_AUTHOR}" --argjson gifs "${GIFS_JSON:-[]}" \
+    '{ready:false, containers:[], up:0, total:0, cpu_pct:0, mem_pct:0, mem_used:"", mem_total:"",
+      cpu_temp:"", gpu_temp:"", ip:"", uptime:"", quote:$quote, author:$author, gifs:$gifs, alerts:[]}' \
+    > "${TMP}" 2>/dev/null && mv "${TMP}" "${JSON}" && chmod 644 "${JSON}"
+
 # ---------------------------------------------------------------------------
 #  Helpers
 # ---------------------------------------------------------------------------
+PREV_TOTAL=0; PREV_IDLE=0
+cpu_pct() {  # uso de CPU do sistema, delta entre iterações do /proc/stat
+    local cpu u n s idle iow irq sirq steal rest total idl dt di
+    read -r cpu u n s idle iow irq sirq steal rest < /proc/stat
+    total=$((u+n+s+idle+iow+irq+sirq+steal)); idl=$((idle+iow))
+    dt=$((total-PREV_TOTAL)); di=$((idl-PREV_IDLE))
+    PREV_TOTAL=${total}; PREV_IDLE=${idl}
+    (( dt <= 0 )) && { echo 0; return; }
+    echo $(( (100*(dt-di))/dt ))
+}
+mem_info() {  # "pct<TAB>usado<TAB>total" (humanizado em GiB)
+    awk '/^MemTotal:/{t=$2}/^MemAvailable:/{a=$2}END{u=t-a; printf "%d\t%.1fG\t%.1fG",(u*100)/t,u/1048576,t/1048576}' /proc/meminfo
+}
+
 cpu_temp() {  # imprime inteiro em °C, ou vazio
     local t
     if command -v sensors >/dev/null 2>&1; then
@@ -80,28 +101,32 @@ while true; do
     stats_json=$(printf '%s' "${stats_raw}" | jq -s '.' 2>/dev/null); [[ -z "${stats_json}" ]] && stats_json='[]'
     ps_json=$(printf '%s' "${ps_raw}" | jq -s '.' 2>/dev/null);       [[ -z "${ps_json}" ]] && ps_json='[]'
 
-    # nome -> "running"? (do ps), e métricas (do stats), ordenado por CPU desc
+    # nome -> "running"? (do ps), e métricas (do stats), ordenado por MEM desc
     containers=$(jq -n --argjson stats "${stats_json}" --argjson ps "${ps_json}" '
         ($ps | map({(.Names): (.State // "")}) | add // {}) as $state
         | [ $stats[]
             | { name: .Name,
                 cpu:  ((.CPUPerc // "0%") | rtrimstr("%") | tonumber? // 0),
+                memp: ((.MemPerc // "0%") | rtrimstr("%") | tonumber? // 0),
                 mem:  (.MemPerc // "0%"),
                 up:   (($state[.Name] // "running") == "running") } ]
-        | sort_by(-.cpu)')
+        | sort_by(-.memp)')
 
     total=$(jq -n --argjson ps "${ps_json}" '$ps | length')
     up=$(jq -n --argjson ps "${ps_json}" '[$ps[] | select(.State=="running")] | length')
 
-    ct=$(cpu_temp); gt=$(gpu_temp)
+    ct=$(cpu_temp); gt=$(gpu_temp); cp=$(cpu_pct)
+    IFS=$'\t' read -r mem_pct mem_used mem_total < <(mem_info)
     ip=$(ip -4 -o addr show scope global 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -n1)
     up_pretty=$(uptime -p 2>/dev/null)
 
     # --- alertas ---
+    # Só sinaliza container REALMENTE problemático (reiniciando / unhealthy);
+    # containers parados de propósito (exited) NÃO viram alerta — seria ruído.
     alert_arr=()
     while IFS= read -r n; do
-        [[ -n "${n}" ]] && alert_arr+=("Container caído: ${n}")
-    done < <(jq -r --argjson ps "${ps_json}" '$ps[] | select(.State!="running") | .Names' 2>/dev/null)
+        [[ -n "${n}" ]] && alert_arr+=("Serviço instável: ${n}")
+    done < <(jq -r --argjson ps "${ps_json}" '$ps[] | select(.State=="restarting" or (.HealthStatus // "")=="unhealthy") | .Names' 2>/dev/null)
     [[ "${ct}" =~ ^[0-9]+$ && "${ct}" -ge "${TEMP_HI}" ]] && alert_arr+=("CPU quente: ${ct}°C")
     [[ "${gt}" =~ ^[0-9]+$ && "${gt}" -ge "${TEMP_HI}" ]] && alert_arr+=("GPU quente: ${gt}°C")
     while read -r tgt pct; do
@@ -114,12 +139,15 @@ while true; do
     jq -n \
         --argjson containers "${containers:-[]}" \
         --argjson up "${up:-0}" --argjson total "${total:-0}" \
+        --argjson cpu_pct "${cp:-0}" --argjson mem_pct "${mem_pct:-0}" \
+        --arg mem_used "${mem_used}" --arg mem_total "${mem_total}" \
         --arg cpu_temp "${ct}" --arg gpu_temp "${gt}" \
         --arg ip "${ip}" --arg uptime "${up_pretty}" \
         --arg quote "${QUOTE_PT}" --arg author "${QUOTE_AUTHOR}" \
         --argjson gifs "${GIFS_JSON:-[]}" \
         --argjson alerts "${alerts:-[]}" \
-        '{containers:$containers, up:$up, total:$total,
+        '{ready:true, containers:$containers, up:$up, total:$total,
+          cpu_pct:$cpu_pct, mem_pct:$mem_pct, mem_used:$mem_used, mem_total:$mem_total,
           cpu_temp:$cpu_temp, gpu_temp:$gpu_temp, ip:$ip, uptime:$uptime,
           quote:$quote, author:$author, gifs:$gifs, alerts:$alerts}' \
         > "${TMP}" 2>/dev/null && mv "${TMP}" "${JSON}" && chmod 644 "${JSON}"

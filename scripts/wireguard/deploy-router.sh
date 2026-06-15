@@ -13,12 +13,12 @@
 #  Objetivo: acordar/acessar a casa de fora via VPN, sem expor login nenhum.
 #  Túnel split: o cliente só roteia 192.168.1.0/24 (a casa) pelo WireGuard.
 #
-#  Uso (a partir do desktop, que alcança o router):
-#    scp ~/dotfiles/scripts/wireguard/deploy-router.sh v1cferr@192.168.1.1:/tmp/wg-deploy.sh
-#    ssh -t v1cferr@192.168.1.1 'su root -c "sh /tmp/wg-deploy.sh"'
+#  Uso (a partir do desktop, terminal REAL — o prompt de senha precisa de tty):
+#    scp -O ~/dotfiles/scripts/wireguard/deploy-router.sh v1cferr@192.168.1.1:/tmp/wg-deploy.sh
+#    ssh -t v1cferr@192.168.1.1 'sudo sh /tmp/wg-deploy.sh'
 #
-#  Depois de confirmar que a sessão sobreviveu, CANCELE o dead-man (no router):
-#    rm -f /tmp/wg-deadman.active
+#  O dead-man é AUTO-CANCELADO quando o wg0 sobe verificado. Só sobra armado se
+#  o script abortar/cair antes disso — aí ele reverte sozinho em ${DEADMAN_SECS}s.
 # ============================================================================
 set -eu
 
@@ -125,8 +125,30 @@ if ! fw4 check >/dev/null 2>&1; then
   /etc/init.d/firewall reload || true
   abort "fw4 check falhou — config revertida na hora."
 fi
+modprobe wireguard 2>/dev/null || true
 /etc/init.d/network reload
 /etc/init.d/firewall reload
+
+# 'reload' comita mas nem sempre instancia interface nova: subir e verificar.
+ifup "${WG_IF}" 2>/dev/null || true
+sleep 2
+if ! ip addr show dev "${WG_IF}" >/dev/null 2>&1; then
+  ifup "${WG_IF}" 2>/dev/null || true; sleep 2
+fi
+if ! ip addr show dev "${WG_IF}" >/dev/null 2>&1; then
+  echo "ERRO: ${WG_IF} não subiu como device. Diagnóstico:" >&2
+  logread 2>/dev/null | grep -iE "${WG_IF}|wireguard|netifd" | tail -10 >&2 || true
+  echo "(dead-man segue armado: reverte em ~$((DEADMAN_SECS/60)) min)" >&2
+  exit 1
+fi
+echo "    ${WG_IF} UP -> $(ip -br addr show dev "${WG_IF}" 2>/dev/null)"
+
+# Sucesso verificado E a sessão sobreviveu aos reloads -> dispensa o dead-man.
+# (Se um reload tivesse derrubado a sessão, este script teria morrido antes daqui
+#  e o dead-man, em setsid, reverteria. Auto-cancelar aqui mata a corrida contra
+#  o relógio que reverteu a 1a tentativa.)
+rm -f /tmp/wg-deadman.active
+echo "    dead-man auto-cancelado (deploy verificado)"
 
 # --- configs dos clientes (também salvas em ${CLIENTS_OUT}, modo 600) ---
 ALLOWED="192.168.1.0/24, ${WG_NET}.0/24"
@@ -161,10 +183,7 @@ cat <<EOF
 
 ############################################################################
 #  WireGuard NO AR (porta UDP ${WG_PORT}). Servidor pubkey: ${SRV_PUB}
-#
-#  >>> A sessão SSH sobreviveu? Se SIM, CANCELE o dead-man AGORA:
-#          rm -f /tmp/wg-deadman.active
-#      (senão ele reverte tudo em ${DEADMAN_SECS}s)
+#  Interface verificada e dead-man já auto-cancelado. Nada a fazer aqui.
 #
 #  Configs dos clientes salvas em ${CLIENTS_OUT} (contém CHAVES PRIVADAS —
 #  copie pro notebook/celular e depois apague: rm -f ${CLIENTS_OUT}).

@@ -37,12 +37,10 @@ ssh -t v1cferr@192.168.1.1 'sudo sh /tmp/wg-deploy.sh'   # pede a senha do v1cfe
 > `scp -O` força o protocolo SCP legado — o OpenWrt não inclui `sftp-server`,
 > então o scp novo (baseado em SFTP) falha com "sftp-server: not found".
 
-No fim ele imprime (e salva em `/root/wg-clients.conf`, modo 600) as configs do
-notebook e do celular. **Se a sessão sobreviveu, cancele o dead-man na hora:**
-
-```sh
-ssh -t v1cferr@192.168.1.1 'sudo rm -f /tmp/wg-deadman.active'
-```
+No fim, depois de **subir e verificar o `wg0`**, o script **auto-cancela o
+dead-man** e imprime (salvando em `/root/wg-clients.conf`, modo 600) as configs
+do notebook e do celular. Se ele abortar/cair antes da verificação, o dead-man
+reverte tudo sozinho em 10 min — sem ação manual.
 
 Depois de copiar as configs para os dispositivos, apague o arquivo com as
 chaves privadas:

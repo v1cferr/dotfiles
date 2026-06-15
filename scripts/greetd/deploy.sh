@@ -3,8 +3,8 @@
 #  Deploy do greetd + greeter quickshell + coletor de status (/etc + /usr/local)
 # ----------------------------------------------------------------------------
 #  Instala configs/QML/coletor/units a partir dos dotfiles, cria o usuário
-#  `greeter` se faltar, e sobe o coletor de status. NÃO troca o display manager
-#  (isso é o switch-to-greetd.sh) — o SDDM continua ativo até você validar.
+#  `greeter` se faltar, e sobe o coletor de status. NÃO habilita o DM
+#  (isso é o switch-to-greetd.sh).
 #
 #  Pré-requisito:  sudo pacman -S greetd
 #  Uso:            sudo ~/dotfiles/scripts/greetd/deploy.sh
@@ -85,5 +85,5 @@ cat <<EOF
        sudo systemctl stop greetd
 
   Se o greetd ainda não for o DM:  sudo ~/dotfiles/scripts/greetd/switch-to-greetd.sh
-  Rollback (enquanto o SDDM existir): sudo ~/dotfiles/scripts/greetd/rollback-to-sddm.sh
+  Se o greeter quebrar: TTY/SSH -> sudo systemctl disable greetd (há o 'agreety').
 EOF

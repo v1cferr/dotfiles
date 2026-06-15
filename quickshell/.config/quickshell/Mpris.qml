@@ -1,7 +1,8 @@
-// Painel de controle de mídia (Spotify) — modelo do painel de VPN.
-// Abre/fecha via:  qs ipc call mpris toggle   (usado pelo on-click do módulo
-// custom/spotify da Waybar). Usa o serviço nativo Quickshell.Services.Mpris.
-// Bottom/top-left no DP-1 (perto da pílula do Spotify).
+// Pílula de mídia (Spotify) na Waybar + painel de controle no hover.
+// A pílula fica na ponta ESQUERDA da barra (largura fixa; a Waybar reserva a
+// margem esquerda). Passar o mouse na pílula OU no painel mantém o painel
+// aberto; sai dos dois -> fecha após uma folga. Estilo Tokyo Night, igual à
+// estética de pílula da Waybar. Usa Quickshell.Services.Mpris.
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Mpris
@@ -11,20 +12,46 @@ import QtQuick.Layouts
 Scope {
     id: root
 
-    // Paleta Tokyo Night (mesma da Waybar / shell.qml)
+    // Paleta Tokyo Night
     readonly property color colBg: "#f21a1b26"
     readonly property color colBorder: "#414868"
     readonly property color colText: "#c0caf5"
     readonly property color colDim: "#565f89"
     readonly property color colAccent: "#7aa2f7"
-    readonly property color colRed: "#f38ba8"
     readonly property color colGreen: "#a6e3a1"
+    readonly property color colYellow: "#f9e2af"
     readonly property color colTrack: "#283041"
+    // Pílula (mesma cara da Waybar): bg #1a1b26 ~86%, borda #414868 ~35%
+    readonly property color pillBg: "#db1a1b26"
+    readonly property color pillBorder: "#59414868"
+    readonly property string uiFont: "JetBrainsMono Nerd Font"
 
-    property bool panelVisible: false
     property real positionNow: 0
 
-    // Seleciona o player do Spotify (fallback: o que estiver tocando; senão o 1º)
+    // hover-open
+    property bool pillHovered: false
+    property bool panelHovered: false
+    property bool panelVisible: false
+    onPillHoveredChanged: root.updateOpen()
+    onPanelHoveredChanged: root.updateOpen()
+    function updateOpen() {
+        if (root.pillHovered || root.panelHovered) {
+            closeTimer.stop();
+            if (!root.panelVisible)
+                root.refreshPosition();
+            root.panelVisible = true;
+        } else {
+            closeTimer.restart();
+        }
+    }
+    Timer {
+        id: closeTimer
+        interval: 300
+        onTriggered: if (!root.pillHovered && !root.panelHovered)
+            root.panelVisible = false
+    }
+
+    // Seleciona o player do Spotify (fallback: tocando; senão o 1º)
     readonly property var player: {
         const m = Mpris.players;
         const list = (m && m.values) ? m.values : [];
@@ -52,10 +79,17 @@ Scope {
     readonly property real length: (root.player && root.player.length) ? root.player.length : 0
     readonly property bool playing: !!(root.player && root.player.isPlaying)
 
+    // texto/ícone da pílula
+    readonly property string pillText: {
+        if (!root.hasPlayer)
+            return "Spotify";
+        return root.artist ? (root.artist + " - " + root.title) : root.title;
+    }
+    readonly property color pillColor: root.playing ? root.colGreen : (root.hasPlayer ? root.colYellow : root.colDim)
+
     function refreshPosition() {
         root.positionNow = (root.player && root.player.positionSupported) ? root.player.position : 0;
     }
-
     function fmt(s) {
         if (!s || s < 0)
             return "0:00";
@@ -64,15 +98,14 @@ Scope {
         return m + ":" + (sec < 10 ? "0" : "") + sec;
     }
 
+    // Mantido pra flexibilidade (ex.: keybind): qs ipc call mpris toggle
     IpcHandler {
         target: "mpris"
-
         function toggle(): void {
             root.panelVisible = !root.panelVisible;
             if (root.panelVisible)
                 root.refreshPosition();
         }
-        // "open" e não "show" (show colide com o subcomando `qs ipc show`)
         function open(): void {
             root.panelVisible = true;
             root.refreshPosition();
@@ -82,7 +115,6 @@ Scope {
         }
     }
 
-    // Tick da barra de progresso enquanto tocando + painel aberto
     Timer {
         interval: 1000
         repeat: true
@@ -90,14 +122,6 @@ Scope {
         onTriggered: root.refreshPosition()
     }
 
-    // Auto-fechar quando o mouse sai do painel (igual ao painel de VPN)
-    Timer {
-        interval: 2500
-        running: root.panelVisible && !panelHover.hovered
-        onTriggered: root.panelVisible = false
-    }
-
-    // Atualiza posição ao trocar de faixa / play-pause
     Connections {
         target: root.player
         ignoreUnknownSignals: true
@@ -112,28 +136,80 @@ Scope {
         }
     }
 
+    function dp1OrNull() {
+        const screens = Quickshell.screens;
+        for (let i = 0; i < screens.length; i++)
+            if (screens[i].name === "DP-1")
+                return screens[i];
+        return null;
+    }
+
+    // ===== PÍLULA (ponta esquerda da barra) =====
     PanelWindow {
-        id: panel
-        visible: root.panelVisible
-
-        // Fixa no DP-1 (perto da pílula do Spotify); null se não houver DP-1.
-        screen: {
-            const screens = Quickshell.screens;
-            for (let i = 0; i < screens.length; i++)
-                if (screens[i].name === "DP-1")
-                    return screens[i];
-            return null;
-        }
-
+        id: pill
+        screen: root.dp1OrNull()
         anchors {
             top: true
             left: true
         }
         margins {
-            top: 6
-            left: 8
+            top: 4
+            left: 4
         }
+        exclusiveZone: 0
+        implicitWidth: 220
+        implicitHeight: 26
+        color: "transparent"
 
+        Rectangle {
+            anchors.fill: parent
+            radius: 8
+            color: root.pillBg
+            border.color: root.pillBorder
+            border.width: 1
+
+            HoverHandler {
+                id: pillHover
+                onHoveredChanged: root.pillHovered = hovered
+            }
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 10
+                anchors.rightMargin: 10
+                spacing: 6
+
+                Text {
+                    text: "󰝚"
+                    color: root.pillColor
+                    font.family: root.uiFont
+                    font.pixelSize: 13
+                }
+                Text {
+                    Layout.fillWidth: true
+                    text: root.pillText
+                    color: root.hasPlayer ? root.colText : root.colDim
+                    font.family: root.uiFont
+                    font.pixelSize: 11
+                    elide: Text.ElideRight
+                }
+            }
+        }
+    }
+
+    // ===== PAINEL (logo abaixo da pílula) =====
+    PanelWindow {
+        id: panel
+        visible: root.panelVisible
+        screen: root.dp1OrNull()
+        anchors {
+            top: true
+            left: true
+        }
+        margins {
+            top: 33
+            left: 4
+        }
         exclusiveZone: 0
         implicitWidth: 360
         implicitHeight: content.implicitHeight + 28
@@ -148,6 +224,7 @@ Scope {
 
             HoverHandler {
                 id: panelHover
+                onHoveredChanged: root.panelHovered = hovered
             }
 
             ColumnLayout {
@@ -156,7 +233,6 @@ Scope {
                 anchors.margins: 14
                 spacing: 12
 
-                // Cabeçalho: capa + faixa/artista/álbum
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 12
@@ -182,6 +258,7 @@ Scope {
                             visible: art.status !== Image.Ready
                             text: "󰓇"
                             color: root.colDim
+                            font.family: root.uiFont
                             font.pixelSize: 28
                         }
                     }
@@ -194,6 +271,7 @@ Scope {
                             Layout.fillWidth: true
                             text: root.title
                             color: root.colText
+                            font.family: root.uiFont
                             font.pixelSize: 14
                             font.bold: true
                             elide: Text.ElideRight
@@ -203,6 +281,7 @@ Scope {
                             visible: root.artist !== ""
                             text: root.artist
                             color: root.colAccent
+                            font.family: root.uiFont
                             font.pixelSize: 12
                             elide: Text.ElideRight
                         }
@@ -211,20 +290,19 @@ Scope {
                             visible: root.album !== ""
                             text: root.album
                             color: root.colDim
+                            font.family: root.uiFont
                             font.pixelSize: 11
                             elide: Text.ElideRight
                         }
                     }
                 }
 
-                // Barra de progresso (clicável p/ buscar)
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 4
                     visible: root.hasPlayer && root.length > 0
 
                     Rectangle {
-                        id: track
                         Layout.fillWidth: true
                         height: 6
                         radius: 3
@@ -259,6 +337,7 @@ Scope {
                         Text {
                             text: root.fmt(root.positionNow)
                             color: root.colDim
+                            font.family: root.uiFont
                             font.pixelSize: 10
                         }
                         Item {
@@ -267,12 +346,12 @@ Scope {
                         Text {
                             text: root.fmt(root.length)
                             color: root.colDim
+                            font.family: root.uiFont
                             font.pixelSize: 10
                         }
                     }
                 }
 
-                // Controles: anterior / play-pause / próxima
                 RowLayout {
                     Layout.alignment: Qt.AlignHCenter
                     spacing: 18
@@ -301,13 +380,13 @@ Scope {
                     visible: !root.hasPlayer
                     text: "Nenhum player de mídia ativo"
                     color: root.colDim
+                    font.family: root.uiFont
                     font.pixelSize: 12
                 }
             }
         }
     }
 
-    // Botão circular de controle
     component CtlButton: Rectangle {
         id: btn
 
@@ -327,6 +406,7 @@ Scope {
             anchors.centerIn: parent
             text: btn.glyph
             color: root.colAccent
+            font.family: root.uiFont
             font.pixelSize: btn.big ? 20 : 16
         }
 

@@ -6,7 +6,9 @@
   "position": "top",
   "height": 30,
   "spacing": 4,
-  "margin": "4 4 1 4",
+  // Margens laterais reservam espaço pras pílulas Quickshell (Spotify à esquerda,
+  // VPN à direita) — ver quickshell/Mpris.qml e quickshell/Vpn.qml.
+  "margin": "4 160 1 230",
   "reload_style_on_change": true,
   // -------------------------------------------------------------------------
   // Organização dos Módulos em "Pílulas"
@@ -285,8 +287,7 @@
     "orientation": "horizontal",
     "modules": [
       "hyprland/workspaces",
-      "hyprland/window",
-      "custom/spotify"
+      "hyprland/window"
     ]
   },
   // Pílula 2: Informações centrais
@@ -308,7 +309,6 @@
       "custom/gpu-temp",
       "memory",
       "disk",
-      "custom/vpn",
       "network",
       "pulseaudio",
       "custom/hypridle",

@@ -130,12 +130,6 @@ bindkey "\e\e" sudo-command-line
 eval "$(atuin init zsh)"
 eval "$(starship init zsh)"
 
-# Zoxide (Substituto do cd) - Instale com: sudo pacman -S zoxide
-if command -v zoxide >/dev/null 2>&1; then
-    eval "$(zoxide init zsh)"
-    alias cd="z"
-fi
-
 # .NET
 export PATH="$HOME/.dotnet/tools:$PATH"
 
@@ -247,3 +241,11 @@ claude-pick() {
         Pessoal*) CLAUDE_CONFIG_DIR="$CLAUDE_PESSOAL_DIR" claude "$@" ;;
     esac
 }
+
+# Zoxide (substituto do cd) — Instale com: sudo pacman -S zoxide
+# DEVE ser o ÚLTIMO eval do .zshrc (o zoxide reclama via _zo_doctor se houver
+# inicialização de outros hooks/precmd depois dele).
+if command -v zoxide >/dev/null 2>&1; then
+    eval "$(zoxide init zsh)"
+    alias cd="z"
+fi

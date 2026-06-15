@@ -53,6 +53,7 @@ gnome-clocks 50.0-2
 gnome-disk-utility 46.1-2
 gnome-keyring 1:50.0-1
 go 2:1.26.4-1
+greetd 0.10.3-2
 grim 1.5.0-2
 gst-plugin-pipewire 1:1.6.6-1
 gvfs 1.60.0-2
@@ -145,7 +146,6 @@ rsync 3.4.4-1
 samba 2:4.24.3-1
 sassc 3.6.2-5
 sbctl 0.18-1
-sddm 0.21.0-7
 seahorse 1:47.0.1-6
 slurp 1.5.0-2
 smartmontools 7.5-1

@@ -182,7 +182,7 @@ ShellRoot {
     }
 
     // ========================================================================
-    //  Monitor secundário (HDMI-A-1) — GIF em tela cheia, rotaciona ~12s
+    //  Monitor secundário (HDMI-A-1) — GIF em tela cheia, rotaciona a cada 2.5min
     // ========================================================================
     Component {
         id: gifComp
@@ -204,7 +204,7 @@ ShellRoot {
                         : ""
             }
             Timer {
-                interval: 12000; repeat: true
+                interval: 150000; repeat: true   // 2.5 min, igual ao ROTATE do hyprlock
                 running: gifRoot.gifs.length > 1
                 onTriggered: gifRoot.idx++
             }

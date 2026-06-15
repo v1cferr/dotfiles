@@ -112,8 +112,8 @@ de cada um (modelo na seção "Stacks Docker" do `.env.example`) e
 ## 10. Checklist final
 
 - [ ] greetd sobe o greeter quickshell no boot; senha loga na sessão uwsm
-      (`readlink /etc/systemd/system/display-manager.service` → greetd; rollback:
-      `scripts/greetd/rollback-to-sddm.sh` enquanto o SDDM existir)
+      (`readlink /etc/systemd/system/display-manager.service` → greetd; se quebrar,
+      via SSH/console: `sudo systemctl disable greetd` — há o `agreety` de emergência)
 - [ ] Hyprland sobe e os atalhos funcionam (ver `README.hyprland.md`)
 - [ ] `stow-sync.sh status` sem links quebrados
 - [ ] SSH/GPG funcionando (`ssh -T git@github.com`, `gpg -K`)

@@ -24,24 +24,31 @@ O script roda **no roteador, como root** — ele NÃO está coberto pelo stow
 blindado: backup + dead-man switch (auto-revert em 10 min) + `fw4 check` antes
 de aplicar + `reload` (não restart, preserva a sessão via conntrack).
 
+O router roda **dropbear** (sem `su`, sem login root por chave), mas o `v1cferr`
+tem `sudo` com senha. O prompt de senha precisa de um **terminal real** (não o
+`!` do Claude Code, que roda sem tty):
+
 ```sh
 # a partir do desktop (que alcança o router por chave):
-scp ~/dotfiles/scripts/wireguard/deploy-router.sh v1cferr@192.168.1.1:/tmp/wg-deploy.sh
-ssh -t v1cferr@192.168.1.1 'su root -c "sh /tmp/wg-deploy.sh"'   # pede a senha de root
+scp -O ~/dotfiles/scripts/wireguard/deploy-router.sh v1cferr@192.168.1.1:/tmp/wg-deploy.sh
+ssh -t v1cferr@192.168.1.1 'sudo sh /tmp/wg-deploy.sh'   # pede a senha do v1cferr
 ```
+
+> `scp -O` força o protocolo SCP legado — o OpenWrt não inclui `sftp-server`,
+> então o scp novo (baseado em SFTP) falha com "sftp-server: not found".
 
 No fim ele imprime (e salva em `/root/wg-clients.conf`, modo 600) as configs do
 notebook e do celular. **Se a sessão sobreviveu, cancele o dead-man na hora:**
 
 ```sh
-rm -f /tmp/wg-deadman.active        # no router
+ssh -t v1cferr@192.168.1.1 'sudo rm -f /tmp/wg-deadman.active'
 ```
 
 Depois de copiar as configs para os dispositivos, apague o arquivo com as
 chaves privadas:
 
 ```sh
-rm -f /root/wg-clients.conf         # no router
+ssh -t v1cferr@192.168.1.1 'sudo rm -f /root/wg-clients.conf'
 ```
 
 ## Clientes

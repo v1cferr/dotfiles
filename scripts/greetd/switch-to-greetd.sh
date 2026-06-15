@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # ============================================================================
-#  Cutover: SDDM -> greetd
+#  Habilita o greetd como display manager
 # ----------------------------------------------------------------------------
-#  Desabilita o SDDM e habilita o greetd. NÃO remove o SDDM (rede de segurança).
+#  Desabilita qualquer DM antigo (se houver) e habilita o greetd. Idempotente:
+#  funciona tanto na migração quanto num rebuild limpo (sem DM antigo).
 #  Mantenha uma sessão SSH aberta antes de rodar. Aplica no próximo boot.
 #
 #  Uso:  sudo ~/dotfiles/scripts/greetd/switch-to-greetd.sh
@@ -24,8 +25,8 @@ if [[ ! -f /run/greeter-status/status.json ]]; then
     read -r ans; [[ "${ans}" == "y" || "${ans}" == "Y" ]] || exit 1
 fi
 
-echo "[switch] desabilitando sddm e habilitando greetd…"
-systemctl disable sddm.service
+echo "[switch] desabilitando DM antigo (se houver) e habilitando greetd…"
+systemctl disable sddm.service 2>/dev/null || true   # best-effort (pode não existir)
 systemctl enable greetd.service
 
 echo "[switch] display-manager.service ->"
@@ -34,6 +35,7 @@ readlink -f /etc/systemd/system/display-manager.service 2>/dev/null || true
 cat <<'EOF'
 
 [switch] feito. Reinicie pra aplicar:  sudo reboot
-  Se o greeter não subir, recupere via SSH/console (chvt 3) e rode:
-      sudo ~/dotfiles/scripts/greetd/rollback-to-sddm.sh && sudo reboot
+  Se o greeter não subir, recupere via SSH ou um console TTY (Ctrl+Alt+F3) e:
+      sudo systemctl disable greetd && sudo reboot
+  (o greetd também traz o 'agreety', um greeter texto de emergência)
 EOF

@@ -29,26 +29,25 @@ primário é fixo (`arch_hero_flipped.png`), instalado em `/etc/greetd/wallpaper
 | `etc/systemd/system/greeter-status.service` | `/etc/systemd/system/` | coletor root (loop) |
 | `etc/tmpfiles.d/greeter-status.conf` | `/etc/tmpfiles.d/` | cria `/run/greeter-status` |
 | `../scripts/greetd/collect-status.sh` | `/usr/local/lib/greetd/` | gera o status.json + assets |
-| `../scripts/greetd/deploy.sh` | — | instalador (não troca o DM) |
-| `../scripts/greetd/switch-to-greetd.sh` | — | cutover SDDM → greetd |
-| `../scripts/greetd/rollback-to-sddm.sh` | — | reversão (enquanto o SDDM existir) |
+| `../scripts/greetd/deploy.sh` | — | instalador (configs + coletor) |
+| `../scripts/greetd/switch-to-greetd.sh` | — | habilita o greetd como DM |
 
 ## Deploy / migração
 
 ```bash
 sudo pacman -S greetd
-sudo ~/dotfiles/scripts/greetd/deploy.sh        # configs + coletor (SDDM segue ativo)
+sudo ~/dotfiles/scripts/greetd/deploy.sh        # configs + coletor
 
-# valida o compositor numa VT livre:
-sudo -u greeter Hyprland --config /etc/greetd/hyprland-greeter.conf
-# dry-run sem trocar o DM:
-sudo systemctl start greetd   # chvt 2 pra ver; depois: sudo systemctl stop greetd
+# (opcional) dry-run sem reiniciar, numa VT livre:
+sudo systemctl start greetd     # senha real loga; depois: sudo systemctl stop greetd
 
-# cutover (mantenha SSH aberto):
+# habilita o greetd como DM (mantenha SSH aberto):
 sudo ~/dotfiles/scripts/greetd/switch-to-greetd.sh && sudo reboot
 ```
 
-Rollback: `sudo ~/dotfiles/scripts/greetd/rollback-to-sddm.sh && sudo reboot`.
+Recuperação: se o greeter não subir, via SSH ou console (Ctrl+Alt+F3) rode
+`sudo systemctl disable greetd && sudo reboot` (o greetd traz o `agreety`, um
+greeter texto de emergência).
 
 ## Notas
 

@@ -48,6 +48,13 @@ magick "${DOTFILES_DIR}/wallpapers/Pictures/Wallpapers/arch_hero_flipped.png" \
 chmod -R a+rX /etc/greetd
 echo "[deploy] /etc/greetd atualizado (incl. wallpaper.png)"
 
+# 2b) PAM do greetd com pam_gnome_keyring (destrava a keyring "login" no login).
+#     O pacote do greetd traz um /etc/pam.d/greetd sem keyring; sobrescrevemos
+#     pela versão versionada. Sem isso, VS Code / Claude Code CLI etc. pedem a
+#     senha da keyring a cada sessão.
+install -Dm0644 "${PKG}/etc/pam.d/greetd" /etc/pam.d/greetd
+echo "[deploy] /etc/pam.d/greetd atualizado (pam_gnome_keyring)"
+
 # 3) Coletor root
 install -Dm0755 "${SCRIPT_DIR}/collect-status.sh" /usr/local/lib/greetd/collect-status.sh
 echo "[deploy] coletor instalado em /usr/local/lib/greetd/"

@@ -1,14 +1,15 @@
-// OSD (toast) de volume + mute de microfone, estilo Tokyo Night.
-// Aparece ao mudar volume/mute do sink padrão ou o mute do microfone e some
-// sozinho após ~1.5s. Usa o serviço nativo Quickshell.Services.Pipewire.
-// Fixado bottom-center no DP-1 (nunca na TV HDMI-A-1).
+// OSD (toast) de volume + mute de microfone + brilho (gamma do hyprsunset),
+// estilo Tokyo Night. Volume/mic aparecem reagindo ao Pipewire; brilho é
+// empurrado por IPC (qs ipc call osd brightness <valor> <max>) pelas teclas
+// XF86MonBrightness. Some sozinho após ~1.5s. Fixado bottom-center no DP-1.
 //
-// Brilho NÃO está aqui: este desktop não tem backlight (sem brightnessctl/ddcutil).
-// O componente foi desenhado pra ganhar um terceiro "mode" depois.
+// Brilho aqui = gamma do hyprsunset (este desktop não tem backlight real;
+// brightnessctl/ddcutil ausentes). gamma 100 = normal, vai até max-gamma (150).
 //
-// Nota sobre "Translate ID error: -1 (default-nodes-api)" no log: é ruído nativo
-// do libpipewire quando o nó default ainda não resolveu; não é deste QML.
+// Nota: "Translate ID error: -1 (default-nodes-api)" no log é ruído nativo do
+// libpipewire, não deste QML.
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Pipewire
 import QtQuick
 import QtQuick.Layouts
@@ -25,19 +26,20 @@ Scope {
     readonly property color colRed: "#f38ba8"
     readonly property color colTrack: "#283041"
 
-    // "volume" ou "mic" — o que disparou o OSD por último
+    // "volume" | "mic" | "brightness" — o que disparou o OSD por último
     property string mode: "volume"
     property bool shown: false
 
-    // Trava anti-flash (boot) + anti-troca-de-device. Cada evento de settling
-    // (boot, ready, troca de saída/headphone) re-adia o arme. O show real é
-    // coalescido num Timer(0) que só mostra se "armed" continuar true no próximo
-    // ciclo do event loop — ou seja, DEPOIS de todos os handlers síncronos do
-    // mesmo sinal. Assim uma troca de device (que chama deferArm() e zera armed
-    // no mesmo ciclo) nunca vaza um OSD, independente da ordem dos sinais do QML.
+    // Brilho (empurrado via IPC pelas teclas de brilho)
+    property int brightnessValue: 100
+    property int brightnessMax: 150
+
+    // Trava anti-flash (boot) + anti-troca-de-device pro caminho reativo do
+    // Pipewire. Cada evento de settling re-adia o arme; o show real é coalescido
+    // num Timer(0) que só mostra se "armed" continuar true no próximo ciclo do
+    // event loop. (O brilho via IPC NÃO passa por essa trava — é ação explícita.)
     property bool armed: false
 
-    // Mantém sink e source "vivos" pra que volume/muted atualizem em tempo real.
     PwObjectTracker {
         objects: {
             const arr = [];
@@ -59,7 +61,6 @@ Scope {
     onSinkMutedChanged: root.trigger("volume")
     onMicMutedChanged: root.trigger("mic")
 
-    // Desarma já (suprime o disparo em voo) e re-arma 500ms após o ÚLTIMO settling.
     function deferArm() {
         root.armed = false;
         armTimer.restart();
@@ -67,7 +68,14 @@ Scope {
 
     function trigger(m) {
         root.mode = m;
-        showTimer.restart(); // coalescido: decide no próximo ciclo do loop
+        showTimer.restart();
+    }
+
+    // Mostra direto (sem a trava armed): usado pelo brilho via IPC.
+    function showNow(m) {
+        root.mode = m;
+        root.shown = true;
+        hideTimer.restart();
     }
 
     function volIcon() {
@@ -78,6 +86,27 @@ Scope {
         if (root.volume <= 0.66)
             return "󰖀";
         return "󰕾";
+    }
+
+    function brightIcon() {
+        const frac = root.brightnessMax > 0 ? root.brightnessValue / root.brightnessMax : 0;
+        if (frac <= 0.33)
+            return "󰃞";
+        if (frac <= 0.66)
+            return "󰃟";
+        return "󰃠";
+    }
+
+    // Brilho empurrado pelas teclas XF86MonBrightness via:
+    //   qs ipc call osd brightness <valor> <max>
+    IpcHandler {
+        target: "osd"
+
+        function brightness(value: int, max: int): void {
+            root.brightnessMax = max > 0 ? max : 150;
+            root.brightnessValue = value;
+            root.showNow("brightness");
+        }
     }
 
     Connections {
@@ -122,8 +151,6 @@ Scope {
         id: osd
         visible: root.shown
 
-        // Fixa no DP-1. Sem DP-1 presente -> screen null -> janela não mapeia
-        // (garante que NUNCA aparece na TV HDMI-A-1).
         screen: {
             const screens = Quickshell.screens;
             for (let i = 0; i < screens.length; i++)
@@ -132,7 +159,6 @@ Scope {
             return null;
         }
 
-        // bottom-center: ancorar só na borda de baixo centraliza na horizontal.
         anchors {
             bottom: true
         }
@@ -158,12 +184,11 @@ Scope {
                 anchors.rightMargin: 18
                 spacing: 14
 
-                // Ícone (volume por nível/mute, ou microfone). Sem font.family
-                // explícita — mesma fallback Nerd que o shell.qml usa no 󰦝.
+                // Ícone do modo atual. Sem font.family (mesma fallback Nerd do shell.qml).
                 Text {
                     Layout.alignment: Qt.AlignVCenter
-                    text: root.mode === "mic" ? (root.micMuted ? "󰍭" : "󰍬") : root.volIcon()
-                    color: (root.mode === "mic" && root.micMuted) || (root.mode === "volume" && root.sinkMuted) ? root.colRed : root.colAccent
+                    text: root.mode === "mic" ? (root.micMuted ? "󰍭" : "󰍬") : root.mode === "brightness" ? root.brightIcon() : root.volIcon()
+                    color: ((root.mode === "mic" && root.micMuted) || (root.mode === "volume" && root.sinkMuted)) ? root.colRed : root.colAccent
                     font.pixelSize: 26
                 }
 
@@ -198,6 +223,43 @@ Scope {
                         Layout.preferredWidth: 46
                         horizontalAlignment: Text.AlignRight
                         text: root.sinkMuted ? "mudo" : Math.round(root.volume * 100) + "%"
+                        color: root.colText
+                        font.pixelSize: 14
+                        font.bold: true
+                    }
+                }
+
+                // Modo BRILHO (gamma do hyprsunset): barra + valor
+                RowLayout {
+                    Layout.fillWidth: true
+                    visible: root.mode === "brightness"
+                    spacing: 12
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignVCenter
+                        height: 8
+                        radius: 4
+                        color: root.colTrack
+
+                        Rectangle {
+                            width: parent.width * Math.max(0, Math.min(1, root.brightnessMax > 0 ? root.brightnessValue / root.brightnessMax : 0))
+                            height: parent.height
+                            radius: 4
+                            color: root.colAccent
+                            Behavior on width {
+                                NumberAnimation {
+                                    duration: 90
+                                }
+                            }
+                        }
+                    }
+
+                    Text {
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.preferredWidth: 46
+                        horizontalAlignment: Text.AlignRight
+                        text: root.brightnessValue + "%"
                         color: root.colText
                         font.pixelSize: 14
                         font.bold: true

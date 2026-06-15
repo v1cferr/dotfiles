@@ -2,6 +2,17 @@
 
 # Script para controlar e exibir informações do Spotify no Waybar
 # Requer: playerctl
+#
+# Nota: artista/título/álbum são escapados para JSON (json_escape) antes de
+# entrarem na saída, senão uma faixa com aspas (") ou barra (\) quebraria o
+# JSON e o módulo ficaria em branco até a música mudar. Os separadores \n do
+# tooltip são escritos como escape literal de JSON (não passam pelo escaper).
+
+# Escapa uma string para uso DENTRO de um valor JSON (barra, aspas, tab) e
+# remove quebras de linha cruas que invalidariam o JSON.
+json_escape() {
+    printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e 's/\t/\\t/g' | tr -d '\n\r'
+}
 
 # Verifica se o playerctl está instalado
 if ! command -v playerctl &> /dev/null; then
@@ -33,7 +44,7 @@ if [[ -z "$ARTIST" ]] || [[ -z "$TITLE" ]]; then
     exit 0
 fi
 
-# Trunca strings muito longas
+# Trunca strings muito longas (antes de escapar)
 MAX_LENGTH=30
 if [[ ${#ARTIST} -gt $MAX_LENGTH ]]; then
     ARTIST="${ARTIST:0:$MAX_LENGTH}..."
@@ -42,35 +53,39 @@ if [[ ${#TITLE} -gt $MAX_LENGTH ]]; then
     TITLE="${TITLE:0:$MAX_LENGTH}..."
 fi
 
-# Formata a saída baseada no status
+# Define a classe baseada no status (texto vazio quando parado)
 case "$PLAYER_STATUS" in
-    "Playing")
-        TEXT="$ARTIST - $TITLE"
-        CLASS="playing"
-        ;;
-    "Paused")
-        TEXT="$ARTIST - $TITLE"
-        CLASS="paused"
-        ;;
+    "Playing") CLASS="playing" ;;
+    "Paused")  CLASS="paused" ;;
     *)
-        TEXT=""
-        CLASS="stopped"
+        echo '{"text": "", "class": "stopped"}'
+        exit 0
         ;;
 esac
 
-# Cria o tooltip com informações completas
+# Escapa os campos dinâmicos para JSON
 ALBUM=$(playerctl --player=spotify metadata album 2>/dev/null)
 POSITION=$(playerctl --player=spotify position --format "{{ duration(position) }}" 2>/dev/null)
 DURATION=$(playerctl --player=spotify metadata --format "{{ duration(mpris:length) }}" 2>/dev/null)
 
-TOOLTIP="$ARTIST - $TITLE"
-if [[ -n "$ALBUM" ]]; then
-    TOOLTIP="$TOOLTIP\nÁlbum: $ALBUM"
-fi
-if [[ -n "$POSITION" ]] && [[ -n "$DURATION" ]]; then
-    TOOLTIP="$TOOLTIP\n$POSITION / $DURATION"
-fi
-TOOLTIP="$TOOLTIP\nStatus: $PLAYER_STATUS"
+ARTIST_E=$(json_escape "$ARTIST")
+TITLE_E=$(json_escape "$TITLE")
+ALBUM_E=$(json_escape "$ALBUM")
+STATUS_E=$(json_escape "$PLAYER_STATUS")
+POSITION_E=$(json_escape "$POSITION")
+DURATION_E=$(json_escape "$DURATION")
 
-# Saída JSON para o Waybar
+TEXT="$ARTIST_E - $TITLE_E"
+
+# Tooltip: separadores \n são escape literal de JSON (\\n no string bash)
+TOOLTIP="$ARTIST_E - $TITLE_E"
+if [[ -n "$ALBUM_E" ]]; then
+    TOOLTIP="$TOOLTIP\\nÁlbum: $ALBUM_E"
+fi
+if [[ -n "$POSITION_E" ]] && [[ -n "$DURATION_E" ]]; then
+    TOOLTIP="$TOOLTIP\\n$POSITION_E / $DURATION_E"
+fi
+TOOLTIP="$TOOLTIP\\nStatus: $STATUS_E"
+
+# Saída JSON para o Waybar (campos já escapados)
 printf '{"text": "%s", "class": "%s", "tooltip": "%s"}\n' "$TEXT" "$CLASS" "$TOOLTIP"

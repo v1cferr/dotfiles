@@ -72,16 +72,18 @@ else
     echo "  (status.json ainda não existe — veja: journalctl -u greeter-status -e)"
 fi
 
-cat <<'EOF'
+dm="$(readlink -f /etc/systemd/system/display-manager.service 2>/dev/null)"
+cat <<EOF
 
-[deploy] ok. Próximos passos (SDDM ainda é o DM ativo):
-  1) Teste o compositor standalone numa VT livre:
-       sudo -u greeter Hyprland --config /etc/greetd/hyprland-greeter.conf
-  2) Dry-run do greetd sem desativar o SDDM:
-       sudo systemctl start greetd   (depois: chvt 2 pra ver; senha real loga)
+[deploy] ok. DM atual: ${dm##*/}
+  Pra VER as mudanças do greeter: faça LOGOUT (o greetd reabre o greeter) ou reboot.
+
+  NÃO use 'sudo -u greeter Hyprland ...' pra testar: sem uma sessão logind o
+  greeter não tem XDG_RUNTIME_DIR e o Hyprland aborta. Quem provê esse env é o
+  próprio greetd. Pra um teste fora do boot, use o dry-run:
+       sudo systemctl start greetd     # numa VT livre; senha real loga
        sudo systemctl stop greetd
-  3) Cutover definitivo:
-       sudo ~/dotfiles/scripts/greetd/switch-to-greetd.sh
-  Rollback a qualquer momento:
-       sudo ~/dotfiles/scripts/greetd/rollback-to-sddm.sh
+
+  Se o greetd ainda não for o DM:  sudo ~/dotfiles/scripts/greetd/switch-to-greetd.sh
+  Rollback (enquanto o SDDM existir): sudo ~/dotfiles/scripts/greetd/rollback-to-sddm.sh
 EOF

@@ -25,6 +25,10 @@ if [[ ${EUID} -ne 0 ]]; then
     exit 1
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+DOTFILES_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+PKG="${DOTFILES_DIR}/openrazer"
+
 RULE_PATH="/etc/udev/rules.d/99-razer-no-autosuspend.rules"
 
 echo ":: Instalando ${RULE_PATH}"
@@ -46,5 +50,17 @@ for p in /sys/bus/usb/devices/*/; do
         printf '   %s -> %s\n' "$p" "$(cat "${p}/power/control" 2>/dev/null)"
     fi
 done
+
+# ----------------------------------------------------------------------------
+#  Replug por software no boot (DeathAdder V2 enumera mas o handshake falha →
+#  mouse inerte até replugar). Re-autoriza o device antes do greeter.
+# ----------------------------------------------------------------------------
+echo ":: Instalando razer-rekick (script + serviço systemd)"
+install -Dm0755 "${SCRIPT_DIR}/razer-rekick.sh" /usr/local/lib/openrazer/razer-rekick.sh
+install -Dm0644 "${PKG}/etc/systemd/system/razer-rekick.service" \
+                /etc/systemd/system/razer-rekick.service
+systemctl daemon-reload
+systemctl enable razer-rekick.service
+echo "   habilitado (roda no próximo boot; pra testar agora: sudo systemctl start razer-rekick)"
 
 echo ":: Pronto."

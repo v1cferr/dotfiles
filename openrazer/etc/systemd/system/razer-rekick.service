@@ -1,0 +1,20 @@
+# ============================================================================
+#  Replug por software do mouse Razer no boot (workaround DeathAdder V2)
+# ----------------------------------------------------------------------------
+#  Roda ANTES do greeter (multi-user.target, antes do graphical.target/greetd),
+#  depois do udev ter enumerado o device. Re-autoriza o mouse pra ele sair do
+#  estado travado de boot. Ver scripts/openrazer/razer-rekick.sh.
+# ============================================================================
+[Unit]
+Description=Software re-plug of Razer mouse (DeathAdder V2 boot init race)
+After=systemd-udevd.service
+Wants=systemd-udevd.service
+Before=greetd.service
+
+[Service]
+Type=oneshot
+ExecStartPre=/usr/bin/sleep 4
+ExecStart=/usr/local/lib/openrazer/razer-rekick.sh
+
+[Install]
+WantedBy=multi-user.target

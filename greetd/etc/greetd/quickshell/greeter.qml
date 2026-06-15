@@ -166,14 +166,6 @@ ShellRoot {
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: isPrimary ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-            // esconde o cursor do mouse (nada é clicável; o foco é só teclado)
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.NoButton
-                hoverEnabled: true
-                cursorShape: Qt.BlankCursor
-            }
-
             Loader {
                 anchors.fill: parent
                 sourceComponent: win.isPrimary ? primaryComp : gifComp

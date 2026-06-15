@@ -38,5 +38,10 @@ homelab/rustdesk/data/
 gh/.config/gh/hosts.yml
 vlc/.config/vlc/vlc-qt-interface.conf
 
+# OpenRazer: estado de runtime escrito pelo daemon (DPI/efeitos), com drift
+# constante por causa do serial ausente do DeathAdder V2 → o DPI é forçado no
+# autostart (set-mouse-dpi.sh), então não faz sentido versionar este arquivo.
+openrazer/.config/openrazer/persistence.conf
+
 # Backup criptografado de segredos (scripts/secrets/) — NUNCA versionar
 secrets-backup*.tar.gz.gpg

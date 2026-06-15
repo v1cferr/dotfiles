@@ -55,7 +55,7 @@ GIFS_JSON=$(for g in "${OUT_DIR}"/gif-*.gif; do [[ -e "${g}" ]] && printf '%s\n'
 # pra a frase e o GIF aparecerem na hora. ready=false => greeter mostra "carregando".
 jq -n --arg quote "${QUOTE_PT}" --arg author "${QUOTE_AUTHOR}" --argjson gifs "${GIFS_JSON:-[]}" \
     '{ready:false, containers:[], processes:[], up:0, total:0, cpu_pct:0, mem_pct:0, mem_used:"", mem_total:"",
-      cpu_temp:"", gpu_temp:"", ip:"", uptime:"", quote:$quote, author:$author, gifs:$gifs, alerts:[]}' \
+      cpu_temp:"", gpu_temp:"", ip:"", uptime:"", uptime_secs:0, quote:$quote, author:$author, gifs:$gifs, alerts:[]}' \
     > "${TMP}" 2>/dev/null && mv "${TMP}" "${JSON}" && chmod 644 "${JSON}"
 
 # ---------------------------------------------------------------------------
@@ -102,15 +102,17 @@ while true; do
     ps_json=$(printf '%s' "${ps_raw}" | jq -s '.' 2>/dev/null);       [[ -z "${ps_json}" ]] && ps_json='[]'
 
     # nome -> "running"? (do ps), e métricas (do stats), ordenado por MEM desc
+    # mem_mib = memória usada real do container (parse do MemUsage "123MiB / 7GiB")
     containers=$(jq -n --argjson stats "${stats_json}" --argjson ps "${ps_json}" '
         ($ps | map({(.Names): (.State // "")}) | add // {}) as $state
         | [ $stats[]
+            | ((.MemUsage // "0MiB") | split(" / ")[0]
+               | (capture("(?<n>[0-9.]+)(?<u>[A-Za-z]+)") // {n:"0",u:"B"})) as $m
             | { name: .Name,
-                cpu:  ((.CPUPerc // "0%") | rtrimstr("%") | tonumber? // 0),
-                memp: ((.MemPerc // "0%") | rtrimstr("%") | tonumber? // 0),
-                mem:  (.MemPerc // "0%"),
-                up:   (($state[.Name] // "running") == "running") } ]
-        | sort_by(-.memp)')
+                cpu:     ((.CPUPerc // "0%") | rtrimstr("%") | tonumber? // 0),
+                mem_mib: (($m.n|tonumber) * ({"B":1,"KiB":1024,"kB":1000,"MiB":1048576,"MB":1000000,"GiB":1073741824,"GB":1000000000}[$m.u] // 1048576) / 1048576),
+                up:      (($state[.Name] // "running") == "running") } ]
+        | sort_by(-.mem_mib)')
 
     total=$(jq -n --argjson ps "${ps_json}" '$ps | length')
     up=$(jq -n --argjson ps "${ps_json}" '[$ps[] | select(.State=="running")] | length')
@@ -119,14 +121,16 @@ while true; do
     IFS=$'\t' read -r mem_pct mem_used mem_total < <(mem_info)
 
     # --- top processos do sistema (mini-btop), agregados por nome, por MEM ---
-    procs=$(ps -eo comm,pmem,pcpu --no-headers 2>/dev/null \
-        | awk '{m[$1]+=$2; c[$1]+=$3} END{for(k in m) printf "%s\t%.1f\t%.1f\n", k, m[k], c[k]}' \
+    # rss em KiB (memória residente real); agrega por nome e converte p/ MiB
+    procs=$(ps -eo comm,rss,pcpu --no-headers 2>/dev/null \
+        | awk '{m[$1]+=$2; c[$1]+=$3} END{for(k in m) printf "%s\t%d\t%.1f\n", k, m[k], c[k]}' \
         | sort -t"$(printf '\t')" -k2 -rn | head -n 8 \
-        | jq -R 'split("\t") | {name:.[0], mem:((.[1]//"0")|tonumber), cpu:((.[2]//"0")|tonumber)}' \
+        | jq -R 'split("\t") | {name:.[0], mem_mib:(((.[1]//"0")|tonumber)/1024), cpu:((.[2]//"0")|tonumber)}' \
         | jq -s '.' 2>/dev/null)
     [[ -z "${procs}" ]] && procs='[]'
     ip=$(ip -4 -o addr show scope global 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -n1)
     up_pretty=$(uptime -p 2>/dev/null)
+    up_secs=$(awk '{print int($1)}' /proc/uptime 2>/dev/null)
 
     # --- alertas ---
     # Só sinaliza container REALMENTE problemático (reiniciando / unhealthy);
@@ -150,14 +154,14 @@ while true; do
         --argjson cpu_pct "${cp:-0}" --argjson mem_pct "${mem_pct:-0}" \
         --arg mem_used "${mem_used}" --arg mem_total "${mem_total}" \
         --arg cpu_temp "${ct}" --arg gpu_temp "${gt}" \
-        --arg ip "${ip}" --arg uptime "${up_pretty}" \
+        --arg ip "${ip}" --arg uptime "${up_pretty}" --argjson uptime_secs "${up_secs:-0}" \
         --arg quote "${QUOTE_PT}" --arg author "${QUOTE_AUTHOR}" \
         --argjson gifs "${GIFS_JSON:-[]}" \
         --argjson alerts "${alerts:-[]}" \
         --argjson processes "${procs:-[]}" \
         '{ready:true, containers:$containers, up:$up, total:$total,
           cpu_pct:$cpu_pct, mem_pct:$mem_pct, mem_used:$mem_used, mem_total:$mem_total,
-          cpu_temp:$cpu_temp, gpu_temp:$gpu_temp, ip:$ip, uptime:$uptime,
+          cpu_temp:$cpu_temp, gpu_temp:$gpu_temp, ip:$ip, uptime:$uptime, uptime_secs:$uptime_secs,
           quote:$quote, author:$author, gifs:$gifs, alerts:$alerts, processes:$processes}' \
         > "${TMP}" 2>/dev/null && mv "${TMP}" "${JSON}" && chmod 644 "${JSON}"
 

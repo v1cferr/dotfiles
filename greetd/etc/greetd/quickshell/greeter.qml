@@ -54,13 +54,42 @@ ShellRoot {
         return s.charAt(0).toUpperCase() + s.slice(1);
     }
 
+    // memória absoluta: MiB e, a partir de 1024 MiB, GiB
+    function fmtMem(mib) {
+        if (mib === undefined || mib === null) return "—";
+        if (mib >= 1024) return (mib / 1024).toFixed(2) + " GiB";
+        return Math.round(mib) + " MiB";
+    }
+
+    // uptime adaptativo HH:MM:SS (+ dias quando passa de 24h)
+    function fmtUptime(s) {
+        s = Math.max(0, Math.floor(s));
+        var d = Math.floor(s / 86400); s -= d * 86400;
+        var h = Math.floor(s / 3600);  s -= h * 3600;
+        var m = Math.floor(s / 60);    var sec = s - m * 60;
+        function p(n) { return (n < 10 ? "0" : "") + n; }
+        return (d > 0 ? d + "d " : "") + p(h) + ":" + p(m) + ":" + p(sec);
+    }
+
+    // uptime tickando localmente (1s), resincronizado pelo coletor
+    property int upSecs: 0
+    Timer {
+        interval: 1000; repeat: true; running: true
+        onTriggered: root.upSecs += 1
+    }
+
     // ---- feed de status: lê o JSON do coletor a cada 1s ---------------------
     Process {
         id: statusProc
         command: ["cat", "/run/greeter-status/status.json"]
         stdout: StdioCollector {
             onStreamFinished: {
-                try { root.status = JSON.parse(text); } catch (e) {}
+                try {
+                    root.status = JSON.parse(text);
+                    var u = root.status.uptime_secs || 0;
+                    if (Math.abs(u - root.upSecs) > 2)   // resync se divergiu
+                        root.upSecs = u;
+                } catch (e) {}
             }
         }
     }
@@ -136,6 +165,14 @@ ShellRoot {
 
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: isPrimary ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+
+            // esconde o cursor do mouse (nada é clicável; o foco é só teclado)
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.NoButton
+                hoverEnabled: true
+                cursorShape: Qt.BlankCursor
+            }
 
             Loader {
                 anchors.fill: parent
@@ -298,6 +335,19 @@ ShellRoot {
 
                 Item { height: 12 }
 
+                // loading da frase (some assim que o coletor escreve a quote)
+                Text {
+                    visible: (root.status.quote || "").length === 0
+                    text: "carregando frase…"
+                    color: root.colDim; font.pixelSize: 13; font.italic: true
+                    SequentialAnimation on opacity {
+                        running: (root.status.quote || "").length === 0
+                        loops: Animation.Infinite
+                        NumberAnimation { from: 0.3; to: 1.0; duration: 800 }
+                        NumberAnimation { from: 1.0; to: 0.3; duration: 800 }
+                    }
+                }
+
                 // quote PT-BR
                 ColumnLayout {
                     Layout.fillWidth: true
@@ -418,7 +468,7 @@ ShellRoot {
 
                     Text {
                         Layout.fillWidth: true
-                        text: root.status.uptime || ""
+                        text: "uptime  " + root.fmtUptime(root.upSecs)
                         color: root.colDim; font.pixelSize: 11; font.italic: true
                         elide: Text.ElideRight
                     }
@@ -464,7 +514,7 @@ ShellRoot {
                         visible: root.ready && (root.status.containers || []).length > 0
                         spacing: 8
                         Text { Layout.fillWidth: true; text: "Container (docker)"; color: root.colDim; font.pixelSize: 10 }
-                        Text { text: "MEM"; color: root.colDim; font.pixelSize: 10; Layout.preferredWidth: 54; horizontalAlignment: Text.AlignRight }
+                        Text { text: "MEM"; color: root.colDim; font.pixelSize: 10; Layout.preferredWidth: 70; horizontalAlignment: Text.AlignRight }
                         Text { text: "CPU"; color: root.colDim; font.pixelSize: 10; Layout.preferredWidth: 48; horizontalAlignment: Text.AlignRight }
                     }
 
@@ -486,10 +536,10 @@ ShellRoot {
                                 elide: Text.ElideRight
                             }
                             Text {
-                                text: modelData.mem || ""
+                                text: root.fmtMem(modelData.mem_mib)
                                 color: root.colGreen; font.pixelSize: 12
                                 horizontalAlignment: Text.AlignRight
-                                Layout.preferredWidth: 54
+                                Layout.preferredWidth: 70
                             }
                             Text {
                                 text: (modelData.cpu !== undefined ? modelData.cpu.toFixed(1) : "0.0") + "%"
@@ -538,7 +588,7 @@ ShellRoot {
                         Layout.fillWidth: true; spacing: 8
                         visible: (root.status.processes || []).length > 0
                         Text { Layout.fillWidth: true; text: "Processo"; color: root.colDim; font.pixelSize: 10 }
-                        Text { text: "MEM"; color: root.colDim; font.pixelSize: 10; Layout.preferredWidth: 54; horizontalAlignment: Text.AlignRight }
+                        Text { text: "MEM"; color: root.colDim; font.pixelSize: 10; Layout.preferredWidth: 70; horizontalAlignment: Text.AlignRight }
                         Text { text: "CPU"; color: root.colDim; font.pixelSize: 10; Layout.preferredWidth: 48; horizontalAlignment: Text.AlignRight }
                     }
 
@@ -558,9 +608,9 @@ ShellRoot {
                                 color: root.colText; font.pixelSize: 12; elide: Text.ElideRight
                             }
                             Text {
-                                text: (modelData.mem !== undefined ? modelData.mem.toFixed(1) : "0.0") + "%"
+                                text: root.fmtMem(modelData.mem_mib)
                                 color: root.colGreen; font.pixelSize: 12
-                                horizontalAlignment: Text.AlignRight; Layout.preferredWidth: 54
+                                horizontalAlignment: Text.AlignRight; Layout.preferredWidth: 70
                             }
                             Text {
                                 text: (modelData.cpu !== undefined ? modelData.cpu.toFixed(1) : "0.0") + "%"

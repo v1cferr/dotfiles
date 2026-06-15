@@ -277,7 +277,8 @@ ShellRoot {
                 Text {
                     color: root.colText
                     font.pixelSize: 20
-                    text: "Bem-vindo de volta, " + root.username
+                    // texto só de exibição; o login usa root.username ("v1cferr")
+                    text: "Bem-vindo de volta, Victor F. (@v1cferr)! ♥"
                 }
 
                 // campo de senha

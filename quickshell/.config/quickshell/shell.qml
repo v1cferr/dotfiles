@@ -264,4 +264,10 @@ ShellRoot {
             }
         }
     }
+
+    // OSD (toast) de volume/mic, bottom-center no DP-1. Componente em Osd.qml.
+    Osd {}
+
+    // Painel de controle de mídia (Spotify), modelo do painel de VPN. Componente em Mpris.qml.
+    Mpris {}
 }

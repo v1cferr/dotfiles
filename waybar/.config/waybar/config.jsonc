@@ -84,7 +84,8 @@
     "exec-if": "pgrep spotify",
     "return-type": "json",
     "interval": 3,
-    "on-click": "playerctl --player=spotify play-pause",
+    "on-click": "$HOME/.config/waybar/scripts/spotify-panel.sh",
+    "on-click-right": "playerctl --player=spotify play-pause",
     "on-scroll-up": "playerctl --player=spotify next",
     "on-scroll-down": "playerctl --player=spotify previous",
     "smooth-scrolling-threshold": 1

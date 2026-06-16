@@ -5,8 +5,10 @@ remotamente sem teclado/HDMI.
 
 > Status: **configurado e validado em rede (máquina ligada)** — inclusive o caminho
 > **de casa pela VPN da FAI**: magic packet confirmado chegando na `enp7s0` via tcpdump
-> (origem `192.168.50.9` da VPN → `200.136.209.255`, `length 102`, 2026-06-16). Falta
-> apenas o teste físico com a máquina **desligada**. Última atualização: 2026-06-16.
+> (origem `192.168.50.9` da VPN → `200.136.209.255`, `length 102`, 2026-06-16). E o
+> teste físico com a máquina **DESLIGADA** também **passou** (2026-06-16): o `wake-fai`
+> de casa acordou a workstation do S5 (uptime de 57s no primeiro boot pós-WoL).
+> Última atualização: 2026-06-16.
 
 ---
 

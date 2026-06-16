@@ -169,9 +169,13 @@ connect_fai_auto() {
   local log="${XDG_RUNTIME_DIR:-/tmp}/netextender-fai.log"
   local pid i
 
+  # </dev/null: sem isso, o `script` herda o terminal como stdin, põe ele em raw
+  # mode e não restaura (roda em background/setsid) — o que deixa o terminal com
+  # echo dobrado no `ssh` seguinte. Fechar o stdin evita mexer no terminal; o
+  # netExtender ainda ganha seu próprio pty pelo `script -c`.
   FAI_VPN_PASS="$pass" NX_PROFILE="$FAI_PROFILE" \
     setsid script -qec 'netExtender connect "$NX_PROFILE" -p "$FAI_VPN_PASS"' /dev/null \
-    >"$log" 2>&1 &
+    </dev/null >"$log" 2>&1 &
   pid=$!
 
   for i in $(seq 1 35); do

@@ -18,7 +18,7 @@ import QtQuick.Layouts
 Scope {
     id: root
 
-    property int barExclusiveZone: 30
+    property int barExclusiveZone: 34
     readonly property int trayCount: SystemTray.items ? SystemTray.items.values.length : 0
     readonly property string scriptsDir: Quickshell.env("HOME") + "/.config/waybar/scripts"
     readonly property string vpnBin: Quickshell.env("HOME") + "/.local/bin/vpn"
@@ -531,8 +531,8 @@ Scope {
         property alias hovered: area.containsMouse
         property bool italic: false
 
-        implicitWidth: (pill.maxWidth > 0) ? Math.min(prow.implicitWidth + 20, pill.maxWidth) : prow.implicitWidth + 20
-        implicitHeight: 22
+        implicitWidth: (pill.maxWidth > 0) ? Math.min(prow.implicitWidth + 28, pill.maxWidth) : prow.implicitWidth + 28
+        implicitHeight: 28
         radius: 8
         color: area.containsMouse ? root.colPillHoverBg : root.colPillBg
         border.color: area.containsMouse ? root.colHoverBorder : root.colPillBorder
@@ -552,15 +552,15 @@ Scope {
         RowLayout {
             id: prow
             anchors.fill: parent
-            anchors.leftMargin: 10
-            anchors.rightMargin: 10
-            spacing: 6
+            anchors.leftMargin: 14
+            anchors.rightMargin: 14
+            spacing: 8
             Text {
                 visible: pill.icon !== ""
                 text: pill.icon
                 color: pill.accent
                 font.family: root.uiFont
-                font.pixelSize: 13
+                font.pixelSize: 15
             }
             Text {
                 visible: pill.label !== ""
@@ -568,7 +568,7 @@ Scope {
                 text: pill.label
                 color: pill.accent
                 font.family: root.uiFont
-                font.pixelSize: 11
+                font.pixelSize: 12
                 font.italic: pill.italic
                 elide: Text.ElideRight
             }
@@ -593,18 +593,14 @@ Scope {
         }
     }
 
-    component Group: Rectangle {
+    component Group: Item {
         default property alias content: groupRow.data
-        radius: 12
-        color: root.colGroupBg
-        border.color: root.colGroupBorder
-        border.width: 1
-        implicitWidth: groupRow.implicitWidth + 8
-        implicitHeight: 26
+        implicitWidth: groupRow.implicitWidth
+        implicitHeight: 30
         RowLayout {
             id: groupRow
             anchors.centerIn: parent
-            spacing: 6
+            spacing: 10
         }
     }
 
@@ -615,8 +611,8 @@ Scope {
         property bool active: false
         property bool exists: false
 
-        implicitWidth: Math.max(24, wlbl.implicitWidth + 14)
-        implicitHeight: 22
+        implicitWidth: Math.max(30, wlbl.implicitWidth + 18)
+        implicitHeight: 28
         radius: 8
         color: wsbtn.active ? root.colWsActiveBg : (wsArea.containsMouse ? root.colPillHoverBg : root.colPillBg)
         border.color: wsbtn.active ? root.colWsActiveBorder : (wsArea.containsMouse ? root.colHoverBorder : root.colPillBorder)
@@ -633,7 +629,7 @@ Scope {
             text: wsbtn.active ? "󰮯" : (wsbtn.exists ? root.wsIcon(wsbtn.wsid) : "󰧵")
             color: wsbtn.active ? "#1a1b26" : root.colWsInactive
             font.family: root.uiFont
-            font.pixelSize: 13
+            font.pixelSize: 15
             font.bold: wsbtn.active
         }
         MouseArea {
@@ -807,14 +803,19 @@ Scope {
                 right: 4
                 bottom: 1
             }
-            implicitHeight: 30
+            implicitHeight: 34
             exclusiveZone: root.barExclusiveZone
             color: "transparent"
 
-            // ESQUERDA: workspaces (do monitor) + título da janela + Spotify
-            Group {
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 6
+                anchors.rightMargin: 6
+                spacing: 0
+
+                // ESQUERDA: workspaces (do monitor) + título da janela + Spotify
+                Group {
+                    Layout.alignment: Qt.AlignVCenter
                 Repeater {
                     model: (bar.modelData && bar.modelData.name === "HDMI-A-1") ? [5, 6, 7, 8] : [1, 2, 3, 4]
                     WsBtn {
@@ -843,9 +844,13 @@ Scope {
                 }
             }
 
-            // CENTRO: weather + relógio + notificações
-            Group {
-                anchors.centerIn: parent
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                // CENTRO: weather + relógio + notificações
+                Group {
+                    Layout.alignment: Qt.AlignVCenter
                 Pill {
                     visible: root.wHas
                     icon: root.weatherIcon(root.wText, root.isDayNow())
@@ -867,10 +872,13 @@ Scope {
                 }
             }
 
-            // DIREITA (ordem da Waybar): cpu, cpu-temp, gpu-uso, gpu-temp, ram, disco, vpn, rede, áudio, hypridle
-            Group {
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                // DIREITA (ordem da Waybar): cpu, cpu-temp, gpu-uso, gpu-temp, ram, disco, vpn, rede, áudio, hypridle
+                Group {
+                    Layout.alignment: Qt.AlignVCenter
                 Pill {
                     icon: "󰻠"
                     label: root.cpuPct + "%"
@@ -935,8 +943,8 @@ Scope {
                     model: SystemTray.items
                     Item {
                         id: trayDel
-                        implicitWidth: 22
-                        implicitHeight: 22
+                        implicitWidth: 28
+                        implicitHeight: 28
                         // Alguns SNI (ex.: Dropbox) publicam o ícone como
                         // image://icon/<nome>?path=<dir> num tema hicolor que o
                         // provedor do Quickshell não resolve. Busco o arquivo
@@ -968,10 +976,10 @@ Scope {
                             anchors.centerIn: parent
                             // path-icons: só mostra após resolver pro file:// (evita o load quebrado)
                             source: trayDel.isPathIcon ? trayDel.resolvedIcon : trayDel.rawIcon
-                            sourceSize.width: 16
-                            sourceSize.height: 16
-                            width: 16
-                            height: 16
+                            sourceSize.width: 18
+                            sourceSize.height: 18
+                            width: 18
+                            height: 18
                             opacity: modelData.status === 0 ? 0.55 : 1
                         }
                         MouseArea {
@@ -992,6 +1000,7 @@ Scope {
                         }
                     }
                 }
+            }
             }
         }
     }

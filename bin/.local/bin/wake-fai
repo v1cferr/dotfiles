@@ -12,7 +12,7 @@ set -u
 WS_USER="${WS_USER:-v1cferr}"
 WS_IP="${WS_IP:-200.136.209.229}"     # superintendencia-server
 WS_PORT="${WS_PORT:-22}"
-BOOT_WAIT="${BOOT_WAIT:-120}"         # seg máx esperando a máquina subir
+BOOT_WAIT="${BOOT_WAIT:-150}"         # seg máx esperando a máquina subir (cold boot)
 WOL="${WOL:-$HOME/dotfiles/netextender/wake-on-lan/send-wol.sh}"
 KEEP_VPN=0
 
@@ -36,6 +36,15 @@ ws_up()  { timeout 3 bash -c "exec 3<>/dev/tcp/${WS_IP}/${WS_PORT}" 2>/dev/null;
 
 # 1) VPN da FAI -------------------------------------------------------------
 connected_now=0
+# Trava: subir a VPN full-tunnel dentro de uma sessão SSH pode derrubar a
+# própria sessão (sem route-pin). Em casa, no console, $SSH_CONNECTION é vazio.
+if [ -n "${SSH_CONNECTION:-}" ] && ! vpn_up; then
+  echo "⚠️  Você está numa sessão SSH. wake-fai sobe a VPN da FAI full-tunnel SEM"
+  echo "    route-pin — isso pode DERRUBAR esta sessão e te trancar fora."
+  echo "    Remoto seguro: sudo bash ~/dotfiles/scripts/fai-ufscar-vpn-remote.sh"
+  printf "    Continuar mesmo assim? [y/N] "
+  read -r ans; case "$ans" in [Yy]*) ;; *) echo "abortado."; exit 1 ;; esac
+fi
 if vpn_up; then
   echo "✓ VPN da FAI já conectada."
 else

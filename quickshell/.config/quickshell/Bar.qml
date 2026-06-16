@@ -213,6 +213,100 @@ Scope {
         }
     }
 
+    // ===== Weather (MSN / Foreca, endpoint legado XML) =====
+    property string wTemp: ""
+    property string wText: ""
+    property string wFeels: ""
+    property string wHumidity: ""
+    property string wWind: ""
+    property var wForecast: []
+    readonly property bool wHas: root.wTemp !== ""
+    function wattr(s, name) {
+        const m = s.match(new RegExp('(?:^|\\s)' + name + '="([^"]*)"'));
+        return m ? m[1] : "";
+    }
+    function weatherIcon(text, isDay) {
+        const c = (text || "").toLowerCase();
+        if (/ensolarad|limpo|\bsol\b|claro/.test(c))
+            return isDay ? "󰖙" : "󰖔";
+        if (/parcial|poucas nuvens/.test(c))
+            return isDay ? "󰖕" : "󰼶";
+        if (/nublad|encobert|nuvens|nuvem/.test(c))
+            return "󰖐";
+        if (/neblina|névoa|nevoeiro|bruma/.test(c))
+            return "󰖑";
+        if (/trovoad|tempestade|raio|relâmpag/.test(c))
+            return "󰖓";
+        if (/chuv|garoa|chuvisco|pancada|aguaceiro/.test(c))
+            return "󰖗";
+        if (/neve|gelo|granizo/.test(c))
+            return "󰖘";
+        return "󰖐";
+    }
+    function isDayNow() {
+        const h = sysClock.date.getHours();
+        return h >= 6 && h < 18;
+    }
+    function parseWeather(xml) {
+        const cur = xml.match(/<current\b([^>]*)\/>/);
+        if (cur) {
+            const a = cur[1];
+            root.wTemp = root.wattr(a, "temperature");
+            root.wText = root.wattr(a, "skytext");
+            root.wFeels = root.wattr(a, "feelslike");
+            root.wHumidity = root.wattr(a, "humidity");
+            root.wWind = root.wattr(a, "winddisplay");
+        }
+        const fc = [];
+        const re = /<forecast\b([^>]*)\/>/g;
+        let m;
+        while ((m = re.exec(xml)) !== null) {
+            const a = m[1];
+            fc.push({
+                day: root.wattr(a, "shortday"),
+                low: root.wattr(a, "low"),
+                high: root.wattr(a, "high"),
+                text: root.wattr(a, "skytextday"),
+                precip: root.wattr(a, "precip")
+            });
+        }
+        root.wForecast = fc;
+    }
+    Process {
+        id: weatherProc
+        command: ["curl", "-sS", "-m", "10", "-A", "Mozilla/5.0", "https://weather.service.msn.com/find.aspx?src=msn&weadegreetype=C&culture=pt-BR&weasearchstr=-21.9977,-47.8827"]
+        stdout: StdioCollector {
+            onStreamFinished: root.parseWeather(text)
+        }
+    }
+    Timer {
+        interval: 900000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: weatherProc.running = true
+    }
+    // hover do popover de weather
+    property bool wPillHovered: false
+    property bool wPopHovered: false
+    property bool wPopVisible: false
+    onWPillHoveredChanged: root.updateWeatherPop()
+    onWPopHoveredChanged: root.updateWeatherPop()
+    function updateWeatherPop() {
+        if (root.wPillHovered || root.wPopHovered) {
+            wPopCloseTimer.stop();
+            root.wPopVisible = true;
+        } else {
+            wPopCloseTimer.restart();
+        }
+    }
+    Timer {
+        id: wPopCloseTimer
+        interval: 300
+        onTriggered: if (!root.wPillHovered && !root.wPopHovered)
+            root.wPopVisible = false
+    }
+
     // ===== Áudio (Pipewire) =====
     PwObjectTracker {
         objects: Pipewire.defaultAudioSink ? [Pipewire.defaultAudioSink] : []
@@ -349,6 +443,7 @@ Scope {
         signal rightClicked
         signal scrolledUp
         signal scrolledDown
+        property alias hovered: area.containsMouse
 
         implicitWidth: (pill.maxWidth > 0) ? Math.min(prow.implicitWidth + 20, pill.maxWidth) : prow.implicitWidth + 20
         implicitHeight: 22
@@ -426,6 +521,149 @@ Scope {
         }
     }
 
+    // ===== Popover de weather (hover) — DP-1, previsão de 5 dias =====
+    PanelWindow {
+        id: wPop
+        visible: root.wPopVisible && root.wHas
+        screen: {
+            const screens = Quickshell.screens;
+            for (let i = 0; i < screens.length; i++)
+                if (screens[i].name === "DP-1")
+                    return screens[i];
+            return null;
+        }
+        anchors {
+            top: true
+        }
+        margins {
+            top: 36
+        }
+        exclusiveZone: 0
+        implicitWidth: 440
+        implicitHeight: 158
+        color: "transparent"
+
+        Rectangle {
+            anchors.fill: parent
+            radius: 12
+            color: "#f21a1b26"
+            border.color: "#414868"
+            border.width: 1
+
+            HoverHandler {
+                id: wPopHover
+                onHoveredChanged: root.wPopHovered = hovered
+            }
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 14
+                spacing: 10
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 12
+                    Text {
+                        text: root.weatherIcon(root.wText, root.isDayNow())
+                        color: root.colSapphire
+                        font.family: root.uiFont
+                        font.pixelSize: 34
+                    }
+                    ColumnLayout {
+                        spacing: 0
+                        Text {
+                            text: root.wTemp + "°C"
+                            color: root.colText
+                            font.family: root.uiFont
+                            font.pixelSize: 22
+                            font.bold: true
+                        }
+                        Text {
+                            text: root.wText
+                            color: root.colSapphire
+                            font.family: root.uiFont
+                            font.pixelSize: 12
+                        }
+                    }
+                    Item {
+                        Layout.fillWidth: true
+                    }
+                    ColumnLayout {
+                        spacing: 1
+                        Text {
+                            text: "Sensação " + root.wFeels + "°"
+                            color: root.colDim
+                            font.family: root.uiFont
+                            font.pixelSize: 10
+                        }
+                        Text {
+                            text: "Umidade " + root.wHumidity + "%"
+                            color: root.colDim
+                            font.family: root.uiFont
+                            font.pixelSize: 10
+                        }
+                        Text {
+                            text: root.wWind
+                            color: root.colDim
+                            font.family: root.uiFont
+                            font.pixelSize: 10
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 1
+                    color: "#414868"
+                    opacity: 0.5
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+                    Repeater {
+                        model: root.wForecast
+                        ColumnLayout {
+                            required property var modelData
+                            Layout.fillWidth: true
+                            spacing: 2
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: modelData.day
+                                color: root.colText
+                                font.family: root.uiFont
+                                font.pixelSize: 11
+                                font.bold: true
+                            }
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: root.weatherIcon(modelData.text, true)
+                                color: root.colSapphire
+                                font.family: root.uiFont
+                                font.pixelSize: 18
+                            }
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: modelData.high + "° / " + modelData.low + "°"
+                                color: root.colText
+                                font.family: root.uiFont
+                                font.pixelSize: 10
+                            }
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                visible: modelData.precip !== ""
+                                text: "󰖎 " + modelData.precip + "%"
+                                color: root.colBlue
+                                font.family: root.uiFont
+                                font.pixelSize: 9
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // ===== Barra por monitor =====
     Variants {
         model: Quickshell.screens
@@ -472,9 +710,17 @@ Scope {
                 }
             }
 
-            // CENTRO: relógio + notificações (weather vem na Fase 3b, antes do relógio)
+            // CENTRO: weather + relógio + notificações
             Group {
                 anchors.centerIn: parent
+                Pill {
+                    visible: root.wHas
+                    icon: root.weatherIcon(root.wText, root.isDayNow())
+                    label: root.wTemp + "°C"
+                    accent: root.colSapphire
+                    onHoveredChanged: root.wPillHovered = hovered
+                    onClicked: root.launch(["xdg-open", "https://www.msn.com/pt-br/clima/forecast/in-S%C3%A3o-Carlos,S%C3%A3o-Paulo"])
+                }
                 Pill {
                     label: root.timeStr
                     accent: root.colMauve

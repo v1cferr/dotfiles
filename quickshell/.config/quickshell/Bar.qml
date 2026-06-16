@@ -4,12 +4,14 @@
 // FASE 3a: cpu-temp + gpu-uso/temp (nvidia-smi) + vpn + hypridle + swaync.
 // FASE 3b: weather (MSN/Foreca XML) + popover de previsão 5 dias.
 // FASE 4: workspaces (hyprctl + eventos, por monitor) + título da janela.
-// Falta: system tray (fase 5); depois ligar no shell.qml e aposentar a Waybar.
+// FASE 5: system tray (StatusNotifier; popula quando o qs é o watcher).
+// Falta: ligar no shell.qml e aposentar a Waybar (fase 6).
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 import Quickshell.Services.Mpris
+import Quickshell.Services.SystemTray
 import QtQuick
 import QtQuick.Layouts
 
@@ -17,6 +19,7 @@ Scope {
     id: root
 
     property int barExclusiveZone: 30
+    readonly property int trayCount: SystemTray.items ? SystemTray.items.values.length : 0
     readonly property string scriptsDir: Quickshell.env("HOME") + "/.config/waybar/scripts"
     readonly property string vpnBin: Quickshell.env("HOME") + "/.local/bin/vpn"
 
@@ -924,6 +927,41 @@ Scope {
                     icon: root.hypridleIcon
                     accent: root.hypridleOn ? root.colGreen : root.colRed
                     onClicked: root.launch(["bash", root.scriptsDir + "/toggle-hypridle.sh", "toggle"])
+                }
+                // System tray (StatusNotifier). Popula quando o qs é o watcher
+                // (i.e. com a Waybar fora — Fase 6 / login). Esquerda=activate,
+                // meio=secondaryActivate, scroll, direita=menu nativo.
+                Repeater {
+                    model: SystemTray.items
+                    Item {
+                        implicitWidth: 22
+                        implicitHeight: 22
+                        Image {
+                            anchors.centerIn: parent
+                            source: modelData.icon
+                            sourceSize.width: 16
+                            sourceSize.height: 16
+                            width: 16
+                            height: 16
+                            opacity: modelData.status === 0 ? 0.55 : 1
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+                            onClicked: m => {
+                                if (m.button === Qt.LeftButton)
+                                    modelData.activate();
+                                else if (m.button === Qt.MiddleButton)
+                                    modelData.secondaryActivate();
+                                else if (modelData.hasMenu) {
+                                    const p = parent.mapToItem(null, parent.width / 2, parent.height);
+                                    modelData.display(bar, p.x, p.y);
+                                }
+                            }
+                            onWheel: w => modelData.scroll(w.angleDelta.y, false)
+                        }
+                    }
                 }
             }
         }

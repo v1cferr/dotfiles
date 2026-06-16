@@ -934,11 +934,40 @@ Scope {
                 Repeater {
                     model: SystemTray.items
                     Item {
+                        id: trayDel
                         implicitWidth: 22
                         implicitHeight: 22
+                        // Alguns SNI (ex.: Dropbox) publicam o ícone como
+                        // image://icon/<nome>?path=<dir> num tema hicolor que o
+                        // provedor do Quickshell não resolve. Busco o arquivo
+                        // real no <dir> e aponto pra file://.
+                        readonly property string rawIcon: "" + modelData.icon
+                        readonly property bool isPathIcon: /^image:\/\/icon\/[^?]+\?path=/.test(trayDel.rawIcon)
+                        property string resolvedIcon: ""
+                        function resolveTrayIcon() {
+                            trayDel.resolvedIcon = "";
+                            const m = trayDel.rawIcon.match(/^image:\/\/icon\/([^?]+)\?path=(.+)$/);
+                            if (m) {
+                                iconFinder.command = ["find", m[2], "-name", m[1] + ".png", "-print", "-quit"];
+                                iconFinder.running = true;
+                            }
+                        }
+                        onRawIconChanged: trayDel.resolveTrayIcon()
+                        Component.onCompleted: trayDel.resolveTrayIcon()
+                        Process {
+                            id: iconFinder
+                            stdout: StdioCollector {
+                                onStreamFinished: {
+                                    const p = text.trim();
+                                    if (p)
+                                        trayDel.resolvedIcon = "file://" + p;
+                                }
+                            }
+                        }
                         Image {
                             anchors.centerIn: parent
-                            source: modelData.icon
+                            // path-icons: só mostra após resolver pro file:// (evita o load quebrado)
+                            source: trayDel.isPathIcon ? trayDel.resolvedIcon : trayDel.rawIcon
                             sourceSize.width: 16
                             sourceSize.height: 16
                             width: 16

@@ -191,6 +191,15 @@ connect_fai_auto() {
   return 1
 }
 
+# Split-tunnel: depois de conectar, derruba SÓ a rota default do túnel pra
+# internet local continuar funcionando. Os subnets da FAI (200.136.209.128/25
+# etc.) têm rota própria e seguem pelo túnel. Sem senha graças ao
+# /etc/sudoers.d/fai-split-tunnel; validado que o netExtender não re-adiciona.
+fai_split_tunnel() {
+  sudo -n /usr/bin/ip route del default dev snwl_ssltunnel 2>/dev/null \
+    && notify "FAI: split-tunnel ativo (internet local preservada)" || true
+}
+
 connect_fai() {
   local script_path="$DOTFILES_ROOT/scripts/fai-ufscar-vpn.sh"
 
@@ -211,6 +220,7 @@ connect_fai() {
   if pass="$(fai_password)"; then
     notify "Conectando: $FAI_PROFILE..."
     if connect_fai_auto "$pass"; then
+      fai_split_tunnel
       notify "Conectada: $FAI_PROFILE"
       refresh_waybar
       return

@@ -18,8 +18,23 @@ PKG="${DOTFILES_DIR}/netextender"
 
 while IFS= read -r -d '' src; do
     dest="/etc/${src#"${PKG}/etc/"}"
-    install -Dm0644 "${src}" "${dest}"
-    echo "[deploy] ${dest}"
+    case "${dest}" in
+        /etc/sudoers.d/*)
+            # sudoers exige 0440 e sintaxe válida — instala num temp, valida, move
+            install -Dm0440 "${src}" "${dest}.tmp"
+            if visudo -cf "${dest}.tmp" >/dev/null; then
+                mv -f "${dest}.tmp" "${dest}"
+                echo "[deploy] ${dest} (0440, validado)"
+            else
+                rm -f "${dest}.tmp"
+                echo "ERRO: sudoers inválido, não instalei: ${dest}" >&2; exit 1
+            fi
+            ;;
+        *)
+            install -Dm0644 "${src}" "${dest}"
+            echo "[deploy] ${dest}"
+            ;;
+    esac
 done < <(find "${PKG}/etc" -type f -print0)
 
 echo "[deploy] perfil instalado. Confirme que o seu NetExtender lê de /etc/SonicWall/."

@@ -1,8 +1,8 @@
 // Barra Quickshell (substituta da Waybar).
-// FASE 1: shell por-monitor + relógio + cpu/ram/disco.
+// FASE 1: shell + relógio + cpu/ram/disco.
 // FASE 2: áudio (Pipewire) + Spotify (Mpris) + rede (nmcli).
-// Faltam: cpu-temp, gpu-temp/uso, weather(MSN), vpn, hypridle, swaync,
-//         workspaces, título da janela, tray.
+// FASE 3a: cpu-temp + gpu-uso/temp (nvidia-smi) + vpn + hypridle + swaync.
+// Faltam: weather(MSN, fase 3b), workspaces + título (fase 4), tray (fase 5).
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Pipewire
@@ -14,8 +14,10 @@ Scope {
     id: root
 
     property int barExclusiveZone: 30
+    readonly property string scriptsDir: Quickshell.env("HOME") + "/.config/waybar/scripts"
+    readonly property string vpnBin: Quickshell.env("HOME") + "/.local/bin/vpn"
 
-    // ===== Paleta (Tokyo Night + Catppuccin, fiel ao style.css) =====
+    // ===== Paleta =====
     readonly property color colGroupBg: "#591a1b26"
     readonly property color colGroupBorder: "#2e414868"
     readonly property color colPillBg: "#db1a1b26"
@@ -123,29 +125,95 @@ Scope {
             onStreamFinished: root.diskPct = parseInt(text.trim()) || 0
         }
     }
-    Timer {
-        interval: 2000
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: cpuProc.running = true
+
+    // ===== Temperaturas / GPU (scripts + nvidia-smi) =====
+    property string cpuTemp: "—"
+    property int gpuUsage: 0
+    property string gpuTemp: "—"
+    Process {
+        id: cpuTempProc
+        command: ["bash", root.scriptsDir + "/cpu-temp.sh"]
+        stdout: StdioCollector {
+            onStreamFinished: root.cpuTemp = text.trim() || "—"
+        }
     }
-    Timer {
-        interval: 5000
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: memProc.running = true
+    function parseGpu(text) {
+        const m = text.trim().split(",");
+        if (m.length >= 2) {
+            root.gpuUsage = parseInt(m[0]) || 0;
+            root.gpuTemp = (parseInt(m[1]) || 0) + "°C";
+        }
     }
-    Timer {
-        interval: 30000
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: diskProc.running = true
+    Process {
+        id: gpuProc
+        command: ["sh", "-c", "nvidia-smi --query-gpu=utilization.gpu,temperature.gpu --format=csv,noheader,nounits 2>/dev/null"]
+        stdout: StdioCollector {
+            onStreamFinished: root.parseGpu(text)
+        }
     }
 
-    // ===== Áudio (Pipewire nativo) =====
+    // ===== VPN (vpn status-json) =====
+    property bool vpnConnected: false
+    property string vpnName: ""
+    function parseVpn(text) {
+        try {
+            const j = JSON.parse(text);
+            let c = false, n = "";
+            (j.vpns || []).forEach(v => {
+                if (v.connected) {
+                    c = true;
+                    n = v.name;
+                }
+            });
+            root.vpnConnected = c;
+            root.vpnName = n;
+        } catch (e) {}
+    }
+    Process {
+        id: vpnProc
+        command: [root.vpnBin, "status-json"]
+        stdout: StdioCollector {
+            onStreamFinished: root.parseVpn(text)
+        }
+    }
+
+    // ===== Hypridle (toggle-hypridle.sh) =====
+    property string hypridleIcon: "󰒲"
+    property bool hypridleOn: false
+    function parseHypridle(text) {
+        try {
+            const j = JSON.parse(text);
+            root.hypridleIcon = j.text || "󰒲";
+            root.hypridleOn = (j.class === "enabled");
+        } catch (e) {}
+    }
+    Process {
+        id: hypridleProc
+        command: ["bash", root.scriptsDir + "/toggle-hypridle.sh"]
+        stdout: StdioCollector {
+            onStreamFinished: root.parseHypridle(text)
+        }
+    }
+
+    // ===== Notificações (swaync — stream) =====
+    property string swayncIcon: "󰂜"
+    function parseSwaync(line) {
+        try {
+            const j = JSON.parse(line);
+            const a = j.alt || "";
+            root.swayncIcon = a.indexOf("dnd") >= 0 ? (a.indexOf("notification") >= 0 ? "󰂛" : "󰪑") : (a.indexOf("notification") >= 0 ? "󰂚" : "󰂜");
+        } catch (e) {}
+    }
+    Process {
+        id: swayncProc
+        running: true
+        command: ["swaync-client", "-swb"]
+        stdout: SplitParser {
+            onRead: line => root.parseSwaync(line)
+        }
+    }
+
+    // ===== Áudio (Pipewire) =====
     PwObjectTracker {
         objects: Pipewire.defaultAudioSink ? [Pipewire.defaultAudioSink] : []
     }
@@ -170,7 +238,7 @@ Scope {
             root.sink.audio.muted = !root.sink.audio.muted;
     }
 
-    // ===== Spotify (Mpris nativo) =====
+    // ===== Spotify (Mpris) =====
     readonly property var player: {
         const m = Mpris.players;
         const list = (m && m.values) ? m.values : [];
@@ -196,7 +264,7 @@ Scope {
     readonly property string spText: root.spHasPlayer ? (root.spArtist ? root.spArtist + " - " + root.spTitle : root.spTitle) : ""
     readonly property color spColor: root.spPlaying ? root.colGreen : (root.spHasPlayer ? root.colYellow : root.colDim)
 
-    // ===== Rede (nmcli — ethernet nesta máquina) =====
+    // ===== Rede (nmcli) =====
     property bool netConnected: false
     property bool netEthernet: false
     function parseNet(text) {
@@ -223,12 +291,51 @@ Scope {
             onStreamFinished: root.parseNet(text)
         }
     }
+
+    // ===== Timers de polling =====
+    Timer {
+        interval: 2000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            cpuProc.running = true;
+            hypridleProc.running = true;
+        }
+    }
+    Timer {
+        interval: 3000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            cpuTempProc.running = true;
+            gpuProc.running = true;
+        }
+    }
+    Timer {
+        interval: 5000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            memProc.running = true;
+            vpnProc.running = true;
+        }
+    }
     Timer {
         interval: 10000
         running: true
         repeat: true
         triggeredOnStart: true
         onTriggered: netProc.running = true
+    }
+    Timer {
+        interval: 30000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: diskProc.running = true
     }
 
     // ===== Pílula reutilizável =====
@@ -237,7 +344,7 @@ Scope {
         property string icon: ""
         property string label: ""
         property color accent: root.colText
-        property int maxWidth: 0 // 0 = largura natural; >0 = limita e elide
+        property int maxWidth: 0
         signal clicked
         signal rightClicked
         signal scrolledUp
@@ -365,7 +472,7 @@ Scope {
                 }
             }
 
-            // CENTRO: relógio
+            // CENTRO: relógio + notificações (weather vem na Fase 3b, antes do relógio)
             Group {
                 anchors.centerIn: parent
                 Pill {
@@ -373,9 +480,15 @@ Scope {
                     accent: root.colMauve
                     onClicked: root.showDate = !root.showDate
                 }
+                Pill {
+                    icon: root.swayncIcon
+                    accent: root.colPeach
+                    onClicked: root.launch(["swaync-client", "-t", "-sw"])
+                    onRightClicked: root.launch(["swaync-client", "-d", "-sw"])
+                }
             }
 
-            // DIREITA: cpu / ram / disco / rede / áudio
+            // DIREITA (ordem da Waybar): cpu, cpu-temp, gpu-uso, gpu-temp, ram, disco, vpn, rede, áudio, hypridle
             Group {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
@@ -383,6 +496,21 @@ Scope {
                     icon: "󰻠"
                     label: root.cpuPct + "%"
                     accent: root.stateColor(root.cpuPct, root.colYellow)
+                }
+                Pill {
+                    icon: "󰔏"
+                    label: root.cpuTemp
+                    accent: root.colPeach
+                }
+                Pill {
+                    icon: "󰾲"
+                    label: root.gpuUsage + "%"
+                    accent: root.colMauve
+                }
+                Pill {
+                    icon: "󰢮"
+                    label: root.gpuTemp
+                    accent: root.colLavender
                 }
                 Pill {
                     icon: "󰍛"
@@ -393,6 +521,14 @@ Scope {
                     icon: "󰋊"
                     label: root.diskPct + "%"
                     accent: root.stateColor(root.diskPct, root.colTeal)
+                }
+                Pill {
+                    icon: "󰦝"
+                    label: root.vpnConnected ? root.vpnName : ""
+                    accent: root.vpnConnected ? root.colGreen : root.colDim
+                    maxWidth: 150
+                    onClicked: root.launch(["qs", "ipc", "call", "vpn", "toggle"])
+                    onRightClicked: root.launch([root.vpnBin, "menu"])
                 }
                 Pill {
                     icon: root.netConnected ? (root.netEthernet ? "󰈀" : "󰤨") : "󰤯"
@@ -407,6 +543,11 @@ Scope {
                     onRightClicked: root.launch(["pavucontrol"])
                     onScrolledUp: root.setVol(0.05)
                     onScrolledDown: root.setVol(-0.05)
+                }
+                Pill {
+                    icon: root.hypridleIcon
+                    accent: root.hypridleOn ? root.colGreen : root.colRed
+                    onClicked: root.launch(["bash", root.scriptsDir + "/toggle-hypridle.sh", "toggle"])
                 }
             }
         }

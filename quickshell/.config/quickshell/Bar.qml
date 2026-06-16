@@ -18,7 +18,7 @@ import QtQuick.Layouts
 Scope {
     id: root
 
-    property int barExclusiveZone: 34
+    property int barExclusiveZone: 30
     readonly property int trayCount: SystemTray.items ? SystemTray.items.values.length : 0
     readonly property string scriptsDir: Quickshell.env("HOME") + "/.config/waybar/scripts"
     readonly property string vpnBin: Quickshell.env("HOME") + "/.local/bin/vpn"
@@ -531,8 +531,8 @@ Scope {
         property alias hovered: area.containsMouse
         property bool italic: false
 
-        implicitWidth: (pill.maxWidth > 0) ? Math.min(prow.implicitWidth + 28, pill.maxWidth) : prow.implicitWidth + 28
-        implicitHeight: 28
+        implicitWidth: (pill.maxWidth > 0) ? Math.min(prow.implicitWidth + 22, pill.maxWidth) : prow.implicitWidth + 22
+        implicitHeight: 22
         radius: 8
         color: area.containsMouse ? root.colPillHoverBg : root.colPillBg
         border.color: area.containsMouse ? root.colHoverBorder : root.colPillBorder
@@ -552,15 +552,15 @@ Scope {
         RowLayout {
             id: prow
             anchors.fill: parent
-            anchors.leftMargin: 14
-            anchors.rightMargin: 14
-            spacing: 8
+            anchors.leftMargin: 11
+            anchors.rightMargin: 11
+            spacing: 5
             Text {
                 visible: pill.icon !== ""
                 text: pill.icon
                 color: pill.accent
                 font.family: root.uiFont
-                font.pixelSize: 15
+                font.pixelSize: 13
             }
             Text {
                 visible: pill.label !== ""
@@ -568,7 +568,7 @@ Scope {
                 text: pill.label
                 color: pill.accent
                 font.family: root.uiFont
-                font.pixelSize: 12
+                font.pixelSize: 11
                 font.italic: pill.italic
                 elide: Text.ElideRight
             }
@@ -596,11 +596,11 @@ Scope {
     component Group: Item {
         default property alias content: groupRow.data
         implicitWidth: groupRow.implicitWidth
-        implicitHeight: 30
+        implicitHeight: 26
         RowLayout {
             id: groupRow
             anchors.centerIn: parent
-            spacing: 10
+            spacing: 4
         }
     }
 
@@ -611,8 +611,8 @@ Scope {
         property bool active: false
         property bool exists: false
 
-        implicitWidth: Math.max(30, wlbl.implicitWidth + 18)
-        implicitHeight: 28
+        implicitWidth: Math.max(24, wlbl.implicitWidth + 14)
+        implicitHeight: 22
         radius: 8
         color: wsbtn.active ? root.colWsActiveBg : (wsArea.containsMouse ? root.colPillHoverBg : root.colPillBg)
         border.color: wsbtn.active ? root.colWsActiveBorder : (wsArea.containsMouse ? root.colHoverBorder : root.colPillBorder)
@@ -629,7 +629,7 @@ Scope {
             text: wsbtn.active ? "󰮯" : (wsbtn.exists ? root.wsIcon(wsbtn.wsid) : "󰧵")
             color: wsbtn.active ? "#1a1b26" : root.colWsInactive
             font.family: root.uiFont
-            font.pixelSize: 15
+            font.pixelSize: 13
             font.bold: wsbtn.active
         }
         MouseArea {
@@ -803,19 +803,14 @@ Scope {
                 right: 4
                 bottom: 1
             }
-            implicitHeight: 34
+            implicitHeight: 30
             exclusiveZone: root.barExclusiveZone
             color: "transparent"
 
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: 6
-                anchors.rightMargin: 6
-                spacing: 0
-
-                // ESQUERDA: workspaces (do monitor) + título da janela + Spotify
-                Group {
-                    Layout.alignment: Qt.AlignVCenter
+            // ESQUERDA: workspaces (do monitor) + título da janela + Spotify
+            Group {
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
                 Repeater {
                     model: (bar.modelData && bar.modelData.name === "HDMI-A-1") ? [5, 6, 7, 8] : [1, 2, 3, 4]
                     WsBtn {
@@ -844,13 +839,9 @@ Scope {
                 }
             }
 
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                // CENTRO: weather + relógio + notificações
-                Group {
-                    Layout.alignment: Qt.AlignVCenter
+            // CENTRO: weather + relógio + notificações (sempre no centro da tela)
+            Group {
+                anchors.centerIn: parent
                 Pill {
                     visible: root.wHas
                     icon: root.weatherIcon(root.wText, root.isDayNow())
@@ -872,13 +863,10 @@ Scope {
                 }
             }
 
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                // DIREITA (ordem da Waybar): cpu, cpu-temp, gpu-uso, gpu-temp, ram, disco, vpn, rede, áudio, hypridle
-                Group {
-                    Layout.alignment: Qt.AlignVCenter
+            // DIREITA (ordem da Waybar): cpu, cpu-temp, gpu-uso, gpu-temp, ram, disco, vpn, rede, áudio, hypridle
+            Group {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
                 Pill {
                     icon: "󰻠"
                     label: root.cpuPct + "%"
@@ -943,8 +931,8 @@ Scope {
                     model: SystemTray.items
                     Item {
                         id: trayDel
-                        implicitWidth: 28
-                        implicitHeight: 28
+                        implicitWidth: 24
+                        implicitHeight: 24
                         // Alguns SNI (ex.: Dropbox) publicam o ícone como
                         // image://icon/<nome>?path=<dir> num tema hicolor que o
                         // provedor do Quickshell não resolve. Busco o arquivo
@@ -976,10 +964,10 @@ Scope {
                             anchors.centerIn: parent
                             // path-icons: só mostra após resolver pro file:// (evita o load quebrado)
                             source: trayDel.isPathIcon ? trayDel.resolvedIcon : trayDel.rawIcon
-                            sourceSize.width: 18
-                            sourceSize.height: 18
-                            width: 18
-                            height: 18
+                            sourceSize.width: 16
+                            sourceSize.height: 16
+                            width: 16
+                            height: 16
                             opacity: modelData.status === 0 ? 0.55 : 1
                         }
                         MouseArea {
@@ -1000,7 +988,6 @@ Scope {
                         }
                     }
                 }
-            }
             }
         }
     }

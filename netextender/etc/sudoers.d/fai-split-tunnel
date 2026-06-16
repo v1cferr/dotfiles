@@ -1,0 +1,5 @@
+# Split-tunnel da VPN da FAI: deixa o wrapper `vpn` derrubar SÓ a rota default
+# do túnel sem pedir senha (internet local volta; os subnets da FAI têm rota
+# própria e seguem pelo túnel). Comando fixo, sem args variáveis = seguro.
+# Instalado em /etc/sudoers.d/ (0440) pelo scripts/netextender/deploy.sh.
+v1cferr ALL=(root) NOPASSWD: /usr/bin/ip route del default dev snwl_ssltunnel

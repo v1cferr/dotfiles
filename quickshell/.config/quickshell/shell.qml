@@ -270,4 +270,7 @@ ShellRoot {
 
     // Painel de controle de mídia (Spotify), modelo do painel de VPN. Componente em Mpris.qml.
     Mpris {}
+
+    // Barra principal — substitui a Waybar. Componente em Bar.qml.
+    Bar {}
 }

@@ -138,22 +138,61 @@ Scope {
         }
     }
 
-    // ===== Temperaturas / GPU (scripts + nvidia-smi) =====
-    property string cpuTemp: "—"
+    // ===== Temperaturas (sensors -j) + GPU uso/temp (nvidia-smi) =====
+    property real cpuTempC: 0
+    property real moboTempC: 0
+    property var nvmeTempsC: []
     property int gpuUsage: 0
-    property string gpuTemp: "—"
+    property real gpuTempC: 0
+    function parseSensors(text) {
+        try {
+            const d = JSON.parse(text);
+            const nvmes = [];
+            for (const chip in d) {
+                const s = d[chip];
+                if (typeof s !== "object")
+                    continue;
+                let pick = null, key = "";
+                if (chip.indexOf("coretemp") === 0) {
+                    pick = s["Package id 0"];
+                    key = "cpu";
+                } else if (chip.indexOf("nct") === 0) {
+                    pick = s["SYSTIN"];
+                    key = "mobo";
+                } else if (chip.indexOf("nvme") === 0) {
+                    pick = s["Composite"];
+                    key = "nvme";
+                }
+                if (!pick || typeof pick !== "object")
+                    continue;
+                let val = 0;
+                for (const k in pick)
+                    if (k.indexOf("_input") >= 0) {
+                        val = pick[k];
+                        break;
+                    }
+                if (key === "cpu")
+                    root.cpuTempC = val;
+                else if (key === "mobo")
+                    root.moboTempC = val;
+                else if (key === "nvme")
+                    nvmes.push(val);
+            }
+            root.nvmeTempsC = nvmes;
+        } catch (e) {}
+    }
     Process {
-        id: cpuTempProc
-        command: ["bash", root.scriptsDir + "/cpu-temp.sh"]
+        id: sensorsProc
+        command: ["sh", "-c", "sensors -j 2>/dev/null"]
         stdout: StdioCollector {
-            onStreamFinished: root.cpuTemp = text.trim() || "—"
+            onStreamFinished: root.parseSensors(text)
         }
     }
     function parseGpu(text) {
         const m = text.trim().split(",");
         if (m.length >= 2) {
             root.gpuUsage = parseInt(m[0]) || 0;
-            root.gpuTemp = (parseInt(m[1]) || 0) + "°C";
+            root.gpuTempC = parseInt(m[1]) || 0;
         }
     }
     Process {
@@ -163,6 +202,61 @@ Scope {
             onStreamFinished: root.parseGpu(text)
         }
     }
+    // Lista curada de temperaturas + a mais quente (headline)
+    readonly property var tempList: {
+        const arr = [];
+        if (root.cpuTempC > 0)
+            arr.push({
+                name: "CPU",
+                temp: Math.round(root.cpuTempC)
+            });
+        if (root.gpuTempC > 0)
+            arr.push({
+                name: "GPU",
+                temp: Math.round(root.gpuTempC)
+            });
+        if (root.moboTempC > 0)
+            arr.push({
+                name: "Placa",
+                temp: Math.round(root.moboTempC)
+            });
+        const nv = root.nvmeTempsC;
+        for (let i = 0; i < nv.length; i++)
+            arr.push({
+                name: nv.length > 1 ? "NVMe " + (i + 1) : "NVMe",
+                temp: Math.round(nv[i])
+            });
+        return arr;
+    }
+    readonly property int tempMax: {
+        let m = 0;
+        for (let i = 0; i < root.tempList.length; i++)
+            if (root.tempList[i].temp > m)
+                m = root.tempList[i].temp;
+        return m;
+    }
+    function tempColor(t) {
+        return t >= 85 ? root.colRed : (t >= 70 ? root.colPeach : root.colSapphire);
+    }
+    // Uso consolidado (CPU/RAM/GPU/Disco), headline = CPU
+    readonly property var usageList: [
+        {
+            name: "CPU",
+            pct: root.cpuPct
+        },
+        {
+            name: "RAM",
+            pct: root.memPct
+        },
+        {
+            name: "GPU",
+            pct: root.gpuUsage
+        },
+        {
+            name: "Disco",
+            pct: root.diskPct
+        }
+    ]
 
     // ===== VPN (vpn status-json) =====
     property bool vpnConnected: false
@@ -398,6 +492,101 @@ Scope {
         }
     }
 
+    // throughput por interface (/proc/net/dev); taxa = delta / 2s (intervalo do timer)
+    property var netPrev: ({})
+    property var netRates: []
+    property real netMainRx: 0
+    property real netMainTx: 0
+    function parseNetDev(text) {
+        const lines = text.split("\n");
+        const cur = {};
+        for (let i = 0; i < lines.length; i++) {
+            const m = lines[i].trim().match(/^([\w-]+):\s*(\d+)(?:\s+\d+){7}\s+(\d+)/);
+            if (!m)
+                continue;
+            const iface = m[1];
+            if (iface === "lo" || iface.indexOf("veth") === 0)
+                continue;
+            cur[iface] = {
+                rx: Number(m[2]),
+                tx: Number(m[3])
+            };
+        }
+        const rates = [];
+        for (const iface in cur) {
+            const prev = root.netPrev[iface];
+            if (prev) {
+                const rxr = Math.max(0, (cur[iface].rx - prev.rx) / 2);
+                const txr = Math.max(0, (cur[iface].tx - prev.tx) / 2);
+                if (iface === "enp4s0") {
+                    root.netMainRx = rxr;
+                    root.netMainTx = txr;
+                }
+                if (rxr > 0 || txr > 0 || iface === "enp4s0")
+                    rates.push({
+                        iface: iface,
+                        rx: rxr,
+                        tx: txr
+                    });
+            }
+        }
+        root.netPrev = cur;
+        rates.sort((a, b) => (b.rx + b.tx) - (a.rx + a.tx));
+        root.netRates = rates;
+    }
+    Process {
+        id: netDevProc
+        command: ["sh", "-c", "cat /proc/net/dev"]
+        stdout: StdioCollector {
+            onStreamFinished: root.parseNetDev(text)
+        }
+    }
+    function fmtRate(bps) {
+        if (bps >= 1048576)
+            return (bps / 1048576).toFixed(1) + "M";
+        if (bps >= 1024)
+            return Math.round(bps / 1024) + "K";
+        return Math.round(bps) + "B";
+    }
+
+    // ===== Hover do popover de métricas (temp / uso / rede) =====
+    property string metricShown: ""   // "temp" | "usage" | "net"
+    property bool metricHovering: false
+    property bool metricPopHovered: false
+    property bool metricPopVisible: false
+    readonly property var metricRows: {
+        const m = root.metricShown;
+        if (m === "temp")
+            return root.tempList.map(t => ({ label: t.name, value: t.temp + "\u00b0C" }));
+        if (m === "usage")
+            return root.usageList.map(u => ({ label: u.name, value: u.pct + "%" }));
+        if (m === "net")
+            return root.netRates.map(n => ({ label: n.iface, value: "\u2193" + root.fmtRate(n.rx) + " \u2191" + root.fmtRate(n.tx) }));
+        return [];
+    }
+    function showMetric(which) {
+        root.metricShown = which;
+        root.metricHovering = true;
+        metricCloseTimer.stop();
+        root.metricPopVisible = true;
+    }
+    function unhoverMetric() {
+        root.metricHovering = false;
+        metricCloseTimer.restart();
+    }
+    onMetricPopHoveredChanged: {
+        if (root.metricPopHovered)
+            metricCloseTimer.stop();
+        else
+            metricCloseTimer.restart();
+    }
+    Timer {
+        id: metricCloseTimer
+        interval: 300
+        onTriggered: if (!root.metricHovering && !root.metricPopHovered)
+            root.metricPopVisible = false
+    }
+
     // ===== Timers de polling =====
     Timer {
         interval: 2000
@@ -407,6 +596,7 @@ Scope {
         onTriggered: {
             cpuProc.running = true;
             hypridleProc.running = true;
+            netDevProc.running = true;
         }
     }
     Timer {
@@ -415,7 +605,7 @@ Scope {
         repeat: true
         triggeredOnStart: true
         onTriggered: {
-            cpuTempProc.running = true;
+            sensorsProc.running = true;
             gpuProc.running = true;
         }
     }
@@ -783,6 +973,84 @@ Scope {
         }
     }
 
+    // ===== Popover de metricas (temp / uso / rede) — DP-1, hover =====
+    PanelWindow {
+        id: metricPop
+        visible: root.metricPopVisible
+        screen: {
+            const screens = Quickshell.screens;
+            for (let i = 0; i < screens.length; i++)
+                if (screens[i].name === "DP-1")
+                    return screens[i];
+            return null;
+        }
+        anchors {
+            top: true
+            right: true
+        }
+        margins {
+            top: 33
+            right: 4
+        }
+        exclusiveZone: 0
+        implicitWidth: 290
+        implicitHeight: 200
+        color: "transparent"
+        Rectangle {
+            anchors.fill: parent
+            radius: 12
+            color: "#f21a1b26"
+            border.color: "#414868"
+            border.width: 1
+            HoverHandler {
+                onHoveredChanged: root.metricPopHovered = hovered
+            }
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 14
+                spacing: 8
+                Text {
+                    text: root.metricShown === "temp" ? "Temperaturas" : (root.metricShown === "net" ? "Rede" : "Uso")
+                    color: root.colAccent
+                    font.family: root.uiFont
+                    font.pixelSize: 14
+                    font.bold: true
+                }
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 1
+                    color: "#414868"
+                    opacity: 0.5
+                }
+                Repeater {
+                    model: root.metricRows
+                    RowLayout {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        spacing: 12
+                        Text {
+                            Layout.fillWidth: true
+                            text: modelData.label
+                            color: root.colText
+                            font.family: root.uiFont
+                            font.pixelSize: 12
+                        }
+                        Text {
+                            text: modelData.value
+                            color: root.colText
+                            font.family: root.uiFont
+                            font.pixelSize: 12
+                            font.bold: true
+                        }
+                    }
+                }
+                Item {
+                    Layout.fillHeight: true
+                }
+            }
+        }
+    }
+
     // ===== Barra por monitor =====
     Variants {
         model: Quickshell.screens
@@ -868,34 +1136,16 @@ Scope {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 Pill {
-                    icon: "󰻠"
+                    icon: "󰔏"
+                    label: root.tempMax + "°C"
+                    accent: root.tempColor(root.tempMax)
+                    onHoveredChanged: hovered ? root.showMetric("temp") : root.unhoverMetric()
+                }
+                Pill {
+                    icon: "󰓅"
                     label: root.cpuPct + "%"
                     accent: root.stateColor(root.cpuPct, root.colYellow)
-                }
-                Pill {
-                    icon: "󰔏"
-                    label: root.cpuTemp
-                    accent: root.colPeach
-                }
-                Pill {
-                    icon: "󰾲"
-                    label: root.gpuUsage + "%"
-                    accent: root.colMauve
-                }
-                Pill {
-                    icon: "󰢮"
-                    label: root.gpuTemp
-                    accent: root.colLavender
-                }
-                Pill {
-                    icon: "󰍛"
-                    label: root.memPct + "%"
-                    accent: root.stateColor(root.memPct, root.colPink)
-                }
-                Pill {
-                    icon: "󰋊"
-                    label: root.diskPct + "%"
-                    accent: root.stateColor(root.diskPct, root.colTeal)
+                    onHoveredChanged: hovered ? root.showMetric("usage") : root.unhoverMetric()
                 }
                 Pill {
                     icon: "󰦝"
@@ -906,8 +1156,10 @@ Scope {
                     onRightClicked: root.launch([root.vpnBin, "menu"])
                 }
                 Pill {
-                    icon: root.netConnected ? (root.netEthernet ? "󰈀" : "󰤨") : "󰤯"
-                    accent: root.netConnected ? (root.netEthernet ? root.colTeal : root.colGreen) : root.colRed
+                    icon: "󰛳"
+                    label: "↓" + root.fmtRate(root.netMainRx) + " ↑" + root.fmtRate(root.netMainTx)
+                    accent: root.netConnected ? root.colTeal : root.colRed
+                    onHoveredChanged: hovered ? root.showMetric("net") : root.unhoverMetric()
                     onClicked: root.launch(["nm-connection-editor"])
                 }
                 Pill {

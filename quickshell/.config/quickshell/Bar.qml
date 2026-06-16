@@ -1,24 +1,27 @@
-// Barra Quickshell (substituta da Waybar) — FASE 1: shell por-monitor + relógio
-// + cpu/ram/disco. Tokyo Night, pílulas iguais às da Waybar. Mais módulos vêm
-// nas próximas fases (áudio, spotify, rede, scripts, workspaces, janela, tray).
+// Barra Quickshell (substituta da Waybar).
+// FASE 1: shell por-monitor + relógio + cpu/ram/disco.
+// FASE 2: áudio (Pipewire) + Spotify (Mpris) + rede (nmcli).
+// Faltam: cpu-temp, gpu-temp/uso, weather(MSN), vpn, hypridle, swaync,
+//         workspaces, título da janela, tray.
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.Pipewire
+import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Layouts
 
 Scope {
     id: root
 
-    // Permite testar sem reservar espaço (harness seta 0); produção usa 30.
     property int barExclusiveZone: 30
 
     // ===== Paleta (Tokyo Night + Catppuccin, fiel ao style.css) =====
-    readonly property color colGroupBg: "#591a1b26"     // grupo 0.35
-    readonly property color colGroupBorder: "#2e414868" // 0.18
-    readonly property color colPillBg: "#db1a1b26"      // pílula 0.86
-    readonly property color colPillHoverBg: "#eb1a1b26" // 0.92
-    readonly property color colPillBorder: "#59414868"  // 0.35
-    readonly property color colHoverBorder: "#807aa2f7" // accent 0.5
+    readonly property color colGroupBg: "#591a1b26"
+    readonly property color colGroupBorder: "#2e414868"
+    readonly property color colPillBg: "#db1a1b26"
+    readonly property color colPillHoverBg: "#eb1a1b26"
+    readonly property color colPillBorder: "#59414868"
+    readonly property color colHoverBorder: "#807aa2f7"
     readonly property color colText: "#c0caf5"
     readonly property color colDim: "#565f89"
     readonly property color colAccent: "#7aa2f7"
@@ -38,8 +41,11 @@ Scope {
     function stateColor(pct, base) {
         return pct >= 90 ? root.colRed : (pct >= 70 ? root.colPeach : base);
     }
+    function launch(cmd) {
+        Quickshell.execDetached(cmd);
+    }
 
-    // ===== Relógio (SystemClock nativo) =====
+    // ===== Relógio =====
     property bool showDate: false
     property string timeStr: ""
     SystemClock {
@@ -58,12 +64,11 @@ Scope {
     }
     Component.onCompleted: root.updateClock()
 
-    // ===== CPU / RAM / Disco (lendo /proc e df) =====
+    // ===== CPU / RAM / Disco =====
     property int cpuPct: 0
     property int memPct: 0
     property int diskPct: 0
     property var cpuPrev: null
-
     function parseCpu(text) {
         const parts = text.trim().split(/\s+/);
         if (parts[0] !== "cpu")
@@ -97,7 +102,6 @@ Scope {
         if (total > 0)
             root.memPct = Math.round((total - avail) / total * 100);
     }
-
     Process {
         id: cpuProc
         command: ["sh", "-c", "head -n1 /proc/stat"]
@@ -119,7 +123,6 @@ Scope {
             onStreamFinished: root.diskPct = parseInt(text.trim()) || 0
         }
     }
-
     Timer {
         interval: 2000
         running: true
@@ -142,18 +145,105 @@ Scope {
         onTriggered: diskProc.running = true
     }
 
+    // ===== Áudio (Pipewire nativo) =====
+    PwObjectTracker {
+        objects: Pipewire.defaultAudioSink ? [Pipewire.defaultAudioSink] : []
+    }
+    readonly property var sink: Pipewire.defaultAudioSink
+    readonly property real volume: (sink && sink.audio) ? sink.audio.volume : 0
+    readonly property bool sinkMuted: (sink && sink.audio) ? sink.audio.muted : false
+    function volIcon() {
+        if (root.sinkMuted || root.volume <= 0)
+            return "󰝟";
+        if (root.volume <= 0.33)
+            return "󰕿";
+        if (root.volume <= 0.66)
+            return "󰖀";
+        return "󰕾";
+    }
+    function setVol(delta) {
+        if (root.sink && root.sink.audio)
+            root.sink.audio.volume = Math.max(0, Math.min(1, root.sink.audio.volume + delta));
+    }
+    function toggleMute() {
+        if (root.sink && root.sink.audio)
+            root.sink.audio.muted = !root.sink.audio.muted;
+    }
+
+    // ===== Spotify (Mpris nativo) =====
+    readonly property var player: {
+        const m = Mpris.players;
+        const list = (m && m.values) ? m.values : [];
+        for (let i = 0; i < list.length; i++) {
+            const p = list[i];
+            if (p && (p.identity === "Spotify" || (p.dbusName || "").toLowerCase().indexOf("spotify") >= 0))
+                return p;
+        }
+        for (let i = 0; i < list.length; i++)
+            if (list[i] && list[i].isPlaying)
+                return list[i];
+        return list.length ? list[0] : null;
+    }
+    readonly property bool spHasPlayer: !!root.player
+    readonly property string spTitle: (root.player && root.player.trackTitle) ? root.player.trackTitle : ""
+    readonly property string spArtist: {
+        if (!root.player || !root.player.trackArtists)
+            return "";
+        const a = root.player.trackArtists;
+        return Array.isArray(a) ? a.join(", ") : ("" + a);
+    }
+    readonly property bool spPlaying: !!(root.player && root.player.isPlaying)
+    readonly property string spText: root.spHasPlayer ? (root.spArtist ? root.spArtist + " - " + root.spTitle : root.spTitle) : ""
+    readonly property color spColor: root.spPlaying ? root.colGreen : (root.spHasPlayer ? root.colYellow : root.colDim)
+
+    // ===== Rede (nmcli — ethernet nesta máquina) =====
+    property bool netConnected: false
+    property bool netEthernet: false
+    function parseNet(text) {
+        let conn = false, eth = false;
+        const lines = text.split("\n");
+        for (let i = 0; i < lines.length; i++) {
+            const p = lines[i].split(":");
+            if (p.length < 3)
+                continue;
+            const type = p[1], state = p[2];
+            if ((type === "ethernet" || type === "wifi") && state.indexOf("connected") === 0 && state.indexOf("externally") < 0) {
+                conn = true;
+                if (type === "ethernet")
+                    eth = true;
+            }
+        }
+        root.netConnected = conn;
+        root.netEthernet = eth;
+    }
+    Process {
+        id: netProc
+        command: ["sh", "-c", "nmcli -t -f DEVICE,TYPE,STATE device status"]
+        stdout: StdioCollector {
+            onStreamFinished: root.parseNet(text)
+        }
+    }
+    Timer {
+        interval: 10000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: netProc.running = true
+    }
+
     // ===== Pílula reutilizável =====
     component Pill: Rectangle {
         id: pill
         property string icon: ""
         property string label: ""
         property color accent: root.colText
+        property int maxWidth: 0 // 0 = largura natural; >0 = limita e elide
         signal clicked
         signal rightClicked
         signal scrolledUp
         signal scrolledDown
 
-        implicitWidth: prow.implicitWidth + 20
+        implicitWidth: (pill.maxWidth > 0) ? Math.min(prow.implicitWidth + 20, pill.maxWidth) : prow.implicitWidth + 20
         implicitHeight: 22
         radius: 8
         color: area.containsMouse ? root.colPillHoverBg : root.colPillBg
@@ -173,7 +263,9 @@ Scope {
 
         RowLayout {
             id: prow
-            anchors.centerIn: parent
+            anchors.fill: parent
+            anchors.leftMargin: 10
+            anchors.rightMargin: 10
             spacing: 6
             Text {
                 visible: pill.icon !== ""
@@ -184,13 +276,14 @@ Scope {
             }
             Text {
                 visible: pill.label !== ""
+                Layout.fillWidth: pill.maxWidth > 0
                 text: pill.label
                 color: pill.accent
                 font.family: root.uiFont
                 font.pixelSize: 11
+                elide: Text.ElideRight
             }
         }
-
         MouseArea {
             id: area
             anchors.fill: parent
@@ -211,7 +304,6 @@ Scope {
         }
     }
 
-    // ===== Container de grupo (pílula 0.35) =====
     component Group: Rectangle {
         default property alias content: groupRow.data
         radius: 12
@@ -251,7 +343,7 @@ Scope {
             exclusiveZone: root.barExclusiveZone
             color: "transparent"
 
-            // ESQUERDA (placeholder por enquanto; workspaces/janela/spotify vêm depois)
+            // ESQUERDA: placeholder + Spotify (workspaces/janela vêm na Fase 4)
             Group {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
@@ -259,6 +351,17 @@ Scope {
                     icon: "󰣇"
                     label: "QS"
                     accent: root.colAccent
+                }
+                Pill {
+                    visible: root.spHasPlayer
+                    icon: "󰝚"
+                    label: root.spText
+                    accent: root.spColor
+                    maxWidth: 240
+                    onClicked: root.launch(["qs", "ipc", "call", "mpris", "toggle"])
+                    onRightClicked: root.launch(["playerctl", "--player=spotify", "play-pause"])
+                    onScrolledUp: root.launch(["playerctl", "--player=spotify", "next"])
+                    onScrolledDown: root.launch(["playerctl", "--player=spotify", "previous"])
                 }
             }
 
@@ -272,7 +375,7 @@ Scope {
                 }
             }
 
-            // DIREITA: cpu / ram / disco
+            // DIREITA: cpu / ram / disco / rede / áudio
             Group {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
@@ -290,6 +393,20 @@ Scope {
                     icon: "󰋊"
                     label: root.diskPct + "%"
                     accent: root.stateColor(root.diskPct, root.colTeal)
+                }
+                Pill {
+                    icon: root.netConnected ? (root.netEthernet ? "󰈀" : "󰤨") : "󰤯"
+                    accent: root.netConnected ? (root.netEthernet ? root.colTeal : root.colGreen) : root.colRed
+                    onClicked: root.launch(["nm-connection-editor"])
+                }
+                Pill {
+                    icon: root.volIcon()
+                    label: Math.round(root.volume * 100) + "%"
+                    accent: root.sinkMuted ? root.colDim : root.colBlue
+                    onClicked: root.toggleMute()
+                    onRightClicked: root.launch(["pavucontrol"])
+                    onScrolledUp: root.setVol(0.05)
+                    onScrolledDown: root.setVol(-0.05)
                 }
             }
         }

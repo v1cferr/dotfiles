@@ -2,9 +2,12 @@
 // FASE 1: shell + relógio + cpu/ram/disco.
 // FASE 2: áudio (Pipewire) + Spotify (Mpris) + rede (nmcli).
 // FASE 3a: cpu-temp + gpu-uso/temp (nvidia-smi) + vpn + hypridle + swaync.
-// Faltam: weather(MSN, fase 3b), workspaces + título (fase 4), tray (fase 5).
+// FASE 3b: weather (MSN/Foreca XML) + popover de previsão 5 dias.
+// FASE 4: workspaces (hyprctl + eventos, por monitor) + título da janela.
+// Falta: system tray (fase 5); depois ligar no shell.qml e aposentar a Waybar.
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 import Quickshell.Services.Mpris
 import QtQuick
@@ -38,6 +41,9 @@ Scope {
     readonly property color colSapphire: "#74c7ec"
     readonly property color colTeal: "#94e2d5"
     readonly property color colPink: "#f5c2e7"
+    readonly property color colWsInactive: "#a9b1d6"
+    readonly property color colWsActiveBg: "#d97aa2f7"
+    readonly property color colWsActiveBorder: "#e67aa2f7"
     readonly property string uiFont: "JetBrainsMono Nerd Font"
 
     function stateColor(pct, base) {
@@ -64,7 +70,10 @@ Scope {
             root.updateClock();
         }
     }
-    Component.onCompleted: root.updateClock()
+    Component.onCompleted: {
+        root.updateClock();
+        hyprProc.running = true;
+    }
 
     // ===== CPU / RAM / Disco =====
     property int cpuPct: 0
@@ -432,6 +441,79 @@ Scope {
         onTriggered: diskProc.running = true
     }
 
+    // ===== Hyprland: workspaces (hyprctl + eventos) + título da janela =====
+    property var wsActive: ({})
+    property var wsExist: ({})
+    property string focusedMon: ""
+    readonly property var wsIcons: ({
+            1: "󰲠",
+            2: "󰲢",
+            3: "󰲤",
+            4: "󰲦",
+            5: "󰲨",
+            6: "󰲪",
+            7: "󰲬",
+            8: "󰲮"
+        })
+    function wsIcon(id) {
+        return root.wsIcons[id] || "󰊠";
+    }
+    function parseHypr(text) {
+        const parts = text.split("@@@");
+        try {
+            const mons = JSON.parse(parts[0]);
+            const active = ({});
+            let foc = "";
+            for (let i = 0; i < mons.length; i++) {
+                if (mons[i].activeWorkspace)
+                    active[mons[i].name] = mons[i].activeWorkspace.id;
+                if (mons[i].focused)
+                    foc = mons[i].name;
+            }
+            root.wsActive = active;
+            root.focusedMon = foc;
+        } catch (e) {}
+        try {
+            const wss = JSON.parse(parts[1]);
+            const ex = ({});
+            for (let i = 0; i < wss.length; i++)
+                ex[wss[i].id] = true;
+            root.wsExist = ex;
+        } catch (e) {}
+    }
+    Process {
+        id: hyprProc
+        command: ["sh", "-c", "hyprctl -j monitors; echo '@@@'; hyprctl -j workspaces"]
+        stdout: StdioCollector {
+            onStreamFinished: root.parseHypr(text)
+        }
+    }
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            const n = event.name;
+            if (n.indexOf("workspace") === 0 || n === "focusedmon" || n === "createworkspace" || n === "destroyworkspace" || n === "moveworkspace" || n === "openwindow" || n === "closewindow" || n === "urgent")
+                hyprProc.running = true;
+        }
+    }
+    // título da janela ativa (Hyprland nativo) + rewrite rules
+    readonly property string rawTitle: Hyprland.activeToplevel ? (Hyprland.activeToplevel.title || "") : ""
+    readonly property string winTitle: root.rewriteTitle(root.rawTitle)
+    function rewriteTitle(t) {
+        if (!t)
+            return "";
+        let m;
+        if ((m = t.match(/^(.*) — Mozilla Firefox$/)))
+            return "󰈹 " + m[1];
+        if ((m = t.match(/^(.*) - (fish|zsh|bash)$/)))
+            return "󰆍 [" + m[1] + "]";
+        if ((m = t.match(/^(.*) - Spotify$/)))
+            return "󰝚 " + m[1];
+        if ((m = t.match(/^(.*) - (Code|Visual Studio Code)$/)))
+            return "󰨞 " + m[1];
+        return t;
+    }
+
     // ===== Pílula reutilizável =====
     component Pill: Rectangle {
         id: pill
@@ -444,6 +526,7 @@ Scope {
         signal scrolledUp
         signal scrolledDown
         property alias hovered: area.containsMouse
+        property bool italic: false
 
         implicitWidth: (pill.maxWidth > 0) ? Math.min(prow.implicitWidth + 20, pill.maxWidth) : prow.implicitWidth + 20
         implicitHeight: 22
@@ -483,6 +566,7 @@ Scope {
                 color: pill.accent
                 font.family: root.uiFont
                 font.pixelSize: 11
+                font.italic: pill.italic
                 elide: Text.ElideRight
             }
         }
@@ -518,6 +602,42 @@ Scope {
             id: groupRow
             anchors.centerIn: parent
             spacing: 6
+        }
+    }
+
+    // ===== Botão de workspace =====
+    component WsBtn: Rectangle {
+        id: wsbtn
+        property int wsid: 0
+        property bool active: false
+        property bool exists: false
+
+        implicitWidth: Math.max(24, wlbl.implicitWidth + 14)
+        implicitHeight: 22
+        radius: 8
+        color: wsbtn.active ? root.colWsActiveBg : (wsArea.containsMouse ? root.colPillHoverBg : root.colPillBg)
+        border.color: wsbtn.active ? root.colWsActiveBorder : (wsArea.containsMouse ? root.colHoverBorder : root.colPillBorder)
+        border.width: 1
+        Behavior on color {
+            ColorAnimation {
+                duration: 200
+            }
+        }
+
+        Text {
+            id: wlbl
+            anchors.centerIn: parent
+            text: wsbtn.active ? "󰮯" : (wsbtn.exists ? root.wsIcon(wsbtn.wsid) : "󰧵")
+            color: wsbtn.active ? "#1a1b26" : root.colWsInactive
+            font.family: root.uiFont
+            font.pixelSize: 13
+            font.bold: wsbtn.active
+        }
+        MouseArea {
+            id: wsArea
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: root.launch(["hyprctl", "dispatch", "workspace", "" + wsbtn.wsid])
         }
     }
 
@@ -688,14 +808,24 @@ Scope {
             exclusiveZone: root.barExclusiveZone
             color: "transparent"
 
-            // ESQUERDA: placeholder + Spotify (workspaces/janela vêm na Fase 4)
+            // ESQUERDA: workspaces (do monitor) + título da janela + Spotify
             Group {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
+                Repeater {
+                    model: (bar.modelData && bar.modelData.name === "HDMI-A-1") ? [5, 6, 7, 8] : [1, 2, 3, 4]
+                    WsBtn {
+                        wsid: modelData
+                        active: root.wsActive[bar.modelData.name] === modelData
+                        exists: root.wsExist[modelData] === true
+                    }
+                }
                 Pill {
-                    icon: "󰣇"
-                    label: "QS"
-                    accent: root.colAccent
+                    visible: bar.modelData && bar.modelData.name === root.focusedMon && root.winTitle !== ""
+                    label: root.winTitle
+                    accent: root.colSky
+                    italic: true
+                    maxWidth: 340
                 }
                 Pill {
                     visible: root.spHasPlayer

@@ -174,9 +174,86 @@ Dispare o `Send-WOL` do Windows. Se aparecerem linhas como
 
 ---
 
+## 8. Windows — tudo num passo só: `wake-fai.bat`
+
+Equivalente Windows do `wake-fai` do Linux. Num duplo-clique ele faz, em sequência:
+
+```text
+1. conecta na VPN da FAI (SonicWall, via NECLI — o CLI do NetExtender), se não estiver;
+2. se a workstation não responde no SSH, manda o Wake-on-LAN (3x) e espera ela ligar;
+3. abre o `ssh superintendencia@200.136.209.229` (a senha do SSH você digita no prompt);
+4. ao sair do SSH, pergunta se quer desconectar a VPN.
+```
+
+A **senha da VPN** fica guardada **criptografada** (DPAPI — só o seu usuário Windows,
+nesta máquina, consegue ler). Você digita uma vez; depois conecta sem pedir nada.
+
+### 8.1. O que você precisa ter instalado (uma vez)
+
+1. **SonicWall NetExtender para Windows** — o app inclui o `NECLI.exe`, que o script
+   usa pra conectar a VPN. Download:
+   <https://www.sonicwall.com/products/remote-access/vpn-clients/>
+   - Abra o NetExtender **gráfico uma vez** e conecte na VPN da FAI manualmente
+     (servidor `200.133.233.101:4433`, domínio `fai2008`, seu usuário e senha). Isso
+     serve só pra **aceitar o certificado** do servidor — depois o script faz tudo sozinho.
+2. **Cliente SSH** — já vem por padrão no Windows 10/11 (`ssh.exe`). Pra conferir, abra
+   o **PowerShell** e rode `ssh`; se aparecer a ajuda do comando, está OK.
+
+### 8.2. Os arquivos
+
+Copie estes **dois arquivos** (da pasta `netextender/wake-on-lan/`) pra qualquer pasta
+da sua máquina — por exemplo a Área de Trabalho. Eles têm que ficar **juntos**:
+
+- `wake-fai.bat` ← é o que você dá duplo-clique
+- `wake-fai.ps1` ← o script de verdade (o `.bat` chama ele)
+
+### 8.3. Usando (a cada vez que quiser acessar a workstation de casa)
+
+1. **Duplo-clique no `wake-fai.bat`.**
+   - O Windows pode mostrar um aviso azul (**SmartScreen**) por ser um script baixado:
+     clique em **Mais informações → Executar assim mesmo**.
+2. **Na 1ª vez**, ele pede o **seu usuário e senha da VPN da FAI** (uma janelinha de
+   login). Isso fica salvo cifrado em `%USERPROFILE%\.wake-fai\fai-vpn.cred.xml` —
+   nas próximas vezes ele nem pergunta.
+3. Ele conecta a VPN, acorda a workstation (se estiver desligada, espera ~1-2 min) e
+   abre o SSH. **Digite a senha do SSH** quando pedir (`superintendencia` → `Fai@sup2026`).
+4. Quando terminar, **digite `exit`** no SSH. Ele pergunta se desconecta a VPN — responda
+   `Y` (sim) ou `n` (manter conectada).
+
+### 8.4. Opções (pra quem usa pelo PowerShell)
+
+```powershell
+.\wake-fai.ps1            # fluxo completo (pergunta se desconecta ao sair)
+.\wake-fai.ps1 -KeepVpn   # mantém a VPN conectada ao sair do SSH
+.\wake-fai.ps1 -NoSsh     # só conecta a VPN e acorda a máquina (não abre SSH)
+.\wake-fai.ps1 -Reconfigure          # troca o usuário/senha da VPN salvos
+.\wake-fai.ps1 -NecliPath "C:\Program Files\SonicWall\NetExtender\NECLI.exe"  # apontar o NECLI na mão
+```
+
+> O `.bat` aceita as mesmas opções: `wake-fai.bat -KeepVpn`, `wake-fai.bat -Reconfigure`, etc.
+
+### 8.5. Problemas comuns
+
+| Sintoma                                          | Causa provável                          | Solução                                                                                              |
+| ------------------------------------------------ | --------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `NECLI.exe não encontrado`                       | NetExtender não instalado ou em local incomum | Instale o NetExtender (8.1); ou rode `.\wake-fai.ps1 -NecliPath "caminho\NECLI.exe"`             |
+| VPN não conecta / erro de **certificado**        | Certificado do servidor não foi aceito  | Abra o NetExtender **gráfico** uma vez e conecte na mão pra aceitar o certificado (8.1)               |
+| VPN não conecta / **usuário ou senha**           | Credencial errada                       | Rode `.\wake-fai.ps1 -Reconfigure` e digite de novo                                                  |
+| A máquina não liga (não sobe em ~2 min)          | WoL/BIOS, ou pacote não chegou          | Repita (ela manda 3x); veja as seções 1-6 deste README (config do servidor / rede)                   |
+| SmartScreen bloqueia o `.bat`                    | Script baixado da internet              | **Mais informações → Executar assim mesmo** (é esperado)                                              |
+| VPN conecta mas o NECLI usa outra sintaxe        | Versão diferente do NetExtender         | Rode `NECLI help connect` no PowerShell e ajuste o bloco `Connect-Vpn` no `.ps1`                      |
+
+> **Endpoint da VPN já embutido** no script (não é segredo de ninguém): servidor
+> `200.133.233.101:4433`, domínio `fai2008`. **Usuário e senha da VPN são os SEUS** —
+> nada vem pré-preenchido.
+
+---
+
 ## Arquivos desta pasta
 
 - `README.md` — este documento.
 - `send-wol.exe` — enviador de magic packet para Windows (duplo-clique; `send-wol.ps1` compilado).
 - `send-wol.ps1` — enviador de magic packet para Windows (PowerShell), e fonte do `.exe`.
 - `send-wol.sh` — enviador de magic packet para Linux/Arch (bash puro, via `/dev/udp`); use de casa pela VPN.
+- `wake-fai.ps1` — **Windows**: VPN da FAI → WoL → SSH num passo só; senha cifrada (DPAPI). Porte do `wake-fai` do Linux.
+- `wake-fai.bat` — atalho de duplo-clique para o `wake-fai.ps1` (roda sem mexer na ExecutionPolicy).

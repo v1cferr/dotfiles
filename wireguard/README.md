@@ -13,8 +13,14 @@ oposto de um port-forward com prompt de login visível.
 
 - Sub-rede do túnel: `10.10.10.0/24` — router `.1`, notebook `.2`, celular `.3`.
 - Porta de escuta: **UDP 51820** (liberada na WAN; só isso a mais é exposto).
-- **Split tunnel:** o cliente só roteia `192.168.1.0/24` (a casa) pela VPN — sua
-  navegação normal não passa por casa.
+- **Full-tunnel (padrão):** o cliente roteia `0.0.0.0/0, ::/0` com `DNS =
+  192.168.1.1` — toda a navegação sai pela **internet de casa** (útil quando o
+  4G de fora está lento/capado) e o DNS passa pelo AdBlock/DoH + split-DNS
+  `*.v1cferr.dev` do router. Como o `wan` já tem `masq=1`, o NAT é automático;
+  só faltava o forward de firewall **`wg → wan`** (o `wg → lan` já existia).
+- **Split tunnel (`FULL_TUNNEL=0`):** o cliente só roteia `192.168.1.0/24` (a
+  casa) + a sub-rede do túnel, sem mexer no DNS — a navegação normal não passa
+  por casa.
 - Endpoint: `ssh.v1cferr.dev:51820` (o mesmo DDNS do SSH já mantém o IP atualizado).
 
 ## Deploy
@@ -31,11 +37,31 @@ tem `sudo` com senha. O prompt de senha precisa de um **terminal real** (não o
 ```sh
 # a partir do desktop (que alcança o router por chave):
 scp -O ~/dotfiles/scripts/wireguard/deploy-router.sh v1cferr@192.168.1.1:/tmp/wg-deploy.sh
-ssh -t v1cferr@192.168.1.1 'sudo sh /tmp/wg-deploy.sh'   # pede a senha do v1cferr
+ssh -t v1cferr@192.168.1.1 'sudo sh /tmp/wg-deploy.sh'   # full-tunnel (padrão)
+# para gerar configs split:
+ssh -t v1cferr@192.168.1.1 'sudo FULL_TUNNEL=0 sh /tmp/wg-deploy.sh'
 ```
 
 > `scp -O` força o protocolo SCP legado — o OpenWrt não inclui `sftp-server`,
 > então o scp novo (baseado em SFTP) falha com "sftp-server: not found".
+
+### Ligar full-tunnel num router que já roda WireGuard
+
+Se o WireGuard foi instalado quando o deploy ainda era split (sem o forward
+`wg → wan`), use o script aditivo/idempotente — ele só **acrescenta** esse
+forward (backup + `fw4 check` + revert automático se falhar), sem tocar no resto:
+
+```sh
+scp -O ~/dotfiles/scripts/wireguard/enable-fulltunnel-router.sh v1cferr@192.168.1.1:/tmp/wg-ft.sh
+ssh -t v1cferr@192.168.1.1 'sudo sh /tmp/wg-ft.sh'
+```
+
+Depois ajuste o **cliente**: `AllowedIPs = 0.0.0.0/0, ::/0` e `DNS = 192.168.1.1`.
+
+> **Pegadinha IPv6:** o túnel só dá endereço IPv4 ao cliente, mas o `::/0` no
+> `AllowedIPs` captura o IPv6 também. Sem IPv6 no túnel, o tráfego v6 fica
+> *blackholed* (não vaza para fora do túnel) e tudo é forçado por IPv4 — é o
+> comportamento desejado, não um bug.
 
 No fim, depois de **subir e verificar o `wg0`**, o script **auto-cancela o
 dead-man** e imprime (salvando em `/root/wg-clients.conf`, modo 600) as configs

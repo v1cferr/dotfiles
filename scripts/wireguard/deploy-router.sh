@@ -10,8 +10,9 @@
 #    - `fw4 check` valida o ruleset ANTES de confiar; se falhar, reverte na hora;
 #    - usa `reload` (não restart) — conntrack preserva conexões estabelecidas.
 #
-#  Objetivo: acordar/acessar a casa de fora via VPN, sem expor login nenhum.
-#  Túnel split: o cliente só roteia 192.168.1.0/24 (a casa) pelo WireGuard.
+#  Objetivo: acordar/acessar a casa de fora via VPN, sem expor login nenhum,
+#  e (full-tunnel, padrão) usar a internet de CASA de fora — ex: 4G mais lento.
+#  FULL_TUNNEL=0 gera configs split (cliente só roteia a LAN + a sub-rede WG).
 #
 #  Uso (a partir do desktop, terminal REAL — o prompt de senha precisa de tty):
 #    scp -O ~/dotfiles/scripts/wireguard/deploy-router.sh v1cferr@192.168.1.1:/tmp/wg-deploy.sh
@@ -28,6 +29,7 @@ WG_NET="10.10.10"        # sub-rede do túnel: router=.1, notebook=.2, celular=.
 PUBHOST="ssh.v1cferr.dev"  # endpoint público (DDNS já mantém atualizado)
 DEADMAN_SECS="600"       # 10 min até o auto-revert
 CLIENTS_OUT="/root/wg-clients.conf"
+FULL_TUNNEL="${FULL_TUNNEL:-1}"  # 1 = cliente usa a internet de casa (full-tunnel); 0 = split
 
 say() { echo "==> $*"; }
 
@@ -106,6 +108,13 @@ uci add firewall forwarding >/dev/null
 uci set "firewall.@forwarding[-1].src=wg"
 uci set "firewall.@forwarding[-1].dest=lan"
 
+# --- firewall: forward wg -> wan (full-tunnel: usar a internet de casa) ---
+# A zona wan já tem masq=1, então o NAT acontece sozinho. Encaminhamento aqui
+# só HABILITA: quem decide usar a internet de casa é o AllowedIPs do cliente.
+uci add firewall forwarding >/dev/null
+uci set "firewall.@forwarding[-1].src=wg"
+uci set "firewall.@forwarding[-1].dest=wan"
+
 # --- firewall: liberar a porta UDP do WG na WAN ---
 uci add firewall rule >/dev/null
 uci set "firewall.@rule[-1].name=Allow-WireGuard"
@@ -151,13 +160,23 @@ rm -f /tmp/wg-deadman.active
 echo "    dead-man auto-cancelado (deploy verificado)"
 
 # --- configs dos clientes (também salvas em ${CLIENTS_OUT}, modo 600) ---
-ALLOWED="192.168.1.0/24, ${WG_NET}.0/24"
+# Full-tunnel (padrão): roteia TUDO por casa (usa a internet de casa de fora) e
+# resolve DNS no router (.1) -> AdBlock/DoH + split-DNS *.v1cferr.dev.
+# FULL_TUNNEL=0 -> split: só a LAN + a sub-rede WG, sem mexer no DNS.
+if [ "${FULL_TUNNEL}" = "1" ]; then
+  ALLOWED="0.0.0.0/0, ::/0"
+  DNSLINE="DNS = ${WG_NET}.1"
+else
+  ALLOWED="192.168.1.0/24, ${WG_NET}.0/24"
+  DNSLINE=""
+fi
 {
 cat <<EOF
 ===== NOTEBOOK  (salve como casa-wg.conf) =====
 [Interface]
 PrivateKey = ${LAP_PRIV}
 Address = ${WG_NET}.2/32
+${DNSLINE}
 
 [Peer]
 PublicKey = ${SRV_PUB}
@@ -169,6 +188,7 @@ PersistentKeepalive = 25
 [Interface]
 PrivateKey = ${PHN_PRIV}
 Address = ${WG_NET}.3/32
+${DNSLINE}
 
 [Peer]
 PublicKey = ${SRV_PUB}

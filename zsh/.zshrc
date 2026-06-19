@@ -54,6 +54,13 @@ alias sc2='flameshot screen --number 0 -c'
 alias stow-sync="~/dotfiles/scripts/stow-sync.sh"
 alias hyprland='start-hyprland'
 alias nrd='npm run dev'
+
+# Monitor de uso de tokens/custo do Claude Code (bloco ativo de 5h),
+# atualizando a cada 5s. NÃO é o /usage (limites da assinatura): lê os
+# logs .jsonl locais via ccusage. Use ccwatch1 p/ refresh de 1s.
+alias ccwatch="watch -n 5 -c 'ccusage blocks --active --color'"
+alias ccwatch1="watch -n 1 -c 'ccusage blocks --active --color'"
+
 alias vpn-status='vpn status'
 alias vpn-ufscar='$HOME/dotfiles/scripts/ufscar-vpn.sh'
 alias vpn-fai='$HOME/dotfiles/scripts/fai-ufscar-vpn.sh'
@@ -209,10 +216,13 @@ alias ytwatch='mpv --profile=fast --hwdec=auto-safe --cache=yes --ytdl-raw-optio
 # ==============================
 # CLAUDE CODE / MÚLTIPLAS CONTAS
 # ==============================
-# Cada conta usa um CLAUDE_CONFIG_DIR isolado e DEDICADO (login, sessões, MCP, settings).
-# Obs: NÃO reaproveitar ~/.claude aqui — o config padrão fica em ~/.claude.json (home),
-# então apontar CLAUDE_CONFIG_DIR pra ~/.claude criaria um 2º arquivo (~/.claude/.claude.json)
-# divergente. Por isso cada conta tem pasta própria; ~/.claude/~/.claude.json fica como padrão.
+# Cada conta usa um CLAUDE_CONFIG_DIR isolado pra LOGIN/credenciais/MCP/settings,
+# MAS o histórico de sessões + a memória são COMPARTILHADOS: o projects/ de cada conta
+# é um symlink pro acervo canônico ~/.claude/projects (ver _claude_share_projects abaixo).
+# Assim qualquer alias enxerga/resume as mesmas conversas e a mesma memória do projeto.
+# Obs: NÃO reaproveitar ~/.claude como CONFIG dir — o config padrão fica em ~/.claude.json
+# (home), então apontar CLAUDE_CONFIG_DIR pra ~/.claude criaria um 2º arquivo divergente.
+# Por isso cada conta tem pasta própria; ~/.claude/~/.claude.json fica como padrão.
 #   ~/.claude-fai      -> FAI / nonprofit (victor.ferreira@fai.ufscar.br)
 #   ~/.claude-pessoal  -> pessoal         (dragons10021@outlook.com)
 export CLAUDE_FAI_DIR="$HOME/.claude-fai"
@@ -221,6 +231,26 @@ export CLAUDE_PESSOAL_DIR="$HOME/.claude-pessoal"
 # Aliases diretos (aceitam argumentos extras normalmente)
 alias claude-fai='CLAUDE_CONFIG_DIR="$CLAUDE_FAI_DIR" claude'
 alias claude-pessoal='CLAUDE_CONFIG_DIR="$CLAUDE_PESSOAL_DIR" claude'
+
+# Histórico/memória compartilhados: aponta o projects/ de cada conta -> ~/.claude/projects.
+# Idempotente e SEGURO: só cria o symlink quando o projects/ da conta está faltando ou
+# vazio (nunca sobrescreve histórico real; nesse caso, mesclar à mão no acervo canônico).
+_claude_share_projects() {
+    local canon="$HOME/.claude/projects" d
+    [ -e "$canon" ] || mkdir -p "$canon"
+    for d in "$CLAUDE_FAI_DIR" "$CLAUDE_PESSOAL_DIR"; do
+        [ -n "$d" ] || continue
+        mkdir -p "$d"
+        if [ -L "$d/projects" ]; then
+            continue
+        elif [ ! -e "$d/projects" ]; then
+            ln -s "$canon" "$d/projects"
+        elif [ -d "$d/projects" ] && [ -z "$(ls -A "$d/projects" 2>/dev/null)" ]; then
+            rmdir "$d/projects" && ln -s "$canon" "$d/projects"
+        fi
+    done
+}
+_claude_share_projects
 
 # Monitor de uso ao vivo (tokens/custo do bloco atual), atualiza a cada 1s
 alias claude-usage='watch -n 1 -c ccusage blocks --active --color'

@@ -2,7 +2,7 @@
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
-    "//": "Last update at 6/12/2026, 6:02:49 PM",
+    "//": "Last update at 6/17/2026, 4:48:55 PM",
     ".agent": ".agent, .claude, .cline, .codebuddy, .codex, .commandcode, .continue, .crush, .cursor, .factory, .gemini, .goose, .junie, .kilocode, .kiro, .kode, .mcpjam, .mux, .neovate, .opencode, .openhands, .pi, .pochi, .qoder, .qwen, .roo, .trae, .windsurf, .zencoder",
     ".clang-tidy": ".clang-format, .clangd, compile_commands.json",
     ".env": "*.env, .env.*, .envrc, env.d.ts",
@@ -205,7 +205,8 @@
   "python.analysis.typeCheckingMode": "standard",
   "remote.SSH.remotePlatform": {
     "ssh.v1cferr.dev": "linux",
-    "workstation": "linux"
+    "workstation": "linux",
+    "casa": "linux"
   },
   "security.allowedUNCHosts": [
     "wsl.localhost",

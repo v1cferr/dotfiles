@@ -1,4 +1,0 @@
-gobject-introspection
-gtk2-debug
-gtk-doc
-gtkmm-debug

@@ -25,10 +25,23 @@ CADDY_PKG="${DOTFILES_DIR}/caddy"
 
 echo "[deploy] dotfiles: ${DOTFILES_DIR}"
 
-# 1) Caddyfile + drop-in do systemd
+# 0) Sanidade: o binário em uso precisa ter o plugin da Cloudflare, senão o
+#    Caddy se recusa a subir (DNS-01 challenge do curinga *.v1cferr.dev).
+#    O binário custom mora em /usr/local/bin/caddy (ver scripts/caddy/build.sh);
+#    a unit aponta pra lá via exec.conf. Se faltar, mande buildar primeiro.
+CADDY_BIN="/usr/local/bin/caddy"
+if [[ ! -x "${CADDY_BIN}" ]] || ! "${CADDY_BIN}" list-modules 2>/dev/null | grep -q '^dns.providers.cloudflare$'; then
+    echo "[deploy] ERRO: ${CADDY_BIN} ausente ou sem dns.providers.cloudflare." >&2
+    echo "[deploy] Rode primeiro (SEM sudo): ~/dotfiles/scripts/caddy/build.sh" >&2
+    exit 1
+fi
+
+# 1) Caddyfile + drop-ins do systemd (env = token CF; exec = binário custom)
 install -Dm0644 "${CADDY_PKG}/etc/caddy/Caddyfile" /etc/caddy/Caddyfile
 install -Dm0644 "${CADDY_PKG}/etc/systemd/system/caddy.service.d/env.conf" \
                 /etc/systemd/system/caddy.service.d/env.conf
+install -Dm0644 "${CADDY_PKG}/etc/systemd/system/caddy.service.d/exec.conf" \
+                /etc/systemd/system/caddy.service.d/exec.conf
 echo "[deploy] arquivos copiados para /etc"
 
 # 2) Recarrega o systemd (drop-in pode ter mudado) e sobe/reinicia o caddy.

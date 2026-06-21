@@ -1,3 +1,4 @@
+//@ pragma UseQApplication
 // Painel de controle de VPN — lista dinâmica (FAI via netExtender + todos os
 // perfis vpn/wireguard do NetworkManager), cada uma com conectar/desconectar.
 // Toggle externo:  qs ipc call vpn toggle   (usado pelo módulo custom/vpn da Waybar)

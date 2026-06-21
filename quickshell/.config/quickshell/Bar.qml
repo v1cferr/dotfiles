@@ -2,7 +2,7 @@
 // FASE 1: shell + relógio + cpu/ram/disco.
 // FASE 2: áudio (Pipewire) + Spotify (Mpris) + rede (nmcli).
 // FASE 3a: cpu-temp + gpu-uso/temp (nvidia-smi) + vpn + hypridle + swaync.
-// FASE 3b: weather (MSN/Foreca XML) + popover de previsão 5 dias.
+// FASE 3b: weather (Open-Meteo JSON) + popover de previsão 7 dias.
 // FASE 4: workspaces (hyprctl + eventos, por monitor) + título da janela.
 // FASE 5: system tray (StatusNotifier; popula quando o qs é o watcher).
 // Falta: ligar no shell.qml e aposentar a Waybar (fase 6).
@@ -66,6 +66,11 @@ Scope {
     function updateClock() {
         const d = sysClock.date;
         root.timeStr = root.showDate ? "󰃭 " + Qt.formatDateTime(d, "dd/MM/yyyy") : "󰥔 " + Qt.formatDateTime(d, "HH:mm:ss");
+        const dk = Qt.formatDate(d, "yyyy-MM-dd");
+        if (dk !== root.calDayKey) {
+            root.calDayKey = dk;
+            root.refreshCalendar();
+        }
     }
     Connections {
         target: sysClock
@@ -319,7 +324,7 @@ Scope {
         }
     }
 
-    // ===== Weather (MSN / Foreca, endpoint legado XML) =====
+    // ===== Weather (Open-Meteo, JSON; lat/long de São Carlos) =====
     property string wTemp: ""
     property string wText: ""
     property string wFeels: ""
@@ -327,9 +332,26 @@ Scope {
     property string wWind: ""
     property var wForecast: []
     readonly property bool wHas: root.wTemp !== ""
-    function wattr(s, name) {
-        const m = s.match(new RegExp('(?:^|\\s)' + name + '="([^"]*)"'));
-        return m ? m[1] : "";
+    // Código WMO (Open-Meteo) -> texto PT-BR. As strings batem com os regex do
+    // weatherIcon() abaixo, então o ícone é derivado do texto sem mexer no mapa.
+    function wmoText(code) {
+        const c = code;
+        if (c === 0 || c === 1) return "Ensolarado";
+        if (c === 2) return "Parcialmente nublado";
+        if (c === 3) return "Nublado";
+        if (c === 45 || c === 48) return "Nevoeiro";
+        if (c >= 51 && c <= 57) return "Garoa";
+        if (c >= 61 && c <= 67) return "Chuva";
+        if ((c >= 71 && c <= 77) || c === 85 || c === 86) return "Neve";
+        if (c >= 80 && c <= 82) return "Pancadas de chuva";
+        if (c === 95) return "Trovoada";
+        if (c === 96 || c === 99) return "Trovoada com granizo";
+        return "—";
+    }
+    // Direção do vento (graus -> rosa-dos-ventos PT-BR, 8 pontos).
+    function windDir(deg) {
+        const dirs = ["N", "NE", "L", "SE", "S", "SO", "O", "NO"];
+        return dirs[Math.round(deg / 45) % 8];
     }
     function weatherIcon(text, isDay) {
         const c = (text || "").toLowerCase();
@@ -353,34 +375,43 @@ Scope {
         const h = sysClock.date.getHours();
         return h >= 6 && h < 18;
     }
-    function parseWeather(xml) {
-        const cur = xml.match(/<current\b([^>]*)\/>/);
-        if (cur) {
-            const a = cur[1];
-            root.wTemp = root.wattr(a, "temperature");
-            root.wText = root.wattr(a, "skytext");
-            root.wFeels = root.wattr(a, "feelslike");
-            root.wHumidity = root.wattr(a, "humidity");
-            root.wWind = root.wattr(a, "winddisplay");
+    function parseWeather(jsonText) {
+        let data;
+        try {
+            data = JSON.parse(jsonText);
+        } catch (e) {
+            return;
         }
+        const cur = data.current;
+        if (cur) {
+            root.wTemp = "" + Math.round(cur.temperature_2m);
+            root.wText = root.wmoText(cur.weather_code);
+            root.wFeels = "" + Math.round(cur.apparent_temperature);
+            root.wHumidity = "" + cur.relative_humidity_2m;
+            root.wWind = Math.round(cur.wind_speed_10m) + " km/h " + root.windDir(cur.wind_direction_10m);
+        }
+        const dy = data.daily;
         const fc = [];
-        const re = /<forecast\b([^>]*)\/>/g;
-        let m;
-        while ((m = re.exec(xml)) !== null) {
-            const a = m[1];
-            fc.push({
-                day: root.wattr(a, "shortday"),
-                low: root.wattr(a, "low"),
-                high: root.wattr(a, "high"),
-                text: root.wattr(a, "skytextday"),
-                precip: root.wattr(a, "precip")
-            });
+        // Índice 0 é hoje (já está na pílula); mostro do dia seguinte em diante
+        // (próximos 7 dias = até o mesmo dia da semana na semana que vem).
+        if (dy && dy.time) {
+            for (let i = 1; i < dy.time.length; i++) {
+                const dt = new Date(dy.time[i] + "T00:00:00");
+                const pp = dy.precipitation_probability_max[i];
+                fc.push({
+                    day: root.dowAbbr[dt.getDay()],
+                    low: "" + Math.round(dy.temperature_2m_min[i]),
+                    high: "" + Math.round(dy.temperature_2m_max[i]),
+                    text: root.wmoText(dy.weather_code[i]),
+                    precip: (pp === null || pp === undefined) ? "" : "" + pp
+                });
+            }
         }
         root.wForecast = fc;
     }
     Process {
         id: weatherProc
-        command: ["curl", "-sS", "-m", "10", "-A", "Mozilla/5.0", "https://weather.service.msn.com/find.aspx?src=msn&weadegreetype=C&culture=pt-BR&weasearchstr=-21.9977,-47.8827"]
+        command: ["curl", "-sS", "-m", "10", "https://api.open-meteo.com/v1/forecast?latitude=-21.9977&longitude=-47.8827&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=8"]
         stdout: StdioCollector {
             onStreamFinished: root.parseWeather(text)
         }
@@ -549,6 +580,189 @@ Scope {
         return Math.round(bps) + "B";
     }
 
+    // ===== Posicionamento de popovers (sempre logo abaixo do elemento) =====
+    readonly property var screenDP1: {
+        const s = Quickshell.screens;
+        for (let i = 0; i < s.length; i++)
+            if (s[i].name === "DP-1")
+                return s[i];
+        return s.length ? s[0] : null;
+    }
+    property var popScreen: null
+    property real popCenterX: 0   // centro do elemento ancorado, em coords da janela da barra
+    // mapToItem pra um Item REAL (barContent) é confiável; só mapToItem(null) não é
+    function anchorPopover(pillItem, barContentItem, scr) {
+        if (pillItem && barContentItem) {
+            const p = pillItem.mapToItem(barContentItem, 0, 0);
+            root.popCenterX = p.x + pillItem.width / 2;
+        }
+        if (scr)
+            root.popScreen = scr;
+    }
+    // margin.left pra centralizar o popover sob o elemento (+4 = margin.left da barra)
+    function popLeft(popW) {
+        const scr = root.popScreen || root.screenDP1;
+        const sw = scr ? scr.width : 1920;
+        return Math.round(Math.max(4, Math.min(root.popCenterX + 4 - popW / 2, sw - popW - 4)));
+    }
+
+    // ===== Feriados (nacional + SP + São Carlos) — pesquisa verificada jun/2026 =====
+    // Bases legais nas notas do workflow; scope: "nac" | "sp" | "sc".
+    // off = offset em dias do DOMINGO de Páscoa (datas móveis); senão m/d fixos.
+    // fac = ponto facultativo (não dá folga garantida) -> mostrado mais discreto.
+    readonly property var holidayDefs: [
+        { name: "Ano-Novo", scope: "nac", m: 1, d: 1 },
+        { name: "Carnaval (segunda)", scope: "nac", off: -48, fac: true },
+        { name: "Carnaval (terça)", scope: "nac", off: -47, fac: true },
+        { name: "Quarta-feira de Cinzas", scope: "nac", off: -46, fac: true },
+        { name: "Sexta-feira Santa", scope: "nac", off: -2 },
+        { name: "Tiradentes", scope: "nac", m: 4, d: 21 },
+        { name: "Dia do Trabalho", scope: "nac", m: 5, d: 1 },
+        { name: "Corpus Christi", scope: "sc", off: 60 },
+        { name: "Revolução Constitucionalista", scope: "sp", m: 7, d: 9 },
+        { name: "N. Sra. da Babilônia", scope: "sc", m: 8, d: 15 },
+        { name: "Independência", scope: "nac", m: 9, d: 7 },
+        { name: "N. Sra. Aparecida", scope: "nac", m: 10, d: 12 },
+        { name: "Finados", scope: "nac", m: 11, d: 2 },
+        { name: "Aniversário de São Carlos", scope: "sc", m: 11, d: 4 },
+        { name: "Proclamação da República", scope: "nac", m: 11, d: 15 },
+        { name: "Consciência Negra", scope: "nac", m: 11, d: 20 },
+        { name: "Natal", scope: "nac", m: 12, d: 25 }
+    ]
+    readonly property var monthNames: ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
+    readonly property var weekHeads: ["D", "S", "T", "Q", "Q", "S", "S"]
+    readonly property var dowAbbr: ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"]
+    readonly property var monAbbr: ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
+    function easterDate(y) {
+        const a = y % 19, b = Math.floor(y / 100), c = y % 100;
+        const dd = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+        const g = Math.floor((b - f + 1) / 3);
+        const h = (19 * a + b - dd - g + 15) % 30;
+        const i = Math.floor(c / 4), k = c % 4;
+        const l = (32 + 2 * e + 2 * i - h - k) % 7;
+        const mm = Math.floor((a + 11 * h + 22 * l) / 451);
+        const month = Math.floor((h + l - 7 * mm + 114) / 31);
+        const day = ((h + l - 7 * mm + 114) % 31) + 1;
+        return new Date(y, month - 1, day);
+    }
+    function holidaysOfYear(y) {
+        const e = root.easterDate(y);
+        const defs = root.holidayDefs;
+        const out = [];
+        for (let i = 0; i < defs.length; i++) {
+            const def = defs[i];
+            const dt = (def.off !== undefined) ? new Date(y, e.getMonth(), e.getDate() + def.off) : new Date(y, def.m - 1, def.d);
+            out.push({
+                date: dt,
+                name: def.name,
+                scope: def.scope,
+                fac: def.fac === true
+            });
+        }
+        return out;
+    }
+    function scopeColor(scope) {
+        return scope === "nac" ? root.colRed : (scope === "sp" ? root.colBlue : root.colMauve);
+    }
+    function scopeLabel(scope) {
+        return scope === "nac" ? "Nacional" : (scope === "sp" ? "Estado SP" : "São Carlos");
+    }
+    // Estado do calendário (recomputado só na virada do dia)
+    property int calYear: 0
+    property int calTodayM: 0
+    property int calTodayD: 0
+    property var calMap: ({})
+    property var calUpcoming: []
+    property string calDayKey: ""
+    function buildCalMap(y) {
+        const map = ({});
+        const hs = root.holidaysOfYear(y);
+        for (let i = 0; i < hs.length; i++) {
+            const h = hs[i];
+            const key = (h.date.getMonth() + 1) * 100 + h.date.getDate();
+            if (!map[key])
+                map[key] = [];
+            map[key].push(h);
+        }
+        return map;
+    }
+    function computeUpcoming(now, n) {
+        const t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        let all = root.holidaysOfYear(now.getFullYear()).concat(root.holidaysOfYear(now.getFullYear() + 1));
+        all = all.filter(h => !h.fac && h.date.getTime() >= t0);
+        all.sort((a, b) => a.date.getTime() - b.date.getTime());
+        return all.slice(0, n);
+    }
+    function refreshCalendar() {
+        const d = sysClock.date;
+        root.calYear = d.getFullYear();
+        root.calTodayM = d.getMonth() + 1;
+        root.calTodayD = d.getDate();
+        root.calMap = root.buildCalMap(root.calYear);
+        root.calUpcoming = root.computeUpcoming(d, 7);
+    }
+    function monthCells(m) {
+        const cells = [];
+        for (let i = 0; i < 7; i++)
+            cells.push({ head: root.weekHeads[i] });
+        const first = new Date(root.calYear, m - 1, 1).getDay();
+        for (let i = 0; i < first; i++)
+            cells.push({ d: 0 });
+        const dim = new Date(root.calYear, m, 0).getDate();
+        for (let d = 1; d <= dim; d++) {
+            const arr = root.calMap[m * 100 + d];
+            let hol = null;
+            if (arr && arr.length) {
+                hol = arr[0];
+                for (let j = 0; j < arr.length; j++)
+                    if (!arr[j].fac) {
+                        hol = arr[j];
+                        break;
+                    }
+            }
+            cells.push({
+                d: d,
+                holiday: hol,
+                today: (m === root.calTodayM && d === root.calTodayD)
+            });
+        }
+        return cells;
+    }
+    function fmtHolidayDate(dt) {
+        const dd = ("0" + dt.getDate()).slice(-2);
+        return root.dowAbbr[dt.getDay()] + " " + dd + "/" + root.monAbbr[dt.getMonth()];
+    }
+    function daysUntilLabel(dt) {
+        const t0 = new Date(root.calYear, root.calTodayM - 1, root.calTodayD).getTime();
+        const h0 = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).getTime();
+        const n = Math.round((h0 - t0) / 86400000);
+        if (n <= 0)
+            return "hoje";
+        if (n === 1)
+            return "amanhã";
+        return "em " + n + "d";
+    }
+    // hover-keep do calendário (igual ao weather)
+    property bool calPillHovered: false
+    property bool calPopHovered: false
+    property bool calPopVisible: false
+    onCalPillHoveredChanged: root.updateCalPop()
+    onCalPopHoveredChanged: root.updateCalPop()
+    function updateCalPop() {
+        if (root.calPillHovered || root.calPopHovered) {
+            calPopCloseTimer.stop();
+            root.calPopVisible = true;
+        } else {
+            calPopCloseTimer.restart();
+        }
+    }
+    Timer {
+        id: calPopCloseTimer
+        interval: 300
+        onTriggered: if (!root.calPillHovered && !root.calPopHovered)
+            root.calPopVisible = false
+    }
+
     // ===== Hover do popover de métricas (temp / uso / rede) =====
     property string metricShown: ""   // "temp" | "usage" | "net"
     property bool metricHovering: false
@@ -557,16 +771,30 @@ Scope {
     readonly property var metricRows: {
         const m = root.metricShown;
         if (m === "temp")
-            return root.tempList.map(t => ({ label: t.name, value: t.temp + "\u00b0C" }));
+            return root.tempList.map(t => ({
+                        label: t.name,
+                        value: t.temp + "\u00b0C",
+                        frac: Math.max(0, Math.min(1, t.temp / 100)),
+                        barColor: root.tempColor(t.temp)
+                    }));
         if (m === "usage")
-            return root.usageList.map(u => ({ label: u.name, value: u.pct + "%" }));
+            return root.usageList.map(u => ({
+                        label: u.name,
+                        value: u.pct + "%",
+                        frac: Math.max(0, Math.min(1, u.pct / 100)),
+                        barColor: root.stateColor(u.pct, root.colAccent)
+                    }));
         if (m === "net")
-            return root.netRates.map(n => ({ label: n.iface, value: "\u2193" + root.fmtRate(n.rx) + " \u2191" + root.fmtRate(n.tx) }));
+            return root.netRates.map(n => ({
+                        label: n.iface,
+                        value: "\u2193" + root.fmtRate(n.rx) + " \u2191" + root.fmtRate(n.tx)
+                    }));
         return [];
     }
-    function showMetric(which) {
+    function showMetric(which, pillItem, barContentItem, scr) {
         root.metricShown = which;
         root.metricHovering = true;
+        root.anchorPopover(pillItem, barContentItem, scr);
         metricCloseTimer.stop();
         root.metricPopVisible = true;
     }
@@ -637,6 +865,8 @@ Scope {
     // ===== Hyprland: workspaces (hyprctl + eventos) + título da janela =====
     property var wsActive: ({})
     property var wsExist: ({})
+    property var wsWindows: ({})   // contagem de janelas por ws (detecta janela nova)
+    property var wsActivity: ({})  // algo abriu/urgente numa ws de fundo (badge)
     property string focusedMon: ""
     readonly property var wsIcons: ({
             1: "󰲠",
@@ -669,9 +899,26 @@ Scope {
         try {
             const wss = JSON.parse(parts[1]);
             const ex = ({});
-            for (let i = 0; i < wss.length; i++)
-                ex[wss[i].id] = true;
+            const win = ({});
+            const prev = root.wsWindows;
+            const act = Object.assign({}, root.wsActivity);
+            const focusedWsId = root.wsActive[root.focusedMon];
+            for (let i = 0; i < wss.length; i++) {
+                const w = wss[i];
+                ex[w.id] = true;
+                const wc = w.windows || 0;
+                win[w.id] = wc;
+                const before = prev[w.id];
+                // janela nova numa ws que NÃO é a focada -> marca atividade
+                if (before !== undefined && wc > before && w.id !== focusedWsId)
+                    act[w.id] = true;
+                // visitei a ws -> limpa o aviso
+                if (w.id === focusedWsId)
+                    act[w.id] = false;
+            }
             root.wsExist = ex;
+            root.wsWindows = win;
+            root.wsActivity = act;
         } catch (e) {}
     }
     Process {
@@ -681,12 +928,28 @@ Scope {
             onStreamFinished: root.parseHypr(text)
         }
     }
+    // marca atividade na ws urgente (caso "demanda atenção" sem janela nova, ex.: aba)
+    function markUrgentActivity() {
+        const wl = Hyprland.workspaces ? Hyprland.workspaces.values : [];
+        const focusedWsId = root.wsActive[root.focusedMon];
+        const act = Object.assign({}, root.wsActivity);
+        let changed = false;
+        for (let i = 0; i < wl.length; i++)
+            if (wl[i].urgent === true && wl[i].id !== focusedWsId) {
+                act[wl[i].id] = true;
+                changed = true;
+            }
+        if (changed)
+            root.wsActivity = act;
+    }
     Connections {
         target: Hyprland
         function onRawEvent(event) {
             const n = event.name;
             if (n.indexOf("workspace") === 0 || n === "focusedmon" || n === "createworkspace" || n === "destroyworkspace" || n === "moveworkspace" || n === "openwindow" || n === "closewindow" || n === "urgent")
                 hyprProc.running = true;
+            if (n === "urgent")
+                root.markUrgentActivity();
         }
     }
     // título da janela ativa (Hyprland nativo) + rewrite rules
@@ -800,6 +1063,7 @@ Scope {
         property int wsid: 0
         property bool active: false
         property bool exists: false
+        property bool activity: false
 
         implicitWidth: Math.max(24, wlbl.implicitWidth + 14)
         implicitHeight: 22
@@ -822,6 +1086,36 @@ Scope {
             font.pixelSize: 13
             font.bold: wsbtn.active
         }
+        // badge: algo abriu / ficou urgente nessa ws enquanto eu estava em outra
+        Rectangle {
+            visible: wsbtn.activity && !wsbtn.active
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.rightMargin: 2
+            anchors.topMargin: 2
+            width: 7
+            height: 7
+            radius: 3.5
+            color: root.colPeach
+            border.color: "#1a1b26"
+            border.width: 1
+            SequentialAnimation on opacity {
+                running: wsbtn.activity && !wsbtn.active
+                loops: Animation.Infinite
+                NumberAnimation {
+                    from: 1
+                    to: 0.35
+                    duration: 700
+                    easing.type: Easing.InOutQuad
+                }
+                NumberAnimation {
+                    from: 0.35
+                    to: 1
+                    duration: 700
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
         MouseArea {
             id: wsArea
             anchors.fill: parent
@@ -834,21 +1128,17 @@ Scope {
     PanelWindow {
         id: wPop
         visible: root.wPopVisible && root.wHas
-        screen: {
-            const screens = Quickshell.screens;
-            for (let i = 0; i < screens.length; i++)
-                if (screens[i].name === "DP-1")
-                    return screens[i];
-            return null;
-        }
+        screen: root.popScreen || root.screenDP1
         anchors {
             top: true
+            left: true
         }
         margins {
-            top: 36
+            top: 33
+            left: root.popLeft(wPop.implicitWidth)
         }
         exclusiveZone: 0
-        implicitWidth: 440
+        implicitWidth: 560
         implicitHeight: 158
         color: "transparent"
 
@@ -929,7 +1219,7 @@ Scope {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 10
+                    spacing: 6
                     Repeater {
                         model: root.wForecast
                         ColumnLayout {
@@ -977,24 +1267,18 @@ Scope {
     PanelWindow {
         id: metricPop
         visible: root.metricPopVisible
-        screen: {
-            const screens = Quickshell.screens;
-            for (let i = 0; i < screens.length; i++)
-                if (screens[i].name === "DP-1")
-                    return screens[i];
-            return null;
-        }
+        screen: root.popScreen || root.screenDP1
         anchors {
             top: true
-            right: true
+            left: true
         }
         margins {
             top: 33
-            right: 4
+            left: root.popLeft(metricPop.implicitWidth)
         }
         exclusiveZone: 0
-        implicitWidth: 290
-        implicitHeight: 200
+        implicitWidth: 300
+        implicitHeight: 240
         color: "transparent"
         Rectangle {
             anchors.fill: parent
@@ -1024,28 +1308,252 @@ Scope {
                 }
                 Repeater {
                     model: root.metricRows
-                    RowLayout {
+                    ColumnLayout {
                         required property var modelData
                         Layout.fillWidth: true
-                        spacing: 12
-                        Text {
+                        spacing: 3
+                        RowLayout {
                             Layout.fillWidth: true
-                            text: modelData.label
-                            color: root.colText
-                            font.family: root.uiFont
-                            font.pixelSize: 12
+                            spacing: 12
+                            Text {
+                                Layout.fillWidth: true
+                                text: modelData.label
+                                color: root.colText
+                                font.family: root.uiFont
+                                font.pixelSize: 12
+                            }
+                            Text {
+                                text: modelData.value
+                                color: root.colText
+                                font.family: root.uiFont
+                                font.pixelSize: 12
+                                font.bold: true
+                            }
                         }
-                        Text {
-                            text: modelData.value
-                            color: root.colText
-                            font.family: root.uiFont
-                            font.pixelSize: 12
-                            font.bold: true
+                        Rectangle {
+                            visible: modelData.frac !== undefined
+                            Layout.fillWidth: true
+                            implicitHeight: 5
+                            radius: 2.5
+                            color: "#33414868"
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: parent.width * (modelData.frac !== undefined ? modelData.frac : 0)
+                                height: parent.height
+                                radius: parent.radius
+                                color: modelData.barColor !== undefined ? modelData.barColor : root.colAccent
+                                Behavior on width {
+                                    NumberAnimation {
+                                        duration: 300
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+                            }
                         }
                     }
                 }
                 Item {
                     Layout.fillHeight: true
+                }
+            }
+        }
+    }
+
+    // ===== Popover de calendário (hover no relógio) — ano inteiro + feriados =====
+    PanelWindow {
+        id: calPop
+        visible: root.calPopVisible
+        screen: root.popScreen || root.screenDP1
+        anchors {
+            top: true
+            left: true
+        }
+        margins {
+            top: 33
+            left: root.popLeft(calPop.implicitWidth)
+        }
+        exclusiveZone: 0
+        implicitWidth: 880
+        implicitHeight: 470
+        color: "transparent"
+        Rectangle {
+            anchors.fill: parent
+            radius: 12
+            color: "#f21a1b26"
+            border.color: "#414868"
+            border.width: 1
+            HoverHandler {
+                onHoveredChanged: root.calPopHovered = hovered
+            }
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 14
+                spacing: 14
+
+                // ---- Próximos feriados (coluna esquerda) ----
+                ColumnLayout {
+                    Layout.preferredWidth: 234
+                    Layout.fillHeight: true
+                    spacing: 7
+                    Text {
+                        text: "Próximos feriados"
+                        color: root.colAccent
+                        font.family: root.uiFont
+                        font.pixelSize: 15
+                        font.bold: true
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 1
+                        color: "#414868"
+                        opacity: 0.5
+                    }
+                    Repeater {
+                        model: root.calUpcoming
+                        RowLayout {
+                            required property var modelData
+                            Layout.fillWidth: true
+                            spacing: 8
+                            Rectangle {
+                                width: 8
+                                height: 8
+                                radius: 4
+                                color: root.scopeColor(modelData.scope)
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 0
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: modelData.name
+                                    color: root.colText
+                                    font.family: root.uiFont
+                                    font.pixelSize: 12
+                                    font.bold: true
+                                    elide: Text.ElideRight
+                                }
+                                Text {
+                                    text: root.fmtHolidayDate(modelData.date) + "  ·  " + root.scopeLabel(modelData.scope)
+                                    color: root.colDim
+                                    font.family: root.uiFont
+                                    font.pixelSize: 10
+                                }
+                            }
+                            Text {
+                                text: root.daysUntilLabel(modelData.date)
+                                color: root.colSky
+                                font.family: root.uiFont
+                                font.pixelSize: 10
+                                font.bold: true
+                            }
+                        }
+                    }
+                    Item {
+                        Layout.fillHeight: true
+                    }
+                    RowLayout {
+                        spacing: 10
+                        Repeater {
+                            model: [{ c: "nac", t: "Nacional" }, { c: "sp", t: "SP" }, { c: "sc", t: "S.Carlos" }]
+                            RowLayout {
+                                required property var modelData
+                                spacing: 4
+                                Rectangle {
+                                    width: 8
+                                    height: 8
+                                    radius: 4
+                                    color: root.scopeColor(modelData.c)
+                                }
+                                Text {
+                                    text: modelData.t
+                                    color: root.colDim
+                                    font.family: root.uiFont
+                                    font.pixelSize: 9
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillHeight: true
+                    width: 1
+                    color: "#414868"
+                    opacity: 0.5
+                }
+
+                // ---- Grade de 12 meses ----
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    spacing: 6
+                    Text {
+                        text: "Calendário " + root.calYear
+                        color: root.colText
+                        font.family: root.uiFont
+                        font.pixelSize: 15
+                        font.bold: true
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                    GridLayout {
+                        Layout.fillWidth: true
+                        columns: 4
+                        rowSpacing: 8
+                        columnSpacing: 12
+                        Repeater {
+                            model: 12
+                            ColumnLayout {
+                                required property int index
+                                spacing: 1
+                                Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
+                                Text {
+                                    text: root.monthNames[index]
+                                    color: (index + 1 === root.calTodayM) ? root.colAccent : root.colText
+                                    font.family: root.uiFont
+                                    font.pixelSize: 11
+                                    font.bold: true
+                                    Layout.alignment: Qt.AlignHCenter
+                                }
+                                Grid {
+                                    columns: 7
+                                    Layout.alignment: Qt.AlignHCenter
+                                    Repeater {
+                                        model: root.monthCells(index + 1)
+                                        Item {
+                                            required property var modelData
+                                            readonly property var hol: modelData.holiday
+                                            readonly property bool isToday: modelData.today === true
+                                            readonly property bool isHead: modelData.head !== undefined
+                                            width: 19
+                                            height: 15
+                                            Rectangle {
+                                                anchors.centerIn: parent
+                                                width: 16
+                                                height: 13
+                                                radius: 3
+                                                color: parent.isToday ? root.colAccent : (parent.hol && !parent.hol.fac ? root.scopeColor(parent.hol.scope) : "transparent")
+                                                border.width: (!parent.isToday && parent.hol && parent.hol.fac) ? 1 : 0
+                                                border.color: parent.hol ? root.scopeColor(parent.hol.scope) : "transparent"
+                                            }
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: parent.isHead ? parent.modelData.head : (parent.modelData.d > 0 ? ("" + parent.modelData.d) : "")
+                                                color: parent.isHead ? root.colDim : (parent.isToday ? "#1a1b26" : (parent.hol && !parent.hol.fac ? "#1a1b26" : (parent.hol && parent.hol.fac ? root.scopeColor(parent.hol.scope) : root.colWsInactive)))
+                                                font.family: root.uiFont
+                                                font.pixelSize: parent.isHead ? 8 : 9
+                                                font.bold: parent.isToday || (parent.hol && !parent.hol.fac) || parent.isHead
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Item {
+                        Layout.fillHeight: true
+                    }
                 }
             }
         }
@@ -1075,168 +1583,216 @@ Scope {
             exclusiveZone: root.barExclusiveZone
             color: "transparent"
 
-            // ESQUERDA: workspaces (do monitor) + título da janela + Spotify
-            Group {
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                Repeater {
-                    model: (bar.modelData && bar.modelData.name === "HDMI-A-1") ? [5, 6, 7, 8] : [1, 2, 3, 4]
-                    WsBtn {
-                        wsid: modelData
-                        active: root.wsActive[bar.modelData.name] === modelData
-                        exists: root.wsExist[modelData] === true
+            // Item full-width usado como referência de coordenadas pros popovers
+            // (mapToItem pra um Item real é confiável; mapToItem(null) não é).
+            Item {
+                id: barContent
+                anchors.fill: parent
+
+                // ESQUERDA: workspaces (do monitor) + título da janela + Spotify
+                Group {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    Repeater {
+                        model: (bar.modelData && bar.modelData.name === "HDMI-A-1") ? [5, 6, 7, 8] : [1, 2, 3, 4]
+                        WsBtn {
+                            wsid: modelData
+                            active: root.wsActive[bar.modelData.name] === modelData
+                            exists: root.wsExist[modelData] === true
+                            activity: root.wsActivity[modelData] === true
+                        }
+                    }
+                    Pill {
+                        visible: bar.modelData && bar.modelData.name === root.focusedMon && root.winTitle !== ""
+                        label: root.winTitle
+                        accent: root.colSky
+                        italic: true
+                        maxWidth: 340
+                    }
+                    Pill {
+                        visible: root.spHasPlayer
+                        icon: "󰝚"
+                        label: root.spText
+                        accent: root.spColor
+                        maxWidth: 240
+                        onClicked: root.launch(["qs", "ipc", "call", "mpris", "toggle"])
+                        onRightClicked: root.launch(["playerctl", "--player=spotify", "play-pause"])
+                        onScrolledUp: root.launch(["playerctl", "--player=spotify", "next"])
+                        onScrolledDown: root.launch(["playerctl", "--player=spotify", "previous"])
                     }
                 }
-                Pill {
-                    visible: bar.modelData && bar.modelData.name === root.focusedMon && root.winTitle !== ""
-                    label: root.winTitle
-                    accent: root.colSky
-                    italic: true
-                    maxWidth: 340
-                }
-                Pill {
-                    visible: root.spHasPlayer
-                    icon: "󰝚"
-                    label: root.spText
-                    accent: root.spColor
-                    maxWidth: 240
-                    onClicked: root.launch(["qs", "ipc", "call", "mpris", "toggle"])
-                    onRightClicked: root.launch(["playerctl", "--player=spotify", "play-pause"])
-                    onScrolledUp: root.launch(["playerctl", "--player=spotify", "next"])
-                    onScrolledDown: root.launch(["playerctl", "--player=spotify", "previous"])
-                }
-            }
 
-            // CENTRO: weather + relógio + notificações (sempre no centro da tela)
-            Group {
-                anchors.centerIn: parent
-                Pill {
-                    visible: root.wHas
-                    icon: root.weatherIcon(root.wText, root.isDayNow())
-                    label: root.wTemp + "°C"
-                    accent: root.colSapphire
-                    onHoveredChanged: root.wPillHovered = hovered
-                    onClicked: root.launch(["xdg-open", "https://www.msn.com/pt-br/clima/forecast/in-S%C3%A3o-Carlos,S%C3%A3o-Paulo"])
-                }
-                Pill {
-                    label: root.timeStr
-                    accent: root.colMauve
-                    onClicked: root.showDate = !root.showDate
-                }
-                Pill {
-                    icon: root.swayncIcon
-                    accent: root.colPeach
-                    onClicked: root.launch(["swaync-client", "-t", "-sw"])
-                    onRightClicked: root.launch(["swaync-client", "-d", "-sw"])
-                }
-            }
-
-            // DIREITA (ordem da Waybar): cpu, cpu-temp, gpu-uso, gpu-temp, ram, disco, vpn, rede, áudio, hypridle
-            Group {
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                Pill {
-                    icon: "󰔏"
-                    label: root.tempMax + "°C"
-                    accent: root.tempColor(root.tempMax)
-                    onHoveredChanged: hovered ? root.showMetric("temp") : root.unhoverMetric()
-                }
-                Pill {
-                    icon: "󰓅"
-                    label: root.cpuPct + "%"
-                    accent: root.stateColor(root.cpuPct, root.colYellow)
-                    onHoveredChanged: hovered ? root.showMetric("usage") : root.unhoverMetric()
-                }
-                Pill {
-                    icon: "󰦝"
-                    label: root.vpnConnected ? root.vpnName : ""
-                    accent: root.vpnConnected ? root.colGreen : root.colDim
-                    maxWidth: 150
-                    onClicked: root.launch(["qs", "ipc", "call", "vpn", "toggle"])
-                    onRightClicked: root.launch([root.vpnBin, "menu"])
-                }
-                Pill {
-                    icon: "󰛳"
-                    label: "↓" + root.fmtRate(root.netMainRx) + " ↑" + root.fmtRate(root.netMainTx)
-                    accent: root.netConnected ? root.colTeal : root.colRed
-                    onHoveredChanged: hovered ? root.showMetric("net") : root.unhoverMetric()
-                    onClicked: root.launch(["nm-connection-editor"])
-                }
-                Pill {
-                    icon: root.volIcon()
-                    label: Math.round(root.volume * 100) + "%"
-                    accent: root.sinkMuted ? root.colDim : root.colBlue
-                    onClicked: root.toggleMute()
-                    onRightClicked: root.launch(["pavucontrol"])
-                    onScrolledUp: root.setVol(0.05)
-                    onScrolledDown: root.setVol(-0.05)
-                }
-                Pill {
-                    icon: root.hypridleIcon
-                    accent: root.hypridleOn ? root.colGreen : root.colRed
-                    onClicked: root.launch(["bash", root.scriptsDir + "/toggle-hypridle.sh", "toggle"])
-                }
-                // System tray (StatusNotifier). Popula quando o qs é o watcher
-                // (i.e. com a Waybar fora — Fase 6 / login). Esquerda=activate,
-                // meio=secondaryActivate, scroll, direita=menu nativo.
-                Repeater {
-                    model: SystemTray.items
-                    Item {
-                        id: trayDel
-                        implicitWidth: 24
-                        implicitHeight: 24
-                        // Alguns SNI (ex.: Dropbox) publicam o ícone como
-                        // image://icon/<nome>?path=<dir> num tema hicolor que o
-                        // provedor do Quickshell não resolve. Busco o arquivo
-                        // real no <dir> e aponto pra file://.
-                        readonly property string rawIcon: "" + modelData.icon
-                        readonly property bool isPathIcon: /^image:\/\/icon\/[^?]+\?path=/.test(trayDel.rawIcon)
-                        property string resolvedIcon: ""
-                        function resolveTrayIcon() {
-                            trayDel.resolvedIcon = "";
-                            const m = trayDel.rawIcon.match(/^image:\/\/icon\/([^?]+)\?path=(.+)$/);
-                            if (m) {
-                                iconFinder.command = ["find", m[2], "-name", m[1] + ".png", "-print", "-quit"];
-                                iconFinder.running = true;
+                // CENTRO: weather + relógio + notificações (sempre no centro da tela)
+                Group {
+                    anchors.centerIn: parent
+                    Pill {
+                        id: weatherPill
+                        visible: root.wHas
+                        icon: root.weatherIcon(root.wText, root.isDayNow())
+                        label: root.wTemp + "°C"
+                        accent: root.colSapphire
+                        onHoveredChanged: {
+                            root.wPillHovered = hovered;
+                            if (hovered)
+                                root.anchorPopover(weatherPill, barContent, bar.screen);
+                        }
+                        onClicked: root.launch(["xdg-open", "https://www.msn.com/pt-br/clima/forecast/in-S%C3%A3o-Carlos,S%C3%A3o-Paulo"])
+                    }
+                    Pill {
+                        id: clockPill
+                        label: root.timeStr
+                        accent: root.colMauve
+                        onClicked: root.showDate = !root.showDate
+                        onHoveredChanged: {
+                            if (hovered) {
+                                root.anchorPopover(clockPill, barContent, bar.screen);
+                                root.calPillHovered = true;
+                            } else {
+                                root.calPillHovered = false;
                             }
                         }
-                        onRawIconChanged: trayDel.resolveTrayIcon()
-                        Component.onCompleted: trayDel.resolveTrayIcon()
-                        Process {
-                            id: iconFinder
-                            stdout: StdioCollector {
-                                onStreamFinished: {
-                                    const p = text.trim();
-                                    if (p)
-                                        trayDel.resolvedIcon = "file://" + p;
-                                }
-                            }
-                        }
-                        Image {
+                    }
+                    Pill {
+                        icon: root.swayncIcon
+                        accent: root.colPeach
+                        onClicked: root.launch(["swaync-client", "-t", "-sw"])
+                        onRightClicked: root.launch(["swaync-client", "-d", "-sw"])
+                    }
+                }
+
+                // DIREITA: temp, uso, vpn, rede, áudio, hypridle, tray
+                Group {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    Pill {
+                        id: tempPill
+                        icon: "󰔏"
+                        label: root.tempMax + "°C"
+                        accent: root.tempColor(root.tempMax)
+                        onHoveredChanged: hovered ? root.showMetric("temp", tempPill, barContent, bar.screen) : root.unhoverMetric()
+                    }
+                    Pill {
+                        id: usagePill
+                        icon: "󰓅"
+                        label: root.cpuPct + "%"
+                        accent: root.stateColor(root.cpuPct, root.colYellow)
+                        onHoveredChanged: hovered ? root.showMetric("usage", usagePill, barContent, bar.screen) : root.unhoverMetric()
+                    }
+                    Pill {
+                        icon: "󰦝"
+                        label: root.vpnConnected ? root.vpnName : ""
+                        accent: root.vpnConnected ? root.colGreen : root.colDim
+                        maxWidth: 150
+                        onClicked: root.launch(["qs", "ipc", "call", "vpn", "toggle"])
+                        onRightClicked: root.launch([root.vpnBin, "menu"])
+                    }
+                    Pill {
+                        id: netPill
+                        icon: "󰛳"
+                        label: "↓" + root.fmtRate(root.netMainRx) + " ↑" + root.fmtRate(root.netMainTx)
+                        accent: root.netConnected ? root.colTeal : root.colRed
+                        onHoveredChanged: hovered ? root.showMetric("net", netPill, barContent, bar.screen) : root.unhoverMetric()
+                        onClicked: root.launch(["nm-connection-editor"])
+                    }
+                    Pill {
+                        icon: root.volIcon()
+                        label: Math.round(root.volume * 100) + "%"
+                        accent: root.sinkMuted ? root.colDim : root.colBlue
+                        onClicked: root.toggleMute()
+                        onRightClicked: root.launch(["pavucontrol"])
+                        onScrolledUp: root.setVol(0.05)
+                        onScrolledDown: root.setVol(-0.05)
+                    }
+                    Pill {
+                        icon: root.hypridleIcon
+                        accent: root.hypridleOn ? root.colGreen : root.colRed
+                        onClicked: root.launch(["bash", root.scriptsDir + "/toggle-hypridle.sh", "toggle"])
+                    }
+                    // System tray (StatusNotifier) — fundo único pro grupo de ícones.
+                    // Popula quando o qs é o watcher (Waybar fora). Esquerda=activate,
+                    // meio=secondaryActivate, scroll, direita=menu nativo (QsMenuAnchor).
+                    Rectangle {
+                        visible: root.trayCount > 0
+                        implicitHeight: 22
+                        implicitWidth: trayRow.implicitWidth + 14
+                        radius: 8
+                        color: root.colPillBg
+                        border.color: root.colPillBorder
+                        border.width: 1
+                        RowLayout {
+                            id: trayRow
                             anchors.centerIn: parent
-                            // path-icons: só mostra após resolver pro file:// (evita o load quebrado)
-                            source: trayDel.isPathIcon ? trayDel.resolvedIcon : trayDel.rawIcon
-                            sourceSize.width: 16
-                            sourceSize.height: 16
-                            width: 16
-                            height: 16
-                            opacity: modelData.status === 0 ? 0.55 : 1
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
-                            onClicked: m => {
-                                if (m.button === Qt.LeftButton)
-                                    modelData.activate();
-                                else if (m.button === Qt.MiddleButton)
-                                    modelData.secondaryActivate();
-                                else if (modelData.hasMenu) {
-                                    const p = parent.mapToItem(null, parent.width / 2, parent.height);
-                                    modelData.display(bar, p.x, p.y);
+                            spacing: 7
+                            Repeater {
+                                model: SystemTray.items
+                                Item {
+                                    id: trayDel
+                                    implicitWidth: 20
+                                    implicitHeight: 22
+                                    // Alguns SNI (ex.: Dropbox) publicam o ícone como
+                                    // image://icon/<nome>?path=<dir> num tema hicolor que o
+                                    // provedor do Quickshell não resolve. Busco o arquivo
+                                    // real no <dir> e aponto pra file://.
+                                    readonly property string rawIcon: "" + modelData.icon
+                                    readonly property bool isPathIcon: /^image:\/\/icon\/[^?]+\?path=/.test(trayDel.rawIcon)
+                                    property string resolvedIcon: ""
+                                    function resolveTrayIcon() {
+                                        trayDel.resolvedIcon = "";
+                                        const m = trayDel.rawIcon.match(/^image:\/\/icon\/([^?]+)\?path=(.+)$/);
+                                        if (m) {
+                                            iconFinder.command = ["find", m[2], "-name", m[1] + ".png", "-print", "-quit"];
+                                            iconFinder.running = true;
+                                        }
+                                    }
+                                    onRawIconChanged: trayDel.resolveTrayIcon()
+                                    Component.onCompleted: trayDel.resolveTrayIcon()
+                                    Process {
+                                        id: iconFinder
+                                        stdout: StdioCollector {
+                                            onStreamFinished: {
+                                                const p = text.trim();
+                                                if (p)
+                                                    trayDel.resolvedIcon = "file://" + p;
+                                            }
+                                        }
+                                    }
+                                    // Menu de contexto nativo do SNI, ancorado abaixo do ícone.
+                                    QsMenuAnchor {
+                                        id: trayMenu
+                                        menu: modelData.menu
+                                        // ancora na janela real (PanelWindow) — padrão robusto no wlroots
+                                        anchor.window: bar
+                                        anchor.rect: Qt.rect(trayDel.mapToItem(barContent, 0, 0).x, trayDel.mapToItem(barContent, 0, 0).y + trayDel.height, trayDel.width, 1)
+                                        anchor.edges: Edges.Bottom
+                                        anchor.gravity: Edges.Bottom
+                                        anchor.adjustment: PopupAdjustment.Flip | PopupAdjustment.Slide
+                                    }
+                                    Image {
+                                        anchors.centerIn: parent
+                                        // path-icons: só mostra após resolver pro file:// (evita o load quebrado)
+                                        source: trayDel.isPathIcon ? trayDel.resolvedIcon : trayDel.rawIcon
+                                        sourceSize.width: 16
+                                        sourceSize.height: 16
+                                        width: 16
+                                        height: 16
+                                        opacity: modelData.status === 0 ? 0.55 : 1
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+                                        onClicked: m => {
+                                            if (m.button === Qt.LeftButton)
+                                                modelData.activate();
+                                            else if (m.button === Qt.MiddleButton)
+                                                modelData.secondaryActivate();
+                                            else if (modelData.hasMenu)
+                                                trayMenu.open();
+                                        }
+                                        onWheel: w => modelData.scroll(w.angleDelta.y, false)
+                                    }
                                 }
                             }
-                            onWheel: w => modelData.scroll(w.angleDelta.y, false)
                         }
                     }
                 }

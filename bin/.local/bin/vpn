@@ -8,9 +8,9 @@ FAI_PROFILE="${FAI_PROFILE:-FAI.UFSCAR}"
 TERMINAL_APP="${TERMINAL:-kitty}"
 
 notify() {
-  local msg="$1"
+  local msg="$1" urgency="${2:-normal}"
   if command -v notify-send >/dev/null 2>&1; then
-    notify-send "VPN" "$msg"
+    notify-send -u "$urgency" "VPN" "$msg"
   else
     printf '%s\n' "$msg"
   fi
@@ -195,9 +195,22 @@ connect_fai_auto() {
 # internet local continuar funcionando. Os subnets da FAI (200.136.209.128/25
 # etc.) têm rota própria e seguem pelo túnel. Sem senha graças ao
 # /etc/sudoers.d/fai-split-tunnel; validado que o netExtender não re-adiciona.
+# NÃO engolir a falha: se o sudoers não estiver instalado, o drop falha e você
+# fica em FULL-TUNNEL (todo o tráfego pela FAI) sem perceber — então avisamos
+# bem visível e dizemos como corrigir.
 fai_split_tunnel() {
-  sudo -n /usr/bin/ip route del default dev snwl_ssltunnel 2>/dev/null \
-    && notify "FAI: split-tunnel ativo (internet local preservada)" || true
+  # Sem default pelo túnel? Já está split (ou o servidor não empurrou full-tunnel).
+  if ! ip route show default 2>/dev/null | grep -q 'dev snwl_ssltunnel'; then
+    return 0
+  fi
+  local err
+  if err="$(sudo -n /usr/bin/ip route del default dev snwl_ssltunnel 2>&1)"; then
+    notify "FAI: split-tunnel ativo (internet local preservada)"
+    return 0
+  fi
+  notify "FAI: FALHA no split-tunnel — VOCÊ ESTÁ EM FULL-TUNNEL. Rode: sudo ~/dotfiles/scripts/netextender/deploy.sh" critical
+  printf 'vpn: split-tunnel falhou: %s\n' "$err" >&2
+  return 1
 }
 
 connect_fai() {

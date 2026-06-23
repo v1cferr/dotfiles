@@ -217,6 +217,15 @@ Scope {
             }
         }
 
+        // Botão DIREITO em qualquer ponto do card = dispensar (dismiss).
+        // Fica no fundo (z-order): os botões de ação tratam o clique esquerdo por
+        // cima; o direito não é aceito por eles e propaga até aqui.
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.RightButton
+            onClicked: Notifs.dismiss(card.notif)
+        }
+
         RowLayout {
             id: cardRow
             anchors.fill: parent

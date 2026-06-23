@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 # ============================================================================
-#  Contagem de notificações (swaync) para a tela de bloqueio (hyprlock)
+#  Contagem de notificações para a tela de bloqueio (hyprlock)
 # ----------------------------------------------------------------------------
-#  O swaync só expõe a CONTAGEM (não o conteúdo), então mostramos só o número.
-#  Sem expor o texto das notificações na tela bloqueada.
+#  Fonte: serviço de notificações do Quickshell (Notifs.qml), via IPC.
+#  Mostramos só o NÚMERO — sem expor o conteúdo na tela bloqueada.
 # ============================================================================
-# --skip-wait: não trava esperando o swaync responder (aparece na hora)
-n=$(swaync-client -c -sw 2>/dev/null || echo 0)
+n=$(qs ipc call notif count 2>/dev/null || echo 0)
 [[ ${n} =~ ^[0-9]+$ ]] || n=0
 
 if (( n > 0 )); then

@@ -1145,15 +1145,14 @@ Scope {
                 anchors.margins: 14
                 spacing: 10
 
+                // Cabeçalho: grupo compacto e CENTRADO (margens simétricas, larguras
+                // naturais — é o esticar pela largura toda que abria os vãos).
                 RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 12
+                    Layout.alignment: Qt.AlignHCenter
+                    spacing: 16
 
-                    // Coluna 1 — clima de hoje (ícone + temperatura + condição).
-                    // preferredWidth:0 + fillWidth nas 4 colunas => larguras IGUAIS.
+                    // Clima de hoje (ícone + temperatura + condição)
                     ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.preferredWidth: 0
                         Layout.alignment: Qt.AlignVCenter
                         spacing: 2
                         RowLayout {
@@ -1174,18 +1173,15 @@ Scope {
                             }
                         }
                         Text {
-                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignHCenter
                             text: root.wText
                             color: root.colSapphire
                             font.family: root.uiFont
                             font.pixelSize: 10
-                            horizontalAlignment: Text.AlignHCenter
-                            wrapMode: Text.WordWrap
                         }
                     }
 
-                    // Colunas 2-4 — métricas iguais, cada uma com separador à esquerda
-                    // (linha fina) e valor-grande-em-cima / rótulo-embaixo, como o hero.
+                    // Métricas: separador fino + valor-em-cima / rótulo-embaixo.
                     Repeater {
                         model: [
                             {
@@ -1203,9 +1199,8 @@ Scope {
                         ]
                         RowLayout {
                             required property var modelData
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: 0
-                            spacing: 12
+                            Layout.alignment: Qt.AlignVCenter
+                            spacing: 16
                             Rectangle {
                                 Layout.alignment: Qt.AlignVCenter
                                 implicitWidth: 1
@@ -1214,7 +1209,6 @@ Scope {
                                 opacity: 0.4
                             }
                             ColumnLayout {
-                                Layout.fillWidth: true
                                 Layout.alignment: Qt.AlignVCenter
                                 spacing: 3
                                 Text {

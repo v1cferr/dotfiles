@@ -274,4 +274,8 @@ ShellRoot {
 
     // Barra principal — substitui a Waybar. Componente em Bar.qml.
     Bar {}
+
+    // Notificações nativas (toasts + central) — substitui o swaync.
+    // Serviço/daemon em Notifs.qml (singleton); UI em Notifications.qml.
+    Notifications {}
 }

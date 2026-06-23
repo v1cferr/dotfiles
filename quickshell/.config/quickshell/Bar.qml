@@ -306,23 +306,9 @@ Scope {
         }
     }
 
-    // ===== Notificações (swaync — stream) =====
-    property string swayncIcon: "󰂜"
-    function parseSwaync(line) {
-        try {
-            const j = JSON.parse(line);
-            const a = j.alt || "";
-            root.swayncIcon = a.indexOf("dnd") >= 0 ? (a.indexOf("notification") >= 0 ? "󰂛" : "󰪑") : (a.indexOf("notification") >= 0 ? "󰂚" : "󰂜");
-        } catch (e) {}
-    }
-    Process {
-        id: swayncProc
-        running: true
-        command: ["swaync-client", "-swb"]
-        stdout: SplitParser {
-            onRead: line => root.parseSwaync(line)
-        }
-    }
+    // ===== Notificações =====
+    // O Quickshell é o daemon (serviço Notifs.qml + UI Notifications.qml). O sino
+    // abaixo lê Notifs.barIcon/dnd e chama os toggles direto no singleton.
 
     // ===== Weather (Open-Meteo, JSON; lat/long de São Carlos) =====
     property string wTemp: ""
@@ -1653,10 +1639,11 @@ Scope {
                         }
                     }
                     Pill {
-                        icon: root.swayncIcon
+                        // || cobre o instante de init do singleton no reload
+                        icon: Notifs.barIcon || "󰂜"
                         accent: root.colPeach
-                        onClicked: root.launch(["swaync-client", "-t", "-sw"])
-                        onRightClicked: root.launch(["swaync-client", "-d", "-sw"])
+                        onClicked: Notifs.toggleCenter()
+                        onRightClicked: Notifs.toggleDnd()
                     }
                 }
 

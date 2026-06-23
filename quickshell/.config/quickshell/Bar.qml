@@ -1124,8 +1124,10 @@ Scope {
             left: root.popLeft(wPop.implicitWidth)
         }
         exclusiveZone: 0
-        implicitWidth: 560
-        implicitHeight: 200
+        // Card se ajusta ao conteúdo (+28 = margens 14*2). Sem largura fixa,
+        // não sobra espaço vazio à direita: a grade de 7 dias define a largura.
+        implicitWidth: wContent.implicitWidth + 28
+        implicitHeight: wContent.implicitHeight + 28
         color: "transparent"
 
         Rectangle {
@@ -1141,6 +1143,7 @@ Scope {
             }
 
             ColumnLayout {
+                id: wContent
                 anchors.fill: parent
                 anchors.margins: 14
                 spacing: 10

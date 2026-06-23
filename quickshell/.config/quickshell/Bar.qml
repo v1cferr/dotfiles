@@ -1150,8 +1150,10 @@ Scope {
 
                 // Cabeçalho centralizado: hero (ícone + temperatura grande) e condição
                 // no topo; métricas numa linha única separadas por "·". Tudo no centro.
+                // AlignHCenter (e não fillWidth) centraliza o bloco dentro da largura
+                // da grade — fillWidth não estica neste contexto do Quickshell.
                 ColumnLayout {
-                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter
                     spacing: 8
 
                     // Hero — ícone + temperatura grande, condição logo abaixo

@@ -1125,7 +1125,7 @@ Scope {
         }
         exclusiveZone: 0
         implicitWidth: 560
-        implicitHeight: 158
+        implicitHeight: 200
         color: "transparent"
 
         Rectangle {
@@ -1145,30 +1145,30 @@ Scope {
                 anchors.margins: 14
                 spacing: 10
 
-                // Cabeçalho: grupo compacto e CENTRADO (margens simétricas, larguras
-                // naturais — é o esticar pela largura toda que abria os vãos).
-                RowLayout {
-                    Layout.alignment: Qt.AlignHCenter
-                    spacing: 16
+                // Cabeçalho centralizado: hero (ícone + temperatura grande) e condição
+                // no topo; métricas numa linha única separadas por "·". Tudo no centro.
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
 
-                    // Clima de hoje (ícone + temperatura + condição)
+                    // Hero — ícone + temperatura grande, condição logo abaixo
                     ColumnLayout {
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: 2
+                        Layout.alignment: Qt.AlignHCenter
+                        spacing: 0
                         RowLayout {
                             Layout.alignment: Qt.AlignHCenter
-                            spacing: 6
+                            spacing: 10
                             Text {
                                 text: root.weatherIcon(root.wText, root.isDayNow())
                                 color: root.colSapphire
                                 font.family: root.uiFont
-                                font.pixelSize: 28
+                                font.pixelSize: 34
                             }
                             Text {
                                 text: root.wTemp + "°C"
                                 color: root.colText
                                 font.family: root.uiFont
-                                font.pixelSize: 22
+                                font.pixelSize: 28
                                 font.bold: true
                             }
                         }
@@ -1177,54 +1177,52 @@ Scope {
                             text: root.wText
                             color: root.colSapphire
                             font.family: root.uiFont
-                            font.pixelSize: 10
+                            font.pixelSize: 12
                         }
                     }
 
-                    // Métricas: separador fino + valor-em-cima / rótulo-embaixo.
-                    Repeater {
-                        model: [
-                            {
-                                label: "Sensação",
-                                value: root.wFeels + "°"
-                            },
-                            {
-                                label: "Umidade",
-                                value: root.wHumidity + "%"
-                            },
-                            {
-                                label: "Vento",
-                                value: root.wWind
-                            }
-                        ]
-                        RowLayout {
-                            required property var modelData
-                            Layout.alignment: Qt.AlignVCenter
-                            spacing: 16
-                            Rectangle {
-                                Layout.alignment: Qt.AlignVCenter
-                                implicitWidth: 1
-                                implicitHeight: 30
-                                color: "#414868"
-                                opacity: 0.4
-                            }
-                            ColumnLayout {
-                                Layout.alignment: Qt.AlignVCenter
-                                spacing: 3
+                    // Métricas em uma linha, centralizadas, separadas por "·"
+                    RowLayout {
+                        Layout.alignment: Qt.AlignHCenter
+                        spacing: 6
+                        Repeater {
+                            model: [
+                                {
+                                    label: "Sensação",
+                                    value: root.wFeels + "°"
+                                },
+                                {
+                                    label: "Umidade",
+                                    value: root.wHumidity + "%"
+                                },
+                                {
+                                    label: "Vento",
+                                    value: root.wWind
+                                }
+                            ]
+                            RowLayout {
+                                required property var modelData
+                                required property int index
+                                spacing: 6
                                 Text {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: modelData.value
-                                    color: root.colText
+                                    visible: index > 0
+                                    text: "·"
+                                    color: root.colDim
                                     font.family: root.uiFont
-                                    font.pixelSize: 14
-                                    font.bold: true
+                                    font.pixelSize: 12
                                 }
                                 Text {
-                                    Layout.alignment: Qt.AlignHCenter
                                     text: modelData.label
                                     color: root.colDim
                                     font.family: root.uiFont
-                                    font.pixelSize: 9
+                                    font.pixelSize: 11
+                                }
+                                Text {
+                                    text: modelData.value
+                                    color: root.colText
+                                    font.family: root.uiFont
+                                    font.pixelSize: 11
+                                    font.bold: true
                                 }
                             }
                         }

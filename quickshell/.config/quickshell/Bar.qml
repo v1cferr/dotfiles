@@ -1147,12 +1147,13 @@ Scope {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 6
+                    spacing: 12
 
-                    // Coluna 1 — condição atual (ícone + temperatura + descrição),
-                    // centrada como as demais pra manter a grade uniforme.
+                    // Coluna 1 — clima de hoje (ícone + temperatura + condição).
+                    // preferredWidth:0 + fillWidth nas 4 colunas => larguras IGUAIS.
                     ColumnLayout {
                         Layout.fillWidth: true
+                        Layout.preferredWidth: 0
                         Layout.alignment: Qt.AlignVCenter
                         spacing: 2
                         RowLayout {
@@ -1162,29 +1163,29 @@ Scope {
                                 text: root.weatherIcon(root.wText, root.isDayNow())
                                 color: root.colSapphire
                                 font.family: root.uiFont
-                                font.pixelSize: 30
+                                font.pixelSize: 28
                             }
                             Text {
                                 text: root.wTemp + "°C"
                                 color: root.colText
                                 font.family: root.uiFont
-                                font.pixelSize: 23
+                                font.pixelSize: 22
                                 font.bold: true
                             }
                         }
                         Text {
-                            Layout.alignment: Qt.AlignHCenter
                             Layout.fillWidth: true
                             text: root.wText
                             color: root.colSapphire
                             font.family: root.uiFont
-                            font.pixelSize: 11
+                            font.pixelSize: 10
                             horizontalAlignment: Text.AlignHCenter
                             wrapMode: Text.WordWrap
                         }
                     }
 
-                    // Colunas 2-4 — métricas, mesmo padrão label/valor centrado.
+                    // Colunas 2-4 — métricas iguais, cada uma com separador à esquerda
+                    // (linha fina) e valor-grande-em-cima / rótulo-embaixo, como o hero.
                     Repeater {
                         model: [
                             {
@@ -1200,25 +1201,37 @@ Scope {
                                 value: root.wWind
                             }
                         ]
-                        ColumnLayout {
+                        RowLayout {
                             required property var modelData
                             Layout.fillWidth: true
-                            Layout.alignment: Qt.AlignVCenter
-                            spacing: 4
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: modelData.label
-                                color: root.colDim
-                                font.family: root.uiFont
-                                font.pixelSize: 9
+                            Layout.preferredWidth: 0
+                            spacing: 12
+                            Rectangle {
+                                Layout.alignment: Qt.AlignVCenter
+                                implicitWidth: 1
+                                implicitHeight: 30
+                                color: "#414868"
+                                opacity: 0.4
                             }
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: modelData.value
-                                color: root.colText
-                                font.family: root.uiFont
-                                font.pixelSize: 13
-                                font.bold: true
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignVCenter
+                                spacing: 3
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: modelData.value
+                                    color: root.colText
+                                    font.family: root.uiFont
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                }
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: modelData.label
+                                    color: root.colDim
+                                    font.family: root.uiFont
+                                    font.pixelSize: 9
+                                }
                             }
                         }
                     }

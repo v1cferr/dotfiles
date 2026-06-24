@@ -1679,7 +1679,10 @@ Scope {
                     Pill {
                         // || cobre o instante de init do singleton no reload
                         icon: Notifs.barIcon || "󰂜"
-                        accent: root.colPeach
+                        // contagem quando há notificações; cor adaptativa:
+                        // dim quando vazio, peach quando há, vermelho no DND.
+                        label: Notifs.count > 0 ? "" + Notifs.count : ""
+                        accent: Notifs.dnd ? root.colRed : (Notifs.count > 0 ? root.colPeach : root.colDim)
                         onClicked: Notifs.toggleCenter()
                         onRightClicked: Notifs.toggleDnd()
                     }

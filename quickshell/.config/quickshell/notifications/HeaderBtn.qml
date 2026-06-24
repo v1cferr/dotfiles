@@ -2,6 +2,7 @@
 // Arquivo próprio (não inline) pra o handler do MouseArea enxergar o id da raiz
 // neste Qt — em inline component o id não resolve dentro de handler.
 import QtQuick
+import "root:/"
 
 Rectangle {
     id: hb

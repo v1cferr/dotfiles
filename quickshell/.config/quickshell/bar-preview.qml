@@ -4,6 +4,7 @@
 // Quando a barra atingir paridade, ela é ligada no shell.qml e a Waybar sai.
 import Quickshell
 import QtQuick
+import "root:/bar"
 
 ShellRoot {
     Bar {

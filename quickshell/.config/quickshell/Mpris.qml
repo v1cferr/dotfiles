@@ -11,16 +11,6 @@ import QtQuick.Layouts
 Scope {
     id: root
 
-    // Paleta Tokyo Night (mesma da Waybar / shell.qml)
-    readonly property color colBg: "#f21a1b26"
-    readonly property color colBorder: "#414868"
-    readonly property color colText: "#c0caf5"
-    readonly property color colDim: "#565f89"
-    readonly property color colAccent: "#7aa2f7"
-    readonly property color colRed: "#f38ba8"
-    readonly property color colGreen: "#a6e3a1"
-    readonly property color colTrack: "#283041"
-
     property bool panelVisible: false
     property real positionNow: 0
 
@@ -116,14 +106,8 @@ Scope {
         id: panel
         visible: root.panelVisible
 
-        // Fixa no DP-1 (perto da pílula do Spotify); null se não houver DP-1.
-        screen: {
-            const screens = Quickshell.screens;
-            for (let i = 0; i < screens.length; i++)
-                if (screens[i].name === "DP-1")
-                    return screens[i];
-            return null;
-        }
+        // Fixa no DP-1 (perto da pílula do Spotify).
+        screen: Theme.screenDP1
 
         anchors {
             top: true
@@ -142,8 +126,8 @@ Scope {
         Rectangle {
             anchors.fill: parent
             radius: 12
-            color: root.colBg
-            border.color: root.colBorder
+            color: Theme.colBg
+            border.color: Theme.colBorder
             border.width: 1
 
             HoverHandler {
@@ -165,7 +149,7 @@ Scope {
                         Layout.preferredWidth: 64
                         Layout.preferredHeight: 64
                         radius: 8
-                        color: root.colTrack
+                        color: Theme.colTrack
                         clip: true
 
                         Image {
@@ -181,7 +165,7 @@ Scope {
                             anchors.centerIn: parent
                             visible: art.status !== Image.Ready
                             text: "󰓇"
-                            color: root.colDim
+                            color: Theme.colDim
                             font.pixelSize: 28
                         }
                     }
@@ -193,7 +177,7 @@ Scope {
                         Text {
                             Layout.fillWidth: true
                             text: root.title
-                            color: root.colText
+                            color: Theme.colText
                             font.pixelSize: 14
                             font.bold: true
                             elide: Text.ElideRight
@@ -202,7 +186,7 @@ Scope {
                             Layout.fillWidth: true
                             visible: root.artist !== ""
                             text: root.artist
-                            color: root.colAccent
+                            color: Theme.colAccent
                             font.pixelSize: 12
                             elide: Text.ElideRight
                         }
@@ -210,7 +194,7 @@ Scope {
                             Layout.fillWidth: true
                             visible: root.album !== ""
                             text: root.album
-                            color: root.colDim
+                            color: Theme.colDim
                             font.pixelSize: 11
                             elide: Text.ElideRight
                         }
@@ -228,13 +212,13 @@ Scope {
                         Layout.fillWidth: true
                         height: 6
                         radius: 3
-                        color: root.colTrack
+                        color: Theme.colTrack
 
                         Rectangle {
                             width: parent.width * Math.max(0, Math.min(1, root.length > 0 ? root.positionNow / root.length : 0))
                             height: parent.height
                             radius: 3
-                            color: root.colAccent
+                            color: Theme.colAccent
                             Behavior on width {
                                 NumberAnimation {
                                     duration: 250
@@ -258,7 +242,7 @@ Scope {
                         Layout.fillWidth: true
                         Text {
                             text: root.fmt(root.positionNow)
-                            color: root.colDim
+                            color: Theme.colDim
                             font.pixelSize: 10
                         }
                         Item {
@@ -266,7 +250,7 @@ Scope {
                         }
                         Text {
                             text: root.fmt(root.length)
-                            color: root.colDim
+                            color: Theme.colDim
                             font.pixelSize: 10
                         }
                     }
@@ -300,7 +284,7 @@ Scope {
                     Layout.alignment: Qt.AlignHCenter
                     visible: !root.hasPlayer
                     text: "Nenhum player de mídia ativo"
-                    color: root.colDim
+                    color: Theme.colDim
                     font.pixelSize: 12
                 }
             }
@@ -319,14 +303,14 @@ Scope {
         implicitHeight: big ? 44 : 36
         radius: width / 2
         color: (area.containsMouse && btn.enabled) ? "#337aa2f7" : "transparent"
-        border.color: btn.enabled ? root.colAccent : root.colDim
+        border.color: btn.enabled ? Theme.colAccent : Theme.colDim
         border.width: 1
         opacity: btn.enabled ? 1 : 0.4
 
         Text {
             anchors.centerIn: parent
             text: btn.glyph
-            color: root.colAccent
+            color: Theme.colAccent
             font.pixelSize: btn.big ? 20 : 16
         }
 

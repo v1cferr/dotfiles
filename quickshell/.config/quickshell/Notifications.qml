@@ -11,29 +11,11 @@ import QtQuick.Layouts
 Scope {
     id: root
 
-    // Paleta Tokyo Night (mesma da barra)
-    readonly property color colBg: "#f21a1b26"
-    readonly property color colBorder: "#414868"
-    readonly property color colText: "#c0caf5"
-    readonly property color colDim: "#565f89"
-    readonly property color colAccent: "#7aa2f7"
-    readonly property color colRed: "#f38ba8"
-    readonly property color colPeach: "#ff9e64"
-    readonly property string uiFont: "JetBrainsMono Nerd Font"
-
-    readonly property var screenDP1: {
-        const s = Quickshell.screens;
-        for (let i = 0; i < s.length; i++)
-            if (s[i].name === "DP-1")
-                return s[i];
-        return s.length ? s[0] : null;
-    }
-
     // ===== Toasts — topo-direita do DP-1 =====
     PanelWindow {
         id: popupWin
         visible: Notifs.popups.length > 0
-        screen: root.screenDP1
+        screen: Theme.screenDP1
         anchors {
             top: true
             right: true
@@ -68,7 +50,7 @@ Scope {
     PanelWindow {
         id: centerWin
         visible: Notifs.centerVisible
-        screen: root.screenDP1
+        screen: Theme.screenDP1
         // só `top` => o layer-shell centraliza horizontalmente
         anchors {
             top: true
@@ -94,8 +76,8 @@ Scope {
             anchors.fill: parent
             implicitHeight: centerCol.implicitHeight + 28
             radius: 14
-            color: root.colBg
-            border.color: root.colBorder
+            color: Theme.colBg
+            border.color: Theme.colBorder
             border.width: 1
 
             HoverHandler {
@@ -114,14 +96,14 @@ Scope {
                     spacing: 8
                     Text {
                         text: "󰂚"
-                        color: root.colAccent
-                        font.family: root.uiFont
+                        color: Theme.colAccent
+                        font.family: Theme.uiFont
                         font.pixelSize: 16
                     }
                     Text {
                         text: "Notificações"
-                        color: root.colText
-                        font.family: root.uiFont
+                        color: Theme.colText
+                        font.family: Theme.uiFont
                         font.pixelSize: 14
                         font.bold: true
                     }
@@ -130,13 +112,13 @@ Scope {
                         implicitWidth: badge.implicitWidth + 12
                         implicitHeight: 18
                         radius: 9
-                        color: root.colAccent
+                        color: Theme.colAccent
                         Text {
                             id: badge
                             anchors.centerIn: parent
                             text: "" + Notifs.count
                             color: "#1a1b26"
-                            font.family: root.uiFont
+                            font.family: Theme.uiFont
                             font.pixelSize: 10
                             font.bold: true
                         }
@@ -159,7 +141,7 @@ Scope {
                 Rectangle {
                     Layout.fillWidth: true
                     implicitHeight: 1
-                    color: root.colBorder
+                    color: Theme.colBorder
                     opacity: 0.5
                 }
 
@@ -173,15 +155,15 @@ Scope {
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: "󰂜"
-                        color: root.colDim
-                        font.family: root.uiFont
+                        color: Theme.colDim
+                        font.family: Theme.uiFont
                         font.pixelSize: 32
                     }
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: "Sem notificações"
-                        color: root.colDim
-                        font.family: root.uiFont
+                        color: Theme.colDim
+                        font.family: Theme.uiFont
                         font.pixelSize: 12
                     }
                 }

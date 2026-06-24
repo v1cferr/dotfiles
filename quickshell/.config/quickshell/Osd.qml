@@ -17,15 +17,6 @@ import QtQuick.Layouts
 Scope {
     id: root
 
-    // Paleta Tokyo Night (mesma da Waybar / shell.qml)
-    readonly property color colBg: "#f21a1b26"
-    readonly property color colBorder: "#414868"
-    readonly property color colText: "#c0caf5"
-    readonly property color colDim: "#565f89"
-    readonly property color colAccent: "#7aa2f7"
-    readonly property color colRed: "#f38ba8"
-    readonly property color colTrack: "#283041"
-
     // "volume" | "mic" | "brightness" — o que disparou o OSD por último
     property string mode: "volume"
     property bool shown: false
@@ -151,13 +142,7 @@ Scope {
         id: osd
         visible: root.shown
 
-        screen: {
-            const screens = Quickshell.screens;
-            for (let i = 0; i < screens.length; i++)
-                if (screens[i].name === "DP-1")
-                    return screens[i];
-            return null;
-        }
+        screen: Theme.screenDP1
 
         anchors {
             bottom: true
@@ -174,8 +159,8 @@ Scope {
         Rectangle {
             anchors.fill: parent
             radius: 12
-            color: root.colBg
-            border.color: root.colBorder
+            color: Theme.colBg
+            border.color: Theme.colBorder
             border.width: 1
 
             RowLayout {
@@ -188,7 +173,7 @@ Scope {
                 Text {
                     Layout.alignment: Qt.AlignVCenter
                     text: root.mode === "mic" ? (root.micMuted ? "󰍭" : "󰍬") : root.mode === "brightness" ? root.brightIcon() : root.volIcon()
-                    color: ((root.mode === "mic" && root.micMuted) || (root.mode === "volume" && root.sinkMuted)) ? root.colRed : root.colAccent
+                    color: ((root.mode === "mic" && root.micMuted) || (root.mode === "volume" && root.sinkMuted)) ? Theme.colRed : Theme.colAccent
                     font.pixelSize: 26
                 }
 
@@ -203,13 +188,13 @@ Scope {
                         Layout.alignment: Qt.AlignVCenter
                         height: 8
                         radius: 4
-                        color: root.colTrack
+                        color: Theme.colTrack
 
                         Rectangle {
                             width: parent.width * Math.max(0, Math.min(1, root.volume))
                             height: parent.height
                             radius: 4
-                            color: root.sinkMuted ? root.colDim : root.colAccent
+                            color: root.sinkMuted ? Theme.colDim : Theme.colAccent
                             Behavior on width {
                                 NumberAnimation {
                                     duration: 90
@@ -223,7 +208,7 @@ Scope {
                         Layout.preferredWidth: 46
                         horizontalAlignment: Text.AlignRight
                         text: root.sinkMuted ? "mudo" : Math.round(root.volume * 100) + "%"
-                        color: root.colText
+                        color: Theme.colText
                         font.pixelSize: 14
                         font.bold: true
                     }
@@ -240,13 +225,13 @@ Scope {
                         Layout.alignment: Qt.AlignVCenter
                         height: 8
                         radius: 4
-                        color: root.colTrack
+                        color: Theme.colTrack
 
                         Rectangle {
                             width: parent.width * Math.max(0, Math.min(1, root.brightnessMax > 0 ? root.brightnessValue / root.brightnessMax : 0))
                             height: parent.height
                             radius: 4
-                            color: root.colAccent
+                            color: Theme.colAccent
                             Behavior on width {
                                 NumberAnimation {
                                     duration: 90
@@ -260,7 +245,7 @@ Scope {
                         Layout.preferredWidth: 46
                         horizontalAlignment: Text.AlignRight
                         text: root.brightnessValue + "%"
-                        color: root.colText
+                        color: Theme.colText
                         font.pixelSize: 14
                         font.bold: true
                     }
@@ -271,7 +256,7 @@ Scope {
                     Layout.fillWidth: true
                     visible: root.mode === "mic"
                     text: root.micMuted ? "Microfone mudo" : "Microfone ativo"
-                    color: root.micMuted ? root.colRed : root.colText
+                    color: root.micMuted ? Theme.colRed : Theme.colText
                     font.pixelSize: 15
                     font.bold: true
                 }

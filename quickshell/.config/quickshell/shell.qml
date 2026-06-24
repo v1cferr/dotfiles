@@ -17,14 +17,6 @@ ShellRoot {
 
     readonly property string vpnBin: Quickshell.env("HOME") + "/.local/bin/vpn"
 
-    // Paleta Tokyo Night (mesma da Waybar)
-    readonly property color colBg: "#f21a1b26"
-    readonly property color colBorder: "#414868"
-    readonly property color colText: "#c0caf5"
-    readonly property color colDim: "#565f89"
-    readonly property color colGreen: "#a6e3a1"
-    readonly property color colRed: "#f38ba8"
-    readonly property color colAccent: "#7aa2f7"
 
     function refresh() {
         statusProc.running = true;
@@ -116,8 +108,8 @@ ShellRoot {
         Rectangle {
             anchors.fill: parent
             radius: 12
-            color: root.colBg
-            border.color: root.colBorder
+            color: Theme.colBg
+            border.color: Theme.colBorder
             border.width: 1
 
             HoverHandler {
@@ -135,7 +127,7 @@ ShellRoot {
 
                     Text {
                         text: "󰦝  VPN"
-                        color: root.colAccent
+                        color: Theme.colAccent
                         font.pixelSize: 15
                         font.bold: true
                     }
@@ -151,7 +143,7 @@ ShellRoot {
                         Text {
                             anchors.centerIn: parent
                             text: "✕"
-                            color: closeArea.containsMouse ? root.colRed : root.colDim
+                            color: closeArea.containsMouse ? Theme.colRed : Theme.colDim
                             font.pixelSize: 12
                         }
 
@@ -167,14 +159,14 @@ ShellRoot {
                 Rectangle {
                     Layout.fillWidth: true
                     height: 1
-                    color: root.colBorder
+                    color: Theme.colBorder
                     opacity: 0.5
                 }
 
                 Text {
                     visible: (root.vpnStatus.vpns || []).length === 0
                     text: "Nenhuma VPN configurada"
-                    color: root.colDim
+                    color: Theme.colDim
                     font.pixelSize: 12
                 }
 
@@ -189,7 +181,7 @@ ShellRoot {
                 Text {
                     visible: root.busy
                     text: "executando..."
-                    color: root.colDim
+                    color: Theme.colDim
                     font.pixelSize: 11
                     font.italic: true
                 }
@@ -215,7 +207,7 @@ ShellRoot {
             width: 10
             height: 10
             radius: 5
-            color: row.connected ? root.colGreen : root.colRed
+            color: row.connected ? Theme.colGreen : Theme.colRed
             Layout.alignment: Qt.AlignVCenter
         }
 
@@ -225,14 +217,14 @@ ShellRoot {
 
             Text {
                 text: row.modelData.name
-                color: root.colText
+                color: Theme.colText
                 font.pixelSize: 13
                 font.bold: true
             }
 
             Text {
                 text: row.subtitle
-                color: root.colDim
+                color: Theme.colDim
                 font.pixelSize: 10
             }
         }
@@ -244,7 +236,7 @@ ShellRoot {
             color: btnArea.containsMouse
                 ? (row.connected ? "#33f38ba8" : "#33a6e3a1")
                 : "transparent"
-            border.color: row.connected ? root.colRed : root.colGreen
+            border.color: row.connected ? Theme.colRed : Theme.colGreen
             border.width: 1
             opacity: root.busy ? 0.4 : 1
 
@@ -252,7 +244,7 @@ ShellRoot {
                 id: btnLabel
                 anchors.centerIn: parent
                 text: row.connected ? "Desconectar" : "Conectar"
-                color: row.connected ? root.colRed : root.colGreen
+                color: row.connected ? Theme.colRed : Theme.colGreen
                 font.pixelSize: 11
             }
 

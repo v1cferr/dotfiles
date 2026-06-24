@@ -13,27 +13,18 @@ Rectangle {
     property var notif
     property bool isPopup: false
 
-    // Paleta Tokyo Night (igual aos demais componentes)
-    readonly property color colCard: "#f21f2336"
-    readonly property color colBorder: "#414868"
-    readonly property color colText: "#c0caf5"
-    readonly property color colDim: "#565f89"
-    readonly property color colAccent: "#7aa2f7"
-    readonly property color colRed: "#f38ba8"
-    readonly property string uiFont: "JetBrainsMono Nerd Font"
-
     function urgColor(u) {
         if (u === NotificationUrgency.Critical)
-            return card.colRed;
+            return Theme.colRed;
         if (u === NotificationUrgency.Low)
-            return card.colDim;
-        return card.colAccent;
+            return Theme.colDim;
+        return Theme.colAccent;
     }
 
     implicitHeight: cardRow.implicitHeight + 20
     radius: 12
-    color: card.colCard
-    border.color: card.notif ? card.urgColor(card.notif.urgency) : card.colBorder
+    color: Theme.colCard
+    border.color: card.notif ? card.urgColor(card.notif.urgency) : Theme.colBorder
     border.width: 1
 
     // Auto-dismiss do toast; Critical permanece até interação.
@@ -81,8 +72,8 @@ Rectangle {
                 anchors.centerIn: parent
                 visible: !nimg.visible
                 text: "󰂚"
-                color: card.notif ? card.urgColor(card.notif.urgency) : card.colAccent
-                font.family: card.uiFont
+                color: card.notif ? card.urgColor(card.notif.urgency) : Theme.colAccent
+                font.family: Theme.uiFont
                 font.pixelSize: 22
             }
         }
@@ -96,15 +87,15 @@ Rectangle {
                 Text {
                     Layout.fillWidth: true
                     text: card.notif ? card.notif.appName : ""
-                    color: card.colDim
-                    font.family: card.uiFont
+                    color: Theme.colDim
+                    font.family: Theme.uiFont
                     font.pixelSize: 10
                     elide: Text.ElideRight
                 }
                 Text {
                     text: "✕"
-                    color: closeArea.containsMouse ? card.colRed : card.colDim
-                    font.family: card.uiFont
+                    color: closeArea.containsMouse ? Theme.colRed : Theme.colDim
+                    font.family: Theme.uiFont
                     font.pixelSize: 12
                     MouseArea {
                         id: closeArea
@@ -119,8 +110,8 @@ Rectangle {
                 visible: text !== ""
                 Layout.fillWidth: true
                 text: card.notif ? card.notif.summary : ""
-                color: card.colText
-                font.family: card.uiFont
+                color: Theme.colText
+                font.family: Theme.uiFont
                 font.pixelSize: 13
                 font.bold: true
                 wrapMode: Text.WordWrap
@@ -129,8 +120,8 @@ Rectangle {
                 visible: text !== ""
                 Layout.fillWidth: true
                 text: card.notif ? card.notif.body : ""
-                color: card.colText
-                font.family: card.uiFont
+                color: Theme.colText
+                font.family: Theme.uiFont
                 font.pixelSize: 11
                 textFormat: Text.StyledText
                 wrapMode: Text.WordWrap
@@ -150,14 +141,14 @@ Rectangle {
                         implicitHeight: 24
                         radius: 7
                         color: actArea.containsMouse ? "#33414868" : "transparent"
-                        border.color: card.colBorder
+                        border.color: Theme.colBorder
                         border.width: 1
                         Text {
                             id: actLabel
                             anchors.centerIn: parent
                             text: modelData.text
-                            color: card.colText
-                            font.family: card.uiFont
+                            color: Theme.colText
+                            font.family: Theme.uiFont
                             font.pixelSize: 10
                         }
                         MouseArea {

@@ -1542,10 +1542,15 @@ Scope {
                 id: barContent
                 anchors.fill: parent
 
-                // ESQUERDA: workspaces (do monitor) + título da janela + Spotify
+                // ESQUERDA: launcher (Arch) + workspaces (do monitor) + título + Spotify
                 Group {
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
+                    // Botão "Iniciar" estilo taskbar — só no monitor principal (DP-1),
+                    // que é onde o popover de energia abre.
+                    PowerMenu {
+                        visible: bar.modelData && bar.modelData.name === "DP-1"
+                    }
                     Repeater {
                         model: (bar.modelData && bar.modelData.name === "HDMI-A-1") ? [5, 6, 7, 8] : [1, 2, 3, 4]
                         WsBtn {

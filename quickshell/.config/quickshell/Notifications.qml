@@ -81,6 +81,14 @@ Scope {
         implicitWidth: 420
         implicitHeight: centerCard.implicitHeight
 
+        // Some sozinha após 5s; o contador pausa enquanto o mouse está no painel
+        // (e reinicia do zero quando o mouse sai).
+        Timer {
+            running: Notifs.centerVisible && !centerHover.hovered
+            interval: 5000
+            onTriggered: Notifs.centerVisible = false
+        }
+
         Rectangle {
             id: centerCard
             anchors.fill: parent
@@ -89,6 +97,10 @@ Scope {
             color: root.colBg
             border.color: root.colBorder
             border.width: 1
+
+            HoverHandler {
+                id: centerHover
+            }
 
             ColumnLayout {
                 id: centerCol
@@ -154,7 +166,7 @@ Scope {
                 // Estado vazio — compacto e centralizado
                 ColumnLayout {
                     visible: Notifs.count === 0
-                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter
                     Layout.topMargin: 8
                     Layout.bottomMargin: 8
                     spacing: 6

@@ -11,7 +11,7 @@ import "root:/widgets"
 
 Pill {
     id: powerBtn
-    icon: ""            // nf-linux-archlinux
+    icon: ""      // nf-linux-archlinux (logo do Arch)
     accent: Theme.colSapphire
     property bool menuOpen: false
     onClicked: powerBtn.menuOpen = !powerBtn.menuOpen

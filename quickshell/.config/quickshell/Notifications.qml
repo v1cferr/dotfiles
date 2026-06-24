@@ -63,46 +63,71 @@ Scope {
         }
     }
 
-    // ===== Central — coluna full-height à direita, toggle pelo sino =====
+    // ===== Central — painel no TOPO-CENTRO, ajustado ao conteúdo (cresce com as
+    // notificações até um teto, depois rola). Toggle pelo sino. =====
     PanelWindow {
         id: centerWin
         visible: Notifs.centerVisible
         screen: root.screenDP1
+        // só `top` => o layer-shell centraliza horizontalmente
         anchors {
             top: true
-            right: true
-            bottom: true
         }
         margins {
             top: 8
-            right: 8
-            bottom: 8
         }
         exclusiveZone: 0
         color: "transparent"
-        implicitWidth: 410
+        implicitWidth: 420
+        implicitHeight: centerCard.implicitHeight
 
         Rectangle {
+            id: centerCard
             anchors.fill: parent
-            radius: 12
+            implicitHeight: centerCol.implicitHeight + 28
+            radius: 14
             color: root.colBg
             border.color: root.colBorder
             border.width: 1
 
             ColumnLayout {
+                id: centerCol
                 anchors.fill: parent
                 anchors.margins: 14
-                spacing: 10
+                spacing: 12
 
+                // Cabeçalho: título + badge de contagem + ações
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
                     Text {
-                        text: "󰂚  Notificações"
+                        text: "󰂚"
                         color: root.colAccent
                         font.family: root.uiFont
-                        font.pixelSize: 15
+                        font.pixelSize: 16
+                    }
+                    Text {
+                        text: "Notificações"
+                        color: root.colText
+                        font.family: root.uiFont
+                        font.pixelSize: 14
                         font.bold: true
+                    }
+                    Rectangle {
+                        visible: Notifs.count > 0
+                        implicitWidth: badge.implicitWidth + 12
+                        implicitHeight: 18
+                        radius: 9
+                        color: root.colAccent
+                        Text {
+                            id: badge
+                            anchors.centerIn: parent
+                            text: "" + Notifs.count
+                            color: "#1a1b26"
+                            font.family: root.uiFont
+                            font.pixelSize: 10
+                            font.bold: true
+                        }
                     }
                     Item {
                         Layout.fillWidth: true
@@ -121,26 +146,39 @@ Scope {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 1
+                    implicitHeight: 1
                     color: root.colBorder
                     opacity: 0.5
                 }
 
-                Text {
+                // Estado vazio — compacto e centralizado
+                ColumnLayout {
                     visible: Notifs.count === 0
                     Layout.fillWidth: true
-                    Layout.topMargin: 24
-                    horizontalAlignment: Text.AlignHCenter
-                    text: "Sem notificações"
-                    color: root.colDim
-                    font.family: root.uiFont
-                    font.pixelSize: 12
+                    Layout.topMargin: 8
+                    Layout.bottomMargin: 8
+                    spacing: 6
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: "󰂜"
+                        color: root.colDim
+                        font.family: root.uiFont
+                        font.pixelSize: 32
+                    }
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: "Sem notificações"
+                        color: root.colDim
+                        font.family: root.uiFont
+                        font.pixelSize: 12
+                    }
                 }
 
+                // Lista — cresce com o conteúdo até 560px, depois rola
                 ListView {
                     visible: Notifs.count > 0
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    Layout.preferredHeight: Math.min(contentHeight, 560)
                     clip: true
                     spacing: 8
                     model: Notifs.history

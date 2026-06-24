@@ -7,6 +7,7 @@ import Quickshell
 import Quickshell.Services.Notifications
 import QtQuick
 import QtQuick.Layouts
+import "root:/"
 
 Scope {
     id: root

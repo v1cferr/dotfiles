@@ -14,6 +14,7 @@ import Quickshell.Services.Mpris
 import Quickshell.Services.SystemTray
 import QtQuick
 import QtQuick.Layouts
+import "root:/"
 
 Scope {
     id: root

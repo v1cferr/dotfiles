@@ -7,6 +7,10 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
+import "root:/bar"
+import "root:/notifications"
+import "root:/osd"
+import "root:/media"
 
 ShellRoot {
     id: root

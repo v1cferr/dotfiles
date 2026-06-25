@@ -23,6 +23,25 @@ Rectangle {
         return Theme.colAccent;
     }
 
+    // Ação "default" (a que "ativa"/foca o app que notificou) -> vira uma setinha
+    // no topo do card; as demais ações continuam como botões de texto.
+    readonly property var defaultAction: {
+        if (!card.notif)
+            return null;
+        const acts = card.notif.actions || [];
+        for (let i = 0; i < acts.length; i++)
+            if (acts[i].identifier === "default")
+                return acts[i];
+        return null;
+    }
+    readonly property var extraActions: {
+        if (!card.notif)
+            return [];
+        return (card.notif.actions || []).filter(function (a) {
+            return a.identifier !== "default";
+        });
+    }
+
     // ===== Ícone do app que notificou =====
     // O Quickshell entrega o ícone como "image://icon/<nome>". Se existe no TEMA
     // atual (Win11-dark + hicolor) usamos direto; senão tentamos o mesmo nome no
@@ -155,6 +174,26 @@ Rectangle {
                     font.pixelSize: 10
                     elide: Text.ElideRight
                 }
+                // Setinha: invoca a ação "default" -> foca/abre o app que notificou.
+                Text {
+                    visible: card.defaultAction !== null
+                    text: "󰏌"
+                    color: arrowArea.containsMouse ? Theme.colAccent : Theme.colDim
+                    font.family: Theme.uiFont
+                    font.pixelSize: 13
+                    Layout.rightMargin: 6
+                    MouseArea {
+                        id: arrowArea
+                        anchors.fill: parent
+                        anchors.margins: -4
+                        hoverEnabled: true
+                        onClicked: {
+                            if (card.defaultAction)
+                                card.defaultAction.invoke();
+                            Notifs.dismiss(card.notif);
+                        }
+                    }
+                }
                 Text {
                     text: "✕"
                     color: closeArea.containsMouse ? Theme.colRed : Theme.colDim
@@ -194,10 +233,10 @@ Rectangle {
             RowLayout {
                 Layout.fillWidth: true
                 Layout.topMargin: 4
-                visible: card.notif && card.notif.actions.length > 0
+                visible: card.extraActions.length > 0
                 spacing: 6
                 Repeater {
-                    model: card.notif ? card.notif.actions : []
+                    model: card.extraActions
                     Rectangle {
                         required property var modelData
                         implicitWidth: actLabel.implicitWidth + 18

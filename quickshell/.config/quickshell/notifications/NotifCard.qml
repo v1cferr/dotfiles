@@ -22,6 +22,27 @@ Rectangle {
         return Theme.colAccent;
     }
 
+    // Ícone do card: dado de imagem (capa/print) ou ícone do app que notificou >
+    // sino genérico. O Quickshell entrega o ícone do app como "image://icon/<nome>";
+    // se o ícone NÃO existe no tema atual, o provider devolve um placeholder
+    // quadriculado que "carrega ok" — por isso validamos com hasThemeIcon.
+    readonly property string iconSource: {
+        if (!card.notif)
+            return "";
+        const img = card.notif.image || "";
+        const m = img.match(/^image:\/\/icon\/(.+)$/);
+        if (m)
+            return Quickshell.hasThemeIcon(m[1]) ? img : "";
+        if (img !== "")
+            return img;
+        const ai = card.notif.appIcon || "";
+        if (ai === "")
+            return "";
+        if (ai.startsWith("/"))
+            return "file://" + ai;
+        return Quickshell.hasThemeIcon(ai) ? Quickshell.iconPath(ai) : "";
+    }
+
     implicitHeight: cardRow.implicitHeight + 20
     radius: 12
     color: Theme.colCard
@@ -63,9 +84,12 @@ Rectangle {
             Image {
                 id: nimg
                 anchors.fill: parent
-                visible: card.notif && card.notif.image !== ""
-                source: card.notif ? card.notif.image : ""
-                fillMode: Image.PreserveAspectCrop
+                // some (cai no sino) se a fonte for vazia OU falhar ao carregar —
+                // evita o quadriculado magenta/preto de "imagem quebrada" do Qt.
+                visible: card.iconSource !== "" && nimg.status !== Image.Error
+                source: card.iconSource
+                asynchronous: true
+                fillMode: Image.PreserveAspectFit
                 sourceSize.width: 36
                 sourceSize.height: 36
             }

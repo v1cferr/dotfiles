@@ -4,6 +4,7 @@
 // (ReferenceError), o que quebrava dismiss/ações. Em arquivo separado, card.notif
 // resolve em qualquer profundidade. Estilo Tokyo Night.
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Notifications
 import QtQuick
 import QtQuick.Layouts
@@ -22,25 +23,62 @@ Rectangle {
         return Theme.colAccent;
     }
 
-    // Ícone do card: dado de imagem (capa/print) ou ícone do app que notificou >
-    // sino genérico. O Quickshell entrega o ícone do app como "image://icon/<nome>";
-    // se o ícone NÃO existe no tema atual, o provider devolve um placeholder
-    // quadriculado que "carrega ok" — por isso validamos com hasThemeIcon.
-    readonly property string iconSource: {
+    // ===== Ícone do app que notificou =====
+    // O Quickshell entrega o ícone como "image://icon/<nome>". Se existe no TEMA
+    // atual (Win11-dark + hicolor) usamos direto; senão tentamos o mesmo nome no
+    // breeze (tema completo) — só neste card, SEM trocar o tema do sistema. Sem
+    // nada disso, cai no sino. (hasThemeIcon evita o placeholder quadriculado que
+    // o provider devolve quando o ícone não está no tema.)
+    readonly property string wantedName: {
         if (!card.notif)
             return "";
         const img = card.notif.image || "";
         const m = img.match(/^image:\/\/icon\/(.+)$/);
         if (m)
-            return Quickshell.hasThemeIcon(m[1]) ? img : "";
-        if (img !== "")
-            return img;
+            return m[1];
         const ai = card.notif.appIcon || "";
-        if (ai === "")
+        if (ai !== "" && !ai.startsWith("/") && ai.indexOf("://") < 0)
+            return ai;
+        return "";
+    }
+    readonly property string themeIcon: {
+        if (!card.notif)
             return "";
+        const img = card.notif.image || "";
+        if (img.startsWith("image://icon/"))
+            return Quickshell.hasThemeIcon(card.wantedName) ? img : "";
+        if (img !== "")
+            return img;               // dado de imagem real (capa/print/file://)
+        const ai = card.notif.appIcon || "";
         if (ai.startsWith("/"))
             return "file://" + ai;
-        return Quickshell.hasThemeIcon(ai) ? Quickshell.iconPath(ai) : "";
+        if (card.wantedName !== "")
+            return Quickshell.hasThemeIcon(card.wantedName) ? Quickshell.iconPath(card.wantedName) : "";
+        return "";
+    }
+    property string fallbackIcon: ""
+    readonly property string iconSource: card.themeIcon !== "" ? card.themeIcon : card.fallbackIcon
+
+    // Fallback no breeze quando o tema atual não tem o ícone (async; argv direto,
+    // sem shell, e nome sanitizado — appName é conteúdo não confiável).
+    function resolveFallback() {
+        card.fallbackIcon = "";
+        const n = card.wantedName;
+        if (card.themeIcon !== "" || n === "" || !(/^[a-zA-Z0-9._-]+$/.test(n)))
+            return;
+        iconFinder.command = ["find", "/usr/share/icons/breeze-dark/apps", "/usr/share/icons/breeze/apps", "(", "-name", n + ".svg", "-o", "-name", n + ".png", ")", "-print", "-quit"];
+        iconFinder.running = true;
+    }
+    Component.onCompleted: card.resolveFallback()
+    Process {
+        id: iconFinder
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const p = text.trim();
+                if (p)
+                    card.fallbackIcon = "file://" + p;
+            }
+        }
     }
 
     implicitHeight: cardRow.implicitHeight + 20

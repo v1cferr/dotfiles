@@ -89,6 +89,12 @@
         reverse_proxy 127.0.0.1:3001
     }
 
+    # ufscar-housing-radar (V1C-68) — apartamentos perto da UFSCar (app em Docker).
+    @ap host ap.v1cferr.dev
+    handle @ap {
+        reverse_proxy 127.0.0.1:3005
+    }
+
     # ---- Dashboard (Homepage) ----
     # Acessível de fora, mas como expõe o mapa da infra, exige login (basic_auth)
     # para quem vem de FORA da LAN. Na LAN abre direto, sem senha.

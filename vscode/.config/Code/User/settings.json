@@ -2,7 +2,7 @@
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
-    "//": "Last update at 6/17/2026, 4:48:55 PM",
+    "//": "Last update at 6/22/2026, 10:20:47 AM",
     ".agent": ".agent, .claude, .cline, .codebuddy, .codex, .commandcode, .continue, .crush, .cursor, .factory, .gemini, .goose, .junie, .kilocode, .kiro, .kode, .mcpjam, .mux, .neovate, .opencode, .openhands, .pi, .pochi, .qoder, .qwen, .roo, .trae, .windsurf, .zencoder",
     ".clang-tidy": ".clang-format, .clangd, compile_commands.json",
     ".env": "*.env, .env.*, .envrc, env.d.ts",
@@ -240,7 +240,8 @@
   "terminal.integrated.defaultProfile.windows": "Git Bash",
   "workbench.editorAssociations": {
     "*.copilotmd": "vscode.markdown.preview.editor",
-    "*.pdf": "pdf.preview"
+    "*.pdf": "pdf.preview",
+    "*.docx": "docxreader.docxEditor"
   },
   "json.schemaDownload.trustedDomains": {
     "https://developer.microsoft.com/json-schemas/": true,
@@ -255,7 +256,6 @@
     "https://www.schemastore.org/": true
   },
   "githubPullRequests.pullBranch": "never",
-  "chat.viewSessions.orientation": "stacked",
   "terminal.integrated.enableMultiLinePasteWarning": "never",
   "terminal.integrated.profiles.linux": {
     "bash": {
@@ -288,4 +288,5 @@
   "files.hotExit": "onExitAndWindowClose",
   // Não abre a tela de boas-vindas no startup
   "workbench.startupEditor": "none",
+  "chat.viewSessions.orientation": "stacked",
 }

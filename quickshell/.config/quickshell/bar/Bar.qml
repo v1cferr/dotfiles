@@ -25,34 +25,10 @@ Scope {
     readonly property string scriptsDir: Quickshell.env("HOME") + "/.config/waybar/scripts"
     readonly property string vpnBin: Quickshell.env("HOME") + "/.local/bin/vpn"
 
-    // ===== Paleta =====
-    readonly property color colGroupBg: "#591a1b26"
-    readonly property color colGroupBorder: "#2e414868"
-    readonly property color colPillBg: "#db1a1b26"
-    readonly property color colPillHoverBg: "#eb1a1b26"
-    readonly property color colPillBorder: "#59414868"
-    readonly property color colHoverBorder: "#807aa2f7"
-    readonly property color colText: "#c0caf5"
-    readonly property color colDim: "#565f89"
-    readonly property color colAccent: "#7aa2f7"
-    readonly property color colGreen: "#a6e3a1"
-    readonly property color colRed: "#f38ba8"
-    readonly property color colYellow: "#f9e2af"
-    readonly property color colPeach: "#fab387"
-    readonly property color colMauve: "#cba6f7"
-    readonly property color colLavender: "#b4befe"
-    readonly property color colSky: "#89dceb"
-    readonly property color colBlue: "#89b4fa"
-    readonly property color colSapphire: "#74c7ec"
-    readonly property color colTeal: "#94e2d5"
-    readonly property color colPink: "#f5c2e7"
-    readonly property color colWsInactive: "#a9b1d6"
-    readonly property color colWsActiveBg: "#d97aa2f7"
-    readonly property color colWsActiveBorder: "#e67aa2f7"
-    readonly property string uiFont: "JetBrainsMono Nerd Font"
+    // Paleta e fonte vêm do Theme singleton (Theme.colX / Theme.uiFont).
 
     function stateColor(pct, base) {
-        return pct >= 90 ? root.colRed : (pct >= 70 ? root.colPeach : base);
+        return pct >= 90 ? Theme.colRed : (pct >= 70 ? Theme.colPeach : base);
     }
     function launch(cmd) {
         Quickshell.execDetached(cmd);
@@ -243,7 +219,7 @@ Scope {
         return m;
     }
     function tempColor(t) {
-        return t >= 85 ? root.colRed : (t >= 70 ? root.colPeach : root.colSapphire);
+        return t >= 85 ? Theme.colRed : (t >= 70 ? Theme.colPeach : Theme.colSapphire);
     }
     // Uso consolidado (CPU/RAM/GPU/Disco), headline = CPU
     readonly property var usageList: [
@@ -481,7 +457,7 @@ Scope {
     }
     readonly property bool spPlaying: !!(root.player && root.player.isPlaying)
     readonly property string spText: root.spHasPlayer ? (root.spArtist ? root.spArtist + " - " + root.spTitle : root.spTitle) : ""
-    readonly property color spColor: root.spPlaying ? root.colGreen : (root.spHasPlayer ? root.colYellow : root.colDim)
+    readonly property color spColor: root.spPlaying ? Theme.colGreen : (root.spHasPlayer ? Theme.colYellow : Theme.colDim)
 
     // ===== Rede (nmcli) =====
     property bool netConnected: false
@@ -650,7 +626,7 @@ Scope {
         return out;
     }
     function scopeColor(scope) {
-        return scope === "nac" ? root.colRed : (scope === "sp" ? root.colBlue : root.colMauve);
+        return scope === "nac" ? Theme.colRed : (scope === "sp" ? Theme.colBlue : Theme.colMauve);
     }
     function scopeLabel(scope) {
         return scope === "nac" ? "Nacional" : (scope === "sp" ? "Estado SP" : "São Carlos");
@@ -770,7 +746,7 @@ Scope {
                         label: u.name,
                         value: u.pct + "%",
                         frac: Math.max(0, Math.min(1, u.pct / 100)),
-                        barColor: root.stateColor(u.pct, root.colAccent)
+                        barColor: root.stateColor(u.pct, Theme.colAccent)
                     }));
         if (m === "net")
             return root.netRates.map(n => ({
@@ -983,8 +959,8 @@ Scope {
         implicitWidth: Math.max(24, wlbl.implicitWidth + 14)
         implicitHeight: 22
         radius: 8
-        color: wsbtn.active ? root.colWsActiveBg : (wsArea.containsMouse ? root.colPillHoverBg : root.colPillBg)
-        border.color: wsbtn.active ? root.colWsActiveBorder : (wsArea.containsMouse ? root.colHoverBorder : root.colPillBorder)
+        color: wsbtn.active ? Theme.colWsActiveBg : (wsArea.containsMouse ? Theme.colPillHoverBg : Theme.colPillBg)
+        border.color: wsbtn.active ? Theme.colWsActiveBorder : (wsArea.containsMouse ? Theme.colHoverBorder : Theme.colPillBorder)
         border.width: 1
         Behavior on color {
             ColorAnimation {
@@ -996,8 +972,8 @@ Scope {
             id: wlbl
             anchors.centerIn: parent
             text: wsbtn.active ? "󰮯" : (wsbtn.exists ? root.wsIcon(wsbtn.wsid) : "󰧵")
-            color: wsbtn.active ? "#1a1b26" : root.colWsInactive
-            font.family: root.uiFont
+            color: wsbtn.active ? "#1a1b26" : Theme.colWsInactive
+            font.family: Theme.uiFont
             font.pixelSize: 13
             font.bold: wsbtn.active
         }
@@ -1011,7 +987,7 @@ Scope {
             width: 7
             height: 7
             radius: 3.5
-            color: root.colPeach
+            color: Theme.colPeach
             border.color: "#1a1b26"
             border.width: 1
             SequentialAnimation on opacity {
@@ -1094,14 +1070,14 @@ Scope {
                             spacing: 10
                             Text {
                                 text: root.weatherIcon(root.wText, root.isDayNow())
-                                color: root.colSapphire
-                                font.family: root.uiFont
+                                color: Theme.colSapphire
+                                font.family: Theme.uiFont
                                 font.pixelSize: 34
                             }
                             Text {
                                 text: root.wTemp + "°C"
-                                color: root.colText
-                                font.family: root.uiFont
+                                color: Theme.colText
+                                font.family: Theme.uiFont
                                 font.pixelSize: 28
                                 font.bold: true
                             }
@@ -1109,8 +1085,8 @@ Scope {
                         Text {
                             Layout.alignment: Qt.AlignHCenter
                             text: root.wText
-                            color: root.colSapphire
-                            font.family: root.uiFont
+                            color: Theme.colSapphire
+                            font.family: Theme.uiFont
                             font.pixelSize: 12
                         }
                     }
@@ -1141,20 +1117,20 @@ Scope {
                                 Text {
                                     visible: index > 0
                                     text: "·"
-                                    color: root.colDim
-                                    font.family: root.uiFont
+                                    color: Theme.colDim
+                                    font.family: Theme.uiFont
                                     font.pixelSize: 12
                                 }
                                 Text {
                                     text: modelData.label
-                                    color: root.colDim
-                                    font.family: root.uiFont
+                                    color: Theme.colDim
+                                    font.family: Theme.uiFont
                                     font.pixelSize: 11
                                 }
                                 Text {
                                     text: modelData.value
-                                    color: root.colText
-                                    font.family: root.uiFont
+                                    color: Theme.colText
+                                    font.family: Theme.uiFont
                                     font.pixelSize: 11
                                     font.bold: true
                                 }
@@ -1182,31 +1158,31 @@ Scope {
                             Text {
                                 Layout.alignment: Qt.AlignHCenter
                                 text: modelData.day
-                                color: root.colText
-                                font.family: root.uiFont
+                                color: Theme.colText
+                                font.family: Theme.uiFont
                                 font.pixelSize: 11
                                 font.bold: true
                             }
                             Text {
                                 Layout.alignment: Qt.AlignHCenter
                                 text: root.weatherIcon(modelData.text, true)
-                                color: root.colSapphire
-                                font.family: root.uiFont
+                                color: Theme.colSapphire
+                                font.family: Theme.uiFont
                                 font.pixelSize: 18
                             }
                             Text {
                                 Layout.alignment: Qt.AlignHCenter
                                 text: modelData.high + "° / " + modelData.low + "°"
-                                color: root.colText
-                                font.family: root.uiFont
+                                color: Theme.colText
+                                font.family: Theme.uiFont
                                 font.pixelSize: 10
                             }
                             Text {
                                 Layout.alignment: Qt.AlignHCenter
                                 visible: modelData.precip !== ""
                                 text: "󰖎 " + modelData.precip + "%"
-                                color: root.colBlue
-                                font.family: root.uiFont
+                                color: Theme.colBlue
+                                font.family: Theme.uiFont
                                 font.pixelSize: 9
                             }
                         }
@@ -1248,8 +1224,8 @@ Scope {
                 spacing: 8
                 Text {
                     text: root.metricShown === "temp" ? "Temperaturas" : (root.metricShown === "net" ? "Rede" : "Uso")
-                    color: root.colAccent
-                    font.family: root.uiFont
+                    color: Theme.colAccent
+                    font.family: Theme.uiFont
                     font.pixelSize: 14
                     font.bold: true
                 }
@@ -1271,14 +1247,14 @@ Scope {
                             Text {
                                 Layout.fillWidth: true
                                 text: modelData.label
-                                color: root.colText
-                                font.family: root.uiFont
+                                color: Theme.colText
+                                font.family: Theme.uiFont
                                 font.pixelSize: 12
                             }
                             Text {
                                 text: modelData.value
-                                color: root.colText
-                                font.family: root.uiFont
+                                color: Theme.colText
+                                font.family: Theme.uiFont
                                 font.pixelSize: 12
                                 font.bold: true
                             }
@@ -1295,7 +1271,7 @@ Scope {
                                 width: parent.width * (modelData.frac !== undefined ? modelData.frac : 0)
                                 height: parent.height
                                 radius: parent.radius
-                                color: modelData.barColor !== undefined ? modelData.barColor : root.colAccent
+                                color: modelData.barColor !== undefined ? modelData.barColor : Theme.colAccent
                                 Behavior on width {
                                     NumberAnimation {
                                         duration: 300
@@ -1351,8 +1327,8 @@ Scope {
                     spacing: 7
                     Text {
                         text: "Próximos feriados"
-                        color: root.colAccent
-                        font.family: root.uiFont
+                        color: Theme.colAccent
+                        font.family: Theme.uiFont
                         font.pixelSize: 15
                         font.bold: true
                     }
@@ -1381,23 +1357,23 @@ Scope {
                                 Text {
                                     Layout.fillWidth: true
                                     text: modelData.name
-                                    color: root.colText
-                                    font.family: root.uiFont
+                                    color: Theme.colText
+                                    font.family: Theme.uiFont
                                     font.pixelSize: 12
                                     font.bold: true
                                     elide: Text.ElideRight
                                 }
                                 Text {
                                     text: root.fmtHolidayDate(modelData.date) + "  ·  " + root.scopeLabel(modelData.scope)
-                                    color: root.colDim
-                                    font.family: root.uiFont
+                                    color: Theme.colDim
+                                    font.family: Theme.uiFont
                                     font.pixelSize: 10
                                 }
                             }
                             Text {
                                 text: root.daysUntilLabel(modelData.date)
-                                color: root.colSky
-                                font.family: root.uiFont
+                                color: Theme.colSky
+                                font.family: Theme.uiFont
                                 font.pixelSize: 10
                                 font.bold: true
                             }
@@ -1421,8 +1397,8 @@ Scope {
                                 }
                                 Text {
                                     text: modelData.t
-                                    color: root.colDim
-                                    font.family: root.uiFont
+                                    color: Theme.colDim
+                                    font.family: Theme.uiFont
                                     font.pixelSize: 9
                                 }
                             }
@@ -1444,8 +1420,8 @@ Scope {
                     spacing: 6
                     Text {
                         text: "Calendário " + root.calYear
-                        color: root.colText
-                        font.family: root.uiFont
+                        color: Theme.colText
+                        font.family: Theme.uiFont
                         font.pixelSize: 15
                         font.bold: true
                         Layout.alignment: Qt.AlignHCenter
@@ -1463,8 +1439,8 @@ Scope {
                                 Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
                                 Text {
                                     text: root.monthNames[index]
-                                    color: (index + 1 === root.calTodayM) ? root.colAccent : root.colText
-                                    font.family: root.uiFont
+                                    color: (index + 1 === root.calTodayM) ? Theme.colAccent : Theme.colText
+                                    font.family: Theme.uiFont
                                     font.pixelSize: 11
                                     font.bold: true
                                     Layout.alignment: Qt.AlignHCenter
@@ -1486,15 +1462,15 @@ Scope {
                                                 width: 16
                                                 height: 13
                                                 radius: 3
-                                                color: parent.isToday ? root.colAccent : (parent.hol && !parent.hol.fac ? root.scopeColor(parent.hol.scope) : "transparent")
+                                                color: parent.isToday ? Theme.colAccent : (parent.hol && !parent.hol.fac ? root.scopeColor(parent.hol.scope) : "transparent")
                                                 border.width: (!parent.isToday && parent.hol && parent.hol.fac) ? 1 : 0
                                                 border.color: parent.hol ? root.scopeColor(parent.hol.scope) : "transparent"
                                             }
                                             Text {
                                                 anchors.centerIn: parent
                                                 text: parent.isHead ? parent.modelData.head : (parent.modelData.d > 0 ? ("" + parent.modelData.d) : "")
-                                                color: parent.isHead ? root.colDim : (parent.isToday ? "#1a1b26" : (parent.hol && !parent.hol.fac ? "#1a1b26" : (parent.hol && parent.hol.fac ? root.scopeColor(parent.hol.scope) : root.colWsInactive)))
-                                                font.family: root.uiFont
+                                                color: parent.isHead ? Theme.colDim : (parent.isToday ? "#1a1b26" : (parent.hol && !parent.hol.fac ? "#1a1b26" : (parent.hol && parent.hol.fac ? root.scopeColor(parent.hol.scope) : Theme.colWsInactive)))
+                                                font.family: Theme.uiFont
                                                 font.pixelSize: parent.isHead ? 8 : 9
                                                 font.bold: parent.isToday || (parent.hol && !parent.hol.fac) || parent.isHead
                                             }
@@ -1563,7 +1539,7 @@ Scope {
                     Pill {
                         visible: bar.modelData && bar.modelData.name === root.focusedMon && root.winTitle !== ""
                         label: root.winTitle
-                        accent: root.colSky
+                        accent: Theme.colSky
                         italic: true
                         maxWidth: 340
                     }
@@ -1588,7 +1564,7 @@ Scope {
                         visible: root.wHas
                         icon: root.weatherIcon(root.wText, root.isDayNow())
                         label: root.wTemp + "°C"
-                        accent: root.colSapphire
+                        accent: Theme.colSapphire
                         onHoveredChanged: {
                             root.wPillHovered = hovered;
                             if (hovered)
@@ -1599,7 +1575,7 @@ Scope {
                     Pill {
                         id: clockPill
                         label: root.timeStr
-                        accent: root.colMauve
+                        accent: Theme.colMauve
                         onClicked: root.showDate = !root.showDate
                         onHoveredChanged: {
                             if (hovered) {
@@ -1616,7 +1592,7 @@ Scope {
                         // contagem quando há notificações; cor adaptativa:
                         // dim quando vazio, peach quando há, vermelho no DND.
                         label: Notifs.count > 0 ? "" + Notifs.count : ""
-                        accent: Notifs.dnd ? root.colRed : (Notifs.count > 0 ? root.colPeach : root.colDim)
+                        accent: Notifs.dnd ? Theme.colRed : (Notifs.count > 0 ? Theme.colPeach : Theme.colDim)
                         onClicked: Notifs.toggleCenter()
                         onRightClicked: Notifs.toggleDnd()
                     }
@@ -1637,13 +1613,13 @@ Scope {
                         id: usagePill
                         icon: "󰓅"
                         label: root.cpuPct + "%"
-                        accent: root.stateColor(root.cpuPct, root.colYellow)
+                        accent: root.stateColor(root.cpuPct, Theme.colYellow)
                         onHoveredChanged: hovered ? root.showMetric("usage", usagePill, barContent, bar.screen) : root.unhoverMetric()
                     }
                     Pill {
                         icon: "󰦝"
                         label: root.vpnConnected ? root.vpnName : ""
-                        accent: root.vpnConnected ? root.colGreen : root.colDim
+                        accent: root.vpnConnected ? Theme.colGreen : Theme.colDim
                         maxWidth: 150
                         onClicked: root.launch(["qs", "ipc", "call", "vpn", "toggle"])
                         onRightClicked: root.launch([root.vpnBin, "menu"])
@@ -1652,14 +1628,14 @@ Scope {
                         id: netPill
                         icon: "󰛳"
                         label: "↓" + root.fmtRate(root.netMainRx) + " ↑" + root.fmtRate(root.netMainTx)
-                        accent: root.netConnected ? root.colTeal : root.colRed
+                        accent: root.netConnected ? Theme.colTeal : Theme.colRed
                         onHoveredChanged: hovered ? root.showMetric("net", netPill, barContent, bar.screen) : root.unhoverMetric()
                         onClicked: root.launch(["nm-connection-editor"])
                     }
                     Pill {
                         icon: root.volIcon()
                         label: Math.round(root.volume * 100) + "%"
-                        accent: root.sinkMuted ? root.colDim : root.colBlue
+                        accent: root.sinkMuted ? Theme.colDim : Theme.colBlue
                         onClicked: root.toggleMute()
                         onRightClicked: root.launch(["pavucontrol"])
                         onScrolledUp: root.setVol(0.05)
@@ -1667,7 +1643,7 @@ Scope {
                     }
                     Pill {
                         icon: root.hypridleIcon
-                        accent: root.hypridleOn ? root.colGreen : root.colRed
+                        accent: root.hypridleOn ? Theme.colGreen : Theme.colRed
                         onClicked: root.launch(["bash", root.scriptsDir + "/toggle-hypridle.sh", "toggle"])
                     }
                     // System tray (StatusNotifier) — fundo único pro grupo de ícones.
@@ -1678,8 +1654,8 @@ Scope {
                         implicitHeight: 22
                         implicitWidth: trayRow.implicitWidth + 14
                         radius: 8
-                        color: root.colPillBg
-                        border.color: root.colPillBorder
+                        color: Theme.colPillBg
+                        border.color: Theme.colPillBorder
                         border.width: 1
                         RowLayout {
                             id: trayRow

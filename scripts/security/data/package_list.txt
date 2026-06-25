@@ -1933,3 +1933,4 @@ z-push
 zrythm-git
 zsdx
 zxtune-git
+rakudo-star

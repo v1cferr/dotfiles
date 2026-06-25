@@ -1,9 +1,9 @@
-antigravity-ide 2.0.4-1
+antigravity-ide 2.1.1-1
 anydesk-bin 8.0.2-1
 arch-update 3.20.2-1
-aur-sync-vote 0.2.3-3
+aur-sync-vote 0.2.4-1
 bibata-cursor-theme 2.0.7-1
-claude-code 2.1.185-1
+claude-code 2.1.186-1
 claude-desktop-appimage 2.0.19+claude1.11847.5-1
 dropbox 256.4.3790-1
 evince-no-gnome 48.4-1
@@ -20,6 +20,7 @@ pencil-dev-bin 1.1.56-1
 perssua 0.21.1-1
 polychromatic 0.9.7-1
 rustdesk-bin 1.4.8-1
+shelly 2.4.0.4-2
 spicetify-cli 2.43.2-1
 spicetify-themes-git r528.9af41cf-1
 sublime-text-4 4.4200-1

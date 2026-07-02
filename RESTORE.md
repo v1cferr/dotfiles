@@ -59,7 +59,7 @@ e criaria um `~/etc` errado):
 
 ```bash
 cd ~/dotfiles
-stow hypr rofi waybar zsh vscode gtk-3.0 gtk-4.0 flameshot wallpapers git bin \
+stow hypr rofi waybar zsh vscode gtk-3.0 gtk-4.0 flameshot wallpapers git ssh bin \
      kitty starship swaync networkmanager cloudflare fastfetch opencode \
      zen-browser nvim mpv btop fontconfig spicetify easyeffects atuin autostart \
      xsettingsd gh lazydocker uv openrazer polychromatic pacseek vlc bash nano

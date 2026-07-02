@@ -229,7 +229,7 @@ Detalhes em `scripts/packages/README.md`.
 
 Outras configs de sistema versionadas (cada uma com deploy idempotente; ver o README do pacote):
 
-- `ssh/` — drop-in do SSH (porta 2222 + hardening). O deploy valida com `sshd -t` e faz reload (sem lockout).
+- `ssh/` — **duas metades**: o config do cliente (`~/.ssh/config`, via **stow** — usa `.stow-local-ignore` pra não tocar no `etc/`) e o drop-in do servidor sshd (porta 2222 + hardening, via **deploy** — valida com `sshd -t` e faz reload sem lockout).
 - `docker/` — `daemon.json` do daemon (runtime nvidia). O deploy não reinicia o Docker.
 - `system/` — `pacman.conf` + hook, `makepkg.conf` (+ drop-ins). `mkinitcpio.conf` e `boot/loader/` ficam só como **referência** (não auto-aplicados — risco de boot).
 - `netextender/` — perfil de VPN SonicWall (`/etc/SonicWall/...`). Tem estrutura de `/etc`, por isso é deploy e não stow.
@@ -263,7 +263,7 @@ Pacotes adicionais variam conforme seus módulos (VPN, SwayNC, extensões, etc.)
 git clone https://github.com/v1cferr/dotfiles.git
 cd dotfiles
 
-stow hypr rofi waybar zsh vscode gtk-3.0 gtk-4.0 flameshot wallpapers git bin kitty starship swaync networkmanager cloudflare fastfetch opencode zen-browser nvim mpv btop fontconfig spicetify easyeffects atuin autostart xsettingsd gh lazydocker uv openrazer polychromatic pacseek vlc bash nano
+stow hypr rofi waybar zsh vscode gtk-3.0 gtk-4.0 flameshot wallpapers git ssh bin kitty starship swaync networkmanager cloudflare fastfetch opencode zen-browser nvim mpv btop fontconfig spicetify easyeffects atuin autostart xsettingsd gh lazydocker uv openrazer polychromatic pacseek vlc bash nano
 ```
 
 Opcionalmente, usar:

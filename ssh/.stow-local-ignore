@@ -1,0 +1,6 @@
+# Este pacote 'ssh/' tem DUAS metades com destinos diferentes:
+#   .ssh/       -> config do CLIENTE ssh ($HOME), aplicada por STOW
+#   etc/        -> config do SERVIDOR sshd (/etc), aplicada por scripts/ssh/deploy.sh
+# O stow só deve tocar no lado $HOME. Ignoramos o resto pra não criar um ~/etc errado.
+^/etc$
+^/README\.md$

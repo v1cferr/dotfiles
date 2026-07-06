@@ -95,6 +95,21 @@
         reverse_proxy 127.0.0.1:3005
     }
 
+    # duo-streak-daemon (V1C-71) — console web (Next.js, container duo-web em
+    # 3010; /api/* segue via Next para a API em 8010). Expõe detalhes da
+    # automação, então fica restrito à LAN (mesmo padrão do ai.v1cferr.dev).
+    @duo host duo.v1cferr.dev
+    handle @duo {
+        # 10.10.10.0/24 = túnel WireGuard (router .1, notebook .2, celular .3)
+        @duo_externo not remote_ip 192.168.1.0/24 10.10.10.0/24 127.0.0.1/8 ::1
+        respond @duo_externo "Forbidden" 403
+
+        reverse_proxy 127.0.0.1:3010 {
+            # SSE (/api/events): stream sem buffer
+            flush_interval -1
+        }
+    }
+
     # ---- Dashboard (Homepage) ----
     # Acessível de fora, mas como expõe o mapa da infra, exige login (basic_auth)
     # para quem vem de FORA da LAN. Na LAN abre direto, sem senha.

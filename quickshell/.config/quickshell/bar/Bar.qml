@@ -1236,17 +1236,6 @@ Scope {
                                             }
                                         }
                                     }
-                                    // Menu de contexto nativo do SNI, ancorado abaixo do ícone.
-                                    QsMenuAnchor {
-                                        id: trayMenu
-                                        menu: modelData.menu
-                                        // ancora na janela real (PanelWindow) — padrão robusto no wlroots
-                                        anchor.window: bar
-                                        anchor.rect: Qt.rect(trayDel.mapToItem(barContent, 0, 0).x, trayDel.mapToItem(barContent, 0, 0).y + trayDel.height, trayDel.width, 1)
-                                        anchor.edges: Edges.Bottom
-                                        anchor.gravity: Edges.Bottom
-                                        anchor.adjustment: PopupAdjustment.Flip | PopupAdjustment.Slide
-                                    }
                                     Image {
                                         anchors.centerIn: parent
                                         // path-icons: só mostra após resolver pro file:// (evita o load quebrado)
@@ -1266,13 +1255,27 @@ Scope {
                                                 modelData.activate();
                                             else if (m.button === Qt.MiddleButton)
                                                 modelData.secondaryActivate();
-                                            else if (modelData.hasMenu)
-                                                trayMenu.open();
+                                            else if (modelData.hasMenu) {
+                                                // SNI nativo: menu tematizado próprio
+                                                const pt = trayDel.mapToItem(barContent, 0, trayDel.height);
+                                                trayCtxMenu.openAt(modelData.menu, bar, Qt.rect(pt.x, pt.y, trayDel.width, 1));
+                                            } else {
+                                                // xembedsniproxy (wine/pamac): sem DBusMenu. O display() do
+                                                // Quickshell recusa itens sem menu ("No menu present"), então
+                                                // disparamos o ContextMenu() nativo do SNI via helper — o proxy
+                                                // repassa o clique e o app desenha o próprio menu no cursor.
+                                                root.launch(["bash", root.scriptsDir + "/tray-native-menu.sh", "" + modelData.id]);
+                                            }
                                         }
                                         onWheel: w => modelData.scroll(w.angleDelta.y, false)
                                     }
                                 }
                             }
+                        }
+                        // Uma única instância compartilhada do menu de contexto: abrir num
+                        // ícone troca/fecha o de outro (evita empilhar vários menus).
+                        TrayMenu {
+                            id: trayCtxMenu
                         }
                     }
                 }

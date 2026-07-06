@@ -77,6 +77,16 @@ Pill {
                             danger: false
                         },
                         {
+                            // Escurece a tela na hora (gamma 0 via hyprsunset, NUNCA
+                            // dpms — ver idle-dim.sh / hyprlock-dpms-freeze). Restaura
+                            // sozinho ao mexer no mouse/teclado (on-resume do hypridle)
+                            // ou ao deslizar o brilho. Útil pra dormir sem luz no quarto.
+                            icon: "󰖔",
+                            label: "Escurecer",
+                            cmd: ["/home/v1cferr/.config/hypr/scripts/idle-dim.sh", "dim"],
+                            danger: false
+                        },
+                        {
                             icon: "󰗽",
                             label: "Sair",
                             cmd: ["uwsm", "stop"],

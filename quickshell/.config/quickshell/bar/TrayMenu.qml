@@ -20,6 +20,9 @@ PopupWindow {
     // QsMenuHandle do menu raiz e do submenu aberto (null = fechado).
     property var menuHandle: null
     property var submenuHandle: null
+    // Janela da barra que abriu o menu (pra incluir no focus-grab: clicar noutro
+    // ícone do tray TROCA o menu em vez de contar como "clique fora").
+    property var barWindow: null
 
     color: "transparent"
     visible: false
@@ -30,6 +33,7 @@ PopupWindow {
     // antes pra forçar reposicionar caso já esteja aberto em outro ícone.
     function openAt(handle, win, rect) {
         root.visible = false;
+        root.barWindow = win;
         root.anchor.window = win;
         root.anchor.rect = rect;
         root.anchor.edges = Edges.Bottom;
@@ -45,6 +49,14 @@ PopupWindow {
         root.submenuHandle = null;
     }
 
+    // Some sozinho após um tempo se o mouse não estiver sobre o menu (pausa
+    // enquanto o cursor está em cima; reinicia a contagem ao sair).
+    Timer {
+        running: root.visible && !menuHover.hovered
+        interval: 4000
+        onTriggered: root.closeMenu()
+    }
+
     QsMenuOpener {
         id: opener
         menu: root.menuHandle
@@ -54,10 +66,11 @@ PopupWindow {
         menu: root.submenuHandle
     }
 
-    // Clique fora dos limites do popup → fecha.
+    // Clique fora → fecha. Inclui a barra no grab pra que clicar noutro ícone do
+    // tray TROQUE o menu (o clique chega no ícone) em vez de contar como "fora".
     HyprlandFocusGrab {
         active: root.visible
-        windows: [root]
+        windows: root.barWindow ? [root, root.barWindow] : [root]
         onCleared: root.closeMenu()
     }
 
@@ -152,6 +165,11 @@ PopupWindow {
     Row {
         id: card
         spacing: 6
+
+        // hover no menu pausa o auto-hide
+        HoverHandler {
+            id: menuHover
+        }
 
         // coluna principal
         Rectangle {

@@ -102,7 +102,7 @@ Pegadinhas de flake-em-repo-existente:
 
 ## 9. Pendências (reordenadas em 13/jul pela urgência)
 
-1. **🚨 URGENTE — Resgate do `ResgateArch/`** (no Netac agonizante): é a **home completa do Arch anterior** (pré-reinstalação de dez/2025) com `.ssh/`, `.gnupg/`, `.google_authenticator`, `Projects/` (possível repo não-pushado), `Videos/` (modificado em mar/2026), `.zsh_history`, `.minecraft`. O controlador do disco está caindo do barramento — **copiar na PRÓXIMA janela em que o disco enumerar** (reboot ou rescan PCI), por ordem de prioridade acima. (Dropbox/ pode ignorar.)
+1. ✅ **Resgate do `ResgateArch/` — CONCLUÍDO (13/jul):** 27G salvos em `~/ResgateArch/` no Kingston: `.ssh/`, `.gnupg/`, `.google_authenticator`, históricos, `Projects/` completo (21G + study/ 3G — todo código-fonte intacto), `.minecraft` (1.2G) e `Videos/` (2.3G, só um filme baixado). **Perda real: ZERO** — os 381 ilegíveis eram todos node_modules/venv/cache. Lição operacional que destravou a 3ª janela: `systemctl stop udisks2` antes de ler o disco (o polling SMART do udisks — Get Log Page a cada ~8min — era o gatilho das quedas do controlador). Decisão: perfis de navegador antigos (.mozilla/.zen) dispensados. Falta só a triagem fina do que foi salvo, no ritmo do usuário.
 2. **Corrigir fstab** do Arch: linha do `/mnt/win_disk` sem `nofail` = roleta de emergency mode a cada boot. Adicionar `nofail,x-systemd.device-timeout=10s` (ou comentar a linha de vez).
 3. **Esqueleto do flake** no repo (flake.nix + host de teste + home-manager) — primeiro entregável concreto.
 4. ~~Decidir disco de staging~~ → decidido: comprar NVMe novo pro slot do Netac (aposentadoria do Netac após o resgate).

@@ -45,3 +45,10 @@ openrazer/.config/openrazer/persistence.conf
 
 # Backup criptografado de segredos (scripts/secrets/) — NUNCA versionar
 secrets-backup*.tar.gz.gpg
+
+# Nix: symlink de saída do `nix build` (aponta pra /nix/store)
+result
+result-*
+
+# Disco das VMs de teste (estado, não config) — criado pelo run-*-vm no cwd
+*.qcow2

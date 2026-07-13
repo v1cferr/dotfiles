@@ -104,6 +104,7 @@ neovim 0.12.4-1
 networkmanager 1.56.1-1
 network-manager-applet 1.36.0-2
 networkmanager-openconnect 1.2.10-4
+nix 2.34.8-1
 noto-fonts 1:2026.07.01-1
 noto-fonts-cjk 20240730-1
 noto-fonts-emoji 1:2.051-1

@@ -291,4 +291,5 @@
   // Não abre a tela de boas-vindas no startup
   "workbench.startupEditor": "none",
   "chat.viewSessions.orientation": "stacked",
+  "git.ignoreRebaseWarning": true,
 }

@@ -1,6 +1,0 @@
-[Unit]
-Description=Regenera as listas de pacotes (pacman + AUR) versionadas nos dotfiles
-
-[Service]
-Type=oneshot
-ExecStart=%h/dotfiles/scripts/packages/sync.sh

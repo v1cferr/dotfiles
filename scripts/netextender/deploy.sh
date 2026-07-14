@@ -37,4 +37,10 @@ while IFS= read -r -d '' src; do
     esac
 done < <(find "${PKG}/etc" -type f -print0)
 
+# Aplica o sysctl do VPN gateway (ip_forward) sem precisar de reboot.
+if [[ -f /etc/sysctl.d/99-fai-vpn-gateway.conf ]]; then
+    sysctl -p /etc/sysctl.d/99-fai-vpn-gateway.conf >/dev/null && \
+        echo "[deploy] sysctl aplicado (net.ipv4.ip_forward)"
+fi
+
 echo "[deploy] perfil instalado. Confirme que o seu NetExtender lê de /etc/SonicWall/."

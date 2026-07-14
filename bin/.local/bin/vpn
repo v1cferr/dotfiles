@@ -213,6 +213,40 @@ fai_split_tunnel() {
   return 1
 }
 
+# VPN gateway: compartilha o túnel da FAI com a LAN de casa. Qualquer dispositivo
+# (ex.: a máquina do César) que rotear os subnets da FAI para esta máquina (.10)
+# — via rota estática no roteador — sai pelo túnel. Só o tráfego da FAI desvia;
+# o resto usa a internet de casa normalmente. O acesso existe SÓ enquanto a VPN
+# estiver conectada (as regras sobem aqui e caem no disconnect).
+#
+# Regras fixas via /etc/sudoers.d/fai-vpn-gateway (NOPASSWD). Origem fixada em
+# 192.168.1.0/24; -I FORWARD 1 fura a policy DROP do Docker; MASQUERADE no túnel
+# faz a FAI enxergar só o IP de VPN desta máquina. Idempotente: -D antes de -I.
+gateway_up() {
+  sudo -n /usr/bin/iptables -D FORWARD -s 192.168.1.0/24 -o snwl_ssltunnel -j ACCEPT 2>/dev/null || true
+  sudo -n /usr/bin/iptables -D FORWARD -d 192.168.1.0/24 -i snwl_ssltunnel -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT 2>/dev/null || true
+  sudo -n /usr/bin/iptables -t nat -D POSTROUTING -s 192.168.1.0/24 -o snwl_ssltunnel -j MASQUERADE 2>/dev/null || true
+
+  local ok=1
+  sudo -n /usr/bin/iptables -I FORWARD 1 -s 192.168.1.0/24 -o snwl_ssltunnel -j ACCEPT 2>/dev/null || ok=0
+  sudo -n /usr/bin/iptables -I FORWARD 1 -d 192.168.1.0/24 -i snwl_ssltunnel -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT 2>/dev/null || ok=0
+  sudo -n /usr/bin/iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o snwl_ssltunnel -j MASQUERADE 2>/dev/null || ok=0
+
+  if [ "$ok" -eq 1 ]; then
+    notify "FAI: gateway da LAN ativo (a rede de casa acessa a FAI por esta máquina)"
+  else
+    notify "FAI: FALHA ao subir o gateway da LAN. Rode: sudo ~/dotfiles/scripts/netextender/deploy.sh" critical
+    printf 'vpn: gateway_up falhou (sudoers fai-vpn-gateway instalado?)\n' >&2
+  fi
+}
+
+# Remove as regras do gateway (silencioso; erros ignorados se já não existirem).
+gateway_down() {
+  sudo -n /usr/bin/iptables -D FORWARD -s 192.168.1.0/24 -o snwl_ssltunnel -j ACCEPT 2>/dev/null || true
+  sudo -n /usr/bin/iptables -D FORWARD -d 192.168.1.0/24 -i snwl_ssltunnel -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT 2>/dev/null || true
+  sudo -n /usr/bin/iptables -t nat -D POSTROUTING -s 192.168.1.0/24 -o snwl_ssltunnel -j MASQUERADE 2>/dev/null || true
+}
+
 connect_fai() {
   local script_path="$DOTFILES_ROOT/scripts/fai-ufscar-vpn.sh"
 
@@ -234,6 +268,7 @@ connect_fai() {
     notify "Conectando: $FAI_PROFILE..."
     if connect_fai_auto "$pass"; then
       fai_split_tunnel
+      gateway_up
       notify "Conectada: $FAI_PROFILE"
       refresh_waybar
       return
@@ -254,6 +289,10 @@ disconnect_fai() {
     notify "netExtender nao encontrado"
     exit 1
   fi
+
+  # Derruba o gateway da LAN antes de desconectar (corta o acesso da rede de casa
+  # à FAI junto com o túnel). Idempotente e silencioso.
+  gateway_down
 
   if netextender_run "netExtender disconnect" >/dev/null 2>&1 && ! fai_active; then
     notify "Desconectada: $FAI_PROFILE"

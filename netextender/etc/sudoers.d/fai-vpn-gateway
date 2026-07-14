@@ -1,0 +1,14 @@
+# VPN gateway da FAI: deixa o wrapper `vpn` subir/derrubar as regras de NAT que
+# compartilham o túnel com a LAN, sem pedir senha. Todos os comandos são FIXOS
+# (sem args variáveis) = seguro. Sobem no `vpn connect fai`, caem no disconnect.
+# Instalado em /etc/sudoers.d/ (0440) pelo scripts/netextender/deploy.sh.
+#
+# MASQUERADE no túnel + FORWARD LAN<->túnel. -I FORWARD 1 fura a policy DROP que
+# o Docker impõe. As regras casam por origem 192.168.1.0/24 e a interface do
+# túnel, então não afetam nada quando a VPN está desconectada.
+v1cferr ALL=(root) NOPASSWD: /usr/bin/iptables -I FORWARD 1 -s 192.168.1.0/24 -o snwl_ssltunnel -j ACCEPT
+v1cferr ALL=(root) NOPASSWD: /usr/bin/iptables -D FORWARD -s 192.168.1.0/24 -o snwl_ssltunnel -j ACCEPT
+v1cferr ALL=(root) NOPASSWD: /usr/bin/iptables -I FORWARD 1 -d 192.168.1.0/24 -i snwl_ssltunnel -m conntrack --ctstate RELATED\,ESTABLISHED -j ACCEPT
+v1cferr ALL=(root) NOPASSWD: /usr/bin/iptables -D FORWARD -d 192.168.1.0/24 -i snwl_ssltunnel -m conntrack --ctstate RELATED\,ESTABLISHED -j ACCEPT
+v1cferr ALL=(root) NOPASSWD: /usr/bin/iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o snwl_ssltunnel -j MASQUERADE
+v1cferr ALL=(root) NOPASSWD: /usr/bin/iptables -t nat -D POSTROUTING -s 192.168.1.0/24 -o snwl_ssltunnel -j MASQUERADE

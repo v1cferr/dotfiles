@@ -48,6 +48,37 @@ sudo netExtender connect FAI.UFSCAR
 > `protocol=fortinet`) **não funciona** — o openconnect não fala o protocolo do
 > SonicWall. Pode ser removido com `nmcli connection delete FAI.UFSCAR`.
 
+## Compartilhar a VPN com a LAN (VPN gateway)
+
+Este desktop (`.10`) pode servir de **gateway** da VPN pra rede de casa: outros
+dispositivos (ex.: a máquina do César) acessam os recursos da FAI **sem instalar
+nada** — o NetExtender (x86) nem roda no roteador ARM. Só o tráfego da FAI desvia
+pra cá; o resto usa a internet de casa normal. O acesso vale **só enquanto a VPN
+estiver conectada** neste desktop.
+
+Como funciona:
+
+```
+dispositivo LAN --(rota estática no roteador)--> desktop .10 --[snwl_ssltunnel]--> FAI
+   (qualquer IP)     "FAI = via .10"              (NAT/masquerade)
+```
+
+- **Desktop:** o `vpn connect fai` sobe o NAT (MASQUERADE no túnel + FORWARD
+  LAN↔túnel) automaticamente; o `disconnect` derruba. Regras fixas via
+  `etc/sudoers.d/fai-vpn-gateway`; `ip_forward` fixado em
+  `etc/sysctl.d/99-fai-vpn-gateway.conf`. Tudo aplicado pelo `deploy.sh`.
+- **Roteador (OpenWrt):** rode `router/fai-vpn-gateway.sh` **no roteador** (root)
+  — cria o lease fixo `.40` do `arch-cesar` e as 6 rotas dos subnets da FAI
+  (`192.168.{90,100,110,130,223}.0/24` + `200.136.209.128/25`) via `.10`.
+
+Subnets roteados pelo túnel (capturados do NetExtender conectado):
+`192.168.90.0/24`, `192.168.100.0/24`, `192.168.110.0/24`, `192.168.130.0/24`,
+`192.168.223.0/24`, `200.136.209.128/25` (inclui os DNS `.235`/`.247`).
+
+> Não precisa de split-DNS: `pc.sup.fai.ufscar.br` (200.136.209.229) e
+> `fai.ufscar.br` (200.136.209.236) já resolvem no DNS público pra IPs dentro do
+> `/25` roteado. O nome funciona direto.
+
 ## Dependências
 
 - `netextender` (via AUR)

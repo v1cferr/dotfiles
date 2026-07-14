@@ -100,6 +100,16 @@ Pegadinhas de flake-em-repo-existente:
 - **`minecraft-server/` movido** do disco Windows para `~/Downloads/minecraft-server/1.21.10/` (1.2GB: mundo "lariussa" + nether/end, plugins, mods, docker-compose, `.git`). Origem removida. Duas baixas em setores fisicamente mortos (I/O error persistente), ambas no `lariussa-backup/` e **sem impacto** — o mundo vivo tem versões mais novas e íntegras dos dois arquivos (`entities/r.-1.-1.mca` e o datapack "Hostile Mobs Improve Over Time.zip").
 - **Health check completo** do Netac (tabela acima) via `udisksctl`/`busctl` (smartctl exigia senha sudo interativa).
 
+## 9½. PIVÔ DE ESTRATÉGIA (13/jul, noite) — reescrita do zero na branch `nixos`
+
+**Decisão do usuário, supersede §5 (branch) e §6 (faseamento):** aprender NixOS escrevendo a config **do zero**, direto na ISO minimal (26.05 — <https://channels.nixos.org/nixos-26.05/latest-nixos-minimal-x86_64-linux.iso>), instalada **bare metal num disco secundário** (sda HD 320G ou sdb SanDisk 1TB — conferir/limpar o sdb antes, tem restos de Windows antigo; Netac descartado, está morto). Trialboot Windows+Arch+NixOS via rEFInd: **bootloader do NixOS na ESP do próprio disco secundário**, nunca na ESP do Kingston.
+
+- **Branch `nixos`** = lar deste documento + esqueleto flake **testado** (flake check verde, VM bootou Hyprland). O esqueleto vira *gabarito de consulta* quando travar — greetd/tuigreet, bluetooth, home-manager consumindo os dirs stow, tudo já resolvido lá. **Main = Arch puro, zero nix** (commits removidos via rebase).
+- O rice continua sendo reaproveitado como arquivos (ninguém reescreve QML do zero); a curadoria "do zero" vale pra camada de **sistema e pacotes**.
+- Sincronização: `git merge main` periódico na `nixos` (arquivos nix não existem na main, não conflitam).
+- Primeiras declarações no `configuration.nix` pra não ficar cego/incomunicável: `networking.networkmanager.enable`, **`services.openssh.enable`** (permite configurar o NixOS confortavelmente via SSH a partir do Arch), `git`, editor, usuário com senha.
+- Continuam válidos deste doc: arquitetura distrobox (§3), tabela de atritos/antídotos (§4), pegadinhas de flake-em-repo (§5), regra capacidade-vs-estado, cutover final no Kingston (§6 item 4).
+
 ## 9. Pendências (reordenadas em 13/jul pela urgência)
 
 1. ✅ **Resgate do `ResgateArch/` — CONCLUÍDO (13/jul):** 27G salvos em `~/ResgateArch/` no Kingston: `.ssh/`, `.gnupg/`, `.google_authenticator`, históricos, `Projects/` completo (21G + study/ 3G — todo código-fonte intacto), `.minecraft` (1.2G) e `Videos/` (2.3G, só um filme baixado). **Perda real: ZERO** — os 381 ilegíveis eram todos node_modules/venv/cache. Lição operacional que destravou a 3ª janela: `systemctl stop udisks2` antes de ler o disco (o polling SMART do udisks — Get Log Page a cada ~8min — era o gatilho das quedas do controlador). Decisão: perfis de navegador antigos (.mozilla/.zen) dispensados. Falta só a triagem fina do que foi salvo, no ritmo do usuário.

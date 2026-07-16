@@ -199,6 +199,7 @@
     librewolf
     google-chrome
     vscode
+    spotify # unfree (ok: allowUnfree acima)
     # whatsapp  # (estava comentado na config original)
 
     # ── bleeding-edge (escolhidos a dedo) ──

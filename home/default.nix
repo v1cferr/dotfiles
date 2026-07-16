@@ -14,7 +14,6 @@
 {
   imports = [
     ./git.nix # programs.git → ~/.gitconfig
-    ./gnome.nix # dconf → teclado ABNT2 na sessão
   ];
 
   home.username = "v1cferr";

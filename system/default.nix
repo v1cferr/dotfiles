@@ -85,7 +85,7 @@
   # Monitores: LG ULTRAGEAR (DP-1, 1920x1080) é o PRIMÁRIO, fisicamente à direita
   # do HDMI-1 (1366x768). Aplicado no start do X (LightDM) → vale em todo login.
   services.xserver.displayManager.setupCommands = ''
-    ${pkgs.xorg.xrandr}/bin/xrandr \
+    ${pkgs.xrandr}/bin/xrandr \
       --output HDMI-1 --mode 1366x768 --pos 0x0 \
       --output DP-1 --mode 1920x1080 --pos 1366x0 --primary
   '';

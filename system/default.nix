@@ -69,13 +69,15 @@
     options = [ "ro" "noload" "nofail" "x-systemd.automount" ];
   };
 
-  # ── Desktop: GNOME sobre X11 ────────────────────────────────────────────────
-  # (O rice Hyprland+Quickshell entra numa fase futura — ver README.)
+  # ── Desktop: XFCE sobre X11 ─────────────────────────────────────────────────
+  # DE leve (interino até o rice Hyprland+Quickshell — ver README). GNOME/GDM
+  # pesavam demais neste HDD lento (Shell + tracker indexando o disco). XFCE +
+  # LightDM aliviam RAM e I/O.
   services.xserver.enable = true;
-  services.displayManager.gdm.enable = true;
-  services.desktopManager.gnome.enable = true;
-  # Teclado no LOGIN (GDM). A sessão do usuário no GNOME/Wayland usa a input
-  # source declarada em home/gnome.nix — as duas coisas são separadas.
+  services.xserver.displayManager.lightdm.enable = true;
+  services.xserver.desktopManager.xfce.enable = true;
+  # Em X11 (XFCE) o xkb do sistema VALE na sessão (o GNOME/Wayland ignorava e
+  # exigia dconf em home/). ABNT2 aqui cobre login e sessão.
   services.xserver.xkb = {
     layout = "br"; # variante padrão do "br" = ABNT2
     variant = "";

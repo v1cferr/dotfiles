@@ -67,13 +67,16 @@
   };
 
   # ── Usuário (capacidade declarada; senha/chaves = "quem sou eu") ────────────
-  # hashedPassword é HASH, não texto claro → ok rastrear no git. Segredo de
-  # verdade (tokens/credenciais) fica pra sops-nix (regra #4 do README).
+  # Hash da senha vive FORA do git, em arquivo root-only. NUNCA rastrear hash em
+  # repo público (o antigo vazou → rotacionar). Gerar o arquivo:
+  #   sudo sh -c 'umask 077; mkdir -p /etc/secrets; \
+  #     nix run nixpkgs#mkpasswd -- -m sha-512 > /etc/secrets/v1cferr.hash'
+  # Futuro: migrar pra sops-nix (regra #4 do README).
   users.users.v1cferr = {
     isNormalUser = true;
     description = "Victor";
     extraGroups = [ "wheel" "networkmanager" ];
-    hashedPassword = "$6$rFNK5/dGM/.joz0o$vfl1XfkabH16RTb0xlvhC2nA/SIVQOG4LzKX00dlv09XVOsY/nnV4/s6Kuy8n8zjVobsQjGrnpEuugYoz5qHd/";
+    hashedPasswordFile = "/etc/secrets/v1cferr.hash";
     openssh.authorizedKeys.keys = [
       # chave que entra no Arch hoje (~/.ssh/authorized_keys)
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKPvFX6AAslYtCXeUnNmSIKL4GESHvgO+irlnJ5+2ltD dev.victorferreira@gmail.com"

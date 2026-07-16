@@ -177,6 +177,7 @@
   environment.systemPackages = with pkgs; [
     # ── base estável ──
     git
+    gh # GitHub CLI (auth/push via HTTPS + token)
     vim
     htop
     kitty

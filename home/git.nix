@@ -6,9 +6,14 @@
 {
   programs.git = {
     enable = true;
-    settings.user = {
-      name = "Victor Ferreira";
-      email = "dev.victorferreira@gmail.com";
+    settings = {
+      user = {
+        name = "Victor Ferreira";
+        email = "dev.victorferreira@gmail.com";
+      };
+      # GitHub via HTTPS usa o token do gh (GitHub CLI) como credential helper →
+      # `git push/pull` funcionam sem SSH e sem gravar token em texto puro.
+      credential."https://github.com".helper = "!gh auth git-credential";
     };
   };
 }

@@ -40,6 +40,17 @@
   hardware.enableRedistributableFirmware = true;
   zramSwap.enable = true; # HDD é lento → swap comprimido na RAM
 
+  # ── Discos extras ───────────────────────────────────────────────────────
+  # Kingston (nvme) = Arch de PRODUÇÃO. README: "não tocar até o cutover".
+  # Monto SÓ-LEITURA (ro+noload = zero escrita garantida) só pra ler/copiar os
+  # dotfiles. nofail + automount: não trava o boot e monta no 1º acesso; se o
+  # disco sair, o sistema sobe normal. UUID (estável; nomes nvmeX embaralham).
+  fileSystems."/mnt/kingston-arch" = {
+    device = "/dev/disk/by-uuid/d98ec566-6ec2-4371-8048-d3a4f02b2cbb";
+    fsType = "ext4";
+    options = [ "ro" "noload" "nofail" "x-systemd.automount" ];
+  };
+
   # ── Desktop: GNOME sobre X11 ────────────────────────────────────────────────
   # (O rice Hyprland+Quickshell entra numa fase futura — ver README.)
   services.xserver.enable = true;

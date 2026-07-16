@@ -3,12 +3,24 @@
 # Tudo que é do sistema vive aqui. Cresce por tema: quando um assunto ficar
 # grande, mova-o pra system/<tema>.nix e adicione em `imports` abaixo.
 # ═══════════════════════════════════════════════════════════════════════════
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 {
   imports = [
     ../hardware-configuration.nix # gerado pela máquina — não editar
   ];
+
+  # ── Segredos (sops-nix) ───────────────────────────────────────────────────
+  # Segredos criptografados em secrets/secrets.yaml (versionados no git, mas
+  # ilegíveis sem a chave). Decriptados em runtime pra /run/secrets*. A chave
+  # privada age (/var/lib/sops-nix/key.txt) fica FORA do git — é o que se leva
+  # no cutover. Editar: nix shell nixpkgs#sops -c sops secrets/secrets.yaml
+  sops = {
+    defaultSopsFile = ../secrets/secrets.yaml;
+    age.keyFile = "/var/lib/sops-nix/key.txt";
+    secrets.v1cferr_password_hash.neededForUsers = true; # senha: precisa cedo
+    secrets.cloudflare_ddns_token = { };
+  };
 
   # ── Boot (UEFI, systemd-boot no ESP DESTE disco) ───────────────────────────
   # Não mexe no boot do Arch/Kingston nem do Windows.
@@ -93,7 +105,7 @@
     isNormalUser = true;
     description = "Victor";
     extraGroups = [ "wheel" "networkmanager" ];
-    hashedPasswordFile = "/etc/secrets/v1cferr.hash";
+    hashedPasswordFile = config.sops.secrets.v1cferr_password_hash.path;
     openssh.authorizedKeys.keys = [
       # chave que entra no Arch hoje (~/.ssh/authorized_keys)
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKPvFX6AAslYtCXeUnNmSIKL4GESHvgO+irlnJ5+2ltD dev.victorferreira@gmail.com"
@@ -122,6 +134,37 @@
   systemd.targets.suspend.enable = false;
   systemd.targets.hibernate.enable = false;
   systemd.targets.hybrid-sleep.enable = false;
+
+  # ── fail2ban — protege o SSH exposto na internet ─────────────────────────
+  # A 2222 fica aberta ao mundo (port-forward 2222 no OpenWrt) COM senha
+  # habilitada → fail2ban é obrigatório. Espelha o jail do Arch: bane após 4
+  # falhas em 10min, por 1h; nunca bane a LAN nem o loopback.
+  services.fail2ban = {
+    enable = true;
+    bantime = "1h";
+    ignoreIP = [ "127.0.0.1/8" "::1" "192.168.1.0/24" ];
+    jails.sshd.settings = {
+      enabled = true;
+      port = 2222;
+      backend = "systemd"; # sshd loga no journald
+      maxretry = 4;
+      findtime = "10m";
+    };
+  };
+
+  # ── DNS dinâmico (Cloudflare) ─────────────────────────────────────────────
+  # Mantém ssh.v1cferr.dev apontando pro IP público atual (que muda) → permite
+  # `ssh …@ssh.v1cferr.dev` de qualquer lugar, sem VPN. Token FORA do git
+  # (arquivo root-only). proxied=false: registro DNS-only (cinza) — SSH não
+  # passa pelo proxy HTTP da Cloudflare.
+  services.cloudflare-dyndns = {
+    enable = true;
+    apiTokenFile = config.sops.secrets.cloudflare_ddns_token.path;
+    domains = [ "ssh.v1cferr.dev" ];
+    proxied = false;
+    ipv4 = true;
+    ipv6 = false;
+  };
 
   # ── Pacotes (LISTA ÚNICA) ────────────────────────────────────────────────
   # Máquina de um usuário só → não faz sentido separar system vs user. TODO

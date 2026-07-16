@@ -21,9 +21,16 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Segredos criptografados versionados no repo (senha, tokens…). A chave-mestra
+    # age fica FORA do git e é a única coisa a carregar no cutover.
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, disko, ... }@inputs:
+  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, disko, sops-nix, ... }@inputs:
     let
       system = "x86_64-linux";
 
@@ -47,6 +54,7 @@
         specialArgs = { inherit inputs; };
         modules = [
           { nixpkgs.overlays = [ overlayUnstable ]; } # habilita `unstable.*`
+          sops-nix.nixosModules.sops
           ./system
 
           home-manager.nixosModules.home-manager

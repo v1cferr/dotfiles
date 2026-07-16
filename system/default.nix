@@ -40,6 +40,12 @@
     dates = "weekly";
     options = "--delete-older-than 30d"; # a /nix/store não cresce pra sempre
   };
+  # GC reativo por espaço (complementa o timer acima): se durante um build o
+  # espaço livre cair abaixo de min-free, coleta lixo até liberar max-free e
+  # segue o build. Evita "no space left" no meio de um rebuild grande.
+  # Valores = default consolidado da comunidade; suba min-free se um dia faltar.
+  nix.settings.min-free = 1024 * 1024 * 1024; # 1 GiB
+  nix.settings.max-free = 5 * 1024 * 1024 * 1024; # 5 GiB
   nixpkgs.config.allowUnfree = true; # google-chrome, vscode, etc.
 
   # ── Compat com binários FHS (nix-ld) ──────────────────────────────────────

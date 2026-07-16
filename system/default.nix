@@ -1,0 +1,132 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# SISTEMA (root) — host nixos-seagate (HDD Seagate ST9320423AS).
+# Tudo que é do sistema vive aqui. Cresce por tema: quando um assunto ficar
+# grande, mova-o pra system/<tema>.nix e adicione em `imports` abaixo.
+# ═══════════════════════════════════════════════════════════════════════════
+{ pkgs, ... }:
+
+{
+  imports = [
+    ../hardware-configuration.nix # gerado pela máquina — não editar
+  ];
+
+  # ── Boot (UEFI, systemd-boot no ESP DESTE disco) ───────────────────────────
+  # Não mexe no boot do Arch/Kingston nem do Windows.
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.systemd-boot.configurationLimit = 10; # ESP não enche de gerações
+
+  # ── Rede ───────────────────────────────────────────────────────────────────
+  networking.hostName = "nixos-seagate";
+  networking.networkmanager.enable = true;
+
+  # ── Nix / flakes ─────────────────────────────────────────────────────────
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.auto-optimise-store = true; # dedup por hardlink na /nix/store
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 30d"; # a /nix/store não cresce pra sempre
+  };
+  nixpkgs.config.allowUnfree = true; # google-chrome, vscode, etc.
+
+  # ── Local / idioma ─────────────────────────────────────────────────────────
+  time.timeZone = "America/Sao_Paulo";
+  i18n.defaultLocale = "en_US.UTF-8";
+  console.keyMap = "br-abnt2"; # teclado no TTY (a GUI é no bloco Desktop)
+
+  # ── Hardware desta máquina ──────────────────────────────────────────────────
+  hardware.cpu.intel.updateMicrocode = true;
+  hardware.enableRedistributableFirmware = true;
+  zramSwap.enable = true; # HDD é lento → swap comprimido na RAM
+
+  # ── Desktop: GNOME sobre X11 ────────────────────────────────────────────────
+  # (O rice Hyprland+Quickshell entra numa fase futura — ver README.)
+  services.xserver.enable = true;
+  services.displayManager.gdm.enable = true;
+  services.desktopManager.gnome.enable = true;
+  # Teclado no LOGIN (GDM). A sessão do usuário no GNOME/Wayland usa a input
+  # source declarada em home/gnome.nix — as duas coisas são separadas.
+  services.xserver.xkb = {
+    layout = "br"; # variante padrão do "br" = ABNT2
+    variant = "";
+  };
+
+  # ── Fontes e tipografia ─────────────────────────────────────────────────────
+  fonts = {
+    packages = with pkgs; [ nerd-fonts.jetbrains-mono ];
+    fontconfig = {
+      enable = true;
+      # Estética "laboratório": JetBrains Mono também em menus/navegador.
+      defaultFonts = {
+        monospace = [ "JetBrainsMono Nerd Font" ];
+        sansSerif = [ "JetBrainsMono Nerd Font" ];
+        serif = [ "JetBrainsMono Nerd Font" ];
+      };
+    };
+  };
+
+  # ── Usuário (capacidade declarada; senha/chaves = "quem sou eu") ────────────
+  # hashedPassword é HASH, não texto claro → ok rastrear no git. Segredo de
+  # verdade (tokens/credenciais) fica pra sops-nix (regra #4 do README).
+  users.users.v1cferr = {
+    isNormalUser = true;
+    description = "Victor";
+    extraGroups = [ "wheel" "networkmanager" ];
+    hashedPassword = "$6$rFNK5/dGM/.joz0o$vfl1XfkabH16RTb0xlvhC2nA/SIVQOG4LzKX00dlv09XVOsY/nnV4/s6Kuy8n8zjVobsQjGrnpEuugYoz5qHd/";
+    openssh.authorizedKeys.keys = [
+      # chave que entra no Arch hoje (~/.ssh/authorized_keys)
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKPvFX6AAslYtCXeUnNmSIKL4GESHvgO+irlnJ5+2ltD dev.victorferreira@gmail.com"
+      # chave local do Arch/Kingston — pra hop Arch -> NixOS
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINRHYth5yugzhdulstjLPJAqHuzXE6j/EVl7dHcWKIUI dev.victorferreira@gmail.com"
+    ];
+  };
+  security.sudo.wheelNeedsPassword = true;
+
+  # ── SSH (espelha o Arch: porta 2222, root off, senha como fallback) ─────────
+  services.openssh = {
+    enable = true;
+    ports = [ 2222 ];
+    openFirewall = true; # abre a 2222 no firewall
+    settings = {
+      PermitRootLogin = "no";
+      PasswordAuthentication = true;
+      KbdInteractiveAuthentication = false;
+    };
+  };
+
+  # ── Nunca suspender ─────────────────────────────────────────────────────
+  # É um desktop de acesso remoto (SSH). Se suspender, o SSH cai e você não
+  # alcança de outro PC. Desativa todos os alvos de sono.
+  systemd.targets.sleep.enable = false;
+  systemd.targets.suspend.enable = false;
+  systemd.targets.hibernate.enable = false;
+  systemd.targets.hybrid-sleep.enable = false;
+
+  # ── Pacotes (LISTA ÚNICA) ────────────────────────────────────────────────
+  # Máquina de um usuário só → não faz sentido separar system vs user. TODO
+  # pacote instalado vive aqui. O home-manager (home/) NÃO instala pacote — ele
+  # só CONFIGURA (dotfiles/settings).
+  #
+  # `pkgs.foo`          → versão da BASE estável (26.05). Use por padrão.
+  # `pkgs.unstable.foo` → versão BLEEDING-EDGE (canal unstable). Só o que você
+  #                       quiser sempre na última. Overlay definido no flake.nix.
+  environment.systemPackages = with pkgs; [
+    # ── base estável ──
+    git
+    vim
+    htop
+    kitty
+    librewolf
+    google-chrome
+    vscode
+    # whatsapp  # (estava comentado na config original)
+
+    # ── bleeding-edge (escolhidos a dedo) ──
+    unstable.fastfetch
+    unstable.claude-code
+  ];
+
+  # Fixado na 1ª instalação — NUNCA mudar depois (não é "versão do sistema").
+  system.stateVersion = "26.05";
+}

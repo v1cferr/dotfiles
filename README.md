@@ -82,3 +82,24 @@ de ~1 ano de Arch não migra por inércia.
 - **2026-07-13** — Branch criada e zerada (só `configuration.nix` + este README). Esqueleto
   flake testado em VM preservado na tag `nix-flake-skeleton`. Decisões: unstable no host,
   reescrita à mão pra aprender, trialboot em disco secundário (aguardando hardware).
+- **2026-07-15** — Realidade adiantou o plano: NixOS 26.05 instalado direto no **HDD Seagate**
+  (host `nixos-seagate`, GNOME, SSH:2222), sem esperar o trialboot. Arquitetura de flake
+  montada e unificada **sistema + usuário** via **home-manager como módulo do NixOS** (um só
+  rebuild aplica os dois, atômico). Layout escolhido: **duas pastas** que espelham o modelo
+  mental — `system/` (root) e `home/` (usuário) — em vez de `hosts/`+`modules/` (indireção
+  que só se paga com VÁRIAS máquinas; hoje há uma). `hardware-configuration.nix` na raiz.
+  Apps de usuário (chrome, vscode, librewolf, claude-code) migrados de `systemPackages` →
+  `home.packages`. Teclado ABNT2 corrigido (GNOME/Wayland ignora o xkb do sistema na sessão
+  → declarado em `home/gnome.nix`). `configuration.nix` da raiz (fase 0) aposentado.
+  Rebuild: `sudo nixos-rebuild switch --flake .#nixos-seagate`.
+
+  ```text
+  flake.nix                    # cola sistema + usuário
+  hardware-configuration.nix   # gerado, não editar
+  system/default.nix           # SISTEMA (cresce: system/audio.nix, fonts.nix…)
+  home/{default,apps,git,gnome}.nix   # USUÁRIO (cresce: home/kitty.nix, hypr.nix…)
+  ```
+
+  Migração dos configs de app (fase Rice): **híbrido** — módulos nativos do home-manager
+  onde existem (`programs.kitty/zsh/git/starship`), e arquivo cru via `mkOutOfStoreSymlink`
+  pro rice que precisa de hot-reload (Hyprland/Quickshell).

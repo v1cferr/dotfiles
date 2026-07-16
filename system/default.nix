@@ -30,6 +30,12 @@
   };
   nixpkgs.config.allowUnfree = true; # google-chrome, vscode, etc.
 
+  # ── Compat com binários FHS (nix-ld) ──────────────────────────────────────
+  # NixOS não roda binários dinâmicos "genéricos" (que buscam /lib64/ld-linux…).
+  # O nix-ld provê esse loader → faz funcionar VS Code Remote-SSH (vscode-server),
+  # wheels Python/CUDA (uv pip install torch), etc. (item "dia 1" do README).
+  programs.nix-ld.enable = true;
+
   # ── Local / idioma ─────────────────────────────────────────────────────────
   time.timeZone = "America/Sao_Paulo";
   i18n.defaultLocale = "en_US.UTF-8";

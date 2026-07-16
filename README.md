@@ -1,105 +1,134 @@
-# NixOS do zero — plano & diário de bordo
+# dotfiles — NixOS declarativo
 
-> **Branch `nixos`**: reconstrução 100% declarativa a partir da ISO minimal, escrita à mão.
-> **`main`** = Arch (produção, intocada) · **`arch`** = backup congelado da main.
-> Todo o histórico anterior está preservado no git — o esqueleto flake **testado em VM**
-> (flake check verde, Hyprland bootando) vive na tag `nix-flake-skeleton`:
-> `git checkout nix-flake-skeleton -- nix/` traz o gabarito quando travar.
+Sistema inteiro **declarativo e versionado**: reconstruível em qualquer máquina com um
+comando. Host atual: **`nixos-seagate`** (HDD Seagate, XFCE). Branch de trabalho: **`nixos`**.
 
-## Objetivo
+> `main` = Arch (produção, intocada) · `arch` = backup congelado.
+> Todo o histórico pré-Nix está preservado na tag **`archive/pre-nix-2026-07-16`**
+> (`git log archive/pre-nix-2026-07-16` pra navegar).
 
-Sistema inteiro declarativo e versionado (GitHub + redundância local), reconstruível em
-qualquer máquina/disco com um comando, mantido até 2032+. Rice Hyprland + Quickshell
-preservado. Curadoria total: só entra o que for declarado conscientemente — o acúmulo
-de ~1 ano de Arch não migra por inércia.
+---
+
+## Instalar um pacote (o caminho fácil)
+
+**1. Ache o nome** em <https://search.nixos.org/packages> ou no terminal:
+
+```bash
+nix search nixpkgs spotify
+```
+
+**2. Adicione o nome** em `environment.systemPackages`, em `system/default.nix`:
+
+```nix
+environment.systemPackages = with pkgs; [
+  git
+  spotify        # ← só adicionar a linha
+  # unstable.foo # ← versão bleeding-edge (canal unstable) — prefixe com `unstable.`
+];
+```
+
+**3. Aplique:**
+
+```bash
+git add -A                                       # flakes só enxergam o que está no git!
+sudo nixos-rebuild switch --flake .#nixos-seagate
+```
+
+Pronto — o pacote está no PATH. Pra remover, apague a linha e rebuilde.
+
+> **Nunca** `nix profile add` / `nix-env -i` (imperativo — some no rebuild, foge do controle).
+> Pra testar **sem instalar**: `nix shell nixpkgs#pkg` abre um shell efêmero com o pacote.
+
+### Detalhes úteis
+
+- **Pacote *unfree*** (spotify, vscode, chrome): já coberto por `nixpkgs.config.allowUnfree = true`.
+- **Versão mais nova** que a do canal estável: prefixe com `unstable.` (ex.: `unstable.claude-code`) —
+  o overlay do canal `nixos-unstable` já está ligado no `flake.nix`.
+- **Configurar** um app (dotfiles, settings) é outra coisa: vai em `home/` (home-manager),
+  não em `systemPackages`. Ex.: `home/git.nix`, `home/kitty.nix`.
+- **App sem pacote no nixpkgs** (~poucos ex-AUR): derivation própria em `pkgs/`,
+  `appimageTools`, ou `nix-init`.
+
+---
+
+## Layout do repo
+
+```text
+flake.nix                    # maestro: cola sistema (root) + usuário (home-manager)
+flake.lock                   # pins (cápsula do tempo)
+hardware-configuration.nix   # gerado pela máquina — não editar
+system/default.nix           # SISTEMA: pacotes, serviços, boot, rede, desktop…
+home/                        # USUÁRIO: só CONFIGURA (não instala) — git.nix, …
+secrets/secrets.yaml         # segredos criptografados (sops-nix)
+.sops.yaml                   # regras de encriptação (recipient age)
+pkgs/                        # derivations próprias ("AUR pessoal")
+```
+
+**Sistema + usuário num só rebuild:** o home-manager entra como módulo do NixOS, então
+`nixos-rebuild switch` aplica os dois de forma atômica. Regra de ouro do repo:
+**pacote = `system/`, configuração = `home/`.**
+
+---
 
 ## Regras do jogo
 
-1. **Capacidade se declara, estado não.** Bluetooth ligado = config; fone pareado = estado
-   (`/var/lib/bluetooth`). Idem senhas de Wi-Fi, volumes Docker, perfil de navegador.
+1. **Capacidade se declara, estado não.** Bluetooth ligado = config; fone pareado = estado.
+   Idem senhas de Wi-Fi, volumes Docker, perfil de navegador.
 2. **Flakes só enxergam arquivos rastreados** → `git add` antes de QUALQUER rebuild.
-3. **Canal `nixos-unstable`** no flake (bleeding edge, estilo Arch). A ISO de instalação
-   pode ser a estável (26.05) — o canal muda no flake depois.
-4. **Segredo nunca rastreado em claro** (vai legível pra `/nix/store`) → sops-nix quando
-   os serviços chegarem.
-5. **⚠️ No Arch, NUNCA dar checkout desta branch em `~/dotfiles`** — os symlinks do stow
-   apontam pro worktree; os configs do sistema vivo sumiriam do disco. Pra mexer nela a
-   partir do Arch: `git worktree add ~/nixos-wt nixos`. No NixOS, ela é a branch natural.
+3. **Nada imperativo.** Sem `nix-env`/`nix profile add`. Tudo no config + rebuild.
+4. **Segredo nunca em claro no git** (iria legível pra `/nix/store`) → sops-nix.
+5. **Canal `nixos-unstable`** no flake (bleeding edge, estilo Arch).
+6. **⚠️ No Arch, NUNCA dar checkout da branch `nixos` em `~/dotfiles`** — os symlinks do stow
+   apontam pro worktree e os configs do Arch vivo sumiriam. Use `git worktree add ~/nixos-wt nixos`.
 
-## Arquitetura alvo (construir gradualmente)
+---
 
-```text
-├── flake.nix                       # maestro: unifica sistema (root) + home (usuário)
-├── flake.lock                      # cápsula do tempo dos pins
-├── configuration.nix               # << ponto de partida (fase 0, pré-flake)
-├── hosts/
-│   ├── trialboot/                  # laboratório (disco secundário)
-│   │   ├── configuration.nix
-│   │   └── hardware-configuration.nix   # gerado pela ISO (nixos-generate-config)
-│   └── workstation/                # destino final (Kingston, pós-cutover)
-├── home/                           # home-manager modular (git.nix, shell.nix, ...)
-└── pkgs/                           # derivations próprias ("AUR pessoal")
+## Segredos (sops-nix)
+
+Segredos criptografados versionados em `secrets/secrets.yaml`; a chave **privada** age vive
+em `/var/lib/sops-nix/key.txt` (FORA do git — é o que se leva no cutover).
+
+```bash
+# editar/adicionar segredos (encripta sozinho pro recipient do .sops.yaml):
+nix shell nixpkgs#sops -c sops secrets/secrets.yaml
+git add secrets/secrets.yaml && sudo nixos-rebuild switch --flake .#nixos-seagate
 ```
 
-## Fases
+Consumidos hoje: senha do usuário (`hashedPasswordFile`) e token do Cloudflare DDNS.
 
-**0. Instalação (disco secundário, trialboot)** — *bloqueada: disco ainda fora do gabinete*
-- ISO minimal: <https://channels.nixos.org/nixos-26.05/latest-nixos-minimal-x86_64-linux.iso>
-- Particionar por `/dev/disk/by-id/` (nomes `sdX`/`nvmeX` embaralham nesta máquina!);
-  **ESP própria no disco secundário — jamais a do Kingston**; rEFInd detecta sozinho.
-- Kit anti-cegueira no 1º `configuration.nix` (ver comentários no arquivo): NetworkManager,
-  **openssh** (permite configurar via SSH sentado no Arch), usuário, git, editor.
+---
 
-**1. Base** — migrar pra flake + `hosts/trialboot/` + home-manager no mesmo repo.
-**2. Desktop** — hyprland, greetd, pipewire, bluetooth, fontes.
-**3. Rice** — trazer os configs da main: `git checkout main -- hypr/ quickshell/ kitty/ ...`
-   (hot-edit: `mkOutOfStoreSymlink` nos dirs de iteração rápida).
-**4. Homelab** — caddy, fail2ban, wireguard, docker/oci-containers, DDNS.
-**5. Chefões** — NetExtender via `buildFHSEnv`, sops-nix, derivations próprias, distrobox
-   Arch (`--nvidia`) como playground pacman/AUR.
-**6. Cutover** — quando o trialboot aguentar 1 semana de rotina real (trabalho+estudo),
-   aplicar o flake no Kingston (`hosts/workstation/`). Arch aposentado.
+## Roadmap
 
-## Atritos conhecidos → antídotos
+- [x] Flake unificado sistema + home-manager
+- [x] sops-nix (senha + DDNS)
+- [x] DE leve interino: **XFCE + LightDM** (GNOME pesava no HDD)
+- [ ] **Rice Hyprland + Quickshell** — trazer configs da `main`
+      (`git checkout main -- hypr/ quickshell/ …`; `mkOutOfStoreSymlink` nos dirs de hot-reload)
+- [ ] Homelab: caddy, wireguard, docker/oci-containers
+- [ ] NetExtender via `buildFHSEnv`; distrobox Arch (`--nvidia`) como playground pacman/AUR
+- [ ] **Cutover**: aplicar o flake no Kingston quando a rotina real aguentar 1 semana
+
+### Atritos conhecidos → antídotos
 
 | Atrito | Antídoto |
 |---|---|
-| Wheels Python/CUDA assumem FHS (`uv pip install torch`) | `programs.nix-ld.enable = true` no dia 1 |
+| Wheels Python/CUDA assumem FHS (`uv pip install torch`) | `programs.nix-ld.enable = true` (já ligado) |
 | Containers com GPU (open-webui etc.) | `hardware.nvidia-container-toolkit.enable = true` |
 | home-manager = symlink read-only (mata hot-reload QML) | `mkOutOfStoreSymlink` nos dirs quentes |
-| NetExtender (FHS + daemon NEService, sem pacote) | `buildFHSEnv`; reservar um fim de semana |
-| ~5 pacotes AUR sem equivalente | derivation própria / `appimageTools` / `nix-init` |
-| Saudade do pacman | `nix shell nixpkgs#pkg`, `nix search`, `comma`; distrobox |
+| NetExtender (FHS + daemon, sem pacote) | `buildFHSEnv`; reservar um fim de semana |
+| Saudade do pacman | `nix shell nixpkgs#pkg`, `nix search`, `comma`, distrobox |
 
-## Discos (contexto 2026-07-13)
-
-- **Kingston (nvme)** = Arch, produção. Não tocar até o cutover.
-- **Netac NE-1TB** = MORTO (controlador cai do barramento; resgate concluído, perda zero).
-- **sdb SanDisk 1TB** = tem Windows antigo; conferir/limpar antes de usar como trialboot.
+---
 
 ## Diário
 
-- **2026-07-13** — Branch criada e zerada (só `configuration.nix` + este README). Esqueleto
-  flake testado em VM preservado na tag `nix-flake-skeleton`. Decisões: unstable no host,
-  reescrita à mão pra aprender, trialboot em disco secundário (aguardando hardware).
-- **2026-07-15** — Realidade adiantou o plano: NixOS 26.05 instalado direto no **HDD Seagate**
-  (host `nixos-seagate`, GNOME, SSH:2222), sem esperar o trialboot. Arquitetura de flake
-  montada e unificada **sistema + usuário** via **home-manager como módulo do NixOS** (um só
-  rebuild aplica os dois, atômico). Layout escolhido: **duas pastas** que espelham o modelo
-  mental — `system/` (root) e `home/` (usuário) — em vez de `hosts/`+`modules/` (indireção
-  que só se paga com VÁRIAS máquinas; hoje há uma). `hardware-configuration.nix` na raiz.
-  Apps de usuário (chrome, vscode, librewolf, claude-code) migrados de `systemPackages` →
-  `home.packages`. Teclado ABNT2 corrigido (GNOME/Wayland ignora o xkb do sistema na sessão
-  → declarado em `home/gnome.nix`). `configuration.nix` da raiz (fase 0) aposentado.
-  Rebuild: `sudo nixos-rebuild switch --flake .#nixos-seagate`.
-
-  ```text
-  flake.nix                    # cola sistema + usuário
-  hardware-configuration.nix   # gerado, não editar
-  system/default.nix           # SISTEMA (cresce: system/audio.nix, fonts.nix…)
-  home/{default,apps,git,gnome}.nix   # USUÁRIO (cresce: home/kitty.nix, hypr.nix…)
-  ```
-
-  Migração dos configs de app (fase Rice): **híbrido** — módulos nativos do home-manager
-  onde existem (`programs.kitty/zsh/git/starship`), e arquivo cru via `mkOutOfStoreSymlink`
-  pro rice que precisa de hot-reload (Hyprland/Quickshell).
+- **2026-07-13** — Branch `nixos` criada e zerada. Esqueleto flake testado em VM na tag
+  `nix-flake-skeleton`. Decisões: unstable no host, reescrita à mão pra aprender.
+- **2026-07-15** — NixOS 26.05 instalado direto no **HDD Seagate** (host `nixos-seagate`).
+  Flake unificado **sistema + usuário** via home-manager como módulo. Layout: `system/` (root)
+  + `home/` (usuário), em vez de `hosts/`+`modules/` (indireção só paga com várias máquinas).
+- **2026-07-16** — Migração consolidada: **sops-nix** (senha + Cloudflare DDNS), **gh** como
+  credential helper do git (push HTTPS por token), troca **GNOME/GDM → XFCE/LightDM** (HDD lento),
+  LG ULTRAGEAR como monitor primário, GC reativo por espaço (`min-free`/`max-free`).
+  Histórico pré-Nix colapsado na tag `archive/pre-nix-2026-07-16`.

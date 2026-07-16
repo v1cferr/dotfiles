@@ -1,0 +1,11 @@
+# Regras do sops. A chave PÚBLICA age abaixo é a do nixos-seagate; a PRIVADA
+# vive em /var/lib/sops-nix/key.txt (FORA do git) e é o que se carrega no cutover.
+# Editar segredos:   nix shell nixpkgs#sops -c sops secrets/secrets.yaml
+# Re-encriptar p/ novas chaves:   nix shell nixpkgs#sops -c sops updatekeys secrets/secrets.yaml
+keys:
+  - &nixos_seagate age132kmspxjsqzc3nnd6407svq744ju4q6vl85hq2v02pgqc2yf7caq03plfn
+creation_rules:
+  - path_regex: secrets/[^/]+\.yaml$
+    key_groups:
+      - age:
+          - *nixos_seagate

@@ -1,0 +1,3 @@
+# symlinks de build do nix (nix build / nixos-rebuild build)
+result
+result-*

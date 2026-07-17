@@ -1,7 +1,7 @@
 # dotfiles — NixOS declarativo
 
 Sistema inteiro **declarativo e versionado**: reconstruível em qualquer máquina com um
-comando. Host atual: **`nixos-seagate`** (HDD Seagate, XFCE). Branch de trabalho: **`nixos`**.
+comando. Host atual: **`nixos-seagate`** (HDD Seagate, Hyprland/Wayland + NVIDIA). Branch de trabalho: **`nixos`**.
 
 > `main` = Arch (produção, intocada) · `arch` = backup congelado.
 > Todo o histórico pré-Nix está preservado na tag **`archive/pre-nix-2026-07-16`**
@@ -54,11 +54,15 @@ Pronto — o pacote está no PATH. Pra remover, apague a linha e rebuilde.
 ## Layout do repo
 
 ```text
-flake.nix                    # maestro: cola sistema (root) + usuário (home-manager)
+flake.nix                    # maestro: mkHost + nixosConfigurations.{nixos-seagate, ex-b560m-v5}
 flake.lock                   # pins (cápsula do tempo)
-hardware-configuration.nix   # gerado pela máquina — não editar
-system/default.nix           # SISTEMA: pacotes, serviços, boot, rede, desktop…
-home/                        # USUÁRIO: só CONFIGURA (não instala) — git.nix, …
+system/default.nix           # SISTEMA (COMUM a todos os hosts): pacotes, serviços, desktop…
+hosts/                       # o ESPECÍFICO de cada máquina:
+  ├─ nixos-seagate.nix       #   HDD atual: hardware-configuration + hostname + mounts
+  ├─ ex-b560m-v5.nix         #   destino do cutover (SSD Kingston) — preparado
+  └─ ex-b560m-v5-disko.nix   #   layout de disco declarativo (disko) do Kingston
+hardware-configuration.nix   # scan do HDD (gerado) — não editar
+home/                        # USUÁRIO: só CONFIGURA (não instala) — git.nix, hypr.nix…
 secrets/secrets.yaml         # segredos criptografados (sops-nix)
 .sops.yaml                   # regras de encriptação (recipient age)
 pkgs/                        # derivations próprias ("AUR pessoal")
@@ -66,7 +70,8 @@ pkgs/                        # derivations próprias ("AUR pessoal")
 
 **Sistema + usuário num só rebuild:** o home-manager entra como módulo do NixOS, então
 `nixos-rebuild switch` aplica os dois de forma atômica. Regra de ouro do repo:
-**pacote = `system/`, configuração = `home/`.**
+**pacote = `system/`, configuração = `home/`.** Host novo = criar `hosts/<host>.nix`
+(o específico) + 1 linha em `nixosConfigurations` no `flake.nix`; o comum (`system/`) é herdado.
 
 ---
 
@@ -77,7 +82,8 @@ pkgs/                        # derivations próprias ("AUR pessoal")
 2. **Flakes só enxergam arquivos rastreados** → `git add` antes de QUALQUER rebuild.
 3. **Nada imperativo.** Sem `nix-env`/`nix profile add`. Tudo no config + rebuild.
 4. **Segredo nunca em claro no git** (iria legível pra `/nix/store`) → sops-nix.
-5. **Canal `nixos-unstable`** no flake (bleeding edge, estilo Arch).
+5. **Base estável `nixos-26.05` + overlay `unstable.*`** por pacote — base previsível,
+   bleeding-edge só no que você escolher (prefixando `unstable.`).
 6. **⚠️ No Arch, NUNCA dar checkout da branch `nixos` em `~/dotfiles`** — os symlinks do stow
    apontam pro worktree e os configs do Arch vivo sumiriam. Use `git worktree add ~/nixos-wt nixos`.
 
@@ -98,6 +104,67 @@ Consumidos hoje: senha do usuário (`hashedPasswordFile`) e token do Cloudflare 
 
 ---
 
+## Cutover — migrar do HDD pro SSD Kingston (host `ex-b560m-v5`)
+
+Instalar no Kingston é **declarativo** (disko + `nixos-install`). É **destrutivo** — só
+depois de fazer o **backup dos dados** do Arch/Kingston pro seu SSD.
+
+**Pré-requisitos (ter em mãos ANTES de bootar a live USB):**
+
+1. **Backup** de tudo do Kingston/Arch já feito (no SSD SanDisk ou outro).
+2. A **chave age** `/var/lib/sops-nix/key.txt` copiada pra um USB/gerenciador — **sem ela o
+   sops não decripta** a senha nem o token no 1º boot (você fica sem senha).
+3. Pendrive com a **ISO minimal do NixOS** (live USB).
+
+**Mapa de discos — sempre por `by-id` (os nomes `sdX`/`nvmeX` EMBARALHAM entre boots!):**
+
+| Disco | `by-id` | Papel no cutover |
+|---|---|---|
+| Kingston 1TB | `nvme-KINGSTON_SKC3000S1024G_50026B7686B3D2F6` | **ALVO — será FORMATADO** |
+| Seagate 298G | `ata-ST9320423AS_5VH4YZV8` | NixOS atual → vira backup/resgate |
+| SanDisk 1TB | `ata-SanDisk_SSD_PLUS_1000GB_22520C801629` | SSD p/ backup dos dados |
+| Netac 1TB | `nvme-NE-1TB_2280_0004382002024` | Windows (não tocar) |
+
+**Passo a passo (bootando pela live USB):**
+
+```bash
+# 0. Rede: cabo já pega DHCP. Wi-Fi: `sudo nmtui`.
+
+# 1. Trazer o repo (git vem no ambiente da ISO via nix-shell)
+nix-shell -p git
+git clone https://github.com/v1cferr/dotfiles ~/dotfiles
+cd ~/dotfiles && git checkout nixos
+
+# 2. PARTICIONAR + FORMATAR o Kingston  ⚠️ APAGA O DISCO (de propósito)
+#    (o device já está fixado por by-id em hosts/ex-b560m-v5-disko.nix)
+sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko -- \
+  --mode destroy,format,mount --flake .#ex-b560m-v5
+#    → cria GPT (ESP 1G vfat + resto ext4) e monta tudo em /mnt
+
+# 3. Restaurar a CHAVE age no destino (SENÃO o sops não decripta no 1º boot)
+sudo install -d -m 700 /mnt/var/lib/sops-nix
+sudo cp /caminho/do/backup/key.txt /mnt/var/lib/sops-nix/key.txt
+sudo chmod 600 /mnt/var/lib/sops-nix/key.txt
+
+# 4. Instalar o sistema declarativo
+sudo nixos-install --flake .#ex-b560m-v5
+#    (a senha do v1cferr vem do sops; se pedir senha de root, defina uma)
+
+# 5. Reboot → tira o pendrive → boota no Kingston
+sudo reboot
+```
+
+**Pós-cutover:**
+
+- Logue, confirme rede/SSH/GPU e rode uma vez: `sudo nixos-rebuild switch --flake .#ex-b560m-v5`.
+- Restaure seus dados de usuário (`~`) do backup.
+- O HDD Seagate continua bootável como resgate; quando confiar, dá pra remover o host
+  `nixos-seagate` (apagar `hosts/nixos-seagate.nix` + a linha no `flake.nix`).
+- Se algum módulo de kernel faltar: `sudo nixos-generate-config --root /mnt --dir /tmp` no
+  instalador e copie o `hardware-configuration.nix` gerado pro host (é a mesma placa, deve bater).
+
+---
+
 ## Roadmap
 
 - [x] Flake unificado sistema + home-manager
@@ -107,7 +174,8 @@ Consumidos hoje: senha do usuário (`hashedPasswordFile`) e token do Cloudflare 
       (`git checkout main -- hypr/ quickshell/ …`; `mkOutOfStoreSymlink` nos dirs de hot-reload)
 - [ ] Homelab: caddy, wireguard, docker/oci-containers
 - [ ] NetExtender via `buildFHSEnv`; distrobox Arch (`--nvidia`) como playground pacman/AUR
-- [ ] **Cutover**: aplicar o flake no Kingston quando a rotina real aguentar 1 semana
+- [x] **disko + host `ex-b560m-v5`** preparados — passo a passo na seção _Cutover_ acima
+- [ ] **Cutover**: executar (disko + `nixos-install` no Kingston) após o backup dos dados
 
 ### Atritos conhecidos → antídotos
 
@@ -132,3 +200,8 @@ Consumidos hoje: senha do usuário (`hashedPasswordFile`) e token do Cloudflare 
   credential helper do git (push HTTPS por token), troca **GNOME/GDM → XFCE/LightDM** (HDD lento),
   LG ULTRAGEAR como monitor primário, GC reativo por espaço (`min-free`/`max-free`).
   Histórico pré-Nix colapsado na tag `archive/pre-nix-2026-07-16`.
+- **2026-07-17** — Preparado o **cutover** pro SSD Kingston. Repo promovido pra **multi-host**
+  (`system/` comum + `hosts/{nixos-seagate,ex-b560m-v5}.nix`) e **disko** declarativo (ext4,
+  por `by-id`) do Kingston. `nixos-seagate` ficou com `.drv` IDÊNTICO (refactor sem efeito no
+  sistema atual). Passo a passo do cutover documentado (seção _Cutover_). Aguarda só o backup
+  dos dados do Arch/Kingston pro SSD antes de executar.

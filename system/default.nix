@@ -1,15 +1,12 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# SISTEMA (root) — host nixos-seagate (HDD Seagate ST9320423AS).
-# Tudo que é do sistema vive aqui. Cresce por tema: quando um assunto ficar
-# grande, mova-o pra system/<tema>.nix e adicione em `imports` abaixo.
+# SISTEMA — config COMUM a todos os hosts (machine-agnostic).
+# O específico de cada máquina (hostname, hardware-configuration.nix, discos,
+# stateVersion) vive em hosts/<host>.nix. Cresce por tema: mova assuntos grandes
+# pra system/<tema>.nix e importe aqui.
 # ═══════════════════════════════════════════════════════════════════════════
 { config, pkgs, ... }:
 
 {
-  imports = [
-    ../hardware-configuration.nix # gerado pela máquina — não editar
-  ];
-
   # ── Segredos (sops-nix) ───────────────────────────────────────────────────
   # Segredos criptografados em secrets/secrets.yaml (versionados no git, mas
   # ilegíveis sem a chave). Decriptados em runtime pra /run/secrets*. A chave
@@ -22,14 +19,12 @@
     secrets.cloudflare_ddns_token = { };
   };
 
-  # ── Boot (UEFI, systemd-boot no ESP DESTE disco) ───────────────────────────
-  # Não mexe no boot do Arch/Kingston nem do Windows.
+  # ── Boot (UEFI, systemd-boot) ──────────────────────────────────────────────
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.systemd-boot.configurationLimit = 10; # ESP não enche de gerações
 
   # ── Rede ───────────────────────────────────────────────────────────────────
-  networking.hostName = "nixos-seagate";
   networking.networkmanager.enable = true;
 
   # ── Nix / flakes ─────────────────────────────────────────────────────────
@@ -59,10 +54,10 @@
   i18n.defaultLocale = "en_US.UTF-8";
   console.keyMap = "br-abnt2"; # teclado no TTY (a GUI é no bloco Desktop)
 
-  # ── Hardware desta máquina ──────────────────────────────────────────────────
+  # ── Hardware (mesma máquina física em todos os hosts: MOBO EX-B560M-V5) ─────
   hardware.cpu.intel.updateMicrocode = true;
   hardware.enableRedistributableFirmware = true;
-  zramSwap.enable = true; # HDD é lento → swap comprimido na RAM
+  zramSwap.enable = true; # swap comprimido na RAM
 
   # ── GPU: NVIDIA RTX 3050 (Ampere) — driver proprietário ──────────────────────
   # nouveau em Ampere não faz reclocking (fica lento) e não tem CUDA. O driver
@@ -75,17 +70,6 @@
     open = true; # módulos abertos (Ampere suporta; recomendado)
     nvidiaSettings = true; # app gráfico nvidia-settings
     package = config.boot.kernelPackages.nvidiaPackages.stable;
-  };
-
-  # ── Discos extras ───────────────────────────────────────────────────────
-  # Kingston (nvme) = Arch de PRODUÇÃO. README: "não tocar até o cutover".
-  # Monto SÓ-LEITURA (ro+noload = zero escrita garantida) só pra ler/copiar os
-  # dotfiles. nofail + automount: não trava o boot e monta no 1º acesso; se o
-  # disco sair, o sistema sobe normal. UUID (estável; nomes nvmeX embaralham).
-  fileSystems."/mnt/kingston-arch" = {
-    device = "/dev/disk/by-uuid/d98ec566-6ec2-4371-8048-d3a4f02b2cbb";
-    fsType = "ext4";
-    options = [ "ro" "noload" "nofail" "x-systemd.automount" ];
   };
 
   # ── Desktop: Hyprland (Wayland) ─────────────────────────────────────────────
@@ -120,11 +104,7 @@
   };
 
   # ── Usuário (capacidade declarada; senha/chaves = "quem sou eu") ────────────
-  # Hash da senha vive FORA do git, em arquivo root-only. NUNCA rastrear hash em
-  # repo público (o antigo vazou → rotacionar). Gerar o arquivo:
-  #   sudo sh -c 'umask 077; mkdir -p /etc/secrets; \
-  #     nix run nixpkgs#mkpasswd -- -m sha-512 > /etc/secrets/v1cferr.hash'
-  # Futuro: migrar pra sops-nix (regra #4 do README).
+  # Hash da senha via sops (fora do git). Chaves públicas SSH são públicas — ok.
   users.users.v1cferr = {
     isNormalUser = true;
     description = "Victor";
@@ -179,8 +159,8 @@
   # ── DNS dinâmico (Cloudflare) ─────────────────────────────────────────────
   # Mantém ssh.v1cferr.dev apontando pro IP público atual (que muda) → permite
   # `ssh …@ssh.v1cferr.dev` de qualquer lugar, sem VPN. Token FORA do git
-  # (arquivo root-only). proxied=false: registro DNS-only (cinza) — SSH não
-  # passa pelo proxy HTTP da Cloudflare.
+  # (via sops). proxied=false: registro DNS-only (cinza) — SSH não passa pelo
+  # proxy HTTP da Cloudflare.
   services.cloudflare-dyndns = {
     enable = true;
     apiTokenFile = config.sops.secrets.cloudflare_ddns_token.path;
@@ -216,7 +196,4 @@
     unstable.fastfetch
     unstable.claude-code
   ];
-
-  # Fixado na 1ª instalação — NUNCA mudar depois (não é "versão do sistema").
-  system.stateVersion = "26.05";
 }

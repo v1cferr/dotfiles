@@ -64,6 +64,19 @@
   hardware.enableRedistributableFirmware = true;
   zramSwap.enable = true; # HDD é lento → swap comprimido na RAM
 
+  # ── GPU: NVIDIA RTX 3050 (Ampere) — driver proprietário ──────────────────────
+  # nouveau em Ampere não faz reclocking (fica lento) e não tem CUDA. O driver
+  # proprietário com módulos ABERTOS é o caminho recomendado p/ Turing+ e o que
+  # faz Hyprland/Wayland + Vulkan + CUDA funcionarem de verdade.
+  services.xserver.videoDrivers = [ "nvidia" ];
+  hardware.graphics.enable = true; # OpenGL/Vulkan (ex-hardware.opengl)
+  hardware.nvidia = {
+    modesetting.enable = true; # obrigatório p/ Wayland/Hyprland
+    open = true; # módulos abertos (Ampere suporta; recomendado)
+    nvidiaSettings = true; # app gráfico nvidia-settings
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
+
   # ── Discos extras ───────────────────────────────────────────────────────
   # Kingston (nvme) = Arch de PRODUÇÃO. README: "não tocar até o cutover".
   # Monto SÓ-LEITURA (ro+noload = zero escrita garantida) só pra ler/copiar os
@@ -75,26 +88,22 @@
     options = [ "ro" "noload" "nofail" "x-systemd.automount" ];
   };
 
-  # ── Desktop: XFCE sobre X11 ─────────────────────────────────────────────────
-  # DE leve (interino até o rice Hyprland+Quickshell — ver README). GNOME/GDM
-  # pesavam demais neste HDD lento (Shell + tracker indexando o disco). XFCE +
-  # LightDM aliviam RAM e I/O.
-  services.xserver.enable = true;
+  # ── Desktop: Hyprland (Wayland) ─────────────────────────────────────────────
+  # Compositor Wayland. LightDM (greeter X11) lança a sessão Hyprland; Xwayland
+  # cobre apps X11. Atenção: na sessão Wayland o teclado e os monitores NÃO vêm
+  # do xkb/xrandr do sistema — são config do Hyprland (~/.config/hypr/hyprland.conf:
+  # input.kb_layout p/ ABNT2 e linhas `monitor=` p/ o arranjo/primário).
+  services.xserver.enable = true; # habilita LightDM (greeter X11) + Xwayland
   services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.xfce.enable = true;
-  # Em X11 (XFCE) o xkb do sistema VALE na sessão (o GNOME/Wayland ignorava e
-  # exigia dconf em home/). ABNT2 aqui cobre login e sessão.
+  programs.hyprland.enable = true;
+  # xkb do sistema: cobre o greeter (LightDM/X11) e apps Xwayland.
   services.xserver.xkb = {
     layout = "br"; # variante padrão do "br" = ABNT2
     variant = "";
   };
-  # Monitores: LG ULTRAGEAR (DP-1, 1920x1080) é o PRIMÁRIO, fisicamente à direita
-  # do HDMI-1 (1366x768). Aplicado no start do X (LightDM) → vale em todo login.
-  services.xserver.displayManager.setupCommands = ''
-    ${pkgs.xrandr}/bin/xrandr \
-      --output HDMI-1 --mode 1366x768 --pos 0x0 \
-      --output DP-1 --mode 1920x1080 --pos 1366x0 --primary
-  '';
+  # Apps Electron/Chromium (vscode, spotify, chrome, claude-code) rodam nativos
+  # em Wayland em vez de Xwayland.
+  environment.sessionVariables.NIXOS_OZONE_WL = "1";
 
   # ── Fontes e tipografia ─────────────────────────────────────────────────────
   fonts = {
@@ -195,7 +204,8 @@
     gh # GitHub CLI (auth/push via HTTPS + token)
     vim
     htop
-    kitty
+    kitty # terminal do Hyprland default (SUPER+Q)
+    wofi # launcher do Hyprland default (SUPER+R)
     librewolf
     google-chrome
     vscode

@@ -1,103 +1,93 @@
-# CONFIG do Hyprland (~/.config/hypr/hyprland.conf), declarada. O compositor e a
-# sessão vêm do system/ (programs.hyprland.enable); aqui é SÓ o arquivo de config
-# (regra da pasta: home/ configura, não instala).
+# CONFIG do Hyprland em Lua (~/.config/hypr/hyprland.lua), declarada. O compositor
+# e a sessão vêm do system/ (programs.hyprland.enable); aqui é SÓ o arquivo de
+# config (regra da pasta: home/ configura, não instala).
 #
-# Isto é uma base enxuta e usável (keybinds equivalentes ao exemplo default do
-# Hyprland) já com ABNT2 e os monitores certos. Ponto de partida do rice — vai
-# crescer com waybar, wallpaper, animações etc.
+# Formato Lua (Hyprland 0.55+): substitui o antigo hyprland.conf (hyprlang), que
+# está deprecado. `hl` é um objeto global injetado pelo Hyprland. Se hyprland.lua
+# existir, ele é carregado no lugar do .conf. Docs: https://wiki.hypr.land
 #
-# Nota: por vir do /nix/store (read-only), mudanças exigem rebuild. Quando entrar
-# na fase de iteração rápida, trocar por mkOutOfStoreSymlink pra hot-reload.
+# Base enxuta e usável (keybinds equivalentes ao exemplo default) já com ABNT2 e
+# os monitores certos. Nota: vindo do /nix/store (read-only), mudanças exigem
+# rebuild; na fase de iteração rápida, trocar por mkOutOfStoreSymlink p/ hot-reload.
 { ... }:
 
 {
-  xdg.configFile."hypr/hyprland.conf".text = ''
-    # ── Monitores ────────────────────────────────────────────────────────────
-    # LG ULTRAGEAR (DP-1) à direita e como principal; HDMI-1 à esquerda.
-    # Formato: nome,resolução@hz,posição,escala
-    monitor = HDMI-1,1366x768@60,0x0,1
-    monitor = DP-1,1920x1080@60,1366x0,1
-    monitor = ,preferred,auto,auto   # qualquer outro monitor: auto
-    workspace = 1,monitor:DP-1,default:true   # workspace principal no LG
+  xdg.configFile."hypr/hyprland.lua".text = ''
+    -- ── Monitores ────────────────────────────────────────────────────────────
+    -- LG ULTRAGEAR (DP-1) definido primeiro → vira o principal; à direita do
+    -- HDMI-1. Campos: mode "LARGxALT@hz", position "XxY", scale (número).
+    hl.monitor({ output = "DP-1",   mode = "1920x1080@60", position = "1366x0", scale = 1 })
+    hl.monitor({ output = "HDMI-1", mode = "1366x768@60",  position = "0x0",    scale = 1 })
+    hl.monitor({ output = "",       mode = "preferred",    position = "auto",   scale = "auto" })
 
-    # ── Variáveis ────────────────────────────────────────────────────────────
-    $mod = SUPER
-    $terminal = kitty
-    $menu = wofi --show drun
+    -- ── Programas ────────────────────────────────────────────────────────────
+    local terminal = "kitty"
+    local menu     = "wofi --show drun"
 
-    # ── Input (teclado/mouse) ────────────────────────────────────────────────
-    input {
-      kb_layout = br          # ABNT2 (variante padrão do layout br)
-      follow_mouse = 1
-      sensitivity = 0
-      touchpad {
-        natural_scroll = true
-      }
-    }
+    -- ── Ambiente ─────────────────────────────────────────────────────────────
+    hl.env("XCURSOR_SIZE", "24")
+    hl.env("HYPRCURSOR_SIZE", "24")
 
-    # ── Aparência ────────────────────────────────────────────────────────────
-    general {
-      gaps_in = 5
-      gaps_out = 10
-      border_size = 2
-      layout = dwindle
-    }
-    decoration {
-      rounding = 6
-    }
-    animations {
-      enabled = true
-    }
-    dwindle {
-      pseudotile = true
-      preserve_split = true
-    }
-    misc {
-      force_default_wallpaper = 0   # sem o anime default do Hyprland
-    }
+    -- ── Aparência ────────────────────────────────────────────────────────────
+    hl.config({
+      general = {
+        gaps_in  = 5,
+        gaps_out = 10,
+        border_size = 2,
+        layout = "dwindle",
+      },
+      decoration = {
+        rounding = 6,
+      },
+      animations = {
+        enabled = true,
+      },
+      dwindle = {
+        preserve_split = true,
+      },
+      misc = {
+        force_default_wallpaper = 0,  -- sem o wallpaper anime default
+      },
+    })
 
-    # ── Keybinds (equivalentes ao default) ───────────────────────────────────
-    bind = $mod, Q, exec, $terminal
-    bind = $mod, C, killactive
-    bind = $mod, M, exit
-    bind = $mod, V, togglefloating
-    bind = $mod, F, fullscreen
-    bind = $mod, R, exec, $menu
-    bind = $mod, P, pseudo
-    bind = $mod, J, togglesplit
+    -- ── Input (teclado/mouse) ────────────────────────────────────────────────
+    hl.config({
+      input = {
+        kb_layout = "br",   -- ABNT2 (variante padrão do layout br)
+        follow_mouse = 1,
+        sensitivity = 0,
+        touchpad = {
+          natural_scroll = true,
+        },
+      },
+    })
 
-    # foco (setas)
-    bind = $mod, left, movefocus, l
-    bind = $mod, right, movefocus, r
-    bind = $mod, up, movefocus, u
-    bind = $mod, down, movefocus, d
+    -- ── Keybinds (equivalentes ao default) ───────────────────────────────────
+    local mainMod = "SUPER"
 
-    # workspaces 1–10
-    bind = $mod, 1, workspace, 1
-    bind = $mod, 2, workspace, 2
-    bind = $mod, 3, workspace, 3
-    bind = $mod, 4, workspace, 4
-    bind = $mod, 5, workspace, 5
-    bind = $mod, 6, workspace, 6
-    bind = $mod, 7, workspace, 7
-    bind = $mod, 8, workspace, 8
-    bind = $mod, 9, workspace, 9
-    bind = $mod, 0, workspace, 10
+    hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))              -- terminal
+    hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))                  -- launcher
+    hl.bind(mainMod .. " + C", hl.dsp.window.close())                 -- fechar
+    hl.bind(mainMod .. " + M", hl.dsp.exit())                         -- sair do Hyprland
+    hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
+    hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
+    hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))          -- dwindle
 
-    # mover janela pra workspace 1–10
-    bind = $mod SHIFT, 1, movetoworkspace, 1
-    bind = $mod SHIFT, 2, movetoworkspace, 2
-    bind = $mod SHIFT, 3, movetoworkspace, 3
-    bind = $mod SHIFT, 4, movetoworkspace, 4
-    bind = $mod SHIFT, 5, movetoworkspace, 5
-    bind = $mod SHIFT, 6, movetoworkspace, 6
-    bind = $mod SHIFT, 7, movetoworkspace, 7
-    bind = $mod SHIFT, 8, movetoworkspace, 8
-    bind = $mod SHIFT, 9, movetoworkspace, 9
-    bind = $mod SHIFT, 0, movetoworkspace, 10
+    -- foco (setas)
+    hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
+    hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
+    hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
+    hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 
-    # mouse: mover/redimensionar janela
-    bindm = $mod, mouse:272, movewindow
-    bindm = $mod, mouse:273, resizewindow
+    -- workspaces 1–10 (SUPER troca; SUPER+SHIFT move a janela)
+    for i = 1, 10 do
+      local key = i % 10  -- 10 mapeia pra tecla 0
+      hl.bind(mainMod .. " + " .. key,         hl.dsp.focus({ workspace = i }))
+      hl.bind(mainMod .. " + SHIFT + " .. key, hl.dsp.window.move({ workspace = i }))
+    end
+
+    -- mouse: mover / redimensionar janela
+    hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
+    hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
   '';
 }

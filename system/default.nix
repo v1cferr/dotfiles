@@ -89,6 +89,14 @@
   # em Wayland em vez de Xwayland.
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
 
+  # ── Keyring / Secret Service (gnome-keyring) ──────────────────────────────
+  # Provê o org.freedesktop.secrets — onde apps guardam segredos CIFRADOS em vez
+  # de texto plano (git via libsecret, NetworkManager, navegadores, etc.).
+  # Destranca automaticamente no login do LightDM (PAM, com a senha do usuário).
+  services.gnome.gnome-keyring.enable = true;
+  security.pam.services.lightdm.enableGnomeKeyring = true;
+  programs.seahorse.enable = true; # GUI "Senhas e Chaves" pra gerenciar
+
   # ── Fontes e tipografia ─────────────────────────────────────────────────────
   fonts = {
     packages = with pkgs; [ nerd-fonts.jetbrains-mono ];

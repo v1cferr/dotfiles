@@ -14,6 +14,7 @@
 {
   imports = [
     ./git.nix # programs.git → ~/.gitconfig
+    ./hypr.nix # ~/.config/hypr/hyprland.conf (ABNT2 + monitores + keybinds)
   ];
 
   home.username = "v1cferr";

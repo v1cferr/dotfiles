@@ -109,6 +109,21 @@ nix shell nixpkgs#sops -c sops secrets/secrets.yaml
 git add secrets/secrets.yaml && sudo nixos-rebuild switch --flake .#nixos-seagate
 ```
 
+**Adicionar segredo sem editar YAML (Bitwarden → sops).** O índice público
+`secrets/bitwarden-secrets.json` mapeia nome-no-sops → item-no-Bitwarden. A partir dele o
+nix gera os `sops.secrets` sozinho (`system/secrets.nix`) e o comando `sync-secrets` puxa
+os valores do Bitwarden e grava cifrado no `secrets.yaml` — o rebuild segue **puro** (sem
+`--impure`). Fluxo pra um segredo novo: cadastra no Bitwarden, adiciona uma linha no JSON e:
+
+```bash
+export BW_SESSION=$(bw unlock --raw)   # destrava o Bitwarden
+sync-secrets                           # Bitwarden → secrets.yaml (cifrado, via sops set)
+sudo nixos-rebuild switch --flake .#nixos-seagate
+```
+
+Segredos que não vêm do Bitwarden (ex.: o hash de senha do usuário) seguem declarados à
+mão no `system/default.nix`.
+
 **Dados de usuário → restic (`system/restic.nix`).** O que não dá pra declarar (seu `~`)
 vira backup cifrado: um snapshot diário de `/home/v1cferr` num repositório restic, com poda
 automática (7 diários, 4 semanais, 6 mensais) e verificação de integridade a cada run. Cache
@@ -192,6 +207,7 @@ sudo reboot
 - [x] Flake unificado sistema + home-manager
 - [x] sops-nix (senha + DDNS + senha do restic)
 - [x] Backup do estado do usuário com restic (snapshot diário cifrado, poda + integridade)
+- [x] Segredos automáticos: Bitwarden → sops via `sync-secrets` (puro, sem `--impure`)
 - [x] DE leve interino: **XFCE + LightDM** (GNOME pesava no HDD)
 - [ ] **Rice Hyprland + Quickshell** — trazer configs da `main`
       (`git checkout main -- hypr/ quickshell/ …`; `mkOutOfStoreSymlink` nos dirs de hot-reload)

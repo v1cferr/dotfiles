@@ -20,7 +20,11 @@
       "hyprland/workspaces": {
         "all-outputs": false,
         "sort-by-number": true,
-        "on-click": "activate"
+        "on-click": "activate",
+        "persistent-workspaces": {
+          "1": ["DP-1"], "2": ["DP-1"], "3": ["DP-1"], "4": ["DP-1"],
+          "5": ["HDMI-A-1"], "6": ["HDMI-A-1"], "7": ["HDMI-A-1"], "8": ["HDMI-A-1"]
+        }
       },
 
       "clock": {

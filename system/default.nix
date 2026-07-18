@@ -228,6 +228,7 @@
     gh # GitHub CLI (auth/push via HTTPS + token)
     vim
     htop
+    openssl # gerar senhas/chaves (rand), TLS, etc.
     kitty # terminal do Hyprland default (SUPER+Q)
     wofi # launcher do Hyprland default (SUPER+R)
     waybar # barra de status (workspaces + relógio); config em home/waybar.nix
@@ -243,6 +244,7 @@
     vscode
     spotify # unfree (ok: allowUnfree acima)
     # whatsapp  # (estava comentado na config original)
+    unzip
 
     # ── Gerenciador de arquivos: Dolphin (KDE) ──
     # GUI mais completo: split view, abas, terminal embutido, previews. Os pacotes

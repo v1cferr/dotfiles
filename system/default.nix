@@ -228,6 +228,7 @@
     pavucontrol # GUI de mixer/dispositivos (PipeWire via compat PulseAudio)
     pamixer # controle de volume via CLI (pros keybinds de mídia do Hyprland)
     playerctl # play/pause/next via CLI (teclas de mídia)
+    hypridle # daemon de ociosidade do Hyprland (apaga os monitores; config em home/hypr.nix)
     gnome-themes-extra # tema GTK Adwaita-dark (usado pelo home/theme.nix)
     bibata-cursors # tema de cursor Bibata-Modern-Ice (config no home/)
     librewolf
@@ -235,6 +236,15 @@
     vscode
     spotify # unfree (ok: allowUnfree acima)
     # whatsapp  # (estava comentado na config original)
+
+    # ── Gerenciador de arquivos: Dolphin (KDE) ──
+    # GUI mais completo: split view, abas, terminal embutido, previews. Os pacotes
+    # extras é que ligam os recursos: kio-extras = SFTP/SMB/MTP (celular via USB);
+    # thumbnailers = miniaturas de imagem/pdf/vídeo. Lixeira (trash:/) é nativa.
+    kdePackages.dolphin
+    kdePackages.kio-extras
+    kdePackages.kdegraphics-thumbnailers
+    kdePackages.ffmpegthumbs
 
     # ── bleeding-edge (escolhidos a dedo) ──
     unstable.fastfetch

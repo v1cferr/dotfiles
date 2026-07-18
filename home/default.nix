@@ -18,6 +18,7 @@
     ./waybar.nix # ~/.config/waybar/* (barra básica: workspaces + relógio)
     ./theme.nix # dark mode (color-scheme prefer-dark + GTK Adwaita-dark)
     ./xdg.nix # browser default (Zen) via xdg.mimeApps + $BROWSER
+    ./dropbox.nix # serviço de sync do usuário (~/Dropbox: Obsidian + docs)
   ];
 
   home.username = "v1cferr";

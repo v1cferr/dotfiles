@@ -4,7 +4,7 @@
 # stateVersion) vive em hosts/<host>.nix. Cresce por tema: mova assuntos grandes
 # pra system/<tema>.nix e importe aqui.
 # ═══════════════════════════════════════════════════════════════════════════
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 
 {
   # ── Segredos (sops-nix) ───────────────────────────────────────────────────
@@ -234,6 +234,7 @@
     bibata-cursors # tema de cursor Bibata-Modern-Ice (config no home/)
     librewolf
     google-chrome
+    inputs.zen-browser.packages.${pkgs.system}.default # Zen (flake; ver flake.nix)
     vscode
     spotify # unfree (ok: allowUnfree acima)
     # whatsapp  # (estava comentado na config original)

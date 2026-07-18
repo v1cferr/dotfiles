@@ -72,6 +72,24 @@
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
 
+  # ── Áudio: PipeWire (substitui PulseAudio/JACK) ─────────────────────────────
+  # Stack de som padrão no NixOS moderno + Wayland. O WirePlumber (session
+  # manager) vem junto e cuida do roteamento — inclusive de áudio Bluetooth
+  # (A2DP/HFP), sem precisar de módulo extra como no PulseAudio antigo. O rtkit
+  # dá prioridade de tempo-real ao servidor (evita xruns/estalos).
+  # Controle: `wpctl` (CLI, vem no wireplumber), `pavucontrol` (GUI) e, nos
+  # keybinds do Hyprland, `pamixer` (volume) + `playerctl` (play/pause/next).
+  security.rtkit.enable = true;
+  services.pulseaudio.enable = false; # o PipeWire assume o lugar do PulseAudio
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true; # apps 32-bit (jogos/Wine) tocam som
+    pulse.enable = true; # compat: apps que falam PulseAudio (a maioria)
+    jack.enable = true; # compat: apps pro-audio que falam JACK
+    wireplumber.enable = true;
+  };
+
   # ── Desktop: Hyprland (Wayland) ─────────────────────────────────────────────
   # Compositor Wayland. LightDM (greeter X11) lança a sessão Hyprland; Xwayland
   # cobre apps X11. Atenção: na sessão Wayland o teclado e os monitores NÃO vêm
@@ -194,6 +212,9 @@
     htop
     kitty # terminal do Hyprland default (SUPER+Q)
     wofi # launcher do Hyprland default (SUPER+R)
+    pavucontrol # GUI de mixer/dispositivos (PipeWire via compat PulseAudio)
+    pamixer # controle de volume via CLI (pros keybinds de mídia do Hyprland)
+    playerctl # play/pause/next via CLI (teclas de mídia)
     librewolf
     google-chrome
     vscode

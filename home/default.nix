@@ -15,6 +15,7 @@
   imports = [
     ./git.nix # programs.git → ~/.gitconfig
     ./hypr.nix # ~/.config/hypr/hyprland.conf (ABNT2 + monitores + keybinds)
+    ./theme.nix # dark mode (color-scheme prefer-dark + GTK Adwaita-dark)
   ];
 
   home.username = "v1cferr";

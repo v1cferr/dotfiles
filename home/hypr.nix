@@ -15,11 +15,11 @@
   xdg.configFile."hypr/hyprland.lua".text = ''
     -- ── Monitores ────────────────────────────────────────────────────────────
     -- Nomes de conector confirmados via `hyprctl monitors` (Wayland/NVIDIA):
-    --   DP-1     = LG ULTRAGEAR (1080p 144Hz) → à direita, monitor principal
-    --   HDMI-A-1 = TV LG 1366x768             → à esquerda
+    --   DP-1     = LG ULTRAGEAR (1080p 144Hz) → à direita (em 1920x0), principal
+    --   HDMI-A-1 = TV LG (Full HD; a EDID default reporta 1366x768) → à esquerda
     -- Campos: mode "LARGxALT@hz" (143.98 é o modo exato do LG), position "XxY".
-    hl.monitor({ output = "DP-1",     mode = "1920x1080@143.98", position = "1366x0", scale = 1 })
-    hl.monitor({ output = "HDMI-A-1", mode = "preferred",        position = "0x0",    scale = 1 })
+    hl.monitor({ output = "DP-1",     mode = "1920x1080@143.98", position = "1920x0", scale = 1 })
+    hl.monitor({ output = "HDMI-A-1", mode = "1920x1080@60",     position = "0x0",    scale = 1 })
     hl.monitor({ output = "",         mode = "preferred",        position = "auto",   scale = "auto" })
 
     -- Workspace 1 (o principal/default) fica no LG.

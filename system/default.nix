@@ -7,6 +7,10 @@
 { config, pkgs, inputs, ... }:
 
 {
+  imports = [
+    ./restic.nix # backup cifrado do estado do usuário (repo no HDD por ora)
+  ];
+
   # ── Segredos (sops-nix) ───────────────────────────────────────────────────
   # Segredos criptografados em secrets/secrets.yaml (versionados no git, mas
   # ilegíveis sem a chave). Decriptados em runtime pra /run/secrets*. A chave
@@ -17,6 +21,7 @@
     age.keyFile = "/var/lib/sops-nix/key.txt";
     secrets.v1cferr_password_hash.neededForUsers = true; # senha: precisa cedo
     secrets.cloudflare_ddns_token = { };
+    secrets.restic_password = { }; # senha do repo restic (backup do estado)
   };
 
   # ── Boot (UEFI, systemd-boot) ──────────────────────────────────────────────

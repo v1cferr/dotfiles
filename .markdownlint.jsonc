@@ -1,0 +1,7 @@
+{
+  // Regras do markdownlint versionadas — para CLI e editor concordarem.
+  "default": true,
+  // Prosa quebrada em ~100 colunas de propósito; tabelas passam de 80.
+  // Não faz sentido policiar comprimento de linha aqui.
+  "MD013": false
+}

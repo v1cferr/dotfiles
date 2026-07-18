@@ -30,7 +30,13 @@
     local menu     = "wofi --show drun"
 
     -- ── Ambiente ─────────────────────────────────────────────────────────────
+    -- Cursor: Bibata-Modern-Ice (pacote bibata-cursors vem do system/). XCURSOR_*
+    -- cobre XWayland/apps legados e o fallback do Hyprland; HYPRCURSOR_* é o
+    -- formato nativo (cai no XCursor se não houver variante hyprcursor do tema).
+    -- Apps GTK pegam o cursor pelo gsettings (home/theme.nix), não daqui.
+    hl.env("XCURSOR_THEME", "Bibata-Modern-Ice")
     hl.env("XCURSOR_SIZE", "24")
+    hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Ice")
     hl.env("HYPRCURSOR_SIZE", "24")
 
     -- ── Aparência ────────────────────────────────────────────────────────────

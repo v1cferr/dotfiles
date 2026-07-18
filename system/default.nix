@@ -229,6 +229,7 @@
     pamixer # controle de volume via CLI (pros keybinds de mídia do Hyprland)
     playerctl # play/pause/next via CLI (teclas de mídia)
     gnome-themes-extra # tema GTK Adwaita-dark (usado pelo home/theme.nix)
+    bibata-cursors # tema de cursor Bibata-Modern-Ice (config no home/)
     librewolf
     google-chrome
     vscode

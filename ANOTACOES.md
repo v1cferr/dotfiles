@@ -1,8 +1,11 @@
 # Anotações
 
+> Sempre pesquisar as boas práticas e o que a comunidade do NixOS está usando mais para cada pacote/software (para ter uma referência e sugestões)
+
 - [ ] Instalar o flameshot
   - <https://wiki.nixos.org/wiki/Flameshot>
 - [ ] Verificar se é possível adicionar estado declarativo criptografado
+- [ ] Adicionar um software para notificações
 
 Ambos com systemd (ou algo semelhante) e rodando em daemon (background):
 

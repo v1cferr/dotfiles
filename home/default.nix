@@ -15,6 +15,7 @@
   imports = [
     ./git.nix # programs.git → ~/.gitconfig
     ./hypr.nix # ~/.config/hypr/hyprland.conf (ABNT2 + monitores + keybinds)
+    ./waybar.nix # ~/.config/waybar/* (barra básica: workspaces + relógio)
     ./theme.nix # dark mode (color-scheme prefer-dark + GTK Adwaita-dark)
   ];
 

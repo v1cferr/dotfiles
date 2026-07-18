@@ -34,6 +34,7 @@
     zen-browser = {
       url = "github:0xc000022070/zen-browser-flake";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager"; # dedup: evita home-manager_2 no lock
     };
   };
 

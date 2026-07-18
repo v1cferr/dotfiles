@@ -12,6 +12,30 @@
 { ... }:
 
 {
+  # ── Ociosidade: apaga os monitores após 5 min (hypridle) ───────────────────
+  # hypridle (pacote no system/) escuta o tempo ocioso do Hyprland. O único
+  # listener apaga AMBOS os monitores via DPMS (hyprctl dispatch dpms off pega
+  # todas as saídas de uma vez) e religa ao mexer mouse/teclado. NÃO suspende —
+  # coerente com o systemd.targets.sleep desligado no system/ (desktop remoto).
+  # Monitor externo não tem backlight controlável por software, então "escurecer"
+  # aqui = apagar (standby), não reduzir brilho.
+  #
+  # Formato hyprlang (.conf), NÃO Lua: a lua-ificação do 0.55 é só do COMPOSITOR
+  # (hyprland.lua). Os satélites (hypridle/hyprlock/hyprpaper) ainda são .conf —
+  # cada daemon migra no seu tempo; não existe hypridle.lua hoje. O único pedaço
+  # que é do compositor — subir o daemon — vai em Lua no autostart mais abaixo.
+  xdg.configFile."hypr/hypridle.conf".text = ''
+    general {
+      ignore_dbus_inhibit = false
+    }
+
+    listener {
+      timeout    = 300                        # 5 min ocioso
+      on-timeout = hyprctl dispatch dpms off  # apaga os dois monitores
+      on-resume  = hyprctl dispatch dpms on   # religa ao voltar
+    }
+  '';
+
   xdg.configFile."hypr/hyprland.lua".text = ''
     -- ── Monitores ────────────────────────────────────────────────────────────
     -- Nomes de conector confirmados via `hyprctl monitors` (Wayland/NVIDIA):
@@ -22,8 +46,16 @@
     hl.monitor({ output = "HDMI-A-1", mode = "1920x1080@60",     position = "0x0",    scale = 1 })
     hl.monitor({ output = "",         mode = "preferred",        position = "auto",   scale = "auto" })
 
-    -- Workspace 1 (o principal/default) fica no LG.
-    hl.workspace_rule({ workspace = "1", monitor = "DP-1", default = true })
+    -- 4 workspaces por monitor: 1–4 no LG (DP-1, principal), 5–8 na TV (HDMI-A-1).
+    -- default:true = a workspace que abre em cada monitor no boot da sessão.
+    hl.workspace_rule({ workspace = "1", monitor = "DP-1",     default = true })
+    hl.workspace_rule({ workspace = "2", monitor = "DP-1" })
+    hl.workspace_rule({ workspace = "3", monitor = "DP-1" })
+    hl.workspace_rule({ workspace = "4", monitor = "DP-1" })
+    hl.workspace_rule({ workspace = "5", monitor = "HDMI-A-1", default = true })
+    hl.workspace_rule({ workspace = "6", monitor = "HDMI-A-1" })
+    hl.workspace_rule({ workspace = "7", monitor = "HDMI-A-1" })
+    hl.workspace_rule({ workspace = "8", monitor = "HDMI-A-1" })
 
     -- ── Programas ────────────────────────────────────────────────────────────
     local terminal = "kitty"
@@ -38,6 +70,14 @@
     hl.env("XCURSOR_SIZE", "24")
     hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Ice")
     hl.env("HYPRCURSOR_SIZE", "24")
+
+    -- ── Autostart ────────────────────────────────────────────────────────────
+    -- hyprland.start dispara UMA vez no boot da sessão (não em reload) → sobe o
+    -- hypridle, que lê ~/.config/hypr/hypridle.conf e apaga os monitores no ocioso.
+    hl.on("hyprland.start", function()
+      hl.exec_cmd("hypridle")
+      hl.exec_cmd("waybar")
+    end)
 
     -- ── Aparência ────────────────────────────────────────────────────────────
     hl.config({
@@ -90,11 +130,12 @@
     hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
     hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 
-    -- workspaces 1–10 (SUPER troca; SUPER+SHIFT move a janela)
-    for i = 1, 10 do
-      local key = i % 10  -- 10 mapeia pra tecla 0
-      hl.bind(mainMod .. " + " .. key,         hl.dsp.focus({ workspace = i }))
-      hl.bind(mainMod .. " + SHIFT + " .. key, hl.dsp.window.move({ workspace = i }))
+    -- workspaces 1–8 (SUPER troca; SUPER+SHIFT move a janela).
+    -- SUPER+1..4 → LG (DP-1) · SUPER+5..8 → TV (HDMI-A-1). O foco segue o monitor
+    -- da workspace (pelas workspace_rule acima).
+    for i = 1, 8 do
+      hl.bind(mainMod .. " + " .. i,         hl.dsp.focus({ workspace = i }))
+      hl.bind(mainMod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
     end
 
     -- mouse: mover / redimensionar janela

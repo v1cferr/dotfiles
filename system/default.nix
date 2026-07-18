@@ -225,6 +225,7 @@
     htop
     kitty # terminal do Hyprland default (SUPER+Q)
     wofi # launcher do Hyprland default (SUPER+R)
+    waybar # barra de status (workspaces + relógio); config em home/waybar.nix
     pavucontrol # GUI de mixer/dispositivos (PipeWire via compat PulseAudio)
     pamixer # controle de volume via CLI (pros keybinds de mídia do Hyprland)
     playerctl # play/pause/next via CLI (teclas de mídia)

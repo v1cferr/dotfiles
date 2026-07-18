@@ -20,6 +20,9 @@
     font-name = "JetBrainsMono Nerd Font 11";
     document-font-name = "JetBrainsMono Nerd Font 11";
     monospace-font-name = "JetBrainsMono Nerd Font 11";
+    # Cursor dos apps GTK (o Hyprland/XWayland pega pelas envs em home/hypr.nix).
+    cursor-theme = "Bibata-Modern-Ice";
+    cursor-size = 24;
   };
 
   # Escreve ~/.config/gtk-3.0 e gtk-4.0 apontando pro tema escuro + fonte. Sem

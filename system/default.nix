@@ -90,6 +90,13 @@
     wireplumber.enable = true;
   };
 
+  # ── Bluetooth ───────────────────────────────────────────────────────────────
+  # BlueZ (stack) + liga o adaptador no boot. blueman = applet/GUI de bandeja
+  # pra parear/gerenciar em desktop sem DE (Hyprland). Áudio BT sai via PipeWire.
+  hardware.bluetooth.enable = true;
+  hardware.bluetooth.powerOnBoot = true;
+  services.blueman.enable = true;
+
   # ── Desktop: Hyprland (Wayland) ─────────────────────────────────────────────
   # Compositor Wayland. LightDM (greeter X11) lança a sessão Hyprland; Xwayland
   # cobre apps X11. Atenção: na sessão Wayland o teclado e os monitores NÃO vêm

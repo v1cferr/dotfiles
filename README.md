@@ -89,10 +89,19 @@ pkgs/                        # derivations próprias ("AUR pessoal")
 
 ---
 
-## Segredos (sops-nix)
+## Estado — o que o declarativo não cobre (sops + restic)
 
-Segredos criptografados versionados em `secrets/secrets.yaml`; a chave **privada** age vive
-em `/var/lib/sops-nix/key.txt` (FORA do git — é o que se leva no cutover).
+A regra nº 1 diz que **estado não se declara**: senha de Wi-Fi, perfil de navegador, os
+arquivos em `~`. É justamente esse lado mutável que deixa um sistema declarativo pela
+metade — reconstruo a máquina com um comando, mas não os dados que vivem nela. Duas
+ferramentas fecham esse buraco, cada uma no seu registro: **sops** versiona os segredos,
+**restic** faz backup dos dados.
+
+**Segredos → `secrets/` (sops-nix).** Senhas e tokens ficam cifrados em
+`secrets/secrets.yaml`, versionados no git (ilegíveis sem a chave) e decriptados em runtime
+pra `/run/secrets`. A chave **privada** age vive em `/var/lib/sops-nix/key.txt` — FORA do
+git, é o que se leva no cutover. Consumidos hoje: senha do usuário (`hashedPasswordFile`),
+token do Cloudflare DDNS e a senha do repositório restic.
 
 ```bash
 # editar/adicionar segredos (encripta sozinho pro recipient do .sops.yaml):
@@ -100,7 +109,20 @@ nix shell nixpkgs#sops -c sops secrets/secrets.yaml
 git add secrets/secrets.yaml && sudo nixos-rebuild switch --flake .#nixos-seagate
 ```
 
-Consumidos hoje: senha do usuário (`hashedPasswordFile`) e token do Cloudflare DDNS.
+**Dados de usuário → restic (`system/restic.nix`).** O que não dá pra declarar (seu `~`)
+vira backup cifrado: um snapshot diário de `/home/v1cferr` num repositório restic, com poda
+automática (7 diários, 4 semanais, 6 mensais) e verificação de integridade a cada run. Cache
+e regeneráveis (`node_modules`, `.direnv`, builds, `cache2` do Zen…) ficam de fora. A senha
+do repo é o segredo `restic_password` acima — sem ela nada decripta. Hoje o repositório mora
+em `/var/backup/restic`, no próprio HDD: é HDD→HDD, então serve de snapshot e de veículo do
+cutover (restaurar no destino), mas ainda não protege contra falha do disco — pós-cutover,
+apontar `repository` pra um HDD montado torna o backup off-disk de verdade.
+
+```bash
+systemctl start restic-backups-home    # backup manual, fora do timer diário
+restic-home snapshots                   # listar snapshots (wrapper já traz repo + senha)
+restic-home restore latest --target /   # restaurar o snapshot mais recente
+```
 
 ---
 
@@ -118,12 +140,12 @@ depois de fazer o **backup dos dados** do Arch/Kingston pro seu SSD.
 
 **Mapa de discos — sempre por `by-id` (os nomes `sdX`/`nvmeX` EMBARALHAM entre boots!):**
 
-| Disco | `by-id` | Papel no cutover |
-|---|---|---|
-| Kingston 1TB | `nvme-KINGSTON_SKC3000S1024G_50026B7686B3D2F6` | **ALVO — será FORMATADO** |
-| Seagate 298G | `ata-ST9320423AS_5VH4YZV8` | NixOS atual → vira backup/resgate |
-| SanDisk 1TB | `ata-SanDisk_SSD_PLUS_1000GB_22520C801629` | SSD p/ backup dos dados |
-| Netac 1TB | `nvme-NE-1TB_2280_0004382002024` | Windows (não tocar) |
+| Disco        | `by-id`                                        | Papel no cutover                  |
+| ------------ | ---------------------------------------------- | --------------------------------- |
+| Kingston 1TB | `nvme-KINGSTON_SKC3000S1024G_50026B7686B3D2F6` | **ALVO — será FORMATADO**         |
+| Seagate 298G | `ata-ST9320423AS_5VH4YZV8`                     | NixOS atual → vira backup/resgate |
+| SanDisk 1TB  | `ata-SanDisk_SSD_PLUS_1000GB_22520C801629`     | SSD p/ backup dos dados           |
+| Netac 1TB    | `nvme-NE-1TB_2280_0004382002024`               | Windows (não tocar)               |
 
 **Passo a passo (bootando pela live USB):**
 
@@ -168,24 +190,25 @@ sudo reboot
 ## Roadmap
 
 - [x] Flake unificado sistema + home-manager
-- [x] sops-nix (senha + DDNS)
+- [x] sops-nix (senha + DDNS + senha do restic)
+- [x] Backup do estado do usuário com restic (snapshot diário cifrado, poda + integridade)
 - [x] DE leve interino: **XFCE + LightDM** (GNOME pesava no HDD)
 - [ ] **Rice Hyprland + Quickshell** — trazer configs da `main`
       (`git checkout main -- hypr/ quickshell/ …`; `mkOutOfStoreSymlink` nos dirs de hot-reload)
 - [ ] Homelab: caddy, wireguard, docker/oci-containers
 - [ ] NetExtender via `buildFHSEnv`; distrobox Arch (`--nvidia`) como playground pacman/AUR
-- [x] **disko + host `ex-b560m-v5`** preparados — passo a passo na seção _Cutover_ acima
+- [x] **disko + host `ex-b560m-v5`** preparados — passo a passo na seção *Cutover* acima
 - [ ] **Cutover**: executar (disko + `nixos-install` no Kingston) após o backup dos dados
 
 ### Atritos conhecidos → antídotos
 
-| Atrito | Antídoto |
-|---|---|
-| Wheels Python/CUDA assumem FHS (`uv pip install torch`) | `programs.nix-ld.enable = true` (já ligado) |
-| Containers com GPU (open-webui etc.) | `hardware.nvidia-container-toolkit.enable = true` |
-| home-manager = symlink read-only (mata hot-reload QML) | `mkOutOfStoreSymlink` nos dirs quentes |
-| NetExtender (FHS + daemon, sem pacote) | `buildFHSEnv`; reservar um fim de semana |
-| Saudade do pacman | `nix shell nixpkgs#pkg`, `nix search`, `comma`, distrobox |
+| Atrito                                                  | Antídoto                                                  |
+| ------------------------------------------------------- | --------------------------------------------------------- |
+| Wheels Python/CUDA assumem FHS (`uv pip install torch`) | `programs.nix-ld.enable = true` (já ligado)               |
+| Containers com GPU (open-webui etc.)                    | `hardware.nvidia-container-toolkit.enable = true`         |
+| home-manager = symlink read-only (mata hot-reload QML)  | `mkOutOfStoreSymlink` nos dirs quentes                    |
+| NetExtender (FHS + daemon, sem pacote)                  | `buildFHSEnv`; reservar um fim de semana                  |
+| Saudade do pacman                                       | `nix shell nixpkgs#pkg`, `nix search`, `comma`, distrobox |
 
 ---
 
@@ -194,8 +217,8 @@ sudo reboot
 - **2026-07-13** — Branch `nixos` criada e zerada. Esqueleto flake testado em VM na tag
   `nix-flake-skeleton`. Decisões: unstable no host, reescrita à mão pra aprender.
 - **2026-07-15** — NixOS 26.05 instalado direto no **HDD Seagate** (host `nixos-seagate`).
-  Flake unificado **sistema + usuário** via home-manager como módulo. Layout: `system/` (root)
-  + `home/` (usuário), em vez de `hosts/`+`modules/` (indireção só paga com várias máquinas).
+  Flake unificado **sistema + usuário** via home-manager como módulo. Layout: `system/`
+  (root) + `home/` (usuário), em vez de `hosts/`+`modules/` (indireção só paga com várias máquinas).
 - **2026-07-16** — Migração consolidada: **sops-nix** (senha + Cloudflare DDNS), **gh** como
   credential helper do git (push HTTPS por token), troca **GNOME/GDM → XFCE/LightDM** (HDD lento),
   LG ULTRAGEAR como monitor primário, GC reativo por espaço (`min-free`/`max-free`).
@@ -203,5 +226,9 @@ sudo reboot
 - **2026-07-17** — Preparado o **cutover** pro SSD Kingston. Repo promovido pra **multi-host**
   (`system/` comum + `hosts/{nixos-seagate,ex-b560m-v5}.nix`) e **disko** declarativo (ext4,
   por `by-id`) do Kingston. `nixos-seagate` ficou com `.drv` IDÊNTICO (refactor sem efeito no
-  sistema atual). Passo a passo do cutover documentado (seção _Cutover_). Aguarda só o backup
+  sistema atual). Passo a passo do cutover documentado (seção *Cutover*). Aguarda só o backup
   dos dados do Arch/Kingston pro SSD antes de executar.
+- **2026-07-18** — Fechado o lado do **estado**: **restic** faz snapshot diário cifrado de
+  `~` (poda + verificação de integridade; repo em `/var/backup/restic`, HDD→HDD por ora) e o
+  **Zen** virou navegador padrão de forma declarativa (`home/xdg.nix` → `xdg.mimeApps` +
+  `$BROWSER`). Documentada a seção *Estado (sops + restic)*.

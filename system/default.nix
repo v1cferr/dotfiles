@@ -9,6 +9,7 @@
 {
   imports = [
     ./restic.nix # backup cifrado do estado do usuário (repo no HDD por ora)
+    ./secrets.nix # gera sops.secrets do Bitwarden + comando sync-secrets
   ];
 
   # ── Segredos (sops-nix) ───────────────────────────────────────────────────
@@ -21,7 +22,7 @@
     age.keyFile = "/var/lib/sops-nix/key.txt";
     secrets.v1cferr_password_hash.neededForUsers = true; # senha: precisa cedo
     secrets.cloudflare_ddns_token = { };
-    secrets.restic_password = { }; # senha do repo restic (backup do estado)
+    # restic_password agora vem do Bitwarden (ver ./secrets.nix + bitwarden-secrets.json)
   };
 
   # ── Boot (UEFI, systemd-boot) ──────────────────────────────────────────────

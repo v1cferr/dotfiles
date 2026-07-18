@@ -114,6 +114,12 @@
   # em Wayland em vez de Xwayland.
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
 
+  # ── Dark mode: portal p/ o color-scheme (config do tema vive em home/theme.nix) ─
+  # O programs.hyprland já habilita o xdg.portal (+ portal-hyprland p/ screencast).
+  # O portal-gtk é quem serve org.freedesktop.appearance (color-scheme) → é assim
+  # que apps Electron/Chromium (vscode, chrome, spotify) escurecem junto do sistema.
+  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+
   # ── Keyring / Secret Service (gnome-keyring) ──────────────────────────────
   # Provê o org.freedesktop.secrets — onde apps guardam segredos CIFRADOS em vez
   # de texto plano (git via libsecret, NetworkManager, navegadores, etc.).
@@ -222,6 +228,7 @@
     pavucontrol # GUI de mixer/dispositivos (PipeWire via compat PulseAudio)
     pamixer # controle de volume via CLI (pros keybinds de mídia do Hyprland)
     playerctl # play/pause/next via CLI (teclas de mídia)
+    gnome-themes-extra # tema GTK Adwaita-dark (usado pelo home/theme.nix)
     librewolf
     google-chrome
     vscode

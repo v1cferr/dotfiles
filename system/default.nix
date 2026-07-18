@@ -47,6 +47,9 @@
   nix.settings.min-free = 1024 * 1024 * 1024; # 1 GiB
   nix.settings.max-free = 5 * 1024 * 1024 * 1024; # 5 GiB
   nixpkgs.config.allowUnfree = true; # google-chrome, vscode, etc.
+  # bitwarden-desktop (Electron) trava no Electron 39 (EOL). Nenhum canal migrou
+  # ainda; liberamos SÓ esta versão. Ao bumpar o Bitwarden, revisar/remover isto.
+  nixpkgs.config.permittedInsecurePackages = [ "electron-39.8.10" ];
 
   # ── Compat com binários FHS (nix-ld) ──────────────────────────────────────
   # NixOS não roda binários dinâmicos "genéricos" (que buscam /lib64/ld-linux…).
@@ -245,6 +248,12 @@
     spotify # unfree (ok: allowUnfree acima)
     # whatsapp  # (estava comentado na config original)
     unzip
+
+    # ── Gerenciador de senhas: Bitwarden ──
+    # desktop trava no Electron 39 EOL (liberado em permittedInsecurePackages
+    # acima — os dois canais fixam o mesmo Electron, então fica no estável).
+    bitwarden-desktop # app desktop (GUI Electron)
+    bitwarden-cli # `bw` — consultar/scriptar o cofre no terminal
 
     # ── Gerenciador de arquivos: Dolphin (KDE) ──
     # GUI mais completo: split view, abas, terminal embutido, previews. Os pacotes

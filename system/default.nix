@@ -294,7 +294,9 @@
     # `bottles` do nixpkgs vem FHS-wrapped → os runners (GE-Proton/wine-staging)
     # rodam no NixOS. A(s) bottle(s) em si são ESTADO (~/.local/share/bottles),
     # copiadas do Kingston — não se declaram (regra nº 1).
-    bottles
+    # removeWarningPopup: silencia o aviso "Unsupported Environment" (o Bottles upstream
+    # só suporta Flatpak/sandbox; no NixOS é FHS-wrapped e funciona — o popup é ruído).
+    (bottles.override { removeWarningPopup = true; })
 
     # ── Gerenciador de arquivos: Dolphin (KDE) ──
     # GUI mais completo: split view, abas, terminal embutido, previews. Os pacotes

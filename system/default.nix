@@ -10,6 +10,7 @@
   imports = [
     ./restic.nix # backup cifrado do estado do usuário (repo no HDD por ora)
     ./secrets.nix # gera sops.secrets do Bitwarden + comando sync-secrets
+    ./media/jellyfin.nix # servidor de mídia Jellyfin (nativo, systemd, biblioteca em /srv/media)
   ];
 
   # ── Segredos (sops-nix) ───────────────────────────────────────────────────

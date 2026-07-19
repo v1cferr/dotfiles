@@ -247,6 +247,7 @@
     gh # GitHub CLI (auth/push via HTTPS + token)
     vim
     htop
+    tree # lista a árvore de diretórios no terminal
     openssl # gerar senhas/chaves (rand), TLS, etc.
     kitty # terminal do Hyprland default (SUPER+Q)
     wofi # launcher do Hyprland default (SUPER+R)

@@ -14,6 +14,9 @@
       # GitHub via HTTPS usa o token do gh (GitHub CLI) como credential helper →
       # `git push/pull` funcionam sem SSH e sem gravar token em texto puro.
       credential."https://github.com".helper = "!gh auth git-credential";
+      # `git pull` rebaseia commits locais em cima do remoto (histórico linear; acaba
+      # com o prompt "divergent branches"). Repo pessoal single-author = rebase é limpo.
+      pull.rebase = true;
     };
   };
 }

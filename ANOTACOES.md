@@ -19,6 +19,10 @@
         Dolphin (a moldura é do Hyprland).
 - [ ] Depois que eu estiver no SSD, já configurar o WoW Ascension com o Bottles para jogarmos e eu ir configurando o sistema simultaneamente
 
+## Mantenabilidade
+
+- [ ] Verificar a arquitetura de pastas e melhores práticas para manunteção, organização e escalabilidade do meu repositório (dotfiles do Nix e NixOS)
+
 ## Serviços Docker e etc
 
 Ambos com systemd (ou algo semelhante) e rodando em daemon (background):

@@ -262,6 +262,8 @@
     pamixer # controle de volume via CLI (pros keybinds de mídia do Hyprland)
     playerctl # play/pause/next via CLI (teclas de mídia)
     hypridle # daemon de ociosidade do Hyprland (apaga os monitores; config em home/hypr.nix)
+    cliphist # histórico de clipboard no Wayland (guarda texto/imagem; picker via wofi)
+    wl-clipboard # wl-copy/wl-paste — base do clipboard Wayland (o cliphist depende dele)
     gnome-themes-extra # tema GTK Adwaita-dark (usado pelo home/theme.nix)
     bibata-cursors # tema de cursor Bibata-Modern-Ice (config no home/)
     librewolf

@@ -87,6 +87,9 @@
     hl.on("hyprland.start", function()
       hl.exec_cmd("hypridle")
       hl.exec_cmd("waybar")
+      -- watcher do clipboard: escuta cada cópia e grava no histórico do cliphist.
+      -- Sem isto o cliphist fica vazio (é o daemon que popula o banco).
+      hl.exec_cmd("wl-paste --watch cliphist store")
     end)
 
     -- ── Aparência ────────────────────────────────────────────────────────────
@@ -131,6 +134,9 @@
     hl.bind(mainMod .. " + C", hl.dsp.window.close())                 -- fechar
     hl.bind(mainMod .. " + M", hl.dsp.exit())                         -- sair do Hyprland
     hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
+    -- clipboard: abre o histórico do cliphist no wofi; a escolha volta pro clipboard.
+    -- (roda via sh -c do exec → o pipe funciona; cole normal com Ctrl+V depois)
+    hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("cliphist list | wofi --dmenu | cliphist decode | wl-copy"))
     hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
     hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))          -- dwindle
 

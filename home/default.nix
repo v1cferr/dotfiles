@@ -14,6 +14,9 @@
 {
   imports = [
     ./git.nix # programs.git → ~/.gitconfig
+    ./zsh.nix # ~/.zshrc (histórico + autosuggest + syntax highlight + aliases)
+    ./starship.nix # ~/.config/starship.toml (prompt do zsh)
+    ./kitty.nix # ~/.config/kitty/kitty.conf (terminal default do Hyprland)
     ./hypr.nix # ~/.config/hypr/hyprland.conf (ABNT2 + monitores + keybinds)
     ./waybar.nix # ~/.config/waybar/* (barra básica: workspaces + relógio)
     ./theme.nix # dark mode (color-scheme prefer-dark + GTK Adwaita-dark)

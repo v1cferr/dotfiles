@@ -71,6 +71,12 @@
     hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Ice")
     hl.env("HYPRCURSOR_SIZE", "24")
 
+    -- Tema Qt/KDE (Dolphin): faz o Qt seguir o GTK escuro. O módulo qt
+    -- (home/theme.nix) já define isso como session var, mas em Wayland a sessão
+    -- nem sempre carrega — fixar aqui garante o dark nos apps abertos pelo Hyprland.
+    hl.env("QT_QPA_PLATFORMTHEME", "gtk3")
+    hl.env("QT_STYLE_OVERRIDE", "adwaita-dark")
+
     -- ── Autostart ────────────────────────────────────────────────────────────
     -- hyprland.start dispara UMA vez no boot da sessão (não em reload) → sobe o
     -- hypridle, que lê ~/.config/hypr/hypridle.conf e apaga os monitores no ocioso.

@@ -40,14 +40,22 @@ Tire o pendrive e boote na SanDisk (ajuste a ordem de boot na BIOS, se preciso).
 
 ## Passo 5 — Restaurar seus dados (já na SanDisk)
 
-Logue com sua senha de sempre. Abra um **TTY** (Ctrl+Alt+F3) pra não mexer no `~` em uso, e:
+Faça login normalmente. **Saia da sessão gráfica antes de restaurar** — só trocar de TTY
+não basta: os apps do Hyprland (Zen, VSCode, `.claude`) seguem com arquivos abertos e
+**regravam o estado deles ao fechar**, sobrescrevendo o que o restic restaurou.
+
+1. No Hyprland, **`SUPER + M`** → sai pro LightDM (nenhum app seu roda mais mexendo no `~`).
+2. **`Ctrl + Alt + F3`** → TTY3; logue como `v1cferr` no console.
+3. Restaure:
 
 ```bash
 git clone https://github.com/v1cferr/dotfiles ~/dotfiles && cd ~/dotfiles
 sudo ./scripts/restore-home.sh
+reboot
 ```
 
-Monta o HDD Seagate e restaura seu `~` (Zen, `.claude`, VSCode, documentos) do backup restic.
+Monta o HDD Seagate (só-leitura) e restaura seu `~` (Zen, `.claude`, VSCode, documentos) do
+backup restic. Depois do `reboot`, boote no Hyprland normalmente.
 
 ## Passo 6 — Re-parear o fone
 

@@ -17,7 +17,10 @@ mkdir -p "$MNT"
 mountpoint -q "$MNT" || mount -o ro "$SEAGATE" "$MNT"
 
 echo "==> restaurando o snapshot mais recente do restic pra /home…"
+# --no-lock: o Seagate está montado ro (fonte só-leitura); sem isto o restic tenta
+# criar um lock no repo e trava em loop ("read-only file system").
 nix shell nixpkgs#restic --command restic \
+  --no-lock \
   -r "$MNT/var/backup/restic" \
   --password-file /run/secrets/restic_password \
   restore latest --target /

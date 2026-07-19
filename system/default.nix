@@ -269,7 +269,10 @@
     librewolf
     google-chrome
     inputs.zen-browser.packages.${pkgs.system}.default # Zen (flake; ver flake.nix)
-    vscode
+    # override: --password-store=gnome-libsecret — no Hyprland o Electron não
+    # autodetecta o backend de secret (XDG_CURRENT_DESKTOP não é GNOME/KDE) e mostra
+    # "couldn't identify OS keyring"; a flag força o uso do gnome-keyring (libsecret).
+    (vscode.override { commandLineArgs = "--password-store=gnome-libsecret"; })
     spotify # unfree (ok: allowUnfree acima)
     # whatsapp  # (estava comentado na config original)
     unzip

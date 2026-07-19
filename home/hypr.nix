@@ -90,6 +90,10 @@
       -- watcher do clipboard: escuta cada cópia e grava no histórico do cliphist.
       -- Sem isto o cliphist fica vazio (é o daemon que popula o banco).
       hl.exec_cmd("wl-paste --watch cliphist store")
+      -- clipboard persistente: mantém a cópia viva após o app de origem fechar. No
+      -- Wayland o dono do clipboard é a app; sem isto a imagem do Flameshot some ao
+      -- ele sair (Ctrl+V não cola). Casa com o cliphist (histórico) acima.
+      hl.exec_cmd("wl-clip-persist --clipboard regular")
     end)
 
     -- ── Aparência ────────────────────────────────────────────────────────────

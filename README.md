@@ -54,16 +54,18 @@ Pronto — o pacote está no PATH. Pra remover, apague a linha e rebuilde.
 ## Layout do repo
 
 ```text
-flake.nix                    # maestro: mkHost + nixosConfigurations.{nixos-seagate, ex-b560m-v5}
+flake.nix                    # maestro: mkHost + nixosConfigurations.{nixos-seagate, nixos-sandisk, ex-b560m-v5}
 flake.lock                   # pins (cápsula do tempo)
 system/default.nix           # SISTEMA (COMUM a todos os hosts): pacotes, serviços, desktop…
 hosts/                       # o ESPECÍFICO de cada máquina:
   ├─ nixos-seagate.nix       #   HDD atual: hardware-configuration + hostname + mounts
-  ├─ ex-b560m-v5.nix         #   destino do cutover (SSD Kingston) — preparado
+  ├─ nixos-sandisk.nix       #   ALVO do cutover (SSD SanDisk, SATA) — preparado
+  ├─ nixos-sandisk-disko.nix #   layout de disco declarativo (disko) da SanDisk
+  ├─ ex-b560m-v5.nix         #   alternativa dormente (SSD Kingston, NVMe)
   └─ ex-b560m-v5-disko.nix   #   layout de disco declarativo (disko) do Kingston
 hardware-configuration.nix   # scan do HDD (gerado) — não editar
-home/                        # USUÁRIO: só CONFIGURA (não instala) — git.nix, hypr.nix…
-secrets/secrets.yaml         # segredos criptografados (sops-nix)
+home/                        # USUÁRIO: só CONFIGURA (não instala) — git.nix, hypr.nix, xdg.nix, dropbox.nix…
+secrets/                     # segredos sops (secrets.yaml) + índice Bitwarden (bitwarden-secrets.json)
 .sops.yaml                   # regras de encriptação (recipient age)
 pkgs/                        # derivations próprias ("AUR pessoal")
 ```
@@ -141,64 +143,81 @@ restic-home restore latest --target /   # restaurar o snapshot mais recente
 
 ---
 
-## Cutover — migrar do HDD pro SSD Kingston (host `ex-b560m-v5`)
+## Cutover — migrar do HDD pro SSD SanDisk (host `nixos-sandisk`)
 
-Instalar no Kingston é **declarativo** (disko + `nixos-install`). É **destrutivo** — só
-depois de fazer o **backup dos dados** do Arch/Kingston pro seu SSD.
+Instalar na SanDisk é **declarativo** (disko + `nixos-install`): o sistema se reconstrói
+inteiro a partir do flake. É **destrutivo pra SanDisk** (que hoje tem Windows, descartável).
+O **Arch no Kingston fica intacto** como rede de segurança, e o **HDD Seagate continua
+plugado** — é de lá que sai o restore dos seus dados (repo restic).
 
-**Pré-requisitos (ter em mãos ANTES de bootar a live USB):**
+**Pré-requisitos (ANTES de bootar a live USB):**
 
-1. **Backup** de tudo do Kingston/Arch já feito (no SSD SanDisk ou outro).
-2. A **chave age** `/var/lib/sops-nix/key.txt` copiada pra um USB/gerenciador — **sem ela o
-   sops não decripta** a senha nem o token no 1º boot (você fica sem senha).
-3. Pendrive com a **ISO minimal do NixOS** (live USB).
+1. **Backup do `~` feito** — `restic-home snapshots` deve listar um snapshot recente.
+2. **Senha-mestra do Bitwarden** em mãos — é dela que sai a chave age (guardada como nota
+   `sops-nix age key (dotfiles)`). Sem a chave age o sops não decripta a senha de login no
+   1º boot. (Backup extra: o `.age` no Dropbox + passphrase, ou uma cópia em pendrive.)
+3. Pendrive com a **ISO minimal do NixOS** (live USB) + rede por cabo.
+4. Nada que você ainda precise na **SanDisk** (o Windows dela será apagado).
 
 **Mapa de discos — sempre por `by-id` (os nomes `sdX`/`nvmeX` EMBARALHAM entre boots!):**
 
-| Disco        | `by-id`                                        | Papel no cutover                  |
-| ------------ | ---------------------------------------------- | --------------------------------- |
-| Kingston 1TB | `nvme-KINGSTON_SKC3000S1024G_50026B7686B3D2F6` | **ALVO — será FORMATADO**         |
-| Seagate 298G | `ata-ST9320423AS_5VH4YZV8`                     | NixOS atual → vira backup/resgate |
-| SanDisk 1TB  | `ata-SanDisk_SSD_PLUS_1000GB_22520C801629`     | SSD p/ backup dos dados           |
-| Netac 1TB    | `nvme-NE-1TB_2280_0004382002024`               | Windows (não tocar)               |
+| Disco        | `by-id`                                        | Papel no cutover                        |
+| ------------ | ---------------------------------------------- | --------------------------------------- |
+| SanDisk 1TB  | `ata-SanDisk_SSD_PLUS_1000GB_22520C801629`     | **ALVO — será FORMATADO**               |
+| Seagate 298G | `ata-ST9320423AS_5VH4YZV8`                     | NixOS atual → resgate + fonte do restic |
+| Kingston 1TB | `nvme-KINGSTON_SKC3000S1024G_50026B7686B3D2F6` | Arch — PRESERVADO (fallback)            |
+| Netac 1TB    | `nvme-NE-1TB_2280_0004382002024`               | Windows (não tocar)                     |
 
 **Passo a passo (bootando pela live USB):**
 
 ```bash
-# 0. Rede: cabo já pega DHCP. Wi-Fi: `sudo nmtui`.
+# 0. Rede: cabo já pega DHCP.
 
-# 1. Trazer o repo (git vem no ambiente da ISO via nix-shell)
-nix-shell -p git
+# 1. Trazer o repo + ferramentas (git e bw vêm via nix-shell no ambiente da ISO)
+nix-shell -p git bitwarden-cli
 git clone https://github.com/v1cferr/dotfiles ~/dotfiles
 cd ~/dotfiles && git checkout nixos
 
-# 2. PARTICIONAR + FORMATAR o Kingston  ⚠️ APAGA O DISCO (de propósito)
-#    (o device já está fixado por by-id em hosts/ex-b560m-v5-disko.nix)
+# 2. PARTICIONAR + FORMATAR a SanDisk  ⚠️ APAGA O DISCO (de propósito)
+#    (o device está fixado por by-id em hosts/nixos-sandisk-disko.nix)
 sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko -- \
-  --mode destroy,format,mount --flake .#ex-b560m-v5
+  --mode destroy,format,mount --flake .#nixos-sandisk
 #    → cria GPT (ESP 1G vfat + resto ext4) e monta tudo em /mnt
 
-# 3. Restaurar a CHAVE age no destino (SENÃO o sops não decripta no 1º boot)
+# 3. Restaurar a CHAVE age (do Bitwarden — só a senha-mestra)
+bw login && export BW_SESSION=$(bw unlock --raw)
 sudo install -d -m 700 /mnt/var/lib/sops-nix
-sudo cp /caminho/do/backup/key.txt /mnt/var/lib/sops-nix/key.txt
+bw get notes "sops-nix age key (dotfiles)" | sudo tee /mnt/var/lib/sops-nix/key.txt >/dev/null
 sudo chmod 600 /mnt/var/lib/sops-nix/key.txt
 
 # 4. Instalar o sistema declarativo
-sudo nixos-install --flake .#ex-b560m-v5
-#    (a senha do v1cferr vem do sops; se pedir senha de root, defina uma)
+sudo nixos-install --flake .#nixos-sandisk
+#    (a senha do v1cferr vem do sops; se pedir senha de root, defina uma temporária)
 
-# 5. Reboot → tira o pendrive → boota no Kingston
+# 5. Reboot → tira o pendrive → boota na SanDisk (ajuste a ordem de boot na BIOS)
 sudo reboot
 ```
 
-**Pós-cutover:**
+**Pós-cutover (já na SanDisk):**
 
-- Logue, confirme rede/SSH/GPU e rode uma vez: `sudo nixos-rebuild switch --flake .#ex-b560m-v5`.
-- Restaure seus dados de usuário (`~`) do backup.
-- O HDD Seagate continua bootável como resgate; quando confiar, dá pra remover o host
-  `nixos-seagate` (apagar `hosts/nixos-seagate.nix` + a linha no `flake.nix`).
+- Logue com sua senha de sempre (veio do hash no sops), confirme rede/SSH/GPU e rode uma
+  vez: `sudo nixos-rebuild switch --flake .#nixos-sandisk`.
+- **Restaure o `~` do restic** (o repo vive no HDD Seagate, que segue plugado). De um TTY
+  (não logado no desktop, pra não conflitar com arquivos em uso):
+
+  ```bash
+  sudo mkdir -p /mnt/seagate
+  # ache a partição raiz do Seagate com `lsblk -f` (a ext4 grande) e monte:
+  sudo mount /dev/disk/by-id/ata-ST9320423AS_5VH4YZV8-part2 /mnt/seagate
+  sudo nix shell nixpkgs#restic -c restic -r /mnt/seagate/var/backup/restic \
+    --password-file /run/secrets/restic_password restore latest --target /
+  ```
+
+- **Re-pareie o Bluetooth** (o fone é estado): `bluetoothctl` → `pair`/`trust`/`connect`.
+- Quando confiar na SanDisk, dá pra remover os hosts `nixos-seagate` e `ex-b560m-v5`
+  (Kingston) do `flake.nix`. O Seagate segue bootável como resgate até lá.
 - Se algum módulo de kernel faltar: `sudo nixos-generate-config --root /mnt --dir /tmp` no
-  instalador e copie o `hardware-configuration.nix` gerado pro host (é a mesma placa, deve bater).
+  instalador e compare o `hardware-configuration.nix` gerado (é a mesma placa, deve bater).
 
 ---
 
@@ -213,8 +232,9 @@ sudo reboot
       (`git checkout main -- hypr/ quickshell/ …`; `mkOutOfStoreSymlink` nos dirs de hot-reload)
 - [ ] Homelab: caddy, wireguard, docker/oci-containers
 - [ ] NetExtender via `buildFHSEnv`; distrobox Arch (`--nvidia`) como playground pacman/AUR
-- [x] **disko + host `ex-b560m-v5`** preparados — passo a passo na seção *Cutover* acima
-- [ ] **Cutover**: executar (disko + `nixos-install` no Kingston) após o backup dos dados
+- [x] **disko + host `nixos-sandisk`** preparados (alvo SanDisk; Arch no Kingston preservado)
+- [x] Chave age no **Bitwarden** — restauração no cutover só com a senha-mestra
+- [ ] **Cutover**: executar (disko + `nixos-install` na SanDisk) — backup do `~` já feito
 
 ### Atritos conhecidos → antídotos
 
@@ -244,7 +264,11 @@ sudo reboot
   por `by-id`) do Kingston. `nixos-seagate` ficou com `.drv` IDÊNTICO (refactor sem efeito no
   sistema atual). Passo a passo do cutover documentado (seção *Cutover*). Aguarda só o backup
   dos dados do Arch/Kingston pro SSD antes de executar.
-- **2026-07-18** — Fechado o lado do **estado**: **restic** faz snapshot diário cifrado de
-  `~` (poda + verificação de integridade; repo em `/var/backup/restic`, HDD→HDD por ora) e o
-  **Zen** virou navegador padrão de forma declarativa (`home/xdg.nix` → `xdg.mimeApps` +
-  `$BROWSER`). Documentada a seção *Estado (sops + restic)*.
+- **2026-07-18** — Fechado o lado do **estado** e preparado o cutover pra SanDisk. **Zen**
+  como navegador padrão declarativo (`home/xdg.nix`); **restic** com 1º snapshot do `~`
+  (16.6 GiB); **Dropbox** declarativo (`services.dropbox`, cofre do Obsidian); **Bitwarden**
+  (desktop + CLI) como gerenciador de senhas; automação **Bitwarden → sops** via `sync-secrets`
+  (puro, sem `--impure`, índice em `secrets/bitwarden-secrets.json`); **chave age guardada no
+  Bitwarden** (restauração só com a senha-mestra); Bluetooth com relato de bateria do fone.
+  Trocado o alvo do cutover: **host `nixos-sandisk`** (SanDisk SATA) no lugar do Kingston,
+  preservando o Arch como fallback. Seção *Cutover* reescrita pro fluxo real.

@@ -280,6 +280,7 @@
     spotify # unfree (ok: allowUnfree acima)
     # whatsapp  # (estava comentado na config original)
     unzip
+    qbittorrent # app GUI de torrent (janela, uso manual) — separado do serviço headless (media/qbittorrent.nix)
 
     # ── Gerenciador de senhas: Bitwarden ──
     # desktop trava no Electron 39 EOL (liberado em permittedInsecurePackages

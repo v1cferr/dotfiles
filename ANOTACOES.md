@@ -22,6 +22,7 @@
 ## Mantenabilidade
 
 - [ ] Verificar a arquitetura de pastas e melhores práticas para manunteção, organização e escalabilidade do meu repositório (dotfiles do Nix e NixOS)
+- [ ] Remover todos os outros hosts e manter apenas o atual (atualmente estamos no SSD SanDisk)
 
 ## Serviços Docker e etc
 
@@ -29,3 +30,7 @@ Ambos com systemd (ou algo semelhante) e rodando em daemon (background):
 
 - [ ] Adicionar o servidor de Midia (Jellyfin) com linguagem Nix
 - [ ] Adicionar o duolingo rodando para fazer automaticamente com Nix
+
+## Pacotes e softwares
+
+- [x] Media player — VLC (GUI completa, toca tudo out-of-the-box). Pacote no system/.

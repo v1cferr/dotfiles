@@ -24,16 +24,11 @@
   #   Regra do dedo: Kingston = Gen4 (16 GT/s) · Netac = Gen3 (8 GT/s).
   # ════════════════════════════════════════════════════════════════════════════
 
-  # Discos extras montados SÓ-LEITURA — só fazem sentido AQUI (o HDD Seagate).
-  # ro + nofail + x-systemd.automount = zero escrita, não trava o boot, monta no
-  # 1º acesso. uid/gid = 1000/100 → legível pelo v1cferr sem sudo (NTFS não tem
-  # dono Unix). Contexto: fase de migração/backup pré-cutover.
-
-  # Kingston (Arch, NVMe Gen4) — produção. No próprio Kingston esse disco é a raiz.
+  # Kingston (Arch, ext4) — RW pra receber arquivos migrados do SanDisk (SATA→NVMe).
   fileSystems."/mnt/kingston-arch" = {
     device = "/dev/disk/by-uuid/d98ec566-6ec2-4371-8048-d3a4f02b2cbb";
     fsType = "ext4";
-    options = [ "ro" "noload" "nofail" "x-systemd.automount" ];
+    options = [ "nofail" "x-systemd.automount" ];
   };
 
   # SanDisk (SATA SSD) — Windows (será formatado p/ virar o backup; a UUID muda

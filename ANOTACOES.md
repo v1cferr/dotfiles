@@ -2,7 +2,8 @@
 
 > Sempre pesquisar as boas práticas e o que a comunidade do NixOS está usando mais para cada pacote/software (para ter uma referência e sugestões)
 
-- [ ] Instalar o flameshot
+- [ ] Instalar o flameshot — DEPOIS no SSD (precisa compilar c/ enableWlrSupport;
+      lento no HDD). Alternativa nativa sem compilar: grim + slurp + swappy.
   - <https://wiki.nixos.org/wiki/Flameshot>
 - [ ] Verificar se é possível adicionar estado declarativo criptografado
 - [ ] Adicionar um software para notificações

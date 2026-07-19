@@ -103,7 +103,9 @@
   # BlueZ (stack) + liga o adaptador no boot. blueman = applet/GUI de bandeja
   # pra parear/gerenciar em desktop sem DE (Hyprland). Áudio BT sai via PipeWire.
   hardware.bluetooth.enable = true;
-  hardware.bluetooth.powerOnBoot = true;
+  hardware.bluetooth.powerOnBoot = true; # adaptador liga no boot (sempre pronto)
+  # Experimental: liga o relato de BATERIA do fone (%) + features extras do BlueZ.
+  hardware.bluetooth.settings.General.Experimental = true;
   services.blueman.enable = true;
 
   # ── Desktop: Hyprland (Wayland) ─────────────────────────────────────────────

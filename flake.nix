@@ -81,7 +81,9 @@
       nixosConfigurations = {
         # Instalação ATUAL (HDD Seagate)
         nixos-seagate = mkHost ./hosts/nixos-seagate.nix;
-        # Destino do cutover (SSD Kingston) — PREPARADO, ainda não instalado
+        # ALVO ATIVO do cutover (SSD SanDisk, SATA) — preserva o Arch no Kingston
+        nixos-sandisk = mkHost ./hosts/nixos-sandisk.nix;
+        # Alternativa dormente (SSD Kingston, NVMe) — apagaria o Arch; não é o plano
         ex-b560m-v5 = mkHost ./hosts/ex-b560m-v5.nix;
       };
     };

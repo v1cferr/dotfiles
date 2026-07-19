@@ -67,6 +67,7 @@ hardware-configuration.nix   # scan do HDD (gerado) — não editar
 home/                        # USUÁRIO: só CONFIGURA (não instala) — git.nix, hypr.nix, xdg.nix, dropbox.nix…
 secrets/                     # segredos sops (secrets.yaml) + índice Bitwarden (bitwarden-secrets.json)
 .sops.yaml                   # regras de encriptação (recipient age)
+scripts/                     # cutover-sandisk.sh (instala) + restore-home.sh (restaura o ~)
 pkgs/                        # derivations próprias ("AUR pessoal")
 ```
 
@@ -168,56 +169,31 @@ plugado** — é de lá que sai o restore dos seus dados (repo restic).
 | Kingston 1TB | `nvme-KINGSTON_SKC3000S1024G_50026B7686B3D2F6` | Arch — PRESERVADO (fallback)            |
 | Netac 1TB    | `nvme-NE-1TB_2280_0004382002024`               | Windows (não tocar)                     |
 
-**Passo a passo (bootando pela live USB):**
+**Instalar — 3 comandos no live USB:**
 
 ```bash
-# 0. Rede: cabo já pega DHCP.
-
-# 1. Trazer o repo + ferramentas (git e bw vêm via nix-shell no ambiente da ISO)
-nix-shell -p git bitwarden-cli
-git clone https://github.com/v1cferr/dotfiles ~/dotfiles
-cd ~/dotfiles && git checkout nixos
-
-# 2. PARTICIONAR + FORMATAR a SanDisk  ⚠️ APAGA O DISCO (de propósito)
-#    (o device está fixado por by-id em hosts/nixos-sandisk-disko.nix)
-sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko -- \
-  --mode destroy,format,mount --flake .#nixos-sandisk
-#    → cria GPT (ESP 1G vfat + resto ext4) e monta tudo em /mnt
-
-# 3. Restaurar a CHAVE age (do Bitwarden — só a senha-mestra)
-bw login && export BW_SESSION=$(bw unlock --raw)
-sudo install -d -m 700 /mnt/var/lib/sops-nix
-bw get notes "sops-nix age key (dotfiles)" | sudo tee /mnt/var/lib/sops-nix/key.txt >/dev/null
-sudo chmod 600 /mnt/var/lib/sops-nix/key.txt
-
-# 4. Instalar o sistema declarativo
-sudo nixos-install --flake .#nixos-sandisk
-#    (a senha do v1cferr vem do sops; se pedir senha de root, defina uma temporária)
-
-# 5. Reboot → tira o pendrive → boota na SanDisk (ajuste a ordem de boot na BIOS)
-sudo reboot
+nix-shell -p git
+git clone https://github.com/v1cferr/dotfiles ~/dotfiles && cd ~/dotfiles && git checkout nixos
+sudo ./scripts/cutover-sandisk.sh
 ```
 
-**Pós-cutover (já na SanDisk):**
+O `cutover-sandisk.sh` confirma o disco (você digita `FORMATAR`), **formata a SanDisk**
+(disko), **restaura a chave age** do Bitwarden (pede só a senha-mestra) e roda o
+**`nixos-install`**. Ao fim: `reboot`, tire o pendrive, boote na SanDisk (ordem de boot na BIOS).
 
-- Logue com sua senha de sempre (veio do hash no sops), confirme rede/SSH/GPU e rode uma
-  vez: `sudo nixos-rebuild switch --flake .#nixos-sandisk`.
-- **Restaure o `~` do restic** (o repo vive no HDD Seagate, que segue plugado). De um TTY
-  (não logado no desktop, pra não conflitar com arquivos em uso):
+**Restaurar seus dados — 1 comando, já na SanDisk** (de um TTY, não logado no desktop):
 
-  ```bash
-  sudo mkdir -p /mnt/seagate
-  # ache a partição raiz do Seagate com `lsblk -f` (a ext4 grande) e monte:
-  sudo mount /dev/disk/by-id/ata-ST9320423AS_5VH4YZV8-part2 /mnt/seagate
-  sudo nix shell nixpkgs#restic -c restic -r /mnt/seagate/var/backup/restic \
-    --password-file /run/secrets/restic_password restore latest --target /
-  ```
+```bash
+sudo ./scripts/restore-home.sh
+```
 
-- **Re-pareie o Bluetooth** (o fone é estado): `bluetoothctl` → `pair`/`trust`/`connect`.
-- Quando confiar na SanDisk, dá pra remover os hosts `nixos-seagate` e `ex-b560m-v5`
-  (Kingston) do `flake.nix`. O Seagate segue bootável como resgate até lá.
-- Se algum módulo de kernel faltar: `sudo nixos-generate-config --root /mnt --dir /tmp` no
-  instalador e compare o `hardware-configuration.nix` gerado (é a mesma placa, deve bater).
+Monta o HDD Seagate (ro) e restaura o `~` do snapshot restic. Depois, **re-pareie o fone**
+(`bluetoothctl` → `scan on`/`pair`/`trust`/`connect`) — é o único estado que não volta sozinho.
+
+**Se algo escapar:** módulo de kernel faltando → rode `sudo nixos-generate-config --root /mnt
+--dir /tmp` no instalador e compare o `hardware-configuration.nix` gerado (mesma placa, deve
+bater). Quando confiar na SanDisk, dá pra remover os hosts `nixos-seagate`/`ex-b560m-v5` do
+`flake.nix` (o Seagate segue bootável como resgate até lá).
 
 ---
 

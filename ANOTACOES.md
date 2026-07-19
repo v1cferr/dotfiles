@@ -6,6 +6,7 @@
   - <https://wiki.nixos.org/wiki/Flameshot>
 - [ ] Verificar se é possível adicionar estado declarativo criptografado
 - [ ] Adicionar um software para notificações
+- [x] Dark mode no file manager (Dolphin) — Qt segue o GTK escuro (home/theme.nix)
 
 Ambos com systemd (ou algo semelhante) e rodando em daemon (background):
 

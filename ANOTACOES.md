@@ -17,6 +17,8 @@
         Dolphin (a moldura é do Hyprland).
 - [ ] Depois que eu estiver no SSD, já configurar o WoW Ascension com o Bottles para jogarmos e eu ir configurando o sistema simultaneamente
 
+## Serviços Docker e etc
+
 Ambos com systemd (ou algo semelhante) e rodando em daemon (background):
 
 - [ ] Adicionar o servidor de Midia (Jellyfin) com linguagem Nix

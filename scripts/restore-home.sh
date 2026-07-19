@@ -7,6 +7,9 @@ set -euo pipefail
 SEAGATE="/dev/disk/by-id/ata-ST9320423AS_5VH4YZV8-part2"
 MNT="/mnt/seagate"
 
+# garante nix-command/flakes (robustez; o sistema instalado já liga, mas não custa)
+export NIX_CONFIG="extra-experimental-features = nix-command flakes"
+
 [ -e "$SEAGATE" ] || { echo "ERRO: raiz do Seagate não encontrada ($SEAGATE). Veja 'lsblk -f' e ajuste o by-id."; exit 1; }
 [ -r /run/secrets/restic_password ] || { echo "ERRO: /run/secrets/restic_password ausente (sops não decriptou?)."; exit 1; }
 

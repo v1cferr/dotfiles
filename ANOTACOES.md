@@ -3,8 +3,9 @@
 > 1. Sempre pesquisar as boas práticas e o que a comunidade do NixOS está usando mais para cada pacote/software (para ter uma referência e sugestões)
 > 2. Nas arquivos de configurações `.nix`, `.lua`, `.conf` e etc. Adicionar apenas uma linha de comentário `# exemplo` (resumo) para cada config logo acima para resumir o que exatamente aquela linha faz (para não poluir os arquivos de configurações de comentários)
 
-- [ ] Instalar o flameshot — DEPOIS no SSD (precisa compilar c/ enableWlrSupport;
-      lento no HDD). Alternativa nativa sem compilar: grim + slurp + swappy.
+- [x] Instalar o flameshot — v13 estável + enableWlrSupport (grim). O v14 só
+      captura via portal (não funciona neste Hyprland); o v13 usa grim direto
+      (useGrimAdapter). Multi-monitor: windowrule estica o overlay pelas 2 telas.
   - <https://wiki.nixos.org/wiki/Flameshot>
 - [ ] Verificar se é possível adicionar estado declarativo criptografado
 - [ ] Adicionar um software para notificações

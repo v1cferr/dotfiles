@@ -301,5 +301,6 @@
     # ── bleeding-edge (escolhidos a dedo) ──
     unstable.fastfetch
     unstable.claude-code
+    unstable.yt-dlp # baixa vídeo/áudio; unstable pq quebra quando os sites mudam (precisa da última)
   ];
 }

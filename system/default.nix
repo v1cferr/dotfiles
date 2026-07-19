@@ -108,6 +108,11 @@
   hardware.bluetooth.settings.General.Experimental = true;
   services.blueman.enable = true;
 
+  # ── Mídia removível (pendrive, HD externo) ──────────────────────────────────
+  # udisks2 = backend que o Dolphin/Solid usa pra MONTAR removível no clique. Sem
+  # isso, USB não monta. (O live USB do instalador NÃO se declara — é transitório.)
+  services.udisks2.enable = true;
+
   # ── Desktop: Hyprland (Wayland) ─────────────────────────────────────────────
   # Compositor Wayland. LightDM (greeter X11) lança a sessão Hyprland; Xwayland
   # cobre apps X11. Atenção: na sessão Wayland o teclado e os monitores NÃO vêm

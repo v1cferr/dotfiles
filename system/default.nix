@@ -250,6 +250,7 @@
     vim
     htop
     tree # lista a árvore de diretórios no terminal
+    jq # processa/consulta JSON no terminal (usado no fluxo de segredos c/ bw)
     openssl # gerar senhas/chaves (rand), TLS, etc.
     python3 # interpretador Python (rodar scripts; libs por projeto ficam no uv/venv)
     uv # gerenciador Python rápido (venv/deps/pythons); os pythons dele rodam via nix-ld

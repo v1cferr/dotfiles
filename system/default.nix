@@ -74,6 +74,7 @@
   # faz Hyprland/Wayland + Vulkan + CUDA funcionarem de verdade.
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.graphics.enable = true; # OpenGL/Vulkan (ex-hardware.opengl)
+  hardware.graphics.enable32Bit = true; # libs 32-bit p/ Wine/Proton (Bottles/WoW)
   hardware.nvidia = {
     modesetting.enable = true; # obrigatório p/ Wayland/Hyprland
     open = true; # módulos abertos (Ampere suporta; recomendado)
@@ -275,6 +276,12 @@
     # acima — os dois canais fixam o mesmo Electron, então fica no estável).
     bitwarden-desktop # app desktop (GUI Electron)
     bitwarden-cli # `bw` — consultar/scriptar o cofre no terminal
+
+    # ── Jogos: Wine/WoW via Bottles ──
+    # `bottles` do nixpkgs vem FHS-wrapped → os runners (GE-Proton/wine-staging)
+    # rodam no NixOS. A(s) bottle(s) em si são ESTADO (~/.local/share/bottles),
+    # copiadas do Kingston — não se declaram (regra nº 1).
+    bottles
 
     # ── Gerenciador de arquivos: Dolphin (KDE) ──
     # GUI mais completo: split view, abas, terminal embutido, previews. Os pacotes

@@ -19,6 +19,7 @@
     ./theme.nix # dark mode (color-scheme prefer-dark + GTK Adwaita-dark)
     ./xdg.nix # browser default (Zen) via xdg.mimeApps + $BROWSER
     ./dropbox.nix # serviço de sync do usuário (~/Dropbox: Obsidian + docs)
+    ./flameshot.nix # ~/.config/flameshot/flameshot.ini (screenshot; keybind em hypr.nix)
   ];
 
   home.username = "v1cferr";

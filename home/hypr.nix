@@ -77,6 +77,10 @@
     hl.env("QT_QPA_PLATFORMTHEME", "gtk3")
     hl.env("QT_STYLE_OVERRIDE", "adwaita-dark")
 
+    -- Qt roda nativo em Wayland (fallback xcb): o flameshot precisa disso pra
+    -- posicionar o overlay/picker certo; xcb cobre qualquer app Qt sem Wayland.
+    hl.env("QT_QPA_PLATFORM", "wayland;xcb")
+
     -- ── Autostart ────────────────────────────────────────────────────────────
     -- hyprland.start dispara UMA vez no boot da sessão (não em reload) → sobe o
     -- hypridle, que lê ~/.config/hypr/hypridle.conf e apaga os monitores no ocioso.
@@ -147,5 +151,39 @@
     -- mouse: mover / redimensionar janela
     hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
     hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+
+    -- ── Screenshot (Flameshot v13 + grim) ────────────────────────────────────
+    -- Config em home/flameshot.nix. PROBLEMA multi-monitor: o grim captura os dois
+    -- monitores (3840x1080), mas o overlay do editor nasce SÓ no monitor da origem
+    -- (HDMI @ 0,0) → não dava pra selecionar no DP-1 (principal @ 1920,0).
+    -- FIX (o clássico pré-v14): esticar a janela do overlay pelos DOIS monitores —
+    -- float + move 0,0 + size = soma das telas (3840x1080). Aí o overlay cobre tudo
+    -- e a seleção funciona em qualquer tela. opacity/no_blur/no_shadow: o overlay é
+    -- um frame congelado, não pode herdar transparência/blur globais.
+    -- (Tamanho fixo pro arranjo desta máquina: 2x 1080p lado a lado.)
+    --
+    -- match por TÍTULO (não class): no v13/Wayland a janela do overlay tem class
+    -- VAZIA e title exatamente "flameshot" (^...$ pra não casar o VS Code editando
+    -- este arquivo). suppress_event=fullscreen: o overlay nasce fullscreen (cobre 1
+    -- só monitor) — suprimir isso deixa o float+move+size assumirem.
+    hl.window_rule({
+      name  = "flameshot-overlay",
+      match = { title = "^flameshot$" },
+
+      no_anim        = true,
+      float          = true,
+      move           = "0 0",
+      size           = "3840 1080",
+      opacity        = "1.0 override 1.0 override",
+      no_blur        = true,
+      no_shadow      = true,
+      rounding       = 0,
+      suppress_event = "fullscreen",
+    })
+
+    -- Print ou SUPER+SHIFT+S (estilo Windows) → editor do flameshot cobrindo as
+    -- duas telas; seleciona a região onde quiser e salva em ~/Pictures/Screenshots.
+    hl.bind("Print",                   hl.dsp.exec_cmd("flameshot gui"))
+    hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("flameshot gui"))
   '';
 }

@@ -35,4 +35,15 @@
     font.name = "JetBrainsMono Nerd Font";
     font.size = 11;
   };
+
+  # Apps Qt/KDE (Dolphin) NÃO seguem o GTK sozinhos em Hyprland. O caminho
+  # confiável no 26.05 (o "qt6ct + Breeze" está bugado — nixpkgs#489021) é fazer
+  # o Qt SEGUIR o GTK (platformTheme gtk3) + estilo adwaita-dark. Aqui o pacote
+  # do estilo (adwaita-qt) vem junto do módulo — inevitável pra tema Qt, ao
+  # contrário do GTK que já tinha o tema system-wide.
+  qt = {
+    enable = true;
+    platformTheme.name = "gtk3"; # QT_QPA_PLATFORMTHEME=gtk3 → segue o GTK escuro
+    style.name = "adwaita-dark";
+  };
 }

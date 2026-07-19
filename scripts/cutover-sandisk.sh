@@ -7,6 +7,9 @@ HOST="nixos-sandisk"
 DISK="/dev/disk/by-id/ata-SanDisk_SSD_PLUS_1000GB_22520C801629"
 AGE_ITEM="sops-nix age key (dotfiles)"
 
+# minimal ISO não liga nix-command/flakes por padrão → habilita pra todo nix daqui
+export NIX_CONFIG="extra-experimental-features = nix-command flakes"
+
 # segurança: precisa ser o live installer e a SanDisk tem que existir
 command -v nixos-install >/dev/null || { echo "Rode isto do LIVE USB do NixOS."; exit 1; }
 [ -e "$DISK" ] || { echo "ERRO: SanDisk não encontrada ($DISK). Confira o by-id com 'ls /dev/disk/by-id'."; exit 1; }

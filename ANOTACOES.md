@@ -14,6 +14,7 @@
         vendorizar tema Win11 Kvantum (ex.: store.kde.org/p/1554628 "Win11OS-dark")
         em ~/.config/Kvantum + QT_STYLE_OVERRIDE=kvantum. Só estiliza o INTERIOR do
         Dolphin (a moldura é do Hyprland).
+- [ ] Depois que eu estiver no SSD, já configurar o WoW Ascension com o Bottles para jogarmos e eu ir configurando o sistema simultaneamente
 
 Ambos com systemd (ou algo semelhante) e rodando em daemon (background):
 

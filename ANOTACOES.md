@@ -9,6 +9,8 @@
   - <https://wiki.nixos.org/wiki/Flameshot>
 - [ ] Verificar se é possível adicionar estado declarativo criptografado
 - [ ] Adicionar um software para notificações
+- [x] Clipboard (Wayland) — cliphist + wl-clipboard, watcher no autostart do Hyprland
+      e picker no wofi (SUPER+SHIFT+V). Pacotes no system/, config em home/hypr.nix.
 - [x] Dark mode no file manager (Dolphin) — Qt segue o GTK escuro (home/theme.nix)
   - [ ] Tema Windows 11 no file manager — DEPOIS no SSD (cosmético, ajuste visual
         no Kvantum Manager). Caminho: instalar kdePackages.qtstyleplugin-kvantum +

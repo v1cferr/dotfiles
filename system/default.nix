@@ -297,6 +297,9 @@
     # removeWarningPopup: silencia o aviso "Unsupported Environment" (o Bottles upstream
     # só suporta Flatpak/sandbox; no NixOS é FHS-wrapped e funciona — o popup é ruído).
     (bottles.override { removeWarningPopup = true; })
+    # Emulador de PS3 (roda a trilogia Uncharted 1/2/3, que é PS3). Usa Vulkan (NVIDIA
+    # ok). Firmware (PS3UPDAT.PUP da Sony) e jogos são ESTADO — você provê, não declara.
+    rpcs3
 
     # ── Gerenciador de arquivos: Dolphin (KDE) ──
     # GUI mais completo: split view, abas, terminal embutido, previews. Os pacotes

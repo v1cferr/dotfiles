@@ -249,6 +249,8 @@
     htop
     tree # lista a árvore de diretórios no terminal
     openssl # gerar senhas/chaves (rand), TLS, etc.
+    python3 # interpretador Python (rodar scripts; libs por projeto ficam no uv/venv)
+    uv # gerenciador Python rápido (venv/deps/pythons); os pythons dele rodam via nix-ld
     kitty # terminal do Hyprland default (SUPER+Q)
     wofi # launcher do Hyprland default (SUPER+R)
     waybar # barra de status (workspaces + relógio); config em home/waybar.nix

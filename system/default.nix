@@ -249,6 +249,7 @@
     gh # GitHub CLI (auth/push via HTTPS + token)
     vim
     htop
+    btop # monitor de recursos (CPU/mem/disco/rede) com TUI rica; htop turbinado
     tree # lista a árvore de diretórios no terminal
     jq # processa/consulta JSON no terminal (usado no fluxo de segredos c/ bw)
     openssl # gerar senhas/chaves (rand), TLS, etc.

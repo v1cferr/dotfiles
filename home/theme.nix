@@ -7,7 +7,34 @@
 #      (VS Code, Chrome, Spotify, LibreWolf). É o que escurece a maioria.
 #   2. gtk-theme = "Adwaita-dark"    → pros apps GTK3 antigos, que não seguem
 #      o color-scheme sozinhos. O tema é achado via XDG_DATA_DIRS (system/).
-{ ... }:
+{ pkgs, lib, ... }:
+
+let
+  # Vendoriza SÓ a pasta Kvantum do tema Win11OS (yeyushengfan258/Win11OS-kde),
+  # pinada por commit p/ reprodutibilidade. Layout /share/Kvantum/<Tema> = o que
+  # qt.kvantum.themes espera (ele faz stripPrefix "/share/Kvantum"). Exceção à
+  # regra "home/ não instala pacote": é asset de tema consumido só pelo módulo qt
+  # do home-manager (mesmo caso do adwaita-qt, que já vem pelo módulo).
+  win11os-kvantum = pkgs.stdenvNoCC.mkDerivation {
+    pname = "win11os-kvantum";
+    version = "0-unstable-9f021c3";
+    src = pkgs.fetchFromGitHub {
+      owner = "yeyushengfan258";
+      repo = "Win11OS-kde";
+      rev = "9f021c3e71da7baf59a0614ab858d53b1e455fd5";
+      hash = "sha256-R1l0YG+UEfFKPJd/pQJ3aJzWKg1ru0gWasW7zStK1Ig=";
+    };
+    # Só copia arquivos SVG/kvconfig — nada pra configurar/compilar.
+    dontConfigure = true;
+    dontBuild = true;
+    installPhase = ''
+      runHook preInstall
+      mkdir -p "$out/share/Kvantum"
+      cp -r Kvantum/Win11OS-dark "$out/share/Kvantum/"
+      runHook postInstall
+    '';
+  };
+in
 
 {
   # Preferência global de esquema de cor + fonte da UI (dconf → gsettings).
@@ -17,6 +44,7 @@
   dconf.settings."org/gnome/desktop/interface" = {
     color-scheme = "prefer-dark";
     gtk-theme = "Adwaita-dark";
+    icon-theme = "Fluent-dark"; # ícones Windows 11 (fluent-icon-theme, no system/)
     font-name = "JetBrainsMono Nerd Font 11";
     document-font-name = "JetBrainsMono Nerd Font 11";
     monospace-font-name = "JetBrainsMono Nerd Font 11";
@@ -32,18 +60,36 @@
   gtk = {
     enable = true;
     theme.name = "Adwaita-dark";
+    iconTheme.name = "Fluent-dark"; # ícones Windows 11 nos apps GTK (pacote no system/)
     font.name = "JetBrainsMono Nerd Font";
     font.size = 11;
   };
 
-  # Apps Qt/KDE (Dolphin) NÃO seguem o GTK sozinhos em Hyprland. O caminho
-  # confiável no 26.05 (o "qt6ct + Breeze" está bugado — nixpkgs#489021) é fazer
-  # o Qt SEGUIR o GTK (platformTheme gtk3) + estilo adwaita-dark. Aqui o pacote
-  # do estilo (adwaita-qt) vem junto do módulo — inevitável pra tema Qt, ao
-  # contrário do GTK que já tinha o tema system-wide.
+  # Apps Qt/KDE (Dolphin) NÃO seguem o GTK sozinhos em Hyprland. Antes seguíamos o
+  # GTK (platformTheme gtk3 + adwaita-dark); agora o Qt é 100% Kvantum p/ o tema
+  # Windows 11 no Dolphin. O Kvantum passa a mandar em TUDO no Qt (paleta + widgets),
+  # então largamos o gtk3-follow aqui — os apps GTK/Electron seguem inalterados
+  # (color-scheme prefer-dark acima). O plugin da engine (qtstyleplugin-kvantum)
+  # vem pelo próprio módulo qt (via platformTheme/style) — mesma exceção do adwaita-qt.
   qt = {
     enable = true;
-    platformTheme.name = "gtk3"; # QT_QPA_PLATFORMTHEME=gtk3 → segue o GTK escuro
-    style.name = "adwaita-dark";
+    platformTheme.name = "kvantum"; # QT_QPA_PLATFORMTHEME=kvantum → Kvantum define a paleta
+    style.name = "kvantum"; # QT_STYLE_OVERRIDE=kvantum → Kvantum desenha os widgets
   };
+
+  # Seleciona o tema Windows 11 (dark) e o instala em ~/.config/Kvantum. O módulo
+  # escreve ~/.config/Kvantum/kvantum.kvconfig apontando pro Win11OS-dark.
+  qt.kvantum = {
+    enable = true;
+    themes = [ win11os-kvantum ]; # copia p/ ~/.config/Kvantum/Win11OS-dark/
+    settings.General.theme = "Win11OS-dark";
+  };
+
+  # Ícones do Dolphin (e demais apps KDE): o Kvantum NÃO define ícones — os apps
+  # KDE leem o tema do kdeglobals [Icons] Theme. Como o KDE reescreve esse arquivo
+  # em runtime, forço SÓ essa chave (idempotente), como no home/dolphin.nix.
+  home.activation.kdeIconTheme = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    kw="${pkgs.kdePackages.kconfig}/bin/kwriteconfig6"
+    run "$kw" --file "$HOME/.config/kdeglobals" --group Icons --key Theme Fluent-dark
+  '';
 }

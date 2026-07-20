@@ -195,5 +195,14 @@
     -- duas telas; seleciona a região onde quiser e salva em ~/Pictures/Screenshots.
     hl.bind("Print",                   hl.dsp.exec_cmd("flameshot gui"))
     hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("flameshot gui"))
+
+    -- ── Filtro de luz azul (hyprsunset) ──────────────────────────────────────
+    -- O serviço (home/hyprsunset.nix) já troca a temperatura por horário sozinho;
+    -- estes binds são override MANUAL pontual via IPC (`hyprctl hyprsunset`) — valem
+    -- até o próximo perfil do schedule assumir. F9 liga/desliga o serviço inteiro.
+    hl.bind(mainMod .. " + F9",         hl.dsp.exec_cmd("systemctl --user is-active --quiet hyprsunset && systemctl --user stop hyprsunset || systemctl --user start hyprsunset")) -- toggle serviço
+    hl.bind(mainMod .. " + SHIFT + F9", hl.dsp.exec_cmd("hyprctl hyprsunset identity"))         -- filtro OFF (cores naturais)
+    hl.bind(mainMod .. " + CTRL + F9",  hl.dsp.exec_cmd("hyprctl hyprsunset temperature 3000")) -- noite (quente)
+    hl.bind(mainMod .. " + ALT + F9",   hl.dsp.exec_cmd("hyprctl hyprsunset temperature 2000")) -- madrugada (muito quente)
   '';
 }

@@ -50,3 +50,10 @@
       via shadPS4 (experimental). Firmware+jogos = estado (você provê). Controle Machenike
       G5 Pro: kernel 6.18 tem o driver xpad (nativo desde 6.10) + Bluetooth já ligado →
       só parear (runtime, bluetoothctl) e usar em modo Xbox/Xinput. Tudo declarativo possível feito.
+
+## Outros
+
+- [x] Filtro de luz azul — hyprsunset (nativo do Hyprland, CTM: não sai em
+      screenshot/gravação). Serviço systemd --user + perfis por horário em
+      home/hyprsunset.nix; overrides manuais no F9 (home/hypr.nix). Schedule
+      herdado dos dotfiles do Arch.

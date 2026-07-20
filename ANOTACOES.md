@@ -2,6 +2,7 @@
 
 > 1. Sempre pesquisar as boas práticas e o que a comunidade do NixOS está usando mais para cada pacote/software (para ter uma referência e sugestões)
 > 2. Nas arquivos de configurações `.nix`, `.lua`, `.conf` e etc. Adicionar apenas uma linha de comentário `# exemplo` (resumo) para cada config logo acima para resumir o que exatamente aquela linha faz (para não poluir os arquivos de configurações de comentários)
+> 3. Sempre declarativo e não "manual" (para funcionar em qualquer hardware posteriormente)
 
 - [x] Instalar o flameshot — v13 estável + enableWlrSupport (grim). O v14 só
       captura via portal (não funciona neste Hyprland); o v13 usa grim direto
@@ -23,11 +24,15 @@
 
 ## Temas (Tokyo Night e etc)
 
-- [ ] Tema Windows 11 no file manager — DEPOIS no SSD (cosmético, ajuste visual
-      no Kvantum Manager). Caminho: instalar kdePackages.qtstyleplugin-kvantum +
-      vendorizar tema Win11 Kvantum (ex.: store.kde.org/p/1554628 "Win11OS-dark")
-      em ~/.config/Kvantum + QT_STYLE_OVERRIDE=kvantum. Só estiliza o INTERIOR do
-      Dolphin (a moldura é do Hyprland).
+- [x] Tema Windows 11 no file manager — Kvantum + tema Win11OS-dark, tudo
+      declarativo (home/theme.nix). O Qt deixou de seguir o GTK e passou a ser
+      100% Kvantum (platformTheme+style = kvantum; a engine qtstyleplugin-kvantum
+      vem pelo módulo qt). O tema é vendorizado por commit (fetchFromGitHub de
+      yeyushengfan258/Win11OS-kde, só a pasta Kvantum) e instalado via
+      qt.kvantum.themes → ~/.config/Kvantum. Só estiliza o INTERIOR do Dolphin
+      (a moldura é do Hyprland). Ícones estilo Windows 11: fluent-icon-theme
+      (Fluent-dark, no system/); no Dolphin/KDE via kdeglobals [Icons] Theme
+      (activation em theme.nix), nos apps GTK via gtk.iconTheme + dconf.
 
 ## Serviços Docker e etc
 

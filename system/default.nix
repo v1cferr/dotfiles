@@ -13,6 +13,7 @@
     ./media/jellyfin.nix # servidor de mídia Jellyfin (nativo, systemd, biblioteca em /srv/media)
     ./media/qbittorrent.nix # cliente de download (Web UI 8080; grava em /srv/media/torrents)
     ./ai/ollama.nix # runtime de IA local (CUDA); solver do duo-streak-daemon
+    ./ai/duo.nix # stack do duo-streak-daemon (compose declarativo; auto-ativa com o segredo)
   ];
 
   # ── Segredos (sops-nix) ───────────────────────────────────────────────────

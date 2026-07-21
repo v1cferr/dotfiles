@@ -21,11 +21,15 @@ SOPS_AGE_KEY="$(sudo cat /var/lib/sops-nix/key.txt)"
 export SOPS_AGE_KEY
 
 n=0
-while IFS=$'\t' read -r key item; do
+while IFS=$'\t' read -r key spec; do
   [ -z "$key" ] && continue
-  val="$(bw get password "$item")"
+  # spec = "Item" (campo padrão: password) OU "Item:campo" (ex.: "duolingo.com:username")
+  item="${spec%%:*}"
+  field="password"
+  case "$spec" in *:*) field="${spec##*:}" ;; esac
+  val="$(bw get "$field" "$item")"
   sops set "$yaml" "[\"$key\"]" "\"$val\""
-  echo "  ok  $key  <-  Bitwarden: \"$item\""
+  echo "  ok  $key  <-  Bitwarden: \"$item\" ($field)"
   n=$((n + 1))
 done < <(jq -r 'to_entries[] | "\(.key)\t\(.value)"' "$map")
 

@@ -39,8 +39,16 @@
 > Ambos com systemd (ou algo semelhante) e rodando em daemon (background)
 
 - [ ] Adicionar o servidor de Midia (Jellyfin) com linguagem Nix
-- [ ] Adicionar o duolingo rodando para fazer automaticamente com Nix
-  - [ ] Instalar Ollama ou outro recomendando para rodar modelos de IA localmente
+- [x] Adicionar o duolingo rodando para fazer automaticamente com Nix — stack
+      duo-streak-daemon (daemon Playwright + api + web + Postgres) via docker
+      compose gerenciado por systemd (system/ai/duo.nix). Código = flake input
+      privado (git+ssh, fixo no flake.lock); segredos via sops (template duo.env);
+      login por SESSÃO salva (duo-login 1x — o headless cai no anti-bot do Duolingo).
+      Ofensiva mantida sozinha 1x/dia (catch-up). Helpers: duo-login, duo-run-once.
+  - [x] Instalar Ollama ou outro recomendando para rodar modelos de IA localmente
+        — Ollama NATIVO com CUDA (system/ai/ollama.nix, pkgs.ollama-cuda na RTX 3050).
+        qwen3:4b (solver texto) + bge-m3 (embeddings) via loadModels. É o solver
+        local do duo-streak-daemon (localhost:11434), sem cota nem nuvem.
 
 ## Pacotes e softwares
 
@@ -55,6 +63,11 @@
       via shadPS4 (experimental). Firmware+jogos = estado (você provê). Controle Machenike
       G5 Pro: kernel 6.18 tem o driver xpad (nativo desde 6.10) + Bluetooth já ligado →
       só parear (runtime, bluetoothctl) e usar em modo Xbox/Xinput. Tudo declarativo possível feito.
+
+## Segurança, Privacidade e Economia de Energia
+
+- [ ] Lockscreen & AFK/Idle mode
+- [ ] Desligar todos os leds de todos os hardwares no modo AFK
 
 ## Outros
 

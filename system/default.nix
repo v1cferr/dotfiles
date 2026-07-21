@@ -12,6 +12,7 @@
     ./secrets.nix # gera sops.secrets do Bitwarden + comando sync-secrets
     ./media/jellyfin.nix # servidor de mídia Jellyfin (nativo, systemd, biblioteca em /srv/media)
     ./media/qbittorrent.nix # cliente de download (Web UI 8080; grava em /srv/media/torrents)
+    ./ai/ollama.nix # runtime de IA local (CUDA); solver do duo-streak-daemon
   ];
 
   # ── Segredos (sops-nix) ───────────────────────────────────────────────────

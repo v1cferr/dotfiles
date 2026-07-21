@@ -288,6 +288,7 @@
     unzip
     qbittorrent # app GUI de torrent (janela, uso manual) — separado do serviço headless (media/qbittorrent.nix)
     vlc # media player (GUI completa; toca praticamente tudo out-of-the-box)
+    obsidian # notas em Markdown (cofre local; unfree — ok pelo allowUnfree acima)
 
     # ── Gerenciador de senhas: Bitwarden ──
     # desktop trava no Electron 39 EOL (liberado em permittedInsecurePackages

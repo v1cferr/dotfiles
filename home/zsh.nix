@@ -27,8 +27,7 @@
       rebuild = "sudo nixos-rebuild switch --flake ~/Projects/GitHub/v1cferr/dotfiles";
       update = "nix flake update --flake ~/Projects/GitHub/v1cferr/dotfiles"; # bump do flake.lock
       gc = "sudo nix-collect-garbage -d"; # limpa gerações antigas da store manualmente
-      ll = "ls -lah"; # listagem detalhada + arquivos ocultos + tamanhos legíveis
-      la = "ls -A"; # lista tudo (menos . e ..)
+      # ls/ll/la/lt (eza) e cat (bat) vivem em home/cli.nix, junto do toolkit CLI
       ".." = "cd ..";
       "..." = "cd ../..";
     };

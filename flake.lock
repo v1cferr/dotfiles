@@ -20,6 +20,22 @@
         "type": "github"
       }
     },
+    "duo-streak-daemon": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1783467334,
+        "narHash": "sha256-gmPLSChzxStQ+zv3aSCzbEdxdfxWQMXU2j2YfYRG6MA=",
+        "ref": "refs/heads/main",
+        "rev": "d70c947ed593e8f3352bea64fee374ea29b0f156",
+        "revCount": 45,
+        "type": "git",
+        "url": "ssh://git@github.com/v1cferr/duo-streak-daemon.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://git@github.com/v1cferr/duo-streak-daemon.git"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -76,6 +92,7 @@
     "root": {
       "inputs": {
         "disko": "disko",
+        "duo-streak-daemon": "duo-streak-daemon",
         "home-manager": "home-manager",
         "nixpkgs": "nixpkgs",
         "nixpkgs-unstable": "nixpkgs-unstable",

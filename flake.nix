@@ -36,6 +36,18 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager"; # dedup: evita home-manager_2 no lock
     };
+
+    # duo-streak-daemon — o app (daemon Playwright + API + web + Docker) mora no
+    # SEU repo. Aqui é só DEPLOY: fixamos o commit no flake.lock (bump com
+    # `nix flake update duo-streak-daemon`) e o docker-compose builda do store-path.
+    # flake = false: é um repo de código comum, não expõe outputs Nix.
+    duo-streak-daemon = {
+      # Repo PRIVADO → git+ssh (reusa a chave SSH; sem token no sops). O `nix flake
+      # lock`/update roda como USUÁRIO (tem a chave) e popula a store; o rebuild
+      # como root reusa o store-path já fixado, sem re-fetch.
+      url = "git+ssh://git@github.com/v1cferr/duo-streak-daemon.git";
+      flake = false;
+    };
   };
 
   outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, disko, sops-nix, ... }@inputs:

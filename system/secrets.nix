@@ -24,8 +24,19 @@ let
   };
 in
 {
-  # Gera um sops.secrets.<nome> = {} pra cada entrada do índice (fonte: Bitwarden).
-  sops.secrets = lib.mapAttrs (_key: _item: { }) bwMap;
+  # ── Base do sops-nix ───────────────────────────────────────────────────────
+  # secrets/secrets.yaml: cifrado, versionado, ilegível sem a chave. Decriptado em
+  # runtime pra /run/secrets*. A chave age (/var/lib/sops-nix/key.txt) fica FORA do
+  # git — é o que se leva no cutover. Editar: nix shell nixpkgs#sops -c sops secrets/secrets.yaml
+  sops.defaultSopsFile = ../secrets/secrets.yaml;
+  sops.age.keyFile = "/var/lib/sops-nix/key.txt";
+
+  # Gera um sops.secrets.<nome> = {} pra cada entrada do índice (Bitwarden), e
+  # mescla (//) os segredos que NÃO vêm do Bitwarden (declarados à mão).
+  sops.secrets = (lib.mapAttrs (_key: _item: { }) bwMap) // {
+    v1cferr_password_hash.neededForUsers = true; # hash da senha: precisa cedo (usuário)
+    cloudflare_ddns_token = { };
+  };
 
   environment.systemPackages = [ sync-secrets ];
 }

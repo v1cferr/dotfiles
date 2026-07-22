@@ -48,6 +48,14 @@
       url = "git+ssh://git@github.com/v1cferr/duo-streak-daemon.git";
       flake = false;
     };
+
+    # Tema do GRUB estilo "seleção de mundo" do Minecraft (pro dualboot Arch/NixOS/
+    # Windows). SÓ tem efeito quando system/boot.nix flipar `useGrub = true` (em
+    # casa); enquanto false, o input fica travado no lock mas inerte.
+    minegrub-world-sel-theme = {
+      url = "github:Lxtharia/minegrub-world-sel-theme";
+      inputs.nixpkgs.follows = "nixpkgs"; # dedup: não puxa um 2º nixpkgs pro lock
+    };
   };
 
   outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, disko, sops-nix, ... }@inputs:

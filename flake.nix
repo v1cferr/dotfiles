@@ -1,5 +1,5 @@
 {
-  description = "Sistema declarativo do v1cferr — NixOS (nixos-seagate) + home-manager unificados";
+  description = "Sistema declarativo do v1cferr — NixOS (nixos-sandisk) + home-manager unificados";
 
   inputs = {
     # BASE do sistema: canal ESTÁVEL (release, tipo Debian/Ubuntu, ~6 meses).
@@ -91,12 +91,10 @@
     in
     {
       nixosConfigurations = {
-        # Instalação ATUAL (HDD Seagate)
-        nixos-seagate = mkHost ./hosts/nixos-seagate.nix;
-        # ALVO ATIVO do cutover (SSD SanDisk, SATA) — preserva o Arch no Kingston
+        # Instalação ATUAL — SSD SanDisk (SATA), MOBO ASUS EX-B560M-V5. Disco
+        # declarativo via disko. Novo host? hosts/<host>/ + uma linha aqui.
+        #   sudo nixos-rebuild switch --flake .#nixos-sandisk
         nixos-sandisk = mkHost ./hosts/nixos-sandisk.nix;
-        # Alternativa dormente (SSD Kingston, NVMe) — apagaria o Arch; não é o plano
-        ex-b560m-v5 = mkHost ./hosts/ex-b560m-v5.nix;
       };
     };
 }

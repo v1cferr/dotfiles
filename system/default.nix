@@ -9,7 +9,7 @@
 {
   imports = [
     ./core.nix # Nix/flakes, nixpkgs (unfree/inseguros), nix-ld, locale/idioma
-    ./boot.nix # bootloader UEFI (systemd-boot)
+    ./boot.nix # bootloader UEFI (systemd-boot). GRUB+minegrub pré-configurado em boot-grub.nix — trocar aqui EM CASA
     ./network.nix # NetworkManager, SSH exposto, fail2ban, DNS dinâmico, no-sleep
     ./hardware.nix # CPU/microcode, firmware, zram, GPU NVIDIA, Bluetooth, udisks2
     ./audio.nix # PipeWire + rtkit

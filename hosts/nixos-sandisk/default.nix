@@ -6,7 +6,7 @@
 
 {
   imports = [
-    ./nixos-sandisk-disko.nix # disko gera os fileSystems da SanDisk
+    ./disko.nix # disko gera os fileSystems da SanDisk
     (modulesPath + "/installer/scan/not-detected.nix")
   ];
 

@@ -20,7 +20,7 @@ let
   sync-secrets = pkgs.writeShellApplication {
     name = "sync-secrets";
     runtimeInputs = with pkgs; [ bitwarden-cli jq sops git ];
-    text = builtins.readFile ./sync-secrets.sh; # bash à parte = shellcheck no build
+    text = builtins.readFile ../scripts/sync-secrets.sh; # bash à parte = shellcheck no build
   };
 in
 {

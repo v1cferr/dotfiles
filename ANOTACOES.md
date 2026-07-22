@@ -75,3 +75,12 @@
       screenshot/gravação). Serviço systemd --user + perfis por horário em
       home/hyprsunset.nix; overrides manuais no F9 (home/hypr.nix). Schedule
       herdado dos dotfiles do Arch.
+
+## Media
+
+> Adicionar todos como padrão
+
+- [ ] Instalar um Image Viewer (Para renderizar todo tipo de imagem)
+- [ ] PDF Viewer
+- [ ] Video Media Player
+- [ ] Organizar a resolução dos dois monitores e adicionar uma adaptação par a quando o monitor secundário não estiver conectado

@@ -94,7 +94,7 @@
         # Instalação ATUAL — SSD SanDisk (SATA), MOBO ASUS EX-B560M-V5. Disco
         # declarativo via disko. Novo host? hosts/<host>/ + uma linha aqui.
         #   sudo nixos-rebuild switch --flake .#nixos-sandisk
-        nixos-sandisk = mkHost ./hosts/nixos-sandisk.nix;
+        nixos-sandisk = mkHost ./hosts/nixos-sandisk;
       };
     };
 }

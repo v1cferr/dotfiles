@@ -16,6 +16,7 @@
     gh # GitHub CLI (auth/push via HTTPS + token)
     vim
     htop
+    dmidecode
     btop # monitor de recursos (CPU/mem/disco/rede) com TUI rica; htop turbinado
     tree # lista a árvore de diretórios no terminal
     jq # processa/consulta JSON no terminal (usado no fluxo de segredos c/ bw)
@@ -80,6 +81,19 @@
     kdePackages.kio-extras
     kdePackages.kdegraphics-thumbnailers
     kdePackages.ffmpegthumbs
+
+    # ── GPU: diagnóstico & estresse (Arc B580) ──
+    # Grupo p/ medir/estressar a placa. Dá pra enxugar depois de validar (o unigine
+    # é pesado). Monitores (nvtop/intel-gpu-tools) valem manter; benches são one-off.
+    nvtopPackages.intel # monitor de GPU ao vivo (util/clock/VRAM/temp) — Intel
+    intel-gpu-tools # intel_gpu_top — engines/freq do driver Intel
+    vulkan-tools # vulkaninfo/vkcube — confere a stack Vulkan
+    mesa-demos # glxgears/glxinfo — sanity check OpenGL
+    glmark2 # benchmark OpenGL
+    vkmark # benchmark Vulkan (mostra bem a Battlemage)
+    unigine-heaven # estresse/bench clássico em loop — unfree (ok)
+    unigine-superposition # estresse/bench moderno e pesado — unfree (ok)
+    clpeak # benchmark de compute OpenCL
 
     # ── bleeding-edge (escolhidos a dedo) ──
     unstable.fastfetch

@@ -12,39 +12,20 @@
 { ... }:
 
 {
-  # ── Ociosidade: apaga os monitores após 5 min (hypridle) ───────────────────
-  # hypridle (pacote no system/) escuta o tempo ocioso do Hyprland. O único
-  # listener apaga AMBOS os monitores via DPMS (hyprctl dispatch dpms off pega
-  # todas as saídas de uma vez) e religa ao mexer mouse/teclado. NÃO suspende —
-  # coerente com o systemd.targets.sleep desligado no system/ (desktop remoto).
-  # Monitor externo não tem backlight controlável por software, então "escurecer"
-  # aqui = apagar (standby), não reduzir brilho.
-  #
-  # Formato hyprlang (.conf), NÃO Lua: a lua-ificação do 0.55 é só do COMPOSITOR
-  # (hyprland.lua). Os satélites (hypridle/hyprlock/hyprpaper) ainda são .conf —
-  # cada daemon migra no seu tempo; não existe hypridle.lua hoje. O único pedaço
-  # que é do compositor — subir o daemon — vai em Lua no autostart mais abaixo.
-  xdg.configFile."hypr/hypridle.conf".text = ''
-    general {
-      ignore_dbus_inhibit = false
-    }
-
-    listener {
-      timeout    = 300                        # 5 min ocioso
-      on-timeout = hyprctl dispatch dpms off  # apaga os dois monitores
-      on-resume  = hyprctl dispatch dpms on   # religa ao voltar
-    }
-  '';
-
+  # Ociosidade (dim aos 3 min + lock aos 5 min) e a tela de bloqueio moram em
+  # home/lockscreen.nix — hypridle/hyprlock via módulo (serviço systemd --user),
+  # não mais .conf na mão. O SUPER+L (lock manual) está nos keybinds abaixo.
   xdg.configFile."hypr/hyprland.lua".text = ''
     -- ── Monitores ────────────────────────────────────────────────────────────
     -- Nomes de conector confirmados via `hyprctl monitors` (Wayland/NVIDIA):
-    --   DP-1     = LG ULTRAGEAR (1080p 144Hz) → à direita (em 1920x0), principal
-    --   HDMI-A-1 = TV LG (Full HD; a EDID default reporta 1366x768) → à esquerda
-    -- Campos: mode "LARGxALT@hz" (143.98 é o modo exato do LG), position "XxY".
-    hl.monitor({ output = "DP-1",     mode = "1920x1080@143.98", position = "1920x0", scale = 1 })
-    hl.monitor({ output = "HDMI-A-1", mode = "1920x1080@60",     position = "0x0",    scale = 1 })
-    hl.monitor({ output = "",         mode = "preferred",        position = "auto",   scale = "auto" })
+    --   DP-1     = LG ULTRAGEAR (1080p 144Hz) → PRINCIPAL, na origem 0x0
+    --   HDMI-A-1 = TV LG → à esquerda (x negativo); painel nativo 1366x768 ("HD",
+    --              não Full HD) — 1080p aqui só faz downscale/borra, então nativo.
+    -- Adaptação p/ TV desconectada: com o principal em 0x0, o LG segue sozinho sem
+    -- offset fantasma; as workspaces 5–8 recaem nele automaticamente.
+    hl.monitor({ output = "DP-1",     mode = "1920x1080@143.98", position = "0x0",     scale = 1 })
+    hl.monitor({ output = "HDMI-A-1", mode = "1366x768@59.79",   position = "-1366x0", scale = 1 })
+    hl.monitor({ output = "",         mode = "preferred",        position = "auto",    scale = "auto" })
 
     -- 4 workspaces por monitor: 1–4 no LG (DP-1, principal), 5–8 na TV (HDMI-A-1).
     -- default:true = a workspace que abre em cada monitor no boot da sessão.
@@ -82,10 +63,9 @@
     hl.env("QT_QPA_PLATFORM", "wayland;xcb")
 
     -- ── Autostart ────────────────────────────────────────────────────────────
-    -- hyprland.start dispara UMA vez no boot da sessão (não em reload) → sobe o
-    -- hypridle, que lê ~/.config/hypr/hypridle.conf e apaga os monitores no ocioso.
+    -- hyprland.start dispara UMA vez no boot da sessão (não em reload). O hypridle
+    -- NÃO entra aqui: sobe como serviço systemd --user (home/lockscreen.nix).
     hl.on("hyprland.start", function()
-      hl.exec_cmd("hypridle")
       hl.exec_cmd("waybar")
       -- watcher do clipboard: escuta cada cópia e grava no histórico do cliphist.
       -- Sem isto o cliphist fica vazio (é o daemon que popula o banco).
@@ -137,6 +117,9 @@
     hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))                  -- launcher
     hl.bind(mainMod .. " + C", hl.dsp.window.close())                 -- fechar
     hl.bind(mainMod .. " + M", hl.dsp.exit())                         -- sair do Hyprland
+    -- lock manual: chama o hyprlock direto (robusto mesmo se o hypridle não rodar);
+    -- `pidof ... ||` evita subir um 2º lock por cima. Idle/sleep trancam via hypridle.
+    hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("pidof hyprlock || hyprlock"))  -- travar tela
     hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
     -- clipboard: abre o histórico do cliphist no wofi; a escolha volta pro clipboard.
     -- (roda via sh -c do exec → o pipe funciona; cole normal com Ctrl+V depois)

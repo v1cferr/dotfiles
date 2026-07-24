@@ -32,5 +32,8 @@
   # ── Local / idioma ─────────────────────────────────────────────────────────
   time.timeZone = "America/Sao_Paulo";
   i18n.defaultLocale = "en_US.UTF-8";
+  # Gera também pt_BR (UI segue em inglês): o relógio do lockscreen usa LC_TIME
+  # pt_BR pra data por extenso ("Quarta-feira, 23 de julho…"). Sem isto cai no C.
+  i18n.supportedLocales = [ "en_US.UTF-8/UTF-8" "pt_BR.UTF-8/UTF-8" ];
   console.keyMap = "br-abnt2"; # teclado no TTY (a GUI é no desktop.nix)
 }

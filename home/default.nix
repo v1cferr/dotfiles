@@ -29,6 +29,7 @@
     ./dolphin.nix # Dolphin: view mode sempre "Detalhes" (via activation)
     ./flameshot.nix # ~/.config/flameshot/flameshot.ini (screenshot; keybind em hypr.nix)
     ./media.nix # visualizadores (Gwenview/Okular) + players (VLC/mpv) + apps padrão
+    ./notifications.nix # mako (daemon de notificação Wayland; OSD de brilho + notify-send)
   ];
 
   home.username = "v1cferr";

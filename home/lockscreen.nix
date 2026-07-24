@@ -16,15 +16,15 @@
 # sem ele o hyprlock não autentica e TRANCA você pra fora. Locale pt_BR
 # (system/core.nix) é p/ a data por extenso do relógio.
 #
-# APRENDIZADOS DE HARDWARE (mesma NVIDIA do Arch), NÃO mexer:
+# APRENDIZADOS DE HARDWARE (duráveis, independem da GPU), NÃO mexer:
 #   1. Wallpaper ESTÁTICO, nunca `path = screenshot`: o screencopy/DMA segfalha o
 #      hyprlock ao acordar do idle (frame DMA destruído no exit → lockout).
 #   2. Nada de GIF/reload contínuo: o gatherer assíncrono corre com o exit() e
 #      corrompe a heap (SIGABRT no unlock).
-#   3. dpms: no Arch (driver antigo) o `dpms on` sob lock CONGELAVA o page-flip
-#      atomic desta NVIDIA (só reboot). Aqui optamos pelo dpms nativo p/ testar no
-#      kernel/driver novos — se voltar a congelar, o fallback é dim por gamma do
-#      hyprsunset (ver histórico git deste arquivo). TESTAR com um TTY aberto.
+#   3. dpms: usamos o `dpms off/on` NATIVO do hypridle. Histórico: na antiga NVIDIA
+#      (Arch, driver velho) o `dpms on` sob lock CONGELAVA o page-flip atomic (só
+#      reboot); na Arc B580 (xe) não reproduz. Se algum dia congelar, o fallback é
+#      dim por gamma do hyprsunset (ver histórico git). TESTAR com um TTY aberto.
 # Ref: https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/
 { config, pkgs, ... }:
 

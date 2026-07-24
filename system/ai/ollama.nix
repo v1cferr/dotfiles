@@ -1,6 +1,8 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# Ollama — runtime de modelos de IA LOCAIS (systemd, sobe no boot), acelerado
-# por GPU (CUDA, RTX 3050 Ampere).
+# Ollama — runtime de modelos de IA LOCAIS (systemd, sobe no boot). Roda em CPU
+# (i5-11400): a Arc B580 não tem aceleração Ollama simples no nixpkgs ainda
+# (dependeria de SYCL/oneAPI ou ipex-llm) — explorar depois. O qwen3:4b (~2.6 GB)
+# roda tranquilo em CPU, só mais devagar.
 #
 # É o "cérebro" (solver) do duo-streak-daemon: o daemon extrai o exercício do DOM
 # e o Ollama decide a resposta — 100% local, sem cota, sem enviar dados a terceiros.
@@ -12,14 +14,14 @@
 # ollama-model-loader (systemd) faz o pull na ativação e é idempotente (pula se
 # já existe). Teste: `ollama run qwen3:4b`.
 # ═══════════════════════════════════════════════════════════════════════════
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 
 {
   services.ollama = {
     enable = true;
-    # Segue a GPU (system/gpu.nix): CUDA na NVIDIA (RTX 3050); CPU no perfil Intel
-    # Arc (Ollama ainda não tem GPU Intel simples no nixpkgs). B580 → explorar depois.
-    package = if config.my.gpu == "nvidia" then pkgs.ollama-cuda else pkgs.ollama;
+    # CPU-only: `pkgs.ollama` puro (sem CUDA/ROCm). Aceleração na Arc B580 fica
+    # pra depois (ver cabeçalho) — hoje o solver roda na CPU.
+    package = pkgs.ollama;
     # Escuta só em 127.0.0.1:11434 (padrão) — os containers do duo (network_mode:
     # host) alcançam localhost sem expor o Ollama na LAN.
     # qwen3:4b = solver texto-primeiro (não precisa de visão); bge-m3 = embeddings

@@ -17,7 +17,7 @@
   # não mais .conf na mão. O SUPER+L (lock manual) está nos keybinds abaixo.
   xdg.configFile."hypr/hyprland.lua".text = ''
     -- ── Monitores ────────────────────────────────────────────────────────────
-    -- Nomes de conector confirmados via `hyprctl monitors` (Wayland/NVIDIA):
+    -- Nomes de conector confirmados via `hyprctl monitors` (Wayland/Arc):
     --   DP-1     = LG ULTRAGEAR (1080p 144Hz) → PRINCIPAL, na origem 0x0
     --   HDMI-A-1 = TV LG → à esquerda (x negativo); painel nativo 1366x768 ("HD",
     --              não Full HD) — 1080p aqui só faz downscale/borra, então nativo.

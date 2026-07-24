@@ -46,9 +46,10 @@
       login por SESSÃO salva (duo-login 1x — o headless cai no anti-bot do Duolingo).
       Ofensiva mantida sozinha 1x/dia (catch-up). Helpers: duo-login, duo-run-once.
   - [x] Instalar Ollama ou outro recomendando para rodar modelos de IA localmente
-        — Ollama NATIVO (system/ai/ollama.nix) segue a my.gpu: CUDA na RTX 3050, CPU no Intel Arc.
-        qwen3:4b (solver texto) + bge-m3 (embeddings) via loadModels. É o solver
-        local do duo-streak-daemon (localhost:11434), sem cota nem nuvem.
+        — Ollama NATIVO (system/ai/ollama.nix) roda em CPU (i5-11400; aceleração na
+        Arc B580 = explorar depois). qwen3:4b (solver texto) + bge-m3 (embeddings)
+        via loadModels. É o solver local do duo-streak-daemon (localhost:11434),
+        sem cota nem nuvem.
 
 ## Pacotes e softwares
 
@@ -95,17 +96,12 @@
       antigo congelava; fallback = gamma, no histórico git). PAM em
       system/desktop.nix (sem ele não desbloqueia); locale pt_BR em system/core.nix.
       SUPER+L tranca na hora. Notifs ficou de fora (depende do Quickshell).
-- [ ] Trocar a RTX 3050 → Intel Arc B580 (Battlemage) — TERRENO PRONTO, plug-and-go
-      (system/gpu.nix). `my.gpu` DEFAULT = "intel" (Arc: xe + Mesa, VA-API iHD) → o
-      boot padrão já dá vídeo na Arc, SEM menu. NVIDIA vira só a specialisation
-      "nvidia" (resgate). Battlemage OK no kernel 6.18/Mesa 25.x (>= 6.12/24.3).
-      ANTES de sair (RTX ainda na máquina): `sudo nixos-rebuild BOOT` (NÃO switch —
-      boot só agenda o próximo boot, não derruba a sessão nvidia atual). Dia da troca:
-      desligar → trocar placa (monitores no DP/HDMI da Arc) → ligar → vídeo direto.
-      Confirmar: `fastfetch` + `vainfo`. FALLBACK se não der vídeo: recolocar a RTX +
-      escolher a entrada "nvidia" no menu (ou geração anterior), ou SSH de fora.
-      Depois de validar: remover TUDO de nvidia + o switch (Intel puro). Ollama já
-      cai p/ CPU no Intel (GPU Intel no Ollama = explorar depois).
+- [x] Trocar a RTX 3050 → Intel Arc B580 (Battlemage) — FEITO. Arc validada (`xe`
+      carregado, fastfetch/vainfo OK) e NVIDIA REMOVIDA de vez: system/gpu.nix agora
+      é Intel puro (xe + Mesa, VA-API iHD), sem `my.gpu`, sem specialisation, sem CUDA.
+      Battlemage OK no kernel 6.18/Mesa 25.x. Ollama caiu p/ CPU (system/ai/ollama.nix;
+      GPU Intel no Ollama = explorar depois). Pra ressuscitar a NVIDIA: histórico git
+      do gpu.nix.
 
 ## Media
 

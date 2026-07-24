@@ -12,12 +12,14 @@
 # ollama-model-loader (systemd) faz o pull na ativação e é idempotente (pula se
 # já existe). Teste: `ollama run qwen3:4b`.
 # ═══════════════════════════════════════════════════════════════════════════
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 {
   services.ollama = {
     enable = true;
-    package = pkgs.ollama-cuda; # build com CUDA → usa a NVIDIA (RTX 3050) em vez da CPU
+    # Segue a GPU (system/gpu.nix): CUDA na NVIDIA (RTX 3050); CPU no perfil Intel
+    # Arc (Ollama ainda não tem GPU Intel simples no nixpkgs). B580 → explorar depois.
+    package = if config.my.gpu == "nvidia" then pkgs.ollama-cuda else pkgs.ollama;
     # Escuta só em 127.0.0.1:11434 (padrão) — os containers do duo (network_mode:
     # host) alcançam localhost sem expor o Ollama na LAN.
     # qwen3:4b = solver texto-primeiro (não precisa de visão); bge-m3 = embeddings

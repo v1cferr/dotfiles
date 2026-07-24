@@ -11,7 +11,8 @@
     ./core.nix # Nix/flakes, nixpkgs (unfree/inseguros), nix-ld, locale/idioma
     ./boot.nix # bootloader UEFI (systemd-boot). GRUB+minegrub pré-configurado em boot-grub.nix — trocar aqui EM CASA
     ./network.nix # NetworkManager, SSH exposto, fail2ban, DNS dinâmico, no-sleep
-    ./hardware.nix # CPU/microcode, firmware, zram, GPU NVIDIA, Bluetooth, udisks2
+    ./hardware.nix # CPU/microcode, firmware, zram, Bluetooth, udisks2
+    ./gpu.nix # driver de vídeo por perfil (my.gpu): NVIDIA (default) ou Intel Arc (specialisation)
     ./audio.nix # PipeWire + rtkit
     ./desktop.nix # LightDM, Hyprland, xkb, portal (dark mode), gnome-keyring
     ./fonts.nix # JetBrainsMono Nerd Font (padrão mono/sans/serif)

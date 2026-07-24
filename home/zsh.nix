@@ -24,7 +24,8 @@
 
     shellAliases = {
       # NixOS: sem `#host` o nixos-rebuild casa o hostname atual com o nixosConfigurations.
-      rebuild = "sudo nixos-rebuild switch --flake ~/Projects/GitHub/v1cferr/dotfiles";
+      # && hyprctl reload: recarrega o hyprland.lua na sessão (config nova não aplica sozinha; fora do Hyprland só erra sem efeito).
+      rebuild = "sudo nixos-rebuild switch --flake ~/Projects/GitHub/v1cferr/dotfiles && hyprctl reload";
       update = "nix flake update --flake ~/Projects/GitHub/v1cferr/dotfiles"; # bump do flake.lock
       gc = "sudo nix-collect-garbage -d"; # limpa gerações antigas da store manualmente
       # ls/ll/la/lt (eza) e cat (bat) vivem em home/cli.nix, junto do toolkit CLI

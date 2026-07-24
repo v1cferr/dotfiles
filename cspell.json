@@ -26,6 +26,23 @@
     "restic", "sops", "openconnect", "netextender", "ollama", "jellyfin", "qbittorrent",
     "cloudflare", "dyndns", "ddns", "fail2ban", "microcode", "zram", "bootloader", "udisks",
     "dropbox", "obsidian", "librewolf", "cferr", "sandisk", "kingston", "ufscar",
-    "toolkit", "upstream", "symlink", "idempotente", "wttr", "pango", "abnt"
+    "toolkit", "upstream", "symlink", "idempotente", "wttr", "pango", "abnt",
+    "hypr", "hyprlang", "lockscreen", "movetoworkspacesilent", "clampa", "compinit",
+    "uefi", "mobo", "disko", "bitwarden", "seagate", "pkgs", "cutover", "claude", "oneline",
+    "acpi", "ahci", "asus", "battlemage", "bezier", "bluetoothctl", "buildkit", "buildx",
+    "cloudflared", "clpeak", "dconf", "dedup", "dlna", "dockerfiles", "dolphinrc", "duolingo",
+    "envrc", "epub", "fastfetch", "fontconfig", "fwupd", "fwupdmgr", "gammastep", "gemini",
+    "github", "glmark", "gwenview", "hardlink", "ipex", "jellyseerr", "kdeglobals",
+    "kimageformats", "kvconfig", "libadwaita", "linux", "lvfs", "machenike", "maestral",
+    "mimeapps", "minegrub", "modesetting", "netac", "networkmanager", "nofail", "notif",
+    "notifs", "ntfs", "ntfy", "nvme", "okular", "oneshot", "opengl", "platformtheme",
+    "prefs", "qtimageformats", "qtstyleplugin", "qwen", "rpcs", "rtkit", "screencopy",
+    "setgid", "shuf", "sigabrt", "spotify", "sycl", "thumbnailers", "tldr", "ultragear",
+    "unigine", "vainfo", "venv", "vfat", "vkmark", "vulkan", "webui", "whatsapp",
+    "windowrule", "wlsunset", "xpad", "xrandr", "xruns", "yeyushengfan", "dualboot", "updat",
+    // anglicismos/verbos que você usa de propósito nos comentários (não são erro):
+    "segfalha", "boota", "bootando", "bootar", "builda", "buildando", "buildar", "bumpar",
+    "rebaseia", "reseta", "scriptar", "scriptável", "linkados", "vendoriza", "vendorizado",
+    "vendorizados", "autodetecta"
   ]
 }

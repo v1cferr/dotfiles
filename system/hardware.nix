@@ -10,6 +10,11 @@
   hardware.enableRedistributableFirmware = true; # inclui firmware da GPU (Intel Arc/NVIDIA)
   zramSwap.enable = true; # swap comprimido na RAM
 
+  # fwupd = updates de firmware via LVFS (`fwupdmgr refresh && fwupdmgr update`).
+  # NÃO cobre a BIOS desta placa (ASUS EX-B560M-V5 não está no LVFS → usar EZ Flash
+  # 3 na UEFI c/ pendrive FAT32). Serve p/ SSD NVMe e outros componentes.
+  services.fwupd.enable = true;
+
   # ── Bluetooth ───────────────────────────────────────────────────────────────
   # BlueZ (stack) + liga o adaptador no boot. blueman = applet/GUI de bandeja
   # pra parear/gerenciar em desktop sem DE (Hyprland). Áudio BT sai via PipeWire.

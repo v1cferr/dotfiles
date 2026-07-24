@@ -12,7 +12,7 @@
     ./boot.nix # bootloader UEFI (systemd-boot). GRUB+minegrub pré-configurado em boot-grub.nix — trocar aqui EM CASA
     ./network.nix # NetworkManager, SSH exposto, fail2ban, DNS dinâmico, no-sleep
     ./hardware.nix # CPU/microcode, firmware, zram, Bluetooth, udisks2
-    ./gpu.nix # driver de vídeo por perfil (my.gpu): NVIDIA (default) ou Intel Arc (specialisation)
+    ./gpu.nix # driver de vídeo: Intel Arc B580 (xe + Mesa, sem CUDA)
     ./audio.nix # PipeWire + rtkit
     ./desktop.nix # LightDM, Hyprland, xkb, portal (dark mode), gnome-keyring
     ./fonts.nix # JetBrainsMono Nerd Font (padrão mono/sans/serif)
@@ -22,7 +22,7 @@
     ./secrets.nix # base do sops + sops.secrets do Bitwarden + comando sync-secrets
     ./media/jellyfin.nix # servidor de mídia Jellyfin (nativo, systemd, biblioteca em /srv/media)
     ./media/qbittorrent.nix # cliente de download (Web UI 8080; grava em /srv/media/torrents)
-    ./ai/ollama.nix # runtime de IA local (CUDA); solver do duo-streak-daemon
+    ./ai/ollama.nix # runtime de IA local (CPU); solver do duo-streak-daemon
     ./ai/duo.nix # stack do duo-streak-daemon (compose declarativo; auto-ativa com o segredo)
   ];
 }

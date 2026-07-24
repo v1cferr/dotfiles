@@ -1,13 +1,13 @@
 # ═══════════════════════════════════════════════════════════════════════════
 # HARDWARE — CPU/microcode, firmware, zram, Bluetooth e mídia removível. MESMA
-# máquina física em todos os hosts (MOBO ASUS EX-B560M-V5). A GPU (NVIDIA/Intel,
-# trocável no boot) mora em system/gpu.nix.
+# máquina física em todos os hosts (MOBO ASUS EX-B560M-V5). A GPU (Intel Arc
+# B580) mora em system/gpu.nix.
 # ═══════════════════════════════════════════════════════════════════════════
 { ... }:
 
 {
   hardware.cpu.intel.updateMicrocode = true;
-  hardware.enableRedistributableFirmware = true; # inclui firmware da GPU (Intel Arc/NVIDIA)
+  hardware.enableRedistributableFirmware = true; # inclui firmware da GPU (Intel Arc)
   zramSwap.enable = true; # swap comprimido na RAM
 
   # fwupd = updates de firmware via LVFS (`fwupdmgr refresh && fwupdmgr update`).

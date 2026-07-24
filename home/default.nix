@@ -21,6 +21,7 @@
     ./kitty.nix # ~/.config/kitty/kitty.conf (terminal default do Hyprland)
     ./hypr.nix # ~/.config/hypr/hyprland.conf (ABNT2 + monitores + keybinds)
     ./hyprsunset.nix # filtro de luz azul (serviço systemd + perfis por horário)
+    ./lockscreen.nix # hyprlock (tela de bloqueio) + hypridle (idle: dim + lock)
     ./waybar.nix # ~/.config/waybar/* (barra básica: workspaces + relógio)
     ./theme.nix # dark mode (color-scheme prefer-dark + GTK Adwaita-dark)
     ./xdg.nix # browser default (Zen) via xdg.mimeApps + $BROWSER

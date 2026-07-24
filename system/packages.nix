@@ -35,7 +35,6 @@
     (flameshot.override { enableWlrSupport = true; })
     pamixer # controle de volume via CLI (pros keybinds de mídia do Hyprland)
     playerctl # play/pause/next via CLI (teclas de mídia)
-    hypridle # daemon de ociosidade do Hyprland (apaga os monitores; config em home/hypr.nix)
     cliphist # histórico de clipboard no Wayland (guarda texto/imagem; picker via wofi)
     wl-clipboard # wl-copy/wl-paste — base do clipboard Wayland (o cliphist depende dele)
     wl-clip-persist # mantém o clipboard vivo após o app de origem fechar (ex.: imagem do Flameshot)

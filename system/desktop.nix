@@ -33,4 +33,10 @@
   services.gnome.gnome-keyring.enable = true;
   security.pam.services.lightdm.enableGnomeKeyring = true;
   programs.seahorse.enable = true; # GUI "Senhas e Chaves" pra gerenciar
+
+  # ── Lockscreen (hyprlock) ──────────────────────────────────────────────────
+  # PAM p/ o hyprlock autenticar a senha do usuário. SEM isto ele não desbloqueia
+  # e TRANCA você pra fora. O pacote/config são do usuário (home/lockscreen.nix);
+  # aqui é só o serviço PAM (nível-sistema). {} = herda a stack de login padrão.
+  security.pam.services.hyprlock = { };
 }

@@ -27,6 +27,7 @@
     ./dropbox.nix # serviço de sync do usuário (~/Dropbox: Obsidian + docs)
     ./dolphin.nix # Dolphin: view mode sempre "Detalhes" (via activation)
     ./flameshot.nix # ~/.config/flameshot/flameshot.ini (screenshot; keybind em hypr.nix)
+    ./media.nix # visualizadores (Gwenview/Okular) + players (VLC/mpv) + apps padrão
   ];
 
   home.username = "v1cferr";

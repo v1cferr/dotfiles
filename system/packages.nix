@@ -47,6 +47,8 @@
     # override: --password-store=gnome-libsecret — no Hyprland o Electron não
     # autodetecta o backend de secret (XDG_CURRENT_DESKTOP não é GNOME/KDE) e mostra
     # "couldn't identify OS keyring"; a flag força o uso do gnome-keyring (libsecret).
+    # Extensões/settings ficam com o Settings Sync (conta), NÃO com o nix — evita o
+    # cabo-de-guerra (nix instala symlink read-only e não propaga pras outras máquinas).
     (vscode.override { commandLineArgs = "--password-store=gnome-libsecret"; })
     spotify # unfree (ok: allowUnfree acima)
     # whatsapp  # (estava comentado na config original)

@@ -30,6 +30,11 @@
     exclude = [
       "/home/v1cferr/.cache"
       "/home/v1cferr/.local/share/Trash"
+      # ── Volumosos e RE-OBTENÍVEIS (não faz sentido cifrar/guardar) ──
+      "/home/v1cferr/Downloads" # transiente
+      "/home/v1cferr/Games" # jogos (PS3 etc.) — re-baixáveis das fontes
+      "/home/v1cferr/.local/share/bottles" # prefixos Wine (~154G): jogos re-instaláveis. NOTA: saves de jogo vivem aqui dentro — se algum for insubstituível, faça backup à parte.
+      "/home/v1cferr/.local/share/Steam" # biblioteca Steam, se houver (re-baixável)
       "**/node_modules"
       "**/.direnv"
       "**/target" # builds Rust

@@ -4,22 +4,23 @@
 # restic cifra tudo em repouso e guarda com checksum (o `restic check` verifica
 # integridade — o mesmo padrão que se quer pra armazenamento "duvidoso").
 #
-# Repo AGORA no HDD (/var/backup/restic): como o NixOS roda do HDD, é HDD→HDD —
-# dá snapshots + cifra + serve de VEÍCULO de migração (restore no destino), mas
-# NÃO protege contra falha do próprio HDD. Pós-cutover (NixOS no SanDisk), muda
-# o `repository` pro HDD montado (ex.: /mnt/hdd-backup/restic) → aí é backup
-# off-disk de verdade (SanDisk→HDD).
+# Repo no HDD Seagate (/mnt/seagate-old/restic), OFF-DISK: o NixOS roda do SanDisk
+# (SSD SATA) e o backup vai pro HDD SEPARADO → sobrevive à morte do SanDisk (backup
+# de verdade, não só snapshot). O SanDisk não carrega cópia nenhuma. ext4 nos dois →
+# sem snapshot CoW "grátis"; pra isso, formatar em btrfs numa migração futura.
 #
 # A senha do repo é SEGREDO (sops: restic_password). Sem ela não decripta o repo.
 # ═══════════════════════════════════════════════════════════════════════════
 { config, ... }:
 
 {
-  # garante o diretório-pai do repo (restic init cria o repo, não o /var/backup)
-  systemd.tmpfiles.rules = [ "d /var/backup 0700 root root -" ];
+  # SEGURANÇA: o backup só roda com o HDD Seagate montado. Sem isto, se o disco não
+  # montasse, o restic gravaria em /mnt/seagate-old na RAIZ (SanDisk) — backup no
+  # lugar errado + enchendo o disco que a gente quer aliviar. RequiresMountsFor barra isso.
+  systemd.services.restic-backups-home.unitConfig.RequiresMountsFor = "/mnt/seagate-old";
 
   services.restic.backups.home = {
-    repository = "/var/backup/restic"; # HDD por ora (ver cabeçalho)
+    repository = "/mnt/seagate-old/restic"; # HDD Seagate, off-disk (ver cabeçalho)
     passwordFile = config.sops.secrets.restic_password.path;
     initialize = true; # cria o repo no 1º backup
 

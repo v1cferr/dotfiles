@@ -17,8 +17,8 @@
   # Sempre por UUID (sdX/nvmeX embaralham entre boots). Todos com nofail: montam no
   # BOOT (já aparecem montados ao ligar) e o nofail pula em vez de travar se o disco sumir.
 
-  # Seagate (HDD, ex-sistema) — ext4. CONTÉM o backup restic em /var/backup/restic:
-  # é sua rede de segurança da migração; não apague esse dir até confiar no SSD.
+  # Seagate (HDD, ex-sistema) — ext4. Agora é o DESTINO do backup restic off-disk
+  # (/mnt/seagate-old/restic); o sistema antigo da migração foi apagado. Ver system/restic.nix.
   fileSystems."/mnt/seagate-old" = {
     device = "/dev/disk/by-uuid/85788f24-b8a0-4c3e-af4f-8af1f8b52147";
     fsType = "ext4";

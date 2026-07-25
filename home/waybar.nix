@@ -22,8 +22,8 @@
         "sort-by-number": true,
         "on-click": "activate",
         "persistent-workspaces": {
-          "1": ["DP-1"], "2": ["DP-1"], "3": ["DP-1"], "4": ["DP-1"],
-          "5": ["HDMI-A-1"], "6": ["HDMI-A-1"], "7": ["HDMI-A-1"], "8": ["HDMI-A-1"]
+          "1": ["DP-2"], "2": ["DP-2"], "3": ["DP-2"], "4": ["DP-2"],
+          "5": ["HDMI-A-3"], "6": ["HDMI-A-3"], "7": ["HDMI-A-3"], "8": ["HDMI-A-3"]
         }
       },
 

@@ -101,25 +101,25 @@ in
   xdg.configFile."hypr/hyprland.lua".text = ''
     -- ── Monitores ────────────────────────────────────────────────────────────
     -- Nomes de conector confirmados via `hyprctl monitors` (Wayland/Arc):
-    --   DP-1     = LG ULTRAGEAR (1080p 144Hz) → PRINCIPAL, na origem 0x0
-    --   HDMI-A-1 = TV LG → à esquerda (x negativo); painel nativo 1366x768 ("HD",
+    --   DP-2     = LG ULTRAGEAR (1080p 144Hz) → PRINCIPAL, na origem 0x0
+    --   HDMI-A-3 = TV LG → à esquerda (x negativo); painel nativo 1366x768 ("HD",
     --              não Full HD) — 1080p aqui só faz downscale/borra, então nativo.
     -- Adaptação p/ TV desconectada: com o principal em 0x0, o LG segue sozinho sem
     -- offset fantasma; as workspaces 5–8 recaem nele automaticamente.
-    hl.monitor({ output = "DP-1",     mode = "1920x1080@143.98", position = "0x0",     scale = 1 })
-    hl.monitor({ output = "HDMI-A-1", mode = "1366x768@59.79",   position = "-1366x0", scale = 1 })
+    hl.monitor({ output = "DP-2",     mode = "1920x1080@143.98", position = "0x0",     scale = 1 })
+    hl.monitor({ output = "HDMI-A-3", mode = "1366x768@59.79",   position = "-1366x0", scale = 1 })
     hl.monitor({ output = "",         mode = "preferred",        position = "auto",    scale = "auto" })
 
-    -- 4 workspaces por monitor: 1–4 no LG (DP-1, principal), 5–8 na TV (HDMI-A-1).
+    -- 4 workspaces por monitor: 1–4 no LG (DP-2, principal), 5–8 na TV (HDMI-A-3).
     -- default:true = a workspace que abre em cada monitor no boot da sessão.
-    hl.workspace_rule({ workspace = "1", monitor = "DP-1",     default = true })
-    hl.workspace_rule({ workspace = "2", monitor = "DP-1" })
-    hl.workspace_rule({ workspace = "3", monitor = "DP-1" })
-    hl.workspace_rule({ workspace = "4", monitor = "DP-1" })
-    hl.workspace_rule({ workspace = "5", monitor = "HDMI-A-1", default = true })
-    hl.workspace_rule({ workspace = "6", monitor = "HDMI-A-1" })
-    hl.workspace_rule({ workspace = "7", monitor = "HDMI-A-1" })
-    hl.workspace_rule({ workspace = "8", monitor = "HDMI-A-1" })
+    hl.workspace_rule({ workspace = "1", monitor = "DP-2",     default = true })
+    hl.workspace_rule({ workspace = "2", monitor = "DP-2" })
+    hl.workspace_rule({ workspace = "3", monitor = "DP-2" })
+    hl.workspace_rule({ workspace = "4", monitor = "DP-2" })
+    hl.workspace_rule({ workspace = "5", monitor = "HDMI-A-3", default = true })
+    hl.workspace_rule({ workspace = "6", monitor = "HDMI-A-3" })
+    hl.workspace_rule({ workspace = "7", monitor = "HDMI-A-3" })
+    hl.workspace_rule({ workspace = "8", monitor = "HDMI-A-3" })
 
     -- ── Programas (paridade com o Arch, ferramentas adaptadas ao NixOS) ────────
     local terminal       = "kitty"              -- SUPER+RETURN
@@ -241,9 +241,9 @@ in
     hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
     hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 
-    -- Foco por monitor: F1 = LG (DP-1, principal) · F2 = TV (HDMI-A-1)
-    hl.bind(mainMod .. " + F1", hl.dsp.focus({ monitor = "DP-1" }))
-    hl.bind(mainMod .. " + F2", hl.dsp.focus({ monitor = "HDMI-A-1" }))
+    -- Foco por monitor: F1 = LG (DP-2, principal) · F2 = TV (HDMI-A-3)
+    hl.bind(mainMod .. " + F1", hl.dsp.focus({ monitor = "DP-2" }))
+    hl.bind(mainMod .. " + F2", hl.dsp.focus({ monitor = "HDMI-A-3" }))
 
     -- Workspaces 1–8 (SUPER troca; SUPER+SHIFT move a janela). 1–4 no LG, 5–8 na TV.
     for i = 1, 8 do
@@ -258,8 +258,8 @@ in
     hl.bind(mainMod .. " + mouse_up",    hl.dsp.focus({ workspace = "e-1" }))
 
     -- Mover a janela ativa entre monitores: CTRL+← p/ TV (esquerda), CTRL+→ p/ LG (direita).
-    hl.bind(mainMod .. " + CTRL + left",  hl.dsp.window.move({ monitor = "HDMI-A-1" }))
-    hl.bind(mainMod .. " + CTRL + right", hl.dsp.window.move({ monitor = "DP-1" }))
+    hl.bind(mainMod .. " + CTRL + left",  hl.dsp.window.move({ monitor = "HDMI-A-3" }))
+    hl.bind(mainMod .. " + CTRL + right", hl.dsp.window.move({ monitor = "DP-2" }))
 
     -- Mouse: mover / redimensionar janela
     hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
@@ -299,7 +299,7 @@ in
     hl.window_rule({
       match = { class = "^(ascension\\.exe)$" },
       float = true,
-      monitor = "DP-1",
+      monitor = "DP-2",
       size = "1920 1080",
       center = true,
       fullscreen = true,
@@ -310,7 +310,7 @@ in
     -- ── Screenshot (Flameshot v13 + grim) ────────────────────────────────────
     -- Config em home/flameshot.nix. PROBLEMA multi-monitor: o grim captura os dois
     -- monitores (3840x1080), mas o overlay do editor nasce SÓ no monitor da origem
-    -- (HDMI @ 0,0) → não dava pra selecionar no DP-1 (principal @ 1920,0).
+    -- (HDMI @ 0,0) → não dava pra selecionar no DP-2 (principal @ 1920,0).
     -- FIX (o clássico pré-v14): esticar a janela do overlay pelos DOIS monitores —
     -- float + move 0,0 + size = soma das telas (3840x1080). Aí o overlay cobre tudo
     -- e a seleção funciona em qualquer tela. opacity/no_blur/no_shadow: o overlay é

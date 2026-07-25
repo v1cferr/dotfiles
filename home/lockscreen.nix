@@ -35,8 +35,8 @@ let
   quotesDb = ./lockscreen/quotes.tsv;         # banco offline de frases (en<TAB>pt<TAB>autor)
 
   # ── Monitores (mesmos nomes de conector do home/hypr.nix) ────────────────────
-  primary   = "DP-1";      # LG ULTRAGEAR — desktop borrado + login
-  secondary = "HDMI-A-1";  # TV — imagem estática + cadeado
+  primary   = "DP-2";      # LG ULTRAGEAR — desktop borrado + login
+  secondary = "HDMI-A-3";  # TV — imagem estática + cadeado
 
   # ── Paleta Tokyo Night + fonte ───────────────────────────────────────────────
   font    = "JetBrainsMono Nerd Font";

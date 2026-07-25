@@ -72,6 +72,13 @@
         };
       };
 
+      # Pacotes LOCAIS (fora do nixpkgs), empacotados em ./pkgs e expostos como
+      # `pkgs.<nome>`. callPackage injeta as deps automaticamente.
+      overlayLocalPkgs = final: prev: {
+        claude-code-discord-status =
+          final.callPackage ./pkgs/claude-code-discord-status.nix { };
+      };
+
       # Um host = módulos COMUNS (overlay, sops, disko, ./system, home-manager) +
       # o arquivo específico do host. Novo host? Cria hosts/<host>.nix e adiciona
       # uma linha em nixosConfigurations abaixo.
@@ -81,7 +88,7 @@
         inherit system;
         specialArgs = { inherit inputs; };
         modules = [
-          { nixpkgs.overlays = [ overlayUnstable ]; } # habilita `unstable.*`
+          { nixpkgs.overlays = [ overlayUnstable overlayLocalPkgs ]; } # `unstable.*` + pacotes locais (./pkgs)
           sops-nix.nixosModules.sops
           disko.nixosModules.disko # inerte em hosts sem disko.devices
           ./system

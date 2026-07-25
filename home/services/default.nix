@@ -4,5 +4,6 @@
 {
   imports = [
     ./cs2-saves-backup.nix # timer que espelha saves do CS2 (Bottles) p/ pasta do restic
+    ./claude-discord-rpc.nix # daemon + config do Discord Rich Presence pro Claude Code
   ];
 }

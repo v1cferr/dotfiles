@@ -7,29 +7,18 @@
 # nível-sistema (serviços, drivers, pacotes de root). Separação de privilégio:
 # quebrar o home NÃO derruba o boot — é o que torna estes dotfiles reprodutíveis.
 #
-# Cresce por app: home/kitty.nix, home/zsh.nix, home/hypr.nix… e adiciona no
-# imports abaixo.
+# Organizado por CATEGORIA (subpasta com seu próprio default.nix que importa os
+# módulos dela) — assim o topo não vira um monte de arquivos soltos. Novo módulo?
+# cria home/<categoria>/<app>.nix e adiciona 1 linha no default.nix da categoria.
 # ═══════════════════════════════════════════════════════════════════════════
 { ... }:
 
 {
   imports = [
-    ./git.nix # programs.git → ~/.gitconfig
-    ./zsh.nix # ~/.zshrc (histórico + autosuggest + syntax highlight + aliases)
-    ./cli.nix # toolkit CLI moderno (eza/bat/fzf/zoxide/direnv/yazi/tealdeer) + integração zsh
-    ./starship.nix # ~/.config/starship.toml (prompt do zsh)
-    ./kitty.nix # ~/.config/kitty/kitty.conf (terminal default do Hyprland)
-    ./hypr.nix # ~/.config/hypr/hyprland.conf (ABNT2 + monitores + keybinds)
-    ./hyprsunset.nix # filtro de luz azul (serviço systemd + perfis por horário)
-    ./lockscreen.nix # hyprlock (tela de bloqueio) + hypridle (idle: dim + lock)
-    ./waybar.nix # ~/.config/waybar/* (barra básica: workspaces + relógio)
-    ./theme.nix # dark mode (color-scheme prefer-dark + GTK Adwaita-dark)
-    ./xdg.nix # browser default (Zen) via xdg.mimeApps + $BROWSER
-    ./dropbox.nix # serviço de sync do usuário (~/Dropbox: Obsidian + docs)
-    ./dolphin.nix # Dolphin: view mode sempre "Detalhes" (via activation)
-    ./flameshot.nix # ~/.config/flameshot/flameshot.ini (screenshot; keybind em hypr.nix)
-    ./media.nix # visualizadores (Gwenview/Okular) + players (VLC/mpv) + apps padrão
-    ./notifications.nix # mako (daemon de notificação Wayland; OSD de brilho + notify-send)
+    ./shell # terminal, shell e dev-cli (zsh/starship/cli/kitty/git)
+    ./desktop # Hyprland + Wayland + aparência (hypr/waybar/lockscreen/theme/xdg…)
+    ./apps # apps GUI de usuário (discord/dropbox/media/dolphin/flameshot/mangohud)
+    ./services # serviços/timers do usuário (cs2-saves-backup, claude-discord-rpc)
   ];
 
   home.username = "v1cferr";

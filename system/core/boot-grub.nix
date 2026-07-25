@@ -1,12 +1,12 @@
 # ═══════════════════════════════════════════════════════════════════════════
 # BOOT (GRUB + tema Minecraft) — ALTERNATIVA PRÉ-CONFIGURADA, DORMENTE.
 #
-# Este arquivo NÃO é importado por padrão (o system/default.nix importa ./boot.nix
+# Este arquivo NÃO é importado por padrão (o system/core/default.nix importa ./boot.nix
 # = systemd-boot). Ele fica pronto pra a migração systemd-boot → GRUB.
 #
 # ⚠️ ATIVAR SÓ EM CASA (na frente da máquina): trocar o bootloader errado deixa a
 # máquina sem boot E sem SSH. Passos:
-#   1. system/default.nix: troque `./boot.nix` por `./boot-grub.nix` no imports.
+#   1. system/core/default.nix: troque `./boot.nix` por `./boot-grub.nix` no imports.
 #   2. `nixos-rebuild build --flake .#nixos-sandisk`  (valida, não aplica)
 #   3. `sudo nixos-rebuild switch --flake .#nixos-sandisk`
 # O GRUB gera entradas das gerações anteriores do NixOS (rollback pelo menu) +

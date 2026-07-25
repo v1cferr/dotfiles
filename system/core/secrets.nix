@@ -15,12 +15,12 @@
 
 let
   # Índice público: { "<nome-no-sops>" = "<item-no-Bitwarden>"; ... }
-  bwMap = builtins.fromJSON (builtins.readFile ../secrets/bitwarden-secrets.json);
+  bwMap = builtins.fromJSON (builtins.readFile ../../secrets/bitwarden-secrets.json);
 
   sync-secrets = pkgs.writeShellApplication {
     name = "sync-secrets";
     runtimeInputs = with pkgs; [ bitwarden-cli jq sops git ];
-    text = builtins.readFile ../scripts/sync-secrets.sh; # bash à parte = shellcheck no build
+    text = builtins.readFile ../../scripts/sync-secrets.sh; # bash à parte = shellcheck no build
   };
 in
 {
@@ -28,7 +28,7 @@ in
   # secrets/secrets.yaml: cifrado, versionado, ilegível sem a chave. Decriptado em
   # runtime pra /run/secrets*. A chave age (/var/lib/sops-nix/key.txt) fica FORA do
   # git — é o que se leva no cutover. Editar: nix shell nixpkgs#sops -c sops secrets/secrets.yaml
-  sops.defaultSopsFile = ../secrets/secrets.yaml;
+  sops.defaultSopsFile = ../../secrets/secrets.yaml;
   sops.age.keyFile = "/var/lib/sops-nix/key.txt";
 
   # Gera um sops.secrets.<nome> = {} pra cada entrada do índice (Bitwarden), e

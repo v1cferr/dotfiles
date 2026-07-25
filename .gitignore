@@ -5,4 +5,4 @@ result-*
 # PNGs ignorados por padrão (screenshots avulsos).
 *.png
 # Exceção: wallpaper do lockscreen é asset versionado (declarativo).
-!home/lockscreen/*.png
+!home/desktop/lockscreen/*.png

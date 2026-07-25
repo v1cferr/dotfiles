@@ -102,12 +102,11 @@ in
     -- ── Monitores ────────────────────────────────────────────────────────────
     -- Nomes de conector confirmados via `hyprctl monitors` (Wayland/Arc):
     --   DP-2     = LG ULTRAGEAR (1080p 144Hz) → PRINCIPAL, na origem 0x0
-    --   HDMI-A-3 = TV LG → à esquerda (x negativo); painel nativo 1366x768 ("HD",
-    --              não Full HD) — 1080p aqui só faz downscale/borra, então nativo.
+    --   HDMI-A-3 = TV LG → à esquerda (x negativo), em Full HD (1920x1080@60).
     -- Adaptação p/ TV desconectada: com o principal em 0x0, o LG segue sozinho sem
     -- offset fantasma; as workspaces 5–8 recaem nele automaticamente.
     hl.monitor({ output = "DP-2",     mode = "1920x1080@143.98", position = "0x0",     scale = 1 })
-    hl.monitor({ output = "HDMI-A-3", mode = "1366x768@59.79",   position = "-1366x0", scale = 1 })
+    hl.monitor({ output = "HDMI-A-3", mode = "1920x1080@60",     position = "-1920x0", scale = 1 })
     hl.monitor({ output = "",         mode = "preferred",        position = "auto",    scale = "auto" })
 
     -- 4 workspaces por monitor: 1–4 no LG (DP-2, principal), 5–8 na TV (HDMI-A-3).
@@ -310,12 +309,14 @@ in
     -- ── Screenshot (Flameshot v13 + grim) ────────────────────────────────────
     -- Config em home/flameshot.nix. PROBLEMA multi-monitor: o grim captura os dois
     -- monitores (3840x1080), mas o overlay do editor nasce SÓ no monitor da origem
-    -- (HDMI @ 0,0) → não dava pra selecionar no DP-2 (principal @ 1920,0).
+    -- → não cobre o desktop inteiro se o move/size não baterem com o bounding box.
     -- FIX (o clássico pré-v14): esticar a janela do overlay pelos DOIS monitores —
-    -- float + move 0,0 + size = soma das telas (3840x1080). Aí o overlay cobre tudo
-    -- e a seleção funciona em qualquer tela. opacity/no_blur/no_shadow: o overlay é
-    -- um frame congelado, não pode herdar transparência/blur globais.
-    -- (Tamanho fixo pro arranjo desta máquina: 2x 1080p lado a lado.)
+    -- float + move = canto do bounding box + size = soma das telas (3840x1080). Aí o
+    -- overlay cobre tudo e a seleção funciona em qualquer tela. opacity/no_blur/
+    -- no_shadow: o overlay é um frame congelado, não herda transparência/blur globais.
+    -- Arranjo atual: HDMI-A-3 (TV) @ -1920x0 · DP-2 (principal) @ 0x0 → o canto
+    -- superior-esquerdo do desktop é (-1920, 0), por isso o move é "-1920 0" (e NÃO
+    -- "0 0", que deixava a TV de fora pós-swap dos conectores).
     --
     -- match por TÍTULO (não class): no v13/Wayland a janela do overlay tem class
     -- VAZIA e title exatamente "flameshot" (^...$ pra não casar o VS Code editando
@@ -327,7 +328,7 @@ in
 
       no_anim        = true,
       float          = true,
-      move           = "0 0",
+      move           = "-1920 0",
       size           = "3840 1080",
       opacity        = "1.0 override 1.0 override",
       no_blur        = true,

@@ -41,6 +41,14 @@ hl.config({
   misc = {
     force_default_wallpaper = 0,  -- sem o wallpaper anime default
     disable_hyprland_logo = true, -- sem o logo de fundo (usamos wallpaper próprio)
+    -- VRR (G-Sync) só em jogos fullscreen. O LG UltraGear é G-Sync Compatible; na
+    -- Arc (xe) o congelamento que a NVIDIA dava no lockscreen NÃO reproduz (por isso
+    -- o vrr=1 sempre-ligado foi vetado no Arch — histórico em lockscreen.nix). 2 é seguro.
+    vrr = 2,
+    -- Rede de segurança contra lockout: se o hyprlock morrer no teardown (ex.: ao
+    -- acordar do dpms), relançar `hyprlock` de um TTY reata a sessão travada em vez
+    -- de recusar — evita o "sudo reboot" pra sair de uma tela de bloqueio órfã.
+    allow_session_lock_restore = true,
   },
 })
 

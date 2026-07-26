@@ -95,9 +95,23 @@ let
   };
 in
 {
+  # Ferramentas da SESSÃO Hyprland que o Lua abaixo invoca (keybinds/autostart) —
+  # app+config no home (regra 4). wofi = launcher; cliphist+wl-clipboard = histórico
+  # de clipboard (+wl-clip-persist mantém a cópia após o app fechar); pamixer/playerctl
+  # = teclas de mídia; pavucontrol = mixer GUI (SUPER+S).
+  home.packages = with pkgs; [
+    wofi
+    cliphist
+    wl-clipboard
+    wl-clip-persist
+    pamixer
+    playerctl
+    pavucontrol
+  ];
+
   # Ociosidade (dim aos 3 min + lock aos 5 min) e a tela de bloqueio moram em
-  # home/lockscreen.nix — hypridle/hyprlock via módulo (serviço systemd --user),
-  # não mais .conf na mão. O SUPER+L (lock manual) está nos keybinds abaixo.
+  # home/desktop/lockscreen.nix — hypridle/hyprlock via módulo (serviço systemd
+  # --user), não mais .conf na mão. O SUPER+L (lock manual) está nos keybinds abaixo.
   xdg.configFile."hypr/hyprland.lua".text = ''
     -- ── Monitores ────────────────────────────────────────────────────────────
     -- Nomes de conector confirmados via `hyprctl monitors` (Wayland/Arc):

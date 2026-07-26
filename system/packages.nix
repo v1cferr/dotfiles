@@ -25,13 +25,6 @@
     openssl # gerar senhas/chaves (rand), TLS, etc.
     python3 # interpretador Python (rodar scripts; libs por projeto ficam no uv/venv)
     uv # gerenciador Python rápido (venv/deps/pythons); os pythons dele rodam via nix-ld
-    wofi # launcher do Hyprland default (SUPER+R)
-    pavucontrol # GUI de mixer/dispositivos (PipeWire via compat PulseAudio)
-    pamixer # controle de volume via CLI (pros keybinds de mídia do Hyprland)
-    playerctl # play/pause/next via CLI (teclas de mídia)
-    cliphist # histórico de clipboard no Wayland (guarda texto/imagem; picker via wofi)
-    wl-clipboard # wl-copy/wl-paste — base do clipboard Wayland (o cliphist depende dele)
-    wl-clip-persist # mantém o clipboard vivo após o app de origem fechar (ex.: imagem do Flameshot)
     librewolf
     google-chrome
     inputs.zen-browser.packages.${pkgs.system}.default # Zen (flake; ver flake.nix)

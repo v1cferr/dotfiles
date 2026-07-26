@@ -172,7 +172,7 @@ in
       -- swaync) NÃO sobem no login — o LightDM lança o Hyprland cru, sem integração systemd.
       -- O target está declarado em systemd.user.targets (abaixo do xdg.configFile).
       hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP && systemctl --user start hyprland-session.target")
-      hl.exec_cmd("waybar")
+      hl.exec_cmd("qs")  -- Quickshell (bar/OSD/mídia). Config QML em home/desktop/quickshell/ (hot-reload).
       -- watcher do clipboard: escuta cada cópia e grava no histórico do cliphist.
       -- Sem isto o cliphist fica vazio (é o daemon que popula o banco).
       hl.exec_cmd("wl-paste --watch cliphist store")
@@ -238,10 +238,9 @@ in
     -- clipboard: histórico do cliphist no wofi; a escolha volta pro clipboard (cole com Ctrl+V).
     hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("cliphist list | wofi --dmenu | cliphist decode | wl-copy"))
 
-    -- reiniciar a Waybar (no Arch era o restart do Quickshell; aqui a barra é a Waybar).
-    -- pkill SEM -x: no NixOS o comm é `.waybar-wrapped` (wrapper), então `-x waybar`
-    -- não casava e duplicava a barra em vez de reiniciar.
-    hl.bind(mainMod .. " + ESCAPE",    hl.dsp.exec_cmd("bash -lc 'pkill waybar; sleep 0.3; waybar &'"))
+    -- reiniciar o Quickshell (raramente necessário — ele faz hot-reload do QML ao
+    -- salvar; útil só quando o processo trava). `qs kill` para a instância, `qs` sobe.
+    hl.bind(mainMod .. " + ESCAPE",    hl.dsp.exec_cmd("bash -lc 'qs kill; sleep 0.3; qs &'"))
 
     -- VPN (SUPER+N / SHIFT+N / CTRL+N): PENDENTE — backend ainda não migrado
     -- (netExtender da FAI não está no nixpkgs; UFSCar é conexão NetworkManager c/ segredo).

@@ -56,6 +56,14 @@
       url = "github:Lxtharia/minegrub-world-sel-theme";
       inputs.nixpkgs.follows = "nixpkgs"; # dedup: não puxa um 2º nixpkgs pro lock
     };
+
+    # Quickshell — shell/bar em QML (outfoxxed), NÃO no nixpkgs. "Sempre a última":
+    # bump com `nix flake update quickshell`. A config QML mora no repo
+    # (home/desktop/quickshell/) e é linkada por mkOutOfStoreSymlink → hot-reload.
+    quickshell = {
+      url = "git+https://git.outfoxxed.me/quickshell/quickshell";
+      inputs.nixpkgs.follows = "nixpkgs"; # dedup
+    };
   };
 
   outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, disko, sops-nix, ... }@inputs:

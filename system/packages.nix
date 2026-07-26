@@ -14,7 +14,6 @@
   environment.systemPackages = with pkgs; [
     # ── base estável ──
     git
-    gh # GitHub CLI (auth/push via HTTPS + token)
     vim
     htop
     dmidecode
@@ -27,7 +26,6 @@
     python3 # interpretador Python (rodar scripts; libs por projeto ficam no uv/venv)
     uv # gerenciador Python rápido (venv/deps/pythons); os pythons dele rodam via nix-ld
     unzip # descompacta .zip (utilitário base)
-    bitwarden-cli # `bw` — consultar/scriptar o cofre no terminal (fluxo de segredos)
 
     # ── Jogos: Wine/WoW via Bottles ──
     # `bottles` do nixpkgs vem FHS-wrapped → os runners (GE-Proton/wine-staging)
@@ -51,10 +49,5 @@
     # removidos após validar a Arc — eram one-off. Ficam só os monitores do dia-a-dia.
     nvtopPackages.intel # monitor de GPU ao vivo (util/clock/VRAM/temp) — Intel
     intel-gpu-tools # intel_gpu_top — engines/freq do driver Intel
-
-    # ── bleeding-edge (escolhidos a dedo) ──
-    unstable.fastfetch
-    unstable.claude-code
-    unstable.yt-dlp # baixa vídeo/áudio; unstable pq quebra quando os sites mudam (precisa da última)
   ];
 }

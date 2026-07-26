@@ -239,7 +239,9 @@ in
     hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("cliphist list | wofi --dmenu | cliphist decode | wl-copy"))
 
     -- reiniciar a Waybar (no Arch era o restart do Quickshell; aqui a barra é a Waybar).
-    hl.bind(mainMod .. " + ESCAPE",    hl.dsp.exec_cmd("bash -lc 'pkill -x waybar; sleep 0.3; waybar &'"))
+    -- pkill SEM -x: no NixOS o comm é `.waybar-wrapped` (wrapper), então `-x waybar`
+    -- não casava e duplicava a barra em vez de reiniciar.
+    hl.bind(mainMod .. " + ESCAPE",    hl.dsp.exec_cmd("bash -lc 'pkill waybar; sleep 0.3; waybar &'"))
 
     -- VPN (SUPER+N / SHIFT+N / CTRL+N): PENDENTE — backend ainda não migrado
     -- (netExtender da FAI não está no nixpkgs; UFSCar é conexão NetworkManager c/ segredo).

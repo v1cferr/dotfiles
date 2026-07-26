@@ -1,7 +1,7 @@
-# CONFIG do kitty (~/.config/kitty/kitty.conf), declarado. É o terminal default do
-# Hyprland (SUPER+Q, keybind em home/hypr.nix). O binário `kitty` vem do system/
-# (systemPackages); aqui é só aparência + comportamento. O prompt é o starship
-# (home/starship.nix) e o shell é o zsh (home/zsh.nix).
+# kitty — terminal default do Hyprland (SUPER+Q, keybind em home/desktop/hypr.nix).
+# `programs.kitty` INSTALA o pacote E escreve ~/.config/kitty/kitty.conf (app+config
+# no home, regra 4). O prompt é o starship (home/shell/starship.nix) e o shell é o
+# zsh (home/shell/zsh.nix).
 { ... }:
 
 {

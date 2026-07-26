@@ -28,12 +28,6 @@
     wofi # launcher do Hyprland default (SUPER+R)
     waybar # barra de status (workspaces + relógio); config em home/waybar.nix
     pavucontrol # GUI de mixer/dispositivos (PipeWire via compat PulseAudio)
-    # Screenshot: flameshot v13 ESTÁVEL + enableWlrSupport (grim). Por que NÃO o
-    # v14 (unstable): o v14 removeu o adapter de grim e captura só via
-    # xdg-desktop-portal — que NÃO entrega neste Hyprland ("Unable to capture
-    # screen"). O v13 tem o `useGrimAdapter` (ligado no .ini, home/), que usa o grim
-    # direto e funciona (testado). enableWlrSupport = põe o grim no PATH do wrapper.
-    (flameshot.override { enableWlrSupport = true; })
     pamixer # controle de volume via CLI (pros keybinds de mídia do Hyprland)
     playerctl # play/pause/next via CLI (teclas de mídia)
     cliphist # histórico de clipboard no Wayland (guarda texto/imagem; picker via wofi)

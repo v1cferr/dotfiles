@@ -1,7 +1,6 @@
-# CONFIG do Flameshot (screenshot), declarada. O pacote — flameshot v13 estável
-# com enableWlrSupport (grim) — vem do system/ (regra da pasta: home/ configura,
-# não instala). Os keybinds (Print / SUPER+SHIFT+S) e a windowrule do overlay
-# vivem no home/hypr.nix (config do Hyprland é um blob Lua único).
+# Flameshot (screenshot) — pacote v13 (enableWlrSupport/grim) + config, no home
+# (regra 4). Os keybinds (Print / SUPER+SHIFT+S) e a windowrule do overlay vivem
+# no home/desktop/hypr.nix (config do Hyprland é um blob Lua único).
 #
 # Captura neste box = grim, via `useGrimAdapter=true`. Contexto: no Wayland o
 # flameshot pode capturar por (a) xdg-desktop-portal ou (b) grim. O portal NÃO
@@ -12,9 +11,14 @@
 #
 # NB: o .ini vem do /nix/store (read-only) → mudanças pela GUI NÃO persistem;
 # editar aqui e rebuild. Qt QSettings NÃO aceita comentário inline no .ini.
-{ config, ... }:
+{ config, pkgs, ... }:
 
 {
+  # v13 ESTÁVEL + enableWlrSupport: captura por grim (via useGrimAdapter no .ini),
+  # que funciona neste Hyprland — o v14 removeu o grim e só tem portal (que dá
+  # "Unable to capture screen" aqui). enableWlrSupport põe o grim no PATH do wrapper.
+  home.packages = [ (pkgs.flameshot.override { enableWlrSupport = true; }) ];
+
   # Pasta de saída dos prints (flameshot não cria sozinho de forma confiável).
   home.file."Pictures/Screenshots/.keep".text = "";
 

@@ -182,13 +182,20 @@ in
   # Ociosidade (dim aos 3 min + lock aos 5 min) e a tela de bloqueio moram em
   # home/desktop/lockscreen.nix — hypridle/hyprlock via módulo (serviço systemd
   # --user), não mais .conf na mão. O SUPER+L (lock manual) está nos keybinds abaixo.
-  # ~/.config/hypr/hyprland.lua → arquivo REAL no repo (mutável) = hot-reload: edita
-  # home/desktop/hypr/hyprland.lua + `hyprctl reload`, SEM rebuild (mesmo esquema do
-  # quickshell). Os scripts minimize-others/brightness-osd vão pro PATH (home.packages
-  # abaixo), então o Lua os chama por NOME — por isso o .lua pode ser estático.
+  #
+  # CONFIG MODULAR + HOT-RELOAD: o entrypoint hyprland.lua só faz dofile dos módulos
+  # em ~/.config/hypr/lua/*.lua (1 assunto por arquivo: monitors/appearance/input/
+  # keybinds/rules/autostart/environment). Ambos vêm por mkOutOfStoreSymlink dos
+  # arquivos REAIS no repo (mutáveis) → edita qualquer .lua + `hyprctl reload` aplica
+  # na hora, SEM rebuild (mesmo esquema do quickshell). Os scripts que os binds
+  # chamam (minimize-others/brightness-osd/monitor-toggle) vão pro PATH (home.packages
+  # acima), então os módulos os invocam por NOME — por isso os .lua podem ser estáticos.
   xdg.configFile."hypr/hyprland.lua".source =
     config.lib.file.mkOutOfStoreSymlink
       "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/desktop/hypr/hyprland.lua";
+  xdg.configFile."hypr/lua".source =
+    config.lib.file.mkOutOfStoreSymlink
+      "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/desktop/hypr/lua";
 
   # Sessão systemd do usuário. O LightDM lança o Hyprland "cru" (sem integração
   # systemd), então o graphical-session.target — que os serviços --user do desktop

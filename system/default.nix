@@ -14,6 +14,7 @@
     ./net # NetworkManager, SSH exposto, fail2ban, DDNS
     ./desktop # LightDM, Hyprland, xkb, portal (dark mode), gnome-keyring
     ./services # backup (restic), hooks (Claude Code), mídia (Jellyfin/qBit), IA (Ollama/duo)
+    ./gaming # Steam + Proton-GE + gamemode (FHS-wrap/firewall de nível-sistema)
     ./packages.nix # environment.systemPackages (apps/ferramentas de sistema)
   ];
 }

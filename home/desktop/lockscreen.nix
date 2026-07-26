@@ -107,7 +107,7 @@ in
           blur_size = 6;
           noise = 0.012;
           contrast = 0.92;
-          brightness = 0.62; # meio-termo: wallpaper aparece, mas escurece o bastante p/ o relógio/frase ficarem legíveis
+          brightness = 0.40; # escuro o bastante p/ o relógio/frase ficarem bem legíveis (a wallpaper ainda aparece)
           vibrancy = 0.17;
         }
         {

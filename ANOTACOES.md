@@ -55,9 +55,12 @@
 - [x] Software para notificações — o Quickshell é o daemon (dono do org.freedesktop.Notifications):
       toasts + centro de controle, em QML. Substituiu o swaync/mako (dois daemons brigam pelo mesmo
       nome D-Bus). Alternativas standalone p/ referência: mako (minimalista) / swaync (com control center).
-- [x] Instalar o flameshot — v13 estável + enableWlrSupport (grim). O v14 só
-      captura via portal (não funciona neste Hyprland); o v13 usa grim direto
-      (useGrimAdapter). Multi-monitor: windowrule estica o overlay pelas 2 telas.
+- [x] Instalar o flameshot — v14 do UNSTABLE (pkgs.unstable.flameshot, overlay do flake;
+      resto do sistema fica estável) + captura via xdg-desktop-portal (Screenshot servido
+      pelo portal-hyprland, que o programs.hyprland já habilita; XDG_CURRENT_DESKTOP=Hyprland).
+      SEM grim direto/useGrimAdapter → some o aviso "grim ... GNOME". A ideia antiga de que
+      "o portal não funcionava aqui" ficou obsoleta (o portal-hyprland passou a prover a
+      interface Screenshot). Multi-monitor: windowrule estica o overlay pelas 2 telas.
       Pacote + config em home/apps/flameshot.nix.
   - <https://wiki.nixos.org/wiki/Flameshot>
 - [ ] Verificar se é possível adicionar estado declarativo criptografado
@@ -177,3 +180,6 @@
       em 0x0 = se a TV desconectar, o LG segue sozinho sem offset (ws 5–8 recaem nele).
 
 - [ ] Configurar para ser indexado e aparecer nos primeiro resultado do Google (SEO/AIO Ranking)
+- [ ] Organizar meu markdown de anotações
+- [ ] Adicionar um método de zip direto no tooltip do meu file manager (Dolphin) — zipar sem abrir o terminal, via menu de contexto (botão direito). Pesquisar se há algum software que faça isso.
+- [ ] Adicionar um arquivo para declarar quais softwares inicializam e ficam ativos com a minha maquina (preciso ter esse acompanhamento)

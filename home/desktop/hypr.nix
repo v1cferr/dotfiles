@@ -13,7 +13,7 @@
 # home/desktop/hypr/hyprland.lua (arquivo real no repo). Edita o .lua + `hyprctl
 # reload` → aplica na hora, sem rebuild. Os scripts do Lua (minimize-others,
 # brightness-osd) entram no PATH via home.packages, então o .lua os chama por nome.
-{ pkgs, config, ... }:
+{ pkgs, config, inputs, ... }:
 
 let
   # minimize-others: manda as OUTRAS janelas da workspace atual pra special:minimized
@@ -75,14 +75,14 @@ let
   };
 
   # brightness-osd: "brilho" via gamma do hyprsunset (este desktop não tem backlight
-  # real — brightnessctl/ddcutil ausentes) + OSD via notify-send (o Quickshell é o
-  # daemon de notificação agora). Só tem efeito com o hyprsunset rodando. Uso:
-  # brightness-osd up|down|reset.
-  # Lê o gamma atual, calcula o novo e CLAMPA [floor, ceil] setando ABSOLUTO — o
-  # hyprsunset só clampa o teto (max-gamma); embaixo ia a 0/negativo e bugava a tela.
+  # real — brightnessctl/ddcutil ausentes). Mostra o OSD NATIVO do Quickshell (barra
+  # bottom-center) via IPC — não é toast. Só tem efeito com o hyprsunset rodando.
+  # Uso: brightness-osd up|down|reset. Lê o gamma atual, calcula o novo e CLAMPA
+  # [floor, ceil] setando ABSOLUTO — o hyprsunset só clampa o teto (max-gamma);
+  # embaixo ia a 0/negativo e bugava a tela.
   brightnessOsd = pkgs.writeShellApplication {
     name = "brightness-osd";
-    runtimeInputs = with pkgs; [ hyprland libnotify coreutils ];
+    runtimeInputs = [ pkgs.hyprland pkgs.coreutils inputs.quickshell.packages.${pkgs.system}.default ];
     text = ''
       step=10
       floor=20  # piso: nunca deixa a tela preta/bugada
@@ -104,9 +104,9 @@ let
       if [ "$new" -gt "$ceil" ];  then new=$ceil;  fi
       hyprctl hyprsunset gamma "$new" >/dev/null 2>&1 || true
 
-      # x-canonical-private-synchronous: dica p/ o daemon trocar a notif no lugar (OSD).
-      notify-send -h string:x-canonical-private-synchronous:brightness \
-        -h "int:value:$new" "󰃞 Brilho" "$new%" || true
+      # empurra o OSD nativo do Quickshell (barra bottom-center) via IPC — o handler
+      # está no home/desktop/quickshell/osd/Osd.qml (target "osd", func brightness).
+      qs ipc call osd brightness "$new" "$ceil" >/dev/null 2>&1 || true
     '';
   };
 

@@ -938,7 +938,7 @@ Scope {
         RowLayout {
             id: groupRow
             anchors.centerIn: parent
-            spacing: 1.5 // gap entre os pills/widgets de cada grupo (esq/centro/dir)
+            spacing: 2 // gap entre os pills/widgets de cada grupo (esq/centro/dir)
         }
     }
 

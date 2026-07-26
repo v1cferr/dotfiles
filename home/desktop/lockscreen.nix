@@ -29,10 +29,12 @@
 { config, pkgs, ... }:
 
 let
-  # ── Assets vendorizados no repo (vão pro /nix/store → 100% reprodutível) ─────
-  wallMain = ./lockscreen/wallpaper-main.png; # monitor principal (borrado no lock)
-  wallTv   = ./lockscreen/wallpaper-tv.jpg;   # TV (imagem estática, sem login)
-  quotesDb = ./lockscreen/quotes.tsv;         # banco offline de frases (en<TAB>pt<TAB>autor)
+  # ── Wallpapers: oficiais do NixOS via pkgs.nixos-artwork (declarativos, sem
+  #    binário no git; bump junto com o nixpkgs). quotes.tsv segue vendorizado. ──
+  art = pkgs.nixos-artwork.wallpapers;
+  wallMain = "${art.nineish-catppuccin-mocha}/share/backgrounds/nixos/nix-wallpaper-nineish-catppuccin-mocha.png"; # principal (borrado no lock)
+  wallTv   = "${art.watersplash}/share/backgrounds/nixos/nix-wallpaper-watersplash.png"; # TV (imagem estática, sem login)
+  quotesDb = ./lockscreen/quotes.tsv; # banco offline de frases (en<TAB>pt<TAB>autor)
 
   # ── Monitores (mesmos nomes de conector do home/hypr.nix) ────────────────────
   primary   = "DP-2";      # LG ULTRAGEAR — desktop borrado + login

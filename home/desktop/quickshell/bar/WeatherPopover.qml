@@ -14,7 +14,7 @@ PanelWindow {
         left: true
     }
     margins {
-        top: 33
+        top: 8 // gap abaixo da bar (barExclusiveZone 30 já é somada)
         left: bar.popLeft(wPop.implicitWidth)
     }
     exclusiveZone: 0

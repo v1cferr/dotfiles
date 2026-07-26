@@ -34,7 +34,7 @@ Pill {
             left: true
         }
         margins {
-            top: 33
+            top: 8 // gap abaixo da bar (barExclusiveZone 30 já é somada)
             left: 8
         }
         exclusiveZone: 0

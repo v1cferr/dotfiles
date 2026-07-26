@@ -15,9 +15,10 @@
 
 {
   imports = [
+    ./packages.nix # LISTA CENTRAL de apps/CLIs do usuário (espelha o system/packages.nix)
     ./shell # terminal, shell e dev-cli (zsh/starship/cli/kitty/git)
     ./desktop # Hyprland + Wayland + aparência (hypr/waybar/lockscreen/theme/xdg…)
-    ./apps # apps GUI de usuário (discord/dropbox/media/dolphin/flameshot/mangohud)
+    ./apps # apps de usuário COM config própria (dropbox/media/dolphin/flameshot/mangohud)
     ./services # serviços/timers do usuário (cs2-saves-backup, claude-discord-rpc)
   ];
 

@@ -3,8 +3,6 @@
 
 {
   imports = [
-    ./gui.nix # apps GUI sem config própria (browsers, discord, vscode, spotify, obsidian…)
-    ./games.nix # jogos/launchers/emuladores (bottles, rpcs3, prismlauncher)
     ./dropbox.nix # serviço de sync do usuário (~/Dropbox: Obsidian + docs)
     ./media.nix # visualizadores (Gwenview/Okular) + players (VLC/mpv) + apps padrão
     ./dolphin.nix # Dolphin: view mode sempre "Detalhes" (via activation)

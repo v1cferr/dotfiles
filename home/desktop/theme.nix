@@ -37,6 +37,10 @@ let
 in
 
 {
+  # Cursor Bibata: referenciado por NOME (dconf cursor-theme + envs XCURSOR no
+  # home/desktop/hypr.nix), então o pacote precisa estar no perfil do usuário.
+  home.packages = [ pkgs.bibata-cursors ];
+
   # Preferência global de esquema de cor + fonte da UI (dconf → gsettings).
   # A fonte aqui é o que os apps GTK/GNOME usam na interface — o fontconfig
   # (system/default.nix) já cobre o resto (mono/sans/serif), mas apps GTK leem
@@ -44,23 +48,28 @@ in
   dconf.settings."org/gnome/desktop/interface" = {
     color-scheme = "prefer-dark";
     gtk-theme = "Adwaita-dark";
-    icon-theme = "Fluent-dark"; # ícones Windows 11 (fluent-icon-theme, no system/)
+    icon-theme = "Fluent-dark"; # ícones Windows 11 (fluent-icon-theme, pacote no gtk abaixo)
     font-name = "JetBrainsMono Nerd Font 11";
     document-font-name = "JetBrainsMono Nerd Font 11";
     monospace-font-name = "JetBrainsMono Nerd Font 11";
-    # Cursor dos apps GTK (o Hyprland/XWayland pega pelas envs em home/hypr.nix).
+    # Cursor dos apps GTK (o Hyprland/XWayland pega pelas envs em home/desktop/hypr.nix).
     cursor-theme = "Bibata-Modern-Ice";
     cursor-size = 24;
   };
 
-  # Escreve ~/.config/gtk-3.0 e gtk-4.0 apontando pro tema escuro + fonte. Sem
-  # `package` no tema de propósito: o Adwaita-dark é instalado system-wide
-  # (gnome-themes-extra) e achado via XDG_DATA_DIRS — mantém a regra "home/ não
-  # instala pacote". A fonte também vem do system/ (fonts.packages).
+  # Escreve ~/.config/gtk-3.0 e gtk-4.0 apontando pro tema escuro + fonte. Os
+  # pacotes do tema e dos ícones são declarados AQUI (regra 4): o home-manager os
+  # põe no perfil do usuário e referencia. A fonte vem do system/ (fonts.packages).
   gtk = {
     enable = true;
-    theme.name = "Adwaita-dark";
-    iconTheme.name = "Fluent-dark"; # ícones Windows 11 nos apps GTK (pacote no system/)
+    theme = {
+      name = "Adwaita-dark";
+      package = pkgs.gnome-themes-extra; # traz o Adwaita-dark
+    };
+    iconTheme = {
+      name = "Fluent-dark";
+      package = pkgs.fluent-icon-theme; # ícones estilo Windows 11 (Fluent-dark)
+    };
     font.name = "JetBrainsMono Nerd Font";
     font.size = 11;
   };

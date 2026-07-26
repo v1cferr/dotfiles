@@ -32,9 +32,6 @@
     cliphist # histórico de clipboard no Wayland (guarda texto/imagem; picker via wofi)
     wl-clipboard # wl-copy/wl-paste — base do clipboard Wayland (o cliphist depende dele)
     wl-clip-persist # mantém o clipboard vivo após o app de origem fechar (ex.: imagem do Flameshot)
-    gnome-themes-extra # tema GTK Adwaita-dark (usado pelo home/theme.nix)
-    fluent-icon-theme # ícones estilo Windows 11 (Fluent-dark; config no home/theme.nix)
-    bibata-cursors # tema de cursor Bibata-Modern-Ice (config no home/)
     librewolf
     google-chrome
     inputs.zen-browser.packages.${pkgs.system}.default # Zen (flake; ver flake.nix)

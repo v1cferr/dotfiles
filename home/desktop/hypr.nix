@@ -73,24 +73,34 @@ let
 
   # brightness-osd: "brilho" via gamma do hyprsunset (este desktop não tem backlight
   # real — brightnessctl/ddcutil ausentes) + OSD no swaync (notify-send com replace
-  # in-place). Só tem efeito com o hyprsunset rodando. Uso: brightness-osd up|down.
+  # in-place). Só tem efeito com o hyprsunset rodando. Uso: brightness-osd up|down|reset.
+  # Lê o gamma atual, calcula o novo e CLAMPA [floor, ceil] setando ABSOLUTO — o
+  # hyprsunset só clampa o teto (max-gamma); embaixo ia a 0/negativo e bugava a tela.
   brightnessOsd = pkgs.writeShellApplication {
     name = "brightness-osd";
     runtimeInputs = with pkgs; [ hyprland libnotify coreutils ];
     text = ''
       step=10
+      floor=20  # piso: nunca deixa a tela preta/bugada
+      ceil=150  # teto = max-gamma do hyprsunset.nix
+
+      cur="$(hyprctl hyprsunset gamma 2>/dev/null | tr -dc '0-9' || true)"
+      [ -n "$cur" ] || cur=100
+
       case "''${1:-up}" in
-        up)   hyprctl hyprsunset gamma "+$step" >/dev/null 2>&1 || true ;;
-        down) hyprctl hyprsunset gamma "-$step" >/dev/null 2>&1 || true ;;
+        up)    new=$((cur + step)) ;;
+        down)  new=$((cur - step)) ;;
+        reset) new=100 ;;           # volta pro brilho normal
+        *)     new=$cur ;;
       esac
 
-      # gamma resultante (o hyprsunset já clampa); se o serviço estiver off, mostra 100.
-      g="$(hyprctl hyprsunset gamma 2>/dev/null | tr -dc '0-9' || true)"
-      [ -n "$g" ] || g=100
+      if [ "$new" -lt "$floor" ]; then new=$floor; fi
+      if [ "$new" -gt "$ceil" ];  then new=$ceil;  fi
+      hyprctl hyprsunset gamma "$new" >/dev/null 2>&1 || true
 
       # x-canonical-private-synchronous → o swaync troca a notificação no lugar (vira OSD).
       notify-send -h string:x-canonical-private-synchronous:brightness \
-        -h "int:value:$g" "󰃞 Brilho" "$g%" || true
+        -h "int:value:$new" "󰃞 Brilho" "$new%" || true
     '';
   };
 in
@@ -293,9 +303,11 @@ in
     -- brilho = gamma do hyprsunset (desktop sem backlight); OSD via swaync.
     hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("${brightnessOsd}/bin/brightness-osd up"),   { locked = true, repeating = true })
     hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("${brightnessOsd}/bin/brightness-osd down"), { locked = true, repeating = true })
-    -- alternativa sem teclas dedicadas de brilho: SHIFT + teclas de volume.
-    hl.bind("SHIFT + XF86AudioRaiseVolume", hl.dsp.exec_cmd("${brightnessOsd}/bin/brightness-osd up"),   { locked = true, repeating = true })
-    hl.bind("SHIFT + XF86AudioLowerVolume", hl.dsp.exec_cmd("${brightnessOsd}/bin/brightness-osd down"), { locked = true, repeating = true })
+    -- Brilho (gamma) no cluster de áudio, já que o teclado não tem teclas de brilho:
+    -- SHIFT+VolUp = +claro · SHIFT+VolDown = +escuro · SHIFT+Mute = reset (100%).
+    hl.bind("SHIFT + XF86AudioRaiseVolume", hl.dsp.exec_cmd("${brightnessOsd}/bin/brightness-osd up"),    { locked = true, repeating = true })
+    hl.bind("SHIFT + XF86AudioLowerVolume", hl.dsp.exec_cmd("${brightnessOsd}/bin/brightness-osd down"),  { locked = true, repeating = true })
+    hl.bind("SHIFT + XF86AudioMute",        hl.dsp.exec_cmd("${brightnessOsd}/bin/brightness-osd reset"), { locked = true })
 
     -- ── Window rules ───────────────────────────────────────────────────────────
     -- Transparência sutil em tudo: ativa 0.98 / inativa 0.96 (contraste + wallpaper).

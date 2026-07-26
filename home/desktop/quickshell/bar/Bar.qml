@@ -260,13 +260,7 @@ Scope {
             root.vpnName = n;
         } catch (e) {}
     }
-    Process {
-        id: vpnProc
-        command: [root.vpnBin, "status-json"]
-        stdout: StdioCollector {
-            onStreamFinished: root.parseVpn(text)
-        }
-    }
+    // VPN removida (migração adiada — netExtender fora do nixpkgs). Sem polling.
 
     // ===== Hypridle (toggle-hypridle.sh) =====
     property string hypridleIcon: "󰒲"
@@ -809,7 +803,6 @@ Scope {
         triggeredOnStart: true
         onTriggered: {
             memProc.running = true;
-            vpnProc.running = true;
         }
     }
     Timer {
@@ -1158,14 +1151,6 @@ Scope {
                         label: root.cpuPct + "%"
                         accent: root.stateColor(root.cpuPct, Theme.colYellow)
                         onHoveredChanged: hovered ? root.showMetric("usage", usagePill, barContent, bar.screen) : root.unhoverMetric()
-                    }
-                    Pill {
-                        icon: "󰦝"
-                        label: root.vpnConnected ? root.vpnName : ""
-                        accent: root.vpnConnected ? Theme.colGreen : Theme.colDim
-                        maxWidth: 150
-                        onClicked: root.launch(["qs", "ipc", "call", "vpn", "toggle"])
-                        onRightClicked: root.launch([root.vpnBin, "menu"])
                     }
                     Pill {
                         id: netPill

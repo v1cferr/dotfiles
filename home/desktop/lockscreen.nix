@@ -32,8 +32,8 @@ let
   # ── Wallpapers: oficiais do NixOS via pkgs.nixos-artwork (declarativos, sem
   #    binário no git; bump junto com o nixpkgs). quotes.tsv segue vendorizado. ──
   art = pkgs.nixos-artwork.wallpapers;
-  wallMain = "${art.nineish-catppuccin-mocha}/share/backgrounds/nixos/nix-wallpaper-nineish-catppuccin-mocha.png"; # principal (borrado no lock)
-  wallTv   = "${art.watersplash}/share/backgrounds/nixos/nix-wallpaper-watersplash.png"; # TV (imagem estática, sem login)
+  wallMain = "${art.catppuccin-mocha}/share/backgrounds/nixos/nixos-wallpaper-catppuccin-mocha.png"; # principal (borrado no lock)
+  wallTv   = "${art.moonscape}/share/backgrounds/nixos/nix-wallpaper-moonscape.png"; # TV (imagem estática, sem login)
   quotesDb = ./lockscreen/quotes.tsv; # banco offline de frases (en<TAB>pt<TAB>autor)
 
   # ── Monitores (mesmos nomes de conector do home/hypr.nix) ────────────────────
@@ -103,11 +103,11 @@ in
         {
           monitor = primary;
           path = "${wallMain}"; # PNG nítido; o hyprlock faz o blur/brilho
-          blur_passes = 3;
+          blur_passes = 2; # aliviado de 3 → a wallpaper aparece mais (widgets seguem legíveis)
           blur_size = 6;
           noise = 0.012;
           contrast = 0.92;
-          brightness = 0.55;
+          brightness = 0.7; # aliviado de 0.55 → menos escurecido
           vibrancy = 0.17;
         }
         {

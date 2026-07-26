@@ -72,7 +72,7 @@ let
   };
 
   # brightness-osd: "brilho" via gamma do hyprsunset (este desktop não tem backlight
-  # real — brightnessctl/ddcutil ausentes) + OSD no mako (notify-send com replace
+  # real — brightnessctl/ddcutil ausentes) + OSD no swaync (notify-send com replace
   # in-place). Só tem efeito com o hyprsunset rodando. Uso: brightness-osd up|down.
   brightnessOsd = pkgs.writeShellApplication {
     name = "brightness-osd";
@@ -88,7 +88,7 @@ let
       g="$(hyprctl hyprsunset gamma 2>/dev/null | tr -dc '0-9' || true)"
       [ -n "$g" ] || g=100
 
-      # x-canonical-private-synchronous → o mako troca a notificação no lugar (vira OSD).
+      # x-canonical-private-synchronous → o swaync troca a notificação no lugar (vira OSD).
       notify-send -h string:x-canonical-private-synchronous:brightness \
         -h "int:value:$g" "󰃞 Brilho" "$g%" || true
     '';
@@ -169,7 +169,7 @@ in
     hl.on("hyprland.start", function()
       -- Sessão systemd --user: importa o env do Wayland e inicia o hyprland-session.target
       -- (BindsTo graphical-session.target). Sem isto os serviços --user (hyprsunset/hypridle/
-      -- mako) NÃO sobem no login — o LightDM lança o Hyprland cru, sem integração systemd.
+      -- swaync) NÃO sobem no login — o LightDM lança o Hyprland cru, sem integração systemd.
       -- O target está declarado em systemd.user.targets (abaixo do xdg.configFile).
       hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP && systemctl --user start hyprland-session.target")
       hl.exec_cmd("waybar")
@@ -289,7 +289,7 @@ in
     hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
     hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
     hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
-    -- brilho = gamma do hyprsunset (desktop sem backlight); OSD via mako.
+    -- brilho = gamma do hyprsunset (desktop sem backlight); OSD via swaync.
     hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("${brightnessOsd}/bin/brightness-osd up"),   { locked = true, repeating = true })
     hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("${brightnessOsd}/bin/brightness-osd down"), { locked = true, repeating = true })
     -- alternativa sem teclas dedicadas de brilho: SHIFT + teclas de volume.
@@ -368,7 +368,7 @@ in
 
   # Sessão systemd do usuário. O LightDM lança o Hyprland "cru" (sem integração
   # systemd), então o graphical-session.target — que os serviços --user do desktop
-  # (hyprsunset/hypridle/mako) usam como WantedBy — nunca era ativado, e nenhum
+  # (hyprsunset/hypridle/swaync) usam como WantedBy — nunca era ativado, e nenhum
   # subia no login. Este target o ativa via BindsTo (o graphical-session.target
   # recusa start manual, só por dependência); o autostart acima o inicia. Espelha o
   # que o módulo wayland.windowManager.hyprland faria — aqui a config é raw.

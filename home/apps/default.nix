@@ -3,7 +3,7 @@
 
 {
   imports = [
-    ./discord.nix # cliente Discord (voz/chat; expõe o socket IPC pro Rich Presence)
+    ./gui.nix # apps GUI sem config própria (browsers, discord, vscode, spotify, obsidian…)
     ./dropbox.nix # serviço de sync do usuário (~/Dropbox: Obsidian + docs)
     ./media.nix # visualizadores (Gwenview/Okular) + players (VLC/mpv) + apps padrão
     ./dolphin.nix # Dolphin: view mode sempre "Detalhes" (via activation)

@@ -1,7 +1,8 @@
 # ═══════════════════════════════════════════════════════════════════════════
 # PACOTES DE SISTEMA (nível-root) ─────────────────────────────────────────────
-# Apps e ferramentas system-wide. Pacotes de USUÁRIO com integração de shell
-# (eza, fzf, zoxide…) ficam no home/ (programs.*). Ver home/default.nix.
+# Só ferramentas de NÍVEL-SISTEMA: resgate/base, diagnóstico e o que root/serviços
+# precisam. Apps e CLIs de USUÁRIO vivem no home/ (regra 4): programs.* quando há
+# módulo, senão home.packages agrupado por categoria (ver home/apps, home/shell).
 #
 # `pkgs.foo`          → versão da BASE estável (26.05). Use por padrão.
 # `pkgs.unstable.foo` → versão BLEEDING-EDGE (canal unstable). Só o que você
@@ -25,26 +26,8 @@
     openssl # gerar senhas/chaves (rand), TLS, etc.
     python3 # interpretador Python (rodar scripts; libs por projeto ficam no uv/venv)
     uv # gerenciador Python rápido (venv/deps/pythons); os pythons dele rodam via nix-ld
-    librewolf
-    google-chrome
-    inputs.zen-browser.packages.${pkgs.system}.default # Zen (flake; ver flake.nix)
-    # override: --password-store=gnome-libsecret — no Hyprland o Electron não
-    # autodetecta o backend de secret (XDG_CURRENT_DESKTOP não é GNOME/KDE) e mostra
-    # "couldn't identify OS keyring"; a flag força o uso do gnome-keyring (libsecret).
-    # Extensões/settings ficam com o Settings Sync (conta), NÃO com o nix — evita o
-    # cabo-de-guerra (nix instala symlink read-only e não propaga pras outras máquinas).
-    (vscode.override { commandLineArgs = "--password-store=gnome-libsecret"; })
-    spotify # unfree (ok: allowUnfree acima)
-    # whatsapp  # (estava comentado na config original)
-    unzip
-    qbittorrent # app GUI de torrent (janela, uso manual) — separado do serviço headless (media/qbittorrent.nix)
-    obsidian # notas em Markdown (cofre local; unfree — ok pelo allowUnfree acima)
-
-    # ── Gerenciador de senhas: Bitwarden ──
-    # desktop trava no Electron 39 EOL (liberado em permittedInsecurePackages
-    # no core.nix — os dois canais fixam o mesmo Electron, então fica no estável).
-    bitwarden-desktop # app desktop (GUI Electron)
-    bitwarden-cli # `bw` — consultar/scriptar o cofre no terminal
+    unzip # descompacta .zip (utilitário base)
+    bitwarden-cli # `bw` — consultar/scriptar o cofre no terminal (fluxo de segredos)
 
     # ── Jogos: Wine/WoW via Bottles ──
     # `bottles` do nixpkgs vem FHS-wrapped → os runners (GE-Proton/wine-staging)

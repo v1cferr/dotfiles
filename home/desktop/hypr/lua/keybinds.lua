@@ -104,8 +104,9 @@ hl.bind("Print",                   hl.dsp.exec_cmd("flameshot gui"))
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("flameshot-screenshot"))
 
 hl.define_submap("screenshot", function()
-  hl.bind("1",      hl.dsp.exec_cmd("flameshot-pick DP-2"))     -- monitor principal (LG)
-  hl.bind("2",      hl.dsp.exec_cmd("flameshot-pick HDMI-A-3")) -- monitor secundário (TV)
+  -- posicional: 1 = tela da ESQUERDA (TV), 2 = tela da DIREITA (LG principal).
+  hl.bind("1",      hl.dsp.exec_cmd("flameshot-pick HDMI-A-3")) -- secundário (TV, à esquerda)
+  hl.bind("2",      hl.dsp.exec_cmd("flameshot-pick DP-2"))     -- principal (LG, à direita)
   hl.bind("escape", hl.dsp.exec_cmd("flameshot-cancel"))        -- cancela + sai do submap
 end)
 

@@ -34,13 +34,6 @@
     options = [ "nofail" "x-systemd.device-timeout=5s" ];
   };
 
-  # Netac (NVMe Gen3) — Windows/dados (NE-1TB 2280), NTFS somente leitura.
-  fileSystems."/mnt/netac-win" = {
-    device = "/dev/disk/by-uuid/CA9C7EDD9C7EC38B";
-    fsType = "ntfs3";
-    options = [ "ro" "nofail" "uid=1000" "gid=100" "x-systemd.device-timeout=5s" ];
-  };
-
   # Kernel — MESMO hardware do Seagate (mesma MOBO/CPU). SanDisk é SATA (ahci +
   # sd_mod). No cutover, dá pra regenerar com nixos-generate-config se algo mudar.
   boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];

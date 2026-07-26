@@ -13,29 +13,47 @@
 
 ## Ideias
 
-> Não sei se vou usar Quickshell ou não, mas tava pensando em migrar tudo para quickshell sim para ser personalizavel conforme minhas necessidades
+> Quickshell: DECIDIDO — migrei tudo pro Quickshell (ver TODO). Personalizável em QML
+> com hot-reload; o Hyprland também virou hot-reload (hyprland.lua via mkOutOfStoreSymlink).
 
 ## TODO
 
-- [ ] Adicionar o Quickshell para customizar o Hyprland (menu de contexto, widgets, notificações, etc)
+- [x] Quickshell — shell/bar/OSD/mídia/NOTIFICAÇÕES em QML (portado do meu Arch,
+      adaptado). Substituiu a waybar (removida) E o swaync (o Quickshell é o daemon de
+      org.freedesktop.Notifications). Binário do flake oficial (latest). Config QML em
+      home/desktop/quickshell/ via mkOutOfStoreSymlink → HOT-RELOAD (edita .qml e
+      recarrega ao vivo; delegate de Repeater às vezes pede restart do qs, SUPER+ESCAPE).
+      Adaptações Arch→NixOS: GPU nvidia→sysfs xe (só temp), hypridle→systemctl, monitores
+      DP-2/HDMI-A-3, VPN dropada, Firefox→Zen.
+- [x] Hyprland hot-reload — hyprland.lua saiu do texto embutido pra arquivo real no repo
+      (home/desktop/hypr/hyprland.lua) via mkOutOfStoreSymlink: edita + `hyprctl reload`,
+      sem rebuild. Scripts (minimize-others/brightness-osd) vão pro PATH; o Lua chama por nome.
+- [x] Monitor fantasma — serviço hypr-monitor-watch (systemd --user) escuta o socket2 e dá
+      `hyprctl reload` no hotplug: mata a área fantasma (cursor na tela que sumiu) e move os
+      workspaces (TV fora → ws 5-8 no LG). Caveat: TV DESLIGADA que mantém o HDMI não manda
+      evento → precisaria de toggle manual.
+- [x] Brilho por teclado — SHIFT+VolUp/VolDown/0 = +claro/+escuro/reset (gamma do hyprsunset;
+      sem backlight real). Piso 20% (clamp) + teto 150%. OSD nativo do Quickshell via IPC.
+- [x] Frases do lockscreen via API — removido o quotes.tsv; serviço+timer busca lote da
+      ZenQuotes (EN) a cada 6 h → cache pango → shuf -n1. Offline: último cache + fallback.
 - [x] Configurar o OOM Killer — earlyoom (system/hardware/oom.nix), companheiro do zram:
       mata o MAIOR processo antes do freeze por falta de RAM. --prefer browsers/Electron,
       --avoid compositor/sessão/sshd. Coexiste com o systemd-oomd (backstop). thresholds
-      10%/10% (default testado); notifica no mako.
+      10%/10% (default testado); notifica via notify-send (Quickshell é o daemon).
 - [x] Alterar os wallpapers da minha screenlock — trocados os do Arch pelos oficiais do
       NixOS via pkgs.nixos-artwork.wallpapers (declarativo, sem binário no git):
       principal = catppuccin-mocha (cheia), TV = moonscape. Blur/brilho ajustados
       (blur_passes 2, brightness 0.40). home/desktop/lockscreen.nix.
   - <https://github.com/NixOS/nixos-artwork/tree/master/wallpapers>
 - [ ] Adicionar um método de zip direto no tooltip do meu file manager (Dolphin) — zipar sem abrir o terminal, via menu de contexto (botão direito). Pesquisar se há algum software que faça isso.
-- [ ] Software para notify
+- [x] Software para notify — o Quickshell é o daemon (org.freedesktop.Notifications): toasts + centro de controle.
 - [x] Instalar o flameshot — v13 estável + enableWlrSupport (grim). O v14 só
       captura via portal (não funciona neste Hyprland); o v13 usa grim direto
       (useGrimAdapter). Multi-monitor: windowrule estica o overlay pelas 2 telas.
       Pacote + config em home/apps/flameshot.nix.
   - <https://wiki.nixos.org/wiki/Flameshot>
 - [ ] Verificar se é possível adicionar estado declarativo criptografado
-- [ ] Adicionar um software para notificações
+- [x] Adicionar um software para notificações — feito pelo Quickshell (ver acima).
 - [x] Clipboard (Wayland) — cliphist + wl-clipboard, watcher no autostart do Hyprland
       e picker no wofi (SUPER+SHIFT+V). Pacotes E config em home/desktop/hypr.nix.
       + wl-clip-persist: mantém a cópia viva após o app fechar (fix da imagem do
@@ -103,19 +121,19 @@
       módulo do NixOS (useGlobalPkgs+useUserPackages), 1 rebuild aplica os dois e o
       unfree é herdado. MIGRAÇÃO CONCLUÍDA: todos os apps GUI/CLIs saíram do
       system/packages.nix → lista central home/packages.nix + módulos com config
-      próprios (kitty/dolphin/flameshot/media/waybar/tema/hypr helpers). system/
+      próprios (kitty/dolphin/flameshot/media/quickshell/tema/hypr helpers). system/
       ficou só com resgate/base/diagnóstico. (git/vim ficam nos dois de propósito:
       root/rescue vs programs.git — única exceção consciente.)
 - [ ] Migrar meus bindings das configs do Arch Linux (Hyprland)
 - [x] Lockscreen — [hyprlock](https://github.com/hyprwm/hyprlock) + hypridle,
       portados do Arch e 100% declarativos (home/desktop/lockscreen.nix). SEM scripts .sh
       soltos: a lógica mora no BUILD (Nix) ou no systemd, runtime = comando de 1
-      linha. Widgets: relógio + data pt-BR + usuário + frase (quotes.tsv → pango
-      no build; `shuf -n1`) + clima (wttr.in via timer systemd; `cat` do cache).
+      linha. Widgets: relógio + data pt-BR + usuário + frase (ZenQuotes API via timer
+      → cache pango; `shuf -n1`) + clima (wttr.in via timer systemd; `cat` do cache).
       Idle: lock aos 5 min + tela off via dpms NATIVO (testar — no Arch o driver
       antigo congelava; fallback = gamma, no histórico git). PAM em
       system/desktop/desktop.nix (sem ele não desbloqueia); locale pt_BR em system/core/core.nix.
-      SUPER+L tranca na hora. Notifs ficou de fora (depende do Quickshell).
+      SUPER+L tranca na hora. Notifs agora são do Quickshell (daemon nativo).
 - [x] Trocar a RTX 3050 → Intel Arc B580 (Battlemage) — FEITO. Arc validada (`xe`
       carregado, fastfetch/vainfo OK) e NVIDIA REMOVIDA de vez: system/hardware/gpu.nix agora
       é Intel puro (xe + Mesa, VA-API iHD), sem `my.gpu`, sem specialisation, sem CUDA.

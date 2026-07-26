@@ -14,7 +14,7 @@ PanelWindow {
         left: true
     }
     margins {
-        top: 8 // gap abaixo da bar (barExclusiveZone 30 já é somada)
+        top: 4 // = gaps_out do Hyprland: alinha o popover com o topo das janelas (barExclusiveZone 30 já somada)
         left: bar.popLeft(metricPop.implicitWidth)
     }
     exclusiveZone: 0

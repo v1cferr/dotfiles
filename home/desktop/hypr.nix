@@ -110,6 +110,36 @@ let
     '';
   };
 
+  # monitor-toggle: liga/desliga a TV (HDMI-A-3) NO HYPRLAND, à mão. Necessário
+  # porque a TV (ou o receiver/switch no meio) mantém o link HDMI vivo mesmo
+  # desligada → o DRM segue "connected" e o Hyprland NUNCA emite monitorremoved,
+  # então o monitor-watch não tem evento pra reagir e sobra o "monitor fantasma"
+  # (cursor indo pra tela que sumiu). Ao desabilitar, o Hyprland recolhe os
+  # workspaces 5–8 pro LG sozinho; reabilitar restaura com os params do hyprland.lua.
+  monitorToggle = pkgs.writeShellApplication {
+    name = "monitor-toggle";
+    runtimeInputs = with pkgs; [ hyprland jq coreutils ];
+    text = ''
+      name="HDMI-A-3"
+
+      # No parser Lua (0.55) o `hyprctl keyword` é bloqueado ("Use eval"), então a
+      # config de monitor em runtime vai por `hyprctl eval` chamando o MESMO hl.monitor
+      # do hyprland.lua. Religar repete mode/position/scale de lá (mantém a TV à
+      # esquerda do LG); desligar é só disabled=true.
+      on="hl.monitor({ output = \"$name\", mode = \"1920x1080@60\", position = \"-1920x0\", scale = 1, disabled = false })"
+      off="hl.monitor({ output = \"$name\", disabled = true })"
+
+      # presente em `hyprctl monitors` (só os ATIVOS) → está ligada → desliga.
+      if hyprctl -j monitors | jq -e --arg n "$name" 'any(.[]; .name==$n)' >/dev/null 2>&1; then
+        hyprctl eval "$off" >/dev/null 2>&1 || true
+        hyprctl notify -1 2000 "rgb(f38ba8)" "TV (HDMI-A-3) desligada — workspaces no LG" >/dev/null 2>&1 || true
+      else
+        hyprctl eval "$on" >/dev/null 2>&1 || true
+        hyprctl notify -1 2000 "rgb(a6e3a1)" "TV (HDMI-A-3) religada" >/dev/null 2>&1 || true
+      fi
+    '';
+  };
+
   # hypr-monitor-watch: escuta os eventos do Hyprland (socket2) e dá `hyprctl reload`
   # quando um monitor CONECTA/DESCONECTA. O reload re-aplica a config → recalcula o
   # layout (mata o "monitor fantasma" — cursor indo pra tela que sumiu) e MOVE os
@@ -139,6 +169,7 @@ in
   home.packages = with pkgs; [
     minimizeOthers # SUPER+M: minimiza as outras janelas (o Lua chama por nome)
     brightnessOsd # brilho via gamma do hyprsunset (SHIFT+Vol/0; chamado por nome)
+    monitorToggle # SUPER+SHIFT+T: liga/desliga a TV no Hyprland (fantasma da TV off)
     wofi
     cliphist
     wl-clipboard

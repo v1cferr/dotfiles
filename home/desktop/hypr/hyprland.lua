@@ -144,6 +144,11 @@ hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 hl.bind(mainMod .. " + F1", hl.dsp.focus({ monitor = "DP-2" }))
 hl.bind(mainMod .. " + F2", hl.dsp.focus({ monitor = "HDMI-A-3" }))
 
+-- Liga/desliga a TV (HDMI-A-3) no Hyprland, à mão. A TV mantém o link HDMI vivo
+-- desligada → o DRM segue "connected", o monitor-watch não recebe evento e sobra
+-- o "monitor fantasma". Desligar recolhe os workspaces 5–8 pro LG; ligar restaura.
+hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("monitor-toggle"))
+
 -- Workspaces 1–8 (SUPER troca; SUPER+SHIFT move a janela). 1–4 no LG, 5–8 na TV.
 for i = 1, 8 do
   hl.bind(mainMod .. " + " .. i,         hl.dsp.focus({ workspace = i }))

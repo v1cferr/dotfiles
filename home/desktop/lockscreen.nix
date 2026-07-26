@@ -107,7 +107,7 @@ in
           blur_size = 6;
           noise = 0.012;
           contrast = 0.92;
-          brightness = 0.7; # aliviado de 0.55 → menos escurecido
+          brightness = 0.62; # meio-termo: wallpaper aparece, mas escurece o bastante p/ o relógio/frase ficarem legíveis
           vibrancy = 0.17;
         }
         {

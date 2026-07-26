@@ -33,7 +33,8 @@
 
       # ── GPU (Arc B580 / xe) ──
       gpu_stats = true; # uso (%)
-      gpu_temp = true; # temperatura
+      gpu_temp = true; # temperatura do core
+      gpu_mem_temp = true; # temperatura da VRAM (sensor existe; no xe pode ficar vazio)
       gpu_core_clock = true; # clock do core
       gpu_mem_clock = true; # clock da VRAM
       gpu_power = true; # consumo em W (xe não expõe hoje → pode ficar vazio)
@@ -43,7 +44,9 @@
       gpu_load_change = true; # colore conforme a carga
 
       # ── Memória / I-O de disco ──
-      ram = true; # RAM usada
+      ram = true; # RAM usada (total do sistema)
+      procmem = true; # RAM usada só pelo processo do jogo
+      swap = true; # uso de swap
       io_read = true; # leitura de disco (MiB/s)
       io_write = true; # escrita de disco (MiB/s)
 
@@ -53,6 +56,7 @@
       wine = true; # versão do Wine/Proton
       resolution = true; # resolução de render
       throttling_status = true; # avisa se há throttle térmico/power
+      time = true; # relógio no overlay (útil p/ screenshots/gravações)
 
       # ── Aparência / posição ──
       position = "top-left"; # canto do overlay

@@ -4,8 +4,8 @@
 # declarativa e reprodutível — no BUILD (Nix puro) ou no SYSTEMD — e o runtime é
 # só comando de 1 linha, com binário por caminho ABSOLUTO (${pkgs...}/bin/x), sem
 # depender de PATH. Assim isto sobrevive a upgrades (durável 2032+):
-#   • quote   → o TSV vira frases pango prontas NO BUILD (runCommand); no lock só
-#               roda `shuf -n1` no arquivo já formatado.
+#   • quote   → serviço+timer systemd busca um lote da ZenQuotes API a cada 6 h e
+#               formata em pango num cache; no lock só roda `shuf -n1`. Frases em EN.
 #   • weather → um serviço+timer systemd busca o wttr.in a cada 10 min p/ um cache;
 #               no lock só roda `cat`. Fonte estável, sem raspar HTML.
 #   • idle    → `dpms off/on` NATIVO do hypridle (sem script de dim).
@@ -30,11 +30,10 @@
 
 let
   # ── Wallpapers: oficiais do NixOS via pkgs.nixos-artwork (declarativos, sem
-  #    binário no git; bump junto com o nixpkgs). quotes.tsv segue vendorizado. ──
+  #    binário no git; bump junto com o nixpkgs). ──
   art = pkgs.nixos-artwork.wallpapers;
   wallMain = "${art.catppuccin-mocha}/share/backgrounds/nixos/nixos-wallpaper-catppuccin-mocha.png"; # principal (borrado no lock)
   wallTv   = "${art.moonscape}/share/backgrounds/nixos/nix-wallpaper-moonscape.png"; # TV (imagem estática, sem login)
-  quotesDb = ./lockscreen/quotes.tsv; # banco offline de frases (en<TAB>pt<TAB>autor)
 
   # ── Monitores (mesmos nomes de conector do home/hypr.nix) ────────────────────
   primary   = "DP-2";      # LG ULTRAGEAR — desktop borrado + login
@@ -58,14 +57,27 @@ let
   shuf        = "${pkgs.coreutils}/bin/shuf";
   catBin      = "${pkgs.coreutils}/bin/cat";
 
-  # ── Quote: TSV → frases pango prontas NO BUILD (Nix puro; runtime = shuf -n1) ──
-  # sed escapa &<> (pango) e o awk reordena p/ "«pt» — autor", filtrando frases
-  # longas (>120) que estourariam a linha. Resultado: 1 frase pango por linha.
-  quotes = pkgs.runCommand "lockscreen-quotes" { } ''
-    ${pkgs.gnused}/bin/sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' ${quotesDb} \
-      | ${pkgs.gawk}/bin/awk -F'\t' 'length($2) <= 120 {
-          print "<i>“" $2 "”</i>  <b>— " $3 "</b>"
-        }' > $out
+  # ── Quote: cache atualizado por timer systemd (ZenQuotes API; runtime = shuf -n1)
+  # Substituiu o quotes.tsv vendorizado. O timer busca um LOTE (~50) do zenquotes.io
+  # /api/quotes, filtra (não-vazio, <=120 chars, sem o placeholder de rate-limit),
+  # escapa &<> (pango) e grava atômico; o lock só roda shuf -n1. Frases em INGLÊS
+  # (não há API PT decente). Offline: mantém o último cache; sem rede na 1ª vez → fallback.
+  quotesCache = "${config.xdg.cacheHome}/lockscreen/quotes";
+  quotesFetch = pkgs.writeShellScript "lockscreen-quotes-fetch" ''
+    ${pkgs.coreutils}/bin/mkdir -p ${config.xdg.cacheHome}/lockscreen
+    tmp="${quotesCache}.tmp"
+    if ${pkgs.curl}/bin/curl -s --max-time 15 'https://zenquotes.io/api/quotes' \
+      | ${pkgs.jq}/bin/jq -r '.[]
+          | select((.q | length) > 0 and (.q | length) <= 120 and .a != "zenquotes.io")
+          | "<i>“" + (.q | gsub("&";"&amp;") | gsub("<";"&lt;") | gsub(">";"&gt;")) + "”</i>  <b>— "
+            + (.a | gsub("&";"&amp;") | gsub("<";"&lt;") | gsub(">";"&gt;")) + "</b>"' > "$tmp" \
+      && [ -s "$tmp" ]; then
+      ${pkgs.coreutils}/bin/mv "$tmp" ${quotesCache}
+    else
+      ${pkgs.coreutils}/bin/rm -f "$tmp"
+    fi
+    # fallback: garante ao menos 1 frase (1º boot sem rede) p/ o shuf não vir vazio.
+    [ -s ${quotesCache} ] || echo '<i>“The best way to predict the future is to invent it.”</i>  <b>— Alan Kay</b>' > ${quotesCache}
   '';
 
   # ── Weather: cache atualizado por timer systemd (wttr.in; runtime = cat) ───────
@@ -172,10 +184,10 @@ in
           halign = "center";
           valign = "center";
         }
-        # Frase pt-BR no rodapé esquerdo (arquivo pré-formatado no build → shuf -n1)
+        # Frase no rodapé esquerdo (cache da ZenQuotes API atualizado por timer → shuf -n1)
         {
           monitor = primary;
-          text = "cmd[update:150000] ${shuf} -n1 ${quotes}";
+          text = "cmd[update:150000] ${shuf} -n1 ${quotesCache}";
           color = "rgba(c0caf5cc)";
           font_size = 13;
           font_family = font;
@@ -250,6 +262,24 @@ in
     Timer = {
       OnBootSec = "1min";        # 1ª busca logo após o boot
       OnUnitActiveSec = "10min"; # e a cada 10 min depois
+      Persistent = true;
+    };
+    Install.WantedBy = [ "timers.target" ];
+  };
+
+  # ── Quotes: cache do ZenQuotes via serviço oneshot + timer (substituiu o TSV) ──
+  systemd.user.services.lockscreen-quotes = {
+    Unit.Description = "Atualiza o cache de frases da tela de bloqueio (ZenQuotes)";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${quotesFetch}";
+    };
+  };
+  systemd.user.timers.lockscreen-quotes = {
+    Unit.Description = "Renova o lote de frases da tela de bloqueio a cada 6 h";
+    Timer = {
+      OnBootSec = "1min";       # 1º lote logo após o boot
+      OnUnitActiveSec = "6h";   # renova o lote a cada 6 h (variedade sem martelar a API)
       Persistent = true;
     };
     Install.WantedBy = [ "timers.target" ];

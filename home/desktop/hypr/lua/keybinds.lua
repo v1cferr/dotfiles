@@ -87,12 +87,13 @@ hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = tr
 hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightness-osd up"),   { locked = true, repeating = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightness-osd down"), { locked = true, repeating = true })
 -- Brilho (gamma), já que o teclado não tem teclas de brilho:
--- SHIFT+VolUp = +claro · SHIFT+VolDown = +escuro · SHIFT+0 = reset (100%).
--- Reset por code:19 (tecla 0 física): no ABNT2 Shift+0 vira ")" (o keysym muda
--- com shift), então bindar "SHIFT + 0" não pegaria — o keycode ignora isso.
+-- SHIFT+VolUp = +claro · SHIFT+VolDown = +escuro · SUPER+SHIFT+B = reset (100%).
+-- Reset saiu do SHIFT+code:19 (tecla 0 física): bindar aquilo CONSUMIA o keystroke
+-- e, no ABNT2, ")" é Shift+0 → não dava pra fechar parêntese. SUPER+SHIFT+B não
+-- rouba tecla de digitação nenhuma.
 hl.bind("SHIFT + XF86AudioRaiseVolume", hl.dsp.exec_cmd("brightness-osd up"),    { locked = true, repeating = true })
 hl.bind("SHIFT + XF86AudioLowerVolume", hl.dsp.exec_cmd("brightness-osd down"),  { locked = true, repeating = true })
-hl.bind("SHIFT + code:19",              hl.dsp.exec_cmd("brightness-osd reset"), { locked = true })
+hl.bind(mainMod .. " + SHIFT + B",      hl.dsp.exec_cmd("brightness-osd reset"), { locked = true })
 
 -- Screenshot: Print ou SUPER+SHIFT+S (estilo Windows) → editor do flameshot
 -- cobrindo as duas telas (a window_rule está em rules.lua). Salva em ~/Pictures/Screenshots.

@@ -4,8 +4,8 @@
 # declarativa e reprodutível — no BUILD (Nix puro) ou no SYSTEMD — e o runtime é
 # só comando de 1 linha, com binário por caminho ABSOLUTO (${pkgs...}/bin/x), sem
 # depender de PATH. Assim isto sobrevive a upgrades (durável 2032+):
-#   • quote   → serviço+timer systemd busca um lote da ZenQuotes API a cada 6 h e
-#               formata em pango num cache; no lock só roda `shuf -n1`. Frases em EN.
+#   • quote   → serviço+timer systemd busca um lote da ZenQuotes API 1×/dia, traduz
+#               p/ pt-BR (DeepL) e formata em pango num cache; no lock só `shuf -n1`.
 #   • weather → um serviço+timer systemd busca o wttr.in a cada 10 min p/ um cache;
 #               no lock só roda `cat`. Fonte estável, sem raspar HTML.
 #   • idle    → `dpms off/on` NATIVO do hypridle (sem script de dim).
@@ -57,27 +57,58 @@ let
   shuf        = "${pkgs.coreutils}/bin/shuf";
   catBin      = "${pkgs.coreutils}/bin/cat";
 
-  # ── Quote: cache atualizado por timer systemd (ZenQuotes API; runtime = shuf -n1)
+  # ── Quote: cache atualizado por timer systemd (ZenQuotes + DeepL; runtime = shuf -n1)
   # Substituiu o quotes.tsv vendorizado. O timer busca um LOTE (~50) do zenquotes.io
-  # /api/quotes, filtra (não-vazio, <=120 chars, sem o placeholder de rate-limit),
-  # escapa &<> (pango) e grava atômico; o lock só roda shuf -n1. Frases em INGLÊS
-  # (não há API PT decente). Offline: mantém o último cache; sem rede na 1ª vez → fallback.
-  quotesCache = "${config.xdg.cacheHome}/lockscreen/quotes";
+  # /api/quotes (EN), filtra (não-vazio, <=120 chars, sem o placeholder de rate-limit)
+  # e TRADUZ p/ pt-BR via DeepL (chave em /run/secrets/deepl_api_key, sops) — só as
+  # FRASES num único request em lote; o autor fica no original. Escapa &<> (pango) e
+  # grava atômico; o lock só roda shuf -n1. FALLBACK seguro: sem chave/DeepL fora →
+  # usa o lote em INGLÊS; sem rede na 1ª vez → uma frase embutida (pt-BR).
+  quotesCache  = "${config.xdg.cacheHome}/lockscreen/quotes";
+  deeplKeyFile = "/run/secrets/deepl_api_key"; # sops (owner v1cferr); ausente ⇒ mantém EN
   quotesFetch = pkgs.writeShellScript "lockscreen-quotes-fetch" ''
     ${pkgs.coreutils}/bin/mkdir -p ${config.xdg.cacheHome}/lockscreen
     tmp="${quotesCache}.tmp"
-    if ${pkgs.curl}/bin/curl -s --max-time 15 'https://zenquotes.io/api/quotes' \
-      | ${pkgs.jq}/bin/jq -r '.[]
+    ${pkgs.coreutils}/bin/rm -f "$tmp"
+
+    # 1) Lote EN filtrado → array compacto [{q,a}] (q=frase, a=autor).
+    filtered="$(${pkgs.curl}/bin/curl -s --max-time 15 'https://zenquotes.io/api/quotes' \
+      | ${pkgs.jq}/bin/jq -c '[.[]
           | select((.q | length) > 0 and (.q | length) <= 120 and .a != "zenquotes.io")
-          | "<i>“" + (.q | gsub("&";"&amp;") | gsub("<";"&lt;") | gsub(">";"&gt;")) + "”</i>  <b>— "
-            + (.a | gsub("&";"&amp;") | gsub("<";"&lt;") | gsub(">";"&gt;")) + "</b>"' > "$tmp" \
-      && [ -s "$tmp" ]; then
-      ${pkgs.coreutils}/bin/mv "$tmp" ${quotesCache}
-    else
-      ${pkgs.coreutils}/bin/rm -f "$tmp"
+          | {q, a}]' 2>/dev/null || true)"
+
+    # 2) Se há lote e a chave do DeepL existe, traduz as FRASES (1 request em lote,
+    #    target PT-BR) e recombina com o autor original NA ORDEM. Erro/len divergente
+    #    → 'translated' vazio ⇒ cai no EN adiante.
+    translated=""
+    if [ -n "$filtered" ] && [ "$filtered" != "[]" ] && [ -r "${deeplKeyFile}" ]; then
+      key="$(${pkgs.coreutils}/bin/cat "${deeplKeyFile}")"
+      payload="$(${pkgs.coreutils}/bin/printf '%s' "$filtered" \
+        | ${pkgs.jq}/bin/jq -c '{text: [.[].q], target_lang: "PT-BR", source_lang: "EN"}')"
+      resp="$(${pkgs.curl}/bin/curl -s --max-time 30 \
+        -H "Authorization: DeepL-Auth-Key $key" -H 'Content-Type: application/json' \
+        -d "$payload" 'https://api-free.deepl.com/v2/translate' 2>/dev/null || true)"
+      translated="$(${pkgs.jq}/bin/jq -cn --argjson f "$filtered" --argjson r "$resp" \
+        'if ($r.translations | type) == "array" and ($r.translations | length) == ($f | length)
+         then [range(0; ($f | length)) | {q: $r.translations[.].text, a: $f[.].a}]
+         else empty end' 2>/dev/null || true)"
     fi
+
+    # 3) Fonte final: traduzida se deu certo, senão o lote EN. Formata em pango.
+    src=""
+    if   [ -n "$translated" ] && [ "$translated" != "null" ] && [ "$translated" != "[]" ]; then src="$translated"
+    elif [ -n "$filtered" ]   && [ "$filtered"   != "[]" ];                                 then src="$filtered"
+    fi
+    if [ -n "$src" ]; then
+      ${pkgs.coreutils}/bin/printf '%s' "$src" | ${pkgs.jq}/bin/jq -r '.[]
+          | "<i>“" + (.q | gsub("&";"&amp;") | gsub("<";"&lt;") | gsub(">";"&gt;")) + "”</i>  <b>— "
+            + (.a | gsub("&";"&amp;") | gsub("<";"&lt;") | gsub(">";"&gt;")) + "</b>"' > "$tmp" 2>/dev/null || true
+    fi
+
+    # 4) Publica atômico se deu certo; senão descarta e mantém o cache anterior.
+    if [ -s "$tmp" ]; then ${pkgs.coreutils}/bin/mv "$tmp" ${quotesCache}; else ${pkgs.coreutils}/bin/rm -f "$tmp"; fi
     # fallback: garante ao menos 1 frase (1º boot sem rede) p/ o shuf não vir vazio.
-    [ -s ${quotesCache} ] || echo '<i>“The best way to predict the future is to invent it.”</i>  <b>— Alan Kay</b>' > ${quotesCache}
+    [ -s ${quotesCache} ] || echo '<i>“A melhor forma de prever o futuro é inventá-lo.”</i>  <b>— Alan Kay</b>' > ${quotesCache}
   '';
 
   # ── Weather: cache atualizado por timer systemd (wttr.in; runtime = cat) ───────
@@ -276,10 +307,10 @@ in
     };
   };
   systemd.user.timers.lockscreen-quotes = {
-    Unit.Description = "Renova o lote de frases da tela de bloqueio a cada 6 h";
+    Unit.Description = "Renova o lote de frases da tela de bloqueio 1×/dia";
     Timer = {
       OnBootSec = "1min";       # 1º lote logo após o boot
-      OnUnitActiveSec = "6h";   # renova o lote a cada 6 h (variedade sem martelar a API)
+      OnUnitActiveSec = "1d";   # renova 1×/dia: ~50 frases ⇒ folga na cota grátis do DeepL (500k/mês)
       Persistent = true;
     };
     Install.WantedBy = [ "timers.target" ];

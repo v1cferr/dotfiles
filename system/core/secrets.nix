@@ -36,6 +36,8 @@ in
   sops.secrets = (lib.mapAttrs (_key: _item: { }) bwMap) // {
     v1cferr_password_hash.neededForUsers = true; # hash da senha: precisa cedo (usuário)
     cloudflare_ddns_token = { };
+    jellyfin_api_key = { owner = "v1cferr"; mode = "0400"; }; # legível p/ tooling do usuário em /run/secrets (sem sudo)
+    deepl_api_key = { owner = "v1cferr"; mode = "0400"; }; # tradução das frases do lockscreen (serviço --user lê /run/secrets)
   };
 
   environment.systemPackages = [ sync-secrets ];

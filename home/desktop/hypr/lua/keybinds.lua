@@ -95,10 +95,19 @@ hl.bind("SHIFT + XF86AudioRaiseVolume", hl.dsp.exec_cmd("brightness-osd up"),   
 hl.bind("SHIFT + XF86AudioLowerVolume", hl.dsp.exec_cmd("brightness-osd down"),  { locked = true, repeating = true })
 hl.bind(mainMod .. " + SHIFT + B",      hl.dsp.exec_cmd("brightness-osd reset"), { locked = true })
 
--- Screenshot: Print ou SUPER+SHIFT+S (estilo Windows) → editor do flameshot
--- cobrindo as duas telas (a window_rule está em rules.lua). Salva em ~/Pictures/Screenshots.
+-- Screenshot (Flameshot v14). Print = fluxo nativo (picker + clique de mouse).
+-- SUPER+SHIFT+S = fluxo por TECLADO (paridade Arch): abre o picker e entra no submap
+-- "screenshot" → 1 = monitor principal (DP-2), 2 = TV (HDMI-A-3), Esc cancela. O v14
+-- SEMPRE mostra o picker no multi-monitor; os scripts (home/apps/flameshot.nix)
+-- sintetizam o clique no preview e resetam o submap sozinhos. Salva em ~/Pictures/Screenshots.
 hl.bind("Print",                   hl.dsp.exec_cmd("flameshot gui"))
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("flameshot gui"))
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("flameshot-screenshot"))
+
+hl.define_submap("screenshot", function()
+  hl.bind("1",      hl.dsp.exec_cmd("flameshot-pick DP-2"))     -- monitor principal (LG)
+  hl.bind("2",      hl.dsp.exec_cmd("flameshot-pick HDMI-A-3")) -- monitor secundário (TV)
+  hl.bind("escape", hl.dsp.exec_cmd("flameshot-cancel"))        -- cancela + sai do submap
+end)
 
 -- ── Filtro de luz azul (hyprsunset) ─────────────────────────────────────────
 -- O serviço (home/hyprsunset.nix) já troca a temperatura por horário sozinho;

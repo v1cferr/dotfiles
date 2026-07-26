@@ -46,14 +46,15 @@
       (blur_passes 2, brightness 0.40). home/desktop/lockscreen.nix.
   - <https://github.com/NixOS/nixos-artwork/tree/master/wallpapers>
 - [ ] Adicionar um método de zip direto no tooltip do meu file manager (Dolphin) — zipar sem abrir o terminal, via menu de contexto (botão direito). Pesquisar se há algum software que faça isso.
-- [x] Software para notify — o Quickshell é o daemon (org.freedesktop.Notifications): toasts + centro de controle.
+- [x] Software para notificações — o Quickshell é o daemon (dono do org.freedesktop.Notifications):
+      toasts + centro de controle, em QML. Substituiu o swaync/mako (dois daemons brigam pelo mesmo
+      nome D-Bus). Alternativas standalone p/ referência: mako (minimalista) / swaync (com control center).
 - [x] Instalar o flameshot — v13 estável + enableWlrSupport (grim). O v14 só
       captura via portal (não funciona neste Hyprland); o v13 usa grim direto
       (useGrimAdapter). Multi-monitor: windowrule estica o overlay pelas 2 telas.
       Pacote + config em home/apps/flameshot.nix.
   - <https://wiki.nixos.org/wiki/Flameshot>
 - [ ] Verificar se é possível adicionar estado declarativo criptografado
-- [x] Adicionar um software para notificações — feito pelo Quickshell (ver acima).
 - [x] Clipboard (Wayland) — cliphist + wl-clipboard, watcher no autostart do Hyprland
       e picker no wofi (SUPER+SHIFT+V). Pacotes E config em home/desktop/hypr.nix.
       + wl-clip-persist: mantém a cópia viva após o app fechar (fix da imagem do

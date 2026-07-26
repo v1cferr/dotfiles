@@ -84,7 +84,9 @@ let
       floor=20  # piso: nunca deixa a tela preta/bugada
       ceil=150  # teto = max-gamma do hyprsunset.nix
 
-      cur="$(hyprctl hyprsunset gamma 2>/dev/null | tr -dc '0-9' || true)"
+      # o gamma vem como FLOAT (ex.: "90.000015") → pega só a parte inteira (cut no
+      # ponto), senão o tr juntaria os dígitos ("90000015") e o valor explodia.
+      cur="$(hyprctl hyprsunset gamma 2>/dev/null | cut -d. -f1 | tr -dc '0-9' || true)"
       [ -n "$cur" ] || cur=100
 
       case "''${1:-up}" in
@@ -303,11 +305,13 @@ in
     -- brilho = gamma do hyprsunset (desktop sem backlight); OSD via swaync.
     hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("${brightnessOsd}/bin/brightness-osd up"),   { locked = true, repeating = true })
     hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("${brightnessOsd}/bin/brightness-osd down"), { locked = true, repeating = true })
-    -- Brilho (gamma) no cluster de áudio, já que o teclado não tem teclas de brilho:
-    -- SHIFT+VolUp = +claro · SHIFT+VolDown = +escuro · SHIFT+Mute = reset (100%).
+    -- Brilho (gamma), já que o teclado não tem teclas de brilho:
+    -- SHIFT+VolUp = +claro · SHIFT+VolDown = +escuro · SHIFT+0 = reset (100%).
+    -- Reset por code:19 (tecla 0 física): no ABNT2 Shift+0 vira ")" (o keysym muda
+    -- com shift), então bindar "SHIFT + 0" não pegaria — o keycode ignora isso.
     hl.bind("SHIFT + XF86AudioRaiseVolume", hl.dsp.exec_cmd("${brightnessOsd}/bin/brightness-osd up"),    { locked = true, repeating = true })
     hl.bind("SHIFT + XF86AudioLowerVolume", hl.dsp.exec_cmd("${brightnessOsd}/bin/brightness-osd down"),  { locked = true, repeating = true })
-    hl.bind("SHIFT + XF86AudioMute",        hl.dsp.exec_cmd("${brightnessOsd}/bin/brightness-osd reset"), { locked = true })
+    hl.bind("SHIFT + code:19",              hl.dsp.exec_cmd("${brightnessOsd}/bin/brightness-osd reset"), { locked = true })
 
     -- ── Window rules ───────────────────────────────────────────────────────────
     -- Transparência sutil em tudo: ativa 0.98 / inativa 0.96 (contraste + wallpaper).

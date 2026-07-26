@@ -38,14 +38,15 @@ system/                  SISTEMA — comum a todos os hosts (machine-agnostic)
   net/                   NetworkManager, SSH exposto, fail2ban, DDNS
   desktop/               LightDM, Hyprland, xkb, portal, gnome-keyring
   services/              restic, hooks do Claude Code, Jellyfin/qBittorrent, Ollama/duo
-  packages.nix           environment.systemPackages (ferramentas de sistema)
+  packages.nix           LISTA CENTRAL de pacotes de SISTEMA (resgate/base + diagnóstico)
 
 home/                    USUÁRIO (home-manager) — dotfiles + apps de usuário
-  default.nix            importa as categorias abaixo + stateVersion
+  default.nix            importa packages.nix + as categorias + stateVersion
+  packages.nix           LISTA CENTRAL de apps/CLIs do usuário (sem config própria)
   shell/                 zsh, starship, cli, kitty, git
-  desktop/               hypr, hyprsunset, lockscreen (+assets), waybar, notifications, theme, xdg
-  apps/                  discord, dropbox, media, dolphin, flameshot, mangohud
-  services/              cs2-saves-backup, claude-discord-rpc
+  desktop/               hypr (+helpers), hyprsunset, lockscreen (+assets), waybar, notifications, theme, xdg
+  apps/                  apps COM config própria: dropbox, media, dolphin, flameshot, mangohud
+  services/              cs2-saves-backup, claude-discord-rpc (daemon)
 
 pkgs/                    derivations próprias (fora do nixpkgs) — ex.: claude-code-discord-status
 hosts/                   específico de cada máquina (hostname, discos, stateVersion)
@@ -54,19 +55,33 @@ secrets/                 secrets.yaml (sops) + bitwarden-secrets.json
 scripts/                 sync-secrets.sh (Bitwarden → sops) · healthcheck.sh
 ```
 
-## Convenções do repo
+## Onde instalar um pacote?
 
-1. **Separação `system/` vs `home/`.** Nível-sistema (serviços, drivers, pacotes de
-   root) no `system/`; app **e** config de usuário no `home/` (`programs.*` quando há
-   módulo, senão `home.packages`). Como o home-manager entra como módulo do NixOS
-   (`useGlobalPkgs` + `useUserPackages`), um `rebuild` aplica os dois. *(Migração dos
-   apps GUI de `system/packages.nix` → `home/` em andamento.)*
-2. **Organização por categoria.** Cada assunto numa subpasta com `default.nix` (ver
-   Estrutura acima).
-3. **Uma linha de comentário-resumo por config** em `.nix`/`.lua`/`.conf` — descreve o
-   que a linha faz, sem poluir o arquivo.
+Duas listas centrais, espelhadas: [`system/packages.nix`](system/packages.nix) e
+[`home/packages.nix`](home/packages.nix). A decisão por pacote:
+
+1. **Default é o `home/`.** App/CLI seu do dia a dia, sem config → 1 linha em
+   [`home/packages.nix`](home/packages.nix) + `rebuild`.
+2. App **com config** declarativa (dotfiles / `programs.*`) → módulo próprio no
+   `home/` (o pacote e a config andam juntos), ex.: `kitty`, `dolphin`, `flameshot`.
+3. Vai pro **`system/`** só se: precisa de **root/resgate** (ex.: `git`/`vim` num
+   shell de root), é **driver/serviço**, ou um **serviço de sistema usa** o pacote.
+
+Regra de ouro: *na dúvida, `home/`; só sobe pro `system/` se root ou um serviço precisar.*
 
 `pkgs.foo` = base estável; `pkgs.unstable.foo` = canal unstable (por pacote, via overlay).
+
+## Convenções do repo
+
+1. **Separação `system/` vs `home/`** (ver "Onde instalar um pacote?"). Nível-sistema
+   no `system/`; app **e** config de usuário no `home/`. Como o home-manager entra como
+   módulo do NixOS (`useGlobalPkgs` + `useUserPackages`), um `rebuild` aplica os dois.
+2. **Organização por categoria** — cada assunto numa subpasta com `default.nix`.
+3. **Nix = app + config; estado = restic** — saves, prefixos Wine, tokens/sessões de app
+   **não** se declaram; vão pro backup.
+4. **Uma linha de comentário-resumo por config** em `.nix`/`.lua`/`.conf` — sem poluir.
+5. **Validar antes de aplicar** — `nixos-rebuild build` / `nix eval` OK e commits
+   atômicos por feature antes do switch.
 
 ## Segredos (sops-nix)
 

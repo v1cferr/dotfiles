@@ -28,7 +28,7 @@
 #        "ntfy_topic":      "Duo ntfy Topic",      (só se criou)
 #        "duolingo_password": "Duolingo",          (só se criou)
 #        "duolingo_username": "Duolingo Email"     (só se criou)
-#   3. `sync-secrets`  →  `sudo nixos-rebuild switch --flake .#nixos-seagate`
+#   3. `sync-secrets`  →  `sudo nixos-rebuild switch --flake .#nixos-sandisk`
 #
 # Sessão do Duolingo (login 1x, interativo — anti-bot não gosta de login headless):
 #   `duo-login`  → abre o navegador, você entra, a sessão salva no volume duo-data.

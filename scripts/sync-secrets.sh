@@ -36,4 +36,4 @@ done < <(jq -r 'to_entries[] | "\(.key)\t\(.value)"' "$map")
 git -C "$repo" add secrets/secrets.yaml secrets/bitwarden-secrets.json
 echo ""
 echo "$n segredo(s) sincronizado(s). Aplique com:"
-echo "  sudo nixos-rebuild switch --flake .#nixos-seagate"
+echo "  sudo nixos-rebuild switch --flake .#nixos-sandisk"

@@ -1,30 +1,31 @@
-# Flameshot (screenshot) — pacote v13 (enableWlrSupport/grim) + config, no home
-# (regra 4). Os keybinds (Print / SUPER+SHIFT+S) e a windowrule do overlay vivem
-# no home/desktop/hypr.nix (config do Hyprland é um blob Lua único).
+# Flameshot (screenshot) — v14 do canal UNSTABLE (pkgs.unstable.*, via overlay do
+# flake.nix) + config, no home (regra 4). Os keybinds (Print / SUPER+SHIFT+S) e a
+# windowrule do overlay vivem em home/desktop/hypr/lua/.
 #
-# Captura neste box = grim, via `useGrimAdapter=true`. Contexto: no Wayland o
-# flameshot pode capturar por (a) xdg-desktop-portal ou (b) grim. O portal NÃO
-# funciona neste Hyprland (flameshot dá "Unable to capture screen"); o grim SIM
-# (testado, ~940 KB). O v14 removeu o grim e só tem portal → por isso ficamos no
-# v13 (ver system/default.nix). `useGrimAdapter` é setting exclusiva do v13; se um
-# dia migrar pro v14, ela vira inválida ("Unrecognized setting") e trava tudo.
+# Captura via xdg-desktop-portal (org.freedesktop.portal.Screenshot), servido pelo
+# xdg-desktop-portal-hyprland (programs.hyprland já habilita) — MESMO caminho do meu
+# Arch, onde o v14 capturava sem grim direto. O portal usa screencopy por baixo, então
+# o flameshot NÃO cospe o aviso "grim ... GNOME" (aquele vinha do useGrimAdapter, que o
+# v14 nem suporta mais). Roteamento OK: XDG_CURRENT_DESKTOP=Hyprland casa com o UseIn.
+#
+# Por que unstable: o v14 não está no nixos-26.05 estável (tem 13.3.0); o overlay
+# pkgs.unstable.* (flake.nix) puxa SÓ o flameshot do unstable — o resto do sistema
+# fica estável. Bump da versão = `nix flake update nixpkgs-unstable`.
 #
 # NB: o .ini vem do /nix/store (read-only) → mudanças pela GUI NÃO persistem;
 # editar aqui e rebuild. Qt QSettings NÃO aceita comentário inline no .ini.
 { config, pkgs, ... }:
 
 {
-  # v13 ESTÁVEL + enableWlrSupport: captura por grim (via useGrimAdapter no .ini),
-  # que funciona neste Hyprland — o v14 removeu o grim e só tem portal (que dá
-  # "Unable to capture screen" aqui). enableWlrSupport põe o grim no PATH do wrapper.
-  home.packages = [ (pkgs.flameshot.override { enableWlrSupport = true; }) ];
+  # v14 (unstable). Já vem Wayland-ready (qtwayland + grim no wrapper); captura pelo
+  # portal por padrão — sem useGrimAdapter, sem o aviso do grim.
+  home.packages = [ pkgs.unstable.flameshot ];
 
   # Pasta de saída dos prints (flameshot não cria sozinho de forma confiável).
   home.file."Pictures/Screenshots/.keep".text = "";
 
   xdg.configFile."flameshot/flameshot.ini".text = ''
     [General]
-    useGrimAdapter=true
     disabledTrayIcon=true
     showStartupLaunchMessage=false
     showDesktopNotification=true

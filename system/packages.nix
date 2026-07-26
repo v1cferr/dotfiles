@@ -74,15 +74,6 @@
     # e mods são ESTADO (~/.local/share/PrismLauncher) — não se declaram (regra nº 1).
     prismlauncher
 
-    # ── Gerenciador de arquivos: Dolphin (KDE) ──
-    # GUI mais completo: split view, abas, terminal embutido, previews. Os pacotes
-    # extras é que ligam os recursos: kio-extras = SFTP/SMB/MTP (celular via USB);
-    # thumbnailers = miniaturas de imagem/pdf/vídeo. Lixeira (trash:/) é nativa.
-    kdePackages.dolphin
-    kdePackages.kio-extras
-    kdePackages.kdegraphics-thumbnailers
-    kdePackages.ffmpegthumbs
-
     # ── GPU: monitoramento (Arc B580) ──
     # Os benches (vulkan-tools/mesa-demos/glmark2/vkmark/unigine/clpeak) foram
     # removidos após validar a Arc — eram one-off. Ficam só os monitores do dia-a-dia.

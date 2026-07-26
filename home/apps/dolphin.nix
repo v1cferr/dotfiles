@@ -13,6 +13,15 @@
 { pkgs, lib, ... }:
 
 {
+  # Dolphin (KDE) + extras que ligam recursos: kio-extras = SFTP/SMB/MTP (celular
+  # via USB); thumbnailers = miniaturas de imagem/pdf/vídeo. Lixeira (trash:/) nativa.
+  home.packages = with pkgs.kdePackages; [
+    dolphin
+    kio-extras
+    kdegraphics-thumbnailers
+    ffmpegthumbs
+  ];
+
   home.activation.dolphinDetailsView = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     kw="${pkgs.kdePackages.kconfig}/bin/kwriteconfig6"
     run "$kw" --file "$HOME/.config/dolphinrc" --group General --key GlobalViewProps true

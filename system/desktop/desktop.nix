@@ -20,11 +20,23 @@
   # em Wayland em vez de Xwayland.
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
 
-  # ── Dark mode: portal p/ o color-scheme (config do tema vive em home/theme.nix) ─
-  # O programs.hyprland já habilita o xdg.portal (+ portal-hyprland p/ screencast).
-  # O portal-gtk é quem serve org.freedesktop.appearance (color-scheme) → é assim
-  # que apps Electron/Chromium (vscode, chrome, spotify) escurecem junto do sistema.
-  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+  # ── Portais do xdg-desktop-portal ─────────────────────────────────────────
+  # O programs.hyprland já habilita o xdg.portal + o portal-hyprland (screencast).
+  #   • portal-gtk: serve org.freedesktop.appearance (color-scheme) → é assim que
+  #     apps Electron/Chromium (vscode, chrome, spotify) escurecem com o sistema.
+  #   • portal-wlr: implementa a interface Screenshot (o portal-hyprland 1.3.12 SÓ a
+  #     DECLARA, mas responde "Unknown method" → o flameshot v14 dava "Unable to
+  #     capture screen"). É o mesmo portal que eu tinha no Arch. Screencopy do wlroots.
+  xdg.portal.extraPortals = [
+    pkgs.xdg-desktop-portal-gtk
+    pkgs.xdg-desktop-portal-wlr
+  ];
+  # Roteamento explícito: Screenshot → wlr (o hyprland não implementa); o resto segue
+  # o default (hyprland p/ ScreenCast/GlobalShortcuts, gtk p/ appearance/FileChooser).
+  xdg.portal.config.common = {
+    default = [ "hyprland" "gtk" ];
+    "org.freedesktop.impl.portal.Screenshot" = [ "wlr" ];
+  };
 
   # ── Keyring / Secret Service (gnome-keyring) ──────────────────────────────
   # Provê o org.freedesktop.secrets — onde apps guardam segredos CIFRADOS em vez

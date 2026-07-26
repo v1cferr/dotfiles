@@ -35,7 +35,10 @@
 - [x] Brilho por teclado — SHIFT+VolUp/VolDown/0 = +claro/+escuro/reset (gamma do hyprsunset;
       sem backlight real). Piso 20% (clamp) + teto 150%. OSD nativo do Quickshell via IPC.
 - [x] Frases do lockscreen via API — removido o quotes.tsv; serviço+timer busca lote da
-      ZenQuotes (EN) a cada 6 h → cache pango → shuf -n1. Offline: último cache + fallback.
+      ZenQuotes (EN) 1×/dia e TRADUZ p/ pt-BR via DeepL (chave sops deepl_api_key; só as
+      frases num request em lote, autor no original) → cache pango → shuf -n1. Fallback:
+      sem chave/DeepL fora ⇒ lote EN; sem rede ⇒ frase embutida. Diário p/ caber na cota
+      grátis do DeepL (500k chars/mês).
 - [x] Configurar o OOM Killer — earlyoom (system/hardware/oom.nix), companheiro do zram:
       mata o MAIOR processo antes do freeze por falta de RAM. --prefer browsers/Electron,
       --avoid compositor/sessão/sshd. Coexiste com o systemd-oomd (backstop). thresholds
@@ -141,8 +144,9 @@
 - [x] Lockscreen — [hyprlock](https://github.com/hyprwm/hyprlock) + hypridle,
       portados do Arch e 100% declarativos (home/desktop/lockscreen.nix). SEM scripts .sh
       soltos: a lógica mora no BUILD (Nix) ou no systemd, runtime = comando de 1
-      linha. Widgets: relógio + data pt-BR + usuário + frase (ZenQuotes API via timer
-      → cache pango; `shuf -n1`) + clima (wttr.in via timer systemd; `cat` do cache).
+      linha. Widgets: relógio + data pt-BR + usuário + frase (ZenQuotes via timer,
+      traduzida p/ pt-BR pelo DeepL → cache pango; `shuf -n1`) + clima (wttr.in via
+      timer systemd; `cat` do cache).
       Idle: lock aos 5 min + tela off via dpms NATIVO (testar — no Arch o driver
       antigo congelava; fallback = gamma, no histórico git). PAM em
       system/desktop/desktop.nix (sem ele não desbloqueia); locale pt_BR em system/core/core.nix.

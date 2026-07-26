@@ -108,6 +108,27 @@ let
         -h "int:value:$new" "󰃞 Brilho" "$new%" || true
     '';
   };
+
+  # hypr-monitor-watch: escuta os eventos do Hyprland (socket2) e dá `hyprctl reload`
+  # quando um monitor CONECTA/DESCONECTA. O reload re-aplica a config → recalcula o
+  # layout (mata o "monitor fantasma" — cursor indo pra tela que sumiu) e MOVE os
+  # workspaces do monitor perdido pro que sobrou (TV fora → ws 5-8 caem no LG). Roda
+  # como serviço systemd --user (não exec-once no Lua → não duplica no reload).
+  monitorWatch = pkgs.writeShellApplication {
+    name = "hypr-monitor-watch";
+    runtimeInputs = with pkgs; [ hyprland socat coreutils ];
+    text = ''
+      sock="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
+      socat -u "UNIX-CONNECT:$sock" - | while IFS= read -r line; do
+        case "$line" in
+          monitoradded*|monitorremoved*)
+            sleep 0.4  # deixa o Hyprland assentar o hotplug antes do reload
+            hyprctl reload >/dev/null 2>&1 || true
+            ;;
+        esac
+      done
+    '';
+  };
 in
 {
   # Ferramentas da SESSÃO Hyprland que o Lua abaixo invoca (keybinds/autostart) —
@@ -150,5 +171,20 @@ in
       Wants = [ "graphical-session-pre.target" ];
       After = [ "graphical-session-pre.target" ];
     };
+  };
+
+  # Reaplica a config no hotplug de monitor (mata o fantasma + move workspaces).
+  systemd.user.services.hypr-monitor-watch = {
+    Unit = {
+      Description = "Reaplica a config do Hyprland quando um monitor conecta/desconecta";
+      PartOf = [ "graphical-session.target" ];
+      After = [ "graphical-session.target" ];
+    };
+    Service = {
+      ExecStart = "${monitorWatch}/bin/hypr-monitor-watch";
+      Restart = "on-failure";
+      RestartSec = 3;
+    };
+    Install.WantedBy = [ "graphical-session.target" ];
   };
 }

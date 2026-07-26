@@ -26,7 +26,6 @@
     python3 # interpretador Python (rodar scripts; libs por projeto ficam no uv/venv)
     uv # gerenciador Python rápido (venv/deps/pythons); os pythons dele rodam via nix-ld
     wofi # launcher do Hyprland default (SUPER+R)
-    waybar # barra de status (workspaces + relógio); config em home/waybar.nix
     pavucontrol # GUI de mixer/dispositivos (PipeWire via compat PulseAudio)
     pamixer # controle de volume via CLI (pros keybinds de mídia do Hyprland)
     playerctl # play/pause/next via CLI (teclas de mídia)

@@ -1,11 +1,14 @@
-# CONFIG da Waybar (~/.config/waybar/*), declarada. O pacote vem do system/.
-# Barra BÁSICA e temporária — só workspaces + relógio (+ bandeja) — até você
-# trazer a sua barra do Quickshell. Uma barra por monitor (Waybar faz isso
-# sozinho); cada uma mostra as workspaces do SEU monitor (all-outputs=false),
-# então o LG mostra 1–4 e a TV mostra 5–8.
-{ ... }:
+# Waybar — pacote + config (~/.config/waybar/*) no home (regra 4). Barra BÁSICA e
+# temporária — só workspaces + relógio (+ bandeja) — até você trazer a sua barra
+# do Quickshell. Uma barra por monitor (Waybar faz isso sozinho); cada uma mostra
+# as workspaces do SEU monitor (all-outputs=false): o LG mostra 1–4 e a TV 5–8.
+# (Config raw via xdg.configFile em vez de programs.waybar.settings — é jsonc/css
+# à mão; programs.waybar espera dados estruturados e traz um serviço systemd próprio.)
+{ pkgs, ... }:
 
 {
+  home.packages = [ pkgs.waybar ]; # o binário (config raw logo abaixo)
+
   xdg.configFile."waybar/config.jsonc".text = ''
     {
       "layer": "top",

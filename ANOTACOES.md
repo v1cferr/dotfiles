@@ -25,9 +25,12 @@
       recarrega ao vivo; delegate de Repeater às vezes pede restart do qs, SUPER+ESCAPE).
       Adaptações Arch→NixOS: GPU nvidia→sysfs xe (só temp), hypridle→systemctl, monitores
       DP-2/HDMI-A-3, VPN dropada, Firefox→Zen.
-- [x] Hyprland hot-reload — hyprland.lua saiu do texto embutido pra arquivo real no repo
-      (home/desktop/hypr/hyprland.lua) via mkOutOfStoreSymlink: edita + `hyprctl reload`,
-      sem rebuild. Scripts (minimize-others/brightness-osd) vão pro PATH; o Lua chama por nome.
+- [x] Hyprland hot-reload + config MODULAR — hyprland.lua saiu do texto embutido pra
+      arquivos reais no repo via mkOutOfStoreSymlink (edita + `hyprctl reload`, sem rebuild).
+      Quebrado por categoria (regra 5) em home/desktop/hypr/lua/*.lua: environment, monitors,
+      appearance, input, autostart, rules, keybinds; o hyprland.lua é só o loader (dofile na
+      ordem). Scripts (minimize-others/brightness-osd/monitor-toggle) vão pro PATH; o Lua chama
+      por nome. API Lua 0.55: gradiente = {colors,angle}, bezier = hl.curve, animação = hl.animation.
 - [x] Monitor fantasma — serviço hypr-monitor-watch (systemd --user) escuta o socket2 e dá
       `hyprctl reload` no hotplug: mata a área fantasma (cursor na tela que sumiu) e move os
       workspaces (TV fora → ws 5-8 no LG). Caveat: TV DESLIGADA que mantém o HDMI não manda
@@ -140,7 +143,9 @@
       próprios (kitty/dolphin/flameshot/media/quickshell/tema/hypr helpers). system/
       ficou só com resgate/base/diagnóstico. (git/vim ficam nos dois de propósito:
       root/rescue vs programs.git — única exceção consciente.)
-- [ ] Migrar meus bindings das configs do Arch Linux (Hyprland)
+- [x] Migrar meus bindings das configs do Arch Linux (Hyprland) — FEITO. Binds + look-and-feel
+      (bordas com gradiente Tokyo Night, blur, shadow, animações completas) e input (mouse accel
+      flat, numlock, ABNT2) portados do Arch pra Lua modular (home/desktop/hypr/lua/). Ver acima.
 - [x] Lockscreen — [hyprlock](https://github.com/hyprwm/hyprlock) + hypridle,
       portados do Arch e 100% declarativos (home/desktop/lockscreen.nix). SEM scripts .sh
       soltos: a lógica mora no BUILD (Nix) ou no systemd, runtime = comando de 1

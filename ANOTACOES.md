@@ -102,6 +102,18 @@
 - [x] Bottles é declarativo? O APP sim (home/packages.nix, com override removeWarningPopup).
       O que está DENTRO (bottles/prefixos, jogos, runners GE-Proton) é ESTADO em
       ~/.local/share/bottles — não declarável, vai por backup (regra: Nix = app+config; estado = restic).
+- [x] Steam é declarativo? SIM, e vai em system/ (programs.steam) — é o método
+      OFICIAL/recomendado (wiki NixOS + manual nixpkgs), NÃO home-manager: não
+      existe programs.steam no HM. Não fere a regra 4 — a Steam é INTEGRAÇÃO de
+      sistema (libs 32-bit da GPU, FHS-wrap, udev dos controles, firewall do
+      Remote Play/LAN), classe do programs.hyprland, não app de usuário puro. O
+      que é do usuário (jogos, login, saves) = ESTADO → restic (regra 6), já
+      excluído (restic.nix:38). system/gaming/steam.nix: + Proton-GE
+      (extraCompatPackages) + gamemode. Categoria nova system/gaming/ (regra 5).
+      Som dos jogos OpenAL/HashLink (Northgard, Dead Cells…): o OpenAL 1.18.2
+      embutido não tem backend `pipewire` → fica mudo; força backend `pulse` via
+      ~/.config/alsoft.conf declarativo (home/apps/openal.nix), global p/ todos.
+  - <https://wiki.nixos.org/wiki/Steam>
 - [x] Emulador — RPCS3 (PS3) em home/packages.nix p/ Uncharted 1/2/3 (trilogia é PS3). PS4/U4 só
       via shadPS4 (experimental). Firmware+jogos = estado (você provê). Controle Machenike
       G5 Pro: kernel 6.18 tem o driver xpad (nativo desde 6.10) + Bluetooth já ligado →

@@ -24,29 +24,25 @@ hl.window_rule({
   idle_inhibit = "focus",
 })
 
--- ── Screenshot (Flameshot v13 + grim) ───────────────────────────────────────
--- Config em home/apps/flameshot.nix. PROBLEMA multi-monitor: o grim captura os
--- dois monitores (3840x1080), mas o overlay do editor nasce SÓ no monitor da
--- origem → não cobre o desktop inteiro se o move/size não baterem com o bounding
--- box. FIX (o clássico pré-v14): esticar a janela do overlay pelos DOIS monitores
--- — float + move = canto do bounding box + size = soma das telas (3840x1080). Aí
--- o overlay cobre tudo e a seleção funciona em qualquer tela. opacity/no_blur/
--- no_shadow: o overlay é um frame congelado, não herda transparência/blur globais.
--- Arranjo atual: HDMI-A-3 (TV) @ -1920x0 · DP-2 (principal) @ 0x0 → o canto
--- superior-esquerdo do desktop é (-1920, 0), por isso o move é "-1920 0".
---
--- match por TÍTULO (não class): no v13/Wayland a janela do overlay tem class
--- VAZIA e title exatamente "flameshot" (^...$ pra não casar o VS Code editando
--- este arquivo). suppress_event=fullscreen: o overlay nasce fullscreen (cobre 1
--- só monitor) — suprimir isso deixa o float+move+size assumirem.
+-- ── Screenshot (Flameshot v14 via portal) ───────────────────────────────────
+-- Config em home/apps/flameshot.nix; captura via xdg-desktop-portal (-wlr).
+-- Regra portada do meu Arch (v14): o esticão -1920/3840 do fluxo ANTIGO (v13/grim)
+-- QUEBRA o v14 — o v14 abre um PICKER de monitor (janela normal) e depois um overlay
+-- fullscreen no monitor escolhido. Forçar move/size gigante bagunça o picker. Aqui só
+-- deixamos flutuante + centralizado, sem animação; suppress_event=fullscreen mantém o
+-- overlay como janela flutuante (não entra no fullscreen do Hyprland → sem o flash do
+-- wallpaper ao fechar). opacity/no_blur/no_shadow: o overlay é frame congelado, não
+-- herda transparência/blur globais. match por TÍTULO: neste box a janela do flameshot
+-- (tanto o picker de monitor quanto o overlay) tem class VAZIA e title "flameshot".
+-- Sem float, ela cai no tiling do dwindle (nasce espremida em meia tela) — daí o "bug".
 hl.window_rule({
-  name = "flameshot-overlay",
+  name = "flameshot-v14-overlay",
   match = { title = "^flameshot$" },
 
   no_anim = true,
   float = true,
-  move = "-1920 0",
-  size = "3840 1080",
+  center = true,
+  pin = false,
   opacity = "1.0 override 1.0 override",
   no_blur = true,
   no_shadow = true,

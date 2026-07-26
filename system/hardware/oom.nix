@@ -12,8 +12,12 @@
 {
   services.earlyoom = {
     enable = true;
-    freeMemThreshold = 5; # RAM livre < 5% → SIGTERM no maior processo (killThreshold menor = SIGKILL)
-    freeSwapThreshold = 10; # e swap (zram) livre < 10% — junto com a RAM, evita matar cedo demais
+    # Defaults testados do earlyoom (10%/10%): SIGTERM quando RAM livre < 10% E swap
+    # livre < 10% (SIGKILL na metade: 5%/5%). Agir CEDO (10%) previne melhor o freeze
+    # que esperar 5%. Como o swap é 100% zram (mora na RAM), a métrica de swap é pouco
+    # confiável — por isso apoiamos no threshold de RAM. Se ainda travar, sobe o de RAM.
+    freeMemThreshold = 10; # RAM livre < 10% → SIGTERM no maior processo
+    freeSwapThreshold = 10; # e swap (zram) livre < 10%
     enableNotifications = true; # avisa no desktop (mako) qual processo foi morto e por quê
 
     # comm (nome, até 15 chars) casado por regex estendida:

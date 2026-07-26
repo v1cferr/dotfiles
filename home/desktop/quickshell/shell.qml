@@ -271,8 +271,8 @@ ShellRoot {
     // Barra principal — substitui a Waybar. Componente em Bar.qml.
     Bar {}
 
-    // Notificações nativas (toasts + central) — DESATIVADO por ora (o swaync ainda
-    // é o daemon; evita 2 donos do org.freedesktop.Notifications). Fase 2: reativar
-    // aqui e remover o swaync (home/desktop/notifications.nix) p/ ir 100% Quickshell.
-    // Notifications {}
+    // Notificações nativas do Quickshell (toasts + central). Daemon em Notifs.qml
+    // (singleton) + UI em Notifications.qml. Dono do org.freedesktop.Notifications
+    // (o swaync foi removido; o mako órfão morreu). O sino no Bar lê Notifs.count/dnd.
+    Notifications {}
 }

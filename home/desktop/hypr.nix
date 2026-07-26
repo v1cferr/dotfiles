@@ -75,8 +75,9 @@ let
   };
 
   # brightness-osd: "brilho" via gamma do hyprsunset (este desktop não tem backlight
-  # real — brightnessctl/ddcutil ausentes) + OSD no swaync (notify-send com replace
-  # in-place). Só tem efeito com o hyprsunset rodando. Uso: brightness-osd up|down|reset.
+  # real — brightnessctl/ddcutil ausentes) + OSD via notify-send (o Quickshell é o
+  # daemon de notificação agora). Só tem efeito com o hyprsunset rodando. Uso:
+  # brightness-osd up|down|reset.
   # Lê o gamma atual, calcula o novo e CLAMPA [floor, ceil] setando ABSOLUTO — o
   # hyprsunset só clampa o teto (max-gamma); embaixo ia a 0/negativo e bugava a tela.
   brightnessOsd = pkgs.writeShellApplication {
@@ -103,7 +104,7 @@ let
       if [ "$new" -gt "$ceil" ];  then new=$ceil;  fi
       hyprctl hyprsunset gamma "$new" >/dev/null 2>&1 || true
 
-      # x-canonical-private-synchronous → o swaync troca a notificação no lugar (vira OSD).
+      # x-canonical-private-synchronous: dica p/ o daemon trocar a notif no lugar (OSD).
       notify-send -h string:x-canonical-private-synchronous:brightness \
         -h "int:value:$new" "󰃞 Brilho" "$new%" || true
     '';
@@ -160,7 +161,7 @@ in
 
   # Sessão systemd do usuário. O LightDM lança o Hyprland "cru" (sem integração
   # systemd), então o graphical-session.target — que os serviços --user do desktop
-  # (hyprsunset/hypridle/swaync) usam como WantedBy — nunca era ativado, e nenhum
+  # (hyprsunset/hypridle) usam como WantedBy — nunca era ativado, e nenhum
   # subia no login. Este target o ativa via BindsTo (o graphical-session.target
   # recusa start manual, só por dependência); o autostart acima o inicia. Espelha o
   # que o módulo wayland.windowManager.hyprland faria — aqui a config é raw.

@@ -8,5 +8,6 @@
     ./gpu.nix # driver de vídeo: Intel Arc B580 (xe + Mesa, sem CUDA)
     ./audio.nix # PipeWire + rtkit
     ./fonts.nix # JetBrainsMono Nerd Font (padrão mono/sans/serif)
+    ./mouse.nix # Logitech MX Master 3S via logiops (gestos → workspaces, DPI, smartshift)
   ];
 }

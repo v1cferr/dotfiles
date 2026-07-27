@@ -1,4 +1,4 @@
-// "Botão Iniciar" estilo taskbar: logo do Arch no canto sup. esquerdo da barra.
+// "Botão Iniciar" estilo taskbar: logo do NixOS no canto sup. esquerdo da barra.
 // Clique abre um menu de energia (bloquear/sair/suspender/reiniciar/desligar).
 // Nada de sudo: poweroff/reboot/suspend via systemd-logind (sessão ativa =
 // autorizado sem senha); lock via loginctl (dispara o hyprlock); sair via uwsm.
@@ -11,7 +11,7 @@ import "root:/widgets"
 
 Pill {
     id: powerBtn
-    icon: ""      // nf-linux-archlinux (logo do Arch)
+    icon: ""      // nf-linux-nixos (logo do NixOS)
     accent: Theme.colSapphire
     property bool menuOpen: false
     onClicked: powerBtn.menuOpen = !powerBtn.menuOpen

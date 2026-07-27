@@ -30,11 +30,12 @@
   programs.nix-ld.enable = true;
 
   # ── Local / idioma ─────────────────────────────────────────────────────────
-  # Sistema INTEIRO em en-US (por preferência: output/erros em inglês facilitam o
-  # debug). O timezone/teclado seguem BR (fuso local + teclado físico ABNT2), mas
-  # locale, datas e textos de UI são todos en-US.
+  # Sistema em en-US (por preferência: output/erros em inglês facilitam o debug).
+  # EXCEÇÃO: a LOCKSCREEN é full pt-BR (por gosto) → por isso geramos pt_BR também,
+  # que o relógio do lockscreen usa via LC_TIME pra data por extenso (home/desktop/
+  # lockscreen.nix). Timezone/teclado seguem BR (fuso local + teclado físico ABNT2).
   time.timeZone = "America/Sao_Paulo";
   i18n.defaultLocale = "en_US.UTF-8";
-  i18n.supportedLocales = [ "en_US.UTF-8/UTF-8" ];
+  i18n.supportedLocales = [ "en_US.UTF-8/UTF-8" "pt_BR.UTF-8/UTF-8" ];
   console.keyMap = "br-abnt2"; # teclado no TTY (a GUI é no desktop.nix)
 }

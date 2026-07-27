@@ -118,7 +118,7 @@ let
   # (.tmp + mv) p/ o hyprlock nunca ler um cache pela metade.
   weatherFetch = pkgs.writeShellScript "lockscreen-weather-fetch" ''
     ${pkgs.coreutils}/bin/mkdir -p ${weatherDir}
-    ${pkgs.curl}/bin/curl -s --max-time 15 -H 'Accept-Language: en' \
+    ${pkgs.curl}/bin/curl -s --max-time 15 -H 'Accept-Language: pt' \
       'https://wttr.in/-22.0087,-47.8909?format=%C,+%t' -o ${weatherCache}.tmp \
       && ${pkgs.coreutils}/bin/mv ${weatherCache}.tmp ${weatherCache}
   '';
@@ -172,7 +172,7 @@ in
         outer_color = "${blue} ${magenta} 45deg"; # borda gradiente
         check_color = "${green} ${blue} 120deg";  # verificando a senha
         fail_color = red;                          # senha errada
-        placeholder_text = ''<span foreground="##565f89">Enter password…</span>'';
+        placeholder_text = ''<span foreground="##565f89">Digite a senha…</span>'';
         fail_text = ''<span foreground="##f7768e">$PAMFAIL</span>'';
         dots_spacing = 0.3;
         fade_on_empty = false;
@@ -193,10 +193,12 @@ in
           halign = "center";
           valign = "center";
         }
-        # Data completa (en-US, como o resto do sistema) + nº da semana
+        # Data completa em pt-BR (a LOCKSCREEN é exceção: full pt-BR mesmo com o
+        # sistema em en-US) — LC_TIME pt_BR pra data por extenso; sed capitaliza a
+        # 1ª letra + nº da semana.
         {
           monitor = primary;
-          text = ''cmd[update:60000] date +"%A, %B %d, %Y  ·  Week %V"'';
+          text = ''cmd[update:60000] LC_TIME=pt_BR.UTF-8 date +"%A, %d de %B de %Y  ·  Semana %V" | sed 's/./\u&/' '';
           color = muted;
           font_size = 22;
           font_family = font;

@@ -22,9 +22,11 @@
 
     # comm (nome, até 15 chars) casado por regex estendida:
     extraArgs = [
-      # PREFERE matar (os comilões que costumam disparar):
+      # PREFERE matar (os comilões descartáveis, fáceis de reabrir). NOTA: editores
+      # (code/obsidian) FORA daqui de propósito — perder trabalho não salvo dói mais
+      # que um navegador; que morram o Chrome/Discord antes do VSCode.
       "--prefer"
-      "^(chrome|chromium|firefox|librewolf|zen|electron|code|obsidian|spotify|Discord)"
+      "^(chrome|chromium|firefox|librewolf|zen|electron|spotify|Discord)"
       # NUNCA mata (compositor, sessão, áudio e acesso remoto — perder isso = tela travada/sem SSH):
       "--avoid"
       "^(Hyprland|waybar|hyprlock|hypridle|sshd|systemd|dbus-broker|pipewire|wireplumber|mako)$"

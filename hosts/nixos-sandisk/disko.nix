@@ -13,8 +13,9 @@
 #     --flake .#nixos-sandisk
 #   sudo nixos-install --flake .#nixos-sandisk
 #
-# Layout: GPT · ESP 1G (vfat, /boot) · resto ext4 (/). Sem swap em disco
-# (zram cobre; suspend desligado, então hibernar não é necessário).
+# Layout: GPT · ESP 1G (vfat, /boot) · resto ext4 (/). Sem PARTIÇÃO de swap
+# (suspend desligado → hibernar não é necessário). O swap é zram + um /swapfile
+# de 16 GB no ext4, declarado via swapDevices em system/hardware/hardware.nix.
 # ═══════════════════════════════════════════════════════════════════════════
 {
   disko.devices.disk.sandisk = {

@@ -3,6 +3,7 @@
 
 {
   imports = [
+    ./palette.nix # FONTE ÚNICA de cores (my.theme.name); gera os dados p/ Quickshell/Hyprland
     ./hypr.nix # ~/.config/hypr/hyprland.conf (ABNT2 + monitores + keybinds)
     ./clipboard.nix # cliphist (histórico) + rofi (picker c/ preview img/tipo); Tokyo Night
     ./hyprsunset.nix # filtro de luz azul (serviço systemd + perfis por horário)

@@ -101,6 +101,6 @@ in
     showHelp=false
     drawColor=#ff0000
     drawThickness=3
-    uiColor=#8b5cf6
+    uiColor=#${config.my.theme.palette.purple}
   '';
 }

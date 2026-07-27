@@ -6,9 +6,10 @@
 # Migração do meu Arch (cliphist-rofi-img.sh) COM melhorias: além de thumbnail de
 # imagem, agora arquivos copiados (URI file://…) ganham ÍCONE do tipo (zip/vídeo/pdf…)
 # resolvido pelo tema de ícones (Fluent-dark). Regra 1/3: idiomático e declarativo.
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 
 let
+  palette = config.my.theme.palette; # cores do tema ativo (home/desktop/palette.nix)
   # clipboard-menu: monta a lista do cliphist com ícones e mostra no rofi; a escolha
   # volta pro clipboard (cole com Ctrl+V). Uma passada só (lista → rofi → decode → copy).
   #   • imagem (binary png/jpg/…) → decodifica pro cache e usa como THUMBNAIL
@@ -83,7 +84,7 @@ in
     clipboardMenu
   ];
 
-  # Tema Tokyo Night do picker (mesmos hex do Theme.qml/lockscreen). icon-theme =
+  # Cores do TEMA ATIVO (my.theme) — a paleta do rofi segue a fonte única. icon-theme =
   # Fluent-dark (o mesmo do sistema) resolve os ícones nomeados por tipo de arquivo.
   xdg.configFile."rofi/clipboard.rasi".text = ''
     configuration {
@@ -91,12 +92,12 @@ in
       icon-theme:  "Fluent-dark";
     }
     * {
-      tn-bg:     #1a1b26;
-      tn-bg-alt: #24283b;
-      tn-fg:     #c0caf5;
-      tn-muted:  #565f89;
-      tn-blue:   #7aa2f7;
-      tn-border: #414868;
+      tn-bg:     #${palette.bg};
+      tn-bg-alt: #${palette.surface};
+      tn-fg:     #${palette.text};
+      tn-muted:  #${palette.dim};
+      tn-blue:   #${palette.blue};
+      tn-border: #${palette.border};
       background-color: transparent;
       text-color:       @tn-fg;
     }

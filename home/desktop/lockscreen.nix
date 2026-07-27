@@ -39,15 +39,16 @@ let
   primary   = "DP-2";      # LG ULTRAGEAR — desktop borrado + login
   secondary = "HDMI-A-3";  # TV — imagem estática + cadeado
 
-  # ── Paleta Tokyo Night + fonte ───────────────────────────────────────────────
+  # ── Cores do tema ativo (my.theme) + fonte ───────────────────────────────────
+  palette = config.my.theme.palette; # fonte única (home/desktop/palette.nix)
   font    = "JetBrainsMono Nerd Font";
-  bg      = "rgba(26, 27, 38, 0.85)";
-  fg      = "rgb(192, 202, 245)";
-  muted   = "rgb(86, 95, 137)";
-  blue    = "rgba(7aa2f7ee)";
-  magenta = "rgba(bb9af7ee)";
-  green   = "rgba(9ece6aee)";
-  red     = "rgba(f7768eee)";
+  bg      = "rgba(${palette.bg}d9)";   # fundo do lock (d9 ≈ 85% opacidade)
+  fg      = "rgb(${palette.text})";
+  muted   = "rgb(${palette.dim})";
+  blue    = "rgba(${palette.blue}ee)";
+  magenta = "rgba(${palette.magenta}ee)";
+  green   = "rgba(${palette.green}ee)";
+  red     = "rgba(${palette.red}ee)";
 
   # ── Binários por caminho absoluto (não dependem de PATH — durável) ────────────
   hyprctl     = "${pkgs.hyprland}/bin/hyprctl";
@@ -155,7 +156,7 @@ in
         }
         {
           monitor = secondary;
-          color = "rgba(1a1b26ff)"; # fallback enquanto a imagem carrega
+          color = "rgba(${palette.bg}ff)"; # fallback enquanto a imagem carrega
           path = "${wallTv}";
         }
       ];
@@ -172,7 +173,7 @@ in
         outer_color = "${blue} ${magenta} 45deg"; # borda gradiente
         check_color = "${green} ${blue} 120deg";  # verificando a senha
         fail_color = red;                          # senha errada
-        placeholder_text = ''<span foreground="##565f89">Digite a senha…</span>'';
+        placeholder_text = ''<span foreground="##${palette.dim}">Digite a senha…</span>'';
         fail_text = ''<span foreground="##f7768e">$PAMFAIL</span>'';
         dots_spacing = 0.3;
         fade_on_empty = false;

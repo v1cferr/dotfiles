@@ -4,6 +4,7 @@
 {
   imports = [
     ./hypr.nix # ~/.config/hypr/hyprland.conf (ABNT2 + monitores + keybinds)
+    ./clipboard.nix # cliphist (histórico) + rofi (picker c/ preview img/tipo); Tokyo Night
     ./hyprsunset.nix # filtro de luz azul (serviço systemd + perfis por horário)
     ./lockscreen.nix # hyprlock (tela de bloqueio) + hypridle (idle: dim + lock)
     ./quickshell.nix # shell/bar/OSD/mídia + NOTIFICAÇÕES em QML; hot-reload via mkOutOfStoreSymlink

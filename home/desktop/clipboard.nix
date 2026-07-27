@@ -43,7 +43,7 @@ let
         cliphist list | while IFS= read -r line; do
           case "$line" in
             *"binary data"*)
-              ext="$(printf '%s' "$line" | grep -oiE '[[:space:]](png|jpe?g|bmp|gif|webp)[[:space:]]' | tr -d '[:space:]' | tr 'A-Z' 'a-z' | head -1)"
+              ext="$(printf '%s' "$line" | grep -oiE '[[:space:]](png|jpe?g|bmp|gif|webp)[[:space:]]' | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]' | head -1)"
               if [ -n "$ext" ]; then
                 [ "$ext" = jpeg ] && ext=jpg
                 id="$(printf '%s' "$line" | cut -f1)"
@@ -55,7 +55,7 @@ let
               fi
               ;;
             *file://*)
-              e="$(printf '%s' "$line" | grep -oiE '\.[A-Za-z0-9]+' | tail -1 | tr -d '.' | tr 'A-Z' 'a-z')"
+              e="$(printf '%s' "$line" | grep -oiE '\.[A-Za-z0-9]+' | tail -1 | tr -d '.' | tr '[:upper:]' '[:lower:]')"
               printf '%s\0icon\x1f%s\n' "$line" "$(ext_icon "$e")"
               ;;
             *)

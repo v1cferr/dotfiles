@@ -26,8 +26,10 @@ hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("hyprctl reload"))           
 -- lock: loginctl → logind → lock_cmd do hypridle (home/lockscreen.nix); nunca duplica o hyprlock.
 hl.bind(mainMod .. " + L",         hl.dsp.exec_cmd("loginctl lock-session"))      -- travar tela
 
--- clipboard: histórico do cliphist no wofi; a escolha volta pro clipboard (cole com Ctrl+V).
-hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("cliphist list | wofi --dmenu | cliphist decode | wl-copy"))
+-- clipboard: histórico do cliphist no rofi com PREVIEW (thumbnail de imagem + ícone
+-- por tipo de arquivo); a escolha volta pro clipboard (cole com Ctrl+V). Script e tema
+-- Tokyo Night em home/desktop/clipboard.nix.
+hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("clipboard-menu"))
 
 -- reiniciar o Quickshell (raramente necessário — ele faz hot-reload do QML ao
 -- salvar; útil só quando o processo trava). `qs kill` para a instância, `qs` sobe.

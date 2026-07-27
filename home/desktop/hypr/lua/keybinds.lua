@@ -26,6 +26,12 @@ hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("hyprctl reload"))           
 -- lock: loginctl → logind → lock_cmd do hypridle (home/lockscreen.nix); nunca duplica o hyprlock.
 hl.bind(mainMod .. " + L",         hl.dsp.exec_cmd("loginctl lock-session"))      -- travar tela
 
+-- Barra "/" no acesso remoto: o Moonlight NÃO envia a tecla "/ ?" do ABNT2 (bug #1789,
+-- tecla internacional). Remapeia a tecla MENU (≣, ociosa) → "/" e Shift+Menu → "?", via
+-- wtype (injeta o caractere direto, independe do layout). Vale local também.
+hl.bind("Menu",         hl.dsp.exec_cmd("wtype /"))
+hl.bind("SHIFT + Menu", hl.dsp.exec_cmd("wtype '?'"))
+
 -- clipboard: histórico do cliphist no rofi com PREVIEW (thumbnail de imagem + ícone
 -- por tipo de arquivo); a escolha volta pro clipboard (cole com Ctrl+V). Script e tema
 -- Tokyo Night em home/desktop/clipboard.nix.

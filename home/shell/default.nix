@@ -8,5 +8,6 @@
     ./cli.nix # toolkit CLI moderno (eza/bat/fzf/zoxide/direnv/yazi/tealdeer) + integração zsh
     ./kitty.nix # ~/.config/kitty/kitty.conf (terminal default do Hyprland)
     ./git.nix # programs.git → ~/.gitconfig
+    ./ssh.nix # ~/.ssh/config → hosts da FAI (workstation/fai-vm) via a VPN
   ];
 }

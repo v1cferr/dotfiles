@@ -16,3 +16,11 @@ hl.config({
     },
   },
 })
+
+-- Teclado VIRTUAL do Sunshine (acesso remoto Moonlight) = layout US, por-dispositivo.
+-- Motivo: o Moonlight NÃO envia a tecla "/ ?" do ABNT2 (bug #1789 — é a tecla
+-- internacional que teclados US não têm, então o evento morre no cliente). No layout
+-- US o "/" cai numa tecla padrão que o Moonlight envia normalmente. Só afeta o STREAM;
+-- o teclado FÍSICO de casa continua ABNT2 (config global acima). Variante us,intl dá
+-- acentos/ç via dead-keys, se um dia quiser (kb_variant = "intl").
+hl.device({ name = "keyboard-passthrough", kb_layout = "us" })

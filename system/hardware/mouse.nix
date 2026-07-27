@@ -11,7 +11,7 @@
       devices = [
         {
           name = "MX Master 3S";
-          dpi = 1200; # sensibilidade (nativo do 3S é 1000; leve bump)
+          dpi = 2000; # sensibilidade (nativo 1000; faixa 200–8000 — ajuste esta linha a gosto)
 
           # Roda inteligente: alterna catraca ↔ giro-livre pela força do giro.
           smartshift = {

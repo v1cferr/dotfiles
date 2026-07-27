@@ -17,6 +17,13 @@
     openFirewall = false; # NÃO abre na LAN/internet; acesso só pela tailnet (tailscale0 trusted)
     settings = {
       sunshine_name = "nixos-sandisk"; # nome que aparece no Moonlight
+      # Acesso vem pela tailnet (IP 100.x, que o Sunshine classifica como WAN) →
+      # "wan" p/ não bloquear o web UI. NÃO é exposição real: o firewall só deixa a
+      # tailscale0 (trusted) chegar aqui; LAN/internet continuam fechadas.
+      origin_web_ui_allowed = "wan";
+      # CSRF: libera as origens da tailnet (IP + nome MagicDNS). Sem isto, criar o
+      # usuário/salvar pelo web UI é bloqueado quando o host != localhost.
+      csrf_allowed_origins = "https://100.92.126.90:47990,https://nixos-sandisk.tailf2731d.ts.net:47990";
     };
   };
 }

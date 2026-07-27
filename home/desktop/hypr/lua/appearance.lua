@@ -1,15 +1,19 @@
 -- ── Aparência: geral + decoração + animações ───────────────────────────────
 -- Portado do look-and-feel.conf do Arch (Tokyo Night), adaptado à API Lua 0.55.
 
--- general: gaps/borda finos + borda com GRADIENTE (azul→roxo 45°). Na API Lua o
+-- Paleta vinda do Nix (my.theme): tabela gerada por home/desktop/palette.nix. Hexes SEM
+-- '#'; as bordas/sombra abaixo montam rgba(<hex><alpha>). Trocar o tema recolore tudo.
+local C = dofile(os.getenv("HOME") .. "/.config/theme/hypr-colors.lua")
+
+-- general: gaps/borda finos + borda com GRADIENTE (azul→magenta 45°). Na API Lua o
 -- gradiente é a tabela { colors={...}, angle=N } — a string hyprlang não cola.
 hl.config({
   general = {
     gaps_in = 3,
     gaps_out = 4,
     border_size = 1,
-    ["col.active_border"]   = { colors = { "rgba(7aa2f755)", "rgba(bb9af744)" }, angle = 45 },
-    ["col.inactive_border"] = "rgba(41444644)",
+    ["col.active_border"]   = { colors = { "rgba(" .. C.blue .. "55)", "rgba(" .. C.magenta .. "44)" }, angle = 45 },
+    ["col.inactive_border"] = "rgba(" .. C.border .. "44)",
     resize_on_border = false, -- não redimensiona clicando na borda/gap
     allow_tearing = false,    -- sem tearing (ver wiki antes de ligar)
     layout = "dwindle",
@@ -22,7 +26,7 @@ hl.config({
       enabled = true,
       range = 6,
       render_power = 3,
-      color = "rgba(0f0f0fee)",
+      color = "rgba(" .. C.shadow .. "ee)",
     },
     blur = {
       enabled = true,

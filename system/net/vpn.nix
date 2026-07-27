@@ -39,12 +39,17 @@ in
   environment.systemPackages = [ vpnCli ];
 
   # Config do nxBender (FAI) renderizado pelo sops: params estáticos + a senha do cofre.
-  # Vive em /run/secrets/rendered (root-only), nunca na store nem no git.
+  # Vive em /run/secrets/rendered (root-only), nunca na store nem no git. A fingerprint
+  # é do cert SELF-SIGNED da FAI (público, não é segredo) — sem ela o nxBender recusa o
+  # SSL. Se a FAI trocar o certificado, pegar a nova:
+  #   openssl s_client -connect 200.133.233.101:4433 | openssl x509 -noout -fingerprint -sha1
+  #   (formato nxBender = sha1 minúsculo com ':').
   sops.templates."nxbender-fai.conf".content = ''
     server = 200.133.233.101
     port = 4433
     username = victor.ferreira
     domain = fai2008
+    fingerprint = a9:db:84:93:e3:09:96:c7:33:6f:4d:05:ba:fa:1d:aa:59:0e:77:01
     password = ${config.sops.placeholder.fai_vpn_password}
   '';
 

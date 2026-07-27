@@ -85,6 +85,7 @@
       overlayLocalPkgs = final: prev: {
         claude-code-discord-status =
           final.callPackage ./pkgs/claude-code-discord-status.nix { };
+        nxbender = final.callPackage ./pkgs/nxbender.nix { }; # cliente FOSS da VPN SonicWall (FAI)
       };
 
       # Um host = módulos COMUNS (overlay, sops, disko, ./system, home-manager) +

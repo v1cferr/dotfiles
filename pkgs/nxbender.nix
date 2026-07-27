@@ -32,6 +32,12 @@ python3Packages.buildPythonApplication {
     # option". Multilink já vem OFF por padrão num link único, então a opção é redundante.
     substituteInPlace nxbender/ppp.py \
       --replace-fail "'nomp'," "# 'nomp' removido: pppd 2.5+ sem multilink (opcao inexistente)"
+    # SPLIT-TUNNEL: a FAI empurra uma rota default (0.0.0.0/0) que jogaria TODA a internet
+    # pelo túnel. Filtra o /0 no setup_routes → só as sub-redes internas da FAI vão pela
+    # VPN; a internet do usuário segue pela LAN. (No teardown a ppp0 cai e o kernel limpa.)
+    substituteInPlace nxbender/nx.py \
+      --replace-fail "for route in set(self.routes):" \
+                     "for route in [r for r in set(self.routes) if ipaddress.IPv4Network(unicode(r)).prefixlen != 0]:"
   '';
 
   doCheck = false; # o repo não tem testes

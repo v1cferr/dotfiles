@@ -54,6 +54,8 @@ in
   '';
 
   # UFSCar — GlobalProtect via openconnect; senha do sops por STDIN (não vaza no ps).
+  # --authgroup escolhe o gateway (o portal oferece 5); senão o openconnect pede
+  # interativamente e o serviço morre (stdin é só a senha → EOF).
   systemd.services.vpn-ufscar = {
     description = "VPN UFSCar (GlobalProtect via openconnect)";
     wants = [ "network-online.target" ];
@@ -64,7 +66,7 @@ in
       ExecStart = pkgs.writeShellScript "vpn-ufscar-up" ''
         ${pkgs.coreutils}/bin/cat ${config.sops.secrets.ufscar_vpn_password.path} \
           | ${pkgs.openconnect}/bin/openconnect --protocol=gp --user=857722 \
-              --passwd-on-stdin acessoremoto-scl.ufscar.br
+              --authgroup=acessoremoto.ufscar.br --passwd-on-stdin acessoremoto-scl.ufscar.br
       '';
       Restart = "no";
     };

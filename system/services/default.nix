@@ -9,5 +9,6 @@
     ./qbittorrent.nix # cliente de download (Web UI 8080; grava em /srv/media/torrents)
     ./ollama.nix # runtime de IA local (CPU); solver do duo-streak-daemon
     ./duo.nix # stack do duo-streak-daemon (compose declarativo; auto-ativa com o segredo)
+    ./sunshine.nix # streaming de tela remoto (Moonlight); captura KMS, acesso só pela tailnet
   ];
 }

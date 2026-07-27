@@ -20,6 +20,16 @@ python3Packages.buildPythonApplication {
   propagatedBuildInputs = with python3Packages; [ configargparse pyroute2 requests colorlog ];
   nativeBuildInputs = [ makeWrapper ];
 
+  # Python 3.12+ REMOVEU ssl.wrap_socket → o túnel do nxBender quebrava
+  # (AttributeError). Troca pela API moderna: contexto não-verificado (CERT_NONE) =
+  # o comportamento original do wrap_socket sem args (o nxBender valida o servidor
+  # pela própria fingerprint, não pela cadeia de cert).
+  postPatch = ''
+    substituteInPlace nxbender/sslconn.py \
+      --replace-fail "self.s = ssl.wrap_socket(sock)" \
+                     "self.s = ssl._create_unverified_context().wrap_socket(sock)"
+  '';
+
   doCheck = false; # o repo não tem testes
 
   # pppd no PATH: o nxBender chama o pppd pra levantar a interface do túnel.

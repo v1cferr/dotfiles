@@ -28,10 +28,11 @@ hl.bind(mainMod .. " + L",         hl.dsp.exec_cmd("loginctl lock-session"))    
 
 -- Barra "/" no acesso remoto: o Moonlight NÃO envia a tecla "/ ?" do ABNT2 (bug #1789,
 -- tecla internacional). Remapeia SCROLL LOCK (tecla ociosa; este TKL não tem Menu) →
--- "/" e Shift+ScrollLock → "?", via wtype (injeta o caractere direto, independe do
--- layout), mantendo o ABNT2. Vale local também.
-hl.bind("Scroll_Lock",         hl.dsp.exec_cmd("wtype /"))
-hl.bind("SHIFT + Scroll_Lock", hl.dsp.exec_cmd("wtype '?'"))
+-- "/" e Shift+ScrollLock → "?", via send_shortcut (dispatcher NATIVO do Hyprland, envia
+-- o keysym direto pra janela ativa — independe do layout e não depende de exec externo,
+-- diferente do wtype que não injetava pelo bind). Mantém o ABNT2; vale local também.
+hl.bind("Scroll_Lock",         hl.dsp.send_shortcut({ mods = 0,       key = "slash", window = "activewindow" }))  -- "/"
+hl.bind("SHIFT + Scroll_Lock", hl.dsp.send_shortcut({ mods = "SHIFT", key = "slash", window = "activewindow" }))  -- "?" (Shift+/)
 
 -- clipboard: histórico do cliphist no rofi com PREVIEW (thumbnail de imagem + ícone
 -- por tipo de arquivo); a escolha volta pro clipboard (cole com Ctrl+V). Script e tema

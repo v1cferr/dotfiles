@@ -171,7 +171,6 @@ in
     brightnessOsd # brilho via gamma do hyprsunset (SHIFT+Vol/0; chamado por nome)
     monitorToggle # SUPER+SHIFT+T: liga/desliga a TV no Hyprland (fantasma da TV off)
     wofi
-    wtype # injeta caractere/texto no Wayland (usado no remap do "/" p/ acesso remoto — keybinds.lua)
     wl-clipboard # wl-copy/wl-paste (usado pelo wl-clip-persist e uso manual)
     wl-clip-persist # mantém a cópia viva após o app fechar (o cliphist está em clipboard.nix)
     pamixer

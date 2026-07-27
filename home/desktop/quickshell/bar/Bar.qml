@@ -291,42 +291,42 @@ Scope {
     property string wWind: ""
     property var wForecast: []
     readonly property bool wHas: root.wTemp !== ""
-    // Código WMO (Open-Meteo) -> texto PT-BR. As strings batem com os regex do
+    // Código WMO (Open-Meteo) -> texto en-US. As strings batem com os regex do
     // weatherIcon() abaixo, então o ícone é derivado do texto sem mexer no mapa.
     function wmoText(code) {
         const c = code;
-        if (c === 0 || c === 1) return "Ensolarado";
-        if (c === 2) return "Parcialmente nublado";
-        if (c === 3) return "Nublado";
-        if (c === 45 || c === 48) return "Nevoeiro";
-        if (c >= 51 && c <= 57) return "Garoa";
-        if (c >= 61 && c <= 67) return "Chuva";
-        if ((c >= 71 && c <= 77) || c === 85 || c === 86) return "Neve";
-        if (c >= 80 && c <= 82) return "Pancadas de chuva";
-        if (c === 95) return "Trovoada";
-        if (c === 96 || c === 99) return "Trovoada com granizo";
+        if (c === 0 || c === 1) return "Clear";
+        if (c === 2) return "Partly cloudy";
+        if (c === 3) return "Cloudy";
+        if (c === 45 || c === 48) return "Fog";
+        if (c >= 51 && c <= 57) return "Drizzle";
+        if (c >= 61 && c <= 67) return "Rain";
+        if ((c >= 71 && c <= 77) || c === 85 || c === 86) return "Snow";
+        if (c >= 80 && c <= 82) return "Showers";
+        if (c === 95) return "Thunderstorm";
+        if (c === 96 || c === 99) return "Thunderstorm w/ hail";
         return "—";
     }
-    // Direção do vento (graus -> rosa-dos-ventos PT-BR, 8 pontos).
+    // Direção do vento (graus -> rosa-dos-ventos, 8 pontos).
     function windDir(deg) {
-        const dirs = ["N", "NE", "L", "SE", "S", "SO", "O", "NO"];
+        const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
         return dirs[Math.round(deg / 45) % 8];
     }
     function weatherIcon(text, isDay) {
         const c = (text || "").toLowerCase();
-        if (/ensolarad|limpo|\bsol\b|claro/.test(c))
+        if (/clear|sunny|\bsun\b/.test(c))
             return isDay ? "󰖙" : "󰖔";
-        if (/parcial|poucas nuvens/.test(c))
+        if (/partly/.test(c))
             return isDay ? "󰖕" : "󰼶";
-        if (/nublad|encobert|nuvens|nuvem/.test(c))
+        if (/cloud|overcast/.test(c))
             return "󰖐";
-        if (/neblina|névoa|nevoeiro|bruma/.test(c))
+        if (/fog|mist|haze/.test(c))
             return "󰖑";
-        if (/trovoad|tempestade|raio|relâmpag/.test(c))
+        if (/thunder|storm/.test(c))
             return "󰖓";
-        if (/chuv|garoa|chuvisco|pancada|aguaceiro/.test(c))
+        if (/rain|drizzle|shower/.test(c))
             return "󰖗";
-        if (/neve|gelo|granizo/.test(c))
+        if (/snow|ice|hail|sleet/.test(c))
             return "󰖘";
         return "󰖐";
     }
@@ -1106,7 +1106,7 @@ Scope {
                             if (hovered)
                                 root.anchorPopover(weatherPill, barContent, bar.screen);
                         }
-                        onClicked: root.launch(["xdg-open", "https://www.msn.com/pt-br/clima/forecast/in-S%C3%A3o-Carlos,S%C3%A3o-Paulo"])
+                        onClicked: root.launch(["xdg-open", "https://www.msn.com/en-us/weather/forecast/in-S%C3%A3o-Carlos,S%C3%A3o-Paulo"])
                     }
                     Pill {
                         id: clockPill

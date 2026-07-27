@@ -118,7 +118,7 @@ let
   # (.tmp + mv) p/ o hyprlock nunca ler um cache pela metade.
   weatherFetch = pkgs.writeShellScript "lockscreen-weather-fetch" ''
     ${pkgs.coreutils}/bin/mkdir -p ${weatherDir}
-    ${pkgs.curl}/bin/curl -s --max-time 15 -H 'Accept-Language: pt' \
+    ${pkgs.curl}/bin/curl -s --max-time 15 -H 'Accept-Language: en' \
       'https://wttr.in/-22.0087,-47.8909?format=%C,+%t' -o ${weatherCache}.tmp \
       && ${pkgs.coreutils}/bin/mv ${weatherCache}.tmp ${weatherCache}
   '';
@@ -193,10 +193,10 @@ in
           halign = "center";
           valign = "center";
         }
-        # Data completa em pt-BR (1ª letra maiúscula) + nº da semana
+        # Data completa (en-US, como o resto do sistema) + nº da semana
         {
           monitor = primary;
-          text = ''cmd[update:60000] LC_TIME=pt_BR.UTF-8 date +"%A, %d de %B de %Y  ·  Semana %V" | sed 's/./\u&/' '';
+          text = ''cmd[update:60000] date +"%A, %B %d, %Y  ·  Week %V"'';
           color = muted;
           font_size = 22;
           font_family = font;

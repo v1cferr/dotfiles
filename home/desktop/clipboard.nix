@@ -117,7 +117,7 @@ in
       children:         [ prompt, entry ];
     }
     prompt { text-color: @tn-blue; }
-    entry  { placeholder: "buscar…"; placeholder-color: @tn-muted; }
+    entry  { placeholder: "search…"; placeholder-color: @tn-muted; }
     listview { lines: 8; columns: 1; scrollbar: false; spacing: 4px; }
     element {
       padding:       6px 8px;

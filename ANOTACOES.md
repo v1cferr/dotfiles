@@ -11,10 +11,18 @@
 > 7. Sem `.sh` solto: a lógica mora no build (Nix) ou no systemd; runtime = comando de 1 linha (shellcheck no build pega erro cedo).
 > 8. Validar antes de aplicar: `nixos-rebuild build` / `nix eval` OK e commits atômicos por feature/task, antes do switch.
 
+## Configurações antigas do Arch Linux
+
+> Aqui estão minhas configurações legado do Arch Linux que estamos migrando tudo para o Nix e NixOS, para que tudo seja declarativo e não manual, e para que funcione em qualquer hardware posteriormente.
+
+- Local: `/mnt/kingston-arch/home/v1cferr/dotfiles`
+- Repo no GitHub: <https://github.com/v1cferr/dotfiles>
+
 ## Ideias
 
 > Quickshell: DECIDIDO — migrei tudo pro Quickshell (ver TODO). Personalizável em QML
 > com hot-reload; o Hyprland também virou hot-reload (hyprland.lua via mkOutOfStoreSymlink).
+> Para me inspirar: <https://github.com/Misterio77/Foundry>
 
 ## TODO
 
@@ -56,19 +64,38 @@
       toasts + centro de controle, em QML. Substituiu o swaync/mako (dois daemons brigam pelo mesmo
       nome D-Bus). Alternativas standalone p/ referência: mako (minimalista) / swaync (com control center).
 - [x] Instalar o flameshot — v14 do UNSTABLE (pkgs.unstable.flameshot, overlay do flake;
-      resto do sistema fica estável) + captura via xdg-desktop-portal (Screenshot servido
-      pelo portal-hyprland, que o programs.hyprland já habilita; XDG_CURRENT_DESKTOP=Hyprland).
-      SEM grim direto/useGrimAdapter → some o aviso "grim ... GNOME". A ideia antiga de que
-      "o portal não funcionava aqui" ficou obsoleta (o portal-hyprland passou a prover a
-      interface Screenshot). Multi-monitor: windowrule estica o overlay pelas 2 telas.
-      Pacote + config em home/apps/flameshot.nix.
+      resto do sistema estável) + captura via xdg-desktop-portal, SEM grim direto/useGrimAdapter
+      (some o aviso "grim ... GNOME"). PEGADINHA: o portal-hyprland 1.3.12 DECLARA mas NÃO
+      implementa a interface Screenshot ("Unknown method") → precisou do xdg-desktop-portal-wlr
+      (system/desktop/desktop.nix; roteamento Screenshot=wlr no portals.conf). Fluxo por TECLADO
+      (o v14 força um picker de monitor no multi-monitor): SUPER+SHIFT+S abre o picker + entra no
+      submap "screenshot"; 1=TV (esq), 2=principal (dir) SINTETIZAM o clique no preview do monitor
+      (cursor + send_shortcut mouse:272; scripts em home/apps/flameshot.nix). A janela tem class
+      VAZIA + title "flameshot" → window rule casa por TÍTULO (home/desktop/hypr/lua/rules.lua).
   - <https://wiki.nixos.org/wiki/Flameshot>
 - [ ] Verificar se é possível adicionar estado declarativo criptografado
-- [x] Clipboard (Wayland) — cliphist + wl-clipboard, watcher no autostart do Hyprland
-      e picker no wofi (SUPER+SHIFT+V). Pacotes E config em home/desktop/hypr.nix.
-      + wl-clip-persist: mantém a cópia viva após o app fechar (fix da imagem do
-      Flameshot, que sumia do clipboard ao Flameshot sair — dono do clipboard no Wayland).
+- [x] Clipboard (Wayland) — cliphist DECLARATIVO (services.cliphist, allowImages=texto+imagem)
+      + picker no ROFI com PREVIEW: thumbnail das imagens copiadas + ícone por TIPO de arquivo
+      (zip/vídeo/pdf/exe… via Fluent-dark), tema Tokyo Night, SUPER+SHIFT+V. Migração melhorada
+      do cliphist-rofi-img.sh do Arch (script clipboard-menu). home/desktop/clipboard.nix
+      (substituiu o antigo picker wofi-text). + wl-clip-persist (autostart hypr): mantém a
+      cópia viva após o app fechar (fix da imagem do Flameshot — dono do clipboard no Wayland).
 - [x] Dark mode no file manager (Dolphin) — Qt segue o GTK escuro (home/desktop/theme.nix)
+- [x] Acesso remoto de tela — Tailscale (mesh WireGuard) + Sunshine/Moonlight. Sunshine
+      (system/services/sunshine.nix): captura KMS + encode na GPU Arc, acesso SÓ pela tailnet
+      (openFirewall=false; a interface tailscale0 é trusted → fechado na LAN/internet). Tailscale
+      (system/net/tailscale.nix): join DECLARATIVO via authKeyFile (sops/Bitwarden) — entra na
+      tailnet sozinho no 1º boot, sem `tailscale up` manual. Web UI do Sunshine precisa de
+      origin_web_ui_allowed=wan + csrf_allowed_origins (IP/MagicDNS da tailnet) senão o "criar
+      usuário" dá erro de CSRF. Teclado: o Moonlight NÃO envia a tecla "/ ?" do ABNT2 (bug #1789)
+      → ScrollLock="/" e Shift+ScrollLock="?" via hl.dsp.send_shortcut (keybinds.lua; wtype não
+      injetava pelo bind). Atalhos Moonlight: Capture system shortcuts=Always p/ o SUPER passar;
+      Ctrl+Alt+Shift+Z solta/recaptura o mouse, +Q sai, +X fullscreen. FOSS futuro = Headscale.
+- [x] Idioma: sistema em en-US (output/erros em inglês facilitam debug), EXCEÇÃO — a LOCKSCREEN
+      é full pt-BR (data por extenso, clima, "Digite a senha…", frases via DeepL). defaultLocale=
+      en_US + supportedLocales inclui pt_BR (o LC_TIME da data do lock depende dele). Teclado
+      ABNT2 + timezone BR seguem (físico/fuso, não idioma). clipboard/bar/UI em en-US.
+      system/core/core.nix + home/desktop/lockscreen.nix.
 - [ ] Depois que eu estiver no SSD, já configurar o WoW Ascension com o Bottles para jogarmos e eu ir configurando o sistema simultaneamente
 
 - [x] Verificar a arquitetura de pastas e melhores práticas para manutenção/organização/
@@ -182,4 +209,10 @@
 - [ ] Configurar para ser indexado e aparecer nos primeiro resultado do Google (SEO/AIO Ranking)
 - [ ] Organizar meu markdown de anotações
 - [ ] Adicionar um método de zip direto no tooltip do meu file manager (Dolphin) — zipar sem abrir o terminal, via menu de contexto (botão direito). Pesquisar se há algum software que faça isso.
-- [ ] Adicionar um arquivo para declarar quais softwares inicializam e ficam ativos com a minha maquina (preciso ter esse acompanhamento)
+- [ ] Adicionar um arquivo para declarar quais softwares inicializam e ficam ativos com a minha maquina (preciso ter esse acompanhamento para saber o que está rodando e o que não está rodando, para poder desativar o que não quero que rode e ativar o que quero que rode)
+- [ ] Instalar o driver/software do meu mouse Razer Deathadder v2 (adicionar a notificação de quando meu DPI mudar, etc)
+- [ ] Configurar meu launcher de apps (colocar icones, filtro pelos ultimos utilizados e etc)
+- [x] Clipboard manager com visualização de imagens/arquivos + histórico — FEITO com rofi
+      (não quickshell): cliphist + rofi c/ preview (thumbnail + ícone por tipo). Ver acima.
+- [ ] Possibilidade de clicar para trocar de workspace na minha status bar
+- [ ] Tray icons e tooltip clicaveis (para abrir o app ou ir para a configuração do app)

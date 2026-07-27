@@ -28,6 +28,10 @@ python3Packages.buildPythonApplication {
     substituteInPlace nxbender/sslconn.py \
       --replace-fail "self.s = ssl.wrap_socket(sock)" \
                      "self.s = ssl._create_unverified_context().wrap_socket(sock)"
+    # pppd 2.5+ (nixpkgs) não tem a opção 'nomp' (desliga multilink) → "unrecognized
+    # option". Multilink já vem OFF por padrão num link único, então a opção é redundante.
+    substituteInPlace nxbender/ppp.py \
+      --replace-fail "'nomp'," "# 'nomp' removido: pppd 2.5+ sem multilink (opcao inexistente)"
   '';
 
   doCheck = false; # o repo não tem testes

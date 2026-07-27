@@ -39,6 +39,13 @@ hl.bind("SHIFT + Scroll_Lock", hl.dsp.send_shortcut({ mods = "SHIFT", key = "sla
 -- Tokyo Night em home/desktop/clipboard.nix.
 hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("clipboard-menu"))
 
+-- VPN (paridade Arch): SUPER+N = UFSCar (GlobalProtect), SHIFT+N = FAI (SonicWall/nxBender),
+-- CTRL+N = desconecta tudo. Serviços systemd sob demanda (system/net/vpn.nix); o CLI `vpn`
+-- liga sem senha via regra polkit.
+hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd("vpn connect ufscar"))
+hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("vpn connect fai"))
+hl.bind(mainMod .. " + CTRL + N",  hl.dsp.exec_cmd("vpn disconnect all"))
+
 -- reiniciar o Quickshell (raramente necessário — ele faz hot-reload do QML ao
 -- salvar; útil só quando o processo trava). `qs kill` para a instância, `qs` sobe.
 hl.bind(mainMod .. " + ESCAPE",    hl.dsp.exec_cmd("bash -lc 'qs kill; sleep 0.3; qs &'"))

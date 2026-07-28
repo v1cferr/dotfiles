@@ -25,10 +25,14 @@
         autoMount = false; # NÃO monta no boot — o `vpn connect fai` sobe (VPN-gated)
         mountPoint = "/home/v1cferr/FAI-workstation";
         options = {
-          vfs-cache-mode = "full"; # cache leitura+escrita (rápido; já é o default do módulo)
-          vfs-cache-max-age = "168h"; # mantém no cache por 1 semana
-          vfs-cache-max-size = "10G"; # teto do cache local
-          dir-cache-time = "30s"; # revalida listagem rápido (arquivo novo aparece logo)
+          # "writes": LEITURAS passam direto (streaming, NÃO acumulam em disco) — só o que
+          # você escreve/copia é cacheado até subir. Disco fica enxuto. (Troque p/ "full"
+          # se quiser velocidade máxima de reabrir arquivos, ao custo de encher o cache.)
+          vfs-cache-mode = "writes";
+          vfs-cache-max-age = "6h"; # evicta o cache de escrita rápido
+          vfs-cache-max-size = "2G"; # teto baixo do cache em disco (~/.cache/rclone)
+          dir-cache-time = "5m"; # listagem cacheada 5min → navegar fica RÁPIDO (F5 recarrega)
+          buffer-size = "8M"; # RAM de read-ahead por arquivo aberto — baixo de propósito
           timeout = "30s"; # timeout de I/O (não pendura eterno se a VPN cair)
           contimeout = "15s"; # timeout de conexão
         };

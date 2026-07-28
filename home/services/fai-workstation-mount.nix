@@ -18,7 +18,9 @@
         key_file = "/home/v1cferr/.ssh/id_ed25519"; # chave existente (estado → backup)
         known_hosts_file = "/home/v1cferr/.ssh/known_hosts"; # workstation já confiada
       };
-      mounts."/home/v1cferr" = {
+      mounts."/" = {
+        # "/" = raiz inteira da workstation (não só o home). O user v1cferr vê o que tem
+        # permissão de ler; o resto aparece mas fica inacessível (normal p/ não-root).
         enable = true;
         autoMount = false; # NÃO monta no boot — o `vpn connect fai` sobe (VPN-gated)
         mountPoint = "/home/v1cferr/FAI-workstation";
@@ -38,7 +40,7 @@
   # falhas rápidas (StartLimit) antes do host ficar alcançável. Retry a cada 10s até
   # conectar — como o `vpn connect fai` dá o start e o `disconnect` dá o stop, não fica em
   # loop eterno quando a VPN está intencionalmente desligada.
-  systemd.user.services."rclone-mount:.home.v1cferr@faiws" = {
+  systemd.user.services."rclone-mount:.@faiws" = {
     Unit.StartLimitIntervalSec = 0;
     Service.RestartSec = 10;
   };

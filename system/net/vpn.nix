@@ -19,7 +19,7 @@ let
       # Mount rclone da workstation FAI (~/FAI-workstation) sobe/derruba JUNTO com a VPN
       # FAI (home/services/fai-workstation-mount.nix). --no-block: não trava esperando o
       # túnel; o serviço retenta sozinho até o host ficar alcançável.
-      mnt='rclone-mount:.home.v1cferr@faiws.service'
+      mnt='rclone-mount:.@faiws.service'
       fai_up()      { systemctl start vpn-fai.service && note "FAI conectando…"; systemctl --user start --no-block "$mnt" 2>/dev/null || true; }
       fai_down()    { systemctl stop  vpn-fai.service 2>/dev/null || true; systemctl --user stop "$mnt" 2>/dev/null || true; note "FAI desconectada"; }
       ufscar_up()   { systemctl start vpn-ufscar.service && note "UFSCar conectando…"; }

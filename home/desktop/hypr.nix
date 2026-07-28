@@ -163,14 +163,13 @@ let
 in
 {
   # Ferramentas da SESSÃO Hyprland que o Lua abaixo invoca (keybinds/autostart) —
-  # app+config no home (regra 4). wofi = launcher; wl-clipboard/wl-clip-persist = base
-  # do clipboard (o histórico cliphist + picker rofi vivem em clipboard.nix); pamixer/playerctl
-  # = teclas de mídia; pavucontrol = mixer GUI (SUPER+S).
+  # app+config no home (regra 4). Launcher = rofi (home/desktop/launcher.nix, mesmo tool do
+  # clipboard). wl-clipboard/wl-clip-persist = base do clipboard (histórico cliphist + picker
+  # rofi vivem em clipboard.nix); pamixer/playerctl = teclas de mídia; pavucontrol = mixer (SUPER+S).
   home.packages = with pkgs; [
     minimizeOthers # SUPER+M: minimiza as outras janelas (o Lua chama por nome)
     brightnessOsd # brilho via gamma do hyprsunset (SHIFT+Vol/0; chamado por nome)
     monitorToggle # SUPER+SHIFT+T: liga/desliga a TV no Hyprland (fantasma da TV off)
-    wofi
     wl-clipboard # wl-copy/wl-paste (usado pelo wl-clip-persist e uso manual)
     wl-clip-persist # mantém a cópia viva após o app fechar (o cliphist está em clipboard.nix)
     pamixer

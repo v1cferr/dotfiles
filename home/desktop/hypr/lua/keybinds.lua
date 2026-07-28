@@ -4,8 +4,8 @@ local mainMod = "SUPER"
 -- Programas que os binds abaixo chamam (ferramentas adaptadas ao NixOS).
 local terminal       = "kitty"            -- SUPER+RETURN
 local terminalWithAi = "kitty claude"     -- SUPER+BACKSPACE (Claude Code no terminal)
-local launcherApps   = "wofi --show drun" -- SUPER+Q (apps .desktop) [era rofi drun]
-local launcherRun    = "wofi --show run"  -- SUPER+R (binários no PATH) [era rofi run]
+local launcherApps   = "rofi -show drun -theme launcher" -- SUPER+Q (apps .desktop; ícones+recência)
+local launcherRun    = "rofi -show run -theme launcher"  -- SUPER+R (binários no PATH)
 local fileManager    = "dolphin"          -- SUPER+E [era thunar]
 local sound          = "pavucontrol"      -- SUPER+S (mixer de áudio)
 local bluetooth      = "blueman-manager"  -- SUPER+B

@@ -11,6 +11,22 @@
   services.xserver.enable = true; # habilita LightDM (greeter X11) + Xwayland
   services.xserver.displayManager.lightdm.enable = true;
   programs.hyprland.enable = true;
+
+  # ── Autologin ──────────────────────────────────────────────────────────────
+  # A máquina loga sozinha no Hyprland no boot. MOTIVO: o Sunshine (acesso remoto)
+  # captura uma sessão gráfica VIVA — sem alguém logado não há compositor pra
+  # streamar. Com autologin a sessão sobe no boot → o graphical-session.target ativa
+  # → o Sunshine (autoStart) sobe junto, e dá pra conectar do Moonlight sem ninguém
+  # tocar na máquina. Bônus: se o Hyprland cair, o LightDM re-loga sozinho (resiliência).
+  # defaultSession é OBRIGATÓRIO (assertion do lightdm) e define a sessão do autologin.
+  # SEGURANÇA: o boot cai numa sessão DESTRANCADA. Mitigação: o hypridle tranca aos
+  # 5min (home/desktop/lockscreen.nix) e o acesso remoto é só pela tailnet. Se quiser
+  # trancar já no boot, dá p/ um exec-once do hyprlock no autostart.
+  services.displayManager.autoLogin = {
+    enable = true;
+    user = "v1cferr";
+  };
+  services.displayManager.defaultSession = "hyprland";
   # xkb do sistema: cobre o greeter (LightDM/X11) e apps Xwayland.
   services.xserver.xkb = {
     layout = "br"; # variante padrão do "br" = ABNT2

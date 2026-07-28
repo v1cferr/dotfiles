@@ -7,6 +7,11 @@ hl.on("hyprland.start", function()
   -- quickshell) NÃO sobem no login — o LightDM lança o Hyprland cru, sem integração systemd.
   -- O target está declarado em systemd.user.targets (home/desktop/hypr.nix).
   hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP && systemctl --user start hyprland-session.target")
+  -- TRANCA no boot: a máquina loga sozinha (autologin, system/desktop/desktop.nix) p/ o
+  -- Sunshine subir, mas a sessão nasce TRANCADA — o Moonlight cai direto no hyprlock e só
+  -- entra com senha. `pidof || ` evita 2ª superfície de session-lock (quebraria o teclado).
+  -- Só no boot da sessão (hyprland.start não dispara em reload). PAM em desktop.nix.
+  hl.exec_cmd("pidof hyprlock || hyprlock")
   hl.exec_cmd("qs") -- Quickshell (bar/OSD/mídia). Config QML em home/desktop/quickshell/ (hot-reload).
   -- O watcher do cliphist (histórico) agora é serviço declarativo (services.cliphist,
   -- home/desktop/clipboard.nix) — não é mais lançado aqui.

@@ -27,6 +27,10 @@
       # && hyprctl reload: recarrega o hyprland.lua na sessão (config nova não aplica sozinha; fora do Hyprland só erra sem efeito).
       rebuild = "sudo nixos-rebuild switch --flake ~/Projects/GitHub/v1cferr/dotfiles && hyprctl reload";
       update = "nix flake update --flake ~/Projects/GitHub/v1cferr/dotfiles"; # bump do flake.lock
+      # upgrade = update + rebuild (tipo `apt update && apt full-upgrade`). O `update` roda
+      # como USUÁRIO primeiro (tem a chave SSH p/ inputs privados, ex. duo-streak-daemon) e
+      # SÓ com sucesso (`&&`) segue pro rebuild como root — lock quebrado nunca chega a aplicar.
+      upgrade = "nix flake update --flake ~/Projects/GitHub/v1cferr/dotfiles && sudo nixos-rebuild switch --flake ~/Projects/GitHub/v1cferr/dotfiles && hyprctl reload";
       gc = "sudo nix-collect-garbage -d"; # limpa gerações antigas da store manualmente
       # ls/ll/la/lt (eza) e cat (bat) vivem em home/cli.nix, junto do toolkit CLI
       ".." = "cd ..";

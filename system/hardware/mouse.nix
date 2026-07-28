@@ -51,10 +51,18 @@
 
   # logid tem BOOT-RACE + não re-detecta no reconnect: se o mouse conecta DEPOIS do logid
   # subir (BT pareia com atraso no boot, ou reconecta após dormir), o DPI fica no default
-  # (1000), não nos 2500. Esta regra reinicia o logid quando o MX Master (046D:B034, BT)
-  # conecta → reaplica a config SEMPRE. --no-block p/ não travar o udev; try-restart só age
-  # se o logid já estiver de pé.
+  # (1000), não nos 2500. MAS reiniciar o logid no INSTANTE do connect falha ("5 tries":
+  # o HID++ do BT ainda não respondeu). Então o udev, quando o MX Master (046D:B034)
+  # conecta, dispara um oneshot que ESPERA o HID++ acordar e SÓ AÍ reinicia o logid.
   services.udev.extraRules = ''
-    ACTION=="add", SUBSYSTEM=="hidraw", KERNELS=="*046D:B034*", RUN+="${pkgs.systemd}/bin/systemctl --no-block try-restart logid.service"
+    ACTION=="add", SUBSYSTEM=="hidraw", KERNELS=="*046D:B034*", TAG+="systemd", ENV{SYSTEMD_WANTS}+="logid-reapply.service"
   '';
+  systemd.services.logid-reapply = {
+    description = "Reaplica a config do logid quando o MX Master (BT) conecta e fica pronto";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStartPre = "${pkgs.coreutils}/bin/sleep 5"; # espera o HID++ do BT acordar
+      ExecStart = "${pkgs.systemd}/bin/systemctl try-restart logid.service";
+    };
+  };
 }

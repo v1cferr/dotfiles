@@ -273,11 +273,16 @@ in
           timeout = 300;
           on-timeout = "${loginctlBin} lock-session";
         }
-        # +30s: desliga a tela via dpms NATIVO. on-resume religa ao voltar.
+        # +30s: desliga a tela via dpms NATIVO. on-resume religa ao voltar. CONFLITO com
+        # o Sunshine (captura KMS): o guard em system/services/sunshine.nix acorda a tela
+        # e pausa este hypridle durante o stream — senão o Moonlight pegaria tela preta.
         {
           timeout = 330;
-          on-timeout = "${hyprctl} dispatch dpms off";
-          on-resume = "${hyprctl} dispatch dpms on";
+          # Sintaxe Lua do 0.55 (hl.dsp.*): o `dispatch dpms off` ANTIGO falha calado
+          # (erro de parse + exit 0) → a tela nunca desligava. Aspas simples p/ o sh
+          # passar como 1 arg; \" literais no comando.
+          on-timeout = "${hyprctl} dispatch 'hl.dsp.dpms(\"off\")'";
+          on-resume = "${hyprctl} dispatch 'hl.dsp.dpms(\"on\")'";
         }
       ];
     };

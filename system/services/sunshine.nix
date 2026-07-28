@@ -44,6 +44,13 @@ in
     openFirewall = false; # NÃO abre na LAN/internet; acesso só pela tailnet (tailscale0 trusted)
     settings = {
       sunshine_name = "nixos-sandisk"; # nome que aparece no Moonlight
+      # FORÇA o backend wlr (wlr-screencopy). Sem isto, o Sunshine PROBA o backend
+      # `portalgrab` (portal ScreenCast/RemoteDesktop) no startup — e no Hyprland esse
+      # probe dispara o `hyprland-share-picker`, que não renderiza (falta plugin Qt) e
+      # PENDURA o Sunshine → nunca abre as portas (não conectava o Moonlight pós-VPN/boot).
+      # wlr é o backend correto p/ wlroots; forçá-lo pula o probe do portal. (Vídeo=wlr,
+      # input=uinput via ACL uaccess do /dev/uinput — ambos sem portal.)
+      capture = "wlr";
       # NÃO forçar capture=kms: o kmsgrab NÃO enumera no driver `xe` (Battlemage) →
       # "Unable to find display" e o serviço nem streama. Deixa auto = `wlr` (funciona
       # DESDE QUE o monitor esteja ligado — ver o guard streamBegin abaixo).

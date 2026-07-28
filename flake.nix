@@ -64,6 +64,14 @@
       url = "git+https://git.outfoxxed.me/quickshell/quickshell";
       inputs.nixpkgs.follows = "nixpkgs"; # dedup
     };
+
+    # Google Chrome canais DEV/BETA — o nixpkgs só empacota o stable. Este flake
+    # mantido (nix-community) traz o google-chrome-dev sempre fresco; "latest" = bump
+    # com `nix flake update browser-previews`. Usado em home/packages.nix.
+    browser-previews = {
+      url = "github:nix-community/browser-previews";
+      inputs.nixpkgs.follows = "nixpkgs"; # dedup (derivation própria, sem dep do unstable)
+    };
   };
 
   outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, disko, sops-nix, ... }@inputs:

@@ -13,7 +13,10 @@
   home.packages = with pkgs; [
     # ── Navegadores ──
     librewolf # Firefox hardened (privacidade)
-    google-chrome # Chrome (unfree; compatibilidade/DevTools)
+    # Chrome canal DEV (unstable/latest), NÃO o stable — via flake browser-previews
+    # (o nixpkgs só tem stable). Binário/launcher = "Google Chrome Dev"; bump com
+    # `nix flake update browser-previews`. unfree; compatibilidade/DevTools bleeding-edge.
+    inputs.browser-previews.packages.${pkgs.system}.google-chrome-dev
     inputs.zen-browser.packages.${pkgs.system}.default # Zen (flake; ver flake.nix)
 
     # ── Comunicação ──

@@ -12,6 +12,23 @@
 # ═══════════════════════════════════════════════════════════════════════════
 { pkgs, lib, ... }:
 
+let
+  # Bloco XBEL do bookmark "FAI Workstation" (a pasta do rclone SFTP, ~/FAI-workstation).
+  faiPlace = pkgs.writeText "fai-place.xbel" ''
+     <bookmark href="file:///home/v1cferr/FAI-workstation">
+      <title>FAI Workstation</title>
+      <info>
+       <metadata owner="http://freedesktop.org">
+        <bookmark:icon name="folder-remote"/>
+       </metadata>
+       <metadata owner="http://www.kde.org">
+        <ID>1784500000/0</ID>
+        <isSystemItem>false</isSystemItem>
+       </metadata>
+      </info>
+     </bookmark>
+  '';
+in
 {
   # Dolphin (KDE) + extras que ligam recursos: kio-extras = SFTP/SMB/MTP (celular
   # via USB); thumbnailers = miniaturas de imagem/pdf/vídeo. Lixeira (trash:/) nativa.
@@ -29,5 +46,21 @@
     run mkdir -p "$dir"
     run "$kw" --file "$dir/.directory" --group Dolphin --key ViewMode 2
     run "$kw" --file "$dir/.directory" --group Dolphin --key Version 4
+  '';
+
+  # Bookmark "FAI Workstation" no painel Places (declarativo, idempotente). MESMO motivo
+  # do details-view: o Dolphin reescreve o user-places.xbel em runtime (monta disco/adiciona
+  # lugar) → symlink imutável brigaria + travaria os teus lugares. Então insere o bookmark
+  # SÓ se ainda não estiver lá, deixando o resto mutável. Reproduzível em qualquer máquina
+  # (não hardcoda as entradas de disco, que são específicas do hardware).
+  home.activation.faiWorkstationPlace = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    xbel="$HOME/.local/share/user-places.xbel"
+    if [ -f "$xbel" ] && ! grep -q FAI-workstation "$xbel"; then
+      tmp="$(mktemp)"
+      grep -v '</xbel>' "$xbel" > "$tmp"
+      cat ${faiPlace} >> "$tmp"
+      printf '</xbel>\n' >> "$tmp"
+      run mv "$tmp" "$xbel"
+    fi
   '';
 }

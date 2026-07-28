@@ -23,7 +23,7 @@ Scope {
     property int barExclusiveZone: 30
     readonly property int trayCount: SystemTray.items ? SystemTray.items.values.length : 0
     readonly property string scriptsDir: Quickshell.env("HOME") + "/.config/waybar/scripts"
-    readonly property string vpnBin: Quickshell.env("HOME") + "/.local/bin/vpn"
+    readonly property string vpnBin: "vpn" // CLI no PATH (system/net/vpn.nix)
 
     // Paleta e fonte vêm do Theme singleton (Theme.colX / Theme.uiFont).
 
@@ -260,7 +260,13 @@ Scope {
             root.vpnName = n;
         } catch (e) {}
     }
-    // VPN removida (migração adiada — netExtender fora do nixpkgs). Sem polling.
+    Process {
+        id: vpnProc
+        command: [root.vpnBin, "status-json"]
+        stdout: StdioCollector {
+            onStreamFinished: root.parseVpn(text)
+        }
+    }
 
     // ===== Hypridle (toggle-hypridle.sh) =====
     property string hypridleIcon: "󰒲"
@@ -803,6 +809,7 @@ Scope {
         triggeredOnStart: true
         onTriggered: {
             memProc.running = true;
+            vpnProc.running = true;
         }
     }
     Timer {
@@ -1151,6 +1158,16 @@ Scope {
                         label: root.cpuPct + "%"
                         accent: root.stateColor(root.cpuPct, Theme.colYellow)
                         onHoveredChanged: hovered ? root.showMetric("usage", usagePill, barContent, bar.screen) : root.unhoverMetric()
+                    }
+                    Pill {
+                        // VPN: verde + nome quando conectada, cinza quando off. Clique = menu
+                        // rofi (conectar/desconectar FAI/UFSCar); dir = desconectar tudo.
+                        icon: "󰦝"
+                        label: root.vpnConnected ? root.vpnName : ""
+                        accent: root.vpnConnected ? Theme.colGreen : Theme.colDim
+                        maxWidth: 150
+                        onClicked: root.launch([root.vpnBin, "menu"])
+                        onRightClicked: root.launch([root.vpnBin, "disconnect", "all"])
                     }
                     Pill {
                         id: netPill

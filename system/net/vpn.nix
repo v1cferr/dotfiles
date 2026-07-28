@@ -10,10 +10,10 @@
 { pkgs, config, ... }:
 
 let
-  # CLI `vpn`: connect/disconnect ufscar|fai|all → systemctl start/stop + notificação.
+  # CLI `vpn`: connect/disconnect ufscar|fai|all + status-json/menu (pro pill da barra).
   vpnCli = pkgs.writeShellApplication {
     name = "vpn";
-    runtimeInputs = with pkgs; [ systemd libnotify ];
+    runtimeInputs = with pkgs; [ systemd libnotify rofi ];
     text = ''
       note() { notify-send -a VPN "VPN" "$1" 2>/dev/null || true; }
       case "''${1:-}" in
@@ -30,7 +30,27 @@ let
             all)    systemctl stop vpn-ufscar.service vpn-fai.service 2>/dev/null || true; note "VPNs desconectadas" ;;
             *) echo "uso: vpn disconnect ufscar|fai|all" >&2; exit 1 ;;
           esac ;;
-        *) echo "uso: vpn connect|disconnect <ufscar|fai|all>" >&2; exit 1 ;;
+        # Saída estável p/ o pill do Quickshell (Bar.qml faz o polling a cada 5s).
+        status-json)
+          fai=false; ufscar=false
+          systemctl is-active --quiet vpn-fai.service    && fai=true
+          systemctl is-active --quiet vpn-ufscar.service && ufscar=true
+          printf '{"vpns":[{"id":"fai","name":"FAI","connected":%s},{"id":"ufscar","name":"UFSCar","connected":%s}]}\n' "$fai" "$ufscar" ;;
+        # Menu do rofi (clique no pill): rótulo alterna conectar/desconectar por estado.
+        menu)
+          fai=Conectar; ufscar=Conectar
+          systemctl is-active --quiet vpn-fai.service    && fai=Desconectar
+          systemctl is-active --quiet vpn-ufscar.service && ufscar=Desconectar
+          choice=$(printf '󰦝  %s FAI\n󰦝  %s UFSCar\n󰗼  Desconectar tudo\n' "$fai" "$ufscar" \
+            | rofi -dmenu -i -p VPN -theme-str 'window { width: 340px; }') || exit 0
+          case "$choice" in
+            *"Conectar FAI"*)       systemctl start vpn-fai.service    && note "FAI conectando…" ;;
+            *"Desconectar FAI"*)    systemctl stop  vpn-fai.service    && note "FAI desconectada" ;;
+            *"Conectar UFSCar"*)    systemctl start vpn-ufscar.service && note "UFSCar conectando…" ;;
+            *"Desconectar UFSCar"*) systemctl stop  vpn-ufscar.service && note "UFSCar desconectada" ;;
+            *"Desconectar tudo"*)   systemctl stop vpn-ufscar.service vpn-fai.service 2>/dev/null || true; note "VPNs desconectadas" ;;
+          esac ;;
+        *) echo "uso: vpn connect|disconnect <ufscar|fai|all> | status-json | menu" >&2; exit 1 ;;
       esac
     '';
   };

@@ -38,7 +38,8 @@ in
 {
   services.sunshine = {
     enable = true;
-    capSysAdmin = true; # cap p/ captura KMS (mirror da sessão física do Hyprland)
+    # SEM capSysAdmin: a captura é wlr (wlr-screencopy), que NÃO precisa de CAP_SYS_ADMIN
+    # — só o KMS-grab precisaria, e o KMS nem funciona no driver xe. Menos privilégio.
     autoStart = true; # sobe junto da sessão gráfica (serviço --user, WantedBy graphical-session)
     openFirewall = false; # NÃO abre na LAN/internet; acesso só pela tailnet (tailscale0 trusted)
     settings = {

@@ -55,12 +55,17 @@
   };
 
   # ── Keyring / Secret Service (gnome-keyring) ──────────────────────────────
-  # Provê o org.freedesktop.secrets — onde apps guardam segredos CIFRADOS em vez
-  # de texto plano (git via libsecret, NetworkManager, navegadores, etc.).
-  # Destranca automaticamente no login do LightDM (PAM, com a senha do usuário).
+  # Provê o org.freedesktop.secrets — onde apps guardam segredos (git via libsecret,
+  # NetworkManager, Chrome/Spotify/Dropbox, etc.). ATENÇÃO ao AUTOLOGIN: o PAM do
+  # lightdm-autologin NÃO digita senha, então o pam_gnome_keyring NUNCA recebe authtok
+  # → o auto-unlock NÃO vem do PAM. Aqui o keyring "Login" tem senha VAZIA (estado, não
+  # declarável — regra 6): o gnome-keyring-daemon o destrava sozinho no startup, sem
+  # prompt, pra TODOS os apps. Trade-off aceito: sessão já é autologin/destrancada e o
+  # acesso remoto é só tailnet. Ver memória [[keyring-apos-restore]].
   services.gnome.gnome-keyring.enable = true;
+  # Só serve ao login INTERATIVO (resgate, se o autologin for desligado); inerte no autologin.
   security.pam.services.lightdm.enableGnomeKeyring = true;
-  programs.seahorse.enable = true; # GUI "Senhas e Chaves" pra gerenciar
+  programs.seahorse.enable = true; # GUI "Senhas e Chaves" pra gerenciar/trocar senha do keyring
 
   # ── Lockscreen (hyprlock) ──────────────────────────────────────────────────
   # PAM p/ o hyprlock autenticar a senha do usuário. SEM isto ele não desbloqueia

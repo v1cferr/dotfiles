@@ -47,5 +47,6 @@
     unstable.fastfetch # resumo do sistema (bleeding-edge: hardware/versões novas)
     unstable.claude-code # este assistente de código (bleeding-edge — evolui rápido)
     unstable.yt-dlp # baixa vídeo/áudio (unstable pq quebra quando os sites mudam)
+    unstable.speedtest-cli # teste de velocidade (unstable: acompanha mudanças do speedtest.net)
   ];
 }

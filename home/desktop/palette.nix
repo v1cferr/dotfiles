@@ -56,6 +56,29 @@ let
       pink = "f5c2e7";
       shadow = "11111b"; # crust
     };
+    # Gruvbox Dark — github.com/morhetz/gruvbox (paleta quente; ótimo p/ testar a troca).
+    gruvbox-dark = {
+      bg = "282828"; # bg0
+      surface = "3c3836"; # bg1
+      track = "504945"; # bg2
+      border = "665c54"; # bg3
+      text = "ebdbb2"; # fg1
+      subtext = "d5c4a1"; # fg2
+      dim = "928374"; # gray
+      accent = "fe8019"; # orange (o acento icônico do Gruvbox)
+      blue = "83a598";
+      cyan = "8ec07c"; # aqua
+      sky = "83a598";
+      teal = "8ec07c";
+      green = "b8bb26";
+      yellow = "fabd2f";
+      orange = "fe8019";
+      red = "fb4934";
+      magenta = "d3869b";
+      purple = "b16286";
+      pink = "d3869b";
+      shadow = "1d2021"; # bg0_hard
+    };
   };
 
   p = palettes.${cfg.name};

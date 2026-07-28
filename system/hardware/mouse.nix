@@ -1,8 +1,8 @@
 # Mouse Logitech MX Master 3S — configuração declarativa via logiops (daemon logid).
-# logid roda como serviço systemd (root → acessa o hidraw) e aplica o /etc/logid.cfg no
-# hotplug. Conectado por Bluetooth (logiops 0.3.x já fala HID++ por BT); se um dia não
-# detectar por BT, plugar o receptor Bolt (vem na caixa) resolve, sem mudar este arquivo.
-{ ... }:
+# logid roda como serviço systemd (root → acessa o hidraw) e aplica a config no hotplug.
+# Conectado por Bluetooth (logiops 0.3.x já fala HID++ por BT); se um dia não detectar por
+# BT, plugar o receptor Bolt (vem na caixa) resolve, sem mudar este arquivo.
+{ pkgs, ... }:
 
 {
   services.logiops = {
@@ -48,4 +48,13 @@
       ];
     };
   };
+
+  # logid tem BOOT-RACE + não re-detecta no reconnect: se o mouse conecta DEPOIS do logid
+  # subir (BT pareia com atraso no boot, ou reconecta após dormir), o DPI fica no default
+  # (1000), não nos 2500. Esta regra reinicia o logid quando o MX Master (046D:B034, BT)
+  # conecta → reaplica a config SEMPRE. --no-block p/ não travar o udev; try-restart só age
+  # se o logid já estiver de pé.
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="hidraw", KERNELS=="*046D:B034*", RUN+="${pkgs.systemd}/bin/systemctl --no-block try-restart logid.service"
+  '';
 }

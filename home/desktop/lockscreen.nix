@@ -8,7 +8,7 @@
 #               p/ pt-BR (DeepL) e formata em pango num cache; no lock só `shuf -n1`.
 #   • weather → um serviço+timer systemd busca o wttr.in a cada 10 min p/ um cache;
 #               no lock só roda `cat`. Fonte estável, sem raspar HTML.
-#   • idle    → `dpms off/on` NATIVO do hypridle (sem script de dim).
+#   • idle    → só TRANCA aos 5min (loginctl lock-session). SEM dpms-off — ver ponto 3.
 #
 # Regra da pasta: apps de USUÁRIO → home/. programs.hyprlock instala o hyprlock e
 # services.hypridle sobe o daemon (systemd --user, igual ao hyprsunset). Por isso o
@@ -21,10 +21,10 @@
 #      hyprlock ao acordar do idle (frame DMA destruído no exit → lockout).
 #   2. Nada de GIF/reload contínuo: o gatherer assíncrono corre com o exit() e
 #      corrompe a heap (SIGABRT no unlock).
-#   3. dpms: usamos o `dpms off/on` NATIVO do hypridle. Histórico: na antiga NVIDIA
-#      (Arch, driver velho) o `dpms on` sob lock CONGELAVA o page-flip atomic (só
-#      reboot); na Arc B580 (xe) não reproduz. Se algum dia congelar, o fallback é
-#      dim por gamma do hyprsunset (ver histórico git). TESTAR com um TTY aberto.
+#   3. dpms-off REMOVIDO (jul/2026): desligar a tela no idle BUGAVA o acesso remoto —
+#      o Sunshine (captura wlr no driver xe) pegava TELA PRETA do monitor apagado, e
+#      alternar dpms sob captura deu ENGINE-RESET da GPU (xe RCS, travou o scanout).
+#      Agora o idle SÓ tranca. Se um dia quiser escurecer, use gamma do hyprsunset.
 # Ref: https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/
 { config, pkgs, ... }:
 
@@ -51,7 +51,6 @@ let
   red     = "rgba(${palette.red}ee)";
 
   # ── Binários por caminho absoluto (não dependem de PATH — durável) ────────────
-  hyprctl     = "${pkgs.hyprland}/bin/hyprctl";
   hyprlockBin = "${pkgs.hyprlock}/bin/hyprlock";
   pidof       = "${pkgs.procps}/bin/pidof";
   loginctlBin = "${pkgs.systemd}/bin/loginctl";
@@ -255,7 +254,7 @@ in
     };
   };
 
-  # ── hypridle: lock aos 5 min + dpms (tela off) logo depois ───────────────────
+  # ── hypridle: só TRANCA aos 5 min (SEM dpms-off — bugava o moon/Sunshine) ─────
   services.hypridle = {
     enable = true;
     settings = {
@@ -269,20 +268,11 @@ in
       };
       listener = [
         # 5 min: tranca. loginctl → lock_cmd (protegido), nunca duplica o hyprlock.
+        # NÃO há listener de dpms-off: desligar a tela quebrava o acesso remoto (ver
+        # cabeçalho, ponto 3). O monitor fica ligado; o moon captura sempre.
         {
           timeout = 300;
           on-timeout = "${loginctlBin} lock-session";
-        }
-        # +30s: desliga a tela via dpms NATIVO. on-resume religa ao voltar. CONFLITO com
-        # o Sunshine (captura KMS): o guard em system/services/sunshine.nix acorda a tela
-        # e pausa este hypridle durante o stream — senão o Moonlight pegaria tela preta.
-        {
-          timeout = 330;
-          # Sintaxe Lua do 0.55 (hl.dsp.*): o `dispatch dpms off` ANTIGO falha calado
-          # (erro de parse + exit 0) → a tela nunca desligava. Aspas simples p/ o sh
-          # passar como 1 arg; \" literais no comando.
-          on-timeout = "${hyprctl} dispatch 'hl.dsp.dpms(\"off\")'";
-          on-resume = "${hyprctl} dispatch 'hl.dsp.dpms(\"on\")'";
         }
       ];
     };

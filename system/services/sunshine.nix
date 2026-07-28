@@ -15,30 +15,22 @@
 #   https://<ip-tailnet>:47990  → cria usuário/senha admin → pareia o Moonlight (PIN).
 # O estado (clientes pareados) mora em ~/.config/sunshine (não declarável → é ESTADO).
 #
-# GUARD DE IDLE (conflito com o hypridle): a captura é do monitor FÍSICO via wlr. Se
-# o hypridle já tiver dado `dpms off` (home/desktop/lockscreen.nix, aos ~5min), o output
-# está em standby → conectar do Moonlight pega TELA PRETA (a conexão não acorda a tela;
-# só input, e há bugs de black-screen/crash no dpms off do Hyprland). Fix idiomático:
-# global_prep_cmd (do/undo no início/fim do stream) → ao conectar ACORDA a tela e PAUSA
-# o hypridle (não desliga no meio do stream); ao desconectar, RELIGA o hypridle. Assim o
-# monitor segue desligando aos 5min quando estou fora, mas o acesso remoto sempre funciona.
+# GUARD DE IDLE (conflito com o hypridle): a captura é do monitor FÍSICO via wlr, que
+# funciona DESDE QUE o monitor esteja ligado. O idle NÃO desliga mais a tela (dpms-off
+# removido — bugava isto aqui: tela preta + engine-reset da GPU no xe; ver
+# home/desktop/lockscreen.nix). Sobra só o LOCK aos 5min — que, no meio de um stream,
+# trancaria a sessão remota. Então o guard só PAUSA o hypridle enquanto o stream roda
+# (global_prep_cmd do/undo) e RELIGA ao desconectar. Nada de dpms/settle: o monitor já
+# está sempre aceso.
 { pkgs, ... }:
 
 let
-  # Início do stream: acorda todos os monitores (dpms on, no-op se já ligados) e para o
-  # hypridle p/ não travar/desligar a tela no meio da sessão remota. `|| true`: um passo
-  # falho nunca aborta o stream (prep-cmd que falha cancela o app no Sunshine).
+  # Início do stream: para o hypridle p/ a sessão remota não TRANCAR no meio por idle.
+  # `|| true`: um prep-cmd que falha cancelaria o stream no Sunshine.
   streamBegin = pkgs.writeShellScript "sunshine-stream-begin" ''
-    # Para o hypridle PRIMEIRO (não reapaga a tela no meio do stream) e SÓ ENTÃO
-    # acorda o monitor — ordem importa p/ não haver corrida com um timeout de idle.
     ${pkgs.systemd}/bin/systemctl --user stop hypridle.service || true
-    ${pkgs.hyprland}/bin/hyprctl dispatch 'hl.dsp.dpms("on")' || true
-    # Settle: o painel físico leva ~1-2s p/ acender e voltar a emitir frames. Sem esta
-    # pausa a captura wlr começa numa tela ainda escura e LATCHA em PRETO (não recupera
-    # sem uma transição). Roda no prep-cmd do Sunshine, que espera o `do` terminar.
-    ${pkgs.coreutils}/bin/sleep 2 || true
   '';
-  # Fim do stream: religa o hypridle → volta o ciclo normal (lock+dpms off aos 5min).
+  # Fim do stream: religa o hypridle → volta a trancar aos 5min de ociosidade.
   streamEnd = pkgs.writeShellScript "sunshine-stream-end" ''
     ${pkgs.systemd}/bin/systemctl --user start hypridle.service || true
   '';

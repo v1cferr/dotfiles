@@ -16,18 +16,26 @@ let
     runtimeInputs = with pkgs; [ systemd libnotify rofi ];
     text = ''
       note() { notify-send -a VPN "VPN" "$1" 2>/dev/null || true; }
+      # Mount rclone da workstation FAI (~/FAI-workstation) sobe/derruba JUNTO com a VPN
+      # FAI (home/services/fai-workstation-mount.nix). --no-block: não trava esperando o
+      # túnel; o serviço retenta sozinho até o host ficar alcançável.
+      mnt='rclone-mount:.home.v1cferr@faiws.service'
+      fai_up()      { systemctl start vpn-fai.service && note "FAI conectando…"; systemctl --user start --no-block "$mnt" 2>/dev/null || true; }
+      fai_down()    { systemctl stop  vpn-fai.service 2>/dev/null || true; systemctl --user stop "$mnt" 2>/dev/null || true; note "FAI desconectada"; }
+      ufscar_up()   { systemctl start vpn-ufscar.service && note "UFSCar conectando…"; }
+      ufscar_down() { systemctl stop  vpn-ufscar.service 2>/dev/null || true; note "UFSCar desconectada"; }
       case "''${1:-}" in
         connect)
           case "''${2:-}" in
-            ufscar) systemctl start vpn-ufscar.service && note "UFSCar conectando…" ;;
-            fai)    systemctl start vpn-fai.service    && note "FAI conectando…" ;;
+            ufscar) ufscar_up ;;
+            fai)    fai_up ;;
             *) echo "uso: vpn connect ufscar|fai" >&2; exit 1 ;;
           esac ;;
         disconnect)
           case "''${2:-all}" in
-            ufscar) systemctl stop vpn-ufscar.service; note "UFSCar desconectada" ;;
-            fai)    systemctl stop vpn-fai.service;    note "FAI desconectada" ;;
-            all)    systemctl stop vpn-ufscar.service vpn-fai.service 2>/dev/null || true; note "VPNs desconectadas" ;;
+            ufscar) ufscar_down ;;
+            fai)    fai_down ;;
+            all)    ufscar_down; fai_down ;;
             *) echo "uso: vpn disconnect ufscar|fai|all" >&2; exit 1 ;;
           esac ;;
         # Saída estável p/ o pill do Quickshell (Bar.qml faz o polling a cada 5s).
@@ -44,11 +52,11 @@ let
           choice=$(printf '󰦝  %s FAI\n󰦝  %s UFSCar\n󰗼  Desconectar tudo\n' "$fai" "$ufscar" \
             | rofi -dmenu -i -p VPN -theme-str 'window { width: 340px; }') || exit 0
           case "$choice" in
-            *"Conectar FAI"*)       systemctl start vpn-fai.service    && note "FAI conectando…" ;;
-            *"Desconectar FAI"*)    systemctl stop  vpn-fai.service    && note "FAI desconectada" ;;
-            *"Conectar UFSCar"*)    systemctl start vpn-ufscar.service && note "UFSCar conectando…" ;;
-            *"Desconectar UFSCar"*) systemctl stop  vpn-ufscar.service && note "UFSCar desconectada" ;;
-            *"Desconectar tudo"*)   systemctl stop vpn-ufscar.service vpn-fai.service 2>/dev/null || true; note "VPNs desconectadas" ;;
+            *"Conectar FAI"*)       fai_up ;;
+            *"Desconectar FAI"*)    fai_down ;;
+            *"Conectar UFSCar"*)    ufscar_up ;;
+            *"Desconectar UFSCar"*) ufscar_down ;;
+            *"Desconectar tudo"*)   ufscar_down; fai_down ;;
           esac ;;
         *) echo "uso: vpn connect|disconnect <ufscar|fai|all> | status-json | menu" >&2; exit 1 ;;
       esac

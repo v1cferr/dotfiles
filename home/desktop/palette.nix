@@ -3,7 +3,7 @@
 # consumidores em Nix (rofi/lockscreen/flameshot) leem `config.my.theme.palette.<cor>`;
 # os hot-reload (Quickshell/Hyprland) leem os arquivos de dados gerados abaixo (não dá
 # pra o Nix escrever dentro das árvores symlinkadas do quickshell/hypr).
-{ config, lib, ... }:
+{ config, lib, osConfig, ... }:
 
 let
   cfg = config.my.theme;
@@ -95,21 +95,18 @@ in
       internal = true;
       description = "Paleta resolvida do tema ativo (hexes sem '#'). Lida pelos módulos.";
     };
-    # Fonte da UI junto das cores: é tema, e assim trocar = 1 linha, igual ao preset.
-    # O pacote em si vem do system/hardware/fonts.nix (fonte é nível-sistema, regra 4).
-    font = lib.mkOption {
-      type = lib.types.str;
-      default = "JetBrainsMono Nerd Font";
-      description = "Família da fonte de UI. Lida pelos módulos (rofi hoje; ver TODO da migração).";
-    };
   };
+  # A FONTE de UI não fica aqui: é `my.fonts.ui`, em system/hardware/fonts.nix, junto
+  # do pacote (regra 4) — este módulo cuida só das CORES. Consumidores leem via osConfig.
 
   config = {
     my.theme.palette = p;
 
     # Dados p/ o Quickshell: Theme.qml lê via FileView+JsonAdapter (cores com '#').
+    # Vai junto o uiFont — o .qml é symlink hot-reload, o Nix não escreve dentro dele,
+    # então este JSON é o único caminho até o Quickshell (nome do arquivo é histórico).
     home.file.".config/theme/quickshell-colors.json".text = builtins.toJSON (
-      lib.mapAttrs (_: v: "#${v}") p
+      lib.mapAttrs (_: v: "#${v}") p // { uiFont = osConfig.my.fonts.ui; }
     );
 
     # Dados p/ o Hyprland: appearance.lua dá dofile e usa a tabela (hexes sem '#').

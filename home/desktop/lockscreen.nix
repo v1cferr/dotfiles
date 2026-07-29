@@ -26,7 +26,7 @@
 #      alternar dpms sob captura deu ENGINE-RESET da GPU (xe RCS, travou o scanout).
 #      Agora o idle SÓ tranca. Se um dia quiser escurecer, use gamma do hyprsunset.
 # Ref: https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/
-{ config, pkgs, ... }:
+{ config, pkgs, osConfig, ... }:
 
 let
   # ── Wallpapers: oficiais do NixOS via pkgs.nixos-artwork (declarativos, sem
@@ -41,7 +41,7 @@ let
 
   # ── Cores do tema ativo (my.theme) + fonte ───────────────────────────────────
   palette = config.my.theme.palette; # fonte única (home/desktop/palette.nix)
-  font    = "JetBrainsMono Nerd Font";
+  font    = osConfig.my.fonts.ui;    # SSOT (system/hardware/fonts.nix)
   bg      = "rgba(${palette.bg}d9)";   # fundo do lock (d9 ≈ 85% opacidade)
   fg      = "rgb(${palette.text})";
   muted   = "rgb(${palette.dim})";

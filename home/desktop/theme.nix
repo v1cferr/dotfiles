@@ -7,7 +7,7 @@
 #      (VS Code, Chrome, Spotify, LibreWolf). É o que escurece a maioria.
 #   2. gtk-theme = "Adwaita-dark"    → pros apps GTK3 antigos, que não seguem
 #      o color-scheme sozinhos. O tema é achado via XDG_DATA_DIRS (system/).
-{ pkgs, lib, ... }:
+{ pkgs, lib, osConfig, ... }:
 
 let
   # Vendoriza SÓ a pasta Kvantum do tema Win11OS (yeyushengfan258/Win11OS-kde),
@@ -49,9 +49,9 @@ in
     color-scheme = "prefer-dark";
     gtk-theme = "Adwaita-dark";
     icon-theme = "Fluent-dark"; # ícones Windows 11 (fluent-icon-theme, pacote no gtk abaixo)
-    font-name = "JetBrainsMono Nerd Font 11";
-    document-font-name = "JetBrainsMono Nerd Font 11";
-    monospace-font-name = "JetBrainsMono Nerd Font 11";
+    font-name = "${osConfig.my.fonts.ui} 11";
+    document-font-name = "${osConfig.my.fonts.ui} 11";
+    monospace-font-name = "${osConfig.my.fonts.ui} 11";
     # Cursor dos apps GTK (o Hyprland/XWayland pega pelas envs em home/desktop/hypr.nix).
     cursor-theme = "Bibata-Modern-Ice";
     cursor-size = 24;
@@ -70,7 +70,7 @@ in
       name = "Fluent-dark";
       package = pkgs.fluent-icon-theme; # ícones estilo Windows 11 (Fluent-dark)
     };
-    font.name = "JetBrainsMono Nerd Font";
+    font.name = osConfig.my.fonts.ui; # SSOT: system/hardware/fonts.nix
     font.size = 11;
   };
 

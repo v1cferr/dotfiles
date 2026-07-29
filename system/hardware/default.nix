@@ -7,7 +7,7 @@
     ./oom.nix # earlyoom: mata o maior processo antes do freeze por falta de RAM (companheiro do zram)
     ./gpu.nix # driver de vídeo: Intel Arc B580 (xe + Mesa, sem CUDA)
     ./audio.nix # PipeWire + rtkit
-    ./fonts.nix # JetBrainsMono Nerd Font (padrão mono/sans/serif)
+    ./fonts.nix # SSOT da fonte de UI (my.fonts.ui) + fontconfig + métricas MS
     ./mouse.nix # Logitech MX Master 3S via logiops (gestos → workspaces, DPI, smartshift)
   ];
 }

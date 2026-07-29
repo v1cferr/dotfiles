@@ -3,7 +3,7 @@
 # fuzzy) + tema Tokyo Night vindo da paleta ÚNICA (my.theme → recolore junto ao trocar preset).
 # Binds SUPER+Q (apps) / SUPER+R (binários) em home/desktop/hypr/lua/keybinds.lua.
 # O pacote rofi já vem de clipboard.nix (não redeclara — mesmo tool p/ launcher + clipboard).
-{ config, ... }:
+{ config, osConfig, ... }:
 
 let
   palette = config.my.theme.palette; # cores do tema ativo (home/desktop/palette.nix)
@@ -17,7 +17,7 @@ in
       icon-theme: "Fluent-dark";
       drun-display-format: "{name}";
       matching:   "fuzzy";
-      font:       "${config.my.theme.font} 12";
+      font:       "${osConfig.my.fonts.ui} 12";
     }
     * {
       tn-bg:     #${palette.bg};

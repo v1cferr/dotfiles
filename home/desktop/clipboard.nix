@@ -6,7 +6,7 @@
 # Migração do meu Arch (cliphist-rofi-img.sh) COM melhorias: além de thumbnail de
 # imagem, agora arquivos copiados (URI file://…) ganham ÍCONE do tipo (zip/vídeo/pdf…)
 # resolvido pelo tema de ícones (Fluent-dark). Regra 1/3: idiomático e declarativo.
-{ pkgs, config, ... }:
+{ pkgs, config, osConfig, ... }:
 
 let
   palette = config.my.theme.palette; # cores do tema ativo (home/desktop/palette.nix)
@@ -92,7 +92,7 @@ in
     configuration {
       show-icons:  true;
       icon-theme:  "Fluent-dark";
-      font:        "${config.my.theme.font} 12";
+      font:        "${osConfig.my.fonts.ui} 12";
     }
     * {
       tn-bg:     #${palette.bg};

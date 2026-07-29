@@ -1,8 +1,9 @@
 pragma Singleton
 // Fonte de tema do Quickshell. A PALETA vem do Nix (my.theme) via o JSON gerado por
 // home/desktop/palette.nix — trocar de tema lá recolore a barra toda no próximo rebuild
-// (o FileView observa o arquivo, então o qs recarrega ao vivo). As opacidades do glass
-// e a fonte de UI são ESTILO e ficam aqui. Referencie como Theme.colX / Theme.uiFont.
+// (o FileView observa o arquivo, então o qs recarrega ao vivo). A FONTE de UI vem pelo
+// mesmo JSON (my.fonts.ui, em system/hardware/fonts.nix); só as opacidades do glass são
+// ESTILO e ficam aqui. Referencie como Theme.colX / Theme.uiFont.
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -38,6 +39,7 @@ Singleton {
             property string magenta: "#bb9af7"
             property string purple: "#9d7cd8"
             property string pink: "#ff007c"
+            property string uiFont: "JetBrainsMono Nerd Font" // vem do my.fonts.ui
             property string shadow: "#0f0f0f"
         }
     }
@@ -81,7 +83,7 @@ Singleton {
     readonly property color colWsActiveBorder: aa(pal.accent, "e6")
     readonly property color colWsInactive: pal.subtext
 
-    readonly property string uiFont: "JetBrainsMono Nerd Font"
+    readonly property string uiFont: pal.uiFont
 
     // Monitor principal (DP-1) com fallback — usado por barra/painéis/OSD.
     readonly property var screenDP1: {

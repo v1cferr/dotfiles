@@ -2,15 +2,15 @@
 # `programs.kitty` INSTALA o pacote E escreve ~/.config/kitty/kitty.conf (app+config
 # no home, regra 4). O prompt é o starship (home/shell/starship.nix) e o shell é o
 # zsh (home/shell/zsh.nix).
-{ ... }:
+{ osConfig, ... }:
 
 {
   programs.kitty = {
     enable = true;
 
-    # Mesma fonte do resto do sistema (JetBrains Mono Nerd Font → ícones do starship).
+    # Mesma fonte do resto do sistema (SSOT: my.fonts.ui → ícones do starship).
     font = {
-      name = "JetBrainsMono Nerd Font";
+      name = osConfig.my.fonts.ui;
       size = 12;
     };
 

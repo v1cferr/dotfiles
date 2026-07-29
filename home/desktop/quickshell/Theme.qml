@@ -47,6 +47,7 @@ Singleton {
 
     // Base
     readonly property color colBg: aa(pal.bg, "f2")
+    readonly property color colBgSolid: pal.bg // bg opaco (ex.: texto sobre acento)
     readonly property color colCard: aa(pal.surface, "f2")
     readonly property color colBorder: pal.border
     readonly property color colText: pal.text

@@ -973,7 +973,7 @@ Scope {
             id: wlbl
             anchors.centerIn: parent
             text: wsbtn.active ? "󰮯" : root.wsIcon(wsbtn.wsid)
-            color: wsbtn.active ? "#1a1b26" : Theme.colWsInactive
+            color: wsbtn.active ? Theme.colBgSolid : Theme.colWsInactive
             font.family: Theme.uiFont
             font.pixelSize: 13
             font.bold: wsbtn.active

@@ -10,12 +10,17 @@
 #   dolphinrc [General] GlobalViewProps=true  → mesmo modo em TODA pasta
 #   view_properties/global/.directory [Dolphin] ViewMode=2  → 2 = Detalhes
 #
-# E o ViewMode vai IMUTÁVEL (`ViewMode[$i]=2`, marcador de kiosk do KConfig):
-# escrever só o valor não bastava — o Dolphin reescreve esse .directory ao sair e
-# o default do kcfg é Ícones, então qualquer troca de modo apagava a chave e o
-# "Detalhes" se perdia. Imutável, o KConfig recusa a gravação e o valor sobrevive;
-# as outras props (ordenação, colunas, miniaturas) seguem mutáveis. Trocar de modo
-# na sessão ainda funciona — só não persiste.
+# E o ViewMode vai IMUTÁVEL — `ViewMode[$i]=2`, o marcador de kiosk do KConfig.
+# Não é preciosismo: desde o 26.04 o Dolphin guarda as view properties num xattr
+# do diretório (user.kde.fm.viewproperties#1) e trata o .directory como legado —
+# o save() chama cleanDotDirectoryFile(), que faz deleteGroup("Dolphin") e APAGA
+# o arquivo (viewproperties.cpp). Só o marcador sobrevive a isso: o KConfig recusa
+# a remoção, o grupo não fica vazio, o arquivo fica. E como o .directory tem
+# precedência sobre o xattr na leitura, ele é a âncora declarativa — o Dolphin
+# inclusive copia o `[$i]` p/ dentro do xattr no primeiro save.
+#
+# As outras props (ordenação, colunas, miniaturas) seguem mutáveis. Trocar de modo
+# na sessão funciona — só não persiste; p/ mudar de vez, editar aqui.
 # ═══════════════════════════════════════════════════════════════════════════
 { pkgs, lib, ... }:
 

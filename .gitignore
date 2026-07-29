@@ -5,3 +5,5 @@ result-*
 # PNGs ignorados por padrão (screenshots avulsos). Os wallpapers do lockscreen
 # agora vêm do pkgs.nixos-artwork (declarativos), não são mais versionados aqui.
 *.png
+
+*.env

@@ -8,7 +8,7 @@ PanelWindow {
     id: metricPop
     required property var bar
     visible: bar.metricPopVisible
-    screen: bar.popScreen || bar.screenDP1
+    screen: bar.popScreen || bar.screenPrimary
     anchors {
         top: true
         left: true

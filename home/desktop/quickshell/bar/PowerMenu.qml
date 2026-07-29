@@ -28,7 +28,7 @@ Pill {
     PanelWindow {
         id: menu
         visible: powerBtn.menuOpen
-        screen: Theme.screenDP1
+        screen: Theme.screenPrimary
         anchors {
             top: true
             left: true

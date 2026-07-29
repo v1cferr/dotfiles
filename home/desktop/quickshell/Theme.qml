@@ -44,6 +44,24 @@ Singleton {
         }
     }
 
+    // Conectores vindos do Nix (my.monitors, home/desktop/monitors.nix); fallback = o
+    // setup atual, p/ o caso do arquivo faltar — mesmo padrão da paleta acima.
+    FileView {
+        id: monitorsFile
+        path: "/home/v1cferr/.config/theme/monitors.json"
+        blockLoading: true
+        watchChanges: true
+        onFileChanged: reload()
+        JsonAdapter {
+            id: mon
+            property string primary: "DP-2"
+            property string secondary: "HDMI-A-3"
+        }
+    }
+
+    readonly property string primaryMonitor: mon.primary
+    readonly property string secondaryMonitor: mon.secondary
+
     // Aplica opacidade (byte hex "aa") a uma cor "#rrggbb" → "#aarrggbb".
     function aa(hex, a) { return "#" + a + hex.slice(1); }
 
@@ -85,11 +103,13 @@ Singleton {
 
     readonly property string uiFont: pal.uiFont
 
-    // Monitor principal (DP-1) com fallback — usado por barra/painéis/OSD.
-    readonly property var screenDP1: {
+    // Monitor principal, com fallback no 1º disponível — usado por barra/painéis/OSD.
+    // ERA "DP-1", que NÃO existe nesta máquina: nunca casava e caía sempre no s[0], ou
+    // seja, o toast/OSD podia abrir na TV dependendo da ordem de enumeração.
+    readonly property var screenPrimary: {
         const s = Quickshell.screens;
         for (let i = 0; i < s.length; i++)
-            if (s[i].name === "DP-1")
+            if (s[i].name === theme.primaryMonitor)
                 return s[i];
         return s.length ? s[0] : null;
     }

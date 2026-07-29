@@ -4,10 +4,11 @@
 {
   imports = [
     ./palette.nix # FONTE ÚNICA de cores (my.theme.name); gera os dados p/ Quickshell/Hyprland
+    ./monitors.nix # FONTE ÚNICA dos conectores (my.monitors); gera os dados p/ Quickshell/Hyprland
     ./hypr.nix # ~/.config/hypr/hyprland.conf (ABNT2 + monitores + keybinds)
     ./clipboard.nix # cliphist (histórico) + rofi (picker c/ preview img/tipo); Tokyo Night
     ./launcher.nix # launcher de apps (rofi drun: ícones + recência + Tokyo Night)
-    ./wallpaper.nix # hyprpaper: wallpaper de desktop (nixos-artwork; DP-2 dark + TV moonscape)
+    ./wallpaper.nix # hyprpaper: wallpaper de desktop (nixos-artwork; principal dark + TV moonscape)
     ./hyprsunset.nix # filtro de luz azul (serviço systemd + perfis por horário)
     ./lockscreen.nix # hyprlock (tela de bloqueio) + hypridle (idle: dim + lock)
     ./quickshell.nix # shell/bar/OSD/mídia + NOTIFICAÇÕES em QML; hot-reload via mkOutOfStoreSymlink

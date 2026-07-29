@@ -108,7 +108,7 @@ Scope {
         visible: root.panelVisible
 
         // Fixa no DP-1 (perto da pílula do Spotify).
-        screen: Theme.screenDP1
+        screen: Theme.screenPrimary
 
         anchors {
             top: true

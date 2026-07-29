@@ -2,6 +2,8 @@
 -- Portado do window-rules.conf do Arch, adaptado à API Lua 0.55.
 
 -- Transparência sutil em tudo: ativa 0.98 / inativa 0.96 (contraste + wallpaper).
+local M = dofile(os.getenv("HOME") .. "/.config/theme/monitors.lua")  -- SSOT dos conectores
+
 hl.window_rule({ match = { class = ".*" }, opacity = "0.98 0.96" })
 -- Ignora pedidos de "maximizar" dos apps (comporta melhor no tiling).
 hl.window_rule({ match = { class = ".*" }, suppress_event = "maximize" })
@@ -16,7 +18,7 @@ hl.window_rule({ match = { title = "^(Picture-in-Picture)$" }, opacity = "1.0" }
 hl.window_rule({
   match = { class = "^(ascension\\.exe)$" },
   float = true,
-  monitor = "DP-2",
+  monitor = M.primary,
   size = "1920 1080",
   center = true,
   fullscreen = true,

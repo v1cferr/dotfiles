@@ -12,7 +12,7 @@
 local dir = os.getenv("HOME") .. "/.config/hypr/lua/"
 for _, mod in ipairs({
   "environment", -- hl.env: cursor, tema Qt, plataforma Wayland
-  "monitors",    -- hl.monitor + hl.workspace_rule (DP-2/HDMI-A-3, ws 1–8)
+  "monitors",    -- hl.monitor + hl.workspace_rule (conectores do my.monitors, ws 1–8)
   "appearance",  -- general/decoration/animations: bordas, blur, shadow, curvas
   "input",       -- teclado ABNT2 + mouse (accel flat, numlock)
   "autostart",   -- hl.on("hyprland.start"): systemd, quickshell, clipboard

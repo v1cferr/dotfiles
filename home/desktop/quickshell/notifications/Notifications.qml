@@ -16,7 +16,7 @@ Scope {
     PanelWindow {
         id: popupWin
         visible: Notifs.popups.length > 0
-        screen: Theme.screenDP1
+        screen: Theme.screenPrimary
         anchors {
             top: true
             right: true
@@ -51,7 +51,7 @@ Scope {
     PanelWindow {
         id: centerWin
         visible: Notifs.centerVisible
-        screen: Theme.screenDP1
+        screen: Theme.screenPrimary
         // só `top` => o layer-shell centraliza horizontalmente
         anchors {
             top: true

@@ -1,4 +1,6 @@
 -- ── Keybinds (paridade com o Arch/Kingston) ─────────────────────────────────
+local M = dofile(os.getenv("HOME") .. "/.config/theme/monitors.lua")  -- SSOT dos conectores
+
 local mainMod = "SUPER"
 
 -- Programas que os binds abaixo chamam (ferramentas adaptadas ao NixOS).
@@ -60,9 +62,9 @@ hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
 hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
 hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 
--- Foco por monitor: F1 = LG (DP-2, principal) · F2 = TV (HDMI-A-3)
-hl.bind(mainMod .. " + F1", hl.dsp.focus({ monitor = "DP-2" }))
-hl.bind(mainMod .. " + F2", hl.dsp.focus({ monitor = "HDMI-A-3" }))
+-- Foco por monitor: F1 = LG (principal) · F2 = TV (secundário). Nomes: my.monitors.
+hl.bind(mainMod .. " + F1", hl.dsp.focus({ monitor = M.primary }))
+hl.bind(mainMod .. " + F2", hl.dsp.focus({ monitor = M.secondary }))
 
 -- Liga/desliga a TV (HDMI-A-3) no Hyprland, à mão. A TV mantém o link HDMI vivo
 -- desligada → o DRM segue "connected", o monitor-watch não recebe evento e sobra
@@ -82,8 +84,8 @@ hl.bind(mainMod .. " + mouse_down",  hl.dsp.focus({ workspace = "e+1" }))
 hl.bind(mainMod .. " + mouse_up",    hl.dsp.focus({ workspace = "e-1" }))
 
 -- Mover a janela ativa entre monitores: CTRL+← p/ TV (esquerda), CTRL+→ p/ LG (direita).
-hl.bind(mainMod .. " + CTRL + left",  hl.dsp.window.move({ monitor = "HDMI-A-3" }))
-hl.bind(mainMod .. " + CTRL + right", hl.dsp.window.move({ monitor = "DP-2" }))
+hl.bind(mainMod .. " + CTRL + left",  hl.dsp.window.move({ monitor = M.secondary }))
+hl.bind(mainMod .. " + CTRL + right", hl.dsp.window.move({ monitor = M.primary }))
 
 -- Mouse: mover / redimensionar janela
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
@@ -114,7 +116,7 @@ hl.bind(mainMod .. " + SHIFT + B",      hl.dsp.exec_cmd("brightness-osd reset"),
 
 -- Screenshot (Flameshot v14). Print = fluxo nativo (picker + clique de mouse).
 -- SUPER+SHIFT+S = fluxo por TECLADO (paridade Arch): abre o picker e entra no submap
--- "screenshot" → 1 = monitor principal (DP-2), 2 = TV (HDMI-A-3), Esc cancela. O v14
+-- "screenshot" → 1 = TV (secundário), 2 = principal, Esc cancela. O v14
 -- SEMPRE mostra o picker no multi-monitor; os scripts (home/apps/flameshot.nix)
 -- sintetizam o clique no preview e resetam o submap sozinhos. Salva em ~/Pictures/Screenshots.
 hl.bind("Print",                   hl.dsp.exec_cmd("flameshot gui"))
@@ -122,8 +124,8 @@ hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("flameshot-screenshot"))
 
 hl.define_submap("screenshot", function()
   -- posicional: 1 = tela da ESQUERDA (TV), 2 = tela da DIREITA (LG principal).
-  hl.bind("1",      hl.dsp.exec_cmd("flameshot-pick HDMI-A-3")) -- secundário (TV, à esquerda)
-  hl.bind("2",      hl.dsp.exec_cmd("flameshot-pick DP-2"))     -- principal (LG, à direita)
+  hl.bind("1",      hl.dsp.exec_cmd("flameshot-pick " .. M.secondary)) -- secundário (TV, à esquerda)
+  hl.bind("2",      hl.dsp.exec_cmd("flameshot-pick " .. M.primary))     -- principal (LG, à direita)
   hl.bind("escape", hl.dsp.exec_cmd("flameshot-cancel"))        -- cancela + sai do submap
 end)
 

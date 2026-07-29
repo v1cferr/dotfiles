@@ -143,7 +143,7 @@ Scope {
         id: osd
         visible: root.shown
 
-        screen: Theme.screenDP1
+        screen: Theme.screenPrimary
 
         anchors {
             bottom: true

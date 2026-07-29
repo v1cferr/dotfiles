@@ -546,13 +546,8 @@ Scope {
     }
 
     // ===== Posicionamento de popovers (sempre logo abaixo do elemento) =====
-    readonly property var screenDP1: {
-        const s = Quickshell.screens;
-        for (let i = 0; i < s.length; i++)
-            if (s[i].name === "DP-2")
-                return s[i];
-        return s.length ? s[0] : null;
-    }
+    // Alias do Theme (era uma 2ª implementação, divergente da de lá — ver Theme.qml).
+    readonly property var screenPrimary: Theme.screenPrimary
     property var popScreen: null
     property real popCenterX: 0   // centro do elemento ancorado, em coords da janela da barra
     // mapToItem pra um Item REAL (barContent) é confiável; só mapToItem(null) não é
@@ -566,7 +561,7 @@ Scope {
     }
     // margin.left pra centralizar o popover sob o elemento (+4 = margin.left da barra)
     function popLeft(popW) {
-        const scr = root.popScreen || root.screenDP1;
+        const scr = root.popScreen || root.screenPrimary;
         const sw = scr ? scr.width : 1920;
         return Math.round(Math.max(4, Math.min(root.popCenterX + 4 - popW / 2, sw - popW - 4)));
     }
@@ -1065,13 +1060,13 @@ Scope {
                 Group {
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
-                    // Botão "Iniciar" estilo taskbar — só no monitor principal (DP-2),
+                    // Botão "Iniciar" estilo taskbar — só no monitor principal,
                     // que é onde o popover de energia abre.
                     PowerMenu {
-                        visible: bar.modelData && bar.modelData.name === "DP-2"
+                        visible: bar.modelData && bar.modelData.name === Theme.primaryMonitor
                     }
                     Repeater {
-                        model: (bar.modelData && bar.modelData.name === "HDMI-A-3") ? [5, 6, 7, 8] : [1, 2, 3, 4]
+                        model: (bar.modelData && bar.modelData.name === Theme.secondaryMonitor) ? [5, 6, 7, 8] : [1, 2, 3, 4]
                         WsBtn {
                             wsid: modelData
                             active: root.wsActive[bar.modelData.name] === modelData

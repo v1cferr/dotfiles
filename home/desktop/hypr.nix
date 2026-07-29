@@ -110,7 +110,7 @@ let
     '';
   };
 
-  # monitor-toggle: liga/desliga a TV (HDMI-A-3) NO HYPRLAND, à mão. Necessário
+  # monitor-toggle: liga/desliga a TV (my.monitors.secondary) NO HYPRLAND, à mão. Necessário
   # porque a TV (ou o receiver/switch no meio) mantém o link HDMI vivo mesmo
   # desligada → o DRM segue "connected" e o Hyprland NUNCA emite monitorremoved,
   # então o monitor-watch não tem evento pra reagir e sobra o "monitor fantasma"
@@ -120,7 +120,7 @@ let
     name = "monitor-toggle";
     runtimeInputs = with pkgs; [ hyprland jq coreutils ];
     text = ''
-      name="HDMI-A-3"
+      name="${config.my.monitors.secondary}" # SSOT: home/desktop/monitors.nix
 
       # No parser Lua (0.55) o `hyprctl keyword` é bloqueado ("Use eval"), então a
       # config de monitor em runtime vai por `hyprctl eval` chamando o MESMO hl.monitor
@@ -132,10 +132,10 @@ let
       # presente em `hyprctl monitors` (só os ATIVOS) → está ligada → desliga.
       if hyprctl -j monitors | jq -e --arg n "$name" 'any(.[]; .name==$n)' >/dev/null 2>&1; then
         hyprctl eval "$off" >/dev/null 2>&1 || true
-        hyprctl notify -1 2000 "rgb(f38ba8)" "TV (HDMI-A-3) desligada — workspaces no LG" >/dev/null 2>&1 || true
+        hyprctl notify -1 2000 "rgb(f38ba8)" "TV desligada — workspaces no LG" >/dev/null 2>&1 || true
       else
         hyprctl eval "$on" >/dev/null 2>&1 || true
-        hyprctl notify -1 2000 "rgb(a6e3a1)" "TV (HDMI-A-3) religada" >/dev/null 2>&1 || true
+        hyprctl notify -1 2000 "rgb(a6e3a1)" "TV religada" >/dev/null 2>&1 || true
       fi
     '';
   };

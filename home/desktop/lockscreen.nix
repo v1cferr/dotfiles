@@ -35,9 +35,9 @@ let
   wallMain = "${art.catppuccin-mocha}/share/backgrounds/nixos/nixos-wallpaper-catppuccin-mocha.png"; # principal (borrado no lock)
   wallTv   = "${art.moonscape}/share/backgrounds/nixos/nix-wallpaper-moonscape.png"; # TV (imagem estática, sem login)
 
-  # ── Monitores (mesmos nomes de conector do home/hypr.nix) ────────────────────
-  primary   = "DP-2";      # LG ULTRAGEAR — desktop borrado + login
-  secondary = "HDMI-A-3";  # TV — imagem estática + cadeado
+  # ── Monitores: SSOT em home/desktop/monitors.nix (regra 11) ──────────────────
+  primary   = config.my.monitors.primary;   # LG ULTRAGEAR — desktop borrado + login
+  secondary = config.my.monitors.secondary; # TV — imagem estática + cadeado
 
   # ── Cores do tema ativo (my.theme) + fonte ───────────────────────────────────
   palette = config.my.theme.palette; # fonte única (home/desktop/palette.nix)

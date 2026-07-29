@@ -53,11 +53,14 @@ in
     dir="$HOME/.local/share/dolphin/view_properties/global"
     run mkdir -p "$dir"
     run "$kw" --file "$dir/.directory" --group Dolphin --key Version 4
-    # kwriteconfig6 não sabe escrever o marcador [$i], então grava a chave normal
-    # (ele cria/posiciona o grupo direito) e o sed a promove p/ imutável. Idempotente:
-    # se já está imutável, o kwriteconfig6 é recusado e o sed não acha nada.
-    run "$kw" --file "$dir/.directory" --group Dolphin --key ViewMode 2
-    run ${pkgs.gnused}/bin/sed -i 's/^ViewMode=2$/ViewMode[$i]=2/' "$dir/.directory"
+    # kwriteconfig6 não sabe escrever o marcador [$i] → grava a chave normal (ele
+    # cria/posiciona o grupo certo) e o sed a promove p/ imutável. O guard é
+    # obrigatório: sobre uma chave já imutável o kwriteconfig6 sai 2, e a activation
+    # roda com `set -e` → abortaria o resto do home-manager.
+    if ! grep -qF 'ViewMode[$i]=2' "$dir/.directory" 2>/dev/null; then
+      run "$kw" --file "$dir/.directory" --group Dolphin --key ViewMode 2
+      run ${pkgs.gnused}/bin/sed -i 's/^ViewMode=2$/ViewMode[$i]=2/' "$dir/.directory"
+    fi
   '';
 
   # Bookmark "FAI Workstation" no painel Places (declarativo, idempotente). MESMO motivo

@@ -1,4 +1,6 @@
 # ═══════════════════════════════════════════════════════════════════════════
+# XDG — browser default (Zen) + menu de aplicativos p/ os apps KDE.
+#
 # BROWSER DEFAULT (declarativo) — Zen Browser.
 #
 # Segue a regra do home/: aqui NÃO se instala (o pacote Zen vem do flake, em
@@ -29,6 +31,30 @@ in
       "application/xhtml+xml" = zen;
     };
   };
+
+  # ── applications.menu — sem ele, apps KDE não abrem NADA no duplo-clique ──
+  #
+  # Apps KF6 (Dolphin/Gwenview/Okular/Ark) resolvem "quem abre este arquivo" pelo
+  # KApplicationTrader, que lê o índice ksycoca. E o kbuildsycoca só descobre os
+  # .desktop percorrendo o menu XDG (`applications.menu`) — sem esse arquivo ele
+  # indexa ZERO aplicativos e o duplo-clique falha em silêncio, mesmo com o
+  # mimeapps.list certinho ("applications.menu not found in …" no journal).
+  #
+  # O Plasma traria o dele (plasma-applications.menu), mas aqui a sessão é
+  # Hyprland → precisa ser declarado. Menu chapado (<All/>) porque o único
+  # consumidor é o índice do ksycoca, não um lançador com categorias — o rofi
+  # lê os .desktop direto. Se algum dia o Plasma entrar, ele usa o prefixo
+  # XDG_MENU_PREFIX=plasma- e ignora este arquivo (sem conflito).
+  xdg.configFile."menus/applications.menu".text = ''
+    <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN" "http://www.freedesktop.org/standards/menu-spec/menu-1.0.dtd">
+    <Menu>
+      <Name>Applications</Name>
+      <DefaultAppDirs/>
+      <DefaultDirectoryDirs/>
+      <DefaultMergeDirs/>
+      <Include><All/></Include>
+    </Menu>
+  '';
 
   # Apps de terminal (git, gh, xdg-open…) leem $BROWSER, não o mimeapps.
   home.sessionVariables.BROWSER = "zen-beta";

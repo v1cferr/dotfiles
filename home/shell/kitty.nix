@@ -2,8 +2,18 @@
 # `programs.kitty` INSTALA o pacote E escreve ~/.config/kitty/kitty.conf (app+config
 # no home, regra 4). O prompt é o starship (home/shell/starship.nix) e o shell é o
 # zsh (home/shell/zsh.nix).
-{ osConfig, ... }:
+{ config, osConfig, ... }:
 
+let
+  # O kitty-themes tem nomes PRÓPRIOS de arquivo, então o preset do my.theme precisa de
+  # tradução (regra 11: o consumidor adapta, mas não guarda o valor). Preset novo em
+  # palette.nix sem entrada aqui QUEBRA a eval — de propósito: falha alto, não em silêncio.
+  kittyThemes = {
+    tokyo-night = "tokyo_night_night";
+    catppuccin-mocha = "Catppuccin-Mocha";
+    gruvbox-dark = "gruvbox-dark";
+  };
+in
 {
   programs.kitty = {
     enable = true;
@@ -14,8 +24,9 @@
       size = 12;
     };
 
-    # Esquema de cores (arquivo do pacote kitty-themes, sem o sufixo .conf).
-    themeFile = "tokyo_night_night";
+    # Esquema de cores SEGUE o my.theme.name (era fixo em tokyo_night: trocar de preset
+    # recolorava tudo menos o terminal). Arquivo do kitty-themes, sem o sufixo .conf.
+    themeFile = kittyThemes.${config.my.theme.name};
 
     # kitty injeta helpers no shell (ex.: pular entre prompts, abrir output no pager).
     shellIntegration.mode = "enabled";

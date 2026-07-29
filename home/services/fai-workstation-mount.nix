@@ -4,8 +4,11 @@
 # derruba) — o host 200.136.209.229 só existe pela VPN, então nada de mount fantasma/stale
 # no boot (o SSHFS travaria o Dolphin nesse cenário; o rclone falha limpo e reconecta).
 # SFTP por key_file (a chave SSH que já existe) → ZERO segredo no nix.
-{ ... }:
+{ config, ... }:
 
+let
+  ws = config.my.fai.workstation; # SSOT: home/net/fai-workstation.nix (regra 11)
+in
 {
   programs.rclone = {
     enable = true;
@@ -13,8 +16,8 @@
       # rclone.conf gerado pelo módulo; só caminhos/host aqui (nenhum segredo).
       config = {
         type = "sftp";
-        host = "200.136.209.229"; # workstation (alcançável só via VPN FAI)
-        user = "v1cferr";
+        host = ws.host; # workstation (alcançável só via VPN FAI)
+        user = ws.user;
         key_file = "/home/v1cferr/.ssh/id_ed25519"; # chave existente (estado → backup)
         known_hosts_file = "/home/v1cferr/.ssh/known_hosts"; # workstation já confiada
       };

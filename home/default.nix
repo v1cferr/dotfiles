@@ -20,6 +20,7 @@
     ./desktop # Hyprland + Wayland + aparência (hypr/waybar/lockscreen/theme/xdg…)
     ./apps # apps de usuário COM config própria (dropbox/media/dolphin/flameshot/mangohud)
     ./services # serviços/timers do usuário (cs2-saves-backup, claude-discord-rpc)
+    ./net # hosts remotos e CLIs de rede (SSOT da workstation FAI + wake-workstation)
   ];
 
   home.username = "v1cferr";

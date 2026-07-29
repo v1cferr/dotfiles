@@ -1,8 +1,10 @@
 # Config SSH do cliente (~/.ssh/config declarativo): hosts da FAI via a VPN split-tunnel.
 # A chave privada (~/.ssh/id_ed25519) é ESTADO/segredo → vem pelo backup, não pelo Nix (regra 6).
-{ ... }:
+{ config, ... }:
 
 let
+  ws = config.my.fai.workstation; # SSOT: home/net/fai-workstation.nix (regra 11)
+
   # Resiliência p/ sessões longas sobre o túnel SonicWall (VS Code Remote-SSH sofre com
   # buraco de rota transitório: já medimos ~6 min de blackhole só p/ a workstation, com
   # o ppp0 vivo). A ideia é TOLERAR o buraco em vez de derrubar a sessão e reconectar.
@@ -24,10 +26,10 @@ in
 
     # Ambos vivem na sub-rede 200.136.209.128/25, roteada pela `vpn connect fai`.
     settings = {
-      # Workstation da FAI (mesma máquina do Wake-on-LAN; MAC 8c:86:dd:61:22:12, enp7s0).
+      # Workstation da FAI (mesma máquina do `wake-workstation`; host/MAC vêm da SSOT).
       workstation = faiResilience // {
-        HostName = "200.136.209.229";
-        User = "v1cferr";
+        HostName = ws.host;
+        User = ws.user;
         Port = 22;
         IdentityFile = "~/.ssh/id_ed25519";
         SetEnv = { TERM = "xterm-256color"; }; # cores certas no terminal remoto

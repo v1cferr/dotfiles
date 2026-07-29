@@ -7,6 +7,7 @@
     ./hypr.nix # ~/.config/hypr/hyprland.conf (ABNT2 + monitores + keybinds)
     ./clipboard.nix # cliphist (histórico) + rofi (picker c/ preview img/tipo); Tokyo Night
     ./launcher.nix # launcher de apps (rofi drun: ícones + recência + Tokyo Night)
+    ./wallpaper.nix # hyprpaper: wallpaper de desktop (nixos-artwork; DP-2 dark + TV moonscape)
     ./hyprsunset.nix # filtro de luz azul (serviço systemd + perfis por horário)
     ./lockscreen.nix # hyprlock (tela de bloqueio) + hypridle (idle: dim + lock)
     ./quickshell.nix # shell/bar/OSD/mídia + NOTIFICAÇÕES em QML; hot-reload via mkOutOfStoreSymlink

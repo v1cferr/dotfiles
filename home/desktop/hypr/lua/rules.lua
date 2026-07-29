@@ -2,7 +2,12 @@
 -- Portado do window-rules.conf do Arch, adaptado à API Lua 0.55.
 
 -- Transparência sutil em tudo: ativa 0.98 / inativa 0.96 (contraste + wallpaper).
-local M = loadThemeData("monitors.lua", { primary = "DP-2", secondary = "HDMI-A-3" })  -- SSOT + fallback (ver hyprland.lua)
+-- Dado gerado pelo Nix, com FALLBACK autocontido: se o arquivo faltar (1º boot antes
+-- do rebuild, ou dado novo ainda não gerado), o dofile ESTOURA e aborta a config —
+-- e como "autostart" vem depois na ordem de carga, a sessão sobe sem serviços.
+-- NÃO usar helper global: o Hyprland não compartilha globais entre os dofile.
+local ok_M, M = pcall(dofile, os.getenv("HOME") .. "/.config/theme/monitors.lua")
+if not ok_M or type(M) ~= "table" then M = { primary = "DP-2", secondary = "HDMI-A-3" } end
 
 hl.window_rule({ match = { class = ".*" }, opacity = "0.98 0.96" })
 -- Ignora pedidos de "maximizar" dos apps (comporta melhor no tiling).

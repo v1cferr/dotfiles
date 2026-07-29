@@ -4,7 +4,12 @@
 --   secondary = TV LG → à esquerda (x negativo), em Full HD (1920x1080@60).
 -- Adaptação p/ TV desconectada: com o principal em 0x0, o LG segue sozinho sem
 -- offset fantasma; as workspaces 5–8 recaem nele automaticamente.
-local M = loadThemeData("monitors.lua", { primary = "DP-2", secondary = "HDMI-A-3" })
+-- Dado gerado pelo Nix, com FALLBACK autocontido: se o arquivo faltar (1º boot antes
+-- do rebuild, ou dado novo ainda não gerado), o dofile ESTOURA e aborta a config —
+-- e como "autostart" vem depois na ordem de carga, a sessão sobe sem serviços.
+-- NÃO usar helper global: o Hyprland não compartilha globais entre os dofile.
+local ok_M, M = pcall(dofile, os.getenv("HOME") .. "/.config/theme/monitors.lua")
+if not ok_M or type(M) ~= "table" then M = { primary = "DP-2", secondary = "HDMI-A-3" } end
 
 hl.monitor({ output = M.primary,     mode = "1920x1080@143.98", position = "0x0",     scale = 1 })
 hl.monitor({ output = M.secondary, mode = "1920x1080@60",     position = "-1920x0", scale = 1 })

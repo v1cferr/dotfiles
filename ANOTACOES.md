@@ -287,9 +287,36 @@
       cert self-signed; UFSCar=openconnect/GlobalProtect (`--authgroup`). Ambas split-tunnel;
       senhas via sops/Bitwarden. CLI `vpn` (connect/disconnect/status-json/menu) + binds SUPER+N /
       +SHIFT+N / +CTRL+N + PILL clicável na barra. Coexistem com o Moonlight (rotas disjuntas).
+  - [x] Reconexão automática (jul/2026) — o túnel cai SOZINHO ("Modem hangup" sem SIGTERM) e com
+        `Restart=no` ficava morto até reconectar na mão (12 min num dia, ~1 h em outro, derrubando
+        SSH e o mount junto). Agora `Restart=always` + `RestartSec=10` nas duas, com teto de 6
+        tentativas/10 min: queda real volta na 1ª, senha errada não martela o portal (SonicWall e
+        GlobalProtect BLOQUEIAM a conta por tentativa repetida). `restartIfChanged=false` p/ rebuild
+        não derrubar túnel em uso — o daemon-reload já aplica o `Restart=` novo no processo vivo.
+        `vpn disconnect` segue OK: stop explícito não dispara restart.
+  - [x] Pill que não mente (jul/2026) — `systemctl is-active` sozinho MENTE: com o portal fora do ar
+        o nxBender entra em crash-loop e o systemd reporta `active` ~2 min POR TENTATIVA, com zero
+        ppp0 → o pill ficava verde durante a queda inteira. `status-json` agora exige unidade ativa
+        E interface do túnel presente (UFSCar filtra `tun[0-9]`, senão `type tun` casa o tailscale0).
+        O `menu` fica com `is-active` DE PROPÓSITO: lá a pergunta é "o serviço roda?", p/ oferecer
+        Desconectar e parar o crash-loop.
 - [x] SSH declarativo p/ a workstation da FAI (home/shell/ssh.nix, `programs.ssh` API nova
       `settings`) — `ssh workstation` (200.136.209.229) + `fai-vm`, via a VPN FAI. Chave autorizada
       1x com ssh-copy-id (estado).
+  - [x] Sessão que não cai (jul/2026) — o Remote-SSH do VS Code morria em buraco de rota transitório:
+        medimos ~6 min de blackhole SÓ p/ a .229 com o ppp0 vivo e a fai-vm (.248) respondendo pela
+        MESMA rota/túnel — ou seja, lado da FAI, sem correção possível daqui. A config agora TOLERA
+        em vez de derrubar: `ServerAliveInterval 15` + `ServerAliveCountMax 20` (~5 min de folga) e
+        `TCPKeepAlive no` (o keepalive do kernel derrubava ANTES desse prazo). De quebra o keepalive
+        segura a sessão ociosa no SonicWall. `ControlMaster`/`ControlPersist 10m`: o Remote-SSH abre
+        VÁRIAS conexões; multiplexadas num TCP só, reabrir caiu p/ 0,08 s. MAC da workstation =
+        `8c:86:dd:61:22:12` (enp7s0, cabeada). Wake-on-LAN NÃO montado de propósito: a máquina não
+        desliga e magic packet dificilmente atravessa o SonicWall (precisaria disparar da fai-vm).
+  - TRIAGEM quando `ssh workstation` falha — testar nesta ordem: `ping 1.1.1.1` (internet),
+    `nc -zv 200.133.233.101 4433` (portal da VPN), `nc -zv 200.136.209.236 443` (`fai.ufscar.br`) e
+    `ip link show type ppp` (túnel). Internet OK + portal e site da FAI em timeout = INDISPONIBILIDADE
+    DA FAI, não há o que ajustar aqui (já aconteceu em 29/07: `tracepath` chegava no backbone da
+    UFSCar em 200.133.233.198 e morria no salto seguinte; `www.ufscar.br` de pé, FAI inteira muda).
 - [x] Sistema de TEMAS centralizado (home/desktop/palette.nix, `my.theme.name`) — presets
       tokyo-night (default) / catppuccin-mocha / gruvbox-dark, hexes oficiais exatos. Trocar =
       1 linha + rebuild → recolore Quickshell (JSON via FileView), Hyprland (lua via dofile) e

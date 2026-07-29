@@ -91,7 +91,7 @@ in
   xdg.configFile."rofi/clipboard.rasi".text = ''
     configuration {
       show-icons:  true;
-      icon-theme:  "Fluent-dark";
+      icon-theme:  "${config.my.theme.iconTheme}";
       font:        "${osConfig.my.fonts.ui} 12";
     }
     * {

@@ -7,7 +7,7 @@
 #      (VS Code, Chrome, Spotify, LibreWolf). É o que escurece a maioria.
 #   2. gtk-theme = "Adwaita-dark"    → pros apps GTK3 antigos, que não seguem
 #      o color-scheme sozinhos. O tema é achado via XDG_DATA_DIRS (system/).
-{ pkgs, lib, osConfig, ... }:
+{ pkgs, lib, config, osConfig, ... }:
 
 let
   # Vendoriza SÓ a pasta Kvantum do tema Win11OS (yeyushengfan258/Win11OS-kde),
@@ -48,13 +48,13 @@ in
   dconf.settings."org/gnome/desktop/interface" = {
     color-scheme = "prefer-dark";
     gtk-theme = "Adwaita-dark";
-    icon-theme = "Fluent-dark"; # ícones Windows 11 (fluent-icon-theme, pacote no gtk abaixo)
+    icon-theme = config.my.theme.iconTheme; # SSOT (pacote no gtk abaixo)
     font-name = "${osConfig.my.fonts.ui} 11";
     document-font-name = "${osConfig.my.fonts.ui} 11";
     monospace-font-name = "${osConfig.my.fonts.ui} 11";
-    # Cursor dos apps GTK (o Hyprland/XWayland pega pelas envs em home/desktop/hypr.nix).
-    cursor-theme = "Bibata-Modern-Ice";
-    cursor-size = 24;
+    # Cursor dos apps GTK (o Hyprland pega pelas envs em hypr/lua/environment.lua).
+    cursor-theme = config.my.theme.cursor.name;
+    cursor-size = config.my.theme.cursor.size;
   };
 
   # Escreve ~/.config/gtk-3.0 e gtk-4.0 apontando pro tema escuro + fonte. Os
@@ -67,7 +67,7 @@ in
       package = pkgs.gnome-themes-extra; # traz o Adwaita-dark
     };
     iconTheme = {
-      name = "Fluent-dark";
+      name = config.my.theme.iconTheme; # SSOT: my.theme.iconTheme
       package = pkgs.fluent-icon-theme; # ícones estilo Windows 11 (Fluent-dark)
     };
     font.name = osConfig.my.fonts.ui; # SSOT: system/hardware/fonts.nix
@@ -99,6 +99,6 @@ in
   # em runtime, forço SÓ essa chave (idempotente), como no home/dolphin.nix.
   home.activation.kdeIconTheme = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     kw="${pkgs.kdePackages.kconfig}/bin/kwriteconfig6"
-    run "$kw" --file "$HOME/.config/kdeglobals" --group Icons --key Theme Fluent-dark
+    run "$kw" --file "$HOME/.config/kdeglobals" --group Icons --key Theme ${config.my.theme.iconTheme}
   '';
 }

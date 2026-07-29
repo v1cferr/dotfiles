@@ -95,9 +95,30 @@ in
       internal = true;
       description = "Paleta resolvida do tema ativo (hexes sem '#'). Lida pelos módulos.";
     };
+    # Tema de ÍCONES: é tema, mas NÃO deriva do preset de cores — o Fluent-dark é o look
+    # Windows 11 e vale em qualquer paleta. O PACOTE fica em theme.nix (gtk.iconTheme.package),
+    # então trocar = esta linha + o pacote lá.
+    iconTheme = lib.mkOption {
+      type = lib.types.str;
+      default = "Fluent-dark";
+      description = "Tema de ícones (SSOT). Lido por theme.nix (dconf/GTK/kdeglobals) e pelos temas do rofi.";
+    };
+    # Cursor: mesmo raciocínio. O pacote (bibata-cursors) fica em theme.nix.
+    cursor = {
+      name = lib.mkOption {
+        type = lib.types.str;
+        default = "Bibata-Modern-Ice";
+        description = "Tema do cursor (SSOT). Lido por theme.nix (dconf) e pelo Hyprland via hypr-colors.lua.";
+      };
+      size = lib.mkOption {
+        type = lib.types.int;
+        default = 24;
+        description = "Tamanho do cursor em px (SSOT) — aqui é global, não por contexto.";
+      };
+    };
   };
   # A FONTE de UI não fica aqui: é `my.fonts.ui`, em system/hardware/fonts.nix, junto
-  # do pacote (regra 4) — este módulo cuida só das CORES. Consumidores leem via osConfig.
+  # do pacote (regra 4) — este módulo cuida do resto do tema. Consumidores leem via osConfig.
 
   config = {
     my.theme.palette = p;
@@ -109,11 +130,15 @@ in
       lib.mapAttrs (_: v: "#${v}") p // { uiFont = osConfig.my.fonts.ui; }
     );
 
-    # Dados p/ o Hyprland: appearance.lua dá dofile e usa a tabela (hexes sem '#').
+    # Dados p/ o Hyprland: appearance.lua e environment.lua dão dofile e usam a tabela
+    # (hexes sem '#'). Vão junto cursor/tamanho — mesmo motivo do JSON acima: o Lua é
+    # symlink hot-reload, o Nix não interpola lá dentro (nome do arquivo é histórico).
     home.file.".config/theme/hypr-colors.lua".text =
       "-- Gerado pelo Nix (my.theme). NÃO editar à mão — fonte em home/desktop/palette.nix.\n"
       + "return {\n"
       + lib.concatStrings (lib.mapAttrsToList (k: v: "  ${k} = \"${v}\",\n") p)
+      + "  cursorTheme = \"${cfg.cursor.name}\",\n"
+      + "  cursorSize = \"${toString cfg.cursor.size}\",\n"
       + "}\n";
   };
 }

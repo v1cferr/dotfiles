@@ -1,12 +1,15 @@
 -- ── Ambiente (hl.env) ──────────────────────────────────────────────────────
--- Cursor: Bibata-Modern-Ice (pacote bibata-cursors vem do system/). XCURSOR_*
--- cobre XWayland/apps legados e o fallback do Hyprland; HYPRCURSOR_* é o
+-- Cursor vindo do Nix (my.theme.cursor): mesma tabela gerada por palette.nix que a
+-- aparência usa — este .lua é symlink hot-reload, o Nix não interpola aqui dentro.
+local T = dofile(os.getenv("HOME") .. "/.config/theme/hypr-colors.lua")
+
+-- XCURSOR_* cobre XWayland/apps legados e o fallback do Hyprland; HYPRCURSOR_* é o
 -- formato nativo (cai no XCursor se não houver variante hyprcursor do tema).
 -- Apps GTK pegam o cursor pelo gsettings (home/theme.nix), não daqui.
-hl.env("XCURSOR_THEME", "Bibata-Modern-Ice")
-hl.env("XCURSOR_SIZE", "24")
-hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Ice")
-hl.env("HYPRCURSOR_SIZE", "24")
+hl.env("XCURSOR_THEME", T.cursorTheme)
+hl.env("XCURSOR_SIZE", T.cursorSize)
+hl.env("HYPRCURSOR_THEME", T.cursorTheme)
+hl.env("HYPRCURSOR_SIZE", T.cursorSize)
 
 -- Tema Qt/KDE (Dolphin): faz o Qt seguir o GTK escuro. O módulo qt
 -- (home/theme.nix) já define isso como session var, mas em Wayland a sessão

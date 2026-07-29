@@ -14,7 +14,7 @@ in
   xdg.configFile."rofi/launcher.rasi".text = ''
     configuration {
       show-icons: true;
-      icon-theme: "Fluent-dark";
+      icon-theme: "${config.my.theme.iconTheme}";
       drun-display-format: "{name}";
       matching:   "fuzzy";
       font:       "${osConfig.my.fonts.ui} 12";

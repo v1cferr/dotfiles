@@ -22,9 +22,15 @@ let
   # CLI `vpn`: connect/disconnect ufscar|fai|all + status-json/menu (pro pill da barra).
   vpnCli = pkgs.writeShellApplication {
     name = "vpn";
-    runtimeInputs = with pkgs; [ systemd libnotify rofi ];
+    runtimeInputs = with pkgs; [ systemd libnotify rofi iproute2 gnugrep ];
     text = ''
       note() { notify-send -a VPN "VPN" "$1" 2>/dev/null || true; }
+      # "Conectado" = unidade ativa E túnel existindo de fato. Só `is-active` MENTE: com
+      # o portal da FAI fora do ar o nxBender entra em crash-loop e o systemd reporta
+      # active durante cada tentativa (~2min), com zero ppp0 — o pill ficava verde à toa.
+      # UFSCar: filtra tun[0-9] porque `type tun` também casa o tailscale0.
+      fai_conn()    { systemctl is-active --quiet vpn-fai.service    && [ -n "$(ip -o link show type ppp)" ]; }
+      ufscar_conn() { systemctl is-active --quiet vpn-ufscar.service && ip -o link show type tun | grep -q ': tun[0-9]'; }
       # Mount rclone da workstation FAI (~/FAI-workstation) sobe/derruba JUNTO com a VPN
       # FAI (home/services/fai-workstation-mount.nix). --no-block: não trava esperando o
       # túnel; o serviço retenta sozinho até o host ficar alcançável.
@@ -50,8 +56,8 @@ let
         # Saída estável p/ o pill do Quickshell (Bar.qml faz o polling a cada 5s).
         status-json)
           fai=false; ufscar=false
-          systemctl is-active --quiet vpn-fai.service    && fai=true
-          systemctl is-active --quiet vpn-ufscar.service && ufscar=true
+          fai_conn    && fai=true
+          ufscar_conn && ufscar=true
           printf '{"vpns":[{"id":"fai","name":"FAI","connected":%s},{"id":"ufscar","name":"UFSCar","connected":%s}]}\n' "$fai" "$ufscar" ;;
         # Menu do rofi (clique no pill): rótulo alterna conectar/desconectar por estado.
         menu)

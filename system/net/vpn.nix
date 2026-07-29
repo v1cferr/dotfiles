@@ -10,13 +10,18 @@
 { pkgs, config, ... }:
 
 let
-  # Teto de retentativas do Restart=always: o túnel cai sozinho ("Modem hangup" sem SIGTERM)
-  # e antes ficava morto até reconectar na mão (12 min em 29/07, ~1 h em 27/07).
-  # 6 tentativas por 10 min: queda real volta na 1ª; senha errada não fica martelando o
-  # portal (SonicWall/GlobalProtect bloqueiam a conta) — o pill da barra apaga e você vê.
-  vpnRestartGuard = {
-    startLimitIntervalSec = 600;
-    startLimitBurst = 6;
+  # BACKOFF EXPONENCIAL, sem teto rígido. O teto anterior (6 tentativas/10 min) tinha um
+  # buraco: quando o SonicWall ACEITA a conexão e derruba em ~24s (SIGHUP), cada ciclo dura
+  # ~34s — as 6 tentativas queimavam em ~3,5 min e o systemd marcava start-limit-hit,
+  # deixando a unidade em `failed` PERMANENTE. Pior que o bug original: nem `vpn connect
+  # fai` subia mais, sem um `systemctl reset-failed` na mão.
+  # Agora 10s → 300s progressivo e nunca desiste. Senha errada = ~12 tentativas/h no pior
+  # caso, gentil o bastante p/ não disparar bloqueio de conta no portal.
+  vpnRestart = {
+    Restart = "always";
+    RestartSec = 10;
+    RestartSteps = 5; # 10s, ~26s, ~68s, ~force… até o teto
+    RestartMaxDelaySec = 300;
   };
 
   # CLI `vpn`: connect/disconnect ufscar|fai|all + status-json/menu (pro pill da barra).
@@ -35,9 +40,11 @@ let
       # FAI (home/services/fai-workstation-mount.nix). --no-block: não trava esperando o
       # túnel; o serviço retenta sozinho até o host ficar alcançável.
       mnt='rclone-mount:.@faiws.service'
-      fai_up()      { systemctl start vpn-fai.service && note "FAI conectando…"; systemctl --user start --no-block "$mnt" 2>/dev/null || true; }
+      # reset-failed antes de todo start: unidade que morreu em `failed` RECUSA `start` até
+      # ser limpa, e aí o bind SUPER+N não fazia nada sem explicação. Idempotente.
+      fai_up()      { systemctl reset-failed vpn-fai.service 2>/dev/null || true; systemctl start vpn-fai.service && note "FAI conectando…"; systemctl --user start --no-block "$mnt" 2>/dev/null || true; }
       fai_down()    { systemctl stop  vpn-fai.service 2>/dev/null || true; systemctl --user stop "$mnt" 2>/dev/null || true; note "FAI desconectada"; }
-      ufscar_up()   { systemctl start vpn-ufscar.service && note "UFSCar conectando…"; }
+      ufscar_up()   { systemctl reset-failed vpn-ufscar.service 2>/dev/null || true; systemctl start vpn-ufscar.service && note "UFSCar conectando…"; }
       ufscar_down() { systemctl stop  vpn-ufscar.service 2>/dev/null || true; note "UFSCar desconectada"; }
       case "''${1:-}" in
         connect)
@@ -112,11 +119,9 @@ in
           | ${pkgs.openconnect}/bin/openconnect --protocol=gp --user=857722 \
               --authgroup=acessoremoto.ufscar.br --passwd-on-stdin acessoremoto-scl.ufscar.br
       '';
-      Restart = "always";
-      RestartSec = 10;
-    };
+    } // vpnRestart;
     # `vpn disconnect` usa systemctl stop → o systemd NÃO reinicia (stop explícito não conta).
-    inherit (vpnRestartGuard) startLimitIntervalSec startLimitBurst;
+    startLimitIntervalSec = 0; # sem teto: quem segura o ritmo é o backoff acima
   };
 
   # FAI — SonicWall via nxBender, lendo o config renderizado pelo sops (com a senha).
@@ -128,10 +133,8 @@ in
     serviceConfig = {
       Type = "simple";
       ExecStart = "${pkgs.nxbender}/bin/nxBender -c ${config.sops.templates."nxbender-fai.conf".path}";
-      Restart = "always";
-      RestartSec = 10;
-    };
-    inherit (vpnRestartGuard) startLimitIntervalSec startLimitBurst;
+    } // vpnRestart;
+    startLimitIntervalSec = 0;
   };
 
   # polkit: deixa o usuário ligar/desligar SÓ os serviços vpn-* sem senha (pro bind

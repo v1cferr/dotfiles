@@ -11,7 +11,11 @@
   programs.eza.enable = true; # ls moderno (ícones + git); aliases logo abaixo
   programs.eza.git = true; # coluna de status do git na listagem
   programs.bat.enable = true; # cat com syntax highlight + paginação
-  programs.zoxide.enable = true; # `z <pasta>` pula por frequência (hook de cd no zsh)
+  programs.zoxide.enable = true; # pula de pasta por frequência (hook no zsh)
+  # Substitui o `cd` builtin pelo zoxide: `cd nome-parcial` salta pra pasta mais usada que
+  # casa (aprende conforme você navega); `cd` normal (path completo, .., -) segue funcionando;
+  # `cdi` = picker interativo (fzf) quando há vários matches. Fim de digitar o dir inteiro.
+  programs.zoxide.options = [ "--cmd cd" ];
   programs.fzf.enable = true; # fuzzy finder: Ctrl+R (histórico), Ctrl+T (arquivo), Alt+C (cd)
   programs.yazi.enable = true; # file manager TUI com preview (usa bat; `y` faz cd ao sair)
   programs.tealdeer = {

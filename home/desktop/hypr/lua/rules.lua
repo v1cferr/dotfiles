@@ -2,7 +2,7 @@
 -- Portado do window-rules.conf do Arch, adaptado à API Lua 0.55.
 
 -- Transparência sutil em tudo: ativa 0.98 / inativa 0.96 (contraste + wallpaper).
-local M = dofile(os.getenv("HOME") .. "/.config/theme/monitors.lua")  -- SSOT dos conectores
+local M = loadThemeData("monitors.lua", { primary = "DP-2", secondary = "HDMI-A-3" })  -- SSOT + fallback (ver hyprland.lua)
 
 hl.window_rule({ match = { class = ".*" }, opacity = "0.98 0.96" })
 -- Ignora pedidos de "maximizar" dos apps (comporta melhor no tiling).

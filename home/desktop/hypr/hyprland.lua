@@ -9,6 +9,20 @@
 -- qualquer .lua + `hyprctl reload` → aplica na hora, sem rebuild. Os scripts que
 -- os binds chamam (minimize-others, brightness-osd, monitor-toggle) entram no
 -- PATH via home.packages, então os módulos os invocam por nome.
+-- Carrega uma tabela de dados GERADA pelo Nix (~/.config/theme/*.lua) com FALLBACK.
+-- Por que pcall e não dofile direto: se o arquivo não existir — 1º boot antes do
+-- primeiro rebuild, ou dado novo já referenciado no repo mas ainda não gerado — o
+-- dofile ESTOURA e aborta o resto da config. Como "autostart" vem depois de
+-- "monitors" na lista abaixo, isso derruba o hyprland-session.target e a máquina sobe
+-- SEM quickshell/sunshine/hyprpaper: sessão remota inacessível. Aconteceu em 29/07.
+function loadThemeData(file, fallback)
+  local ok, t = pcall(dofile, os.getenv("HOME") .. "/.config/theme/" .. file)
+  if ok and type(t) == "table" then
+    return t
+  end
+  return fallback
+end
+
 local dir = os.getenv("HOME") .. "/.config/hypr/lua/"
 for _, mod in ipairs({
   "environment", -- hl.env: cursor, tema Qt, plataforma Wayland

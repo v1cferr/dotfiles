@@ -1,7 +1,7 @@
 -- ── Ambiente (hl.env) ──────────────────────────────────────────────────────
 -- Cursor vindo do Nix (my.theme.cursor): mesma tabela gerada por palette.nix que a
 -- aparência usa — este .lua é symlink hot-reload, o Nix não interpola aqui dentro.
-local T = dofile(os.getenv("HOME") .. "/.config/theme/hypr-colors.lua")
+local T = loadThemeData("hypr-colors.lua", { cursorTheme = "Bibata-Modern-Ice", cursorSize = "24" })
 
 -- XCURSOR_* cobre XWayland/apps legados e o fallback do Hyprland; HYPRCURSOR_* é o
 -- formato nativo (cai no XCursor se não houver variante hyprcursor do tema).

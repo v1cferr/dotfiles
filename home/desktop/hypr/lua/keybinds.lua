@@ -1,5 +1,5 @@
 -- ── Keybinds (paridade com o Arch/Kingston) ─────────────────────────────────
-local M = dofile(os.getenv("HOME") .. "/.config/theme/monitors.lua")  -- SSOT dos conectores
+local M = loadThemeData("monitors.lua", { primary = "DP-2", secondary = "HDMI-A-3" })  -- SSOT + fallback (ver hyprland.lua)
 
 local mainMod = "SUPER"
 

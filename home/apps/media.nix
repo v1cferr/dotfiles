@@ -42,6 +42,9 @@ in
     enable = true;
     defaultApplications = {
       # ── Imagens → Gwenview ──
+      # SEMPRE o tipo CANÔNICO do shared-mime-info: alias não casa na busca, a
+      # entrada morre em silêncio. (image/heic é alias de image/heif; o .desktop do
+      # Gwenview declara só image/x-psd, alias de image/vnd.adobe.photoshop.)
       "image/png" = app.gwenview;
       "image/jpeg" = app.gwenview;
       "image/gif" = app.gwenview;
@@ -50,9 +53,10 @@ in
       "image/tiff" = app.gwenview;
       "image/svg+xml" = app.gwenview;
       "image/avif" = app.gwenview;
-      "image/heif" = app.gwenview;
-      "image/heic" = app.gwenview;
+      "image/heif" = app.gwenview; # .heif/.heic
       "image/jxl" = app.gwenview;
+      "image/vnd.microsoft.icon" = app.gwenview; # .ico (o Qt lê nativo; o .desktop não declara)
+      "image/vnd.adobe.photoshop" = app.gwenview; # .psd (via kimageformats)
       # ── Documentos → Okular ──
       "application/pdf" = app.okular;
       "application/epub+zip" = app.okular;
@@ -62,7 +66,7 @@ in
       "video/x-matroska" = app.vlc; # .mkv
       "video/webm" = app.vlc;
       "video/quicktime" = app.vlc; # .mov
-      "video/x-msvideo" = app.vlc; # .avi
+      "video/vnd.avi" = app.vlc; # .avi — era video/x-msvideo, que é só ALIAS: caía no mpv
       "video/mpeg" = app.vlc;
       "video/x-flv" = app.vlc; # .flv
       "video/x-ms-wmv" = app.vlc; # .wmv
@@ -78,6 +82,7 @@ in
       "audio/aac" = app.vlc;
       "audio/x-ms-wma" = app.vlc; # .wma
       "audio/x-matroska" = app.vlc; # .mka
+      "audio/midi" = app.vlc; # .mid
     };
   };
 }

@@ -140,6 +140,36 @@ let
     '';
   };
 
+  # hypr-session-ensure: deriva o ambiente Wayland DO SOCKET (não da config) e sobe o
+  # hyprland-session.target. Precisa derivar porque roda fora do compositor: o
+  # HYPRLAND_INSTANCE_SIGNATURE é o nome do diretório em $XDG_RUNTIME_DIR/hypr/ e o
+  # WAYLAND_DISPLAY é o socket wayland-N. Sem essas duas no ambiente do systemd --user,
+  # os serviços da sessão sobem sem conseguir falar com o compositor.
+  sessionWatch = pkgs.writeShellApplication {
+    name = "hypr-session-ensure";
+    runtimeInputs = with pkgs; [ systemd coreutils findutils ];
+    text = ''
+      rt="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+
+      # Instância mais RECENTE (o dir sobrevive a crash; pega o de mtime maior).
+      sig="$(find "$rt/hypr" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %f\n' 2>/dev/null \
+             | sort -rn | head -1 | cut -d' ' -f2-)"
+      [ -n "$sig" ] || { echo "sem instância do Hyprland em $rt/hypr — nada a fazer"; exit 0; }
+
+      # WAYLAND_DISPLAY: primeiro socket wayland-N (ignora os .lock).
+      wl="$(find "$rt" -mindepth 1 -maxdepth 1 -name 'wayland-[0-9]*' -not -name '*.lock' \
+            -printf '%f\n' 2>/dev/null | sort | head -1)"
+      [ -n "$wl" ] || { echo "sem socket wayland em $rt — nada a fazer"; exit 0; }
+
+      systemctl --user set-environment \
+        "HYPRLAND_INSTANCE_SIGNATURE=$sig" "WAYLAND_DISPLAY=$wl" XDG_CURRENT_DESKTOP=Hyprland
+
+      # No-op se o exec-once do autostart.lua já subiu o target.
+      systemctl --user start hyprland-session.target
+      echo "hyprland-session.target garantido (sig=$sig display=$wl)"
+    '';
+  };
+
   # hypr-monitor-watch: escuta os eventos do Hyprland (socket2) e dá `hyprctl reload`
   # quando um monitor CONECTA/DESCONECTA. O reload re-aplica a config → recalcula o
   # layout (mata o "monitor fantasma" — cursor indo pra tela que sumiu) e MOVE os
@@ -207,6 +237,31 @@ in
       BindsTo = [ "graphical-session.target" ];
       Wants = [ "graphical-session-pre.target" ];
       After = [ "graphical-session-pre.target" ];
+    };
+  };
+
+  # ── REDE DE SEGURANÇA do acesso remoto ──────────────────────────────────────
+  # O autostart.lua sobe o hyprland-session.target por exec-once. Isso tem um furo
+  # que custou caro em 29/07: se a config Lua ESTOURAR, os módulos seguintes não
+  # rodam — e "autostart" vem depois de "monitors" — então o target nunca sobe e a
+  # máquina fica SEM Sunshine e SEM Quickshell. Remotamente, isso é irrecuperável:
+  # o Hyprland está vivo, mas nada mais que dependa de graphical-session.target.
+  #
+  # Este path unit tira o acesso remoto das mãos da config: ele observa o SOCKET do
+  # compositor, que existe mesmo com a config quebrada, e sobe o target por conta
+  # própria. Redundante com o exec-once de propósito — `systemctl start` num target
+  # já ativo é no-op, então os dois coexistem sem brigar.
+  systemd.user.paths.hyprland-session-watch = {
+    Unit.Description = "Observa o socket do Hyprland p/ garantir o graphical-session.target";
+    Path.PathExistsGlob = "%t/hypr/*/.socket.sock"; # %t = XDG_RUNTIME_DIR
+    Install.WantedBy = [ "default.target" ]; # ativo desde o login, antes do compositor
+  };
+
+  systemd.user.services.hyprland-session-watch = {
+    Unit.Description = "Sobe o hyprland-session.target (rede de segurança do exec-once)";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${sessionWatch}/bin/hypr-session-ensure";
     };
   };
 

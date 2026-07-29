@@ -22,7 +22,7 @@
 # trancaria a sessão remota. Então o guard só PAUSA o hypridle enquanto o stream roda
 # (global_prep_cmd do/undo) e RELIGA ao desconectar. Nada de dpms/settle: o monitor já
 # está sempre aceso.
-{ pkgs, config, ... }:
+{ pkgs, lib, config, ... }:
 
 let
   # Início do stream: para o hypridle p/ a sessão remota não TRANCAR no meio por idle.
@@ -34,6 +34,32 @@ let
   streamEnd = pkgs.writeShellScript "sunshine-stream-end" ''
     ${pkgs.systemd}/bin/systemctl --user start hypridle.service || true
   '';
+
+  # sunshine-health: handshake TLS de verdade na 47984. `-brief` imprime "Protocol
+  # version:" só quando o handshake COMPLETA — é o sinal; TCP aceito não basta, foi
+  # exatamente o estado pendurado de 29/07. Probe em 127.0.0.1: não depende da tailnet.
+  #
+  # SEM PIPE de propósito: o writeShellApplication liga `set -o pipefail`, e com
+  # `| grep -q` o grep sai no 1º match → o openssl morre de SIGPIPE → o pipeline
+  # retorna ERRO mesmo tendo dado match. Isso invertia o resultado: handshake OK era
+  # lido como falha, e o timer reiniciaria o Sunshine a cada 2 min p/ sempre. Captura
+  # em variável + `case` evita o pipe inteiro.
+  sunshineHealth = pkgs.writeShellApplication {
+    name = "sunshine-health";
+    runtimeInputs = with pkgs; [ openssl systemd coreutils ];
+    text = ''
+      for attempt in 1 2 3; do
+        out="$(timeout 8 openssl s_client -connect 127.0.0.1:47984 -brief </dev/null 2>&1 || true)"
+        case "$out" in
+          *"Protocol version:"*) exit 0 ;;
+        esac
+        echo "handshake TLS na 47984 falhou (tentativa $attempt/3)"
+        [ "$attempt" = 3 ] || sleep 5
+      done
+      echo "handler HTTPS pendurado — reiniciando o sunshine.service" >&2
+      systemctl --user restart sunshine.service
+    '';
+  };
 in
 {
   services.sunshine = {
@@ -73,5 +99,33 @@ in
         { do = "${streamBegin}"; undo = "${streamEnd}"; }
       ];
     };
+  };
+
+  # ── Healthcheck do handler HTTPS ────────────────────────────────────────────
+  # Em 29/07 o Sunshine ficou com a 47984 (HTTPS) aceitando TCP e NUNCA completando o
+  # handshake TLS — 22 conexões empilhadas em CLOSE-WAIT — enquanto a 47989 (HTTP)
+  # respondia 200 normalmente. O Moonlight usa a HTTPS em host já pareado, então ele
+  # mostrava "offline". O pior: o serviço ficava `active`, ExecMainStatus=0 e SEM UMA
+  # LINHA de log. Não havia como perceber; só `systemctl restart` resolveu.
+  #
+  # Daí o probe ativo: o único jeito de detectar é TENTAR o handshake. 3 tentativas em
+  # ~10 s antes de reiniciar, p/ não confundir hang com o startup do serviço. Reinicia
+  # mesmo se houver stream ativo — host com HTTPS pendurado já está inútil.
+  systemd.user.services.sunshine-healthcheck = lib.mkIf config.my.services.sunshine {
+    description = "Reinicia o Sunshine se o handler HTTPS (47984) estiver pendurado";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${sunshineHealth}/bin/sunshine-health";
+    };
+  };
+
+  systemd.user.timers.sunshine-healthcheck = lib.mkIf config.my.services.sunshine {
+    description = "Probe periódico do handler HTTPS do Sunshine";
+    timerConfig = {
+      OnActiveSec = "2min"; # dá tempo do serviço subir antes do 1º probe
+      OnUnitActiveSec = "2min";
+    };
+    partOf = [ "graphical-session.target" ]; # sem sessão não há Sunshine p/ checar
+    wantedBy = [ "graphical-session.target" ];
   };
 }

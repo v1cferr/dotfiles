@@ -9,13 +9,13 @@
 # e o daemon roda como serviço systemd --user — SEM o `claude-presence setup`
 # imperativo (que mutaria settings.json e subiria o daemon na mão).
 # ═══════════════════════════════════════════════════════════════════════════
-{ pkgs, ... }:
+{ pkgs, osConfig, lib, ... }:
 
 let
   ccds = pkgs.claude-code-discord-status;
   daemonEntry = "${ccds}/lib/node_modules/claude-code-discord-status/dist/daemon/index.js";
 in
-{
+lib.mkIf osConfig.my.services.discord-rpc {
   home.packages = [ ccds ]; # CLI `claude-presence` p/ diagnóstico (status/doctor/preview)
 
   # Config que o daemon lê (loadConfig → ~/.claude-presence/config.json). O DIRETÓRIO

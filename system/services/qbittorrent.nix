@@ -6,11 +6,11 @@
 # categorias se ajustam na Web UI (localhost:8080) — isso é estado do qBittorrent.
 # Login inicial: usuário 'admin', senha temporária no log (journalctl -u qbittorrent).
 # ═══════════════════════════════════════════════════════════════════════════
-{ ... }:
+{ config, ... }:
 
 {
   services.qbittorrent = {
-    enable = true;
+    enable = config.my.services.qbittorrent;
     openFirewall = true; # abre a porta de torrent (peers) + a Web UI na LAN
     webuiPort = 8080; # painel web (mesmo do setup antigo)
     user = "qbittorrent";

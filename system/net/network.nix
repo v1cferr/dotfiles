@@ -51,7 +51,7 @@
   # (via sops). proxied=false: registro DNS-only (cinza) — SSH não passa pelo
   # proxy HTTP da Cloudflare.
   services.cloudflare-dyndns = {
-    enable = true;
+    enable = config.my.services.cloudflare-ddns;
     apiTokenFile = config.sops.secrets.cloudflare_ddns_token.path;
     domains = [ "ssh.v1cferr.dev" ];
     proxied = false;

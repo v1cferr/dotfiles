@@ -138,7 +138,7 @@ let
     text = ''docker exec -it duo-daemon duo-streak-daemon run-once --force "$@"'';
   };
 in
-lib.mkIf enabled {
+lib.mkIf (enabled && config.my.services.duo) {
   virtualisation.docker = {
     enable = true; # engine declarada no Nix
     # Os Dockerfiles do app usam `RUN --mount=type=cache` → exige BuildKit (o

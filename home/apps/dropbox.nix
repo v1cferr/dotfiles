@@ -17,8 +17,8 @@
 # O cliente baixa o próprio binário em ~/.dropbox-dist (estado, fora do Nix) —
 # é a parte imperativa que o Dropbox impõe; o resto (habilitar/subir) é declarado.
 # ═══════════════════════════════════════════════════════════════════════════
-{ ... }:
+{ osConfig, ... }:
 
 {
-  services.dropbox.enable = true; # pasta padrão: ~/Dropbox
+  services.dropbox.enable = osConfig.my.services.dropbox; # pasta padrão: ~/Dropbox
 }

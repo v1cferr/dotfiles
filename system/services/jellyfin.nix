@@ -9,7 +9,7 @@
 # arquivos; o jellyfin lê). As BIBLIOTECAS em si (o que é Filme/Série) se configuram
 # na web UI (localhost:8096) no 1º acesso — isso vive no DB do jellyfin, não aqui.
 # ═══════════════════════════════════════════════════════════════════════════
-{ ... }:
+{ config, ... }:
 
 {
   # Grupo compartilhado da mídia: dono = eu (copio/gerencio), leitura = jellyfin.
@@ -26,7 +26,7 @@
   ];
 
   services.jellyfin = {
-    enable = true;
+    enable = config.my.services.jellyfin;
     openFirewall = true; # abre 8096/8920 (web) + 1900/7359 UDP (descoberta DLNA) na LAN
   };
 }

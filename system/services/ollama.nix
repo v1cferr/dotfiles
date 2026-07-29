@@ -14,11 +14,11 @@
 # ollama-model-loader (systemd) faz o pull na ativação e é idempotente (pula se
 # já existe). Teste: `ollama run qwen3:4b`.
 # ═══════════════════════════════════════════════════════════════════════════
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 
 {
   services.ollama = {
-    enable = true;
+    enable = config.my.services.ollama;
     # CPU-only: `pkgs.ollama` puro (sem CUDA/ROCm). Aceleração na Arc B580 fica
     # pra depois (ver cabeçalho) — hoje o solver roda na CPU.
     package = pkgs.ollama;

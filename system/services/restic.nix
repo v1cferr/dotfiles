@@ -11,9 +11,9 @@
 #
 # A senha do repo é SEGREDO (sops: restic_password). Sem ela não decripta o repo.
 # ═══════════════════════════════════════════════════════════════════════════
-{ config, ... }:
+{ config, lib, ... }:
 
-{
+lib.mkIf config.my.services.restic {
   # SEGURANÇA: o backup só roda com o HDD Seagate montado. Sem isto, se o disco não
   # montasse, o restic gravaria em /mnt/seagate-old na RAIZ (SanDisk) — backup no
   # lugar errado + enchendo o disco que a gente quer aliviar. RequiresMountsFor barra isso.

@@ -22,7 +22,7 @@
 # trancaria a sessão remota. Então o guard só PAUSA o hypridle enquanto o stream roda
 # (global_prep_cmd do/undo) e RELIGA ao desconectar. Nada de dpms/settle: o monitor já
 # está sempre aceso.
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 
 let
   # Início do stream: para o hypridle p/ a sessão remota não TRANCAR no meio por idle.
@@ -37,7 +37,7 @@ let
 in
 {
   services.sunshine = {
-    enable = true;
+    enable = config.my.services.sunshine;
     # SEM capSysAdmin: a captura é wlr (wlr-screencopy), que NÃO precisa de CAP_SYS_ADMIN
     # — só o KMS-grab precisaria, e o KMS nem funciona no driver xe. Menos privilégio.
     autoStart = true; # sobe junto da sessão gráfica (serviço --user, WantedBy graphical-session)

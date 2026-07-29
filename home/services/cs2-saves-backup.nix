@@ -12,7 +12,7 @@
 # Barato: rsync é incremental (no-op quando nada mudou), então rodar de hora em
 # hora não pesa. Pra outro jogo depois: replicar o par src→dst num novo módulo.
 # ═══════════════════════════════════════════════════════════════════════════
-{ pkgs, config, ... }:
+{ pkgs, config, osConfig, lib, ... }:
 
 let
   home = config.home.homeDirectory;
@@ -30,7 +30,7 @@ let
     fi
   '';
 in
-{
+lib.mkIf osConfig.my.services.cs2-backup {
   # serviço oneshot: dispara o espelhamento (o restic diário faz o resto)
   systemd.user.services.cs2-saves-backup = {
     Unit.Description = "Espelha os saves do CS2 (Bottles) p/ pasta coberta pelo restic";

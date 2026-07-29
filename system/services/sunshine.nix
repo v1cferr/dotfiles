@@ -61,6 +61,12 @@ in
       # CSRF: libera as origens da tailnet (IP + nome MagicDNS). Sem isto, criar o
       # usuário/salvar pelo web UI é bloqueado quando o host != localhost.
       csrf_allowed_origins = "https://100.92.126.90:47990,https://nixos-sandisk.tailf2731d.ts.net:47990";
+      # OBRIGATÓRIO porque o acesso é pela tailnet: a tailscale0 tem MTU 1280 e o default
+      # do Sunshine é 1392 → todo pacote de vídeo estoura o túnel. WireGuard descarta em
+      # SILÊNCIO (sem ICMP, sem log): o host streama normal, o cliente recebe pela metade,
+      # não remonta frame e desconecta em ~4 s — foi o que aconteceu em 29/07. 1024 cabe
+      # com folga em 1280 depois de IP+UDP+cabeçalhos do Moonlight.
+      packet_size = 1024;
       # Guard de idle: do/undo acordam a tela + pausam o hypridle durante o stream (ver
       # header). JSON no sunshine.conf; vale p/ TODOS os apps (inclui o "Desktop" remoto).
       global_prep_cmd = builtins.toJSON [

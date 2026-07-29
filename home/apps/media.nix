@@ -58,12 +58,26 @@ in
       "application/epub+zip" = app.okular;
       "application/vnd.comicbook+zip" = app.okular; # .cbz
       # ── Vídeo → VLC (mpv fica p/ abrir manual/CLI) ──
-      "video/mp4" = app.vlc;
+      "video/mp4" = app.vlc; # .mp4/.m4v
       "video/x-matroska" = app.vlc; # .mkv
       "video/webm" = app.vlc;
       "video/quicktime" = app.vlc; # .mov
       "video/x-msvideo" = app.vlc; # .avi
       "video/mpeg" = app.vlc;
+      "video/x-flv" = app.vlc; # .flv
+      "video/x-ms-wmv" = app.vlc; # .wmv
+      "video/3gpp" = app.vlc; # .3gp
+      "video/ogg" = app.vlc; # .ogv
+      # ── Áudio → VLC (mesma lógica do vídeo; sem isto o mpv.desktop ganhava
+      # a associação por reivindicar os tipos no .desktop, contra a intenção acima) ──
+      "audio/mpeg" = app.vlc; # .mp3
+      "audio/flac" = app.vlc;
+      "audio/ogg" = app.vlc; # .ogg/.opus
+      "audio/vnd.wave" = app.vlc; # .wav
+      "audio/mp4" = app.vlc; # .m4a
+      "audio/aac" = app.vlc;
+      "audio/x-ms-wma" = app.vlc; # .wma
+      "audio/x-matroska" = app.vlc; # .mka
     };
   };
 }

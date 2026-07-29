@@ -24,13 +24,17 @@
 
     shellAliases = {
       # NixOS: sem `#host` o nixos-rebuild casa o hostname atual com o nixosConfigurations.
-      # && hyprctl reload: recarrega o hyprland.lua na sessão (config nova não aplica sozinha; fora do Hyprland só erra sem efeito).
-      rebuild = "sudo nixos-rebuild switch --flake ~/Projects/GitHub/v1cferr/dotfiles && hyprctl reload";
+      # && hyprctl -i 0 reload: recarrega o hyprland.lua (config nova não aplica sozinha).
+      # O `-i 0` é o que faz isso funcionar por SSH: sem ele o hyprctl exige
+      # HYPRLAND_INSTANCE_SIGNATURE, que só existe dentro da sessão gráfica → rebuildar de
+      # fora falhava calado e a config nova NÃO era aplicada (29/07). O `|| true` mantém o
+      # exit code do rebuild como o que importa, mesmo sem Hyprland rodando.
+      rebuild = "sudo nixos-rebuild switch --flake ~/Projects/GitHub/v1cferr/dotfiles && { hyprctl -i 0 reload || true; }";
       update = "nix flake update --flake ~/Projects/GitHub/v1cferr/dotfiles"; # bump do flake.lock
       # upgrade = update + rebuild (tipo `apt update && apt full-upgrade`). O `update` roda
       # como USUÁRIO primeiro (tem a chave SSH p/ inputs privados, ex. duo-streak-daemon) e
       # SÓ com sucesso (`&&`) segue pro rebuild como root — lock quebrado nunca chega a aplicar.
-      upgrade = "nix flake update --flake ~/Projects/GitHub/v1cferr/dotfiles && sudo nixos-rebuild switch --flake ~/Projects/GitHub/v1cferr/dotfiles && hyprctl reload";
+      upgrade = "nix flake update --flake ~/Projects/GitHub/v1cferr/dotfiles && sudo nixos-rebuild switch --flake ~/Projects/GitHub/v1cferr/dotfiles && { hyprctl -i 0 reload || true; }";
       gc = "sudo nix-collect-garbage -d"; # limpa gerações antigas da store manualmente
       # ls/ll/la/lt (eza) e cat (bat) vivem em home/cli.nix, junto do toolkit CLI
       ".." = "cd ..";

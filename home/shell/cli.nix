@@ -5,17 +5,23 @@
 # já escrevem a integração no zsh (keybinds, hooks, completions) de forma
 # versionada — melhor que hooks à mão. (system/ segue dono do nível-sistema.)
 # ═══════════════════════════════════════════════════════════════════════════
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 {
   programs.eza.enable = true; # ls moderno (ícones + git); aliases logo abaixo
   programs.eza.git = true; # coluna de status do git na listagem
   programs.bat.enable = true; # cat com syntax highlight + paginação
-  programs.zoxide.enable = true; # pula de pasta por frequência (hook no zsh)
-  # Substitui o `cd` builtin pelo zoxide: `cd nome-parcial` salta pra pasta mais usada que
-  # casa (aprende conforme você navega); `cd` normal (path completo, .., -) segue funcionando;
-  # `cdi` = picker interativo (fzf) quando há vários matches. Fim de digitar o dir inteiro.
-  programs.zoxide.options = [ "--cmd cd" ];
+  # zoxide: `cd nome-parcial` salta pra pasta mais usada (aprende ao navegar); `cd` normal
+  # (path/../-) segue OK; `cdi` = picker fzf. Fim de digitar o dir inteiro.
+  programs.zoxide.enable = true; # instala o binário (o init do zsh vai no fim, abaixo)
+  # O HM injeta o init do zoxide-zsh cedo (mkOrder 851) → dispara o falso-positivo do doctor
+  # ("initialize at the end"). Fix correto (home-manager#9349): desligar a integração
+  # automática e reinjetar o init no FIM do .zshrc (mkOrder 2000, depois de todo mkAfter) —
+  # o doctor fica satisfeito de verdade, sem silenciar nada. --cmd cd = o `cd` vira o zoxide.
+  programs.zoxide.enableZshIntegration = false;
+  programs.zsh.initContent = lib.mkOrder 2000 ''
+    eval "$(${pkgs.zoxide}/bin/zoxide init zsh --cmd cd)"
+  '';
   programs.fzf.enable = true; # fuzzy finder: Ctrl+R (histórico), Ctrl+T (arquivo), Alt+C (cd)
   programs.yazi.enable = true; # file manager TUI com preview (usa bat; `y` faz cd ao sair)
   programs.tealdeer = {

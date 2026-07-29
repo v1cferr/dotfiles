@@ -18,6 +18,7 @@
 
 let
   zen = "zen-beta.desktop";
+  code = "code.desktop"; # VS Code (instalado em home/packages.nix)
 in
 {
   xdg.mimeApps = {
@@ -29,6 +30,20 @@ in
       "x-scheme-handler/unknown" = zen; # fallback de scheme desconhecido
       "text/html" = zen;
       "application/xhtml+xml" = zen;
+
+      # ── Texto/código → VS Code ──
+      # Sem isto o duplo-clique caía no Okular (que reivindica text/plain e markdown
+      # no .desktop dele) ou em NADA (json/csv/yaml/toml/py/js não tinham handler).
+      "text/plain" = code; # tb. cobre .nix/.ini/.conf/.env
+      "text/markdown" = code;
+      "text/x-log" = code;
+      "text/csv" = code;
+      "application/json" = code;
+      "application/yaml" = code;
+      "application/toml" = code;
+      "text/x-python" = code;
+      "text/javascript" = code;
+      "text/vnd.trolltech.linguist" = code; # .ts: o shared-mime-info casa Qt Linguist, não TypeScript
     };
   };
 

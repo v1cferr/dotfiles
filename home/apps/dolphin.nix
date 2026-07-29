@@ -37,6 +37,7 @@ in
     kio-extras
     kdegraphics-thumbnailers
     ffmpegthumbs
+    ark # gerenciador de arquivos compactados + servicemenus "Comprimir/Extrair" no botão-direito
   ];
 
   home.activation.dolphinDetailsView = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

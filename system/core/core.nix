@@ -18,6 +18,11 @@
   # Valores = default consolidado da comunidade; suba min-free se um dia faltar.
   nix.settings.min-free = 1024 * 1024 * 1024; # 1 GiB
   nix.settings.max-free = 5 * 1024 * 1024 * 1024; # 5 GiB
+  # Prioridade OCIOSA do nix-daemon: os builds (que maxam os cores compilando) CEDEM
+  # CPU/disco à sessão interativa → rebuild/upgrade não trava o desktop nem o stream do
+  # Moonlight. Máquina parada = build usa tudo normal (idle só cede quando algo mais quer).
+  nix.daemonCPUSchedPolicy = "idle";
+  nix.daemonIOSchedClass = "idle";
   nixpkgs.config.allowUnfree = true; # google-chrome, vscode, etc.
   # bitwarden-desktop (Electron) trava no Electron 39 (EOL). Nenhum canal migrou
   # ainda; liberamos SÓ esta versão. Ao bumpar o Bitwarden, revisar/remover isto.

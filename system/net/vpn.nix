@@ -10,6 +10,15 @@
 { pkgs, config, ... }:
 
 let
+  # Teto de retentativas do Restart=always: o túnel cai sozinho ("Modem hangup" sem SIGTERM)
+  # e antes ficava morto até reconectar na mão (12 min em 29/07, ~1 h em 27/07).
+  # 6 tentativas por 10 min: queda real volta na 1ª; senha errada não fica martelando o
+  # portal (SonicWall/GlobalProtect bloqueiam a conta) — o pill da barra apaga e você vê.
+  vpnRestartGuard = {
+    startLimitIntervalSec = 600;
+    startLimitBurst = 6;
+  };
+
   # CLI `vpn`: connect/disconnect ufscar|fai|all + status-json/menu (pro pill da barra).
   vpnCli = pkgs.writeShellApplication {
     name = "vpn";
@@ -88,6 +97,7 @@ in
     description = "VPN UFSCar (GlobalProtect via openconnect)";
     wants = [ "network-online.target" ];
     after = [ "network-online.target" ];
+    restartIfChanged = false; # rebuild não derruba túnel em uso; o daemon-reload já aplica o Restart= novo
     # sem wantedBy → SOB DEMANDA (o CLI `vpn` liga)
     serviceConfig = {
       Type = "simple";
@@ -96,8 +106,11 @@ in
           | ${pkgs.openconnect}/bin/openconnect --protocol=gp --user=857722 \
               --authgroup=acessoremoto.ufscar.br --passwd-on-stdin acessoremoto-scl.ufscar.br
       '';
-      Restart = "no";
+      Restart = "always";
+      RestartSec = 10;
     };
+    # `vpn disconnect` usa systemctl stop → o systemd NÃO reinicia (stop explícito não conta).
+    inherit (vpnRestartGuard) startLimitIntervalSec startLimitBurst;
   };
 
   # FAI — SonicWall via nxBender, lendo o config renderizado pelo sops (com a senha).
@@ -105,11 +118,14 @@ in
     description = "VPN FAI (SonicWall via nxBender)";
     wants = [ "network-online.target" ];
     after = [ "network-online.target" ];
+    restartIfChanged = false; # idem: reconectar a VPN é decisão sua, não efeito colateral de rebuild
     serviceConfig = {
       Type = "simple";
       ExecStart = "${pkgs.nxbender}/bin/nxBender -c ${config.sops.templates."nxbender-fai.conf".path}";
-      Restart = "no";
+      Restart = "always";
+      RestartSec = 10;
     };
+    inherit (vpnRestartGuard) startLimitIntervalSec startLimitBurst;
   };
 
   # polkit: deixa o usuário ligar/desligar SÓ os serviços vpn-* sem senha (pro bind

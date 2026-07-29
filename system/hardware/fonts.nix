@@ -6,7 +6,13 @@
 
 {
   fonts = {
-    packages = with pkgs; [ nerd-fonts.jetbrains-mono ];
+    packages = with pkgs; [
+      nerd-fonts.jetbrains-mono
+      # Métricas da Microsoft p/ o OnlyOffice (home/apps/office.nix) abrir .docx/.xlsx
+      # com o layout certo — sem elas o fontconfig substitui e a paginação anda.
+      corefonts # Arial, Times New Roman, Courier New, Verdana… (Office ≤2003)
+      vista-fonts # Calibri, Cambria, Consolas… (o .docx moderno usa Calibri por padrão)
+    ];
     fontconfig = {
       enable = true;
       # Estética "laboratório": JetBrains Mono também em menus/navegador.

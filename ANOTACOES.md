@@ -10,6 +10,9 @@
 > 6. Nix = app + config; estado = restic: saves, prefixos Wine, tokens/sessões de app **não** se declaram — vão pro backup.
 > 7. Sem `.sh` solto: a lógica mora no build (Nix) ou no systemd; runtime = comando de 1 linha (shellcheck no build pega erro cedo).
 > 8. Validar antes de aplicar: `nixos-rebuild build` / `nix eval` OK e commits atômicos por feature/task, antes do switch.
+> 9. Tudo em tema TokyoNight, centralizado numa PALETA NIX própria (`home/desktop/palette.nix`, opção `my.theme.name`) — trocar de tema = 1 linha (presets: tokyo-night/catppuccin-mocha/gruvbox-dark). O nix-colors foi DESCARTADO: arquivado (abr/2026) + base16 de só 16 cores não reproduz os hexes exatos.
+> 10. A FONTE de UI tem SSOT PRÓPRIA, separada das cores: `my.fonts.ui` em `system/hardware/fonts.nix` (junto do pacote, porque fonte é nível-sistema — regra 4; e o fontconfig também precisa do nome, e módulo de sistema não lê opção do home-manager). Trocar de fonte = 1 linha + o pacote. Consumidor de usuário lê via `osConfig.my.fonts.ui`, nunca literal.
+> 11. SSOT SEMPRE: valor repetido em 2+ lugares vira opção `my.<domínio>.<coisa>` e consumidor NUNCA guarda literal — hoje são `my.theme.name`/`.palette` (cores, regra 9), `my.fonts.ui` (fonte, regra 10) e `my.services.<n>` (serviços opcionais). A opção mora no nível MAIS BAIXO que precisa dela: se algum módulo do `system/` consome, ela é de sistema e o `home/` lê via `osConfig` — o contrário NÃO existe (módulo de sistema não lê opção do home-manager). Consumidor de HOT-RELOAD (Quickshell/Hyprland) não aceita interpolação do Nix, porque a árvore é symlink: o módulo GERA um arquivo de dados (JSON/Lua) que ele lê, e aí o único literal legítimo é o fallback de "arquivo faltou". VALIDAR trocando a opção por um SENTINELA — rebuild, conferir que TODOS os consumidores mudaram, reverter e checar que o store path voltou idêntico.
 
 ## Configurações antigas do Arch Linux
 
@@ -23,6 +26,8 @@
 > Quickshell: DECIDIDO — migrei tudo pro Quickshell (ver TODO). Personalizável em QML
 > com hot-reload; o Hyprland também virou hot-reload (hyprland.lua via mkOutOfStoreSymlink).
 > Para me inspirar: <https://github.com/Misterio77/Foundry>
+> Wallpapers Nix: <https://github.com/NixOS/nixos-artwork/tree/master/wallpapers>
+> Temas centralizados: `home/desktop/palette.nix` (`my.theme`). O nix-colors foi descartado (arquivado + base16 limita a 16 cores).
 
 ## TODO
 
@@ -59,7 +64,7 @@
       principal = catppuccin-mocha (cheia), TV = moonscape. Blur/brilho ajustados
       (blur_passes 2, brightness 0.40). home/desktop/lockscreen.nix.
   - <https://github.com/NixOS/nixos-artwork/tree/master/wallpapers>
-- [ ] Adicionar um método de zip direto no tooltip do meu file manager (Dolphin) — zipar sem abrir o terminal, via menu de contexto (botão direito). Pesquisar se há algum software que faça isso.
+- [x] Adicionar um método de zip direto no tooltip do meu file manager (Dolphin) — zipar sem abrir o terminal, via menu de contexto (botão direito). FEITO: kdePackages.ark (servicemenus "Comprimir/Extrair" no botão-direito). home/apps/dolphin.nix.
 - [x] Software para notificações — o Quickshell é o daemon (dono do org.freedesktop.Notifications):
       toasts + centro de controle, em QML. Substituiu o swaync/mako (dois daemons brigam pelo mesmo
       nome D-Bus). Alternativas standalone p/ referência: mako (minimalista) / swaync (com control center).
@@ -73,6 +78,19 @@
       (cursor + send_shortcut mouse:272; scripts em home/apps/flameshot.nix). A janela tem class
       VAZIA + title "flameshot" → window rule casa por TÍTULO (home/desktop/hypr/lua/rules.lua).
   - <https://wiki.nixos.org/wiki/Flameshot>
+- [ ] SSOT pendente (regra 11) — o que AINDA está repetido, medido por grep no repo:
+      MONITORES `DP-2` (8 arquivos) e `HDMI-A-3` (7) — wallpaper.nix, lockscreen.nix, hypr/lua
+      (monitors, rules, keybinds) + hyprland.lua, desktop/default.nix e quickshell/bar/Bar.qml.
+      É o pior caso e é exatamente o "entrar em 10 arquivos p/ trocar uma coisa"; candidato a
+      `my.monitors.{primary,secondary}` no system/, com o Lua e o QML lendo pelo arquivo de dados
+      gerado (mesmo caminho das cores).
+      ÍCONES `Fluent-dark` (3: theme.nix, launcher.nix, clipboard.nix) → `my.theme.iconTheme`.
+      CURSOR `Bibata-Modern-Ice` (2: theme.nix + hypr/lua/environment.lua).
+      HOME `/home/v1cferr` (5: dolphin.nix, Theme.qml, restic.nix, fai-workstation-mount.nix,
+      home/default.nix) → `my.user.home`, hoje hardcoded.
+      BURACO REAL, não só duplicação: kitty.nix tem `themeFile = "tokyo_night_night"` FIXO, então
+      trocar `my.theme.name` p/ gruvbox-dark ou catppuccin-mocha recolore tudo MENOS o terminal —
+      contradiz a promessa de "1 linha" da regra 9. Corrigir mapeando preset → themeFile do kitty.
 - [ ] Verificar se é possível adicionar estado declarativo criptografado
 - [x] Clipboard (Wayland) — cliphist DECLARATIVO (services.cliphist, allowImages=texto+imagem)
       + picker no ROFI com PREVIEW: thumbnail das imagens copiadas + ícone por TIPO de arquivo
@@ -82,7 +100,8 @@
       cópia viva após o app fechar (fix da imagem do Flameshot — dono do clipboard no Wayland).
 - [x] Dark mode no file manager (Dolphin) — Qt segue o GTK escuro (home/desktop/theme.nix)
 - [x] Acesso remoto de tela — Tailscale (mesh WireGuard) + Sunshine/Moonlight. Sunshine
-      (system/services/sunshine.nix): captura KMS + encode na GPU Arc, acesso SÓ pela tailnet
+      (system/services/sunshine.nix): captura WLR (wlr-screencopy; o KMS NÃO enumera no
+      driver xe da Arc) + encode na GPU Arc, acesso SÓ pela tailnet
       (openFirewall=false; a interface tailscale0 é trusted → fechado na LAN/internet). Tailscale
       (system/net/tailscale.nix): join DECLARATIVO via authKeyFile (sops/Bitwarden) — entra na
       tailnet sozinho no 1º boot, sem `tailscale up` manual. Web UI do Sunshine precisa de
@@ -91,6 +110,16 @@
       → ScrollLock="/" e Shift+ScrollLock="?" via hl.dsp.send_shortcut (keybinds.lua; wtype não
       injetava pelo bind). Atalhos Moonlight: Capture system shortcuts=Always p/ o SUPER passar;
       Ctrl+Alt+Shift+Z solta/recaptura o mouse, +Q sai, +X fullscreen. FOSS futuro = Headscale.
+  - [x] Debug longo (jul/2026) — "tela preta no Moonlight" era o wlr capturando o monitor
+        em DPMS-OFF (não regressão de versão/encoder). SOLUÇÃO: removi o dpms-off do hypridle
+        (idle SÓ tranca agora) → monitor sempre aceso → nunca preto. CUIDADO: alternar dpms
+        SOB captura ativa deu engine-reset da GPU (xe RCS) + page-flip wedged (só reboot limpa).
+        O guard global_prep_cmd só pausa o hypridle durante o stream (não trancar no meio).
+  - [x] Subir no boot — o Sunshine precisa de sessão gráfica viva → autologin (LightDM,
+        defaultSession=hyprland, system/desktop/desktop.nix) + hyprlock no autostart
+        (home/desktop/hypr/lua/autostart.lua) = sobe TRAVADO, o Moonlight cai no lockscreen.
+  - Conecto pelo app "Low Res Desktop" (o "Desktop" simples latcha em preto por timing); o
+    xrandr do prep dele NÃO é lixo — é o que dá a folga de timing. Mesma imagem 1080p.
 - [x] Idioma: sistema em en-US (output/erros em inglês facilitam debug), EXCEÇÃO — a LOCKSCREEN
       é full pt-BR (data por extenso, clima, "Digite a senha…", frases via DeepL). defaultLocale=
       en_US + supportedLocales inclui pt_BR (o LC_TIME da data do lock depende dele). Teclado
@@ -157,7 +186,8 @@
       só parear (runtime, bluetoothctl) e usar em modo Xbox/Xinput. Tudo declarativo possível feito.
 
 - [x] Lockscreen & AFK/Idle mode — ver "Outros" (hyprlock + hypridle: lock aos
-      5 min + tela off via dpms). Falta só desligar os LEDs no AFK (abaixo).
+      5 min. O tela-off via dpms foi REMOVIDO — bugava o Moonlight, ver Acesso remoto).
+      Falta só desligar os LEDs no AFK (abaixo).
 - [ ] Desligar todos os leds de todos os hardwares no modo AFK
 
 - [x] Filtro de luz azul — hyprsunset (nativo do Hyprland, CTM: não sai em
@@ -182,8 +212,8 @@
       linha. Widgets: relógio + data pt-BR + usuário + frase (ZenQuotes via timer,
       traduzida p/ pt-BR pelo DeepL → cache pango; `shuf -n1`) + clima (wttr.in via
       timer systemd; `cat` do cache).
-      Idle: lock aos 5 min + tela off via dpms NATIVO (testar — no Arch o driver
-      antigo congelava; fallback = gamma, no histórico git). PAM em
+      Idle: lock aos 5 min (SÓ tranca; o dpms-off foi removido — bugava o Moonlight/Arc,
+      ver Acesso remoto). PAM em
       system/desktop/desktop.nix (sem ele não desbloqueia); locale pt_BR em system/core/core.nix.
       SUPER+L tranca na hora. Notifs agora são do Quickshell (daemon nativo).
 - [x] Trocar a RTX 3050 → Intel Arc B580 (Battlemage) — FEITO. Arc validada (`xe`
@@ -206,13 +236,84 @@
       DP-2 (LG ULTRAGEAR) principal na origem 0x0; TV (HDMI-A-3) à esquerda. Principal
       em 0x0 = se a TV desconectar, o LG segue sozinho sem offset (ws 5–8 recaem nele).
 
+- [x] Google Chrome canal DEV — troquei o stable pelo google-chrome-dev via flake
+      nix-community/browser-previews (o nixpkgs só empacota o stable). Input novo no
+      flake.nix (nixpkgs.follows p/ dedup) + home/packages.nix. Binário google-chrome-unstable;
+      "latest" com `nix flake update browser-previews`. (O stable não abria por SingletonLock
+      fantasma do host antigo nixos-seagate — fix: rm ~/.config/google-chrome/Singleton*.)
+- [x] Alias `upgrade` (home/shell/zsh.nix) = `update` + `rebuild` num comando só (tipo
+      apt full-upgrade). O update roda como USUÁRIO (chave SSH dos inputs privados) && o rebuild.
 - [ ] Configurar para ser indexado e aparecer nos primeiro resultado do Google (SEO/AIO Ranking)
 - [ ] Organizar meu markdown de anotações
-- [ ] Adicionar um método de zip direto no tooltip do meu file manager (Dolphin) — zipar sem abrir o terminal, via menu de contexto (botão direito). Pesquisar se há algum software que faça isso.
-- [ ] Adicionar um arquivo para declarar quais softwares inicializam e ficam ativos com a minha maquina (preciso ter esse acompanhamento para saber o que está rodando e o que não está rodando, para poder desativar o que não quero que rode e ativar o que quero que rode)
+- [x] Adicionar um método de zip direto no tooltip do meu file manager (Dolphin) — zipar sem abrir o terminal, via menu de contexto (botão direito). FEITO: kdePackages.ark (servicemenus "Comprimir/Extrair" no botão-direito). home/apps/dolphin.nix.
+- [x] Adicionar um arquivo para declarar quais softwares inicializam e ficam ativos com a minha
+      maquina (ligar/desligar) — FEITO: PAINEL central `system/services/toggles.nix` (`my.services.<n>`,
+      mkEnableOption + mkIf/enable-gate, padrão idiomático). Flip true/false + `rebuild` liga/desliga
+      10 opcionais (jellyfin, ollama, duo, sunshine, qbittorrent, restic, cloudflare-ddns, dropbox,
+      discord-rpc, cs2-backup). Essenciais (tailscale/mouse/desktop/keyring/earlyoom) e VPN (sob-demanda) FORA.
 - [ ] Instalar o driver/software do meu mouse Razer Deathadder v2 (adicionar a notificação de quando meu DPI mudar, etc)
-- [ ] Configurar meu launcher de apps (colocar icones, filtro pelos ultimos utilizados e etc)
+- [x] Configurar meu launcher de apps (colocar icones, filtro pelos ultimos utilizados e etc)
+      — FEITO: rofi `drun` (ícones Fluent-dark + fuzzy + histórico/recência) tematizado pela
+      paleta única (my.theme), UI en-US. SUPER+Q (apps) / SUPER+R (bins). Saiu do wofi →
+      consolidado no rofi (mesmo tool do clipboard). home/desktop/launcher.nix.
 - [x] Clipboard manager com visualização de imagens/arquivos + histórico — FEITO com rofi
       (não quickshell): cliphist + rofi c/ preview (thumbnail + ícone por tipo). Ver acima.
-- [ ] Possibilidade de clicar para trocar de workspace na minha status bar
+- [x] Possibilidade de clicar para trocar de workspace na minha status bar — JÁ FEITO: os
+      ws-pills têm onClicked → `hyprctl dispatch workspace <id>` (Bar.qml).
 - [ ] Tray icons e tooltip clicaveis (para abrir o app ou ir para a configuração do app)
+- [x] Trocar a parte do status bar que tem a logo do Arch para a logo do NixOS — FEITO:
+      glifo Nerd Font U+F303 (nf-linux-archlinux) → U+F313 (nf-linux-nixos) no botão iniciar
+      (PowerMenu do Quickshell). home/desktop/quickshell/bar/PowerMenu.qml.
+- [x] Adicionar os wallpapers e pesquisar qual melhor Wallpaper Provider no meu caso do meu setup
+      (declarativo) — FEITO: **hyprpaper** (oficial do Hyprland, estático/leve) + wallpapers do
+      nixos-artwork. DP-2 = nineish-dark-gray, TV = moonscape. home/desktop/wallpaper.nix. Trocar
+      imagem = 1 attr. (Alternativas p/ referência: swww = transições/rotação; mpvpaper = vídeo.)
+- [ ] Arrumar o flameshot para não bugar com minha status/top bar (quickshell)
+- [x] Resolver a questão do Keyring para todos os apps/softwares que precisam de senha (como o
+      Dropbox, Spotify, Chrome, etc) — FEITO com keyring "Login" de senha VAZIA (seahorse: troca
+      senha antiga do Arch → vazia; não-destrutivo, preserva os segredos). CAUSA RAIZ: com AUTOLOGIN
+      o PAM não digita senha → pam_gnome_keyring nunca destrava; e hyprlock→keyring é comprovadamente
+      quebrado no NixOS (Discourse). Senha vazia = gnome-keyring-daemon destrava sozinho no startup,
+      sem prompt em nenhum app. É ESTADO (regra 6), não declarável. Doc no system/desktop/desktop.nix
+      (seção Keyring). Descartados no caminho: greetd+greeter Quickshell (quebra Sunshine no boot) e
+      lockscreen Quickshell (mantido hyprlock + autologin, decisão do user).
+- [x] Conectar na workstation da FAI e adicionar como uma pasta com SSHFS ou algum protocolo
+      semelhante e/ou mais resiliente e confiável para adicionar no meu file manager — FEITO
+      com **rclone mount** (SFTP + cache VFS), NÃO sshfs (que travaria com o host VPN-gated):
+      ~/FAI-workstation = raiz `/` da workstation, sobe/cai junto com a VPN FAI (vpn CLI),
+      bookmark declarativo no Dolphin. home/services/fai-workstation-mount.nix.
+- [x] VPN FAI + UFSCar 100% declarativas (system/net/vpn.nix) — FAI=nxBender (FOSS, 3 patches:
+      ssl.wrap_socket removido no py3.12, opção `nomp` do pppd, split-tunnel) + fingerprint do
+      cert self-signed; UFSCar=openconnect/GlobalProtect (`--authgroup`). Ambas split-tunnel;
+      senhas via sops/Bitwarden. CLI `vpn` (connect/disconnect/status-json/menu) + binds SUPER+N /
+      +SHIFT+N / +CTRL+N + PILL clicável na barra. Coexistem com o Moonlight (rotas disjuntas).
+- [x] SSH declarativo p/ a workstation da FAI (home/shell/ssh.nix, `programs.ssh` API nova
+      `settings`) — `ssh workstation` (200.136.209.229) + `fai-vm`, via a VPN FAI. Chave autorizada
+      1x com ssh-copy-id (estado).
+- [x] Sistema de TEMAS centralizado (home/desktop/palette.nix, `my.theme.name`) — presets
+      tokyo-night (default) / catppuccin-mocha / gruvbox-dark, hexes oficiais exatos. Trocar =
+      1 linha + rebuild → recolore Quickshell (JSON via FileView), Hyprland (lua via dofile) e
+      rofi/lockscreen/flameshot (leem `config.my.theme.palette`). nix-colors DESCARTADO (arquivado).
+- [x] FONTE de UI centralizada (regra 10) — `my.fonts.ui` em system/hardware/fonts.nix é a SSOT;
+      trocar = 1 linha + o pacote. Mora no system/ (não no my.theme) porque o PACOTE é
+      nível-sistema e o fontconfig precisa do nome — sistema não lê opção do HM, o inverso sim.
+      7 consumidores, todos via `osConfig.my.fonts.ui`: fontconfig (defaultFonts mono/sans/serif),
+      GTK (dconf + gtk.font) e Qt em theme.nix, kitty, hyprlock, rofi launcher + clipboard, e o
+      Quickshell pelo MESMO JSON da paleta (o .qml é symlink hot-reload, o Nix não escreve dentro).
+      TAMANHO fica em cada consumidor (11pt GTK, 12pt kitty/rofi, por widget no lock) — é contexto.
+      Validado com sentinela: troquei o valor, os 7 mudaram, o revert voltou ao mesmo store path.
+      JetBrainsMono Nerd Font confirmada como a recomendação #1 p/ dev em 2026 (Fira Code = 2º,
+      ligaduras; Iosevka = mais estreita, ~20% mais código/linha). PEGADINHA do rofi: dentro do
+      .rasi o '#' abre literal de COR, não comentário — comentar ali mata o parse do tema INTEIRO
+      e o rofi só avisa no stderr, caindo nos defaults em silêncio.
+- [x] Mouse Logitech MX Master 3S (system/hardware/mouse.nix, logiops) — DPI 2222, SmartShift,
+      hi-res scroll, botão de gestos → workspaces. PEGADINHA BT: boot-race + "5 tries" do HID++ →
+      regra udev dispara um oneshot (sleep 5 + restart logid) que reaplica no connect/boot/wake.
+- [x] Sunshine capture=wlr (system/services/sunshine.nix) — FIX do boot-hang que travava o
+      Moonlight: o Sunshine probava o backend `portalgrab` no startup e pendurava no
+      hyprland-share-picker → nunca abria as portas. Forçar `wlr` pula o probe do portal.
+- [x] zoxide no `cd` (home/shell/cli.nix, `--cmd cd`) — `cd <parcial>` pula pra pasta mais usada;
+      `cdi` = picker fzf. (o zoxide já era enable; só liguei o `--cmd cd`.)
+- [x] Arrumar o meu launcher de aplicativos (mostrar icone, filtro pelos ultimos utilizados, etc)
+      — DUPLICATA do launcher acima; feito (rofi drun). home/desktop/launcher.nix.
+- [ ] Adicionar Wallpapers (atualmente está preto, pesquisar as melhores opções da comunidade Nix)

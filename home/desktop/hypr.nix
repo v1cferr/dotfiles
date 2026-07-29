@@ -149,6 +149,12 @@ let
     name = "hypr-session-ensure";
     runtimeInputs = with pkgs; [ systemd coreutils findutils ];
     text = ''
+      # Roda a cada 30s → sai CALADO no caso normal, senão são ~2900 linhas/dia no journal.
+      # Só fala quando de fato precisou agir, que é o evento que interessa investigar.
+      if systemctl --user --quiet is-active hyprland-session.target; then
+        exit 0
+      fi
+
       rt="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 
       # Instância mais RECENTE (o dir sobrevive a crash; pega o de mtime maior).
@@ -247,13 +253,20 @@ in
   # máquina fica SEM Sunshine e SEM Quickshell. Remotamente, isso é irrecuperável:
   # o Hyprland está vivo, mas nada mais que dependa de graphical-session.target.
   #
-  # Este path unit tira o acesso remoto das mãos da config: ele observa o SOCKET do
-  # compositor, que existe mesmo com a config quebrada, e sobe o target por conta
-  # própria. Redundante com o exec-once de propósito — `systemctl start` num target
-  # já ativo é no-op, então os dois coexistem sem brigar.
-  systemd.user.paths.hyprland-session-watch = {
-    Unit.Description = "Observa o socket do Hyprland p/ garantir o graphical-session.target";
-    Path.PathExistsGlob = "%t/hypr/*/.socket.sock"; # %t = XDG_RUNTIME_DIR
+  # Isto tira o acesso remoto das mãos da config: verifica o SOCKET do compositor, que
+  # existe mesmo com a config quebrada, e sobe o target por conta própria. Redundante
+  # com o exec-once de propósito — `systemctl start` num target já ativo é no-op.
+  #
+  # TIMER, não path unit: com `PathExistsGlob` o systemd re-dispara enquanto a condição
+  # segue verdadeira — o oneshot sai, o socket continua lá, dispara de novo → loop até
+  # `unit-start-limit-hit` (testado, falhou exatamente assim). Path unit só serve quando
+  # o serviço CONSOME o caminho. O timer é idempotente por construção e custa nada.
+  systemd.user.timers.hyprland-session-watch = {
+    Unit.Description = "Garante periodicamente o graphical-session.target do Hyprland";
+    Timer = {
+      OnActiveSec = "20s"; # 1ª checagem logo após o login
+      OnUnitActiveSec = "30s";
+    };
     Install.WantedBy = [ "default.target" ]; # ativo desde o login, antes do compositor
   };
 

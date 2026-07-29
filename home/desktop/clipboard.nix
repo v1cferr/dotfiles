@@ -86,10 +86,13 @@ in
 
   # Cores do TEMA ATIVO (my.theme) — a paleta do rofi segue a fonte única. icon-theme =
   # Fluent-dark (o mesmo do sistema) resolve os ícones nomeados por tipo de arquivo.
+  # `font` explícito: sem ele o rofi cai no default "mono 12". NÃO comentar dentro do
+  # .rasi com '#' — ali '#' abre literal de cor e quebra o parse do tema inteiro.
   xdg.configFile."rofi/clipboard.rasi".text = ''
     configuration {
       show-icons:  true;
       icon-theme:  "Fluent-dark";
+      font:        "${config.my.theme.font} 12";
     }
     * {
       tn-bg:     #${palette.bg};

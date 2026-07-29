@@ -9,12 +9,15 @@ let
   palette = config.my.theme.palette; # cores do tema ativo (home/desktop/palette.nix)
 in
 {
+  # `font` explícito no bloco configuration: sem ele o rofi cai no default "mono 12".
+  # NÃO comentar dentro do .rasi com '#' — ali '#' abre literal de cor e quebra o parse.
   xdg.configFile."rofi/launcher.rasi".text = ''
     configuration {
       show-icons: true;
       icon-theme: "Fluent-dark";
       drun-display-format: "{name}";
       matching:   "fuzzy";
+      font:       "${config.my.theme.font} 12";
     }
     * {
       tn-bg:     #${palette.bg};

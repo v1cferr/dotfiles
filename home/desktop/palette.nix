@@ -95,6 +95,13 @@ in
       internal = true;
       description = "Paleta resolvida do tema ativo (hexes sem '#'). Lida pelos módulos.";
     };
+    # Fonte da UI junto das cores: é tema, e assim trocar = 1 linha, igual ao preset.
+    # O pacote em si vem do system/hardware/fonts.nix (fonte é nível-sistema, regra 4).
+    font = lib.mkOption {
+      type = lib.types.str;
+      default = "JetBrainsMono Nerd Font";
+      description = "Família da fonte de UI. Lida pelos módulos (rofi hoje; ver TODO da migração).";
+    };
   };
 
   config = {

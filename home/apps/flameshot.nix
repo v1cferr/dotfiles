@@ -86,6 +86,26 @@ in
   # v14 (unstable) + os scripts do fluxo por teclado (chamados pelo submap em keybinds.lua).
   home.packages = [ fs flameshotScreenshot flameshotPick flameshotCancel ];
 
+  # ── Aliases de print, migrados do zsh do Arch ──────────────────────────────
+  # Ficam AQUI, junto da ferramenta, e não no home/shell/zsh.nix — mesma convenção do
+  # eza/bat, que moram no cli.nix (o zsh.nix guarda só os de shell/sistema).
+  #
+  # VERIFICADO no v14/Wayland desta máquina: só o `gui` abre o picker de monitor; o
+  # `full` e o `screen --number` capturam DIRETO, sem picker. Ou seja, os aliases do
+  # Arch continuam valendo — o que não vale é `--region`, que o v14 ignora.
+  #
+  # O `--number` é índice de tela do Qt, NÃO nome de monitor, então não sai do
+  # my.monitors (regra 11 não se aplica: não há como derivar). Mapeamento medido
+  # capturando as duas telas e comparando com os wallpapers: 0 = principal (DP-2),
+  # 1 = TV (HDMI-A-3). Se o layout de monitores mudar, REMEDIR.
+  # Os números herdados do Arch já casam com o submap de screenshot (1=TV, 2=principal).
+  programs.zsh.shellAliases = {
+    screenshot = "flameshot gui"; # seleção interativa (abre o picker do v14)
+    scfull = "flameshot full -c"; # as duas telas → clipboard
+    sc1 = "flameshot screen --number 1 -c"; # TV (HDMI-A-3) → clipboard
+    sc2 = "flameshot screen --number 0 -c"; # principal (DP-2) → clipboard
+  };
+
   # Pasta de saída dos prints (flameshot não cria sozinho de forma confiável).
   home.file."Pictures/Screenshots/.keep".text = "";
 

@@ -266,8 +266,15 @@ Scope {
     ]
 
     // ===== VPN (vpn status-json) =====
+    // vpnList guarda a lista CRUA [{id,name,connected}] porque o popover precisa de uma
+    // linha por VPN; vpnConnected/vpnName seguem sendo o agregado que o pill mostra.
+    // Uma leitura só alimenta os dois — o rofi remontava os rótulos por conta própria
+    // com `systemctl is-active`, que MENTE no crash-loop do nxBender (ver vpn.nix).
     property bool vpnConnected: false
     property string vpnName: ""
+    property var vpnList: []
+    property bool vpnPopVisible: false
+    property bool vpnBusy: false
     function parseVpn(text) {
         try {
             const j = JSON.parse(text);
@@ -278,9 +285,27 @@ Scope {
                     n = v.name;
                 }
             });
+            root.vpnList = j.vpns || [];
             root.vpnConnected = c;
             root.vpnName = n;
         } catch (e) {}
+    }
+    // Conectar/desconectar pelo popover. Process (e não launch()) p/ saber QUANDO
+    // terminou: aí o estado é relido na hora, em vez de esperar o poll de 5s — e o
+    // vpnBusy segura o painel aberto e os botões inertes durante a ação.
+    function runVpn(action, target) {
+        root.vpnBusy = true;
+        vpnActionProc.command = [root.vpnBin, action, target];
+        vpnActionProc.running = true;
+    }
+    Process {
+        id: vpnActionProc
+        onRunningChanged: {
+            if (!running) {
+                root.vpnBusy = false;
+                vpnProc.running = true;
+            }
+        }
     }
     Process {
         id: vpnProc
@@ -1053,6 +1078,11 @@ Scope {
         bar: root
     }
 
+    // ===== Popover de VPN — view em bar/VpnPopover.qml =====
+    VpnPopover {
+        bar: root
+    }
+
     // ===== Barra por monitor =====
     Variants {
         model: Quickshell.screens
@@ -1183,14 +1213,22 @@ Scope {
                         onHoveredChanged: hovered ? root.showMetric("usage", usagePill, barContent, bar.screen) : root.unhoverMetric()
                     }
                     Pill {
-                        // VPN: verde + nome quando conectada, cinza quando off. Clique = menu
-                        // rofi (conectar/desconectar FAI/UFSCar); dir = desconectar tudo.
+                        // VPN: verde + nome quando conectada, cinza quando off. Clique abre o
+                        // popover ANCORADO na barra (bar/VpnPopover.qml) — antes lançava
+                        // `vpn menu`, um rofi solto no meio da tela, fora do tema do shell.
+                        // Clique-direito segue sendo o atalho de derrubar tudo.
+                        id: vpnPill
                         icon: "󰦝"
                         label: root.vpnConnected ? root.vpnName : ""
                         accent: root.vpnConnected ? Theme.colGreen : Theme.colDim
                         maxWidth: 150
-                        onClicked: root.launch([root.vpnBin, "menu"])
-                        onRightClicked: root.launch([root.vpnBin, "disconnect", "all"])
+                        onClicked: {
+                            root.anchorPopover(vpnPill, barContent, bar.screen);
+                            root.vpnPopVisible = !root.vpnPopVisible;
+                            if (root.vpnPopVisible)
+                                vpnProc.running = true; // estado fresco ao abrir
+                        }
+                        onRightClicked: root.runVpn("disconnect", "all")
                     }
                     Pill {
                         id: netPill

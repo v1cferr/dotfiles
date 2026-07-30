@@ -24,10 +24,11 @@ let
     RestartMaxDelaySec = 300;
   };
 
-  # CLI `vpn`: connect/disconnect ufscar|fai|all + status-json/menu (pro pill da barra).
+  # CLI `vpn`: connect/disconnect ufscar|fai|all + status-json (que alimenta o pill E o
+  # popover da barra — quickshell/bar/VpnPopover.qml).
   vpnCli = pkgs.writeShellApplication {
     name = "vpn";
-    runtimeInputs = with pkgs; [ systemd libnotify rofi iproute2 gnugrep ];
+    runtimeInputs = with pkgs; [ systemd libnotify iproute2 gnugrep ];
     text = ''
       note() { notify-send -a VPN "VPN" "$1" 2>/dev/null || true; }
       # "Conectado" = unidade ativa E túnel existindo de fato. Só `is-active` MENTE: com
@@ -66,21 +67,13 @@ let
           fai_conn    && fai=true
           ufscar_conn && ufscar=true
           printf '{"vpns":[{"id":"fai","name":"FAI","connected":%s},{"id":"ufscar","name":"UFSCar","connected":%s}]}\n' "$fai" "$ufscar" ;;
-        # Menu do rofi (clique no pill): rótulo alterna conectar/desconectar por estado.
-        menu)
-          fai=Conectar; ufscar=Conectar
-          systemctl is-active --quiet vpn-fai.service    && fai=Desconectar
-          systemctl is-active --quiet vpn-ufscar.service && ufscar=Desconectar
-          choice=$(printf '󰦝  %s FAI\n󰦝  %s UFSCar\n󰗼  Desconectar tudo\n' "$fai" "$ufscar" \
-            | rofi -dmenu -i -p VPN -theme-str 'window { width: 340px; }') || exit 0
-          case "$choice" in
-            *"Conectar FAI"*)       fai_up ;;
-            *"Desconectar FAI"*)    fai_down ;;
-            *"Conectar UFSCar"*)    ufscar_up ;;
-            *"Desconectar UFSCar"*) ufscar_down ;;
-            *"Desconectar tudo"*)   ufscar_down; fai_down ;;
-          esac ;;
-        *) echo "uso: vpn connect|disconnect <ufscar|fai|all> | status-json | menu" >&2; exit 1 ;;
+        # REMOVIDO (30/07) o subcomando `menu`, que abria um rofi solto no meio da tela.
+        # A UI agora é um popover ANCORADO na barra (quickshell/bar/VpnPopover.qml), no tema
+        # do shell. Não é só estética: o menu do rofi montava os rótulos com `systemctl
+        # is-active`, que MENTE (ver fai_conn/ufscar_conn acima) — ele dizia "Desconectar"
+        # durante o crash-loop do nxBender, sem existir túnel. O popover lê o status-json,
+        # que checa o túnel de verdade. Uma fonte de verdade só, e a correta.
+        *) echo "uso: vpn connect|disconnect <ufscar|fai|all> | status-json" >&2; exit 1 ;;
       esac
     '';
   };

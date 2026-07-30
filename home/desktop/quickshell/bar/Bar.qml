@@ -1007,7 +1007,12 @@ Scope {
             id: wsArea
             anchors.fill: parent
             hoverEnabled: true
-            onClicked: root.launch(["hyprctl", "dispatch", "workspace", "" + wsbtn.wsid])
+            // Sintaxe LUA do 0.55: `dispatch` virou atalho p/ hl.dispatch(...), então a
+            // forma antiga ("dispatch", "workspace", N) monta `hl.dispatch(workspace 3)` e
+            // estoura no parser — clique morria em silêncio, sem nada na tela.
+            // Cuidado: `hl.dsp.workspace` é TABELA, não função (vira "attempt to call a
+            // table value"); quem troca de workspace é o focus, igual ao keybinds.lua.
+            onClicked: root.launch(["hyprctl", "dispatch", "hl.dsp.focus({ workspace = " + wsbtn.wsid + " })"])
         }
     }
 

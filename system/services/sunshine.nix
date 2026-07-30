@@ -53,10 +53,10 @@ let
         case "$out" in
           *"Protocol version:"*) exit 0 ;;
         esac
-        echo "handshake TLS na 47984 falhou (tentativa $attempt/3)"
+        echo "<4>handshake TLS na 47984 falhou (tentativa $attempt/3)" # <4>=warning
         [ "$attempt" = 3 ] || sleep 5
       done
-      echo "handler HTTPS pendurado — reiniciando o sunshine.service" >&2
+      echo "<3>handler HTTPS pendurado — reiniciando o sunshine.service" >&2 # <3>=err
       systemctl --user restart sunshine.service
     '';
   };
@@ -116,6 +116,10 @@ in
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${sunshineHealth}/bin/sunshine-health";
+      # Timer de 2min → o systemd logaria "Starting…/Finished…" sempre (440 linhas/dia
+      # medidas). `warning` corta o info; as falhas do probe saem com prefixo <4>/<3> e
+      # continuam visíveis, que é o que importa investigar.
+      LogLevelMax = "warning";
     };
   };
 

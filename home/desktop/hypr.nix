@@ -172,7 +172,8 @@ let
 
       # No-op se o exec-once do autostart.lua já subiu o target.
       systemctl --user start hyprland-session.target
-      echo "hyprland-session.target garantido (sig=$sig display=$wl)"
+      # <4> = warning: sobrevive ao LogLevelMax e marca a ÚNICA vez que interessa no journal.
+      echo "<4>hyprland-session.target garantido (sig=$sig display=$wl)"
     '';
   };
 
@@ -275,6 +276,11 @@ in
     Service = {
       Type = "oneshot";
       ExecStart = "${sessionWatch}/bin/hypr-session-ensure";
+      # Roda a cada 30s: sem isto o SYSTEMD loga "Starting…/Finished…" por conta própria e
+      # afoga o journal (medido: 1708 linhas num dia). Fazer o script sair calado NÃO basta —
+      # essas linhas são do systemd, não do script. `warning` corta o info e deixa passar o
+      # que o script emite com prefixo <4>, que é justamente a vez em que ele agiu.
+      LogLevelMax = "warning";
     };
   };
 

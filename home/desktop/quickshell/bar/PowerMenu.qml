@@ -116,12 +116,32 @@ Pill {
                         Layout.fillWidth: true
                         implicitHeight: 32
                         radius: 8
-                        // o vermelho aqui era #f38ba8, do Catppuccin ANTIGO — agora sai do my.theme
-                        color: itemArea.containsMouse ? (modelData.danger ? Theme.colHoverBgDanger : Theme.colHoverBg) : "transparent"
+                        // o vermelho aqui era #f38ba8, do Catppuccin ANTIGO — agora sai do my.theme.
+                        // Tokens colMenuHoverBg* (30%): linha de menu não tem borda, então
+                        // os de 20% ficam invisíveis (1.11:1 de contraste, medido).
+                        color: itemArea.containsMouse ? (modelData.danger ? Theme.colMenuHoverBgDanger : Theme.colMenuHoverBg) : "transparent"
                         Behavior on color {
                             ColorAnimation {
                                 duration: Theme.hoverAnim
                                 easing.type: Easing.OutQuad
+                            }
+                        }
+
+                        // mesma barra de acento do menu do tray (TrayMenu.qml) — o shell
+                        // fala UMA língua de hover: fundo + marca de posição na esquerda.
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.leftMargin: 3
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: itemArea.containsMouse ? 3 : 0
+                            height: parent.height - 10
+                            radius: 1.5
+                            color: modelData.danger ? Theme.colRed : Theme.colAccent
+                            Behavior on width {
+                                NumberAnimation {
+                                    duration: Theme.hoverAnim
+                                    easing.type: Easing.OutQuad
+                                }
                             }
                         }
 

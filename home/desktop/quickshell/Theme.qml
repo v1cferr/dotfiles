@@ -112,6 +112,13 @@ Singleton {
     readonly property color colHoverBgDanger: aa(pal.red, "33"); // ação destrutiva
     readonly property color colHoverBgOk: aa(pal.green, "33"); // ação de confirmar
     readonly property color colHoverBgAccent: aa(pal.accent, "33"); // controle em foco
+    // LINHA DE MENU é caso à parte: não tem borda p/ indicar o hover, então o fundo é
+    // o único sinal — e a 20% ele é invisível. MEDIDO: border@20% sobre o fundo do menu
+    // dá 1.11:1 de contraste (o olho não pega). O accent a 30% dá 1.77:1 E muda de MATIZ
+    // (cinza→azul), que é o que a vista percebe de longe. Não subo mais que isso p/ o
+    // item não virar um bloco chapado de azul.
+    readonly property color colMenuHoverBg: aa(pal.accent, "4d"); // linha de menu sob o cursor
+    readonly property color colMenuHoverBgDanger: aa(pal.red, "4d"); // idem, ação destrutiva
     // Duração da transição de hover. 120ms (não os 200ms da Pill): num MENU o
     // cursor cruza vários itens seguidos, e 200ms deixa rastro de 2-3 itens
     // acesos ao mesmo tempo. 120ms ainda lê como fade, mas acompanha o cursor.

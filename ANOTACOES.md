@@ -278,8 +278,6 @@
       fantasma do host antigo nixos-seagate — fix: rm ~/.config/google-chrome/Singleton*.)
 - [x] Alias `upgrade` (home/shell/zsh.nix) = `update` + `rebuild` num comando só (tipo
       apt full-upgrade). O update roda como USUÁRIO (chave SSH dos inputs privados) && o rebuild.
-- [ ] Configurar para ser indexado e aparecer nos primeiro resultado do Google (SEO/AIO Ranking)
-- [ ] Organizar meu markdown de anotações
 - [x] Adicionar um método de zip direto no tooltip do meu file manager (Dolphin) — zipar sem abrir o terminal, via menu de contexto (botão direito). FEITO: kdePackages.ark (servicemenus "Comprimir/Extrair" no botão-direito). home/apps/dolphin.nix.
 - [x] Adicionar um arquivo para declarar quais softwares inicializam e ficam ativos com a minha
       maquina (ligar/desligar) — FEITO: PAINEL central `system/services/toggles.nix` (`my.services.<n>`,
@@ -316,7 +314,22 @@
       `hl.dsp.workspace(N)` falha com "attempt to call a table value", porque ali é TABELA
       (só sub-dispatchers). Delegate de Repeater não pega no hot-reload: pede SUPER+ESCAPE.
       TERCEIRO item marcado [x] sem funcionar (com o wallpaper e o screenDP1) — ver regra 14.
-- [ ] Tray icons e tooltip clicaveis (para abrir o app ou ir para a configuração do app)
+- [~] Tray: CLIQUE já funcionava (30/07) — o delegate do Bar.qml tem esquerda `activate()`,
+      meio `secondaryActivate()`, direita abrindo o menu SNI nativo (TrayMenu) e roda com
+      `scroll()`. O item estava marcado como pendente estando pronto — inverso do padrão do
+      wallpaper/screenDP1/ws-pill, e igualmente enganoso.
+      O que ESTAVA quebrado ali era outro: o fallback de clique-direito p/ SNI sem DBusMenu
+      (xembedsniproxy: wine/Battle.net, pamac) chamava
+      `$HOME/.config/waybar/scripts/tray-native-menu.sh` — caminho da WAYBAR, que foi
+      removida na migração; o dir não existe e o script não estava no repo. Portado do legado
+      p/ writeShellApplication (regra 7) e chamado por NOME pelo PATH.
+      FALTA: o TOOLTIP, que não existe em nenhum lugar da barra. O SNI do Quickshell expõe
+      `tooltipTitle`/`tooltipDescription` prontos; o padrão a seguir são os popovers
+      (PanelWindow ancorado, ver MetricsPopover.qml).
+      NOTA DE MEDIÇÃO: contei itens de tray com `busctl --user list | grep StatusNotifierItem`
+      e deu 0, o que é FALSO — app que registra com nome único (`:1.82`) não casa esse padrão.
+      A fonte autoritativa é a propriedade `RegisteredStatusNotifierItems` do watcher (é o que
+      o tray-native-menu lê): 3 itens.
 - [x] Trocar a parte do status bar que tem a logo do Arch para a logo do NixOS — FEITO:
       glifo Nerd Font U+F303 (nf-linux-archlinux) → U+F313 (nf-linux-nixos) no botão iniciar
       (PowerMenu do Quickshell). home/desktop/quickshell/bar/PowerMenu.qml.
@@ -330,7 +343,18 @@
       de correção abaixo). Documentação afirmando que algo funciona é pior que TODO em aberto: fez
       duvidar de renderização/GPU em vez de olhar o formato da config.
       (Alternativas p/ referência: swww = transições/rotação; mpvpaper = vídeo.)
-- [ ] Arrumar o flameshot para não bugar com minha status/top bar (quickshell)
+- [x] Flameshot vs. barra: "barra duplicada" no print (30/07) — o overlay do flameshot é
+      JANELA normal, e no Hyprland janela NUNCA cobre layer `top`, onde a barra vive
+      (`hyprctl layers` → "Layer level 2 (top): namespace: quickshell"). O overlay mostra um
+      frame CONGELADO que já contém a barra, e a barra VIVA desenha em cima → duas barras.
+      Não há window rule que inverta: é feature request ABERTA (hyprwm/Hyprland#4847), e a
+      comunidade confirma que nem a layer `overlay` cobre um bar em `top`. FIX declarativo:
+      `IpcHandler` no Bar.qml (hide/unhide) + o flameshot-screenshot chamando em volta do
+      loop que ele já tinha. ORDEM IMPORTA: esconde DEPOIS que a janela aparece, quando o
+      frame já foi capturado → a barra CONTINUA no print, só a duplicata viva sai.
+      `visible: false` desmapeia a layer, o que também libera o strip de 30px p/ selecionar
+      região no topo. PEGADINHA: a função IPC não pode se chamar `show` — colide com o
+      subcomando `qs ipc show` e o CLI nunca a chama (já documentado no IpcHandler do vpn).
 - [x] Resolver a questão do Keyring para todos os apps/softwares que precisam de senha (como o
       Dropbox, Spotify, Chrome, etc) — FEITO com keyring "Login" de senha VAZIA (seahorse: troca
       senha antiga do Arch → vazia; não-destrutivo, preserva os segredos). CAUSA RAIZ: com AUTOLOGIN

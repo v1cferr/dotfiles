@@ -55,7 +55,7 @@ hl.bind(mainMod .. " + CTRL + N",  hl.dsp.exec_cmd("vpn disconnect all"))
 
 -- reiniciar o Quickshell (raramente necessário — ele faz hot-reload do QML ao
 -- salvar; útil só quando o processo trava). `qs kill` para a instância, `qs` sobe.
-hl.bind(mainMod .. " + ESCAPE",    hl.dsp.exec_cmd("bash -lc 'qs kill; sleep 0.3; qs &'"))
+hl.bind(mainMod .. " + ESCAPE",    hl.dsp.exec_cmd("qs-restart")) -- reinicia o Quickshell (delegate de Repeater não pega no hot-reload)
 
 -- Minimizar: manda as OUTRAS janelas da workspace pra special:minimized (toggle).
 hl.bind(mainMod .. " + M",         hl.dsp.exec_cmd("minimize-others"))

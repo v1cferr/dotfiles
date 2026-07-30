@@ -5,6 +5,7 @@
   imports = [
     ./palette.nix # FONTE ÚNICA de cores (my.theme.name); gera os dados p/ Quickshell/Hyprland
     ./monitors.nix # FONTE ÚNICA dos conectores (my.monitors); gera os dados p/ Quickshell/Hyprland
+    ./autostart.nix # PAINEL do que abre no login (my.autostart) — Discord/Spotify
     ./hypr.nix # ~/.config/hypr/hyprland.conf (ABNT2 + monitores + keybinds)
     ./clipboard.nix # cliphist (histórico) + rofi (picker c/ preview img/tipo); Tokyo Night
     ./launcher.nix # launcher de apps (rofi drun: ícones + recência + Tokyo Night)

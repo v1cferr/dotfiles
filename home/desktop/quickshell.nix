@@ -28,6 +28,52 @@ let
   # que é daemonização normal e sobrevive. Ou seja, isto é MELHORIA de arquitetura, não
   # correção de bug. Fica registrado porque inferir mecanismo a partir de uma observação
   # com explicação mais simples é justamente o erro que a regra 14 manda evitar.
+  # tray-native-menu: dispara o menu de contexto NATIVO de um SNI que NÃO expõe DBusMenu
+  # (ícones vindos do xembedsniproxy: wine/Battle.net, pamac). O `display()` do Quickshell
+  # recusa item sem menu ("No menu present"), então chamamos o método ContextMenu() do SNI
+  # na posição do cursor — o proxy repassa pro X11 e o app desenha o próprio menu ali.
+  #
+  # PORTADO do waybar do Arch (30/07): o Bar.qml chamava
+  # `$HOME/.config/waybar/scripts/tray-native-menu.sh`, um caminho da WAYBAR — que foi
+  # REMOVIDA na migração. O diretório não existe nesta máquina e o script não estava no
+  # repo, então o clique-direito nesses ícones falhava em SILÊNCIO. Agora vive no build
+  # (regra 7) e o QML o chama por NOME, pelo PATH.
+  trayNativeMenu = pkgs.writeShellApplication {
+    name = "tray-native-menu";
+    runtimeInputs = with pkgs; [ hyprland systemd coreutils ];
+    text = ''
+      target_id="''${1:-}"
+      [ -z "$target_id" ] && exit 2
+
+      # posição global do cursor ("x, y") → dois inteiros
+      pos="$(hyprctl cursorpos 2>/dev/null || true)"
+      gx="''${pos%%,*}"; gy="''${pos##*,}"
+      gx="''${gx//[[:space:]]/}"; gy="''${gy//[[:space:]]/}"
+      case "$gx" in ""|*[!0-9]*) gx=0 ;; esac
+      case "$gy" in ""|*[!0-9]*) gy=0 ;; esac
+
+      items="$(busctl --user get-property org.kde.StatusNotifierWatcher \
+        /StatusNotifierWatcher org.kde.StatusNotifierWatcher \
+        RegisteredStatusNotifierItems 2>/dev/null || true)"
+
+      for tok in $items; do
+        # entradas vêm entre aspas ("svc/path"); o "as" e a contagem não têm
+        entry="''${tok//\"/}"
+        [ "$entry" = "$tok" ] && continue
+        svc="''${entry%%/*}"; path="/''${entry#*/}"
+        id="$(busctl --user get-property "$svc" "$path" \
+          org.kde.StatusNotifierItem Id 2>/dev/null || true)"
+        id="''${id#s \"}"; id="''${id%\"}"
+        if [ "$id" = "$target_id" ]; then
+          busctl --user call "$svc" "$path" \
+            org.kde.StatusNotifierItem ContextMenu ii "$gx" "$gy" 2>/dev/null
+          exit 0
+        fi
+      done
+      exit 1
+    '';
+  };
+
   qsRestart = pkgs.writeShellApplication {
     name = "qs-restart";
     runtimeInputs = [
@@ -48,6 +94,7 @@ in
     inputs.quickshell.packages.${pkgs.system}.default # `qs` / `quickshell`
     pkgs.lm_sensors # `sensors` — CPU temp lido pelo bar/Bar.qml
     qsRestart # `qs-restart` — usado pelo bind SUPER+ESCAPE (keybinds.lua)
+    trayNativeMenu # `tray-native-menu` — clique-direito em SNI sem DBusMenu (Bar.qml)
   ];
 
   # ~/.config/quickshell → arquivo real no repo (mutável) = hot-reload.

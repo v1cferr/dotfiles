@@ -22,7 +22,6 @@ Scope {
 
     property int barExclusiveZone: 30
     readonly property int trayCount: SystemTray.items ? SystemTray.items.values.length : 0
-    readonly property string scriptsDir: Quickshell.env("HOME") + "/.config/waybar/scripts"
     readonly property string vpnBin: "vpn" // CLI no PATH (system/net/vpn.nix)
 
     // Paleta e fonte vêm do Theme singleton (Theme.colX / Theme.uiFont).
@@ -1267,7 +1266,7 @@ Scope {
                                                 // Quickshell recusa itens sem menu ("No menu present"), então
                                                 // disparamos o ContextMenu() nativo do SNI via helper — o proxy
                                                 // repassa o clique e o app desenha o próprio menu no cursor.
-                                                root.launch(["bash", root.scriptsDir + "/tray-native-menu.sh", "" + modelData.id]);
+                                                root.launch(["tray-native-menu", "" + modelData.id]);
                                             }
                                         }
                                         onWheel: w => modelData.scroll(w.angleDelta.y, false)

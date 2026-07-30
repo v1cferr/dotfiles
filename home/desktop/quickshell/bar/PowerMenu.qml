@@ -116,7 +116,8 @@ Pill {
                         Layout.fillWidth: true
                         implicitHeight: 32
                         radius: 8
-                        color: itemArea.containsMouse ? (modelData.danger ? "#33f38ba8" : "#33414868") : "transparent"
+                        // o vermelho aqui era #f38ba8, do Catppuccin ANTIGO — agora sai do my.theme
+                        color: itemArea.containsMouse ? (modelData.danger ? Theme.colHoverBgDanger : Theme.colHoverBg) : "transparent"
 
                         RowLayout {
                             anchors.fill: parent

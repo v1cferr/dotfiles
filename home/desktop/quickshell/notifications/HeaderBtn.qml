@@ -14,7 +14,7 @@ Rectangle {
     implicitHeight: 26
     radius: 8
     opacity: hb.enabled ? 1 : 0.4
-    color: hbArea.containsMouse ? "#33414868" : "transparent"
+    color: hbArea.containsMouse ? Theme.colHoverBg : "transparent"
     border.color: hb.active ? Theme.colPeach : Theme.colBorder
     border.width: 1
 

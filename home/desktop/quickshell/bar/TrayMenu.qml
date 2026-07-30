@@ -104,7 +104,7 @@ PopupWindow {
             visible: !entry.modelData.isSeparator
             anchors.fill: parent
             radius: 6
-            color: (hov.containsMouse && entry.modelData.enabled) ? "#33414868" : "transparent"
+            color: (hov.containsMouse && entry.modelData.enabled) ? Theme.colHoverBg : "transparent"
 
             RowLayout {
                 id: rowInner

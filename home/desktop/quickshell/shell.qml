@@ -142,7 +142,7 @@ ShellRoot {
                         width: 22
                         height: 22
                         radius: 6
-                        color: closeArea.containsMouse ? "#33f38ba8" : "transparent"
+                        color: closeArea.containsMouse ? Theme.colHoverBgDanger : "transparent"
 
                         Text {
                             anchors.centerIn: parent
@@ -238,7 +238,7 @@ ShellRoot {
             implicitHeight: 28
             radius: 8
             color: btnArea.containsMouse
-                ? (row.connected ? "#33f38ba8" : "#33a6e3a1")
+                ? (row.connected ? Theme.colHoverBgDanger : Theme.colHoverBgOk) // eram Catppuccin
                 : "transparent"
             border.color: row.connected ? Theme.colRed : Theme.colGreen
             border.width: 1

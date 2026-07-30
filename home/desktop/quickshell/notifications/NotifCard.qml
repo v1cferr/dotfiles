@@ -242,7 +242,7 @@ Rectangle {
                         implicitWidth: actLabel.implicitWidth + 18
                         implicitHeight: 24
                         radius: 7
-                        color: actArea.containsMouse ? "#33414868" : "transparent"
+                        color: actArea.containsMouse ? Theme.colHoverBg : "transparent"
                         border.color: Theme.colBorder
                         border.width: 1
                         Text {

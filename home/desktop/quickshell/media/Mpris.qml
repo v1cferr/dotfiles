@@ -303,7 +303,7 @@ Scope {
         implicitWidth: big ? 44 : 36
         implicitHeight: big ? 44 : 36
         radius: width / 2
-        color: (area.containsMouse && btn.enabled) ? "#337aa2f7" : "transparent"
+        color: (area.containsMouse && btn.enabled) ? Theme.colHoverBgAccent : "transparent"
         border.color: btn.enabled ? Theme.colAccent : Theme.colDim
         border.width: 1
         opacity: btn.enabled ? 1 : 0.4

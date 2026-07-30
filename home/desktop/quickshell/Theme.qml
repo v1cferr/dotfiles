@@ -101,6 +101,18 @@ Singleton {
     readonly property color colWsActiveBorder: aa(pal.accent, "e6")
     readonly property color colWsInactive: pal.subtext
 
+    // ── Hover ────────────────────────────────────────────────────────────────
+    // Todo realce de hover do shell (menu do tray, power menu, botões de
+    // notificação, controles de mídia) é "a cor a 20% sobre transparente". Isso
+    // estava escrito À MÃO em 7 arquivos — e em 4 deles com a paleta CATPPUCCIN
+    // ANTIGA (#f38ba8/#a6e3a1), que já não existe no my.theme: o hover de
+    // "perigo" pintava de um vermelho de OUTRO tema. Daí virarem tokens: trocar
+    // de paleta no Nix recolore o hover junto, sem caçar hex nos QMLs (regra 11).
+    readonly property color colHoverBg: aa(pal.border, "33"); // neutro (padrão)
+    readonly property color colHoverBgDanger: aa(pal.red, "33"); // ação destrutiva
+    readonly property color colHoverBgOk: aa(pal.green, "33"); // ação de confirmar
+    readonly property color colHoverBgAccent: aa(pal.accent, "33"); // controle em foco
+
     readonly property string uiFont: pal.uiFont
 
     // Monitor principal, com fallback no 1º disponível — usado por barra/painéis/OSD.

@@ -1,7 +1,7 @@
 # Wallpaper de desktop — hyprpaper (daemon oficial do Hyprland: estático, leve, declarativo).
 # Imagens oficiais do NixOS via pkgs.nixos-artwork (sem binário no git; bump junto ao nixpkgs).
-# Principal = nineish-dark-gray (dark, casa com o Tokyo Night); TV = moonscape
-# (mesmo do lockscreen). Trocar = mudar o attr do nixos-artwork (1 linha; ~30 opções). Sobe no
+# Principal = catppuccin-mocha e TV = moonscape — as MESMAS duas imagens do lockscreen, então
+# desbloquear não troca o fundo debaixo. Trocar = mudar o attr do nixos-artwork (1 linha; ~30 opções). Sobe no
 # graphical-session (serviço --user do próprio módulo). Conectores vêm do my.monitors (regra 11).
 #
 # FORMATO DA CONFIG (hyprpaper 0.8.x) — é por isto que a tela ficava PRETA:
@@ -22,7 +22,7 @@ let
 
   # ESCOLHA dos wallpapers — trocar aqui é 1 linha de verdade (ver pathOf abaixo).
   # Opções em `nix eval nixpkgs#nixos-artwork.wallpapers --apply builtins.attrNames`.
-  main = art.nineish-dark-gray; # principal: cinza escuro, casa com o Tokyo Night
+  main = art.catppuccin-mocha; # principal: MESMA imagem do lockscreen (home/desktop/lockscreen.nix)
   tv = art.moonscape; # TV: mesma imagem do lockscreen
 
   # O nome do ARQUIVO dentro do pacote NÃO segue padrão: a maioria é nix-wallpaper-<attr>.png,

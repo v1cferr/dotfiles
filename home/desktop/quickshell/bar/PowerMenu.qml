@@ -118,6 +118,12 @@ Pill {
                         radius: 8
                         // o vermelho aqui era #f38ba8, do Catppuccin ANTIGO — agora sai do my.theme
                         color: itemArea.containsMouse ? (modelData.danger ? Theme.colHoverBgDanger : Theme.colHoverBg) : "transparent"
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Theme.hoverAnim
+                                easing.type: Easing.OutQuad
+                            }
+                        }
 
                         RowLayout {
                             anchors.fill: parent

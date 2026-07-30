@@ -15,6 +15,12 @@ Rectangle {
     radius: 8
     opacity: hb.enabled ? 1 : 0.4
     color: hbArea.containsMouse ? Theme.colHoverBg : "transparent"
+    Behavior on color {
+        ColorAnimation {
+            duration: Theme.hoverAnim
+            easing.type: Easing.OutQuad
+        }
+    }
     border.color: hb.active ? Theme.colPeach : Theme.colBorder
     border.width: 1
 

@@ -143,6 +143,12 @@ ShellRoot {
                         height: 22
                         radius: 6
                         color: closeArea.containsMouse ? Theme.colHoverBgDanger : "transparent"
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Theme.hoverAnim
+                                easing.type: Easing.OutQuad
+                            }
+                        }
 
                         Text {
                             anchors.centerIn: parent
@@ -237,9 +243,16 @@ ShellRoot {
             implicitWidth: btnLabel.implicitWidth + 24
             implicitHeight: 28
             radius: 8
+            // eram #f38ba8/#a6e3a1: o vermelho e o verde do Catppuccin ANTIGO
             color: btnArea.containsMouse
-                ? (row.connected ? Theme.colHoverBgDanger : Theme.colHoverBgOk) // eram Catppuccin
+                ? (row.connected ? Theme.colHoverBgDanger : Theme.colHoverBgOk)
                 : "transparent"
+            Behavior on color {
+                ColorAnimation {
+                    duration: Theme.hoverAnim
+                    easing.type: Easing.OutQuad
+                }
+            }
             border.color: row.connected ? Theme.colRed : Theme.colGreen
             border.width: 1
             opacity: root.busy ? 0.4 : 1

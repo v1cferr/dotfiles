@@ -243,6 +243,12 @@ Rectangle {
                         implicitHeight: 24
                         radius: 7
                         color: actArea.containsMouse ? Theme.colHoverBg : "transparent"
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Theme.hoverAnim
+                                easing.type: Easing.OutQuad
+                            }
+                        }
                         border.color: Theme.colBorder
                         border.width: 1
                         Text {

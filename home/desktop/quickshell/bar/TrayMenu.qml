@@ -104,7 +104,14 @@ PopupWindow {
             visible: !entry.modelData.isSeparator
             anchors.fill: parent
             radius: 6
+            // hover animado (fade) em vez de troca seca de cor; cor do Theme (regra 11)
             color: (hov.containsMouse && entry.modelData.enabled) ? Theme.colHoverBg : "transparent"
+            Behavior on color {
+                ColorAnimation {
+                    duration: Theme.hoverAnim
+                    easing.type: Easing.OutQuad
+                }
+            }
 
             RowLayout {
                 id: rowInner
@@ -128,7 +135,13 @@ PopupWindow {
                     elide: Text.ElideRight
                     // tira os mnemônicos "_" do label do DBusMenu
                     text: ("" + entry.modelData.text).replace(/_(.)/g, "$1")
-                    color: entry.modelData.enabled ? Theme.colText : Theme.colDim
+                    // acende junto do fundo: só o fade do bg é discreto demais no menu
+                    color: !entry.modelData.enabled ? Theme.colDim : (hov.containsMouse ? Theme.colAccent : Theme.colText)
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Theme.hoverAnim
+                        }
+                    }
                     font.family: Theme.uiFont
                     font.pixelSize: 12
                 }
@@ -138,7 +151,12 @@ PopupWindow {
                     visible: entry.modelData.hasChildren
                     Layout.preferredWidth: entry.modelData.hasChildren ? 12 : 0
                     text: "›"
-                    color: Theme.colDim
+                    color: hov.containsMouse ? Theme.colAccent : Theme.colDim
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Theme.hoverAnim
+                        }
+                    }
                     font.family: Theme.uiFont
                     font.pixelSize: 14
                 }

@@ -112,6 +112,10 @@ Singleton {
     readonly property color colHoverBgDanger: aa(pal.red, "33"); // ação destrutiva
     readonly property color colHoverBgOk: aa(pal.green, "33"); // ação de confirmar
     readonly property color colHoverBgAccent: aa(pal.accent, "33"); // controle em foco
+    // Duração da transição de hover. 120ms (não os 200ms da Pill): num MENU o
+    // cursor cruza vários itens seguidos, e 200ms deixa rastro de 2-3 itens
+    // acesos ao mesmo tempo. 120ms ainda lê como fade, mas acompanha o cursor.
+    readonly property int hoverAnim: 120;
 
     readonly property string uiFont: pal.uiFont
 

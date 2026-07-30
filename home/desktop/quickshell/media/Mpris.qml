@@ -304,6 +304,12 @@ Scope {
         implicitHeight: big ? 44 : 36
         radius: width / 2
         color: (area.containsMouse && btn.enabled) ? Theme.colHoverBgAccent : "transparent"
+        Behavior on color {
+            ColorAnimation {
+                duration: Theme.hoverAnim
+                easing.type: Easing.OutQuad
+            }
+        }
         border.color: btn.enabled ? Theme.colAccent : Theme.colDim
         border.width: 1
         opacity: btn.enabled ? 1 : 0.4

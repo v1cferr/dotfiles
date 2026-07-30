@@ -78,19 +78,35 @@
       (cursor + send_shortcut mouse:272; scripts em home/apps/flameshot.nix). A janela tem class
       VAZIA + title "flameshot" → window rule casa por TÍTULO (home/desktop/hypr/lua/rules.lua).
   - <https://wiki.nixos.org/wiki/Flameshot>
-- [ ] SSOT pendente (regra 11) — o que AINDA está repetido, medido por grep no repo:
-      MONITORES `DP-2` (8 arquivos) e `HDMI-A-3` (7) — wallpaper.nix, lockscreen.nix, hypr/lua
-      (monitors, rules, keybinds) + hyprland.lua, desktop/default.nix e quickshell/bar/Bar.qml.
-      É o pior caso e é exatamente o "entrar em 10 arquivos p/ trocar uma coisa"; candidato a
-      `my.monitors.{primary,secondary}` no system/, com o Lua e o QML lendo pelo arquivo de dados
-      gerado (mesmo caminho das cores).
-      ÍCONES `Fluent-dark` (3: theme.nix, launcher.nix, clipboard.nix) → `my.theme.iconTheme`.
-      CURSOR `Bibata-Modern-Ice` (2: theme.nix + hypr/lua/environment.lua).
-      HOME `/home/v1cferr` (5: dolphin.nix, Theme.qml, restic.nix, fai-workstation-mount.nix,
-      home/default.nix) → `my.user.home`, hoje hardcoded.
-      BURACO REAL, não só duplicação: kitty.nix tem `themeFile = "tokyo_night_night"` FIXO, então
-      trocar `my.theme.name` p/ gruvbox-dark ou catppuccin-mocha recolore tudo MENOS o terminal —
-      contradiz a promessa de "1 linha" da regra 9. Corrigir mapeando preset → themeFile do kitty.
+- [x] SSOT (regra 11) — FEITO: `my.monitors.{primary,secondary}` em home/desktop/monitors.nix
+      (era DP-2 em 8 arquivos e HDMI-A-3 em 7, entre Nix/Lua/QML), `my.theme.iconTheme` e
+      `my.theme.cursor.{name,size}` em palette.nix, e o BURACO do kitty (themeFile fixo em
+      tokyo_night — trocar `my.theme.name` recolorava tudo MENOS o terminal) corrigido mapeando
+      preset → themeFile. Cada um validado com SENTINELA: troca o valor, confere que TODOS os
+      consumidores mudaram, reverte e checa que o store path voltou idêntico.
+      Achado no caminho: existiam DUAS implementações de `screenDP1` no Quickshell — a do Bar.qml
+      procurava "DP-2" (certa) e a do Theme.qml procurava "DP-1", que NÃO existe nesta máquina →
+      nunca casava, caía no fallback s[0] e notificação/OSD/PowerMenu/Mpris podiam abrir NA TV.
+      Unificado em `Theme.screenPrimary`, lendo a SSOT.
+- [ ] SSOT pendente — só sobrou o HOME `/home/v1cferr` (5 arquivos: dolphin.nix, Theme.qml,
+      restic.nix, fai-workstation-mount.nix, home/default.nix) → `my.user.home`. Prioridade BAIXA
+      de propósito: ao contrário de fonte/cor/conector, o caminho não muda quando o hardware muda.
+- [x] Sessão remota resiliente (29/07) — quem sobe o `hyprland-session.target` é o exec-once do
+      autostart.lua, e "autostart" vem DEPOIS de "monitors" na ordem de carga: config Lua que
+      estoura = target nunca sobe = máquina sem Sunshine e sem Quickshell, com o Hyprland vivo.
+      Remotamente é irrecuperável. Agora um TIMER (30s) checa e sobe o target por conta própria,
+      derivando HYPRLAND_INSTANCE_SIGNATURE e WAYLAND_DISPLAY DO FILESYSTEM.
+      Path unit NÃO serve: `PathExistsGlob` re-dispara enquanto a condição é verdadeira → o oneshot
+      sai, o socket ainda está lá, dispara de novo, até `unit-start-limit-hit` (a 1ª versão subiu
+      `failed` e a proteção não existia de fato).
+      E os módulos Lua agora carregam os dados gerados pelo Nix com `pcall` + fallback INLINE por
+      arquivo (não helper global: o Hyprland não compartilha globais entre os `dofile` — tentar
+      isso pôs o compositor em emergency mode apontando monitors.lua).
+      LIÇÃO: unidade systemd e config de compositor NÃO se validam por build, só por execução.
+      `nixos-rebuild build` passa e o runtime falha.
+- [x] `hyprctl -i 0` nos aliases (29/07) — o `rebuild`/`upgrade` terminavam em `&& hyprctl reload`,
+      que EXIGE HYPRLAND_INSTANCE_SIGNATURE e por isso nunca funcionava por SSH: rebuildar de fora
+      deixava a config nova no disco sem aplicar, calado. `-i 0` acha a instância de qualquer shell.
 - [ ] Verificar se é possível adicionar estado declarativo criptografado
 - [x] Clipboard (Wayland) — cliphist DECLARATIVO (services.cliphist, allowImages=texto+imagem)
       + picker no ROFI com PREVIEW: thumbnail das imagens copiadas + ícone por TIPO de arquivo
@@ -118,6 +134,21 @@
   - [x] Subir no boot — o Sunshine precisa de sessão gráfica viva → autologin (LightDM,
         defaultSession=hyprland, system/desktop/desktop.nix) + hyprlock no autostart
         (home/desktop/hypr/lua/autostart.lua) = sobe TRAVADO, o Moonlight cai no lockscreen.
+  - [x] **packet_size=1024 — OBRIGATÓRIO porque o acesso é pela tailnet** (29/07). Sintoma: o
+        Moonlight conectava, pareava, o host streamava sem UM erro (monitor selecionado,
+        h264_vaapi criado, Opus pronto, 18 MB de vídeo saindo) e o cliente desconectava em ~4 s,
+        sempre. Causa: a tailscale0 tem MTU 1280 e o default do Sunshine é 1392 → todo pacote de
+        vídeo estoura o túnel, e o WireGuard descarta em SILÊNCIO (sem ICMP, sem log, sem
+        contador). O host parece perfeito e o cliente recebe frames pela metade. Estava latente
+        desde sempre; 1024 cabe com folga depois de IP+UDP+cabeçalhos do Moonlight.
+  - [x] Healthcheck do handler HTTPS (29/07) — o Sunshine ficou com a 47984 aceitando TCP e NUNCA
+        completando o handshake TLS (22 conexões em CLOSE-WAIT), enquanto a 47989 respondia 200.
+        O Moonlight usa a HTTPS em host pareado → mostrava "offline". O serviço ficava `active`,
+        ExecMainStatus=0 e SEM UMA LINHA de log: invisível por definição. Timer de 2 min tenta o
+        handshake e reinicia após 3 falhas em ~10 s. PEGADINHA que quase foi pro repo: `| grep -q`
+        com o `set -o pipefail` do writeShellApplication INVERTE o resultado (grep sai no 1º match,
+        openssl morre de SIGPIPE, pipeline retorna erro APESAR do match) — a 1ª versão lia
+        handshake OK como falha e reiniciava o Sunshine a cada 2 min. Captura em variável + `case`.
   - Conecto pelo app "Low Res Desktop" (o "Desktop" simples latcha em preto por timing); o
     xrandr do prep dele NÃO é lixo — é o que dá a folga de timing. Mesma imagem 1080p.
 - [x] Idioma: sistema em en-US (output/erros em inglês facilitam debug), EXCEÇÃO — a LOCKSCREEN
@@ -264,10 +295,16 @@
 - [x] Trocar a parte do status bar que tem a logo do Arch para a logo do NixOS — FEITO:
       glifo Nerd Font U+F303 (nf-linux-archlinux) → U+F313 (nf-linux-nixos) no botão iniciar
       (PowerMenu do Quickshell). home/desktop/quickshell/bar/PowerMenu.qml.
-- [x] Adicionar os wallpapers e pesquisar qual melhor Wallpaper Provider no meu caso do meu setup
-      (declarativo) — FEITO: **hyprpaper** (oficial do Hyprland, estático/leve) + wallpapers do
-      nixos-artwork. DP-2 = nineish-dark-gray, TV = moonscape. home/desktop/wallpaper.nix. Trocar
-      imagem = 1 attr. (Alternativas p/ referência: swww = transições/rotação; mpvpaper = vídeo.)
+- [x] Wallpaper — **hyprpaper** (oficial do Hyprland, estático/leve) + imagens do nixos-artwork
+      (via pkgs: sem binário no git, bump junto do nixpkgs; o .gitignore barra *.png de propósito).
+      Principal = catppuccin-mocha, TV = moonscape — as MESMAS duas do lockscreen, então
+      desbloquear não troca o fundo por baixo. home/desktop/wallpaper.nix. 34 opções em
+      `nix eval nixpkgs#nixos-artwork.wallpapers --apply builtins.attrNames`; existem os
+      `nineish-catppuccin-*`, que não existiam quando isto foi configurado.
+      ATENÇÃO — este item ficou marcado [x] por meses SEM FUNCIONAR (a tela era preta, ver o item
+      de correção abaixo). Documentação afirmando que algo funciona é pior que TODO em aberto: fez
+      duvidar de renderização/GPU em vez de olhar o formato da config.
+      (Alternativas p/ referência: swww = transições/rotação; mpvpaper = vídeo.)
 - [ ] Arrumar o flameshot para não bugar com minha status/top bar (quickshell)
 - [x] Resolver a questão do Keyring para todos os apps/softwares que precisam de senha (como o
       Dropbox, Spotify, Chrome, etc) — FEITO com keyring "Login" de senha VAZIA (seahorse: troca
@@ -310,8 +347,15 @@
         `TCPKeepAlive no` (o keepalive do kernel derrubava ANTES desse prazo). De quebra o keepalive
         segura a sessão ociosa no SonicWall. `ControlMaster`/`ControlPersist 10m`: o Remote-SSH abre
         VÁRIAS conexões; multiplexadas num TCP só, reabrir caiu p/ 0,08 s. MAC da workstation =
-        `8c:86:dd:61:22:12` (enp7s0, cabeada). Wake-on-LAN NÃO montado de propósito: a máquina não
-        desliga e magic packet dificilmente atravessa o SonicWall (precisaria disparar da fai-vm).
+        `8c:86:dd:61:22:12` (enp7s0, cabeada). Wake-on-LAN AGORA MONTADO (antes era
+        "não vale, a máquina não desliga"): `wake-workstation`, em home/net/fai-workstation.nix,
+        com duas estratégias — unicast pelo túnel + broadcast dirigido da /25 localmente, e RELAY
+        rodando na fai-vm, que está na mesma sub-rede e faz broadcast L2 de verdade (o SonicWall
+        não passa magic packet). Magic packet em Python, não o `wakeonlan` do nixpkgs (Perl, que
+        arrasta Perl-Critic/Perl-Tidy pro build) — e é o MESMO código do relay, onde não se
+        instala nada. SO_BROADCAST é obrigatório; portas 9 e 7 porque NIC velha às vezes só ouve
+        a 7. AINDA NÃO TESTADO de ponta a ponta: a workstation não desliga, então não houve
+        ocasião de observar o efeito.
   - TRIAGEM quando `ssh workstation` falha — testar nesta ordem: `ping 1.1.1.1` (internet),
     `nc -zv 200.133.233.101 4433` (portal da VPN), `nc -zv 200.136.209.236 443` (`fai.ufscar.br`) e
     `ip link show type ppp` (túnel). Internet OK + portal e site da FAI em timeout = INDISPONIBILIDADE
@@ -343,4 +387,15 @@
       `cdi` = picker fzf. (o zoxide já era enable; só liguei o `--cmd cd`.)
 - [x] Arrumar o meu launcher de aplicativos (mostrar icone, filtro pelos ultimos utilizados, etc)
       — DUPLICATA do launcher acima; feito (rofi drun). home/desktop/launcher.nix.
-- [ ] Adicionar Wallpapers (atualmente está preto, pesquisar as melhores opções da comunidade Nix)
+- [x] "Wallpaper preto" (29/07) — CAUSA RAIZ: o hyprpaper 0.8 trocou o formato da config, do
+      achatado (`wallpaper = MONITOR,path` + `preload =` + `ipc =`) p/ CATEGORIA
+      (`wallpaper { monitor = …; path = …; }`). `preload` e `ipc` não existem mais nem como string
+      no binário (`strings hyprpaper | grep -c preload` = 0). O módulo services.hyprpaper do
+      home-manager AINDA gera o formato antigo → o daemon sobe, acha os 2 outputs e loga
+      "Monitor DP-2 has no target: no wp will be created": nenhuma layer surface, fundo preto e
+      NENHUM erro de parse denunciando. Diagnóstico: `hyprctl layers` mostrava só a layer do
+      quickshell, nunca a do hyprpaper. FIX: a config passa a ser escrita por xdg.configFile e o
+      módulo fica só com `enable` (serviço + pacote).
+      Também: `pathOf` deriva o NOME DO ARQUIVO lendo o pacote, porque não há padrão — a maioria é
+      `nix-wallpaper-<attr>.png`, os catppuccin são `nixos-wallpaper-<attr>.png` e o gradient-grey é
+      NixOS-Gradient-grey.png. Antes, "trocar = 1 attr" era mentira e quebraria num catppuccin.

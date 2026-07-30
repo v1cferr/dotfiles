@@ -1282,9 +1282,14 @@ Scope {
                                             else if (m.button === Qt.MiddleButton)
                                                 modelData.secondaryActivate();
                                             else if (modelData.hasMenu) {
-                                                // SNI nativo: menu tematizado próprio
+                                                // SNI nativo: menu tematizado próprio. O menu é
+                                                // layer surface (ver TrayMenu.qml: PopupWindow não
+                                                // recebe ponteiro por causa do Hyprland#6682), então
+                                                // ele se posiciona por X DE TELA, não por anchor.rect:
+                                                // X do ícone dentro do barContent + a margem esquerda
+                                                // da barra. O Y é implícito (fica sob a exclusiveZone).
                                                 const pt = trayDel.mapToItem(barContent, 0, trayDel.height);
-                                                trayCtxMenu.openAt(modelData.menu, bar, Qt.rect(pt.x, pt.y, trayDel.width, 1));
+                                                trayCtxMenu.openAt(modelData.menu, bar, pt.x + bar.margins.left);
                                             } else {
                                                 // xembedsniproxy (wine/pamac): sem DBusMenu. O display() do
                                                 // Quickshell recusa itens sem menu ("No menu present"), então

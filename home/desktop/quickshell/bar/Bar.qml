@@ -21,6 +21,14 @@ Scope {
     id: root
 
     property int barExclusiveZone: 30
+    // Esconde a barra sob demanda (IPC). Existe por causa do overlay do Flameshot: no
+    // Hyprland uma JANELA normal nunca cobre uma layer `top`, e a barra vive nela — o
+    // overlay mostra um frame CONGELADO que já contém a barra e a barra VIVA desenha em
+    // cima, dando o efeito de "barra duplicada". Não há window rule que resolva (é feature
+    // request aberta: hyprwm/Hyprland#4847), então o único caminho é esconder.
+    // `visible: false` desmapeia a layer surface — o strip de 30px para de capturar clique,
+    // o que importa p/ conseguir selecionar região no topo da tela.
+    property bool hidden: false
     readonly property int trayCount: SystemTray.items ? SystemTray.items.values.length : 0
     readonly property string vpnBin: "vpn" // CLI no PATH (system/net/vpn.nix)
 
@@ -31,6 +39,21 @@ Scope {
     }
     function launch(cmd) {
         Quickshell.execDetached(cmd);
+    }
+
+    // qs ipc call bar hide / unhide  → usado pelo flameshot-screenshot (home/apps/flameshot.nix).
+    // NÃO nomear "show": colide com o subcomando `qs ipc show` e o CLI nunca chama a função
+    // (mesma pegadinha já documentada no shell.qml, no IpcHandler do vpn).
+    IpcHandler {
+        target: "bar"
+
+        function hide(): void {
+            root.hidden = true;
+        }
+
+        function unhide(): void {
+            root.hidden = false;
+        }
     }
 
     // ===== Relógio =====
@@ -1051,6 +1074,7 @@ Scope {
                 bottom: 1
             }
             implicitHeight: 30
+            visible: !root.hidden
             exclusiveZone: root.barExclusiveZone
             color: "transparent"
 

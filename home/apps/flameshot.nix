@@ -14,7 +14,7 @@
 #
 # NB: o .ini vem do /nix/store (read-only) → mudanças pela GUI NÃO persistem;
 # editar aqui e rebuild. Qt QSettings NÃO aceita comentário inline no .ini.
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 
 let
   fs = pkgs.unstable.flameshot; # v14
@@ -25,7 +25,9 @@ let
   # sequestrado depois. Entrar/sair do submap via `hyprctl dispatch` (API Lua 0.55).
   flameshotScreenshot = pkgs.writeShellApplication {
     name = "flameshot-screenshot";
-    runtimeInputs = [ fs pkgs.hyprland pkgs.jq pkgs.coreutils ];
+    # `qs`: esconde a barra enquanto o overlay existe (ver abaixo). runtimeInputs é
+    # obrigatório — writeShellApplication usa PATH restrito, não o do usuário.
+    runtimeInputs = [ fs pkgs.hyprland pkgs.jq pkgs.coreutils inputs.quickshell.packages.${pkgs.system}.default ];
     text = ''
       flameshot gui >/dev/null 2>&1 &
       hyprctl dispatch 'hl.dsp.submap("screenshot")' >/dev/null 2>&1 || true
@@ -33,7 +35,14 @@ let
       fs_open() { hyprctl clients -j | jq -e 'any(.[]; .title=="flameshot")' >/dev/null 2>&1; }
       (
         c=0; while [ "$c" -lt 15 ];  do sleep 0.2; fs_open && break;  c=$((c+1)); done  # espera abrir (≤3s)
+        # BARRA DUPLICADA: aqui o frame CONGELADO do overlay já foi capturado — com a barra
+        # dentro. Esconder a barra VIVA agora mata a duplicata SEM tirá-la do print. No
+        # Hyprland janela normal NUNCA cobre layer `top`, e a barra vive nela; não há window
+        # rule p/ inverter (feature request aberta, hyprwm/Hyprland#4847), então esconder é o
+        # único caminho. Só esconde se abriu de fato, senão sumiria a barra à toa.
+        fs_open && qs ipc call bar hide >/dev/null 2>&1 || true
         c=0; while [ "$c" -lt 300 ]; do fs_open || break; sleep 0.2;  c=$((c+1)); done  # espera fechar (≤60s)
+        qs ipc call bar unhide >/dev/null 2>&1 || true  # SEMPRE volta, inclusive no timeout de 60s
         hyprctl dispatch 'hl.dsp.submap("reset")' >/dev/null 2>&1 || true
       ) >/dev/null 2>&1 &
     '';

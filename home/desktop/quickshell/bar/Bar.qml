@@ -1291,7 +1291,10 @@ Scope {
                                                 const pt = trayDel.mapToItem(barContent, 0, trayDel.height);
                                                 trayCtxMenu.openAt(modelData.menu, bar, pt.x + bar.margins.left);
                                             } else {
-                                                // xembedsniproxy (wine/pamac): sem DBusMenu. O display() do
+                                                // xembedsniproxy (wine/Battle.net/pamac): sem DBusMenu. Este
+                                                // caminho ficou MORTO até 30/07, porque o proxy não estava
+                                                // instalado — nenhum ícone assim chegava a existir. Agora
+                                                // ele é declarado em home/desktop/quickshell.nix. O display() do
                                                 // Quickshell recusa itens sem menu ("No menu present"), então
                                                 // disparamos o ContextMenu() nativo do SNI via helper — o proxy
                                                 // repassa o clique e o app desenha o próprio menu no cursor.

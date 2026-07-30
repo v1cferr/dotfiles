@@ -1,9 +1,10 @@
 // Menu de contexto do system tray, tematizado TokyoNight (harmônico com o
 // resto da barra). Renderiza o DBusMenu (com.canonical.dbusmenu) que os SNI
 // nativos expõem, via QsMenuOpener. Só serve itens COM DBusMenu (hasMenu);
-// os ícones do xembedsniproxy (wine/Battle.net, pamac) não têm DBusMenu e
-// caem no display() nativo lá no Bar.qml — esses o app desenha sozinho e não
-// dá pra tematizar aqui.
+// os ícones que vêm pela ponte xembedsniproxy (wine/Battle.net, pamac) não têm
+// DBusMenu e caem no tray-native-menu lá no Bar.qml — esses o app desenha sozinho
+// e não dá pra tematizar aqui. MEDIDO num ícone desses (Battle.net no Bottles):
+// Id é o window ID do X11 ("14680080"), Title/ToolTip vazios, Menu inexistente.
 //
 // Suporta: separadores, checkbox/radio (buttonType + checkState), itens
 // desabilitados e UM nível de submenu (coluna à direita — cobre o "VPN

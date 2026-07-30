@@ -286,6 +286,21 @@
       mkEnableOption + mkIf/enable-gate, padrão idiomático). Flip true/false + `rebuild` liga/desliga
       10 opcionais (jellyfin, ollama, duo, sunshine, qbittorrent, restic, cloudflare-ddns, dropbox,
       discord-rpc, cs2-backup). Essenciais (tailscale/mouse/desktop/keyring/earlyoom) e VPN (sob-demanda) FORA.
+- [x] PAINEL de autostart (30/07) — `my.autostart` em home/desktop/autostart.nix: o que ABRE
+      junto com a sessão, no idioma do toggles.nix. Discord e Spotify entraram como SERVIÇO
+      --user, não `exec-once`, porque exec-once NÃO reinicia se o app morrer — era o que faltava
+      p/ "continue ativo". `Restart=on-failure` de propósito: crash volta, fechar na mão respeita
+      (com `always` seria impossível fechar). O header é ÍNDICE dos TRÊS lugares que sobem coisa
+      no boot (este painel, my.services, e o exec-once do autostart.lua p/ hyprlock/qs/clipboard)
+      em vez de fingir centralização total — o hyprlock no exec-once é load-bearing p/ acesso
+      remoto. `spotify --minimized` existe mas o --help diz "Only works on Windows": p/ não roubar
+      foco no login o caminho é window rule (`workspace N silent`), não flag de app.
+- [x] Aliases de print migrados do Arch (30/07) — screenshot/scfull/sc1/sc2 em
+      home/apps/flameshot.nix (junto da ferramenta, como o eza/bat no cli.nix; o zsh.nix guarda
+      só os de shell/sistema). TESTADO no v14/Wayland antes de portar: só o `gui` abre o picker de
+      monitor; `full` e `screen --number` capturam direto. `--number` é índice do Qt, não nome de
+      monitor, então NÃO sai do my.monitors — medido capturando as duas telas e comparando com os
+      wallpapers: 0 = principal, 1 = TV. REMEDIR se o layout de monitores mudar.
 - [ ] Instalar o driver/software do meu mouse Razer Deathadder v2 (adicionar a notificação de quando meu DPI mudar, etc)
 - [x] Configurar meu launcher de apps (colocar icones, filtro pelos ultimos utilizados e etc)
       — FEITO: rofi `drun` (ícones Fluent-dark + fuzzy + histórico/recência) tematizado pela
@@ -293,8 +308,14 @@
       consolidado no rofi (mesmo tool do clipboard). home/desktop/launcher.nix.
 - [x] Clipboard manager com visualização de imagens/arquivos + histórico — FEITO com rofi
       (não quickshell): cliphist + rofi c/ preview (thumbnail + ícone por tipo). Ver acima.
-- [x] Possibilidade de clicar para trocar de workspace na minha status bar — JÁ FEITO: os
-      ws-pills têm onClicked → `hyprctl dispatch workspace <id>` (Bar.qml).
+- [x] Clicar no ws-pill p/ trocar de workspace (Bar.qml) — ficou QUEBRADO da migração p/ o
+      Hyprland 0.55 até 30/07, marcado aqui como feito com o comando errado. O `dispatch` virou
+      atalho p/ `hl.dispatch(...)`, então a forma antiga montava `hl.dispatch(workspace 3)` e
+      estourava no parser Lua. O clique morria em SILÊNCIO porque o `execDetached` do Quickshell
+      não mostra stderr. Forma correta: `hl.dsp.focus({ workspace = N })` — e cuidado, o óbvio
+      `hl.dsp.workspace(N)` falha com "attempt to call a table value", porque ali é TABELA
+      (só sub-dispatchers). Delegate de Repeater não pega no hot-reload: pede SUPER+ESCAPE.
+      TERCEIRO item marcado [x] sem funcionar (com o wallpaper e o screenDP1) — ver regra 14.
 - [ ] Tray icons e tooltip clicaveis (para abrir o app ou ir para a configuração do app)
 - [x] Trocar a parte do status bar que tem a logo do Arch para a logo do NixOS — FEITO:
       glifo Nerd Font U+F303 (nf-linux-archlinux) → U+F313 (nf-linux-nixos) no botão iniciar

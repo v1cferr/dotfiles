@@ -15,12 +15,19 @@ let
   # reaplica delegate de Repeater (ws-pills, notificações) — editar o QML desses não
   # basta, precisa reiniciar o processo.
   #
-  # POR QUE UM SCRIPT e não `qs kill; sleep; qs &` no bind (regra 7: lógica no build):
-  # o `qs &` sobe como job de um bash que morre logo em seguida, e o processo não
-  # sobrevive de forma confiável — o bind SUPER+ESCAPE parecia funcionar e NÃO
-  # reiniciava nada (30/07: o Quickshell seguia com 5h de uptime depois de apertar).
-  # Subir via `hyprctl dispatch` faz o COMPOSITOR ser o pai, que é o dono certo
-  # (regra 15) e o mesmo do exec-once do autostart.lua.
+  # POR QUE UM SCRIPT e não `qs kill; sleep 0.3; qs &` direto no bind: regra 7 (lógica
+  # no build, bind = 1 comando) e regra 15 (dono explícito) — subir via `hyprctl
+  # dispatch` faz o COMPOSITOR ser o pai, o mesmo dono do exec-once do autostart.lua,
+  # em vez de o processo ser reparenteado ao init. De quebra o script funciona de um
+  # shell fora da sessão, por causa do `-i 0`.
+  #
+  # CORREÇÃO (30/07): a versão anterior deste comentário afirmava que a forma antiga
+  # NÃO reiniciava nada. Era FALSO. A evidência ("Quickshell com 5h de uptime depois de
+  # apertar SUPER+ESCAPE") tinha causa banal: o usuário apertou SUPER+SPACE. Testada
+  # depois, a forma antiga reinicia sim — o processo só termina com ppid=1 (systemd),
+  # que é daemonização normal e sobrevive. Ou seja, isto é MELHORIA de arquitetura, não
+  # correção de bug. Fica registrado porque inferir mecanismo a partir de uma observação
+  # com explicação mais simples é justamente o erro que a regra 14 manda evitar.
   qsRestart = pkgs.writeShellApplication {
     name = "qs-restart";
     runtimeInputs = [

@@ -35,6 +35,11 @@
       # como USUÁRIO primeiro (tem a chave SSH p/ inputs privados, ex. duo-streak-daemon) e
       # SÓ com sucesso (`&&`) segue pro rebuild como root — lock quebrado nunca chega a aplicar.
       upgrade = "nix flake update --flake ~/Projects/GitHub/v1cferr/dotfiles && sudo nixos-rebuild switch --flake ~/Projects/GitHub/v1cferr/dotfiles && { hyprctl -i 0 reload || true; }";
+      # CUIDADO com o `-d`: ele apaga TODAS as gerações antigas, não só as velhas — ou seja,
+      # depois de rodar não há mais rollback p/ a geração de ontem, nem entrada dela no GRUB.
+      # É o que se quer quando a intenção é liberar o máximo; se a intenção for só higiene,
+      # `--delete-older-than 7d` limpa quase o mesmo e PRESERVA a saída de emergência.
+      # (O GC automático semanal, esse sim, usa --delete-older-than 30d — system/core/core.nix.)
       gc = "sudo nix-collect-garbage -d"; # limpa gerações antigas da store manualmente
       # ls/ll/la/lt (eza) e cat (bat) vivem em home/cli.nix, junto do toolkit CLI
       ".." = "cd ..";

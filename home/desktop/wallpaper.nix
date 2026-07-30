@@ -19,8 +19,22 @@
 
 let
   art = pkgs.nixos-artwork.wallpapers;
-  main = "${art.nineish-dark-gray}/share/backgrounds/nixos/nix-wallpaper-nineish-dark-gray.png";
-  tv = "${art.moonscape}/share/backgrounds/nixos/nix-wallpaper-moonscape.png";
+
+  # ESCOLHA dos wallpapers — trocar aqui é 1 linha de verdade (ver pathOf abaixo).
+  # Opções em `nix eval nixpkgs#nixos-artwork.wallpapers --apply builtins.attrNames`.
+  main = art.nineish-dark-gray; # principal: cinza escuro, casa com o Tokyo Night
+  tv = art.moonscape; # TV: mesma imagem do lockscreen
+
+  # O nome do ARQUIVO dentro do pacote NÃO segue padrão: a maioria é nix-wallpaper-<attr>.png,
+  # os catppuccin são nixos-wallpaper-<attr>.png e o gradient-grey é NixOS-Gradient-grey.png.
+  # Montar o caminho por string quebraria na troca — e é o que fazia o comentário "trocar =
+  # 1 linha" ser mentira. Lê o diretório do pacote e pega o arquivo que está lá.
+  pathOf =
+    wp:
+    let
+      dir = "${wp}/share/backgrounds/nixos";
+    in
+    "${dir}/${builtins.head (builtins.attrNames (builtins.readDir dir))}";
 
   # Uma categoria `wallpaper { }` por monitor — o formato que a 0.8.x entende.
   wallpaperFor = monitor: path: ''
@@ -35,7 +49,7 @@ in
 
   xdg.configFile."hypr/hyprpaper.conf".text = ''
     splash = false
-    ${wallpaperFor config.my.monitors.primary main}
-    ${wallpaperFor config.my.monitors.secondary tv}
+    ${wallpaperFor config.my.monitors.primary (pathOf main)}
+    ${wallpaperFor config.my.monitors.secondary (pathOf tv)}
   '';
 }

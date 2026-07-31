@@ -16,7 +16,7 @@ hl.config({
     ["col.inactive_border"] = "rgba(" .. C.border .. "44)",
     resize_on_border = false, -- não redimensiona clicando na borda/gap
     allow_tearing = false,    -- sem tearing (ver wiki antes de ligar)
-    layout = "dwindle",
+    layout = "scrolling",     -- fita infinita em TODAS as ws (nativo 0.55); binds em keybinds.lua
   },
   -- decoração: cantos arredondados + blur + sombra. A opacidade das janelas fica
   -- na window_rule global (rules.lua): 0.98 ativa / 0.96 inativa.
@@ -39,9 +39,10 @@ hl.config({
       vibrancy = 0.2,
     },
   },
-  dwindle = {
-    preserve_split = true, -- lembra o eixo do split ao fechar janelas
-  },
+  -- Sem bloco `scrolling`: os 7 defaults já são o que se quer (column_width 0.5 = 2 colunas
+  -- de 960px em 1080p, fullscreen_on_one_column, follow_focus, wrap_focus, direction right,
+  -- focus_fit_method, explicit_column_widths) — conferido com `hyprctl getoption`.
+  -- O bloco `dwindle` saiu junto com o layout: nenhuma ws usa dwindle mais.
   misc = {
     force_default_wallpaper = 0,  -- sem o wallpaper anime default
     disable_hyprland_logo = true, -- sem o logo de fundo (usamos wallpaper próprio)

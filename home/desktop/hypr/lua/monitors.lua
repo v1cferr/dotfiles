@@ -18,14 +18,14 @@ hl.monitor({ output = "",         mode = "preferred",        position = "auto", 
 -- 4 workspaces por monitor: 1–4 no LG (principal), 5–8 na TV (secundário).
 -- Nomes de conector vêm do Nix (my.monitors) — SSOT em home/desktop/monitors.nix.
 -- default:true = a workspace que abre em cada monitor no boot da sessão.
--- ws 2 e 6 = TRIAL do layout scrolling (fita infinita, nativo no 0.55) convivendo com o
--- dwindle das outras 6; binds da fita em keybinds.lua. Promover pra general.layout só
--- depois de o uso real aprovar.
+-- Sem `layout` aqui: o scrolling é global (appearance.lua) desde que o trial nas ws 2 e 6
+-- foi aprovado no uso. Se um dia voltar a ter ws dwindle, os binds da fita precisam do
+-- guard de novo — senão o dwindle cospe um toast de erro POR EVENTO (ver ANOTACOES).
 hl.workspace_rule({ workspace = "1", monitor = M.primary,     default = true })
-hl.workspace_rule({ workspace = "2", monitor = M.primary,   layout = "scrolling" })
+hl.workspace_rule({ workspace = "2", monitor = M.primary })
 hl.workspace_rule({ workspace = "3", monitor = M.primary })
 hl.workspace_rule({ workspace = "4", monitor = M.primary })
 hl.workspace_rule({ workspace = "5", monitor = M.secondary, default = true })
-hl.workspace_rule({ workspace = "6", monitor = M.secondary, layout = "scrolling" })
+hl.workspace_rule({ workspace = "6", monitor = M.secondary })
 hl.workspace_rule({ workspace = "7", monitor = M.secondary })
 hl.workspace_rule({ workspace = "8", monitor = M.secondary })

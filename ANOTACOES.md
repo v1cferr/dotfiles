@@ -192,6 +192,18 @@
          ser `hl.dispatch(d)` ("dispatcher objects cannot be called directly", literal na
          LuaBindingsDispatcherUtils.cpp:24). Custei duas medições achando que o guard estava
          quebrado por causa do (c).
+      PROMOVIDO A GLOBAL (jul/2026): o trial nas ws 2 e 6 foi aprovado no uso, então
+      `general.layout = "scrolling"` e as 8 ws viram fita. Saiu junto: o `layout=` das
+      workspace_rule, o bloco `dwindle` do appearance.lua (nenhuma ws usa mais) e o guard
+      do keybinds.lua com a lista espelhada — sem ws dwindle não existe o erro que ele
+      evitava, e lista espelhada à mão é dívida. Se ALGUMA ws voltar a ser dwindle, o guard
+      é OBRIGATÓRIO de volta (está no commit 7f74ae8). `SUPER+P` (pseudo) virou no-op, mas
+      responde `ok` — é dispatcher de janela, não mensagem de layout, então não gera toast.
+      EM ABERTO: com `follow_mouse=1` o foco troca sozinho enquanto a fita anda (as janelas
+      deslizam sob o cursor parado) e o `follow_focus` recentra, deixando o deslocamento
+      irregular — medi foco pulando d→b→a→Zen num teste. `follow_focus=false` NÃO resolveu
+      (3 disparos sem mover, depois salto de +1520). Só dá pra julgar no uso real, porque
+      disparar por `hyprctl` com cursor parado não reproduz o uso de verdade.
       4. Mover janela DE LADO na mesma ws = `swapcol l/r` (SUPER+SHIFT+,/.), e ele move a
          COLUNA INTEIRA — pilha junto — dando a volta nas pontas. Pra mover só UMA janela de
          uma pilha: `expel` (SUPER+O) primeiro, aí swapcol. NÃO usar o `window.swap({direction})`

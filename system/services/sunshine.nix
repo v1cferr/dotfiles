@@ -60,6 +60,98 @@ let
       systemctl --user restart sunshine.service
     '';
   };
+  # moonlight-stats: relatório de QUALIDADE das sessões, porque "cai toda hora" não é
+  # mensurável e o log do Sunshine só diz "CLIENT DISCONNECTED" — a mesma linha para
+  # cliente que fechou, cliente que desistiu e host que derrubou (é a queixa da issue
+  # tailscale/tailscale#14208, que segue sem causa-raiz justamente por falta disto).
+  #
+  # O que ele responde, e que foi o que fechou o diagnóstico de 31/07: a distribuição é
+  # BIMODAL — ou a sessão dura horas, ou morre em 3-60 s. Com isso dá p/ testar hipótese
+  # em vez de chutar: o relatório cruza cada sessão com os eventos do tailscaled no MESMO
+  # intervalo (troca de caminho IPv4↔IPv6 e link change/rebind), então uma causa candidata
+  # se REFUTA na hora se as sessões longas a sofrem mais que as curtas — foi o que
+  # aconteceu com as quatro primeiras suspeitas (ver ANOTACOES).
+  statsPy = pkgs.writeText "moonlight-stats.py" ''
+    import datetime, re, statistics, subprocess, sys
+
+    DAYS = sys.argv[1] if len(sys.argv) > 1 else "7"
+
+    def journal(*args):
+        cmd = ["journalctl", "--no-pager", "-o", "short-iso", "--since", f"-{DAYS} days", *args]
+        return subprocess.run(cmd, capture_output=True, text=True).stdout
+
+    def stamp(line):
+        try:
+            return datetime.datetime.fromisoformat(line.split()[0])
+        except (ValueError, IndexError):
+            return None
+
+    # Sessões: pares CONNECTED→DISCONNECTED. Sessão em curso (sem par) fica de fora — sem
+    # fim não há duração, e contá-la como "curta" mentiria justamente na sessão de agora.
+    sessions, start = [], None
+    for line in journal("--user", "-u", "sunshine.service").splitlines():
+        t = stamp(line)
+        if t is None:
+            continue
+        if "CLIENT CONNECTED" in line:
+            start = t
+        elif "CLIENT DISCONNECTED" in line and start:
+            sessions.append((start, t, (t - start).total_seconds()))
+            start = None
+
+    ts = journal("-u", "tailscaled").splitlines()
+    paths = [stamp(x) for x in ts if "now using" in x and stamp(x)]
+    links = [stamp(x) for x in ts if re.search(r"[Ll]ink [Cc]hange|LinkChange", x) and stamp(x)]
+
+    if not sessions:
+        print(f"nenhuma sessão concluída nos últimos {DAYS} dias.")
+        sys.exit(0)
+
+    print(f"=== sessões Moonlight — últimos {DAYS} dias ===\n")
+    print(f"{'início':<15}{'duração':>10}{'trocas-caminho':>16}{'link-change':>13}")
+    short, long = [], []
+    for a, b, d in sessions:
+        np = sum(1 for x in paths if a <= x <= b)
+        nl = sum(1 for x in links if a <= x <= b)
+        (short if d < 120 else long).append((d, np, nl))
+        mark = "  <-- curta" if d < 120 else ""
+        print(f"{a.strftime('%m-%d %H:%M:%S'):<15}{d:>9.0f}s{np:>16}{nl:>13}{mark}")
+
+    print(f"\n=== resumo ===")
+    alld = sorted(d for _, _, d in sessions)
+    print(f"sessões: {len(alld)}   mediana: {statistics.median(alld):.0f}s   "
+          f"min: {alld[0]:.0f}s   max: {alld[-1]:.0f}s")
+    print(f"curtas (<120s): {len(short)}/{len(alld)}   longas: {len(long)}/{len(alld)}")
+
+    # A comparação que refuta/confirma causa: se as LONGAS sofrem MAIS o evento que as
+    # curtas, o evento não é o que derruba. Taxa por minuto, senão sessão de 3 s "nunca"
+    # tem evento só por ser curta — o viés que quase levou a uma conclusão errada.
+    print("\n=== eventos de rede por minuto de sessão (curtas vs longas) ===")
+    for name, group in [("curtas <120s", short), ("longas >=120s", long)]:
+        if not group:
+            continue
+        pr = [np / (d / 60) for d, np, _ in group if d > 0]
+        lr = [nl / (d / 60) for d, _, nl in group if d > 0]
+        print(f"  {name:<14} n={len(group):<4} "
+              f"caminho: mediana={statistics.median(pr):.2f} média={statistics.mean(pr):.2f}   "
+              f"link: mediana={statistics.median(lr):.2f} média={statistics.mean(lr):.2f}")
+    print("  (LONGAS com taxa MAIOR = esse evento é sobrevivível, não é a causa)")
+
+    print("\n=== caminho atual do Tailscale ===")
+    out = subprocess.run(["tailscale", "status"], capture_output=True, text=True).stdout
+    for line in out.splitlines():
+        if "direct" in line or "relay" in line:
+            kind = "DIRETO" if "direct" in line else "RELAY (DERP - latência alta!)"
+            print(f"  {line.split()[1] if len(line.split()) > 1 else '?'}: {kind}")
+  '';
+
+  # Wrapper: a lógica mora no build (regra 7) e o runtime é uma linha. `python3` explícito
+  # em runtimeInputs — o script é um artefato do store, não um .sh solto no repo.
+  moonlightStats = pkgs.writeShellApplication {
+    name = "moonlight-stats";
+    runtimeInputs = with pkgs; [ python3 systemd tailscale ];
+    text = ''exec python3 ${statsPy} "$@"'';
+  };
 in
 {
   services.sunshine = {
@@ -93,6 +185,27 @@ in
       # não remonta frame e desconecta em ~4 s — foi o que aconteceu em 29/07. 1024 cabe
       # com folga em 1280 depois de IP+UDP+cabeçalhos do Moonlight.
       packet_size = 1024;
+      # TETO DE BITRATE no host. O default é 0 = "obedece o que o Moonlight pedir", e o
+      # cliente pedia até 79 Mbps: medindo as 67 sessões de 7 dias (jul/2026), as de
+      # 79 Mbps tiveram mediana de vida de 22 s contra 290 s nas de 23.8 Mbps. Cap no
+      # HOST e não no slider do cliente de propósito — é declarativo e vale p/ QUALQUER
+      # cliente que parear, sem depender de lembrar da config do Moonlight em cada
+      # máquina. 10 Mbps em 1080p/h264 é confortável p/ desktop remoto (que é o uso:
+      # trabalhar na máquina de casa a partir da FAI).
+      max_bitrate = 10000; # Kbps
+      # Mais correção de erro (default 20%): o caminho até a rede da FAI PERDE pacote —
+      # medido 1.67% de perda e RTT saltando de 20 p/ 312 ms numa rajada de 300 pacotes
+      # de 1 KB. FEC recupera perda sem retransmitir (que em tempo real chegaria tarde).
+      # Custa banda, e é por isso que anda junto do teto acima: sobra folga p/ pagar.
+      # RESSALVA: a medição é ICMP, que switch/firewall costuma despriorizar — trata-se
+      # de indício de caminho ruim, não de prova do que o fluxo de vídeo sofre.
+      fec_percentage = 30;
+      # Tolera buraco transitório antes de derrubar o stream (default 10 s). Só ajuda no
+      # caso em que o HOST é quem desiste; nos logs não há como distinguir isso do
+      # cliente desistindo — "CLIENT DISCONNECTED" é a mesma linha nos dois casos.
+      # Não sai de graça: sessão de cliente morto segura o hypridle pausado por mais
+      # tempo (o guard global_prep_cmd só religa no undo).
+      ping_timeout = 20000; # ms
       # Guard de idle: do/undo acordam a tela + pausam o hypridle durante o stream (ver
       # header). JSON no sunshine.conf; vale p/ TODOS os apps (inclui o "Desktop" remoto).
       global_prep_cmd = builtins.toJSON [
@@ -122,6 +235,10 @@ in
       LogLevelMax = "warning";
     };
   };
+
+  # Diagnóstico fica no system/ junto do que ele diagnostica (o healthcheck acima mora
+  # aqui pelo mesmo motivo): system/ é resgate/base/DIAGNÓSTICO.
+  environment.systemPackages = lib.mkIf config.my.services.sunshine [ moonlightStats ];
 
   systemd.user.timers.sunshine-healthcheck = lib.mkIf config.my.services.sunshine {
     description = "Probe periódico do handler HTTPS do Sunshine";

@@ -180,6 +180,23 @@
       2. TODA mensagem de layout exige janela FOCADA: sem foco elas devolvem "no focused window"
          e não fazem nada, silenciosamente. Foi o que me fez achar (errado) que `move ±col`
          estava quebrado — as janelas de teste tinham subido com regra `silent`.
+- [x] Thumbwheel (rodinha do polegar) do MX Master rola a fita — mouse.nix ganhou um bloco
+      `thumbwheel` que DIVERTE a roda e sintetiza SUPER+CTRL+,/. (keybinds.lua move ±80px).
+      Por que keypress e não bindar `mouse_left`/`mouse_right` (que o Hyprland suporta
+      nativamente): `binds:scroll_event_delay` = 300ms é um TETO de ~3 disparos/s pra bind de
+      roda, o que travaria a rolagem; e baixar o teto estragaria o SUPER+roda-vertical de
+      workspace, que tem hi-res scroll ligado. Keypress não passa por esse teto.
+      Por que 80px e não 1 coluna: no thumbwheel o logiops IGNORA o `interval` depois do 1º
+      disparo e manda um evento por incremento mínimo (issue #310, ABERTA) — em vez de brigar,
+      o desenho assume rajada, e rajada de passo pequeno = rolagem suave. Calibrar a velocidade
+      no `move ±N` do keybinds.lua (hot-reload), NUNCA no `interval` (rebuild e sem efeito).
+      Por que combo de 3 teclas e não F13/F14 por keycode: `hl.bind("code:191", ...)` registra
+      com `keycode=0` no `hyprctl binds` e não deu pra provar que dispara (não consigo apertar
+      F13); comma/period registram certo, e sintetizar combo já é padrão provado aqui (o botão
+      de gestos faz isso desde sempre). Se um dia o combo se mostrar instável em rajada, F13
+      via `code:191` é o plano B (evdev 183 + 8 = xkb 191; o +8 está no KeybindManager.cpp:338).
+      CUSTO ACEITO: `divert` mata o scroll horizontal DENTRO dos apps (VS Code, tabela larga no
+      browser, Dolphin). Se incomodar, `divert = false` devolve — e aí o bind vira SUPER+roda.
 - [x] Acesso remoto de tela — Tailscale (mesh WireGuard) + Sunshine/Moonlight. Sunshine
       (system/services/sunshine.nix): captura WLR (wlr-screencopy; o KMS NÃO enumera no
       driver xe da Arc) + encode na GPU Arc, acesso SÓ pela tailnet

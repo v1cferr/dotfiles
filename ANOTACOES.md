@@ -111,7 +111,50 @@
 - [x] `hyprctl -i 0` nos aliases (29/07) — o `rebuild`/`upgrade` terminavam em `&& hyprctl reload`,
       que EXIGE HYPRLAND_INSTANCE_SIGNATURE e por isso nunca funcionava por SSH: rebuildar de fora
       deixava a config nova no disco sem aplicar, calado. `-i 0` acha a instância de qualquer shell.
+- [x] Higiene de disco (30/07) — o pedido era "GC automático que não deixe o disco encher", e o
+      GC JÁ existia e funcionava (nix.gc weekly + --delete-older-than 30d, auto-optimise-store com
+      628.191 hardlinks). Medindo antes de mexer, o pedido se revelou mal-endereçado:
+        disco usado 625.7 GiB | /nix/store 58.3 (9.3%) | NÃO-Nix 567.4 (90.7%)
+        Bottles 319 GiB (Battlenet 181, Cities-Skylines-II 86, Ascension 47) | Jellyfin 132 |
+        Games 47 | Steam 8 | Trash 1.7
+      O domínio INTEIRO do GC são 9% do disco: se encher, enche pelos outros 91%, e nenhuma política
+      de GC toca em prefixo de Wine. Então, em vez de mais GC:
+      • min-free 1→15 GiB (max-free 5→50): coletar só quando sobra 1 GiB é chegar DEPOIS do
+        acidente, e a partição é compartilhada com 506 GiB de jogos/mídia — o espaço pode sumir por
+        fora do Nix. NOMES conferidos com `nix config show`: neste Nix (2.34.8) valem
+        min-free/max-free; o rename p/ gc-threshold/gc-limit + auto-gc é de versão mais nova e NÃO
+        existe aqui — seguir a pesquisa às cegas geraria opção inválida.
+      • journald ganhou TETO (SystemMaxUse=2G). NÃO havia nenhum, e o default do systemd é 10% do
+        filesystem = ~92 GiB nesta máquina, sem nada denunciar. Crescimento de log não é hipótese:
+        dois timers MEUS escreviam 2148 linhas/dia até ganharem LogLevelMax.
+      • ALARME (home/services/disk-hygiene.nix): timer --user que notifica quando o livre cai,
+        JÁ COM os maiores consumidores na mensagem — o pedido era poder AVALIAR o que remover, e p/
+        isso a notificação tem de dizer O QUE cresceu. Duas fases de propósito: `df` (instantâneo) a
+        cada 30 min, e o `du` (que leva MINUTOS aqui) só quando o disco está baixo, com nice+ionice.
+        Anti-spam de 12h por severidade, escalando na hora se warn→crit — notificação repetitiva
+        passa a ser ignorada, o mesmo erro do journal afogado.
+      • Lixeira expira sozinha aos 30d (trash-cli, `-f` explícito: unit que espera resposta fica
+        pendurada). Era o ÚNICO lixo real da medição — 1.7 GiB que o restic já exclui do backup.
+      • Ferramentas: já havia gdu (TUI) e filelight (GUI, pastas). Faltavam as outras DUAS
+        perguntas: `czkawka` (GUI — duplicatas, arquivos grandes, pastas vazias: o que é
+        DESCARTÁVEL, não só o que é grande) e `nix-tree` (qual PACOTE pesa no closure; foi como se
+        mediu que o xembedsniproxy custa 429 MiB de qtwebengine).
+      NÃO automatizado de propósito: apagar jogo/mídia. Ninguém deve deletar 319 GiB de jogos por
+      conta própria — daí alarme em vez de faxina. Achado p/ o dono decidir: existe um bottle
+      "Battle.net" de 688 MiB ao lado do "Battlenet" de 181 GiB, com cara de tentativa abandonada.
 - [ ] Verificar se é possível adicionar estado declarativo criptografado
+- [ ] IMPERMANÊNCIA na migração p/ o Kingston — ideia do dono (30/07), inspirada no
+      <https://github.com/Misterio77/Foundry>: raiz efêmera (tmpfs ou subvolume zerado no boot) +
+      lista EXPLÍCITA do que persiste. Encaixa em duas coisas que este repo já tem: a regra 6
+      (Nix = app+config; estado = restic) deixaria de ser convenção e passaria a ser IMPOSTA pelo
+      sistema — o que não está declarado como persistente simplesmente não sobrevive ao boot; e
+      responde o item acima (estado declarativo criptografado), porque o par natural é
+      impermanência + LUKS.
+      PONTOS A DECIDIR ANTES, medidos hoje: os 567 GiB de não-Nix (Bottles 319, Jellyfin 132,
+      Games 47) são estado GRANDE e legítimo — impermanência não os apaga, mas obriga a declarar
+      cada caminho, e errar a lista significa perder save/prefixo no reboot. Candidatos: módulo
+      `impermanence` (nix-community) ou o esquema do Foundry. Fazer JUNTO com a migração, em
+      instalação nova — converter máquina em uso é o caminho mais arriscado.
 - [x] Clipboard (Wayland) — cliphist DECLARATIVO (services.cliphist, allowImages=texto+imagem)
       + picker no ROFI com PREVIEW: thumbnail das imagens copiadas + ícone por TIPO de arquivo
       (zip/vídeo/pdf/exe… via Fluent-dark), tema Tokyo Night, SUPER+SHIFT+V. Migração melhorada
@@ -288,7 +331,19 @@
       junto com a sessão, no idioma do toggles.nix. Discord e Spotify entraram como SERVIÇO
       --user, não `exec-once`, porque exec-once NÃO reinicia se o app morrer — era o que faltava
       p/ "continue ativo". `Restart=on-failure` de propósito: crash volta, fechar na mão respeita
-      (com `always` seria impossível fechar). O header é ÍNDICE dos TRÊS lugares que sobem coisa
+      (com `always` seria impossível fechar).
+      CORREÇÃO (30/07) — a justificativa acima vinha com "(Electron sai com 0 ao fechar)", que era
+      FALSO p/ o Spotify: ele é CEF, e o `bin/spotify` MOVE o processo real p/ um scope próprio
+      (app-org.chromium.Chromium-<pid>.scope, fora do cgroup da unit), com o processo acompanhado
+      pelo systemd SAINDO COM 1 mesmo quando a app subiu bem. Resultado: on-failure reiniciava a
+      cada 5s, o novo launcher achava a instância viva, imprimia "Opening in existing browser
+      session" e MANDAVA A JANELA APARECER. Medido no journal: 4145 reinícios num dia. Fix em duas
+      camadas: `successExit=1` no Spotify (sair 1 é o caminho normal dele; a unit é LANÇADOR, não
+      supervisor — escapando do cgroup o systemd já não supervisionava nada) + StartLimit de
+      3/5min em TODAS as units do painel. A causa do estrago não foi só o código de saída: era não
+      haver limite — com RestartSec=5 dava 2 partidas/10s, sempre sob o burst=5 default, então o
+      freio de fábrica NUNCA atuava. O comentário é que segurou o bug de pé: ele explicava a
+      escolha errada de forma convincente. O header é ÍNDICE dos TRÊS lugares que sobem coisa
       no boot (este painel, my.services, e o exec-once do autostart.lua p/ hyprlock/qs/clipboard)
       em vez de fingir centralização total — o hyprlock no exec-once é load-bearing p/ acesso
       remoto. `spotify --minimized` existe mas o --help diz "Only works on Windows": p/ não roubar
@@ -323,9 +378,55 @@
       `$HOME/.config/waybar/scripts/tray-native-menu.sh` — caminho da WAYBAR, que foi
       removida na migração; o dir não existe e o script não estava no repo. Portado do legado
       p/ writeShellApplication (regra 7) e chamado por NOME pelo PATH.
+      HOVER NO MENU (30/07) — o menu do tray abria e NÃO recebia UM evento de ponteiro: nenhum
+      hover, e fechava aos 4s com o mouse parado em cima. NÃO era cor nem QML: hyprwm/Hyprland#6682,
+      popup Qt REDIMENSIONADO depois de exibido fica com a região de input errada. Encaixa exato — o
+      openAt() torna a janela visível ANTES de o QsMenuOpener popular os itens, então o card nasce
+      pequeno e cresce. Reproduzido com o PRÓPRIO Quickshell, FECHADO como "not planned". FIX:
+      PopupWindow → PanelWindow (layer surface), que não passa por xdg_surface::set_window_geometry.
+      Estava na cara: era o ÚNICO PopupWindow do shell — os outros 4 painéis são PanelWindow e todos
+      tinham hover. De quebra cobre a abertura de SUBMENU, que também cresce depois de exibida.
+      Preço: posicionar à mão (sem anchor.rect/PopupAdjustment.Slide) — X vem do ícone + clamp.
+      MEDIÇÃO que fechou o caso: amostrando `hyprctl layers` a 0.4s (o menu agora É layer, então
+      APARECE ali — observabilidade que o popup não dava), uma janela ficou 7.46s de pé, acima do
+      timer de 4s → o HoverHandler enxerga o cursor. Antes TODA janela morria em ~3.7s.
+      HOVER VISÍVEL — o realce existia e era INVISÍVEL: `border`@20% sobre o fundo do menu dá
+      1.11:1 de contraste (medido). Trocado por `accent`@30% = 1.77:1 E mudança de MATIZ
+      (cinza→azul), que é o que a vista pega. Tokens colMenuHoverBg{,Danger} no Theme, + barra de
+      acento de 3px deslizando pela esquerda (fundo = sinal de ÁREA, barra = sinal de POSIÇÃO).
+      A medição também desmentiu uma escolha minha: eu fiz o texto acender em accent, que sobre o
+      fundo aceso cai a 3.83:1 contra 5.97:1 do colText — piorava a legibilidade por efeito.
+      PONTE XEmbed→SNI (30/07) — os comentários deste repo citavam o `xembedsniproxy` em 3 lugares
+      como se ele existisse, e ele NUNCA ESTEVE INSTALADO: o tray-native-menu era código morto,
+      porque nenhum ícone sem DBusMenu chegava a existir. App X11 legado (Wine/Bottles → Battle.net)
+      publica ícone por XEmbed, não SNI; sem host XEmbed o Wine desenha a bandeja numa JANELINHA
+      própria (medida: class=explorer.exe, 160x20, flutuando). Agora o proxy é declarado
+      (home/desktop/quickshell.nix). Causalidade demonstrada nos DOIS sentidos: proxy de pé = 4
+      itens no watcher e explorer.exe=0; proxy morto = 3 itens e a janelinha volta. CUSTO medido e
+      assumido: 758 MiB novos no closure (429 deles qtwebengine, + kwin/breeze/oxygen), porque o
+      binário só existe no kdePackages.plasma-workspace. Alternativas descartadas com motivo:
+      `snixembed` faz o caminho INVERSO (publica SNI como XEmbed) e por isso tenta ser o watcher,
+      morrendo com "could not acquire watcher name" (o Quickshell já é); não há standalone no
+      nixpkgs; extrair o binário não escapa (plasma-workspace referencia kwin/breeze/oxygen
+      DIRETO); stalonetray = janela flutuante de novo.
+      LIMITAÇÃO do ícone que vem pela ponte, medida: sem nome e sem menu — `Id` é o window ID do X11
+      em decimal ("14680083"), `Title`/`ToolTip` vazios, `Menu` inexistente. O clique-direito cai no
+      tray-native-menu (que só AGORA tem uso real) e o tooltip pendente não pode se contentar com o
+      `Id`: p/ estes teria de resolver o WM_CLASS.
+      ÍCONE FANTASMA (30/07) — fechar o Battle.net deixava o ícone na barra, sem responder a clique
+      nenhum. NÃO era bug do proxy: o `battle.net.exe` sai sem remover a registração e o
+      `explorer.exe` do Wine segue segurando a janela (xprop: WM_CLASS=explorer.exe,
+      _NET_WM_PID vivo). Do lado do X a janela existe; do lado do app não há quem responda. O
+      helper funciona — `tray-native-menu <id>` retorna exit=0, achou o item e chamou ContextMenu().
+      Conserto: `wineserver -k` no prefixo do Bottles (NÃO reboot); o proxy então LIMPA o item
+      corretamente (4→3 itens, janela 0, unit intacta). Se um dia sobrar item com a janela já morta,
+      `systemctl --user restart xembedsniproxy`.
       FALTA: o TOOLTIP, que não existe em nenhum lugar da barra. O SNI do Quickshell expõe
       `tooltipTitle`/`tooltipDescription` prontos; o padrão a seguir são os popovers
-      (PanelWindow ancorado, ver MetricsPopover.qml).
+      (PanelWindow ancorado, ver MetricsPopover.qml). MEDIDO nos itens de hoje: o Discord publica
+      ToolTip com título "Discord", o Sunshine deixa VAZIO e só tem Title="sunshine", e o ícone da
+      ponte XEmbed não tem nem um nem outro → a cascata precisa ser tooltipTitle → title → id, e
+      p/ os da ponte, WM_CLASS.
       NOTA DE MEDIÇÃO: contei itens de tray com `busctl --user list | grep StatusNotifierItem`
       e deu 0, o que é FALSO — app que registra com nome único (`:1.82`) não casa esse padrão.
       A fonte autoritativa é a propriedade `RegisteredStatusNotifierItems` do watcher (é o que
@@ -448,3 +549,23 @@
       Também: `pathOf` deriva o NOME DO ARQUIVO lendo o pacote, porque não há padrão — a maioria é
       `nix-wallpaper-<attr>.png`, os catppuccin são `nixos-wallpaper-<attr>.png` e o gradient-grey é
       NixOS-Gradient-grey.png. Antes, "trocar = 1 attr" era mentira e quebraria num catppuccin.
+- [ ] Adicionar a parte para entrar via SSH sem senha no meu roteador (OpenWRT) e no meu switch (OpenWRT) para poder fazer manutenção remota
+      sem precisar digitar senha
+- [ ] Verificar se a conexão com o moonlight está estável (monitorar e ter logs para verificarmos se está boa mesmo)
+- [x] VPN na topbar (30/07) — o clique no pill abria `vpn menu`: um rofi SOLTO no meio da tela,
+      fora do tema do shell. Agora é um popover ANCORADO sob o pill (quickshell/bar/VpnPopover.qml),
+      no padrão dos outros painéis: uma linha por VPN com bolinha de estado + botão que alterna
+      Conectar/Desconectar, e "Desconectar tudo" no pé. CLIQUE e não hover (há botões dentro;
+      painel que abre no hover fecha na primeira distração — mesma escolha do PowerMenu).
+      Não é só estética: o rofi montava os rótulos com `systemctl is-active`, que MENTE (o próprio
+      vpn.nix documenta em fai_conn/ufscar_conn — no crash-loop do nxBender o systemd diz "active"
+      ~2min sem existir ppp0), então ele oferecia "Desconectar" numa VPN desconectada. O popover lê
+      o MESMO `vpn status-json` do pill, que checa o TÚNEL. Subcomando `menu` e a dep de rofi
+      removidos do CLI.
+      E APAGOU ~190 LINHAS DE CÓDIGO MORTO: o shell.qml carregava um painel de VPN inteiro que não
+      podia funcionar, por 3 motivos independentes — (1) chamava `$HOME/.local/bin/vpn`, caminho do
+      ARCH, verificado inexistente aqui; (2) era INALCANÇÁVEL, único gatilho era `qs ipc call vpn
+      toggle`, do módulo custom/vpn da WAYBAR removida; (3) modelava netExtender + perfis do
+      NetworkManager e lia um campo `neservice` que o status-json não emite mais. Dos três casos do
+      dia dessa família (com o "Electron sai com 0" e o xembedsniproxy), foi o pior: nos outros dava
+      p/ não notar, esse NUNCA rodou uma vez.

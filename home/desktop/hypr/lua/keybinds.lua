@@ -38,8 +38,15 @@ hl.bind(mainMod .. " + L",         hl.dsp.exec_cmd("loginctl lock-session"))    
 -- "/" e Shift+ScrollLock → "?", via send_shortcut (dispatcher NATIVO do Hyprland, envia
 -- o keysym direto pra janela ativa — independe do layout e não depende de exec externo,
 -- diferente do wtype que não injetava pelo bind). Mantém o ABNT2; vale local também.
-hl.bind("Scroll_Lock",         hl.dsp.send_shortcut({ mods = 0,       key = "slash", window = "activewindow" }))  -- "/"
-hl.bind("SHIFT + Scroll_Lock", hl.dsp.send_shortcut({ mods = "SHIFT", key = "slash", window = "activewindow" }))  -- "?" (Shift+/)
+-- key = "code:97" e NÃO "slash": o resolveKeycode do send_shortcut varre o keymap com
+-- xkb_state_key_get_one_sym, que respeita os modificadores APERTADOS NA HORA — só acha
+-- keysym do nível ATIVO. Com Shift segurado (o bind do "?") nenhum keycode produz `slash`
+-- (produzem `question`) → "send_shortcut: key not found" e o "?" nunca saía. O prefixo
+-- `code:` faz short-circuit ANTES de tocar no estado xkb, então é imune a modificador.
+-- 97 = <AB11>, a tecla "/ ?" do ABNT2 (evdev KEY_RO 89 + 8); confere com
+-- `xkbcli compile-keymap --layout br --variant abnt2`.
+hl.bind("Scroll_Lock",         hl.dsp.send_shortcut({ mods = 0,       key = "code:97", window = "activewindow" }))  -- "/"
+hl.bind("SHIFT + Scroll_Lock", hl.dsp.send_shortcut({ mods = "SHIFT", key = "code:97", window = "activewindow" }))  -- "?" (Shift+/)
 
 -- clipboard: histórico do cliphist no rofi com PREVIEW (thumbnail de imagem + ícone
 -- por tipo de arquivo); a escolha volta pro clipboard (cole com Ctrl+V). Script e tema

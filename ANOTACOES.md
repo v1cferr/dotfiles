@@ -208,6 +208,19 @@
       → ScrollLock="/" e Shift+ScrollLock="?" via hl.dsp.send_shortcut (keybinds.lua; wtype não
       injetava pelo bind). Atalhos Moonlight: Capture system shortcuts=Always p/ o SUPER passar;
       Ctrl+Alt+Shift+Z solta/recaptura o mouse, +Q sai, +X fullscreen. FOSS futuro = Headscale.
+  - [x] FIX (jul/2026) do "?" que nunca saía — `send_shortcut: key not found`. O bind usava
+        `key = "slash"`, e o resolveKeycode do send_shortcut varre o keymap com
+        `xkb_state_key_get_one_sym` (LuaBindingsDispatchers.cpp), que respeita os modificadores
+        APERTADOS NA HORA — ou seja, só acha keysym do nível ATIVO. No bind do "?" o Shift está
+        segurado → o nível 2 está ativo → nenhum keycode produz `slash` (produzem `question`) →
+        erro. Prova: `key = "question"` SEM shift falha igual, espelhado. AGRAVANTE: o
+        m_keyToCodeCache só é populado em caso de SUCESSO, então um "/" bem-sucedido antes
+        deixava o "?" funcionar por cache — o bug só aparecia com cache frio (ex.: depois de um
+        `hyprctl reload`), o que fazia parecer intermitente. FIX: `key = "code:97"`, que faz
+        short-circuit ANTES de tocar no estado xkb → imune a modificador e a cache. 97 = `<AB11>`,
+        a tecla "/ ?" do ABNT2 (evdev KEY_RO 89 + 8), conferido com
+        `xkbcli compile-keymap --layout br --variant abnt2`. LIÇÃO: em send_shortcut/send_key_state
+        com modificador, usar SEMPRE `code:` — keysym só é confiável em bind sem modificador.
   - [x] Debug longo (jul/2026) — "tela preta no Moonlight" era o wlr capturando o monitor
         em DPMS-OFF (não regressão de versão/encoder). SOLUÇÃO: removi o dpms-off do hypridle
         (idle SÓ tranca agora) → monitor sempre aceso → nunca preto. CUIDADO: alternar dpms

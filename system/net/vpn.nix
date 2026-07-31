@@ -79,6 +79,37 @@ let
       # o `nc -zv` desta máquina sai calado, o que já me enganou uma vez).
       tcp_open() { timeout "''${3:-6}" bash -c "exec 3<>/dev/tcp/$1/$2" 2>/dev/null; }
 
+      # ── Auto-cura do HANG ──────────────────────────────────────────────────
+      # O nxBender chama o portal SEM timeout (visto no traceback: "connect
+      # timeout=None"). Quando o SonicWall aceita o TCP mas NÃO responde o pedido de
+      # sessão, o processo dorme p/ sempre: a unit fica `active/running`, sem UMA linha de
+      # log e sem túnel — e o Restart=always jamais atua, porque ele só reage a processo
+      # que SAI. MEDIDO em 31/07: 11 min pendurado com a conexão em ESTAB e Recv-Q/Send-Q
+      # zerados; `systemctl restart` conectou em 10s. Mesma forma do hang do handler HTTPS
+      # do Sunshine (system/services/sunshine.nix): ativo, exit 0, invisível por definição.
+      #
+      # Só age quando as TRÊS condições valem: unidade ativa (ou seja, alguém pediu p/
+      # conectar), túnel ausente, e ativa há mais que a folga. A folga existe porque
+      # conectar leva ~10-30s de forma legítima — sem ela o watchdog mataria a conexão
+      # em curso e viraria o próprio problema.
+      heal_one() {
+        id="$1"
+        meta="$(vpn_meta "$id")" || return 0
+        read -r unit _ _ <<< "$meta"
+        systemctl is-active --quiet "$unit" || return 0  # ninguém pediu conexão
+        conn_of "$id" && return 0                        # túnel de pé: nada a fazer
+        since_us="$(systemctl show "$unit" -p ActiveEnterTimestampMonotonic --value)"
+        up_s="$(cut -d' ' -f1 /proc/uptime)"
+        # monotônico (imune a ajuste de relógio); folga em segundos
+        awk -v s="''${since_us:-0}" -v u="$up_s" -v g=180 \
+          'BEGIN { exit !(s > 0 && u - s/1000000 > g) }' || return 0
+        # <4> = warning: sobrevive ao LogLevelMax e marca a vez em que ele AGIU
+        echo "<4>$id: ativa sem túnel além da folga — reiniciando (hang do portal)"
+        notify-send -a VPN -u critical -i network-vpn "VPN ''${id^^} travada" \
+          "Ativa sem túnel há mais de 3 min. O portal aceitou a conexão e parou de responder — reiniciando." 2>/dev/null || true
+        systemctl restart "$unit" 2>/dev/null || true
+      }
+
       # Ecoa: linha1 = VEREDITO (de quem é a culpa), linha2 = detalhe, resto = evidência.
       diag() {
         id="$1"
@@ -152,6 +183,9 @@ let
             all)    ufscar_down; fai_down ;;
             *) echo "uso: vpn disconnect ufscar|fai|all" >&2; exit 1 ;;
           esac ;;
+        # Chamado pelo timer vpn-heal: destrava VPN pendurada (ver heal_one).
+        heal)
+          for id in ''${2:-fai ufscar}; do heal_one "$id"; done ;;
         # Diagnóstico sob demanda, no terminal: `vpn diagnose fai`.
         diagnose)
           diag "''${2:-fai}" ;;
@@ -180,7 +214,7 @@ let
         # is-active`, que MENTE (ver fai_conn/ufscar_conn acima) — ele dizia "Desconectar"
         # durante o crash-loop do nxBender, sem existir túnel. O popover lê o status-json,
         # que checa o túnel de verdade. Uma fonte de verdade só, e a correta.
-        *) echo "uso: vpn connect|disconnect <ufscar|fai|all> | status-json | diagnose <id> | watch <id> [seg]" >&2; exit 1 ;;
+        *) echo "uso: vpn connect|disconnect <ufscar|fai|all> | status-json | diagnose <id> | watch <id> [seg] | heal [id]" >&2; exit 1 ;;
       esac
     '';
   };
@@ -194,6 +228,29 @@ in
   # Process) e sumiria num restart do shell, justamente no minuto em que deveria avisar.
   # Template @<id> porque são duas VPNs com portais e sintomas diferentes.
   # É unidade de USUÁRIO porque quem entrega a notificação é o Quickshell, na sessão.
+  # Watchdog do hang (ver heal_one no CLI). É unidade de USUÁRIO porque precisa notificar
+  # (o Quickshell é o daemon) e porque a regra polkit acima já deixa este usuário
+  # reiniciar as vpn-*: não precisa de root p/ isso. Sob autologin a sessão está sempre de
+  # pé, então o watchdog está sempre valendo — se um dia isso mudar, ele deixa de rodar
+  # sem sessão, e essa é a limitação conhecida.
+  systemd.user.services.vpn-heal = {
+    description = "Destrava VPN pendurada (ativa, sem túnel, além da folga)";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${vpnCli}/bin/vpn heal";
+      LogLevelMax = "warning"; # cala o no-op; o <4> do heal_one passa
+    };
+  };
+
+  systemd.user.timers.vpn-heal = {
+    description = "Checagem periódica de VPN pendurada";
+    timerConfig = {
+      OnActiveSec = "3min";
+      OnUnitActiveSec = "2min";
+    };
+    wantedBy = [ "timers.target" ];
+  };
+
   systemd.user.services."vpn-watch@" = {
     description = "Diagnostica e notifica se a VPN %i não conectar";
     serviceConfig = {

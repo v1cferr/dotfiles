@@ -551,7 +551,44 @@
       NixOS-Gradient-grey.png. Antes, "trocar = 1 attr" era mentira e quebraria num catppuccin.
 - [ ] Adicionar a parte para entrar via SSH sem senha no meu roteador (OpenWRT) e no meu switch (OpenWRT) para poder fazer manutenção remota
       sem precisar digitar senha
-- [ ] Verificar se a conexão com o moonlight está estável (monitorar e ter logs para verificarmos se está boa mesmo)
+- [x] Verificar se a conexão com o moonlight está estável (monitorar e ter logs) — FEITO
+      (31/07), e a MEDIÇÃO derrubou quatro hipóteses minhas antes de sobrar uma. Ferramenta
+      `moonlight-stats [dias]` (system/services/sunshine.nix): lista as sessões e cruza cada
+      uma com os eventos do tailscaled no MESMO intervalo.
+      O ACHADO que orienta tudo: a distribuição é BIMODAL — ou a sessão dura HORAS, ou morre
+      em 3-60 s. Em 7 dias: 67 sessões, mediana 40 s, 39 delas abaixo de 120 s, e a maior com
+      12155 s. Não é rede "degradando aos poucos"; são dois regimes distintos.
+      REFUTADAS, cada uma pelo mesmo teste (se as sessões LONGAS sofrem MAIS o evento, ele é
+      sobrevivível e não é a causa) — e a taxa tem de ser POR MINUTO, senão sessão de 3 s
+      "nunca" tem evento só por ser curta, viés que quase fechou o caso errado:
+        • flapping de caminho IPv4↔IPv6 do Tailscale: só 1/39 curtas teve UMA troca, e uma
+          sessão de 74 min sobreviveu a 40 trocas.
+        • saturação de upload: a casa tem 347 Mbps de subida (medido), 0% de perda em ping
+          ocioso, 23 ms de RTT.
+        • link change/rebind do tailscaled (302 e 449 em 7 dias, que davam MUITA cara de
+          culpado): 0/39 curtas tiveram algum, e a sessão de 4455 s aguentou 76 link changes
+          + 114 rebinds.
+        • blackhole da VPN FAI: a hipótese era boa (o cliente está em 200.136.193.228, a FAI,
+          e o split-tunnel do nxBender filtra só o /0 → as sub-redes da FAI ENTRAM no ppp0,
+          o que capturaria a rota do endpoint do cliente). Refutada: as longas têm MAIS ppp0
+          de pé (mediana 62% do tempo) que as curtas (0%), e a de 8495 s rodou com o túnel
+          ativo 100% do tempo.
+      O que SOBROU, e é onde o host não vê nada: durante TODA sessão curta o log do Sunshine
+      está limpo — sem erro de encoder, de captura ou de rede. Some com o cliente. A única
+      correlação que resistiu foi o BITRATE PEDIDO: 79 Mbps → mediana de vida 22 s; 23.8 Mbps
+      → 290 s. E o `max_bitrate` default é 0 = "obedece o cliente", que é como 79 Mbps entrou.
+      Daí o teto de 10 Mbps + FEC 30% + ping_timeout 20 s.
+      PMTU CONFERIDA e descartada como causa: `ping -M do` passa até 1280 B cheios até o
+      cliente, então o `packet_size=1024` está corretamente dimensionado (era a causa de
+      29/07, não é mais esta). Sob rajada o caminho mostra 1.67% de perda e RTT de 20→312 ms
+      — indício de rede da FAI ruim, NÃO prova: é ICMP, que firewall desprioriza.
+      PESQUISA: a doc oficial do Sunshine só tem "Packet loss → baixe o MTU" (PR #2514), que
+      é o que o packet_size já faz; a tailscale/tailscale#14208 relata exatamente esta dor
+      (moonlight+ssh caindo, "logs só dizem client disconnected") e segue SEM causa-raiz.
+      FALTA a metade que o host não consegue medir — o lado do cliente: overlay de
+      estatísticas do Moonlight (Ctrl+Alt+Shift+S) durante uma queda, e iperf3 -u do Windows
+      p/ medir o que o fluxo de vídeo sofre (o ICMP acima não serve). Sem isso, "rede da FAI"
+      continua sendo a suspeita mais forte e não um fato.
 - [x] VPN na topbar (30/07) — o clique no pill abria `vpn menu`: um rofi SOLTO no meio da tela,
       fora do tema do shell. Agora é um popover ANCORADO sob o pill (quickshell/bar/VpnPopover.qml),
       no padrão dos outros painéis: uma linha por VPN com bolinha de estado + botão que alterna
@@ -588,3 +625,25 @@
         PEGADINHA DO BUILD: backtick dentro de `printf '...'` = SC2016 e o build FALHA; e a
         mensagem sai ILEGÍVEL porque o shellcheck crasha ao imprimir linha com acento
         ("cannot encode character '\227'") — o sandbox não tem locale UTF-8.
+  - [x] HANG do nxBender: a VPN que não voltava sozinha (31/07) — CAUSA RAIZ achada num
+        diagnóstico guiado. O portal do SonicWall aceita o TCP, o login PASSA
+        ("Logging in…" → "Starting session…") e então ele para de responder. O nxBender
+        chama o portal SEM timeout (traceback: "connect timeout=None"), então o processo
+        dorme p/ SEMPRE: a unit fica `active/running`, ZERO linhas de log, sem túnel — e o
+        `Restart=always` JAMAIS atua, porque só reage a processo que SAI.
+        EVIDÊNCIA medida: 11 min pendurado com a conexão em ESTAB e Recv-Q/Send-Q ZERADOS
+        (`ss -tn state all dst 200.133.233.101`); `systemctl restart` conectou em 10s
+        (ppp0 = 192.168.50.6, rotas split-tunnel, workstation:22 aberta, mount rclone OK).
+        É a MESMA FORMA do hang do handler HTTPS do Sunshine: ativo, exit 0, invisível.
+        FIX: `vpn heal` + timer vpn-heal (2min) — reinicia só quando as TRÊS valem: unidade
+        ativa (alguém pediu), túnel ausente, e ativa há mais que a FOLGA de 180s. A folga é
+        o que impede o watchdog de matar uma conexão em curso (conectar leva 10-30s) e virar
+        o próprio problema. Testado: com a VPN saudável o heal é no-op e o MainPID NÃO muda.
+        TRIAGEM que separou "minha máquina" de "a FAI" — vale repetir na próxima:
+          ip route get <ip>            -> rota normal, sem resto de ppp/tun
+          ip rule + ip route table 52  -> Tailscale NÃO cobre os IPs da FAI
+          ping <portal>                -> 3/3, 31ms: host VIVO
+          TCP por porta (python)       -> 4433 ABERTA; 443/80/22 REFUSED (só a 4433 escuta)
+          controle UFSCar              -> www.ufscar.br e acessoremoto OK = internet sã
+        PEGADINHA DE MEDIÇÃO: `ss -tnp` sem root NÃO mapeia PID de processo de outro
+        usuário — o "nenhuma conexão" que eu vi era artefato; sem `-p` a conexão apareceu.

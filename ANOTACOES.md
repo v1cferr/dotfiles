@@ -208,8 +208,19 @@
          COLUNA INTEIRA — pilha junto — dando a volta nas pontas. Pra mover só UMA janela de
          uma pilha: `expel` (SUPER+O) primeiro, aí swapcol. NÃO usar o `window.swap({direction})`
          genérico: não é layout-aware e fundiu janelas sem relação numa coluna no teste.
-- [x] Thumbwheel (rodinha do polegar) do MX Master rola a fita — mouse.nix ganhou um bloco
-      `thumbwheel` que DIVERTE a roda e sintetiza SUPER+CTRL+,/. (keybinds.lua move ±80px).
+- [x] REVISÃO (jul/2026) do thumbwheel + largura, depois de usar: a fita virou 1 JANELA POR
+      TELA (`scrolling.column_width = 1.0`, único valor fora do default) e o thumbwheel
+      DEIXOU de ser divertido pelo logiops. Agora a rodinha do polegar faz scroll horizontal
+      NATIVO dentro dos apps (VS Code, tabela larga), e a fita anda só com SUPER + rodinha,
+      por bind em `mouse_left`/`mouse_right`. O que destravou isso: o teto de 300ms do
+      `binds:scroll_event_delay` era o motivo de TODO o rodeio via logiops — mas ele só é
+      fatal pra rolagem suave em PIXELS. Andando de COLUNA em coluna, com 1 coluna = 1 tela,
+      3 disparos/s é de sobra, e aí o custo do divert (matar o scroll horizontal dos apps)
+      deixou de se pagar. Binds novos: SUPER+CTRL+./, = `colresize all 1.0`/`0.5`, que mexe
+      na fita INTEIRA (o SUPER+ALT+,/. só mexe na coluna ativa). Lição: o teto de 300ms não
+      é bom nem ruim em abstrato — ele só importa se o passo for pequeno.
+- [x] [HISTÓRICO — revertido acima] Thumbwheel do MX Master rola a fita — mouse.nix ganhou um
+      bloco `thumbwheel` que DIVERTE a roda e sintetiza SUPER+CTRL+,/. (keybinds.lua move ±80px).
       Por que keypress e não bindar `mouse_left`/`mouse_right` (que o Hyprland suporta
       nativamente): `binds:scroll_event_delay` = 300ms é um TETO de ~3 disparos/s pra bind de
       roda, o que travaria a rolagem; e baixar o teto estragaria o SUPER+roda-vertical de

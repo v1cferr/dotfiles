@@ -39,10 +39,13 @@ hl.config({
       vibrancy = 0.2,
     },
   },
-  -- Sem bloco `scrolling`: os 7 defaults já são o que se quer (column_width 0.5 = 2 colunas
-  -- de 960px em 1080p, fullscreen_on_one_column, follow_focus, wrap_focus, direction right,
-  -- focus_fit_method, explicit_column_widths) — conferido com `hyprctl getoption`.
+  -- Fita: 1 janela por tela. Único valor fora do default (0.5); os outros 6 do `scrolling`
+  -- já são o que se quer, então não estão escritos aqui. Por coluna dá pra encolher com
+  -- SUPER+ALT+,/. e a fita inteira com SUPER+CTRL+,/. (keybinds.lua).
   -- O bloco `dwindle` saiu junto com o layout: nenhuma ws usa dwindle mais.
+  scrolling = {
+    column_width = 1.0,
+  },
   misc = {
     force_default_wallpaper = 0,  -- sem o wallpaper anime default
     disable_hyprland_logo = true, -- sem o logo de fundo (usamos wallpaper próprio)

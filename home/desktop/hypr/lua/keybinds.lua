@@ -89,20 +89,23 @@ hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 -- nunca `d()` ("dispatcher objects cannot be called directly").
 hl.bind(mainMod .. " + comma",          hl.dsp.layout("move -col"))       -- fita ← 1 coluna
 hl.bind(mainMod .. " + period",         hl.dsp.layout("move +col"))       -- fita → 1 coluna
--- Thumbwheel do MX Master, que o logiops sintetiza como SUPER+CTRL+,/. (mouse.nix).
--- Combo de 3 teclas e NÃO F13/F14 por keycode: `code:191` registra com keycode=0 no
--- `hyprctl binds` (não deu pra provar que dispara), enquanto comma/period registram
--- certo — e sintetizar combo já é padrão provado aqui (o botão de gestos faz isso).
--- Passo pequeno de propósito: o logiops dispara em rajada (issue #310 do PixlOne/logiops),
--- então rajada de 80px vira rolagem suave. Calibrar a velocidade AQUI, não no `interval`.
-hl.bind(mainMod .. " + CTRL + comma",   hl.dsp.layout("move -80"))        -- thumbwheel ←
-hl.bind(mainMod .. " + CTRL + period",  hl.dsp.layout("move +80"))        -- thumbwheel →
+-- Thumbwheel do MX Master = SUPER + rodinha horizontal. O logiops NÃO diverte mais a roda
+-- (mouse.nix): ela volta a emitir REL_HWHEEL nativo, então o scroll horizontal dentro dos
+-- apps (VS Code, tabela larga) funciona normal, e a fita só anda com o SUPER segurado.
+-- O teto de `binds:scroll_event_delay` (300ms, ~3 disparos/s) deixou de ser problema: ele
+-- era fatal pra rolagem suave em PIXELS, mas pra salto de COLUNA 3/s é de sobra — mais
+-- ainda com column_width=1.0, onde uma coluna já é a tela inteira.
+hl.bind(mainMod .. " + mouse_left",     hl.dsp.layout("move -col"))       -- thumbwheel ←
+hl.bind(mainMod .. " + mouse_right",    hl.dsp.layout("move +col"))       -- thumbwheel →
 -- Reordenar e redimensionar colunas. swapcol move a COLUNA INTEIRA (pilha junto) e dá a
 -- volta nas pontas; pra mover só uma janela de uma pilha, expel (SUPER+O) antes.
 hl.bind(mainMod .. " + SHIFT + comma",  hl.dsp.layout("swapcol l"))       -- troca c/ a coluna à esquerda
 hl.bind(mainMod .. " + SHIFT + period", hl.dsp.layout("swapcol r"))       -- troca c/ a coluna à direita
-hl.bind(mainMod .. " + ALT + comma",    hl.dsp.layout("colresize -conf")) -- cicla largura ↓ (0.333/0.5/0.667/1.0)
-hl.bind(mainMod .. " + ALT + period",   hl.dsp.layout("colresize +conf")) -- cicla largura ↑
+hl.bind(mainMod .. " + ALT + comma",    hl.dsp.layout("colresize -conf")) -- cicla largura ↓ SÓ da coluna ativa
+hl.bind(mainMod .. " + ALT + period",   hl.dsp.layout("colresize +conf")) -- cicla largura ↑ SÓ da coluna ativa
+-- `colresize all N` mexe na fita INTEIRA de uma vez (o -conf/+conf acima é só a ativa).
+hl.bind(mainMod .. " + CTRL + period",  hl.dsp.layout("colresize all 1.0")) -- TUDO em 100% (1 janela por tela)
+hl.bind(mainMod .. " + CTRL + comma",   hl.dsp.layout("colresize all 0.5")) -- TUDO em 50% (2 lado a lado)
 -- Empilhar/desempilhar janelas dentro da coluna
 hl.bind(mainMod .. " + I",              hl.dsp.layout("consume"))         -- puxa a janela pra coluna anterior
 hl.bind(mainMod .. " + O",              hl.dsp.layout("expel"))           -- expulsa a janela pra coluna própria

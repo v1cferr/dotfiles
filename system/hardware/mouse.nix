@@ -26,20 +26,17 @@
             target = false;
           };
 
-          # Rodinha do polegar → rola a fita do layout scrolling do Hyprland (ws 2 e 6).
-          # Sintetiza SUPER+CTRL+,/. em vez de mandar scroll horizontal: keypress NÃO passa
-          # pelo teto de 300ms do `binds:scroll_event_delay`, que travaria a rolagem em ~3
-          # colunas/s (e baixar esse teto estragaria o SUPER+roda-vertical de workspace).
-          # `interval = 1` é a verdade declarada: no thumbwheel o logiops dispara a cada
-          # incremento independente do valor (issue #310, aberta) — por isso o bind do lado
-          # do Hyprland move 80px, não 1 coluna: rajada de passo pequeno = rolagem suave.
-          # CUSTO ACEITO: `divert` tira o scroll horizontal nativo DENTRO dos apps.
-          thumbwheel = {
-            divert = true;
-            invert = false;
-            left  = { mode = "OnInterval"; interval = 1; action = { type = "Keypress"; keys = [ "KEY_LEFTMETA" "KEY_LEFTCTRL" "KEY_COMMA" ]; }; };
-            right = { mode = "OnInterval"; interval = 1; action = { type = "Keypress"; keys = [ "KEY_LEFTMETA" "KEY_LEFTCTRL" "KEY_DOT" ]; }; };
-          };
+          # SEM bloco `thumbwheel` de propósito: a rodinha do polegar fica NATIVA (REL_HWHEEL),
+          # que é o que faz o scroll horizontal funcionar DENTRO dos apps (VS Code, tabela
+          # larga no browser, Dolphin). Quem rola a fita do Hyprland é SUPER + rodinha, por
+          # bind em `mouse_left`/`mouse_right` (home/desktop/hypr/lua/keybinds.lua).
+          # Já existiu aqui um `thumbwheel.divert = true` sintetizando SUPER+CTRL+,/. — a
+          # razão era fugir do teto de 300ms do `binds:scroll_event_delay`, que estrangula
+          # bind de roda em ~3 disparos/s. Virou desnecessário quando a fita passou a andar
+          # de COLUNA em coluna (com column_width=1.0, 1 coluna = 1 tela): 3 telas/s é de
+          # sobra, e o custo do divert (matar o scroll horizontal dos apps) não se pagava.
+          # Se um dia precisar do divert de volta: `interval` é ignorado no thumbwheel — o
+          # logiops dispara a cada incremento (PixlOne/logiops#310, aberta).
 
           buttons = [
             {

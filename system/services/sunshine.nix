@@ -190,9 +190,27 @@ in
       # 79 Mbps tiveram mediana de vida de 22 s contra 290 s nas de 23.8 Mbps. Cap no
       # HOST e não no slider do cliente de propósito — é declarativo e vale p/ QUALQUER
       # cliente que parear, sem depender de lembrar da config do Moonlight em cada
-      # máquina. 10 Mbps em 1080p/h264 é confortável p/ desktop remoto (que é o uso:
-      # trabalhar na máquina de casa a partir da FAI).
-      max_bitrate = 10000; # Kbps
+      # máquina.
+      #
+      # 10000 -> 20000 (31/07). Duas medições mudaram a conta:
+      #   1. O encoder em uso é AV1 (av1_vaapi, confirmado na instância viva), não h264
+      #      como este comentário dizia. AV1 rende ~40-50% mais por bit, então 10 Mbps
+      #      aqui já equivaliam a ~18-20 Mbps de h264 — o teto era mais folgado do que
+      #      parecia, mas por engano de premissa, não por escolha.
+      #   2. O "79 Mbps" NÃO é o que o cliente pedia nesta semana: cruzando bitrate com
+      #      encoder no journal, as sessões de 7 dias rodaram a 19.4 Mbps, e as CURTAS de
+      #      31/07 (15-68 s) também foram a 19.4 — ou seja, queda curta acontece em
+      #      bitrate moderado, e o cap não é o que a evita. O confundidor é o horário:
+      #      elas caem na janela das 08h, a mesma em que a rede da FAI derrubou a VPN 52x
+      #      na semana (system/net/vpn.nix).
+      # Portanto 20000 NÃO é experimento — é voltar ao bitrate que já era o de fato, agora
+      # explícito e declarado. O teto continua existindo p/ impedir que um cliente peça 79.
+      # Serve p/ Cities Skylines II, onde pan de câmera muda TODO pixel do quadro (pior
+      # caso de compressão interframe, apesar de o jogo ser "calmo"); Hearthstone, com
+      # câmera fixa, cabia bem em 10.
+      # AMOSTRA a 10 Mbps: UMA sessão, que nem fechou — o teto anterior nunca chegou a
+      # ter registro de estabilidade. Não há A/B a preservar aqui.
+      max_bitrate = 20000; # Kbps
       # Mais correção de erro (default 20%): o caminho até a rede da FAI PERDE pacote —
       # medido 1.67% de perda e RTT saltando de 20 p/ 312 ms numa rajada de 300 pacotes
       # de 1 KB. FEC recupera perda sem retransmitir (que em tempo real chegaria tarde).

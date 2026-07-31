@@ -578,6 +578,25 @@
       correlação que resistiu foi o BITRATE PEDIDO: 79 Mbps → mediana de vida 22 s; 23.8 Mbps
       → 290 s. E o `max_bitrate` default é 0 = "obedece o cliente", que é como 79 Mbps entrou.
       Daí o teto de 10 Mbps + FEC 30% + ping_timeout 20 s.
+      REVISÃO DESSA ÚLTIMA HIPÓTESE (31/07, medindo p/ responder "10 Mbps serve p/ jogar?") —
+      ela ficou MAIS FRACA, e duas premissas caíram:
+        • O encoder em uso é AV1 (av1_vaapi, confirmado na instância VIVA), não h264 como
+          estava escrito. AV1 rende ~40-50% mais por bit, então 10 Mbps já valiam ~18-20 de
+          h264: o teto era mais folgado do que se pensava, por engano e não por escolha.
+        • O "cliente pedia 79 Mbps" NÃO vale p/ esta semana. Cruzando `Streaming bitrate is`
+          com o encoder ativo no journal, as 7 dias rodaram a 19.4 Mbps — e as CURTAS de
+          31/07 (15 a 68 s) TAMBÉM foram a 19.4. Ou seja: queda curta acontece em bitrate
+          MODERADO, então o bitrate não é o que a evita. O 79 deve ser de período anterior.
+        • A amostra a 10 Mbps era UMA sessão, que nem fechou — aquele teto nunca chegou a ter
+          registro de estabilidade, não havia A/B a preservar. Por isso 10 → 20 Mbps.
+      CONFUNDIDOR que agora salta: as curtas se concentram na janela das 08h, EXATAMENTE a
+      janela em que a rede da FAI derrubou a VPN 52x na semana (ver o item da VPN). Reforça
+      "rede da FAI" — que segue suspeita, não fato, pela mesma razão de antes: falta o lado
+      do cliente.
+      BITRATE POR USO (o que decide é quantos pixels MUDAM por frame, não a velocidade da
+      ação): desktop remoto e Hearthstone (câmera fixa) cabem em 10; Cities Skylines II pede
+      20-25 porque PAN DE CÂMERA muda todo pixel do quadro — pior caso de compressão
+      interframe, apesar de o jogo ser "calmo"; FPS 30+, e aí o gargalo vira latência.
       PMTU CONFERIDA e descartada como causa: `ping -M do` passa até 1280 B cheios até o
       cliente, então o `packet_size=1024` está corretamente dimensionado (era a causa de
       29/07, não é mais esta). Sob rajada o caminho mostra 1.67% de perda e RTT de 20→312 ms

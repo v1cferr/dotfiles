@@ -162,6 +162,24 @@
       (substituiu o antigo picker wofi-text). + wl-clip-persist (autostart hypr): mantém a
       cópia viva após o app fechar (fix da imagem do Flameshot — dono do clipboard no Wayland).
 - [x] Dark mode no file manager (Dolphin) — Qt segue o GTK escuro (home/desktop/theme.nix)
+- [x] Layout SCROLLING (fita infinita) em TRIAL nas ws 2 e 6 — pra parar de pular de workspace
+      só pra manter poucas janelas na tela. É NATIVO no Hyprland 0.55.4 do nixpkgs: sem plugin,
+      sem flake input (o hyprscrolling não entra nessa história). Convive com o dwindle via
+      `hl.workspace_rule({ layout = "scrolling" })` (monitors.lua) — general.layout segue
+      "dwindle", então dá pra comparar os dois no mesmo dia e reverter apagando 1 palavra.
+      Nenhum bloco `hl.config({ scrolling = ... })`: os 7 valores que eu queria (column_width
+      0.5 = 2 colunas de 960px em 1080p, fullscreen_on_one_column, focus_fit_method, follow_focus,
+      wrap_focus, direction, explicit_column_widths) JÁ SÃO os defaults — conferido com
+      `hyprctl getoption`. Binds em keybinds.lua: SUPER+,/. rola a fita por coluna (é o atalho
+      de TECLADO, funciona sem mouse), SHIFT+ reordena, ALT+ cicla largura, I/O empilha/desempilha
+      na coluna, G recentra e SHIFT+G expande pro espaço livre.
+      DUAS PEGADINHAS que o wiki não conta:
+      1. `fit_into_view` está DOCUMENTADO no wiki e NÃO EXISTE no 0.55.4 ("no such layoutmsg for
+         scrolling"). O equivalente que funciona é `fit active`. Varri as 12 mensagens que os
+         binds usam uma por uma com `hyprctl dispatch` — só essa era fantasma.
+      2. TODA mensagem de layout exige janela FOCADA: sem foco elas devolvem "no focused window"
+         e não fazem nada, silenciosamente. Foi o que me fez achar (errado) que `move ±col`
+         estava quebrado — as janelas de teste tinham subido com regra `silent`.
 - [x] Acesso remoto de tela — Tailscale (mesh WireGuard) + Sunshine/Moonlight. Sunshine
       (system/services/sunshine.nix): captura WLR (wlr-screencopy; o KMS NÃO enumera no
       driver xe da Arc) + encode na GPU Arc, acesso SÓ pela tailnet

@@ -67,6 +67,34 @@ hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
 hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
 hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 
+-- ── Fita do scrolling layout (ws 2 e 6; ver monitors.lua) ───────────────────
+-- `move` rola a VISTA sem mexer no foco; com follow_mouse=1 (input.lua) basta passar o
+-- mouse sobre a coluna que entrou pra ela receber o teclado. As setas acima continuam
+-- valendo: follow_focus (default) já traz a coluna focada pra vista.
+hl.bind(mainMod .. " + comma",          hl.dsp.layout("move -col"))       -- fita ← 1 coluna
+hl.bind(mainMod .. " + period",         hl.dsp.layout("move +col"))       -- fita → 1 coluna
+-- Thumbwheel do MX Master, que o logiops sintetiza como SUPER+CTRL+,/. (mouse.nix).
+-- Combo de 3 teclas e NÃO F13/F14 por keycode: `code:191` registra com keycode=0 no
+-- `hyprctl binds` (não deu pra provar que dispara), enquanto comma/period registram
+-- certo — e sintetizar combo já é padrão provado aqui (o botão de gestos faz isso).
+-- Passo pequeno de propósito: o logiops dispara em rajada (issue #310 do PixlOne/logiops),
+-- então rajada de 80px vira rolagem suave. Calibrar a velocidade AQUI, não no `interval`.
+hl.bind(mainMod .. " + CTRL + comma",   hl.dsp.layout("move -80"))        -- thumbwheel ←
+hl.bind(mainMod .. " + CTRL + period",  hl.dsp.layout("move +80"))        -- thumbwheel →
+-- Reordenar e redimensionar colunas
+hl.bind(mainMod .. " + SHIFT + comma",  hl.dsp.layout("swapcol l"))       -- troca c/ a coluna à esquerda
+hl.bind(mainMod .. " + SHIFT + period", hl.dsp.layout("swapcol r"))       -- troca c/ a coluna à direita
+hl.bind(mainMod .. " + ALT + comma",    hl.dsp.layout("colresize -conf")) -- cicla largura ↓ (0.333/0.5/0.667/1.0)
+hl.bind(mainMod .. " + ALT + period",   hl.dsp.layout("colresize +conf")) -- cicla largura ↑
+-- Empilhar/desempilhar janelas dentro da coluna
+hl.bind(mainMod .. " + I",              hl.dsp.layout("consume"))         -- puxa a janela pra coluna anterior
+hl.bind(mainMod .. " + O",              hl.dsp.layout("expel"))           -- expulsa a janela pra coluna própria
+-- `fit active` e NÃO `fit_into_view`: o wiki documenta o segundo, mas o 0.55.4 responde
+-- "no such layoutmsg for scrolling". Todas as mensagens de layout exigem janela FOCADA
+-- (sem foco elas devolvem "no focused window" e não fazem nada).
+hl.bind(mainMod .. " + G",              hl.dsp.layout("fit active"))      -- recentra a coluna ativa
+hl.bind(mainMod .. " + SHIFT + G",      hl.dsp.layout("fit expand"))      -- expande a janela pro espaço livre
+
 -- Foco por monitor: F1 = LG (principal) · F2 = TV (secundário). Nomes: my.monitors.
 hl.bind(mainMod .. " + F1", hl.dsp.focus({ monitor = M.primary }))
 hl.bind(mainMod .. " + F2", hl.dsp.focus({ monitor = M.secondary }))

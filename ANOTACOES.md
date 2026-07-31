@@ -180,6 +180,22 @@
       2. TODA mensagem de layout exige janela FOCADA: sem foco elas devolvem "no focused window"
          e não fazem nada, silenciosamente. Foi o que me fez achar (errado) que `move ±col`
          estava quebrado — as janelas de teste tinham subido com regra `silent`.
+      3. BIND É GLOBAL, MENSAGEM DE LAYOUT NÃO É. Numa ws dwindle o Hyprland responde "Unknown
+         dwindle layoutmsg: move +80" e emite UMA NOTIFICAÇÃO POR EVENTO — com o thumbwheel
+         disparando em rajada, a tela vira uma parede de toasts. Por isso os binds da fita
+         passam por um guard (`fita()` no keybinds.lua) que só despacha se a ws ativa estiver
+         em `scrollingWs`. Três becos sem saída até chegar nele: (a) `pcall` NÃO abafa — o
+         checkResult (LuaBindingsInternal.cpp:376) emite a notificação e devolve {ok=false}
+         sem levantar erro Lua, não há o que capturar; (b) não dá pra perguntar o layout — o
+         objeto de workspace expõe id/name/monitor/windows/last_window e `layout` é nil, daí a
+         lista de ws ser espelhada À MÃO do monitors.lua; (c) `d()` não executa nada — tem que
+         ser `hl.dispatch(d)` ("dispatcher objects cannot be called directly", literal na
+         LuaBindingsDispatcherUtils.cpp:24). Custei duas medições achando que o guard estava
+         quebrado por causa do (c).
+      4. Mover janela DE LADO na mesma ws = `swapcol l/r` (SUPER+SHIFT+,/.), e ele move a
+         COLUNA INTEIRA — pilha junto — dando a volta nas pontas. Pra mover só UMA janela de
+         uma pilha: `expel` (SUPER+O) primeiro, aí swapcol. NÃO usar o `window.swap({direction})`
+         genérico: não é layout-aware e fundiu janelas sem relação numa coluna no teste.
 - [x] Thumbwheel (rodinha do polegar) do MX Master rola a fita — mouse.nix ganhou um bloco
       `thumbwheel` que DIVERTE a roda e sintetiza SUPER+CTRL+,/. (keybinds.lua move ±80px).
       Por que keypress e não bindar `mouse_left`/`mouse_right` (que o Hyprland suporta

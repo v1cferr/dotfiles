@@ -219,6 +219,13 @@
       deixou de se pagar. Binds novos: SUPER+CTRL+./, = `colresize all 1.0`/`0.5`, que mexe
       na fita INTEIRA (o SUPER+ALT+,/. só mexe na coluna ativa). Lição: o teto de 300ms não
       é bom nem ruim em abstrato — ele só importa se o passo for pequeno.
+      MODOS DE VISÃO (o complemento do 1.0): `fit all` em SUPER+CTRL+G espreme a fita INTEIRA
+      na tela, adaptando à quantidade — 4 janelas viram 4x470px lado a lado; SUPER+CTRL+.
+      volta pra 1 por tela. É o "ver tudo de uma vez" pra quando o contexto importa mais
+      que o foco. PEGADINHA: `colresize all N` sozinho NÃO traz a vista junto — encolhi 2
+      colunas pra 0.5 e AS DUAS ficaram fora da tela, à esquerda; o `fit all` redimensiona
+      E reposiciona. Alternativa por-app (testada, funciona): window_rule com
+      `scrolling_width = 0.5` faz um app específico já nascer com meia tela.
 - [x] [HISTÓRICO — revertido acima] Thumbwheel do MX Master rola a fita — mouse.nix ganhou um
       bloco `thumbwheel` que DIVERTE a roda e sintetiza SUPER+CTRL+,/. (keybinds.lua move ±80px).
       Por que keypress e não bindar `mouse_left`/`mouse_right` (que o Hyprland suporta

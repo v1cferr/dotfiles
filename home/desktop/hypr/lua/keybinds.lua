@@ -103,9 +103,15 @@ hl.bind(mainMod .. " + SHIFT + comma",  hl.dsp.layout("swapcol l"))       -- tro
 hl.bind(mainMod .. " + SHIFT + period", hl.dsp.layout("swapcol r"))       -- troca c/ a coluna à direita
 hl.bind(mainMod .. " + ALT + comma",    hl.dsp.layout("colresize -conf")) -- cicla largura ↓ SÓ da coluna ativa
 hl.bind(mainMod .. " + ALT + period",   hl.dsp.layout("colresize +conf")) -- cicla largura ↑ SÓ da coluna ativa
--- `colresize all N` mexe na fita INTEIRA de uma vez (o -conf/+conf acima é só a ativa).
-hl.bind(mainMod .. " + CTRL + period",  hl.dsp.layout("colresize all 1.0")) -- TUDO em 100% (1 janela por tela)
-hl.bind(mainMod .. " + CTRL + comma",   hl.dsp.layout("colresize all 0.5")) -- TUDO em 50% (2 lado a lado)
+-- ── Modos de visão: alternam a fita INTEIRA (o ALT+,/. acima é só a coluna ativa) ──
+-- `fit all` é o modo "ver tudo de uma vez": ele REDIMENSIONA e REPOSICIONA as colunas pra
+-- caber todas na tela, adaptando à quantidade (2 janelas → 951px cada; 3 → ~633px). É
+-- diferente do `colresize all 0.5`, que força 2-por-tela mesmo com 5 janelas abertas.
+-- Cuidado: `colresize all N` sozinho NÃO traz a vista junto — encolhi 2 colunas pra 0.5 e
+-- as duas ficaram fora da tela, à esquerda. O `fit all` faz as duas coisas.
+hl.bind(mainMod .. " + CTRL + G",       hl.dsp.layout("fit all"))           -- VER TUDO: espreme a fita toda na tela
+hl.bind(mainMod .. " + CTRL + period",  hl.dsp.layout("colresize all 1.0")) -- FOCO: tudo em 100% (1 janela por tela)
+hl.bind(mainMod .. " + CTRL + comma",   hl.dsp.layout("colresize all 0.5")) -- tudo em 50% (2 lado a lado, fixo)
 -- Empilhar/desempilhar janelas dentro da coluna
 hl.bind(mainMod .. " + I",              hl.dsp.layout("consume"))         -- puxa a janela pra coluna anterior
 hl.bind(mainMod .. " + O",              hl.dsp.layout("expel"))           -- expulsa a janela pra coluna própria

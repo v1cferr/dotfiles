@@ -30,6 +30,9 @@ hl.bind(mainMod .. " + V",         hl.dsp.window.float({ action = "toggle" }))  
 hl.bind(mainMod .. " + F",         hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))  -- fullscreen
 hl.bind(mainMod .. " + P",         hl.dsp.window.pseudo())                        -- pseudo (era do dwindle; no-op no scrolling, mas responde ok — não gera toast)
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("hyprctl reload"))             -- recarregar config
+-- Cheatsheet: lista TODOS os binds no rofi, gerada deste arquivo em runtime
+-- (home/desktop/cheatsheet.nix). H e não "/" porque o Moonlight não envia a "/" do ABNT2.
+hl.bind(mainMod .. " + H",         hl.dsp.exec_cmd("keybinds-cheatsheet"))        -- ajuda: lista de atalhos
 -- lock: loginctl → logind → lock_cmd do hypridle (home/lockscreen.nix); nunca duplica o hyprlock.
 hl.bind(mainMod .. " + L",         hl.dsp.exec_cmd("loginctl lock-session"))      -- travar tela
 

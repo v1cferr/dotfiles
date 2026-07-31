@@ -162,6 +162,17 @@
       (substituiu o antigo picker wofi-text). + wl-clip-persist (autostart hypr): mantém a
       cópia viva após o app fechar (fix da imagem do Flameshot — dono do clipboard no Wayland).
 - [x] Dark mode no file manager (Dolphin) — Qt segue o GTK escuro (home/desktop/theme.nix)
+- [x] Cheatsheet de keybinds no rofi (SUPER+H, home/desktop/cheatsheet.nix) — GERADO do
+      keybinds.lua em RUNTIME por um awk, nunca escrito à mão: lista duplicada viraria
+      mentira no primeiro bind novo. Lê ~/.config/hypr/lua/keybinds.lua, que é
+      mkOutOfStoreSymlink pro repo, então acompanha até hot-reload sem rebuild. Grupo = 1ª
+      linha do bloco de comentário acima do bind; descrição = comentário no fim da linha,
+      com fallback pro texto do grupo. Verificado contra `hyprctl binds`: 91/91 cobertos,
+      0 faltando. DOIS BUGS que custaram versões: (a) achar o comentário por regex "sem
+      hífen" some com descrições legítimas (no-op, qs-restart) — tem que ser a ÚLTIMA
+      ocorrência de " -- "; (b) traduzir tecla com gsub cego troca o "left" DENTRO de
+      "mouse_left" — tem que ser token a token. H e não "/" porque o Moonlight não envia
+      a "/" do ABNT2 (mesma razão do remap do ScrollLock).
 - [x] Layout SCROLLING (fita infinita) em TRIAL nas ws 2 e 6 — pra parar de pular de workspace
       só pra manter poucas janelas na tela. É NATIVO no Hyprland 0.55.4 do nixpkgs: sem plugin,
       sem flake input (o hyprscrolling não entra nessa história). Convive com o dwindle via

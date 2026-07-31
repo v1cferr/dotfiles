@@ -569,3 +569,22 @@
       NetworkManager e lia um campo `neservice` que o status-json não emite mais. Dos três casos do
       dia dessa família (com o "Electron sai com 0" e o xembedsniproxy), foi o pior: nos outros dava
       p/ não notar, esse NUNCA rodou uma vez.
+  - [x] Alerta de falha de conexão (31/07) — falhar era SILENCIOSO: clicava Conectar, nada
+        acontecia, e do lado de cá parecia problema da máquina pessoal. `vpn diagnose <id>` +
+        `vpn watch <id>` (unit `vpn-watch@`, disparada por fai_up/ufscar_up): 45s depois do
+        pedido, se não houver túnel, NOTIFICA dizendo DE QUEM É A CULPA — é essa a informação
+        que muda o que se faz em seguida (esperar a FAI vs. mexer na rede/senha).
+        NÃO dá p/ usar `OnFailure=` do systemd: com Restart=always + startLimitIntervalSec=0
+        estas units NUNCA entram em `failed`, ficam em crash-loop eterno. O gatilho é tempo.
+        Classificação por assinaturas MEDIDAS no journal (2 dias), não inventadas:
+        ConnectTimeout em /cgi-bin/userLogin (portal fora) = 152 ocorrências, o caso comum;
+        "Connection reset by peer" (27); "Modem hangup"/"Peer not responding"/"No response to
+        N echo-requests" (túnel subiu e caiu). ORDEM importa: internet daqui -> portal -> log,
+        senão um "timeout" no log viraria culpa da FAI com a rede local caída.
+        TESTADO contra a falha REAL (a FAI estava fora): veredito "PORTAL DA VPN FORA DO AR —
+        não é a sua máquina". E o 1º teste pegou um defeito meu: unidade PARADA era
+        classificada como "ainda tentando" com log de DIAS atrás — agora há gate de
+        is-active + janela de 15 min na evidência, senão o diagnóstico mente.
+        PEGADINHA DO BUILD: backtick dentro de `printf '...'` = SC2016 e o build FALHA; e a
+        mensagem sai ILEGÍVEL porque o shellcheck crasha ao imprimir linha com acento
+        ("cannot encode character '\227'") — o sandbox não tem locale UTF-8.

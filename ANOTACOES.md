@@ -208,6 +208,15 @@
          COLUNA INTEIRA — pilha junto — dando a volta nas pontas. Pra mover só UMA janela de
          uma pilha: `expel` (SUPER+O) primeiro, aí swapcol. NÃO usar o `window.swap({direction})`
          genérico: não é layout-aware e fundiu janelas sem relação numa coluna no teste.
+      5. ARRASTAR (SUPER+clique) NUNCA cria coluna — é hardcoded. No CScrollingAlgorithm::
+         newTarget, o ramo `wasDraggingWindow() && draggingTiled()` sempre faz
+         `droppingColumn->add(target, ...)`, ou seja EMPILHA na coluna de destino; a única
+         escolha é acima/abaixo, por o cursor estar acima ou abaixo do meio da janela-alvo.
+         O ramo que cria coluna (`add(idx, width)`) é o de janela NOVA, e o arrasto não passa
+         por ele. Não há knob: nenhuma das 9 chaves do `scrolling` toca em arrasto. Pra pôr
+         lado a lado use SUPER+O (expel) + SUPER+SHIFT+,/. Brecha do mouse: soltar em ÁREA
+         VAZIA cai no `if (!droppingColumn)` e cria coluna — mas no FIM da fita, não onde
+         soltou. (Este item foi LIDO NA FONTE e não medido: não dá pra sintetizar arrasto.)
 - [x] REVISÃO (jul/2026) do thumbwheel + largura, depois de usar: a fita virou 1 JANELA POR
       TELA (`scrolling.column_width = 1.0`, único valor fora do default) e o thumbwheel
       DEIXOU de ser divertido pelo logiops. Agora a rodinha do polegar faz scroll horizontal

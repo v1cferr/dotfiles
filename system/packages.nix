@@ -21,6 +21,10 @@
     tree # lista a árvore de diretórios no terminal
     gdu # analisador de uso de disco TUI (Go), ~5× mais rápido que ncdu em disco grande (`sudo gdu -x /`)
     kdePackages.filelight # analisador de uso de disco GUI (KDE, gráfico sunburst); integra c/ Dolphin/Kvantum
+    # O gdu/filelight respondem "qual PASTA pesa"; este responde "qual PACOTE pesa", que é
+    # outra pergunta: mostra o closure ordenado por tamanho e o que cada dep arrasta.
+    # Foi como se mediu que o xembedsniproxy custava 429 MiB de qtwebengine (30/07).
+    nix-tree # navega o closure de uma derivação por TAMANHO (`nix-tree /run/current-system`)
     jq # processa/consulta JSON no terminal (usado no fluxo de segredos c/ bw)
     openssl # gerar senhas/chaves (rand), TLS, etc.
     python3 # interpretador Python (rodar scripts; libs por projeto ficam no uv/venv)

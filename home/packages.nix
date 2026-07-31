@@ -42,6 +42,14 @@
     rpcs3 # emulador PS3 (Uncharted 1/2/3); firmware + jogos = estado, você provê
     prismlauncher # Minecraft nativo p/ modpacks (vem wrapped com os JDKs 8/17/21)
 
+    # ── Disco / limpeza ──
+    # Complementa o filelight (que mostra PASTAS): o czkawka acha o que é
+    # DESCARTÁVEL — duplicatas, arquivos grandes, pastas vazias, temporários,
+    # imagens/vídeos semelhantes. É a peça que faltava p/ decidir o que remover
+    # em vez de só ver o que é grande. GUI = `czkawka_gui` (ou `krokiet`, a nova);
+    # `czkawka_cli` p/ script. NÃO apaga nada sozinho — sempre lista primeiro.
+    czkawka
+
     # ── CLIs ──
     gh # GitHub CLI (auth/push via HTTPS + token)
     unstable.fastfetch # resumo do sistema (bleeding-edge: hardware/versões novas)

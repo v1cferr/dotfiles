@@ -42,7 +42,7 @@ tamanho parecido.
 ## Como não digitar tudo
 
 O Windows PE não lê btrfs, então este arquivo **não** estará acessível a partir do
-Kingston durante a instalação. Leve uma cópia no pendrive (Fase 0.3) e, lá dentro:
+Kingston durante a instalação. Leve uma cópia no pendrive (Fase 0.2) e, lá dentro:
 
 ```text
 Shift+F10                    → abre o cmd
@@ -56,38 +56,30 @@ comando, `Ctrl+C`, e no cmd **clica com o botão direito** para colar.
 
 ## Fase 0 — Antes de reiniciar (no NixOS, agora)
 
-### 0.1 Trocar a senha no autounattend
+### 0.1 Gravar o pendrive
 
-O modelo está em [`scripts/autounattend.xml`](scripts/autounattend.xml), com um
-placeholder no lugar da senha.
+Um comando, no **Apêndice** no fim deste arquivo. Leva ~30 min.
 
-⚠️ **Não edite o arquivo do repo.** Este repo é **público** no GitHub, e a senha fica
-em texto puro no XML — é como o formato exige. Trabalhe numa cópia fora do git:
+### 0.2 Conferir o pendrive e copiar este guia
 
-```bash
-cp ~/Projects/GitHub/v1cferr/dotfiles/scripts/autounattend.xml /tmp/autounattend.xml
-nano /tmp/autounattend.xml     # troque TROQUE-ESTA-SENHA pela senha real
-```
-
-### 0.2 Copiar o autounattend pro pendrive
+Verifica que o `install.wim` foi inteiro — foi o que derrubou a 3ª tentativa:
 
 ```bash
-sudo cp /tmp/autounattend.xml /mnt/usb/autounattend.xml
-```
+sudo mkdir -p /mnt/usb && sudo mount /dev/sdc1 /mnt/usb
 
-Tem que ficar na **raiz** e com esse nome exato — é onde o setup procura sozinho.
+ls -lh /mnt/usb/sources/install.wim          # UM arquivo de ~7,9 G
+ls /mnt/usb/sources/*.swm 2>/dev/null && echo "⚠️ TEM SWM — regrave" || echo "✓ sem .swm"
+ls -l /mnt/usb/efi/boot/bootx64.efi          # o boot UEFI
 
-### 0.3 Copiar este guia pro pendrive
-
-```bash
 sudo cp ~/Projects/GitHub/v1cferr/dotfiles/INSTALACAO-WINDOWS.md /mnt/usb/
+sync && sudo umount /mnt/usb && echo "PENDRIVE PRONTO"
 ```
 
-### 0.4 Desmontar
-
-```bash
-sync && sudo umount /mnt/iso /mnt/usb && echo "PENDRIVE PRONTO"
-```
+> **Instalação PADRÃO, sem `autounattend.xml`.** É a decisão de 01/08 — depois de três
+> falhas, quanto menos variável melhor. A consequência é que você passa pelas telas do
+> OOBE à mão, incluindo o truque da conta local (Fase 6.1). O answer file continua
+> disponível em [`scripts/autounattend.xml`](scripts/autounattend.xml) se um dia quiser
+> automatizar; ele foi descartado como causa dos erros, não é defeituoso.
 
 ---
 
@@ -97,13 +89,14 @@ Reinicie e entre no setup (**DEL** na EX-B560M-V5).
 
 1. **Ativar o TPM por firmware** — o Windows 11 exige TPM 2.0:
    *Advanced → PCH-FW Configuration → TPM Device Selection → **PTT***
-2. **Secure Boot ligado** — o pendrive só tem binários assinados pela Microsoft,
-   então funciona com ele ativo. É o motivo de termos dividido o WIM em vez de usar
-   Ventoy ou NTFS+shim.
+2. **Secure Boot ligado** — o bootloader UEFI:NTFS que o `woeusb` grava é assinado
+   pela Microsoft (desde o Rufus 3.17), então o pendrive boota com Secure Boot ativo.
 3. Salvar e sair (**F10**).
 
-> Se mesmo assim o instalador reclamar de "This PC can't run Windows 11", as chaves de
-> bypass do `autounattend.xml` cobrem — mas prefira o PTT ligado de verdade.
+⚠️ **Sem o `autounattend.xml`, o PTT não é opcional.** Ele é que traria as chaves de
+bypass do check de hardware. Numa instalação padrão o Windows 11 verifica TPM 2.0 de
+verdade — se o PTT estiver desligado, o setup para em *"This PC can't run
+Windows 11"* e você volta pra BIOS.
 
 ---
 
@@ -199,8 +192,8 @@ O disco fica **inteiramente não alocado**. É assim que o Setup gosta.
 
 De volta à GUI do Setup, clique em **Refresh**.
 
-1. **Edição** — escolha a que você tem licença (Pro, provavelmente). O
-   `autounattend.xml` de propósito não fixa a chave, então esta tela aparece.
+1. **Edição** — escolha a que você tem licença (Pro, provavelmente). Se pedir chave de
+   produto, *"I don't have a product key"* deixa escolher a edição e ativar depois.
 2. **Tipo de instalação** — *Custom: Install Windows only (advanced)*.
 3. **Onde instalar** — o Disk 1 deve aparecer como um único **Unallocated Space** de
    ~931,5 GB. Selecione ele e clique em **Create Partition** (ou *New*), aceitando o
@@ -211,33 +204,46 @@ De volta à GUI do Setup, clique em **Refresh**.
 Com os outros discos offline, ele é obrigado a pôr a ESP no Disk 1 — que era o
 objetivo desde o começo, agora feito pelas ferramentas dele.
 
-Daqui pra frente é automático: o `autounattend.xml` aceita a EULA, põe teclado ABNT2,
-fuso de Brasília, cria a conta local `v1cferr` como administrador e pula as telas de
-conta Microsoft e de telemetria.
+A cópia dos arquivos leva uns 10–20 min e a máquina reinicia sozinha algumas vezes.
+Quando chegar no OOBE (as telas azuis de "vamos configurar seu PC"), siga a **Fase 6.1**
+— é lá que está o truque da conta local.
 
-> **Se ainda assim falhar**, a única variável que sobra é o próprio
-> `autounattend.xml` — o instalador novo é conhecido por implicar com answer file
-> parcial. Teste: `Shift+F10` → `dir D:\` para achar a letra do pendrive →
-> `del D:\autounattend.xml` → **Refresh**. Você perde a automação da conta local
-> (crie pelo OOBE, desconectando a rede para escapar da conta Microsoft), mas a
-> instalação anda.
+> **Se ainda assim falhar**, o suspeito é a **mídia**, não o disco. As três falhas de
+> 01/08 vieram de pendrive gravado à mão (FAT32 + WIM dividido). Confira que o
+> `install.wim` está inteiro — `Shift+F10` → `dir D:\sources\install*` — e, se houver
+> `.swm`, regrave com o `woeusb` (Apêndice).
+>
+> O `autounattend.xml` **já foi descartado** como causa: o erro persistiu sem ele.
 
 ---
 
 ## Fase 6 — Depois de instalar
 
-### 6.1 Apagar o autounattend do pendrive
+### 6.1 OOBE — escapar da conta Microsoft
 
-Ele tem sua senha em texto puro.
+O Windows 11 25H2 não oferece mais a opção de conta local nas telas normais. Quando
+chegar em *"Let's connect you to a network"* ou na tela de login da conta Microsoft:
 
 ```text
-del D:\autounattend.xml
+Shift+F10
+start ms-cxh:localonly
+```
+
+Abre o diálogo clássico de criar conta local (nome + senha) e o OOBE segue dali.
+
+> O antigo `OOBE\BYPASSNRO` foi **removido** no 24H2 — não perca tempo com ele.
+> Desconectar o cabo de rede **antes** de ligar o PC também costuma fazer o OOBE
+> oferecer a conta local sozinho, e é o plano B se o comando acima não pegar.
+
+### 6.2 Tirar o guia do pendrive
+
+```text
 del D:\INSTALACAO-WINDOWS.md
 ```
 
 (ou espete o pendrive no NixOS depois e apague de lá)
 
-### 6.2 O relógio — senão os dois sistemas brigam
+### 6.3 O relógio — senão os dois sistemas brigam
 
 O NixOS guarda o **RTC em UTC** (conferido: `RTC in local TZ: no`). O Windows assume
 que o RTC está em **hora local**. Sem corrigir, cada troca de sistema move o relógio
@@ -252,12 +258,12 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeI
 
 Reinicie e ajuste a hora uma última vez. A partir daí os dois concordam.
 
-### 6.3 BitLocker — confira antes de confiar
+### 6.4 BitLocker — confira antes de confiar
 
-A conta **local** do `autounattend.xml` já evita o pior: a criptografia automática do
-Windows 11 só liga sozinha quando você entra com conta Microsoft, que é quem guarda a
-chave de recuperação. Mesmo assim, há relatos de o 25H2 cifrar volumes em instalação
-limpa, então vale checar. Num cmd como administrador:
+A **conta local** da Fase 6.1 já evita o pior: a criptografia automática do Windows 11
+só liga sozinha quando você entra com conta Microsoft, que é quem guarda a chave de
+recuperação. Mesmo assim, há relatos de o 25H2 cifrar volumes em instalação limpa,
+então vale checar. Num cmd como administrador:
 
 ```text
 manage-bde -status
@@ -274,14 +280,14 @@ você. E você vai ficar alternando entradas de boot entre NixOS e Windows — m
 Secure Boot ou na ordem de boot pode disparar a tela de recuperação do BitLocker. Sem
 a chave, o disco vira tijolo.
 
-### 6.4 Os discos offline voltam sozinhos
+### 6.5 Os discos offline voltam sozinhos
 
 O `offline disk` da Fase 3 é estado do Windows e some no reboot — Seagate e Kingston
 reaparecem normalmente, tanto no Windows quanto no NixOS. Se por algum motivo o
 Windows continuar mostrando algum deles como offline em *Disk Management*, clique com
 o direito no disco → **Online**. Nada foi alterado no conteúdo.
 
-### 6.5 Ordem de boot
+### 6.6 Ordem de boot
 
 O Windows provavelmente se colocou como primeira opção. Isso é normal e **não tocou em
 nenhum arquivo do Kingston** — a ESP dele é a do SanDisk.
@@ -289,7 +295,7 @@ nenhum arquivo do Kingston** — a ESP dele é a do SanDisk.
 Para voltar ao NixOS: **F8** no POST e escolher o Kingston. Para tornar permanente:
 *BIOS → Boot → Boot Option Priorities → #1 = Kingston*.
 
-### 6.6 De volta no NixOS
+### 6.7 De volta no NixOS
 
 O UUID do SanDisk mudou (ele foi reformatado), então o mount transitório passou a
 mentir. Remova o bloco `/mnt/sandisk-old` de
@@ -380,28 +386,28 @@ A lição, que vale além deste guia: **quando a ferramenta oficial resolve o pr
 não invente**. Cada uma das três falhas veio de eu tentar ser mais correto que o
 Windows — typecode "mais padrão", layout "mais explícito", boot "mais assinado".
 
-### Onde entra o `autounattend.xml`
+### Opcional: automatizar o OOBE com `autounattend.xml`
 
-Depois que o `woeusb` terminar, copie na raiz do pendrive:
+**Não usado nesta instalação** — a de 01/08 foi padrão, para reduzir variáveis depois
+das três falhas. Mas o answer file existe, está validado, e poupa as telas do OOBE
+(EULA, teclado ABNT2, fuso, conta local, telas de telemetria).
+
+Se um dia quiser usar, o modelo está em
+[`scripts/autounattend.xml`](scripts/autounattend.xml):
 
 ```bash
+cp ~/Projects/GitHub/v1cferr/dotfiles/scripts/autounattend.xml /tmp/autounattend.xml
+nano /tmp/autounattend.xml          # troque TROQUE-ESTA-SENHA
+
 sudo mount /dev/sdc1 /mnt/usb
-sudo cp /tmp/autounattend.xml /mnt/usb/
-sudo cp ~/Projects/GitHub/v1cferr/dotfiles/INSTALACAO-WINDOWS.md /mnt/usb/
+sudo cp /tmp/autounattend.xml /mnt/usb/      # na RAIZ, com este nome exato
 sync && sudo umount /mnt/usb
+rm /tmp/autounattend.xml                     # a senha fica em texto puro
 ```
 
-> Ele foi descartado como suspeito na tentativa 3 — o erro persistiu sem ele. Pode
-> usar tranquilo.
+⚠️ **Nunca edite o arquivo do repo** — este repo é público no GitHub e a senha do XML
+não é cifrada. Trabalhe sempre numa cópia fora do git, e apague depois.
 
-### Plano B: conta local sem o `autounattend`
-
-Se optar por instalar sem ele, o Windows 11 25H2 insiste em conta Microsoft. Na tela
-de conexão do OOBE, `Shift+F10` e:
-
-```text
-start ms-cxh:localonly
-```
-
-O antigo `OOBE\BYPASSNRO` foi removido no 24H2. Desconectar o cabo de rede antes do
-OOBE também costuma destravar a opção de conta local.
+> Ele foi **descartado como causa** dos erros na tentativa 3 (o problema persistiu sem
+> ele), então não é defeituoso. Vantagem colateral: traz as chaves de bypass do check
+> de hardware, então dispensa o PTT ligado.

@@ -34,6 +34,14 @@
     options = [ "nofail" "x-systemd.device-timeout=5s" ];
   };
 
+  # Swapfile de disco (backstop de capacidade — o porquê está em system/hardware/
+  # hardware.nix, junto do zram). Mora no host porque depende do FS da raiz: aqui é
+  # ext4, então o NixOS cria e formata /swapfile na ativação, sem gambiarra de CoW.
+  # No nixos-kingston (btrfs) quem faz isso é o disko, num subvolume NOCOW. Em MB.
+  swapDevices = [
+    { device = "/swapfile"; size = 16 * 1024; } # 16 GB (= RAM)
+  ];
+
   # Kernel — MESMO hardware do Seagate (mesma MOBO/CPU). SanDisk é SATA (ahci +
   # sd_mod). No cutover, dá pra regenerar com nixos-generate-config se algo mudar.
   boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];

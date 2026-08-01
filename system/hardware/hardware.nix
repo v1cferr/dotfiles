@@ -10,15 +10,16 @@
   hardware.enableRedistributableFirmware = true; # inclui firmware da GPU (Intel Arc)
   zramSwap.enable = true; # swap comprimido na RAM (rápido; prio 5 → usado primeiro)
 
-  # Swapfile de DISCO como backstop real de capacidade. O zram mora na RAM e NÃO
-  # adiciona espaço — só comprime. Quando os 16 GB + zram apertam (ex.: Minecraft
-  # com 8 GB de heap + VSCode + navegador), esse overflow em disco evita o OOM
-  # killer matar apps. Prioridade default (negativa) < zram (5): as páginas quentes
-  # vão pro zram, o disco só pega o overflow frio. NixOS cria e formata o /swapfile
-  # na ativação (root é ext4 → swapfile funciona sem gambiarra de CoW). Tamanho em MB.
-  swapDevices = [
-    { device = "/swapfile"; size = 16 * 1024; } # 16 GB (= RAM)
-  ];
+  # O SWAPFILE DE DISCO mora no HOST, não aqui: ele depende do filesystem da raiz.
+  # Em ext4 (nixos-sandisk) é um /swapfile comum declarado via swapDevices; em btrfs
+  # (nixos-kingston) precisa de subvolume NOCOW e quem cria é o disko. Mesma opção
+  # nos dois lugares geraria dois swapfiles no Kingston — um deles em CoW, que o
+  # kernel recusa ativar. O zram acima é agnóstico de disco e por isso fica.
+  #
+  # Motivação (vale pros dois hosts): o zram comprime mas NÃO adiciona espaço. Quando
+  # os 16 GB + zram apertam (Minecraft com 8 GB de heap + VSCode + navegador), o
+  # overflow em disco evita o OOM killer matar apps. Prioridade default (negativa) <
+  # zram (5): página quente vai pro zram, o disco só pega o overflow frio.
 
   # fwupd = updates de firmware via LVFS (`fwupdmgr refresh && fwupdmgr update`).
   # NÃO cobre a BIOS desta placa (ASUS EX-B560M-V5 não está no LVFS → usar EZ Flash

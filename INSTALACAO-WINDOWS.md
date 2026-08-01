@@ -12,7 +12,7 @@ que este roteiro apaga é o SanDisk — que hoje não tem nada exclusivo (o `/ho
 copiado byte a byte para o Kingston e conferido). O pior caso realista é o Windows se
 colocar como primeiro no menu de boot, o que se resolve na BIOS em 10 segundos.
 
-**Como o Kingston fica protegido sem desparafusar nada:** a **Fase 3.5** coloca os
+**Como o Kingston fica protegido sem desparafusar nada:** a **Fase 3** coloca os
 outros discos *offline* pelo `diskpart`. O Windows não consegue escrever num disco
 offline — o efeito é o mesmo de desconectar o cabo, e volta sozinho no próximo boot.
 
@@ -115,111 +115,118 @@ Na primeira tela do setup, **antes de clicar em qualquer coisa**: `Shift+F10`.
 
 ---
 
-## Fase 3 — Particionar à mão ⚠️ DESTRUTIVO
+## Fase 3 — Isolar os outros discos ⚠️ É AQUI QUE O KINGSTON FICA PROTEGIDO
 
-Este é o passo que protege o Kingston. Criando a ESP no SanDisk **antes**, o Windows
-instala o bootloader nela em vez de procurar uma existente em outro disco.
+**Substitui "desconectar o Kingston fisicamente"** — mesmo efeito, sem chave de fenda,
+e reversível. O Windows **não consegue escrever num disco offline**.
+
+`Shift+F10` na primeira tela do Setup:
 
 ```text
 diskpart
 list disk
 ```
 
-Anote qual número é o de **931 GB**. Então:
+Identifique pelos tamanhos: **298 GB** (Seagate) e **953 GB** (Kingston) saem de cena;
+**931 GB** (SanDisk) é o alvo e **fica online**. Confirme cada um antes de tirar:
 
 ```text
-select disk N
+select disk 0
+detail disk
+```
+
+Só rode `offline disk` se o modelo bater com o que você espera tirar. Repita para o
+outro:
+
+```text
+offline disk
+select disk 2
+detail disk
+offline disk
+list disk
+```
+
+O `list disk` final tem que mostrar **Offline** no Disk 0 e no Disk 2, e **Online** no
+Disk 1 e no Disk 3 (pendrive).
+
+⚠️ **Nunca** coloque offline o disco de 931 GB (é o alvo) nem o pendrive (é a mídia de
+onde você está rodando).
+
+> `offline` é estado do Windows, não toca em nada gravado. O Linux ignora
+> completamente, e os discos voltam sozinhos no próximo boot.
+
+---
+
+## Fase 4 — Limpar o alvo e deixar o Setup particionar ⚠️ DESTRUTIVO
+
+**NÃO crie as partições à mão.** Uma versão anterior deste guia mandava criar
+ESP + MSR + NTFS pelo `diskpart`, e o Setup **recusou** com *"There is an error
+selecting this partition for install"* — mesmo com o layout correto e os outros discos
+já offline. O instalador do Windows 11 24H2+ implica com partição que não foi ele que
+criou.
+
+Como a Fase 3 já deixou o Kingston inalcançável, não há mais motivo para o layout
+manual: o Setup **só tem um disco onde criar a ESP**. A proteção vem do `offline`, não
+do particionamento.
+
+Ainda no `diskpart`:
+
+```text
+select disk 1
 detail disk
 ```
 
 ### ⛔ PARE E LEIA A SAÍDA
 
-O `detail disk` mostra o **modelo**. Só continue se aparecer **SanDisk SSD PLUS**.
+Só continue se aparecer **SanDisk SSD PLUS**.
 
 - Se disser `KINGSTON SKC3000` → disco errado. Volte ao `select disk`.
 - Se disser `ST9320423AS` → é o Seagate dos backups. Volte ao `select disk`.
 
-Confirmado que é o SanDisk:
+Confirmado:
 
 ```text
 clean
 convert gpt
-create partition efi size=300
-format quick fs=fat32 label="System"
-create partition msr size=16
-create partition primary
-format quick fs=ntfs label="Windows"
-list partition
 exit
 ```
 
-O `list partition` deve mostrar três: System (300 MB), Reservada (16 MB) e a Primária
-com o resto (~930 GB).
+O disco fica **inteiramente não alocado**. É assim que o Setup gosta.
 
 ---
 
-## Fase 3.5 — Isolar os outros discos ⚠️ NÃO PULE
+## Fase 5 — Instalar
 
-**Este passo substitui "desconectar o Kingston fisicamente"** — mesmo efeito, sem
-chave de fenda, e reversível.
-
-Sem ele o Setup enxerga **três partições "System"** (uma ESP no Seagate, uma no
-SanDisk, uma no Kingston), não consegue decidir onde escrever o bootloader e falha
-com *"There is an error selecting this partition for install"*. Aconteceu de verdade
-em 01/08.
-
-Ainda no `diskpart`:
-
-```text
-diskpart
-list disk
-select disk 0
-offline disk
-select disk 2
-offline disk
-list disk
-exit
-```
-
-O `list disk` final tem que mostrar Disk 0 e Disk 2 marcados na coluna **Offline**.
-
-⚠️ **Confirme os números pelos tamanhos antes de digitar** — 298 GB (Seagate) e
-953 GB (Kingston). **Nunca** coloque offline o disco de 931 GB: é o alvo. E nem o
-pendrive, que é a mídia de onde você está rodando.
-
-Por que isso é a proteção certa:
-
-- O Windows **não consegue escrever num disco offline**. O Kingston fica inalcançável
-  para o instalador, que era o objetivo desde o começo.
-- Sobra **uma única ESP** visível — a do SanDisk. Sem ambiguidade sobre onde vai o
-  bootloader.
-- `offline` é estado do Windows, não toca em nada gravado. O Linux ignora
-  completamente, e os discos voltam sozinhos no próximo boot.
-
-Volte ao Setup e clique em **Refresh**. Só devem restar o Disk 1 e o pendrive.
-
----
-
-## Fase 4 — Instalar
-
-De volta à GUI do setup:
+De volta à GUI do Setup, clique em **Refresh**.
 
 1. **Edição** — escolha a que você tem licença (Pro, provavelmente). O
    `autounattend.xml` de propósito não fixa a chave, então esta tela aparece.
 2. **Tipo de instalação** — *Custom: Install Windows only (advanced)*.
-3. **Onde instalar** — selecione a partição **`Windows`** (~930 GB). Depois da Fase 3.5
-   ela deve ser praticamente a única opção sobrando, junto com o pendrive.
-   **Não** clique em Novo/Formatar/Excluir aqui; já está tudo pronto.
+3. **Onde instalar** — o Disk 1 deve aparecer como um único **Unallocated Space** de
+   ~931,5 GB. Selecione ele e clique em **Create Partition** (ou *New*), aceitando o
+   tamanho padrão.
+4. O Setup cria sozinho ESP + MSR + Windows + Recovery. Selecione a **Primary** grande
+   (~930 GB) e clique em **Next**.
+
+Com os outros discos offline, ele é obrigado a pôr a ESP no Disk 1 — que era o
+objetivo desde o começo, agora feito pelas ferramentas dele.
 
 Daqui pra frente é automático: o `autounattend.xml` aceita a EULA, põe teclado ABNT2,
 fuso de Brasília, cria a conta local `v1cferr` como administrador e pula as telas de
 conta Microsoft e de telemetria.
 
+> **Se ainda assim falhar**, a única variável que sobra é o próprio
+> `autounattend.xml` — o instalador novo é conhecido por implicar com answer file
+> parcial. Teste: `Shift+F10` → `dir D:\` para achar a letra do pendrive →
+> `del D:\autounattend.xml` → **Refresh**. Você perde a automação da conta local
+> (crie pelo OOBE, desconectando a rede para escapar da conta Microsoft), mas a
+> instalação anda.
+
 ---
 
-## Fase 5 — Depois de instalar
+## Fase 6 — Depois de instalar
 
-### 5.1 Apagar o autounattend do pendrive
+### 6.1 Apagar o autounattend do pendrive
 
 Ele tem sua senha em texto puro.
 
@@ -230,7 +237,7 @@ del D:\INSTALACAO-WINDOWS.md
 
 (ou espete o pendrive no NixOS depois e apague de lá)
 
-### 5.2 O relógio — senão os dois sistemas brigam
+### 6.2 O relógio — senão os dois sistemas brigam
 
 O NixOS guarda o **RTC em UTC** (conferido: `RTC in local TZ: no`). O Windows assume
 que o RTC está em **hora local**. Sem corrigir, cada troca de sistema move o relógio
@@ -245,7 +252,7 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeI
 
 Reinicie e ajuste a hora uma última vez. A partir daí os dois concordam.
 
-### 5.3 BitLocker — confira antes de confiar
+### 6.3 BitLocker — confira antes de confiar
 
 A conta **local** do `autounattend.xml` já evita o pior: a criptografia automática do
 Windows 11 só liga sozinha quando você entra com conta Microsoft, que é quem guarda a
@@ -267,14 +274,14 @@ você. E você vai ficar alternando entradas de boot entre NixOS e Windows — m
 Secure Boot ou na ordem de boot pode disparar a tela de recuperação do BitLocker. Sem
 a chave, o disco vira tijolo.
 
-### 5.4 Os discos offline voltam sozinhos
+### 6.4 Os discos offline voltam sozinhos
 
-O `offline disk` da Fase 3.5 é estado do Windows e some no reboot — Seagate e Kingston
+O `offline disk` da Fase 3 é estado do Windows e some no reboot — Seagate e Kingston
 reaparecem normalmente, tanto no Windows quanto no NixOS. Se por algum motivo o
 Windows continuar mostrando algum deles como offline em *Disk Management*, clique com
 o direito no disco → **Online**. Nada foi alterado no conteúdo.
 
-### 5.5 Ordem de boot
+### 6.5 Ordem de boot
 
 O Windows provavelmente se colocou como primeira opção. Isso é normal e **não tocou em
 nenhum arquivo do Kingston** — a ESP dele é a do SanDisk.
@@ -282,7 +289,7 @@ nenhum arquivo do Kingston** — a ESP dele é a do SanDisk.
 Para voltar ao NixOS: **F8** no POST e escolher o Kingston. Para tornar permanente:
 *BIOS → Boot → Boot Option Priorities → #1 = Kingston*.
 
-### 5.6 De volta no NixOS
+### 6.6 De volta no NixOS
 
 O UUID do SanDisk mudou (ele foi reformatado), então o mount transitório passou a
 mentir. Remova o bloco `/mnt/sandisk-old` de
@@ -298,7 +305,7 @@ Enquanto não remover, o boot só emite um aviso — o `nofail` evita que ele tr
 | Sintoma | Causa provável |
 | --- | --- |
 | **"A media driver your computer needs is missing"** | **Aconteceu (01/08).** A partição do pendrive estava tipada como *EFI System* — o Windows **não dá letra de unidade a uma ESP**, então o Setup não achou o `sources/`. Ver o Apêndice |
-| **"There is an error selecting this partition for install"** | **Aconteceu (01/08).** Três discos com partição *System* — o Setup não decide onde pôr o bootloader. Faça a **Fase 3.5** (offline nos outros discos) e clique em Refresh |
+| **"There is an error selecting this partition for install"** | **Aconteceu (01/08), duas vezes.** O instalador 24H2+ recusa partição criada à mão. `clean` no disco alvo e deixe o Setup criar (**Fases 3 e 4**). Não adianta só pôr os outros discos offline — foi tentado e continuou falhando |
 | Partição alvo aparece como *Read-only* | `select disk 1` → `attributes disk clear readonly` |
 | "This PC can't run Windows 11" | PTT desligado na BIOS (Fase 1) |
 | Setup não acha disco nenhum | Disco em modo RAID/Intel RST — mude para **AHCI** na BIOS |
@@ -308,6 +315,21 @@ Enquanto não remover, o boot só emite um aviso — o `nofail` evita que ele tr
 
 **O NixOS não depende do SanDisk para nada.** Ele boota do Kingston, com sua própria
 ESP em `nvme0n1p1`. O pior caso desta noite é ter que reordenar o menu de boot.
+
+### A lição das duas falhas
+
+Os dois erros da noite tiveram a mesma raiz: **tentar ser mais correto que as
+ferramentas do Windows.**
+
+- Tipei o pendrive como `EF00` porque é o "certo" pelo padrão UEFI. O Windows queria
+  `0700`.
+- Criei o layout de partições à mão porque era mais explícito. O Windows queria criar
+  o dele.
+
+A combinação que funciona separa as duas responsabilidades: **`offline disk` nos
+outros discos** dá a proteção (o Windows fisicamente não alcança o Kingston), e o
+**Setup manda no disco que sobrou**. Não tente fazer as duas coisas com a mesma
+ferramenta.
 
 ---
 

@@ -181,7 +181,44 @@ del D:\INSTALACAO-WINDOWS.md
 
 (ou espete o pendrive no NixOS depois e apague de lá)
 
-### 5.2 Ordem de boot
+### 5.2 O relógio — senão os dois sistemas brigam
+
+O NixOS guarda o **RTC em UTC** (conferido: `RTC in local TZ: no`). O Windows assume
+que o RTC está em **hora local**. Sem corrigir, cada troca de sistema move o relógio
+em 3 horas, e você fica reajustando pra sempre.
+
+A correção certa é ensinar o Windows a usar UTC — assim o padrão sensato do NixOS
+fica intacto. Num **cmd como administrador**, no Windows:
+
+```text
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeIsUniversal /t REG_DWORD /d 1 /f
+```
+
+Reinicie e ajuste a hora uma última vez. A partir daí os dois concordam.
+
+### 5.3 BitLocker — confira antes de confiar
+
+A conta **local** do `autounattend.xml` já evita o pior: a criptografia automática do
+Windows 11 só liga sozinha quando você entra com conta Microsoft, que é quem guarda a
+chave de recuperação. Mesmo assim, há relatos de o 25H2 cifrar volumes em instalação
+limpa, então vale checar. Num cmd como administrador:
+
+```text
+manage-bde -status
+```
+
+Se disser **"Protection On"** em algum volume, você tem duas saídas — e precisa
+escolher uma **agora**, não depois:
+
+- `manage-bde -off C:` para desligar, ou
+- salvar a chave de recuperação num lugar seguro (Bitwarden)
+
+**Por que isso importa no seu caso:** sem conta Microsoft, ninguém guardou a chave por
+você. E você vai ficar alternando entradas de boot entre NixOS e Windows — mexer em
+Secure Boot ou na ordem de boot pode disparar a tela de recuperação do BitLocker. Sem
+a chave, o disco vira tijolo.
+
+### 5.4 Ordem de boot
 
 O Windows provavelmente se colocou como primeira opção. Isso é normal e **não tocou em
 nenhum arquivo do Kingston** — a ESP dele é a do SanDisk.
@@ -189,7 +226,7 @@ nenhum arquivo do Kingston** — a ESP dele é a do SanDisk.
 Para voltar ao NixOS: **F8** no POST e escolher o Kingston. Para tornar permanente:
 *BIOS → Boot → Boot Option Priorities → #1 = Kingston*.
 
-### 5.3 De volta no NixOS
+### 5.5 De volta no NixOS
 
 O UUID do SanDisk mudou (ele foi reformatado), então o mount transitório passou a
 mentir. Remova o bloco `/mnt/sandisk-old` de

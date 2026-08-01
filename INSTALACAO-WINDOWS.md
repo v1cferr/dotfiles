@@ -12,6 +12,10 @@ que este roteiro apaga é o SanDisk — que hoje não tem nada exclusivo (o `/ho
 copiado byte a byte para o Kingston e conferido). O pior caso realista é o Windows se
 colocar como primeiro no menu de boot, o que se resolve na BIOS em 10 segundos.
 
+**Como o Kingston fica protegido sem desparafusar nada:** a **Fase 3.5** coloca os
+outros discos *offline* pelo `diskpart`. O Windows não consegue escrever num disco
+offline — o efeito é o mesmo de desconectar o cabo, e volta sozinho no próximo boot.
+
 ---
 
 ## A regra que importa
@@ -19,11 +23,16 @@ colocar como primeiro no menu de boot, o que se resolve na BIOS em 10 segundos.
 Só existe **um** jeito de estragar esta noite: apagar o disco errado. Os dois têm
 tamanho parecido.
 
-| Disco | `list disk` mostra | O que é |
-| --- | --- | --- |
-| Seagate ST9320423AS | **298 GB** | backups restic — **NÃO TOCAR** |
-| **SanDisk SSD PLUS** | **931 GB** | ← o alvo |
-| Kingston KC3000 | **953 GB** | NixOS — **NÃO TOCAR** |
+| `list disk` | Tamanho | Disco | |
+| --- | --- | --- | --- |
+| **Disk 0** | 298 GB | Seagate ST9320423AS | backups restic — **NÃO TOCAR** |
+| **Disk 1** | **931 GB** | **SanDisk SSD PLUS** | ← o alvo |
+| **Disk 2** | 953 GB | Kingston KC3000 | NixOS — **NÃO TOCAR** |
+| **Disk 3** | 14,5 GB | o pendrive | a mídia de instalação |
+
+> A numeração acima foi **observada na prática em 01/08/2026**. Mesmo assim, confirme
+> pelo tamanho — o Windows enumera por conta própria e isso pode mudar se você trocar
+> algo de porta.
 
 931 e 953 se confundem num console às pressas. Por isso o roteiro obriga um
 `detail disk` antes de qualquer comando destrutivo: **o nome do modelo não engana.**
@@ -149,6 +158,48 @@ com o resto (~930 GB).
 
 ---
 
+## Fase 3.5 — Isolar os outros discos ⚠️ NÃO PULE
+
+**Este passo substitui "desconectar o Kingston fisicamente"** — mesmo efeito, sem
+chave de fenda, e reversível.
+
+Sem ele o Setup enxerga **três partições "System"** (uma ESP no Seagate, uma no
+SanDisk, uma no Kingston), não consegue decidir onde escrever o bootloader e falha
+com *"There is an error selecting this partition for install"*. Aconteceu de verdade
+em 01/08.
+
+Ainda no `diskpart`:
+
+```text
+diskpart
+list disk
+select disk 0
+offline disk
+select disk 2
+offline disk
+list disk
+exit
+```
+
+O `list disk` final tem que mostrar Disk 0 e Disk 2 marcados na coluna **Offline**.
+
+⚠️ **Confirme os números pelos tamanhos antes de digitar** — 298 GB (Seagate) e
+953 GB (Kingston). **Nunca** coloque offline o disco de 931 GB: é o alvo. E nem o
+pendrive, que é a mídia de onde você está rodando.
+
+Por que isso é a proteção certa:
+
+- O Windows **não consegue escrever num disco offline**. O Kingston fica inalcançável
+  para o instalador, que era o objetivo desde o começo.
+- Sobra **uma única ESP** visível — a do SanDisk. Sem ambiguidade sobre onde vai o
+  bootloader.
+- `offline` é estado do Windows, não toca em nada gravado. O Linux ignora
+  completamente, e os discos voltam sozinhos no próximo boot.
+
+Volte ao Setup e clique em **Refresh**. Só devem restar o Disk 1 e o pendrive.
+
+---
+
 ## Fase 4 — Instalar
 
 De volta à GUI do setup:
@@ -156,11 +207,9 @@ De volta à GUI do setup:
 1. **Edição** — escolha a que você tem licença (Pro, provavelmente). O
    `autounattend.xml` de propósito não fixa a chave, então esta tela aparece.
 2. **Tipo de instalação** — *Custom: Install Windows only (advanced)*.
-3. **Onde instalar** — selecione a partição **`Windows`** (~930 GB) no disco que você
-   preparou. **Não** clique em Novo/Formatar/Excluir aqui; já está tudo pronto.
-   - Confira que a linha selecionada é do mesmo disco da Fase 3. O setup mostra
-     "Drive 0/1/2 Partition N" — o número do drive tem que bater com o `N` que você
-     usou no `select disk`.
+3. **Onde instalar** — selecione a partição **`Windows`** (~930 GB). Depois da Fase 3.5
+   ela deve ser praticamente a única opção sobrando, junto com o pendrive.
+   **Não** clique em Novo/Formatar/Excluir aqui; já está tudo pronto.
 
 Daqui pra frente é automático: o `autounattend.xml` aceita a EULA, põe teclado ABNT2,
 fuso de Brasília, cria a conta local `v1cferr` como administrador e pula as telas de
@@ -218,7 +267,14 @@ você. E você vai ficar alternando entradas de boot entre NixOS e Windows — m
 Secure Boot ou na ordem de boot pode disparar a tela de recuperação do BitLocker. Sem
 a chave, o disco vira tijolo.
 
-### 5.4 Ordem de boot
+### 5.4 Os discos offline voltam sozinhos
+
+O `offline disk` da Fase 3.5 é estado do Windows e some no reboot — Seagate e Kingston
+reaparecem normalmente, tanto no Windows quanto no NixOS. Se por algum motivo o
+Windows continuar mostrando algum deles como offline em *Disk Management*, clique com
+o direito no disco → **Online**. Nada foi alterado no conteúdo.
+
+### 5.5 Ordem de boot
 
 O Windows provavelmente se colocou como primeira opção. Isso é normal e **não tocou em
 nenhum arquivo do Kingston** — a ESP dele é a do SanDisk.
@@ -226,7 +282,7 @@ nenhum arquivo do Kingston** — a ESP dele é a do SanDisk.
 Para voltar ao NixOS: **F8** no POST e escolher o Kingston. Para tornar permanente:
 *BIOS → Boot → Boot Option Priorities → #1 = Kingston*.
 
-### 5.5 De volta no NixOS
+### 5.6 De volta no NixOS
 
 O UUID do SanDisk mudou (ele foi reformatado), então o mount transitório passou a
 mentir. Remova o bloco `/mnt/sandisk-old` de
@@ -241,7 +297,9 @@ Enquanto não remover, o boot só emite um aviso — o `nofail` evita que ele tr
 
 | Sintoma | Causa provável |
 | --- | --- |
-| **"A media driver your computer needs is missing"** | **Aconteceu de verdade (01/08).** A partição do pendrive estava tipada como *EFI System* — o Windows **não dá letra de unidade a uma ESP**, então o Setup não achou o `sources/`. Ver o Apêndice |
+| **"A media driver your computer needs is missing"** | **Aconteceu (01/08).** A partição do pendrive estava tipada como *EFI System* — o Windows **não dá letra de unidade a uma ESP**, então o Setup não achou o `sources/`. Ver o Apêndice |
+| **"There is an error selecting this partition for install"** | **Aconteceu (01/08).** Três discos com partição *System* — o Setup não decide onde pôr o bootloader. Faça a **Fase 3.5** (offline nos outros discos) e clique em Refresh |
+| Partição alvo aparece como *Read-only* | `select disk 1` → `attributes disk clear readonly` |
 | "This PC can't run Windows 11" | PTT desligado na BIOS (Fase 1) |
 | Setup não acha disco nenhum | Disco em modo RAID/Intel RST — mude para **AHCI** na BIOS |
 | Instalou mas o NixOS sumiu do boot | Só a ordem da NVRAM. **F8** → Kingston. Se o Kingston não aparecer nem no F8, veja abaixo |

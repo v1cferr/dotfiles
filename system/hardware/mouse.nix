@@ -41,15 +41,22 @@
           buttons = [
             {
               cid = 195; # 0xC3 = botão de gestos (embaixo do apoio do polegar)
+              # Gestos = GERÊNCIA DA FITA pelo polegar, desde que o scrolling virou global e
+              # workspace deixou de ser onde se estoca janela. Cada gesto sintetiza um bind que
+              # JÁ EXISTE no keybinds.lua — nada de ação nova só pro mouse, senão o cheatsheet
+              # (SUPER+H, gerado do keybinds.lua) não enxergaria.
+              # Trocar de workspace continua em SUPER+1..8, SUPER+TAB e SUPER+roda-vertical.
               action = {
                 type = "Gestures";
                 gestures = [
-                  # Esquerda/Direita → trocar de workspace no Hyprland.
-                  { direction = "Left"; mode = "OnRelease"; action = { type = "Keypress"; keys = [ "KEY_LEFTMETA" "KEY_LEFTSHIFT" "KEY_TAB" ]; }; }
-                  { direction = "Right"; mode = "OnRelease"; action = { type = "Keypress"; keys = [ "KEY_LEFTMETA" "KEY_TAB" ]; }; }
-                  # Cima → fullscreen · Baixo → minimizar as outras janelas.
-                  { direction = "Up"; mode = "OnRelease"; action = { type = "Keypress"; keys = [ "KEY_LEFTMETA" "KEY_F" ]; }; }
-                  { direction = "Down"; mode = "OnRelease"; action = { type = "Keypress"; keys = [ "KEY_LEFTMETA" "KEY_M" ]; }; }
+                  # Esquerda/Direita → MOVER a janela pela fita (SUPER+SHIFT+,/. = swapcol l/r).
+                  # É o "pôr do lado com o mouse": o arrasto não faz isso (empilha, hardcoded).
+                  { direction = "Left"; mode = "OnRelease"; action = { type = "Keypress"; keys = [ "KEY_LEFTMETA" "KEY_LEFTSHIFT" "KEY_COMMA" ]; }; }
+                  { direction = "Right"; mode = "OnRelease"; action = { type = "Keypress"; keys = [ "KEY_LEFTMETA" "KEY_LEFTSHIFT" "KEY_DOT" ]; }; }
+                  # Cima → VER TUDO (SUPER+CTRL+G = fit all) · Baixo → foco, 1 por tela
+                  # (SUPER+CTRL+. = colresize all 1.0). O par de modos de visão, no polegar.
+                  { direction = "Up"; mode = "OnRelease"; action = { type = "Keypress"; keys = [ "KEY_LEFTMETA" "KEY_LEFTCTRL" "KEY_G" ]; }; }
+                  { direction = "Down"; mode = "OnRelease"; action = { type = "Keypress"; keys = [ "KEY_LEFTMETA" "KEY_LEFTCTRL" "KEY_DOT" ]; }; }
                   # Clique sem mover → launcher de apps (SUPER+Q).
                   { direction = "None"; mode = "OnRelease"; action = { type = "Keypress"; keys = [ "KEY_LEFTMETA" "KEY_Q" ]; }; }
                 ];

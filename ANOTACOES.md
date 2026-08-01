@@ -642,7 +642,16 @@
       .rasi o '#' abre literal de COR, não comentário — comentar ali mata o parse do tema INTEIRO
       e o rofi só avisa no stderr, caindo nos defaults em silêncio.
 - [x] Mouse Logitech MX Master 3S (system/hardware/mouse.nix, logiops) — DPI 2222, SmartShift,
-      hi-res scroll, botão de gestos → workspaces. PEGADINHA BT: boot-race + "5 tries" do HID++ →
+      hi-res scroll, botão de gestos → GERÊNCIA DA FITA (era workspaces; mudou quando o
+      scrolling virou global e workspace deixou de ser onde se estoca janela): ← / → movem
+      a janela pela fita (swapcol), ↑ = ver tudo, ↓ = foco 1-por-tela, clique = launcher.
+      Cada gesto sintetiza um bind que JÁ EXISTE no keybinds.lua — nunca uma ação exclusiva
+      do mouse, senão o cheatsheet do SUPER+H (que é gerado do keybinds.lua) não a veria.
+      MOUSE E FITA, o resumo: arrastar NUNCA cria coluna (empilha, hardcoded); quem põe uma
+      janela do lado da outra com o mouse é SUPER+botão-direito+arrastar, que redimensiona a
+      coluna — o scrolling implementa resize-drag de verdade (borda esquerda mantém a direita
+      parada ajustando a câmera; borda direita mantém a esquerda fixa), e encolher revela a
+      vizinha. Isso já existia desde sempre no keybinds.lua e eu não sabia. PEGADINHA BT: boot-race + "5 tries" do HID++ →
       regra udev dispara um oneshot (sleep 5 + restart logid) que reaplica no connect/boot/wake.
 - [x] Sunshine capture=wlr (system/services/sunshine.nix) — FIX do boot-hang que travava o
       Moonlight: o Sunshine probava o backend `portalgrab` no startup e pendurava no

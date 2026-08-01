@@ -16,14 +16,14 @@ você formatar o SanDisk para o Windows — que **não** é hoje.
 
 ## Referência rápida
 
-| | |
-| --- | --- |
-| Kingston (destino) | `/dev/disk/by-id/nvme-KINGSTON_SKC3000S1024G_50026B7686B3D2F6` |
-| SanDisk (origem) | UUID `d0392422-6a6c-4c36-8ff4-e6eda25ae487` |
-| Seagate (backup) | UUID `85788f24-b8a0-4c3e-af4f-8af1f8b52147` |
-| Repo no SanDisk | `/mnt/sd/home/v1cferr/Projects/GitHub/v1cferr/dotfiles` |
+|                        |                                                                    |
+| ---------------------- | ------------------------------------------------------------------ |
+| Kingston (destino)     | `/dev/disk/by-id/nvme-KINGSTON_SKC3000S1024G_50026B7686B3D2F6`     |
+| SanDisk (origem)       | UUID `d0392422-6a6c-4c36-8ff4-e6eda25ae487`                        |
+| Seagate (backup)       | UUID `85788f24-b8a0-4c3e-af4f-8af1f8b52147`                        |
+| Repo no SanDisk        | `/mnt/sd/home/v1cferr/Projects/GitHub/v1cferr/dotfiles`            |
 | Sistema pré-construído | `/mnt/sd/home/v1cferr/kingston-system` (symlink p/ o `/nix/store`) |
-| Volume da travessia | `/home` = 403 G · `/var/lib` + `/etc` = ~500 M |
+| Volume da travessia    | `/home` = 403 G · `/var/lib` + `/etc` = ~500 M                     |
 
 **Fora do escopo de propósito:** `/srv/media` (130 G de biblioteca Jellyfin) e
 `/var/lib/jellyfin`. Ambos re-obteníveis; o serviço é declarativo e sobe sozinho.
@@ -119,6 +119,12 @@ ls -l /mnt/sd/var/lib/sops-nix/key.txt
 Os dois têm que existir. Se não existirem, você montou o disco errado — desmonte e
 confira com `lsblk -f`.
 
+> **Sobre clonar o repo em vez de usar o do SanDisk:** o repo é público, então
+> `git clone -b nixos https://github.com/v1cferr/dotfiles` funciona no instalador. Mas
+> **isso não substitui montar o SanDisk** — os 403 G do `/home`, a chave age e a
+> closure pré-construída só existem lá. Use o clone apenas como plano B se o repo do
+> SanDisk estiver ilegível; e leia o aviso da Fase 5 sobre o input privado antes.
+
 ---
 
 ## Fase 3 — Formatar o Kingston ⚠️ DESTRUTIVO
@@ -189,14 +195,27 @@ nixos-install --root /mnt --system "$SYS" --no-root-passwd
 O `--no-root-passwd` é de propósito: root não tem senha nesta config, e o seu usuário
 vem do sops. Se o instalador perguntar senha de root, algo saiu do script.
 
-**Se a cópia do store falhar por qualquer motivo**, o caminho normal funciona igual —
-só baixa da internet em vez de ler o disco ao lado:
+> **Use este caminho, não o `--flake`.** Não é só velocidade: o `--system` instala uma
+> closure **já construída** e não avalia flake nenhum. O caminho `--flake` avaliaria, e
+> aí o nix tentaria buscar o input `duo-streak-daemon`, que é um **repo PRIVADO por
+> `git+ssh`** (`flake.nix` linha 48). O instalador não tem sua chave SSH → falha de
+> autenticação no meio do cutover, com o Kingston já formatado.
+
+### Se precisar mesmo do `--flake` (plano C)
+
+Só se a closure pré-construída não existir. Leve a chave SSH junto:
 
 ```bash
+mkdir -p /root/.ssh
+cp /mnt/sd/home/v1cferr/.ssh/id_ed25519 /root/.ssh/
+chmod 600 /root/.ssh/id_ed25519
+
 nixos-install --root /mnt \
   --flake path:/mnt/sd/home/v1cferr/Projects/GitHub/v1cferr/dotfiles#nixos-kingston \
   --no-root-passwd
 ```
+
+Sem a chave, isso falha. Com ela, funciona mas baixa tudo da internet.
 
 ---
 
@@ -352,11 +371,12 @@ E finalmente: apague este arquivo.
 escolha o SanDisk, e você está de volta ao sistema de hoje. Nada foi perdido — o único
 disco alterado foi o Kingston, cujo conteúdo já está em dois backups verificados.
 
-| Sintoma | Causa provável |
-| --- | --- |
-| Boot sem senha de usuário | Fase 4 pulada — a chave age não chegou em `/mnt/var/lib/sops-nix/` |
-| `/run/secrets/` vazio | Idem, ou permissão errada na chave (tem que ser `600`) |
-| `dubious ownership` no nix | Faltou o `path:` no `--flake` |
-| Kingston não aparece no boot | ESP não criada — confira a Fase 3 com `findmnt -R /mnt` |
-| Serviço sem acesso aos arquivos | `/var/lib/nixos` não foi copiado (uid/gid remapeados) |
-| Cliente SSH acusa host mudado | Fase 6.3 pulada — chaves de host não vieram |
+| Sintoma                         | Causa provável                                                     |
+| ------------------------------- | ------------------------------------------------------------------ |
+| Boot sem senha de usuário       | Fase 4 pulada — a chave age não chegou em `/mnt/var/lib/sops-nix/` |
+| `/run/secrets/` vazio           | Idem, ou permissão errada na chave (tem que ser `600`)             |
+| `dubious ownership` no nix      | Faltou o `path:` no `--flake`                                      |
+| Kingston não aparece no boot    | ESP não criada — confira a Fase 3 com `findmnt -R /mnt`            |
+| Serviço sem acesso aos arquivos | `/var/lib/nixos` não foi copiado (uid/gid remapeados)              |
+| Cliente SSH acusa host mudado   | Fase 6.3 pulada — chaves de host não vieram                        |
+| `Permission denied (publickey)` durante o install | Usou `--flake`; o input `duo-streak-daemon` é privado. Use o `--system` da Fase 5 |

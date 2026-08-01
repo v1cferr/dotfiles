@@ -38,6 +38,11 @@ in
     cloudflare_ddns_token = { };
     jellyfin_api_key = { owner = "v1cferr"; mode = "0400"; }; # legível p/ tooling do usuário em /run/secrets (sem sudo)
     deepl_api_key = { owner = "v1cferr"; mode = "0400"; }; # tradução das frases do lockscreen (serviço --user lê /run/secrets)
+    # rclone.conf do Google Drive (token OAuth). FORA do Bitwarden de propósito: é
+    # MULTILINHA e o sync-secrets faz `sops set` com JSON de uma linha só — quebraria.
+    # E, ao contrário da senha do restic, o token é REGERÁVEL (refaz o OAuth), então
+    # não precisa do cofre. Editar: nix shell nixpkgs#sops -c sops secrets/secrets.yaml
+    rclone_gdrive_conf = { };
   };
 
   environment.systemPackages = [ sync-secrets ];

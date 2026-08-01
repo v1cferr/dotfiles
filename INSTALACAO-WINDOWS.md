@@ -304,8 +304,9 @@ Enquanto não remover, o boot só emite um aviso — o `nofail` evita que ele tr
 
 | Sintoma | Causa provável |
 | --- | --- |
-| **"A media driver your computer needs is missing"** | **Aconteceu (01/08).** A partição do pendrive estava tipada como *EFI System* — o Windows **não dá letra de unidade a uma ESP**, então o Setup não achou o `sources/`. Ver o Apêndice |
-| **"There is an error selecting this partition for install"** | **Aconteceu (01/08), duas vezes.** O instalador 24H2+ recusa partição criada à mão. `clean` no disco alvo e deixe o Setup criar (**Fases 3 e 4**). Não adianta só pôr os outros discos offline — foi tentado e continuou falhando |
+| **"A media driver your computer needs is missing"** | Pendrive mal gravado. Regrave com **`woeusb`** (Apêndice) — não tente FAT32 + WIM dividido |
+| **"There is an error selecting this partition for install"** | **Aconteceu 3× em 01/08.** Some com: pendrive feito pelo `woeusb` (NTFS, WIM inteiro) + `clean` no alvo + Setup particionando. Ver o Apêndice para o histórico das tentativas |
+| `unknown filesystem type 'ntfs-3g'` ao gravar o pendrive | Falta `boot.supportedFilesystems.ntfs = true` no NixOS — já declarado em [`system/core/boot.nix`](system/core/boot.nix) |
 | Partição alvo aparece como *Read-only* | `select disk 1` → `attributes disk clear readonly` |
 | "This PC can't run Windows 11" | PTT desligado na BIOS (Fase 1) |
 | Setup não acha disco nenhum | Disco em modo RAID/Intel RST — mude para **AHCI** na BIOS |
@@ -316,93 +317,91 @@ Enquanto não remover, o boot só emite um aviso — o `nofail` evita que ele tr
 **O NixOS não depende do SanDisk para nada.** Ele boota do Kingston, com sua própria
 ESP em `nvme0n1p1`. O pior caso desta noite é ter que reordenar o menu de boot.
 
-### A lição das duas falhas
+### A lição das três falhas
 
-Os dois erros da noite tiveram a mesma raiz: **tentar ser mais correto que as
-ferramentas do Windows.**
+Todas tiveram a mesma raiz: **tentar ser mais correto que as ferramentas do Windows.**
+Typecode "mais padrão" (`EF00`), layout de partição "mais explícito", boot "mais
+assinado" (FAT32 + WIM dividido). O Windows queria `0700`, queria criar as partições
+dele, e nunca precisou do WIM dividido.
 
-- Tipei o pendrive como `EF00` porque é o "certo" pelo padrão UEFI. O Windows queria
-  `0700`.
-- Criei o layout de partições à mão porque era mais explícito. O Windows queria criar
-  o dele.
+A combinação que funciona separa as responsabilidades por dono:
 
-A combinação que funciona separa as duas responsabilidades: **`offline disk` nos
-outros discos** dá a proteção (o Windows fisicamente não alcança o Kingston), e o
-**Setup manda no disco que sobrou**. Não tente fazer as duas coisas com a mesma
-ferramenta.
+| Responsabilidade | Quem faz |
+| --- | --- |
+| Gravar o pendrive | `woeusb` — a ferramenta que já resolve isso |
+| **Proteger o Kingston** | `offline disk` no `diskpart` (Fase 3) |
+| Particionar o disco alvo | o próprio Setup do Windows |
+
+Não tente fazer as três com a mesma ferramenta, e não tente fazer nenhuma à mão
+quando existe uma que já faz.
 
 ---
 
-## Apêndice — como o pendrive foi feito
+## Apêndice — como gravar o pendrive
 
-Guardado porque o `install.wim` do Windows 11 tem **7,96 GB** e não cabe em FAT32
-(limite de 4 GiB por arquivo). É onde a maioria dos tutoriais falha.
-
-**Por que FAT32 + WIM dividido, e não `dd`/Ventoy/NTFS:** o Windows 11 exige Secure
-Boot. Este método deixa o pendrive com **apenas binários assinados pela Microsoft**,
-então boota com Secure Boot ligado. Ventoy e NTFS+shim adicionam bootloader
-não-assinado, que o Secure Boot bloqueia — e aí você acaba desligando o Secure Boot
-e brigando com o requisito do Windows.
+**Use o `woeusb`. Um comando.** Ele particiona, formata em NTFS, copia o
+`install.wim` INTEIRO (sem dividir) e instala o bootloader UEFI:NTFS numa partição
+FAT16 de 1 MB no fim do disco — o mesmo layout que o Rufus produz.
 
 ```bash
-DEV=/dev/disk/by-id/usb-hp_v165w_00248121AB99EE30E00065B2-0:0
-ISO=~/Downloads/en-us_windows_11_consumer_editions_version_25h2_..._x64_dvd_....iso
-
-sudo umount "$DEV"-part* 2>/dev/null
-sudo wipefs -af "$DEV"
-sudo nix shell nixpkgs#gptfdisk -c sgdisk --zap-all "$DEV"
-
-# ⚠️ typecode 0700 (Microsoft basic data), NÃO EF00 (EFI System). Ver a armadilha abaixo.
-sudo nix shell nixpkgs#gptfdisk -c sgdisk --new=1:0:0 --typecode=1:0700 --change-name=1:WIN11 "$DEV"
-sudo nix shell nixpkgs#parted -c partprobe "$DEV"
-sudo mkfs.vfat -F32 -n WIN11 "$DEV"-part1
-
-sudo mkdir -p /mnt/iso /mnt/usb
-sudo mount -o loop,ro "$ISO" /mnt/iso
-sudo mount "$DEV"-part1 /mnt/usb
-
-# copia tudo MENOS o install.wim (erros de chown são esperados: FAT32 não tem dono Unix)
-sudo rsync -a --info=progress2 --exclude='sources/install.wim' /mnt/iso/ /mnt/usb/
-
-# divide em pedaços < 4 GiB — o Setup entende .swm nativamente
-sudo nix shell nixpkgs#wimlib -c wimlib-imagex split \
-  /mnt/iso/sources/install.wim /mnt/usb/sources/install.swm 3800
+sudo umount /dev/sdc* 2>/dev/null
+sudo nix shell nixpkgs#woeusb -c woeusb \
+  --device ~/Downloads/en-us_windows_11_..._x64_dvd_....iso \
+  /dev/sdc --target-filesystem NTFS
 ```
 
-### ⚠️ A armadilha do `EF00` — custou uma tentativa
+Precisa de **rede** (baixa o `uefi-ntfs.img` do repo do Rufus) e de
+**`boot.supportedFilesystems.ntfs = true`** no sistema — já declarado em
+[`system/core/boot.nix`](system/core/boot.nix). Sem isso ele morre com
+*"unknown filesystem type 'ntfs-3g'"* logo depois de formatar.
 
-Na primeira vez tipei a partição como **`EF00` (EFI System)**, achando ser o mais
-correto pelo padrão UEFI. Resultado: o pendrive **bootou normalmente** (a firmware lê
-a ESP direto), mas o Setup morreu depois com *"A media driver your computer needs is
-missing"*.
+Leva ~30 min neste pendrive (escreve a ~4 MB/s).
 
-A mensagem é enganosa — não faltava driver nenhum. **O Windows não atribui letra de
-unidade a uma ESP**, por design. Sem letra, o Setup não tinha onde procurar o
-`sources/install.swm`.
+**Secure Boot continua ligado.** O UEFI:NTFS é assinado pela Microsoft desde o Rufus
+3.17, então NTFS não custa mais o Secure Boot — que é justamente a suposição errada
+que me levou pelo caminho longo abaixo.
 
-O certo é **`0700` (Microsoft basic data)**, que é o que o Rufus usa exatamente por
-isso. Firmware UEFI escaneia mídia removível procurando `/EFI/BOOT/BOOTX64.EFI`
-independentemente do tipo da partição, então boota igual.
+### ⚠️ O caminho que NÃO funciona — três tentativas perdidas
 
-**Conserto sem refazer o pendrive** — muda só o metadado do GPT, não toca nos dados:
+Tentei FAT32 + `install.wim` dividido em `.swm` com o `wimlib`, porque o WIM do
+Windows 11 tem **7,96 GB** e não cabe nos 4 GiB por arquivo do FAT32. A justificativa
+era manter o boot 100% assinado pela Microsoft, para não perder o Secure Boot.
+
+**A premissa estava obsoleta**: o UEFI:NTFS é assinado desde 2021. NTFS nunca custou
+o Secure Boot. Passei por três falhas antes de perceber:
+
+| Tentativa | Erro | Causa |
+| --- | --- | --- |
+| 1 | *"A media driver your computer needs is missing"* | Partição tipada `EF00` (EFI System). O Windows **não dá letra de unidade a uma ESP**, então o Setup não achava o `sources/`. O certo seria `0700` |
+| 2 | *"There is an error selecting this partition for install"* | Layout de partições criado à mão no `diskpart`. O instalador 24H2+ recusa partição que não foi ele que criou |
+| 3 | O mesmo erro | `clean` + Setup particionando + sem `autounattend.xml`. Sobrou o **`.swm`**: o setup do 24H2+ tem problemas conhecidos com WIM dividido |
+
+A lição, que vale além deste guia: **quando a ferramenta oficial resolve o problema,
+não invente**. Cada uma das três falhas veio de eu tentar ser mais correto que o
+Windows — typecode "mais padrão", layout "mais explícito", boot "mais assinado".
+
+### Onde entra o `autounattend.xml`
+
+Depois que o `woeusb` terminar, copie na raiz do pendrive:
 
 ```bash
-sudo nix shell nixpkgs#gptfdisk -c sgdisk --typecode=1:0700 "$DEV"
-sudo partprobe "$DEV" && sudo udevadm trigger --settle
-lsblk -o NAME,FSTYPE,LABEL,PARTTYPENAME "$DEV"   # tem que dizer "Microsoft basic data"
+sudo mount /dev/sdc1 /mnt/usb
+sudo cp /tmp/autounattend.xml /mnt/usb/
+sudo cp ~/Projects/GitHub/v1cferr/dotfiles/INSTALACAO-WINDOWS.md /mnt/usb/
+sync && sudo umount /mnt/usb
 ```
 
-> Se o `lsblk` mostrar a partição sem `FSTYPE`/`LABEL` logo depois, é só cache do
-> udev — o `partprobe` + `udevadm trigger` acima resolve. O filesystem não foi tocado.
+> Ele foi descartado como suspeito na tentativa 3 — o erro persistiu sem ele. Pode
+> usar tranquilo.
 
-**Alternativa de emergência**, se estiver na tela de erro e não quiser reiniciar: dá
-pra atribuir a letra à mão e continuar.
+### Plano B: conta local sem o `autounattend`
+
+Se optar por instalar sem ele, o Windows 11 25H2 insiste em conta Microsoft. Na tela
+de conexão do OOBE, `Shift+F10` e:
 
 ```text
-Shift+F10
-diskpart
-list volume          → ache o de 14 GB, FAT32, rótulo WIN11
-select volume N
-assign letter=D
-exit
+start ms-cxh:localonly
 ```
+
+O antigo `OOBE\BYPASSNRO` foi removido no 24H2. Desconectar o cabo de rede antes do
+OOBE também costuma destravar a opção de conta local.

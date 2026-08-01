@@ -15,4 +15,11 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.systemd-boot.configurationLimit = 10; # ESP não enche de gerações
+
+  # Suporte a NTFS — necessário pro DUALBOOT: ler o disco do Windows (SanDisk) a
+  # partir do NixOS. O driver `ntfs3` já vem no kernel, mas o que o `mount` procura
+  # é o helper de userspace `mount.ntfs-3g`, que só existe com esta opção. Sem ela o
+  # woeusb falha com "unknown filesystem type 'ntfs-3g'" ao montar o pendrive que
+  # ele mesmo acabou de formatar (visto em 01/08/2026, ao gravar a mídia do Win11).
+  boot.supportedFilesystems.ntfs = true;
 }

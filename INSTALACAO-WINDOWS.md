@@ -241,6 +241,7 @@ Enquanto não remover, o boot só emite um aviso — o `nofail` evita que ele tr
 
 | Sintoma | Causa provável |
 | --- | --- |
+| **"A media driver your computer needs is missing"** | **Aconteceu de verdade (01/08).** A partição do pendrive estava tipada como *EFI System* — o Windows **não dá letra de unidade a uma ESP**, então o Setup não achou o `sources/`. Ver o Apêndice |
 | "This PC can't run Windows 11" | PTT desligado na BIOS (Fase 1) |
 | Setup não acha disco nenhum | Disco em modo RAID/Intel RST — mude para **AHCI** na BIOS |
 | Instalou mas o NixOS sumiu do boot | Só a ordem da NVRAM. **F8** → Kingston. Se o Kingston não aparecer nem no F8, veja abaixo |
@@ -249,3 +250,79 @@ Enquanto não remover, o boot só emite um aviso — o `nofail` evita que ele tr
 
 **O NixOS não depende do SanDisk para nada.** Ele boota do Kingston, com sua própria
 ESP em `nvme0n1p1`. O pior caso desta noite é ter que reordenar o menu de boot.
+
+---
+
+## Apêndice — como o pendrive foi feito
+
+Guardado porque o `install.wim` do Windows 11 tem **7,96 GB** e não cabe em FAT32
+(limite de 4 GiB por arquivo). É onde a maioria dos tutoriais falha.
+
+**Por que FAT32 + WIM dividido, e não `dd`/Ventoy/NTFS:** o Windows 11 exige Secure
+Boot. Este método deixa o pendrive com **apenas binários assinados pela Microsoft**,
+então boota com Secure Boot ligado. Ventoy e NTFS+shim adicionam bootloader
+não-assinado, que o Secure Boot bloqueia — e aí você acaba desligando o Secure Boot
+e brigando com o requisito do Windows.
+
+```bash
+DEV=/dev/disk/by-id/usb-hp_v165w_00248121AB99EE30E00065B2-0:0
+ISO=~/Downloads/en-us_windows_11_consumer_editions_version_25h2_..._x64_dvd_....iso
+
+sudo umount "$DEV"-part* 2>/dev/null
+sudo wipefs -af "$DEV"
+sudo nix shell nixpkgs#gptfdisk -c sgdisk --zap-all "$DEV"
+
+# ⚠️ typecode 0700 (Microsoft basic data), NÃO EF00 (EFI System). Ver a armadilha abaixo.
+sudo nix shell nixpkgs#gptfdisk -c sgdisk --new=1:0:0 --typecode=1:0700 --change-name=1:WIN11 "$DEV"
+sudo nix shell nixpkgs#parted -c partprobe "$DEV"
+sudo mkfs.vfat -F32 -n WIN11 "$DEV"-part1
+
+sudo mkdir -p /mnt/iso /mnt/usb
+sudo mount -o loop,ro "$ISO" /mnt/iso
+sudo mount "$DEV"-part1 /mnt/usb
+
+# copia tudo MENOS o install.wim (erros de chown são esperados: FAT32 não tem dono Unix)
+sudo rsync -a --info=progress2 --exclude='sources/install.wim' /mnt/iso/ /mnt/usb/
+
+# divide em pedaços < 4 GiB — o Setup entende .swm nativamente
+sudo nix shell nixpkgs#wimlib -c wimlib-imagex split \
+  /mnt/iso/sources/install.wim /mnt/usb/sources/install.swm 3800
+```
+
+### ⚠️ A armadilha do `EF00` — custou uma tentativa
+
+Na primeira vez tipei a partição como **`EF00` (EFI System)**, achando ser o mais
+correto pelo padrão UEFI. Resultado: o pendrive **bootou normalmente** (a firmware lê
+a ESP direto), mas o Setup morreu depois com *"A media driver your computer needs is
+missing"*.
+
+A mensagem é enganosa — não faltava driver nenhum. **O Windows não atribui letra de
+unidade a uma ESP**, por design. Sem letra, o Setup não tinha onde procurar o
+`sources/install.swm`.
+
+O certo é **`0700` (Microsoft basic data)**, que é o que o Rufus usa exatamente por
+isso. Firmware UEFI escaneia mídia removível procurando `/EFI/BOOT/BOOTX64.EFI`
+independentemente do tipo da partição, então boota igual.
+
+**Conserto sem refazer o pendrive** — muda só o metadado do GPT, não toca nos dados:
+
+```bash
+sudo nix shell nixpkgs#gptfdisk -c sgdisk --typecode=1:0700 "$DEV"
+sudo partprobe "$DEV" && sudo udevadm trigger --settle
+lsblk -o NAME,FSTYPE,LABEL,PARTTYPENAME "$DEV"   # tem que dizer "Microsoft basic data"
+```
+
+> Se o `lsblk` mostrar a partição sem `FSTYPE`/`LABEL` logo depois, é só cache do
+> udev — o `partprobe` + `udevadm trigger` acima resolve. O filesystem não foi tocado.
+
+**Alternativa de emergência**, se estiver na tela de erro e não quiser reiniciar: dá
+pra atribuir a letra à mão e continuar.
+
+```text
+Shift+F10
+diskpart
+list volume          → ache o de 14 GB, FAT32, rótulo WIN11
+select volume N
+assign letter=D
+exit
+```

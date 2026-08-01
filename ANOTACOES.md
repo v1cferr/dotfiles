@@ -228,6 +228,15 @@
          lado a lado use SUPER+O (expel) + SUPER+SHIFT+,/. Brecha do mouse: soltar em ÁREA
          VAZIA cai no `if (!droppingColumn)` e cria coluna — mas no FIM da fita, não onde
          soltou. (Este item foi LIDO NA FONTE e não medido: não dá pra sintetizar arrasto.)
+      6. TODA forma de mover janela pro lado EMPILHA — testei as três: arrasto (lido na
+         fonte), `window.swap({direction})` e `window.move({direction})`. As duas últimas
+         medidas: mandam a janela pra DENTRO da coluna vizinha, não pro lado dela. Lado a
+         lado só existe no nível de COLUNA (swapcol/expel/colresize/fit). O scrolling é um
+         layout 1-D e o mouse é 2-D; é essa a incompatibilidade de fundo.
+         RESPOSTA DE MOUSE: (a) SUPER+botão-direito+arrastar redimensiona a coluna e
+         encolher revela a vizinha — já existia; (b) SUPER+clique-do-meio = expel + fit all
+         num gesto (lambda Lua com hl.dispatch, pois um bind só aceita UM dispatcher):
+         desfaz o empilhamento que o arrasto causa e mostra a fita inteira.
 - [x] REVISÃO (jul/2026) do thumbwheel + largura, depois de usar: a fita virou 1 JANELA POR
       TELA (`scrolling.column_width = 1.0`, único valor fora do default) e o thumbwheel
       DEIXOU de ser divertido pelo logiops. Agora a rodinha do polegar faz scroll horizontal

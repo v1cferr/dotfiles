@@ -149,9 +149,24 @@ hl.bind(mainMod .. " + mouse_up",    hl.dsp.focus({ workspace = "e-1" }))
 hl.bind(mainMod .. " + CTRL + left",  hl.dsp.window.move({ monitor = M.secondary }))
 hl.bind(mainMod .. " + CTRL + right", hl.dsp.window.move({ monitor = M.primary }))
 
--- Mouse: mover / redimensionar janela
+-- Mouse: mover / redimensionar janela. O RESIZE é o que põe uma janela do lado da outra
+-- com o mouse: o scrolling implementa resize-drag de verdade (borda esquerda mantém a
+-- direita parada ajustando a câmera; borda direita mantém a esquerda fixa), e encolher a
+-- coluna revela a vizinha. O DRAG não faz isso — ver o bind do clique do meio abaixo.
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+
+-- "Organizar lado a lado", num clique. Existe porque no scrolling TODA forma de mover
+-- janela pro lado (arrastar, window.swap, window.move) EMPILHA na coluna de destino —
+-- verificado nas três, e é hardcoded no CScrollingAlgorithm. Não há drop horizontal.
+-- Então em vez de brigar com o arrasto, este bind DESFAZ e normaliza: expel tira a janela
+-- de qualquer pilha (coluna própria) e fit all mostra a fita inteira na tela.
+-- Lambda + hl.dispatch porque um bind só aceita UM dispatcher, e aqui são dois em ordem.
+local expelCol, fitAll = hl.dsp.layout("expel"), hl.dsp.layout("fit all")
+hl.bind(mainMod .. " + mouse:274", function()                                     -- clique do meio: desempilha + mostra tudo
+  hl.dispatch(expelCol)
+  return hl.dispatch(fitAll)
+end)
 
 -- ── Teclas de mídia / volume / brilho ───────────────────────────────────────
 -- locked = funciona com a tela travada; repeating = repete enquanto segura.

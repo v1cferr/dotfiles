@@ -28,7 +28,9 @@ let
   parser = pkgs.writeText "keybinds-cheatsheet.awk" ''
     function clean(c) { sub(/^-- ?/, "", c); gsub(/─/, "", c); sub(/^ +| +$/, "", c); return c }
     function short(t) {
-      if (match(t, /[.:] /)) t = substr(t, 1, RSTART - 1)
+      # corta só na 1ª ". " (fim de frase). NÃO cortar em ": " — grupos como
+      # "Mouse: mover / redimensionar janela" virariam o inútil "Mouse".
+      if (match(t, /\. /)) t = substr(t, 1, RSTART - 1)
       sub(/[.:]$/, "", t)
       if (length(t) > 66) t = substr(t, 1, 63) "…"
       return t
@@ -50,6 +52,7 @@ let
         else if (t == "mouse_down")  t = "roda ↓"
         else if (t == "mouse:272")   t = "clique esq"
         else if (t == "mouse:273")   t = "clique dir"
+        else if (t == "mouse:274")   t = "clique meio"
         else if (t == "left")  t = "←"; else if (t == "right") t = "→"
         else if (t == "up")    t = "↑"; else if (t == "down")  t = "↓"
         else if (t == "RETURN") t = "Enter"; else if (t == "ESCAPE" || t == "escape") t = "Esc"

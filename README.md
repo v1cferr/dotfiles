@@ -4,7 +4,9 @@ Sistema **declarativo** e reprodutível: NixOS (base) e home-manager (dotfiles d
 usuário) num único flake. Um `rebuild` aplica sistema **e** usuário de uma vez.
 
 - **Base:** nixpkgs estável `nixos-26.05` + overlay `unstable.*` sob demanda (por pacote).
-- **Host ativo:** `nixos-sandisk` — SSD SanDisk (SATA), UEFI/systemd-boot.
+- **Host ativo:** `nixos-sandisk` — SSD SanDisk (SATA), ext4, UEFI/systemd-boot.
+- **Host alvo:** `nixos-kingston` — NVMe KC3000, btrfs com subvolumes. Construído e
+  validado, **ainda não instalado** → ver [`MIGRACAO-KINGSTON.md`](MIGRACAO-KINGSTON.md).
 - **Máquina:** Intel i5-11400 (microcode) · Intel Arc B580 (driver aberto `xe` + Mesa, sem CUDA).
 - **Desktop:** Hyprland (Wayland) via greeter LightDM · PipeWire · teclado ABNT2.
 
@@ -49,8 +51,9 @@ home/                    USUÁRIO (home-manager) — dotfiles + apps de usuário
   services/              cs2-saves-backup, claude-discord-rpc (daemon)
 
 pkgs/                    derivations próprias (fora do nixpkgs) — ex.: claude-code-discord-status
-hosts/                   específico de cada máquina (hostname, discos, stateVersion)
-  nixos-sandisk/         ← ATIVO (SSD SanDisk): default.nix + disko.nix (particionamento)
+hosts/                   específico de cada máquina (hostname, discos, swap, stateVersion)
+  nixos-sandisk/         ← ATIVO (SSD SanDisk, ext4): default.nix + disko.nix
+  nixos-kingston/        ← ALVO (NVMe KC3000, btrfs + subvolumes p/ impermanência)
 secrets/                 secrets.yaml (sops) + bitwarden-secrets.json
 scripts/                 sync-secrets.sh (Bitwarden → sops) · healthcheck.sh
 ```
@@ -105,12 +108,21 @@ do repositório restic.
 - **SSH** na porta `2222` (root off, `fail2ban` ligado) + **Cloudflare DDNS** mantendo
   `ssh.v1cferr.dev` no IP público atual — acesso de qualquer lugar, sem VPN.
 
-## Reinstalar do zero
+## Reinstalar do zero / migrar de disco
 
-O passo a passo de instalação/migração (formatar o disco via disko, restaurar a chave
-age do Bitwarden, `nixos-install`, restaurar o `~`) está preservado no histórico do git:
+**[`MIGRACAO-KINGSTON.md`](MIGRACAO-KINGSTON.md)** é o runbook completo do cutover
+SanDisk → Kingston: comando por comando, do boot do live USB até o sistema validado,
+com o estado não-declarativo (`/home`, `/var/lib`, chaves de host SSH, perfis do
+NetworkManager) atravessando junto.
+
+Ele tem prazo de validade — apague depois que o Kingston estiver validado. Guias
+antigos ficam no histórico:
 
 ```bash
-git log --oneline --all -- README.md   # localizar o commit do guia de cutover
-git show <commit>:README.md            # ver o guia
+git log --oneline --all -- README.md MIGRACAO-KINGSTON.md
+git show <commit>:<arquivo>
 ```
+
+O resumo que não envelhece: `disko` formata (declarativo, por `by-id`), a chave age
+vem do SanDisk ou do Bitwarden **antes** do `nixos-install` (senão o usuário nasce sem
+senha), e o `~` vem disco a disco — nunca do backup, que é acervo e não insumo.

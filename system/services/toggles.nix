@@ -16,6 +16,7 @@
     "sunshine"
     "qbittorrent"
     "restic"
+    "arch-kingston-archive"
     "cloudflare-ddns"
     "dropbox"
     "discord-rpc"
@@ -30,6 +31,7 @@
     sunshine = true; # streaming de tela p/ Moonlight
     qbittorrent = true; # cliente torrent
     restic = true; # backup automático
+    arch-kingston-archive = true; # TEMPORÁRIO: arquiva o Arch antigo no Drive (desligar após o check)
     cloudflare-ddns = true; # DNS dinâmico (mantém o SSH externo)
     dropbox = true; # sync do ~/Dropbox
     discord-rpc = true; # Rich Presence do Claude Code no Discord

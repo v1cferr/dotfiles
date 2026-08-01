@@ -127,6 +127,11 @@
         # declarativo via disko. Novo host? hosts/<host>/ + uma linha aqui.
         #   sudo nixos-rebuild switch --flake .#nixos-sandisk
         nixos-sandisk = mkHost ./hosts/nixos-sandisk;
+
+        # ALVO da migração — NVMe Kingston KC3000, btrfs com subvolumes prontos pra
+        # impermanência. Ainda NÃO instalado: existe pra ser validado (`nixos-rebuild
+        # build --flake .#nixos-kingston`) ANTES do cutover, com o sistema atual vivo.
+        nixos-kingston = mkHost ./hosts/nixos-kingston;
       };
     };
 }

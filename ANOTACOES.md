@@ -22,7 +22,25 @@
 
 > Aqui estão minhas configurações legado do Arch Linux que estamos migrando tudo para o Nix e NixOS, para que tudo seja declarativo e não manual, e para que funcione em qualquer hardware posteriormente.
 
-- Local: `/mnt/kingston-arch/home/v1cferr/dotfiles`
+⚠️ **O caminho `/mnt/kingston-arch` NÃO EXISTE MAIS** — o Kingston foi formatado em
+01/08/2026 pra virar o daily driver NixOS. As configs do Arch agora só existem nos dois
+repos restic (senha no Bitwarden: item `Restic Arch Kingston`):
+
+| Onde | Repo |
+| --- | --- |
+| Google Drive (offsite) | `rclone:gdrive:BACKUPS_EX-B560M-V5/KINGSTON` — snapshot `6d7e3ee7` |
+| Seagate (local) | `/mnt/seagate-old/restic-arch-kingston` — snapshot `38b4b9c3` |
+
+Pra garimpar sem restaurar tudo, monte o snapshot como pasta navegável:
+
+```bash
+sudo restic-arch-kingston-local mount /mnt/arch-antigo   # Ctrl+C desmonta
+```
+
+Os dotfiles do Arch ficam em `home/v1cferr/dotfiles` dentro do snapshot. Existe também
+uma cópia manual do `Projects` do Arch em `~/BACKUP-KINGSTON/` (14 G) — pode apagar
+quando terminar de consultar; o conteúdo está nos repos acima.
+
 - Repo no GitHub: <https://github.com/v1cferr/dotfiles>
 
 ## Ideias
@@ -343,7 +361,20 @@
       en_US + supportedLocales inclui pt_BR (o LC_TIME da data do lock depende dele). Teclado
       ABNT2 + timezone BR seguem (físico/fuso, não idioma). clipboard/bar/UI em en-US.
       system/core/core.nix + home/desktop/lockscreen.nix.
-- [ ] Depois que eu estiver no SSD, já configurar o WoW Ascension com o Bottles para jogarmos e eu ir configurando o sistema simultaneamente
+- [ ] Configurar o WoW Ascension com o Bottles para jogarmos, e ir configurando o
+      sistema simultaneamente. (Escrito como "depois que eu estiver no SSD" — o cutover
+      já aconteceu em 01/08 e o daily driver é o NVMe Kingston, então isso está livre.)
+- [ ] **Dissipador M.2 para o KC3000** — medido em 01/08/2026: 77–80 °C sob carga, e o
+      contador de gestão térmica SOBE durante I/O pesado (`T1 Trans Count` foi de 17 pra
+      18 num único benchmark; 24.781 s acumulados). Nunca cruzou o limiar de aviso do
+      controlador e o disco está impecável (`media_errors: 0`, spare 100%, 4% de vida
+      usada, leitura 6911 MB/s = 98,7% do catálogo), mas a Kingston especifica operação
+      até **70 °C** e agora ele é o daily driver, não mais o disco secundário parado.
+      Conferir primeiro se a placa tem dissipador no slot e como é o fluxo de ar perto
+      da Arc B580. Preferir PASSIVO: ventoinha de 30 mm alimentada por Molex roda em
+      rotação fixa, chia, não tem tacômetro e morre em 1–2 anos — e ventoinha morta
+      dentro de carcaça fechada é pior que dissipador passivo. Medir depois com
+      `sudo nvme smart-log /dev/nvme0n1 | grep -E "^temperature|Sensor 2|T1 Trans"`.
 
 - [x] Verificar a arquitetura de pastas e melhores práticas para manutenção/organização/
       escalabilidade — FEITO. Reorganizado por categoria (padrão da comunidade):
@@ -474,7 +505,7 @@
       (com `always` seria impossível fechar).
       CORREÇÃO (30/07) — a justificativa acima vinha com "(Electron sai com 0 ao fechar)", que era
       FALSO p/ o Spotify: ele é CEF, e o `bin/spotify` MOVE o processo real p/ um scope próprio
-      (app-org.chromium.Chromium-<pid>.scope, fora do cgroup da unit), com o processo acompanhado
+      (`app-org.chromium.Chromium-<pid>.scope`, fora do cgroup da unit), com o processo acompanhado
       pelo systemd SAINDO COM 1 mesmo quando a app subiu bem. Resultado: on-failure reiniciava a
       cada 5s, o novo launcher achava a instância viva, imprimia "Opening in existing browser
       session" e MANDAVA A JANELA APARECER. Medido no journal: 4145 reinícios num dia. Fix em duas
@@ -808,10 +839,10 @@
         o que impede o watchdog de matar uma conexão em curso (conectar leva 10-30s) e virar
         o próprio problema. Testado: com a VPN saudável o heal é no-op e o MainPID NÃO muda.
         TRIAGEM que separou "minha máquina" de "a FAI" — vale repetir na próxima:
-          ip route get <ip>            -> rota normal, sem resto de ppp/tun
+          `ip route get <ip>`            -> rota normal, sem resto de ppp/tun
           ip rule + ip route table 52  -> Tailscale NÃO cobre os IPs da FAI
-          ping <portal>                -> 3/3, 31ms: host VIVO
+          `ping <portal>`                -> 3/3, 31ms: host VIVO
           TCP por porta (python)       -> 4433 ABERTA; 443/80/22 REFUSED (só a 4433 escuta)
-          controle UFSCar              -> www.ufscar.br e acessoremoto OK = internet sã
+          controle UFSCar              -> `www.ufscar.br` e acessoremoto OK = internet sã
         PEGADINHA DE MEDIÇÃO: `ss -tnp` sem root NÃO mapeia PID de processo de outro
         usuário — o "nenhuma conexão" que eu vi era artefato; sem `-p` a conexão apareceu.

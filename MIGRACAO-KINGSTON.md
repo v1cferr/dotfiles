@@ -14,24 +14,37 @@ você formatar o SanDisk para o Windows — que **não** é hoje.
 
 ---
 
-## Como não digitar isto tudo
+## Início rápido — os três comandos
 
-No console do instalador não há mouse nem clipboard. Duas saídas, use a que preferir.
-
-### A) O script guiado — um comando só
-
-O runbook inteiro, executável. Mesmas fases, cada uma anunciando o que vai fazer e
-pedindo confirmação; a destrutiva exige digitar `FORMATAR` por extenso.
+Boote o pendrive (**F8** no POST, modo **UEFI**, não Legacy/CSM). No console:
 
 ```bash
+sudo -i
+mkdir -p /mnt/sd && mount /dev/disk/by-uuid/d0392422-6a6c-4c36-8ff4-e6eda25ae487 /mnt/sd
 bash /mnt/sd/home/v1cferr/Projects/GitHub/v1cferr/dotfiles/scripts/cutover-kingston.sh
 ```
 
-É idempotente: se parar no meio (ou se você quiser rodar uma fase de novo), chame
-outra vez que ele pula o que já foi feito. Só precisa da Fase 2 (montar o SanDisk)
-feita antes — ou deixe que ele mesmo monta.
+**É só isto.** O script conduz as sete fases, cada uma anunciando o que vai fazer e
+pedindo confirmação; a destrutiva exige digitar `FORMATAR` por extenso. Ele é
+idempotente — se parar no meio, chame de novo que pula o que já foi feito.
 
-### B) SSH a partir do celular — para copiar e colar à vontade
+As fases detalhadas abaixo são a **referência**: o que o script faz em cada passo, por
+quê, e como fazer à mão se ele falhar. Você não precisa lê-las para migrar.
+
+**Duas coisas para levar na cabeça:**
+
+- **O SanDisk continua bootável o tempo todo.** Deu errado em qualquer ponto? F8,
+  escolha o SanDisk, e você volta ao sistema de antes. Ele vai reclamar do
+  `/mnt/kingston-arch` (o UUID some ao formatar), mas tem `nofail` — só um aviso.
+- **A chave age (Fase 4) é o passo que não perdoa.** O script cuida disso, mas se
+  acabar fazendo à mão, é o único que, esquecido, te deixa sem conseguir logar.
+
+---
+
+## Se preferir seguir comando a comando
+
+No console do instalador não há mouse nem clipboard. Para copiar e colar à vontade,
+entre por SSH a partir do celular ou de outro computador:
 
 Se preferir seguir o markdown comando a comando, entre no instalador por SSH e cole
 do celular ou de outro computador:
@@ -213,10 +226,34 @@ chmod 600 /mnt/var/lib/sops-nix/key.txt
 head -c 20 /mnt/var/lib/sops-nix/key.txt   # deve começar com AGE-SECRET-KEY-1
 ```
 
-> **Plano B se o SanDisk não estiver acessível:** a mesma chave está no Bitwarden, na
-> secure note `sops-nix age key (dotfiles)`. Confira que a pública derivada bate com o
-> recipient do `.sops.yaml`:
-> `age132kmspxjsqzc3nnd6407svq744ju4q6vl85hq2v02pgqc2yf7caq03plfn`
+### Plano B: a chave pelo Bitwarden
+
+Se o SanDisk não estiver legível. A mesma chave está na secure note
+`sops-nix age key (dotfiles)` — **verificado em 01/08/2026**: a pública derivada dela
+bate com o recipient do `.sops.yaml`.
+
+```bash
+nix --extra-experimental-features 'nix-command flakes' shell nixpkgs#bitwarden-cli
+
+bw login                            # e-mail + senha mestra (+ 2FA, se ativo)
+export BW_SESSION=$(bw unlock --raw)
+
+mkdir -p /mnt/var/lib/sops-nix
+bw get notes 'sops-nix age key (dotfiles)' > /mnt/var/lib/sops-nix/key.txt
+chmod 600 /mnt/var/lib/sops-nix/key.txt
+```
+
+Confirme que é a chave certa antes de instalar — tem que sair exatamente o recipient
+do `.sops.yaml`:
+
+```bash
+nix --extra-experimental-features 'nix-command flakes' \
+  shell nixpkgs#age -c age-keygen -y /mnt/var/lib/sops-nix/key.txt
+# age132kmspxjsqzc3nnd6407svq744ju4q6vl85hq2v02pgqc2yf7caq03plfn
+```
+
+> Este caminho precisa de **rede** e da sua **senha mestra digitada no console**. Por
+> isso é plano B: pelo SanDisk é um `cp` e pronto.
 
 ---
 

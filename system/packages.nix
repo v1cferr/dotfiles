@@ -31,6 +31,21 @@
     uv # gerenciador Python rápido (venv/deps/pythons); os pythons dele rodam via nix-ld
     unzip # descompacta .zip (utilitário base)
 
+    # ── Mídia bootável ──
+    # Equivalente ao Rufus no Linux, com GUI: `sudo woeusbgui`. Particiona, formata em
+    # NTFS, copia o install.wim INTEIRO (sem dividir) e grava o bootloader UEFI:NTFS —
+    # que é assinado pela Microsoft desde o Rufus 3.17, então o Secure Boot fica LIGADO.
+    # Nível-sistema porque escreve em block device: precisa de root, e no perfil do
+    # usuário o `sudo` não acharia o binário.
+    #
+    # O VENTOY foi a primeira escolha e foi DESCARTADO: o nixpkgs o marca como inseguro
+    # porque ele embarca binários pré-compilados não-auditáveis (nixpkgs#404663,
+    # ventoy#2795 — anos sem resolução). Usar exigiria `permittedInsecurePackages`, e
+    # não vale pra um BOOTLOADER que roda antes do sistema. Ele é mais conveniente
+    # (copia a ISO como arquivo, várias no mesmo pendrive) — se um dia a origem dos
+    # blobs for resolvida, reconsiderar.
+    woeusb-ng # ver INSTALACAO-WINDOWS.md p/ o histórico de como a mídia foi parar aqui
+
     # ── GPU: monitoramento (Arc B580) ──
     # Os benches (vulkan-tools/mesa-demos/glmark2/vkmark/unigine/clpeak) foram
     # removidos após validar a Arc — eram one-off. Ficam só os monitores do dia-a-dia.

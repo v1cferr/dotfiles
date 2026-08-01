@@ -14,6 +14,48 @@ você formatar o SanDisk para o Windows — que **não** é hoje.
 
 ---
 
+## Como não digitar isto tudo
+
+No console do instalador não há mouse nem clipboard. Duas saídas, use a que preferir.
+
+### A) O script guiado — um comando só
+
+O runbook inteiro, executável. Mesmas fases, cada uma anunciando o que vai fazer e
+pedindo confirmação; a destrutiva exige digitar `FORMATAR` por extenso.
+
+```bash
+bash /mnt/sd/home/v1cferr/Projects/GitHub/v1cferr/dotfiles/scripts/cutover-kingston.sh
+```
+
+É idempotente: se parar no meio (ou se você quiser rodar uma fase de novo), chame
+outra vez que ele pula o que já foi feito. Só precisa da Fase 2 (montar o SanDisk)
+feita antes — ou deixe que ele mesmo monta.
+
+### B) SSH a partir do celular — para copiar e colar à vontade
+
+Se preferir seguir o markdown comando a comando, entre no instalador por SSH e cole
+do celular ou de outro computador:
+
+```bash
+# no console do instalador
+passwd nixos                # define uma senha temporária
+systemctl start sshd
+ip -br addr show enp7s0     # anote o IP
+```
+
+Aí, do celular (Termius, JuiceSSH, Termux): `ssh nixos@<IP>`. Colar funciona normal, e
+você ainda tem o histórico do que rodou.
+
+Para só **ler** o runbook no console, sem sair dele:
+
+```bash
+less /mnt/sd/home/v1cferr/Projects/GitHub/v1cferr/dotfiles/MIGRACAO-KINGSTON.md
+```
+
+Alt+F2 abre um segundo terminal — dá para deixar o guia aberto num e trabalhar no outro.
+
+---
+
 ## Referência rápida
 
 |                        |                                                                    |

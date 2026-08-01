@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  autounattend.xml — Windows 11 25H2 · máquina EX-B560M-V5 · alvo: SanDisk SSD PLUS 1TB
+
+  DE PROPÓSITO NÃO CONTÉM <DiskConfiguration> NEM <ImageInstall>.
+  O DiskID é atribuído pelo Windows e não dá pra prever a partir do Linux; automatizar
+  WillWipeDisk num índice chutado apagaria o Kingston sem perguntar. O particionamento
+  é MANUAL via diskpart (Shift+F10), onde os tamanhos ficam visíveis antes de apagar.
+  Consequência: o setup vai mostrar a tela de escolha de disco. É intencional.
+
+  O que este arquivo automatiza (tudo não-destrutivo):
+    • chaves de bypass do check de hardware do Win11 (seguro: você TEM TPM e Secure Boot)
+    • EULA, idioma, teclado ABNT2, fuso de Brasília
+    • conta LOCAL — evita a exigência de conta Microsoft
+    • telas de propaganda do OOBE
+
+  Colocar na RAIZ do pendrive, com este nome exato. O setup acha sozinho.
+-->
+<unattend xmlns="urn:schemas-microsoft-com:unattend">
+
+  <settings pass="windowsPE">
+
+    <component name="Microsoft-Windows-International-Core-WinPE"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+      <SetupUILanguage>
+        <UILanguage>en-US</UILanguage>
+      </SetupUILanguage>
+      <InputLocale>0416:00010416</InputLocale> <!-- Português (Brasil) ABNT2 -->
+      <SystemLocale>pt-BR</SystemLocale>
+      <UILanguage>en-US</UILanguage>           <!-- a mídia é en-us; pt-BR exigiria language pack -->
+      <UserLocale>pt-BR</UserLocale>
+    </component>
+
+    <component name="Microsoft-Windows-Setup"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+
+      <!-- Bypass do check de hardware. Você TEM TPM (PTT) e Secure Boot, então isto é
+           só seguro contra viagem perdida se o PTT estiver desligado na BIOS. -->
+      <RunSynchronous>
+        <RunSynchronousCommand wcm:action="add">
+          <Order>1</Order>
+          <Path>reg add HKLM\System\Setup\LabConfig /v BypassTPMCheck /t REG_DWORD /d 1 /f</Path>
+        </RunSynchronousCommand>
+        <RunSynchronousCommand wcm:action="add">
+          <Order>2</Order>
+          <Path>reg add HKLM\System\Setup\LabConfig /v BypassSecureBootCheck /t REG_DWORD /d 1 /f</Path>
+        </RunSynchronousCommand>
+        <RunSynchronousCommand wcm:action="add">
+          <Order>3</Order>
+          <Path>reg add HKLM\System\Setup\LabConfig /v BypassRAMCheck /t REG_DWORD /d 1 /f</Path>
+        </RunSynchronousCommand>
+        <RunSynchronousCommand wcm:action="add">
+          <Order>4</Order>
+          <Path>reg add HKLM\System\Setup\LabConfig /v BypassCPUCheck /t REG_DWORD /d 1 /f</Path>
+        </RunSynchronousCommand>
+        <RunSynchronousCommand wcm:action="add">
+          <Order>5</Order>
+          <Path>reg add HKLM\System\Setup\LabConfig /v BypassStorageCheck /t REG_DWORD /d 1 /f</Path>
+        </RunSynchronousCommand>
+        <!-- Permite concluir o OOBE sem conta Microsoft mesmo com rede ativa. -->
+        <RunSynchronousCommand wcm:action="add">
+          <Order>6</Order>
+          <Path>reg add HKLM\System\Setup\LabConfig /v BypassNRO /t REG_DWORD /d 1 /f</Path>
+        </RunSynchronousCommand>
+      </RunSynchronous>
+
+      <UserData>
+        <AcceptEula>true</AcceptEula>
+        <!-- SEM ProductKey de propósito: o setup mostra o seletor de edição
+             (Home/Pro). É mais uma confirmação visual, e você escolhe Pro. -->
+      </UserData>
+
+    </component>
+  </settings>
+
+  <settings pass="oobeSystem">
+    <component name="Microsoft-Windows-Shell-Setup"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+
+      <TimeZone>E. South America Standard Time</TimeZone> <!-- Brasília -->
+
+      <OOBE>
+        <HideEULAPage>true</HideEULAPage>
+        <HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
+        <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+        <HideLocalAccountScreen>true</HideLocalAccountScreen>
+        <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+        <ProtectYourPC>3</ProtectYourPC> <!-- 3 = nada de telemetria opcional -->
+      </OOBE>
+
+      <UserAccounts>
+        <LocalAccounts>
+          <LocalAccount wcm:action="add">
+            <Name>v1cferr</Name>
+            <Group>Administrators</Group>
+            <DisplayName>Victor</DisplayName>
+            <Password>
+              <!-- ⚠️ TROQUE ANTES DE USAR. Fica em TEXTO PURO no pendrive.
+                   Troque também no primeiro login do Windows. -->
+              <Value>TROQUE-ESTA-SENHA</Value>
+              <PlainText>true</PlainText>
+            </Password>
+          </LocalAccount>
+        </LocalAccounts>
+      </UserAccounts>
+
+    </component>
+  </settings>
+
+</unattend>

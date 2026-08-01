@@ -308,8 +308,50 @@ Enquanto não remover, o boot só emite um aviso — o `nofail` evita que ele tr
 
 ## Se der errado
 
+### ⭐ ANTES DE CHUTAR: leia o log
+
+O Setup grava o motivo real num arquivo. Cada tentativa às cegas custa 30 min; ler o
+log custa 2. **Faça isto primeiro.**
+
+Na tela de erro, `Shift+F10`:
+
+```text
+notepad X:\Windows\Panther\setuperr.log
+```
+
+`X:` é o disco RAM do WinPE. Se o arquivo não existir ou estiver vazio, procure os
+outros — dependendo de onde falhou, o log muda de lugar:
+
+```text
+dir /s /b X:\Windows\Panther\*.log
+dir /s /b C:\$WINDOWS.~BT\Sources\Panther\*.log
+dir /s /b C:\Windows\Panther\*.log
+```
+
+O que interessa são as **últimas 15–20 linhas** e qualquer código no formato
+`0x8007...` / `0xC1900...` — é ele que identifica a causa. Para filtrar só os erros
+sem abrir o editor:
+
+```text
+findstr /i "error fail 0x" X:\Windows\Panther\setuperr.log
+```
+
+Se precisar levar o log pra fora, copie pro pendrive (que é gravável, é NTFS):
+
+```text
+copy X:\Windows\Panther\setuperr.log D:\
+```
+
+> **Por que isto virou a primeira coisa da lista:** em 01/08 foram cinco tentativas,
+> cada uma trocando uma variável por palpite — typecode, layout de partição, WIM
+> dividido, answer file, ISO. Quatro dessas horas teriam sido evitadas lendo
+> `setuperr.log` na primeira falha.
+
+### Tabela de sintomas
+
 | Sintoma | Causa provável |
 | --- | --- |
+| **"Windows 11 installation has failed"** (genérico, já depois de copiar arquivos) | Passou da seleção de partição — o problema NÃO é mais disco nem mídia. **Leia o `setuperr.log`** (acima); sem o código não dá pra saber |
 | **"A media driver your computer needs is missing"** | Pendrive mal gravado. Regrave com **`woeusb`** (Apêndice) — não tente FAT32 + WIM dividido |
 | **"There is an error selecting this partition for install"** | **Aconteceu 3× em 01/08.** Some com: pendrive feito pelo `woeusb` (NTFS, WIM inteiro) + `clean` no alvo + Setup particionando. Ver o Apêndice para o histórico das tentativas |
 | `unknown filesystem type 'ntfs-3g'` ao gravar o pendrive | Falta `boot.supportedFilesystems.ntfs = true` no NixOS — já declarado em [`system/core/boot.nix`](system/core/boot.nix) |

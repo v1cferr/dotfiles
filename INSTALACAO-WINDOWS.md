@@ -18,6 +18,96 @@ offline — o efeito é o mesmo de desconectar o cabo, e volta sozinho no próxi
 
 ---
 
+## 📋 Contexto para quem for ajudar a diagnosticar
+
+> Cole esta seção (ou o link deste arquivo) para alguém que chega sem histórico.
+> Tudo abaixo foi **verificado na máquina em 01/08/2026**, não é suposição.
+
+### Hardware
+
+| | |
+| --- | --- |
+| CPU | Intel Core i5-11400 (11ª gen, LGA1200) |
+| Placa-mãe | ASUS EX-B560M-V5, BIOS **2803** (12/09/2025) |
+| RAM | 16 GB DDR4 |
+| GPU | Intel Arc B580 (Battlemage G21) |
+| Fonte | Sharkoon WPM Gold Zero 550W |
+
+### Estado da BIOS — conferido pelo Linux
+
+| | |
+| --- | --- |
+| **Secure Boot** | ❌ **DESABILITADO** (a Fase 1 manda ligar — não está) |
+| TPM | ✅ presente (`/dev/tpm0` existe → o PTT foi ativado) |
+| Modo SATA | ⚠️ **não verificado** — se for RAID/Intel RST em vez de AHCI, é candidato |
+
+### Discos (`fdisk -l`, 01/08)
+
+⚠️ **As letras `/dev/sdX` EMBARALHAM entre boots** — já mudaram duas vezes nesta
+máquina. Sempre confirmar pelo modelo antes de qualquer comando destrutivo, e usar
+`/dev/disk/by-id/` em vez da letra.
+
+```text
+nvme0n1  953,9 GB  KINGSTON SKC3000S1024G  → NixOS (btrfs). NÃO TOCAR
+sda      931,5 GB  SanDisk SSD PLUS        → alvo do Windows
+sdb      298,1 GB  ST9320423AS (Seagate)   → backups restic. NÃO TOCAR
+sdc       14,5 GB  v165w                   → pendrive da instalação
+```
+
+**O SanDisk já tem partições criadas pelo próprio Setup do Windows:**
+
+```text
+sda1    200M  EFI System              ← 200M é o padrão do Setup (o manual era 300M)
+sda2     16M  Microsoft reserved
+sda3  931,3G  Microsoft basic data
+```
+
+Isso prova que o instalador chegou a particionar e começar a aplicar a imagem.
+
+### Mídia
+
+- ISO: **`Win11_25H2_English_x64_v2.iso`** — baixada do site oficial da Microsoft
+- Pendrive gravado com `woeusb 0.2.12`, NTFS, `install.wim` **inteiro** (7,9 GB,
+  sem dividir em `.swm`), mais a partição FAT16 de 1 MB com o UEFI:NTFS do Rufus
+- Instalação **padrão**, sem `autounattend.xml`
+
+### Sintoma atual
+
+Diálogo genérico **"Windows 11 installation has failed"**, depois da cópia dos
+arquivos. O `setuperr.log` ainda **não foi lido** — é a próxima coisa a fazer.
+
+### ✅ Já descartado (não sugerir de novo)
+
+| Hipótese | Por que está descartada |
+| --- | --- |
+| Pendrive mal gravado | Chegou a copiar 7,9 GB e o Setup particionou o disco |
+| `install.wim` dividido (`.swm`) | Vai inteiro nesta mídia |
+| Typecode da partição do pendrive | `0700` (Microsoft basic data), correto |
+| ISO adulterada / de terceiros | Trocada pela oficial da Microsoft; o erro mudou de tipo |
+| `autounattend.xml` | Removido, o erro persistiu |
+| Seleção/layout de partição | Passou dessa tela; o Setup criou o layout dele |
+| TPM ausente | `/dev/tpm0` existe |
+| Outros discos confundindo o Setup | Seagate e Kingston ficam **offline** via `diskpart` (Fase 3) |
+
+### ❓ Ainda não investigado
+
+1. **O `setuperr.log`** — o código do erro. É o que falta e vale mais que tudo acima
+2. **Secure Boot desligado** — o Windows 11 exige; ligar antes da próxima tentativa
+3. **Modo SATA na BIOS** — confirmar AHCI (não RAID / Intel RST)
+4. Periféricos USB não-essenciais conectados durante a instalação
+
+### Histórico: 5 tentativas, todas falharam
+
+| # | Mídia | Erro |
+| --- | --- | --- |
+| 1 | FAT32 + `.swm`, partição `EF00` | *"A media driver your computer needs is missing"* |
+| 2 | idem, partições criadas à mão | *"There is an error selecting this partition for install"* |
+| 3 | idem + `clean` + Setup particionando | mesmo erro |
+| 4 | idem + outros discos offline | mesmo erro |
+| 5 | **woeusb NTFS + ISO oficial** | *"Windows 11 installation has failed"* ← passou muito mais longe |
+
+---
+
 ## A regra que importa
 
 Só existe **um** jeito de estragar esta noite: apagar o disco errado. Os dois têm

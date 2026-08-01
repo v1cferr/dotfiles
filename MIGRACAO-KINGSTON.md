@@ -371,12 +371,11 @@ E finalmente: apague este arquivo.
 escolha o SanDisk, e você está de volta ao sistema de hoje. Nada foi perdido — o único
 disco alterado foi o Kingston, cujo conteúdo já está em dois backups verificados.
 
-| Sintoma                         | Causa provável                                                     |
-| ------------------------------- | ------------------------------------------------------------------ |
-| Boot sem senha de usuário       | Fase 4 pulada — a chave age não chegou em `/mnt/var/lib/sops-nix/` |
-| `/run/secrets/` vazio           | Idem, ou permissão errada na chave (tem que ser `600`)             |
-| `dubious ownership` no nix      | Faltou o `path:` no `--flake`                                      |
-| Kingston não aparece no boot    | ESP não criada — confira a Fase 3 com `findmnt -R /mnt`            |
-| Serviço sem acesso aos arquivos | `/var/lib/nixos` não foi copiado (uid/gid remapeados)              |
-| Cliente SSH acusa host mudado   | Fase 6.3 pulada — chaves de host não vieram                        |
-| `Permission denied (publickey)` durante o install | Usou `--flake`; o input `duo-streak-daemon` é privado. Use o `--system` da Fase 5 |
+| Sintoma                         | Causa provável                                                           |
+| ------------------------------- | ------------------------------------------------------------------------ |
+| Boot sem senha de usuário       | Fase 4 pulada — a chave age não chegou em `/mnt/var/lib/sops-nix/`       |
+| `/run/secrets/` vazio           | Idem, ou permissão errada na chave (tem que ser `600`)                   |
+| `dubious ownership` no nix      | Faltou o `path:` no `--flake`                                            |
+| Kingston não aparece no boot    | ESP não criada — confira a Fase 3 com `findmnt -R /mnt`                  |
+| Serviço sem acesso aos arquivos | `/var/lib/nixos` não foi copiado (uid/gid remapeados)                    |
+| `Permission denied (publickey)` | Usou `--flake` — o input `duo-streak-daemon` é privado. Use o `--system` |

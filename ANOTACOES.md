@@ -155,6 +155,23 @@
       cada caminho, e errar a lista significa perder save/prefixo no reboot. Candidatos: módulo
       `impermanence` (nix-community) ou o esquema do Foundry. Fazer JUNTO com a migração, em
       instalação nova — converter máquina em uso é o caminho mais arriscado.
+      DECIDIDO em 01/08/2026, ao montar o hosts/nixos-kingston (o LAYOUT já está pronto):
+      • btrfs SIM — não por gosto, mas porque /nix e /persist precisam ser volumes separados
+        DESDE a instalação; ext4 plano custaria uma segunda reinstalação. Subvolumes criados:
+        `@ @home @nix @persist @log @swap`. Confere com o Foundry (raiz = subvolume zerado no
+        boot, não tmpfs; tmpfs tetaria a raiz nos 15 GB de RAM).
+      • LUKS NÃO — a passphrase no boot mataria o autologin de que o Sunshine depende pra
+        acesso remoto depois de queda de energia. É a diferença deliberada pro Foundry.
+      • `@home` como subvolume PERMANENTE (o Foundry não tem) — estágio intermediário de
+        propósito: liga a impermanência na raiz primeiro, e só depois decide estendê-la ao
+        home. NÃO tranca nada: estender é zerar o @home pelo mesmo mecanismo, sem reinstalar.
+        É a resposta ao risco dos 567 GiB acima — declarar tudo de primeira é onde se perde.
+      • `/var/lib` NÃO é subvolume, e isso é proposital: se fosse permanente, nada obrigaria
+        a declarar. Consequência a lembrar: o estado de serviço que o cutover copia pra lá
+        (uid-map, NetworkManager, bluetooth…) é ZERADO no reboot quando a feature entrar —
+        tem que migrar pro /persist e ser declarado. Esse é o trabalho, não um bug.
+      FALTA só: o snapshot `@-blank` (base do rollback) e a lista de persistência. O blank NÃO
+      é now-or-never — subvolume vazio criado depois é idêntico a snapshot em branco.
 - [x] Clipboard (Wayland) — cliphist DECLARATIVO (services.cliphist, allowImages=texto+imagem)
       + picker no ROFI com PREVIEW: thumbnail das imagens copiadas + ícone por TIPO de arquivo
       (zip/vídeo/pdf/exe… via Fluent-dark), tema Tokyo Night, SUPER+SHIFT+V. Migração melhorada

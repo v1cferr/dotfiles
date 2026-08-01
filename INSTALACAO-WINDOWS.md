@@ -37,9 +37,15 @@ offline — o efeito é o mesmo de desconectar o cabo, e volta sozinho no próxi
 
 | | |
 | --- | --- |
-| **Secure Boot** | ❌ **DESABILITADO** (a Fase 1 manda ligar — não está) |
+| **Secure Boot** | ✅ **LIGADO em todas as 5 tentativas** de instalar o Windows |
 | TPM | ✅ presente (`/dev/tpm0` existe → o PTT foi ativado) |
 | Modo SATA | ⚠️ **não verificado** — se for RAID/Intel RST em vez de AHCI, é candidato |
+
+> **Não se confunda ao medir isto pelo Linux.** Rodando no NixOS, o `bootctl status`
+> diz `Secure Boot: disabled` — mas isso é do **boot atual**, não das tentativas. O
+> systemd-boot daqui **não é assinado**, então o NixOS só carrega com o Secure Boot
+> DESLIGADO. O dono liga na BIOS pra tentar o Windows e desliga pra voltar ao NixOS.
+> Medir pelo Linux e concluir "estava desligado" é erro de método — aconteceu comigo.
 
 ### Discos (`fdisk -l`, 01/08)
 
@@ -87,14 +93,16 @@ arquivos. O `setuperr.log` ainda **não foi lido** — é a próxima coisa a faz
 | `autounattend.xml` | Removido, o erro persistiu |
 | Seleção/layout de partição | Passou dessa tela; o Setup criou o layout dele |
 | TPM ausente | `/dev/tpm0` existe |
+| Secure Boot desligado | Estava **ligado** nas cinco tentativas (ver a nota acima) |
 | Outros discos confundindo o Setup | Seagate e Kingston ficam **offline** via `diskpart` (Fase 3) |
 
 ### ❓ Ainda não investigado
 
 1. **O `setuperr.log`** — o código do erro. É o que falta e vale mais que tudo acima
-2. **Secure Boot desligado** — o Windows 11 exige; ligar antes da próxima tentativa
-3. **Modo SATA na BIOS** — confirmar AHCI (não RAID / Intel RST)
-4. Periféricos USB não-essenciais conectados durante a instalação
+2. **Modo SATA na BIOS** — confirmar AHCI (não RAID / Intel RST). O alvo é um SSD
+   **SATA**, então isso importa mais aqui do que num NVMe
+3. Periféricos USB não-essenciais conectados durante a instalação
+4. Memória — um `memtest` não custa nada e falha de RAM dá erro genérico assim
 
 ### Histórico: 5 tentativas, todas falharam
 
@@ -377,7 +385,21 @@ reaparecem normalmente, tanto no Windows quanto no NixOS. Se por algum motivo o
 Windows continuar mostrando algum deles como offline em *Disk Management*, clique com
 o direito no disco → **Online**. Nada foi alterado no conteúdo.
 
-### 6.6 Ordem de boot
+### 6.6 O Secure Boot vira atrito permanente — e tem solução
+
+Depois que o Windows estiver instalado, você fica preso num vaivém: o **Windows quer
+Secure Boot LIGADO**, e o **NixOS daqui só boota com ele DESLIGADO**, porque o
+systemd-boot não é assinado. Trocar de sistema passaria a exigir uma visita à BIOS.
+
+A solução declarativa é o **[lanzaboote](https://github.com/nix-community/lanzaboote)**:
+ele assina o boot do NixOS com chaves suas (enroladas na firmware), e aí os dois
+sistemas convivem com Secure Boot ligado o tempo todo.
+
+Não faça isso na mesma noite da instalação do Windows — trocar o esquema de boot
+enquanto se depura outra coisa é como se perde o acesso à máquina. Fica como TODO
+para depois que o dualboot estiver de pé e estável.
+
+### 6.7 Ordem de boot
 
 O Windows provavelmente se colocou como primeira opção. Isso é normal e **não tocou em
 nenhum arquivo do Kingston** — a ESP dele é a do SanDisk.
@@ -385,7 +407,7 @@ nenhum arquivo do Kingston** — a ESP dele é a do SanDisk.
 Para voltar ao NixOS: **F8** no POST e escolher o Kingston. Para tornar permanente:
 *BIOS → Boot → Boot Option Priorities → #1 = Kingston*.
 
-### 6.7 De volta no NixOS
+### 6.8 De volta no NixOS
 
 O UUID do SanDisk mudou (ele foi reformatado), então o mount transitório passou a
 mentir. Remova o bloco `/mnt/sandisk-old` de

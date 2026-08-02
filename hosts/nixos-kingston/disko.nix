@@ -22,7 +22,23 @@
 #
 # KC3000 (Phison E18, TBW 800 TB): a write amplification do CoW é irrelevante nesse
 # volume, e o zstd REDUZ escrita em dado compressível. Fragmentação de CoW só
-# incomoda em banco de dados / imagem de VM — resolve com `chattr +C` pontual.
+# incomoda em banco de dados / imagem de VM — o `+C` desses casos é declarado em
+# system/hardware/btrfs.nix.
+#
+# ── AS OPÇÕES DE MOUNT, e por que estas ────────────────────────────────────
+# `compress=zstd:1` e não o `zstd` pelado (= nível 3): num Gen4 de ~7 GB/s o
+# gargalo passa a ser o COMPRESSOR, não o disco. zstd:1 comprime várias vezes mais
+# rápido por ~5-10% de razão a menos — e a DESCOMPRESSÃO tem a mesma velocidade nos
+# dois níveis, então leitura não perde nada. Num disco de 953 G a 49% os GiB
+# economizados pelo :3 não compram o custo em cada `nixos-rebuild`.
+# ⚠️ Trocar o nível só vale pra escrita NOVA: o que já está gravado continua em
+# zstd:3 (inofensivo). Reescrever exigiria `defragment -r -czstd`, que QUEBRA
+# reflink/snapshot e multiplicaria o disco usado — não fazer.
+#
+# `discard=async` é o default do kernel desde o 6.2, mas está EXPLÍCITO de
+# propósito: é ele que justifica o `services.fstrim.enable = false` no
+# system/hardware/btrfs.nix. Política que depende de default implícito de kernel
+# quebra calada num bump — se tirar daqui, religue o fstrim no mesmo commit.
 #
 # PEGADINHA DO SWAP: em btrfs, swapfile exige NOCOW e zero compressão, senão o
 # kernel recusa ativar. Por isso `@swap` é subvolume PRÓPRIO e SEM compress — e o
@@ -52,33 +68,35 @@
           content = {
             type = "btrfs";
             extraArgs = [ "-f" ]; # sobrescreve assinatura de FS anterior (o ext4 do Arch)
+            # Repetido em cada subvolume por exigência do disko (não há herança);
+            # o PORQUÊ de cada opção está no cabeçalho.
             subvolumes = {
               # Alvo futuro do rollback da impermanência: é ESTE que será zerado
               # a cada boot quando a feature entrar. Por isso nada que importe
               # pode morar fora dos outros subvolumes.
               "@" = {
                 mountpoint = "/";
-                mountOptions = [ "compress=zstd" "noatime" ];
+                mountOptions = [ "compress=zstd:1" "noatime" "discard=async" ];
               };
               "@home" = {
                 mountpoint = "/home";
-                mountOptions = [ "compress=zstd" "noatime" ];
+                mountOptions = [ "compress=zstd:1" "noatime" "discard=async" ];
               };
               # /nix é imutável e enorme: noatime evita escrita a cada leitura.
               "@nix" = {
                 mountpoint = "/nix";
-                mountOptions = [ "compress=zstd" "noatime" ];
+                mountOptions = [ "compress=zstd:1" "noatime" "discard=async" ];
               };
               # Vazio HOJE. Vira o destino da lista explícita de persistência.
               "@persist" = {
                 mountpoint = "/persist";
-                mountOptions = [ "compress=zstd" "noatime" ];
+                mountOptions = [ "compress=zstd:1" "noatime" "discard=async" ];
               };
               # Separado senão a impermanência levaria o journal junto no reboot —
               # e perder log é perder justamente o que explica o boot que deu errado.
               "@log" = {
                 mountpoint = "/var/log";
-                mountOptions = [ "compress=zstd" "noatime" ];
+                mountOptions = [ "compress=zstd:1" "noatime" "discard=async" ];
               };
               # SEM compress e SEM noatime: o mkswapfile do btrfs exige NOCOW puro.
               "@swap" = {

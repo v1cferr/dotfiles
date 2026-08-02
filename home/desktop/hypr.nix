@@ -16,6 +16,9 @@
 { pkgs, config, inputs, ... }:
 
 let
+  # Pacote do Quickshell (flake input). Ligado uma vez porque o caminho completo
+  # passa de 130 colunas e se repetia em cada consumidor deste arquivo.
+  qsPkg = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
   # minimize-others: manda as OUTRAS janelas da workspace atual pra special:minimized
   # (apertar de novo traz de volta). Reescrito p/ o dispatch Lua do 0.55 — o antigo
   # `hyprctl dispatch movetoworkspacesilent` quebrou; agora é hl.dsp.window.move com
@@ -82,7 +85,7 @@ let
   # embaixo ia a 0/negativo e bugava a tela.
   brightnessOsd = pkgs.writeShellApplication {
     name = "brightness-osd";
-    runtimeInputs = [ pkgs.hyprland pkgs.coreutils inputs.quickshell.packages.${pkgs.system}.default ];
+    runtimeInputs = [ pkgs.hyprland pkgs.coreutils qsPkg ];
     text = ''
       step=10
       floor=20  # piso: nunca deixa a tela preta/bugada

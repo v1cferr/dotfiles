@@ -11,6 +11,9 @@
 { pkgs, config, inputs, ... }:
 
 let
+  # Pacote do Quickshell (flake input). Ligado uma vez porque o caminho completo
+  # passa de 130 colunas e se repetia em cada consumidor deste arquivo.
+  qsPkg = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
   # qs-restart: mata e sobe o Quickshell de novo. Necessário porque o hot-reload NÃO
   # reaplica delegate de Repeater (ws-pills, notificações) — editar o QML desses não
   # basta, precisa reiniciar o processo.
@@ -82,7 +85,7 @@ let
   qsRestart = pkgs.writeShellApplication {
     name = "qs-restart";
     runtimeInputs = [
-      inputs.quickshell.packages.${pkgs.system}.default
+      qsPkg
       pkgs.hyprland
       pkgs.coreutils
     ];
@@ -96,7 +99,7 @@ let
 in
 {
   home.packages = [
-    inputs.quickshell.packages.${pkgs.system}.default # `qs` / `quickshell`
+    qsPkg # `qs` / `quickshell`
     pkgs.lm_sensors # `sensors` — CPU temp lido pelo bar/Bar.qml
     qsRestart # `qs-restart` — usado pelo bind SUPER+ESCAPE (keybinds.lua)
     trayNativeMenu # `tray-native-menu` — clique-direito em SNI sem DBusMenu (Bar.qml)

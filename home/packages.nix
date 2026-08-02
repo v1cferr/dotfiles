@@ -16,8 +16,8 @@
     # Chrome canal DEV (unstable/latest), NÃO o stable — via flake browser-previews
     # (o nixpkgs só tem stable). Binário/launcher = "Google Chrome Dev"; bump com
     # `nix flake update browser-previews`. unfree; compatibilidade/DevTools bleeding-edge.
-    inputs.browser-previews.packages.${pkgs.system}.google-chrome-dev
-    inputs.zen-browser.packages.${pkgs.system}.default # Zen (flake; ver flake.nix)
+    inputs.browser-previews.packages.${stdenv.hostPlatform.system}.google-chrome-dev
+    inputs.zen-browser.packages.${stdenv.hostPlatform.system}.default # Zen (flake; ver flake.nix)
 
     # ── Comunicação ──
     discord # voz/chat (unfree; expõe o socket IPC pro Rich Presence do Claude Code)

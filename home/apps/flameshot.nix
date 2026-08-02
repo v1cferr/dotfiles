@@ -17,6 +17,9 @@
 { config, pkgs, inputs, ... }:
 
 let
+  # Pacote do Quickshell (flake input). Ligado uma vez porque o caminho completo
+  # passa de 130 colunas e se repetia em cada consumidor deste arquivo.
+  qsPkg = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
   fs = pkgs.unstable.flameshot; # v14
 
   # flameshot-screenshot: abre o picker (flameshot gui) e ENTRA no submap "screenshot"
@@ -27,7 +30,7 @@ let
     name = "flameshot-screenshot";
     # `qs`: esconde a barra enquanto o overlay existe (ver abaixo). runtimeInputs é
     # obrigatório — writeShellApplication usa PATH restrito, não o do usuário.
-    runtimeInputs = [ fs pkgs.hyprland pkgs.jq pkgs.coreutils inputs.quickshell.packages.${pkgs.system}.default ];
+    runtimeInputs = [ fs pkgs.hyprland pkgs.jq pkgs.coreutils qsPkg ];
     text = ''
       flameshot gui >/dev/null 2>&1 &
       hyprctl dispatch 'hl.dsp.submap("screenshot")' >/dev/null 2>&1 || true

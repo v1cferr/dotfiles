@@ -10,10 +10,13 @@
 #   ⚠️ O QUE ESTE ARQUIVO DÁ, E O QUE NÃO DÁ. A firmware verifica o GRUB (assinado
 #   com a chave desta máquina) e verifica o `bootmgfw.efi` do Windows (assinado
 #   pela Microsoft). O GRUB, porém, carrega kernel e initrd SEM verificar nada —
-#   ele não tem shim nem `check_signatures`. Ou seja: isto satisfaz a firmware e o
-#   Windows, e barra um bootloader trocado por fora; NÃO barra quem já tenha root
-#   e troque o kernel. Quem quiser a cadeia inteira troca o GRUB pelo lanzaboote
-#   e perde o menu (e o tema) — é esse o trade, não há terceira porta hoje.
+#   e isso não é acidente: é o `--disable-shim-lock` em ./boot.nix, que é
+#   OBRIGATÓRIO pra máquina bootar (sem ele o GRUB exige o protocolo do shim, que
+#   não existe aqui, e morre em "shim_lock protocol not found" — tanto no NixOS
+#   quanto no Windows). Ou seja: isto satisfaz a firmware e o Windows, e barra um
+#   bootloader trocado por fora; NÃO barra quem já tenha root e troque o kernel.
+#   Quem quiser a cadeia inteira precisa de shim (e aí kernel assinado pela
+#   Microsoft) ou do lanzaboote (e aí sem menu e sem tema). Não há terceira porta.
 #
 # CERTIFICADOS DA MICROSOFT: `enroll-keys -m` é OBRIGATÓRIO. Sem ele, apagar as
 # chaves de fábrica derruba junto (a) o Windows, cujo bootloader é assinado pela

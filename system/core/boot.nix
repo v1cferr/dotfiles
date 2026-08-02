@@ -70,6 +70,47 @@
     # fallback — o GRUB tenta em ordem e só cai no "auto" se o GOP não oferecer 1080p.
     gfxmodeEfi = "1920x1080,auto";
 
+    # ═══ O QUE FAZ O GRUB BOOTAR COM SECURE BOOT LIGADO ═══════════════════════
+    # Sem estas duas flags o resultado é `error: prohibited by secure boot
+    # policy` + `grub rescue>` — medido em 02/08/2026, na primeira tentativa.
+    # A firmware ACEITOU o grubx64.efi assinado (a assinatura estava certa); quem
+    # recusou foi o GRUB, contra si mesmo. São dois bloqueios distintos:
+    #
+    # 1. `--modules=…` — com Secure Boot ativo o GRUB desliga o `insmod` (é
+    #    side-load de código). Como o `grub-install` embute só o mínimo pra achar
+    #    o /boot, o `normal` (o módulo que DESENHA O MENU) vinha do disco e era
+    #    barrado → rescue direto, antes de qualquer menu. Tudo que o boot precisa
+    #    tem que estar DENTRO do binário assinado. Nomes conferidos um a um contra
+    #    o grub2_efi: os 47 existem.
+    #
+    # 2. `--disable-shim-lock` — esta é a não-óbvia, e embutir módulos SOZINHO não
+    #    resolveria: o menu apareceria e aí falhariam o NixOS E o Windows. Em
+    #    kern/efi/sb.c, o `grub_shim_lock_verifier_setup()` só NÃO registra o
+    #    verificador em dois casos: Secure Boot desligado, ou a imagem trazer o
+    #    marcador OBJ_TYPE_DISABLE_SHIM_LOCK (que é o que esta flag embute).
+    #    Registrado, ele cobre GRUB_FILE_TYPE_LINUX_KERNEL e
+    #    GRUB_FILE_TYPE_EFI_CHAINLOADED_IMAGE, e o `write` dele chama o protocolo
+    #    do shim — que aqui NÃO EXISTE, porque não usamos shim → todo boot morre
+    #    em "shim_lock protocol not found".
+    #
+    # ⚠️ A flag 2 é literalmente "não verifique nada depois de mim", e é o que
+    # torna concreto o caveat já documentado em ./secureboot.nix: a cadeia é
+    # verificada pela firmware ATÉ o GRUB, e não além. Quem quiser além disso
+    # precisa de shim (e aí kernel assinado pela Microsoft) ou do lanzaboote (e
+    # aí sem menu e sem tema). Não há terceira porta.
+    extraGrubInstallArgs = [
+      "--disable-shim-lock"
+      ("--modules=" + builtins.concatStringsSep " " [
+        "all_video" "boot" "btrfs" "cat" "chain" "configfile" "echo" "efifwsetup"
+        "efi_gop" "efi_uga" "ext2" "fat" "font" "gettext" "gfxmenu" "gfxterm"
+        "gfxterm_background" "gzio" "halt" "help" "jpeg" "keystatus" "linux"
+        "loadenv" "loopback" "ls" "lsefi" "minicmd" "normal" "part_gpt"
+        "part_msdos" "png" "probe" "reboot" "regexp" "search" "search_fs_file"
+        "search_fs_uuid" "search_label" "sleep" "terminal" "test" "true" "video"
+        "video_fb" "videoinfo" "zstd"
+      ])
+    ];
+
     minegrub-world-sel.enable = true;
     minegrub-world-sel.customIcons = [
       {

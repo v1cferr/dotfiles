@@ -107,7 +107,13 @@ Boot está inativo, então o GRUB e o Windows continuam subindo.
 
 ## Fase 3 — NixOS: enrolar as chaves
 
+> ⚠️ **Se você está retomando depois do `grub rescue>` de 02/08:** a firmware está em
+> Setup Mode e as chaves foram limpas de novo, então recomece por um `rebuild` — ele
+> reinstala o GRUB **com os módulos embutidos** (`extraGrubInstallArgs`) e reassina.
+> Sem esse `rebuild` o binário na ESP ainda é o antigo, e o rescue mode volta.
+
 ```bash
+rebuild                  # reinstala o GRUB com os módulos embutidos + assina
 sudo sbctl enroll-keys -m
 sbctl status
 ```
@@ -153,6 +159,8 @@ No Windows, `msinfo32` → **Secure Boot State: On**.
 | Sintoma | O que é |
 | --- | --- |
 | Firmware não boota nada / "Invalid signature" | O GRUB foi reescrito sem assinatura. **BIOS → Secure Boot: Disabled**, boote, `sudo sbctl sign -s /boot/EFI/*/grubx64.efi`, religue o SB |
+| `prohibited by secure boot policy` + `grub rescue>` | **Aconteceu em 02/08.** A assinatura estava CERTA (a firmware executou o GRUB) — faltavam os módulos embutidos. Resolvido pelo `extraGrubInstallArgs` em [`system/core/boot.nix`](system/core/boot.nix); confira que o `rebuild` reinstalou o GRUB |
+| `shim_lock protocol not found` | Falta o `--disable-shim-lock` no `extraGrubInstallArgs`. Sem ele o GRUB exige um shim que não existe aqui, e nem NixOS nem Windows bootam |
 | Windows no menu, mas não boota | O UUID mudou. `lsblk -o NAME,LABEL,UUID /dev/sdb` e corrija o `search --fs-uuid` em [`system/core/boot.nix`](system/core/boot.nix) |
 | Windows pede chave de recuperação | O BitLocker não foi desligado (Fase 0). Sem a chave, `sbctl reset` + SB off devolve o PCR 7 anterior |
 | Arc B580 sem vídeo no POST | `enroll-keys` sem o `-m`. `sudo sbctl reset` na BIOS em Setup Mode e refaça a Fase 3 **com** o `-m` |

@@ -22,6 +22,19 @@
     # ── Comunicação ──
     discord # voz/chat (unfree; expõe o socket IPC pro Rich Presence do Claude Code)
 
+    # ── IA ──
+    # Claude Desktop (GUI: Chat/Cowork/Code) — .deb OFICIAL reempacotado, ver flake.nix.
+    # Variante FHS e não a pura: os servidores MCP precisam achar node/uv, e o Cowork
+    # sobe uma VM QEMU procurando /usr/share/OVMF/*.fd e /usr/bin/virtiofsd em caminhos
+    # FHS HARDCODED — fora do FHS ele responde "virtualization_tools_missing" e pronto.
+    # Closure MEDIDO: 2.9 GiB (o qemu_kvm é a maior fatia) — a medição de 30/07 diz que
+    # não é onde o disco enche: o /nix/store INTEIRO é 9% dele, os Bottles são 319 GiB.
+    # ⚠️ Cowork exige VT-x LIGADO NA BIOS (aqui está desligado: "VMX disabled by BIOS")
+    # + o usuário no grupo kvm. Sem isso, só Chat/Code funcionam. A sessão e o claude_desktop_config.json são
+    # ESTADO (regra 6 → restic) e o app REESCREVE esse JSON em runtime (regra 14: o
+    # Nix não é dono dele). unfree.
+    claude-desktop-fhs
+
     # ── Notas / mídia ──
     obsidian # notas em Markdown (cofre local; unfree)
     spotify # música (unfree)

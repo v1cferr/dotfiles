@@ -66,6 +66,19 @@
       inputs.nixpkgs.follows = "nixpkgs"; # dedup
     };
 
+    # Claude Desktop — NÃO está no nixpkgs (a issue #366213 foi fechada; o canal só
+    # tem claude-code/claude-monitor). Este flake REEMPACOTA o .deb OFICIAL que a
+    # Anthropic passou a publicar em 30/06/2026 (beta Linux, APT próprio) — padrão
+    # nixpkgs de vendor binário (dpkg-deb + autoPatchelfHook), como discord/vscode.
+    # Preterido: k3d3/claude-desktop-linux-flake (o pioneiro, mas fazia RE do binário
+    # de Windows e está parado desde nov/2025) e heytcass/claude-for-linux (extrai do
+    # DMG do macOS; 6 estrelas, 77 issues). CI do upstream bumpa versão+hash sozinha,
+    # então "última versão" = `nix flake update claude-desktop`.
+    claude-desktop = {
+      url = "github:aaddrick/claude-desktop-debian";
+      inputs.nixpkgs.follows = "nixpkgs"; # dedup: só afeta o lock (o overlay usa o pkgs DAQUI)
+    };
+
     # Google Chrome canais DEV/BETA — o nixpkgs só empacota o stable. Este flake
     # mantido (nix-community) traz o google-chrome-dev sempre fresco; "latest" = bump
     # com `nix flake update browser-previews`. Usado em home/packages.nix.
@@ -106,7 +119,9 @@
         inherit system;
         specialArgs = { inherit inputs; };
         modules = [
-          { nixpkgs.overlays = [ overlayUnstable overlayLocalPkgs ]; } # `unstable.*` + pacotes locais (./pkgs)
+          # `unstable.*` + pacotes locais (./pkgs) + claude-desktop (flake; overlay
+          # em vez de packages.<system> pra buildar contra ESTA base, sem 3º nixpkgs)
+          { nixpkgs.overlays = [ overlayUnstable overlayLocalPkgs inputs.claude-desktop.overlays.default ]; }
           sops-nix.nixosModules.sops
           disko.nixosModules.disko # inerte em hosts sem disko.devices
           ./system

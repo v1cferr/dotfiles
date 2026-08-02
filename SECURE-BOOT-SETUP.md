@@ -63,16 +63,19 @@ sudo sbctl create-keys          # cria /var/lib/sbctl/keys
 rebuild
 ```
 
-O `rebuild` vai imprimir `installing the GRUB 2 boot loader...` e rodar o os-prober.
-Confira, **antes de reiniciar**, que o Windows foi encontrado:
+O `rebuild` vai imprimir `installing the GRUB 2 boot loader...`. A entrada do Windows
+é **fixa por UUID** (`904C-B9D0`, a ESP do SanDisk), não vem de varredura — então ela
+sempre aparece no arquivo. O que precisa ser conferido é se o UUID ainda bate:
 
 ```bash
-sudo grep -A2 -i "menuentry 'Windows" /boot/grub/grub.cfg
-sbctl verify                    # o grubx64.efi deve aparecer como assinado
+sudo grep -A5 'menuentry "Windows 11"' /boot/grub/grub.cfg
+lsblk -o NAME,LABEL,UUID /dev/sdb    # sdb1 tem que ser 904C-B9D0
+sbctl verify                          # o grubx64.efi deve aparecer como assinado
 ```
 
-Se o Windows **não** aparecer no `grub.cfg`, pare aqui e me chame — sem entrada no
-menu, ligar Secure Boot só esconde o problema.
+Se o UUID do `sdb1` **não** for `904C-B9D0`, corrija em
+[`system/core/boot.nix`](system/core/boot.nix) antes de seguir — a entrada existiria
+no menu e simplesmente não bootaria.
 
 **Reinicie.** Você deve ver o menu do Minecraft com dois mundos: NixOS e Windows 11.
 Teste **os dois**, incluindo entrar no Windows e voltar.
@@ -135,7 +138,7 @@ No Windows, `msinfo32` → **Secure Boot State: On**.
 | Sintoma | O que é |
 | --- | --- |
 | Firmware não boota nada / "Invalid signature" | O GRUB foi reescrito sem assinatura. **BIOS → Secure Boot: Disabled**, boote, `sudo sbctl sign -s /boot/EFI/*/grubx64.efi`, religue o SB |
-| Windows sumiu do menu | Só o os-prober não rodou. `rebuild` de novo e confira o `grub.cfg` |
+| Windows no menu, mas não boota | O UUID mudou. `lsblk -o NAME,LABEL,UUID /dev/sdb` e corrija o `search --fs-uuid` em [`system/core/boot.nix`](system/core/boot.nix) |
 | Windows pede chave de recuperação | O BitLocker não foi desligado (Fase 0). Sem a chave, `sbctl reset` + SB off devolve o PCR 7 anterior |
 | Arc B580 sem vídeo no POST | `enroll-keys` sem o `-m`. `sudo sbctl reset` na BIOS em Setup Mode e refaça a Fase 3 **com** o `-m` |
 | Menu do GRUB feio/esticado | O `gfxmodeEfi` não pegou 1080p. Ajustar em [`system/core/boot.nix`](system/core/boot.nix) |

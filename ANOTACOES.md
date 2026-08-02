@@ -53,6 +53,39 @@ quando terminar de consultar; o conteúdo está nos repos acima.
 
 ## TODO
 
+- [x] BTRFS bem configurado (02/08/2026) — auditado o FS depois do cutover. O que existia
+      (noatime, space_cache=v2, subvolumes, scrub mensal) estava certo; o que faltava virou
+      system/hardware/btrfs.nix (POLÍTICA, machine-agnostic atrás de "a raiz é btrfs?") +
+      system/services/btrbk.nix (snapshots). O LAYOUT continua no disko.nix.
+      • SNAPSHOTS (a maior lacuna): btrfs sem snapshot é ext4 com checksum. btrbk horário do
+        @home, retenção 48h/7d/4w, `snapshot_create=onchange` (senão máquina ociosa gera 24
+        snapshots idênticos/dia e empurra os úteis pra fora). NÃO substitui o restic — ele
+        mora no MESMO disco; cobre "sobrescrevi há 20 min", o restic cobre "o disco morreu".
+        Só @home: a raiz já tem rollback por geração no GRUB, e snapshot de `/` nem pegaria
+        o /nix (subvolume separado — snapshot não desce pra subvolume aninhado).
+      • zstd:3 → zstd:1: num Gen4 de ~7 GB/s o gargalo vira o COMPRESSOR. Descompressão tem
+        a mesma velocidade nos dois níveis ⇒ leitura não perde nada, e cada rebuild ganha.
+        Só vale pra escrita NOVA; reescrever exigiria `defragment -czstd`, que QUEBRA reflink.
+      • fstrim.timer DESLIGADO: `discard=async` (default do kernel desde 6.2, agora explícito
+        no disko) já é a mesma operação, enfileirada e com rate limit. Os dois juntos = TRIM
+        em duplicata. Se tirar o discard=async do disko, religar o fstrim no MESMO commit.
+      • Reclaim automático de block group ligado (dynamic_reclaim + periodic_reclaim, kernel
+        6.11+, vinham 0). É o substituto IN-KERNEL do cron de `btrfs balance -dusage=N` do
+        btrfsmaintenance — e melhor, porque sabe quando NÃO vale relocar. bg_reclaim_threshold
+        fica intocado: é mutuamente exclusivo com o dynamic (EINVAL).
+      • Alarme: o scrub falhava em SILÊNCIO. Agora OnFailure → notificação crítica em toda
+        sessão viva + journal. Somado a isso, checagem DIÁRIA de `btrfs device stats -c`:
+        o scrub é mensal, um NVMe que começa a morrer no dia 2 ficaria 28 dias sem aviso.
+        Contador não zera sozinho — reconhecer com `device stats -z` DEPOIS de investigar.
+      • `+C` (nodatacow) nos diretórios de banco (volumes do Docker, SQLite do Jellyfin):
+        CoW + escrita aleatória de 8 KiB fragmenta sem parar. Só pega arquivo NOVO, e
+        desliga o checksum desses arquivos — trade-off consciente, os dois são refazíveis.
+      PASSO MANUAL ÚNICO (subvolume não nasce em rebuild — o disko só roda em instalação):
+        sudo mount -o subvolid=5 /dev/nvme0n1p2 /mnt && sudo btrfs subvolume create /mnt/@snapshots && sudo umount /mnt
+      O `nofail` no /.snapshots existe pra que esquecer esse passo custe "btrbk não roda"
+      (RequiresMountsFor) em vez de "boot cai no emergency shell".
+      NÃO ligar qgroups/quota: mata a performance do btrfs e é o motivo de metade dos
+      relatos de "btrfs lento". Nada aqui precisa deles.
 - [x] Quickshell — shell/bar/OSD/mídia/NOTIFICAÇÕES em QML (portado do meu Arch,
       adaptado). Substituiu a waybar (removida) E o swaync (o Quickshell é o daemon de
       org.freedesktop.Notifications). Binário do flake oficial (latest). Config QML em

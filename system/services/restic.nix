@@ -4,10 +4,13 @@
 # restic cifra tudo em repouso e guarda com checksum (o `restic check` verifica
 # integridade — o mesmo padrão que se quer pra armazenamento "duvidoso").
 #
-# Repo no HDD Seagate (/mnt/seagate-old/restic), OFF-DISK: o NixOS roda do SanDisk
-# (SSD SATA) e o backup vai pro HDD SEPARADO → sobrevive à morte do SanDisk (backup
-# de verdade, não só snapshot). O SanDisk não carrega cópia nenhuma. ext4 nos dois →
-# sem snapshot CoW "grátis"; pra isso, formatar em btrfs numa migração futura.
+# Repo no HDD Seagate (/mnt/seagate-old/restic), OFF-DISK: o NixOS roda do NVMe
+# Kingston e o backup vai pro HDD SEPARADO → sobrevive à morte do Kingston (backup
+# de verdade, não só snapshot).
+#
+# PAR COM O btrbk (btrbk.nix), desde que o Kingston virou btrfs (cutover 01/08/2026):
+# o snapshot local horário cobre "sobrescrevi agora há pouco"; ESTE cobre "o disco
+# morreu". Snapshot no mesmo disco não é backup — por isso os dois, não um só.
 #
 # A senha do repo é SEGREDO (sops: restic_password). Sem ela não decripta o repo.
 # ═══════════════════════════════════════════════════════════════════════════

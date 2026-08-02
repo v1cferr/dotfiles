@@ -135,7 +135,11 @@ let
 
         # Janela de 15 min: garante que a evidência é da tentativa ATUAL, não de uma
         # sessão antiga que sobrou no journal (mesma armadilha do gate acima).
-        log="$(journalctl -u "$unit" --since '-15 min' --no-pager 2>/dev/null || true)"
+        # `-o cat` = só a MENSAGEM, sem o prefixo "data host unidade[pid]:". Antes isso
+        # era feito depois, com `sed 's/.*nixos-sandisk //'` — que virou no-op no dia em
+        # que o hostname mudou, e aí a evidência voltou a sair com o prefixo. Pedir o
+        # formato certo à ferramenta não tem como envelhecer; recortar por nome, sim.
+        log="$(journalctl -u "$unit" --since '-15 min' --no-pager -o cat 2>/dev/null || true)"
 
         # ORDEM proposital: o mais local primeiro. Culpar a FAI por um "timeout" no log
         # enquanto a rede daqui está caída seria o erro clássico deste tipo de alerta.
@@ -163,10 +167,10 @@ let
         fi
 
         printf '%s\n%s\n' "$verdict" "$detail"
-        # evidência: as últimas linhas de erro, sem o prefixo de host/unidade
+        # evidência: as últimas linhas de erro (já sem prefixo, pelo `-o cat` acima)
         printf '%s\n' "$log" \
           | grep -iE 'error|failed|timed out|hangup|refused|reset by peer|not responding' \
-          | tail -n 3 | sed 's/.*nixos-sandisk //' || true
+          | tail -n 3 || true
         return 1
       }
       case "''${1:-}" in

@@ -49,9 +49,10 @@
       flake = false;
     };
 
-    # Tema do GRUB estilo "seleção de mundo" do Minecraft (pro dualboot Arch/NixOS/
-    # Windows). SÓ tem efeito quando system/boot.nix flipar `useGrub = true` (em
-    # casa); enquanto false, o input fica travado no lock mas inerte.
+    # Tema do GRUB estilo "seleção de mundo" do Minecraft — cada SO/geração vira um
+    # "mundo" com ícone e descrição. É o do dualboot NixOS ⇄ Windows 11, ATIVO em
+    # system/core/boot.nix. O outro tema do mesmo autor (minegrub-theme, o menu
+    # principal do Minecraft) foi preterido: entrada vira botão, sem ícone por SO.
     minegrub-world-sel-theme = {
       url = "github:Lxtharia/minegrub-world-sel-theme";
       inputs.nixpkgs.follows = "nixpkgs"; # dedup: não puxa um 2º nixpkgs pro lock

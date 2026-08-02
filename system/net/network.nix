@@ -58,4 +58,24 @@
     ipv4 = true;
     ipv6 = false;
   };
+
+  # ESPERAR A REDE DE VERDADE. O módulo do nixpkgs ordena só por `network.target`
+  # (services/networking/cloudflare-dyndns.nix:79), e esse target NÃO significa
+  # "tem internet" — significa "a pilha de rede foi iniciada". Quem significa
+  # conectividade é o `network-online.target`, e ele exige as DUAS pontas: o
+  # `wants` (senão o target nem é puxado) e o `after` (senão não há ordem).
+  #
+  # MEDIDO no boot de 01/08: o serviço subiu em T+3s e o network-online só ficou
+  # pronto em T+9,8s (a NetworkManager-wait-online leva 6,5s esperando DHCP).
+  # Resultado, TODO boot: as quatro APIs de "qual é meu IP" davam unreachable, ele
+  # APAGAVA o cache (`Deleting cache at: …/ip.cache`) e saía com status 2. O timer
+  # de 5 min consertava depois — então isso nunca apareceu como quebrado, só como
+  # um `failed` no boot que a gente aprendeu a ignorar. O custo real era o
+  # ssh.v1cferr.dev ficar apontando pro IP velho na PIOR hora possível: logo depois
+  # de uma queda de energia, que é justamente quando o IP público costuma mudar
+  # e quando se quer entrar de fora.
+  systemd.services.cloudflare-dyndns = {
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+  };
 }

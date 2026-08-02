@@ -160,6 +160,42 @@ quando terminar de consultar; o conteúdo está nos repos acima.
       NÃO automatizado de propósito: apagar jogo/mídia. Ninguém deve deletar 319 GiB de jogos por
       conta própria — daí alarme em vez de faxina. Achado p/ o dono decidir: existe um bottle
       "Battle.net" de 688 MiB ao lado do "Battlenet" de 181 GiB, com cara de tentativa abandonada.
+- [x] DUALBOOT com tema minegrub + SECURE BOOT (02/08/2026) — systemd-boot → GRUB, tema
+      "seleção de mundo" do Minecraft, Windows 11 no menu e Secure Boot ligado nos dois SOs.
+      system/core/boot.nix (o boot-grub.nix dormente foi absorvido) + system/core/secureboot.nix.
+      O QUE DECIDIU A ARQUITETURA, e não foi gosto: **as duas ESPs estão em discos
+      diferentes** (NixOS em nvme0n1p1, Windows em sdb1). O systemd-boot só carrega binário
+      EFI da PRÓPRIA ESP — ele é incapaz de listar o Windows, e trocar de SO viraria F8 no
+      POST toda vez. Isso derruba o LANZABOOTE junto, que é systemd-boot-only e é o caminho
+      oficial de Secure Boot no NixOS. Sobra GRUB (lê as duas ESPs, e é o que o tema exige)
+      + assinatura à mão via sbctl. Não há módulo NixOS que assine o GRUB.
+      HONESTIDADE SOBRE O QUE ISSO PROTEGE: a firmware verifica o GRUB e o bootmgfw da
+      Microsoft; o GRUB carrega kernel/initrd SEM verificar (não tem shim). Satisfaz a
+      firmware e o Windows e barra bootloader trocado por fora; não barra quem já tem root.
+      A cadeia inteira só com lanzaboote — e aí sem menu e sem tema.
+      ⚠️ `enroll-keys -m` (com os certificados da Microsoft) NÃO É OPCIONAL: sem ele,
+      apagar as chaves de fábrica derruba o Windows E a option ROM da Arc B580. E o timing
+      importa: o CA da Microsoft de 2011 EXPIROU em junho/2026. Conferido nesta máquina em
+      02/08 — a BIOS 2803 já traz as duas gerações no `db` (2011 + os três CAs de 2023) e o
+      sbctl 0.18 embute as seis, então o `-m` cobre também o Windows pós-rollover. O
+      `--firmware-builtin` NÃO serviria: o `dbDefault` desta firmware está vazio.
+      PEGADINHA DO TEMA: os ícones casam por `--class`, NÃO pelo título — e erra em
+      silêncio (ícone genérico, sem texto). `nixos` vem do default `entryOptions`; `windows`
+      é derivado pelo 30_os-prober da PRIMEIRA palavra do label "Windows Boot Manager"
+      (logo, "windows", nunca "windows11"); `submenu` é o das gerações antigas. O texto das
+      2 linhas é RENDERIZADO DENTRO do PNG na fonte do Minecraft, e o título do GRUB é
+      empurrado pra fora da tela pelo tema (`item_icon_space = 2000`) — por isso todas as
+      gerações mostram a mesma descrição: compartilham a classe `nixos`. Limitação do tema.
+      ESCOLHA DO TEMA: o link original era o minegrub-theme (menu principal do Minecraft),
+      preterido pelo minegrub-world-sel-theme (mesmo autor) — a tela de seleção de mundo dá
+      ícone + descrição POR SO, que é o que um dualboot quer; no menu principal a entrada
+      é só um botão.
+      MEDIDO ANTES: a ESP de 1 GiB aguenta as 10 gerações. O install-grub.pl liga o
+      copyKernels sozinho (o /boot está noutro filesystem que o /nix/store — o que também
+      evita depender do GRUB ler btrfs+zstd) e nomeia por hash da store, então gerações que
+      compartilham kernel ocupam espaço uma vez: 13 MiB + 47 MiB por versão de kernel.
+      Runbook dos passos MANUAIS (Setup Mode só se entra pela BIOS) no cabeçalho do
+      secureboot.nix, junto do porquê de cada um.
 - [ ] Verificar se é possível adicionar estado declarativo criptografado
 - [ ] IMPERMANÊNCIA no Kingston — ideia do dono (30/07), inspirada no
       <https://github.com/Misterio77/Foundry>: raiz efêmera (tmpfs ou subvolume zerado no boot) +
@@ -191,6 +227,11 @@ quando terminar de consultar; o conteúdo está nos repos acima.
         a declarar. Consequência a lembrar: o estado de serviço que o cutover copia pra lá
         (uid-map, NetworkManager, bluetooth…) é ZERADO no reboot quando a feature entrar —
         tem que migrar pro /persist e ser declarado. Esse é o trabalho, não um bug.
+        ⚠️ `/var/lib/sbctl` É O PRIMEIRO DA LISTA e o único que faz a máquina NÃO BOOTAR se
+        for esquecido: são as chaves de Secure Boot (ver system/core/secureboot.nix). Sem
+        elas o switch seguinte não assina o GRUB, e com Secure Boot ligado a firmware
+        recusa o bootloader. Recuperação = desligar SB na BIOS + `sbctl create-keys` +
+        `enroll-keys -m` de novo, com a BIOS em Setup Mode. Declarar ANTES de ligar a raiz efêmera.
       FALTA só: o snapshot `@-blank` (base do rollback) e a lista de persistência. O blank NÃO
       é now-or-never — subvolume vazio criado depois é idêntico a snapshot em branco.
 - [x] Clipboard (Wayland) — cliphist DECLARATIVO (services.cliphist, allowImages=texto+imagem)

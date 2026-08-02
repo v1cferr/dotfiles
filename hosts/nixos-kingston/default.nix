@@ -32,14 +32,10 @@
   # Montar o C: aqui seria convidar as duas coisas que estragam dualboot: escrita em
   # NTFS com hibernação/fast-startup pendente, e o restic varrendo 900 GB alheios.
 
-  # Scrub mensal: btrfs guarda checksum de TODO bloco, e o scrub é o que efetivamente
-  # relê e compara. Sem ele o checksum só acusa erro quando você por acaso lê o setor
-  # podre. Em ext4 isso não existia — é ganho novo, então vale ligar de saída.
-  services.btrfs.autoScrub = {
-    enable = true;
-    interval = "monthly";
-    fileSystems = [ "/" ];
-  };
+  # O scrub mensal e o resto da POLÍTICA de btrfs (alarme, contadores de erro,
+  # reclaim, TRIM, nocow) saíram daqui pra system/hardware/btrfs.nix: nada ali é
+  # específico DESTA máquina — o guarda é "a raiz é btrfs?", não "é o Kingston?".
+  # Aqui fica só o LAYOUT, que é do host de verdade (disko.nix).
 
   # Kernel — MESMO hardware do SanDisk (mesma MOBO/CPU); só a raiz virou NVMe.
   boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];

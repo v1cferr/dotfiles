@@ -519,6 +519,43 @@ quando terminar de consultar; o conteúdo está nos repos acima.
         Arc B580 = explorar depois). qwen3:4b (solver texto) + bge-m3 (embeddings)
         via loadModels. É o solver local do duo-streak-daemon (localhost:11434),
         sem cota nem nuvem.
+  - [x] Claude Desktop (GUI: Chat/Cowork/Code) — 02/08/2026. A pesquisa mudou de resposta no
+        meio do caminho: em **30/06/2026 a Anthropic passou a publicar um Claude Desktop
+        OFICIAL pra Linux** (beta, `.deb` num APT próprio, só Debian/Ubuntu homologados).
+        Isso APOSENTA os projetos que faziam engenharia reversa do binário de macOS/Windows,
+        que era todo o estado da arte até então. NÃO está no nixpkgs: a issue #366213
+        (Package request) foi FECHADA e o canal só tem claude-code/claude-monitor.
+        ESCOLHIDO `aaddrick/claude-desktop-debian` (5.3k ★, releases automáticas seguindo a
+        versão upstream), que REEMPACOTA o .deb oficial desde a v3.0.0 — `dpkg-deb` +
+        `autoPatchelfHook`, o padrão nixpkgs de vendor binário (discord/vscode). PRETERIDOS:
+        `k3d3/claude-desktop-linux-flake` (o pioneiro e o mais citado nas buscas, mas fazia RE
+        do módulo nativo e está PARADO desde nov/2025 — anterior ao release oficial) e
+        `heytcass/claude-for-linux` (extrai do DMG do macOS; 6 ★ e 77 issues abertas).
+        Critério além de popularidade: o aaddrick NÃO usa o electron do nixpkgs (mantém a
+        árvore co-locada pra `/proc/self/exe`/`resourcesPath` resolverem) e NÃO desliga o
+        sandbox — o `chrome-sandbox` vem SUID, a store não carrega SUID, e em vez do
+        `--no-sandbox` que a maioria dos forks usa ele conta com o userns sandbox.
+        VARIANTE **FHS** e não a pura: os servidores MCP precisam achar node/uv, e o Cowork
+        sobe uma VM QEMU de verdade procurando `/usr/share/OVMF/*.fd` e `/usr/bin/virtiofsd`
+        em caminhos FHS HARDCODED — fora do FHS ele só responde `virtualization_tools_missing`.
+        Closure MEDIDO 2.9 GiB (o qemu_kvm é a maior fatia).
+        Integrado por **`overlays.default`** e não por `packages.<system>` (que é o padrão
+        do zen-browser/browser-previews aqui): conferi ANTES que os 13 atributos que o pacote
+        usa (libgbm, addDriverRunpath, qemu_kvm, OVMF…) existem no 26.05, então dá pra buildar
+        contra a base estável em vez de arrastar um 3º nixpkgs pro lock — o input dele é
+        `nixpkgs-unstable`, e `follows` sozinho NÃO resolveria (o overlay usa o `final` de
+        quem consome, ignorando o input dele).
+        ⚠️ COWORK NÃO FUNCIONA nesta máquina até um passo MANUAL na BIOS: o kernel diz
+        `x86/cpu: VMX (outside TXT) disabled by BIOS` e `kvm_intel: VMX not enabled` — não
+        existe `/dev/kvm`. Ligar "Intel Virtualization Technology (VT-x)" (mesma visita do
+        Secure Boot) e SÓ ENTÃO somar `users.users.v1cferr.extraGroups = [ "kvm" ]`, que não
+        entrou aqui por não ser validável sem o device. O `/dev/vhost-vsock` JÁ existe.
+        Chat e Code funcionam sem nada disso.
+        Achados de execução: `--doctor` NÃO é flag reconhecida nesta versão (ela abre a GUI);
+        o app sobe em Wayland NATIVO sozinho, então o `CLAUDE_USE_WAYLAND=1` que a doc oficial
+        manda usar é desnecessário aqui. Falta do beta Linux: Computer Use e ditado.
+        ESTADO (regra 6 → restic): sessão/login e `~/.config/Claude/claude_desktop_config.json`
+        — e o app REESCREVE esse JSON em runtime, então pela regra 14 o Nix não é dono dele.
 
 - [x] Media player — VLC (GUI completa, toca tudo out-of-the-box). home/apps/media.nix
       (movido do system/ → regra: app de usuário no home).

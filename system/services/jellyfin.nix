@@ -9,7 +9,7 @@
 # arquivos; o jellyfin lê). As BIBLIOTECAS em si (o que é Filme/Série) se configuram
 # na web UI (localhost:8096) no 1º acesso — isso vive no DB do jellyfin, não aqui.
 # ═══════════════════════════════════════════════════════════════════════════
-{ config, ... }:
+{ config, lib, ... }:
 
 {
   # Grupo compartilhado da mídia: dono = eu (copio/gerencio), leitura = jellyfin.
@@ -30,4 +30,8 @@
     enable = config.my.services.jellyfin;
     openFirewall = true; # abre 8096/8920 (web) + 1900/7359 UDP (descoberta DLNA) na LAN
   };
+
+  # Upstream usa UMask 0077: capa/nfo que o jellyfin baixa nascem 0600 e eu não consigo
+  # ler nem mover. 0002 faz esses arquivos herdarem o grupo 'media' com leitura.
+  systemd.services.jellyfin.serviceConfig.UMask = lib.mkForce "0002";
 }

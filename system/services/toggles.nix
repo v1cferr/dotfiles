@@ -16,6 +16,7 @@
     "sunshine"
     "qbittorrent"
     "restic"
+    "btrbk"
     "arch-kingston-archive"
     "cloudflare-ddns"
     "dropbox"
@@ -30,7 +31,8 @@
     duo = true; # duo-streak-daemon (ofensiva automática do Duolingo)
     sunshine = true; # streaming de tela p/ Moonlight
     qbittorrent = true; # cliente torrent
-    restic = true; # backup automático
+    restic = true; # backup automático (off-disk, diário)
+    btrbk = true; # snapshots locais do @home (horário) — complementa o restic
     arch-kingston-archive = true; # TEMPORÁRIO: arquiva o Arch antigo no Drive (desligar após o check)
     cloudflare-ddns = true; # DNS dinâmico (mantém o SSH externo)
     dropbox = true; # sync do ~/Dropbox

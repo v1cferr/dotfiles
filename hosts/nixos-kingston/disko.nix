@@ -98,6 +98,22 @@
                 mountpoint = "/var/log";
                 mountOptions = [ "compress=zstd:1" "noatime" "discard=async" ];
               };
+              # Casa dos snapshots do btrbk (system/services/btrbk.nix). Subvolume
+              # TOP-LEVEL, não um diretório dentro de `@`, por dois motivos: (1) o
+              # rollback da impermanência zeraria `@` e levaria junto exatamente o
+              # histórico que existe pra salvar a pele; (2) fora de `@home`, o
+              # restic nunca tropeça nele (senão faria backup de cada snapshot).
+              #
+              # `nofail`: subvolume NÃO nasce num rebuild — o disko só roda em
+              # instalação. Num sistema já instalado ele é criado à mão, UMA vez:
+              #   sudo mount -o subvolid=5 /dev/nvme0n1p2 /mnt \
+              #     && sudo btrfs subvolume create /mnt/@snapshots && sudo umount /mnt
+              # Com nofail, esquecer esse passo custa "o btrbk não roda" (ele exige
+              # o mount via RequiresMountsFor) em vez de "boot cai no emergency shell".
+              "@snapshots" = {
+                mountpoint = "/.snapshots";
+                mountOptions = [ "compress=zstd:1" "noatime" "discard=async" "nofail" ];
+              };
               # SEM compress e SEM noatime: o mkswapfile do btrfs exige NOCOW puro.
               "@swap" = {
                 mountpoint = "/swap";

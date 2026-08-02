@@ -5,6 +5,7 @@
   imports = [
     ./toggles.nix # PAINEL central: my.services.* liga/desliga os serviços opcionais
     ./restic.nix # backup cifrado do estado do usuário (repo no HDD por ora)
+    ./btrbk.nix # snapshots btrfs horários do @home (desfazer local; NÃO é backup)
     ./restic-arch-kingston.nix # TEMPORÁRIO: arquiva o Arch antigo no Google Drive antes de formatar
     ./claude-code.nix # hooks do Claude Code (managed-settings /etc) → Discord Rich Presence
     ./jellyfin.nix # servidor de mídia Jellyfin (nativo, systemd, biblioteca em /srv/media)

@@ -556,6 +556,16 @@ quando terminar de consultar; o conteúdo está nos repos acima.
         manda usar é desnecessário aqui. Falta do beta Linux: Computer Use e ditado.
         ESTADO (regra 6 → restic): sessão/login e `~/.config/Claude/claude_desktop_config.json`
         — e o app REESCREVE esse JSON em runtime, então pela regra 14 o Nix não é dono dele.
+        ⚠️ KEYRING: no 1º login o app avisa "your sign-in won't be saved" e pede login TODA
+        vez. NÃO é o keyring (conferido: `org.freedesktop.secrets` no bus e `collection/login`
+        presente — não é o caso do keyring-após-restore). É o Electron autodetectando o backend
+        de secret pelo XDG_CURRENT_DESKTOP: "Hyprland" não casa com nenhum caso do os_crypt do
+        Chromium, ele cai no "basic text" e o safeStorage se declara indisponível. MESMO bug e
+        MESMO remédio do VS Code, mas sem `commandLineArgs` (não é o electron do nixpkgs) —
+        entra por wrapper (`overlayClaudeKeyring` no flake.nix). Só o `claude-desktop` é
+        embrulhado: o overlay do upstream monta o `-fhs` sobre `final.claude-desktop`, que é o
+        do FIXPOINT, então a variante FHS herda o wrap sozinha — não precisou tocar no fhs.nix
+        dele. Regra geral: TODO Electron novo aqui vai precisar de `--password-store=gnome-libsecret`.
 
 - [x] Media player — VLC (GUI completa, toca tudo out-of-the-box). home/apps/media.nix
       (movido do system/ → regra: app de usuário no home).
@@ -844,6 +854,28 @@ quando terminar de consultar; o conteúdo está nos repos acima.
       ligaduras; Iosevka = mais estreita, ~20% mais código/linha). PEGADINHA do rofi: dentro do
       .rasi o '#' abre literal de COR, não comentário — comentar ali mata o parse do tema INTEIRO
       e o rofi só avisa no stderr, caindo nos defaults em silêncio.
+  - [x] CADEIA DE FALLBACK (02/08/2026) — emoji, CJK, matemática e dingbats viravam
+        QUADRADINHO PIXELADO (título de stream na Twitch, planilha no Chrome). O diagnóstico
+        derrubou a hipótese óbvia: fonte de emoji, CJK e cor JÁ ESTAVAM instaladas — vinham
+        de graça pelo `fonts.enableDefaultPackages = true`. O defeito era a cadeia ter UM ELO
+        SÓ: `sansSerif`/`serif`/`monospace` = só a SSOT, uma fonte MONOESPAÇADA que cobre
+        Latin/Grego/Cirílico + os símbolos patcheados e nada mais. Tudo fora disso era
+        resolvido pela ordem própria do fontconfig — ou seja, por ACIDENTE — e no fim dessa
+        fila está o `unifont`, bitmap de 16px que é o único a cobrir faixas como U+0870 e
+        U+2FFC (medido com `fc-list ":charset=<cp>"`). O quadradinho era ele.
+        FIX: `noto-fonts` (traz NotoSansMath/Symbols/Symbols2 — as letras matemáticas 𝗥 e
+        os dingbats ⁎ saem daí), `noto-fonts-color-emoji` e `noto-fonts-cjk-sans`, DECLARADOS
+        mesmo os que já vinham do enableDefaultPackages: renderização não pode depender de um
+        default do NixOS que ninguém pediu. E cada genérica virou lista — SSOT primeiro
+        (aparência intacta), Noto no meio, `Noto Color Emoji` no FIM (no fim ele nunca ganha
+        de fonte de texto, mas é alcançado direto em vez de por sorte na fila).
+        ARMADILHA DE MEDIÇÃO que quase me fez concluir errado DUAS vezes: `fc-match` MENTE.
+        Com família explícita (`fc-match "Noto Sans:charset=1F534"`) ele devolve a família
+        pedida mesmo que ela não tenha o glifo — charset só pesa na ordenação. E sem charset
+        válido ele responde qualquer coisa (respondeu `unifont` pra tudo quando meu loop
+        quebrou o parsing). Quem filtra POR COBERTURA DE VERDADE é `fc-list ":charset=<cp>"`.
+        NÃO É BUG: `❤` (U+2764) fica monocromático de propósito — é emoji de APRESENTAÇÃO DE
+        TEXTO, só vira colorido com o seletor VS16 (`❤️`). Forçar cor exigiria regra própria.
 - [x] Mouse Logitech MX Master 3S (system/hardware/mouse.nix, logiops) — DPI 2222, SmartShift,
       hi-res scroll, botão de gestos → GERÊNCIA DA FITA (era workspaces; mudou quando o
       scrolling virou global e workspace deixou de ser onde se estoca janela): ← / → movem

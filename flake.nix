@@ -1,5 +1,5 @@
 {
-  description = "Sistema declarativo do v1cferr — NixOS (nixos-sandisk) + home-manager unificados";
+  description = "Sistema declarativo do v1cferr — NixOS (nixos-kingston) + home-manager unificados";
 
   inputs = {
     # BASE do sistema: canal ESTÁVEL (release, tipo Debian/Ubuntu, ~6 meses).
@@ -124,14 +124,10 @@
     in
     {
       nixosConfigurations = {
-        # Instalação ATUAL — SSD SanDisk (SATA), MOBO ASUS EX-B560M-V5. Disco
-        # declarativo via disko. Novo host? hosts/<host>/ + uma linha aqui.
-        #   sudo nixos-rebuild switch --flake .#nixos-sandisk
-        nixos-sandisk = mkHost ./hosts/nixos-sandisk;
-
-        # ALVO da migração — NVMe Kingston KC3000, btrfs com subvolumes prontos pra
-        # impermanência. Ainda NÃO instalado: existe pra ser validado (`nixos-rebuild
-        # build --flake .#nixos-kingston`) ANTES do cutover, com o sistema atual vivo.
+        # ÚNICO host — NVMe Kingston KC3000, MOBO ASUS EX-B560M-V5, btrfs com
+        # subvolumes prontos pra impermanência. Disco declarativo via disko.
+        # Novo host? hosts/<host>/ + uma linha aqui.
+        #   sudo nixos-rebuild switch --flake .#nixos-kingston
         nixos-kingston = mkHost ./hosts/nixos-kingston;
       };
     };

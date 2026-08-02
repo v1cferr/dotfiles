@@ -52,8 +52,7 @@ home/                    USUÁRIO (home-manager) — dotfiles + apps de usuário
 
 pkgs/                    derivations próprias (fora do nixpkgs) — ex.: claude-code-discord-status
 hosts/                   específico de cada máquina (hostname, discos, swap, stateVersion)
-  nixos-kingston/        ← ATIVO (NVMe KC3000, btrfs + subvolumes): default.nix + disko.nix
-  nixos-sandisk/         ← MORTO (o SanDisk virou Windows 11) — só como molde de host novo
+  nixos-kingston/        ← ÚNICO host (NVMe KC3000, btrfs + subvolumes): default.nix + disko.nix
 secrets/                 secrets.yaml (sops) + bitwarden-secrets.json
 scripts/                 sync-secrets.sh (Bitwarden → sops) · healthcheck.sh
 ```

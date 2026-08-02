@@ -425,8 +425,9 @@ quando terminar de consultar; o conteúdo está nos repos acima.
       home/ → shell/ desktop/ apps/ services/ + packages.nix (lista central de apps
       de usuário); system/ → core/ hardware/ net/ desktop/ services/ + packages.nix.
       Cada subpasta tem seu default.nix. README atualizado.
-- [x] Remover todos os outros hosts e manter apenas o atual. (Hoje o ativo é o
-      hosts/nixos-kingston/; o nixos-sandisk sobrou como molde — o disco dele é o Windows.)
+- [x] Remover todos os outros hosts e manter apenas o atual — hoje só hosts/nixos-kingston/.
+      O nixos-sandisk saiu em 02/08/2026: o disco dele virou o Windows 11, então o host não
+      era mais nem rollback nem alvo. Molde pra host novo se pega no histórico do git.
 - [x] Instalar software para análise de uso de disco — gdu (TUI Go, ~5× mais
       rápido que ncdu em disco grande) + filelight (GUI KDE, sunburst; integra c/
       Dolphin/Kvantum). Ambos em system/packages.nix. Uso: `sudo gdu -x /`.

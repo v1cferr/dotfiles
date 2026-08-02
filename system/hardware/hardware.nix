@@ -11,10 +11,10 @@
   zramSwap.enable = true; # swap comprimido na RAM (rápido; prio 5 → usado primeiro)
 
   # O SWAPFILE DE DISCO mora no HOST, não aqui: ele depende do filesystem da raiz.
-  # Em ext4 (nixos-sandisk) é um /swapfile comum declarado via swapDevices; em btrfs
-  # (nixos-kingston) precisa de subvolume NOCOW e quem cria é o disko. Mesma opção
-  # nos dois lugares geraria dois swapfiles no Kingston — um deles em CoW, que o
-  # kernel recusa ativar. O zram acima é agnóstico de disco e por isso fica.
+  # No btrfs do nixos-kingston ele precisa de subvolume NOCOW, e quem o cria é o
+  # disko. Declarar aqui TAMBÉM geraria um segundo swapfile — em CoW, que o kernel
+  # recusa ativar. (Num host ext4 seria um /swapfile comum via swapDevices; foi o
+  # caso do extinto nixos-sandisk.) O zram acima é agnóstico de disco e por isso fica.
   #
   # Motivação (vale pros dois hosts): o zram comprime mas NÃO adiciona espaço. Quando
   # os 16 GB + zram apertam (Minecraft com 8 GB de heap + VSCode + navegador), o

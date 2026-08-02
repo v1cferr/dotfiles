@@ -1,8 +1,8 @@
-# Host: nixos-kingston — MESMA máquina física (MOBO ASUS EX-B560M-V5), rodando do
-# NVMe Kingston KC3000. É o DAILY DRIVER definitivo: o disco mais rápido fica com o
-# sistema que se usa todo dia, e o SanDisk (SATA) vira Windows 11 depois.
+# Host: nixos-kingston — MOBO ASUS EX-B560M-V5, rodando do NVMe Kingston KC3000.
+# É o DAILY DRIVER (cutover feito em 01/08/2026): o disco mais rápido ficou com o
+# sistema de todo dia, e o SanDisk (SATA) virou o Windows 11 do dualboot.
 # Só o específico; o comum vem de ../system. Disco DECLARATIVO via disko (btrfs).
-# PREPARAÇÃO — nada é formatado num rebuild normal; só no cutover (ver disko.nix).
+# Nada é formatado num rebuild normal — só num `disko` explícito (ver disko.nix).
 { modulesPath, ... }:
 
 {
@@ -26,14 +26,11 @@
     options = [ "nofail" "x-systemd.device-timeout=5s" ];
   };
 
-  # SanDisk (ex-sistema) — TRANSITÓRIO. Existe só pra copiar o /home disco-a-disco
-  # depois da instalação. Quando o SanDisk virar Windows 11, o UUID muda e este mount
-  # simplesmente não monta (nofail) — aí APAGUE este bloco em vez de deixá-lo mentindo.
-  fileSystems."/mnt/sandisk-old" = {
-    device = "/dev/disk/by-uuid/d0392422-6a6c-4c36-8ff4-e6eda25ae487";
-    fsType = "ext4";
-    options = [ "nofail" "x-systemd.device-timeout=5s" ];
-  };
+  # O SanDisk NÃO é montado de propósito. Ele virou o Windows 11 (NTFS), e a única
+  # partição que o NixOS precisa dele é a ESP — que o os-prober monta sozinho, na
+  # hora do switch, pra pôr o Windows no menu do GRUB (ver system/core/boot.nix).
+  # Montar o C: aqui seria convidar as duas coisas que estragam dualboot: escrita em
+  # NTFS com hibernação/fast-startup pendente, e o restic varrendo 900 GB alheios.
 
   # Scrub mensal: btrfs guarda checksum de TODO bloco, e o scrub é o que efetivamente
   # relê e compara. Sem ele o checksum só acusa erro quando você por acaso lê o setor

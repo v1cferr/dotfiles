@@ -7,7 +7,17 @@
 {
   # ── Nix / flakes ─────────────────────────────────────────────────────────
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  nix.settings.auto-optimise-store = true; # dedup por hardlink na /nix/store
+  # Dedup por hardlink na /nix/store. AGENDADO (nix.optimise) e não
+  # auto-optimise-store: aquele roda o hardlink a CADA build, e em btrfs a churn de
+  # metadado é CoW — sai caro numa máquina que rebuilda o dia todo. Aqui o trabalho
+  # sai do caminho crítico e vai pra uma janela ociosa.
+  # NÃO é pelo medo que circula ("auto-optimise corrompe a store"): a race do
+  # NixOS/nix#7273 foi corrigida, e o assert que afirma isso é política do nix-darwin.
+  # O motivo é só QUANDO o trabalho acontece.
+  nix.optimise = {
+    automatic = true;
+    dates = [ "03:45" ]; # ocioso, e longe do GC semanal e do restic diário
+  };
   nix.gc = {
     automatic = true;
     dates = "weekly";

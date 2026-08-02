@@ -161,7 +161,9 @@ in
     autoStart = true; # sobe junto da sessão gráfica (serviço --user, WantedBy graphical-session)
     openFirewall = false; # NÃO abre na LAN/internet; acesso só pela tailnet (tailscale0 trusted)
     settings = {
-      sunshine_name = "nixos-sandisk"; # nome que aparece no Moonlight
+      # Nome que aparece no Moonlight. DERIVADO do hostname, nunca literal: ficou
+      # "nixos-sandisk" por um mês depois do cutover, mentindo sobre qual máquina é.
+      sunshine_name = config.networking.hostName;
       # FORÇA o backend wlr (wlr-screencopy). Sem isto, o Sunshine PROBA o backend
       # `portalgrab` (portal ScreenCast/RemoteDesktop) no startup — e no Hyprland esse
       # probe dispara o `hyprland-share-picker`, que não renderiza (falta plugin Qt) e
@@ -178,7 +180,16 @@ in
       origin_web_ui_allowed = "wan";
       # CSRF: libera as origens da tailnet (IP + nome MagicDNS). Sem isto, criar o
       # usuário/salvar pelo web UI é bloqueado quando o host != localhost.
-      csrf_allowed_origins = "https://100.92.126.90:47990,https://nixos-sandisk.tailf2731d.ts.net:47990";
+      #
+      # ⚠️ AMBOS OS VALORES FICARAM ERRADOS entre o cutover (01/08) e 02/08/2026, e
+      # ninguém notou: o STREAM não usa CSRF, então só o web UI estava quebrado —
+      # falha silenciosa por definição. O hostname virou nixos-kingston e o IP da
+      # tailnet mudou (100.92.126.90 → 100.116.22.4) quando o nó re-entrou na tailnet.
+      # O nome agora é DERIVADO (regra 11: literal repetido é dívida); o IP não dá
+      # pra derivar em tempo de build — é runtime — então é SNAPSHOT e vai errar de
+      # novo se o nó re-entrar. Preferir o MagicDNS; conferir com `tailscale ip -4`.
+      csrf_allowed_origins =
+        "https://100.116.22.4:47990,https://${config.networking.hostName}.tailf2731d.ts.net:47990";
       # OBRIGATÓRIO porque o acesso é pela tailnet: a tailscale0 tem MTU 1280 e o default
       # do Sunshine é 1392 → todo pacote de vídeo estoura o túnel. WireGuard descarta em
       # SILÊNCIO (sem ICMP, sem log): o host streama normal, o cliente recebe pela metade,

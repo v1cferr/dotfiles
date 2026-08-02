@@ -84,13 +84,24 @@ Teste **os dois**, incluindo entrar no Windows e voltar.
 
 ## Fase 2 — BIOS: apagar as chaves de fábrica
 
-Reinicie e entre no setup (**DEL** na EX-B560M-V5).
+Reinicie e entre no setup (**DEL** na EX-B560M-V5). Vá em `Boot → Secure Boot`.
 
-1. `Boot → Secure Boot → Key Management → **Clear Secure Boot Keys**`
-2. Salvar e sair (**F10**).
+1. **`Secure Boot Mode` → `Custom`** ⚠️ **É este o passo que destrava tudo.** Em
+   `Standard` a ASUS nem MOSTRA o submenu `Key Management` — a firmware usa as chaves
+   de fábrica e não deixa mexer. Se você não achar "Clear Secure Boot Keys", é porque
+   ainda está em Standard.
+2. `Key Management` → **`Clear Secure Boot Keys`** → o estado vira **`Setup`**.
+3. Salvar e sair (**F10**).
+
+> ⛔ **Não toque em `Install Default Secure Boot Keys`.** Ele restaura as chaves de
+> fábrica e desfaz o enroll da Fase 3. Está no mesmo menu, uma linha ao lado.
 
 Isso põe a firmware em **Setup Mode**. O boot segue normal — em Setup Mode o Secure
 Boot está inativo, então o GRUB e o Windows continuam subindo.
+
+> Nota: o `OS Type` (`Windows UEFI mode` / `Other OS`) é OUTRA coisa — é o liga/desliga
+> do Secure Boot, e fica pra Fase 4. `Secure Boot Mode` é quem controla se as chaves
+> são as de fábrica ou as suas. Os dois nomes se parecem e ficam na mesma tela.
 
 ---
 
@@ -113,9 +124,13 @@ O `status` deve mostrar **Setup Mode: Disabled** (as chaves entraram).
 
 ## Fase 4 — BIOS: ligar o Secure Boot
 
-1. `Boot → Secure Boot → OS Type → **Windows UEFI mode**`
+1. `Boot → Secure Boot → OS Type` → **`Windows UEFI mode`** (é o liga/desliga; em
+   `Other OS` o Secure Boot fica inativo).
 2. Confirme que `Secure Boot State` virou **Enabled**.
 3. Salvar e sair (**F10**).
+
+> O `Secure Boot Mode` **continua em `Custom`**, e é assim que tem que ficar — é o que
+> diz "use as chaves enroladas, não as de fábrica". Voltar pra `Standard` desfaria tudo.
 
 ---
 
@@ -141,6 +156,8 @@ No Windows, `msinfo32` → **Secure Boot State: On**.
 | Windows no menu, mas não boota | O UUID mudou. `lsblk -o NAME,LABEL,UUID /dev/sdb` e corrija o `search --fs-uuid` em [`system/core/boot.nix`](system/core/boot.nix) |
 | Windows pede chave de recuperação | O BitLocker não foi desligado (Fase 0). Sem a chave, `sbctl reset` + SB off devolve o PCR 7 anterior |
 | Arc B580 sem vídeo no POST | `enroll-keys` sem o `-m`. `sudo sbctl reset` na BIOS em Setup Mode e refaça a Fase 3 **com** o `-m` |
+| Não acho "Clear Secure Boot Keys" na BIOS | `Secure Boot Mode` ainda está em `Standard`. Em Standard a ASUS esconde o `Key Management` inteiro |
+| Voltou a pedir chave da Microsoft / Windows não boota | Alguém pôs `Secure Boot Mode` de volta em `Standard`, ou usou `Install Default Secure Boot Keys` |
 | Menu do GRUB feio/esticado | O `gfxmodeEfi` não pegou 1080p. Ajustar em [`system/core/boot.nix`](system/core/boot.nix) |
 | Ícone genérico, sem texto, em alguma entrada | O `--class` daquela entrada não casa com nenhum `customIcons.name`. Ver `grep menuentry /boot/grub/grub.cfg` |
 
@@ -152,6 +169,9 @@ do Kingston.
 
 ## Depois que estiver tudo de pé
 
+0. `sudo sbctl remove-file /boot/EFI/BOOT/BOOTX64.EFI` — aquele arquivo era o
+   systemd-boot e foi apagado na limpeza da ESP, mas o hook chegou a assiná-lo antes,
+   então ele ficou no banco do sbctl e o `verify` reclama de um arquivo que não existe.
 1. `git rm SECURE-BOOT-SETUP.md` — este arquivo cumpriu o papel.
 2. Conferir se o Moonlight ainda pareia (o `sunshine_name` mudou de `nixos-sandisk`
    pra `nixos-kingston` — é só nome de exibição, o pareamento é por certificado).

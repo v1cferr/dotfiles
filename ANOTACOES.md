@@ -267,6 +267,36 @@ quando terminar de consultar; o conteúdo está nos repos acima.
         `enroll-keys -m` de novo, com a BIOS em Setup Mode. Declarar ANTES de ligar a raiz efêmera.
       FALTA só: o snapshot `@-blank` (base do rollback) e a lista de persistência. O blank NÃO
       é now-or-never — subvolume vazio criado depois é idêntico a snapshot em branco.
+      ── LIDO O CÓDIGO DO FOUNDRY (02/08/2026), o que muda no plano ──────────────
+      CORREÇÃO DE PREMISSA: btrfs NÃO é obrigatório pra impermanência — o caminho mais
+      comum na comunidade é raiz em tmpfs, e com bind mount ela roda até em ext4. A escolha
+      segue CERTA, mas pelo motivo certo: btrfs dá raiz efêmera sem gastar RAM, e RAM é
+      exatamente o que falta aqui (15 GB). Não repetir "é obrigatório".
+      São só dois arquivos no Foundry: `hosts/common/optional/ephemeral-btrfs.nix` (o wipe)
+      e `hosts/common/global/optin-persistence.nix` (a lista). O resto da persistência é
+      DISTRIBUÍDO — cada módulo de serviço declara o que ele precisa guardar (openssh.nix,
+      podman.nix, jellyfin.nix…). Esse é o padrão a copiar: casa com system/services/*.nix.
+      ⚠️ `/srv` É O MAIOR RISCO, e não estava anotado: NÃO é subvolume, mora em `@`, e é onde
+      vive a biblioteca do Jellyfin (132 GiB). O Foundry persiste `/srv` explicitamente. Ligar
+      a raiz efêmera sem isso APAGA a biblioteca no primeiro boot. Antes do sbctl na lista.
+      Lista mínima do Foundry, toda ela aplicável aqui: `/etc/machine-id` (arquivo, não dir),
+      `/var/lib/systemd`, `/var/lib/nixos`, `/srv`. O `/var/lib/nixos` é o MAPA DE UID/GID —
+      perder = reatribuição de uid, que é a MESMA classe de bug que quebrou Docker/Postgres/
+      Sunshine no cutover (ver o dano do cutover). `/var/log` NÃO entra: o Foundry lista
+      porque não tem subvolume pra isso; aqui o `@log` já resolve, e declarar os dois faria
+      um bind mount por cima do subvolume.
+      `neededForBoot = true` no `/persist` (o Foundry seta; hoje está false no disko).
+      `dont-wipe`: arquivo marcador no topo do filesystem que faz o script PULAR o wipe.
+      COPIAR — é a diferença entre "boot loop" e "toco um arquivo pelo live USB".
+      SYSTEMD INITRD ANTES, em commit separado: o Foundry roda `boot.initrd.systemd.enable`
+      e o script tem dois caminhos; o de `postDeviceCommands` é o legado. Ligar o systemd
+      initrd sozinho, rebootar e confirmar — só depois somar o wipe. Dois riscos de boot
+      num commit só é o jeito de não saber qual dos dois quebrou.
+      Adaptar nomes no wipeScript: o Foundry usa `root`/`root-blank`/`persist`; aqui é
+      `@`/`@-blank`/`@persist`. Errar isso não dá erro de avaliação — dá boot quebrado.
+      Copiar também o workaround do impermanence#254 (`/var/lib/private` em 0700 +
+      `RemainAfterExit = false` no systemd-tmpfiles-resetup), senão serviço com DynamicUser
+      quebra. E `@snapshots` (btrbk) sobrevive por desenho: é top-level, não vive dentro de `@`.
 - [x] Clipboard (Wayland) — cliphist DECLARATIVO (services.cliphist, allowImages=texto+imagem)
       + picker no ROFI com PREVIEW: thumbnail das imagens copiadas + ícone por TIPO de arquivo
       (zip/vídeo/pdf/exe… via Fluent-dark), tema Tokyo Night, SUPER+SHIFT+V. Migração melhorada

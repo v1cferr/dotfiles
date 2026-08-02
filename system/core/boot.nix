@@ -11,9 +11,7 @@
 # ⚠️ OS ÍCONES DO TEMA CASAM POR `--class`, NÃO PELO TÍTULO DA ENTRADA. É a única
 # pegadinha real aqui, e ela falha em SILÊNCIO (cai num ícone genérico sem texto):
 #   • `nixos`   vem do default `entryOptions = "--class nixos --unrestricted"`;
-#   • `windows` é derivado pelo 30_os-prober a partir do LABEL "Windows Boot
-#     Manager" — ele pega a PRIMEIRA palavra em minúsculas (grub2/etc/grub.d/
-#     30_os-prober:149), então o nome certo é "windows", nunca "windows11";
+#   • `windows` vem do `--class windows` escrito à mão no extraEntries abaixo;
 #   • `submenu` é o das gerações antigas (install-grub.pl emite `--class submenu`).
 # Cada `name` do customIcons vira o arquivo `icons/<name>.png` do tema, e o texto
 # das duas linhas é RENDERIZADO DENTRO do PNG na fonte do Minecraft — não é texto
@@ -37,8 +35,31 @@
     enable = true;
     efiSupport = true;
     device = "nodev"; # instala o GRUB-EFI na ESP (não num MBR)
-    useOSProber = true; # varre os outros discos e põe o Windows 11 no menu
     configurationLimit = 10; # gerações no menu (rollback) sem encher a ESP
+
+    # OS-PROBER DESLIGADO, Windows fixado à mão logo abaixo. Ele FUNCIONAVA (achou o
+    # `sdb1@/efi/Microsoft/Boot/bootmgfw.efi` de primeira), mas achava DEMAIS: o
+    # Seagate (`sda2`) ainda tem a raiz do NixOS antigo — hoje o disco é só o destino
+    # do restic, e o sistema velho continua lá porque não dá pra formatar sem perder
+    # os backups. Resultado: uma terceira entrada que boota um sistema morto.
+    # Trocar sondagem por UUID resolve isso por CONSTRUÇÃO, e ainda: o switch deixa de
+    # montar disco alheio (era o passo mais lento e o único com efeito colateral) e o
+    # menu passa a ser declarativo de verdade (regra 3) em vez de depender do que uma
+    # varredura encontrar naquele boot.
+    # PREÇO, explícito: se o Windows for reinstalado ou mudar de disco, o UUID muda e
+    # a entrada quebra em silêncio (some do menu). O os-prober se adaptaria sozinho.
+    # É edição de UMA linha, e já está no radar — o plano é mover o Windows pra um
+    # NVMe novo. Conferir com `lsblk -o NAME,LABEL,UUID`.
+    useOSProber = false;
+    extraEntries = ''
+      menuentry "Windows 11" --class windows --class os {
+        insmod part_gpt
+        insmod fat
+        insmod chain
+        search --no-floppy --fs-uuid --set=root 904C-B9D0
+        chainloader /EFI/Microsoft/Boot/bootmgfw.efi
+      }
+    '';
 
     # O tema desenha o próprio fundo. O default do NixOS (wallpaper cinza) só
     # apareceria por um frame atrás dele e ainda copiaria 1 MiB inútil pra ESP.
@@ -58,7 +79,7 @@
         lineBottom = "Survival Mode, No Cheats";
       }
       {
-        name = "windows"; # = --class que o 30_os-prober deriva do LABEL
+        name = "windows"; # = --class da entrada em extraEntries
         imgName = "windows11";
         lineTop = "Windows 11 (SanDisk SSD PLUS)";
         lineBottom = "Creative Mode, Cheats Enabled";

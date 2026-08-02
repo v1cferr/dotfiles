@@ -8,6 +8,11 @@
 # Biblioteca em /srv/media (SSD): compartilhada via grupo 'media' (eu gerencio os
 # arquivos; o jellyfin lê). As BIBLIOTECAS em si (o que é Filme/Série) se configuram
 # na web UI (localhost:8096) no 1º acesso — isso vive no DB do jellyfin, não aqui.
+#
+# DLNA (pra TV): deixou de ser core no 10.10 — é o plugin oficial "DLNA", instalado
+# pela web UI (Painel > Plugins). Ele descobre a interface de rede sozinho, mas conta
+# como "virtual" só o que estiver em VirtualInterfaceNames (Painel > Rede): sem
+# 'docker'/'br-' ali, ele anuncia o IP da bridge do Docker e a TV não acha o servidor.
 # ═══════════════════════════════════════════════════════════════════════════
 { config, lib, ... }:
 

@@ -22,6 +22,7 @@
   systemd.tmpfiles.rules = [
     "d /srv/media          2775 v1cferr media - -"
     "d /srv/media/media    2775 v1cferr media - -" # filmes/séries (biblioteca)
+    "d /srv/media/media/Filmes 2775 v1cferr media - -" # raiz da biblioteca de filmes
     "d /srv/media/torrents 2775 v1cferr media - -" # downloads (futuro qbittorrent)
   ];
 

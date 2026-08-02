@@ -110,6 +110,22 @@
         nxbender = final.callPackage ./pkgs/nxbender.nix { }; # cliente FOSS da VPN SonicWall (FAI)
       };
 
+      # Claude Desktop: força o backend de secret. O Electron autodetecta pelo
+      # XDG_CURRENT_DESKTOP, "Hyprland" não casa com nenhum caso do os_crypt do
+      # Chromium, ele cai no "basic text" e aí o safeStorage se declara indisponível
+      # → o app avisa "your sign-in won't be saved" e pede login TODA vez. É o MESMO
+      # bug e o MESMO remédio do VS Code (home/packages.nix), mas sem `commandLineArgs`
+      # (não é o electron do nixpkgs) — daí o wrapper. Só o `claude-desktop` é
+      # embrulhado: o overlay do upstream monta o -fhs sobre `final.claude-desktop`,
+      # que é o do FIXPOINT, então a variante FHS herda este wrap sozinha.
+      overlayClaudeKeyring = final: prev: {
+        claude-desktop = prev.claude-desktop.overrideAttrs (old: {
+          postInstall = (old.postInstall or "") + ''
+            wrapProgram $out/bin/claude-desktop --add-flags "--password-store=gnome-libsecret"
+          '';
+        });
+      };
+
       # Um host = módulos COMUNS (overlay, sops, disko, ./system, home-manager) +
       # o arquivo específico do host. Novo host? Cria hosts/<host>.nix e adiciona
       # uma linha em nixosConfigurations abaixo.
@@ -121,7 +137,15 @@
         modules = [
           # `unstable.*` + pacotes locais (./pkgs) + claude-desktop (flake; overlay
           # em vez de packages.<system> pra buildar contra ESTA base, sem 3º nixpkgs)
-          { nixpkgs.overlays = [ overlayUnstable overlayLocalPkgs inputs.claude-desktop.overlays.default ]; }
+          # (o overlayClaudeKeyring vem DEPOIS do upstream: ele reembrulha o pacote dele)
+          {
+            nixpkgs.overlays = [
+              overlayUnstable
+              overlayLocalPkgs
+              inputs.claude-desktop.overlays.default
+              overlayClaudeKeyring
+            ];
+          }
           sops-nix.nixosModules.sops
           disko.nixosModules.disko # inerte em hosts sem disko.devices
           ./system

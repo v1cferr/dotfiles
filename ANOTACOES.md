@@ -26,10 +26,10 @@
 01/08/2026 pra virar o daily driver NixOS. As configs do Arch agora só existem nos dois
 repos restic (senha no Bitwarden: item `Restic Arch Kingston`):
 
-| Onde | Repo |
-| --- | --- |
+| Onde                   | Repo                                                               |
+| ---------------------- | ------------------------------------------------------------------ |
 | Google Drive (offsite) | `rclone:gdrive:BACKUPS_EX-B560M-V5/KINGSTON` — snapshot `6d7e3ee7` |
-| Seagate (local) | `/mnt/seagate-old/restic-arch-kingston` — snapshot `38b4b9c3` |
+| Seagate (local)        | `/mnt/seagate-old/restic-arch-kingston` — snapshot `38b4b9c3`      |
 
 Pra garimpar sem restaurar tudo, monte o snapshot como pasta navegável:
 
@@ -161,7 +161,7 @@ quando terminar de consultar; o conteúdo está nos repos acima.
       conta própria — daí alarme em vez de faxina. Achado p/ o dono decidir: existe um bottle
       "Battle.net" de 688 MiB ao lado do "Battlenet" de 181 GiB, com cara de tentativa abandonada.
 - [ ] Verificar se é possível adicionar estado declarativo criptografado
-- [ ] IMPERMANÊNCIA na migração p/ o Kingston — ideia do dono (30/07), inspirada no
+- [ ] IMPERMANÊNCIA no Kingston — ideia do dono (30/07), inspirada no
       <https://github.com/Misterio77/Foundry>: raiz efêmera (tmpfs ou subvolume zerado no boot) +
       lista EXPLÍCITA do que persiste. Encaixa em duas coisas que este repo já tem: a regra 6
       (Nix = app+config; estado = restic) deixaria de ser convenção e passaria a ser IMPOSTA pelo
@@ -171,8 +171,11 @@ quando terminar de consultar; o conteúdo está nos repos acima.
       PONTOS A DECIDIR ANTES, medidos hoje: os 567 GiB de não-Nix (Bottles 319, Jellyfin 132,
       Games 47) são estado GRANDE e legítimo — impermanência não os apaga, mas obriga a declarar
       cada caminho, e errar a lista significa perder save/prefixo no reboot. Candidatos: módulo
-      `impermanence` (nix-community) ou o esquema do Foundry. Fazer JUNTO com a migração, em
-      instalação nova — converter máquina em uso é o caminho mais arriscado.
+      `impermanence` (nix-community) ou o esquema do Foundry.
+      ⚠️ A migração JÁ ACONTECEU (01/08/2026) sem ligar a impermanência, então a premissa
+      original ("fazer junto, em instalação nova") caducou: agora é conversão de máquina em
+      uso, que era justamente o caminho que eu queria evitar. O layout btrfs salva a maior
+      parte do custo — falta o `@-blank` e a lista, não uma reinstalação.
       DECIDIDO em 01/08/2026, ao montar o hosts/nixos-kingston (o LAYOUT já está pronto):
       • btrfs SIM — não por gosto, mas porque /nix e /persist precisam ser volumes separados
         DESDE a instalação; ext4 plano custaria uma segunda reinstalação. Subvolumes criados:
@@ -381,7 +384,8 @@ quando terminar de consultar; o conteúdo está nos repos acima.
       home/ → shell/ desktop/ apps/ services/ + packages.nix (lista central de apps
       de usuário); system/ → core/ hardware/ net/ desktop/ services/ + packages.nix.
       Cada subpasta tem seu default.nix. README atualizado.
-- [x] Remover todos os outros hosts e manter apenas o atual — só hosts/nixos-sandisk/ (SSD SanDisk).
+- [x] Remover todos os outros hosts e manter apenas o atual. (Hoje o ativo é o
+      hosts/nixos-kingston/; o nixos-sandisk sobrou como molde — o disco dele é o Windows.)
 - [x] Instalar software para análise de uso de disco — gdu (TUI Go, ~5× mais
       rápido que ncdu em disco grande) + filelight (GUI KDE, sunburst; integra c/
       Dolphin/Kvantum). Ambos em system/packages.nix. Uso: `sudo gdu -x /`.

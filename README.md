@@ -4,9 +4,9 @@ Sistema **declarativo** e reprodutível: NixOS (base) e home-manager (dotfiles d
 usuário) num único flake. Um `rebuild` aplica sistema **e** usuário de uma vez.
 
 - **Base:** nixpkgs estável `nixos-26.05` + overlay `unstable.*` sob demanda (por pacote).
-- **Host ativo:** `nixos-sandisk` — SSD SanDisk (SATA), ext4, UEFI/systemd-boot.
-- **Host alvo:** `nixos-kingston` — NVMe KC3000, btrfs com subvolumes. Construído e
-  validado, **ainda não instalado** → ver [`MIGRACAO-KINGSTON.md`](MIGRACAO-KINGSTON.md).
+- **Host ativo:** `nixos-kingston` — NVMe KC3000, btrfs com subvolumes (base p/ impermanência).
+- **Boot:** UEFI/**GRUB** com tema minegrub, em **dualboot com o Windows 11** (SSD SanDisk)
+  e **Secure Boot** ligado nos dois — chaves próprias via `sbctl`.
 - **Máquina:** Intel i5-11400 (microcode) · Intel Arc B580 (driver aberto `xe` + Mesa, sem CUDA).
 - **Desktop:** Hyprland (Wayland) via greeter LightDM · PipeWire · teclado ABNT2.
 
@@ -52,8 +52,8 @@ home/                    USUÁRIO (home-manager) — dotfiles + apps de usuário
 
 pkgs/                    derivations próprias (fora do nixpkgs) — ex.: claude-code-discord-status
 hosts/                   específico de cada máquina (hostname, discos, swap, stateVersion)
-  nixos-sandisk/         ← ATIVO (SSD SanDisk, ext4): default.nix + disko.nix
-  nixos-kingston/        ← ALVO (NVMe KC3000, btrfs + subvolumes p/ impermanência)
+  nixos-kingston/        ← ATIVO (NVMe KC3000, btrfs + subvolumes): default.nix + disko.nix
+  nixos-sandisk/         ← MORTO (o SanDisk virou Windows 11) — só como molde de host novo
 secrets/                 secrets.yaml (sops) + bitwarden-secrets.json
 scripts/                 sync-secrets.sh (Bitwarden → sops) · healthcheck.sh
 ```
@@ -110,19 +110,21 @@ do repositório restic.
 
 ## Reinstalar do zero / migrar de disco
 
-**[`MIGRACAO-KINGSTON.md`](MIGRACAO-KINGSTON.md)** é o runbook completo do cutover
-SanDisk → Kingston: comando por comando, do boot do live USB até o sistema validado,
-com o estado não-declarativo (`/home`, `/var/lib`, chaves de host SSH, perfis do
-NetworkManager) atravessando junto.
-
-Ele tem prazo de validade — apague depois que o Kingston estiver validado. Guias
-antigos ficam no histórico:
+O runbook do cutover SanDisk → Kingston foi **apagado** depois que a migração
+aconteceu (01/08/2026) — runbook cumprido é runbook que só mente na próxima vez. Ele
+está no histórico, junto com os guias anteriores:
 
 ```bash
-git log --oneline --all -- README.md MIGRACAO-KINGSTON.md
-git show <commit>:<arquivo>
+git log --oneline --all --diff-filter=D -- MIGRACAO-KINGSTON.md INSTALACAO-WINDOWS.md
+git show <commit>^:<arquivo>
 ```
 
-O resumo que não envelhece: `disko` formata (declarativo, por `by-id`), a chave age
-vem do SanDisk ou do Bitwarden **antes** do `nixos-install` (senão o usuário nasce sem
-senha), e o `~` vem disco a disco — nunca do backup, que é acervo e não insumo.
+O resumo que **não** envelhece, para a próxima instalação do zero:
+
+- `disko` formata — declarativo e sempre por `/dev/disk/by-id/`, nunca por `sdX`
+  (as letras embaralham entre boots; já mudaram duas vezes nesta máquina).
+- A **chave age** entra **antes** do `nixos-install`: sem ela o sops não decifra o
+  `hashedPasswordFile` e o usuário nasce sem senha. Origem: Bitwarden.
+- O `~` vem **disco a disco**, nunca do backup — restic é acervo, não insumo.
+- O que não é declarado (`/var/lib`, chaves de host SSH, perfis do NetworkManager)
+  atravessa à mão, e é exatamente a lista que a impermanência vai obrigar a declarar.

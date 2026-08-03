@@ -221,6 +221,19 @@ in
       # câmera fixa, cabia bem em 10.
       # AMOSTRA a 10 Mbps: UMA sessão, que nem fechou — o teto anterior nunca chegou a
       # ter registro de estabilidade. Não há A/B a preservar aqui.
+      #
+      # ⚠️ CORREÇÃO (03/08/2026): o item 1 acima está ERRADO para o cliente da FAI. O
+      # encoder NÃO é escolha do host — é NEGOCIADO, e quem escolhe é o Moonlight.
+      # Medido no log de hoje, sessão real vinda do faidell6035:
+      #     Creating encoder [h264_vaapi] / Color depth: 8-bit / Rec. 601
+      # enquanto o host anuncia hevc_vaapi E av1_vaapi (ambos 10-bit) no startup. Ou
+      # seja: aquele cliente pede H.264 8-bit, o codec MENOS eficiente disponível, e
+      # a conta de "AV1 rende 40-50% mais por bit" não vale pra ele — a 16,8 Mbps
+      # negociados ele gasta banda como H.264 gasta.
+      # Consequência prática: ligar HEVC/AV1 NO MOONLIGHT do cliente vale mais que
+      # qualquer ajuste deste arquivo, e é onde mexer primeiro quando o stream sofrer.
+      # Não há setting de host que force isso (o `hevc_mode`/`av1_mode` só ANUNCIA
+      # suporte, que já está anunciado) — é caixa de seleção no cliente.
       max_bitrate = 20000; # Kbps
       # Mais correção de erro (default 20%): o caminho até a rede da FAI PERDE pacote —
       # medido 1.67% de perda e RTT saltando de 20 p/ 312 ms numa rajada de 300 pacotes
@@ -239,6 +252,51 @@ in
       # header). JSON no sunshine.conf; vale p/ TODOS os apps (inclui o "Desktop" remoto).
       global_prep_cmd = builtins.toJSON [
         { do = "${streamBegin}"; undo = "${streamEnd}"; }
+      ];
+    };
+
+    # ── Apps expostos ao Moonlight — DECLARATIVOS (regra 3) ────────────────────
+    # Até 03/08/2026 isto NÃO era declarado, e o Sunshine criava o próprio
+    # ~/.config/sunshine/apps.json com os apps DE FÁBRICA. Um deles derrubava o
+    # stream em 2,5s:
+    #
+    #   "Low Res Desktop" → prep-cmd `xrandr --output HDMI-1 --mode 1920x1080`
+    #
+    # Dois erros no mesmo comando de fábrica: `xrandr` é X11 (aqui é Wayland puro,
+    # sem Xwayland no caminho da captura) e `HDMI-1` não existe — as saídas reais
+    # são DP-2 e HDMI-A-3. Prep-cmd que FALHA faz o Sunshine abortar a sessão, então
+    # clicar nesse app era garantia de queda. Pior: o undo do guard global não roda
+    # nesse aborto, deixando o hypridle parado (ver lock_cmd em lockscreen.nix).
+    #
+    # NÃO reimplementei o "Low Res Desktop" com `hyprctl output`, de propósito:
+    # trocar modo de vídeo COM a captura wlr ativa é a mesma classe de risco que o
+    # dpms sob captura, que deu ENGINE-RESET da GPU no xe (ver cabeçalho). Resolução
+    # menor se pede no CLIENTE (Moonlight escolhe o modo e o Sunshine escala) — sem
+    # tocar no scanout do host.
+    #
+    # ⚠️ TRADE-OFF: declarar `applications` faz o módulo apontar `file_apps` pro
+    # store (nixos/modules/services/networking/sunshine.nix:128, gated em apps != [])
+    # → a aba Applications do web UI vira SOMENTE LEITURA. É o preço do declarativo,
+    # e é o lado certo da regra 14 (um dono por artefato). O
+    # ~/.config/sunshine/apps.json antigo passa a ser IGNORADO — não apagar por
+    # reflexo ao ver que ele existe e não tem efeito; ele é só lixo do período
+    # não-declarativo.
+    applications = {
+      apps = [
+        # Desktop remoto: o app "especial" do Sunshine (sem cmd = streama a sessão).
+        { name = "Desktop"; }
+        # Steam em Big Picture. `detached`: o Sunshine não espera o processo terminar
+        # (senão a sessão morreria junto do Steam); o undo fecha o BP ao desconectar.
+        # `setsid` por caminho absoluto (regra 7); `steam` fica por NOME de propósito
+        # — quem resolve é o wrapper FHS do programs.steam no PATH da sessão, e um
+        # ${pkgs.steam}/bin/steam aqui furaria esse wrapper.
+        {
+          name = "Steam Big Picture";
+          detached = [ "${pkgs.util-linux}/bin/setsid steam steam://open/bigpicture" ];
+          prep-cmd = [
+            { do = ""; undo = "${pkgs.util-linux}/bin/setsid steam steam://close/bigpicture"; }
+          ];
+        }
       ];
     };
   };

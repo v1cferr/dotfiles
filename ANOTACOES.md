@@ -1024,3 +1024,6 @@ quando terminar de consultar; o conteúdo está nos repos acima.
           controle UFSCar              -> `www.ufscar.br` e acessoremoto OK = internet sã
         PEGADINHA DE MEDIÇÃO: `ss -tnp` sem root NÃO mapeia PID de processo de outro
         usuário — o "nenhuma conexão" que eu vi era artefato; sem `-p` a conexão apareceu.
+
+- [ ] Configurar ambos os perfils do Claude (fai.ufscar.br) e do César (imagino que essa configuração esteja no meu backup da home no Google Drive que configuramos antes)
+- [ ] Continuar configurando o dualboot com Secure Boot

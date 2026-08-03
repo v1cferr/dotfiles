@@ -1,0 +1,63 @@
+{
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NIX IDE (jnoortheen.nix-ide) — config ESPECÍFICA DESTE REPO.
+  //
+  // POR QUE AQUI e não no settings.json do usuário: as expressões abaixo carregam o
+  // caminho ABSOLUTO do flake, e o settings.json do usuário é sincronizado pelo
+  // Settings Sync para outras máquinas, onde esse caminho não existe. Aqui o valor
+  // fica versionado no git, ao lado do flake que ele referencia. O toggle
+  // `nix.enableLanguageServer` mora no settings.json do usuário de propósito: é
+  // independente de máquina e não carrega caminho nenhum.
+  //
+  // NÃO REPETIR DEFAULT: a extensão 0.5.13 já usa `nixd` como `nix.serverPath` e
+  // `nixfmt` como `nix.formatterPath` — o issue nix-community/vscode-nix-ide#433
+  // (nixpkgs-fmt depreciado) já foi corrigido. Redeclarar default aqui congelaria a
+  // escolha contra melhoria futura do upstream, que é o oposto de durar.
+  //
+  // BINÁRIOS POR NOME, resolvidos pelo $PATH (nixd/nixfmt vêm de home/packages.nix).
+  // NUNCA colocar caminho do /nix/store aqui: o primeiro `nix-collect-garbage`
+  // apagaria o alvo e a config quebraria em silêncio.
+  //
+  // ⚠️ ACOPLAMENTO: o literal `nixos-kingston` abaixo é o nome do host no flake. Se
+  // renomear o host, ISTO NÃO FALHA VISIVELMENTE — o nixd só para de completar
+  // options e você fica achando que a extensão piorou. Preferi o nome explícito a
+  // um `builtins.head (attrValues …)`: o head sobreviveria ao rename, mas passaria a
+  // escolher host ARBITRÁRIO no dia em que existir um segundo, o que é pior.
+  // ═══════════════════════════════════════════════════════════════════════════
+  "nix.serverSettings": {
+    "nixd": {
+      // Formatter que o LSP chama no "Format Document". nixfmt é o OFICIAL desde a
+      // RFC 166 (nixfmt 1.0 saiu sob a org NixOS); nixpkgs-fmt está DEPRECIADO e o
+      // alejandra é alternativa não-oficial. Escolha alinhada com o nixpkgs.
+      //
+      // O `-` NÃO é decorativo: o nixd manda o documento por STDIN, e o nixfmt 1.4
+      // avisa "Bare invocation of nixfmt is deprecated. Use 'nixfmt -' for anonymous
+      // stdin." — ou seja, a forma sem `-` está a caminho de sumir. Verificado que a
+      // saída é idêntica nas duas, então usar `-` é de graça hoje e evita o dia em que
+      // o formatter simplesmente para de responder no save.
+      "formatting": { "command": ["nixfmt", "-"] },
+      // Completa e documenta `pkgs.*` com o MESMO nixpkgs que o flake.lock fixa, não
+      // um canal qualquer da máquina. Sem isto o nixd cai num fallback e mente sobre
+      // qual pacote existe — pior que não completar.
+      "nixpkgs": {
+        "expr": "import (builtins.getFlake \"/home/v1cferr/Projects/GitHub/v1cferr/dotfiles\").inputs.nixpkgs { }"
+      },
+      // O ganho real do nixd sobre o nil: completar OPÇÕES de NixOS e home-manager
+      // com tipo e descrição, avaliando a config de verdade em vez de adivinhar por
+      // texto. Verificado em 03/08/2026: 57 grupos de options no nixos, 38 no
+      // home-manager.
+      "options": {
+        "nixos": {
+          "expr": "(builtins.getFlake \"/home/v1cferr/Projects/GitHub/v1cferr/dotfiles\").nixosConfigurations.nixos-kingston.options"
+        },
+        // home-manager é MÓDULO do NixOS aqui, então as options dele não estão no
+        // topo da config: saem de `home-manager.users`, cujo tipo é submódulo — daí o
+        // `getSubOptions []`. Com `.options.home-manager` puro viriam só as 3 opções
+        // do wrapper (users/useGlobalPkgs/…), não as centenas de dentro.
+        "home-manager": {
+          "expr": "(builtins.getFlake \"/home/v1cferr/Projects/GitHub/v1cferr/dotfiles\").nixosConfigurations.nixos-kingston.options.home-manager.users.type.getSubOptions []"
+        }
+      }
+    }
+  }
+}

@@ -44,6 +44,24 @@
     # autodetecta o backend de secret e mostra "couldn't identify OS keyring"; a flag
     # força o gnome-keyring. Extensões/settings = Settings Sync (conta), NÃO nix.
     (vscode.override { commandLineArgs = "--password-store=gnome-libsecret"; })
+    # Toolchain Nix que a extensão nix-ide DIRIGE — o pacote é declarativo aqui, a
+    # config da extensão não (Settings Sync + .vscode/settings.json do repo; ver a
+    # linha do vscode acima). Os dois são resolvidos por NOME no $PATH: caminho do
+    # /nix/store dentro de settings.json quebraria no primeiro nix-collect-garbage.
+    #
+    # nixd e NÃO nil: os dois são LSP de Nix vivos, mas só o nixd completa OPÇÕES de
+    # NixOS/home-manager, porque compila contra o próprio interpretador e AVALIA a
+    # config em vez de analisar texto. Num repo que é 95% `services.*`/`programs.*`,
+    # isso é a função inteira. O nil é melhor no resto (mais leve, diagnóstico bom) —
+    # se um dia o nixd pesar, ele é o plano B, trocando 1 linha aqui e o serverPath.
+    nixd
+    # nixfmt e NÃO nixpkgs-fmt/alejandra: é o formatter OFICIAL desde a RFC 166, que
+    # criou o Nix formatting team e moveu o repo pra org NixOS. O nixpkgs-fmt está
+    # DEPRECIADO pelo próprio autor; o alejandra é bom mas não-oficial, e divergir do
+    # nixpkgs em estilo é dívida gratuita. Atenção ao nome: `nixfmt` JÁ É o RFC-style
+    # (1.4.0, mesmo derivation que nixfmt-rfc-style); `nixfmt-classic` (0.6.0) é o
+    # antigo — pedir o clássico por engano reformataria o repo inteiro no estilo velho.
+    nixfmt
 
     # ── Torrent / senhas ──
     qbittorrent # torrent GUI (uso manual) — separado do serviço headless (system/services/qbittorrent.nix)

@@ -2,12 +2,20 @@
   // ═══════════════════════════════════════════════════════════════════════════
   // NIX IDE (jnoortheen.nix-ide) — config ESPECÍFICA DESTE REPO.
   //
-  // POR QUE AQUI e não no settings.json do usuário: as expressões abaixo carregam o
-  // caminho ABSOLUTO do flake, e o settings.json do usuário é sincronizado pelo
-  // Settings Sync para outras máquinas, onde esse caminho não existe. Aqui o valor
-  // fica versionado no git, ao lado do flake que ele referencia. O toggle
+  // POR QUE AQUI e não no settings.json do usuário: as expressões abaixo dependem de
+  // que a raiz do workspace SEJA este flake (o `./.` resolve pra ela) e nomeiam o host
+  // `nixos-kingston`. No settings.json do usuário, que o Settings Sync propaga, isso
+  // valeria pra qualquer projeto Nix aberto — e nos outros o `getFlake` falharia.
+  // Aqui fica versionado ao lado do flake que referencia. O toggle
   // `nix.enableLanguageServer` mora no settings.json do usuário de propósito: é
-  // independente de máquina e não carrega caminho nenhum.
+  // independente de máquina e de projeto, e não carrega caminho nenhum.
+  //
+  // CAMINHO RELATIVO, não absoluto (corrigido em 03/08/2026): `builtins.toString ./.`
+  // resolve pra raiz do workspace — é a forma da doc oficial do nixd, e VERIFICADA
+  // aqui numa sessão LSP de verdade (initialize + didOpen + completion): digitar
+  // `services.openss` devolveu `openssh` com as duas formas. A relativa é a que dura:
+  // sobrevive a mover o repo, a clonar em outro caminho e a outro usuário. A versão
+  // anterior tinha /home/v1cferr/... escrito três vezes.
   //
   // NÃO REPETIR DEFAULT: a extensão 0.5.13 já usa `nixd` como `nix.serverPath` e
   // `nixfmt` como `nix.formatterPath` — o issue nix-community/vscode-nix-ide#433
@@ -18,11 +26,13 @@
   // NUNCA colocar caminho do /nix/store aqui: o primeiro `nix-collect-garbage`
   // apagaria o alvo e a config quebraria em silêncio.
   //
-  // ⚠️ ACOPLAMENTO: o literal `nixos-kingston` abaixo é o nome do host no flake. Se
-  // renomear o host, ISTO NÃO FALHA VISIVELMENTE — o nixd só para de completar
-  // options e você fica achando que a extensão piorou. Preferi o nome explícito a
-  // um `builtins.head (attrValues …)`: o head sobreviveria ao rename, mas passaria a
-  // escolher host ARBITRÁRIO no dia em que existir um segundo, o que é pior.
+  // ⚠️ DOIS ACOPLAMENTOS que não falham visivelmente — o nixd só PARA de completar e
+  // parece que a extensão piorou:
+  //   1. `nixos-kingston` é o nome do host no flake. Renomear o host quebra. Preferi o
+  //      nome explícito a um `builtins.head (attrValues …)`: o head sobreviveria ao
+  //      rename, mas escolheria host ARBITRÁRIO no dia em que houver um segundo.
+  //   2. `./.` é a RAIZ DO WORKSPACE. Abrir uma subpasta do repo como workspace (em vez
+  //      da raiz) faz o getFlake apontar pra um diretório sem flake.nix.
   // ═══════════════════════════════════════════════════════════════════════════
   "nix.serverSettings": {
     "nixd": {
@@ -40,22 +50,22 @@
       // um canal qualquer da máquina. Sem isto o nixd cai num fallback e mente sobre
       // qual pacote existe — pior que não completar.
       "nixpkgs": {
-        "expr": "import (builtins.getFlake \"/home/v1cferr/Projects/GitHub/v1cferr/dotfiles\").inputs.nixpkgs { }"
+        "expr": "import (builtins.getFlake (builtins.toString ./.)).inputs.nixpkgs { }"
       },
       // O ganho real do nixd sobre o nil: completar OPÇÕES de NixOS e home-manager
       // com tipo e descrição, avaliando a config de verdade em vez de adivinhar por
       // texto. Verificado em 03/08/2026: 57 grupos de options no nixos, 38 no
-      // home-manager.
+      // home-manager, e `services.openss` → `openssh` numa sessão LSP real.
       "options": {
         "nixos": {
-          "expr": "(builtins.getFlake \"/home/v1cferr/Projects/GitHub/v1cferr/dotfiles\").nixosConfigurations.nixos-kingston.options"
+          "expr": "(builtins.getFlake (builtins.toString ./.)).nixosConfigurations.nixos-kingston.options"
         },
         // home-manager é MÓDULO do NixOS aqui, então as options dele não estão no
         // topo da config: saem de `home-manager.users`, cujo tipo é submódulo — daí o
         // `getSubOptions []`. Com `.options.home-manager` puro viriam só as 3 opções
         // do wrapper (users/useGlobalPkgs/…), não as centenas de dentro.
         "home-manager": {
-          "expr": "(builtins.getFlake \"/home/v1cferr/Projects/GitHub/v1cferr/dotfiles\").nixosConfigurations.nixos-kingston.options.home-manager.users.type.getSubOptions []"
+          "expr": "(builtins.getFlake (builtins.toString ./.)).nixosConfigurations.nixos-kingston.options.home-manager.users.type.getSubOptions []"
         }
       }
     }

@@ -74,8 +74,31 @@
   # ssh.v1cferr.dev ficar apontando pro IP velho na PIOR hora possível: logo depois
   # de uma queda de energia, que é justamente quando o IP público costuma mudar
   # e quando se quer entrar de fora.
+  # …SÓ QUE network-online NÃO BASTA — o furo era o DNS, não o link. MEDIDO no boot
+  # de 03/08 (com o after/wants acima já valendo): o target foi atingido em
+  # 07:22:09.529, o serviço subiu em 07:22:09.530 e o `tailscaled` só COMEÇOU a subir
+  # em 07:22:09.541 — 11ms depois. Como o /etc/resolv.conf aponta pro 100.100.100.100
+  # (quem serve esse endereço é o próprio tailscaled), as quatro APIs de "qual é meu
+  # IP" caíram por falha de resolução, não de rota: a 1ª estourou timeout em 2,7s e as
+  # outras três morreram em ~25ms cada. Mesmo sintoma de antes, causa diferente.
+  #
+  # `after = tailscaled.service` sozinho não resolve: o Type=notify avisa "pronto" antes
+  # do netmap chegar do control plane, e é o netmap que ensina o resolver a responder.
+  # Não existe alvo pra "o DNS da tailnet responde" — então em vez de adivinhar a ordem,
+  # a gente TOLERA a corrida e tenta de novo: o Restart deixa a janela de DNS velho em
+  # ≤20s, contra os ≤5min do timer. O StartLimit é o freio pra não virar loop infinito
+  # quando a falha for real (token inválido, Cloudflare fora) — 6 tentativas em 5min e
+  # ele desiste, deixando o `failed` visível pro timer assumir depois.
   systemd.services.cloudflare-dyndns = {
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "tailscaled.service" ];
     wants = [ "network-online.target" ];
+    serviceConfig = {
+      Restart = "on-failure";
+      RestartSec = "20s";
+    };
+    unitConfig = {
+      StartLimitIntervalSec = "5m";
+      StartLimitBurst = 6;
+    };
   };
 }

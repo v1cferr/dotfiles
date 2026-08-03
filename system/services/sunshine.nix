@@ -60,6 +60,53 @@ let
       systemctl --user restart sunshine.service
     '';
   };
+  # sunshine-path-probe: amostra o CAMINHO da tailnet por peer, 1×/min, no journal.
+  #
+  # POR QUE AMOSTRAR, se o tailscaled já loga caminho: porque ele loga só a TRANSIÇÃO
+  # PARA DIRETO. Medido em 03/08/2026 — em 7 dias de journal existem OITO linhas
+  # `magicsock: … now using <ep>`, e todas são endpoint direto (IPv4 público da FAI e
+  # IPv6). O relay NÃO aparece nesse fluxo. Então "não houve evento" é ambíguo: pode ser
+  # "seguiu direto" ou "está em DERP desde sempre" — e o estado inicial de cada boot é
+  # desconhecido. Evento dá o INSTANTE da mudança; só amostra dá o ESTADO, que é o que
+  # responde "essa sessão foi direta?".
+  #
+  # Isto existe porque em 03/08 a resposta veio de SORTE: eu rodei `tailscale ping` no
+  # momento certo e vi DERP. Nas 4 sessões de 3-7s daquele dia o relatório não tinha como
+  # provar nada; nas seguintes, diretas, a sessão passou de 8 min. É a variável que mais
+  # prevê queda e era justamente a que não ficava registrada.
+  #
+  # 1 min é grosso pra sessão de 3s DE PROPÓSITO: caminho persiste por minutos, então a
+  # amostra vizinha descreve bem o instante, e 1440 linhas/dia é ruído irrelevante. O
+  # `<5>` (notice) + LogLevelMax=notice na unit é o mesmo truque do healthcheck acima:
+  # mata o "Starting…/Finished…" do systemd (info) e preserva a linha que importa.
+  pathProbePy = pkgs.writeText "sunshine-path-probe.py" ''
+    import json, subprocess, sys
+
+    out = subprocess.run(
+        ["${pkgs.tailscale}/bin/tailscale", "status", "--json"],
+        capture_output=True, text=True,
+    )
+    if out.returncode != 0:
+        print("<4>path probe: `tailscale status --json` falhou", file=sys.stderr)
+        sys.exit(0)
+
+    # Só peer que interessa: online OU com tráfego ativo. Peer dormindo não tem caminho.
+    for p in json.loads(out.stdout).get("Peer", {}).values():
+        if not (p.get("Online") or p.get("Active")):
+            continue
+        # CurAddr VAZIO é a definição de relayed no tailscale: sem endpoint direto, o
+        # tráfego vai pelo DERP nomeado em Relay. Não inferir por latência.
+        addr = p.get("CurAddr") or ""
+        if addr:
+            kind = "direct6" if addr.startswith("[") else "direct4"
+        else:
+            kind = "relay:" + (p.get("Relay") or "?")
+        print(
+            f"<5>path peer={p.get('HostName')} kind={kind} "
+            f"addr={addr or '-'} active={str(bool(p.get('Active'))).lower()}"
+        )
+  '';
+
   # moonlight-stats: relatório de QUALIDADE das sessões, porque "cai toda hora" não é
   # mensurável e o log do Sunshine só diz "CLIENT DISCONNECTED" — a mesma linha para
   # cliente que fechou, cliente que desistiu e host que derrubou (é a queixa da issue
@@ -103,19 +150,48 @@ let
     paths = [stamp(x) for x in ts if "now using" in x and stamp(x)]
     links = [stamp(x) for x in ts if re.search(r"[Ll]ink [Cc]hange|LinkChange", x) and stamp(x)]
 
+    # Amostras do sunshine-path-probe: (instante, kind). Só peer ATIVO — é o que está
+    # streamando; peer online e parado descreveria o caminho de outra máquina.
+    samples = []
+    for line in journal("-u", "sunshine-path-probe.service").splitlines():
+        t = stamp(line)
+        if t is None or "path peer=" not in line:
+            continue
+        kv = dict(x.split("=", 1) for x in line.split() if "=" in x)
+        if kv.get("active") == "true" and kv.get("kind"):
+            samples.append((t, kv["kind"]))
+
+    def path_of(a, b):
+        """Caminho vigente na sessão [a,b]. CARRY-FORWARD é o ponto: sessão de 3s não
+        contém amostra nenhuma (probe é de 1 min), e aí o estado válido é o da última
+        amostra ANTES dela — sem isso, justamente as sessões curtas, que são as que
+        interessam, sairiam todas como '?'."""
+        inside = [k for t, k in samples if a <= t <= b]
+        if not inside:
+            before = [k for t, k in samples if t < a]
+            inside = before[-1:]
+        if not inside:
+            return "?"
+        uniq = sorted(set(inside))
+        # "misto" = trocou DURANTE a sessão. Medido em 03/08: a sessão de 8 min
+        # atravessou direct4→direct6 duas vezes e sobreviveu — misto não é veredito
+        # de culpa, é só o registro de que houve troca.
+        return uniq[0] if len(uniq) == 1 else "misto"
+
     if not sessions:
         print(f"nenhuma sessão concluída nos últimos {DAYS} dias.")
         sys.exit(0)
 
     print(f"=== sessões Moonlight — últimos {DAYS} dias ===\n")
-    print(f"{'início':<15}{'duração':>10}{'trocas-caminho':>16}{'link-change':>13}")
+    print(f"{'início':<15}{'duração':>10}{'caminho':>10}{'trocas-caminho':>16}{'link-change':>13}")
     short, long = [], []
     for a, b, d in sessions:
         np = sum(1 for x in paths if a <= x <= b)
         nl = sum(1 for x in links if a <= x <= b)
-        (short if d < 120 else long).append((d, np, nl))
+        kind = path_of(a, b)
+        (short if d < 120 else long).append((d, np, nl, kind))
         mark = "  <-- curta" if d < 120 else ""
-        print(f"{a.strftime('%m-%d %H:%M:%S'):<15}{d:>9.0f}s{np:>16}{nl:>13}{mark}")
+        print(f"{a.strftime('%m-%d %H:%M:%S'):<15}{d:>9.0f}s{kind:>10}{np:>16}{nl:>13}{mark}")
 
     print(f"\n=== resumo ===")
     alld = sorted(d for _, _, d in sessions)
@@ -130,12 +206,29 @@ let
     for name, group in [("curtas <120s", short), ("longas >=120s", long)]:
         if not group:
             continue
-        pr = [np / (d / 60) for d, np, _ in group if d > 0]
-        lr = [nl / (d / 60) for d, _, nl in group if d > 0]
+        pr = [np / (d / 60) for d, np, _, _ in group if d > 0]
+        lr = [nl / (d / 60) for d, _, nl, _ in group if d > 0]
         print(f"  {name:<14} n={len(group):<4} "
               f"caminho: mediana={statistics.median(pr):.2f} média={statistics.mean(pr):.2f}   "
               f"link: mediana={statistics.median(lr):.2f} média={statistics.mean(lr):.2f}")
     print("  (LONGAS com taxa MAIOR = esse evento é sobrevivível, não é a causa)")
+
+    # A comparação que o relatório NÃO tinha e que era a mais preditiva. Aqui a leitura é
+    # direta, sem o viés de taxa-por-minuto: agrupa por caminho e olha a mediana de vida.
+    # Se `relay:*` tiver mediana de segundos e `direct*` de minutos, o veredito é o
+    # caminho — e nenhum ajuste de bitrate/FEC deste arquivo conserta isso.
+    print("\n=== duração por CAMINHO (o mais preditivo) ===")
+    by_kind = {}
+    for d, _, _, kind in short + long:
+        by_kind.setdefault(kind, []).append(d)
+    if set(by_kind) <= {"?"}:
+        print("  sem amostra ainda — o sunshine-path-probe começa a gravar no próximo")
+        print("  boot/rebuild; sessões anteriores a ele ficam como '?' pra sempre.")
+    for kind in sorted(by_kind):
+        ds = sorted(by_kind[kind])
+        curtas = sum(1 for x in ds if x < 120)
+        print(f"  {kind:<12} n={len(ds):<4} mediana={statistics.median(ds):>6.0f}s   "
+              f"min={ds[0]:>4.0f}s max={ds[-1]:>6.0f}s   curtas={curtas}/{len(ds)}")
 
     print("\n=== caminho atual do Tailscale ===")
     out = subprocess.run(["tailscale", "status"], capture_output=True, text=True).stdout
@@ -321,6 +414,34 @@ in
       # continuam visíveis, que é o que importa investigar.
       LogLevelMax = "warning";
     };
+  };
+
+  # ── Probe de caminho da tailnet ──────────────────────────────────────────────
+  # Unit de SISTEMA, não --user, por dois motivos: caminho da tailnet muda com ou sem
+  # sessão gráfica (e a lacuna que isso fecha é justamente "qual era o caminho ANTES de
+  # eu conectar"), e o journal do sistema é onde o tailscaled já loga — o relatório lê
+  # os dois do mesmo lugar.
+  systemd.services.sunshine-path-probe = lib.mkIf config.my.services.sunshine {
+    description = "Registra o caminho da tailnet (direto/relay) por peer no journal";
+    # Sem tailscaled no ar o `status --json` falha e o probe só emite <4> e sai 0 — não
+    # quero um `failed` de boot por dependência que sobe depois (a lição do ddns).
+    after = [ "tailscaled.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.python3}/bin/python3 ${pathProbePy}";
+      # Deixa passar o <5>/notice da amostra e corta o "Starting…/Finished…" (info) do
+      # systemd — senão 1×/min viraria ~4300 linhas/dia de ruído pra 1440 de sinal.
+      LogLevelMax = "notice";
+    };
+  };
+
+  systemd.timers.sunshine-path-probe = lib.mkIf config.my.services.sunshine {
+    description = "Amostra o caminho da tailnet a cada minuto";
+    timerConfig = {
+      OnBootSec = "2min"; # dá tempo do tailscaled negociar caminho antes da 1ª amostra
+      OnUnitActiveSec = "1min";
+    };
+    wantedBy = [ "timers.target" ];
   };
 
   # Diagnóstico fica no system/ junto do que ele diagnostica (o healthcheck acima mora

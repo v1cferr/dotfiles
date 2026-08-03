@@ -247,7 +247,12 @@
           pkgs = nixpkgs.legacyPackages.${system};
           inherit (self.checks.${system}.pre-commit) shellHook enabledPackages;
         in
-        pkgs.mkShell {
+        # mkShellNoCC e NÃO mkShell: nada aqui compila C — são linters de Nix e o LSP. O
+        # mkShell arrasta o stdenv com wrapper de cc/binutils, e o efeito VISÍVEL é o
+        # direnv despejando um parágrafo de `export +AR +AS +CC +CXX +LD +NM +OBJCOPY
+        # +RANLIB +NIX_CFLAGS_COMPILE +NIX_HARDENING_ENABLE …` a cada `cd` no repo. Sem o
+        # CC isso encurta pro que interessa, e o shell fica mais leve de montar.
+        pkgs.mkShellNoCC {
           inherit shellHook;
           buildInputs = enabledPackages ++ [ pkgs.nixd ];
         };

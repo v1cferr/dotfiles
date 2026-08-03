@@ -39,13 +39,22 @@ in
       # build (nix-output-monitor por dentro) + DIFF de pacotes entre a geração atual e a
       # nova. SEM `sudo` na frente de propósito — o nh eleva sozinho na hora de ativar,
       # então o build roda como usuário e só a ativação pede senha.
-      # O caminho vem do NH_FLAKE (programs.nh.flake), por isso não aparece aqui.
-      rebuild = "nh os switch && { hyprctl -i 0 reload || true; }";
+      #
+      # O CAMINHO VAI EXPLÍCITO, e não via NH_FLAKE. Aprendido na prática em 03/08/2026:
+      # o `programs.nh.flake` publica a variável por `environment.variables`, que vira
+      # `export` no /etc/set-environment e só é lido no LOGIN. A sessão gráfica em curso
+      # não a tem, e terminal novo herda o ambiente da sessão (não relê o /etc/profile) —
+      # então o alias quebrava exatamente depois do switch que o introduziu, com a
+      # mensagem enganosa "no flake found at /etc/nixos/flake.nix", como se a config
+      # estivesse no lugar errado. Passando o caminho, funciona no primeiro `rebuild` e
+      # não depende de relogar. O programs.nh.flake CONTINUA valendo (é a SSOT lida aqui,
+      # e serve pro `nh` avulso), só não é mais dependência do alias.
+      rebuild = "nh os switch ${flake} && { hyprctl -i 0 reload || true; }";
       update = "nix flake update --flake ${flake}"; # bump do flake.lock
       # upgrade = update + rebuild (tipo `apt update && apt full-upgrade`). O `update` roda
       # como USUÁRIO primeiro (tem a chave SSH p/ inputs privados, ex. duo-streak-daemon) e
       # SÓ com sucesso (`&&`) segue pro rebuild como root — lock quebrado nunca chega a aplicar.
-      upgrade = "nix flake update --flake ${flake} && nh os switch && { hyprctl -i 0 reload || true; }";
+      upgrade = "nix flake update --flake ${flake} && nh os switch ${flake} && { hyprctl -i 0 reload || true; }";
       # CUIDADO com o `-d`: ele apaga TODAS as gerações antigas, não só as velhas — ou seja,
       # depois de rodar não há mais rollback p/ a geração de ontem, nem entrada dela no GRUB.
       # É o que se quer quando a intenção é liberar o máximo; se a intenção for só higiene,

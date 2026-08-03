@@ -79,7 +79,14 @@ let
   # amostra vizinha descreve bem o instante, e 1440 linhas/dia é ruído irrelevante. O
   # `<5>` (notice) + LogLevelMax=notice na unit é o mesmo truque do healthcheck acima:
   # mata o "Starting…/Finished…" do systemd (info) e preserva a linha que importa.
-  pathProbePy = pkgs.writeText "sunshine-path-probe.py" ''
+  #
+  # SSOT do nome da unit (regra 11): ele acopla TRÊS pontos — a unit, o timer e a consulta
+  # `journalctl -u` dentro do relatório. Literal repetido aqui não daria erro de build:
+  # renomear a unit deixaria o relatório lendo um nome que não existe e reportando "sem
+  # amostra" pra sempre. Falha silenciosa, o pior tipo (regra 14).
+  probeUnit = "sunshine-path-probe";
+
+  pathProbePy = pkgs.writeText "${probeUnit}.py" ''
     import json, subprocess, sys
 
     out = subprocess.run(
@@ -153,7 +160,7 @@ let
     # Amostras do sunshine-path-probe: (instante, kind). Só peer ATIVO — é o que está
     # streamando; peer online e parado descreveria o caminho de outra máquina.
     samples = []
-    for line in journal("-u", "sunshine-path-probe.service").splitlines():
+    for line in journal("-u", "${probeUnit}.service").splitlines():
         t = stamp(line)
         if t is None or "path peer=" not in line:
             continue
@@ -227,7 +234,7 @@ let
     if set(by_kind) <= {"?"}:
         if not samples:
             print("  o sunshine-path-probe não gravou amostra nenhuma nesta janela —")
-            print("  conferir: systemctl list-timers sunshine-path-probe")
+            print("  conferir: systemctl list-timers ${probeUnit}")
         else:
             first = samples[0][0].strftime("%m-%d %H:%M")
             print(f"  as sessões desta janela são ANTERIORES à 1ª amostra ({first}) e ficam")
@@ -429,7 +436,7 @@ in
   # sessão gráfica (e a lacuna que isso fecha é justamente "qual era o caminho ANTES de
   # eu conectar"), e o journal do sistema é onde o tailscaled já loga — o relatório lê
   # os dois do mesmo lugar.
-  systemd.services.sunshine-path-probe = lib.mkIf config.my.services.sunshine {
+  systemd.services."${probeUnit}" = lib.mkIf config.my.services.sunshine {
     description = "Registra o caminho da tailnet (direto/relay) por peer no journal";
     # Sem tailscaled no ar o `status --json` falha e o probe só emite <4> e sai 0 — não
     # quero um `failed` de boot por dependência que sobe depois (a lição do ddns).
@@ -443,7 +450,7 @@ in
     };
   };
 
-  systemd.timers.sunshine-path-probe = lib.mkIf config.my.services.sunshine {
+  systemd.timers."${probeUnit}" = lib.mkIf config.my.services.sunshine {
     description = "Amostra o caminho da tailnet a cada minuto";
     timerConfig = {
       OnBootSec = "2min"; # dá tempo do tailscaled negociar caminho antes da 1ª amostra

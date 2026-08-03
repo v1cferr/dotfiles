@@ -48,7 +48,13 @@ let
 
   diskWatch = pkgs.writeShellApplication {
     name = "disk-watch";
-    runtimeInputs = with pkgs; [ coreutils libnotify util-linux gnused gawk ];
+    runtimeInputs = with pkgs; [
+      coreutils
+      libnotify
+      util-linux
+      gnused
+      gawk
+    ];
     text = ''
       # --- fase 1: check barato -------------------------------------------
       # `df --output=avail -BG` sai como "  123G"; tira o G e o espaço.
@@ -172,7 +178,10 @@ in
       ];
     };
 
-    home.packages = [ diskWatch trashExpire ];
+    home.packages = [
+      diskWatch
+      trashExpire
+    ];
 
     # ── Alarme de espaço ───────────────────────────────────────────────────
     systemd.user.services.disk-watch = {

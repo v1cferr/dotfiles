@@ -27,18 +27,18 @@
 let
   # Bloco XBEL do bookmark "FAI Workstation" (a pasta do rclone SFTP, ~/FAI-workstation).
   faiPlace = pkgs.writeText "fai-place.xbel" ''
-     <bookmark href="file:///home/v1cferr/FAI-workstation">
-      <title>FAI Workstation</title>
-      <info>
-       <metadata owner="http://freedesktop.org">
-        <bookmark:icon name="folder-remote"/>
-       </metadata>
-       <metadata owner="http://www.kde.org">
-        <ID>1784500000/0</ID>
-        <isSystemItem>false</isSystemItem>
-       </metadata>
-      </info>
-     </bookmark>
+    <bookmark href="file:///home/v1cferr/FAI-workstation">
+     <title>FAI Workstation</title>
+     <info>
+      <metadata owner="http://freedesktop.org">
+       <bookmark:icon name="folder-remote"/>
+      </metadata>
+      <metadata owner="http://www.kde.org">
+       <ID>1784500000/0</ID>
+       <isSystemItem>false</isSystemItem>
+      </metadata>
+     </info>
+    </bookmark>
   '';
 in
 {

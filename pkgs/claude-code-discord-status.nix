@@ -6,7 +6,11 @@
 # (tsup) gera o dist/; `src/hooks/` e `dist/` entram no output via `files` do
 # package.json. Bump de versão: trocar `version` + os DOIS hashes (src via
 # `nurl`, deps via `nix run nixpkgs#prefetch-npm-deps -- package-lock.json`).
-{ lib, buildNpmPackage, fetchFromGitHub }:
+{
+  lib,
+  buildNpmPackage,
+  fetchFromGitHub,
+}:
 
 buildNpmPackage rec {
   pname = "claude-code-discord-status";

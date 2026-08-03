@@ -6,7 +6,12 @@
 # Migração do meu Arch (cliphist-rofi-img.sh) COM melhorias: além de thumbnail de
 # imagem, agora arquivos copiados (URI file://…) ganham ÍCONE do tipo (zip/vídeo/pdf…)
 # resolvido pelo tema de ícones (Fluent-dark). Regra 1/3: idiomático e declarativo.
-{ pkgs, config, osConfig, ... }:
+{
+  pkgs,
+  config,
+  osConfig,
+  ...
+}:
 
 let
   palette = config.my.theme.palette; # cores do tema ativo (home/desktop/palette.nix)
@@ -17,7 +22,13 @@ let
   #   • texto                      → ícone de texto
   clipboardMenu = pkgs.writeShellApplication {
     name = "clipboard-menu";
-    runtimeInputs = with pkgs; [ cliphist wl-clipboard rofi coreutils gnugrep ];
+    runtimeInputs = with pkgs; [
+      cliphist
+      wl-clipboard
+      rofi
+      coreutils
+      gnugrep
+    ];
     text = ''
       cache="''${XDG_CACHE_HOME:-$HOME/.cache}/cliphist/thumbnails"
       mkdir -p "$cache"

@@ -3,7 +3,13 @@
 # FAI. Estabelece o túnel SSL e sobe o pppd (PPP-over-SSL, como o NetExtender faz).
 # Uso: sudo nxBender --server HOST:PORT -u USER -p SENHA -d DOMINIO [--fingerprint ...].
 # Repo: https://github.com/abrasive/nxBender (IPv4 only; sem 2FA/auto-reconnect).
-{ lib, python3Packages, fetchFromGitHub, ppp, makeWrapper }:
+{
+  lib,
+  python3Packages,
+  fetchFromGitHub,
+  ppp,
+  makeWrapper,
+}:
 
 python3Packages.buildPythonApplication {
   pname = "nxbender";
@@ -17,7 +23,12 @@ python3Packages.buildPythonApplication {
     hash = "sha256-PusyOqqSQaV63LITeOR/G2nkc1tuvlj8l8I8Hp0Ako0=";
   };
 
-  propagatedBuildInputs = with python3Packages; [ configargparse pyroute2 requests colorlog ];
+  propagatedBuildInputs = with python3Packages; [
+    configargparse
+    pyroute2
+    requests
+    colorlog
+  ];
   nativeBuildInputs = [ makeWrapper ];
 
   # Python 3.12+ REMOVEU ssl.wrap_socket → o túnel do nxBender quebrava

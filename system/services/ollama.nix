@@ -26,6 +26,9 @@
     # host) alcançam localhost sem expor o Ollama na LAN.
     # qwen3:4b = solver texto-primeiro (não precisa de visão); bge-m3 = embeddings
     # p/ a memória few-shot do duo-streak-daemon. Pull na ativação (idempotente).
-    loadModels = [ "qwen3:4b" "bge-m3" ];
+    loadModels = [
+      "qwen3:4b"
+      "bge-m3"
+    ];
   };
 }

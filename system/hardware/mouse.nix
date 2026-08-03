@@ -51,14 +51,68 @@
                 gestures = [
                   # Esquerda/Direita → MOVER a janela pela fita (SUPER+SHIFT+,/. = swapcol l/r).
                   # É o "pôr do lado com o mouse": o arrasto não faz isso (empilha, hardcoded).
-                  { direction = "Left"; mode = "OnRelease"; action = { type = "Keypress"; keys = [ "KEY_LEFTMETA" "KEY_LEFTSHIFT" "KEY_COMMA" ]; }; }
-                  { direction = "Right"; mode = "OnRelease"; action = { type = "Keypress"; keys = [ "KEY_LEFTMETA" "KEY_LEFTSHIFT" "KEY_DOT" ]; }; }
+                  {
+                    direction = "Left";
+                    mode = "OnRelease";
+                    action = {
+                      type = "Keypress";
+                      keys = [
+                        "KEY_LEFTMETA"
+                        "KEY_LEFTSHIFT"
+                        "KEY_COMMA"
+                      ];
+                    };
+                  }
+                  {
+                    direction = "Right";
+                    mode = "OnRelease";
+                    action = {
+                      type = "Keypress";
+                      keys = [
+                        "KEY_LEFTMETA"
+                        "KEY_LEFTSHIFT"
+                        "KEY_DOT"
+                      ];
+                    };
+                  }
                   # Cima → VER TUDO (SUPER+CTRL+G = fit all) · Baixo → foco, 1 por tela
                   # (SUPER+CTRL+. = colresize all 1.0). O par de modos de visão, no polegar.
-                  { direction = "Up"; mode = "OnRelease"; action = { type = "Keypress"; keys = [ "KEY_LEFTMETA" "KEY_LEFTCTRL" "KEY_G" ]; }; }
-                  { direction = "Down"; mode = "OnRelease"; action = { type = "Keypress"; keys = [ "KEY_LEFTMETA" "KEY_LEFTCTRL" "KEY_DOT" ]; }; }
+                  {
+                    direction = "Up";
+                    mode = "OnRelease";
+                    action = {
+                      type = "Keypress";
+                      keys = [
+                        "KEY_LEFTMETA"
+                        "KEY_LEFTCTRL"
+                        "KEY_G"
+                      ];
+                    };
+                  }
+                  {
+                    direction = "Down";
+                    mode = "OnRelease";
+                    action = {
+                      type = "Keypress";
+                      keys = [
+                        "KEY_LEFTMETA"
+                        "KEY_LEFTCTRL"
+                        "KEY_DOT"
+                      ];
+                    };
+                  }
                   # Clique sem mover → launcher de apps (SUPER+Q).
-                  { direction = "None"; mode = "OnRelease"; action = { type = "Keypress"; keys = [ "KEY_LEFTMETA" "KEY_Q" ]; }; }
+                  {
+                    direction = "None";
+                    mode = "OnRelease";
+                    action = {
+                      type = "Keypress";
+                      keys = [
+                        "KEY_LEFTMETA"
+                        "KEY_Q"
+                      ];
+                    };
+                  }
                 ];
               };
             }

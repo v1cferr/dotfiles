@@ -40,14 +40,18 @@ in
         User = ws.user;
         Port = 22;
         IdentityFile = "~/.ssh/id_ed25519";
-        SetEnv = { TERM = "xterm-256color"; }; # cores certas no terminal remoto
+        SetEnv = {
+          TERM = "xterm-256color";
+        }; # cores certas no terminal remoto
       };
       # VM de apoio na FAI.
       fai-vm = faiResilience // {
         HostName = "200.136.209.248";
         User = "v1cferr";
         Port = 22;
-        SetEnv = { TERM = "xterm-256color"; };
+        SetEnv = {
+          TERM = "xterm-256color";
+        };
       };
     };
   };

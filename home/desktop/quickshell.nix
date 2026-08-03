@@ -8,7 +8,12 @@
 # VIVO ao salvar (sem rebuild), e os arquivos seguem versionados no git (portável:
 # outra máquina clona o repo no mesmo caminho e funciona). É um desvio consciente
 # da regra 3 (não é symlink puro da store), padrão da comunidade p/ ricing de QML.
-{ pkgs, config, inputs, ... }:
+{
+  pkgs,
+  config,
+  inputs,
+  ...
+}:
 
 let
   # Pacote do Quickshell (flake input). Ligado uma vez porque o caminho completo
@@ -48,7 +53,11 @@ let
   # (regra 7) e o QML o chama por NOME, pelo PATH.
   trayNativeMenu = pkgs.writeShellApplication {
     name = "tray-native-menu";
-    runtimeInputs = with pkgs; [ hyprland systemd coreutils ];
+    runtimeInputs = with pkgs; [
+      hyprland
+      systemd
+      coreutils
+    ];
     text = ''
       target_id="''${1:-}"
       [ -z "$target_id" ] && exit 2
@@ -107,8 +116,7 @@ in
 
   # ~/.config/quickshell → arquivo real no repo (mutável) = hot-reload.
   xdg.configFile."quickshell".source =
-    config.lib.file.mkOutOfStoreSymlink
-      "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/desktop/quickshell";
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/desktop/quickshell";
 
   # ── Ponte XEmbed → StatusNotifierItem ───────────────────────────────────────
   # App X11 legado (Wine/Bottles, e por isso o Battle.net) publica ícone de bandeja

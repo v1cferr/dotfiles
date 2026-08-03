@@ -34,7 +34,13 @@
 #   `duo-login`  → abre o navegador, você entra, a sessão salva no volume duo-data.
 #   Depois o daemon mantém a ofensiva sozinho (1x/dia). Rodar já: `duo-run-once`.
 # ═══════════════════════════════════════════════════════════════════════════
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 
 let
   # Só liga quando a senha do Postgres já foi provisionada (ver AUTO-GATE acima).
@@ -118,7 +124,10 @@ let
   # visível (via Xwayland/DISPLAY) e a sessão persiste no volume duo_duo-data.
   duo-login = pkgs.writeShellApplication {
     name = "duo-login";
-    runtimeInputs = [ pkgs.docker pkgs.xhost ];
+    runtimeInputs = [
+      pkgs.docker
+      pkgs.xhost
+    ];
     text = ''
       xhost +local: >/dev/null 2>&1 || true
       trap 'xhost -local: >/dev/null 2>&1 || true' EXIT
@@ -147,7 +156,11 @@ lib.mkIf (enabled && config.my.services.duo) {
   };
   users.users.v1cferr.extraGroups = [ "docker" ]; # rodar docker/duo-login sem sudo
 
-  environment.systemPackages = [ duo-login duo-run-once pkgs.docker-compose ];
+  environment.systemPackages = [
+    duo-login
+    duo-run-once
+    pkgs.docker-compose
+  ];
 
   # .env renderizado pelo sops: config em texto + segredos por placeholder. As
   # linhas opcionais só entram se o segredo correspondente foi provisionado.
@@ -172,28 +185,42 @@ lib.mkIf (enabled && config.my.services.duo) {
     GPU_VRAM_MB=8192
     DUO_DB_PASSWORD=${config.sops.placeholder.duo_db_password}
   ''
-  + lib.optionalString (config.sops.secrets ? gemini_api_key)
-      "GEMINI_API_KEY=${config.sops.placeholder.gemini_api_key}\n"
-  + lib.optionalString (config.sops.secrets ? ntfy_topic)
-      "NTFY_TOPIC=${config.sops.placeholder.ntfy_topic}\n"
-  + lib.optionalString (config.sops.secrets ? duolingo_username)
-      "DUOLINGO_USERNAME=${config.sops.placeholder.duolingo_username}\n"
-  + lib.optionalString (config.sops.secrets ? duolingo_password)
-      "DUOLINGO_PASSWORD=${config.sops.placeholder.duolingo_password}\n";
+  + lib.optionalString (
+    config.sops.secrets ? gemini_api_key
+  ) "GEMINI_API_KEY=${config.sops.placeholder.gemini_api_key}\n"
+  + lib.optionalString (
+    config.sops.secrets ? ntfy_topic
+  ) "NTFY_TOPIC=${config.sops.placeholder.ntfy_topic}\n"
+  + lib.optionalString (
+    config.sops.secrets ? duolingo_username
+  ) "DUOLINGO_USERNAME=${config.sops.placeholder.duolingo_username}\n"
+  + lib.optionalString (
+    config.sops.secrets ? duolingo_password
+  ) "DUOLINGO_PASSWORD=${config.sops.placeholder.duolingo_password}\n";
 
   # Sobe/derruba o stack via compose. Só builda o que faltar (camadas em cache).
   # Depende do Docker e do Ollama nativo (o solver que o daemon consome).
   systemd.services.duo-stack = {
     description = "duo-streak-daemon stack (compose: daemon + api + web + db)";
-    after = [ "docker.service" "network-online.target" "ollama.service" ];
+    after = [
+      "docker.service"
+      "network-online.target"
+      "ollama.service"
+    ];
     requires = [ "docker.service" ];
-    wants = [ "network-online.target" "ollama.service" ];
+    wants = [
+      "network-online.target"
+      "ollama.service"
+    ];
     wantedBy = [ "multi-user.target" ];
     path = [ pkgs.docker ];
     # Muda o compose OU a ESTRUTURA do .env → o switch reinicia o serviço → `up -d`
     # recria os containers afetados (aplica env novo). (Mudança só de VALOR de
     # segredo não altera o hash aqui; nesse caso: systemctl restart duo-stack.)
-    restartTriggers = [ composeFile config.sops.templates."duo.env".content ];
+    restartTriggers = [
+      composeFile
+      config.sops.templates."duo.env".content
+    ];
     # DOCKER_CONFIG aponta pro dir com os plugins (ver dockerCfgSetup) → o Compose
     # acha o buildx e usa BuildKit. DOCKER_BUILDKIT=1 reforça.
     environment = {
@@ -206,7 +233,11 @@ lib.mkIf (enabled && config.my.services.duo) {
       RuntimeDirectory = "duo"; # cria /run/duo (writable p/ o DOCKER_CONFIG acima)
       TimeoutStartSec = "1800"; # 1º start builda 3 imagens (Playwright/Next.js) — demora
       # espera o daemon → prepara os plugins → builda (com cache, rápido)
-      ExecStartPre = [ dockerReady dockerCfgSetup "${dc} build" ];
+      ExecStartPre = [
+        dockerReady
+        dockerCfgSetup
+        "${dc} build"
+      ];
 
       ExecStart = "${dc} up -d --remove-orphans";
       ExecStop = "${dc} down";

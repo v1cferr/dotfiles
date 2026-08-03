@@ -17,18 +17,23 @@ let
   # arrasta Perl-Critic/Perl-Tidy pro build) — e é o MESMO código que roda no relay, onde
   # não posso instalar nada. SO_BROADCAST é obrigatório: sem ele o kernel recusa o envio
   # p/ endereço de broadcast. Portas 9 e 7 porque NIC velha às vezes só escuta a 7.
-  mkSender = targets: pkgs.writeText "wol-send.py" ''
-    import socket
-    pkt = bytes.fromhex("ff" * 6 + "${macHex}" * 16)
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    for t in [${lib.concatMapStringsSep ", " (t: "\"${t}\"") targets}]:
-        for port in (9, 7):
-            s.sendto(pkt, (t, port))
-  '';
+  mkSender =
+    targets:
+    pkgs.writeText "wol-send.py" ''
+      import socket
+      pkt = bytes.fromhex("ff" * 6 + "${macHex}" * 16)
+      s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+      s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+      for t in [${lib.concatMapStringsSep ", " (t: "\"${t}\"") targets}]:
+          for port in (9, 7):
+              s.sendto(pkt, (t, port))
+    '';
 
   # Local: unicast pelo túnel + broadcast dirigido da /25.
-  senderLocal = mkSender [ ws.host ws.broadcast ];
+  senderLocal = mkSender [
+    ws.host
+    ws.broadcast
+  ];
   # Relay: roda NA fai-vm, que está na mesma sub-rede → broadcast L2 de verdade.
   senderRelay = mkSender [ "255.255.255.255" ];
 

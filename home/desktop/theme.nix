@@ -7,7 +7,13 @@
 #      (VS Code, Chrome, Spotify, LibreWolf). É o que escurece a maioria.
 #   2. gtk-theme = "Adwaita-dark"    → pros apps GTK3 antigos, que não seguem
 #      o color-scheme sozinhos. O tema é achado via XDG_DATA_DIRS (system/).
-{ pkgs, lib, config, osConfig, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  osConfig,
+  ...
+}:
 
 let
   # Vendoriza SÓ a pasta Kvantum do tema Win11OS (yeyushengfan258/Win11OS-kde),

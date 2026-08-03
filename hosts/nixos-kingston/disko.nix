@@ -76,27 +76,47 @@
               # pode morar fora dos outros subvolumes.
               "@" = {
                 mountpoint = "/";
-                mountOptions = [ "compress=zstd:1" "noatime" "discard=async" ];
+                mountOptions = [
+                  "compress=zstd:1"
+                  "noatime"
+                  "discard=async"
+                ];
               };
               "@home" = {
                 mountpoint = "/home";
-                mountOptions = [ "compress=zstd:1" "noatime" "discard=async" ];
+                mountOptions = [
+                  "compress=zstd:1"
+                  "noatime"
+                  "discard=async"
+                ];
               };
               # /nix é imutável e enorme: noatime evita escrita a cada leitura.
               "@nix" = {
                 mountpoint = "/nix";
-                mountOptions = [ "compress=zstd:1" "noatime" "discard=async" ];
+                mountOptions = [
+                  "compress=zstd:1"
+                  "noatime"
+                  "discard=async"
+                ];
               };
               # Vazio HOJE. Vira o destino da lista explícita de persistência.
               "@persist" = {
                 mountpoint = "/persist";
-                mountOptions = [ "compress=zstd:1" "noatime" "discard=async" ];
+                mountOptions = [
+                  "compress=zstd:1"
+                  "noatime"
+                  "discard=async"
+                ];
               };
               # Separado senão a impermanência levaria o journal junto no reboot —
               # e perder log é perder justamente o que explica o boot que deu errado.
               "@log" = {
                 mountpoint = "/var/log";
-                mountOptions = [ "compress=zstd:1" "noatime" "discard=async" ];
+                mountOptions = [
+                  "compress=zstd:1"
+                  "noatime"
+                  "discard=async"
+                ];
               };
               # Casa dos snapshots do btrbk (system/services/btrbk.nix). Subvolume
               # TOP-LEVEL, não um diretório dentro de `@`, por dois motivos: (1) o
@@ -112,7 +132,12 @@
               # o mount via RequiresMountsFor) em vez de "boot cai no emergency shell".
               "@snapshots" = {
                 mountpoint = "/.snapshots";
-                mountOptions = [ "compress=zstd:1" "noatime" "discard=async" "nofail" ];
+                mountOptions = [
+                  "compress=zstd:1"
+                  "noatime"
+                  "discard=async"
+                  "nofail"
+                ];
               };
               # SEM compress e SEM noatime: o mkswapfile do btrfs exige NOCOW puro.
               "@swap" = {

@@ -50,7 +50,10 @@
   # Roteamento explícito: Screenshot → wlr (o hyprland não implementa); o resto segue
   # o default (hyprland p/ ScreenCast/GlobalShortcuts, gtk p/ appearance/FileChooser).
   xdg.portal.config.common = {
-    default = [ "hyprland" "gtk" ];
+    default = [
+      "hyprland"
+      "gtk"
+    ];
     "org.freedesktop.impl.portal.Screenshot" = [ "wlr" ];
   };
 

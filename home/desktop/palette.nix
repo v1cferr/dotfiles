@@ -3,7 +3,12 @@
 # consumidores em Nix (rofi/lockscreen/flameshot) leem `config.my.theme.palette.<cor>`;
 # os hot-reload (Quickshell/Hyprland) leem os arquivos de dados gerados abaixo (não dá
 # pra o Nix escrever dentro das árvores symlinkadas do quickshell/hypr).
-{ config, lib, osConfig, ... }:
+{
+  config,
+  lib,
+  osConfig,
+  ...
+}:
 
 let
   cfg = config.my.theme;

@@ -9,7 +9,12 @@
 # e o daemon roda como serviço systemd --user — SEM o `claude-presence setup`
 # imperativo (que mutaria settings.json e subiria o daemon na mão).
 # ═══════════════════════════════════════════════════════════════════════════
-{ pkgs, osConfig, lib, ... }:
+{
+  pkgs,
+  osConfig,
+  lib,
+  ...
+}:
 
 let
   ccds = pkgs.claude-code-discord-status;

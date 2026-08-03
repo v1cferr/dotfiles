@@ -53,7 +53,12 @@
 # estar formatado, desligue em toggles.nix e apague este arquivo. O repo no Drive
 # sobrevive sozinho — só a senha (Bitwarden) é necessária pra restaurar.
 # ═══════════════════════════════════════════════════════════════════════════
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   # SSOT dos dois destinos (regra 11): fonte, exclusões e flags NÃO podem existir
@@ -143,8 +148,7 @@ lib.mkIf config.my.services.arch-kingston-archive {
   # SEGURANÇA: sem o Kingston montado, /mnt/kingston-arch é um diretório VAZIO na raiz
   # do SanDisk — o backup "daria certo" e arquivaria nada. Mesmo padrão do restic.nix.
   # O destino local exige TAMBÉM o Seagate, senão o repo iria parar na raiz do SanDisk.
-  systemd.services.restic-backups-arch-kingston.unitConfig.RequiresMountsFor =
-    "/mnt/kingston-arch";
+  systemd.services.restic-backups-arch-kingston.unitConfig.RequiresMountsFor = "/mnt/kingston-arch";
   systemd.services.restic-backups-arch-kingston-local.unitConfig.RequiresMountsFor =
     "/mnt/kingston-arch /mnt/seagate-old";
 

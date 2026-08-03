@@ -14,7 +14,12 @@
 #
 # NB: o .ini vem do /nix/store (read-only) → mudanças pela GUI NÃO persistem;
 # editar aqui e rebuild. Qt QSettings NÃO aceita comentário inline no .ini.
-{ config, pkgs, inputs, ... }:
+{
+  config,
+  pkgs,
+  inputs,
+  ...
+}:
 
 let
   # Pacote do Quickshell (flake input). Ligado uma vez porque o caminho completo
@@ -30,7 +35,13 @@ let
     name = "flameshot-screenshot";
     # `qs`: esconde a barra enquanto o overlay existe (ver abaixo). runtimeInputs é
     # obrigatório — writeShellApplication usa PATH restrito, não o do usuário.
-    runtimeInputs = [ fs pkgs.hyprland pkgs.jq pkgs.coreutils qsPkg ];
+    runtimeInputs = [
+      fs
+      pkgs.hyprland
+      pkgs.jq
+      pkgs.coreutils
+      qsPkg
+    ];
     text = ''
       flameshot gui >/dev/null 2>&1 &
       hyprctl dispatch 'hl.dsp.submap("screenshot")' >/dev/null 2>&1 || true
@@ -56,7 +67,11 @@ let
   # fatia do alvo dinamicamente (nada chumbado → sobrevive a TV desligada / rearranjo).
   flameshotPick = pkgs.writeShellApplication {
     name = "flameshot-pick";
-    runtimeInputs = [ pkgs.hyprland pkgs.jq pkgs.coreutils ];
+    runtimeInputs = [
+      pkgs.hyprland
+      pkgs.jq
+      pkgs.coreutils
+    ];
     text = ''
       target="''${1:?uso: flameshot-pick <monitor>}"
       reset() { hyprctl dispatch 'hl.dsp.submap("reset")' >/dev/null 2>&1 || true; }
@@ -96,7 +111,12 @@ let
 in
 {
   # v14 (unstable) + os scripts do fluxo por teclado (chamados pelo submap em keybinds.lua).
-  home.packages = [ fs flameshotScreenshot flameshotPick flameshotCancel ];
+  home.packages = [
+    fs
+    flameshotScreenshot
+    flameshotPick
+    flameshotCancel
+  ];
 
   # ── Aliases de print, migrados do zsh do Arch ──────────────────────────────
   # Ficam AQUI, junto da ferramenta, e não no home/shell/zsh.nix — mesma convenção do

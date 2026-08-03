@@ -26,37 +26,42 @@
 #      alternar dpms sob captura deu ENGINE-RESET da GPU (xe RCS, travou o scanout).
 #      Agora o idle SÓ tranca. Se um dia quiser escurecer, use gamma do hyprsunset.
 # Ref: https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/
-{ config, pkgs, osConfig, ... }:
+{
+  config,
+  pkgs,
+  osConfig,
+  ...
+}:
 
 let
   # ── Wallpapers: oficiais do NixOS via pkgs.nixos-artwork (declarativos, sem
   #    binário no git; bump junto com o nixpkgs). ──
   art = pkgs.nixos-artwork.wallpapers;
   wallMain = "${art.catppuccin-mocha}/share/backgrounds/nixos/nixos-wallpaper-catppuccin-mocha.png"; # principal (borrado no lock)
-  wallTv   = "${art.moonscape}/share/backgrounds/nixos/nix-wallpaper-moonscape.png"; # TV (imagem estática, sem login)
+  wallTv = "${art.moonscape}/share/backgrounds/nixos/nix-wallpaper-moonscape.png"; # TV (imagem estática, sem login)
 
   # ── Monitores: SSOT em home/desktop/monitors.nix (regra 11) ──────────────────
-  primary   = config.my.monitors.primary;   # LG ULTRAGEAR — desktop borrado + login
+  primary = config.my.monitors.primary; # LG ULTRAGEAR — desktop borrado + login
   secondary = config.my.monitors.secondary; # TV — imagem estática + cadeado
 
   # ── Cores do tema ativo (my.theme) + fonte ───────────────────────────────────
   palette = config.my.theme.palette; # fonte única (home/desktop/palette.nix)
-  font    = osConfig.my.fonts.ui;    # SSOT (system/hardware/fonts.nix)
-  bg      = "rgba(${palette.bg}d9)";   # fundo do lock (d9 ≈ 85% opacidade)
-  fg      = "rgb(${palette.text})";
-  muted   = "rgb(${palette.dim})";
-  blue    = "rgba(${palette.blue}ee)";
+  font = osConfig.my.fonts.ui; # SSOT (system/hardware/fonts.nix)
+  bg = "rgba(${palette.bg}d9)"; # fundo do lock (d9 ≈ 85% opacidade)
+  fg = "rgb(${palette.text})";
+  muted = "rgb(${palette.dim})";
+  blue = "rgba(${palette.blue}ee)";
   magenta = "rgba(${palette.magenta}ee)";
-  green   = "rgba(${palette.green}ee)";
-  red     = "rgba(${palette.red}ee)";
+  green = "rgba(${palette.green}ee)";
+  red = "rgba(${palette.red}ee)";
 
   # ── Binários por caminho absoluto (não dependem de PATH — durável) ────────────
   hyprlockBin = "${pkgs.hyprlock}/bin/hyprlock";
-  pidof       = "${pkgs.procps}/bin/pidof";
+  pidof = "${pkgs.procps}/bin/pidof";
   loginctlBin = "${pkgs.systemd}/bin/loginctl";
-  systemdRun  = "${pkgs.systemd}/bin/systemd-run";
-  shuf        = "${pkgs.coreutils}/bin/shuf";
-  catBin      = "${pkgs.coreutils}/bin/cat";
+  systemdRun = "${pkgs.systemd}/bin/systemd-run";
+  shuf = "${pkgs.coreutils}/bin/shuf";
+  catBin = "${pkgs.coreutils}/bin/cat";
 
   # ── Quote: cache atualizado por timer systemd (ZenQuotes + DeepL; runtime = shuf -n1)
   # Substituiu o quotes.tsv vendorizado. O timer busca um LOTE (~50) do zenquotes.io
@@ -65,7 +70,7 @@ let
   # FRASES num único request em lote; o autor fica no original. Escapa &<> (pango) e
   # grava atômico; o lock só roda shuf -n1. FALLBACK seguro: sem chave/DeepL fora →
   # usa o lote em INGLÊS; sem rede na 1ª vez → uma frase embutida (pt-BR).
-  quotesCache  = "${config.xdg.cacheHome}/lockscreen/quotes";
+  quotesCache = "${config.xdg.cacheHome}/lockscreen/quotes";
   deeplKeyFile = "/run/secrets/deepl_api_key"; # sops (owner v1cferr); ausente ⇒ mantém EN
   quotesFetch = pkgs.writeShellScript "lockscreen-quotes-fetch" ''
     ${pkgs.coreutils}/bin/mkdir -p ${config.xdg.cacheHome}/lockscreen
@@ -113,7 +118,7 @@ let
   '';
 
   # ── Weather: cache atualizado por timer systemd (wttr.in; runtime = cat) ───────
-  weatherDir   = "${config.xdg.cacheHome}/lockscreen";
+  weatherDir = "${config.xdg.cacheHome}/lockscreen";
   weatherCache = "${weatherDir}/weather";
   # São Carlos/SP por COORDENADAS (sem ambiguidade de geocoding). Escreve atômico
   # (.tmp + mv) p/ o hyprlock nunca ler um cache pela metade.
@@ -171,8 +176,8 @@ in
         font_color = fg;
         font_family = font;
         outer_color = "${blue} ${magenta} 45deg"; # borda gradiente
-        check_color = "${green} ${blue} 120deg";  # verificando a senha
-        fail_color = red;                          # senha errada
+        check_color = "${green} ${blue} 120deg"; # verificando a senha
+        fail_color = red; # senha errada
         placeholder_text = ''<span foreground="##${palette.dim}">Digite a senha…</span>'';
         fail_text = ''<span foreground="##f7768e">$PAMFAIL</span>'';
         dots_spacing = 0.3;
@@ -310,7 +315,7 @@ in
   systemd.user.timers.lockscreen-weather = {
     Unit.Description = "Atualiza o clima da tela de bloqueio a cada 10 min";
     Timer = {
-      OnBootSec = "1min";        # 1ª busca logo após o boot
+      OnBootSec = "1min"; # 1ª busca logo após o boot
       OnUnitActiveSec = "10min"; # e a cada 10 min depois
       Persistent = true;
     };
@@ -328,8 +333,8 @@ in
   systemd.user.timers.lockscreen-quotes = {
     Unit.Description = "Renova o lote de frases da tela de bloqueio 1×/dia";
     Timer = {
-      OnBootSec = "1min";       # 1º lote logo após o boot
-      OnUnitActiveSec = "1d";   # renova 1×/dia: ~50 frases ⇒ folga na cota grátis do DeepL (500k/mês)
+      OnBootSec = "1min"; # 1º lote logo após o boot
+      OnUnitActiveSec = "1d"; # renova 1×/dia: ~50 frases ⇒ folga na cota grátis do DeepL (500k/mês)
       Persistent = true;
     };
     Install.WantedBy = [ "timers.target" ];

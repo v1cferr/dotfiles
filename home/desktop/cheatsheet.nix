@@ -10,7 +10,12 @@
 # remoto. H é livre e passa em qualquer caminho.
 #
 # O pacote rofi vem de clipboard.nix (não redeclara — mesmo tool p/ launcher/clipboard/aqui).
-{ pkgs, config, osConfig, ... }:
+{
+  pkgs,
+  config,
+  osConfig,
+  ...
+}:
 
 let
   palette = config.my.theme.palette; # cores do tema ativo (home/desktop/palette.nix)
@@ -82,7 +87,10 @@ let
 
   cheatsheet = pkgs.writeShellApplication {
     name = "keybinds-cheatsheet";
-    runtimeInputs = with pkgs; [ gawk rofi ];
+    runtimeInputs = with pkgs; [
+      gawk
+      rofi
+    ];
     text = ''
       src="$HOME/.config/hypr/lua/keybinds.lua"
       # Falha ALTO se o symlink sumir: um cheatsheet vazio mentiria dizendo "não há binds".

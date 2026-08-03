@@ -22,18 +22,60 @@
       # em diante escurece de leve até 0.8 (piso), reduzindo o cansaço no escuro, e
       # volta ao normal de manhã. Perfil sem gamma volta a 1.0 (cada perfil zera os outros).
       profile = [
-        { time = "0:00"; temperature = 2000; gamma = 0.8; } # madrugada: quente + escuro
-        { time = "6:00"; temperature = 3000; gamma = 0.9; } # amanhecer: esfria + clareia
-        { time = "7:00"; temperature = 4000; gamma = 1.0; } # manhã: brilho normal de volta
-        { time = "8:00"; identity = true; } # dia (8h–17h30): neutro, sem filtro, brilho cheio
-        { time = "17:30"; temperature = 6000; } # fim de tarde: 1º aquecimento (sem dim ainda)
-        { time = "18:00"; temperature = 5500; }
-        { time = "19:00"; temperature = 5000; }
-        { time = "20:00"; temperature = 4500; }
-        { time = "21:00"; temperature = 4000; }
-        { time = "22:00"; temperature = 3500; gamma = 0.9; } # pré-sono: reduz azul + dim leve
-        { time = "23:00"; temperature = 3000; gamma = 0.85; }
-        { time = "23:30"; temperature = 2500; gamma = 0.8; } # transição final p/ a madrugada
+        {
+          time = "0:00";
+          temperature = 2000;
+          gamma = 0.8;
+        } # madrugada: quente + escuro
+        {
+          time = "6:00";
+          temperature = 3000;
+          gamma = 0.9;
+        } # amanhecer: esfria + clareia
+        {
+          time = "7:00";
+          temperature = 4000;
+          gamma = 1.0;
+        } # manhã: brilho normal de volta
+        {
+          time = "8:00";
+          identity = true;
+        } # dia (8h–17h30): neutro, sem filtro, brilho cheio
+        {
+          time = "17:30";
+          temperature = 6000;
+        } # fim de tarde: 1º aquecimento (sem dim ainda)
+        {
+          time = "18:00";
+          temperature = 5500;
+        }
+        {
+          time = "19:00";
+          temperature = 5000;
+        }
+        {
+          time = "20:00";
+          temperature = 4500;
+        }
+        {
+          time = "21:00";
+          temperature = 4000;
+        }
+        {
+          time = "22:00";
+          temperature = 3500;
+          gamma = 0.9;
+        } # pré-sono: reduz azul + dim leve
+        {
+          time = "23:00";
+          temperature = 3000;
+          gamma = 0.85;
+        }
+        {
+          time = "23:30";
+          temperature = 2500;
+          gamma = 0.8;
+        } # transição final p/ a madrugada
       ];
     };
   };

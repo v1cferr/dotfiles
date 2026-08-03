@@ -22,7 +22,12 @@
 # trancaria a sessão remota. Então o guard só PAUSA o hypridle enquanto o stream roda
 # (global_prep_cmd do/undo) e RELIGA ao desconectar. Nada de dpms/settle: o monitor já
 # está sempre aceso.
-{ pkgs, lib, config, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 
 let
   # Início do stream: para o hypridle p/ a sessão remota não TRANCAR no meio por idle.
@@ -46,7 +51,11 @@ let
   # em variável + `case` evita o pipe inteiro.
   sunshineHealth = pkgs.writeShellApplication {
     name = "sunshine-health";
-    runtimeInputs = with pkgs; [ openssl systemd coreutils ];
+    runtimeInputs = with pkgs; [
+      openssl
+      systemd
+      coreutils
+    ];
     text = ''
       for attempt in 1 2 3; do
         out="$(timeout 8 openssl s_client -connect 127.0.0.1:47984 -brief </dev/null 2>&1 || true)"
@@ -257,7 +266,11 @@ let
   # em runtimeInputs — o script é um artefato do store, não um .sh solto no repo.
   moonlightStats = pkgs.writeShellApplication {
     name = "moonlight-stats";
-    runtimeInputs = with pkgs; [ python3 systemd tailscale ];
+    runtimeInputs = with pkgs; [
+      python3
+      systemd
+      tailscale
+    ];
     text = ''exec python3 ${statsPy} "$@"'';
   };
 in
@@ -296,8 +309,7 @@ in
       # O nome agora é DERIVADO (regra 11: literal repetido é dívida); o IP não dá
       # pra derivar em tempo de build — é runtime — então é SNAPSHOT e vai errar de
       # novo se o nó re-entrar. Preferir o MagicDNS; conferir com `tailscale ip -4`.
-      csrf_allowed_origins =
-        "https://100.116.22.4:47990,https://${config.networking.hostName}.tailf2731d.ts.net:47990";
+      csrf_allowed_origins = "https://100.116.22.4:47990,https://${config.networking.hostName}.tailf2731d.ts.net:47990";
       # OBRIGATÓRIO porque o acesso é pela tailnet: a tailscale0 tem MTU 1280 e o default
       # do Sunshine é 1392 → todo pacote de vídeo estoura o túnel. WireGuard descarta em
       # SILÊNCIO (sem ICMP, sem log): o host streama normal, o cliente recebe pela metade,
@@ -359,7 +371,10 @@ in
       # Guard de idle: do/undo acordam a tela + pausam o hypridle durante o stream (ver
       # header). JSON no sunshine.conf; vale p/ TODOS os apps (inclui o "Desktop" remoto).
       global_prep_cmd = builtins.toJSON [
-        { do = "${streamBegin}"; undo = "${streamEnd}"; }
+        {
+          do = "${streamBegin}";
+          undo = "${streamEnd}";
+        }
       ];
     };
 
@@ -402,7 +417,10 @@ in
           name = "Steam Big Picture";
           detached = [ "${pkgs.util-linux}/bin/setsid steam steam://open/bigpicture" ];
           prep-cmd = [
-            { do = ""; undo = "${pkgs.util-linux}/bin/setsid steam steam://close/bigpicture"; }
+            {
+              do = "";
+              undo = "${pkgs.util-linux}/bin/setsid steam steam://close/bigpicture";
+            }
           ];
         }
       ];

@@ -13,7 +13,12 @@
 # home/desktop/hypr/hyprland.lua (arquivo real no repo). Edita o .lua + `hyprctl
 # reload` → aplica na hora, sem rebuild. Os scripts do Lua (minimize-others,
 # brightness-osd) entram no PATH via home.packages, então o .lua os chama por nome.
-{ pkgs, config, inputs, ... }:
+{
+  pkgs,
+  config,
+  inputs,
+  ...
+}:
 
 let
   # Pacote do Quickshell (flake input). Ligado uma vez porque o caminho completo
@@ -25,7 +30,11 @@ let
   # follow=false (silencioso). jq/hyprctl entram no PATH do próprio script.
   minimizeOthers = pkgs.writeShellApplication {
     name = "minimize-others";
-    runtimeInputs = with pkgs; [ hyprland jq coreutils ];
+    runtimeInputs = with pkgs; [
+      hyprland
+      jq
+      coreutils
+    ];
     text = ''
       active_json="$(hyprctl -j activewindow)"
       active_addr="$(jq -r '.address // empty' <<< "$active_json")"
@@ -85,7 +94,11 @@ let
   # embaixo ia a 0/negativo e bugava a tela.
   brightnessOsd = pkgs.writeShellApplication {
     name = "brightness-osd";
-    runtimeInputs = [ pkgs.hyprland pkgs.coreutils qsPkg ];
+    runtimeInputs = [
+      pkgs.hyprland
+      pkgs.coreutils
+      qsPkg
+    ];
     text = ''
       step=10
       floor=20  # piso: nunca deixa a tela preta/bugada
@@ -121,7 +134,11 @@ let
   # workspaces 5–8 pro LG sozinho; reabilitar restaura com os params do hyprland.lua.
   monitorToggle = pkgs.writeShellApplication {
     name = "monitor-toggle";
-    runtimeInputs = with pkgs; [ hyprland jq coreutils ];
+    runtimeInputs = with pkgs; [
+      hyprland
+      jq
+      coreutils
+    ];
     text = ''
       name="${config.my.monitors.secondary}" # SSOT: home/desktop/monitors.nix
 
@@ -150,7 +167,11 @@ let
   # os serviços da sessão sobem sem conseguir falar com o compositor.
   sessionWatch = pkgs.writeShellApplication {
     name = "hypr-session-ensure";
-    runtimeInputs = with pkgs; [ systemd coreutils findutils ];
+    runtimeInputs = with pkgs; [
+      systemd
+      coreutils
+      findutils
+    ];
     text = ''
       # Roda a cada 30s → sai CALADO no caso normal, senão são ~2900 linhas/dia no journal.
       # Só fala quando de fato precisou agir, que é o evento que interessa investigar.
@@ -187,7 +208,11 @@ let
   # como serviço systemd --user (não exec-once no Lua → não duplica no reload).
   monitorWatch = pkgs.writeShellApplication {
     name = "hypr-monitor-watch";
-    runtimeInputs = with pkgs; [ hyprland socat coreutils ];
+    runtimeInputs = with pkgs; [
+      hyprland
+      socat
+      coreutils
+    ];
     text = ''
       sock="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
       socat -u "UNIX-CONNECT:$sock" - | while IFS= read -r line; do
@@ -229,11 +254,9 @@ in
   # chamam (minimize-others/brightness-osd/monitor-toggle) vão pro PATH (home.packages
   # acima), então os módulos os invocam por NOME — por isso os .lua podem ser estáticos.
   xdg.configFile."hypr/hyprland.lua".source =
-    config.lib.file.mkOutOfStoreSymlink
-      "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/desktop/hypr/hyprland.lua";
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/desktop/hypr/hyprland.lua";
   xdg.configFile."hypr/lua".source =
-    config.lib.file.mkOutOfStoreSymlink
-      "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/desktop/hypr/lua";
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/desktop/hypr/lua";
 
   # Sessão systemd do usuário. O LightDM lança o Hyprland "cru" (sem integração
   # systemd), então o graphical-session.target — que os serviços --user do desktop

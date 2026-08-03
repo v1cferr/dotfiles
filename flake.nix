@@ -88,7 +88,16 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, disko, sops-nix, ... }@inputs:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      nixpkgs-unstable,
+      home-manager,
+      disko,
+      sops-nix,
+      ...
+    }@inputs:
     let
       system = "x86_64-linux";
 
@@ -105,8 +114,7 @@
       # Pacotes LOCAIS (fora do nixpkgs), empacotados em ./pkgs e expostos como
       # `pkgs.<nome>`. callPackage injeta as deps automaticamente.
       overlayLocalPkgs = final: prev: {
-        claude-code-discord-status =
-          final.callPackage ./pkgs/claude-code-discord-status.nix { };
+        claude-code-discord-status = final.callPackage ./pkgs/claude-code-discord-status.nix { };
         nxbender = final.callPackage ./pkgs/nxbender.nix { }; # cliente FOSS da VPN SonicWall (FAI)
       };
 
@@ -131,35 +139,37 @@
       # uma linha em nixosConfigurations abaixo.
       #   sudo nixos-rebuild switch --flake .#<host>
       # (home-manager entra como módulo → um rebuild aplica sistema + usuário.)
-      mkHost = hostModule: nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = { inherit inputs; };
-        modules = [
-          # `unstable.*` + pacotes locais (./pkgs) + claude-desktop (flake; overlay
-          # em vez de packages.<system> pra buildar contra ESTA base, sem 3º nixpkgs)
-          # (o overlayClaudeKeyring vem DEPOIS do upstream: ele reembrulha o pacote dele)
-          {
-            nixpkgs.overlays = [
-              overlayUnstable
-              overlayLocalPkgs
-              inputs.claude-desktop.overlays.default
-              overlayClaudeKeyring
-            ];
-          }
-          sops-nix.nixosModules.sops
-          disko.nixosModules.disko # inerte em hosts sem disko.devices
-          ./system
-          hostModule
+      mkHost =
+        hostModule:
+        nixpkgs.lib.nixosSystem {
+          inherit system;
+          specialArgs = { inherit inputs; };
+          modules = [
+            # `unstable.*` + pacotes locais (./pkgs) + claude-desktop (flake; overlay
+            # em vez de packages.<system> pra buildar contra ESTA base, sem 3º nixpkgs)
+            # (o overlayClaudeKeyring vem DEPOIS do upstream: ele reembrulha o pacote dele)
+            {
+              nixpkgs.overlays = [
+                overlayUnstable
+                overlayLocalPkgs
+                inputs.claude-desktop.overlays.default
+                overlayClaudeKeyring
+              ];
+            }
+            sops-nix.nixosModules.sops
+            disko.nixosModules.disko # inerte em hosts sem disko.devices
+            ./system
+            hostModule
 
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true; # usa o nixpkgs do sistema (+ overlay)
-            home-manager.useUserPackages = true; # instala no perfil do usuário
-            home-manager.extraSpecialArgs = { inherit inputs; };
-            home-manager.users.v1cferr = import ./home;
-          }
-        ];
-      };
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true; # usa o nixpkgs do sistema (+ overlay)
+              home-manager.useUserPackages = true; # instala no perfil do usuário
+              home-manager.extraSpecialArgs = { inherit inputs; };
+              home-manager.users.v1cferr = import ./home;
+            }
+          ];
+        };
     in
     {
       nixosConfigurations = {
@@ -169,5 +179,23 @@
         #   sudo nixos-rebuild switch --flake .#nixos-kingston
         nixos-kingston = mkHost ./hosts/nixos-kingston;
       };
+
+      # `nix fmt` — formatter do repo. Sem este output, o nixfmt existiria SÓ dentro do
+      # VS Code (via nixd/nix-ide), e "o estilo do repo" dependeria de qual editor a
+      # pessoa abriu. Declarar aqui torna o padrão verificável de fora do editor, que é
+      # o que um CI usaria. nixfmt é o formatter OFICIAL desde a RFC 166 (o mesmo que o
+      # nixpkgs adotou), então isto é alinhar com o upstream, não escolher gosto.
+      #
+      # `nixfmt-tree` e NÃO `nixfmt` cru — os dois motivos vieram de erro real (03/08):
+      #   1. `nix fmt` sem caminho não passa argumento, e o nixfmt cru cai na invocação
+      #      por STDIN (a deprecada) com stdin vazio → "unexpected end of input".
+      #   2. `nix fmt .` faz o nixfmt cru andar a árvore INTEIRA, incluindo o symlink
+      #      ./result de um `nixos-rebuild build`. Ele entrou no /nix/store e morreu com
+      #      "openTempFileWithDefaultPermissions: permission denied (Read-only file
+      #      system)" tentando formatar .nix dentro de node_modules do bitwarden.
+      # O wrapper (treefmt) resolve os dois: funciona sem argumento e respeita o
+      # .gitignore, então nunca sai do que é versionado. O aviso do próprio nixfmt
+      # recomenda exatamente ele.
+      formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt-tree;
     };
 }

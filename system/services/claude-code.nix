@@ -21,7 +21,13 @@ let
   # ferramentas garantidas no PATH. `exec` = o wrapper some, sobra o script real.
   hook = pkgs.writeShellApplication {
     name = "claude-presence-hook";
-    runtimeInputs = with pkgs; [ bash coreutils curl jq nodejs ];
+    runtimeInputs = with pkgs; [
+      bash
+      coreutils
+      curl
+      jq
+      nodejs
+    ];
     text = ''exec ${hookScript} "$@"'';
   };
   cmd = lib.getExe hook;
@@ -30,13 +36,26 @@ let
   # async — não bloqueia o CC — no resto). asyncHook sem matcher omite a chave.
   syncHook = {
     matcher = "";
-    hooks = [ { type = "command"; command = cmd; timeout = 5; } ];
+    hooks = [
+      {
+        type = "command";
+        command = cmd;
+        timeout = 5;
+      }
+    ];
   };
   asyncHook =
     matcher:
     (lib.optionalAttrs (matcher != null) { inherit matcher; })
     // {
-      hooks = [ { type = "command"; command = cmd; timeout = 5; async = true; } ];
+      hooks = [
+        {
+          type = "command";
+          command = cmd;
+          timeout = 5;
+          async = true;
+        }
+      ];
     };
 in
 {

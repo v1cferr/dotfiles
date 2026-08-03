@@ -45,7 +45,14 @@ let
   # log seria lido como culpa da FAI mesmo com a sua rede caída.
   vpnCli = pkgs.writeShellApplication {
     name = "vpn";
-    runtimeInputs = with pkgs; [ systemd libnotify iproute2 gnugrep coreutils bash ];
+    runtimeInputs = with pkgs; [
+      systemd
+      libnotify
+      iproute2
+      gnugrep
+      coreutils
+      bash
+    ];
     text = ''
       note() { notify-send -a VPN "VPN" "$1" 2>/dev/null || true; }
       # "Conectado" = unidade ativa E túnel existindo de fato. Só `is-active` MENTE: com
@@ -297,7 +304,8 @@ in
           | ${pkgs.openconnect}/bin/openconnect --protocol=gp --user=857722 \
               --authgroup=acessoremoto.ufscar.br --passwd-on-stdin acessoremoto-scl.ufscar.br
       '';
-    } // vpnRestart;
+    }
+    // vpnRestart;
     # `vpn disconnect` usa systemctl stop → o systemd NÃO reinicia (stop explícito não conta).
     startLimitIntervalSec = 0; # sem teto: quem segura o ritmo é o backoff acima
   };
@@ -311,7 +319,8 @@ in
     serviceConfig = {
       Type = "simple";
       ExecStart = "${pkgs.nxbender}/bin/nxBender -c ${config.sops.templates."nxbender-fai.conf".path}";
-    } // vpnRestart;
+    }
+    // vpnRestart;
     startLimitIntervalSec = 0;
   };
 

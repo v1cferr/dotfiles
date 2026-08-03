@@ -12,7 +12,13 @@
 # Barato: rsync é incremental (no-op quando nada mudou), então rodar de hora em
 # hora não pesa. Pra outro jogo depois: replicar o par src→dst num novo módulo.
 # ═══════════════════════════════════════════════════════════════════════════
-{ pkgs, config, osConfig, lib, ... }:
+{
+  pkgs,
+  config,
+  osConfig,
+  lib,
+  ...
+}:
 
 let
   home = config.home.homeDirectory;

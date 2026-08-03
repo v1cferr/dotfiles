@@ -23,7 +23,10 @@
   fileSystems."/mnt/seagate-old" = {
     device = "/dev/disk/by-uuid/85788f24-b8a0-4c3e-af4f-8af1f8b52147";
     fsType = "ext4";
-    options = [ "nofail" "x-systemd.device-timeout=5s" ];
+    options = [
+      "nofail"
+      "x-systemd.device-timeout=5s"
+    ];
   };
 
   # O SanDisk NÃO é montado de propósito. Ele virou o Windows 11 (NTFS), e a única
@@ -38,7 +41,14 @@
   # Aqui fica só o LAYOUT, que é do host de verdade (disko.nix).
 
   # Kernel — MESMO hardware do SanDisk (mesma MOBO/CPU); só a raiz virou NVMe.
-  boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
+  boot.initrd.availableKernelModules = [
+    "xhci_pci"
+    "ahci"
+    "nvme"
+    "usbhid"
+    "usb_storage"
+    "sd_mod"
+  ];
   boot.kernelModules = [ "kvm-intel" ];
 
   # Fixado na 1ª instalação — NUNCA mudar depois. Mesmo valor do host antigo porque

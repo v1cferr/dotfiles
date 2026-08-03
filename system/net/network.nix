@@ -35,7 +35,11 @@
   services.fail2ban = {
     enable = true;
     bantime = "1h";
-    ignoreIP = [ "127.0.0.1/8" "::1" "192.168.1.0/24" ];
+    ignoreIP = [
+      "127.0.0.1/8"
+      "::1"
+      "192.168.1.0/24"
+    ];
     jails.sshd.settings = {
       enabled = true;
       port = 2222;
@@ -90,7 +94,10 @@
   # quando a falha for real (token inválido, Cloudflare fora) — 6 tentativas em 5min e
   # ele desiste, deixando o `failed` visível pro timer assumir depois.
   systemd.services.cloudflare-dyndns = {
-    after = [ "network-online.target" "tailscaled.service" ];
+    after = [
+      "network-online.target"
+      "tailscaled.service"
+    ];
     wants = [ "network-online.target" ];
     serviceConfig = {
       Restart = "on-failure";

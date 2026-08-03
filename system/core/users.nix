@@ -19,7 +19,10 @@
     # serviços de usuário (Dropbox, etc.) rodam 24/7 nesta máquina sempre-ligada
     # de acesso remoto, mesmo sem sessão gráfica/SSH aberta.
     linger = true;
-    extraGroups = [ "wheel" "networkmanager" ];
+    extraGroups = [
+      "wheel"
+      "networkmanager"
+    ];
     shell = pkgs.zsh; # shell de login = zsh (config interativa em home/zsh.nix)
     hashedPasswordFile = config.sops.secrets.v1cferr_password_hash.path;
     openssh.authorizedKeys.keys = [

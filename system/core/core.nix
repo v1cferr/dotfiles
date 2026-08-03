@@ -6,7 +6,10 @@
 
 {
   # ── Nix / flakes ─────────────────────────────────────────────────────────
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
   # Dedup por hardlink na /nix/store. AGENDADO (nix.optimise) e não
   # auto-optimise-store: aquele roda o hardlink a CADA build, e em btrfs a churn de
   # metadado é CoW — sai caro numa máquina que rebuilda o dia todo. Aqui o trabalho
@@ -72,6 +75,9 @@
   # lockscreen.nix). Timezone/teclado seguem BR (fuso local + teclado físico ABNT2).
   time.timeZone = "America/Sao_Paulo";
   i18n.defaultLocale = "en_US.UTF-8";
-  i18n.supportedLocales = [ "en_US.UTF-8/UTF-8" "pt_BR.UTF-8/UTF-8" ];
+  i18n.supportedLocales = [
+    "en_US.UTF-8/UTF-8"
+    "pt_BR.UTF-8/UTF-8"
+  ];
   console.keyMap = "br-abnt2"; # teclado no TTY (a GUI é no desktop.nix)
 }

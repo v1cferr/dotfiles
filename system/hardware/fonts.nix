@@ -12,7 +12,12 @@
 # O TAMANHO fica em cada consumidor: 11pt no GTK, 12pt no kitty/rofi, e o lockscreen
 # varia por widget — é contexto, não tema.
 # ═══════════════════════════════════════════════════════════════════════════
-{ pkgs, lib, config, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 
 {
   options.my.fonts.ui = lib.mkOption {
@@ -51,9 +56,21 @@
       # O emoji vai no FIM de cada genérica de propósito: no fim ele nunca ganha de
       # uma fonte de texto, mas é alcançado direto em vez de por sorte na fila.
       defaultFonts = {
-        monospace = [ config.my.fonts.ui "Noto Sans Mono" "Noto Color Emoji" ];
-        sansSerif = [ config.my.fonts.ui "Noto Sans" "Noto Color Emoji" ];
-        serif = [ config.my.fonts.ui "Noto Serif" "Noto Color Emoji" ];
+        monospace = [
+          config.my.fonts.ui
+          "Noto Sans Mono"
+          "Noto Color Emoji"
+        ];
+        sansSerif = [
+          config.my.fonts.ui
+          "Noto Sans"
+          "Noto Color Emoji"
+        ];
+        serif = [
+          config.my.fonts.ui
+          "Noto Serif"
+          "Noto Color Emoji"
+        ];
         emoji = [ "Noto Color Emoji" ]; # explícito: é o default do NixOS, mas não se herda default silencioso
       };
     };

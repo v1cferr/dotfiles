@@ -11,7 +11,13 @@
 # recebe nada disto — em vez de quebrar com uma unit de scrub apontando pra um
 # filesystem que não tem checksum.
 # ═══════════════════════════════════════════════════════════════════════════
-{ config, lib, pkgs, utils, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  utils,
+  ...
+}:
 
 let
   rootIsBtrfs = config.fileSystems ? "/" && config.fileSystems."/".fsType == "btrfs";
@@ -37,7 +43,11 @@ let
   # ele sem entrar no bus certo.
   btrfsAlert = pkgs.writeShellApplication {
     name = "btrfs-alert";
-    runtimeInputs = with pkgs; [ coreutils libnotify util-linux ];
+    runtimeInputs = with pkgs; [
+      coreutils
+      libnotify
+      util-linux
+    ];
     text = ''
       title="$1"
       body="$2"

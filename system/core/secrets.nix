@@ -19,7 +19,12 @@ let
 
   sync-secrets = pkgs.writeShellApplication {
     name = "sync-secrets";
-    runtimeInputs = with pkgs; [ bitwarden-cli jq sops git ];
+    runtimeInputs = with pkgs; [
+      bitwarden-cli
+      jq
+      sops
+      git
+    ];
     text = builtins.readFile ../../scripts/sync-secrets.sh; # bash à parte = shellcheck no build
   };
 in
@@ -36,8 +41,14 @@ in
   sops.secrets = (lib.mapAttrs (_key: _item: { }) bwMap) // {
     v1cferr_password_hash.neededForUsers = true; # hash da senha: precisa cedo (usuário)
     cloudflare_ddns_token = { };
-    jellyfin_api_key = { owner = "v1cferr"; mode = "0400"; }; # legível p/ tooling do usuário em /run/secrets (sem sudo)
-    deepl_api_key = { owner = "v1cferr"; mode = "0400"; }; # tradução das frases do lockscreen (serviço --user lê /run/secrets)
+    jellyfin_api_key = {
+      owner = "v1cferr";
+      mode = "0400";
+    }; # legível p/ tooling do usuário em /run/secrets (sem sudo)
+    deepl_api_key = {
+      owner = "v1cferr";
+      mode = "0400";
+    }; # tradução das frases do lockscreen (serviço --user lê /run/secrets)
     # rclone.conf do Google Drive (token OAuth). FORA do Bitwarden de propósito: é
     # MULTILINHA e o sync-secrets faz `sops set` com JSON de uma linha só — quebraria.
     # E, ao contrário da senha do restic, o token é REGERÁVEL (refaz o OAuth), então

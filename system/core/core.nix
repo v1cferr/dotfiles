@@ -26,6 +26,32 @@
     dates = "weekly";
     options = "--delete-older-than 30d"; # a /nix/store não cresce pra sempre
   };
+
+  # ── nh: a UX do rebuild ────────────────────────────────────────────────────
+  # `nh os switch` no lugar do `nixos-rebuild switch` (ver os aliases em
+  # home/shell/zsh.nix). O que ele acrescenta e o `nixos-rebuild` não dá:
+  #   • ÁRVORE de progresso do build (usa o nix-output-monitor por dentro) em vez do
+  #     paredão de "building '/nix/store/…'" que não diz o que falta;
+  #   • DIFF de pacotes entre a geração atual e a nova — o que subiu de versão, o que
+  #     entrou, o que saiu. É a informação que eu passei o dia inteiro extraindo na mão
+  #     comparando store paths.
+  # `--ask` é OPT-IN (conferido no --help), então isto NÃO fica interativo: continua
+  # seguro por SSH e dentro de script, que importa nesta máquina de acesso remoto.
+  #
+  # ⚠️ `clean` fica DESLIGADO de propósito. O `programs.nh.clean` sobe um timer de
+  # `nh clean all`, e o GC já tem dono logo acima (`nix.gc`, semanal, 30d) + o reativo
+  # por espaço abaixo. Dois coletores no mesmo store é exatamente o "dois donos pro
+  # mesmo artefato" da regra 14: nenhum falha, e a retenção real passa a ser a
+  # interseção das duas políticas — ou seja, você acha que tem 30 dias de rollback e
+  # tem o que o outro deixou. Se algum dia preferir o do nh, DESLIGAR o nix.gc no
+  # mesmo commit.
+  programs.nh = {
+    enable = true;
+    # SSOT do caminho do repo (regra 11): vira NH_FLAKE, e o home/shell/zsh.nix lê isto
+    # via `osConfig` em vez de repetir o caminho em cada alias. Antes o literal
+    # ~/Projects/GitHub/v1cferr/dotfiles aparecia três vezes lá.
+    flake = "/home/v1cferr/Projects/GitHub/v1cferr/dotfiles";
+  };
   # GC reativo por espaço (complementa o timer acima): se durante um build o
   # espaço livre cair abaixo de min-free, coleta lixo até liberar max-free e
   # segue o build. Evita "no space left" no meio de um rebuild grande.

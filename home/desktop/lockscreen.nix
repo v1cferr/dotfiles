@@ -54,6 +54,7 @@ let
   hyprlockBin = "${pkgs.hyprlock}/bin/hyprlock";
   pidof       = "${pkgs.procps}/bin/pidof";
   loginctlBin = "${pkgs.systemd}/bin/loginctl";
+  systemdRun  = "${pkgs.systemd}/bin/systemd-run";
   shuf        = "${pkgs.coreutils}/bin/shuf";
   catBin      = "${pkgs.coreutils}/bin/cat";
 
@@ -261,7 +262,27 @@ in
       general = {
         # `pidof ... ||` evita subir 2 hyprlock: 2 superfícies de session-lock
         # confundem o grab do teclado e o campo de senha para de digitar.
-        lock_cmd = "${pidof} hyprlock || ${hyprlockBin}";
+        #
+        # `systemd-run --user` NÃO é frescura — é o que impede um LOCKOUT REMOTO.
+        # Diagnosticado em 03/08/2026: hyprlock lançado direto aqui nasce FILHO do
+        # hypridle, logo dentro do cgroup do `hypridle.service`. E o guard de idle do
+        # Sunshine (system/services/sunshine.nix, streamBegin) faz
+        # `systemctl --user stop hypridle` pra sessão remota não trancar no meio do
+        # stream — só que `stop` mata o cgroup INTEIRO (KillMode=control-group default),
+        # levando o hyprlock junto.
+        #
+        # O resultado é pior que "destrancou sozinho": o `loginctl lock-session` já
+        # engatou o session-lock do Wayland, então o compositor fica TRANCADO SEM
+        # CLIENTE pra desenhar o campo de senha. Ninguém autentica — nem pelo Moonlight,
+        # nem no teclado físico. Foi exatamente o que aconteceu às 08:33 (hypridle
+        # trancou por idle) + 08:34 (conexão do Moonlight matou o hyprlock): acesso
+        # remoto perdido, e só voltou porque havia SSH pra subir o hyprlock na mão.
+        #
+        # Em unit transiente própria (app.slice/hyprlock.service) ele fica fora do
+        # alcance do `stop hypridle`. `--collect` limpa a unit quando você destranca,
+        # senão o nome fica ocupado e o lock seguinte não sobe. O env (WAYLAND_DISPLAY,
+        # HYPRLAND_INSTANCE_SIGNATURE) vem do systemd --user, que a sessão já importa.
+        lock_cmd = "${pidof} hyprlock || ${systemdRun} --user --unit=hyprlock --collect ${hyprlockBin}";
         # Se um dia suspender (hoje não), tranca antes de dormir.
         before_sleep_cmd = "${loginctlBin} lock-session";
         ignore_dbus_inhibit = true;

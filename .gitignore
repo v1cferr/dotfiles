@@ -7,3 +7,8 @@ result-*
 *.png
 
 *.env
+# gerado pelo git-hooks.nix (devShell instala o hook) — não versionar
+.pre-commit-config.yaml
+
+# cache do direnv/nix-direnv
+.direnv/

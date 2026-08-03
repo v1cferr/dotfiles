@@ -79,6 +79,16 @@
       inputs.nixpkgs.follows = "nixpkgs"; # dedup: só afeta o lock (o overlay usa o pkgs DAQUI)
     };
 
+    # git-hooks.nix — pre-commit gerenciado por Nix. É o que faz o lint pegar ANTES do
+    # commit em vez de depois do push: sem ele, `nix flake check` e o CI só reprovam
+    # quando o erro já está na história. As HOOKS ficam declaradas em checks abaixo, e
+    # o `shellHook` que instala o .git/hooks/pre-commit vem do devShells.
+    # (cachix/git-hooks.nix é o nome atual; o repo antigo pre-commit-hooks.nix redireciona.)
+    git-hooks = {
+      url = "github:cachix/git-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs"; # dedup: statix/deadnix/nixfmt vêm da MESMA base
+    };
+
     # Google Chrome canais DEV/BETA — o nixpkgs só empacota o stable. Este flake
     # mantido (nix-community) traz o google-chrome-dev sempre fresco; "latest" = bump
     # com `nix flake update browser-previews`. Usado em home/packages.nix.
@@ -90,6 +100,7 @@
 
   outputs =
     {
+      self, # usado em devShells (lê o shellHook do checks.pre-commit)
       nixpkgs,
       nixpkgs-unstable,
       home-manager,
@@ -197,41 +208,48 @@
       # recomenda exatamente ele.
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt-tree;
 
-      # GATE de qualidade: `nix flake check` roda, fora do editor, o que o editor roda.
-      # Sem isto o statix/deadnix/nixfmt seriam só binários instalados — e "padrão do
-      # repo" que depende de alguém LEMBRAR de rodar não é padrão, é intenção. Com o
-      # gate, o padrão sobrevive a mim esquecendo, a outra máquina, e a um CI futuro.
+      # GATE de qualidade — UMA definição, DOIS consumidores: o `nix flake check` e o
+      # hook de pre-commit nascem daqui. Antes eram três derivações artesanais que
+      # lintavam exatamente o mesmo que os hooks iriam lintar: duas definições da mesma
+      # regra, que é a receita de drift silencioso da regra 14 (o gate passa, o hook
+      # reprova, e ninguém entende por quê). O git-hooks.nix colapsa as duas.
       #
-      # Fonte = `inputs.self`, que é o que faz isto ser seguro: o flake copia pro store
-      # SÓ o que o git versiona, então o check nunca enxerga ./result nem arquivo solto
-      # — foi exatamente andando por ./result que o nixfmt morreu hoje tentando escrever
-      # no /nix/store read-only.
-      checks.${system} =
+      # A terceira definição que SOBRA de propósito é o CI (.github/workflows/nix.yml),
+      # que roda as ferramentas direto do nixpkgs em vez de avaliar este flake. Não é
+      # descuido: o input privado duo-streak-daemon obrigaria o CI a ter deploy key só
+      # pra rodar linters. Custo aceito e declarado — ao mexer nos hooks abaixo, mexer
+      # no workflow também.
+      checks.${system} = {
+        pre-commit = inputs.git-hooks.lib.${system}.run {
+          src = ./.;
+          hooks = {
+            # nixfmt-rfc-style e NÃO `nixfmt`: neste conjunto de hooks o nome `nixfmt`
+            # ainda aponta pro clássico. Pedir o errado reformataria o repo no estilo
+            # velho — o mesmo cuidado de nome do home/packages.nix.
+            nixfmt-rfc-style.enable = true;
+            # Ambos leem a config do repo (./statix.toml) porque rodam com o cwd na raiz.
+            statix.enable = true;
+            deadnix.enable = true;
+          };
+        };
+      };
+
+      # devShell — existe por um motivo CONCRETO, não por completude: entrar nele é o
+      # que INSTALA o hook em .git/hooks/pre-commit (o `shellHook` do git-hooks faz
+      # isso). Sem ele, "temos pre-commit" seria mentira: o arquivo de hook nunca
+      # apareceria. Com o direnv (home/shell/direnv.nix) o `cd` no repo já entra aqui,
+      # então o hook se instala sozinho em qualquer clone novo.
+      #
+      # `enabledPackages` traz statix/deadnix/nixfmt na versão que os hooks usam — logo,
+      # rodar na mão dentro do shell é idêntico ao que o hook vai rodar.
+      devShells.${system}.default =
         let
           pkgs = nixpkgs.legacyPackages.${system};
-          src = inputs.self;
-          # runCommandLocal: check é barato e não vale distribuir/cachear remoto.
-          check =
-            name: deps: script:
-            pkgs.runCommandLocal "check-${name}" { nativeBuildInputs = deps; } ''
-              ${script}
-              touch $out
-            '';
+          inherit (self.checks.${system}.pre-commit) shellHook enabledPackages;
         in
-        {
-          # `-c` aponta o statix.toml: o default é `.`, que na sandbox NÃO é a fonte.
-          # Sem isso os dois lints desligados lá voltariam a reprovar o check — e o
-          # sintoma seria "o gate falha mas rodar na mão passa", que custa uma tarde.
-          statix = check "statix" [ pkgs.statix ] "statix check -c ${src} ${src}";
-          # `--fail` é obrigatório: sem ele o deadnix só IMPRIME os achados e sai 0, e o
-          # check passaria de olhos abertos por cima de código morto.
-          deadnix = check "deadnix" [ pkgs.deadnix ] "deadnix --fail ${src}";
-          # `-c` (--check) só reprova, não reescreve — o que se quer num gate. Formatar
-          # é trabalho do `nix fmt`.
-          nixfmt = check "nixfmt" [
-            pkgs.nixfmt
-            pkgs.findutils
-          ] "find ${src} -name '*.nix' -print0 | xargs -0 nixfmt -c";
+        pkgs.mkShell {
+          inherit shellHook;
+          buildInputs = enabledPackages ++ [ pkgs.nixd ];
         };
     };
 }

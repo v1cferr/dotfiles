@@ -62,6 +62,17 @@
     # (1.4.0, mesmo derivation que nixfmt-rfc-style); `nixfmt-classic` (0.6.0) é o
     # antigo — pedir o clássico por engano reformataria o repo inteiro no estilo velho.
     nixfmt
+    # LINT, o que o nixd NÃO faz: ele entende a linguagem, não julga o estilo nem acha
+    # código morto. Os dois entram junto porque respondem perguntas diferentes e o gate
+    # do flake (`checks` em flake.nix) roda ambos:
+    #   statix  → anti-padrão idiomático (ex.: `a = x.a;` que devia ser `inherit (x) a;`)
+    #   deadnix → declaração MORTA (arg de lambda, let-binding e pattern não usados)
+    # Aqui é só disponibilidade pra rodar na mão; quem GARANTE é o `nix flake check`.
+    # Config do statix em ./statix.toml — dois lints desligados com justificativa lá,
+    # porque 63 dos 77 achados iniciais eram um único lint que contraria a idioma do
+    # nixpkgs (caminho pontilhado).
+    statix
+    deadnix
 
     # ── Torrent / senhas ──
     qbittorrent # torrent GUI (uso manual) — separado do serviço headless (system/services/qbittorrent.nix)

@@ -90,7 +90,6 @@
 
   outputs =
     {
-      self,
       nixpkgs,
       nixpkgs-unstable,
       home-manager,
@@ -104,7 +103,7 @@
       # Overlay que expõe `pkgs.unstable.<pacote>` = versão do canal unstable,
       # mantendo TODO o resto do sistema na base estável. É isso que dá a
       # escolha por pacote: `pkgs.foo` (estável) vs `pkgs.unstable.foo` (última).
-      overlayUnstable = final: prev: {
+      overlayUnstable = _: _: {
         unstable = import nixpkgs-unstable {
           inherit system;
           config.allowUnfree = true;
@@ -113,7 +112,7 @@
 
       # Pacotes LOCAIS (fora do nixpkgs), empacotados em ./pkgs e expostos como
       # `pkgs.<nome>`. callPackage injeta as deps automaticamente.
-      overlayLocalPkgs = final: prev: {
+      overlayLocalPkgs = final: _: {
         claude-code-discord-status = final.callPackage ./pkgs/claude-code-discord-status.nix { };
         nxbender = final.callPackage ./pkgs/nxbender.nix { }; # cliente FOSS da VPN SonicWall (FAI)
       };
@@ -126,7 +125,7 @@
       # (não é o electron do nixpkgs) — daí o wrapper. Só o `claude-desktop` é
       # embrulhado: o overlay do upstream monta o -fhs sobre `final.claude-desktop`,
       # que é o do FIXPOINT, então a variante FHS herda este wrap sozinha.
-      overlayClaudeKeyring = final: prev: {
+      overlayClaudeKeyring = _: prev: {
         claude-desktop = prev.claude-desktop.overrideAttrs (old: {
           postInstall = (old.postInstall or "") + ''
             wrapProgram $out/bin/claude-desktop --add-flags "--password-store=gnome-libsecret"
@@ -197,5 +196,42 @@
       # .gitignore, então nunca sai do que é versionado. O aviso do próprio nixfmt
       # recomenda exatamente ele.
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt-tree;
+
+      # GATE de qualidade: `nix flake check` roda, fora do editor, o que o editor roda.
+      # Sem isto o statix/deadnix/nixfmt seriam só binários instalados — e "padrão do
+      # repo" que depende de alguém LEMBRAR de rodar não é padrão, é intenção. Com o
+      # gate, o padrão sobrevive a mim esquecendo, a outra máquina, e a um CI futuro.
+      #
+      # Fonte = `inputs.self`, que é o que faz isto ser seguro: o flake copia pro store
+      # SÓ o que o git versiona, então o check nunca enxerga ./result nem arquivo solto
+      # — foi exatamente andando por ./result que o nixfmt morreu hoje tentando escrever
+      # no /nix/store read-only.
+      checks.${system} =
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+          src = inputs.self;
+          # runCommandLocal: check é barato e não vale distribuir/cachear remoto.
+          check =
+            name: deps: script:
+            pkgs.runCommandLocal "check-${name}" { nativeBuildInputs = deps; } ''
+              ${script}
+              touch $out
+            '';
+        in
+        {
+          # `-c` aponta o statix.toml: o default é `.`, que na sandbox NÃO é a fonte.
+          # Sem isso os dois lints desligados lá voltariam a reprovar o check — e o
+          # sintoma seria "o gate falha mas rodar na mão passa", que custa uma tarde.
+          statix = check "statix" [ pkgs.statix ] "statix check -c ${src} ${src}";
+          # `--fail` é obrigatório: sem ele o deadnix só IMPRIME os achados e sai 0, e o
+          # check passaria de olhos abertos por cima de código morto.
+          deadnix = check "deadnix" [ pkgs.deadnix ] "deadnix --fail ${src}";
+          # `-c` (--check) só reprova, não reescreve — o que se quer num gate. Formatar
+          # é trabalho do `nix fmt`.
+          nixfmt = check "nixfmt" [
+            pkgs.nixfmt
+            pkgs.findutils
+          ] "find ${src} -name '*.nix' -print0 | xargs -0 nixfmt -c";
+        };
     };
 }

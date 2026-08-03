@@ -8,7 +8,7 @@
 # `pkgs.unstable.foo` → versão BLEEDING-EDGE (canal unstable). Só o que você
 #                       quiser sempre na última. Overlay definido no flake.nix.
 # ═══════════════════════════════════════════════════════════════════════════
-{ pkgs, inputs, ... }:
+{ pkgs, ... }:
 
 {
   environment.systemPackages = with pkgs; [

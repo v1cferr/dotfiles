@@ -41,8 +41,7 @@ in
 
     # Dados p/ o Quickshell: Theme.qml lê via FileView + JsonAdapter.
     home.file.".config/theme/monitors.json".text = builtins.toJSON {
-      primary = cfg.primary;
-      secondary = cfg.secondary;
+      inherit (cfg) primary secondary;
     };
   };
 }

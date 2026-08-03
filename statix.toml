@@ -1,0 +1,41 @@
+# Config do statix (lint de anti-padrão em Nix). Lido por `statix check` e pelo
+# check do flake (`nix flake check`).
+#
+# MEDIÇÃO que motivou este arquivo (03/08/2026, 79 arquivos): 77 achados, sendo
+#   63x W20 repeated_keys   (82% de tudo)
+#   10x W10 empty_pattern
+#    4x W4  manual_inherit_from
+# Os 4 do W4 foram CORRIGIDOS (viraram `inherit (x) a b;`). Os outros dois estão
+# desligados abaixo — não por serem chatos, mas por estarem ERRADOS pra um repo de
+# módulos NixOS. Lint que a gente ignora na prática é pior que lint desligado: ele
+# treina o olho a passar por cima do output inteiro, inclusive do achado real.
+
+disabled = [
+  # W20 — quer que `services.openssh = {…}` e `services.fail2ban = {…}` virem um
+  # único `services = { openssh = …; fail2ban = …; }`. Recusado por três motivos:
+  #
+  #   1. CAMINHO PONTILHADO É A IDIOMA DO NIXOS. O nixpkgs inteiro e toda a doc
+  #      escrevem `services.foo.enable = true`. Seguir o W20 deixaria este repo
+  #      divergente do ecossistema — o oposto do que "boas práticas" quer dizer.
+  #   2. PIORA O DIFF. Com atributos no topo, adicionar ou remover um serviço é um
+  #      hunk isolado. Aninhado, cada mudança mexe na estrutura em volta e o diff
+  #      cresce sem que nada mais tenha mudado.
+  #   3. PIORA A LEITURA DESTE REPO especificamente: os módulos daqui têm blocos
+  #      grandes de comentário POR CONFIG (regra 2). Aninhar tudo sob uma chave
+  #      empurraria comentário e valor pra 3-4 níveis de indentação e o
+  #      system/net/network.nix viraria um attrset gigante de ~100 linhas.
+  #
+  # É lint de GOSTO com um lado defensável (agrupar o que é do mesmo domínio), mas
+  # o gosto do repo é o do nixpkgs, e ele está declarado aqui em vez de ser
+  # ignorado em silêncio a cada execução.
+  "repeated_keys",
+
+  # W10 — quer `_:` em vez de `{ ... }:` quando o módulo não usa argumento nenhum.
+  # Recusado porque `{ ... }:` é a ASSINATURA DE MÓDULO NixOS: quem abre o arquivo
+  # vê de imediato que aquilo recebe os args de módulo e por acaso não usa nenhum.
+  # `_:` diz só "recebe algo e ignora". E na hora de precisar de `pkgs`, a edição é
+  # `{ ... }:` → `{ pkgs, ... }:`, menor que reconstruir a partir de `_:`.
+  # (Este é o mais fraco dos dois argumentos — se um dia preferir o `_:`, é só tirar
+  # daqui e rodar `statix fix`.)
+  "empty_pattern",
+]

@@ -16,8 +16,8 @@ in
       # rclone.conf gerado pelo módulo; só caminhos/host aqui (nenhum segredo).
       config = {
         type = "sftp";
-        host = ws.host; # workstation (alcançável só via VPN FAI)
-        user = ws.user;
+        # host/user vêm da SSOT do ws (workstation alcançável só via VPN FAI).
+        inherit (ws) host user;
         key_file = "/home/v1cferr/.ssh/id_ed25519"; # chave existente (estado → backup)
         known_hosts_file = "/home/v1cferr/.ssh/known_hosts"; # workstation já confiada
       };

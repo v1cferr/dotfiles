@@ -221,9 +221,17 @@ let
     by_kind = {}
     for d, _, _, kind in short + long:
         by_kind.setdefault(kind, []).append(d)
+    # DOIS motivos diferentes pra tudo sair '?', e confundi-los engana quem lê: "o probe
+    # não está rodando" pede conserto, "as sessões são mais velhas que o probe" só pede
+    # paciência. Distinguir olhando se existe amostra na janela.
     if set(by_kind) <= {"?"}:
-        print("  sem amostra ainda — o sunshine-path-probe começa a gravar no próximo")
-        print("  boot/rebuild; sessões anteriores a ele ficam como '?' pra sempre.")
+        if not samples:
+            print("  o sunshine-path-probe não gravou amostra nenhuma nesta janela —")
+            print("  conferir: systemctl list-timers sunshine-path-probe")
+        else:
+            first = samples[0][0].strftime("%m-%d %H:%M")
+            print(f"  as sessões desta janela são ANTERIORES à 1ª amostra ({first}) e ficam")
+            print("  '?' pra sempre; as próximas já saem atribuídas.")
     for kind in sorted(by_kind):
         ds = sorted(by_kind[kind])
         curtas = sum(1 for x in ds if x < 120)

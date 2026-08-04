@@ -295,6 +295,13 @@ in
       # NÃO forçar capture=kms: o kmsgrab NÃO enumera no driver `xe` (Battlemage) →
       # "Unable to find display" e o serviço nem streama. Deixa auto = `wlr` (funciona
       # DESDE QUE o monitor esteja ligado — ver o guard streamBegin abaixo).
+      # QUAL monitor capturar. Sem isto o wlgrab pega o PRIMEIRO da enumeração, e a TV
+      # enumera antes do LG — então o Moonlight abria no monitor SECUNDÁRIO (medido no
+      # log: "Monitor 0 is HDMI-A-3 / Monitor 1 is DP-2" → "Selected monitor [... LG TV]").
+      # Não é escolha do cliente: o Moonlight recebe o que o host manda. Casa pelo NOME
+      # do conector (o mesmo da lista de monitores do log), não por índice — índice
+      # depende da ordem de enumeração, que é justamente o que deu errado aqui.
+      output_name = config.my.monitors.primary; # SSOT: system/desktop/monitors.nix
       # Acesso vem pela tailnet (IP 100.x, que o Sunshine classifica como WAN) →
       # "wan" p/ não bloquear o web UI. NÃO é exposição real: o firewall só deixa a
       # tailscale0 (trusted) chegar aqui; LAN/internet continuam fechadas.

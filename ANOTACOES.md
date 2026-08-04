@@ -1087,6 +1087,21 @@ quando terminar de consultar; o conteúdo está nos repos acima.
       varre o arquivo e casa o primeiro blob parecido com gzip. Quase virou "o download
       corrompeu". Pra testar CRC de RAR de verdade: `nix shell nixpkgs#unrar -c unrar t`
       (unfree, e o allowUnfree deste repo já é true).
+      VAZÃO MEDIDA (04/08) — o que era lento era o TOR, não o MEGA nem a linha:
+        Hetzner (EUA): 1 stream 17,2 MB/s | 8 streams 42,2 | 16 streams 33,9 (piora)
+        MEGA (gfs206n184): 1 stream 27,7 MB/s | 4 ranges paralelos 53,5 (449 Mbps)
+        Tor (o download real): ~1,5 MB/s
+      NIC é gigabit, então o teto é o plano (~450 Mbps). Os 17,4 GiB que levaram 3h19m
+      pelo Tor sairiam em ~11 min num stream direto, ~5,5 min com 4 ranges.
+      E É AQUI QUE VELOCIDADE E COTA SE OPÕEM: direto é 18× mais rápido e para nos ~5 GB
+      da janela; o Tor é lento e na prática ilimitado (troca de circuito). Não existe
+      "rápido E 17 GB" de graça — quem quer os dois usa conta Pro, e só então os ranges
+      paralelos passam a valer (11 min → 5,5).
+      POR ISSO NÃO CONSTRUÍ CLIENTE PARALELO: o ganho é 2× sobre o megadl sequencial em
+      arquivo que já leva minutos, e custaria a API do MEGA + AES-CTR por chunk + o
+      meta-MAC reimplementado à mão (o megadl já verifica de graça) — dívida nossa a cada
+      mudança de protocolo do MEGA. Se um dia valer, o megabasterd faz multi-slot pronto,
+      mas são 948 MiB de closure (arrasta JRE) medidos no cache.
       TOR SÓ PRA ARQUIVO PEQUENO: medi 709 KiB/s no circuito (3 saltos voluntários), o que
       daria ~7h e 17 GiB de banda DOADA num arquivo só; o projeto Tor desencoraja granel
       (a rede é dimensionada pra latência baixa, não pra vazão) e o MEGA ainda bloqueia

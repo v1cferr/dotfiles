@@ -251,6 +251,28 @@
         nixos-kingston = mkHost ./hosts/nixos-kingston;
       };
 
+      # O que ESTE repo empacota ou reembrulha, exposto peça por peça:
+      #   nix build .#nxbender
+      # Antes só existiam dentro do overlay, o que os tornava inconstruíveis
+      # isoladamente — não dava pra testar um patch sem passar por um rebuild inteiro.
+      #
+      # O `pkgs` vem do PRÓPRIO host e não de um `import nixpkgs` novo, por dois
+      # motivos: é o MESMO objeto que o sistema instala (então o check abaixo não pode
+      # divergir do que a máquina recebe — regra 14), e não acrescenta uma 2ª
+      # instanciação de nixpkgs à avaliação (o mesmo cuidado do pkgsUnstable acima).
+      packages.${system} =
+        let
+          pkgs = self.nixosConfigurations.nixos-kingston.pkgs;
+        in
+        {
+          inherit (pkgs)
+            claude-code-discord-status # ./pkgs — daemon do Rich Presence
+            nxbender # ./pkgs — cliente da VPN SonicWall (3 patches sobre o upstream)
+            claude-desktop # flake de terceiro + o wrapper de keyring daqui
+            ;
+          inherit (pkgs.unstable) vscode; # receita do unstable com o SRC do tarball oficial
+        };
+
       # `nix fmt` — formatter do repo. Sem este output, o nixfmt existiria SÓ dentro do
       # VS Code (via nixd/nix-ide), e "o estilo do repo" dependeria de qual editor a
       # pessoa abriu. Declarar aqui torna o padrão verificável de fora do editor, que é
@@ -275,11 +297,11 @@
       # regra, que é a receita de drift silencioso da regra 14 (o gate passa, o hook
       # reprova, e ninguém entende por quê). O git-hooks.nix colapsa as duas.
       #
-      # A terceira definição que SOBRA de propósito é o CI (.github/workflows/nix.yml),
-      # que roda as ferramentas direto do nixpkgs em vez de avaliar este flake. Não é
-      # descuido: o input privado duo-streak-daemon obrigaria o CI a ter deploy key só
-      # pra rodar linters. Custo aceito e declarado — ao mexer nos hooks abaixo, mexer
-      # no workflow também.
+      # E o CI (.github/workflows/nix.yml) virou o TERCEIRO consumidor da mesma
+      # definição em 04/08/2026: roda `nix flake check` com `--override-input
+      # duo-streak-daemon path:./ci/stub-duo` (o stub dispensa deploy key pro input
+      # privado). Ou seja, mexer nos hooks abaixo muda o CI sozinho — não há mais uma
+      # segunda lista de linters no workflow.
       checks.${system} = {
         pre-commit = inputs.git-hooks.lib.${system}.run {
           src = ./.;
@@ -297,6 +319,29 @@
             deadnix.enable = true;
           };
         };
+
+        # CONSTRÓI o que o repo empacota — a parte que o gate NÃO cobria (04/08/2026).
+        # O `nix flake check` constrói o que está em `checks` («the derivations specified
+        # by the flake's checks output can be built successfully»), mas de
+        # `nixosConfigurations` só exige que o toplevel «must be derivations»: ele
+        # AVALIA o host e para aí. Medido antes desta linha: o check imprimia
+        # "running 1 flake checks…" — a única coisa construída era o pre-commit.
+        #
+        # A diferença importa porque o frágil aqui não é avaliação, é EMPACOTAMENTO: os
+        # 3 patches do nxbender, o `sourceRoot = "source"` do vscode e o wrapProgram
+        # sobre o .deb do claude-desktop são suposições sobre árvore de terceiro. Nenhuma
+        # quebra no eval — quebram no build, DEPOIS do `nix flake update`. E `upgrade` é
+        # `update && nh os switch`, então a quebra caía no meio do switch.
+        #
+        # linkFarm e não symlinkJoin: farm não funde diretórios, então dois pacotes com
+        # o mesmo `bin/` não colidem. O derivado é descartável — o valor é o build.
+        #
+        # DE PROPÓSITO não é o `system.build.toplevel`: construir o sistema inteiro no
+        # runner do GitHub arrastaria o quickshell (Qt/C++). Aqui só entram os pacotes
+        # que o repo controla, que é onde os patches podem apodrecer.
+        pacotes = nixpkgs.legacyPackages.${system}.linkFarm "checks-pacotes-do-repo" (
+          nixpkgs.lib.mapAttrsToList (name: path: { inherit name path; }) self.packages.${system}
+        );
       };
 
       # devShell — existe por um motivo CONCRETO, não por completude: entrar nele é o

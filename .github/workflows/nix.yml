@@ -20,6 +20,11 @@
 # O QUE ISSO COMPROU, e eram dois furos reais:
 #   1. O CI não verificava que `nixosConfigurations.nixos-kingston` AVALIA — erro de
 #      módulo passava verde e só aparecia no `rebuild`. Agora reprova aqui.
+#      ⚠️ AVALIAR NÃO É CONSTRUIR: o `flake check` constrói o que está em `checks` e de
+#      `nixosConfigurations` só exige que o toplevel SEJA uma derivação. Por isso o
+#      `checks.pacotes` (flake.nix) existe — é ele que faz o CI construir de verdade os
+#      pacotes que este repo empacota. O sistema INTEIRO segue fora de propósito:
+#      arrastaria o quickshell (Qt/C++) pro runner.
 #   2. Os três `nix run` eram uma TERCEIRA definição da mesma regra que flake.nix e o
 #      hook de pre-commit já definiam: drift silencioso da regra 14 esperando acontecer
 #      (o gate passa, o hook reprova, ninguém entende por quê). Agora é UMA definição,
@@ -63,10 +68,12 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
 
-      # UM comando = o gate inteiro: os três linters (hooks declarados em flake.nix),
-      # a avaliação do host e os demais outputs do flake. O --override-input é o que
-      # dispensa credencial pro input privado (ver cabeçalho).
-      - name: nix flake check (linters + avaliação do host)
+      # UM comando = o gate inteiro: os três linters (hooks declarados em flake.nix), a
+      # avaliação do host, o BUILD dos pacotes do repo (checks.pacotes) e os demais
+      # outputs. O --override-input é o que dispensa credencial pro input privado (ver
+      # cabeçalho). Localmente são ~30s com a store quente; no runner, frio, o vscode e o
+      # claude-desktop são desempacotamento de blob (sem compilar), não build de fonte.
+      - name: nix flake check (linters + host + build dos pacotes)
         run: nix flake check --override-input duo-streak-daemon path:./ci/stub-duo
 
 # ── PLANO B: deploy key, se o stub vazio algum dia NÃO servir ───────────────────

@@ -51,6 +51,7 @@ home/                    USUÁRIO (home-manager) — dotfiles + apps de usuário
   services/              cs2-saves-backup, claude-discord-rpc (daemon)
 
 pkgs/                    derivations próprias (fora do nixpkgs) — ex.: claude-code-discord-status
+                         expostas em `packages.x86_64-linux` → `nix build .#nxbender`
 hosts/                   específico de cada máquina (hostname, discos, monitores, stateVersion)
   nixos-kingston/        ← ÚNICO host (NVMe KC3000, btrfs + subvolumes)
     default.nix          hostname, kernel, montagens extras, my.monitors, stateVersion

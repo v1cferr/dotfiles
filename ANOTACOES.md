@@ -1027,3 +1027,34 @@ quando terminar de consultar; o conteúdo está nos repos acima.
 
 - [ ] Configurar ambos os perfils do Claude (fai.ufscar.br) e do César (imagino que essa configuração esteja no meu backup da home no Google Drive que configuramos antes)
 - [ ] Continuar configurando o dualboot com Secure Boot
+- [x] Baixar link do MEGA por proxy/Tor (03/08/2026) — `mega-tor <link> [destino]`
+      (home/net/mega.nix) + daemon Tor só-cliente com SOCKS em 127.0.0.1:9050
+      (system/net/tor.nix, toggle `my.services.tor`).
+      FERRAMENTA: megatools (`megadl`), 139 KiB de closure, mantido (1.11.5, jul/2025).
+      É a única mantida que abre LINK PÚBLICO pela CLI **e** tem `--proxy socks5h://`
+      NATIVO — o próprio man usa `socks5h://localhost:9050` (Tor) como exemplo, então
+      não precisa de torsocks/LD_PRELOAD. Descartadas: rclone (o backend `mega` fala com
+      CONTA; link com a chave no fragmento não é caminho de remote — rclone#7088 aberto),
+      MEGAcmd (oficial, closure grande e `proxy` só HTTP(S): SOCKS é o issue #204, aberto
+      desde 2019 — sem SOCKS não há Tor) e megabasterd (GUI Java; o proxy dele é LISTA de
+      proxies pra furar cota, objetivo diferente).
+      TRÊS COISAS DO WIKI DO NIXOS QUE NÃO VALEM AQUI (conferidas no módulo do nixpkgs,
+      não presumidas): (a) `services.tor.enable` sem `client.enable` sobe o daemon SEM
+      porta de saída — fica `active` e nada consegue usar; (b) o `openFirewall = true` do
+      exemplo é de RELAY: o listener é 127.0.0.1, não há o que abrir, e abrir viraria
+      proxy aberto na LAN; (c) a "segunda porta rápida 9063" NÃO EXISTE — o módulo gera
+      UMA SOCKSPort a partir de `client.socksListenAddress`, e 9063 é só o default do
+      wrapper `torsocks-faster` (services.tor.torsocks), que sem uma SOCKSPort declarada
+      à mão aponta pra porta onde ninguém escuta. Por isso o torsocks ficou de fora.
+      `SafeSocks 1`: recusa SOCKS4/SOCKS5-com-IP, ou seja, quem resolve DNS localmente
+      toma ERRO em vez de vazar a consulta — e é por isso que o consumidor usa socks5h.
+      LAÇO DE 10 TENTATIVAS porque circuito Tor cai no meio de download longo e isso é o
+      normal: o resume do megadl é o DEFAULT (`--disable-resume` é que desliga), então
+      tentativa nova retoma o parcial. O wrapper prova o circuito antes (mostra o exit IP
+      via check.torproject.org) pra falhar com a causa certa quando o daemon está fora.
+      LIMITES QUE NÃO SÃO BUG: o MEGA bloqueia parte dos exit nodes (falha imediata em
+      TODAS as tentativas = exit bloqueado, não link ruim; circuito novo = restart do
+      tor); a cota grátis é por IP (~5 GB/24h) e o exit é IP compartilhado, pode chegar
+      já gasto; e Tor é circuito único de 3 saltos voluntários — o próprio projeto
+      desencoraja granel, a rede é dimensionada pra latência baixa, não pra vazão. Pra
+      dezenas de GB o caminho é VPN paga ou `megadl` direto (também está no PATH).

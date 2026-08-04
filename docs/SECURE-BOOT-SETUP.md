@@ -180,6 +180,6 @@ do Kingston.
 0. `sudo sbctl remove-file /boot/EFI/BOOT/BOOTX64.EFI` — aquele arquivo era o
    systemd-boot e foi apagado na limpeza da ESP, mas o hook chegou a assiná-lo antes,
    então ele ficou no banco do sbctl e o `verify` reclama de um arquivo que não existe.
-1. `git rm SECURE-BOOT-SETUP.md` — este arquivo cumpriu o papel.
+1. `git rm docs/SECURE-BOOT-SETUP.md` — este arquivo cumpriu o papel.
 2. Conferir se o Moonlight ainda pareia (o `sunshine_name` mudou de `nixos-sandisk`
    pra `nixos-kingston` — é só nome de exibição, o pareamento é por certificado).

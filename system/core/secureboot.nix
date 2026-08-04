@@ -53,7 +53,7 @@
 # pro backup; este é estado que o backup não cobre). Perder essa pasta = o próximo
 # switch não assina o GRUB = máquina não boota com SB ligado. Recuperação: SB off
 # na BIOS, refazer os passos 1–5. E é o PRIMEIRO item a declarar quando a
-# impermanência entrar (ver ANOTACOES.md), senão o reboot apaga as chaves.
+# impermanência entrar (ver docs/ANOTACOES.md), senão o reboot apaga as chaves.
 # ═══════════════════════════════════════════════════════════════════════════
 { pkgs, ... }:
 

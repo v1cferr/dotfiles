@@ -14,7 +14,7 @@
 #
 # ── POR QUE BTRFS AQUI, se o SanDisk é ext4 ────────────────────────────────
 # Não é pelo btrfs em si: é pelo LAYOUT DE SUBVOLUMES, que é pré-requisito da
-# IMPERMANÊNCIA (ANOTACOES.md, TODO de 30/07 — raiz efêmera + lista explícita do
+# IMPERMANÊNCIA (docs/ANOTACOES.md, TODO de 30/07 — raiz efêmera + lista explícita do
 # que persiste, inspirado no Foundry do Misterio77). Impermanência exige /nix e
 # /persist em volumes separados da raiz DESDE A INSTALAÇÃO; instalar ext4 plano
 # significaria reinstalar de novo pra adotá-la. A feature NÃO está ligada ainda —

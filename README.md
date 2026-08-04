@@ -58,7 +58,13 @@ hosts/                   específico de cada máquina (hostname, discos, monitor
     services.nix         PAINEL: quais serviços opcionais ESTA máquina liga (my.services.*)
 secrets/                 secrets.yaml (sops) + bitwarden-secrets.json
 scripts/                 sync-secrets.sh (Bitwarden → sops) · healthcheck.sh
+docs/                    o que NÃO é declarável (BIOS, runbooks) + o diário do repo
+  ANOTACOES.md           regras, decisões e TODOs — o "por quê" que não cabe em comentário
+  SECURE-BOOT-SETUP.md   TEMPORÁRIO: passos manuais do Secure Boot (apagar quando fechar)
+  bios-ex-b560m-v5.md    estado desejado da BIOS (NVRAM não é declarável pelo NixOS)
 ```
+
+O `README.md` é o único doc da raiz — o resto mora em `docs/`.
 
 ## Onde instalar um pacote?
 

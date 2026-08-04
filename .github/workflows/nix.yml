@@ -1,22 +1,37 @@
 # ═══════════════════════════════════════════════════════════════════════════════
-# CI DE QUALIDADE — roda em cada push o mesmo gate que o `nix flake check` local.
+# CI DE QUALIDADE — roda em cada push EXATAMENTE o gate do `nix flake check` local.
 #
 # POR QUE existe: o gate do flake (checks.x86_64-linux em flake.nix) só roda quando
 # alguém DIGITA `nix flake check`. Padrão que depende de lembrar é intenção, não
 # padrão — e a intenção é a primeira coisa a evaporar num rebuild às pressas em 2027.
 #
-# POR QUE NÃO É `nix flake check`, que seria o óbvio: este flake tem um input PRIVADO
+# POR QUE HOJE É `nix flake check` DE VERDADE (mudou em 04/08/2026): este flake tem um
+# input PRIVADO
 #   duo-streak-daemon = ssh://git@github.com/v1cferr/duo-streak-daemon.git
-# e o Nix 2.34 busca TODOS os inputs travados no lock ao avaliar o flake — não só os
-# que a saída pedida usa. Ou seja, `nix flake check` aqui exigiria uma deploy key nos
-# secrets só pra rodar três linters que nem tocam nesse input. Rodando as ferramentas
-# direto do nixpkgs, o flake LOCAL nunca é avaliado e nenhuma credencial entra na
-# jogada. Os três comandos abaixo foram verificados iguais aos do gate local.
+# e o Nix busca TODOS os inputs travados no lock ao avaliar o flake — não só os que a
+# saída pedida usa. Por isso o CI antes rodava statix/deadnix/nixfmt direto do nixpkgs:
+# assim o flake LOCAL nunca era avaliado e nenhuma credencial entrava na jogada. O preço
+# era duplo e está registrado abaixo. A saída foi `--override-input`, que troca o input
+# ANTES do fetch por um diretório VAZIO versionado em ci/stub-duo — nenhuma deploy key,
+# nenhum segredo no Actions, e o flake avalia inteiro. Verificado em 04/08/2026:
+# "checking NixOS configuration 'nixosConfigurations.nixos-kingston'" + "all checks
+# passed!". Por que vazio basta: ver ci/stub-duo/.gitkeep.
 #
-# ⚠️ O QUE ISTO NÃO COBRE, e é honesto dizer: o CI não verifica que o
-# `nixosConfigurations.nixos-kingston` AVALIA. Um erro de módulo passa por aqui e só
-# aparece no `rebuild`. Pra cobrir, precisaria da deploy key — receita no fim do
-# arquivo. Enquanto não houver, o `rebuild` local é quem pega esse tipo de erro.
+# O QUE ISSO COMPROU, e eram dois furos reais:
+#   1. O CI não verificava que `nixosConfigurations.nixos-kingston` AVALIA — erro de
+#      módulo passava verde e só aparecia no `rebuild`. Agora reprova aqui.
+#   2. Os três `nix run` eram uma TERCEIRA definição da mesma regra que flake.nix e o
+#      hook de pre-commit já definiam: drift silencioso da regra 14 esperando acontecer
+#      (o gate passa, o hook reprova, ninguém entende por quê). Agora é UMA definição,
+#      e mexer nos hooks do flake.nix muda o CI automaticamente — sem editar este
+#      arquivo. Some também o `env NIXPKGS` que existia só pra fixar a versão dos
+#      linters: eles agora vêm do flake.lock, iguais aos de casa por construção.
+#
+# ⚠️ O CUSTO, aceito de propósito: o `flake check` busca TODOS os inputs (~1,43 GiB em
+# 19 inputs) e avalia a config inteira, então o CI passou de segundos para minutos. A
+# troca é tempo de máquina por cobertura e por uma definição só. Se um dia incomodar, o
+# caminho de volta é este arquivo no histórico — não desfazer o ci/stub-duo, que é útil
+# de qualquer forma pra rodar `flake check` em qualquer clone sem a chave privada.
 # ═══════════════════════════════════════════════════════════════════════════════
 name: nix
 
@@ -32,15 +47,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  # nixpkgs FIXADO no MESMO canal do flake (nixos-26.05), e não o `nixpkgs#` pelado.
-  # Com o registry padrão do runner, a versão do statix/nixfmt seria a de qualquer
-  # momento: um release deles reprovaria o CI sem NADA ter mudado neste repo — falha
-  # que parece bug do código e não é. Ao subir a base do flake, subir aqui também.
-  NIXPKGS: github:NixOS/nixpkgs/nixos-26.05
-
 jobs:
-  lint:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -55,28 +63,22 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
 
-      # Anti-padrão idiomático. Sem `-c`, o statix lê o ./statix.toml do cwd, que é a
-      # raiz do checkout — é onde ele está. Os dois lints desligados lá valem aqui.
-      - name: statix (anti-padrão)
-        run: nix run $NIXPKGS#statix -- check
+      # UM comando = o gate inteiro: os três linters (hooks declarados em flake.nix),
+      # a avaliação do host e os demais outputs do flake. O --override-input é o que
+      # dispensa credencial pro input privado (ver cabeçalho).
+      - name: nix flake check (linters + avaliação do host)
+        run: nix flake check --override-input duo-streak-daemon path:./ci/stub-duo
 
-      # `--fail` é o que transforma relatório em gate: sem ele o deadnix imprime os
-      # achados e sai 0, e o CI passaria verde por cima de código morto.
-      - name: deadnix (código morto)
-        run: nix run $NIXPKGS#deadnix -- --fail .
-
-      # `--check` só reprova, não reescreve. `git ls-files` em vez de `find`: pega
-      # exatamente o que é versionado, sem risco de andar por result/ ou .direnv/.
-      - name: nixfmt (formatação RFC 166)
-        run: nix run $NIXPKGS#nixfmt -- --check $(git ls-files '*.nix')
-
-# ── RECEITA pro dia em que quiser cobrir a avaliação do flake ───────────────────
+# ── PLANO B: deploy key, se o stub vazio algum dia NÃO servir ───────────────────
+# Só é necessário se um módulo passar a LER conteúdo do repo privado em tempo de
+# avaliação (hoje `system/services/duo.nix` só usa o input como contexto de build do
+# Docker). Nesse dia o stub precisaria do arquivo lido — se isso ficar impraticável:
 # 1. Gerar um par de chaves só pra isso:  ssh-keygen -t ed25519 -f ci_key -N ""
 # 2. Pública  → repo duo-streak-daemon → Settings → Deploy keys (só leitura).
 # 3. Privada  → repo dotfiles → Settings → Secrets → Actions → SSH_PRIVATE_KEY.
-# 4. Job novo, depois do install-nix-action:
+# 4. Antes do check:
 #      - uses: webfactory/ssh-agent@v0.9.0
 #        with: { ssh-private-key: "${{ secrets.SSH_PRIVATE_KEY }}" }
-#      - run: nix flake check
+#    e tirar o --override-input do comando acima.
 # Chave DEDICADA, nunca a sua pessoal: deploy key some do repo com um clique, chave
 # pessoal comprometida é o teu GitHub inteiro.

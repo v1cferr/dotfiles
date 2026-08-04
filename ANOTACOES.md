@@ -1048,13 +1048,28 @@ quando terminar de consultar; o conteúdo está nos repos acima.
       à mão aponta pra porta onde ninguém escuta. Por isso o torsocks ficou de fora.
       `SafeSocks 1`: recusa SOCKS4/SOCKS5-com-IP, ou seja, quem resolve DNS localmente
       toma ERRO em vez de vazar a consulta — e é por isso que o consumidor usa socks5h.
-      LAÇO DE 10 TENTATIVAS porque circuito Tor cai no meio de download longo e isso é o
-      normal: o resume do megadl é o DEFAULT (`--disable-resume` é que desliga), então
-      tentativa nova retoma o parcial. O wrapper prova o circuito antes (mostra o exit IP
-      via check.torproject.org) pra falhar com a causa certa quando o daemon está fora.
-      LIMITES QUE NÃO SÃO BUG: o MEGA bloqueia parte dos exit nodes (falha imediata em
-      TODAS as tentativas = exit bloqueado, não link ruim; circuito novo = restart do
-      tor); a cota grátis é por IP (~5 GB/24h) e o exit é IP compartilhado, pode chegar
-      já gasto; e Tor é circuito único de 3 saltos voluntários — o próprio projeto
-      desencoraja granel, a rede é dimensionada pra latência baixa, não pra vazão. Pra
-      dezenas de GB o caminho é VPN paga ou `megadl` direto (também está no PATH).
+      LAÇO PACIENTE (o wrapper é um só, `mega-dl`, com transporte por flag — o `mega-tor`
+      da 1ª versão virou `--tor`): tenta, e em falha RETOMA até o arquivo fechar ou até o
+      teto de 48h. Retomada é o que faz isso valer: o parcial mora em `.megatmp.<id>` no
+      destino, o resume é o DEFAULT (`--disable-resume` é que desliga) e é keyed pelo ID
+      DO ARQUIVO, não pelo transporte — MEDIDO: comecei por Tor e continuei direto do
+      mesmo parcial. O `--tor` prova o circuito antes (exit IP via check.torproject.org)
+      pra falhar com a causa certa quando o daemon está fora.
+      A COTA É O LIMITE DE VERDADE, e nenhum transporte muda: download anônimo tem ~5 GB
+      por IP em janela DESLIZANTE de ~6 h, contada por IP e não por conta (logout não
+      zera). O teste real foi um arquivo de 17,4 GiB = ~4 janelas. Por isso o laço
+      distingue "over quota" (string do megatools) e ESPERA 30 min em vez de trocar de IP:
+      janela deslizante libera aos poucos, então bater de 30 em 30 min rende mais que
+      esperar 6h paradas — e fatiar o arquivo entre IPs diferentes é exatamente o que a
+      cota existe pra impedir (é o que o megabasterd faz com lista de proxies). Pressa se
+      resolve com conta Pro (`megadl -u/-p`, senha via sops), não com rotação.
+      DETECÇÃO da cota por `case` em variável e NUNCA `| grep -q`: com o pipefail do
+      writeShellApplication o grep sai no 1º match, o tail morre de SIGPIPE e o pipeline
+      retorna erro APESAR do match (mesma pegadinha do healthcheck do Sunshine).
+      E `du -shc` de glob que não casa nada JÁ imprime "0 total" **e** sai com erro — o
+      `|| echo 0` do fallback saía somado ao dele, imprimindo "0" duas vezes na linha.
+      TOR SÓ PRA ARQUIVO PEQUENO: medi 709 KiB/s no circuito (3 saltos voluntários), o que
+      daria ~7h e 17 GiB de banda DOADA num arquivo só; o projeto Tor desencoraja granel
+      (a rede é dimensionada pra latência baixa, não pra vazão) e o MEGA ainda bloqueia
+      parte dos exit nodes (falha imediata e repetida = exit bloqueado, não link ruim;
+      circuito novo = `systemctl restart tor`).

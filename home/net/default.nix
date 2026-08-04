@@ -4,6 +4,6 @@
 {
   imports = [
     ./fai-workstation.nix # SSOT do host da workstation FAI + `wake-workstation` (WoL)
-    ./mega.nix # megatools + `mega-tor` (download de link do MEGA pelo SOCKS do Tor)
+    ./mega.nix # megatools + `mega-dl` (link do MEGA com retomada paciente; --tor/--proxy)
   ];
 }

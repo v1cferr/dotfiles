@@ -131,15 +131,22 @@
     let
       system = "x86_64-linux";
 
+      # UMA instância do canal unstable, criada FORA do overlay de propósito. Dentro
+      # dele, o `import` corre por instância de `pkgs` — e overlay vale também pros
+      # SPLICES (`pkgsi686Linux`, que o Steam instancia por causa do 32-bit): no dia
+      # que alguém tocar `pkgs.pkgsi686Linux.unstable`, a árvore unstable seria
+      # importada OUTRA vez. Hoje é lazy e não custa nada; içar o import é o que
+      # garante que continue assim. É também a forma que a comunidade associa a OOM
+      # em avaliação (discourse 1517) — o custo aparece quando as instâncias somam.
+      pkgsUnstable = import nixpkgs-unstable {
+        inherit system;
+        config.allowUnfree = true;
+      };
+
       # Overlay que expõe `pkgs.unstable.<pacote>` = versão do canal unstable,
       # mantendo TODO o resto do sistema na base estável. É isso que dá a
       # escolha por pacote: `pkgs.foo` (estável) vs `pkgs.unstable.foo` (última).
-      overlayUnstable = _: _: {
-        unstable = import nixpkgs-unstable {
-          inherit system;
-          config.allowUnfree = true;
-        };
-      };
+      overlayUnstable = _: _: { unstable = pkgsUnstable; };
 
       # Troca só o SRC do vscode pelo tarball do input vscode-latest, mantendo a RECEITA do
       # unstable — o generic.nix do nixpkgs tem lógica versionada (`versionAtLeast

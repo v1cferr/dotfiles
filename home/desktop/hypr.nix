@@ -16,6 +16,7 @@
 {
   pkgs,
   config,
+  osConfig,
   inputs,
   ...
 }:
@@ -140,7 +141,7 @@ let
       coreutils
     ];
     text = ''
-      name="${config.my.monitors.secondary}" # SSOT: home/desktop/monitors.nix
+      name="${osConfig.my.monitors.secondary}" # SSOT: system/desktop/monitors.nix
 
       # No parser Lua (0.55) o `hyprctl keyword` é bloqueado ("Use eval"), então a
       # config de monitor em runtime vai por `hyprctl eval` chamando o MESMO hl.monitor

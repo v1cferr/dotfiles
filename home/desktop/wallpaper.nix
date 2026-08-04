@@ -15,7 +15,7 @@
 # escrita AQUI (xdg.configFile) e o módulo entra só com `enable` → ele fornece o serviço
 # systemd --user e o pacote; o conteúdo é nosso. Se um dia o módulo aprender o formato novo,
 # isto volta p/ `settings` e o arquivo encurta.
-{ pkgs, config, ... }:
+{ pkgs, osConfig, ... }:
 
 let
   art = pkgs.nixos-artwork.wallpapers;
@@ -49,7 +49,7 @@ in
 
   xdg.configFile."hypr/hyprpaper.conf".text = ''
     splash = false
-    ${wallpaperFor config.my.monitors.primary (pathOf main)}
-    ${wallpaperFor config.my.monitors.secondary (pathOf tv)}
+    ${wallpaperFor osConfig.my.monitors.primary (pathOf main)}
+    ${wallpaperFor osConfig.my.monitors.secondary (pathOf tv)}
   '';
 }

@@ -1068,6 +1068,25 @@ quando terminar de consultar; o conteúdo está nos repos acima.
       retorna erro APESAR do match (mesma pegadinha do healthcheck do Sunshine).
       E `du -shc` de glob que não casa nada JÁ imprime "0 total" **e** sai com erro — o
       `|| echo 0` do fallback saía somado ao dele, imprimindo "0" duas vezes na linha.
+      RESULTADO MEDIDO (04/08, o arquivo de teste de 17,4 GiB): fechou PELO TOR em 3h19m,
+      ~1,5 MB/s de média — bem acima do 709 KiB/s do instante inicial. E a cota NUNCA
+      bateu, ao contrário do que eu previ: o Tor troca de circuito ao longo de horas
+      (MaxCircuitDirtiness = 10 min pra stream nova) e o megadl abre conexão por chunk,
+      então a saída passou por vários exit IPs sem ninguém pedir. Efeito colateral do
+      desenho do Tor, não configuração daqui — e é por isso que a previsão "17 GB anônimo
+      não sai" estava errada NESTE caminho; num IP fixo (direto/VPN única) ela vale.
+      CONFERIR O ARQUIVO, e a ordem importa: (1) o megadl já verifica o MAC do MEGA e
+      aborta com "MAC mismatch" — terminar sem erro é prova CRIPTOGRÁFICA de que os bytes
+      são os do servidor, então isso vale mais que qualquer teste de arquivo depois;
+      (2) `file` + assinatura em offset 0; (3) os 8 bytes finais, que num RAR5 completo
+      terminam em `03 05 04 00` (header HEAD_ENDARC, tipo 5 = fim de arquivo) — é o que
+      separa "download truncado" de "arquivo inteiro".
+      ⚠️ PEGADINHA DO p7zip: `7z l` disse `Type = gzip` e "There are data after the end of
+      archive" num RAR v5 PERFEITO. O p7zip do nixpkgs vem com `enableUnfree ? false` e o
+      postFetch ARRANCA o código do unRAR — sem o codec ele não reconhece a assinatura,
+      varre o arquivo e casa o primeiro blob parecido com gzip. Quase virou "o download
+      corrompeu". Pra testar CRC de RAR de verdade: `nix shell nixpkgs#unrar -c unrar t`
+      (unfree, e o allowUnfree deste repo já é true).
       TOR SÓ PRA ARQUIVO PEQUENO: medi 709 KiB/s no circuito (3 saltos voluntários), o que
       daria ~7h e 17 GiB de banda DOADA num arquivo só; o projeto Tor desencoraja granel
       (a rede é dimensionada pra latência baixa, não pra vazão) e o MEGA ainda bloqueia

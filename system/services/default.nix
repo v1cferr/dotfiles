@@ -3,7 +3,7 @@
 
 {
   imports = [
-    ./toggles.nix # PAINEL central: my.services.* liga/desliga os serviços opcionais
+    ./toggles.nix # INTERFACE: declara as chaves my.services.* (os VALORES são do host)
     ./restic.nix # backup cifrado do estado do usuário (repo no HDD por ora)
     ./btrbk.nix # snapshots btrfs horários do @home (desfazer local; NÃO é backup)
     ./restic-arch-kingston.nix # TEMPORÁRIO: arquiva o Arch antigo no Google Drive antes de formatar

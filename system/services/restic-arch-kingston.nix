@@ -50,7 +50,8 @@
 # herda o mesmo PATH, então o mkAfter conserta os dois de uma vez.
 #
 # CICLO DE VIDA: isto é temporário. Depois do check --read-data passar e o Kingston
-# estar formatado, desligue em toggles.nix e apague este arquivo. O repo no Drive
+# estar formatado, desligue no painel do host (hosts/nixos-kingston/services.nix),
+# tire a chave de system/services/toggles.nix e apague este arquivo. O repo no Drive
 # sobrevive sozinho — só a senha (Bitwarden) é necessária pra restaurar.
 # ═══════════════════════════════════════════════════════════════════════════
 {

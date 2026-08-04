@@ -8,10 +8,19 @@
 {
   imports = [
     ./disko.nix # disko gera os fileSystems do Kingston (btrfs + subvolumes)
+    ./services.nix # PAINEL: quais serviços opcionais esta máquina liga (my.services.*)
     (modulesPath + "/installer/scan/not-detected.nix")
   ];
 
   networking.hostName = "nixos-kingston";
+
+  # ═══ MONITORES — conectores DESTA placa/GPU ═══════════════════════════════
+  # SSOT dos nomes; a opção é declarada em system/desktop/monitors.nix (sem default,
+  # de propósito) e lida por Nix, Lua e QML. Trocar de cabo/monitor = trocar AQUI.
+  my.monitors = {
+    primary = "DP-2"; # LG ULTRAGEAR (DisplayPort)
+    secondary = "HDMI-A-3"; # TV LG (HDMI)
+  };
 
   # ═══ MAPA DE DISCOS (MOBO EX-B560M-V5) — montagens extras ════════════════════
   # A raiz e o /boot vêm do disko. Aqui fica o ACESSO aos outros discos.

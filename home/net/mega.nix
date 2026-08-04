@@ -93,7 +93,7 @@ let
         if ! probe=$(curl -sS --max-time 60 --socks5-hostname 127.0.0.1:9050 \
                        https://check.torproject.org/api/ip); then
           echo "o SOCKS 127.0.0.1:9050 não respondeu — o tor está no ar?" >&2
-          echo "  systemctl status tor  (e my.services.tor em system/services/toggles.nix)" >&2
+          echo "  systemctl status tor  (e my.services.tor no painel do host, hosts/<host>/services.nix)" >&2
           exit 1
         fi
         case "$probe" in

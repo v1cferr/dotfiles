@@ -51,8 +51,11 @@ home/                    USUÁRIO (home-manager) — dotfiles + apps de usuário
   services/              cs2-saves-backup, claude-discord-rpc (daemon)
 
 pkgs/                    derivations próprias (fora do nixpkgs) — ex.: claude-code-discord-status
-hosts/                   específico de cada máquina (hostname, discos, swap, stateVersion)
-  nixos-kingston/        ← ÚNICO host (NVMe KC3000, btrfs + subvolumes): default.nix + disko.nix
+hosts/                   específico de cada máquina (hostname, discos, monitores, stateVersion)
+  nixos-kingston/        ← ÚNICO host (NVMe KC3000, btrfs + subvolumes)
+    default.nix          hostname, kernel, montagens extras, my.monitors, stateVersion
+    disko.nix            layout de disco declarativo (btrfs + subvolumes)
+    services.nix         PAINEL: quais serviços opcionais ESTA máquina liga (my.services.*)
 secrets/                 secrets.yaml (sops) + bitwarden-secrets.json
 scripts/                 sync-secrets.sh (Bitwarden → sops) · healthcheck.sh
 ```
@@ -84,6 +87,10 @@ Regra de ouro: *na dúvida, `home/`; só sobe pro `system/` se root ou um servi�
 4. **Uma linha de comentário-resumo por config** em `.nix`/`.lua`/`.conf` — sem poluir.
 5. **Validar antes de aplicar** — `nixos-rebuild build` / `nix eval` OK e commits
    atômicos por feature antes do switch.
+6. **Opção se DECLARA no `system/`, se DEFINE no `hosts/`** — o `my.*` é a interface
+   do repo (`system/services/toggles.nix`, `system/desktop/monitors.nix`); o valor é
+   resposta de máquina e mora em `hosts/<host>/`. Opção de hardware sem `default` de
+   propósito: host novo que esquecer falha no eval em vez de herdar mentira.
 
 ## Segredos (sops-nix)
 

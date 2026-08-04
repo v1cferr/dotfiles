@@ -6,7 +6,8 @@
 # ÍNDICE — o que sobe no boot mora em TRÊS lugares, por motivos diferentes:
 #   1. AQUI (my.autostart)      → apps de GUI sem módulo próprio: Discord, Spotify.
 #   2. my.services.<n>          → serviços de verdade, com módulo/daemon próprio
-#      (system/services/toggles.nix)  (dropbox, jellyfin, ollama, sunshine, restic…).
+#      (dropbox, jellyfin, ollama, sunshine, restic…). As chaves são declaradas em
+#      system/services/toggles.nix; o true/false é do host (hosts/<host>/services.nix).
 #   3. hypr/lua/autostart.lua   → infra da sessão que PRECISA do exec-once do
 #      compositor: hyprlock (a máquina sobe travada), quickshell (barra) e
 #      wl-clip-persist. Não migrei p/ systemd porque o hyprlock no boot é

@@ -19,6 +19,12 @@
 # Os de HOT-RELOAD (Hyprland/Quickshell) leem os arquivos de dados gerados em
 # home/desktop/monitors.nix, porque o Nix não escreve dentro das árvores
 # symlinkadas (mesma mecânica da paleta em palette.nix).
+#
+# SEM `default` de propósito (04/08/2026): DP-2/HDMI-A-3 são conectores DESTA placa,
+# e isto aqui é a árvore machine-agnostic. Default de hardware no system/ é a mentira
+# que só aparece no host nº 2 (o laptop herdaria conectores que ele não tem, e ninguém
+# veria o erro). Sem default, o módulo exige que o HOST declare — o valor mora em
+# hosts/<host>/default.nix, e host novo que esquecer QUEBRA no eval, alto e cedo.
 # ═══════════════════════════════════════════════════════════════════════════
 { lib, ... }:
 
@@ -26,13 +32,11 @@
   options.my.monitors = {
     primary = lib.mkOption {
       type = lib.types.str;
-      default = "DP-2";
-      description = "Conector do monitor PRINCIPAL (LG ULTRAGEAR) — origem 0x0, workspaces 1–4.";
+      description = "Conector do monitor PRINCIPAL — origem 0x0, workspaces 1–4. Definido pelo host.";
     };
     secondary = lib.mkOption {
       type = lib.types.str;
-      default = "HDMI-A-3";
-      description = "Conector do monitor SECUNDÁRIO (TV LG) — à esquerda, workspaces 5–8.";
+      description = "Conector do monitor SECUNDÁRIO — à esquerda, workspaces 5–8. Definido pelo host.";
     };
   };
 }

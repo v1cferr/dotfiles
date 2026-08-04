@@ -15,6 +15,7 @@
     "duo"
     "sunshine"
     "qbittorrent"
+    "tor"
     "restic"
     "btrbk"
     "arch-kingston-archive"
@@ -31,6 +32,7 @@
     duo = true; # duo-streak-daemon (ofensiva automática do Duolingo)
     sunshine = true; # streaming de tela p/ Moonlight
     qbittorrent = true; # cliente torrent
+    tor = true; # SOCKS5 local 127.0.0.1:9050 (só cliente; consumidor = `mega-tor`)
     restic = true; # backup automático (off-disk, diário)
     btrbk = true; # snapshots locais do @home (horário) — complementa o restic
     arch-kingston-archive = true; # TEMPORÁRIO: arquiva o Arch antigo no Drive (desligar após o check)

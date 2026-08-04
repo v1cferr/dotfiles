@@ -276,6 +276,7 @@
         "nixpkgs-unstable": "nixpkgs-unstable",
         "quickshell": "quickshell",
         "sops-nix": "sops-nix",
+        "vscode-latest": "vscode-latest",
         "zen-browser": "zen-browser"
       }
     },
@@ -312,6 +313,19 @@
         "owner": "nix-systems",
         "repo": "x86_64-linux",
         "type": "github"
+      }
+    },
+    "vscode-latest": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1785237709,
+        "narHash": "sha256-2FzfySScIT4z2+QJA092m6R/ZJKi9lWeVCUB6Lc2yTw=",
+        "type": "tarball",
+        "url": "https://update.code.visualstudio.com/latest/linux-x64/stable"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://update.code.visualstudio.com/latest/linux-x64/stable"
       }
     },
     "zen-browser": {

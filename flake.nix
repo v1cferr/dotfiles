@@ -96,6 +96,19 @@
       url = "github:nix-community/browser-previews";
       inputs.nixpkgs.follows = "nixpkgs"; # dedup (derivation própria, sem dep do unstable)
     };
+
+    # VS Code na ÚLTIMA versão DE VERDADE. Nem o unstable entrega isso: o bump é humano/bot
+    # e fica 3-14 dias atrás, às vezes PULANDO release (1.125→1.127, 1.127→1.129.1 em jul/26).
+    # A causa é estrutural — o auto-updater do VS Code não roda com a store read-only, então a
+    # versão é literalmente o que está no lock. Aqui o lock passa a ser o TARBALL OFICIAL do
+    # canal stable: a URL `/latest/` não muda, mas o conteúdo sim, e o `nix flake update`
+    # re-resolve e grava o narHash novo → `upgrade` já traz a versão do dia, sem hash na mão.
+    # NÃO é o Insiders (build de teste diária): é o mesmo stable que a Microsoft serve, só sem
+    # esperar o nixpkgs. `flake = false` porque é um tarball, não um flake.
+    vscode-latest = {
+      url = "tarball+https://update.code.visualstudio.com/latest/linux-x64/stable";
+      flake = false;
+    };
   };
 
   outputs =
@@ -118,6 +131,28 @@
         unstable = import nixpkgs-unstable {
           inherit system;
           config.allowUnfree = true;
+        };
+      };
+
+      # Troca só o SRC do vscode pelo tarball do input vscode-latest, mantendo a RECEITA do
+      # unstable — o generic.nix do nixpkgs tem lógica versionada (`versionAtLeast
+      # vscodeVersion "1.129.0"`), então patchar receita fresca é o delta mínimo; sobre a
+      # receita da 26.05 (era 1.119) o salto de 12 versões passaria por ramos que não existem.
+      # Patcha DENTRO de `unstable` (por isso vem depois do overlayUnstable) porque `unstable`
+      # é outro import de nixpkgs, que os overlays daqui não alcançam.
+      #   version: lido do package.json do próprio tarball. O input já é store path em eval,
+      #            então é readFile puro — sem IFD, sem hash duplicado pra manter.
+      #   sourceRoot: o fetcher de tarball do flake REMOVE o dir de topo (VSCode-linux-x64),
+      #               diferente do fetchurl do nixpkgs (que usa sourceRoot = "").
+      overlayVscodeLatest = _: prev: {
+        unstable = prev.unstable // {
+          vscode = prev.unstable.vscode.overrideAttrs (_: {
+            inherit (builtins.fromJSON (builtins.readFile "${inputs.vscode-latest}/resources/app/package.json"))
+              version
+              ;
+            src = inputs.vscode-latest;
+            sourceRoot = "source";
+          });
         };
       };
 
@@ -161,6 +196,7 @@
             {
               nixpkgs.overlays = [
                 overlayUnstable
+                overlayVscodeLatest # DEPOIS do overlayUnstable: patcha o `unstable.vscode` dele
                 overlayLocalPkgs
                 inputs.claude-desktop.overlays.default
                 overlayClaudeKeyring

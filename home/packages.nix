@@ -40,10 +40,12 @@
     spotify # música (unfree)
 
     # ── Editor / dev ──
-    # VS Code: override --password-store=gnome-libsecret — no Hyprland o Electron não
-    # autodetecta o backend de secret e mostra "couldn't identify OS keyring"; a flag
-    # força o gnome-keyring. Extensões/settings = Settings Sync (conta), NÃO nix.
-    (vscode.override { commandLineArgs = "--password-store=gnome-libsecret"; })
+    # VS Code: receita do unstable com o SRC trocado pelo tarball oficial mais recente
+    # (input vscode-latest + overlayVscodeLatest no flake.nix) — `upgrade` traz a versão
+    # do dia, não a que o nixpkgs bumpou. Override --password-store=gnome-libsecret: no
+    # Hyprland o Electron não autodetecta o backend de secret e mostra "couldn't
+    # identify OS keyring". Extensões/settings = Settings Sync (conta), NÃO nix.
+    (unstable.vscode.override { commandLineArgs = "--password-store=gnome-libsecret"; })
     # Toolchain Nix que a extensão nix-ide DIRIGE — o pacote é declarativo aqui, a
     # config da extensão não (Settings Sync + .vscode/settings.json do repo; ver a
     # linha do vscode acima). Os dois são resolvidos por NOME no $PATH: caminho do

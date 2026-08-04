@@ -53,6 +53,66 @@ quando terminar de consultar; o conteúdo está nos repos acima.
 
 ## TODO
 
+- [x] Segundo destinatário age no cofre sops (04/08/2026) — o `.sops.yaml` tinha UMA chave, e
+      sops não tem recuperação: perder aquela chave = perder TODO segredo do repo, para sempre.
+      O único backup dela era o Bitwarden, então o desenho tinha um ponto de falha capaz de
+      dano permanente (os outros riscos do repo custam tempo, não dados). Agora são dois
+      destinatários: `host_nixos_kingston` (a de sempre, em /var/lib/sops-nix/key.txt) e
+      `backup_offline`.
+      • `creation_rules` só vale pra arquivo NOVO — adicionar a chave no `.sops.yaml` NÃO
+        re-encripta o que já existe. Quem faz isso é `sops updatekeys -y secrets/secrets.yaml`,
+        rodando como root (a chave atual é dele) e com `chown v1cferr:users` + `chmod 644`
+        depois, senão o arquivo do repo fica do root.
+      • VERIFICADO decriptando o cofre com a chave de backup ISOLADA (`SOPS_AGE_KEY_FILE`
+        apontando só pra ela). Sem esse teste o backup seria imaginário — e o `updatekeys`
+        imprime "already up to date" mesmo quando faz o serviço, então a mensagem dele não
+        serve de prova. A prova é decriptar, ou os dois `recipient:` dentro do secrets.yaml.
+      • Efeito colateral bom: `restic_password` mora DENTRO do cofre, então recuperar o cofre
+        recupera a senha do restic — perder o Bitwarden não faz mais os repos virarem tijolo.
+      • Anchor renomeado `nixos_seagate` → `host_nixos_kingston`: a chave nasceu naquele host e
+        foi carregada no cutover (01/08) — mesma chave, host novo, nome velho confundia.
+      FALTA a cópia OFFLINE (USB/papel em outro lugar físico): as duas cópias da privada hoje
+      estão na mesma máquina e na mesma conta de nuvem (~/ e ~/Dropbox, texto claro, escolha
+      consciente). Enquanto for assim, o segundo destinatário protege contra perder a chave do
+      host, não contra perder a conta/máquina.
+- [x] CI passou a rodar `nix flake check` DE VERDADE (04/08/2026) — o workflow rodava
+      statix/deadnix/nixfmt direto do nixpkgs porque o input privado `duo-streak-daemon` faria
+      o `flake check` exigir deploy key (o Nix busca TODOS os inputs do lock ao avaliar, não só
+      os que a saída usa). Isso deixava dois furos: o CI não verificava que o
+      `nixosConfigurations` AVALIA (erro de módulo passava verde até o rebuild), e os três `nix
+      run` eram uma TERCEIRA definição da mesma regra que o flake.nix e o pre-commit já
+      definiam — drift da regra 14 esperando acontecer.
+      • A saída foi `--override-input duo-streak-daemon path:./ci/stub-duo`: troca o input
+        ANTES do fetch, então nenhuma credencial entra no CI. Diretório VAZIO basta porque o
+        único consumidor (`system/services/duo.nix`) usa o input só como contexto de build do
+        Docker — interpolação de path, sem `readFile` em avaliação. Se algum dia um módulo LER
+        arquivo do repo privado, o stub precisa daquele arquivo (ou volta o plano B da deploy
+        key, que ficou registrado no fim do workflow).
+      • Sumiu o `env NIXPKGS` que existia só pra fixar a versão dos linters: eles agora vêm do
+        flake.lock, iguais aos de casa por construção. Mexer nos hooks do flake.nix muda o CI
+        sozinho, sem editar o workflow.
+      • CUSTO aceito: o check busca os ~1,43 GiB de inputs e avalia a config inteira, então o
+        CI foi de segundos pra minutos. Tempo de máquina por cobertura e por uma definição só.
+- [x] Arquivo off-line dos inputs do flake (04/08/2026) — `nix flake archive --to
+      file:///home/v1cferr/flake-archive`, que entra no restic do home (o `restic.nix` cobre
+      /home/v1cferr e não exclui esse caminho) → fica versionado e verificado pela máquina que
+      já existe, em vez de uma cópia crua. Medido: 18 inputs, 1,43 GiB na store → **319 MiB**
+      no archive (o cache `file://` comprime com xz, e é por isso que demora alguns minutos).
+      • VERIFICADO de verdade, não por "os arquivos estão lá": cada input foi CONSULTADO de
+        volta com `nix path-info --store file:///home/v1cferr/flake-archive <path>`, 0 faltando.
+      • PEGADINHA na hora de verificar: o `--dry-run` lista também o path do flake RAIZ, que
+        com a árvore SUJA muda a cada edição — ele aparece como "faltando" no archive sem que
+        nada esteja errado. O archive é dos INPUTS; o repo em si tem o git como backup.
+      • POR QUE: o `flake.lock` fixa IDENTIDADE, não DISPONIBILIDADE, e flakes não têm mirror
+        (não existe `?mirrors=` como no fetchurl). Metade dos inputs é de mantenedor único ou
+        self-hosted — `quickshell` só existe em git.outfoxxed.me. Se aquele servidor sair do
+        ar, o input é inbuscável e o rev travado não ajuda em nada.
+      • O que isso NÃO compra: rebuild offline completo. As fontes de cada pacote do nixpkgs
+        continuam vindo do cache/upstream. Pra bootar sem construir nada, o que se arquiva é o
+        closure do sistema (`nix copy` do system.build.toplevel) — dezenas de GB, outra decisão.
+      PENDENTE virar declarativo (regra 3): hoje é comando na mão e envelhece no próximo `nix
+      flake update`. Dono natural = timer systemd re-arquivando, e o restic deduplica, então
+      re-arquivar só adiciona os inputs que mudaram.
 - [x] BTRFS bem configurado (02/08/2026) — auditado o FS depois do cutover. O que existia
       (noatime, space_cache=v2, subvolumes, scrub mensal) estava certo; o que faltava virou
       system/hardware/btrfs.nix (POLÍTICA, machine-agnostic atrás de "a raiz é btrfs?") +

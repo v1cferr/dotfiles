@@ -1107,3 +1107,34 @@ quando terminar de consultar; o conteúdo está nos repos acima.
       (a rede é dimensionada pra latência baixa, não pra vazão) e o MEGA ainda bloqueia
       parte dos exit nodes (falha imediata e repetida = exit bloqueado, não link ruim;
       circuito novo = `systemctl restart tor`).
+- [ ] Salto de release 26.05 → 27.05 (~mai/2027) — NÃO é reinstalação: são DUAS STRINGS no
+      flake.nix, `nixpkgs.url` (nixos-27.05) e `home-manager.url` (release-27.05), que mudam
+      JUNTAS (o branch de release do HM casa com a base, senão dá mismatch de opções). Os
+      outros ~9 inputs têm `inputs.nixpkgs.follows = "nixpkgs"` e vêm de graça — o dedup que
+      já existe por causa do tamanho do lock é o que torna o salto trivial: 1 input muda, 9
+      seguem. Sem ele, cada flake arrastaria seu próprio nixpkgs 26.05 e eu ficaria com duas
+      bases coexistindo depois do salto.
+      O `upgrade` NUNCA faz esse salto, e isso é feature: `nix flake update` só anda DENTRO do
+      branch pinado, e no `nixos-26.05` entram só BACKPORTS — cherry-pick de CVE/bugfix que um
+      mantenedor marca com a label `backport release-26.05`. Versão nova de pacote NÃO entra,
+      exceto navegador e kernel (upstream só dá suporte de segurança à versão nova, então
+      backportar patch de Firefox seria reescrever o Firefox). E `nixos-26.05` (canal) ≠
+      `release-26.05` (branch): o canal é ponteiro que só avança depois do Hydra buildar e a
+      suíte de testes passar — mesmo gating do nixos-unstable.
+      ⚠️ O `stateVersion` NÃO MUDA — nem no salto, nem nunca. Fica "26.05" pra sempre em
+      hosts/nixos-kingston/default.nix e home/default.nix. O nome engana: não é "a versão do
+      meu sistema", é "a versão do NixOS com a qual o meu ESTADO EM DISCO é compatível". 54
+      módulos do nixpkgs leem esse valor, e o caso canônico é o postgresql.nix, que escolhe o
+      MAJOR do Postgres por ele (`versionAtLeast stateVersion "26.11"` → postgresql_18;
+      "25.11" → postgresql_17 …). Bumpar faz o módulo apontar pra um major que NÃO LÊ o
+      datadir existente: o
+      serviço não sobe, e se algo reinicializar o cluster o banco foi. Rollback de geração não
+      salva — volta o SISTEMA, não o /var/lib já mexido (mesma classe do dano do cutover, quando
+      copiar /var/lib quebrou Docker/Postgres/Sunshine em silêncio). Por isso ele existe no
+      config mesmo sendo imutável: é CERTIDÃO DE NASCIMENTO do estado, não botão — os módulos
+      precisam saber quando o estado nasceu justamente porque não sabem migrá-lo sozinhos. Só
+      muda se as release notes mandarem, e junto da migração manual (pg_upgrade e afins).
+      Usar `nixos-rebuild boot` e NÃO `switch`: aplica no próximo boot e a geração 26.05 fica no
+      minegrub como saída de emergência. E esperar ~2-4 semanas depois do release (o branch
+      estabiliza conforme os backports chegam); o custo de esperar aqui é baixo, porque o que eu
+      quero fresco já vem por `unstable.*` e pelos inputs upstream diretos.

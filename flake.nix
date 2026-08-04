@@ -187,10 +187,14 @@
       };
 
       # Um host = módulos COMUNS (overlay, sops, disko, ./system, home-manager) +
-      # o arquivo específico do host. Novo host? Cria hosts/<host>.nix e adiciona
-      # uma linha em nixosConfigurations abaixo.
+      # a PASTA específica do host. Novo host? Cria hosts/<host>/ (default.nix +
+      # disko.nix + services.nix) e adiciona uma linha em nixosConfigurations abaixo.
       #   sudo nixos-rebuild switch --flake .#<host>
       # (home-manager entra como módulo → um rebuild aplica sistema + usuário.)
+      #
+      # O que é do HOST e não do ./system: hostname, discos, kernel, monitores,
+      # stateVersion e o painel my.services. O system/ declara as opções; o host
+      # responde (ver convenção 6 do README).
       mkHost =
         hostModule:
         nixpkgs.lib.nixosSystem {

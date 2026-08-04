@@ -205,9 +205,16 @@
       mkHost =
         hostModule:
         nixpkgs.lib.nixosSystem {
-          inherit system;
           specialArgs = { inherit inputs; };
           modules = [
+            # `hostPlatform` no lugar do argumento `system` do nixosSystem: o próprio
+            # nixpkgs chama aquele de saída "legacy" e o zera no wrapper do flake —
+            # «Allow system to be set modularly in nixpkgs.system. We set it to null,
+            # to remove the "legacy" entrypoint's non-hermetic default.» (nixpkgs/flake.nix).
+            # O default dele é `builtins.currentSystem`, que é IMPURO; declarar como opção
+            # de módulo é a forma hermética, e um host cross-compilado só sobrescreve aqui.
+            { nixpkgs.hostPlatform = system; }
+
             # `unstable.*` + pacotes locais (./pkgs) + claude-desktop (flake; overlay
             # em vez de packages.<system> pra buildar contra ESTA base, sem 3º nixpkgs)
             # (o overlayClaudeKeyring vem DEPOIS do upstream: ele reembrulha o pacote dele)

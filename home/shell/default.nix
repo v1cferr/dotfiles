@@ -9,5 +9,6 @@
     ./kitty.nix # ~/.config/kitty/kitty.conf (terminal default do Hyprland)
     ./git.nix # programs.git → ~/.gitconfig
     ./ssh.nix # ~/.ssh/config → hosts da FAI (workstation/fai-vm) via a VPN
+    ./fastfetch.nix # ~/.config/fastfetch/config.jsonc (resumo do sistema)
   ];
 }

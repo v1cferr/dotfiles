@@ -105,6 +105,13 @@
     # re-resolve e grava o narHash novo → `upgrade` já traz a versão do dia, sem hash na mão.
     # NÃO é o Insiders (build de teste diária): é o mesmo stable que a Microsoft serve, só sem
     # esperar o nixpkgs. `flake = false` porque é um tarball, não um flake.
+    #
+    # ⚠️ CUSTO, o outro lado do "sempre a última" (medido em 04/08/2026): tarball não tem rev, então o lock guarda
+    # SÓ o narHash — e a URL `/latest/` é alvo MÓVEL. No dia em que a Microsoft rotacionar o conteúdo, ninguém no
+    # mundo serve mais aquele hash, e COMMIT ANTIGO deste repo deixa de ser construível. É o único input que fura
+    # a "cápsula do tempo" da regra 13 — trade-off aceito de propósito, mas o preço é este. Se um dia precisar de
+    # um ponto reproduzível de verdade, trocar `/latest/` por `/<versão>/` (a API de update serve URL versionada)
+    # devolve hash estável.
     vscode-latest = {
       url = "tarball+https://update.code.visualstudio.com/latest/linux-x64/stable";
       flake = false;
@@ -262,6 +269,10 @@
             # nixfmt-rfc-style e NÃO `nixfmt`: neste conjunto de hooks o nome `nixfmt`
             # ainda aponta pro clássico. Pedir o errado reformataria o repo no estilo
             # velho — o mesmo cuidado de nome do home/packages.nix.
+            # (04/08/2026: o `nix flake check` já AVISA "nixfmt-rfc-style is now the same
+            # as pkgs.nixfmt which should be used instead" — a distinção acima está
+            # expirando no nixpkgs. Quando o hook set do git-hooks.nix acompanhar, o nome
+            # certo volta a ser `nixfmt`; até lá, trocar reformataria no estilo velho.)
             nixfmt-rfc-style.enable = true;
             # Ambos leem a config do repo (./statix.toml) porque rodam com o cwd na raiz.
             statix.enable = true;

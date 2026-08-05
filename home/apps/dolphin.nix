@@ -46,7 +46,7 @@ let
     }
     {
       title = "Drive";
-      path = config.my.drive.local; # SSOT: home/services/drive-sync.nix (regra 11)
+      path = config.my.drive.local; # SSOT: home/services/drive-mount.nix (regra 11)
       icon = "folder-gdrive";
     }
   ];

@@ -21,7 +21,7 @@
     btrbk = true; # snapshots locais do @home (horário) — complementa o restic
     cloudflare-ddns = true; # DNS dinâmico (mantém o SSH externo)
     dropbox = true; # sync do ~/Dropbox
-    drive-sync = true; # ~/Drive ⇄ Google Drive (bisync); precisa do --resync manual 1x
+    drive-mount = true; # ~/Drive = raiz do Drive montada (rclone mount), aparece no Dolphin
     discord-rpc = true; # Rich Presence do Claude Code no Discord
     cs2-backup = true; # backup dos saves do CS2
   };

@@ -25,21 +25,45 @@
 { pkgs, lib, ... }:
 
 let
-  # Bloco XBEL do bookmark "FAI Workstation" (a pasta do rclone SFTP, ~/FAI-workstation).
-  faiPlace = pkgs.writeText "fai-place.xbel" ''
-    <bookmark href="file:///home/v1cferr/FAI-workstation">
-     <title>FAI Workstation</title>
-     <info>
-      <metadata owner="http://freedesktop.org">
-       <bookmark:icon name="folder-remote"/>
-      </metadata>
-      <metadata owner="http://www.kde.org">
-       <ID>1784500000/0</ID>
-       <isSystemItem>false</isSystemItem>
-      </metadata>
-     </info>
-    </bookmark>
-  '';
+  # LUGARES FIXOS no painel Places do Dolphin. Adicionar um = 1 linha nesta lista.
+  # Os nomes de ícone foram conferidos no breeze-icons 6.26.0 (places/22): nome que não
+  # existe não quebra nada, só cai num ícone genérico de pasta. Há `folder-gdrive` lá
+  # pra quando a pasta sincronizada do Drive existir.
+  places = [
+    {
+      title = "FAI Workstation";
+      path = "/home/v1cferr/FAI-workstation"; # rclone SFTP; sobe com a VPN da FAI
+      icon = "folder-remote";
+    }
+    {
+      title = "Obsidian";
+      path = "/home/v1cferr/Dropbox/Obsidian"; # cofre de notas (sincronizado pelo Dropbox)
+      icon = "folder-notes";
+    }
+  ];
+
+  # Um arquivo XBEL por lugar. O `<ID>` do KDE tem que ser ÚNICO por bookmark — vem do
+  # índice, pra não haver colisão nem número mágico repetido na mão.
+  placeFiles = lib.imap0 (
+    i: p:
+    p
+    // {
+      file = pkgs.writeText "dolphin-place-${toString i}.xbel" ''
+        <bookmark href="file://${p.path}">
+         <title>${p.title}</title>
+         <info>
+          <metadata owner="http://freedesktop.org">
+           <bookmark:icon name="${p.icon}"/>
+          </metadata>
+          <metadata owner="http://www.kde.org">
+           <ID>1784500000/${toString i}</ID>
+           <isSystemItem>false</isSystemItem>
+          </metadata>
+         </info>
+        </bookmark>
+      '';
+    }
+  ) places;
 in
 {
   # Dolphin (KDE) + extras que ligam recursos: kio-extras = SFTP/SMB/MTP (celular
@@ -68,19 +92,26 @@ in
     fi
   '';
 
-  # Bookmark "FAI Workstation" no painel Places (declarativo, idempotente). MESMO motivo
-  # do details-view: o Dolphin reescreve o user-places.xbel em runtime (monta disco/adiciona
-  # lugar) → symlink imutável brigaria + travaria os teus lugares. Então insere o bookmark
-  # SÓ se ainda não estiver lá, deixando o resto mutável. Reproduzível em qualquer máquina
+  # Bookmarks no painel Places (declarativo, idempotente). MESMO motivo do details-view:
+  # o Dolphin reescreve o user-places.xbel em runtime (monta disco/adiciona lugar) →
+  # symlink imutável brigaria + travaria os teus lugares. Então insere cada bookmark SÓ
+  # se ainda não estiver lá, deixando o resto mutável. Reproduzível em qualquer máquina
   # (não hardcoda as entradas de disco, que são específicas do hardware).
-  home.activation.faiWorkstationPlace = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  #
+  # O teste é POR LUGAR e casa pelo CAMINHO, não pela lista inteira: com um guard só, um
+  # lugar novo nunca entraria (o arquivo já teria o antigo) ou os antigos duplicariam.
+  # Sem `exit` aqui de propósito — a activation do home-manager é um script único, e um
+  # `exit` abortaria tudo o que vem depois.
+  home.activation.dolphinPlaces = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     xbel="$HOME/.local/share/user-places.xbel"
-    if [ -f "$xbel" ] && ! grep -q FAI-workstation "$xbel"; then
-      tmp="$(mktemp)"
-      grep -v '</xbel>' "$xbel" > "$tmp"
-      cat ${faiPlace} >> "$tmp"
-      printf '</xbel>\n' >> "$tmp"
-      run mv "$tmp" "$xbel"
-    fi
+    ${lib.concatMapStrings (p: ''
+      if [ -f "$xbel" ] && ! grep -qF '${p.path}' "$xbel"; then
+        tmp="$(mktemp)"
+        grep -v '</xbel>' "$xbel" > "$tmp"
+        cat ${p.file} >> "$tmp"
+        printf '</xbel>\n' >> "$tmp"
+        run mv "$tmp" "$xbel"
+      fi
+    '') placeFiles}
   '';
 }

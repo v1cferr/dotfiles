@@ -31,7 +31,7 @@
     uv # gerenciador Python rápido (venv/deps/pythons); os pythons dele rodam via nix-ld
     unzip # descompacta .zip (utilitário base)
     # RESGATE (critério 3 do README): o módulo services.restic gera só wrappers POR REPO
-    # (`restic-home`), então repo sem serviço — como o arquivo do Arch — ficava
+    # (`restic-home-gdrive`), então repo sem serviço — como o arquivo do Arch — ficava
     # inalcançável sem `nix shell`. Backup que exige ginástica pra ler é meio backup.
     restic # cliente do restic p/ inspecionar/restaurar QUALQUER repo (ver docs/ANOTACOES.md)
 

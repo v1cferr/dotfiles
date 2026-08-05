@@ -117,7 +117,8 @@ do repositório restic.
 ## Backup e acesso remoto
 
 - **restic** ([`system/services/restic.nix`](system/services/restic.nix)) — backup
-  cifrado do `~` (Zen, `.claude`, VSCode, documentos) no HDD Seagate off-disk.
+  cifrado do `~` (Zen, `.claude`, VSCode, documentos) no **Google Drive**, offsite.
+  Ver o conteúdo: `sudo restic-home-gdrive mount /mnt/backup` (pasta por snapshot).
 - **SSH** na porta `2222` (root off, `fail2ban` ligado) + **Cloudflare DDNS** mantendo
   `ssh.v1cferr.dev` no IP público atual — acesso de qualquer lugar, sem VPN.
 

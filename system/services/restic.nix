@@ -1,27 +1,33 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# BACKUP DECLARATIVO (restic) — estado do usuário → repositório CIFRADO.
+# BACKUP DECLARATIVO (restic) — estado do usuário → Google Drive, CIFRADO.
 #
-# restic cifra tudo em repouso e guarda com checksum (o `restic check` verifica
-# integridade — o mesmo padrão que se quer pra armazenamento "duvidoso").
+# restic cifra em repouso, deduplica e versiona. O `check` verifica integridade.
 #
 # PAR COM O btrbk (btrbk.nix): o snapshot local horário cobre "sobrescrevi agora há
-# pouco"; ESTE cobre "o disco morreu". Snapshot no mesmo disco não é backup.
+# pouco"; ESTE cobre "o disco morreu / a casa pegou fogo". Snapshot no mesmo disco
+# não é backup, e sync não é backup — apagar propaga. Só o restic é backup (regra 6).
 #
-# A senha do repo é SEGREDO (sops: restic_password) — a MESMA nos dois destinos, de
-# propósito: repos intercambiáveis na restauração.
+# A senha é SEGREDO (sops: restic_password). Sem ela o repo é lixo cifrado.
 #
-# ── TRANSIÇÃO EM CURSO (05/08/2026): Seagate → Google Drive ─────────────────
-# DESTINO: ficar só com o Drive. O motivo não é espaço (Drive tem 4,95 TiB livres de
-# 5 TiB) — é que a única cópia do home vivo estava num Momentus 7200.4 de ~2009, com
-# 840 mil load cycles (40% além do spec) e 348 erros de CRC, DENTRO da máquina. Uma
-# cópia offsite ganha nos modos de falha que de fato acontecem: disco morre, roubo,
-# incêndio. Perde em velocidade de restauração e passa a depender da conta Google.
+# ── POR QUE SÓ O DRIVE (05/08/2026) ─────────────────────────────────────────
+# O destino era o HDD Seagate (/mnt/seagate-old/restic) e saiu daqui. Não foi por
+# espaço: era a ÚNICA cópia do home vivo, num Momentus 7200.4 de ~2009 com 840 mil
+# load cycles (40% além do spec) e 348 erros de CRC, DENTRO da mesma máquina — some
+# junto com ela num roubo ou incêndio. Uma cópia offsite ganha nos modos de falha que
+# de fato acontecem. Preço aceito: restauração passa pela rede e depende da conta
+# Google. Medido no 1º snapshot: 40,6 GiB lidos → 23,6 GiB no fio, 15 min.
 #
-# OS DOIS RODAM enquanto a transição não fecha — e essa ordem NÃO é negociável:
-#   1. `home-gdrive` faz o primeiro backup completo (demora: é upload de ~dezenas de GB);
-#   2. `sudo restic-home-gdrive check --read-data` passa;
-#   3. SÓ ENTÃO apagar o alvo `home` daqui e o repo do Seagate.
-# Destruir a cópia velha antes da nova estar VERIFICADA é como se perde backup.
+# O REPO ANTIGO DO SEAGATE NÃO FOI APAGADO — está congelado em
+# /mnt/seagate-old/restic como rede de segurança até o `check --read-data` do Drive
+# passar. Sem o alvo aqui o wrapper `restic-home` deixa de existir; para ler o repo
+# congelado é o restic direto:
+#   sudo restic -r /mnt/seagate-old/restic --password-file /run/secrets/restic_password snapshots
+#
+# ── VER O QUE ESTÁ DENTRO DO BACKUP ─────────────────────────────────────────
+# O repo é blob cifrado — rclone NÃO decifra, quem decifra é o restic. Para navegar
+# como pasta (um diretório por snapshot, read-only):
+#   sudo restic-home-gdrive mount /mnt/backup     # Ctrl+C desmonta
+# O wrapper que o módulo gera já leva RCLONE_CONFIG, a senha e o rclone no PATH.
 # ═══════════════════════════════════════════════════════════════════════════
 {
   config,
@@ -30,12 +36,24 @@
   ...
 }:
 
-let
-  # SSOT dos dois destinos (regra 11): fonte, exclusões e retenção não podem existir
-  # duplicadas — duas listas divergem em silêncio e aí os repos param de ser
-  # intercambiáveis, que é justamente a propriedade que os torna redundância.
-  comum = {
+lib.mkIf config.my.services.restic {
+  # PEGADINHA que já custou o serviço do arquivo do Arch inteiro: o módulo do nixpkgs
+  # põe SÓ o ssh no PATH (`path = [ config.programs.ssh.package ]`), e o backend
+  # `rclone:` do restic EXECUTA o binário rclone. Sem este mkAfter, morre na largada
+  # com "rclone: executable file not found in $PATH".
+  systemd.services.restic-backups-home-gdrive.path = lib.mkAfter [ pkgs.rclone ];
+
+  services.restic.backups.home-gdrive = {
+    # `rclone:<remote>:<caminho>` — o restic sobe um `rclone rcd` e fala HTTP com ele.
+    # O caminho nomeia a MÁQUINA (placa EX-B560M-V5) pra conviver com outros backups lá.
+    repository = "rclone:gdrive:BACKUPS_EX-B560M-V5/HOME";
+
     passwordFile = config.sops.secrets.restic_password.path;
+
+    # rclone.conf com o token OAuth = SEGREDO (regra 12). NUNCA a opção `rcloneConfig`
+    # (attrset): ela vaza o token pro /nix/store, que é world-readable.
+    rcloneConfigFile = config.sops.secrets.rclone_gdrive_conf.path;
+
     initialize = true; # cria o repo no 1º backup
 
     paths = [ "/home/v1cferr" ];
@@ -43,6 +61,18 @@ let
     # exclui o regenerável (cache/build/lixo). O `storage` do Zen (dados de site)
     # NÃO é cache → fica; só o cache2 (http cache do Firefox/Zen) sai.
     exclude = [
+      # MOUNT DE OUTRA MÁQUINA — não é "regenerável", é ALHEIO. Sem esta linha o backup
+      # FALHAVA de forma INTERMITENTE (05/08/2026): `error: lstat
+      # /home/v1cferr/FAI-workstation: permission denied` → restic sai 3, e como o
+      # `backup` é o 1º de três ExecStart, o `unlock` e o `forget --prune` NÃO rodavam —
+      # a retenção silenciosamente não se aplicava. A causa é de permissão, não de
+      # config: o mount é FUSE do USUÁRIO (rclone SFTP, home/services/fai-workstation-mount.nix)
+      # e o backup roda como ROOT, que não entra em FUSE alheio. Intermitente porque só
+      # existe quando a VPN da FAI está de pé — o run das 06:44 passou, o das 14:55 não.
+      # `--one-file-system` não salva: ele impede DESCER no mount, mas o restic ainda
+      # dá lstat no ponto de montagem. Backup de máquina remota nunca deveria entrar aqui.
+      "/home/v1cferr/FAI-workstation"
+
       "/home/v1cferr/.cache"
       "/home/v1cferr/.local/share/Trash"
       # ── Volumosos e RE-OBTENÍVEIS (não faz sentido cifrar/guardar) ──
@@ -65,83 +95,41 @@ let
       "**/startupCache"
     ];
 
-    # retenção: poda automática após cada backup
-    pruneOpts = [
-      "--keep-daily 7"
-      "--keep-weekly 4"
-      "--keep-monthly 6"
-    ];
-  };
-in
-lib.mkIf config.my.services.restic {
-  # ── DESTINO ANTIGO: HDD Seagate (sai quando o Drive estiver verificado) ─────
-  # SEGURANÇA: o backup só roda com o HDD montado. Sem isto, se o disco não montasse,
-  # o restic gravaria em /mnt/seagate-old na RAIZ do NVMe — backup no lugar errado +
-  # enchendo o disco que a gente quer aliviar. RequiresMountsFor barra isso.
-  systemd.services.restic-backups-home.unitConfig.RequiresMountsFor = "/mnt/seagate-old";
-
-  services.restic.backups.home = comum // {
-    repository = "/mnt/seagate-old/restic";
-
-    timerConfig = {
-      OnCalendar = "daily";
-      Persistent = true; # roda no boot se perdeu o horário
-      RandomizedDelaySec = "15min";
-    };
-
-    # integridade: relê 10% dos dados a cada run. Barato em disco LOCAL; é justamente
-    # o que NÃO se faz no destino remoto (ver lá embaixo).
-    checkOpts = [ "--read-data-subset=10%" ];
-  };
-
-  # ── DESTINO NOVO: Google Drive, OFFSITE ────────────────────────────────────
-  # PEGADINHA que já custou o serviço do arquivo do Arch: o módulo do nixpkgs põe SÓ o
-  # ssh no PATH (`path = [ config.programs.ssh.package ]`), e o backend `rclone:` do
-  # restic EXECUTA o binário rclone. Sem este mkAfter, morre na largada com
-  # "rclone: executable file not found in $PATH".
-  systemd.services.restic-backups-home-gdrive.path = lib.mkAfter [ pkgs.rclone ];
-
-  services.restic.backups.home-gdrive = comum // {
-    # `rclone:<remote>:<caminho>` — o restic sobe um `rclone rcd` e fala HTTP com ele.
-    # O caminho nomeia a MÁQUINA (placa EX-B560M-V5) pra conviver com outros backups lá.
-    repository = "rclone:gdrive:BACKUPS_EX-B560M-V5/HOME";
-
-    # rclone.conf com o token OAuth = SEGREDO (regra 12). NUNCA a opção `rcloneConfig`
-    # (attrset): ela vaza o token pro /nix/store, que é world-readable.
-    rcloneConfigFile = config.sops.secrets.rclone_gdrive_conf.path;
-
-    # Uma hora DEPOIS do destino local: os dois leem os mesmos 2,9 M de arquivos, e
-    # rodar junto brigaria por I/O no mesmo home sem ganho nenhum.
     timerConfig = {
       OnCalendar = "03:00";
-      Persistent = true;
+      Persistent = true; # roda no boot se perdeu o horário
       RandomizedDelaySec = "30min";
     };
 
     extraBackupArgs = [
       # A opção que decide a VIABILIDADE (não é otimização): no Drive o custo é por
-      # CHAMADA de API, não por byte. São 2,9 MILHÕES de arquivos aqui — em objetos de
-      # 128 MiB (o máximo do restic) isso vira alguns milhares de objetos. Medido no
-      # arquivo do Arch: 44,6 GiB viraram 189 packs.
+      # CHAMADA de API, não por byte, e são 255 MIL arquivos aqui. Em objetos de 128 MiB
+      # (o máximo do restic) isso vira alguns milhares de objetos.
       "--pack-size=128"
       "--one-file-system" # não atravessa pra outro FS se aparecer mount aninhado
       "--exclude-caches" # pula diretório com CACHEDIR.TAG (padrão freedesktop)
     ];
 
-    # Progresso 1x/min no journal. No default (1 fps) o upload longo viraria milhares
-    # de linhas.
+    # Progresso 1x/min no journal. No default (1 fps) um upload de 15 min viraria
+    # milhares de linhas.
     progressFps = 0.0167;
 
-    # `--read-data-subset` fica FORA de propósito: relê = BAIXA. 10% por dia de um repo
-    # de dezenas de GB seria vários GB de download diário, todo dia, pra sempre. Aqui o
-    # check é só de ESTRUTURA (índices/árvores), que é metadado e sai barato; a leitura
-    # integral dos dados é MANUAL e deliberada:
+    # retenção: poda automática após cada backup
+    pruneOpts = [
+      "--keep-daily 7"
+      "--keep-weekly 4"
+      "--keep-monthly 6"
+      # Poda em repo remoto REEMPACOTA: baixa packs parcialmente usados e sobe de volta.
+      # Sem teto, um prune ruim viraria horas de tráfego. O que não couber hoje é podado
+      # na próxima execução.
+      "--max-repack-size=2G"
+    ];
+
+    # `--read-data-subset` fica FORA de propósito: reler = BAIXAR. 10% por dia de um
+    # repo de ~24 GiB seria ~2,4 GiB de download TODO DIA, pra sempre. Aqui o check é só
+    # de ESTRUTURA (índices e árvores), que é metadado e sai barato. A leitura integral
+    # dos dados é MANUAL e deliberada:
     #   sudo restic-home-gdrive check --read-data
     checkOpts = [ ];
-
-    # Poda em repo remoto REEMPACOTA: baixa packs parcialmente usados e sobe de volta.
-    # Sem limite, um prune ruim viraria horas de tráfego. O teto por execução mantém o
-    # custo previsível — o que não couber hoje é podado na próxima.
-    pruneOpts = comum.pruneOpts ++ [ "--max-repack-size=2G" ];
   };
 }

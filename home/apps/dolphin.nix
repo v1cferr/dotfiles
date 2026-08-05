@@ -22,13 +22,17 @@
 # As outras props (ordenação, colunas, miniaturas) seguem mutáveis. Trocar de modo
 # na sessão funciona — só não persiste; p/ mudar de vez, editar aqui.
 # ═══════════════════════════════════════════════════════════════════════════
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 
 let
   # LUGARES FIXOS no painel Places do Dolphin. Adicionar um = 1 linha nesta lista.
   # Os nomes de ícone foram conferidos no breeze-icons 6.26.0 (places/22): nome que não
-  # existe não quebra nada, só cai num ícone genérico de pasta. Há `folder-gdrive` lá
-  # pra quando a pasta sincronizada do Drive existir.
+  # existe não quebra nada, só cai num ícone genérico de pasta.
   places = [
     {
       title = "FAI Workstation";
@@ -39,6 +43,11 @@ let
       title = "Obsidian";
       path = "/home/v1cferr/Dropbox/Obsidian"; # cofre de notas (sincronizado pelo Dropbox)
       icon = "folder-notes";
+    }
+    {
+      title = "Drive";
+      path = config.my.drive.local; # SSOT: home/services/drive-sync.nix (regra 11)
+      icon = "folder-gdrive";
     }
   ];
 

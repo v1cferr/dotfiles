@@ -53,7 +53,13 @@ in
     # MULTILINHA e o sync-secrets faz `sops set` com JSON de uma linha só — quebraria.
     # E, ao contrário da senha do restic, o token é REGERÁVEL (refaz o OAuth), então
     # não precisa do cofre. Editar: nix shell nixpkgs#sops -c sops secrets/secrets.yaml
-    rclone_gdrive_conf = { };
+    # owner v1cferr: o bisync do ~/Drive é serviço --user (home/services/drive-sync.nix)
+    # e precisa LER isto sem sudo. O restic segue lendo — roda como root, que lê 0400
+    # alheio. Mesmo padrão do jellyfin_api_key/deepl_api_key acima.
+    rclone_gdrive_conf = {
+      owner = "v1cferr";
+      mode = "0400";
+    };
   };
 
   environment.systemPackages = [ sync-secrets ];

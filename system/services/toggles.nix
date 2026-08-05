@@ -33,6 +33,7 @@
     "btrbk"
     "cloudflare-ddns"
     "dropbox"
+    "drive-sync"
     "discord-rpc"
     "cs2-backup"
   ] (n: lib.mkEnableOption n);

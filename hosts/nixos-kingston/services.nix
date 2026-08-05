@@ -19,7 +19,6 @@
     tor = true; # SOCKS5 local 127.0.0.1:9050 (só cliente; consumidor = `mega-tor`)
     restic = true; # backup automático (off-disk, diário)
     btrbk = true; # snapshots locais do @home (horário) — complementa o restic
-    arch-kingston-archive = true; # TEMPORÁRIO: arquiva o Arch antigo no Drive (desligar após o check)
     cloudflare-ddns = true; # DNS dinâmico (mantém o SSH externo)
     dropbox = true; # sync do ~/Dropbox
     discord-rpc = true; # Rich Presence do Claude Code no Discord

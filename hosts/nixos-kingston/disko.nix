@@ -2,8 +2,9 @@
 # Layout de disco DECLARATIVO — host nixos-kingston (KINGSTON KC3000, NVMe Gen4).
 #
 # ⚠️ DESTRUTIVO: apaga o disco inteiro. NÃO roda em rebuild normal — só no
-# CUTOVER, de propósito. O Kingston hoje tem o Arch antigo, já ARQUIVADO no
-# Google Drive (system/services/restic-arch-kingston.nix) e verificado antes disto.
+# CUTOVER, que JÁ ACONTECEU (01/08/2026). O Arch que morava aqui foi arquivado no
+# Google Drive antes disso, e o `check --read-data` provou o repo em 05/08 — como
+# chegar nele está em docs/ANOTACOES.md (o módulo que criava o repo já foi apagado).
 #
 # Seleção por by-id (nomes sd/nvme EMBARALHAM entre boots). NUNCA usar /dev/nvmeXnY.
 #

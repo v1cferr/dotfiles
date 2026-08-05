@@ -31,7 +31,6 @@
     "tor"
     "restic"
     "btrbk"
-    "arch-kingston-archive"
     "cloudflare-ddns"
     "dropbox"
     "discord-rpc"

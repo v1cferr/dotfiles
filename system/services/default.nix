@@ -6,7 +6,6 @@
     ./toggles.nix # INTERFACE: declara as chaves my.services.* (os VALORES são do host)
     ./restic.nix # backup cifrado do estado do usuário (repo no HDD por ora)
     ./btrbk.nix # snapshots btrfs horários do @home (desfazer local; NÃO é backup)
-    ./restic-arch-kingston.nix # TEMPORÁRIO: arquiva o Arch antigo no Google Drive antes de formatar
     ./claude-code.nix # hooks do Claude Code (managed-settings /etc) → Discord Rich Presence
     ./jellyfin.nix # servidor de mídia Jellyfin (nativo, systemd, biblioteca em /srv/media)
     ./qbittorrent.nix # cliente de download (Web UI 8080; grava em /srv/media/torrents)

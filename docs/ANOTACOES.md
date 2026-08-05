@@ -31,11 +31,26 @@ repos restic (senha no Bitwarden: item `Restic Arch Kingston`):
 | Google Drive (offsite) | `rclone:gdrive:BACKUPS_EX-B560M-V5/KINGSTON` — snapshot `6d7e3ee7` |
 | Seagate (local)        | `/mnt/seagate-old/restic-arch-kingston` — snapshot `38b4b9c3`      |
 
-Pra garimpar sem restaurar tudo, monte o snapshot como pasta navegável:
+O módulo que criava esses repos foi APAGADO em 05/08/2026 (cumpriu o ciclo de vida: o
+`check --read-data` passou), então **os wrappers `restic-arch-kingston*` não existem
+mais** — mas os repos e a senha continuam. O acesso agora é o restic direto (`restic` está
+no `system/packages.nix` justamente por isso), lendo a senha de `/run/secrets`:
 
 ```bash
-sudo restic-arch-kingston-local mount /mnt/arch-antigo   # Ctrl+C desmonta
+# Seagate (local, rápido) — monta como pasta navegável; Ctrl+C desmonta
+sudo restic -r /mnt/seagate-old/restic-arch-kingston \
+  --password-file /run/secrets/restic_password_arch_kingston \
+  mount /mnt/arch-antigo
+
+# Google Drive (offsite) — precisa do RCLONE_CONFIG (token OAuth, sops)
+sudo RCLONE_CONFIG=/run/secrets/rclone_gdrive_conf \
+  restic -r rclone:gdrive:BACKUPS_EX-B560M-V5/KINGSTON \
+  --password-file /run/secrets/restic_password_arch_kingston snapshots
 ```
+
+Os dois segredos seguem declarados (`restic_password_arch_kingston` vem do índice do
+Bitwarden, `rclone_gdrive_conf` de `system/core/secrets.nix`) — são a CHAVE de um acervo
+vivo, não sobra do módulo. Não apagar junto.
 
 Os dotfiles do Arch ficam em `home/v1cferr/dotfiles` dentro do snapshot. Existe também
 uma cópia manual do `Projects` do Arch em `~/BACKUP-KINGSTON/` (14 G) — pode apagar
@@ -68,6 +83,25 @@ quando terminar de consultar; o conteúdo está nos repos acima.
       `100.92.126.90 nixos-sandisk … offline, last seen 4d ago` (05/08/2026). A máquina não
       existe mais (o SanDisk virou Windows 11). Nó morto na tailnet é ACL e rota que ninguém
       audita. Admin console → Machines → remover.
+- [x] Arquivo do Arch VERIFICADO e o módulo APAGADO (05/08/2026) — fim do ciclo de vida que
+      o próprio `system/services/restic-arch-kingston.nix` tinha escrito: "depois do check
+      --read-data passar e o Kingston estar formatado, apague este arquivo".
+      • `sudo restic-arch-kingston check --read-data` → `no errors were found`, lendo os
+        **189 packs** (1 snapshot, 7 índices) do repo no Drive. Isso é o que separa "subiu"
+        de "dá pra restaurar": relê os dados, não só o índice.
+      • Saíram o módulo, o import em `system/services/default.nix`, a chave
+        `arch-kingston-archive` do `toggles.nix` e o `true` do painel do host.
+      • FICARAM de propósito: os repos, o segredo `restic_password_arch_kingston` (índice do
+        Bitwarden) e o `rclone_gdrive_conf`. São a CHAVE de um acervo vivo — o módulo era o
+        que ESCREVIA, não o que dá acesso.
+      • Efeito colateral que virou correção: apagar o módulo levava os wrappers
+        `restic-arch-kingston*`, e `restic` NÃO estava no PATH — o `services.restic` do
+        nixpkgs só gera wrapper por repo. O acervo teria ficado inalcançável sem `nix
+        shell`. Entrou `restic` no `system/packages.nix` (critério "resgate"), e os comandos
+        sem wrapper estão na seção "Configurações antigas do Arch Linux" acima.
+      • PENDENTE: o repo do Seagate (perna local) NÃO foi read-verificado — o check acima foi
+        no Drive. O comando é o mesmo trocando `-r` (ver seção acima). Vale porque o Seagate é
+        um Momentus de ~2009 com 348 erros de CRC.
 - [x] Segundo destinatário age no cofre sops (04/08/2026) — o `.sops.yaml` tinha UMA chave, e
       sops não tem recuperação: perder aquela chave = perder TODO segredo do repo, para sempre.
       O único backup dela era o Bitwarden, então o desenho tinha um ponto de falha capaz de

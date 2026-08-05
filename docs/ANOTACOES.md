@@ -53,6 +53,21 @@ quando terminar de consultar; o conteúdo está nos repos acima.
 
 ## TODO
 
+- [ ] 🔴 REVOGAR a auth key do Tailscale que estava no `.env` órfão (achado em 05/08/2026)
+      O arquivo `.env` na raiz do repo guardava `TAILSCALE=tskey-auth-kLXAR6…` em TEXTO CLARO,
+      modo 644, cabeçalho "nixos-sandisk declarative join (**reusable**)". Não era versionado
+      (`*.env` no .gitignore) e NADA lia: o join de hoje usa
+      `authKeyFile = config.sops.secrets.tailscale_authkey.path` (system/net/tailscale.nix:18).
+      Sobra do host ANTIGO, de 27/07 — anterior ao cutover.
+      • Key REUSABLE é o pior caso: quem tiver a string entra na tailnet quantas vezes quiser.
+      • O arquivo foi APAGADO. Revogar não precisa da string, só do ID: no admin console,
+        Settings → Keys → a que começa com `kLXAR6`.
+      • Enquanto não revogar, a key vale mesmo sem o arquivo. Apagar reduziu a exposição
+        local; não invalidou nada.
+- [ ] Tirar o nó `nixos-sandisk` da tailnet — `tailscale status` ainda lista
+      `100.92.126.90 nixos-sandisk … offline, last seen 4d ago` (05/08/2026). A máquina não
+      existe mais (o SanDisk virou Windows 11). Nó morto na tailnet é ACL e rota que ninguém
+      audita. Admin console → Machines → remover.
 - [x] Segundo destinatário age no cofre sops (04/08/2026) — o `.sops.yaml` tinha UMA chave, e
       sops não tem recuperação: perder aquela chave = perder TODO segredo do repo, para sempre.
       O único backup dela era o Bitwarden, então o desenho tinha um ponto de falha capaz de

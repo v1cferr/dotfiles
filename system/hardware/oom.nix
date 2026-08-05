@@ -18,18 +18,31 @@
     # confiável — por isso apoiamos no threshold de RAM. Se ainda travar, sobe o de RAM.
     freeMemThreshold = 10; # RAM livre < 10% → SIGTERM no maior processo
     freeSwapThreshold = 10; # e swap (zram) livre < 10%
-    enableNotifications = true; # avisa no desktop (mako) qual processo foi morto e por quê
+    enableNotifications = true; # avisa no desktop qual processo foi morto e por quê
 
-    # comm (nome, até 15 chars) casado por regex estendida:
+    # O earlyoom casa `comm` — o campo do KERNEL, truncado em 15 chars — por regex
+    # estendida. Duas armadilhas, as duas medidas nesta máquina em 05/08/2026:
+    #
+    #   1. WRAPPER DO NIXPKGS muda o nome. `wrapProgram` deixa o script com o nome
+    #      original e o ELF real como `.X-wrapped`; quem roda é o ELF, então o comm é
+    #      `.Hyprland-wrapp` e `.quickshell-wra` (cortados no 15º char) — NUNCA
+    #      "Hyprland". Daí o `^\.?` e o fim SEM `$`: casa embrulhado e cru, e sobrevive
+    #      ao dia que um pacote passar (ou deixar) de ser embrulhado.
+    #   2. ÂNCORA `$` + nome exato = falso senso de proteção. A lista antiga era
+    #      `^(Hyprland|waybar|…|mako)$` e casava 5 de 10 contra os processos vivos: o
+    #      COMPOSITOR ficava de fora pelo motivo 1, e `waybar`/`mako` eram fantasmas
+    #      (saíram na migração pro Quickshell). Ou seja, o comentário prometia
+    #      "compositor nunca morre" e o efeito era o oposto do escrito.
     extraArgs = [
       # PREFERE matar (os comilões descartáveis, fáceis de reabrir). NOTA: editores
       # (code/obsidian) FORA daqui de propósito — perder trabalho não salvo dói mais
       # que um navegador; que morram o Chrome/Discord antes do VSCode.
       "--prefer"
       "^(chrome|chromium|firefox|librewolf|zen|electron|spotify|Discord)"
-      # NUNCA mata (compositor, sessão, áudio e acesso remoto — perder isso = tela travada/sem SSH):
+      # NUNCA mata: compositor e shell (tela travada), áudio, sessão e SSH (sem resgate).
+      # quickshell entra no lugar da waybar — hoje ele é barra, OSD E daemon de notificação.
       "--avoid"
-      "^(Hyprland|waybar|hyprlock|hypridle|sshd|systemd|dbus-broker|pipewire|wireplumber|mako)$"
+      "^\\.?(Hyprland|quickshell|hyprlock|hypridle|hyprpaper|sshd|systemd|dbus-broker|pipewire|wireplumber)"
     ];
   };
 }

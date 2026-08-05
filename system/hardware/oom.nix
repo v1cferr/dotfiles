@@ -21,18 +21,26 @@
     enableNotifications = true; # avisa no desktop qual processo foi morto e por quê
 
     # O earlyoom casa `comm` — o campo do KERNEL, truncado em 15 chars — por regex
-    # estendida. Duas armadilhas, as duas medidas nesta máquina em 05/08/2026:
+    # estendida. TRÊS armadilhas, todas medidas nesta máquina em 05/08/2026:
     #
     #   1. WRAPPER DO NIXPKGS muda o nome. `wrapProgram` deixa o script com o nome
     #      original e o ELF real como `.X-wrapped`; quem roda é o ELF, então o comm é
     #      `.Hyprland-wrapp` e `.quickshell-wra` (cortados no 15º char) — NUNCA
-    #      "Hyprland". Daí o `^\.?` e o fim SEM `$`: casa embrulhado e cru, e sobrevive
+    #      "Hyprland". Daí o `[.]?` e o fim SEM `$`: casa embrulhado e cru, e sobrevive
     #      ao dia que um pacote passar (ou deixar) de ser embrulhado.
     #   2. ÂNCORA `$` + nome exato = falso senso de proteção. A lista antiga era
     #      `^(Hyprland|waybar|…|mako)$` e casava 5 de 10 contra os processos vivos: o
     #      COMPOSITOR ficava de fora pelo motivo 1, e `waybar`/`mako` eram fantasmas
     #      (saíram na migração pro Quickshell). Ou seja, o comentário prometia
     #      "compositor nunca morre" e o efeito era o oposto do escrito.
+    #   3. `[.]` e NÃO `\.` — a barra invertida NÃO CHEGA. O módulo do nixpkgs entrega
+    #      os args por `Environment=EARLYOOM_ARGS=…`, e o systemd descarta `\.` como
+    #      escape inválido. Escrito `"^\\.?"`, o earlyoom logava
+    #      `regex '^.?(Hyprland|…)'` — sem a barra. Ainda funcionava (`.?` = um char
+    #      qualquer opcional, e sobra-casar no --avoid erra pro lado seguro), mas o
+    #      comentário passava a mentir. Classe de caractere não tem barra pra perder.
+    #      CONFERIR sempre no que o daemon PARSEOU, nunca no .nix:
+    #        journalctl -u earlyoom | grep 'avoid killing'
     extraArgs = [
       # PREFERE matar (os comilões descartáveis, fáceis de reabrir). NOTA: editores
       # (code/obsidian) FORA daqui de propósito — perder trabalho não salvo dói mais
@@ -42,7 +50,7 @@
       # NUNCA mata: compositor e shell (tela travada), áudio, sessão e SSH (sem resgate).
       # quickshell entra no lugar da waybar — hoje ele é barra, OSD E daemon de notificação.
       "--avoid"
-      "^\\.?(Hyprland|quickshell|hyprlock|hypridle|hyprpaper|sshd|systemd|dbus-broker|pipewire|wireplumber)"
+      "^[.]?(Hyprland|quickshell|hyprlock|hypridle|hyprpaper|sshd|systemd|dbus-broker|pipewire|wireplumber)"
     ];
   };
 }

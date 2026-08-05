@@ -1,11 +1,8 @@
-// Barra Quickshell (substituta da Waybar).
-// FASE 1: shell + relógio + cpu/ram/disco.
-// FASE 2: áudio (Pipewire) + Spotify (Mpris) + rede (nmcli).
-// FASE 3a: cpu-temp + gpu-uso/temp (nvidia-smi) + vpn + hypridle + swaync.
-// FASE 3b: weather (Open-Meteo JSON) + popover de previsão 7 dias.
-// FASE 4: workspaces (hyprctl + eventos, por monitor) + título da janela.
-// FASE 5: system tray (StatusNotifier; popula quando o qs é o watcher).
-// Falta: ligar no shell.qml e aposentar a Waybar (fase 6).
+// Barra do desktop — a única; a Waybar saiu na migração pro Quickshell.
+// Carregada por shell.qml (`Bar {}`); os popovers moram em arquivos ao lado
+// (Calendar/Metrics/Vpn/Weather/Tray/PowerMenu).
+// Mostra: workspaces por monitor + título · relógio · cpu/ram/disco/temp · GPU ·
+// áudio (Pipewire) · Spotify (Mpris) · rede · VPN · clima · tray · notificações.
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
@@ -143,7 +140,7 @@ Scope {
         }
     }
 
-    // ===== Temperaturas (sensors -j) + GPU uso/temp (nvidia-smi) =====
+    // ===== Temperaturas (sensors -j) + GPU temp (hwmon do xe; ver gpuProc) =====
     property real cpuTempC: 0
     property real moboTempC: 0
     property var nvmeTempsC: []

@@ -2,7 +2,7 @@
 # PACOTES DO USUÁRIO (home-manager) — a lista CENTRAL. É AQUI que você adiciona
 # um app/CLI novo SEM config própria (espelha o system/packages.nix). Apps COM
 # config declarativa vivem no seu módulo (programs.* ou apps/desktop/shell):
-# kitty, git, dolphin, flameshot, media, waybar, tema, helpers do Hyprland. unfree
+# kitty, git, dolphin, flameshot, media, quickshell, tema, helpers do Hyprland. unfree
 # ok (allowUnfree herdado do system).
 #
 # `pkgs.foo` = base estável (26.05); `pkgs.unstable.foo` = canal bleeding-edge.

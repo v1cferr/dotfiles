@@ -97,23 +97,29 @@
       inputs.nixpkgs.follows = "nixpkgs"; # dedup (derivation própria, sem dep do unstable)
     };
 
-    # VS Code na ÚLTIMA versão DE VERDADE. Nem o unstable entrega isso: o bump é humano/bot
-    # e fica 3-14 dias atrás, às vezes PULANDO release (1.125→1.127, 1.127→1.129.1 em jul/26).
-    # A causa é estrutural — o auto-updater do VS Code não roda com a store read-only, então a
-    # versão é literalmente o que está no lock. Aqui o lock passa a ser o TARBALL OFICIAL do
-    # canal stable: a URL `/latest/` não muda, mas o conteúdo sim, e o `nix flake update`
-    # re-resolve e grava o narHash novo → `upgrade` já traz a versão do dia, sem hash na mão.
-    # NÃO é o Insiders (build de teste diária): é o mesmo stable que a Microsoft serve, só sem
-    # esperar o nixpkgs. `flake = false` porque é um tarball, não um flake.
+    # VS Code na última versão DE VERDADE — o tarball OFICIAL do canal stable. Nem o unstable
+    # entrega isso: o bump lá é humano/bot e fica 3-14 dias atrás, às vezes PULANDO release
+    # (1.125→1.127, 1.127→1.129.1 em jul/26). A causa é estrutural — o auto-updater do VS Code
+    # não roda com a store read-only, então a versão é literalmente o que está no lock. NÃO é o
+    # Insiders (build de teste diária). `flake = false` porque é tarball, não flake.
     #
-    # ⚠️ CUSTO, o outro lado do "sempre a última" (medido em 04/08/2026): tarball não tem rev, então o lock guarda
-    # SÓ o narHash — e a URL `/latest/` é alvo MÓVEL. No dia em que a Microsoft rotacionar o conteúdo, ninguém no
-    # mundo serve mais aquele hash, e COMMIT ANTIGO deste repo deixa de ser construível. É o único input que fura
-    # a "cápsula do tempo" da regra 13 — trade-off aceito de propósito, mas o preço é este. Se um dia precisar de
-    # um ponto reproduzível de verdade, trocar `/latest/` por `/<versão>/` (a API de update serve URL versionada)
-    # devolve hash estável.
+    # URL VERSIONADA e não `/latest/` — mudou em 05/08/2026, e o motivo foi o CI ficar VERMELHO:
+    #   error: mismatch in field 'narHash' of input '…/latest/linux-x64/stable'
+    #          lock: sha256-2Fzf… | servido: sha256-PLpT…
+    # A causa: `/latest/` é PONTEIRO. Saiu a 1.132.0, o ponteiro andou, e o narHash travado (que
+    # era da 1.131.0) deixou de casar. Aqui passava porque o tarball velho já estava na store;
+    # em máquina limpa — CI, clone novo, reinstalação — o flake não avaliava mais. Ou seja: o
+    # furo na regra 13 não era um risco de 2032, era quebra a cada release do VS Code.
+    #
+    # Medido antes de trocar (o que prova que a URL versionada resolve): `/1.131.0/` devolve
+    # exatamente o `sha256-2Fzf…` que estava no lock, e `/1.132.0/` devolve `sha256-PLpT…` —
+    # os dois estáveis em fetches repetidos. Artefato versionado é imutável; ponteiro não é.
+    #
+    # PREÇO, agora explícito: `nix flake update` NÃO traz mais versão nova sozinho — a URL é
+    # fixa. Subir de versão = editar o número aqui + `nix flake update vscode-latest`. Uma
+    # edição a mais por mês em troca de um flake que avalia em qualquer máquina.
     vscode-latest = {
-      url = "tarball+https://update.code.visualstudio.com/latest/linux-x64/stable";
+      url = "tarball+https://update.code.visualstudio.com/1.132.0/linux-x64/stable";
       flake = false;
     };
   };

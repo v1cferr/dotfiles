@@ -1198,3 +1198,4 @@ quando terminar de consultar; o conteúdo está nos repos acima.
       minegrub como saída de emergência. E esperar ~2-4 semanas depois do release (o branch
       estabiliza conforme os backports chegam); o custo de esperar aqui é baixo, porque o que eu
       quero fresco já vem por `unstable.*` e pelos inputs upstream diretos.
+- [ ] Deixar o VSCode de forma declarativa com o Nix e ao mesmo tempo sempre atualizar o sync com minha conta do GitHub/Microsoft (quero que fique centralizado no <https://github.com/v1cferr/dotfiles>)

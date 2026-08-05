@@ -318,14 +318,14 @@
     "vscode-latest": {
       "flake": false,
       "locked": {
-        "lastModified": 1785237709,
-        "narHash": "sha256-2FzfySScIT4z2+QJA092m6R/ZJKi9lWeVCUB6Lc2yTw=",
+        "lastModified": 1785859847,
+        "narHash": "sha256-PLpT3kQqSeOJ/49fdv+GG7ZbZPUVaE5isM+zbjr9uJw=",
         "type": "tarball",
-        "url": "https://update.code.visualstudio.com/latest/linux-x64/stable"
+        "url": "https://update.code.visualstudio.com/1.132.0/linux-x64/stable"
       },
       "original": {
         "type": "tarball",
-        "url": "https://update.code.visualstudio.com/latest/linux-x64/stable"
+        "url": "https://update.code.visualstudio.com/1.132.0/linux-x64/stable"
       }
     },
     "zen-browser": {

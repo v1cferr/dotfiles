@@ -40,9 +40,10 @@
     spotify # música (unfree)
 
     # ── Editor / dev ──
-    # VS Code: receita do unstable com o SRC trocado pelo tarball oficial mais recente
-    # (input vscode-latest + overlayVscodeLatest no flake.nix) — `upgrade` traz a versão
-    # do dia, não a que o nixpkgs bumpou. Override --password-store=gnome-libsecret: no
+    # VS Code: receita do unstable com o SRC trocado pelo tarball oficial, em versão FIXA
+    # (input vscode-tarball + overlayVscodeTarball no flake.nix) — adiante do que o nixpkgs
+    # bumpou, mas o `upgrade` NÃO sobe sozinho: a URL é versionada, então subir é editar o
+    # número no flake.nix (o porquê está lá). Override --password-store=gnome-libsecret: no
     # Hyprland o Electron não autodetecta o backend de secret e mostra "couldn't
     # identify OS keyring". Extensões/settings = Settings Sync (conta), NÃO nix.
     (unstable.vscode.override { commandLineArgs = "--password-store=gnome-libsecret"; })

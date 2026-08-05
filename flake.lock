@@ -276,7 +276,7 @@
         "nixpkgs-unstable": "nixpkgs-unstable",
         "quickshell": "quickshell",
         "sops-nix": "sops-nix",
-        "vscode-latest": "vscode-latest",
+        "vscode-tarball": "vscode-tarball",
         "zen-browser": "zen-browser"
       }
     },
@@ -315,7 +315,7 @@
         "type": "github"
       }
     },
-    "vscode-latest": {
+    "vscode-tarball": {
       "flake": false,
       "locked": {
         "lastModified": 1785859847,

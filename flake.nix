@@ -97,11 +97,15 @@
       inputs.nixpkgs.follows = "nixpkgs"; # dedup (derivation própria, sem dep do unstable)
     };
 
-    # VS Code na última versão DE VERDADE — o tarball OFICIAL do canal stable. Nem o unstable
-    # entrega isso: o bump lá é humano/bot e fica 3-14 dias atrás, às vezes PULANDO release
+    # VS Code do tarball OFICIAL do canal stable, em versão FIXA. Existe porque o nixpkgs
+    # não serve: o bump lá é humano/bot e fica 3-14 dias atrás, às vezes PULANDO release
     # (1.125→1.127, 1.127→1.129.1 em jul/26). A causa é estrutural — o auto-updater do VS Code
     # não roda com a store read-only, então a versão é literalmente o que está no lock. NÃO é o
     # Insiders (build de teste diária). `flake = false` porque é tarball, não flake.
+    #
+    # NOME: chamava-se `vscode-latest` até 05/08/2026, e o nome virou mentira no minuto em
+    # que a URL foi fixada — "latest" prometia um acompanhamento automático que não existe
+    # mais. `-tarball` diz o que É (e explica o `flake = false`), sem prometer versão.
     #
     # URL VERSIONADA e não `/latest/` — mudou em 05/08/2026, e o motivo foi o CI ficar VERMELHO:
     #   error: mismatch in field 'narHash' of input '…/latest/linux-x64/stable'
@@ -116,9 +120,9 @@
     # os dois estáveis em fetches repetidos. Artefato versionado é imutável; ponteiro não é.
     #
     # PREÇO, agora explícito: `nix flake update` NÃO traz mais versão nova sozinho — a URL é
-    # fixa. Subir de versão = editar o número aqui + `nix flake update vscode-latest`. Uma
+    # fixa. Subir de versão = editar o número aqui + `nix flake update vscode-tarball`. Uma
     # edição a mais por mês em troca de um flake que avalia em qualquer máquina.
-    vscode-latest = {
+    vscode-tarball = {
       url = "tarball+https://update.code.visualstudio.com/1.132.0/linux-x64/stable";
       flake = false;
     };
@@ -154,7 +158,7 @@
       # escolha por pacote: `pkgs.foo` (estável) vs `pkgs.unstable.foo` (última).
       overlayUnstable = _: _: { unstable = pkgsUnstable; };
 
-      # Troca só o SRC do vscode pelo tarball do input vscode-latest, mantendo a RECEITA do
+      # Troca só o SRC do vscode pelo tarball do input vscode-tarball, mantendo a RECEITA do
       # unstable — o generic.nix do nixpkgs tem lógica versionada (`versionAtLeast
       # vscodeVersion "1.129.0"`), então patchar receita fresca é o delta mínimo; sobre a
       # receita da 26.05 (era 1.119) o salto de 12 versões passaria por ramos que não existem.
@@ -164,13 +168,14 @@
       #            então é readFile puro — sem IFD, sem hash duplicado pra manter.
       #   sourceRoot: o fetcher de tarball do flake REMOVE o dir de topo (VSCode-linux-x64),
       #               diferente do fetchurl do nixpkgs (que usa sourceRoot = "").
-      overlayVscodeLatest = _: prev: {
+      overlayVscodeTarball = _: prev: {
         unstable = prev.unstable // {
           vscode = prev.unstable.vscode.overrideAttrs (_: {
-            inherit (builtins.fromJSON (builtins.readFile "${inputs.vscode-latest}/resources/app/package.json"))
+            inherit
+              (builtins.fromJSON (builtins.readFile "${inputs.vscode-tarball}/resources/app/package.json"))
               version
               ;
-            src = inputs.vscode-latest;
+            src = inputs.vscode-tarball;
             sourceRoot = "source";
           });
         };
@@ -227,7 +232,7 @@
             {
               nixpkgs.overlays = [
                 overlayUnstable
-                overlayVscodeLatest # DEPOIS do overlayUnstable: patcha o `unstable.vscode` dele
+                overlayVscodeTarball # DEPOIS do overlayUnstable: patcha o `unstable.vscode` dele
                 overlayLocalPkgs
                 inputs.claude-desktop.overlays.default
                 overlayClaudeKeyring

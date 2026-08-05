@@ -58,7 +58,7 @@ hosts/                   específico de cada máquina (hostname, discos, monitor
     disko.nix            layout de disco declarativo (btrfs + subvolumes)
     services.nix         PAINEL: quais serviços opcionais ESTA máquina liga (my.services.*)
 secrets/                 secrets.yaml (sops) + bitwarden-secrets.json
-scripts/                 sync-secrets.sh (Bitwarden → sops) · healthcheck.sh
+scripts/                 sync-secrets.sh — bash lido por `writeShellApplication` (shellcheck no build)
 docs/                    o que NÃO é declarável (BIOS, runbooks) + o diário do repo
   ANOTACOES.md           regras, decisões e TODOs — o "por quê" que não cabe em comentário
   SECURE-BOOT-SETUP.md   TEMPORÁRIO: passos manuais do Secure Boot (apagar quando fechar)

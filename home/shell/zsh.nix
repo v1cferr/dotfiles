@@ -61,6 +61,17 @@ in
       # `--delete-older-than 7d` limpa quase o mesmo e PRESERVA a saída de emergência.
       # (O GC automático semanal, esse sim, usa --delete-older-than 30d — system/core/core.nix.)
       gc = "sudo nix-collect-garbage -d"; # limpa gerações antigas da store manualmente
+
+      # ACHAR UM ARQUIVO DENTRO DO BACKUP. Monta o repo do Drive como pasta read-only,
+      # um diretório por snapshot (`snapshots/latest/…`) — abre no Dolphin e navega.
+      # Ctrl+C desmonta. O repo é blob CIFRADO: quem decifra é o restic, não o rclone.
+      # Vale como alias e não script (regra 7): é comando de uma linha, e o wrapper
+      # `restic-home-gdrive` (gerado pelo módulo) já leva senha, RCLONE_CONFIG e rclone.
+      backup-browse = "sudo mkdir -p /mnt/backup && sudo restic-home-gdrive mount /mnt/backup";
+      # Relê TODOS os dados do repo pra provar que dá pra restaurar (baixa o repo inteiro
+      # — ~24 GiB, ~4 min). É deliberadamente manual: no automático seria download diário.
+      backup-verify = "sudo restic-home-gdrive check --read-data";
+
       # ls/ll/la/lt (eza) e cat (bat) vivem em home/cli.nix, junto do toolkit CLI
       ".." = "cd ..";
       "..." = "cd ../..";

@@ -17,10 +17,15 @@
 # de fato acontecem. Preço aceito: restauração passa pela rede e depende da conta
 # Google. Medido no 1º snapshot: 40,6 GiB lidos → 23,6 GiB no fio, 15 min.
 #
-# O REPO ANTIGO DO SEAGATE NÃO FOI APAGADO — está congelado em
-# /mnt/seagate-old/restic como rede de segurança até o `check --read-data` do Drive
-# passar. Sem o alvo aqui o wrapper `restic-home` deixa de existir; para ler o repo
-# congelado é o restic direto:
+# O DRIVE ESTÁ VERIFICADO: `check --read-data` relendo os 189 packs deu "no errors
+# were found" em 05/08/2026. O repo do Seagate mesmo assim NÃO foi apagado, e não é
+# indecisão — é HISTÓRICO: o Drive tem 1 snapshot (de hoje) e o Seagate tem 13, com a
+# janela de 7d/4s/6m. Apagar agora perderia toda versão anterior a hoje, que é
+# exatamente o que salva quando um arquivo corrompeu semanas atrás e ninguém viu. O
+# repo é estático (nada mais escreve nele) e o disco tem 195 G livres, então guardar
+# não custa. Apagar quando o Drive acumular janela equivalente.
+# Sem o alvo aqui o wrapper `restic-home` deixa de existir; pra ler o repo congelado
+# é o restic direto:
 #   sudo restic -r /mnt/seagate-old/restic --password-file /run/secrets/restic_password snapshots
 #
 # ── VER O QUE ESTÁ DENTRO DO BACKUP ─────────────────────────────────────────

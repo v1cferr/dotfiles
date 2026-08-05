@@ -82,7 +82,26 @@ quando terminar de consultar; o conteúdo está nos repos acima.
 - [ ] Tirar o nó `nixos-sandisk` da tailnet — `tailscale status` ainda lista
       `100.92.126.90 nixos-sandisk … offline, last seen 4d ago` (05/08/2026). A máquina não
       existe mais (o SanDisk virou Windows 11). Nó morto na tailnet é ACL e rota que ninguém
-      audita. Admin console → Machines → remover.
+      audita.
+
+      POR QUE ESTES DOIS NÃO VIRAM DECLARATIVOS (pesquisado em 05/08/2026, regra 1):
+      o CLI OFICIAL não faz nenhuma das duas coisas. `tailscale --help` da 1.98.10 (a que
+      está instalada) tem 30 subcomandos e nenhum é `key` ou `device` — o mais perto é
+      `logout`, que expira o node key DESTA máquina, não remove nó alheio. A doc oficial de
+      "Remove a device" diz console ou API, sem CLI, e a FR do upstream
+      (tailscale/tailscale#8844) segue aberta. As duas ações são da API v2:
+        DELETE https://api.tailscale.com/api/v2/device/{id}
+        DELETE https://api.tailscale.com/api/v2/tailnet/{tailnet}/keys/{keyId}
+      DECISÃO: fazer no admin console e NÃO guardar token de API. Automatizar exigiria um
+      token/OAuth client com escrita na tailnet inteira, guardado no sops — um segredo
+      PERMANENTE e mais poderoso que a auth key que se quer revogar, criado para uma tarefa
+      de UMA VEZ. Só compensa se um dia existir rotina recorrente (ex.: podar nó parado),
+      e aí o certo é OAuth client com escopo mínimo, não API key de admin.
+      (Detalhe da doc que importa: revogar a key NÃO desautoriza quem já entrou com ela —
+      são ações independentes, e é por isso que as duas estão nesta lista.)
+      O CLI, aliás, JÁ é declarativo: vem de `services.tailscale.package`
+      (system/net/tailscale.nix), não de lista de pacotes. Pôr `tailscale` em
+      `system/packages.nix` seria o mesmo pacote em dois lugares — fura a regra 4.
 - [x] Arquivo do Arch VERIFICADO e o módulo APAGADO (05/08/2026) — fim do ciclo de vida que
       o próprio `system/services/restic-arch-kingston.nix` tinha escrito: "depois do check
       --read-data passar e o Kingston estar formatado, apague este arquivo".

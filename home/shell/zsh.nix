@@ -62,12 +62,21 @@ in
       # (O GC automático semanal, esse sim, usa --delete-older-than 30d — system/core/core.nix.)
       gc = "sudo nix-collect-garbage -d"; # limpa gerações antigas da store manualmente
 
-      # ACHAR UM ARQUIVO DENTRO DO BACKUP. Monta o repo do Drive como pasta read-only,
-      # um diretório por snapshot (`snapshots/latest/…`) — abre no Dolphin e navega.
+      # ACHAR UM ARQUIVO DENTRO DO BACKUP. Monta o repo como pasta read-only com um
+      # diretório por snapshot (`snapshots/latest/…`) — abre no Dolphin e navega.
       # Ctrl+C desmonta. O repo é blob CIFRADO: quem decifra é o restic, não o rclone.
-      # Vale como alias e não script (regra 7): é comando de uma linha, e o wrapper
-      # `restic-home-gdrive` (gerado pelo módulo) já leva senha, RCLONE_CONFIG e rclone.
-      backup-browse = "sudo mkdir -p /mnt/backup && sudo restic-home-gdrive mount /mnt/backup";
+      #
+      # SEM `sudo`, e isso é o ponto: mount FUSE é privado de quem montou, então
+      # `sudo restic mount` gera uma pasta que o Dolphin NÃO abre (era o defeito da 1ª
+      # versão). Rodando como usuário, a pasta é dele e o file manager entra. Exige as
+      # senhas legíveis sem sudo — feito em system/core/secrets.nix — e os mountpoints
+      # criados por tmpfiles em system/services/restic.nix.
+      #
+      # Alias e não script (regra 7): é comando de uma linha.
+      backup-browse = "RCLONE_CONFIG=/run/secrets/rclone_gdrive_conf restic -r rclone:gdrive:BACKUPS_EX-B560M-V5/HOME --password-file /run/secrets/restic_password mount /mnt/backup";
+      # O acervo do Arch antigo (o Kingston de quando era Arch Linux). Repo ESTÁTICO:
+      # nada escreve nele desde 01/08/2026 — só se consulta.
+      arch-browse = "RCLONE_CONFIG=/run/secrets/rclone_gdrive_conf restic -r rclone:gdrive:BACKUPS_EX-B560M-V5/ARCH-KINGSTON --password-file /run/secrets/restic_password_arch_kingston mount /mnt/arch-antigo";
       # Relê TODOS os dados do repo pra provar que dá pra restaurar (baixa o repo inteiro
       # — ~24 GiB, ~4 min). É deliberadamente manual: no automático seria download diário.
       backup-verify = "sudo restic-home-gdrive check --read-data";

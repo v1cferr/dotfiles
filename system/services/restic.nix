@@ -42,6 +42,19 @@
 }:
 
 lib.mkIf config.my.services.restic {
+  # PONTOS DE MONTAGEM pra NAVEGAR os backups no gerenciador de arquivos (aliases
+  # `backup-browse` e `arch-browse`). Donos do USUÁRIO porque quem monta tem que ser ele:
+  # mount FUSE é privado de quem montou, então um `sudo restic mount` produz pasta que o
+  # Dolphin não abre — foi o defeito da 1ª versão do alias.
+  #
+  # Ficam em /mnt e NÃO no home de propósito: mountpoint dentro de /home/v1cferr entraria
+  # no `paths` do backup e cairia na MESMA armadilha do ~/FAI-workstation (lstat em FUSE
+  # alheio → restic sai 3 → o prune não roda). Fora do home, nem existe o problema.
+  systemd.tmpfiles.rules = [
+    "d /mnt/backup 0755 v1cferr users -" # repo do home, no Drive
+    "d /mnt/arch-antigo 0755 v1cferr users -" # acervo do Arch antigo (ARCH-KINGSTON)
+  ];
+
   # PEGADINHA que já custou o serviço do arquivo do Arch inteiro: o módulo do nixpkgs
   # põe SÓ o ssh no PATH (`path = [ config.programs.ssh.package ]`), e o backend
   # `rclone:` do restic EXECUTA o binário rclone. Sem este mkAfter, morre na largada

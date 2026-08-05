@@ -28,16 +28,18 @@ foi apagado, a cópia manual `~/BACKUP-KINGSTON` foi apagada e a perna local (Se
 
 Sobra este ponteiro porque repo que ninguém sabe abrir é pior que repo apagado:
 
+A pasta no Drive foi renomeada `KINGSTON` → **`ARCH-KINGSTON`** em 05/08/2026 (o nome
+antigo não dizia que era o Arch). Navegar como pasta, no Dolphin:
+
 ```bash
-# Acervo do Arch antigo — 44,6 GiB, snapshot 6d7e3ee7. Senha: Bitwarden "Restic Arch Kingston"
-sudo RCLONE_CONFIG=/run/secrets/rclone_gdrive_conf \
-  restic -r rclone:gdrive:BACKUPS_EX-B560M-V5/KINGSTON \
-  --password-file /run/secrets/restic_password_arch_kingston snapshots
+arch-browse                     # monta em /mnt/arch-antigo (Ctrl+C desmonta)
 ```
 
-Trocar `snapshots` por `mount /mnt/arch-antigo` navega como pasta (Ctrl+C desmonta). Os
-dotfiles do Arch estão em `home/v1cferr/dotfiles` dentro do snapshot. Os dois segredos
-seguem declarados de propósito — são a CHAVE do acervo, não sobra do módulo.
+O alias está em `home/shell/zsh.nix` e roda SEM sudo de propósito: mount FUSE é privado
+de quem montou, então `sudo restic mount` gera pasta que o file manager não abre. Os
+dotfiles do Arch estão em `home/v1cferr/dotfiles` dentro do snapshot (`6d7e3ee7`, 44,6
+GiB). Os dois segredos seguem declarados de propósito — são a CHAVE do acervo, não sobra
+do módulo.
 
 - Repo no GitHub: <https://github.com/v1cferr/dotfiles>
 

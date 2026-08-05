@@ -60,6 +60,21 @@ in
       owner = "v1cferr";
       mode = "0400";
     };
+    # SENHAS DOS REPOS RESTIC legíveis pelo usuário. Motivo: `restic mount` só é
+    # navegável por QUEM MONTOU — mount FUSE é privado por padrão, o que esta config já
+    # provou pelo avesso (o restic como ROOT não conseguia nem lstat no mount FUSE do
+    # USUÁRIO em ~/FAI-workstation). Montar com sudo dava uma pasta que o Dolphin não
+    # abre; montar como usuário exige ler a senha sem sudo.
+    # Não é escalada de privilégio: é a senha do backup DOS DADOS DESTE MESMO USUÁRIO —
+    # quem já é v1cferr tem os arquivos originais. Mesmo padrão do jellyfin/deepl.
+    restic_password = {
+      owner = "v1cferr";
+      mode = "0400";
+    };
+    restic_password_arch_kingston = {
+      owner = "v1cferr";
+      mode = "0400";
+    };
   };
 
   environment.systemPackages = [ sync-secrets ];

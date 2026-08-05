@@ -49,6 +49,19 @@ let
       path = config.my.drive.local; # SSOT: home/services/drive-mount.nix (regra 11)
       icon = "folder-gdrive";
     }
+    # Os dois abaixo só têm conteúdo COM O MOUNT DE PÉ (`backup-browse`/`arch-browse`).
+    # Vazio = não montado, e isso é informação, não bug: são consultas raras e um mount
+    # permanente de repo cifrado remoto seria conexão aberta e lock no repo por nada.
+    {
+      title = "Backup (snapshots)";
+      path = "/mnt/backup"; # repo do home no Drive; read-only, um dir por snapshot
+      icon = "folder-tar";
+    }
+    {
+      title = "Arch antigo";
+      path = "/mnt/arch-antigo"; # acervo de quando o Kingston era Arch Linux
+      icon = "folder-locked";
+    }
   ];
 
   # Um arquivo XBEL por lugar. O `<ID>` do KDE tem que ser ÚNICO por bookmark — vem do

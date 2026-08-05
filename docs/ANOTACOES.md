@@ -51,6 +51,110 @@ seguem declarados de propósito — são a CHAVE do acervo, não sobra do módul
 
 ## TODO
 
+- [x] earlyoom NÃO protegia o compositor (05/08/2026) — o achado mais grave da limpeza, e
+      apareceu por acidente: `waybar` e `mako` estavam na lista `--avoid` e são fantasmas
+      (saíram na migração pro Quickshell). Ao tirá-los, medi a regex contra os processos
+      VIVOS e ela casava 5 de 10 — o Hyprland ficava de fora.
+      • CAUSA: o earlyoom casa `comm`, o campo do KERNEL truncado em 15 chars. O
+        `wrapProgram` do nixpkgs deixa o script com o nome original e o ELF real como
+        `.X-wrapped`, e quem RODA é o ELF → o comm é `.Hyprland-wrapp` e `.quickshell-wra`.
+        `^(Hyprland|…)$` nunca casava. O comentário prometia "compositor nunca morre" e o
+        efeito era o oposto do escrito.
+      • Agora `^[.]?(…)` sem `$`, casando 16 processos vivos. Entrou `quickshell` (hoje é
+        barra, OSD E daemon de notificação) e `hyprpaper`.
+      • PEGADINHA DENTRO DA PEGADINHA: escrevi `"^\\.?"` primeiro, e a barra NÃO CHEGA — o
+        módulo entrega os args por `Environment=EARLYOOM_ARGS=…` e o systemd descarta `\.`
+        como escape inválido. O daemon logava `'^.?(…)'`. Classe de caractere `[.]` não tem
+        barra pra perder. LIÇÃO: conferir no que o DAEMON parseou, nunca no .nix —
+        `journalctl -u earlyoom | grep 'avoid killing'`.
+
+- [x] Backup migrou do HDD pro Google Drive, verificado (05/08/2026) — o Seagate guardava a
+      ÚNICA cópia do home vivo, num Momentus 7200.4 de ~2009 com 840 mil load cycles e 348
+      erros de CRC, DENTRO da máquina. Não foi espaço: o Drive tem 4,95 TiB livres de 5 TiB.
+      Cópia offsite ganha nos modos de falha que acontecem (disco morre, roubo, incêndio);
+      perde em restauração pela rede e passa a depender da conta Google.
+      • Medido: 1º snapshot 40,6 GiB lidos → 23,6 GiB no fio, 15 min, 255 mil arquivos. O
+        incremental seguinte: 33 s e 170 MiB. `check --read-data` relendo 189 packs: "no
+        errors were found".
+      • Três coisas que repo REMOTO exige e local não: `--pack-size=128` (no Drive o custo é
+        por CHAMADA de API, não por byte), `checkOpts = []` (o `--read-data-subset=10%` do
+        local RELÊ, e reler remoto é BAIXAR — seriam GB/dia pra sempre) e
+        `--max-repack-size=2G` (poda remota reempacota).
+      • BUG que isso destapou: o backup FALHAVA de forma INTERMITENTE com
+        `lstat /home/v1cferr/FAI-workstation: permission denied` → restic sai 3. É mount FUSE
+        do USUÁRIO e o backup roda como ROOT, que não entra em FUSE alheio; só acontecia com
+        a VPN da FAI de pé. E como `backup` é o 1º de TRÊS ExecStart, o `forget --prune` NÃO
+        rodava — a retenção silenciosamente não se aplicava naqueles dias.
+        `--one-file-system` não salva: ele impede DESCER, mas o lstat do ponto acontece.
+      • O repo do Seagate NÃO foi apagado: o Drive tem 1 snapshot e ele tem 13, com janela de
+        6 meses. Apagar hoje perderia toda versão anterior a hoje.
+      • Aliases novos: `backup-browse` (monta o repo como pasta, um dir por snapshot) e
+        `backup-verify`. O rclone NÃO decifra restic — quem decifra é o restic.
+
+- [x] ~/Drive = raiz do Google Drive MONTADA, não sincronizada (05/08/2026) — comecei com
+      `rclone bisync` e trocei por `rclone mount` depois de LISTAR o remote, que é o passo que
+      eu devia ter dado ANTES: a raiz tem ~19,6 GiB de acervo real (Documentos, César, Mãe,
+      SENAC…), e a pasta dedicada que eu havia inventado nasceria VAZIA — não resolvia o
+      "preciso de um arquivo que está no Drive".
+      • Mount ganha aqui: zero download (bisync baixaria os 19,6 GiB pro NVMe pro MESMO
+        acesso) e sync PROPAGA — apagar local apagaria no Drive, inclusive pasta de família.
+      • `Type=notify` (está no `rclone mount --help`): a unit só fica "started" depois do
+        mountpoint pronto, senão o Dolphin abre antes e cacheia "vazia".
+      • `--exclude BACKUPS_EX-B560M-V5/**`: esconde ~48 GiB de blob restic do gerenciador de
+        arquivos. Não é estética — um Delete sem querer ali CORROMPE o backup.
+      • Duas armadilhas pagas: (1) bisync não cria a pasta de destino e o remédio que ele
+        sugere também falha; (2) o rclone RENOVA o token OAuth e tenta persistir no arquivo
+        de config — contra o secret do sops (0400) isso vira `Failed to save config`, então a
+        unit copia pra `%t` (tmpfs, 0600) e passa `--config` no comando. O `--config` no
+        comando e não `RCLONE_CONFIG` no ambiente porque exportar faria o mount da FAI
+        procurar o remote `faiws` no arquivo errado.
+      • E o mount não subia porque `~/Drive` tinha um `RCLONE_TEST` órfão de 0 byte que a
+        versão bisync criou: o rclone recusa mountpoint não-vazio, e `--allow-non-empty` fica
+        fora de propósito (montar por cima ESCONDE o arquivo). Se não subir: `ls -a ~/Drive`
+        antes de suspeitar da rede.
+
+- [x] Opção se DECLARA no system/, se DEFINE no hosts/ (05/08/2026) — virou a convenção 6 do
+      README. Os conectores de monitor (`DP-2`/`HDMI-A-3`) tinham `default` em
+      system/desktop/monitors.nix e o painel `my.services` morava em system/services/toggles.nix.
+      Com um host só é invisível; no host nº 2 o system/ passa a MENTIR (um laptop herdaria
+      conectores que não tem e subiria Jellyfin/Sunshine por default). Agora o system declara
+      as opções e o `hosts/nixos-kingston/services.nix` responde. Os defaults de monitor
+      saíram de propósito: host que esquecer QUEBRA no eval, alto e cedo.
+      A declaração de `my.services` segue central e NÃO foi distribuída por módulo porque
+      `osConfig` só enxerga o namespace do NixOS — as chaves lidas pelo home/ (dropbox,
+      discord-rpc, cs2-backup) precisam de um módulo de SISTEMA de qualquer forma.
+
+- [x] O gate passou a CONSTRUIR, não só avaliar (05/08/2026) — o `nix flake check` constrói o
+      que está em `checks` e de `nixosConfigurations` só exige que o toplevel SEJA uma
+      derivação. Medido: imprimia "running 1 flake checks" e só o pre-commit era construído.
+      O frágil aqui não é avaliação, é EMPACOTAMENTO: os 3 patches do nxbender, o
+      `sourceRoot = "source"` do vscode e o wrapProgram sobre o .deb do claude-desktop são
+      suposições sobre árvore de TERCEIRO — quebram no build, depois do `update`, e como
+      `upgrade` é `update && nh os switch`, a quebra caía no meio do switch. Agora
+      `packages.x86_64-linux` expõe os quatro (`nix build .#nxbender`) e `checks.pacotes` os
+      constrói. De propósito NÃO é o system.build.toplevel: arrastaria o quickshell (Qt/C++)
+      pro runner.
+      E foi ele que pegou a primeira vítima no mesmo dia: a URL `/latest/` do VS Code é
+      PONTEIRO — saiu a 1.132.0, o ponteiro andou e o narHash travado (da 1.131.0) parou de
+      casar. Aqui passava porque o tarball velho estava na store; em máquina LIMPA o flake não
+      avaliava mais. Não era risco de 2032, era quebra a cada release. Trocado por URL
+      versionada (`/1.132.0/`), que é imutável — o preço é que `nix flake update` não sobe
+      versão sozinho, subir é editar o número.
+
+- [x] Caça ao código e à doc mortos (05/08/2026) — apagados `pkgs/README.md` (dizia "vazio por
+      ora" com 2 derivations dentro, e apontava pra uma "fase 5 do README" que não existe),
+      `home/desktop/quickshell/bar-preview.qml` (o próprio arquivo definia quando morrer: "quando
+      a barra atingir paridade, é ligada no shell.qml e a Waybar sai" — as duas coisas
+      aconteceram), `scripts/healthcheck.sh` (zero referência em .nix e o cabeçalho se dizia
+      "gitignored" estando VERSIONADO — o `.sh` solto que a regra 7 proíbe) e o `.env` órfão.
+      Mais ~6 comentários que descreviam um mundo que não existe (as "FASES" do Bar.qml,
+      `nvidia-smi` numa máquina Intel, `waybar` em duas listas de categoria).
+      AUDITADO e limpo: zero `.nix` órfão, zero input de flake sem consumidor (12 conferidos),
+      toda opção `my.*` com consumidor.
+      LIÇÃO: o pior legado não é arquivo sobrando — é LISTA ENUMERANDO PROGRAMA REMOVIDO. O
+      `waybar`/`mako` mortos no `--avoid` do earlyoom escondiam que o compositor nunca estava
+      protegido. Doc morta ali não era sujeira, era bug disfarçado.
+
 - [ ] 🔴 REVOGAR a auth key do Tailscale que estava no `.env` órfão (achado em 05/08/2026)
       O arquivo `.env` na raiz do repo guardava `TAILSCALE=tskey-auth-kLXAR6…` em TEXTO CLARO,
       modo 644, cabeçalho "nixos-sandisk declarative join (**reusable**)". Não era versionado
@@ -62,19 +166,17 @@ seguem declarados de propósito — são a CHAVE do acervo, não sobra do módul
         Settings → Keys → a que começa com `kLXAR6`.
       • Enquanto não revogar, a key vale mesmo sem o arquivo. Apagar reduziu a exposição
         local; não invalidou nada.
-- [ ] Tirar o nó `nixos-sandisk` da tailnet — `tailscale status` ainda lista
-      `100.92.126.90 nixos-sandisk … offline, last seen 4d ago` (05/08/2026). A máquina não
-      existe mais (o SanDisk virou Windows 11). Nó morto na tailnet é ACL e rota que ninguém
-      audita.
-
-      POR QUE ESTES DOIS NÃO VIRAM DECLARATIVOS (pesquisado em 05/08/2026, regra 1):
-      o CLI OFICIAL não faz nenhuma das duas coisas. `tailscale --help` da 1.98.10 (a que
+- [x] Nó `nixos-sandisk` REMOVIDO da tailnet (05/08/2026) — sobrava offline há 4 dias de uma
+      máquina que não existe mais (o SanDisk virou Windows 11); nó morto é ACL e rota que
+      ninguém audita. Feito no admin console; sobraram 2 (nixos-kingston, faidell6035).
+      • POR QUE ESTES DOIS NÃO VIRAM DECLARATIVOS (pesquisado em 05/08/2026, regra 1): o
+        CLI OFICIAL não faz nenhuma das duas coisas. `tailscale --help` da 1.98.10 (a que
       está instalada) tem 30 subcomandos e nenhum é `key` ou `device` — o mais perto é
       `logout`, que expira o node key DESTA máquina, não remove nó alheio. A doc oficial de
       "Remove a device" diz console ou API, sem CLI, e a FR do upstream
       (tailscale/tailscale#8844) segue aberta. As duas ações são da API v2:
-        DELETE https://api.tailscale.com/api/v2/device/{id}
-        DELETE https://api.tailscale.com/api/v2/tailnet/{tailnet}/keys/{keyId}
+      `DELETE /api/v2/device/{id}` e `DELETE /api/v2/tailnet/{tailnet}/keys/{keyId}`, em
+      `https://api.tailscale.com`.
       DECISÃO: fazer no admin console e NÃO guardar token de API. Automatizar exigiria um
       token/OAuth client com escrita na tailnet inteira, guardado no sops — um segredo
       PERMANENTE e mais poderoso que a auth key que se quer revogar, criado para uma tarefa

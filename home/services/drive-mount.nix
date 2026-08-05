@@ -77,6 +77,13 @@ in
         # `programs.rclone` gera o rclone.conf do remote `faiws`, e exportar a variável
         # faria o mount da FAI procurar o remote no arquivo errado. (A doc do rclone
         # ainda avisa que unit de systemd não herda ambiente — outra razão pro flag.)
+        # ⚠️ O MOUNTPOINT TEM QUE ESTAR VAZIO. O rclone recusa com "…is not empty, use
+        # --allow-non-empty to mount anyway" — e `--allow-non-empty` fica FORA de
+        # propósito: montar por cima de arquivo existente ESCONDE ele, e aí você tem
+        # dado invisível que só reaparece quando o mount cai. Custou o primeiro start
+        # (05/08/2026): a versão bisync deste módulo criava um RCLONE_TEST aqui, e o
+        # arquivo órfão de 0 byte travou o mount em loop de restart.
+        # Se o mount não subir, checar `ls -a ~/Drive` ANTES de suspeitar de rede.
         ExecStartPre = [
           "${pkgs.coreutils}/bin/mkdir -p ${cfg.local}"
           "${pkgs.coreutils}/bin/install -m600 /run/secrets/rclone_gdrive_conf %t/rclone-gdrive.conf"

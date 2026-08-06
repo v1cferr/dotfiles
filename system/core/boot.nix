@@ -24,10 +24,28 @@
 # então gerações que compartilham kernel ocupam espaço UMA vez: os 10 limites cabem
 # folgados no 1 GiB da ESP (hoje: 13 MiB de kernel + 47 MiB de initrd por versão).
 # ═══════════════════════════════════════════════════════════════════════════
-{ config, inputs, ... }:
+{
+  config,
+  inputs,
+  pkgs,
+  ...
+}:
 
 {
   imports = [ inputs.minegrub-world-sel-theme.nixosModules.default ];
+
+  # KERNEL MAINLINE (7.1.x) em vez do default do release (6.18.x). O motivo é o
+  # DRIVER DE VÍDEO: o `xe` da Arc B580 mora no kernel, então kernel novo = driver
+  # novo — e é o único lever de driver que NÃO exige atravessar canal (o
+  # `linuxPackages_latest` vem do próprio 26.05). Ver o bloco ⚠️ em
+  # hardware/gpu.nix pra por que o resto do stack gráfico fica no estável.
+  # Seguro aqui porque: zero módulo out-of-tree (nada de zfs/virtualbox pra casar
+  # com a versão) e o Secure Boot desta máquina assina o GRUB, não o kernel
+  # (./secureboot.nix) — trocar de kernel não pede re-enroll de chave.
+  # Aplicar com `nixos-rebuild boot` + reboot, NUNCA `switch`: kernel novo com
+  # /run/current-system antigo deixa os módulos do kernel rodando fora de sincronia.
+  # Se regredir, o rollback é escolher a geração anterior no menu do GRUB.
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   boot.loader.efi.canTouchEfiVariables = true;
 

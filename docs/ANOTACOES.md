@@ -918,6 +918,16 @@ do módulo.
       Aviso gravado no cabeçalho do `extraPackages` em system/hardware/gpu.nix.
       Peso extra desde 06/08: o Mesa virou caminho crítico de IA também, porque o
       Ollama passou a rodar por Vulkan/ANV — não é mais só perf de jogo.
+- [x] Kernel mainline (`linuxPackages_latest`, 7.1.x) — 06/08/2026, em
+      system/core/boot.nix. É o lever (a) do item acima e o ÚNICO de driver que não
+      atravessa canal: o `linuxPackages_latest` vem do próprio 26.05, e o driver `xe`
+      da Arc mora no kernel, então kernel novo = driver novo sem risco de ABI de
+      loader. Seguro nesta máquina porque não há NENHUM módulo out-of-tree (nada de
+      zfs/virtualbox pra casar de versão — auditado) e o Secure Boot daqui assina o
+      GRUB, não o kernel (core/secureboot.nix), então não pede re-enroll de chave.
+      Aplicado com `nixos-rebuild boot` + reboot, NUNCA `switch` — kernel novo com
+      /run/current-system antigo deixa módulo fora de sincronia. Rollback = geração
+      anterior no menu do GRUB. Sai de 6.18.42 (default do release) pra 7.1.6.
 
 > Adicionar todos como padrão
 

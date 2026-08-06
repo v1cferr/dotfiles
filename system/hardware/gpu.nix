@@ -27,6 +27,22 @@
   # re-inicializa a GPU limpa, como num cold boot. Se não colar: bios/efi/acpi/cold.
   boot.kernelParams = [ "reboot=pci" ];
 
+  # ⚠️ NÃO trocar por `pkgs.unstable.*` — TESTADO E REPROVADO (06/08/2026). Estes
+  # .so não são libs normais: são PLUGINS carregados impuramente de
+  # /run/opengl-driver/lib por um loader que vem do canal ESTÁVEL, e o loader
+  # aceita driver IGUAL ou MAIS VELHO que ele, nunca mais novo. O `libva` varre
+  # `__vaDriverInit_1_<minor>` do SEU minor até 1_0; o iHD do unstable exporta
+  # `1_24` e o libva 2.23 do estável só tenta até `1_23` → `vaInitialize failed`
+  # e todo decode/encode cai pra CPU, em silêncio.
+  #
+  # O MESA NÃO está nesta regra — é exceção MEDIDA, não suposição: o `libgbm` é
+  # pacote separado (stub) e existe `hardware.graphics.package` justamente pra
+  # trocar a versão global do Mesa. Testado: ICD do `unstable.mesa` + loader do
+  # sistema → Arc B580 + `Mesa 26.1.6`, sem erro. Se um dia valer, é ali (com
+  # `package32 = pkgs.unstable.pkgsi686Linux.mesa` — NESSA ordem), não aqui.
+  # Hoje não vale: o nixpkgs backporta point-release pro release (mesa 26.1.5 vs
+  # 26.1.6; kernel e linux-firmware IDÊNTICOS nos dois canais). Pro kernel o lever
+  # é `linuxPackages_latest`, do próprio estável — ver core/boot.nix.
   hardware.graphics.extraPackages = with pkgs; [
     intel-media-driver # VA-API (iHD) — decode/encode de vídeo
     vpl-gpu-rt # oneVPL runtime (QuickSync nas gerações novas)

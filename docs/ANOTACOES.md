@@ -884,6 +884,40 @@ do módulo.
       Battlemage OK no kernel 6.18/Mesa 25.x. O Ollama ficou em CPU na troca e VOLTOU
       pra GPU em 06/08/2026 via `pkgs.ollama-vulkan` (ver item do Ollama acima).
       Pra ressuscitar a NVIDIA: histórico git do system/hardware/gpu.nix.
+- [x] Driver da Intel no canal UNSTABLE — TENTADO, TESTADO e REPROVADO (06/08/2026).
+      A ideia era "driver sempre na última versão, porque a Intel atualiza toda semana".
+      Ela morre no fato de que driver gráfico no NixOS não é lib normal: é PLUGIN
+      carregado impuramente de `/run/opengl-driver/lib`, e o LOADER vem do canal da
+      base. Loader aceita driver igual ou mais VELHO que ele, nunca mais novo — o
+      `libva` varre `__vaDriverInit_1_<minor>` do seu minor até `1_0` e não tenta
+      acima. Medido: `intel-media-driver` do unstable exporta `1_24`, o `libva`
+      2.23.0 do estável para em `1_23` → `vaInitialize failed with error code -1`,
+      e TODO decode/encode cai pra CPU **em silêncio** (regra 14: nada falha, só
+      fica errado). Problema conhecido da comunidade (nixpkgs #263940, #216361).
+      ⚠️ **O MESA É EXCEÇÃO** — medido DEPOIS, e é o oposto do que eu tinha
+      concluído: o `libgbm` virou pacote SEPARADO (stub que linka o do host em
+      runtime) e o 25.05 introduziu `hardware.graphics.package` exatamente pra
+      "gerenciar a versão global do Mesa sem mass rebuild". Testado: ICD do
+      `unstable.mesa` + vulkan-loader do sistema → `deviceName = Arc B580`,
+      `driverInfo = Mesa 26.1.6`; EGL idem, sem erro. Ou seja: **Mesa PODE cruzar
+      canal** (loader de Vulkan/GL negocia versão), `libva` NÃO (só desce de
+      minor). Não é a mesma classe de problema, apesar de parecer.
+      E o ganho não existia: o nixpkgs BACKPORTA point-release pro branch de
+      release — mesa 26.1.5 vs 26.1.6, e kernel 6.18.42 + linux-firmware 20260622
+      IDÊNTICOS nos dois canais. Divergem só o userspace Intel (media-driver
+      26.1.6→26.2.4, compute-runtime 26.18→26.27, vpl-gpu-rt 26.1.6→26.3.0) — e é
+      exatamente esse que não pode atravessar o canal.
+      **REGRA QUE FICA**, por lever: (a) kernel → `pkgs.linuxPackages_latest`, do
+      PRÓPRIO estável, sem cruzar canal — feito, ver item do kernel; (b) Mesa →
+      `hardware.graphics.package = pkgs.unstable.mesa` (+ `package32 =
+      pkgs.unstable.pkgsi686Linux.mesa`, nessa ordem — `pkgs.pkgsi686Linux.unstable`
+      é errado, ver flake.nix), mecanismo provado mas SÓ vale quando o delta for
+      minor de verdade: revisar ~set/2026, quando o unstable for pro 26.2+ e o
+      26.05 travar no 26.1.x; (c) VA-API/oneVPL/compute → fica no estável, sobe só
+      com a base (26.11, ~nov/2026); (d) NÃO adotar mesa_git/cache de terceiro.
+      Aviso gravado no cabeçalho do `extraPackages` em system/hardware/gpu.nix.
+      Peso extra desde 06/08: o Mesa virou caminho crítico de IA também, porque o
+      Ollama passou a rodar por Vulkan/ANV — não é mais só perf de jogo.
 
 > Adicionar todos como padrão
 

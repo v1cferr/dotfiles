@@ -303,6 +303,11 @@
   "workbench.editor.pinnedTabsOnSeparateRow": true,
   // Sempre reabre as janelas/pastas da última sessão (volta de onde parou)
   "window.restoreWindows": "all",
+  // Zoom da UI INTEIRA (Ctrl+= / Ctrl+- / Ctrl+0), não só do editor. O default
+  // zoomPerWindow=true deixa o zoom válido só na janela atual e NÃO o persiste; com false
+  // ele volta a ser global e o VS Code grava `window.zoomLevel` AQUI — ou seja, o zoom
+  // passa a ser versionado junto com o resto. Cada passo é ~20% (zoomLevel 1 ≈ 120%).
+  "window.zoomPerWindow": false,
   // Mantém arquivos não salvos ao fechar a janela/sair (não perde trabalho)
   "files.hotExit": "onExitAndWindowClose",
   // Não abre a tela de boas-vindas no startup
@@ -328,4 +333,5 @@
     "launchpad": true
   },
   "breadcrumbs.showEditorType": true,
+  "window.zoomLevel": -1,
 }

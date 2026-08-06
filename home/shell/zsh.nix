@@ -19,7 +19,12 @@ let
   # porquê está no flake.nix), então é ele quem sobe o número — é o que faz o VS Code
   # ficar sempre na última stable. NO-OP quando já está. Falhou (API fora, repo em outro
   # formato)? O `&&` para aqui e nada é aplicado com o repo meio-editado.
-  updateCmd = "vscode-bump ${flake} && nix flake update --flake ${flake}";
+  # O `vscode-extensions-dump` vai por ÚLTIMO e não mexe em input nenhum: ele regrava o
+  # espelho das extensões instaladas (home/apps/vscode/extensions.txt) pra que o repo mostre
+  # no diff extensão que entrou ou saiu. O gatilho é este alias, e não o `rebuild`, porque
+  # `update` é o ritual de manutenção — o preço é o espelho ficar atrasado entre dois
+  # `update`, o que é aceitável pra um registro que ninguém consome em runtime.
+  updateCmd = "vscode-bump ${flake} && nix flake update --flake ${flake} && vscode-extensions-dump ${flake}";
 in
 {
   programs.zsh = {

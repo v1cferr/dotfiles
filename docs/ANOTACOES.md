@@ -754,10 +754,28 @@ do módulo.
       login por SESSÃO salva (duo-login 1x — o headless cai no anti-bot do Duolingo).
       Ofensiva mantida sozinha 1x/dia (catch-up). Helpers: duo-login, duo-run-once.
   - [x] Instalar Ollama ou outro recomendando para rodar modelos de IA localmente
-        — Ollama NATIVO (system/services/ollama.nix) roda em CPU (i5-11400; aceleração na
-        Arc B580 = explorar depois). qwen3:4b (solver texto) + bge-m3 (embeddings)
+        — Ollama NATIVO (system/services/ollama.nix), **na GPU (Arc B580) por Vulkan**
+        desde 06/08/2026. qwen3:4b (solver texto) + bge-m3 (embeddings)
         via loadModels. É o solver local do duo-streak-daemon (localhost:11434),
         sem cota nem nuvem.
+  - [x] Ollama na GPU da Arc B580 (06/08/2026) — era o "explorar depois" que ficou
+        pendente na troca de placa. `services.ollama.acceleration` NÃO existe mais
+        (`mkRemovedOptionModule`): aceleração virou escolha de PACOTE, e `pkgs.ollama`
+        puro é igual ao `-cpu` quando não há rocmSupport/cudaSupport — ou seja, o
+        "CPU-only" antigo não era limitação do nixpkgs, era o default. Solução de 1
+        linha: `package = pkgs.ollama-vulkan` (0.32.3, já no 26.05).
+        VULKAN e não SYCL/ipex-llm porque o Vulkan usa o Mesa ANV que já está no
+        sistema — nada novo pra empacotar (o ipex-llm não está no nixpkgs).
+        Medido no startup: `library=Vulkan description="Intel(R) Arc(tm) B580
+        Graphics (BMG G21)" type=discrete total=11.9 GiB available=9.7 GiB`. O
+        `llvmpipe` (Vulkan em CPU, aparece como GPU1 no vulkaninfo) é descartado
+        pelo próprio ollama — não precisou de `GGML_VK_VISIBLE_DEVICES`.
+        Hardening do módulo já libera a placa: `DeviceAllow` tem `char-drm`
+        (major 226 = /dev/dri/*) e `SupplementaryGroups = [ "render" ]`.
+        ⚠️ Risco conhecido: crash do backend Vulkan em Arc sob decode de alta
+        frequência (ollama#14207). Fallback = `pkgs.ollama-cpu`, 1 linha.
+        CONSEQUÊNCIA de arquitetura: o Mesa agora é caminho crítico de IA, não só
+        de jogo — reforça o item do driver/unstable abaixo.
   - [x] Claude Desktop (GUI: Chat/Cowork/Code) — 02/08/2026. A pesquisa mudou de resposta no
         meio do caminho: em **30/06/2026 a Anthropic passou a publicar um Claude Desktop
         OFICIAL pra Linux** (beta, `.deb` num APT próprio, só Debian/Ubuntu homologados).
@@ -863,9 +881,9 @@ do módulo.
 - [x] Trocar a RTX 3050 → Intel Arc B580 (Battlemage) — FEITO. Arc validada (`xe`
       carregado, fastfetch/vainfo OK) e NVIDIA REMOVIDA de vez: system/hardware/gpu.nix agora
       é Intel puro (xe + Mesa, VA-API iHD), sem `my.gpu`, sem specialisation, sem CUDA.
-      Battlemage OK no kernel 6.18/Mesa 25.x. Ollama caiu p/ CPU (system/services/ollama.nix;
-      GPU Intel no Ollama = explorar depois). Pra ressuscitar a NVIDIA: histórico git
-      do system/hardware/gpu.nix.
+      Battlemage OK no kernel 6.18/Mesa 25.x. O Ollama ficou em CPU na troca e VOLTOU
+      pra GPU em 06/08/2026 via `pkgs.ollama-vulkan` (ver item do Ollama acima).
+      Pra ressuscitar a NVIDIA: histórico git do system/hardware/gpu.nix.
 
 > Adicionar todos como padrão
 

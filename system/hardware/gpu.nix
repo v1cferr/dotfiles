@@ -6,7 +6,8 @@
 # specialisation de resgate durante a troca de placa. A Arc foi validada
 # (fastfetch/vainfo/`xe` carregado) e a NVIDIA foi REMOVIDA de vez — o destino
 # sempre foi Intel puro. Pra ressuscitar a NVIDIA, o histórico git deste arquivo
-# tem o perfil completo. O Ollama segue esta GPU (ai/ollama.nix).
+# tem o perfil completo. O Ollama roda NESTA GPU, por Vulkan/Mesa ANV — logo o
+# Mesa daqui é caminho crítico de IA, não só de jogo (services/ollama.nix).
 #
 # Requisitos Battlemage já satisfeitos: kernel 6.18 (>=6.12), Mesa 25.x (>=24.3),
 # firmware redistribuível ligado (hardware.nix).

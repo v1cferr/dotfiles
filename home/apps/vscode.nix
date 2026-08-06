@@ -1,5 +1,7 @@
-# VS Code — pacote (regra: app COM config própria é dono do seu pacote) + os DOIS JSONs
-# do usuário (settings/keybindings) versionados aqui e linkados pro ~/.config/Code/User.
+# VS Code — pacote (regra: app COM config própria é dono do seu pacote) + os TRÊS JSONs de
+# config do usuário (settings/keybindings/mcp) versionados aqui e linkados pro
+# ~/.config/Code/User. O resto daquele diretório (globalStorage, History, workspaceStorage,
+# sync) é ESTADO e fica de fora de propósito: vai pro restic, não pro git.
 #
 # POR QUE mkOutOfStoreSymlink e NÃO `programs.vscode.profiles.default.userSettings`: o
 # módulo do home-manager GERA o settings.json na store, e store é read-only — o app, que
@@ -26,8 +28,10 @@
 # desligar o recurso "Settings" congelaria ela pra sempre. Consequência a aceitar: este
 # arquivo é um MIRROR versionado, não fonte imutável — mudança feita em outra máquina
 # chega aqui como diff, e extensão que escreve na config (o `"//": "Last update at …"` do
-# fileNesting é o pior caso) gera ruído no `git status`. Quem quiser Nix ENFORCING troca
-# estas duas linhas por `programs.vscode.profiles.default.userSettings` e desliga
+# fileNesting é o pior caso) aparece no `git status` — e isso é a FUNÇÃO, não o preço: o
+# repo tem que espelhar o que o sistema É, e como o arquivo linkado é o VIVO, `git status`
+# virou detector de drift da config do editor. Quem quiser Nix ENFORCING troca os
+# `xdg.configFile` abaixo por `programs.vscode.profiles.default.userSettings` e desliga
 # "Settings"/"Keybindings" no Sync — é a decisão inversa, não uma correção.
 #
 # EXTENSÕES continuam sendo INSTALADAS pelo Sync (conta), não declaradas aqui: declará-las
@@ -118,4 +122,15 @@ in
     config.lib.file.mkOutOfStoreSymlink "${repo}/settings.json";
   xdg.configFile."Code/User/keybindings.json".source =
     config.lib.file.mkOutOfStoreSymlink "${repo}/keybindings.json";
+  # mcp.json: quais MCP servers o chat do VS Code enxerga (context7, playwright, markitdown).
+  # Entra aqui pelo MESMO motivo dos dois de cima — é config que o app REESCREVE (adicionar
+  # server pela galeria grava neste arquivo), então symlink e não `programs.vscode.userMcp`,
+  # que existe mas geraria na store.
+  #
+  # SEGREDO NENHUM aqui, e é isso que torna versionar seguro: a API key do context7 não está
+  # no arquivo, e sim como ${input:context7_api_key} — a indireção NATIVA do VS Code, que
+  # pergunta o valor em runtime e o guarda no globalStorage (estado → restic). VERIFICAR ISSO
+  # DE NOVO ao adicionar server novo: no dia em que um pedir token INLINE, este arquivo deixa
+  # de poder ser versionado em claro e o caminho passa a ser sops, não commit.
+  xdg.configFile."Code/User/mcp.json".source = config.lib.file.mkOutOfStoreSymlink "${repo}/mcp.json";
 }

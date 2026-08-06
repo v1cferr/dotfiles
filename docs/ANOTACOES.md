@@ -925,9 +925,13 @@ do módulo.
       loader. Seguro nesta máquina porque não há NENHUM módulo out-of-tree (nada de
       zfs/virtualbox pra casar de versão — auditado) e o Secure Boot daqui assina o
       GRUB, não o kernel (core/secureboot.nix), então não pede re-enroll de chave.
-      Aplicado com `nixos-rebuild boot` + reboot, NUNCA `switch` — kernel novo com
-      /run/current-system antigo deixa módulo fora de sincronia. Rollback = geração
-      anterior no menu do GRUB. Sai de 6.18.42 (default do release) pra 7.1.6.
+      Sai de 6.18.42 (default do release) pra 7.1.6. Rollback = geração anterior no
+      menu do GRUB. `boot` é PREFERÍVEL a `switch` numa troca de kernel, mas o
+      `switch` não quebra — eu tinha escrito "NUNCA switch" e estava errado: o NixOS
+      guarda `/run/booted-system/kernel-modules` com a árvore do kernel RODANDO, e
+      foi o que aconteceu na prática (switch 6.18.42→7.1.6, `systemctl --failed`
+      vazio, modprobe resolvendo em .../6.18.42). A vantagem do `boot` é só não
+      reiniciar serviço numa geração cujo kernel ainda não subiu.
 
 > Adicionar todos como padrão
 

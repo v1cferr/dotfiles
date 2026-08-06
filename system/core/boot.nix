@@ -42,9 +42,12 @@
   # Seguro aqui porque: zero módulo out-of-tree (nada de zfs/virtualbox pra casar
   # com a versão) e o Secure Boot desta máquina assina o GRUB, não o kernel
   # (./secureboot.nix) — trocar de kernel não pede re-enroll de chave.
-  # Aplicar com `nixos-rebuild boot` + reboot, NUNCA `switch`: kernel novo com
-  # /run/current-system antigo deixa os módulos do kernel rodando fora de sincronia.
-  # Se regredir, o rollback é escolher a geração anterior no menu do GRUB.
+  # PREFERIR `nixos-rebuild boot` + reboot ao trocar de versão de kernel — mas
+  # `switch` NÃO quebra: o NixOS guarda `/run/booted-system/kernel-modules` com a
+  # árvore do kernel que está RODANDO, então modprobe/udev continuam resolvendo
+  # (verificado em 06/08/2026: switch de 6.18.42→7.1.6 com zero serviço falhando).
+  # A vantagem do `boot` é só não reiniciar serviço dentro de uma geração cujo
+  # kernel ainda não subiu. Rollback = geração anterior no menu do GRUB.
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   boot.loader.efi.canTouchEfiVariables = true;

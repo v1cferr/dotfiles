@@ -9,6 +9,17 @@ let
   # opção mora no nível mais baixo que precisa dela, e o home lê via osConfig). Antes
   # este caminho era literal nos três aliases abaixo.
   flake = osConfig.programs.nh.flake;
+
+  # Os três aliases de manutenção são compostos aqui e não escritos três vezes: `upgrade`
+  # É `update && rebuild` por definição, e restatá-lo por extenso (como era até 06/08/2026)
+  # é a mesma regra em dois lugares — no dia em que só uma das cópias muda, `upgrade` para
+  # de ser o que o nome diz e ninguém percebe (regra 11).
+  rebuildCmd = "nh os switch ${flake} && { hyprctl -i 0 reload || true; }";
+  # vscode-bump ANTES do flake update: o input `vscode-tarball` tem URL VERSIONADA (o
+  # porquê está no flake.nix), então é ele quem sobe o número — é o que faz o VS Code
+  # ficar sempre na última stable. NO-OP quando já está. Falhou (API fora, repo em outro
+  # formato)? O `&&` para aqui e nada é aplicado com o repo meio-editado.
+  updateCmd = "vscode-bump ${flake} && nix flake update --flake ${flake}";
 in
 {
   programs.zsh = {
@@ -49,12 +60,12 @@ in
       # estivesse no lugar errado. Passando o caminho, funciona no primeiro `rebuild` e
       # não depende de relogar. O programs.nh.flake CONTINUA valendo (é a SSOT lida aqui,
       # e serve pro `nh` avulso), só não é mais dependência do alias.
-      rebuild = "nh os switch ${flake} && { hyprctl -i 0 reload || true; }";
-      update = "nix flake update --flake ${flake}"; # bump do flake.lock
+      rebuild = rebuildCmd;
+      update = updateCmd; # bump do flake.lock + da versão do VS Code (vscode-bump)
       # upgrade = update + rebuild (tipo `apt update && apt full-upgrade`). O `update` roda
       # como USUÁRIO primeiro (tem a chave SSH p/ inputs privados, ex. duo-streak-daemon) e
       # SÓ com sucesso (`&&`) segue pro rebuild como root — lock quebrado nunca chega a aplicar.
-      upgrade = "nix flake update --flake ${flake} && nh os switch ${flake} && { hyprctl -i 0 reload || true; }";
+      upgrade = "${updateCmd} && ${rebuildCmd}";
       # CUIDADO com o `-d`: ele apaga TODAS as gerações antigas, não só as velhas — ou seja,
       # depois de rodar não há mais rollback p/ a geração de ontem, nem entrada dela no GRUB.
       # É o que se quer quando a intenção é liberar o máximo; se a intenção for só higiene,

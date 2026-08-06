@@ -53,6 +53,31 @@ do módulo.
 
 ## TODO
 
+- [x] VS Code sempre na última stable, sem edição manual (06/08/2026) — fecha a ponta solta
+      que a troca de URL de ontem deixou. O pedido era "prefiro sempre deixar na latest", e a
+      resposta NÃO é voltar pro `/latest/`: ponteiro + narHash travado é exatamente a quebra
+      a cada release que consertamos ontem. Input que se atualiza sozinho não existe com hash
+      travado — o que existe é BUMP AUTOMATIZADO.
+      • `pkgs/vscode-bump.nix` (`writeShellApplication`, regra 7 — o build É o shellcheck):
+        consulta `update.code.visualstudio.com/api/update/linux-x64/stable/latest`, lê o
+        `productVersion` (e NÃO o `version`, que é o hash do commit), reescreve o número no
+        `flake.nix` e roda `nix flake update vscode-tarball`. NO-OP quando já está na última,
+        porque roda em todo `upgrade`.
+      • O caminho do repo vem por ARGUMENTO (regra 11): a SSOT é `programs.nh.flake`, lida
+        pelo zsh.nix via `osConfig` — o pacote não guarda literal.
+      • Descartada a Action agendada: o repo ficaria atual sozinho, mas exigiria `git pull`
+        antes do `upgrade` pra servir de algo, e cada bump dispararia o CI de 1,43 GiB. O
+        momento em que a versão importa é o do REBUILD, então o gatilho certo é o alias.
+      • De carona, os aliases pararam de se repetir: `rebuildCmd`/`updateCmd` são compostos
+        no `let` e `upgrade` = `${updateCmd} && ${rebuildCmd}`. Antes `upgrade` restava os
+        dois por extenso — a mesma regra em dois lugares, e no dia em que só uma cópia muda
+        `upgrade` deixa de ser o que o nome diz (regra 11).
+      • VALIDADO com round-trip, e é a prova que importa: baixei o `flake.nix` na mão pra
+        1.131.0, rodei o bump e o `flake.lock` voltou BYTE-IDÊNTICO ao commitado (o narHash
+        `sha256-PLpT3k…` da 1.132.0). `nix flake check`: all checks passed.
+      • O que isto NÃO resolve: extensões e settings continuam vindo do Settings Sync (conta
+        Microsoft), não do Nix — só o PACOTE é declarativo.
+
 - [x] earlyoom NÃO protegia o compositor (05/08/2026) — o achado mais grave da limpeza, e
       apareceu por acidente: `waybar` e `mako` estavam na lista `--avoid` e são fantasmas
       (saíram na migração pro Quickshell). Ao tirá-los, medi a regex contra os processos

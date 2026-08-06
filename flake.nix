@@ -119,9 +119,13 @@
     # exatamente o `sha256-2Fzf…` que estava no lock, e `/1.132.0/` devolve `sha256-PLpT…` —
     # os dois estáveis em fetches repetidos. Artefato versionado é imutável; ponteiro não é.
     #
-    # PREÇO, agora explícito: `nix flake update` NÃO traz mais versão nova sozinho — a URL é
-    # fixa. Subir de versão = editar o número aqui + `nix flake update vscode-tarball`. Uma
-    # edição a mais por mês em troca de um flake que avalia em qualquer máquina.
+    # PREÇO da URL fixa: `nix flake update` não traz versão nova sozinho. Quem paga é o
+    # `vscode-bump` (pkgs/vscode-bump.nix) desde 06/08/2026 — consulta a API oficial,
+    # reescreve o número DESTA linha e roda `nix flake update vscode-tarball`. Ele é o
+    # primeiro passo dos aliases `update`/`upgrade` (home/shell/zsh.nix), então "sempre na
+    # última stable" acontece no rebuild, sem edição manual e sem furar a regra 13 (o hash
+    # continua travado no lock; o que mudou é QUEM o atualiza). Subir na mão continua
+    # possível: editar aqui + `nix flake update vscode-tarball`.
     vscode-tarball = {
       url = "tarball+https://update.code.visualstudio.com/1.132.0/linux-x64/stable";
       flake = false;
@@ -186,6 +190,7 @@
       overlayLocalPkgs = final: _: {
         claude-code-discord-status = final.callPackage ./pkgs/claude-code-discord-status.nix { };
         nxbender = final.callPackage ./pkgs/nxbender.nix { }; # cliente FOSS da VPN SonicWall (FAI)
+        vscode-bump = final.callPackage ./pkgs/vscode-bump.nix { }; # bump do vscode-tarball p/ a última stable
       };
 
       # Claude Desktop: força o backend de secret. O Electron autodetecta pelo
@@ -280,6 +285,7 @@
             claude-code-discord-status # ./pkgs — daemon do Rich Presence
             nxbender # ./pkgs — cliente da VPN SonicWall (3 patches sobre o upstream)
             claude-desktop # flake de terceiro + o wrapper de keyring daqui
+            vscode-bump # ./pkgs — o build é o shellcheck do script (regra 7)
             ;
           inherit (pkgs.unstable) vscode; # receita do unstable com o SRC do tarball oficial
         };

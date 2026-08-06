@@ -47,7 +47,7 @@ home/                    USUÁRIO (home-manager) — dotfiles + apps de usuário
   packages.nix           LISTA CENTRAL de apps/CLIs do usuário (sem config própria)
   shell/                 zsh, starship, cli, kitty, git
   desktop/               hypr (+helpers), hyprsunset, lockscreen (+assets), waybar, notifications, theme, xdg
-  apps/                  apps COM config própria: dropbox, media, dolphin, flameshot, mangohud
+  apps/                  apps COM config própria: dropbox, media, dolphin, flameshot, vscode, mangohud
   services/              cs2-saves-backup, claude-discord-rpc (daemon)
 
 pkgs/                    derivations próprias (fora do nixpkgs) — ex.: claude-code-discord-status

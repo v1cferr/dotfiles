@@ -2,8 +2,8 @@
 # PACOTES DO USUÁRIO (home-manager) — a lista CENTRAL. É AQUI que você adiciona
 # um app/CLI novo SEM config própria (espelha o system/packages.nix). Apps COM
 # config declarativa vivem no seu módulo (programs.* ou apps/desktop/shell):
-# kitty, git, dolphin, flameshot, media, quickshell, tema, helpers do Hyprland. unfree
-# ok (allowUnfree herdado do system).
+# kitty, git, dolphin, flameshot, media, vscode, quickshell, tema, helpers do Hyprland.
+# unfree ok (allowUnfree herdado do system).
 #
 # `pkgs.foo` = base estável (26.05); `pkgs.unstable.foo` = canal bleeding-edge.
 # ═══════════════════════════════════════════════════════════════════════════
@@ -40,20 +40,12 @@
     spotify # música (unfree)
 
     # ── Editor / dev ──
-    # VS Code: receita do unstable com o SRC trocado pelo tarball oficial (input
-    # vscode-tarball + overlayVscodeTarball no flake.nix) — adiante do que o nixpkgs bumpou.
-    # A URL do input é versionada, e quem sobe o número é o `vscode-bump` abaixo, chamado
-    # pelo `update`/`upgrade`: na prática, SEMPRE a última stable. Override
-    # --password-store=gnome-libsecret: no Hyprland o Electron não autodetecta o backend de
-    # secret e mostra "couldn't identify OS keyring". Extensões/settings = Settings Sync
-    # (conta), NÃO nix.
-    (unstable.vscode.override { commandLineArgs = "--password-store=gnome-libsecret"; })
-    # Sobe o input vscode-tarball p/ a última stable (./pkgs). No PATH porque é o alias
-    # `update` (home/shell/zsh.nix) que o chama por nome, e não um serviço.
-    vscode-bump
+    # O VS Code (pacote + settings.json/keybindings.json versionados) mora em
+    # home/apps/vscode.nix — app COM config própria é dono do seu pacote.
+    #
     # Toolchain Nix que a extensão nix-ide DIRIGE — o pacote é declarativo aqui, a
-    # config da extensão não (Settings Sync + .vscode/settings.json do repo; ver a
-    # linha do vscode acima). Os dois são resolvidos por NOME no $PATH: caminho do
+    # config da extensão não (home/apps/vscode/settings.json + .vscode/settings.json
+    # do repo). Os dois são resolvidos por NOME no $PATH: caminho do
     # /nix/store dentro de settings.json quebraria no primeiro nix-collect-garbage.
     #
     # nixd e NÃO nil: os dois são LSP de Nix vivos, mas só o nixd completa OPÇÕES de

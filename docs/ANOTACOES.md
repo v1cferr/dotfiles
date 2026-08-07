@@ -92,9 +92,18 @@ do módulo.
         não por preguiça: depende de regra do **KWin** pra sumir com a barra de título (aqui é
         Hyprland, não há KWin) e de um QSS via `--stylesheet`, que brigaria com o Kvantum que
         já desenha todo o Qt. Antes de copiar receita de tema, checar se ela pressupõe Plasma.
-      • FALTA pra fechar o visual: a toolbar (o "command strip" do Explorer). É `dolphinui.rc`,
-        XML que o Dolphin reescreve no "Configurar barras de ferramentas" → cai na regra 14, um
-        symlink do HM ali brigaria. Se for fazer, é activation idempotente, não `home.file`.
+      • TOOLBAR estilo Explorer: TENTADA E RECUSADA no mesmo dia (07/08/2026). Não commitada,
+        e o `~/.local/share/kxmlgui5/dolphin/dolphinui.rc` foi apagado. Motivo primário: NÃO
+        GOSTOU do resultado — o Explorer tem DUAS faixas (endereço em cima, comandos embaixo)
+        e o Dolphin só tem UMA toolbar, então tudo se amontoa numa linha e fica pior que o
+        default limpo. Não é limitação de config, é do Dolphin.
+        Havia também um custo que sozinho já pedia cautela: o `.rc` carrega `version="48"` e
+        quando o Dolphin subir pra 49 o KXMLGUI DESCARTA o arquivo em silêncio — a toolbar
+        voltaria ao padrão sem erro nenhum. Mesma classe de drift do ViewMode.
+        Se alguém insistir: é activation idempotente e nunca `home.file` (regra 14, o Dolphin
+        reescreve o arquivo no "Configurar barras de ferramentas"). Mas o veredito é NÃO.
+      • Onde o visual PAROU: ícones + as 5 chaves acima. O que sobraria exige brigar com o
+        Kvantum (QSS) ou com um KWin que não existe aqui — ou seja, não sobra nada barato.
 
 - [x] Ícones do Dolphin: Fluent → **Win11** (07/08/2026) — o pedido era "o mais semelhante ao
       Windows 11 possível", e o ponto de partida já ERA um tema Windows 11 (`fluent-icon-theme`

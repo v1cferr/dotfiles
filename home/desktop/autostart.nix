@@ -61,7 +61,9 @@ let
       desc = "chat/voz";
     };
     spotify = {
-      exec = "${pkgs.spotify}/bin/spotify";
+      # unstable.* precisa CASAR com home/packages.nix, senão o autostart sobe a versão
+      # quebrada da base enquanto o menu abre a boa (ver a justificativa lá).
+      exec = "${pkgs.unstable.spotify}/bin/spotify";
       desc = "música";
       # Sair com 1 é o caminho NORMAL aqui (escapa p/ scope próprio; ver header).
       # Sem isto, on-failure reinicia a cada 5s e a janela reaparece sozinha.

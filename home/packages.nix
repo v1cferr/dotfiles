@@ -37,7 +37,14 @@
 
     # ── Notas / mídia ──
     obsidian # notas em Markdown (cofre local; unfree)
-    spotify # música (unfree)
+    # Música (unfree). UNSTABLE e não a base: a 1.2.90.451 da 26.05 NÃO ABRE mais aqui
+    # (MEDIDO 07/08/2026) — o zygote do CEF morre antes do primeiro ping, o browser
+    # aborta com "GPU process isn't usable. Goodbye." e o processo cai de SIGTRAP em
+    # ~250ms, sem janela e sem erro visível. Não é a Arc B580 nem o perfil: `--disable-gpu`
+    # e `--no-sandbox` não mudam nada, e `--no-zygote` contorna. A 1.2.92.147 do unstable
+    # abre limpa, SEM flag — por isso a correção é a versão, não um workaround no launcher.
+    # Voltar pra `spotify` puro quando a base alcançar ≥1.2.92.
+    unstable.spotify
 
     # ── Editor / dev ──
     # O VS Code (pacote + settings.json/keybindings.json versionados) mora em

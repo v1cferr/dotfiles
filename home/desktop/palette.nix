@@ -100,12 +100,13 @@ in
       internal = true;
       description = "Paleta resolvida do tema ativo (hexes sem '#'). Lida pelos módulos.";
     };
-    # Tema de ÍCONES: é tema, mas NÃO deriva do preset de cores — o Fluent-dark é o look
+    # Tema de ÍCONES: é tema, mas NÃO deriva do preset de cores — o Win11-dark é o look
     # Windows 11 e vale em qualquer paleta. O PACOTE fica em theme.nix (gtk.iconTheme.package),
-    # então trocar = esta linha + o pacote lá.
+    # então trocar = esta linha + o pacote lá. O NOME tem que casar com o diretório que o
+    # install.sh gera (`-n Win11` + variante `-dark`), senão o tema cai no fallback calado.
     iconTheme = lib.mkOption {
       type = lib.types.str;
-      default = "Fluent-dark";
+      default = "Win11-dark";
       description = "Tema de ícones (SSOT). Lido por theme.nix (dconf/GTK/kdeglobals) e pelos temas do rofi.";
     };
     # Cursor: mesmo raciocínio. O pacote (bibata-cursors) fica em theme.nix.

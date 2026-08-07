@@ -5,7 +5,7 @@
 #
 # Migração do meu Arch (cliphist-rofi-img.sh) COM melhorias: além de thumbnail de
 # imagem, agora arquivos copiados (URI file://…) ganham ÍCONE do tipo (zip/vídeo/pdf…)
-# resolvido pelo tema de ícones (Fluent-dark). Regra 1/3: idiomático e declarativo.
+# resolvido pelo tema de ícones ativo (my.theme.iconTheme). Regra 1/3: idiomático e declarativo.
 {
   pkgs,
   config,
@@ -33,7 +33,7 @@ let
       cache="''${XDG_CACHE_HOME:-$HOME/.cache}/cliphist/thumbnails"
       mkdir -p "$cache"
 
-      # extensão → nome de ícone freedesktop (resolvido pelo tema Fluent-dark).
+      # extensão → nome de ícone freedesktop (resolvido pelo tema de ícones ativo).
       ext_icon() {
         case "$1" in
           zip|tar|gz|xz|bz2|7z|rar|zst)             echo application-x-archive ;;
@@ -95,8 +95,8 @@ in
     clipboardMenu
   ];
 
-  # Cores do TEMA ATIVO (my.theme) — a paleta do rofi segue a fonte única. icon-theme =
-  # Fluent-dark (o mesmo do sistema) resolve os ícones nomeados por tipo de arquivo.
+  # Cores do TEMA ATIVO (my.theme) — a paleta do rofi segue a fonte única. icon-theme vem do
+  # my.theme.iconTheme (o mesmo do sistema) e resolve os ícones nomeados por tipo de arquivo.
   # `font` explícito: sem ele o rofi cai no default "mono 12". NÃO comentar dentro do
   # .rasi com '#' — ali '#' abre literal de cor e quebra o parse do tema inteiro.
   xdg.configFile."rofi/clipboard.rasi".text = ''

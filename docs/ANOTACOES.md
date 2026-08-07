@@ -77,6 +77,31 @@ do módulo.
       • Não houve perda de token: `/run` é tmpfs, então a escrita do root já era descartada em
         todo reboot. O sops sempre foi a fonte da verdade.
 
+- [x] Ícones do Dolphin: Fluent → **Win11** (07/08/2026) — o pedido era "o mais semelhante ao
+      Windows 11 possível", e o ponto de partida já ERA um tema Windows 11 (`fluent-icon-theme`
+      é o Fluent Design). Então não foi conserto, foi fidelidade: o `Win11-icon-theme` redesenha
+      os ícones da Microsoft, enquanto o Fluent é interpretação autoral do Fluent Design.
+      • Decidido OLHANDO, não lendo: montei uma comparação com os ícones reais dos 3 candidatos
+        (Fluent / Win11 / We10X), 19 nomes cada, mesmo tamanho e fundo. `We10X` cai fora por
+        ser Windows **10X**, geração anterior — aparece nas listas por ser popular, não fiel.
+      • Argumento que decidiu: `Win11-icon-theme` é do MESMO autor (yeyushengfan258) do
+        `Win11OS-kde` que já vendorizamos pro Kvantum → widget e ícone combinam de fábrica.
+      • Preço: sai do nixpkgs (vendorizado, pinado por commit `a5b460a`) → bump virou MANUAL.
+      • Três armadilhas pagas no build, todas invisíveis na doc do upstream:
+        1. `nativeBuildInputs = [ gtk3 ]` é OBRIGATÓRIO. O install.sh chama
+           `gtk-update-icon-cache` no fim de CADA variante e o `set -eo pipefail` mata ali —
+           depois de instalar a 1ª. Sem isso o `Win11-dark`, que é o que usamos, nem existia.
+           E não é pelo cache: nenhum `icon-theme.cache` sobra no output.
+        2. `noBrokenSymlinks` reprova o build com 147 links mortos por variante. NÃO é
+           workaround silenciar: são nomes de variante de cor (`folder-green.svg`,
+           `folder_color_yellow_wine.svg`) cujo alvo não existe em instalação NENHUMA, nem num
+           Arch — `colors/color-<X>/` usa nomes `folder-*.svg` pra sobrescrever e nunca cria os
+           prefixados. Bug cosmético do upstream. Poda com `find "$out" -xtype l -delete`.
+        3. `-t <cor>` fica FORA: ele copia `colors/color-<X>/` POR CIMA de `places/scalable` e
+           recoloriria as pastas. A variante vazia é justamente a que foi aprovada.
+      • Comentários que citavam "Fluent-dark" em launcher.nix/clipboard.nix passaram a apontar
+        pro `my.theme.iconTheme`. Nome de tema hardcodado em comentário é drift esperando a vez.
+
 - [x] "Sempre Detalhes" nunca foi Detalhes (07/08/2026) — era **Compact** desde 18/07. O pin
       do `dolphin.nix` sempre funcionou; apontava pro modo errado. `DolphinView::Mode`
       (`src/views/dolphinview.h`) é `0 = Icons, 1 = Details, 2 = Compact`, e NÃO a ordem do

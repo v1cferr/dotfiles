@@ -40,6 +40,58 @@ let
       runHook postInstall
     '';
   };
+
+  # ÍCONES Windows 11 (yeyushengfan258/Win11-icon-theme), pinado por commit. Vendorizado
+  # porque NÃO está no nixpkgs — mesma exceção do win11os-kvantum acima.
+  #
+  # Escolhido em 07/08/2026 sobre o `pkgs.fluent-icon-theme`, que era o tema daqui e TAMBÉM
+  # é Windows 11. Dois motivos, nesta ordem: (1) é redesenho dos ícones da Microsoft, e não
+  # a interpretação autoral do Fluent Design — comparado ícone a ícone antes de trocar;
+  # (2) é do MESMO autor do Kvantum acima, então widget e ícone combinam de fábrica.
+  # PREÇO ACEITO: sai do canal do nixpkgs, então o bump aqui virou manual (regra da
+  # estratégia de versões — upstream direto só quando o ganho justifica).
+  #
+  # `-t` fica FORA de propósito: com a variante vazia o script pula o `cp colors/color<X>`,
+  # e é justamente `src/places/scalable` (pasta azul-clara da MS) que foi aprovado. Passar
+  # `-t blue` etc. RECOLORIRIA as pastas por cima e entregaria outra coisa.
+  win11-icons = pkgs.stdenvNoCC.mkDerivation {
+    pname = "win11-icon-theme";
+    version = "0-unstable-a5b460a";
+    src = pkgs.fetchFromGitHub {
+      owner = "yeyushengfan258";
+      repo = "Win11-icon-theme";
+      rev = "a5b460a407da143b32f19a503d7fcebb3edf2371";
+      hash = "sha256-+GtOkOVSWlNTdKSs0R86LhnpbBZ21Y0ML3V8pwDUUSc=";
+    };
+    dontConfigure = true;
+    dontBuild = true;
+    # SÓ pelo binário: o install.sh termina cada variante com `gtk-update-icon-cache`
+    # (linha 202) e o `set -eo pipefail` transforma o "command not found" em erro fatal.
+    # O estrago era pior que falhar: ele morria DEPOIS de instalar a 1ª variante, então
+    # sem isto o `Win11-dark` — justamente o que usamos — nem chegava a existir.
+    # Não é pelo cache: conferido que nenhum icon-theme.cache sobra no output.
+    nativeBuildInputs = [ pkgs.gtk3 ];
+    # Roda o install.sh em vez de copiar `src/` na mão: além de copiar, ele renomeia o
+    # index.theme, aplica a troca da variante dark e recria a FAZENDA DE SYMLINKS do
+    # `links/` — é ela que faz centenas de nomes de mime caírem no mesmo SVG. Copiar à
+    # mão entregaria um tema cheio de ícone genérico.
+    installPhase = ''
+      runHook preInstall
+      mkdir -p "$out/share/icons"
+      bash ./install.sh -d "$out/share/icons" -n Win11
+
+      # PODA de symlink morto, senão o `noBrokenSymlinks` do nixpkgs reprova o build
+      # (147 por variante). Não é workaround: são links de VARIANTE DE COR
+      # (`folder-green.svg`, `green-folder-video.svg`, `folder_color_yellow_wine.svg`)
+      # cujo alvo não existe em instalação nenhuma — nem num Arch — porque
+      # `colors/color-<X>/` usa nomes `folder-*.svg` pra SOBRESCREVER, e nunca cria os
+      # nomes prefixados. Bug cosmético do upstream; o nixpkgs só é mais rigoroso.
+      # Conferido que nenhum deles é nome freedesktop que o Dolphin procure — os que
+      # importam (folder, folder-documents, user-home, mimes) seguem intactos.
+      find "$out" -xtype l -delete
+      runHook postInstall
+    '';
+  };
 in
 
 {
@@ -74,7 +126,7 @@ in
     };
     iconTheme = {
       name = config.my.theme.iconTheme; # SSOT: my.theme.iconTheme
-      package = pkgs.fluent-icon-theme; # ícones estilo Windows 11 (Fluent-dark)
+      package = win11-icons; # ícones do Windows 11 (Win11-dark) — ver a derivação no let
     };
     font.name = osConfig.my.fonts.ui; # SSOT: system/hardware/fonts.nix
     font.size = 11;

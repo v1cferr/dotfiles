@@ -1,4 +1,4 @@
-# Launcher de apps — rofi `drun` com ÍCONES (Fluent-dark) + ordena pelos mais/recém usados
+# Launcher de apps — rofi `drun` com ÍCONES (my.theme.iconTheme) + ordena pelos mais/recém usados
 # (histórico do rofi, ligado por padrão: na abertura mostra os recentes; ao digitar, filtra
 # fuzzy) + tema Tokyo Night vindo da paleta ÚNICA (my.theme → recolore junto ao trocar preset).
 # Binds SUPER+Q (apps) / SUPER+R (binários) em home/desktop/hypr/lua/keybinds.lua.

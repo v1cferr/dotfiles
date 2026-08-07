@@ -84,8 +84,10 @@ do módulo.
         mais destoante: o Explorer não tem expansor nessa visão.
       • `[General] ShowSelectionToggle=false` (no Win11 "caixas de seleção" vem desligado),
         `AlwaysShowTabBar=true`, `ShowFullPath=true`, `ShowStatusBar=FullWidth`.
-      • `[KDE] SingleClick=false` (duplo clique). ÚNICO item que escapa do Dolphin: é
-        kdeglobals, vale pra todo app KDE.
+      • `[KDE] SingleClick=false` (duplo clique) entrou e SAIU no mesmo dia. O pedido é
+        semelhança de INTERFACE, e clique é COMPORTAMENTO — não muda um pixel. Pior: mora no
+        kdeglobals, então mudaria TODO app KDE por causa do file manager. Serve de régua pro
+        resto: mexer no que se VÊ, não no que se USA.
       • O guia "pixel-perfect" que circula (vrunox-9714/dolphin-win11-theme) foi RECUSADO, e
         não por preguiça: depende de regra do **KWin** pra sumir com a barra de título (aqui é
         Hyprland, não há KWin) e de um QSS via `--stylesheet`, que brigaria com o Kvantum que

@@ -154,9 +154,10 @@ in
     run "$kw" --file "$HOME/.config/dolphinrc" --group General --key ShowFullPath true
     # Enum do KConfigXT: grava-se o NOME da escolha (Small/FullWidth/Disabled), não o índice.
     run "$kw" --file "$HOME/.config/dolphinrc" --group General --key ShowStatusBar FullWidth
-    # Duplo clique pra abrir, como no Explorer. ATENÇÃO: é do kdeglobals, ou seja vale pra
-    # TODO app KDE, não só pro Dolphin — é o único item daqui que escapa do file manager.
-    run "$kw" --file "$HOME/.config/kdeglobals" --group KDE --key SingleClick false
+
+    # `[KDE] SingleClick=false` (duplo clique) foi TENTADO e REMOVIDO em 07/08/2026. O pedido
+    # é semelhança de INTERFACE, e clique é COMPORTAMENTO — não muda um pixel. Pior: mora no
+    # kdeglobals, então mudaria todo app KDE por causa do file manager. Não reintroduzir.
 
     dir="$HOME/.local/share/dolphin/view_properties/global"
     run mkdir -p "$dir"

@@ -6,8 +6,19 @@
 # O módulo services.hyprsunset sobe um SERVIÇO systemd --user (dispensa exec-once)
 # e gera ~/.config/hypr/hyprsunset.conf a partir de `settings`. Os `profile` trocam
 # a temperatura por horário do relógio sozinhos; os keybinds F9 (home/hypr.nix) são
-# só override manual pontual via `hyprctl hyprsunset`. Schedule herdado dos dotfiles
-# do Arch. Kelvin: 6500=dia neutro · 4000=noite · 3000=noite avançada · 2000=madrugada.
+# só override manual pontual via `hyprctl hyprsunset`.
+# Kelvin: 6500=dia neutro · 4000=noite · 3000=noite avançada · 2000=madrugada.
+#
+# A NOITE É AGRESSIVA DE PROPÓSITO (06/08/2026, reescrita do schedule herdado do
+# Arch): trabalho o dia inteiro em OUTRO PC sem filtro, então quando chego às 18h
+# o olho já vem castigado e não dá pra tratar 18h como "início de noite leve". O
+# schedule antigo só descia de 500 em 500K e chegava em 5500K às 18h — perto do
+# neutro, ou seja, alívio real só às 22h, 4h depois de chegar. Agora o maior
+# degrau da curva é justamente às 18h (5500→4200), e às 19h já está em 3500K.
+# ⚠️ Abaixo de ~3200K a cor fica visivelmente laranja e ESTRAGA filme/jogo/foto:
+# o escape hatch é SUPER+SHIFT+F9 (`hyprctl hyprsunset identity` = filtro OFF), e
+# o próximo perfil do relógio retoma a curva sozinho. Se atrapalhar demais, o
+# ajuste é subir SÓ o degrau das 18h/18:30 — não achatar a curva inteira.
 { ... }:
 
 {
@@ -43,37 +54,41 @@
         } # dia (8h–17h30): neutro, sem filtro, brilho cheio
         {
           time = "17:30";
-          temperature = 6000;
+          temperature = 5500;
         } # fim de tarde: 1º aquecimento (sem dim ainda)
         {
           time = "18:00";
-          temperature = 5500;
+          temperature = 4200;
+        } # CHEGADA DO TRABALHO: maior degrau da curva, é aqui que o alívio começa
+        {
+          time = "18:30";
+          temperature = 3800;
         }
         {
           time = "19:00";
-          temperature = 5000;
+          temperature = 3500;
         }
         {
           time = "20:00";
-          temperature = 4500;
+          temperature = 3200;
         }
         {
           time = "21:00";
-          temperature = 4000;
+          temperature = 3000;
         }
         {
           time = "22:00";
-          temperature = 3500;
+          temperature = 2800;
           gamma = 0.9;
         } # pré-sono: reduz azul + dim leve
         {
           time = "23:00";
-          temperature = 3000;
+          temperature = 2500;
           gamma = 0.85;
         }
         {
           time = "23:30";
-          temperature = 2500;
+          temperature = 2200;
           gamma = 0.8;
         } # transição final p/ a madrugada
       ];

@@ -53,6 +53,26 @@ do módulo.
 
 ## TODO
 
+- [x] `arch-browse` voltou a abrir (07/08/2026) — o alias estava CERTO; quem quebrava era o
+      backup. `restic-backups-home-gdrive` roda como ROOT e a opção `rcloneConfigFile` só faz
+      `RCLONE_CONFIG=/run/secrets/rclone_gdrive_conf`. O rclone renova o token OAuth e
+      PERSISTE por cima do arquivo apontado — como root, funciona, e o arquivo recriado nasce
+      `root:users`, apagando o `owner = "v1cferr"` do sops. Aí o alias, que roda como usuário
+      (mount FUSE é privado de quem monta), não lia mais o rclone.conf.
+      • Sintoma traiçoeiro: CONSERTA no reboot (sops reaplica) e quebra no primeiro backup. A
+        linha do tempo do dia fechou exata — boot 07:29:47 → `~/Drive` leu OK 07:30:10 → o run
+        atrasado das 03:00 (`Persistent = true`) rodou 07:54:39 → segredo virou root 07:54:40.
+      • Como foi achado: comparar `/run/secrets/*` com o `manifest.json` do sops do
+        `/run/current-system/activate`. Só o `rclone_gdrive_conf` divergia. Vale como receita —
+        drift de segredo não aparece em `nixos-rebuild`, só no runtime.
+      • Fix: cópia gravável em `/run/restic-backups-home-gdrive/rclone.conf` (o
+        `RuntimeDirectory` que o módulo já declara), mesmo padrão do `~/Drive`. O restic nunca
+        mais toca no segredo. `mkBefore` no `preStart`, NÃO `mkAfter`: o `initialize = true`
+        injeta `restic cat config || restic init` no começo do MESMO script e esse já fala com
+        o Drive — copiar depois dele mataria o serviço na largada.
+      • Não houve perda de token: `/run` é tmpfs, então a escrita do root já era descartada em
+        todo reboot. O sops sempre foi a fonte da verdade.
+
 - [x] VS Code sempre na última stable, sem edição manual (06/08/2026) — fecha a ponta solta
       que a troca de URL de ontem deixou. O pedido era "prefiro sempre deixar na latest", e a
       resposta NÃO é voltar pro `/latest/`: ponteiro + narHash travado é exatamente a quebra

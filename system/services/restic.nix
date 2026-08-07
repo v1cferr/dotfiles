@@ -41,6 +41,11 @@
   ...
 }:
 
+let
+  # O módulo do nixpkgs já declara `RuntimeDirectory=restic-backups-home-gdrive` → systemd
+  # cria (e apaga no stop) este diretório antes do preStart. Só reaproveitamos.
+  runtimeDir = "/run/restic-backups-home-gdrive";
+in
 lib.mkIf config.my.services.restic {
   # PONTOS DE MONTAGEM pra NAVEGAR os backups no gerenciador de arquivos (aliases
   # `backup-browse` e `arch-browse`). Donos do USUÁRIO porque quem monta tem que ser ele:
@@ -55,11 +60,34 @@ lib.mkIf config.my.services.restic {
     "d /mnt/arch-antigo 0755 v1cferr users -" # acervo do Arch antigo (ARCH-KINGSTON)
   ];
 
-  # PEGADINHA que já custou o serviço do arquivo do Arch inteiro: o módulo do nixpkgs
-  # põe SÓ o ssh no PATH (`path = [ config.programs.ssh.package ]`), e o backend
-  # `rclone:` do restic EXECUTA o binário rclone. Sem este mkAfter, morre na largada
-  # com "rclone: executable file not found in $PATH".
-  systemd.services.restic-backups-home-gdrive.path = lib.mkAfter [ pkgs.rclone ];
+  systemd.services.restic-backups-home-gdrive = {
+    # PEGADINHA que já custou o serviço do arquivo do Arch inteiro: o módulo do nixpkgs
+    # põe SÓ o ssh no PATH (`path = [ config.programs.ssh.package ]`), e o backend
+    # `rclone:` do restic EXECUTA o binário rclone. Sem este mkAfter, morre na largada
+    # com "rclone: executable file not found in $PATH".
+    path = lib.mkAfter [ pkgs.rclone ];
+
+    # CÓPIA GRAVÁVEL do rclone.conf — mesmo padrão do ~/Drive (home/services/drive-mount.nix),
+    # e aqui NÃO é cosmético: é o que impede o backup de ARREBENTAR o `arch-browse`.
+    #
+    # A opção `rcloneConfigFile` do módulo só faz `RCLONE_CONFIG=<caminho>`, e este serviço
+    # roda como ROOT. O rclone renova o token OAuth e persiste o novo POR CIMA do arquivo
+    # apontado — root tem permissão, então dá certo, e o arquivo novo nasce `root:users`.
+    # Isso APAGA o `owner = "v1cferr"` que o sops pôs em /run/secrets/rclone_gdrive_conf, e
+    # o `arch-browse`/`backup-browse` (que rodam como o USUÁRIO, ver alias em
+    # home/shell/zsh.nix) passam a morrer sem conseguir ler o rclone.conf.
+    # Diagnosticado em 07/08/2026: boot 07:29 → sops põe v1cferr → o backup atrasado das
+    # 03:00 rodou 07:54:39 → mtime do segredo virou root:users às 07:54:40. Na prática o
+    # navegador do backup ficava quebrado quase sempre, e "consertava" sozinho no reboot.
+    # O usuário lendo daqui é read-only (0400), então ele NÃO tem como reintroduzir o bug.
+    environment.RCLONE_CONFIG = "${runtimeDir}/rclone.conf";
+    # mkBefore, NÃO mkAfter: o `initialize = true` põe um `restic cat config || restic init`
+    # no começo do MESMO preStart, e esse já fala com o Drive. Copiar depois dele deixaria o
+    # serviço morrer no primeiro comando por rclone.conf inexistente.
+    preStart = lib.mkBefore ''
+      install -m600 ${config.sops.secrets.rclone_gdrive_conf.path} ${runtimeDir}/rclone.conf
+    '';
+  };
 
   services.restic.backups.home-gdrive = {
     # `rclone:<remote>:<caminho>` — o restic sobe um `rclone rcd` e fala HTTP com ele.
@@ -69,8 +97,9 @@ lib.mkIf config.my.services.restic {
     passwordFile = config.sops.secrets.restic_password.path;
 
     # rclone.conf com o token OAuth = SEGREDO (regra 12). NUNCA a opção `rcloneConfig`
-    # (attrset): ela vaza o token pro /nix/store, que é world-readable.
-    rcloneConfigFile = config.sops.secrets.rclone_gdrive_conf.path;
+    # (attrset): ela vaza o token pro /nix/store, que é world-readable. E também NÃO a
+    # `rcloneConfigFile`: ela aponta o RCLONE_CONFIG direto pro segredo, e o serviço roda
+    # como root — ver o `environment.RCLONE_CONFIG` acima, que passa a cópia gravável.
 
     initialize = true; # cria o repo no 1º backup
 

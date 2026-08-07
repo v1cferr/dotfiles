@@ -57,6 +57,34 @@ do módulo.
 
 ## TODO
 
+- [x] Cloudflare no Claude Code: CLI + MCP (07/08/2026) — pra fechar a "descoberta pendente" do
+      Caddy (o wildcard respondendo IP privado) sem eu ler zona no painel na mão. Três peças:
+      `wrangler` em `home/packages.nix` (base 26.05, que está na MESMA 4.93.0 do unstable — sem
+      delta, sem motivo p/ bleeding-edge), `.mcp.json` na raiz e `.claude/settings.json`.
+      • ESCOPO É PROJETO, e NÃO global, contra o que eu tinha pedido — porque global e
+        declarativo são MUTUAMENTE EXCLUSIVOS aqui, e vale registrar o porquê. Os três escopos
+        de MCP do Claude Code: `local` e `user` (=global) moram em `~/.claude.json`; só
+        `project` mora em `.mcp.json`, versionado. E o `~/.claude.json` é o arquivo que guarda
+        `numStartups`, `tipsHistory`, `projects`, cache de features — o app REESCREVE em
+        runtime, então pela regra 14 o Nix não pode ser dono dele. Global = imperativo. Fim.
+      • A ROTA DE FUGA EXISTE E FOI RECUSADA: `/etc/claude-code/managed-mcp.json` seria
+        declarativo (`environment.etc`) E global, o único jeito de ter os dois. Mas ele tem
+        controle EXCLUSIVO: "Claude Code loads only the servers that file defines. Users cannot
+        add, modify, or use any other MCP servers, including plugin-provided servers." Isso
+        MATARIA o github, o atlassian e os connectors do claude.ai. Trocar 4 servidores que
+        funcionam por 1 é péssimo negócio — e project scope resolve 100% do caso de uso, já que
+        o trabalho de DNS/Caddy é NESTE repo.
+      • O plugin oficial (`cloudflare/skills`, que a doc manda instalar) foi ABERTO e RECUSADO:
+        traz 5 servidores MCP e 13 skills, e 11 delas são Workers/Durable Objects/Pages/
+        Turnstile — plataforma de dev que eu não uso. Sobrou o que serve: `cloudflare-api`
+        (DNS, zonas, tokens) e `cloudflare-docs`. Os 3 descartados eram `bindings`, `builds` e
+        `observability`. Marketplace foi removido depois de inspecionado, não ficou órfão.
+      • `enabledMcpjsonServers` no `.claude/settings.json` PRÉ-APROVA os dois: sem ele o Claude
+        pergunta a cada sessão. Só vale em workspace confiável — repo clonado não se auto-aprova.
+      • Auth é OAuth no browser, na PRIMEIRA chamada de tool — não tem token no repo (regra 12).
+        Credencial SEPARADA do token sops do `cloudflare-dyndns`; não confundir os dois.
+      • ⚠️ `.mcp.json` é JSON estrito, sem comentário — por isso o "porquê" está aqui e não lá.
+
 - [x] `arch-browse` voltou a abrir (07/08/2026) — o alias estava CERTO; quem quebrava era o
       backup. `restic-backups-home-gdrive` roda como ROOT e a opção `rcloneConfigFile` só faz
       `RCLONE_CONFIG=/run/secrets/rclone_gdrive_conf`. O rclone renova o token OAuth e

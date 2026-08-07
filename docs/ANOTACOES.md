@@ -58,9 +58,14 @@ do módulo.
 ## TODO
 
 - [x] Cloudflare no Claude Code: CLI + MCP (07/08/2026) — pra fechar a "descoberta pendente" do
-      Caddy (o wildcard respondendo IP privado) sem eu ler zona no painel na mão. Três peças:
-      `wrangler` em `home/packages.nix` (base 26.05, que está na MESMA 4.93.0 do unstable — sem
-      delta, sem motivo p/ bleeding-edge), `.mcp.json` na raiz e `.claude/settings.json`.
+      Caddy (o wildcard respondendo IP privado) sem eu ler zona no painel na mão. Duas peças:
+      `.mcp.json` na raiz e `.claude/settings.json`.
+      • O `wrangler` ENTROU E SAIU no mesmo dia, e o motivo vale registrar porque eu ia repetir:
+        assumi que o "CLI oficial da Cloudflare" serviria pra DNS. NÃO SERVE — o help inteiro é
+        Workers/Pages/KV/R2/AI/Queues, e não existe `wrangler dns` nem nada de zona. E o preço
+        era 2.2 GiB de closure, QUATRO cópias de nodejs-24 (slim, -npm, -corepack e o cheio):
+        sozinho, +1.91 GiB dos +2.10 GiB daquele switch. Contradizia o próprio critério que
+        usei duas linhas abaixo pra recusar as skills de Workers. Quem faz DNS é o MCP.
       • ESCOPO É PROJETO, e NÃO global, contra o que eu tinha pedido — porque global e
         declarativo são MUTUAMENTE EXCLUSIVOS aqui, e vale registrar o porquê. Os três escopos
         de MCP do Claude Code: `local` e `user` (=global) moram em `~/.claude.json`; só

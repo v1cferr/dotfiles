@@ -100,12 +100,10 @@
 
     # ── CLIs ──
     gh # GitHub CLI (auth/push via HTTPS + token)
-    # CLI oficial da Cloudflare (Workers/Pages, mas também `wrangler dns`/zonas). Base e
-    # não unstable: as duas estão em 4.93.0 hoje: sem delta, sem motivo p/ bleeding-edge.
-    # Login é `wrangler login` (OAuth no browser) e grava em ~/.config/.wrangler — ESTADO,
-    # fora do Nix. Não confundir com o token sops do cloudflare-dyndns: são credenciais
-    # separadas, e essa aqui é interativa/pessoal.
-    wrangler
+    # NÃO adicionar `wrangler` aqui: TESTADO E REMOVIDO em 07/08/2026, no mesmo dia em que
+    # entrou. Custa 2.2 GiB de closure (QUATRO cópias de nodejs-24: slim, -npm, -corepack e
+    # o cheio) e NÃO tem comando de DNS/zona — o help inteiro é Workers/Pages/KV/R2/AI.
+    # O trabalho de DNS aqui é feito pelo MCP `cloudflare-api` (.mcp.json na raiz).
     unstable.claude-code # este assistente de código (bleeding-edge — evolui rápido)
     unstable.yt-dlp # baixa vídeo/áudio (unstable pq quebra quando os sites mudam)
     unstable.speedtest-cli # teste de velocidade (unstable: acompanha mudanças do speedtest.net)

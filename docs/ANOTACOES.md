@@ -77,6 +77,23 @@ do módulo.
       • Não houve perda de token: `/run` é tmpfs, então a escrita do root já era descartada em
         todo reboot. O sops sempre foi a fonte da verdade.
 
+- [x] Dolphin mais perto do **Windows Explorer** (07/08/2026) — 6 chaves, e só as em que o
+      default do Dolphin DIVERGE do Explorer. Cada default foi lido no `config.kcfg` do pacote,
+      não chutado; `HighlightEntireRow` e `SortFoldersFirst` já vinham certos e ficaram fora.
+      • `[DetailsMode] ExpandableFolders=false` — os `▶` e as linhas de árvore eram a coisa
+        mais destoante: o Explorer não tem expansor nessa visão.
+      • `[General] ShowSelectionToggle=false` (no Win11 "caixas de seleção" vem desligado),
+        `AlwaysShowTabBar=true`, `ShowFullPath=true`, `ShowStatusBar=FullWidth`.
+      • `[KDE] SingleClick=false` (duplo clique). ÚNICO item que escapa do Dolphin: é
+        kdeglobals, vale pra todo app KDE.
+      • O guia "pixel-perfect" que circula (vrunox-9714/dolphin-win11-theme) foi RECUSADO, e
+        não por preguiça: depende de regra do **KWin** pra sumir com a barra de título (aqui é
+        Hyprland, não há KWin) e de um QSS via `--stylesheet`, que brigaria com o Kvantum que
+        já desenha todo o Qt. Antes de copiar receita de tema, checar se ela pressupõe Plasma.
+      • FALTA pra fechar o visual: a toolbar (o "command strip" do Explorer). É `dolphinui.rc`,
+        XML que o Dolphin reescreve no "Configurar barras de ferramentas" → cai na regra 14, um
+        symlink do HM ali brigaria. Se for fazer, é activation idempotente, não `home.file`.
+
 - [x] Ícones do Dolphin: Fluent → **Win11** (07/08/2026) — o pedido era "o mais semelhante ao
       Windows 11 possível", e o ponto de partida já ERA um tema Windows 11 (`fluent-icon-theme`
       é o Fluent Design). Então não foi conserto, foi fidelidade: o `Win11-icon-theme` redesenha

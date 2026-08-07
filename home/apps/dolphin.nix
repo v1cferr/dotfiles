@@ -131,6 +131,33 @@ in
     run "$kw" --file "$HOME/.config/dolphinrc" --group DetailsMode --key PreviewSize 32
     run "$kw" --file "$HOME/.config/dolphinrc" --group DetailsMode --key IconSize 32
 
+    # ── PARIDADE COM O WINDOWS EXPLORER (07/08/2026) ────────────────────────────────
+    # Só as chaves em que o default do Dolphin DIVERGE do Explorer — cada default foi
+    # conferido no config.kcfg do pacote, não chutado. `HighlightEntireRow` (linha inteira
+    # destacada) e `SortFoldersFirst` (pastas primeiro) já vêm certos e ficam de fora.
+    #
+    # NÃO foi seguido o guia "pixel-perfect" que circula na comunidade
+    # (vrunox-9714/dolphin-win11-theme): ele depende de uma REGRA DO KWIN pra sumir com a
+    # barra de título — aqui é Hyprland, não existe KWin — e de um QSS via
+    # `--stylesheet`, que brigaria com o Kvantum que já desenha todo o Qt daqui.
+    # O que sobra dele de aplicável é layout de toolbar, que é `dolphinui.rc` e não chave.
+
+    # Os `▶` e as linhas de árvore no Details são a coisa MAIS destoante do Explorer,
+    # que não tem expansor nenhum nessa visão.
+    run "$kw" --file "$HOME/.config/dolphinrc" --group DetailsMode --key ExpandableFolders false
+    # Marcador de seleção que aparece no hover. No Win11 "caixas de seleção de item" vem
+    # DESLIGADO; no Dolphin vem ligado.
+    run "$kw" --file "$HOME/.config/dolphinrc" --group General --key ShowSelectionToggle false
+    # Explorer do Win11 mostra a faixa de abas mesmo com uma aba só.
+    run "$kw" --file "$HOME/.config/dolphinrc" --group General --key AlwaysShowTabBar true
+    # Barra de endereço com o caminho inteiro, não só o nome da pasta atual.
+    run "$kw" --file "$HOME/.config/dolphinrc" --group General --key ShowFullPath true
+    # Enum do KConfigXT: grava-se o NOME da escolha (Small/FullWidth/Disabled), não o índice.
+    run "$kw" --file "$HOME/.config/dolphinrc" --group General --key ShowStatusBar FullWidth
+    # Duplo clique pra abrir, como no Explorer. ATENÇÃO: é do kdeglobals, ou seja vale pra
+    # TODO app KDE, não só pro Dolphin — é o único item daqui que escapa do file manager.
+    run "$kw" --file "$HOME/.config/kdeglobals" --group KDE --key SingleClick false
+
     dir="$HOME/.local/share/dolphin/view_properties/global"
     run mkdir -p "$dir"
     run "$kw" --file "$dir/.directory" --group Dolphin --key Version 4

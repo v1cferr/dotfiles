@@ -36,4 +36,7 @@ done < <(jq -r 'to_entries[] | "\(.key)\t\(.value)"' "$map")
 git -C "$repo" add secrets/secrets.yaml secrets/bitwarden-secrets.json
 echo ""
 echo "$n segredo(s) sincronizado(s). Aplique com:"
-echo "  sudo nixos-rebuild switch --flake .#nixos-sandisk"
+# $HOSTNAME é builtin do bash: não depende de PATH (o writeShellApplication tem
+# runtimeInputs ESTRITO, e `hostname` não está lá). Antes era "nixos-sandisk"
+# literal — host que morreu no cutover, mandando colar um alvo inexistente.
+echo "  sudo nixos-rebuild switch --flake .#$HOSTNAME"

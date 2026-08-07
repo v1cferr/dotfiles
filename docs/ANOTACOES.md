@@ -77,7 +77,22 @@ do módulo.
       • Não houve perda de token: `/run` é tmpfs, então a escrita do root já era descartada em
         todo reboot. O sops sempre foi a fonte da verdade.
 
-- [ ] MINIATURA no mount do restic custa DOWNLOAD do Drive — medido em 07/08/2026, não é
+- [x] "Sempre Detalhes" nunca foi Detalhes (07/08/2026) — era **Compact** desde 18/07. O pin
+      do `dolphin.nix` sempre funcionou; apontava pro modo errado. `DolphinView::Mode`
+      (`src/views/dolphinview.h`) é `0 = Icons, 1 = Details, 2 = Compact`, e NÃO a ordem do
+      menu (Icons/Compact/Details = Ctrl+1/2/3). O `whatsthis` do kcfg ainda chama o 2 de
+      "column" (nome antigo do Compact) e reforça o engano.
+      • Diagnóstico foi por PRINT, não por leitura de config: abri o Dolphin e olhei. Config
+        "certa" com efeito errado não se enxerga lendo o `.directory`. Se for conferir modo de
+        view, olhe a tela — nome à direita do ícone e segunda coluna = Compact; Detalhes tem
+        cabeçalho de coluna e uma linha por item.
+      • O número cru virou `viewModeDetails` nomeado, pra não enganar de novo.
+      • Migrar 2→1 exigiu ramo novo na activation: sobre chave JÁ imutável o kwriteconfig6 sai
+        2 e o `set -e` derrubaria o resto do home-manager — então reescreve com sed direto.
+      • Isto é a regra 14 se cumprindo pela SEGUNDA vez no mesmo arquivo: nada falhou, só
+        ficou errado, por 3 semanas. Pin de KConfig sem verificação é drift esperando a vez.
+
+- [x] MINIATURA no mount do restic custa DOWNLOAD do Drive — medido em 07/08/2026, não é
       teoria. `PreviewsShown` tem `<default>true</default>` no
       `dolphin_directoryviewpropertysettings.kcfg` (26.04.3) e não está setado aqui → preview
       LIGADO. Abri o Dolphin em `Pictures/Screenshots` do snapshot (30 arquivos, 3,9 MiB):
@@ -90,10 +105,10 @@ do módulo.
         imagens tinham ~130 KiB cada, muito abaixo de qualquer teto sensato.
       • Não existe guard POR CAMINHO no Dolphin/KIO — conferido no kcfg e nos símbolos do
         binário. Com `GlobalViewProps=true` também não dá preview off só em `/mnt`.
-      • Decidir entre: (a) `PreviewsShown[$i]=false` no `.directory` global (1 linha em
-        `home/apps/dolphin.nix`, mesmo padrão do `ViewMode[$i]`) → seguro por default, e dá
-        pra ligar na sessão sem persistir; ou (b) deixar como está e desligar preview na mão
-        antes de garimpar o acervo, tratando o repo como consulta pontual.
+      • DECIDIDO: preview fica LIGADO em tudo. `PreviewsShown[$i]=false` global foi recusado —
+        miniatura vale mais no dia a dia do que a proteção contra um caso de consulta rara.
+        Mitigação é manual: desligar visualização antes de garimpar o acervo. Registrado com
+        ⚠️ na seção "Configurações antigas do Arch Linux", que é onde se cai ao abrir o repo.
 
 - [x] VS Code sempre na última stable, sem edição manual (06/08/2026) — fecha a ponta solta
       que a troca de URL de ontem deixou. O pedido era "prefiro sempre deixar na latest", e a
@@ -1486,3 +1501,4 @@ do módulo.
       estabiliza conforme os backports chegam); o custo de esperar aqui é baixo, porque o que eu
       quero fresco já vem por `unstable.*` e pelos inputs upstream diretos.
 - [ ] Deixar o VSCode de forma declarativa com o Nix e ao mesmo tempo sempre atualizar o sync com minha conta do GitHub/Microsoft (quero que fique centralizado no <https://github.com/v1cferr/dotfiles>)
+- [ ] Adicionar o IP publico atual no Fastfetch?

@@ -101,6 +101,19 @@ do módulo.
            recoloriria as pastas. A variante vazia é justamente a que foi aprovada.
       • Comentários que citavam "Fluent-dark" em launcher.nix/clipboard.nix passaram a apontar
         pro `my.theme.iconTheme`. Nome de tema hardcodado em comentário é drift esperando a vez.
+      • E O TEMA SÓ NÃO BASTOU: no 1º print depois do rebuild as pastas saíram em LINE ART
+        monocromática. O tema tem arte colorida em `places/16` e `places/scalable`, mas o
+        `places/22` é `fill="currentColor"` — e 22 é o default. Não era regressão do Win11: o
+        Fluent tinha o MESMO 22 monocromático, só não aparecia porque a visão era Compact
+        (ícone grande → caía no scalable). Ou seja, quem revelou isso foi a troca pra Detalhes,
+        que entrou no mesmo dia — duas mudanças juntas disfarçando a causa.
+        A chave é `[DetailsMode] PreviewSize`, NÃO `IconSize`. Errei duas vezes antes de ler
+        `dolphinitemlistview.cpp:172`: `previewsShown() ? previewSize() : iconSize()` — com
+        preview ligado o `IconSize` é IGNORADO. Os dois foram pra 32 pro tamanho não pular
+        quando o preview é desligado pra garimpar o acervo. Fica em `home/apps/dolphin.nix`.
+      • Lição repetida: `grep currentColor` no SVG me fez concluir que o 16 era monocromático
+        quando ele é COLORIDO (arquivo de 28 KB, cor fora do fill). Só renderizando os três
+        tamanhos lado a lado o quadro apareceu. Pra ícone, RENDERIZE — não leia o XML.
 
 - [x] "Sempre Detalhes" nunca foi Detalhes (07/08/2026) — era **Compact** desde 18/07. O pin
       do `dolphin.nix` sempre funcionou; apontava pro modo errado. `DolphinView::Mode`

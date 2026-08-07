@@ -112,6 +112,25 @@ in
   home.activation.dolphinDetailsView = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     kw="${pkgs.kdePackages.kconfig}/bin/kwriteconfig6"
     run "$kw" --file "$HOME/.config/dolphinrc" --group General --key GlobalViewProps true
+
+    # TAMANHO do ícone na visão Detalhes. Sem isto as pastas saem em LINE ART
+    # monocromática, e não nas amarelas do Windows 11: o tema Win11 só tem arte colorida
+    # em `places/16` e `places/scalable` — o `places/22` é `fill="currentColor"`, e 22 é
+    # justamente o default. (O Fluent tinha o mesmo 22 monocromático; só não aparecia
+    # porque a visão era Compact, que pede ícone grande e caía no scalable.)
+    #
+    # A CHAVE É `PreviewSize`, NÃO `IconSize` — custou duas tentativas erradas. Com
+    # preview LIGADO (nosso caso, decidido em 07/08) o Dolphin ignora `IconSize`:
+    #   dolphinitemlistview.cpp:172
+    #   const int iconSize = previewsShown() ? settings.previewSize() : settings.iconSize();
+    # Os dois vão pra 32 de propósito, pra o tamanho não pular quando você desliga o
+    # preview pra garimpar o /mnt/arch-antigo. 32 é degrau válido do ZoomLevelInfo
+    # (16/22/32/48/…) e o 1º que entra na faixa do `places/scalable` (MinSize=32).
+    # NÃO vai imutável: assim o Ctrl+scroll continua funcionando na sessão. Zoom que
+    # pare em 22 traz o line art de volta — é o preço de deixar o zoom livre.
+    run "$kw" --file "$HOME/.config/dolphinrc" --group DetailsMode --key PreviewSize 32
+    run "$kw" --file "$HOME/.config/dolphinrc" --group DetailsMode --key IconSize 32
+
     dir="$HOME/.local/share/dolphin/view_properties/global"
     run mkdir -p "$dir"
     run "$kw" --file "$dir/.directory" --group Dolphin --key Version 4

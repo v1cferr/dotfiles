@@ -8,7 +8,14 @@
 #
 # "Sempre Detalhes" = duas chaves:
 #   dolphinrc [General] GlobalViewProps=true  → mesmo modo em TODA pasta
-#   view_properties/global/.directory [Dolphin] ViewMode=2  → 2 = Detalhes
+#   view_properties/global/.directory [Dolphin] ViewMode=1  → 1 = Detalhes
+#
+# ⚠️ O VALOR NÃO SEGUE A ORDEM DO MENU. Ficou 2 aqui de 18/07 a 07/08/2026 e o efeito era
+# Compact — o pin funcionava, só apontava pro modo errado, e por ser imutável trocar pra
+# Detalhes na sessão nunca colava. O enum é `DolphinView::Mode` (src/views/dolphinview.h):
+# 0 = Icons, 1 = Details, 2 = Compact. O menu lista Icons/Compact/Details (Ctrl+1/2/3), que
+# é outra ordem, e o `whatsthis` do kcfg piora chamando o 2 de "column" (nome antigo do
+# Compact). Conferir no header do fonte, nunca no menu nem no kcfg.
 #
 # E o ViewMode vai IMUTÁVEL — `ViewMode[$i]=2`, o marcador de kiosk do KConfig.
 # Não é preciosismo: desde o 26.04 o Dolphin guarda as view properties num xattr
@@ -30,6 +37,10 @@
 }:
 
 let
+  # `DolphinView::Mode` (src/views/dolphinview.h): 0 = Icons, 1 = Details, 2 = Compact.
+  # Nomeado porque o número cru é ARMADILHA — ver o ⚠️ do cabeçalho.
+  viewModeDetails = 1;
+
   # LUGARES FIXOS no painel Places do Dolphin. Adicionar um = 1 linha nesta lista.
   # Os nomes de ícone foram conferidos no breeze-icons 6.26.0 (places/22): nome que não
   # existe não quebra nada, só cai num ícone genérico de pasta.
@@ -108,9 +119,17 @@ in
     # cria/posiciona o grupo certo) e o sed a promove p/ imutável. O guard é
     # obrigatório: sobre uma chave já imutável o kwriteconfig6 sai 2, e a activation
     # roda com `set -e` → abortaria o resto do home-manager.
-    if ! grep -qF 'ViewMode[$i]=2' "$dir/.directory" 2>/dev/null; then
-      run "$kw" --file "$dir/.directory" --group Dolphin --key ViewMode 2
-      run ${pkgs.gnused}/bin/sed -i 's/^ViewMode=2$/ViewMode[$i]=2/' "$dir/.directory"
+    if grep -qF 'ViewMode[$i]=${toString viewModeDetails}' "$dir/.directory" 2>/dev/null; then
+      : # já no valor certo e imutável
+    elif grep -qF 'ViewMode[$i]=' "$dir/.directory" 2>/dev/null; then
+      # Já imutável, mas com OUTRO valor — o caso do 2→1. Aqui o kwriteconfig6 sairia 2 e
+      # derrubaria a activation, então a linha é reescrita direto.
+      run ${pkgs.gnused}/bin/sed -i \
+        's/^ViewMode\[\$i\]=.*$/ViewMode[$i]=${toString viewModeDetails}/' "$dir/.directory"
+    else
+      run "$kw" --file "$dir/.directory" --group Dolphin --key ViewMode ${toString viewModeDetails}
+      run ${pkgs.gnused}/bin/sed -i \
+        's/^ViewMode=${toString viewModeDetails}$/ViewMode[$i]=${toString viewModeDetails}/' "$dir/.directory"
     fi
   '';
 

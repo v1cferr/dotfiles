@@ -35,6 +35,10 @@ antigo não dizia que era o Arch). Navegar como pasta, no Dolphin:
 arch-browse                     # monta em /mnt/arch-antigo (Ctrl+C desmonta)
 ```
 
+⚠️ Desligue a **visualização** (miniaturas) no Dolphin antes de navegar aqui: preview lê o
+CONTEÚDO, e cada leitura faz o restic baixar packs do Drive. Medido: uma pasta de 3,9 MiB
+custou 3,68 MiB de download só em ícone (ver TODO de 07/08/2026).
+
 O alias está em `home/shell/zsh.nix` e roda SEM sudo de propósito: mount FUSE é privado
 de quem montou, então `sudo restic mount` gera pasta que o file manager não abre. Os
 dotfiles do Arch estão em `home/v1cferr/dotfiles` dentro do snapshot (`6d7e3ee7`, 44,6
@@ -72,6 +76,24 @@ do módulo.
         o Drive — copiar depois dele mataria o serviço na largada.
       • Não houve perda de token: `/run` é tmpfs, então a escrita do root já era descartada em
         todo reboot. O sops sempre foi a fonte da verdade.
+
+- [ ] MINIATURA no mount do restic custa DOWNLOAD do Drive — medido em 07/08/2026, não é
+      teoria. `PreviewsShown` tem `<default>true</default>` no
+      `dolphin_directoryviewpropertysettings.kcfg` (26.04.3) e não está setado aqui → preview
+      LIGADO. Abri o Dolphin em `Pictures/Screenshots` do snapshot (30 arquivos, 3,9 MiB):
+      +30 thumbnails em `~/.cache/thumbnails` e **+3,68 MiB lidos da rede** pelo
+      `rclone serve restic` — ou seja, baixou a pasta inteira só pra desenhar ícone.
+      • O `MaximumRemoteSize` do KDE (default 0 = não previsualizar remoto) NÃO protege, e o
+        teste PROVA: ele está unset e o preview aconteceu de todo jeito. Mount FUSE em `/mnt`
+        aparece pro KIO como caminho LOCAL, então a guarda de "remoto" nem é consultada.
+      • E o limite local (`[PreviewSettings] MaximumSize`) não serve de guard: é global e as
+        imagens tinham ~130 KiB cada, muito abaixo de qualquer teto sensato.
+      • Não existe guard POR CAMINHO no Dolphin/KIO — conferido no kcfg e nos símbolos do
+        binário. Com `GlobalViewProps=true` também não dá preview off só em `/mnt`.
+      • Decidir entre: (a) `PreviewsShown[$i]=false` no `.directory` global (1 linha em
+        `home/apps/dolphin.nix`, mesmo padrão do `ViewMode[$i]`) → seguro por default, e dá
+        pra ligar na sessão sem persistir; ou (b) deixar como está e desligar preview na mão
+        antes de garimpar o acervo, tratando o repo como consulta pontual.
 
 - [x] VS Code sempre na última stable, sem edição manual (06/08/2026) — fecha a ponta solta
       que a troca de URL de ontem deixou. O pedido era "prefiro sempre deixar na latest", e a

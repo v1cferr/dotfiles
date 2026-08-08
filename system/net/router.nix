@@ -17,10 +17,12 @@
 # FÍSICO. A decisão sobre a ferramenta de push (nuci/Dewclaw/própria) está aberta
 # no TODO de docs/pendencias.md; este módulo entrega a metade sem risco.
 #
-# O QUE O `sysupgrade` JÁ PRESERVA, medido em 08/08/2026 no keep.d do aparelho:
-# `/etc/config/` INTEIRO, `/etc/profile.d/`, `/etc/dropbear/` e passwd/shadow/group.
-# O que NÃO sobrevive é `/etc/sudoers.d/` e `/home/` — daí a chave SSH e o
-# `~/bin/owfetch` precisarem entrar no `/etc/sysupgrade.conf` do roteador.
+# O QUE O `sysupgrade` JÁ PRESERVA — 38 entradas no keep.d, medidas em 08/08/2026:
+# `/etc/config/` INTEIRO, `/etc/profile.d/`, `/etc/dropbear/`, passwd/shadow/group
+# E TAMBÉM `/etc/sudoers.d/`. Ficam de fora só `/home/` (a chave SSH e o
+# `~/bin/owfetch`) e o PRÓPRIO `/etc/sysupgrade.conf` — este último é a armadilha:
+# o `list_static_conffiles` lê os caminhos listados DENTRO dele mas não o inclui,
+# então sem se auto-listar o 1º upgrade preserva o pedido e o 2º perde tudo.
 # ═══════════════════════════════════════════════════════════════════════════
 { pkgs, ... }:
 

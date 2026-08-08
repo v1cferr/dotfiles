@@ -55,9 +55,37 @@
   # (via sops). proxied=false: registro DNS-only (cinza) — SSH não passa pelo
   # proxy HTTP da Cloudflare.
   #
-  # Este registro é a ÂNCORA de IP de todo o resto: os subdomínios de serviço são
-  # CNAMEs apontando pra cá (ver system/services/caddy.nix), então é ele que faz
-  # o proxy inteiro seguir o IP público. Se ele mentir, tudo mente junto.
+  # Este registro é a ÂNCORA DE IP da zona inteira, e o único que o DDNS toca.
+  # Os serviços NÃO ganham registro cada um: a zona usa um CURINGA
+  # `*.<domínio>` CNAME apontando pra cá, então subdomínio novo funciona sem
+  # nenhum trabalho de DNS — que é justamente o ponto do curinga.
+  #
+  # O IP publicado aqui É o desta casa, e ele RESPONDE de fora: o roteador tem o
+  # público direto na `pppoe-wan` e encaminha 80/443/2222. Provado em 08/08/2026
+  # pela borda da Cloudflare (registro proxied temporário → o Caddy devolveu o 404
+  # do catch-all em 0,39s). Houve um susto de CGNAT em 07/08 que se provou FALSO —
+  # o diagnóstico e as três formas de o teste mentir estão em docs/ANOTACOES.md.
+  #
+  # ⚠️ NÃO adicione `*.<domínio>` aqui. Testado em 07/08/2026: o tool só sabe
+  # criar/atualizar registro A, e a API recusa com o código 81054 ("A CNAME
+  # record with that host already exists"). O serviço entra em loop de restart
+  # e sai 3. O curinga tem que continuar CNAME, e é o alvo dele que faz a zona
+  # seguir o IP — não o DDNS.
+  #
+  # ⚠️ NÃO CONFIE NO `dig` DE DENTRO DE CASA para auditar esta zona. O roteador
+  # faz split-DNS de `*.<domínio>` → 192.168.1.10 e responde ANTES de qualquer
+  # servidor externo — inclusive quando se aponta o dig direto pro autoritativo
+  # (`dig @bruce.ns.cloudflare.com`). O sintoma é TTL 0 numa resposta que
+  # deveria vir da Cloudflare. Custou uma investigação inteira em 07/08/2026:
+  # a zona estava CERTA e parecia quebrada. Para ver o DNS de verdade, saia por
+  # DoH (HTTPS, que o roteador não intercepta):
+  #   curl -s -H 'accept: application/dns-json' \
+  #     'https://cloudflare-dns.com/dns-query?name=ssh.<domínio>&type=A' | jq
+  #
+  # ⚠️ O cache (/var/lib/cloudflare-dyndns/ip.cache) compara o IP atual contra o
+  # que ELE escreveu por último, nunca contra o registro real — alteração feita
+  # pelo dashboard o deixa cego ("Every domain is up-to-date", sem chamar a API).
+  # Apagá-lo força uma escrita real.
   #
   # O nome vem de `my.net.domain` (SSOT, regra 11 — ./domain.nix), nunca literal:
   # o Caddy e as jails do fail2ban leem a MESMA opção.

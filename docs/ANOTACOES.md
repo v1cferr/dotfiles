@@ -88,6 +88,42 @@ do módulo.
         sentinela (regra 11) — virar `jellyfin` pra `lan` fez o 403 aparecer, reverter devolveu
         o store path byte-a-byte.
 
+- [x] `router-sync`: a config do roteador sai da cegueira (08/08/2026) — as ~750 linhas de
+      UCI do Cudy WR3000 passam a viver em `router/uci/*.conf`, versionadas, com os
+      segredos redigidos. NÃO é o roteador declarativo: é ele VISÍVEL e o drift DETECTÁVEL,
+      que era a queixa real. `router-sync pull` espelha, `router-sync diff` compara e sai 1
+      se divergir (testado nos três estados: sincronia 0, divergência 1, revertido 0).
+      • POR QUE NÃO EMPURRA CONFIG, e por que essa metade veio primeiro: escrever UCI por
+        SSH exige commit-confirm (aplica → agenda rollback → confirma se ainda houver
+        acesso). Sem isso, uma linha errada de rede ou firewall tranca você fora e a saída
+        é modo failsafe com acesso FÍSICO. A metade de leitura entrega quase todo o valor
+        com nenhum do risco — e o export vira insumo pra QUALQUER ferramenta de push depois.
+      • REDAÇÃO FAIL-SAFE, e a direção é o ponto: redige por DEFAULT tudo cujo nome sugira
+        credencial, e só libera o que reconhece — `public_key` (público por definição) e
+        valor que começa com `/` (é CAMINHO, não segredo). Lista de bloqueio faria o
+        contrário e vazaria em silêncio no dia que um pacote novo trouxesse opção nova.
+        Validado: os 7 segredos saíram redigidos, e os 2 falsos positivos previstos
+        (`luci.flash_keep.passwd='/etc/passwd'`, `uhttpd.main.key='/etc/uhttpd.key'`)
+        ficaram intactos pela regra do `/`. Varredura extra por string de alta entropia só
+        achou as 3 `public_key` dos peers, um DUID de DHCPv6 e um caminho.
+      • `uci show` e não `uci export`: uma linha por opção faz o diff do git apontar a
+        LINHA que mudou, em vez do bloco inteiro.
+      • ⚠️ `__file__` NÃO acha a raiz do repo: o script é copiado pro /nix/store, então o
+        caminho relativo a ele aponta pra dentro da store (read-only). Mordeu na primeira
+        execução. O idioma certo é o do `sync-secrets.sh`: `git rev-parse --show-toplevel`.
+      • O QUE O `sysupgrade` JÁ PRESERVA, medido no keep.d: `/etc/config/` INTEIRO,
+        `/etc/profile.d/`, `/etc/dropbear/` e passwd/shadow/group. A lacuna real é menor do
+        que eu vinha dizendo — só `/etc/sudoers.d/` e `/home/` ficam de fora, e os dois se
+        resolvem com duas linhas no `/etc/sysupgrade.conf` do roteador.
+      • BOAS PRÁTICAS pesquisadas, pra quando a decisão de push vier: imagem
+        (nix-openwrt-imagebuilder + /etc/uci-defaults) e push (nuci/Dewclaw/próprio) são
+        COMPLEMENTARES, não alternativas — a imagem é o artefato de desastre, o push é o
+        ciclo diário. O `nuci` (github.com/lonerOrz/openwrt-nix) é o mais bem desenhado
+        (valida antes, watchdog anti-brick com boot hook, sops, `nuci diff`) e está VIVO
+        (push em 30/07/2026), mas tem 1 contribuidor e commits recentes ainda refatorando a
+        CLI — churn de API na ferramenta que controla a rede. Dewclaw é mais antigo e o
+        autor declarou que não dá suporte.
+
 - [x] `my.net.{lan,vpn}Subnet`: as faixas de casa viram SSOT (08/08/2026) — última ponta
       solta da saída do Tailscale. "De casa" é decisão de SEGURANÇA (separa quem entra
       direto de quem precisa de senha) e estava escrita por extenso em QUATRO lugares:

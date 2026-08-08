@@ -11,7 +11,7 @@ age (pendências) e o que se consulta (histórico) têm ritmos diferentes.
 | --- | --- | --- |
 | [regras.md](regras.md) | As 15 regras do repo | Antes de decidir qualquer coisa |
 | [pendencias.md](pendencias.md) | O que está aberto | Ao escolher no que trabalhar |
-| [historico/](historico/) | O que foi feito e por quê, um arquivo por mês | "Por que isto está assim?" |
+| [historico/](historico/) | O que foi feito e por quê — pasta por ano, arquivo por mês | "Por que isto está assim?" |
 | [ideias.md](ideias.md) | Considerado, ainda não decidido | Ao planejar |
 | [arch-legado.md](arch-legado.md) | Capítulo encerrado + como abrir o acervo | Raramente |
 | [guias/](guias/) | Passo a passo de hardware/setup | Ao reinstalar |

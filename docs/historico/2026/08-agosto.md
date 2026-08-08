@@ -1,6 +1,6 @@
 # Histórico — agosto de 2026
 
-35 entradas. Índice em [README.md](README.md).
+35 entradas. Índice em [README.md](../README.md).
 
 - [x] `my.ingress`: exposição vira TOGGLE (08/08/2026) — o Caddyfile deixou de ser escrito à
       mão. Cada serviço se declara em `my.ingress` (schema em system/net/ingress.nix, painel em

@@ -1,6 +1,6 @@
 # Histórico — julho de 2026
 
-63 entradas. Índice em [README.md](README.md).
+63 entradas. Índice em [README.md](../README.md).
 
 9 entradas caíram aqui por INFERÊNCIA: não têm data no texto e o `git log -S` não achou o commit que as introduziu (provavelmente foram reescritas depois de criadas). Julho é o mês de abertura do repo — é o palpite conservador, não um fato.
 

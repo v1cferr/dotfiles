@@ -17,7 +17,7 @@
 #
 # `public` FUNCIONA de verdade: o roteador tem IP público na pppoe-wan e encaminha
 # 80/443 pra cá (houve um susto de CGNAT em 07/08/2026 que se provou falso — ver
-# docs/historico/2026-08.md). Um serviço marcado `public` é alcançável da internet HOJE.
+# docs/historico/2026/08-agosto.md). Um serviço marcado `public` é alcançável da internet HOJE.
 #
 # A opção mora em net/ e não dentro do caddy.nix porque descreve ALCANCE DE REDE, não
 # detalhe do proxy — hoje o Caddy é o único consumidor, mas a decisão não é dele.

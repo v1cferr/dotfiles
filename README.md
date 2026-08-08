@@ -63,7 +63,7 @@ router/                  espelho do UCI do OpenWrt (router-sync) — visível, n
 docs/                    o que NÃO é declarável + o diário do repo (ver docs/README.md)
   regras.md              as 15 regras — a NUMERAÇÃO é API, 70+ comentários citam "regra N"
   pendencias.md          o que está aberto
-  historico/             o que foi feito e POR QUÊ, um arquivo por mês (inclui o RECUSADO)
+  historico/<ano>/<mês>  o que foi feito e POR QUÊ (inclui o que foi tentado e RECUSADO)
   ideias.md              considerado, ainda não decidido
   arch-legado.md         capítulo encerrado + como abrir o acervo do Arch
   guias/                 passo a passo de hardware/setup (BIOS, Secure Boot)

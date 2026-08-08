@@ -1,7 +1,19 @@
-# Filtro de luz azul do ecossistema Hyprland (hyprsunset). Escolhido no lugar de
-# gammastep/wlsunset porque age via CTM no compositor (hyprland-ctm-control-v1),
-# NÃO por shader — então NÃO aparece em screenshot/gravação (importante: uso o
-# Flameshot direto). Docs: https://wiki.hypr.land/Hypr-Ecosystem/hyprsunset/
+# Filtro de luz azul do ecossistema Hyprland (hyprsunset). Age via CTM no compositor
+# (hyprland-ctm-control-v1), então NÃO aparece em screenshot/gravação — importante
+# porque uso o Flameshot direto. Docs: https://wiki.hypr.land/Hypr-Ecosystem/hyprsunset/
+#
+# ⚠️ CORREÇÃO (08/08/2026): este bloco dizia que a escolha foi "no lugar de
+# gammastep/wlsunset porque não é shader". O argumento estava torto — gammastep e
+# wlsunset TAMBÉM não usam shader. Quem usa é o hyprshade, e é contra ELE que o wiki
+# do Hyprland recomenda o hyprsunset ("preferred to screen shaders as it will not be
+# captured via recording/screenshots"). O motivo real de preferir aos outros dois é
+# ser nativo do protocolo do Hyprland, não a questão do shader.
+#
+# ⚠️ OS 13 PERFIS NÃO SÃO EXCESSO. Verificado no código do hyprsunset 0.3.3: ZERO
+# ocorrências de transition/interpolate/gradual, e a issue "Graduated transition"
+# segue ABERTA. Ele salta seco no horário de cada perfil. Degrau pequeno e frequente
+# é a ÚNICA forma de obter curva suave numa ferramenta que só sabe saltar — se um dia
+# ele interpolar, isto colapsa pra 3 perfis (ver docs/ideias.md).
 #
 # O módulo services.hyprsunset sobe um SERVIÇO systemd --user (dispensa exec-once)
 # e gera ~/.config/hypr/hyprsunset.conf a partir de `settings`. Os `profile` trocam

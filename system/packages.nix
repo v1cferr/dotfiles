@@ -40,5 +40,9 @@
     # removidos após validar a Arc — eram one-off. Ficam só os monitores do dia-a-dia.
     nvtopPackages.intel # monitor de GPU ao vivo (util/clock/VRAM/temp) — Intel
     intel-gpu-tools # intel_gpu_top — engines/freq do driver Intel
+    # Lista os protocolos Wayland que o compositor expõe e o que cada saída suporta.
+    # Entrou em 08/08/2026 porque a pergunta "o Hyprland ainda serve wlr-gamma-control?"
+    # não tinha como ser respondida sem chutar — e chute vira comentário errado no repo.
+    wayland-utils # wayland-info
   ];
 }

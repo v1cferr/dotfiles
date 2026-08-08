@@ -18,9 +18,13 @@
   # `openFirewall = false` de propósito, então SEM esta regra ele fica inacessível de
   # todo lugar — inclusive de casa. Quem apagar isto tem que abrir as portas dele.
   #
-  # `-I nixos-fw 1` e não `-A`: a cadeia nixos-fw TERMINA num refuse, então regra
-  # anexada no fim nunca é alcançada. Inserir no topo reproduz a semântica do
-  # trustedInterfaces — a faixa inteira passa antes de qualquer outra decisão.
+  # `-I nixos-fw 1` e não `-A`. ⚠️ CORREÇÃO (08/08/2026): este comentário dizia que
+  # "a cadeia termina num refuse, então `-A` nunca é alcançada", e isso é FALSO para
+  # o extraCommands — lido no firewall-start GERADO, ele é injetado ANTES do
+  # `-A nixos-fw -j nixos-fw-log-refuse`, então `-A` funcionaria. A frase só vale pra
+  # regra digitada À MÃO num firewall já de pé. O `-I 1` continua sendo o certo por
+  # outro motivo: é ele que reproduz a semântica do trustedInterfaces — a faixa
+  # inteira passa antes de QUALQUER outra decisão da cadeia.
   # (Backend é iptables aqui: `networking.nftables.enable = false`.)
   networking.firewall = {
     extraCommands = ''

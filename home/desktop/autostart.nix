@@ -4,7 +4,9 @@
 # system/services/toggles.nix (mkEnableOption + gate), mas p/ APPS de GUI.
 #
 # ÍNDICE — o que sobe no boot mora em TRÊS lugares, por motivos diferentes:
-#   1. AQUI (my.autostart)      → apps de GUI sem módulo próprio: Discord, Spotify.
+#   1. AQUI (my.autostart)      → apps de GUI sem serviço próprio: Discord, Spotify,
+#      LocalSend (este tem módulo NixOS, mas só pro pacote e o firewall — quem o SOBE
+#      é este painel).
 #   2. my.services.<n>          → serviços de verdade, com módulo/daemon próprio
 #      (dropbox, jellyfin, ollama, sunshine, restic…). As chaves são declaradas em
 #      system/services/toggles.nix; o true/false é do host (hosts/<host>/services.nix).
@@ -42,12 +44,15 @@
 #      RestartSec=5 dava 2 partidas/10s, sempre abaixo do burst=5 default, então o
 #      freio de fábrica nunca chegava a atuar.
 #
-# Os pacotes vêm de home/packages.nix; aqui só se REFERENCIA o binário pelo store path
-# (não instala de novo — é o mesmo path, não fere a regra 4).
+# Os pacotes vêm de home/packages.nix — exceto o LocalSend, cujo dono é
+# system/net/localsend.nix (o módulo do nixpkgs une pacote e firewall). Aqui só se
+# REFERENCIA o binário pelo store path (não instala de novo — é o mesmo path, não
+# fere a regra 4).
 # ═══════════════════════════════════════════════════════════════════════════
 {
   config,
   lib,
+  osConfig,
   pkgs,
   ...
 }:
@@ -59,6 +64,22 @@ let
     discord = {
       exec = "${pkgs.discord}/bin/Discord";
       desc = "chat/voz";
+    };
+    localsend = {
+      # `--hidden` sobe SEM janela, só o ícone na tray (SNI) — é o que faz sentido
+      # pra um receptor: o LocalSend só RECEBE arquivo se estiver aberto, e mandar do
+      # celular não pode exigir ir até o PC abrir o app.
+      # ⚠️ A tray da barra (quickshell) passa a ser o ÚNICO jeito de trazer a janela
+      # de volta. Se a barra não estiver de pé, ele fica rodando invisível.
+      # ⚠️ NÃO ligar o "Autostart after login" nas Configurações DO APP: aquilo
+      # escreve um .desktop em ~/.config/autostart e viraria um SEGUNDO dono da mesma
+      # automação (regra 15) — duas instâncias disputando a 53317.
+      # O binário é `localsend_app` (é o que o .desktop dele usa), e o pacote vem da
+      # opção do módulo em vez de `pkgs.localsend`: se um dia ele virar
+      # `unstable.localsend` no system/, o autostart segue sozinho. É a armadilha do
+      # spotify (abaixo) resolvida por construção, não por atenção.
+      exec = "${osConfig.programs.localsend.package}/bin/localsend_app --hidden";
+      desc = "transferência de arquivo na LAN";
     };
     spotify = {
       # unstable.* precisa CASAR com home/packages.nix, senão o autostart sobe a versão
@@ -80,6 +101,7 @@ in
     # ── PAINEL: edite aqui pra ligar/desligar o que abre no login ─────────────
     my.autostart = {
       discord = true; # chat/voz
+      localsend = true; # receptor de arquivo da LAN, oculto na tray
       spotify = true; # música
     };
 

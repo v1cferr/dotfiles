@@ -1,6 +1,53 @@
 # Histórico — agosto de 2026
 
-35 entradas. Índice em [README.md](../README.md).
+36 entradas. Índice em [README.md](../README.md).
+
+- [x] LocalSend declarativo, aberto SÓ pra LAN (08/08/2026) — "AirDrop" de código aberto
+      (MIT, 1.17.0) pra passar arquivo entre celular e PC sem nuvem e sem conta. Três peças:
+      `programs.localsend` em system/net/localsend.nix, a 53317 liberada por ORIGEM e uma
+      entrada no painel `my.autostart`.
+      • POR QUE NO `system/` e não no `home/`, contra a regra 4: quem une PACOTE + PORTA é o
+        módulo do nixpkgs, e firewall é nível-sistema. Mesmo caso do `programs.steam`. O
+        pacote NÃO se repete no home/packages.nix — o autostart lê
+        `osConfig.programs.localsend.package`, e o store path do `sw/bin/localsend_app` e do
+        `ExecStart` da unit CONFEREM (mesmo `5vzlv6k…`), que é a prova de que não duplicou.
+        De brinde, isso mata por construção a armadilha do spotify: trocar pro `unstable` no
+        system/ leva o autostart junto, em vez de exigir que eu lembre de casar dois arquivos.
+      • ⚠️ `openFirewall = false` CONTRA o default do módulo, e a ameaça não é a internet: o
+        roteador só encaminha 80/443/2222, então a 53317 nunca esteve exposta ao mundo. Quem
+        alcançaria é a VPN — `openFirewall` abre a porta em TODA interface, e com o túnel da
+        FAI de pé (`ppp0`) a rede corporativa inteira passaria a enxergar o serviço e a ler o
+        `/api/localsend/v2/info` (nome do dispositivo, modelo, fingerprint) sem autenticação
+        nenhuma. Vira confiança por ORIGEM, igual à do Sunshine: só `my.net.lanSubnet`.
+      • Os peers do WireGuard entram DE GRAÇA, sem regra própria: chegam com origem
+        10.10.10.x e a regra de net/network.nix já aceita a faixa antes de qualquer decisão.
+        Quinto consumidor da SSOT, validado pelo ritual do sentinela (regra 11): trocar a
+        faixa por 172.31.99.0/24 mudou as duas regras novas junto com o `ignoreip` do
+        fail2ban, e reverter devolveu o store path IDÊNTICO (`i0kvjns…`).
+      • UDP é obrigatório junto com o TCP, e não é detalhe: TCP é a transferência e o `/info`;
+        UDP 53317 é o anúncio multicast em 224.0.0.167, que é o que faz os aparelhos se
+        DESCOBRIREM. Sem ela o app abre e funciona, mas só por "adicionar por IP" na mão —
+        falha que parece "o celular não me acha", não "porta fechada".
+      • ⚠️ A porta é REPETIDA no meu módulo porque o do nixpkgs não a expõe como opção (é um
+        `firewallPort = 53317` interno ao arquivo dele). Trocar a porta DENTRO do app
+        (Configurações → Rede) faz a recepção morrer em SILÊNCIO: sem erro de build, sem log.
+      • AUTOSTART com `--hidden` (flag confirmada nas strings do `libapp.so`, não chutada):
+        sobe sem janela, só o ícone SNI na tray do quickshell. Sem isso o app não recebe nada
+        — o LocalSend só escuta enquanto está aberto, e mandar do celular exigiria ir até o PC
+        abrir. Preço explícito: a tray passa a ser o ÚNICO jeito de trazer a janela de volta.
+        ⚠️ NÃO ligar o "Autostart after login" DAS CONFIGURAÇÕES DO APP: aquilo escreve um
+        `.desktop` em `~/.config/autostart` e viraria um SEGUNDO dono da mesma automação
+        (regra 15), com duas instâncias disputando a 53317.
+      • ⚠️ CORREÇÃO DE COMENTÁRIO ERRADO que este trabalho destapou, em net/network.nix: eu
+        havia escrito que a cadeia `nixos-fw` "termina num refuse, então `-A` nunca é
+        alcançada". FALSO pro `extraCommands` — lido no `firewall-start` GERADO, ele é
+        injetado ANTES do `-A nixos-fw -j nixos-fw-log-refuse` (nixpkgs 26.05, linha 235 vs
+        238), então `-A` funcionaria. A frase só vale pra regra digitada À MÃO num firewall já
+        de pé. O `-I 1` continua certo, mas por OUTRO motivo: é ele que reproduz a semântica
+        do `trustedInterfaces`. Mesma classe do "`~/.profile` não é lido no OpenWrt" — nota
+        antiga que eu ia citar como se fosse fato medido.
+      • Apelido, pasta de destino e "salvar sem confirmar" ficam no app (regra 6/14: ele
+        reescreve o próprio `shared_preferences` em runtime, o Nix não é dono).
 
 - [x] `my.ingress`: exposição vira TOGGLE (08/08/2026) — o Caddyfile deixou de ser escrito à
       mão. Cada serviço se declara em `my.ingress` (schema em system/net/ingress.nix, painel em

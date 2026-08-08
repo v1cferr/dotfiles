@@ -16,10 +16,9 @@
 # diretiva de formatação. Como %s não interpreta escapes, o \033 precisa já vir
 # expandido daqui.
 ESC=$(printf '\033')
-C_LOGO="${ESC}[1;36m" # ciano: o logo
-C_LBL="${ESC}[1;34m"  # azul:  rótulos
-C_TTL="${ESC}[1;37m"  # branco: título
-C_DIM="${ESC}[0;90m"  # cinza: separador
+C_LBL="${ESC}[1;34m" # azul:  rótulos
+C_TTL="${ESC}[1;37m" # branco: título
+C_DIM="${ESC}[0;90m" # cinza: separador
 C_OFF="${ESC}[0m"
 
 # ── coleta ────────────────────────────────────────────────────────────────────
@@ -30,7 +29,7 @@ REV="${DISTRIB_REVISION:-}"
 TGT="${DISTRIB_TARGET:-?}"
 ARCH="${DISTRIB_ARCH:-$(uname -m)}"
 
-MODEL=$(cat /tmp/sysinfo/model 2>/dev/null || echo "desconhecido")
+MODEL=$(cat /tmp/sysinfo/model 2>/dev/null || echo "unknown")
 KERN=$(uname -r)
 MACH=$(uname -m)
 
@@ -40,11 +39,11 @@ UPD=$((UPS / 86400))
 UPH=$(((UPS % 86400) / 3600))
 UPM=$(((UPS % 3600) / 60))
 if [ "$UPD" -gt 0 ]; then
-	UPTIME="${UPD}d ${UPH}h ${UPM}min"
+	UPTIME="${UPD}d ${UPH}h ${UPM}m"
 elif [ "$UPH" -gt 0 ]; then
-	UPTIME="${UPH}h ${UPM}min"
+	UPTIME="${UPH}h ${UPM}m"
 else
-	UPTIME="${UPM}min"
+	UPTIME="${UPM}m"
 fi
 
 NPROC=$(grep -c '^processor' /proc/cpuinfo 2>/dev/null || echo '?')
@@ -66,24 +65,16 @@ FLASH=$(df -h /overlay 2>/dev/null | awk 'NR==2{printf "%s / %s (%s)", $3, $2, $
 LAN=$(ip -4 -o addr show br-lan 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -1)
 WAN=$(ip -4 -o addr show pppoe-wan 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -1)
 [ -z "$WAN" ] && WAN=$(ip -4 -o addr show wan 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -1)
-[ -z "$WAN" ] && WAN="sem link"
+[ -z "$WAN" ] && WAN="no link"
 
 LEASES=$(wc -l < /tmp/dhcp.leases 2>/dev/null || echo 0)
 
 # ── saída ─────────────────────────────────────────────────────────────────────
 linha() { printf '  %s%-10s%s %s\n' "$C_LBL" "$1" "$C_OFF" "$2"; }
 
+# SEM logo ASCII de propósito: o /etc/banner do OpenWrt já desenha o mesmo desenho
+# no login, e o fetch vinha logo abaixo — dois logos idênticos na mesma tela.
 printf '\n'
-printf '%s' "$C_LOGO"
-cat <<'ART'
-   _______                     ________        __
-  |       |.-----.-----.-----.|  |  |  |.----.|  |_
-  |   -   ||  _  |  -__|     ||  |  |  ||   _||   _|
-  |_______||   __|_____|__|__||________||__|  |____|
-           |__|
-ART
-printf '%s\n' "$C_OFF"
-
 printf '  %s%s@%s%s\n' "$C_TTL" "$(id -un)" "$(uname -n)" "$C_OFF"
 printf '  %s%s%s\n' "$C_DIM" "──────────────────────────────────────────────" "$C_OFF"
 
@@ -92,13 +83,13 @@ linha "Host"     "$MODEL"
 linha "Kernel"   "Linux ${KERN} · ${MACH}"
 linha "Target"   "$TGT"
 linha "Uptime"   "$UPTIME"
-linha "CPU"      "${CPUN} (${NPROC} núcleos)"
+linha "CPU"      "${CPUN} (${NPROC} cores)"
 linha "Load"     "$LOAD"
 linha "RAM"      "$MEM"
 linha "Flash"    "$FLASH"
-linha "LAN"      "${LAN:-n/d}"
+linha "LAN"      "${LAN:-n/a}"
 linha "WAN"      "$WAN"
-linha "Clientes" "${LEASES} no DHCP"
+linha "Clients"  "${LEASES} on DHCP"
 
 # faixa de cores, como o módulo `colors` do fastfetch
 printf "\n  "

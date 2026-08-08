@@ -111,10 +111,15 @@ do módulo.
       • ⚠️ `__file__` NÃO acha a raiz do repo: o script é copiado pro /nix/store, então o
         caminho relativo a ele aponta pra dentro da store (read-only). Mordeu na primeira
         execução. O idioma certo é o do `sync-secrets.sh`: `git rev-parse --show-toplevel`.
-      • O QUE O `sysupgrade` JÁ PRESERVA, medido no keep.d: `/etc/config/` INTEIRO,
-        `/etc/profile.d/`, `/etc/dropbear/` e passwd/shadow/group. A lacuna real é menor do
-        que eu vinha dizendo — só `/etc/sudoers.d/` e `/home/` ficam de fora, e os dois se
-        resolvem com duas linhas no `/etc/sysupgrade.conf` do roteador.
+      • O QUE O `sysupgrade` JÁ PRESERVA — 38 entradas no keep.d, e eu errei DUAS VEZES
+        aqui por ler a lista truncada em 12 linhas e concluir do que não vi: `/etc/config/`
+        INTEIRO, `/etc/profile.d/`, `/etc/dropbear/`, passwd/shadow/group E TAMBÉM
+        `/etc/sudoers.d/`, que eu vinha dizendo que se perdia. A lacuna real é só `/home/`.
+      • ⚠️ ARMADILHA que só apareceu ao ler o `/sbin/sysupgrade`: o próprio
+        `/etc/sysupgrade.conf` NÃO está no keep.d. O `list_static_conffiles` lê os caminhos
+        LISTADOS DENTRO dele, mas não o inclui — então o 1º upgrade preserva o que você
+        pediu e o 2º perde tudo, porque o arquivo que pedia sumiu no primeiro. Conserto:
+        listar `/etc/sysupgrade.conf` dentro dele mesmo.
       • BOAS PRÁTICAS pesquisadas, pra quando a decisão de push vier: imagem
         (nix-openwrt-imagebuilder + /etc/uci-defaults) e push (nuci/Dewclaw/próprio) são
         COMPLEMENTARES, não alternativas — a imagem é o artefato de desastre, o push é o

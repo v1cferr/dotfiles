@@ -42,7 +42,13 @@ documentados na mesma entrada do TODO.
 
 ## Sobrevivência a upgrade
 
-Medido no `keep.d` do aparelho em 08/08/2026 — o `sysupgrade` já preserva
-`/etc/config/` inteiro, `/etc/profile.d/`, `/etc/dropbear/` e passwd/shadow/group.
-**Não** preserva `/etc/sudoers.d/` nem `/home/`, que precisam entrar no
-`/etc/sysupgrade.conf` do roteador.
+Medido no `keep.d` do aparelho em 08/08/2026 (38 entradas) — o `sysupgrade` já
+preserva `/etc/config/` inteiro, `/etc/profile.d/`, `/etc/dropbear/`,
+passwd/shadow/group **e `/etc/sudoers.d/`**.
+
+Ficam de fora e precisam entrar no `/etc/sysupgrade.conf` do roteador:
+
+- `/home/v1cferr/` — onde vivem a chave SSH e o `~/bin/owfetch`
+- `/etc/sysupgrade.conf` — **ele mesmo**. O `list_static_conffiles` lê os caminhos
+  listados dentro dele mas não o inclui, então sem essa linha o 1º upgrade
+  preserva o que você pediu e o 2º perde tudo.

@@ -44,6 +44,36 @@ in
           TERM = "xterm-256color";
         }; # cores certas no terminal remoto
       };
+      # Roteador de casa (OpenWrt 25.12 / BusyBox). `ssh router`.
+      #
+      # SEM `faiResilience`: aquilo dimensiona keepalive e multiplexação pro túnel
+      # SonicWall e pro orçamento de 17s do Remote-SSH. Aqui é um salto de LAN com
+      # <1ms — herdar aquilo seria carga cultuada, não configuração.
+      #
+      # IP literal e não opção `my.*`: é o ÚNICO lugar do repo que cita o endereço
+      # do gateway (o Caddy usa a faixa /24, não o .1). Literal solitário não
+      # dispara a regra 11 — mesma justificativa que o domain.nix registra.
+      #
+      # ⚠️ O servidor é DROPBEAR, não OpenSSH: aceita ed25519, mas atualização de
+      # firmware REGENERA a host key e o próximo `ssh router` aborta com "REMOTE
+      # HOST IDENTIFICATION HAS CHANGED". Aí é `ssh-keygen -R 192.168.1.1` e
+      # reaceitar — não é ataque, é o flash.
+      #
+      # ⚠️ authorized_keys VIVE NO ROTEADOR, fora do alcance do Nix (OpenWrt não é
+      # NixOS). Isto aqui declara só o LADO CLIENTE. Instalar a chave é passo
+      # manual, uma vez por reflash:
+      #   ssh-copy-id -i ~/.ssh/id_ed25519.pub v1cferr@192.168.1.1
+      # Sobrevive a `sysupgrade` com "keep settings"; reflash limpo exige repetir.
+      router = {
+        HostName = "192.168.1.1";
+        User = "v1cferr";
+        Port = 22;
+        IdentityFile = "~/.ssh/id_ed25519";
+        SetEnv = {
+          TERM = "xterm-256color";
+        };
+      };
+
       # VM de apoio na FAI.
       fai-vm = faiResilience // {
         HostName = "200.136.209.248";

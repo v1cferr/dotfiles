@@ -88,6 +88,70 @@ do módulo.
         sentinela (regra 11) — virar `jellyfin` pra `lan` fez o 403 aparecer, reverter devolveu
         o store path byte-a-byte.
 
+- [x] ~~CGNAT~~ FALSO ALARME: o acesso externo SEMPRE funcionou (08/08/2026) — esta entrada
+      nasceu ERRADA em 07/08 e fica reescrita, não apagada, porque o valor está no método que
+      falhou. A conclusão de ontem ("não há rota de entrada, é CGNAT") era falsa nas TRÊS pernas:
+      • NÃO há CGNAT. O roteador tem o IP público direto na `pppoe-wan`. O `172.31.43.240` que
+        eu li como "NAT da operadora" no traceroute é o PEER do enlace PPPoE. Saltos em RFC 1918
+        num traceroute não provam CGNAT — operadora usa espaço privado em transporte, e isso
+        aparece igual nos dois casos. Foi inferência, vendida como prova.
+      • A operadora NÃO bloqueia. Provado pelo contador do nftables (`nft list chain inet fw4
+        dstnat_wan`): 3 disparos de fora = contador +3. Os pacotes sempre chegaram.
+      • O acesso externo FUNCIONA. Provado pela borda da Cloudflare: registro `proxied` temporário
+        → a CF conectou no Caddy e recebeu o `404 Subdomínio não configurado` em 0,39s, com o
+        contador do roteador subindo junto. Encerrou a questão.
+      • QUEM BLOQUEIA É A REDE DA FAI. Era o meu único ponto externo, e não é neutra: o SYN sai
+        de lá e chega aqui, o conntrack do roteador mostra `SYN_RECV` (ou seja, o Caddy RESPONDE
+        o SYN-ACK), e o ACK final nunca volta. O firewall da FAI descarta o SYN-ACK.
+      • ⚠️ MÉTODO — três formas de o teste MENTIR, todas cometidas aqui:
+        1. DE DENTRO DA LAN: o roteador faz hairpin e a porta "abre". Falso positivo.
+        2. PELA VPN DA FAI com o túnel ATIVO no alvo: `ip route get 200.136.209.229` sai por
+           `ppp0` com origem `192.168.50.1` — a resposta volta por outro caminho e o cliente
+           descarta. Falso NEGATIVO, e o mais traiçoeiro, porque parece um teste externo legítimo.
+        3. PONTO EXTERNO ÚNICO: se ele mesmo bloqueia, tudo parece quebrado. Uma rede corporativa
+           não pode ser juiz do próprio caso — exige um SEGUNDO ponto independente.
+      • A FERRAMENTA QUE RESOLVEU, guardar pra próxima: criar um registro `proxied` na Cloudflare
+        e bater nele. A CF vira um ponto externo NEUTRO que já é seu, sem terceiros e sem VPN. O
+        `404` do catch-all é o sinal perfeito — não precisa nem de serviço no ar. Apagar depois.
+      • CONSEQUÊNCIAS: `expose = "public"` FUNCIONA hoje. Não precisa de cloudflared, não precisa
+        ligar pra operadora, e a armadilha do `trusted_proxies` vira teórica de novo (mas o
+        `client_ip` fica, porque continua certo).
+      • ⚠️ E O RISCO REAL INVERTE: `jellyfin` e `torrent` estão expostos à internet AGORA, com o
+        login do próprio app como única barreira. Ontem isso era teórico ("nada alcança"); hoje é
+        fato. O wildcard resolve pra cá, a 443 está encaminhada e o Caddy serve os dois sem gate.
+        Decidir conscientemente: manter, ou virar `expose = "lan"` no painel.
+
+- [x] `my.ingress`: exposição vira TOGGLE (08/08/2026) — o Caddyfile deixou de ser escrito à
+      mão. Cada serviço se declara em `my.ingress` (schema em system/net/ingress.nix, painel em
+      hosts/nixos-kingston/services.nix) e os vhosts são GERADOS. Alternar alcance = trocar uma
+      palavra: `expose = "lan"` ↔ `"public"`.
+      • O QUE ISSO CONSERTA: antes o alcance era implícito e assimétrico — `duo`/`ai` tinham
+        `respond @externo 403` escrito à mão, `jellyfin`/`torrent` NÃO tinham, e a decisão de
+        expor só existia como uma AUSÊNCIA no meio de 60 linhas. Codificar segurança por omissão
+        é o pior caso: esquecer de escrever virava "exposto", em silêncio. Agora o default de
+        `expose` é `lan` — esquecer FECHA.
+      • TAILNET no matcher de casa (100.64.0.0/10): é o que dá acesso remoto DE VERDADE hoje,
+        já que o CGNAT impede entrada direta. Um par da tailnet é tão "casa" quanto a LAN. Foi
+        junto no `ignoreip` do fail2ban — errar a senha no celular não pode banir a si mesmo.
+        ⚠️ Essa faixa é a mesma do CGNAT de carrier; hoje é inofensiva porque nada da internet
+        alcança o processo, mas no dia do túnel exige distinguir o caminho, não confiar no IP.
+      • `remote_ip` → `client_ip` ANTES de existir túnel: hoje são idênticos (sem proxy
+        confiável, cliente = conexão). Custou zero e desarma a armadilha do cloudflared entregar
+        pelo loopback e todo o tráfego do túnel virar "casa", furando o basic_auth em silêncio.
+        ⚠️ NÃO adicionar `trusted_proxies` enquanto não houver túnel: sem ele o X-Forwarded-For
+        é ignorado (que é o certo); com ele, processo local qualquer forja o IP de origem.
+      • O failregex do fail2ban passou a ser DERIVADO de quem tem `auth`, em vez do literal
+        `pos\.`: serviço novo com basic_auth entra na jail sozinho.
+      • ⚠️ PEGADINHA DE NIX que mordeu no primeiro gerado: o alvo é o literal `{$VAR}` (env var
+        do Caddy), e `"{$${v}}"` numa string Nix é ERRO DE SINTAXE, não escape — o gerado saiu
+        com `{$${v}}` cru, que viraria hash VAZIO em runtime. A forma sem ambiguidade é
+        concatenar: `"{$" + v + "}"`. Pegou no olho, no Caddyfile gerado; não haveria erro de
+        build.
+      • VALIDADO: `caddy validate` com o binário custom e hashes bcrypt reais → `Valid
+        configuration`; o gerado é semanticamente idêntico ao que estava à mão; e o ritual do
+        sentinela (regra 11) — virar `jellyfin` pra `lan` fez o 403 aparecer, reverter devolveu
+        o store path byte-a-byte.
+
 - [ ] CGNAT: NÃO HÁ ENTRADA (07/08/2026) — o achado que invalida a premissa do ingress. A
       operadora não me dá IP público: o traceroute sai por `172.31.43.240` → `172.31.43.61` →
       `172.31.38.22`, três saltos em RFC 1918. O `177.52.84.188` que o ipify/DDNS reportam é o

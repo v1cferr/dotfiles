@@ -1,8 +1,10 @@
 # Sunshine — servidor de streaming de tela/desktop remoto (cliente = Moonlight). É
 # a forma recomendada de acesso remoto no Hyprland/Wayland: captura via wlr-screencopy
 # (o `wlr`, auto-selecionado) e encoda na GPU. O Arc B580 tem encoder AV1/HEVC (VA-API)
-# → stream fluido e de baixa latência. Chega-se no Sunshine PELA tailnet (Tailscale),
-# não pela LAN/internet (openFirewall=false → só a interface tailscale0, que é trusted).
+# → stream fluido e de baixa latência. Chega-se no Sunshine PELO WIREGUARD do roteador,
+# não pela LAN nem pela internet: `openFirewall = false` mantém as portas fechadas, e
+# quem abre é a regra de origem 10.10.10.0/24 em ../net/network.nix. Era Tailscale até
+# 08/08/2026 — a troca está registrada em docs/ANOTACOES.md.
 #
 # APRENDIZADO (jul/2026, debug longo): "tela preta no Moonlight" era o wlr capturando o
 # monitor DPMS-OFF (apagado) — NÃO regressão de versão nem encoder. Captura funciona
@@ -11,8 +13,8 @@
 # alternar dpms COM a captura+encode ativos deu engine-reset da GPU (xe RCS) — por isso o
 # guard acorda a tela ANTES do stream (no prep-cmd), nunca no meio.
 #
-# Setup interativo (1x, do navegador de qualquer máquina na tailnet):
-#   https://<ip-tailnet>:47990  → cria usuário/senha admin → pareia o Moonlight (PIN).
+# Setup interativo (1x, do navegador de qualquer peer do WireGuard):
+#   https://192.168.1.10:47990  → cria usuário/senha admin → pareia o Moonlight (PIN).
 # O estado (clientes pareados) mora em ~/.config/sunshine (não declarável → é ESTADO).
 #
 # GUARD DE IDLE (conflito com o hypridle): a captura é do monitor FÍSICO via wlr, que
@@ -42,7 +44,7 @@ let
 
   # sunshine-health: handshake TLS de verdade na 47984. `-brief` imprime "Protocol
   # version:" só quando o handshake COMPLETA — é o sinal; TCP aceito não basta, foi
-  # exatamente o estado pendurado de 29/07. Probe em 127.0.0.1: não depende da tailnet.
+  # exatamente o estado pendurado de 29/07. Probe em 127.0.0.1: não depende da VPN.
   #
   # SEM PIPE de propósito: o writeShellApplication liga `set -o pipefail`, e com
   # `| grep -q` o grep sai no 1º match → o openssl morre de SIGPIPE → o pipeline
@@ -69,73 +71,22 @@ let
       systemctl --user restart sunshine.service
     '';
   };
-  # sunshine-path-probe: amostra o CAMINHO da tailnet por peer, 1×/min, no journal.
-  #
-  # POR QUE AMOSTRAR, se o tailscaled já loga caminho: porque ele loga só a TRANSIÇÃO
-  # PARA DIRETO. Medido em 03/08/2026 — em 7 dias de journal existem OITO linhas
-  # `magicsock: … now using <ep>`, e todas são endpoint direto (IPv4 público da FAI e
-  # IPv6). O relay NÃO aparece nesse fluxo. Então "não houve evento" é ambíguo: pode ser
-  # "seguiu direto" ou "está em DERP desde sempre" — e o estado inicial de cada boot é
-  # desconhecido. Evento dá o INSTANTE da mudança; só amostra dá o ESTADO, que é o que
-  # responde "essa sessão foi direta?".
-  #
-  # Isto existe porque em 03/08 a resposta veio de SORTE: eu rodei `tailscale ping` no
-  # momento certo e vi DERP. Nas 4 sessões de 3-7s daquele dia o relatório não tinha como
-  # provar nada; nas seguintes, diretas, a sessão passou de 8 min. É a variável que mais
-  # prevê queda e era justamente a que não ficava registrada.
-  #
-  # 1 min é grosso pra sessão de 3s DE PROPÓSITO: caminho persiste por minutos, então a
-  # amostra vizinha descreve bem o instante, e 1440 linhas/dia é ruído irrelevante. O
-  # `<5>` (notice) + LogLevelMax=notice na unit é o mesmo truque do healthcheck acima:
-  # mata o "Starting…/Finished…" do systemd (info) e preserva a linha que importa.
-  #
-  # SSOT do nome da unit (regra 11): ele acopla TRÊS pontos — a unit, o timer e a consulta
-  # `journalctl -u` dentro do relatório. Literal repetido aqui não daria erro de build:
-  # renomear a unit deixaria o relatório lendo um nome que não existe e reportando "sem
-  # amostra" pra sempre. Falha silenciosa, o pior tipo (regra 14).
-  probeUnit = "sunshine-path-probe";
-
-  pathProbePy = pkgs.writeText "${probeUnit}.py" ''
-    import json, subprocess, sys
-
-    out = subprocess.run(
-        ["${pkgs.tailscale}/bin/tailscale", "status", "--json"],
-        capture_output=True, text=True,
-    )
-    if out.returncode != 0:
-        print("<4>path probe: `tailscale status --json` falhou", file=sys.stderr)
-        sys.exit(0)
-
-    # Só peer que interessa: online OU com tráfego ativo. Peer dormindo não tem caminho.
-    for p in json.loads(out.stdout).get("Peer", {}).values():
-        if not (p.get("Online") or p.get("Active")):
-            continue
-        # CurAddr VAZIO é a definição de relayed no tailscale: sem endpoint direto, o
-        # tráfego vai pelo DERP nomeado em Relay. Não inferir por latência.
-        addr = p.get("CurAddr") or ""
-        if addr:
-            kind = "direct6" if addr.startswith("[") else "direct4"
-        else:
-            kind = "relay:" + (p.get("Relay") or "?")
-        print(
-            f"<5>path peer={p.get('HostName')} kind={kind} "
-            f"addr={addr or '-'} active={str(bool(p.get('Active'))).lower()}"
-        )
-  '';
-
   # moonlight-stats: relatório de QUALIDADE das sessões, porque "cai toda hora" não é
   # mensurável e o log do Sunshine só diz "CLIENT DISCONNECTED" — a mesma linha para
-  # cliente que fechou, cliente que desistiu e host que derrubou (é a queixa da issue
-  # tailscale/tailscale#14208, que segue sem causa-raiz justamente por falta disto).
+  # cliente que fechou, cliente que desistiu e host que derrubou.
   #
   # O que ele responde, e que foi o que fechou o diagnóstico de 31/07: a distribuição é
-  # BIMODAL — ou a sessão dura horas, ou morre em 3-60 s. Com isso dá p/ testar hipótese
-  # em vez de chutar: o relatório cruza cada sessão com os eventos do tailscaled no MESMO
-  # intervalo (troca de caminho IPv4↔IPv6 e link change/rebind), então uma causa candidata
-  # se REFUTA na hora se as sessões longas a sofrem mais que as curtas — foi o que
-  # aconteceu com as quatro primeiras suspeitas (ver ANOTACOES).
+  # BIMODAL — ou a sessão dura horas, ou morre em 3-60 s. Isso sozinho já separa "rede
+  # ruim" de "algo derruba", que era a dúvida.
+  #
+  # ENCOLHEU em 08/08/2026, com a saída do Tailscale. Ele cruzava cada sessão com os
+  # eventos do tailscaled (troca de caminho IPv4↔IPv6, link change) e com as amostras do
+  # sunshine-path-probe, pra responder "esta sessão foi direta ou caiu no DERP?". Com
+  # WireGuard não existe relay: a pergunta perdeu o objeto, e as seções que a respondiam
+  # foram removidas em vez de adaptadas. Ficou o que continua verdadeiro — duração das
+  # sessões e a divisão curtas/longas.
   statsPy = pkgs.writeText "moonlight-stats.py" ''
-    import datetime, re, statistics, subprocess, sys
+    import datetime, statistics, subprocess, sys
 
     DAYS = sys.argv[1] if len(sys.argv) > 1 else "7"
 
@@ -162,52 +113,17 @@ let
             sessions.append((start, t, (t - start).total_seconds()))
             start = None
 
-    ts = journal("-u", "tailscaled").splitlines()
-    paths = [stamp(x) for x in ts if "now using" in x and stamp(x)]
-    links = [stamp(x) for x in ts if re.search(r"[Ll]ink [Cc]hange|LinkChange", x) and stamp(x)]
-
-    # Amostras do sunshine-path-probe: (instante, kind). Só peer ATIVO — é o que está
-    # streamando; peer online e parado descreveria o caminho de outra máquina.
-    samples = []
-    for line in journal("-u", "${probeUnit}.service").splitlines():
-        t = stamp(line)
-        if t is None or "path peer=" not in line:
-            continue
-        kv = dict(x.split("=", 1) for x in line.split() if "=" in x)
-        if kv.get("active") == "true" and kv.get("kind"):
-            samples.append((t, kv["kind"]))
-
-    def path_of(a, b):
-        """Caminho vigente na sessão [a,b]. CARRY-FORWARD é o ponto: sessão de 3s não
-        contém amostra nenhuma (probe é de 1 min), e aí o estado válido é o da última
-        amostra ANTES dela — sem isso, justamente as sessões curtas, que são as que
-        interessam, sairiam todas como '?'."""
-        inside = [k for t, k in samples if a <= t <= b]
-        if not inside:
-            before = [k for t, k in samples if t < a]
-            inside = before[-1:]
-        if not inside:
-            return "?"
-        uniq = sorted(set(inside))
-        # "misto" = trocou DURANTE a sessão. Medido em 03/08: a sessão de 8 min
-        # atravessou direct4→direct6 duas vezes e sobreviveu — misto não é veredito
-        # de culpa, é só o registro de que houve troca.
-        return uniq[0] if len(uniq) == 1 else "misto"
-
     if not sessions:
         print(f"nenhuma sessão concluída nos últimos {DAYS} dias.")
         sys.exit(0)
 
     print(f"=== sessões Moonlight — últimos {DAYS} dias ===\n")
-    print(f"{'início':<15}{'duração':>10}{'caminho':>10}{'trocas-caminho':>16}{'link-change':>13}")
+    print(f"{'início':<15}{'duração':>10}")
     short, long = [], []
     for a, b, d in sessions:
-        np = sum(1 for x in paths if a <= x <= b)
-        nl = sum(1 for x in links if a <= x <= b)
-        kind = path_of(a, b)
-        (short if d < 120 else long).append((d, np, nl, kind))
+        (short if d < 120 else long).append(d)
         mark = "  <-- curta" if d < 120 else ""
-        print(f"{a.strftime('%m-%d %H:%M:%S'):<15}{d:>9.0f}s{kind:>10}{np:>16}{nl:>13}{mark}")
+        print(f"{a.strftime('%m-%d %H:%M:%S'):<15}{d:>9.0f}s{mark}")
 
     print(f"\n=== resumo ===")
     alld = sorted(d for _, _, d in sessions)
@@ -215,51 +131,6 @@ let
           f"min: {alld[0]:.0f}s   max: {alld[-1]:.0f}s")
     print(f"curtas (<120s): {len(short)}/{len(alld)}   longas: {len(long)}/{len(alld)}")
 
-    # A comparação que refuta/confirma causa: se as LONGAS sofrem MAIS o evento que as
-    # curtas, o evento não é o que derruba. Taxa por minuto, senão sessão de 3 s "nunca"
-    # tem evento só por ser curta — o viés que quase levou a uma conclusão errada.
-    print("\n=== eventos de rede por minuto de sessão (curtas vs longas) ===")
-    for name, group in [("curtas <120s", short), ("longas >=120s", long)]:
-        if not group:
-            continue
-        pr = [np / (d / 60) for d, np, _, _ in group if d > 0]
-        lr = [nl / (d / 60) for d, _, nl, _ in group if d > 0]
-        print(f"  {name:<14} n={len(group):<4} "
-              f"caminho: mediana={statistics.median(pr):.2f} média={statistics.mean(pr):.2f}   "
-              f"link: mediana={statistics.median(lr):.2f} média={statistics.mean(lr):.2f}")
-    print("  (LONGAS com taxa MAIOR = esse evento é sobrevivível, não é a causa)")
-
-    # A comparação que o relatório NÃO tinha e que era a mais preditiva. Aqui a leitura é
-    # direta, sem o viés de taxa-por-minuto: agrupa por caminho e olha a mediana de vida.
-    # Se `relay:*` tiver mediana de segundos e `direct*` de minutos, o veredito é o
-    # caminho — e nenhum ajuste de bitrate/FEC deste arquivo conserta isso.
-    print("\n=== duração por CAMINHO (o mais preditivo) ===")
-    by_kind = {}
-    for d, _, _, kind in short + long:
-        by_kind.setdefault(kind, []).append(d)
-    # DOIS motivos diferentes pra tudo sair '?', e confundi-los engana quem lê: "o probe
-    # não está rodando" pede conserto, "as sessões são mais velhas que o probe" só pede
-    # paciência. Distinguir olhando se existe amostra na janela.
-    if set(by_kind) <= {"?"}:
-        if not samples:
-            print("  o sunshine-path-probe não gravou amostra nenhuma nesta janela —")
-            print("  conferir: systemctl list-timers ${probeUnit}")
-        else:
-            first = samples[0][0].strftime("%m-%d %H:%M")
-            print(f"  as sessões desta janela são ANTERIORES à 1ª amostra ({first}) e ficam")
-            print("  '?' pra sempre; as próximas já saem atribuídas.")
-    for kind in sorted(by_kind):
-        ds = sorted(by_kind[kind])
-        curtas = sum(1 for x in ds if x < 120)
-        print(f"  {kind:<12} n={len(ds):<4} mediana={statistics.median(ds):>6.0f}s   "
-              f"min={ds[0]:>4.0f}s max={ds[-1]:>6.0f}s   curtas={curtas}/{len(ds)}")
-
-    print("\n=== caminho atual do Tailscale ===")
-    out = subprocess.run(["tailscale", "status"], capture_output=True, text=True).stdout
-    for line in out.splitlines():
-        if "direct" in line or "relay" in line:
-            kind = "DIRETO" if "direct" in line else "RELAY (DERP - latência alta!)"
-            print(f"  {line.split()[1] if len(line.split()) > 1 else '?'}: {kind}")
   '';
 
   # Wrapper: a lógica mora no build (regra 7) e o runtime é uma linha. `python3` explícito
@@ -269,7 +140,6 @@ let
     runtimeInputs = with pkgs; [
       python3
       systemd
-      tailscale
     ];
     text = ''exec python3 ${statsPy} "$@"'';
   };
@@ -280,7 +150,7 @@ in
     # SEM capSysAdmin: a captura é wlr (wlr-screencopy), que NÃO precisa de CAP_SYS_ADMIN
     # — só o KMS-grab precisaria, e o KMS nem funciona no driver xe. Menos privilégio.
     autoStart = true; # sobe junto da sessão gráfica (serviço --user, WantedBy graphical-session)
-    openFirewall = false; # NÃO abre na LAN/internet; acesso só pela tailnet (tailscale0 trusted)
+    openFirewall = false; # fechado em todo lugar; quem abre é a regra 10.10.10.0/24 (../net/network.nix)
     settings = {
       # Nome que aparece no Moonlight. DERIVADO do hostname, nunca literal: ficou
       # "nixos-sandisk" por um mês depois do cutover, mentindo sobre qual máquina é.
@@ -302,26 +172,29 @@ in
       # do conector (o mesmo da lista de monitores do log), não por índice — índice
       # depende da ordem de enumeração, que é justamente o que deu errado aqui.
       output_name = config.my.monitors.primary; # SSOT: system/desktop/monitors.nix
-      # Acesso vem pela tailnet (IP 100.x, que o Sunshine classifica como WAN) →
-      # "wan" p/ não bloquear o web UI. NÃO é exposição real: o firewall só deixa a
-      # tailscale0 (trusted) chegar aqui; LAN/internet continuam fechadas.
+      # "wan" e não "lan": mantido no valor mais permissivo DE PROPÓSITO, porque quem
+      # decide o alcance aqui é o firewall, não o Sunshine — só a faixa do WireGuard
+      # chega nesta porta. Apertar isto ganharia nada e arrisca quebrar o web UI em
+      # silêncio (o stream não usa CSRF, então o sintoma só aparece ao abrir o painel).
       origin_web_ui_allowed = "wan";
-      # CSRF: libera as origens da tailnet (IP + nome MagicDNS). Sem isto, criar o
+      # CSRF: libera a origem pela qual o painel é aberto. Sem isto, criar o
       # usuário/salvar pelo web UI é bloqueado quando o host != localhost.
       #
-      # ⚠️ AMBOS OS VALORES FICARAM ERRADOS entre o cutover (01/08) e 02/08/2026, e
-      # ninguém notou: o STREAM não usa CSRF, então só o web UI estava quebrado —
-      # falha silenciosa por definição. O hostname virou nixos-kingston e o IP da
-      # tailnet mudou (100.92.126.90 → 100.116.22.4) quando o nó re-entrou na tailnet.
-      # O nome agora é DERIVADO (regra 11: literal repetido é dívida); o IP não dá
-      # pra derivar em tempo de build — é runtime — então é SNAPSHOT e vai errar de
-      # novo se o nó re-entrar. Preferir o MagicDNS; conferir com `tailscale ip -4`.
-      csrf_allowed_origins = "https://100.116.22.4:47990,https://${config.networking.hostName}.tailf2731d.ts.net:47990";
-      # OBRIGATÓRIO porque o acesso é pela tailnet: a tailscale0 tem MTU 1280 e o default
-      # do Sunshine é 1392 → todo pacote de vídeo estoura o túnel. WireGuard descarta em
-      # SILÊNCIO (sem ICMP, sem log): o host streama normal, o cliente recebe pela metade,
-      # não remonta frame e desconecta em ~4 s — foi o que aconteceu em 29/07. 1024 cabe
-      # com folga em 1280 depois de IP+UDP+cabeçalhos do Moonlight.
+      # ⚠️ JÁ FICOU ERRADO ANTES, entre o cutover (01/08) e 02/08/2026, e ninguém notou:
+      # o STREAM não usa CSRF, então só o web UI quebra — falha silenciosa por definição.
+      # Na época o valor apontava pra tailnet, cujo IP mudava a cada re-entrada do nó.
+      # Agora é o IP de LAN desta máquina, que é por onde o peer do WireGuard chega (o
+      # roteador roteia 10.10.10.x → LAN sem NAT). Continua sendo SNAPSHOT: não dá pra
+      # derivar IP em tempo de build. Vale garantir lease fixa no roteador — sem ela,
+      # trocar de IP quebra o painel de novo, e só se descobre ao tentar abri-lo.
+      csrf_allowed_origins = "https://192.168.1.10:47990";
+      # OBRIGATÓRIO porque o acesso é por túnel. O default do Sunshine é 1392, calibrado
+      # pra MTU 1500 — em túnel ele estoura, e o WireGuard descarta em SILÊNCIO (sem
+      # ICMP, sem log): o host streama normal, o cliente recebe pela metade, não remonta
+      # frame e desconecta em ~4 s. Foi o que aconteceu em 29/07 com a tailscale0 (MTU
+      # 1280). MANTIDO em 1024 na troca pro WireGuard (MTU ~1420) mesmo sobrando espaço:
+      # é valor PROVADO, e subir seria otimização sem medição correndo o risco de
+      # reintroduzir exatamente o bug silencioso que custou aquele debug.
       packet_size = 1024;
       # TETO DE BITRATE no host. O default é 0 = "obedece o que o Moonlight pedir", e o
       # cliente pedia até 79 Mbps: medindo as 67 sessões de 7 dias (jul/2026), as de
@@ -454,34 +327,6 @@ in
       # continuam visíveis, que é o que importa investigar.
       LogLevelMax = "warning";
     };
-  };
-
-  # ── Probe de caminho da tailnet ──────────────────────────────────────────────
-  # Unit de SISTEMA, não --user, por dois motivos: caminho da tailnet muda com ou sem
-  # sessão gráfica (e a lacuna que isso fecha é justamente "qual era o caminho ANTES de
-  # eu conectar"), e o journal do sistema é onde o tailscaled já loga — o relatório lê
-  # os dois do mesmo lugar.
-  systemd.services."${probeUnit}" = lib.mkIf config.my.services.sunshine {
-    description = "Registra o caminho da tailnet (direto/relay) por peer no journal";
-    # Sem tailscaled no ar o `status --json` falha e o probe só emite <4> e sai 0 — não
-    # quero um `failed` de boot por dependência que sobe depois (a lição do ddns).
-    after = [ "tailscaled.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.python3}/bin/python3 ${pathProbePy}";
-      # Deixa passar o <5>/notice da amostra e corta o "Starting…/Finished…" (info) do
-      # systemd — senão 1×/min viraria ~4300 linhas/dia de ruído pra 1440 de sinal.
-      LogLevelMax = "notice";
-    };
-  };
-
-  systemd.timers."${probeUnit}" = lib.mkIf config.my.services.sunshine {
-    description = "Amostra o caminho da tailnet a cada minuto";
-    timerConfig = {
-      OnBootSec = "2min"; # dá tempo do tailscaled negociar caminho antes da 1ª amostra
-      OnUnitActiveSec = "1min";
-    };
-    wantedBy = [ "timers.target" ];
   };
 
   # Diagnóstico fica no system/ junto do que ele diagnostica (o healthcheck acima mora

@@ -12,16 +12,15 @@
 # "exposto" em silêncio. Com `expose`, o default é `lan`: esquecer FECHA.
 #
 # COMO ALTERNAR: uma palavra no painel do host (hosts/*/services.nix).
-#   expose = "lan"    → só rede de casa (LAN + WireGuard do roteador + tailnet)
+#   expose = "lan"    → só rede de casa (LAN + WireGuard do roteador)
 #   expose = "public" → alcançável de fora, sujeito ao `auth` declarado
 #
-# ⚠️ `public` DECLARA intenção, não cria conectividade. Hoje NADA entra: a
-# operadora põe este host atrás de CGNAT (ver a entrada do TODO em
-# docs/ANOTACOES.md), então nenhuma porta é alcançável da internet. O gate certo
-# já é aplicado; o caminho de entrada é decisão pendente (IP público ou
-# cloudflared). Quando ele existir, esta lista é que vira o ingress do túnel —
-# por isso a opção mora em net/ e não dentro do caddy.nix: o Caddy não é o único
-# consumidor futuro, mesmo sendo o único hoje.
+# `public` FUNCIONA de verdade: o roteador tem IP público na pppoe-wan e encaminha
+# 80/443 pra cá (houve um susto de CGNAT em 07/08/2026 que se provou falso — ver
+# docs/ANOTACOES.md). Um serviço marcado `public` é alcançável da internet HOJE.
+#
+# A opção mora em net/ e não dentro do caddy.nix porque descreve ALCANCE DE REDE, não
+# detalhe do proxy — hoje o Caddy é o único consumidor, mas a decisão não é dele.
 # ═══════════════════════════════════════════════════════════════════════════
 { lib, ... }:
 
@@ -45,7 +44,7 @@
               "public"
             ];
             default = "lan";
-            description = "Alcance: `lan` (casa + tailnet) ou `public` (internet). Default fechado — omitir NUNCA expõe.";
+            description = "Alcance: `lan` (casa + WireGuard) ou `public` (internet). Default fechado — omitir NUNCA expõe.";
           };
 
           # user -> nome da variável de ambiente que carrega o hash bcrypt (o

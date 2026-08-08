@@ -8,6 +8,30 @@
   # ── Rede ───────────────────────────────────────────────────────────────────
   networking.networkmanager.enable = true;
 
+  # ── VPN de casa: a faixa do WireGuard é CONFIÁVEL ──────────────────────────
+  # O servidor WireGuard é o ROTEADOR (OpenWrt), não esta máquina — então NÃO existe
+  # interface `wg0` local pra pôr em `trustedInterfaces`. O tráfego dos peers chega
+  # pela LAN com origem 10.10.10.x, e a confiança precisa ser por ORIGEM.
+  #
+  # Isto SUBSTITUI o `trustedInterfaces = [ "tailscale0" ]` que morreu junto com o
+  # Tailscale (08/08/2026), e é o que mantém o Sunshine alcançável: ele roda com
+  # `openFirewall = false` de propósito, então SEM esta regra ele fica inacessível de
+  # todo lugar — inclusive de casa. Quem apagar isto tem que abrir as portas dele.
+  #
+  # `-I nixos-fw 1` e não `-A`: a cadeia nixos-fw TERMINA num refuse, então regra
+  # anexada no fim nunca é alcançada. Inserir no topo reproduz a semântica do
+  # trustedInterfaces — a faixa inteira passa antes de qualquer outra decisão.
+  # (Backend é iptables aqui: `networking.nftables.enable = false`.)
+  networking.firewall = {
+    extraCommands = ''
+      iptables -I nixos-fw 1 -s 10.10.10.0/24 -j nixos-fw-accept
+    '';
+    # Sem isto, `reload` do firewall empilha duplicatas da regra acima.
+    extraStopCommands = ''
+      iptables -D nixos-fw -s 10.10.10.0/24 -j nixos-fw-accept 2>/dev/null || true
+    '';
+  };
+
   # ── SSH (espelha o Arch: porta 2222, root off, senha como fallback) ─────────
   services.openssh = {
     enable = true;
@@ -113,26 +137,20 @@
   # ssh.v1cferr.dev ficar apontando pro IP velho na PIOR hora possível: logo depois
   # de uma queda de energia, que é justamente quando o IP público costuma mudar
   # e quando se quer entrar de fora.
-  # …SÓ QUE network-online NÃO BASTA — o furo era o DNS, não o link. MEDIDO no boot
-  # de 03/08 (com o after/wants acima já valendo): o target foi atingido em
-  # 07:22:09.529, o serviço subiu em 07:22:09.530 e o `tailscaled` só COMEÇOU a subir
-  # em 07:22:09.541 — 11ms depois. Como o /etc/resolv.conf aponta pro 100.100.100.100
-  # (quem serve esse endereço é o próprio tailscaled), as quatro APIs de "qual é meu
-  # IP" caíram por falha de resolução, não de rota: a 1ª estourou timeout em 2,7s e as
-  # outras três morreram em ~25ms cada. Mesmo sintoma de antes, causa diferente.
+  # HOUVE UMA SEGUNDA CAUSA, e ela MORREU com o Tailscale (08/08/2026): o
+  # /etc/resolv.conf apontava pro 100.100.100.100, servido pelo próprio tailscaled, que
+  # subia 11ms DEPOIS deste serviço — as quatro APIs de "qual é meu IP" falhavam por
+  # resolução, não por rota. Isso exigia um `after = tailscaled.service` que agora não
+  # tem mais alvo. Com o resolver de volta ao normal, a corrida de DNS não existe.
   #
-  # `after = tailscaled.service` sozinho não resolve: o Type=notify avisa "pronto" antes
-  # do netmap chegar do control plane, e é o netmap que ensina o resolver a responder.
-  # Não existe alvo pra "o DNS da tailnet responde" — então em vez de adivinhar a ordem,
-  # a gente TOLERA a corrida e tenta de novo: o Restart deixa a janela de DNS velho em
-  # ≤20s, contra os ≤5min do timer. O StartLimit é o freio pra não virar loop infinito
-  # quando a falha for real (token inválido, Cloudflare fora) — 6 tentativas em 5min e
-  # ele desiste, deixando o `failed` visível pro timer assumir depois.
+  # O RETRY ABAIXO FICA, e não é resíduo: a primeira causa (DHCP demorando ~6,5s depois
+  # do target) é independente do Tailscale e continua valendo. Tolerar a corrida e
+  # tentar de novo é mais robusto que adivinhar ordem — o Restart deixa a janela de IP
+  # velho em ≤20s, contra os ≤5min do timer. O StartLimit é o freio pra não virar loop
+  # infinito quando a falha for real (token inválido, Cloudflare fora): 6 tentativas em
+  # 5min e ele desiste, deixando o `failed` visível pro timer assumir depois.
   systemd.services.cloudflare-dyndns = {
-    after = [
-      "network-online.target"
-      "tailscaled.service"
-    ];
+    after = [ "network-online.target" ];
     wants = [ "network-online.target" ];
     serviceConfig = {
       Restart = "on-failure";

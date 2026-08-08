@@ -203,14 +203,12 @@ lib.mkIf (enabled && config.my.services.caddy) {
                 # aqui ESTENDE o acesso do `ai` aos clientes de VPN — decisão consciente,
                 # não efeito colateral.
                 #
-                # 100.64.0.0/10 = TAILNET. É o que dá acesso remoto de verdade hoje: o
-                # CGNAT da operadora impede qualquer entrada direta (ANOTACOES), mas o
-                # Tailscale atravessa, e um par na tailnet é tão "de casa" quanto a LAN.
-                # ⚠️ Essa faixa é a mesma do CGNAT de carrier. Hoje é inofensivo porque
-                # NADA da internet alcança este processo; no dia do túnel, um cliente
-                # externo atrás de carrier-NAT poderia apresentar um IP dessa faixa e ser
-                # tratado como casa — nesse dia, distinguir o caminho do túnel (porta ou
-                # header próprios), não confiar só no IP.
+                # É por essa faixa que o ACESSO REMOTO passa desde que o Tailscale saiu
+                # (08/08/2026): entra-se pelo WireGuard do roteador e os serviços `lan`
+                # respondem como se você estivesse no sofá. Chegou a haver aqui um
+                # 100.64.0.0/10 (tailnet) — saiu junto, e ainda bem: aquela faixa é a
+                # MESMA do CGNAT de carrier, então um cliente externo atrás de NAT de
+                # operadora poderia apresentar um IP dela e ser tratado como casa.
                 #
                 # `client_ip` e NÃO `remote_ip`: hoje os dois são idênticos (sem proxy
                 # confiável na frente, o cliente É a conexão). A diferença aparece com o
@@ -220,7 +218,7 @@ lib.mkIf (enabled && config.my.services.caddy) {
                 # ⚠️ NÃO adicionar `trusted_proxies` enquanto não houver túnel: sem ele o
                 # header X-Forwarded-For é ignorado (que é o que se quer); com ele, um
                 # processo local qualquer passaria a poder forjar o IP de origem.
-                @externo not client_ip 192.168.1.0/24 10.10.10.0/24 100.64.0.0/10 127.0.0.1/8 ::1
+                @externo not client_ip 192.168.1.0/24 10.10.10.0/24 127.0.0.1/8 ::1
 
                 # ---- Vhosts GERADOS de `my.ingress` (painel em hosts/*/services.nix) ----
                 # Não editar aqui: alterar alcance é trocar `expose` na SSOT.
@@ -280,9 +278,9 @@ lib.mkIf (enabled && config.my.services.caddy) {
     maxretry = 5;
     findtime = "10m";
     bantime = "1h";
-    # Não banir a rede de casa — nela o basic_auth nem é exigido. Mesma lista do
-    # matcher @externo, tailnet inclusa: um par da tailnet É casa, e banir a si
-    # mesmo por errar senha no celular seria o fim do acesso remoto.
-    ignoreip = "127.0.0.1/8 ::1 192.168.1.0/24 10.10.10.0/24 100.64.0.0/10";
+    # Não banir a rede de casa — nela o basic_auth nem é exigido. MESMA lista do
+    # matcher @externo, WireGuard incluso: banir a si mesmo por errar a senha no
+    # celular pela VPN seria o fim do acesso remoto.
+    ignoreip = "127.0.0.1/8 ::1 192.168.1.0/24 10.10.10.0/24";
   };
 }

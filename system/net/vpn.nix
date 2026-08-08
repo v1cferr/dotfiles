@@ -58,7 +58,8 @@ let
       # "Conectado" = unidade ativa E túnel existindo de fato. Só `is-active` MENTE: com
       # o portal da FAI fora do ar o nxBender entra em crash-loop e o systemd reporta
       # active durante cada tentativa (~2min), com zero ppp0 — o pill ficava verde à toa.
-      # UFSCar: filtra tun[0-9] porque `type tun` também casa o tailscale0.
+      # UFSCar: filtra tun[0-9] porque `type tun` casa QUALQUER tun (o tailscale0 era
+      # o caso concreto até 08/08/2026; o filtro fica, o motivo continua válido).
       fai_conn()    { systemctl is-active --quiet vpn-fai.service    && [ -n "$(ip -o link show type ppp)" ]; }
       ufscar_conn() { systemctl is-active --quiet vpn-ufscar.service && ip -o link show type tun | grep -q ': tun[0-9]'; }
       # Mount rclone da workstation FAI (~/FAI-workstation) sobe/derruba JUNTO com a VPN

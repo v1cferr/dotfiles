@@ -20,7 +20,7 @@
   # tocar na máquina. Bônus: se o Hyprland cair, o LightDM re-loga sozinho (resiliência).
   # defaultSession é OBRIGATÓRIO (assertion do lightdm) e define a sessão do autologin.
   # SEGURANÇA: o boot cai numa sessão DESTRANCADA. Mitigação: o hypridle tranca aos
-  # 5min (home/desktop/lockscreen.nix) e o acesso remoto é só pela tailnet. Se quiser
+  # 5min (home/desktop/lockscreen.nix) e o acesso remoto é só pelo WireGuard. Se quiser
   # trancar já no boot, dá p/ um exec-once do hyprlock no autostart.
   services.displayManager.autoLogin = {
     enable = true;
@@ -64,7 +64,7 @@
   # → o auto-unlock NÃO vem do PAM. Aqui o keyring "Login" tem senha VAZIA (estado, não
   # declarável — regra 6): o gnome-keyring-daemon o destrava sozinho no startup, sem
   # prompt, pra TODOS os apps. Trade-off aceito: sessão já é autologin/destrancada e o
-  # acesso remoto é só tailnet. Ver memória [[keyring-apos-restore]].
+  # acesso remoto é só pelo WireGuard. Ver memória [[keyring-apos-restore]].
   services.gnome.gnome-keyring.enable = true;
   # Só serve ao login INTERATIVO (resgate, se o autologin for desligado); inerte no autologin.
   security.pam.services.lightdm.enableGnomeKeyring = true;

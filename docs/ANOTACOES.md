@@ -88,6 +88,52 @@ do módulo.
         sentinela (regra 11) — virar `jellyfin` pra `lan` fez o 403 aparecer, reverter devolveu
         o store path byte-a-byte.
 
+- [x] Tailscale REMOVIDO — só WireGuard (08/08/2026) — o acesso remoto passa a ser o
+      WireGuard que o ROTEADOR já servia, e a malha de terceiro sai inteira do repo.
+      • POR QUE, e a premissa que eu tinha errado: o cliente do Tailscale JÁ é FOSS
+        (BSD-3); o proprietário é o plano de CONTROLE. Então a troca não tira software
+        fechado da máquina — tira a dependência de um coordenador de terceiro que sabe
+        quais dispositivos existem e pode desligar a rede. O Headscale resolveria isso
+        também, mas custa um serviço crítico a manter; WireGuard puro custa zero, porque
+        o servidor já estava no roteador (`wg0`, 10.10.10.0/24) e o Caddy já confiava
+        nessa faixa.
+      • O QUE DERRUBOU O ÚNICO ARGUMENTO CONTRA: o medo era rede corporativa bloquear UDP
+        e obrigar o relay DERP — exatamente o caso de uso (Moonlight do trabalho). MEDIDO:
+        3 pacotes UDP 51820 disparados da FAI, contador `Allow-WireGuard` do nftables no
+        roteador foi de 0 → 3. Passa. E sem relay o vídeo vai sempre direto, o que pra
+        streaming é ganho puro — o caminho é mais curto ainda, já que a FAI e a casa estão
+        as duas em São Carlos.
+      • ⚠️ A PEGADINHA QUE QUASE PASSOU: o `tailscale.nix` carregava
+        `trustedInterfaces = [ "tailscale0" ]`, e o Sunshine roda com `openFirewall =
+        false`. Apagar o módulo sem substituir isso deixaria o Sunshine INALCANÇÁVEL de
+        todo lugar, em silêncio. O substituto está em net/network.nix e é por ORIGEM, não
+        por interface: o servidor WireGuard é o ROTEADOR, então não existe `wg0` local pra
+        confiar — o peer chega pela LAN com origem 10.10.10.x. Regra inserida com
+        `-I nixos-fw 1`: a cadeia termina num refuse, então `-A` nunca seria alcançada.
+      • MORREU JUNTO, e é o ponto do "zero legado": o subsistema `sunshine-path-probe`
+        (~82 linhas + 2 units systemd) e as seções do `moonlight-stats` que cruzavam o
+        journal do tailscaled. Tudo aquilo existia pra responder "esta sessão foi direta
+        ou caiu no DERP?" — com WireGuard não há relay, então a pergunta PERDEU O OBJETO.
+        Não foi código que quebrou; foi código que deixou de ter sentido. O relatório
+        manteve o que continua verdadeiro: duração das sessões e a divisão curtas/longas.
+      • Sumiu também o `after = tailscaled.service` do cloudflare-dyndns: aquela corrida
+        de DNS existia porque o resolv.conf apontava pro 100.100.100.100 servido pelo
+        próprio tailscaled. O RETRY ficou — a outra causa (DHCP demorando ~6,5s depois do
+        network-online) é independente e continua valendo.
+      • AJUSTES FUNCIONAIS no sunshine.nix: `csrf_allowed_origins` apontava pro IP da
+        tailnet e pro nome MagicDNS, ambos mortos → virou `https://192.168.1.10:47990`,
+        que é por onde o peer chega. Continua SNAPSHOT (não dá pra derivar IP em build) —
+        vale garantir lease fixa no roteador. O `packet_size = 1024` FICOU: foi calibrado
+        pra MTU 1280 da tailscale0 e sobra espaço na MTU ~1420 do WireGuard, mas é valor
+        provado e subir seria otimização sem medição, arriscando reintroduzir o descarte
+        SILENCIOSO que custou o debug de 29/07.
+      • ⚠️ O QUE SE PERDE, e é real: o Tailscale re-resolvia o endpoint sozinho quando o
+        IP de casa mudava. O WireGuard guarda o endpoint resolvido e NÃO re-resolve — se
+        o IP mudar enquanto você está fora, a sessão morre e o cliente não volta só. Tem
+        conserto (timer que re-resolve e reaplica), mas é trabalho, não mágica de terceiro.
+      • `tailscale_authkey` saiu do índice do Bitwarden. O valor CIFRADO continua no
+        secrets.yaml até alguém removê-lo à mão — inofensivo, mas é resíduo.
+
 - [x] Roteador OpenWrt: acesso, limpeza e `owfetch` (08/08/2026) — o Cudy WR3000 virou
       administrável por SSH sem senha, e ganhou um resumo de sistema. NADA disso é
       declarativo, e o registro existe por isso: o OpenWrt não é NixOS, então tudo abaixo

@@ -57,6 +57,42 @@ do módulo.
 
 ## TODO
 
+- [ ] CGNAT: NÃO HÁ ENTRADA (07/08/2026) — o achado que invalida a premissa do ingress. A
+      operadora não me dá IP público: o traceroute sai por `172.31.43.240` → `172.31.43.61` →
+      `172.31.38.22`, três saltos em RFC 1918. O `177.52.84.188` que o ipify/DDNS reportam é o
+      NAT COMPARTILHADO dela, não meu — e por isso NENHUMA regra de port forward pode funcionar:
+      o roteador não possui o endereço que ela tentaria expor.
+      • MEDIDO de fora, da workstation da FAI (200.136.209.229) por SSH sobre a VPN: portas 80,
+        443 e 2222 TODAS filtradas. Controles que descartam as outras hipóteses: a FAI deixa sair
+        443 (example.com → 200) e o DNS resolve certo de lá (`pos.v1cferr.dev` → 177.52.84.188).
+        Ou seja, o wildcard e o DDNS estão CORRETOS — o que falta é caminho de entrada.
+      • ⚠️ A LIÇÃO, e é a SEGUNDA VEZ NO MESMO DIA que caio nela: de dentro da própria LAN o
+        teste MENTE. `curl` no IP público de casa devolve 200 e a porta 443 "abre", porque a
+        operadora faz hairpin pro cliente interno. Foi o mesmo erro do DNS (o `dig` dava IP
+        privado porque o roteador sequestra a 53). REGRA: conectividade externa só se prova de
+        um ponto FORA DA REDE — DoH pra DNS, host externo pra porta. Nada medido de casa vale.
+      • Isto explica o `ssh.v1cferr.dev` "não funciona de fora" que estava aberto há tempo. Nunca
+        foi DNS, nunca foi o token do sops, nunca foi o wildcard. Não existe rota de entrada.
+      • O `cloudflare-dyndns` publica fielmente um IP que NÃO É MEU e é dividido com outros
+        clientes da operadora — e o wildcard agora aponta tudo pra lá. Não é perigoso, mas é um
+        registro que não descreve a realidade. Revisar junto com a decisão abaixo.
+      • CONSEQUÊNCIA DE SEGURANÇA (por ora, boa): `jellyfin` e `torrent`, que o Caddyfile deixa
+        sem gate externo de propósito, NÃO estão expostos — nada da internet os alcança. A
+        exposição declarada é hoje teórica. Isso muda no minuto em que houver entrada.
+      • CAMINHO RECOMENDADO: (1) ligar pra operadora e pedir IP público — é grátis e, se sair,
+        o desenho atual volta a valer sem mudar nada; (2) Tailscale pro que é meu (duo/ai/
+        jellyfin/torrent) — já funciona, atravessa CGNAT, sem terceiros no caminho; (3)
+        `services.cloudflared` (o módulo existe no nixpkgs) SÓ pro `pos`, que é o único que
+        precisa de público de verdade (o JP não vai instalar Tailscale). Não tunelar mídia: o
+        ToS da Cloudflare restringe streaming de vídeo desproporcional pelo CDN.
+      • ⚠️⚠️ ARMADILHA DO TUNNEL, ler ANTES de implementar: o `@externo` confia em `127.0.0.1/8`,
+        e o `cloudflared` entrega no Caddy PELO LOOPBACK. Do jeito que está, todo tráfego do
+        tunnel chegaria como INTERNO: o `pos` pularia o basic_auth e o `duo`/`ai` perderiam o
+        403 — abertos pra internet, em silêncio, sem nada falhar. Exige `trusted_proxies` + IP
+        real via `CF-Connecting-IP`, ou entregar num endereço fora da lista de confiança.
+      • Pro Tailscale há um análogo: `*.v1cferr.dev` só resolve pra 192.168.1.10 DENTRO de casa.
+        De fora, pela tailnet, ou split-DNS no admin do Tailscale ou usar os nomes `.ts.net`.
+
 - [x] Cloudflare no Claude Code: CLI + MCP (07/08/2026) — pra fechar a "descoberta pendente" do
       Caddy (o wildcard respondendo IP privado) sem eu ler zona no painel na mão. Duas peças:
       `.mcp.json` na raiz e `.claude/settings.json`.

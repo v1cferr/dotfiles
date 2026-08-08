@@ -26,4 +26,55 @@
     discord-rpc = true; # Rich Presence do Claude Code no Discord
     cs2-backup = true; # backup dos saves do CS2
   };
+
+  # ── PAINEL DE EXPOSIÇÃO: quem tem subdomínio e até onde alcança ────────────
+  # Gera os vhosts do Caddy (schema em system/net/ingress.nix). ALTERNAR = trocar
+  # a palavra do `expose`:
+  #   "lan"    → LAN + WireGuard do roteador + TAILNET (acesso remoto real hoje)
+  #   "public" → internet, sujeito ao `auth` declarado
+  #
+  # ⚠️ "public" hoje é DECLARAÇÃO, não conectividade: este host está atrás de
+  # CGNAT e nada entra (ver TODO do CGNAT em docs/ANOTACOES.md). O gate correto
+  # já é aplicado; falta o caminho de entrada (IP público ou cloudflared).
+  #
+  # Omitir `expose` FECHA (default = "lan") — esquecimento não vira exposição.
+  my.ingress = {
+    pos = {
+      upstream = 3006;
+      routes = {
+        "/api/*" = 8006;
+      }; # FastAPI; prefixo NÃO removido, p/ a mesma URL valer no container
+      expose = "public";
+      auth = {
+        v1cferr = "CADDY_POS_HASH_V1CFERR";
+        jp = "CADDY_POS_HASH_JP";
+      };
+      comment = "GradRadar (V1C-72), dividido com o JP. Sem login próprio até o F2 → basic_auth de fora.";
+    };
+
+    jellyfin = {
+      upstream = 8096;
+      expose = "public";
+      comment = "Login próprio; exposto no mesmo nível do Arch. Upstream em loopback (o serviço nativo escuta 0.0.0.0).";
+    };
+
+    torrent = {
+      upstream = 8080;
+      expose = "public";
+      comment = "qBittorrent — login próprio, mesmo critério do jellyfin.";
+    };
+
+    duo = {
+      upstream = 3010;
+      proxyConfig = "flush_interval -1"; # SSE (/api/events) sem buffer
+      expose = "lan";
+      comment = "duo-streak-daemon (V1C-71). Expõe detalhes da automação → nunca sai de casa.";
+    };
+
+    ai = {
+      upstream = 11434;
+      expose = "lan";
+      comment = "Ollama NÃO tem auth nativa. `lan` é a ÚNICA proteção — não trocar sem pôr auth na frente.";
+    };
+  };
 }

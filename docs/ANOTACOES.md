@@ -57,6 +57,37 @@ do módulo.
 
 ## TODO
 
+- [x] `my.ingress`: exposição vira TOGGLE (08/08/2026) — o Caddyfile deixou de ser escrito à
+      mão. Cada serviço se declara em `my.ingress` (schema em system/net/ingress.nix, painel em
+      hosts/nixos-kingston/services.nix) e os vhosts são GERADOS. Alternar alcance = trocar uma
+      palavra: `expose = "lan"` ↔ `"public"`.
+      • O QUE ISSO CONSERTA: antes o alcance era implícito e assimétrico — `duo`/`ai` tinham
+        `respond @externo 403` escrito à mão, `jellyfin`/`torrent` NÃO tinham, e a decisão de
+        expor só existia como uma AUSÊNCIA no meio de 60 linhas. Codificar segurança por omissão
+        é o pior caso: esquecer de escrever virava "exposto", em silêncio. Agora o default de
+        `expose` é `lan` — esquecer FECHA.
+      • TAILNET no matcher de casa (100.64.0.0/10): é o que dá acesso remoto DE VERDADE hoje,
+        já que o CGNAT impede entrada direta. Um par da tailnet é tão "casa" quanto a LAN. Foi
+        junto no `ignoreip` do fail2ban — errar a senha no celular não pode banir a si mesmo.
+        ⚠️ Essa faixa é a mesma do CGNAT de carrier; hoje é inofensiva porque nada da internet
+        alcança o processo, mas no dia do túnel exige distinguir o caminho, não confiar no IP.
+      • `remote_ip` → `client_ip` ANTES de existir túnel: hoje são idênticos (sem proxy
+        confiável, cliente = conexão). Custou zero e desarma a armadilha do cloudflared entregar
+        pelo loopback e todo o tráfego do túnel virar "casa", furando o basic_auth em silêncio.
+        ⚠️ NÃO adicionar `trusted_proxies` enquanto não houver túnel: sem ele o X-Forwarded-For
+        é ignorado (que é o certo); com ele, processo local qualquer forja o IP de origem.
+      • O failregex do fail2ban passou a ser DERIVADO de quem tem `auth`, em vez do literal
+        `pos\.`: serviço novo com basic_auth entra na jail sozinho.
+      • ⚠️ PEGADINHA DE NIX que mordeu no primeiro gerado: o alvo é o literal `{$VAR}` (env var
+        do Caddy), e `"{$${v}}"` numa string Nix é ERRO DE SINTAXE, não escape — o gerado saiu
+        com `{$${v}}` cru, que viraria hash VAZIO em runtime. A forma sem ambiguidade é
+        concatenar: `"{$" + v + "}"`. Pegou no olho, no Caddyfile gerado; não haveria erro de
+        build.
+      • VALIDADO: `caddy validate` com o binário custom e hashes bcrypt reais → `Valid
+        configuration`; o gerado é semanticamente idêntico ao que estava à mão; e o ritual do
+        sentinela (regra 11) — virar `jellyfin` pra `lan` fez o 403 aparecer, reverter devolveu
+        o store path byte-a-byte.
+
 - [ ] CGNAT: NÃO HÁ ENTRADA (07/08/2026) — o achado que invalida a premissa do ingress. A
       operadora não me dá IP público: o traceroute sai por `172.31.43.240` → `172.31.43.61` →
       `172.31.38.22`, três saltos em RFC 1918. O `177.52.84.188` que o ipify/DDNS reportam é o

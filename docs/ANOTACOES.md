@@ -88,6 +88,49 @@ do módulo.
         sentinela (regra 11) — virar `jellyfin` pra `lan` fez o 403 aparecer, reverter devolveu
         o store path byte-a-byte.
 
+- [x] Roteador OpenWrt: acesso, limpeza e `owfetch` (08/08/2026) — o Cudy WR3000 virou
+      administrável por SSH sem senha, e ganhou um resumo de sistema. NADA disso é
+      declarativo, e o registro existe por isso: o OpenWrt não é NixOS, então tudo abaixo
+      é passo MANUAL que some num reflash limpo (sobrevive a `sysupgrade` com keep settings).
+      • CLIENTE declarativo, resto não: `home/shell/ssh.nix` ganhou o host `router`. Sem o
+        `faiResilience` — aquilo dimensiona keepalive e multiplexação pro túnel SonicWall;
+        num salto de LAN de <1ms seria carga cultuada.
+      • OS CINCO PASSOS MANUAIS, na ordem: (1) `ssh-copy-id` da chave; (2) `@includedir
+        /etc/sudoers.d` no `/etc/sudoers` — ele NÃO vinha, então drop-in ali era ignorado em
+        SILÊNCIO; (3) a regra NOPASSWD restrita; (4) o script em `~/bin/owfetch`; (5) a
+        chamada em `/etc/profile.d/99-owfetch.sh`. Somar `/etc/sudoers.d/` ao
+        `/etc/sysupgrade.conf` faz o passo 3 persistir.
+      • ⚠️ NÃO existe `su` no BusyBox e `sudo cmd > arquivo` NÃO funciona (o `>` é do shell
+        sem privilégio, antes do sudo). O padrão é `| sudo tee`. E editar sudoers é
+        copiar → editar a CÓPIA → `visudo -c -f` → só então instalar: com `sudo` quebrado e
+        sem `su`, a saída seria failsafe com acesso físico.
+      • ESCOPO DO SUDO: começou `ALL` e foi ESTREITADO pra `/sbin/reboot, /usr/sbin/nft,
+        /sbin/uci, /etc/init.d/dnsmasq`. O motivo é que `NOPASSWD: ALL` + chave SSH torna a
+        CHAVE equivalente a root — e o login de root por SSH já estava desativado no
+        dropbear (flags `-w -g`), então o amplo desfazia a proteção que já existia.
+      • DNS LOCAL: 13 entradas → 1. Só `/v1cferr.dev/192.168.1.10` fazia trabalho — no
+        dnsmasq isso cobre o domínio E todos os subdomínios. As 12 específicas eram
+        redundantes, várias apontando pra serviços mortos no Arch (bazarr/prowlarr/radarr/
+        sonarr/jellyseerr/spendflow/chat/dash/files), e nenhuma cobria `pos` nem `duo`.
+        Backup em `/etc/config/dhcp.bak-limpeza`. Efeito aceito: a curinga pega o APEX, então
+        `https://v1cferr.dev` de dentro de casa dá erro de TLS (o cert curinga não cobre o
+        domínio nu). De fora vai pra Vercel normalmente.
+      • `scripts/owfetch.sh`: fetch em ash puro, ~4 KB, ZERO dependência. Não é fastfetch
+        porque o /overlay tem 1.4 MB livres de 6.1 MB — fastfetch pesa 1-2 MB e o neofetch
+        arrastaria o bash; qualquer um enche a flash, e roteador com flash cheia não grava
+        nem config. A ordem dos campos espelha `home/shell/fastfetch.nix` de propósito.
+      • ⚠️ `~/.profile` NÃO É LIDO no OpenWrt — perdi um teste inteiro nisso. O `/etc/profile`
+        varre `/etc/profile.d/*.sh` e é ali que a chamada mora. Guardas obrigatórias:
+        `[ -t 1 ]` (senão suja `scp`/comandos por SSH) e `-x` (senão erra se o script sumir).
+      • ⚠️ printf pad por BYTE: o rótulo "Memória" desalinhava porque `ó` são 2 bytes em
+        UTF-8. Virou "RAM". E o ARM não expõe `model name` em /proc/cpuinfo — o nome da CPU
+        sai do `DISTRIB_ARCH`.
+      • O hook `shellcheck` entrou no `flake.nix` por causa deste script: o
+        `scripts/sync-secrets.sh` já ganhava verificação de graça pelo `writeShellApplication`,
+        mas o `owfetch.sh` roda em ash NO ROTEADOR e nenhuma derivação o embrulha — seria o
+        único `.sh` do repo a executar em máquina alheia SEM verificação. Ligar o hook exigiu
+        `# shellcheck shell=bash` no `.envrc`, que não tem shebang (SC2148).
+
 - [x] ~~CGNAT~~ FALSO ALARME: o acesso externo SEMPRE funcionou (08/08/2026) — esta entrada
       nasceu ERRADA em 07/08 e fica reescrita, não apagada, porque o valor está no método que
       falhou. A conclusão de ontem ("não há rota de entrada, é CGNAT") era falsa nas TRÊS pernas:

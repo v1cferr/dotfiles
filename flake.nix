@@ -334,6 +334,12 @@
             # Ambos leem a config do repo (./statix.toml) porque rodam com o cwd na raiz.
             statix.enable = true;
             deadnix.enable = true;
+            # Cobre os `.sh` de ./scripts — a regra 7 diz que a lógica mora no build, e
+            # o sync-secrets.sh já ganha shellcheck de graça por vir de um
+            # writeShellApplication. O owfetch.sh NÃO ganha: ele roda em ash no OpenWrt,
+            # não aqui, então nenhuma derivação o embrulha. Sem este hook, o único `.sh`
+            # do repo que executa em máquina ALHEIA seria o único sem verificação.
+            shellcheck.enable = true;
           };
         };
 

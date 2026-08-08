@@ -25,7 +25,7 @@ import sys
 from pathlib import Path
 
 HOST = "v1cferr@192.168.1.1"
-MARCA = "<REDIGIDO — valor real no roteador; ver docs/historico.md>"
+MARCA = "<REDIGIDO — valor real no roteador; ver docs/historico/>"
 
 # Nome da opção (folha) que carrega credencial. `key` genérico entra porque é o
 # nome que o wireless usa pra senha do WiFi.

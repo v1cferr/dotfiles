@@ -1,6 +1,6 @@
 # Pendências
 
-O que está em aberto. Item concluído migra para [historico.md](historico.md) —
+O que está em aberto. Item concluído migra para [historico/](historico/) —
 este arquivo só cresce com trabalho novo, e encolhe quando trabalho termina.
 
 Convenção herdada do arquivo único: cada item explica o QUE, o PORQUÊ e a

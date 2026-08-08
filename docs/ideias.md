@@ -1,7 +1,7 @@
 # Ideias
 
 Coisas consideradas, referências e o que ainda não virou decisão. O que já virou
-está em [historico.md](historico.md); o que está para fazer, em
+está em [historico/](historico/); o que está para fazer, em
 [pendencias.md](pendencias.md).
 
 > Quickshell: DECIDIDO — migrei tudo pro Quickshell (ver TODO). Personalizável em QML

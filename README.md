@@ -59,10 +59,15 @@ hosts/                   específico de cada máquina (hostname, discos, monitor
     services.nix         PAINEL: quais serviços opcionais ESTA máquina liga (my.services.*)
 secrets/                 secrets.yaml (sops) + bitwarden-secrets.json
 scripts/                 sync-secrets.sh — bash lido por `writeShellApplication` (shellcheck no build)
-docs/                    o que NÃO é declarável (BIOS, runbooks) + o diário do repo
-  ANOTACOES.md           regras, decisões e TODOs — o "por quê" que não cabe em comentário
-  SECURE-BOOT-SETUP.md   TEMPORÁRIO: passos manuais do Secure Boot (apagar quando fechar)
-  bios-ex-b560m-v5.md    estado desejado da BIOS (NVRAM não é declarável pelo NixOS)
+router/                  espelho do UCI do OpenWrt (router-sync) — visível, não declarável
+docs/                    o que NÃO é declarável + o diário do repo (ver docs/README.md)
+  regras.md              as 15 regras — a NUMERAÇÃO é API, 70+ comentários citam "regra N"
+  pendencias.md          o que está aberto
+  historico.md           o que foi feito e POR QUÊ (inclui o que foi tentado e RECUSADO)
+  ideias.md              considerado, ainda não decidido
+  arch-legado.md         capítulo encerrado + como abrir o acervo do Arch
+  guias/                 passo a passo de hardware/setup (BIOS, Secure Boot)
+  testes/                protocolos de teste reutilizáveis
 ```
 
 O `README.md` é o único doc da raiz — o resto mora em `docs/`.

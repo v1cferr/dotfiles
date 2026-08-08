@@ -2,7 +2,7 @@
 
 > **ARQUIVO TEMPORÁRIO.** Apagar assim que o Secure Boot estiver ligado e os dois
 > sistemas bootando. O que precisa sobreviver já está no cabeçalho de
-> [`system/core/secureboot.nix`](system/core/secureboot.nix) — este aqui é só a
+> [`system/core/secureboot.nix`](../../system/core/secureboot.nix) — este aqui é só a
 > sequência da noite. Runbook cumprido que fica no repo vira mentira depois.
 
 O código já está commitado e o `nixos-rebuild build` passa. **Nada foi aplicado.**
@@ -74,7 +74,7 @@ sbctl verify                          # o grubx64.efi deve aparecer como assinad
 ```
 
 Se o UUID do `sdb1` **não** for `904C-B9D0`, corrija em
-[`system/core/boot.nix`](system/core/boot.nix) antes de seguir — a entrada existiria
+[`system/core/boot.nix`](../../system/core/boot.nix) antes de seguir — a entrada existiria
 no menu e simplesmente não bootaria.
 
 **Reinicie.** Você deve ver o menu do Minecraft com dois mundos: NixOS e Windows 11.
@@ -159,14 +159,14 @@ No Windows, `msinfo32` → **Secure Boot State: On**.
 | Sintoma | O que é |
 | --- | --- |
 | Firmware não boota nada / "Invalid signature" | O GRUB foi reescrito sem assinatura. **BIOS → Secure Boot: Disabled**, boote, `sudo sbctl sign -s /boot/EFI/*/grubx64.efi`, religue o SB |
-| `prohibited by secure boot policy` + `grub rescue>` | **Aconteceu em 02/08.** A assinatura estava CERTA (a firmware executou o GRUB) — faltavam os módulos embutidos. Resolvido pelo `extraGrubInstallArgs` em [`system/core/boot.nix`](system/core/boot.nix); confira que o `rebuild` reinstalou o GRUB |
+| `prohibited by secure boot policy` + `grub rescue>` | **Aconteceu em 02/08.** A assinatura estava CERTA (a firmware executou o GRUB) — faltavam os módulos embutidos. Resolvido pelo `extraGrubInstallArgs` em [`system/core/boot.nix`](../../system/core/boot.nix); confira que o `rebuild` reinstalou o GRUB |
 | `shim_lock protocol not found` | Falta o `--disable-shim-lock` no `extraGrubInstallArgs`. Sem ele o GRUB exige um shim que não existe aqui, e nem NixOS nem Windows bootam |
-| Windows no menu, mas não boota | O UUID mudou. `lsblk -o NAME,LABEL,UUID /dev/sdb` e corrija o `search --fs-uuid` em [`system/core/boot.nix`](system/core/boot.nix) |
+| Windows no menu, mas não boota | O UUID mudou. `lsblk -o NAME,LABEL,UUID /dev/sdb` e corrija o `search --fs-uuid` em [`system/core/boot.nix`](../../system/core/boot.nix) |
 | Windows pede chave de recuperação | O BitLocker não foi desligado (Fase 0). Sem a chave, `sbctl reset` + SB off devolve o PCR 7 anterior |
 | Arc B580 sem vídeo no POST | `enroll-keys` sem o `-m`. `sudo sbctl reset` na BIOS em Setup Mode e refaça a Fase 3 **com** o `-m` |
 | Não acho "Clear Secure Boot Keys" na BIOS | `Secure Boot Mode` ainda está em `Standard`. Em Standard a ASUS esconde o `Key Management` inteiro |
 | Voltou a pedir chave da Microsoft / Windows não boota | Alguém pôs `Secure Boot Mode` de volta em `Standard`, ou usou `Install Default Secure Boot Keys` |
-| Menu do GRUB feio/esticado | O `gfxmodeEfi` não pegou 1080p. Ajustar em [`system/core/boot.nix`](system/core/boot.nix) |
+| Menu do GRUB feio/esticado | O `gfxmodeEfi` não pegou 1080p. Ajustar em [`system/core/boot.nix`](../../system/core/boot.nix) |
 | Ícone genérico, sem texto, em alguma entrada | O `--class` daquela entrada não casa com nenhum `customIcons.name`. Ver `grep menuentry /boot/grub/grub.cfg` |
 
 **Recuperação de último caso:** desligar Secure Boot na BIOS devolve o boot em todos

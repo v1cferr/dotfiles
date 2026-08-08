@@ -15,7 +15,7 @@
 # (aplica → agenda rollback → confirma se ainda houver acesso), senão uma linha
 # errada de rede ou firewall tranca você fora e a saída é modo failsafe com acesso
 # FÍSICO. A decisão sobre a ferramenta de push (nuci/Dewclaw/própria) está aberta
-# no TODO de docs/ANOTACOES.md; este módulo entrega a metade sem risco.
+# no TODO de docs/pendencias.md; este módulo entrega a metade sem risco.
 #
 # O QUE O `sysupgrade` JÁ PRESERVA, medido em 08/08/2026 no keep.d do aparelho:
 # `/etc/config/` INTEIRO, `/etc/profile.d/`, `/etc/dropbear/` e passwd/shadow/group.

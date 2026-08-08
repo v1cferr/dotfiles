@@ -33,7 +33,7 @@
     # RESGATE (critério 3 do README): o módulo services.restic gera só wrappers POR REPO
     # (`restic-home-gdrive`), então repo sem serviço — como o arquivo do Arch — ficava
     # inalcançável sem `nix shell`. Backup que exige ginástica pra ler é meio backup.
-    restic # cliente do restic p/ inspecionar/restaurar QUALQUER repo (ver docs/ANOTACOES.md)
+    restic # cliente do restic p/ inspecionar/restaurar QUALQUER repo (ver docs/historico.md)
 
     # ── GPU: monitoramento (Arc B580) ──
     # Os benches (vulkan-tools/mesa-demos/glmark2/vkmark/unigine/clpeak) foram

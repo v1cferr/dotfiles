@@ -92,7 +92,7 @@
   # público direto na `pppoe-wan` e encaminha 80/443/2222. Provado em 08/08/2026
   # pela borda da Cloudflare (registro proxied temporário → o Caddy devolveu o 404
   # do catch-all em 0,39s). Houve um susto de CGNAT em 07/08 que se provou FALSO —
-  # o diagnóstico e as três formas de o teste mentir estão em docs/ANOTACOES.md.
+  # o diagnóstico e as três formas de o teste mentir estão em docs/historico.md.
   #
   # ⚠️ NÃO adicione `*.<domínio>` aqui. Testado em 07/08/2026: o tool só sabe
   # criar/atualizar registro A, e a API recusa com o código 81054 ("A CNAME

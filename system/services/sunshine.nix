@@ -4,7 +4,7 @@
 # → stream fluido e de baixa latência. Chega-se no Sunshine PELO WIREGUARD do roteador,
 # não pela LAN nem pela internet: `openFirewall = false` mantém as portas fechadas, e
 # quem abre é a regra de origem 10.10.10.0/24 em ../net/network.nix. Era Tailscale até
-# 08/08/2026 — a troca está registrada em docs/ANOTACOES.md.
+# 08/08/2026 — a troca está registrada em docs/historico.md.
 #
 # APRENDIZADO (jul/2026, debug longo): "tela preta no Moonlight" era o wlr capturando o
 # monitor DPMS-OFF (apagado) — NÃO regressão de versão nem encoder. Captura funciona

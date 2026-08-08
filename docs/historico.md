@@ -1,61 +1,12 @@
-# Anotações
+# Histórico
 
-## Regras
+O que foi feito, e — mais importante — POR QUÊ, o que foi tentado e recusado, e
+qual armadilha custou caro. É o arquivo que responde "por que isto está assim?"
+seis meses depois.
 
-> 1. Sempre pesquisar as boas práticas e o que a comunidade do NixOS está usando mais para cada pacote/software (para ter uma referência e sugestões)
-> 2. COMENTÁRIO em `.nix`/`.lua`/`.conf`: uma linha de resumo por config, logo acima dela — e um BLOCO de cabeçalho por módulo, dizendo o que é, POR QUE essa escolha e as pegadinhas conhecidas. A linha evita poluir; o bloco é o que devolve horas quando o problema volta em seis meses. Comentário registra o porquê e a armadilha, não o óbvio que o código já diz. (A regra antiga proibia o bloco, mas o repo sempre teve — a regra estava errada, não a prática.)
-> 3. Sempre declarativo e não "manual" (para funcionar em qualquer hardware posteriormente)
-> 4. Separar `system/` e `home/`: nível-sistema (serviços, drivers, pacotes de root) no `system/`; app **e** config de usuário no `home/` (`programs.*` quando há módulo, senão `home.packages`). Nunca o mesmo pacote nos dois.
-> 5. Organizar por categoria: cada assunto numa subpasta com seu `default.nix` (adicionar módulo = 1 linha no `default.nix` da categoria; o topo não muda).
-> 6. Nix = app + config; estado = restic: saves, prefixos Wine, tokens/sessões de app **não** se declaram — vão pro backup.
-> 7. Sem `.sh` solto: a lógica mora no build (Nix) ou no systemd; runtime = comando de 1 linha (shellcheck no build pega erro cedo).
-> 8. Validar antes de aplicar: `nixos-rebuild build` / `nix eval` OK e commits atômicos por feature/task, antes do switch.
-> 9. Tudo em tema TokyoNight, centralizado numa PALETA NIX própria (`home/desktop/palette.nix`, opção `my.theme.name`) — trocar de tema = 1 linha (presets: tokyo-night/catppuccin-mocha/gruvbox-dark). O nix-colors foi DESCARTADO: arquivado (abr/2026) + base16 de só 16 cores não reproduz os hexes exatos.
-> 10. A FONTE de UI tem SSOT PRÓPRIA, separada das cores: `my.fonts.ui` em `system/hardware/fonts.nix` (junto do pacote, porque fonte é nível-sistema — regra 4; e o fontconfig também precisa do nome, e módulo de sistema não lê opção do home-manager). Trocar de fonte = 1 linha + o pacote. Consumidor de usuário lê via `osConfig.my.fonts.ui`, nunca literal.
-> 11. SSOT SEMPRE: valor repetido em 2+ lugares vira opção `my.<domínio>.<coisa>` e consumidor NUNCA guarda literal — hoje são `my.theme.name`/`.palette` (cores, regra 9), `my.fonts.ui` (fonte, regra 10) e `my.services.<n>` (serviços opcionais). A opção mora no nível MAIS BAIXO que precisa dela: se algum módulo do `system/` consome, ela é de sistema e o `home/` lê via `osConfig` — o contrário NÃO existe (módulo de sistema não lê opção do home-manager). Consumidor de HOT-RELOAD (Quickshell/Hyprland) não aceita interpolação do Nix, porque a árvore é symlink: o módulo GERA um arquivo de dados (JSON/Lua) que ele lê, e aí o único literal legítimo é o fallback de "arquivo faltou". VALIDAR trocando a opção por um SENTINELA — rebuild, conferir que TODOS os consumidores mudaram, reverter e checar que o store path voltou idêntico.
-> 12. SEGREDOS são camada SEPARADA e o repo NUNCA guarda credencial: origem = Bitwarden, entrega = sops-nix (chave age do root). Consumidor lê `/run/secrets/<nome>` em RUNTIME, nunca em tempo de build — o `/nix/store` é world-readable, então segredo interpolado em derivação VAZA. Editar segredo exige `rebuild`, senão o `/run/secrets` não atualiza.
-> 13. O `flake.lock` FIXA o universo de dependências: sem `nix-channel`, sem fetch sem hash, sem "latest" implícito. Bump só por `update`/`upgrade` — o `update` roda como USUÁRIO porque é quem tem a chave SSH dos inputs privados — e o lock entra no MESMO commit da mudança que o exigiu, senão o build de ontem não é reproduzível hoje.
-> 14. UM DONO por artefato: se o Nix gera o arquivo, só o Nix escreve nele; se o app o reescreve em runtime, o Nix NÃO o gerencia como arquivo — usa activation idempotente ou marcador de imutabilidade (`ViewMode[$i]`). Duas camadas no mesmo arquivo = DRIFT SILENCIOSO, o pior tipo: nada falha, só fica errado. Casos reais deste repo: hyprpaper (módulo do HM gerando formato velho contra a config que o daemon exigia → tela preta por meses), `~/.config/theme/*` (apagados como "temporários" quando eram symlinks do HM → boot sem sessão), `dolphinrc` (o Dolphin reescreve → activation + `[$i]`).
-> 15. Toda AUTOMAÇÃO tem dono explícito e ÚNICO: quem inicia está declarado (unit systemd, `exec-once` do compositor, timer). Processo órfão parenteado a um shell qualquer morre com ele. E dono único SEM FALLBACK é ponto de falha: se a automação sustenta acesso remoto, precisa de rede de segurança independente da config que pode quebrar (foi o caso do `graphical-session.target`, que só o `exec-once` levantava).
-
-## Configurações antigas do Arch Linux
-
-> Aqui estão minhas configurações legado do Arch Linux que estamos migrando tudo para o Nix e NixOS, para que tudo seja declarativo e não manual, e para que funcione em qualquer hardware posteriormente.
-
-Encerrado em 05/08/2026. O Kingston foi formatado (01/08), o módulo que criava os backups
-foi apagado, a cópia manual `~/BACKUP-KINGSTON` foi apagada e a perna local (Seagate) saiu
-— ficou **só a cópia offsite**, que passou no `check --read-data` (189 packs, 0 erros).
-
-Sobra este ponteiro porque repo que ninguém sabe abrir é pior que repo apagado:
-
-A pasta no Drive foi renomeada `KINGSTON` → **`ARCH-KINGSTON`** em 05/08/2026 (o nome
-antigo não dizia que era o Arch). Navegar como pasta, no Dolphin:
-
-```bash
-arch-browse                     # monta em /mnt/arch-antigo (Ctrl+C desmonta)
-```
-
-⚠️ Desligue a **visualização** (miniaturas) no Dolphin antes de navegar aqui: preview lê o
-CONTEÚDO, e cada leitura faz o restic baixar packs do Drive. Medido: uma pasta de 3,9 MiB
-custou 3,68 MiB de download só em ícone (ver TODO de 07/08/2026).
-
-O alias está em `home/shell/zsh.nix` e roda SEM sudo de propósito: mount FUSE é privado
-de quem montou, então `sudo restic mount` gera pasta que o file manager não abre. Os
-dotfiles do Arch estão em `home/v1cferr/dotfiles` dentro do snapshot (`6d7e3ee7`, 44,6
-GiB). Os dois segredos seguem declarados de propósito — são a CHAVE do acervo, não sobra
-do módulo.
-
-- Repo no GitHub: <https://github.com/v1cferr/dotfiles>
-
-## Ideias
-
-> Quickshell: DECIDIDO — migrei tudo pro Quickshell (ver TODO). Personalizável em QML
-> com hot-reload; o Hyprland também virou hot-reload (hyprland.lua via mkOutOfStoreSymlink).
-> Para me inspirar: <https://github.com/Misterio77/Foundry>
-> Wallpapers Nix: <https://github.com/NixOS/nixos-artwork/tree/master/wallpapers>
-> Temas centralizados: `home/desktop/palette.nix` (`my.theme`). O nix-colors foi descartado (arquivado + base16 limita a 16 cores).
-
-## TODO
+Ordem cronológica REVERSA: o mais recente primeiro, como sempre foi. Quando
+crescer demais, o corte natural é por período (`historico-2026.md`), nunca por
+tema — entrada boa cruza assuntos, e separar por tema quebraria a narrativa.
 
 - [x] `my.ingress`: exposição vira TOGGLE (08/08/2026) — o Caddyfile deixou de ser escrito à
       mão. Cada serviço se declara em `my.ingress` (schema em system/net/ingress.nix, painel em
@@ -309,42 +260,6 @@ do módulo.
         configuration`; o gerado é semanticamente idêntico ao que estava à mão; e o ritual do
         sentinela (regra 11) — virar `jellyfin` pra `lan` fez o 403 aparecer, reverter devolveu
         o store path byte-a-byte.
-
-- [ ] CGNAT: NÃO HÁ ENTRADA (07/08/2026) — o achado que invalida a premissa do ingress. A
-      operadora não me dá IP público: o traceroute sai por `172.31.43.240` → `172.31.43.61` →
-      `172.31.38.22`, três saltos em RFC 1918. O `177.52.84.188` que o ipify/DDNS reportam é o
-      NAT COMPARTILHADO dela, não meu — e por isso NENHUMA regra de port forward pode funcionar:
-      o roteador não possui o endereço que ela tentaria expor.
-      • MEDIDO de fora, da workstation da FAI (200.136.209.229) por SSH sobre a VPN: portas 80,
-        443 e 2222 TODAS filtradas. Controles que descartam as outras hipóteses: a FAI deixa sair
-        443 (example.com → 200) e o DNS resolve certo de lá (`pos.v1cferr.dev` → 177.52.84.188).
-        Ou seja, o wildcard e o DDNS estão CORRETOS — o que falta é caminho de entrada.
-      • ⚠️ A LIÇÃO, e é a SEGUNDA VEZ NO MESMO DIA que caio nela: de dentro da própria LAN o
-        teste MENTE. `curl` no IP público de casa devolve 200 e a porta 443 "abre", porque a
-        operadora faz hairpin pro cliente interno. Foi o mesmo erro do DNS (o `dig` dava IP
-        privado porque o roteador sequestra a 53). REGRA: conectividade externa só se prova de
-        um ponto FORA DA REDE — DoH pra DNS, host externo pra porta. Nada medido de casa vale.
-      • Isto explica o `ssh.v1cferr.dev` "não funciona de fora" que estava aberto há tempo. Nunca
-        foi DNS, nunca foi o token do sops, nunca foi o wildcard. Não existe rota de entrada.
-      • O `cloudflare-dyndns` publica fielmente um IP que NÃO É MEU e é dividido com outros
-        clientes da operadora — e o wildcard agora aponta tudo pra lá. Não é perigoso, mas é um
-        registro que não descreve a realidade. Revisar junto com a decisão abaixo.
-      • CONSEQUÊNCIA DE SEGURANÇA (por ora, boa): `jellyfin` e `torrent`, que o Caddyfile deixa
-        sem gate externo de propósito, NÃO estão expostos — nada da internet os alcança. A
-        exposição declarada é hoje teórica. Isso muda no minuto em que houver entrada.
-      • CAMINHO RECOMENDADO: (1) ligar pra operadora e pedir IP público — é grátis e, se sair,
-        o desenho atual volta a valer sem mudar nada; (2) Tailscale pro que é meu (duo/ai/
-        jellyfin/torrent) — já funciona, atravessa CGNAT, sem terceiros no caminho; (3)
-        `services.cloudflared` (o módulo existe no nixpkgs) SÓ pro `pos`, que é o único que
-        precisa de público de verdade (o JP não vai instalar Tailscale). Não tunelar mídia: o
-        ToS da Cloudflare restringe streaming de vídeo desproporcional pelo CDN.
-      • ⚠️⚠️ ARMADILHA DO TUNNEL, ler ANTES de implementar: o `@externo` confia em `127.0.0.1/8`,
-        e o `cloudflared` entrega no Caddy PELO LOOPBACK. Do jeito que está, todo tráfego do
-        tunnel chegaria como INTERNO: o `pos` pularia o basic_auth e o `duo`/`ai` perderiam o
-        403 — abertos pra internet, em silêncio, sem nada falhar. Exige `trusted_proxies` + IP
-        real via `CF-Connecting-IP`, ou entregar num endereço fora da lista de confiança.
-      • Pro Tailscale há um análogo: `*.v1cferr.dev` só resolve pra 192.168.1.10 DENTRO de casa.
-        De fora, pela tailnet, ou split-DNS no admin do Tailscale ou usar os nomes `.ts.net`.
 
 - [x] Cloudflare no Claude Code: CLI + MCP (07/08/2026) — pra fechar a "descoberta pendente" do
       Caddy (o wildcard respondendo IP privado) sem eu ler zona no painel na mão. Duas peças:
@@ -684,17 +599,6 @@ do módulo.
       `waybar`/`mako` mortos no `--avoid` do earlyoom escondiam que o compositor nunca estava
       protegido. Doc morta ali não era sujeira, era bug disfarçado.
 
-- [ ] 🔴 REVOGAR a auth key do Tailscale que estava no `.env` órfão (achado em 05/08/2026)
-      O arquivo `.env` na raiz do repo guardava `TAILSCALE=tskey-auth-kLXAR6…` em TEXTO CLARO,
-      modo 644, cabeçalho "nixos-sandisk declarative join (**reusable**)". Não era versionado
-      (`*.env` no .gitignore) e NADA lia: o join de hoje usa
-      `authKeyFile = config.sops.secrets.tailscale_authkey.path` (system/net/tailscale.nix:18).
-      Sobra do host ANTIGO, de 27/07 — anterior ao cutover.
-      • Key REUSABLE é o pior caso: quem tiver a string entra na tailnet quantas vezes quiser.
-      • O arquivo foi APAGADO. Revogar não precisa da string, só do ID: no admin console,
-        Settings → Keys → a que começa com `kLXAR6`.
-      • Enquanto não revogar, a key vale mesmo sem o arquivo. Apagar reduziu a exposição
-        local; não invalidou nada.
 - [x] Nó `nixos-sandisk` REMOVIDO da tailnet (05/08/2026) — sobrava offline há 4 dias de uma
       máquina que não existe mais (o SanDisk virou Windows 11); nó morto é ACL e rota que
       ninguém audita. Feito no admin console; sobraram 2 (nixos-kingston, faidell6035).
@@ -716,6 +620,7 @@ do módulo.
       O CLI, aliás, JÁ é declarativo: vem de `services.tailscale.package`
       (system/net/tailscale.nix), não de lista de pacotes. Pôr `tailscale` em
       `system/packages.nix` seria o mesmo pacote em dois lugares — fura a regra 4.
+
 - [x] Arquivo do Arch VERIFICADO e o módulo APAGADO (05/08/2026) — fim do ciclo de vida que
       o próprio `system/services/restic-arch-kingston.nix` tinha escrito: "depois do check
       --read-data passar e o Kingston estar formatado, apague este arquivo".
@@ -734,6 +639,7 @@ do módulo.
         sem wrapper estão na seção "Configurações antigas do Arch Linux" acima.
       • A perna do Seagate NÃO foi read-verificada e não vai ser: decidido em 05/08 ficar
         SÓ com a cópia do Drive. Verificar um repo que vai ser apagado é trabalho jogado fora.
+
 - [x] Segundo destinatário age no cofre sops (04/08/2026) — o `.sops.yaml` tinha UMA chave, e
       sops não tem recuperação: perder aquela chave = perder TODO segredo do repo, para sempre.
       O único backup dela era o Bitwarden, então o desenho tinha um ponto de falha capaz de
@@ -756,6 +662,7 @@ do módulo.
       estão na mesma máquina e na mesma conta de nuvem (~/ e ~/Dropbox, texto claro, escolha
       consciente). Enquanto for assim, o segundo destinatário protege contra perder a chave do
       host, não contra perder a conta/máquina.
+
 - [x] CI passou a rodar `nix flake check` DE VERDADE (04/08/2026) — o workflow rodava
       statix/deadnix/nixfmt direto do nixpkgs porque o input privado `duo-streak-daemon` faria
       o `flake check` exigir deploy key (o Nix busca TODOS os inputs do lock ao avaliar, não só
@@ -774,6 +681,7 @@ do módulo.
         sozinho, sem editar o workflow.
       • CUSTO aceito: o check busca os ~1,43 GiB de inputs e avalia a config inteira, então o
         CI foi de segundos pra minutos. Tempo de máquina por cobertura e por uma definição só.
+
 - [x] Arquivo off-line dos inputs do flake (04/08/2026) — `nix flake archive --to
       file:///home/v1cferr/flake-archive`, que entra no restic do home (o `restic.nix` cobre
       /home/v1cferr e não exclui esse caminho) → fica versionado e verificado pela máquina que
@@ -794,6 +702,7 @@ do módulo.
       PENDENTE virar declarativo (regra 3): hoje é comando na mão e envelhece no próximo `nix
       flake update`. Dono natural = timer systemd re-arquivando, e o restic deduplica, então
       re-arquivar só adiciona os inputs que mudaram.
+
 - [x] BTRFS bem configurado (02/08/2026) — auditado o FS depois do cutover. O que existia
       (noatime, space_cache=v2, subvolumes, scrub mensal) estava certo; o que faltava virou
       system/hardware/btrfs.nix (POLÍTICA, machine-agnostic atrás de "a raiz é btrfs?") +
@@ -827,6 +736,7 @@ do módulo.
       (RequiresMountsFor) em vez de "boot cai no emergency shell".
       NÃO ligar qgroups/quota: mata a performance do btrfs e é o motivo de metade dos
       relatos de "btrfs lento". Nada aqui precisa deles.
+
 - [x] Quickshell — shell/bar/OSD/mídia/NOTIFICAÇÕES em QML (portado do meu Arch,
       adaptado). Substituiu a waybar (removida) E o swaync (o Quickshell é o daemon de
       org.freedesktop.Notifications). Binário do flake oficial (latest). Config QML em
@@ -834,36 +744,45 @@ do módulo.
       recarrega ao vivo; delegate de Repeater às vezes pede restart do qs, SUPER+ESCAPE).
       Adaptações Arch→NixOS: GPU nvidia→sysfs xe (só temp), hypridle→systemctl, monitores
       DP-2/HDMI-A-3, VPN dropada, Firefox→Zen.
+
 - [x] Hyprland hot-reload + config MODULAR — hyprland.lua saiu do texto embutido pra
       arquivos reais no repo via mkOutOfStoreSymlink (edita + `hyprctl reload`, sem rebuild).
       Quebrado por categoria (regra 5) em home/desktop/hypr/lua/*.lua: environment, monitors,
       appearance, input, autostart, rules, keybinds; o hyprland.lua é só o loader (dofile na
       ordem). Scripts (minimize-others/brightness-osd/monitor-toggle) vão pro PATH; o Lua chama
       por nome. API Lua 0.55: gradiente = {colors,angle}, bezier = hl.curve, animação = hl.animation.
+
 - [x] Monitor fantasma — serviço hypr-monitor-watch (systemd --user) escuta o socket2 e dá
       `hyprctl reload` no hotplug: mata a área fantasma (cursor na tela que sumiu) e move os
       workspaces (TV fora → ws 5-8 no LG). Caveat: TV DESLIGADA que mantém o HDMI não manda
       evento → precisaria de toggle manual.
+
 - [x] Brilho por teclado — SHIFT+VolUp/VolDown/0 = +claro/+escuro/reset (gamma do hyprsunset;
       sem backlight real). Piso 20% (clamp) + teto 150%. OSD nativo do Quickshell via IPC.
+
 - [x] Frases do lockscreen via API — removido o quotes.tsv; serviço+timer busca lote da
       ZenQuotes (EN) 1×/dia e TRADUZ p/ pt-BR via DeepL (chave sops deepl_api_key; só as
       frases num request em lote, autor no original) → cache pango → shuf -n1. Fallback:
       sem chave/DeepL fora ⇒ lote EN; sem rede ⇒ frase embutida. Diário p/ caber na cota
       grátis do DeepL (500k chars/mês).
+
 - [x] Configurar o OOM Killer — earlyoom (system/hardware/oom.nix), companheiro do zram:
       mata o MAIOR processo antes do freeze por falta de RAM. --prefer browsers/Electron,
       --avoid compositor/sessão/sshd. Coexiste com o systemd-oomd (backstop). thresholds
       10%/10% (default testado); notifica via notify-send (Quickshell é o daemon).
+
 - [x] Alterar os wallpapers da minha screenlock — trocados os do Arch pelos oficiais do
       NixOS via pkgs.nixos-artwork.wallpapers (declarativo, sem binário no git):
       principal = catppuccin-mocha (cheia), TV = moonscape. Blur/brilho ajustados
       (blur_passes 2, brightness 0.40). home/desktop/lockscreen.nix.
   - <https://github.com/NixOS/nixos-artwork/tree/master/wallpapers>
+
 - [x] Adicionar um método de zip direto no tooltip do meu file manager (Dolphin) — zipar sem abrir o terminal, via menu de contexto (botão direito). FEITO: kdePackages.ark (servicemenus "Comprimir/Extrair" no botão-direito). home/apps/dolphin.nix.
+
 - [x] Software para notificações — o Quickshell é o daemon (dono do org.freedesktop.Notifications):
       toasts + centro de controle, em QML. Substituiu o swaync/mako (dois daemons brigam pelo mesmo
       nome D-Bus). Alternativas standalone p/ referência: mako (minimalista) / swaync (com control center).
+
 - [x] Instalar o flameshot — v14 do UNSTABLE (pkgs.unstable.flameshot, overlay do flake;
       resto do sistema estável) + captura via xdg-desktop-portal, SEM grim direto/useGrimAdapter
       (some o aviso "grim ... GNOME"). PEGADINHA: o portal-hyprland 1.3.12 DECLARA mas NÃO
@@ -874,6 +793,7 @@ do módulo.
       (cursor + send_shortcut mouse:272; scripts em home/apps/flameshot.nix). A janela tem class
       VAZIA + title "flameshot" → window rule casa por TÍTULO (home/desktop/hypr/lua/rules.lua).
   - <https://wiki.nixos.org/wiki/Flameshot>
+
 - [x] SSOT (regra 11) — FEITO: `my.monitors.{primary,secondary}` em home/desktop/monitors.nix
       (era DP-2 em 8 arquivos e HDMI-A-3 em 7, entre Nix/Lua/QML), `my.theme.iconTheme` e
       `my.theme.cursor.{name,size}` em palette.nix, e o BURACO do kitty (themeFile fixo em
@@ -884,9 +804,7 @@ do módulo.
       procurava "DP-2" (certa) e a do Theme.qml procurava "DP-1", que NÃO existe nesta máquina →
       nunca casava, caía no fallback s[0] e notificação/OSD/PowerMenu/Mpris podiam abrir NA TV.
       Unificado em `Theme.screenPrimary`, lendo a SSOT.
-- [ ] SSOT pendente — só sobrou o HOME `/home/v1cferr` (5 arquivos: dolphin.nix, Theme.qml,
-      restic.nix, fai-workstation-mount.nix, home/default.nix) → `my.user.home`. Prioridade BAIXA
-      de propósito: ao contrário de fonte/cor/conector, o caminho não muda quando o hardware muda.
+
 - [x] Sessão remota resiliente (29/07) — quem sobe o `hyprland-session.target` é o exec-once do
       autostart.lua, e "autostart" vem DEPOIS de "monitors" na ordem de carga: config Lua que
       estoura = target nunca sobe = máquina sem Sunshine e sem Quickshell, com o Hyprland vivo.
@@ -900,9 +818,11 @@ do módulo.
       isso pôs o compositor em emergency mode apontando monitors.lua).
       LIÇÃO: unidade systemd e config de compositor NÃO se validam por build, só por execução.
       `nixos-rebuild build` passa e o runtime falha.
+
 - [x] `hyprctl -i 0` nos aliases (29/07) — o `rebuild`/`upgrade` terminavam em `&& hyprctl reload`,
       que EXIGE HYPRLAND_INSTANCE_SIGNATURE e por isso nunca funcionava por SSH: rebuildar de fora
       deixava a config nova no disco sem aplicar, calado. `-i 0` acha a instância de qualquer shell.
+
 - [x] Higiene de disco (30/07) — o pedido era "GC automático que não deixe o disco encher", e o
       GC JÁ existia e funcionava (nix.gc weekly + --delete-older-than 30d, auto-optimise-store com
       628.191 hardlinks). Medindo antes de mexer, o pedido se revelou mal-endereçado:
@@ -934,6 +854,7 @@ do módulo.
       NÃO automatizado de propósito: apagar jogo/mídia. Ninguém deve deletar 319 GiB de jogos por
       conta própria — daí alarme em vez de faxina. Achado p/ o dono decidir: existe um bottle
       "Battle.net" de 688 MiB ao lado do "Battlenet" de 181 GiB, com cara de tentativa abandonada.
+
 - [x] DUALBOOT com tema minegrub + SECURE BOOT (02/08/2026) — systemd-boot → GRUB, tema
       "seleção de mundo" do Minecraft, Windows 11 no menu e Secure Boot ligado nos dois SOs.
       system/core/boot.nix (o boot-grub.nix dormente foi absorvido) + system/core/secureboot.nix.
@@ -970,81 +891,16 @@ do módulo.
       compartilham kernel ocupam espaço uma vez: 13 MiB + 47 MiB por versão de kernel.
       Runbook dos passos MANUAIS (Setup Mode só se entra pela BIOS) no cabeçalho do
       secureboot.nix, junto do porquê de cada um.
-- [ ] Verificar se é possível adicionar estado declarativo criptografado
-- [ ] IMPERMANÊNCIA no Kingston — ideia do dono (30/07), inspirada no
-      <https://github.com/Misterio77/Foundry>: raiz efêmera (tmpfs ou subvolume zerado no boot) +
-      lista EXPLÍCITA do que persiste. Encaixa em duas coisas que este repo já tem: a regra 6
-      (Nix = app+config; estado = restic) deixaria de ser convenção e passaria a ser IMPOSTA pelo
-      sistema — o que não está declarado como persistente simplesmente não sobrevive ao boot; e
-      responde o item acima (estado declarativo criptografado), porque o par natural é
-      impermanência + LUKS.
-      PONTOS A DECIDIR ANTES, medidos hoje: os 567 GiB de não-Nix (Bottles 319, Jellyfin 132,
-      Games 47) são estado GRANDE e legítimo — impermanência não os apaga, mas obriga a declarar
-      cada caminho, e errar a lista significa perder save/prefixo no reboot. Candidatos: módulo
-      `impermanence` (nix-community) ou o esquema do Foundry.
-      ⚠️ A migração JÁ ACONTECEU (01/08/2026) sem ligar a impermanência, então a premissa
-      original ("fazer junto, em instalação nova") caducou: agora é conversão de máquina em
-      uso, que era justamente o caminho que eu queria evitar. O layout btrfs salva a maior
-      parte do custo — falta o `@-blank` e a lista, não uma reinstalação.
-      DECIDIDO em 01/08/2026, ao montar o hosts/nixos-kingston (o LAYOUT já está pronto):
-      • btrfs SIM — não por gosto, mas porque /nix e /persist precisam ser volumes separados
-        DESDE a instalação; ext4 plano custaria uma segunda reinstalação. Subvolumes criados:
-        `@ @home @nix @persist @log @swap`. Confere com o Foundry (raiz = subvolume zerado no
-        boot, não tmpfs; tmpfs tetaria a raiz nos 15 GB de RAM).
-      • LUKS NÃO — a passphrase no boot mataria o autologin de que o Sunshine depende pra
-        acesso remoto depois de queda de energia. É a diferença deliberada pro Foundry.
-      • `@home` como subvolume PERMANENTE (o Foundry não tem) — estágio intermediário de
-        propósito: liga a impermanência na raiz primeiro, e só depois decide estendê-la ao
-        home. NÃO tranca nada: estender é zerar o @home pelo mesmo mecanismo, sem reinstalar.
-        É a resposta ao risco dos 567 GiB acima — declarar tudo de primeira é onde se perde.
-      • `/var/lib` NÃO é subvolume, e isso é proposital: se fosse permanente, nada obrigaria
-        a declarar. Consequência a lembrar: o estado de serviço que o cutover copia pra lá
-        (uid-map, NetworkManager, bluetooth…) é ZERADO no reboot quando a feature entrar —
-        tem que migrar pro /persist e ser declarado. Esse é o trabalho, não um bug.
-        ⚠️ `/var/lib/sbctl` É O PRIMEIRO DA LISTA e o único que faz a máquina NÃO BOOTAR se
-        for esquecido: são as chaves de Secure Boot (ver system/core/secureboot.nix). Sem
-        elas o switch seguinte não assina o GRUB, e com Secure Boot ligado a firmware
-        recusa o bootloader. Recuperação = desligar SB na BIOS + `sbctl create-keys` +
-        `enroll-keys -m` de novo, com a BIOS em Setup Mode. Declarar ANTES de ligar a raiz efêmera.
-      FALTA só: o snapshot `@-blank` (base do rollback) e a lista de persistência. O blank NÃO
-      é now-or-never — subvolume vazio criado depois é idêntico a snapshot em branco.
-      ── LIDO O CÓDIGO DO FOUNDRY (02/08/2026), o que muda no plano ──────────────
-      CORREÇÃO DE PREMISSA: btrfs NÃO é obrigatório pra impermanência — o caminho mais
-      comum na comunidade é raiz em tmpfs, e com bind mount ela roda até em ext4. A escolha
-      segue CERTA, mas pelo motivo certo: btrfs dá raiz efêmera sem gastar RAM, e RAM é
-      exatamente o que falta aqui (15 GB). Não repetir "é obrigatório".
-      São só dois arquivos no Foundry: `hosts/common/optional/ephemeral-btrfs.nix` (o wipe)
-      e `hosts/common/global/optin-persistence.nix` (a lista). O resto da persistência é
-      DISTRIBUÍDO — cada módulo de serviço declara o que ele precisa guardar (openssh.nix,
-      podman.nix, jellyfin.nix…). Esse é o padrão a copiar: casa com system/services/*.nix.
-      ⚠️ `/srv` É O MAIOR RISCO, e não estava anotado: NÃO é subvolume, mora em `@`, e é onde
-      vive a biblioteca do Jellyfin (132 GiB). O Foundry persiste `/srv` explicitamente. Ligar
-      a raiz efêmera sem isso APAGA a biblioteca no primeiro boot. Antes do sbctl na lista.
-      Lista mínima do Foundry, toda ela aplicável aqui: `/etc/machine-id` (arquivo, não dir),
-      `/var/lib/systemd`, `/var/lib/nixos`, `/srv`. O `/var/lib/nixos` é o MAPA DE UID/GID —
-      perder = reatribuição de uid, que é a MESMA classe de bug que quebrou Docker/Postgres/
-      Sunshine no cutover (ver o dano do cutover). `/var/log` NÃO entra: o Foundry lista
-      porque não tem subvolume pra isso; aqui o `@log` já resolve, e declarar os dois faria
-      um bind mount por cima do subvolume.
-      `neededForBoot = true` no `/persist` (o Foundry seta; hoje está false no disko).
-      `dont-wipe`: arquivo marcador no topo do filesystem que faz o script PULAR o wipe.
-      COPIAR — é a diferença entre "boot loop" e "toco um arquivo pelo live USB".
-      SYSTEMD INITRD ANTES, em commit separado: o Foundry roda `boot.initrd.systemd.enable`
-      e o script tem dois caminhos; o de `postDeviceCommands` é o legado. Ligar o systemd
-      initrd sozinho, rebootar e confirmar — só depois somar o wipe. Dois riscos de boot
-      num commit só é o jeito de não saber qual dos dois quebrou.
-      Adaptar nomes no wipeScript: o Foundry usa `root`/`root-blank`/`persist`; aqui é
-      `@`/`@-blank`/`@persist`. Errar isso não dá erro de avaliação — dá boot quebrado.
-      Copiar também o workaround do impermanence#254 (`/var/lib/private` em 0700 +
-      `RemainAfterExit = false` no systemd-tmpfiles-resetup), senão serviço com DynamicUser
-      quebra. E `@snapshots` (btrbk) sobrevive por desenho: é top-level, não vive dentro de `@`.
+
 - [x] Clipboard (Wayland) — cliphist DECLARATIVO (services.cliphist, allowImages=texto+imagem)
       + picker no ROFI com PREVIEW: thumbnail das imagens copiadas + ícone por TIPO de arquivo
       (zip/vídeo/pdf/exe… via Fluent-dark), tema Tokyo Night, SUPER+SHIFT+V. Migração melhorada
       do cliphist-rofi-img.sh do Arch (script clipboard-menu). home/desktop/clipboard.nix
       (substituiu o antigo picker wofi-text). + wl-clip-persist (autostart hypr): mantém a
       cópia viva após o app fechar (fix da imagem do Flameshot — dono do clipboard no Wayland).
+
 - [x] Dark mode no file manager (Dolphin) — Qt segue o GTK escuro (home/desktop/theme.nix)
+
 - [x] Cheatsheet de keybinds no rofi (SUPER+H, home/desktop/cheatsheet.nix) — GERADO do
       keybinds.lua em RUNTIME por um awk, nunca escrito à mão: lista duplicada viraria
       mentira no primeiro bind novo. Lê ~/.config/hypr/lua/keybinds.lua, que é
@@ -1056,6 +912,7 @@ do módulo.
       ocorrência de " -- "; (b) traduzir tecla com gsub cego troca o "left" DENTRO de
       "mouse_left" — tem que ser token a token. H e não "/" porque o Moonlight não envia
       a "/" do ABNT2 (mesma razão do remap do ScrollLock).
+
 - [x] Layout SCROLLING (fita infinita) em TRIAL nas ws 2 e 6 — pra parar de pular de workspace
       só pra manter poucas janelas na tela. É NATIVO no Hyprland 0.55.4 do nixpkgs: sem plugin,
       sem flake input (o hyprscrolling não entra nessa história). Convive com o dwindle via
@@ -1120,6 +977,7 @@ do módulo.
          encolher revela a vizinha — já existia; (b) SUPER+clique-do-meio = expel + fit all
          num gesto (lambda Lua com hl.dispatch, pois um bind só aceita UM dispatcher):
          desfaz o empilhamento que o arrasto causa e mostra a fita inteira.
+
 - [x] REVISÃO (jul/2026) do thumbwheel + largura, depois de usar: a fita virou 1 JANELA POR
       TELA (`scrolling.column_width = 1.0`, único valor fora do default) e o thumbwheel
       DEIXOU de ser divertido pelo logiops. Agora a rodinha do polegar faz scroll horizontal
@@ -1138,6 +996,7 @@ do módulo.
       colunas pra 0.5 e AS DUAS ficaram fora da tela, à esquerda; o `fit all` redimensiona
       E reposiciona. Alternativa por-app (testada, funciona): window_rule com
       `scrolling_width = 0.5` faz um app específico já nascer com meia tela.
+
 - [x] [HISTÓRICO — revertido acima] Thumbwheel do MX Master rola a fita — mouse.nix ganhou um
       bloco `thumbwheel` que DIVERTE a roda e sintetiza SUPER+CTRL+,/. (keybinds.lua move ±80px).
       Por que keypress e não bindar `mouse_left`/`mouse_right` (que o Hyprland suporta
@@ -1155,6 +1014,7 @@ do módulo.
       via `code:191` é o plano B (evdev 183 + 8 = xkb 191; o +8 está no KeybindManager.cpp:338).
       CUSTO ACEITO: `divert` mata o scroll horizontal DENTRO dos apps (VS Code, tabela larga no
       browser, Dolphin). Se incomodar, `divert = false` devolve — e aí o bind vira SUPER+roda.
+
 - [x] Acesso remoto de tela — Tailscale (mesh WireGuard) + Sunshine/Moonlight. Sunshine
       (system/services/sunshine.nix): captura WLR (wlr-screencopy; o KMS NÃO enumera no
       driver xe da Arc) + encode na GPU Arc, acesso SÓ pela tailnet
@@ -1204,34 +1064,23 @@ do módulo.
         handshake OK como falha e reiniciava o Sunshine a cada 2 min. Captura em variável + `case`.
   - Conecto pelo app "Low Res Desktop" (o "Desktop" simples latcha em preto por timing); o
     xrandr do prep dele NÃO é lixo — é o que dá a folga de timing. Mesma imagem 1080p.
+
 - [x] Idioma: sistema em en-US (output/erros em inglês facilitam debug), EXCEÇÃO — a LOCKSCREEN
       é full pt-BR (data por extenso, clima, "Digite a senha…", frases via DeepL). defaultLocale=
       en_US + supportedLocales inclui pt_BR (o LC_TIME da data do lock depende dele). Teclado
       ABNT2 + timezone BR seguem (físico/fuso, não idioma). clipboard/bar/UI em en-US.
       system/core/core.nix + home/desktop/lockscreen.nix.
-- [ ] Configurar o WoW Ascension com o Bottles para jogarmos, e ir configurando o
-      sistema simultaneamente. (Escrito como "depois que eu estiver no SSD" — o cutover
-      já aconteceu em 01/08 e o daily driver é o NVMe Kingston, então isso está livre.)
-- [ ] **Dissipador M.2 para o KC3000** — medido em 01/08/2026: 77–80 °C sob carga, e o
-      contador de gestão térmica SOBE durante I/O pesado (`T1 Trans Count` foi de 17 pra
-      18 num único benchmark; 24.781 s acumulados). Nunca cruzou o limiar de aviso do
-      controlador e o disco está impecável (`media_errors: 0`, spare 100%, 4% de vida
-      usada, leitura 6911 MB/s = 98,7% do catálogo), mas a Kingston especifica operação
-      até **70 °C** e agora ele é o daily driver, não mais o disco secundário parado.
-      Conferir primeiro se a placa tem dissipador no slot e como é o fluxo de ar perto
-      da Arc B580. Preferir PASSIVO: ventoinha de 30 mm alimentada por Molex roda em
-      rotação fixa, chia, não tem tacômetro e morre em 1–2 anos — e ventoinha morta
-      dentro de carcaça fechada é pior que dissipador passivo. Medir depois com
-      `sudo nvme smart-log /dev/nvme0n1 | grep -E "^temperature|Sensor 2|T1 Trans"`.
 
 - [x] Verificar a arquitetura de pastas e melhores práticas para manutenção/organização/
       escalabilidade — FEITO. Reorganizado por categoria (padrão da comunidade):
       home/ → shell/ desktop/ apps/ services/ + packages.nix (lista central de apps
       de usuário); system/ → core/ hardware/ net/ desktop/ services/ + packages.nix.
       Cada subpasta tem seu default.nix. README atualizado.
+
 - [x] Remover todos os outros hosts e manter apenas o atual — hoje só hosts/nixos-kingston/.
       O nixos-sandisk saiu em 02/08/2026: o disco dele virou o Windows 11, então o host não
       era mais nem rollback nem alvo. Molde pra host novo se pega no histórico do git.
+
 - [x] Instalar software para análise de uso de disco — gdu (TUI Go, ~5× mais
       rápido que ncdu em disco grande) + filelight (GUI KDE, sunburst; integra c/
       Dolphin/Kvantum). Ambos em system/packages.nix. Uso: `sudo gdu -x /`.
@@ -1249,6 +1098,7 @@ do módulo.
 > Ambos com systemd (ou algo semelhante) e rodando em daemon (background)
 
 - [x] Adicionar o servidor de Mídia (Jellyfin) com Nix — nativo, systemd, biblioteca em /srv/media (system/services/jellyfin.nix).
+
 - [x] Adicionar o duolingo rodando para fazer automaticamente com Nix — stack
       duo-streak-daemon (daemon Playwright + api + web + Postgres) via docker
       compose gerenciado por systemd (system/services/duo.nix). Código = flake input
@@ -1332,6 +1182,7 @@ do módulo.
 - [x] Bottles é declarativo? O APP sim (home/packages.nix, com override removeWarningPopup).
       O que está DENTRO (bottles/prefixos, jogos, runners GE-Proton) é ESTADO em
       ~/.local/share/bottles — não declarável, vai por backup (regra: Nix = app+config; estado = restic).
+
 - [x] Steam é declarativo? SIM, e vai em system/ (programs.steam) — é o método
       OFICIAL/recomendado (wiki NixOS + manual nixpkgs), NÃO home-manager: não
       existe programs.steam no HM. Não fere a regra 4 — a Steam é INTEGRAÇÃO de
@@ -1344,6 +1195,7 @@ do módulo.
       embutido não tem backend `pipewire` → fica mudo; força backend `pulse` via
       ~/.config/alsoft.conf declarativo (home/apps/openal.nix), global p/ todos.
   - <https://wiki.nixos.org/wiki/Steam>
+
 - [x] Emulador — RPCS3 (PS3) em home/packages.nix p/ Uncharted 1/2/3 (trilogia é PS3). PS4/U4 só
       via shadPS4 (experimental). Firmware+jogos = estado (você provê). Controle Machenike
       G5 Pro: kernel 6.18 tem o driver xpad (nativo desde 6.10) + Bluetooth já ligado →
@@ -1352,12 +1204,12 @@ do módulo.
 - [x] Lockscreen & AFK/Idle mode — ver "Outros" (hyprlock + hypridle: lock aos
       5 min. O tela-off via dpms foi REMOVIDO — bugava o Moonlight, ver Acesso remoto).
       Falta só desligar os LEDs no AFK (abaixo).
-- [ ] Desligar todos os leds de todos os hardwares no modo AFK
 
 - [x] Filtro de luz azul — hyprsunset (nativo do Hyprland, CTM: não sai em
       screenshot/gravação). Serviço systemd --user + perfis por horário em
       home/desktop/hyprsunset.nix; overrides manuais no F9 (home/desktop/hypr.nix). Schedule
       herdado dos dotfiles do Arch.
+
 - [x] Pacotes: home-manager vs system — REGRA (regra 4): app/config de USUÁRIO no
       home/ (programs.* quando há módulo, senão home.packages); nível-sistema
       (serviços/drivers/root) no system/. NUNCA o mesmo pacote nos dois. Como HM é
@@ -1367,9 +1219,11 @@ do módulo.
       próprios (kitty/dolphin/flameshot/media/quickshell/tema/hypr helpers). system/
       ficou só com resgate/base/diagnóstico. (git/vim ficam nos dois de propósito:
       root/rescue vs programs.git — única exceção consciente.)
+
 - [x] Migrar meus bindings das configs do Arch Linux (Hyprland) — FEITO. Binds + look-and-feel
       (bordas com gradiente Tokyo Night, blur, shadow, animações completas) e input (mouse accel
       flat, numlock, ABNT2) portados do Arch pra Lua modular (home/desktop/hypr/lua/). Ver acima.
+
 - [x] Lockscreen — [hyprlock](https://github.com/hyprwm/hyprlock) + hypridle,
       portados do Arch e 100% declarativos (home/desktop/lockscreen.nix). SEM scripts .sh
       soltos: a lógica mora no BUILD (Nix) ou no systemd, runtime = comando de 1
@@ -1380,12 +1234,14 @@ do módulo.
       ver Acesso remoto). PAM em
       system/desktop/desktop.nix (sem ele não desbloqueia); locale pt_BR em system/core/core.nix.
       SUPER+L tranca na hora. Notifs agora são do Quickshell (daemon nativo).
+
 - [x] Trocar a RTX 3050 → Intel Arc B580 (Battlemage) — FEITO. Arc validada (`xe`
       carregado, fastfetch/vainfo OK) e NVIDIA REMOVIDA de vez: system/hardware/gpu.nix agora
       é Intel puro (xe + Mesa, VA-API iHD), sem `my.gpu`, sem specialisation, sem CUDA.
       Battlemage OK no kernel 6.18/Mesa 25.x. O Ollama ficou em CPU na troca e VOLTOU
       pra GPU em 06/08/2026 via `pkgs.ollama-vulkan` (ver item do Ollama acima).
       Pra ressuscitar a NVIDIA: histórico git do system/hardware/gpu.nix.
+
 - [x] Driver da Intel no canal UNSTABLE — TENTADO, TESTADO e REPROVADO (06/08/2026).
       A ideia era "driver sempre na última versão, porque a Intel atualiza toda semana".
       Ela morre no fato de que driver gráfico no NixOS não é lib normal: é PLUGIN
@@ -1420,6 +1276,7 @@ do módulo.
       Aviso gravado no cabeçalho do `extraPackages` em system/hardware/gpu.nix.
       Peso extra desde 06/08: o Mesa virou caminho crítico de IA também, porque o
       Ollama passou a rodar por Vulkan/ANV — não é mais só perf de jogo.
+
 - [x] Kernel mainline (`linuxPackages_latest`, 7.1.x) — 06/08/2026, em
       system/core/boot.nix. É o lever (a) do item acima e o ÚNICO de driver que não
       atravessa canal: o `linuxPackages_latest` vem do próprio 26.05, e o driver `xe`
@@ -1440,10 +1297,13 @@ do módulo.
 - [x] Image Viewer — Gwenview (KDE) + kimageformats/qtimageformats p/ formatos
       modernos (AVIF/HEIF/JXL/WebP/RAW). Tematizado pelo Kvantum, integra c/ Dolphin.
       home/apps/media.nix; default de image/* via xdg.mimeApps.
+
 - [x] PDF Viewer — Okular (KDE): PDF/EPUB/CBZ + anotações. home/apps/media.nix;
       default de application/pdf via xdg.mimeApps.
+
 - [x] Video Player — VLC (GUI, default de video/*) + mpv (leve/scriptável, via
       programs.mpv). home/apps/media.nix. mpv abre manual/CLI; trocar o default é 1 linha.
+
 - [x] Resolução dos 2 monitores + adaptação de desconexão (home/desktop/hypr.nix) —
       DP-2 (LG ULTRAGEAR) principal na origem 0x0; TV (HDMI-A-3) à esquerda. Principal
       em 0x0 = se a TV desconectar, o LG segue sozinho sem offset (ws 5–8 recaem nele).
@@ -1453,14 +1313,18 @@ do módulo.
       flake.nix (nixpkgs.follows p/ dedup) + home/packages.nix. Binário google-chrome-unstable;
       "latest" com `nix flake update browser-previews`. (O stable não abria por SingletonLock
       fantasma do host antigo nixos-seagate — fix: rm ~/.config/google-chrome/Singleton*.)
+
 - [x] Alias `upgrade` (home/shell/zsh.nix) = `update` + `rebuild` num comando só (tipo
       apt full-upgrade). O update roda como USUÁRIO (chave SSH dos inputs privados) && o rebuild.
+
 - [x] Adicionar um método de zip direto no tooltip do meu file manager (Dolphin) — zipar sem abrir o terminal, via menu de contexto (botão direito). FEITO: kdePackages.ark (servicemenus "Comprimir/Extrair" no botão-direito). home/apps/dolphin.nix.
+
 - [x] Adicionar um arquivo para declarar quais softwares inicializam e ficam ativos com a minha
       maquina (ligar/desligar) — FEITO: PAINEL central `system/services/toggles.nix` (`my.services.<n>`,
       mkEnableOption + mkIf/enable-gate, padrão idiomático). Flip true/false + `rebuild` liga/desliga
       10 opcionais (jellyfin, ollama, duo, sunshine, qbittorrent, restic, cloudflare-ddns, dropbox,
       discord-rpc, cs2-backup). Essenciais (tailscale/mouse/desktop/keyring/earlyoom) e VPN (sob-demanda) FORA.
+
 - [x] PAINEL de autostart (30/07) — `my.autostart` em home/desktop/autostart.nix: o que ABRE
       junto com a sessão, no idioma do toggles.nix. Discord e Spotify entraram como SERVIÇO
       --user, não `exec-once`, porque exec-once NÃO reinicia se o app morrer — era o que faltava
@@ -1482,19 +1346,22 @@ do módulo.
       em vez de fingir centralização total — o hyprlock no exec-once é load-bearing p/ acesso
       remoto. `spotify --minimized` existe mas o --help diz "Only works on Windows": p/ não roubar
       foco no login o caminho é window rule (`workspace N silent`), não flag de app.
+
 - [x] Aliases de print migrados do Arch (30/07) — screenshot/scfull/sc1/sc2 em
       home/apps/flameshot.nix (junto da ferramenta, como o eza/bat no cli.nix; o zsh.nix guarda
       só os de shell/sistema). TESTADO no v14/Wayland antes de portar: só o `gui` abre o picker de
       monitor; `full` e `screen --number` capturam direto. `--number` é índice do Qt, não nome de
       monitor, então NÃO sai do my.monitors — medido capturando as duas telas e comparando com os
       wallpapers: 0 = principal, 1 = TV. REMEDIR se o layout de monitores mudar.
-- [ ] Instalar o driver/software do meu mouse Razer Deathadder v2 (adicionar a notificação de quando meu DPI mudar, etc)
+
 - [x] Configurar meu launcher de apps (colocar icones, filtro pelos ultimos utilizados e etc)
       — FEITO: rofi `drun` (ícones Fluent-dark + fuzzy + histórico/recência) tematizado pela
       paleta única (my.theme), UI en-US. SUPER+Q (apps) / SUPER+R (bins). Saiu do wofi →
       consolidado no rofi (mesmo tool do clipboard). home/desktop/launcher.nix.
+
 - [x] Clipboard manager com visualização de imagens/arquivos + histórico — FEITO com rofi
       (não quickshell): cliphist + rofi c/ preview (thumbnail + ícone por tipo). Ver acima.
+
 - [x] Clicar no ws-pill p/ trocar de workspace (Bar.qml) — ficou QUEBRADO da migração p/ o
       Hyprland 0.55 até 30/07, marcado aqui como feito com o comando errado. O `dispatch` virou
       atalho p/ `hl.dispatch(...)`, então a forma antiga montava `hl.dispatch(workspace 3)` e
@@ -1503,71 +1370,11 @@ do módulo.
       `hl.dsp.workspace(N)` falha com "attempt to call a table value", porque ali é TABELA
       (só sub-dispatchers). Delegate de Repeater não pega no hot-reload: pede SUPER+ESCAPE.
       TERCEIRO item marcado [x] sem funcionar (com o wallpaper e o screenDP1) — ver regra 14.
-- [~] Tray: CLIQUE já funcionava (30/07) — o delegate do Bar.qml tem esquerda `activate()`,
-      meio `secondaryActivate()`, direita abrindo o menu SNI nativo (TrayMenu) e roda com
-      `scroll()`. O item estava marcado como pendente estando pronto — inverso do padrão do
-      wallpaper/screenDP1/ws-pill, e igualmente enganoso.
-      O que ESTAVA quebrado ali era outro: o fallback de clique-direito p/ SNI sem DBusMenu
-      (xembedsniproxy: wine/Battle.net, pamac) chamava
-      `$HOME/.config/waybar/scripts/tray-native-menu.sh` — caminho da WAYBAR, que foi
-      removida na migração; o dir não existe e o script não estava no repo. Portado do legado
-      p/ writeShellApplication (regra 7) e chamado por NOME pelo PATH.
-      HOVER NO MENU (30/07) — o menu do tray abria e NÃO recebia UM evento de ponteiro: nenhum
-      hover, e fechava aos 4s com o mouse parado em cima. NÃO era cor nem QML: hyprwm/Hyprland#6682,
-      popup Qt REDIMENSIONADO depois de exibido fica com a região de input errada. Encaixa exato — o
-      openAt() torna a janela visível ANTES de o QsMenuOpener popular os itens, então o card nasce
-      pequeno e cresce. Reproduzido com o PRÓPRIO Quickshell, FECHADO como "not planned". FIX:
-      PopupWindow → PanelWindow (layer surface), que não passa por xdg_surface::set_window_geometry.
-      Estava na cara: era o ÚNICO PopupWindow do shell — os outros 4 painéis são PanelWindow e todos
-      tinham hover. De quebra cobre a abertura de SUBMENU, que também cresce depois de exibida.
-      Preço: posicionar à mão (sem anchor.rect/PopupAdjustment.Slide) — X vem do ícone + clamp.
-      MEDIÇÃO que fechou o caso: amostrando `hyprctl layers` a 0.4s (o menu agora É layer, então
-      APARECE ali — observabilidade que o popup não dava), uma janela ficou 7.46s de pé, acima do
-      timer de 4s → o HoverHandler enxerga o cursor. Antes TODA janela morria em ~3.7s.
-      HOVER VISÍVEL — o realce existia e era INVISÍVEL: `border`@20% sobre o fundo do menu dá
-      1.11:1 de contraste (medido). Trocado por `accent`@30% = 1.77:1 E mudança de MATIZ
-      (cinza→azul), que é o que a vista pega. Tokens colMenuHoverBg{,Danger} no Theme, + barra de
-      acento de 3px deslizando pela esquerda (fundo = sinal de ÁREA, barra = sinal de POSIÇÃO).
-      A medição também desmentiu uma escolha minha: eu fiz o texto acender em accent, que sobre o
-      fundo aceso cai a 3.83:1 contra 5.97:1 do colText — piorava a legibilidade por efeito.
-      PONTE XEmbed→SNI (30/07) — os comentários deste repo citavam o `xembedsniproxy` em 3 lugares
-      como se ele existisse, e ele NUNCA ESTEVE INSTALADO: o tray-native-menu era código morto,
-      porque nenhum ícone sem DBusMenu chegava a existir. App X11 legado (Wine/Bottles → Battle.net)
-      publica ícone por XEmbed, não SNI; sem host XEmbed o Wine desenha a bandeja numa JANELINHA
-      própria (medida: class=explorer.exe, 160x20, flutuando). Agora o proxy é declarado
-      (home/desktop/quickshell.nix). Causalidade demonstrada nos DOIS sentidos: proxy de pé = 4
-      itens no watcher e explorer.exe=0; proxy morto = 3 itens e a janelinha volta. CUSTO medido e
-      assumido: 758 MiB novos no closure (429 deles qtwebengine, + kwin/breeze/oxygen), porque o
-      binário só existe no kdePackages.plasma-workspace. Alternativas descartadas com motivo:
-      `snixembed` faz o caminho INVERSO (publica SNI como XEmbed) e por isso tenta ser o watcher,
-      morrendo com "could not acquire watcher name" (o Quickshell já é); não há standalone no
-      nixpkgs; extrair o binário não escapa (plasma-workspace referencia kwin/breeze/oxygen
-      DIRETO); stalonetray = janela flutuante de novo.
-      LIMITAÇÃO do ícone que vem pela ponte, medida: sem nome e sem menu — `Id` é o window ID do X11
-      em decimal ("14680083"), `Title`/`ToolTip` vazios, `Menu` inexistente. O clique-direito cai no
-      tray-native-menu (que só AGORA tem uso real) e o tooltip pendente não pode se contentar com o
-      `Id`: p/ estes teria de resolver o WM_CLASS.
-      ÍCONE FANTASMA (30/07) — fechar o Battle.net deixava o ícone na barra, sem responder a clique
-      nenhum. NÃO era bug do proxy: o `battle.net.exe` sai sem remover a registração e o
-      `explorer.exe` do Wine segue segurando a janela (xprop: WM_CLASS=explorer.exe,
-      _NET_WM_PID vivo). Do lado do X a janela existe; do lado do app não há quem responda. O
-      helper funciona — `tray-native-menu <id>` retorna exit=0, achou o item e chamou ContextMenu().
-      Conserto: `wineserver -k` no prefixo do Bottles (NÃO reboot); o proxy então LIMPA o item
-      corretamente (4→3 itens, janela 0, unit intacta). Se um dia sobrar item com a janela já morta,
-      `systemctl --user restart xembedsniproxy`.
-      FALTA: o TOOLTIP, que não existe em nenhum lugar da barra. O SNI do Quickshell expõe
-      `tooltipTitle`/`tooltipDescription` prontos; o padrão a seguir são os popovers
-      (PanelWindow ancorado, ver MetricsPopover.qml). MEDIDO nos itens de hoje: o Discord publica
-      ToolTip com título "Discord", o Sunshine deixa VAZIO e só tem Title="sunshine", e o ícone da
-      ponte XEmbed não tem nem um nem outro → a cascata precisa ser tooltipTitle → title → id, e
-      p/ os da ponte, WM_CLASS.
-      NOTA DE MEDIÇÃO: contei itens de tray com `busctl --user list | grep StatusNotifierItem`
-      e deu 0, o que é FALSO — app que registra com nome único (`:1.82`) não casa esse padrão.
-      A fonte autoritativa é a propriedade `RegisteredStatusNotifierItems` do watcher (é o que
-      o tray-native-menu lê): 3 itens.
+
 - [x] Trocar a parte do status bar que tem a logo do Arch para a logo do NixOS — FEITO:
       glifo Nerd Font U+F303 (nf-linux-archlinux) → U+F313 (nf-linux-nixos) no botão iniciar
       (PowerMenu do Quickshell). home/desktop/quickshell/bar/PowerMenu.qml.
+
 - [x] Wallpaper — **hyprpaper** (oficial do Hyprland, estático/leve) + imagens do nixos-artwork
       (via pkgs: sem binário no git, bump junto do nixpkgs; o .gitignore barra *.png de propósito).
       Principal = catppuccin-mocha, TV = moonscape — as MESMAS duas do lockscreen, então
@@ -1578,6 +1385,7 @@ do módulo.
       de correção abaixo). Documentação afirmando que algo funciona é pior que TODO em aberto: fez
       duvidar de renderização/GPU em vez de olhar o formato da config.
       (Alternativas p/ referência: swww = transições/rotação; mpvpaper = vídeo.)
+
 - [x] Flameshot vs. barra: "barra duplicada" no print (30/07) — o overlay do flameshot é
       JANELA normal, e no Hyprland janela NUNCA cobre layer `top`, onde a barra vive
       (`hyprctl layers` → "Layer level 2 (top): namespace: quickshell"). O overlay mostra um
@@ -1590,6 +1398,7 @@ do módulo.
       `visible: false` desmapeia a layer, o que também libera o strip de 30px p/ selecionar
       região no topo. PEGADINHA: a função IPC não pode se chamar `show` — colide com o
       subcomando `qs ipc show` e o CLI nunca a chama (já documentado no IpcHandler do vpn).
+
 - [x] Resolver a questão do Keyring para todos os apps/softwares que precisam de senha (como o
       Dropbox, Spotify, Chrome, etc) — FEITO com keyring "Login" de senha VAZIA (seahorse: troca
       senha antiga do Arch → vazia; não-destrutivo, preserva os segredos). CAUSA RAIZ: com AUTOLOGIN
@@ -1598,11 +1407,13 @@ do módulo.
       sem prompt em nenhum app. É ESTADO (regra 6), não declarável. Doc no system/desktop/desktop.nix
       (seção Keyring). Descartados no caminho: greetd+greeter Quickshell (quebra Sunshine no boot) e
       lockscreen Quickshell (mantido hyprlock + autologin, decisão do user).
+
 - [x] Conectar na workstation da FAI e adicionar como uma pasta com SSHFS ou algum protocolo
       semelhante e/ou mais resiliente e confiável para adicionar no meu file manager — FEITO
       com **rclone mount** (SFTP + cache VFS), NÃO sshfs (que travaria com o host VPN-gated):
       ~/FAI-workstation = raiz `/` da workstation, sobe/cai junto com a VPN FAI (vpn CLI),
       bookmark declarativo no Dolphin. home/services/fai-workstation-mount.nix.
+
 - [x] VPN FAI + UFSCar 100% declarativas (system/net/vpn.nix) — FAI=nxBender (FOSS, 3 patches:
       ssl.wrap_socket removido no py3.12, opção `nomp` do pppd, split-tunnel) + fingerprint do
       cert self-signed; UFSCar=openconnect/GlobalProtect (`--authgroup`). Ambas split-tunnel;
@@ -1621,6 +1432,7 @@ do módulo.
         E interface do túnel presente (UFSCar filtra `tun[0-9]`, senão `type tun` casa o tailscale0).
         O `menu` fica com `is-active` DE PROPÓSITO: lá a pergunta é "o serviço roda?", p/ oferecer
         Desconectar e parar o crash-loop.
+
 - [x] SSH declarativo p/ a workstation da FAI (home/shell/ssh.nix, `programs.ssh` API nova
       `settings`) — `ssh workstation` (200.136.209.229) + `fai-vm`, via a VPN FAI. Chave autorizada
       1x com ssh-copy-id (estado).
@@ -1645,10 +1457,12 @@ do módulo.
     `ip link show type ppp` (túnel). Internet OK + portal e site da FAI em timeout = INDISPONIBILIDADE
     DA FAI, não há o que ajustar aqui (já aconteceu em 29/07: `tracepath` chegava no backbone da
     UFSCar em 200.133.233.198 e morria no salto seguinte; `www.ufscar.br` de pé, FAI inteira muda).
+
 - [x] Sistema de TEMAS centralizado (home/desktop/palette.nix, `my.theme.name`) — presets
       tokyo-night (default) / catppuccin-mocha / gruvbox-dark, hexes oficiais exatos. Trocar =
       1 linha + rebuild → recolore Quickshell (JSON via FileView), Hyprland (lua via dofile) e
       rofi/lockscreen/flameshot (leem `config.my.theme.palette`). nix-colors DESCARTADO (arquivado).
+
 - [x] FONTE de UI centralizada (regra 10) — `my.fonts.ui` em system/hardware/fonts.nix é a SSOT;
       trocar = 1 linha + o pacote. Mora no system/ (não no my.theme) porque o PACOTE é
       nível-sistema e o fontconfig precisa do nome — sistema não lê opção do HM, o inverso sim.
@@ -1683,6 +1497,7 @@ do módulo.
         quebrou o parsing). Quem filtra POR COBERTURA DE VERDADE é `fc-list ":charset=<cp>"`.
         NÃO É BUG: `❤` (U+2764) fica monocromático de propósito — é emoji de APRESENTAÇÃO DE
         TEXTO, só vira colorido com o seletor VS16 (`❤️`). Forçar cor exigiria regra própria.
+
 - [x] Mouse Logitech MX Master 3S (system/hardware/mouse.nix, logiops) — DPI 2222, SmartShift,
       hi-res scroll, botão de gestos → GERÊNCIA DA FITA (era workspaces; mudou quando o
       scrolling virou global e workspace deixou de ser onde se estoca janela): ← / → movem
@@ -1695,13 +1510,17 @@ do módulo.
       parada ajustando a câmera; borda direita mantém a esquerda fixa), e encolher revela a
       vizinha. Isso já existia desde sempre no keybinds.lua e eu não sabia. PEGADINHA BT: boot-race + "5 tries" do HID++ →
       regra udev dispara um oneshot (sleep 5 + restart logid) que reaplica no connect/boot/wake.
+
 - [x] Sunshine capture=wlr (system/services/sunshine.nix) — FIX do boot-hang que travava o
       Moonlight: o Sunshine probava o backend `portalgrab` no startup e pendurava no
       hyprland-share-picker → nunca abria as portas. Forçar `wlr` pula o probe do portal.
+
 - [x] zoxide no `cd` (home/shell/cli.nix, `--cmd cd`) — `cd <parcial>` pula pra pasta mais usada;
       `cdi` = picker fzf. (o zoxide já era enable; só liguei o `--cmd cd`.)
+
 - [x] Arrumar o meu launcher de aplicativos (mostrar icone, filtro pelos ultimos utilizados, etc)
       — DUPLICATA do launcher acima; feito (rofi drun). home/desktop/launcher.nix.
+
 - [x] "Wallpaper preto" (29/07) — CAUSA RAIZ: o hyprpaper 0.8 trocou o formato da config, do
       achatado (`wallpaper = MONITOR,path` + `preload =` + `ipc =`) p/ CATEGORIA
       (`wallpaper { monitor = …; path = …; }`). `preload` e `ipc` não existem mais nem como string
@@ -1714,8 +1533,7 @@ do módulo.
       Também: `pathOf` deriva o NOME DO ARQUIVO lendo o pacote, porque não há padrão — a maioria é
       `nix-wallpaper-<attr>.png`, os catppuccin são `nixos-wallpaper-<attr>.png` e o gradient-grey é
       NixOS-Gradient-grey.png. Antes, "trocar = 1 attr" era mentira e quebraria num catppuccin.
-- [ ] Adicionar a parte para entrar via SSH sem senha no meu roteador (OpenWRT) e no meu switch (OpenWRT) para poder fazer manutenção remota
-      sem precisar digitar senha
+
 - [x] Verificar se a conexão com o moonlight está estável (monitorar e ter logs) — FEITO
       (31/07), e a MEDIÇÃO derrubou quatro hipóteses minhas antes de sobrar uma. Ferramenta
       `moonlight-stats [dias]` (system/services/sunshine.nix): lista as sessões e cruza cada
@@ -1773,6 +1591,7 @@ do módulo.
       estatísticas do Moonlight (Ctrl+Alt+Shift+S) durante uma queda, e iperf3 -u do Windows
       p/ medir o que o fluxo de vídeo sofre (o ICMP acima não serve). Sem isso, "rede da FAI"
       continua sendo a suspeita mais forte e não um fato.
+
 - [x] VPN na topbar (30/07) — o clique no pill abria `vpn menu`: um rofi SOLTO no meio da tela,
       fora do tema do shell. Agora é um popover ANCORADO sob o pill (quickshell/bar/VpnPopover.qml),
       no padrão dos outros painéis: uma linha por VPN com bolinha de estado + botão que alterna
@@ -1832,8 +1651,6 @@ do módulo.
         PEGADINHA DE MEDIÇÃO: `ss -tnp` sem root NÃO mapeia PID de processo de outro
         usuário — o "nenhuma conexão" que eu vi era artefato; sem `-p` a conexão apareceu.
 
-- [ ] Configurar ambos os perfils do Claude (fai.ufscar.br) e do César (imagino que essa configuração esteja no meu backup da home no Google Drive que configuramos antes)
-- [ ] Continuar configurando o dualboot com Secure Boot
 - [x] Baixar link do MEGA por proxy/Tor (03/08/2026) — `mega-tor <link> [destino]`
       (home/net/mega.nix) + daemon Tor só-cliente com SOCKS em 127.0.0.1:9050
       (system/net/tor.nix, toggle `my.services.tor`).
@@ -1914,36 +1731,3 @@ do módulo.
       (a rede é dimensionada pra latência baixa, não pra vazão) e o MEGA ainda bloqueia
       parte dos exit nodes (falha imediata e repetida = exit bloqueado, não link ruim;
       circuito novo = `systemctl restart tor`).
-- [ ] Salto de release 26.05 → 27.05 (~mai/2027) — NÃO é reinstalação: são DUAS STRINGS no
-      flake.nix, `nixpkgs.url` (nixos-27.05) e `home-manager.url` (release-27.05), que mudam
-      JUNTAS (o branch de release do HM casa com a base, senão dá mismatch de opções). Os
-      outros ~9 inputs têm `inputs.nixpkgs.follows = "nixpkgs"` e vêm de graça — o dedup que
-      já existe por causa do tamanho do lock é o que torna o salto trivial: 1 input muda, 9
-      seguem. Sem ele, cada flake arrastaria seu próprio nixpkgs 26.05 e eu ficaria com duas
-      bases coexistindo depois do salto.
-      O `upgrade` NUNCA faz esse salto, e isso é feature: `nix flake update` só anda DENTRO do
-      branch pinado, e no `nixos-26.05` entram só BACKPORTS — cherry-pick de CVE/bugfix que um
-      mantenedor marca com a label `backport release-26.05`. Versão nova de pacote NÃO entra,
-      exceto navegador e kernel (upstream só dá suporte de segurança à versão nova, então
-      backportar patch de Firefox seria reescrever o Firefox). E `nixos-26.05` (canal) ≠
-      `release-26.05` (branch): o canal é ponteiro que só avança depois do Hydra buildar e a
-      suíte de testes passar — mesmo gating do nixos-unstable.
-      ⚠️ O `stateVersion` NÃO MUDA — nem no salto, nem nunca. Fica "26.05" pra sempre em
-      hosts/nixos-kingston/default.nix e home/default.nix. O nome engana: não é "a versão do
-      meu sistema", é "a versão do NixOS com a qual o meu ESTADO EM DISCO é compatível". 54
-      módulos do nixpkgs leem esse valor, e o caso canônico é o postgresql.nix, que escolhe o
-      MAJOR do Postgres por ele (`versionAtLeast stateVersion "26.11"` → postgresql_18;
-      "25.11" → postgresql_17 …). Bumpar faz o módulo apontar pra um major que NÃO LÊ o
-      datadir existente: o
-      serviço não sobe, e se algo reinicializar o cluster o banco foi. Rollback de geração não
-      salva — volta o SISTEMA, não o /var/lib já mexido (mesma classe do dano do cutover, quando
-      copiar /var/lib quebrou Docker/Postgres/Sunshine em silêncio). Por isso ele existe no
-      config mesmo sendo imutável: é CERTIDÃO DE NASCIMENTO do estado, não botão — os módulos
-      precisam saber quando o estado nasceu justamente porque não sabem migrá-lo sozinhos. Só
-      muda se as release notes mandarem, e junto da migração manual (pg_upgrade e afins).
-      Usar `nixos-rebuild boot` e NÃO `switch`: aplica no próximo boot e a geração 26.05 fica no
-      minegrub como saída de emergência. E esperar ~2-4 semanas depois do release (o branch
-      estabiliza conforme os backports chegam); o custo de esperar aqui é baixo, porque o que eu
-      quero fresco já vem por `unstable.*` e pelos inputs upstream diretos.
-- [ ] Deixar o VSCode de forma declarativa com o Nix e ao mesmo tempo sempre atualizar o sync com minha conta do GitHub/Microsoft (quero que fique centralizado no <https://github.com/v1cferr/dotfiles>)
-- [ ] Adicionar o IP publico atual no Fastfetch?

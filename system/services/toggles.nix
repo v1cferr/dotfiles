@@ -23,6 +23,7 @@
 
 {
   options.my.services = lib.genAttrs [
+    "caddy"
     "jellyfin"
     "ollama"
     "duo"

@@ -50,14 +50,21 @@
   };
 
   # ── DNS dinâmico (Cloudflare) ─────────────────────────────────────────────
-  # Mantém ssh.v1cferr.dev apontando pro IP público atual (que muda) → permite
-  # `ssh …@ssh.v1cferr.dev` de qualquer lugar, sem VPN. Token FORA do git
+  # Mantém ssh.<domínio> apontando pro IP público atual (que muda) → permite
+  # `ssh …@ssh.<domínio>` de qualquer lugar, sem VPN. Token FORA do git
   # (via sops). proxied=false: registro DNS-only (cinza) — SSH não passa pelo
   # proxy HTTP da Cloudflare.
+  #
+  # Este registro é a ÂNCORA de IP de todo o resto: os subdomínios de serviço são
+  # CNAMEs apontando pra cá (ver system/services/caddy.nix), então é ele que faz
+  # o proxy inteiro seguir o IP público. Se ele mentir, tudo mente junto.
+  #
+  # O nome vem de `my.net.domain` (SSOT, regra 11 — ./domain.nix), nunca literal:
+  # o Caddy e as jails do fail2ban leem a MESMA opção.
   services.cloudflare-dyndns = {
     enable = config.my.services.cloudflare-ddns;
     apiTokenFile = config.sops.secrets.cloudflare_ddns_token.path;
-    domains = [ "ssh.v1cferr.dev" ];
+    domains = [ "ssh.${config.my.net.domain}" ];
     proxied = false;
     ipv4 = true;
     ipv6 = false;

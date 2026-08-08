@@ -11,6 +11,7 @@
 
 {
   my.services = {
+    caddy = true; # proxy reverso *.v1cferr.dev (inerte até os segredos existirem)
     jellyfin = true; # servidor de mídia (/srv/media)
     ollama = true; # IA local (solver do Duolingo)
     duo = true; # duo-streak-daemon (ofensiva automática do Duolingo)

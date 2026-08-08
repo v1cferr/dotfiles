@@ -90,6 +90,63 @@ do módulo.
         Credencial SEPARADA do token sops do `cloudflare-dyndns`; não confundir os dois.
       • ⚠️ `.mcp.json` é JSON estrito, sem comentário — por isso o "porquê" está aqui e não lá.
 
+- [x] Caddy de volta, declarativo (07/08/2026) — a "Fase 4 — Homelab" começou. O ingress do Arch
+      (`caddy/etc/caddy/Caddyfile` na branch `main`/`arch`) tinha ficado para trás na migração:
+      `services.caddy` agora serve `*.v1cferr.dev` com cert CURINGA da LE via DNS-01 da
+      Cloudflare, e `my.net.domain` (system/net/domain.nix) virou o SSOT do domínio — antes o
+      literal existia num lugar só (o DDNS), o que não justificava opção; com o proxy o
+      consumidor virou quatro e disparou a regra 11.
+      • O motivo da maior gambiarra do setup antigo MORREU: buildar com xcaddy e esconder o
+        binário em `/usr/local/bin` existia porque "um `pacman -Syu` já sobrescreveu o binário
+        custom uma vez e derrubou o proxy inteiro". No Nix é `caddy.withPlugins` com o vendor
+        fixado por hash — o pacote É a declaração.
+      • ⚠️ `propagation_timeout -1` foi PRESERVADO literal. Não é preferência: a checagem local
+        de propagação do certmagic falha neste host, e sem desligá-la a emissão trava.
+      • PRIMEIRO `networking.firewall.allowedTCPPorts` do repo (80/443). Todo o resto usa o
+        `openFirewall` do módulo upstream, mas `services.caddy` não tem um. O roteador já
+        encaminhava 80/443/2222 desde o Arch — quem bloqueava era o firewall do NixOS.
+      • AUTO-GATE nos 4 segredos (padrão do duo.nix), porque `{$VAR}` vazio vira hash de
+        basic_auth vazio e o Caddy recusaria a config INTEIRA — inerte é melhor que derrubar o
+        proxy no switch.
+      • Validado SEM switch: ritual do sentinela da regra 11 (DDNS + vhost + 5 matchers +
+        failregex trocaram juntos) e `caddy validate` no Caddyfile gerado, com o binário custom,
+        dando `Valid configuration`.
+      • ~~Descoberta pendente: o wildcard responde IP privado~~ — RESOLVIDA em 07/08/2026, e o
+        diagnóstico estava ERRADO. Não havia wildcard nenhum na Cloudflare: a zona tinha 10
+        registros e nenhum `*`. Quem respondia `192.168.1.10` era o ROTEADOR (192.168.1.1), que
+        tem um wildcard local `*.v1cferr.dev` → 192.168.1.10 configurado nele, fora do Nix —
+        split-horizon pra LAN não fazer hairpin pelo WAN. O erro foi MEDIR DE DENTRO DA REDE:
+        `dig @1.1.1.1` também dava privado porque o roteador sequestra a porta 53. Quem
+        desempatou foi DNS-over-HTTPS (porta 443, insequestrável): de fora, `ssh` sempre
+        resolveu certo pro IP público, e nome aleatório dava NXDOMAIN. O `cloudflare-dyndns`
+        nunca esteve quebrado. LIÇÃO: pra validar DNS público de dentro da própria LAN, DoH —
+        `dig` mente quando há interceptação.
+      • WILDCARD ADICIONADO (07/08/2026): `*` CNAME → `ssh.v1cferr.dev`, DNS-only. CNAME e não
+        A de propósito: o `cloudflare-dyndns` só gerencia `ssh.${domain}` (network.nix:67), então
+        o wildcard HERDA o IP dinâmico de graça — um A ficaria congelado no primeiro IP. Isso
+        casa com o desenho que o Caddyfile já tinha: cert curinga + catch-all `respond
+        "Subdomínio não configurado" 404`. Antes disso, NENHUM dos cinco vhosts (pos/duo/ai/
+        jellyfin/torrent) tinha registro — de fora, o proxy inteiro era inalcançável.
+      • ⚠️ O risco de wildcard + DNS-01 foi TESTADO, não assumido: se o wildcard atropelasse o
+        `_acme-challenge.*`, a renovação do cert quebraria em ~60 dias, em silêncio. Consultado
+        via DoH, um TXT explícito sob o wildcard continua sendo devolvido como TXT (RFC 4592:
+        registro explícito tem precedência). Renovação segura.
+      • ZONA LIMPA no mesmo dia: 10 registros → 3. Saíram os dois TXT `_acme-challenge` órfãos
+        (`prowlarr`/`torrent`, sobra do Arch — o certmagic não limpou), o `tv` A → 179.135.127.74
+        (IP MORTO: o DDNS só gerencia `ssh`, e por ser explícito o `tv` ganhava do wildcard e
+        seguia quebrado — removido, agora herda o IP vivo) e `ap`/`dash`/`files` CNAME → `ssh`,
+        que o wildcard tornou redundantes. Ficaram só `A ssh` (alvo do DDNS e do wildcard),
+        `A v1cferr.dev` proxied (o site no Vercel) e o `CNAME *`.
+      • Os NS `ns1/ns2.dns-parking.com` também saíram. Eram sobra da importação da HOSTINGER, e
+        a checagem que autorizou remover: a delegação REAL vive no REGISTRADOR, não na zona — e
+        `dig NS` já devolvia só `bruce/zoe.ns.cloudflare.com`, provando que a Cloudflare nunca
+        serviu aqueles dois. Nada da Hostinger precisa existir na zona; o vínculo é o painel
+        deles apontando pra Cloudflare. (Se um dia entrar e-mail no domínio, aí sim: MX + SPF.)
+      • ⚠️ PEGADINHA do split-horizon: o wildcard do ROTEADOR cobre também o APEX, então de
+        dentro da LAN `https://v1cferr.dev` bate no Caddy e dá ERRO DE TLS — o cert `*.v1cferr.dev`
+        NÃO cobre `v1cferr.dev` nu (wildcard não casa o próprio domínio). Não está quebrado: pela
+        borda da Cloudflare o apex responde 307 normal. Só não dá pra testar o apex de casa.
+
 - [x] `arch-browse` voltou a abrir (07/08/2026) — o alias estava CERTO; quem quebrava era o
       backup. `restic-backups-home-gdrive` roda como ROOT e a opção `rcloneConfigFile` só faz
       `RCLONE_CONFIG=/run/secrets/rclone_gdrive_conf`. O rclone renova o token OAuth e

@@ -24,11 +24,11 @@
   # (Backend é iptables aqui: `networking.nftables.enable = false`.)
   networking.firewall = {
     extraCommands = ''
-      iptables -I nixos-fw 1 -s 10.10.10.0/24 -j nixos-fw-accept
+      iptables -I nixos-fw 1 -s ${config.my.net.vpnSubnet} -j nixos-fw-accept
     '';
     # Sem isto, `reload` do firewall empilha duplicatas da regra acima.
     extraStopCommands = ''
-      iptables -D nixos-fw -s 10.10.10.0/24 -j nixos-fw-accept 2>/dev/null || true
+      iptables -D nixos-fw -s ${config.my.net.vpnSubnet} -j nixos-fw-accept 2>/dev/null || true
     '';
   };
 
@@ -59,10 +59,14 @@
   services.fail2ban = {
     enable = true;
     bantime = "1h";
+    # Vale pro [DEFAULT] do fail2ban, ou seja: TODAS as jails herdam, inclusive a
+    # caddy-pos. Sem 127.0.0.1/8 e ::1 aqui de propósito — o módulo do nixpkgs já os
+    # prepende, e declarar de novo saía duplicado no jail.local gerado.
     ignoreIP = [
-      "127.0.0.1/8"
-      "::1"
-      "192.168.1.0/24"
+      config.my.net.lanSubnet
+      # A faixa do WireGuard entra junto: entrar de fora pela VPN e errar a senha do
+      # SSH não pode banir o próprio caminho de volta.
+      config.my.net.vpnSubnet
     ];
     jails.sshd.settings = {
       enabled = true;

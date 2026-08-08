@@ -88,6 +88,26 @@ do módulo.
         sentinela (regra 11) — virar `jellyfin` pra `lan` fez o 403 aparecer, reverter devolveu
         o store path byte-a-byte.
 
+- [x] `my.net.{lan,vpn}Subnet`: as faixas de casa viram SSOT (08/08/2026) — última ponta
+      solta da saída do Tailscale. "De casa" é decisão de SEGURANÇA (separa quem entra
+      direto de quem precisa de senha) e estava escrita por extenso em QUATRO lugares:
+      matcher `@externo` do Caddy, `ignoreip` da jail caddy-pos, `ignoreIP` do sshd e a
+      regra de firewall que substituiu o `trustedInterfaces`. Divergir ali não dá erro de
+      build — só passa a tratar como estranho quem devia entrar, ou o contrário.
+      • DUAS opções e não uma lista só: o firewall que mantém o Sunshine alcançável confia
+        SÓ na do WireGuard. O Sunshine é fechado na LAN por decisão, e mesclar as faixas o
+        abriria pra rede de casa inteira sem ninguém perceber.
+      • Validado pelo ritual do sentinela: trocar `vpnSubnet` por 172.31.99.0/24 mudou os
+        QUATRO consumidores juntos; reverter devolveu o store path.
+      • ACHADO DE BRINDE, duas configs mortas que o sentinela expôs: o `[DEFAULT]` do
+        fail2ban saía com `127.0.0.1/8 ::1` DUPLICADO (o módulo do nixpkgs já prepende os
+        dois — declarar de novo repetia), e o `ignoreip` da jail caddy-pos virou idêntico
+        ao DEFAULT depois que ambos passaram a ler a SSOT. Jail sem `ignoreip` herda o
+        default: uma cópia a menos pra divergir.
+      • ⚠️ Estes valores ESPELHAM o roteador, que é quem realmente os define (ele serve o
+        DHCP da LAN e é o servidor WireGuard). O Nix não alcança lá — mudar a faixa no
+        OpenWrt e esquecer daqui deixa o repo mentindo em silêncio.
+
 - [x] Tailscale REMOVIDO — só WireGuard (08/08/2026) — o acesso remoto passa a ser o
       WireGuard que o ROTEADOR já servia, e a malha de terceiro sai inteira do repo.
       • POR QUE, e a premissa que eu tinha errado: o cliente do Tailscale JÁ é FOSS

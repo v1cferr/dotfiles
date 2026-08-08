@@ -70,6 +70,7 @@
 
 let
   domain = config.my.net.domain;
+  inherit (config.my.net) lanSubnet vpnSubnet;
 
   # Ponto e vírgula do regex: o domínio entra em failregex do fail2ban, onde `.`
   # é curinga. Escapar evita que `pos.v1cferr.dev` case `posXv1cferrYdev`.
@@ -218,7 +219,7 @@ lib.mkIf (enabled && config.my.services.caddy) {
                 # ⚠️ NÃO adicionar `trusted_proxies` enquanto não houver túnel: sem ele o
                 # header X-Forwarded-For é ignorado (que é o que se quer); com ele, um
                 # processo local qualquer passaria a poder forjar o IP de origem.
-                @externo not client_ip 192.168.1.0/24 10.10.10.0/24 127.0.0.1/8 ::1
+                @externo not client_ip ${lanSubnet} ${vpnSubnet} 127.0.0.1/8 ::1
 
                 # ---- Vhosts GERADOS de `my.ingress` (painel em hosts/*/services.nix) ----
                 # Não editar aqui: alterar alcance é trocar `expose` na SSOT.
@@ -278,9 +279,9 @@ lib.mkIf (enabled && config.my.services.caddy) {
     maxretry = 5;
     findtime = "10m";
     bantime = "1h";
-    # Não banir a rede de casa — nela o basic_auth nem é exigido. MESMA lista do
-    # matcher @externo, WireGuard incluso: banir a si mesmo por errar a senha no
-    # celular pela VPN seria o fim do acesso remoto.
-    ignoreip = "127.0.0.1/8 ::1 192.168.1.0/24 10.10.10.0/24";
+    # SEM `ignoreip` próprio: o [DEFAULT] do fail2ban (../net/network.nix) já isenta
+    # a mesma lista, e as duas saíam idênticas no jail.local gerado desde que ambas
+    # passaram a ler a SSOT. Jail sem ignoreip HERDA o default — é o comportamento
+    # que se quer, e uma cópia a menos pra divergir.
   };
 }

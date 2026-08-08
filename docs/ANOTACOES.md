@@ -119,9 +119,17 @@ do módulo.
         porque o /overlay tem 1.4 MB livres de 6.1 MB — fastfetch pesa 1-2 MB e o neofetch
         arrastaria o bash; qualquer um enche a flash, e roteador com flash cheia não grava
         nem config. A ordem dos campos espelha `home/shell/fastfetch.nix` de propósito.
-      • ⚠️ `~/.profile` NÃO É LIDO no OpenWrt — perdi um teste inteiro nisso. O `/etc/profile`
-        varre `/etc/profile.d/*.sh` e é ali que a chamada mora. Guardas obrigatórias:
-        `[ -t 1 ]` (senão suja `scp`/comandos por SSH) e `-x` (senão erra se o script sumir).
+      • AUTOSTART em `/etc/profile.d/99-owfetch.sh` (o `/etc/profile` varre esse diretório).
+        Guardas obrigatórias: `[ -t 1 ]` (senão suja `scp` e comandos por SSH) e `-x` (senão
+        erra se o script sumir num reflash). `$HOME` e não caminho fixo: o diretório é lido
+        por CADA usuário que loga, então quem não tiver o script simplesmente não vê nada.
+      • ⚠️ MÉTODO, e a lição vale mais que o resultado: eu cheguei a ANOTAR AQUI que
+        "`~/.profile` não é lido no OpenWrt". FALSO — ele é lido, e o login real mostrou o
+        fetch rodando DUAS vezes só com ele. O que enganou foi o teste: `echo exit | ssh -tt`
+        NÃO é uma sessão interativa (o ash olha `isatty(0)`, e stdin veio de um pipe), então
+        ele devolve zero tanto para "não configurado" quanto para "configurado e funcionando".
+        Um método que não distingue as duas hipóteses não é teste — e foi a MESMA classe de
+        erro do CGNAT: instrumento cego lido como evidência.
       • ⚠️ printf pad por BYTE: o rótulo "Memória" desalinhava porque `ó` são 2 bytes em
         UTF-8. Virou "RAM". E o ARM não expõe `model name` em /proc/cpuinfo — o nome da CPU
         sai do `DISTRIB_ARCH`.

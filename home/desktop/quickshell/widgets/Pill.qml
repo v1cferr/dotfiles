@@ -9,6 +9,11 @@ Rectangle {
     id: pill
     property string icon: ""
     property string label: ""
+    // Texto secundário na MESMA pílula: depois do label e em cor discreta, pra dois dados
+    // que andam juntos sem virar duas pílulas (ex.: a data ao lado da hora). Vem DEPOIS
+    // de propósito — o label é a informação principal e fica na borda esquerda, que é
+    // onde o olho entra na pílula; `sub` é o complemento e não disputa esse lugar.
+    property string sub: ""
     property color accent: Theme.colText
     property int maxWidth: 0
     signal clicked
@@ -58,6 +63,13 @@ Rectangle {
             font.pixelSize: 11
             font.italic: pill.italic
             elide: Text.ElideRight
+        }
+        Text {
+            visible: pill.sub !== ""
+            text: pill.sub
+            color: Theme.colDim
+            font.family: Theme.uiFont
+            font.pixelSize: 11
         }
     }
     MouseArea {

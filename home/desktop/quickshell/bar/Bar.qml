@@ -54,7 +54,13 @@ Scope {
     }
 
     // ===== Relógio =====
-    property bool showDate: false
+    // Hora E data SEMPRE visíveis, na mesma pílula. Era um toggle no clique (showDate): ou
+    // uma ou outra, e pra ver a data tinha que clicar duas vezes (ida e volta). A hora vem
+    // primeiro e a data vai no `sub` da Pill (cor discreta) — hierarquia, não separação.
+    // Dia da semana pelo dowAbbr daqui, e não pelo "ddd" do Qt: o formato do Qt depende do
+    // locale do processo, então "sáb" viraria "Sat" se a barra subir sem LC_TIME.
+    // Sem ano — quem precisa dele tem o calendário no hover.
+    property string dateStr: ""
     property string timeStr: ""
     SystemClock {
         id: sysClock
@@ -62,7 +68,8 @@ Scope {
     }
     function updateClock() {
         const d = sysClock.date;
-        root.timeStr = root.showDate ? "󰃭 " + Qt.formatDateTime(d, "dd/MM/yyyy") : "󰥔 " + Qt.formatDateTime(d, "HH:mm:ss");
+        root.dateStr = root.dowAbbr[d.getDay()] + " " + Qt.formatDateTime(d, "dd/MM");
+        root.timeStr = Qt.formatDateTime(d, "HH:mm:ss");
         const dk = Qt.formatDate(d, "yyyy-MM-dd");
         if (dk !== root.calDayKey) {
             root.calDayKey = dk;
@@ -1167,9 +1174,10 @@ Scope {
                     }
                     Pill {
                         id: clockPill
+                        icon: "󰥔"
                         label: root.timeStr
+                        sub: root.dateStr
                         accent: Theme.colMauve
-                        onClicked: root.showDate = !root.showDate
                         onHoveredChanged: {
                             if (hovered) {
                                 root.anchorPopover(clockPill, barContent, bar.screen);

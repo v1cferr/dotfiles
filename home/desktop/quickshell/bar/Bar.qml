@@ -617,10 +617,30 @@ Scope {
         return Math.round(Math.max(4, Math.min(root.popCenterX + 4 - popW / 2, sw - popW - 4)));
     }
 
-    // ===== Feriados (nacional + SP + São Carlos) — pesquisa verificada jun/2026 =====
-    // Bases legais nas notas do workflow; scope: "nac" | "sp" | "sc".
-    // off = offset em dias do DOMINGO de Páscoa (datas móveis); senão m/d fixos.
-    // fac = ponto facultativo (não dá folga garantida) -> mostrado mais discreto.
+    // ===== Feriados (nacional + SP + São Carlos) — REVERIFICADO em 08/08/2026 =====
+    // scope: "nac" | "sp" | "sc". off = offset em dias do DOMINGO de Páscoa (datas
+    // móveis); senão m/d fixos. fac = ponto facultativo (não dá folga garantida) ->
+    // fica discreto na grade e FORA de "próximos feriados" (computeUpcoming filtra).
+    //
+    // ⚠️ ESTA LISTA NÃO SE ATUALIZA SOZINHA — é a única parte do calendário que não.
+    // Os MÓVEIS derivam da Páscoa (easterDate) e escalam pra sempre; os FIXOS são LEI
+    // escrita à mão aqui. Lei nova, ou o município mexendo num feriado, deixa a grade
+    // errada EM SILÊNCIO. Revisar quando aparecer notícia de feriado novo, não por
+    // calendário — 2027 já está coberto, porque nada aqui depende do ano.
+    //
+    // BASES LEGAIS (antes era "ver notas do workflow", ponteiro pra fora do repo):
+    //   nac  Lei 662/1949 + 6.802/1980 (Aparecida) + 9.093/1995 (Sexta-feira Santa)
+    //        + 14.759/2023 (Consciência Negra, nacional desde 2024 — NÃO é mais só SP)
+    //   sp   Lei estadual 9.497/1997 (Revolução Constitucionalista, 9 de julho)
+    //   sc   Lei municipal 7.502/1974 (Corpus Christi) + Babilônia 15/08 + aniversário 04/11
+    //
+    // DUAS ARMADILHAS que os sites de calendário caem e esta lista não:
+    // 1. CARNAVAL e CINZAS não são feriado nacional NEM municipal em São Carlos — são
+    //    ponto facultativo (decreto estadual 70.273 + prefeitura). Daí o fac: true.
+    // 2. CORPUS CHRISTI é ponto facultativo FEDERAL, mas feriado MUNICIPAL aqui (lei
+    //    acima) — por isso entra como "sc" e SEM fac. Em outra cidade seria fac.
+    // CONFERÊNCIA: os não-fac desta lista somam 14, que é o número que a prefeitura e a
+    // imprensa local publicam para São Carlos. Se um dia divergir, é sinal de lei nova.
     readonly property var holidayDefs: [
         { name: "Ano-Novo", scope: "nac", m: 1, d: 1 },
         { name: "Carnaval (segunda)", scope: "nac", off: -48, fac: true },
@@ -704,6 +724,18 @@ Scope {
         all.sort((a, b) => a.date.getTime() - b.date.getTime());
         return all.slice(0, n);
     }
+    // Quem faz o calendário virar o ano sozinho: updateClock() compara o yyyy-MM-dd com
+    // calDayKey, e na primeira batida do SystemClock depois da meia-noite chama isto.
+    // Vale pra 01/01 também — calYear muda e o popover inteiro (cabeçalho + as 12 grades)
+    // reavalia, sem rebuild e sem reiniciar o shell. MEDIDO em 08/08/2026 simulando a
+    // virada 31/12/2026 -> 01/01/2027: cabeçalho 2027, "hoje" em 01/01, Carnaval pintado
+    // em 08-09/02. Se a máquina passar a virada suspensa, o resume cai no mesmo caminho.
+    //
+    // ⚠️ NÃO OTIMIZE ISTO PRA MUTAR OS OBJETOS NO LUGAR. O popover lê calMap por binding
+    // (`Repeater { model: bar.monthCells(...) }`), e binding do QML só reavalia quando a
+    // PROPRIEDADE é reatribuída — escrever dentro do objeto existente (calMap[k] = v) não
+    // emite sinal nenhum. O calendário congelaria EM SILÊNCIO: nada quebra, nada loga, só
+    // para de virar o ano. Medido no qml headless: reatribuir propaga, mutar não.
     function refreshCalendar() {
         const d = sysClock.date;
         root.calYear = d.getFullYear();

@@ -2,6 +2,24 @@
 
 36 entradas. Índice em [README.md](../README.md).
 
+- [x] Gamma sai da curva do hyprsunset — cada tela pela ferramenta certa (08/08/2026) —
+      efeito colateral do DDC/CI entrar: o `hyprsunset` NÃO SABE mirar uma saída
+      específica. Procurei `output`/`monitor`/`display` no código-fonte: ZERO ocorrências.
+      Ele aplica CTM em TODAS as saídas de uma vez.
+      • O PROBLEMA QUE ISSO CRIAVA: com o backlight real do DP-2 vindo do DDC/CI, manter o
+        auto-dim por gamma daria dimming DUPLO no monitor bom (backlight 32% × gamma 0.9 às
+        22h) pra entregar um alívio fraco na TV. Foi regressão que EU introduzi ao adicionar
+        o brightness.nix, e só apareceu ao perguntar "e a TV, como funcionaria?".
+      • A DIVISÃO QUE FICOU: DP-2 (LG ULTRAGEAR) → backlight de verdade via DDC/CI;
+        HDMI-A-3 (LG TV) → ajuste de backlight no controle remoto DELA, que não fala DDC/CI.
+        TV é aparelho, não computador: config de imagem persiste lá e não precisa do repo.
+      • O `max-gamma = 150` FICOU: os keybinds SHIFT+VolUp/Down seguem ajustando gamma por
+        IPC, agora como retoque fino MANUAL em vez de curva automática.
+      • HDMI-CEC foi descartado sem teste, e o motivo é de especificação: o protocolo cobre
+        ligar/desligar, volume e troca de entrada — brilho não está no padrão. Sobra o
+        controle por rede (webOS, TV de 2017), que fica em aberto: não sei o IP dela, e o
+        `192.168.1.20` da lease `TV-Samsung-Sala` não responde (nem é certo ser essa TV).
+
 - [x] Brilho REAL do monitor: DDC/CI + curva por horário (08/08/2026) — o `ddcutil getvcp
       10` devolveu **100** às 20h, num quarto escuro. O monitor passava o dia inteiro no
       talo, e NENHUMA curva de Kelvin resolve isso. Era a causa do olho ardendo.

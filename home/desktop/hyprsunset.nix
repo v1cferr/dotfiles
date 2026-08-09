@@ -40,25 +40,31 @@
       max-gamma = 150; # teto do gamma em % (default 100); folga p/ ajuste via IPC
 
       # Perfis por horário (transição suave ao longo do dia). identity = filtro OFF.
-      # gamma = brilho percebido (1.0 = normal; <1 escurece). Auto-dim SÓ de noite:
-      # dia e início de noite ficam em brilho cheio (pode estar trabalhando); das 22h
-      # em diante escurece de leve até 0.8 (piso), reduzindo o cansaço no escuro, e
-      # volta ao normal de manhã. Perfil sem gamma volta a 1.0 (cada perfil zera os outros).
+      #
+      # ⚠️ SEM `gamma` NOS PERFIS desde 08/08/2026, e a razão é uma interação: o
+      # hyprsunset NÃO SABE mirar uma saída específica (procurei `output`/`monitor`/
+      # `display` no código-fonte: ZERO ocorrências — ele aplica CTM em todas de uma
+      # vez). Com o backlight real do DP-2 agora vindo do DDC/CI
+      # (../desktop/brightness.nix), manter o auto-dim aqui daria dimming DUPLO no
+      # monitor bom (backlight 32% × gamma 0.9) pra entregar um alívio fraco na TV.
+      # Cada tela passa a ser tratada pela ferramenta certa:
+      #   DP-2 (LG ULTRAGEAR) → backlight de verdade, via DDC/CI
+      #   HDMI-A-3 (LG TV)    → ajuste de backlight no controle remoto dela (não fala DDC/CI)
+      #
+      # O `max-gamma` abaixo FICA: os keybinds SHIFT+VolUp/Down seguem ajustando gamma
+      # por IPC, agora como retoque fino manual em vez de curva automática.
       profile = [
         {
           time = "0:00";
           temperature = 2000;
-          gamma = 0.8;
         } # madrugada: quente + escuro
         {
           time = "6:00";
           temperature = 3000;
-          gamma = 0.9;
         } # amanhecer: esfria + clareia
         {
           time = "7:00";
           temperature = 4000;
-          gamma = 1.0;
         } # manhã: brilho normal de volta
         {
           time = "8:00";
@@ -91,17 +97,14 @@
         {
           time = "22:00";
           temperature = 2800;
-          gamma = 0.9;
         } # pré-sono: reduz azul + dim leve
         {
           time = "23:00";
           temperature = 2500;
-          gamma = 0.85;
         }
         {
           time = "23:30";
           temperature = 2200;
-          gamma = 0.8;
         } # transição final p/ a madrugada
       ];
     };

@@ -13,7 +13,6 @@
     ./cheatsheet.nix # SUPER+H: lista de keybinds no rofi, GERADA do keybinds.lua em runtime
     ./wallpaper.nix # hyprpaper: wallpaper de desktop (nixos-artwork; principal dark + TV moonscape)
     ./hyprsunset.nix # filtro de luz azul (serviço systemd + perfis por horário)
-    ./brightness.nix # curva de BRILHO por horário (DDC/CI) — irmão do hyprsunset, que cuida da COR
     ./lockscreen.nix # hyprlock (tela de bloqueio) + hypridle (idle: dim + lock)
     ./quickshell.nix # shell/bar/OSD/mídia + NOTIFICAÇÕES em QML; hot-reload via mkOutOfStoreSymlink
     ./theme.nix # dark mode (color-scheme prefer-dark + GTK Adwaita-dark)

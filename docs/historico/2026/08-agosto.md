@@ -2,7 +2,33 @@
 
 36 entradas. Índice em [README.md](../README.md).
 
-- [x] Gamma sai da curva do hyprsunset — cada tela pela ferramenta certa (08/08/2026) —
+- [x] Backlight por DDC/CI REVERTIDO — dimming pior nas duas telas ganha de ótimo em uma
+      (08/08/2026) — o `ddcutil` funcionou, a curva funcionou, e mesmo assim saiu. O motivo
+      não é técnico, é de ERGONOMIA, e vale mais registrado que o código.
+      • O QUE FUNCIONOU: `hardware.i2c.enable` + ddcutil deram controle REAL de backlight no
+        DP-2 (LG ULTRAGEAR, MCCS VCP 2.1). A medição que motivou tudo continua válida — o
+        monitor estava em **100%** às 20h num quarto escuro, e ISSO era a causa do olho
+        ardendo, não o filtro azul. A curva por horário aplicou 40% e o monitor obedeceu.
+      • O QUE MATOU: a LG TV do HDMI não tem como acompanhar. Não fala DDC/CI (`x37
+        unresponsive`), NÃO ESTÁ NA REDE (conferido no DHCP do roteador: o único dispositivo
+        sem nome é Amazon, não LG — então nem webOS), e o HDMI-CEC não cobre brilho, isso é
+        de especificação. Três caminhos, três fechados.
+      • O RACIOCÍNIO DA REVERSÃO, que é o ponto: uma tela a 32% ao lado de outra a 100%
+        obriga a pupila a se readaptar toda vez que o olhar troca, e isso cansa MAIS que o
+        ganho na tela boa. Dimming pior nas duas > dimming ótimo em uma, quando as duas
+        estão no campo de visão. O gamma do hyprsunset é pior tecnicamente (escurece o
+        SINAL, com a luz de fundo no talo) mas alcança AS DUAS — e uniformidade venceu.
+      • ⚠️ A ALTERNATIVA que continua valendo, se um dia o incômodo voltar: ajustar o
+        backlight da TV UMA VEZ pelo controle remoto dela (é config de aparelho, persiste, e
+        cai na mesma categoria do docs/guias/bios-*.md) e retomar o DDC no monitor. Foi
+        RECUSADA por não ser automática, não por não funcionar.
+      • FICOU do experimento: `wayland-utils` (wayland-info), que entrou junto e é útil por
+        si; e a correção do cabeçalho do hyprsunset.nix sobre shader e sobre os 13 perfis.
+      • ⚠️ O MONITOR FICOU EM 40%. O valor persiste no HARDWARE — reverter o Nix não o
+        desfaz. Mudar é pelos botões do próprio monitor, ou
+        `nix shell nixpkgs#ddcutil -c ddcutil --model "LG ULTRAGEAR" setvcp 10 100`.
+
+- [x] ~~Gamma sai da curva do hyprsunset~~ REVERTIDO junto com o DDC (08/08/2026) —
       efeito colateral do DDC/CI entrar: o `hyprsunset` NÃO SABE mirar uma saída
       específica. Procurei `output`/`monitor`/`display` no código-fonte: ZERO ocorrências.
       Ele aplica CTM em TODAS as saídas de uma vez.
@@ -20,7 +46,7 @@
         controle por rede (webOS, TV de 2017), que fica em aberto: não sei o IP dela, e o
         `192.168.1.20` da lease `TV-Samsung-Sala` não responde (nem é certo ser essa TV).
 
-- [x] Brilho REAL do monitor: DDC/CI + curva por horário (08/08/2026) — o `ddcutil getvcp
+- [x] ~~Brilho REAL do monitor: DDC/CI + curva por horário~~ REVERTIDO (08/08/2026) — o `ddcutil getvcp
       10` devolveu **100** às 20h, num quarto escuro. O monitor passava o dia inteiro no
       talo, e NENHUMA curva de Kelvin resolve isso. Era a causa do olho ardendo.
       • A INVERSÃO QUE MOTIVOU: a literatura de ergonomia põe REDUZIR BRILHO acima de

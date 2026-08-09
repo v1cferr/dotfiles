@@ -41,30 +41,37 @@
 
       # Perfis por horário (transição suave ao longo do dia). identity = filtro OFF.
       #
-      # ⚠️ SEM `gamma` NOS PERFIS desde 08/08/2026, e a razão é uma interação: o
-      # hyprsunset NÃO SABE mirar uma saída específica (procurei `output`/`monitor`/
-      # `display` no código-fonte: ZERO ocorrências — ele aplica CTM em todas de uma
-      # vez). Com o backlight real do DP-2 agora vindo do DDC/CI
-      # (../desktop/brightness.nix), manter o auto-dim aqui daria dimming DUPLO no
-      # monitor bom (backlight 32% × gamma 0.9) pra entregar um alívio fraco na TV.
-      # Cada tela passa a ser tratada pela ferramenta certa:
-      #   DP-2 (LG ULTRAGEAR) → backlight de verdade, via DDC/CI
-      #   HDMI-A-3 (LG TV)    → ajuste de backlight no controle remoto dela (não fala DDC/CI)
+      # `gamma` = brilho PERCEBIDO (1.0 = normal; <1 escurece), e é o único dimming
+      # automático que alcança AS DUAS telas — por isso ele voltou em 08/08/2026,
+      # depois de uma tentativa de usar backlight real que foi REVERTIDA.
       #
-      # O `max-gamma` abaixo FICA: os keybinds SHIFT+VolUp/Down seguem ajustando gamma
-      # por IPC, agora como retoque fino manual em vez de curva automática.
+      # A TENTATIVA E O PORQUÊ DA REVERSÃO: o DP-2 aceita DDC/CI e ganhou curva de
+      # backlight de verdade (bem melhor que gamma, que escurece o SINAL com a luz
+      # de fundo no talo). Só que a LG TV do HDMI NÃO fala DDC/CI, não está na rede
+      # (nada de webOS) e CEC não cobre brilho — não há caminho automático pra ela.
+      # Uma tela a 32% ao lado de outra a 100% obriga a pupila a se readaptar toda
+      # vez que o olhar troca, e isso cansa mais do que o ganho na tela boa.
+      # Decisão: dimming pior nas duas > dimming ótimo em uma. Detalhes e a medição
+      # que motivou tudo (o monitor estava em 100% às 20h) em docs/historico/2026/.
+      #
+      # Auto-dim SÓ de noite: dia e início de noite em brilho cheio (pode estar
+      # trabalhando); das 22h em diante escurece até 0.8 (piso) e volta de manhã.
+      # ⚠️ Perfil SEM gamma volta a 1.0 — cada perfil zera o que os outros setaram.
       profile = [
         {
           time = "0:00";
           temperature = 2000;
+          gamma = 0.8;
         } # madrugada: quente + escuro
         {
           time = "6:00";
           temperature = 3000;
+          gamma = 0.9;
         } # amanhecer: esfria + clareia
         {
           time = "7:00";
           temperature = 4000;
+          gamma = 1.0;
         } # manhã: brilho normal de volta
         {
           time = "8:00";
@@ -97,14 +104,17 @@
         {
           time = "22:00";
           temperature = 2800;
+          gamma = 0.9;
         } # pré-sono: reduz azul + dim leve
         {
           time = "23:00";
           temperature = 2500;
+          gamma = 0.85;
         }
         {
           time = "23:30";
           temperature = 2200;
+          gamma = 0.8;
         } # transição final p/ a madrugada
       ];
     };

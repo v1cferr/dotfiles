@@ -20,7 +20,9 @@ o que disfarça o salto.
 **A ordem de prioridade contra cansaço visual** é a contrária da intuição: reduzir
 BRILHO vem antes de temperatura de cor, e modo noturno não substitui brilho adequado.
 Foi o que motivou o `system/hardware/ddc.nix` — gamma escurece o sinal, não a luz
-emitida. A curva de brilho FOI FEITA (`home/desktop/brightness.nix`). O que ainda falta:
+emitida. A curva de brilho por DDC/CI foi FEITA e REVERTIDA — funcionava, mas só no monitor
+principal, e a TV do HDMI não tem caminho automático. Ver o histórico de agosto. O que
+segue em aberto:
 
 - **Bias lighting** — luz atrás do monitor. É a recomendação que mais aparece na
   literatura e a única que não é software: reduz o contraste entre tela e parede escura.

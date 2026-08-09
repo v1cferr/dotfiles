@@ -24,9 +24,13 @@
         RECUSADA por não ser automática, não por não funcionar.
       • FICOU do experimento: `wayland-utils` (wayland-info), que entrou junto e é útil por
         si; e a correção do cabeçalho do hyprsunset.nix sobre shader e sobre os 13 perfis.
-      • ⚠️ O MONITOR FICOU EM 40%. O valor persiste no HARDWARE — reverter o Nix não o
-        desfaz. Mudar é pelos botões do próprio monitor, ou
-        `nix shell nixpkgs#ddcutil -c ddcutil --model "LG ULTRAGEAR" setvcp 10 100`.
+      • O MONITOR VOLTOU SOZINHO PRA 100%, e eu tinha anotado o contrário: cheguei a
+        avisar que "ficou em 40% e persiste no hardware". FALSO — `setvcp` sem `--save`
+        não grava na EEPROM, então o valor se perde no primeiro desligamento de tela. A
+        reversão ficou completa, sem estado órfão. Vale como armadilha ao contrário: quem
+        for automatizar DDC precisa saber que a mudança é VOLÁTIL por padrão, o que aliás
+        é bom (um serviço que reaplica no login basta) mas surpreende quem espera que
+        `setvcp` grude.
 
 - [x] ~~Gamma sai da curva do hyprsunset~~ REVERTIDO junto com o DDC (08/08/2026) —
       efeito colateral do DDC/CI entrar: o `hyprsunset` NÃO SABE mirar uma saída

@@ -185,6 +185,50 @@
         };
       };
 
+      # btop com suporte à GPU Intel Xe — TEMPORÁRIO, com data de validade explícita.
+      #
+      # O btop 1.4.7 (o que está no nixpkgs) JÁ vem com `-DBTOP_GPU=ON`; o furo não é build
+      # flag nem permissão de root — é que o backend Intel dele é i915 e SÓ i915. A Arc B580
+      # é Battlemage, roda no driver `xe`, e o i915 nem suporta esse chip. Medido no binário
+      # da 1.4.7: só existem `i915`/`intel_i915_info`, nenhuma referência a `xe`. Ou seja,
+      # `sudo btop` também não mostraria nada — não há código pra ler o contador.
+      # Upstream: issues #1407 (feature request Xe) e #1073 (esta placa, B580) ABERTAS.
+      #
+      # O PR #1457 implementa Xe (util por fdinfo com fallback gtidle/PMU, clock por sysfs,
+      # VRAM dedicada, power por hwmon) e foi testado em B580. Aqui roda SEM root.
+      #
+      # Por que o fork inteiro e não `patches = [ (fetchpatch …) ]`, que seria o delta menor:
+      # o PR é contra `main`, e o diff NÃO aplica sobre a tag v1.4.7 (`git apply --check`
+      # falha em src/linux/btop_collect.cpp:317). Trocar o `src` é o mesmo padrão do
+      # overlayVscodeTarball acima — receita do nixpkgs, código de outro lugar.
+      #
+      # REMOVER quando o #1457 mergear e a release com ele chegar ao canal: apagar este
+      # overlay, a linha na lista de overlays e o `btop` de packages.${system}. Aí o
+      # `pkgs.btop` volta a ser o do nixpkgs, já com Xe. (Regra: zero legado — isto não
+      # pode virar mobília.)
+      #
+      # version: convenção do nixpkgs pra snapshot não-lançado (`-unstable-<data do commit>`),
+      #          porque o CMakeLists do fork ainda diz 1.4.7 e chamar de "1.4.7" seco
+      #          esconderia que não é a release. Como o binário reporta 1.4.7 e não esta
+      #          string, o versionCheckHook reprovaria — daí o doInstallCheck = false.
+      # changelog: o do nixpkgs é interpolado com a version e apontaria pra uma tag que não
+      #            existe; aqui vale o próprio PR.
+      overlayBtopXe = _: prev: {
+        btop = prev.btop.overrideAttrs (old: {
+          version = "1.4.7-unstable-2026-07-20";
+          src = prev.fetchFromGitHub {
+            owner = "deveworld";
+            repo = "btop";
+            rev = "76530c80dd6184ccb72d7048c2589afdc4bdee52"; # feature/xe-gpu-support, head do PR #1457
+            hash = "sha256-zBzr2NmekUvK8Hae5N/8qu9OdfGK5+Kzu7maZOVK/sY=";
+          };
+          doInstallCheck = false;
+          meta = old.meta // {
+            changelog = "https://github.com/aristocratos/btop/pull/1457";
+          };
+        });
+      };
+
       # Pacotes LOCAIS (fora do nixpkgs), empacotados em ./pkgs e expostos como
       # `pkgs.<nome>`. callPackage injeta as deps automaticamente.
       overlayLocalPkgs = final: _: {
@@ -238,6 +282,7 @@
               nixpkgs.overlays = [
                 overlayUnstable
                 overlayVscodeTarball # DEPOIS do overlayUnstable: patcha o `unstable.vscode` dele
+                overlayBtopXe # temporário: GPU Intel Xe (Arc B580) até o PR #1457 mergear
                 overlayLocalPkgs
                 inputs.claude-desktop.overlays.default
                 overlayClaudeKeyring
@@ -286,6 +331,7 @@
             nxbender # ./pkgs — cliente da VPN SonicWall (3 patches sobre o upstream)
             claude-desktop # flake de terceiro + o wrapper de keyring daqui
             vscode-bump # ./pkgs — o build é o shellcheck do script (regra 7)
+            btop # nixpkgs + src do PR #1457 (GPU Intel Xe) — vive aqui pra o check COMPILAR o fork
             ;
           inherit (pkgs.unstable) vscode; # receita do unstable com o SRC do tarball oficial
         };

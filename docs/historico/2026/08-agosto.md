@@ -2,6 +2,38 @@
 
 36 entradas. Índice em [README.md](../README.md).
 
+- [x] Brilho REAL do monitor: DDC/CI + curva por horário (08/08/2026) — o `ddcutil getvcp
+      10` devolveu **100** às 20h, num quarto escuro. O monitor passava o dia inteiro no
+      talo, e NENHUMA curva de Kelvin resolve isso. Era a causa do olho ardendo.
+      • A INVERSÃO QUE MOTIVOU: a literatura de ergonomia põe REDUZIR BRILHO acima de
+        temperatura de cor, e "modo noturno não substitui brilho adequado". Eu esperava o
+        contrário, e a config esperava também — o `hyprsunset` cobria cor com 13 perfis
+        caprichados e luminância com nada.
+      • O `gamma` do hyprsunset NÃO ERA BRILHO: ele escurece o SINAL enviado ao painel
+        enquanto o backlight segue no talo. A luz que chega no olho não muda. O próprio
+        histórico de julho já registrava "sem backlight real" — a lacuna estava anotada e
+        ninguém tinha ligado os pontos.
+      • `hardware.i2c.enable` (system/hardware/ddc.nix) carrega o `i2c-dev`, que não estava
+        carregado porque NADA PEDIA. Sem `/dev/i2c-*` o ddcutil não tem por onde falar.
+      • ⚠️ SÓ O DP-2 RESPONDE: o LG ULTRAGEAR fala MCCS (VCP 2.1); a LG TV no HDMI devolve
+        "does not support DDC/CI — I2C slave address x37 is unresponsive". E ERREI ao prever
+        isso: disse que o HDMI "expunha ZERO barramentos i2c", mas o ddcutil achou o
+        `/dev/i2c-7` dele. Meu teste olhava symlinks por conector no sysfs, que é outra
+        coisa. A conclusão estava certa pelo motivo errado — a TV TEM barramento, ela é que
+        não fala o protocolo.
+      • `home/desktop/brightness.nix`: curva por horário espelhando a estrutura do
+        hyprsunset (90% de dia → 55% às 18h → 40% às 20h → 28% de madrugada). Timer --user
+        de 5 min, e escreve SÓ quando o alvo muda — assim ajuste manual vale até o próximo
+        degrau, mesmo contrato do hyprsunset, e não fica escrevendo DDC à toa (é lento e faz
+        o monitor piscar). `--model` e não `--display N`: o número muda se outro monitor DDC
+        entrar.
+      • RECUSADO o `ddcci-driver` (existe no nixpkgs, expõe o monitor como backlight padrão
+        e deixaria o `brightnessctl` funcionar): é módulo de kernel out-of-tree, quebra a
+        cada bump. Pra infra que precisa durar, chamar o ddcutil de um timer é menos elegante
+        e muito menos frágil.
+      • Os valores da curva são PONTO DE PARTIDA, não verdade. O critério da literatura é
+        comparar com folha de papel branco ao lado da tela.
+
 - [x] LocalSend declarativo, aberto SÓ pra LAN (08/08/2026) — "AirDrop" de código aberto
       (MIT, 1.17.0) pra passar arquivo entre celular e PC sem nuvem e sem conta. Três peças:
       `programs.localsend` em system/net/localsend.nix, a 53317 liberada por ORIGEM e uma

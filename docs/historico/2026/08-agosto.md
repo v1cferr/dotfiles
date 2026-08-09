@@ -1,6 +1,58 @@
 # Histórico — agosto de 2026
 
-36 entradas. Índice em [README.md](../README.md).
+37 entradas. Índice em [README.md](../README.md).
+
+- [x] Relógio da barra mostra data E hora — e o calendário vira o ano sozinho, medido
+      (08/08/2026) — o relógio era um TOGGLE: clique alternava entre `󰥔 HH:mm:ss` e
+      `󰃭 dd/MM/yyyy`, nunca os dois. Ver a data custava dois cliques (ida e volta), o que é
+      caro para o dado mais consultado da barra. Agora saem juntos na mesma pílula.
+      • A FORMA: hora primeiro em mauve, data depois em `Theme.colDim`. Isso é HIERARQUIA,
+        não separação — a hora fica na borda esquerda, que é por onde o olho entra na
+        pílula, e a data acompanha sem disputar. Nasceu como `sub` novo no `widgets/Pill.qml`
+        (texto secundário na mesma pílula), reutilizável para qualquer par que ande junto.
+      • DUAS DECISÕES: sem ANO (redundante — o popover de calendário tem, a um hover), e
+        dia da semana pelo `dowAbbr` do próprio arquivo em vez do `"ddd"` do Qt. O formato
+        do Qt depende do locale do PROCESSO: se a barra subir sem `LC_TIME` — autologin, por
+        exemplo — "sáb" vira "Sat" em silêncio. A tabela local não tem esse risco.
+      • ⚠️ REGRA 8 NÃO TEM COMO SER CUMPRIDA AQUI, e isso vale saber: a árvore do Quickshell
+        é `mkOutOfStoreSymlink`, então NÃO passa pelo `/nix/store` e `nixos-rebuild build`
+        não exerce estes arquivos — não existe build para validar. O substituto que usei:
+        `qmllint` (sintaxe) + `qml` headless (comportamento) + screenshot do resultado real.
+        Erro de QML aqui só aparece com a barra já rodando.
+      • A PERGUNTA QUE VALEU A NOITE: "e quando for 2027, o calendário atualiza sozinho?".
+        Sim — `SystemClock` bate a cada segundo, `updateClock()` compara `yyyy-MM-dd` com
+        `calDayKey` e chama `refreshCalendar()` na primeira batida após a meia-noite. Não
+        aceitei de cabeça: simulei a virada 31/12/2026 → 01/01/2027 com as funções REAIS
+        extraídas do `Bar.qml` (não uma reescrita) — cabeçalho vira 2027, "hoje" pula para
+        01/01, Carnaval pintado em 08-09/02. Páscoa conferida até 2032, inclusive o Carnaval
+        de 29/02/2028, bissexto. O algoritmo tem autoteste embutido: se derrapasse num ano, o
+        DIA DA SEMANA denunciaria (Páscoa é sempre domingo, Corpus Christi sempre quinta).
+      • ⚠️ O ACHADO MAIS VALIOSO, e era o elo que eu só tinha RACIOCINADO: o popover lê
+        `calMap` por binding (`Repeater { model: bar.monthCells(...) }`), e binding do QML só
+        reavalia quando a PROPRIEDADE é reatribuída. Medido no `qml` headless (6/6):
+        reatribuir propaga, MUTAR o objeto por dentro (`calMap[k] = v`) não emite sinal
+        nenhum. Ou seja, o calendário só vira o ano porque `refreshCalendar` faz
+        `root.calMap = root.buildCalMap(...)`. Quem "otimizar" isso para escrever no objeto
+        existente CONGELA o calendário em silêncio: nada quebra, nada loga, só para de virar
+        o ano. Anotado no código, junto da função.
+      • FERIADOS REVERIFICADOS (nacional + SP + São Carlos) e o resultado foi: NADA MUDOU. A
+        lista já estava correta e completa para 2027 — nenhum feriado novo desde a Lei
+        14.759/2023 (Consciência Negra, nacional desde 2024, e não mais só estadual).
+        Confirmação independente: os não-facultativos da lista somam 14, que é o número que
+        a prefeitura e a imprensa local publicam para São Carlos.
+      • O QUE MUDOU NOS FERIADOS foi a DOCUMENTAÇÃO, que estava pior do que o código: o
+        cabeçalho mandava "ver as notas do workflow" — ponteiro para fora do repo, ou seja,
+        para lugar nenhum. As leis entraram no arquivo (662/1949, 6.802/1980, 9.093/1995,
+        14.759/2023, estadual 9.497/1997 e a MUNICIPAL 7.502/1974 do Corpus Christi).
+      • AS DUAS ARMADILHAS em que os sites de calendário caem e esta lista não — a primeira
+        busca que fiz já errou as duas: (1) CARNAVAL e Cinzas não são feriado nacional nem
+        municipal em São Carlos, são ponto facultativo; (2) CORPUS CHRISTI é facultativo
+        FEDERAL mas feriado MUNICIPAL aqui, pela lei acima — em outra cidade seria `fac`.
+      • ⚠️ O QUE NÃO SE ATUALIZA SOZINHO, e é a única parte do calendário assim: a lista
+        `holidayDefs`. Os MÓVEIS derivam da Páscoa e escalam para sempre; os FIXOS são LEI
+        escrita à mão. Lei nova, ou o município mexendo num feriado, deixa a grade errada em
+        silêncio. Revisar quando aparecer notícia de feriado novo — não por virada de ano,
+        porque nada ali depende do ano.
 
 - [x] Backlight por DDC/CI REVERTIDO — dimming pior nas duas telas ganha de ótimo em uma
       (08/08/2026) — o `ddcutil` funcionou, a curva funcionou, e mesmo assim saiu. O motivo

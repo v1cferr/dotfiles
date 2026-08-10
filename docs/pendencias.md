@@ -6,16 +6,22 @@ este arquivo só cresce com trabalho novo, e encolhe quando trabalho termina.
 Convenção herdada do arquivo único: cada item explica o QUE, o PORQUÊ e a
 armadilha conhecida. Vale mais o parágrafo do que o título.
 
-- [ ] HEVC/AV1 no cliente Moonlight do notebook da FAI (aberto em 10/08/2026) — medido na
-      sessão real de hoje: o cliente negocia `h264_vaapi` 8-bit Rec.601, o codec MENOS
-      eficiente, enquanto o host anuncia `hevc_vaapi` E `av1_vaapi` em 10-bit.
-      • É o MAIOR ganho de qualidade disponível hoje, e não custa banda: nos mesmos 16,8 Mbps
-        já negociados, HEVC/AV1 rendem ~40-50% mais por bit.
-      • ⚠️ NÃO TEM CONSERTO NESTE REPO, e é por isso que vira pendência em vez de commit: o
-        encoder é NEGOCIADO e quem escolhe é o cliente. O `hevc_mode`/`av1_mode` do host só
-        ANUNCIA suporte, e já anuncia. É caixa de seleção nas configurações do Moonlight.
-      • Confirma a nota de 03/08/2026 em system/services/sunshine.nix, que previu exatamente
-        isto. Fechar o item = trocar no cliente e conferir no journal que subiu o encoder.
+- [x] HEVC ligado no cliente Moonlight — FEITO e MEDIDO (10/08/2026). A sessão das 14:43
+      negocia `hevc_vaapi` / Rec. 709, contra `h264_vaapi` / Rec. 601 das anteriores.
+      Ganho colateral que ninguém pediu: a colorimetria saiu de SD (601) para HD (709), que é
+      correção de fato — 601 em conteúdo HD desloca as cores.
+      • ⚠️ LIÇÃO DE MÉTODO, e é o motivo de este item ficar registrado em vez de sumir: ele
+        chegou a ser FECHADO COMO "SEM AÇÃO" por relato ("o notebook não tem GPU dedicada,
+        não suporta"), e a medição desmentiu em DEZ MINUTOS. iGPU Intel decodifica HEVC desde
+        ~2015; "sem GPU dedicada" não implica "sem HEVC". Fechar item por relato quando existe
+        instrumento a um comando de distância é como se cria doc que mente — e este repo já
+        gastou um dia inteiro hoje por causa de um item fechado errado (o do CGNAT).
+      • NÃO SE NOTA A OLHO, e isso é esperado, não decepção: a 16,8 Mbps para desktop parado a
+        vazão real é ~3 Mbps, ou seja 18% do teto. Sem escassez de bits, a eficiência do HEVC
+        não tem o que comprar. Ela aparece em movimento — scroll, vídeo, jogo.
+      • FALTA CONFERIR se a decodificação é por HARDWARE. O host não enxerga isso: ele só sabe
+        o que codificou. `Ctrl+Alt+Shift+S` no Moonlight → *decode time*; <5 ms é hardware,
+        >15 ms é software e aí o HEVC custa mais do que rende (voltar pra H.264).
 
 - [ ] Peer `fai-workstation` (10.10.10.5) do WireGuard: vivo ou legado? (aberto em
       10/08/2026) — medido com o `wg-status` novo: em **17 dias** de uptime do roteador ele

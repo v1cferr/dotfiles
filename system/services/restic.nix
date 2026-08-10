@@ -127,7 +127,16 @@ lib.mkIf config.my.services.restic {
       # visível): o Drive monta em TODO boot, então a partir de 06/08/2026 o serviço
       # passou a falhar TODA NOITE e a poda parou de rodar de vez.
       # MEDIDO em 09/08/2026: último `forget --prune` bem-sucedido foi 05/08 15:46 —
-      # quatro dias de snapshots acumulando fora da janela 7d/4s/6m, no Drive.
+      # quatro dias sem retenção nenhuma sendo aplicada.
+      # ⚠️ O TAMANHO DO ESTRAGO FOI PEQUENO, e a razão importa pra não superestimar o
+      # próximo caso: o run de recuperação removeu UM snapshot e liberou 4,9 MiB em 14 s.
+      # Com `--keep-daily 7` e só 5 dias distintos no repo, NADA tinha envelhecido pra
+      # fora da janela ainda — o único excedente era a duplicata do mesmo dia. O prejuízo
+      # de verdade só começaria depois de ~7 dias distintos, quando cada dia novo passa a
+      # empurrar um pra fora e nenhum sai.
+      # O QUE TEM DENTE mesmo é o `unlock`, que também é ExecStart e também não rodava:
+      # lock preso de um run interrompido BLOQUEIA o backup inteiro, e isso não depende
+      # de quanto tempo passou.
       # A LIÇÃO, que é maior que este arquivo: mount FUSE do usuário DENTRO do
       # `paths` quebra o backup por construção. Ponto de montagem novo em
       # /home/v1cferr entra AQUI no mesmo commit que o cria — é a terceira vez que

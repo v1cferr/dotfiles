@@ -26,6 +26,19 @@
         MESMA armadilha do `~/FAI-workstation` de 05/08 (FUSE do usuário, backup roda
         como root), com um mountpoint que ninguém lembrou de excluir. Corrigido em
         system/services/restic.nix.
+      • O CONSERTO RODOU e o resultado DESMENTIU a estimativa de quem escreveu isto: eu
+        avisei que a poda atrasada podia demorar e precisar de mais de uma execução, por
+        causa do reempacotamento em repo remoto. Levou **14 s** — removeu 1 snapshot,
+        reempacotou 1 pack, liberou 4,9 MiB. Ficaram 6 snapshots / 26,1 GiB.
+      • POR QUE FOI TÃO BARATO, que é o que evita superestimar o próximo caso: com
+        `--keep-daily 7` e só 5 dias distintos no repo, NADA tinha envelhecido pra fora
+        da janela em 4 dias — o único excedente era a duplicata do mesmo dia. O custo de
+        retenção morta não cresce linear com os dias parados: ele é ZERO até o repo
+        passar de 7 dias distintos, e só então cada dia novo passa a empurrar um pra fora.
+      • E ISSO REORDENA QUAL ERA O RISCO DE VERDADE. Não era espaço no Drive: era o
+        `unlock`, que é o outro ExecStart que também não rodava. Lock preso de um run
+        interrompido bloqueia o backup INTEIRO, não a poda — e esse dano não depende de
+        quanto tempo se passou, acontece na primeira vez que um run morre no meio.
       • POR QUE PASSOU DESPERCEBIDO, e esta é a parte que vale guardar: o
         FAI-workstation só monta com a VPN de pé, então falhava de forma INTERMITENTE —
         e foi justamente a intermitência que fez alguém investigar. O `~/Drive` monta em

@@ -151,14 +151,21 @@ O IX.br e a RNP não são removíveis: a internet da UFSCar vem da RNP.
 
 ### O que a sessão real revelou, e não estava previsto aqui
 
-- ⚠️ **`ping_timeout = 20000` salvou uma sessão por 1,1 s.** Às 11:47:16 houve
-  desconexão e reconexão 18,9 s depois. A sessão NÃO foi derrubada, e a prova é que o
-  guard do hypridle não ciclou (um único `Stopped` às 11:25, nenhum `Started` às
-  11:47) — o `undo` do prep-cmd nunca rodou. Nada do lado de casa piscou. Se esse
-  buraco virar rotina, o `ping_timeout` é o parâmetro, e o custo está no `sunshine.nix`.
-- ⚠️ **O cliente negocia `h264_vaapi` 8-bit** enquanto o host anuncia `hevc_vaapi` e
-  `av1_vaapi` em 10-bit. Confirma a nota de 03/08 no `sunshine.nix`: o encoder é
-  escolha do CLIENTE, e nenhum ajuste do host força. Ligar HEVC/AV1 no Moonlight vale
-  mais que qualquer coisa deste repo.
+- **`ping_timeout = 20000` absorveu um buraco de 18,9 s** às 11:47 sem derrubar a
+  sessão. A prova é que o guard do hypridle não ciclou (um único `Stopped` às 11:25,
+  nenhum `Started` às 11:47) — o `undo` do prep-cmd nunca rodou. Método reaproveitável:
+  o guard é um detector de fim-de-sessão mais confiável que a linha
+  `CLIENT DISCONNECTED`, que sai tanto em queda real quanto em reconexão absorvida.
+  ⚠️ As duas quedas do dia (18,9 s e 104 s) foram o DONO reconectando, confirmado por
+  ele. Não são indício de rota instável — todos os testes deram 0% de perda.
+- **HEVC: negocia, mas não serve neste cliente.** Ligado às 14:43 (`hevc_vaapi`,
+  Rec. 709) e desligado pelo dono às 14:57 por estar "muito bugado" na prática.
+  H.264 é a escolha final para esta máquina, e é DELIBERADA — não é o default que
+  ninguém revisou.
+  ⚠️ Isso desmente a nota de 03/08 do `sunshine.nix` PARA ESTE CLIENTE, e é o registro
+  que impede a próxima pessoa de repetir: lá está escrito que ligar HEVC/AV1 "vale mais
+  que qualquer ajuste do host". Vale — onde o decode presta. Aqui negociou limpo no
+  journal e entregou imagem ruim, que é o pior caso possível de diagnosticar, porque do
+  lado do host TUDO parece certo.
 - `Video encryption enabled` nas duas sessões — o modo WAN entrou sozinho, sem
   configurar nada.

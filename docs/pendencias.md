@@ -6,22 +6,27 @@ este arquivo só cresce com trabalho novo, e encolhe quando trabalho termina.
 Convenção herdada do arquivo único: cada item explica o QUE, o PORQUÊ e a
 armadilha conhecida. Vale mais o parágrafo do que o título.
 
-- [x] HEVC ligado no cliente Moonlight — FEITO e MEDIDO (10/08/2026). A sessão das 14:43
-      negocia `hevc_vaapi` / Rec. 709, contra `h264_vaapi` / Rec. 601 das anteriores.
-      Ganho colateral que ninguém pediu: a colorimetria saiu de SD (601) para HD (709), que é
-      correção de fato — 601 em conteúdo HD desloca as cores.
-      • ⚠️ LIÇÃO DE MÉTODO, e é o motivo de este item ficar registrado em vez de sumir: ele
-        chegou a ser FECHADO COMO "SEM AÇÃO" por relato ("o notebook não tem GPU dedicada,
-        não suporta"), e a medição desmentiu em DEZ MINUTOS. iGPU Intel decodifica HEVC desde
-        ~2015; "sem GPU dedicada" não implica "sem HEVC". Fechar item por relato quando existe
-        instrumento a um comando de distância é como se cria doc que mente — e este repo já
-        gastou um dia inteiro hoje por causa de um item fechado errado (o do CGNAT).
-      • NÃO SE NOTA A OLHO, e isso é esperado, não decepção: a 16,8 Mbps para desktop parado a
-        vazão real é ~3 Mbps, ou seja 18% do teto. Sem escassez de bits, a eficiência do HEVC
-        não tem o que comprar. Ela aparece em movimento — scroll, vídeo, jogo.
-      • FALTA CONFERIR se a decodificação é por HARDWARE. O host não enxerga isso: ele só sabe
-        o que codificou. `Ctrl+Alt+Shift+S` no Moonlight → *decode time*; <5 ms é hardware,
-        >15 ms é software e aí o HEVC custa mais do que rende (voltar pra H.264).
+- [x] HEVC no Moonlight: TESTADO E DESCARTADO para o notebook da FAI (10/08/2026). Ligado às
+      14:43 — negociou `hevc_vaapi` / Rec. 709 limpo, contra `h264_vaapi` / Rec. 601 — e o
+      dono desligou às 14:57 por estar **"muito bugado"** na prática. **H.264 é a escolha
+      final para esta máquina**, e é DELIBERADA, não default esquecido.
+      • ⚠️ O MODO DE FALHA É O PIOR POSSÍVEL DE DIAGNOSTICAR, e é por isso que este item
+        sobrevive fechado: do lado do HOST tudo parecia certo. O journal registrou
+        `Creating encoder [hevc_vaapi]`, a colorimetria até MELHOROU (Rec. 601 → 709, que é
+        correção de fato — 601 em conteúdo HD desloca cor), e mesmo assim a imagem entregue
+        era ruim. O host codifica; quem decodifica é o cliente, e o host não enxerga isso.
+        Negociação limpa não é sinônimo de reprodução boa.
+      • ⚠️ ISSO DESMENTE A NOTA DE 03/08 em system/services/sunshine.nix PARA ESTE CLIENTE.
+        Lá está escrito que ligar HEVC/AV1 "vale mais que qualquer ajuste deste arquivo" —
+        e vale, onde o decode presta. Aqui não presta. Sem este registro, a próxima pessoa
+        (ou eu) segue aquele conselho e perde a tarde de novo.
+      • DUAS VOLTAS ERRADAS ANTES DE ACERTAR, e a lição é a mesma nas duas direções:
+        1. fechei como "sem ação" por RELATO ("não tem GPU dedicada") — a medição desmentiu
+           em 10 min, porque iGPU Intel decodifica HEVC desde ~2015;
+        2. reabri como "funciona" por MEDIÇÃO DO HOST — o uso real desmentiu em 15 min.
+        Nenhum dos dois instrumentos respondia a pergunta certa, que era "como fica a imagem
+        no cliente". Só o olho de quem usa respondia.
+      • O que sobra pra essa máquina: teto de bitrate e FEC, ambos no host.
 
 - [ ] Peer `fai-workstation` (10.10.10.5) do WireGuard: vivo ou legado? (aberto em
       10/08/2026) — medido com o `wg-status` novo: em **17 dias** de uptime do roteador ele

@@ -95,11 +95,16 @@
         cada fluxo novo (depois o conntrack desvia do dstnat), então 3 = exatamente vídeo
         47998 + áudio 47999 + controle 48000. Depois da reconexão virou 6 — que é como se
         confirmou que houve UMA reconexão, e não várias.
-      • ⚠️ `ping_timeout = 20000` SALVOU UMA SESSÃO POR 1,1 s: buraco de 18,9 s às 11:47, e a
-        sessão não caiu. A prova é indireta e vale como método — o guard do hypridle NÃO
-        ciclou (um `Stopped` às 11:25, nenhum `Started` às 11:47), ou seja o `undo` do
-        prep-cmd nunca rodou, logo o Sunshine não desmontou a sessão. Nada piscou do lado de
-        casa: o buraco foi do lado da UFSCar.
+      • `ping_timeout = 20000` absorveu um buraco de 18,9 s às 11:47 sem derrubar a sessão. A
+        prova é indireta e vale como método — o guard do hypridle NÃO ciclou (um `Stopped` às
+        11:25, nenhum `Started` às 11:47), ou seja o `undo` do prep-cmd nunca rodou, logo o
+        Sunshine não desmontou a sessão.
+        ⚠️ CORREÇÃO (mesmo dia): a 1ª versão desta linha concluía "o buraco foi do lado da
+        UFSCar", porque nada tinha piscado do lado de casa. O dono confirmou depois que foi
+        ELE reconectando — nas duas quedas do dia (18,9 s e 104 s). "Não foi aqui" não
+        implica "foi a rede": faltava a terceira hipótese, o usuário, e ela era a certa. O
+        mecanismo do `ping_timeout` segue medido e verdadeiro; a causa atribuída é que era
+        invenção. Não há indício de instabilidade nesta rota — 0% de perda em todos os testes.
       • A ROTA, medida e com os donos por RDAP: roteador → **Alcans (AS52783, o ISP)** →
         Algar (AS16735, TRÂNSITO da Alcans) → IX.br/NIC.br (AS26162) → RNP (AS1916) →
         UFSCar (AS52888). Cinco sistemas autônomos, e NENHUM é servidor intermediário — todos

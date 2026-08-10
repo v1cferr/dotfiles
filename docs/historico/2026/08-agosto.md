@@ -1,6 +1,39 @@
 # Histórico — agosto de 2026
 
-46 entradas. Índice em [README.md](../README.md).
+47 entradas. Índice em [README.md](../README.md).
+
+- [x] `wg-status`: visibilidade do WireGuard sem senha — e um bug de sysupgrade que ela
+      revelou (10/08/2026). Não dava pra responder "o celular está conectado?" sem senha de
+      root, e ping só prova alcance, não handshake.
+      • WRAPPER, NÃO O BINÁRIO: `/usr/bin/wg-status` = `exec /usr/bin/wg show`, subcomando
+        fixo e SEM repassar `"$@"`. Pôr `/usr/bin/wg` inteiro no NOPASSWD daria `wg set`, que
+        TROCA CHAVE DE PEER — quem tivesse só a chave SSH poderia se inscrever na VPN sem
+        senha nenhuma. Sem repasse de argumento não existe `wg-status set`.
+      • root:root 0755 e FORA do /home. Se o usuário pudesse escrever no arquivo, reescrevê-lo
+        daria root arbitrário sem senha e o wrapper viraria o buraco que existe pra evitar. É
+        por isso que ele NÃO foi pra /home/v1cferr/bin/, que seria o lugar cômodo por já estar
+        preservado. Forma copiada do /usr/bin/wake-desktop, que já vivia aqui igual.
+      • ⚠️ BUG PRÉ-EXISTENTE ACHADO NO CAMINHO: o `/usr/bin/wake-desktop` NUNCA esteve no
+        `/etc/sysupgrade.conf`. O sysupgrade preserva `/etc/sudoers.d/` mas NÃO `/usr/bin/`,
+        então o próximo upgrade apagaria o binário e DEIXARIA a regra NOPASSWD apontando pro
+        vazio — Wake-on-LAN pelo roteador morrendo em silêncio, com a config parecendo certa.
+        Regra e alvo têm que ser preservados JUNTOS. Os dois foram listados.
+      • O QUE O PRIMEIRO `wg show` MOSTROU, e vale mais que o wrapper:
+        1. O celular está conectado (handshake de 1m57s, 3,14 GiB enviados) — mas o endpoint
+           é `186.219.82.216`, que é **UFSCar (AS52888)**, bloco `186.219.80.0/20`. Ou seja,
+           ele está no WiFi do campus, NÃO em rede móvel. Isso corrige a leitura que eu tinha
+           feito do RTT: os 80 ms com jitter de 20 ms não são 4G, são o mesmo caminho do
+           notebook (35 ms) mais o salto WiFi.
+        2. ⚠️ EXISTE UM TERCEIRO BLOCO DA UFSCAR, e ele NÃO está no `moonlightSources` de
+           system/services/sunshine.nix. Consequência prática: Moonlight DIRETO do celular
+           seria recusado. Hoje ele funciona só porque a 51820 do WireGuard não tem `src_ip`.
+           DECISÃO: não ampliar o allowlist agora — o celular já tem caminho que funciona, e
+           abrir mais faixa pra um aparelho que não precisa é troca ruim. Fica registrado pra
+           quando alguém perguntar "por que do celular não conecta direto?".
+        3. Em 17 DIAS de uptime, só UM peer fez handshake. `notebook` (.2) nunca — coerente,
+           é justamente o que o acesso direto de hoje substituiu. Mas `fai-workstation` (.5)
+           tem `persistent_keepalive = 25`, ou seja foi configurada pra manter conexão viva, e
+           não conectou uma vez. Ou está desligada, ou o peer é legado. Ver pendências.
 
 - [x] Roteador: `/etc/init.d/firewall` entra no NOPASSWD (10/08/2026) — o
       scripts/router-moonlight-forward.sh precisava de senha só pro `reload` do fim, e isso

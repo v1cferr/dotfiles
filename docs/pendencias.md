@@ -17,6 +17,19 @@ armadilha conhecida. Vale mais o parágrafo do que o título.
       • Confirma a nota de 03/08/2026 em system/services/sunshine.nix, que previu exatamente
         isto. Fechar o item = trocar no cliente e conferir no journal que subiu o encoder.
 
+- [ ] Peer `fai-workstation` (10.10.10.5) do WireGuard: vivo ou legado? (aberto em
+      10/08/2026) — medido com o `wg-status` novo: em **17 dias** de uptime do roteador ele
+      não fez UM handshake. E não é peer passivo esquecido: tem `persistent_keepalive = 25`,
+      que existe justamente pra manter a conexão de pé.
+      • As duas leituras possíveis, e elas pedem ações opostas: ou a workstation está com o
+        WireGuard parado (e alguém conta com esse túnel sem saber que ele não sobe), ou o
+        peer é resíduo e devia sair do roteador pela regra de zero legado.
+      • ⚠️ NÃO APAGAR ANTES DE CONFERIR: o mount `~/FAI-workstation` (rclone SFTP) sobe junto
+        com a VPN da FAI, não com este túnel — então o peer PARECE órfão sem ser. Conferir de
+        lá com `wg` antes de decidir.
+      • O peer `notebook` (.2) também está sem handshake, mas isso é ESPERADO e não é item:
+        é exatamente o que o acesso direto de 10/08 substituiu.
+
 - [ ] MTU do túnel — medir e anotar (herdado do teste de 10/08/2026). Protocolo em
       [testes/wireguard-moonlight.md](testes/wireguard-moonlight.md).
       • Impossível testar de casa: não há interface WireGuard nesta máquina (o túnel termina
@@ -206,6 +219,8 @@ armadilha conhecida. Vale mais o parágrafo do que o título.
       • DECISÃO A MANTER: comando arbitrário CONTINUA pedindo senha. Ampliar pra `(ALL)
         NOPASSWD: ALL` seria a mudança que de fato escala privilégio — as atuais não escalam
         porque o `nft` já dá o mesmo alcance. Só adicionar binário com motivo, um a um.
+      • `/usr/bin/wg-status` entrou junto (wrapper só-leitura do `wg show`) — o binário `wg`
+        inteiro NÃO entra, porque `wg set` troca chave de peer.
       • FALTA o SWITCH, que nunca foi tocado.
       • ⚠️ NADA DISSO É ESPELHADO: o `router-sync` cobre só `/etc/config/`. Sudoers e chave
         SSH vivem fora do repo, e o `/home/` do roteador nem sobrevive a `sysupgrade`.

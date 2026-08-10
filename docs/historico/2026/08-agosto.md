@@ -100,11 +100,18 @@
         ciclou (um `Stopped` às 11:25, nenhum `Started` às 11:47), ou seja o `undo` do
         prep-cmd nunca rodou, logo o Sunshine não desmontou a sessão. Nada piscou do lado de
         casa: o buraco foi do lado da UFSCar.
-      • A ROTA, medida e com os donos por RDAP: roteador → Algar (AS16735) → IX.br/NIC.br
-        (AS26162) → RNP (AS1916) → UFSCar (AS52888). Quatro sistemas autônomos, e NENHUM é
-        servidor intermediário — todos encaminham pacote, nenhum termina a conexão. IX.br e
-        RNP não são removíveis: a internet da UFSCar vem da RNP. É a resposta empírica ao
-        pedido de "sem servidores intermediários", e confirma que o túnel também não tinha.
+      • A ROTA, medida e com os donos por RDAP: roteador → **Alcans (AS52783, o ISP)** →
+        Algar (AS16735, TRÂNSITO da Alcans) → IX.br/NIC.br (AS26162) → RNP (AS1916) →
+        UFSCar (AS52888). Cinco sistemas autônomos, e NENHUM é servidor intermediário — todos
+        encaminham pacote, nenhum termina a conexão. IX.br e RNP não são removíveis: a
+        internet da UFSCar vem da RNP. É a resposta empírica ao pedido de "sem servidores
+        intermediários", e confirma que o túnel também não tinha.
+        ⚠️ CORREÇÃO (mesmo dia): a primeira versão desta linha dizia que a Algar era o ISP,
+        porque foi o 1º salto PÚBLICO do traceroute. Errado — o IP de casa (177.52.84.188)
+        está em `177.52.80.0/21`, que é **ALCANS TELECOM (AS52783)**. A Algar é o trânsito
+        dela. Ler "primeiro salto público" como "meu provedor" é a mesma classe de erro do
+        traceroute lido como prova de CGNAT: o salto diz por onde o pacote passou, não de
+        quem é a assinatura. Quem responde isso é RDAP no IP de casa, não o traceroute.
       • LATÊNCIA: ruído, como previsto. Os 35 ms são do caminho físico, que o túnel percorria
         igual. Registrado explicitamente para ninguém atribuir ganho a isto depois.
 

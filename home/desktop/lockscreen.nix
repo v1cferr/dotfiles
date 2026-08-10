@@ -9,6 +9,8 @@
 #   • weather → um serviço+timer systemd busca o wttr.in a cada 10 min p/ um cache;
 #               no lock só roda `cat`. Fonte estável, sem raspar HTML.
 #   • idle    → só TRANCA aos 5min (loginctl lock-session). SEM dpms-off — ver ponto 3.
+#   • lock    → `hyprlock.service`, unit DECLARADA. Trancar não depende do hypridle
+#               estar vivo; ver o bloco da unit para o incidente que motivou isso.
 #
 # Regra da pasta: apps de USUÁRIO → home/. programs.hyprlock instala o hyprlock e
 # services.hypridle sobe o daemon (systemd --user, igual ao hyprsunset). Por isso o
@@ -57,9 +59,9 @@ let
 
   # ── Binários por caminho absoluto (não dependem de PATH — durável) ────────────
   hyprlockBin = "${pkgs.hyprlock}/bin/hyprlock";
-  pidof = "${pkgs.procps}/bin/pidof";
+  pidof = "${pkgs.procps}/bin/pidof"; # ExecCondition da unit: não sobe 2º hyprlock
   loginctlBin = "${pkgs.systemd}/bin/loginctl";
-  systemdRun = "${pkgs.systemd}/bin/systemd-run";
+  systemctlBin = "${pkgs.systemd}/bin/systemctl";
   shuf = "${pkgs.coreutils}/bin/shuf";
   catBin = "${pkgs.coreutils}/bin/cat";
 
@@ -260,34 +262,62 @@ in
     };
   };
 
+  # ── hyprlock como UNIT DECLARADA: TRANCAR NÃO PODE DEPENDER DO HYPRIDLE ──────
+  # Até 10/08/2026 o único caminho pra trancar era `loginctl lock-session`, que NÃO
+  # tranca nada sozinho: só marca LockedHint e emite o sinal Lock no D-Bus. Quem
+  # escutava e subia o hyprlock era o hypridle, via lock_cmd. Consequência: com o
+  # hypridle parado, o sinal caía no VAZIO — o botão "Bloquear" da barra clicava e
+  # não acontecia nada, sem erro nenhum. Foi o que houve por 6h em 10/08/2026, com o
+  # guard do Sunshine (../..//system/services/sunshine.nix) segurando o hypridle
+  # parado depois de um cliente morrer sem teardown.
+  #
+  # É a dependência errada: bloquear a tela é FUNÇÃO DE SEGURANÇA, e não pode ficar
+  # refém de um daemon de OCIOSIDADE que qualquer coisa pode parar (o guard do
+  # Sunshine, a pill da barra, um crash). Agora o hyprlock é uma unit própria e quem
+  # quer trancar dá `systemctl --user start hyprlock.service`, direto.
+  #
+  # UNIT PRÓPRIA, e não `systemd-run` transiente (que era o truque anterior), pelo
+  # mesmo motivo de antes MAIS dois: continua FORA do cgroup do hypridle.service —
+  # o que impede o LOCKOUT REMOTO diagnosticado em 03/08/2026, quando
+  # `systemctl --user stop hypridle` do guard do Sunshine matava o cgroup inteiro
+  # (KillMode=control-group) e levava junto o hyprlock, deixando o compositor
+  # TRANCADO SEM CLIENTE pra desenhar o campo de senha. E de quebra:
+  #   • idempotência de graça — `start` numa unit já ativa é no-op, então o antigo
+  #     `pidof hyprlock ||` sai de cena. Duas superfícies de session-lock confundem
+  #     o grab do teclado e o campo de senha para de digitar; o systemd garante uma.
+  #   • o nome não fica ocupado após o unlock (era o papel do `--collect`).
+  # O env (WAYLAND_DISPLAY, HYPRLAND_INSTANCE_SIGNATURE) vem do systemd --user, que
+  # a sessão já importa. Sem Restart: hyprlock que sai é unlock, não falha a reerguer.
+  systemd.user.services.hyprlock = {
+    Unit = {
+      Description = "Tela de bloqueio (hyprlock)";
+      # Sem sessão gráfica não há o que trancar — e o lock morre junto com ela.
+      PartOf = [ "graphical-session.target" ];
+      After = [ "graphical-session.target" ];
+    };
+    Service = {
+      Type = "simple"; # roda enquanto a tela está trancada; sai no unlock
+      # Herdeiro do antigo `pidof hyprlock ||`: cobre o hyprlock que NÃO nasceu desta
+      # unit — hoje só o do resgate de lockout por TTY (ver allow_session_lock_restore
+      # em hypr/lua/appearance.lua), já que boot/idle/botão passam todos por aqui.
+      # ExecCondition e não ExecStartPre de propósito: falhar aqui SALTA a partida em
+      # silêncio (unit fica inactive), enquanto o StartPre a marcaria como `failed`.
+      ExecCondition = "${pkgs.bash}/bin/bash -c '! ${pidof} hyprlock'";
+      ExecStart = hyprlockBin;
+    };
+    # SEM Install/wantedBy DE PROPÓSITO: quem tranca é o clique ou o idle, nunca o
+    # boot. O hyprlock do boot continua sendo o do autostart (../autostart.nix).
+  };
+
   # ── hypridle: só TRANCA aos 5 min (SEM dpms-off — bugava o moon/Sunshine) ─────
   services.hypridle = {
     enable = true;
     settings = {
       general = {
-        # `pidof ... ||` evita subir 2 hyprlock: 2 superfícies de session-lock
-        # confundem o grab do teclado e o campo de senha para de digitar.
-        #
-        # `systemd-run --user` NÃO é frescura — é o que impede um LOCKOUT REMOTO.
-        # Diagnosticado em 03/08/2026: hyprlock lançado direto aqui nasce FILHO do
-        # hypridle, logo dentro do cgroup do `hypridle.service`. E o guard de idle do
-        # Sunshine (system/services/sunshine.nix, streamBegin) faz
-        # `systemctl --user stop hypridle` pra sessão remota não trancar no meio do
-        # stream — só que `stop` mata o cgroup INTEIRO (KillMode=control-group default),
-        # levando o hyprlock junto.
-        #
-        # O resultado é pior que "destrancou sozinho": o `loginctl lock-session` já
-        # engatou o session-lock do Wayland, então o compositor fica TRANCADO SEM
-        # CLIENTE pra desenhar o campo de senha. Ninguém autentica — nem pelo Moonlight,
-        # nem no teclado físico. Foi exatamente o que aconteceu às 08:33 (hypridle
-        # trancou por idle) + 08:34 (conexão do Moonlight matou o hyprlock): acesso
-        # remoto perdido, e só voltou porque havia SSH pra subir o hyprlock na mão.
-        #
-        # Em unit transiente própria (app.slice/hyprlock.service) ele fica fora do
-        # alcance do `stop hypridle`. `--collect` limpa a unit quando você destranca,
-        # senão o nome fica ocupado e o lock seguinte não sobe. O env (WAYLAND_DISPLAY,
-        # HYPRLAND_INSTANCE_SIGNATURE) vem do systemd --user, que a sessão já importa.
-        lock_cmd = "${pidof} hyprlock || ${systemdRun} --user --unit=hyprlock --collect ${hyprlockBin}";
+        # Delega pra unit declarada acima — ver lá o porquê de não ser nem o hyprlock
+        # direto (lockout remoto) nem `systemd-run` transiente. `start` é idempotente,
+        # então isto nunca sobe um segundo hyprlock.
+        lock_cmd = "${systemctlBin} --user start hyprlock.service";
         # Se um dia suspender (hoje não), tranca antes de dormir.
         before_sleep_cmd = "${loginctlBin} lock-session";
         ignore_dbus_inhibit = true;

@@ -12,8 +12,9 @@
 #      system/services/toggles.nix; o true/false é do host (hosts/<host>/services.nix).
 #   3. hypr/lua/autostart.lua   → infra da sessão que PRECISA do exec-once do
 #      compositor: hyprlock (a máquina sobe travada), quickshell (barra) e
-#      wl-clip-persist. Não migrei p/ systemd porque o hyprlock no boot é
-#      load-bearing p/ o acesso remoto (o Moonlight cai no lockscreen).
+#      wl-clip-persist. O GATILHO segue sendo o exec-once (só o compositor sabe a
+#      hora), mas o hyprlock em si é unit (hyprlock.service, desktop/lockscreen.nix):
+#      boot, idle e botão da barra passam todos pelo mesmo dono.
 #
 # POR QUE SERVIÇO E NÃO exec-once: `exec-once` NÃO reinicia se o app morrer. Serviço
 # systemd reinicia. Restart=on-failure de propósito: crash volta, mas FECHAR na mão

@@ -9,9 +9,14 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP && systemctl --user start hyprland-session.target")
   -- TRANCA no boot: a máquina loga sozinha (autologin, system/desktop/desktop.nix) p/ o
   -- Sunshine subir, mas a sessão nasce TRANCADA — o Moonlight cai direto no hyprlock e só
-  -- entra com senha. `pidof || ` evita 2ª superfície de session-lock (quebraria o teclado).
-  -- Só no boot da sessão (hyprland.start não dispara em reload). PAM em desktop.nix.
-  hl.exec_cmd("pidof hyprlock || hyprlock")
+  -- entra com senha. Só no boot da sessão (hyprland.start não dispara em reload).
+  -- PAM em desktop.nix.
+  -- Pela UNIT, não `hyprlock` solto: o hyprlock tem UM dono (hyprlock.service, em
+  -- home/desktop/lockscreen.nix) e é por ele que passam boot, idle e o botão da barra.
+  -- Processo solto aqui furaria a idempotência do systemd — o lock do idle subiria uma
+  -- 2ª superfície de session-lock por cima desta, e duas quebram o grab do teclado
+  -- (o campo de senha para de digitar). O `pidof ||` que morava aqui virou ExecCondition.
+  hl.exec_cmd("systemctl --user start hyprlock.service")
   hl.exec_cmd("qs") -- Quickshell (bar/OSD/mídia). Config QML em home/desktop/quickshell/ (hot-reload).
   -- O watcher do cliphist (histórico) agora é serviço declarativo (services.cliphist,
   -- home/desktop/clipboard.nix) — não é mais lançado aqui.

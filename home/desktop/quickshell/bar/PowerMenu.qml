@@ -73,7 +73,13 @@ Pill {
                         {
                             icon: "󰌾",
                             label: "Bloquear",
-                            cmd: ["loginctl", "lock-session"],
+                            // Sobe o hyprlock DIRETO (unit declarada em lockscreen.nix) e
+                            // só depois marca o LockedHint. `loginctl lock-session` sozinho
+                            // NÃO trancava: ele só emite o sinal Lock, e quem escutava era o
+                            // hypridle — com ele parado (guard do Sunshine), o clique virava
+                            // no-op silencioso. O `start` é idempotente, então o lock_cmd que
+                            // o hypridle dispara ao ver o sinal não duplica nada.
+                            cmd: ["sh", "-c", "systemctl --user start hyprlock.service; loginctl lock-session"],
                             danger: false
                         },
                         {

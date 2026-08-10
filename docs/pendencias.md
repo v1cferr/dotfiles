@@ -115,17 +115,18 @@ armadilha conhecida. Vale mais o parágrafo do que o título.
       • Pro Tailscale há um análogo: `*.v1cferr.dev` só resolve pra 192.168.1.10 DENTRO de casa.
         De fora, pela tailnet, ou split-DNS no admin do Tailscale ou usar os nomes `.ts.net`.
 
-- [ ] 🔴 REVOGAR a auth key do Tailscale que estava no `.env` órfão (achado em 05/08/2026)
-      O arquivo `.env` na raiz do repo guardava `TAILSCALE=tskey-auth-kLXAR6…` em TEXTO CLARO,
-      modo 644, cabeçalho "nixos-sandisk declarative join (**reusable**)". Não era versionado
-      (`*.env` no .gitignore) e NADA lia: o join de hoje usa
-      `authKeyFile = config.sops.secrets.tailscale_authkey.path` (system/net/tailscale.nix:18).
-      Sobra do host ANTIGO, de 27/07 — anterior ao cutover.
-      • Key REUSABLE é o pior caso: quem tiver a string entra na tailnet quantas vezes quiser.
-      • O arquivo foi APAGADO. Revogar não precisa da string, só do ID: no admin console,
-        Settings → Keys → a que começa com `kLXAR6`.
-      • Enquanto não revogar, a key vale mesmo sem o arquivo. Apagar reduziu a exposição
-        local; não invalidou nada.
+- [ ] VS Code: o language server do `kamikillerto.vscode-colorize` aborta em loop
+      (achado em 09/08/2026) — 15 coredumps em 2 dias, ~a cada 6-30 min de sessão. NÃO é
+      o editor nem o nix: `coredumpctl info` entrega a linha de comando com o
+      `.vscode/extensions/kamikillerto.vscode-colorize-0.17.1/server/out/server.js`.
+      • Preço POR aborto, medido: 58 s de CPU, 2,6 GB de pico de RAM, 2,7 GB escritos no
+        NVMe só pra gravar o dump. É a travada que se sente, e é desgaste de disco.
+      • Conserto imediato = desabilitar a extensão (ou restringir `colorize.include`).
+        Perde-se só o realce de cor. A extensão vem do Settings Sync, NÃO do nix — então
+        o conserto é fora deste repo enquanto o item do VSCode declarativo não fechar.
+      • ⚠️ NÃO é o mesmo bug do "stop job" de 90 s (que também acusava o VS Code): lá é o
+        `app-code-*.scope` ignorando SIGTERM no desligamento; aqui é filho abortando no
+        meio da sessão. Corrigir um não corrige o outro.
 
 - [ ] SSOT pendente — só sobrou o HOME `/home/v1cferr` (5 arquivos: dolphin.nix, Theme.qml,
       restic.nix, fai-workstation-mount.nix, home/default.nix) → `my.user.home`. Prioridade BAIXA

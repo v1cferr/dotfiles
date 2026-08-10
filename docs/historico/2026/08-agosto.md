@@ -1,6 +1,59 @@
 # Histórico — agosto de 2026
 
-41 entradas. Índice em [README.md](../README.md).
+43 entradas. Índice em [README.md](../README.md).
+
+- [x] Auth keys do Tailscale revogadas — a exposição de 05/08 fechou (09/08/2026)
+      O `.env` órfão na raiz do repo guardava `TAILSCALE=tskey-auth-kLXAR6…` em texto
+      claro, modo 644, e a key era **reusable** — o pior caso, porque quem tivesse a
+      string entrava na tailnet quantas vezes quisesse. Apagar o arquivo (05/08) reduziu
+      a exposição local e NÃO invalidou nada; só a revogação no admin console faz isso.
+      Todas as keys foram apagadas pelo dono em 09/08.
+      • O Tailscale saiu de uso nesta máquina no caminho: `tailscaled` está `inactive` e
+        o binário `tailscale` nem existe no PATH — o que tornou a revogação um ato de
+        blast radius zero. Registrado porque é o argumento que destrava esse tipo de
+        item: quando nada depende do segredo, revogar deixa de ter contrapartida e a
+        única razão pra adiar some.
+      • A rota de acesso externo continua sendo a pendência do CGNAT, não esta.
+
+- [x] Auditoria geral do setup, e o que ela achou: a poda do restic estava parada
+      há 4 dias (09/08/2026) — varredura completa de hardware e software pedida em aberto
+      ("meu sistema está saudável?"). O veredito foi saudável, mas dois achados só
+      existiam porque ninguém tinha olhado: os dois se escondiam atrás de ruído que já
+      era rotina.
+      • 🔴 **restic: `forget --prune` sem rodar desde 05/08 15:46.** `error: lstat
+        /home/v1cferr/Drive: permission denied` → restic sai 3 → o `unlock` e o
+        `forget --prune`, que são o 2º e o 3º ExecStart, nunca chegam a executar. É a
+        MESMA armadilha do `~/FAI-workstation` de 05/08 (FUSE do usuário, backup roda
+        como root), com um mountpoint que ninguém lembrou de excluir. Corrigido em
+        system/services/restic.nix.
+      • POR QUE PASSOU DESPERCEBIDO, e esta é a parte que vale guardar: o
+        FAI-workstation só monta com a VPN de pé, então falhava de forma INTERMITENTE —
+        e foi justamente a intermitência que fez alguém investigar. O `~/Drive` monta em
+        TODO boot, então a falha virou constante, diária e silenciosa. Falha que acontece
+        SEMPRE é mais fácil de ignorar que falha que acontece às vezes: vira o estado
+        normal do serviço. O dado nunca esteve em risco (snapshot salvo todo dia, 41,8
+        GiB, 297.740 arquivos) — o que morreu foi a retenção.
+      • 🟠 **VS Code: 15 coredumps em 2 dias, e não é o editor.** O que aborta com
+        SIGABRT é o language server da extensão `kamikillerto.vscode-colorize` 0.17.1
+        (`coredumpctl info` entrega a linha de comando inteira, com o caminho do
+        `server/out/server.js`). Preço medido POR aborto: 58 s de CPU, 2,6 GB de pico de
+        RAM e 2,7 GB escritos no NVMe só pra gravar o dump — numa máquina de 15 GB e num
+        disco cujo desgaste a gente acompanha. Cadência de 09/08: 10:38, 15:01, 15:43,
+        15:57, 16:49, 16:55, 17:07.
+      • ⚠️ NÃO CONFUNDIR com o "stop job" de 90 s da entrada abaixo, apesar de os dois
+        dizerem "VS Code": lá é o `app-code-*.scope` ignorando SIGTERM no DESLIGAMENTO;
+        aqui é um processo filho abortando NO MEIO DA SESSÃO. Causas independentes,
+        correções independentes — e o risco real era o primeiro achado "explicar" o
+        segundo e a investigação parar ali.
+      • DESMENTIDOS PELA MEDIÇÃO, que é o que impede trabalho inútil: (a) "15 GB de RAM
+        é pouco" — PSI de memória em ~0, swapfile em disco com 0 B usados, zram
+        comprimindo 2,7 G em 981 M; o que trava é o colorize, não a RAM. (b) "o NVMe
+        está quente" — 52,9 °C de Composite sob carga (jogo + 7 containers + ollama),
+        contra os 77-80 °C que geraram a pendência do dissipador; o `Sensor 2` a 79,8 °C
+        segue sendo o falso alarme conhecido (sensor não implementado, cravado).
+      • Resto verde e conferido: 0 units falhas, `is-system-running: running`, btrfs
+        `no errors found`, 58% de disco, fwupd sem update pendente, `nix flake check`
+        passando. Secure Boot e VT-x seguem desligados — mesma ida à BIOS, já rastreada.
 
 - [x] Desligamento de 90 s → ~5 s: o "stop job" era UM app, e não o sistema
       (09/08/2026) — a queixa era "demora quase 5 min pra desligar". O journal desmentiu o

@@ -36,6 +36,24 @@ armadilha conhecida. Vale mais o parágrafo do que o título.
       • O peer `notebook` (.2) também está sem handshake, mas isso é ESPERADO e não é item:
         é exatamente o que o acesso direto de 10/08 substituiu.
 
+- [~] TESTAR o Wake-on-LAN de verdade (aberto em 10/08/2026) — a config está aplicada e o
+      `40-enp7s0.link` gerado com `WakeOnLan=magic`, mas NADA disso prova que a máquina
+      acorda. Só desligar e mandar o pacote prova.
+      • ⚠️ NÃO FECHAR ESTE ITEM SEM O TESTE. É o mesmo erro do HEVC de hoje, ao contrário:
+        lá eu fechei por relato sem medir; aqui a tentação é fechar por config aplicada sem
+        acionar. Config correta e efeito real são coisas diferentes — foi exatamente o que o
+        fw4 ensinou hoje ao ACEITAR um `src_ip` em lista e DESCARTAR a seção.
+      • ROTEIRO: `sudo poweroff` → do celular pelo WireGuard,
+        `ssh v1cferr@192.168.1.1 'sudo wake-desktop'` → a máquina tem que ligar.
+      • ESTADO ATUAL medido: `power/wakeup = disabled` e `Wake-on: d`. O `.link` só é aplicado
+        pelo udev quando a interface APARECE, ou seja a partir do próximo boot. Armar antes
+        disso, sem derrubar o link: `ethtool -s enp7s0 wol g`.
+      • SE NÃO ACORDAR, o próximo suspeito é a BIOS: "Wake on LAN / Wake on PCIe" precisa
+        estar ligado lá também. O SO arma a NIC; a placa-mãe decide se aceita o sinal.
+      • ⚠️ ISTO NUNCA VAI COBRIR QUEDA DE ENERGIA, e não é falha do WoL: corte real tira o
+        +5VSB e a NIC perde o registro armado. Pra "acabou a luz" quem responde é *Restore on
+        AC Power Loss* na BIOS — e aí o WoL fica irrelevante, porque a máquina liga sozinha.
+
 - [ ] MTU do túnel — medir e anotar (herdado do teste de 10/08/2026). Protocolo em
       [testes/wireguard-moonlight.md](testes/wireguard-moonlight.md).
       • Impossível testar de casa: não há interface WireGuard nesta máquina (o túnel termina

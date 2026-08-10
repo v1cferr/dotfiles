@@ -63,6 +63,34 @@
   systemd.targets.hibernate.enable = false;
   systemd.targets.hybrid-sleep.enable = false;
 
+  # ── Wake-on-LAN — o par do "nunca suspender": se a máquina ESTIVER desligada ─
+  # ACHADO EM 10/08/2026, e o sintoma era invisível: o roteador tem TODAS as peças pra
+  # acordar este PC — o script `/usr/bin/wake-desktop`, a regra NOPASSWD dele, e o MAC
+  # alvo `7c:10:c9:a1:f4:e5`, que confere com esta enp7s0 — e nada acontecia, porque a
+  # ponta que RECEBE estava desarmada. Medido: `Wake-on: d`, com `Supports Wake-on: pumbg`
+  # (o `g` de magic packet existe na placa). Três peças certas apontando pra uma quarta
+  # que não escuta: não dá erro em lugar nenhum, só não acorda.
+  #
+  # DECLARATIVO E NÃO `ethtool -s enp7s0 wol g`: o r8169 RESETA o WoL a cada boot, então a
+  # forma imperativa se perde no próximo reboot — que é exatamente quando se precisa dela.
+  # Esta opção vira `linkConfig.WakeOnLan` (nixos/modules/tasks/network-interfaces.nix),
+  # aplicado pelo udev a cada subida do link.
+  #
+  # CONTRASTE com o `wake-workstation` de ../../home/net/fai-workstation.nix, que resolve o
+  # MESMO problema e não pôde ser declarado: lá o receptor é uma Ubuntu de terceiro e o
+  # conserto é netplan na mão, anotado em comentário. Aqui o receptor é esta máquina.
+  #
+  # ⚠️ NÃO COBRE QUEDA DE ENERGIA, e é o mal-entendido a evitar: corte real tira o +5VSB e
+  # a NIC perde o registro armado. Pra "acabou a luz" quem responde é a BIOS (*Restore on
+  # AC Power Loss* = Power On), que este repo não alcança. WoL serve pro desligamento
+  # NORMAL, que é o caso comum.
+  #
+  # ⚠️ O NetworkManager tem `connection.wol` próprio. O default dele é não mexer, mas se
+  # resetar numa mudança de link o sintoma é WoL funcionar logo após o boot e parar depois
+  # — e isso só aparece desligando de verdade e mandando o magic packet. Literal `enp7s0`
+  # e não opção: consumidor único (regra 11 pede 2+).
+  networking.interfaces.enp7s0.wakeOnLan.enable = true;
+
   # ── fail2ban — protege o SSH exposto na internet ─────────────────────────
   # A 2222 fica aberta ao mundo (port-forward 2222 no OpenWrt) COM senha
   # habilitada → fail2ban é obrigatório. Espelha o jail do Arch: bane após 4

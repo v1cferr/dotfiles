@@ -120,6 +120,23 @@ lib.mkIf config.my.services.restic {
       # dá lstat no ponto de montagem. Backup de máquina remota nunca deveria entrar aqui.
       "/home/v1cferr/FAI-workstation"
 
+      # MESMA ARMADILHA, SEGUNDA VÍTIMA — e esta doeu mais porque é PERMANENTE.
+      # O `~/Drive` é o rclone gdrive (home/services/drive-mount.nix), FUSE do usuário
+      # igual ao de cima, e o root também não lstata nele. A diferença é que o
+      # FAI-workstation só existe com a VPN de pé (falha intermitente, e por isso
+      # visível): o Drive monta em TODO boot, então a partir de 06/08/2026 o serviço
+      # passou a falhar TODA NOITE e a poda parou de rodar de vez.
+      # MEDIDO em 09/08/2026: último `forget --prune` bem-sucedido foi 05/08 15:46 —
+      # quatro dias de snapshots acumulando fora da janela 7d/4s/6m, no Drive.
+      # A LIÇÃO, que é maior que este arquivo: mount FUSE do usuário DENTRO do
+      # `paths` quebra o backup por construção. Ponto de montagem novo em
+      # /home/v1cferr entra AQUI no mesmo commit que o cria — é a terceira vez que
+      # este mesmo bug aparece com um nome diferente.
+      # ⚠️ E o serviço falhando toda noite não é só ruído: "restic falhou" vira o
+      # estado normal, e aí a falha REAL (Drive fora do ar, token OAuth expirado,
+      # lock preso) chega sem nada que a distinga do barulho de sempre.
+      "/home/v1cferr/Drive"
+
       "/home/v1cferr/.cache"
       "/home/v1cferr/.local/share/Trash"
       # ── Volumosos e RE-OBTENÍVEIS (não faz sentido cifrar/guardar) ──

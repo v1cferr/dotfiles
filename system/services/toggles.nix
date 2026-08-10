@@ -27,6 +27,7 @@
     "jellyfin"
     "ollama"
     "duo"
+    "grad-radar"
     "sunshine"
     "qbittorrent"
     "tor"

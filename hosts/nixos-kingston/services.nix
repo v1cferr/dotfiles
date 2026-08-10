@@ -15,6 +15,7 @@
     jellyfin = true; # servidor de mídia (/srv/media)
     ollama = true; # IA local (solver do Duolingo)
     duo = true; # duo-streak-daemon (ofensiva automática do Duolingo)
+    grad-radar = true; # GradRadar no boot + monitor de editais 2x/dia (V1C-72)
     sunshine = true; # streaming de tela p/ Moonlight
     qbittorrent = true; # cliente torrent
     tor = true; # SOCKS5 local 127.0.0.1:9050 (só cliente; consumidor = `mega-tor`)

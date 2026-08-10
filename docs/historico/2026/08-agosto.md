@@ -1,6 +1,52 @@
 # Histórico — agosto de 2026
 
-47 entradas. Índice em [README.md](../README.md).
+48 entradas. Índice em [README.md](../README.md).
+
+- [x] Auditoria de crescimento em disco: o Docker era o único sem teto, e o btrfs/GC
+      não precisavam de nada (10/08/2026) — a pergunta era "o btrfs está bem? tem swap? o
+      GC limpa direito?". As três respostas foram "sim, não mexa", e o problema real estava
+      num quarto lugar que ninguém tinha olhado.
+      • 🟠 **Docker: 11,35 GB de build cache, 8,5 GB recuperáveis, ZERO política.** Todos
+        os vizinhos já tinham teto — journald em `SystemMaxUse=2G`, coredump vacuado pelo
+        systemd, btrbk com `snapshot_preserve`, nix com `gc` semanal. O Docker era o único
+        sem nada, e o `grad-radar.nix` que entrou na véspera PIOROU isso: ele roda
+        `docker compose build` no ExecStartPre, a cada boot. Resolvido em
+        system/services/docker.nix; a poda manual recuperou 8,501 GB (cache 11,35 → 2,85).
+      • DUAS OPÇÕES RECUSADAS, e as duas destroem dado na MESMA janela — o stack PARADO
+        na hora da poda semanal. Nenhuma dá erro; elas apagam com sucesso o que não devem.
+        `allVolumes.enable` poda volume NOMEADO, e é onde vivem `duo_duo-db-data` e
+        `grad-radar_db_data`: com o compose derrubado, a poda apagaria os dois Postgres.
+        `flags = ["--all"]` remove imagem COM TAG sem container rodando, e as imagens
+        locais não vêm de registry — some = rebuild, que no grad-radar inclui
+        `pnpm install` dentro do container (a unit tem `TimeoutStartSec = 1800` por isso).
+        O `--all` é o que a maioria dos configs públicos usa; aqui não paga.
+      • ⚠️ O `weekly` do systemd é **Mon 00:00**, que é exatamente o minuto do `nix-gc`.
+        Ficou `Mon 04:30`, depois do restic (03:00 + até 30 min) e do nix-optimise (03:45).
+        Duas faxinas pesadas de I/O na mesma NVMe no mesmo minuto não ganham em coincidir.
+      • **btrfs: nada a fazer — e um conselho popular a NÃO seguir.** As opções montadas
+        são `noatime,compress=zstd:1,ssd,discard=async,space_cache=v2`, que é o conjunto
+        correto. NÃO adicionar `fstrim.timer`: o `discard=async` já é TRIM contínuo, e o
+        timer não está habilitado justamente por isso. Alocação sadia com ~398 GiB não
+        alocados (Data 548 GiB alocados / 530,7 usados; Metadata DUP 7 GiB / 3,99), então
+        também não há `balance` pendente — que é o que morde usuário de btrfs a longo prazo.
+      • **Swap existe, em duas camadas**: zram 7,7 G em prio 5 (quente, comprimindo 2,7 G
+        em 981 MB medidos) e swapfile de 16 G em prio -1 (frio), este com **0 B usados** —
+        a camada rápida dá conta sozinha. A prova de que o swapfile está NOCOW correto não
+        é o `lsattr`, é o kernel ter aceitado o `swapon`: o btrfs RECUSA ativar swapfile
+        que seja CoW ou comprimido, então estar ativo é a validação.
+      • **GC já estava certo**: semanal + `--delete-older-than 30d`, mais `nix-optimise`
+        diário. Recomendado NÃO apertar — a `/nix/store` inteira são 53 GB de 953 GB, ou
+        seja, não é ela que cresce; encurtar a janela custaria cache de rebuild e rollback
+        pra recuperar espaço que não falta.
+      • ⚠️ ERRO MEU NO CAMINHO, e a mecânica vale mais que o erro: havia `caddy.nix` e
+        `services.nix` do dono já no INDEX; eu dei `git add` nos meus dois arquivos e
+        commitei — e o `git commit` leva o index INTEIRO, então trabalho alheio entrou no
+        meu commit. Desfeito com `reset --soft HEAD~1` + `git commit -- <paths>`, que
+        commita só os caminhos dados e deixa o resto do index quieto. REGRA: em árvore com
+        trabalho de terceiros staged, commitar SEMPRE por pathspec.
+      • O `--dry-run` que eu tinha escrito no comentário do módulo NÃO EXISTE no Docker
+        29.6.2 (conferido no `--help` antes de commitar). A prévia real é `docker system
+        prune` SEM o `-f`, que lista as categorias e pede y/N.
 
 - [x] `wg-status`: visibilidade do WireGuard sem senha — e um bug de sysupgrade que ela
       revelou (10/08/2026). Não dava pra responder "o celular está conectado?" sem senha de

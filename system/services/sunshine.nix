@@ -41,7 +41,8 @@
 # home/desktop/lockscreen.nix). Sobra só o LOCK aos 5min — que, no meio de um stream,
 # trancaria a sessão remota. Então o guard só PAUSA o hypridle enquanto o stream roda
 # (global_prep_cmd do/undo) e RELIGA ao desconectar. Nada de dpms/settle: o monitor já
-# está sempre aceso.
+# está sempre aceso. O `undo` NÃO é confiável (cliente que morre sem teardown nunca o
+# dispara) — daí o watchdog `hypridle-guard` neste arquivo, que fecha essa brecha.
 {
   pkgs,
   lib,
@@ -118,15 +119,83 @@ let
     src: map (p: "-s ${src} -p ${p.proto} --dport ${p.dport}") moonlightPorts
   ) moonlightSources;
 
+  # Marca de que a pausa do hypridle é DESTE guard, e não do usuário. A pill da barra
+  # (quickshell, Bar.qml) também para o hypridle, de propósito — sem esta marca o
+  # watchdog abaixo desfaria esse toggle manual em até 5 min. Fica no XDG_RUNTIME_DIR:
+  # some no reboot, que é exatamente quando o hypridle volta sozinho de qualquer jeito.
+  pauseStamp = ''"''${XDG_RUNTIME_DIR:-/run/user/$(${pkgs.coreutils}/bin/id -u)}/sunshine-hypridle-paused"'';
+
   # Início do stream: para o hypridle p/ a sessão remota não TRANCAR no meio por idle.
   # `|| true`: um prep-cmd que falha cancelaria o stream no Sunshine.
   streamBegin = pkgs.writeShellScript "sunshine-stream-begin" ''
+    ${pkgs.coreutils}/bin/touch ${pauseStamp} || true
     ${pkgs.systemd}/bin/systemctl --user stop hypridle.service || true
   '';
   # Fim do stream: religa o hypridle → volta a trancar aos 5min de ociosidade.
   streamEnd = pkgs.writeShellScript "sunshine-stream-end" ''
+    ${pkgs.coreutils}/bin/rm -f ${pauseStamp} || true
     ${pkgs.systemd}/bin/systemctl --user start hypridle.service || true
   '';
+
+  # ── Watchdog do guard: o `undo` acima NÃO é garantia ─────────────────────────
+  # Medido em 10/08/2026: cliente sumiu sem teardown limpo às ~14:57, o Sunshine
+  # nunca fechou a sessão, o `undo` nunca rodou, e o hypridle ficou parado por 6h.
+  # O `ping_timeout` não cobre isso — ele derruba o STREAM, não a contabilidade da
+  # sessão. E enquanto o hypridle está parado a máquina não tranca sozinha nunca.
+  #
+  # O SINAL TEM QUE SER A REALIDADE, NÃO A CONTABILIDADE DO SUNSHINE. O caminho
+  # óbvio seria o `/serverinfo` (sem auth na 47989, é o que o header cita), mas ele
+  # é justamente quem mente: às 17:30 daquele dia ainda dizia SUNSHINE_SERVER_BUSY
+  # com o cliente morto havia 2h30. Um watchdog keyado nele nunca dispararia.
+  #
+  # O que NÃO mentiu na mesma medição: os sockets. Com a sessão fantasma "ativa", o
+  # Sunshine tinha ZERO sockets UDP nas portas de vídeo — ele os cria por sessão e
+  # os fecha ao fim. Então `bound` = stream de verdade.
+  # ⚠️ Medi o lado NEGATIVO (sem stream ⇒ sem socket); o positivo é inferência forte
+  # (é por essas portas que o cliente manda vídeo/áudio/controle — são as mesmas do
+  # `moonlightPorts`), mas não observada. Conferir no próximo stream com
+  # `ss -uan | grep 4799` antes de tratar como fato.
+  hypridleGuard = pkgs.writeShellApplication {
+    name = "hypridle-guard";
+    runtimeInputs = with pkgs; [
+      systemd
+      iproute2
+      coreutils
+    ];
+    text = ''
+      stamp=${pauseStamp}
+
+      # 1) Pausa que não é deste guard (pill da barra) — não é da nossa conta.
+      [ -e "$stamp" ] || exit 0
+
+      # 2) hypridle já vivo: o undo rodou. Só limpa a marca.
+      if systemctl --user is-active --quiet hypridle.service; then
+        rm -f "$stamp"
+        exit 0
+      fi
+
+      # 3) CARÊNCIA de 2 min. Entre o `do` (que para o hypridle) e o bind das portas
+      #    de vídeo existe uma janela — no "Steam Big Picture" ela dura o launch do
+      #    Steam inteiro. Religar dentro dela é o lockout remoto de 03/08 de novo.
+      paused=$(systemctl --user show hypridle.service -p InactiveEnterTimestampMonotonic --value)
+      now=$(awk '{printf "%d", $1 * 1000000}' /proc/uptime)
+      if [ "$paused" -gt 0 ] && [ "$((now - paused))" -lt 120000000 ]; then exit 0; fi
+
+      # 4) Stream de verdade? UDP de vídeo bound, ou TCP de controle ESTABELECIDO com
+      #    peer não-loopback (cobre a janela de setup, antes do vídeo subir; o loopback
+      #    sai fora porque o sunshine-healthcheck abre uma na 47984 a cada 2 min).
+      #    Filtro do próprio ss, SEM PIPE pro grep: `set -o pipefail` + `grep -q` que
+      #    sai no 1º match dá SIGPIPE e inverte o resultado — a lição do sunshineHealth.
+      #    `not dst X` e NÃO `dst != X`: o segundo parece natural e o parser do ss
+      #    rejeita com "bison bellows (syntax error)". Testado em 10/08/2026.
+      [ -z "$(ss -uanH "sport >= :${sp 9} and sport <= :${sp 11}")" ] || exit 0
+      [ -z "$(ss -tanH state established "( sport = :${sp (-5)} or sport = :${sp 21} ) and not dst 127.0.0.0/8 and not dst [::1]")" ] || exit 0
+
+      echo "<4>hypridle parado sem stream ativo — religando (o undo do Sunshine não rodou)"
+      rm -f "$stamp"
+      systemctl --user start hypridle.service
+    '';
+  };
 
   # sunshine-health: handshake TLS de verdade na 47984. `-brief` imprime "Protocol
   # version:" só quando o handshake COMPLETA — é o sinal; TCP aceito não basta, foi
@@ -431,6 +500,16 @@ in
     };
   };
 
+  # Watchdog do guard de idle — ver o bloco `hypridleGuard` acima para o incidente.
+  systemd.user.services.hypridle-guard = lib.mkIf config.my.services.sunshine {
+    description = "Religa o hypridle se o guard do Sunshine o deixou parado sem stream";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${hypridleGuard}/bin/hypridle-guard";
+      LogLevelMax = "warning"; # mesmo motivo do healthcheck: sem Starting/Finished
+    };
+  };
+
   # ── Acesso pela internet, sem VPN, restrito à UFSCar ────────────────────────
   # A outra metade disto mora NO ROTEADOR (redirects `Moonlight-*`), que o Nix não
   # alcança — ver o cabeçalho de ../net/router.nix. Esta regra sozinha não expõe nada:
@@ -465,6 +544,18 @@ in
       OnUnitActiveSec = "2min";
     };
     partOf = [ "graphical-session.target" ]; # sem sessão não há Sunshine p/ checar
+    wantedBy = [ "graphical-session.target" ];
+  };
+
+  # 5min e não 2: o idle tranca aos 5min de qualquer forma, então resolução mais fina
+  # não compra nada — e o custo de religar tarde é ínfimo perto de religar cedo demais.
+  systemd.user.timers.hypridle-guard = lib.mkIf config.my.services.sunshine {
+    description = "Verificação periódica do guard de idle do Sunshine";
+    timerConfig = {
+      OnActiveSec = "5min";
+      OnUnitActiveSec = "5min";
+    };
+    partOf = [ "graphical-session.target" ];
     wantedBy = [ "graphical-session.target" ];
   };
 }

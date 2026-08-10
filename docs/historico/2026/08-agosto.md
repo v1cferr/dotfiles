@@ -1,6 +1,77 @@
 # Histórico — agosto de 2026
 
-43 entradas. Índice em [README.md](../README.md).
+45 entradas. Índice em [README.md](../README.md).
+
+- [x] Moonlight sem VPN: port-forward direto, restrito à UFSCar (10/08/2026) — o pedido era
+      "conectar no Sunshine de fora sem entrar na VPN, e direto, sem servidores
+      intermediários". A segunda metade do pedido já era verdade e ninguém sabia.
+      • ⚠️ A PREMISSA ESTAVA ERRADA, e vale mais que a implementação: **o WireGuard não é um
+        servidor intermediário**. O endpoint dele é o PRÓPRIO roteador de casa, então túnel e
+        port-forward percorrem exatamente `UFSCar → internet → 177.52.84.188`. Não havia rota
+        alternativa a eliminar. Isso ERA risco no Tailscale (podia cair no DERP), e saiu junto
+        com ele em 08/08 — o medo sobreviveu à causa. Não reescrever isto como ganho de rota.
+      • O QUE SE GANHA DE VERDADE é MTU: 1492 da PPPoE contra ~1420 do túnel. Latência é ruído.
+      • O QUE MOTIVA MESMO ASSIM, e é bom motivo: o notebook da FAI já roda nxBender +
+        openconnect. Somar um terceiro cliente de VPN ali é conflito de rota esperando
+        acontecer — o dono recusou instalar WireGuard por isso, e está certo.
+      • PORTAS CONFERIDAS NO BINÁRIO, não em blog: lidos os offsets do web UI do build em uso
+        (2026.516.143833, `assets/web/assets/config-*.js`) — tcp `port-5`/`port`/`port+1`/
+        `port+21`, udp `port+9`…`port+11`. Quase toda lista na internet inclui uma **UDP 48002
+        ("mic") que NÃO EXISTE nesta versão**. São três portas UDP, não quatro.
+      • A 47990 (painel admin) ficou DE FORA das duas listas de propósito. O
+        `origin_web_ui_allowed = "wan"` só é seguro porque ela não é encaminhada — e o
+        comentário que justificava aquele valor ("só a faixa do WireGuard chega nesta porta")
+        deixou de ser verdade hoje e foi reescrito.
+      • DUAS TRANCAS, e o `-s` do host não é redundante com o `src_ip` do roteador: é a que
+        sobrevive a alguém mexer no LuCI sem ler o repo. As listas TÊM que casar — divergir dá
+        "roteador encaminha, host derruba", sintoma indistinguível de qualquer outra falha.
+      • ⚠️ RESTRIÇÃO NOVA que a mudança criou: `packet_size` é GLOBAL e agora serve dois
+        caminhos de MTU diferente. O teto útil vira o do MENOR (o túnel), então 1024 deixou de
+        ser conservadorismo e virou trava. Só destrava se o túnel for aposentado.
+      • CRIPTOGRAFIA não regride, e isso não era óbvio: o Sunshine classifica cliente por IP.
+        Pelo túnel chega 10.10.10.x = LAN → `lan_encryption_mode = 0` (o túnel cifra). Direto
+        chega público = WAN → `wan_encryption_mode = 1`, ligado por default.
+      • ✅ VALIDADO NO MESMO DIA, com sessão real de 21m58s + 9min. Medições e método completos
+        em [testes/moonlight-direto.md](../../testes/moonlight-direto.md); o essencial:
+        0% de perda em 100 pacotes de 1 KB, RTT 35,5 ms, jitter 0,54 ms. A prova de que a
+        sessão funciona de ponta a ponta foi o próprio Claude passar a rodar SEM `SSH_CLIENT`
+        e com `DISPLAY=:0` — dentro da sessão gráfica sendo streamada.
+      • O UDP PASSA, e o método de prova vale guardar: o contador de DNAT do roteador marcou
+        `Moonlight-Stream-Campus → packets 3`. Esse contador só conta o PRIMEIRO pacote de
+        cada fluxo novo (depois o conntrack desvia do dstnat), então 3 = exatamente vídeo
+        47998 + áudio 47999 + controle 48000. Depois da reconexão virou 6 — que é como se
+        confirmou que houve UMA reconexão, e não várias.
+      • ⚠️ `ping_timeout = 20000` SALVOU UMA SESSÃO POR 1,1 s: buraco de 18,9 s às 11:47, e a
+        sessão não caiu. A prova é indireta e vale como método — o guard do hypridle NÃO
+        ciclou (um `Stopped` às 11:25, nenhum `Started` às 11:47), ou seja o `undo` do
+        prep-cmd nunca rodou, logo o Sunshine não desmontou a sessão. Nada piscou do lado de
+        casa: o buraco foi do lado da UFSCar.
+      • A ROTA, medida e com os donos por RDAP: roteador → Algar (AS16735) → IX.br/NIC.br
+        (AS26162) → RNP (AS1916) → UFSCar (AS52888). Quatro sistemas autônomos, e NENHUM é
+        servidor intermediário — todos encaminham pacote, nenhum termina a conexão. IX.br e
+        RNP não são removíveis: a internet da UFSCar vem da RNP. É a resposta empírica ao
+        pedido de "sem servidores intermediários", e confirma que o túnel também não tinha.
+      • LATÊNCIA: ruído, como previsto. Os 35 ms são do caminho físico, que o túnel percorria
+        igual. Registrado explicitamente para ninguém atribuir ganho a isto depois.
+
+- [x] ~~CGNAT~~ o item morto que sobreviveu à própria correção (10/08/2026) — a entrada de
+      07/08 em `docs/pendencias.md` ("NÃO HÁ ENTRADA … NENHUMA regra de port forward pode
+      funcionar") continuou lá por três dias DEPOIS de a entrada de 08/08 deste arquivo já a
+      ter desmentido inteira. Apagada.
+      • O CUSTO NÃO FOI TEÓRICO: ela é a primeira coisa que se lê ao perguntar "dá pra expor
+        porta?", e a resposta que ela dá é "não, desista". O trabalho de hoje começou tendo
+        que provar que a doc do próprio repo estava errada.
+      • REPROVADO HOJE, com método que não mente (ponto externo independente, não a rede da
+        FAI): `check-host.net` de Áustria, Canadá e Irã conecta na 2222 de `177.52.84.188`.
+        Controle na mesma ferramenta: a 47984 dava `Connection refused` antes das redirects —
+        é o que torna o positivo interpretável em vez de só otimista.
+      • ⚠️ E O TRACEROUTE CONTINUA PARECENDO CGNAT: saltos 2-4 em `172.31.x` e o 5 em
+        `100.127.255.225`, que é faixa `100.64/10` — a faixa DEFINIDA pra CGNAT. Ainda assim
+        não é: é transporte interno da operadora. Este é exatamente o instrumento que enganou
+        em 07/08, ele não melhorou, e quem repetir a leitura vai errar de novo.
+      • A LIÇÃO DE PROCESSO: corrigir no histórico não corrige a pendência. Item revertido tem
+        que morrer nos DOIS lugares no mesmo commit, senão o repo passa a ter duas respostas e
+        a errada é a que está no arquivo que as pessoas leem primeiro.
 
 - [x] Auth keys do Tailscale revogadas — a exposição de 05/08 fechou (09/08/2026)
       O `.env` órfão na raiz do repo guardava `TAILSCALE=tskey-auth-kLXAR6…` em texto

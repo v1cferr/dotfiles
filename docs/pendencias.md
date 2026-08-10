@@ -6,15 +6,27 @@ este arquivo só cresce com trabalho novo, e encolhe quando trabalho termina.
 Convenção herdada do arquivo único: cada item explica o QUE, o PORQUÊ e a
 armadilha conhecida. Vale mais o parágrafo do que o título.
 
-- [ ] TESTE DE SEGUNDA, 10/08/2026 — MTU do túnel + Moonlight, na UFSCar com o notebook da
-      FAI. Protocolo em [testes/wireguard-moonlight.md](testes/wireguard-moonlight.md).
+- [ ] HEVC/AV1 no cliente Moonlight do notebook da FAI (aberto em 10/08/2026) — medido na
+      sessão real de hoje: o cliente negocia `h264_vaapi` 8-bit Rec.601, o codec MENOS
+      eficiente, enquanto o host anuncia `hevc_vaapi` E `av1_vaapi` em 10-bit.
+      • É o MAIOR ganho de qualidade disponível hoje, e não custa banda: nos mesmos 16,8 Mbps
+        já negociados, HEVC/AV1 rendem ~40-50% mais por bit.
+      • ⚠️ NÃO TEM CONSERTO NESTE REPO, e é por isso que vira pendência em vez de commit: o
+        encoder é NEGOCIADO e quem escolhe é o cliente. O `hevc_mode`/`av1_mode` do host só
+        ANUNCIA suporte, e já anuncia. É caixa de seleção nas configurações do Moonlight.
+      • Confirma a nota de 03/08/2026 em system/services/sunshine.nix, que previu exatamente
+        isto. Fechar o item = trocar no cliente e conferir no journal que subiu o encoder.
+
+- [ ] MTU do túnel — medir e anotar (herdado do teste de 10/08/2026). Protocolo em
+      [testes/wireguard-moonlight.md](testes/wireguard-moonlight.md).
       • Impossível testar de casa: não há interface WireGuard nesta máquina (o túnel termina
         no ROTEADOR), então ping pro 10.10.10.1 sai pelo cabo e mede a LAN. Sinal de teste
         inválido: latência de ~0,3 ms.
-      • O que sai dali: o número que decide se o `packet_size = 1024` do sunshine.nix pode
-        subir. Ele foi calibrado pra MTU 1280 da antiga tailscale0; o WireGuard fica em ~1420.
-      • ⚠️ Não subir direto pro teto: estourar a MTU faz o WireGuard descartar em SILÊNCIO
-        (sem ICMP, sem log) e o cliente cai em ~4 s. Foi o bug de 29/07/2026.
+      • ⚠️ MUDOU DE VALOR EM 10/08/2026, e é preciso dizer por quê: este teste existia pra
+        decidir se o `packet_size = 1024` podia subir. Não pode mais — com o caminho direto
+        no ar, o valor é GLOBAL e serve DOIS caminhos de MTU diferente (túnel ~1420, direto
+        1492), então o teto útil é o do menor. O número só volta a ser acionável se o túnel
+        for aposentado. Medir mesmo assim vale: é o que diz QUAL dos dois é o menor.
 
 - [~] Tray: CLIQUE já funcionava (30/07) — o delegate do Bar.qml tem esquerda `activate()`,
       meio `secondaryActivate()`, direita abrindo o menu SNI nativo (TrayMenu) e roda com
@@ -78,42 +90,6 @@ armadilha conhecida. Vale mais o parágrafo do que o título.
       e deu 0, o que é FALSO — app que registra com nome único (`:1.82`) não casa esse padrão.
       A fonte autoritativa é a propriedade `RegisteredStatusNotifierItems` do watcher (é o que
       o tray-native-menu lê): 3 itens.
-
-- [ ] CGNAT: NÃO HÁ ENTRADA (07/08/2026) — o achado que invalida a premissa do ingress. A
-      operadora não me dá IP público: o traceroute sai por `172.31.43.240` → `172.31.43.61` →
-      `172.31.38.22`, três saltos em RFC 1918. O `177.52.84.188` que o ipify/DDNS reportam é o
-      NAT COMPARTILHADO dela, não meu — e por isso NENHUMA regra de port forward pode funcionar:
-      o roteador não possui o endereço que ela tentaria expor.
-      • MEDIDO de fora, da workstation da FAI (200.136.209.229) por SSH sobre a VPN: portas 80,
-        443 e 2222 TODAS filtradas. Controles que descartam as outras hipóteses: a FAI deixa sair
-        443 (example.com → 200) e o DNS resolve certo de lá (`pos.v1cferr.dev` → 177.52.84.188).
-        Ou seja, o wildcard e o DDNS estão CORRETOS — o que falta é caminho de entrada.
-      • ⚠️ A LIÇÃO, e é a SEGUNDA VEZ NO MESMO DIA que caio nela: de dentro da própria LAN o
-        teste MENTE. `curl` no IP público de casa devolve 200 e a porta 443 "abre", porque a
-        operadora faz hairpin pro cliente interno. Foi o mesmo erro do DNS (o `dig` dava IP
-        privado porque o roteador sequestra a 53). REGRA: conectividade externa só se prova de
-        um ponto FORA DA REDE — DoH pra DNS, host externo pra porta. Nada medido de casa vale.
-      • Isto explica o `ssh.v1cferr.dev` "não funciona de fora" que estava aberto há tempo. Nunca
-        foi DNS, nunca foi o token do sops, nunca foi o wildcard. Não existe rota de entrada.
-      • O `cloudflare-dyndns` publica fielmente um IP que NÃO É MEU e é dividido com outros
-        clientes da operadora — e o wildcard agora aponta tudo pra lá. Não é perigoso, mas é um
-        registro que não descreve a realidade. Revisar junto com a decisão abaixo.
-      • CONSEQUÊNCIA DE SEGURANÇA (por ora, boa): `jellyfin` e `torrent`, que o Caddyfile deixa
-        sem gate externo de propósito, NÃO estão expostos — nada da internet os alcança. A
-        exposição declarada é hoje teórica. Isso muda no minuto em que houver entrada.
-      • CAMINHO RECOMENDADO: (1) ligar pra operadora e pedir IP público — é grátis e, se sair,
-        o desenho atual volta a valer sem mudar nada; (2) Tailscale pro que é meu (duo/ai/
-        jellyfin/torrent) — já funciona, atravessa CGNAT, sem terceiros no caminho; (3)
-        `services.cloudflared` (o módulo existe no nixpkgs) SÓ pro `pos`, que é o único que
-        precisa de público de verdade (o JP não vai instalar Tailscale). Não tunelar mídia: o
-        ToS da Cloudflare restringe streaming de vídeo desproporcional pelo CDN.
-      • ⚠️⚠️ ARMADILHA DO TUNNEL, ler ANTES de implementar: o `@externo` confia em `127.0.0.1/8`,
-        e o `cloudflared` entrega no Caddy PELO LOOPBACK. Do jeito que está, todo tráfego do
-        tunnel chegaria como INTERNO: o `pos` pularia o basic_auth e o `duo`/`ai` perderiam o
-        403 — abertos pra internet, em silêncio, sem nada falhar. Exige `trusted_proxies` + IP
-        real via `CF-Connecting-IP`, ou entregar num endereço fora da lista de confiança.
-      • Pro Tailscale há um análogo: `*.v1cferr.dev` só resolve pra 192.168.1.10 DENTRO de casa.
-        De fora, pela tailnet, ou split-DNS no admin do Tailscale ou usar os nomes `.ts.net`.
 
 - [ ] VS Code: o language server do `kamikillerto.vscode-colorize` aborta em loop
       (achado em 09/08/2026) — 15 coredumps em 2 dias, ~a cada 6-30 min de sessão. NÃO é

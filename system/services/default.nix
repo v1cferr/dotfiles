@@ -13,6 +13,7 @@
     ./ollama.nix # runtime de IA local (CPU); solver do duo-streak-daemon
     ./duo.nix # stack do duo-streak-daemon (compose declarativo; auto-ativa com o segredo)
     ./grad-radar.nix # stack do GradRadar no boot + timer do monitor de editais
+    ./docker.nix # poda semanal da engine (só a POLÍTICA; quem liga docker são os stacks)
     ./sunshine.nix # streaming de tela remoto (Moonlight); captura KMS, acesso só pelo WireGuard
   ];
 }

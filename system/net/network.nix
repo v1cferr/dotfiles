@@ -14,9 +14,16 @@
   # pela LAN com origem 10.10.10.x, e a confiança precisa ser por ORIGEM.
   #
   # Isto SUBSTITUI o `trustedInterfaces = [ "tailscale0" ]` que morreu junto com o
-  # Tailscale (08/08/2026), e é o que mantém o Sunshine alcançável: ele roda com
-  # `openFirewall = false` de propósito, então SEM esta regra ele fica inacessível de
-  # todo lugar — inclusive de casa. Quem apagar isto tem que abrir as portas dele.
+  # Tailscale (08/08/2026), e é o que mantém o Sunshine alcançável PELO TÚNEL: ele roda
+  # com `openFirewall = false` de propósito. Quem apagar isto tem que abrir as portas
+  # dele.
+  #
+  # NÃO é mais o único caminho, e a frase anterior ("sem esta regra ele fica inacessível
+  # de todo lugar") caducou em 10/08/2026: o acesso direto da UFSCar, sem VPN, tem
+  # regras próprias em ../services/sunshine.nix. As duas coexistem de propósito — esta
+  # cobre celular e qualquer peer novo; a de lá cobre o notebook da FAI, onde somar um
+  # terceiro cliente de VPN seria conflito de rota. Apagar esta aqui NÃO derruba o
+  # Moonlight da UFSCar, e apagar a de lá NÃO derruba o do túnel.
   #
   # `-I nixos-fw 1` e não `-A`. ⚠️ CORREÇÃO (08/08/2026): este comentário dizia que
   # "a cadeia termina num refuse, então `-A` nunca é alcançada", e isso é FALSO para

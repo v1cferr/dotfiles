@@ -16,8 +16,10 @@
 # só por "adicionar por IP" na mão.
 #
 # ⚠️ `openFirewall = false` CONTRA o default do módulo, e o motivo NÃO é a
-# internet: o roteador só encaminha 80/443/2222, então o mundo nunca alcançou a
-# 53317. Quem alcançaria é a VPN — `openFirewall` abre a porta em TODA interface,
+# internet: o roteador encaminha 80/443/2222 e as portas do Moonlight (47984,
+# 47989, 48010/tcp + 47998-48000/udp, estas restritas à UFSCar desde 10/08/2026),
+# e a 53317 não está em nenhuma dessas listas — o mundo nunca a alcançou.
+# Quem alcançaria é a VPN — `openFirewall` abre a porta em TODA interface,
 # e com o túnel da FAI de pé (`ppp0`) a rede corporativa inteira passaria a ver o
 # serviço e a ler o `/info` (nome do dispositivo, modelo, fingerprint) sem
 # autenticação nenhuma. A confiança aqui é por ORIGEM, igual à regra do Sunshine

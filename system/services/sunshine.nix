@@ -1,10 +1,28 @@
 # Sunshine — servidor de streaming de tela/desktop remoto (cliente = Moonlight). É
 # a forma recomendada de acesso remoto no Hyprland/Wayland: captura via wlr-screencopy
 # (o `wlr`, auto-selecionado) e encoda na GPU. O Arc B580 tem encoder AV1/HEVC (VA-API)
-# → stream fluido e de baixa latência. Chega-se no Sunshine PELO WIREGUARD do roteador,
-# não pela LAN nem pela internet: `openFirewall = false` mantém as portas fechadas, e
-# quem abre é a regra de origem 10.10.10.0/24 em ../net/network.nix. Era Tailscale até
-# 08/08/2026 — a troca está registrada em docs/historico/2026/08-agosto.md.
+# → stream fluido e de baixa latência. Era Tailscale até 08/08/2026 — a troca está
+# registrada em docs/historico/2026/08-agosto.md.
+#
+# COMO SE CHEGA AQUI — DOIS caminhos desde 10/08/2026, e `openFirewall = false`
+# continua valendo nos dois (nenhum deles abre porta em toda interface):
+#   1. WireGuard do roteador — regra de origem 10.10.10.0/24 em ../net/network.nix.
+#   2. INTERNET, direto, restrito aos blocos da UFSCar — as regras no fim deste
+#      arquivo, mais as redirects `Moonlight-*` no roteador (router/uci/firewall.conf).
+# O caminho 2 existe porque o notebook da FAI já roda nxBender + openconnect, e somar
+# um terceiro cliente de VPN ali é conflito de rota esperando acontecer.
+#
+# ⚠️ O caminho 2 NÃO é "mais direto" que o 1, e essa era a premissa que o motivou: o
+# endpoint do WireGuard é o PRÓPRIO roteador de casa, então os dois percorrem UFSCar →
+# internet → 177.52.84.188. Não há relay (isso era risco do Tailscale, que saiu). O que
+# o caminho 2 ganha de verdade é MTU — 1492 da PPPoE contra 1420 do túnel — e o que ele
+# ganha em latência é ruído. Não reescrever isto como ganho de rota.
+#
+# CRIPTOGRAFIA, e o motivo de não ser um downgrade: o Sunshine classifica o cliente por
+# IP. Pelo túnel ele chega como 10.10.10.x = LAN → `lan_encryption_mode = 0` (o túnel já
+# cifra). Pela internet ele chega público = WAN → `wan_encryption_mode = 1`, que é o
+# default e fica LIGADO. Não mexer nesses dois: são o que impede o caminho 2 de streamar
+# em claro.
 #
 # APRENDIZADO (jul/2026, debug longo): "tela preta no Moonlight" era o wlr capturando o
 # monitor DPMS-OFF (apagado) — NÃO regressão de versão nem encoder. Captura funciona
@@ -32,6 +50,74 @@
 }:
 
 let
+  # ── Portas, e de onde se aceita chegar nelas ───────────────────────────────
+  # DERIVADAS da base com os MESMOS offsets que o próprio Sunshine usa pra montar a
+  # tabela de portas do web UI. Lidos do build em uso (2026.516.143833), em
+  # `assets/web/assets/config-*.js`: tcp `port-5`, `port`, `port+1`, `port+21` e udp
+  # `port+9`…`port+11`. Escrever os números à mão seria copiar de blog, e blog erra:
+  # quase toda lista na internet inclui uma UDP 48002 ("mic") que NÃO EXISTE nesta
+  # versão — são três portas UDP, não quatro. Conferir no js do store ao atualizar.
+  basePort = 47989; # o `port` do Sunshine; mover isto move todas as outras
+  sp = n: toString (basePort + n);
+
+  # O que o Moonlight precisa alcançar — e o que ele NÃO precisa. A `port+1` (47990) é
+  # o PAINEL ADMIN e está fora desta lista DE PROPÓSITO: ela nunca sai de casa. Quem a
+  # adicionar aqui publica na internet a tela que cria usuário e pareia cliente.
+  moonlightPorts = [
+    {
+      proto = "tcp";
+      dport = sp (-5);
+    } # 47984 — HTTPS: é por aqui que host JÁ PAREADO entra
+    {
+      proto = "tcp";
+      dport = sp 0;
+    } # 47989 — HTTP: /serverinfo e o pareamento por PIN
+    {
+      proto = "tcp";
+      dport = sp 21;
+    } # 48010 — RTSP: negociação da sessão
+    {
+      proto = "udp";
+      dport = "${sp 9}:${sp 11}";
+    } # 47998-48000 — vídeo, áudio e controle
+  ];
+
+  # De ONDE se aceita. Blocos públicos da UFSCar, confirmados no registro.br em
+  # 10/08/2026 (ambos registrados sob o CNPJ 45.358.058/0001-40).
+  #
+  # ⚠️ NÃO trocar por `0.0.0.0/0` "pra funcionar de qualquer lugar". A casa NÃO está
+  # atrás de CGNAT — medido em 10/08/2026, a 2222 responde de Áustria, Canadá e Irã —
+  # então `0.0.0.0/0` aqui significa literalmente o planeta. O que estas portas
+  # entregam a quem as alcança é o `/serverinfo` SEM autenticação nenhuma: hostname,
+  # GPU, lista de apps e se há sessão ativa. Parear ainda exige o PIN digitado no
+  # host; inventariar a máquina não exige nada.
+  #
+  # Literal, e não opção em ../net/subnets.nix, porque a regra 11 pede 2+ consumidores
+  # e aqui o consumidor é UM. Mas há um espelho a manter em sincronia à mão: o
+  # `src_ip` das redirects `Moonlight-*` em router/uci/firewall.conf. Se as duas listas
+  # divergirem, o roteador encaminha e o host derruba — e o sintoma é "Moonlight não
+  # conecta", que é indistinguível de tudo o mais.
+  #
+  # OS DOIS BLOCOS NÃO VALEM O MESMO, e isso está medido (docs/historico/2026/08-agosto.md,
+  # entrada do falso alarme de CGNAT): a rede da FAI DESCARTA O SYN-ACK de volta — o SYN
+  # sai de lá, chega aqui, o host responde, o conntrack do roteador fica em `SYN_RECV` e o
+  # ACK final nunca volta. Ou seja, do /21 a conexão pode simplesmente não fechar, e não há
+  # nada deste lado que conserte isso. O /20 (campus) PASSA — provado pela sessão SSH de
+  # 10/08/2026, vinda de 200.133.233.101. O /21 fica na lista mesmo assim: custa uma regra,
+  # e o bloqueio é do firewall DELES, que pode mudar sem aviso.
+  moonlightSources = [
+    "200.133.224.0/20" # UFSCar — campus. É por aqui que o notebook sai hoje, e FUNCIONA
+    "200.136.192.0/21" # UFSCar — faixa da FAI. Ver acima: pode não fechar conexão
+  ];
+
+  # Produto origem × porta = 8 regras. GERADO e não escrito à mão porque a lista do
+  # stop tem que casar EXATAMENTE com a do start: regra que não casa não é removida no
+  # reload e empilha duplicata a cada rebuild. Escrever 16 linhas espelhadas na mão é
+  # exatamente o jeito de deixar uma para trás.
+  fwMatches = lib.concatMap (
+    src: map (p: "-s ${src} -p ${p.proto} --dport ${p.dport}") moonlightPorts
+  ) moonlightSources;
+
   # Início do stream: para o hypridle p/ a sessão remota não TRANCAR no meio por idle.
   # `|| true`: um prep-cmd que falha cancelaria o stream no Sunshine.
   streamBegin = pkgs.writeShellScript "sunshine-stream-begin" ''
@@ -173,9 +259,16 @@ in
       # depende da ordem de enumeração, que é justamente o que deu errado aqui.
       output_name = config.my.monitors.primary; # SSOT: system/desktop/monitors.nix
       # "wan" e não "lan": mantido no valor mais permissivo DE PROPÓSITO, porque quem
-      # decide o alcance aqui é o firewall, não o Sunshine — só a faixa do WireGuard
-      # chega nesta porta. Apertar isto ganharia nada e arrisca quebrar o web UI em
-      # silêncio (o stream não usa CSRF, então o sintoma só aparece ao abrir o painel).
+      # decide o alcance aqui é o firewall, não o Sunshine. Apertar isto ganharia nada
+      # e arrisca quebrar o web UI em silêncio (o stream não usa CSRF, então o sintoma
+      # só aparece ao abrir o painel).
+      #
+      # ⚠️ ISTO SÓ CONTINUA SEGURO ENQUANTO A 47990 NÃO FOR ENCAMINHADA. Até 10/08/2026
+      # a frase aqui era "só a faixa do WireGuard chega nesta porta", e ela deixou de
+      # ser verdade no dia em que o acesso direto entrou: agora chega também a UFSCar,
+      # nas portas de STREAM. A 47990 ficou de fora das duas listas (`moonlightPorts`
+      # no topo e as redirects do roteador) justamente porque este valor é "wan" —
+      # encaminhá-la publicaria o painel admin sem gate nenhum.
       origin_web_ui_allowed = "wan";
       # CSRF: libera a origem pela qual o painel é aberto. Sem isto, criar o
       # usuário/salvar pelo web UI é bloqueado quando o host != localhost.
@@ -195,6 +288,15 @@ in
       # 1280). MANTIDO em 1024 na troca pro WireGuard (MTU ~1420) mesmo sobrando espaço:
       # é valor PROVADO, e subir seria otimização sem medição correndo o risco de
       # reintroduzir exatamente o bug silencioso que custou aquele debug.
+      #
+      # ⚠️ DESDE 10/08/2026 ISTO ESTÁ TRAVADO EM 1024, e não é mais conservadorismo — é
+      # restrição. Este valor é GLOBAL, um só para todos os clientes, e agora existem dois
+      # caminhos com MTU DIFERENTE: o túnel (~1420) e o direto da UFSCar (1492 da PPPoE).
+      # Quem calibrar para o caminho direto quebra o do túnel, e quebra do jeito pior que
+      # este arquivo já documenta: o WireGuard descarta em SILÊNCIO, sem ICMP e sem log, e
+      # o cliente cai em ~4 s. O teto útil é o do MENOR caminho, sempre.
+      # Só faz sentido subir se o caminho do túnel for APOSENTADO — e aí o número a mirar
+      # é o do teste em docs/testes/wireguard-moonlight.md, não um chute.
       packet_size = 1024;
       # TETO DE BITRATE no host. O default é 0 = "obedece o que o Moonlight pedir", e o
       # cliente pedia até 79 Mbps: medindo as 67 sessões de 7 dias (jul/2026), as de
@@ -327,6 +429,29 @@ in
       # continuam visíveis, que é o que importa investigar.
       LogLevelMax = "warning";
     };
+  };
+
+  # ── Acesso pela internet, sem VPN, restrito à UFSCar ────────────────────────
+  # A outra metade disto mora NO ROTEADOR (redirects `Moonlight-*`), que o Nix não
+  # alcança — ver o cabeçalho de ../net/router.nix. Esta regra sozinha não expõe nada:
+  # sem o DNAT lá, nenhum pacote da internet chega nestas portas. É por isso que ela
+  # pode entrar ANTES, e é a ordem certa — o inverso deixaria o roteador encaminhando
+  # pra um host que rejeita.
+  #
+  # O `-s` NÃO é redundante com o `src_ip` do roteador: é a segunda tranca, e a que
+  # sobrevive a alguém mexer no LuCI sem olhar este arquivo.
+  #
+  # `-I nixos-fw 1`: mesmo idioma e mesmo motivo da regra do LocalSend em
+  # ../net/localsend.nix — `-A` funcionaria no extraCommands de hoje, mas `-I 1` não
+  # depende de onde o upstream decide injetá-lo amanhã.
+  networking.firewall = lib.mkIf config.my.services.sunshine {
+    extraCommands = lib.concatMapStringsSep "\n" (
+      m: "iptables -I nixos-fw 1 ${m} -j nixos-fw-accept"
+    ) fwMatches;
+    # Sem isto, `reload` do firewall empilha duplicatas das regras acima.
+    extraStopCommands = lib.concatMapStringsSep "\n" (
+      m: "iptables -D nixos-fw ${m} -j nixos-fw-accept 2>/dev/null || true"
+    ) fwMatches;
   };
 
   # Diagnóstico fica no system/ junto do que ele diagnostica (o healthcheck acima mora

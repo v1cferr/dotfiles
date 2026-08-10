@@ -5,12 +5,51 @@
 > [`system/core/secureboot.nix`](../../system/core/secureboot.nix) — este aqui é só a
 > sequência da noite. Runbook cumprido que fica no repo vira mentira depois.
 
-O código já está commitado e o `nixos-rebuild build` passa. **Nada foi aplicado.**
+## ONDE ISTO PAROU (aferido em 09/08/2026)
+
+**Fases 0 a 3 estão FEITAS. Falta só a Fase 4 — ligar o Secure Boot na BIOS.**
+
+| Fase | Estado | Como foi aferido |
+| --- | --- | --- |
+| 0 — BitLocker off | ✅ | `lsblk` mostra o volume do Windows como `ntfs`, não `BitLocker` |
+| 1 — GRUB + `create-keys` | ✅ | `/var/lib/sbctl/keys` existe (02/08 03:07) |
+| 2 — Setup Mode | ✅ (e já saiu) | `SetupMode = 0` |
+| 3 — `enroll-keys -m` | ✅ | `PK`/`KEK`/`db` são as chaves do sbctl (val. 02/08/2026→02/08/2031) e o `db` traz os CAs da Microsoft de 2011 **e** 2023 |
+| 4 — **ligar o SB** | ❌ | `SecureBoot = 0` — a firmware está em User Mode com as chaves certas, só com o SB desligado |
+
+Aferir de novo sem root, a qualquer momento:
+
+```bash
+cd /sys/firmware/efi/efivars
+od -An -tu1 SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c   # 5º byte: 1 = ligado
+od -An -tu1 SetupMode-8be4df61-93ca-11d2-aa0d-00e098032b8c    # 5º byte: 0 = chaves enroladas
+```
+
+> O histórico de 02/08 marcou "Secure Boot ligado nos dois SOs" como concluído — **não
+> estava**. As chaves entraram, mas o SB nunca chegou a ser ligado depois do
+> `grub rescue>` daquela noite.
+
+Antes de ir pra Fase 4, faça o pré-voo — é exatamente o que queimou em 02/08:
+
+```bash
+sudo sbctl status && sudo sbctl verify
+ls -la /boot/EFI/NixOS-boot/grubx64.efi   # ≥ ~1,5 MB = os 47 módulos estão embutidos
+```
+
+O `verify` vai reclamar de `/boot/EFI/BOOT/BOOTX64.EFI`: é ruído esperado (systemd-boot
+já apagado, sobrou no banco do sbctl — ver a limpeza no fim deste arquivo). Não aborte
+por causa dele.
 
 ## O que pode dar errado, e por que não é grave
 
-O NixOS boota do Kingston (`nvme0n1`) e o Windows do SanDisk (`sdb`) — ESPs
+O NixOS boota do Kingston (`nvme0n1`) e o Windows do SanDisk (`sda`) — ESPs
 separadas, em discos separados. Nenhum passo aqui escreve no disco do outro.
+
+> ⚠️ **As letras `sd*` trocam entre boots.** Em 09/08/2026 a SanDisk era `sda` e o
+> Seagate velho (com a raiz do NixOS morto) era `sdb` — o inverso do que este guia
+> dizia antes. **Confira sempre pelo modelo, nunca pela letra:** `lsblk -d -o
+> NAME,MODEL`. A entrada do GRUB é imune a isso (casa por UUID), mas quem confere
+> o disco errado "corrige" o `boot.nix` pro UUID errado e quebra o menu em silêncio.
 
 O pior caso realista é a firmware recusar o GRUB por falta de assinatura, e a saída
 é sempre a mesma: **desligar o Secure Boot na BIOS**. Não existe tijolo neste
@@ -69,11 +108,11 @@ sempre aparece no arquivo. O que precisa ser conferido é se o UUID ainda bate:
 
 ```bash
 sudo grep -A5 'menuentry "Windows 11"' /boot/grub/grub.cfg
-lsblk -o NAME,LABEL,UUID /dev/sdb    # sdb1 tem que ser 904C-B9D0
+lsblk -o NAME,MODEL,LABEL,UUID       # a ESP da SanDisk tem que ser 904C-B9D0
 sbctl verify                          # o grubx64.efi deve aparecer como assinado
 ```
 
-Se o UUID do `sdb1` **não** for `904C-B9D0`, corrija em
+Se a ESP da SanDisk **não** for `904C-B9D0`, corrija em
 [`system/core/boot.nix`](../../system/core/boot.nix) antes de seguir — a entrada existiria
 no menu e simplesmente não bootaria.
 
@@ -161,7 +200,7 @@ No Windows, `msinfo32` → **Secure Boot State: On**.
 | Firmware não boota nada / "Invalid signature" | O GRUB foi reescrito sem assinatura. **BIOS → Secure Boot: Disabled**, boote, `sudo sbctl sign -s /boot/EFI/*/grubx64.efi`, religue o SB |
 | `prohibited by secure boot policy` + `grub rescue>` | **Aconteceu em 02/08.** A assinatura estava CERTA (a firmware executou o GRUB) — faltavam os módulos embutidos. Resolvido pelo `extraGrubInstallArgs` em [`system/core/boot.nix`](../../system/core/boot.nix); confira que o `rebuild` reinstalou o GRUB |
 | `shim_lock protocol not found` | Falta o `--disable-shim-lock` no `extraGrubInstallArgs`. Sem ele o GRUB exige um shim que não existe aqui, e nem NixOS nem Windows bootam |
-| Windows no menu, mas não boota | O UUID mudou. `lsblk -o NAME,LABEL,UUID /dev/sdb` e corrija o `search --fs-uuid` em [`system/core/boot.nix`](../../system/core/boot.nix) |
+| Windows no menu, mas não boota | O UUID mudou. `lsblk -o NAME,MODEL,LABEL,UUID` (pelo MODELO — a letra troca) e corrija o `search --fs-uuid` em [`system/core/boot.nix`](../../system/core/boot.nix) |
 | Windows pede chave de recuperação | O BitLocker não foi desligado (Fase 0). Sem a chave, `sbctl reset` + SB off devolve o PCR 7 anterior |
 | Arc B580 sem vídeo no POST | `enroll-keys` sem o `-m`. `sudo sbctl reset` na BIOS em Setup Mode e refaça a Fase 3 **com** o `-m` |
 | Não acho "Clear Secure Boot Keys" na BIOS | `Secure Boot Mode` ainda está em `Standard`. Em Standard a ASUS esconde o `Key Management` inteiro |

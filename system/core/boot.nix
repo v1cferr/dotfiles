@@ -2,11 +2,13 @@
 # BOOT — GRUB (UEFI) com tema minegrub, em DUALBOOT com o Windows 11.
 #
 # POR QUE GRUB, e não o systemd-boot que estava aqui até ago/2026: cada sistema tem
-# a SUA ESP, em disco separado — NixOS em `nvme0n1p1` (/boot) e Windows 11 em `sdb1`
-# (SanDisk). O systemd-boot só carrega binário EFI da PRÓPRIA ESP, então ele é
-# incapaz de listar o Windows: trocar de SO viraria F8 no POST toda vez. O GRUB lê
-# as duas. Isso também é o que descarta o lanzaboote (o caminho oficial de Secure
-# Boot no NixOS), que é systemd-boot-only — a assinatura mora em ./secureboot.nix.
+# a SUA ESP, em disco separado — NixOS no Kingston (`nvme0n1p1`, /boot) e Windows 11
+# na ESP da SanDisk (label SYSTEM, UUID 904C-B9D0 — a LETRA `sd*` TROCA entre boots,
+# então identifique por modelo, nunca por `sdX`). O systemd-boot só carrega binário
+# EFI da PRÓPRIA ESP, então ele é incapaz de listar o Windows: trocar de SO viraria
+# F8 no POST toda vez. O GRUB lê as duas. Isso também é o que descarta o
+# lanzaboote (o caminho oficial de Secure Boot no NixOS), que é systemd-boot-only —
+# a assinatura mora em ./secureboot.nix.
 #
 # ⚠️ OS ÍCONES DO TEMA CASAM POR `--class`, NÃO PELO TÍTULO DA ENTRADA. É a única
 # pegadinha real aqui, e ela falha em SILÊNCIO (cai num ícone genérico sem texto):
@@ -59,8 +61,8 @@
     configurationLimit = 10; # gerações no menu (rollback) sem encher a ESP
 
     # OS-PROBER DESLIGADO, Windows fixado à mão logo abaixo. Ele FUNCIONAVA (achou o
-    # `sdb1@/efi/Microsoft/Boot/bootmgfw.efi` de primeira), mas achava DEMAIS: o
-    # Seagate (`sda2`) ainda tem a raiz do NixOS antigo — hoje o disco é só o destino
+    # `bootmgfw.efi` da SanDisk de primeira), mas achava DEMAIS: o
+    # Seagate (ST9320423AS) ainda tem a raiz do NixOS antigo — hoje o disco é só o destino
     # do restic, e o sistema velho continua lá porque não dá pra formatar sem perder
     # os backups. Resultado: uma terceira entrada que boota um sistema morto.
     # Trocar sondagem por UUID resolve isso por CONSTRUÇÃO, e ainda: o switch deixa de

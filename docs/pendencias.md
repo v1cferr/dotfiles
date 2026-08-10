@@ -198,8 +198,17 @@ armadilha conhecida. Vale mais o parágrafo do que o título.
 
 - [ ] Instalar o driver/software do meu mouse Razer Deathadder v2 (adicionar a notificação de quando meu DPI mudar, etc)
 
-- [ ] Adicionar a parte para entrar via SSH sem senha no meu roteador (OpenWRT) e no meu switch (OpenWRT) para poder fazer manutenção remota
-      sem precisar digitar senha
+- [~] Manutenção remota sem senha no roteador e no switch (OpenWrt).
+      • ROTEADOR, feito: o SSH já era por chave (`ssh v1cferr@192.168.1.1` roda em BatchMode),
+        e o que faltava era o `sudo`. Hoje são NOPASSWD `/sbin/reboot`, `/usr/sbin/nft`,
+        `/sbin/uci`, `/etc/init.d/dnsmasq` e `/etc/init.d/firewall` (este entrou em
+        10/08/2026 — justificativa e método no histórico).
+      • DECISÃO A MANTER: comando arbitrário CONTINUA pedindo senha. Ampliar pra `(ALL)
+        NOPASSWD: ALL` seria a mudança que de fato escala privilégio — as atuais não escalam
+        porque o `nft` já dá o mesmo alcance. Só adicionar binário com motivo, um a um.
+      • FALTA o SWITCH, que nunca foi tocado.
+      • ⚠️ NADA DISSO É ESPELHADO: o `router-sync` cobre só `/etc/config/`. Sudoers e chave
+        SSH vivem fora do repo, e o `/home/` do roteador nem sobrevive a `sysupgrade`.
 
 - [ ] Configurar ambos os perfils do Claude (fai.ufscar.br) e do César (imagino que essa configuração esteja no meu backup da home no Google Drive que configuramos antes)
 

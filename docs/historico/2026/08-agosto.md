@@ -1,6 +1,27 @@
 # Histórico — agosto de 2026
 
-45 entradas. Índice em [README.md](../README.md).
+46 entradas. Índice em [README.md](../README.md).
+
+- [x] Roteador: `/etc/init.d/firewall` entra no NOPASSWD (10/08/2026) — o
+      scripts/router-moonlight-forward.sh precisava de senha só pro `reload` do fim, e isso
+      o tornava interativo à toa.
+      • ⚠️ O RISCO INCREMENTAL É ZERO, e é MEDIDO, não suposto — foi isto que destravou a
+        decisão: `/usr/sbin/nft` JÁ era NOPASSWD (confirmado com `sudo -n nft list tables`),
+        e `nft flush ruleset` derruba o firewall inteiro. O poder de desligar o firewall sem
+        senha já existia, por um caminho PIOR. A mudança só torna utilizável o caminho
+        legítimo. Sem essa medição isto teria sido recusado como "escalada de privilégio", e
+        a recusa estaria errada.
+      • MÉTODO, que vale pra qualquer mexida em sudoers: validar com `visudo -c -f` no
+        arquivo CANDIDATO em /tmp, ANTES de encostar no que funciona — sudoers malformado faz
+        o sudo recusar tudo, e o conserto exigiria justamente o root que o sudo daria.
+        Segunda checagem do conjunto (`visudo -c`) depois de instalar, com rollback.
+      • ⚠️ ISTO NÃO É ESPELHADO. O `router-sync` cobre `/etc/config/` e nada mais, então esta
+        entrada é o ÚNICO registro da mudança no repo. O `sysupgrade` preserva
+        `/etc/sudoers.d/` (está nas 38 entradas do keep.d), então ela sobrevive a upgrade —
+        mas não a uma reinstalação limpa.
+      • Estado final: `v1cferr ALL=(ALL) NOPASSWD: /sbin/reboot, /usr/sbin/nft, /sbin/uci,
+        /etc/init.d/dnsmasq, /etc/init.d/firewall`. Comando arbitrário continua pedindo senha
+        (`(ALL) ALL`), que é o certo.
 
 - [x] Moonlight sem VPN: port-forward direto, restrito à UFSCar (10/08/2026) — o pedido era
       "conectar no Sunshine de fora sem entrar na VPN, e direto, sem servidores

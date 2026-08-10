@@ -1,6 +1,41 @@
 # Histórico — agosto de 2026
 
-37 entradas. Índice em [README.md](../README.md).
+41 entradas. Índice em [README.md](../README.md).
+
+- [x] Desligamento de 90 s → ~5 s: o "stop job" era UM app, e não o sistema
+      (09/08/2026) — a queixa era "demora quase 5 min pra desligar". O journal desmentiu o
+      número e entregou o culpado: 90,3 / 90,4 / 90,5 / 90,6 s nos 10 últimos boots. Tempo
+      redondo assim não é trabalho, é TIMEOUT — o `DefaultTimeoutStopSec` default do
+      systemd, 90 s, batendo inteiro, todo boot.
+      • CULPADO ÚNICO e sempre o mesmo: `app-code-*.scope: Stopping timed out. Killing.`.
+        O VS Code roda num scope da SESSÃO DO USUÁRIO (o GLib cria `app-<nome>-<pid>.scope`
+        ao lançar o `.desktop`) e não responde ao SIGTERM. Buscando o padrão no journal
+        inteiro: 8 ocorrências do VS Code e 6 do Chromium antes dele — é comportamento de
+        Electron, não desta máquina. Todo o RESTO (docker, jellyfin, rede, unmounts, swap)
+        para em menos de 2 s, o que fecha a conta: 90 s de shutdown = 88 s de espera.
+      • ONDE ISSO MUDA O DIAGNÓSTICO: o instinto era mexer nos serviços do SISTEMA. Não
+        havia nada lá pra ganhar. O ajuste que resolve é do lado do USUÁRIO — 5 s no
+        `systemd.user`, onde o inquilino é app de desktop e quem ia salvar no SIGTERM já
+        salvou em menos de 1 s.
+      • O SISTEMA ficou em 30 s, e não em 5 s junto: `duo` e `grad-radar` têm
+        `docker compose down` no ExecStop, e o `down` dá 10 s de carência a CADA container.
+        Apertar demais aqui SIGKILLaria o Postgres desses stacks no meio do down — não
+        corrompe, mas volta fazendo recovery de WAL, e o preço aparece longe da causa.
+      • O QUE A MUDANÇA NÃO FAZ, porque a leitura fácil é "agora mata os apps": o SIGKILL
+        já acontecia — 90 s depois. Nada que morria de morte natural passou a ser morto;
+        só se deixou de cobrar a espera por quem nunca ia responder.
+      • ⚠️ A ARMADILHA QUE A REGRA 8 PEGOU, e ela falha em SILÊNCIO: `systemd.extraConfig`
+        FOI REMOVIDA (o 26.05 manda `systemd.settings.Manager`). Escrevendo na opção
+        removida, o `nix eval` do `system.conf` gerado PASSA e sai sem a linha — zero erro,
+        zero warning, e o desligamento continuaria em 90 s com a config "aplicada". Só
+        apareceu porque a validação foi LER o arquivo gerado, não perguntar se buildou.
+        E a assimetria é a parte não-óbvia: do lado do usuário `systemd.user.extraConfig`
+        continua sendo a ÚNICA forma — `systemd.user.settings` não existe (conferido nas
+        `options`, não deduzido do lado do sistema).
+      • PRÓXIMA VEZ que o desligamento demorar, o teto global não vai ser a resposta: unit
+        com `TimeoutStopSec` próprio ignora o default (hoje qbittorrent tem 30 min, jellyfin
+        15 s, caddy 5 s, `user@.service` 2 min do upstream). Procurar primeiro com
+        `systemctl show <unit> -p TimeoutStopUSec`.
 
 - [x] Relógio da barra mostra data E hora — e o calendário vira o ano sozinho, medido
       (08/08/2026) — o relógio era um TOGGLE: clique alternava entre `󰥔 HH:mm:ss` e

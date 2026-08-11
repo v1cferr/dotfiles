@@ -254,7 +254,23 @@ armadilha conhecida. Vale mais o parágrafo do que o título.
       • ⚠️ NADA DISSO É ESPELHADO: o `router-sync` cobre só `/etc/config/`. Sudoers e chave
         SSH vivem fora do repo, e o `/home/` do roteador nem sobrevive a `sysupgrade`.
 
-- [ ] Configurar ambos os perfils do Claude (fai.ufscar.br) e do César (imagino que essa configuração esteja no meu backup da home no Google Drive que configuramos antes)
+- [~] Claude Code, o que SOBROU das três contas (11/08/2026) — a estrutura foi declarada em
+      `home/shell/claude-code.nix` e a entrada está no [histórico de
+      agosto](historico/2026/08-agosto.md): wrappers `claude-fai`/`claude-pessoal`,
+      `claude-pick`, `settings.json` versionado e `projects/` compartilhado. Duas pontas
+      seguem abertas, e nenhuma das duas é declarável:
+      • O `/login` de cada conta. NÃO restaurei o `.credentials.json` do backup do Arch de
+        propósito (token de 7 semanas de máquina desativada), então cada conta pede um login
+        na primeira execução. Conferir depois sem gastar cota: `claude-fai doctor` diz se a
+        conta está assinada.
+      • A conta DEFAULT (`~/.claude`) segue sem gerência do Nix, e isso é assimetria
+        consciente, não esquecimento: linkar o `settings.json` DELA pro repo é a mesma
+        decisão já validada nas outras duas (o CC preserva o symlink ao salvar — medido),
+        só não entrou junto pra não misturar com a entrada das contas novas. Fazer isso
+        exige reescrever o bloco de cabeçalho do `system/services/claude-code.nix`, que hoje
+        afirma que o `settings.json` do usuário "NÃO pode virar symlink" — a frase vale pra
+        symlink da STORE (read-only), não pro `mkOutOfStoreSymlink`, e vira drift no dia em
+        que a conta default for linkada (regra 16).
 
 - [ ] Continuar configurando o dualboot com Secure Boot
 

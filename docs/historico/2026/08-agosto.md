@@ -1,6 +1,55 @@
 # Histórico — agosto de 2026
 
-51 entradas. Índice em [README.md](../README.md).
+52 entradas. Índice em [README.md](../README.md).
+
+- [x] `claude-fai` / `claude-pessoal`: as três contas do Claude Code voltaram, declaradas
+      (11/08/2026) — no Arch isso eram dois aliases e uma função de shell no `~/.zshrc`
+      (`_claude_share_projects`), rodando a cada abertura de terminal. Virou
+      `home/shell/claude-code.nix`: uma atriz `profiles` que é SSOT das contas e gera tudo —
+      wrappers, menu do `claude-pick`, symlink de `settings.json` e symlink de `projects/`.
+      Conta nova = uma entrada nela + um `settings-<nome>.json`.
+      • WRAPPER NO LUGAR DE ALIAS, e a diferença não é estética: alias só existe em zsh
+        INTERATIVO, então no Arch `claude-fai` não funcionava por SSH não-interativo, dentro
+        de script, em task do VS Code nem em keybind do Hyprland. Agora são binários gerados
+        por `writeShellApplication` (regra 7: lógica no build), o que de graça FIXA a versão
+        do `claude` chamado — e isso importa aqui, porque esta máquina tem uma instalação
+        nativa órfã em `~/.local/bin` que o `claude doctor` reclama e que o PATH poderia
+        resolver primeiro.
+      • ⚠️ O QUE DECIDIU O DESENHO DO `settings.json`, e foi MEDIDO em vez de suposto: o
+        arquivo é linkado pro repo por `mkOutOfStoreSymlink`, mesmo contrato do VS Code
+        (home/apps/vscode.nix), e isso só é seguro se o CC não trocar o symlink por arquivo
+        comum ao salvar. Ele escreve de forma ATÔMICA (tmp + rename), o que MATARIA o link —
+        mas resolve o realpath ANTES: rodando `claude auto-mode reset` num perfil de teste, o
+        symlink ficou intacto e quem trocou de inode foi o ALVO (593793 → 593844). Ou seja: o
+        `/config` da TUI continua funcionando e cada ajuste cai como `git diff` em vez de
+        drift invisível (regra 16). Se um dia o CC perder essa guarda, o sintoma é
+        `~/.claude-fai/settings.json` deixar de ser symlink e o repo parar de receber.
+      • ⚠️ NÃO apontar `CLAUDE_CONFIG_DIR` pro `~/.claude` pra "reaproveitar" a conta default:
+        o `.claude.json` (config de projetos/MCP, distinta do `settings.json`) mora na RAIZ do
+        `CLAUDE_CONFIG_DIR` — no default é o `~/.claude.json` do home, e com a variável
+        apontada pro `~/.claude` ele viraria `~/.claude/.claude.json`, um SEGUNDO arquivo
+        divergente. Verificado no 2.1.222, junto do resto: `claude mcp add` com o
+        `.claude.json` symlinkado escreveu ATRAVÉS do link.
+      • DUAS CONFIGS MORRERAM NA TRAVESSIA (regra 16) e é por isso que os `settings-*.json`
+        não são cópia fiel do Arch: o `permissions.allow` com `mcp__pencil` e os dois MCP de
+        usuário que estavam no `.claude.json` das duas contas — `pencil`
+        (`/opt/pencil-dev-bin/…`, pacote do AUR que não existe no NixOS) e `atlassian` (por
+        `npx mcp-remote`, hoje feito pelo PLUGIN `atlassian@claude-plugins-official`, que a
+        conta default já usa). Migrar permissão pra MCP que não sobe é declarar o inexistente.
+      • `projects/` SEGUE COMPARTILHADO, agora por symlink declarado: é onde ficam os
+        transcripts E a memória por projeto (`…/projects/<slug>/memory/`), então qualquer
+        conta resume as mesmas conversas e lê as mesmas memórias. Preço conhecido: o
+        `ccusage` não separa custo por conta, porque lê o acervo comum — o número é o da
+        máquina, não o da assinatura.
+      • ESTADO VEIO DO RESTIC, NÃO DO REPO (regra 6): o `history.jsonl` das duas contas (128 e
+        179 prompts) saiu do backup do Arch por `restic dump` — sem montar nada, que é o
+        caminho melhor quando se quer arquivo específico e não navegar. O `.credentials.json`
+        NÃO foi restaurado de propósito: token de 7 semanas de uma máquina desativada vale
+        menos que um `/login` limpo, e credencial não se declara nem se copia por script
+        (regras 6 e 12).
+      • O shellcheck do `writeShellApplication` reprovou o primeiro build por SC2155
+        (`export X="$(cmd)"` mascara o exit code do comando). Regra 7 se pagando no build em
+        vez de num bug de runtime.
 
 - [x] VT-x ligado na BIOS — e o passo seguinte que este histórico mandava dar NÃO
       é necessário (11/08/2026) — a entrada do Cowork (08/08) fechava com "ligar VT-x e SÓ

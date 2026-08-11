@@ -114,7 +114,8 @@
     # entrou. Custa 2.2 GiB de closure (QUATRO cópias de nodejs-24: slim, -npm, -corepack e
     # o cheio) e NÃO tem comando de DNS/zona — o help inteiro é Workers/Pages/KV/R2/AI.
     # O trabalho de DNS aqui é feito pelo MCP `cloudflare-api` (.mcp.json na raiz).
-    unstable.claude-code # este assistente de código (bleeding-edge — evolui rápido)
+    # O `claude-code` NÃO está aqui: ele tem config própria (as contas separadas
+    # claude-fai/claude-pessoal), então é dono do seu pacote em home/shell/claude-code.nix.
     unstable.yt-dlp # baixa vídeo/áudio (unstable pq quebra quando os sites mudam)
     unstable.speedtest-cli # teste de velocidade (unstable: acompanha mudanças do speedtest.net)
   ];

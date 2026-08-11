@@ -1,6 +1,39 @@
 # Histórico — agosto de 2026
 
-49 entradas. Índice em [README.md](../README.md).
+50 entradas. Índice em [README.md](../README.md).
+
+- [x] Coreutils GNU na máquina inteira do `cesar` — e não foi preciso instalar nada
+      (11/08/2026). O Git for Windows já embarcava o userland completo (coreutils 8.32,
+      grep 3.0, sed 4.9, awk, less, vim) em `C:\Program Files\Git\usr\bin`; ele só não
+      estava exposto, porque o instalador do Git põe no PATH apenas o `Git\cmd`. A
+      mudança foi UMA entrada no PATH de máquina.
+      • **A decisão inteira está na ORDEM: apêndice no FIM, nunca no início.** Esse
+        diretório traz `find.exe`, `sort.exe`, `tar.exe`, `link.exe` e `echo.exe`, todos
+        com homônimo do Windows de semântica diferente. Prependar — que é o que o
+        instalador do Git oferece como opção, com aviso — quebra script `.bat` e build
+        MSVC, porque o `link.exe` do MSYS não é o linker da Microsoft. No fim, ganha-se
+        tudo que não conflita e não se perde nada. AFERIDO com `where`: `find`/`sort`/
+        `tar` continuam resolvendo pro System32, e `ls` resolve pro GNU porque só existe
+        um.
+      • ⚠️ NO POWERSHELL ISSO RENDE MENOS DO QUE PARECE, e não é problema de PATH:
+        `ls`, `cat`, `cp`, `rm`, `sort`, `curl`, `echo` são ALIASES nativos, e alias
+        vence PATH sempre. Lá é `ls.exe` na mão. No `cmd` não há aliases e funciona
+        direto; dentro do bash a questão nem existe.
+      • Aplicado por `powershell -EncodedCommand` (base64 UTF-16LE) em vez de aspas
+        aninhadas: o comando atravessa zsh → ssh → cmd → powershell, e cada camada come
+        um nível de quoting. Um `dir /b "C:\...\usr\bin" | find /c` chegou a reportar
+        "path not found" num diretório que EXISTIA, só pelo mangling do cmd no pipe —
+        quase virou "essa instalação do Git é mínima e não tem os utilitários".
+      • O script é idempotente (`-split ";" -notcontains`), porque PATH de máquina é
+        exatamente o tipo de coisa que se aplica duas vezes sem perceber.
+      • **Nasceu o guia** [`docs/guias/cesar-windows-passos-manuais.md`](../../guias/cesar-windows-passos-manuais.md):
+        chave autorizada, PATH, Scoop e Claude Code. São os passos que o Nix NÃO alcança
+        (a máquina não é NixOS e não é nossa), e sem eles escritos a reinstalação do
+        Windows viraria redescoberta do zero. Mesma natureza do `authorized_keys` do
+        roteador OpenWrt.
+      • VERIFICADO de quebra que o `SetEnv TERM` continua desnecessário: dentro do Git
+        Bash o `TERM` já vem `xterm-256color`, definido pelo próprio shell. A decisão de
+        10/08 de não mandar a variável se sustenta agora que o shell mudou.
 
 - [x] `ssh cesar` — o PC do irmão virou host declarativo (10/08/2026). O acesso já
       funcionava à mão (`ssh v1cferr@192.168.1.40`); o que entrou em home/shell/ssh.nix foi o

@@ -76,6 +76,11 @@ in
 
       # PC do irmão, na LAN de casa (`ssh cesar` — CESAR é o hostname da máquina).
       #
+      # Isto declara SÓ o lado cliente. Os passos do lado Windows — chave autorizada,
+      # coreutils no PATH de máquina, Scoop, Claude Code — não são alcançáveis pelo Nix
+      # e estão em docs/guias/cesar-windows-passos-manuais.md, pra serem refeitos em
+      # minutos se aquele Windows for reinstalado.
+      #
       # É WINDOWS 11 com OpenSSH_for_Windows_9.5, e é daí que vêm todas as pegadinhas:
       #
       # ⚠️ Sem `SetEnv TERM`: o shell padrão do sshd do Windows é o **cmd.exe**, que não

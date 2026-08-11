@@ -33,6 +33,7 @@
   pkgs,
   lib,
   config,
+  osConfig,
   ...
 }:
 
@@ -60,17 +61,20 @@ let
       path = config.my.drive.local; # SSOT: home/services/drive-mount.nix (regra 11)
       icon = "folder-gdrive";
     }
-    # Os dois abaixo só têm conteúdo COM O MOUNT DE PÉ (`backup-browse`/`arch-browse`).
-    # Vazio = não montado, e isso é informação, não bug: são consultas raras e um mount
-    # permanente de repo cifrado remoto seria conexão aberta e lock no repo por nada.
+    # Este só tem conteúdo COM O MOUNT DE PÉ (`backup-browse`). Vazio = não montado, e
+    # isso é informação, não bug: é consulta rara, e mount permanente do repo do HOME
+    # ainda seria lock preso em cima do repo que a poda diária PRECISA travar sozinha.
     {
       title = "Backup (snapshots)";
       path = "/mnt/backup"; # repo do home no Drive; read-only, um dir por snapshot
       icon = "folder-tar";
     }
+    # Este, ao contrário, está SEMPRE montado desde 11/08/2026 (home/services/arch-antigo-mount.nix):
+    # o repo é estático e o mount dispensa lock, então sobrou só o custo de RAM. Pasta
+    # vazia aqui virou SINTOMA de verdade — `systemctl --user status arch-antigo-mount`.
     {
       title = "Arch antigo";
-      path = "/mnt/arch-antigo"; # acervo de quando o Kingston era Arch Linux
+      path = osConfig.my.archAntigo.local; # SSOT: system/services/arch-antigo.nix (regra 11)
       icon = "folder-locked";
     }
   ];

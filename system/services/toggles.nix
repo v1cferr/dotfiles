@@ -36,6 +36,7 @@
     "cloudflare-ddns"
     "dropbox"
     "drive-mount"
+    "arch-antigo-mount"
     "discord-rpc"
     "cs2-backup"
   ] (n: lib.mkEnableOption n);

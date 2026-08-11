@@ -24,6 +24,7 @@
     cloudflare-ddns = true; # DNS dinâmico (mantém o SSH externo)
     dropbox = true; # sync do ~/Dropbox
     drive-mount = true; # ~/Drive = raiz do Drive montada (rclone mount), aparece no Dolphin
+    arch-antigo-mount = true; # /mnt/arch-antigo = acervo do Arch antigo montado SEMPRE (restic)
     discord-rpc = true; # Rich Presence do Claude Code no Discord
     cs2-backup = true; # backup dos saves do CS2
   };

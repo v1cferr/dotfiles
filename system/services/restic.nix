@@ -47,17 +47,20 @@ let
   runtimeDir = "/run/restic-backups-home-gdrive";
 in
 lib.mkIf config.my.services.restic {
-  # PONTOS DE MONTAGEM pra NAVEGAR os backups no gerenciador de arquivos (aliases
-  # `backup-browse` e `arch-browse`). Donos do USUÁRIO porque quem monta tem que ser ele:
-  # mount FUSE é privado de quem montou, então um `sudo restic mount` produz pasta que o
-  # Dolphin não abre — foi o defeito da 1ª versão do alias.
+  # PONTO DE MONTAGEM pra NAVEGAR o backup no gerenciador de arquivos (alias
+  # `backup-browse`). Dono do USUÁRIO porque quem monta tem que ser ele: mount FUSE é
+  # privado de quem montou, então um `sudo restic mount` produz pasta que o Dolphin não
+  # abre — foi o defeito da 1ª versão do alias.
   #
-  # Ficam em /mnt e NÃO no home de propósito: mountpoint dentro de /home/v1cferr entraria
+  # Fica em /mnt e NÃO no home de propósito: mountpoint dentro de /home/v1cferr entraria
   # no `paths` do backup e cairia na MESMA armadilha do ~/FAI-workstation (lstat em FUSE
   # alheio → restic sai 3 → o prune não roda). Fora do home, nem existe o problema.
+  #
+  # O /mnt/arch-antigo era criado aqui até 11/08/2026 e saiu pra
+  # system/services/arch-antigo.nix: aquele mount deixou de ser consulta sob demanda e
+  # virou serviço permanente, então o diretório dele não pode depender deste toggle.
   systemd.tmpfiles.rules = [
     "d /mnt/backup 0755 v1cferr users -" # repo do home, no Drive
-    "d /mnt/arch-antigo 0755 v1cferr users -" # acervo do Arch antigo (ARCH-KINGSTON)
   ];
 
   systemd.services.restic-backups-home-gdrive = {
@@ -68,14 +71,17 @@ lib.mkIf config.my.services.restic {
     path = lib.mkAfter [ pkgs.rclone ];
 
     # CÓPIA GRAVÁVEL do rclone.conf — mesmo padrão do ~/Drive (home/services/drive-mount.nix),
-    # e aqui NÃO é cosmético: é o que impede o backup de ARREBENTAR o `arch-browse`.
+    # e aqui NÃO é cosmético: é o que impede este backup de ARREBENTAR todo mundo que lê o
+    # mesmo segredo como USUÁRIO (`backup-browse`, e o mount do acervo do Arch antigo).
     #
     # A opção `rcloneConfigFile` do módulo só faz `RCLONE_CONFIG=<caminho>`, e este serviço
     # roda como ROOT. O rclone renova o token OAuth e persiste o novo POR CIMA do arquivo
     # apontado — root tem permissão, então dá certo, e o arquivo novo nasce `root:users`.
     # Isso APAGA o `owner = "v1cferr"` que o sops pôs em /run/secrets/rclone_gdrive_conf, e
-    # o `arch-browse`/`backup-browse` (que rodam como o USUÁRIO, ver alias em
-    # home/shell/zsh.nix) passam a morrer sem conseguir ler o rclone.conf.
+    # todo consumidor que roda como USUÁRIO passa a morrer sem conseguir ler o rclone.conf:
+    # o `backup-browse` (alias em home/shell/zsh.nix), o ~/Drive e — desde 11/08/2026, o
+    # mais sensível a isso, porque é serviço e não comando — o mount permanente do acervo
+    # do Arch antigo (home/services/arch-antigo-mount.nix).
     # Diagnosticado em 07/08/2026: boot 07:29 → sops põe v1cferr → o backup atrasado das
     # 03:00 rodou 07:54:39 → mtime do segredo virou root:users às 07:54:40. Na prática o
     # navegador do backup ficava quebrado quase sempre, e "consertava" sozinho no reboot.

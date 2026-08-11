@@ -85,14 +85,17 @@ in
       # SEM `sudo`, e isso é o ponto: mount FUSE é privado de quem montou, então
       # `sudo restic mount` gera uma pasta que o Dolphin NÃO abre (era o defeito da 1ª
       # versão). Rodando como usuário, a pasta é dele e o file manager entra. Exige as
-      # senhas legíveis sem sudo — feito em system/core/secrets.nix — e os mountpoints
-      # criados por tmpfiles em system/services/restic.nix.
+      # senhas legíveis sem sudo — feito em system/core/secrets.nix — e o mountpoint
+      # criado por tmpfiles em system/services/restic.nix.
       #
       # Alias e não script (regra 7): é comando de uma linha.
+      #
+      # Só sobrou o do HOME. O gêmeo `arch-browse` (acervo do Arch antigo) MORREU em
+      # 11/08/2026: aquele mount virou permanente e tem dono declarado agora
+      # (home/services/arch-antigo-mount.nix) — /mnt/arch-antigo já está montado, não há
+      # comando pra rodar. Este aqui segue sob demanda de propósito: o repo do HOME é
+      # justamente o que a poda diária precisa travar sozinha.
       backup-browse = "RCLONE_CONFIG=/run/secrets/rclone_gdrive_conf restic -r rclone:gdrive:BACKUPS_EX-B560M-V5/HOME --password-file /run/secrets/restic_password mount /mnt/backup";
-      # O acervo do Arch antigo (o Kingston de quando era Arch Linux). Repo ESTÁTICO:
-      # nada escreve nele desde 01/08/2026 — só se consulta.
-      arch-browse = "RCLONE_CONFIG=/run/secrets/rclone_gdrive_conf restic -r rclone:gdrive:BACKUPS_EX-B560M-V5/ARCH-KINGSTON --password-file /run/secrets/restic_password_arch_kingston mount /mnt/arch-antigo";
       # Relê TODOS os dados do repo pra provar que dá pra restaurar (baixa o repo inteiro
       # — ~24 GiB, ~4 min). É deliberadamente manual: no automático seria download diário.
       backup-verify = "sudo restic-home-gdrive check --read-data";

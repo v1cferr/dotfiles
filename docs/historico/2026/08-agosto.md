@@ -1,6 +1,68 @@
 # Histórico — agosto de 2026
 
-52 entradas. Índice em [README.md](../README.md).
+54 entradas. Índice em [README.md](../README.md).
+
+- [x] `/mnt/arch-antigo` montado SEMPRE, e o `arch-browse` morreu (11/08/2026) — o sintoma
+      foi abrir o bookmark no Dolphin e ver pasta vazia. Não havia defeito: segredos
+      legíveis, repo respondendo, mount subindo em ~20 s quando pedido. O defeito era o
+      DESENHO — automação sem dono declarado (regra 15), viva só enquanto o terminal do
+      alias ficasse aberto. Virou serviço: `home/services/arch-antigo-mount.nix` (a unit
+      que monta) + `system/services/arch-antigo.nix` (mountpoint e SSOT do caminho, que o
+      bookmark passou a ler — regra 11).
+      • POR QUE DOIS ARQUIVOS, e não é preciosismo de regra 4: quem MONTA tem que ser o
+        usuário (mount FUSE é privado de quem montou; `sudo restic mount` gera pasta que o
+        Dolphin não abre), mas quem CRIA o diretório tem que ser root, porque /mnt é dele.
+        E a opção nasce do lado sistema porque módulo de sistema não lê opção do
+        home-manager — o contrário não existe.
+      • O diretório saiu do `restic.nix`, onde era criado junto do /mnt/backup. Lá ele
+        ficava atado ao toggle `restic`: desligar o backup passaria a derrubar um mount
+        agora PERMANENTE, e a falha apareceria longe da causa.
+      • ⚠️ `--no-lock`, e isto foi MEDIDO, não economizado: todo `restic mount` cria lock
+        não-exclusivo e o renova a cada ~5 min, e mount que não sai limpo deixa o lock
+        PRESO. O repo tinha 3 locks — um do mount vivo e restos de `arch-browse` de 05/08 e
+        08/08. Permanente, isso só pioraria, e ainda escreveria no repo offsite a cada 5 min
+        pra sempre. O lock protege leitura concorrente com PODA, e este repo é estático:
+        nada escreve nele desde 01/08 e nenhuma rotina o poda (o `forget --prune` só olha o
+        repo HOME). Conferido depois: mount de pé, 0 locks.
+      • ⚠️ O `Type = "notify"` do ~/Drive NÃO dá pra copiar: `restic mount` não fala
+        sd_notify (não há "notify" no `--help` da 0.18.1). Com Type=simple o systemd daria a
+        unit por pronta antes do mountpoint existir — reproduzindo o sintoma que a mudança
+        veio matar. Por isso o ExecStartPost que espera o `mountpoint -q` (writeShellApplication,
+        regra 7), com TimeoutStartSec=180 pra a espera caber.
+      • O binário do rclone vai PINADO em `-o rclone.program=`: o backend `rclone:` EXECUTA
+        o rclone e unit de systemd não herda PATH — mesma pegadinha que já matou o serviço
+        de backup ("executable file not found in $PATH"), resolvida sem depender de PATH.
+        E o rclone.conf é CÓPIA GRAVÁVEL em `%t`, arquivo próprio (não o do ~/Drive): sem
+        isso o token OAuth renovado gera `Failed to save config` no journal — num serviço
+        24/7, ERROR recorrente escondendo erro de verdade.
+      • O PREÇO, medido: ~195 MiB de RSS residentes (115 do restic com o índice do snapshot
+        de 44,6 GiB + 79 do `rclone serve restic`). Em rede, parado, é ZERO — o restic não
+        faz polling. O comentário do bookmark dizia que mount permanente seria "conexão
+        aberta e lock no repo por nada": a conexão é real e virou escolha consciente, o lock
+        deixou de existir. E o aviso das miniaturas do Dolphin ficou MAIS importante, não
+        menos — preview lê conteúdo, cada leitura baixa packs, e agora a pasta está sempre a
+        um clique.
+      • Pasta vazia ali deixou de ser estado normal e virou SINTOMA: o diagnóstico começa em
+        `systemctl --user status arch-antigo-mount`.
+
+- [x] O `switch` que ativou mas não virou boot, por causa de uma unit ALHEIA (11/08/2026) —
+      o `rebuild` do mount acima terminou com `Activation (test) failed` (exit 4) e a
+      culpada era a `vpn-fai`, que não tinha relação nenhuma com a mudança: já repicava
+      antes (contador de restart em 43) porque o servidor da FAI responde
+      `"Password change needed"` — senha institucional expirada. O `nh` roda a ativação em
+      `test` ANTES de fixar a geração, e abortou a fase `boot`.
+      • ⚠️ O ESTRAGO É SILENCIOSO e não aparece na hora: `/run/current-system` já era a
+        geração nova (tudo funcionando na sessão), mas `/nix/var/nix/profiles/system` ficou
+        na ANTIGA — ou seja, o próximo boot voltaria pro sistema sem a mudança. Quem não
+        compara os dois não vê. Diagnóstico de um comando:
+        `readlink -f /run/current-system /nix/var/nix/profiles/system` — iguais = fechou.
+      • A LIÇÃO, que é maior que este caso: uma unit falhando por motivo EXTERNO (senha
+        expirada, serviço remoto fora) sequestra o switch inteiro. `systemctl stop` nela e
+        rebuildar de novo resolveu — a `vpn-fai` é `linked` sem `WantedBy`, então parar não
+        perde nada, ela não sobe no boot mesmo.
+      • Pendente do lado da FAI: trocar a senha no portal e atualizar `fai_vpn_password` no
+        sops (alimenta o template `nxbender-fai.conf`, `system/net/vpn.nix`) + rebuild. Até
+        lá, `~/FAI-workstation` e `ssh workstation` seguem fora.
 
 - [x] `claude-fai` / `claude-pessoal`: as três contas do Claude Code voltaram, declaradas
       (11/08/2026) — no Arch isso eram dois aliases e uma função de shell no `~/.zshrc`

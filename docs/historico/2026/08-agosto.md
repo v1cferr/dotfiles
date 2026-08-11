@@ -1,6 +1,29 @@
 # Histórico — agosto de 2026
 
-50 entradas. Índice em [README.md](../README.md).
+51 entradas. Índice em [README.md](../README.md).
+
+- [x] VT-x ligado na BIOS — e o passo seguinte que este histórico mandava dar NÃO
+      é necessário (11/08/2026) — a entrada do Cowork (08/08) fechava com "ligar VT-x e SÓ
+      ENTÃO somar `users.users.v1cferr.extraGroups = [ "kvm" ]`, que não entrou por não ser
+      validável sem o device". O device existe agora, então dava pra validar — e a validação
+      DESMENTIU o plano.
+      • VT-x confirmado: `vmx` nas flags do `/proc/cpuinfo`, `kvm_intel` carregado,
+        `/dev/kvm` criado às 07:11. Sumiram os `VMX (outside TXT) disabled by BIOS` do log.
+      • ⚠️ O GRUPO `kvm` NÃO ENTRA: o `/dev/kvm` nasce em **modo 666** (regra udev que o
+        NixOS já embarca), grupo `kvm`. Medido que o `v1cferr` tem leitura E escrita nele
+        SEM estar no grupo. Somar o `extraGroups` seria declarar uma permissão que o
+        sistema já dá a todo mundo — config morta pela regra 16, no mesmo dia em que a
+        regra nasceu.
+      • A LIÇÃO é sobre a forma da anotação, não sobre o kvm: "faça X e DEPOIS faça Y"
+        registra uma HIPÓTESE sobre Y como se fosse plano. Quando X finalmente acontece,
+        Y é executado sem ninguém reverificar se ainda faz sentido — e aqui não fazia.
+        Anotação de passo futuro deveria carregar o TESTE que decide se ele é preciso
+        (`test -w /dev/kvm`), não só a ação.
+      • Secure Boot segue `Disabled` e isso NÃO regrediu: `Setup Mode: Disabled` diz que as
+        chaves continuam enroladas, então permanece só a Fase 4 do guia — virar a chave.
+      • De quebra, o diagnóstico do colorize se confirmou: **19 h sem um único aborto**
+        (último em 10/08 18:30) contra um a cada 30–60 min antes. Os coredumps que ainda
+        aparecem no `coredumpctl` são todos anteriores à remoção — registro, não atividade.
 
 - [x] Coreutils GNU na máquina inteira do `cesar` — e não foi preciso instalar nada
       (11/08/2026). O Git for Windows já embarcava o userland completo (coreutils 8.32,

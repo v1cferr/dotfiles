@@ -17,15 +17,34 @@
 # O cliente baixa o próprio binário em ~/.dropbox-dist (estado, fora do Nix) —
 # é a parte imperativa que o Dropbox impõe; o resto (habilitar/subir) é declarado.
 #
-# ── SEM TRAY, POR CONSTRUÇÃO ────────────────────────────────────────────────
-# O módulo do home-manager fixa `DISPLAY=` VAZIO na unit, de propósito: isto é um
-# daemon headless, não um app de sessão. MEDIDO em 11/08/2026 no processo vivo:
-# nenhum fd de Wayland/X11 aberto. Logo o ícone do Dropbox NUNCA vai aparecer na
-# tray, e isso não é falha da barra (quickshell) — no mesmo instante o watcher SNI
-# listava LocalSend, Sunshine e Discord normalmente. Ligar a GUI custaria prender o
-# sync ao graphical-session.target (logout = sync parado), e esta máquina é
-# sempre-ligada com linger justamente pro contrário — ver system/core/users.nix.
-# A visibilidade vem do healthcheck abaixo, que NOTIFICA; não de um ícone.
+# ── TRAY: O ÍCONE EXIGE SESSÃO, E ISSO CUSTA O 24/7 ────────────────────────
+# O módulo do home-manager fixa `DISPLAY=` VAZIO na unit, de propósito: pra ele
+# isto é um daemon headless. O preço é não haver ícone na tray — MEDIDO em
+# 11/08/2026 no processo vivo: zero fd de Wayland/X11 aberto, e o watcher SNI
+# listando LocalSend/Sunshine/Discord SEM o Dropbox. Nunca foi falha da barra.
+#
+# Aqui esse default é INVERTIDO, porque o ícone é pedido. Basta o daemon herdar o
+# display da sessão pra ele registrar `dropbox_client_<pid>` no watcher na hora
+# (medido). E a barra já sabe desenhá-lo: o `image://icon/<nome>?path=<dir>` que o
+# Dropbox publica tem tratamento próprio em desktop/quickshell/bar/Bar.qml.
+#
+# Não se CRAVA `DISPLAY=:0`/`WAYLAND_DISPLAY=wayland-1` aqui: o nome do socket é da
+# sessão, não do host, e amanhã é `wayland-2`. O autostart.lua já faz
+# `systemctl --user import-environment WAYLAND_DISPLAY …`, então o gerenciador de
+# usuário TEM as duas variáveis — o remédio é só PARAR de zerar o DISPLAY e deixar
+# a unit herdar (por isso o `Environment` vai com mkForce, sem o `DISPLAY=`).
+#
+# O CUSTO, explícito: herdar display exige ser INICIADO pela sessão gráfica.
+# `After=` sozinho não resolveria — quem levanta o graphical-session.target é o
+# exec-once do compositor, FORA da transação do default.target, então no boot o
+# serviço partia antes e caía em headless de novo (era o que se via: dropbox e
+# quickshell ambos às 07:11:42). Logo o Install passa a ser
+# graphical-session.target, e a consequência é honesta: SEM SESSÃO NÃO HÁ SYNC.
+# Nesta máquina isso é barato (autologin, sempre ligada — system/core/users.nix),
+# mas é troca de verdade, e herda a pegadinha já anotada em desktop/polkit-agent.nix
+# (home-manager#8547): se um dia o graphical-session.target ficar inativo, o sync
+# para junto. É por isso que o watcher do bloco 2 também LOGA em nível warning, e
+# não só notifica: sem sessão não há toast pra ver, mas o journal continua lá.
 #
 # ── O INCIDENTE QUE ESTE ARQUIVO EXISTE PRA NÃO REPETIR ─────────────────────
 # Descoberto em 11/08/2026: o daemon estava `active (running)` há 6 h, sem uma
@@ -123,6 +142,12 @@ let
               ;;
           esac
 
+          # `<4>` é o prefixo de nível do systemd (warning) — sem ele a linha sairia
+          # em `info` e o LogLevelMax=warning da unit a ENGOLIRIA. Loga SEMPRE, não
+          # só quando o toast falha: o sync agora depende do graphical-session
+          # (ver cabeçalho), e se essa sessão for justamente o que quebrou não há
+          # notification daemon pra receber o aviso. O journal é o fallback.
+          printf '<4>%s — %s\n' "$titulo" "$estado" >&2
           notify-send -a "Dropbox" -u critical -i dropbox "$titulo" "$corpo" || true
 
           printf '%s %s\n' "$estado" "$now" > "$state"
@@ -161,12 +186,29 @@ in
       # calada pra sempre — a lição das 4145 partidas do Spotify (ver autostart).
       StartLimitIntervalSec = 300;
       StartLimitBurst = 5;
+      # Preso à sessão porque é ela que dá o display do ícone (ver cabeçalho).
+      # Mesmo trio dos autostart-* e do polkit-agent: PartOf pra cair junto, After
+      # pra ordenar, e o WantedBy lá embaixo pra SUBIR junto.
+      PartOf = [ "graphical-session.target" ];
+      After = [ "graphical-session.target" ];
     };
     Service = {
       ExitType = "cgroup";
       Restart = lib.mkForce "always"; # mkForce: o módulo já define on-failure
       RestartSec = 10;
+      # mkForce e não um item a mais: `Environment` é LISTA, e uma 2ª entrada
+      # `DISPLAY=…` dependeria da ORDEM de merge do módulo pra vencer o
+      # `DISPLAY=` vazio do upstream — ordem que ninguém garante. Reescrever a
+      # lista inteira é determinístico. Fica só o HOME; DISPLAY e WAYLAND_DISPLAY
+      # vêm HERDADOS do gerenciador de usuário (import-environment do
+      # desktop/hypr/lua/autostart.lua), que é o que evita cravar `wayland-1`.
+      Environment = lib.mkForce [ "HOME=${dropboxHome}" ];
     };
+    # mkForce: o módulo declara `default.target`, e MANTER os dois seria pior que
+    # não mexer — no boot o default.target subiria o daemon ANTES da sessão, em
+    # headless e sem ícone, e o graphical-session.target depois não o reiniciaria
+    # (unit já ativa não parte de novo). Aqui só a sessão inicia.
+    Install.WantedBy = lib.mkForce [ "graphical-session.target" ];
   };
 
   # ── BLOCO 2: perceber o "vivo mas não sincroniza" ─────────────────────────

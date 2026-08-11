@@ -9,7 +9,7 @@ age (pendências) e o que se consulta (histórico) têm ritmos diferentes.
 
 | Arquivo | O que é | Quando se lê |
 | --- | --- | --- |
-| [regras.md](regras.md) | As 15 regras do repo | Antes de decidir qualquer coisa |
+| [regras.md](regras.md) | As 16 regras do repo | Antes de decidir qualquer coisa |
 | [pendencias.md](pendencias.md) | O que está aberto | Ao escolher no que trabalhar |
 | [historico/](historico/) | O que foi feito e por quê — pasta por ano, arquivo por mês | "Por que isto está assim?" |
 | [ideias.md](ideias.md) | Considerado, ainda não decidido | Ao planejar |

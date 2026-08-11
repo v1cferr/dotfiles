@@ -1,6 +1,37 @@
 # Histórico — agosto de 2026
 
-48 entradas. Índice em [README.md](../README.md).
+49 entradas. Índice em [README.md](../README.md).
+
+- [x] `ssh cesar` — o PC do irmão virou host declarativo (10/08/2026). O acesso já
+      funcionava à mão (`ssh v1cferr@192.168.1.40`); o que entrou em home/shell/ssh.nix foi o
+      alias e, principalmente, o registro de POR QUE este host não se parece com nenhum dos
+      outros três: ele é o único **Windows** do arquivo.
+      • **Herdar `faiResilience` seria carga cultuada.** Aquele bloco existe pra tolerar o
+        buraco de rota do túnel SonicWall dentro do orçamento de 17 s do VS Code Remote-SSH.
+        Aqui é salto de LAN, <1ms — mesma decisão já tomada no `router`, e o padrão do
+        arquivo passa a ser "resiliência é opt-in, não default".
+      • **Sem `SetEnv TERM`, ao contrário dos outros três hosts.** O shell padrão do sshd do
+        Windows é o **cmd.exe**, que não lê TERM, e o sshd de lá não traz `AcceptEnv` — a
+        variável seria descartada no servidor. Copiar por simetria daria uma linha que não
+        faz nada e que a próxima leitura ia tentar "consertar".
+      • ⚠️ **O aviso de post-quantum a cada conexão NÃO é erro nosso.** O servidor é
+        `OpenSSH_for_Windows_9.5` (medido no `-v`), e o `mlkem768x25519` só existe do OpenSSH
+        9.9 em diante; o Windows 11 build 26200 ainda embarca o 9.5. Só some quando a MS
+        atualizar o Win32-OpenSSH. RECUSADO calar com `WarnWeakCrypto = "no"` (existe no
+        nosso 10.4): silenciar por host esconde a defasagem real do servidor, e o dia em que
+        ela for corrigida passaria despercebido. O aviso é barulho honesto.
+      • ⚠️ **`ssh-copy-id` NÃO funciona contra Windows** — ele assume shell POSIX do outro
+        lado, e do outro lado tem cmd.exe. O passo manual é rodado NA máquina do irmão, e
+        QUAL arquivo depende de o usuário ser administrador: se for, o sshd do Windows
+        **ignora** o `~/.ssh/authorized_keys` dele e só lê
+        `C:\ProgramData\ssh\administrators_authorized_keys` — que ainda exige `icacls`
+        restringindo a herança, senão o sshd recusa o arquivo e volta pra senha **em
+        silêncio do lado do cliente**. Receita completa no comentário do módulo; o passo em
+        si ficou em pendências, porque hoje o login ainda é por SENHA.
+      • IP literal (192.168.1.40) e não opção `my.*`: citado num lugar só, mesma
+        justificativa do `router` — literal solitário não dispara a regra 11. Mas é DHCP: se
+        o roteador entregar outro endereço, o alias quebra, e o conserto é reserva de DHCP
+        no OpenWrt, não mais uma opção aqui.
 
 - [x] Auditoria de crescimento em disco: o Docker era o único sem teto, e o btrfs/GC
       não precisavam de nada (10/08/2026) — a pergunta era "o btrfs está bem? tem swap? o

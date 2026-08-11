@@ -74,6 +74,48 @@ in
         };
       };
 
+      # PC do irmão, na LAN de casa (`ssh cesar` — CESAR é o hostname da máquina).
+      #
+      # É WINDOWS 11 com OpenSSH_for_Windows_9.5, e é daí que vêm todas as pegadinhas:
+      #
+      # ⚠️ Sem `SetEnv TERM`: o shell padrão do sshd do Windows é o **cmd.exe**, que não
+      # lê TERM — e o sshd de lá não traz `AcceptEnv`, então a variável seria descartada
+      # no servidor de qualquer jeito. Mandar mesmo assim seria carga cultuada.
+      #
+      # ⚠️ Sem `faiResilience`: salto de LAN (<1ms), mesma justificativa do `router`.
+      #
+      # ⚠️ O aviso "connection is not using a post-quantum key exchange" aparece a CADA
+      # conexão e NÃO é erro de config nossa: o mlkem768x25519 só existe do OpenSSH 9.9
+      # em diante, e o Windows 11 (build 26200) ainda embarca o 9.5. Some sozinho quando
+      # a MS atualizar o Win32-OpenSSH. Dá pra calar com `WarnWeakCrypto = "no"` (existe
+      # no nosso 10.4), e é justamente por isso que NÃO está aqui: silenciar por host
+      # esconde a defasagem real do servidor, e o dia em que ela for corrigida passaria
+      # despercebido. O aviso é barulho honesto.
+      #
+      # ⚠️ authorized_keys VIVE NO WINDOWS, fora do alcance do Nix — isto declara só o
+      # LADO CLIENTE, e hoje o login ainda cai em SENHA. E `ssh-copy-id` NÃO funciona
+      # aqui: ele assume shell POSIX do outro lado, e do outro lado tem cmd.exe. O passo
+      # manual é rodado NA máquina do irmão, e QUAL arquivo depende de o usuário ser
+      # administrador — se for, o sshd do Windows IGNORA o ~/.ssh/authorized_keys dele:
+      #   # usuário comum, no PowerShell:
+      #   mkdir -Force $env:USERPROFILE\.ssh
+      #   Add-Content $env:USERPROFILE\.ssh\authorized_keys '<conteúdo do id_ed25519.pub>'
+      #   # usuário ADMIN, no PowerShell como administrador:
+      #   Add-Content C:\ProgramData\ssh\administrators_authorized_keys '<a mesma linha>'
+      #   icacls C:\ProgramData\ssh\administrators_authorized_keys /inheritance:r `
+      #     /grant "Administrators:F" /grant "SYSTEM:F"
+      # O `icacls` não é enfeite: o sshd RECUSA o arquivo (e volta pra senha, em silêncio
+      # do lado do cliente) se ele for gravável por mais alguém.
+      #
+      # ⚠️ IP literal e por DHCP: se o roteador entregar outro endereço, o alias quebra —
+      # o conserto é reserva de DHCP no OpenWrt, não mais uma opção `my.*` aqui.
+      cesar = {
+        HostName = "192.168.1.40";
+        User = "v1cferr";
+        Port = 22;
+        IdentityFile = "~/.ssh/id_ed25519";
+      };
+
       # VM de apoio na FAI.
       fai-vm = faiResilience // {
         HostName = "200.136.209.248";

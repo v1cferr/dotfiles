@@ -254,6 +254,19 @@ armadilha conhecida. Vale mais o parágrafo do que o título.
       • ⚠️ NADA DISSO É ESPELHADO: o `router-sync` cobre só `/etc/config/`. Sudoers e chave
         SSH vivem fora do repo, e o `/home/` do roteador nem sobrevive a `sysupgrade`.
 
+- [ ] `ssh cesar` sem senha — instalar a chave pública no Windows do irmão (aberto em
+      10/08/2026, junto do host declarativo em home/shell/ssh.nix). O `IdentityFile` já está
+      declarado; falta só o lado de lá, que o Nix não alcança.
+      • ⚠️ `ssh-copy-id` NÃO serve: ele assume shell POSIX, e o shell padrão do sshd do
+        Windows é o cmd.exe. O passo é rodado NA máquina do irmão, em PowerShell.
+      • ⚠️ QUAL arquivo depende de o usuário ser administrador — se for, o sshd IGNORA o
+        `~/.ssh/authorized_keys` dele e só lê
+        `C:\ProgramData\ssh\administrators_authorized_keys`, que ainda exige `icacls`
+        tirando a herança. Sem isso o sshd recusa o arquivo e volta pra senha **sem dizer
+        nada ao cliente** — o modo de falha é "não funcionou e não explicou".
+      • Receita completa (as duas variantes) no comentário do bloco `cesar` em
+        home/shell/ssh.nix.
+
 - [ ] Configurar ambos os perfils do Claude (fai.ufscar.br) e do César (imagino que essa configuração esteja no meu backup da home no Google Drive que configuramos antes)
 
 - [ ] Continuar configurando o dualboot com Secure Boot

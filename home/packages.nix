@@ -37,13 +37,23 @@
 
     # ── Notas / mídia ──
     obsidian # notas em Markdown (cofre local; unfree)
-    # Música (unfree). UNSTABLE e não a base: a 1.2.90.451 da 26.05 NÃO ABRE mais aqui
-    # (MEDIDO 07/08/2026) — o zygote do CEF morre antes do primeiro ping, o browser
-    # aborta com "GPU process isn't usable. Goodbye." e o processo cai de SIGTRAP em
-    # ~250ms, sem janela e sem erro visível. Não é a Arc B580 nem o perfil: `--disable-gpu`
-    # e `--no-sandbox` não mudam nada, e `--no-zygote` contorna. A 1.2.92.147 do unstable
-    # abre limpa, SEM flag — por isso a correção é a versão, não um workaround no launcher.
-    # Voltar pra `spotify` puro quando a base alcançar ≥1.2.92.
+    # Música (unfree). O zygote do CEF morre antes do primeiro ping: o browser aborta
+    # com "GPU process isn't usable. Goodbye." e o processo cai de SIGTRAP em ~250ms,
+    # sem janela e sem erro visível. `--disable-gpu` e `--no-sandbox` não mudam nada;
+    # só `--no-zygote` contorna — e a flag mora no PACOTE (overlaySpotifyNoZygote, no
+    # flake.nix), não num `exec`, pra que abrir pelo menu pegue a mesma correção.
+    #
+    # CORREÇÃO (11/08/2026) — este comentário dizia que a 1.2.92.147 do unstable "abre
+    # limpa, SEM flag" e que "a correção é a versão, não um workaround no launcher".
+    # ERRADO nas duas metades: a 1.2.92.147 crasha IGUAL (medido de novo hoje, mesma
+    # mensagem e mesmos ~270ms), então a versão nunca foi a causa — o que a troca de
+    # 07/08 mediu foi outra coisa. Fica `unstable` só porque não há motivo pra voltar
+    # pra base; a flag é que sustenta o app de pé.
+    #
+    # O crash ficou 4 dias INVISÍVEL porque o `SuccessExitStatus=1` do autostart (que
+    # existe por bom motivo, ver o header de lá) faz a unit morrer LIMPA — nada em
+    # `systemctl --user --failed`. O sintoma que apareceu foi "sumiu o ícone do
+    # Spotify da tray", que não parece crash nenhum.
     unstable.spotify
 
     # ── Editor / dev ──

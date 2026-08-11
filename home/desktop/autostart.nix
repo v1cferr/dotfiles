@@ -85,6 +85,11 @@ let
     spotify = {
       # unstable.* precisa CASAR com home/packages.nix, senão o autostart sobe a versão
       # quebrada da base enquanto o menu abre a boa (ver a justificativa lá).
+      #
+      # A flag `--no-zygote` que mantém o app de pé NÃO vem aqui: ela é do PACOTE,
+      # embutida pelo overlaySpotifyNoZygote do flake.nix. Assim o menu (`Exec=spotify`
+      # pelo PATH) recebe a mesma flag que este autostart — uma dona só (regra 15),
+      # em vez de a flag existir aqui e faltar lá.
       exec = "${pkgs.unstable.spotify}/bin/spotify";
       desc = "música";
       # Sair com 1 é o caminho NORMAL aqui (escapa p/ scope próprio; ver header).

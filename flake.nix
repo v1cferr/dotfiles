@@ -162,6 +162,37 @@
       # escolha por pacote: `pkgs.foo` (estável) vs `pkgs.unstable.foo` (última).
       overlayUnstable = _: _: { unstable = pkgsUnstable; };
 
+      # Spotify: `--no-zygote` embutido no PACOTE, sem o qual o app não abre. O CEF dele
+      # aborta com "GPU process isn't usable. Goodbye." e cai de SIGTRAP em ~270ms, sem
+      # janela e sem erro visível. `--disable-gpu` e `--no-sandbox` não mudam nada; só
+      # esta flag contorna (medido 11/08/2026 na 1.2.92.147 — a suspeita anterior, de que
+      # era a VERSÃO, estava errada: a 1.2.92 crasha igual à 1.2.90).
+      #
+      # POR QUE NO PACOTE e não no `exec` do home/desktop/autostart.nix, que seria a
+      # linha mais curta: o `.desktop` do Spotify usa `Exec=spotify` — nome NU, resolvido
+      # pelo PATH. Flag só no autostart consertaria o boot e deixaria o MENU crashando,
+      # com dois lugares pra manter em sincronia. Embrulhando o pacote, todo caminho que
+      # chega no `spotify` do perfil pega a flag (regra 15: uma dona só).
+      #
+      # postFixup e não postInstall: a receita do nixpkgs faz o wrap dela no installPhase,
+      # e o fixupPhase roda DEPOIS — envelopar antes seria envelopar o que ainda não existe.
+      # `$out/bin/spotify` é symlink pra ../share/spotify/spotify; o wrapProgram move o
+      # symlink pra bin/.spotify-wrapped (destino relativo segue válido, mesmo dir) e põe o
+      # wrapper no lugar dele.
+      #
+      # Patcha DENTRO de `unstable` (por isso depois do overlayUnstable), mesmo motivo do
+      # overlayVscodeTarball: `unstable` é outro import de nixpkgs.
+      # REMOVER quando o Spotify voltar a abrir sem flag — testar é `spotify` sem ela.
+      overlaySpotifyNoZygote = _: prev: {
+        unstable = prev.unstable // {
+          spotify = prev.unstable.spotify.overrideAttrs (old: {
+            postFixup = (old.postFixup or "") + ''
+              wrapProgram $out/bin/spotify --add-flags "--no-zygote"
+            '';
+          });
+        };
+      };
+
       # Troca só o SRC do vscode pelo tarball do input vscode-tarball, mantendo a RECEITA do
       # unstable — o generic.nix do nixpkgs tem lógica versionada (`versionAtLeast
       # vscodeVersion "1.129.0"`), então patchar receita fresca é o delta mínimo; sobre a
@@ -282,6 +313,7 @@
               nixpkgs.overlays = [
                 overlayUnstable
                 overlayVscodeTarball # DEPOIS do overlayUnstable: patcha o `unstable.vscode` dele
+                overlaySpotifyNoZygote # idem: embute a flag sem a qual o Spotify não abre
                 overlayBtopXe # temporário: GPU Intel Xe (Arc B580) até o PR #1457 mergear
                 overlayLocalPkgs
                 inputs.claude-desktop.overlays.default

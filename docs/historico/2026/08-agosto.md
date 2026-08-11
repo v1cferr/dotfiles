@@ -64,12 +64,39 @@
         sops (alimenta o template `nxbender-fai.conf`, `system/net/vpn.nix`) + rebuild. Até
         lá, `~/FAI-workstation` e `ssh workstation` seguem fora.
 
-- [x] `claude-fai` / `claude-pessoal`: as três contas do Claude Code voltaram, declaradas
-      (11/08/2026) — no Arch isso eram dois aliases e uma função de shell no `~/.zshrc`
-      (`_claude_share_projects`), rodando a cada abertura de terminal. Virou
+- [x] `claude-fai` / `claude-pessoal`: DUAS contas do Claude Code, e o `~/.claude` deixou de
+      ser uma delas (11/08/2026) — no Arch isso eram dois aliases e uma função de shell no
+      `~/.zshrc` (`_claude_share_projects`), rodando a cada abertura de terminal. Virou
       `home/shell/claude-code.nix`: uma atriz `profiles` que é SSOT das contas e gera tudo —
       wrappers, menu do `claude-pick`, symlink de `settings.json` e symlink de `projects/`.
       Conta nova = uma entrada nela + um `settings-<nome>.json`.
+      • ⚠️ ERREI NA PRIMEIRA VERSÃO, e o erro é instrutivo: criei um `~/.claude-fai` VAZIO
+        ao lado do `~/.claude` — que JÁ ERA a conta da FAI (`oauthAccount.emailAddress` =
+        victor.ferreira@…, seat nonprofit premium). Seriam dois logins pra mesma assinatura,
+        e a "terceira conta" existiria só por acidente de nomenclatura. Copiei a topologia do
+        Arch (default + 2) sem conferir QUEM era cada pasta AQUI. Lição: em migração, a
+        pergunta não é "quais pastas existiam lá", é "o que cada pasta É aqui" — e a resposta
+        estava a um `jq .oauthAccount ~/.claude.json` de distância.
+      • O `claude` PURO virou a FAI, via `home.sessionVariables.CLAUDE_CONFIG_DIR`. Pega tudo
+        que chama o binário sem passar pelos wrappers: extensão do VS Code, script, cron.
+        ⚠️ Só vale em shell NOVO (o hm-session-vars.sh é lido no início da sessão) — o
+        terminal que rodou o `rebuild` segue no `~/.claude` até ser fechado. Mesma pegadinha
+        do NH_FLAKE em 03/08, com a diferença de que aqui um terminal novo já resolve.
+      • O `~/.claude` CONTINUA EXISTINDO, agora como ACERVO e não como conta: o `projects/`
+        (200 MB, 13 projetos, 39 memórias deste repo) é da MÁQUINA, não de uma assinatura.
+        Ficar no caminho canônico faz ferramenta de terceiro achar sozinha e evita que
+        aposentar uma conta um dia órfã o acervo. Foram consideradas e recusadas: mover pra
+        dentro do `.claude-fai` (assimétrico) e pra um caminho neutro (200 MB movidos com
+        sessão viva escrevendo lá).
+      • O QUE MIGROU do `~/.claude` pro `~/.claude-fai`, porque é a MESMA conta: os plugins
+        instalados (8,1 MB — `github`/`atlassian`/`frontend-design`, que o
+        `settings-fai.json` do repo passou a declarar em vez dos do Arch, senão a migração
+        os desligaria em silêncio), o `settings.local.json` (permissões já aprovadas), o
+        `.claude.json` SEM `oauthAccount`/`claudeCodeFirstTokenDate` (17 pastas confiáveis
+        preservadas, campos de conta deixados pro `/login` reescrever) e o `history.jsonl`
+        concatenado com o do Arch — 128 + 1705 linhas, e a concatenação é cronológica de
+        graça porque as janelas não se sobrepõem (o Arch termina em junho, esta máquina
+        começa em julho).
       • WRAPPER NO LUGAR DE ALIAS, e a diferença não é estética: alias só existe em zsh
         INTERATIVO, então no Arch `claude-fai` não funcionava por SSH não-interativo, dentro
         de script, em task do VS Code nem em keybind do Hyprland. Agora são binários gerados

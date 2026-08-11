@@ -1,20 +1,34 @@
 # ═══════════════════════════════════════════════════════════════════════════
 # CLAUDE CODE (CLI) — o pacote + as CONTAS SEPARADAS (`claude-fai`, `claude-pessoal`).
 #
-# O PROBLEMA: são três assinaturas na mesma máquina (a default + FAI/nonprofit + pessoal)
-# e o Claude Code guarda LOGIN, MCP e settings num único diretório de config. Rodar as três
-# no mesmo diretório significaria relogar a cada troca de conta. A saída é a variável
-# CLAUDE_CONFIG_DIR: cada conta tem o seu diretório, e trocar de conta é trocar a variável.
+# O PROBLEMA: são DUAS assinaturas na mesma máquina (FAI/nonprofit e pessoal) e o Claude
+# Code guarda LOGIN, MCP e settings num único diretório de config. Rodar as duas no mesmo
+# diretório significaria relogar a cada troca. A saída é a variável CLAUDE_CONFIG_DIR: cada
+# conta tem o seu diretório, e trocar de conta é trocar a variável.
 #
-#   ~/.claude          -> default (a que o `claude` puro usa; NÃO é gerenciada aqui, ver abaixo)
-#   ~/.claude-fai      -> FAI / nonprofit (victor.ferreira@fai.ufscar.br)
+#   ~/.claude-fai      -> FAI / nonprofit (victor.ferreira@fai.ufscar.br) — é o DEFAULT
 #   ~/.claude-pessoal  -> pessoal         (dragons10021@outlook.com)
+#   ~/.claude          -> NÃO é conta: é o ACERVO comum (projects/), ver abaixo
 #
-# ⚠️ NÃO apontar CLAUDE_CONFIG_DIR pro ~/.claude pra "reaproveitar" a conta default: o
-# `.claude.json` (a config de projetos/MCP, distinta do settings.json) mora na RAIZ do
-# CLAUDE_CONFIG_DIR — no default ele é o ~/.claude.json do home, e com a variável apontada
-# pro ~/.claude ele viraria ~/.claude/.claude.json, um SEGUNDO arquivo divergente. Por isso
-# cada conta extra tem pasta própria e a default fica intocada. (Verificado no 2.1.222.)
+# SÃO DUAS CONTAS E NÃO TRÊS, e isso é uma correção de 11/08/2026: a primeira versão deste
+# módulo criava um `~/.claude-fai` VAZIO ao lado do `~/.claude` — que já era a conta da FAI
+# (`oauthAccount.emailAddress` = victor.ferreira@…, seat nonprofit premium). Seriam dois
+# logins pra mesma assinatura, e a terceira "conta" existiria só por acidente de nomenclatura.
+# Agora o `claude` puro CAI NA FAI, porque o CLAUDE_CONFIG_DIR é exportado na sessão (lá
+# embaixo). Vale pra tudo que chama o binário sem passar pelos wrappers: extensão do VS Code,
+# script, cron. Quem quer a outra conta chama `claude-pessoal`, que sobrepõe a variável.
+#
+# ⚠️ MAS O ACERVO CONTINUA NO ~/.claude, e essa separação é o miolo do desenho: o `projects/`
+# (transcripts + memória, 200 MB e 13 projetos aqui) é da MÁQUINA, não de uma assinatura.
+# Deixá-lo no caminho canônico significa que ferramenta de terceiro que procura o padrão
+# (`ccusage` e afins) acha sozinha, e que aposentar uma conta um dia não órfã o acervo.
+#
+# ⚠️ E É POR ISSO QUE O ~/.claude NÃO PODE SER A PASTA DE CONFIG, por mais tentador que
+# pareça agora que ele já é FAI: o `.claude.json` (config de projetos/MCP, distinta do
+# settings.json) mora na RAIZ do CLAUDE_CONFIG_DIR. Sem a variável ele é o `~/.claude.json`
+# do home; com ela apontada pro `~/.claude` viraria `~/.claude/.claude.json`, um SEGUNDO
+# arquivo divergente do primeiro. Verificado no 2.1.222 — junto do teste do symlink, o
+# `claude mcp add` gravou exatamente ali dentro do CLAUDE_CONFIG_DIR.
 #
 # WRAPPER e não ALIAS (era alias no Arch, home/.zshrc): alias só existe em zsh INTERATIVO —
 # `claude-fai` não funcionava por SSH não-interativo, dentro de script, em task do VS Code
@@ -44,8 +58,12 @@
 # Se um dia o CC perder essa guarda, o sintoma é ~/.claude-fai/settings.json deixar de ser
 # symlink e o repo parar de receber as mudanças.
 #
-# O CONTEÚDO dos dois settings-*.json veio do Arch (…/.claude-{fai,pessoal}/settings.json),
-# menos o que morreu na travessia (regra 16): o `permissions.allow` com `mcp__pencil` e os
+# O CONTEÚDO dos settings-*.json: o da PESSOAL veio do Arch inteiro; o da FAI é MERGE do
+# Arch com o que o `~/.claude` (a mesma conta, viva nesta máquina) tinha em uso — os plugins
+# `github`/`atlassian`/`frontend-design`. Pegar só a versão do Arch teria SILENCIOSAMENTE
+# desligado três plugins que estavam ligados, que é o tipo de perda que ninguém liga à
+# migração dois dias depois.
+# Fora isso, morreu na travessia (regra 16): o `permissions.allow` com `mcp__pencil` e os
 # dois MCP de usuário que estavam no .claude.json das duas contas — `pencil`
 # (/opt/pencil-dev-bin/…, pacote do AUR que não existe aqui) e `atlassian` (por
 # `npx mcp-remote`, hoje feito pelo PLUGIN atlassian@claude-plugins-official). Migrar
@@ -63,11 +81,13 @@
 #   • os HOOKS do ciclo de vida (Discord Rich Presence) — eles moram no
 #     /etc/claude-code/managed-settings.json (system/services/claude-code.nix), porque
 #     precisam ser IMPOSTOS e não sobrescrevíveis. O caminho é FIXO em /etc, fora do
-#     CLAUDE_CONFIG_DIR, então valem nas três contas de uma vez.
-#   • o ~/.claude (conta default) — segue sem gerência do Nix, do jeito que estava. Não é
-#     esquecimento: linkar o settings.json DELE pro repo é a mesma decisão de cima aplicada
-#     à conta que este repo usa no dia a dia, e vale fazer — só não foi feito junto pra não
-#     misturar com a entrada das duas contas novas.
+#     CLAUDE_CONFIG_DIR, então valem nas duas contas de uma vez.
+#   • o `projects/` do ~/.claude — é o ALVO dos symlinks, não um artefato declarado. O Nix é
+#     dono dos links; o conteúdo é do app (regra 14).
+#   • o RESTO do ~/.claude (history.jsonl, settings.json, sessions/, shell-snapshots/…) —
+#     sobra de quando ele era conta, e sobra é LEGADO: o que valia a pena foi copiado pro
+#     ~/.claude-fai na virada e o resto se poda depois que a conta nova provar que anda
+#     (está anotado em docs/pendencias.md — regra 16).
 # ═══════════════════════════════════════════════════════════════════════════
 {
   config,
@@ -167,6 +187,18 @@ in
         config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.claude/projects";
     }) profiles
   );
+
+  # O `claude` PURO vira a FAI. Sem isto ele cairia no ~/.claude, que hoje é só o acervo —
+  # e o CC criaria ali um `.claude.json` paralelo e pediria um terceiro login (ver o ⚠️ do
+  # cabeçalho). Vale pra todo mundo que chama o binário sem passar pelos wrappers: extensão
+  # do VS Code, script, cron.
+  #
+  # ⚠️ SÓ VALE EM SHELL NOVO. O home-manager escreve isto no hm-session-vars.sh, que o
+  # .zshrc carrega no início da sessão — o terminal que rodou o `rebuild` continua sem a
+  # variável e segue usando o ~/.claude até ser fechado. Mesma pegadinha que o NH_FLAKE
+  # pregou em 03/08 (home/shell/zsh.nix), com a diferença de que aqui um terminal NOVO já
+  # resolve, sem precisar relogar na sessão gráfica.
+  home.sessionVariables.CLAUDE_CONFIG_DIR = "${config.home.homeDirectory}/.claude-fai";
 
   programs.zsh.shellAliases = {
     # Monitor ao vivo do bloco atual (tokens/custo), 1 refresh por segundo.

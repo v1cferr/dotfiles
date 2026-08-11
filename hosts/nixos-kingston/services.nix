@@ -46,11 +46,12 @@
         "/api/*" = 8006;
       }; # FastAPI; prefixo NÃO removido, p/ a mesma URL valer no container
       expose = "public";
-      auth = {
-        v1cferr = "CADDY_POS_HASH_V1CFERR";
-        jp = "CADDY_POS_HASH_JP";
-      };
-      comment = "GradRadar (V1C-72), dividido com o JP. Sem login próprio até o F2 → basic_auth de fora.";
+      # SEM basic_auth, de propósito: o login vai morar na aplicação (Next.js),
+      # e uma senha de proxy na frente significaria digitar duas. Até o F2 a
+      # página é ABERTA — o que ela mostra são datas de edital público e nenhum
+      # dado pessoal (nenhum dos três nomes é renderizado). O dia em que houver
+      # algo por candidato, o login do app tem que existir ANTES.
+      comment = "GradRadar (V1C-72), dividido com o JP e o César. Aberto: auth virá no próprio app (F2).";
     };
 
     jellyfin = {

@@ -76,15 +76,22 @@ let
   # é curinga. Escapar evita que `pos.v1cferr.dev` case `posXv1cferrYdev`.
   domainRe = builtins.replaceStrings [ "." ] [ "\\." ] domain;
 
-  # AUTO-GATE: os quatro são necessários JUNTOS. Faltando um, `{$VAR}` vira
-  # string vazia e o Caddy recusa a config (hash de basic_auth vazio) — melhor
-  # ficar inerte do que derrubar o proxy no switch.
+  # AUTO-GATE: necessários JUNTOS. Faltando um, `{$VAR}` vira string vazia e o
+  # Caddy recusa a config (hash de basic_auth vazio) — melhor ficar inerte do
+  # que derrubar o proxy no switch.
+  #
+  # Os hashes NÃO são literais aqui: são derivados de quem declara `auth` na
+  # SSOT. Quando eram fixos, tirar o basic_auth de um serviço deixava o portão
+  # exigindo um segredo que ninguém mais lia — e o dia em que esse item saísse do
+  # Bitwarden o Caddy ficaria inerte, levando jellyfin, torrent, ai e duo com ele.
+  # Um serviço que cai por causa de uma senha que não usa é o pior tipo de
+  # acoplamento: invisível até o dia em que importa.
+  authVars = lib.unique (lib.concatMap (s: lib.attrValues s.auth) (lib.attrValues config.my.ingress));
   requiredSecrets = [
     "caddy_acme_email"
     "caddy_cloudflare_dns_token"
-    "caddy_pos_hash_v1cferr"
-    "caddy_pos_hash_jp"
-  ];
+  ]
+  ++ map lib.toLower authVars;
   enabled = lib.all (s: builtins.hasAttr s config.sops.secrets) requiredSecrets;
 
   # ── Gerador dos vhosts, a partir de `my.ingress` (system/net/ingress.nix) ──
@@ -246,12 +253,14 @@ lib.mkIf (enabled && config.my.services.caddy) {
   # Renderiza o .env do Caddy: config em texto + segredos por placeholder.
   # ASPAS SIMPLES nos hashes: bcrypt contém `$`, e o `.env` do setup antigo já
   # documentava que sem elas o valor é mutilado antes de chegar no processo.
+  # Uma linha por variável de `auth` declarada na SSOT — nenhuma escrita à mão.
+  # Deixar um CADDY_*_HASH aqui depois de tirar o basic_auth renderiza um segredo
+  # que nada consome, e o próximo leitor não tem como saber que é resto.
   sops.templates."caddy.env".content = ''
     CADDY_ACME_EMAIL=${config.sops.placeholder.caddy_acme_email}
     CADDY_CLOUDFLARE_DNS_TOKEN=${config.sops.placeholder.caddy_cloudflare_dns_token}
-    CADDY_POS_HASH_V1CFERR='${config.sops.placeholder.caddy_pos_hash_v1cferr}'
-    CADDY_POS_HASH_JP='${config.sops.placeholder.caddy_pos_hash_jp}'
-  '';
+  ''
+  + lib.concatMapStrings (v: "${v}='${config.sops.placeholder.${lib.toLower v}}'\n") authVars;
 
   # ── fail2ban: brute-force no basic_auth do `pos` ──────────────────────────
   # Mora aqui e não em ../net/network.nix (onde o serviço é declarado) porque a
@@ -262,26 +271,40 @@ lib.mkIf (enabled && config.my.services.caddy) {
   # `pos` é tentativa falha, não navegação normal.
   # Os hosts vêm DERIVADOS da SSOT (quem tem `auth`), não literais: declarar um
   # serviço novo com basic_auth já o põe na jail, sem lembrar de editar aqui.
-  environment.etc."fail2ban/filter.d/caddy-pos.conf".text = ''
-    # Falhas de basic_auth no Caddy (hosts: ${lib.concatStringsSep ", " authHosts}),
-    # lidas do access log JSON no journald. ⚠️ Depende da ORDEM das chaves do log
-    # — validar com `fail2ban-regex` depois de bump do Caddy.
-    [Definition]
-    failregex = "remote_ip":"<HOST>",.+?"host":"(${authHostsRe})",.+?"status":401,
-    journalmatch = _SYSTEMD_UNIT=caddy.service
-  '';
+  # Sem nenhum host com basic_auth não existe 401 para contar, e o `authHostsRe`
+  # vazio geraria `"host":"()"` — um failregex que casa nada. A jail continuaria
+  # verde no `fail2ban-client status` sem proteger coisa alguma, que é o modo de
+  # falha silenciosa contra o qual o cabeçalho deste módulo avisa. Melhor não
+  # existir do que existir mentindo.
+  environment.etc."fail2ban/filter.d/caddy-pos.conf" = lib.mkIf (authHosts != [ ]) {
+    text = ''
+      # Falhas de basic_auth no Caddy (hosts: ${lib.concatStringsSep ", " authHosts}),
+      # lidas do access log JSON no journald. ⚠️ Depende da ORDEM das chaves do log
+      # — validar com `fail2ban-regex` depois de bump do Caddy.
+      [Definition]
+      failregex = "remote_ip":"<HOST>",.+?"host":"(${authHostsRe})",.+?"status":401,
+      journalmatch = _SYSTEMD_UNIT=caddy.service
+    '';
+  };
 
-  services.fail2ban.jails.caddy-pos.settings = {
-    enabled = true;
-    filter = "caddy-pos";
-    backend = "systemd"; # o Caddy loga no journald, não em arquivo
-    port = "http,https";
-    maxretry = 5;
-    findtime = "10m";
-    bantime = "1h";
-    # SEM `ignoreip` próprio: o [DEFAULT] do fail2ban (../net/network.nix) já isenta
-    # a mesma lista, e as duas saíam idênticas no jail.local gerado desde que ambas
-    # passaram a ler a SSOT. Jail sem ignoreip HERDA o default — é o comportamento
-    # que se quer, e uma cópia a menos pra divergir.
+  # `optionalAttrs` e não `mkIf` no `settings`: o módulo do fail2ban injeta
+  # `enabled = true` em toda jail DECLARADA, então esvaziar as settings ainda
+  # emitia `[caddy-pos]` no jail.local — uma jail sem filtro, apontando para um
+  # arquivo que este módulo acabou de parar de criar. O serviço subiria
+  # reclamando. A jail tem que deixar de EXISTIR, não de ter conteúdo.
+  services.fail2ban.jails = lib.optionalAttrs (authHosts != [ ]) {
+    caddy-pos.settings = {
+      enabled = true;
+      filter = "caddy-pos";
+      backend = "systemd"; # o Caddy loga no journald, não em arquivo
+      port = "http,https";
+      maxretry = 5;
+      findtime = "10m";
+      bantime = "1h";
+      # SEM `ignoreip` próprio: o [DEFAULT] do fail2ban (../net/network.nix) já
+      # isenta a mesma lista, e as duas saíam idênticas no jail.local gerado desde
+      # que ambas passaram a ler a SSOT. Jail sem ignoreip HERDA o default — é o
+      # comportamento que se quer, e uma cópia a menos pra divergir.
+    };
   };
 }

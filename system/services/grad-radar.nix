@@ -1,6 +1,7 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# GradRadar — stack do app (Next.js + FastAPI + Postgres) subindo no BOOT, e o
-# monitor de editais rodando por timer.
+# GradRadar — stack do app (Next.js + FastAPI + Postgres) subindo no BOOT, e a
+# cadeia de acompanhamento de editais rodando por timer: coleta → reavalia
+# horário → notifica.
 #
 # O PROBLEMA QUE ISTO RESOLVE: o Caddy já subia sozinho e o Docker também, mas
 # os containers do grad-radar não. Depois de cada reboot o
@@ -122,9 +123,29 @@ lib.mkIf config.my.services.grad-radar {
     unitConfig.ConditionPathExists = composeFile;
     serviceConfig = {
       Type = "oneshot";
-      # --quiet: só mudança e falha viram log. Um journal com 15 linhas de
+      # --quiet: só mudança e falha viram log. Um journal com 19 linhas de
       # "igual" por hora é um journal que ninguém lê.
-      ExecStart = "${dc} exec -T backend python -m app.monitor --quiet";
+      #
+      # `verify` roda DEPOIS e sem --apply: ele relê as grades que o monitor
+      # acabou de baixar e compara o veredito de horário com o que está no banco.
+      # Relatar e não gravar é deliberado — divergência pode ser grade nova (o que
+      # se quer saber) ou o extrator falhando num formato inédito, e gravar calado
+      # apagaria a diferença. Quem decide é uma pessoa, com `just verify-apply`.
+      # A cadeia inteira, na ordem: coleta → reavalia horário → avisa.
+      #
+      # `notify` por último e por um motivo: ele lê o que os dois anteriores
+      # acabaram de gravar. Rodar antes avisaria sobre o estado da execução
+      # passada, e um alerta atrasado de um dia é pior que nenhum num projeto cujo
+      # inimigo é justamente descobrir tarde.
+      #
+      # Sem canal configurado, `notify` só GRAVA os eventos — não falha. Isso é de
+      # propósito: a cadeia não deve quebrar por falta de credencial, e os eventos
+      # ficam na tabela esperando o canal existir.
+      ExecStart = [
+        "${dc} exec -T backend python -m app.monitor --quiet"
+        "${dc} exec -T backend python -m app.verify"
+        "${dc} exec -T backend python -m app.notify"
+      ];
     };
   };
 

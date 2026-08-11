@@ -26,8 +26,22 @@
         **ignora** o `~/.ssh/authorized_keys` dele e só lê
         `C:\ProgramData\ssh\administrators_authorized_keys` — que ainda exige `icacls`
         restringindo a herança, senão o sshd recusa o arquivo e volta pra senha **em
-        silêncio do lado do cliente**. Receita completa no comentário do módulo; o passo em
-        si ficou em pendências, porque hoje o login ainda é por SENHA.
+        silêncio do lado do cliente**. FEITO no mesmo dia, e validado com
+        `ssh -o BatchMode=yes ... "echo OK"` — o `BatchMode` proíbe o prompt de senha, então
+        o `OK` prova que foi a CHAVE que autenticou; sem ele o teste é ambíguo, porque você
+        digita a senha e conclui que a chave funcionou.
+      • ⚠️ `Add-Content -Encoding ascii` não é preciosismo: o padrão do PowerShell pra
+        arquivo é UTF-16, e o sshd não lê `authorized_keys` em UTF-16 — falha MUDA, cai na
+        senha sem dizer por quê. Mesma classe de armadilha do `icacls`: as duas formas de
+        errar aqui são silenciosas e indistinguíveis uma da outra.
+      • SENHA da conta trocada junto, e a decisão foi MEDIDA antes: o Windows distingue
+        TROCAR senha (com a antiga em mãos, que re-embrulha a chave-mestra do DPAPI) de
+        RESETAR (`net user v1cferr *`, que a torna irrecuperável e leva junto Credential
+        Manager, senhas de navegador e EFS — tudo em silêncio). Não há caminho de "troca"
+        por linha de comando sem P/Invoke, e por SSH não existe Ctrl+Alt+Del. O reset foi
+        seguro porque `cmdkey /list` veio `* NONE *` (nada a perder) e o
+        `Get-LocalUser | Select PrincipalSource` veio `Local` — se viesse `MicrosoftAccount`,
+        nem `net user` nem `Set-LocalUser` mudariam nada, porque a senha seria da conta MS.
       • IP literal (192.168.1.40) e não opção `my.*`: citado num lugar só, mesma
         justificativa do `router` — literal solitário não dispara a regra 11. Mas é DHCP: se
         o roteador entregar outro endereço, o alias quebra, e o conserto é reserva de DHCP

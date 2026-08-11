@@ -32,6 +32,29 @@
         justificativa do `router` — literal solitário não dispara a regra 11. Mas é DHCP: se
         o roteador entregar outro endereço, o alias quebra, e o conserto é reserva de DHCP
         no OpenWrt, não mais uma opção aqui.
+      • **O shell virou GIT BASH, e o bash já estava lá o tempo todo.** `RequestTTY` +
+        `RemoteCommand` apontando pro `C:\Program Files\Git\bin\bash.exe` — testado, cai em
+        `v1cferr@Cesar MINGW64 ~$`. ⚠️ O `where bash` MENTE nessa máquina: o único `bash` no
+        PATH é `C:\Windows\System32\bash.exe`, que **não é bash** — é o stub legado do WSL, e
+        não há distro instalada. O bash de verdade não aparece no `where` porque só o
+        `Git\cmd` está no PATH e o binário mora no `Git\bin`. Quase virou "essa máquina não
+        tem bash", quando tinha.
+      • **E com ele vieram os coreutils, sem instalar nada.** O Git for Windows embarca o
+        userland GNU inteiro (`ls`, `grep`, `sed`, `awk`, `find`, `less`, `tar`, `curl`…) — a
+        queixa de "faltam coreutils" era, na verdade, a queixa de cair no cmd.exe.
+      • RECUSADO trocar o shell pelo registro (`HKLM:\SOFTWARE\OpenSSH\DefaultShell`): é
+        GLOBAL, mudaria o shell de toda sessão SSH da máquina, inclusive a do dono. Do lado
+        do cliente a escolha é só nossa e some junto com este repo.
+      • RECUSADO instalar WSL, mesmo com o `v1cferr` sendo admin: o projeto do irmão é
+        Gradle/Java Windows-native (`gradlew.bat`), e rodá-lo do WSL contra `/mnt/c` cruza a
+        fronteira de I/O que é justamente onde o WSL é lento — fora plantar GB de VM na
+        máquina dos outros. O CUSTO ASSUMIDO: o sandboxing do Claude Code só existe no WSL2,
+        então no Windows nativo a permissão é a única barreira.
+      • ⚠️ `RemoteCommand` e comando de linha são MUTUAMENTE EXCLUDENTES no ssh ("Cannot
+        execute command-line and remote command"), então o bloco de cima sozinho QUEBRARIA
+        `scp`, `rsync` e `ssh cesar <cmd>`. Daí o gêmeo `cesar-cmd`, mesmo host sem
+        `RemoteCommand`: `cesar` pra sentar e trabalhar, `cesar-cmd` pra copiar arquivo. A
+        alternativa era decorar `-o RemoteCommand=none` em toda invocação.
 
 - [x] Auditoria de crescimento em disco: o Docker era o único sem teto, e o btrfs/GC
       não precisavam de nada (10/08/2026) — a pergunta era "o btrfs está bem? tem swap? o

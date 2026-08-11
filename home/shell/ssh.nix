@@ -94,14 +94,12 @@ in
       #
       # ⚠️ authorized_keys VIVE NO WINDOWS, fora do alcance do Nix — isto declara só o
       # LADO CLIENTE, e hoje o login ainda cai em SENHA. E `ssh-copy-id` NÃO funciona
-      # aqui: ele assume shell POSIX do outro lado, e do outro lado tem cmd.exe. O passo
-      # manual é rodado NA máquina do irmão, e QUAL arquivo depende de o usuário ser
-      # administrador — se for, o sshd do Windows IGNORA o ~/.ssh/authorized_keys dele:
-      #   # usuário comum, no PowerShell:
-      #   mkdir -Force $env:USERPROFILE\.ssh
-      #   Add-Content $env:USERPROFILE\.ssh\authorized_keys '<conteúdo do id_ed25519.pub>'
-      #   # usuário ADMIN, no PowerShell como administrador:
-      #   Add-Content C:\ProgramData\ssh\administrators_authorized_keys '<a mesma linha>'
+      # aqui: ele assume shell POSIX do outro lado, e do outro lado tem cmd.exe.
+      # MEDIDO (10/08): o `v1cferr` lá é ADMINISTRADOR (`whoami /groups` traz o
+      # BUILTIN\Administrators, SID S-1-5-32-544), e isso decide o arquivo — pra membro
+      # do grupo, o sshd do Windows IGNORA o `~/.ssh/authorized_keys` e lê SÓ o de baixo.
+      # Passo manual, no PowerShell como administrador NA máquina do irmão:
+      #   Add-Content C:\ProgramData\ssh\administrators_authorized_keys '<id_ed25519.pub>'
       #   icacls C:\ProgramData\ssh\administrators_authorized_keys /inheritance:r `
       #     /grant "Administrators:F" /grant "SYSTEM:F"
       # O `icacls` não é enfeite: o sshd RECUSA o arquivo (e volta pra senha, em silêncio
@@ -109,7 +107,34 @@ in
       #
       # ⚠️ IP literal e por DHCP: se o roteador entregar outro endereço, o alias quebra —
       # o conserto é reserva de DHCP no OpenWrt, não mais uma opção `my.*` aqui.
+      #
+      # O `RemoteCommand` troca o cmd.exe pelo GIT BASH, que já está instalado lá
+      # (`where git` → C:\Program Files\Git\cmd\git.exe). O `where bash` NÃO acha esse
+      # bash porque só o `Git\cmd` está no PATH, e o bash.exe mora no `Git\bin` — daí o
+      # caminho absoluto aqui. O único `bash` no PATH é `C:\Windows\System32\bash.exe`,
+      # que NÃO é bash: é o stub legado do WSL, e a máquina não tem distro instalada
+      # ("Windows Subsystem for Linux has no installed distributions").
+      #
+      # RECUSADO trocar o shell pelo registro (`HKLM:\SOFTWARE\OpenSSH\DefaultShell`):
+      # é global, mudaria o shell de TODA sessão SSH da máquina — inclusive a do dono.
+      # Do lado do cliente a escolha é só nossa e some junto com este arquivo.
       cesar = {
+        HostName = "192.168.1.40";
+        User = "v1cferr";
+        Port = 22;
+        IdentityFile = "~/.ssh/id_ed25519";
+        RequestTTY = "yes"; # RemoteCommand sem TTY = shell interativo sem eco nem readline
+        RemoteCommand = ''"C:\Program Files\Git\bin\bash.exe" -l -i'';
+      };
+
+      # O MESMO host, sem `RemoteCommand` — e não é duplicação: `RemoteCommand` e comando
+      # de linha são MUTUAMENTE EXCLUDENTES no ssh ("Cannot execute command-line and
+      # remote command"), então com o bloco de cima `ssh cesar <cmd>`, `scp` e `rsync`
+      # PARAM DE FUNCIONAR. Este gêmeo é a saída declarativa: `cesar` pra sentar e
+      # trabalhar, `cesar-cmd` pra copiar arquivo e rodar comando avulso. A alternativa
+      # era decorar `-o RemoteCommand=none` em toda invocação, que é o tipo de coisa que
+      # o repo existe pra não precisar lembrar.
+      cesar-cmd = {
         HostName = "192.168.1.40";
         User = "v1cferr";
         Port = 22;

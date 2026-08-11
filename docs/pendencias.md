@@ -259,8 +259,9 @@ armadilha conhecida. Vale mais o parágrafo do que o título.
       declarado; falta só o lado de lá, que o Nix não alcança.
       • ⚠️ `ssh-copy-id` NÃO serve: ele assume shell POSIX, e o shell padrão do sshd do
         Windows é o cmd.exe. O passo é rodado NA máquina do irmão, em PowerShell.
-      • ⚠️ QUAL arquivo depende de o usuário ser administrador — se for, o sshd IGNORA o
-        `~/.ssh/authorized_keys` dele e só lê
+      • ⚠️ RESOLVIDO QUAL ARQUIVO (medido em 10/08): o `v1cferr` lá é ADMINISTRADOR
+        (`whoami /groups` traz BUILTIN\Administrators, SID S-1-5-32-544), e pra membro do
+        grupo o sshd do Windows **ignora** o `~/.ssh/authorized_keys` — vale só o
         `C:\ProgramData\ssh\administrators_authorized_keys`, que ainda exige `icacls`
         tirando a herança. Sem isso o sshd recusa o arquivo e volta pra senha **sem dizer
         nada ao cliente** — o modo de falha é "não funcionou e não explicou".

@@ -14,7 +14,7 @@ age (pendências) e o que se consulta (histórico) têm ritmos diferentes.
 | [historico/](historico/) | O que foi feito e por quê — pasta por ano, arquivo por mês | "Por que isto está assim?" |
 | [ideias.md](ideias.md) | Considerado, ainda não decidido | Ao planejar |
 | [arch-legado.md](arch-legado.md) | Capítulo encerrado + como abrir o acervo | Raramente |
-| [guias/](guias/) | Passo a passo de hardware/setup | Ao reinstalar |
+| [guias/](guias/) | Passo a passo do que o Nix não alcança (BIOS, Secure Boot, roteador, Windows) | Ao reinstalar ou mexer fora do repo |
 | [testes/](testes/) | Protocolos de teste reutilizáveis | Ao validar mudança |
 
 ## Convenções

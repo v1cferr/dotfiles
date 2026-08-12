@@ -104,6 +104,10 @@ let
   # pendurado e o CC sem conseguir salvar settings.
   repo = "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/shell/claude";
 
+  # Onde o `claude` PURO cai. Lido pela variável de sessão lá embaixo — literal nenhum
+  # espalhado (regra 11), e o wrapper da FAI sai do mesmo `profiles` logo abaixo.
+  defaultDir = "${config.home.homeDirectory}/.claude-fai";
+
   # SSOT das contas extras (regra 11): esta atriz gera os wrappers, o menu do claude-pick,
   # os symlinks de settings.json e os de projects/. Conta nova = uma entrada aqui + o
   # settings-<nome>.json no ./claude — nada mais muda.
@@ -193,12 +197,24 @@ in
   # cabeçalho). Vale pra todo mundo que chama o binário sem passar pelos wrappers: extensão
   # do VS Code, script, cron.
   #
-  # ⚠️ SÓ VALE EM SHELL NOVO. O home-manager escreve isto no hm-session-vars.sh, que o
-  # .zshrc carrega no início da sessão — o terminal que rodou o `rebuild` continua sem a
-  # variável e segue usando o ~/.claude até ser fechado. Mesma pegadinha que o NH_FLAKE
-  # pregou em 03/08 (home/shell/zsh.nix), com a diferença de que aqui um terminal NOVO já
-  # resolve, sem precisar relogar na sessão gráfica.
-  home.sessionVariables.CLAUDE_CONFIG_DIR = "${config.home.homeDirectory}/.claude-fai";
+  # ⚠️ SÓ VALE DEPOIS DE RELOGAR NA SESSÃO GRÁFICA — terminal novo NÃO basta, e isso foi
+  # MEDIDO em 11/08/2026, com o switch já aplicado e a variável ainda vazia num zsh
+  # recém-aberto. O mecanismo: isto é gravado no `hm-session-vars.sh`, que o `~/.zshenv`
+  # carrega, e o arquivo se autoprotege com `__HM_SESS_VARS_SOURCED=1` pra não recarregar em
+  # subshell. A marca é EXPORTADA, então todo filho da sessão gráfica já nasce com ela e
+  # pula o carregamento inteiro — variável nova não chega em terminal novo, só em sessão
+  # nova. Provado com `env -u __HM_SESS_VARS_SOURCED zsh -i -c`: sem a marca, ela aparece.
+  # Mesma família da pegadinha do NH_FLAKE (home/shell/zsh.nix, 03/08).
+  #
+  # TENTEI `programs.zsh.sessionVariables` como segunda camada e NÃO ADIANTA: cai no MESMO
+  # ~/.zshenv e traz guard próprio (`__HM_ZSH_SESS_VARS_SOURCED`), que a sessão também já
+  # exporta — mesmo o repo não usando a opção em canto nenhum, porque o home-manager emite o
+  # bloco sempre, só vazio. Eram duas camadas com a mesma falha; ficou uma, honesta.
+  #
+  # ATÉ O RELOGIN quem entrega a conta certa é o WRAPPER (`claude-fai`), que exporta a
+  # variável ele mesmo. É o argumento mais forte a favor de o wrapper existir: ele não
+  # depende de o ambiente da sessão ter sido reconstruído.
+  home.sessionVariables.CLAUDE_CONFIG_DIR = defaultDir;
 
   programs.zsh.shellAliases = {
     # Monitor ao vivo do bloco atual (tokens/custo), 1 refresh por segundo.

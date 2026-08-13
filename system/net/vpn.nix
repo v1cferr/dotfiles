@@ -132,14 +132,28 @@ let
         # Unidade PARADA não é falha: é "você não pediu p/ conectar". Sem este gate o
         # diagnóstico classificava com log de DIAS atrás e dizia "ainda tentando" sobre
         # uma VPN que ninguém tentou subir — pego no 1º teste real (UFSCar, 31/07).
-        if ! systemctl is-active --quiet "$unit"; then
-          # SEM backticks aqui: dentro de aspas simples o shellcheck acusa SC2016 e o
-          # build FALHA. Pior, a mensagem sai ilegível — o shellcheck crasha ao imprimir
-          # ("cannot encode character") porque o sandbox não tem locale UTF-8 e a linha
-          # tem acento. Warning em linha acentuada = erro que não se explica sozinho.
-          printf 'nao esta conectando -- unidade parada\nnenhuma tentativa em curso; use: vpn connect %s\n' "$id"
-          return 1
-        fi
+        #
+        # ⚠️ NÃO usar `is-active --quiet` AQUI, e esta foi a mordida de 12/08/2026: em
+        # crash-loop a unidade fica `activating` (SubState=auto-restart) e o `is-active`
+        # sai NÃO-ZERO. O gate então anunciava "unidade parada, nenhuma tentativa em
+        # curso" enquanto o nxBender tentava havia 18 horas — o oposto exato da verdade,
+        # justamente no cenário pra que este diagnóstico foi escrito. Custou a sessão
+        # inteira: mandou procurar problema de rede numa falha de credencial.
+        # `ActiveState` separa os três casos que importam: inactive = ninguém pediu;
+        # activating = tentando agora; failed = tentou e desistiu (os dois últimos TÊM
+        # de seguir pro classificador). O `fai_conn`/`ufscar_conn` lá em cima continua
+        # com `is-active` de propósito — lá "conectado" exige ativa DE VERDADE.
+        state="$(systemctl show "$unit" -p ActiveState --value)"
+        case "$state" in
+          inactive | deactivating)
+            # SEM backticks aqui: dentro de aspas simples o shellcheck acusa SC2016 e o
+            # build FALHA. Pior, a mensagem sai ilegível — o shellcheck crasha ao imprimir
+            # ("cannot encode character") porque o sandbox não tem locale UTF-8 e a linha
+            # tem acento. Warning em linha acentuada = erro que não se explica sozinho.
+            printf 'nao esta conectando -- unidade parada\nnenhuma tentativa em curso; use: vpn connect %s\n' "$id"
+            return 1
+            ;;
+        esac
 
         # Janela de 15 min: garante que a evidência é da tentativa ATUAL, não de uma
         # sessão antiga que sobrou no journal (mesma armadilha do gate acima).
@@ -159,6 +173,19 @@ let
           detail="$host:$port não aceita conexão e a internet daqui está OK"
         else
           case "$log" in
+            # SENHA EXPIRADA vem PRIMEIRO de propósito: é o único caso desta lista em que
+            # RETENTAR NUNCA RESOLVE, e o Restart=always transforma isso em tempestade de
+            # login — 59 tentativas em ~18h entre 11 e 12/08/2026, com risco real de
+            # bloquear a conta. Sem este caso a falha caía em "causa não classificada" e
+            # a evidência sozinha enganava: a frase do SonicWall ("please check TLS,
+            # server writable or other config") parece erro de configuração NOSSA, e na
+            # verdade diz que o APPLIANCE não consegue gravar a troca de senha no AD.
+            # MEDIDO em 12/08: o portal web recusa igual (E_UNAUTHORIZED / "Password
+            # expired.") e nem oferece formulário de troca — nenhum cliente resolve, a
+            # cura é fora daqui. O que funcionou: Ctrl+Alt+Del numa máquina do domínio.
+            *"Password change needed"* | *"Password expired"* | *"password has expired"*)
+              verdict="SENHA EXPIRADA no AD — retentar NAO resolve"
+              detail="troque numa maquina do dominio (Ctrl+Alt+Del); depois sops + nixos-rebuild switch. Rode 'vpn disconnect $id' JA, pra parar de acumular login falho." ;;
             *"Login failed"*|*"Authentication failed"*|*"invalid credential"*)
               verdict="CREDENCIAL REJEITADA"
               detail="o portal respondeu e recusou o login — revisar a senha no sops" ;;

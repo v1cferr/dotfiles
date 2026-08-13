@@ -30,8 +30,22 @@
 # escreve ("VPN é sob-demanda (fora)"): as regras abaixo são inertes enquanto não
 # existir ppp0, e quem liga/desliga o túnel é o CLI `vpn` de ./vpn.nix.
 # ═══════════════════════════════════════════════════════════════════════════
-{ config, ... }:
+{ config, lib, ... }:
 
+let
+  # Faixas que a FAI empurra pelo túnel. ESTA LISTA É DELA, não nossa — ela vem no IPCP a
+  # cada conexão e pode mudar sem avisar. Confirmar com `ip route show dev ppp0` (seis
+  # faixas em 13/08/2026, idênticas às de 12/08). Só existe aqui pelas regras anti-laço
+  # abaixo; a rota de verdade quem instala é o nxBender.
+  faiSubnets = [
+    "192.168.90.0/24"
+    "192.168.100.0/24"
+    "192.168.110.0/24"
+    "192.168.130.0/24"
+    "192.168.223.0/24"
+    "200.136.209.128/25"
+  ];
+in
 {
   # MASQUERADE É OBRIGATÓRIO, não otimização: a FAI não tem rota de volta pra
   # 192.168.1.0/24 — o pacote chega lá e não tem caminho de retorno. Com o NAT tudo
@@ -64,15 +78,42 @@
     # A volta é por conntrack, NÃO um ACCEPT simétrico: a FAI iniciar conexão PRA
     # DENTRO de casa não é o caso de uso, e liberar isso daria à rede da FAI acesso à
     # LAN inteira. Só volta o que esta casa começou.
+    #
+    # ANTI-LAÇO — DIAGNOSTICADO EM 13/08/2026, e o sintoma não parecia ser isto. Com a VPN
+    # DESLIGADA o roteador continua mandando as faixas da FAI pra 192.168.1.10 (a rota
+    # estática dele é fixa e não sabe do túnel); sem ppp0 esta máquina não tem rota
+    # específica, então devolve o pacote pelo default — de volta pro roteador, que devolve
+    # pra cá. LAÇO até o TTL morrer, e o usuário vê "The connection has timed out" depois
+    # de 15s, sem pista nenhuma de que a causa é a VPN parada.
+    #
+    # `! -o ppp0` e não `-i enp7s0 -o enp7s0`: a condição que importa é "tráfego pra FAI
+    # que NÃO está entrando no túnel", independente de por onde ele ia sair. Não cita nome
+    # de placa, então sobrevive a troca de NIC.
+    #
+    # REJECT e não DROP, de propósito: o ICMP net-unreachable faz o cliente falhar NA HORA
+    # com "no route to host", em vez de pendurar até o timeout. Trocar 15s de mistério por
+    # uma falha instantânea e nomeável é o ponto — não dá pra fazer o site funcionar sem
+    # VPN (medido: nem .236 nem .229 aceitam conexão de fora), então o melhor possível é
+    # falhar rápido e de forma legível.
+    #
+    # Só afeta tráfego ENCAMINHADO: o acesso desta própria máquina passa por OUTPUT, não
+    # por FORWARD, e segue intocado.
     extraCommands = ''
       iptables -I FORWARD 1 -s ${config.my.net.lanSubnet} -o ppp0 -j ACCEPT
       iptables -I FORWARD 1 -d ${config.my.net.lanSubnet} -i ppp0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+      ${lib.concatMapStringsSep "\n" (
+        net: "iptables -I FORWARD 1 -d ${net} ! -o ppp0 -j REJECT --reject-with icmp-net-unreachable"
+      ) faiSubnets}
     '';
 
     # Sem isto, `reload` do firewall empilha duplicatas (mesma lição do ./network.nix).
     extraStopCommands = ''
       iptables -D FORWARD -s ${config.my.net.lanSubnet} -o ppp0 -j ACCEPT 2>/dev/null || true
       iptables -D FORWARD -d ${config.my.net.lanSubnet} -i ppp0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT 2>/dev/null || true
+      ${lib.concatMapStringsSep "\n" (
+        net:
+        "iptables -D FORWARD -d ${net} ! -o ppp0 -j REJECT --reject-with icmp-net-unreachable 2>/dev/null || true"
+      ) faiSubnets}
     '';
   };
 }

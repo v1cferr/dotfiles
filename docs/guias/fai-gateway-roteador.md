@@ -73,8 +73,24 @@ sudo /etc/init.d/network reload   # ← pede senha
 
 ## Parte 2 — split-DNS das zonas da FAI
 
-Sem isto você alcança a FAI **só por IP**. Os DCs `200.136.209.252` e `.247` respondem na
-53 pelo túnel e resolvem os nomes internos (testado 12/08/2026).
+**SÓ A ZONA DO AD PRECISA.** Medido em 12/08/2026, comparando resposta pública (1.1.1.1)
+com a do DC da FAI (200.136.209.252):
+
+| zona | público | FAI | split-DNS? |
+| --- | --- | --- | --- |
+| `fai2008.ufscar.br` | **nada** | `.252`, `192.168.130.2/.3` | **sim** |
+| `sup.fai.ufscar.br` | `200.136.209.236` | igual | não |
+| `fai.ufscar.br` | `200.136.209.236` | igual | não |
+
+Por isso `dashboard.sup.fai.ufscar.br` funcionou sem nada disto: a zona é pública, faltava
+só a rota. O split-DNS abaixo serve pros nomes que **só existem dentro** — host de domínio,
+compartilhamento, serviço interno. Se um nome novo não resolver, teste antes de mexer aqui:
+
+```sh
+nslookup <nome> 200.136.209.252    # resolve? então é zona interna, some com a zona abaixo
+```
+
+Os DCs `200.136.209.252` e `.247` respondem na 53 pelo túnel (testado 12/08/2026).
 
 ⚠️ **A armadilha é o `rebind_protection`, que está em `1`.** O DNS da FAI devolve
 `192.168.130.2` pra `fai2008.ufscar.br` — endereço RFC1918 — e o dnsmasq **descarta

@@ -24,6 +24,13 @@ emitida. A curva de brilho por DDC/CI foi FEITA e REVERTIDA — funcionava, mas 
 principal, e a TV do HDMI não tem caminho automático. Ver o histórico de agosto. O que
 segue em aberto:
 
+- **Gamma progressivo a partir das 18h** — o passo seguinte se a curva de cor não bastar,
+  e é ele que finalmente aplicaria a prioridade acima. Em 13/08/2026 a curva pós-18h
+  desceu ~200–400K por degrau (2ª descida) e o eixo do BRILHO foi deixado de fora de
+  propósito: o dim automático por gamma existiu e foi revertido em 08/08 junto com o DDC.
+  ⚠️ A curva de Kelvin chegou perto do fundo útil — já atravessa os ~3200K em que a cor
+  estraga mídia —, então continuar descendo K piora a cor sem alívio proporcional. Se o
+  incômodo voltar, o ajuste é gamma, não mais laranja.
 - **Bias lighting** — luz atrás do monitor. É a recomendação que mais aparece na
   literatura e a única que não é software: reduz o contraste entre tela e parede escura.
 - **PWM**: monitor que escurece por PWM pisca em brilho baixo e piora a fadiga.

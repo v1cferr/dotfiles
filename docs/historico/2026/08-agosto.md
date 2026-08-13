@@ -1,6 +1,42 @@
 # Histórico — agosto de 2026
 
-54 entradas. Índice em [README.md](../README.md).
+55 entradas. Índice em [README.md](../README.md).
+
+- [x] Curva do hyprsunset desce de novo pós-18h (13/08/2026) — a pergunta que abriu isto era
+      outra: "o hyprsunset está iniciando junto com o PC? porque não parece". **Não havia
+      defeito nenhum no autostart**, e o motivo de "não parecer" é a própria config.
+      • A MEDIÇÃO QUE DESMENTIU O SINTOMA: boot às 11:58:58, serviço ativo às 11:59:05 — 7 s
+        depois — e a PRIMEIRA coisa que ele fez foi `Applying profile from: 8:0` →
+        `Resetting the matrix (--identity passed)`. Ou seja, ligou e aplicou o filtro
+        DESLIGADO, porque das 8h às 17:30 o perfil é `identity`. Nada visível no boot era o
+        comportamento CORRETO. Serviço `enabled`, 8 h de pé, 234 ms de CPU, zero restart.
+      • ⚠️ ARMADILHA GERAL, que vale além deste serviço: uma automação cujo estado correto é
+        "sem efeito visível" NÃO se audita pelo olho. Passei perto de tratar percepção como
+        evidência de falha; o que fechou a questão foi o journal (`Switched to new profile`
+        de hora em hora: 17:30 → 5500K … 20:00 → 3200K) mais o `hyprctl hyprsunset
+        temperature` batendo com o perfil do relógio.
+      • O CTM CHEGA NAS DUAS TELAS, e isso foi VERIFICADO, não presumido: A/B por IPC
+        (`identity` → 3000K → volta ao perfil) com o dono olhando. Mudou em DP-2 e na LG TV
+        do HDMI. Importava confirmar antes de mexer na curva — se uma saída não recebesse o
+        CTM, nenhum ajuste de Kelvin resolveria, e o histórico de 08/08 já registra que o
+        hyprsunset aplica em TODAS as saídas ou em nenhuma (não sabe mirar output).
+      • A MUDANÇA, então, é de PREFERÊNCIA e não de correção: cada degrau pós-18h desceu
+        ~200–400K (18h 4200→3800, 19h 3500→3200, 20h 3200→3000, 22h 2800→2600, 23h
+        2500→2400). Seguem 13 perfis e o maior degrau segue às 18h (agora 5000→3800).
+      • ⚠️ ESCOLHIDO O EIXO DA COR CONTRA O QUE ideias.md RECOMENDA. Lá está registrado que
+        reduzir BRILHO vem antes de temperatura de cor, e que "modo noturno não substitui
+        brilho adequado" — a curva pós-18h continua mexendo só em Kelvin, com gamma
+        entrando só às 22h. Foi escolha consciente do dono depois de ver as duas propostas
+        lado a lado, não descuido: o dim automático por gamma existiu e foi REVERTIDO em
+        08/08 junto com o DDC, e reintroduzi-lo é mudança maior que baixar Kelvin.
+      • O QUE FICA EM ABERTO e está anotado no cabeçalho do módulo: se esta curva não
+        bastar, o próximo passo é gamma progressivo a partir das 18h — **não** continuar
+        descendo Kelvin, que daqui pra baixo piora a cor sem alívio proporcional.
+      • O PREÇO ACEITO: a curva agora atravessa os ~3200K de propósito, e o cabeçalho do
+        `hyprsunset.nix` avisava que abaixo disso a cor estraga filme/jogo/foto. Das 19h em
+        diante isso passa a ser o NORMAL, então SUPER+SHIFT+F9 (`identity`) deixa de ser
+        escape hatch raro e vira gesto rotineiro pra abrir mídia à noite. O próximo perfil
+        do relógio retoma a curva sozinho.
 
 - [x] `/mnt/arch-antigo` montado SEMPRE, e o `arch-browse` morreu (11/08/2026) — o sintoma
       foi abrir o bookmark no Dolphin e ver pasta vazia. Não havia defeito: segredos

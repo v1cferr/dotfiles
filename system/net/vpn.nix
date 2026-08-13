@@ -100,12 +100,47 @@ let
       # conectar), túnel ausente, e ativa há mais que a folga. A folga existe porque
       # conectar leva ~10-30s de forma legítima — sem ela o watchdog mataria a conexão
       # em curso e viraria o próprio problema.
+      # AUTO-STOP em erro IRRECUPERÁVEL. O `Restart=always` está certo pro caso comum (o
+      # portal da FAI oscilando) e ERRADO pra credencial: senha expirada não melhora com
+      # tentativa, e cada ciclo é um login falho no SonicWall — 59 em ~18h no episódio de
+      # 11-12/08/2026, com risco real de bloquear a conta. Aqui a política INVERTE: se a
+      # assinatura do log é de credencial, PARA a unidade em vez de reiniciar. Só o dono
+      # resolve (trocar a senha no AD), e até lá insistir só acumula dano.
+      #
+      # Janela de 10 min pro log: a evidência tem de ser da tentativa em curso, não de um
+      # episódio de ontem que faria isto parar uma VPN saudável.
+      stop_if_unrecoverable() {
+        id="$1"
+        unit="$2"
+        log="$(journalctl -u "$unit" --since '-10 min' --no-pager -o cat 2>/dev/null || true)"
+        case "$log" in
+          *"Password change needed"* | *"Password expired"* | *"password has expired"*) ;;
+          *) return 1 ;;
+        esac
+        # <3> = err: mais alto que o <4> do hang, porque isto exige AÇÃO HUMANA
+        echo "<3>$id: senha expirada no AD — parando a unidade (retentar não resolve)"
+        systemctl stop "$unit" 2>/dev/null || true
+        notify-send -a VPN -u critical -i network-vpn "VPN ''${id^^}: senha expirada" \
+          "Parei as tentativas pra não bloquear sua conta. Troque a senha numa máquina do domínio (Ctrl+Alt+Del), depois sops + nixos-rebuild switch." 2>/dev/null || true
+        return 0
+      }
+
       heal_one() {
         id="$1"
         meta="$(vpn_meta "$id")" || return 0
         read -r unit _ _ <<< "$meta"
-        systemctl is-active --quiet "$unit" || return 0  # ninguém pediu conexão
-        conn_of "$id" && return 0                        # túnel de pé: nada a fazer
+        # ⚠️ MESMO cuidado do gate do diag(), e esta era a TERCEIRA aparição do erro neste
+        # arquivo: `is-active --quiet` é falso em `activating`, que é justamente o estado do
+        # crash-loop — então este healer NUNCA agia durante a tempestade de login, no
+        # minuto exato em que ele era necessário. Sem isto o auto-stop acima seria código
+        # morto: ele nem chegaria a ser chamado.
+        case "$(systemctl show "$unit" -p ActiveState --value)" in
+          inactive | deactivating) return 0 ;; # ninguém pediu conexão
+        esac
+        conn_of "$id" && return 0 # túnel de pé: nada a fazer
+        # PRECEDÊNCIA: credencial antes do hang. Se a causa é senha, reiniciar (o que o
+        # resto desta função faz) é exatamente o oposto do certo.
+        stop_if_unrecoverable "$id" "$unit" && return 0
         since_us="$(systemctl show "$unit" -p ActiveEnterTimestampMonotonic --value)"
         up_s="$(cut -d' ' -f1 /proc/uptime)"
         # monotônico (imune a ajuste de relógio); folga em segundos

@@ -73,6 +73,10 @@ sudo /etc/init.d/network reload   # ← pede senha
 
 ## Parte 2 — split-DNS das zonas da FAI
 
+✅ **APLICADO em 13/08/2026** — os três `add_list` abaixo já estão no aparelho e
+verificados: `fai2008.ufscar.br` resolve pelo roteador devolvendo `192.168.130.2/.3`, e o
+DNS da casa + internet seguiram intactos no restart. Ficam aqui pra reflash e rollback.
+
 **SÓ A ZONA DO AD PRECISA.** Medido em 12/08/2026, comparando resposta pública (1.1.1.1)
 com a do DC da FAI (200.136.209.252):
 

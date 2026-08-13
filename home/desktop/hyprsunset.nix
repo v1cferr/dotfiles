@@ -25,12 +25,25 @@
 # Arch): trabalho o dia inteiro em OUTRO PC sem filtro, então quando chego às 18h
 # o olho já vem castigado e não dá pra tratar 18h como "início de noite leve". O
 # schedule antigo só descia de 500 em 500K e chegava em 5500K às 18h — perto do
-# neutro, ou seja, alívio real só às 22h, 4h depois de chegar. Agora o maior
-# degrau da curva é justamente às 18h (5500→4200), e às 19h já está em 3500K.
-# ⚠️ Abaixo de ~3200K a cor fica visivelmente laranja e ESTRAGA filme/jogo/foto:
-# o escape hatch é SUPER+SHIFT+F9 (`hyprctl hyprsunset identity` = filtro OFF), e
-# o próximo perfil do relógio retoma a curva sozinho. Se atrapalhar demais, o
-# ajuste é subir SÓ o degrau das 18h/18:30 — não achatar a curva inteira.
+# neutro, ou seja, alívio real só às 22h, 4h depois de chegar.
+#
+# SEGUNDA DESCIDA (13/08/2026): a de 06/08 ainda parecia fraca, e esta tira mais
+# ~200–400K de cada degrau pós-18h. O maior degrau segue sendo o das 18h (5000→3800)
+# e às 19h já está em 3200K — onde a curva anterior só chegava às 20h.
+# ⚠️ ESCOLHIDO O EIXO DA COR, e isso CONTRARIA o que docs/ideias.md registra como
+# prioridade (reduzir BRILHO vem antes de temperatura de cor). Foi deliberado: o
+# dim automático por gamma já existiu e foi REVERTIDO em 08/08 junto com o DDC, e
+# trazê-lo de volta às 18h é mudança maior que baixar Kelvin. Se esta curva não
+# bastar, o PRÓXIMO passo é gamma progressivo a partir das 18h — NÃO continuar
+# descendo Kelvin, que daqui pra baixo só piora a cor sem alívio proporcional.
+#
+# ⚠️ A CURVA ATRAVESSA OS ~3200K DE PROPÓSITO, e isso muda o contrato do escape
+# hatch: abaixo disso a cor fica visivelmente laranja e ESTRAGA filme/jogo/foto —
+# das 19h em diante esse é o estado NORMAL, não a exceção. SUPER+SHIFT+F9
+# (`hyprctl hyprsunset identity` = filtro OFF) deixa de ser recurso raro e vira o
+# gesto de sempre que abrir mídia à noite; o próximo perfil do relógio retoma a
+# curva sozinho. Se atrapalhar demais, o ajuste é subir SÓ o degrau das 18h/18:30
+# — não achatar a curva inteira.
 { ... }:
 
 {
@@ -79,36 +92,36 @@
         } # dia (8h–17h30): neutro, sem filtro, brilho cheio
         {
           time = "17:30";
-          temperature = 5500;
+          temperature = 5000;
         } # fim de tarde: 1º aquecimento (sem dim ainda)
         {
           time = "18:00";
-          temperature = 4200;
+          temperature = 3800;
         } # CHEGADA DO TRABALHO: maior degrau da curva, é aqui que o alívio começa
         {
           time = "18:30";
-          temperature = 3800;
-        }
-        {
-          time = "19:00";
           temperature = 3500;
         }
         {
-          time = "20:00";
+          time = "19:00";
           temperature = 3200;
-        }
+        } # ⚠️ daqui pra baixo a cor estraga mídia — ver o cabeçalho
         {
-          time = "21:00";
+          time = "20:00";
           temperature = 3000;
         }
         {
-          time = "22:00";
+          time = "21:00";
           temperature = 2800;
+        }
+        {
+          time = "22:00";
+          temperature = 2600;
           gamma = 0.9;
         } # pré-sono: reduz azul + dim leve
         {
           time = "23:00";
-          temperature = 2500;
+          temperature = 2400;
           gamma = 0.85;
         }
         {

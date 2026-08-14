@@ -264,6 +264,7 @@
       # `pkgs.<nome>`. callPackage injeta as deps automaticamente.
       overlayLocalPkgs = final: _: {
         claude-code-discord-status = final.callPackage ./pkgs/claude-code-discord-status.nix { };
+        azure-mcp = final.callPackage ./pkgs/azure-mcp.nix { }; # Azure MCP Server (`azmcp`) — só no claude-fai
         nxbender = final.callPackage ./pkgs/nxbender.nix { }; # cliente FOSS da VPN SonicWall (FAI)
         vscode-bump = final.callPackage ./pkgs/vscode-bump.nix { }; # bump do vscode-tarball p/ a última stable
       };

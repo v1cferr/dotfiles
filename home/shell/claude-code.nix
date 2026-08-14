@@ -254,6 +254,11 @@ in
     # a conta some do relatório: o número é o da máquina, não o da assinatura.
     pkgs.unstable.ccusage
     pick
+    # O MESMO binário que o MCP roda, agora também como comando. Não é conveniência:
+    # o login do Azure (device code) TEM que acontecer fora do Claude Code — dentro da
+    # sessão o código sairia no stderr do servidor MCP, onde ninguém lê. Custo de closure
+    # ZERO: o mcp-azure.json já referencia esse store path, isto só põe um link no PATH.
+    pkgs.azure-mcp
   ]
   ++ lib.attrValues launchers;
 

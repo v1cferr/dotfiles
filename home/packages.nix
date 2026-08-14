@@ -110,6 +110,18 @@
 
     # ── CLIs ──
     gh # GitHub CLI (auth/push via HTTPS + token)
+    # azure-cli: 0,95 GiB MARGINAIS (o closure é 1,19, mas 0,24 já está no sistema) — e
+    # a comparação com o wrangler logo abaixo é justa, porque o critério NÃO é tamanho, é
+    # se a ferramenta faz o trabalho. O wrangler custava 2,2 GiB e NÃO tinha comando de
+    # DNS; este é o ÚNICO caminho pro App Registration do Entra ID (`az ad app …`), que é
+    # o motivo de todo o resto existir. Medido em 14/08/2026: o Azure MCP Server NÃO cobre
+    # Entra — nas 68 tools dele não há App Registration, service principal nem Graph, o
+    # `role` é RBAC de RECURSO, e o `extension_cli_generate` só GERA o texto do comando
+    # `az`, nunca executa. A skill `entra-app-registration` do microsoft/azure-skills
+    # confirma pelo avesso: o que ela ensina é a rodar `az ad app create/list/…`.
+    # De quebra ele simplifica o login do MCP: com o `az` no PATH a cadeia do azmcp pega o
+    # AzureCliCredential e o device code deixa de ser necessário.
+    azure-cli
     # NÃO adicionar `wrangler` aqui: TESTADO E REMOVIDO em 07/08/2026, no mesmo dia em que
     # entrou. Custa 2.2 GiB de closure (QUATRO cópias de nodejs-24: slim, -npm, -corepack e
     # o cheio) e NÃO tem comando de DNS/zona — o help inteiro é Workers/Pages/KV/R2/AI.

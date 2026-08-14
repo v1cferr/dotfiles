@@ -22,16 +22,31 @@
         `makeBinaryWrapper` é herdado pelas libs extraídas e resolve; e `makeBinaryWrapper`
         (execv em C) e não wrapper de shell, porque o .NET acha o `Instrumentation/Resources`
         por /proc/self/exe, que só fica certo DEPOIS do exec.
-      • ⚠️ O `azure-cli` NÃO ENTROU, e essa é a economia que mais valeu: 1,19 GiB de closure
-        medidos, pra fazer um `az login`. A doc da Microsoft e a própria mensagem de erro do
-        azmcp mandam instalá-lo, mas a cadeia do DefaultAzureCredential termina em
-        DeviceCodeCredential — o "abra login.microsoft.com/device e digite ABC123" — que
-        funciona sozinho. Ele só estava falhando com `Persistence check failed`, que NÃO é
-        credencial: é o cache de token do MSAL tentando falar com o Secret Service. Faltavam
-        `libsecret` e `dbus`, que esta máquina já tem pelo keyring. Com as duas na
-        LD_LIBRARY_PATH o device code saiu na hora (verificado: código emitido, sem login).
-        O `msalruntime`/libX11 que aparecem no log de erro são o broker WAM, que só existe no
-        Windows — ignorar.
+      • O `azure-cli` NÃO É NECESSÁRIO PRO LOGIN, e isso vale registrar mesmo tendo ele
+        entrado depois por outro motivo (o item seguinte): a doc da Microsoft e a própria
+        mensagem de erro do azmcp mandam instalá-lo, mas a cadeia do DefaultAzureCredential
+        termina em DeviceCodeCredential — o "abra login.microsoft.com/device e digite
+        ABC123" — que funciona sozinho. Ele só estava falhando com `Persistence check
+        failed`, que NÃO é credencial: é o cache de token do MSAL tentando falar com o
+        Secret Service. Faltavam `libsecret` e `dbus`, que esta máquina já tem pelo keyring.
+        Com as duas na LD_LIBRARY_PATH o device code saiu na hora (verificado: código
+        emitido, sem login). O `msalruntime`/libX11 do log de erro são o broker WAM, que só
+        existe no Windows — ignorar.
+      • ⚠️⚠️ E AÍ VEIO A CORREÇÃO QUE DERRUBOU A PREMISSA — o Azure MCP Server NÃO COBRE
+        APP REGISTRATION, que era o motivo REAL de tudo isto ("não quero mais mexer naquela
+        interface"). Eu tinha entregado o MCP sem checar se ele fazia a única coisa pedida.
+        MEDIDO no `tools/list`: nas 68 tools não existe App Registration, service principal
+        nem Graph; o `role` é RBAC de RECURSO do Azure, não app do Entra; e o
+        `extension_cli_generate` só GERA o texto do comando `az`, nunca executa. A Microsoft
+        também não publica MCP de Entra — o `microsoft/mcp` tem só Azure, Fabric e um
+        template. O `entra-app-registration` do `microsoft/azure-skills`, que parecia ser a
+        peça que faltava, é uma SKILL (markdown de orientação) e não uma tool: o que ela
+        ensina o agente a fazer é rodar `az ad app create/list/show/permission add/…`.
+        Ou seja, quem faz o trabalho é o `azure-cli`. Ele entrou (home/packages.nix), e o
+        custo é 0,95 GiB MARGINAIS e não os 1,19 do closure — 0,24 já estava no sistema.
+        LIÇÃO, e é sobre método, não sobre Azure: "a ferramenta oficial pro serviço X" não
+        implica "cobre a parte de X que você quer". A lista de tools é barata de ler
+        (handshake JSON-RPC no stdio) e devia ter vindo ANTES do pacote, não depois.
       • POR QUE O MCP É POR CONTA e não global: a nuvem é a do trabalho, e são 68 tools em
         `--mode namespace` (contadas por handshake JSON-RPC direto no binário) que não têm o
         que fazer na conta pessoal. Então `profiles.fai.mcp = [ azureMcp ]` e

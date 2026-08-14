@@ -100,6 +100,11 @@ hl.bind(mainMod .. " + period",         hl.dsp.layout("move +col"))       -- fit
 -- ainda com column_width=1.0, onde uma coluna já é a tela inteira.
 hl.bind(mainMod .. " + mouse_left",     hl.dsp.layout("move -col"))       -- thumbwheel ←
 hl.bind(mainMod .. " + mouse_right",    hl.dsp.layout("move +col"))       -- thumbwheel →
+-- Roda VERTICAL também anda na fita (antes trocava de workspace, que nunca era usado —
+-- workspace é sempre teclado: SUPER+1-8 / TAB). Sem SUPER a roda segue normal nos apps.
+-- Sentido definido NA MÃO, testando: rolar pra BAIXO avança pro lado que mais se usa.
+hl.bind(mainMod .. " + mouse_down",     hl.dsp.layout("move -col"))       -- roda ↓ = avança
+hl.bind(mainMod .. " + mouse_up",       hl.dsp.layout("move +col"))       -- roda ↑ = volta
 -- Reordenar e redimensionar colunas. swapcol move a COLUNA INTEIRA (pilha junto) e dá a
 -- volta nas pontas; pra mover só uma janela de uma pilha, expel (SUPER+O) antes.
 hl.bind(mainMod .. " + SHIFT + comma",  hl.dsp.layout("swapcol l"))       -- troca c/ a coluna à esquerda
@@ -139,11 +144,11 @@ for i = 1, 8 do
   hl.bind(mainMod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
 end
 
--- Navegação relativa (workspace anterior/próxima) por TAB e por scroll do mouse.
+-- Navegação relativa (workspace anterior/próxima). SÓ por teclado: a roda do mouse saiu
+-- daqui e foi pra fita (bloco do scrolling acima) — trocar de workspace no scroll nunca
+-- era usado, e a fita é o que dá vontade de rolar com o mouse.
 hl.bind(mainMod .. " + TAB",         hl.dsp.focus({ workspace = "e+1" }))
 hl.bind(mainMod .. " + SHIFT + TAB", hl.dsp.focus({ workspace = "e-1" }))
-hl.bind(mainMod .. " + mouse_down",  hl.dsp.focus({ workspace = "e+1" }))
-hl.bind(mainMod .. " + mouse_up",    hl.dsp.focus({ workspace = "e-1" }))
 
 -- Mover a janela ativa entre monitores: CTRL+← p/ TV (esquerda), CTRL+→ p/ LG (direita).
 hl.bind(mainMod .. " + CTRL + left",  hl.dsp.window.move({ monitor = M.secondary }))

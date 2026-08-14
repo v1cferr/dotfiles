@@ -276,22 +276,15 @@ armadilha conhecida. Vale mais o parágrafo do que o título.
         módulo — que linka pro repo por `mkOutOfStoreSymlink` e foi medido. Reescrever a
         frase (é drift de texto, regra 16; os hooks em `/etc` seguem certos e necessários).
 
-- [ ] Login no Azure e primeira validação real (14/08/2026) — o MCP está declarado e SOBE,
-      e o `azure-cli` entrou pro App Registration (ver o [histórico de
-      agosto](historico/2026/08-agosto.md)), mas nada disso falou com uma assinatura de
-      verdade: falta a única parte que não se declara, que é autenticar. Um `az login`
-      resolve os dois de uma vez — a cadeia do azmcp pega o AzureCliCredential, então não
-      precisa do device code (que também funciona, se um dia o `az` sair: `azmcp
-      subscription list` imprime URL e código; ⚠️ rodar FORA do Claude Code, senão o código
-      sai no stderr do servidor MCP, onde ninguém lê).
-      Validar nesta ordem, e a ordem importa porque as duas metades falham por motivos
-      diferentes: (1) `az ad app list` — é o objetivo real, e é onde a PERMISSÃO aparece:
-      mexer em App Registration exige Application Administrator / Cloud Application
-      Administrator no Entra, ou ser owner do app; sem isso o login funciona e o comando
-      nega. (2) `/mcp` dentro do `claude-fai` mostrando `azure` como `connected`, e uma
-      pergunta inofensiva (listar grupos de recursos) antes de deixar o CC CRIAR qualquer
-      coisa. Enquanto o login não acontecer, toda tool do azure devolve 401 — comportamento
-      certo, não defeito.
+- [ ] MCP do Azure ainda não tem em QUE trabalhar (14/08/2026) — o servidor está declarado,
+      conectado e autenticado (ver o [histórico de agosto](historico/2026/08-agosto.md)),
+      mas as 68 tools dele operam sobre SUBSCRIPTION, e o tenant do dia a dia (`FAIUFSCar`)
+      é só diretório: `azmcp subscription list` responde 200 com lista VAZIA. Quem tem
+      assinatura é o tenant `BHS`, e entrar nele exige MFA — `az login --tenant
+      92247c24-8a8c-47f3-a7f1-85df939ad4b6`, que o browser resolve. Só depois disso dá pra
+      dizer se o MCP se paga aqui ou se o `az` sozinho já bastava; até lá ele está VIVO e
+      OCIOSO, o que é diferente de quebrado. ⚠️ O App Registration NÃO depende disto: já
+      funciona pelo `az ad` no FAIUFSCar, que era o objetivo.
 
 - [ ] Continuar configurando o dualboot com Secure Boot
 

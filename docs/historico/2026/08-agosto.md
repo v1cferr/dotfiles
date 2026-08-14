@@ -71,9 +71,27 @@
         o `.claude-fai` que estava escrito duas vezes virou `defaultProfile` (regra 11); e o
         `claude-pick` parou de repetir a lógica do CLAUDE_CONFIG_DIR — agora o menu carrega
         o CAMINHO DO WRAPPER e ele só dá `exec`, então herda MCP e variável de graça.
-      • VALIDADO: `nixos-rebuild build` OK, servidor sobe (`initialize` + `tools/list` por
-        JSON-RPC no stdio) e o `system/init` de uma sessão headless lista
-        `{"name":"azure","status":"connected"}` ao lado dos plugins. Falta só o login.
+      • ⚠️ O LOGIN TEM DUAS ARMADILHAS, e as duas MENTEM sobre o que aconteceu. A primeira:
+        `az login` puro, numa conta cujo tenant não tem subscription, termina em
+        `No subscriptions found` — e NÃO PERSISTE NADA. A autenticação passou; foi o `az`
+        que abortou depois, e o `az account list` seguinte diz "Please run az login", que
+        lê como "sua senha falhou". O certo é `az login --allow-no-subscriptions --tenant
+        <id>`, e não é caso de canto: App Registration é objeto de DIRETÓRIO, então o
+        tenant de trabalho aqui legitimamente não tem assinatura nenhuma. A segunda:
+        `az ad app list` sozinho não lista nada — exige um seletor (`--show-mine` pros que
+        você é owner, `--all` pro tenant inteiro, que aí pede papel de admin no Entra).
+      • DUAS IDENTIDADES, com papéis OPOSTOS, e isso decide qual ferramenta serve pra quê:
+        `FAIUFSCar` (80241bb1-cb3b-4da2-98ae-3029430fdbcd) é só diretório — é onde vivem os
+        App Registrations, e é o alvo do `az ad`; `BHS` (92247c24-8a8c-47f3-a7f1-85df939ad4b6)
+        é quem tem subscription, e exige MFA (`AADSTS50076` — configuração do tenant, não
+        defeito daqui). Ou seja: App Registration = `az ad` no FAIUFSCar; as 68 tools do
+        MCP, que operam sobre subscription, só têm o que fazer no BHS.
+      • VALIDADO PONTA A PONTA: `nixos-rebuild build` OK; servidor sobe (`initialize` +
+        `tools/list` por JSON-RPC no stdio); `system/init` de uma sessão headless lista
+        `{"name":"azure","status":"connected"}` ao lado dos plugins; `az ad app list
+        --show-mine` devolveu os 3 apps do tenant; e o `azmcp subscription list` passou a
+        responder `status 200` com `subscriptions: []` em vez de 401 — o que prova que o
+        AzureCliCredential fecha a cadeia e o device code virou plano B, não o caminho.
 
 - [x] Curva do hyprsunset desce de novo pós-18h (13/08/2026) — a pergunta que abriu isto era
       outra: "o hyprsunset está iniciando junto com o PC? porque não parece". **Não havia

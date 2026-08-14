@@ -73,6 +73,31 @@
 # E `theme: dark-ansi` não é neutro, é o mais TokyoNight que dá: manda a TUI usar as 16
 # cores ANSI do terminal, que no kitty deste repo JÁ são a paleta do my.theme (regra 9).
 #
+# MCP POR CONTA (14/08/2026) — o Azure MCP Server (`pkgs.azure-mcp`, empacotado em
+# ./pkgs) entra SÓ na FAI, porque a nuvem é a do trabalho: a conta pessoal não tem o que
+# fazer com ela, e 68 tools a mais custam contexto em toda sessão. Por isso `mcp` virou
+# campo do `profiles`: a conta que não declara nada não ganha flag nenhuma.
+#
+# O ENTREGADOR é a flag `--mcp-config` do wrapper, e as três alternativas foram
+# DESCARTADAS por motivo concreto:
+#   • `.mcp.json` na raiz do repo (o que hoje serve os dois MCP da Cloudflare) — é escopo
+#     de PROJETO: o Azure só existiria rodando `claude` dentro do dotfiles, que é onde a
+#     gente NUNCA vai mexer no Azure.
+#   • user scope no `.claude.json` — é estado do app, o CC reescreve o arquivo inteiro;
+#     declarar ali é a receita de drift da regra 14.
+#   • `/etc/claude-code/managed-mcp.json` — parece o lugar certo (é irmão do
+#     managed-settings.json que já usamos pros hooks), e é ARMADILHA: quem deploya esse
+#     arquivo passa a ter controle EXCLUSIVO, e o CC deixa de carregar TODO o resto —
+#     inclusive os MCP dos plugins `github` e `atlassian`, que estão em uso. Ganharia o
+#     Azure e perderia dois.
+#
+# ⚠️ E É POR ISSO QUE O `claude` PURO VIROU WRAPPER TAMBÉM (antes era o binário cru do
+# pacote): `claude` puro É a conta da FAI (o CLAUDE_CONFIG_DIR aqui embaixo), então sem
+# isso o MCP do Azure só apareceria em quem lembrasse de digitar `claude-fai` — e nunca
+# na extensão do VS Code, que chama o binário do PATH. O pacote `claude` NÃO entra mais
+# em `home.packages` (dois `bin/claude` colidiriam na ativação); ele só é referenciado
+# pelo `lib.getExe` dentro dos wrappers.
+#
 # O QUE NÃO ENTRA AQUI:
 #   • `.credentials.json` (token OAuth de cada conta) — segredo E estado: nunca versionado,
 #     nunca declarado. Conta nova = um `/login` (regras 6 e 12).
@@ -104,42 +129,98 @@ let
   # pendurado e o CC sem conseguir salvar settings.
   repo = "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/shell/claude";
 
-  # Onde o `claude` PURO cai. Lido pela variável de sessão lá embaixo — literal nenhum
-  # espalhado (regra 11), e o wrapper da FAI sai do mesmo `profiles` logo abaixo.
-  defaultDir = "${config.home.homeDirectory}/.claude-fai";
+  # Azure MCP Server: deixa o CC criar/ler/alterar recurso do Azure por tool em vez de a
+  # gente clicar no portal. `--mode namespace` (o default do azmcp) expõe UMA tool por
+  # serviço — 68 no total; `all` explodiria pra centenas e `single` deixaria uma só, com
+  # um salto de roteamento a mais. Pra enxugar, `--namespace storage --namespace keyvault…`
+  # limita aos serviços citados. Auth NÃO mora aqui (regra 12): é o device code do próprio
+  # azmcp, guardado no keyring — ver o comentário do pkgs/azure-mcp.nix.
+  azureMcp = pkgs.writeText "mcp-azure.json" (
+    builtins.toJSON {
+      mcpServers.azure = {
+        type = "stdio";
+        command = lib.getExe pkgs.azure-mcp;
+        args = [
+          "server"
+          "start"
+          "--mode"
+          "namespace"
+        ];
+        # Telemetria da Microsoft desligada: é máquina pessoal, e o servidor roda local.
+        env.AZURE_MCP_COLLECT_TELEMETRY = "false";
+      };
+    }
+  );
 
-  # SSOT das contas extras (regra 11): esta atriz gera os wrappers, o menu do claude-pick,
-  # os symlinks de settings.json e os de projects/. Conta nova = uma entrada aqui + o
-  # settings-<nome>.json no ./claude — nada mais muda.
+  # SSOT das contas (regra 11): esta atriz gera os wrappers, o menu do claude-pick, os
+  # symlinks de settings.json, os de projects/ e quais MCP cada conta enxerga. Conta nova =
+  # uma entrada aqui + o settings-<nome>.json no ./claude — nada mais muda.
   profiles = {
     fai = {
       dir = ".claude-fai";
       label = "FAI      (victor.ferreira@fai.ufscar.br)";
+      mcp = [ azureMcp ]; # a nuvem do trabalho é só desta conta
     };
     pessoal = {
       dir = ".claude-pessoal";
       label = "Pessoal  (dragons10021@outlook.com)";
+      mcp = [ ];
     };
   };
 
-  # `claude-fai` / `claude-pessoal`: o mesmo binário com o CLAUDE_CONFIG_DIR trocado.
-  # `exec` = o wrapper sai da árvore de processos e sobra o claude real (sinais e TTY da TUI
-  # chegam direto). "$@" repassa argumentos, então `claude-fai --resume`, `claude-fai -p …`
-  # e `claude-fai doctor` funcionam igual ao `claude`.
-  launcher =
-    name: p:
+  # Qual conta o `claude` PURO é. Sai daqui o CLAUDE_CONFIG_DIR da sessão E o wrapper
+  # `claude` — antes o ".claude-fai" estava escrito duas vezes, agora sai do profiles.
+  defaultProfile = "fai";
+  defaultDir = "${config.home.homeDirectory}/${profiles.${defaultProfile}.dir}";
+
+  # O mesmo binário com o CLAUDE_CONFIG_DIR trocado e os MCP da conta. `exec` = o wrapper
+  # sai da árvore de processos e sobra o claude real (sinais e TTY da TUI chegam direto).
+  # "$@" repassa argumentos, então `--resume`, `-p …` e `doctor` funcionam igual ao cru.
+  #
+  # ⚠️ O `--` NÃO É ENFEITE, e a regra de quando usá-lo é o oposto da intuição — MEDIDO no
+  # 2.1.222: `--mcp-config` é VARIÁDICO (aceita N arquivos), então ele engole tudo que vier
+  # depois enquanto não achar um token começando com "-". Sem terminador,
+  # `claude-fai mcp list` morre com "MCP config file not found: …/mcp" (ele leu `mcp` e
+  # `list` como mais dois arquivos de config). Mas o `--` resolve SÓ o caso do subcomando e
+  # ESTRAGA o da flag: com ele, `claude-fai --version` abre uma SESSÃO com "--version" de
+  # prompt, em vez de imprimir a versão. Daí o `case` — quem começa com "-" (ou nada, a TUI
+  # interativa) vai sem terminador; palavra solta (subcomando ou prompt) vai com.
+  mkLauncher =
+    binName: p:
     pkgs.writeShellApplication {
-      name = "claude-${name}";
+      name = binName;
       text = ''
         export CLAUDE_CONFIG_DIR="$HOME/${p.dir}"
-        exec ${lib.getExe claude} "$@"
-      '';
+      ''
+      + (
+        if p.mcp == [ ] then
+          ''
+            exec ${lib.getExe claude} "$@"
+          ''
+        else
+          let
+            flags = lib.concatMapStringsSep " " (f: "--mcp-config ${f}") p.mcp;
+          in
+          ''
+            case "''${1-}" in
+              -* | "") exec ${lib.getExe claude} ${flags} "$@" ;;
+              *)       exec ${lib.getExe claude} ${flags} -- "$@" ;;
+            esac
+          ''
+      );
     };
 
-  # Linhas "<dir>\tlabel" pro fzf: ele FILTRA por tudo e MOSTRA só o campo 2+ (--with-nth),
-  # então o diretório viaja junto sem aparecer na tela — evita ter que traduzir o rótulo
-  # escolhido de volta pra caminho com um `case` duplicando o que já está no `profiles`.
-  menu = lib.concatMapStringsSep "\n" (p: "${p.dir}\t${p.label}") (lib.attrValues profiles);
+  # `claude-fai` / `claude-pessoal`, e o `claude` puro apontando pra conta default.
+  launchers = lib.mapAttrs (name: mkLauncher "claude-${name}") profiles;
+  claudeDefault = mkLauncher "claude" profiles.${defaultProfile};
+
+  # Linhas "<caminho do wrapper>\tlabel" pro fzf: ele FILTRA por tudo e MOSTRA só o campo
+  # 2+ (--with-nth), então o caminho viaja junto sem aparecer na tela. Carregar o WRAPPER
+  # (e não o diretório, como era antes) é o que faz o pick herdar de graça o
+  # CLAUDE_CONFIG_DIR e os MCP da conta, em vez de repetir essa lógica aqui dentro.
+  menu = lib.concatMapStringsSep "\n" (
+    name: "${lib.getExe launchers.${name}}\t${profiles.${name}.label}"
+  ) (lib.attrNames profiles);
 
   # Seletor interativo: escolhe a conta na hora. `claude-pick [args…]`.
   pick = pkgs.writeShellApplication {
@@ -154,11 +235,10 @@ let
       sel=$(printf '%s\n' ${lib.escapeShellArg menu} \
         | fzf --prompt='Conta Claude > ' --height=25% --reverse \
               --delimiter='\t' --with-nth=2..) || exit 0
-      # Atribuição separada do export: `export X="$(cmd)"` mascara o exit code do comando
+      # Atribuição separada do exec: `X="$(cmd)"` na mesma linha mascara o exit code
       # (SC2155), e o shellcheck do writeShellApplication REPROVA o build por isso.
-      dir=$(printf '%s' "$sel" | cut -f1)
-      export CLAUDE_CONFIG_DIR="$HOME/$dir"
-      exec ${lib.getExe claude} "$@"
+      bin=$(printf '%s' "$sel" | cut -f1)
+      exec "$bin" "$@"
     '';
   };
 in
@@ -166,15 +246,16 @@ in
   home.packages = [
     # O pacote mora AQUI e não no home/packages.nix: app com config própria é dono do seu
     # pacote (mesma regra do vscode.nix). `unstable` porque o CC evolui rápido — a stable
-    # do NixOS congelaria meses de features.
-    claude
+    # do NixOS congelaria meses de features. Ele entra EMBRULHADO (`claudeDefault`), nunca
+    # cru: ver o ⚠️ do cabeçalho sobre o `claude` puro ter virado wrapper.
+    claudeDefault
     # ccusage: tokens/custo do bloco de 5h e por sessão (os aliases claude-usage* abaixo).
     # Só existe no unstable. Lê o acervo ~/.claude/projects — que é o COMPARTILHADO, então
     # a conta some do relatório: o número é o da máquina, não o da assinatura.
     pkgs.unstable.ccusage
     pick
   ]
-  ++ lib.mapAttrsToList launcher profiles;
+  ++ lib.attrValues launchers;
 
   # Por conta: o settings.json linkado pro repo (config, versionada) e o projects/ apontado
   # pro acervo comum (estado, compartilhado). O `home.file` é o DONO dos dois symlinks; quem

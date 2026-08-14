@@ -1,6 +1,64 @@
 # Histórico — agosto de 2026
 
-55 entradas. Índice em [README.md](../README.md).
+56 entradas. Índice em [README.md](../README.md).
+
+- [x] Azure MCP Server, e SÓ na conta da FAI (14/08/2026) — o pedido era mexer no
+      portal.azure.com por comando em vez de clicar na interface. Virou `pkgs/azure-mcp.nix`
+      (o binário `azmcp`) + um campo `mcp` no `profiles` do `home/shell/claude-code.nix`.
+      • POR QUE EMPACOTAR em vez de seguir a receita da Microsoft: a doc manda
+        `npx -y @azure/mcp@latest server start`, que a regra 13 proíbe duas vezes — "latest"
+        implícito E fetch sem hash A CADA START do servidor, ou seja o MCP podia trocar de
+        versão no meio de uma sessão. O `@azure/mcp` do npm é só um shim JS que escolhe, no
+        postinstall, um dos seis `@azure/mcp-<os>-<arch>`; quem tem o server é o pacote da
+        plataforma, e dentro dele vem UM binário .NET self-contained de 150 MB. Então
+        buscamos o tarball da plataforma direto e o `nodejs` sai inteiro do closure.
+      • ⚠️ O ACHADO QUE CUSTOU AS DUAS PRIMEIRAS TENTATIVAS — `runtimeDependencies` (RPATH)
+        NÃO resolve as libs deste binário, e o erro não diz por quê. Sem nada:
+        `Couldn't find a valid ICU package`. Com icu+openssl no RPATH: ICU passa e vem
+        `No usable version of libssl was found` + core dump. O motivo é que ele é
+        single-file e DESEMPACOTA as libs nativas do .NET em `~/.net/azmcp/<hash>/` no
+        primeiro start (o `libpal_azure_c_shared_openssl3.so` está lá) — é esse .so
+        extraído, fora da store e sem RUNPATH nosso, quem faz o dlopen. LD_LIBRARY_PATH via
+        `makeBinaryWrapper` é herdado pelas libs extraídas e resolve; e `makeBinaryWrapper`
+        (execv em C) e não wrapper de shell, porque o .NET acha o `Instrumentation/Resources`
+        por /proc/self/exe, que só fica certo DEPOIS do exec.
+      • ⚠️ O `azure-cli` NÃO ENTROU, e essa é a economia que mais valeu: 1,19 GiB de closure
+        medidos, pra fazer um `az login`. A doc da Microsoft e a própria mensagem de erro do
+        azmcp mandam instalá-lo, mas a cadeia do DefaultAzureCredential termina em
+        DeviceCodeCredential — o "abra login.microsoft.com/device e digite ABC123" — que
+        funciona sozinho. Ele só estava falhando com `Persistence check failed`, que NÃO é
+        credencial: é o cache de token do MSAL tentando falar com o Secret Service. Faltavam
+        `libsecret` e `dbus`, que esta máquina já tem pelo keyring. Com as duas na
+        LD_LIBRARY_PATH o device code saiu na hora (verificado: código emitido, sem login).
+        O `msalruntime`/libX11 que aparecem no log de erro são o broker WAM, que só existe no
+        Windows — ignorar.
+      • POR QUE O MCP É POR CONTA e não global: a nuvem é a do trabalho, e são 68 tools em
+        `--mode namespace` (contadas por handshake JSON-RPC direto no binário) que não têm o
+        que fazer na conta pessoal. Então `profiles.fai.mcp = [ azureMcp ]` e
+        `profiles.pessoal.mcp = [ ]` — a conta que não declara não ganha a flag.
+      • ⚠️ ARMADILHA DO `--mcp-config`, medida no CC 2.1.222 e a regra é o OPOSTO da
+        intuição: a flag é VARIÁDICA, então engole tudo até achar um token começando com
+        "-". Sem terminador, `claude-fai mcp list` morre com
+        `MCP config file not found: …/mcp` (leu `mcp` e `list` como mais dois arquivos). Mas
+        o `--` conserta SÓ o subcomando e ESTRAGA a flag: com ele, `claude-fai --version`
+        abre uma sessão com "--version" de prompt. Daí o `case` no wrapper — começa com "-"
+        (ou vazio) vai sem `--`; palavra solta vai com.
+      • TRÊS CAMINHOS RECUSADOS: (1) `.mcp.json` da raiz, que é onde vivem os dois MCP da
+        Cloudflare — é escopo de PROJETO, o Azure só existiria rodando `claude` dentro do
+        dotfiles, que é justamente onde nunca vamos mexer no Azure; (2) user scope no
+        `.claude.json` — estado do app, o CC reescreve o arquivo inteiro (regra 14);
+        (3) `/etc/claude-code/managed-mcp.json`, que PARECE o lugar certo por ser irmão do
+        managed-settings.json dos hooks, e é armadilha: quem deploya esse arquivo ganha
+        controle EXCLUSIVO e o CC para de carregar todo o resto, inclusive os MCP dos
+        plugins `github` e `atlassian`, que estão em uso. Ganharia um e perderia dois.
+      • DE QUEBRA, TRÊS ARESTAS DO MÓDULO: o `claude` puro virou wrapper (era o binário cru,
+        e sem isso o MCP não chegaria na extensão do VS Code, que chama o binário do PATH);
+        o `.claude-fai` que estava escrito duas vezes virou `defaultProfile` (regra 11); e o
+        `claude-pick` parou de repetir a lógica do CLAUDE_CONFIG_DIR — agora o menu carrega
+        o CAMINHO DO WRAPPER e ele só dá `exec`, então herda MCP e variável de graça.
+      • VALIDADO: `nixos-rebuild build` OK, servidor sobe (`initialize` + `tools/list` por
+        JSON-RPC no stdio) e o `system/init` de uma sessão headless lista
+        `{"name":"azure","status":"connected"}` ao lado dos plugins. Falta só o login.
 
 - [x] Curva do hyprsunset desce de novo pós-18h (13/08/2026) — a pergunta que abriu isto era
       outra: "o hyprsunset está iniciando junto com o PC? porque não parece". **Não havia

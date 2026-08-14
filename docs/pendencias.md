@@ -276,6 +276,19 @@ armadilha conhecida. Vale mais o parágrafo do que o título.
         módulo — que linka pro repo por `mkOutOfStoreSymlink` e foi medido. Reescrever a
         frase (é drift de texto, regra 16; os hooks em `/etc` seguem certos e necessários).
 
+- [ ] Login no Azure e primeira validação real do MCP (14/08/2026) — o servidor está
+      declarado e SOBE (ver o [histórico de agosto](historico/2026/08-agosto.md)), mas nunca
+      falou com uma assinatura de verdade: falta a única parte que não se declara, que é
+      autenticar. NÃO é `az login` (o `azure-cli` foi recusado de propósito, 1,19 GiB): é o
+      device code do próprio azmcp. Rodar UMA VEZ num terminal, fora do Claude Code —
+      `azmcp subscription list` — abrir a URL que ele imprimir, digitar o código, e o token
+      fica no keyring pro MCP reusar calado. ⚠️ Tem que ser fora do CC mesmo: dentro da
+      sessão o prompt do device code sairia no stderr do servidor MCP, onde ninguém lê.
+      Depois disso, conferir no `/mcp` que `azure` está `connected` e pedir algo inofensivo
+      (listar grupos de recursos) antes de deixar o CC criar qualquer coisa. Enquanto o
+      login não acontecer, TODA tool do azure devolve 401 — o que é o comportamento certo,
+      não defeito.
+
 - [ ] Continuar configurando o dualboot com Secure Boot
 
 - [ ] Salto de release 26.05 → 27.05 (~mai/2027) — NÃO é reinstalação: são DUAS STRINGS no

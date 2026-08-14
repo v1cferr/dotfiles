@@ -10,11 +10,18 @@
 # publica. Por isso ele vive no sops (ntfy_topic) e NUNCA na store — o script lê
 # /run/secrets/ntfy_topic em runtime. Use um tópico aleatório, não "v1cferr".
 #
-# Ligar (uma vez):
+# Ligar (uma vez) — NESTA ORDEM, senão o switch quebra:
 #   1. Bitwarden: item "ntfy Topic", com o tópico aleatório no campo *senha*
 #      (`openssl rand -hex 10` dá um bom). O sync-secrets usa `bw get password`.
-#   2. `sync-secrets`  →  `sudo nixos-rebuild switch --flake .#nixos-kingston`
-#   3. No app do celular: assinar esse mesmo tópico.
+#   2. secrets/bitwarden-secrets.json: +1 linha
+#        "ntfy_topic": "ntfy Topic",
+#   3. `sync-secrets`  →  `sudo nixos-rebuild switch --flake .#nixos-kingston`
+#   4. No app do celular: assinar esse mesmo tópico.
+#
+# Por que 2 vem depois de 1 e antes de 3: entrar no índice faz o sops DECLARAR o
+# segredo, e um segredo declarado cuja chave ainda não está no secrets.yaml passa
+# no build e quebra na ATIVAÇÃO ("secret does not exist"). O índice sem o valor
+# cifrado = switch quebrado. Enquanto a linha não existir, tudo isto fica inerte.
 #
 # Sem o segredo provisionado o comando AVISA no stderr e sai 0 — nunca derruba
 # quem chamou. Um backup não deve falhar porque o aviso não saiu.

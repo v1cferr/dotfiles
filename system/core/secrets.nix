@@ -38,50 +38,66 @@ in
 
   # Gera um sops.secrets.<nome> = {} pra cada entrada do índice (Bitwarden), e
   # mescla (//) os segredos que NÃO vêm do Bitwarden (declarados à mão).
-  sops.secrets = (lib.mapAttrs (_key: _item: { }) bwMap) // {
-    v1cferr_password_hash.neededForUsers = true; # hash da senha: precisa cedo (usuário)
-    cloudflare_ddns_token = { };
-    jellyfin_api_key = {
-      owner = "v1cferr";
-      mode = "0400";
-    }; # legível p/ tooling do usuário em /run/secrets (sem sudo)
-    deepl_api_key = {
-      owner = "v1cferr";
-      mode = "0400";
-    }; # tradução das frases do lockscreen (serviço --user lê /run/secrets)
-    # tópico do ntfy: o comando `notify` (home/shell/ntfy.nix) roda como usuário,
-    # e os timers --user que avisam também. Mesmo padrão do deepl acima.
-    ntfy_topic = {
-      owner = "v1cferr";
-      mode = "0400";
+  sops.secrets =
+    (lib.mapAttrs (_key: _item: { }) bwMap)
+    // {
+      v1cferr_password_hash.neededForUsers = true; # hash da senha: precisa cedo (usuário)
+      cloudflare_ddns_token = { };
+      jellyfin_api_key = {
+        owner = "v1cferr";
+        mode = "0400";
+      }; # legível p/ tooling do usuário em /run/secrets (sem sudo)
+      deepl_api_key = {
+        owner = "v1cferr";
+        mode = "0400";
+      }; # tradução das frases do lockscreen (serviço --user lê /run/secrets)
+      # tópico do ntfy: o comando `notify` (home/shell/ntfy.nix) roda como usuário,
+      # e os timers --user que avisam também. Mesmo padrão do deepl acima.
+      #
+      # Condicional ao índice de propósito: declarar um sops.secrets cuja chave
+      # ainda não está no secrets.yaml passa no BUILD e quebra na ATIVAÇÃO
+      # ("secret does not exist"), ou seja, derruba o switch. Assim o módulo
+      # continua inerte até `sync-secrets` ter rodado, que é a mesma regra que o
+      # resto daqui segue.
+      # rclone.conf do Google Drive (token OAuth). FORA do Bitwarden de propósito: é
+      # MULTILINHA e o sync-secrets faz `sops set` com JSON de uma linha só — quebraria.
+      # E, ao contrário da senha do restic, o token é REGERÁVEL (refaz o OAuth), então
+      # não precisa do cofre. Editar: nix shell nixpkgs#sops -c sops secrets/secrets.yaml
+      # owner v1cferr: o mount do ~/Drive é serviço --user (home/services/drive-mount.nix)
+      # e precisa LER isto sem sudo. O restic segue lendo — roda como root, que lê 0400
+      # alheio. Mesmo padrão do jellyfin_api_key/deepl_api_key acima.
+      rclone_gdrive_conf = {
+        owner = "v1cferr";
+        mode = "0400";
+      };
+      # SENHAS DOS REPOS RESTIC legíveis pelo usuário. Motivo: `restic mount` só é
+      # navegável por QUEM MONTOU — mount FUSE é privado por padrão, o que esta config já
+      # provou pelo avesso (o restic como ROOT não conseguia nem lstat no mount FUSE do
+      # USUÁRIO em ~/FAI-workstation). Montar com sudo dava uma pasta que o Dolphin não
+      # abre; montar como usuário exige ler a senha sem sudo.
+      # Não é escalada de privilégio: é a senha do backup DOS DADOS DESTE MESMO USUÁRIO —
+      # quem já é v1cferr tem os arquivos originais. Mesmo padrão do jellyfin/deepl.
+      restic_password = {
+        owner = "v1cferr";
+        mode = "0400";
+      };
+      restic_password_arch_kingston = {
+        owner = "v1cferr";
+        mode = "0400";
+      };
+    }
+    # Condicional ao índice de propósito: declarar um sops.secrets cuja chave
+    # ainda não está no secrets.yaml passa no BUILD e quebra na ATIVAÇÃO
+    # ("secret does not exist"), derrubando o switch. Assim isto fica inerte
+    # até o `sync-secrets` ter rodado — mesma regra do resto daqui.
+    # O comando `notify` (home/shell/ntfy.nix) roda como usuário, e os timers
+    # --user que avisam também: owner v1cferr, igual ao deepl acima.
+    // lib.optionalAttrs (bwMap ? ntfy_topic) {
+      ntfy_topic = {
+        owner = "v1cferr";
+        mode = "0400";
+      };
     };
-    # rclone.conf do Google Drive (token OAuth). FORA do Bitwarden de propósito: é
-    # MULTILINHA e o sync-secrets faz `sops set` com JSON de uma linha só — quebraria.
-    # E, ao contrário da senha do restic, o token é REGERÁVEL (refaz o OAuth), então
-    # não precisa do cofre. Editar: nix shell nixpkgs#sops -c sops secrets/secrets.yaml
-    # owner v1cferr: o mount do ~/Drive é serviço --user (home/services/drive-mount.nix)
-    # e precisa LER isto sem sudo. O restic segue lendo — roda como root, que lê 0400
-    # alheio. Mesmo padrão do jellyfin_api_key/deepl_api_key acima.
-    rclone_gdrive_conf = {
-      owner = "v1cferr";
-      mode = "0400";
-    };
-    # SENHAS DOS REPOS RESTIC legíveis pelo usuário. Motivo: `restic mount` só é
-    # navegável por QUEM MONTOU — mount FUSE é privado por padrão, o que esta config já
-    # provou pelo avesso (o restic como ROOT não conseguia nem lstat no mount FUSE do
-    # USUÁRIO em ~/FAI-workstation). Montar com sudo dava uma pasta que o Dolphin não
-    # abre; montar como usuário exige ler a senha sem sudo.
-    # Não é escalada de privilégio: é a senha do backup DOS DADOS DESTE MESMO USUÁRIO —
-    # quem já é v1cferr tem os arquivos originais. Mesmo padrão do jellyfin/deepl.
-    restic_password = {
-      owner = "v1cferr";
-      mode = "0400";
-    };
-    restic_password_arch_kingston = {
-      owner = "v1cferr";
-      mode = "0400";
-    };
-  };
 
   environment.systemPackages = [ sync-secrets ];
 }

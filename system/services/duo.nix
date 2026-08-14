@@ -19,13 +19,13 @@
 #      sync-secrets usa `bw get password`):
 #        "Duo DB Password"  (gere uma senha forte)    [obrigatório]
 #        "Gemini API Key"   (reserva do solver)        [opcional]
-#        "Duo ntfy Topic"   (alerta ofensiva em risco) [opcional]
+#        "ntfy Topic"       (alerta ofensiva em risco; tópico compartilhado)
 #        "Duolingo"         (senha da conta)            [opcional; fallback do login]
 #        "Duolingo Email"   (o e-mail de login, no campo senha) [par do fallback]
 #   2. secrets/bitwarden-secrets.json: some as linhas correspondentes:
 #        "duo_db_password": "Duo DB Password",
 #        "gemini_api_key":  "Gemini API Key",      (só se criou)
-#        "ntfy_topic":      "Duo ntfy Topic",      (só se criou)
+#        "ntfy_topic":      "ntfy Topic",           (já no índice)
 #        "duolingo_password": "Duolingo",          (só se criou)
 #        "duolingo_username": "Duolingo Email"     (só se criou)
 #   3. `sync-secrets`  →  `sudo nixos-rebuild switch --flake .#nixos-kingston`

@@ -49,6 +49,12 @@ in
       owner = "v1cferr";
       mode = "0400";
     }; # tradução das frases do lockscreen (serviço --user lê /run/secrets)
+    # tópico do ntfy: o comando `notify` (home/shell/ntfy.nix) roda como usuário,
+    # e os timers --user que avisam também. Mesmo padrão do deepl acima.
+    ntfy_topic = {
+      owner = "v1cferr";
+      mode = "0400";
+    };
     # rclone.conf do Google Drive (token OAuth). FORA do Bitwarden de propósito: é
     # MULTILINHA e o sync-secrets faz `sops set` com JSON de uma linha só — quebraria.
     # E, ao contrário da senha do restic, o token é REGERÁVEL (refaz o OAuth), então

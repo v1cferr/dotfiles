@@ -10,6 +10,7 @@
     ./claude-code.nix # pacote + contas separadas (claude-fai/claude-pessoal/claude-pick)
     ./git.nix # programs.git → ~/.gitconfig
     ./ssh.nix # ~/.ssh/config → hosts da FAI (workstation/fai-vm) via a VPN
+    ./ntfy.nix # comando `notify` → push no celular (tópico ntfy vem do sops)
     ./fastfetch.nix # ~/.config/fastfetch/config.jsonc (resumo do sistema)
   ];
 }

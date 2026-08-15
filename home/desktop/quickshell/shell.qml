@@ -1,19 +1,19 @@
 //@ pragma UseQApplication
-// Raiz do shell: só COMPÕE os componentes (barra, OSD, mídia, notificações).
-// Cada um mora no próprio arquivo; aqui não há lógica.
+// The shell's root: it only COMPOSES the components (bar, OSD, media, notifications).
+// Each one lives in its own file; there is no logic here.
 //
-// REMOVIDO (30/07): este arquivo carregava um painel de controle de VPN inteiro
-// (~190 linhas) que era CÓDIGO MORTO em três níveis, e nada disso aparecia:
-//   1. chamava `$HOME/.local/bin/vpn`, caminho do setup ARCH — nesta máquina o
-//      CLI é `vpn` no PATH (system/net/vpn.nix), então toda ação e todo status
-//      falhavam em silêncio contra um binário inexistente;
-//   2. era inalcançável — o único gatilho era `qs ipc call vpn toggle`, herdado
-//      do módulo custom/vpn da WAYBAR, que foi removida na migração; nenhum bind
-//      do keybinds.lua chama isso;
-//   3. modelava o mundo antigo: "FAI via netExtender" e "perfis do
-//      NetworkManager", quando hoje é nxBender (FAI) + openconnect (UFSCar), e
-//      lia um campo `neservice` que o `vpn status-json` nem emite mais.
-// O controle de VPN agora vive ANCORADO na barra, em bar/VpnPopover.qml.
+// REMOVED (30/07): this file carried an entire VPN control panel (~190 lines) that was DEAD CODE
+// on three levels, and none of it showed up:
+//   1. it called `$HOME/.local/bin/vpn`, a path from the ARCH setup, whereas on this machine the
+//      CLI is `vpn` on the PATH (system/net/vpn.nix), so every action and every status failed
+//      silently against a binary that does not exist;
+//   2. it was unreachable, since the only trigger was `qs ipc call vpn toggle`, inherited from
+//      WAYBAR's custom/vpn module, which was removed in the migration; no bind in keybinds.lua
+//      calls that;
+//   3. it modeled the old world: "FAI through netExtender" and "NetworkManager profiles", when
+//      today it is nxBender (FAI) plus openconnect (UFSCar), and it read a `neservice` field that
+//      `vpn status-json` does not even emit anymore.
+// The VPN control now lives ANCHORED to the bar, in bar/VpnPopover.qml.
 import Quickshell
 import QtQuick
 import "root:/bar"
@@ -24,17 +24,17 @@ import "root:/media"
 ShellRoot {
     id: root
 
-    // OSD (toast) de volume/mic, bottom-center no monitor principal. Componente em Osd.qml.
+    // The volume/mic OSD (a toast), bottom-center on the main monitor. The component is in Osd.qml.
     Osd {}
 
-    // Painel de controle de mídia (Spotify). Componente em Mpris.qml.
+    // The media control panel (Spotify). The component is in Mpris.qml.
     Mpris {}
 
-    // Barra principal — substitui a Waybar. Componente em Bar.qml.
+    // The main bar, replacing Waybar. The component is in Bar.qml.
     Bar {}
 
-    // Notificações nativas do Quickshell (toasts + central). Daemon em Notifs.qml
-    // (singleton) + UI em Notifications.qml. Dono do org.freedesktop.Notifications
-    // (o swaync foi removido; o mako órfão morreu). O sino no Bar lê Notifs.count/dnd.
+    // Quickshell's native notifications (toasts plus the center). The daemon is in Notifs.qml
+    // (a singleton) and the UI in Notifications.qml. It owns org.freedesktop.Notifications
+    // (swaync was removed; the orphaned mako died). The bell in the Bar reads Notifs.count/dnd.
     Notifications {}
 }

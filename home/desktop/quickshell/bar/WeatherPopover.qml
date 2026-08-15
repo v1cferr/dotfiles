@@ -1,4 +1,4 @@
-// Popover do clima (atual + previsão 7 dias). Estado no Bar, via `bar`.
+// The weather popover (current plus a 7-day forecast). The state lives in the Bar, through `bar`.
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -14,12 +14,12 @@ PanelWindow {
         left: true
     }
     margins {
-        top: 4 // = gaps_out do Hyprland: alinha o popover com o topo das janelas (barExclusiveZone 30 já somada)
+        top: 4 // = Hyprland's gaps_out: it aligns the popover with the top of the windows (barExclusiveZone 30 already added)
         left: bar.popLeft(wPop.implicitWidth)
     }
     exclusiveZone: 0
-    // Card se ajusta ao conteúdo (+28 = margens 14*2). Sem largura fixa,
-    // não sobra espaço vazio à direita: a grade de 7 dias define a largura.
+    // The card fits the content (+28 = the 14*2 margins). With no fixed width there is no empty
+    // space left on the right: the 7-day grid defines the width.
     implicitWidth: wContent.implicitWidth + 28
     implicitHeight: wContent.implicitHeight + 28
     color: "transparent"
@@ -42,15 +42,15 @@ PanelWindow {
             anchors.margins: 14
             spacing: 10
 
-            // Cabeçalho centralizado: hero (ícone + temperatura grande) e condição
-            // no topo; métricas numa linha única separadas por "·". Tudo no centro.
-            // AlignHCenter (e não fillWidth) centraliza o bloco dentro da largura
-            // da grade — fillWidth não estica neste contexto do Quickshell.
+            // A centered header: the hero (the icon plus the big temperature) and the
+            // condition on top; the metrics on a single line separated by "·". All centered.
+            // AlignHCenter (and not fillWidth) centers the block inside the grid's width, since
+            // fillWidth does not stretch in this Quickshell context.
             ColumnLayout {
                 Layout.alignment: Qt.AlignHCenter
                 spacing: 8
 
-                // Hero — ícone + temperatura grande, condição logo abaixo
+                // The hero: the icon plus the big temperature, with the condition right below
                 ColumnLayout {
                     Layout.alignment: Qt.AlignHCenter
                     spacing: 0
@@ -80,22 +80,22 @@ PanelWindow {
                     }
                 }
 
-                // Métricas em uma linha, centralizadas, separadas por "·"
+                // The metrics on one line, centered, separated by "·"
                 RowLayout {
                     Layout.alignment: Qt.AlignHCenter
                     spacing: 6
                     Repeater {
                         model: [
                             {
-                                label: "Sensação",
+                                label: "Feels like",
                                 value: bar.wFeels + "°"
                             },
                             {
-                                label: "Umidade",
+                                label: "Humidity",
                                 value: bar.wHumidity + "%"
                             },
                             {
-                                label: "Vento",
+                                label: "Wind",
                                 value: bar.wWind
                             }
                         ]

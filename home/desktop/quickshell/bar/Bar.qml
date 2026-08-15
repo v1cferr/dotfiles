@@ -1,8 +1,9 @@
-// Barra do desktop — a única; a Waybar saiu na migração pro Quickshell.
-// Carregada por shell.qml (`Bar {}`); os popovers moram em arquivos ao lado
+// The desktop's bar, the only one; Waybar left in the migration to Quickshell.
+// It is loaded by shell.qml (`Bar {}`); the popovers live in files next to it
 // (Calendar/Metrics/Vpn/Weather/Tray/PowerMenu).
-// Mostra: workspaces por monitor + título · relógio · cpu/ram/disco/temp · GPU ·
-// áudio (Pipewire) · Spotify (Mpris) · rede · VPN · clima · tray · notificações.
+// It shows: the workspaces per monitor plus the title · the clock · cpu/ram/disk/temp · the GPU ·
+// audio (Pipewire) · Spotify (Mpris) · the network · the VPN · the weather · the tray ·
+// notifications.
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
@@ -18,18 +19,18 @@ Scope {
     id: root
 
     property int barExclusiveZone: 30
-    // Esconde a barra sob demanda (IPC). Existe por causa do overlay do Flameshot: no
-    // Hyprland uma JANELA normal nunca cobre uma layer `top`, e a barra vive nela — o
-    // overlay mostra um frame CONGELADO que já contém a barra e a barra VIVA desenha em
-    // cima, dando o efeito de "barra duplicada". Não há window rule que resolva (é feature
-    // request aberta: hyprwm/Hyprland#4847), então o único caminho é esconder.
-    // `visible: false` desmapeia a layer surface — o strip de 30px para de capturar clique,
-    // o que importa p/ conseguir selecionar região no topo da tela.
+    // It hides the bar on demand (through IPC). It exists because of Flameshot's overlay: on
+    // Hyprland a normal WINDOW never covers a `top` layer, and the bar lives in one, so the
+    // overlay shows a FROZEN frame that already contains the bar and the LIVE bar draws on top,
+    // giving the "duplicated bar" effect. There is no window rule that solves it (it is an open
+    // feature request: hyprwm/Hyprland#4847), so the only path is hiding.
+    // `visible: false` unmaps the layer surface, so the 30px strip stops capturing clicks, which
+    // matters for being able to select a region at the top of the screen.
     property bool hidden: false
     readonly property int trayCount: SystemTray.items ? SystemTray.items.values.length : 0
-    readonly property string vpnBin: "vpn" // CLI no PATH (system/net/vpn.nix)
+    readonly property string vpnBin: "vpn" // the CLI on the PATH (system/net/vpn.nix)
 
-    // Paleta e fonte vêm do Theme singleton (Theme.colX / Theme.uiFont).
+    // The palette and the font come from the Theme singleton (Theme.colX / Theme.uiFont).
 
     function stateColor(pct, base) {
         return pct >= 90 ? Theme.colRed : (pct >= 70 ? Theme.colPeach : base);
@@ -38,9 +39,9 @@ Scope {
         Quickshell.execDetached(cmd);
     }
 
-    // qs ipc call bar hide / unhide  → usado pelo flameshot-screenshot (home/apps/flameshot.nix).
-    // NÃO nomear "show": colide com o subcomando `qs ipc show` e o CLI nunca chama a função
-    // (mesma pegadinha já documentada no shell.qml, no IpcHandler do vpn).
+    // qs ipc call bar hide / unhide, used by flameshot-screenshot (home/apps/flameshot.nix).
+    // Do NOT name it "show": it collides with the `qs ipc show` subcommand and the CLI never
+    // calls the function (the same trap already documented in shell.qml, in the vpn IpcHandler).
     IpcHandler {
         target: "bar"
 
@@ -53,13 +54,14 @@ Scope {
         }
     }
 
-    // ===== Relógio =====
-    // Hora E data SEMPRE visíveis, na mesma pílula. Era um toggle no clique (showDate): ou
-    // uma ou outra, e pra ver a data tinha que clicar duas vezes (ida e volta). A hora vem
-    // primeiro e a data vai no `sub` da Pill (cor discreta) — hierarquia, não separação.
-    // Dia da semana pelo dowAbbr daqui, e não pelo "ddd" do Qt: o formato do Qt depende do
-    // locale do processo, então "sáb" viraria "Sat" se a barra subir sem LC_TIME.
-    // Sem ano — quem precisa dele tem o calendário no hover.
+    // ===== The clock =====
+    // The time AND the date ALWAYS visible, in the same pill. It used to be a toggle on click
+    // (showDate): one or the other, and to see the date you had to click twice (there and back).
+    // The time comes first and the date goes into the Pill's `sub` (a discreet color): a
+    // hierarchy, not a separation.
+    // The weekday comes from dowAbbr here, and not from Qt's "ddd": Qt's format depends on the
+    // process' locale, so "sáb" would become "Sat" if the bar came up with no LC_TIME.
+    // No year; whoever needs it has the calendar on hover.
     property string dateStr: ""
     property string timeStr: ""
     SystemClock {
@@ -87,7 +89,7 @@ Scope {
         hyprProc.running = true;
     }
 
-    // ===== CPU / RAM / Disco =====
+    // ===== CPU / RAM / Disk =====
     property int cpuPct: 0
     property int memPct: 0
     property int diskPct: 0
@@ -147,7 +149,7 @@ Scope {
         }
     }
 
-    // ===== Temperaturas (sensors -j) + GPU temp (hwmon do xe; ver gpuProc) =====
+    // ===== Temperatures (sensors -j) plus the GPU temp (xe's hwmon; see gpuProc) =====
     property real cpuTempC: 0
     property real moboTempC: 0
     property var nvmeTempsC: []
@@ -206,14 +208,15 @@ Scope {
     }
     Process {
         id: gpuProc
-        // Intel Arc B580 (driver xe): temp via hwmon; uso% NÃO existe no xe → 0.
-        // Saída "0,<temp>" p/ o parseGpu (era nvidia-smi "usage,temp" no Arch).
+        // Intel Arc B580 (the xe driver): the temp through hwmon; the usage % does NOT exist on
+        // xe, so 0. The output is "0,<temp>" for parseGpu (it was nvidia-smi's "usage,temp" on
+        // Arch).
         command: ["sh", "-c", "for t in /sys/class/drm/card*/device/hwmon/hwmon*/temp*_input; do d=$(dirname \"$t\"); [ \"$(cat \"$d/name\" 2>/dev/null)\" = xe ] && echo \"0,$(($(cat \"$t\")/1000))\" && break; done"]
         stdout: StdioCollector {
             onStreamFinished: root.parseGpu(text)
         }
     }
-    // Lista curada de temperaturas + a mais quente (headline)
+    // A curated list of temperatures plus the hottest one (the headline)
     readonly property var tempList: {
         const arr = [];
         if (root.cpuTempC > 0)
@@ -228,7 +231,7 @@ Scope {
             });
         if (root.moboTempC > 0)
             arr.push({
-                name: "Placa",
+                name: "Board",
                 temp: Math.round(root.moboTempC)
             });
         const nv = root.nvmeTempsC;
@@ -249,7 +252,7 @@ Scope {
     function tempColor(t) {
         return t >= 85 ? Theme.colRed : (t >= 70 ? Theme.colPeach : Theme.colSapphire);
     }
-    // Uso consolidado (CPU/RAM/GPU/Disco), headline = CPU
+    // Consolidated usage (CPU/RAM/GPU/Disk), the headline is the CPU
     readonly property var usageList: [
         {
             name: "CPU",
@@ -264,16 +267,16 @@ Scope {
             pct: root.gpuUsage
         },
         {
-            name: "Disco",
+            name: "Disk",
             pct: root.diskPct
         }
     ]
 
     // ===== VPN (vpn status-json) =====
-    // vpnList guarda a lista CRUA [{id,name,connected}] porque o popover precisa de uma
-    // linha por VPN; vpnConnected/vpnName seguem sendo o agregado que o pill mostra.
-    // Uma leitura só alimenta os dois — o rofi remontava os rótulos por conta própria
-    // com `systemctl is-active`, que MENTE no crash-loop do nxBender (ver vpn.nix).
+    // vpnList holds the RAW list [{id,name,connected}] because the popover needs one row per
+    // VPN; vpnConnected/vpnName remain the aggregate the pill shows.
+    // A single read feeds both: rofi used to reassemble the labels on its own with
+    // `systemctl is-active`, which LIES during nxBender's crash loop (see vpn.nix).
     property bool vpnConnected: false
     property string vpnName: ""
     property var vpnList: []
@@ -294,9 +297,9 @@ Scope {
             root.vpnName = n;
         } catch (e) {}
     }
-    // Conectar/desconectar pelo popover. Process (e não launch()) p/ saber QUANDO
-    // terminou: aí o estado é relido na hora, em vez de esperar o poll de 5s — e o
-    // vpnBusy segura o painel aberto e os botões inertes durante a ação.
+    // Connecting/disconnecting from the popover. A Process (and not launch()) so we know WHEN it
+    // finished: then the state is reread right away instead of waiting for the 5s poll, and
+    // vpnBusy holds the panel open and the buttons inert during the action.
     function runVpn(action, target) {
         root.vpnBusy = true;
         vpnActionProc.command = [root.vpnBin, action, target];
@@ -319,15 +322,15 @@ Scope {
         }
     }
 
-    // ===== Qualidade da VPN — popover de HOVER do pill =====
-    // O pill respondia só "tem túnel?"; faltava "e está bom?" — que é a pergunta de
-    // quem está com uma sessão SSH ou uma chamada dependendo dele.
-    // DUAS FONTES, de propósito: o `vpn stats-json` traz o ESTADO (iface, IP, MTU,
-    // tempo no ar, bytes, e qual host serve de alvo) a cada 20s — 3s com o painel
-    // aberto —, e a latência vem da sonda CONTÍNUA logo abaixo. Sem túnel nada disso
-    // roda, então o custo em repouso é zero; é por isso que não entrou no status-json,
-    // que roda a cada 5s o dia inteiro só p/ pintar o pill.
-    property var vpnStats: ({})   // id -> objeto do `vpn stats-json`
+    // ===== VPN quality: the pill's HOVER popover =====
+    // The pill only answered "is there a tunnel?"; what was missing was "and is it any good?",
+    // which is the question of somebody with an SSH session or a call depending on it.
+    // TWO SOURCES, on purpose: `vpn stats-json` brings the STATE (iface, IP, MTU, uptime, bytes,
+    // and which host serves as the target) every 20s (3s with the panel open), and the latency
+    // comes from the CONTINUOUS probe right below. With no tunnel none of it runs, so the cost at
+    // rest is zero; that is why it did not go into status-json, which runs every 5s all day long
+    // just to paint the pill.
+    property var vpnStats: ({})   // id -> the object from `vpn stats-json`
     function parseVpnStats(text) {
         try {
             const j = JSON.parse(text);
@@ -337,47 +340,46 @@ Scope {
         } catch (e) {}
     }
 
-    // ── Sonda contínua: 1 pacote/s, janela de 60s ─────────────────────────────
-    // POR QUE CONTÍNUA, e não uma rajada a cada leitura — MEDIDO em 14/08/2026 no
-    // túnel da FAI, e foi o que condenou a 1ª versão: 3 pacotes em 0,6s davam mdev
-    // 0,4ms enquanto uma janela de 20s dava mdev 3,3ms e PICO DE 54,7ms. Ou seja, a
-    // rajada observava 3% do tempo e um engasgo de 2s era invisível em 97% dos casos;
-    // pior, a perda tinha resolução de 33% (3 pacotes!), então 1-3% de perda real
-    // aparecia como "0%". Número bonito e falso é pior que número ausente.
-    // O CUSTO é irrisório e foi medido: 84 B/s, e 30 pacotes a 1/s deram 0% de perda —
-    // o alvo não faz rate-limit nessa cadência. A janela de 60 amostras dá jitter de
-    // verdade e resolução de perda de 1,7%.
-    // O `ping` é LINE-BUFFERED mesmo escrevendo em pipe (verificado: uma linha por
-    // segundo, sem stdbuf), então dá pra ler o fluxo em vez de esperar ele terminar.
-    // QUEM DESCOBRE O ALVO é o CLI (system/net/vpn.nix): varrer rota e testar
-    // candidato é trabalho de shell; observar o tempo todo é trabalho de quem fica
-    // aberto. Sem alvo, esta sonda simplesmente não sobe e o painel diz "sem sonda".
+    // ── A continuous probe: 1 packet/s, a 60s window ──────────────────────────
+    // WHY CONTINUOUS, and not a burst on every read. MEASURED on 14/08/2026 on the FAI tunnel,
+    // and it is what condemned the 1st version: 3 packets in 0.6s gave an mdev of 0.4ms while a
+    // 20s window gave an mdev of 3.3ms and a PEAK OF 54.7ms. Which means the burst observed 3% of
+    // the time and a 2s hiccup was invisible in 97% of cases; worse, the loss had a resolution of
+    // 33% (3 packets!), so 1-3% of real loss showed up as "0%". A pretty, false number is worse
+    // than an absent number.
+    // THE COST is negligible and it was measured: 84 B/s, and 30 packets at 1/s gave 0% loss, so
+    // the target does not rate-limit at that cadence. The 60-sample window gives real jitter and a
+    // loss resolution of 1.7%.
+    // `ping` is LINE-BUFFERED even when writing into a pipe (verified: one line per second, with
+    // no stdbuf), so the stream can be read instead of waiting for it to finish.
+    // WHAT DISCOVERS THE TARGET is the CLI (system/net/vpn.nix): sweeping routes and testing
+    // candidates is shell work; observing all the time is the work of whoever stays open. With no
+    // target this probe simply does not come up and the panel says "no probe".
     component VpnProbe: Scope {
         id: probe
-        // `info` CHEGA de fora (o objeto desta VPN no vpn stats-json) em vez de ser
-        // buscado aqui: inline component não enxerga o `id` do documento que o declara,
-        // então um `root.vpnStats[...]` daqui de dentro estoura em ReferenceError e a
-        // instância inteira não nasce — o sintoma foi `vpnProbeStat` virar undefined.
+        // `info` ARRIVES from outside (this VPN's object in vpn stats-json) instead of being
+        // fetched here: an inline component does not see the `id` of the document that declares
+        // it, so a `root.vpnStats[...]` from in here blows up with a ReferenceError and the whole
+        // instance is never born; the symptom was `vpnProbeStat` becoming undefined.
         required property var info
         readonly property string iface: probe.info.connected === true ? (probe.info.iface || "") : ""
         readonly property string target: probe.info.connected === true ? (probe.info.probe || "") : ""
-        // Túnel novo (ou alvo novo) = série nova: emendar duas sessões desenharia um
-        // degrau que nunca existiu. O IP entra na chave porque o NOME da interface se
-        // repete: num reconnect o ppp0 volta a ser ppp0 (visto em 14/08/2026, o IP indo
-        // de 192.168.50.2 p/ .3) e sem ele a série atravessaria a queda como se nada
-        // tivesse acontecido.
+        // A new tunnel (or a new target) = a new series: splicing two sessions would draw a step
+        // that never existed. The IP goes into the key because the interface's NAME repeats: on a
+        // reconnect ppp0 becomes ppp0 again (seen on 14/08/2026, the IP going from 192.168.50.2 to
+        // .3) and without it the series would cross the drop as if nothing had happened.
         readonly property string key: probe.iface + "@" + probe.ip + "@" + probe.target
         readonly property string ip: probe.info.connected === true ? (probe.info.ip || "") : ""
-        readonly property int window: 60 // 1 min a 1 pacote/s
-        property var series: []          // ms por amostra; null = pacote sem resposta
+        readonly property int window: 60 // 1 min at 1 packet/s
+        property var series: []          // ms per sample; null = a packet with no answer
 
         onKeyChanged: {
             probe.series = [];
             pingProc.running = false;
             if (probe.iface !== "" && probe.target !== "") {
-                // -O emite "no answer yet" na hora do timeout: sem isso, pacote perdido
-                // seria SILÊNCIO e a série ficaria só com os que voltaram (perda 0%
-                // eterna). -n não resolve DNS; -W 1 casa com o intervalo de 1s.
+                // -O emits "no answer yet" at timeout: without it a lost packet would be
+                // SILENCE and the series would only hold the ones that came back (an eternal 0%
+                // loss). -n does not resolve DNS; -W 1 matches the 1s interval.
                 pingProc.command = ["ping", "-n", "-O", "-i", "1", "-W", "1", "-I", probe.iface, probe.target];
                 probe.lastAt = Date.now();
                 pingProc.running = true;
@@ -389,19 +391,19 @@ Scope {
             probe.series = s;
         }
         function feed(line) {
-            probe.lastAt = Date.now(); // qualquer linha prova que a sonda está viva
+            probe.lastAt = Date.now(); // any line proves the probe is alive
             const m = line.match(/time=([0-9.]+) ms/);
             if (m)
                 probe.push(Number(m[1]));
             else if (line.indexOf("no answer yet") >= 0)
                 probe.push(null);
-            // cabeçalho e ruído não viram amostra, mas contam como sinal de vida
+            // the header and noise do not become samples, but they count as a sign of life
         }
-        // WATCHDOG. Com o -O o ping FALA a cada segundo mesmo quando o alvo some, então
-        // SILÊNCIO não é perda de pacote: é a sonda quebrada (processo morto, interface
-        // recriada debaixo dele). Sem isto o painel congelaria exibindo a última janela
-        // boa, com cara de "estável" — exatamente a mentira que ele existe pra não
-        // contar. Marca o buraco na série E ressuscita o processo.
+        // A WATCHDOG. With -O, ping SPEAKS every second even when the target disappears, so
+        // SILENCE is not packet loss: it is the probe broken (a dead process, an interface
+        // recreated under it). Without this the panel would freeze showing the last good window,
+        // looking "stable", which is exactly the lie it exists not to tell. It marks the hole in
+        // the series AND resurrects the process.
         property double lastAt: 0
         Timer {
             interval: 5000
@@ -418,12 +420,12 @@ Scope {
         }
         Timer {
             id: reviveTimer
-            interval: 300 // deixa o processo morrer antes de renascer
+            interval: 300 // it lets the process die before being reborn
             onTriggered: if (probe.iface !== "" && probe.target !== "")
                 pingProc.running = true
         }
-        // Estatística da janela. O `mdev` é o desvio padrão das respondidas — a mesma
-        // conta do iputils, p/ o número aqui bater com o do `ping` no terminal.
+        // The window's statistics. The `mdev` is the standard deviation of the answered ones,
+        // the same calculation iputils does, so the number here matches `ping` in the terminal.
         readonly property var stat: {
             const s = probe.series;
             let n = 0, sum = 0, sum2 = 0, mn = 0, mx = 0, lost = 0;
@@ -461,7 +463,7 @@ Scope {
             }
         }
     }
-    // Uma sonda por VPN — as mesmas duas que o CLI conhece (system/net/vpn.nix).
+    // One probe per VPN, the same two the CLI knows about (system/net/vpn.nix).
     VpnProbe {
         id: faiProbe
         info: root.vpnStats["fai"] || ({})
@@ -479,14 +481,14 @@ Scope {
             ufscar: ufscarProbe.series
         })
 
-    // Veredito, com os cortes ancorados na baseline MEDIDA do túnel da FAI (14/08/2026,
-    // 1 pacote/s: média ~34ms, mdev 0,8ms, 0% de perda). A ORDEM é a do estrago: perda
-    // primeiro (mata sessão), jitter antes da média — 200ms estáveis se trabalha, 40ms
-    // serrilhados travam SSH e chamada.
-    // Os NÚMEROS não são chutados: 2% de perda = 2 pacotes perdidos na janela de 60, e
-    // um pacote solto por minuto é rotina demais p/ acender alarme; mdev de 10ms é uma
-    // ordem de grandeza acima do medido em túnel saudável.
-    // "medindo…" antes de 5 amostras porque veredito com 2 pacotes é adivinhação.
+    // The verdict, with the cutoffs anchored to the MEASURED baseline of the FAI tunnel
+    // (14/08/2026, 1 packet/s: a ~34ms mean, 0.8ms mdev, 0% loss). The ORDER is the order of the
+    // damage: loss first (it kills a session), jitter before the mean, since 200ms of steady
+    // latency is workable and 40ms of jagged latency freezes SSH and calls.
+    // The NUMBERS are not guesses: 2% loss = 2 packets lost in the 60-sample window, and one
+    // stray packet a minute is far too routine to raise an alarm; a 10ms mdev is an order of
+    // magnitude above what a healthy tunnel measures.
+    // "measuring…" before 5 samples, because a verdict with 2 packets is guesswork.
     function vpnQuality(s, pr) {
         if (!s || !s.connected)
             return {
@@ -495,37 +497,37 @@ Scope {
             };
         if (!s.probe)
             return {
-                label: "sem sonda",
+                label: "no probe",
                 color: Theme.colDim
             };
         if (!pr || pr.n < 5)
             return {
-                label: "medindo…",
+                label: "measuring…",
                 color: Theme.colDim
             };
         if (pr.loss >= 20)
             return {
-                label: "ruim",
+                label: "bad",
                 color: Theme.colRed
             };
         if (pr.loss >= 2 || pr.mdev > 10)
             return {
-                label: "instável",
+                label: "unstable",
                 color: Theme.colPeach
             };
         if (pr.avg > 150)
             return {
-                label: "lenta",
+                label: "slow",
                 color: Theme.colYellow
             };
         return {
-            label: "estável",
+            label: "steady",
             color: Theme.colGreen
         };
     }
-    // Taxa AGORA da interface do túnel: sai do netRates que a barra já calcula a cada
-    // 2s (/proc/net/dev) — o stats-json não repete essa conta. Interface parada não
-    // aparece naquela lista, e "não apareceu" quer dizer 0 B/s.
+    // The tunnel interface's rate RIGHT NOW: it comes from the netRates the bar already computes
+    // every 2s (/proc/net/dev), since stats-json does not repeat that calculation. An idle
+    // interface does not show up in that list, and "it did not show up" means 0 B/s.
     function vpnRate(iface) {
         const r = (root.netRates || []).find(n => n.iface === iface);
         return r || {
@@ -551,8 +553,8 @@ Scope {
             return Math.floor(s / 60) + "min";
         return Math.round(s) + "s";
     }
-    // Só as CONECTADAS entram no painel: linha de VPN desligada não tem estatística,
-    // e o popover de AÇÕES (clique) é que lista as duas p/ ligar/desligar.
+    // Only the CONNECTED ones enter the panel: a row for a VPN that is off has no statistics,
+    // and it is the ACTIONS popover (on click) that lists both to turn them on and off.
     readonly property var vpnStatsList: {
         const out = [];
         const l = root.vpnList || [];
@@ -567,9 +569,9 @@ Scope {
         }
         return out;
     }
-    // O painel de estatísticas é do HOVER; o de ações, do CLIQUE. Os dois ancoram no
-    // MESMO ponto da barra, então enquanto o menu está aberto este some — senão um
-    // desenharia por cima do outro (e o mouse continua sobre o pill o tempo todo).
+    // The statistics panel belongs to HOVER; the actions one to the CLICK. Both anchor at the
+    // SAME point of the bar, so while the menu is open this one disappears; otherwise one would
+    // draw on top of the other (and the mouse stays over the pill the whole time).
     property bool vpnPillHovered: false
     property bool vpnStatsPopHovered: false
     property bool vpnStatsPopVisible: false
@@ -578,13 +580,13 @@ Scope {
         if (root.vpnStatsWanted) {
             vpnStatsCloseTimer.stop();
             root.vpnStatsPopVisible = true;
-            vpnStatsProc.running = true; // amostra fresca ao abrir
+            vpnStatsProc.running = true; // a fresh sample when it opens
         } else {
             vpnStatsCloseTimer.restart();
         }
     }
-    // Mesma folga de 300ms dos outros popovers de hover: dá pra atravessar o vão
-    // entre o pill e o painel sem ele fechar na cara.
+    // The same 300ms of slack as the other hover popovers: you can cross the gap between the
+    // pill and the panel without it closing in your face.
     Timer {
         id: vpnStatsCloseTimer
         interval: 300
@@ -616,18 +618,18 @@ Scope {
     }
     Process {
         id: hypridleProc
-        // hypridle roda como serviço systemd --user (home/desktop/lockscreen.nix).
+        // hypridle runs as a systemd --user service (home/desktop/lockscreen.nix).
         command: ["sh", "-c", "systemctl --user is-active --quiet hypridle.service && echo on || echo off"]
         stdout: StdioCollector {
             onStreamFinished: root.parseHypridle(text)
         }
     }
 
-    // ===== Notificações =====
-    // O Quickshell é o daemon (serviço Notifs.qml + UI Notifications.qml). O sino
-    // abaixo lê Notifs.barIcon/dnd e chama os toggles direto no singleton.
+    // ===== Notifications =====
+    // Quickshell is the daemon (the Notifs.qml service plus the Notifications.qml UI). The bell
+    // below reads Notifs.barIcon/dnd and calls the toggles straight on the singleton.
 
-    // ===== Weather (Open-Meteo, JSON; lat/long de São Carlos) =====
+    // ===== Weather (Open-Meteo, JSON; São Carlos' lat/long) =====
     property string wTemp: ""
     property string wText: ""
     property string wFeels: ""
@@ -635,8 +637,8 @@ Scope {
     property string wWind: ""
     property var wForecast: []
     readonly property bool wHas: root.wTemp !== ""
-    // Código WMO (Open-Meteo) -> texto en-US. As strings batem com os regex do
-    // weatherIcon() abaixo, então o ícone é derivado do texto sem mexer no mapa.
+    // The WMO code (Open-Meteo) -> en-US text. The strings match weatherIcon()'s regexes below,
+    // so the icon is derived from the text with no touching of the map.
     function wmoText(code) {
         const c = code;
         if (c === 0 || c === 1) return "Clear";
@@ -651,7 +653,7 @@ Scope {
         if (c === 96 || c === 99) return "Thunderstorm w/ hail";
         return "—";
     }
-    // Direção do vento (graus -> rosa-dos-ventos, 8 pontos).
+    // The wind's direction (degrees -> the compass rose, 8 points).
     function windDir(deg) {
         const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
         return dirs[Math.round(deg / 45) % 8];
@@ -695,8 +697,8 @@ Scope {
         }
         const dy = data.daily;
         const fc = [];
-        // Índice 0 é hoje (já está na pílula); mostro do dia seguinte em diante
-        // (próximos 7 dias = até o mesmo dia da semana na semana que vem).
+        // Index 0 is today (it is already in the pill); I show from the next day onward
+        // (the next 7 days = up to the same weekday next week).
         if (dy && dy.time) {
             for (let i = 1; i < dy.time.length; i++) {
                 const dt = new Date(dy.time[i] + "T00:00:00");
@@ -726,7 +728,7 @@ Scope {
         triggeredOnStart: true
         onTriggered: weatherProc.running = true
     }
-    // hover do popover de weather
+    // the weather popover's hover
     property bool wPillHovered: false
     property bool wPopHovered: false
     property bool wPopVisible: false
@@ -747,7 +749,7 @@ Scope {
             root.wPopVisible = false
     }
 
-    // ===== Áudio (Pipewire) =====
+    // ===== Audio (Pipewire) =====
     PwObjectTracker {
         objects: Pipewire.defaultAudioSink ? [Pipewire.defaultAudioSink] : []
     }
@@ -798,7 +800,7 @@ Scope {
     readonly property string spText: root.spHasPlayer ? (root.spArtist ? root.spArtist + " - " + root.spTitle : root.spTitle) : ""
     readonly property color spColor: root.spPlaying ? Theme.colGreen : (root.spHasPlayer ? Theme.colYellow : Theme.colDim)
 
-    // ===== Rede (nmcli) =====
+    // ===== Network (nmcli) =====
     property bool netConnected: false
     property bool netEthernet: false
     function parseNet(text) {
@@ -826,7 +828,7 @@ Scope {
         }
     }
 
-    // throughput por interface (/proc/net/dev); taxa = delta / 2s (intervalo do timer)
+    // throughput per interface (/proc/net/dev); the rate = the delta / 2s (the timer's interval)
     property var netPrev: ({})
     property var netRates: []
     property real netMainRx: 0
@@ -883,12 +885,13 @@ Scope {
         return Math.round(bps) + "B";
     }
 
-    // ===== Posicionamento de popovers (sempre logo abaixo do elemento) =====
-    // Alias do Theme (era uma 2ª implementação, divergente da de lá — ver Theme.qml).
+    // ===== Popover positioning (always right below the element) =====
+    // An alias of Theme's (it used to be a 2nd implementation, diverging from that one; see
+    // Theme.qml).
     readonly property var screenPrimary: Theme.screenPrimary
     property var popScreen: null
-    property real popCenterX: 0   // centro do elemento ancorado, em coords da janela da barra
-    // mapToItem pra um Item REAL (barContent) é confiável; só mapToItem(null) não é
+    property real popCenterX: 0   // the anchored element's center, in the bar window's coordinates
+    // mapToItem into a REAL Item (barContent) is reliable; only mapToItem(null) is not
     function anchorPopover(pillItem, barContentItem, scr) {
         if (pillItem && barContentItem) {
             const p = pillItem.mapToItem(barContentItem, 0, 0);
@@ -897,37 +900,43 @@ Scope {
         if (scr)
             root.popScreen = scr;
     }
-    // margin.left pra centralizar o popover sob o elemento (+4 = margin.left da barra)
+    // margin.left to center the popover under the element (+4 = the bar's margin.left)
     function popLeft(popW) {
         const scr = root.popScreen || root.screenPrimary;
         const sw = scr ? scr.width : 1920;
         return Math.round(Math.max(4, Math.min(root.popCenterX + 4 - popW / 2, sw - popW - 4)));
     }
 
-    // ===== Feriados (nacional + SP + São Carlos) — REVERIFICADO em 08/08/2026 =====
-    // scope: "nac" | "sp" | "sc". off = offset em dias do DOMINGO de Páscoa (datas
-    // móveis); senão m/d fixos. fac = ponto facultativo (não dá folga garantida) ->
-    // fica discreto na grade e FORA de "próximos feriados" (computeUpcoming filtra).
+    // ===== Holidays (national plus SP plus São Carlos), RECHECKED on 08/08/2026 =====
+    // The NAMES stay in pt-BR on purpose: they are the official names of Brazilian holidays, the
+    // same class of literal as the city's name. The chrome around them is en-US.
+    // scope: "nac" | "sp" | "sc". off = the offset in days from Easter SUNDAY (the movable
+    // dates); otherwise a fixed m/d. fac = an optional public holiday (it does not guarantee a
+    // day off), so it stays discreet in the grid and OUT of "upcoming holidays" (computeUpcoming
+    // filters it).
     //
-    // ⚠️ ESTA LISTA NÃO SE ATUALIZA SOZINHA — é a única parte do calendário que não.
-    // Os MÓVEIS derivam da Páscoa (easterDate) e escalam pra sempre; os FIXOS são LEI
-    // escrita à mão aqui. Lei nova, ou o município mexendo num feriado, deixa a grade
-    // errada EM SILÊNCIO. Revisar quando aparecer notícia de feriado novo, não por
-    // calendário — 2027 já está coberto, porque nada aqui depende do ano.
+    // THIS LIST DOES NOT UPDATE ITSELF, and it is the only part of the calendar that does not.
+    // The MOVABLE ones derive from Easter (easterDate) and scale forever; the FIXED ones are LAW
+    // written by hand here. A new law, or the city touching a holiday, leaves the grid wrong IN
+    // SILENCE. Review it when news of a new holiday shows up, not by the calendar: 2027 is
+    // already covered, because nothing here depends on the year.
     //
-    // BASES LEGAIS (antes era "ver notas do workflow", ponteiro pra fora do repo):
-    //   nac  Lei 662/1949 + 6.802/1980 (Aparecida) + 9.093/1995 (Sexta-feira Santa)
-    //        + 14.759/2023 (Consciência Negra, nacional desde 2024 — NÃO é mais só SP)
-    //   sp   Lei estadual 9.497/1997 (Revolução Constitucionalista, 9 de julho)
-    //   sc   Lei municipal 7.502/1974 (Corpus Christi) + Babilônia 15/08 + aniversário 04/11
+    // THE LEGAL BASES (this used to say "see the workflow notes", a pointer outside the repo):
+    //   nac  Law 662/1949 plus 6.802/1980 (Aparecida) plus 9.093/1995 (Good Friday)
+    //        plus 14.759/2023 (Consciência Negra, national since 2024, NOT just SP anymore)
+    //   sp   State law 9.497/1997 (Revolução Constitucionalista, july 9th)
+    //   sc   Municipal law 7.502/1974 (Corpus Christi) plus Babilônia 15/08 plus the city's
+    //        anniversary 04/11
     //
-    // DUAS ARMADILHAS que os sites de calendário caem e esta lista não:
-    // 1. CARNAVAL e CINZAS não são feriado nacional NEM municipal em São Carlos — são
-    //    ponto facultativo (decreto estadual 70.273 + prefeitura). Daí o fac: true.
-    // 2. CORPUS CHRISTI é ponto facultativo FEDERAL, mas feriado MUNICIPAL aqui (lei
-    //    acima) — por isso entra como "sc" e SEM fac. Em outra cidade seria fac.
-    // CONFERÊNCIA: os não-fac desta lista somam 14, que é o número que a prefeitura e a
-    // imprensa local publicam para São Carlos. Se um dia divergir, é sinal de lei nova.
+    // TWO TRAPS the calendar websites fall into and this list does not:
+    // 1. CARNAVAL and CINZAS are neither a national NOR a municipal holiday in São Carlos, they
+    //    are an optional public holiday (state decree 70.273 plus the city hall). Hence fac: true.
+    // 2. CORPUS CHRISTI is a FEDERAL optional public holiday, but a MUNICIPAL holiday here (the
+    //    law above), which is why it goes in as "sc" and WITHOUT fac. In another city it would be
+    //    fac.
+    // THE CHECK: the non-fac entries in this list add up to 14, which is the number the city hall
+    // and the local press publish for São Carlos. If it ever diverges, that is a sign of a new
+    // law.
     readonly property var holidayDefs: [
         { name: "Ano-Novo", scope: "nac", m: 1, d: 1 },
         { name: "Carnaval (segunda)", scope: "nac", off: -48, fac: true },
@@ -983,9 +992,9 @@ Scope {
         return scope === "nac" ? Theme.colRed : (scope === "sp" ? Theme.colBlue : Theme.colMauve);
     }
     function scopeLabel(scope) {
-        return scope === "nac" ? "Nacional" : (scope === "sp" ? "Estado SP" : "São Carlos");
+        return scope === "nac" ? "National" : (scope === "sp" ? "SP state" : "São Carlos");
     }
-    // Estado do calendário (recomputado só na virada do dia)
+    // The calendar's state (recomputed only when the day turns)
     property int calYear: 0
     property int calTodayM: 0
     property int calTodayD: 0
@@ -1011,18 +1020,20 @@ Scope {
         all.sort((a, b) => a.date.getTime() - b.date.getTime());
         return all.slice(0, n);
     }
-    // Quem faz o calendário virar o ano sozinho: updateClock() compara o yyyy-MM-dd com
-    // calDayKey, e na primeira batida do SystemClock depois da meia-noite chama isto.
-    // Vale pra 01/01 também — calYear muda e o popover inteiro (cabeçalho + as 12 grades)
-    // reavalia, sem rebuild e sem reiniciar o shell. MEDIDO em 08/08/2026 simulando a
-    // virada 31/12/2026 -> 01/01/2027: cabeçalho 2027, "hoje" em 01/01, Carnaval pintado
-    // em 08-09/02. Se a máquina passar a virada suspensa, o resume cai no mesmo caminho.
+    // What makes the calendar roll the year over on its own: updateClock() compares the
+    // yyyy-MM-dd against calDayKey, and on the SystemClock's first beat after midnight it calls
+    // this. It holds for 01/01 too: calYear changes and the whole popover (the header plus the 12
+    // grids) reevaluates, with no rebuild and no restarting the shell. MEASURED on 08/08/2026
+    // simulating the 31/12/2026 -> 01/01/2027 rollover: a 2027 header, "today" on 01/01, Carnaval
+    // painted on 08-09/02. If the machine crosses the rollover suspended, the resume falls into
+    // the same path.
     //
-    // ⚠️ NÃO OTIMIZE ISTO PRA MUTAR OS OBJETOS NO LUGAR. O popover lê calMap por binding
-    // (`Repeater { model: bar.monthCells(...) }`), e binding do QML só reavalia quando a
-    // PROPRIEDADE é reatribuída — escrever dentro do objeto existente (calMap[k] = v) não
-    // emite sinal nenhum. O calendário congelaria EM SILÊNCIO: nada quebra, nada loga, só
-    // para de virar o ano. Medido no qml headless: reatribuir propaga, mutar não.
+    // DO NOT OPTIMIZE THIS INTO MUTATING THE OBJECTS IN PLACE. The popover reads calMap through a
+    // binding (`Repeater { model: bar.monthCells(...) }`), and a QML binding only reevaluates
+    // when the PROPERTY is reassigned: writing inside the existing object (calMap[k] = v) emits
+    // no signal at all. The calendar would freeze IN SILENCE: nothing breaks, nothing logs, it
+    // just stops rolling the year over. Measured in headless qml: reassigning propagates,
+    // mutating does not.
     function refreshCalendar() {
         const d = sysClock.date;
         root.calYear = d.getFullYear();
@@ -1067,12 +1078,12 @@ Scope {
         const h0 = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).getTime();
         const n = Math.round((h0 - t0) / 86400000);
         if (n <= 0)
-            return "hoje";
+            return "today";
         if (n === 1)
-            return "amanhã";
-        return "em " + n + "d";
+            return "tomorrow";
+        return "in " + n + "d";
     }
-    // hover-keep do calendário (igual ao weather)
+    // the calendar's hover-keep (the same as the weather one)
     property bool calPillHovered: false
     property bool calPopHovered: false
     property bool calPopVisible: false
@@ -1093,7 +1104,7 @@ Scope {
             root.calPopVisible = false
     }
 
-    // ===== Hover do popover de métricas (temp / uso / rede) =====
+    // ===== The metrics popover's hover (temp / usage / network) =====
     property string metricShown: ""   // "temp" | "usage" | "net"
     property bool metricHovering: false
     property bool metricPopHovered: false
@@ -1145,7 +1156,7 @@ Scope {
             root.metricPopVisible = false
     }
 
-    // ===== Timers de polling =====
+    // ===== The polling timers =====
     Timer {
         interval: 2000
         running: true
@@ -1192,11 +1203,11 @@ Scope {
         onTriggered: diskProc.running = true
     }
 
-    // ===== Hyprland: workspaces (hyprctl + eventos) + título da janela =====
+    // ===== Hyprland: the workspaces (hyprctl plus events) plus the window's title =====
     property var wsActive: ({})
     property var wsExist: ({})
-    property var wsWindows: ({})   // contagem de janelas por ws (detecta janela nova)
-    property var wsActivity: ({})  // algo abriu/urgente numa ws de fundo (badge)
+    property var wsWindows: ({})   // the window count per ws (it detects a new window)
+    property var wsActivity: ({})  // something opened or went urgent on a background ws (the badge)
     property string focusedMon: ""
     readonly property var wsIcons: ({
             1: "󰲠",
@@ -1239,10 +1250,10 @@ Scope {
                 const wc = w.windows || 0;
                 win[w.id] = wc;
                 const before = prev[w.id];
-                // janela nova numa ws que NÃO é a focada -> marca atividade
+                // a new window on a ws that is NOT the focused one -> it marks activity
                 if (before !== undefined && wc > before && w.id !== focusedWsId)
                     act[w.id] = true;
-                // visitei a ws -> limpa o aviso
+                // I visited the ws -> it clears the notice
                 if (w.id === focusedWsId)
                     act[w.id] = false;
             }
@@ -1258,7 +1269,8 @@ Scope {
             onStreamFinished: root.parseHypr(text)
         }
     }
-    // marca atividade na ws urgente (caso "demanda atenção" sem janela nova, ex.: aba)
+    // it marks activity on an urgent ws (the "demands attention" case with no new window, a tab,
+    // say)
     function markUrgentActivity() {
         const wl = Hyprland.workspaces ? Hyprland.workspaces.values : [];
         const focusedWsId = root.wsActive[root.focusedMon];
@@ -1282,7 +1294,7 @@ Scope {
                 root.markUrgentActivity();
         }
     }
-    // título da janela ativa (Hyprland nativo) + rewrite rules
+    // the active window's title (Hyprland native) plus the rewrite rules
     readonly property string rawTitle: Hyprland.activeToplevel ? (Hyprland.activeToplevel.title || "") : ""
     readonly property string winTitle: root.rewriteTitle(root.rawTitle)
     function rewriteTitle(t) {
@@ -1300,8 +1312,8 @@ Scope {
         return t;
     }
 
-    // ===== Pílula reutilizável =====
-    // Pílula/chip extraída para widgets/Pill.qml (import "root:/widgets").
+    // ===== The reusable pill =====
+    // The pill/chip was extracted into widgets/Pill.qml (import "root:/widgets").
 
     component Group: Item {
         default property alias content: groupRow.data
@@ -1310,11 +1322,11 @@ Scope {
         RowLayout {
             id: groupRow
             anchors.centerIn: parent
-            spacing: 4 // gap entre os pills/widgets de cada grupo (esq/centro/dir)
+            spacing: 4 // the gap between each group's pills/widgets (left/center/right)
         }
     }
 
-    // ===== Botão de workspace =====
+    // ===== The workspace button =====
     component WsBtn: Rectangle {
         id: wsbtn
         property int wsid: 0
@@ -1343,7 +1355,7 @@ Scope {
             font.pixelSize: 13
             font.bold: wsbtn.active
         }
-        // badge: algo abriu / ficou urgente nessa ws enquanto eu estava em outra
+        // the badge: something opened or went urgent on that ws while I was on another
         Rectangle {
             visible: wsbtn.activity && !wsbtn.active
             anchors.right: parent.right
@@ -1377,41 +1389,41 @@ Scope {
             id: wsArea
             anchors.fill: parent
             hoverEnabled: true
-            // Sintaxe LUA do 0.55: `dispatch` virou atalho p/ hl.dispatch(...), então a
-            // forma antiga ("dispatch", "workspace", N) monta `hl.dispatch(workspace 3)` e
-            // estoura no parser — clique morria em silêncio, sem nada na tela.
-            // Cuidado: `hl.dsp.workspace` é TABELA, não função (vira "attempt to call a
-            // table value"); quem troca de workspace é o focus, igual ao keybinds.lua.
+            // The 0.55 LUA syntax: `dispatch` became a shortcut for hl.dispatch(...), so the
+            // old form ("dispatch", "workspace", N) assembles `hl.dispatch(workspace 3)` and
+            // blows up in the parser, so the click died in silence, with nothing on screen.
+            // Careful: `hl.dsp.workspace` is a TABLE, not a function (it becomes "attempt to
+            // call a table value"); what switches workspaces is focus, just like keybinds.lua.
             onClicked: root.launch(["hyprctl", "dispatch", "hl.dsp.focus({ workspace = " + wsbtn.wsid + " })"])
         }
     }
 
-    // ===== Popover de weather — view em bar/WeatherPopover.qml =====
+    // ===== The weather popover, the view is in bar/WeatherPopover.qml =====
     WeatherPopover {
         bar: root
     }
 
-    // ===== Popover de métricas — view em bar/MetricsPopover.qml =====
+    // ===== The metrics popover, the view is in bar/MetricsPopover.qml =====
     MetricsPopover {
         bar: root
     }
 
-    // ===== Popover de calendário — view em bar/CalendarPopover.qml =====
+    // ===== The calendar popover, the view is in bar/CalendarPopover.qml =====
     CalendarPopover {
         bar: root
     }
 
-    // ===== Popover de VPN — view em bar/VpnPopover.qml =====
+    // ===== The VPN popover, the view is in bar/VpnPopover.qml =====
     VpnPopover {
         bar: root
     }
 
-    // ===== Popover de estatísticas da VPN (hover) — view em bar/VpnStatsPopover.qml =====
+    // ===== The VPN statistics popover (hover), the view is in bar/VpnStatsPopover.qml =====
     VpnStatsPopover {
         bar: root
     }
 
-    // ===== Barra por monitor =====
+    // ===== One bar per monitor =====
     Variants {
         model: Quickshell.screens
 
@@ -1436,18 +1448,18 @@ Scope {
             exclusiveZone: root.barExclusiveZone
             color: "transparent"
 
-            // Item full-width usado como referência de coordenadas pros popovers
-            // (mapToItem pra um Item real é confiável; mapToItem(null) não é).
+            // A full-width Item used as the coordinate reference for the popovers (mapToItem
+            // into a real Item is reliable; mapToItem(null) is not).
             Item {
                 id: barContent
                 anchors.fill: parent
 
-                // ESQUERDA: launcher (Arch) + workspaces (do monitor) + título + Spotify
+                // LEFT: the launcher plus the workspaces (of that monitor) plus the title plus Spotify
                 Group {
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
-                    // Botão "Iniciar" estilo taskbar — só no monitor principal,
-                    // que é onde o popover de energia abre.
+                    // A taskbar-style "Start" button, only on the main monitor, which is
+                    // where the power popover opens.
                     PowerMenu {
                         visible: bar.modelData && bar.modelData.name === Theme.primaryMonitor
                     }
@@ -1480,7 +1492,7 @@ Scope {
                     }
                 }
 
-                // CENTRO: weather + relógio + notificações (sempre no centro da tela)
+                // CENTER: the weather plus the clock plus the notifications (always at the screen's center)
                 Group {
                     anchors.centerIn: parent
                     Pill {
@@ -1512,10 +1524,10 @@ Scope {
                         }
                     }
                     Pill {
-                        // || cobre o instante de init do singleton no reload
+                        // the || covers the singleton's init instant on a reload
                         icon: Notifs.barIcon || "󰂜"
-                        // contagem quando há notificações; cor adaptativa:
-                        // dim quando vazio, peach quando há, vermelho no DND.
+                        // the count when there are notifications; an adaptive color:
+                        // dim when empty, peach when there are some, red under DND.
                         label: Notifs.count > 0 ? "" + Notifs.count : ""
                         accent: Notifs.dnd ? Theme.colRed : (Notifs.count > 0 ? Theme.colPeach : Theme.colDim)
                         onClicked: Notifs.toggleCenter()
@@ -1523,7 +1535,7 @@ Scope {
                     }
                 }
 
-                // DIREITA: temp, uso, vpn, rede, áudio, hypridle, tray
+                // RIGHT: temp, usage, vpn, network, audio, hypridle, the tray
                 Group {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
@@ -1542,14 +1554,15 @@ Scope {
                         onHoveredChanged: hovered ? root.showMetric("usage", usagePill, barContent, bar.screen) : root.unhoverMetric()
                     }
                     Pill {
-                        // VPN: verde + nome quando conectada, cinza quando off. Clique abre o
-                        // popover ANCORADO na barra (bar/VpnPopover.qml) — antes lançava
-                        // `vpn menu`, um rofi solto no meio da tela, fora do tema do shell.
-                        // Clique-direito segue sendo o atalho de derrubar tudo.
-                        // HOVER (com túnel de pé) mostra as estatísticas — VpnStatsPopover.qml.
-                        // A divisão é intencional: informação no hover, AÇÃO no clique. Painel
-                        // com botão que abre sozinho no hover some na primeira distração, e o
-                        // de estatísticas não tem nada pra clicar (mesmo critério do calendário).
+                        // VPN: green plus the name when connected, gray when off. A click opens
+                        // the popover ANCHORED to the bar (bar/VpnPopover.qml); it used to launch
+                        // `vpn menu`, a loose rofi in the middle of the screen, outside the
+                        // shell's theme. Right click is still the shortcut for taking everything
+                        // down. HOVER (with a tunnel up) shows the statistics
+                        // (VpnStatsPopover.qml). The split is intentional: information on hover,
+                        // ACTION on click. A panel with a button that opens on its own on hover
+                        // disappears at the first distraction, and the statistics one has nothing
+                        // to click (the same criterion as the calendar).
                         id: vpnPill
                         icon: "󰦝"
                         label: root.vpnConnected ? root.vpnName : ""
@@ -1564,7 +1577,7 @@ Scope {
                             root.anchorPopover(vpnPill, barContent, bar.screen);
                             root.vpnPopVisible = !root.vpnPopVisible;
                             if (root.vpnPopVisible)
-                                vpnProc.running = true; // estado fresco ao abrir
+                                vpnProc.running = true; // a fresh state when it opens
                         }
                         onRightClicked: root.runVpn("disconnect", "all")
                     }
@@ -1590,9 +1603,9 @@ Scope {
                         accent: root.hypridleOn ? Theme.colGreen : Theme.colRed
                         onClicked: root.launch(["sh", "-c", "systemctl --user is-active --quiet hypridle.service && systemctl --user stop hypridle.service || systemctl --user start hypridle.service"])
                     }
-                    // System tray (StatusNotifier) — fundo único pro grupo de ícones.
-                    // Popula quando o qs é o watcher (Waybar fora). Esquerda=activate,
-                    // meio=secondaryActivate, scroll, direita=menu nativo (QsMenuAnchor).
+                    // The system tray (StatusNotifier), a single background for the icon group.
+                    // It populates when qs is the watcher (with Waybar gone). Left=activate,
+                    // middle=secondaryActivate, scroll, right=the native menu (QsMenuAnchor).
                     Rectangle {
                         visible: root.trayCount > 0
                         implicitHeight: 22
@@ -1611,10 +1624,10 @@ Scope {
                                     id: trayDel
                                     implicitWidth: 20
                                     implicitHeight: 22
-                                    // Alguns SNI (ex.: Dropbox) publicam o ícone como
-                                    // image://icon/<nome>?path=<dir> num tema hicolor que o
-                                    // provedor do Quickshell não resolve. Busco o arquivo
-                                    // real no <dir> e aponto pra file://.
+                                    // Some SNIs (Dropbox, say) publish the icon as
+                                    // image://icon/<name>?path=<dir> in a hicolor theme
+                                    // Quickshell's provider does not resolve. I look for the
+                                    // real file in <dir> and point at file://.
                                     readonly property string rawIcon: "" + modelData.icon
                                     readonly property bool isPathIcon: /^image:\/\/icon\/[^?]+\?path=/.test(trayDel.rawIcon)
                                     property string resolvedIcon: ""
@@ -1640,7 +1653,7 @@ Scope {
                                     }
                                     Image {
                                         anchors.centerIn: parent
-                                        // path-icons: só mostra após resolver pro file:// (evita o load quebrado)
+                                        // path icons: it only shows after resolving to file:// (which avoids the broken load)
                                         source: trayDel.isPathIcon ? trayDel.resolvedIcon : trayDel.rawIcon
                                         sourceSize.width: 16
                                         sourceSize.height: 16
@@ -1658,22 +1671,25 @@ Scope {
                                             else if (m.button === Qt.MiddleButton)
                                                 modelData.secondaryActivate();
                                             else if (modelData.hasMenu) {
-                                                // SNI nativo: menu tematizado próprio. O menu é
-                                                // layer surface (ver TrayMenu.qml: PopupWindow não
-                                                // recebe ponteiro por causa do Hyprland#6682), então
-                                                // ele se posiciona por X DE TELA, não por anchor.rect:
-                                                // X do ícone dentro do barContent + a margem esquerda
-                                                // da barra. O Y é implícito (fica sob a exclusiveZone).
+                                                // A native SNI: our own themed menu. The menu is a
+                                                // layer surface (see TrayMenu.qml: a PopupWindow
+                                                // receives no pointer because of Hyprland#6682), so
+                                                // it positions itself by SCREEN X, not by
+                                                // anchor.rect: the icon's X inside barContent plus
+                                                // the bar's left margin. The Y is implicit (it sits
+                                                // under the exclusiveZone).
                                                 const pt = trayDel.mapToItem(barContent, 0, trayDel.height);
                                                 trayCtxMenu.openAt(modelData.menu, bar, pt.x + bar.margins.left);
                                             } else {
-                                                // xembedsniproxy (wine/Battle.net/pamac): sem DBusMenu. Este
-                                                // caminho ficou MORTO até 30/07, porque o proxy não estava
-                                                // instalado — nenhum ícone assim chegava a existir. Agora
-                                                // ele é declarado em home/desktop/quickshell.nix. O display() do
-                                                // Quickshell recusa itens sem menu ("No menu present"), então
-                                                // disparamos o ContextMenu() nativo do SNI via helper — o proxy
-                                                // repassa o clique e o app desenha o próprio menu no cursor.
+                                                // xembedsniproxy (wine/Battle.net/pamac): no DBusMenu.
+                                                // This path was DEAD until 30/07, because the proxy was
+                                                // not installed, so no icon like that ever came to
+                                                // exist. Now it is declared in
+                                                // home/desktop/quickshell.nix. Quickshell's display()
+                                                // refuses items with no menu ("No menu present"), so we
+                                                // fire the SNI's native ContextMenu() through a helper:
+                                                // the proxy forwards the click and the app draws its own
+                                                // menu at the cursor.
                                                 root.launch(["tray-native-menu", "" + modelData.id]);
                                             }
                                         }
@@ -1682,8 +1698,8 @@ Scope {
                                 }
                             }
                         }
-                        // Uma única instância compartilhada do menu de contexto: abrir num
-                        // ícone troca/fecha o de outro (evita empilhar vários menus).
+                        // A single shared instance of the context menu: opening it on one icon
+                        // switches or closes another's (which avoids stacking several menus).
                         TrayMenu {
                             id: trayCtxMenu
                         }

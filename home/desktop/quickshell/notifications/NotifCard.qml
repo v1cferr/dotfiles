@@ -1,8 +1,8 @@
-// Card de notificação (usado pelos toasts e pela central).
-// É um ARQUIVO próprio de propósito: em inline component (component X: ...) o id
-// e as propriedades da raiz NÃO resolvem dentro de handlers aninhados neste Qt
-// (ReferenceError), o que quebrava dismiss/ações. Em arquivo separado, card.notif
-// resolve em qualquer profundidade. Estilo Tokyo Night.
+// A notification card (used by the toasts and by the center).
+// It is its own FILE on purpose: in an inline component (component X: ...) the root's id and
+// properties do NOT resolve inside nested handlers on this Qt (a ReferenceError), which broke
+// dismiss and the actions. In a separate file, card.notif resolves at any depth. Tokyo Night
+// style.
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Notifications
@@ -23,8 +23,8 @@ Rectangle {
         return Theme.colAccent;
     }
 
-    // Ação "default" (a que "ativa"/foca o app que notificou) -> vira uma setinha
-    // no topo do card; as demais ações continuam como botões de texto.
+    // The "default" action (the one that "activates"/focuses the app that notified) becomes a
+    // little arrow at the top of the card; the other actions stay as text buttons.
     readonly property var defaultAction: {
         if (!card.notif)
             return null;
@@ -42,12 +42,12 @@ Rectangle {
         });
     }
 
-    // ===== Ícone do app que notificou =====
-    // O Quickshell entrega o ícone como "image://icon/<nome>". Se existe no TEMA
-    // atual (Win11-dark + hicolor) usamos direto; senão tentamos o mesmo nome no
-    // breeze (tema completo) — só neste card, SEM trocar o tema do sistema. Sem
-    // nada disso, cai no sino. (hasThemeIcon evita o placeholder quadriculado que
-    // o provider devolve quando o ícone não está no tema.)
+    // ===== The icon of the app that notified =====
+    // Quickshell hands the icon over as "image://icon/<name>". If it exists in the CURRENT theme
+    // (Win11-dark plus hicolor) we use it directly; otherwise we try the same name in breeze (a
+    // complete theme), only in this card, WITHOUT changing the system's theme. With none of that,
+    // it falls back to the bell. (hasThemeIcon avoids the checkered placeholder the provider
+    // returns when the icon is not in the theme.)
     readonly property string wantedName: {
         if (!card.notif)
             return "";
@@ -78,8 +78,8 @@ Rectangle {
     property string fallbackIcon: ""
     readonly property string iconSource: card.themeIcon !== "" ? card.themeIcon : card.fallbackIcon
 
-    // Fallback no breeze quando o tema atual não tem o ícone (async; argv direto,
-    // sem shell, e nome sanitizado — appName é conteúdo não confiável).
+    // The breeze fallback when the current theme does not have the icon (async; a direct argv,
+    // with no shell, and a sanitized name, since appName is untrusted content).
     function resolveFallback() {
         card.fallbackIcon = "";
         const n = card.wantedName;
@@ -106,13 +106,13 @@ Rectangle {
     border.color: card.notif ? card.urgColor(card.notif.urgency) : Theme.colBorder
     border.width: 1
 
-    // Auto-dismiss do toast; Critical permanece até interação.
+    // The toast's auto-dismiss; Critical stays until an interaction.
     Timer {
         running: card.isPopup && card.notif && card.notif.urgency !== NotificationUrgency.Critical
         interval: (card.notif && card.notif.urgency === NotificationUrgency.Low) ? 4000 : 6000
         onTriggered: Notifs.removePopup(card.notif)
     }
-    // Fechada por fora (app/central/expira) -> remove o toast também.
+    // Closed from outside (the app, the center, an expiry) removes the toast too.
     Connections {
         target: card.notif
         function onClosed(reason) {
@@ -120,8 +120,8 @@ Rectangle {
         }
     }
 
-    // Botão DIREITO em qualquer ponto do card = dispensar (dismiss). Fica no fundo
-    // (z-order): os botões de ação tratam o esquerdo por cima; o direito propaga.
+    // The RIGHT button anywhere on the card dismisses it. It sits at the bottom (z-order): the
+    // action buttons handle the left one on top, and the right one propagates.
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.RightButton
@@ -141,8 +141,8 @@ Rectangle {
             Image {
                 id: nimg
                 anchors.fill: parent
-                // some (cai no sino) se a fonte for vazia OU falhar ao carregar —
-                // evita o quadriculado magenta/preto de "imagem quebrada" do Qt.
+                // it disappears (falling back to the bell) if the source is empty OR fails to
+                // load, which avoids Qt's magenta/black "broken image" checkerboard.
                 visible: card.iconSource !== "" && nimg.status !== Image.Error
                 source: card.iconSource
                 asynchronous: true
@@ -174,7 +174,7 @@ Rectangle {
                     font.pixelSize: 10
                     elide: Text.ElideRight
                 }
-                // Setinha: invoca a ação "default" -> foca/abre o app que notificou.
+                // The little arrow: it invokes the "default" action, focusing/opening the app that notified.
                 Text {
                     visible: card.defaultAction !== null
                     text: "󰏌"

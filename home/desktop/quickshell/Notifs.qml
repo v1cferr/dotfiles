@@ -1,10 +1,10 @@
 pragma Singleton
-// Serviço de notificações — o Quickshell vira o daemon org.freedesktop.Notifications
-// (substitui o swaync). Guarda o estado (DND, toasts ativos, histórico) e expõe IPC:
-//   qs ipc call notif toggle   -> abre/fecha a central
-//   qs ipc call notif dnd      -> alterna Não Perturbe
-//   qs ipc call notif clear    -> limpa o histórico
-// UI em Notifications.qml; a barra lê Notifs.barIcon / Notifs.count / Notifs.dnd.
+// The notification service: Quickshell becomes the org.freedesktop.Notifications daemon (it
+// replaces swaync). It holds the state (DND, live toasts, history) and exposes IPC:
+//   qs ipc call notif toggle   -> opens/closes the center
+//   qs ipc call notif dnd      -> toggles Do Not Disturb
+//   qs ipc call notif clear    -> clears the history
+// The UI is in Notifications.qml; the bar reads Notifs.barIcon / Notifs.count / Notifs.dnd.
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Notifications
@@ -13,17 +13,17 @@ import QtQuick
 Singleton {
     id: root
 
-    // ===== Estado =====
+    // ===== State =====
     property bool dnd: false
     property bool centerVisible: false
-    // Toasts atualmente na tela (objetos Notification; vivos porque ficam tracked).
+    // The toasts currently on screen (Notification objects; alive because they stay tracked).
     property var popups: []
 
-    // Histórico = notificações rastreadas pelo servidor (UntypedObjectModel).
+    // The history = the notifications tracked by the server (an UntypedObjectModel).
     readonly property var history: server.trackedNotifications
     readonly property int count: server.trackedNotifications ? server.trackedNotifications.values.length : 0
 
-    // Ícone do sino na barra — mesmos glyphs que o swaync usava.
+    // The bell icon in the bar, the same glyphs swaync used.
     readonly property string barIcon: root.dnd
         ? (root.count > 0 ? "󰂛" : "󰪑")
         : (root.count > 0 ? "󰂚" : "󰂜")
@@ -62,9 +62,9 @@ Singleton {
         persistenceSupported: true
 
         onNotification: function (n) {
-            // tracked = true mantém o objeto vivo e o coloca no histórico.
+            // tracked = true keeps the object alive and puts it in the history.
             n.tracked = true;
-            // Toast só aparece com DND desligado (Critical fura o DND).
+            // A toast only shows up with DND off (Critical pierces DND).
             if (!root.dnd || n.urgency === NotificationUrgency.Critical)
                 root.popups = root.popups.concat([n]);
         }
@@ -81,7 +81,7 @@ Singleton {
         function clear(): void {
             root.clearAll();
         }
-        // Contagem do histórico p/ a tela de bloqueio (qs ipc call notif count).
+        // The history's count, for the lock screen (qs ipc call notif count).
         function count(): string {
             return "" + root.count;
         }

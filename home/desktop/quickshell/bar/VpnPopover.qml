@@ -1,18 +1,17 @@
-// Popover de VPN, aberto pelo CLIQUE no pill 󰦝 da barra. Uma linha por VPN
-// (FAI/UFSCar), com bolinha de estado e botão que alterna Conectar/Desconectar,
-// mais "Desconectar tudo" no pé. Estado e ações ficam no Bar e chegam por
-// referência via `bar` (mesmo contrato dos outros popovers desta pasta).
+// The VPN popover, opened by CLICKING the bar's 󰦝 pill. One row per VPN (FAI/UFSCar), with a
+// state dot and a button that toggles Connect/Disconnect, plus "Disconnect all" at the foot. The
+// state and the actions live in the Bar and arrive by reference through `bar` (the same contract
+// as the other popovers in this folder).
 //
-// SUBSTITUI o menu do rofi (`vpn menu`): era uma janela SOLTA no meio da tela,
-// sem relação visual com a barra e fora do tema do shell. A lista vem do mesmo
-// `vpn status-json` que o pill já consulta a cada 5s — uma fonte de verdade só,
-// em vez de o rofi remontar os rótulos por conta própria com `systemctl
-// is-active` (que, como o comentário do vpn.nix avisa, MENTE: durante o
-// crash-loop do nxBender ele diz "active" sem existir túnel).
+// It REPLACES the rofi menu (`vpn menu`): that was a LOOSE window in the middle of the screen,
+// with no visual relation to the bar and outside the shell's theme. The list comes from the same
+// `vpn status-json` the pill already queries every 5s, a single source of truth, instead of rofi
+// reassembling the labels on its own with `systemctl is-active` (which, as vpn.nix' comment
+// warns, LIES: during nxBender's crash loop it says "active" with no tunnel existing).
 //
-// É CLIQUE e não hover, ao contrário do calendário/weather: aqui se clica em
-// botões dentro do painel, e painel que abre no hover fecha na primeira
-// distração. Mesma escolha do PowerMenu, que também tem ações dentro.
+// It is a CLICK and not a hover, unlike the calendar/weather: here you click buttons inside the
+// panel, and a panel that opens on hover closes at the first distraction. The same choice as
+// PowerMenu, which also has actions inside.
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -29,7 +28,7 @@ PanelWindow {
         left: true
     }
     margins {
-        top: 4 // = gaps_out do Hyprland (o barExclusiveZone 30 já está descontado)
+        top: 4 // = Hyprland's gaps_out (the barExclusiveZone 30 is already discounted)
         left: bar.popLeft(vpnPop.implicitWidth)
     }
     exclusiveZone: 0
@@ -37,8 +36,8 @@ PanelWindow {
     implicitHeight: card.implicitHeight
     color: "transparent"
 
-    // Fecha sozinho quando o mouse sai — mas NUNCA no meio de uma ação, senão o
-    // painel evapora justamente enquanto se espera o resultado do clique.
+    // It closes on its own when the mouse leaves, but NEVER in the middle of an action,
+    // otherwise the panel evaporates exactly while you wait for the click's result.
     Timer {
         interval: 2500
         running: vpnPop.visible && !popHover.hovered && !vpnPop.bar.vpnBusy
@@ -79,10 +78,10 @@ PanelWindow {
                 opacity: 0.5
             }
 
-            // Só aparece se o status-json vier vazio/ilegível — normalmente nunca.
+            // It only shows up if the status-json comes back empty or unreadable, which normally never happens.
             Text {
                 visible: (vpnPop.bar.vpnList || []).length === 0
-                text: "sem resposta do `vpn status-json`"
+                text: "no answer from `vpn status-json`"
                 color: Theme.colDim
                 font.family: Theme.uiFont
                 font.pixelSize: 11
@@ -136,7 +135,7 @@ PanelWindow {
                         Text {
                             id: btnLabel
                             anchors.centerIn: parent
-                            text: row.connected ? "Desconectar" : "Conectar"
+                            text: row.connected ? "Disconnect" : "Connect"
                             color: row.connected ? Theme.colRed : Theme.colGreen
                             font.family: Theme.uiFont
                             font.pixelSize: 11
@@ -158,11 +157,11 @@ PanelWindow {
                 height: 1
                 color: Theme.colBorder
                 opacity: 0.5
-                // some quando não há nenhuma conectada: separador de nada é ruído
+                // it disappears when none is connected: a separator for nothing is noise
                 visible: (vpnPop.bar.vpnList || []).some(v => v.connected === true)
             }
 
-            // Atalho p/ derrubar as duas de uma vez (o mesmo que o clique-direito no pill).
+            // A shortcut for taking both down at once (the same as right-clicking the pill).
             Rectangle {
                 Layout.fillWidth: true
                 implicitHeight: 26
@@ -178,7 +177,7 @@ PanelWindow {
 
                 Text {
                     anchors.centerIn: parent
-                    text: "󰗼  Desconectar tudo"
+                    text: "󰗼  Disconnect all"
                     color: allArea.containsMouse ? Theme.colRed : Theme.colDim
                     font.family: Theme.uiFont
                     font.pixelSize: 11
@@ -200,7 +199,7 @@ PanelWindow {
 
             Text {
                 visible: vpnPop.bar.vpnBusy
-                text: "executando…"
+                text: "running…"
                 color: Theme.colDim
                 font.family: Theme.uiFont
                 font.pixelSize: 10

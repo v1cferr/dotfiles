@@ -1,6 +1,6 @@
-// Botão do cabeçalho da central de notificações (DND, Limpar).
-// Arquivo próprio (não inline) pra o handler do MouseArea enxergar o id da raiz
-// neste Qt — em inline component o id não resolve dentro de handler.
+// A header button of the notification center (DND, Clear).
+// Its own file (not inline) so the MouseArea's handler can see the root's id on this Qt: in an
+// inline component the id does not resolve inside a handler.
 import QtQuick
 import "root:/"
 

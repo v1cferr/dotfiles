@@ -1,8 +1,8 @@
-// UI das notificações: toasts (canto superior direito do DP-1) + central de
-// notificações (toggle pelo sino da barra). Lê o serviço Notifs.qml. Estilo
-// Tokyo Night, alinhado com a barra / OSD / painéis.
-// O card (NotifCard.qml) e o botão do cabeçalho (HeaderBtn.qml) são arquivos
-// próprios — inline component quebra o escopo da raiz nos handlers neste Qt.
+// The notifications' UI: toasts (the main monitor's top right corner) plus the notification
+// center (toggled by the bar's bell). It reads the Notifs.qml service. Tokyo Night style, aligned
+// with the bar / OSD / panels.
+// The card (NotifCard.qml) and the header's button (HeaderBtn.qml) are files of their own, since
+// an inline component breaks the root's scope inside handlers on this Qt.
 import Quickshell
 import Quickshell.Services.Notifications
 import QtQuick
@@ -12,7 +12,7 @@ import "root:/"
 Scope {
     id: root
 
-    // ===== Toasts — topo-direita do DP-1 =====
+    // ===== Toasts, the main monitor's top right =====
     PanelWindow {
         id: popupWin
         visible: Notifs.popups.length > 0
@@ -46,13 +46,13 @@ Scope {
         }
     }
 
-    // ===== Central — painel no TOPO-CENTRO, ajustado ao conteúdo (cresce com as
-    // notificações até um teto, depois rola). Toggle pelo sino. =====
+    // ===== The center: a panel at the TOP CENTER, fitted to the content (it grows with the
+    // notifications up to a ceiling, then scrolls). Toggled by the bell. =====
     PanelWindow {
         id: centerWin
         visible: Notifs.centerVisible
         screen: Theme.screenPrimary
-        // só `top` => o layer-shell centraliza horizontalmente
+        // only `top` means the layer shell centers it horizontally
         anchors {
             top: true
         }
@@ -64,8 +64,8 @@ Scope {
         implicitWidth: 420
         implicitHeight: centerCard.implicitHeight
 
-        // Some sozinha após 5s; o contador pausa enquanto o mouse está no painel
-        // (e reinicia do zero quando o mouse sai).
+        // It disappears on its own after 5s; the counter pauses while the mouse is on the panel
+        // (and restarts from zero when the mouse leaves).
         Timer {
             running: Notifs.centerVisible && !centerHover.hovered
             interval: 5000
@@ -91,7 +91,7 @@ Scope {
                 anchors.margins: 14
                 spacing: 12
 
-                // Cabeçalho: título + badge de contagem + ações
+                // The header: the title plus the count badge plus the actions
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
@@ -102,7 +102,7 @@ Scope {
                         font.pixelSize: 16
                     }
                     Text {
-                        text: "Notificações"
+                        text: "Notifications"
                         color: Theme.colText
                         font.family: Theme.uiFont
                         font.pixelSize: 14
@@ -133,7 +133,7 @@ Scope {
                         onClicked: Notifs.toggleDnd()
                     }
                     HeaderBtn {
-                        text: "󰎟 Limpar"
+                        text: "󰎟 Clear"
                         enabled: Notifs.count > 0
                         onClicked: Notifs.clearAll()
                     }
@@ -146,7 +146,7 @@ Scope {
                     opacity: 0.5
                 }
 
-                // Estado vazio — compacto e centralizado
+                // The empty state, compact and centered
                 ColumnLayout {
                     visible: Notifs.count === 0
                     Layout.alignment: Qt.AlignHCenter
@@ -162,14 +162,14 @@ Scope {
                     }
                     Text {
                         Layout.alignment: Qt.AlignHCenter
-                        text: "Sem notificações"
+                        text: "No notifications"
                         color: Theme.colDim
                         font.family: Theme.uiFont
                         font.pixelSize: 12
                     }
                 }
 
-                // Lista — cresce com o conteúdo até 560px, depois rola
+                // The list: it grows with the content up to 560px, then scrolls
                 ListView {
                     visible: Notifs.count > 0
                     Layout.fillWidth: true

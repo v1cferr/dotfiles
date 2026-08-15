@@ -1,6 +1,6 @@
-// Popover do calendário (ano inteiro + próximos feriados), aberto pelo hover no
-// relógio da barra. Estado/lógica (calMap, calUpcoming, monthCells, feriados…)
-// ficam no Bar e chegam por referência via `bar`.
+// The calendar popover (the whole year plus the upcoming holidays), opened by hovering the bar's
+// clock. The state and the logic (calMap, calUpcoming, monthCells, the holidays and so on) live
+// in the Bar and arrive by reference through `bar`.
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -16,7 +16,7 @@ PanelWindow {
         left: true
     }
     margins {
-        top: 4 // = gaps_out do Hyprland: alinha o popover com o topo das janelas (barExclusiveZone 30 já somada)
+        top: 4 // = Hyprland's gaps_out: it aligns the popover with the top of the windows (barExclusiveZone 30 already added)
         left: bar.popLeft(calPop.implicitWidth)
     }
     exclusiveZone: 0
@@ -37,13 +37,13 @@ PanelWindow {
             anchors.margins: 14
             spacing: 14
 
-            // ---- Próximos feriados (coluna esquerda) ----
+            // ---- The upcoming holidays (the left column) ----
             ColumnLayout {
                 Layout.preferredWidth: 234
                 Layout.fillHeight: true
                 spacing: 7
                 Text {
-                    text: "Próximos feriados"
+                    text: "Upcoming holidays"
                     color: Theme.colAccent
                     font.family: Theme.uiFont
                     font.pixelSize: 15
@@ -102,7 +102,7 @@ PanelWindow {
                 RowLayout {
                     spacing: 10
                     Repeater {
-                        model: [{ c: "nac", t: "Nacional" }, { c: "sp", t: "SP" }, { c: "sc", t: "S.Carlos" }]
+                        model: [{ c: "nac", t: "National" }, { c: "sp", t: "SP" }, { c: "sc", t: "S.Carlos" }]
                         RowLayout {
                             required property var modelData
                             spacing: 4
@@ -130,13 +130,13 @@ PanelWindow {
                 opacity: 0.5
             }
 
-            // ---- Grade de 12 meses ----
+            // ---- The 12-month grid ----
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 spacing: 6
                 Text {
-                    text: "Calendário " + bar.calYear
+                    text: "Calendar " + bar.calYear
                     color: Theme.colText
                     font.family: Theme.uiFont
                     font.pixelSize: 15

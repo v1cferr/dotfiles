@@ -1,7 +1,8 @@
-// "Botão Iniciar" estilo taskbar: logo do NixOS no canto sup. esquerdo da barra.
-// Clique abre um menu de energia (bloquear/sair/suspender/reiniciar/desligar).
-// Nada de sudo: poweroff/reboot/suspend via systemd-logind (sessão ativa =
-// autorizado sem senha); lock via loginctl (dispara o hyprlock); sair via uwsm.
+// A taskbar-style "Start button": the NixOS logo in the bar's top left corner.
+// A click opens a power menu (lock/log out/suspend/reboot/shut down).
+// No sudo: poweroff/reboot/suspend go through systemd-logind (an active session is authorized
+// with no password); the lock goes through loginctl (which fires hyprlock); logging out through
+// uwsm.
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -11,7 +12,7 @@ import "root:/widgets"
 
 Pill {
     id: powerBtn
-    icon: ""      // nf-linux-nixos (logo do NixOS)
+    icon: ""      // nf-linux-nixos (the NixOS logo)
     accent: Theme.colSapphire
     property bool menuOpen: false
     onClicked: powerBtn.menuOpen = !powerBtn.menuOpen
@@ -34,7 +35,7 @@ Pill {
             left: true
         }
         margins {
-            top: 4 // = gaps_out do Hyprland: alinha o popover com o topo das janelas (barExclusiveZone 30 já somada)
+            top: 4 // = Hyprland's gaps_out: it aligns the popover with the top of the windows (barExclusiveZone 30 already added)
             left: 8
         }
         exclusiveZone: 0
@@ -42,7 +43,7 @@ Pill {
         implicitWidth: 210
         implicitHeight: menuCard.implicitHeight
 
-        // Some sozinho quando o mouse sai (igual ao painel de VPN).
+        // It disappears on its own when the mouse leaves (the same as the VPN panel).
         Timer {
             running: powerBtn.menuOpen && !menuHover.hovered
             interval: 2500
@@ -72,47 +73,49 @@ Pill {
                     model: [
                         {
                             icon: "󰌾",
-                            label: "Bloquear",
-                            // Sobe o hyprlock DIRETO (unit declarada em lockscreen.nix) e
-                            // só depois marca o LockedHint. `loginctl lock-session` sozinho
-                            // NÃO trancava: ele só emite o sinal Lock, e quem escutava era o
-                            // hypridle — com ele parado (guard do Sunshine), o clique virava
-                            // no-op silencioso. O `start` é idempotente, então o lock_cmd que
-                            // o hypridle dispara ao ver o sinal não duplica nada.
+                            label: "Lock",
+                            // It brings hyprlock up DIRECTLY (the unit declared in
+                            // lockscreen.nix) and only then marks the LockedHint.
+                            // `loginctl lock-session` on its own did NOT lock: it only emits
+                            // the Lock signal, and what listened for it was hypridle, so with
+                            // hypridle stopped (Sunshine's guard) the click became a silent
+                            // no-op. The `start` is idempotent, so the lock_cmd hypridle fires
+                            // on seeing the signal duplicates nothing.
                             cmd: ["sh", "-c", "systemctl --user start hyprlock.service; loginctl lock-session"],
                             danger: false
                         },
                         {
-                            // Escurece a tela na hora (gamma 0 via hyprsunset, NUNCA
-                            // dpms — ver idle-dim.sh / hyprlock-dpms-freeze). Restaura
-                            // sozinho ao mexer no mouse/teclado (on-resume do hypridle)
-                            // ou ao deslizar o brilho. Útil pra dormir sem luz no quarto.
+                            // It darkens the screen right away (gamma 0 through hyprsunset,
+                            // NEVER dpms; see idle-dim.sh / hyprlock-dpms-freeze). It restores
+                            // itself on mouse/keyboard movement (hypridle's on-resume) or when
+                            // sliding the brightness. Useful for sleeping with no light in the
+                            // room.
                             icon: "󰖔",
-                            label: "Escurecer",
-                            cmd: ["hyprctl", "hyprsunset", "gamma", "0"], // gamma 0 = preto; restaura no brilho/resume
+                            label: "Darken",
+                            cmd: ["hyprctl", "hyprsunset", "gamma", "0"], // gamma 0 = black; it restores on brightness/resume
                             danger: false
                         },
                         {
                             icon: "󰗽",
-                            label: "Sair",
-                            cmd: ["sh", "-c", "loginctl terminate-user \"$USER\""], // LightDM lança o Hypr cru (sem uwsm)
+                            label: "Log out",
+                            cmd: ["sh", "-c", "loginctl terminate-user \"$USER\""], // LightDM launches a bare Hypr (no uwsm)
                             danger: false
                         },
                         {
                             icon: "󰒲",
-                            label: "Suspender",
+                            label: "Suspend",
                             cmd: ["systemctl", "suspend"],
                             danger: false
                         },
                         {
                             icon: "󰜉",
-                            label: "Reiniciar",
+                            label: "Reboot",
                             cmd: ["systemctl", "reboot"],
                             danger: true
                         },
                         {
                             icon: "󰐥",
-                            label: "Desligar",
+                            label: "Shut down",
                             cmd: ["systemctl", "poweroff"],
                             danger: true
                         }
@@ -122,9 +125,10 @@ Pill {
                         Layout.fillWidth: true
                         implicitHeight: 32
                         radius: 8
-                        // o vermelho aqui era #f38ba8, do Catppuccin ANTIGO — agora sai do my.theme.
-                        // Tokens colMenuHoverBg* (30%): linha de menu não tem borda, então
-                        // os de 20% ficam invisíveis (1.11:1 de contraste, medido).
+                        // the red here used to be #f38ba8, from the OLD Catppuccin; now it
+                        // comes from my.theme. The colMenuHoverBg* tokens (30%): a menu row has
+                        // no border, so the 20% ones are invisible (1.11:1 of contrast,
+                        // measured).
                         color: itemArea.containsMouse ? (modelData.danger ? Theme.colMenuHoverBgDanger : Theme.colMenuHoverBg) : "transparent"
                         Behavior on color {
                             ColorAnimation {
@@ -133,8 +137,9 @@ Pill {
                             }
                         }
 
-                        // mesma barra de acento do menu do tray (TrayMenu.qml) — o shell
-                        // fala UMA língua de hover: fundo + marca de posição na esquerda.
+                        // the same accent bar as the tray's menu (TrayMenu.qml): the shell
+                        // speaks ONE hover language, a background plus a position mark on the
+                        // left.
                         Rectangle {
                             anchors.left: parent.left
                             anchors.leftMargin: 3

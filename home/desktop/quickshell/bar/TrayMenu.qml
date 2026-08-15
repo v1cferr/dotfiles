@@ -1,35 +1,33 @@
-// Menu de contexto do system tray, tematizado TokyoNight (harmônico com o
-// resto da barra). Renderiza o DBusMenu (com.canonical.dbusmenu) que os SNI
-// nativos expõem, via QsMenuOpener. Só serve itens COM DBusMenu (hasMenu);
-// os ícones que vêm pela ponte xembedsniproxy (wine/Battle.net, pamac) não têm
-// DBusMenu e caem no tray-native-menu lá no Bar.qml — esses o app desenha sozinho
-// e não dá pra tematizar aqui. MEDIDO num ícone desses (Battle.net no Bottles):
-// Id é o window ID do X11 ("14680080"), Title/ToolTip vazios, Menu inexistente.
+// The system tray's context menu, themed TokyoNight (harmonious with the rest of the bar). It
+// renders the DBusMenu (com.canonical.dbusmenu) the native SNIs expose, through QsMenuOpener. It
+// only serves items WITH a DBusMenu (hasMenu); the icons that come through the xembedsniproxy
+// bridge (wine/Battle.net, pamac) have no DBusMenu and fall into tray-native-menu over in
+// Bar.qml, since those the app draws itself and there is no theming them here. MEASURED on one of
+// those icons (Battle.net in Bottles): the Id is the X11 window ID ("14680080"), Title/ToolTip
+// are empty, Menu does not exist.
 //
-// Suporta: separadores, checkbox/radio (buttonType + checkState), itens
-// desabilitados e UM nível de submenu (coluna à direita — cobre o "VPN
-// Connections" do nm-applet). Fecha ao clicar fora via HyprlandFocusGrab.
+// It supports: separators, checkbox/radio (buttonType plus checkState), disabled items and ONE
+// level of submenu (a column on the right, which covers nm-applet's "VPN Connections"). It closes
+// on a click outside through HyprlandFocusGrab.
 //
-// POR QUE PanelWindow (layer surface) E NÃO PopupWindow — bug DO HYPRLAND:
-// como PopupWindow, este menu APARECIA mas não recebia UM evento de ponteiro:
-// nenhum hover, e fechava sozinho aos 4s com o mouse parado em cima. Causa:
-// hyprwm/Hyprland#6682 — popup Qt REDIMENSIONADO depois de exibido fica com a
-// região de input errada (ela fica "centrada", desalinhada do que se vê). É
-// exatamente o que acontece aqui: o openAt() torna a janela visível ANTES de o
-// QsMenuOpener terminar de popular os itens, então o card nasce pequeno e
-// cresce — e a região de input não acompanha. O issue foi reproduzido com o
-// PRÓPRIO Quickshell e está FECHADO como "not planned": não vem correção de
-// lá, tem de ser evitado aqui.
+// WHY PanelWindow (a layer surface) AND NOT PopupWindow, a HYPRLAND bug: as a PopupWindow, this
+// menu APPEARED but did not receive a SINGLE pointer event: no hover, and it closed on its own
+// after 4s with the mouse sitting on it. The cause: hyprwm/Hyprland#6682, a Qt popup RESIZED
+// after being shown ends up with the wrong input region (it stays "centered", misaligned from
+// what you see). That is exactly what happens here: openAt() makes the window visible BEFORE
+// QsMenuOpener finishes populating the items, so the card is born small and grows, and the input
+// region does not follow. The issue was reproduced with Quickshell ITSELF and is CLOSED as "not
+// planned": no fix is coming from there, it has to be avoided here.
 //
-// Layer surface não passa por esse caminho (nada de xdg_surface::set_window_
-// geometry) e é o que os outros 4 painéis desta barra já usam com hover
-// funcionando (PowerMenu, Metrics, Calendar, Weather). De quebra cobre a
-// ABERTURA DE SUBMENU, que também faz o card crescer depois de exibido.
+// A layer surface does not go through that path (no xdg_surface::set_window_geometry) and it is
+// what the other 4 panels of this bar already use with working hover (PowerMenu, Metrics,
+// Calendar, Weather). As a bonus it covers OPENING A SUBMENU, which also makes the card grow
+// after being shown.
 //
-// O preço é posicionar à mão: layer surface não tem anchor.rect nem
-// PopupAdjustment.Slide, então o X vem do ícone clicado (via openAt) e o clamp
-// de borda é explícito. O Y sai de graça: a barra reserva exclusiveZone 30, e
-// um layer surface sem zona própria já é posicionado ABAIXO do reservado.
+// The price is positioning by hand: a layer surface has no anchor.rect and no
+// PopupAdjustment.Slide, so the X comes from the clicked icon (through openAt) and the edge clamp
+// is explicit. The Y comes for free: the bar reserves exclusiveZone 30, and a layer surface with
+// no zone of its own is already positioned BELOW what is reserved.
 import Quickshell
 import Quickshell.Hyprland
 import QtQuick
@@ -39,18 +37,18 @@ import "root:/"
 PanelWindow {
     id: root
 
-    // QsMenuHandle do menu raiz e do submenu aberto (null = fechado).
+    // The QsMenuHandle of the root menu and of the open submenu (null = closed).
     property var menuHandle: null
     property var submenuHandle: null
-    // Janela da barra que abriu o menu (pra incluir no focus-grab: clicar noutro
-    // ícone do tray TROCA o menu em vez de contar como "clique fora").
+    // The bar window that opened the menu (to include in the focus grab: clicking another tray
+    // icon SWITCHES the menu instead of counting as a "click outside").
     property var barWindow: null
-    // X de TELA desejado pra borda esquerda do menu (= borda esq. do ícone clicado).
+    // The desired SCREEN X for the menu's left edge (= the clicked icon's left edge).
     property int desiredX: 0
 
     visible: false
     color: "transparent"
-    exclusiveZone: 0 // é menu, não painel: não reserva espaço de tela
+    exclusiveZone: 0 // it is a menu, not a panel: it reserves no screen space
     implicitWidth: card.implicitWidth
     implicitHeight: card.implicitHeight
 
@@ -59,18 +57,18 @@ PanelWindow {
         left: true
     }
     margins {
-        top: 4 // 4px abaixo da barra — o exclusiveZone 30 dela já está descontado
-        // Alinha com o ícone sem vazar da tela. Como o tray fica na PONTA DIREITA,
-        // na prática é o clamp que manda e o menu encosta na borda — que é o que o
-        // PopupAdjustment.Slide fazia sozinho quando isto era PopupWindow.
+        top: 4 // 4px below the bar; its exclusiveZone 30 is already discounted
+        // It aligns with the icon without spilling off the screen. Since the tray sits at the
+        // RIGHT END, in practice it is the clamp that rules and the menu touches the edge, which
+        // is what PopupAdjustment.Slide did on its own when this was a PopupWindow.
         left: {
             const sw = root.screen ? root.screen.width : 1920;
             return Math.max(4, Math.min(root.desiredX, sw - root.implicitWidth - 4));
         }
     }
 
-    // Abre o menu com a borda esquerda em `x` (coords de TELA), na tela de `win`.
-    // Reseta visible antes pra reposicionar caso já esteja aberto em outro ícone.
+    // It opens the menu with its left edge at `x` (SCREEN coordinates), on `win`'s screen.
+    // It resets visible first so it repositions if it is already open on another icon.
     function openAt(handle, win, x) {
         root.visible = false;
         root.barWindow = win;
@@ -86,8 +84,8 @@ PanelWindow {
         root.submenuHandle = null;
     }
 
-    // Some sozinho após um tempo se o mouse não estiver sobre o menu (pausa
-    // enquanto o cursor está em cima; reinicia a contagem ao sair).
+    // It disappears on its own after a while if the mouse is not over the menu (it pauses while
+    // the cursor is on it and restarts the count when it leaves).
     Timer {
         running: root.visible && !menuHover.hovered
         interval: 4000
@@ -103,29 +101,29 @@ PanelWindow {
         menu: root.submenuHandle
     }
 
-    // Clique fora → fecha. Inclui a barra no grab pra que clicar noutro ícone do
-    // tray TROQUE o menu (o clique chega no ícone) em vez de contar como "fora".
+    // A click outside closes it. It includes the bar in the grab so that clicking another tray
+    // icon SWITCHES the menu (the click reaches the icon) instead of counting as "outside".
     HyprlandFocusGrab {
         active: root.visible
         windows: root.barWindow ? [root, root.barWindow] : [root]
         onCleared: root.closeMenu()
     }
 
-    // Delegate reutilizado pela coluna principal e pela do submenu.
-    // `menu` recebe o controller (o próprio root) por propriedade — evita
-    // depender de acesso a id externo dentro do component inline.
+    // A delegate reused by the main column and by the submenu's.
+    // `menu` receives the controller (root itself) through a property, which avoids depending on
+    // access to an external id inside the inline component.
     component MenuEntry: Item {
         id: entry
         required property var modelData
         property var menu: null
         property bool isSub: false
-        // um só lugar decide "está sob o cursor" — fundo, barra e seta leem daqui
+        // a single place decides "it is under the cursor": the background, the bar and the arrow read from here
         readonly property bool hovered: hov.containsMouse && entry.modelData.enabled
         width: parent ? parent.width : 180
         implicitWidth: entry.modelData.isSeparator ? 40 : (rowInner.implicitWidth + 16)
         implicitHeight: entry.modelData.isSeparator ? 7 : 26
 
-        // separador
+        // the separator
         Rectangle {
             visible: entry.modelData.isSeparator
             anchors.verticalCenter: parent.verticalCenter
@@ -138,13 +136,13 @@ PanelWindow {
             opacity: 0.6
         }
 
-        // item normal
+        // a normal item
         Rectangle {
             visible: !entry.modelData.isSeparator
             anchors.fill: parent
             radius: 6
-            // fade animado; colMenuHoverBg (accent 30%) e não colHoverBg — este último
-            // dá 1.11:1 de contraste aqui, ou seja, hover que não se vê.
+            // an animated fade; colMenuHoverBg (the accent at 30%) and not colHoverBg, since
+            // the latter gives 1.11:1 of contrast here, which is to say a hover you cannot see.
             color: entry.hovered ? Theme.colMenuHoverBg : "transparent"
             Behavior on color {
                 ColorAnimation {
@@ -153,9 +151,10 @@ PanelWindow {
                 }
             }
 
-            // Barra de acento que DESLIZA da esquerda. Vai junto do fundo de propósito:
-            // é sinal de POSIÇÃO (aponta a linha), enquanto o fundo é sinal de área.
-            // Redundância barata — resolve mesmo se a diferença de fundo passar batida.
+            // An accent bar that SLIDES in from the left. It goes along with the background on
+            // purpose: it is a POSITION signal (it points at the row), while the background is an
+            // area signal. Cheap redundancy: it works even if the background difference goes
+            // unnoticed.
             Rectangle {
                 anchors.left: parent.left
                 anchors.leftMargin: 2
@@ -179,7 +178,7 @@ PanelWindow {
                 anchors.rightMargin: 8
                 spacing: 8
 
-                // marca de checkbox/radio (buttonType: 1=check, 2=radio)
+                // the checkbox/radio mark (buttonType: 1=check, 2=radio)
                 Text {
                     visible: entry.modelData.buttonType !== 0
                     Layout.preferredWidth: entry.modelData.buttonType !== 0 ? 12 : 0
@@ -192,16 +191,17 @@ PanelWindow {
                 Text {
                     Layout.fillWidth: true
                     elide: Text.ElideRight
-                    // tira os mnemônicos "_" do label do DBusMenu
+                    // it strips the "_" mnemonics from the DBusMenu label
                     text: ("" + entry.modelData.text).replace(/_(.)/g, "$1")
-                    // NÃO acende no accent: sobre o fundo aceso o accent cai a 3.83:1 de
-                    // contraste, contra 5.97:1 do colText. Legibilidade > efeito.
+                    // It does NOT light up in the accent: over the lit background the accent
+                    // drops to 3.83:1 of contrast, against colText's 5.97:1. Legibility beats
+                    // effect.
                     color: entry.modelData.enabled ? Theme.colText : Theme.colDim
                     font.family: Theme.uiFont
                     font.pixelSize: 12
                 }
 
-                // seta de submenu
+                // the submenu's arrow
                 Text {
                     visible: entry.modelData.hasChildren
                     Layout.preferredWidth: entry.modelData.hasChildren ? 12 : 0
@@ -219,7 +219,7 @@ PanelWindow {
                 enabled: entry.modelData.enabled && !entry.modelData.isSeparator
                 onClicked: {
                     if (entry.modelData.hasChildren) {
-                        // toggla o submenu (mesmo item fecha; outro troca)
+                        // it toggles the submenu (the same item closes it; another switches it)
                         entry.menu.submenuHandle = (entry.menu.submenuHandle === entry.modelData) ? null : entry.modelData;
                     } else {
                         entry.modelData.triggered();
@@ -234,12 +234,12 @@ PanelWindow {
         id: card
         spacing: 6
 
-        // hover no menu pausa o auto-hide
+        // hovering the menu pauses the auto-hide
         HoverHandler {
             id: menuHover
         }
 
-        // coluna principal
+        // the main column
         Rectangle {
             id: mainCol
             implicitWidth: Math.min(360, Math.max(160, mainList.implicitWidth + 16))
@@ -264,7 +264,7 @@ PanelWindow {
             }
         }
 
-        // coluna do submenu (aparece à direita quando há um aberto)
+        // the submenu's column (it appears on the right when one is open)
         Rectangle {
             visible: root.submenuHandle !== null
             implicitWidth: visible ? Math.min(360, Math.max(160, subList.implicitWidth + 16)) : 0

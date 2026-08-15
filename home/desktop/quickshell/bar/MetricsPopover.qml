@@ -1,4 +1,4 @@
-// Popover de métricas (temp / uso / rede). Estado no Bar, via `bar`.
+// The metrics popover (temp / usage / network). The state lives in the Bar, through `bar`.
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -14,7 +14,7 @@ PanelWindow {
         left: true
     }
     margins {
-        top: 4 // = gaps_out do Hyprland: alinha o popover com o topo das janelas (barExclusiveZone 30 já somada)
+        top: 4 // = Hyprland's gaps_out: it aligns the popover with the top of the windows (barExclusiveZone 30 already added)
         left: bar.popLeft(metricPop.implicitWidth)
     }
     exclusiveZone: 0
@@ -35,7 +35,7 @@ PanelWindow {
             anchors.margins: 14
             spacing: 8
             Text {
-                text: bar.metricShown === "temp" ? "Temperaturas" : (bar.metricShown === "net" ? "Rede" : "Uso")
+                text: bar.metricShown === "temp" ? "Temperatures" : (bar.metricShown === "net" ? "Network" : "Usage")
                 color: Theme.colAccent
                 font.family: Theme.uiFont
                 font.pixelSize: 14

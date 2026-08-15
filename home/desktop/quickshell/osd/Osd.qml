@@ -1,13 +1,13 @@
-// OSD (toast) de volume + mute de microfone + brilho (gamma do hyprsunset),
-// estilo Tokyo Night. Volume/mic aparecem reagindo ao Pipewire; brilho é
-// empurrado por IPC (qs ipc call osd brightness <valor> <max>) pelas teclas
-// XF86MonBrightness. Some sozinho após ~1.5s. Fixado bottom-center no DP-1.
+// The OSD (a toast) for volume plus microphone mute plus brightness (hyprsunset's gamma), in
+// Tokyo Night style. Volume/mic show up reacting to Pipewire; brightness is pushed through IPC
+// (qs ipc call osd brightness <value> <max>) by the XF86MonBrightness keys. It disappears on its
+// own after ~1.5s. Pinned bottom-center on the main monitor.
 //
-// Brilho aqui = gamma do hyprsunset (este desktop não tem backlight real;
-// brightnessctl/ddcutil ausentes). gamma 100 = normal, vai até max-gamma (150).
+// Brightness here = hyprsunset's gamma (this desktop has no real backlight;
+// brightnessctl/ddcutil are absent). gamma 100 = normal, going up to max-gamma (150).
 //
-// Nota: "Translate ID error: -1 (default-nodes-api)" no log é ruído nativo do
-// libpipewire, não deste QML.
+// A note: "Translate ID error: -1 (default-nodes-api)" in the log is libpipewire's own noise, not
+// this QML's.
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Pipewire
@@ -18,18 +18,18 @@ import "root:/"
 Scope {
     id: root
 
-    // "volume" | "mic" | "brightness" — o que disparou o OSD por último
+    // "volume" | "mic" | "brightness": what fired the OSD last
     property string mode: "volume"
     property bool shown: false
 
-    // Brilho (empurrado via IPC pelas teclas de brilho)
+    // Brightness (pushed through IPC by the brightness keys)
     property int brightnessValue: 100
     property int brightnessMax: 150
 
-    // Trava anti-flash (boot) + anti-troca-de-device pro caminho reativo do
-    // Pipewire. Cada evento de settling re-adia o arme; o show real é coalescido
-    // num Timer(0) que só mostra se "armed" continuar true no próximo ciclo do
-    // event loop. (O brilho via IPC NÃO passa por essa trava — é ação explícita.)
+    // An anti-flash (boot) plus anti-device-switch lock for Pipewire's reactive path. Every
+    // settling event pushes the arming back; the real show is coalesced into a Timer(0) that only
+    // shows if "armed" is still true on the event loop's next cycle. (Brightness through IPC does
+    // NOT go through that lock, since it is an explicit action.)
     property bool armed: false
 
     PwObjectTracker {
@@ -63,7 +63,7 @@ Scope {
         showTimer.restart();
     }
 
-    // Mostra direto (sem a trava armed): usado pelo brilho via IPC.
+    // It shows directly (with no armed lock): used by brightness through IPC.
     function showNow(m) {
         root.mode = m;
         root.shown = true;
@@ -89,8 +89,8 @@ Scope {
         return "󰃠";
     }
 
-    // Brilho empurrado pelas teclas XF86MonBrightness via:
-    //   qs ipc call osd brightness <valor> <max>
+    // Brightness pushed by the XF86MonBrightness keys through:
+    //   qs ipc call osd brightness <value> <max>
     IpcHandler {
         target: "osd"
 
@@ -170,7 +170,7 @@ Scope {
                 anchors.rightMargin: 18
                 spacing: 14
 
-                // Ícone do modo atual. Sem font.family (mesma fallback Nerd do shell.qml).
+                // The current mode's icon. With no font.family (the same Nerd fallback as shell.qml).
                 Text {
                     Layout.alignment: Qt.AlignVCenter
                     text: root.mode === "mic" ? (root.micMuted ? "󰍭" : "󰍬") : root.mode === "brightness" ? root.brightIcon() : root.volIcon()
@@ -178,7 +178,7 @@ Scope {
                     font.pixelSize: 26
                 }
 
-                // Modo VOLUME: barra + porcentagem
+                // VOLUME mode: a bar plus a percentage
                 RowLayout {
                     Layout.fillWidth: true
                     visible: root.mode === "volume"
@@ -208,14 +208,14 @@ Scope {
                         Layout.alignment: Qt.AlignVCenter
                         Layout.preferredWidth: 46
                         horizontalAlignment: Text.AlignRight
-                        text: root.sinkMuted ? "mudo" : Math.round(root.volume * 100) + "%"
+                        text: root.sinkMuted ? "muted" : Math.round(root.volume * 100) + "%"
                         color: Theme.colText
                         font.pixelSize: 14
                         font.bold: true
                     }
                 }
 
-                // Modo BRILHO (gamma do hyprsunset): barra + valor
+                // BRIGHTNESS mode (hyprsunset's gamma): a bar plus the value
                 RowLayout {
                     Layout.fillWidth: true
                     visible: root.mode === "brightness"
@@ -252,11 +252,11 @@ Scope {
                     }
                 }
 
-                // Modo MIC: rótulo de estado
+                // MIC mode: a state label
                 Text {
                     Layout.fillWidth: true
                     visible: root.mode === "mic"
-                    text: root.micMuted ? "Microfone mudo" : "Microfone ativo"
+                    text: root.micMuted ? "Microphone muted" : "Microphone live"
                     color: root.micMuted ? Theme.colRed : Theme.colText
                     font.pixelSize: 15
                     font.bold: true

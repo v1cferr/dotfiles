@@ -1,7 +1,7 @@
-// Painel de controle de mídia (Spotify) — modelo do painel de VPN.
-// Abre/fecha via:  qs ipc call mpris toggle   (usado pelo on-click do módulo
-// custom/spotify da Waybar). Usa o serviço nativo Quickshell.Services.Mpris.
-// Bottom/top-left no DP-1 (perto da pílula do Spotify).
+// The media control panel (Spotify), modeled on the VPN panel.
+// It opens and closes through:  qs ipc call mpris toggle   (used by the on-click of Waybar's
+// custom/spotify module). It uses the native Quickshell.Services.Mpris service.
+// Bottom/top-left on the main monitor (near the Spotify pill).
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Mpris
@@ -15,7 +15,7 @@ Scope {
     property bool panelVisible: false
     property real positionNow: 0
 
-    // Seleciona o player do Spotify (fallback: o que estiver tocando; senão o 1º)
+    // It selects the Spotify player (the fallback: whichever is playing; otherwise the 1st)
     readonly property var player: {
         const m = Mpris.players;
         const list = (m && m.values) ? m.values : [];
@@ -63,7 +63,7 @@ Scope {
             if (root.panelVisible)
                 root.refreshPosition();
         }
-        // "open" e não "show" (show colide com o subcomando `qs ipc show`)
+        // "open" and not "show" (show collides with the `qs ipc show` subcommand)
         function open(): void {
             root.panelVisible = true;
             root.refreshPosition();
@@ -73,7 +73,7 @@ Scope {
         }
     }
 
-    // Tick da barra de progresso enquanto tocando + painel aberto
+    // The progress bar's tick while playing and with the panel open
     Timer {
         interval: 1000
         repeat: true
@@ -81,14 +81,14 @@ Scope {
         onTriggered: root.refreshPosition()
     }
 
-    // Auto-fechar quando o mouse sai do painel (igual ao painel de VPN)
+    // Auto-closing when the mouse leaves the panel (the same as the VPN panel)
     Timer {
         interval: 2500
         running: root.panelVisible && !panelHover.hovered
         onTriggered: root.panelVisible = false
     }
 
-    // Atualiza posição ao trocar de faixa / play-pause
+    // It updates the position when the track changes or on play-pause
     Connections {
         target: root.player
         ignoreUnknownSignals: true
@@ -107,7 +107,7 @@ Scope {
         id: panel
         visible: root.panelVisible
 
-        // Fixa no DP-1 (perto da pílula do Spotify).
+        // Pinned on the main monitor (near the Spotify pill).
         screen: Theme.screenPrimary
 
         anchors {
@@ -141,7 +141,7 @@ Scope {
                 anchors.margins: 14
                 spacing: 12
 
-                // Cabeçalho: capa + faixa/artista/álbum
+                // The header: the cover plus track/artist/album
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 12
@@ -202,7 +202,7 @@ Scope {
                     }
                 }
 
-                // Barra de progresso (clicável p/ buscar)
+                // The progress bar (clickable to seek)
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 4
@@ -257,7 +257,7 @@ Scope {
                     }
                 }
 
-                // Controles: anterior / play-pause / próxima
+                // The controls: previous / play-pause / next
                 RowLayout {
                     Layout.alignment: Qt.AlignHCenter
                     spacing: 18
@@ -284,7 +284,7 @@ Scope {
                 Text {
                     Layout.alignment: Qt.AlignHCenter
                     visible: !root.hasPlayer
-                    text: "Nenhum player de mídia ativo"
+                    text: "No media player is active"
                     color: Theme.colDim
                     font.pixelSize: 12
                 }
@@ -292,7 +292,7 @@ Scope {
         }
     }
 
-    // Botão circular de controle
+    // A circular control button
     component CtlButton: Rectangle {
         id: btn
 

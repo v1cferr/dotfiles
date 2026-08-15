@@ -1,41 +1,40 @@
-# Config do statix (lint de anti-padrão em Nix). Lido por `statix check` e pelo
-# check do flake (`nix flake check`).
+# statix's config (an anti-pattern lint for Nix). Read by `statix check` and by the flake's check
+# (`nix flake check`).
 #
-# MEDIÇÃO que motivou este arquivo (03/08/2026, 79 arquivos): 77 achados, sendo
-#   63x W20 repeated_keys   (82% de tudo)
+# THE MEASUREMENT that motivated this file (03/08/2026, 79 files): 77 findings, of which
+#   63x W20 repeated_keys   (82% of everything)
 #   10x W10 empty_pattern
 #    4x W4  manual_inherit_from
-# Os 4 do W4 foram CORRIGIDOS (viraram `inherit (x) a b;`). Os outros dois estão
-# desligados abaixo — não por serem chatos, mas por estarem ERRADOS pra um repo de
-# módulos NixOS. Lint que a gente ignora na prática é pior que lint desligado: ele
-# treina o olho a passar por cima do output inteiro, inclusive do achado real.
+# The 4 W4s were FIXED (they became `inherit (x) a b;`). The other two are turned off below, not
+# for being annoying, but for being WRONG for a repo of NixOS modules. A lint we ignore in
+# practice is worse than a lint turned off: it trains the eye to skip over the whole output, the
+# real finding included.
 
 disabled = [
-  # W20 — quer que `services.openssh = {…}` e `services.fail2ban = {…}` virem um
-  # único `services = { openssh = …; fail2ban = …; }`. Recusado por três motivos:
+  # W20 wants `services.openssh = {…}` and `services.fail2ban = {…}` to become a single
+  # `services = { openssh = …; fail2ban = …; }`. Refused for three reasons:
   #
-  #   1. CAMINHO PONTILHADO É A IDIOMA DO NIXOS. O nixpkgs inteiro e toda a doc
-  #      escrevem `services.foo.enable = true`. Seguir o W20 deixaria este repo
-  #      divergente do ecossistema — o oposto do que "boas práticas" quer dizer.
-  #   2. PIORA O DIFF. Com atributos no topo, adicionar ou remover um serviço é um
-  #      hunk isolado. Aninhado, cada mudança mexe na estrutura em volta e o diff
-  #      cresce sem que nada mais tenha mudado.
-  #   3. PIORA A LEITURA DESTE REPO especificamente: os módulos daqui têm blocos
-  #      grandes de comentário POR CONFIG (regra 2). Aninhar tudo sob uma chave
-  #      empurraria comentário e valor pra 3-4 níveis de indentação e o
-  #      system/net/network.nix viraria um attrset gigante de ~100 linhas.
+  #   1. THE DOTTED PATH IS NIXOS' IDIOM. All of nixpkgs and every doc write
+  #      `services.foo.enable = true`. Following W20 would leave this repo diverging from the
+  #      ecosystem, the opposite of what "best practices" means.
+  #   2. IT MAKES THE DIFF WORSE. With top-level attributes, adding or removing a service is an
+  #      isolated hunk. Nested, every change touches the structure around it and the diff grows
+  #      with nothing else having changed.
+  #   3. IT MAKES READING THIS REPO WORSE specifically: the modules here have large comment blocks
+  #      PER CONFIG (rule 2). Nesting everything under one key would push comment and value to 3-4
+  #      levels of indentation and system/net/network.nix would become a giant ~100-line attrset.
   #
-  # É lint de GOSTO com um lado defensável (agrupar o que é do mesmo domínio), mas
-  # o gosto do repo é o do nixpkgs, e ele está declarado aqui em vez de ser
-  # ignorado em silêncio a cada execução.
+  # It is a TASTE lint with a defensible side (grouping what belongs to the same domain), but the
+  # repo's taste is nixpkgs' taste, and it is declared here instead of being ignored in silence on
+  # every run.
   "repeated_keys",
 
-  # W10 — quer `_:` em vez de `{ ... }:` quando o módulo não usa argumento nenhum.
-  # Recusado porque `{ ... }:` é a ASSINATURA DE MÓDULO NixOS: quem abre o arquivo
-  # vê de imediato que aquilo recebe os args de módulo e por acaso não usa nenhum.
-  # `_:` diz só "recebe algo e ignora". E na hora de precisar de `pkgs`, a edição é
-  # `{ ... }:` → `{ pkgs, ... }:`, menor que reconstruir a partir de `_:`.
-  # (Este é o mais fraco dos dois argumentos — se um dia preferir o `_:`, é só tirar
-  # daqui e rodar `statix fix`.)
+  # W10 wants `_:` instead of `{ ... }:` when the module uses no argument at all. Refused because
+  # `{ ... }:` is the NixOS MODULE SIGNATURE: whoever opens the file sees right away that it
+  # receives the module args and happens to use none. `_:` only says "it receives something and
+  # ignores it". And when `pkgs` is needed, the edit is `{ ... }:` to `{ pkgs, ... }:`, smaller
+  # than rebuilding from `_:`.
+  # (This is the weaker of the two arguments; if I ever prefer `_:`, it is just removing it from
+  # here and running `statix fix`.)
   "empty_pattern",
 ]

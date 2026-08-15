@@ -1,22 +1,22 @@
-# Regras do sops. As chaves PÚBLICAS abaixo são quem CONSEGUE decriptar; a privada de
-# cada uma vive FORA do git. DOIS destinatários de propósito:
-#   host   → /var/lib/sops-nix/key.txt na máquina; é o que o sops-nix usa no boot pra
-#            popular /run/secrets, e o que se carrega no cutover. O anchor dizia
-#            `nixos_seagate` até 04/08/2026: a chave NASCEU naquele host e foi carregada
-#            no cutover pro Kingston (01/08/2026) — mesma chave, host novo, nome velho.
-#   backup → chave OFFLINE (gerada 04/08/2026), que NÃO fica em máquina nem em nuvem em
-#            texto claro. Existe porque destinatário ÚNICO = perda IRREVERSÍVEL de todo
-#            segredo do repo no dia em que aquela chave sumir: o sops não tem recuperação,
-#            e o único backup dela era o Bitwarden (SPOF de tudo). Com duas, perder uma
-#            é aborrecimento; perder as duas é que é desastre.
-# Editar segredos:   nix shell nixpkgs#sops -c sops secrets/secrets.yaml
-# Re-encriptar p/ novas chaves:   nix shell nixpkgs#sops -c sops updatekeys secrets/secrets.yaml
+# sops' rules. The PUBLIC keys below are who CAN decrypt; each one's private half lives OUTSIDE
+# git. TWO recipients on purpose:
+#   host   -> /var/lib/sops-nix/key.txt on the machine; it is what sops-nix uses at boot to
+#             populate /run/secrets, and what you carry across a cutover. The anchor said
+#             `nixos_seagate` until 04/08/2026: the key was BORN on that host and was carried in
+#             the cutover to the Kingston (01/08/2026), so the same key, a new host, an old name.
+#   backup -> an OFFLINE key (generated 04/08/2026) that does NOT sit on a machine nor in the
+#             cloud in the clear. It exists because a SINGLE recipient = IRREVERSIBLE loss of
+#             every secret in the repo the day that key disappears: sops has no recovery, and its
+#             only backup was Bitwarden (the SPOF of everything). With two, losing one is an
+#             annoyance; losing both is the disaster.
+# To edit secrets:   nix shell nixpkgs#sops -c sops secrets/secrets.yaml
+# To re-encrypt for new keys:   nix shell nixpkgs#sops -c sops updatekeys secrets/secrets.yaml
 #
-# ⚠️ `creation_rules` só vale pra arquivo NOVO. Adicionar destinatário aqui NÃO
-# re-encripta o que já existe — sem rodar `updatekeys`, a chave nova não decripta nada e
-# o backup é imaginário. E o regex pega só `secrets/*.yaml`: o bitwarden-secrets.json é
-# texto claro de PROPÓSITO (mapa nome-no-sops → item-no-Bitwarden, sem credencial), mas
-# um .json que algum dia contenha segredo NÃO seria encriptado por esta regra.
+# WARNING: `creation_rules` only applies to a NEW file. Adding a recipient here does NOT
+# re-encrypt what already exists, so without running `updatekeys` the new key decrypts nothing and
+# the backup is imaginary. And the regex only catches `secrets/*.yaml`: bitwarden-secrets.json is
+# plain text ON PURPOSE (a name-in-sops to item-in-Bitwarden map, with no credential), but a .json
+# that some day holds a secret would NOT be encrypted by this rule.
 keys:
   - &host_nixos_kingston age132kmspxjsqzc3nnd6407svq744ju4q6vl85hq2v02pgqc2yf7caq03plfn
   - &backup_offline age1eexkwwdh60rxp78407dq4d5xcmzanupnh8f4l4llpukhq0fmxv0ql5lnvk

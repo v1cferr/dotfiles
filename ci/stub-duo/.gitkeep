@@ -1,11 +1,11 @@
-Stub VAZIO que substitui o input privado `duo-streak-daemon` no CI.
+An EMPTY stub that replaces the private `duo-streak-daemon` input in the CI.
 
-Existe porque o Nix busca TODOS os inputs travados no lock ao avaliar o flake, então
-`nix flake check` exigiria credencial de leitura do repo privado. Com
+It exists because Nix fetches ALL the inputs locked in the lock file when evaluating the flake, so
+`nix flake check` would demand a read credential for the private repo. With
   nix flake check --override-input duo-streak-daemon path:./ci/stub-duo
-o input é trocado ANTES do fetch e nenhuma chave entra no CI.
+the input is swapped BEFORE the fetch and no key enters the CI.
 
-Vazio basta porque o único consumidor (system/services/duo.nix) usa o input apenas como
-CONTEXTO de build do Docker (`context: ${duoSrc}`) — interpolação de path, sem readFile
-em tempo de avaliação. Se algum dia o módulo passar a LER um arquivo do repo, o arquivo
-correspondente precisa existir aqui (vazio) ou o check quebra.
+Empty is enough because the only consumer (system/services/duo.nix) uses the input purely as
+Docker build CONTEXT (`context: ${duoSrc}`), which is path interpolation, with no readFile at
+evaluation time. If the module ever starts READING a file from the repo, the corresponding file
+has to exist here (empty) or the check breaks.

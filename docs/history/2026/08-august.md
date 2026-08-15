@@ -1,6 +1,37 @@
 # History: august 2026
 
-59 entries. Index in [README.md](../README.md).
+60 entries. Index in [README.md](../README.md).
+
+- [x] The repo is ENTIRELY in en-US, and rule 17 stopped being a promise (15/08/2026). The
+      rule was written this morning with the `.nix` tree named as known debt; by the end of the
+      day the debt was gone. In order: the 12 densest modules, the other 86 `.nix` files, the CI
+      workflow, `scripts/`, the Hyprland Lua, the Quickshell QML and the tooling files
+      (`.envrc`, `statix.toml`, `.sops.yaml`, `.gitignore`, `.markdownlint.jsonc`, the two
+      VS Code `settings.json`, `router/README.md`, `ci/stub-duo/.gitkeep`).
+      • IT WAS NOT ONLY COMMENTS, and that is what made it worth doing in one stretch. Three
+        files GENERATE what the session shows: `keybinds.lua` is parsed at runtime by the awk in
+        `cheatsheet.nix`, so translating it translated the SUPER+H cheatsheet; the Quickshell QML
+        is the bar itself; the shell scripts print to the terminal. Anything user-facing that
+        this repo OWNS came along.
+      • WHAT STAYS IN pt-BR IS A CLOSED LIST, and each item says why where it lives: the
+        lockscreen (a product decision from july), the Brazilian holiday names plus the month and
+        weekday names in the bar's calendar, and runtime identifiers whose rename would be a
+        behavior change and not a translation (`my.archAntigo`, the `arch-antigo-mount` unit,
+        `/mnt/arch-antigo`, the "Arch antigo" bookmark, `/srv/media/media/Filmes`).
+      • `checks.pacotes` BECAME `checks.packages`, closing the one item the morning had left
+        pending: it kept its name only because `.github/workflows/nix.yml` cited it BY NAME, so
+        translating the workflow removed the reason.
+      • THE REDACTION MARKER of `router-sync` changed with it, because the old one carried an em
+        dash, and it is written INTO `router/uci/*.conf`. The four mirrored files that hold it
+        were rewritten in the same commit: otherwise `router-sync diff` would report every config
+        with a secret as diverging until the next `pull`, which is a gate lying about the
+        router's state. A translation with a runtime side effect is not a translation, it is a
+        change, and it went in as one.
+      • MEASURED AS IT WENT, because "it is only a comment" is exactly how a live config breaks:
+        `nix flake check` after each batch of `.nix`, `luac -p` plus a real `hyprctl reload`
+        (which answered ok, 92 binds) for the Lua, `shellcheck -x` plus `py_compile` for the
+        scripts, and for the QML the Quickshell log itself, which hot-reloads on save and said
+        "Configuration Loaded" at the end, with `qs ipc call bar unhide` still answering.
 
 - [x] Minecraft OPENED, and the "unexpected error" was the SAME lost `+x`, one tree wider
       (15/08/2026). This closes the item opened on 14/08 ("see Minecraft OPEN"). The app

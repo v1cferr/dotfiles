@@ -1,6 +1,6 @@
 {
-  // Links localhost/127.0.0.1 (Live Server, dev servers) abrem no browser do
-  // sistema (Zen) em vez do Simple Browser embutido do VS Code.
+  // localhost/127.0.0.1 links (Live Server, dev servers) open in the system's browser (Zen)
+  // instead of VS Code's built-in Simple Browser.
   "workbench.externalUriOpeners": {
     "localhost": "default",
     "127.0.0.1": "default"
@@ -8,7 +8,7 @@
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
-    "//": "Last update at 8/11/2026, 8:54:03 PM",
+    "//": "Last update at 8/15/2026, 7:24:09 PM",
     ".agent": ".agent, .claude, .cline, .codebuddy, .codex, .commandcode, .continue, .crush, .cursor, .factory, .gemini, .goose, .junie, .kilocode, .kiro, .kode, .mcpjam, .mux, .neovate, .opencode, .openhands, .pi, .pochi, .qoder, .qwen, .roo, .trae, .windsurf, .zencoder",
     ".clang-tidy": ".clang-format, .clangd, compile_commands.json",
     ".env": "*.env, .env.*, .envrc, env.d.ts",
@@ -138,7 +138,7 @@
   "github.copilot.chat.codesearch.enabled": true,
   "github.copilot.chat.agent.thinkingTool": true,
   "diffEditor.ignoreTrimWhitespace": false,
-  // Configurações para melhor suporte a Nerd Fonts e ícones
+  // Settings for better Nerd Font and icon support
   "editor.renderWhitespace": "selection",
   "terminal.integrated.fontWeight": "normal",
   "editor.fontWeight": "normal",
@@ -167,15 +167,16 @@
   "[github-actions-workflow]": {
     "editor.defaultFormatter": "redhat.vscode-yaml",
   },
-  // Nix: liga o LSP (nixd) da extensão jnoortheen.nix-ide. O default da extensão é
-  // false, então SEM esta linha não há language server nenhum — só realce de sintaxe.
-  // Fica aqui, e não no .vscode/ do repo, porque é independente de máquina e não
-  // carrega caminho: vale pra qualquer .nix que eu abrir, e o Settings Sync propaga.
-  // A config COM caminho absoluto (nixd.options/nixpkgs) mora no
-  // .vscode/settings.json do repo dotfiles, versionada ao lado do flake.
+  // Nix: it turns on the LSP (nixd) of the jnoortheen.nix-ide extension. The extension's
+  // default is false, so WITHOUT this line there is no language server at all, only syntax
+  // highlighting. It stays here, and not in the repo's .vscode/, because it is independent of
+  // machine and carries no path: it holds for any .nix I open, and Settings Sync propagates it.
+  // The config WITH a path (nixd.options/nixpkgs) lives in the dotfiles repo's
+  // .vscode/settings.json, versioned next to the flake.
   "nix.enableLanguageServer": true,
-  // nixfmt via LSP. O formatOnSave global (acima) já é true e o formatter global é o
-  // prettier, que não conhece Nix — sem este bloco, salvar .nix não formatava.
+  // nixfmt through the LSP. The global formatOnSave (above) is already true and the global
+  // formatter is prettier, which does not know Nix, so without this block saving a .nix did not
+  // format it.
   "[nix]": {
     "editor.defaultFormatter": "jnoortheen.nix-ide",
   },
@@ -294,28 +295,30 @@
       "icon": "terminal-powershell"
     }
   },
-  "terminal.integrated.defaultProfile.linux": "zsh", // Desativa o indicador do GitLens Launchpad
-  // Abas pinadas: impede fechar por teclado E mouse (não perde os pins sem querer)
+  "terminal.integrated.defaultProfile.linux": "zsh", // It turns the GitLens Launchpad indicator off
+  // Pinned tabs: it prevents closing by keyboard AND mouse (so the pins are not lost by accident)
   "workbench.editor.preventPinnedEditorClose": "keyboardAndMouse",
-  // Mantém as abas pinadas numa linha separada no topo, sempre fixas à esquerda
+  // It keeps the pinned tabs on a separate row at the top, always fixed to the left
   "workbench.editor.pinnedTabsOnSeparateRow": true,
-  // Sempre reabre as janelas/pastas da última sessão (volta de onde parou)
+  // It always reopens the last session's windows/folders (it goes back to where you stopped)
   "window.restoreWindows": "all",
-  // Zoom da UI INTEIRA (Ctrl+= / Ctrl+- / Ctrl+0), não só do editor. O default
-  // zoomPerWindow=true deixa o zoom válido só na janela atual e NÃO o persiste; com false
-  // ele volta a ser global e o VS Code grava `window.zoomLevel` AQUI — ou seja, o zoom
-  // passa a ser versionado junto com o resto. Cada passo é ~20% (zoomLevel 1 ≈ 120%).
+  // Zoom for the WHOLE UI (Ctrl+= / Ctrl+- / Ctrl+0), not just the editor. The default
+  // zoomPerWindow=true makes the zoom valid only in the current window and does NOT persist it;
+  // with false it goes back to being global and VS Code writes `window.zoomLevel` HERE, which is
+  // to say the zoom becomes versioned along with the rest. Each step is ~20% (zoomLevel 1 is
+  // about 120%).
   "window.zoomPerWindow": false,
-  // Mantém arquivos não salvos ao fechar a janela/sair (não perde trabalho)
+  // It keeps unsaved files when closing the window or exiting (so no work is lost)
   "files.hotExit": "onExitAndWindowClose",
-  // Não abre a tela de boas-vindas no startup
+  // It does not open the welcome screen at startup
   "workbench.startupEditor": "none",
   "chat.viewSessions.orientation": "stacked",
   "git.ignoreRebaseWarning": true,
-  // UI nova (painéis flutuantes/arredondados, activity+status bar compactas). Default é
-  // false e a habilitação normal é por EXPERIMENTO do MS (experiment.mode "auto"), que
-  // sorteia por máquina — era por isso que o Windows tinha e o Linux não, na MESMA versão.
-  // Explícito aqui = vale nas duas e não depende do sorteio. É `experimental`: pode sumir.
+  // The new UI (floating/rounded panels, a compact activity and status bar). The default is
+  // false and the normal way it gets enabled is through an MS EXPERIMENT (experiment.mode
+  // "auto"), which draws lots per machine, which is why Windows had it and Linux did not, on the
+  // SAME version. Explicit here = it holds on both and does not depend on the draw. It is
+  // `experimental`, so it may disappear.
   "workbench.experimental.modernUI": true,
   "gitlens.views.scm.grouped.views": {
     "commits": true,

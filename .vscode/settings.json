@@ -1,69 +1,70 @@
 {
   // ═══════════════════════════════════════════════════════════════════════════
-  // NIX IDE (jnoortheen.nix-ide) — config ESPECÍFICA DESTE REPO.
+  // NIX IDE (jnoortheen.nix-ide): the config SPECIFIC TO THIS REPO.
   //
-  // POR QUE AQUI e não no settings.json do usuário: as expressões abaixo dependem de
-  // que a raiz do workspace SEJA este flake (o `./.` resolve pra ela) e nomeiam o host
-  // `nixos-kingston`. No settings.json do usuário, que o Settings Sync propaga, isso
-  // valeria pra qualquer projeto Nix aberto — e nos outros o `getFlake` falharia.
-  // Aqui fica versionado ao lado do flake que referencia. O toggle
-  // `nix.enableLanguageServer` mora no settings.json do usuário de propósito: é
-  // independente de máquina e de projeto, e não carrega caminho nenhum.
+  // WHY HERE and not in the user's settings.json: the expressions below depend on the
+  // workspace's root BEING this flake (the `./.` resolves to it) and they name the host
+  // `nixos-kingston`. In the user's settings.json, which Settings Sync propagates, that
+  // would hold for any Nix project opened, and in the others the `getFlake` would fail.
+  // Here it stays versioned next to the flake it references. The `nix.enableLanguageServer`
+  // toggle lives in the user's settings.json on purpose: it is independent of machine and
+  // project, and it carries no path.
   //
-  // CAMINHO RELATIVO, não absoluto (corrigido em 03/08/2026): `builtins.toString ./.`
-  // resolve pra raiz do workspace — é a forma da doc oficial do nixd, e VERIFICADA
-  // aqui numa sessão LSP de verdade (initialize + didOpen + completion): digitar
-  // `services.openss` devolveu `openssh` com as duas formas. A relativa é a que dura:
-  // sobrevive a mover o repo, a clonar em outro caminho e a outro usuário. A versão
-  // anterior tinha /home/v1cferr/... escrito três vezes.
+  // A RELATIVE PATH, not an absolute one (fixed on 03/08/2026): `builtins.toString ./.`
+  // resolves to the workspace's root. It is the form in nixd's official docs, and it was
+  // VERIFIED here in a real LSP session (initialize plus didOpen plus completion): typing
+  // `services.openss` returned `openssh` with both forms. The relative one is the one that
+  // lasts: it survives moving the repo, cloning it at another path and another user. The
+  // previous version had /home/v1cferr/... written three times.
   //
-  // NÃO REPETIR DEFAULT: a extensão 0.5.13 já usa `nixd` como `nix.serverPath` e
-  // `nixfmt` como `nix.formatterPath` — o issue nix-community/vscode-nix-ide#433
-  // (nixpkgs-fmt depreciado) já foi corrigido. Redeclarar default aqui congelaria a
-  // escolha contra melhoria futura do upstream, que é o oposto de durar.
+  // DO NOT REPEAT A DEFAULT: extension 0.5.13 already uses `nixd` as `nix.serverPath` and
+  // `nixfmt` as `nix.formatterPath`, since the nix-community/vscode-nix-ide#433 issue
+  // (nixpkgs-fmt deprecated) has been fixed. Redeclaring a default here would freeze the
+  // choice against a future upstream improvement, which is the opposite of lasting.
   //
-  // BINÁRIOS POR NOME, resolvidos pelo $PATH (nixd/nixfmt vêm de home/packages.nix).
-  // NUNCA colocar caminho do /nix/store aqui: o primeiro `nix-collect-garbage`
-  // apagaria o alvo e a config quebraria em silêncio.
+  // BINARIES BY NAME, resolved through the $PATH (nixd/nixfmt come from home/packages.nix).
+  // NEVER put a /nix/store path here: the first `nix-collect-garbage` would delete the
+  // target and the config would break in silence.
   //
-  // ⚠️ DOIS ACOPLAMENTOS que não falham visivelmente — o nixd só PARA de completar e
-  // parece que a extensão piorou:
-  //   1. `nixos-kingston` é o nome do host no flake. Renomear o host quebra. Preferi o
-  //      nome explícito a um `builtins.head (attrValues …)`: o head sobreviveria ao
-  //      rename, mas escolheria host ARBITRÁRIO no dia em que houver um segundo.
-  //   2. `./.` é a RAIZ DO WORKSPACE. Abrir uma subpasta do repo como workspace (em vez
-  //      da raiz) faz o getFlake apontar pra um diretório sem flake.nix.
+  // TWO COUPLINGS that do not fail visibly: nixd just STOPS completing and it looks like
+  // the extension got worse.
+  //   1. `nixos-kingston` is the host's name in the flake. Renaming the host breaks it. I
+  //      preferred the explicit name over a `builtins.head (attrValues …)`: the head would
+  //      survive the rename, but it would pick an ARBITRARY host the day there is a second
+  //      one.
+  //   2. `./.` is the WORKSPACE'S ROOT. Opening a subfolder of the repo as the workspace
+  //      (instead of the root) makes the getFlake point at a directory with no flake.nix.
   // ═══════════════════════════════════════════════════════════════════════════
   "nix.serverSettings": {
     "nixd": {
-      // Formatter que o LSP chama no "Format Document". nixfmt é o OFICIAL desde a
-      // RFC 166 (nixfmt 1.0 saiu sob a org NixOS); nixpkgs-fmt está DEPRECIADO e o
-      // alejandra é alternativa não-oficial. Escolha alinhada com o nixpkgs.
+      // The formatter the LSP calls on "Format Document". nixfmt is the OFFICIAL one since
+      // RFC 166 (nixfmt 1.0 came out under the NixOS org); nixpkgs-fmt is DEPRECATED and
+      // alejandra is an unofficial alternative. A choice aligned with nixpkgs.
       //
-      // O `-` NÃO é decorativo: o nixd manda o documento por STDIN, e o nixfmt 1.4
-      // avisa "Bare invocation of nixfmt is deprecated. Use 'nixfmt -' for anonymous
-      // stdin." — ou seja, a forma sem `-` está a caminho de sumir. Verificado que a
-      // saída é idêntica nas duas, então usar `-` é de graça hoje e evita o dia em que
-      // o formatter simplesmente para de responder no save.
+      // The `-` is NOT decorative: nixd sends the document over STDIN, and nixfmt 1.4 warns
+      // "Bare invocation of nixfmt is deprecated. Use 'nixfmt -' for anonymous stdin.",
+      // which is to say the form without `-` is on its way out. It was verified that the
+      // output is identical either way, so using `-` is free today and avoids the day the
+      // formatter simply stops answering on save.
       "formatting": { "command": ["nixfmt", "-"] },
-      // Completa e documenta `pkgs.*` com o MESMO nixpkgs que o flake.lock fixa, não
-      // um canal qualquer da máquina. Sem isto o nixd cai num fallback e mente sobre
-      // qual pacote existe — pior que não completar.
+      // It completes and documents `pkgs.*` with the SAME nixpkgs flake.lock pins, not some
+      // channel on the machine. Without this nixd falls into a fallback and lies about
+      // which package exists, which is worse than not completing.
       "nixpkgs": {
         "expr": "import (builtins.getFlake (builtins.toString ./.)).inputs.nixpkgs { }"
       },
-      // O ganho real do nixd sobre o nil: completar OPÇÕES de NixOS e home-manager
-      // com tipo e descrição, avaliando a config de verdade em vez de adivinhar por
-      // texto. Verificado em 03/08/2026: 57 grupos de options no nixos, 38 no
-      // home-manager, e `services.openss` → `openssh` numa sessão LSP real.
+      // nixd's real gain over nil: completing NixOS and home-manager OPTIONS with their type
+      // and description, by actually evaluating the config instead of guessing from text.
+      // Verified on 03/08/2026: 57 option groups in nixos, 38 in home-manager, and
+      // `services.openss` giving `openssh` in a real LSP session.
       "options": {
         "nixos": {
           "expr": "(builtins.getFlake (builtins.toString ./.)).nixosConfigurations.nixos-kingston.options"
         },
-        // home-manager é MÓDULO do NixOS aqui, então as options dele não estão no
-        // topo da config: saem de `home-manager.users`, cujo tipo é submódulo — daí o
-        // `getSubOptions []`. Com `.options.home-manager` puro viriam só as 3 opções
-        // do wrapper (users/useGlobalPkgs/…), não as centenas de dentro.
+        // home-manager is a NixOS MODULE here, so its options are not at the top of the
+        // config: they come out of `home-manager.users`, whose type is a submodule, hence
+        // the `getSubOptions []`. With a plain `.options.home-manager` only the wrapper's 3
+        // options would come (users/useGlobalPkgs/…), not the hundreds inside.
         "home-manager": {
           "expr": "(builtins.getFlake (builtins.toString ./.)).nixosConfigurations.nixos-kingston.options.home-manager.users.type.getSubOptions []"
         }

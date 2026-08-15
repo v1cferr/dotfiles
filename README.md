@@ -84,9 +84,11 @@ docs/                    what is NOT declarable, plus the repo's diary (see docs
 `README.md` is the only doc at the root. Everything else lives in `docs/`.
 
 > **Note on language.** Rule 17 makes en-US the language of this repo, and the
-> migration is incremental: whatever gets touched is left translated. All of
-> `docs/` is translated and renamed; the `.nix` comments outside the files
-> touched so far are the debt that remains.
+> migration is done: `docs/`, the `.nix` tree, the Hyprland Lua, the Quickshell
+> QML, the scripts and the tooling files are all translated and renamed. What
+> stays in pt-BR is a short list that rule 17 names, each item justified where it
+> lives: the lockscreen, the Brazilian holiday and calendar names in the bar, and
+> a handful of runtime identifiers.
 
 ## Where does a package go?
 

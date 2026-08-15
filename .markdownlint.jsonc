@@ -1,7 +1,7 @@
 {
-  // Regras do markdownlint versionadas — para CLI e editor concordarem.
+  // The markdownlint rules, versioned so the CLI and the editor agree.
   "default": true,
-  // Prosa quebrada em ~100 colunas de propósito; tabelas passam de 80.
-  // Não faz sentido policiar comprimento de linha aqui.
+  // The prose is wrapped at ~100 columns on purpose; tables go past 80.
+  // There is no sense in policing line length here.
   "MD013": false
 }

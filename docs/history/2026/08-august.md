@@ -1,6 +1,35 @@
 # History: august 2026
 
-60 entries. Index in [README.md](../README.md).
+61 entries. Index in [README.md](../README.md).
+
+- [x] The rules left the prompt and became `/etc/claude-code/CLAUDE.md` (15/08/2026). Three
+      rules were being retyped BY HAND at the top of every prompt I wrote for Claude Code
+      (incremental commits, everything in en-US, never a `Co-Authored-By:` trailer), which is
+      rule 3's definition of manual: it works until the day I forget, and the day I forget is
+      the one that produces a repo in two languages with a single blob commit signed by a
+      coauthor I did not want. Now `system/services/claude-code.nix` generates them and EVERY
+      project on this machine is born with them. It became rule 18.
+      • WHY THE MANAGED LAYER and not `$CLAUDE_CONFIG_DIR/CLAUDE.md`, which is the path
+        everybody knows: the user file is PER ACCOUNT, so with `claude-fai` and
+        `claude-pessoal` it would be two copies of the same text drifting apart, and CC WRITES
+        to it, because the `#` shortcut appends a memory to exactly that file. Nix owning it
+        would break the shortcut and put two owners on one artifact (rule 14). The managed one
+        CC only ever reads.
+      • MEASURED IN THE BUNDLE (2.1.222) instead of trusted from the docs, because a memory
+        file that is never read fails SILENTLY and looks exactly like an assistant ignoring the
+        rules: the loader resolves "Managed" to `join(fU(), "CLAUDE.md")`, `fU()` returns
+        "/etc/claude-code" on Linux ("/Library/Application Support/ClaudeCode" on macOS), and
+        that layer is read UNCONDITIONALLY, unlike User and Project, which are gated by
+        settings. Confirmed after the build: the file is in the built system's `/etc`.
+      • THE NEAR MISS was managed-settings.json's `claudeMd` field ("instructions injected as
+        organization-managed memory. Only honored from managed/policy settings"), which does the
+        same job with no second file and LOSES ON THE DIFF: the markdown would turn into a JSON
+        one-liner with escaped newlines, unreadable in a `git diff` and out of markdownlint's
+        reach.
+      • IT COSTS CONTEXT IN EVERY SESSION on this machine, this repo's included, so the file
+        holds the rules and NOTHING else, and the reasoning stays in `docs/rules.md`. Rule 17's
+        em dash and emoji bans did NOT go along: they are a style choice for what I publish,
+        not a working agreement with the agent. Promoting them later is one line in the module.
 
 - [x] The repo is ENTIRELY in en-US, and rule 17 stopped being a promise (15/08/2026). The
       rule was written this morning with the `.nix` tree named as known debt; by the end of the

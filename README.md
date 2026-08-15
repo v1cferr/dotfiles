@@ -60,7 +60,7 @@ home/                    USER (home-manager): dotfiles + user apps
 
 pkgs/                    own derivations (outside nixpkgs), exposed in `packages.x86_64-linux`
                          so that `nix build .#nxbender` works. Vendored binaries and helper
-                         scripts live here: nxbender, azure-mcp, curseforge (+bump, +fix-java),
+                         scripts live here: nxbender, azure-mcp, curseforge (+bump, +fix-perms),
                          vscode-bump, claude-code-discord-status
 hosts/                   per-machine specifics (hostname, disks, monitors, stateVersion)
   nixos-kingston/        <- the ONLY host (NVMe KC3000, btrfs + subvolumes)
@@ -72,22 +72,21 @@ scripts/                 bash/python read by `writeShellApplication` (shellcheck
                          sync-secrets, router-sync, router-moonlight-forward, owfetch
 router/                  mirror of the OpenWrt UCI config (router-sync): visible, not declarable
 docs/                    what is NOT declarable, plus the repo's diary (see docs/README.md)
-  rules.md              the 17 rules. The NUMBERING is API: 169 comments cite "regra N"
+  rules.md               the 17 rules. The NUMBERING is API: the code cites "rule N"
   open-items.md          what is still open
-  history/<year>/<month>  what was done and WHY (including what was tried and REJECTED)
-  ideas.md              considered, not yet decided
+  history/<year>/<month>    what was done and WHY (including what was tried and REJECTED)
+  ideas.md               considered, not yet decided
   arch-legacy.md         a closed chapter + how to open the old Arch archive
-  guides/                 step by step for what Nix cannot reach (BIOS, Secure Boot, router, Windows)
-  tests/                reusable test protocols
+  guides/                step by step for what Nix cannot reach (BIOS, Secure Boot, router, Windows)
+  tests/                 reusable test protocols
 ```
 
 `README.md` is the only doc at the root. Everything else lives in `docs/`.
 
 > **Note on language.** Rule 17 makes en-US the language of this repo, and the
-> migration is incremental: whatever gets touched is left translated. The
-> filenames under `docs/` above are still the pt-BR ones because they have not
-> been renamed yet, and this listing describes the repo as it is today, not as
-> it will be.
+> migration is incremental: whatever gets touched is left translated. All of
+> `docs/` is translated and renamed; the `.nix` comments outside the files
+> touched so far are the debt that remains.
 
 ## Where does a package go?
 
@@ -150,7 +149,7 @@ in [`system/core/secrets.nix`](system/core/secrets.nix).
 nix shell nixpkgs#sops -c sops secrets/secrets.yaml   # edit secrets
 ```
 
-⚠️ Editing a secret requires a `rebuild`, otherwise `/run/secrets` is not
+Editing a secret requires a `rebuild`, otherwise `/run/secrets` is not
 refreshed.
 
 What it holds today: my password hash, the Cloudflare DDNS token and (through

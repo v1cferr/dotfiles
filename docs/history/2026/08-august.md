@@ -1,2078 +1,2262 @@
-# Histórico — agosto de 2026
+# History: august 2026
 
-59 entradas. Índice em [README.md](../README.md).
+59 entries. Index in [README.md](../README.md).
 
-- [x] OneDrive da FAI montado no Linux: CONSTRUÍDO, MEDIDO E REMOVIDO — o tenant não deixa
-      (15/08/2026) — a ideia era `~/OneDrive` como pasta normal no Dolphin, do mesmo jeito
-      que o `~/Drive` e o `~/FAI-workstation`: onedriver (FUSE, on-demand) pelo caminho
-      oficial — Microsoft Graph + login Entra ID —, já que cliente de OneDrive pra Linux a
-      Microsoft nunca publicou. O módulo ficou pronto e o login foi tentado de verdade.
-      Parou em **"Need admin approval"**, e a medição mostrou que não há o que fazer deste
-      lado. O código saiu inteiro (regra de zero legado); ressuscita com
-      `git show 4a14cd6:home/services/onedrive-mount.nix`.
-      • ⚠️ A PERMISSÃO NÃO ERA O PROBLEMA, e é aqui que a intuição erra: o
-        `Files.ReadWrite.All` é `type=User` no catálogo do Graph
-        (`AdminConsentRequired = No`), ou seja, usuário comum PODERIA consentir. Quem barra
-        é o cruzamento de duas coisas do tenant da FAI: a política é
-        `ManagePermissionGrantsForSelf.microsoft-user-default-low`, que só libera quando
-        **todas** as permissões estão classificadas como low-impact, e as classificadas lá
-        são só as CINCO de fábrica (`User.Read`, `openid`, `email`, `profile`,
-        `offline_access`). O onedriver pede `user.read files.readwrite.all offline_access`,
-        então o `.All` cai fora da lista e o consentimento de usuário morre ali.
-      • ⚠️ TROCAR O `clientId` NÃO CURA — e essa era a saída óbvia, que eu tinha escrito no
-        próprio módulo como remédio. Registrar um app DENTRO do tenant (dá: o
-        `allowedToCreateApps` está `true`) satisfaz o "apps registered in your tenant" da
-        política, mas não CLASSIFICA permissão nenhuma: a mesma tela de aprovação volta.
-        Necessário e insuficiente. Consentir por conta própria também não era opção —
-        `/me/memberOf` devolve só grupos, nenhum papel de diretório.
-      • COMO SE MEDE ISSO EM 3 COMANDOS, que é o que valeu a pena aprender:
-        `az rest --url ".../v1.0/policies/authorizationPolicy"` dá a política;
+- [x] Minecraft OPENED, and the "unexpected error" was the SAME lost `+x`, one tree wider
+      (15/08/2026). This closes the item opened on 14/08 ("see Minecraft OPEN"). The app
+      answered the Play button with the generic red banner, "An unexpected error occurred.
+      Operation failed.", whose support article lists three causes (antivirus, a full disk,
+      folder permissions on Windows) and none of them was it. The agent log named the victim:
+          [Radiuminator] Failed to launch Minecraft instance: d967e030-...
+            An error occurred trying to start process
+            '.../Documents/curseforge/minecraft/Install/minecraft-launcher'
+            with working directory '.../Install'. Permission denied.
+      `chmod +x` on what the sweep found, and the game opened with the modpack running.
+      • THE BANNER LIES BY OMISSION, and that is worth knowing before the next one: the app
+        knows the real error and loses it on the way out. Right after the `Permission denied`
+        the log shows `Invalid enum value: General` at `toApiErrorReason` (`background.js`),
+        which is it failing to map its own internal error code and falling back to the generic
+        message. Any `Operation failed.` here deserves the agent log before it deserves the
+        support article.
+      • THE LESSON OF THE PREVIOUS ENTRY REPEATED ITSELF ONE LEVEL UP: yesterday I learned
+        that "missing Java" was really a lost `+x`, and fixed `Install/java`. The name
+        `curseforge-fix-java` described the SYMPTOM I had seen, not the bug. A sweep of
+        `Install/` by ELF magic byte found **115** files still at 644: `runtime/` 68 (the JRE of
+        the VANILLA launcher, which is what actually runs the game), `natives/` 31, `launcher/`
+        8, `bin/` 6, `webcache2/` 1 and `minecraft-launcher` itself. `java/` was the ONLY
+        correct tree, 133 of 133, precisely because that was what the script covered. The
+        extractor loses the bit on EVERYTHING it unpacks.
+      • WHAT MADE IT COST A SECOND CYCLE: yesterday's fix WORKED, and working is what made it
+        look complete. `java/` came back 133 of 133 correct, so every check aimed at Java was
+        green while the game still would not open. A fix that covers the tree you looked at
+        proves nothing about the tree you did not.
+      • The package was renamed with `git mv` to `curseforge-fix-perms` and now sweeps the whole
+        `Install/` tree. It reads the 4-byte ELF magic in bash itself, with no `file` and no
+        fork per candidate, because a list of names (`*/bin/*`, `*.so`) would have to guess the
+        name of the next binary, and the tree grows on its own with every MC version and every
+        modloader. `assets/` is pruned: 8879 content-addressed Mojang blobs, never executed, and
+        the only subtree that grows without bound. That takes the sweep from ~1.0s to ~0.13s on
+        every activation.
+      • `Instances/` stays OUT on purpose, even with two 644 `.so` sitting in there
+        (`libEffekseerNativeForJava.so`, `epicfight/.../ServerCommunicationHelper.so`): those
+        are unpacked from their own jars by the MODS, at runtime, 644 on every distro, and
+        `dlopen` does not look at the exec bit. That is not a lost bit, it is how those mods
+        ship. The `.so` under `Install/` do get `+x` for the opposite reason: the original
+        tarballs ship them 755, and restoring what the extractor lost is more defensible than
+        judging one by one which ones would load anyway.
+      • Rule 17 came along for the ride: renaming the package touched `flake.nix`,
+        `home/apps/curseforge.nix`, `pkgs/curseforge.nix`, `README.md` and `pendencias.md`, and
+        each of them was left in en-US in the same commit. The `checks.pacotes` attribute kept
+        its pt-BR name because `.github/workflows/nix.yml` cites it BY NAME and that file was
+        not touched here; it goes out when that workflow is translated.
+
+- [x] The FAI OneDrive mounted on Linux: BUILT, MEASURED AND REMOVED, because the tenant does
+      not allow it (15/08/2026). The idea was `~/OneDrive` as a normal folder in Dolphin, the
+      same way as `~/Drive` and `~/FAI-workstation`: onedriver (FUSE, on-demand) through the
+      official path, Microsoft Graph plus an Entra ID login, since Microsoft never published a
+      OneDrive client for Linux. The module was finished and the login was actually attempted.
+      It stopped at **"Need admin approval"**, and the measurement showed there is nothing to be
+      done from this side. The code went out entirely (the zero-legacy rule); it can be
+      resurrected with `git show 4a14cd6:home/services/onedrive-mount.nix`.
+      • THE PERMISSION WAS NOT THE PROBLEM, and this is where intuition goes wrong:
+        `Files.ReadWrite.All` is `type=User` in the Graph catalog (`AdminConsentRequired = No`),
+        which means an ordinary user COULD consent. What blocks it is the intersection of two
+        things in the FAI tenant: the policy is
+        `ManagePermissionGrantsForSelf.microsoft-user-default-low`, which only allows it when
+        **all** the permissions are classified as low-impact, and the ones classified there are
+        only the FIVE factory ones (`User.Read`, `openid`, `email`, `profile`,
+        `offline_access`). onedriver asks for `user.read files.readwrite.all offline_access`, so
+        the `.All` falls outside the list and user consent dies right there.
+      • CHANGING THE `clientId` DOES NOT CURE IT, and that was the obvious way out, which I
+        had written in the module itself as the remedy. Registering an app INSIDE the tenant
+        (possible: `allowedToCreateApps` is `true`) satisfies the policy's "apps registered in
+        your tenant", but it CLASSIFIES no permission, so the same approval screen comes back.
+        Necessary and insufficient. Consenting on my own was not an option either, since
+        `/me/memberOf` returns only groups, no directory role.
+      • HOW TO MEASURE THIS IN 3 COMMANDS, which is what was worth learning:
+        `az rest --url ".../v1.0/policies/authorizationPolicy"` gives the policy;
         `az rest --url ".../servicePrincipals(appId='00000003-0000-0000-c000-000000000000')/delegatedPermissionClassifications"`
-        dá o que é low-impact; e `onedriver -a -n <mnt>` imprime a URL de auth com o
-        `scope=` exato — ler o scope da URL, e não do comentário do código, foi o que fechou
-        a conta.
-      • O QUE DESTRAVARIA, e as duas passam pelo TI: admin consent no app, ou classificar a
-        permissão como low-impact. `Files.ReadWrite` (só o drive do usuário) seria pedido
-        bem mais fácil de aprovar que o `.All`, mas exigiria patch no onedriver, que enterra
-        o scope no binário. Sem acesso ao TI, nenhuma das duas é minha pra puxar.
-      • POR QUE REMOVER EM VEZ DE DEIXAR DE STANDBY: módulo não importado NUNCA É AVALIADO —
-        não entra em `nix eval`, nem no `checks`, nem no rebuild. Apodreceria em silêncio
-        (pacote sumindo do nixpkgs, opção do home-manager mudando de nome) e daria a
-        sensação falsa de "está pronto, é só ligar". Ficou 4 dias assim, órfão desde o
-        `6600ad0`, sem ninguém notar. E não há dor operacional segurando: o OneDrive pela
-        web funciona.
-      • A DECISÃO DE MOUNT (e não sync) segue registrada aqui porque ela sobrevive ao
-        módulo: é conta INSTITUCIONAL, e sync PROPAGA delete — um apagão local viraria
-        apagão no OneDrive da FAI, que não é meu pra recuperar. Se um dia isto voltar, volta
-        como mount.
+        gives what is low-impact; and `onedriver -a -n <mnt>` prints the auth URL with the exact
+        `scope=`. Reading the scope from the URL, and not from a code comment, is what closed
+        the case.
+      • WHAT WOULD UNBLOCK IT, and both go through IT: admin consent on the app, or classifying
+        the permission as low-impact. `Files.ReadWrite` (the user's drive only) would be a far
+        easier ask to approve than the `.All`, but it would require patching onedriver, which
+        buries the scope in the binary. With no access to IT, neither one is mine to pull.
+      • WHY REMOVE IT INSTEAD OF LEAVING IT ON STANDBY: a module that is not imported is NEVER
+        EVALUATED, so it does not enter `nix eval`, nor `checks`, nor the rebuild. It would rot
+        silently (a package disappearing from nixpkgs, a home-manager option changing name) and
+        it would give the false sense of "it is ready, just turn it on". It sat like that for 4
+        days, orphaned since `6600ad0`, with nobody noticing. And there is no operational pain
+        holding it: OneDrive through the web works.
+      • THE MOUNT (and not sync) DECISION stays recorded here because it outlives the module: it
+        is an INSTITUTIONAL account, and sync PROPAGATES a delete, so a local wipe would become
+        a wipe on the FAI OneDrive, which is not mine to recover. If this ever comes back, it
+        comes back as a mount.
 
-- [x] CurseForge substitui o PrismLauncher — e "falta Java" era PERMISSÃO (14-15/08/2026) —
-      o Prism importa um `.zip` de modpack, mas quem mantém biblioteca e ATUALIZA o pack é o
-      app do CurseForge, que é o uso real aqui. Ele não está no nixpkgs (unfree,
-      binário-only), então o repo reempacota o AppImage oficial em `pkgs/curseforge.nix`
-      (`home/apps/curseforge.nix` do lado do usuário) — mesmo padrão de vendor binário do
+- [x] CurseForge replaces PrismLauncher, and "missing Java" was PERMISSIONS (14-15/08/2026).
+      Prism imports a modpack `.zip`, but what keeps the library and UPDATES the pack is the
+      CurseForge app, which is the real use here. It is not in nixpkgs (unfree, binary-only), so
+      the repo repackages the official AppImage in `pkgs/curseforge.nix`
+      (`home/apps/curseforge.nix` on the user side), the same vendored-binary pattern as
       claude-desktop.
-      • ⚠️⚠️ A CAUSA RAIZ, e ela não tem NADA de NixOS: o app baixa a JRE dele
-        (`OpenJDK21U-jre_x64_linux_hotspot_21.0.4_7.tar.gz`) e extrai com um extrator .NET
-        que NÃO PRESERVA PERMISSÃO. Os binários saem `rw-r--r--`, o primeiro `java -version`
-        morre em `Permission denied` (`System.ComponentModel.Win32Exception`, no log do
-        agent) e a interface anuncia **"Java Runtime Environment is missing or out of
-        date"** — uma mensagem que aponta pro lado errado. Em distro nenhuma esse Java
-        abriria; o bug é do CurseForge.
-      • ⚠️ E ELE NÃO SE CURA SOZINHO: ao tentar rebaixar a JRE pra consertar, a extração
-        falha em `The file '…/Jre_21/NOTICE' already exists.` — o extrator também não
-        sobrescreve. Ou seja, o botão "Retry" da interface roda pra sempre sem sair do
-        lugar. Foram DOIS bugs em cascata, e o segundo é o que transforma o primeiro em beco
-        sem saída.
-      • O CONSERTO É `curseforge-fix-java` (pkgs/), que devolve o `+x`. Roda na activation do
-        home-manager a cada rebuild e também na mão, porque o download que quebra pode
-        acontecer no MEIO de uma sessão — aí é rodar o comando e reabrir o app. Idempotente
-        e silencioso quando não há o que consertar. No diretório real ele corrigiu **88**
-        arquivos, bem mais que o `chmod` manual óbvio em `bin/`: havia `.so` em
-        subdiretórios, incluindo o `lib/server/libjvm.so`.
-      • ⚠️⚠️ O ERRO QUE CUSTOU UM CICLO INTEIRO, e a lição vale mais que o conserto: eu li
-        "No Java executable found" e conclui **"então falta Java"**. Declarei três Temurin
-        JRE (8/17/21) no FHS, com `/usr/lib/jvm` e caminho estável — solução bonita para um
-        problema que não existia. Não mudou NADA, porque o app só consulta a JRE que ele
-        gerencia: com os três instalados, o log do agent seguiu citando **18× o java dele e
-        ZERO vez o nosso**. Os JREs saíram no mesmo commit em que entraram (regra 16). A
-        mensagem de erro de um app terceiro é uma HIPÓTESE, não um diagnóstico — e a
-        diferença entre "falta Java" e "o Java que existe não executa" é a tarde inteira.
-      • O que me empurrou pro erro foi a doc de suporte da Overwolf ("o app instala Java
-        automaticamente") somada às strings `adoptium`/`java-runtime-*` no asar. As duas
-        eram VERDADE e mesmo assim me levaram pro lugar errado: ele instala mesmo — só que
-        quebrado. Ler o log do AGENT (`~/.config/CurseForge/agent/logs/`, JSON, separado do
-        log do Electron) foi o que resolveu, e devia ter sido o primeiro passo.
-      • A CONTA FINAL: `curseforge` +340,2 MiB contra `prismlauncher` −17,6 MiB e `openjdk`
-        (8, 17, 21 e 25, que o wrapper do Prism embrulhava) **−1,8 GiB** — total **27,2 →
-        25,7 GiB**. O sistema encolheu 1,5 GiB trocando launcher nativo por Electron, porque
-        aqui ninguém declara Java: quem provê é o app.
-      • ⚠️ AppImage e NÃO o `.deb`, e o motivo é o mesmo Java, pelo outro lado. As duas
-        fontes existem e são a mesma release, mas o que importa aqui é binário que o app
-        BAIXA em runtime (a JRE, o instalador do Forge, o Minecraft) — e nada disso passa
-        por `autoPatchelfHook`, que só alcança o que está na store. O `programs.nix-ld` deste
-        sistema cobre o LOADER (o `/lib64/ld-linux` daqui aponta pra ele, e foi por isso que
-        a JRE do app rodou no host depois do `+x`), mas não as bibliotecas de cada um. O
-        `appimageTools` embrulha em `buildFHSEnv`, onde o loader existe e o
-        `container-init.cc` ainda põe `/run/opengl-driver/lib` no `ld.so.conf` — o Minecraft
-        lançado como filho herda o FHS **e** o driver da Arc B580. É o FHS que faz o pacote
-        funcionar, não o patchelf.
-      • ⚠️ O `.zip` QUE OS TUTORIAIS MANDAM BAIXAR ESTÁ MORTO: `curseforge-latest-linux.zip`
-        tem `last-modified` de **10/08/2025** e carrega a 1.285.2. O `.AppImage` e o `.deb`
-        na mesma pasta são de **05/08/2026** e trazem a 1.316.0-37372 — confirmado pelo
-        próprio updater do app no primeiro boot ("latest version: 1.316.0-37372"). Seguir o
-        tutorial popular instalaria um app um ano atrasado.
-      • ⚠️ O LOGIN DEPENDE DE UMA ASSOCIAÇÃO QUE O APP NÃO CONSEGUE FAZER SOZINHO. Ele
-        tenta se registrar como handler de `cfauth://` em runtime (Electron
-        `setAsDefaultProtocolClient`), e isso NUNCA vai funcionar aqui: o
-        `~/.config/mimeapps.list` é gerenciado pelo home-manager e aponta pra store, que é
-        read-only (regra 14). O log diz na largada `Failed subscribing app protocol.` e
-        `Failed to register login scheme 'cfauth'`. Como `cfauth://` é o CALLBACK do login
-        (o app abre o browser e espera o redirect), sem handler o login volta pro nada — daí
-        os três schemes declarados em `xdg.mimeApps` no módulo do app.
-      • ⚠️ URL-PONTEIRO, o mesmo furo do `/latest/` do VS Code: a Overwolf só publica
-        `curseforge-latest-linux.AppImage` (testados `-1.316.0-`, `~37372`, `latest.yml` →
-        404). O hash travado mantém o build reprodutível, mas apodrece na próxima release
-        deles. Remédio = `pkgs/curseforge-bump.nix`, irmão do `vscode-bump`, no alias
-        `update`. Com um agravante: lá bastava trocar o número, aqui o HASH precisa ser
-        RECALCULADO. Pra não baixar 139 MiB a cada `update`, quem responde "mudou?" é um
-        range request de 256 KiB no `.deb` (o `control` fica nos primeiros KiB); o AppImage
-        só é baixado quando a resposta é sim.
-      • Por isso o `curseforge` é a ÚNICA exceção do `checks.pacotes` (flake.nix): deixá-lo
-        lá pintaria o CI de vermelho a cada release da Overwolf, por algo que não está neste
-        repo. O `curseforge-bump` ENTRA no check, porque o shellcheck dele é estável.
-      • DUAS COISAS QUE EU TINHA ESCRITO ERRADO E A MEDIÇÃO DERRUBOU: (1) que o
-        `--no-sandbox` era necessário — rodando `bin/curseforge`, que não passa flag
-        nenhuma, o app abre e carrega a biblioteca normalmente, porque o bwrap do
-        `buildFHSEnv` já dá o namespace que o Chromium quer; a flag ficou só por vir do
-        `.desktop` do upstream. (2) que o GNU tar autodetectaria a compressão num pipe — ele
-        só autodetecta quando pode dar seek, então `ar p … | tar -xO` morre em "Archive is
-        compressed. Use -J option". O bump passa por arquivo, o que de quebra o deixa
-        sobreviver ao dia em que o `.xz` virar `.zst`.
+      • THE ROOT CAUSE, and it has NOTHING to do with NixOS: the app downloads its own JRE
+        (`OpenJDK21U-jre_x64_linux_hotspot_21.0.4_7.tar.gz`) and unpacks it with a .NET
+        extractor that does NOT PRESERVE PERMISSIONS. The binaries come out `rw-r--r--`, the
+        first `java -version` dies with `Permission denied`
+        (`System.ComponentModel.Win32Exception`, in the agent log) and the interface announces
+        **"Java Runtime Environment is missing or out of date"**, a message that points the
+        wrong way. On no distro would that Java open; the bug is CurseForge's.
+      • AND IT DOES NOT HEAL ITSELF: when trying to reinstall the JRE to fix it, the
+        extraction fails at `The file '…/Jre_21/NOTICE' already exists.`, because the extractor
+        does not overwrite either. Which means the interface's "Retry" button runs forever
+        without moving. There were TWO bugs in a cascade, and the second is what turns the first
+        into a dead end.
+      • THE FIX IS `curseforge-fix-java` (pkgs/), which gives the `+x` back. It runs in the
+        home-manager activation on every rebuild and also by hand, because the download that
+        breaks can happen IN THE MIDDLE of a session, and then it is a matter of running the
+        command and reopening the app. It is idempotent and silent when there is nothing to fix.
+        In the real directory it fixed **88** files, far more than the obvious manual `chmod` in
+        `bin/`: there were `.so` files in subdirectories, including `lib/server/libjvm.so`.
+      • THE MISTAKE THAT COST A WHOLE CYCLE, and the lesson is worth more than the fix: I
+        read "No Java executable found" and concluded **"so Java is missing"**. I declared three
+        Temurin JREs (8/17/21) in the FHS, with `/usr/lib/jvm` and a stable path, a pretty
+        solution for a problem that did not exist. It changed NOTHING, because the app only
+        consults the JRE it manages: with all three installed, the agent log went on citing
+        **ITS java 18 times and ours ZERO times**. The JREs went out in the same commit they
+        came in (rule 16). A third party app's error message is a HYPOTHESIS, not a diagnosis,
+        and the difference between "Java is missing" and "the Java that exists does not execute"
+        is a whole afternoon.
+      • What pushed me into the mistake was Overwolf's support doc ("the app installs Java
+        automatically") plus the `adoptium`/`java-runtime-*` strings in the asar. Both were TRUE
+        and they still took me to the wrong place: it does install it, just broken. Reading the
+        AGENT log (`~/.config/CurseForge/agent/logs/`, JSON, separate from the Electron log) is
+        what solved it, and it should have been the first step.
+      • THE FINAL TALLY: `curseforge` +340.2 MiB against `prismlauncher` -17.6 MiB and `openjdk`
+        (8, 17, 21 and 25, which the Prism wrapper bundled) **-1.8 GiB**, for a total of
+        **27.2 to 25.7 GiB**. The system shrank by 1.5 GiB swapping a native launcher for an
+        Electron one, because nobody declares Java here: the provider is the app.
+      • AppImage and NOT the `.deb`, and the reason is the same Java, from the other side.
+        Both sources exist and are the same release, but what matters here is a binary the app
+        DOWNLOADS at runtime (the JRE, the Forge installer, Minecraft), and none of that goes
+        through `autoPatchelfHook`, which only reaches what is in the store. This system's
+        `programs.nix-ld` covers the LOADER (the `/lib64/ld-linux` here points at it, and that
+        is why the app's JRE ran on the host after the `+x`), but not each one's libraries.
+        `appimageTools` wraps it in `buildFHSEnv`, where the loader exists and
+        `container-init.cc` also puts `/run/opengl-driver/lib` in the `ld.so.conf`, so Minecraft
+        launched as a child inherits the FHS **and** the Arc B580 driver. It is the FHS that
+        makes the package work, not patchelf.
+      • THE `.zip` THE TUTORIALS TELL YOU TO DOWNLOAD IS DEAD:
+        `curseforge-latest-linux.zip` has a `last-modified` of **10/08/2025** and carries
+        1.285.2. The `.AppImage` and the `.deb` in the same folder are from **05/08/2026** and
+        bring 1.316.0-37372, confirmed by the app's own updater on the first boot ("latest
+        version: 1.316.0-37372"). Following the popular tutorial would install an app a year
+        behind.
+      • THE LOGIN DEPENDS ON AN ASSOCIATION THE APP CANNOT MAKE ON ITS OWN. It tries to
+        register as the handler for `cfauth://` at runtime (Electron
+        `setAsDefaultProtocolClient`), and that will NEVER work here:
+        `~/.config/mimeapps.list` is managed by home-manager and points into the store, which is
+        read-only (rule 14). The log says right at startup `Failed subscribing app protocol.`
+        and `Failed to register login scheme 'cfauth'`. Since `cfauth://` is the login CALLBACK
+        (the app opens the browser and waits for the redirect), with no handler the login comes
+        back to nothing, hence the three schemes declared in `xdg.mimeApps` in the app's module.
+      • A POINTER URL, the same hole as VS Code's `/latest/`: Overwolf only publishes
+        `curseforge-latest-linux.AppImage` (tested `-1.316.0-`, `~37372` and `latest.yml`, all
+        404). The pinned hash keeps the build reproducible, but it rots on their next release.
+        The remedy is `pkgs/curseforge-bump.nix`, a sibling of `vscode-bump`, on the `update`
+        alias. With one aggravating factor: there it was enough to change the number, here the
+        HASH has to be RECOMPUTED. To avoid downloading 139 MiB on every `update`, what answers
+        "did it change?" is a 256 KiB range request on the `.deb` (the `control` sits in the
+        first few KiB); the AppImage is only downloaded when the answer is yes.
+      • That is why `curseforge` is the ONLY exception in `checks.pacotes` (flake.nix): leaving
+        it there would paint the CI red on every Overwolf release, for something that is not in
+        this repo. `curseforge-bump` DOES enter the check, because its shellcheck is stable.
+      • TWO THINGS I HAD WRITTEN WRONG AND MEASUREMENT KNOCKED DOWN: (1) that `--no-sandbox` was
+        necessary, when running `bin/curseforge`, which passes no flags at all, the app opens
+        and loads the library normally, because the `buildFHSEnv` bwrap already gives Chromium
+        the namespace it wants; the flag stayed only because it came from the upstream
+        `.desktop`. (2) that GNU tar would autodetect the compression in a pipe, when it only
+        autodetects if it can seek, so `ar p … | tar -xO` dies with "Archive is compressed. Use
+        -J option". The bump goes through a file, which as a bonus makes it survive the day
+        `.xz` becomes `.zst`.
 
-- [x] Hover no pill da VPN mostra qualidade do túnel (14/08/2026) — o pill respondia só
-      "tem túnel?"; faltava "e está bom?", que é a pergunta de quem está com SSH ou chamada
-      dependendo dele. Agora o HOVER abre `bar/VpnStatsPopover.qml` (latência, jitter,
-      perda, gráfico da série, tráfego da sessão, tempo no ar) e o CLIQUE segue abrindo o
-      `VpnPopover` de sempre, com conectar/desconectar. Informação no hover, AÇÃO no clique.
-      • DIVISÃO DE TRABALHO: o `vpn stats-json` (novo) entrega o ESTADO — iface, IP, MTU,
-        tempo no ar, bytes da sessão e QUAL host serve de alvo de sonda — e a barra MEDE a
-        latência com ping contínuo. Não virou campo do `status-json` porque aquele é o
-        polling de 5s que pinta o pill e tem de ser barato; este só roda com túnel de pé.
-        Descobrir alvo (varrer rota, testar candidato, memorizar) é trabalho de shell;
-        observar o tempo todo é trabalho de quem fica aberto.
-      • ⚠️ O ALVO ÓBVIO DA SONDA NÃO SERVE: o peer do ppp da FAI é `192.0.2.1`, que é
-        TEST-NET-1 — endereço de fachada do SonicWall — e ignora ICMP (MEDIDO: 100% de
-        perda). Quem responde é `200.136.209.236` (fai.ufscar.br): IP público, mas a rota
-        `200.136.209.128/25` sai pelo ppp0, então o ping mede o TÚNEL. Baseline medida a 1
-        pacote/s: média ~34ms, mdev 0,8ms, 0% de perda — é dela que saem os cortes do
-        veredito (estável / lenta / instável / ruim).
-      • O `ping -I <iface>` não é detalhe de estilo: prende o pacote ao túnel
-        (SO_BINDTODEVICE). Sem ele, um alvo que deixasse de ser roteado pela VPN sairia pela
-        internet de casa e o painel exibiria uma latência ÓTIMA que não é a do túnel. Número
-        errado é pior que número ausente — com o bind, esse caso vira "sem sonda". PROVA
-        medida: o mesmo alvo preso ao `enp7s0` dá 100% de perda, então o número exibido não
-        tem como vir de fora do túnel.
-      • ⚠️⚠️ A 1ª VERSÃO MEDIA POR RAJADA E OS NÚMEROS ERAM BONITOS E FALSOS — o painel já
-        estava pronto e aprovado ("está tudo certo") quando a pergunta "esses números são
-        confiáveis?" derrubou metade dele. Ele pingava 3 pacotes a cada 20s. MEDIDO lado a
-        lado na mesma hora: a rajada dava mdev **0,4ms**; uma janela de 20s dava mdev
-        **3,3ms e pico de 54,7ms**. Ou seja, observava 0,6s de cada 20s (3% do tempo), então
-        engasgo de 2s era invisível em 97% dos casos — e a perda, com 3 pacotes, tinha
-        RESOLUÇÃO DE 33%: 1-3% de perda real aparecia como "0%". Só a média sobreviveu à
-        auditoria (33,6 contra 34,4 da referência de 40 pacotes). Lição: amostra curta não
-        responde pergunta sobre ESTABILIDADE, e um painel que exibe jitter de meio segundo
-        com cara de vigilância mente por omissão de escala.
-      • A CORREÇÃO foi virar sonda CONTÍNUA de 1 pacote/s (componente VpnProbe, no
-        `Bar.qml`) com estatística sobre a janela dos últimos 60 pacotes: jitter de verdade,
-        perda com resolução de 1,7% e uma barra por segundo no gráfico. Custo medido: 84 B/s,
-        e 30 pacotes a 1/s deram 0% de perda — o alvo não faz rate-limit nessa cadência.
-        O `-O` do ping é OBRIGATÓRIO: sem ele, pacote perdido é SILÊNCIO e a série ficaria só
-        com os que voltaram — perda 0% eterna, o mesmo tipo de mentira de novo.
-      • O `ping` é line-buffered mesmo escrevendo em pipe (verificado: uma linha por segundo,
-        sem `stdbuf`), que é o que torna a leitura do fluxo viável.
-      • WATCHDOG, porque sonda morta é a pior falha possível AQUI: com o `-O` o ping fala a
-        cada segundo mesmo quando o alvo some, então SILÊNCIO não é perda de pacote — é o
-        processo quebrado. Sem watchdog o painel congelaria exibindo a última janela boa,
-        com cara de "estável", que é a mentira que ele existe pra não contar. 5s sem linha =
-        marca o buraco na série e ressuscita o ping. TESTADO matando a sonda: voltou em 10s.
-      • O TÚNEL CAIU E VOLTOU no meio do trabalho, e ensinou duas coisas. (1) O `ping -I` NÃO
-        morre no reconnect: o ppp0 volta a se chamar ppp0 e o bind re-resolve — verificado
-        pelo `wchar` do processo, que seguiu crescendo ~1 linha/s. (2) Justamente por isso a
-        série emendaria dois túneis diferentes como se fossem um; o IP entrou na chave da
-        sonda (mudou de 192.168.50.2 p/ .3) pra forçar série nova.
-      • ⚠️ Pra VALIDAR mudança de QML aqui, `qs-restart`: o hot-reload manteve VIVO um Timer
-        da árvore antiga (um `console.log` de depuração continuou saindo depois de o arquivo
-        já estar limpo e de o log dizer "Configuration Loaded"). O quickshell.nix já avisa
-        que o hot-reload não reaplica tudo — vale pra objeto com Timer/Process, não só pra
-        delegate de Repeater.
-      • O GRÁFICO existe porque "está estável?" é pergunta sobre o TEMPO: um "34 ms" sozinho
-        não distingue túnel liso de túnel que oscilou 30→900ms no último minuto. A escala
-        começa em ZERO (teto = 60ms, ou 15% acima do pico) — auto-escalar pelo mínimo faria
-        0,5ms de variação virar serrote dramático, o oposto da leitura honesta.
-      • Duas pegadinhas de QML, as duas de sintoma mudo: `readonly property real top` no
-        delegate morre com "Cannot override FINAL property" (o nome colide com herança do
-        Item) — virou `scaleTop`; e INLINE COMPONENT NÃO ENXERGA O `id` DO DOCUMENTO que o
-        declara, então o `root.vpnStats[...]` dentro do VpnProbe estourava em ReferenceError,
-        a instância não nascia, e quem reclamava era o POPOVER — `undefined` a três arquivos
-        de distância da causa. O dado passou a CHEGAR por propriedade.
-      • Alvo memorizado em `$XDG_RUNTIME_DIR/vpn-probe-<id>`, com chave iface+IP: túnel novo
-        = sonda nova, e "não achei" é reavaliado a cada 5 min (senão um alvo fora do ar no
-        instante da conexão condenaria o painel a "sem sonda" até desconectar).
-      • O painel nasceu com 300px e o rodapé cortava o IP da sonda ("200.136.209…"). Foi p/
-        360 com rodapé em duas linhas: painel de diagnóstico que elide dado é contraditório —
-        quem abre está justamente atrás do detalhe.
+- [x] Hovering the VPN pill shows the tunnel's quality (14/08/2026). The pill only answered "is
+      there a tunnel?"; what was missing was "and is it any good?", which is the question of
+      whoever has SSH or a call depending on it. Now HOVER opens `bar/VpnStatsPopover.qml`
+      (latency, jitter, loss, a graph of the series, session traffic, uptime) and CLICK still
+      opens the usual `VpnPopover`, with connect/disconnect. Information on hover, ACTION on
+      click.
+      • DIVISION OF LABOR: `vpn stats-json` (new) delivers the STATE (iface, IP, MTU, uptime,
+        session bytes and WHICH host serves as the probe target) and the bar MEASURES the
+        latency with a continuous ping. It did not become a field of `status-json` because that
+        one is the 5s polling that paints the pill and has to be cheap; this one only runs with
+        a tunnel up. Discovering a target (sweeping routes, testing candidates, memorizing) is
+        shell work; observing all the time is the work of whoever stays open.
+      • THE OBVIOUS PROBE TARGET DOES NOT WORK: the FAI ppp peer is `192.0.2.1`, which is
+        TEST-NET-1, a facade address of the SonicWall, and it ignores ICMP (MEASURED: 100%
+        loss). What answers is `200.136.209.236` (fai.ufscar.br): a public IP, but the
+        `200.136.209.128/25` route goes out through ppp0, so the ping measures the TUNNEL. A
+        baseline measured at 1 packet/s: ~34ms average, 0.8ms mdev, 0% loss, and that is where
+        the verdict's cutoffs come from (stable / slow / unstable / bad).
+      • The `ping -I <iface>` is not a style detail: it pins the packet to the tunnel
+        (SO_BINDTODEVICE). Without it, a target that stopped being routed through the VPN would
+        go out over the home internet and the panel would display a GREAT latency that is not
+        the tunnel's. A wrong number is worse than a missing number, and with the bind that case
+        becomes "no probe". MEASURED PROOF: the same target pinned to `enp7s0` gives 100% loss,
+        so the displayed number cannot come from outside the tunnel.
+      • THE 1st VERSION MEASURED IN BURSTS AND THE NUMBERS WERE PRETTY AND FALSE. The panel
+        was already finished and approved ("it is all correct") when the question "are these
+        numbers reliable?" knocked down half of it. It pinged 3 packets every 20s. MEASURED side
+        by side at the same hour: the burst gave an mdev of **0.4ms**; a 20s window gave an mdev
+        of **3.3ms with a peak of 54.7ms**. Which means it observed 0.6s out of every 20s (3% of
+        the time), so a 2s hiccup was invisible in 97% of cases, and the loss, with 3 packets,
+        had a RESOLUTION OF 33%: 1 to 3% of real loss showed up as "0%". Only the average
+        survived the audit (33.6 against the 34.4 of the 40 packet reference). The lesson: a
+        short sample does not answer a question about STABILITY, and a panel displaying half a
+        second of jitter with a monitoring look lies by omitting the scale.
+      • THE FIX was turning it into a CONTINUOUS probe at 1 packet/s (the VpnProbe component, in
+        `Bar.qml`) with statistics over a window of the last 60 packets: real jitter, loss with
+        1.7% resolution and one bar per second in the graph. Measured cost: 84 B/s, and 30
+        packets at 1/s gave 0% loss, so the target does not rate-limit at that cadence.
+        The ping's `-O` is MANDATORY: without it, a lost packet is SILENCE and the series would
+        contain only the ones that came back, an eternal 0% loss, the same kind of lie again.
+      • `ping` is line-buffered even when writing to a pipe (verified: one line per second, with
+        no `stdbuf`), which is what makes reading the stream viable.
+      • A WATCHDOG, because a dead probe is the worst possible failure HERE: with `-O` the ping
+        speaks every second even when the target disappears, so SILENCE is not packet loss, it
+        is the process broken. Without a watchdog the panel would freeze displaying the last
+        good window, looking "stable", which is exactly the lie it exists not to tell. 5s
+        without a line means marking the hole in the series and resurrecting the ping. TESTED by
+        killing the probe: it came back in 10s.
+      • THE TUNNEL DROPPED AND CAME BACK in the middle of the work, and it taught two things.
+        (1) The `ping -I` does NOT die on the reconnect: ppp0 is called ppp0 again and the bind
+        re-resolves, verified through the process's `wchar`, which kept growing at ~1 line/s.
+        (2) Precisely because of that, the series would splice two different tunnels as if they
+        were one; the IP entered the probe's key (it changed from 192.168.50.2 to .3) to force a
+        new series.
+      • To VALIDATE a QML change here, use `qs-restart`: the hot-reload kept a Timer from the
+        old tree ALIVE (a debugging `console.log` kept coming out after the file was already
+        clean and the log said "Configuration Loaded"). quickshell.nix already warns that the
+        hot-reload does not reapply everything, and that holds for an object with a
+        Timer/Process, not only for a Repeater delegate.
+      • THE GRAPH exists because "is it stable?" is a question about TIME: a lone "34 ms" does
+        not distinguish a smooth tunnel from one that swung 30 to 900ms in the last minute. The
+        scale starts at ZERO (the ceiling is 60ms, or 15% above the peak), because auto-scaling
+        from the minimum would turn 0.5ms of variation into a dramatic sawtooth, the opposite of
+        an honest reading.
+      • Two QML traps, both with a silent symptom: a `readonly property real top` in the
+        delegate dies with "Cannot override FINAL property" (the name collides with the Item
+        inheritance) and became `scaleTop`; and an INLINE COMPONENT DOES NOT SEE THE `id` OF THE
+        DOCUMENT that declares it, so the `root.vpnStats[...]` inside VpnProbe blew up with a
+        ReferenceError, the instance was never born, and what complained was the POPOVER, an
+        `undefined` three files away from the cause. The data started ARRIVING through a
+        property.
+      • The target is memorized in `$XDG_RUNTIME_DIR/vpn-probe-<id>`, keyed by iface+IP: a new
+        tunnel means a new probe, and "not found" is reevaluated every 5 min (otherwise a target
+        that was down at the instant of connection would condemn the panel to "no probe" until
+        disconnecting).
+      • The panel was born at 300px and the footer cut off the probe's IP ("200.136.209…"). It
+        went to 360 with a two-line footer: a diagnostic panel that elides data is
+        self-contradictory, because whoever opens it is precisely after the detail.
 
-- [x] Azure MCP Server, e SÓ na conta da FAI (14/08/2026) — o pedido era mexer no
-      portal.azure.com por comando em vez de clicar na interface. Virou `pkgs/azure-mcp.nix`
-      (o binário `azmcp`) + um campo `mcp` no `profiles` do `home/shell/claude-code.nix`.
-      • POR QUE EMPACOTAR em vez de seguir a receita da Microsoft: a doc manda
-        `npx -y @azure/mcp@latest server start`, que a regra 13 proíbe duas vezes — "latest"
-        implícito E fetch sem hash A CADA START do servidor, ou seja o MCP podia trocar de
-        versão no meio de uma sessão. O `@azure/mcp` do npm é só um shim JS que escolhe, no
-        postinstall, um dos seis `@azure/mcp-<os>-<arch>`; quem tem o server é o pacote da
-        plataforma, e dentro dele vem UM binário .NET self-contained de 150 MB. Então
-        buscamos o tarball da plataforma direto e o `nodejs` sai inteiro do closure.
-      • ⚠️ O ACHADO QUE CUSTOU AS DUAS PRIMEIRAS TENTATIVAS — `runtimeDependencies` (RPATH)
-        NÃO resolve as libs deste binário, e o erro não diz por quê. Sem nada:
-        `Couldn't find a valid ICU package`. Com icu+openssl no RPATH: ICU passa e vem
-        `No usable version of libssl was found` + core dump. O motivo é que ele é
-        single-file e DESEMPACOTA as libs nativas do .NET em `~/.net/azmcp/<hash>/` no
-        primeiro start (o `libpal_azure_c_shared_openssl3.so` está lá) — é esse .so
-        extraído, fora da store e sem RUNPATH nosso, quem faz o dlopen. LD_LIBRARY_PATH via
-        `makeBinaryWrapper` é herdado pelas libs extraídas e resolve; e `makeBinaryWrapper`
-        (execv em C) e não wrapper de shell, porque o .NET acha o `Instrumentation/Resources`
-        por /proc/self/exe, que só fica certo DEPOIS do exec.
-      • O `azure-cli` NÃO É NECESSÁRIO PRO LOGIN, e isso vale registrar mesmo tendo ele
-        entrado depois por outro motivo (o item seguinte): a doc da Microsoft e a própria
-        mensagem de erro do azmcp mandam instalá-lo, mas a cadeia do DefaultAzureCredential
-        termina em DeviceCodeCredential — o "abra login.microsoft.com/device e digite
-        ABC123" — que funciona sozinho. Ele só estava falhando com `Persistence check
-        failed`, que NÃO é credencial: é o cache de token do MSAL tentando falar com o
-        Secret Service. Faltavam `libsecret` e `dbus`, que esta máquina já tem pelo keyring.
-        Com as duas na LD_LIBRARY_PATH o device code saiu na hora (verificado: código
-        emitido, sem login). O `msalruntime`/libX11 do log de erro são o broker WAM, que só
-        existe no Windows — ignorar.
-      • ⚠️⚠️ E AÍ VEIO A CORREÇÃO QUE DERRUBOU A PREMISSA — o Azure MCP Server NÃO COBRE
-        APP REGISTRATION, que era o motivo REAL de tudo isto ("não quero mais mexer naquela
-        interface"). Eu tinha entregado o MCP sem checar se ele fazia a única coisa pedida.
-        MEDIDO no `tools/list`: nas 68 tools não existe App Registration, service principal
-        nem Graph; o `role` é RBAC de RECURSO do Azure, não app do Entra; e o
-        `extension_cli_generate` só GERA o texto do comando `az`, nunca executa. A Microsoft
-        também não publica MCP de Entra — o `microsoft/mcp` tem só Azure, Fabric e um
-        template. O `entra-app-registration` do `microsoft/azure-skills`, que parecia ser a
-        peça que faltava, é uma SKILL (markdown de orientação) e não uma tool: o que ela
-        ensina o agente a fazer é rodar `az ad app create/list/show/permission add/…`.
-        Ou seja, quem faz o trabalho é o `azure-cli`. Ele entrou (home/packages.nix), e o
-        custo é 0,95 GiB MARGINAIS e não os 1,19 do closure — 0,24 já estava no sistema.
-        LIÇÃO, e é sobre método, não sobre Azure: "a ferramenta oficial pro serviço X" não
-        implica "cobre a parte de X que você quer". A lista de tools é barata de ler
-        (handshake JSON-RPC no stdio) e devia ter vindo ANTES do pacote, não depois.
-      • POR QUE O MCP É POR CONTA e não global: a nuvem é a do trabalho, e são 68 tools em
-        `--mode namespace` (contadas por handshake JSON-RPC direto no binário) que não têm o
-        que fazer na conta pessoal. Então `profiles.fai.mcp = [ azureMcp ]` e
-        `profiles.pessoal.mcp = [ ]` — a conta que não declara não ganha a flag.
-      • ⚠️ ARMADILHA DO `--mcp-config`, medida no CC 2.1.222 e a regra é o OPOSTO da
-        intuição: a flag é VARIÁDICA, então engole tudo até achar um token começando com
-        "-". Sem terminador, `claude-fai mcp list` morre com
-        `MCP config file not found: …/mcp` (leu `mcp` e `list` como mais dois arquivos). Mas
-        o `--` conserta SÓ o subcomando e ESTRAGA a flag: com ele, `claude-fai --version`
-        abre uma sessão com "--version" de prompt. Daí o `case` no wrapper — começa com "-"
-        (ou vazio) vai sem `--`; palavra solta vai com.
-      • TRÊS CAMINHOS RECUSADOS: (1) `.mcp.json` da raiz, que é onde vivem os dois MCP da
-        Cloudflare — é escopo de PROJETO, o Azure só existiria rodando `claude` dentro do
-        dotfiles, que é justamente onde nunca vamos mexer no Azure; (2) user scope no
-        `.claude.json` — estado do app, o CC reescreve o arquivo inteiro (regra 14);
-        (3) `/etc/claude-code/managed-mcp.json`, que PARECE o lugar certo por ser irmão do
-        managed-settings.json dos hooks, e é armadilha: quem deploya esse arquivo ganha
-        controle EXCLUSIVO e o CC para de carregar todo o resto, inclusive os MCP dos
-        plugins `github` e `atlassian`, que estão em uso. Ganharia um e perderia dois.
-      • DE QUEBRA, TRÊS ARESTAS DO MÓDULO: o `claude` puro virou wrapper (era o binário cru,
-        e sem isso o MCP não chegaria na extensão do VS Code, que chama o binário do PATH);
-        o `.claude-fai` que estava escrito duas vezes virou `defaultProfile` (regra 11); e o
-        `claude-pick` parou de repetir a lógica do CLAUDE_CONFIG_DIR — agora o menu carrega
-        o CAMINHO DO WRAPPER e ele só dá `exec`, então herda MCP e variável de graça.
-      • ⚠️ O LOGIN TEM DUAS ARMADILHAS, e as duas MENTEM sobre o que aconteceu. A primeira:
-        `az login` puro, numa conta cujo tenant não tem subscription, termina em
-        `No subscriptions found` — e NÃO PERSISTE NADA. A autenticação passou; foi o `az`
-        que abortou depois, e o `az account list` seguinte diz "Please run az login", que
-        lê como "sua senha falhou". O certo é `az login --allow-no-subscriptions --tenant
-        <id>`, e não é caso de canto: App Registration é objeto de DIRETÓRIO, então o
-        tenant de trabalho aqui legitimamente não tem assinatura nenhuma. A segunda:
-        `az ad app list` sozinho não lista nada — exige um seletor (`--show-mine` pros que
-        você é owner, `--all` pro tenant inteiro, que aí pede papel de admin no Entra).
-      • DUAS IDENTIDADES, com papéis OPOSTOS, e isso decide qual ferramenta serve pra quê:
-        `FAIUFSCar` (80241bb1-cb3b-4da2-98ae-3029430fdbcd) é só diretório — é onde vivem os
-        App Registrations, e é o alvo do `az ad`; `BHS` (92247c24-8a8c-47f3-a7f1-85df939ad4b6)
-        é quem tem subscription, e exige MFA (`AADSTS50076` — configuração do tenant, não
-        defeito daqui). Ou seja: App Registration = `az ad` no FAIUFSCar; as 68 tools do
-        MCP, que operam sobre subscription, só têm o que fazer no BHS.
-      • VALIDADO PONTA A PONTA: `nixos-rebuild build` OK; servidor sobe (`initialize` +
-        `tools/list` por JSON-RPC no stdio); `system/init` de uma sessão headless lista
-        `{"name":"azure","status":"connected"}` ao lado dos plugins; `az ad app list
-        --show-mine` devolveu os 3 apps do tenant; e o `azmcp subscription list` passou a
-        responder `status 200` com `subscriptions: []` em vez de 401 — o que prova que o
-        AzureCliCredential fecha a cadeia e o device code virou plano B, não o caminho.
+- [x] Azure MCP Server, and ONLY on the FAI account (14/08/2026). The request was to work on
+      portal.azure.com by command instead of clicking through the interface. It became
+      `pkgs/azure-mcp.nix` (the `azmcp` binary) plus an `mcp` field in the `profiles` of
+      `home/shell/claude-code.nix`.
+      • WHY PACKAGE IT instead of following Microsoft's recipe: the docs say
+        `npx -y @azure/mcp@latest server start`, which rule 13 forbids twice, an implicit
+        "latest" AND a fetch with no hash ON EVERY SERVER START, which means the MCP could
+        change version in the middle of a session. The npm `@azure/mcp` is only a JS shim that
+        picks, in the postinstall, one of the six `@azure/mcp-<os>-<arch>`; what has the server
+        is the platform package, and inside it comes ONE self-contained .NET binary of 150 MB.
+        So we fetch the platform tarball directly and `nodejs` leaves the closure entirely.
+      • THE FINDING THAT COST THE FIRST TWO ATTEMPTS: `runtimeDependencies` (RPATH) does NOT
+        resolve this binary's libs, and the error does not say why. With nothing:
+        `Couldn't find a valid ICU package`. With icu+openssl in the RPATH: ICU passes and then
+        comes `No usable version of libssl was found` plus a core dump. The reason is that it is
+        single-file and it UNPACKS the native .NET libs into `~/.net/azmcp/<hash>/` on the first
+        start (`libpal_azure_c_shared_openssl3.so` is there), and it is that extracted .so,
+        outside the store and with none of our RUNPATH, that does the dlopen. LD_LIBRARY_PATH
+        through `makeBinaryWrapper` is inherited by the extracted libs and resolves it; and
+        `makeBinaryWrapper` (execv in C) and not a shell wrapper, because .NET finds
+        `Instrumentation/Resources` through /proc/self/exe, which is only right AFTER the exec.
+      • `azure-cli` IS NOT NECESSARY FOR THE LOGIN, and that is worth recording even though it
+        came in later for another reason (the item that follows): Microsoft's docs and azmcp's
+        own error message tell you to install it, but the DefaultAzureCredential chain ends in
+        DeviceCodeCredential, the "open login.microsoft.com/device and type ABC123" one, which
+        works on its own. It was only failing with `Persistence check failed`, which is NOT a
+        credential issue: it is the MSAL token cache trying to talk to the Secret Service.
+        `libsecret` and `dbus` were missing, and this machine already has both through the
+        keyring. With those two in LD_LIBRARY_PATH the device code came out immediately
+        (verified: the code was emitted, with no login). The `msalruntime`/libX11 in the error
+        log are the WAM broker, which only exists on Windows, so ignore them.
+      • AND THEN CAME THE CORRECTION THAT KNOCKED DOWN THE PREMISE: the Azure MCP Server
+        does NOT COVER APP REGISTRATION, which was the REAL reason for all of this ("I do not
+        want to touch that interface anymore"). I had delivered the MCP without checking whether
+        it did the one thing that was asked. MEASURED in `tools/list`: among the 68 tools there
+        is no App Registration, no service principal and no Graph; `role` is Azure RESOURCE
+        RBAC, not an Entra app; and `extension_cli_generate` only GENERATES the text of the `az`
+        command, it never executes. Microsoft does not publish an Entra MCP either, since
+        `microsoft/mcp` only has Azure, Fabric and a template. The `entra-app-registration` from
+        `microsoft/azure-skills`, which looked like the missing piece, is a SKILL (guidance
+        markdown) and not a tool: what it teaches the agent to do is run
+        `az ad app create/list/show/permission add/…`. Which means what does the work is
+        `azure-cli`. It went in (home/packages.nix), and the cost is 0.95 GiB MARGINAL and not
+        the 1.19 of the closure, since 0.24 was already on the system.
+        THE LESSON, and it is about method, not about Azure: "the official tool for service X"
+        does not imply "it covers the part of X you want". The tool list is cheap to read (a
+        JSON-RPC handshake over stdio) and it should have come BEFORE the package, not after.
+      • WHY THE MCP IS PER ACCOUNT and not global: the cloud is the work one, and there are 68
+        tools in `--mode namespace` (counted through a JSON-RPC handshake straight at the
+        binary) that have nothing to do on the personal account. So
+        `profiles.fai.mcp = [ azureMcp ]` and `profiles.pessoal.mcp = [ ]`, and the account that
+        does not declare it does not get the flag.
+      • THE `--mcp-config` TRAP, measured on CC 2.1.222, and the rule is the OPPOSITE of the
+        intuition: the flag is VARIADIC, so it swallows everything until it finds a token
+        starting with "-". With no terminator, `claude-fai mcp list` dies with
+        `MCP config file not found: …/mcp` (it read `mcp` and `list` as two more files). But the
+        `--` fixes ONLY the subcommand and BREAKS the flag: with it, `claude-fai --version`
+        opens a session with "--version" as the prompt. Hence the `case` in the wrapper:
+        starting with "-" (or empty) goes without `--`; a bare word goes with it.
+      • THREE PATHS REFUSED: (1) the root `.mcp.json`, which is where the two Cloudflare MCP
+        servers live, because it is PROJECT scope, so Azure would only exist when running
+        `claude` inside the dotfiles, which is precisely where we will never touch Azure;
+        (2) user scope in `.claude.json`, which is app state, since CC rewrites the whole file
+        (rule 14); (3) `/etc/claude-code/managed-mcp.json`, which LOOKS like the right place for
+        being the sibling of the hooks' managed-settings.json, and is a trap: whoever deploys
+        that file gains EXCLUSIVE control and CC stops loading everything else, including the
+        MCP servers from the `github` and `atlassian` plugins, which are in use. It would gain
+        one and lose two.
+      • AS A BONUS, THREE ROUGH EDGES IN THE MODULE: plain `claude` became a wrapper (it was the
+        raw binary, and without this the MCP would not reach the VS Code extension, which calls
+        the binary from the PATH); the `.claude-fai` that was written twice became
+        `defaultProfile` (rule 11); and `claude-pick` stopped repeating the CLAUDE_CONFIG_DIR
+        logic, since the menu now carries the WRAPPER PATH and it only does an `exec`, so it
+        inherits the MCP and the variable for free.
+      • THE LOGIN HAS TWO TRAPS, and both LIE about what happened. The first: a plain
+        `az login`, on an account whose tenant has no subscription, ends in
+        `No subscriptions found` and PERSISTS NOTHING. The authentication passed; it was `az`
+        that aborted afterwards, and the following `az account list` says "Please run az login",
+        which reads as "your password failed". The right form is
+        `az login --allow-no-subscriptions --tenant <id>`, and it is not a corner case: an App
+        Registration is a DIRECTORY object, so the work tenant here legitimately has no
+        subscription at all. The second: `az ad app list` on its own lists nothing, it requires
+        a selector (`--show-mine` for the ones you own, `--all` for the whole tenant, which then
+        asks for an admin role in Entra).
+      • TWO IDENTITIES, with OPPOSITE roles, and that decides which tool serves what:
+        `FAIUFSCar` (80241bb1-cb3b-4da2-98ae-3029430fdbcd) is directory only, which is where the
+        App Registrations live and is the target of `az ad`;
+        `BHS` (92247c24-8a8c-47f3-a7f1-85df939ad4b6) is the one with a subscription, and it
+        requires MFA (`AADSTS50076`, tenant configuration, not a defect here). Which means: App
+        Registration = `az ad` on FAIUFSCar; the MCP's 68 tools, which operate over a
+        subscription, only have work to do on BHS.
+      • VALIDATED END TO END: `nixos-rebuild build` OK; the server comes up (`initialize` plus
+        `tools/list` through JSON-RPC over stdio); the `system/init` of a headless session lists
+        `{"name":"azure","status":"connected"}` next to the plugins; `az ad app list
+        --show-mine` returned the tenant's 3 apps; and `azmcp subscription list` started
+        answering `status 200` with `subscriptions: []` instead of 401, which proves that
+        AzureCliCredential closes the chain and the device code became plan B, not the path.
 
-- [x] Curva do hyprsunset desce de novo pós-18h (13/08/2026) — a pergunta que abriu isto era
-      outra: "o hyprsunset está iniciando junto com o PC? porque não parece". **Não havia
-      defeito nenhum no autostart**, e o motivo de "não parecer" é a própria config.
-      • A MEDIÇÃO QUE DESMENTIU O SINTOMA: boot às 11:58:58, serviço ativo às 11:59:05 — 7 s
-        depois — e a PRIMEIRA coisa que ele fez foi `Applying profile from: 8:0` →
-        `Resetting the matrix (--identity passed)`. Ou seja, ligou e aplicou o filtro
-        DESLIGADO, porque das 8h às 17:30 o perfil é `identity`. Nada visível no boot era o
-        comportamento CORRETO. Serviço `enabled`, 8 h de pé, 234 ms de CPU, zero restart.
-      • ⚠️ ARMADILHA GERAL, que vale além deste serviço: uma automação cujo estado correto é
-        "sem efeito visível" NÃO se audita pelo olho. Passei perto de tratar percepção como
-        evidência de falha; o que fechou a questão foi o journal (`Switched to new profile`
-        de hora em hora: 17:30 → 5500K … 20:00 → 3200K) mais o `hyprctl hyprsunset
-        temperature` batendo com o perfil do relógio.
-      • O CTM CHEGA NAS DUAS TELAS, e isso foi VERIFICADO, não presumido: A/B por IPC
-        (`identity` → 3000K → volta ao perfil) com o dono olhando. Mudou em DP-2 e na LG TV
-        do HDMI. Importava confirmar antes de mexer na curva — se uma saída não recebesse o
-        CTM, nenhum ajuste de Kelvin resolveria, e o histórico de 08/08 já registra que o
-        hyprsunset aplica em TODAS as saídas ou em nenhuma (não sabe mirar output).
-      • A MUDANÇA, então, é de PREFERÊNCIA e não de correção: cada degrau pós-18h desceu
-        ~200–400K (18h 4200→3800, 19h 3500→3200, 20h 3200→3000, 22h 2800→2600, 23h
-        2500→2400). Seguem 13 perfis e o maior degrau segue às 18h (agora 5000→3800).
-      • ⚠️ ESCOLHIDO O EIXO DA COR CONTRA O QUE ideias.md RECOMENDA. Lá está registrado que
-        reduzir BRILHO vem antes de temperatura de cor, e que "modo noturno não substitui
-        brilho adequado" — a curva pós-18h continua mexendo só em Kelvin, com gamma
-        entrando só às 22h. Foi escolha consciente do dono depois de ver as duas propostas
-        lado a lado, não descuido: o dim automático por gamma existiu e foi REVERTIDO em
-        08/08 junto com o DDC, e reintroduzi-lo é mudança maior que baixar Kelvin.
-      • O QUE FICA EM ABERTO e está anotado no cabeçalho do módulo: se esta curva não
-        bastar, o próximo passo é gamma progressivo a partir das 18h — **não** continuar
-        descendo Kelvin, que daqui pra baixo piora a cor sem alívio proporcional.
-      • O PREÇO ACEITO: a curva agora atravessa os ~3200K de propósito, e o cabeçalho do
-        `hyprsunset.nix` avisava que abaixo disso a cor estraga filme/jogo/foto. Das 19h em
-        diante isso passa a ser o NORMAL, então SUPER+SHIFT+F9 (`identity`) deixa de ser
-        escape hatch raro e vira gesto rotineiro pra abrir mídia à noite. O próximo perfil
-        do relógio retoma a curva sozinho.
+- [x] The hyprsunset curve comes down again after 18:00 (13/08/2026). The question that opened
+      this was a different one: "is hyprsunset starting along with the PC? because it does not
+      look like it". **There was no defect at all in the autostart**, and the reason it "does
+      not look like it" is the config itself.
+      • THE MEASUREMENT THAT DISPROVED THE SYMPTOM: boot at 11:58:58, the service active at
+        11:59:05, 7 s later, and the FIRST thing it did was `Applying profile from: 8:0` then
+        `Resetting the matrix (--identity passed)`. Which means it came up and applied the
+        filter TURNED OFF, because from 08:00 to 17:30 the profile is `identity`. Nothing
+        visible at boot was the CORRECT behavior. The service is `enabled`, 8 h up, 234 ms of
+        CPU, zero restarts.
+      • A GENERAL TRAP, which holds beyond this service: an automation whose correct state is
+        "no visible effect" canNOT be audited by eye. I came close to treating perception as
+        evidence of failure; what closed the question was the journal (`Switched to new profile`
+        hour by hour: 17:30 to 5500K … 20:00 to 3200K) plus `hyprctl hyprsunset temperature`
+        matching the profile for the clock time.
+      • THE CTM REACHES BOTH SCREENS, and that was VERIFIED, not presumed: an A/B through IPC
+        (`identity`, then 3000K, then back to the profile) with me watching. It changed on DP-2
+        and on the LG TV over HDMI. It mattered to confirm that before touching the curve,
+        because if one output did not receive the CTM, no Kelvin adjustment would solve
+        anything, and the 08/08 history already records that hyprsunset applies to ALL outputs
+        or to none (it cannot target an output).
+      • THE CHANGE, then, is one of PREFERENCE and not a fix: every step after 18:00 came down
+        ~200 to 400K (18:00 4200 to 3800, 19:00 3500 to 3200, 20:00 3200 to 3000, 22:00 2800 to
+        2600, 23:00 2500 to 2400). There are still 13 profiles and the biggest step is still at
+        18:00 (now 5000 to 3800).
+      • THE COLOR AXIS WAS CHOSEN AGAINST WHAT ideas.md RECOMMENDS. It is recorded there that
+        reducing BRIGHTNESS comes before color temperature, and that "night mode does not
+        replace adequate brightness"; the post-18:00 curve still touches only Kelvin, with gamma
+        entering only at 22:00. It was a conscious choice of mine after seeing both proposals
+        side by side, not carelessness: the automatic gamma dim existed and was REVERTED on
+        08/08 along with the DDC, and reintroducing it is a bigger change than lowering Kelvin.
+      • WHAT STAYS OPEN and is noted in the module header: if this curve is not enough, the next
+        step is progressive gamma from 18:00 on, and **not** continuing to lower Kelvin, which
+        from here down makes the color worse with no proportional relief.
+      • THE ACCEPTED PRICE: the curve now crosses ~3200K on purpose, and the `hyprsunset.nix`
+        header warned that below that the color ruins a film, a game or a photo. From 19:00 on
+        that becomes the NORM, so SUPER+SHIFT+F9 (`identity`) stops being a rare escape hatch
+        and becomes a routine gesture for opening media at night. The next profile on the clock
+        resumes the curve by itself.
 
-- [x] `/mnt/arch-antigo` montado SEMPRE, e o `arch-browse` morreu (11/08/2026) — o sintoma
-      foi abrir o bookmark no Dolphin e ver pasta vazia. Não havia defeito: segredos
-      legíveis, repo respondendo, mount subindo em ~20 s quando pedido. O defeito era o
-      DESENHO — automação sem dono declarado (regra 15), viva só enquanto o terminal do
-      alias ficasse aberto. Virou serviço: `home/services/arch-legacy-mount.nix` (a unit
-      que monta) + `system/services/arch-legacy.nix` (mountpoint e SSOT do caminho, que o
-      bookmark passou a ler — regra 11).
-      • POR QUE DOIS ARQUIVOS, e não é preciosismo de regra 4: quem MONTA tem que ser o
-        usuário (mount FUSE é privado de quem montou; `sudo restic mount` gera pasta que o
-        Dolphin não abre), mas quem CRIA o diretório tem que ser root, porque /mnt é dele.
-        E a opção nasce do lado sistema porque módulo de sistema não lê opção do
-        home-manager — o contrário não existe.
-      • O diretório saiu do `restic.nix`, onde era criado junto do /mnt/backup. Lá ele
-        ficava atado ao toggle `restic`: desligar o backup passaria a derrubar um mount
-        agora PERMANENTE, e a falha apareceria longe da causa.
-      • ⚠️ `--no-lock`, e isto foi MEDIDO, não economizado: todo `restic mount` cria lock
-        não-exclusivo e o renova a cada ~5 min, e mount que não sai limpo deixa o lock
-        PRESO. O repo tinha 3 locks — um do mount vivo e restos de `arch-browse` de 05/08 e
-        08/08. Permanente, isso só pioraria, e ainda escreveria no repo offsite a cada 5 min
-        pra sempre. O lock protege leitura concorrente com PODA, e este repo é estático:
-        nada escreve nele desde 01/08 e nenhuma rotina o poda (o `forget --prune` só olha o
-        repo HOME). Conferido depois: mount de pé, 0 locks.
-      • ⚠️ O `Type = "notify"` do ~/Drive NÃO dá pra copiar: `restic mount` não fala
-        sd_notify (não há "notify" no `--help` da 0.18.1). Com Type=simple o systemd daria a
-        unit por pronta antes do mountpoint existir — reproduzindo o sintoma que a mudança
-        veio matar. Por isso o ExecStartPost que espera o `mountpoint -q` (writeShellApplication,
-        regra 7), com TimeoutStartSec=180 pra a espera caber.
-      • O binário do rclone vai PINADO em `-o rclone.program=`: o backend `rclone:` EXECUTA
-        o rclone e unit de systemd não herda PATH — mesma pegadinha que já matou o serviço
-        de backup ("executable file not found in $PATH"), resolvida sem depender de PATH.
-        E o rclone.conf é CÓPIA GRAVÁVEL em `%t`, arquivo próprio (não o do ~/Drive): sem
-        isso o token OAuth renovado gera `Failed to save config` no journal — num serviço
-        24/7, ERROR recorrente escondendo erro de verdade.
-      • O PREÇO, medido: ~195 MiB de RSS residentes (115 do restic com o índice do snapshot
-        de 44,6 GiB + 79 do `rclone serve restic`). Em rede, parado, é ZERO — o restic não
-        faz polling. O comentário do bookmark dizia que mount permanente seria "conexão
-        aberta e lock no repo por nada": a conexão é real e virou escolha consciente, o lock
-        deixou de existir. E o aviso das miniaturas do Dolphin ficou MAIS importante, não
-        menos — preview lê conteúdo, cada leitura baixa packs, e agora a pasta está sempre a
-        um clique.
-      • Pasta vazia ali deixou de ser estado normal e virou SINTOMA: o diagnóstico começa em
-        `systemctl --user status arch-antigo-mount`.
+- [x] `/mnt/arch-antigo` mounted ALWAYS, and `arch-browse` died (11/08/2026). The symptom was
+      opening the Dolphin bookmark and seeing an empty folder. There was no defect: the secrets
+      were readable, the repo answered, and the mount came up in ~20 s when asked. The defect
+      was the DESIGN, an automation with no declared owner (rule 15), alive only while the
+      alias's terminal stayed open. It became a service:
+      `home/services/arch-legacy-mount.nix` (the unit that mounts) plus
+      `system/services/arch-legacy.nix` (the mountpoint and the path's SSOT, which the bookmark
+      started reading, rule 11).
+      • WHY TWO FILES, and it is not rule 4 fussiness: whoever MOUNTS has to be the user (a FUSE
+        mount is private to whoever mounted it; `sudo restic mount` produces a folder Dolphin
+        cannot open), but whoever CREATES the directory has to be root, because /mnt is root's.
+        And the option is born on the system side because a system module cannot read a
+        home-manager option, while the reverse does not exist.
+      • The directory left `restic.nix`, where it was created along with /mnt/backup. There it
+        was tied to the `restic` toggle: turning the backup off would start taking down a mount
+        that is now PERMANENT, and the failure would show up far from the cause.
+      • `--no-lock`, and this was MEASURED, not economized: every `restic mount` creates a
+        non-exclusive lock and renews it every ~5 min, and a mount that does not exit cleanly
+        leaves the lock STUCK. The repo had 3 locks: one from the live mount and leftovers from
+        `arch-browse` on 05/08 and 08/08. Permanently, that would only get worse, and it would
+        also write to the offsite repo every 5 min forever. The lock protects concurrent reads
+        against PRUNING, and this repo is static: nothing has written to it since 01/08 and no
+        routine prunes it (`forget --prune` only looks at the HOME repo). Checked afterwards:
+        the mount is up, 0 locks.
+      • The `Type = "notify"` from ~/Drive canNOT be copied: `restic mount` does not speak
+        sd_notify (there is no "notify" in the 0.18.1 `--help`). With Type=simple, systemd would
+        declare the unit ready before the mountpoint existed, reproducing the very symptom the
+        change came to kill. Hence the ExecStartPost that waits for `mountpoint -q`
+        (writeShellApplication, rule 7), with TimeoutStartSec=180 so the wait fits.
+      • The rclone binary goes PINNED in `-o rclone.program=`: the `rclone:` backend EXECUTES
+        rclone and a systemd unit does not inherit the PATH, the same trap that already killed
+        the backup service ("executable file not found in $PATH"), solved without depending on
+        the PATH. And the rclone.conf is a WRITABLE COPY in `%t`, in a file of its own (not
+        ~/Drive's): without that, the renewed OAuth token produces `Failed to save config` in
+        the journal, and in a 24/7 service a recurring ERROR hides a real one.
+      • THE PRICE, measured: ~195 MiB of resident RSS (115 from restic with the index of the
+        44.6 GiB snapshot plus 79 from `rclone serve restic`). On the network, idle, it is ZERO,
+        because restic does not poll. The bookmark comment said a permanent mount would be "an
+        open connection and a lock on the repo for nothing": the connection is real and became a
+        conscious choice, and the lock stopped existing. And the Dolphin thumbnail warning got
+        MORE important, not less, because previews read content, every read downloads packs, and
+        now the folder is always one click away.
+      • An empty folder there stopped being a normal state and became a SYMPTOM: the diagnosis
+        starts at `systemctl --user status arch-antigo-mount`.
 
-- [x] O `switch` que ativou mas não virou boot, por causa de uma unit ALHEIA (11/08/2026) —
-      o `rebuild` do mount acima terminou com `Activation (test) failed` (exit 4) e a
-      culpada era a `vpn-fai`, que não tinha relação nenhuma com a mudança: já repicava
-      antes (contador de restart em 43) porque o servidor da FAI responde
-      `"Password change needed"` — senha institucional expirada. O `nh` roda a ativação em
-      `test` ANTES de fixar a geração, e abortou a fase `boot`.
-      • ⚠️ O ESTRAGO É SILENCIOSO e não aparece na hora: `/run/current-system` já era a
-        geração nova (tudo funcionando na sessão), mas `/nix/var/nix/profiles/system` ficou
-        na ANTIGA — ou seja, o próximo boot voltaria pro sistema sem a mudança. Quem não
-        compara os dois não vê. Diagnóstico de um comando:
-        `readlink -f /run/current-system /nix/var/nix/profiles/system` — iguais = fechou.
-      • A LIÇÃO, que é maior que este caso: uma unit falhando por motivo EXTERNO (senha
-        expirada, serviço remoto fora) sequestra o switch inteiro. `systemctl stop` nela e
-        rebuildar de novo resolveu — a `vpn-fai` é `linked` sem `WantedBy`, então parar não
-        perde nada, ela não sobe no boot mesmo.
-      • Pendente do lado da FAI: trocar a senha no portal e atualizar `fai_vpn_password` no
-        sops (alimenta o template `nxbender-fai.conf`, `system/net/vpn.nix`) + rebuild. Até
-        lá, `~/FAI-workstation` e `ssh workstation` seguem fora.
+- [x] The `switch` that activated but did not become the boot, because of an UNRELATED unit
+      (11/08/2026): the `rebuild` for the mount above ended with `Activation (test) failed`
+      (exit 4) and the culprit was `vpn-fai`, which had nothing to do with the change. It was
+      already flapping before (a restart counter at 43) because the FAI server answers
+      `"Password change needed"`, an expired institutional password. `nh` runs the activation in
+      `test` BEFORE pinning the generation, and it aborted the `boot` phase.
+      • THE DAMAGE IS SILENT and does not show up at the time: `/run/current-system` was
+        already the new generation (everything working in the session), but
+        `/nix/var/nix/profiles/system` stayed on the OLD one, which means the next boot would go
+        back to the system without the change. Whoever does not compare the two does not see it.
+        A one-command diagnosis:
+        `readlink -f /run/current-system /nix/var/nix/profiles/system`, and equal means it
+        closed.
+      • THE LESSON, which is bigger than this case: a unit failing for an EXTERNAL reason (an
+        expired password, a remote service down) hijacks the entire switch. A `systemctl stop`
+        on it plus rebuilding again solved it, since `vpn-fai` is `linked` with no `WantedBy`,
+        so stopping it loses nothing, because it does not come up at boot anyway.
+      • Pending on the FAI side: change the password in the portal and update `fai_vpn_password`
+        in sops (it feeds the `nxbender-fai.conf` template, `system/net/vpn.nix`) plus a
+        rebuild. Until then, `~/FAI-workstation` and `ssh workstation` stay out.
 
-- [x] `claude-fai` / `claude-pessoal`: DUAS contas do Claude Code, e o `~/.claude` deixou de
-      ser uma delas (11/08/2026) — no Arch isso eram dois aliases e uma função de shell no
-      `~/.zshrc` (`_claude_share_projects`), rodando a cada abertura de terminal. Virou
-      `home/shell/claude-code.nix`: uma atriz `profiles` que é SSOT das contas e gera tudo —
-      wrappers, menu do `claude-pick`, symlink de `settings.json` e symlink de `projects/`.
-      Conta nova = uma entrada nela + um `settings-<nome>.json`.
-      • ⚠️ ERREI NA PRIMEIRA VERSÃO, e o erro é instrutivo: criei um `~/.claude-fai` VAZIO
-        ao lado do `~/.claude` — que JÁ ERA a conta da FAI (`oauthAccount.emailAddress` =
-        victor.ferreira@…, seat nonprofit premium). Seriam dois logins pra mesma assinatura,
-        e a "terceira conta" existiria só por acidente de nomenclatura. Copiei a topologia do
-        Arch (default + 2) sem conferir QUEM era cada pasta AQUI. Lição: em migração, a
-        pergunta não é "quais pastas existiam lá", é "o que cada pasta É aqui" — e a resposta
-        estava a um `jq .oauthAccount ~/.claude.json` de distância.
-      • O `claude` PURO virou a FAI, via `home.sessionVariables.CLAUDE_CONFIG_DIR`. Pega tudo
-        que chama o binário sem passar pelos wrappers: extensão do VS Code, script, cron.
-        ⚠️ Só vale em shell NOVO (o hm-session-vars.sh é lido no início da sessão) — o
-        terminal que rodou o `rebuild` segue no `~/.claude` até ser fechado. Mesma pegadinha
-        do NH_FLAKE em 03/08, com a diferença de que aqui um terminal novo já resolve.
-      • O `~/.claude` CONTINUA EXISTINDO, agora como ACERVO e não como conta: o `projects/`
-        (200 MB, 13 projetos, 39 memórias deste repo) é da MÁQUINA, não de uma assinatura.
-        Ficar no caminho canônico faz ferramenta de terceiro achar sozinha e evita que
-        aposentar uma conta um dia órfã o acervo. Foram consideradas e recusadas: mover pra
-        dentro do `.claude-fai` (assimétrico) e pra um caminho neutro (200 MB movidos com
-        sessão viva escrevendo lá).
-      • O QUE MIGROU do `~/.claude` pro `~/.claude-fai`, porque é a MESMA conta: os plugins
-        instalados (8,1 MB — `github`/`atlassian`/`frontend-design`, que o
-        `settings-fai.json` do repo passou a declarar em vez dos do Arch, senão a migração
-        os desligaria em silêncio), o `settings.local.json` (permissões já aprovadas), o
-        `.claude.json` SEM `oauthAccount`/`claudeCodeFirstTokenDate` (17 pastas confiáveis
-        preservadas, campos de conta deixados pro `/login` reescrever) e o `history.jsonl`
-        concatenado com o do Arch — 128 + 1705 linhas, e a concatenação é cronológica de
-        graça porque as janelas não se sobrepõem (o Arch termina em junho, esta máquina
-        começa em julho).
-      • WRAPPER NO LUGAR DE ALIAS, e a diferença não é estética: alias só existe em zsh
-        INTERATIVO, então no Arch `claude-fai` não funcionava por SSH não-interativo, dentro
-        de script, em task do VS Code nem em keybind do Hyprland. Agora são binários gerados
-        por `writeShellApplication` (regra 7: lógica no build), o que de graça FIXA a versão
-        do `claude` chamado — e isso importa aqui, porque esta máquina tem uma instalação
-        nativa órfã em `~/.local/bin` que o `claude doctor` reclama e que o PATH poderia
-        resolver primeiro.
-      • ⚠️ O QUE DECIDIU O DESENHO DO `settings.json`, e foi MEDIDO em vez de suposto: o
-        arquivo é linkado pro repo por `mkOutOfStoreSymlink`, mesmo contrato do VS Code
-        (home/apps/vscode.nix), e isso só é seguro se o CC não trocar o symlink por arquivo
-        comum ao salvar. Ele escreve de forma ATÔMICA (tmp + rename), o que MATARIA o link —
-        mas resolve o realpath ANTES: rodando `claude auto-mode reset` num perfil de teste, o
-        symlink ficou intacto e quem trocou de inode foi o ALVO (593793 → 593844). Ou seja: o
-        `/config` da TUI continua funcionando e cada ajuste cai como `git diff` em vez de
-        drift invisível (regra 16). Se um dia o CC perder essa guarda, o sintoma é
-        `~/.claude-fai/settings.json` deixar de ser symlink e o repo parar de receber.
-      • ⚠️ NÃO apontar `CLAUDE_CONFIG_DIR` pro `~/.claude` pra "reaproveitar" a conta default:
-        o `.claude.json` (config de projetos/MCP, distinta do `settings.json`) mora na RAIZ do
-        `CLAUDE_CONFIG_DIR` — no default é o `~/.claude.json` do home, e com a variável
-        apontada pro `~/.claude` ele viraria `~/.claude/.claude.json`, um SEGUNDO arquivo
-        divergente. Verificado no 2.1.222, junto do resto: `claude mcp add` com o
-        `.claude.json` symlinkado escreveu ATRAVÉS do link.
-      • DUAS CONFIGS MORRERAM NA TRAVESSIA (regra 16) e é por isso que os `settings-*.json`
-        não são cópia fiel do Arch: o `permissions.allow` com `mcp__pencil` e os dois MCP de
-        usuário que estavam no `.claude.json` das duas contas — `pencil`
-        (`/opt/pencil-dev-bin/…`, pacote do AUR que não existe no NixOS) e `atlassian` (por
-        `npx mcp-remote`, hoje feito pelo PLUGIN `atlassian@claude-plugins-official`, que a
-        conta default já usa). Migrar permissão pra MCP que não sobe é declarar o inexistente.
-      • `projects/` SEGUE COMPARTILHADO, agora por symlink declarado: é onde ficam os
-        transcripts E a memória por projeto (`…/projects/<slug>/memory/`), então qualquer
-        conta resume as mesmas conversas e lê as mesmas memórias. Preço conhecido: o
-        `ccusage` não separa custo por conta, porque lê o acervo comum — o número é o da
-        máquina, não o da assinatura.
-      • ESTADO VEIO DO RESTIC, NÃO DO REPO (regra 6): o `history.jsonl` das duas contas (128 e
-        179 prompts) saiu do backup do Arch por `restic dump` — sem montar nada, que é o
-        caminho melhor quando se quer arquivo específico e não navegar. O `.credentials.json`
-        NÃO foi restaurado de propósito: token de 7 semanas de uma máquina desativada vale
-        menos que um `/login` limpo, e credencial não se declara nem se copia por script
-        (regras 6 e 12).
-      • O shellcheck do `writeShellApplication` reprovou o primeiro build por SC2155
-        (`export X="$(cmd)"` mascara o exit code do comando). Regra 7 se pagando no build em
-        vez de num bug de runtime.
+- [x] `claude-fai` / `claude-pessoal`: TWO Claude Code accounts, and `~/.claude` stopped being
+      one of them (11/08/2026). On Arch that was two aliases and a shell function in `~/.zshrc`
+      (`_claude_share_projects`), running on every terminal open. It became
+      `home/shell/claude-code.nix`: a `profiles` attrset that is the accounts' SSOT and
+      generates everything, the wrappers, the `claude-pick` menu, the `settings.json` symlink
+      and the `projects/` symlink. A new account is one entry in it plus a
+      `settings-<name>.json`.
+      • I GOT THE FIRST VERSION WRONG, and the mistake is instructive: I created an EMPTY
+        `~/.claude-fai` next to `~/.claude`, which ALREADY WAS the FAI account
+        (`oauthAccount.emailAddress` = victor.ferreira@…, a nonprofit premium seat). That would
+        be two logins for the same subscription, and the "third account" would exist purely by
+        accident of naming. I copied the Arch topology (default + 2) without checking WHO each
+        folder was HERE. The lesson: in a migration, the question is not "which folders existed
+        there", it is "what each folder IS here", and the answer was one
+        `jq .oauthAccount ~/.claude.json` away.
+      • Plain `claude` became FAI, through `home.sessionVariables.CLAUDE_CONFIG_DIR`. It catches
+        everything that calls the binary without going through the wrappers: the VS Code
+        extension, a script, cron.
+        It only applies in a NEW shell (hm-session-vars.sh is read at the start of the
+        session), so the terminal that ran the `rebuild` stays on `~/.claude` until it is
+        closed. The same trap as NH_FLAKE on 03/08, with the difference that here a new terminal
+        already solves it.
+      • `~/.claude` STILL EXISTS, now as the ARCHIVE and not as an account: `projects/` (200 MB,
+        13 projects, 39 memories from this repo) belongs to the MACHINE, not to a subscription.
+        Staying on the canonical path lets third party tooling find it by itself and prevents
+        retiring an account from one day orphaning the archive. Considered and refused: moving
+        it inside `.claude-fai` (asymmetric) and moving it to a neutral path (200 MB moved with
+        a live session writing there).
+      • WHAT MIGRATED from `~/.claude` to `~/.claude-fai`, because it is the SAME account: the
+        installed plugins (8.1 MB, `github`/`atlassian`/`frontend-design`, which the repo's
+        `settings-fai.json` started declaring instead of the Arch ones, otherwise the migration
+        would silently turn them off), `settings.local.json` (permissions already approved),
+        the `.claude.json` WITHOUT `oauthAccount`/`claudeCodeFirstTokenDate` (17 trusted folders
+        preserved, the account fields left for `/login` to rewrite) and `history.jsonl`
+        concatenated with the Arch one, 128 + 1705 lines, and the concatenation is chronological
+        for free because the windows do not overlap (Arch ends in june, this machine starts in
+        july).
+      • A WRAPPER INSTEAD OF AN ALIAS, and the difference is not cosmetic: an alias only exists
+        in an INTERACTIVE zsh, so on Arch `claude-fai` did not work over non-interactive SSH,
+        inside a script, in a VS Code task or in a Hyprland keybind. Now they are binaries
+        generated by `writeShellApplication` (rule 7: the logic in the build), which for free
+        PINS the version of the `claude` being called, and that matters here, because this
+        machine has an orphan native install in `~/.local/bin` that `claude doctor` complains
+        about and that the PATH could resolve first.
+      • WHAT DECIDED THE `settings.json` DESIGN, and it was MEASURED instead of assumed: the
+        file is linked into the repo through `mkOutOfStoreSymlink`, the same contract as VS Code
+        (home/apps/vscode.nix), and that is only safe if CC does not replace the symlink with a
+        regular file on save. It writes ATOMICALLY (tmp + rename), which would KILL the link,
+        but it resolves the realpath FIRST: running `claude auto-mode reset` in a test profile,
+        the symlink stayed intact and what changed inode was the TARGET (593793 to 593844). In
+        other words: the TUI's `/config` keeps working and every adjustment lands as a
+        `git diff` instead of invisible drift (rule 16). If CC ever loses that guard, the
+        symptom is `~/.claude-fai/settings.json` no longer being a symlink and the repo no
+        longer receiving anything.
+      • Do NOT point `CLAUDE_CONFIG_DIR` at `~/.claude` to "reuse" the default account: the
+        `.claude.json` (project/MCP config, distinct from `settings.json`) lives at the ROOT of
+        `CLAUDE_CONFIG_DIR`, which in the default case is the home's `~/.claude.json`, and with
+        the variable pointed at `~/.claude` it would become `~/.claude/.claude.json`, a SECOND
+        divergent file. Verified on 2.1.222, along with the rest: `claude mcp add` with a
+        symlinked `.claude.json` wrote THROUGH the link.
+      • TWO CONFIGS DIED IN THE CROSSING (rule 16) and that is why the `settings-*.json` are not
+        a faithful copy of the Arch ones: the `permissions.allow` with `mcp__pencil` and the two
+        user MCP servers that were in both accounts' `.claude.json`, `pencil`
+        (`/opt/pencil-dev-bin/…`, an AUR package that does not exist on NixOS) and `atlassian`
+        (through `npx mcp-remote`, today done by the `atlassian@claude-plugins-official` PLUGIN,
+        which the default account already uses). Migrating a permission for an MCP server that
+        does not come up is declaring the nonexistent.
+      • `projects/` IS STILL SHARED, now through a declared symlink: it is where the transcripts
+        AND the per-project memory live (`…/projects/<slug>/memory/`), so any account resumes
+        the same conversations and reads the same memories. A known price: `ccusage` does not
+        separate cost per account, because it reads the common archive, so the number belongs to
+        the machine, not to the subscription.
+      • THE STATE CAME FROM RESTIC, NOT FROM THE REPO (rule 6): the `history.jsonl` of both
+        accounts (128 and 179 prompts) came out of the Arch backup through `restic dump`, with
+        nothing mounted, which is the better path when you want a specific file and not to
+        browse. The `.credentials.json` was NOT restored on purpose: a 7 week old token from a
+        decommissioned machine is worth less than a clean `/login`, and a credential is neither
+        declared nor copied by a script (rules 6 and 12).
+      • The `writeShellApplication` shellcheck failed the first build with SC2155
+        (`export X="$(cmd)"` masks the command's exit code). Rule 7 paying for itself in the
+        build instead of in a runtime bug.
 
-- [x] VT-x ligado na BIOS — e o passo seguinte que este histórico mandava dar NÃO
-      é necessário (11/08/2026) — a entrada do Cowork (08/08) fechava com "ligar VT-x e SÓ
-      ENTÃO somar `users.users.v1cferr.extraGroups = [ "kvm" ]`, que não entrou por não ser
-      validável sem o device". O device existe agora, então dava pra validar — e a validação
-      DESMENTIU o plano.
-      • VT-x confirmado: `vmx` nas flags do `/proc/cpuinfo`, `kvm_intel` carregado,
-        `/dev/kvm` criado às 07:11. Sumiram os `VMX (outside TXT) disabled by BIOS` do log.
-      • ⚠️ O GRUPO `kvm` NÃO ENTRA: o `/dev/kvm` nasce em **modo 666** (regra udev que o
-        NixOS já embarca), grupo `kvm`. Medido que o `v1cferr` tem leitura E escrita nele
-        SEM estar no grupo. Somar o `extraGroups` seria declarar uma permissão que o
-        sistema já dá a todo mundo — config morta pela regra 16, no mesmo dia em que a
-        regra nasceu.
-      • A LIÇÃO é sobre a forma da anotação, não sobre o kvm: "faça X e DEPOIS faça Y"
-        registra uma HIPÓTESE sobre Y como se fosse plano. Quando X finalmente acontece,
-        Y é executado sem ninguém reverificar se ainda faz sentido — e aqui não fazia.
-        Anotação de passo futuro deveria carregar o TESTE que decide se ele é preciso
-        (`test -w /dev/kvm`), não só a ação.
-      • Secure Boot segue `Disabled` e isso NÃO regrediu: `Setup Mode: Disabled` diz que as
-        chaves continuam enroladas, então permanece só a Fase 4 do guia — virar a chave.
-      • De quebra, o diagnóstico do colorize se confirmou: **19 h sem um único aborto**
-        (último em 10/08 18:30) contra um a cada 30–60 min antes. Os coredumps que ainda
-        aparecem no `coredumpctl` são todos anteriores à remoção — registro, não atividade.
+- [x] VT-x turned on in the BIOS, and the next step this history told me to take is NOT
+      necessary (11/08/2026). The Cowork entry (08/08) closed with "turn VT-x on and ONLY THEN
+      add `users.users.v1cferr.extraGroups = [ "kvm" ]`, which did not go in because it is not
+      validatable without the device". The device exists now, so it could be validated, and the
+      validation DISPROVED the plan.
+      • VT-x confirmed: `vmx` in the `/proc/cpuinfo` flags, `kvm_intel` loaded, `/dev/kvm`
+        created at 07:11. The `VMX (outside TXT) disabled by BIOS` lines are gone from the log.
+      • The `kvm` GROUP DOES NOT GO IN: `/dev/kvm` is born in **mode 666** (a udev rule NixOS
+        already ships), group `kvm`. It was measured that `v1cferr` has read AND write on it
+        WITHOUT being in the group. Adding the `extraGroups` would declare a permission the
+        system already gives everyone, which is dead config by rule 16, on the same day the rule
+        was born.
+      • THE LESSON is about the shape of the note, not about kvm: "do X and THEN do Y" records a
+        HYPOTHESIS about Y as if it were a plan. When X finally happens, Y gets executed with
+        nobody rechecking whether it still makes sense, and here it did not. A note about a
+        future step should carry the TEST that decides whether it is needed
+        (`test -w /dev/kvm`), not only the action.
+      • Secure Boot is still `Disabled` and that did NOT regress: `Setup Mode: Disabled` says
+        the keys are still enrolled, so only Phase 4 of the guide remains, flipping the switch.
+      • As a bonus, the colorize diagnosis confirmed itself: **19 h without a single abort**
+        (the last one on 10/08 18:30) against one every 30 to 60 min before. The coredumps that
+        still show up in `coredumpctl` all predate the removal, so they are a record, not
+        activity.
 
-- [x] Coreutils GNU na máquina inteira do `cesar` — e não foi preciso instalar nada
-      (11/08/2026). O Git for Windows já embarcava o userland completo (coreutils 8.32,
-      grep 3.0, sed 4.9, awk, less, vim) em `C:\Program Files\Git\usr\bin`; ele só não
-      estava exposto, porque o instalador do Git põe no PATH apenas o `Git\cmd`. A
-      mudança foi UMA entrada no PATH de máquina.
-      • **A decisão inteira está na ORDEM: apêndice no FIM, nunca no início.** Esse
-        diretório traz `find.exe`, `sort.exe`, `tar.exe`, `link.exe` e `echo.exe`, todos
-        com homônimo do Windows de semântica diferente. Prependar — que é o que o
-        instalador do Git oferece como opção, com aviso — quebra script `.bat` e build
-        MSVC, porque o `link.exe` do MSYS não é o linker da Microsoft. No fim, ganha-se
-        tudo que não conflita e não se perde nada. AFERIDO com `where`: `find`/`sort`/
-        `tar` continuam resolvendo pro System32, e `ls` resolve pro GNU porque só existe
-        um.
-      • ⚠️ NO POWERSHELL ISSO RENDE MENOS DO QUE PARECE, e não é problema de PATH:
-        `ls`, `cat`, `cp`, `rm`, `sort`, `curl`, `echo` são ALIASES nativos, e alias
-        vence PATH sempre. Lá é `ls.exe` na mão. No `cmd` não há aliases e funciona
-        direto; dentro do bash a questão nem existe.
-      • Aplicado por `powershell -EncodedCommand` (base64 UTF-16LE) em vez de aspas
-        aninhadas: o comando atravessa zsh → ssh → cmd → powershell, e cada camada come
-        um nível de quoting. Um `dir /b "C:\...\usr\bin" | find /c` chegou a reportar
-        "path not found" num diretório que EXISTIA, só pelo mangling do cmd no pipe —
-        quase virou "essa instalação do Git é mínima e não tem os utilitários".
-      • O script é idempotente (`-split ";" -notcontains`), porque PATH de máquina é
-        exatamente o tipo de coisa que se aplica duas vezes sem perceber.
-      • **Nasceu o guia** [`docs/guides/cesar-windows-manual-steps.md`](../../guides/cesar-windows-manual-steps.md):
-        chave autorizada, PATH, Scoop e Claude Code. São os passos que o Nix NÃO alcança
-        (a máquina não é NixOS e não é nossa), e sem eles escritos a reinstalação do
-        Windows viraria redescoberta do zero. Mesma natureza do `authorized_keys` do
-        roteador OpenWrt.
-      • VERIFICADO de quebra que o `SetEnv TERM` continua desnecessário: dentro do Git
-        Bash o `TERM` já vem `xterm-256color`, definido pelo próprio shell. A decisão de
-        10/08 de não mandar a variável se sustenta agora que o shell mudou.
+- [x] GNU coreutils across the whole `cesar` machine, and nothing had to be installed
+      (11/08/2026). Git for Windows already bundled the complete userland (coreutils 8.32,
+      grep 3.0, sed 4.9, awk, less, vim) in `C:\Program Files\Git\usr\bin`; it just was not
+      exposed, because the Git installer puts only `Git\cmd` on the PATH. The change was ONE
+      entry in the machine PATH.
+      • **The whole decision is in the ORDER: append at the END, never at the front.** That
+        directory brings `find.exe`, `sort.exe`, `tar.exe`, `link.exe` and `echo.exe`, all with
+        a Windows namesake of different semantics. Prepending, which is what the Git installer
+        offers as an option, with a warning, breaks `.bat` scripts and MSVC builds, because the
+        MSYS `link.exe` is not Microsoft's linker. At the end, you gain everything that does not
+        conflict and lose nothing. MEASURED with `where`: `find`/`sort`/`tar` still resolve to
+        System32, and `ls` resolves to the GNU one because only one exists.
+      • IN POWERSHELL THIS PAYS OFF LESS THAN IT LOOKS, and it is not a PATH problem: `ls`,
+        `cat`, `cp`, `rm`, `sort`, `curl` and `echo` are native ALIASES, and an alias always
+        beats the PATH. There it is `ls.exe` by hand. In `cmd` there are no aliases and it works
+        directly; inside bash the question does not even come up.
+      • Applied through `powershell -EncodedCommand` (base64 UTF-16LE) instead of nested quotes:
+        the command crosses zsh, ssh, cmd and powershell, and each layer eats a level of
+        quoting. A `dir /b "C:\...\usr\bin" | find /c` even reported "path not found" on a
+        directory that EXISTED, purely from cmd's mangling in the pipe, and it almost became
+        "this Git installation is minimal and does not have the utilities".
+      • The script is idempotent (`-split ";" -notcontains`), because a machine PATH is exactly
+        the kind of thing you apply twice without noticing.
+      • **The guide was born**:
+        [`docs/guides/cesar-windows-manual-steps.md`](../../guides/cesar-windows-manual-steps.md),
+        covering the authorized key, the PATH, Scoop and Claude Code. Those are the steps Nix
+        does NOT reach (the machine is not NixOS and is not mine), and without them written down
+        a Windows reinstall would become rediscovery from scratch. The same nature as the
+        OpenWrt router's `authorized_keys`.
+      • VERIFIED as a bonus that `SetEnv TERM` is still unnecessary: inside Git Bash, `TERM`
+        already comes as `xterm-256color`, set by the shell itself. The 10/08 decision not to
+        send the variable holds now that the shell has changed.
 
-- [x] `ssh cesar` — o PC do irmão virou host declarativo (10/08/2026). O acesso já
-      funcionava à mão (`ssh v1cferr@192.168.1.40`); o que entrou em home/shell/ssh.nix foi o
-      alias e, principalmente, o registro de POR QUE este host não se parece com nenhum dos
-      outros três: ele é o único **Windows** do arquivo.
-      • **Herdar `faiResilience` seria carga cultuada.** Aquele bloco existe pra tolerar o
-        buraco de rota do túnel SonicWall dentro do orçamento de 17 s do VS Code Remote-SSH.
-        Aqui é salto de LAN, <1ms — mesma decisão já tomada no `router`, e o padrão do
-        arquivo passa a ser "resiliência é opt-in, não default".
-      • **Sem `SetEnv TERM`, ao contrário dos outros três hosts.** O shell padrão do sshd do
-        Windows é o **cmd.exe**, que não lê TERM, e o sshd de lá não traz `AcceptEnv` — a
-        variável seria descartada no servidor. Copiar por simetria daria uma linha que não
-        faz nada e que a próxima leitura ia tentar "consertar".
-      • ⚠️ **O aviso de post-quantum a cada conexão NÃO é erro nosso.** O servidor é
-        `OpenSSH_for_Windows_9.5` (medido no `-v`), e o `mlkem768x25519` só existe do OpenSSH
-        9.9 em diante; o Windows 11 build 26200 ainda embarca o 9.5. Só some quando a MS
-        atualizar o Win32-OpenSSH. RECUSADO calar com `WarnWeakCrypto = "no"` (existe no
-        nosso 10.4): silenciar por host esconde a defasagem real do servidor, e o dia em que
-        ela for corrigida passaria despercebido. O aviso é barulho honesto.
-      • ⚠️ **`ssh-copy-id` NÃO funciona contra Windows** — ele assume shell POSIX do outro
-        lado, e do outro lado tem cmd.exe. O passo manual é rodado NA máquina do irmão, e
-        QUAL arquivo depende de o usuário ser administrador: se for, o sshd do Windows
-        **ignora** o `~/.ssh/authorized_keys` dele e só lê
-        `C:\ProgramData\ssh\administrators_authorized_keys` — que ainda exige `icacls`
-        restringindo a herança, senão o sshd recusa o arquivo e volta pra senha **em
-        silêncio do lado do cliente**. FEITO no mesmo dia, e validado com
-        `ssh -o BatchMode=yes ... "echo OK"` — o `BatchMode` proíbe o prompt de senha, então
-        o `OK` prova que foi a CHAVE que autenticou; sem ele o teste é ambíguo, porque você
-        digita a senha e conclui que a chave funcionou.
-      • ⚠️ `Add-Content -Encoding ascii` não é preciosismo: o padrão do PowerShell pra
-        arquivo é UTF-16, e o sshd não lê `authorized_keys` em UTF-16 — falha MUDA, cai na
-        senha sem dizer por quê. Mesma classe de armadilha do `icacls`: as duas formas de
-        errar aqui são silenciosas e indistinguíveis uma da outra.
-      • SENHA da conta trocada junto, e a decisão foi MEDIDA antes: o Windows distingue
-        TROCAR senha (com a antiga em mãos, que re-embrulha a chave-mestra do DPAPI) de
-        RESETAR (`net user v1cferr *`, que a torna irrecuperável e leva junto Credential
-        Manager, senhas de navegador e EFS — tudo em silêncio). Não há caminho de "troca"
-        por linha de comando sem P/Invoke, e por SSH não existe Ctrl+Alt+Del. O reset foi
-        seguro porque `cmdkey /list` veio `* NONE *` (nada a perder) e o
-        `Get-LocalUser | Select PrincipalSource` veio `Local` — se viesse `MicrosoftAccount`,
-        nem `net user` nem `Set-LocalUser` mudariam nada, porque a senha seria da conta MS.
-      • IP literal (192.168.1.40) e não opção `my.*`: citado num lugar só, mesma
-        justificativa do `router` — literal solitário não dispara a regra 11. Mas é DHCP: se
-        o roteador entregar outro endereço, o alias quebra, e o conserto é reserva de DHCP
-        no OpenWrt, não mais uma opção aqui.
-      • **O shell virou GIT BASH, e o bash já estava lá o tempo todo.** `RequestTTY` +
-        `RemoteCommand` apontando pro `C:\Program Files\Git\bin\bash.exe` — testado, cai em
-        `v1cferr@Cesar MINGW64 ~$`. ⚠️ O `where bash` MENTE nessa máquina: o único `bash` no
-        PATH é `C:\Windows\System32\bash.exe`, que **não é bash** — é o stub legado do WSL, e
-        não há distro instalada. O bash de verdade não aparece no `where` porque só o
-        `Git\cmd` está no PATH e o binário mora no `Git\bin`. Quase virou "essa máquina não
-        tem bash", quando tinha.
-      • **E com ele vieram os coreutils, sem instalar nada.** O Git for Windows embarca o
-        userland GNU inteiro (`ls`, `grep`, `sed`, `awk`, `find`, `less`, `tar`, `curl`…) — a
-        queixa de "faltam coreutils" era, na verdade, a queixa de cair no cmd.exe.
-      • RECUSADO trocar o shell pelo registro (`HKLM:\SOFTWARE\OpenSSH\DefaultShell`): é
-        GLOBAL, mudaria o shell de toda sessão SSH da máquina, inclusive a do dono. Do lado
-        do cliente a escolha é só nossa e some junto com este repo.
-      • RECUSADO instalar WSL, mesmo com o `v1cferr` sendo admin: o projeto do irmão é
-        Gradle/Java Windows-native (`gradlew.bat`), e rodá-lo do WSL contra `/mnt/c` cruza a
-        fronteira de I/O que é justamente onde o WSL é lento — fora plantar GB de VM na
-        máquina dos outros. O CUSTO ASSUMIDO: o sandboxing do Claude Code só existe no WSL2,
-        então no Windows nativo a permissão é a única barreira.
-      • ⚠️ `RemoteCommand` e comando de linha são MUTUAMENTE EXCLUDENTES no ssh ("Cannot
-        execute command-line and remote command"), então o bloco de cima sozinho QUEBRARIA
-        `scp`, `rsync` e `ssh cesar <cmd>`. Daí o gêmeo `cesar-cmd`, mesmo host sem
-        `RemoteCommand`: `cesar` pra sentar e trabalhar, `cesar-cmd` pra copiar arquivo. A
-        alternativa era decorar `-o RemoteCommand=none` em toda invocação.
+- [x] `ssh cesar`: my brother's PC became a declarative host (10/08/2026). Access already
+      worked by hand (`ssh v1cferr@192.168.1.40`); what went into home/shell/ssh.nix was the
+      alias and, above all, the record of WHY this host looks like none of the other three: it
+      is the only **Windows** one in the file.
+      • **Inheriting `faiResilience` would be cargo cult.** That block exists to tolerate the
+        SonicWall tunnel's routing hole within VS Code Remote-SSH's 17 s budget. Here it is a
+        LAN hop, <1ms, the same decision already taken for `router`, and the file's pattern
+        becomes "resilience is opt-in, not default".
+      • **No `SetEnv TERM`, unlike the other three hosts.** The default shell of the Windows
+        sshd is **cmd.exe**, which does not read TERM, and their sshd does not carry
+        `AcceptEnv`, so the variable would be discarded at the server. Copying it for symmetry
+        would give a line that does nothing and that the next reading would try to "fix".
+      • **The post-quantum warning on every connection is NOT our error.** The server is
+        `OpenSSH_for_Windows_9.5` (measured with `-v`), and `mlkem768x25519` only exists from
+        OpenSSH 9.9 on; Windows 11 build 26200 still ships 9.5. It only goes away when MS
+        updates Win32-OpenSSH. REFUSED to silence it with `WarnWeakCrypto = "no"` (it exists in
+        our 10.4): silencing it per host hides the server's real lag, and the day it gets fixed
+        would go unnoticed. The warning is honest noise.
+      • **`ssh-copy-id` does NOT work against Windows**, because it assumes a POSIX shell on
+        the other side, and on the other side there is cmd.exe. The manual step is run ON my
+        brother's machine, and WHICH file depends on whether the user is an administrator: if
+        they are, the Windows sshd **ignores** their `~/.ssh/authorized_keys` and only reads
+        `C:\ProgramData\ssh\administrators_authorized_keys`, which still requires `icacls`
+        restricting inheritance, otherwise sshd refuses the file and falls back to the password
+        **silently on the client side**. DONE the same day, and validated with
+        `ssh -o BatchMode=yes ... "echo OK"`: `BatchMode` forbids the password prompt, so the
+        `OK` proves it was the KEY that authenticated; without it the test is ambiguous, because
+        you type the password and conclude the key worked.
+      • `Add-Content -Encoding ascii` is not fussiness: PowerShell's default for a file is
+        UTF-16, and sshd does not read `authorized_keys` in UTF-16, a SILENT failure that falls
+        back to the password without saying why. The same class of trap as the `icacls` one:
+        both ways of getting this wrong are silent and indistinguishable from each other.
+      • The account PASSWORD was changed along with it, and the decision was MEASURED first:
+        Windows distinguishes CHANGING a password (with the old one in hand, which re-wraps the
+        DPAPI master key) from RESETTING it (`net user v1cferr *`, which makes it unrecoverable
+        and takes Credential Manager, browser passwords and EFS along with it, all silently).
+        There is no "change" path from the command line without P/Invoke, and over SSH there is
+        no Ctrl+Alt+Del. The reset was safe because `cmdkey /list` came back `* NONE *` (nothing
+        to lose) and `Get-LocalUser | Select PrincipalSource` came back `Local`; had it come
+        back `MicrosoftAccount`, neither `net user` nor `Set-LocalUser` would change anything,
+        because the password would belong to the MS account.
+      • A literal IP (192.168.1.40) and not a `my.*` option: it is cited in a single place, the
+        same justification as `router`, since a lone literal does not trigger rule 11. But it is
+        DHCP: if the router hands out another address, the alias breaks, and the fix is a DHCP
+        reservation on OpenWrt, not one more option here.
+      • **The shell became GIT BASH, and bash had been there the whole time.** `RequestTTY` plus
+        `RemoteCommand` pointing at `C:\Program Files\Git\bin\bash.exe`, tested, landing in
+        `v1cferr@Cesar MINGW64 ~$`. `where bash` LIES on that machine: the only `bash` on the
+        PATH is `C:\Windows\System32\bash.exe`, which **is not bash**, it is the legacy WSL stub,
+        and there is no distro installed. The real bash does not show up in `where` because only
+        `Git\cmd` is on the PATH and the binary lives in `Git\bin`. It almost became "this
+        machine has no bash", when it did.
+      • **And the coreutils came with it, with nothing installed.** Git for Windows bundles the
+        entire GNU userland (`ls`, `grep`, `sed`, `awk`, `find`, `less`, `tar`, `curl` and so
+        on), so the complaint about "missing coreutils" was really the complaint about landing
+        in cmd.exe.
+      • REFUSED to change the shell through the registry
+        (`HKLM:\SOFTWARE\OpenSSH\DefaultShell`): it is GLOBAL, it would change the shell of
+        every SSH session on the machine, including its owner's. On the client side the choice
+        is only ours and it disappears along with this repo.
+      • REFUSED to install WSL, even with `v1cferr` being an admin: my brother's project is
+        Windows-native Gradle/Java (`gradlew.bat`), and running it from WSL against `/mnt/c`
+        crosses the I/O boundary that is exactly where WSL is slow, on top of planting GB of VM
+        on somebody else's machine. THE ACCEPTED COST: Claude Code's sandboxing only exists on
+        WSL2, so on native Windows the permission is the only barrier.
+      • `RemoteCommand` and a command line are MUTUALLY EXCLUSIVE in ssh ("Cannot execute
+        command-line and remote command"), so the block above on its own would BREAK `scp`,
+        `rsync` and `ssh cesar <cmd>`. Hence the twin `cesar-cmd`, the same host with no
+        `RemoteCommand`: `cesar` to sit down and work, `cesar-cmd` to copy a file. The
+        alternative was memorizing `-o RemoteCommand=none` on every invocation.
 
-- [x] Auditoria de crescimento em disco: o Docker era o único sem teto, e o btrfs/GC
-      não precisavam de nada (10/08/2026) — a pergunta era "o btrfs está bem? tem swap? o
-      GC limpa direito?". As três respostas foram "sim, não mexa", e o problema real estava
-      num quarto lugar que ninguém tinha olhado.
-      • 🟠 **Docker: 11,35 GB de build cache, 8,5 GB recuperáveis, ZERO política.** Todos
-        os vizinhos já tinham teto — journald em `SystemMaxUse=2G`, coredump vacuado pelo
-        systemd, btrbk com `snapshot_preserve`, nix com `gc` semanal. O Docker era o único
-        sem nada, e o `grad-radar.nix` que entrou na véspera PIOROU isso: ele roda
-        `docker compose build` no ExecStartPre, a cada boot. Resolvido em
-        system/services/docker.nix; a poda manual recuperou 8,501 GB (cache 11,35 → 2,85).
-      • DUAS OPÇÕES RECUSADAS, e as duas destroem dado na MESMA janela — o stack PARADO
-        na hora da poda semanal. Nenhuma dá erro; elas apagam com sucesso o que não devem.
-        `allVolumes.enable` poda volume NOMEADO, e é onde vivem `duo_duo-db-data` e
-        `grad-radar_db_data`: com o compose derrubado, a poda apagaria os dois Postgres.
-        `flags = ["--all"]` remove imagem COM TAG sem container rodando, e as imagens
-        locais não vêm de registry — some = rebuild, que no grad-radar inclui
-        `pnpm install` dentro do container (a unit tem `TimeoutStartSec = 1800` por isso).
-        O `--all` é o que a maioria dos configs públicos usa; aqui não paga.
-      • ⚠️ O `weekly` do systemd é **Mon 00:00**, que é exatamente o minuto do `nix-gc`.
-        Ficou `Mon 04:30`, depois do restic (03:00 + até 30 min) e do nix-optimise (03:45).
-        Duas faxinas pesadas de I/O na mesma NVMe no mesmo minuto não ganham em coincidir.
-      • **btrfs: nada a fazer — e um conselho popular a NÃO seguir.** As opções montadas
-        são `noatime,compress=zstd:1,ssd,discard=async,space_cache=v2`, que é o conjunto
-        correto. NÃO adicionar `fstrim.timer`: o `discard=async` já é TRIM contínuo, e o
-        timer não está habilitado justamente por isso. Alocação sadia com ~398 GiB não
-        alocados (Data 548 GiB alocados / 530,7 usados; Metadata DUP 7 GiB / 3,99), então
-        também não há `balance` pendente — que é o que morde usuário de btrfs a longo prazo.
-      • **Swap existe, em duas camadas**: zram 7,7 G em prio 5 (quente, comprimindo 2,7 G
-        em 981 MB medidos) e swapfile de 16 G em prio -1 (frio), este com **0 B usados** —
-        a camada rápida dá conta sozinha. A prova de que o swapfile está NOCOW correto não
-        é o `lsattr`, é o kernel ter aceitado o `swapon`: o btrfs RECUSA ativar swapfile
-        que seja CoW ou comprimido, então estar ativo é a validação.
-      • **GC já estava certo**: semanal + `--delete-older-than 30d`, mais `nix-optimise`
-        diário. Recomendado NÃO apertar — a `/nix/store` inteira são 53 GB de 953 GB, ou
-        seja, não é ela que cresce; encurtar a janela custaria cache de rebuild e rollback
-        pra recuperar espaço que não falta.
-      • ⚠️ ERRO MEU NO CAMINHO, e a mecânica vale mais que o erro: havia `caddy.nix` e
-        `services.nix` do dono já no INDEX; eu dei `git add` nos meus dois arquivos e
-        commitei — e o `git commit` leva o index INTEIRO, então trabalho alheio entrou no
-        meu commit. Desfeito com `reset --soft HEAD~1` + `git commit -- <paths>`, que
-        commita só os caminhos dados e deixa o resto do index quieto. REGRA: em árvore com
-        trabalho de terceiros staged, commitar SEMPRE por pathspec.
-      • O `--dry-run` que eu tinha escrito no comentário do módulo NÃO EXISTE no Docker
-        29.6.2 (conferido no `--help` antes de commitar). A prévia real é `docker system
-        prune` SEM o `-f`, que lista as categorias e pede y/N.
+- [x] A disk growth audit: Docker was the only one with no ceiling, and btrfs/GC needed
+      nothing (10/08/2026). The question was "is btrfs fine? is there swap? does the GC clean
+      up properly?". All three answers were "yes, do not touch it", and the real problem was in
+      a fourth place nobody had looked at.
+      • **Docker: 11.35 GB of build cache, 8.5 GB recoverable, ZERO policy.** Every neighbor
+        already had a ceiling: journald at `SystemMaxUse=2G`, coredumps vacuumed by systemd,
+        btrbk with `snapshot_preserve`, nix with a weekly `gc`. Docker was the only one with
+        nothing, and the `grad-radar.nix` that came in the day before made it WORSE: it runs
+        `docker compose build` in ExecStartPre, on every boot. Solved in
+        system/services/docker.nix; the manual prune recovered 8.501 GB (the cache went from
+        11.35 to 2.85).
+      • TWO OPTIONS REFUSED, and both destroy data in the SAME window, with the stack STOPPED at
+        the time of the weekly prune. Neither raises an error; they successfully delete what
+        they should not. `allVolumes.enable` prunes NAMED volumes, which is where
+        `duo_duo-db-data` and `grad-radar_db_data` live: with the compose down, the prune would
+        delete both Postgres instances. `flags = ["--all"]` removes a TAGGED image with no
+        running container, and the local images do not come from a registry, so gone means a
+        rebuild, which in grad-radar includes a `pnpm install` inside the container (the unit
+        has `TimeoutStartSec = 1800` for that reason). The `--all` is what most public configs
+        use; here it does not pay off.
+      • systemd's `weekly` is **Mon 00:00**, which is exactly the `nix-gc` minute. It became
+        `Mon 04:30`, after restic (03:00 plus up to 30 min) and nix-optimise (03:45). Two heavy
+        I/O cleanups on the same NVMe in the same minute gain nothing from coinciding.
+      • **btrfs: nothing to do, and one popular piece of advice NOT to follow.** The mount
+        options are `noatime,compress=zstd:1,ssd,discard=async,space_cache=v2`, which is the
+        correct set. Do NOT add `fstrim.timer`: `discard=async` is already continuous TRIM, and
+        the timer is not enabled precisely for that reason. Allocation is healthy with ~398 GiB
+        unallocated (Data 548 GiB allocated / 530.7 used; Metadata DUP 7 GiB / 3.99), so there
+        is no pending `balance` either, which is what bites btrfs users in the long run.
+      • **Swap exists, in two layers**: zram 7.7 G at priority 5 (hot, compressing 2.7 G into
+        981 MB as measured) and a 16 G swapfile at priority -1 (cold), the latter with **0 B
+        used**, so the fast layer handles it alone. The proof that the swapfile is correctly
+        NOCOW is not `lsattr`, it is the kernel having accepted the `swapon`: btrfs REFUSES to
+        activate a swapfile that is CoW or compressed, so being active is the validation.
+      • **The GC was already right**: weekly plus `--delete-older-than 30d`, plus a daily
+        `nix-optimise`. Recommended NOT to tighten it, since the whole `/nix/store` is 53 GB out
+        of 953 GB, which means it is not what grows; shortening the window would cost rebuild
+        cache and rollbacks to recover space that is not missing.
+      • A MISTAKE ALONG THE WAY, and the mechanics are worth more than the mistake: a
+        `caddy.nix` and a `services.nix` from other work were already in the INDEX; a `git add`
+        of the two files for this change plus a commit took the WHOLE index along, so unrelated
+        work landed in this commit. Undone with `reset --soft HEAD~1` plus
+        `git commit -- <paths>`, which commits only the given paths and leaves the rest of the
+        index alone. THE RULE: in a tree with other work staged, ALWAYS commit by pathspec.
+      • The `--dry-run` that had been written in the module's comment DOES NOT EXIST in Docker
+        29.6.2 (checked in the `--help` before committing). The real preview is
+        `docker system prune` WITHOUT the `-f`, which lists the categories and asks y/N.
 
-- [x] `wg-status`: visibilidade do WireGuard sem senha — e um bug de sysupgrade que ela
-      revelou (10/08/2026). Não dava pra responder "o celular está conectado?" sem senha de
-      root, e ping só prova alcance, não handshake.
-      • WRAPPER, NÃO O BINÁRIO: `/usr/bin/wg-status` = `exec /usr/bin/wg show`, subcomando
-        fixo e SEM repassar `"$@"`. Pôr `/usr/bin/wg` inteiro no NOPASSWD daria `wg set`, que
-        TROCA CHAVE DE PEER — quem tivesse só a chave SSH poderia se inscrever na VPN sem
-        senha nenhuma. Sem repasse de argumento não existe `wg-status set`.
-      • root:root 0755 e FORA do /home. Se o usuário pudesse escrever no arquivo, reescrevê-lo
-        daria root arbitrário sem senha e o wrapper viraria o buraco que existe pra evitar. É
-        por isso que ele NÃO foi pra /home/v1cferr/bin/, que seria o lugar cômodo por já estar
-        preservado. Forma copiada do /usr/bin/wake-desktop, que já vivia aqui igual.
-      • ⚠️ BUG PRÉ-EXISTENTE ACHADO NO CAMINHO: o `/usr/bin/wake-desktop` NUNCA esteve no
-        `/etc/sysupgrade.conf`. O sysupgrade preserva `/etc/sudoers.d/` mas NÃO `/usr/bin/`,
-        então o próximo upgrade apagaria o binário e DEIXARIA a regra NOPASSWD apontando pro
-        vazio — Wake-on-LAN pelo roteador morrendo em silêncio, com a config parecendo certa.
-        Regra e alvo têm que ser preservados JUNTOS. Os dois foram listados.
-      • O QUE O PRIMEIRO `wg show` MOSTROU, e vale mais que o wrapper:
-        1. O celular está conectado (handshake de 1m57s, 3,14 GiB enviados) — mas o endpoint
-           é `186.219.82.216`, que é **UFSCar (AS52888)**, bloco `186.219.80.0/20`. Ou seja,
-           ele está no WiFi do campus, NÃO em rede móvel. Isso corrige a leitura que eu tinha
-           feito do RTT: os 80 ms com jitter de 20 ms não são 4G, são o mesmo caminho do
-           notebook (35 ms) mais o salto WiFi.
-        2. ⚠️ EXISTE UM TERCEIRO BLOCO DA UFSCAR, e ele NÃO está no `moonlightSources` de
-           system/services/sunshine.nix. Consequência prática: Moonlight DIRETO do celular
-           seria recusado. Hoje ele funciona só porque a 51820 do WireGuard não tem `src_ip`.
-           DECISÃO: não ampliar o allowlist agora — o celular já tem caminho que funciona, e
-           abrir mais faixa pra um aparelho que não precisa é troca ruim. Fica registrado pra
-           quando alguém perguntar "por que do celular não conecta direto?".
-        3. Em 17 DIAS de uptime, só UM peer fez handshake. `notebook` (.2) nunca — coerente,
-           é justamente o que o acesso direto de hoje substituiu. Mas `fai-workstation` (.5)
-           tem `persistent_keepalive = 25`, ou seja foi configurada pra manter conexão viva, e
-           não conectou uma vez. Ou está desligada, ou o peer é legado. Ver pendências.
+- [x] `wg-status`: WireGuard visibility with no password, and a sysupgrade bug it revealed
+      (10/08/2026). There was no way to answer "is the phone connected?" without the root
+      password, and a ping only proves reachability, not a handshake.
+      • A WRAPPER, NOT THE BINARY: `/usr/bin/wg-status` = `exec /usr/bin/wg show`, with a fixed
+        subcommand and WITHOUT forwarding `"$@"`. Putting the whole `/usr/bin/wg` in NOPASSWD
+        would give `wg set`, which REPLACES A PEER KEY, so whoever had only the SSH key could
+        enroll themselves into the VPN with no password at all. With no argument forwarding
+        there is no `wg-status set`.
+      • root:root 0755 and OUTSIDE /home. If the user could write to the file, rewriting it
+        would give arbitrary root with no password and the wrapper would become the hole it
+        exists to avoid. That is why it did NOT go into /home/v1cferr/bin/, which would be the
+        convenient place for already being preserved. The form is copied from
+        /usr/bin/wake-desktop, which already lived here the same way.
+      • A PRE-EXISTING BUG FOUND ALONG THE WAY: `/usr/bin/wake-desktop` was NEVER in
+        `/etc/sysupgrade.conf`. sysupgrade preserves `/etc/sudoers.d/` but NOT `/usr/bin/`, so
+        the next upgrade would delete the binary and LEAVE the NOPASSWD rule pointing at
+        nothing, with Wake-on-LAN through the router dying silently and the config looking
+        right. The rule and its target have to be preserved TOGETHER. Both were listed.
+      • WHAT THE FIRST `wg show` SHOWED, and it is worth more than the wrapper:
+        1. The phone is connected (a 1m57s handshake, 3.14 GiB sent), but the endpoint is
+           `186.219.82.216`, which is **UFSCar (AS52888)**, block `186.219.80.0/20`. Which means
+           it is on the campus WiFi, NOT on mobile data. That corrects the reading I had made of
+           the RTT: the 80 ms with 20 ms of jitter are not 4G, they are the same path as the
+           notebook (35 ms) plus the WiFi hop.
+        2. THERE IS A THIRD UFSCAR BLOCK, and it is NOT in the `moonlightSources` of
+           system/services/sunshine.nix. The practical consequence: DIRECT Moonlight from the
+           phone would be refused. Today it works only because WireGuard's 51820 has no
+           `src_ip`. DECISION: do not widen the allowlist now, because the phone already has a
+           path that works, and opening another range for a device that does not need it is a
+           bad trade. It is recorded here for when somebody asks "why does the phone not connect
+           directly?".
+        3. In 17 DAYS of uptime, only ONE peer did a handshake. `notebook` (.2) never did, which
+           is consistent, since that is exactly what today's direct access replaced. But
+           `fai-workstation` (.5) has `persistent_keepalive = 25`, meaning it was configured to
+           keep the connection alive, and it did not connect once. Either it is off, or the peer
+           is legacy. See the open items.
 
-- [x] Roteador: `/etc/init.d/firewall` entra no NOPASSWD (10/08/2026) — o
-      scripts/router-moonlight-forward.sh precisava de senha só pro `reload` do fim, e isso
-      o tornava interativo à toa.
-      • ⚠️ O RISCO INCREMENTAL É ZERO, e é MEDIDO, não suposto — foi isto que destravou a
-        decisão: `/usr/sbin/nft` JÁ era NOPASSWD (confirmado com `sudo -n nft list tables`),
-        e `nft flush ruleset` derruba o firewall inteiro. O poder de desligar o firewall sem
-        senha já existia, por um caminho PIOR. A mudança só torna utilizável o caminho
-        legítimo. Sem essa medição isto teria sido recusado como "escalada de privilégio", e
-        a recusa estaria errada.
-      • MÉTODO, que vale pra qualquer mexida em sudoers: validar com `visudo -c -f` no
-        arquivo CANDIDATO em /tmp, ANTES de encostar no que funciona — sudoers malformado faz
-        o sudo recusar tudo, e o conserto exigiria justamente o root que o sudo daria.
-        Segunda checagem do conjunto (`visudo -c`) depois de instalar, com rollback.
-      • ⚠️ ISTO NÃO É ESPELHADO. O `router-sync` cobre `/etc/config/` e nada mais, então esta
-        entrada é o ÚNICO registro da mudança no repo. O `sysupgrade` preserva
-        `/etc/sudoers.d/` (está nas 38 entradas do keep.d), então ela sobrevive a upgrade —
-        mas não a uma reinstalação limpa.
-      • Estado final: `v1cferr ALL=(ALL) NOPASSWD: /sbin/reboot, /usr/sbin/nft, /sbin/uci,
-        /etc/init.d/dnsmasq, /etc/init.d/firewall`. Comando arbitrário continua pedindo senha
-        (`(ALL) ALL`), que é o certo.
+- [x] Router: `/etc/init.d/firewall` enters NOPASSWD (10/08/2026). The
+      scripts/router-moonlight-forward.sh needed a password only for the `reload` at the end,
+      and that made it interactive for nothing.
+      • THE INCREMENTAL RISK IS ZERO, and it is MEASURED, not assumed, and that is what
+        unblocked the decision: `/usr/sbin/nft` ALREADY was NOPASSWD (confirmed with
+        `sudo -n nft list tables`), and `nft flush ruleset` takes the whole firewall down. The
+        power to turn the firewall off with no password already existed, through a WORSE path.
+        The change only makes the legitimate path usable. Without that measurement this would
+        have been refused as "privilege escalation", and the refusal would have been wrong.
+      • METHOD, which holds for any sudoers change: validate with `visudo -c -f` on the
+        CANDIDATE file in /tmp, BEFORE touching what works, because a malformed sudoers makes
+        sudo refuse everything, and the fix would require precisely the root that sudo would
+        give. A second check of the whole set (`visudo -c`) after installing, with a rollback.
+      • THIS IS NOT MIRRORED. `router-sync` covers `/etc/config/` and nothing else, so this
+        entry is the ONLY record of the change in the repo. `sysupgrade` preserves
+        `/etc/sudoers.d/` (it is in the 38 keep.d entries), so it survives an upgrade, but not a
+        clean reinstall.
+      • The final state: `v1cferr ALL=(ALL) NOPASSWD: /sbin/reboot, /usr/sbin/nft, /sbin/uci,
+        /etc/init.d/dnsmasq, /etc/init.d/firewall`. An arbitrary command still asks for the
+        password (`(ALL) ALL`), which is correct.
 
-- [x] Moonlight sem VPN: port-forward direto, restrito à UFSCar (10/08/2026) — o pedido era
-      "conectar no Sunshine de fora sem entrar na VPN, e direto, sem servidores
-      intermediários". A segunda metade do pedido já era verdade e ninguém sabia.
-      • ⚠️ A PREMISSA ESTAVA ERRADA, e vale mais que a implementação: **o WireGuard não é um
-        servidor intermediário**. O endpoint dele é o PRÓPRIO roteador de casa, então túnel e
-        port-forward percorrem exatamente `UFSCar → internet → 177.52.84.188`. Não havia rota
-        alternativa a eliminar. Isso ERA risco no Tailscale (podia cair no DERP), e saiu junto
-        com ele em 08/08 — o medo sobreviveu à causa. Não reescrever isto como ganho de rota.
-      • O QUE SE GANHA DE VERDADE é MTU: 1492 da PPPoE contra ~1420 do túnel. Latência é ruído.
-      • O QUE MOTIVA MESMO ASSIM, e é bom motivo: o notebook da FAI já roda nxBender +
-        openconnect. Somar um terceiro cliente de VPN ali é conflito de rota esperando
-        acontecer — o dono recusou instalar WireGuard por isso, e está certo.
-      • PORTAS CONFERIDAS NO BINÁRIO, não em blog: lidos os offsets do web UI do build em uso
-        (2026.516.143833, `assets/web/assets/config-*.js`) — tcp `port-5`/`port`/`port+1`/
-        `port+21`, udp `port+9`…`port+11`. Quase toda lista na internet inclui uma **UDP 48002
-        ("mic") que NÃO EXISTE nesta versão**. São três portas UDP, não quatro.
-      • A 47990 (painel admin) ficou DE FORA das duas listas de propósito. O
-        `origin_web_ui_allowed = "wan"` só é seguro porque ela não é encaminhada — e o
-        comentário que justificava aquele valor ("só a faixa do WireGuard chega nesta porta")
-        deixou de ser verdade hoje e foi reescrito.
-      • DUAS TRANCAS, e o `-s` do host não é redundante com o `src_ip` do roteador: é a que
-        sobrevive a alguém mexer no LuCI sem ler o repo. As listas TÊM que casar — divergir dá
-        "roteador encaminha, host derruba", sintoma indistinguível de qualquer outra falha.
-      • ⚠️ RESTRIÇÃO NOVA que a mudança criou: `packet_size` é GLOBAL e agora serve dois
-        caminhos de MTU diferente. O teto útil vira o do MENOR (o túnel), então 1024 deixou de
-        ser conservadorismo e virou trava. Só destrava se o túnel for aposentado.
-      • CRIPTOGRAFIA não regride, e isso não era óbvio: o Sunshine classifica cliente por IP.
-        Pelo túnel chega 10.10.10.x = LAN → `lan_encryption_mode = 0` (o túnel cifra). Direto
-        chega público = WAN → `wan_encryption_mode = 1`, ligado por default.
-      • ✅ VALIDADO NO MESMO DIA, com sessão real de 21m58s + 9min. Medições e método completos
-        em [testes/moonlight-direto.md](../../tests/moonlight-direct.md); o essencial:
-        0% de perda em 100 pacotes de 1 KB, RTT 35,5 ms, jitter 0,54 ms. A prova de que a
-        sessão funciona de ponta a ponta foi o próprio Claude passar a rodar SEM `SSH_CLIENT`
-        e com `DISPLAY=:0` — dentro da sessão gráfica sendo streamada.
-      • O UDP PASSA, e o método de prova vale guardar: o contador de DNAT do roteador marcou
-        `Moonlight-Stream-Campus → packets 3`. Esse contador só conta o PRIMEIRO pacote de
-        cada fluxo novo (depois o conntrack desvia do dstnat), então 3 = exatamente vídeo
-        47998 + áudio 47999 + controle 48000. Depois da reconexão virou 6 — que é como se
-        confirmou que houve UMA reconexão, e não várias.
-      • `ping_timeout = 20000` absorveu um buraco de 18,9 s às 11:47 sem derrubar a sessão. A
-        prova é indireta e vale como método — o guard do hypridle NÃO ciclou (um `Stopped` às
-        11:25, nenhum `Started` às 11:47), ou seja o `undo` do prep-cmd nunca rodou, logo o
-        Sunshine não desmontou a sessão.
-        ⚠️ CORREÇÃO (mesmo dia): a 1ª versão desta linha concluía "o buraco foi do lado da
-        UFSCar", porque nada tinha piscado do lado de casa. O dono confirmou depois que foi
-        ELE reconectando — nas duas quedas do dia (18,9 s e 104 s). "Não foi aqui" não
-        implica "foi a rede": faltava a terceira hipótese, o usuário, e ela era a certa. O
-        mecanismo do `ping_timeout` segue medido e verdadeiro; a causa atribuída é que era
-        invenção. Não há indício de instabilidade nesta rota — 0% de perda em todos os testes.
-      • A ROTA, medida e com os donos por RDAP: roteador → **Alcans (AS52783, o ISP)** →
-        Algar (AS16735, TRÂNSITO da Alcans) → IX.br/NIC.br (AS26162) → RNP (AS1916) →
-        UFSCar (AS52888). Cinco sistemas autônomos, e NENHUM é servidor intermediário — todos
-        encaminham pacote, nenhum termina a conexão. IX.br e RNP não são removíveis: a
-        internet da UFSCar vem da RNP. É a resposta empírica ao pedido de "sem servidores
-        intermediários", e confirma que o túnel também não tinha.
-        ⚠️ CORREÇÃO (mesmo dia): a primeira versão desta linha dizia que a Algar era o ISP,
-        porque foi o 1º salto PÚBLICO do traceroute. Errado — o IP de casa (177.52.84.188)
-        está em `177.52.80.0/21`, que é **ALCANS TELECOM (AS52783)**. A Algar é o trânsito
-        dela. Ler "primeiro salto público" como "meu provedor" é a mesma classe de erro do
-        traceroute lido como prova de CGNAT: o salto diz por onde o pacote passou, não de
-        quem é a assinatura. Quem responde isso é RDAP no IP de casa, não o traceroute.
-      • LATÊNCIA: ruído, como previsto. Os 35 ms são do caminho físico, que o túnel percorria
-        igual. Registrado explicitamente para ninguém atribuir ganho a isto depois.
+- [x] Moonlight with no VPN: a direct port forward, restricted to UFSCar (10/08/2026). The
+      request was "connect to Sunshine from outside without joining the VPN, and directly, with
+      no intermediate servers". The second half of the request was already true and nobody knew.
+      • THE PREMISE WAS WRONG, and that is worth more than the implementation: **WireGuard is
+        not an intermediate server**. Its endpoint is the home router ITSELF, so both the tunnel
+        and the port forward travel exactly `UFSCar → internet → 177.52.84.188`. There was no
+        alternative route to eliminate. That WAS a risk with Tailscale (it could fall into DERP)
+        and it left along with it on 08/08, so the fear outlived the cause. Do not rewrite this
+        as a routing gain.
+      • WHAT IS ACTUALLY GAINED is MTU: 1492 from PPPoE against ~1420 through the tunnel.
+        Latency is noise.
+      • WHAT MOTIVATES IT ANYWAY, and it is a good reason: the FAI notebook already runs
+        nxBender + openconnect. Adding a third VPN client there is a routing conflict waiting to
+        happen, and its owner refused to install WireGuard for that reason, and they are right.
+      • THE PORTS WERE CHECKED IN THE BINARY, not in a blog post: the offsets were read from the
+        web UI of the build in use (2026.516.143833, `assets/web/assets/config-*.js`): tcp
+        `port-5`/`port`/`port+1`/`port+21`, udp `port+9` through `port+11`. Almost every list on
+        the internet includes a **UDP 48002 ("mic") that DOES NOT EXIST in this version**. There
+        are three UDP ports, not four.
+      • 47990 (the admin panel) was left OUT of both lists on purpose. The
+        `origin_web_ui_allowed = "wan"` is only safe because it is not forwarded, and the
+        comment that justified that value ("only the WireGuard range reaches this port") stopped
+        being true today and was rewritten.
+      • TWO LOCKS, and the host's `-s` is not redundant with the router's `src_ip`: it is the
+        one that survives somebody touching LuCI without reading the repo. The lists HAVE to
+        match, because diverging gives "the router forwards, the host drops", a symptom
+        indistinguishable from any other failure.
+      • A NEW CONSTRAINT the change created: `packet_size` is GLOBAL and it now serves two
+        paths with different MTU. The useful ceiling becomes the SMALLER one (the tunnel), so
+        1024 stopped being conservatism and became a lock. It only unlocks if the tunnel is
+        retired.
+      • ENCRYPTION does not regress, and that was not obvious: Sunshine classifies a client by
+        IP. Through the tunnel it arrives as 10.10.10.x = LAN, so `lan_encryption_mode = 0` (the
+        tunnel encrypts). Direct it arrives public = WAN, so `wan_encryption_mode = 1`, on by
+        default.
+      • VALIDATED THE SAME DAY, with a real session of 21m58s plus 9min. The full
+        measurements and method are in
+        [tests/moonlight-direct.md](../../tests/moonlight-direct.md); the essentials: 0% loss
+        across 100 packets of 1 KB, RTT 35.5 ms, jitter 0.54 ms. The proof that the session
+        works end to end was Claude itself starting to run WITHOUT `SSH_CLIENT` and with
+        `DISPLAY=:0`, inside the graphical session being streamed.
+      • UDP GETS THROUGH, and the method of proof is worth keeping: the router's DNAT counter
+        marked `Moonlight-Stream-Campus → packets 3`. That counter only counts the FIRST packet
+        of each new flow (after that conntrack bypasses dstnat), so 3 is exactly video 47998 +
+        audio 47999 + control 48000. After the reconnect it became 6, which is how it was
+        confirmed that there was ONE reconnect and not several.
+      • `ping_timeout = 20000` absorbed an 18.9 s hole at 11:47 without dropping the session.
+        The proof is indirect and it holds as a method: the hypridle guard did NOT cycle (a
+        `Stopped` at 11:25, no `Started` at 11:47), which means the prep-cmd `undo` never ran,
+        so Sunshine did not tear the session down.
+        CORRECTION (same day): the 1st version of this line concluded "the hole was on the
+        UFSCar side", because nothing had blinked on the home side. I confirmed afterwards that
+        it was ME reconnecting, on both drops that day (18.9 s and 104 s). "It was not here"
+        does not imply "it was the network": the third hypothesis, the user, was missing, and it
+        was the right one. The `ping_timeout` mechanism is still measured and true; what was
+        invention was the attributed cause. There is no sign of instability on this route, with
+        0% loss in every test.
+      • THE ROUTE, measured and with the owners through RDAP: router → **Alcans (AS52783, the
+        ISP)** → Algar (AS16735, Alcans's TRANSIT) → IX.br/NIC.br (AS26162) → RNP (AS1916) →
+        UFSCar (AS52888). Five autonomous systems, and NONE is an intermediate server, since
+        they all forward packets and none terminates the connection. IX.br and RNP cannot be
+        removed: UFSCar's internet comes from RNP. It is the empirical answer to the "no
+        intermediate servers" request, and it confirms that the tunnel did not have any either.
+        CORRECTION (same day): the first version of this line said Algar was the ISP, because
+        it was the 1st PUBLIC hop in the traceroute. Wrong: the home IP (177.52.84.188) is in
+        `177.52.80.0/21`, which is **ALCANS TELECOM (AS52783)**. Algar is its transit. Reading
+        "first public hop" as "my provider" is the same class of error as the traceroute read as
+        proof of CGNAT: the hop says where the packet went through, not whose the subscription
+        is. What answers that is RDAP on the home IP, not the traceroute.
+      • LATENCY: noise, as predicted. The 35 ms belong to the physical path, which the tunnel
+        travelled all the same. Recorded explicitly so nobody attributes a gain to this later.
 
-- [x] ~~CGNAT~~ o item morto que sobreviveu à própria correção (10/08/2026) — a entrada de
-      07/08 em `docs/open-items.md` ("NÃO HÁ ENTRADA … NENHUMA regra de port forward pode
-      funcionar") continuou lá por três dias DEPOIS de a entrada de 08/08 deste arquivo já a
-      ter desmentido inteira. Apagada.
-      • O CUSTO NÃO FOI TEÓRICO: ela é a primeira coisa que se lê ao perguntar "dá pra expor
-        porta?", e a resposta que ela dá é "não, desista". O trabalho de hoje começou tendo
-        que provar que a doc do próprio repo estava errada.
-      • REPROVADO HOJE, com método que não mente (ponto externo independente, não a rede da
-        FAI): `check-host.net` de Áustria, Canadá e Irã conecta na 2222 de `177.52.84.188`.
-        Controle na mesma ferramenta: a 47984 dava `Connection refused` antes das redirects —
-        é o que torna o positivo interpretável em vez de só otimista.
-      • ⚠️ E O TRACEROUTE CONTINUA PARECENDO CGNAT: saltos 2-4 em `172.31.x` e o 5 em
-        `100.127.255.225`, que é faixa `100.64/10` — a faixa DEFINIDA pra CGNAT. Ainda assim
-        não é: é transporte interno da operadora. Este é exatamente o instrumento que enganou
-        em 07/08, ele não melhorou, e quem repetir a leitura vai errar de novo.
-      • A LIÇÃO DE PROCESSO: corrigir no histórico não corrige a pendência. Item revertido tem
-        que morrer nos DOIS lugares no mesmo commit, senão o repo passa a ter duas respostas e
-        a errada é a que está no arquivo que as pessoas leem primeiro.
+- [x] ~~CGNAT~~ the dead item that outlived its own correction (10/08/2026): the 07/08 entry in
+      `docs/open-items.md` ("THERE IS NO INBOUND … NO port forward rule can work") stayed there
+      for three days AFTER the 08/08 entry in this file had already disproved it entirely.
+      Deleted.
+      • THE COST WAS NOT THEORETICAL: it is the first thing you read when asking "can I expose a
+        port?", and the answer it gives is "no, give up". Today's work started by having to
+        prove that the repo's own docs were wrong.
+      • DISPROVED TODAY, with a method that does not lie (an independent external vantage point,
+        not the FAI network): `check-host.net` from Austria, Canada and Iran connects to 2222 on
+        `177.52.84.188`. A control in the same tool: 47984 gave `Connection refused` before the
+        redirects, which is what makes the positive interpretable instead of merely optimistic.
+      • AND THE TRACEROUTE STILL LOOKS LIKE CGNAT: hops 2 to 4 in `172.31.x` and hop 5 in
+        `100.127.255.225`, which is the `100.64/10` range, the range DEFINED for CGNAT. It still
+        is not: it is the ISP's internal transport. This is exactly the instrument that misled
+        on 07/08, it has not improved, and whoever repeats the reading will get it wrong again.
+      • THE PROCESS LESSON: correcting the history does not correct the open item. A reverted
+        item has to die in BOTH places in the same commit, otherwise the repo ends up with two
+        answers and the wrong one is in the file people read first.
 
-- [x] Auth keys do Tailscale revogadas — a exposição de 05/08 fechou (09/08/2026)
-      O `.env` órfão na raiz do repo guardava `TAILSCALE=tskey-auth-kLXAR6…` em texto
-      claro, modo 644, e a key era **reusable** — o pior caso, porque quem tivesse a
-      string entrava na tailnet quantas vezes quisesse. Apagar o arquivo (05/08) reduziu
-      a exposição local e NÃO invalidou nada; só a revogação no admin console faz isso.
-      Todas as keys foram apagadas pelo dono em 09/08.
-      • O Tailscale saiu de uso nesta máquina no caminho: `tailscaled` está `inactive` e
-        o binário `tailscale` nem existe no PATH — o que tornou a revogação um ato de
-        blast radius zero. Registrado porque é o argumento que destrava esse tipo de
-        item: quando nada depende do segredo, revogar deixa de ter contrapartida e a
-        única razão pra adiar some.
-      • A rota de acesso externo continua sendo a pendência do CGNAT, não esta.
+- [x] Tailscale auth keys revoked: the 05/08 exposure is closed (09/08/2026). The orphan
+      `.env` at the repo root held `TAILSCALE=tskey-auth-kLXAR6…` in plain text, mode 644, and
+      the key was **reusable**, the worst case, because whoever had the string could join the
+      tailnet as many times as they wanted. Deleting the file (05/08) reduced the local exposure
+      and invalidated NOTHING; only revoking it in the admin console does that. I deleted every
+      key on 09/08.
+      • Tailscale fell out of use on this machine along the way: `tailscaled` is `inactive` and
+        the `tailscale` binary does not even exist on the PATH, which made the revocation an act
+        with zero blast radius. Recorded because it is the argument that unblocks this kind of
+        item: when nothing depends on the secret, revoking has no downside and the only reason
+        to postpone disappears.
+      • The external access route is still the CGNAT open item, not this one.
 
-- [x] Auditoria geral do setup, e o que ela achou: a poda do restic estava parada
-      há 4 dias (09/08/2026) — varredura completa de hardware e software pedida em aberto
-      ("meu sistema está saudável?"). O veredito foi saudável, mas dois achados só
-      existiam porque ninguém tinha olhado: os dois se escondiam atrás de ruído que já
-      era rotina.
-      • 🔴 **restic: `forget --prune` sem rodar desde 05/08 15:46.** `error: lstat
-        /home/v1cferr/Drive: permission denied` → restic sai 3 → o `unlock` e o
-        `forget --prune`, que são o 2º e o 3º ExecStart, nunca chegam a executar. É a
-        MESMA armadilha do `~/FAI-workstation` de 05/08 (FUSE do usuário, backup roda
-        como root), com um mountpoint que ninguém lembrou de excluir. Corrigido em
+- [x] A general audit of the setup, and what it found: the restic prune had been stopped for 4
+      days (09/08/2026). A complete hardware and software sweep asked for in the open ("is my
+      system healthy?"). The verdict was healthy, but two findings only existed because nobody
+      had looked: both were hiding behind noise that had already become routine.
+      • **restic: `forget --prune` had not run since 05/08 15:46.**
+        `error: lstat /home/v1cferr/Drive: permission denied`, so restic exits 3, so the
+        `unlock` and the `forget --prune`, which are the 2nd and 3rd ExecStart, never get to
+        run. It is the SAME trap as `~/FAI-workstation` on 05/08 (a user FUSE mount, with the
+        backup running as root), with a mountpoint nobody remembered to exclude. Fixed in
         system/services/restic.nix.
-      • O CONSERTO RODOU e o resultado DESMENTIU a estimativa de quem escreveu isto: eu
-        avisei que a poda atrasada podia demorar e precisar de mais de uma execução, por
-        causa do reempacotamento em repo remoto. Levou **14 s** — removeu 1 snapshot,
-        reempacotou 1 pack, liberou 4,9 MiB. Ficaram 6 snapshots / 26,1 GiB.
-      • POR QUE FOI TÃO BARATO, que é o que evita superestimar o próximo caso: com
-        `--keep-daily 7` e só 5 dias distintos no repo, NADA tinha envelhecido pra fora
-        da janela em 4 dias — o único excedente era a duplicata do mesmo dia. O custo de
-        retenção morta não cresce linear com os dias parados: ele é ZERO até o repo
-        passar de 7 dias distintos, e só então cada dia novo passa a empurrar um pra fora.
-      • E ISSO REORDENA QUAL ERA O RISCO DE VERDADE. Não era espaço no Drive: era o
-        `unlock`, que é o outro ExecStart que também não rodava. Lock preso de um run
-        interrompido bloqueia o backup INTEIRO, não a poda — e esse dano não depende de
-        quanto tempo se passou, acontece na primeira vez que um run morre no meio.
-      • POR QUE PASSOU DESPERCEBIDO, e esta é a parte que vale guardar: o
-        FAI-workstation só monta com a VPN de pé, então falhava de forma INTERMITENTE —
-        e foi justamente a intermitência que fez alguém investigar. O `~/Drive` monta em
-        TODO boot, então a falha virou constante, diária e silenciosa. Falha que acontece
-        SEMPRE é mais fácil de ignorar que falha que acontece às vezes: vira o estado
-        normal do serviço. O dado nunca esteve em risco (snapshot salvo todo dia, 41,8
-        GiB, 297.740 arquivos) — o que morreu foi a retenção.
-      • 🟠 **VS Code: 15 coredumps em 2 dias, e não é o editor.** O que aborta com
-        SIGABRT é o language server da extensão `kamikillerto.vscode-colorize` 0.17.1
-        (`coredumpctl info` entrega a linha de comando inteira, com o caminho do
-        `server/out/server.js`). Preço medido POR aborto: 58 s de CPU, 2,6 GB de pico de
-        RAM e 2,7 GB escritos no NVMe só pra gravar o dump — numa máquina de 15 GB e num
-        disco cujo desgaste a gente acompanha. Cadência de 09/08: 10:38, 15:01, 15:43,
-        15:57, 16:49, 16:55, 17:07.
-      • ⚠️ NÃO CONFUNDIR com o "stop job" de 90 s da entrada abaixo, apesar de os dois
-        dizerem "VS Code": lá é o `app-code-*.scope` ignorando SIGTERM no DESLIGAMENTO;
-        aqui é um processo filho abortando NO MEIO DA SESSÃO. Causas independentes,
-        correções independentes — e o risco real era o primeiro achado "explicar" o
-        segundo e a investigação parar ali.
-      • DESMENTIDOS PELA MEDIÇÃO, que é o que impede trabalho inútil: (a) "15 GB de RAM
-        é pouco" — PSI de memória em ~0, swapfile em disco com 0 B usados, zram
-        comprimindo 2,7 G em 981 M; o que trava é o colorize, não a RAM. (b) "o NVMe
-        está quente" — 52,9 °C de Composite sob carga (jogo + 7 containers + ollama),
-        contra os 77-80 °C que geraram a pendência do dissipador; o `Sensor 2` a 79,8 °C
-        segue sendo o falso alarme conhecido (sensor não implementado, cravado).
-      • Resto verde e conferido: 0 units falhas, `is-system-running: running`, btrfs
-        `no errors found`, 58% de disco, fwupd sem update pendente, `nix flake check`
-        passando. Secure Boot e VT-x seguem desligados — mesma ida à BIOS, já rastreada.
+      • THE FIX RAN and the result DISPROVED the estimate of whoever wrote this: I warned that a
+        delayed prune could take a while and need more than one run, because of repacking on a
+        remote repo. It took **14 s**: it removed 1 snapshot, repacked 1 pack and freed 4.9 MiB.
+        6 snapshots / 26.1 GiB were left.
+      • WHY IT WAS SO CHEAP, which is what keeps the next case from being overestimated: with
+        `--keep-daily 7` and only 5 distinct days in the repo, NOTHING had aged out of the
+        window in 4 days, and the only excess was the same-day duplicate. The cost of dead
+        retention does not grow linearly with the days stopped: it is ZERO until the repo passes
+        7 distinct days, and only then does each new day start pushing one out.
+      • AND THAT REORDERS WHAT THE REAL RISK WAS. It was not space on the Drive, it was the
+        `unlock`, the other ExecStart that also was not running. A stuck lock from an
+        interrupted run blocks the ENTIRE backup, not the prune, and that damage does not depend
+        on how much time passed, it happens the first time a run dies mid-way.
+      • WHY IT WENT UNNOTICED, and this is the part worth keeping: FAI-workstation only mounts
+        with the VPN up, so it failed INTERMITTENTLY, and it was precisely the intermittency
+        that made somebody investigate. `~/Drive` mounts on EVERY boot, so the failure became
+        constant, daily and silent. A failure that happens ALWAYS is easier to ignore than one
+        that happens sometimes: it becomes the service's normal state. The data was never at
+        risk (a snapshot saved every day, 41.8 GiB, 297,740 files); what died was the retention.
+      • **VS Code: 15 coredumps in 2 days, and it is not the editor.** What aborts with
+        SIGABRT is the language server of the `kamikillerto.vscode-colorize` 0.17.1 extension
+        (`coredumpctl info` hands over the whole command line, with the path to
+        `server/out/server.js`). The price measured PER abort: 58 s of CPU, 2.6 GB of peak RAM
+        and 2.7 GB written to the NVMe just to record the dump, on a 15 GB machine and on a disk
+        whose wear we track. The 09/08 cadence: 10:38, 15:01, 15:43, 15:57, 16:49, 16:55, 17:07.
+      • DO NOT CONFUSE this with the 90 s "stop job" in the entry below, even though both say
+        "VS Code": there it is the `app-code-*.scope` ignoring SIGTERM at SHUTDOWN; here it is a
+        child process aborting IN THE MIDDLE OF THE SESSION. Independent causes, independent
+        fixes, and the real risk was the first finding "explaining" the second and the
+        investigation stopping there.
+      • DISPROVED BY MEASUREMENT, which is what prevents useless work: (a) "15 GB of RAM is not
+        much", when memory PSI is ~0, the on-disk swapfile has 0 B used and zram compresses
+        2.7 G into 981 M; what freezes is colorize, not the RAM. (b) "the NVMe is hot", when
+        Composite is 52.9 °C under load (a game + 7 containers + ollama), against the 77 to
+        80 °C that generated the heatsink open item; the `Sensor 2` at 79.8 °C is still the
+        known false alarm (an unimplemented sensor, pinned).
+      • The rest is green and checked: 0 failed units, `is-system-running: running`, btrfs
+        `no errors found`, 58% disk, fwupd with no pending update, `nix flake check` passing.
+        Secure Boot and VT-x are still off, the same BIOS trip, already tracked.
 
-- [x] Desligamento de 90 s → ~5 s: o "stop job" era UM app, e não o sistema
-      (09/08/2026) — a queixa era "demora quase 5 min pra desligar". O journal desmentiu o
-      número e entregou o culpado: 90,3 / 90,4 / 90,5 / 90,6 s nos 10 últimos boots. Tempo
-      redondo assim não é trabalho, é TIMEOUT — o `DefaultTimeoutStopSec` default do
-      systemd, 90 s, batendo inteiro, todo boot.
-      • CULPADO ÚNICO e sempre o mesmo: `app-code-*.scope: Stopping timed out. Killing.`.
-        O VS Code roda num scope da SESSÃO DO USUÁRIO (o GLib cria `app-<nome>-<pid>.scope`
-        ao lançar o `.desktop`) e não responde ao SIGTERM. Buscando o padrão no journal
-        inteiro: 8 ocorrências do VS Code e 6 do Chromium antes dele — é comportamento de
-        Electron, não desta máquina. Todo o RESTO (docker, jellyfin, rede, unmounts, swap)
-        para em menos de 2 s, o que fecha a conta: 90 s de shutdown = 88 s de espera.
-      • ONDE ISSO MUDA O DIAGNÓSTICO: o instinto era mexer nos serviços do SISTEMA. Não
-        havia nada lá pra ganhar. O ajuste que resolve é do lado do USUÁRIO — 5 s no
-        `systemd.user`, onde o inquilino é app de desktop e quem ia salvar no SIGTERM já
-        salvou em menos de 1 s.
-      • O SISTEMA ficou em 30 s, e não em 5 s junto: `duo` e `grad-radar` têm
-        `docker compose down` no ExecStop, e o `down` dá 10 s de carência a CADA container.
-        Apertar demais aqui SIGKILLaria o Postgres desses stacks no meio do down — não
-        corrompe, mas volta fazendo recovery de WAL, e o preço aparece longe da causa.
-      • O QUE A MUDANÇA NÃO FAZ, porque a leitura fácil é "agora mata os apps": o SIGKILL
-        já acontecia — 90 s depois. Nada que morria de morte natural passou a ser morto;
-        só se deixou de cobrar a espera por quem nunca ia responder.
-      • ⚠️ A ARMADILHA QUE A REGRA 8 PEGOU, e ela falha em SILÊNCIO: `systemd.extraConfig`
-        FOI REMOVIDA (o 26.05 manda `systemd.settings.Manager`). Escrevendo na opção
-        removida, o `nix eval` do `system.conf` gerado PASSA e sai sem a linha — zero erro,
-        zero warning, e o desligamento continuaria em 90 s com a config "aplicada". Só
-        apareceu porque a validação foi LER o arquivo gerado, não perguntar se buildou.
-        E a assimetria é a parte não-óbvia: do lado do usuário `systemd.user.extraConfig`
-        continua sendo a ÚNICA forma — `systemd.user.settings` não existe (conferido nas
-        `options`, não deduzido do lado do sistema).
-      • PRÓXIMA VEZ que o desligamento demorar, o teto global não vai ser a resposta: unit
-        com `TimeoutStopSec` próprio ignora o default (hoje qbittorrent tem 30 min, jellyfin
-        15 s, caddy 5 s, `user@.service` 2 min do upstream). Procurar primeiro com
+- [x] Shutdown from 90 s to ~5 s: the "stop job" was ONE app, not the system (09/08/2026). The
+      complaint was "it takes almost 5 min to shut down". The journal disproved the number and
+      handed over the culprit: 90.3 / 90.4 / 90.5 / 90.6 s across the last 10 boots. A round
+      number like that is not work, it is a TIMEOUT, systemd's default
+      `DefaultTimeoutStopSec` of 90 s, hitting in full, every boot.
+      • A SINGLE culprit and always the same one: `app-code-*.scope: Stopping timed out.
+        Killing.`. VS Code runs in a USER SESSION scope (GLib creates `app-<name>-<pid>.scope`
+        when launching the `.desktop`) and it does not answer SIGTERM. Searching the pattern
+        across the whole journal: 8 occurrences of VS Code and 6 of Chromium before it, so it is
+        Electron behavior, not this machine's. Everything ELSE (docker, jellyfin, network,
+        unmounts, swap) stops in under 2 s, which closes the arithmetic: 90 s of shutdown = 88 s
+        of waiting.
+      • WHERE THIS CHANGES THE DIAGNOSIS: the instinct was to touch the SYSTEM services. There
+        was nothing to gain there. The adjustment that solves it is on the USER side, 5 s in
+        `systemd.user`, where the tenant is a desktop app and whoever was going to save on
+        SIGTERM already saved in under 1 s.
+      • THE SYSTEM stayed at 30 s and did not go to 5 s along with it: `duo` and `grad-radar`
+        have `docker compose down` in their ExecStop, and `down` gives EACH container 10 s of
+        grace. Tightening too much here would SIGKILL those stacks' Postgres in the middle of
+        the down, which does not corrupt anything but comes back doing WAL recovery, and the
+        price shows up far from the cause.
+      • WHAT THE CHANGE DOES NOT DO, because the easy reading is "now it kills the apps": the
+        SIGKILL already happened, 90 s later. Nothing that died a natural death started being
+        killed; we only stopped paying the wait for someone who was never going to answer.
+      • THE TRAP RULE 8 CAUGHT, and it fails SILENTLY: `systemd.extraConfig` WAS REMOVED
+        (26.05 wants `systemd.settings.Manager`). Writing to the removed option, the `nix eval`
+        of the generated `system.conf` PASSES and comes out without the line, with zero errors
+        and zero warnings, and the shutdown would still take 90 s with the config "applied". It
+        only showed up because the validation was READING the generated file, not asking whether
+        it built.
+        And the asymmetry is the non-obvious part: on the user side `systemd.user.extraConfig`
+        is still the ONLY form, since `systemd.user.settings` does not exist (checked in the
+        `options`, not deduced from the system side).
+      • NEXT TIME the shutdown drags, the global ceiling will not be the answer: a unit with its
+        own `TimeoutStopSec` ignores the default (today qbittorrent has 30 min, jellyfin 15 s,
+        caddy 5 s, `user@.service` 2 min from upstream). Look there first with
         `systemctl show <unit> -p TimeoutStopUSec`.
 
-- [x] Relógio da barra mostra data E hora — e o calendário vira o ano sozinho, medido
-      (08/08/2026) — o relógio era um TOGGLE: clique alternava entre `󰥔 HH:mm:ss` e
-      `󰃭 dd/MM/yyyy`, nunca os dois. Ver a data custava dois cliques (ida e volta), o que é
-      caro para o dado mais consultado da barra. Agora saem juntos na mesma pílula.
-      • A FORMA: hora primeiro em mauve, data depois em `Theme.colDim`. Isso é HIERARQUIA,
-        não separação — a hora fica na borda esquerda, que é por onde o olho entra na
-        pílula, e a data acompanha sem disputar. Nasceu como `sub` novo no `widgets/Pill.qml`
-        (texto secundário na mesma pílula), reutilizável para qualquer par que ande junto.
-      • DUAS DECISÕES: sem ANO (redundante — o popover de calendário tem, a um hover), e
-        dia da semana pelo `dowAbbr` do próprio arquivo em vez do `"ddd"` do Qt. O formato
-        do Qt depende do locale do PROCESSO: se a barra subir sem `LC_TIME` — autologin, por
-        exemplo — "sáb" vira "Sat" em silêncio. A tabela local não tem esse risco.
-      • ⚠️ REGRA 8 NÃO TEM COMO SER CUMPRIDA AQUI, e isso vale saber: a árvore do Quickshell
-        é `mkOutOfStoreSymlink`, então NÃO passa pelo `/nix/store` e `nixos-rebuild build`
-        não exerce estes arquivos — não existe build para validar. O substituto que usei:
-        `qmllint` (sintaxe) + `qml` headless (comportamento) + screenshot do resultado real.
-        Erro de QML aqui só aparece com a barra já rodando.
-      • A PERGUNTA QUE VALEU A NOITE: "e quando for 2027, o calendário atualiza sozinho?".
-        Sim — `SystemClock` bate a cada segundo, `updateClock()` compara `yyyy-MM-dd` com
-        `calDayKey` e chama `refreshCalendar()` na primeira batida após a meia-noite. Não
-        aceitei de cabeça: simulei a virada 31/12/2026 → 01/01/2027 com as funções REAIS
-        extraídas do `Bar.qml` (não uma reescrita) — cabeçalho vira 2027, "hoje" pula para
-        01/01, Carnaval pintado em 08-09/02. Páscoa conferida até 2032, inclusive o Carnaval
-        de 29/02/2028, bissexto. O algoritmo tem autoteste embutido: se derrapasse num ano, o
-        DIA DA SEMANA denunciaria (Páscoa é sempre domingo, Corpus Christi sempre quinta).
-      • ⚠️ O ACHADO MAIS VALIOSO, e era o elo que eu só tinha RACIOCINADO: o popover lê
-        `calMap` por binding (`Repeater { model: bar.monthCells(...) }`), e binding do QML só
-        reavalia quando a PROPRIEDADE é reatribuída. Medido no `qml` headless (6/6):
-        reatribuir propaga, MUTAR o objeto por dentro (`calMap[k] = v`) não emite sinal
-        nenhum. Ou seja, o calendário só vira o ano porque `refreshCalendar` faz
-        `root.calMap = root.buildCalMap(...)`. Quem "otimizar" isso para escrever no objeto
-        existente CONGELA o calendário em silêncio: nada quebra, nada loga, só para de virar
-        o ano. Anotado no código, junto da função.
-      • FERIADOS REVERIFICADOS (nacional + SP + São Carlos) e o resultado foi: NADA MUDOU. A
-        lista já estava correta e completa para 2027 — nenhum feriado novo desde a Lei
-        14.759/2023 (Consciência Negra, nacional desde 2024, e não mais só estadual).
-        Confirmação independente: os não-facultativos da lista somam 14, que é o número que
-        a prefeitura e a imprensa local publicam para São Carlos.
-      • O QUE MUDOU NOS FERIADOS foi a DOCUMENTAÇÃO, que estava pior do que o código: o
-        cabeçalho mandava "ver as notas do workflow" — ponteiro para fora do repo, ou seja,
-        para lugar nenhum. As leis entraram no arquivo (662/1949, 6.802/1980, 9.093/1995,
-        14.759/2023, estadual 9.497/1997 e a MUNICIPAL 7.502/1974 do Corpus Christi).
-      • AS DUAS ARMADILHAS em que os sites de calendário caem e esta lista não — a primeira
-        busca que fiz já errou as duas: (1) CARNAVAL e Cinzas não são feriado nacional nem
-        municipal em São Carlos, são ponto facultativo; (2) CORPUS CHRISTI é facultativo
-        FEDERAL mas feriado MUNICIPAL aqui, pela lei acima — em outra cidade seria `fac`.
-      • ⚠️ O QUE NÃO SE ATUALIZA SOZINHO, e é a única parte do calendário assim: a lista
-        `holidayDefs`. Os MÓVEIS derivam da Páscoa e escalam para sempre; os FIXOS são LEI
-        escrita à mão. Lei nova, ou o município mexendo num feriado, deixa a grade errada em
-        silêncio. Revisar quando aparecer notícia de feriado novo — não por virada de ano,
-        porque nada ali depende do ano.
+- [x] The bar clock shows the date AND the time, and the calendar rolls the year over by
+      itself, measured (08/08/2026). The clock used to be a TOGGLE: a click alternated between
+      `󰥔 HH:mm:ss` and `󰃭 dd/MM/yyyy`, never both. Seeing the date cost two clicks (there and
+      back), which is expensive for the most consulted piece of data on the bar. Now they come
+      out together in the same pill.
+      • THE FORM: the time first in mauve, the date after it in `Theme.colDim`. That is
+        HIERARCHY, not separation: the time sits on the left edge, which is where the eye enters
+        the pill, and the date follows without competing. It was born as a new `sub` in
+        `widgets/Pill.qml` (secondary text in the same pill), reusable for any pair that travels
+        together.
+      • TWO DECISIONS: no YEAR (redundant, since the calendar popover has it, one hover away),
+        and the weekday from the file's own `dowAbbr` instead of Qt's `"ddd"`. Qt's format
+        depends on the PROCESS locale, so if the bar comes up without `LC_TIME`, autologin for
+        instance, "sáb" silently becomes "Sat". The local table does not have that risk.
+      • RULE 8 CANNOT BE SATISFIED HERE, and that is worth knowing: the Quickshell tree is
+        `mkOutOfStoreSymlink`, so it does NOT go through `/nix/store` and `nixos-rebuild build`
+        does not exercise these files, which means there is no build to validate. The substitute
+        I used: `qmllint` (syntax) + headless `qml` (behavior) + a screenshot of the real
+        result. A QML error here only shows up with the bar already running.
+      • THE QUESTION THAT WAS WORTH THE NIGHT: "and when it is 2027, does the calendar update on
+        its own?". Yes: `SystemClock` ticks every second, `updateClock()` compares `yyyy-MM-dd`
+        against `calDayKey` and calls `refreshCalendar()` on the first tick after midnight. I
+        did not take that on faith: I simulated the 31/12/2026 to 01/01/2027 rollover with the
+        REAL functions extracted from `Bar.qml` (not a rewrite), and the header becomes 2027,
+        "today" jumps to 01/01, and Carnival is painted on 08-09/02. Easter was checked through
+        2032, including the Carnival of 29/02/2028, a leap day. The algorithm has a built-in
+        self test: if it slipped in some year, the WEEKDAY would give it away (Easter is always
+        a Sunday, Corpus Christi always a Thursday).
+      • THE MOST VALUABLE FINDING, and it was the link I had only REASONED about: the popover
+        reads `calMap` through a binding (`Repeater { model: bar.monthCells(...) }`), and a QML
+        binding only reevaluates when the PROPERTY is reassigned. Measured in headless `qml`
+        (6/6): reassigning propagates, MUTATING the object from the inside (`calMap[k] = v`)
+        emits no signal at all. Which means the calendar only rolls the year over because
+        `refreshCalendar` does `root.calMap = root.buildCalMap(...)`. Whoever "optimizes" that
+        into writing into the existing object FREEZES the calendar silently: nothing breaks,
+        nothing logs, it just stops rolling the year. Noted in the code, next to the function.
+      • HOLIDAYS REVERIFIED (national + SP + São Carlos) and the result was: NOTHING CHANGED.
+        The list was already correct and complete for 2027, with no new holiday since Law
+        14.759/2023 (Consciência Negra, national since 2024 and no longer only state level). An
+        independent confirmation: the non-optional ones on the list add up to 14, which is the
+        number the city hall and the local press publish for São Carlos.
+      • WHAT CHANGED ABOUT THE HOLIDAYS was the DOCUMENTATION, which was worse than the code:
+        the header said "see the workflow notes", a pointer outside the repo, which is to say to
+        nowhere. The laws went into the file (662/1949, 6.802/1980, 9.093/1995, 14.759/2023, the
+        state 9.497/1997 and the MUNICIPAL 7.502/1974 for Corpus Christi).
+      • THE TWO TRAPS that calendar sites fall into and this list does not, and the first search
+        I ran got both wrong: (1) CARNIVAL and Ash Wednesday are neither a national nor a
+        municipal holiday in São Carlos, they are optional days off; (2) CORPUS CHRISTI is
+        FEDERALLY optional but a MUNICIPAL holiday here, through the law above, and in another
+        city it would be `fac`.
+      • WHAT DOES NOT UPDATE ITSELF, and it is the only part of the calendar like that: the
+        `holidayDefs` list. The MOVABLE ones derive from Easter and scale forever; the FIXED
+        ones are LAW written by hand. A new law, or the municipality changing a holiday, leaves
+        the grid wrong silently. Review it when news of a new holiday appears, not at the turn
+        of the year, because nothing there depends on the year.
 
-- [x] Backlight por DDC/CI REVERTIDO — dimming pior nas duas telas ganha de ótimo em uma
-      (08/08/2026) — o `ddcutil` funcionou, a curva funcionou, e mesmo assim saiu. O motivo
-      não é técnico, é de ERGONOMIA, e vale mais registrado que o código.
-      • O QUE FUNCIONOU: `hardware.i2c.enable` + ddcutil deram controle REAL de backlight no
-        DP-2 (LG ULTRAGEAR, MCCS VCP 2.1). A medição que motivou tudo continua válida — o
-        monitor estava em **100%** às 20h num quarto escuro, e ISSO era a causa do olho
-        ardendo, não o filtro azul. A curva por horário aplicou 40% e o monitor obedeceu.
-      • O QUE MATOU: a LG TV do HDMI não tem como acompanhar. Não fala DDC/CI (`x37
-        unresponsive`), NÃO ESTÁ NA REDE (conferido no DHCP do roteador: o único dispositivo
-        sem nome é Amazon, não LG — então nem webOS), e o HDMI-CEC não cobre brilho, isso é
-        de especificação. Três caminhos, três fechados.
-      • O RACIOCÍNIO DA REVERSÃO, que é o ponto: uma tela a 32% ao lado de outra a 100%
-        obriga a pupila a se readaptar toda vez que o olhar troca, e isso cansa MAIS que o
-        ganho na tela boa. Dimming pior nas duas > dimming ótimo em uma, quando as duas
-        estão no campo de visão. O gamma do hyprsunset é pior tecnicamente (escurece o
-        SINAL, com a luz de fundo no talo) mas alcança AS DUAS — e uniformidade venceu.
-      • ⚠️ A ALTERNATIVA que continua valendo, se um dia o incômodo voltar: ajustar o
-        backlight da TV UMA VEZ pelo controle remoto dela (é config de aparelho, persiste, e
-        cai na mesma categoria do docs/guides/bios-*.md) e retomar o DDC no monitor. Foi
-        RECUSADA por não ser automática, não por não funcionar.
-      • FICOU do experimento: `wayland-utils` (wayland-info), que entrou junto e é útil por
-        si; e a correção do cabeçalho do hyprsunset.nix sobre shader e sobre os 13 perfis.
-      • O MONITOR VOLTOU SOZINHO PRA 100%, e eu tinha anotado o contrário: cheguei a
-        avisar que "ficou em 40% e persiste no hardware". FALSO — `setvcp` sem `--save`
-        não grava na EEPROM, então o valor se perde no primeiro desligamento de tela. A
-        reversão ficou completa, sem estado órfão. Vale como armadilha ao contrário: quem
-        for automatizar DDC precisa saber que a mudança é VOLÁTIL por padrão, o que aliás
-        é bom (um serviço que reaplica no login basta) mas surpreende quem espera que
-        `setvcp` grude.
+- [x] DDC/CI backlight REVERTED: worse dimming on both screens beats great dimming on one
+      (08/08/2026). `ddcutil` worked, the curve worked, and it went out anyway. The reason is
+      not technical, it is ERGONOMIC, and it is worth more recorded than the code.
+      • WHAT WORKED: `hardware.i2c.enable` plus ddcutil gave REAL backlight control on DP-2 (LG
+        ULTRAGEAR, MCCS VCP 2.1). The measurement that motivated everything is still valid: the
+        monitor was at **100%** at 20:00 in a dark room, and THAT was the cause of the burning
+        eyes, not the blue filter. The hourly curve applied 40% and the monitor obeyed.
+      • WHAT KILLED IT: the LG TV on HDMI has no way to follow along. It does not speak DDC/CI
+        (`x37 unresponsive`), it is NOT ON THE NETWORK (checked in the router's DHCP: the only
+        unnamed device is Amazon, not LG, so not even webOS), and HDMI-CEC does not cover
+        brightness, which is a spec matter. Three paths, three closed.
+      • THE REASONING BEHIND THE REVERSION, which is the point: one screen at 32% next to
+        another at 100% forces the pupil to readapt every time the gaze switches, and that tires
+        the eyes MORE than the gain on the good screen. Worse dimming on both beats great
+        dimming on one, when both are in the field of view. The hyprsunset gamma is technically
+        worse (it darkens the SIGNAL, with the backlight at full) but it reaches BOTH, and
+        uniformity won.
+      • THE ALTERNATIVE that still holds, if the discomfort ever comes back: adjust the TV's
+        backlight ONCE with its own remote (it is device config, it persists, and it falls into
+        the same category as docs/guides/bios-*.md) and resume DDC on the monitor. It was
+        REFUSED for not being automatic, not for not working.
+      • WHAT STAYED from the experiment: `wayland-utils` (wayland-info), which came in along
+        with it and is useful on its own; and the correction to the hyprsunset.nix header about
+        the shader and about the 13 profiles.
+      • THE MONITOR WENT BACK TO 100% ON ITS OWN, and I had written the opposite: I actually
+        warned that "it stayed at 40% and persists in hardware". FALSE, because `setvcp` without
+        `--save` does not write to the EEPROM, so the value is lost on the first screen
+        power-off. The reversion ended up complete, with no orphan state. It counts as an
+        inverted trap: whoever automates DDC needs to know that the change is VOLATILE by
+        default, which is actually good (a service that reapplies at login is enough) but
+        surprises anyone expecting `setvcp` to stick.
 
-- [x] ~~Gamma sai da curva do hyprsunset~~ REVERTIDO junto com o DDC (08/08/2026) —
-      efeito colateral do DDC/CI entrar: o `hyprsunset` NÃO SABE mirar uma saída
-      específica. Procurei `output`/`monitor`/`display` no código-fonte: ZERO ocorrências.
-      Ele aplica CTM em TODAS as saídas de uma vez.
-      • O PROBLEMA QUE ISSO CRIAVA: com o backlight real do DP-2 vindo do DDC/CI, manter o
-        auto-dim por gamma daria dimming DUPLO no monitor bom (backlight 32% × gamma 0.9 às
-        22h) pra entregar um alívio fraco na TV. Foi regressão que EU introduzi ao adicionar
-        o brightness.nix, e só apareceu ao perguntar "e a TV, como funcionaria?".
-      • A DIVISÃO QUE FICOU: DP-2 (LG ULTRAGEAR) → backlight de verdade via DDC/CI;
-        HDMI-A-3 (LG TV) → ajuste de backlight no controle remoto DELA, que não fala DDC/CI.
-        TV é aparelho, não computador: config de imagem persiste lá e não precisa do repo.
-      • O `max-gamma = 150` FICOU: os keybinds SHIFT+VolUp/Down seguem ajustando gamma por
-        IPC, agora como retoque fino MANUAL em vez de curva automática.
-      • HDMI-CEC foi descartado sem teste, e o motivo é de especificação: o protocolo cobre
-        ligar/desligar, volume e troca de entrada — brilho não está no padrão. Sobra o
-        controle por rede (webOS, TV de 2017), que fica em aberto: não sei o IP dela, e o
-        `192.168.1.20` da lease `TV-Samsung-Sala` não responde (nem é certo ser essa TV).
+- [x] ~~Gamma leaves the hyprsunset curve~~ REVERTED along with the DDC (08/08/2026): a side
+      effect of DDC/CI coming in was that `hyprsunset` does NOT know how to target a specific
+      output. I searched for `output`/`monitor`/`display` in the source: ZERO occurrences. It
+      applies the CTM to ALL outputs at once.
+      • THE PROBLEM THAT CREATED: with DP-2's real backlight coming from DDC/CI, keeping the
+        gamma auto-dim would give DOUBLE dimming on the good monitor (backlight 32% times gamma
+        0.9 at 22:00) in order to deliver weak relief on the TV. It was a regression I
+        introduced by adding brightness.nix, and it only showed up when asking "and the TV, how
+        would that work?".
+      • THE SPLIT THAT REMAINED: DP-2 (LG ULTRAGEAR) gets real backlight through DDC/CI;
+        HDMI-A-3 (LG TV) gets its backlight adjusted with ITS OWN remote, since it does not
+        speak DDC/CI. A TV is an appliance, not a computer: picture config persists there and
+        does not need the repo.
+      • `max-gamma = 150` STAYED: the SHIFT+VolUp/Down keybinds still adjust gamma through IPC,
+        now as MANUAL fine tuning instead of an automatic curve.
+      • HDMI-CEC was discarded without testing, and the reason is a spec matter: the protocol
+        covers power, volume and input switching, and brightness is not in the standard. What is
+        left is network control (webOS, a 2017 TV), which stays open: I do not know its IP, and
+        the `192.168.1.20` from the `TV-Samsung-Sala` lease does not answer (and it is not even
+        certain that is this TV).
 
-- [x] ~~Brilho REAL do monitor: DDC/CI + curva por horário~~ REVERTIDO (08/08/2026) — o `ddcutil getvcp
-      10` devolveu **100** às 20h, num quarto escuro. O monitor passava o dia inteiro no
-      talo, e NENHUMA curva de Kelvin resolve isso. Era a causa do olho ardendo.
-      • A INVERSÃO QUE MOTIVOU: a literatura de ergonomia põe REDUZIR BRILHO acima de
-        temperatura de cor, e "modo noturno não substitui brilho adequado". Eu esperava o
-        contrário, e a config esperava também — o `hyprsunset` cobria cor com 13 perfis
-        caprichados e luminância com nada.
-      • O `gamma` do hyprsunset NÃO ERA BRILHO: ele escurece o SINAL enviado ao painel
-        enquanto o backlight segue no talo. A luz que chega no olho não muda. O próprio
-        histórico de julho já registrava "sem backlight real" — a lacuna estava anotada e
-        ninguém tinha ligado os pontos.
-      • `hardware.i2c.enable` (system/hardware/ddc.nix) carrega o `i2c-dev`, que não estava
-        carregado porque NADA PEDIA. Sem `/dev/i2c-*` o ddcutil não tem por onde falar.
-      • ⚠️ SÓ O DP-2 RESPONDE: o LG ULTRAGEAR fala MCCS (VCP 2.1); a LG TV no HDMI devolve
-        "does not support DDC/CI — I2C slave address x37 is unresponsive". E ERREI ao prever
-        isso: disse que o HDMI "expunha ZERO barramentos i2c", mas o ddcutil achou o
-        `/dev/i2c-7` dele. Meu teste olhava symlinks por conector no sysfs, que é outra
-        coisa. A conclusão estava certa pelo motivo errado — a TV TEM barramento, ela é que
-        não fala o protocolo.
-      • `home/desktop/brightness.nix`: curva por horário espelhando a estrutura do
-        hyprsunset (90% de dia → 55% às 18h → 40% às 20h → 28% de madrugada). Timer --user
-        de 5 min, e escreve SÓ quando o alvo muda — assim ajuste manual vale até o próximo
-        degrau, mesmo contrato do hyprsunset, e não fica escrevendo DDC à toa (é lento e faz
-        o monitor piscar). `--model` e não `--display N`: o número muda se outro monitor DDC
-        entrar.
-      • RECUSADO o `ddcci-driver` (existe no nixpkgs, expõe o monitor como backlight padrão
-        e deixaria o `brightnessctl` funcionar): é módulo de kernel out-of-tree, quebra a
-        cada bump. Pra infra que precisa durar, chamar o ddcutil de um timer é menos elegante
-        e muito menos frágil.
-      • Os valores da curva são PONTO DE PARTIDA, não verdade. O critério da literatura é
-        comparar com folha de papel branco ao lado da tela.
+- [x] ~~REAL monitor brightness: DDC/CI + an hourly curve~~ REVERTED (08/08/2026):
+      `ddcutil getvcp 10` returned **100** at 20:00, in a dark room. The monitor spent the whole
+      day at full, and NO Kelvin curve solves that. It was the cause of the burning eyes.
+      • THE INVERSION THAT MOTIVATED IT: the ergonomics literature puts REDUCING BRIGHTNESS
+        above color temperature, and "night mode does not replace adequate brightness". I
+        expected the opposite, and the config expected it too: `hyprsunset` covered color with
+        13 carefully tuned profiles and luminance with nothing.
+      • The hyprsunset `gamma` was NOT BRIGHTNESS: it darkens the SIGNAL sent to the panel while
+        the backlight stays at full. The light reaching the eye does not change. The july
+        history itself already recorded "no real backlight", so the gap was written down and
+        nobody had connected the dots.
+      • `hardware.i2c.enable` (system/hardware/ddc.nix) loads `i2c-dev`, which was not loaded
+        because NOTHING ASKED FOR IT. Without `/dev/i2c-*` ddcutil has nothing to speak through.
+      • ONLY DP-2 ANSWERS: the LG ULTRAGEAR speaks MCCS (VCP 2.1); the LG TV on HDMI returns
+        "does not support DDC/CI, I2C slave address x37 is unresponsive". And I WAS WRONG in
+        predicting that: I said HDMI "exposed ZERO i2c buses", but ddcutil found its
+        `/dev/i2c-7`. My test looked at per-connector symlinks in sysfs, which is a different
+        thing. The conclusion was right for the wrong reason: the TV HAS a bus, it is the one
+        that does not speak the protocol.
+      • `home/desktop/brightness.nix`: an hourly curve mirroring the hyprsunset structure (90%
+        during the day, 55% at 18:00, 40% at 20:00, 28% overnight). A 5 min --user timer, and it
+        writes ONLY when the target changes, so a manual adjustment holds until the next step,
+        the same contract as hyprsunset, and it does not keep writing DDC for nothing (it is
+        slow and it makes the monitor blink). `--model` and not `--display N`: the number
+        changes if another DDC monitor comes in.
+      • REFUSED: the `ddcci-driver` (it exists in nixpkgs, exposes the monitor as a standard
+        backlight and would let `brightnessctl` work). It is an out-of-tree kernel module and it
+        breaks on every bump. For infrastructure that has to last, calling ddcutil from a timer
+        is less elegant and far less fragile.
+      • The curve values are a STARTING POINT, not truth. The criterion from the literature is
+        comparing against a sheet of white paper next to the screen.
 
-- [x] LocalSend declarativo, aberto SÓ pra LAN (08/08/2026) — "AirDrop" de código aberto
-      (MIT, 1.17.0) pra passar arquivo entre celular e PC sem nuvem e sem conta. Três peças:
-      `programs.localsend` em system/net/localsend.nix, a 53317 liberada por ORIGEM e uma
-      entrada no painel `my.autostart`.
-      • POR QUE NO `system/` e não no `home/`, contra a regra 4: quem une PACOTE + PORTA é o
-        módulo do nixpkgs, e firewall é nível-sistema. Mesmo caso do `programs.steam`. O
-        pacote NÃO se repete no home/packages.nix — o autostart lê
-        `osConfig.programs.localsend.package`, e o store path do `sw/bin/localsend_app` e do
-        `ExecStart` da unit CONFEREM (mesmo `5vzlv6k…`), que é a prova de que não duplicou.
-        De brinde, isso mata por construção a armadilha do spotify: trocar pro `unstable` no
-        system/ leva o autostart junto, em vez de exigir que eu lembre de casar dois arquivos.
-      • ⚠️ `openFirewall = false` CONTRA o default do módulo, e a ameaça não é a internet: o
-        roteador só encaminha 80/443/2222, então a 53317 nunca esteve exposta ao mundo. Quem
-        alcançaria é a VPN — `openFirewall` abre a porta em TODA interface, e com o túnel da
-        FAI de pé (`ppp0`) a rede corporativa inteira passaria a enxergar o serviço e a ler o
-        `/api/localsend/v2/info` (nome do dispositivo, modelo, fingerprint) sem autenticação
-        nenhuma. Vira confiança por ORIGEM, igual à do Sunshine: só `my.net.lanSubnet`.
-      • Os peers do WireGuard entram DE GRAÇA, sem regra própria: chegam com origem
-        10.10.10.x e a regra de net/network.nix já aceita a faixa antes de qualquer decisão.
-        Quinto consumidor da SSOT, validado pelo ritual do sentinela (regra 11): trocar a
-        faixa por 172.31.99.0/24 mudou as duas regras novas junto com o `ignoreip` do
-        fail2ban, e reverter devolveu o store path IDÊNTICO (`i0kvjns…`).
-      • UDP é obrigatório junto com o TCP, e não é detalhe: TCP é a transferência e o `/info`;
-        UDP 53317 é o anúncio multicast em 224.0.0.167, que é o que faz os aparelhos se
-        DESCOBRIREM. Sem ela o app abre e funciona, mas só por "adicionar por IP" na mão —
-        falha que parece "o celular não me acha", não "porta fechada".
-      • ⚠️ A porta é REPETIDA no meu módulo porque o do nixpkgs não a expõe como opção (é um
-        `firewallPort = 53317` interno ao arquivo dele). Trocar a porta DENTRO do app
-        (Configurações → Rede) faz a recepção morrer em SILÊNCIO: sem erro de build, sem log.
-      • AUTOSTART com `--hidden` (flag confirmada nas strings do `libapp.so`, não chutada):
-        sobe sem janela, só o ícone SNI na tray do quickshell. Sem isso o app não recebe nada
-        — o LocalSend só escuta enquanto está aberto, e mandar do celular exigiria ir até o PC
-        abrir. Preço explícito: a tray passa a ser o ÚNICO jeito de trazer a janela de volta.
-        ⚠️ NÃO ligar o "Autostart after login" DAS CONFIGURAÇÕES DO APP: aquilo escreve um
-        `.desktop` em `~/.config/autostart` e viraria um SEGUNDO dono da mesma automação
-        (regra 15), com duas instâncias disputando a 53317.
-      • ⚠️ CORREÇÃO DE COMENTÁRIO ERRADO que este trabalho destapou, em net/network.nix: eu
-        havia escrito que a cadeia `nixos-fw` "termina num refuse, então `-A` nunca é
-        alcançada". FALSO pro `extraCommands` — lido no `firewall-start` GERADO, ele é
-        injetado ANTES do `-A nixos-fw -j nixos-fw-log-refuse` (nixpkgs 26.05, linha 235 vs
-        238), então `-A` funcionaria. A frase só vale pra regra digitada À MÃO num firewall já
-        de pé. O `-I 1` continua certo, mas por OUTRO motivo: é ele que reproduz a semântica
-        do `trustedInterfaces`. Mesma classe do "`~/.profile` não é lido no OpenWrt" — nota
-        antiga que eu ia citar como se fosse fato medido.
-      • Apelido, pasta de destino e "salvar sem confirmar" ficam no app (regra 6/14: ele
-        reescreve o próprio `shared_preferences` em runtime, o Nix não é dono).
+- [x] LocalSend declarative, open ONLY to the LAN (08/08/2026): an open source "AirDrop" (MIT,
+      1.17.0) for moving files between the phone and the PC with no cloud and no account. Three
+      pieces: `programs.localsend` in system/net/localsend.nix, port 53317 allowed by SOURCE,
+      and an entry in the `my.autostart` panel.
+      • WHY IN `system/` and not in `home/`, against rule 4: what unites the PACKAGE and the
+        PORT is the nixpkgs module, and a firewall is system level. The same case as
+        `programs.steam`. The package is NOT repeated in home/packages.nix: the autostart reads
+        `osConfig.programs.localsend.package`, and the store path of `sw/bin/localsend_app` and
+        of the unit's `ExecStart` MATCH (the same `5vzlv6k…`), which is the proof that nothing
+        was duplicated. As a bonus, that kills the spotify trap by construction: switching to
+        `unstable` in system/ takes the autostart along, instead of requiring me to remember to
+        keep two files in sync.
+      • `openFirewall = false` AGAINST the module's default, and the threat is not the
+        internet: the router only forwards 80/443/2222, so 53317 was never exposed to the world.
+        Who would reach it is the VPN, because `openFirewall` opens the port on EVERY interface,
+        and with the FAI tunnel up (`ppp0`) the whole corporate network would start seeing the
+        service and reading `/api/localsend/v2/info` (device name, model, fingerprint) with no
+        authentication at all. It becomes trust by SOURCE, the same as Sunshine's: only
+        `my.net.lanSubnet`.
+      • The WireGuard peers get in FOR FREE, with no rule of their own: they arrive with source
+        10.10.10.x and the net/network.nix rule already accepts that range before any decision.
+        The fifth consumer of the SSOT, validated by the sentinel ritual (rule 11): swapping the
+        range for 172.31.99.0/24 changed both new rules along with fail2ban's `ignoreip`, and
+        reverting gave back an IDENTICAL store path (`i0kvjns…`).
+      • UDP is mandatory alongside TCP, and it is not a detail: TCP is the transfer and the
+        `/info`; UDP 53317 is the multicast announcement on 224.0.0.167, which is what makes the
+        devices DISCOVER each other. Without it the app opens and works, but only through "add
+        by IP" by hand, a failure that looks like "my phone cannot find me", not "the port is
+        closed".
+      • The port is REPEATED in my module because the nixpkgs one does not expose it as an
+        option (it is a `firewallPort = 53317` internal to their file). Changing the port INSIDE
+        the app (Settings, Network) makes reception die SILENTLY: no build error, no log.
+      • AUTOSTART with `--hidden` (a flag confirmed in the `libapp.so` strings, not guessed): it
+        comes up with no window, only the SNI icon in the quickshell tray. Without it the app
+        receives nothing, because LocalSend only listens while it is open, and sending from the
+        phone would require walking to the PC to open it. An explicit price: the tray becomes
+        the ONLY way to bring the window back.
+        Do NOT turn on "Autostart after login" IN THE APP'S SETTINGS: that writes a
+        `.desktop` into `~/.config/autostart` and would become a SECOND owner of the same
+        automation (rule 15), with two instances fighting over 53317.
+      • A CORRECTION TO A WRONG COMMENT that this work uncovered, in net/network.nix: I had
+        written that the `nixos-fw` chain "ends in a refuse, so `-A` is never reached". FALSE
+        for `extraCommands`: read in the GENERATED `firewall-start`, it is injected BEFORE
+        `-A nixos-fw -j nixos-fw-log-refuse` (nixpkgs 26.05, line 235 vs 238), so `-A` would
+        work. The sentence only holds for a rule typed BY HAND into a firewall that is already
+        up. The `-I 1` is still right, but for ANOTHER reason: it is what reproduces the
+        semantics of `trustedInterfaces`. The same class as "`~/.profile` is not read on
+        OpenWrt", an old note I was about to cite as if it were a measured fact.
+      • The nickname, the destination folder and "save without confirming" stay in the app
+        (rules 6 and 14: it rewrites its own `shared_preferences` at runtime, so Nix does not
+        own it).
 
-- [x] `my.ingress`: exposição vira TOGGLE (08/08/2026) — o Caddyfile deixou de ser escrito à
-      mão. Cada serviço se declara em `my.ingress` (schema em system/net/ingress.nix, painel em
-      hosts/nixos-kingston/services.nix) e os vhosts são GERADOS. Alternar alcance = trocar uma
-      palavra: `expose = "lan"` ↔ `"public"`.
-      • O QUE ISSO CONSERTA: antes o alcance era implícito e assimétrico — `duo`/`ai` tinham
-        `respond @externo 403` escrito à mão, `jellyfin`/`torrent` NÃO tinham, e a decisão de
-        expor só existia como uma AUSÊNCIA no meio de 60 linhas. Codificar segurança por omissão
-        é o pior caso: esquecer de escrever virava "exposto", em silêncio. Agora o default de
-        `expose` é `lan` — esquecer FECHA.
-      • TAILNET no matcher de casa (100.64.0.0/10): é o que dá acesso remoto DE VERDADE hoje,
-        já que o CGNAT impede entrada direta. Um par da tailnet é tão "casa" quanto a LAN. Foi
-        junto no `ignoreip` do fail2ban — errar a senha no celular não pode banir a si mesmo.
-        ⚠️ Essa faixa é a mesma do CGNAT de carrier; hoje é inofensiva porque nada da internet
-        alcança o processo, mas no dia do túnel exige distinguir o caminho, não confiar no IP.
-      • `remote_ip` → `client_ip` ANTES de existir túnel: hoje são idênticos (sem proxy
-        confiável, cliente = conexão). Custou zero e desarma a armadilha do cloudflared entregar
-        pelo loopback e todo o tráfego do túnel virar "casa", furando o basic_auth em silêncio.
-        ⚠️ NÃO adicionar `trusted_proxies` enquanto não houver túnel: sem ele o X-Forwarded-For
-        é ignorado (que é o certo); com ele, processo local qualquer forja o IP de origem.
-      • O failregex do fail2ban passou a ser DERIVADO de quem tem `auth`, em vez do literal
-        `pos\.`: serviço novo com basic_auth entra na jail sozinho.
-      • ⚠️ PEGADINHA DE NIX que mordeu no primeiro gerado: o alvo é o literal `{$VAR}` (env var
-        do Caddy), e `"{$${v}}"` numa string Nix é ERRO DE SINTAXE, não escape — o gerado saiu
-        com `{$${v}}` cru, que viraria hash VAZIO em runtime. A forma sem ambiguidade é
-        concatenar: `"{$" + v + "}"`. Pegou no olho, no Caddyfile gerado; não haveria erro de
-        build.
-      • VALIDADO: `caddy validate` com o binário custom e hashes bcrypt reais → `Valid
-        configuration`; o gerado é semanticamente idêntico ao que estava à mão; e o ritual do
-        sentinela (regra 11) — virar `jellyfin` pra `lan` fez o 403 aparecer, reverter devolveu
-        o store path byte-a-byte.
+- [x] `my.ingress`: exposure becomes a TOGGLE (08/08/2026). The Caddyfile stopped being written
+      by hand. Each service declares itself in `my.ingress` (the schema in
+      system/net/ingress.nix, the panel in hosts/nixos-kingston/services.nix) and the vhosts are
+      GENERATED. Switching reach means changing one word: `expose = "lan"` becomes `"public"`.
+      • WHAT THIS FIXES: before, the reach was implicit and asymmetric. `duo`/`ai` had a
+        hand-written `respond @externo 403`, `jellyfin`/`torrent` did NOT, and the decision to
+        expose only existed as an ABSENCE in the middle of 60 lines. Encoding security by
+        omission is the worst case: forgetting to write it became "exposed", silently. Now the
+        `expose` default is `lan`, so forgetting CLOSES.
+      • The TAILNET in the home matcher (100.64.0.0/10): it is what gives REAL remote access
+        today, since CGNAT prevents direct inbound. A tailnet peer is as much "home" as the LAN.
+        It went along into fail2ban's `ignoreip`, because getting the password wrong on the
+        phone cannot ban yourself.
+        That range is the same one carrier CGNAT uses; today it is harmless because nothing
+        from the internet reaches the process, but on the day of the tunnel it requires
+        distinguishing the path, not trusting the IP.
+      • `remote_ip` became `client_ip` BEFORE any tunnel exists: today they are identical (with
+        no trusted proxy, the client is the connection). It cost nothing and it disarms the trap
+        of cloudflared delivering over loopback and all the tunnel traffic becoming "home",
+        bypassing basic_auth silently.
+        Do NOT add `trusted_proxies` while there is no tunnel: without it the
+        X-Forwarded-For is ignored (which is correct); with it, any local process forges the
+        source IP.
+      • The fail2ban failregex became DERIVED from whoever has `auth`, instead of the literal
+        `pos\.`: a new service with basic_auth enters the jail by itself.
+      • A NIX TRAP that bit on the first generated file: the target is the literal `{$VAR}`
+        (a Caddy env var), and `"{$${v}}"` in a Nix string is a SYNTAX ERROR, not an escape, so
+        the generated file came out with a raw `{$${v}}`, which would become an EMPTY hash at
+        runtime. The unambiguous form is concatenating: `"{$" + v + "}"`. It was caught by eye,
+        in the generated Caddyfile; there would have been no build error.
+      • VALIDATED: `caddy validate` with the custom binary and real bcrypt hashes returned
+        `Valid configuration`; the generated file is semantically identical to what was there by
+        hand; and the sentinel ritual (rule 11) held, since flipping `jellyfin` to `lan` made
+        the 403 appear and reverting gave the store path back byte for byte.
 
-- [x] `router-sync`: a config do roteador sai da cegueira (08/08/2026) — as ~750 linhas de
-      UCI do Cudy WR3000 passam a viver em `router/uci/*.conf`, versionadas, com os
-      segredos redigidos. NÃO é o roteador declarativo: é ele VISÍVEL e o drift DETECTÁVEL,
-      que era a queixa real. `router-sync pull` espelha, `router-sync diff` compara e sai 1
-      se divergir (testado nos três estados: sincronia 0, divergência 1, revertido 0).
-      • POR QUE NÃO EMPURRA CONFIG, e por que essa metade veio primeiro: escrever UCI por
-        SSH exige commit-confirm (aplica → agenda rollback → confirma se ainda houver
-        acesso). Sem isso, uma linha errada de rede ou firewall tranca você fora e a saída
-        é modo failsafe com acesso FÍSICO. A metade de leitura entrega quase todo o valor
-        com nenhum do risco — e o export vira insumo pra QUALQUER ferramenta de push depois.
-      • REDAÇÃO FAIL-SAFE, e a direção é o ponto: redige por DEFAULT tudo cujo nome sugira
-        credencial, e só libera o que reconhece — `public_key` (público por definição) e
-        valor que começa com `/` (é CAMINHO, não segredo). Lista de bloqueio faria o
-        contrário e vazaria em silêncio no dia que um pacote novo trouxesse opção nova.
-        Validado: os 7 segredos saíram redigidos, e os 2 falsos positivos previstos
-        (`luci.flash_keep.passwd='/etc/passwd'`, `uhttpd.main.key='/etc/uhttpd.key'`)
-        ficaram intactos pela regra do `/`. Varredura extra por string de alta entropia só
-        achou as 3 `public_key` dos peers, um DUID de DHCPv6 e um caminho.
-      • `uci show` e não `uci export`: uma linha por opção faz o diff do git apontar a
-        LINHA que mudou, em vez do bloco inteiro.
-      • ⚠️ `__file__` NÃO acha a raiz do repo: o script é copiado pro /nix/store, então o
-        caminho relativo a ele aponta pra dentro da store (read-only). Mordeu na primeira
-        execução. O idioma certo é o do `sync-secrets.sh`: `git rev-parse --show-toplevel`.
-      • O QUE O `sysupgrade` JÁ PRESERVA — 38 entradas no keep.d, e eu errei DUAS VEZES
-        aqui por ler a lista truncada em 12 linhas e concluir do que não vi: `/etc/config/`
-        INTEIRO, `/etc/profile.d/`, `/etc/dropbear/`, passwd/shadow/group E TAMBÉM
-        `/etc/sudoers.d/`, que eu vinha dizendo que se perdia. A lacuna real é só `/home/`.
-      • ⚠️ ARMADILHA que só apareceu ao ler o `/sbin/sysupgrade`: o próprio
-        `/etc/sysupgrade.conf` NÃO está no keep.d. O `list_static_conffiles` lê os caminhos
-        LISTADOS DENTRO dele, mas não o inclui — então o 1º upgrade preserva o que você
-        pediu e o 2º perde tudo, porque o arquivo que pedia sumiu no primeiro. Conserto:
-        listar `/etc/sysupgrade.conf` dentro dele mesmo.
-      • BOAS PRÁTICAS pesquisadas, pra quando a decisão de push vier: imagem
-        (nix-openwrt-imagebuilder + /etc/uci-defaults) e push (nuci/Dewclaw/próprio) são
-        COMPLEMENTARES, não alternativas — a imagem é o artefato de desastre, o push é o
-        ciclo diário. O `nuci` (github.com/lonerOrz/openwrt-nix) é o mais bem desenhado
-        (valida antes, watchdog anti-brick com boot hook, sops, `nuci diff`) e está VIVO
-        (push em 30/07/2026), mas tem 1 contribuidor e commits recentes ainda refatorando a
-        CLI — churn de API na ferramenta que controla a rede. Dewclaw é mais antigo e o
-        autor declarou que não dá suporte.
+- [x] `router-sync`: the router config comes out of the blind spot (08/08/2026). The ~750
+      lines of UCI from the Cudy WR3000 now live in `router/uci/*.conf`, versioned, with the
+      secrets redacted. It is NOT a declarative router: it is a VISIBLE one with DETECTABLE
+      drift, which was the real complaint. `router-sync pull` mirrors, `router-sync diff`
+      compares and exits 1 if they diverge (tested in all three states: in sync 0, diverged 1,
+      reverted 0).
+      • WHY IT DOES NOT PUSH CONFIG, and why this half came first: writing UCI over SSH
+        requires commit-confirm (apply, schedule a rollback, confirm if there is still access).
+        Without that, one wrong network or firewall line locks you out and the way back is
+        failsafe mode with PHYSICAL access. The read half delivers nearly all the value with
+        none of the risk, and the export becomes input for ANY push tool later.
+      • FAIL-SAFE REDACTION, and the direction is the point: it redacts by DEFAULT anything
+        whose name suggests a credential, and only lets through what it recognizes,
+        `public_key` (public by definition) and a value starting with `/` (that is a PATH, not
+        a secret). A blocklist would do the opposite and leak silently the day a new package
+        brought a new option. Validated: the 7 secrets came out redacted, and the 2 predicted
+        false positives (`luci.flash_keep.passwd='/etc/passwd'`,
+        `uhttpd.main.key='/etc/uhttpd.key'`) stayed intact through the `/` rule. An extra sweep
+        for high-entropy strings only found the peers' 3 `public_key` values, a DHCPv6 DUID and
+        a path.
+      • `uci show` and not `uci export`: one line per option makes the git diff point at the
+        LINE that changed instead of the whole block.
+      • `__file__` does NOT find the repo root: the script is copied into /nix/store, so a
+        path relative to it points inside the store (read-only). It bit on the first run. The
+        right idiom is the one in `sync-secrets.sh`: `git rev-parse --show-toplevel`.
+      • WHAT `sysupgrade` ALREADY PRESERVES: 38 entries in keep.d, and I got this wrong TWICE
+        by reading the list truncated at 12 lines and concluding from what I did not see. It
+        preserves ALL of `/etc/config/`, `/etc/profile.d/`, `/etc/dropbear/`,
+        passwd/shadow/group AND ALSO `/etc/sudoers.d/`, which I had been saying was lost. The
+        real gap is only `/home/`.
+      • A TRAP that only showed up when reading `/sbin/sysupgrade`: `/etc/sysupgrade.conf`
+        itself is NOT in keep.d. `list_static_conffiles` reads the paths LISTED INSIDE it but
+        does not include it, so the 1st upgrade preserves what you asked for and the 2nd loses
+        everything, because the file doing the asking disappeared in the first one. The fix:
+        list `/etc/sysupgrade.conf` inside itself.
+      • BEST PRACTICES researched, for when the push decision comes: an image
+        (nix-openwrt-imagebuilder + /etc/uci-defaults) and a push (nuci/Dewclaw/your own) are
+        COMPLEMENTARY, not alternatives, because the image is the disaster artifact and the
+        push is the daily cycle. `nuci` (github.com/lonerOrz/openwrt-nix) is the best designed
+        one (it validates first, an anti-brick watchdog with a boot hook, sops, `nuci diff`)
+        and it is ALIVE (a push on 30/07/2026), but it has 1 contributor and recent commits
+        still refactoring the CLI, which is API churn in the tool that controls the network.
+        Dewclaw is older and its author declared that they do not support it.
 
-- [x] `my.net.{lan,vpn}Subnet`: as faixas de casa viram SSOT (08/08/2026) — última ponta
-      solta da saída do Tailscale. "De casa" é decisão de SEGURANÇA (separa quem entra
-      direto de quem precisa de senha) e estava escrita por extenso em QUATRO lugares:
-      matcher `@externo` do Caddy, `ignoreip` da jail caddy-pos, `ignoreIP` do sshd e a
-      regra de firewall que substituiu o `trustedInterfaces`. Divergir ali não dá erro de
-      build — só passa a tratar como estranho quem devia entrar, ou o contrário.
-      • DUAS opções e não uma lista só: o firewall que mantém o Sunshine alcançável confia
-        SÓ na do WireGuard. O Sunshine é fechado na LAN por decisão, e mesclar as faixas o
-        abriria pra rede de casa inteira sem ninguém perceber.
-      • Validado pelo ritual do sentinela: trocar `vpnSubnet` por 172.31.99.0/24 mudou os
-        QUATRO consumidores juntos; reverter devolveu o store path.
-      • ACHADO DE BRINDE, duas configs mortas que o sentinela expôs: o `[DEFAULT]` do
-        fail2ban saía com `127.0.0.1/8 ::1` DUPLICADO (o módulo do nixpkgs já prepende os
-        dois — declarar de novo repetia), e o `ignoreip` da jail caddy-pos virou idêntico
-        ao DEFAULT depois que ambos passaram a ler a SSOT. Jail sem `ignoreip` herda o
-        default: uma cópia a menos pra divergir.
-      • ⚠️ Estes valores ESPELHAM o roteador, que é quem realmente os define (ele serve o
-        DHCP da LAN e é o servidor WireGuard). O Nix não alcança lá — mudar a faixa no
-        OpenWrt e esquecer daqui deixa o repo mentindo em silêncio.
+- [x] `my.net.{lan,vpn}Subnet`: the home ranges become an SSOT (08/08/2026), the last loose
+      end of the Tailscale removal. "From home" is a SECURITY decision (it separates who gets
+      in directly from who needs a password) and it was spelled out in FOUR places: Caddy's
+      `@externo` matcher, the caddy-pos jail's `ignoreip`, sshd's `ignoreIP` and the firewall
+      rule that replaced `trustedInterfaces`. Diverging there raises no build error, it just
+      starts treating as a stranger somebody who should get in, or the other way around.
+      • TWO options and not a single list: the firewall that keeps Sunshine reachable trusts
+        ONLY the WireGuard one. Sunshine is closed on the LAN by decision, and merging the
+        ranges would open it to the whole home network without anybody noticing.
+      • Validated by the sentinel ritual: swapping `vpnSubnet` for 172.31.99.0/24 changed all
+        FOUR consumers together; reverting gave the store path back.
+      • A BONUS FINDING, two dead configs the sentinel exposed: fail2ban's `[DEFAULT]` came out
+        with `127.0.0.1/8 ::1` DUPLICATED (the nixpkgs module already prepends both, so
+        declaring them again repeated them), and the caddy-pos jail's `ignoreip` became
+        identical to the DEFAULT once both started reading the SSOT. A jail with no `ignoreip`
+        inherits the default: one fewer copy to diverge.
+      • These values MIRROR the router, which is what really defines them (it serves the LAN
+        DHCP and it is the WireGuard server). Nix does not reach in there, so changing the range
+        on OpenWrt and forgetting it here leaves the repo lying silently.
 
-- [x] Tailscale REMOVIDO — só WireGuard (08/08/2026) — o acesso remoto passa a ser o
-      WireGuard que o ROTEADOR já servia, e a malha de terceiro sai inteira do repo.
-      • POR QUE, e a premissa que eu tinha errado: o cliente do Tailscale JÁ é FOSS
-        (BSD-3); o proprietário é o plano de CONTROLE. Então a troca não tira software
-        fechado da máquina — tira a dependência de um coordenador de terceiro que sabe
-        quais dispositivos existem e pode desligar a rede. O Headscale resolveria isso
-        também, mas custa um serviço crítico a manter; WireGuard puro custa zero, porque
-        o servidor já estava no roteador (`wg0`, 10.10.10.0/24) e o Caddy já confiava
-        nessa faixa.
-      • O QUE DERRUBOU O ÚNICO ARGUMENTO CONTRA: o medo era rede corporativa bloquear UDP
-        e obrigar o relay DERP — exatamente o caso de uso (Moonlight do trabalho). MEDIDO:
-        3 pacotes UDP 51820 disparados da FAI, contador `Allow-WireGuard` do nftables no
-        roteador foi de 0 → 3. Passa. E sem relay o vídeo vai sempre direto, o que pra
-        streaming é ganho puro — o caminho é mais curto ainda, já que a FAI e a casa estão
-        as duas em São Carlos.
-      • ⚠️ A PEGADINHA QUE QUASE PASSOU: o `tailscale.nix` carregava
-        `trustedInterfaces = [ "tailscale0" ]`, e o Sunshine roda com `openFirewall =
-        false`. Apagar o módulo sem substituir isso deixaria o Sunshine INALCANÇÁVEL de
-        todo lugar, em silêncio. O substituto está em net/network.nix e é por ORIGEM, não
-        por interface: o servidor WireGuard é o ROTEADOR, então não existe `wg0` local pra
-        confiar — o peer chega pela LAN com origem 10.10.10.x. Regra inserida com
-        `-I nixos-fw 1`: a cadeia termina num refuse, então `-A` nunca seria alcançada.
-      • MORREU JUNTO, e é o ponto do "zero legado": o subsistema `sunshine-path-probe`
-        (~82 linhas + 2 units systemd) e as seções do `moonlight-stats` que cruzavam o
-        journal do tailscaled. Tudo aquilo existia pra responder "esta sessão foi direta
-        ou caiu no DERP?" — com WireGuard não há relay, então a pergunta PERDEU O OBJETO.
-        Não foi código que quebrou; foi código que deixou de ter sentido. O relatório
-        manteve o que continua verdadeiro: duração das sessões e a divisão curtas/longas.
-      • Sumiu também o `after = tailscaled.service` do cloudflare-dyndns: aquela corrida
-        de DNS existia porque o resolv.conf apontava pro 100.100.100.100 servido pelo
-        próprio tailscaled. O RETRY ficou — a outra causa (DHCP demorando ~6,5s depois do
-        network-online) é independente e continua valendo.
-      • AJUSTES FUNCIONAIS no sunshine.nix: `csrf_allowed_origins` apontava pro IP da
-        tailnet e pro nome MagicDNS, ambos mortos → virou `https://192.168.1.10:47990`,
-        que é por onde o peer chega. Continua SNAPSHOT (não dá pra derivar IP em build) —
-        vale garantir lease fixa no roteador. O `packet_size = 1024` FICOU: foi calibrado
-        pra MTU 1280 da tailscale0 e sobra espaço na MTU ~1420 do WireGuard, mas é valor
-        provado e subir seria otimização sem medição, arriscando reintroduzir o descarte
-        SILENCIOSO que custou o debug de 29/07.
-      • ⚠️ O QUE SE PERDE, e é real: o Tailscale re-resolvia o endpoint sozinho quando o
-        IP de casa mudava. O WireGuard guarda o endpoint resolvido e NÃO re-resolve — se
-        o IP mudar enquanto você está fora, a sessão morre e o cliente não volta só. Tem
-        conserto (timer que re-resolve e reaplica), mas é trabalho, não mágica de terceiro.
-      • `tailscale_authkey` saiu do índice do Bitwarden. O valor CIFRADO continua no
-        secrets.yaml até alguém removê-lo à mão — inofensivo, mas é resíduo.
+- [x] Tailscale REMOVED, WireGuard only (08/08/2026): remote access becomes the WireGuard the
+      ROUTER already served, and the third party mesh leaves the repo entirely.
+      • WHY, and the premise I had wrong: the Tailscale client ALREADY is FOSS (BSD-3); what is
+        proprietary is the CONTROL plane. So the swap does not remove closed software from the
+        machine, it removes the dependency on a third party coordinator that knows which devices
+        exist and can turn the network off. Headscale would solve that too, but it costs a
+        critical service to maintain; plain WireGuard costs zero, because the server was already
+        on the router (`wg0`, 10.10.10.0/24) and Caddy already trusted that range.
+      • WHAT KNOCKED DOWN THE ONLY ARGUMENT AGAINST IT: the fear was a corporate network
+        blocking UDP and forcing the DERP relay, which is exactly the use case (Moonlight from
+        work). MEASURED: 3 UDP 51820 packets fired from FAI, and the nftables `Allow-WireGuard`
+        counter on the router went from 0 to 3. It gets through. And with no relay the video
+        always goes direct, which for streaming is pure gain, since the path is even shorter,
+        given that FAI and home are both in São Carlos.
+      • THE TRAP THAT ALMOST SLIPPED THROUGH: `tailscale.nix` carried
+        `trustedInterfaces = [ "tailscale0" ]`, and Sunshine runs with `openFirewall = false`.
+        Deleting the module without replacing that would have left Sunshine UNREACHABLE from
+        everywhere, silently. The replacement is in net/network.nix and it is by SOURCE, not by
+        interface: the WireGuard server is the ROUTER, so there is no local `wg0` to trust, and
+        the peer arrives over the LAN with source 10.10.10.x. The rule is inserted with
+        `-I nixos-fw 1`: the chain ends in a refuse, so `-A` would never be reached.
+      • WHAT DIED ALONG WITH IT, and this is the point of "zero legacy": the
+        `sunshine-path-probe` subsystem (~82 lines plus 2 systemd units) and the
+        `moonlight-stats` sections that cross-referenced the tailscaled journal. All of that
+        existed to answer "was this session direct or did it fall into DERP?", and with
+        WireGuard there is no relay, so the question LOST ITS OBJECT. It was not code that
+        broke; it was code that stopped making sense. The report kept what is still true: the
+        session durations and the short/long split.
+      • Also gone: the `after = tailscaled.service` of cloudflare-dyndns. That DNS race existed
+        because resolv.conf pointed at the 100.100.100.100 served by tailscaled itself. The
+        RETRY stayed, since the other cause (DHCP taking ~6.5s after network-online) is
+        independent and still holds.
+      • FUNCTIONAL ADJUSTMENTS in sunshine.nix: `csrf_allowed_origins` pointed at the tailnet IP
+        and the MagicDNS name, both dead, so it became `https://192.168.1.10:47990`, which is
+        where the peer arrives. It is still a SNAPSHOT (an IP cannot be derived at build time),
+        so it is worth guaranteeing a static lease on the router. `packet_size = 1024` STAYED:
+        it was calibrated for tailscale0's MTU 1280 and there is room to spare in WireGuard's
+        ~1420 MTU, but it is a proven value and raising it would be optimizing without
+        measuring, risking reintroducing the SILENT drop that cost the 29/07 debug.
+      • WHAT IS LOST, and it is real: Tailscale re-resolved the endpoint by itself when the
+        home IP changed. WireGuard stores the resolved endpoint and does NOT re-resolve, so if
+        the IP changes while you are away, the session dies and the client does not come back on
+        its own. There is a fix (a timer that re-resolves and reapplies), but it is work, not
+        third party magic.
+      • `tailscale_authkey` left the Bitwarden index. The ENCRYPTED value is still in
+        secrets.yaml until somebody removes it by hand, which is harmless but is residue.
 
-- [x] Roteador OpenWrt: acesso, limpeza e `owfetch` (08/08/2026) — o Cudy WR3000 virou
-      administrável por SSH sem senha, e ganhou um resumo de sistema. NADA disso é
-      declarativo, e o registro existe por isso: o OpenWrt não é NixOS, então tudo abaixo
-      é passo MANUAL que some num reflash limpo (sobrevive a `sysupgrade` com keep settings).
-      • CLIENTE declarativo, resto não: `home/shell/ssh.nix` ganhou o host `router`. Sem o
-        `faiResilience` — aquilo dimensiona keepalive e multiplexação pro túnel SonicWall;
-        num salto de LAN de <1ms seria carga cultuada.
-      • OS CINCO PASSOS MANUAIS, na ordem: (1) `ssh-copy-id` da chave; (2) `@includedir
-        /etc/sudoers.d` no `/etc/sudoers` — ele NÃO vinha, então drop-in ali era ignorado em
-        SILÊNCIO; (3) a regra NOPASSWD restrita; (4) o script em `~/bin/owfetch`; (5) a
-        chamada em `/etc/profile.d/99-owfetch.sh`. Somar `/etc/sudoers.d/` ao
-        `/etc/sysupgrade.conf` faz o passo 3 persistir.
-      • ⚠️ NÃO existe `su` no BusyBox e `sudo cmd > arquivo` NÃO funciona (o `>` é do shell
-        sem privilégio, antes do sudo). O padrão é `| sudo tee`. E editar sudoers é
-        copiar → editar a CÓPIA → `visudo -c -f` → só então instalar: com `sudo` quebrado e
-        sem `su`, a saída seria failsafe com acesso físico.
-      • ESCOPO DO SUDO: começou `ALL` e foi ESTREITADO pra `/sbin/reboot, /usr/sbin/nft,
-        /sbin/uci, /etc/init.d/dnsmasq`. O motivo é que `NOPASSWD: ALL` + chave SSH torna a
-        CHAVE equivalente a root — e o login de root por SSH já estava desativado no
-        dropbear (flags `-w -g`), então o amplo desfazia a proteção que já existia.
-      • DNS LOCAL: 13 entradas → 1. Só `/v1cferr.dev/192.168.1.10` fazia trabalho — no
-        dnsmasq isso cobre o domínio E todos os subdomínios. As 12 específicas eram
-        redundantes, várias apontando pra serviços mortos no Arch (bazarr/prowlarr/radarr/
-        sonarr/jellyseerr/spendflow/chat/dash/files), e nenhuma cobria `pos` nem `duo`.
-        Backup em `/etc/config/dhcp.bak-limpeza`. Efeito aceito: a curinga pega o APEX, então
-        `https://v1cferr.dev` de dentro de casa dá erro de TLS (o cert curinga não cobre o
-        domínio nu). De fora vai pra Vercel normalmente.
-      • `scripts/owfetch.sh`: fetch em ash puro, ~4 KB, ZERO dependência. Não é fastfetch
-        porque o /overlay tem 1.4 MB livres de 6.1 MB — fastfetch pesa 1-2 MB e o neofetch
-        arrastaria o bash; qualquer um enche a flash, e roteador com flash cheia não grava
-        nem config. A ordem dos campos espelha `home/shell/fastfetch.nix` de propósito.
-      • AUTOSTART em `/etc/profile.d/99-owfetch.sh` (o `/etc/profile` varre esse diretório).
-        Guardas obrigatórias: `[ -t 1 ]` (senão suja `scp` e comandos por SSH) e `-x` (senão
-        erra se o script sumir num reflash). `$HOME` e não caminho fixo: o diretório é lido
-        por CADA usuário que loga, então quem não tiver o script simplesmente não vê nada.
-      • ⚠️ MÉTODO, e a lição vale mais que o resultado: eu cheguei a ANOTAR AQUI que
-        "`~/.profile` não é lido no OpenWrt". FALSO — ele é lido, e o login real mostrou o
-        fetch rodando DUAS vezes só com ele. O que enganou foi o teste: `echo exit | ssh -tt`
-        NÃO é uma sessão interativa (o ash olha `isatty(0)`, e stdin veio de um pipe), então
-        ele devolve zero tanto para "não configurado" quanto para "configurado e funcionando".
-        Um método que não distingue as duas hipóteses não é teste — e foi a MESMA classe de
-        erro do CGNAT: instrumento cego lido como evidência.
-      • ⚠️ printf pad por BYTE: o rótulo "Memória" desalinhava porque `ó` são 2 bytes em
-        UTF-8. Virou "RAM". E o ARM não expõe `model name` em /proc/cpuinfo — o nome da CPU
-        sai do `DISTRIB_ARCH`.
-      • O hook `shellcheck` entrou no `flake.nix` por causa deste script: o
-        `scripts/sync-secrets.sh` já ganhava verificação de graça pelo `writeShellApplication`,
-        mas o `owfetch.sh` roda em ash NO ROTEADOR e nenhuma derivação o embrulha — seria o
-        único `.sh` do repo a executar em máquina alheia SEM verificação. Ligar o hook exigiu
-        `# shellcheck shell=bash` no `.envrc`, que não tem shebang (SC2148).
+- [x] OpenWrt router: access, cleanup and `owfetch` (08/08/2026). The Cudy WR3000 became
+      administrable over SSH with no password, and it gained a system summary. NONE of this is
+      declarative, and the record exists for that reason: OpenWrt is not NixOS, so everything
+      below is a MANUAL step that disappears in a clean reflash (it survives a `sysupgrade`
+      with keep settings).
+      • The CLIENT is declarative, the rest is not: `home/shell/ssh.nix` gained the `router`
+        host. Without `faiResilience`, because that dimensions keepalive and multiplexing for
+        the SonicWall tunnel; on a <1ms LAN hop it would be cargo cult.
+      • THE FIVE MANUAL STEPS, in order: (1) `ssh-copy-id` for the key; (2)
+        `@includedir /etc/sudoers.d` in `/etc/sudoers`, which was NOT there, so a drop-in in
+        there was ignored SILENTLY; (3) the restricted NOPASSWD rule; (4) the script in
+        `~/bin/owfetch`; (5) the call in `/etc/profile.d/99-owfetch.sh`. Adding
+        `/etc/sudoers.d/` to `/etc/sysupgrade.conf` makes step 3 persist.
+      • There is NO `su` in BusyBox and `sudo cmd > file` does NOT work (the `>` belongs to
+        the unprivileged shell, before sudo). The pattern is `| sudo tee`. And editing sudoers
+        means copy, edit the COPY, `visudo -c -f`, and only then install: with `sudo` broken and
+        no `su`, the way out would be failsafe with physical access.
+      • SUDO SCOPE: it started as `ALL` and was NARROWED to `/sbin/reboot, /usr/sbin/nft,
+        /sbin/uci, /etc/init.d/dnsmasq`. The reason is that `NOPASSWD: ALL` plus an SSH key
+        makes the KEY equivalent to root, and root login over SSH was already disabled in
+        dropbear (the `-w -g` flags), so the broad version undid the protection that already
+        existed.
+      • LOCAL DNS: 13 entries became 1. Only `/v1cferr.dev/192.168.1.10` did any work, since in
+        dnsmasq that covers the domain AND every subdomain. The 12 specific ones were
+        redundant, several pointing at services dead since Arch
+        (bazarr/prowlarr/radarr/sonarr/jellyseerr/spendflow/chat/dash/files), and none covered
+        `pos` or `duo`. A backup is in `/etc/config/dhcp.bak-limpeza`. An accepted effect: the
+        wildcard also catches the APEX, so `https://v1cferr.dev` from inside the house gives a
+        TLS error (the wildcard cert does not cover the bare domain). From outside it goes to
+        Vercel normally.
+      • `scripts/owfetch.sh`: a fetch in pure ash, ~4 KB, with ZERO dependencies. It is not
+        fastfetch because /overlay has 1.4 MB free out of 6.1 MB, and fastfetch weighs 1 to
+        2 MB while neofetch would drag bash in; either one fills the flash, and a router with
+        full flash does not even save config. The field order mirrors
+        `home/shell/fastfetch.nix` on purpose.
+      • AUTOSTART in `/etc/profile.d/99-owfetch.sh` (`/etc/profile` scans that directory).
+        Mandatory guards: `[ -t 1 ]` (otherwise it pollutes `scp` and commands over SSH) and
+        `-x` (otherwise it errors if the script disappears in a reflash). `$HOME` and not a
+        fixed path: the directory is read by EVERY user who logs in, so whoever does not have
+        the script simply sees nothing.
+      • METHOD, and the lesson is worth more than the result: I actually WROTE DOWN HERE
+        that "`~/.profile` is not read on OpenWrt". FALSE, it is read, and the real login showed
+        the fetch running TWICE with just that. What fooled me was the test:
+        `echo exit | ssh -tt` is NOT an interactive session (ash looks at `isatty(0)`, and stdin
+        came from a pipe), so it returns nothing both for "not configured" and for "configured
+        and working". A method that does not distinguish the two hypotheses is not a test, and
+        it was the SAME class of error as the CGNAT one: a blind instrument read as evidence.
+      • printf pads by BYTE: the "Memória" label misaligned because `ó` is 2 bytes in UTF-8.
+        It became "RAM". And ARM does not expose `model name` in /proc/cpuinfo, so the CPU name
+        comes from `DISTRIB_ARCH`.
+      • The `shellcheck` hook entered `flake.nix` because of this script:
+        `scripts/sync-secrets.sh` already got verification for free through
+        `writeShellApplication`, but `owfetch.sh` runs in ash ON THE ROUTER and no derivation
+        wraps it, so it would be the only `.sh` in the repo executing on somebody else's
+        machine WITHOUT verification. Turning the hook on required `# shellcheck shell=bash` in
+        `.envrc`, which has no shebang (SC2148).
 
-- [x] ~~CGNAT~~ FALSO ALARME: o acesso externo SEMPRE funcionou (08/08/2026) — esta entrada
-      nasceu ERRADA em 07/08 e fica reescrita, não apagada, porque o valor está no método que
-      falhou. A conclusão de ontem ("não há rota de entrada, é CGNAT") era falsa nas TRÊS pernas:
-      • NÃO há CGNAT. O roteador tem o IP público direto na `pppoe-wan`. O `172.31.43.240` que
-        eu li como "NAT da operadora" no traceroute é o PEER do enlace PPPoE. Saltos em RFC 1918
-        num traceroute não provam CGNAT — operadora usa espaço privado em transporte, e isso
-        aparece igual nos dois casos. Foi inferência, vendida como prova.
-      • A operadora NÃO bloqueia. Provado pelo contador do nftables (`nft list chain inet fw4
-        dstnat_wan`): 3 disparos de fora = contador +3. Os pacotes sempre chegaram.
-      • O acesso externo FUNCIONA. Provado pela borda da Cloudflare: registro `proxied` temporário
-        → a CF conectou no Caddy e recebeu o `404 Subdomínio não configurado` em 0,39s, com o
-        contador do roteador subindo junto. Encerrou a questão.
-      • QUEM BLOQUEIA É A REDE DA FAI. Era o meu único ponto externo, e não é neutra: o SYN sai
-        de lá e chega aqui, o conntrack do roteador mostra `SYN_RECV` (ou seja, o Caddy RESPONDE
-        o SYN-ACK), e o ACK final nunca volta. O firewall da FAI descarta o SYN-ACK.
-      • ⚠️ MÉTODO — três formas de o teste MENTIR, todas cometidas aqui:
-        1. DE DENTRO DA LAN: o roteador faz hairpin e a porta "abre". Falso positivo.
-        2. PELA VPN DA FAI com o túnel ATIVO no alvo: `ip route get 200.136.209.229` sai por
-           `ppp0` com origem `192.168.50.1` — a resposta volta por outro caminho e o cliente
-           descarta. Falso NEGATIVO, e o mais traiçoeiro, porque parece um teste externo legítimo.
-        3. PONTO EXTERNO ÚNICO: se ele mesmo bloqueia, tudo parece quebrado. Uma rede corporativa
-           não pode ser juiz do próprio caso — exige um SEGUNDO ponto independente.
-      • A FERRAMENTA QUE RESOLVEU, guardar pra próxima: criar um registro `proxied` na Cloudflare
-        e bater nele. A CF vira um ponto externo NEUTRO que já é seu, sem terceiros e sem VPN. O
-        `404` do catch-all é o sinal perfeito — não precisa nem de serviço no ar. Apagar depois.
-      • CONSEQUÊNCIAS: `expose = "public"` FUNCIONA hoje. Não precisa de cloudflared, não precisa
-        ligar pra operadora, e a armadilha do `trusted_proxies` vira teórica de novo (mas o
-        `client_ip` fica, porque continua certo).
-      • ⚠️ E O RISCO REAL INVERTE: `jellyfin` e `torrent` estão expostos à internet AGORA, com o
-        login do próprio app como única barreira. Ontem isso era teórico ("nada alcança"); hoje é
-        fato. O wildcard resolve pra cá, a 443 está encaminhada e o Caddy serve os dois sem gate.
-        Decidir conscientemente: manter, ou virar `expose = "lan"` no painel.
+- [x] ~~CGNAT~~ FALSE ALARM: external access ALWAYS worked (08/08/2026). This entry was born
+      WRONG on 07/08 and it stays rewritten instead of deleted, because the value is in the
+      method that failed. Yesterday's conclusion ("there is no inbound route, it is CGNAT") was
+      false on all THREE legs:
+      • There is NO CGNAT. The router has the public IP directly on `pppoe-wan`. The
+        `172.31.43.240` I read as "the ISP's NAT" in the traceroute is the PEER of the PPPoE
+        link. RFC 1918 hops in a traceroute do not prove CGNAT, because an ISP uses private
+        space in transport, and that looks the same in both cases. It was inference, sold as
+        proof.
+      • The ISP does NOT block. Proven by the nftables counter (`nft list chain inet fw4
+        dstnat_wan`): 3 hits from outside gave counter +3. The packets always arrived.
+      • External access WORKS. Proven by Cloudflare's edge: a temporary `proxied` record, and CF
+        connected to Caddy and got the `404 Subdomínio não configurado` in 0.39s, with the
+        router counter going up along with it. Case closed.
+      • WHAT BLOCKS IS THE FAI NETWORK. It was my only external vantage point, and it is not
+        neutral: the SYN leaves there and arrives here, the router's conntrack shows `SYN_RECV`
+        (which means Caddy DOES answer the SYN-ACK), and the final ACK never comes back. The FAI
+        firewall drops the SYN-ACK.
+      • METHOD, three ways for the test to LIE, all of them committed here:
+        1. FROM INSIDE THE LAN: the router does hairpin and the port "opens". A false positive.
+        2. THROUGH THE FAI VPN with the tunnel ACTIVE on the target:
+           `ip route get 200.136.209.229` goes out through `ppp0` with source `192.168.50.1`, so
+           the answer comes back by another path and the client discards it. A false NEGATIVE,
+           and the most treacherous one, because it looks like a legitimate external test.
+        3. A SINGLE EXTERNAL VANTAGE POINT: if it is the one blocking, everything looks broken.
+           A corporate network cannot judge its own case, which demands a SECOND independent
+           point.
+      • THE TOOL THAT SOLVED IT, keep it for next time: create a `proxied` record on Cloudflare
+        and hit it. CF becomes a NEUTRAL external vantage point that is already yours, with no
+        third party and no VPN. The catch-all `404` is the perfect signal, since you do not even
+        need a service up. Delete it afterwards.
+      • CONSEQUENCES: `expose = "public"` WORKS today. There is no need for cloudflared, no need
+        to call the ISP, and the `trusted_proxies` trap becomes theoretical again (but the
+        `client_ip` stays, because it is still correct).
+      • AND THE REAL RISK INVERTS: `jellyfin` and `torrent` are exposed to the internet NOW,
+        with the app's own login as the only barrier. Yesterday that was theoretical ("nothing
+        reaches it"); today it is a fact. The wildcard resolves here, 443 is forwarded and Caddy
+        serves both with no gate. Decide consciously: keep it, or switch to `expose = "lan"` in
+        the panel.
 
-- [x] `my.ingress`: exposição vira TOGGLE (08/08/2026) — o Caddyfile deixou de ser escrito à
-      mão. Cada serviço se declara em `my.ingress` (schema em system/net/ingress.nix, painel em
-      hosts/nixos-kingston/services.nix) e os vhosts são GERADOS. Alternar alcance = trocar uma
-      palavra: `expose = "lan"` ↔ `"public"`.
-      • O QUE ISSO CONSERTA: antes o alcance era implícito e assimétrico — `duo`/`ai` tinham
-        `respond @externo 403` escrito à mão, `jellyfin`/`torrent` NÃO tinham, e a decisão de
-        expor só existia como uma AUSÊNCIA no meio de 60 linhas. Codificar segurança por omissão
-        é o pior caso: esquecer de escrever virava "exposto", em silêncio. Agora o default de
-        `expose` é `lan` — esquecer FECHA.
-      • TAILNET no matcher de casa (100.64.0.0/10): é o que dá acesso remoto DE VERDADE hoje,
-        já que o CGNAT impede entrada direta. Um par da tailnet é tão "casa" quanto a LAN. Foi
-        junto no `ignoreip` do fail2ban — errar a senha no celular não pode banir a si mesmo.
-        ⚠️ Essa faixa é a mesma do CGNAT de carrier; hoje é inofensiva porque nada da internet
-        alcança o processo, mas no dia do túnel exige distinguir o caminho, não confiar no IP.
-      • `remote_ip` → `client_ip` ANTES de existir túnel: hoje são idênticos (sem proxy
-        confiável, cliente = conexão). Custou zero e desarma a armadilha do cloudflared entregar
-        pelo loopback e todo o tráfego do túnel virar "casa", furando o basic_auth em silêncio.
-        ⚠️ NÃO adicionar `trusted_proxies` enquanto não houver túnel: sem ele o X-Forwarded-For
-        é ignorado (que é o certo); com ele, processo local qualquer forja o IP de origem.
-      • O failregex do fail2ban passou a ser DERIVADO de quem tem `auth`, em vez do literal
-        `pos\.`: serviço novo com basic_auth entra na jail sozinho.
-      • ⚠️ PEGADINHA DE NIX que mordeu no primeiro gerado: o alvo é o literal `{$VAR}` (env var
-        do Caddy), e `"{$${v}}"` numa string Nix é ERRO DE SINTAXE, não escape — o gerado saiu
-        com `{$${v}}` cru, que viraria hash VAZIO em runtime. A forma sem ambiguidade é
-        concatenar: `"{$" + v + "}"`. Pegou no olho, no Caddyfile gerado; não haveria erro de
-        build.
-      • VALIDADO: `caddy validate` com o binário custom e hashes bcrypt reais → `Valid
-        configuration`; o gerado é semanticamente idêntico ao que estava à mão; e o ritual do
-        sentinela (regra 11) — virar `jellyfin` pra `lan` fez o 403 aparecer, reverter devolveu
-        o store path byte-a-byte.
+- [x] Cloudflare in Claude Code: CLI + MCP (07/08/2026), to close Caddy's "pending discovery"
+      (the wildcard answering with a private IP) without me reading the zone in the dashboard by
+      hand. Two pieces: `.mcp.json` at the root and `.claude/settings.json`.
+      • `wrangler` CAME IN AND WENT OUT the same day, and the reason is worth recording because
+        I was about to repeat it: I assumed the "official Cloudflare CLI" would serve for DNS.
+        IT DOES NOT. The entire help is Workers/Pages/KV/R2/AI/Queues, and there is no
+        `wrangler dns` and nothing about zones. And the price was 2.2 GiB of closure, FOUR
+        copies of nodejs-24 (slim, -npm, -corepack and the full one): on its own, +1.91 GiB of
+        the +2.10 GiB of that switch. It contradicted the very criterion I used two lines below
+        to refuse the Workers skills. What does DNS is the MCP.
+      • THE SCOPE IS PROJECT, and NOT global, against what I had asked for, because global and
+        declarative are MUTUALLY EXCLUSIVE here, and the why is worth recording. The three MCP
+        scopes in Claude Code: `local` and `user` (=global) live in `~/.claude.json`; only
+        `project` lives in `.mcp.json`, versioned. And `~/.claude.json` is the file that holds
+        `numStartups`, `tipsHistory`, `projects` and a feature cache, which the app REWRITES at
+        runtime, so by rule 14 Nix cannot own it. Global = imperative. End of story.
+      • THE ESCAPE HATCH EXISTS AND WAS REFUSED: `/etc/claude-code/managed-mcp.json` would be
+        declarative (`environment.etc`) AND global, the only way to have both. But it takes
+        EXCLUSIVE control: "Claude Code loads only the servers that file defines. Users cannot
+        add, modify, or use any other MCP servers, including plugin-provided servers." That
+        would KILL github, atlassian and the claude.ai connectors. Trading 4 working servers for
+        1 is a terrible deal, and project scope solves 100% of the use case, since the DNS/Caddy
+        work is IN THIS repo.
+      • The official plugin (`cloudflare/skills`, which the docs tell you to install) was OPENED
+        and REFUSED: it brings 5 MCP servers and 13 skills, and 11 of them are
+        Workers/Durable Objects/Pages/Turnstile, a dev platform I do not use. What was left is
+        what serves: `cloudflare-api` (DNS, zones, tokens) and `cloudflare-docs`. The 3
+        discarded ones were `bindings`, `builds` and `observability`. The marketplace was
+        removed after being inspected, it was not left orphaned.
+      • `enabledMcpjsonServers` in `.claude/settings.json` PRE-APPROVES both: without it Claude
+        asks on every session. It only holds in a trusted workspace, since a cloned repo does
+        not self-approve.
+      • Auth is OAuth in the browser, on the FIRST tool call, so there is no token in the repo
+        (rule 12). It is a credential SEPARATE from the `cloudflare-dyndns` sops token; do not
+        confuse the two.
+      • `.mcp.json` is strict JSON, with no comments, which is why the "why" is here and not
+        there.
 
-- [x] Cloudflare no Claude Code: CLI + MCP (07/08/2026) — pra fechar a "descoberta pendente" do
-      Caddy (o wildcard respondendo IP privado) sem eu ler zona no painel na mão. Duas peças:
-      `.mcp.json` na raiz e `.claude/settings.json`.
-      • O `wrangler` ENTROU E SAIU no mesmo dia, e o motivo vale registrar porque eu ia repetir:
-        assumi que o "CLI oficial da Cloudflare" serviria pra DNS. NÃO SERVE — o help inteiro é
-        Workers/Pages/KV/R2/AI/Queues, e não existe `wrangler dns` nem nada de zona. E o preço
-        era 2.2 GiB de closure, QUATRO cópias de nodejs-24 (slim, -npm, -corepack e o cheio):
-        sozinho, +1.91 GiB dos +2.10 GiB daquele switch. Contradizia o próprio critério que
-        usei duas linhas abaixo pra recusar as skills de Workers. Quem faz DNS é o MCP.
-      • ESCOPO É PROJETO, e NÃO global, contra o que eu tinha pedido — porque global e
-        declarativo são MUTUAMENTE EXCLUSIVOS aqui, e vale registrar o porquê. Os três escopos
-        de MCP do Claude Code: `local` e `user` (=global) moram em `~/.claude.json`; só
-        `project` mora em `.mcp.json`, versionado. E o `~/.claude.json` é o arquivo que guarda
-        `numStartups`, `tipsHistory`, `projects`, cache de features — o app REESCREVE em
-        runtime, então pela regra 14 o Nix não pode ser dono dele. Global = imperativo. Fim.
-      • A ROTA DE FUGA EXISTE E FOI RECUSADA: `/etc/claude-code/managed-mcp.json` seria
-        declarativo (`environment.etc`) E global, o único jeito de ter os dois. Mas ele tem
-        controle EXCLUSIVO: "Claude Code loads only the servers that file defines. Users cannot
-        add, modify, or use any other MCP servers, including plugin-provided servers." Isso
-        MATARIA o github, o atlassian e os connectors do claude.ai. Trocar 4 servidores que
-        funcionam por 1 é péssimo negócio — e project scope resolve 100% do caso de uso, já que
-        o trabalho de DNS/Caddy é NESTE repo.
-      • O plugin oficial (`cloudflare/skills`, que a doc manda instalar) foi ABERTO e RECUSADO:
-        traz 5 servidores MCP e 13 skills, e 11 delas são Workers/Durable Objects/Pages/
-        Turnstile — plataforma de dev que eu não uso. Sobrou o que serve: `cloudflare-api`
-        (DNS, zonas, tokens) e `cloudflare-docs`. Os 3 descartados eram `bindings`, `builds` e
-        `observability`. Marketplace foi removido depois de inspecionado, não ficou órfão.
-      • `enabledMcpjsonServers` no `.claude/settings.json` PRÉ-APROVA os dois: sem ele o Claude
-        pergunta a cada sessão. Só vale em workspace confiável — repo clonado não se auto-aprova.
-      • Auth é OAuth no browser, na PRIMEIRA chamada de tool — não tem token no repo (regra 12).
-        Credencial SEPARADA do token sops do `cloudflare-dyndns`; não confundir os dois.
-      • ⚠️ `.mcp.json` é JSON estrito, sem comentário — por isso o "porquê" está aqui e não lá.
+- [x] Caddy is back, declarative (07/08/2026): "Phase 4, Homelab" started. The Arch ingress
+      (`caddy/etc/caddy/Caddyfile` on the `main`/`arch` branch) had been left behind in the
+      migration. `services.caddy` now serves `*.v1cferr.dev` with a WILDCARD LE cert through
+      Cloudflare DNS-01, and `my.net.domain` (system/net/domain.nix) became the domain's SSOT:
+      before, the literal existed in a single place (the DDNS), which did not justify an option;
+      with the proxy the consumers became four and triggered rule 11.
+      • The reason for the biggest hack of the old setup DIED: building with xcaddy and hiding
+        the binary in `/usr/local/bin` existed because "a `pacman -Syu` once overwrote the custom
+        binary and took the whole proxy down". On Nix it is `caddy.withPlugins` with the vendor
+        pinned by hash, so the package IS the declaration.
+      • `propagation_timeout -1` was PRESERVED literally. It is not a preference: certmagic's
+        local propagation check fails on this host, and without turning it off the issuance
+        hangs.
+      • The repo's FIRST `networking.firewall.allowedTCPPorts` (80/443). Everything else uses
+        the upstream module's `openFirewall`, but `services.caddy` does not have one. The router
+        had been forwarding 80/443/2222 since the Arch days; what blocked was the NixOS
+        firewall.
+      • AUTO-GATE on the 4 secrets (the duo.nix pattern), because an empty `{$VAR}` becomes an
+        empty basic_auth hash and Caddy would refuse the ENTIRE config, and inert is better than
+        taking the proxy down on the switch.
+      • Validated WITHOUT a switch: the rule 11 sentinel ritual (the DDNS + the vhost + 5
+        matchers + the failregex all changed together) and `caddy validate` on the generated
+        Caddyfile, with the custom binary, returning `Valid configuration`.
+      • ~~Pending discovery: the wildcard answers with a private IP~~: SOLVED on 07/08/2026, and
+        the diagnosis was WRONG. There was no wildcard at all on Cloudflare: the zone had 10
+        records and no `*`. What answered `192.168.1.10` was the ROUTER (192.168.1.1), which has
+        a local wildcard `*.v1cferr.dev` pointing to 192.168.1.10 configured on it, outside Nix,
+        as split-horizon so the LAN does not hairpin through the WAN. The mistake was MEASURING
+        FROM INSIDE THE NETWORK: `dig @1.1.1.1` also returned the private address because the
+        router hijacks port 53. What broke the tie was DNS-over-HTTPS (port 443, unhijackable):
+        from outside, `ssh` always resolved correctly to the public IP, and a random name gave
+        NXDOMAIN. `cloudflare-dyndns` was never broken. LESSON: to validate public DNS from
+        inside your own LAN, use DoH, because `dig` lies when there is interception.
+      • WILDCARD ADDED (07/08/2026): `*` CNAME to `ssh.v1cferr.dev`, DNS-only. A CNAME and not an
+        A on purpose: `cloudflare-dyndns` only manages `ssh.${domain}` (network.nix:67), so the
+        wildcard INHERITS the dynamic IP for free, while an A would be frozen at the first IP.
+        That matches the design the Caddyfile already had: a wildcard cert plus the catch-all
+        `respond "Subdomínio não configurado" 404`. Before that, NONE of the five vhosts
+        (pos/duo/ai/jellyfin/torrent) had a record, so from outside the whole proxy was
+        unreachable.
+      • The wildcard plus DNS-01 risk was TESTED, not assumed: if the wildcard ran over
+        `_acme-challenge.*`, the cert renewal would break in ~60 days, silently. Queried through
+        DoH, an explicit TXT under the wildcard is still returned as a TXT (RFC 4592: an
+        explicit record takes precedence). Renewal is safe.
+      • ZONE CLEANED the same day: 10 records became 3. Out went the two orphan `_acme-challenge`
+        TXTs (`prowlarr`/`torrent`, leftovers from Arch, since certmagic did not clean up), the
+        `tv` A pointing at 179.135.127.74 (a DEAD IP: the DDNS only manages `ssh`, and being
+        explicit, `tv` beat the wildcard and stayed broken, so it was removed and now inherits
+        the live IP) and the `ap`/`dash`/`files` CNAMEs to `ssh`, which the wildcard made
+        redundant. What was left is `A ssh` (the target of both the DDNS and the wildcard),
+        `A v1cferr.dev` proxied (the site on Vercel) and the `CNAME *`.
+      • The `ns1/ns2.dns-parking.com` NS records also went out. They were leftovers from the
+        HOSTINGER import, and the check that authorized removing them: the REAL delegation lives
+        at the REGISTRAR, not in the zone, and `dig NS` already returned only
+        `bruce/zoe.ns.cloudflare.com`, proving Cloudflare never served those two. Nothing from
+        Hostinger needs to exist in the zone; the link is their dashboard pointing at
+        Cloudflare. (If email ever comes to the domain, then yes: MX + SPF.)
+      • A split-horizon TRAP: the ROUTER's wildcard also covers the APEX, so from inside the
+        LAN `https://v1cferr.dev` hits Caddy and gives a TLS ERROR, because the `*.v1cferr.dev`
+        cert does NOT cover bare `v1cferr.dev` (a wildcard does not match the domain itself). It
+        is not broken: through Cloudflare's edge the apex answers a normal 307. It just cannot
+        be tested for the apex from home.
 
-- [x] Caddy de volta, declarativo (07/08/2026) — a "Fase 4 — Homelab" começou. O ingress do Arch
-      (`caddy/etc/caddy/Caddyfile` na branch `main`/`arch`) tinha ficado para trás na migração:
-      `services.caddy` agora serve `*.v1cferr.dev` com cert CURINGA da LE via DNS-01 da
-      Cloudflare, e `my.net.domain` (system/net/domain.nix) virou o SSOT do domínio — antes o
-      literal existia num lugar só (o DDNS), o que não justificava opção; com o proxy o
-      consumidor virou quatro e disparou a regra 11.
-      • O motivo da maior gambiarra do setup antigo MORREU: buildar com xcaddy e esconder o
-        binário em `/usr/local/bin` existia porque "um `pacman -Syu` já sobrescreveu o binário
-        custom uma vez e derrubou o proxy inteiro". No Nix é `caddy.withPlugins` com o vendor
-        fixado por hash — o pacote É a declaração.
-      • ⚠️ `propagation_timeout -1` foi PRESERVADO literal. Não é preferência: a checagem local
-        de propagação do certmagic falha neste host, e sem desligá-la a emissão trava.
-      • PRIMEIRO `networking.firewall.allowedTCPPorts` do repo (80/443). Todo o resto usa o
-        `openFirewall` do módulo upstream, mas `services.caddy` não tem um. O roteador já
-        encaminhava 80/443/2222 desde o Arch — quem bloqueava era o firewall do NixOS.
-      • AUTO-GATE nos 4 segredos (padrão do duo.nix), porque `{$VAR}` vazio vira hash de
-        basic_auth vazio e o Caddy recusaria a config INTEIRA — inerte é melhor que derrubar o
-        proxy no switch.
-      • Validado SEM switch: ritual do sentinela da regra 11 (DDNS + vhost + 5 matchers +
-        failregex trocaram juntos) e `caddy validate` no Caddyfile gerado, com o binário custom,
-        dando `Valid configuration`.
-      • ~~Descoberta pendente: o wildcard responde IP privado~~ — RESOLVIDA em 07/08/2026, e o
-        diagnóstico estava ERRADO. Não havia wildcard nenhum na Cloudflare: a zona tinha 10
-        registros e nenhum `*`. Quem respondia `192.168.1.10` era o ROTEADOR (192.168.1.1), que
-        tem um wildcard local `*.v1cferr.dev` → 192.168.1.10 configurado nele, fora do Nix —
-        split-horizon pra LAN não fazer hairpin pelo WAN. O erro foi MEDIR DE DENTRO DA REDE:
-        `dig @1.1.1.1` também dava privado porque o roteador sequestra a porta 53. Quem
-        desempatou foi DNS-over-HTTPS (porta 443, insequestrável): de fora, `ssh` sempre
-        resolveu certo pro IP público, e nome aleatório dava NXDOMAIN. O `cloudflare-dyndns`
-        nunca esteve quebrado. LIÇÃO: pra validar DNS público de dentro da própria LAN, DoH —
-        `dig` mente quando há interceptação.
-      • WILDCARD ADICIONADO (07/08/2026): `*` CNAME → `ssh.v1cferr.dev`, DNS-only. CNAME e não
-        A de propósito: o `cloudflare-dyndns` só gerencia `ssh.${domain}` (network.nix:67), então
-        o wildcard HERDA o IP dinâmico de graça — um A ficaria congelado no primeiro IP. Isso
-        casa com o desenho que o Caddyfile já tinha: cert curinga + catch-all `respond
-        "Subdomínio não configurado" 404`. Antes disso, NENHUM dos cinco vhosts (pos/duo/ai/
-        jellyfin/torrent) tinha registro — de fora, o proxy inteiro era inalcançável.
-      • ⚠️ O risco de wildcard + DNS-01 foi TESTADO, não assumido: se o wildcard atropelasse o
-        `_acme-challenge.*`, a renovação do cert quebraria em ~60 dias, em silêncio. Consultado
-        via DoH, um TXT explícito sob o wildcard continua sendo devolvido como TXT (RFC 4592:
-        registro explícito tem precedência). Renovação segura.
-      • ZONA LIMPA no mesmo dia: 10 registros → 3. Saíram os dois TXT `_acme-challenge` órfãos
-        (`prowlarr`/`torrent`, sobra do Arch — o certmagic não limpou), o `tv` A → 179.135.127.74
-        (IP MORTO: o DDNS só gerencia `ssh`, e por ser explícito o `tv` ganhava do wildcard e
-        seguia quebrado — removido, agora herda o IP vivo) e `ap`/`dash`/`files` CNAME → `ssh`,
-        que o wildcard tornou redundantes. Ficaram só `A ssh` (alvo do DDNS e do wildcard),
-        `A v1cferr.dev` proxied (o site no Vercel) e o `CNAME *`.
-      • Os NS `ns1/ns2.dns-parking.com` também saíram. Eram sobra da importação da HOSTINGER, e
-        a checagem que autorizou remover: a delegação REAL vive no REGISTRADOR, não na zona — e
-        `dig NS` já devolvia só `bruce/zoe.ns.cloudflare.com`, provando que a Cloudflare nunca
-        serviu aqueles dois. Nada da Hostinger precisa existir na zona; o vínculo é o painel
-        deles apontando pra Cloudflare. (Se um dia entrar e-mail no domínio, aí sim: MX + SPF.)
-      • ⚠️ PEGADINHA do split-horizon: o wildcard do ROTEADOR cobre também o APEX, então de
-        dentro da LAN `https://v1cferr.dev` bate no Caddy e dá ERRO DE TLS — o cert `*.v1cferr.dev`
-        NÃO cobre `v1cferr.dev` nu (wildcard não casa o próprio domínio). Não está quebrado: pela
-        borda da Cloudflare o apex responde 307 normal. Só não dá pra testar o apex de casa.
+- [x] `arch-browse` opens again (07/08/2026): the alias was RIGHT, what broke it was the
+      backup. `restic-backups-home-gdrive` runs as ROOT and the `rcloneConfigFile` option only
+      sets `RCLONE_CONFIG=/run/secrets/rclone_gdrive_conf`. rclone renews the OAuth token and
+      PERSISTS it over the file it was pointed at, which as root works, and the recreated file
+      is born `root:users`, erasing the sops `owner = "v1cferr"`. Then the alias, which runs as
+      the user (a FUSE mount is private to whoever mounts it), could not read rclone.conf
+      anymore.
+      • A treacherous symptom: it FIXES itself on reboot (sops reapplies it) and breaks on the
+        first backup. The day's timeline closed exactly: boot 07:29:47, `~/Drive` read OK
+        07:30:10, the delayed 03:00 run (`Persistent = true`) ran 07:54:39, the secret became
+        root's 07:54:40.
+      • How it was found: comparing `/run/secrets/*` against the sops `manifest.json` from
+        `/run/current-system/activate`. Only `rclone_gdrive_conf` diverged. It is worth keeping
+        as a recipe, since secret drift does not show up in `nixos-rebuild`, only at runtime.
+      • Fix: a writable copy in `/run/restic-backups-home-gdrive/rclone.conf` (the
+        `RuntimeDirectory` the module already declares), the same pattern as `~/Drive`. restic
+        never touches the secret again. `mkBefore` on `preStart`, NOT `mkAfter`: the
+        `initialize = true` injects `restic cat config || restic init` at the beginning of the
+        SAME script and that already talks to the Drive, so copying after it would kill the
+        service right at the start.
+      • No token was lost: `/run` is tmpfs, so root's write was already discarded on every
+        reboot. sops was always the source of truth.
 
-- [x] `arch-browse` voltou a abrir (07/08/2026) — o alias estava CERTO; quem quebrava era o
-      backup. `restic-backups-home-gdrive` roda como ROOT e a opção `rcloneConfigFile` só faz
-      `RCLONE_CONFIG=/run/secrets/rclone_gdrive_conf`. O rclone renova o token OAuth e
-      PERSISTE por cima do arquivo apontado — como root, funciona, e o arquivo recriado nasce
-      `root:users`, apagando o `owner = "v1cferr"` do sops. Aí o alias, que roda como usuário
-      (mount FUSE é privado de quem monta), não lia mais o rclone.conf.
-      • Sintoma traiçoeiro: CONSERTA no reboot (sops reaplica) e quebra no primeiro backup. A
-        linha do tempo do dia fechou exata — boot 07:29:47 → `~/Drive` leu OK 07:30:10 → o run
-        atrasado das 03:00 (`Persistent = true`) rodou 07:54:39 → segredo virou root 07:54:40.
-      • Como foi achado: comparar `/run/secrets/*` com o `manifest.json` do sops do
-        `/run/current-system/activate`. Só o `rclone_gdrive_conf` divergia. Vale como receita —
-        drift de segredo não aparece em `nixos-rebuild`, só no runtime.
-      • Fix: cópia gravável em `/run/restic-backups-home-gdrive/rclone.conf` (o
-        `RuntimeDirectory` que o módulo já declara), mesmo padrão do `~/Drive`. O restic nunca
-        mais toca no segredo. `mkBefore` no `preStart`, NÃO `mkAfter`: o `initialize = true`
-        injeta `restic cat config || restic init` no começo do MESMO script e esse já fala com
-        o Drive — copiar depois dele mataria o serviço na largada.
-      • Não houve perda de token: `/run` é tmpfs, então a escrita do root já era descartada em
-        todo reboot. O sops sempre foi a fonte da verdade.
-
-- [x] Dolphin mais perto do **Windows Explorer** (07/08/2026) — 6 chaves, e só as em que o
-      default do Dolphin DIVERGE do Explorer. Cada default foi lido no `config.kcfg` do pacote,
-      não chutado; `HighlightEntireRow` e `SortFoldersFirst` já vinham certos e ficaram fora.
-      • `[DetailsMode] ExpandableFolders=false` — os `▶` e as linhas de árvore eram a coisa
-        mais destoante: o Explorer não tem expansor nessa visão.
-      • `[General] ShowSelectionToggle=false` (no Win11 "caixas de seleção" vem desligado),
+- [x] Dolphin closer to **Windows Explorer** (07/08/2026): 6 keys, and only the ones where the
+      Dolphin default DIVERGES from Explorer. Each default was read in the package's
+      `config.kcfg`, not guessed; `HighlightEntireRow` and `SortFoldersFirst` already came
+      right and stayed out.
+      • `[DetailsMode] ExpandableFolders=false`: the `▶` markers and the tree lines were the
+        most jarring thing, since Explorer has no expander in that view.
+      • `[General] ShowSelectionToggle=false` (on Win11 "checkboxes" comes off),
         `AlwaysShowTabBar=true`, `ShowFullPath=true`, `ShowStatusBar=FullWidth`.
-      • `[KDE] SingleClick=false` (duplo clique) entrou e SAIU no mesmo dia. O pedido é
-        semelhança de INTERFACE, e clique é COMPORTAMENTO — não muda um pixel. Pior: mora no
-        kdeglobals, então mudaria TODO app KDE por causa do file manager. Serve de régua pro
-        resto: mexer no que se VÊ, não no que se USA.
-      • O guia "pixel-perfect" que circula (vrunox-9714/dolphin-win11-theme) foi RECUSADO, e
-        não por preguiça: depende de regra do **KWin** pra sumir com a barra de título (aqui é
-        Hyprland, não há KWin) e de um QSS via `--stylesheet`, que brigaria com o Kvantum que
-        já desenha todo o Qt. Antes de copiar receita de tema, checar se ela pressupõe Plasma.
-      • TOOLBAR estilo Explorer: TENTADA E RECUSADA no mesmo dia (07/08/2026). Não commitada,
-        e o `~/.local/share/kxmlgui5/dolphin/dolphinui.rc` foi apagado. Motivo primário: NÃO
-        GOSTOU do resultado — o Explorer tem DUAS faixas (endereço em cima, comandos embaixo)
-        e o Dolphin só tem UMA toolbar, então tudo se amontoa numa linha e fica pior que o
-        default limpo. Não é limitação de config, é do Dolphin.
-        Havia também um custo que sozinho já pedia cautela: o `.rc` carrega `version="48"` e
-        quando o Dolphin subir pra 49 o KXMLGUI DESCARTA o arquivo em silêncio — a toolbar
-        voltaria ao padrão sem erro nenhum. Mesma classe de drift do ViewMode.
-        Se alguém insistir: é activation idempotente e nunca `home.file` (regra 14, o Dolphin
-        reescreve o arquivo no "Configurar barras de ferramentas"). Mas o veredito é NÃO.
-      • Onde o visual PAROU: ícones + as 5 chaves acima. O que sobraria exige brigar com o
-        Kvantum (QSS) ou com um KWin que não existe aqui — ou seja, não sobra nada barato.
+      • `[KDE] SingleClick=false` (double click) came in and went OUT the same day. The request
+        is INTERFACE similarity, and clicking is BEHAVIOR, so it does not change a pixel.
+        Worse: it lives in kdeglobals, so it would change EVERY KDE app because of the file
+        manager. It works as a ruler for the rest: touch what you SEE, not what you USE.
+      • The "pixel-perfect" guide that circulates (vrunox-9714/dolphin-win11-theme) was
+        REFUSED, and not out of laziness: it depends on a **KWin** rule to remove the title bar
+        (here it is Hyprland, there is no KWin) and on a QSS through `--stylesheet`, which
+        would fight the Kvantum that already draws all of Qt. Before copying a theme recipe,
+        check whether it presumes Plasma.
+      • An Explorer-style TOOLBAR: TRIED AND REFUSED the same day (07/08/2026). Not committed,
+        and `~/.local/share/kxmlgui5/dolphin/dolphinui.rc` was deleted. The primary reason: I
+        did NOT LIKE the result. Explorer has TWO strips (the address on top, the commands
+        below) and Dolphin has only ONE toolbar, so everything piles into a single line and it
+        ends up worse than the clean default. It is not a config limitation, it is Dolphin's.
+        There was also a cost that on its own already called for caution: the `.rc` carries
+        `version="48"` and when Dolphin goes to 49, KXMLGUI DISCARDS the file silently, so the
+        toolbar would go back to the default with no error at all. The same class of drift as
+        the ViewMode.
+        If somebody insists: it is an idempotent activation and never `home.file` (rule 14,
+        since Dolphin rewrites the file in "Configure toolbars"). But the verdict is NO.
+      • Where the look STOPPED: icons plus the 5 keys above. What would be left requires
+        fighting Kvantum (QSS) or a KWin that does not exist here, which means nothing cheap is
+        left.
 
-- [x] Ícones do Dolphin: Fluent → **Win11** (07/08/2026) — o pedido era "o mais semelhante ao
-      Windows 11 possível", e o ponto de partida já ERA um tema Windows 11 (`fluent-icon-theme`
-      é o Fluent Design). Então não foi conserto, foi fidelidade: o `Win11-icon-theme` redesenha
-      os ícones da Microsoft, enquanto o Fluent é interpretação autoral do Fluent Design.
-      • Decidido OLHANDO, não lendo: montei uma comparação com os ícones reais dos 3 candidatos
-        (Fluent / Win11 / We10X), 19 nomes cada, mesmo tamanho e fundo. `We10X` cai fora por
-        ser Windows **10X**, geração anterior — aparece nas listas por ser popular, não fiel.
-      • Argumento que decidiu: `Win11-icon-theme` é do MESMO autor (yeyushengfan258) do
-        `Win11OS-kde` que já vendorizamos pro Kvantum → widget e ícone combinam de fábrica.
-      • Preço: sai do nixpkgs (vendorizado, pinado por commit `a5b460a`) → bump virou MANUAL.
-      • Três armadilhas pagas no build, todas invisíveis na doc do upstream:
-        1. `nativeBuildInputs = [ gtk3 ]` é OBRIGATÓRIO. O install.sh chama
-           `gtk-update-icon-cache` no fim de CADA variante e o `set -eo pipefail` mata ali —
-           depois de instalar a 1ª. Sem isso o `Win11-dark`, que é o que usamos, nem existia.
-           E não é pelo cache: nenhum `icon-theme.cache` sobra no output.
-        2. `noBrokenSymlinks` reprova o build com 147 links mortos por variante. NÃO é
-           workaround silenciar: são nomes de variante de cor (`folder-green.svg`,
-           `folder_color_yellow_wine.svg`) cujo alvo não existe em instalação NENHUMA, nem num
-           Arch — `colors/color-<X>/` usa nomes `folder-*.svg` pra sobrescrever e nunca cria os
-           prefixados. Bug cosmético do upstream. Poda com `find "$out" -xtype l -delete`.
-        3. `-t <cor>` fica FORA: ele copia `colors/color-<X>/` POR CIMA de `places/scalable` e
-           recoloriria as pastas. A variante vazia é justamente a que foi aprovada.
-      • Comentários que citavam "Fluent-dark" em launcher.nix/clipboard.nix passaram a apontar
-        pro `my.theme.iconTheme`. Nome de tema hardcodado em comentário é drift esperando a vez.
-      • E O TEMA SÓ NÃO BASTOU: no 1º print depois do rebuild as pastas saíram em LINE ART
-        monocromática. O tema tem arte colorida em `places/16` e `places/scalable`, mas o
-        `places/22` é `fill="currentColor"` — e 22 é o default. Não era regressão do Win11: o
-        Fluent tinha o MESMO 22 monocromático, só não aparecia porque a visão era Compact
-        (ícone grande → caía no scalable). Ou seja, quem revelou isso foi a troca pra Detalhes,
-        que entrou no mesmo dia — duas mudanças juntas disfarçando a causa.
-        A chave é `[DetailsMode] PreviewSize`, NÃO `IconSize`. Errei duas vezes antes de ler
-        `dolphinitemlistview.cpp:172`: `previewsShown() ? previewSize() : iconSize()` — com
-        preview ligado o `IconSize` é IGNORADO. Os dois foram pra 32 pro tamanho não pular
-        quando o preview é desligado pra garimpar o acervo. Fica em `home/apps/dolphin.nix`.
-      • Lição repetida: `grep currentColor` no SVG me fez concluir que o 16 era monocromático
-        quando ele é COLORIDO (arquivo de 28 KB, cor fora do fill). Só renderizando os três
-        tamanhos lado a lado o quadro apareceu. Pra ícone, RENDERIZE — não leia o XML.
+- [x] Dolphin icons: Fluent to **Win11** (07/08/2026). The request was "as similar to Windows
+      11 as possible", and the starting point ALREADY WAS a Windows 11 theme
+      (`fluent-icon-theme` is Fluent Design). So it was not a fix, it was fidelity:
+      `Win11-icon-theme` redraws Microsoft's icons, while Fluent is an authorial interpretation
+      of Fluent Design.
+      • Decided by LOOKING, not by reading: I put together a comparison with the real icons of
+        the 3 candidates (Fluent / Win11 / We10X), 19 names each, at the same size and
+        background. `We10X` is out for being Windows **10X**, the previous generation; it shows
+        up in lists for being popular, not faithful.
+      • The argument that decided it: `Win11-icon-theme` is by the SAME author
+        (yeyushengfan258) as the `Win11OS-kde` we already vendored for Kvantum, so widget and
+        icon match out of the box.
+      • The price: it leaves nixpkgs (vendored, pinned by commit `a5b460a`), so bumping became
+        MANUAL.
+      • Three traps paid for in the build, all invisible in the upstream docs:
+        1. `nativeBuildInputs = [ gtk3 ]` is MANDATORY. install.sh calls
+           `gtk-update-icon-cache` at the end of EACH variant and the `set -eo pipefail` kills
+           it right there, after installing the 1st. Without that, `Win11-dark`, which is the
+           one we use, did not even exist. And it is not about the cache: no `icon-theme.cache`
+           survives in the output.
+        2. `noBrokenSymlinks` fails the build with 147 dead links per variant. Silencing it is
+           NOT a workaround: they are color variant names (`folder-green.svg`,
+           `folder_color_yellow_wine.svg`) whose target does not exist in ANY installation, not
+           even on Arch, because `colors/color-<X>/` uses `folder-*.svg` names to override and
+           never creates the prefixed ones. A cosmetic upstream bug. Prune it with
+           `find "$out" -xtype l -delete`.
+        3. `-t <color>` stays OUT: it copies `colors/color-<X>/` OVER `places/scalable` and
+           would recolor the folders. The empty variant is precisely the one that was approved.
+      • Comments citing "Fluent-dark" in launcher.nix/clipboard.nix now point at
+        `my.theme.iconTheme`. A hardcoded theme name in a comment is drift waiting its turn.
+      • AND THE THEME ALONE WAS NOT ENOUGH: in the 1st screenshot after the rebuild the folders
+        came out as monochrome LINE ART. The theme has colored art in `places/16` and
+        `places/scalable`, but `places/22` is `fill="currentColor"`, and 22 is the default. It
+        was not a Win11 regression: Fluent had the SAME monochrome 22, it just did not show
+        because the view was Compact (a big icon, so it fell into scalable). Which means what
+        revealed it was the switch to Details, which landed the same day, two changes together
+        disguising the cause.
+        The key is `[DetailsMode] PreviewSize`, NOT `IconSize`. I got it wrong twice before
+        reading `dolphinitemlistview.cpp:172`: `previewsShown() ? previewSize() : iconSize()`,
+        so with previews on, `IconSize` is IGNORED. Both went to 32 so the size does not jump
+        when the preview is turned off to dig through the archive. It lives in
+        `home/apps/dolphin.nix`.
+      • A repeated lesson: `grep currentColor` on the SVG made me conclude that the 16 was
+        monochrome when it is COLORED (a 28 KB file, with the color outside the fill). Only
+        rendering the three sizes side by side made the picture appear. For an icon, RENDER it,
+        do not read the XML.
 
-- [x] "Sempre Detalhes" nunca foi Detalhes (07/08/2026) — era **Compact** desde 18/07. O pin
-      do `dolphin.nix` sempre funcionou; apontava pro modo errado. `DolphinView::Mode`
-      (`src/views/dolphinview.h`) é `0 = Icons, 1 = Details, 2 = Compact`, e NÃO a ordem do
-      menu (Icons/Compact/Details = Ctrl+1/2/3). O `whatsthis` do kcfg ainda chama o 2 de
-      "column" (nome antigo do Compact) e reforça o engano.
-      • Diagnóstico foi por PRINT, não por leitura de config: abri o Dolphin e olhei. Config
-        "certa" com efeito errado não se enxerga lendo o `.directory`. Se for conferir modo de
-        view, olhe a tela — nome à direita do ícone e segunda coluna = Compact; Detalhes tem
-        cabeçalho de coluna e uma linha por item.
-      • O número cru virou `viewModeDetails` nomeado, pra não enganar de novo.
-      • Migrar 2→1 exigiu ramo novo na activation: sobre chave JÁ imutável o kwriteconfig6 sai
-        2 e o `set -e` derrubaria o resto do home-manager — então reescreve com sed direto.
-      • Isto é a regra 14 se cumprindo pela SEGUNDA vez no mesmo arquivo: nada falhou, só
-        ficou errado, por 3 semanas. Pin de KConfig sem verificação é drift esperando a vez.
+- [x] "Always Details" was never Details (07/08/2026): it had been **Compact** since 18/07.
+      The `dolphin.nix` pin always worked, it pointed at the wrong mode. `DolphinView::Mode`
+      (`src/views/dolphinview.h`) is `0 = Icons, 1 = Details, 2 = Compact`, and NOT the menu
+      order (Icons/Compact/Details = Ctrl+1/2/3). The kcfg `whatsthis` still calls 2 "column"
+      (Compact's old name) and reinforces the mistake.
+      • The diagnosis came from a SCREENSHOT, not from reading config: I opened Dolphin and
+        looked. A "correct" config with the wrong effect cannot be seen by reading the
+        `.directory`. If you are going to check a view mode, look at the screen: the name to
+        the right of the icon plus a second column means Compact; Details has column headers
+        and one line per item.
+      • The raw number became a named `viewModeDetails`, so it does not mislead again.
+      • Migrating 2 to 1 required a new branch in the activation: over an ALREADY immutable key
+        kwriteconfig6 exits 2 and `set -e` would take the rest of home-manager down, so it
+        rewrites with sed directly.
+      • This is rule 14 proving itself for the SECOND time in the same file: nothing failed, it
+        was just wrong, for 3 weeks. A KConfig pin with no verification is drift waiting its
+        turn.
 
-- [x] MINIATURA no mount do restic custa DOWNLOAD do Drive — medido em 07/08/2026, não é
-      teoria. `PreviewsShown` tem `<default>true</default>` no
-      `dolphin_directoryviewpropertysettings.kcfg` (26.04.3) e não está setado aqui → preview
-      LIGADO. Abri o Dolphin em `Pictures/Screenshots` do snapshot (30 arquivos, 3,9 MiB):
-      +30 thumbnails em `~/.cache/thumbnails` e **+3,68 MiB lidos da rede** pelo
-      `rclone serve restic` — ou seja, baixou a pasta inteira só pra desenhar ícone.
-      • O `MaximumRemoteSize` do KDE (default 0 = não previsualizar remoto) NÃO protege, e o
-        teste PROVA: ele está unset e o preview aconteceu de todo jeito. Mount FUSE em `/mnt`
-        aparece pro KIO como caminho LOCAL, então a guarda de "remoto" nem é consultada.
-      • E o limite local (`[PreviewSettings] MaximumSize`) não serve de guard: é global e as
-        imagens tinham ~130 KiB cada, muito abaixo de qualquer teto sensato.
-      • Não existe guard POR CAMINHO no Dolphin/KIO — conferido no kcfg e nos símbolos do
-        binário. Com `GlobalViewProps=true` também não dá preview off só em `/mnt`.
-      • DECIDIDO: preview fica LIGADO em tudo. `PreviewsShown[$i]=false` global foi recusado —
-        miniatura vale mais no dia a dia do que a proteção contra um caso de consulta rara.
-        Mitigação é manual: desligar visualização antes de garimpar o acervo. Registrado com
-        ⚠️ na seção "Configurações antigas do Arch Linux", que é onde se cai ao abrir o repo.
+- [x] A THUMBNAIL on the restic mount costs a DOWNLOAD from the Drive: measured on
+      07/08/2026, this is not theory. `PreviewsShown` has `<default>true</default>` in
+      `dolphin_directoryviewpropertysettings.kcfg` (26.04.3) and it is not set here, so the
+      preview is ON. I opened Dolphin in the snapshot's `Pictures/Screenshots` (30 files,
+      3.9 MiB): +30 thumbnails in `~/.cache/thumbnails` and **+3.68 MiB read from the network**
+      by `rclone serve restic`, which means it downloaded the whole folder just to draw icons.
+      • KDE's `MaximumRemoteSize` (default 0 = do not preview remote) does NOT protect, and the
+        test PROVES it: it is unset and the preview happened anyway. A FUSE mount in `/mnt`
+        looks to KIO like a LOCAL path, so the "remote" guard is not even consulted.
+      • And the local limit (`[PreviewSettings] MaximumSize`) does not work as a guard: it is
+        global and the images were ~130 KiB each, far below any sensible ceiling.
+      • There is no PER-PATH guard in Dolphin/KIO, checked in the kcfg and in the binary's
+        symbols. With `GlobalViewProps=true` there is no way to turn the preview off only in
+        `/mnt` either.
+      • DECIDED: the preview stays ON everywhere. A global `PreviewsShown[$i]=false` was
+        refused, because a thumbnail is worth more day to day than protection against a rare
+        lookup. The mitigation is manual: turn previews off before digging through the archive.
+        Recorded with a warning in the "Old Arch Linux configs" section, which is where you land
+        when opening the repo.
 
-- [x] VS Code sempre na última stable, sem edição manual (06/08/2026) — fecha a ponta solta
-      que a troca de URL de ontem deixou. O pedido era "prefiro sempre deixar na latest", e a
-      resposta NÃO é voltar pro `/latest/`: ponteiro + narHash travado é exatamente a quebra
-      a cada release que consertamos ontem. Input que se atualiza sozinho não existe com hash
-      travado — o que existe é BUMP AUTOMATIZADO.
-      • `pkgs/vscode-bump.nix` (`writeShellApplication`, regra 7 — o build É o shellcheck):
-        consulta `update.code.visualstudio.com/api/update/linux-x64/stable/latest`, lê o
-        `productVersion` (e NÃO o `version`, que é o hash do commit), reescreve o número no
-        `flake.nix` e roda `nix flake update vscode-tarball`. NO-OP quando já está na última,
-        porque roda em todo `upgrade`.
-      • O caminho do repo vem por ARGUMENTO (regra 11): a SSOT é `programs.nh.flake`, lida
-        pelo zsh.nix via `osConfig` — o pacote não guarda literal.
-      • Descartada a Action agendada: o repo ficaria atual sozinho, mas exigiria `git pull`
-        antes do `upgrade` pra servir de algo, e cada bump dispararia o CI de 1,43 GiB. O
-        momento em que a versão importa é o do REBUILD, então o gatilho certo é o alias.
-      • De carona, os aliases pararam de se repetir: `rebuildCmd`/`updateCmd` são compostos
-        no `let` e `upgrade` = `${updateCmd} && ${rebuildCmd}`. Antes `upgrade` restava os
-        dois por extenso — a mesma regra em dois lugares, e no dia em que só uma cópia muda
-        `upgrade` deixa de ser o que o nome diz (regra 11).
-      • VALIDADO com round-trip, e é a prova que importa: baixei o `flake.nix` na mão pra
-        1.131.0, rodei o bump e o `flake.lock` voltou BYTE-IDÊNTICO ao commitado (o narHash
-        `sha256-PLpT3k…` da 1.132.0). `nix flake check`: all checks passed.
-      • O que isto NÃO resolve: extensões e settings continuam vindo do Settings Sync (conta
-        Microsoft), não do Nix — só o PACOTE é declarativo.
+- [x] VS Code always on the latest stable, with no manual edit (06/08/2026): this closes the
+      loose end yesterday's URL change left. The request was "I would rather always keep it on
+      latest", and the answer is NOT going back to `/latest/`: a pointer plus a pinned narHash
+      is exactly the per-release breakage we fixed yesterday. An input that updates itself does
+      not exist with a pinned hash; what exists is an AUTOMATED BUMP.
+      • `pkgs/vscode-bump.nix` (`writeShellApplication`, rule 7, since the build IS the
+        shellcheck): it queries
+        `update.code.visualstudio.com/api/update/linux-x64/stable/latest`, reads the
+        `productVersion` (and NOT the `version`, which is the commit hash), rewrites the number
+        in `flake.nix` and runs `nix flake update vscode-tarball`. It is a NO-OP when already on
+        the latest, because it runs on every `upgrade`.
+      • The repo path comes as an ARGUMENT (rule 11): the SSOT is `programs.nh.flake`, read by
+        zsh.nix through `osConfig`, so the package holds no literal.
+      • A scheduled Action was discarded: the repo would stay current on its own, but it would
+        require a `git pull` before the `upgrade` to be worth anything, and each bump would
+        trigger the 1.43 GiB CI. The moment the version matters is the REBUILD, so the right
+        trigger is the alias.
+      • Along for the ride, the aliases stopped repeating themselves: `rebuildCmd`/`updateCmd`
+        are composed in the `let` and `upgrade` = `${updateCmd} && ${rebuildCmd}`. Before,
+        `upgrade` spelled both out, which is the same rule in two places, and on the day only
+        one copy changes, `upgrade` stops being what its name says (rule 11).
+      • VALIDATED with a round trip, and that is the proof that matters: I downgraded
+        `flake.nix` by hand to 1.131.0, ran the bump and `flake.lock` came back BYTE-IDENTICAL
+        to the committed one (the `sha256-PLpT3k…` narHash of 1.132.0). `nix flake check`: all
+        checks passed.
+      • What this does NOT solve: the extensions and settings still come from Settings Sync (a
+        Microsoft account), not from Nix, so only the PACKAGE is declarative.
 
-- [x] earlyoom NÃO protegia o compositor (05/08/2026) — o achado mais grave da limpeza, e
-      apareceu por acidente: `waybar` e `mako` estavam na lista `--avoid` e são fantasmas
-      (saíram na migração pro Quickshell). Ao tirá-los, medi a regex contra os processos
-      VIVOS e ela casava 5 de 10 — o Hyprland ficava de fora.
-      • CAUSA: o earlyoom casa `comm`, o campo do KERNEL truncado em 15 chars. O
-        `wrapProgram` do nixpkgs deixa o script com o nome original e o ELF real como
-        `.X-wrapped`, e quem RODA é o ELF → o comm é `.Hyprland-wrapp` e `.quickshell-wra`.
-        `^(Hyprland|…)$` nunca casava. O comentário prometia "compositor nunca morre" e o
-        efeito era o oposto do escrito.
-      • Agora `^[.]?(…)` sem `$`, casando 16 processos vivos. Entrou `quickshell` (hoje é
-        barra, OSD E daemon de notificação) e `hyprpaper`.
-      • PEGADINHA DENTRO DA PEGADINHA: escrevi `"^\\.?"` primeiro, e a barra NÃO CHEGA — o
-        módulo entrega os args por `Environment=EARLYOOM_ARGS=…` e o systemd descarta `\.`
-        como escape inválido. O daemon logava `'^.?(…)'`. Classe de caractere `[.]` não tem
-        barra pra perder. LIÇÃO: conferir no que o DAEMON parseou, nunca no .nix —
+- [x] earlyoom was NOT protecting the compositor (05/08/2026): the most serious finding of the
+      cleanup, and it turned up by accident. `waybar` and `mako` were in the `--avoid` list and
+      are ghosts (they left in the migration to Quickshell). When taking them out, I measured
+      the regex against the LIVE processes and it matched 5 out of 10, with Hyprland left out.
+      • THE CAUSE: earlyoom matches `comm`, the KERNEL field truncated at 15 chars. The nixpkgs
+        `wrapProgram` leaves the script with the original name and the real ELF as
+        `.X-wrapped`, and what RUNS is the ELF, so the comm is `.Hyprland-wrapp` and
+        `.quickshell-wra`. `^(Hyprland|…)$` never matched. The comment promised "the compositor
+        never dies" and the effect was the opposite of what was written.
+      • Now it is `^[.]?(…)` with no `$`, matching 16 live processes. `quickshell` came in
+        (today it is the bar, the OSD AND the notification daemon), along with `hyprpaper`.
+      • A TRAP INSIDE THE TRAP: I wrote `"^\\.?"` first, and the backslash DOES NOT ARRIVE,
+        because the module delivers the args through `Environment=EARLYOOM_ARGS=…` and systemd
+        discards `\.` as an invalid escape. The daemon logged `'^.?(…)'`. A character class
+        `[.]` has no backslash to lose. LESSON: check what the DAEMON parsed, never the .nix:
         `journalctl -u earlyoom | grep 'avoid killing'`.
 
-- [x] Backup migrou do HDD pro Google Drive, verificado (05/08/2026) — o Seagate guardava a
-      ÚNICA cópia do home vivo, num Momentus 7200.4 de ~2009 com 840 mil load cycles e 348
-      erros de CRC, DENTRO da máquina. Não foi espaço: o Drive tem 4,95 TiB livres de 5 TiB.
-      Cópia offsite ganha nos modos de falha que acontecem (disco morre, roubo, incêndio);
-      perde em restauração pela rede e passa a depender da conta Google.
-      • Medido: 1º snapshot 40,6 GiB lidos → 23,6 GiB no fio, 15 min, 255 mil arquivos. O
-        incremental seguinte: 33 s e 170 MiB. `check --read-data` relendo 189 packs: "no
-        errors were found".
-      • Três coisas que repo REMOTO exige e local não: `--pack-size=128` (no Drive o custo é
-        por CHAMADA de API, não por byte), `checkOpts = []` (o `--read-data-subset=10%` do
-        local RELÊ, e reler remoto é BAIXAR — seriam GB/dia pra sempre) e
-        `--max-repack-size=2G` (poda remota reempacota).
-      • BUG que isso destapou: o backup FALHAVA de forma INTERMITENTE com
-        `lstat /home/v1cferr/FAI-workstation: permission denied` → restic sai 3. É mount FUSE
-        do USUÁRIO e o backup roda como ROOT, que não entra em FUSE alheio; só acontecia com
-        a VPN da FAI de pé. E como `backup` é o 1º de TRÊS ExecStart, o `forget --prune` NÃO
-        rodava — a retenção silenciosamente não se aplicava naqueles dias.
-        `--one-file-system` não salva: ele impede DESCER, mas o lstat do ponto acontece.
-      • O repo do Seagate NÃO foi apagado: o Drive tem 1 snapshot e ele tem 13, com janela de
-        6 meses. Apagar hoje perderia toda versão anterior a hoje.
-      • Aliases novos: `backup-browse` (monta o repo como pasta, um dir por snapshot) e
-        `backup-verify`. O rclone NÃO decifra restic — quem decifra é o restic.
+- [x] The backup migrated from the HDD to Google Drive, verified (05/08/2026): the Seagate
+      held the ONLY copy of the live home, on a ~2009 Momentus 7200.4 with 840 thousand load
+      cycles and 348 CRC errors, INSIDE the machine. It was not about space: the Drive has
+      4.95 TiB free out of 5 TiB. An offsite copy wins on the failure modes that actually
+      happen (the disk dies, theft, fire); it loses on restoring over the network and it starts
+      depending on the Google account.
+      • Measured: the 1st snapshot read 40.6 GiB, becoming 23.6 GiB on the wire, in 15 min,
+        across 255 thousand files. The next incremental: 33 s and 170 MiB. `check --read-data`
+        rereading 189 packs: "no errors were found".
+      • Three things a REMOTE repo requires and a local one does not: `--pack-size=128` (on the
+        Drive the cost is per API CALL, not per byte), `checkOpts = []` (the local
+        `--read-data-subset=10%` REREADS, and rereading remotely is DOWNLOADING, which would be
+        GB/day forever) and `--max-repack-size=2G` (remote pruning repacks).
+      • A BUG this uncovered: the backup FAILED INTERMITTENTLY with
+        `lstat /home/v1cferr/FAI-workstation: permission denied`, so restic exits 3. It is a
+        USER FUSE mount and the backup runs as ROOT, which does not enter somebody else's FUSE;
+        it only happened with the FAI VPN up. And since `backup` is the 1st of THREE
+        ExecStart entries, `forget --prune` did NOT run, so retention silently did not apply on
+        those days.
+        `--one-file-system` does not save you: it prevents DESCENDING, but the lstat of the
+        mount point still happens.
+      • The Seagate repo was NOT deleted: the Drive has 1 snapshot and it has 13, with a 6 month
+        window. Deleting it today would lose every version older than today.
+      • New aliases: `backup-browse` (it mounts the repo as a folder, one dir per snapshot) and
+        `backup-verify`. rclone does NOT decrypt restic; what decrypts is restic.
 
-- [x] ~/Drive = raiz do Google Drive MONTADA, não sincronizada (05/08/2026) — comecei com
-      `rclone bisync` e trocei por `rclone mount` depois de LISTAR o remote, que é o passo que
-      eu devia ter dado ANTES: a raiz tem ~19,6 GiB de acervo real (Documentos, César, Mãe,
-      SENAC…), e a pasta dedicada que eu havia inventado nasceria VAZIA — não resolvia o
-      "preciso de um arquivo que está no Drive".
-      • Mount ganha aqui: zero download (bisync baixaria os 19,6 GiB pro NVMe pro MESMO
-        acesso) e sync PROPAGA — apagar local apagaria no Drive, inclusive pasta de família.
-      • `Type=notify` (está no `rclone mount --help`): a unit só fica "started" depois do
-        mountpoint pronto, senão o Dolphin abre antes e cacheia "vazia".
-      • `--exclude BACKUPS_EX-B560M-V5/**`: esconde ~48 GiB de blob restic do gerenciador de
-        arquivos. Não é estética — um Delete sem querer ali CORROMPE o backup.
-      • Duas armadilhas pagas: (1) bisync não cria a pasta de destino e o remédio que ele
-        sugere também falha; (2) o rclone RENOVA o token OAuth e tenta persistir no arquivo
-        de config — contra o secret do sops (0400) isso vira `Failed to save config`, então a
-        unit copia pra `%t` (tmpfs, 0600) e passa `--config` no comando. O `--config` no
-        comando e não `RCLONE_CONFIG` no ambiente porque exportar faria o mount da FAI
-        procurar o remote `faiws` no arquivo errado.
-      • E o mount não subia porque `~/Drive` tinha um `RCLONE_TEST` órfão de 0 byte que a
-        versão bisync criou: o rclone recusa mountpoint não-vazio, e `--allow-non-empty` fica
-        fora de propósito (montar por cima ESCONDE o arquivo). Se não subir: `ls -a ~/Drive`
-        antes de suspeitar da rede.
+- [x] ~/Drive = the Google Drive root MOUNTED, not synced (05/08/2026): I started with
+      `rclone bisync` and switched to `rclone mount` after LISTING the remote, which is the
+      step I should have taken FIRST. The root has ~19.6 GiB of real archive (Documentos,
+      César, Mãe, SENAC and so on), and the dedicated folder I had invented would have been
+      born EMPTY, which did not solve "I need a file that is on the Drive".
+      • Mount wins here: zero download (bisync would pull the 19.6 GiB onto the NVMe for the
+        SAME access) and sync PROPAGATES, so deleting locally would delete on the Drive,
+        including family folders.
+      • `Type=notify` (it is in `rclone mount --help`): the unit only becomes "started" after
+        the mountpoint is ready, otherwise Dolphin opens first and caches "empty".
+      • `--exclude BACKUPS_EX-B560M-V5/**`: it hides ~48 GiB of restic blobs from the file
+        manager. It is not cosmetic, because an accidental Delete in there CORRUPTS the backup.
+      • Two traps paid for: (1) bisync does not create the destination folder and the remedy it
+        suggests fails too; (2) rclone RENEWS the OAuth token and tries to persist it into the
+        config file, and against the sops secret (0400) that becomes
+        `Failed to save config`, so the unit copies it into `%t` (tmpfs, 0600) and passes
+        `--config` on the command line. `--config` on the command and not `RCLONE_CONFIG` in
+        the environment, because exporting it would make the FAI mount look for the `faiws`
+        remote in the wrong file.
+      • And the mount would not come up because `~/Drive` had an orphan 0-byte `RCLONE_TEST`
+        that the bisync version had created: rclone refuses a non-empty mountpoint, and
+        `--allow-non-empty` stays out on purpose (mounting over it HIDES the file). If it does
+        not come up: `ls -a ~/Drive` before suspecting the network.
 
-- [x] Opção se DECLARA no system/, se DEFINE no hosts/ (05/08/2026) — virou a convenção 6 do
-      README. Os conectores de monitor (`DP-2`/`HDMI-A-3`) tinham `default` em
-      system/desktop/monitors.nix e o painel `my.services` morava em system/services/toggles.nix.
-      Com um host só é invisível; no host nº 2 o system/ passa a MENTIR (um laptop herdaria
-      conectores que não tem e subiria Jellyfin/Sunshine por default). Agora o system declara
-      as opções e o `hosts/nixos-kingston/services.nix` responde. Os defaults de monitor
-      saíram de propósito: host que esquecer QUEBRA no eval, alto e cedo.
-      A declaração de `my.services` segue central e NÃO foi distribuída por módulo porque
-      `osConfig` só enxerga o namespace do NixOS — as chaves lidas pelo home/ (dropbox,
-      discord-rpc, cs2-backup) precisam de um módulo de SISTEMA de qualquer forma.
+- [x] An option is DECLARED in system/ and DEFINED in hosts/ (05/08/2026): this became
+      convention 6 in the README. The monitor connectors (`DP-2`/`HDMI-A-3`) had a `default` in
+      system/desktop/monitors.nix and the `my.services` panel lived in
+      system/services/toggles.nix. With a single host that is invisible; on host number 2,
+      system/ starts LYING (a laptop would inherit connectors it does not have and would bring
+      Jellyfin/Sunshine up by default). Now system declares the options and
+      `hosts/nixos-kingston/services.nix` answers them. The monitor defaults were removed on
+      purpose: a host that forgets them BREAKS at eval, loudly and early.
+      The `my.services` declaration is still central and was NOT distributed per module,
+      because `osConfig` only sees the NixOS namespace, so the keys read by home/ (dropbox,
+      discord-rpc, cs2-backup) need a SYSTEM module either way.
 
-- [x] O gate passou a CONSTRUIR, não só avaliar (05/08/2026) — o `nix flake check` constrói o
-      que está em `checks` e de `nixosConfigurations` só exige que o toplevel SEJA uma
-      derivação. Medido: imprimia "running 1 flake checks" e só o pre-commit era construído.
-      O frágil aqui não é avaliação, é EMPACOTAMENTO: os 3 patches do nxbender, o
-      `sourceRoot = "source"` do vscode e o wrapProgram sobre o .deb do claude-desktop são
-      suposições sobre árvore de TERCEIRO — quebram no build, depois do `update`, e como
-      `upgrade` é `update && nh os switch`, a quebra caía no meio do switch. Agora
-      `packages.x86_64-linux` expõe os quatro (`nix build .#nxbender`) e `checks.pacotes` os
-      constrói. De propósito NÃO é o system.build.toplevel: arrastaria o quickshell (Qt/C++)
-      pro runner.
-      E foi ele que pegou a primeira vítima no mesmo dia: a URL `/latest/` do VS Code é
-      PONTEIRO — saiu a 1.132.0, o ponteiro andou e o narHash travado (da 1.131.0) parou de
-      casar. Aqui passava porque o tarball velho estava na store; em máquina LIMPA o flake não
-      avaliava mais. Não era risco de 2032, era quebra a cada release. Trocado por URL
-      versionada (`/1.132.0/`), que é imutável — o preço é que `nix flake update` não sobe
-      versão sozinho, subir é editar o número.
+- [x] The gate started BUILDING, not only evaluating (05/08/2026): `nix flake check` builds
+      what is in `checks` and of `nixosConfigurations` it only requires that the toplevel BE a
+      derivation. Measured: it printed "running 1 flake checks" and only pre-commit was built.
+      What is fragile here is not evaluation, it is PACKAGING: nxbender's 3 patches, vscode's
+      `sourceRoot = "source"` and the wrapProgram over claude-desktop's .deb are assumptions
+      about SOMEONE ELSE'S tree, so they break at build time, after an `update`, and since
+      `upgrade` is `update && nh os switch`, the breakage landed in the middle of the switch.
+      Now `packages.x86_64-linux` exposes all four (`nix build .#nxbender`) and
+      `checks.pacotes` builds them. Deliberately NOT system.build.toplevel: that would drag
+      quickshell (Qt/C++) onto the runner.
+      And it caught its first victim the same day: the VS Code `/latest/` URL is a POINTER.
+      1.132.0 shipped, the pointer moved and the pinned narHash (1.131.0's) stopped matching.
+      Here it passed because the old tarball was in the store; on a CLEAN machine the flake did
+      not evaluate anymore. It was not a 2032 risk, it broke on every release. Swapped for a
+      versioned URL (`/1.132.0/`), which is immutable, and the price is that `nix flake update`
+      does not bump the version on its own, since bumping means editing the number.
 
-- [x] Caça ao código e à doc mortos (05/08/2026) — apagados `pkgs/README.md` (dizia "vazio por
-      ora" com 2 derivations dentro, e apontava pra uma "fase 5 do README" que não existe),
-      `home/desktop/quickshell/bar-preview.qml` (o próprio arquivo definia quando morrer: "quando
-      a barra atingir paridade, é ligada no shell.qml e a Waybar sai" — as duas coisas
-      aconteceram), `scripts/healthcheck.sh` (zero referência em .nix e o cabeçalho se dizia
-      "gitignored" estando VERSIONADO — o `.sh` solto que a regra 7 proíbe) e o `.env` órfão.
-      Mais ~6 comentários que descreviam um mundo que não existe (as "FASES" do Bar.qml,
-      `nvidia-smi` numa máquina Intel, `waybar` em duas listas de categoria).
-      AUDITADO e limpo: zero `.nix` órfão, zero input de flake sem consumidor (12 conferidos),
-      toda opção `my.*` com consumidor.
-      LIÇÃO: o pior legado não é arquivo sobrando — é LISTA ENUMERANDO PROGRAMA REMOVIDO. O
-      `waybar`/`mako` mortos no `--avoid` do earlyoom escondiam que o compositor nunca estava
-      protegido. Doc morta ali não era sujeira, era bug disfarçado.
+- [x] Hunting down dead code and dead docs (05/08/2026): deleted `pkgs/README.md` (it said
+      "empty for now" with 2 derivations inside, and pointed at a "phase 5 of the README" that
+      does not exist), `home/desktop/quickshell/bar-preview.qml` (the file itself defined when
+      to die: "once the bar reaches parity, it is wired into shell.qml and Waybar goes away",
+      and both things happened), `scripts/healthcheck.sh` (zero references in any .nix and a
+      header calling itself "gitignored" while being VERSIONED, the loose `.sh` that rule 7
+      forbids) and the orphan `.env`.
+      Plus ~6 comments describing a world that does not exist (the "PHASES" in Bar.qml,
+      `nvidia-smi` on an Intel machine, `waybar` in two category lists).
+      AUDITED and clean: zero orphan `.nix`, zero flake input with no consumer (12 checked),
+      every `my.*` option with a consumer.
+      LESSON: the worst legacy is not a leftover file, it is a LIST ENUMERATING A REMOVED
+      PROGRAM. The dead `waybar`/`mako` in earlyoom's `--avoid` hid the fact that the
+      compositor was never protected. Dead docs there were not clutter, they were a disguised
+      bug.
 
-- [x] Nó `nixos-sandisk` REMOVIDO da tailnet (05/08/2026) — sobrava offline há 4 dias de uma
-      máquina que não existe mais (o SanDisk virou Windows 11); nó morto é ACL e rota que
-      ninguém audita. Feito no admin console; sobraram 2 (nixos-kingston, faidell6035).
-      • POR QUE ESTES DOIS NÃO VIRAM DECLARATIVOS (pesquisado em 05/08/2026, regra 1): o
-        CLI OFICIAL não faz nenhuma das duas coisas. `tailscale --help` da 1.98.10 (a que
-      está instalada) tem 30 subcomandos e nenhum é `key` ou `device` — o mais perto é
-      `logout`, que expira o node key DESTA máquina, não remove nó alheio. A doc oficial de
-      "Remove a device" diz console ou API, sem CLI, e a FR do upstream
-      (tailscale/tailscale#8844) segue aberta. As duas ações são da API v2:
-      `DELETE /api/v2/device/{id}` e `DELETE /api/v2/tailnet/{tailnet}/keys/{keyId}`, em
-      `https://api.tailscale.com`.
-      DECISÃO: fazer no admin console e NÃO guardar token de API. Automatizar exigiria um
-      token/OAuth client com escrita na tailnet inteira, guardado no sops — um segredo
-      PERMANENTE e mais poderoso que a auth key que se quer revogar, criado para uma tarefa
-      de UMA VEZ. Só compensa se um dia existir rotina recorrente (ex.: podar nó parado),
-      e aí o certo é OAuth client com escopo mínimo, não API key de admin.
-      (Detalhe da doc que importa: revogar a key NÃO desautoriza quem já entrou com ela —
-      são ações independentes, e é por isso que as duas estão nesta lista.)
-      O CLI, aliás, JÁ é declarativo: vem de `services.tailscale.package`
-      (system/net/tailscale.nix), não de lista de pacotes. Pôr `tailscale` em
-      `system/packages.nix` seria o mesmo pacote em dois lugares — fura a regra 4.
+- [x] The `nixos-sandisk` node REMOVED from the tailnet (05/08/2026): it had been sitting
+      offline for 4 days, belonging to a machine that no longer exists (the SanDisk became
+      Windows 11), and a dead node is an ACL and a route nobody audits. Done in the admin
+      console; 2 were left (nixos-kingston, faidell6035).
+      • WHY THESE TWO DID NOT BECOME DECLARATIVE (researched on 05/08/2026, rule 1): the
+        OFFICIAL CLI does neither. `tailscale --help` on 1.98.10 (the installed one) has 30
+        subcommands and none of them is `key` or `device`. The closest is `logout`, which
+        expires THIS machine's node key, not removes somebody else's node. The official
+        "Remove a device" doc says console or API, with no CLI, and the upstream FR
+        (tailscale/tailscale#8844) is still open. Both actions belong to the v2 API:
+        `DELETE /api/v2/device/{id}` and `DELETE /api/v2/tailnet/{tailnet}/keys/{keyId}`, at
+        `https://api.tailscale.com`.
+      DECISION: do it in the admin console and do NOT store an API token. Automating it would
+      require a token or OAuth client with write access to the whole tailnet, kept in sops, a
+      PERMANENT secret more powerful than the auth key you want to revoke, created for a
+      ONE-TIME task. It only pays off if a recurring routine ever exists (pruning idle nodes,
+      say), and then the right thing is an OAuth client with minimal scope, not an admin API
+      key.
+      (A doc detail that matters: revoking the key does NOT deauthorize whoever already joined
+      with it, since they are independent actions, and that is why both are on this list.)
+      The CLI, by the way, ALREADY is declarative: it comes from `services.tailscale.package`
+      (system/net/tailscale.nix), not from a package list. Putting `tailscale` in
+      `system/packages.nix` would be the same package in two places, which breaks rule 4.
 
-- [x] Arquivo do Arch VERIFICADO e o módulo APAGADO (05/08/2026) — fim do ciclo de vida que
-      o próprio `system/services/restic-arch-kingston.nix` tinha escrito: "depois do check
-      --read-data passar e o Kingston estar formatado, apague este arquivo".
-      • `sudo restic-arch-kingston check --read-data` → `no errors were found`, lendo os
-        **189 packs** (1 snapshot, 7 índices) do repo no Drive. Isso é o que separa "subiu"
-        de "dá pra restaurar": relê os dados, não só o índice.
-      • Saíram o módulo, o import em `system/services/default.nix`, a chave
-        `arch-kingston-archive` do `toggles.nix` e o `true` do painel do host.
-      • FICARAM de propósito: os repos, o segredo `restic_password_arch_kingston` (índice do
-        Bitwarden) e o `rclone_gdrive_conf`. São a CHAVE de um acervo vivo — o módulo era o
-        que ESCREVIA, não o que dá acesso.
-      • Efeito colateral que virou correção: apagar o módulo levava os wrappers
-        `restic-arch-kingston*`, e `restic` NÃO estava no PATH — o `services.restic` do
-        nixpkgs só gera wrapper por repo. O acervo teria ficado inalcançável sem `nix
-        shell`. Entrou `restic` no `system/packages.nix` (critério "resgate"), e os comandos
-        sem wrapper estão na seção "Configurações antigas do Arch Linux" acima.
-      • A perna do Seagate NÃO foi read-verificada e não vai ser: decidido em 05/08 ficar
-        SÓ com a cópia do Drive. Verificar um repo que vai ser apagado é trabalho jogado fora.
+- [x] The Arch archive VERIFIED and the module DELETED (05/08/2026): the end of the lifecycle
+      that `system/services/restic-arch-kingston.nix` itself had written down: "once the
+      check --read-data passes and the Kingston is formatted, delete this file".
+      • `sudo restic-arch-kingston check --read-data` returned `no errors were found`, reading
+        the **189 packs** (1 snapshot, 7 indexes) of the repo on the Drive. That is what
+        separates "it uploaded" from "it can be restored": it rereads the data, not just the
+        index.
+      • Out went the module, the import in `system/services/default.nix`, the
+        `arch-kingston-archive` key in `toggles.nix` and the `true` in the host panel.
+      • KEPT on purpose: the repos, the `restic_password_arch_kingston` secret (the Bitwarden
+        index) and `rclone_gdrive_conf`. They are the KEY to a live archive, and the module was
+        what WROTE to it, not what gives access.
+      • A side effect that became a fix: deleting the module took the `restic-arch-kingston*`
+        wrappers with it, and `restic` was NOT on the PATH, because the nixpkgs
+        `services.restic` only generates a wrapper per repo. The archive would have been
+        unreachable without a `nix shell`. `restic` went into `system/packages.nix` (the
+        "rescue" criterion), and the wrapper-less commands are in the "Old Arch Linux configs"
+        section above.
+      • The Seagate leg was NOT read-verified and will not be: on 05/08 it was decided to keep
+        ONLY the Drive copy. Verifying a repo that is going to be deleted is wasted work.
 
-- [x] Segundo destinatário age no cofre sops (04/08/2026) — o `.sops.yaml` tinha UMA chave, e
-      sops não tem recuperação: perder aquela chave = perder TODO segredo do repo, para sempre.
-      O único backup dela era o Bitwarden, então o desenho tinha um ponto de falha capaz de
-      dano permanente (os outros riscos do repo custam tempo, não dados). Agora são dois
-      destinatários: `host_nixos_kingston` (a de sempre, em /var/lib/sops-nix/key.txt) e
+- [x] A second age recipient in the sops vault (04/08/2026): `.sops.yaml` had ONE key, and
+      sops has no recovery, so losing that key means losing EVERY secret in the repo, forever.
+      Its only backup was Bitwarden, so the design had a point of failure capable of permanent
+      damage (the repo's other risks cost time, not data). Now there are two recipients:
+      `host_nixos_kingston` (the usual one, in /var/lib/sops-nix/key.txt) and
       `backup_offline`.
-      • `creation_rules` só vale pra arquivo NOVO — adicionar a chave no `.sops.yaml` NÃO
-        re-encripta o que já existe. Quem faz isso é `sops updatekeys -y secrets/secrets.yaml`,
-        rodando como root (a chave atual é dele) e com `chown v1cferr:users` + `chmod 644`
-        depois, senão o arquivo do repo fica do root.
-      • VERIFICADO decriptando o cofre com a chave de backup ISOLADA (`SOPS_AGE_KEY_FILE`
-        apontando só pra ela). Sem esse teste o backup seria imaginário — e o `updatekeys`
-        imprime "already up to date" mesmo quando faz o serviço, então a mensagem dele não
-        serve de prova. A prova é decriptar, ou os dois `recipient:` dentro do secrets.yaml.
-      • Efeito colateral bom: `restic_password` mora DENTRO do cofre, então recuperar o cofre
-        recupera a senha do restic — perder o Bitwarden não faz mais os repos virarem tijolo.
-      • Anchor renomeado `nixos_seagate` → `host_nixos_kingston`: a chave nasceu naquele host e
-        foi carregada no cutover (01/08) — mesma chave, host novo, nome velho confundia.
-      FALTA a cópia OFFLINE (USB/papel em outro lugar físico): as duas cópias da privada hoje
-      estão na mesma máquina e na mesma conta de nuvem (~/ e ~/Dropbox, texto claro, escolha
-      consciente). Enquanto for assim, o segundo destinatário protege contra perder a chave do
-      host, não contra perder a conta/máquina.
+      • `creation_rules` only applies to a NEW file, so adding the key to `.sops.yaml` does NOT
+        re-encrypt what already exists. What does that is
+        `sops updatekeys -y secrets/secrets.yaml`, run as root (the current key is root's) and
+        with `chown v1cferr:users` plus `chmod 644` afterwards, otherwise the repo file ends up
+        owned by root.
+      • VERIFIED by decrypting the vault with the backup key in ISOLATION (`SOPS_AGE_KEY_FILE`
+        pointing only at it). Without that test the backup would be imaginary, and `updatekeys`
+        prints "already up to date" even when it does the job, so its message is not proof. The
+        proof is decrypting, or the two `recipient:` entries inside secrets.yaml.
+      • A good side effect: `restic_password` lives INSIDE the vault, so recovering the vault
+        recovers the restic password, and losing Bitwarden no longer turns the repos into
+        bricks.
+      • The anchor was renamed from `nixos_seagate` to `host_nixos_kingston`: the key was born
+        on that host and was carried over in the cutover (01/08), so it is the same key on a
+        new host, and the old name was confusing.
+      MISSING is the OFFLINE copy (USB or paper in another physical place): both copies of the
+      private key today are on the same machine and in the same cloud account (~/ and
+      ~/Dropbox, in plain text, a conscious choice). While that is the case, the second
+      recipient protects against losing the host key, not against losing the account or the
+      machine.
 
-- [x] CI passou a rodar `nix flake check` DE VERDADE (04/08/2026) — o workflow rodava
-      statix/deadnix/nixfmt direto do nixpkgs porque o input privado `duo-streak-daemon` faria
-      o `flake check` exigir deploy key (o Nix busca TODOS os inputs do lock ao avaliar, não só
-      os que a saída usa). Isso deixava dois furos: o CI não verificava que o
-      `nixosConfigurations` AVALIA (erro de módulo passava verde até o rebuild), e os três `nix
-      run` eram uma TERCEIRA definição da mesma regra que o flake.nix e o pre-commit já
-      definiam — drift da regra 14 esperando acontecer.
-      • A saída foi `--override-input duo-streak-daemon path:./ci/stub-duo`: troca o input
-        ANTES do fetch, então nenhuma credencial entra no CI. Diretório VAZIO basta porque o
-        único consumidor (`system/services/duo.nix`) usa o input só como contexto de build do
-        Docker — interpolação de path, sem `readFile` em avaliação. Se algum dia um módulo LER
-        arquivo do repo privado, o stub precisa daquele arquivo (ou volta o plano B da deploy
-        key, que ficou registrado no fim do workflow).
-      • Sumiu o `env NIXPKGS` que existia só pra fixar a versão dos linters: eles agora vêm do
-        flake.lock, iguais aos de casa por construção. Mexer nos hooks do flake.nix muda o CI
-        sozinho, sem editar o workflow.
-      • CUSTO aceito: o check busca os ~1,43 GiB de inputs e avalia a config inteira, então o
-        CI foi de segundos pra minutos. Tempo de máquina por cobertura e por uma definição só.
+- [x] The CI started running `nix flake check` FOR REAL (04/08/2026): the workflow ran
+      statix/deadnix/nixfmt straight from nixpkgs because the private `duo-streak-daemon` input
+      would make `flake check` require a deploy key (Nix fetches ALL the lock's inputs when
+      evaluating, not only the ones the output uses). That left two holes: the CI did not
+      verify that `nixosConfigurations` EVALUATES (a module error stayed green until the
+      rebuild), and the three `nix run` calls were a THIRD definition of the same rule that
+      flake.nix and pre-commit already defined, rule 14 drift waiting to happen.
+      • The way out was `--override-input duo-streak-daemon path:./ci/stub-duo`: it swaps the
+        input BEFORE the fetch, so no credential enters the CI. An EMPTY directory is enough
+        because the only consumer (`system/services/duo.nix`) uses the input purely as a Docker
+        build context, which is path interpolation with no `readFile` at eval time. If some day
+        a module READS a file from the private repo, the stub needs that file (or plan B, the
+        deploy key, comes back; it is recorded at the end of the workflow).
+      • The `env NIXPKGS` that existed only to pin the linters' version is gone: they now come
+        from flake.lock, identical to the local ones by construction. Touching the flake.nix
+        hooks changes the CI by itself, with no workflow edit.
+      • ACCEPTED COST: the check fetches the ~1.43 GiB of inputs and evaluates the whole config,
+        so the CI went from seconds to minutes. Machine time in exchange for coverage and for a
+        single definition.
 
-- [x] Arquivo off-line dos inputs do flake (04/08/2026) — `nix flake archive --to
-      file:///home/v1cferr/flake-archive`, que entra no restic do home (o `restic.nix` cobre
-      /home/v1cferr e não exclui esse caminho) → fica versionado e verificado pela máquina que
-      já existe, em vez de uma cópia crua. Medido: 18 inputs, 1,43 GiB na store → **319 MiB**
-      no archive (o cache `file://` comprime com xz, e é por isso que demora alguns minutos).
-      • VERIFICADO de verdade, não por "os arquivos estão lá": cada input foi CONSULTADO de
-        volta com `nix path-info --store file:///home/v1cferr/flake-archive <path>`, 0 faltando.
-      • PEGADINHA na hora de verificar: o `--dry-run` lista também o path do flake RAIZ, que
-        com a árvore SUJA muda a cada edição — ele aparece como "faltando" no archive sem que
-        nada esteja errado. O archive é dos INPUTS; o repo em si tem o git como backup.
-      • POR QUE: o `flake.lock` fixa IDENTIDADE, não DISPONIBILIDADE, e flakes não têm mirror
-        (não existe `?mirrors=` como no fetchurl). Metade dos inputs é de mantenedor único ou
-        self-hosted — `quickshell` só existe em git.outfoxxed.me. Se aquele servidor sair do
-        ar, o input é inbuscável e o rev travado não ajuda em nada.
-      • O que isso NÃO compra: rebuild offline completo. As fontes de cada pacote do nixpkgs
-        continuam vindo do cache/upstream. Pra bootar sem construir nada, o que se arquiva é o
-        closure do sistema (`nix copy` do system.build.toplevel) — dezenas de GB, outra decisão.
-      PENDENTE virar declarativo (regra 3): hoje é comando na mão e envelhece no próximo `nix
-      flake update`. Dono natural = timer systemd re-arquivando, e o restic deduplica, então
-      re-arquivar só adiciona os inputs que mudaram.
+- [x] An offline archive of the flake inputs (04/08/2026): `nix flake archive --to
+      file:///home/v1cferr/flake-archive`, which enters the home restic (`restic.nix` covers
+      /home/v1cferr and does not exclude that path), so it ends up versioned and verified by
+      the machinery that already exists, instead of a raw copy. Measured: 18 inputs, 1.43 GiB
+      in the store, becoming **319 MiB** in the archive (the `file://` cache compresses with
+      xz, which is why it takes a few minutes).
+      • VERIFIED for real, not by "the files are there": each input was QUERIED back with
+        `nix path-info --store file:///home/v1cferr/flake-archive <path>`, with 0 missing.
+      • A TRAP when verifying: `--dry-run` also lists the ROOT flake path, which with a DIRTY
+        tree changes on every edit, so it shows up as "missing" from the archive with nothing
+        actually wrong. The archive is of the INPUTS; the repo itself has git as its backup.
+      • WHY: `flake.lock` pins IDENTITY, not AVAILABILITY, and flakes have no mirrors (there is
+        no `?mirrors=` like in fetchurl). Half the inputs come from a single maintainer or are
+        self-hosted, and `quickshell` only exists at git.outfoxxed.me. If that server goes
+        down, the input is unfetchable and the pinned rev helps with nothing.
+      • What this does NOT buy: a complete offline rebuild. The sources of each nixpkgs package
+        still come from the cache/upstream. To boot without building anything, what you archive
+        is the system closure (a `nix copy` of system.build.toplevel), which is tens of GB, a
+        different decision.
+      PENDING becoming declarative (rule 3): today it is a manual command and it ages on the
+      next `nix flake update`. The natural owner is a systemd timer re-archiving, and restic
+      deduplicates, so re-archiving only adds the inputs that changed.
 
-- [x] BTRFS bem configurado (02/08/2026) — auditado o FS depois do cutover. O que existia
-      (noatime, space_cache=v2, subvolumes, scrub mensal) estava certo; o que faltava virou
-      system/hardware/btrfs.nix (POLÍTICA, machine-agnostic atrás de "a raiz é btrfs?") +
-      system/services/btrbk.nix (snapshots). O LAYOUT continua no disko.nix.
-      • SNAPSHOTS (a maior lacuna): btrfs sem snapshot é ext4 com checksum. btrbk horário do
-        @home, retenção 48h/7d/4w, `snapshot_create=onchange` (senão máquina ociosa gera 24
-        snapshots idênticos/dia e empurra os úteis pra fora). NÃO substitui o restic — ele
-        mora no MESMO disco; cobre "sobrescrevi há 20 min", o restic cobre "o disco morreu".
-        Só @home: a raiz já tem rollback por geração no GRUB, e snapshot de `/` nem pegaria
-        o /nix (subvolume separado — snapshot não desce pra subvolume aninhado).
-      • zstd:3 → zstd:1: num Gen4 de ~7 GB/s o gargalo vira o COMPRESSOR. Descompressão tem
-        a mesma velocidade nos dois níveis ⇒ leitura não perde nada, e cada rebuild ganha.
-        Só vale pra escrita NOVA; reescrever exigiria `defragment -czstd`, que QUEBRA reflink.
-      • fstrim.timer DESLIGADO: `discard=async` (default do kernel desde 6.2, agora explícito
-        no disko) já é a mesma operação, enfileirada e com rate limit. Os dois juntos = TRIM
-        em duplicata. Se tirar o discard=async do disko, religar o fstrim no MESMO commit.
-      • Reclaim automático de block group ligado (dynamic_reclaim + periodic_reclaim, kernel
-        6.11+, vinham 0). É o substituto IN-KERNEL do cron de `btrfs balance -dusage=N` do
-        btrfsmaintenance — e melhor, porque sabe quando NÃO vale relocar. bg_reclaim_threshold
-        fica intocado: é mutuamente exclusivo com o dynamic (EINVAL).
-      • Alarme: o scrub falhava em SILÊNCIO. Agora OnFailure → notificação crítica em toda
-        sessão viva + journal. Somado a isso, checagem DIÁRIA de `btrfs device stats -c`:
-        o scrub é mensal, um NVMe que começa a morrer no dia 2 ficaria 28 dias sem aviso.
-        Contador não zera sozinho — reconhecer com `device stats -z` DEPOIS de investigar.
-      • `+C` (nodatacow) nos diretórios de banco (volumes do Docker, SQLite do Jellyfin):
-        CoW + escrita aleatória de 8 KiB fragmenta sem parar. Só pega arquivo NOVO, e
-        desliga o checksum desses arquivos — trade-off consciente, os dois são refazíveis.
-      PASSO MANUAL ÚNICO (subvolume não nasce em rebuild — o disko só roda em instalação):
+- [x] BTRFS properly configured (02/08/2026): the FS was audited after the cutover. What
+      existed (noatime, space_cache=v2, subvolumes, a monthly scrub) was right; what was
+      missing became system/hardware/btrfs.nix (POLICY, machine-agnostic behind "is the root
+      btrfs?") plus system/services/btrbk.nix (snapshots). The LAYOUT stays in disko.nix.
+      • SNAPSHOTS (the biggest gap): btrfs with no snapshots is ext4 with checksums. An hourly
+        btrbk of @home, retention 48h/7d/4w, `snapshot_create=onchange` (otherwise an idle
+        machine generates 24 identical snapshots a day and pushes the useful ones out). It does
+        NOT replace restic, since it lives on the SAME disk; it covers "I overwrote it 20 min
+        ago", restic covers "the disk died". @home only: the root already has per-generation
+        rollback in GRUB, and a snapshot of `/` would not even catch /nix (a separate
+        subvolume, since a snapshot does not descend into a nested subvolume).
+      • zstd:3 to zstd:1: on a ~7 GB/s Gen4 drive the bottleneck becomes the COMPRESSOR.
+        Decompression has the same speed at both levels, so reading loses nothing and every
+        rebuild gains. It only applies to NEW writes; rewriting would require
+        `defragment -czstd`, which BREAKS reflinks.
+      • fstrim.timer TURNED OFF: `discard=async` (a kernel default since 6.2, now explicit in
+        disko) is already the same operation, queued and rate limited. Both together means
+        duplicate TRIM. If discard=async is removed from disko, turn fstrim back on in the SAME
+        commit.
+      • Automatic block group reclaim turned on (dynamic_reclaim + periodic_reclaim, kernel
+        6.11+, both came as 0). It is the IN-KERNEL replacement for btrfsmaintenance's
+        `btrfs balance -dusage=N` cron, and better, because it knows when relocating is NOT
+        worth it. bg_reclaim_threshold stays untouched: it is mutually exclusive with the
+        dynamic one (EINVAL).
+      • Alarm: the scrub failed SILENTLY. Now OnFailure sends a critical notification to every
+        live session plus the journal. On top of that, a DAILY check of
+        `btrfs device stats -c`: the scrub is monthly, so an NVMe that starts dying on day 2
+        would go 28 days with no warning. The counter does not reset itself, so acknowledge it
+        with `device stats -z` AFTER investigating.
+      • `+C` (nodatacow) on the database directories (Docker volumes, the Jellyfin SQLite):
+        CoW plus random 8 KiB writes fragments endlessly. It only takes effect on NEW files,
+        and it turns the checksum off for those files, a conscious trade-off, since both are
+        rebuildable.
+      A SINGLE MANUAL STEP (a subvolume is not born in a rebuild, since disko only runs at
+      install time):
         sudo mount -o subvolid=5 /dev/nvme0n1p2 /mnt && sudo btrfs subvolume create /mnt/@snapshots && sudo umount /mnt
-      O `nofail` no /.snapshots existe pra que esquecer esse passo custe "btrbk não roda"
-      (RequiresMountsFor) em vez de "boot cai no emergency shell".
-      NÃO ligar qgroups/quota: mata a performance do btrfs e é o motivo de metade dos
-      relatos de "btrfs lento". Nada aqui precisa deles.
+      The `nofail` on /.snapshots exists so that forgetting that step costs "btrbk does not
+      run" (RequiresMountsFor) instead of "the boot drops into an emergency shell".
+      Do NOT turn qgroups/quota on: it kills btrfs performance and it is the reason for half
+      the "btrfs is slow" reports. Nothing here needs them.
 
-- [x] DUALBOOT com tema minegrub + SECURE BOOT (02/08/2026) — systemd-boot → GRUB, tema
-      "seleção de mundo" do Minecraft, Windows 11 no menu e Secure Boot ligado nos dois SOs.
-      system/core/boot.nix (o boot-grub.nix dormente foi absorvido) + system/core/secureboot.nix.
-      O QUE DECIDIU A ARQUITETURA, e não foi gosto: **as duas ESPs estão em discos
-      diferentes** (NixOS em nvme0n1p1, Windows em sdb1). O systemd-boot só carrega binário
-      EFI da PRÓPRIA ESP — ele é incapaz de listar o Windows, e trocar de SO viraria F8 no
-      POST toda vez. Isso derruba o LANZABOOTE junto, que é systemd-boot-only e é o caminho
-      oficial de Secure Boot no NixOS. Sobra GRUB (lê as duas ESPs, e é o que o tema exige)
-      + assinatura à mão via sbctl. Não há módulo NixOS que assine o GRUB.
-      HONESTIDADE SOBRE O QUE ISSO PROTEGE: a firmware verifica o GRUB e o bootmgfw da
-      Microsoft; o GRUB carrega kernel/initrd SEM verificar (não tem shim). Satisfaz a
-      firmware e o Windows e barra bootloader trocado por fora; não barra quem já tem root.
-      A cadeia inteira só com lanzaboote — e aí sem menu e sem tema.
-      ⚠️ `enroll-keys -m` (com os certificados da Microsoft) NÃO É OPCIONAL: sem ele,
-      apagar as chaves de fábrica derruba o Windows E a option ROM da Arc B580. E o timing
-      importa: o CA da Microsoft de 2011 EXPIROU em junho/2026. Conferido nesta máquina em
-      02/08 — a BIOS 2803 já traz as duas gerações no `db` (2011 + os três CAs de 2023) e o
-      sbctl 0.18 embute as seis, então o `-m` cobre também o Windows pós-rollover. O
-      `--firmware-builtin` NÃO serviria: o `dbDefault` desta firmware está vazio.
-      PEGADINHA DO TEMA: os ícones casam por `--class`, NÃO pelo título — e erra em
-      silêncio (ícone genérico, sem texto). `nixos` vem do default `entryOptions`; `windows`
-      é derivado pelo 30_os-prober da PRIMEIRA palavra do label "Windows Boot Manager"
-      (logo, "windows", nunca "windows11"); `submenu` é o das gerações antigas. O texto das
-      2 linhas é RENDERIZADO DENTRO do PNG na fonte do Minecraft, e o título do GRUB é
-      empurrado pra fora da tela pelo tema (`item_icon_space = 2000`) — por isso todas as
-      gerações mostram a mesma descrição: compartilham a classe `nixos`. Limitação do tema.
-      ESCOLHA DO TEMA: o link original era o minegrub-theme (menu principal do Minecraft),
-      preterido pelo minegrub-world-sel-theme (mesmo autor) — a tela de seleção de mundo dá
-      ícone + descrição POR SO, que é o que um dualboot quer; no menu principal a entrada
-      é só um botão.
-      MEDIDO ANTES: a ESP de 1 GiB aguenta as 10 gerações. O install-grub.pl liga o
-      copyKernels sozinho (o /boot está noutro filesystem que o /nix/store — o que também
-      evita depender do GRUB ler btrfs+zstd) e nomeia por hash da store, então gerações que
-      compartilham kernel ocupam espaço uma vez: 13 MiB + 47 MiB por versão de kernel.
-      Runbook dos passos MANUAIS (Setup Mode só se entra pela BIOS) no cabeçalho do
-      secureboot.nix, junto do porquê de cada um.
+- [x] DUALBOOT with the minegrub theme + SECURE BOOT (02/08/2026): systemd-boot became GRUB,
+      with the Minecraft "world selection" theme, Windows 11 in the menu and Secure Boot on in
+      both OSes. system/core/boot.nix (the dormant boot-grub.nix was absorbed) plus
+      system/core/secureboot.nix.
+      WHAT DECIDED THE ARCHITECTURE, and it was not taste: **the two ESPs are on different
+      disks** (NixOS on nvme0n1p1, Windows on sdb1). systemd-boot only loads an EFI binary from
+      its OWN ESP, so it is incapable of listing Windows, and switching OS would become F8 at
+      POST every time. That takes LANZABOOTE down with it, since it is systemd-boot-only and it
+      is the official Secure Boot path on NixOS. What is left is GRUB (it reads both ESPs, and
+      it is what the theme requires) plus signing by hand through sbctl. There is no NixOS
+      module that signs GRUB.
+      HONESTY ABOUT WHAT THIS PROTECTS: the firmware verifies GRUB and Microsoft's bootmgfw;
+      GRUB loads the kernel and initrd WITHOUT verifying them (it has no shim). It satisfies
+      the firmware and Windows and it blocks a bootloader swapped from outside; it does not
+      block someone who already has root. The whole chain only with lanzaboote, and then with
+      no menu and no theme.
+      `enroll-keys -m` (with the Microsoft certificates) IS NOT OPTIONAL: without it,
+      erasing the factory keys takes down Windows AND the Arc B580's option ROM. And the timing
+      matters: Microsoft's 2011 CA EXPIRED in june/2026. Checked on this machine on 02/08: BIOS
+      2803 already carries both generations in the `db` (2011 plus the three 2023 CAs) and
+      sbctl 0.18 embeds all six, so the `-m` also covers post-rollover Windows.
+      `--firmware-builtin` would NOT work: this firmware's `dbDefault` is empty.
+      A THEME TRAP: the icons match by `--class`, NOT by title, and it fails silently (a
+      generic icon with no text). `nixos` comes from the default `entryOptions`; `windows` is
+      derived by 30_os-prober from the FIRST word of the "Windows Boot Manager" label (so
+      "windows", never "windows11"); `submenu` is the one for old generations. The 2-line text
+      is RENDERED INSIDE the PNG in the Minecraft font, and the GRUB title is pushed off screen
+      by the theme (`item_icon_space = 2000`), which is why every generation shows the same
+      description: they share the `nixos` class. A theme limitation.
+      THE THEME CHOICE: the original link was minegrub-theme (the Minecraft main menu), passed
+      over for minegrub-world-sel-theme (the same author), because the world selection screen
+      gives an icon plus a description PER OS, which is what a dualboot wants; in the main menu
+      an entry is just a button.
+      MEASURED BEFOREHAND: the 1 GiB ESP holds all 10 generations. install-grub.pl turns
+      copyKernels on by itself (/boot is on a different filesystem from /nix/store, which also
+      avoids depending on GRUB reading btrfs+zstd) and names files by store hash, so
+      generations sharing a kernel occupy space once: 13 MiB plus 47 MiB per kernel version.
+      The runbook of the MANUAL steps (Setup Mode can only be entered through the BIOS) is in
+      the secureboot.nix header, along with the why of each one.
 
-- [x] Remover todos os outros hosts e manter apenas o atual — hoje só hosts/nixos-kingston/.
-      O nixos-sandisk saiu em 02/08/2026: o disco dele virou o Windows 11, então o host não
-      era mais nem rollback nem alvo. Molde pra host novo se pega no histórico do git.
+- [x] Remove every other host and keep only the current one: today there is only
+      hosts/nixos-kingston/. nixos-sandisk left on 02/08/2026, because its disk became Windows
+      11, so the host was no longer a rollback and no longer a target. A template for a new
+      host can be taken from the git history.
 
-- [x] Adicionar o duolingo rodando para fazer automaticamente com Nix — stack
-      duo-streak-daemon (daemon Playwright + api + web + Postgres) via docker
-      compose gerenciado por systemd (system/services/duo.nix). Código = flake input
-      privado (git+ssh, fixo no flake.lock); segredos via sops (template duo.env);
-      login por SESSÃO salva (duo-login 1x — o headless cai no anti-bot do Duolingo).
-      Ofensiva mantida sozinha 1x/dia (catch-up). Helpers: duo-login, duo-run-once.
-  - [x] Instalar Ollama ou outro recomendando para rodar modelos de IA localmente
-        — Ollama NATIVO (system/services/ollama.nix), **na GPU (Arc B580) por Vulkan**
-        desde 06/08/2026. qwen3:4b (solver texto) + bge-m3 (embeddings)
-        via loadModels. É o solver local do duo-streak-daemon (localhost:11434),
-        sem cota nem nuvem.
-  - [x] Ollama na GPU da Arc B580 (06/08/2026) — era o "explorar depois" que ficou
-        pendente na troca de placa. `services.ollama.acceleration` NÃO existe mais
-        (`mkRemovedOptionModule`): aceleração virou escolha de PACOTE, e `pkgs.ollama`
-        puro é igual ao `-cpu` quando não há rocmSupport/cudaSupport — ou seja, o
-        "CPU-only" antigo não era limitação do nixpkgs, era o default. Solução de 1
-        linha: `package = pkgs.ollama-vulkan` (0.32.3, já no 26.05).
-        VULKAN e não SYCL/ipex-llm porque o Vulkan usa o Mesa ANV que já está no
-        sistema — nada novo pra empacotar (o ipex-llm não está no nixpkgs).
-        Medido no startup: `library=Vulkan description="Intel(R) Arc(tm) B580
-        Graphics (BMG G21)" type=discrete total=11.9 GiB available=9.7 GiB`. O
-        `llvmpipe` (Vulkan em CPU, aparece como GPU1 no vulkaninfo) é descartado
-        pelo próprio ollama — não precisou de `GGML_VK_VISIBLE_DEVICES`.
-        Hardening do módulo já libera a placa: `DeviceAllow` tem `char-drm`
-        (major 226 = /dev/dri/*) e `SupplementaryGroups = [ "render" ]`.
-        ⚠️ Risco conhecido: crash do backend Vulkan em Arc sob decode de alta
-        frequência (ollama#14207). Fallback = `pkgs.ollama-cpu`, 1 linha.
-        CONSEQUÊNCIA de arquitetura: o Mesa agora é caminho crítico de IA, não só
-        de jogo — reforça o item do driver/unstable abaixo.
-  - [x] Claude Desktop (GUI: Chat/Cowork/Code) — 02/08/2026. A pesquisa mudou de resposta no
-        meio do caminho: em **30/06/2026 a Anthropic passou a publicar um Claude Desktop
-        OFICIAL pra Linux** (beta, `.deb` num APT próprio, só Debian/Ubuntu homologados).
-        Isso APOSENTA os projetos que faziam engenharia reversa do binário de macOS/Windows,
-        que era todo o estado da arte até então. NÃO está no nixpkgs: a issue #366213
-        (Package request) foi FECHADA e o canal só tem claude-code/claude-monitor.
-        ESCOLHIDO `aaddrick/claude-desktop-debian` (5.3k ★, releases automáticas seguindo a
-        versão upstream), que REEMPACOTA o .deb oficial desde a v3.0.0 — `dpkg-deb` +
-        `autoPatchelfHook`, o padrão nixpkgs de vendor binário (discord/vscode). PRETERIDOS:
-        `k3d3/claude-desktop-linux-flake` (o pioneiro e o mais citado nas buscas, mas fazia RE
-        do módulo nativo e está PARADO desde nov/2025 — anterior ao release oficial) e
-        `heytcass/claude-for-linux` (extrai do DMG do macOS; 6 ★ e 77 issues abertas).
-        Critério além de popularidade: o aaddrick NÃO usa o electron do nixpkgs (mantém a
-        árvore co-locada pra `/proc/self/exe`/`resourcesPath` resolverem) e NÃO desliga o
-        sandbox — o `chrome-sandbox` vem SUID, a store não carrega SUID, e em vez do
-        `--no-sandbox` que a maioria dos forks usa ele conta com o userns sandbox.
-        VARIANTE **FHS** e não a pura: os servidores MCP precisam achar node/uv, e o Cowork
-        sobe uma VM QEMU de verdade procurando `/usr/share/OVMF/*.fd` e `/usr/bin/virtiofsd`
-        em caminhos FHS HARDCODED — fora do FHS ele só responde `virtualization_tools_missing`.
-        Closure MEDIDO 2.9 GiB (o qemu_kvm é a maior fatia).
-        Integrado por **`overlays.default`** e não por `packages.<system>` (que é o padrão
-        do zen-browser/browser-previews aqui): conferi ANTES que os 13 atributos que o pacote
-        usa (libgbm, addDriverRunpath, qemu_kvm, OVMF…) existem no 26.05, então dá pra buildar
-        contra a base estável em vez de arrastar um 3º nixpkgs pro lock — o input dele é
-        `nixpkgs-unstable`, e `follows` sozinho NÃO resolveria (o overlay usa o `final` de
-        quem consome, ignorando o input dele).
-        ⚠️ COWORK NÃO FUNCIONA nesta máquina até um passo MANUAL na BIOS: o kernel diz
-        `x86/cpu: VMX (outside TXT) disabled by BIOS` e `kvm_intel: VMX not enabled` — não
-        existe `/dev/kvm`. Ligar "Intel Virtualization Technology (VT-x)" (mesma visita do
-        Secure Boot) e SÓ ENTÃO somar `users.users.v1cferr.extraGroups = [ "kvm" ]`, que não
-        entrou aqui por não ser validável sem o device. O `/dev/vhost-vsock` JÁ existe.
-        Chat e Code funcionam sem nada disso.
-        Achados de execução: `--doctor` NÃO é flag reconhecida nesta versão (ela abre a GUI);
-        o app sobe em Wayland NATIVO sozinho, então o `CLAUDE_USE_WAYLAND=1` que a doc oficial
-        manda usar é desnecessário aqui. Falta do beta Linux: Computer Use e ditado.
-        ESTADO (regra 6 → restic): sessão/login e `~/.config/Claude/claude_desktop_config.json`
-        — e o app REESCREVE esse JSON em runtime, então pela regra 14 o Nix não é dono dele.
-        ⚠️ KEYRING: no 1º login o app avisa "your sign-in won't be saved" e pede login TODA
-        vez. NÃO é o keyring (conferido: `org.freedesktop.secrets` no bus e `collection/login`
-        presente — não é o caso do keyring-após-restore). É o Electron autodetectando o backend
-        de secret pelo XDG_CURRENT_DESKTOP: "Hyprland" não casa com nenhum caso do os_crypt do
-        Chromium, ele cai no "basic text" e o safeStorage se declara indisponível. MESMO bug e
-        MESMO remédio do VS Code, mas sem `commandLineArgs` (não é o electron do nixpkgs) —
-        entra por wrapper (`overlayClaudeKeyring` no flake.nix). Só o `claude-desktop` é
-        embrulhado: o overlay do upstream monta o `-fhs` sobre `final.claude-desktop`, que é o
-        do FIXPOINT, então a variante FHS herda o wrap sozinha — não precisou tocar no fhs.nix
-        dele. Regra geral: TODO Electron novo aqui vai precisar de `--password-store=gnome-libsecret`.
+- [x] Add Duolingo running automatically with Nix: the duo-streak-daemon stack (a Playwright
+      daemon + api + web + Postgres) through docker compose managed by systemd
+      (system/services/duo.nix). The code is a private flake input (git+ssh, pinned in
+      flake.lock); the secrets come through sops (the duo.env template); the login uses a saved
+      SESSION (duo-login once, because headless falls into Duolingo's anti-bot). The streak is
+      kept alive on its own once a day (catch-up). Helpers: duo-login, duo-run-once.
+  - [x] Install Ollama or another recommended way to run AI models locally: NATIVE Ollama
+        (system/services/ollama.nix), **on the GPU (Arc B580) through Vulkan** since
+        06/08/2026. qwen3:4b (the text solver) plus bge-m3 (embeddings) through loadModels. It
+        is the local solver for duo-streak-daemon (localhost:11434), with no quota and no
+        cloud.
+  - [x] Ollama on the Arc B580 GPU (06/08/2026): this was the "explore later" left pending
+        from the card swap. `services.ollama.acceleration` does NOT exist anymore
+        (`mkRemovedOptionModule`): acceleration became a PACKAGE choice, and plain `pkgs.ollama`
+        is the same as `-cpu` when there is no rocmSupport/cudaSupport, which means the old
+        "CPU-only" was not a nixpkgs limitation, it was the default. A 1-line solution:
+        `package = pkgs.ollama-vulkan` (0.32.3, already in 26.05).
+        VULKAN and not SYCL/ipex-llm because Vulkan uses the Mesa ANV that is already on the
+        system, so there is nothing new to package (ipex-llm is not in nixpkgs).
+        Measured at startup: `library=Vulkan description="Intel(R) Arc(tm) B580 Graphics
+        (BMG G21)" type=discrete total=11.9 GiB available=9.7 GiB`. `llvmpipe` (Vulkan on the
+        CPU, showing up as GPU1 in vulkaninfo) is discarded by ollama itself, so
+        `GGML_VK_VISIBLE_DEVICES` was not needed.
+        The module's hardening already allows the card: `DeviceAllow` has `char-drm`
+        (major 226 = /dev/dri/*) and `SupplementaryGroups = [ "render" ]`.
+        A known risk: the Vulkan backend crashing on Arc under high-frequency decode
+        (ollama#14207). The fallback is `pkgs.ollama-cpu`, 1 line.
+        An ARCHITECTURAL CONSEQUENCE: Mesa is now a critical path for AI, not only for games,
+        which reinforces the driver/unstable item below.
+  - [x] Claude Desktop (GUI: Chat/Cowork/Code), 02/08/2026. The research changed its answer
+        halfway through: on **30/06/2026 Anthropic started publishing an OFFICIAL Claude
+        Desktop for Linux** (beta, a `.deb` in an APT of its own, with only Debian/Ubuntu
+        supported). That RETIRES the projects that reverse engineered the macOS/Windows binary,
+        which was the entire state of the art until then. It is NOT in nixpkgs: issue #366213
+        (a package request) was CLOSED and the channel only has claude-code/claude-monitor.
+        CHOSEN: `aaddrick/claude-desktop-debian` (5.3k stars, automatic releases following the
+        upstream version), which REPACKAGES the official .deb since v3.0.0, using `dpkg-deb`
+        plus `autoPatchelfHook`, the nixpkgs vendored-binary pattern (discord/vscode). PASSED
+        OVER: `k3d3/claude-desktop-linux-flake` (the pioneer and the most cited in searches,
+        but it reverse engineered the native module and has been IDLE since nov/2025, which
+        predates the official release) and `heytcass/claude-for-linux` (it extracts from the
+        macOS DMG; 6 stars and 77 open issues).
+        A criterion beyond popularity: aaddrick does NOT use the nixpkgs electron (it keeps the
+        tree co-located so `/proc/self/exe`/`resourcesPath` resolve) and does NOT turn the
+        sandbox off. `chrome-sandbox` ships SUID, the store carries no SUID, and instead of the
+        `--no-sandbox` most forks use, it relies on the userns sandbox.
+        The **FHS** variant and not the plain one: the MCP servers need to find node/uv, and
+        Cowork brings up a real QEMU VM looking for `/usr/share/OVMF/*.fd` and
+        `/usr/bin/virtiofsd` at HARDCODED FHS paths, so outside the FHS it only answers
+        `virtualization_tools_missing`. MEASURED closure: 2.9 GiB (qemu_kvm is the biggest
+        slice).
+        Integrated through **`overlays.default`** and not through `packages.<system>` (which is
+        the zen-browser/browser-previews pattern here): I checked FIRST that the 13 attributes
+        the package uses (libgbm, addDriverRunpath, qemu_kvm, OVMF and so on) exist in 26.05,
+        so it can be built against the stable base instead of dragging a 3rd nixpkgs into the
+        lock. Its input is `nixpkgs-unstable`, and `follows` alone would NOT solve it (the
+        overlay uses the consumer's `final`, ignoring its own input).
+        COWORK DOES NOT WORK on this machine until a MANUAL BIOS step: the kernel says
+        `x86/cpu: VMX (outside TXT) disabled by BIOS` and `kvm_intel: VMX not enabled`, so
+        `/dev/kvm` does not exist. Turn "Intel Virtualization Technology (VT-x)" on (the same
+        visit as Secure Boot) and ONLY THEN add
+        `users.users.v1cferr.extraGroups = [ "kvm" ]`, which did not go in here because it is
+        not validatable without the device. `/dev/vhost-vsock` ALREADY exists. Chat and Code
+        work with none of this.
+        Runtime findings: `--doctor` is NOT a recognized flag in this version (it opens the
+        GUI); the app comes up in NATIVE Wayland by itself, so the `CLAUDE_USE_WAYLAND=1` the
+        official docs tell you to use is unnecessary here. Missing from the Linux beta:
+        Computer Use and dictation.
+        STATE (rule 6, so restic): the session/login and
+        `~/.config/Claude/claude_desktop_config.json`, and the app REWRITES that JSON at
+        runtime, so by rule 14 Nix does not own it.
+        KEYRING: on the 1st login the app warns "your sign-in won't be saved" and asks for a
+        login EVERY time. It is NOT the keyring (checked: `org.freedesktop.secrets` on the bus
+        and `collection/login` present, so it is not the keyring-after-restore case). It is
+        Electron autodetecting the secret backend from XDG_CURRENT_DESKTOP: "Hyprland" matches
+        no case in Chromium's os_crypt, it falls back to "basic text" and safeStorage declares
+        itself unavailable. The SAME bug and the SAME remedy as VS Code, but without
+        `commandLineArgs` (this is not the nixpkgs electron), so it comes in through a wrapper
+        (`overlayClaudeKeyring` in flake.nix). Only `claude-desktop` is wrapped: the upstream
+        overlay builds the `-fhs` on top of `final.claude-desktop`, which is the FIXPOINT one,
+        so the FHS variant inherits the wrap by itself and their fhs.nix did not have to be
+        touched. The general rule: EVERY new Electron app here will need
+        `--password-store=gnome-libsecret`.
 
-- [x] Trocar a RTX 3050 → Intel Arc B580 (Battlemage) — FEITO. Arc validada (`xe`
-      carregado, fastfetch/vainfo OK) e NVIDIA REMOVIDA de vez: system/hardware/gpu.nix agora
-      é Intel puro (xe + Mesa, VA-API iHD), sem `my.gpu`, sem specialisation, sem CUDA.
-      Battlemage OK no kernel 6.18/Mesa 25.x. O Ollama ficou em CPU na troca e VOLTOU
-      pra GPU em 06/08/2026 via `pkgs.ollama-vulkan` (ver item do Ollama acima).
-      Pra ressuscitar a NVIDIA: histórico git do system/hardware/gpu.nix.
+- [x] Swap the RTX 3050 for an Intel Arc B580 (Battlemage): DONE. The Arc is validated (`xe`
+      loaded, fastfetch/vainfo OK) and NVIDIA is REMOVED for good: system/hardware/gpu.nix is
+      now pure Intel (xe + Mesa, VA-API iHD), with no `my.gpu`, no specialisation and no CUDA.
+      Battlemage is fine on kernel 6.18/Mesa 25.x. Ollama stayed on the CPU through the swap
+      and WENT BACK to the GPU on 06/08/2026 through `pkgs.ollama-vulkan` (see the Ollama item
+      above).
+      To resurrect NVIDIA: the git history of system/hardware/gpu.nix.
 
-- [x] Driver da Intel no canal UNSTABLE — TENTADO, TESTADO e REPROVADO (06/08/2026).
-      A ideia era "driver sempre na última versão, porque a Intel atualiza toda semana".
-      Ela morre no fato de que driver gráfico no NixOS não é lib normal: é PLUGIN
-      carregado impuramente de `/run/opengl-driver/lib`, e o LOADER vem do canal da
-      base. Loader aceita driver igual ou mais VELHO que ele, nunca mais novo — o
-      `libva` varre `__vaDriverInit_1_<minor>` do seu minor até `1_0` e não tenta
-      acima. Medido: `intel-media-driver` do unstable exporta `1_24`, o `libva`
-      2.23.0 do estável para em `1_23` → `vaInitialize failed with error code -1`,
-      e TODO decode/encode cai pra CPU **em silêncio** (regra 14: nada falha, só
-      fica errado). Problema conhecido da comunidade (nixpkgs #263940, #216361).
-      ⚠️ **O MESA É EXCEÇÃO** — medido DEPOIS, e é o oposto do que eu tinha
-      concluído: o `libgbm` virou pacote SEPARADO (stub que linka o do host em
-      runtime) e o 25.05 introduziu `hardware.graphics.package` exatamente pra
-      "gerenciar a versão global do Mesa sem mass rebuild". Testado: ICD do
-      `unstable.mesa` + vulkan-loader do sistema → `deviceName = Arc B580`,
-      `driverInfo = Mesa 26.1.6`; EGL idem, sem erro. Ou seja: **Mesa PODE cruzar
-      canal** (loader de Vulkan/GL negocia versão), `libva` NÃO (só desce de
-      minor). Não é a mesma classe de problema, apesar de parecer.
-      E o ganho não existia: o nixpkgs BACKPORTA point-release pro branch de
-      release — mesa 26.1.5 vs 26.1.6, e kernel 6.18.42 + linux-firmware 20260622
-      IDÊNTICOS nos dois canais. Divergem só o userspace Intel (media-driver
-      26.1.6→26.2.4, compute-runtime 26.18→26.27, vpl-gpu-rt 26.1.6→26.3.0) — e é
-      exatamente esse que não pode atravessar o canal.
-      **REGRA QUE FICA**, por lever: (a) kernel → `pkgs.linuxPackages_latest`, do
-      PRÓPRIO estável, sem cruzar canal — feito, ver item do kernel; (b) Mesa →
-      `hardware.graphics.package = pkgs.unstable.mesa` (+ `package32 =
-      pkgs.unstable.pkgsi686Linux.mesa`, nessa ordem — `pkgs.pkgsi686Linux.unstable`
-      é errado, ver flake.nix), mecanismo provado mas SÓ vale quando o delta for
-      minor de verdade: revisar ~set/2026, quando o unstable for pro 26.2+ e o
-      26.05 travar no 26.1.x; (c) VA-API/oneVPL/compute → fica no estável, sobe só
-      com a base (26.11, ~nov/2026); (d) NÃO adotar mesa_git/cache de terceiro.
-      Aviso gravado no cabeçalho do `extraPackages` em system/hardware/gpu.nix.
-      Peso extra desde 06/08: o Mesa virou caminho crítico de IA também, porque o
-      Ollama passou a rodar por Vulkan/ANV — não é mais só perf de jogo.
+- [x] The Intel driver from the UNSTABLE channel: TRIED, TESTED and REJECTED (06/08/2026).
+      The idea was "the driver always on the latest version, because Intel updates it every
+      week". It dies on the fact that a graphics driver on NixOS is not a normal lib: it is a
+      PLUGIN loaded impurely from `/run/opengl-driver/lib`, and the LOADER comes from the base
+      channel. A loader accepts a driver equal to or OLDER than itself, never newer, because
+      `libva` sweeps `__vaDriverInit_1_<minor>` from its own minor down to `1_0` and does not
+      try above. Measured: the unstable `intel-media-driver` exports `1_24`, the stable `libva`
+      2.23.0 stops at `1_23`, so `vaInitialize failed with error code -1`, and ALL
+      decode/encode falls back to the CPU **silently** (rule 14: nothing fails, it just ends
+      up wrong). A known community problem (nixpkgs #263940, #216361).
+      **MESA IS THE EXCEPTION**, measured AFTERWARDS, and it is the opposite of what I had
+      concluded: `libgbm` became a SEPARATE package (a stub that links the host's at runtime)
+      and 25.05 introduced `hardware.graphics.package` precisely to "manage the global Mesa
+      version without a mass rebuild". Tested: the `unstable.mesa` ICD plus the system
+      vulkan-loader gives `deviceName = Arc B580` and `driverInfo = Mesa 26.1.6`; EGL the same,
+      no error. In other words: **Mesa CAN cross channels** (the Vulkan/GL loader negotiates
+      the version), `libva` CANNOT (it only goes down in minor). It is not the same class of
+      problem, even though it looks like it.
+      And the gain did not exist: nixpkgs BACKPORTS point releases to the release branch. Mesa
+      26.1.5 vs 26.1.6, and kernel 6.18.42 + linux-firmware 20260622 are IDENTICAL on both
+      channels. The only divergence is the Intel userspace (media-driver 26.1.6 to 26.2.4,
+      compute-runtime 26.18 to 26.27, vpl-gpu-rt 26.1.6 to 26.3.0), and that is exactly the one
+      that cannot cross channels.
+      **THE RULE THAT STAYS**, per lever: (a) kernel goes to `pkgs.linuxPackages_latest`, from
+      the OWN stable channel, with no crossing (done, see the kernel item); (b) Mesa goes to
+      `hardware.graphics.package = pkgs.unstable.mesa` (plus
+      `package32 = pkgs.unstable.pkgsi686Linux.mesa`, in that order, since
+      `pkgs.pkgsi686Linux.unstable` is wrong, see flake.nix), a proven mechanism but ONLY worth
+      it when the delta is a real minor: review ~sep/2026, when unstable goes to 26.2+ and
+      26.05 pins to 26.1.x; (c) VA-API/oneVPL/compute stays on stable and only moves with the
+      base (26.11, ~nov/2026); (d) do NOT adopt mesa_git or a third party cache.
+      The warning is recorded in the `extraPackages` header in system/hardware/gpu.nix.
+      Extra weight since 06/08: Mesa became a critical path for AI too, because Ollama started
+      running through Vulkan/ANV, so it is not only game performance anymore.
 
-- [x] Kernel mainline (`linuxPackages_latest`, 7.1.x) — 06/08/2026, em
-      system/core/boot.nix. É o lever (a) do item acima e o ÚNICO de driver que não
-      atravessa canal: o `linuxPackages_latest` vem do próprio 26.05, e o driver `xe`
-      da Arc mora no kernel, então kernel novo = driver novo sem risco de ABI de
-      loader. Seguro nesta máquina porque não há NENHUM módulo out-of-tree (nada de
-      zfs/virtualbox pra casar de versão — auditado) e o Secure Boot daqui assina o
-      GRUB, não o kernel (core/secureboot.nix), então não pede re-enroll de chave.
-      Sai de 6.18.42 (default do release) pra 7.1.6. Rollback = geração anterior no
-      menu do GRUB. `boot` é PREFERÍVEL a `switch` numa troca de kernel, mas o
-      `switch` não quebra — eu tinha escrito "NUNCA switch" e estava errado: o NixOS
-      guarda `/run/booted-system/kernel-modules` com a árvore do kernel RODANDO, e
-      foi o que aconteceu na prática (switch 6.18.42→7.1.6, `systemctl --failed`
-      vazio, modprobe resolvendo em .../6.18.42). A vantagem do `boot` é só não
-      reiniciar serviço numa geração cujo kernel ainda não subiu.
+- [x] Mainline kernel (`linuxPackages_latest`, 7.1.x): 06/08/2026, in system/core/boot.nix.
+      It is lever (a) of the item above and the ONLY driver one that does not cross channels,
+      because `linuxPackages_latest` comes from 26.05 itself, and the Arc's `xe` driver lives
+      in the kernel, so a new kernel means a new driver with no loader ABI risk. It is safe on
+      this machine because there is NO out-of-tree module (no zfs or virtualbox to version
+      match, audited) and Secure Boot here signs GRUB, not the kernel (core/secureboot.nix), so
+      it asks for no key re-enroll.
+      It goes from 6.18.42 (the release default) to 7.1.6. Rollback is the previous generation
+      in the GRUB menu. `boot` is PREFERABLE to `switch` on a kernel change, but `switch` does
+      not break it: I had written "NEVER switch" and I was wrong, because NixOS keeps
+      `/run/booted-system/kernel-modules` with the tree of the RUNNING kernel, and that is what
+      happened in practice (switch 6.18.42 to 7.1.6, `systemctl --failed` empty, modprobe
+      resolving under .../6.18.42). The advantage of `boot` is only not restarting a service in
+      a generation whose kernel has not come up yet.
 
-> Adicionar todos como padrão
+> Add all of them as the default
 
-- [x] FONTE de UI centralizada (regra 10) — `my.fonts.ui` em system/hardware/fonts.nix é a SSOT;
-      trocar = 1 linha + o pacote. Mora no system/ (não no my.theme) porque o PACOTE é
-      nível-sistema e o fontconfig precisa do nome — sistema não lê opção do HM, o inverso sim.
-      7 consumidores, todos via `osConfig.my.fonts.ui`: fontconfig (defaultFonts mono/sans/serif),
-      GTK (dconf + gtk.font) e Qt em theme.nix, kitty, hyprlock, rofi launcher + clipboard, e o
-      Quickshell pelo MESMO JSON da paleta (o .qml é symlink hot-reload, o Nix não escreve dentro).
-      TAMANHO fica em cada consumidor (11pt GTK, 12pt kitty/rofi, por widget no lock) — é contexto.
-      Validado com sentinela: troquei o valor, os 7 mudaram, o revert voltou ao mesmo store path.
-      JetBrainsMono Nerd Font confirmada como a recomendação #1 p/ dev em 2026 (Fira Code = 2º,
-      ligaduras; Iosevka = mais estreita, ~20% mais código/linha). PEGADINHA do rofi: dentro do
-      .rasi o '#' abre literal de COR, não comentário — comentar ali mata o parse do tema INTEIRO
-      e o rofi só avisa no stderr, caindo nos defaults em silêncio.
-  - [x] CADEIA DE FALLBACK (02/08/2026) — emoji, CJK, matemática e dingbats viravam
-        QUADRADINHO PIXELADO (título de stream na Twitch, planilha no Chrome). O diagnóstico
-        derrubou a hipótese óbvia: fonte de emoji, CJK e cor JÁ ESTAVAM instaladas — vinham
-        de graça pelo `fonts.enableDefaultPackages = true`. O defeito era a cadeia ter UM ELO
-        SÓ: `sansSerif`/`serif`/`monospace` = só a SSOT, uma fonte MONOESPAÇADA que cobre
-        Latin/Grego/Cirílico + os símbolos patcheados e nada mais. Tudo fora disso era
-        resolvido pela ordem própria do fontconfig — ou seja, por ACIDENTE — e no fim dessa
-        fila está o `unifont`, bitmap de 16px que é o único a cobrir faixas como U+0870 e
-        U+2FFC (medido com `fc-list ":charset=<cp>"`). O quadradinho era ele.
-        FIX: `noto-fonts` (traz NotoSansMath/Symbols/Symbols2 — as letras matemáticas 𝗥 e
-        os dingbats ⁎ saem daí), `noto-fonts-color-emoji` e `noto-fonts-cjk-sans`, DECLARADOS
-        mesmo os que já vinham do enableDefaultPackages: renderização não pode depender de um
-        default do NixOS que ninguém pediu. E cada genérica virou lista — SSOT primeiro
-        (aparência intacta), Noto no meio, `Noto Color Emoji` no FIM (no fim ele nunca ganha
-        de fonte de texto, mas é alcançado direto em vez de por sorte na fila).
-        ARMADILHA DE MEDIÇÃO que quase me fez concluir errado DUAS vezes: `fc-match` MENTE.
-        Com família explícita (`fc-match "Noto Sans:charset=1F534"`) ele devolve a família
-        pedida mesmo que ela não tenha o glifo — charset só pesa na ordenação. E sem charset
-        válido ele responde qualquer coisa (respondeu `unifont` pra tudo quando meu loop
-        quebrou o parsing). Quem filtra POR COBERTURA DE VERDADE é `fc-list ":charset=<cp>"`.
-        NÃO É BUG: `❤` (U+2764) fica monocromático de propósito — é emoji de APRESENTAÇÃO DE
-        TEXTO, só vira colorido com o seletor VS16 (`❤️`). Forçar cor exigiria regra própria.
+- [x] Centralized UI FONT (rule 10): `my.fonts.ui` in system/hardware/fonts.nix is the SSOT,
+      so switching = 1 line plus the package. It lives in system/ (not in my.theme) because the
+      PACKAGE is system level and fontconfig needs the name, since a system module cannot read
+      an HM option while the reverse works.
+      7 consumers, all through `osConfig.my.fonts.ui`: fontconfig (defaultFonts
+      mono/sans/serif), GTK (dconf + gtk.font) and Qt in theme.nix, kitty, hyprlock, the rofi
+      launcher + clipboard, and Quickshell through the SAME palette JSON (the .qml is a
+      hot-reload symlink, Nix does not write inside it).
+      The SIZE stays with each consumer (11pt GTK, 12pt kitty/rofi, per widget on the lock),
+      because that is context. Validated with a sentinel: I changed the value, all 7 changed,
+      and the revert came back to the same store path.
+      JetBrainsMono Nerd Font is confirmed as the #1 recommendation for dev work in 2026 (Fira
+      Code is 2nd, with ligatures; Iosevka is narrower, ~20% more code per line). A rofi TRAP:
+      inside the .rasi, '#' opens a COLOR literal, not a comment, so commenting in there kills
+      the parse of the WHOLE theme and rofi only warns on stderr, falling back to the defaults
+      silently.
+  - [x] FALLBACK CHAIN (02/08/2026): emoji, CJK, math and dingbats turned into a PIXELATED
+        LITTLE SQUARE (a stream title on Twitch, a spreadsheet in Chrome). The diagnosis
+        knocked down the obvious hypothesis: the emoji, CJK and color fonts were ALREADY
+        installed, coming for free through `fonts.enableDefaultPackages = true`. The defect was
+        the chain having ONE LINK ONLY: `sansSerif`/`serif`/`monospace` = the SSOT alone, a
+        MONOSPACED font covering Latin/Greek/Cyrillic plus the patched symbols and nothing
+        else. Everything outside that was resolved by fontconfig's own ordering, which is to
+        say by ACCIDENT, and at the end of that queue sits `unifont`, a 16px bitmap that is the
+        only one covering ranges like U+0870 and U+2FFC (measured with
+        `fc-list ":charset=<cp>"`). The little square was it.
+        FIX: `noto-fonts` (which brings NotoSansMath/Symbols/Symbols2, where the mathematical
+        letters 𝗥 and the dingbats ⁎ come from), `noto-fonts-color-emoji` and
+        `noto-fonts-cjk-sans`, all DECLARED even the ones already coming from
+        enableDefaultPackages, because rendering cannot depend on a NixOS default nobody asked
+        for. And each generic became a list: the SSOT first (appearance untouched), Noto in the
+        middle, `Noto Color Emoji` at the END (at the end it never wins over a text font, but
+        it is reached directly instead of by luck in the queue).
+        A MEASUREMENT TRAP that almost made me conclude wrongly TWICE: `fc-match` LIES. With an
+        explicit family (`fc-match "Noto Sans:charset=1F534"`) it returns the requested family
+        even if it does not have the glyph, since charset only weighs on the ordering. And with
+        no valid charset it answers anything (it answered `unifont` for everything when my loop
+        broke the parsing). What filters BY REAL COVERAGE is `fc-list ":charset=<cp>"`.
+        NOT A BUG: `❤` (U+2764) stays monochrome on purpose, because it is a TEXT PRESENTATION
+        emoji and it only becomes colored with the VS16 selector (`❤️`). Forcing color would
+        require a rule of its own.
 
-- [x] Baixar link do MEGA por proxy/Tor (03/08/2026) — `mega-tor <link> [destino]`
-      (home/net/mega.nix) + daemon Tor só-cliente com SOCKS em 127.0.0.1:9050
-      (system/net/tor.nix, toggle `my.services.tor`).
-      FERRAMENTA: megatools (`megadl`), 139 KiB de closure, mantido (1.11.5, jul/2025).
-      É a única mantida que abre LINK PÚBLICO pela CLI **e** tem `--proxy socks5h://`
-      NATIVO — o próprio man usa `socks5h://localhost:9050` (Tor) como exemplo, então
-      não precisa de torsocks/LD_PRELOAD. Descartadas: rclone (o backend `mega` fala com
-      CONTA; link com a chave no fragmento não é caminho de remote — rclone#7088 aberto),
-      MEGAcmd (oficial, closure grande e `proxy` só HTTP(S): SOCKS é o issue #204, aberto
-      desde 2019 — sem SOCKS não há Tor) e megabasterd (GUI Java; o proxy dele é LISTA de
-      proxies pra furar cota, objetivo diferente).
-      TRÊS COISAS DO WIKI DO NIXOS QUE NÃO VALEM AQUI (conferidas no módulo do nixpkgs,
-      não presumidas): (a) `services.tor.enable` sem `client.enable` sobe o daemon SEM
-      porta de saída — fica `active` e nada consegue usar; (b) o `openFirewall = true` do
-      exemplo é de RELAY: o listener é 127.0.0.1, não há o que abrir, e abrir viraria
-      proxy aberto na LAN; (c) a "segunda porta rápida 9063" NÃO EXISTE — o módulo gera
-      UMA SOCKSPort a partir de `client.socksListenAddress`, e 9063 é só o default do
-      wrapper `torsocks-faster` (services.tor.torsocks), que sem uma SOCKSPort declarada
-      à mão aponta pra porta onde ninguém escuta. Por isso o torsocks ficou de fora.
-      `SafeSocks 1`: recusa SOCKS4/SOCKS5-com-IP, ou seja, quem resolve DNS localmente
-      toma ERRO em vez de vazar a consulta — e é por isso que o consumidor usa socks5h.
-      LAÇO PACIENTE (o wrapper é um só, `mega-dl`, com transporte por flag — o `mega-tor`
-      da 1ª versão virou `--tor`): tenta, e em falha RETOMA até o arquivo fechar ou até o
-      teto de 48h. Retomada é o que faz isso valer: o parcial mora em `.megatmp.<id>` no
-      destino, o resume é o DEFAULT (`--disable-resume` é que desliga) e é keyed pelo ID
-      DO ARQUIVO, não pelo transporte — MEDIDO: comecei por Tor e continuei direto do
-      mesmo parcial. O `--tor` prova o circuito antes (exit IP via check.torproject.org)
-      pra falhar com a causa certa quando o daemon está fora.
-      A COTA É O LIMITE DE VERDADE, e nenhum transporte muda: download anônimo tem ~5 GB
-      por IP em janela DESLIZANTE de ~6 h, contada por IP e não por conta (logout não
-      zera). O teste real foi um arquivo de 17,4 GiB = ~4 janelas. Por isso o laço
-      distingue "over quota" (string do megatools) e ESPERA 30 min em vez de trocar de IP:
-      janela deslizante libera aos poucos, então bater de 30 em 30 min rende mais que
-      esperar 6h paradas — e fatiar o arquivo entre IPs diferentes é exatamente o que a
-      cota existe pra impedir (é o que o megabasterd faz com lista de proxies). Pressa se
-      resolve com conta Pro (`megadl -u/-p`, senha via sops), não com rotação.
-      DETECÇÃO da cota por `case` em variável e NUNCA `| grep -q`: com o pipefail do
-      writeShellApplication o grep sai no 1º match, o tail morre de SIGPIPE e o pipeline
-      retorna erro APESAR do match (mesma pegadinha do healthcheck do Sunshine).
-      E `du -shc` de glob que não casa nada JÁ imprime "0 total" **e** sai com erro — o
-      `|| echo 0` do fallback saía somado ao dele, imprimindo "0" duas vezes na linha.
-      RESULTADO MEDIDO (04/08, o arquivo de teste de 17,4 GiB): fechou PELO TOR em 3h19m,
-      ~1,5 MB/s de média — bem acima do 709 KiB/s do instante inicial. E a cota NUNCA
-      bateu, ao contrário do que eu previ: o Tor troca de circuito ao longo de horas
-      (MaxCircuitDirtiness = 10 min pra stream nova) e o megadl abre conexão por chunk,
-      então a saída passou por vários exit IPs sem ninguém pedir. Efeito colateral do
-      desenho do Tor, não configuração daqui — e é por isso que a previsão "17 GB anônimo
-      não sai" estava errada NESTE caminho; num IP fixo (direto/VPN única) ela vale.
-      CONFERIR O ARQUIVO, e a ordem importa: (1) o megadl já verifica o MAC do MEGA e
-      aborta com "MAC mismatch" — terminar sem erro é prova CRIPTOGRÁFICA de que os bytes
-      são os do servidor, então isso vale mais que qualquer teste de arquivo depois;
-      (2) `file` + assinatura em offset 0; (3) os 8 bytes finais, que num RAR5 completo
-      terminam em `03 05 04 00` (header HEAD_ENDARC, tipo 5 = fim de arquivo) — é o que
-      separa "download truncado" de "arquivo inteiro".
-      ⚠️ PEGADINHA DO p7zip: `7z l` disse `Type = gzip` e "There are data after the end of
-      archive" num RAR v5 PERFEITO. O p7zip do nixpkgs vem com `enableUnfree ? false` e o
-      postFetch ARRANCA o código do unRAR — sem o codec ele não reconhece a assinatura,
-      varre o arquivo e casa o primeiro blob parecido com gzip. Quase virou "o download
-      corrompeu". Pra testar CRC de RAR de verdade: `nix shell nixpkgs#unrar -c unrar t`
-      (unfree, e o allowUnfree deste repo já é true).
-      VAZÃO MEDIDA (04/08) — o que era lento era o TOR, não o MEGA nem a linha:
-        Hetzner (EUA): 1 stream 17,2 MB/s | 8 streams 42,2 | 16 streams 33,9 (piora)
-        MEGA (gfs206n184): 1 stream 27,7 MB/s | 4 ranges paralelos 53,5 (449 Mbps)
-        Tor (o download real): ~1,5 MB/s
-      NIC é gigabit, então o teto é o plano (~450 Mbps). Os 17,4 GiB que levaram 3h19m
-      pelo Tor sairiam em ~11 min num stream direto, ~5,5 min com 4 ranges.
-      E É AQUI QUE VELOCIDADE E COTA SE OPÕEM: direto é 18× mais rápido e para nos ~5 GB
-      da janela; o Tor é lento e na prática ilimitado (troca de circuito). Não existe
-      "rápido E 17 GB" de graça — quem quer os dois usa conta Pro, e só então os ranges
-      paralelos passam a valer (11 min → 5,5).
-      POR ISSO NÃO CONSTRUÍ CLIENTE PARALELO: o ganho é 2× sobre o megadl sequencial em
-      arquivo que já leva minutos, e custaria a API do MEGA + AES-CTR por chunk + o
-      meta-MAC reimplementado à mão (o megadl já verifica de graça) — dívida nossa a cada
-      mudança de protocolo do MEGA. Se um dia valer, o megabasterd faz multi-slot pronto,
-      mas são 948 MiB de closure (arrasta JRE) medidos no cache.
-      TOR SÓ PRA ARQUIVO PEQUENO: medi 709 KiB/s no circuito (3 saltos voluntários), o que
-      daria ~7h e 17 GiB de banda DOADA num arquivo só; o projeto Tor desencoraja granel
-      (a rede é dimensionada pra latência baixa, não pra vazão) e o MEGA ainda bloqueia
-      parte dos exit nodes (falha imediata e repetida = exit bloqueado, não link ruim;
-      circuito novo = `systemctl restart tor`).
+- [x] Download a MEGA link through a proxy/Tor (03/08/2026): `mega-tor <link> [destination]`
+      (home/net/mega.nix) plus a client-only Tor daemon with SOCKS on 127.0.0.1:9050
+      (system/net/tor.nix, the `my.services.tor` toggle).
+      THE TOOL: megatools (`megadl`), 139 KiB of closure, maintained (1.11.5, jul/2025). It is
+      the only maintained one that opens a PUBLIC LINK from the CLI **and** has a NATIVE
+      `--proxy socks5h://`, since its own man page uses `socks5h://localhost:9050` (Tor) as the
+      example, so it needs no torsocks or LD_PRELOAD. Discarded: rclone (the `mega` backend
+      talks to an ACCOUNT; a link with the key in the fragment is not a remote path,
+      rclone#7088 open), MEGAcmd (official, a big closure and `proxy` only over HTTP(S): SOCKS
+      is issue #204, open since 2019, and with no SOCKS there is no Tor) and megabasterd (a
+      Java GUI; its proxy is a LIST of proxies for beating the quota, a different goal).
+      THREE THINGS FROM THE NIXOS WIKI THAT DO NOT HOLD HERE (checked in the nixpkgs module,
+      not assumed): (a) `services.tor.enable` without `client.enable` brings the daemon up with
+      NO outbound port, so it stays `active` and nothing can use it; (b) the
+      `openFirewall = true` from the example is for a RELAY, since the listener is 127.0.0.1,
+      there is nothing to open, and opening it would become an open proxy on the LAN; (c) the
+      "second fast port 9063" DOES NOT EXIST, because the module generates ONE SOCKSPort from
+      `client.socksListenAddress`, and 9063 is only the default of the `torsocks-faster`
+      wrapper (services.tor.torsocks), which without a hand-declared SOCKSPort points at a port
+      where nobody listens. That is why torsocks was left out.
+      `SafeSocks 1`: it refuses SOCKS4 and SOCKS5-with-IP, so whoever resolves DNS locally gets
+      an ERROR instead of leaking the query, and that is why the consumer uses socks5h.
+      A PATIENT LOOP (there is a single wrapper, `mega-dl`, with the transport as a flag; the
+      `mega-tor` of the 1st version became `--tor`): it tries, and on failure it RESUMES until
+      the file completes or until the 48h ceiling. Resuming is what makes this worth it: the
+      partial lives in `.megatmp.<id>` at the destination, resume is the DEFAULT
+      (`--disable-resume` is what turns it off) and it is keyed by the FILE ID, not by the
+      transport. MEASURED: I started over Tor and continued directly from the same partial. The
+      `--tor` proves the circuit first (the exit IP through check.torproject.org) so it fails
+      with the right cause when the daemon is down.
+      THE QUOTA IS THE REAL LIMIT, and no transport changes it: an anonymous download gets
+      ~5 GB per IP in a ~6 h SLIDING window, counted per IP and not per account (logging out
+      does not reset it). The real test was a 17.4 GiB file = ~4 windows. That is why the loop
+      distinguishes "over quota" (a megatools string) and WAITS 30 min instead of switching IP:
+      a sliding window frees up gradually, so knocking every 30 min yields more than waiting 6h
+      idle, and slicing the file across different IPs is exactly what the quota exists to
+      prevent (it is what megabasterd does with a proxy list). Urgency is solved with a Pro
+      account (`megadl -u/-p`, the password through sops), not with rotation.
+      QUOTA DETECTION through a `case` on a variable and NEVER `| grep -q`: with the
+      writeShellApplication pipefail, grep exits on the 1st match, tail dies of SIGPIPE and the
+      pipeline returns an error DESPITE the match (the same trap as the Sunshine healthcheck).
+      And `du -shc` on a glob that matches nothing ALREADY prints "0 total" **and** exits with
+      an error, so the fallback's `|| echo 0` came out added to it, printing "0" twice on the
+      line.
+      MEASURED RESULT (04/08, the 17.4 GiB test file): it completed THROUGH TOR in 3h19m, at
+      ~1.5 MB/s on average, well above the 709 KiB/s of the initial moment. And the quota NEVER
+      hit, contrary to my prediction: Tor rotates circuits over hours (MaxCircuitDirtiness =
+      10 min for a new stream) and megadl opens a connection per chunk, so the traffic went out
+      through several exit IPs with nobody asking. A side effect of Tor's design, not
+      configuration from here, and that is why the prediction "17 GB anonymously will not
+      happen" was wrong ON THIS PATH; on a fixed IP (direct or a single VPN) it holds.
+      CHECKING THE FILE, and the order matters: (1) megadl already verifies MEGA's MAC and
+      aborts with "MAC mismatch", so finishing with no error is CRYPTOGRAPHIC proof that the
+      bytes are the server's, which is worth more than any file test afterwards; (2) `file`
+      plus the signature at offset 0; (3) the final 8 bytes, which in a complete RAR5 end in
+      `03 05 04 00` (the HEAD_ENDARC header, type 5 = end of archive), which is what separates
+      "truncated download" from "whole file".
+      A p7zip TRAP: `7z l` said `Type = gzip` and "There are data after the end of archive"
+      on a PERFECT RAR v5. The nixpkgs p7zip comes with `enableUnfree ? false` and the
+      postFetch RIPS OUT the unRAR code, so without the codec it does not recognize the
+      signature, scans the file and matches the first blob that looks like gzip. It almost
+      became "the download got corrupted". To really test a RAR CRC:
+      `nix shell nixpkgs#unrar -c unrar t` (unfree, and this repo's allowUnfree is already
+      true).
+      MEASURED THROUGHPUT (04/08): what was slow was TOR, not MEGA and not the line:
+        Hetzner (USA): 1 stream 17.2 MB/s | 8 streams 42.2 | 16 streams 33.9 (worse)
+        MEGA (gfs206n184): 1 stream 27.7 MB/s | 4 parallel ranges 53.5 (449 Mbps)
+        Tor (the real download): ~1.5 MB/s
+      The NIC is gigabit, so the ceiling is the plan (~450 Mbps). The 17.4 GiB that took 3h19m
+      through Tor would come down in ~11 min on a direct stream, ~5.5 min with 4 ranges.
+      AND THIS IS WHERE SPEED AND QUOTA OPPOSE EACH OTHER: direct is 18x faster and stops at
+      the window's ~5 GB; Tor is slow and in practice unlimited (circuit rotation). There is no
+      free "fast AND 17 GB": whoever wants both uses a Pro account, and only then do the
+      parallel ranges start to pay off (11 min to 5.5).
+      THAT IS WHY I DID NOT BUILD A PARALLEL CLIENT: the gain is 2x over sequential megadl on a
+      file that already takes minutes, and it would cost the MEGA API plus AES-CTR per chunk
+      plus the meta-MAC reimplemented by hand (megadl already verifies it for free), which is
+      debt of ours on every MEGA protocol change. If it ever becomes worth it, megabasterd does
+      multi-slot out of the box, but it is 948 MiB of closure (it drags in a JRE) as measured in
+      the cache.
+      TOR ONLY FOR A SMALL FILE: I measured 709 KiB/s on the circuit (3 volunteer hops), which
+      would mean ~7h and 17 GiB of DONATED bandwidth for a single file; the Tor project
+      discourages bulk (the network is dimensioned for low latency, not for throughput) and
+      MEGA also blocks part of the exit nodes (an immediate and repeated failure means a
+      blocked exit, not a bad link; a new circuit is `systemctl restart tor`).

@@ -1,50 +1,49 @@
-# Histórico
+# History
 
-O que foi feito, e — mais importante — **por quê**, o que foi tentado e
-**recusado**, e qual armadilha custou caro. É o arquivo que responde "por que
-isto está assim?" seis meses depois.
+What was done and, more importantly, **why**, what was tried and **rejected**, and which
+trap cost dearly. It is the file that answers "why is this like this?" six months later.
 
-Uma pasta por ano, um arquivo por mês. Entrada nova vai no mês corrente, no topo
-(ordem cronológica reversa dentro de cada arquivo).
+One folder per year, one file per month. A new entry goes into the current month, at the
+top (reverse chronological order inside each file).
 
 ## 2026
 
-| Mês | Entradas |
+| Month | Entries |
 | --- | --- |
-| [agosto](2026/08-august.md) | 59 |
-| [julho](2026/07-july.md) | 63 |
+| [august](2026/08-august.md) | 59 |
+| [july](2026/07-july.md) | 63 |
 
-## Como as datas foram atribuídas
+## How the dates were assigned
 
-O corte por mês aconteceu em 08/08/2026, quando o histórico já tinha 98
-entradas e só 35 traziam data explícita. As outras foram datadas em cascata:
+The split by month happened on 08/08/2026, when the history already had 98 entries and
+only 35 carried an explicit date. The others were dated by cascade:
 
-1. `dd/mm/aaaa` no texto — a data que o autor afirmou
-2. `dd/mm` sem ano, ou `mes/aaaa` — o repo só tem 2026
-3. **Arqueologia do git**: `git log -S "<título>" --reverse` acha o commit que
-   introduziu a entrada
-4. Sem nenhum sinal → julho, o mês de abertura do repo
+1. `dd/mm/yyyy` in the text, the date the author stated
+2. `dd/mm` with no year, or `month/yyyy`, since the repo only has 2026
+3. **Git archaeology**: `git log -S "<title>" --reverse` finds the commit that introduced
+   the entry
+4. No signal at all, so july, the month the repo opened
 
-⚠️ **9 entradas de julho estão lá por inferência do passo 4.** Não têm data no
-texto e o `git log -S` não achou o commit — provavelmente foram reescritas depois
-de criadas, então a string atual nunca existiu num commit antigo. Julho é palpite
-conservador, não fato.
+**9 july entries are there by inference from step 4.** They have no date in the text and
+`git log -S` did not find the commit, most likely because they were rewritten after being
+created, so the current string never existed in an old commit. July is a conservative
+guess, not a fact.
 
-Uma pegadinha que atrapalhou a arqueologia e vale registrar: `git log` restrito a
-`docs/` mostrava tudo nascendo em 04/08, porque foi quando o arquivo se mudou pra
-essa pasta. A história real começa em **18/07** e só aparece com `--follow`, ou
-buscando `-S` sem restringir caminho.
+One trap that got in the way of the archaeology and is worth recording: `git log`
+restricted to `docs/` showed everything being born on 04/08, because that is when the file
+moved into that folder. The real history starts on **18/07** and only shows up with
+`--follow`, or by searching with `-S` without restricting the path.
 
-## Convenção para entrada nova
+## Convention for a new entry
 
-Entrada nova **deve** trazer a data no título — `(08/08/2026)`. Isso deixa de ser
-estilo e passa a ser o que garante que ela caia no arquivo certo sem arqueologia.
+A new entry **must** carry the date in its title, `(08/08/2026)`. That stops being style
+and becomes what guarantees it lands in the right file with no archaeology.
 
-NOME DO ARQUIVO: `MM-mes.md`. O número na frente é o que ordena certo; o nome é o
-que dá sentido à aba do editor e ao arquivo fora de contexto. Não repetir "historico"
-nem o ano — o caminho já diz os dois, e `MM-AAAA` ordenaria errado no dia que houvesse
-dois anos lado a lado (`01-2027` antes de `07-2026`).
+FILE NAME: `MM-month.md`. The number in front is what sorts correctly; the name is what
+gives meaning to the editor tab and to the file out of context. Do not repeat "history" or
+the year, since the path already says both, and `MM-YYYY` would sort wrong the day two
+years sat side by side (`01-2027` before `07-2026`).
 
-Ano novo = pasta nova (`2027/`) + primeira linha na tabela acima. Mês novo dentro
-do ano corrente = arquivo novo (`09-setembro.md`) + uma linha. São passos manuais de
-propósito: automatizar isso custaria mais do que as duas linhas por mês.
+A new year means a new folder (`2027/`) plus a first line in the table above. A new month
+inside the current year means a new file (`09-september.md`) plus one line. These are
+manual steps on purpose: automating them would cost more than the two lines a month.

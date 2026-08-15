@@ -1,40 +1,46 @@
-# Legado do Arch Linux
+# Arch Linux legacy
 
-Capítulo ENCERRADO. Fica aqui porque o acervo ainda existe e repo que ninguém
-sabe abrir é pior que repo apagado.
+A CLOSED chapter. It stays here because the archive still exists, and a repo nobody knows
+how to open is worse than a repo that was deleted.
 
-> Aqui estão minhas configurações legado do Arch Linux que estamos migrando tudo para o Nix e NixOS, para que tudo seja declarativo e não manual, e para que funcione em qualquer hardware posteriormente.
+> These are my legacy Arch Linux configs, which we are migrating entirely to Nix and NixOS
+> so that everything is declarative instead of manual, and so that it works on any hardware
+> later on.
 
-Encerrado em 05/08/2026. O Kingston foi formatado (01/08), o módulo que criava os backups
-foi apagado, a cópia manual `~/BACKUP-KINGSTON` foi apagada e a perna local (Seagate) saiu
-— ficou **só a cópia offsite**, que passou no `check --read-data` (189 packs, 0 erros).
+Closed on 05/08/2026. The Kingston was formatted (01/08), the module that created the
+backups was deleted, the manual `~/BACKUP-KINGSTON` copy was deleted and the local leg
+(Seagate) went away. What is left is **the offsite copy only**, which passed
+`check --read-data` (189 packs, 0 errors).
 
-Sobra este ponteiro porque repo que ninguém sabe abrir é pior que repo apagado:
+This pointer survives because a repo nobody knows how to open is worse than a repo that was
+deleted:
 
-A pasta no Drive foi renomeada `KINGSTON` → **`ARCH-KINGSTON`** em 05/08/2026 (o nome
-antigo não dizia que era o Arch).
+The folder on the Drive was renamed from `KINGSTON` to **`ARCH-KINGSTON`** on 05/08/2026
+(the old name did not say it was the Arch one).
 
-**Não há comando pra rodar**: desde 11/08/2026 o acervo fica montado em
-`/mnt/arch-antigo` desde o login — é só abrir o bookmark **Arch antigo** no Dolphin. Quem
-monta é a unit de usuário `arch-antigo-mount`
-([`home/services/arch-legacy-mount.nix`](../home/services/arch-legacy-mount.nix)); o
-mountpoint e a SSOT do caminho são do lado sistema
-([`system/services/arch-legacy.nix`](../system/services/arch-legacy.nix)). O alias
-`arch-browse` morreu junto — pasta vazia aqui virou sintoma, não estado normal:
+**There is no command to run**: since 11/08/2026 the archive stays mounted at
+`/mnt/arch-antigo` from login on, so it is just a matter of opening the **Arch antigo**
+bookmark in Dolphin. What mounts it is the user unit `arch-antigo-mount`
+([`home/services/arch-legacy-mount.nix`](../home/services/arch-legacy-mount.nix)); the
+mountpoint and the SSOT of the path belong to the system side
+([`system/services/arch-legacy.nix`](../system/services/arch-legacy.nix)). The
+`arch-browse` alias died along with it, and an empty folder here became a symptom rather
+than a normal state:
 
 ```bash
-systemctl --user status arch-antigo-mount   # pasta vazia? o diagnóstico começa aqui
-systemctl --user restart arch-antigo-mount  # mount zumbi depois de queda de rede
+systemctl --user status arch-antigo-mount   # empty folder? the diagnosis starts here
+systemctl --user restart arch-antigo-mount  # zombie mount after the network dropped
 ```
 
-⚠️ Desligue a **visualização** (miniaturas) no Dolphin antes de navegar aqui: preview lê o
-CONTEÚDO, e cada leitura faz o restic baixar packs do Drive. Medido: uma pasta de 3,9 MiB
-custou 3,68 MiB de download só em ícone (ver TODO de 07/08/2026). Com o mount permanente
-isso ficou mais importante, não menos — a pasta está sempre a um clique.
+Turn **previews** (thumbnails) off in Dolphin before browsing in here: a preview reads
+the CONTENT, and every read makes restic download packs from the Drive. Measured: a 3.9 MiB
+folder cost 3.68 MiB of download in icons alone (see the TODO from 07/08/2026). With the
+permanent mount that got more important, not less, because the folder is always one click
+away.
 
-O mount roda como USUÁRIO de propósito: mount FUSE é privado de quem montou, então
-`sudo restic mount` gera pasta que o file manager não abre. Os dotfiles do Arch estão em
-`home/v1cferr/dotfiles` dentro do snapshot (`6d7e3ee7`, 44,6 GiB). Os dois segredos seguem
-declarados de propósito — são a CHAVE do acervo, não sobra do módulo.
+The mount runs as the USER on purpose: a FUSE mount is private to whoever mounted it, so
+`sudo restic mount` produces a folder the file manager cannot open. The Arch dotfiles are at
+`home/v1cferr/dotfiles` inside the snapshot (`6d7e3ee7`, 44.6 GiB). Both secrets are still
+declared on purpose: they are the KEY to the archive, not leftovers from the module.
 
-- Repo no GitHub: <https://github.com/v1cferr/dotfiles>
+- Repo on GitHub: <https://github.com/v1cferr/dotfiles>

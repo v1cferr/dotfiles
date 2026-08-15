@@ -1,357 +1,373 @@
-# Pendências
+# Open items
 
-O que está em aberto. Item concluído migra para [history/](history/) —
-este arquivo só cresce com trabalho novo, e encolhe quando trabalho termina.
+What is still open. A finished item migrates to [historico/](history/):
+this file only grows with new work, and shrinks when work ends.
 
-Convenção herdada do arquivo único: cada item explica o QUE, o PORQUÊ e a
-armadilha conhecida. Vale mais o parágrafo do que o título.
+Convention inherited from the single-file era: every item explains the WHAT, the WHY and the
+known trap. The paragraph is worth more than the title.
 
-- [x] HEVC no Moonlight: TESTADO E DESCARTADO para o notebook da FAI (10/08/2026). Ligado às
-      14:43 — negociou `hevc_vaapi` / Rec. 709 limpo, contra `h264_vaapi` / Rec. 601 — e o
-      dono desligou às 14:57 por estar **"muito bugado"** na prática. **H.264 é a escolha
-      final para esta máquina**, e é DELIBERADA, não default esquecido.
-      • ⚠️ O MODO DE FALHA É O PIOR POSSÍVEL DE DIAGNOSTICAR, e é por isso que este item
-        sobrevive fechado: do lado do HOST tudo parecia certo. O journal registrou
-        `Creating encoder [hevc_vaapi]`, a colorimetria até MELHOROU (Rec. 601 → 709, que é
-        correção de fato — 601 em conteúdo HD desloca cor), e mesmo assim a imagem entregue
-        era ruim. O host codifica; quem decodifica é o cliente, e o host não enxerga isso.
-        Negociação limpa não é sinônimo de reprodução boa.
-      • ⚠️ ISSO DESMENTE A NOTA DE 03/08 em system/services/sunshine.nix PARA ESTE CLIENTE.
-        Lá está escrito que ligar HEVC/AV1 "vale mais que qualquer ajuste deste arquivo" —
-        e vale, onde o decode presta. Aqui não presta. Sem este registro, a próxima pessoa
-        (ou eu) segue aquele conselho e perde a tarde de novo.
-      • DUAS VOLTAS ERRADAS ANTES DE ACERTAR, e a lição é a mesma nas duas direções:
-        1. fechei como "sem ação" por RELATO ("não tem GPU dedicada") — a medição desmentiu
-           em 10 min, porque iGPU Intel decodifica HEVC desde ~2015;
-        2. reabri como "funciona" por MEDIÇÃO DO HOST — o uso real desmentiu em 15 min.
-        Nenhum dos dois instrumentos respondia a pergunta certa, que era "como fica a imagem
-        no cliente". Só o olho de quem usa respondia.
-      • O que sobra pra essa máquina: teto de bitrate e FEC, ambos no host.
+- [x] HEVC on Moonlight: TESTED AND DROPPED for the FAI notebook (10/08/2026). Turned on at
+      14:43, it negotiated `hevc_vaapi` / clean Rec. 709 against `h264_vaapi` / Rec. 601, and I
+      turned it off at 14:57 because in practice it was **"way too buggy"**. **H.264 is the
+      final choice for this machine**, and it is DELIBERATE, not a forgotten default.
+      • THE FAILURE MODE IS THE WORST POSSIBLE ONE TO DIAGNOSE, and that is why this item
+        survives closed: on the HOST side everything looked right. The journal recorded
+        `Creating encoder [hevc_vaapi]`, the colorimetry even IMPROVED (Rec. 601 to 709, which
+        is an actual correction, since 601 on HD content shifts color), and the delivered image
+        was still bad. The host encodes; who decodes is the client, and the host cannot see
+        that. A clean negotiation is not the same as good playback.
+      • THIS CONTRADICTS THE 03/08 NOTE in system/services/sunshine.nix FOR THIS CLIENT.
+        There it says that turning on HEVC/AV1 "is worth more than any tweak in this file", and
+        it is, where the decode is any good. Here it is not. Without this record, the next
+        person (or me) follows that advice and loses the afternoon again.
+      • TWO WRONG TURNS BEFORE GETTING IT RIGHT, and the lesson is the same in both directions:
+        1. I closed it as "no action" based on a REPORT ("it has no dedicated GPU"), and the
+           measurement disproved that in 10 min, because an Intel iGPU has decoded HEVC since
+           ~2015;
+        2. I reopened it as "it works" based on a HOST MEASUREMENT, and real use disproved that
+           in 15 min.
+        Neither instrument answered the right question, which was "how does the image look on
+        the client". Only the eye of whoever uses it answered.
+      • What is left for this machine: the bitrate ceiling and FEC, both on the host.
 
-- [ ] Sonda de qualidade da VPN da UFSCar: sem alvo medido (aberto em 14/08/2026) — o
-      popover de hover do pill mede latência/jitter/perda pingando um host DENTRO do túnel.
-      Pra FAI o alvo está fixado e medido (`200.136.209.236`, ver histórico de hoje); pra
-      UFSCar não há nenhum, porque nunca liguei aquele túnel com o painel pronto pra
-      descobrir quem responde lá dentro. Enquanto isso o `vpn stats-json` cai no fallback
-      (gateways das rotas do tun) e, se ninguém responder, o painel diz "sem sonda".
-      • ⚠️ NÃO CHUTAR UM IP DA UFSCar pra "resolver": alvo que não é roteado pelo túnel
-        mediria a internet de casa. O `-I <iface>` protege contra isso (vira silêncio em vez
-        de número errado), mas o silêncio é o sintoma de estar chutando.
-      • COMO FECHAR: conectar (`vpn connect ufscar`), ver `ip -4 route show dev tun0`, pingar
-        candidatos com `ping -I tun0 <ip>` e fixar o que responder em `probe_candidates()`,
-        em `system/net/vpn.nix` — junto com a medição, como está o da FAI.
+- [ ] Quality probe for the UFSCar VPN: no measured target (opened on 14/08/2026). The pill's
+      hover popover measures latency/jitter/loss by pinging a host INSIDE the tunnel. For FAI
+      the target is pinned and measured (`200.136.209.236`, see today's history); for UFSCar
+      there is none, because I never brought that tunnel up with the panel ready to find out
+      who answers in there. Meanwhile `vpn stats-json` falls back (the gateways from the tun
+      routes) and, if nobody answers, the panel says "no probe".
+      • DO NOT GUESS A UFSCar IP to "solve" it: a target that is not routed through the
+        tunnel would measure the home internet. The `-I <iface>` protects against that (it
+        turns into silence instead of a wrong number), but the silence is the symptom of
+        guessing.
+      • HOW TO CLOSE IT: connect (`vpn connect ufscar`), look at `ip -4 route show dev tun0`,
+        ping candidates with `ping -I tun0 <ip>` and pin whichever answers in
+        `probe_candidates()`, in `system/net/vpn.nix`, together with the measurement, the way
+        the FAI one is.
 
-- [ ] Peer `fai-workstation` (10.10.10.5) do WireGuard: vivo ou legado? (aberto em
-      10/08/2026) — medido com o `wg-status` novo: em **17 dias** de uptime do roteador ele
-      não fez UM handshake. E não é peer passivo esquecido: tem `persistent_keepalive = 25`,
-      que existe justamente pra manter a conexão de pé.
-      • As duas leituras possíveis, e elas pedem ações opostas: ou a workstation está com o
-        WireGuard parado (e alguém conta com esse túnel sem saber que ele não sobe), ou o
-        peer é resíduo e devia sair do roteador pela regra de zero legado.
-      • ⚠️ NÃO APAGAR ANTES DE CONFERIR: o mount `~/FAI-workstation` (rclone SFTP) sobe junto
-        com a VPN da FAI, não com este túnel — então o peer PARECE órfão sem ser. Conferir de
-        lá com `wg` antes de decidir.
-      • O peer `notebook` (.2) também está sem handshake, mas isso é ESPERADO e não é item:
-        é exatamente o que o acesso direto de 10/08 substituiu.
+- [ ] WireGuard peer `fai-workstation` (10.10.10.5): alive or legacy? (opened on 10/08/2026)
+      Measured with the new `wg-status`: in **17 days** of router uptime it did not do ONE
+      handshake. And it is not a forgotten passive peer: it has `persistent_keepalive = 25`,
+      which exists precisely to keep the connection up.
+      • The two possible readings, and they call for opposite actions: either the workstation
+        has WireGuard stopped (and someone counts on that tunnel without knowing it never comes
+        up), or the peer is residue and should leave the router by the zero-legacy rule.
+      • DO NOT DELETE BEFORE CHECKING: the `~/FAI-workstation` mount (rclone SFTP) comes up
+        with the FAI VPN, not with this tunnel, so the peer LOOKS orphaned without being it.
+        Check from over there with `wg` before deciding.
+      • The `notebook` peer (.2) has no handshake either, but that is EXPECTED and is not an
+        item: it is exactly what the direct access from 10/08 replaced.
 
-- [~] TESTAR o Wake-on-LAN de verdade (aberto em 10/08/2026) — a config está aplicada e o
-      `40-enp7s0.link` gerado com `WakeOnLan=magic`, mas NADA disso prova que a máquina
-      acorda. Só desligar e mandar o pacote prova.
-      • ⚠️ NÃO FECHAR ESTE ITEM SEM O TESTE. É o mesmo erro do HEVC de hoje, ao contrário:
-        lá eu fechei por relato sem medir; aqui a tentação é fechar por config aplicada sem
-        acionar. Config correta e efeito real são coisas diferentes — foi exatamente o que o
-        fw4 ensinou hoje ao ACEITAR um `src_ip` em lista e DESCARTAR a seção.
-      • ROTEIRO: `sudo poweroff` → do celular pelo WireGuard,
-        `ssh v1cferr@192.168.1.1 'sudo wake-desktop'` → a máquina tem que ligar.
-      • ESTADO ATUAL medido: `power/wakeup = disabled` e `Wake-on: d`. O `.link` só é aplicado
-        pelo udev quando a interface APARECE, ou seja a partir do próximo boot. Armar antes
-        disso, sem derrubar o link: `ethtool -s enp7s0 wol g`.
-      • SE NÃO ACORDAR, o próximo suspeito é a BIOS: "Wake on LAN / Wake on PCIe" precisa
-        estar ligado lá também. O SO arma a NIC; a placa-mãe decide se aceita o sinal.
-      • ⚠️ ISTO NUNCA VAI COBRIR QUEDA DE ENERGIA, e não é falha do WoL: corte real tira o
-        +5VSB e a NIC perde o registro armado. Pra "acabou a luz" quem responde é *Restore on
-        AC Power Loss* na BIOS — e aí o WoL fica irrelevante, porque a máquina liga sozinha.
+- [~] ACTUALLY TEST Wake-on-LAN (opened on 10/08/2026). The config is applied and the
+      `40-enp7s0.link` is generated with `WakeOnLan=magic`, but NONE of that proves the machine
+      wakes up. Only powering it off and sending the packet proves it.
+      • DO NOT CLOSE THIS ITEM WITHOUT THE TEST. It is the same mistake as today's HEVC, in
+        reverse: there I closed by report without measuring; here the temptation is to close by
+        applied config without triggering it. Correct config and real effect are different
+        things, which is exactly what fw4 taught today by ACCEPTING a `src_ip` as a list and
+        DISCARDING the section.
+      • SCRIPT: `sudo poweroff`, then from the phone over WireGuard,
+        `ssh v1cferr@192.168.1.1 'sudo wake-desktop'`, and the machine has to come on.
+      • CURRENT STATE, measured: `power/wakeup = disabled` and `Wake-on: d`. The `.link` is only
+        applied by udev when the interface APPEARS, that is, from the next boot on. To arm it
+        before that, without dropping the link: `ethtool -s enp7s0 wol g`.
+      • IF IT DOES NOT WAKE, the next suspect is the BIOS: "Wake on LAN / Wake on PCIe" has to
+        be on there too. The OS arms the NIC; the motherboard decides whether it accepts the
+        signal.
+      • THIS WILL NEVER COVER A POWER OUTAGE, and that is not a WoL failure: a real cut takes
+        away the +5VSB and the NIC loses the armed register. For "the power went out" the answer
+        is *Restore on AC Power Loss* in the BIOS, and then WoL becomes irrelevant, because the
+        machine turns itself on.
 
-- [ ] MTU do túnel — medir e anotar (herdado do teste de 10/08/2026). Protocolo em
-      [testes/wireguard-moonlight.md](tests/wireguard-moonlight.md).
-      • Impossível testar de casa: não há interface WireGuard nesta máquina (o túnel termina
-        no ROTEADOR), então ping pro 10.10.10.1 sai pelo cabo e mede a LAN. Sinal de teste
-        inválido: latência de ~0,3 ms.
-      • ⚠️ MUDOU DE VALOR EM 10/08/2026, e é preciso dizer por quê: este teste existia pra
-        decidir se o `packet_size = 1024` podia subir. Não pode mais — com o caminho direto
-        no ar, o valor é GLOBAL e serve DOIS caminhos de MTU diferente (túnel ~1420, direto
-        1492), então o teto útil é o do menor. O número só volta a ser acionável se o túnel
-        for aposentado. Medir mesmo assim vale: é o que diz QUAL dos dois é o menor.
+- [ ] Tunnel MTU: measure and write it down (inherited from the 10/08/2026 test). The protocol
+      is in [testes/wireguard-moonlight.md](tests/wireguard-moonlight.md).
+      • Impossible to test from home: there is no WireGuard interface on this machine (the
+        tunnel terminates at the ROUTER), so a ping to 10.10.10.1 goes out over the cable and
+        measures the LAN. The sign of an invalid test: ~0.3 ms of latency.
+      • IT CHANGED IN VALUE ON 10/08/2026, and it is worth saying why: this test existed to
+        decide whether `packet_size = 1024` could go up. It cannot anymore, because with the
+        direct path live the value is GLOBAL and serves TWO paths with different MTU (tunnel
+        ~1420, direct 1492), so the useful ceiling is the lower one. The number only becomes
+        actionable again if the tunnel is retired. Measuring anyway is worth it: it is what says
+        WHICH of the two is the lower one.
 
-- [~] Tray: CLIQUE já funcionava (30/07) — o delegate do Bar.qml tem esquerda `activate()`,
-      meio `secondaryActivate()`, direita abrindo o menu SNI nativo (TrayMenu) e roda com
-      `scroll()`. O item estava marcado como pendente estando pronto — inverso do padrão do
-      wallpaper/screenDP1/ws-pill, e igualmente enganoso.
-      O que ESTAVA quebrado ali era outro: o fallback de clique-direito p/ SNI sem DBusMenu
-      (xembedsniproxy: wine/Battle.net, pamac) chamava
-      `$HOME/.config/waybar/scripts/tray-native-menu.sh` — caminho da WAYBAR, que foi
-      removida na migração; o dir não existe e o script não estava no repo. Portado do legado
-      p/ writeShellApplication (regra 7) e chamado por NOME pelo PATH.
-      HOVER NO MENU (30/07) — o menu do tray abria e NÃO recebia UM evento de ponteiro: nenhum
-      hover, e fechava aos 4s com o mouse parado em cima. NÃO era cor nem QML: hyprwm/Hyprland#6682,
-      popup Qt REDIMENSIONADO depois de exibido fica com a região de input errada. Encaixa exato — o
-      openAt() torna a janela visível ANTES de o QsMenuOpener popular os itens, então o card nasce
-      pequeno e cresce. Reproduzido com o PRÓPRIO Quickshell, FECHADO como "not planned". FIX:
-      PopupWindow → PanelWindow (layer surface), que não passa por xdg_surface::set_window_geometry.
-      Estava na cara: era o ÚNICO PopupWindow do shell — os outros 4 painéis são PanelWindow e todos
-      tinham hover. De quebra cobre a abertura de SUBMENU, que também cresce depois de exibida.
-      Preço: posicionar à mão (sem anchor.rect/PopupAdjustment.Slide) — X vem do ícone + clamp.
-      MEDIÇÃO que fechou o caso: amostrando `hyprctl layers` a 0.4s (o menu agora É layer, então
-      APARECE ali — observabilidade que o popup não dava), uma janela ficou 7.46s de pé, acima do
-      timer de 4s → o HoverHandler enxerga o cursor. Antes TODA janela morria em ~3.7s.
-      HOVER VISÍVEL — o realce existia e era INVISÍVEL: `border`@20% sobre o fundo do menu dá
-      1.11:1 de contraste (medido). Trocado por `accent`@30% = 1.77:1 E mudança de MATIZ
-      (cinza→azul), que é o que a vista pega. Tokens colMenuHoverBg{,Danger} no Theme, + barra de
-      acento de 3px deslizando pela esquerda (fundo = sinal de ÁREA, barra = sinal de POSIÇÃO).
-      A medição também desmentiu uma escolha minha: eu fiz o texto acender em accent, que sobre o
-      fundo aceso cai a 3.83:1 contra 5.97:1 do colText — piorava a legibilidade por efeito.
-      PONTE XEmbed→SNI (30/07) — os comentários deste repo citavam o `xembedsniproxy` em 3 lugares
-      como se ele existisse, e ele NUNCA ESTEVE INSTALADO: o tray-native-menu era código morto,
-      porque nenhum ícone sem DBusMenu chegava a existir. App X11 legado (Wine/Bottles → Battle.net)
-      publica ícone por XEmbed, não SNI; sem host XEmbed o Wine desenha a bandeja numa JANELINHA
-      própria (medida: class=explorer.exe, 160x20, flutuando). Agora o proxy é declarado
-      (home/desktop/quickshell.nix). Causalidade demonstrada nos DOIS sentidos: proxy de pé = 4
-      itens no watcher e explorer.exe=0; proxy morto = 3 itens e a janelinha volta. CUSTO medido e
-      assumido: 758 MiB novos no closure (429 deles qtwebengine, + kwin/breeze/oxygen), porque o
-      binário só existe no kdePackages.plasma-workspace. Alternativas descartadas com motivo:
-      `snixembed` faz o caminho INVERSO (publica SNI como XEmbed) e por isso tenta ser o watcher,
-      morrendo com "could not acquire watcher name" (o Quickshell já é); não há standalone no
-      nixpkgs; extrair o binário não escapa (plasma-workspace referencia kwin/breeze/oxygen
-      DIRETO); stalonetray = janela flutuante de novo.
-      LIMITAÇÃO do ícone que vem pela ponte, medida: sem nome e sem menu — `Id` é o window ID do X11
-      em decimal ("14680083"), `Title`/`ToolTip` vazios, `Menu` inexistente. O clique-direito cai no
-      tray-native-menu (que só AGORA tem uso real) e o tooltip pendente não pode se contentar com o
-      `Id`: p/ estes teria de resolver o WM_CLASS.
-      ÍCONE FANTASMA (30/07) — fechar o Battle.net deixava o ícone na barra, sem responder a clique
-      nenhum. NÃO era bug do proxy: o `battle.net.exe` sai sem remover a registração e o
-      `explorer.exe` do Wine segue segurando a janela (xprop: WM_CLASS=explorer.exe,
-      _NET_WM_PID vivo). Do lado do X a janela existe; do lado do app não há quem responda. O
-      helper funciona — `tray-native-menu <id>` retorna exit=0, achou o item e chamou ContextMenu().
-      Conserto: `wineserver -k` no prefixo do Bottles (NÃO reboot); o proxy então LIMPA o item
-      corretamente (4→3 itens, janela 0, unit intacta). Se um dia sobrar item com a janela já morta,
-      `systemctl --user restart xembedsniproxy`.
-      FALTA: o TOOLTIP, que não existe em nenhum lugar da barra. O SNI do Quickshell expõe
-      `tooltipTitle`/`tooltipDescription` prontos; o padrão a seguir são os popovers
-      (PanelWindow ancorado, ver MetricsPopover.qml). MEDIDO nos itens de hoje: o Discord publica
-      ToolTip com título "Discord", o Sunshine deixa VAZIO e só tem Title="sunshine", e o ícone da
-      ponte XEmbed não tem nem um nem outro → a cascata precisa ser tooltipTitle → title → id, e
-      p/ os da ponte, WM_CLASS.
-      NOTA DE MEDIÇÃO: contei itens de tray com `busctl --user list | grep StatusNotifierItem`
-      e deu 0, o que é FALSO — app que registra com nome único (`:1.82`) não casa esse padrão.
-      A fonte autoritativa é a propriedade `RegisteredStatusNotifierItems` do watcher (é o que
-      o tray-native-menu lê): 3 itens.
+- [~] Tray: the CLICK already worked (30/07). The Bar.qml delegate has left `activate()`, middle
+      `secondaryActivate()`, right opening the native SNI menu (TrayMenu) and it handles
+      `scroll()`. The item was marked pending while being done, the inverse of the
+      wallpaper/screenDP1/ws-pill pattern, and just as misleading.
+      What WAS broken in there was something else: the right-click fallback for an SNI with no
+      DBusMenu (xembedsniproxy: wine/Battle.net, pamac) called
+      `$HOME/.config/waybar/scripts/tray-native-menu.sh`, a WAYBAR path, and Waybar was removed
+      in the migration; the dir does not exist and the script was not in the repo. Ported from
+      the legacy tree to writeShellApplication (rule 7) and called BY NAME through the PATH.
+      HOVER ON THE MENU (30/07): the tray menu opened and did NOT receive ONE pointer event, no
+      hover at all, and it closed after 4s with the mouse sitting on top of it. It was NOT color
+      and NOT QML: hyprwm/Hyprland#6682, a Qt popup RESIZED after being shown ends up with the
+      wrong input region. It fits exactly, because openAt() makes the window visible BEFORE
+      QsMenuOpener populates the items, so the card is born small and grows. Reproduced with
+      Quickshell ITSELF, CLOSED as "not planned". FIX: PopupWindow to PanelWindow (a layer
+      surface), which does not go through xdg_surface::set_window_geometry. It was in plain
+      sight: it was the ONLY PopupWindow in the shell, the other 4 panels are PanelWindow and
+      all of them had hover. As a bonus it also covers opening a SUBMENU, which grows after
+      being shown too. The price: positioning by hand (no anchor.rect/PopupAdjustment.Slide),
+      X comes from the icon plus a clamp.
+      THE MEASUREMENT that closed the case: sampling `hyprctl layers` every 0.4s (the menu now
+      IS a layer, so it SHOWS UP there, observability the popup did not give), one window stayed
+      up for 7.46s, past the 4s timer, so the HoverHandler does see the cursor. Before that
+      EVERY window died in ~3.7s.
+      VISIBLE HOVER: the highlight existed and was INVISIBLE. `border`@20% over the menu
+      background gives 1.11:1 of contrast (measured). Swapped for `accent`@30% = 1.77:1 AND a
+      HUE change (gray to blue), which is what the eye catches. Tokens colMenuHoverBg{,Danger}
+      in the Theme, plus a 3px accent bar sliding in from the left (the background is an AREA
+      signal, the bar is a POSITION signal). The measurement also disproved a choice of mine: I
+      had made the text light up in accent, which over the lit background drops to 3.83:1
+      against colText's 5.97:1, so it made legibility worse as a side effect.
+      XEmbed TO SNI BRIDGE (30/07): the comments in this repo cited `xembedsniproxy` in 3 places
+      as if it existed, and it was NEVER INSTALLED. The tray-native-menu was dead code, because
+      no icon without DBusMenu ever came to exist. A legacy X11 app (Wine/Bottles to Battle.net)
+      publishes its icon over XEmbed, not SNI; with no XEmbed host, Wine draws the tray in a
+      LITTLE WINDOW of its own (measured: class=explorer.exe, 160x20, floating). Now the proxy
+      is declared (home/desktop/quickshell.nix). Causality demonstrated in BOTH directions:
+      proxy up = 4 items in the watcher and explorer.exe=0; proxy dead = 3 items and the little
+      window is back. COST measured and accepted: 758 MiB added to the closure (429 of them
+      qtwebengine, plus kwin/breeze/oxygen), because the binary only exists inside
+      kdePackages.plasma-workspace. Alternatives discarded with a reason: `snixembed` goes the
+      OPPOSITE way (it publishes SNI as XEmbed) and therefore tries to be the watcher, dying
+      with "could not acquire watcher name" (Quickshell already is one); there is no standalone
+      in nixpkgs; extracting the binary does not escape it (plasma-workspace references
+      kwin/breeze/oxygen DIRECTLY); stalonetray = a floating window all over again.
+      LIMITATION of the icon that comes over the bridge, measured: no name and no menu. `Id` is
+      the X11 window ID in decimal ("14680083"), `Title`/`ToolTip` are empty, `Menu` does not
+      exist. Right-click falls into tray-native-menu (which only NOW has a real use) and the
+      pending tooltip cannot settle for the `Id`: for these it would have to resolve the
+      WM_CLASS.
+      GHOST ICON (30/07): closing Battle.net left the icon on the bar, answering no click at
+      all. It was NOT a proxy bug: `battle.net.exe` exits without removing its registration and
+      Wine's `explorer.exe` keeps holding the window (xprop: WM_CLASS=explorer.exe,
+      `_NET_WM_PID` alive). On the X side the window exists; on the app side there is nobody to answer. The
+      helper works: `tray-native-menu <id>` returns exit=0, it found the item and called
+      ContextMenu(). The fix: `wineserver -k` in the Bottles prefix (NOT a reboot); the proxy
+      then CLEANS the item correctly (4 to 3 items, 0 windows, the unit intact). If some day an
+      item is left with the window already dead, `systemctl --user restart xembedsniproxy`.
+      MISSING: the TOOLTIP, which does not exist anywhere on the bar. Quickshell's SNI exposes
+      `tooltipTitle`/`tooltipDescription` ready to use; the pattern to follow is the popovers
+      (an anchored PanelWindow, see MetricsPopover.qml). MEASURED on today's items: Discord
+      publishes a ToolTip with the title "Discord", Sunshine leaves it EMPTY and only has
+      Title="sunshine", and the icon from the XEmbed bridge has neither, so the cascade needs to
+      be tooltipTitle to title to id, and for the bridged ones, WM_CLASS.
+      MEASUREMENT NOTE: I counted tray items with `busctl --user list | grep
+      StatusNotifierItem` and got 0, which is FALSE, because an app that registers under a
+      unique name (`:1.82`) does not match that pattern. The authoritative source is the
+      watcher's `RegisteredStatusNotifierItems` property (which is what tray-native-menu reads):
+      3 items.
 
-- [ ] VS Code: o language server do `kamikillerto.vscode-colorize` aborta em loop
-      (achado em 09/08/2026) — 15 coredumps em 2 dias, ~a cada 6-30 min de sessão. NÃO é
-      o editor nem o nix: `coredumpctl info` entrega a linha de comando com o
+- [ ] VS Code: the language server of `kamikillerto.vscode-colorize` aborts in a loop (found on
+      09/08/2026). 15 coredumps in 2 days, roughly every 6 to 30 min of session. It is NOT the
+      editor and NOT nix: `coredumpctl info` hands over the command line with
       `.vscode/extensions/kamikillerto.vscode-colorize-0.17.1/server/out/server.js`.
-      • Preço POR aborto, medido: 58 s de CPU, 2,6 GB de pico de RAM, 2,7 GB escritos no
-        NVMe só pra gravar o dump. É a travada que se sente, e é desgaste de disco.
-      • Conserto imediato = desabilitar a extensão (ou restringir `colorize.include`).
-        Perde-se só o realce de cor. A extensão vem do Settings Sync, NÃO do nix — então
-        o conserto é fora deste repo enquanto o item do VSCode declarativo não fechar.
-      • ⚠️ NÃO é o mesmo bug do "stop job" de 90 s (que também acusava o VS Code): lá é o
-        `app-code-*.scope` ignorando SIGTERM no desligamento; aqui é filho abortando no
-        meio da sessão. Corrigir um não corrige o outro.
+      • The price PER abort, measured: 58 s of CPU, 2.6 GB of peak RAM, 2.7 GB written to the
+        NVMe just to record the dump. It is the freeze you can feel, and it is disk wear.
+      • The immediate fix is disabling the extension (or restricting `colorize.include`). All
+        that is lost is the color highlight. The extension comes from Settings Sync, NOT from
+        nix, so the fix lives outside this repo while the declarative VSCode item is open.
+      • It is NOT the same bug as the 90 s "stop job" (which also pointed at VS Code): there
+        it is the `app-code-*.scope` ignoring SIGTERM at shutdown; here it is a child aborting
+        in the middle of the session. Fixing one does not fix the other.
 
-- [ ] SSOT pendente — só sobrou o HOME `/home/v1cferr` (5 arquivos: dolphin.nix, Theme.qml,
-      restic.nix, fai-workstation-mount.nix, home/default.nix) → `my.user.home`. Prioridade BAIXA
-      de propósito: ao contrário de fonte/cor/conector, o caminho não muda quando o hardware muda.
+- [ ] SSOT still pending: all that is left is the HOME `/home/v1cferr` (5 files: dolphin.nix,
+      Theme.qml, restic.nix, fai-workstation-mount.nix, home/default.nix) to `my.user.home`.
+      LOW priority on purpose: unlike font/color/connector, the path does not change when the
+      hardware changes.
 
-- [ ] Verificar se é possível adicionar estado declarativo criptografado
+- [ ] Check whether encrypted declarative state is possible
 
-- [ ] IMPERMANÊNCIA no Kingston — ideia do dono (30/07), inspirada no
-      <https://github.com/Misterio77/Foundry>: raiz efêmera (tmpfs ou subvolume zerado no boot) +
-      lista EXPLÍCITA do que persiste. Encaixa em duas coisas que este repo já tem: a regra 6
-      (Nix = app+config; estado = restic) deixaria de ser convenção e passaria a ser IMPOSTA pelo
-      sistema — o que não está declarado como persistente simplesmente não sobrevive ao boot; e
-      responde o item acima (estado declarativo criptografado), porque o par natural é
-      impermanência + LUKS.
-      PONTOS A DECIDIR ANTES, medidos hoje: os 567 GiB de não-Nix (Bottles 319, Jellyfin 132,
-      Games 47) são estado GRANDE e legítimo — impermanência não os apaga, mas obriga a declarar
-      cada caminho, e errar a lista significa perder save/prefixo no reboot. Candidatos: módulo
-      `impermanence` (nix-community) ou o esquema do Foundry.
-      ⚠️ A migração JÁ ACONTECEU (01/08/2026) sem ligar a impermanência, então a premissa
-      original ("fazer junto, em instalação nova") caducou: agora é conversão de máquina em
-      uso, que era justamente o caminho que eu queria evitar. O layout btrfs salva a maior
-      parte do custo — falta o `@-blank` e a lista, não uma reinstalação.
-      DECIDIDO em 01/08/2026, ao montar o hosts/nixos-kingston (o LAYOUT já está pronto):
-      • btrfs SIM — não por gosto, mas porque /nix e /persist precisam ser volumes separados
-        DESDE a instalação; ext4 plano custaria uma segunda reinstalação. Subvolumes criados:
-        `@ @home @nix @persist @log @swap`. Confere com o Foundry (raiz = subvolume zerado no
-        boot, não tmpfs; tmpfs tetaria a raiz nos 15 GB de RAM).
-      • LUKS NÃO — a passphrase no boot mataria o autologin de que o Sunshine depende pra
-        acesso remoto depois de queda de energia. É a diferença deliberada pro Foundry.
-      • `@home` como subvolume PERMANENTE (o Foundry não tem) — estágio intermediário de
-        propósito: liga a impermanência na raiz primeiro, e só depois decide estendê-la ao
-        home. NÃO tranca nada: estender é zerar o @home pelo mesmo mecanismo, sem reinstalar.
-        É a resposta ao risco dos 567 GiB acima — declarar tudo de primeira é onde se perde.
-      • `/var/lib` NÃO é subvolume, e isso é proposital: se fosse permanente, nada obrigaria
-        a declarar. Consequência a lembrar: o estado de serviço que o cutover copia pra lá
-        (uid-map, NetworkManager, bluetooth…) é ZERADO no reboot quando a feature entrar —
-        tem que migrar pro /persist e ser declarado. Esse é o trabalho, não um bug.
-        ⚠️ `/var/lib/sbctl` É O PRIMEIRO DA LISTA e o único que faz a máquina NÃO BOOTAR se
-        for esquecido: são as chaves de Secure Boot (ver system/core/secureboot.nix). Sem
-        elas o switch seguinte não assina o GRUB, e com Secure Boot ligado a firmware
-        recusa o bootloader. Recuperação = desligar SB na BIOS + `sbctl create-keys` +
-        `enroll-keys -m` de novo, com a BIOS em Setup Mode. Declarar ANTES de ligar a raiz efêmera.
-      FALTA só: o snapshot `@-blank` (base do rollback) e a lista de persistência. O blank NÃO
-      é now-or-never — subvolume vazio criado depois é idêntico a snapshot em branco.
-      ── LIDO O CÓDIGO DO FOUNDRY (02/08/2026), o que muda no plano ──────────────
-      CORREÇÃO DE PREMISSA: btrfs NÃO é obrigatório pra impermanência — o caminho mais
-      comum na comunidade é raiz em tmpfs, e com bind mount ela roda até em ext4. A escolha
-      segue CERTA, mas pelo motivo certo: btrfs dá raiz efêmera sem gastar RAM, e RAM é
-      exatamente o que falta aqui (15 GB). Não repetir "é obrigatório".
-      São só dois arquivos no Foundry: `hosts/common/optional/ephemeral-btrfs.nix` (o wipe)
-      e `hosts/common/global/optin-persistence.nix` (a lista). O resto da persistência é
-      DISTRIBUÍDO — cada módulo de serviço declara o que ele precisa guardar (openssh.nix,
-      podman.nix, jellyfin.nix…). Esse é o padrão a copiar: casa com system/services/*.nix.
-      ⚠️ `/srv` É O MAIOR RISCO, e não estava anotado: NÃO é subvolume, mora em `@`, e é onde
-      vive a biblioteca do Jellyfin (132 GiB). O Foundry persiste `/srv` explicitamente. Ligar
-      a raiz efêmera sem isso APAGA a biblioteca no primeiro boot. Antes do sbctl na lista.
-      Lista mínima do Foundry, toda ela aplicável aqui: `/etc/machine-id` (arquivo, não dir),
-      `/var/lib/systemd`, `/var/lib/nixos`, `/srv`. O `/var/lib/nixos` é o MAPA DE UID/GID —
-      perder = reatribuição de uid, que é a MESMA classe de bug que quebrou Docker/Postgres/
-      Sunshine no cutover (ver o dano do cutover). `/var/log` NÃO entra: o Foundry lista
-      porque não tem subvolume pra isso; aqui o `@log` já resolve, e declarar os dois faria
-      um bind mount por cima do subvolume.
-      `neededForBoot = true` no `/persist` (o Foundry seta; hoje está false no disko).
-      `dont-wipe`: arquivo marcador no topo do filesystem que faz o script PULAR o wipe.
-      COPIAR — é a diferença entre "boot loop" e "toco um arquivo pelo live USB".
-      SYSTEMD INITRD ANTES, em commit separado: o Foundry roda `boot.initrd.systemd.enable`
-      e o script tem dois caminhos; o de `postDeviceCommands` é o legado. Ligar o systemd
-      initrd sozinho, rebootar e confirmar — só depois somar o wipe. Dois riscos de boot
-      num commit só é o jeito de não saber qual dos dois quebrou.
-      Adaptar nomes no wipeScript: o Foundry usa `root`/`root-blank`/`persist`; aqui é
-      `@`/`@-blank`/`@persist`. Errar isso não dá erro de avaliação — dá boot quebrado.
-      Copiar também o workaround do impermanence#254 (`/var/lib/private` em 0700 +
-      `RemainAfterExit = false` no systemd-tmpfiles-resetup), senão serviço com DynamicUser
-      quebra. E `@snapshots` (btrbk) sobrevive por desenho: é top-level, não vive dentro de `@`.
+- [ ] IMPERMANENCE on the Kingston: my idea (30/07), inspired by
+      <https://github.com/Misterio77/Foundry>. An ephemeral root (tmpfs or a subvolume wiped at
+      boot) plus an EXPLICIT list of what persists. It fits two things this repo already has:
+      rule 6 (Nix = app+config; state = restic) would stop being a convention and become
+      ENFORCED by the system, since whatever is not declared as persistent simply does not
+      survive the boot; and it answers the item above (encrypted declarative state), because the
+      natural pair is impermanence + LUKS.
+      POINTS TO DECIDE FIRST, measured today: the 567 GiB of non-Nix (Bottles 319, Jellyfin 132,
+      Games 47) are LARGE and legitimate state. Impermanence does not erase them, but it forces
+      declaring every path, and getting the list wrong means losing a save or a prefix on
+      reboot. Candidates: the `impermanence` module (nix-community) or the Foundry scheme.
+      THE MIGRATION ALREADY HAPPENED (01/08/2026) without turning impermanence on, so the
+      original premise ("do it together, on a fresh install") has expired: now it is converting
+      a machine in use, which was precisely the path I wanted to avoid. The btrfs layout saves
+      most of the cost: what is missing is `@-blank` and the list, not a reinstall.
+      DECIDED on 01/08/2026, while putting hosts/nixos-kingston together (the LAYOUT is already
+      done):
+      • btrfs YES, not out of taste, but because /nix and /persist need to be separate volumes
+        FROM the install onward; flat ext4 would cost a second reinstall. Subvolumes created:
+        `@ @home @nix @persist @log @swap`. It matches Foundry (root = a subvolume wiped at
+        boot, not tmpfs; tmpfs would cap the root at the 15 GB of RAM).
+      • LUKS NO: a passphrase at boot would kill the autologin that Sunshine depends on for
+        remote access after a power outage. It is the deliberate difference from Foundry.
+      • `@home` as a PERMANENT subvolume (Foundry does not have one), an intermediate stage on
+        purpose: turn impermanence on at the root first, and only then decide whether to extend
+        it to home. It locks nothing in: extending it is wiping @home through the same
+        mechanism, with no reinstall. It is the answer to the 567 GiB risk above, since
+        declaring everything on the first try is where you lose.
+      • `/var/lib` is NOT a subvolume, and that is deliberate: if it were permanent, nothing
+        would force declaring anything. A consequence to remember: the service state the cutover
+        copies in there (uid-map, NetworkManager, bluetooth...) is WIPED on reboot once the
+        feature lands, so it has to move to /persist and be declared. That is the work, not a
+        bug.
+        `/var/lib/sbctl` IS FIRST ON THE LIST and the only one that makes the machine NOT
+        BOOT if it is forgotten: those are the Secure Boot keys (see system/core/secureboot.nix).
+        Without them the next switch does not sign GRUB, and with Secure Boot on the firmware
+        refuses the bootloader. Recovery = turn SB off in the BIOS + `sbctl create-keys` +
+        `enroll-keys -m` again, with the BIOS in Setup Mode. Declare it BEFORE turning the
+        ephemeral root on.
+      MISSING only: the `@-blank` snapshot (the base of the rollback) and the persistence list.
+      The blank is NOT now-or-never, since an empty subvolume created later is identical to a
+      blank snapshot.
+      ── HAVING READ THE FOUNDRY CODE (02/08/2026), what changes in the plan ──────────────
+      PREMISE CORRECTION: btrfs is NOT mandatory for impermanence. The most common path in the
+      community is a tmpfs root, and with a bind mount it even runs on ext4. The choice is still
+      RIGHT, but for the right reason: btrfs gives an ephemeral root without spending RAM, and
+      RAM is exactly what is short here (15 GB). Do not repeat "it is mandatory".
+      It is only two files in Foundry: `hosts/common/optional/ephemeral-btrfs.nix` (the wipe) and
+      `hosts/common/global/optin-persistence.nix` (the list). The rest of the persistence is
+      DISTRIBUTED: each service module declares what it needs to keep (openssh.nix, podman.nix,
+      jellyfin.nix...). That is the pattern to copy, and it matches system/services/*.nix.
+      `/srv` IS THE BIGGEST RISK, and it was not written down: it is NOT a subvolume, it lives
+      in `@`, and it is where the Jellyfin library lives (132 GiB). Foundry persists `/srv`
+      explicitly. Turning the ephemeral root on without that ERASES the library on the first
+      boot. Before sbctl on the list.
+      Foundry's minimum list, all of it applicable here: `/etc/machine-id` (a file, not a dir),
+      `/var/lib/systemd`, `/var/lib/nixos`, `/srv`. The `/var/lib/nixos` one is the UID/GID MAP,
+      and losing it means uid reassignment, which is the SAME class of bug that broke
+      Docker/Postgres/Sunshine on the cutover (see the cutover damage). `/var/log` does NOT go
+      in: Foundry lists it because it has no subvolume for it; here `@log` already handles it,
+      and declaring both would put a bind mount on top of the subvolume.
+      `neededForBoot = true` on `/persist` (Foundry sets it; today it is false in disko).
+      `dont-wipe`: a marker file at the top of the filesystem that makes the script SKIP the
+      wipe. COPY IT, it is the difference between "boot loop" and "I touch a file from the live
+      USB".
+      SYSTEMD INITRD FIRST, in a separate commit: Foundry runs `boot.initrd.systemd.enable` and
+      the script has two paths, the `postDeviceCommands` one being the legacy path. Turn the
+      systemd initrd on by itself, reboot and confirm, and only then add the wipe. Two boot
+      risks in a single commit is how you end up not knowing which of the two broke.
+      Adapt the names in the wipeScript: Foundry uses `root`/`root-blank`/`persist`; here it is
+      `@`/`@-blank`/`@persist`. Getting that wrong does not produce an evaluation error, it
+      produces a broken boot.
+      Copy the impermanence#254 workaround too (`/var/lib/private` at 0700 +
+      `RemainAfterExit = false` on systemd-tmpfiles-resetup), otherwise a service with
+      DynamicUser breaks. And `@snapshots` (btrbk) survives by design: it is top-level, it does
+      not live inside `@`.
 
-- [ ] Configurar o WoW Ascension com o Bottles para jogarmos, e ir configurando o
-      sistema simultaneamente. (Escrito como "depois que eu estiver no SSD" — o cutover
-      já aconteceu em 01/08 e o daily driver é o NVMe Kingston, então isso está livre.)
+- [ ] Set up WoW Ascension with Bottles so we can play, and configure the system along the way.
+      (Written as "once I am on the SSD"; the cutover already happened on 01/08 and the daily
+      driver is the NVMe Kingston, so this one is free to go.)
 
-- [ ] **Dissipador M.2 para o KC3000** — medido em 01/08/2026: 77–80 °C sob carga, e o
-      contador de gestão térmica SOBE durante I/O pesado (`T1 Trans Count` foi de 17 pra
-      18 num único benchmark; 24.781 s acumulados). Nunca cruzou o limiar de aviso do
-      controlador e o disco está impecável (`media_errors: 0`, spare 100%, 4% de vida
-      usada, leitura 6911 MB/s = 98,7% do catálogo), mas a Kingston especifica operação
-      até **70 °C** e agora ele é o daily driver, não mais o disco secundário parado.
-      Conferir primeiro se a placa tem dissipador no slot e como é o fluxo de ar perto
-      da Arc B580. Preferir PASSIVO: ventoinha de 30 mm alimentada por Molex roda em
-      rotação fixa, chia, não tem tacômetro e morre em 1–2 anos — e ventoinha morta
-      dentro de carcaça fechada é pior que dissipador passivo. Medir depois com
+- [ ] **M.2 heatsink for the KC3000**: measured on 01/08/2026, 77 to 80 °C under load, and the
+      thermal management counter GOES UP during heavy I/O (`T1 Trans Count` went from 17 to 18
+      in a single benchmark; 24,781 s accumulated). It never crossed the controller's warning
+      threshold and the disk is spotless (`media_errors: 0`, spare 100%, 4% of life used, reads
+      at 6911 MB/s = 98.7% of the spec sheet), but Kingston specifies operation up to **70 °C**
+      and it is now the daily driver, not the idle secondary disk anymore.
+      Check first whether the board has a heatsink on the slot and what the airflow near the Arc
+      B580 looks like. Prefer a PASSIVE one: a 30 mm fan fed by Molex runs at a fixed speed,
+      whines, has no tachometer and dies in 1 to 2 years, and a dead fan inside a closed case is
+      worse than a passive heatsink. Measure afterwards with
       `sudo nvme smart-log /dev/nvme0n1 | grep -E "^temperature|Sensor 2|T1 Trans"`.
 
-- [ ] Desligar todos os leds de todos os hardwares no modo AFK
+- [ ] Turn off every LED on every piece of hardware in AFK mode
 
-- [ ] Instalar o driver/software do meu mouse Razer Deathadder v2 (adicionar a notificação de quando meu DPI mudar, etc)
+- [ ] Install the driver/software for my Razer Deathadder v2 mouse (add the notification for
+      when my DPI changes, and so on)
 
-- [~] Manutenção remota sem senha no roteador e no switch (OpenWrt).
-      • ROTEADOR, feito: o SSH já era por chave (`ssh v1cferr@192.168.1.1` roda em BatchMode),
-        e o que faltava era o `sudo`. Hoje são NOPASSWD `/sbin/reboot`, `/usr/sbin/nft`,
-        `/sbin/uci`, `/etc/init.d/dnsmasq` e `/etc/init.d/firewall` (este entrou em
-        10/08/2026 — justificativa e método no histórico).
-      • DECISÃO A MANTER: comando arbitrário CONTINUA pedindo senha. Ampliar pra `(ALL)
-        NOPASSWD: ALL` seria a mudança que de fato escala privilégio — as atuais não escalam
-        porque o `nft` já dá o mesmo alcance. Só adicionar binário com motivo, um a um.
-      • `/usr/bin/wg-status` entrou junto (wrapper só-leitura do `wg show`) — o binário `wg`
-        inteiro NÃO entra, porque `wg set` troca chave de peer.
-      • FALTA o SWITCH, que nunca foi tocado.
-      • ⚠️ NADA DISSO É ESPELHADO: o `router-sync` cobre só `/etc/config/`. Sudoers e chave
-        SSH vivem fora do repo, e o `/home/` do roteador nem sobrevive a `sysupgrade`.
+- [~] Passwordless remote maintenance on the router and on the switch (OpenWrt).
+      • ROUTER, done: SSH was already key-based (`ssh v1cferr@192.168.1.1` runs in BatchMode),
+        and what was missing was `sudo`. Today the NOPASSWD ones are `/sbin/reboot`,
+        `/usr/sbin/nft`, `/sbin/uci`, `/etc/init.d/dnsmasq` and `/etc/init.d/firewall` (this
+        last one came in on 10/08/2026, with the justification and the method in the history).
+      • A DECISION TO KEEP: an arbitrary command STILL asks for the password. Widening it to
+        `(ALL) NOPASSWD: ALL` would be the change that actually escalates privilege, since the
+        current ones do not escalate because `nft` already gives the same reach. Only add a
+        binary with a reason, one at a time.
+      • `/usr/bin/wg-status` came in along with them (a read-only wrapper over `wg show`); the
+        whole `wg` binary does NOT go in, because `wg set` replaces a peer key.
+      • MISSING: the SWITCH, which has never been touched.
+      • NONE OF THIS IS MIRRORED: `router-sync` only covers `/etc/config/`. Sudoers and the
+        SSH key live outside the repo, and the router's `/home/` does not even survive a
+        `sysupgrade`.
 
-- [~] Claude Code, o que SOBROU das duas contas (11/08/2026) — a estrutura foi declarada em
-      `home/shell/claude-code.nix` e a entrada está no [histórico de
-      agosto](history/2026/08-august.md): wrappers `claude-fai`/`claude-pessoal`,
-      `claude-pick`, `settings.json` versionado, `projects/` compartilhado e o `claude` puro
-      caindo na FAI. Três pontas seguem abertas, e nenhuma delas é declarável:
-      • O `/login` de cada conta. NÃO restaurei o `.credentials.json` (nem o do backup do
-        Arch, nem o do `~/.claude`): token não se copia por script, e o do Arch tinha 7
-        semanas de uma máquina desativada. Conferir depois sem gastar cota: `claude-fai
-        doctor` diz se a conta está assinada.
-      • PODAR O RESTO DO `~/.claude` — ele deixou de ser conta e virou só o acervo, mas
-        ficaram lá `history.jsonl`, `settings.json`, `settings.local.json`, `sessions/`,
-        `shell-snapshots/`, `plugins/` (~40 MB fora do `projects/`). O que valia foi copiado
-        pro `~/.claude-fai`; o resto é legado (regra 16). ⚠️ NÃO PODAR ANTES de a conta nova
-        provar que anda: enquanto o `/login` da FAI não acontecer, essas sobras são o único
-        lugar onde o estado dessa conta existe. E NUNCA tocar no `projects/` — é o acervo,
-        alvo dos symlinks das duas contas.
-      • O bloco de cabeçalho do `system/services/claude-code.nix` afirma que o
-        `settings.json` do usuário "NÃO pode virar symlink". A frase vale pra symlink da
-        STORE (read-only), que é do que ela falava, mas hoje lê como se contradissesse este
-        módulo — que linka pro repo por `mkOutOfStoreSymlink` e foi medido. Reescrever a
-        frase (é drift de texto, regra 16; os hooks em `/etc` seguem certos e necessários).
+- [~] Claude Code, what is LEFT of the two accounts (11/08/2026). The structure was declared in
+      `home/shell/claude-code.nix` and the entry is in the [august
+      history](history/2026/08-august.md): the `claude-fai`/`claude-pessoal` wrappers,
+      `claude-pick`, a versioned `settings.json`, a shared `projects/` and plain `claude`
+      falling through to FAI. Three ends are still open, and none of them is declarable:
+      • The `/login` for each account. I did NOT restore `.credentials.json` (neither the one
+        from the Arch backup nor the one in `~/.claude`): a token is not something you copy with
+        a script, and the Arch one was 7 weeks old, from a machine that is decommissioned. Check
+        later without spending quota: `claude-fai doctor` says whether the account is signed in.
+      • PRUNE THE REST OF `~/.claude`. It stopped being an account and became just the archive,
+        but `history.jsonl`, `settings.json`, `settings.local.json`, `sessions/`,
+        `shell-snapshots/` and `plugins/` were left there (~40 MB outside `projects/`). What was
+        worth keeping was copied to `~/.claude-fai`; the rest is legacy (rule 16). DO NOT
+        PRUNE BEFORE the new account proves it walks: until the FAI `/login` happens, those
+        leftovers are the only place where that account's state exists. And NEVER touch
+        `projects/`, which is the archive, the target of both accounts' symlinks.
+      • The header block of `system/services/claude-code.nix` states that the user's
+        `settings.json` "CANNOT become a symlink". The sentence holds for a STORE symlink
+        (read-only), which is what it was talking about, but today it reads as if it contradicted
+        this module, which links to the repo through `mkOutOfStoreSymlink` and was measured.
+        Rewrite the sentence (it is text drift, rule 16; the hooks in `/etc` are still right and
+        still necessary).
 
-- [ ] MCP do Azure ainda não tem em QUE trabalhar (14/08/2026) — o servidor está declarado,
-      conectado e autenticado (ver o [histórico de agosto](history/2026/08-august.md)),
-      mas as 68 tools dele operam sobre SUBSCRIPTION, e o tenant do dia a dia (`FAIUFSCar`)
-      é só diretório: `azmcp subscription list` responde 200 com lista VAZIA. Quem tem
-      assinatura é o tenant `BHS`, e entrar nele exige MFA — `az login --tenant
-      92247c24-8a8c-47f3-a7f1-85df939ad4b6`, que o browser resolve. Só depois disso dá pra
-      dizer se o MCP se paga aqui ou se o `az` sozinho já bastava; até lá ele está VIVO e
-      OCIOSO, o que é diferente de quebrado. ⚠️ O App Registration NÃO depende disto: já
-      funciona pelo `az ad` no FAIUFSCar, que era o objetivo.
+- [ ] The Azure MCP has nothing to work ON yet (14/08/2026). The server is declared, connected
+      and authenticated (see the [august history](history/2026/08-august.md)), but its 68
+      tools operate over a SUBSCRIPTION, and the day-to-day tenant (`FAIUFSCar`) is a directory
+      only: `azmcp subscription list` answers 200 with an EMPTY list. Who has a subscription is
+      the `BHS` tenant, and getting into it requires MFA: `az login --tenant
+      92247c24-8a8c-47f3-a7f1-85df939ad4b6`, which the browser resolves. Only after that is it
+      possible to say whether the MCP pays for itself here or whether `az` alone would have been
+      enough; until then it is ALIVE and IDLE, which is different from broken. The App
+      Registration does NOT depend on this: it already works through `az ad` on FAIUFSCar, which
+      was the goal.
 
-- [ ] Continuar configurando o dualboot com Secure Boot
+- [ ] Keep setting up the dualboot with Secure Boot
 
-- [ ] Salto de release 26.05 → 27.05 (~mai/2027) — NÃO é reinstalação: são DUAS STRINGS no
-      flake.nix, `nixpkgs.url` (nixos-27.05) e `home-manager.url` (release-27.05), que mudam
-      JUNTAS (o branch de release do HM casa com a base, senão dá mismatch de opções). Os
-      outros ~9 inputs têm `inputs.nixpkgs.follows = "nixpkgs"` e vêm de graça — o dedup que
-      já existe por causa do tamanho do lock é o que torna o salto trivial: 1 input muda, 9
-      seguem. Sem ele, cada flake arrastaria seu próprio nixpkgs 26.05 e eu ficaria com duas
-      bases coexistindo depois do salto.
-      O `upgrade` NUNCA faz esse salto, e isso é feature: `nix flake update` só anda DENTRO do
-      branch pinado, e no `nixos-26.05` entram só BACKPORTS — cherry-pick de CVE/bugfix que um
-      mantenedor marca com a label `backport release-26.05`. Versão nova de pacote NÃO entra,
-      exceto navegador e kernel (upstream só dá suporte de segurança à versão nova, então
-      backportar patch de Firefox seria reescrever o Firefox). E `nixos-26.05` (canal) ≠
-      `release-26.05` (branch): o canal é ponteiro que só avança depois do Hydra buildar e a
-      suíte de testes passar — mesmo gating do nixos-unstable.
-      ⚠️ O `stateVersion` NÃO MUDA — nem no salto, nem nunca. Fica "26.05" pra sempre em
-      hosts/nixos-kingston/default.nix e home/default.nix. O nome engana: não é "a versão do
-      meu sistema", é "a versão do NixOS com a qual o meu ESTADO EM DISCO é compatível". 54
-      módulos do nixpkgs leem esse valor, e o caso canônico é o postgresql.nix, que escolhe o
-      MAJOR do Postgres por ele (`versionAtLeast stateVersion "26.11"` → postgresql_18;
-      "25.11" → postgresql_17 …). Bumpar faz o módulo apontar pra um major que NÃO LÊ o
-      datadir existente: o
-      serviço não sobe, e se algo reinicializar o cluster o banco foi. Rollback de geração não
-      salva — volta o SISTEMA, não o /var/lib já mexido (mesma classe do dano do cutover, quando
-      copiar /var/lib quebrou Docker/Postgres/Sunshine em silêncio). Por isso ele existe no
-      config mesmo sendo imutável: é CERTIDÃO DE NASCIMENTO do estado, não botão — os módulos
-      precisam saber quando o estado nasceu justamente porque não sabem migrá-lo sozinhos. Só
-      muda se as release notes mandarem, e junto da migração manual (pg_upgrade e afins).
-      Usar `nixos-rebuild boot` e NÃO `switch`: aplica no próximo boot e a geração 26.05 fica no
-      minegrub como saída de emergência. E esperar ~2-4 semanas depois do release (o branch
-      estabiliza conforme os backports chegam); o custo de esperar aqui é baixo, porque o que eu
-      quero fresco já vem por `unstable.*` e pelos inputs upstream diretos.
+- [ ] Release jump 26.05 to 27.05 (~may/2027). It is NOT a reinstall: it is TWO STRINGS in
+      flake.nix, `nixpkgs.url` (nixos-27.05) and `home-manager.url` (release-27.05), which change
+      TOGETHER (the HM release branch matches the base, otherwise there is an option mismatch).
+      The other ~9 inputs have `inputs.nixpkgs.follows = "nixpkgs"` and come for free: the dedup
+      that already exists because of the lock size is what makes the jump trivial, 1 input
+      changes and 9 follow. Without it, each flake would drag its own nixpkgs 26.05 and I would
+      end up with two bases coexisting after the jump.
+      `upgrade` NEVER makes that jump, and that is a feature: `nix flake update` only moves
+      INSIDE the pinned branch, and into `nixos-26.05` only BACKPORTS come, cherry-picked
+      CVE/bugfixes that a maintainer marks with the `backport release-26.05` label. A new package
+      version does NOT come in, except for the browser and the kernel (upstream only gives
+      security support to the new version, so backporting a Firefox patch would mean rewriting
+      Firefox). And `nixos-26.05` (the channel) is not `release-26.05` (the branch): the channel
+      is a pointer that only advances after Hydra builds and the test suite passes, the same
+      gating as nixos-unstable.
+      The `stateVersion` DOES NOT CHANGE, not on the jump, not ever. It stays "26.05" forever
+      in hosts/nixos-kingston/default.nix and home/default.nix. The name misleads: it is not "the
+      version of my system", it is "the NixOS version my STATE ON DISK is compatible with". 54
+      nixpkgs modules read that value, and the canonical case is postgresql.nix, which picks the
+      Postgres MAJOR from it (`versionAtLeast stateVersion "26.11"` gives postgresql_18; "25.11"
+      gives postgresql_17, and so on). Bumping it makes the module point at a major that does NOT
+      READ the existing datadir: the service does not come up, and if something reinitializes the
+      cluster the database is gone. A generation rollback does not save you: it brings back the
+      SYSTEM, not the /var/lib that was already touched (the same class as the cutover damage,
+      when copying /var/lib broke Docker/Postgres/Sunshine silently). That is why it exists in
+      the config even being immutable: it is the state's BIRTH CERTIFICATE, not a button, and the
+      modules need to know when the state was born precisely because they cannot migrate it on
+      their own. It only changes if the release notes say so, and together with the manual
+      migration (pg_upgrade and the like).
+      Use `nixos-rebuild boot` and NOT `switch`: it applies on the next boot and the 26.05
+      generation stays in minegrub as the emergency exit. And wait ~2 to 4 weeks after the
+      release (the branch stabilizes as the backports arrive); the cost of waiting here is low,
+      because what I want fresh already comes through `unstable.*` and through the direct
+      upstream inputs.
 
-- [ ] Deixar o VSCode de forma declarativa com o Nix e ao mesmo tempo sempre atualizar o sync com minha conta do GitHub/Microsoft (quero que fique centralizado no <https://github.com/v1cferr/dotfiles>)
+- [ ] Make VSCode declarative with Nix and at the same time always keep the sync with my
+      GitHub/Microsoft account updated (I want it centralized in
+      <https://github.com/v1cferr/dotfiles>)
 
-- [ ] Adicionar o IP publico atual no Fastfetch?
-
-- [ ] CurseForge: falta ver o Minecraft ABRIR (aberto em 14/08/2026). O caminho até aqui
-      está todo exercitado de verdade — login pela conta, biblioteca, download do
-      NightfallCraft (MC 1.20.1 + Forge 47.4.4) e, depois do Java entrar no pacote, o
-      pós-processamento do Forge. O que ninguém viu ainda é a janela do jogo.
-      • O LOGIN JÁ FOI VALIDADO na prática, então a dúvida do handler `cfauth://` está
-        fechada: o app autenticou e instalou pack. Se um dia REGREDIR, o suspeito nº 1 volta
-        a ser o scheme (`xdg-mime query default x-scheme-handler/cfauth` tem que responder
-        `curseforge.desktop`), não a senha — o app não consegue se registrar sozinho aqui.
-      • ⚠️ SE VOLTAR "Java Runtime Environment is missing or out of date", NÃO declare Java
-        no Nix — já foi tentado e não muda nada (o app só usa a JRE dele). É o extrator
-        dele perdendo o `+x`: rodar `curseforge-fix-java` e REABRIR o app. A activation já
-        faz isso a cada rebuild; o comando cobre o caso de a JRE ter sido baixada no meio da
-        sessão. Confirmar no log do agent (`~/.config/CurseForge/agent/logs/`) — se for
-        isso, aparece `Permission denied` num `ShellOutput() on '…/bin/java -version'`.
-      • ⚠️ SE O JOGO FECHAR NA HORA DE ABRIR, aí sim o suspeito é biblioteca faltando no
-        FHS. O LWJGL traz os próprios `.so`, mas o que ele carrega em cima (GL/GLFW/OpenAL)
-        vem do FHS — conserto é acrescentar em `extraPkgs` (pkgs/curseforge.nix), NUNCA
-        voltar pro `.deb`, que é justamente o que não resolve binário baixado em runtime.
+- [ ] Add the current public IP to Fastfetch?

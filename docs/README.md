@@ -1,31 +1,31 @@
 # docs
 
-Era um arquivo só (`ANOTACOES.md`, 1949 linhas). Virou seis, porque um god file
-esconde: com 98 entradas fechadas misturadas com 15 abertas, achar o que fazer
-hoje exigia rolar por seis meses de história.
+It used to be a single file (`ANOTACOES.md`, 1949 lines). It became six, because a god
+file hides things: with 98 closed entries mixed in with 15 open ones, finding what to do
+today meant scrolling through six months of history.
 
-O corte é por **função**, não por tema — o que se lê todo dia (regras), o que se
-age (pendências) e o que se consulta (histórico) têm ritmos diferentes.
+The split is by **function**, not by topic. What you read every day (the rules), what you
+act on (the open items) and what you look up (the history) have different rhythms.
 
-| Arquivo | O que é | Quando se lê |
+| File | What it is | When you read it |
 | --- | --- | --- |
-| [rules.md](rules.md) | As 16 regras do repo | Antes de decidir qualquer coisa |
-| [open-items.md](open-items.md) | O que está aberto | Ao escolher no que trabalhar |
-| [history/](history/) | O que foi feito e por quê — pasta por ano, arquivo por mês | "Por que isto está assim?" |
-| [ideas.md](ideas.md) | Considerado, ainda não decidido | Ao planejar |
-| [arch-legacy.md](arch-legacy.md) | Capítulo encerrado + como abrir o acervo | Raramente |
-| [guias/](guides/) | Passo a passo do que o Nix não alcança (BIOS, Secure Boot, roteador, Windows) | Ao reinstalar ou mexer fora do repo |
-| [testes/](tests/) | Protocolos de teste reutilizáveis | Ao validar mudança |
+| [rules.md](rules.md) | The repo's 17 rules | Before deciding anything |
+| [open-items.md](open-items.md) | What is still open | When picking what to work on |
+| [history/](history/) | What was done and why, a folder per year and a file per month | "Why is this like this?" |
+| [ideas.md](ideas.md) | Considered, not decided yet | When planning |
+| [arch-legacy.md](arch-legacy.md) | A closed chapter + how to open the archive | Rarely |
+| [guides/](guides/) | Step by step for what Nix cannot reach (BIOS, Secure Boot, router, Windows) | When reinstalling or working outside the repo |
+| [tests/](tests/) | Reusable test protocols | When validating a change |
 
-## Convenções
+## Conventions
 
-**A numeração das regras é API.** O código referencia "regra 11", "regra 14" em
-mais de setenta comentários. Renumerar quebraria todos em silêncio: regra nova
-entra no fim, regra morta vira tachado.
+**The rule numbering is API.** The code cites "rule 11" and "rule 14" in more than seventy
+comments. Renumbering would break all of them silently: a new rule goes in at the end, a
+dead rule gets struck through instead of disappearing.
 
-**Entrada boa explica o PORQUÊ e a armadilha**, não o o-quê — o código já diz o
-o-quê. As entradas mais valiosas aqui são as que registram algo TENTADO E
-RECUSADO, porque impedem a próxima pessoa (ou você em seis meses) de repetir.
+**A good entry explains the WHY and the trap**, not the what, because the code already says
+the what. The most valuable entries here are the ones recording something TRIED AND
+REJECTED, because they keep the next person (or you in six months) from repeating it.
 
-**Item concluído migra** de `open-items.md` para `history/<mês>.md`. Um arquivo só
-cresce, o outro encolhe.
+**A finished item migrates** from `open-items.md` to `history/<month>.md`. One file only
+grows, the other one shrinks.

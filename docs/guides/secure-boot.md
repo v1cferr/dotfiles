@@ -1,89 +1,88 @@
-# Ligar o dualboot com Secure Boot — passo a passo
+# Turning the dualboot on with Secure Boot: step by step
 
-> **ARQUIVO TEMPORÁRIO.** Apagar assim que o Secure Boot estiver ligado e os dois
-> sistemas bootando. O que precisa sobreviver já está no cabeçalho de
-> [`system/core/secureboot.nix`](../../system/core/secureboot.nix) — este aqui é só a
-> sequência da noite. Runbook cumprido que fica no repo vira mentira depois.
+> **TEMPORARY FILE.** Delete it as soon as Secure Boot is on and both systems boot. What
+> needs to survive is already in the header of
+> [`system/core/secureboot.nix`](../../system/core/secureboot.nix); this one is only the
+> sequence for the night. A completed runbook that stays in the repo turns into a lie later.
 
-## ONDE ISTO PAROU (aferido em 09/08/2026)
+## WHERE THIS STOPPED (measured on 09/08/2026)
 
-**Fases 0 a 3 estão FEITAS. Falta só a Fase 4 — ligar o Secure Boot na BIOS.**
+**Phases 0 through 3 are DONE. Only Phase 4 is left, turning Secure Boot on in the BIOS.**
 
-| Fase | Estado | Como foi aferido |
+| Phase | State | How it was measured |
 | --- | --- | --- |
-| 0 — BitLocker off | ✅ | `lsblk` mostra o volume do Windows como `ntfs`, não `BitLocker` |
-| 1 — GRUB + `create-keys` | ✅ | `/var/lib/sbctl/keys` existe (02/08 03:07) |
-| 2 — Setup Mode | ✅ (e já saiu) | `SetupMode = 0` |
-| 3 — `enroll-keys -m` | ✅ | `PK`/`KEK`/`db` são as chaves do sbctl (val. 02/08/2026→02/08/2031) e o `db` traz os CAs da Microsoft de 2011 **e** 2023 |
-| 4 — **ligar o SB** | ❌ | `SecureBoot = 0` — a firmware está em User Mode com as chaves certas, só com o SB desligado |
+| 0, BitLocker off | done | `lsblk` shows the Windows volume as `ntfs`, not `BitLocker` |
+| 1, GRUB + `create-keys` | done | `/var/lib/sbctl/keys` exists (02/08 03:07) |
+| 2, Setup Mode | done (and already left) | `SetupMode = 0` |
+| 3, `enroll-keys -m` | done | `PK`/`KEK`/`db` are the sbctl keys (valid 02/08/2026 to 02/08/2031) and the `db` carries both the 2011 **and** 2023 Microsoft CAs |
+| 4, **turn SB on** | PENDING | `SecureBoot = 0`, the firmware is in User Mode with the right keys, only with SB off |
 
-Aferir de novo sem root, a qualquer momento:
+Measure it again without root, at any time:
 
 ```bash
 cd /sys/firmware/efi/efivars
-od -An -tu1 SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c   # 5º byte: 1 = ligado
-od -An -tu1 SetupMode-8be4df61-93ca-11d2-aa0d-00e098032b8c    # 5º byte: 0 = chaves enroladas
+od -An -tu1 SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c   # 5th byte: 1 = on
+od -An -tu1 SetupMode-8be4df61-93ca-11d2-aa0d-00e098032b8c    # 5th byte: 0 = keys enrolled
 ```
 
-> O histórico de 02/08 marcou "Secure Boot ligado nos dois SOs" como concluído — **não
-> estava**. As chaves entraram, mas o SB nunca chegou a ser ligado depois do
-> `grub rescue>` daquela noite.
+> The 02/08 history marked "Secure Boot on in both OSes" as done, and it **was not**. The
+> keys went in, but SB was never actually turned on after the `grub rescue>` of that night.
 
-Antes de ir pra Fase 4, faça o pré-voo — é exatamente o que queimou em 02/08:
+Before going to Phase 4, do the preflight, which is exactly what burned on 02/08:
 
 ```bash
 sudo sbctl status && sudo sbctl verify
-ls -la /boot/EFI/NixOS-boot/grubx64.efi   # ≥ ~1,5 MB = os 47 módulos estão embutidos
+ls -la /boot/EFI/NixOS-boot/grubx64.efi   # >= ~1.5 MB means the 47 modules are embedded
 ```
 
-O `verify` vai reclamar de `/boot/EFI/BOOT/BOOTX64.EFI`: é ruído esperado (systemd-boot
-já apagado, sobrou no banco do sbctl — ver a limpeza no fim deste arquivo). Não aborte
-por causa dele.
+`verify` will complain about `/boot/EFI/BOOT/BOOTX64.EFI`: that is expected noise
+(systemd-boot is already deleted and it stayed in the sbctl database, see the cleanup at the
+end of this file). Do not abort because of it.
 
-## O que pode dar errado, e por que não é grave
+## What can go wrong, and why it is not serious
 
-O NixOS boota do Kingston (`nvme0n1`) e o Windows do SanDisk (`sda`) — ESPs
-separadas, em discos separados. Nenhum passo aqui escreve no disco do outro.
+NixOS boots from the Kingston (`nvme0n1`) and Windows from the SanDisk (`sda`), separate
+ESPs on separate disks. No step here writes to the other one's disk.
 
-> ⚠️ **As letras `sd*` trocam entre boots.** Em 09/08/2026 a SanDisk era `sda` e o
-> Seagate velho (com a raiz do NixOS morto) era `sdb` — o inverso do que este guia
-> dizia antes. **Confira sempre pelo modelo, nunca pela letra:** `lsblk -d -o
-> NAME,MODEL`. A entrada do GRUB é imune a isso (casa por UUID), mas quem confere
-> o disco errado "corrige" o `boot.nix` pro UUID errado e quebra o menu em silêncio.
+> **The `sd*` letters swap between boots.** On 09/08/2026 the SanDisk was `sda` and the
+> old Seagate (with the dead NixOS root) was `sdb`, the opposite of what this guide used to
+> say. **Always check by model, never by letter:** `lsblk -d -o NAME,MODEL`. The GRUB entry
+> is immune to this (it matches by UUID), but whoever checks the wrong disk "fixes"
+> `boot.nix` to the wrong UUID and breaks the menu silently.
 
-O pior caso realista é a firmware recusar o GRUB por falta de assinatura, e a saída
-é sempre a mesma: **desligar o Secure Boot na BIOS**. Não existe tijolo neste
-roteiro; o que a firmware recusa é um binário, não o disco.
+The realistic worst case is the firmware refusing GRUB for lack of a signature, and the way
+out is always the same: **turn Secure Boot off in the BIOS**. There is no brick in this
+runbook; what the firmware refuses is a binary, not the disk.
 
 ---
 
-## Fase 0 — Windows: desligar o BitLocker ⚠️ FAÇA ISTO PRIMEIRO
+## Phase 0, Windows: turn BitLocker off DO THIS FIRST
 
-O volume `sdb3` está formatado com BitLocker. Mexer em Secure Boot **muda o PCR 7**,
-e o BitLocker responde a isso pedindo a chave de recuperação no boot — que ninguém
-guardou, porque a conta é local.
+The `sdb3` volume is formatted with BitLocker. Touching Secure Boot **changes PCR 7**, and
+BitLocker answers that by asking for the recovery key at boot, which nobody saved, because
+the account is local.
 
-Boote o Windows, abra um **cmd como administrador**:
+Boot Windows and open an **administrator cmd**:
 
 ```text
 manage-bde -status
 ```
 
-Se algum volume disser **"Protection On"**:
+If any volume says **"Protection On"**:
 
 ```text
 manage-bde -off C:
 ```
 
-Isso **decifra o disco** e leva de minutos a horas em 900 GB. Acompanhe com
-`manage-bde -status` até `Percentage Encrypted: 0.0%` e `Protection Off`.
+That **decrypts the disk** and takes minutes to hours on 900 GB. Follow it with
+`manage-bde -status` until `Percentage Encrypted: 0.0%` and `Protection Off`.
 
-> ⛔ Não siga pra Fase 1 enquanto a decifragem não terminar. Reiniciar no meio não
-> corrompe nada, mas a proteção continua ativa até o fim — que é justamente o
-> problema.
+> Do not move to Phase 1 while the decryption has not finished. Rebooting in the middle
+> corrupts nothing, but the protection stays active until the end, which is precisely the
+> problem.
 
-**Já que está no Windows**, resolva também o relógio (senão os dois sistemas brigam
-por 3 horas a cada troca — o NixOS guarda o RTC em UTC e o Windows assume hora local):
+**While you are in Windows**, fix the clock too (otherwise the two systems fight over 3
+hours on every switch, since NixOS keeps the RTC in UTC and Windows assumes local time):
 
 ```text
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeIsUniversal /t REG_DWORD /d 1 /f
@@ -91,134 +90,136 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeI
 
 ---
 
-## Fase 1 — NixOS: GRUB no ar, ainda SEM Secure Boot
+## Phase 1, NixOS: GRUB up, still WITHOUT Secure Boot
 
-O objetivo desta fase é provar que o GRUB sobe e enxerga o Windows, **enquanto
-errar ainda é barato**. Não pule para o Secure Boot antes disto funcionar.
+The goal of this phase is proving that GRUB comes up and sees Windows, **while getting it
+wrong is still cheap**. Do not jump to Secure Boot before this works.
 
 ```bash
 cd ~/Projects/GitHub/v1cferr/dotfiles
-sudo sbctl create-keys          # cria /var/lib/sbctl/keys
+sudo sbctl create-keys          # creates /var/lib/sbctl/keys
 rebuild
 ```
 
-O `rebuild` vai imprimir `installing the GRUB 2 boot loader...`. A entrada do Windows
-é **fixa por UUID** (`904C-B9D0`, a ESP do SanDisk), não vem de varredura — então ela
-sempre aparece no arquivo. O que precisa ser conferido é se o UUID ainda bate:
+The `rebuild` will print `installing the GRUB 2 boot loader...`. The Windows entry is
+**pinned by UUID** (`904C-B9D0`, the SanDisk ESP), it does not come from a scan, so it always
+shows up in the file. What needs checking is whether the UUID still matches:
 
 ```bash
 sudo grep -A5 'menuentry "Windows 11"' /boot/grub/grub.cfg
-lsblk -o NAME,MODEL,LABEL,UUID       # a ESP da SanDisk tem que ser 904C-B9D0
-sbctl verify                          # o grubx64.efi deve aparecer como assinado
+lsblk -o NAME,MODEL,LABEL,UUID       # the SanDisk ESP has to be 904C-B9D0
+sbctl verify                          # grubx64.efi should show up as signed
 ```
 
-Se a ESP da SanDisk **não** for `904C-B9D0`, corrija em
-[`system/core/boot.nix`](../../system/core/boot.nix) antes de seguir — a entrada existiria
-no menu e simplesmente não bootaria.
+If the SanDisk ESP is **not** `904C-B9D0`, fix it in
+[`system/core/boot.nix`](../../system/core/boot.nix) before going on, because the entry would
+exist in the menu and simply not boot.
 
-**Reinicie.** Você deve ver o menu do Minecraft com dois mundos: NixOS e Windows 11.
-Teste **os dois**, incluindo entrar no Windows e voltar.
-
----
-
-## Fase 2 — BIOS: apagar as chaves de fábrica
-
-Reinicie e entre no setup (**DEL** na EX-B560M-V5). Vá em `Boot → Secure Boot`.
-
-1. **`Secure Boot Mode` → `Custom`** ⚠️ **É este o passo que destrava tudo.** Em
-   `Standard` a ASUS nem MOSTRA o submenu `Key Management` — a firmware usa as chaves
-   de fábrica e não deixa mexer. Se você não achar "Clear Secure Boot Keys", é porque
-   ainda está em Standard.
-2. `Key Management` → **`Clear Secure Boot Keys`** → o estado vira **`Setup`**.
-3. Salvar e sair (**F10**).
-
-> ⛔ **Não toque em `Install Default Secure Boot Keys`.** Ele restaura as chaves de
-> fábrica e desfaz o enroll da Fase 3. Está no mesmo menu, uma linha ao lado.
-
-Isso põe a firmware em **Setup Mode**. O boot segue normal — em Setup Mode o Secure
-Boot está inativo, então o GRUB e o Windows continuam subindo.
-
-> Nota: o `OS Type` (`Windows UEFI mode` / `Other OS`) é OUTRA coisa — é o liga/desliga
-> do Secure Boot, e fica pra Fase 4. `Secure Boot Mode` é quem controla se as chaves
-> são as de fábrica ou as suas. Os dois nomes se parecem e ficam na mesma tela.
+**Reboot.** You should see the Minecraft menu with two worlds: NixOS and Windows 11. Test
+**both**, including entering Windows and coming back.
 
 ---
 
-## Fase 3 — NixOS: enrolar as chaves
+## Phase 2, BIOS: erase the factory keys
 
-> ⚠️ **Se você está retomando depois do `grub rescue>` de 02/08:** a firmware está em
-> Setup Mode e as chaves foram limpas de novo, então recomece por um `rebuild` — ele
-> reinstala o GRUB **com os módulos embutidos** (`extraGrubInstallArgs`) e reassina.
-> Sem esse `rebuild` o binário na ESP ainda é o antigo, e o rescue mode volta.
+Reboot and enter setup (**DEL** on the EX-B560M-V5). Go to `Boot → Secure Boot`.
+
+1. **`Secure Boot Mode` → `Custom`** **This is the step that unlocks everything.** In
+   `Standard`, ASUS does not even SHOW the `Key Management` submenu, since the firmware uses
+   the factory keys and does not let you touch them. If you cannot find "Clear Secure Boot
+   Keys", it is because you are still in Standard.
+2. `Key Management` → **`Clear Secure Boot Keys`** → the state becomes **`Setup`**.
+3. Save and exit (**F10**).
+
+> **Do not touch `Install Default Secure Boot Keys`.** It restores the factory keys and
+> undoes the Phase 3 enroll. It is in the same menu, one line over.
+
+That puts the firmware in **Setup Mode**. Booting stays normal, because in Setup Mode Secure
+Boot is inactive, so GRUB and Windows keep coming up.
+
+> Note: `OS Type` (`Windows UEFI mode` / `Other OS`) is a DIFFERENT thing, it is the Secure
+> Boot on/off switch, and it belongs to Phase 4. `Secure Boot Mode` is what controls whether
+> the keys are the factory ones or yours. The two names look alike and sit on the same
+> screen.
+
+---
+
+## Phase 3, NixOS: enroll the keys
+
+> **If you are resuming after the `grub rescue>` of 02/08:** the firmware is in Setup
+> Mode and the keys were cleared again, so start over with a `rebuild`, which reinstalls GRUB
+> **with the embedded modules** (`extraGrubInstallArgs`) and re-signs it. Without that
+> `rebuild` the binary on the ESP is still the old one, and the rescue mode comes back.
 
 ```bash
-rebuild                  # reinstala o GRUB com os módulos embutidos + assina
+rebuild                  # reinstalls GRUB with the embedded modules + signs it
 sudo sbctl enroll-keys -m
 sbctl status
 ```
 
-O `status` deve mostrar **Setup Mode: Disabled** (as chaves entraram).
+`status` should show **Setup Mode: Disabled** (the keys went in).
 
-> ⚠️ **O `-m` não é opcional.** Ele é o que reinstala os certificados da Microsoft
-> junto com os seus. Sem ele você derruba o Windows **e** a option ROM da Arc B580 —
-> as duas são assinadas pela Microsoft. Já foi conferido nesta máquina: o `sbctl`
-> 0.18 traz as duas gerações de CA (2011 e 2023), então o Windows continua bootando
-> mesmo depois de o certificado de 2011 ter expirado, em junho/2026.
-
----
-
-## Fase 4 — BIOS: ligar o Secure Boot
-
-1. `Boot → Secure Boot → OS Type` → **`Windows UEFI mode`** (é o liga/desliga; em
-   `Other OS` o Secure Boot fica inativo).
-2. Confirme que `Secure Boot State` virou **Enabled**.
-3. Salvar e sair (**F10**).
-
-> O `Secure Boot Mode` **continua em `Custom`**, e é assim que tem que ficar — é o que
-> diz "use as chaves enroladas, não as de fábrica". Voltar pra `Standard` desfaria tudo.
+> **The `-m` is not optional.** It is what reinstalls the Microsoft certificates along
+> with yours. Without it you take down Windows **and** the Arc B580's option ROM, since both
+> are signed by Microsoft. It has already been checked on this machine: sbctl 0.18 carries
+> both CA generations (2011 and 2023), so Windows keeps booting even after the 2011
+> certificate expired, in june/2026.
 
 ---
 
-## Fase 5 — Conferir
+## Phase 4, BIOS: turn Secure Boot on
 
-No NixOS:
+1. `Boot → Secure Boot → OS Type` → **`Windows UEFI mode`** (this is the on/off switch; in
+   `Other OS` Secure Boot stays inactive).
+2. Confirm that `Secure Boot State` became **Enabled**.
+3. Save and exit (**F10**).
+
+> `Secure Boot Mode` **stays in `Custom`**, and that is how it has to stay, because it is
+> what says "use the enrolled keys, not the factory ones". Going back to `Standard` would
+> undo everything.
+
+---
+
+## Phase 5, check
+
+On NixOS:
 
 ```bash
 sbctl status                    # Secure Boot: ✓ Enabled
-sbctl verify                    # grubx64.efi assinado
+sbctl verify                    # grubx64.efi signed
 bootctl status | head -5        # Secure Boot: enabled
 ```
 
-No Windows, `msinfo32` → **Secure Boot State: On**.
+On Windows, `msinfo32` → **Secure Boot State: On**.
 
 ---
 
-## Se der errado
+## If it goes wrong
 
-| Sintoma | O que é |
+| Symptom | What it is |
 | --- | --- |
-| Firmware não boota nada / "Invalid signature" | O GRUB foi reescrito sem assinatura. **BIOS → Secure Boot: Disabled**, boote, `sudo sbctl sign -s /boot/EFI/*/grubx64.efi`, religue o SB |
-| `prohibited by secure boot policy` + `grub rescue>` | **Aconteceu em 02/08.** A assinatura estava CERTA (a firmware executou o GRUB) — faltavam os módulos embutidos. Resolvido pelo `extraGrubInstallArgs` em [`system/core/boot.nix`](../../system/core/boot.nix); confira que o `rebuild` reinstalou o GRUB |
-| `shim_lock protocol not found` | Falta o `--disable-shim-lock` no `extraGrubInstallArgs`. Sem ele o GRUB exige um shim que não existe aqui, e nem NixOS nem Windows bootam |
-| Windows no menu, mas não boota | O UUID mudou. `lsblk -o NAME,MODEL,LABEL,UUID` (pelo MODELO — a letra troca) e corrija o `search --fs-uuid` em [`system/core/boot.nix`](../../system/core/boot.nix) |
-| Windows pede chave de recuperação | O BitLocker não foi desligado (Fase 0). Sem a chave, `sbctl reset` + SB off devolve o PCR 7 anterior |
-| Arc B580 sem vídeo no POST | `enroll-keys` sem o `-m`. `sudo sbctl reset` na BIOS em Setup Mode e refaça a Fase 3 **com** o `-m` |
-| Não acho "Clear Secure Boot Keys" na BIOS | `Secure Boot Mode` ainda está em `Standard`. Em Standard a ASUS esconde o `Key Management` inteiro |
-| Voltou a pedir chave da Microsoft / Windows não boota | Alguém pôs `Secure Boot Mode` de volta em `Standard`, ou usou `Install Default Secure Boot Keys` |
-| Menu do GRUB feio/esticado | O `gfxmodeEfi` não pegou 1080p. Ajustar em [`system/core/boot.nix`](../../system/core/boot.nix) |
-| Ícone genérico, sem texto, em alguma entrada | O `--class` daquela entrada não casa com nenhum `customIcons.name`. Ver `grep menuentry /boot/grub/grub.cfg` |
+| The firmware boots nothing / "Invalid signature" | GRUB was rewritten without a signature. **BIOS → Secure Boot: Disabled**, boot, `sudo sbctl sign -s /boot/EFI/*/grubx64.efi`, turn SB back on |
+| `prohibited by secure boot policy` + `grub rescue>` | **This happened on 02/08.** The signature was RIGHT (the firmware executed GRUB), what was missing were the embedded modules. Solved by `extraGrubInstallArgs` in [`system/core/boot.nix`](../../system/core/boot.nix); check that the `rebuild` reinstalled GRUB |
+| `shim_lock protocol not found` | `--disable-shim-lock` is missing from `extraGrubInstallArgs`. Without it GRUB demands a shim that does not exist here, and neither NixOS nor Windows boots |
+| Windows in the menu, but it does not boot | The UUID changed. `lsblk -o NAME,MODEL,LABEL,UUID` (by MODEL, the letter swaps) and fix the `search --fs-uuid` in [`system/core/boot.nix`](../../system/core/boot.nix) |
+| Windows asks for the recovery key | BitLocker was not turned off (Phase 0). Without the key, `sbctl reset` + SB off gives the previous PCR 7 back |
+| Arc B580 with no video at POST | `enroll-keys` without the `-m`. `sudo sbctl reset` with the BIOS in Setup Mode and redo Phase 3 **with** the `-m` |
+| I cannot find "Clear Secure Boot Keys" in the BIOS | `Secure Boot Mode` is still in `Standard`. In Standard, ASUS hides the whole `Key Management` |
+| It asks for the Microsoft key again / Windows does not boot | Somebody put `Secure Boot Mode` back to `Standard`, or used `Install Default Secure Boot Keys` |
+| The GRUB menu looks ugly or stretched | `gfxmodeEfi` did not take 1080p. Adjust it in [`system/core/boot.nix`](../../system/core/boot.nix) |
+| A generic icon with no text on some entry | The `--class` of that entry matches no `customIcons.name`. See `grep menuentry /boot/grub/grub.cfg` |
 
-**Recuperação de último caso:** desligar Secure Boot na BIOS devolve o boot em todos
-os cenários acima. O NixOS não depende do SanDisk pra nada, e o Windows não depende
-do Kingston.
+**Last-resort recovery:** turning Secure Boot off in the BIOS gives booting back in every
+scenario above. NixOS does not depend on the SanDisk for anything, and Windows does not
+depend on the Kingston.
 
 ---
 
-## Depois que estiver tudo de pé
+## Once everything is up
 
-0. `sudo sbctl remove-file /boot/EFI/BOOT/BOOTX64.EFI` — aquele arquivo era o
-   systemd-boot e foi apagado na limpeza da ESP, mas o hook chegou a assiná-lo antes,
-   então ele ficou no banco do sbctl e o `verify` reclama de um arquivo que não existe.
-1. `git rm docs/SECURE-BOOT-SETUP.md` — este arquivo cumpriu o papel.
-2. Conferir se o Moonlight ainda pareia (o `sunshine_name` mudou de `nixos-sandisk`
-   pra `nixos-kingston` — é só nome de exibição, o pareamento é por certificado).
+0. `sudo sbctl remove-file /boot/EFI/BOOT/BOOTX64.EFI`, because that file was systemd-boot
+   and it was deleted in the ESP cleanup, but the hook did sign it beforehand, so it stayed
+   in the sbctl database and `verify` complains about a file that does not exist.
+1. `git rm docs/guides/secure-boot.md`, because this file will have served its purpose.
+2. Check whether Moonlight still pairs (the `sunshine_name` changed from `nixos-sandisk` to
+   `nixos-kingston`, which is only a display name, since pairing is by certificate).

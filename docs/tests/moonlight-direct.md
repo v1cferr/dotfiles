@@ -1,171 +1,171 @@
-# Teste: Moonlight direto, sem VPN, da UFSCar
+# Test: Moonlight direct, with no VPN, from UFSCar
 
-**Onde:** UFSCar, no notebook da FAI, **sem WireGuard e sem nenhuma VPN ativa**.
-**Por quê:** o caminho direto (`docs/history/2026/08-august.md` não cobre — foi
-aberto em 10/08/2026) troca o túnel por port-forward restrito. O TCP está provado; o
-UDP não. Este protocolo separa "não passa UDP" de "problema de vídeo", que produzem
-sintomas quase idênticos.
+**Where:** UFSCar, on the FAI notebook, **with no WireGuard and no VPN active at all**.
+**Why:** the direct path (`docs/history/2026/08-august.md` does not cover it, it was opened
+on 10/08/2026) trades the tunnel for a restricted port forward. TCP is proven; UDP is not.
+This protocol separates "UDP does not get through" from "a video problem", which produce
+almost identical symptoms.
 
-⚠️ **A VPN tem que estar DESLIGADA.** Com o túnel de pé o teste mente: o Moonlight
-acha o host por `10.10.10.1` e você mede o caminho antigo achando que mediu o novo.
-É a variante 2 da armadilha de método registrada em 08/08 — teste que parece externo
-e não é.
+**The VPN has to be OFF.** With the tunnel up the test lies: Moonlight finds the host
+through `10.10.10.1` and you measure the old path thinking you measured the new one. It is
+variant 2 of the method trap recorded on 08/08, a test that looks external and is not.
 
-## 0. Pré-requisitos
+## 0. Prerequisites
 
-- Host: `system/services/sunshine.nix` aplicado (`nixos-rebuild switch`).
-- Roteador: `scripts/router-moonlight-forward.sh` executado.
+- Host: `system/services/sunshine.nix` applied (`nixos-rebuild switch`).
+- Router: `scripts/router-moonlight-forward.sh` executed.
 
-## 1. O `src_ip` está segurando? (teste de SEGURANÇA, não de alcance)
+## 1. Is the `src_ip` holding? (a SECURITY test, not a reachability one)
 
-⚠️ **Este passo tem que FALHAR para passar.** As redirects são restritas aos blocos da
-UFSCar, então um ponto externo qualquer precisa ser recusado. Se ele conectar, o
-`src_ip` não está aplicado e o Sunshine está aberto pro planeta.
+**This step has to FAIL in order to pass.** The redirects are restricted to the UFSCar
+blocks, so any external vantage point must be refused. If it connects, the `src_ip` is not
+applied and Sunshine is open to the planet.
 
-⚠️ E de dentro da LAN o teste não vale nada: a operadora faz hairpin e a porta
-"abre" sempre. Só de fora.
+And from inside the LAN this test is worthless: the ISP does hairpin and the port
+"opens" every time. From outside only.
 
 ```sh
 curl -s "https://check-host.net/check-tcp?host=177.52.84.188%3A47984&max_nodes=3" \
   -H "Accept: application/json"
-# pega o request_id, espera ~10s, e:
+# grab the request_id, wait ~10s, then:
 curl -s "https://check-host.net/check-result/<request_id>" -H "Accept: application/json"
 ```
 
-- `{"error": "Connection refused"}` em TODOS os nós → ✅ correto, o `src_ip` segura
-- `{"address": "177.52.84.188", "time": …}` em qualquer nó → 🔴 **pare**: a restrição
-  não pegou. Confira `uci show firewall | grep -i moonlight` no roteador
+- `{"error": "Connection refused"}` on ALL nodes → correct, the `src_ip` holds
+- `{"address": "177.52.84.188", "time": …}` on any node → **stop**: the restriction did
+  not take. Check `uci show firewall | grep -i moonlight` on the router
 
-**Contra-teste que dá sentido ao acima:** rode o mesmo na **2222**, que é irrestrita.
-Ela TEM que conectar (medido em 10/08/2026: Áustria, Canadá e Irã, todos OK). Sem
-esse controle, "refused" nas duas seria indistinguível de "o link caiu" — e você
-teria lido uma queda de internet como sucesso de segurança.
+**The counter-test that gives the one above any meaning:** run the same thing against
+**2222**, which is unrestricted. It MUST connect (measured on 10/08/2026: Austria, Canada
+and Iran, all OK). Without that control, "refused" on both would be indistinguishable from
+"the link went down", and you would have read an internet outage as a security success.
 
-**Terceiro contra-teste:** a **47990**. Refused, sempre, de qualquer lugar — é o
-painel admin e não está encaminhado. Ver o aviso do `origin_web_ui_allowed` em
+**A third counter-test:** **47990**. Refused, always, from anywhere, because it is the
+admin panel and it is not forwarded. See the `origin_web_ui_allowed` warning in
 `sunshine.nix`.
 
-Consequência do desenho: **este método não consegue confirmar que a porta abriu para
-a UFSCar** — só o passo 2, de dentro dela, faz isso.
+A consequence of the design: **this method cannot confirm that the port opened for UFSCar**,
+only step 2, from inside it, does that.
 
-## 2. Chega da UFSCar? (no notebook, sem VPN)
+## 2. Does it arrive from UFSCar? (on the notebook, with no VPN)
 
 ```sh
 nc -vz ssh.v1cferr.dev 47984 47989 48010
 ```
 
-Se o TCP falhar aqui e tiver passado no passo 1, o bloqueio é da rede da UFSCar, não
-sua. Registrado em 08/08: **a rede da FAI descarta o SYN-ACK** — o SYN chega em casa,
-o host responde, e o ACK final nunca volta. Se o notebook estiver no segmento da FAI
-(`200.136.192.0/21`) em vez do campus (`200.133.224.0/20`), é o caso esperado, e a
-resposta é usar o túnel.
+If TCP fails here after passing step 1, the block belongs to the UFSCar network, not to
+yours. Recorded on 08/08: **the FAI network drops the SYN-ACK**. The SYN arrives home, the
+host answers, and the final ACK never comes back. If the notebook is on the FAI segment
+(`200.136.192.0/21`) instead of the campus one (`200.133.224.0/20`), that is the expected
+case, and the answer is to use the tunnel.
 
-## 2b. ⚠️ Parear um cliente NOVO não funciona por este caminho
+## 2b. Pairing a NEW client does not work over this path
 
-O notebook da FAI (`"fai pc"`, pareado em 27/07/2026) entra direto: cliente já pareado
-usa o certificado que tem, e isso é 47984 pura. **Cliente novo é outra história** — o
-PIN se digita no web UI, que é a **47990**, e ela não é encaminhada de propósito.
+The FAI notebook (`"fai pc"`, paired on 27/07/2026) gets in directly: an already paired
+client uses the certificate it has, and that is pure 47984. **A new client is another
+story**: the PIN is typed into the web UI, which is **47990**, and that one is not forwarded
+on purpose.
 
-Não force a 47990 para o mundo. As saídas:
+Do not force 47990 open to the world. The ways out:
 
-1. **Parear pelo túnel WireGuard**, uma vez, e depois usar o caminho direto para
-   sempre. É a mais simples e não mexe em nada.
-2. Túnel SSH: `ssh -L 47990:localhost:47990 v1cferr@ssh.v1cferr.dev -p 2222` e abrir
+1. **Pair over the WireGuard tunnel**, once, and then use the direct path forever. It is the
+   simplest one and it touches nothing.
+2. An SSH tunnel: `ssh -L 47990:localhost:47990 v1cferr@ssh.v1cferr.dev -p 2222` and open
    `https://localhost:47990`.
-   ⚠️ **Não verificado, e há motivo concreto para desconfiar:** o
-   `csrf_allowed_origins` do `sunshine.nix` lista só `https://192.168.1.10:47990`, e
-   por esse túnel o browser manda `Origin: https://localhost:47990`. Enviar o PIN é
-   POST, então o CSRF vale. Se der erro ao salvar, é isto — e o conserto é somar essa
-   origem à opção, não abrir a porta.
+   **Not verified, and there is a concrete reason to be suspicious:** the
+   `csrf_allowed_origins` in `sunshine.nix` lists only `https://192.168.1.10:47990`, and
+   over that tunnel the browser sends `Origin: https://localhost:47990`. Sending the PIN is
+   a POST, so CSRF applies. If saving errors out, that is why, and the fix is adding that
+   origin to the option, not opening the port.
 
-## 3. O UDP — a pergunta que este teste existe pra responder
+## 3. UDP, the question this test exists to answer
 
-Não há como testar UDP com `nc -z` de forma conclusiva (sem resposta ≠ bloqueado).
-O teste real é streamar. Parear e rodar **5 minutos**, observando:
+There is no conclusive way to test UDP with `nc -z` (no answer is not the same as blocked).
+The real test is streaming. Pair and run for **5 minutes**, watching:
 
-| Sintoma | Leitura |
+| Symptom | Reading |
 | --- | --- |
-| Não pareia | TCP — volte ao passo 2 |
-| Pareia, lista os apps, e a tela **nunca aparece** | **UDP bloqueado.** É o caso desconfiado |
-| Abre e congela em segundos, sem erro de encoder no journal | **UDP bloqueado ou intermitente** |
-| Abre e cai em ~4 s, repetidamente | MTU — ver `wireguard-moonlight.md` |
-| Roda 5 min | ✅ funciona |
+| Does not pair | TCP, go back to step 2 |
+| Pairs, lists the apps, and the screen **never appears** | **UDP blocked.** This is the suspected case |
+| Opens and freezes within seconds, with no encoder error in the journal | **UDP blocked or intermittent** |
+| Opens and drops at ~4 s, repeatedly | MTU, see `wireguard-moonlight.md` |
+| Runs for 5 min | it works |
 
-Em casa, depois: `moonlight-stats 1`.
+At home afterwards: `moonlight-stats 1`.
 
-⚠️ **"Pareia mas não streama" é o modo de falha a memorizar.** Pareamento e lista de
-apps são TCP (47989/47984); vídeo, áudio e controle são UDP (47998-48000). Uma sessão
-que abre e congela parece bug de captura ou de encoder — e neste caminho quase nunca
-é. Antes de mexer em qualquer coisa do Sunshine, descarte o UDP.
+**"It pairs but does not stream" is the failure mode to memorize.** Pairing and the app
+list are TCP (47989/47984); video, audio and control are UDP (47998-48000). A session that
+opens and freezes looks like a capture or encoder bug, and on this path it almost never is.
+Before touching anything in Sunshine, rule UDP out.
 
-## 4. Se o UDP estiver bloqueado
+## 4. If UDP is blocked
 
-Não há conserto deste lado: quem descarta é o firewall da UFSCar. As saídas, em ordem
-de preferência:
+There is no fix on this side: what drops it is the UFSCar firewall. The ways out, in order
+of preference:
 
-1. **Voltar ao túnel** — continua de pé, e enfia tudo dentro da 51820/UDP, que está
-   PROVADO atravessar aquela rede (medido em 08/08). É o motivo de não desmontá-lo.
-2. Pedir liberação à CoTI/SIn (`sin-citi@ufscar.br`) — as portas são fixas e
-   documentáveis, mas o prazo é institucional.
+1. **Go back to the tunnel**, which is still up, and it stuffs everything inside 51820/UDP,
+   which is PROVEN to cross that network (measured on 08/08). That is the reason not to tear
+   it down.
+2. Ask CoTI/SIn (`sin-citi@ufscar.br`) to open it, since the ports are fixed and
+   documentable, but the timeline is institutional.
 
-## 5. Resultado — 10/08/2026 ✅
+## 5. Result, 10/08/2026
 
-O caminho direto NÃO é uma rota melhor: é o mesmo caminho, sem encapsulamento (o
-endpoint do WireGuard é o próprio roteador). O que ele ganha é MTU (1492 da PPPoE
-contra ~1420 do túnel) e dispensar o cliente de VPN.
+The direct path is NOT a better route: it is the same path without encapsulation (the
+WireGuard endpoint is the router itself). What it gains is MTU (1492 from PPPoE against
+~1420 through the tunnel) and not needing a VPN client.
 
-**O UDP passa.** Era a única incógnita e está respondida — não por inferência, mas
-pelo contador de DNAT do roteador: `Moonlight-Stream-Campus → packets 3`. Esse
-contador só conta o PRIMEIRO pacote de cada fluxo novo (depois o conntrack desvia do
-dstnat), então 3 = exatamente os três fluxos esperados, vídeo 47998 + áudio 47999 +
-controle 48000. Guardar o método: é a forma mais barata de provar fluxo UDP sem
-instrumentar o cliente.
+**UDP gets through.** It was the only unknown and it is answered, not by inference but by
+the router's DNAT counter: `Moonlight-Stream-Campus → packets 3`. That counter only counts
+the FIRST packet of each new flow (after that conntrack bypasses dstnat), so 3 is exactly
+the three expected flows, video 47998 + audio 47999 + control 48000. Keep the method: it is
+the cheapest way to prove a UDP flow without instrumenting the client.
 
-Medido de casa até `200.133.233.101`, 100 pacotes de 1 KB:
+Measured from home to `200.133.233.101`, 100 packets of 1 KB:
 
-| Métrica | Valor |
+| Metric | Value |
 | --- | --- |
-| RTT médio | 35,5 ms (min 34,7 / max 38,1) |
-| Perda | **0%** |
-| Jitter (mdev) | 0,54 ms |
-| Sessão mais longa | 21m58s, seguida de 9 min+ |
-| Vazão em uso de desktop | ~3 Mbps ↑ |
+| Mean RTT | 35.5 ms (min 34.7 / max 38.1) |
+| Loss | **0%** |
+| Jitter (mdev) | 0.54 ms |
+| Longest session | 21m58s, followed by 9 min+ |
+| Throughput in desktop use | ~3 Mbps ↑ |
 
-Contra a medição de jul/2026 no caminho da FAI (**1,67% de perda, RTT 20 → 312 ms**),
-é outro mundo. ⚠️ Mas não é comparação limpa: segmento de origem diferente (campus vs
-FAI) e ICMP é despriorizado por switch. Vale como indício forte, não como prova sobre
-o fluxo de vídeo — para isso, o overlay do Moonlight (`Ctrl+Alt+Shift+S`).
+Against the jul/2026 measurement over the FAI path (**1.67% loss, RTT 20 to 312 ms**), it is
+another world. But it is not a clean comparison: a different source segment (campus vs
+FAI) and ICMP is deprioritized by switches. It counts as a strong indication, not as proof
+about the video flow. For that, use the Moonlight overlay (`Ctrl+Alt+Shift+S`).
 
-**Latência: é ruído, como previsto.** Os 35 ms são o RTT do caminho físico, que o
-túnel percorria igual. Não houve ganho de rota porque não havia rota a ganhar.
+**Latency: noise, as predicted.** The 35 ms are the RTT of the physical path, which the
+tunnel travelled all the same. There was no routing gain because there was no route to gain.
 
-A rota, com os donos identificados por RDAP — quatro sistemas autônomos, nenhum deles
-um servidor intermediário (todos encaminham pacote, nenhum termina a conexão):
+The route, with the owners identified through RDAP: four autonomous systems, none of them an
+intermediate server (they all forward packets, none terminates the connection):
 
 ```text
-roteador → Algar Telecom (AS16735) → IX.br/NIC.br (AS26162)
-         → RNP (AS1916) → UFSCar (AS52888) → notebook
+router → Algar Telecom (AS16735) → IX.br/NIC.br (AS26162)
+       → RNP (AS1916) → UFSCar (AS52888) → notebook
 ```
 
-O IX.br e a RNP não são removíveis: a internet da UFSCar vem da RNP.
+IX.br and RNP cannot be removed: UFSCar's internet comes from RNP.
 
-### O que a sessão real revelou, e não estava previsto aqui
+### What the real session revealed, and was not predicted here
 
-- **`ping_timeout = 20000` absorveu um buraco de 18,9 s** às 11:47 sem derrubar a
-  sessão. A prova é que o guard do hypridle não ciclou (um único `Stopped` às 11:25,
-  nenhum `Started` às 11:47) — o `undo` do prep-cmd nunca rodou. Método reaproveitável:
-  o guard é um detector de fim-de-sessão mais confiável que a linha
-  `CLIENT DISCONNECTED`, que sai tanto em queda real quanto em reconexão absorvida.
-  ⚠️ As duas quedas do dia (18,9 s e 104 s) foram o DONO reconectando, confirmado por
-  ele. Não são indício de rota instável — todos os testes deram 0% de perda.
-- **HEVC: negocia, mas não serve neste cliente.** Ligado às 14:43 (`hevc_vaapi`,
-  Rec. 709) e desligado pelo dono às 14:57 por estar "muito bugado" na prática.
-  H.264 é a escolha final para esta máquina, e é DELIBERADA — não é o default que
-  ninguém revisou.
-  ⚠️ Isso desmente a nota de 03/08 do `sunshine.nix` PARA ESTE CLIENTE, e é o registro
-  que impede a próxima pessoa de repetir: lá está escrito que ligar HEVC/AV1 "vale mais
-  que qualquer ajuste do host". Vale — onde o decode presta. Aqui negociou limpo no
-  journal e entregou imagem ruim, que é o pior caso possível de diagnosticar, porque do
-  lado do host TUDO parece certo.
-- `Video encryption enabled` nas duas sessões — o modo WAN entrou sozinho, sem
-  configurar nada.
+- **`ping_timeout = 20000` absorbed an 18.9 s hole** at 11:47 without dropping the session.
+  The proof is that the hypridle guard did not cycle (a single `Stopped` at 11:25, no
+  `Started` at 11:47), so the prep-cmd `undo` never ran. A reusable method: the guard is a
+  more reliable end-of-session detector than the `CLIENT DISCONNECTED` line, which shows up
+  both on a real drop and on an absorbed reconnect.
+  Both drops that day (18.9 s and 104 s) were me reconnecting, which I confirmed. They
+  are not evidence of an unstable route, since every test came back with 0% loss.
+- **HEVC: it negotiates, but it does not serve on this client.** Turned on at 14:43
+  (`hevc_vaapi`, Rec. 709) and turned off at 14:57 because in practice it was "way too
+  buggy". H.264 is the final choice for this machine, and it is DELIBERATE, not the default
+  nobody reviewed.
+  That contradicts the 03/08 note in `sunshine.nix` FOR THIS CLIENT, and it is the record
+  that keeps the next person from repeating it: there it says that turning HEVC/AV1 on "is
+  worth more than any host tweak". It is, where the decode is any good. Here it negotiated
+  cleanly in the journal and delivered a bad image, which is the worst possible case to
+  diagnose, because on the host side EVERYTHING looks right.
+- `Video encryption enabled` on both sessions: WAN mode came on by itself, with nothing
+  configured.

@@ -1,110 +1,119 @@
-# Ideias
+# Ideas
 
-Coisas consideradas, referências e o que ainda não virou decisão. O que já virou
-está em [history/](history/); o que está para fazer, em
-[open-items.md](open-items.md).
+Things considered, references, and what has not become a decision yet. What already did is
+in [history/](history/); what is still to do is in [open-items.md](open-items.md).
 
-> Quickshell: DECIDIDO — migrei tudo pro Quickshell (ver TODO). Personalizável em QML
-> com hot-reload; o Hyprland também virou hot-reload (hyprland.lua via mkOutOfStoreSymlink).
-> Para me inspirar: <https://github.com/Misterio77/Foundry>
-> Wallpapers Nix: <https://github.com/NixOS/nixos-artwork/tree/master/wallpapers>
-> Temas centralizados: `home/desktop/palette.nix` (`my.theme`). O nix-colors foi descartado (arquivado + base16 limita a 16 cores).
+> Quickshell: DECIDED, I migrated everything to Quickshell (see the TODO). Customizable in
+> QML with hot-reload; Hyprland became hot-reload too (hyprland.lua through
+> mkOutOfStoreSymlink).
+> For inspiration: <https://github.com/Misterio77/Foundry>
+> Nix wallpapers: <https://github.com/NixOS/nixos-artwork/tree/master/wallpapers>
+> Centralized themes: `home/desktop/palette.nix` (`my.theme`). nix-colors was discarded
+> (archived + base16 caps it at 16 colors).
 
-## Filtro de luz azul e cansaço visual
+## Blue light filter and eye strain
 
-**Se o hyprsunset ganhar transição gradual** (issue *Graduated transition*, aberta em
-08/08/2026), os 13 perfis de `home/desktop/hyprsunset.nix` colapsam pra 3 — dia, noite
-e madrugada — e a ferramenta interpola. Hoje ele salta seco, e os degraus pequenos são
-o que disfarça o salto.
+**If hyprsunset gains a gradual transition** (the *Graduated transition* issue, opened on
+08/08/2026), the 13 profiles in `home/desktop/hyprsunset.nix` collapse into 3 (day, night
+and late night) and the tool interpolates. Today it jumps abruptly, and the small steps are
+what disguises the jump.
 
-**A ordem de prioridade contra cansaço visual** é a contrária da intuição: reduzir
-BRILHO vem antes de temperatura de cor, e modo noturno não substitui brilho adequado.
-Foi o que motivou o `system/hardware/ddc.nix` — gamma escurece o sinal, não a luz
-emitida. A curva de brilho por DDC/CI foi FEITA e REVERTIDA — funcionava, mas só no monitor
-principal, e a TV do HDMI não tem caminho automático. Ver o histórico de agosto. O que
-segue em aberto:
+**The priority order against eye strain** is the opposite of the intuition: reducing
+BRIGHTNESS comes before color temperature, and night mode does not replace adequate
+brightness. That is what motivated `system/hardware/ddc.nix`: gamma darkens the signal, not
+the light being emitted. The DDC/CI brightness curve was BUILT and REVERTED, since it
+worked, but only on the main monitor, and the HDMI TV has no automatic path. See the august
+history. What is still open:
 
-- **Gamma progressivo a partir das 18h** — o passo seguinte se a curva de cor não bastar,
-  e é ele que finalmente aplicaria a prioridade acima. Em 13/08/2026 a curva pós-18h
-  desceu ~200–400K por degrau (2ª descida) e o eixo do BRILHO foi deixado de fora de
-  propósito: o dim automático por gamma existiu e foi revertido em 08/08 junto com o DDC.
-  ⚠️ A curva de Kelvin chegou perto do fundo útil — já atravessa os ~3200K em que a cor
-  estraga mídia —, então continuar descendo K piora a cor sem alívio proporcional. Se o
-  incômodo voltar, o ajuste é gamma, não mais laranja.
-- **Bias lighting** — luz atrás do monitor. É a recomendação que mais aparece na
-  literatura e a única que não é software: reduz o contraste entre tela e parede escura.
-- **PWM**: monitor que escurece por PWM pisca em brilho baixo e piora a fadiga.
-  Verificar se os painéis são flicker-free antes de baixar demais o backlight.
+- **Progressive gamma from 18:00 on**, the next step if the color curve is not enough, and
+  it is the one that would finally apply the priority above. On 13/08/2026 the post-18:00
+  curve came down ~200 to 400K per step (the 2nd descent) and the BRIGHTNESS axis was left
+  out on purpose: automatic dimming through gamma existed and was reverted on 08/08 along
+  with the DDC.
+  The Kelvin curve got close to the useful floor, since it already crosses the ~3200K
+  where the color ruins media, so going further down in K makes the color worse without a
+  proportional relief. If the discomfort comes back, the adjustment is gamma, not more
+  orange.
+- **Bias lighting**, a light behind the monitor. It is the recommendation that shows up
+  most in the literature and the only one that is not software: it reduces the contrast
+  between the screen and a dark wall.
+- **PWM**: a monitor that dims through PWM flickers at low brightness and makes fatigue
+  worse. Check whether the panels are flicker-free before lowering the backlight too far.
 
-## NetBird: contingência de CGNAT, não substituto
+## NetBird: a CGNAT contingency, not a replacement
 
-<https://github.com/netbirdio/netbird> — WireGuard com plano de controle: descoberta de
-peers, NAT traversal automático, ACL por dispositivo e SSO. Avaliado em 10/08/2026, no
-mesmo dia em que o acesso direto do Moonlight entrou.
+<https://github.com/netbirdio/netbird>, WireGuard with a control plane: peer discovery,
+automatic NAT traversal, per-device ACL and SSO. Evaluated on 10/08/2026, the same day the
+Moonlight direct access landed.
 
-**DECISÃO: ficar só com o WireGuard do roteador. Não trocar, e não rodar os dois.**
+**DECISION: stay with the router's WireGuard alone. Do not switch, and do not run both.**
 
-O enquadramento que importa não é "trocar ou não" — é que o desenho atual repousa numa
-premissa única: **a Alcans dá IP público de verdade**. Port-forward, WireGuard no
-roteador e DDNS dependem os três disso. Se mudar, caem JUNTOS, no mesmo minuto. O NetBird é o
-plano para esse dia, e esta análise existe para não ser refeita sob pressão.
+The framing that matters is not "switch or not", it is that the current design rests on a
+single premise: **Alcans gives a real public IP**. Port forwarding, WireGuard on the router
+and DDNS all three depend on it. If that changes, they fall TOGETHER, in the same minute.
+NetBird is the plan for that day, and this analysis exists so it does not have to be redone
+under pressure.
 
-### Por que não agora
+### Why not now
 
-- **Exige agente em toda máquina**, e é justamente o que foi recusado: o notebook da FAI
-  já roda nxBender + openconnect, e o agente do NetBird gerencia rota dinamicamente —
-  mesma classe de conflito, mais difícil de depurar que um `wg-quick` estático.
-- **Reintroduz o relay.** Ele cai pra Relay/TURN quando o P2P falha, que é o DERP do
-  Tailscale com outro nome — a razão da saída do Tailscale em 08/08. E na rede da FAI,
-  que descarta SYN-ACK, falha de P2P é o cenário PROVÁVEL: relayaria justamente lá.
-- **O roteador não pode ser o servidor.** O management pede "1 CPU e 2 GB"; o WR3000 tem
-  128 MB de RAM e ~1,3 MB de flash livre. O agente roda em OpenWrt, o plano de controle
-  não.
-- **Auto-hospedar cria dependência circular:** management + signal + relay iriam pro PC,
-  que é a máquina que se quer alcançar. Hoje não existe esse laço — o roteador é aparelho
-  separado e sempre ligado. Usar a nuvem deles resolve o círculo readicionando o terceiro.
+- **It requires an agent on every machine**, which is exactly what was refused: the FAI
+  notebook already runs nxBender + openconnect, and the NetBird agent manages routes
+  dynamically, the same class of conflict, harder to debug than a static `wg-quick`.
+- **It reintroduces the relay.** It falls back to Relay/TURN when P2P fails, which is
+  Tailscale's DERP under another name, the reason Tailscale went out on 08/08. And on the
+  FAI network, which drops SYN-ACK, a P2P failure is the LIKELY scenario: it would relay
+  precisely there.
+- **The router cannot be the server.** The management side asks for "1 CPU and 2 GB"; the
+  WR3000 has 128 MB of RAM and ~1.3 MB of free flash. The agent runs on OpenWrt, the
+  control plane does not.
+- **Self-hosting creates a circular dependency:** management + signal + relay would go to
+  the PC, which is the machine you are trying to reach. Today that loop does not exist,
+  since the router is a separate device that is always on. Using their cloud solves the
+  circle by adding the third party back.
 
-### O que ele resolveria de verdade (e por isso fica anotado)
+### What it would actually solve (and why it stays written down)
 
-1. **CGNAT** — o gatilho. Com relay, sobrevive ao que hoje mataria tudo.
-2. **Adicionar peer sem editar UCI à mão.** Hoje é SSH no roteador; o `router-sync` é
-   pull-only. Atrito real.
-3. **ACL por dispositivo.** Hoje a regra do Sunshine confia na faixa `10.10.10.0/24`
-   INTEIRA — celular, notebook e workstation têm exatamente o mesmo acesso. Esta é uma
-   limitação de verdade do desenho atual, independente de CGNAT.
+1. **CGNAT**, the trigger. With a relay, it survives what would kill everything today.
+2. **Adding a peer without editing UCI by hand.** Today that is SSH into the router;
+   `router-sync` is pull-only. Real friction.
+3. **Per-device ACL.** Today the Sunshine rule trusts the ENTIRE `10.10.10.0/24` range, so
+   the phone, the notebook and the workstation have exactly the same access. This is a real
+   limitation of the current design, independent of CGNAT.
 
-### Gatilho para reabrir
+### Trigger to reopen
 
-O IP público de casa deixar de responder de fora. Teste que não mente (ponto externo
-independente, nunca de dentro da LAN — a operadora faz hairpin):
+The home public IP no longer answering from outside. A test that does not lie (an
+independent external vantage point, never from inside the LAN, because the ISP does
+hairpin):
 
 ```sh
 curl -s "https://check-host.net/check-tcp?host=<ip>%3A2222&max_nodes=3" \
   -H "Accept: application/json"
 ```
 
-## "Tudo no roteador": o que já é, e o que não pode ser
+## "Everything on the router": what it already is, and what it cannot be
 
-Ideia do dono (10/08/2026): concentrar serviço no roteador para nada parar quando o PC
-cair (queda de energia e afins).
+My idea (10/08/2026): concentrate services on the router so that nothing stops when the PC
+goes down (power outages and the like).
 
-**BOA NOTÍCIA: a camada de ACESSO já é exatamente isso.** Rodam no roteador e não dependem
-do PC — WireGuard (`wg0`, é ele o servidor), DHCP, DNS com adblock-fast e https-dns-proxy,
-firewall/SQM, e o Wake-on-LAN (`/usr/bin/wake-desktop`). O PC pode estar desligado que a
-VPN sobe e a rede de casa funciona.
+**GOOD NEWS: the ACCESS layer already is exactly that.** These run on the router and do not
+depend on the PC: WireGuard (`wg0`, the router is the server), DHCP, DNS with adblock-fast
+and https-dns-proxy, firewall/SQM, and Wake-on-LAN (`/usr/bin/wake-desktop`). The PC can be
+off and the VPN still comes up and the home network still works.
 
-**O que NÃO pode migrar:** Jellyfin, Sunshine, Caddy, qBittorrent e Ollama. Não é questão
-de vontade — são 128 MB de RAM e 1,3 MB de flash livre. Streaming de tela e transcode de
-mídia não cabem em ordem de grandeza nenhuma.
+**What CANNOT migrate:** Jellyfin, Sunshine, Caddy, qBittorrent and Ollama. It is not a
+matter of willingness, it is 128 MB of RAM and 1.3 MB of free flash. Screen streaming and
+media transcoding do not fit by any order of magnitude.
 
-⚠️ **E o gargalo do cenário "acabou a luz" NÃO é o roteador — é o PC voltar sozinho.**
-Isso é BIOS (*Restore on AC Power Loss* = Power On), não Nix, e não é declarável neste
-repo. O WoL NÃO substitui: depois de um corte real de energia a NIC perde o estado armado
-por `ethtool`, e só volta se a própria BIOS mantiver o wake habilitado. Ordem certa de
-atacar: (1) BIOS religa sozinho, (2) WoL como resgate para desligamento normal, (3) nobreak
-no roteador+modem se a intenção for manter a internet DURANTE a queda — mas isso não acende
-o PC, porque ele não está no nobreak.
+**And the bottleneck in the "power went out" scenario is NOT the router, it is the PC
+coming back on its own.** That is BIOS (*Restore on AC Power Loss* = Power On), not Nix,
+and it is not declarable in this repo. WoL does NOT replace it: after a real power cut the
+NIC loses the state armed by `ethtool`, and it only comes back if the BIOS itself keeps
+wake enabled. The right order to attack it: (1) the BIOS powers back on by itself, (2) WoL
+as the rescue for a normal shutdown, (3) a UPS on the router and modem if the intent is to
+keep the internet up DURING the outage, but that does not turn the PC on, because the PC is
+not on the UPS.
 
-⚠️ `router/uci/etherwake.conf` é CONFIG MORTA: `name='example'`, `mac='11:22:33:44:55:66'`
-— placeholder de fábrica do app LuCI, nunca preenchido. Quem funciona é o
-`/usr/bin/wake-desktop`, com o MAC embutido. Não confiar na tela do LuCI.
+`router/uci/etherwake.conf` is DEAD CONFIG: `name='example'`,
+`mac='11:22:33:44:55:66'`, the factory placeholder of the LuCI app, never filled in. What
+works is `/usr/bin/wake-desktop`, with the MAC baked in. Do not trust the LuCI screen.

@@ -1,56 +1,61 @@
-# Gateway da VPN FAI — a metade que mora no roteador
+# FAI VPN gateway: the half that lives on the router
 
-Par manual de [`system/net/fai-gateway.nix`](../../system/net/fai-gateway.nix). Aquele
-arquivo faz o PC encaminhar e mascarar; **este aqui faz alguém mandar tráfego pra ele.**
-Sem os dois lados, nada acontece.
+The manual counterpart of
+[`system/net/fai-gateway.nix`](../../system/net/fai-gateway.nix). That file makes the PC
+forward and masquerade; **this one makes somebody send traffic to it.** Without both sides,
+nothing happens.
 
 ```text
-celular/notebook → roteador → 192.168.1.10 → ppp0 → FAI
-      (este guia)              (o .nix)
+phone/notebook → router → 192.168.1.10 → ppp0 → FAI
+    (this guide)           (the .nix)
 ```
 
-## Por que é manual
+## Why it is manual
 
-Duas razões independentes, e nenhuma delas é preguiça:
+Two independent reasons, and neither of them is laziness:
 
-1. **`system/net/router.nix` recusa push de UCI de propósito** — "uma linha errada de rede
-   ou firewall tranca você fora e a saída é modo failsafe com acesso FÍSICO". Aplicar por
-   SSH sem commit-confirm é exatamente o que aquela decisão evita.
-2. **O sudoers do roteador não tem `/etc/init.d/network`.** São NOPASSWD só `reboot`,
-   `nft`, `uci`, `dnsmasq`, `firewall` e `wg-status`. Dá pra *escrever* a rota sem senha e
-   não dá pra *aplicar* — o que deixaria `/etc/config/network` divergente do que roda, e o
-   `router-sync diff` acusaria um drift que nem está no ar.
+1. **`system/net/router.nix` refuses to push UCI on purpose**: "one wrong network or
+   firewall line locks you out and the way back is failsafe mode with PHYSICAL access".
+   Applying over SSH with no commit-confirm is exactly what that decision avoids.
+2. **The router's sudoers does not include `/etc/init.d/network`.** The NOPASSWD entries are
+   only `reboot`, `nft`, `uci`, `dnsmasq`, `firewall` and `wg-status`. You can *write* the
+   route with no password and you cannot *apply* it, which would leave
+   `/etc/config/network` diverging from what runs, and `router-sync diff` would report drift
+   that is not even live.
 
-Ou seja: o `uci set` sai de graça, o `reload` pede sua senha. Rode você.
+In other words: the `uci set` is free, the `reload` asks for your password. Run it yourself.
 
-## Antes de começar
+## Before starting
 
-O lado do PC precisa estar ativo (`sudo nixos-rebuild switch --flake .`) e a VPN de pé
-(`vpn connect fai`), senão não há o que testar.
+The PC side has to be active (`sudo nixos-rebuild switch --flake .`) and the VPN up
+(`vpn connect fai`), otherwise there is nothing to test.
 
-## Parte 1 — rotas estáticas
+## Part 1: static routes
 
-⚠️ **A lista de faixas é da FAI, não nossa** — ela vem no túnel a cada conexão e pode
-mudar. Não confie na lista abaixo às cegas; tire a atual do próprio túnel:
+**The list of ranges belongs to FAI, not to us.** It comes down the tunnel on every
+connection and it can change. Do not trust the list below blindly, pull the current one from
+the tunnel itself:
 
 ```sh
 ip route show dev ppp0 | grep via | awk '{print $1}'
 ```
 
-✅ **ESTA PARTE JÁ ESTÁ FEITA** (verificado 12/08/2026). As seis rotas existem como seções
-NOMEADAS `fai_r1`..`fai_r6` — veja [`router/uci/network.conf`](../../router/uci/network.conf).
-Elas são anteriores a este guia e ficaram anos sem efeito, porque apontavam pra um
-`192.168.1.10` que não encaminhava: **a metade que faltava era a do PC**, não esta.
+**THIS PART IS ALREADY DONE** (verified 12/08/2026). The six routes exist as NAMED
+sections `fai_r1` through `fai_r6`, see
+[`router/uci/network.conf`](../../router/uci/network.conf). They predate this guide and sat
+there for years with no effect, because they pointed at a `192.168.1.10` that did not
+forward: **the missing half was the PC's**, not this one.
 
-⚠️ Por serem nomeadas e não anônimas, `uci show network | grep '@route'` **não as mostra** —
-esse grep devolve vazio e parece que não há rota nenhuma. Procure por `=route`:
+Because they are named and not anonymous, `uci show network | grep '@route'` **does not
+show them**: that grep returns empty and it looks like there is no route at all. Look for
+`=route` instead:
 
 ```sh
 sudo uci show network | grep -E '=route|fai_r'
 ```
 
-Se um dia precisar recriá-las (reflash sem "keep settings"), o padrão é este — nomeadas, e
-com `netmask` em vez de CIDR, como o aparelho já as tem:
+If they ever need recreating (a reflash without "keep settings"), this is the pattern, named
+and with a `netmask` instead of CIDR, the way the device already has them:
 
 ```sh
 i=1
@@ -68,87 +73,91 @@ sudo uci set network.fai_r6.target='200.136.209.128'
 sudo uci set network.fai_r6.netmask='255.255.255.128'
 sudo uci set network.fai_r6.gateway='192.168.1.10'
 sudo uci commit network
-sudo /etc/init.d/network reload   # ← pede senha
+sudo /etc/init.d/network reload   # <- asks for the password
 ```
 
-## Parte 2 — split-DNS das zonas da FAI
+## Part 2: split-DNS for the FAI zones
 
-✅ **APLICADO em 13/08/2026** — os três `add_list` abaixo já estão no aparelho e
-verificados: `fai2008.ufscar.br` resolve pelo roteador devolvendo `192.168.130.2/.3`, e o
-DNS da casa + internet seguiram intactos no restart. Ficam aqui pra reflash e rollback.
+**APPLIED on 13/08/2026**: the three `add_list` entries below are already on the device
+and verified. `fai2008.ufscar.br` resolves through the router returning
+`192.168.130.2/.3`, and the home DNS plus internet stayed intact across the restart. They
+stay here for reflash and rollback.
 
-**SÓ A ZONA DO AD PRECISA.** Medido em 12/08/2026, comparando resposta pública (1.1.1.1)
-com a do DC da FAI (200.136.209.252):
+**ONLY THE AD ZONE NEEDS IT.** Measured on 12/08/2026, comparing the public answer
+(1.1.1.1) with the FAI DC's (200.136.209.252):
 
-| zona | público | FAI | split-DNS? |
+| zone | public | FAI | split-DNS? |
 | --- | --- | --- | --- |
-| `fai2008.ufscar.br` | **nada** | `.252`, `192.168.130.2/.3` | **sim** |
-| `sup.fai.ufscar.br` | `200.136.209.236` | igual | não |
-| `fai.ufscar.br` | `200.136.209.236` | igual | não |
+| `fai2008.ufscar.br` | **nothing** | `.252`, `192.168.130.2/.3` | **yes** |
+| `sup.fai.ufscar.br` | `200.136.209.236` | the same | no |
+| `fai.ufscar.br` | `200.136.209.236` | the same | no |
 
-Por isso `dashboard.sup.fai.ufscar.br` funcionou sem nada disto: a zona é pública, faltava
-só a rota. O split-DNS abaixo serve pros nomes que **só existem dentro** — host de domínio,
-compartilhamento, serviço interno. Se um nome novo não resolver, teste antes de mexer aqui:
+That is why `dashboard.sup.fai.ufscar.br` worked with none of this: the zone is public, only
+the route was missing. The split-DNS below serves the names that **only exist inside**: a
+domain host, a share, an internal service. If a new name does not resolve, test before
+touching anything here:
 
 ```sh
-nslookup <nome> 200.136.209.252    # resolve? então é zona interna, some com a zona abaixo
+nslookup <name> 200.136.209.252    # does it resolve? then it is an internal zone, add it below
 ```
 
-Os DCs `200.136.209.252` e `.247` respondem na 53 pelo túnel (testado 12/08/2026).
+The DCs `200.136.209.252` and `.247` answer on port 53 through the tunnel (tested
+12/08/2026).
 
-⚠️ **A armadilha é o `rebind_protection`, que está em `1`.** O DNS da FAI devolve
-`192.168.130.2` pra `fai2008.ufscar.br` — endereço RFC1918 — e o dnsmasq **descarta
-respostas privadas vindas de fora** por proteção anti-rebind. Sem liberar a zona, o
-split-DNS parece configurado e simplesmente não resolve, sem erro em lugar nenhum.
+**The trap is `rebind_protection`, which is set to `1`.** The FAI DNS returns
+`192.168.130.2` for `fai2008.ufscar.br`, an RFC1918 address, and dnsmasq **discards private
+answers coming from outside** as anti-rebind protection. Without allowing the zone, the
+split-DNS looks configured and simply does not resolve, with no error anywhere.
 
 ```sh
 sudo uci add_list dhcp.@dnsmasq[0].server='/fai2008.ufscar.br/200.136.209.252'
 sudo uci add_list dhcp.@dnsmasq[0].server='/fai2008.ufscar.br/200.136.209.247'
 sudo uci add_list dhcp.@dnsmasq[0].rebind_domain='fai2008.ufscar.br'
 sudo uci commit dhcp
-sudo /etc/init.d/dnsmasq restart   # NOPASSWD; derruba o DNS da casa por ~2s
+sudo /etc/init.d/dnsmasq restart   # NOPASSWD; it drops the home DNS for ~2s
 ```
 
-O `noresolv='1'` não atrapalha: entrada `server=/zona/ip` é casada por domínio mais
-específico e tem precedência sobre o encaminhamento padrão pro DoH.
+The `noresolv='1'` does not get in the way: a `server=/zone/ip` entry is matched by the more
+specific domain and takes precedence over the default forwarding to DoH.
 
-⚠️ **O `https-dns-proxy` é dono da lista `server`.** O init script dele usa
-`uci_add_list_if_new` (aditivo, não apaga), mas tem um par
-`_dnsmasq_create_server_backup` / `_dnsmasq_restore_server_backup`: no *stop* ele
-restaura o backup, e se o backup foi tirado **antes** da sua entrada, ela some. Sintoma:
-nomes da FAI param de resolver depois de mexer no DoH ou rebootar. Conferir com:
+**`https-dns-proxy` owns the `server` list.** Its init script uses `uci_add_list_if_new`
+(additive, it does not delete), but it has a
+`_dnsmasq_create_server_backup` / `_dnsmasq_restore_server_backup` pair: on *stop* it
+restores the backup, and if the backup was taken **before** your entry, yours disappears.
+The symptom: FAI names stop resolving after touching DoH or rebooting. Check with:
 
 ```sh
 sudo uci show dhcp | grep fai2008
 ```
 
-Se isso virar recorrente, é só re-rodar os `add_list` — são idempotentes com
-`uci_add_list_if_new`.
+If this becomes recurrent, just re-run the `add_list` commands, since they are idempotent
+through `uci_add_list_if_new`.
 
-⚠️ **NÃO use `serversfile` como plano B.** O slot é do **adblock-fast**, que o aponta pro
-próprio `/var/run/adblock-fast/dnsmasq.servers` e o remove quando para (visto acontecer no
-`router-sync pull` de 12/08/2026). Sobrescrevê-lo derrubaria o bloqueio de anúncios da casa
-inteira, e ele te sobrescreveria de volta no próximo reload.
+**Do NOT use `serversfile` as a plan B.** That slot belongs to **adblock-fast**, which
+points it at its own `/var/run/adblock-fast/dnsmasq.servers` and removes it when it stops
+(seen happening in the `router-sync pull` of 12/08/2026). Overwriting it would take down ad
+blocking for the whole house, and it would overwrite you back on the next reload.
 
-## Verificação
+## Verification
 
-De **outro** dispositivo da rede (não do PC — ele alcança pelo túnel de qualquer jeito):
+From **another** device on the network (not from the PC, which reaches it through the tunnel
+anyway):
 
 ```sh
-ip route get 200.136.209.229      # deve sair via 192.168.1.10
-nslookup fai2008.ufscar.br        # deve devolver 192.168.130.2/.3
-nc -vz 200.136.209.229 22         # deve abrir
+ip route get 200.136.209.229      # should go out through 192.168.1.10
+nslookup fai2008.ufscar.br        # should return 192.168.130.2/.3
+nc -vz 200.136.209.229 22         # should open
 ```
 
-Se a rota está certa e o SSH não abre, cheque no PC se a VPN caiu — com `ppp0` fora, o
-tráfego morre aqui e **falha em silêncio**, sem mensagem nenhuma pro dispositivo.
+If the route is right and SSH does not open, check on the PC whether the VPN dropped: with
+`ppp0` gone, traffic dies here and **fails silently**, with no message at all to the device.
 
 ## Rollback
 
 ```sh
-# rotas: remova de trás pra frente (os índices deslocam)
-sudo uci show network | grep '@route' | tail -1     # confira o índice antes
-sudo uci delete network.@route[-1]                   # repita 6x
+# routes: remove them back to front (the indexes shift)
+sudo uci show network | grep '@route' | tail -1     # check the index first
+sudo uci delete network.@route[-1]                   # repeat 6x
 sudo uci commit network && sudo /etc/init.d/network reload
 
 # dns
@@ -158,11 +167,11 @@ sudo uci del_list dhcp.@dnsmasq[0].rebind_domain='fai2008.ufscar.br'
 sudo uci commit dhcp && sudo /etc/init.d/dnsmasq restart
 ```
 
-## Depois de aplicar
+## After applying
 
 ```sh
 router-sync pull && git -C ~/Projects/GitHub/v1cferr/dotfiles diff router/
 ```
 
-Sem o `pull`, o espelho em `router/uci/` vira uma cópia que já foi verdade — que é
-exatamente o que o `router-sync diff` existe pra impedir.
+Without the `pull`, the mirror in `router/uci/` becomes a copy of something that used to be
+true, which is exactly what `router-sync diff` exists to prevent.

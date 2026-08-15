@@ -336,3 +336,22 @@ armadilha conhecida. Vale mais o parágrafo do que o título.
 - [ ] Deixar o VSCode de forma declarativa com o Nix e ao mesmo tempo sempre atualizar o sync com minha conta do GitHub/Microsoft (quero que fique centralizado no <https://github.com/v1cferr/dotfiles>)
 
 - [ ] Adicionar o IP publico atual no Fastfetch?
+
+- [ ] CurseForge: falta ver o Minecraft ABRIR (aberto em 14/08/2026). O caminho até aqui
+      está todo exercitado de verdade — login pela conta, biblioteca, download do
+      NightfallCraft (MC 1.20.1 + Forge 47.4.4) e, depois do Java entrar no pacote, o
+      pós-processamento do Forge. O que ninguém viu ainda é a janela do jogo.
+      • O LOGIN JÁ FOI VALIDADO na prática, então a dúvida do handler `cfauth://` está
+        fechada: o app autenticou e instalou pack. Se um dia REGREDIR, o suspeito nº 1 volta
+        a ser o scheme (`xdg-mime query default x-scheme-handler/cfauth` tem que responder
+        `curseforge.desktop`), não a senha — o app não consegue se registrar sozinho aqui.
+      • ⚠️ SE VOLTAR "Java Runtime Environment is missing or out of date", NÃO declare Java
+        no Nix — já foi tentado e não muda nada (o app só usa a JRE dele). É o extrator
+        dele perdendo o `+x`: rodar `curseforge-fix-java` e REABRIR o app. A activation já
+        faz isso a cada rebuild; o comando cobre o caso de a JRE ter sido baixada no meio da
+        sessão. Confirmar no log do agent (`~/.config/CurseForge/agent/logs/`) — se for
+        isso, aparece `Permission denied` num `ShellOutput() on '…/bin/java -version'`.
+      • ⚠️ SE O JOGO FECHAR NA HORA DE ABRIR, aí sim o suspeito é biblioteca faltando no
+        FHS. O LWJGL traz os próprios `.so`, mas o que ele carrega em cima (GL/GLFW/OpenAL)
+        vem do FHS — conserto é acrescentar em `extraPkgs` (pkgs/curseforge.nix), NUNCA
+        voltar pro `.deb`, que é justamente o que não resolve binário baixado em runtime.

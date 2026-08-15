@@ -1,6 +1,90 @@
 # Histórico — agosto de 2026
 
-57 entradas. Índice em [README.md](../README.md).
+58 entradas. Índice em [README.md](../README.md).
+
+- [x] CurseForge substitui o PrismLauncher — e "falta Java" era PERMISSÃO (14-15/08/2026) —
+      o Prism importa um `.zip` de modpack, mas quem mantém biblioteca e ATUALIZA o pack é o
+      app do CurseForge, que é o uso real aqui. Ele não está no nixpkgs (unfree,
+      binário-only), então o repo reempacota o AppImage oficial em `pkgs/curseforge.nix`
+      (`home/apps/curseforge.nix` do lado do usuário) — mesmo padrão de vendor binário do
+      claude-desktop.
+      • ⚠️⚠️ A CAUSA RAIZ, e ela não tem NADA de NixOS: o app baixa a JRE dele
+        (`OpenJDK21U-jre_x64_linux_hotspot_21.0.4_7.tar.gz`) e extrai com um extrator .NET
+        que NÃO PRESERVA PERMISSÃO. Os binários saem `rw-r--r--`, o primeiro `java -version`
+        morre em `Permission denied` (`System.ComponentModel.Win32Exception`, no log do
+        agent) e a interface anuncia **"Java Runtime Environment is missing or out of
+        date"** — uma mensagem que aponta pro lado errado. Em distro nenhuma esse Java
+        abriria; o bug é do CurseForge.
+      • ⚠️ E ELE NÃO SE CURA SOZINHO: ao tentar rebaixar a JRE pra consertar, a extração
+        falha em `The file '…/Jre_21/NOTICE' already exists.` — o extrator também não
+        sobrescreve. Ou seja, o botão "Retry" da interface roda pra sempre sem sair do
+        lugar. Foram DOIS bugs em cascata, e o segundo é o que transforma o primeiro em beco
+        sem saída.
+      • O CONSERTO É `curseforge-fix-java` (pkgs/), que devolve o `+x`. Roda na activation do
+        home-manager a cada rebuild e também na mão, porque o download que quebra pode
+        acontecer no MEIO de uma sessão — aí é rodar o comando e reabrir o app. Idempotente
+        e silencioso quando não há o que consertar. No diretório real ele corrigiu **88**
+        arquivos, bem mais que o `chmod` manual óbvio em `bin/`: havia `.so` em
+        subdiretórios, incluindo o `lib/server/libjvm.so`.
+      • ⚠️⚠️ O ERRO QUE CUSTOU UM CICLO INTEIRO, e a lição vale mais que o conserto: eu li
+        "No Java executable found" e conclui **"então falta Java"**. Declarei três Temurin
+        JRE (8/17/21) no FHS, com `/usr/lib/jvm` e caminho estável — solução bonita para um
+        problema que não existia. Não mudou NADA, porque o app só consulta a JRE que ele
+        gerencia: com os três instalados, o log do agent seguiu citando **18× o java dele e
+        ZERO vez o nosso**. Os JREs saíram no mesmo commit em que entraram (regra 16). A
+        mensagem de erro de um app terceiro é uma HIPÓTESE, não um diagnóstico — e a
+        diferença entre "falta Java" e "o Java que existe não executa" é a tarde inteira.
+      • O que me empurrou pro erro foi a doc de suporte da Overwolf ("o app instala Java
+        automaticamente") somada às strings `adoptium`/`java-runtime-*` no asar. As duas
+        eram VERDADE e mesmo assim me levaram pro lugar errado: ele instala mesmo — só que
+        quebrado. Ler o log do AGENT (`~/.config/CurseForge/agent/logs/`, JSON, separado do
+        log do Electron) foi o que resolveu, e devia ter sido o primeiro passo.
+      • A CONTA FINAL: `curseforge` +340,2 MiB contra `prismlauncher` −17,6 MiB e `openjdk`
+        (8, 17, 21 e 25, que o wrapper do Prism embrulhava) **−1,8 GiB** — total **27,2 →
+        25,7 GiB**. O sistema encolheu 1,5 GiB trocando launcher nativo por Electron, porque
+        aqui ninguém declara Java: quem provê é o app.
+      • ⚠️ AppImage e NÃO o `.deb`, e o motivo é o mesmo Java, pelo outro lado. As duas
+        fontes existem e são a mesma release, mas o que importa aqui é binário que o app
+        BAIXA em runtime (a JRE, o instalador do Forge, o Minecraft) — e nada disso passa
+        por `autoPatchelfHook`, que só alcança o que está na store. O `programs.nix-ld` deste
+        sistema cobre o LOADER (o `/lib64/ld-linux` daqui aponta pra ele, e foi por isso que
+        a JRE do app rodou no host depois do `+x`), mas não as bibliotecas de cada um. O
+        `appimageTools` embrulha em `buildFHSEnv`, onde o loader existe e o
+        `container-init.cc` ainda põe `/run/opengl-driver/lib` no `ld.so.conf` — o Minecraft
+        lançado como filho herda o FHS **e** o driver da Arc B580. É o FHS que faz o pacote
+        funcionar, não o patchelf.
+      • ⚠️ O `.zip` QUE OS TUTORIAIS MANDAM BAIXAR ESTÁ MORTO: `curseforge-latest-linux.zip`
+        tem `last-modified` de **10/08/2025** e carrega a 1.285.2. O `.AppImage` e o `.deb`
+        na mesma pasta são de **05/08/2026** e trazem a 1.316.0-37372 — confirmado pelo
+        próprio updater do app no primeiro boot ("latest version: 1.316.0-37372"). Seguir o
+        tutorial popular instalaria um app um ano atrasado.
+      • ⚠️ O LOGIN DEPENDE DE UMA ASSOCIAÇÃO QUE O APP NÃO CONSEGUE FAZER SOZINHO. Ele
+        tenta se registrar como handler de `cfauth://` em runtime (Electron
+        `setAsDefaultProtocolClient`), e isso NUNCA vai funcionar aqui: o
+        `~/.config/mimeapps.list` é gerenciado pelo home-manager e aponta pra store, que é
+        read-only (regra 14). O log diz na largada `Failed subscribing app protocol.` e
+        `Failed to register login scheme 'cfauth'`. Como `cfauth://` é o CALLBACK do login
+        (o app abre o browser e espera o redirect), sem handler o login volta pro nada — daí
+        os três schemes declarados em `xdg.mimeApps` no módulo do app.
+      • ⚠️ URL-PONTEIRO, o mesmo furo do `/latest/` do VS Code: a Overwolf só publica
+        `curseforge-latest-linux.AppImage` (testados `-1.316.0-`, `~37372`, `latest.yml` →
+        404). O hash travado mantém o build reprodutível, mas apodrece na próxima release
+        deles. Remédio = `pkgs/curseforge-bump.nix`, irmão do `vscode-bump`, no alias
+        `update`. Com um agravante: lá bastava trocar o número, aqui o HASH precisa ser
+        RECALCULADO. Pra não baixar 139 MiB a cada `update`, quem responde "mudou?" é um
+        range request de 256 KiB no `.deb` (o `control` fica nos primeiros KiB); o AppImage
+        só é baixado quando a resposta é sim.
+      • Por isso o `curseforge` é a ÚNICA exceção do `checks.pacotes` (flake.nix): deixá-lo
+        lá pintaria o CI de vermelho a cada release da Overwolf, por algo que não está neste
+        repo. O `curseforge-bump` ENTRA no check, porque o shellcheck dele é estável.
+      • DUAS COISAS QUE EU TINHA ESCRITO ERRADO E A MEDIÇÃO DERRUBOU: (1) que o
+        `--no-sandbox` era necessário — rodando `bin/curseforge`, que não passa flag
+        nenhuma, o app abre e carrega a biblioteca normalmente, porque o bwrap do
+        `buildFHSEnv` já dá o namespace que o Chromium quer; a flag ficou só por vir do
+        `.desktop` do upstream. (2) que o GNU tar autodetectaria a compressão num pipe — ele
+        só autodetecta quando pode dar seek, então `ar p … | tar -xO` morre em "Archive is
+        compressed. Use -J option". O bump passa por arquivo, o que de quebra o deixa
+        sobreviver ao dia em que o `.xz` virar `.zst`.
 
 - [x] Hover no pill da VPN mostra qualidade do túnel (14/08/2026) — o pill respondia só
       "tem túnel?"; faltava "e está bom?", que é a pergunta de quem está com SSH ou chamada

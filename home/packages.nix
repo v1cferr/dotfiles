@@ -98,7 +98,9 @@
     # ── Jogos / emuladores (bottles/ROMs/instâncias são ESTADO → backup, regra 6) ──
     (bottles.override { removeWarningPopup = true; }) # Wine/Proton FHS-wrapped; popup "Unsupported" silenciado
     rpcs3 # emulador PS3 (Uncharted 1/2/3); firmware + jogos = estado, você provê
-    prismlauncher # Minecraft nativo p/ modpacks (vem wrapped com os JDKs 8/17/21)
+    # O CurseForge (que SUBSTITUIU o prismlauncher em 14/08/2026) NÃO está aqui: ele tem
+    # config própria — o handler dos schemes de login —, então é dono do seu pacote em
+    # home/apps/curseforge.nix.
 
     # ── Disco / limpeza ──
     # Complementa o filelight (que mostra PASTAS): o czkawka acha o que é

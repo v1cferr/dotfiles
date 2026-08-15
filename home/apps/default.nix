@@ -11,5 +11,6 @@
     ./flameshot.nix # ~/.config/flameshot/flameshot.ini (screenshot; keybind em hypr.nix)
     ./mangohud.nix # overlay de FPS/temps/uso nos jogos (config declarativa + toggle)
     ./openal.nix # ~/.config/alsoft.conf: força backend pulse (som dos jogos OpenAL/HashLink)
+    ./curseforge.nix # modpacks do Minecraft: pacote (./pkgs) + handler dos schemes do login
   ];
 }

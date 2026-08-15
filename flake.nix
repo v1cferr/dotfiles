@@ -267,6 +267,9 @@
         azure-mcp = final.callPackage ./pkgs/azure-mcp.nix { }; # Azure MCP Server (`azmcp`) — só no claude-fai
         nxbender = final.callPackage ./pkgs/nxbender.nix { }; # cliente FOSS da VPN SonicWall (FAI)
         vscode-bump = final.callPackage ./pkgs/vscode-bump.nix { }; # bump do vscode-tarball p/ a última stable
+        curseforge = final.callPackage ./pkgs/curseforge.nix { }; # AppImage oficial de modpacks (unfree)
+        curseforge-bump = final.callPackage ./pkgs/curseforge-bump.nix { }; # version+hash do curseforge.nix
+        curseforge-fix-java = final.callPackage ./pkgs/curseforge-fix-java.nix { }; # +x na JRE que o app baixa
       };
 
       # Claude Desktop: força o backend de secret. O Electron autodetecta pelo
@@ -364,6 +367,9 @@
             nxbender # ./pkgs — cliente da VPN SonicWall (3 patches sobre o upstream)
             claude-desktop # flake de terceiro + o wrapper de keyring daqui
             vscode-bump # ./pkgs — o build é o shellcheck do script (regra 7)
+            curseforge-bump # ./pkgs — idem: shellcheck no build
+            curseforge-fix-java # ./pkgs — idem
+            curseforge # ./pkgs — AppImage oficial (fora do CHECK abaixo, ver o porquê lá)
             btop # nixpkgs + src do PR #1457 (GPU Intel Xe) — vive aqui pra o check COMPILAR o fork
             ;
           inherit (pkgs.unstable) vscode; # receita do unstable com o SRC do tarball oficial
@@ -441,8 +447,17 @@
         # DE PROPÓSITO não é o `system.build.toplevel`: construir o sistema inteiro no
         # runner do GitHub arrastaria o quickshell (Qt/C++). Aqui só entram os pacotes
         # que o repo controla, que é onde os patches podem apodrecer.
+        # `curseforge` fica DE FORA, e é a única exceção: o src dele é uma URL-PONTEIRO
+        # (`curseforge-latest-linux.AppImage` — a Overwolf não publica URL versionada),
+        # então a cada release deles o hash travado deixa de casar e o check ficaria
+        # VERMELHO por algo que não está neste repo. É a mesma dor do `/latest/` do VS
+        # Code, só que aqui não há URL fixa pra escolher: o remédio é o `curseforge-bump`
+        # (que roda no `update` e ENTRA no check, porque o shellcheck dele é estável).
+        # Testar o empacotamento continua sendo `nix build .#curseforge`, na mão.
         pacotes = nixpkgs.legacyPackages.${system}.linkFarm "checks-pacotes-do-repo" (
-          nixpkgs.lib.mapAttrsToList (name: path: { inherit name path; }) self.packages.${system}
+          nixpkgs.lib.mapAttrsToList (name: path: { inherit name path; }) (
+            removeAttrs self.packages.${system} [ "curseforge" ]
+          )
         );
       };
 

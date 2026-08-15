@@ -24,7 +24,11 @@ let
   # no diff extensão que entrou ou saiu. O gatilho é este alias, e não o `rebuild`, porque
   # `update` é o ritual de manutenção — o preço é o espelho ficar atrasado entre dois
   # `update`, o que é aceitável pra um registro que ninguém consome em runtime.
-  updateCmd = "vscode-bump ${flake} && nix flake update --flake ${flake} && vscode-extensions-dump ${flake}";
+  # curseforge-bump ao lado do vscode-bump, e pelo mesmo motivo com um agravante: o src do
+  # CurseForge é URL-PONTEIRO (a Overwolf não publica URL versionada), então não basta
+  # trocar um número — o HASH precisa ser recalculado, senão a próxima release deles
+  # quebra o build em store fria. Custa um range request de 256 KiB quando nada mudou.
+  updateCmd = "vscode-bump ${flake} && curseforge-bump ${flake} && nix flake update --flake ${flake} && vscode-extensions-dump ${flake}";
 in
 {
   programs.zsh = {

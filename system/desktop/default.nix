@@ -1,9 +1,9 @@
-# Ambiente gráfico (nível-sistema).
+# The graphical environment (system level).
 { ... }:
 
 {
   imports = [
-    ./monitors.nix # FONTE ÚNICA dos conectores (my.monitors) — lido por system/ e por home/ (osConfig)
-    ./desktop.nix # LightDM, Hyprland, xkb, portal (dark mode), gnome-keyring
+    ./monitors.nix # the SINGLE SOURCE of the connectors (my.monitors), read by system/ and by home/ (osConfig)
+    ./desktop.nix # LightDM, Hyprland, xkb, the portal (dark mode), gnome-keyring
   ];
 }

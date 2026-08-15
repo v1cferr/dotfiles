@@ -1,16 +1,19 @@
-# Launcher de apps — rofi `drun` com ÍCONES (my.theme.iconTheme) + ordena pelos mais/recém usados
-# (histórico do rofi, ligado por padrão: na abertura mostra os recentes; ao digitar, filtra
-# fuzzy) + tema Tokyo Night vindo da paleta ÚNICA (my.theme → recolore junto ao trocar preset).
-# Binds SUPER+Q (apps) / SUPER+R (binários) em home/desktop/hypr/lua/keybinds.lua.
-# O pacote rofi já vem de clipboard.nix (não redeclara — mesmo tool p/ launcher + clipboard).
+# The app launcher: rofi `drun` with ICONS (my.theme.iconTheme) plus sorting by most/recently used
+# (rofi's history, on by default: it shows the recent ones when it opens, and filters fuzzily as
+# you type) plus a Tokyo Night theme coming from the SINGLE palette (my.theme, so it recolors
+# along when you switch presets).
+# The SUPER+Q (apps) / SUPER+R (binaries) binds are in home/desktop/hypr/lua/keybinds.lua.
+# The rofi package already comes from clipboard.nix (do not redeclare it, since it is the same
+# tool for the launcher and the clipboard).
 { config, osConfig, ... }:
 
 let
-  palette = config.my.theme.palette; # cores do tema ativo (home/desktop/palette.nix)
+  palette = config.my.theme.palette; # the active theme's colors (home/desktop/palette.nix)
 in
 {
-  # `font` explícito no bloco configuration: sem ele o rofi cai no default "mono 12".
-  # NÃO comentar dentro do .rasi com '#' — ali '#' abre literal de cor e quebra o parse.
+  # An explicit `font` in the configuration block: without it rofi falls back to the default
+  # "mono 12". Do NOT comment inside the .rasi with '#', since there '#' opens a color literal and
+  # breaks the parse.
   xdg.configFile."rofi/launcher.rasi".text = ''
     configuration {
       show-icons: true;

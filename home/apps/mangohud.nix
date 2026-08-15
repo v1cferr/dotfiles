@@ -1,14 +1,14 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# MANGOHUD — overlay de desempenho nos jogos (FPS, temps, uso, clocks…).
+# MANGOHUD: a performance overlay in games (FPS, temps, usage, clocks and so on).
 #
-# Config 100% declarada aqui (gera ~/.config/MangoHud/MangoHud.conf). A INJEÇÃO
-# no jogo vem do toggle `mangohud: true` do bottle (Bottles) — este módulo só
-# CONFIGURA o overlay que aquele injeta. Como o bottle mapeia $HOME, o overlay
-# lê este conf normalmente. Toggle mostrar/ocultar: Shift(dir)+F12 (muda embaixo).
+# The config is 100% declared here (it generates ~/.config/MangoHud/MangoHud.conf). The INJECTION
+# into the game comes from the bottle's `mangohud: true` toggle (Bottles); this module only
+# CONFIGURES the overlay that one injects. Since the bottle maps $HOME, the overlay reads this
+# conf normally. The show/hide toggle: Shift(right)+F12 (set at the bottom).
 #
-# Ressalvas do driver `xe` (Arc B580): `gpu_power` e `gpu_fan` provavelmente
-# ficam VAZIOS — a Arc não expõe potência/fan por hwmon hoje (já verificamos).
-# Deixo ligados: não quebram nada e passam a aparecer se um kernel futuro expor.
+# Caveats of the `xe` driver (Arc B580): `gpu_power` and `gpu_fan` will probably be EMPTY, since
+# the Arc does not expose power/fan through hwmon today (we have checked). I leave them on: they
+# break nothing and they start showing up if a future kernel exposes them.
 # ═══════════════════════════════════════════════════════════════════════════
 { ... }:
 
@@ -17,55 +17,55 @@
     enable = true;
 
     settings = {
-      # ── FPS + frametime ──
-      fps = true; # frames por segundo
-      frametime = true; # tempo de frame (ms)
-      frame_timing = true; # gráfico de frametime
-      histogram = true; # histograma do frametime
+      # ── FPS plus frametime ──
+      fps = true; # frames per second
+      frametime = true; # frame time (ms)
+      frame_timing = true; # a frametime graph
+      histogram = true; # a frametime histogram
 
       # ── CPU ──
-      cpu_stats = true; # uso total (%)
-      cpu_temp = true; # temperatura
-      cpu_power = true; # consumo em W (RAPL — funciona no i5-11400)
-      cpu_mhz = true; # clock atual
-      core_load = true; # uso por núcleo
-      cpu_load_change = true; # colore o número conforme a carga
+      cpu_stats = true; # total usage (%)
+      cpu_temp = true; # temperature
+      cpu_power = true; # draw in W (RAPL, it works on the i5-11400)
+      cpu_mhz = true; # the current clock
+      core_load = true; # usage per core
+      cpu_load_change = true; # it colors the number according to the load
 
       # ── GPU (Arc B580 / xe) ──
-      gpu_stats = true; # uso (%)
-      gpu_temp = true; # temperatura do core
-      gpu_mem_temp = true; # temperatura da VRAM (sensor existe; no xe pode ficar vazio)
-      gpu_core_clock = true; # clock do core
-      gpu_mem_clock = true; # clock da VRAM
-      gpu_power = true; # consumo em W (xe não expõe hoje → pode ficar vazio)
-      gpu_fan = true; # RPM da fan (suporte p/ Arc incerto → pode ficar vazio)
-      vram = true; # VRAM usada
-      gpu_name = true; # nome da placa
-      gpu_load_change = true; # colore conforme a carga
+      gpu_stats = true; # usage (%)
+      gpu_temp = true; # the core's temperature
+      gpu_mem_temp = true; # the VRAM's temperature (the sensor exists; on xe it can stay empty)
+      gpu_core_clock = true; # the core's clock
+      gpu_mem_clock = true; # the VRAM's clock
+      gpu_power = true; # draw in W (xe does not expose it today, so it can stay empty)
+      gpu_fan = true; # the fan's RPM (Arc support uncertain, so it can stay empty)
+      vram = true; # VRAM used
+      gpu_name = true; # the card's name
+      gpu_load_change = true; # it colors according to the load
 
-      # ── Memória / I-O de disco ──
-      ram = true; # RAM usada (total do sistema)
-      procmem = true; # RAM usada só pelo processo do jogo
-      swap = true; # uso de swap
-      io_read = true; # leitura de disco (MiB/s)
-      io_write = true; # escrita de disco (MiB/s)
+      # ── Memory / disk I-O ──
+      ram = true; # RAM used (the system's total)
+      procmem = true; # RAM used by the game's process alone
+      swap = true; # swap usage
+      io_read = true; # disk reads (MiB/s)
+      io_write = true; # disk writes (MiB/s)
 
-      # ── Info do app/driver ──
-      vulkan_driver = true; # driver Vulkan em uso
-      engine_version = true; # engine (DXVK/VKD3D/…)
-      wine = true; # versão do Wine/Proton
-      resolution = true; # resolução de render
-      throttling_status = true; # avisa se há throttle térmico/power
-      time = true; # relógio no overlay (útil p/ screenshots/gravações)
+      # ── App/driver info ──
+      vulkan_driver = true; # the Vulkan driver in use
+      engine_version = true; # the engine (DXVK/VKD3D/…)
+      wine = true; # the Wine/Proton version
+      resolution = true; # the render resolution
+      throttling_status = true; # it warns if there is thermal/power throttling
+      time = true; # a clock in the overlay (useful for screenshots/recordings)
 
-      # ── Aparência / posição ──
-      position = "top-left"; # canto do overlay
-      font_size = 20; # tamanho da fonte
-      background_alpha = 0.4; # transparência do fundo
-      round_corners = 8; # cantos arredondados
-      table_columns = 3; # colunas da tabela
+      # ── Appearance / position ──
+      position = "top-left"; # the overlay's corner
+      font_size = 20; # the font size
+      background_alpha = 0.4; # the background's transparency
+      round_corners = 8; # rounded corners
+      table_columns = 3; # the table's columns
 
-      # ── Toggle mostrar/ocultar (troque a tecla se quiser) ──
+      # ── The show/hide toggle (change the key if you want) ──
       toggle_hud = "Shift_R+F12";
     };
   };

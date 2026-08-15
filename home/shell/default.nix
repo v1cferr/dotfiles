@@ -1,16 +1,16 @@
-# Shell, terminal e ferramentas de linha de comando (dev-cli).
+# Shell, terminal and command line tools (the dev CLI).
 { ... }:
 
 {
   imports = [
-    ./zsh.nix # ~/.zshrc (histórico + autosuggest + syntax highlight + aliases)
-    ./starship.nix # ~/.config/starship.toml (prompt do zsh)
-    ./cli.nix # toolkit CLI moderno (eza/bat/fzf/zoxide/direnv/yazi/tealdeer) + integração zsh
-    ./kitty.nix # ~/.config/kitty/kitty.conf (terminal default do Hyprland)
-    ./claude-code.nix # pacote + contas separadas (claude-fai/claude-pessoal/claude-pick)
-    ./git.nix # programs.git → ~/.gitconfig
-    ./ssh.nix # ~/.ssh/config → hosts da FAI (workstation/fai-vm) via a VPN
-    ./ntfy.nix # comando `notify` → push no celular (tópico ntfy vem do sops)
-    ./fastfetch.nix # ~/.config/fastfetch/config.jsonc (resumo do sistema)
+    ./zsh.nix # ~/.zshrc (history plus autosuggest plus syntax highlighting plus aliases)
+    ./starship.nix # ~/.config/starship.toml (zsh's prompt)
+    ./cli.nix # the modern CLI toolkit (eza/bat/fzf/zoxide/direnv/yazi/tealdeer) plus the zsh integration
+    ./kitty.nix # ~/.config/kitty/kitty.conf (Hyprland's default terminal)
+    ./claude-code.nix # the package plus the separate accounts (claude-fai/claude-pessoal/claude-pick)
+    ./git.nix # programs.git, hence ~/.gitconfig
+    ./ssh.nix # ~/.ssh/config, hence the FAI hosts (workstation/fai-vm) through the VPN
+    ./ntfy.nix # the `notify` command, a push to the phone (the ntfy topic comes from sops)
+    ./fastfetch.nix # ~/.config/fastfetch/config.jsonc (the system summary)
   ];
 }

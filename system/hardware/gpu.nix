@@ -1,53 +1,51 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# GPU — Intel Arc B580 (Battlemage), driver open-source `xe` + Mesa. Máquina:
-# Intel i5-11400 + Arc B580. Driver ÚNICO, declarativo, sem CUDA.
+# GPU: an Intel Arc B580 (Battlemage), the open source `xe` driver plus Mesa. The machine: an
+# Intel i5-11400 plus an Arc B580. A SINGLE driver, declarative, with no CUDA.
 #
-# Histórico: este host já rodou uma RTX 3050 (proprietário + CUDA) com uma
-# specialisation de resgate durante a troca de placa. A Arc foi validada
-# (fastfetch/vainfo/`xe` carregado) e a NVIDIA foi REMOVIDA de vez — o destino
-# sempre foi Intel puro. Pra ressuscitar a NVIDIA, o histórico git deste arquivo
-# tem o perfil completo. O Ollama roda NESTA GPU, por Vulkan/Mesa ANV — logo o
-# Mesa daqui é caminho crítico de IA, não só de jogo (services/ollama.nix).
+# History: this host once ran an RTX 3050 (proprietary plus CUDA) with a rescue specialisation
+# during the card swap. The Arc was validated (fastfetch/vainfo/`xe` loaded) and NVIDIA was
+# REMOVED for good, since the destination was always pure Intel. To resurrect NVIDIA, this file's
+# git history has the complete profile. Ollama runs ON THIS GPU, through Vulkan/Mesa ANV, so the
+# Mesa here is a critical path for AI, not only for games (services/ollama.nix).
 #
-# Requisitos Battlemage já satisfeitos: kernel 6.18 (>=6.12), Mesa 25.x (>=24.3),
-# firmware redistribuível ligado (hardware.nix).
+# The Battlemage requirements are already satisfied: kernel 6.18 (>=6.12), Mesa 25.x (>=24.3),
+# redistributable firmware turned on (hardware.nix).
 # Ref: https://www.phoronix.com/review/intel-arc-b580-graphics-linux
 # ═══════════════════════════════════════════════════════════════════════════
 { pkgs, ... }:
 
 {
-  hardware.graphics.enable = true; # OpenGL/Vulkan (ex-hardware.opengl)
-  hardware.graphics.enable32Bit = true; # libs 32-bit p/ Wine/Proton (Bottles/WoW)
+  hardware.graphics.enable = true; # OpenGL/Vulkan (formerly hardware.opengl)
+  hardware.graphics.enable32Bit = true; # 32-bit libs for Wine/Proton (Bottles/WoW)
 
-  # X (LightDM) usa modesetting/KMS; Wayland/Hyprland vai direto no KMS.
+  # X (LightDM) uses modesetting/KMS; Wayland/Hyprland goes straight to KMS.
   services.xserver.videoDrivers = [ "modesetting" ];
-  boot.initrd.kernelModules = [ "xe" ]; # KMS cedo → tela sobe lisa, sem tela preta
-  # Arc + warm reboot: num `reboot` quente a Arc pode não re-inicializar e travar
-  # o POST (logo ASUS). `reboot=pci` força reset completo via 0xCF9 → o firmware
-  # re-inicializa a GPU limpa, como num cold boot. Se não colar: bios/efi/acpi/cold.
+  boot.initrd.kernelModules = [ "xe" ]; # KMS early, so the screen comes up smooth, with no black screen
+  # Arc plus a warm reboot: on a hot `reboot` the Arc may fail to reinitialize and freeze the POST
+  # (at the ASUS logo). `reboot=pci` forces a full reset through 0xCF9, so the firmware
+  # reinitializes the GPU clean, like a cold boot. If that does not stick: bios/efi/acpi/cold.
   boot.kernelParams = [ "reboot=pci" ];
 
-  # ⚠️ NÃO trocar por `pkgs.unstable.*` — TESTADO E REPROVADO (06/08/2026). Estes
-  # .so não são libs normais: são PLUGINS carregados impuramente de
-  # /run/opengl-driver/lib por um loader que vem do canal ESTÁVEL, e o loader
-  # aceita driver IGUAL ou MAIS VELHO que ele, nunca mais novo. O `libva` varre
-  # `__vaDriverInit_1_<minor>` do SEU minor até 1_0; o iHD do unstable exporta
-  # `1_24` e o libva 2.23 do estável só tenta até `1_23` → `vaInitialize failed`
-  # e todo decode/encode cai pra CPU, em silêncio.
+  # Do NOT swap this for `pkgs.unstable.*`: TESTED AND REJECTED (06/08/2026). These .so files are
+  # not normal libs, they are PLUGINS loaded impurely from /run/opengl-driver/lib by a loader that
+  # comes from the STABLE channel, and the loader accepts a driver EQUAL to or OLDER than itself,
+  # never newer. `libva` scans `__vaDriverInit_1_<minor>` from ITS minor down to 1_0; unstable's
+  # iHD exports `1_24` and stable's libva 2.23 only tries up to `1_23`, so `vaInitialize failed`
+  # and all decode/encode falls back to the CPU, in silence.
   #
-  # O MESA NÃO está nesta regra — é exceção MEDIDA, não suposição: o `libgbm` é
-  # pacote separado (stub) e existe `hardware.graphics.package` justamente pra
-  # trocar a versão global do Mesa. Testado: ICD do `unstable.mesa` + loader do
-  # sistema → Arc B580 + `Mesa 26.1.6`, sem erro. Se um dia valer, é ali (com
-  # `package32 = pkgs.unstable.pkgsi686Linux.mesa` — NESSA ordem), não aqui.
-  # Hoje não vale: o nixpkgs backporta point-release pro release (mesa 26.1.5 vs
-  # 26.1.6; kernel e linux-firmware IDÊNTICOS nos dois canais). Pro kernel o lever
-  # é `linuxPackages_latest`, do próprio estável — ver core/boot.nix.
+  # MESA is NOT covered by this rule; it is a MEASURED exception, not a guess: `libgbm` is a
+  # separate package (a stub) and `hardware.graphics.package` exists precisely to change Mesa's
+  # global version. Tested: `unstable.mesa`'s ICD plus the system's loader gave an Arc B580 with
+  # `Mesa 26.1.6`, with no error. If it is ever worth it, that is where it goes (with
+  # `package32 = pkgs.unstable.pkgsi686Linux.mesa`, IN THAT ORDER), not here.
+  # Today it is not worth it: nixpkgs backports the point release into the release (mesa 26.1.5 vs
+  # 26.1.6; the kernel and linux-firmware are IDENTICAL in both channels). For the kernel the lever
+  # is `linuxPackages_latest`, from stable itself; see core/boot.nix.
   hardware.graphics.extraPackages = with pkgs; [
-    intel-media-driver # VA-API (iHD) — decode/encode de vídeo
-    vpl-gpu-rt # oneVPL runtime (QuickSync nas gerações novas)
+    intel-media-driver # VA-API (iHD): video decode/encode
+    vpl-gpu-rt # the oneVPL runtime (QuickSync on the newer generations)
     intel-compute-runtime # OpenCL / Level Zero (compute)
   ];
-  environment.sessionVariables.LIBVA_DRIVER_NAME = "iHD"; # força o driver VA-API certo
-  environment.systemPackages = [ pkgs.libva-utils ]; # `vainfo` p/ confirmar a aceleração
+  environment.sessionVariables.LIBVA_DRIVER_NAME = "iHD"; # it forces the right VA-API driver
+  environment.systemPackages = [ pkgs.libva-utils ]; # `vainfo`, to confirm the acceleration
 }

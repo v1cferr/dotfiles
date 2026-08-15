@@ -1,27 +1,27 @@
-# vscode-bump — deixa o VS Code na ÚLTIMA versão stable, sem editar o flake.nix à mão.
+# vscode-bump: it keeps VS Code on the LATEST stable version, with no editing flake.nix by hand.
 #
-# POR QUE EXISTE: o input `vscode-tarball` (flake.nix) aponta pra uma URL VERSIONADA de
-# propósito — `/1.132.0/linux-x64/stable` e não `/latest/`. O motivo está escrito lá e é
-# estrutural: `/latest/` é PONTEIRO, então a cada release do VS Code o narHash travado no
-# lock deixa de casar e o flake não avalia mais em máquina limpa (CI, clone novo). Ou
-# seja, "input que se atualiza sozinho" não existe com hash travado — o que existe é
-# BUMP AUTOMATIZADO, e é isto. O preço da URL fixa (uma edição manual por release) deixa
-# de ser pago pela pessoa: quem consulta a API oficial e reescreve o número é o script.
+# WHY IT EXISTS: the `vscode-tarball` input (flake.nix) points at a VERSIONED URL on purpose,
+# `/1.132.0/linux-x64/stable` and not `/latest/`. The reason is written over there and it is
+# structural: `/latest/` is a POINTER, so on every VS Code release the narHash locked in the lock
+# file stops matching and the flake no longer evaluates on a clean machine (CI, a fresh clone).
+# Which means an "input that updates itself" does not exist with a locked hash; what exists is an
+# AUTOMATED BUMP, and this is it. The price of the fixed URL (one manual edit per release) stops
+# being paid by a person: what queries the official API and rewrites the number is the script.
 #
-# ONDE RODA: nos aliases `update`/`upgrade` (home/shell/zsh.nix), ANTES do `nix flake
-# update`. É por isso que "sempre latest" funciona sem `git pull` e sem bot commitando na
-# branch: o momento em que a versão importa é o do rebuild.
+# WHERE IT RUNS: in the `update`/`upgrade` aliases (home/shell/zsh.nix), BEFORE the `nix flake
+# update`. That is why "always latest" works with no `git pull` and no bot committing to the
+# branch: the moment the version matters is the rebuild's.
 #
-# PEGADINHAS:
-#   • O caminho do repo vem por ARGUMENTO, nunca literal aqui (regra 11): a SSOT é
-#     `programs.nh.flake`, e quem a lê é o zsh.nix via `osConfig`.
-#   • O `nix` NÃO entra em runtimeInputs de propósito — usar o do sistema (o
-#     writeShellApplication só PREFIXA o PATH) evita um segundo Nix na store, cuja
-#     versão poderia divergir do daemon.
-#   • Deixa o repo SUJO (flake.nix + flake.lock modificados) e isso é intencional: o
-#     commit é do usuário, atômico, como qualquer bump (regra 13 — o lock entra no mesmo
-#     commit da mudança que o exigiu).
-#   • É NO-OP quando já está na última, porque roda em todo `upgrade`.
+# THE TRAPS:
+#   • The repo's path comes as an ARGUMENT, never a literal here (rule 11): the SSOT is
+#     `programs.nh.flake`, and what reads it is zsh.nix through `osConfig`.
+#   • `nix` does NOT go into runtimeInputs on purpose: using the system's (writeShellApplication
+#     only PREFIXES the PATH) avoids a second Nix in the store, whose version could diverge from
+#     the daemon's.
+#   • It leaves the repo DIRTY (flake.nix plus flake.lock modified) and that is intentional: the
+#     commit is the user's, atomic, like any bump (rule 13: the lock goes in the same commit as
+#     the change that required it).
+#   • It is a NO-OP when already on the latest, because it runs on every `upgrade`.
 {
   writeShellApplication,
   curl,
@@ -37,55 +37,56 @@ writeShellApplication {
     gnused
   ];
 
-  # set -euo pipefail já vem do writeShellApplication (bashOptions padrão).
+  # set -euo pipefail already comes from writeShellApplication (the default bashOptions).
   text = ''
-    repo="''${1:?uso: vscode-bump <caminho-do-repo-do-flake>}"
+    repo="''${1:?usage: vscode-bump <path-to-the-flake-repo>}"
     nix_file="$repo/flake.nix"
 
-    # Versão TRAVADA hoje: lida do próprio flake.nix, que é a SSOT da versão do VS Code.
-    atual=$(sed -n \
+    # The version LOCKED today: read from flake.nix itself, which is the SSOT of the VS Code
+    # version.
+    current=$(sed -n \
       's|.*update\.code\.visualstudio\.com/\([0-9][0-9.]*\)/linux-x64/stable.*|\1|p' \
       "$nix_file")
-    if [ -z "$atual" ]; then
-      echo "vscode-bump: não achei a URL versionada do vscode-tarball em $nix_file" >&2
-      echo "             (o input mudou de forma? conferir flake.nix)" >&2
+    if [ -z "$current" ]; then
+      echo "vscode-bump: could not find the vscode-tarball versioned URL in $nix_file" >&2
+      echo "             (did the input change shape? check flake.nix)" >&2
       exit 1
     fi
 
-    # Versão SERVIDA agora pelo canal stable. `productVersion` e não `version` — o
-    # segundo é o hash do commit ("df53daa…"), não o 1.132.0 que vai na URL.
+    # The version SERVED right now by the stable channel. `productVersion` and not `version`: the
+    # second is the commit hash ("df53daa…"), not the 1.132.0 that goes in the URL.
     latest=$(curl -fsSL \
       https://update.code.visualstudio.com/api/update/linux-x64/stable/latest |
       jq -r '.productVersion')
     case "$latest" in
       *[!0-9.]* | "")
-        echo "vscode-bump: a API devolveu uma versão implausível: '$latest'" >&2
+        echo "vscode-bump: the API returned an implausible version: '$latest'" >&2
         exit 1
         ;;
     esac
 
-    if [ "$atual" = "$latest" ]; then
-      echo "vscode-bump: já na última ($atual)."
+    if [ "$current" = "$latest" ]; then
+      echo "vscode-bump: already on the latest ($current)."
       exit 0
     fi
 
-    echo "vscode-bump: $atual → $latest"
-    # Reescreve só o número, casando o padrão genérico (e não o "$atual" interpolado,
-    # cujos pontos virariam curinga de regex).
+    echo "vscode-bump: $current -> $latest"
+    # It rewrites only the number, matching the generic pattern (and not the interpolated
+    # "$current", whose dots would become regex wildcards).
     sed -i \
       "s|\(update\.code\.visualstudio\.com/\)[0-9.]*\(/linux-x64/stable\)|\1$latest\2|" \
       "$nix_file"
 
-    # Sem isto o flake.nix e o lock ficariam discordando até a próxima avaliação: é este
-    # comando que baixa o tarball novo e grava o narHash dele.
+    # Without this, flake.nix and the lock would disagree until the next evaluation: it is this
+    # command that downloads the new tarball and records its narHash.
     nix flake update vscode-tarball --flake "$repo"
 
-    echo "vscode-bump: pronto. Commit sugerido:"
-    echo "  git -C \"$repo\" commit -am 'chore(vscode): $atual → $latest'"
+    echo "vscode-bump: done. Suggested commit:"
+    echo "  git -C \"$repo\" commit -am 'chore(vscode): $current -> $latest'"
   '';
 
   meta = {
-    description = "Bump do input vscode-tarball para a última versão stable do VS Code";
+    description = "Bumps the vscode-tarball input to VS Code's latest stable version";
     mainProgram = "vscode-bump";
   };
 }

@@ -1,61 +1,57 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# DESLIGAMENTO — quanto tempo o systemd espera uma unit parar antes do SIGKILL.
+# SHUTDOWN: how long systemd waits for a unit to stop before the SIGKILL.
 #
-# SINTOMA: "A stop job is running…" e o desligamento levando um minuto e meio.
-# MEDIDO em 09/08/2026, nos 10 últimos boots: 90,3 / 90,4 / 90,5 / 90,6 s…
-# Número redondo demais pra ser trabalho real — isso não é o sistema fazendo
-# algo, é TIMEOUT batendo. E o timeout era o default do systemd: 90 s.
+# THE SYMPTOM: "A stop job is running…" and the shutdown taking a minute and a half.
+# MEASURED on 09/08/2026, over the last 10 boots: 90.3 / 90.4 / 90.5 / 90.6 s…
+# Far too round a number to be real work: that is not the system doing something, it is a TIMEOUT
+# firing. And the timeout was systemd's default: 90 s.
 #
-# CULPADO ÚNICO, e ele é do lado do USUÁRIO: o VS Code. Ele roda num scope da
-# sessão (`app-code-<pid>.scope`, criado pelo GLib ao lançar o `.desktop`) e
-# não responde ao SIGTERM — todo shutdown fecha igual, `app-code-*.scope:
-# Stopping timed out. Killing.` + SIGKILL. Antes do VS Code, o mesmo padrão
-# aparecia com o Chromium; é comportamento de Electron, não desta máquina.
-# Todo o RESTO — docker, jellyfin, rede, unmounts, swap — para em menos de 2 s.
-# Ou seja: não havia nada a otimizar, só espera por um processo que nunca ia
-# responder.
+# A SINGLE CULPRIT, and it is on the USER's side: VS Code. It runs in a session scope
+# (`app-code-<pid>.scope`, created by GLib when launching the `.desktop`) and it does not answer
+# the SIGTERM: every shutdown closes the same way, `app-code-*.scope: Stopping timed out. Killing.`
+# plus a SIGKILL. Before VS Code, the same pattern showed up with Chromium; it is Electron
+# behavior, not this machine's.
+# EVERYTHING ELSE (docker, jellyfin, the network, the unmounts, swap) stops in under 2 s. Which
+# means there was nothing to optimize, only waiting on a process that was never going to answer.
 #
-# O QUE ESTA MUDANÇA NÃO FAZ: ela não passa a matar nada que antes morria de
-# morte natural. O SIGKILL já acontecia — 90 s depois. Quem salva estado no
-# SIGTERM (pipewire, dropbox, rclone, os daemons todos) leva menos de 1 s e
-# continua salvando; quem ignora o sinal só deixa de cobrar a espera.
+# WHAT THIS CHANGE DOES NOT DO: it does not start killing anything that used to die a natural
+# death. The SIGKILL already happened, 90 s later. Whoever saves state on SIGTERM (pipewire,
+# dropbox, rclone, all the daemons) takes under 1 s and keeps saving; whoever ignores the signal
+# merely stops charging us the wait.
 #
-# POR QUE 5 s no usuário e 30 s no sistema — os dois lados têm inquilinos
-# diferentes, e um valor só serviria mal aos dois:
-#   • USUÁRIO são apps de desktop. Quem ia salvar já salvou; o que sobra é
-#     Electron pendurado. 5 s é folga generosa pra um SIGTERM honesto.
-#   • SISTEMA tem `docker compose down` no ExecStop (duo, grad-radar), e o
-#     `down` dá 10 s de carência a CADA container antes de matar. Um teto
-#     apertado aqui SIGKILLaria o Postgres desses stacks no meio do down — não
-#     corrompe, mas volta fazendo recovery de WAL no boot seguinte, e o preço
-#     aparece longe da causa. 30 s cobre o down com folga e ainda é 3× mais
-#     rápido que o default.
+# WHY 5 s on the user side and 30 s on the system side: the two sides have different tenants, and
+# a single value would serve both badly:
+#   • the USER side is desktop apps. Whoever was going to save has saved; what is left is a hung
+#     Electron. 5 s is generous slack for an honest SIGTERM.
+#   • the SYSTEM side has `docker compose down` in the ExecStop (duo, grad-radar), and `down`
+#     gives EACH container 10 s of grace before killing it. A tight ceiling here would SIGKILL
+#     those stacks' Postgres in the middle of the down. It does not corrupt anything, but it comes
+#     back doing WAL recovery on the next boot, and the price shows up far from the cause. 30 s
+#     covers the down with room to spare and is still 3x faster than the default.
 #
-# ⚠️ Isto é DEFAULT, não teto: unit com `TimeoutStopSec` PRÓPRIO ignora tudo
-# aqui — hoje qbittorrent (30 min), jellyfin (15 s), caddy (5 s),
-# hyprpolkitagent (5 s) e `user@.service` (2 min, do upstream). Se um dia o
-# desligamento voltar a demorar, procurar primeiro quem declarou o próprio
-# valor: `systemctl show <unit> -p TimeoutStopUSec`.
+# This is a DEFAULT, not a ceiling: a unit with its OWN `TimeoutStopSec` ignores everything here.
+# Today that means qbittorrent (30 min), jellyfin (15 s), caddy (5 s), hyprpolkitagent (5 s) and
+# `user@.service` (2 min, from upstream). If the shutdown ever gets slow again, look first for
+# whoever declared their own value: `systemctl show <unit> -p TimeoutStopUSec`.
 #
-# ⚠️ OS DOIS LADOS TÊM APIS DIFERENTES, e a assimetria é armadilha de verdade:
-# `systemd.extraConfig` FOI REMOVIDA (26.05 manda usar `systemd.settings.Manager`,
-# freeform), mas `systemd.user.extraConfig` continua sendo a única forma do lado do
-# usuário — `systemd.user.settings` NÃO existe (conferido nas `options`). E o modo
-# como isso falha é o pior possível: escrevendo na opção removida, o `nix eval` do
-# `system.conf` gerado passa e sai SEM a linha. Nada avisa. Por isso a validação
-# aqui não é "buildou?", é LER o arquivo gerado:
+# THE TWO SIDES HAVE DIFFERENT APIS, and the asymmetry is a real trap: `systemd.extraConfig` WAS
+# REMOVED (26.05 says to use `systemd.settings.Manager`, freeform), but `systemd.user.extraConfig`
+# is still the only form on the user side, since `systemd.user.settings` does NOT exist (checked in
+# the `options`). And the way that fails is the worst possible: writing to the removed option, the
+# `nix eval` of the generated `system.conf` passes and comes out WITHOUT the line. Nothing warns
+# you. That is why the validation here is not "did it build?", it is READING the generated file:
 #   nix eval --raw .#nixosConfigurations.nixos-kingston.config.environment.etc.\"systemd/system.conf\".text
 #
-# COMO CONFERIR o efeito, sem cronômetro na mão — os dois carimbos do journal:
+# HOW TO CHECK the effect, with no stopwatch in hand, through the journal's two stamps:
 #   journalctl -b -1 -o short-precise | grep -E "Stopping User Manager|Journal stopped"
 # ═══════════════════════════════════════════════════════════════════════════
 { ... }:
 
 {
-  # Sistema: 30 s (e não menos) por causa do `docker compose down` — ver o bloco.
+  # The system: 30 s (and not less) because of the `docker compose down`; see the block.
   systemd.settings.Manager.DefaultTimeoutStopSec = "30s";
 
-  # Sessão do usuário: 5 s. É aqui que moravam os 90 s (o scope do VS Code).
+  # The user's session: 5 s. This is where the 90 s lived (VS Code's scope).
   systemd.user.extraConfig = ''
     DefaultTimeoutStopSec=5s
   '';

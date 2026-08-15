@@ -1,13 +1,13 @@
-# QUICKSHELL — o shell/bar em QML (bar, OSD, mídia, notificações), substituindo a
-# waybar. O binário vem do FLAKE oficial (inputs.quickshell → sempre a última;
-# bump com `nix flake update quickshell`).
+# QUICKSHELL: the shell/bar in QML (bar, OSD, media, notifications), replacing waybar. The
+# binary comes from the official FLAKE (inputs.quickshell, so always the latest; bump with
+# `nix flake update quickshell`).
 #
-# HOT-RELOAD (o motivo de ser assim): a config QML mora no REPO
-# (home/desktop/quickshell/) e é linkada por mkOutOfStoreSymlink — um symlink pro
-# arquivo MUTÁVEL, não pra store read-only. Assim o Quickshell recarrega o QML AO
-# VIVO ao salvar (sem rebuild), e os arquivos seguem versionados no git (portável:
-# outra máquina clona o repo no mesmo caminho e funciona). É um desvio consciente
-# da regra 3 (não é symlink puro da store), padrão da comunidade p/ ricing de QML.
+# HOT-RELOAD (the reason it is like this): the QML config lives in the REPO
+# (home/desktop/quickshell/) and is linked through mkOutOfStoreSymlink, a symlink to the
+# MUTABLE file and not to the read-only store. That way Quickshell reloads the QML LIVE on
+# save (with no rebuild), and the files stay versioned in git (portable: another machine
+# clones the repo at the same path and it works). It is a conscious deviation from rule 3 (it
+# is not a pure store symlink), and it is the community pattern for QML ricing.
 {
   pkgs,
   config,
@@ -16,41 +16,42 @@
 }:
 
 let
-  # Pacote do Quickshell (flake input). Ligado uma vez porque o caminho completo
-  # passa de 130 colunas e se repetia em cada consumidor deste arquivo.
+  # The Quickshell package (a flake input). Bound once because the full path goes past 130
+  # columns and repeated itself in every consumer in this file.
   qsPkg = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
-  # qs-restart: mata e sobe o Quickshell de novo. Necessário porque o hot-reload NÃO
-  # reaplica delegate de Repeater (ws-pills, notificações) — editar o QML desses não
-  # basta, precisa reiniciar o processo.
+  # qs-restart: kills Quickshell and brings it back. It is needed because the hot-reload does
+  # NOT reapply a Repeater delegate (the ws-pills, the notifications), so editing their QML is
+  # not enough, the process has to restart.
   #
-  # POR QUE UM SCRIPT e não `qs kill; sleep 0.3; qs &` direto no bind: regra 7 (lógica
-  # no build, bind = 1 comando) e regra 15 (dono explícito) — subir via `hyprctl
-  # dispatch` faz o COMPOSITOR ser o pai, o mesmo dono do exec-once do autostart.lua,
-  # em vez de o processo ser reparenteado ao init. De quebra o script funciona de um
-  # shell fora da sessão, por causa do `-i 0`.
+  # WHY A SCRIPT and not `qs kill; sleep 0.3; qs &` directly in the bind: rule 7 (the logic in
+  # the build, the bind being 1 command) and rule 15 (an explicit owner). Starting it through
+  # `hyprctl dispatch` makes the COMPOSITOR the parent, the same owner as autostart.lua's
+  # exec-once, instead of the process being reparented to init. As a bonus the script works
+  # from a shell outside the session, because of the `-i 0`.
   #
-  # CORREÇÃO (30/07): a versão anterior deste comentário afirmava que a forma antiga
-  # NÃO reiniciava nada. Era FALSO. A evidência ("Quickshell com 5h de uptime depois de
-  # apertar SUPER+ESCAPE") tinha causa banal: o usuário apertou SUPER+SPACE. Testada
-  # depois, a forma antiga reinicia sim — o processo só termina com ppid=1 (systemd),
-  # que é daemonização normal e sobrevive. Ou seja, isto é MELHORIA de arquitetura, não
-  # correção de bug. Fica registrado porque inferir mecanismo a partir de uma observação
-  # com explicação mais simples é justamente o erro que a regra 14 manda evitar.
-  # tray-native-menu: dispara o menu de contexto NATIVO de um SNI que NÃO expõe DBusMenu
-  # (ícones vindos do xembedsniproxy: wine/Battle.net, pamac). O `display()` do Quickshell
-  # recusa item sem menu ("No menu present"), então chamamos o método ContextMenu() do SNI
-  # na posição do cursor — o proxy repassa pro X11 e o app desenha o próprio menu ali.
+  # CORRECTION (30/07): the previous version of this comment claimed the old form did NOT
+  # restart anything. That was FALSE. The evidence ("Quickshell with 5h of uptime after
+  # pressing SUPER+ESCAPE") had a banal cause: I pressed SUPER+SPACE. Tested afterwards, the
+  # old form does restart it; the process just ends up with ppid=1 (systemd), which is normal
+  # daemonization and survives. Which means this is an architectural IMPROVEMENT, not a bug
+  # fix. It is recorded because inferring a mechanism from an observation that has a simpler
+  # explanation is exactly the mistake rule 14 tells you to avoid.
+  # tray-native-menu: it triggers the NATIVE context menu of an SNI that does NOT expose
+  # DBusMenu (icons coming from xembedsniproxy: wine/Battle.net, pamac). Quickshell's
+  # `display()` refuses an item with no menu ("No menu present"), so we call the SNI's
+  # ContextMenu() method at the cursor position, and the proxy forwards it to X11 and the app
+  # draws its own menu there.
   #
-  # CORREÇÃO (30/07): este comentário citava o xembedsniproxy como se ele existisse aqui, e
-  # ele NÃO estava instalado — então este helper era código morto, justificado por um
-  # comentário que descrevia um componente ausente. Agora o proxy é declarado de verdade
-  # (ver systemd.user.services.xembedsniproxy no fim deste arquivo) e o caminho é real.
+  # CORRECTION (30/07): this comment cited xembedsniproxy as if it existed here, and it was NOT
+  # installed, so this helper was dead code, justified by a comment describing an absent
+  # component. Now the proxy is actually declared (see systemd.user.services.xembedsniproxy at
+  # the end of this file) and the path is real.
   #
-  # PORTADO do waybar do Arch (30/07): o Bar.qml chamava
-  # `$HOME/.config/waybar/scripts/tray-native-menu.sh`, um caminho da WAYBAR — que foi
-  # REMOVIDA na migração. O diretório não existe nesta máquina e o script não estava no
-  # repo, então o clique-direito nesses ícones falhava em SILÊNCIO. Agora vive no build
-  # (regra 7) e o QML o chama por NOME, pelo PATH.
+  # PORTED from the Arch waybar (30/07): Bar.qml called
+  # `$HOME/.config/waybar/scripts/tray-native-menu.sh`, a WAYBAR path, and waybar was REMOVED
+  # in the migration. The directory does not exist on this machine and the script was not in
+  # the repo, so right-clicking those icons failed SILENTLY. Now it lives in the build (rule 7)
+  # and the QML calls it by NAME, through the PATH.
   trayNativeMenu = pkgs.writeShellApplication {
     name = "tray-native-menu";
     runtimeInputs = with pkgs; [
@@ -62,7 +63,7 @@ let
       target_id="''${1:-}"
       [ -z "$target_id" ] && exit 2
 
-      # posição global do cursor ("x, y") → dois inteiros
+      # the cursor's global position ("x, y") into two integers
       pos="$(hyprctl cursorpos 2>/dev/null || true)"
       gx="''${pos%%,*}"; gy="''${pos##*,}"
       gx="''${gx//[[:space:]]/}"; gy="''${gy//[[:space:]]/}"
@@ -74,7 +75,7 @@ let
         RegisteredStatusNotifierItems 2>/dev/null || true)"
 
       for tok in $items; do
-        # entradas vêm entre aspas ("svc/path"); o "as" e a contagem não têm
+        # the entries come quoted ("svc/path"); the "as" and the count do not
         entry="''${tok//\"/}"
         [ "$entry" = "$tok" ] && continue
         svc="''${entry%%/*}"; path="/''${entry#*/}"
@@ -99,9 +100,9 @@ let
       pkgs.coreutils
     ];
     text = ''
-      qs kill >/dev/null 2>&1 || true # sem instância rodando, o kill falha e está tudo bem
+      qs kill >/dev/null 2>&1 || true # with no instance running, the kill fails and that is fine
       sleep 0.3
-      # `-i 0` acha a instância sem HYPRLAND_INSTANCE_SIGNATURE → funciona também por SSH.
+      # `-i 0` finds the instance without HYPRLAND_INSTANCE_SIGNATURE, so it also works over SSH.
       hyprctl -i 0 dispatch 'hl.dsp.exec_cmd("qs")'
     '';
   };
@@ -109,61 +110,63 @@ in
 {
   home.packages = [
     qsPkg # `qs` / `quickshell`
-    pkgs.lm_sensors # `sensors` — CPU temp lido pelo bar/Bar.qml
-    qsRestart # `qs-restart` — usado pelo bind SUPER+ESCAPE (keybinds.lua)
-    trayNativeMenu # `tray-native-menu` — clique-direito em SNI sem DBusMenu (Bar.qml)
+    pkgs.lm_sensors # `sensors`, the CPU temp read by bar/Bar.qml
+    qsRestart # `qs-restart`, used by the SUPER+ESCAPE bind (keybinds.lua)
+    trayNativeMenu # `tray-native-menu`, right click on an SNI with no DBusMenu (Bar.qml)
   ];
 
-  # ~/.config/quickshell → arquivo real no repo (mutável) = hot-reload.
+  # ~/.config/quickshell points at the real file in the repo (mutable), which is the hot-reload.
   xdg.configFile."quickshell".source =
     config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/desktop/quickshell";
 
-  # ── Ponte XEmbed → StatusNotifierItem ───────────────────────────────────────
-  # App X11 legado (Wine/Bottles, e por isso o Battle.net) publica ícone de bandeja
-  # pelo protocolo ANTIGO, o XEmbed (_NET_SYSTEM_TRAY_S0) — não pelo SNI que a barra
-  # entende. Sem um host XEmbed, o Wine desiste e desenha a bandeja numa JANELINHA
-  # própria: MEDIDO como `class=explorer.exe`, 160x20, flutuando sobre o desktop. Era
-  # esse o incômodo — o ícone do Battle.net nunca chegava na barra.
+  # ── The XEmbed to StatusNotifierItem bridge ────────────────────────────────
+  # A legacy X11 app (Wine/Bottles, and therefore Battle.net) publishes its tray icon through
+  # the OLD protocol, XEmbed (_NET_SYSTEM_TRAY_S0), and not through the SNI the bar
+  # understands. With no XEmbed host, Wine gives up and draws the tray in a LITTLE WINDOW of
+  # its own: MEASURED as `class=explorer.exe`, 160x20, floating over the desktop. That was the
+  # annoyance, since the Battle.net icon never reached the bar.
   #
-  # O xembedsniproxy hospeda a seleção XEmbed e republica cada ícone como SNI. VERIFICADO
-  # ao vivo com o Battle.net aberto: subiu de 3 p/ 4 itens no StatusNotifierWatcher e a
-  # janelinha do `explorer.exe` DESAPARECEU (o ícone foi embutido no proxy).
+  # xembedsniproxy hosts the XEmbed selection and republishes each icon as an SNI. VERIFIED
+  # live with Battle.net open: it went from 3 to 4 items in the StatusNotifierWatcher and the
+  # `explorer.exe` little window DISAPPEARED (the icon was embedded into the proxy).
   #
-  # CUSTO, medido e assumido: o binário só existe dentro do kdePackages.plasma-workspace,
-  # que traz 758 MiB novos p/ este closure — 429 MiB deles são qtwebengine, mais kwin,
-  # breeze e oxygen-icons. Feio num sistema Hyprland. As alternativas foram descartadas
-  # com motivo: (a) `snixembed` faz o caminho INVERSO (publica SNI como XEmbed, p/ barras
-  # antigas) e por isso tenta ser o próprio StatusNotifierWatcher — morre com "could not
-  # acquire watcher name" porque o Quickshell já é o watcher; (b) não há pacote standalone
-  # no nixpkgs (conferido: xembed-sni-proxy/xembedsniproxy não existem como atributo);
-  # (c) extrair o binário à mão não escapa do peso — o plasma-workspace referencia kwin,
-  # breeze e oxygen-icons DIRETAMENTE; (d) `stalonetray` seria outra janela flutuante,
-  # ou seja, o problema original de volta.
+  # THE COST, measured and accepted: the binary only exists inside kdePackages.plasma-workspace,
+  # which brings 758 new MiB to this closure, 429 MiB of them qtwebengine, plus kwin, breeze
+  # and oxygen-icons. Ugly on a Hyprland system. The alternatives were discarded with a reason:
+  # (a) `snixembed` goes the OPPOSITE way (it publishes SNI as XEmbed, for old bars) and
+  # therefore tries to be the StatusNotifierWatcher itself, dying with "could not acquire
+  # watcher name" because Quickshell already is the watcher; (b) there is no standalone package
+  # in nixpkgs (checked: xembed-sni-proxy and xembedsniproxy do not exist as attributes);
+  # (c) extracting the binary by hand does not escape the weight, since plasma-workspace
+  # references kwin, breeze and oxygen-icons DIRECTLY; (d) `stalonetray` would be another
+  # floating window, which is the original problem coming back.
   #
-  # LIMITAÇÃO conhecida do ícone que vem por aqui (medido): ele NÃO tem nome nem menu —
-  # `Id` é o window ID do X11 em decimal ("14680080"), `Title` e `ToolTip` vazios e
-  # `Menu` inexistente. Por isso o clique-direito cai no tray-native-menu (acima) e por
-  # isso um tooltip futuro não pode se contentar com o `Id`: p/ estes teria de resolver o
-  # WM_CLASS da janela X11.
+  # A known LIMITATION of the icon that comes through here (measured): it has NO name and NO
+  # menu. `Id` is the X11 window ID in decimal ("14680080"), `Title` and `ToolTip` are empty
+  # and `Menu` does not exist. That is why right click falls into tray-native-menu (above) and
+  # why a future tooltip cannot settle for the `Id`: for these it would have to resolve the X11
+  # window's WM_CLASS.
   #
-  # ORDEM: o proxy precisa do watcher (o Quickshell) p/ registrar os itens, e o Quickshell
-  # NÃO é uma unit systemd (sobe pelo exec-once do autostart.lua), então não há como
-  # ordenar contra ele. O padrão SNI manda o item re-registrar quando o watcher aparece;
-  # se algum dia o ícone não surgir no boot, é AQUI que se olha primeiro.
+  # ORDERING: the proxy needs the watcher (Quickshell) to register the items, and Quickshell is
+  # NOT a systemd unit (it comes up through autostart.lua's exec-once), so there is no way to
+  # order against it. The SNI standard tells the item to re-register when the watcher appears;
+  # if the icon ever fails to show up at boot, THIS is where to look first.
   systemd.user.services.xembedsniproxy = {
     Unit = {
-      Description = "xembedsniproxy — ponte bandeja XEmbed (X11/Wine) → StatusNotifierItem";
+      Description = "xembedsniproxy: the XEmbed (X11/Wine) tray bridge to StatusNotifierItem";
       PartOf = [ "graphical-session.target" ];
       After = [ "graphical-session.target" ];
-      # Mesmo freio do autostart.nix: loop morre e FICA VISÍVEL em vez de rodar calado.
+      # The same brake as autostart.nix: a loop dies and STAYS VISIBLE instead of running
+      # silently.
       StartLimitIntervalSec = 300;
       StartLimitBurst = 3;
     };
     Service = {
       ExecStart = "${pkgs.kdePackages.plasma-workspace}/bin/xembedsniproxy";
-      # Precisa do X11 (XWayland). O DISPLAY vem do ambiente do systemd --user (medido:
-      # DISPLAY=:0 presente) — NÃO chumbado aqui, senão quebra se o XWayland mudar de nº.
-      # Se o XWayland ainda não estiver de pé, ele falha e as 3 tentativas dão a folga.
+      # It needs X11 (XWayland). The DISPLAY comes from the systemd --user environment
+      # (measured: DISPLAY=:0 present) and is NOT hardcoded here, otherwise it breaks if
+      # XWayland changes number. If XWayland is not up yet, it fails and the 3 attempts give it
+      # room.
       Restart = "on-failure";
       RestartSec = 5;
     };

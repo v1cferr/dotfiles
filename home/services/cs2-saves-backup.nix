@@ -1,16 +1,16 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# BACKUP DOS SAVES DO CITIES: SKYLINES II (Bottles) → pasta coberta pelo restic.
+# A BACKUP OF THE CITIES: SKYLINES II SAVES (Bottles) into a folder restic covers.
 #
-# Porquê: o restic EXCLUI ~/.local/share/bottles (prefixos Wine, ~154G re-instalável),
-# mas os SAVES vivem lá dentro e são insubstituíveis (repack pirata, SEM Steam Cloud).
-# Este timer ESPELHA os saves p/ ~/CS2-Saves-Backup — que fica em /home, FORA do
-# exclude — e o restic diário leva pro HDD Seagate off-disk. Fecha a regra
-# "estado = restic" e a nota do próprio restic.nix ("saves… faça backup à parte").
+# Why: restic EXCLUDES ~/.local/share/bottles (Wine prefixes, ~154G that is reinstallable), but
+# the SAVES live in there and are irreplaceable (a pirated repack, with NO Steam Cloud). This
+# timer MIRRORS the saves into ~/CS2-Saves-Backup, which sits in /home, OUTSIDE the exclude, and
+# the daily restic takes it to the off-disk Seagate HDD. It closes the "state = restic" rule and
+# the note in restic.nix itself ("saves… back them up separately").
 #
-# rsync --delete: o espelho reflete o estado ATUAL (o histórico versionado —
-# desfazer overwrite acidental — é o restic quem guarda, com keep-daily/weekly).
-# Barato: rsync é incremental (no-op quando nada mudou), então rodar de hora em
-# hora não pesa. Pra outro jogo depois: replicar o par src→dst num novo módulo.
+# rsync --delete: the mirror reflects the CURRENT state (the versioned history, for undoing an
+# accidental overwrite, is what restic keeps, with keep-daily/weekly).
+# It is cheap: rsync is incremental (a no-op when nothing changed), so running it hourly does not
+# weigh. For another game later: replicate the src->dst pair in a new module.
 # ═══════════════════════════════════════════════════════════════════════════
 {
   pkgs,
@@ -22,12 +22,13 @@
 
 let
   home = config.home.homeDirectory;
-  # origem: pasta Saves do CS2 dentro do prefixo Wine do bottle Cities-Skylines-II
+  # the source: the CS2 Saves folder inside the Wine prefix of the Cities-Skylines-II bottle
   savesSrc = "${home}/.local/share/bottles/bottles/Cities-Skylines-II/drive_c/users/steamuser/AppData/LocalLow/Colossal Order/Cities Skylines II/Saves";
-  # destino: pasta simples em $HOME, dentro do que o restic inclui no backup diário
+  # the destination: a plain folder in $HOME, inside what restic includes in the daily backup
   savesDst = "${home}/CS2-Saves-Backup";
 
-  # espelha os saves (só age se já existir save → não falha antes da 1ª partida)
+  # it mirrors the saves (it only acts if a save already exists, so it does not fail before the
+  # 1st game)
   mirrorSaves = pkgs.writeShellScript "cs2-saves-mirror" ''
     set -eu
     ${pkgs.coreutils}/bin/mkdir -p "${savesDst}"
@@ -37,17 +38,17 @@ let
   '';
 in
 lib.mkIf osConfig.my.services.cs2-backup {
-  # serviço oneshot: dispara o espelhamento (o restic diário faz o resto)
+  # a oneshot service: it fires the mirroring (the daily restic does the rest)
   systemd.user.services.cs2-saves-backup = {
-    Unit.Description = "Espelha os saves do CS2 (Bottles) p/ pasta coberta pelo restic";
+    Unit.Description = "Mirrors the CS2 saves (Bottles) into a folder restic covers";
     Service = {
       Type = "oneshot";
       ExecStart = "${mirrorSaves}";
     };
   };
-  # timer: espelha 5 min após o boot e a cada 1 h (pega a sessão de jogo recém-fechada)
+  # the timer: it mirrors 5 min after boot and every 1 h (it catches the game session just closed)
   systemd.user.timers.cs2-saves-backup = {
-    Unit.Description = "Agenda o espelhamento dos saves do CS2";
+    Unit.Description = "Schedules the mirroring of the CS2 saves";
     Timer = {
       OnBootSec = "5min";
       OnUnitActiveSec = "1h";

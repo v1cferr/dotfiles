@@ -1,19 +1,22 @@
-# Flameshot (screenshot) — v14 do canal UNSTABLE (pkgs.unstable.*, via overlay do
-# flake.nix) + config + scripts do fluxo por teclado, no home (regra 4). Os binds
-# (Print / SUPER+SHIFT+S + submap "screenshot") vivem em home/desktop/hypr/lua/keybinds.lua.
+# Flameshot (screenshots): v14 from the UNSTABLE channel (pkgs.unstable.*, through flake.nix's
+# overlay) plus the config and the keyboard-flow scripts, in home (rule 4). The binds
+# (Print / SUPER+SHIFT+S plus the "screenshot" submap) live in
+# home/desktop/hypr/lua/keybinds.lua.
 #
-# Captura via xdg-desktop-portal (org.freedesktop.portal.Screenshot), servido pelo
-# xdg-desktop-portal-wlr (system/desktop/desktop.nix; o -hyprland só DECLARA a interface,
-# não implementa). Sem grim direto/useGrimAdapter → sem o aviso "grim ... GNOME".
+# Capture goes through xdg-desktop-portal (org.freedesktop.portal.Screenshot), served by
+# xdg-desktop-portal-wlr (system/desktop/desktop.nix; the -hyprland one only DECLARES the
+# interface, it does not implement it). With no direct grim and no useGrimAdapter, there is no
+# "grim ... GNOME" warning.
 #
-# FLUXO POR TECLADO (paridade com o Arch v14): o v14 SEMPRE mostra um picker de monitor
-# no multi-monitor (não dá pra pular nem com --region). O picker só aceita clique de
-# mouse, então SUPER+SHIFT+S abre o picker + entra num submap; 1/2 SINTETIZAM o clique no
-# preview do monitor certo (cursor + send_shortcut mouse:272). A janela do flameshot aqui
-# tem class VAZIA + title "flameshot" → seletores e a window rule (rules.lua) usam título.
+# THE KEYBOARD FLOW (parity with the Arch v14): v14 ALWAYS shows a monitor picker on a
+# multi-monitor setup (there is no skipping it, not even with --region). The picker only accepts
+# a mouse click, so SUPER+SHIFT+S opens the picker and enters a submap; 1/2 SYNTHESIZE the click
+# on the right monitor's preview (cursor plus send_shortcut mouse:272). The flameshot window
+# here has an EMPTY class plus the title "flameshot", so the selectors and the window rule
+# (rules.lua) use the title.
 #
-# NB: o .ini vem do /nix/store (read-only) → mudanças pela GUI NÃO persistem;
-# editar aqui e rebuild. Qt QSettings NÃO aceita comentário inline no .ini.
+# NB: the .ini comes from /nix/store (read-only), so changes through the GUI do NOT persist;
+# edit here and rebuild. Qt QSettings does NOT accept an inline comment in the .ini.
 {
   config,
   pkgs,
@@ -22,19 +25,19 @@
 }:
 
 let
-  # Pacote do Quickshell (flake input). Ligado uma vez porque o caminho completo
-  # passa de 130 colunas e se repetia em cada consumidor deste arquivo.
+  # The Quickshell package (a flake input). Bound once because the full path goes past 130
+  # columns and repeated itself in every consumer in this file.
   qsPkg = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
   fs = pkgs.unstable.flameshot; # v14
 
-  # flameshot-screenshot: abre o picker (flameshot gui) e ENTRA no submap "screenshot"
-  # (as teclas 1/2/Esc passam a valer). O watcher reseta o submap quando o flameshot
-  # fecha (clique de mouse no picker, Esc interno ou timeout) — senão o 1/2 ficaria
-  # sequestrado depois. Entrar/sair do submap via `hyprctl dispatch` (API Lua 0.55).
+  # flameshot-screenshot: it opens the picker (flameshot gui) and ENTERS the "screenshot" submap
+  # (the 1/2/Esc keys start counting). The watcher resets the submap when flameshot closes (a
+  # mouse click on the picker, an internal Esc or a timeout), otherwise 1/2 would stay hijacked
+  # afterwards. Entering and leaving the submap through `hyprctl dispatch` (the 0.55 Lua API).
   flameshotScreenshot = pkgs.writeShellApplication {
     name = "flameshot-screenshot";
-    # `qs`: esconde a barra enquanto o overlay existe (ver abaixo). runtimeInputs é
-    # obrigatório — writeShellApplication usa PATH restrito, não o do usuário.
+    # `qs`: it hides the bar while the overlay exists (see below). runtimeInputs is mandatory,
+    # since writeShellApplication uses a restricted PATH, not the user's.
     runtimeInputs = [
       fs
       pkgs.hyprland
@@ -48,23 +51,25 @@ let
 
       fs_open() { hyprctl clients -j | jq -e 'any(.[]; .title=="flameshot")' >/dev/null 2>&1; }
       (
-        c=0; while [ "$c" -lt 15 ];  do sleep 0.2; fs_open && break;  c=$((c+1)); done  # espera abrir (≤3s)
-        # BARRA DUPLICADA: aqui o frame CONGELADO do overlay já foi capturado — com a barra
-        # dentro. Esconder a barra VIVA agora mata a duplicata SEM tirá-la do print. No
-        # Hyprland janela normal NUNCA cobre layer `top`, e a barra vive nela; não há window
-        # rule p/ inverter (feature request aberta, hyprwm/Hyprland#4847), então esconder é o
-        # único caminho. Só esconde se abriu de fato, senão sumiria a barra à toa.
+        c=0; while [ "$c" -lt 15 ];  do sleep 0.2; fs_open && break;  c=$((c+1)); done  # wait for it to open (<=3s)
+        # THE DUPLICATED BAR: by now the overlay's FROZEN frame has already been captured, with
+        # the bar in it. Hiding the LIVE bar now kills the duplicate WITHOUT taking it out of the
+        # shot. On Hyprland a normal window NEVER covers a `top` layer, and the bar lives in one;
+        # there is no window rule to invert that (an open feature request,
+        # hyprwm/Hyprland#4847), so hiding is the only path. It only hides if it actually opened,
+        # otherwise the bar would disappear for nothing.
         fs_open && qs ipc call bar hide >/dev/null 2>&1 || true
-        c=0; while [ "$c" -lt 300 ]; do fs_open || break; sleep 0.2;  c=$((c+1)); done  # espera fechar (≤60s)
-        qs ipc call bar unhide >/dev/null 2>&1 || true  # SEMPRE volta, inclusive no timeout de 60s
+        c=0; while [ "$c" -lt 300 ]; do fs_open || break; sleep 0.2;  c=$((c+1)); done  # wait for it to close (<=60s)
+        qs ipc call bar unhide >/dev/null 2>&1 || true  # it ALWAYS comes back, the 60s timeout included
         hyprctl dispatch 'hl.dsp.submap("reset")' >/dev/null 2>&1 || true
       ) >/dev/null 2>&1 &
     '';
   };
 
-  # flameshot-pick <monitor>: escolhe um monitor no picker do v14 SINTETIZANDO o clique.
-  # Os previews ficam lado a lado na ORDEM FÍSICA (monitores por X, esq→dir); resolve a
-  # fatia do alvo dinamicamente (nada chumbado → sobrevive a TV desligada / rearranjo).
+  # flameshot-pick <monitor>: it picks a monitor in the v14 picker by SYNTHESIZING the click.
+  # The previews sit side by side in PHYSICAL ORDER (monitors by X, left to right); it resolves
+  # the target's slice dynamically (nothing hardcoded, so it survives a turned-off TV or a
+  # rearrangement).
   flameshotPick = pkgs.writeShellApplication {
     name = "flameshot-pick";
     runtimeInputs = [
@@ -73,24 +78,24 @@ let
       pkgs.coreutils
     ];
     text = ''
-      target="''${1:?uso: flameshot-pick <monitor>}"
+      target="''${1:?usage: flameshot-pick <monitor>}"
       reset() { hyprctl dispatch 'hl.dsp.submap("reset")' >/dev/null 2>&1 || true; }
 
-      # geometria do picker (janela title "flameshot"); sem picker → só reseta e sai.
+      # the picker's geometry (the window titled "flameshot"); with no picker, just reset and exit.
       geo="$(hyprctl clients -j | jq -r '[.[] | select(.title=="flameshot")] | first
         | if . == null then empty else "\(.at[0]) \(.at[1]) \(.size[0]) \(.size[1])" end')"
       if [ -z "$geo" ]; then reset; exit 0; fi
       read -r px py pw ph <<<"$geo"
 
-      # índice 0-based do alvo na ordem esq→dir dos monitores ATIVOS + total n.
+      # the target's 0-based index in the left-to-right order of the ACTIVE monitors, plus the total n.
       info="$(hyprctl monitors -j | jq -r --arg t "$target" '
         ([ .[] | { name, x } ] | sort_by(.x)) as $m
         | ($m | map(.name) | index($t)) as $i
         | if $i == null then empty else "\($i) \($m | length)" end')"
-      if [ -z "$info" ]; then reset; exit 0; fi  # alvo não ativo (ex.: TV desligada)
+      if [ -z "$info" ]; then reset; exit 0; fi  # the target is not active (a turned-off TV, say)
       read -r i n <<<"$info"
 
-      # centro do preview: fatia i na horizontal, 55% da altura (sobre o preview).
+      # the preview's center: slice i horizontally, 55% of the height (over the preview).
       cx=$(( px + pw * (2 * i + 1) / (2 * n) ))
       cy=$(( py + ph * 55 / 100 ))
       hyprctl dispatch "hl.dsp.cursor.move({ x = $cx, y = $cy })" >/dev/null 2>&1 || true
@@ -99,7 +104,7 @@ let
     '';
   };
 
-  # flameshot-cancel: Esc no submap → fecha o picker e sai do submap.
+  # flameshot-cancel: Esc in the submap closes the picker and leaves the submap.
   flameshotCancel = pkgs.writeShellApplication {
     name = "flameshot-cancel";
     runtimeInputs = [ pkgs.hyprland ];
@@ -110,7 +115,7 @@ let
   };
 in
 {
-  # v14 (unstable) + os scripts do fluxo por teclado (chamados pelo submap em keybinds.lua).
+  # v14 (unstable) plus the keyboard-flow scripts (called by the submap in keybinds.lua).
   home.packages = [
     fs
     flameshotScreenshot
@@ -118,27 +123,27 @@ in
     flameshotCancel
   ];
 
-  # ── Aliases de print, migrados do zsh do Arch ──────────────────────────────
-  # Ficam AQUI, junto da ferramenta, e não no home/shell/zsh.nix — mesma convenção do
-  # eza/bat, que moram no cli.nix (o zsh.nix guarda só os de shell/sistema).
+  # ── The screenshot aliases, migrated from the Arch zsh ─────────────────────
+  # They stay HERE, next to the tool, and not in home/shell/zsh.nix, the same convention as
+  # eza/bat, which live in cli.nix (zsh.nix keeps only the shell/system ones).
   #
-  # VERIFICADO no v14/Wayland desta máquina: só o `gui` abre o picker de monitor; o
-  # `full` e o `screen --number` capturam DIRETO, sem picker. Ou seja, os aliases do
-  # Arch continuam valendo — o que não vale é `--region`, que o v14 ignora.
+  # VERIFIED on this machine's v14/Wayland: only `gui` opens the monitor picker; `full` and
+  # `screen --number` capture DIRECTLY, with no picker. Which means the Arch aliases still hold;
+  # what does not hold is `--region`, which v14 ignores.
   #
-  # O `--number` é índice de tela do Qt, NÃO nome de monitor, então não sai do
-  # my.monitors (regra 11 não se aplica: não há como derivar). Mapeamento medido
-  # capturando as duas telas e comparando com os wallpapers: 0 = principal (DP-2),
-  # 1 = TV (HDMI-A-3). Se o layout de monitores mudar, REMEDIR.
-  # Os números herdados do Arch já casam com o submap de screenshot (1=TV, 2=principal).
+  # The `--number` is a Qt screen index, NOT a monitor name, so it does not come out of
+  # my.monitors (rule 11 does not apply: there is no way to derive it). The mapping was measured
+  # by capturing both screens and comparing against the wallpapers: 0 = the main one (DP-2),
+  # 1 = the TV (HDMI-A-3). If the monitor layout changes, MEASURE AGAIN.
+  # The numbers inherited from Arch already match the screenshot submap (1=TV, 2=main).
   programs.zsh.shellAliases = {
-    screenshot = "flameshot gui"; # seleção interativa (abre o picker do v14)
-    scfull = "flameshot full -c"; # as duas telas → clipboard
-    sc1 = "flameshot screen --number 1 -c"; # TV (HDMI-A-3) → clipboard
-    sc2 = "flameshot screen --number 0 -c"; # principal (DP-2) → clipboard
+    screenshot = "flameshot gui"; # an interactive selection (it opens the v14 picker)
+    scfull = "flameshot full -c"; # both screens, to the clipboard
+    sc1 = "flameshot screen --number 1 -c"; # the TV (HDMI-A-3), to the clipboard
+    sc2 = "flameshot screen --number 0 -c"; # the main one (DP-2), to the clipboard
   };
 
-  # Pasta de saída dos prints (flameshot não cria sozinho de forma confiável).
+  # The screenshots' output folder (flameshot does not create it reliably on its own).
   home.file."Pictures/Screenshots/.keep".text = "";
 
   xdg.configFile."flameshot/flameshot.ini".text = ''

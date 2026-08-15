@@ -1,7 +1,7 @@
-# Workstation da FAI: SSOT do host (regra 11) + `wake-workstation` (Wake-on-LAN).
-# O IP/usuário eram literais repetidos em 3 consumidores (ssh.nix, o mount rclone e este
-# módulo) — agora saem daqui. Todos os consumidores são do home/, então a opção é do home/
-# (regra 11: mora no nível MAIS BAIXO que precisa dela).
+# The FAI workstation: the host's SSOT (rule 11) plus `wake-workstation` (Wake-on-LAN).
+# The IP/user were literals repeated in 3 consumers (ssh.nix, the rclone mount and this module);
+# now they come from here. All the consumers are in home/, so the option lives in home/ (rule 11:
+# it lives at the LOWEST level that needs it).
 {
   config,
   lib,
@@ -13,10 +13,10 @@ let
   ws = config.my.fai.workstation;
   macHex = lib.toLower (lib.replaceStrings [ ":" "-" ] [ "" "" ] ws.mac);
 
-  # Magic packet = 6× 0xFF + 16× o MAC. Python (não o wakeonlan do nixpkgs, que é Perl e
-  # arrasta Perl-Critic/Perl-Tidy pro build) — e é o MESMO código que roda no relay, onde
-  # não posso instalar nada. SO_BROADCAST é obrigatório: sem ele o kernel recusa o envio
-  # p/ endereço de broadcast. Portas 9 e 7 porque NIC velha às vezes só escuta a 7.
+  # A magic packet = 6x 0xFF plus 16x the MAC. Python (not nixpkgs' wakeonlan, which is Perl and
+  # drags Perl-Critic/Perl-Tidy into the build), and it is the SAME code that runs on the relay,
+  # where I cannot install anything. SO_BROADCAST is mandatory: without it the kernel refuses to
+  # send to a broadcast address. Ports 9 and 7 because an old NIC sometimes only listens on 7.
   mkSender =
     targets:
     pkgs.writeText "wol-send.py" ''
@@ -29,12 +29,12 @@ let
               s.sendto(pkt, (t, port))
     '';
 
-  # Local: unicast pelo túnel + broadcast dirigido da /25.
+  # Local: unicast through the tunnel plus a directed broadcast to the /25.
   senderLocal = mkSender [
     ws.host
     ws.broadcast
   ];
-  # Relay: roda NA fai-vm, que está na mesma sub-rede → broadcast L2 de verdade.
+  # The relay: it runs ON the fai-vm, which is on the same subnet, so a real L2 broadcast.
   senderRelay = mkSender [ "255.255.255.255" ];
 
   wakeCli = pkgs.writeShellApplication {
@@ -50,75 +50,77 @@ let
 
       up() { ping -c1 -W2 "$host" >/dev/null 2>&1; }
 
-      if up; then echo "workstation já está no ar ($host)"; exit 0; fi
+      if up; then echo "the workstation is already up ($host)"; exit 0; fi
 
-      # Sem túnel não há rota p/ a FAI — falhar aqui com a causa certa evita caçar fantasma.
+      # With no tunnel there is no route to FAI, and failing here with the right cause avoids
+      # chasing ghosts.
       if [ -z "$(ip -o link show type ppp)" ]; then
-        echo "VPN FAI desligada — rode 'vpn connect fai' antes (o $host só existe pelo túnel)." >&2
+        echo "the FAI VPN is down, run 'vpn connect fai' first ($host only exists through the tunnel)." >&2
         exit 1
       fi
 
-      echo "enviando magic packet p/ ${ws.mac}…"
-      # 1) RELAY pela fai-vm: o único caminho que acorda máquina desligada HÁ TEMPO, porque
-      #    faz broadcast no segmento L2. Os outros dois dependem de cache (ARP/CAM) quente.
-      #    O script vai pelo STDIN do python3 remoto — nada a instalar do outro lado.
+      echo "sending a magic packet to ${ws.mac}..."
+      # 1) A RELAY through the fai-vm: the only path that wakes a machine that has been off FOR A
+      #    WHILE, because it broadcasts on the L2 segment. The other two depend on a warm cache
+      #    (ARP/CAM). The script goes through the remote python3's STDIN, so there is nothing to
+      #    install on the other side.
       if ssh -o BatchMode=yes -o ConnectTimeout=8 fai-vm python3 - < ${senderRelay} 2>/dev/null; then
-        echo "  ✓ broadcast L2 via fai-vm"
+        echo "  ok: an L2 broadcast through the fai-vm"
       else
-        echo "  ✗ fai-vm indisponível (host key não aceita? VM fora?) — só os caminhos fracos"
+        echo "  the fai-vm is unavailable (host key not accepted? VM down?), only the weak paths left"
       fi
-      # 2) unicast pelo túnel (vale enquanto o ARP do roteador estiver quente) +
-      # 3) broadcast dirigido p/ ${ws.broadcast} (roteador costuma descartar, RFC 2644)
-      python3 ${senderLocal} && echo "  ✓ unicast + broadcast dirigido pelo túnel"
+      # 2) unicast through the tunnel (it works while the router's ARP is warm) plus
+      # 3) a directed broadcast to ${ws.broadcast} (a router usually drops it, RFC 2644)
+      python3 ${senderLocal} && echo "  ok: unicast plus a directed broadcast through the tunnel"
 
-      echo -n "aguardando o host responder (até 120s)"
+      echo -n "waiting for the host to answer (up to 120s)"
       for _ in $(seq 1 40); do
-        if up; then echo; echo "ACORDOU: $host respondendo."; exit 0; fi
+        if up; then echo; echo "IT WOKE UP: $host is answering."; exit 0; fi
         echo -n "."; sleep 3
       done
       echo
-      echo "não respondeu em 120s." >&2
-      echo "Se nenhum boot acontece, o WoL provavelmente não está armado na NIC da" >&2
-      echo "workstation — precisa de root LÁ (ver comentário deste módulo)." >&2
+      echo "it did not answer in 120s." >&2
+      echo "If no boot happens at all, WoL is probably not armed on the workstation's" >&2
+      echo "NIC, which needs root THERE (see this module's comment)." >&2
       exit 1
     '';
   };
 in
 {
   # ─────────────────────────────────────────────────────────────────────────
-  # LADO RECEPTOR — NÃO É DECLARÁVEL DAQUI. A workstation é uma Ubuntu 26.04 de
-  # terceiro (superintendencia-server), fora do alcance destes dotfiles, e o sudo
-  # de lá pede senha. Para armar o WoL, rodar NA WORKSTATION, uma vez:
-  #   sudo ethtool enp7s0 | grep -i wake   # "Supports Wake-on: ...g" = dá p/ usar
-  #   sudo ethtool -s enp7s0 wol g         # arma agora (NÃO sobrevive a reboot)
-  # Persistir: ela usa NETPLAN + systemd-networkd (NÃO NetworkManager, então nada de
-  # nmcli) — em /etc/netplan/00-installer-config.yaml, sob `ethernets: enp7s0:`,
-  # acrescentar `wakeonlan: true` e rodar `sudo netplan apply`.
-  # Costuma exigir também "Wake on LAN/PCIe" LIGADO na BIOS/UEFI.
-  # ESTADO MEDIDO (jul/2026): /sys/class/net/enp7s0/device/power/wakeup = disabled →
-  # quase certamente NÃO armado. Não dá p/ confirmar daqui: os campos Wake-on do ethtool
-  # exigem root e sem ele a leitura dá "netlink error: Operation not permitted".
+  # THE RECEIVING SIDE IS NOT DECLARABLE FROM HERE. The workstation is somebody else's
+  # Ubuntu 26.04 (superintendencia-server), out of these dotfiles' reach, and sudo over
+  # there asks for a password. To arm WoL, run ON THE WORKSTATION, once:
+  #   sudo ethtool enp7s0 | grep -i wake   # "Supports Wake-on: ...g" means it can be used
+  #   sudo ethtool -s enp7s0 wol g         # arms it now (it does NOT survive a reboot)
+  # To persist it: that machine uses NETPLAN plus systemd-networkd (NOT NetworkManager, so no
+  # nmcli). In /etc/netplan/00-installer-config.yaml, under `ethernets: enp7s0:`, add
+  # `wakeonlan: true` and run `sudo netplan apply`.
+  # It usually also requires "Wake on LAN/PCIe" TURNED ON in the BIOS/UEFI.
+  # THE MEASURED STATE (jul/2026): /sys/class/net/enp7s0/device/power/wakeup = disabled, so
+  # almost certainly NOT armed. There is no confirming it from here: ethtool's Wake-on fields
+  # require root and without it the read gives "netlink error: Operation not permitted".
   # ─────────────────────────────────────────────────────────────────────────
   options.my.fai.workstation = {
     host = lib.mkOption {
       type = lib.types.str;
       default = "200.136.209.229";
-      description = "IP da workstation da FAI (alcançável só pela VPN FAI).";
+      description = "The FAI workstation's IP (reachable only through the FAI VPN).";
     };
     user = lib.mkOption {
       type = lib.types.str;
       default = "v1cferr";
-      description = "Usuário de login na workstation.";
+      description = "The login user on the workstation.";
     };
     mac = lib.mkOption {
       type = lib.types.str;
       default = "8c:86:dd:61:22:12";
-      description = "MAC da enp7s0 (a NIC cabeada que carrega o IP) — alvo do Wake-on-LAN.";
+      description = "The MAC of enp7s0 (the wired NIC that carries the IP), the Wake-on-LAN target.";
     };
     broadcast = lib.mkOption {
       type = lib.types.str;
       default = "200.136.209.255";
-      description = "Broadcast da /25 da workstation, p/ o magic packet dirigido.";
+      description = "The broadcast of the workstation's /25, for the directed magic packet.";
     };
   };
 

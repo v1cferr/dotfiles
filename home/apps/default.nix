@@ -1,16 +1,16 @@
-# Apps GUI de usuário.
+# The user's GUI apps.
 { ... }:
 
 {
   imports = [
-    ./dropbox.nix # serviço de sync do usuário (~/Dropbox: Obsidian + docs)
-    ./media.nix # visualizadores (Gwenview/Okular) + players (VLC/mpv) + apps padrão
-    ./office.nix # ONLYOFFICE: default de .docx/.xlsx/.pptx/ODF (fontes MS no system/)
-    ./dolphin.nix # Dolphin: view mode sempre "Detalhes" (via activation)
-    ./vscode.nix # VS Code: pacote + settings/keybindings versionados (hot-reload por symlink)
-    ./flameshot.nix # ~/.config/flameshot/flameshot.ini (screenshot; keybind em hypr.nix)
-    ./mangohud.nix # overlay de FPS/temps/uso nos jogos (config declarativa + toggle)
-    ./openal.nix # ~/.config/alsoft.conf: força backend pulse (som dos jogos OpenAL/HashLink)
-    ./curseforge.nix # modpacks do Minecraft: pacote (./pkgs) + handler dos schemes do login
+    ./dropbox.nix # the user's sync service (~/Dropbox: Obsidian plus docs)
+    ./media.nix # viewers (Gwenview/Okular) plus players (VLC/mpv) plus the default apps
+    ./office.nix # ONLYOFFICE: the default for .docx/.xlsx/.pptx/ODF (the MS fonts are in system/)
+    ./dolphin.nix # Dolphin: the view mode always "Details" (through activation)
+    ./vscode.nix # VS Code: the package plus versioned settings/keybindings (hot-reload through a symlink)
+    ./flameshot.nix # ~/.config/flameshot/flameshot.ini (screenshots; the keybind is in hypr.nix)
+    ./mangohud.nix # the FPS/temps/usage overlay in games (a declarative config plus a toggle)
+    ./openal.nix # ~/.config/alsoft.conf: it forces the pulse backend (sound in OpenAL/HashLink games)
+    ./curseforge.nix # Minecraft modpacks: the package (./pkgs) plus the login scheme handler
   ];
 }

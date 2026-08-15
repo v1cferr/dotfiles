@@ -1,70 +1,68 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# LOCALSEND — "AirDrop" de código aberto: arquivo direto entre celular e PC pela
-# LAN, sem nuvem, sem conta e sem intermediário (cifra TLS ponta-a-ponta com
-# certificado auto-assinado gerado em cada aparelho).
+# LOCALSEND: an open source "AirDrop", a file going straight between phone and PC over the LAN,
+# with no cloud, no account and no middleman (end-to-end TLS with a self-signed certificate
+# generated on each device).
 #
-# POR QUE MORA NO system/ E NÃO NO home/ (regra 4): quem une PACOTE + PORTA de
-# firewall é o módulo do nixpkgs (`programs.localsend`), e firewall é
-# nível-sistema. É o mesmo caso do `programs.steam` (system/gaming/steam.nix) —
-# o módulo upstream não é opcional, então o pacote vem com ele. O pacote NÃO se
-# repete no home/packages.nix: quem precisa do binário lê
-# `osConfig.programs.localsend.package` (é o que o home/desktop/autostart.nix faz).
+# WHY IT LIVES IN system/ AND NOT IN home/ (rule 4): what ties the PACKAGE to the firewall PORT is
+# the nixpkgs module (`programs.localsend`), and the firewall is system level. It is the same case
+# as `programs.steam` (system/gaming/steam.nix): the upstream module is not optional, so the
+# package comes with it. The package is NOT repeated in home/packages.nix: whoever needs the
+# binary reads `osConfig.programs.localsend.package` (which is what home/desktop/autostart.nix
+# does).
 #
-# A 53317 é usada nos DOIS protocolos, e as duas são obrigatórias: TCP é a
-# transferência e o `/api/localsend/v2/info`; UDP é o anúncio multicast em
-# 224.0.0.167 que faz os aparelhos se DESCOBRIREM. Sem a UDP o app funciona, mas
-# só por "adicionar por IP" na mão.
+# 53317 is used by BOTH protocols, and both are mandatory: TCP is the transfer and the
+# `/api/localsend/v2/info`; UDP is the multicast announcement on 224.0.0.167 that makes the
+# devices DISCOVER each other. Without the UDP one the app works, but only through adding by IP by
+# hand.
 #
-# ⚠️ `openFirewall = false` CONTRA o default do módulo, e o motivo NÃO é a
-# internet: o roteador encaminha 80/443/2222 e as portas do Moonlight (47984,
-# 47989, 48010/tcp + 47998-48000/udp, estas restritas à UFSCar desde 10/08/2026),
-# e a 53317 não está em nenhuma dessas listas — o mundo nunca a alcançou.
-# Quem alcançaria é a VPN — `openFirewall` abre a porta em TODA interface,
-# e com o túnel da FAI de pé (`ppp0`) a rede corporativa inteira passaria a ver o
-# serviço e a ler o `/info` (nome do dispositivo, modelo, fingerprint) sem
-# autenticação nenhuma. A confiança aqui é por ORIGEM, igual à regra do Sunshine
-# em ./network.nix: só a LAN de casa, lida da SSOT (regra 11).
+# `openFirewall = false` AGAINST the module's default, and the reason is NOT the internet: the
+# router forwards 80/443/2222 and the Moonlight ports (47984, 47989, 48010/tcp plus
+# 47998-48000/udp, these restricted to UFSCar since 10/08/2026), and 53317 is on none of those
+# lists, so the world never reached it. What would reach it is the VPN: `openFirewall` opens the
+# port on EVERY interface, and with the FAI tunnel up (`ppp0`) the whole corporate network would
+# start seeing the service and reading the `/info` (device name, model, fingerprint) with no
+# authentication at all. Trust here is by ORIGIN, just like the Sunshine rule in ./network.nix:
+# the home LAN only, read from the SSOT (rule 11).
 #
-# Os peers do WireGuard entram DE GRAÇA e não precisam de regra própria: eles
-# chegam com origem 10.10.10.x e a regra de ./network.nix já aceita a faixa
-# inteira antes de qualquer outra decisão.
+# The WireGuard peers come in FOR FREE and need no rule of their own: they arrive with origin
+# 10.10.10.x and ./network.nix' rule already accepts the whole range before any other decision.
 #
-# ⚠️ A porta é REPETIDA aqui porque o módulo não a expõe como opção (é um
-# `firewallPort = 53317` interno ao arquivo dele). Se você trocar a porta DENTRO
-# do app (Configurações → Rede), esta regra deixa de casar e a RECEPÇÃO MORRE EM
-# SILÊNCIO — sem erro de build, sem log, só "o celular não me acha".
+# The port is REPEATED here because the module does not expose it as an option (it is a
+# `firewallPort = 53317` internal to its file). If you change the port INSIDE the app (Settings ->
+# Network), this rule stops matching and RECEIVING DIES IN SILENCE, with no build error, no log,
+# just "the phone cannot find me".
 #
-# Só IPv4, como todas as regras deste repo: a descoberta do LocalSend é multicast
-# IPv4 e a LAN de casa não tem IPv6 roteado.
+# IPv4 only, like every rule in this repo: LocalSend's discovery is IPv4 multicast and the home LAN
+# has no routed IPv6.
 #
-# Configurações do app (apelido, pasta de destino, salvar sem confirmar) e os
-# arquivos recebidos são ESTADO (regra 6): o app reescreve o próprio
-# `shared_preferences` em runtime, então o Nix não é dono dele (regra 14).
+# The app's settings (the alias, the destination folder, saving without confirming) and the
+# received files are STATE (rule 6): the app rewrites its own `shared_preferences` at runtime, so
+# Nix does not own it (rule 14).
 # ═══════════════════════════════════════════════════════════════════════════
 { config, ... }:
 
 let
-  # Porta única do protocolo — vale pro TCP e pro UDP, e aparece em 4 regras abaixo.
+  # The protocol's single port: it holds for TCP and for UDP, and it shows up in 4 rules below.
   port = 53317;
 in
 {
   programs.localsend = {
     enable = true;
-    openFirewall = false; # ver header: a porta é aberta SÓ pra LAN, na regra abaixo
+    openFirewall = false; # see the header: the port is opened ONLY for the LAN, in the rule below
   };
 
-  # `-I nixos-fw 1` e não `-A`, e o motivo MEDIDO no firewall-start gerado (26.05) é
-  # mais estreito do que diz o vizinho em ./network.nix: o `extraCommands` é injetado
-  # ANTES do `-A nixos-fw -j nixos-fw-log-refuse`, então hoje `-A` também seria
-  # alcançado. O que de fato cai no vazio é a mesma regra digitada À MÃO num firewall
-  # já de pé — aí sim a cadeia termina no refuse. `-I 1` é o que vale nos dois casos e
-  # não depende de onde o upstream decide injetar o extraCommands amanhã.
+  # `-I nixos-fw 1` and not `-A`, and the reason MEASURED in the generated firewall-start (26.05)
+  # is narrower than what the neighbor in ./network.nix says: `extraCommands` is injected BEFORE
+  # the `-A nixos-fw -j nixos-fw-log-refuse`, so today `-A` would be reached too. What actually
+  # falls into the void is the same rule typed BY HAND into an already running firewall; there the
+  # chain does end at the refuse. `-I 1` is what holds in both cases and does not depend on where
+  # upstream decides to inject extraCommands tomorrow.
   networking.firewall = {
     extraCommands = ''
       iptables -I nixos-fw 1 -s ${config.my.net.lanSubnet} -p tcp --dport ${toString port} -j nixos-fw-accept
       iptables -I nixos-fw 1 -s ${config.my.net.lanSubnet} -p udp --dport ${toString port} -j nixos-fw-accept
     '';
-    # Sem isto, `reload` do firewall empilha duplicatas das regras acima.
+    # Without this, a firewall `reload` piles up duplicates of the rules above.
     extraStopCommands = ''
       iptables -D nixos-fw -s ${config.my.net.lanSubnet} -p tcp --dport ${toString port} -j nixos-fw-accept 2>/dev/null || true
       iptables -D nixos-fw -s ${config.my.net.lanSubnet} -p udp --dport ${toString port} -j nixos-fw-accept 2>/dev/null || true

@@ -1,15 +1,16 @@
-# Cheatsheet de keybinds no rofi (SUPER+H) — lista TODOS os binds do Hyprland.
+# A keybind cheatsheet in rofi (SUPER+H), listing ALL the Hyprland binds.
 #
-# GERADO do keybinds.lua em RUNTIME, nunca escrito à mão: uma lista duplicada viraria
-# mentira no primeiro bind novo. O arquivo lido é ~/.config/hypr/lua/keybinds.lua, que é
-# mkOutOfStoreSymlink pro repo (home/desktop/hypr.nix) — então o cheatsheet acompanha até
-# edição com hot-reload, sem rebuild.
+# GENERATED from keybinds.lua at RUNTIME, never written by hand: a duplicated list would become
+# a lie on the first new bind. The file it reads is ~/.config/hypr/lua/keybinds.lua, which is a
+# mkOutOfStoreSymlink into the repo (home/desktop/hypr.nix), so the cheatsheet even follows a
+# hot-reload edit, with no rebuild.
 #
-# Por que SUPER+H e não SUPER+/: o Moonlight NÃO envia a tecla "/ ?" do ABNT2 (bug #1789,
-# a mesma razão do remap do ScrollLock em keybinds.lua), então SUPER+/ morreria no acesso
-# remoto. H é livre e passa em qualquer caminho.
+# Why SUPER+H and not SUPER+/: Moonlight does NOT send the ABNT2 "/ ?" key (bug #1789, the same
+# reason as the ScrollLock remap in keybinds.lua), so SUPER+/ would die over remote access. H is
+# free and gets through on any path.
 #
-# O pacote rofi vem de clipboard.nix (não redeclara — mesmo tool p/ launcher/clipboard/aqui).
+# The rofi package comes from clipboard.nix (do not redeclare it, since it is the same tool for
+# the launcher, the clipboard and here).
 {
   pkgs,
   config,
@@ -18,23 +19,24 @@
 }:
 
 let
-  palette = config.my.theme.palette; # cores do tema ativo (home/desktop/palette.nix)
+  palette = config.my.theme.palette; # the active theme's colors (home/desktop/palette.nix)
 
-  # Parser em awk. Regras que ele segue, todas ditadas pelo formato real do keybinds.lua:
-  #   • grupo      = 1ª linha do bloco de comentário logo ACIMA do bind;
-  #   • descrição  = comentário no FIM da linha do bind; sem ele, cai pro texto do grupo;
-  #   • submap     = binds dentro de hl.define_submap ganham prefixo, senão "1"/"2"/"Esc"
-  #                  apareceriam soltos e sem sentido na lista.
-  # Dois detalhes que quebraram versões anteriores e por isso estão explícitos:
-  #   • o comentário é achado pela ÚLTIMA " -- " da linha, não por regex de "sem hífen":
-  #     descrições legítimas contêm hífen ("no-op", "qs-restart") e sumiam;
-  #   • as teclas são traduzidas TOKEN A TOKEN (comma → ","), não com gsub cego, senão
-  #     "left" dentro de "mouse_left" também seria substituído.
+  # A parser in awk. The rules it follows, all dictated by keybinds.lua's real format:
+  #   • the group       = the 1st line of the comment block right ABOVE the bind;
+  #   • the description = the comment at the END of the bind's line; with none, it falls back to
+  #                       the group's text;
+  #   • the submap      = binds inside hl.define_submap get a prefix, otherwise "1"/"2"/"Esc"
+  #                       would show up loose and meaningless in the list.
+  # Two details that broke earlier versions and are therefore explicit:
+  #   • the comment is found by the LAST " -- " on the line, not by a "no hyphen" regex:
+  #     legitimate descriptions contain a hyphen ("no-op", "qs-restart") and were disappearing;
+  #   • the keys are translated TOKEN BY TOKEN (comma to ","), not with a blind gsub, otherwise
+  #     the "left" inside "mouse_left" would be substituted too.
   parser = pkgs.writeText "keybinds-cheatsheet.awk" ''
     function clean(c) { sub(/^-- ?/, "", c); gsub(/─/, "", c); sub(/^ +| +$/, "", c); return c }
     function short(t) {
-      # corta só na 1ª ". " (fim de frase). NÃO cortar em ": " — grupos como
-      # "Mouse: mover / redimensionar janela" virariam o inútil "Mouse".
+      # it cuts only at the 1st ". " (the end of a sentence). Do NOT cut at ": ", since groups
+      # like "Mouse: move / resize the window" would become the useless "Mouse".
       if (match(t, /\. /)) t = substr(t, 1, RSTART - 1)
       sub(/[.:]$/, "", t)
       if (length(t) > 66) t = substr(t, 1, 63) "…"
@@ -51,13 +53,13 @@ let
         t = a[i]
         if      (t == "comma")       t = ","
         else if (t == "period")      t = "."
-        else if (t == "mouse_left")  t = "roda ←"
-        else if (t == "mouse_right") t = "roda →"
-        else if (t == "mouse_up")    t = "roda ↑"
-        else if (t == "mouse_down")  t = "roda ↓"
-        else if (t == "mouse:272")   t = "clique esq"
-        else if (t == "mouse:273")   t = "clique dir"
-        else if (t == "mouse:274")   t = "clique meio"
+        else if (t == "mouse_left")  t = "wheel ←"
+        else if (t == "mouse_right") t = "wheel →"
+        else if (t == "mouse_up")    t = "wheel ↑"
+        else if (t == "mouse_down")  t = "wheel ↓"
+        else if (t == "mouse:272")   t = "left click"
+        else if (t == "mouse:273")   t = "right click"
+        else if (t == "mouse:274")   t = "middle click"
         else if (t == "left")  t = "←"; else if (t == "right") t = "→"
         else if (t == "up")    t = "↑"; else if (t == "down")  t = "↓"
         else if (t == "RETURN") t = "Enter"; else if (t == "ESCAPE" || t == "escape") t = "Esc"
@@ -93,12 +95,13 @@ let
     ];
     text = ''
       src="$HOME/.config/hypr/lua/keybinds.lua"
-      # Falha ALTO se o symlink sumir: um cheatsheet vazio mentiria dizendo "não há binds".
+      # It fails LOUDLY if the symlink disappears: an empty cheatsheet would lie by saying
+      # "there are no binds".
       if [ ! -r "$src" ]; then
-        rofi -e "keybinds-cheatsheet: não consegui ler $src" -theme cheatsheet
+        rofi -e "keybinds-cheatsheet: could not read $src" -theme cheatsheet
         exit 1
       fi
-      # Só exibe: a escolha é descartada (é referência, não um executor de ações).
+      # It only displays: the choice is discarded (it is a reference, not an action runner).
       awk -f ${parser} "$src" | rofi -dmenu -i -p "󰌌 Keybinds" -theme cheatsheet > /dev/null
     '';
   };
@@ -106,9 +109,10 @@ in
 {
   home.packages = [ cheatsheet ];
 
-  # `font` explícito: sem ele o rofi cai no default "mono 12". A my.fonts.ui também é a
-  # monospace do sistema (system/hardware/fonts.nix), então as colunas alinham.
-  # NÃO comentar dentro do .rasi com '#': ali '#' abre literal de cor e quebra o parse.
+  # An explicit `font`: without it rofi falls back to the default "mono 12". my.fonts.ui is also
+  # the system monospace (system/hardware/fonts.nix), so the columns line up.
+  # Do NOT comment inside the .rasi with '#': there '#' opens a color literal and breaks the
+  # parse.
   xdg.configFile."rofi/cheatsheet.rasi".text = ''
     configuration {
       show-icons: false;
@@ -141,7 +145,7 @@ in
       children:         [ prompt, entry ];
     }
     prompt { text-color: @tn-blue; }
-    entry  { placeholder: "Filtrar por tecla ou ação…"; placeholder-color: @tn-muted; }
+    entry  { placeholder: "Filter by key or action…"; placeholder-color: @tn-muted; }
     listview { lines: 20; columns: 1; scrollbar: true; spacing: 2px; }
     scrollbar { handle-color: @tn-blue; handle-width: 4px; }
     element { padding: 4px 10px; border-radius: 6px; }

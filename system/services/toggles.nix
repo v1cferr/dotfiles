@@ -1,23 +1,23 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# INTERFACE dos serviços opcionais — a LISTA de chaves que existem. Aqui NÃO se
-# liga nada: o valor (true/false) é decisão de CADA MÁQUINA e mora no painel do
-# host, hosts/<host>/services.nix.
+# THE INTERFACE of the optional services: the LIST of keys that exist. Nothing is turned on here:
+# the value (true/false) is EACH MACHINE's decision and lives in the host's panel,
+# hosts/<host>/services.nix.
 #
-# Por que a declaração fica aqui e não em cada módulo de serviço (04/08/2026):
-# `osConfig` só enxerga o namespace do NixOS, então uma opção lida por módulo de
-# home (dropbox, discord-rpc, cs2-backup) TEM que ser declarada por um módulo de
-# SISTEMA. Distribuir as declarações deixaria três órfãs precisando de um arquivo
-# central de qualquer jeito — pior que uma lista só, que ainda serve de contrato
-# legível do que este repo sabe ligar e desligar.
+# Why the declaration stays here and not in each service module (04/08/2026): `osConfig` only sees
+# the NixOS namespace, so an option read by a home module (dropbox, discord-rpc, cs2-backup) HAS
+# to be declared by a SYSTEM module. Spreading the declarations out would leave three orphans
+# needing a central file anyway, which is worse than a single list that also serves as a readable
+# contract of what this repo knows how to turn on and off.
 #
-# Cada serviço lê seu flag via config.my.services.<nome> (sistema) ou
-# osConfig.my.services.<nome> (home-manager).
+# Each service reads its flag through config.my.services.<name> (system) or
+# osConfig.my.services.<name> (home-manager).
 #
-# ESSENCIAIS ficam FORA de propósito (tailscale, mouse/logid, desktop hypr*, keyring,
-# earlyoom, fail2ban, fwupd) — não dá pra desligar por engano. VPN é sob-demanda (fora).
+# The ESSENTIALS stay OUT on purpose (tailscale, mouse/logid, the hypr* desktop, keyring,
+# earlyoom, fail2ban, fwupd), so they cannot be turned off by accident. The VPN is on demand
+# (out).
 #
-# Chave nova aqui SEM valor no host nasce `false` (mkEnableOption) — serviço novo que
-# não sobe é o sintoma; o remédio é a linha no painel do host.
+# A new key here WITH no value in the host is born `false` (mkEnableOption), so a new service that
+# does not come up is the symptom; the remedy is the line in the host's panel.
 # ═══════════════════════════════════════════════════════════════════════════
 { lib, ... }:
 

@@ -1,34 +1,36 @@
-# Wallpaper de desktop — hyprpaper (daemon oficial do Hyprland: estático, leve, declarativo).
-# Imagens oficiais do NixOS via pkgs.nixos-artwork (sem binário no git; bump junto ao nixpkgs).
-# Principal = catppuccin-mocha e TV = moonscape — as MESMAS duas imagens do lockscreen, então
-# desbloquear não troca o fundo debaixo. Trocar = mudar o attr do nixos-artwork (1 linha; ~30 opções). Sobe no
-# graphical-session (serviço --user do próprio módulo). Conectores vêm do my.monitors (regra 11).
+# The desktop wallpaper: hyprpaper (Hyprland's official daemon: static, light, declarative).
+# The official NixOS images come through pkgs.nixos-artwork (no binary in git; it bumps along with
+# nixpkgs). The main one is catppuccin-mocha and the TV is moonscape, the SAME two images as the
+# lockscreen, so unlocking does not change the background underneath. Switching = changing the
+# nixos-artwork attribute (1 line; ~30 options). It comes up on the graphical-session (a --user
+# service from the module itself). The connectors come from my.monitors (rule 11).
 #
-# FORMATO DA CONFIG (hyprpaper 0.8.x) — é por isto que a tela ficava PRETA:
-# a 0.8 trocou o formato achatado (`wallpaper = MONITOR,path` + `preload =` + `ipc =`) por
-# CATEGORIA (`wallpaper { monitor = …; path = …; }`). O `preload` e o `ipc` nem existem mais no
-# binário — `strings hyprpaper | grep -c preload` dá 0. Com o formato antigo o hyprpaper SOBE,
-# acha os monitores e loga "Monitor DP-2 has no target: no wp will be created": nenhuma layer
-# surface é criada e o fundo fica preto, sem erro de parse que denuncie o motivo.
+# THE CONFIG FORMAT (hyprpaper 0.8.x): this is why the screen went BLACK. 0.8 swapped the flat
+# format (`wallpaper = MONITOR,path` plus `preload =` plus `ipc =`) for a CATEGORY
+# (`wallpaper { monitor = …; path = …; }`). `preload` and `ipc` do not even exist in the binary
+# anymore: `strings hyprpaper | grep -c preload` gives 0. With the old format hyprpaper COMES UP,
+# finds the monitors and logs "Monitor DP-2 has no target: no wp will be created": no layer
+# surface is created and the background stays black, with no parse error to give away the reason.
 #
-# O módulo services.hyprpaper do home-manager ainda gera o formato antigo, então a config é
-# escrita AQUI (xdg.configFile) e o módulo entra só com `enable` → ele fornece o serviço
-# systemd --user e o pacote; o conteúdo é nosso. Se um dia o módulo aprender o formato novo,
-# isto volta p/ `settings` e o arquivo encurta.
+# home-manager's services.hyprpaper module still generates the old format, so the config is
+# written HERE (xdg.configFile) and the module comes in only with `enable`, providing the systemd
+# --user service and the package; the content is ours. If the module ever learns the new format,
+# this goes back into `settings` and the file gets shorter.
 { pkgs, osConfig, ... }:
 
 let
   art = pkgs.nixos-artwork.wallpapers;
 
-  # ESCOLHA dos wallpapers — trocar aqui é 1 linha de verdade (ver pathOf abaixo).
-  # Opções em `nix eval nixpkgs#nixos-artwork.wallpapers --apply builtins.attrNames`.
-  main = art.catppuccin-mocha; # principal: MESMA imagem do lockscreen (home/desktop/lockscreen.nix)
-  tv = art.moonscape; # TV: mesma imagem do lockscreen
+  # THE CHOICE of wallpapers: changing it here really is 1 line (see pathOf below).
+  # The options are in `nix eval nixpkgs#nixos-artwork.wallpapers --apply builtins.attrNames`.
+  main = art.catppuccin-mocha; # the main one: the SAME image as the lockscreen (home/desktop/lockscreen.nix)
+  tv = art.moonscape; # the TV: the same image as the lockscreen
 
-  # O nome do ARQUIVO dentro do pacote NÃO segue padrão: a maioria é nix-wallpaper-<attr>.png,
-  # os catppuccin são nixos-wallpaper-<attr>.png e o gradient-grey é NixOS-Gradient-grey.png.
-  # Montar o caminho por string quebraria na troca — e é o que fazia o comentário "trocar =
-  # 1 linha" ser mentira. Lê o diretório do pacote e pega o arquivo que está lá.
+  # The FILE name inside the package does NOT follow a pattern: most are
+  # nix-wallpaper-<attr>.png, the catppuccin ones are nixos-wallpaper-<attr>.png and gradient-grey
+  # is NixOS-Gradient-grey.png. Building the path by string would break on a swap, and that is what
+  # made the "switching = 1 line" comment a lie. It reads the package's directory and takes
+  # whatever file is in there.
   pathOf =
     wp:
     let
@@ -36,7 +38,7 @@ let
     in
     "${dir}/${builtins.head (builtins.attrNames (builtins.readDir dir))}";
 
-  # Uma categoria `wallpaper { }` por monitor — o formato que a 0.8.x entende.
+  # One `wallpaper { }` category per monitor, the format 0.8.x understands.
   wallpaperFor = monitor: path: ''
     wallpaper {
       monitor = ${monitor}
@@ -45,7 +47,7 @@ let
   '';
 in
 {
-  services.hyprpaper.enable = true; # só o serviço/pacote; o conteúdo da config vem abaixo
+  services.hyprpaper.enable = true; # only the service/package; the config's content comes below
 
   xdg.configFile."hypr/hyprpaper.conf".text = ''
     splash = false

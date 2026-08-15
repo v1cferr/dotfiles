@@ -1,40 +1,42 @@
-# Config SSH do cliente (~/.ssh/config declarativo): hosts da FAI via a VPN split-tunnel.
-# A chave privada (~/.ssh/id_ed25519) é ESTADO/segredo → vem pelo backup, não pelo Nix (regra 6).
+# The client SSH config (a declarative ~/.ssh/config): the FAI hosts through the split-tunnel
+# VPN. The private key (~/.ssh/id_ed25519) is STATE/a secret, so it comes from the backup, not
+# from Nix (rule 6).
 { config, ... }:
 
 let
-  ws = config.my.fai.workstation; # SSOT: home/net/fai-workstation.nix (regra 11)
+  ws = config.my.fai.workstation; # SSOT: home/net/fai-workstation.nix (rule 11)
 
-  # Resiliência p/ sessões longas sobre o túnel SonicWall (buraco de rota transitório com o
-  # ppp0 vivo). Tolerar o buraco em vez de derrubar a sessão — mas TUDO dimensionado p/ caber
-  # no orçamento do VS Code Remote-SSH, que aborta com "Connecting with SSH timed out" aos
-  # 17 s FIXOS (log da extensão: "Using connect timeout of 17 seconds").
+  # Resilience for long sessions over the SonicWall tunnel (a transient routing hole with ppp0
+  # still alive). Tolerating the hole instead of dropping the session, but EVERYTHING sized to
+  # fit inside VS Code Remote-SSH's budget, which aborts with "Connecting with SSH timed out" at
+  # a FIXED 17 s (from the extension's log: "Using connect timeout of 17 seconds").
   faiResilience = {
-    ServerAliveInterval = 15; # keepalive cifrado a cada 15s: segura a sessão ociosa no SonicWall
-    # 8 falhas (~2 min) de tolerância. Já foi 20 (~5 min) e era CONTRAPRODUCENTE: o master
-    # multiplexado ficava travado num túnel morto todo esse tempo, e cada nova conexão
-    # grudava nele e pendurava junto ("mux_client_request_session: Broken pipe" no log do
-    # VS Code). 2 min ainda atravessa blip; queda real morre rápido e a extensão reconecta.
+    ServerAliveInterval = 15; # an encrypted keepalive every 15s: it holds the idle session on the SonicWall
+    # 8 failures (~2 min) of tolerance. It was 20 (~5 min) and that was COUNTERPRODUCTIVE: the
+    # multiplexed master stayed stuck in a dead tunnel for all that time, and every new
+    # connection glued itself to it and hung along ("mux_client_request_session: Broken pipe" in
+    # the VS Code log). 2 min still rides out a blip; a real drop dies fast and the extension
+    # reconnects.
     ServerAliveCountMax = 8;
-    TCPKeepAlive = "no"; # keepalive do kernel derruba antes do prazo acima; quem manda é o do SSH
-    ControlMaster = "auto"; # Remote-SSH abre várias conexões → multiplexa tudo num TCP só
-    ControlPath = "~/.ssh/cm-%r@%h:%p"; # socket do master (por usuário/host/porta)
-    ControlPersist = "10m"; # master sobrevive 10 min ao último canal: reabrir vira instantâneo
-    # 7×2 = 14 s de pior caso, DENTRO dos 17 s do Remote-SSH. Antes era 15×3 = 45 s: o VS Code
-    # desistia no meio da 2ª tentativa e reportava timeout mesmo com o host prestes a responder.
+    TCPKeepAlive = "no"; # the kernel's keepalive drops before the deadline above; SSH's is in charge
+    ControlMaster = "auto"; # Remote-SSH opens several connections, so multiplex them all onto one TCP
+    ControlPath = "~/.ssh/cm-%r@%h:%p"; # the master's socket (per user/host/port)
+    ControlPersist = "10m"; # the master survives 10 min past the last channel: reopening becomes instant
+    # 7x2 = 14 s worst case, INSIDE Remote-SSH's 17 s. It used to be 15x3 = 45 s: VS Code gave up
+    # in the middle of the 2nd attempt and reported a timeout even with the host about to answer.
     ConnectTimeout = 7;
-    ConnectionAttempts = 2; # VPN recém-subida costuma recusar a 1ª tentativa
+    ConnectionAttempts = 2; # a freshly raised VPN usually refuses the 1st attempt
   };
-  # Master travado num túnel que morreu? `ssh -O exit workstation` mata o socket na hora.
+  # A master stuck in a tunnel that died? `ssh -O exit workstation` kills the socket right away.
 in
 {
   programs.ssh = {
     enable = true;
-    enableDefaultConfig = false; # o bloco "*" com defaults antigos foi deprecado; o OpenSSH já traz sanos
+    enableDefaultConfig = false; # the "*" block with old defaults was deprecated; OpenSSH already ships sane ones
 
-    # Ambos vivem na sub-rede 200.136.209.128/25, roteada pela `vpn connect fai`.
+    # Both live in the 200.136.209.128/25 subnet, routed by `vpn connect fai`.
     settings = {
-      # Workstation da FAI (mesma máquina do `wake-workstation`; host/MAC vêm da SSOT).
+      # The FAI workstation (the same machine as `wake-workstation`; host/MAC come from the SSOT).
       workstation = faiResilience // {
         HostName = ws.host;
         User = ws.user;
@@ -42,28 +44,28 @@ in
         IdentityFile = "~/.ssh/id_ed25519";
         SetEnv = {
           TERM = "xterm-256color";
-        }; # cores certas no terminal remoto
+        }; # the right colors on the remote terminal
       };
-      # Roteador de casa (OpenWrt 25.12 / BusyBox). `ssh router`.
+      # The home router (OpenWrt 25.12 / BusyBox). `ssh router`.
       #
-      # SEM `faiResilience`: aquilo dimensiona keepalive e multiplexação pro túnel
-      # SonicWall e pro orçamento de 17s do Remote-SSH. Aqui é um salto de LAN com
-      # <1ms — herdar aquilo seria carga cultuada, não configuração.
+      # NO `faiResilience`: that sizes keepalive and multiplexing for the SonicWall tunnel and
+      # for Remote-SSH's 17s budget. This is a LAN hop with <1ms, and inheriting that would be
+      # cargo cult, not configuration.
       #
-      # IP literal e não opção `my.*`: é o ÚNICO lugar do repo que cita o endereço
-      # do gateway (o Caddy usa a faixa /24, não o .1). Literal solitário não
-      # dispara a regra 11 — mesma justificativa que o domain.nix registra.
+      # A literal IP and not a `my.*` option: it is the ONLY place in the repo that names the
+      # gateway's address (Caddy uses the /24 range, not the .1). A lone literal does not trigger
+      # rule 11, the same justification domain.nix records.
       #
-      # ⚠️ O servidor é DROPBEAR, não OpenSSH: aceita ed25519, mas atualização de
-      # firmware REGENERA a host key e o próximo `ssh router` aborta com "REMOTE
-      # HOST IDENTIFICATION HAS CHANGED". Aí é `ssh-keygen -R 192.168.1.1` e
-      # reaceitar — não é ataque, é o flash.
+      # WARNING: the server is DROPBEAR, not OpenSSH. It accepts ed25519, but a firmware update
+      # REGENERATES the host key and the next `ssh router` aborts with "REMOTE HOST
+      # IDENTIFICATION HAS CHANGED". Then it is `ssh-keygen -R 192.168.1.1` and accepting again;
+      # it is not an attack, it is the flash.
       #
-      # ⚠️ authorized_keys VIVE NO ROTEADOR, fora do alcance do Nix (OpenWrt não é
-      # NixOS). Isto aqui declara só o LADO CLIENTE. Instalar a chave é passo
-      # manual, uma vez por reflash:
+      # WARNING: authorized_keys LIVES ON THE ROUTER, out of Nix's reach (OpenWrt is not NixOS).
+      # This declares only the CLIENT SIDE. Installing the key is a manual step, once per
+      # reflash:
       #   ssh-copy-id -i ~/.ssh/id_ed25519.pub v1cferr@192.168.1.1
-      # Sobrevive a `sysupgrade` com "keep settings"; reflash limpo exige repetir.
+      # It survives a `sysupgrade` with "keep settings"; a clean reflash requires repeating it.
       router = {
         HostName = "192.168.1.1";
         User = "v1cferr";
@@ -74,71 +76,73 @@ in
         };
       };
 
-      # PC do irmão, na LAN de casa (`ssh cesar` — CESAR é o hostname da máquina).
+      # My brother's PC, on the home LAN (`ssh cesar`, CESAR being the machine's hostname).
       #
-      # Isto declara SÓ o lado cliente. Os passos do lado Windows — chave autorizada,
-      # coreutils no PATH de máquina, Scoop, Claude Code — não são alcançáveis pelo Nix
-      # e estão em docs/guides/cesar-windows-manual-steps.md, pra serem refeitos em
-      # minutos se aquele Windows for reinstalado.
+      # This declares ONLY the client side. The Windows-side steps (the authorized key,
+      # coreutils on the machine PATH, Scoop, Claude Code) are not reachable by Nix and live in
+      # docs/guides/cesar-windows-manual-steps.md, so they can be redone in minutes if that
+      # Windows gets reinstalled.
       #
-      # É WINDOWS 11 com OpenSSH_for_Windows_9.5, e é daí que vêm todas as pegadinhas:
+      # It is WINDOWS 11 with OpenSSH_for_Windows_9.5, and that is where all the traps come from:
       #
-      # ⚠️ Sem `SetEnv TERM`: o shell padrão do sshd do Windows é o **cmd.exe**, que não
-      # lê TERM — e o sshd de lá não traz `AcceptEnv`, então a variável seria descartada
-      # no servidor de qualquer jeito. Mandar mesmo assim seria carga cultuada.
+      # WARNING: no `SetEnv TERM`. The default shell of the Windows sshd is **cmd.exe**, which
+      # does not read TERM, and that sshd does not ship `AcceptEnv`, so the variable would be
+      # discarded on the server anyway. Sending it regardless would be cargo cult.
       #
-      # ⚠️ Sem `faiResilience`: salto de LAN (<1ms), mesma justificativa do `router`.
+      # WARNING: no `faiResilience`. A LAN hop (<1ms), the same justification as `router`.
       #
-      # ⚠️ O aviso "connection is not using a post-quantum key exchange" aparece a CADA
-      # conexão e NÃO é erro de config nossa: o mlkem768x25519 só existe do OpenSSH 9.9
-      # em diante, e o Windows 11 (build 26200) ainda embarca o 9.5. Some sozinho quando
-      # a MS atualizar o Win32-OpenSSH. Dá pra calar com `WarnWeakCrypto = "no"` (existe
-      # no nosso 10.4), e é justamente por isso que NÃO está aqui: silenciar por host
-      # esconde a defasagem real do servidor, e o dia em que ela for corrigida passaria
-      # despercebido. O aviso é barulho honesto.
+      # WARNING: the "connection is not using a post-quantum key exchange" notice shows up on
+      # EVERY connection and is NOT a mistake in our config: mlkem768x25519 only exists from
+      # OpenSSH 9.9 onward, and Windows 11 (build 26200) still ships 9.5. It goes away on its own
+      # when MS updates Win32-OpenSSH. It can be silenced with `WarnWeakCrypto = "no"` (which
+      # exists in our 10.4), and that is precisely why it is NOT here: silencing it per host
+      # hides the server's real lag, and the day it gets fixed would go unnoticed. The warning is
+      # honest noise.
       #
-      # ⚠️ authorized_keys VIVE NO WINDOWS, fora do alcance do Nix — isto declara só o
-      # LADO CLIENTE, e hoje o login ainda cai em SENHA. E `ssh-copy-id` NÃO funciona
-      # aqui: ele assume shell POSIX do outro lado, e do outro lado tem cmd.exe.
-      # MEDIDO (10/08): o `v1cferr` lá é ADMINISTRADOR (`whoami /groups` traz o
-      # BUILTIN\Administrators, SID S-1-5-32-544), e isso decide o arquivo — pra membro
-      # do grupo, o sshd do Windows IGNORA o `~/.ssh/authorized_keys` e lê SÓ o de baixo.
-      # Passo manual, no PowerShell como administrador NA máquina do irmão:
+      # WARNING: authorized_keys LIVES ON WINDOWS, out of Nix's reach, so this declares only the
+      # CLIENT SIDE, and today the login still falls back to a PASSWORD. And `ssh-copy-id` does
+      # NOT work here: it assumes a POSIX shell on the other end, and on the other end there is
+      # cmd.exe. MEASURED (10/08): the `v1cferr` over there is an ADMINISTRATOR (`whoami /groups`
+      # brings BUILTIN\Administrators, SID S-1-5-32-544), and that decides the file: for a member
+      # of the group, the Windows sshd IGNORES `~/.ssh/authorized_keys` and reads ONLY the one
+      # below. A manual step, in PowerShell as administrator ON my brother's machine:
       #   Add-Content C:\ProgramData\ssh\administrators_authorized_keys '<id_ed25519.pub>'
       #   icacls C:\ProgramData\ssh\administrators_authorized_keys /inheritance:r `
       #     /grant "Administrators:F" /grant "SYSTEM:F"
-      # O `icacls` não é enfeite: o sshd RECUSA o arquivo (e volta pra senha, em silêncio
-      # do lado do cliente) se ele for gravável por mais alguém.
+      # The `icacls` is not decoration: the sshd REFUSES the file (and falls back to the
+      # password, silently on the client side) if anybody else can write to it.
       #
-      # ⚠️ IP literal e por DHCP: se o roteador entregar outro endereço, o alias quebra —
-      # o conserto é reserva de DHCP no OpenWrt, não mais uma opção `my.*` aqui.
+      # WARNING: a literal IP, and it comes from DHCP. If the router hands out another address
+      # the alias breaks, and the fix is a DHCP reservation on the OpenWrt, not one more `my.*`
+      # option here.
       #
-      # O `RemoteCommand` troca o cmd.exe pelo GIT BASH, que já está instalado lá
-      # (`where git` → C:\Program Files\Git\cmd\git.exe). O `where bash` NÃO acha esse
-      # bash porque só o `Git\cmd` está no PATH, e o bash.exe mora no `Git\bin` — daí o
-      # caminho absoluto aqui. O único `bash` no PATH é `C:\Windows\System32\bash.exe`,
-      # que NÃO é bash: é o stub legado do WSL, e a máquina não tem distro instalada
+      # The `RemoteCommand` swaps cmd.exe for GIT BASH, which is already installed there
+      # (`where git` gives C:\Program Files\Git\cmd\git.exe). `where bash` does NOT find that
+      # bash because only `Git\cmd` is on the PATH and bash.exe lives in `Git\bin`, hence the
+      # absolute path here. The only `bash` on the PATH is `C:\Windows\System32\bash.exe`, which
+      # is NOT bash: it is the legacy WSL stub, and the machine has no distro installed
       # ("Windows Subsystem for Linux has no installed distributions").
       #
-      # RECUSADO trocar o shell pelo registro (`HKLM:\SOFTWARE\OpenSSH\DefaultShell`):
-      # é global, mudaria o shell de TODA sessão SSH da máquina — inclusive a do dono.
-      # Do lado do cliente a escolha é só nossa e some junto com este arquivo.
+      # REFUSED: swapping the shell through the registry
+      # (`HKLM:\SOFTWARE\OpenSSH\DefaultShell`). It is global, and it would change the shell of
+      # EVERY SSH session on the machine, the owner's included. On the client side the choice is
+      # ours alone and it goes away together with this file.
       cesar = {
         HostName = "192.168.1.40";
         User = "v1cferr";
         Port = 22;
         IdentityFile = "~/.ssh/id_ed25519";
-        RequestTTY = "yes"; # RemoteCommand sem TTY = shell interativo sem eco nem readline
+        RequestTTY = "yes"; # a RemoteCommand with no TTY is an interactive shell with no echo and no readline
         RemoteCommand = ''"C:\Program Files\Git\bin\bash.exe" -l -i'';
       };
 
-      # O MESMO host, sem `RemoteCommand` — e não é duplicação: `RemoteCommand` e comando
-      # de linha são MUTUAMENTE EXCLUDENTES no ssh ("Cannot execute command-line and
-      # remote command"), então com o bloco de cima `ssh cesar <cmd>`, `scp` e `rsync`
-      # PARAM DE FUNCIONAR. Este gêmeo é a saída declarativa: `cesar` pra sentar e
-      # trabalhar, `cesar-cmd` pra copiar arquivo e rodar comando avulso. A alternativa
-      # era decorar `-o RemoteCommand=none` em toda invocação, que é o tipo de coisa que
-      # o repo existe pra não precisar lembrar.
+      # The SAME host, without `RemoteCommand`, and it is not duplication: `RemoteCommand` and a
+      # command line are MUTUALLY EXCLUSIVE in ssh ("Cannot execute command-line and remote
+      # command"), so with the block above `ssh cesar <cmd>`, `scp` and `rsync` STOP WORKING.
+      # This twin is the declarative way out: `cesar` to sit down and work, `cesar-cmd` to copy a
+      # file and run a one-off command. The alternative was memorizing
+      # `-o RemoteCommand=none` on every invocation, which is exactly the kind of thing the repo
+      # exists so you do not have to remember.
       cesar-cmd = {
         HostName = "192.168.1.40";
         User = "v1cferr";
@@ -146,7 +150,7 @@ in
         IdentityFile = "~/.ssh/id_ed25519";
       };
 
-      # VM de apoio na FAI.
+      # A support VM at FAI.
       fai-vm = faiResilience // {
         HostName = "200.136.209.248";
         User = "v1cferr";

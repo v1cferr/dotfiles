@@ -1,96 +1,96 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# CLI MODERNO — toolkit de terminal (reescritas em Rust) + integração com o zsh.
+# THE MODERN CLI: a terminal toolkit (Rust rewrites) plus the zsh integration.
 #
-# Mora no home/ DE PROPÓSITO: são ferramentas do USUÁRIO, e os módulos programs.*
-# já escrevem a integração no zsh (keybinds, hooks, completions) de forma
-# versionada — melhor que hooks à mão. (system/ segue dono do nível-sistema.)
+# It lives in home/ ON PURPOSE: these are the USER's tools, and the programs.* modules already
+# write the zsh integration (keybinds, hooks, completions) in a versioned way, which beats hooks
+# by hand. (system/ remains the owner of the system level.)
 # ═══════════════════════════════════════════════════════════════════════════
 { pkgs, lib, ... }:
 
 {
-  programs.eza.enable = true; # ls moderno (ícones + git); aliases logo abaixo
-  programs.eza.git = true; # coluna de status do git na listagem
-  programs.bat.enable = true; # cat com syntax highlight + paginação
-  # delta: o "bat do git diff". Realce de sintaxe, número de linha e navegação POR
-  # ARQUIVO dentro do pager, em `git diff`/`show`/`log -p`/`blame`. É o de maior impacto
-  # desta lista pelo mesmo motivo que o bat: ler diff é a operação mais repetida aqui, e
-  # o diff cru do git é monocromático.
+  programs.eza.enable = true; # a modern ls (icons plus git); the aliases are right below
+  programs.eza.git = true; # a git status column in the listing
+  programs.bat.enable = true; # cat with syntax highlighting plus paging
+  # delta: the "bat of git diff". Syntax highlighting, line numbers and PER FILE navigation inside
+  # the pager, in `git diff`/`show`/`log -p`/`blame`. It is the highest-impact one on this list for
+  # the same reason as bat: reading a diff is the most repeated operation here, and git's raw diff
+  # is monochrome.
   #
-  # Preterido o difftastic (diff ESTRUTURAL, compara árvore sintática em vez de linha):
-  # ele resolve outro problema — "renomeei/reindentei e o diff explodiu" — e a própria
-  # comunidade usa os dois juntos, delta como pager do dia a dia. Entra depois se a
-  # necessidade aparecer; instalar os dois agora seria escolher sem ter o problema.
+  # difftastic was passed over (a STRUCTURAL diff, comparing the syntax tree instead of lines): it
+  # solves another problem, "I renamed/reindented and the diff exploded", and the community itself
+  # uses both together, delta as the day-to-day pager. It comes in later if the need shows up;
+  # installing both now would be choosing without having the problem.
   programs.delta = {
     enable = true;
-    enableGitIntegration = true; # NÃO é o default: sem isto o delta fica instalado e ocioso
+    enableGitIntegration = true; # NOT the default: without this delta sits installed and idle
     options = {
-      navigate = true; # `n`/`N` salta entre arquivos dentro do pager (diff grande fica navegável)
-      line-numbers = true; # coluna de linha nos dois lados — some a contagem manual no hunk
-      # side-by-side DESLIGADO de propósito: os .nix daqui têm bloco de comentário por
-      # config (regra 2) e linhas de ~90 colunas. Em 1920x1080, duas colunas quebram
-      # tudo e o diff fica PIOR que o de uma coluna. Quando quiser, por invocação:
-      # `git diff --side-by-side` (o delta aceita as flags dele no git).
+      navigate = true; # `n`/`N` jumps between files inside the pager (a big diff becomes navigable)
+      line-numbers = true; # a line column on both sides, so counting by hand inside the hunk goes away
+      # side-by-side is OFF on purpose: the .nix files here have a comment block per config
+      # (rule 2) and lines of ~90 columns. At 1920x1080, two columns break everything and the diff
+      # comes out WORSE than the single-column one. When you want it, per invocation:
+      # `git diff --side-by-side` (delta accepts its own flags through git).
     };
   };
-  # zoxide: `cd nome-parcial` salta pra pasta mais usada (aprende ao navegar); `cd` normal
-  # (path/../-) segue OK; `cdi` = picker fzf. Fim de digitar o dir inteiro.
-  programs.zoxide.enable = true; # instala o binário (o init do zsh vai no fim, abaixo)
-  # O HM injeta o init do zoxide-zsh cedo (mkOrder 851) → dispara o falso-positivo do doctor
-  # ("initialize at the end"). Fix correto (home-manager#9349): desligar a integração
-  # automática e reinjetar o init no FIM do .zshrc (mkOrder 2000, depois de todo mkAfter) —
-  # o doctor fica satisfeito de verdade, sem silenciar nada. --cmd cd = o `cd` vira o zoxide.
+  # zoxide: `cd partial-name` jumps to the most used folder (it learns as you navigate); a normal
+  # `cd` (path/../-) still works; `cdi` is an fzf picker. The end of typing the whole dir.
+  programs.zoxide.enable = true; # it installs the binary (the zsh init goes at the end, below)
+  # HM injects the zoxide-zsh init early (mkOrder 851), which trips the doctor's false positive
+  # ("initialize at the end"). The correct fix (home-manager#9349): turn the automatic integration
+  # off and reinject the init at the END of .zshrc (mkOrder 2000, after every mkAfter), so the
+  # doctor is genuinely satisfied, with nothing silenced. --cmd cd makes `cd` become zoxide.
   programs.zoxide.enableZshIntegration = false;
   programs.zsh.initContent = lib.mkOrder 2000 ''
     eval "$(${pkgs.zoxide}/bin/zoxide init zsh --cmd cd)"
   '';
-  programs.fzf.enable = true; # fuzzy finder: Ctrl+R (histórico), Ctrl+T (arquivo), Alt+C (cd)
-  programs.yazi.enable = true; # file manager TUI com preview (usa bat; `y` faz cd ao sair)
+  programs.fzf.enable = true; # a fuzzy finder: Ctrl+R (history), Ctrl+T (file), Alt+C (cd)
+  programs.yazi.enable = true; # a TUI file manager with previews (it uses bat; `y` cds on exit)
   programs.tealdeer = {
-    enable = true; # `tldr <cmd>` = exemplos práticos (tldr em Rust)
-    settings.updates.auto_update = true; # baixa/atualiza o cache do tldr sozinho
+    enable = true; # `tldr <cmd>` gives practical examples (tldr in Rust)
+    settings.updates.auto_update = true; # it downloads/updates the tldr cache on its own
   };
-  # direnv: ao entrar numa pasta com .envrc, ativa o ambiente (ex.: `use flake`).
-  # nix-direnv = cache que deixa o `nix develop` por-pasta rápido (essencial p/ dev/IA).
+  # direnv: entering a folder with an .envrc activates the environment (`use flake`, say).
+  # nix-direnv is the cache that makes the per-folder `nix develop` fast (essential for dev/AI).
   programs.direnv = {
     enable = true;
     nix-direnv.enable = true;
   };
 
-  # Binários sem módulo programs.* dedicado (só o pacote no perfil do usuário).
-  # Todos escolhidos por LACUNA REAL, não por lista de "awesome": cada um abaixo é uma
-  # ferramenta que faltou num debug concreto desta máquina.
+  # Binaries with no dedicated programs.* module (just the package in the user's profile).
+  # All chosen for a REAL GAP, not from an "awesome" list: each one below is a tool that was
+  # missing during a concrete debugging session on this machine.
   home.packages = with pkgs; [
-    fd # find moderno (rápido, respeita .gitignore) — `fd nix`
-    ripgrep # grep moderno (rg): busca de texto recursiva ultrarrápida
-    # dust: `du` em árvore, ordenado por tamanho e com barra. Complementa o filelight
-    # (GUI, mostra PASTAS) e o czkawka (acha DESCARTÁVEL) no terceiro caso: "o que está
-    # ocupando espaço AQUI", por SSH, sem sessão gráfica. Nesta máquina isso importa: a
-    # partição é compartilhada com jogos e mídia (506 GiB medidos contra 58 GiB de store).
+    fd # a modern find (fast, it respects .gitignore), `fd nix`
+    ripgrep # a modern grep (rg): ultra-fast recursive text search
+    # dust: `du` as a tree, sorted by size and with a bar. It complements filelight (a GUI that
+    # shows FOLDERS) and czkawka (which finds what is DISPOSABLE) in a third case: "what is taking
+    # up space HERE", over SSH, with no graphical session. On this machine that matters: the
+    # partition is shared with games and media (506 GiB measured against 58 GiB of store).
     dust
-    # doggo: `dig` moderno (saída colorida e legível, fala DoH/DoT). Entra porque a
-    # ausência DOEU: em 03/08, depurando o DNS dinâmico e o SSH externo, `dig` não
-    # existia nesta máquina e a consulta teve de sair por `curl` na API DoH da Cloudflare.
-    # Vem junto o `dnsutils` — o `dig` clássico é a língua franca de toda doc e script
-    # de rede, e não quero traduzir comando de troubleshooting alheio na hora do aperto.
+    # doggo: a modern `dig` (colored, readable output, it speaks DoH/DoT). It comes in because its
+    # absence HURT: on 03/08, debugging the dynamic DNS and the external SSH, `dig` did not exist
+    # on this machine and the query had to go out through `curl` against Cloudflare's DoH API.
+    # `dnsutils` comes along: the classic `dig` is the lingua franca of every network doc and
+    # script, and I do not want to translate somebody else's troubleshooting command in a pinch.
     doggo
     dnsutils
-    # procs: `ps` moderno — colorido, com árvore, e busca por nome sem pipe pro grep.
-    # Passei o dia inteiro em `pgrep -a` / `ps -o` caçando Hyprland, hyprlock e sunshine;
-    # é exatamente o caso de uso dele.
+    # procs: a modern `ps`, colored, with a tree, and searching by name with no pipe into grep.
+    # I spent a whole day in `pgrep -a` / `ps -o` hunting Hyprland, hyprlock and sunshine; that is
+    # exactly its use case.
     procs
-    # hyperfine: benchmark de linha de comando com estatística (média, desvio, warmup).
-    # Entra porque combina com a cultura deste repo: quase todo comentário aqui começa
-    # com "MEDIDO em…". Era o que faltava pra medir CORRETAMENTE em vez de cronometrar
-    # uma execução só — `time` mede uma amostra, o hyperfine mede a distribuição.
+    # hyperfine: a command-line benchmark with statistics (mean, deviation, warmup). It comes in
+    # because it matches this repo's culture: nearly every comment here starts with "MEASURED
+    # on…". It was what was missing to measure CORRECTLY instead of timing a single run: `time`
+    # measures one sample, hyperfine measures the distribution.
     hyperfine
   ];
 
-  # Aliases do toolkit (os de shell/sistema seguem em zsh.nix):
+  # The toolkit's aliases (the shell/system ones stay in zsh.nix):
   programs.zsh.shellAliases = {
-    ls = "eza --icons --group-directories-first"; # ls com ícones, pastas primeiro
-    ll = "eza -lah --icons --git --group-directories-first"; # detalhado + ocultos + git
-    la = "eza -a --icons --group-directories-first"; # tudo (menos . e ..)
-    lt = "eza --tree --icons --level=2"; # árvore (2 níveis)
-    cat = "bat --paging=never"; # cat com destaque (age como cat ao redirecionar)
+    ls = "eza --icons --group-directories-first"; # ls with icons, folders first
+    ll = "eza -lah --icons --git --group-directories-first"; # detailed plus hidden plus git
+    la = "eza -a --icons --group-directories-first"; # everything (except . and ..)
+    lt = "eza --tree --icons --level=2"; # a tree (2 levels)
+    cat = "bat --paging=never"; # cat with highlighting (it acts like cat when redirected)
   };
 }

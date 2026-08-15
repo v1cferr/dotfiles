@@ -1,54 +1,56 @@
-# OOM — evita o TRAVAMENTO por falta de RAM (ex.: Chrome/Electron comendo tudo).
+# OOM: it avoids the FREEZE caused by running out of RAM (Chrome/Electron eating everything, for
+# instance).
 #
-# Companheiro do zram (hardware.nix): quando a RAM aperta, o zram comprime; quando
-# nem isso segura, alguém tem que morrer ANTES do kernel congelar a máquina.
+# A companion to zram (hardware.nix): when RAM gets tight, zram compresses; when not even that
+# holds, somebody has to die BEFORE the kernel freezes the machine.
 #
-# Camadas: o systemd-oomd (ligado por padrão no NixOS) é PSI/cgroup e reage devagar
-# — num Hyprland os apps não ficam em cgroups monitorados, então ele deixa passar.
-# O earlyoom é %-based e MATA O MAIOR PROCESSO cedo (previne o freeze de 30-60s).
-# Os dois coexistem: earlyoom é o guarda rápido, oomd o backstop de cgroup.
+# The layers: systemd-oomd (on by default in NixOS) is PSI/cgroup based and reacts slowly, and
+# under Hyprland the apps do not sit in monitored cgroups, so it lets things through. earlyoom is
+# %-based and KILLS THE BIGGEST PROCESS early (which prevents the 30-60s freeze). The two coexist:
+# earlyoom is the fast guard, oomd the cgroup backstop.
 { ... }:
 
 {
   services.earlyoom = {
     enable = true;
-    # Defaults testados do earlyoom (10%/10%): SIGTERM quando RAM livre < 10% E swap
-    # livre < 10% (SIGKILL na metade: 5%/5%). Agir CEDO (10%) previne melhor o freeze
-    # que esperar 5%. Como o swap é 100% zram (mora na RAM), a métrica de swap é pouco
-    # confiável — por isso apoiamos no threshold de RAM. Se ainda travar, sobe o de RAM.
-    freeMemThreshold = 10; # RAM livre < 10% → SIGTERM no maior processo
-    freeSwapThreshold = 10; # e swap (zram) livre < 10%
-    enableNotifications = true; # avisa no desktop qual processo foi morto e por quê
+    # earlyoom's tested defaults (10%/10%): a SIGTERM when free RAM < 10% AND free swap < 10% (a
+    # SIGKILL at half that: 5%/5%). Acting EARLY (10%) prevents the freeze better than waiting for
+    # 5%. Since the swap is 100% zram (it lives in RAM), the swap metric is not very reliable,
+    # which is why we lean on the RAM threshold. If it still freezes, raise the RAM one.
+    freeMemThreshold = 10; # free RAM < 10% -> a SIGTERM to the biggest process
+    freeSwapThreshold = 10; # and free swap (zram) < 10%
+    enableNotifications = true; # it says on the desktop which process was killed and why
 
-    # O earlyoom casa `comm` — o campo do KERNEL, truncado em 15 chars — por regex
-    # estendida. TRÊS armadilhas, todas medidas nesta máquina em 05/08/2026:
+    # earlyoom matches `comm`, the KERNEL's field, truncated at 15 chars, through an extended
+    # regex. THREE traps, all measured on this machine on 05/08/2026:
     #
-    #   1. WRAPPER DO NIXPKGS muda o nome. `wrapProgram` deixa o script com o nome
-    #      original e o ELF real como `.X-wrapped`; quem roda é o ELF, então o comm é
-    #      `.Hyprland-wrapp` e `.quickshell-wra` (cortados no 15º char) — NUNCA
-    #      "Hyprland". Daí o `[.]?` e o fim SEM `$`: casa embrulhado e cru, e sobrevive
-    #      ao dia que um pacote passar (ou deixar) de ser embrulhado.
-    #   2. ÂNCORA `$` + nome exato = falso senso de proteção. A lista antiga era
-    #      `^(Hyprland|waybar|…|mako)$` e casava 5 de 10 contra os processos vivos: o
-    #      COMPOSITOR ficava de fora pelo motivo 1, e `waybar`/`mako` eram fantasmas
-    #      (saíram na migração pro Quickshell). Ou seja, o comentário prometia
-    #      "compositor nunca morre" e o efeito era o oposto do escrito.
-    #   3. `[.]` e NÃO `\.` — a barra invertida NÃO CHEGA. O módulo do nixpkgs entrega
-    #      os args por `Environment=EARLYOOM_ARGS=…`, e o systemd descarta `\.` como
-    #      escape inválido. Escrito `"^\\.?"`, o earlyoom logava
-    #      `regex '^.?(Hyprland|…)'` — sem a barra. Ainda funcionava (`.?` = um char
-    #      qualquer opcional, e sobra-casar no --avoid erra pro lado seguro), mas o
-    #      comentário passava a mentir. Classe de caractere não tem barra pra perder.
-    #      CONFERIR sempre no que o daemon PARSEOU, nunca no .nix:
+    #   1. THE NIXPKGS WRAPPER changes the name. `wrapProgram` leaves the script with the original
+    #      name and the real ELF as `.X-wrapped`; what runs is the ELF, so the comm is
+    #      `.Hyprland-wrapp` and `.quickshell-wra` (cut at the 15th char), NEVER "Hyprland". Hence
+    #      the `[.]?` and the end WITHOUT a `$`: it matches wrapped and raw, and it survives the
+    #      day a package starts (or stops) being wrapped.
+    #   2. The `$` ANCHOR plus an exact name is a false sense of protection. The old list was
+    #      `^(Hyprland|waybar|…|mako)$` and it matched 5 out of 10 against the live processes: the
+    #      COMPOSITOR was left out for reason 1, and `waybar`/`mako` were ghosts (they left in the
+    #      migration to Quickshell). Which means the comment promised "the compositor never dies"
+    #      and the effect was the opposite of what was written.
+    #   3. `[.]` and NOT `\.`, because the backslash DOES NOT ARRIVE. The nixpkgs module delivers
+    #      the args through `Environment=EARLYOOM_ARGS=…`, and systemd discards `\.` as an invalid
+    #      escape. Written as `"^\\.?"`, earlyoom logged `regex '^.?(Hyprland|…)'`, without the
+    #      backslash. It still worked (`.?` is one optional character, and over-matching in
+    #      --avoid errs on the safe side), but the comment became a lie. A character class has no
+    #      backslash to lose.
+    #      ALWAYS CHECK what the daemon PARSED, never the .nix:
     #        journalctl -u earlyoom | grep 'avoid killing'
     extraArgs = [
-      # PREFERE matar (os comilões descartáveis, fáceis de reabrir). NOTA: editores
-      # (code/obsidian) FORA daqui de propósito — perder trabalho não salvo dói mais
-      # que um navegador; que morram o Chrome/Discord antes do VSCode.
+      # It PREFERS to kill these (the disposable gluttons, easy to reopen). NOTE: editors
+      # (code/obsidian) are OUT of here on purpose, since losing unsaved work hurts more than a
+      # browser does; let Chrome/Discord die before VSCode.
       "--prefer"
       "^(chrome|chromium|firefox|librewolf|zen|electron|spotify|Discord)"
-      # NUNCA mata: compositor e shell (tela travada), áudio, sessão e SSH (sem resgate).
-      # quickshell entra no lugar da waybar — hoje ele é barra, OSD E daemon de notificação.
+      # It NEVER kills: the compositor and the shell (a frozen screen), audio, the session and SSH
+      # (no rescue). quickshell takes waybar's place, since today it is the bar, the OSD AND the
+      # notification daemon.
       "--avoid"
       "^[.]?(Hyprland|quickshell|hyprlock|hypridle|hyprpaper|sshd|systemd|dbus-broker|pipewire|wireplumber)"
     ];

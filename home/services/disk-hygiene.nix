@@ -1,37 +1,36 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# HIGIENE DE DISCO — alarme de espaço livre + expiração da lixeira.
+# DISK HYGIENE: a free space alarm plus trash expiry.
 #
-# POR QUE ISTO EXISTE, e por que NÃO é mais GC: o GC do Nix já é automático
-# (system/core/core.nix) e funciona, mas MEDIDO em 30/07 ele cobre 9% do disco —
-# /nix/store tinha 58 GiB contra 626 GiB usados. Os outros 91% são jogos e mídia
-# (Bottles 319 GiB, Jellyfin 132, Games 47, Steam 8), e NADA disso pode ser
-# apagado automaticamente: ninguém deve deletar o jogo de alguém por conta
-# própria. Então a resposta certa p/ "não deixar o disco encher" não é apagar
-# mais — é AVISAR com dado suficiente p/ o dono decidir.
+# WHY THIS EXISTS, and why it is NOT more GC: the Nix GC is already automatic
+# (system/core/core.nix) and it works, but MEASURED on 30/07 it covers 9% of the disk, since
+# /nix/store held 58 GiB against 626 GiB used. The other 91% is games and media (Bottles
+# 319 GiB, Jellyfin 132, Games 47, Steam 8), and NONE of that can be deleted automatically:
+# nobody should delete somebody's game on their own. So the right answer to "do not let the
+# disk fill up" is not deleting more, it is WARNING with enough data for me to decide.
 #
-# DUAS COISAS, de naturezas diferentes, juntas porque são a mesma tarefa
-# (manter o disco sob controle) e ambas são timer de usuário:
-#   • disk-watch  → alarme: notifica quando o livre cai, JÁ COM os maiores
-#                   consumidores na mensagem (o pedido era "avaliar se quero
-#                   remover", e p/ isso a notificação precisa dizer O QUE cresceu).
-#   • trash-expire→ a lixeira era o único lixo REAL achado na medição: 1.7 GiB
-#                   parados, que ninguém expirava e que o restic já exclui do
-#                   backup (restic.nix) — ou seja, desperdício puro.
+# TWO THINGS of different natures, together because they are the same task (keeping the disk
+# under control) and both are user timers:
+#   • disk-watch   -> the alarm: it notifies when free space drops, ALREADY WITH the biggest
+#                     consumers in the message (the request was "to evaluate what I want to
+#                     remove", and for that the notification has to say WHAT grew).
+#   • trash-expire -> the trash was the only REAL garbage found in the measurement: 1.7 GiB
+#                     sitting there, which nobody expired and which restic already excludes
+#                     from the backup (restic.nix), so it was pure waste.
 #
-# DESENHO do alarme (o motivo de ser em duas fases): `du` na árvore inteira leva
-# MINUTOS nesta máquina (medido). Rodar isso a cada 30 min seria absurdo. Então o
-# timer faz só o check BARATO (`df`, instantâneo) e a varredura CARA só acontece
-# quando o disco de fato está baixo — momento em que gastar alguns minutos é
-# exatamente o que se quer. `nice`+`ionice` p/ não competir com a sessão.
+# THE DESIGN of the alarm (the reason it has two phases): `du` over the whole tree takes
+# MINUTES on this machine (measured). Running that every 30 min would be absurd. So the timer
+# only does the CHEAP check (`df`, instant) and the EXPENSIVE sweep only happens when the disk
+# is actually low, which is the moment when spending a few minutes is exactly what you want.
+# `nice` plus `ionice` so it does not compete with the session.
 #
-# ANTI-SPAM: notificação que repete a cada 30 min vira ruído e passa a ser
-# ignorada — o mesmo erro dos meus timers que afogaram o journal (ver bb8690c).
-# Reavisa no máximo 1×/12h por severidade, mas IMEDIATAMENTE se a severidade
-# subir (warn → crit). O estado mora em $XDG_RUNTIME_DIR, que zera no boot.
+# ANTI-SPAM: a notification repeating every 30 min becomes noise and starts being ignored, the
+# same mistake as my timers that drowned the journal (see bb8690c). It re-warns at most once
+# every 12h per severity, but IMMEDIATELY if the severity goes up (warn to crit). The state
+# lives in $XDG_RUNTIME_DIR, which resets at boot.
 #
-# DONO (regra 15): timer systemd --user, preso ao graphical-session — precisa da
-# sessão porque quem entrega a notificação é o Quickshell (daemon de
-# org.freedesktop.Notifications).
+# THE OWNER (rule 15): a systemd --user timer, tied to graphical-session, because it needs the
+# session, since what delivers the notification is Quickshell (the
+# org.freedesktop.Notifications daemon).
 # ═══════════════════════════════════════════════════════════════════════════
 {
   config,
@@ -43,7 +42,7 @@
 let
   cfg = config.my.disk;
 
-  # Lista de caminhos como argumentos de shell, já com aspas.
+  # The list of paths as shell arguments, already quoted.
   watchArgs = lib.escapeShellArgs cfg.watchPaths;
 
   diskWatch = pkgs.writeShellApplication {
@@ -56,10 +55,10 @@ let
       gawk
     ];
     text = ''
-      # --- fase 1: check barato -------------------------------------------
-      # `df --output=avail -BG` sai como "  123G"; tira o G e o espaço.
+      # --- phase 1: the cheap check ---------------------------------------
+      # `df --output=avail -BG` comes out as "  123G", so strip the G and the space.
       free="$(df --output=avail -BG ${lib.escapeShellArg cfg.filesystem} | tail -1 | tr -dc '0-9')"
-      [ -n "$free" ] || exit 0   # df falhou (fs sumiu?) → não inventa alarme
+      [ -n "$free" ] || exit 0   # df failed (the fs disappeared?), so do not invent an alarm
 
       if   [ "$free" -lt ${toString cfg.critFreeGiB} ]; then sev=crit
       elif [ "$free" -lt ${toString cfg.warnFreeGiB} ]; then sev=warn
@@ -68,7 +67,7 @@ let
 
       state="''${XDG_RUNTIME_DIR:-/tmp}/disk-watch.state"
       if [ "$sev" = ok ]; then
-        rm -f "$state"   # voltou ao normal → o próximo aperto avisa na hora
+        rm -f "$state"   # back to normal, so the next squeeze warns immediately
         exit 0
       fi
 
@@ -76,15 +75,16 @@ let
       now="$(date +%s)"
       if [ -f "$state" ]; then
         read -r last_sev last_ts < "$state" || true
-        # mesma severidade e faz menos de 12h → cala. Severidade que SUBIU passa.
+        # the same severity and less than 12h ago means stay quiet. A severity that WENT UP
+        # gets through.
         if [ "$last_sev" = "$sev" ] && [ "$((now - last_ts))" -lt 43200 ]; then
           exit 0
         fi
       fi
 
-      # --- fase 2: varredura CARA, só agora -------------------------------
-      # MiB p/ poder ordenar numericamente; formata em GiB na saída. `|| true`:
-      # caminho inexistente ou sem permissão não pode derrubar o alarme.
+      # --- phase 2: the EXPENSIVE sweep, only now -------------------------
+      # MiB so it can be sorted numerically; the output is formatted in GiB. `|| true`: a
+      # nonexistent path or one without permission cannot take the alarm down.
       body="$(
         nice -n 19 ionice -c 3 du -sx --block-size=1M ${watchArgs} 2>/dev/null \
           | sort -rn \
@@ -100,11 +100,11 @@ let
       )"
 
       case "$sev" in
-        crit) urgency=critical; title="Disco crítico — $free GiB livres" ;;
-        *)    urgency=normal;   title="Disco baixo — $free GiB livres" ;;
+        crit) urgency=critical; title="Disk critical, $free GiB free" ;;
+        *)    urgency=normal;   title="Disk low, $free GiB free" ;;
       esac
 
-      notify-send -a "Disco" -u "$urgency" -i drive-harddisk \
+      notify-send -a "Disk" -u "$urgency" -i drive-harddisk \
         "$title" "$body" || true
 
       printf '%s %s\n' "$sev" "$now" > "$state"
@@ -115,8 +115,8 @@ let
     name = "trash-expire";
     runtimeInputs = [ pkgs.trash-cli ];
     text = ''
-      # -f = não pergunta (o default só pergunta com -i, mas em timer é melhor
-      # ser explícito: unit que espera resposta fica pendurada p/ sempre).
+      # -f means do not ask (the default only asks with -i, but in a timer it is better to be
+      # explicit: a unit waiting for an answer hangs forever).
       trash-empty -f ${toString cfg.trashDays}
     '';
   };
@@ -126,55 +126,55 @@ in
     filesystem = lib.mkOption {
       type = lib.types.str;
       default = "/";
-      description = "Filesystem observado pelo alarme (df).";
+      description = "The filesystem watched by the alarm (df).";
     };
     warnFreeGiB = lib.mkOption {
       type = lib.types.int;
       default = 100;
-      description = "Abaixo disto, notifica (urgência normal).";
+      description = "Below this, it notifies (normal urgency).";
     };
     critFreeGiB = lib.mkOption {
       type = lib.types.int;
       default = 40;
-      description = "Abaixo disto, notifica como crítico (fica na tela).";
+      description = "Below this, it notifies as critical (it stays on screen).";
     };
     topN = lib.mkOption {
       type = lib.types.int;
       default = 5;
-      description = "Quantos maiores consumidores listar na notificação.";
+      description = "How many top consumers to list in the notification.";
     };
     trashDays = lib.mkOption {
       type = lib.types.int;
       default = 30;
-      description = "Idade em dias p/ a lixeira expirar sozinha.";
+      description = "Age in days for the trash to expire on its own.";
     };
     watchPaths = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      description = "Caminhos medidos quando o alarme dispara (os suspeitos de peso).";
+      description = "The paths measured when the alarm fires (the usual heavy suspects).";
     };
   };
 
   config = {
-    # ── PAINEL: limiares e o que medir ─────────────────────────────────────
-    # 100/40 GiB e não porcentagem: o que importa é se cabe o PRÓXIMO jogo ou
-    # patch, e isso é um número absoluto. (Aqui são 915 G no total; em 30/07
-    # havia 243 GiB livres, então 100 dá aviso com folga real p/ decidir.)
+    # ── THE PANEL: the thresholds and what to measure ──────────────────────
+    # 100/40 GiB and not a percentage: what matters is whether the NEXT game or patch fits, and
+    # that is an absolute number. (There are 915 G in total here; on 30/07 there were 243 GiB
+    # free, so 100 warns with real room to decide.)
     my.disk = {
       warnFreeGiB = 100;
       critFreeGiB = 40;
-      # Os pesos medidos em 30/07, do maior p/ o menor. NÃO é `du /` inteiro de
-      # propósito: varrer tudo levaria minutos a mais e traria ruído (/proc,
-      # /sys, mounts de rede). Se aparecer um consumidor novo fora desta lista,
-      # é 1 linha aqui — e o filelight/czkawka existem justamente p/ descobrir.
+      # The weights measured on 30/07, from largest to smallest. It is deliberately NOT a full
+      # `du /`: sweeping everything would take extra minutes and bring noise (/proc, /sys,
+      # network mounts). If a new consumer shows up outside this list, it is 1 line here, and
+      # filelight and czkawka exist precisely to discover it.
       watchPaths = [
         "${config.home.homeDirectory}/.local/share/bottles" # 319 GiB (Wine/Bottles: Battlenet, CS-II, Ascension)
-        "/srv/media" # 132 GiB — biblioteca do Jellyfin
+        "/srv/media" # 132 GiB, the Jellyfin library
         "${config.home.homeDirectory}/Games" # 47 GiB
-        "/nix/store" # 58 GiB — quem cuida é o GC (core.nix), não dá p/ apagar à mão
+        "/nix/store" # 58 GiB, handled by the GC (core.nix), not deletable by hand
         "${config.home.homeDirectory}/.local/share/Steam" # 8 GiB
         "${config.home.homeDirectory}/.cache" # 3.9 GiB
         "${config.home.homeDirectory}/Downloads" # 2.5 GiB
-        "${config.home.homeDirectory}/.local/share/Trash" # 1.7 GiB (expira sozinha, abaixo)
+        "${config.home.homeDirectory}/.local/share/Trash" # 1.7 GiB (it expires on its own, below)
       ];
     };
 
@@ -183,10 +183,10 @@ in
       trashExpire
     ];
 
-    # ── Alarme de espaço ───────────────────────────────────────────────────
+    # ── The space alarm ────────────────────────────────────────────────────
     systemd.user.services.disk-watch = {
       Unit = {
-        Description = "Alarme de espaço em disco (notifica com os maiores consumidores)";
+        Description = "Disk space alarm (it notifies with the biggest consumers)";
         PartOf = [ "graphical-session.target" ];
         After = [ "graphical-session.target" ];
         StartLimitIntervalSec = 3600;
@@ -195,26 +195,26 @@ in
       Service = {
         Type = "oneshot";
         ExecStart = "${diskWatch}/bin/disk-watch";
-        # O script já sai calado quando não há nada a dizer; isto corta o
-        # "Starting…/Finished…" que o SYSTEMD loga por conta própria — a lição
-        # de bb8690c, onde dois timers meus somaram 2148 linhas/dia no journal.
+        # The script already exits silently when there is nothing to say; this cuts the
+        # "Starting…/Finished…" that SYSTEMD logs on its own, the lesson of bb8690c, where two
+        # timers of mine added up to 2148 lines/day in the journal.
         LogLevelMax = "warning";
       };
       Install.WantedBy = [ "graphical-session.target" ];
     };
 
     systemd.user.timers.disk-watch = {
-      Unit.Description = "Checagem periódica de espaço em disco";
+      Unit.Description = "Periodic disk space check";
       Timer = {
-        OnActiveSec = "2min"; # dá tempo da sessão subir antes do 1º check
+        OnActiveSec = "2min"; # gives the session time to come up before the 1st check
         OnUnitActiveSec = "30min";
       };
       Install.WantedBy = [ "timers.target" ];
     };
 
-    # ── Expiração da lixeira ───────────────────────────────────────────────
+    # ── Trash expiry ───────────────────────────────────────────────────────
     systemd.user.services.trash-expire = {
-      Unit.Description = "Expira itens da lixeira com mais de ${toString cfg.trashDays} dias";
+      Unit.Description = "Expires trash items older than ${toString cfg.trashDays} days";
       Service = {
         Type = "oneshot";
         ExecStart = "${trashExpire}/bin/trash-expire";
@@ -223,10 +223,10 @@ in
     };
 
     systemd.user.timers.trash-expire = {
-      Unit.Description = "Expiração diária da lixeira";
+      Unit.Description = "Daily trash expiry";
       Timer = {
         OnCalendar = "daily";
-        Persistent = true; # máquina desligada na hora marcada → roda no próximo boot
+        Persistent = true; # machine off at the scheduled time means it runs on the next boot
       };
       Install.WantedBy = [ "timers.target" ];
     };

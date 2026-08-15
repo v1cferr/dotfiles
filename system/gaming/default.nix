@@ -1,8 +1,8 @@
-# Jogos (nível-sistema): clientes/runtimes que precisam de FHS-wrap ou firewall.
+# Games (system level): clients/runtimes that need an FHS-wrap or the firewall.
 { ... }:
 
 {
   imports = [
-    ./steam.nix # cliente Steam + Proton-GE + gamemode (Remote Play/LAN c/ firewall)
+    ./steam.nix # the Steam client plus Proton-GE plus gamemode (Remote Play/LAN with the firewall)
   ];
 }

@@ -1,83 +1,82 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# PAINEL DE SERVIÇOS do nixos-kingston — liga/desliga os opcionais num lugar só.
-# Editar true/false abaixo + `rebuild`.
+# nixos-kingston's SERVICE PANEL: it turns the optional ones on and off in a single place.
+# Edit true/false below plus `rebuild`.
 #
-# Mora no HOST e não no system/ porque a resposta é por MÁQUINA: um laptop não
-# serve mídia (jellyfin), não faz streaming de tela (sunshine) e não é destino de
-# torrent. A LISTA de chaves que existem é do repo e fica em
-# system/services/toggles.nix; o que cada máquina liga é aqui.
+# It lives in the HOST and not in system/ because the answer is per MACHINE: a laptop does not
+# serve media (jellyfin), does not stream its screen (sunshine) and is not a torrent destination.
+# The LIST of keys that exist belongs to the repo and lives in system/services/toggles.nix; what
+# each machine turns on is here.
 # ═══════════════════════════════════════════════════════════════════════════
 { ... }:
 
 {
   my.services = {
-    caddy = true; # proxy reverso *.v1cferr.dev (inerte até os segredos existirem)
-    jellyfin = true; # servidor de mídia (/srv/media)
-    ollama = true; # IA local (solver do Duolingo)
-    duo = true; # duo-streak-daemon (ofensiva automática do Duolingo)
-    grad-radar = true; # GradRadar no boot + monitor de editais 2x/dia (V1C-72)
-    sunshine = true; # streaming de tela p/ Moonlight
-    qbittorrent = true; # cliente torrent
-    tor = true; # SOCKS5 local 127.0.0.1:9050 (só cliente; consumidor = `mega-tor`)
-    restic = true; # backup automático (off-disk, diário)
-    btrbk = true; # snapshots locais do @home (horário) — complementa o restic
-    cloudflare-ddns = true; # DNS dinâmico (mantém o SSH externo)
-    dropbox = true; # sync do ~/Dropbox
-    drive-mount = true; # ~/Drive = raiz do Drive montada (rclone mount), aparece no Dolphin
-    arch-antigo-mount = true; # /mnt/arch-antigo = acervo do Arch antigo montado SEMPRE (restic)
-    discord-rpc = true; # Rich Presence do Claude Code no Discord
-    cs2-backup = true; # backup dos saves do CS2
+    caddy = true; # the *.v1cferr.dev reverse proxy (inert until the secrets exist)
+    jellyfin = true; # the media server (/srv/media)
+    ollama = true; # local AI (the Duolingo solver)
+    duo = true; # duo-streak-daemon (the automatic Duolingo streak)
+    grad-radar = true; # GradRadar at boot plus the call-for-applications monitor 2x/day (V1C-72)
+    sunshine = true; # screen streaming for Moonlight
+    qbittorrent = true; # the torrent client
+    tor = true; # a local SOCKS5 at 127.0.0.1:9050 (client only; the consumer is `mega-tor`)
+    restic = true; # the automatic backup (off-disk, daily)
+    btrbk = true; # local @home snapshots (hourly), complementing restic
+    cloudflare-ddns = true; # dynamic DNS (it keeps the external SSH alive)
+    dropbox = true; # ~/Dropbox syncing
+    drive-mount = true; # ~/Drive = the Drive's root mounted (rclone mount), showing up in Dolphin
+    arch-antigo-mount = true; # /mnt/arch-antigo = the old Arch archive mounted ALWAYS (restic)
+    discord-rpc = true; # Claude Code's Rich Presence on Discord
+    cs2-backup = true; # a backup of the CS2 saves
   };
 
-  # ── PAINEL DE EXPOSIÇÃO: quem tem subdomínio e até onde alcança ────────────
-  # Gera os vhosts do Caddy (schema em system/net/ingress.nix). ALTERNAR = trocar
-  # a palavra do `expose`:
-  #   "lan"    → LAN + WireGuard do roteador + TAILNET (acesso remoto real hoje)
-  #   "public" → internet, sujeito ao `auth` declarado
+  # ── THE EXPOSURE PANEL: who has a subdomain and how far it reaches ─────────
+  # It generates Caddy's vhosts (the schema is in system/net/ingress.nix). SWITCHING = changing
+  # the `expose` word:
+  #   "lan"    -> the LAN plus the router's WireGuard plus the TAILNET (the real remote access today)
+  #   "public" -> the internet, subject to the declared `auth`
   #
-  # ⚠️ "public" hoje é DECLARAÇÃO, não conectividade: este host está atrás de
-  # CGNAT e nada entra (ver a entrada do CGNAT em docs/history/2026/08-august.md). O gate correto
-  # já é aplicado; falta o caminho de entrada (IP público ou cloudflared).
+  # WARNING: "public" today is a DECLARATION, not connectivity: this host is behind CGNAT and
+  # nothing gets in (see the CGNAT entry in docs/history/2026/08-august.md). The right gate is
+  # already applied; what is missing is the inbound path (a public IP or cloudflared).
   #
-  # Omitir `expose` FECHA (default = "lan") — esquecimento não vira exposição.
+  # Omitting `expose` CLOSES (the default is "lan"), so forgetting does not become exposure.
   my.ingress = {
     pos = {
       upstream = 3006;
       routes = {
         "/api/*" = 8006;
-      }; # FastAPI; prefixo NÃO removido, p/ a mesma URL valer no container
+      }; # FastAPI; the prefix is NOT stripped, so the same URL holds inside the container
       expose = "public";
-      # SEM basic_auth, de propósito: o login vai morar na aplicação (Next.js),
-      # e uma senha de proxy na frente significaria digitar duas. Até o F2 a
-      # página é ABERTA — o que ela mostra são datas de edital público e nenhum
-      # dado pessoal (nenhum dos três nomes é renderizado). O dia em que houver
-      # algo por candidato, o login do app tem que existir ANTES.
-      comment = "GradRadar (V1C-72), dividido com o JP e o César. Aberto: auth virá no próprio app (F2).";
+      # NO basic_auth, on purpose: the login is going to live in the application (Next.js), and a
+      # proxy password in front would mean typing two. Until F2 the page is OPEN, and what it
+      # shows are public call-for-application dates and no personal data (none of the three names
+      # is rendered). The day there is anything per candidate, the app's login has to exist FIRST.
+      comment = "GradRadar (V1C-72), shared with JP and César. Open: auth will come in the app itself (F2).";
     };
 
     jellyfin = {
       upstream = 8096;
       expose = "public";
-      comment = "Login próprio; exposto no mesmo nível do Arch. Upstream em loopback (o serviço nativo escuta 0.0.0.0).";
+      comment = "It has its own login; exposed at the same level as on Arch. The upstream is on loopback (the native service listens on 0.0.0.0).";
     };
 
     torrent = {
       upstream = 8080;
       expose = "public";
-      comment = "qBittorrent — login próprio, mesmo critério do jellyfin.";
+      comment = "qBittorrent: its own login, the same criterion as jellyfin.";
     };
 
     duo = {
       upstream = 3010;
-      proxyConfig = "flush_interval -1"; # SSE (/api/events) sem buffer
+      proxyConfig = "flush_interval -1"; # SSE (/api/events) with no buffering
       expose = "lan";
-      comment = "duo-streak-daemon (V1C-71). Expõe detalhes da automação → nunca sai de casa.";
+      comment = "duo-streak-daemon (V1C-71). It exposes details of the automation, so it never leaves the house.";
     };
 
     ai = {
       upstream = 11434;
       expose = "lan";
-      comment = "Ollama NÃO tem auth nativa. `lan` é a ÚNICA proteção — não trocar sem pôr auth na frente.";
+      comment = "Ollama has NO native auth. `lan` is the ONLY protection; do not change it without putting auth in front.";
     };
   };
 }

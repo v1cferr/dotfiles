@@ -1,21 +1,20 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# ESCRITÓRIO — ONLYOFFICE Desktop Editors.
+# OFFICE: ONLYOFFICE Desktop Editors.
 #
-# Escolha do stack: o OnlyOffice usa OOXML como formato NATIVO, então .docx/.xlsx/
-# .pptx abrem sem tabela deslocada nem repaginação — e a UI é ribbon, igual ao
-# Office 365. O LibreOffice é o default da comunidade NixOS e tem mais recursos
-# (Draw/Base/macros), mas é nativo em ODF e converte OOXML, perdendo fidelidade em
-# documento complexo. Trocar = 1 linha aqui + os defaults abaixo.
+# The stack choice: OnlyOffice uses OOXML as its NATIVE format, so .docx/.xlsx/.pptx open with no
+# shifted table and no repagination, and the UI is a ribbon, just like Office 365. LibreOffice is
+# the NixOS community's default and has more features (Draw/Base/macros), but it is native in ODF
+# and converts OOXML, losing fidelity on a complex document. Switching = 1 line here plus the
+# defaults below.
 #
-# As FONTES vêm do system/hardware/fonts.nix (corefonts + vista-fonts): o pacote é
-# buildFHSEnv e o /etc/fonts vem do HOST (build-fhsenv-bubblewrap), então fontconfig
-# do sistema já enxerga — NÃO precisa do "copie os .ttf p/ ~/.local/share/fonts" que
-# o wiki do NixOS manda fazer à mão (regra 3).
+# The FONTS come from system/hardware/fonts.nix (corefonts plus vista-fonts): the package is a
+# buildFHSEnv and /etc/fonts comes from the HOST (build-fhsenv-bubblewrap), so the system's
+# fontconfig already sees them; there is NO need for the "copy the .ttf into
+# ~/.local/share/fonts" the NixOS wiki tells you to do by hand (rule 3).
 #
-# PEGADINHA: o .desktop do OnlyOffice reivindica 61 mimetypes, incluindo pdf, epub,
-# text/plain, markdown e csv. Os defaults explícitos de home/apps/media.nix (Okular)
-# e home/desktop/xdg.nix (VS Code) continuam ganhando — mas se algum dia sumirem, o
-# OnlyOffice passa a abrir PDF e .txt.
+# A TRAP: OnlyOffice's .desktop claims 61 mimetypes, pdf, epub, text/plain, markdown and csv
+# included. The explicit defaults in home/apps/media.nix (Okular) and home/desktop/xdg.nix
+# (VS Code) still win, but if they ever disappear, OnlyOffice starts opening PDFs and .txt files.
 # ═══════════════════════════════════════════════════════════════════════════
 { pkgs, ... }:
 
@@ -25,7 +24,7 @@ in
 {
   home.packages = [ pkgs.onlyoffice-desktopeditors ];
 
-  # Apps padrão por tipo (funde com media.nix e xdg.nix num só mimeapps.list).
+  # The default apps per type (it merges with media.nix and xdg.nix into a single mimeapps.list).
   xdg.mimeApps = {
     enable = true;
     defaultApplications = {
@@ -34,7 +33,7 @@ in
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = office; # .xlsx
       "application/vnd.openxmlformats-officedocument.presentationml.presentation" = office; # .pptx
       "application/vnd.openxmlformats-officedocument.presentationml.slideshow" = office; # .ppsx
-      # ── Binários legados (Office ≤2003) ──
+      # ── The legacy binaries (Office 2003 and earlier) ──
       "application/msword" = office; # .doc
       "application/vnd.ms-excel" = office; # .xls
       "application/vnd.ms-powerpoint" = office; # .ppt

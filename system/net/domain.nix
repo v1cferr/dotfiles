@@ -1,23 +1,21 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# DOMÍNIO PÚBLICO = FONTE ÚNICA (regra 11). Todo serviço exposto vive sob um
-# subdomínio deste nome.
+# THE PUBLIC DOMAIN = the SINGLE SOURCE (rule 11). Every exposed service lives under a subdomain
+# of this name.
 #
-# Antes desta opção o literal `v1cferr.dev` aparecia uma vez só, no
-# `services.cloudflare-dyndns.domains` de ./network.nix — e um literal solitário
-# não justifica opção. Com o Caddy de volta (system/services/caddy.nix) os
-# consumidores viraram quatro: o DDNS, o endereço do site block, os matchers de
-# acesso e o filtro do fail2ban. É exatamente o gatilho da regra 11 — valor
-# repetido em 2+ lugares vira `my.<domínio>.<coisa>` e ninguém mais guarda
-# literal.
+# Before this option the literal `v1cferr.dev` appeared only once, in ./network.nix'
+# `services.cloudflare-dyndns.domains`, and a lone literal does not justify an option. With Caddy
+# back (system/services/caddy.nix) the consumers became four: the DDNS, the site block's address,
+# the access matchers and the fail2ban filter. That is exactly rule 11's trigger: a value repeated
+# in 2+ places becomes `my.<domain>.<thing>` and nobody holds a literal anymore.
 #
-# POR QUE ARQUIVO PRÓPRIO, e não dentro do módulo que consome (como `my.fonts.ui`
-# mora em hardware/fonts.nix e `my.monitors` em desktop/monitors.nix): aqui os
-# consumidores estão em DUAS pastas (net/ e services/), então nenhum módulo é o
-# dono óbvio. Fica em net/ porque domínio é fato de rede.
+# WHY ITS OWN FILE, and not inside the module that consumes it (the way `my.fonts.ui` lives in
+# hardware/fonts.nix and `my.monitors` in desktop/monitors.nix): here the consumers are in TWO
+# folders (net/ and services/), so no module is the obvious owner. It sits in net/ because a domain
+# is a network fact.
 #
-# COM `default`, ao contrário de `my.monitors`: conector de vídeo é fato de
-# HARDWARE, e default ali seria a mentira que só aparece no host nº 2. Domínio é
-# fato de IDENTIDADE — mesmo critério que dá default a `my.fonts.ui`.
+# WITH a `default`, unlike `my.monitors`: a video connector is a HARDWARE fact, and a default
+# there would be the lie that only shows up on host nº 2. A domain is an IDENTITY fact, the same
+# criterion that gives `my.fonts.ui` a default.
 # ═══════════════════════════════════════════════════════════════════════════
 { lib, ... }:
 
@@ -25,6 +23,6 @@
   options.my.net.domain = lib.mkOption {
     type = lib.types.str;
     default = "v1cferr.dev";
-    description = "Domínio público sob o qual os serviços são expostos (SSOT, regra 11). Lido pelo DDNS, pelo Caddy e pelas jails do fail2ban.";
+    description = "The public domain under which the services are exposed (SSOT, rule 11). Read by the DDNS, by Caddy and by the fail2ban jails.";
   };
 }

@@ -1,14 +1,14 @@
-# Hardware: CPU/firmware, GPU, áudio, fontes.
+# Hardware: CPU/firmware, GPU, audio, fonts.
 { ... }:
 
 {
   imports = [
     ./hardware.nix # CPU/microcode, firmware, zram, Bluetooth, udisks2
-    ./btrfs.nix # integridade do FS: scrub + alarme, contadores de erro, reclaim, TRIM
-    ./oom.nix # earlyoom: mata o maior processo antes do freeze por falta de RAM (companheiro do zram)
-    ./gpu.nix # driver de vídeo: Intel Arc B580 (xe + Mesa, sem CUDA)
-    ./audio.nix # PipeWire + rtkit
-    ./fonts.nix # SSOT da fonte de UI (my.fonts.ui) + fontconfig + métricas MS
-    ./mouse.nix # Logitech MX Master 3S via logiops (gestos → workspaces, DPI, smartshift)
+    ./btrfs.nix # the FS' integrity: scrub plus alarm, error counters, reclaim, TRIM
+    ./oom.nix # earlyoom: it kills the biggest process before the out-of-RAM freeze (zram's companion)
+    ./gpu.nix # the video driver: an Intel Arc B580 (xe plus Mesa, no CUDA)
+    ./audio.nix # PipeWire plus rtkit
+    ./fonts.nix # the SSOT of the UI font (my.fonts.ui) plus fontconfig plus the MS metrics
+    ./mouse.nix # a Logitech MX Master 3S through logiops (gestures, DPI, smartshift)
   ];
 }

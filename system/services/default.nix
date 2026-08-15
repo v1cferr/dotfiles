@@ -1,20 +1,20 @@
-# Serviços de sistema: backup, hooks, mídia e IA (daemons/systemd).
+# System services: backup, hooks, media and AI (daemons/systemd).
 { ... }:
 
 {
   imports = [
-    ./toggles.nix # INTERFACE: declara as chaves my.services.* (os VALORES são do host)
-    ./caddy.nix # proxy reverso de *.<domínio> (cert curinga DNS-01) + jail do fail2ban
-    ./restic.nix # backup cifrado do estado do usuário (repo no HDD por ora)
-    ./arch-legacy.nix # mountpoint + SSOT do acervo do Arch antigo (quem monta é o home)
-    ./btrbk.nix # snapshots btrfs horários do @home (desfazer local; NÃO é backup)
-    ./claude-code.nix # hooks do Claude Code (managed-settings /etc) → Discord Rich Presence
-    ./jellyfin.nix # servidor de mídia Jellyfin (nativo, systemd, biblioteca em /srv/media)
-    ./qbittorrent.nix # cliente de download (Web UI 8080; grava em /srv/media/torrents)
-    ./ollama.nix # runtime de IA local (CPU); solver do duo-streak-daemon
-    ./duo.nix # stack do duo-streak-daemon (compose declarativo; auto-ativa com o segredo)
-    ./grad-radar.nix # stack do GradRadar no boot + timer do monitor de editais
-    ./docker.nix # poda semanal da engine (só a POLÍTICA; quem liga docker são os stacks)
-    ./sunshine.nix # streaming de tela remoto (Moonlight); captura KMS, acesso só pelo WireGuard
+    ./toggles.nix # THE INTERFACE: it declares the my.services.* keys (the VALUES belong to the host)
+    ./caddy.nix # the reverse proxy for *.<domain> (a DNS-01 wildcard cert) plus the fail2ban jail
+    ./restic.nix # the encrypted backup of the user's state (the repo is on the HDD for now)
+    ./arch-legacy.nix # the mountpoint plus the SSOT of the old Arch archive (home is what mounts it)
+    ./btrbk.nix # hourly btrfs snapshots of @home (a local undo; it is NOT a backup)
+    ./claude-code.nix # Claude Code's hooks (managed-settings in /etc) for the Discord Rich Presence
+    ./jellyfin.nix # the Jellyfin media server (native, systemd, the library in /srv/media)
+    ./qbittorrent.nix # the download client (a Web UI on 8080; it writes to /srv/media/torrents)
+    ./ollama.nix # the local AI runtime (CPU); duo-streak-daemon's solver
+    ./duo.nix # duo-streak-daemon's stack (a declarative compose; it self-activates with the secret)
+    ./grad-radar.nix # GradRadar's stack at boot plus the call-for-applications monitor's timer
+    ./docker.nix # the engine's weekly prune (the POLICY only; what turns docker on are the stacks)
+    ./sunshine.nix # remote screen streaming (Moonlight); KMS capture, access only through WireGuard
   ];
 }

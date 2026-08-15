@@ -1,21 +1,20 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# FAIXAS DA REDE DE CASA = FONTE ÚNICA (regra 11). "De casa" é uma decisão de
-# SEGURANÇA — é ela que separa quem entra direto de quem precisa de senha — e
-# estava escrita por extenso em três lugares diferentes.
+# THE HOME NETWORK'S RANGES = the SINGLE SOURCE (rule 11). "From home" is a SECURITY decision, the
+# one that separates who gets in directly from who needs a password, and it was written out in
+# three different places.
 #
-# O GATILHO: com a saída do Tailscale (08/08/2026) a lista virou consumidor
-# triplo — o matcher `@externo` do Caddy, o `ignoreip` da jail do fail2ban e a
-# regra de firewall que substituiu o `trustedInterfaces`. Literal repetido em
-# 2+ lugares é exatamente o que a regra 11 manda virar opção, e aqui o custo de
-# divergir é alto: uma cópia desatualizada não dá erro de build, só passa a
-# tratar como estranho alguém que devia entrar — ou pior, o contrário.
+# THE TRIGGER: with Tailscale leaving (08/08/2026) the list became a triple consumer: Caddy's
+# `@externo` matcher, the fail2ban jail's `ignoreip` and the firewall rule that replaced
+# `trustedInterfaces`. A literal repeated in 2+ places is exactly what rule 11 says to turn into an
+# option, and here the cost of diverging is high: an outdated copy gives no build error, it just
+# starts treating somebody who should get in as a stranger, or worse, the other way around.
 #
-# ARQUIVO PRÓPRIO, mesma justificativa do ./domain.nix: os consumidores estão em
-# DUAS pastas (net/ e services/), então nenhum módulo é o dono óbvio.
+# ITS OWN FILE, the same justification as ./domain.nix: the consumers are in TWO folders (net/ and
+# services/), so no module is the obvious owner.
 #
-# ⚠️ ESTES VALORES ESPELHAM O ROTEADOR, que é quem realmente os define (o OpenWrt
-# serve o DHCP da LAN e é o servidor WireGuard). O Nix não alcança lá: mudar a
-# faixa no roteador e esquecer daqui deixa o repo mentindo em silêncio.
+# THESE VALUES MIRROR THE ROUTER, which is what really defines them (the OpenWrt serves the LAN's
+# DHCP and is the WireGuard server). Nix does not reach over there: changing the range on the
+# router and forgetting here leaves the repo lying in silence.
 # ═══════════════════════════════════════════════════════════════════════════
 { lib, ... }:
 
@@ -24,17 +23,17 @@
     lanSubnet = lib.mkOption {
       type = lib.types.str;
       default = "192.168.1.0/24";
-      description = "Faixa da LAN de casa (DHCP servido pelo roteador OpenWrt).";
+      description = "The home LAN's range (DHCP served by the OpenWrt router).";
     };
 
-    # SEPARADA da LAN de propósito, e não juntas numa lista só: há consumidor que
-    # precisa de UMA e não da outra. O firewall que mantém o Sunshine alcançável
-    # confia só nesta — o Sunshine é fechado NA LAN por decisão, e mesclar as duas
-    # abriria ele pra rede de casa inteira sem ninguém perceber.
+    # SEPARATE from the LAN on purpose, instead of both in a single list: there is a consumer that
+    # needs ONE and not the other. The firewall that keeps Sunshine reachable trusts only this
+    # one, since Sunshine is closed ON THE LAN by decision, and merging the two would open it to
+    # the whole home network without anybody noticing.
     vpnSubnet = lib.mkOption {
       type = lib.types.str;
       default = "10.10.10.0/24";
-      description = "Faixa do WireGuard servido pelo ROTEADOR. É por ela que o acesso remoto entra.";
+      description = "The range of the WireGuard served by the ROUTER. It is how remote access gets in.";
     };
   };
 }

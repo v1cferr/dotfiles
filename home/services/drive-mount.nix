@@ -1,29 +1,29 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# ~/Drive — a RAIZ do Google Drive montada como pasta local (rclone mount + cache
-# VFS) → aparece no Dolphin como pasta normal, com bookmark em home/apps/dolphin.nix.
+# ~/Drive: the ROOT of Google Drive mounted as a local folder (rclone mount plus a VFS cache), so
+# it shows up in Dolphin as a normal folder, with a bookmark in home/apps/dolphin.nix.
 #
-# Serve o caso real: "às vezes preciso de um arquivo que não tenho aqui mas está no
-# Drive". Vê tudo na hora (Documentos, César, Mãe, SENAC…), sem baixar nada.
+# It serves the real case: "sometimes I need a file I do not have here but that is on the Drive".
+# You see everything right away (Documentos, César, Mãe, SENAC and so on), with no downloading.
 #
-# ── POR QUE MOUNT E NÃO BISYNC (decidido em 05/08/2026) ─────────────────────
-# A primeira versão daqui era `rclone bisync`. Trocado depois de LISTAR o remote e
-# ver que a raiz tem ~19,6 GiB de acervo real (fotos de família, documentos):
-#   • bisync baixaria os 19,6 GiB pro NVMe pra dar o mesmo acesso que o mount dá com
-#     zero download;
-#   • e sync PROPAGA — apagar local apagaria no Drive, inclusive pasta de família.
-#     Num mount cada operação é explícita e única; não existe algoritmo reconciliando
-#     duas listagens que possa concluir "o outro lado deve ficar vazio".
-# O que se perde: acesso OFFLINE e edição sem rede. Trade aceito — quem precisa
-# funcionar offline é o backup (restic), e esse é outro módulo.
+# ── WHY A MOUNT AND NOT BISYNC (decided on 05/08/2026) ──────────────────────
+# The first version here was `rclone bisync`. It was swapped after LISTING the remote and seeing
+# that the root holds ~19.6 GiB of real archive (family photos, documents):
+#   • bisync would download those 19.6 GiB onto the NVMe to give the same access the mount gives
+#     with zero downloading;
+#   • and a sync PROPAGATES, so deleting locally would delete on the Drive, family folder
+#     included. In a mount every operation is explicit and singular; there is no algorithm
+#     reconciling two listings that could conclude "the other side should be empty".
+# What you lose: OFFLINE access and editing with no network. An accepted trade, since what needs
+# to work offline is the backup (restic), and that is another module.
 #
-# ── ISTO NÃO É BACKUP ───────────────────────────────────────────────────────
-# É uma JANELA pro Drive: apagar aqui apaga lá, de verdade. O backup é o restic
-# (system/services/restic.nix), e ele é a única coisa que atende a regra 6.
+# ── THIS IS NOT A BACKUP ────────────────────────────────────────────────────
+# It is a WINDOW into the Drive: deleting here deletes there, for real. The backup is restic
+# (system/services/restic.nix), and that is the only thing that satisfies rule 6.
 #
-# O repo do restic mora em BACKUPS_EX-B560M-V5/ e fica EXCLUÍDO da montagem: são ~48
-# GiB de blob cifrado que só poluiriam o gerenciador de arquivos, e um Delete sem
-# querer ali dentro CORROMPE o backup. Pra olhar dentro do backup existe o
-# `backup-browse` (restic mount), que é read-only.
+# The restic repo lives in BACKUPS_EX-B560M-V5/ and is EXCLUDED from the mount: it is ~48 GiB of
+# encrypted blobs that would only pollute the file manager, and an accidental Delete in there
+# CORRUPTS the backup. To look inside the backup there is `backup-browse` (a restic mount), which
+# is read-only.
 # ═══════════════════════════════════════════════════════════════════════════
 {
   config,
@@ -41,49 +41,51 @@ in
     local = lib.mkOption {
       type = lib.types.str;
       default = "/home/v1cferr/Drive";
-      description = "Ponto de montagem. Lido também pelo bookmark do Dolphin (SSOT, regra 11).";
+      description = "The mountpoint. Also read by Dolphin's bookmark (SSOT, rule 11).";
     };
     remote = lib.mkOption {
       type = lib.types.str;
       default = "gdrive:";
-      description = "Remote do rclone. `gdrive:` = raiz do Drive; o remote vem do rclone.conf do sops.";
+      description = "The rclone remote. `gdrive:` = the Drive's root; the remote comes from sops' rclone.conf.";
     };
   };
 
   config = lib.mkIf osConfig.my.services.drive-mount {
     systemd.user.services.drive-mount = {
       Unit = {
-        Description = "Google Drive montado em ${cfg.local} (rclone mount)";
+        Description = "Google Drive mounted at ${cfg.local} (rclone mount)";
         After = [ "network-online.target" ];
         Wants = [ "network-online.target" ];
-        # No login a rede costuma demorar alguns segundos. Sem isto o systemd desistiria
-        # após 5 falhas rápidas (StartLimit) e a pasta ficaria vazia até um start na mão.
+        # At login the network usually takes a few seconds. Without this systemd would give up
+        # after 5 quick failures (StartLimit) and the folder would stay empty until a manual
+        # start.
         StartLimitIntervalSec = 0;
       };
 
       Service = {
-        # Suportado pelo rclone (está no `rclone mount --help`, seção systemd): a unit só
-        # entra em "started" DEPOIS do mountpoint pronto. Com Type=simple o Dolphin
-        # poderia abrir a pasta antes de ela existir e cachear "vazia".
+        # Supported by rclone (it is in `rclone mount --help`, the systemd section): the unit only
+        # goes "started" AFTER the mountpoint is ready. With Type=simple, Dolphin could open the
+        # folder before it exists and cache it as "empty".
         Type = "notify";
 
-        # CÓPIA GRAVÁVEL do rclone.conf. O rclone renova o token OAuth e tenta persistir
-        # o novo no arquivo de config; contra o secret do sops (0400, diretório
-        # não-gravável) isso vira `Failed to save config … permission denied` — não é
-        # fatal, mas é ERROR recorrente no journal escondendo erro de verdade.
-        # `%t` = XDG_RUNTIME_DIR (/run/user/1000), tmpfs, 0600.
+        # A WRITABLE COPY of rclone.conf. rclone renews the OAuth token and tries to persist the
+        # new one into the config file; against the sops secret (0400, in a non-writable
+        # directory) that becomes `Failed to save config … permission denied`. It is not fatal,
+        # but it is a recurring ERROR in the journal hiding a real error.
+        # `%t` = XDG_RUNTIME_DIR (/run/user/1000), a tmpfs, 0600.
         #
-        # O `--config` vai no comando e NÃO como RCLONE_CONFIG no ambiente: o
-        # `programs.rclone` gera o rclone.conf do remote `faiws`, e exportar a variável
-        # faria o mount da FAI procurar o remote no arquivo errado. (A doc do rclone
-        # ainda avisa que unit de systemd não herda ambiente — outra razão pro flag.)
-        # ⚠️ O MOUNTPOINT TEM QUE ESTAR VAZIO. O rclone recusa com "…is not empty, use
-        # --allow-non-empty to mount anyway" — e `--allow-non-empty` fica FORA de
-        # propósito: montar por cima de arquivo existente ESCONDE ele, e aí você tem
-        # dado invisível que só reaparece quando o mount cai. Custou o primeiro start
-        # (05/08/2026): a versão bisync deste módulo criava um RCLONE_TEST aqui, e o
-        # arquivo órfão de 0 byte travou o mount em loop de restart.
-        # Se o mount não subir, checar `ls -a ~/Drive` ANTES de suspeitar de rede.
+        # The `--config` goes on the command and NOT as RCLONE_CONFIG in the environment:
+        # `programs.rclone` generates the rclone.conf for the `faiws` remote, and exporting the
+        # variable would make the FAI mount look for its remote in the wrong file. (rclone's docs
+        # also warn that a systemd unit does not inherit the environment, another reason for the
+        # flag.)
+        # WARNING: THE MOUNTPOINT HAS TO BE EMPTY. rclone refuses with "…is not empty, use
+        # --allow-non-empty to mount anyway", and `--allow-non-empty` stays OUT on purpose:
+        # mounting over an existing file HIDES it, and then you have invisible data that only
+        # reappears when the mount goes down. It cost the first start (05/08/2026): the bisync
+        # version of this module created an RCLONE_TEST here, and the orphaned 0-byte file locked
+        # the mount into a restart loop.
+        # If the mount does not come up, check `ls -a ~/Drive` BEFORE suspecting the network.
         ExecStartPre = [
           "${pkgs.coreutils}/bin/mkdir -p ${cfg.local}"
           "${pkgs.coreutils}/bin/install -m600 /run/secrets/rclone_gdrive_conf %t/rclone-gdrive.conf"
@@ -93,24 +95,24 @@ in
           "${pkgs.rclone}/bin/rclone --config %t/rclone-gdrive.conf mount"
           cfg.remote
           cfg.local
-          # Esconde o repo do restic da montagem (ver cabeçalho): ruído no Dolphin, e um
-          # Delete sem querer ali corromperia o backup.
-          "--exclude BACKUPS_EX-B560M-V5/**" # sem aspas: systemd não expande glob em Exec*
-          # "writes": LEITURA passa direto (streaming, NÃO acumula em disco) — só o que
-          # você escreve/copia é cacheado até subir. Mesma escolha do mount da FAI.
+          # It hides the restic repo from the mount (see the header): noise in Dolphin, and an
+          # accidental Delete in there would corrupt the backup.
+          "--exclude BACKUPS_EX-B560M-V5/**" # no quotes: systemd does not expand a glob in Exec*
+          # "writes": a READ goes straight through (streaming, it does NOT pile up on disk), and
+          # only what you write/copy is cached until it uploads. The same choice as the FAI mount.
           "--vfs-cache-mode writes"
-          "--vfs-cache-max-age 6h" # evicta o cache de escrita rápido
-          "--vfs-cache-max-size 2G" # teto do cache em disco (~/.cache/rclone)
-          "--dir-cache-time 5m" # listagem cacheada 5min → navegar fica RÁPIDO (F5 recarrega)
-          "--buffer-size 8M" # RAM de read-ahead por arquivo aberto
-          "--timeout 30s" # timeout de I/O (não pendura eterno se a rede cair)
-          "--contimeout 15s" # timeout de conexão
-          "--log-systemd" # log vai pro journal com a prioridade certa
+          "--vfs-cache-max-age 6h" # it evicts the write cache quickly
+          "--vfs-cache-max-size 2G" # the on-disk cache ceiling (~/.cache/rclone)
+          "--dir-cache-time 5m" # the listing cached for 5min, so browsing is FAST (F5 reloads)
+          "--buffer-size 8M" # read-ahead RAM per open file
+          "--timeout 30s" # the I/O timeout (it does not hang forever if the network drops)
+          "--contimeout 15s" # the connection timeout
+          "--log-systemd" # the log goes to the journal with the right priority
         ];
 
-        # O rclone desmonta sozinho no SIGTERM; isto é a rede de segurança pro caso de
-        # mount pendurado (o `-` ignora falha quando já está desmontado). Tem que ser o
-        # WRAPPER setuid do NixOS — o fusermount3 do pacote não tem privilégio.
+        # rclone unmounts on its own on SIGTERM; this is the safety net for a hung mount (the `-`
+        # ignores a failure when it is already unmounted). It has to be NixOS' setuid WRAPPER,
+        # since the package's fusermount3 has no privilege.
         ExecStopPost = "-/run/wrappers/bin/fusermount3 -uz ${cfg.local}";
 
         Restart = "on-failure";

@@ -1,14 +1,14 @@
-# CONFIG do git (~/.gitconfig), declarado. O binário `git` vem do system/
-# (systemPackages). Aqui é só a identidade/preferências. Preencha abaixo (deixei
-# comentado pra não chutar — seus commits usam dev.victorferreira@gmail.com).
+# The git CONFIG (~/.gitconfig), declared. The `git` binary comes from system/ (systemPackages).
+# Here it is only the identity/preferences.
 { pkgs, lib, ... }:
 
 {
-  # O plugin `github` do Claude Code fala com o MCP remoto (api.githubcopilot.com) e lê
-  # o token SÓ da env GITHUB_PERSONAL_ACCESS_TOKEN — sem ela o header sai `Bearer ` vazio
-  # e o server responde HTTP 400. Reaproveita o token que o gh já guarda, em vez de gerar
-  # um PAT novo e deixar em texto puro. O gh só lê GH_TOKEN/GITHUB_TOKEN, então esse nome
-  # NÃO sequestra o `gh auth status/refresh`. `|| true` = máquina sem gh logado não quebra.
+  # Claude Code's `github` plugin talks to the remote MCP (api.githubcopilot.com) and reads the
+  # token ONLY from the GITHUB_PERSONAL_ACCESS_TOKEN env; without it the header comes out as an
+  # empty `Bearer ` and the server answers HTTP 400. It reuses the token gh already keeps, instead
+  # of generating a new PAT and leaving it in plain text. gh only reads GH_TOKEN/GITHUB_TOKEN, so
+  # this name does NOT hijack `gh auth status/refresh`. `|| true` means a machine with gh not
+  # logged in does not break.
   programs.zsh.initContent = lib.mkOrder 1000 ''
     export GITHUB_PERSONAL_ACCESS_TOKEN="$(${pkgs.gh}/bin/gh auth token 2>/dev/null || true)"
   '';
@@ -20,11 +20,11 @@
         name = "Victor Ferreira";
         email = "dev.victorferreira@gmail.com";
       };
-      # GitHub via HTTPS usa o token do gh (GitHub CLI) como credential helper →
-      # `git push/pull` funcionam sem SSH e sem gravar token em texto puro.
+      # GitHub over HTTPS uses gh's token (the GitHub CLI) as the credential helper, so
+      # `git push/pull` work with no SSH and with no token written in plain text.
       credential."https://github.com".helper = "!gh auth git-credential";
-      # `git pull` rebaseia commits locais em cima do remoto (histórico linear; acaba
-      # com o prompt "divergent branches"). Repo pessoal single-author = rebase é limpo.
+      # `git pull` rebases the local commits on top of the remote (a linear history; it ends the
+      # "divergent branches" prompt). A personal single-author repo means rebase is clean.
       pull.rebase = true;
     };
   };

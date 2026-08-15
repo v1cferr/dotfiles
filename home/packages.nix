@@ -1,136 +1,136 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# PACOTES DO USUÁRIO (home-manager) — a lista CENTRAL. É AQUI que você adiciona
-# um app/CLI novo SEM config própria (espelha o system/packages.nix). Apps COM
-# config declarativa vivem no seu módulo (programs.* ou apps/desktop/shell):
-# kitty, git, dolphin, flameshot, media, vscode, quickshell, tema, helpers do Hyprland.
-# unfree ok (allowUnfree herdado do system).
+# THE USER'S PACKAGES (home-manager): the CENTRAL list. THIS is where you add a new app/CLI with
+# NO config of its own (it mirrors system/packages.nix). Apps WITH a declarative config live in
+# their own module (programs.* or apps/desktop/shell): kitty, git, dolphin, flameshot, media,
+# vscode, quickshell, the theme, the Hyprland helpers.
+# unfree is fine (allowUnfree is inherited from system).
 #
-# `pkgs.foo` = base estável (26.05); `pkgs.unstable.foo` = canal bleeding-edge.
+# `pkgs.foo` = the stable base (26.05); `pkgs.unstable.foo` = the bleeding-edge channel.
 # ═══════════════════════════════════════════════════════════════════════════
 { pkgs, inputs, ... }:
 
 {
   home.packages = with pkgs; [
-    # ── Navegadores ──
-    librewolf # Firefox hardened (privacidade)
-    # Chrome canal DEV (unstable/latest), NÃO o stable — via flake browser-previews
-    # (o nixpkgs só tem stable). Binário/launcher = "Google Chrome Dev"; bump com
-    # `nix flake update browser-previews`. unfree; compatibilidade/DevTools bleeding-edge.
+    # ── Browsers ──
+    librewolf # a hardened Firefox (privacy)
+    # Chrome from the DEV channel (unstable/latest), NOT stable, through the browser-previews
+    # flake (nixpkgs only has stable). The binary/launcher is "Google Chrome Dev"; bump it with
+    # `nix flake update browser-previews`. unfree; bleeding-edge compatibility/DevTools.
     inputs.browser-previews.packages.${stdenv.hostPlatform.system}.google-chrome-dev
-    inputs.zen-browser.packages.${stdenv.hostPlatform.system}.default # Zen (flake; ver flake.nix)
+    inputs.zen-browser.packages.${stdenv.hostPlatform.system}.default # Zen (a flake; see flake.nix)
 
-    # ── Comunicação ──
-    discord # voz/chat (unfree; expõe o socket IPC pro Rich Presence do Claude Code)
+    # ── Communication ──
+    discord # voice/chat (unfree; it exposes the IPC socket for Claude Code's Rich Presence)
 
-    # ── IA ──
-    # Claude Desktop (GUI: Chat/Cowork/Code) — .deb OFICIAL reempacotado, ver flake.nix.
-    # Variante FHS e não a pura: os servidores MCP precisam achar node/uv, e o Cowork
-    # sobe uma VM QEMU procurando /usr/share/OVMF/*.fd e /usr/bin/virtiofsd em caminhos
-    # FHS HARDCODED — fora do FHS ele responde "virtualization_tools_missing" e pronto.
-    # Closure MEDIDO: 2.9 GiB (o qemu_kvm é a maior fatia) — a medição de 30/07 diz que
-    # não é onde o disco enche: o /nix/store INTEIRO é 9% dele, os Bottles são 319 GiB.
-    # ⚠️ Cowork exige VT-x LIGADO NA BIOS (aqui está desligado: "VMX disabled by BIOS")
-    # + o usuário no grupo kvm. Sem isso, só Chat/Code funcionam. A sessão e o claude_desktop_config.json são
-    # ESTADO (regra 6 → restic) e o app REESCREVE esse JSON em runtime (regra 14: o
-    # Nix não é dono dele). unfree.
+    # ── AI ──
+    # Claude Desktop (the GUI: Chat/Cowork/Code), the OFFICIAL .deb repackaged, see flake.nix.
+    # The FHS variant and not the pure one: the MCP servers need to find node/uv, and Cowork
+    # brings up a QEMU VM looking for /usr/share/OVMF/*.fd and /usr/bin/virtiofsd at HARDCODED
+    # FHS paths, so outside the FHS it answers "virtualization_tools_missing" and that is that.
+    # The closure, MEASURED: 2.9 GiB (qemu_kvm is the biggest slice). The 30/07 measurement says
+    # that is not where the disk fills up: the WHOLE /nix/store is 9% of it, the Bottles are
+    # 319 GiB.
+    # WARNING: Cowork requires VT-x TURNED ON IN THE BIOS (here it is off: "VMX disabled by
+    # BIOS") plus the user in the kvm group. Without that, only Chat/Code work. The session and
+    # claude_desktop_config.json are STATE (rule 6, so restic) and the app REWRITES that JSON at
+    # runtime (rule 14: Nix does not own it). unfree.
     claude-desktop-fhs
 
-    # ── Notas / mídia ──
-    obsidian # notas em Markdown (cofre local; unfree)
-    # Música (unfree). O zygote do CEF morre antes do primeiro ping: o browser aborta
-    # com "GPU process isn't usable. Goodbye." e o processo cai de SIGTRAP em ~250ms,
-    # sem janela e sem erro visível. `--disable-gpu` e `--no-sandbox` não mudam nada;
-    # só `--no-zygote` contorna — e a flag mora no PACOTE (overlaySpotifyNoZygote, no
-    # flake.nix), não num `exec`, pra que abrir pelo menu pegue a mesma correção.
+    # ── Notes / media ──
+    obsidian # Markdown notes (a local vault; unfree)
+    # Music (unfree). The CEF zygote dies before the first ping: the browser aborts with "GPU
+    # process isn't usable. Goodbye." and the process falls to SIGTRAP in ~250ms, with no window
+    # and no visible error. `--disable-gpu` and `--no-sandbox` change nothing; only `--no-zygote`
+    # works around it, and the flag lives in the PACKAGE (overlaySpotifyNoZygote, in flake.nix),
+    # not in an `exec`, so that opening it from the menu picks up the same fix.
     #
-    # CORREÇÃO (11/08/2026) — este comentário dizia que a 1.2.92.147 do unstable "abre
-    # limpa, SEM flag" e que "a correção é a versão, não um workaround no launcher".
-    # ERRADO nas duas metades: a 1.2.92.147 crasha IGUAL (medido de novo hoje, mesma
-    # mensagem e mesmos ~270ms), então a versão nunca foi a causa — o que a troca de
-    # 07/08 mediu foi outra coisa. Fica `unstable` só porque não há motivo pra voltar
-    # pra base; a flag é que sustenta o app de pé.
+    # CORRECTION (11/08/2026): this comment used to say that unstable's 1.2.92.147 "opens clean,
+    # WITHOUT the flag" and that "the fix is the version, not a workaround in the launcher".
+    # WRONG in both halves: 1.2.92.147 crashes just the SAME (measured again today, same message
+    # and the same ~270ms), so the version was never the cause; what the 07/08 swap measured was
+    # something else. It stays on `unstable` only because there is no reason to go back to the
+    # base; it is the flag that keeps the app standing.
     #
-    # O crash ficou 4 dias INVISÍVEL porque o `SuccessExitStatus=1` do autostart (que
-    # existe por bom motivo, ver o header de lá) faz a unit morrer LIMPA — nada em
-    # `systemctl --user --failed`. O sintoma que apareceu foi "sumiu o ícone do
-    # Spotify da tray", que não parece crash nenhum.
+    # The crash stayed INVISIBLE for 4 days because the autostart's `SuccessExitStatus=1` (which
+    # exists for a good reason, see the header over there) makes the unit die CLEAN, so nothing
+    # in `systemctl --user --failed`. The symptom that did show up was "the Spotify icon
+    # disappeared from the tray", which does not look like a crash at all.
     unstable.spotify
 
     # ── Editor / dev ──
-    # O VS Code (pacote + settings.json/keybindings.json versionados) mora em
-    # home/apps/vscode.nix — app COM config própria é dono do seu pacote.
+    # VS Code (the package plus the versioned settings.json/keybindings.json) lives in
+    # home/apps/vscode.nix: an app WITH a config of its own owns its package.
     #
-    # Toolchain Nix que a extensão nix-ide DIRIGE — o pacote é declarativo aqui, a
-    # config da extensão não (home/apps/vscode/settings.json + .vscode/settings.json
-    # do repo). Os dois são resolvidos por NOME no $PATH: caminho do
-    # /nix/store dentro de settings.json quebraria no primeiro nix-collect-garbage.
+    # The Nix toolchain the nix-ide extension DRIVES: the package is declarative here, the
+    # extension's config is not (home/apps/vscode/settings.json plus the repo's
+    # .vscode/settings.json). Both are resolved by NAME on $PATH: a /nix/store path inside
+    # settings.json would break on the first nix-collect-garbage.
     #
-    # nixd e NÃO nil: os dois são LSP de Nix vivos, mas só o nixd completa OPÇÕES de
-    # NixOS/home-manager, porque compila contra o próprio interpretador e AVALIA a
-    # config em vez de analisar texto. Num repo que é 95% `services.*`/`programs.*`,
-    # isso é a função inteira. O nil é melhor no resto (mais leve, diagnóstico bom) —
-    # se um dia o nixd pesar, ele é o plano B, trocando 1 linha aqui e o serverPath.
+    # nixd and NOT nil: both are live Nix LSPs, but only nixd completes NixOS/home-manager
+    # OPTIONS, because it compiles against the interpreter itself and EVALUATES the config
+    # instead of analyzing text. In a repo that is 95% `services.*`/`programs.*`, that is the
+    # entire job. nil is better at the rest (lighter, good diagnostics), so if nixd ever gets too
+    # heavy, it is plan B, changing 1 line here and the serverPath.
     nixd
-    # nixfmt e NÃO nixpkgs-fmt/alejandra: é o formatter OFICIAL desde a RFC 166, que
-    # criou o Nix formatting team e moveu o repo pra org NixOS. O nixpkgs-fmt está
-    # DEPRECIADO pelo próprio autor; o alejandra é bom mas não-oficial, e divergir do
-    # nixpkgs em estilo é dívida gratuita. Atenção ao nome: `nixfmt` JÁ É o RFC-style
-    # (1.4.0, mesmo derivation que nixfmt-rfc-style); `nixfmt-classic` (0.6.0) é o
-    # antigo — pedir o clássico por engano reformataria o repo inteiro no estilo velho.
+    # nixfmt and NOT nixpkgs-fmt/alejandra: it is the OFFICIAL formatter since RFC 166, which
+    # created the Nix formatting team and moved the repo to the NixOS org. nixpkgs-fmt is
+    # DEPRECATED by its own author; alejandra is good but unofficial, and diverging from nixpkgs
+    # on style is free debt. Mind the name: `nixfmt` IS ALREADY the RFC style (1.4.0, the same
+    # derivation as nixfmt-rfc-style); `nixfmt-classic` (0.6.0) is the old one, and asking for
+    # the classic by mistake would reformat the whole repo in the old style.
     nixfmt
-    # LINT, o que o nixd NÃO faz: ele entende a linguagem, não julga o estilo nem acha
-    # código morto. Os dois entram junto porque respondem perguntas diferentes e o gate
-    # do flake (`checks` em flake.nix) roda ambos:
-    #   statix  → anti-padrão idiomático (ex.: `a = x.a;` que devia ser `inherit (x) a;`)
-    #   deadnix → declaração MORTA (arg de lambda, let-binding e pattern não usados)
-    # Aqui é só disponibilidade pra rodar na mão; quem GARANTE é o `nix flake check`.
-    # Config do statix em ./statix.toml — dois lints desligados com justificativa lá,
-    # porque 63 dos 77 achados iniciais eram um único lint que contraria a idioma do
-    # nixpkgs (caminho pontilhado).
+    # LINTING, which nixd does NOT do: it understands the language, it does not judge style nor
+    # find dead code. Both go in together because they answer different questions and the flake's
+    # gate (`checks` in flake.nix) runs both:
+    #   statix  -> an idiomatic anti-pattern (say, `a = x.a;` that should be `inherit (x) a;`)
+    #   deadnix -> a DEAD declaration (an unused lambda arg, let-binding or pattern)
+    # Here it is only availability to run by hand; what GUARANTEES it is `nix flake check`.
+    # statix's config is in ./statix.toml, with two lints turned off and justified there, because
+    # 63 of the initial 77 findings were a single lint that contradicts the nixpkgs idiom (the
+    # dotted path).
     statix
     deadnix
 
-    # ── Torrent / senhas ──
-    qbittorrent # torrent GUI (uso manual) — separado do serviço headless (system/services/qbittorrent.nix)
-    bitwarden-desktop # GUI Electron (Electron 39 EOL liberado em system/core/core.nix)
-    bitwarden-cli # `bw` — consultar/scriptar o cofre no terminal
+    # ── Torrent / passwords ──
+    qbittorrent # the torrent GUI (manual use), separate from the headless service (system/services/qbittorrent.nix)
+    bitwarden-desktop # the Electron GUI (Electron 39, EOL allowed in system/core/core.nix)
+    bitwarden-cli # `bw`, to query/script the vault from the terminal
 
-    # ── Jogos / emuladores (bottles/ROMs/instâncias são ESTADO → backup, regra 6) ──
-    (bottles.override { removeWarningPopup = true; }) # Wine/Proton FHS-wrapped; popup "Unsupported" silenciado
-    rpcs3 # emulador PS3 (Uncharted 1/2/3); firmware + jogos = estado, você provê
-    # O CurseForge (que SUBSTITUIU o prismlauncher em 14/08/2026) NÃO está aqui: ele tem
-    # config própria — o handler dos schemes de login —, então é dono do seu pacote em
-    # home/apps/curseforge.nix.
+    # ── Games / emulators (bottles/ROMs/instances are STATE, so backup, rule 6) ──
+    (bottles.override { removeWarningPopup = true; }) # Wine/Proton FHS-wrapped; the "Unsupported" popup silenced
+    rpcs3 # a PS3 emulator (Uncharted 1/2/3); the firmware plus the games are state, you provide them
+    # CurseForge (which REPLACED prismlauncher on 14/08/2026) is NOT here: it has a config of its
+    # own, the login scheme handler, so it owns its package in home/apps/curseforge.nix.
 
-    # ── Disco / limpeza ──
-    # Complementa o filelight (que mostra PASTAS): o czkawka acha o que é
-    # DESCARTÁVEL — duplicatas, arquivos grandes, pastas vazias, temporários,
-    # imagens/vídeos semelhantes. É a peça que faltava p/ decidir o que remover
-    # em vez de só ver o que é grande. GUI = `czkawka_gui` (ou `krokiet`, a nova);
-    # `czkawka_cli` p/ script. NÃO apaga nada sozinho — sempre lista primeiro.
+    # ── Disk / cleanup ──
+    # It complements filelight (which shows FOLDERS): czkawka finds what is DISPOSABLE, meaning
+    # duplicates, big files, empty folders, temporaries, similar images/videos. It is the missing
+    # piece for deciding what to remove instead of only seeing what is big. The GUI is
+    # `czkawka_gui` (or `krokiet`, the new one); `czkawka_cli` for scripting. It does NOT delete
+    # anything on its own, it always lists first.
     czkawka
 
     # ── CLIs ──
-    gh # GitHub CLI (auth/push via HTTPS + token)
-    # azure-cli: 0,95 GiB MARGINAIS (o closure é 1,19, mas 0,24 já está no sistema) — e
-    # a comparação com o wrangler logo abaixo é justa, porque o critério NÃO é tamanho, é
-    # se a ferramenta faz o trabalho. O wrangler custava 2,2 GiB e NÃO tinha comando de
-    # DNS; este é o ÚNICO caminho pro App Registration do Entra ID (`az ad app …`), que é
-    # o motivo de todo o resto existir. Medido em 14/08/2026: o Azure MCP Server NÃO cobre
-    # Entra — nas 68 tools dele não há App Registration, service principal nem Graph, o
-    # `role` é RBAC de RECURSO, e o `extension_cli_generate` só GERA o texto do comando
-    # `az`, nunca executa. A skill `entra-app-registration` do microsoft/azure-skills
-    # confirma pelo avesso: o que ela ensina é a rodar `az ad app create/list/…`.
-    # De quebra ele simplifica o login do MCP: com o `az` no PATH a cadeia do azmcp pega o
-    # AzureCliCredential e o device code deixa de ser necessário.
+    gh # the GitHub CLI (auth/push over HTTPS plus a token)
+    # azure-cli: 0.95 GiB MARGINAL (the closure is 1.19, but 0.24 is already on the system), and
+    # the comparison with wrangler just below is fair, because the criterion is NOT size, it is
+    # whether the tool does the job. wrangler cost 2.2 GiB and had NO DNS command; this one is the
+    # ONLY path to the Entra ID App Registration (`az ad app …`), which is the reason everything
+    # else exists. Measured on 14/08/2026: the Azure MCP Server does NOT cover Entra. Among its 68
+    # tools there is no App Registration, no service principal and no Graph, its `role` is
+    # RESOURCE RBAC, and `extension_cli_generate` only GENERATES the text of the `az` command, it
+    # never executes. The `entra-app-registration` skill from microsoft/azure-skills confirms it
+    # inside out: what it teaches is running `az ad app create/list/…`.
+    # As a bonus it simplifies the MCP login: with `az` on the PATH, azmcp's chain picks up
+    # AzureCliCredential and the device code stops being necessary.
     azure-cli
-    # NÃO adicionar `wrangler` aqui: TESTADO E REMOVIDO em 07/08/2026, no mesmo dia em que
-    # entrou. Custa 2.2 GiB de closure (QUATRO cópias de nodejs-24: slim, -npm, -corepack e
-    # o cheio) e NÃO tem comando de DNS/zona — o help inteiro é Workers/Pages/KV/R2/AI.
-    # O trabalho de DNS aqui é feito pelo MCP `cloudflare-api` (.mcp.json na raiz).
-    # O `claude-code` NÃO está aqui: ele tem config própria (as contas separadas
-    # claude-fai/claude-pessoal), então é dono do seu pacote em home/shell/claude-code.nix.
-    unstable.yt-dlp # baixa vídeo/áudio (unstable pq quebra quando os sites mudam)
-    unstable.speedtest-cli # teste de velocidade (unstable: acompanha mudanças do speedtest.net)
+    # Do NOT add `wrangler` here: TESTED AND REMOVED on 07/08/2026, the same day it went in. It
+    # costs 2.2 GiB of closure (FOUR copies of nodejs-24: slim, -npm, -corepack and the full one)
+    # and has NO DNS/zone command, since the whole help is Workers/Pages/KV/R2/AI.
+    # The DNS work here is done by the `cloudflare-api` MCP (.mcp.json at the root).
+    # `claude-code` is NOT here: it has a config of its own (the separate claude-fai/claude-pessoal
+    # accounts), so it owns its package in home/shell/claude-code.nix.
+    unstable.yt-dlp # downloads video/audio (unstable because it breaks when the sites change)
+    unstable.speedtest-cli # a speed test (unstable: it keeps up with speedtest.net's changes)
   ];
 }

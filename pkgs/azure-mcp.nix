@@ -1,51 +1,50 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# azure-mcp — o Azure MCP Server (`azmcp`) da Microsoft, que é o que deixa o
-# Claude Code MEXER no portal.azure.com por comando (grupo, storage, keyvault,
-# monitor, RBAC…) em vez de a gente clicar na interface.
+# azure-mcp: Microsoft's Azure MCP Server (`azmcp`), which is what lets Claude Code TOUCH
+# portal.azure.com by command (resource group, storage, keyvault, monitor, RBAC and so on)
+# instead of us clicking through the interface.
 #
-# NÃO está no nixpkgs (conferido em 14/08/2026, stable e unstable). E a receita
-# que a Microsoft publica é `npx -y @azure/mcp@latest server start`, que a regra
-# 13 proíbe: "latest" implícito + fetch sem hash A CADA START do MCP, ou seja o
-# servidor podia mudar de versão no meio de uma sessão. Aqui o binário é FIXO.
+# It is NOT in nixpkgs (checked on 14/08/2026, stable and unstable). And the recipe Microsoft
+# publishes is `npx -y @azure/mcp@latest server start`, which rule 13 forbids: an implicit
+# "latest" plus a fetch with no hash ON EVERY START of the MCP, which means the server could
+# change version in the middle of a session. Here the binary is FIXED.
 #
-# POR QUE VENDOR BINÁRIO e não build do fonte: o `@azure/mcp` do npm é só um
-# shim JS que escolhe, no postinstall, um dos seis pacotes `@azure/mcp-<os>-<arch>`.
-# Quem tem o server de verdade é o pacote da plataforma, e dentro dele vem UM
-# binário .NET self-contained de 150 MB (AOT, `dist/azmcp`) — não há JS pra
-# rodar nem fonte C# no tarball. Então buscamos direto o tarball da plataforma e
-# pulamos o node inteiro: nada de `nodejs` no closure, e o `npx` some da conta.
+# WHY VENDOR A BINARY and not build from source: npm's `@azure/mcp` is only a JS shim that picks,
+# in the postinstall, one of the six `@azure/mcp-<os>-<arch>` packages. What has the real server
+# is the platform package, and inside it comes ONE self-contained 150 MB .NET binary (AOT,
+# `dist/azmcp`), with no JS to run and no C# source in the tarball. So we fetch the platform
+# tarball directly and skip node entirely: no `nodejs` in the closure, and `npx` drops out of the
+# picture.
 #
-# ⚠️ POR QUE LD_LIBRARY_PATH E NÃO RPATH, que seria o certo em Nix: o app é
-# single-file e DESEMPACOTA as libs nativas do .NET em `~/.net/azmcp/<hash>/` no
-# primeiro start (o `libpal_azure_c_shared_openssl3.so` está lá, dá pra conferir).
-# É esse .so extraído — fora da store, sem RUNPATH nosso — quem faz o dlopen do
-# libssl, então `runtimeDependencies` (que só mexe no RPATH do binário da store)
-# NÃO alcança. TENTADO E RECUSADO nesta ordem, com o erro de cada um: sem nada,
-# `Couldn't find a valid ICU package`; com icu+openssl em `runtimeDependencies`,
-# ICU passa mas vem `No usable version of libssl was found` + core dump. O
-# LD_LIBRARY_PATH do wrapper é herdado pelas libs extraídas e resolve os dois.
+# WHY LD_LIBRARY_PATH AND NOT RPATH, which would be the right thing in Nix: the app is
+# single-file and it UNPACKS the .NET native libs into `~/.net/azmcp/<hash>/` on the first start
+# (`libpal_azure_c_shared_openssl3.so` is there, you can check). It is that extracted .so, outside
+# the store and with no RUNPATH of ours, that dlopens libssl, so `runtimeDependencies` (which only
+# touches the RPATH of the store binary) does NOT reach it. TRIED AND REJECTED in this order, with
+# each one's error: with nothing, `Couldn't find a valid ICU package`; with icu plus openssl in
+# `runtimeDependencies`, ICU passes but `No usable version of libssl was found` shows up, plus a
+# core dump. The wrapper's LD_LIBRARY_PATH is inherited by the extracted libs and solves both.
 #
-# DEPENDÊNCIAS, todas MEDIDAS no binário (não copiadas de tutorial):
-#   • icu + openssl + libstdc++ — runtime do .NET. Sem elas o binário nem sobe.
-#   • libsecret + dbus — este é o par que NÃO é óbvio e
-#     é o que decide se dá pra logar. O `azmcp` tenta a cadeia inteira do
-#     DefaultAzureCredential e o último elo, o DeviceCodeCredential (aquele
-#     "abra login.microsoft.com/device e digite ABC123"), faz um "persistence
-#     check" no cache de token do MSAL ANTES de emitir o código. Esse check é
-#     libsecret falando com o Secret Service por D-Bus — o gnome-keyring desta
-#     máquina. Sem elas o erro é `Persistence check failed`, sem nenhuma pista de
-#     que o problema é biblioteca faltando, e a ÚNICA saída que sobra na cadeia
-#     seria instalar o azure-cli: 1,19 GiB de closure pra fazer o mesmo login.
-#     Com elas, custo ~0 (as duas já estão no sistema pelo Plasma/keyring).
-#     O `msalruntime`/libX11 que aparecem no log de erro NÃO importam: é o broker
-#     WAM, que só existe no Windows — a cadeia passa por cima dele.
+# THE DEPENDENCIES, all MEASURED against the binary (not copied from a tutorial):
+#   • icu plus openssl plus libstdc++: the .NET runtime. Without them the binary does not even
+#     start.
+#   • libsecret plus dbus: this is the pair that is NOT obvious and the one that decides whether
+#     you can log in at all. `azmcp` tries the whole DefaultAzureCredential chain and the last
+#     link, DeviceCodeCredential (the "open login.microsoft.com/device and type ABC123" one),
+#     does a "persistence check" on the MSAL token cache BEFORE issuing the code. That check is
+#     libsecret talking to the Secret Service over D-Bus, this machine's gnome-keyring. Without
+#     them the error is `Persistence check failed`, with no hint at all that the problem is a
+#     missing library, and the ONLY way out left in the chain would be installing azure-cli:
+#     1.19 GiB of closure to do the same login. With them, the cost is ~0 (both are already on
+#     the system through Plasma/keyring).
+#     The `msalruntime`/libX11 that show up in the error log do NOT matter: that is the WAM
+#     broker, which only exists on Windows, and the chain steps right over it.
 #
-# BUMP DE VERSÃO: trocar `version` e os hashes das DUAS arquiteturas. Os hashes
-# saem prontos do registry, no formato SRI que o fetchurl aceita:
+# BUMPING THE VERSION: change `version` and the hashes of BOTH architectures. The hashes come
+# ready from the registry, in the SRI format fetchurl accepts:
 #   curl -sL https://registry.npmjs.org/@azure/mcp-linux-x64/latest \
 #     | jq -r '.version, .dist.integrity'
-# (idem trocando -x64 por -arm64). O `latest` do npm hoje é uma BETA — é o canal
-# que a Microsoft publica, não escolha nossa.
+# (same thing swapping -x64 for -arm64). npm's `latest` today is a BETA, which is the channel
+# Microsoft publishes, not a choice of ours.
 # ═══════════════════════════════════════════════════════════════════════════
 {
   lib,
@@ -63,8 +62,8 @@
 let
   version = "3.0.0-beta.35";
 
-  # As libs que o .NET abre por dlopen, e por isso NÃO cabem no RPATH (ver o
-  # cabeçalho): entram como LD_LIBRARY_PATH no wrapper.
+  # The libs .NET opens by dlopen, which is why they do NOT fit in the RPATH (see the header):
+  # they go in as LD_LIBRARY_PATH in the wrapper.
   runtimeLibs = [
     icu
     openssl
@@ -73,8 +72,8 @@ let
     stdenv.cc.cc.lib
   ];
 
-  # Uma entrada por plataforma suportada: o tarball é PRÉ-COMPILADO, então trocar
-  # de máquina (regra 3) exige o hash da arquitetura nova, não um rebuild.
+  # One entry per supported platform: the tarball is PRE-COMPILED, so moving to another machine
+  # (rule 3) requires the new architecture's hash, not a rebuild.
   srcs = {
     x86_64-linux = {
       arch = "linux-x64";
@@ -88,7 +87,7 @@ let
 
   src =
     srcs.${stdenv.hostPlatform.system}
-      or (throw "azure-mcp: sem tarball publicado para ${stdenv.hostPlatform.system}");
+      or (throw "azure-mcp: no tarball published for ${stdenv.hostPlatform.system}");
 in
 
 stdenvNoCC.mkDerivation {
@@ -107,19 +106,18 @@ stdenvNoCC.mkDerivation {
     makeBinaryWrapper
   ];
 
-  # Só o que é NEEDED do próprio ELF — o autoPatchelf resolve isso no RPATH.
+  # Only what is NEEDED by the ELF itself; autoPatchelf resolves that into the RPATH.
   buildInputs = [ stdenv.cc.cc.lib ];
 
-  # O binário é single-file .NET: o strip embaralharia o bundle que ele
-  # desempacota em runtime. Já vem stripped de fábrica, de todo jeito.
+  # The binary is single-file .NET: stripping would scramble the bundle it unpacks at runtime. It
+  # comes stripped from the factory anyway.
   dontStrip = true;
 
-  # O `dist/` inteiro, e não só o binário: ao lado dele vem o
-  # `Instrumentation/Resources/` (os .md que a tool `azmcp_bestpractices` serve).
-  # O .NET acha esse caminho por /proc/self/exe, que é resolvido DEPOIS do execv
-  # do wrapper — daí o `makeBinaryWrapper` (execv em C) e não um wrapper de shell,
-  # que além de não resolver isso deixaria um processo a mais pendurado no stdio
-  # do MCP.
+  # The whole `dist/`, and not just the binary: next to it comes
+  # `Instrumentation/Resources/` (the .md files the `azmcp_bestpractices` tool serves). .NET finds
+  # that path through /proc/self/exe, which is resolved AFTER the wrapper's execv, hence
+  # `makeBinaryWrapper` (execv in C) and not a shell wrapper, which besides not solving that
+  # would leave one extra process hanging on the MCP's stdio.
   installPhase = ''
     runHook preInstall
     mkdir -p $out/lib/azure-mcp $out/bin
@@ -130,7 +128,7 @@ stdenvNoCC.mkDerivation {
   '';
 
   meta = {
-    description = "Azure MCP Server — gerencia recursos do Azure por MCP (binário oficial da Microsoft)";
+    description = "Azure MCP Server: manages Azure resources through MCP (Microsoft's official binary)";
     homepage = "https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server";
     license = lib.licenses.mit;
     mainProgram = "azmcp";

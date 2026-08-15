@@ -1,11 +1,11 @@
-# claude-code-discord-status — Discord Rich Presence pro Claude Code.
-# NÃO está no nixpkgs → empacotado aqui e exposto via overlay (flake.nix), pra
-# system/ e home/ referenciarem o MESMO build (`pkgs.claude-code-discord-status`).
+# claude-code-discord-status: Discord Rich Presence for Claude Code.
+# It is NOT in nixpkgs, so it is packaged here and exposed through the overlay (flake.nix), for
+# system/ and home/ to reference the SAME build (`pkgs.claude-code-discord-status`).
 #
-# Fonte no GitHub (tem package-lock.json → buildNpmPackage). O `npm run build`
-# (tsup) gera o dist/; `src/hooks/` e `dist/` entram no output via `files` do
-# package.json. Bump de versão: trocar `version` + os DOIS hashes (src via
-# `nurl`, deps via `nix run nixpkgs#prefetch-npm-deps -- package-lock.json`).
+# The source is on GitHub (it has a package-lock.json, hence buildNpmPackage). `npm run build`
+# (tsup) generates the dist/; `src/hooks/` and `dist/` enter the output through package.json's
+# `files`. To bump the version: change `version` plus BOTH hashes (the src through `nurl`, the
+# deps through `nix run nixpkgs#prefetch-npm-deps -- package-lock.json`).
 {
   lib,
   buildNpmPackage,
@@ -26,7 +26,7 @@ buildNpmPackage rec {
   npmDepsHash = "sha256-al8Ruydl6txoarbguJhWR2aLgGMGrar0psK/qbWJ3Wc=";
 
   meta = {
-    description = "Discord Rich Presence pro Claude Code (daemon + hooks)";
+    description = "Discord Rich Presence for Claude Code (daemon plus hooks)";
     homepage = "https://github.com/BrunoJurkovic/claude-code-discord-status";
     license = lib.licenses.mit;
     mainProgram = "claude-presence";

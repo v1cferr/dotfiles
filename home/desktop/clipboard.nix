@@ -1,11 +1,12 @@
-# Clipboard manager (Wayland) — histórico com PREVIEW de imagem + ícone por TIPO de
-# arquivo. cliphist guarda texto/imagem/URI (serviço declarativo); o picker é o rofi
-# (-show-icons) com tema Tokyo Night. O bind SUPER+SHIFT+V vive em
-# home/desktop/hypr/lua/keybinds.lua. Substitui o antigo picker wofi (só texto).
+# A clipboard manager (Wayland): history with an image PREVIEW plus an icon per file TYPE.
+# cliphist stores text/image/URI (a declarative service); the picker is rofi (-show-icons) with a
+# Tokyo Night theme. The SUPER+SHIFT+V bind lives in home/desktop/hypr/lua/keybinds.lua. It
+# replaces the old wofi picker (text only).
 #
-# Migração do meu Arch (cliphist-rofi-img.sh) COM melhorias: além de thumbnail de
-# imagem, agora arquivos copiados (URI file://…) ganham ÍCONE do tipo (zip/vídeo/pdf…)
-# resolvido pelo tema de ícones ativo (my.theme.iconTheme). Regra 1/3: idiomático e declarativo.
+# Migrated from my Arch (cliphist-rofi-img.sh) WITH improvements: besides the image thumbnail,
+# copied files (a file://… URI) now get an ICON for their type (zip/video/pdf and so on)
+# resolved by the active icon theme (my.theme.iconTheme). Rules 1 and 3: idiomatic and
+# declarative.
 {
   pkgs,
   config,
@@ -14,12 +15,12 @@
 }:
 
 let
-  palette = config.my.theme.palette; # cores do tema ativo (home/desktop/palette.nix)
-  # clipboard-menu: monta a lista do cliphist com ícones e mostra no rofi; a escolha
-  # volta pro clipboard (cole com Ctrl+V). Uma passada só (lista → rofi → decode → copy).
-  #   • imagem (binary png/jpg/…) → decodifica pro cache e usa como THUMBNAIL
-  #   • arquivo (URI file://…)     → ícone NOMEADO do tipo (pela extensão)
-  #   • texto                      → ícone de texto
+  palette = config.my.theme.palette; # the active theme's colors (home/desktop/palette.nix)
+  # clipboard-menu: it builds the cliphist list with icons and shows it in rofi; the choice goes
+  # back to the clipboard (paste it with Ctrl+V). A single pass (list, rofi, decode, copy).
+  #   • an image (binary png/jpg/…) -> decoded into the cache and used as a THUMBNAIL
+  #   • a file (a file://… URI)     -> a NAMED icon for the type (from the extension)
+  #   • text                        -> a text icon
   clipboardMenu = pkgs.writeShellApplication {
     name = "clipboard-menu";
     runtimeInputs = with pkgs; [
@@ -33,7 +34,7 @@ let
       cache="''${XDG_CACHE_HOME:-$HOME/.cache}/cliphist/thumbnails"
       mkdir -p "$cache"
 
-      # extensão → nome de ícone freedesktop (resolvido pelo tema de ícones ativo).
+      # extension -> a freedesktop icon name (resolved by the active icon theme).
       ext_icon() {
         case "$1" in
           zip|tar|gz|xz|bz2|7z|rar|zst)             echo application-x-archive ;;
@@ -50,7 +51,7 @@ let
         esac
       }
 
-      # monta a entrada do rofi (linha + \0icon\x1f<ícone>) por item e pipa pro rofi.
+      # it builds the rofi entry (line plus \0icon\x1f<icon>) per item and pipes it into rofi.
       choice="$(
         cliphist list | while IFS= read -r line; do
           case "$line" in
@@ -83,22 +84,23 @@ let
   };
 in
 {
-  # Serviço declarativo do cliphist (substitui o `wl-paste --watch` do autostart do
-  # hypr). allowImages = sobe também o watcher de imagem, além do de texto.
+  # cliphist's declarative service (it replaces the `wl-paste --watch` from hypr's autostart).
+  # allowImages also brings up the image watcher, on top of the text one.
   services.cliphist = {
     enable = true;
     allowImages = true;
   };
 
   home.packages = [
-    pkgs.rofi # picker com -show-icons (thumbnail de imagem / ícone por tipo)
+    pkgs.rofi # the picker with -show-icons (an image thumbnail / an icon per type)
     clipboardMenu
   ];
 
-  # Cores do TEMA ATIVO (my.theme) — a paleta do rofi segue a fonte única. icon-theme vem do
-  # my.theme.iconTheme (o mesmo do sistema) e resolve os ícones nomeados por tipo de arquivo.
-  # `font` explícito: sem ele o rofi cai no default "mono 12". NÃO comentar dentro do
-  # .rasi com '#' — ali '#' abre literal de cor e quebra o parse do tema inteiro.
+  # The ACTIVE THEME's colors (my.theme): rofi's palette follows the single source. icon-theme
+  # comes from my.theme.iconTheme (the same one as the system) and resolves the icons named per
+  # file type. An explicit `font`: without it rofi falls back to the default "mono 12". Do NOT
+  # comment inside the .rasi with '#', since there '#' opens a color literal and breaks the parse
+  # of the whole theme.
   xdg.configFile."rofi/clipboard.rasi".text = ''
     configuration {
       show-icons:  true;

@@ -1,34 +1,36 @@
-# Host: nixos-kingston — MOBO ASUS EX-B560M-V5, rodando do NVMe Kingston KC3000.
-# É o DAILY DRIVER (cutover feito em 01/08/2026): o disco mais rápido ficou com o
-# sistema de todo dia, e o SanDisk (SATA) virou o Windows 11 do dualboot.
-# Só o específico; o comum vem de ../system. Disco DECLARATIVO via disko (btrfs).
-# Nada é formatado num rebuild normal — só num `disko` explícito (ver disko.nix).
+# Host: nixos-kingston, an ASUS EX-B560M-V5 board, running from the Kingston KC3000 NVMe.
+# It is the DAILY DRIVER (the cutover happened on 01/08/2026): the fastest disk got the everyday
+# system, and the SanDisk (SATA) became the dualboot's Windows 11.
+# Only the specific bits here; the common ones come from ../system. The disk is DECLARATIVE
+# through disko (btrfs). Nothing is formatted on a normal rebuild, only on an explicit `disko`
+# (see disko.nix).
 { modulesPath, ... }:
 
 {
   imports = [
-    ./disko.nix # disko gera os fileSystems do Kingston (btrfs + subvolumes)
-    ./services.nix # PAINEL: quais serviços opcionais esta máquina liga (my.services.*)
+    ./disko.nix # disko generates the Kingston's fileSystems (btrfs plus subvolumes)
+    ./services.nix # THE PANEL: which optional services this machine turns on (my.services.*)
     (modulesPath + "/installer/scan/not-detected.nix")
   ];
 
   networking.hostName = "nixos-kingston";
 
-  # ═══ MONITORES — conectores DESTA placa/GPU ═══════════════════════════════
-  # SSOT dos nomes; a opção é declarada em system/desktop/monitors.nix (sem default,
-  # de propósito) e lida por Nix, Lua e QML. Trocar de cabo/monitor = trocar AQUI.
+  # ═══ MONITORS: THIS board/GPU's connectors ════════════════════════════════
+  # The SSOT of the names; the option is declared in system/desktop/monitors.nix (with no default,
+  # on purpose) and read by Nix, Lua and QML. Changing a cable or a monitor = changing it HERE.
   my.monitors = {
-    primary = "DP-2"; # LG ULTRAGEAR (DisplayPort)
-    secondary = "HDMI-A-3"; # TV LG (HDMI)
+    primary = "DP-2"; # an LG ULTRAGEAR (DisplayPort)
+    secondary = "HDMI-A-3"; # an LG TV (HDMI)
   };
 
-  # ═══ MAPA DE DISCOS (MOBO EX-B560M-V5) — montagens extras ════════════════════
-  # A raiz e o /boot vêm do disko. Aqui fica o ACESSO aos outros discos.
-  # Sempre por UUID (sdX/nvmeX embaralham entre boots). Todos com nofail (não falha
-  # o boot se o disco sumir) + x-systemd.device-timeout=5s: SEM o timeout o systemd
-  # espera 90s pelo device ausente e TRAVA o `nixos-rebuild switch`.
+  # ═══ THE DISK MAP (the EX-B560M-V5 board): extra mounts ══════════════════════
+  # The root and /boot come from disko. Here is the ACCESS to the other disks.
+  # Always by UUID (sdX/nvmeX shuffle between boots). All with nofail (the boot does not fail if
+  # the disk disappears) plus x-systemd.device-timeout=5s: WITHOUT the timeout systemd waits 90s
+  # for the missing device and FREEZES the `nixos-rebuild switch`.
 
-  # Seagate (HDD) — destino do backup restic off-disk. Ver system/services/restic.nix.
+  # The Seagate (an HDD): the destination of the off-disk restic backup. See
+  # system/services/restic.nix.
   fileSystems."/mnt/seagate-old" = {
     device = "/dev/disk/by-uuid/85788f24-b8a0-4c3e-af4f-8af1f8b52147";
     fsType = "ext4";
@@ -38,18 +40,19 @@
     ];
   };
 
-  # O SanDisk NÃO é montado de propósito. Ele virou o Windows 11 (NTFS), e a única
-  # partição que o NixOS precisa dele é a ESP — que o os-prober monta sozinho, na
-  # hora do switch, pra pôr o Windows no menu do GRUB (ver system/core/boot.nix).
-  # Montar o C: aqui seria convidar as duas coisas que estragam dualboot: escrita em
-  # NTFS com hibernação/fast-startup pendente, e o restic varrendo 900 GB alheios.
+  # The SanDisk is NOT mounted on purpose. It became Windows 11 (NTFS), and the only partition
+  # NixOS needs from it is the ESP, which os-prober mounts on its own, at switch time, to put
+  # Windows in the GRUB menu (see system/core/boot.nix). Mounting the C: here would invite the two
+  # things that ruin a dualboot: writing to NTFS with hibernation/fast startup pending, and restic
+  # sweeping 900 GB that are not ours.
 
-  # O scrub mensal e o resto da POLÍTICA de btrfs (alarme, contadores de erro,
-  # reclaim, TRIM, nocow) saíram daqui pra system/hardware/btrfs.nix: nada ali é
-  # específico DESTA máquina — o guarda é "a raiz é btrfs?", não "é o Kingston?".
-  # Aqui fica só o LAYOUT, que é do host de verdade (disko.nix).
+  # The monthly scrub and the rest of the btrfs POLICY (the alarm, the error counters, reclaim,
+  # TRIM, nocow) left here for system/hardware/btrfs.nix: nothing there is specific to THIS
+  # machine, since the guard is "is the root btrfs?", not "is it the Kingston?".
+  # Here only the LAYOUT is left, which really is the host's (disko.nix).
 
-  # Kernel — MESMO hardware do SanDisk (mesma MOBO/CPU); só a raiz virou NVMe.
+  # The kernel: the SAME hardware as the SanDisk's (the same board/CPU); only the root became an
+  # NVMe.
   boot.initrd.availableKernelModules = [
     "xhci_pci"
     "ahci"
@@ -60,7 +63,7 @@
   ];
   boot.kernelModules = [ "kvm-intel" ];
 
-  # Fixado na 1ª instalação — NUNCA mudar depois. Mesmo valor do host antigo porque
-  # é a mesma release; o stateVersion acompanha a instalação, não o disco.
+  # Fixed at the 1st install: NEVER change it afterwards. The same value as the old host because
+  # it is the same release; the stateVersion follows the installation, not the disk.
   system.stateVersion = "26.05";
 }

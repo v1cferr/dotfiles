@@ -1,9 +1,9 @@
-# Rede do usuário: hosts remotos e CLIs de rede (espelha o system/net/, sem privilégio).
+# The user's networking: remote hosts and network CLIs (it mirrors system/net/, with no privilege).
 { ... }:
 
 {
   imports = [
-    ./fai-workstation.nix # SSOT do host da workstation FAI + `wake-workstation` (WoL)
-    ./mega.nix # megatools + `mega-dl` (link do MEGA com retomada paciente; --tor/--proxy)
+    ./fai-workstation.nix # the SSOT of the FAI workstation's host plus `wake-workstation` (WoL)
+    ./mega.nix # megatools plus `mega-dl` (a MEGA link with patient resuming; --tor/--proxy)
   ];
 }

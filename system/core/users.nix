@@ -1,34 +1,35 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# USUÁRIO & SHELL — zsh como shell de login + a conta v1cferr (identidade).
+# USER & SHELL: zsh as the login shell plus the v1cferr account (identity).
 # ═══════════════════════════════════════════════════════════════════════════
 { config, pkgs, ... }:
 
 {
-  # ── Shell: zsh ──────────────────────────────────────────────────────────────
-  # O NixOS exige o enable system-wide pra usar zsh como shell de login: registra
-  # em /etc/shells, cria o /etc/zshrc e liga completion global. A config interativa
-  # (histórico/aliases/plugins) e o prompt (starship) vivem no home/ (zsh.nix).
+  # ── The shell: zsh ──────────────────────────────────────────────────────────
+  # NixOS requires the system-wide enable to use zsh as a login shell: it registers it in
+  # /etc/shells, creates /etc/zshrc and turns global completion on. The interactive config
+  # (history/aliases/plugins) and the prompt (starship) live in home/ (zsh.nix).
   programs.zsh.enable = true;
 
-  # ── Usuário (capacidade declarada; senha/chaves = "quem sou eu") ────────────
-  # Hash da senha via sops (fora do git). Chaves públicas SSH são públicas — ok.
+  # ── The user (a declared capability; password/keys = "who I am") ────────────
+  # The password hash comes through sops (outside git). The SSH public keys are public, so that is
+  # fine.
   users.users.v1cferr = {
     isNormalUser = true;
     description = "Victor";
-    # linger: sobe o systemd --user do v1cferr no BOOT, sem precisar logar → os
-    # serviços de usuário (Dropbox, etc.) rodam 24/7 nesta máquina sempre-ligada
-    # de acesso remoto, mesmo sem sessão gráfica/SSH aberta.
+    # linger: it brings v1cferr's systemd --user up at BOOT, with no need to log in, so the user
+    # services (Dropbox and so on) run 24/7 on this always-on remote-access machine, even with no
+    # graphical/SSH session open.
     linger = true;
     extraGroups = [
       "wheel"
       "networkmanager"
     ];
-    shell = pkgs.zsh; # shell de login = zsh (config interativa em home/zsh.nix)
+    shell = pkgs.zsh; # the login shell is zsh (the interactive config is in home/zsh.nix)
     hashedPasswordFile = config.sops.secrets.v1cferr_password_hash.path;
     openssh.authorizedKeys.keys = [
-      # chave que entra no Arch hoje (~/.ssh/authorized_keys)
+      # the key that gets into the Arch today (~/.ssh/authorized_keys)
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKPvFX6AAslYtCXeUnNmSIKL4GESHvgO+irlnJ5+2ltD dev.victorferreira@gmail.com"
-      # chave local do Arch/Kingston — pra hop Arch -> NixOS
+      # the local key on the Arch/Kingston, for the Arch -> NixOS hop
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINRHYth5yugzhdulstjLPJAqHuzXE6j/EVl7dHcWKIUI dev.victorferreira@gmail.com"
     ];
   };

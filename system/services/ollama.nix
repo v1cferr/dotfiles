@@ -1,46 +1,46 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# Ollama — runtime de modelos de IA LOCAIS (systemd, sobe no boot). Roda na GPU
-# (Arc B580) por VULKAN, via `pkgs.ollama-vulkan`.
+# Ollama: a runtime for LOCAL AI models (systemd, it comes up at boot). It runs on the GPU (the
+# Arc B580) through VULKAN, using `pkgs.ollama-vulkan`.
 #
-# `services.ollama.acceleration` NÃO existe mais (mkRemovedOptionModule): hoje
-# aceleração é escolha de PACOTE — ollama / -cpu / -rocm / -cuda / -vulkan. E
-# `pkgs.ollama` puro NÃO é a GPU: sem rocmSupport/cudaSupport ele é igual ao
-# -cpu, que era exatamente o que rodava aqui antes.
+# `services.ollama.acceleration` does NOT exist anymore (mkRemovedOptionModule): today acceleration
+# is a PACKAGE choice, ollama / -cpu / -rocm / -cuda / -vulkan. And plain `pkgs.ollama` is NOT the
+# GPU: with no rocmSupport/cudaSupport it is the same as -cpu, which is exactly what used to run
+# here.
 #
-# POR QUE Vulkan e não SYCL/oneAPI/ipex-llm: Vulkan fala com o Mesa ANV, que já
-# está no sistema (hardware/gpu.nix) e é o MESMO driver do resto do desktop —
-# zero dependência nova, zero empacotamento à mão. O caminho SYCL exigiria
-# empacotar o fork da Intel (ipex-llm), que não está no nixpkgs.
-# Medido em 06/08/2026, no startup: `library=Vulkan description="Intel(R)
-# Arc(tm) B580 Graphics (BMG G21)" type=discrete total=11.9 GiB`. O llvmpipe
-# (Vulkan em CPU) é descartado sozinho — não precisa de GGML_VK_VISIBLE_DEVICES.
-# O hardening do módulo já libera a placa: `DeviceAllow` tem `char-drm` (major
-# 226 = /dev/dri/*) e `SupplementaryGroups = [ "render" ]`.
+# WHY Vulkan and not SYCL/oneAPI/ipex-llm: Vulkan talks to Mesa ANV, which is already on the
+# system (hardware/gpu.nix) and is the SAME driver as the rest of the desktop, so zero new
+# dependencies and zero hand packaging. The SYCL path would require packaging Intel's fork
+# (ipex-llm), which is not in nixpkgs.
+# Measured on 06/08/2026, at startup: `library=Vulkan description="Intel(R) Arc(tm) B580 Graphics
+# (BMG G21)" type=discrete total=11.9 GiB`. llvmpipe (Vulkan on the CPU) is discarded on its own,
+# so GGML_VK_VISIBLE_DEVICES is not needed.
+# The module's hardening already lets the card through: `DeviceAllow` has `char-drm` (major
+# 226 = /dev/dri/*) and `SupplementaryGroups = [ "render" ]`.
 #
-# ⚠️ Pegadinha: o backend Vulkan do ollama tem relato de crash em Arc sob decode
-# de alta frequência (ollama#14207). Se aparecer, o fallback é trocar por
-# `pkgs.ollama-cpu` — UMA linha, e sem tocar no driver de vídeo.
+# A trap: ollama's Vulkan backend has reports of crashing on Arc under high-frequency decode
+# (ollama#14207). If that shows up, the fallback is switching to `pkgs.ollama-cpu`, ONE line, and
+# without touching the video driver.
 #
-# É o "cérebro" (solver) do duo-streak-daemon: o daemon extrai o exercício do DOM
-# e o Ollama decide a resposta — 100% local, sem cota, sem enviar dados a terceiros.
-# O stack do duo (docker-compose) foi desenhado pra falar com o Ollama do HOST
-# (network_mode: host → OLLAMA_HOST=http://localhost:11434), então ele mora aqui,
-# nativo, e não em container.
+# It is duo-streak-daemon's "brain" (the solver): the daemon extracts the exercise from the DOM and
+# Ollama decides the answer, 100% locally, with no quota and without sending data to third
+# parties. duo's stack (docker-compose) was designed to talk to the HOST's Ollama
+# (network_mode: host, so OLLAMA_HOST=http://localhost:11434), which is why it lives here, native,
+# and not in a container.
 #
-# O modelo (qwen3:4b, ~2.6 GB) é baixado declarativamente via loadModels — o
-# ollama-model-loader (systemd) faz o pull na ativação e é idempotente (pula se
-# já existe). Teste: `ollama run qwen3:4b`.
+# The model (qwen3:4b, ~2.6 GB) is downloaded declaratively through loadModels: the
+# ollama-model-loader (systemd) does the pull at activation and is idempotent (it skips if it
+# already exists). To test: `ollama run qwen3:4b`.
 # ═══════════════════════════════════════════════════════════════════════════
 { pkgs, config, ... }:
 
 {
   services.ollama = {
     enable = config.my.services.ollama;
-    package = pkgs.ollama-vulkan; # GPU (Arc B580) via Mesa ANV — ver cabeçalho
-    # Escuta só em 127.0.0.1:11434 (padrão) — os containers do duo (network_mode:
-    # host) alcançam localhost sem expor o Ollama na LAN.
-    # qwen3:4b = solver texto-primeiro (não precisa de visão); bge-m3 = embeddings
-    # p/ a memória few-shot do duo-streak-daemon. Pull na ativação (idempotente).
+    package = pkgs.ollama-vulkan; # the GPU (Arc B580) through Mesa ANV; see the header
+    # It listens only on 127.0.0.1:11434 (the default), and duo's containers (network_mode: host)
+    # reach localhost without exposing Ollama on the LAN.
+    # qwen3:4b = a text-first solver (it does not need vision); bge-m3 = embeddings for
+    # duo-streak-daemon's few-shot memory. The pull happens at activation (idempotently).
     loadModels = [
       "qwen3:4b"
       "bge-m3"

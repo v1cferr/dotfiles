@@ -1,8 +1,8 @@
-# nxBender — cliente FOSS (Python) pra VPNs SSL da SonicWall/Dell (NetExtender).
-# Substituto FOSS do netExtender proprietário (que não está no nixpkgs) p/ a VPN da
-# FAI. Estabelece o túnel SSL e sobe o pppd (PPP-over-SSL, como o NetExtender faz).
-# Uso: sudo nxBender --server HOST:PORT -u USER -p SENHA -d DOMINIO [--fingerprint ...].
-# Repo: https://github.com/abrasive/nxBender (IPv4 only; sem 2FA/auto-reconnect).
+# nxBender: a FOSS client (Python) for SonicWall/Dell SSL VPNs (NetExtender).
+# A FOSS replacement for the proprietary netExtender (which is not in nixpkgs) for the FAI VPN. It
+# establishes the SSL tunnel and brings up pppd (PPP-over-SSL, the way NetExtender does).
+# Usage: sudo nxBender --server HOST:PORT -u USER -p PASSWORD -d DOMAIN [--fingerprint ...].
+# Repo: https://github.com/abrasive/nxBender (IPv4 only; no 2FA, no auto-reconnect).
 {
   lib,
   python3Packages,
@@ -14,7 +14,7 @@
 python3Packages.buildPythonApplication {
   pname = "nxbender";
   version = "0.3.0-unstable-2021-06-02";
-  format = "setuptools"; # tem setup.py (legado), não pyproject
+  format = "setuptools"; # it has a setup.py (legacy), not a pyproject
 
   src = fetchFromGitHub {
     owner = "abrasive";
@@ -31,29 +31,31 @@ python3Packages.buildPythonApplication {
   ];
   nativeBuildInputs = [ makeWrapper ];
 
-  # Python 3.12+ REMOVEU ssl.wrap_socket → o túnel do nxBender quebrava
-  # (AttributeError). Troca pela API moderna: contexto não-verificado (CERT_NONE) =
-  # o comportamento original do wrap_socket sem args (o nxBender valida o servidor
-  # pela própria fingerprint, não pela cadeia de cert).
+  # Python 3.12+ REMOVED ssl.wrap_socket, so nxBender's tunnel broke (AttributeError). Swapped for
+  # the modern API: an unverified context (CERT_NONE), which is wrap_socket's original behavior
+  # with no args (nxBender validates the server through its own fingerprint, not through the
+  # certificate chain).
   postPatch = ''
     substituteInPlace nxbender/sslconn.py \
       --replace-fail "self.s = ssl.wrap_socket(sock)" \
                      "self.s = ssl._create_unverified_context().wrap_socket(sock)"
-    # pppd 2.5+ (nixpkgs) não tem a opção 'nomp' (desliga multilink) → "unrecognized
-    # option". Multilink já vem OFF por padrão num link único, então a opção é redundante.
+    # pppd 2.5+ (nixpkgs) does not have the 'nomp' option (which turns multilink off), so it gives
+    # "unrecognized option". Multilink already comes OFF by default on a single link, so the
+    # option is redundant.
     substituteInPlace nxbender/ppp.py \
-      --replace-fail "'nomp'," "# 'nomp' removido: pppd 2.5+ sem multilink (opcao inexistente)"
-    # SPLIT-TUNNEL: a FAI empurra uma rota default (0.0.0.0/0) que jogaria TODA a internet
-    # pelo túnel. Filtra o /0 no setup_routes → só as sub-redes internas da FAI vão pela
-    # VPN; a internet do usuário segue pela LAN. (No teardown a ppp0 cai e o kernel limpa.)
+      --replace-fail "'nomp'," "# 'nomp' removed: pppd 2.5+ has no multilink (the option does not exist)"
+    # SPLIT-TUNNEL: FAI pushes a default route (0.0.0.0/0) that would throw ALL of the internet
+    # through the tunnel. It filters the /0 out in setup_routes, so only FAI's internal subnets go
+    # through the VPN and the user's internet keeps going over the LAN. (On teardown ppp0 goes
+    # down and the kernel cleans up.)
     substituteInPlace nxbender/nx.py \
       --replace-fail "for route in set(self.routes):" \
                      "for route in [r for r in set(self.routes) if ipaddress.IPv4Network(unicode(r)).prefixlen != 0]:"
   '';
 
-  doCheck = false; # o repo não tem testes
+  doCheck = false; # the repo has no tests
 
-  # pppd no PATH: o nxBender chama o pppd pra levantar a interface do túnel.
+  # pppd on the PATH: nxBender calls pppd to bring the tunnel's interface up.
   postFixup = ''
     wrapProgram $out/bin/nxBender --prefix PATH : ${lib.makeBinPath [ ppp ]}
   '';

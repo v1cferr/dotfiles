@@ -1,20 +1,20 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# SEGREDOS AUTOMÁTICOS — Bitwarden como fonte da verdade, sops como cofre.
+# AUTOMATIC SECRETS: Bitwarden as the source of truth, sops as the vault.
 #
-# O índice PÚBLICO secrets/bitwarden-secrets.json mapeia nome-no-sops -> item-no-
-# Bitwarden (não é segredo; vai no git). A partir dele:
-#   1. o nix GERA os `sops.secrets.<nome>` sozinho (nunca mais declarar à mão);
-#   2. o comando `sync-secrets` puxa os valores do Bitwarden e grava CIFRADO no
-#      secrets.yaml (via sops set) — o rebuild continua PURO (sem --impure).
+# The PUBLIC index secrets/bitwarden-secrets.json maps name-in-sops -> item-in-Bitwarden (it is
+# not a secret; it goes into git). From it:
+#   1. nix GENERATES the `sops.secrets.<name>` on its own (never declare one by hand again);
+#   2. the `sync-secrets` command pulls the values from Bitwarden and writes them ENCRYPTED into
+#      secrets.yaml (through sops set), so the rebuild stays PURE (no --impure).
 #
-# Adicionar segredo: cadastra no Bitwarden -> +1 linha no JSON -> `sync-secrets`
-# -> `nixos-rebuild switch`. Segredos que NÃO vêm do Bitwarden (ex.: o hash de
-# senha do usuário) seguem declarados à mão no default.nix.
+# Adding a secret: register it in Bitwarden -> 1 more line in the JSON -> `sync-secrets`
+# -> `nixos-rebuild switch`. Secrets that do NOT come from Bitwarden (the user's password hash,
+# for instance) stay declared by hand in default.nix.
 # ═══════════════════════════════════════════════════════════════════════════
 { pkgs, lib, ... }:
 
 let
-  # Índice público: { "<nome-no-sops>" = "<item-no-Bitwarden>"; ... }
+  # The public index: { "<name-in-sops>" = "<item-in-Bitwarden>"; ... }
   bwMap = builtins.fromJSON (builtins.readFile ../../secrets/bitwarden-secrets.json);
 
   sync-secrets = pkgs.writeShellApplication {
@@ -25,58 +25,57 @@ let
       sops
       git
     ];
-    text = builtins.readFile ../../scripts/sync-secrets.sh; # bash à parte = shellcheck no build
+    text = builtins.readFile ../../scripts/sync-secrets.sh; # bash in its own file = shellcheck at build time
   };
 in
 {
-  # ── Base do sops-nix ───────────────────────────────────────────────────────
-  # secrets/secrets.yaml: cifrado, versionado, ilegível sem a chave. Decriptado em
-  # runtime pra /run/secrets*. A chave age (/var/lib/sops-nix/key.txt) fica FORA do
-  # git — é o que se leva no cutover. Editar: nix shell nixpkgs#sops -c sops secrets/secrets.yaml
+  # ── The sops-nix base ──────────────────────────────────────────────────────
+  # secrets/secrets.yaml: encrypted, versioned, unreadable without the key. Decrypted at runtime
+  # into /run/secrets*. The age key (/var/lib/sops-nix/key.txt) stays OUT of git; it is what you
+  # carry across a cutover. To edit: nix shell nixpkgs#sops -c sops secrets/secrets.yaml
   sops.defaultSopsFile = ../../secrets/secrets.yaml;
   sops.age.keyFile = "/var/lib/sops-nix/key.txt";
 
-  # Gera um sops.secrets.<nome> = {} pra cada entrada do índice (Bitwarden), e
-  # mescla (//) os segredos que NÃO vêm do Bitwarden (declarados à mão).
+  # It generates a sops.secrets.<name> = {} for every entry in the index (Bitwarden), and merges
+  # (//) the secrets that do NOT come from Bitwarden (declared by hand).
   sops.secrets =
     (lib.mapAttrs (_key: _item: { }) bwMap)
     // {
-      v1cferr_password_hash.neededForUsers = true; # hash da senha: precisa cedo (usuário)
+      v1cferr_password_hash.neededForUsers = true; # the password hash: it is needed early (the user)
       cloudflare_ddns_token = { };
       jellyfin_api_key = {
         owner = "v1cferr";
         mode = "0400";
-      }; # legível p/ tooling do usuário em /run/secrets (sem sudo)
+      }; # readable for the user's tooling in /run/secrets (with no sudo)
       deepl_api_key = {
         owner = "v1cferr";
         mode = "0400";
-      }; # tradução das frases do lockscreen (serviço --user lê /run/secrets)
-      # tópico do ntfy: o comando `notify` (home/shell/ntfy.nix) roda como usuário,
-      # e os timers --user que avisam também. Mesmo padrão do deepl acima.
+      }; # translating the lockscreen's quotes (a --user service reads /run/secrets)
+      # The ntfy topic: the `notify` command (home/shell/ntfy.nix) runs as the user, and so do the
+      # --user timers that warn. The same pattern as deepl above.
       #
-      # Condicional ao índice de propósito: declarar um sops.secrets cuja chave
-      # ainda não está no secrets.yaml passa no BUILD e quebra na ATIVAÇÃO
-      # ("secret does not exist"), ou seja, derruba o switch. Assim o módulo
-      # continua inerte até `sync-secrets` ter rodado, que é a mesma regra que o
-      # resto daqui segue.
-      # rclone.conf do Google Drive (token OAuth). FORA do Bitwarden de propósito: é
-      # MULTILINHA e o sync-secrets faz `sops set` com JSON de uma linha só — quebraria.
-      # E, ao contrário da senha do restic, o token é REGERÁVEL (refaz o OAuth), então
-      # não precisa do cofre. Editar: nix shell nixpkgs#sops -c sops secrets/secrets.yaml
-      # owner v1cferr: o mount do ~/Drive é serviço --user (home/services/drive-mount.nix)
-      # e precisa LER isto sem sudo. O restic segue lendo — roda como root, que lê 0400
-      # alheio. Mesmo padrão do jellyfin_api_key/deepl_api_key acima.
+      # Conditional on the index on purpose: declaring a sops.secrets whose key is not in
+      # secrets.yaml yet passes the BUILD and breaks at ACTIVATION ("secret does not exist"),
+      # which is to say it takes the switch down. This way the module stays inert until
+      # `sync-secrets` has run, which is the same rule the rest of this file follows.
+      # The Google Drive rclone.conf (an OAuth token). OUT of Bitwarden on purpose: it is
+      # MULTILINE and sync-secrets does a `sops set` with single-line JSON, which would break it.
+      # And, unlike the restic password, the token is REGENERABLE (redo the OAuth), so it does not
+      # need the vault. To edit: nix shell nixpkgs#sops -c sops secrets/secrets.yaml
+      # owner v1cferr: the ~/Drive mount is a --user service (home/services/drive-mount.nix) and
+      # it needs to READ this without sudo. restic keeps reading it, since it runs as root, which
+      # reads somebody else's 0400. The same pattern as jellyfin_api_key/deepl_api_key above.
       rclone_gdrive_conf = {
         owner = "v1cferr";
         mode = "0400";
       };
-      # SENHAS DOS REPOS RESTIC legíveis pelo usuário. Motivo: `restic mount` só é
-      # navegável por QUEM MONTOU — mount FUSE é privado por padrão, o que esta config já
-      # provou pelo avesso (o restic como ROOT não conseguia nem lstat no mount FUSE do
-      # USUÁRIO em ~/FAI-workstation). Montar com sudo dava uma pasta que o Dolphin não
-      # abre; montar como usuário exige ler a senha sem sudo.
-      # Não é escalada de privilégio: é a senha do backup DOS DADOS DESTE MESMO USUÁRIO —
-      # quem já é v1cferr tem os arquivos originais. Mesmo padrão do jellyfin/deepl.
+      # THE RESTIC REPO PASSWORDS readable by the user. The reason: a `restic mount` is only
+      # browsable by WHOEVER MOUNTED IT, since a FUSE mount is private by default, which this very
+      # config has already proven inside out (restic as ROOT could not even lstat the USER's FUSE
+      # mount at ~/FAI-workstation). Mounting with sudo gave a folder Dolphin does not open;
+      # mounting as the user requires reading the password without sudo.
+      # It is not privilege escalation: it is the backup password for THIS SAME USER'S DATA, and
+      # whoever already is v1cferr has the original files. The same pattern as jellyfin/deepl.
       restic_password = {
         owner = "v1cferr";
         mode = "0400";
@@ -86,12 +85,12 @@ in
         mode = "0400";
       };
     }
-    # Condicional ao índice de propósito: declarar um sops.secrets cuja chave
-    # ainda não está no secrets.yaml passa no BUILD e quebra na ATIVAÇÃO
-    # ("secret does not exist"), derrubando o switch. Assim isto fica inerte
-    # até o `sync-secrets` ter rodado — mesma regra do resto daqui.
-    # O comando `notify` (home/shell/ntfy.nix) roda como usuário, e os timers
-    # --user que avisam também: owner v1cferr, igual ao deepl acima.
+    # Conditional on the index on purpose: declaring a sops.secrets whose key is not in
+    # secrets.yaml yet passes the BUILD and breaks at ACTIVATION ("secret does not exist"), taking
+    # the switch down. This way it stays inert until `sync-secrets` has run, the same rule as the
+    # rest of this file.
+    # The `notify` command (home/shell/ntfy.nix) runs as the user, and so do the --user timers
+    # that warn: owner v1cferr, just like deepl above.
     // lib.optionalAttrs (bwMap ? ntfy_topic) {
       ntfy_topic = {
         owner = "v1cferr";

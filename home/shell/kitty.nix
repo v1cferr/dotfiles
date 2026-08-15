@@ -1,13 +1,13 @@
-# kitty — terminal default do Hyprland (SUPER+Q, keybind em home/desktop/hypr.nix).
-# `programs.kitty` INSTALA o pacote E escreve ~/.config/kitty/kitty.conf (app+config
-# no home, regra 4). O prompt é o starship (home/shell/starship.nix) e o shell é o
-# zsh (home/shell/zsh.nix).
+# kitty: Hyprland's default terminal (SUPER+Q, the keybind is in home/desktop/hypr.nix).
+# `programs.kitty` INSTALLS the package AND writes ~/.config/kitty/kitty.conf (app plus config in
+# home, rule 4). The prompt is starship (home/shell/starship.nix) and the shell is zsh
+# (home/shell/zsh.nix).
 { config, osConfig, ... }:
 
 let
-  # O kitty-themes tem nomes PRÓPRIOS de arquivo, então o preset do my.theme precisa de
-  # tradução (regra 11: o consumidor adapta, mas não guarda o valor). Preset novo em
-  # palette.nix sem entrada aqui QUEBRA a eval — de propósito: falha alto, não em silêncio.
+  # kitty-themes has file names OF ITS OWN, so my.theme's preset needs a translation (rule 11: the
+  # consumer adapts, but it does not hold the value). A new preset in palette.nix with no entry
+  # here BREAKS the eval, on purpose: it fails loudly, not in silence.
   kittyThemes = {
     tokyo-night = "tokyo_night_night";
     catppuccin-mocha = "Catppuccin-Mocha";
@@ -18,35 +18,37 @@ in
   programs.kitty = {
     enable = true;
 
-    # Mesma fonte do resto do sistema (SSOT: my.fonts.ui → ícones do starship).
+    # The same font as the rest of the system (SSOT: my.fonts.ui, hence starship's icons).
     font = {
       name = osConfig.my.fonts.ui;
       size = 12;
     };
 
-    # Esquema de cores SEGUE o my.theme.name (era fixo em tokyo_night: trocar de preset
-    # recolorava tudo menos o terminal). Arquivo do kitty-themes, sem o sufixo .conf.
+    # The color scheme FOLLOWS my.theme.name (it used to be pinned to tokyo_night: switching
+    # presets recolored everything but the terminal). A kitty-themes file, without the .conf
+    # suffix.
     themeFile = kittyThemes.${config.my.theme.name};
 
-    # kitty injeta helpers no shell (ex.: pular entre prompts, abrir output no pager).
+    # kitty injects helpers into the shell (jumping between prompts, opening output in the pager
+    # and so on).
     shellIntegration.mode = "enabled";
 
     settings = {
-      background_opacity = "0.95"; # leve transparência (compositor do Hyprland)
-      scrollback_lines = 10000; # histórico de rolagem generoso
-      enable_audio_bell = false; # sem beep — usa flash visual no lugar
-      confirm_os_window_close = 0; # fecha a janela sem pedir confirmação
-      window_padding_width = 8; # respiro entre o texto e a borda
-      cursor_blink_interval = 0; # cursor fixo (não pisca)
-      copy_on_select = "clipboard"; # selecionar já copia pro clipboard
+      background_opacity = "0.95"; # a light transparency (Hyprland's compositor)
+      scrollback_lines = 10000; # a generous scrollback history
+      enable_audio_bell = false; # no beep; it uses a visual flash instead
+      confirm_os_window_close = 0; # it closes the window without asking for confirmation
+      window_padding_width = 8; # breathing room between the text and the border
+      cursor_blink_interval = 0; # a steady cursor (it does not blink)
+      copy_on_select = "clipboard"; # selecting already copies to the clipboard
     };
 
     keybindings = {
-      "ctrl+shift+enter" = "new_window"; # nova janela (split) do kitty
-      "ctrl+shift+t" = "new_tab"; # nova aba
-      "ctrl+equal" = "change_font_size all +1.0"; # aumenta a fonte
-      "ctrl+minus" = "change_font_size all -1.0"; # diminui a fonte
-      "ctrl+0" = "change_font_size all 0"; # reseta o tamanho da fonte
+      "ctrl+shift+enter" = "new_window"; # a new kitty window (a split)
+      "ctrl+shift+t" = "new_tab"; # a new tab
+      "ctrl+equal" = "change_font_size all +1.0"; # it increases the font
+      "ctrl+minus" = "change_font_size all -1.0"; # it decreases the font
+      "ctrl+0" = "change_font_size all 0"; # it resets the font size
     };
   };
 }

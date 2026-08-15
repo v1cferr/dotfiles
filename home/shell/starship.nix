@@ -1,36 +1,36 @@
-# CONFIG do starship (~/.config/starship.toml), declarado. Prompt cross-shell rápido
-# (Rust) — aqui roda no zsh (home/zsh.nix); a integração é injetada automaticamente
-# (enableZshIntegration, ligado por padrão → `eval "$(starship init zsh)"`). O pacote
-# vem deste módulo do home-manager. Ícones vêm da JetBrains Mono Nerd Font (system/).
+# The starship CONFIG (~/.config/starship.toml), declared. A fast cross-shell prompt (Rust); here
+# it runs on zsh (home/zsh.nix) and the integration is injected automatically
+# (enableZshIntegration, on by default, so `eval "$(starship init zsh)"`). The package comes from
+# this home-manager module. The icons come from JetBrains Mono Nerd Font (system/).
 { ... }:
 
 {
   programs.starship = {
     enable = true;
     settings = {
-      add_newline = true; # linha em branco antes de cada prompt (respiro visual)
+      add_newline = true; # a blank line before every prompt (visual breathing room)
 
-      # Prompt em 2 linhas: infos em cima, símbolo de digitação embaixo.
+      # A 2-line prompt: the info on top, the typing symbol below.
       format = "$directory$git_branch$git_status$cmd_duration$line_break$character";
 
-      # Símbolo do prompt: ❯ verde quando o último comando deu certo, vermelho se falhou.
+      # The prompt's symbol: a green ❯ when the last command succeeded, red if it failed.
       character = {
         success_symbol = "[❯](bold green)";
         error_symbol = "[❯](bold red)";
       };
 
-      # Caminho atual: trunca em 3 níveis, negrito azul.
+      # The current path: truncated at 3 levels, bold blue.
       directory = {
         truncation_length = 3;
-        truncate_to_repo = true; # dentro de um repo, mostra a partir da raiz dele
+        truncate_to_repo = true; # inside a repo, it shows from that repo's root
         style = "bold blue";
       };
 
-      # Git: branch + estado (arquivos modificados/staged/etc.).
+      # Git: the branch plus the state (modified/staged files and so on).
       git_branch.style = "bold purple";
       git_status.style = "bold yellow";
 
-      # Mostra quanto tempo o comando levou quando passa de 2s (útil pra builds/rebuilds).
+      # It shows how long the command took when it goes past 2s (useful for builds/rebuilds).
       cmd_duration = {
         min_time = 2000;
         format = "[took $duration]($style) ";

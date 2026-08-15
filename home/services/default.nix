@@ -1,13 +1,13 @@
-# Meus serviços/timers do usuário (systemd --user).
+# My user services/timers (systemd --user).
 { ... }:
 
 {
   imports = [
-    ./cs2-saves-backup.nix # timer que espelha saves do CS2 (Bottles) p/ pasta do restic
-    ./claude-discord-rpc.nix # daemon + config do Discord Rich Presence pro Claude Code
-    ./fai-workstation-mount.nix # ~/FAI-workstation = SFTP da workstation FAI (rclone+cache), sob VPN
-    ./drive-mount.nix # ~/Drive = raiz do Google Drive montada (rclone mount), pra navegar no Dolphin
-    ./arch-legacy-mount.nix # /mnt/arch-antigo = acervo do Arch antigo montado sempre (restic mount)
-    ./disk-hygiene.nix # alarme de espaço livre (notifica c/ os maiores) + lixeira que expira
+    ./cs2-saves-backup.nix # the timer that mirrors the CS2 saves (Bottles) into restic's folder
+    ./claude-discord-rpc.nix # the daemon plus config of the Discord Rich Presence for Claude Code
+    ./fai-workstation-mount.nix # ~/FAI-workstation = SFTP to the FAI workstation (rclone plus cache), under the VPN
+    ./drive-mount.nix # ~/Drive = the Google Drive's root mounted (rclone mount), to browse in Dolphin
+    ./arch-legacy-mount.nix # /mnt/arch-antigo = the old Arch archive mounted always (a restic mount)
+    ./disk-hygiene.nix # the free space alarm (it notifies with the biggest consumers) plus an expiring trash
   ];
 }

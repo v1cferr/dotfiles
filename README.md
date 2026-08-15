@@ -1,149 +1,193 @@
-# dotfiles — NixOS + home-manager do v1cferr
+# dotfiles: v1cferr's NixOS + home-manager
 
-Sistema **declarativo** e reprodutível: NixOS (base) e home-manager (dotfiles do
-usuário) num único flake. Um `rebuild` aplica sistema **e** usuário de uma vez.
+A **declarative**, reproducible system: NixOS (the base) and home-manager (the
+user's dotfiles) in a single flake. One `rebuild` applies system **and** user at
+once.
 
-- **Base:** nixpkgs estável `nixos-26.05` + overlay `unstable.*` sob demanda (por pacote).
-- **Host ativo:** `nixos-kingston` — NVMe KC3000, btrfs com subvolumes (base p/ impermanência).
-- **Boot:** UEFI/**GRUB** com tema minegrub, em **dualboot com o Windows 11** (SSD SanDisk)
-  e **Secure Boot** ligado nos dois — chaves próprias via `sbctl`.
-- **Máquina:** Intel i5-11400 (microcode) · Intel Arc B580 (driver aberto `xe` + Mesa, sem CUDA).
-- **Desktop:** Hyprland (Wayland) via greeter LightDM · PipeWire · teclado ABNT2.
+- **Base:** stable nixpkgs `nixos-26.05` plus an `unstable.*` overlay on demand, per package.
+- **Active host:** `nixos-kingston`, an NVMe KC3000 on btrfs with subvolumes (groundwork for impermanence).
+- **Boot:** UEFI/**GRUB** with the minegrub theme, in **dualboot with Windows 11** (SanDisk SSD),
+  **Secure Boot** enabled on both, using own keys via `sbctl`.
+- **Machine:** Intel i5-11400 (microcode) · Intel Arc B580 (open `xe` driver + Mesa, no CUDA).
+- **Desktop:** Hyprland (Wayland) behind the LightDM greeter · PipeWire · ABNT2 keyboard.
 
-## Uso no dia a dia
+## Day-to-day use
 
-Aliases definidos em [`home/shell/zsh.nix`](home/shell/zsh.nix):
+Aliases defined in [`home/shell/zsh.nix`](home/shell/zsh.nix):
 
 ```bash
-rebuild   # sudo nixos-rebuild switch --flake ~/Projects/GitHub/v1cferr/dotfiles
-update    # nix flake update --flake ~/Projects/GitHub/v1cferr/dotfiles  (bump do flake.lock)
-gc        # sudo nix-collect-garbage -d  (limpa gerações antigas)
+rebuild   # nh os switch <flake> && hyprctl reload
+update    # vscode-bump + curseforge-bump + nix flake update + vscode-extensions-dump
+upgrade   # update && rebuild, the equivalent of `apt update && apt full-upgrade`
+gc        # sudo nix-collect-garbage -d, drops old generations
 ```
 
-Sem `#host`, o `nixos-rebuild` casa o `hostname` atual com o `nixosConfigurations`.
-Para um host específico: `sudo nixos-rebuild switch --flake .#<host>`.
+`update` is the maintenance ritual, and it does more than bump `flake.lock`: it
+recomputes the pinned version and hash of the vendored binaries (VS Code,
+CurseForge) and refreshes the VS Code extension mirror. It runs as the **user**,
+because that is who holds the SSH key for the private inputs.
 
-## Estrutura
+With no `#host`, `nixos-rebuild` matches the current `hostname` against
+`nixosConfigurations`. For a specific host: `sudo nixos-rebuild switch --flake .#<host>`.
 
-Organizada **por categoria**: cada assunto é uma subpasta com seu próprio
-`default.nix` (que importa os módulos dela). Adicionar um módulo = 1 linha no
-`default.nix` da categoria; o topo não muda.
+## Layout
+
+Organized **by category**: every subject is a subfolder with its own
+`default.nix` importing that category's modules. Adding a module is 1 line in
+the category's `default.nix`, and the top level never changes.
 
 ```text
-flake.nix                inputs (nixpkgs, home-manager, sops, disko, zen-browser…) + overlay + hosts
-flake.lock               versões travadas dos inputs
+flake.nix                inputs (nixpkgs, home-manager, sops, disko, zen-browser...) + overlay + hosts
+flake.lock               pinned input versions
 
-system/                  SISTEMA — comum a todos os hosts (machine-agnostic)
-  default.nix            importa as categorias abaixo + packages.nix
-  core/                  Nix/flakes, boot, usuários, segredos, locale
-  hardware/              CPU/microcode, GPU (Arc B580), áudio (PipeWire), fontes
-  net/                   NetworkManager, SSH exposto, fail2ban, DDNS
+system/                  SYSTEM, shared by every host (machine-agnostic)
+  default.nix            imports the categories below + packages.nix
+  core/                  Nix/flakes, boot, users, secrets, locale
+  hardware/              CPU/microcode, GPU (Arc B580), audio (PipeWire), fonts
+  net/                   NetworkManager, exposed SSH, fail2ban, DDNS, VPNs
   desktop/               LightDM, Hyprland, xkb, portal, gnome-keyring
-  services/              restic, hooks do Claude Code, Jellyfin/qBittorrent, Ollama/duo
-  packages.nix           LISTA CENTRAL de pacotes de SISTEMA (resgate/base + diagnóstico)
+  services/              restic, btrbk, Caddy, Jellyfin/qBittorrent, Sunshine, Ollama/duo
+  packages.nix           CENTRAL LIST of SYSTEM packages (rescue/base + diagnostics)
 
-home/                    USUÁRIO (home-manager) — dotfiles + apps de usuário
-  default.nix            importa packages.nix + as categorias + stateVersion
-  packages.nix           LISTA CENTRAL de apps/CLIs do usuário (sem config própria)
-  shell/                 zsh, starship, cli, kitty, git
-  desktop/               hypr (+helpers), hyprsunset, lockscreen (+assets), waybar, notifications, theme, xdg
-  apps/                  apps COM config própria: dropbox, media, dolphin, flameshot, vscode, mangohud
-  services/              cs2-saves-backup, claude-discord-rpc (daemon)
+home/                    USER (home-manager): dotfiles + user apps
+  default.nix            imports packages.nix + the categories + stateVersion
+  packages.nix           CENTRAL LIST of user apps/CLIs (the ones with no config of their own)
+  shell/                 zsh, starship, cli, kitty, git, ssh, claude-code, ntfy
+  desktop/               hypr (+helpers), quickshell (bar), hyprsunset, lockscreen, theme, palette, xdg
+  apps/                  apps WITH config of their own: dropbox, media, dolphin, flameshot,
+                         vscode, mangohud, office, openal, curseforge
+  services/              drive-mount, fai-workstation-mount, arch-antigo-mount,
+                         cs2-saves-backup, claude-discord-rpc, disk-hygiene
 
-pkgs/                    derivations próprias (fora do nixpkgs) — ex.: claude-code-discord-status
-                         expostas em `packages.x86_64-linux` → `nix build .#nxbender`
-hosts/                   específico de cada máquina (hostname, discos, monitores, stateVersion)
-  nixos-kingston/        ← ÚNICO host (NVMe KC3000, btrfs + subvolumes)
-    default.nix          hostname, kernel, montagens extras, my.monitors, stateVersion
-    disko.nix            layout de disco declarativo (btrfs + subvolumes)
-    services.nix         PAINEL: quais serviços opcionais ESTA máquina liga (my.services.*)
+pkgs/                    own derivations (outside nixpkgs), exposed in `packages.x86_64-linux`
+                         so that `nix build .#nxbender` works. Vendored binaries and helper
+                         scripts live here: nxbender, azure-mcp, curseforge (+bump, +fix-java),
+                         vscode-bump, claude-code-discord-status
+hosts/                   per-machine specifics (hostname, disks, monitors, stateVersion)
+  nixos-kingston/        <- the ONLY host (NVMe KC3000, btrfs + subvolumes)
+    default.nix          hostname, kernel, extra mounts, my.monitors, stateVersion
+    disko.nix            declarative disk layout (btrfs + subvolumes)
+    services.nix         PANEL: which optional services THIS machine turns on (my.services.*)
 secrets/                 secrets.yaml (sops) + bitwarden-secrets.json
-scripts/                 sync-secrets.sh — bash lido por `writeShellApplication` (shellcheck no build)
-router/                  espelho do UCI do OpenWrt (router-sync) — visível, não declarável
-docs/                    o que NÃO é declarável + o diário do repo (ver docs/README.md)
-  regras.md              as 16 regras — a NUMERAÇÃO é API, 70+ comentários citam "regra N"
-  pendencias.md          o que está aberto
-  historico/<ano>/<mês>  o que foi feito e POR QUÊ (inclui o que foi tentado e RECUSADO)
-  ideias.md              considerado, ainda não decidido
-  arch-legado.md         capítulo encerrado + como abrir o acervo do Arch
-  guias/                 passo a passo do que o Nix não alcança (BIOS, Secure Boot, roteador, Windows)
-  testes/                protocolos de teste reutilizáveis
+scripts/                 bash/python read by `writeShellApplication` (shellcheck runs at build time):
+                         sync-secrets, router-sync, router-moonlight-forward, owfetch
+router/                  mirror of the OpenWrt UCI config (router-sync): visible, not declarable
+docs/                    what is NOT declarable, plus the repo's diary (see docs/README.md)
+  regras.md              the 17 rules. The NUMBERING is API: 169 comments cite "regra N"
+  pendencias.md          what is still open
+  historico/<year>/<month>  what was done and WHY (including what was tried and REJECTED)
+  ideias.md              considered, not yet decided
+  arch-legado.md         a closed chapter + how to open the old Arch archive
+  guias/                 step by step for what Nix cannot reach (BIOS, Secure Boot, router, Windows)
+  testes/                reusable test protocols
 ```
 
-O `README.md` é o único doc da raiz — o resto mora em `docs/`.
+`README.md` is the only doc at the root. Everything else lives in `docs/`.
 
-## Onde instalar um pacote?
+> **Note on language.** Rule 17 makes en-US the language of this repo, and the
+> migration is incremental: whatever gets touched is left translated. The
+> filenames under `docs/` above are still the pt-BR ones because they have not
+> been renamed yet, and this listing describes the repo as it is today, not as
+> it will be.
 
-Duas listas centrais, espelhadas: [`system/packages.nix`](system/packages.nix) e
-[`home/packages.nix`](home/packages.nix). A decisão por pacote:
+## Where does a package go?
 
-1. **Default é o `home/`.** App/CLI seu do dia a dia, sem config → 1 linha em
-   [`home/packages.nix`](home/packages.nix) + `rebuild`.
-2. App **com config** declarativa (dotfiles / `programs.*`) → módulo próprio no
-   `home/` (o pacote e a config andam juntos), ex.: `kitty`, `dolphin`, `flameshot`.
-3. Vai pro **`system/`** só se: precisa de **root/resgate** (ex.: `git`/`vim` num
-   shell de root), é **driver/serviço**, ou um **serviço de sistema usa** o pacote.
+Two mirrored central lists: [`system/packages.nix`](system/packages.nix) and
+[`home/packages.nix`](home/packages.nix). The per-package decision:
 
-Regra de ouro: *na dúvida, `home/`; só sobe pro `system/` se root ou um serviço precisar.*
+1. **The default is `home/`.** A day-to-day app/CLI of yours with no config is
+   1 line in [`home/packages.nix`](home/packages.nix), then `rebuild`.
+2. An app **with** declarative config (dotfiles / `programs.*`) gets its own
+   module under `home/`, so package and config travel together. For example
+   `kitty`, `dolphin`, `flameshot`.
+3. It only goes to **`system/`** if it needs **root/rescue** (say `git`/`vim` in
+   a root shell), is a **driver/service**, or a **system service uses** it.
 
-`pkgs.foo` = base estável; `pkgs.unstable.foo` = canal unstable (por pacote, via overlay).
+Rule of thumb: *when in doubt, `home/`; it only moves up to `system/` if root or
+a service needs it.*
 
-## Convenções do repo
+`pkgs.foo` is the stable base; `pkgs.unstable.foo` is the unstable channel, per
+package, through the overlay.
 
-1. **Separação `system/` vs `home/`** (ver "Onde instalar um pacote?"). Nível-sistema
-   no `system/`; app **e** config de usuário no `home/`. Como o home-manager entra como
-   módulo do NixOS (`useGlobalPkgs` + `useUserPackages`), um `rebuild` aplica os dois.
-2. **Organização por categoria** — cada assunto numa subpasta com `default.nix`.
-3. **Nix = app + config; estado = restic** — saves, prefixos Wine, tokens/sessões de app
-   **não** se declaram; vão pro backup.
-4. **Uma linha de comentário-resumo por config** em `.nix`/`.lua`/`.conf` — sem poluir.
-5. **Validar antes de aplicar** — `nixos-rebuild build` / `nix eval` OK e commits
-   atômicos por feature antes do switch.
-6. **Opção se DECLARA no `system/`, se DEFINE no `hosts/`** — o `my.*` é a interface
-   do repo (`system/services/toggles.nix`, `system/desktop/monitors.nix`); o valor é
-   resposta de máquina e mora em `hosts/<host>/`. Opção de hardware sem `default` de
-   propósito: host novo que esquecer falha no eval em vez de herdar mentira.
+## Repo conventions
 
-## Segredos (sops-nix)
+The full set lives in [`docs/regras.md`](docs/regras.md). The ones you need to
+read this tree:
 
-Segredos ficam cifrados em [`secrets/secrets.yaml`](secrets/secrets.yaml) — versionados
-no git, ilegíveis sem a chave. São decriptados em runtime para `/run/secrets*`. A chave
-privada **age** vive em `/var/lib/sops-nix/key.txt`, **fora do git** — é a única coisa a
-carregar numa reinstalação (ela sai da senha-mestra do Bitwarden). Base em
-[`system/core/secrets.nix`](system/core/secrets.nix).
+Deliberately unnumbered, because in `docs/regras.md` the numbering is API and a
+competing list here would be read as rule numbers.
+
+- **`system/` vs `home/` separation** (see "Where does a package go?").
+  System-level under `system/`; the app **and** its user config under `home/`.
+  Since home-manager enters as a NixOS module (`useGlobalPkgs` +
+  `useUserPackages`), one `rebuild` applies both.
+- **Organization by category**: each subject in a subfolder with a `default.nix`.
+- **Nix = app + config; state = restic.** Saves, Wine prefixes, app
+  tokens/sessions are **not** declared. They go to the backup.
+- **One summary comment line per config** in `.nix`/`.lua`/`.conf`, plus a
+  header block per module saying what it is, WHY it was chosen and the known
+  traps. The line keeps it readable; the block is what gives hours back when the
+  problem returns six months later.
+- **Validate before applying**: `nixos-rebuild build` / `nix eval` clean, and
+  atomic commits per feature/task before the switch.
+- **An option is DECLARED in `system/` and DEFINED in `hosts/`.** `my.*` is the
+  repo's interface (`system/services/toggles.nix`,
+  `system/desktop/monitors.nix`); the value is a per-machine answer and lives in
+  `hosts/<host>/`. Hardware options deliberately ship without a `default`, so a
+  new host that forgets one fails at eval instead of inheriting a lie.
+- **Everything is written in en-US**, file names included, and never with a
+  `Co-Authored-By:` trailer.
+
+## Secrets (sops-nix)
+
+Secrets stay encrypted in [`secrets/secrets.yaml`](secrets/secrets.yaml),
+versioned in git and unreadable without the key. They are decrypted at runtime
+into `/run/secrets*`. The private **age** key lives at
+`/var/lib/sops-nix/key.txt`, **outside git**, and is the one thing to carry into
+a reinstall (it comes out of the Bitwarden master password). The groundwork is
+in [`system/core/secrets.nix`](system/core/secrets.nix).
 
 ```bash
-nix shell nixpkgs#sops -c sops secrets/secrets.yaml   # editar segredos
+nix shell nixpkgs#sops -c sops secrets/secrets.yaml   # edit secrets
 ```
 
-Guarda hoje: hash da senha do usuário, token do Cloudflare DDNS e (via Bitwarden) a senha
-do repositório restic.
+⚠️ Editing a secret requires a `rebuild`, otherwise `/run/secrets` is not
+refreshed.
 
-## Backup e acesso remoto
+What it holds today: the user's password hash, the Cloudflare DDNS token and
+(through Bitwarden) the restic repository password.
 
-- **restic** ([`system/services/restic.nix`](system/services/restic.nix)) — backup
-  cifrado do `~` (Zen, `.claude`, VSCode, documentos) no **Google Drive**, offsite.
-  Ver o conteúdo: `sudo restic-home-gdrive mount /mnt/backup` (pasta por snapshot).
-- **SSH** na porta `2222` (root off, `fail2ban` ligado) + **Cloudflare DDNS** mantendo
-  `ssh.v1cferr.dev` no IP público atual — acesso de qualquer lugar, sem VPN.
+## Backup and remote access
 
-## Reinstalar do zero / migrar de disco
+- **restic** ([`system/services/restic.nix`](system/services/restic.nix)):
+  encrypted, offsite backup of `~` (Zen, `.claude`, VS Code, documents) to
+  **Google Drive**. To browse it: `sudo restic-home-gdrive mount /mnt/backup`,
+  which gives one folder per snapshot.
+- **SSH** on port `2222` (root off, `fail2ban` on) plus **Cloudflare DDNS**
+  keeping `ssh.v1cferr.dev` pointed at the current public IP, so the machine is
+  reachable from anywhere without a VPN.
 
-O runbook do cutover SanDisk → Kingston foi **apagado** depois que a migração
-aconteceu (01/08/2026) — runbook cumprido é runbook que só mente na próxima vez. Ele
-está no histórico, junto com os guias anteriores:
+## Reinstalling from scratch / migrating disks
+
+The SanDisk to Kingston cutover runbook was **deleted** once the migration
+happened (2026-08-01), because a runbook that has been executed only lies the
+next time around. It lives in history, next to the earlier guides:
 
 ```bash
 git log --oneline --all --diff-filter=D -- MIGRACAO-KINGSTON.md INSTALACAO-WINDOWS.md
-git show <commit>^:<arquivo>
+git show <commit>^:<file>
 ```
 
-O resumo que **não** envelhece, para a próxima instalação do zero:
+The summary that does **not** age, for the next install from scratch:
 
-- `disko` formata — declarativo e sempre por `/dev/disk/by-id/`, nunca por `sdX`
-  (as letras embaralham entre boots; já mudaram duas vezes nesta máquina).
-- A **chave age** entra **antes** do `nixos-install`: sem ela o sops não decifra o
-  `hashedPasswordFile` e o usuário nasce sem senha. Origem: Bitwarden.
-- O `~` vem **disco a disco**, nunca do backup — restic é acervo, não insumo.
-- O que não é declarado (`/var/lib`, chaves de host SSH, perfis do NetworkManager)
-  atravessa à mão, e é exatamente a lista que a impermanência vai obrigar a declarar.
+- `disko` does the formatting, declaratively and always by `/dev/disk/by-id/`,
+  never by `sdX`. Those letters shuffle between boots, and they already changed
+  twice on this machine.
+- The **age key** goes in **before** `nixos-install`. Without it sops cannot
+  decrypt `hashedPasswordFile` and the user is created with no password. Source:
+  Bitwarden.
+- `~` comes over **disk to disk**, never from the backup. restic is an archive,
+  not an input.
+- Whatever is not declared (`/var/lib`, SSH host keys, NetworkManager profiles)
+  crosses by hand, and that is exactly the list impermanence will force into
+  declaration.

@@ -47,8 +47,9 @@
       • Rule 17 came along for the ride: renaming the package touched `flake.nix`,
         `home/apps/curseforge.nix`, `pkgs/curseforge.nix`, `README.md` and `pendencias.md`, and
         each of them was left in en-US in the same commit. The `checks.pacotes` attribute kept
-        its pt-BR name because `.github/workflows/nix.yml` cites it BY NAME and that file was
-        not touched here; it goes out when that workflow is translated.
+        its pt-BR name for two more commits, because `.github/workflows/nix.yml` cited it BY
+        NAME and that file was not touched here; it became `checks.packages` when that workflow
+        was translated, later the same day.
 
 - [x] The FAI OneDrive mounted on Linux: BUILT, MEASURED AND REMOVED, because the tenant does
       not allow it (15/08/2026). The idea was `~/OneDrive` as a normal folder in Dolphin, the
@@ -168,7 +169,7 @@
         HASH has to be RECOMPUTED. To avoid downloading 139 MiB on every `update`, what answers
         "did it change?" is a 256 KiB range request on the `.deb` (the `control` sits in the
         first few KiB); the AppImage is only downloaded when the answer is yes.
-      • That is why `curseforge` is the ONLY exception in `checks.pacotes` (flake.nix): leaving
+      • That is why `curseforge` is the ONLY exception in `checks.packages` (flake.nix): leaving
         it there would paint the CI red on every Overwolf release, for something that is not in
         this repo. `curseforge-bump` DOES enter the check, because its shellcheck is stable.
       • TWO THINGS I HAD WRITTEN WRONG AND MEASUREMENT KNOCKED DOWN: (1) that `--no-sandbox` was
@@ -1763,7 +1764,7 @@
       about SOMEONE ELSE'S tree, so they break at build time, after an `update`, and since
       `upgrade` is `update && nh os switch`, the breakage landed in the middle of the switch.
       Now `packages.x86_64-linux` exposes all four (`nix build .#nxbender`) and
-      `checks.pacotes` builds them. Deliberately NOT system.build.toplevel: that would drag
+      `checks.packages` builds them. Deliberately NOT system.build.toplevel: that would drag
       quickshell (Qt/C++) onto the runner.
       And it caught its first victim the same day: the VS Code `/latest/` URL is a POINTER.
       1.132.0 shipped, the pointer moved and the pinned narHash (1.131.0's) stopped matching.

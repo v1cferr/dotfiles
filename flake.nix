@@ -464,10 +464,7 @@
         # on `update` and DOES enter the check, because its shellcheck is stable). Testing the
         # packaging is still `nix build .#curseforge`, by hand.
         #
-        # The attribute keeps its pt-BR name on purpose: `checks.pacotes` is cited BY NAME in
-        # the comments of .github/workflows/nix.yml, so renaming it here alone would leave that
-        # file lying. It goes out when that workflow is translated (rule 17).
-        pacotes = nixpkgs.legacyPackages.${system}.linkFarm "checks-pacotes-do-repo" (
+        packages = nixpkgs.legacyPackages.${system}.linkFarm "checks-repo-packages" (
           nixpkgs.lib.mapAttrsToList (name: path: { inherit name path; }) (
             removeAttrs self.packages.${system} [ "curseforge" ]
           )

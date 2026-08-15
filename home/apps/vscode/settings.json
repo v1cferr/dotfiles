@@ -8,7 +8,7 @@
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
-    "//": "Last update at 8/7/2026, 12:43:19 PM",
+    "//": "Last update at 8/11/2026, 8:54:03 PM",
     ".agent": ".agent, .claude, .cline, .codebuddy, .codex, .commandcode, .continue, .crush, .cursor, .factory, .gemini, .goose, .junie, .kilocode, .kiro, .kode, .mcpjam, .mux, .neovate, .opencode, .openhands, .pi, .pochi, .qoder, .qwen, .roo, .trae, .windsurf, .zencoder",
     ".clang-tidy": ".clang-format, .clangd, compile_commands.json",
     ".env": "*.env, .env.*, .envrc, env.d.ts",
@@ -151,8 +151,6 @@
     "markdown": true,
     "scminput": false,
   },
-  "gitlens.ai.model": "vscode",
-  "gitlens.ai.vscode.model": "copilot:gpt-4.1",
   "terminal.integrated.inheritEnv": false,
   "editor.linkedEditing": true,
   "[dockercompose]": {
@@ -333,5 +331,6 @@
     "launchpad": true
   },
   "breadcrumbs.showEditorType": true,
+  "jdk.telemetry.enabled": false,
   "window.zoomLevel": -1,
 }

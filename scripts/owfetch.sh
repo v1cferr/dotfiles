@@ -1,28 +1,27 @@
 #!/bin/sh
-# owfetch — resumo do sistema para OpenWrt, no espírito do fastfetch.
+# owfetch: a system summary for OpenWrt, in fastfetch's spirit.
 #
-# POR QUE UM SCRIPT E NÃO O FASTFETCH: o /overlay deste roteador tem ~1.4 MB
-# livres de 6.1 MB. O fastfetch pesa 1-2 MB e o neofetch ainda arrastaria o bash
-# junto — qualquer um dos dois enche a flash, e roteador com flash cheia não
-# grava nem config. Isto aqui usa só BusyBox: custo zero de instalação.
+# WHY A SCRIPT AND NOT FASTFETCH: this router's /overlay has ~1.4 MB free out of 6.1 MB.
+# fastfetch weighs 1-2 MB and neofetch would drag bash along on top of that, so either one fills
+# the flash, and a router with full flash cannot even write its config. This uses only BusyBox:
+# zero installation cost.
 #
-# ash puro, sem bashismo: nada de arrays, [[ ]] ou ${var^^}. A ORDEM dos campos
-# espelha home/shell/fastfetch.nix (title, separator, os, host, kernel, uptime,
-# cpu, memory, disk, localip, colors) pra os dois se lerem igual.
+# Pure ash, no bashisms: no arrays, no [[ ]], no ${var^^}. The field ORDER mirrors
+# home/shell/fastfetch.nix (title, separator, os, host, kernel, uptime, cpu, memory, disk,
+# localip, colors) so the two read alike.
 
-# ESC REAL, e não a sequência "\033" literal: as cores são passadas como ARGUMENTO
-# (%s) e não dentro do format string do printf. Format com variável dentro é o
-# SC2059 do shellcheck — e o motivo dele existir é real: um valor com % viraria
-# diretiva de formatação. Como %s não interpreta escapes, o \033 precisa já vir
-# expandido daqui.
+# A REAL ESC, and not the literal "\033" sequence: the colors are passed as an ARGUMENT (%s) and
+# not inside printf's format string. A format with a variable inside is shellcheck's SC2059, and
+# its reason for existing is real: a value containing % would become a formatting directive.
+# Since %s does not interpret escapes, the \033 has to arrive already expanded from here.
 ESC=$(printf '\033')
-C_LBL="${ESC}[1;34m" # azul:  rótulos
-C_TTL="${ESC}[1;37m" # branco: título
-C_DIM="${ESC}[0;90m" # cinza: separador
+C_LBL="${ESC}[1;34m" # blue:  the labels
+C_TTL="${ESC}[1;37m" # white: the title
+C_DIM="${ESC}[0;90m" # gray:  the separator
 C_OFF="${ESC}[0m"
 
-# ── coleta ────────────────────────────────────────────────────────────────────
-# shellcheck disable=SC1091  # só existe no roteador; não há como o linter segui-lo
+# ── collecting ────────────────────────────────────────────────────────────────
+# shellcheck disable=SC1091  # it only exists on the router; the linter has no way to follow it
 [ -r /etc/openwrt_release ] && . /etc/openwrt_release
 REL="${DISTRIB_RELEASE:-?}"
 REV="${DISTRIB_REVISION:-}"
@@ -33,7 +32,7 @@ MODEL=$(cat /tmp/sysinfo/model 2>/dev/null || echo "unknown")
 KERN=$(uname -r)
 MACH=$(uname -m)
 
-# uptime: /proc/uptime dá segundos com fração; só a parte inteira interessa
+# uptime: /proc/uptime gives seconds with a fraction; only the integer part matters
 UPS=$(cut -d. -f1 /proc/uptime 2>/dev/null || echo 0)
 UPD=$((UPS / 86400))
 UPH=$(((UPS % 86400) / 3600))
@@ -47,10 +46,10 @@ else
 fi
 
 NPROC=$(grep -c '^processor' /proc/cpuinfo 2>/dev/null || echo '?')
-# ARM não expõe "model name" em /proc/cpuinfo — o nome útil vem do DISTRIB_ARCH
-# (ex.: aarch64_cortex-a53). Fallback pro model name quando existir (x86).
+# ARM does not expose "model name" in /proc/cpuinfo, so the useful name comes from DISTRIB_ARCH
+# (aarch64_cortex-a53, say). It falls back to the model name when there is one (x86).
 CPUN=$(grep -m1 'model name' /proc/cpuinfo 2>/dev/null | cut -d: -f2- | sed 's/^ *//')
-# `aarch64_cortex-a53` → `Cortex-A53`. Caixa alta crua ficava gritando na tela.
+# `aarch64_cortex-a53` becomes `Cortex-A53`. Raw uppercase was shouting on the screen.
 [ -z "$CPUN" ] && CPUN=$(echo "$ARCH" | cut -d_ -f2- | sed 's/cortex-a/Cortex-A/')
 [ -z "$CPUN" ] && CPUN="$MACH"
 
@@ -69,29 +68,29 @@ WAN=$(ip -4 -o addr show pppoe-wan 2>/dev/null | awk '{print $4}' | cut -d/ -f1 
 
 LEASES=$(wc -l < /tmp/dhcp.leases 2>/dev/null || echo 0)
 
-# ── saída ─────────────────────────────────────────────────────────────────────
-linha() { printf '  %s%-10s%s %s\n' "$C_LBL" "$1" "$C_OFF" "$2"; }
+# ── the output ────────────────────────────────────────────────────────────────
+line() { printf '  %s%-10s%s %s\n' "$C_LBL" "$1" "$C_OFF" "$2"; }
 
-# SEM logo ASCII de propósito: o /etc/banner do OpenWrt já desenha o mesmo desenho
-# no login, e o fetch vinha logo abaixo — dois logos idênticos na mesma tela.
+# NO ASCII logo on purpose: OpenWrt's /etc/banner already draws the same art at login, and the
+# fetch came right below it, so two identical logos on the same screen.
 printf '\n'
 printf '  %s%s@%s%s\n' "$C_TTL" "$(id -un)" "$(uname -n)" "$C_OFF"
 printf '  %s%s%s\n' "$C_DIM" "──────────────────────────────────────────────" "$C_OFF"
 
-linha "OS"       "OpenWrt ${REL}${REV:+ ($REV)}"
-linha "Host"     "$MODEL"
-linha "Kernel"   "Linux ${KERN} · ${MACH}"
-linha "Target"   "$TGT"
-linha "Uptime"   "$UPTIME"
-linha "CPU"      "${CPUN} (${NPROC} cores)"
-linha "Load"     "$LOAD"
-linha "RAM"      "$MEM"
-linha "Flash"    "$FLASH"
-linha "LAN"      "${LAN:-n/a}"
-linha "WAN"      "$WAN"
-linha "Clients"  "${LEASES} on DHCP"
+line "OS"       "OpenWrt ${REL}${REV:+ ($REV)}"
+line "Host"     "$MODEL"
+line "Kernel"   "Linux ${KERN} · ${MACH}"
+line "Target"   "$TGT"
+line "Uptime"   "$UPTIME"
+line "CPU"      "${CPUN} (${NPROC} cores)"
+line "Load"     "$LOAD"
+line "RAM"      "$MEM"
+line "Flash"    "$FLASH"
+line "LAN"      "${LAN:-n/a}"
+line "WAN"      "$WAN"
+line "Clients"  "${LEASES} on DHCP"
 
-# faixa de cores, como o módulo `colors` do fastfetch
+# the color strip, like fastfetch's `colors` module
 printf "\n  "
 for c in 0 1 2 3 4 5 6 7; do printf "\033[4%sm   \033[0m" "$c"; done
 printf "\n  "

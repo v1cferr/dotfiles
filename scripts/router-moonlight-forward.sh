@@ -1,93 +1,95 @@
 #!/bin/sh
-# Abre as portas do Moonlight no OpenWrt, restritas aos blocos da UFSCar.
+# It opens the Moonlight ports on the OpenWrt, restricted to UFSCar's blocks.
 #
-# RODA NO ROTEADOR, não aqui, e em DOIS passos:
+# IT RUNS ON THE ROUTER, not here, and in TWO steps:
 #
 #   ssh v1cferr@192.168.1.1 'cat > /tmp/ml.sh' < scripts/router-moonlight-forward.sh
 #   ssh -t v1cferr@192.168.1.1 'sudo sh /tmp/ml.sh; rm -f /tmp/ml.sh'
 #
-# É a metade que o Nix não alcança — ver o cabeçalho de system/net/router.nix. A outra
-# metade (o firewall do HOST) é declarativa e vive em system/services/sunshine.nix; as
-# duas listas de origem TÊM que casar, senão o roteador encaminha e o host derruba.
+# It is the half Nix does not reach; see the header of system/net/router.nix. The other half
+# (the HOST's firewall) is declarative and lives in system/services/sunshine.nix, and the two
+# source lists HAVE to match, otherwise the router forwards and the host drops.
 #
-# ⚠️ POR QUE DOIS PASSOS, e não o óbvio `ssh … 'sudo sh -s' < script`: com o script
-# entrando pelo STDIN, o sudo não tem por onde pedir a senha — o stdin já é o script, não
-# o terminal — e ele falha sem sequer perguntar. Copiar primeiro e executar depois libera
-# o stdin pro prompt, e é por isso que o segundo comando leva `-t` (força o pty).
+# WHY TWO STEPS, and not the obvious `ssh … 'sudo sh -s' < script`: with the script coming in
+# through STDIN, sudo has no way to ask for the password (stdin is already the script, not the
+# terminal) and it fails without even asking. Copying first and running afterwards frees stdin
+# for the prompt, and that is why the second command carries `-t` (it forces a pty).
 #
-# ⚠️ E POR QUE PRECISA DE SENHA: o sudoers deste roteador dá NOPASSWD só pra `/sbin/uci`,
-# `/usr/sbin/nft`, `/sbin/reboot` e `/etc/init.d/dnsmasq` — medido em 10/08/2026 com
-# `sudo -l`. O `/etc/init.d/firewall reload` do fim NÃO está na lista, então a senha é
-# pedida uma vez. É também por isso que `root@` não funciona: o dropbear tem
-# `RootLogin='off'` e `RootPasswordAuth='off'` (router/uci/dropbear.conf).
+# AND WHY IT NEEDS A PASSWORD: this router's sudoers gives NOPASSWD only to `/sbin/uci`,
+# `/usr/sbin/nft`, `/sbin/reboot` and `/etc/init.d/dnsmasq`, measured on 10/08/2026 with
+# `sudo -l`. The `/etc/init.d/firewall reload` at the end is NOT on that list, so the password is
+# asked once. It is also why `root@` does not work: dropbear has `RootLogin='off'` and
+# `RootPasswordAuth='off'` (router/uci/dropbear.conf).
 #
-# `/tmp` no OpenWrt é tmpfs (RAM): copiar pra lá não gasta os ~1.4 MB livres de flash.
+# `/tmp` on OpenWrt is tmpfs (RAM): copying there does not spend the ~1.4 MB of free flash.
 #
-# IDEMPOTENTE: apaga qualquer redirect `Moonlight-*` anterior antes de criar. Rodar duas
-# vezes não empilha duplicata.
+# IDEMPOTENT: it deletes any previous `Moonlight-*` redirect before creating. Running it twice
+# does not stack duplicates.
 set -eu
 
-LAN_HOST='192.168.1.10' # host do Sunshine (lease fixa no DHCP)
+LAN_HOST='192.168.1.10' # the Sunshine host (a fixed DHCP lease)
 BACKUP=/tmp/firewall.bak.$$
-WATCHDOG_SECS=600 # 10 min até o rollback automático
+WATCHDOG_SECS=600 # 10 min until the automatic rollback
 
-# ── De onde se aceita ───────────────────────────────────────────────────────
-# ⚠️ UMA REDIRECT POR ORIGEM, e isso NÃO é escolha de estilo: no fw4 o `src_ip` de uma
-# `redirect` **não pode ser lista** (em `rule` pode — foi daí que a versão errada saiu).
-# Medido em 10/08/2026, e o modo de falha é o pior possível:
+# ── Where connections are accepted from ─────────────────────────────────────
+# ONE REDIRECT PER SOURCE, and that is NOT a style choice: in fw4 a `redirect`'s `src_ip`
+# **cannot be a list** (in a `rule` it can, which is where the wrong version came from).
+# Measured on 10/08/2026, and the failure mode is the worst possible:
 #     Section @redirect[3] (Moonlight-HTTPS) option 'src_ip' must not be a list
 #     Section @redirect[3] (Moonlight-HTTPS) skipped due to invalid options
-# O `uci commit` ACEITA, o `uci show` EXIBE a redirect bonitinha, e o fw4 a DESCARTA
-# na hora de gerar o ruleset. Ou seja: config presente, efeito nenhum.
+# The `uci commit` ACCEPTS it, `uci show` DISPLAYS the redirect nicely, and fw4 DISCARDS it when
+# generating the ruleset. Which means: the config is present, the effect is none.
 #
-# Os dois blocos são da UFSCar (registro.br, CNPJ 45.358.058/0001-40). O rótulo entra no
-# nome da redirect só pra ficar legível no LuCI.
+# Both blocks are UFSCar's (registro.br, CNPJ 45.358.058/0001-40). The label goes into the
+# redirect's name only to stay readable in LuCI.
 #
-# ⚠️ NÃO trocar por `0.0.0.0/0`. A casa NÃO está atrás de CGNAT — medido em 10/08/2026, a
-# 2222 responde de Áustria, Canadá e Irã — então isso ali significa o planeta.
+# Do NOT swap it for `0.0.0.0/0`. The house is NOT behind CGNAT (measured on 10/08/2026, port
+# 2222 answers from Austria, Canada and Iran), so that would mean the planet.
 SOURCES='Campus=200.133.224.0/20 FAI=200.136.192.0/21'
 
-# Quantas regras têm que existir no ruleset EFETIVO no fim. 4 grupos de porta × 2 origens.
-# É o número que o passo de verificação cobra; sem ele o script não sabe se funcionou.
+# How many rules have to exist in the EFFECTIVE ruleset at the end. 4 port groups times 2
+# sources. It is the number the verification step demands; without it the script does not know
+# whether it worked.
 EXPECTED=8
 
-# ── Rede de segurança (commit-confirm pobre) ────────────────────────────────
-# Se este shell morrer no meio, se a verificação final reprovar, ou se a mudança te
-# trancar fora, o /etc/config/firewall volta ao que era.
+# ── The safety net (a poor man's commit-confirm) ────────────────────────────
+# If this shell dies halfway, if the final verification fails, or if the change locks you out,
+# /etc/config/firewall goes back to what it was.
 cp /etc/config/firewall "$BACKUP"
-# shellcheck disable=SC2064 # $BACKUP tem que expandir AGORA, não na saída do trap
-trap "echo '>>> revertendo'; cp '$BACKUP' /etc/config/firewall; /etc/init.d/firewall reload" EXIT
+# shellcheck disable=SC2064 # $BACKUP has to expand NOW, not when the trap fires
+trap "echo '>>> reverting'; cp '$BACKUP' /etc/config/firewall; /etc/init.d/firewall reload" EXIT
 #
-# `nohup … &` e não um subshell `( … ) &`: o watchdog existe justamente pro caso em que a
-# mudança derruba a sua SSH, e é aí que o subshell levaria SIGHUP junto e morreria — a
-# rede de segurança sumiria exatamente no acidente que ela deveria cobrir.
+# `nohup … &` and not a `( … ) &` subshell: the watchdog exists precisely for the case where the
+# change drops your SSH, and that is when the subshell would take the SIGHUP along and die, so
+# the safety net would disappear in exactly the accident it was supposed to cover.
 nohup sh -c "sleep $WATCHDOG_SECS; cp '$BACKUP' /etc/config/firewall; /etc/init.d/firewall reload" \
 	>/dev/null 2>&1 &
 WATCHDOG=$!
-echo "watchdog $WATCHDOG armado: rollback automático em ${WATCHDOG_SECS}s"
+echo "watchdog $WATCHDOG armed: an automatic rollback in ${WATCHDOG_SECS}s"
 
-# ── Limpa aplicações anteriores ─────────────────────────────────────────────
-# De trás pra frente: apagar por índice reindexa o que vem depois, e iterar pra frente
-# pula uma entrada a cada remoção. Erro clássico de UCI.
+# ── It cleans up previous applications ──────────────────────────────────────
+# Back to front: deleting by index reindexes what comes after, and iterating forward skips an
+# entry on every removal. The classic UCI mistake.
 #
-# Conta SEÇÕES (`…@redirect[N]=redirect`), não linhas: cada redirect rende ~8 linhas no
-# `uci show`, então contar linhas dá um teto inflado. Não quebraria — índice inexistente
-# só devolve vazio e não casa o `case` — mas iteraria dezenas de voltas à toa.
+# It counts SECTIONS (`…@redirect[N]=redirect`), not lines: each redirect yields ~8 lines in
+# `uci show`, so counting lines gives an inflated ceiling. It would not break (a nonexistent
+# index just returns empty and does not match the `case`), but it would loop dozens of times for
+# nothing.
 i=$(uci show firewall | grep -c '^firewall\.@redirect\[[0-9]*\]=redirect$' || true)
 while [ "$i" -gt 0 ]; do
 	i=$((i - 1))
 	case "$(uci -q get "firewall.@redirect[$i].name" || true)" in
 	Moonlight-*)
-		echo "removendo redirect antiga: $(uci -q get "firewall.@redirect[$i].name")"
+		echo "removing the old redirect: $(uci -q get "firewall.@redirect[$i].name")"
 		uci delete "firewall.@redirect[$i]"
 		;;
 	esac
 done
 
-# ── Cria as redirects ───────────────────────────────────────────────────────
-# Portas conferidas no build do Sunshine em uso (2026.516.143833), não copiadas de blog:
-# a UDP 48002 ("mic") que quase toda lista inclui NÃO existe nesta versão.
-# A 47990 (web UI / painel admin) fica DE FORA de propósito — ver sunshine.nix.
+# ── It creates the redirects ────────────────────────────────────────────────
+# The ports were checked against the Sunshine build in use (2026.516.143833), not copied from a
+# blog: the UDP 48002 ("mic") that almost every list includes does NOT exist in this version.
+# 47990 (the web UI / admin panel) stays OUT on purpose; see sunshine.nix.
 add_redirect() {
 	base=$1
 	proto=$2
@@ -104,38 +106,38 @@ add_redirect() {
 		uci set "firewall.$s.src_dport=$ports"
 		uci set "firewall.$s.dest_port=$ports"
 		uci set "firewall.$s.target=DNAT"
-		uci set "firewall.$s.src_ip=$cidr" # `set`, NUNCA `add_list` — ver o topo
-		echo "criada: $base-$label ($proto $ports de $cidr)"
+		uci set "firewall.$s.src_ip=$cidr" # `set`, NEVER `add_list`; see the top
+		echo "created: $base-$label ($proto $ports from $cidr)"
 	done
 }
 
-add_redirect Moonlight-HTTPS tcp 47984        # host já pareado entra por aqui
-add_redirect Moonlight-HTTP tcp 47989         # /serverinfo e pareamento por PIN
-add_redirect Moonlight-RTSP tcp 48010         # negociação da sessão
-add_redirect Moonlight-Stream udp 47998-48000 # vídeo, áudio e controle
+add_redirect Moonlight-HTTPS tcp 47984        # an already paired host comes in through here
+add_redirect Moonlight-HTTP tcp 47989         # /serverinfo and PIN pairing
+add_redirect Moonlight-RTSP tcp 48010         # the session's negotiation
+add_redirect Moonlight-Stream udp 47998-48000 # video, audio and control
 
 uci commit firewall
 /etc/init.d/firewall reload
 
-# ── Verifica CONTRA O RULESET EFETIVO ───────────────────────────────────────
-# ⚠️ NÃO conferir com `uci show`: foi exatamente esse o erro da 1ª versão deste script.
-# O `uci show` lê a CONFIG, e a config estava lá — o fw4 é que descartava as seções por
-# `src_ip` inválido. O script imprimia "OK, mudança permanente" com ZERO regras no ar.
-# A única fonte de verdade é o nftables gerado.
+# ── It verifies AGAINST THE EFFECTIVE RULESET ───────────────────────────────
+# Do NOT check with `uci show`: that was exactly this script's 1st-version mistake. `uci show`
+# reads the CONFIG, and the config was there; it was fw4 that discarded the sections for an
+# invalid `src_ip`. The script printed "OK, the change is permanent" with ZERO rules live.
+# The only source of truth is the generated nftables.
 echo
-echo "=== dstnat_wan efetivo ==="
+echo "=== the effective dstnat_wan ==="
 nft list chain inet fw4 dstnat_wan
 got=$(nft list chain inet fw4 dstnat_wan | grep -c 'Moonlight' || true)
 echo
 if [ "$got" -ne "$EXPECTED" ]; then
-	echo "FALHOU: $got regras Moonlight no ruleset, esperado $EXPECTED." >&2
-	echo "Procure por 'skipped due to invalid options' na saída do reload acima." >&2
-	exit 1 # dispara o trap → rollback
+	echo "FAILED: $got Moonlight rules in the ruleset, expected $EXPECTED." >&2
+	echo "Look for 'skipped due to invalid options' in the reload output above." >&2
+	exit 1 # it fires the trap, hence the rollback
 fi
-echo "OK: $got/$EXPECTED regras Moonlight ATIVAS no ruleset."
+echo "OK: $got/$EXPECTED Moonlight rules ACTIVE in the ruleset."
 
-# Chegou aqui = aplicou E foi verificado. Desarma as duas redes de segurança.
+# Getting here means it applied AND was verified. It disarms both safety nets.
 kill "$WATCHDOG" 2>/dev/null || true
 trap - EXIT
 rm -f "$BACKUP"
-echo "watchdog desarmado, mudança permanente."
+echo "watchdog disarmed, the change is permanent."

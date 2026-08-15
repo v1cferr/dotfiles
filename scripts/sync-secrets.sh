@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Sincroniza segredos do Bitwarden -> secrets/secrets.yaml (sops), sem --impure.
-# Fonte da verdade: secrets/bitwarden-secrets.json (nome-no-sops -> item-no-Bitwarden).
-# Fluxo pra adicionar segredo: cadastra no Bitwarden -> +1 linha no JSON -> sync-secrets
-# -> nixos-rebuild (puro). O nix gera os sops.secrets a partir do JSON automaticamente.
+# It syncs the secrets from Bitwarden into secrets/secrets.yaml (sops), with no --impure.
+# The source of truth: secrets/bitwarden-secrets.json (name-in-sops -> item-in-Bitwarden).
+# The flow for adding a secret: register it in Bitwarden -> 1 more line in the JSON ->
+# sync-secrets -> nixos-rebuild (pure). Nix generates the sops.secrets from the JSON on its own.
 set -euo pipefail
 
 repo="$(git rev-parse --show-toplevel)"
@@ -10,20 +10,20 @@ map="$repo/secrets/bitwarden-secrets.json"
 yaml="$repo/secrets/secrets.yaml"
 
 if ! bw status | jq -e '.status == "unlocked"' >/dev/null 2>&1; then
-  echo "Bitwarden travado ou deslogado. Rode:" >&2
-  echo "  bw login                            # se ainda nao logou" >&2
+  echo "Bitwarden is locked or logged out. Run:" >&2
+  echo "  bw login                            # if you have not logged in yet" >&2
   echo "  export BW_SESSION=\$(bw unlock --raw)" >&2
   exit 1
 fi
 
-# Chave age (root) lida SO pra memoria do processo — nao vai a disco.
+# The age key (root's) is read ONLY into the process' memory, it does not go to disk.
 SOPS_AGE_KEY="$(sudo cat /var/lib/sops-nix/key.txt)"
 export SOPS_AGE_KEY
 
 n=0
 while IFS=$'\t' read -r key spec; do
   [ -z "$key" ] && continue
-  # spec = "Item" (campo padrão: password) OU "Item:campo" (ex.: "duolingo.com:username")
+  # spec = "Item" (the default field: password) OR "Item:field" ("duolingo.com:username", say)
   item="${spec%%:*}"
   field="password"
   case "$spec" in *:*) field="${spec##*:}" ;; esac
@@ -35,8 +35,8 @@ done < <(jq -r 'to_entries[] | "\(.key)\t\(.value)"' "$map")
 
 git -C "$repo" add secrets/secrets.yaml secrets/bitwarden-secrets.json
 echo ""
-echo "$n segredo(s) sincronizado(s). Aplique com:"
-# $HOSTNAME é builtin do bash: não depende de PATH (o writeShellApplication tem
-# runtimeInputs ESTRITO, e `hostname` não está lá). Antes era "nixos-sandisk"
-# literal — host que morreu no cutover, mandando colar um alvo inexistente.
+echo "$n secret(s) synced. Apply them with:"
+# $HOSTNAME is a bash builtin, so it does not depend on the PATH (writeShellApplication has a
+# STRICT runtimeInputs, and `hostname` is not in it). It used to be the literal "nixos-sandisk",
+# a host that died in the cutover, telling you to paste a target that does not exist.
 echo "  sudo nixos-rebuild switch --flake .#$HOSTNAME"

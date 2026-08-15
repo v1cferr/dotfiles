@@ -9,7 +9,7 @@ act on (the open items) and what you look up (the history) have different rhythm
 
 | File | What it is | When you read it |
 | --- | --- | --- |
-| [rules.md](rules.md) | The repo's 17 rules | Before deciding anything |
+| [rules.md](rules.md) | The repo's 18 rules | Before deciding anything |
 | [open-items.md](open-items.md) | What is still open | When picking what to work on |
 | [history/](history/) | What was done and why, a folder per year and a file per month | "Why is this like this?" |
 | [ideas.md](ideas.md) | Considered, not decided yet | When planning |

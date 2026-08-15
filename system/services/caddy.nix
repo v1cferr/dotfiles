@@ -1,65 +1,63 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# CADDY — proxy reverso de TODOS os serviços expostos, sob `*.<domínio>`, com
-# certificado CURINGA da Let's Encrypt (desafio DNS-01 via Cloudflare).
+# CADDY: the reverse proxy for ALL exposed services, under `*.<domain>`, with a WILDCARD
+# certificate from Let's Encrypt (the DNS-01 challenge through Cloudflare).
 #
-# Restaura o ingress que existia no Arch (branch `main`/`arch`,
-# caddy/etc/caddy/Caddyfile) e que a migração pro NixOS deixou pra trás — é a
-# "Fase 4 — Homelab" do README da branch nixos, agora declarativa.
+# It restores the ingress that existed on Arch (the `main`/`arch` branch,
+# caddy/etc/caddy/Caddyfile) and that the migration to NixOS left behind. It is the
+# "Phase 4, Homelab" of the nixos branch README, now declarative.
 #
-# POR QUE UM SITE BLOCK CURINGA e não um vhost por subdomínio: é UM certificado
-# em vez de ~10 pedidos ACME simultâneos. O roteamento por nome sai dos matchers
-# `@host` abaixo, e subdomínio não mapeado cai no 404 do fim.
+# WHY ONE WILDCARD SITE BLOCK and not a vhost per subdomain: it is ONE certificate instead of
+# ~10 simultaneous ACME requests. Routing by name comes from the `@host` matchers below, and
+# an unmapped subdomain falls into the 404 at the end.
 #
-# POR QUE DNS-01 e não HTTP-01: curinga só é emitido por DNS-01. O preço é um
-# Caddy com o plugin dns.providers.cloudflare. No Arch isso exigia buildar com
-# xcaddy e ESCONDER o binário em /usr/local/bin, porque "um `pacman -Syu` já
-# sobrescreveu o binário custom uma vez e derrubou o proxy inteiro"
-# (scripts/caddy/build.sh do setup antigo). No Nix o pacote É a declaração:
-# aquele problema deixa de existir, e o `hash` abaixo fixa o vendor de Go.
+# WHY DNS-01 and not HTTP-01: a wildcard is only issued through DNS-01. The price is a Caddy
+# with the dns.providers.cloudflare plugin. On Arch that required building with xcaddy and
+# HIDING the binary in /usr/local/bin, because "a `pacman -Syu` once overwrote the custom
+# binary and took the whole proxy down" (scripts/caddy/build.sh of the old setup). On Nix the
+# package IS the declaration: that problem stops existing, and the `hash` below pins the Go
+# vendor.
 #
-# ⚠️ `propagation_timeout -1` NÃO é chute. A checagem LOCAL de propagação do
-# certmagic falha NESTE host mesmo forçando resolvers públicos, enquanto o
-# registro propaga de verdade (8.8.8.8, 1.1.1.1 e o autoritativo confirmam) — e
-# é o mundo que a LE consulta. Espera fixa de 30s + checagem local desligada faz
-# a LE validar direto. Sem isso a emissão TRAVA.
+# `propagation_timeout -1` is NOT a guess. certmagic's LOCAL propagation check fails ON THIS
+# host even when forcing public resolvers, while the record does propagate for real (8.8.8.8,
+# 1.1.1.1 and the authoritative server confirm it), and it is the world that LE queries. A
+# fixed 30s wait plus the local check turned off makes LE validate directly. Without it the
+# issuance HANGS.
 #
-# ⚠️ Os filtros do fail2ban casam a ORDEM DAS CHAVES do access log JSON
-# (remote_ip … host … status, com `.+?` não-guloso). Bump de Caddy pode quebrá-los
-# EM SILÊNCIO — o serviço segue de pé e simplesmente para de banir. Validar com
-# `fail2ban-regex` a cada bump.
+# The fail2ban filters match the ORDER OF THE KEYS in the JSON access log (remote_ip, then
+# host, then status, with a non-greedy `.+?`). A Caddy bump can break them SILENTLY: the
+# service stays up and simply stops banning. Validate with `fail2ban-regex` on every bump.
 #
-# AUTO-GATE (mesmo padrão do ./duo.nix): só ativa quando os QUATRO segredos
-# existirem. Enquanto não provisionar, fica INERTE e o sistema segue buildando —
-# importante porque `{$VAR}` vazio viraria hash de basic_auth vazio, e o Caddy
-# recusaria a config inteira.
+# AUTO-GATE (the same pattern as ./duo.nix): it only activates when all FOUR secrets exist.
+# Until they are provisioned it stays INERT and the system keeps building, which matters
+# because an empty `{$VAR}` would become an empty basic_auth hash, and Caddy would refuse the
+# entire config.
 #
-# Ligar (uma vez):
-#   1. Cloudflare → API token com `Zone:Read + DNS:Edit` NA ZONA. É um token
-#      SEPARADO do DDNS (o setup antigo também mantinha dois).
-#   2. `caddy hash-password` uma vez por usuário do basic_auth.
-#   3. Bitwarden: crie os itens (o VALOR vai sempre no campo *senha*):
-#        "Caddy ACME Email"        (e-mail de avisos da Let's Encrypt)
-#        "Caddy Cloudflare DNS"    (o token do passo 1)
-#        "Caddy Pos Hash v1cferr"  (hash bcrypt)
-#        "Caddy Pos Hash jp"       (hash bcrypt do João Pedro)
-#   4. secrets/bitwarden-secrets.json: some as quatro linhas correspondentes.
-#   5. `sync-secrets` → `sudo nixos-rebuild switch --flake .#nixos-kingston`
-#   6. DNS na Cloudflare: `pos.<domínio>` = CNAME → `ssh.<domínio>`,
-#      proxied=false (cinza). O A record do `ssh` é a âncora de IP; quem o mantém
-#      é o DDNS em ../net/network.nix.
+# Turning it on (once):
+#   1. Cloudflare: an API token with `Zone:Read + DNS:Edit` ON THE ZONE. It is a token
+#      SEPARATE from the DDNS one (the old setup also kept two).
+#   2. `caddy hash-password` once per basic_auth user.
+#   3. Bitwarden: create the items (the VALUE always goes in the *password* field):
+#        "Caddy ACME Email"        (the Let's Encrypt notice email)
+#        "Caddy Cloudflare DNS"    (the token from step 1)
+#        "Caddy Pos Hash v1cferr"  (a bcrypt hash)
+#        "Caddy Pos Hash jp"       (João Pedro's bcrypt hash)
+#   4. secrets/bitwarden-secrets.json: add the four corresponding lines.
+#   5. `sync-secrets` then `sudo nixos-rebuild switch --flake .#nixos-kingston`
+#   6. DNS on Cloudflare: `pos.<domain>` = CNAME to `ssh.<domain>`, proxied=false (gray). The
+#      `ssh` A record is the IP anchor, and what maintains it is the DDNS in
+#      ../net/network.nix.
 #
-# MAPA DE PORTAS DE LOOPBACK — herdado do setup antigo. Projeto novo escolhe uma
-# livre e ANOTA aqui, senão a próxima colisão é silenciosa:
+# THE LOOPBACK PORT MAP, inherited from the old setup. A new project picks a free one and
+# WRITES IT DOWN here, otherwise the next collision is silent:
 #   3000 open-webui · 3001 spendflow · 3003 homepage · 3004 filebrowser
 #   3005 housing-radar · 3006 GRAD-RADAR (front) · 3010 duo-web
-#   8000 spendflow-api (reservada) · 8006 GRAD-RADAR (api) · 8010 duo-api
+#   8000 spendflow-api (reserved) · 8006 GRAD-RADAR (api) · 8010 duo-api
 #   8080 qbittorrent · 8096 jellyfin · 11434 ollama
 #
-# ESTADO (regra 6): /var/lib/caddy guarda a conta ACME e os certificados. Não se
-# declara — e vale backup, porque a LE limita 5 certificados DUPLICADOS por
-# semana: perder o store custa uma janela de reemissão, não só um rebuild.
-# O Caddyfile tem UM DONO, o Nix (regra 14) — nada de `caddy reload` gravando
-# por cima.
+# STATE (rule 6): /var/lib/caddy holds the ACME account and the certificates. It is not
+# declared, and it is worth backing up, because LE limits 5 DUPLICATE certificates per week:
+# losing the store costs a reissue window, not just a rebuild.
+# The Caddyfile has ONE OWNER, Nix (rule 14), so no `caddy reload` writing over it.
 # ═══════════════════════════════════════════════════════════════════════════
 {
   config,
@@ -72,20 +70,19 @@ let
   domain = config.my.net.domain;
   inherit (config.my.net) lanSubnet vpnSubnet;
 
-  # Ponto e vírgula do regex: o domínio entra em failregex do fail2ban, onde `.`
-  # é curinga. Escapar evita que `pos.v1cferr.dev` case `posXv1cferrYdev`.
+  # Regex escaping: the domain goes into the fail2ban failregex, where `.` is a wildcard.
+  # Escaping prevents `pos.v1cferr.dev` from matching `posXv1cferrYdev`.
   domainRe = builtins.replaceStrings [ "." ] [ "\\." ] domain;
 
-  # AUTO-GATE: necessários JUNTOS. Faltando um, `{$VAR}` vira string vazia e o
-  # Caddy recusa a config (hash de basic_auth vazio) — melhor ficar inerte do
-  # que derrubar o proxy no switch.
+  # AUTO-GATE: they are needed TOGETHER. With one missing, `{$VAR}` becomes an empty string and
+  # Caddy refuses the config (an empty basic_auth hash), so being inert is better than taking
+  # the proxy down on the switch.
   #
-  # Os hashes NÃO são literais aqui: são derivados de quem declara `auth` na
-  # SSOT. Quando eram fixos, tirar o basic_auth de um serviço deixava o portão
-  # exigindo um segredo que ninguém mais lia — e o dia em que esse item saísse do
-  # Bitwarden o Caddy ficaria inerte, levando jellyfin, torrent, ai e duo com ele.
-  # Um serviço que cai por causa de uma senha que não usa é o pior tipo de
-  # acoplamento: invisível até o dia em que importa.
+  # The hashes are NOT literals here: they are derived from whoever declares `auth` in the
+  # SSOT. When they were fixed, removing basic_auth from a service left the gate requiring a
+  # secret nobody read anymore, and the day that item left Bitwarden, Caddy would go inert,
+  # taking jellyfin, torrent, ai and duo with it. A service that goes down because of a
+  # password it does not use is the worst kind of coupling: invisible until the day it matters.
   authVars = lib.unique (lib.concatMap (s: lib.attrValues s.auth) (lib.attrValues config.my.ingress));
   requiredSecrets = [
     "caddy_acme_email"
@@ -94,13 +91,13 @@ let
   ++ map lib.toLower authVars;
   enabled = lib.all (s: builtins.hasAttr s config.sops.secrets) requiredSecrets;
 
-  # ── Gerador dos vhosts, a partir de `my.ingress` (system/net/ingress.nix) ──
-  # O Caddyfile deixou de ser escrito à mão: quem decide alcance é a SSOT, e
-  # esquecer de declarar FECHA em vez de expor (o default de `expose` é "lan").
+  # ── The vhost generator, from `my.ingress` (system/net/ingress.nix) ────────
+  # The Caddyfile stopped being written by hand: what decides reach is the SSOT, and forgetting
+  # to declare CLOSES instead of exposing (the `expose` default is "lan").
   svcs = config.my.ingress;
 
-  # `handle` por prefixo, antes do upstream — o Caddy resolve o mais específico
-  # primeiro, então a ordem entre eles não importa; a ordem CONTRA o upstream sim.
+  # A `handle` per prefix, before the upstream. Caddy resolves the most specific first, so the
+  # order among them does not matter; the order AGAINST the upstream does.
   routeBlocks =
     s:
     lib.concatStringsSep "\n" (
@@ -110,10 +107,10 @@ let
         }'') s.routes
     );
 
-  # CONCATENAÇÃO e não interpolação: o alvo é o literal `{$VAR}` (sintaxe de env
-  # var do Caddy), e `"{$" + v + "}"` é a única forma sem ambiguidade — `$${v}`
-  # numa string Nix é ERRO DE SINTAXE, não escape. Já mordeu uma vez: o primeiro
-  # gerado saiu com `{$${v}}` literal, o que viraria hash vazio em runtime.
+  # CONCATENATION and not interpolation: the target is the literal `{$VAR}` (Caddy's env var
+  # syntax), and `"{$" + v + "}"` is the only unambiguous form, because `$${v}` in a Nix string
+  # is a SYNTAX ERROR, not an escape. It bit once already: the first generated file came out
+  # with a literal `{$${v}}`, which would become an empty hash at runtime.
   authBlock =
     s:
     lib.optionalString (s.auth != { }) ''
@@ -122,8 +119,8 @@ let
           }
     '';
 
-  # O 403 só existe pra quem é "lan". Em "public" o portão é o `auth` (ou nada,
-  # quando o serviço tem login próprio — caso do jellyfin/torrent).
+  # The 403 only exists for whoever is "lan". In "public" the gate is the `auth` (or nothing,
+  # when the service has its own login, which is the jellyfin/torrent case).
   gateBlock =
     s:
     lib.optionalString (s.expose == "lan") ''
@@ -132,15 +129,15 @@ let
 
   vhostBlock = name: s: ''
     ${lib.optionalString (s.comment != "") "    # ${s.comment}"}
-        # expose = ${s.expose}${lib.optionalString (s.auth != { }) " | basic_auth de fora"}
+        # expose = ${s.expose}${lib.optionalString (s.auth != { }) " | basic_auth from outside"}
         @${name} host ${name}.${domain}
         handle @${name} {
     ${gateBlock s}${authBlock s}${routeBlocks s}
     ${upstreamBlock s}    }
   '';
 
-  # Sem `routes`, o upstream é a única rota e o `reverse_proxy` fica solto — o
-  # `handle` de fallback só existe pra empatar com os prefixos quando eles há.
+  # With no `routes`, the upstream is the only route and `reverse_proxy` stands alone. The
+  # fallback `handle` only exists to tie with the prefixes when there are any.
   upstreamBlock =
     s:
     let
@@ -153,9 +150,9 @@ let
 
   vhosts = lib.concatStringsSep "\n" (lib.mapAttrsToList vhostBlock svcs);
 
-  # Hosts que exigem basic_auth → é neles que 401 significa senha errada, e é
-  # deles que a jail do fail2ban tem que ler. Derivado da SSOT: adicionar um
-  # serviço com `auth` já entra na jail, sem editar o failregex à mão.
+  # Hosts that require basic_auth: those are the ones where a 401 means a wrong password, and
+  # those are the ones the fail2ban jail has to read. Derived from the SSOT, so adding a service
+  # with `auth` already enters the jail, with no hand-edited failregex.
   authHosts = lib.attrNames (lib.filterAttrs (_: s: s.auth != { }) svcs);
   authHostsRe = lib.concatStringsSep "|" (map (n: "${n}\\.${domainRe}") authHosts);
 in
@@ -163,30 +160,30 @@ lib.mkIf (enabled && config.my.services.caddy) {
   services.caddy = {
     enable = true;
 
-    # Caddy + plugin de DNS da Cloudflare (exigido pelo DNS-01 do curinga).
-    # O `hash` é do vendor de Go: muda quando a versão do Caddy ou do plugin
-    # muda. Rebuild reclamando de hash → recalcular com lib.fakeHash e ler o
-    # valor esperado no erro.
+    # Caddy plus the Cloudflare DNS plugin (required by the wildcard's DNS-01). The `hash`
+    # belongs to the Go vendor: it changes when the Caddy version or the plugin changes. A
+    # rebuild complaining about the hash means recomputing it with lib.fakeHash and reading the
+    # expected value in the error.
     package = pkgs.caddy.withPlugins {
       plugins = [ "github.com/caddy-dns/cloudflare@v0.2.4" ];
       hash = "sha256-7GoH8YLCoPmPExQxoga2FHB58zQDoZVf1BBwkVi0SsQ=";
     };
 
-    # Segredos por ambiente, nunca na /nix/store (regra 12): o Caddyfile guarda
-    # só os placeholders `{$VAR}`, resolvidos em runtime a partir deste arquivo.
+    # Secrets through the environment, never in /nix/store (rule 12): the Caddyfile holds only
+    # the `{$VAR}` placeholders, resolved at runtime from this file.
     environmentFile = config.sops.templates."caddy.env".path;
 
-    # CA fixada em PRODUÇÃO de propósito: estado antigo de staging já fez o Caddy
-    # servir certificado inválido sem avisar.
+    # The CA is pinned to PRODUCTION on purpose: an old staging state already made Caddy serve
+    # an invalid certificate without warning.
     globalConfig = ''
       email {$CADDY_ACME_EMAIL}
       acme_ca https://acme-v02.api.letsencrypt.org/directory
     '';
 
     virtualHosts."*.${domain}" = {
-      # Access log JSON → stderr → journald, que é de onde as jails do fail2ban
-      # leem (`journalmatch = _SYSTEMD_UNIT=caddy.service`). Sem `format json` os
-      # filtros não casam nada.
+      # A JSON access log to stderr to journald, which is where the fail2ban jails read from
+      # (`journalmatch = _SYSTEMD_UNIT=caddy.service`). Without `format json` the filters match
+      # nothing.
       logFormat = "format json";
 
       extraConfig = ''
@@ -197,114 +194,112 @@ lib.mkIf (enabled && config.my.services.caddy) {
                   propagation_timeout -1
                 }
 
-                # Rede "de casa" = LAN + túnel WireGuard do roteador + loopback. Definido
-                # UMA vez e reusado por todos os handles abaixo (matcher nomeado vale no
-                # site block inteiro).
+                # The "home" network = LAN plus the router's WireGuard tunnel plus loopback.
+                # Defined ONCE and reused by every handle below (a named matcher holds for the
+                # whole site block).
                 #
-                # O 10.10.10.0/24 funciona porque o servidor WireGuard é o ROTEADOR
-                # (OpenWrt) e o caminho wg → lan não faz NAT, então o IP de origem chega
-                # preservado até aqui. Se um dia o WireGuard mudar pro host, esta faixa
-                # muda junto.
+                # The 10.10.10.0/24 works because the WireGuard server is the ROUTER (OpenWrt)
+                # and the wg to lan path does not NAT, so the source IP arrives preserved all
+                # the way here. If WireGuard ever moves to the host, this range moves with it.
                 #
-                # ⚠️ No Arch esta lista estava duplicada e DIVERGENTE: o `duo` incluía a
-                # faixa do WireGuard e o `ai` não, por esquecimento de backfill. Unificar
-                # aqui ESTENDE o acesso do `ai` aos clientes de VPN — decisão consciente,
-                # não efeito colateral.
+                # On Arch this list was duplicated and DIVERGENT: `duo` included the WireGuard
+                # range and `ai` did not, from a forgotten backfill. Unifying it here EXTENDS
+                # `ai`'s access to the VPN clients, which is a conscious decision, not a side
+                # effect.
                 #
-                # É por essa faixa que o ACESSO REMOTO passa desde que o Tailscale saiu
-                # (08/08/2026): entra-se pelo WireGuard do roteador e os serviços `lan`
-                # respondem como se você estivesse no sofá. Chegou a haver aqui um
-                # 100.64.0.0/10 (tailnet) — saiu junto, e ainda bem: aquela faixa é a
-                # MESMA do CGNAT de carrier, então um cliente externo atrás de NAT de
-                # operadora poderia apresentar um IP dela e ser tratado como casa.
+                # This range is what REMOTE ACCESS goes through ever since Tailscale left
+                # (08/08/2026): you come in through the router's WireGuard and the `lan`
+                # services answer as if you were on the couch. There used to be a 100.64.0.0/10
+                # (the tailnet) here, and it went out with it, which is just as well: that
+                # range is the SAME one carrier CGNAT uses, so an external client behind an ISP
+                # NAT could present an address from it and be treated as home.
                 #
-                # `client_ip` e NÃO `remote_ip`: hoje os dois são idênticos (sem proxy
-                # confiável na frente, o cliente É a conexão). A diferença aparece com o
-                # cloudflared, que entrega pelo LOOPBACK — com `remote_ip` todo o tráfego
-                # do túnel viraria "casa" e furaria o basic_auth EM SILÊNCIO. Deixar
-                # `client_ip` agora custa zero e remove a armadilha antes dela existir.
-                # ⚠️ NÃO adicionar `trusted_proxies` enquanto não houver túnel: sem ele o
-                # header X-Forwarded-For é ignorado (que é o que se quer); com ele, um
-                # processo local qualquer passaria a poder forjar o IP de origem.
+                # `client_ip` and NOT `remote_ip`: today the two are identical (with no trusted
+                # proxy in front, the client IS the connection). The difference shows up with
+                # cloudflared, which delivers over LOOPBACK, and with `remote_ip` all the
+                # tunnel traffic would become "home" and bypass basic_auth SILENTLY. Leaving
+                # `client_ip` now costs nothing and removes the trap before it exists.
+                # Do NOT add `trusted_proxies` while there is no tunnel: without it the
+                # X-Forwarded-For header is ignored (which is what we want); with it, any local
+                # process could start forging the source IP.
                 @externo not client_ip ${lanSubnet} ${vpnSubnet} 127.0.0.1/8 ::1
 
-                # ---- Vhosts GERADOS de `my.ingress` (painel em hosts/*/services.nix) ----
-                # Não editar aqui: alterar alcance é trocar `expose` na SSOT.
+                # ---- Vhosts GENERATED from `my.ingress` (the panel is hosts/*/services.nix) ----
+                # Do not edit here: changing reach means changing `expose` in the SSOT.
         ${vhosts}
 
-                # Subdomínio não mapeado → 404 limpo, em vez de erro feio do Caddy.
+                # An unmapped subdomain gets a clean 404, instead of an ugly Caddy error.
                 handle {
-                  respond "Subdomínio não configurado" 404
+                  respond "Subdomain not configured" 404
                 }
       '';
     };
   };
 
-  # PRIMEIRO `allowedTCPPorts` do repo. Todo o resto usa o `openFirewall` do
-  # módulo upstream, mas `services.caddy` não tem um. O roteador (OpenWrt) já
-  # encaminha 80/443/2222 desde o setup antigo — quem bloqueava era o firewall
-  # do NixOS, ligado por padrão. 80 fica aberta porque o Caddy redireciona pra
-  # 443 e porque um dia pode fazer falta pro HTTP-01 de um domínio sem DNS-01.
+  # The repo's FIRST `allowedTCPPorts`. Everything else uses the upstream module's
+  # `openFirewall`, but `services.caddy` does not have one. The router (OpenWrt) has been
+  # forwarding 80/443/2222 since the old setup, and what blocked was the NixOS firewall, on by
+  # default. 80 stays open because Caddy redirects to 443 and because one day it might be
+  # needed for the HTTP-01 of a domain without DNS-01.
   networking.firewall.allowedTCPPorts = [
     80
     443
   ];
 
-  # Renderiza o .env do Caddy: config em texto + segredos por placeholder.
-  # ASPAS SIMPLES nos hashes: bcrypt contém `$`, e o `.env` do setup antigo já
-  # documentava que sem elas o valor é mutilado antes de chegar no processo.
-  # Uma linha por variável de `auth` declarada na SSOT — nenhuma escrita à mão.
-  # Deixar um CADDY_*_HASH aqui depois de tirar o basic_auth renderiza um segredo
-  # que nada consome, e o próximo leitor não tem como saber que é resto.
+  # Renders Caddy's .env: config as text plus secrets through placeholders.
+  # SINGLE QUOTES around the hashes: bcrypt contains `$`, and the old setup's `.env` already
+  # documented that without them the value is mangled before reaching the process.
+  # One line per `auth` variable declared in the SSOT, none written by hand. Leaving a
+  # CADDY_*_HASH here after removing the basic_auth renders a secret nothing consumes, and the
+  # next reader has no way to know it is leftover.
   sops.templates."caddy.env".content = ''
     CADDY_ACME_EMAIL=${config.sops.placeholder.caddy_acme_email}
     CADDY_CLOUDFLARE_DNS_TOKEN=${config.sops.placeholder.caddy_cloudflare_dns_token}
   ''
   + lib.concatMapStrings (v: "${v}='${config.sops.placeholder.${lib.toLower v}}'\n") authVars;
 
-  # ── fail2ban: brute-force no basic_auth do `pos` ──────────────────────────
-  # Mora aqui e não em ../net/network.nix (onde o serviço é declarado) porque a
-  # jail só existe por causa deste proxy: quem apaga o vhost tem que apagar a
-  # jail junto, e o acoplamento fica visível.
+  # ── fail2ban: brute force against `pos`'s basic_auth ──────────────────────
+  # It lives here and not in ../net/network.nix (where the service is declared) because the
+  # jail only exists because of this proxy: whoever deletes the vhost has to delete the jail
+  # with it, and the coupling stays visible.
   #
-  # O basic_auth só devolve 401 quando a senha está errada → 401 no host do
-  # `pos` é tentativa falha, não navegação normal.
-  # Os hosts vêm DERIVADOS da SSOT (quem tem `auth`), não literais: declarar um
-  # serviço novo com basic_auth já o põe na jail, sem lembrar de editar aqui.
-  # Sem nenhum host com basic_auth não existe 401 para contar, e o `authHostsRe`
-  # vazio geraria `"host":"()"` — um failregex que casa nada. A jail continuaria
-  # verde no `fail2ban-client status` sem proteger coisa alguma, que é o modo de
-  # falha silenciosa contra o qual o cabeçalho deste módulo avisa. Melhor não
-  # existir do que existir mentindo.
+  # basic_auth only returns 401 when the password is wrong, so a 401 on the `pos` host is a
+  # failed attempt, not normal browsing.
+  # The hosts come DERIVED from the SSOT (whoever has `auth`), not as literals: declaring a new
+  # service with basic_auth already puts it in the jail, with no need to remember to edit here.
+  # With no host having basic_auth there is no 401 to count, and an empty `authHostsRe` would
+  # generate `"host":"()"`, a failregex that matches nothing. The jail would stay green in
+  # `fail2ban-client status` while protecting nothing, which is the silent failure mode this
+  # module's header warns about. Better not to exist than to exist lying.
   environment.etc."fail2ban/filter.d/caddy-pos.conf" = lib.mkIf (authHosts != [ ]) {
     text = ''
-      # Falhas de basic_auth no Caddy (hosts: ${lib.concatStringsSep ", " authHosts}),
-      # lidas do access log JSON no journald. ⚠️ Depende da ORDEM das chaves do log
-      # — validar com `fail2ban-regex` depois de bump do Caddy.
+      # Caddy basic_auth failures (hosts: ${lib.concatStringsSep ", " authHosts}), read from
+      # the JSON access log in journald. It depends on the ORDER of the log's keys, so
+      # validate with `fail2ban-regex` after a Caddy bump.
       [Definition]
       failregex = "remote_ip":"<HOST>",.+?"host":"(${authHostsRe})",.+?"status":401,
       journalmatch = _SYSTEMD_UNIT=caddy.service
     '';
   };
 
-  # `optionalAttrs` e não `mkIf` no `settings`: o módulo do fail2ban injeta
-  # `enabled = true` em toda jail DECLARADA, então esvaziar as settings ainda
-  # emitia `[caddy-pos]` no jail.local — uma jail sem filtro, apontando para um
-  # arquivo que este módulo acabou de parar de criar. O serviço subiria
-  # reclamando. A jail tem que deixar de EXISTIR, não de ter conteúdo.
+  # `optionalAttrs` and not `mkIf` on `settings`: the fail2ban module injects `enabled = true`
+  # into every DECLARED jail, so emptying the settings still emitted `[caddy-pos]` in
+  # jail.local, a jail with no filter pointing at a file this module had just stopped creating.
+  # The service would come up complaining. The jail has to stop EXISTING, not stop having
+  # content.
   services.fail2ban.jails = lib.optionalAttrs (authHosts != [ ]) {
     caddy-pos.settings = {
       enabled = true;
       filter = "caddy-pos";
-      backend = "systemd"; # o Caddy loga no journald, não em arquivo
+      backend = "systemd"; # Caddy logs to journald, not to a file
       port = "http,https";
       maxretry = 5;
       findtime = "10m";
       bantime = "1h";
-      # SEM `ignoreip` próprio: o [DEFAULT] do fail2ban (../net/network.nix) já
-      # isenta a mesma lista, e as duas saíam idênticas no jail.local gerado desde
-      # que ambas passaram a ler a SSOT. Jail sem ignoreip HERDA o default — é o
-      # comportamento que se quer, e uma cópia a menos pra divergir.
+      # NO `ignoreip` of its own: fail2ban's [DEFAULT] (../net/network.nix) already exempts the
+      # same list, and both came out identical in the generated jail.local once they started
+      # reading the SSOT. A jail with no ignoreip INHERITS the default, which is the behavior
+      # we want, and it is one fewer copy to diverge.
     };
   };
 }

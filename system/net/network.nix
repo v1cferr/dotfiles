@@ -1,53 +1,52 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# REDE & ACESSO REMOTO — NetworkManager, SSH (exposto), fail2ban, DNS dinâmico
-# e "nunca suspender". Tema: esta é uma máquina de acesso remoto por SSH.
+# NETWORK AND REMOTE ACCESS: NetworkManager, SSH (exposed), fail2ban, dynamic DNS and "never
+# suspend". The theme: this is a machine for remote access over SSH.
 # ═══════════════════════════════════════════════════════════════════════════
 { config, ... }:
 
 {
-  # ── Rede ───────────────────────────────────────────────────────────────────
+  # ── Network ────────────────────────────────────────────────────────────────
   networking.networkmanager.enable = true;
 
-  # ── VPN de casa: a faixa do WireGuard é CONFIÁVEL ──────────────────────────
-  # O servidor WireGuard é o ROTEADOR (OpenWrt), não esta máquina — então NÃO existe
-  # interface `wg0` local pra pôr em `trustedInterfaces`. O tráfego dos peers chega
-  # pela LAN com origem 10.10.10.x, e a confiança precisa ser por ORIGEM.
+  # ── The home VPN: the WireGuard range is TRUSTED ───────────────────────────
+  # The WireGuard server is the ROUTER (OpenWrt), not this machine, so there is NO local `wg0`
+  # interface to put in `trustedInterfaces`. The peers' traffic arrives over the LAN with
+  # source 10.10.10.x, and the trust has to be by SOURCE.
   #
-  # Isto SUBSTITUI o `trustedInterfaces = [ "tailscale0" ]` que morreu junto com o
-  # Tailscale (08/08/2026), e é o que mantém o Sunshine alcançável PELO TÚNEL: ele roda
-  # com `openFirewall = false` de propósito. Quem apagar isto tem que abrir as portas
-  # dele.
+  # This REPLACES the `trustedInterfaces = [ "tailscale0" ]` that died along with Tailscale
+  # (08/08/2026), and it is what keeps Sunshine reachable THROUGH THE TUNNEL, since it runs
+  # with `openFirewall = false` on purpose. Whoever deletes this has to open its ports.
   #
-  # NÃO é mais o único caminho, e a frase anterior ("sem esta regra ele fica inacessível
-  # de todo lugar") caducou em 10/08/2026: o acesso direto da UFSCar, sem VPN, tem
-  # regras próprias em ../services/sunshine.nix. As duas coexistem de propósito — esta
-  # cobre celular e qualquer peer novo; a de lá cobre o notebook da FAI, onde somar um
-  # terceiro cliente de VPN seria conflito de rota. Apagar esta aqui NÃO derruba o
-  # Moonlight da UFSCar, e apagar a de lá NÃO derruba o do túnel.
+  # It is no longer the only path, and the previous sentence ("without this rule it is
+  # unreachable from everywhere") expired on 10/08/2026: the direct access from UFSCar, with no
+  # VPN, has its own rules in ../services/sunshine.nix. The two coexist on purpose: this one
+  # covers the phone and any new peer; the one over there covers the FAI notebook, where adding
+  # a third VPN client would be a routing conflict. Deleting this one does NOT take down
+  # Moonlight from UFSCar, and deleting the other one does NOT take down the tunnel's.
   #
-  # `-I nixos-fw 1` e não `-A`. ⚠️ CORREÇÃO (08/08/2026): este comentário dizia que
-  # "a cadeia termina num refuse, então `-A` nunca é alcançada", e isso é FALSO para
-  # o extraCommands — lido no firewall-start GERADO, ele é injetado ANTES do
-  # `-A nixos-fw -j nixos-fw-log-refuse`, então `-A` funcionaria. A frase só vale pra
-  # regra digitada À MÃO num firewall já de pé. O `-I 1` continua sendo o certo por
-  # outro motivo: é ele que reproduz a semântica do trustedInterfaces — a faixa
-  # inteira passa antes de QUALQUER outra decisão da cadeia.
-  # (Backend é iptables aqui: `networking.nftables.enable = false`.)
+  # `-I nixos-fw 1` and not `-A`. CORRECTION (08/08/2026): this comment used to say that "the
+  # chain ends in a refuse, so `-A` is never reached", and that is FALSE for extraCommands.
+  # Read in the GENERATED firewall-start, it is injected BEFORE the
+  # `-A nixos-fw -j nixos-fw-log-refuse`, so `-A` would work. The sentence only holds for a
+  # rule typed BY HAND into a firewall that is already up. The `-I 1` is still the right thing
+  # for another reason: it is what reproduces the trustedInterfaces semantics, since the whole
+  # range passes before ANY other decision in the chain.
+  # (The backend here is iptables: `networking.nftables.enable = false`.)
   networking.firewall = {
     extraCommands = ''
       iptables -I nixos-fw 1 -s ${config.my.net.vpnSubnet} -j nixos-fw-accept
     '';
-    # Sem isto, `reload` do firewall empilha duplicatas da regra acima.
+    # Without this, a firewall `reload` stacks duplicates of the rule above.
     extraStopCommands = ''
       iptables -D nixos-fw -s ${config.my.net.vpnSubnet} -j nixos-fw-accept 2>/dev/null || true
     '';
   };
 
-  # ── SSH (espelha o Arch: porta 2222, root off, senha como fallback) ─────────
+  # ── SSH (mirrors Arch: port 2222, root off, password as a fallback) ────────
   services.openssh = {
     enable = true;
     ports = [ 2222 ];
-    openFirewall = true; # abre a 2222 no firewall
+    openFirewall = true; # opens 2222 in the firewall
     settings = {
       PermitRootLogin = "no";
       PasswordAuthentication = true;
@@ -55,107 +54,104 @@
     };
   };
 
-  # ── Nunca suspender ─────────────────────────────────────────────────────
-  # É um desktop de acesso remoto (SSH). Se suspender, o SSH cai e você não
-  # alcança de outro PC. Desativa todos os alvos de sono.
+  # ── Never suspend ────────────────────────────────────────────────────────
+  # It is a remote access desktop (SSH). If it suspends, SSH drops and you cannot reach it from
+  # another PC. This disables every sleep target.
   systemd.targets.sleep.enable = false;
   systemd.targets.suspend.enable = false;
   systemd.targets.hibernate.enable = false;
   systemd.targets.hybrid-sleep.enable = false;
 
-  # ── Wake-on-LAN — o par do "nunca suspender": se a máquina ESTIVER desligada ─
-  # ACHADO EM 10/08/2026, e o sintoma era invisível: o roteador tem TODAS as peças pra
-  # acordar este PC — o script `/usr/bin/wake-desktop`, a regra NOPASSWD dele, e o MAC
-  # alvo `7c:10:c9:a1:f4:e5`, que confere com esta enp7s0 — e nada acontecia, porque a
-  # ponta que RECEBE estava desarmada. Medido: `Wake-on: d`, com `Supports Wake-on: pumbg`
-  # (o `g` de magic packet existe na placa). Três peças certas apontando pra uma quarta
-  # que não escuta: não dá erro em lugar nenhum, só não acorda.
+  # ── Wake-on-LAN, the counterpart of "never suspend": if the machine IS off ──
+  # FOUND ON 10/08/2026, and the symptom was invisible: the router has ALL the pieces to wake
+  # this PC (the `/usr/bin/wake-desktop` script, its NOPASSWD rule, and the target MAC
+  # `7c:10:c9:a1:f4:e5`, which matches this enp7s0) and nothing happened, because the RECEIVING
+  # end was disarmed. Measured: `Wake-on: d`, with `Supports Wake-on: pumbg` (the `g` for magic
+  # packet exists on the card). Three correct pieces pointing at a fourth that does not listen:
+  # it raises no error anywhere, it just does not wake.
   #
-  # DECLARATIVO E NÃO `ethtool -s enp7s0 wol g`: o r8169 RESETA o WoL a cada boot, então a
-  # forma imperativa se perde no próximo reboot — que é exatamente quando se precisa dela.
-  # Esta opção vira `linkConfig.WakeOnLan` (nixos/modules/tasks/network-interfaces.nix),
-  # aplicado pelo udev a cada subida do link.
+  # DECLARATIVE AND NOT `ethtool -s enp7s0 wol g`: the r8169 RESETS WoL on every boot, so the
+  # imperative form is lost on the next reboot, which is exactly when it is needed. This option
+  # becomes `linkConfig.WakeOnLan` (nixos/modules/tasks/network-interfaces.nix), applied by
+  # udev on every link up.
   #
-  # CONTRASTE com o `wake-workstation` de ../../home/net/fai-workstation.nix, que resolve o
-  # MESMO problema e não pôde ser declarado: lá o receptor é uma Ubuntu de terceiro e o
-  # conserto é netplan na mão, anotado em comentário. Aqui o receptor é esta máquina.
+  # A CONTRAST with the `wake-workstation` in ../../home/net/fai-workstation.nix, which solves
+  # the SAME problem and could not be declared: there the receiver is somebody else's Ubuntu and
+  # the fix is netplan by hand, noted in a comment. Here the receiver is this machine.
   #
-  # ⚠️ NÃO COBRE QUEDA DE ENERGIA, e é o mal-entendido a evitar: corte real tira o +5VSB e
-  # a NIC perde o registro armado. Pra "acabou a luz" quem responde é a BIOS (*Restore on
-  # AC Power Loss* = Power On), que este repo não alcança. WoL serve pro desligamento
-  # NORMAL, que é o caso comum.
+  # IT DOES NOT COVER A POWER OUTAGE, and that is the misunderstanding to avoid: a real cut
+  # takes away the +5VSB and the NIC loses the armed register. For "the power went out" the
+  # answer is the BIOS (*Restore on AC Power Loss* = Power On), which this repo does not reach.
+  # WoL serves a NORMAL shutdown, which is the common case.
   #
-  # ⚠️ O NetworkManager tem `connection.wol` próprio. O default dele é não mexer, mas se
-  # resetar numa mudança de link o sintoma é WoL funcionar logo após o boot e parar depois
-  # — e isso só aparece desligando de verdade e mandando o magic packet. Literal `enp7s0`
-  # e não opção: consumidor único (regra 11 pede 2+).
+  # NetworkManager has its own `connection.wol`. Its default is not to touch it, but if it
+  # resets on a link change the symptom is WoL working right after boot and stopping later, and
+  # that only shows up by actually powering off and sending the magic packet. A literal
+  # `enp7s0` and not an option: a single consumer (rule 11 asks for 2+).
   networking.interfaces.enp7s0.wakeOnLan.enable = true;
 
-  # ── fail2ban — protege o SSH exposto na internet ─────────────────────────
-  # A 2222 fica aberta ao mundo (port-forward 2222 no OpenWrt) COM senha
-  # habilitada → fail2ban é obrigatório. Espelha o jail do Arch: bane após 4
-  # falhas em 10min, por 1h; nunca bane a LAN nem o loopback.
+  # ── fail2ban: protects the SSH exposed to the internet ───────────────────
+  # Port 2222 is open to the world (a 2222 port forward on OpenWrt) WITH passwords enabled, so
+  # fail2ban is mandatory. It mirrors the Arch jail: it bans after 4 failures in 10min, for 1h,
+  # and it never bans the LAN or loopback.
   services.fail2ban = {
     enable = true;
     bantime = "1h";
-    # Vale pro [DEFAULT] do fail2ban, ou seja: TODAS as jails herdam, inclusive a
-    # caddy-pos. Sem 127.0.0.1/8 e ::1 aqui de propósito — o módulo do nixpkgs já os
-    # prepende, e declarar de novo saía duplicado no jail.local gerado.
+    # This holds for fail2ban's [DEFAULT], which means ALL jails inherit it, including
+    # caddy-pos. 127.0.0.1/8 and ::1 are deliberately absent here: the nixpkgs module already
+    # prepends them, and declaring them again came out duplicated in the generated jail.local.
     ignoreIP = [
       config.my.net.lanSubnet
-      # A faixa do WireGuard entra junto: entrar de fora pela VPN e errar a senha do
-      # SSH não pode banir o próprio caminho de volta.
+      # The WireGuard range goes in with it: coming in from outside through the VPN and
+      # mistyping the SSH password cannot ban your own way back.
       config.my.net.vpnSubnet
     ];
     jails.sshd.settings = {
       enabled = true;
       port = 2222;
-      backend = "systemd"; # sshd loga no journald
+      backend = "systemd"; # sshd logs to journald
       maxretry = 4;
       findtime = "10m";
     };
   };
 
-  # ── DNS dinâmico (Cloudflare) ─────────────────────────────────────────────
-  # Mantém ssh.<domínio> apontando pro IP público atual (que muda) → permite
-  # `ssh …@ssh.<domínio>` de qualquer lugar, sem VPN. Token FORA do git
-  # (via sops). proxied=false: registro DNS-only (cinza) — SSH não passa pelo
-  # proxy HTTP da Cloudflare.
+  # ── Dynamic DNS (Cloudflare) ──────────────────────────────────────────────
+  # It keeps ssh.<domain> pointing at the current public IP (which changes), so
+  # `ssh …@ssh.<domain>` works from anywhere, with no VPN. The token stays OUT of git (through
+  # sops). proxied=false means a DNS-only record (gray), because SSH does not go through
+  # Cloudflare's HTTP proxy.
   #
-  # Este registro é a ÂNCORA DE IP da zona inteira, e o único que o DDNS toca.
-  # Os serviços NÃO ganham registro cada um: a zona usa um CURINGA
-  # `*.<domínio>` CNAME apontando pra cá, então subdomínio novo funciona sem
-  # nenhum trabalho de DNS — que é justamente o ponto do curinga.
+  # This record is the whole zone's IP ANCHOR, and the only one the DDNS touches. The services
+  # do NOT each get a record: the zone uses a `*.<domain>` WILDCARD CNAME pointing here, so a
+  # new subdomain works with no DNS work at all, which is precisely the point of the wildcard.
   #
-  # O IP publicado aqui É o desta casa, e ele RESPONDE de fora: o roteador tem o
-  # público direto na `pppoe-wan` e encaminha 80/443/2222. Provado em 08/08/2026
-  # pela borda da Cloudflare (registro proxied temporário → o Caddy devolveu o 404
-  # do catch-all em 0,39s). Houve um susto de CGNAT em 07/08 que se provou FALSO —
-  # o diagnóstico e as três formas de o teste mentir estão em docs/history/2026/08-august.md.
+  # The IP published here IS this house's, and it DOES ANSWER from outside: the router has the
+  # public one directly on `pppoe-wan` and forwards 80/443/2222. Proven on 08/08/2026 through
+  # Cloudflare's edge (a temporary proxied record, and Caddy returned the catch-all 404 in
+  # 0.39s). There was a CGNAT scare on 07/08 that proved FALSE; the diagnosis and the three
+  # ways for the test to lie are in docs/history/2026/08-august.md.
   #
-  # ⚠️ NÃO adicione `*.<domínio>` aqui. Testado em 07/08/2026: o tool só sabe
-  # criar/atualizar registro A, e a API recusa com o código 81054 ("A CNAME
-  # record with that host already exists"). O serviço entra em loop de restart
-  # e sai 3. O curinga tem que continuar CNAME, e é o alvo dele que faz a zona
-  # seguir o IP — não o DDNS.
+  # Do NOT add `*.<domain>` here. Tested on 07/08/2026: the tool only knows how to create and
+  # update an A record, and the API refuses with code 81054 ("A CNAME record with that host
+  # already exists"). The service enters a restart loop and exits 3. The wildcard has to stay a
+  # CNAME, and it is its target that makes the zone follow the IP, not the DDNS.
   #
-  # ⚠️ NÃO CONFIE NO `dig` DE DENTRO DE CASA para auditar esta zona. O roteador
-  # faz split-DNS de `*.<domínio>` → 192.168.1.10 e responde ANTES de qualquer
-  # servidor externo — inclusive quando se aponta o dig direto pro autoritativo
-  # (`dig @bruce.ns.cloudflare.com`). O sintoma é TTL 0 numa resposta que
-  # deveria vir da Cloudflare. Custou uma investigação inteira em 07/08/2026:
-  # a zona estava CERTA e parecia quebrada. Para ver o DNS de verdade, saia por
-  # DoH (HTTPS, que o roteador não intercepta):
+  # Do NOT TRUST `dig` FROM INSIDE THE HOUSE to audit this zone. The router does split-DNS of
+  # `*.<domain>` to 192.168.1.10 and answers BEFORE any external server, including when you
+  # point dig straight at the authoritative one (`dig @bruce.ns.cloudflare.com`). The symptom
+  # is a TTL of 0 on an answer that should come from Cloudflare. It cost an entire investigation
+  # on 07/08/2026: the zone was RIGHT and looked broken. To see the real DNS, go out through DoH
+  # (HTTPS, which the router does not intercept):
   #   curl -s -H 'accept: application/dns-json' \
-  #     'https://cloudflare-dns.com/dns-query?name=ssh.<domínio>&type=A' | jq
+  #     'https://cloudflare-dns.com/dns-query?name=ssh.<domain>&type=A' | jq
   #
-  # ⚠️ O cache (/var/lib/cloudflare-dyndns/ip.cache) compara o IP atual contra o
-  # que ELE escreveu por último, nunca contra o registro real — alteração feita
-  # pelo dashboard o deixa cego ("Every domain is up-to-date", sem chamar a API).
-  # Apagá-lo força uma escrita real.
+  # The cache (/var/lib/cloudflare-dyndns/ip.cache) compares the current IP against what IT
+  # wrote last, never against the real record, so a change made through the dashboard leaves it
+  # blind ("Every domain is up-to-date", without calling the API). Deleting it forces a real
+  # write.
   #
-  # O nome vem de `my.net.domain` (SSOT, regra 11 — ./domain.nix), nunca literal:
-  # o Caddy e as jails do fail2ban leem a MESMA opção.
+  # The name comes from `my.net.domain` (an SSOT, rule 11, ./domain.nix), never a literal:
+  # Caddy and the fail2ban jails read the SAME option.
   services.cloudflare-dyndns = {
     enable = config.my.services.cloudflare-ddns;
     apiTokenFile = config.sops.secrets.cloudflare_ddns_token.path;
@@ -165,33 +161,32 @@
     ipv6 = false;
   };
 
-  # ESPERAR A REDE DE VERDADE. O módulo do nixpkgs ordena só por `network.target`
-  # (services/networking/cloudflare-dyndns.nix:79), e esse target NÃO significa
-  # "tem internet" — significa "a pilha de rede foi iniciada". Quem significa
-  # conectividade é o `network-online.target`, e ele exige as DUAS pontas: o
-  # `wants` (senão o target nem é puxado) e o `after` (senão não há ordem).
+  # WAITING FOR THE NETWORK FOR REAL. The nixpkgs module orders only by `network.target`
+  # (services/networking/cloudflare-dyndns.nix:79), and that target does NOT mean "there is
+  # internet", it means "the network stack was started". What means connectivity is
+  # `network-online.target`, and it requires BOTH ends: the `wants` (otherwise the target is not
+  # even pulled in) and the `after` (otherwise there is no ordering).
   #
-  # MEDIDO no boot de 01/08: o serviço subiu em T+3s e o network-online só ficou
-  # pronto em T+9,8s (a NetworkManager-wait-online leva 6,5s esperando DHCP).
-  # Resultado, TODO boot: as quatro APIs de "qual é meu IP" davam unreachable, ele
-  # APAGAVA o cache (`Deleting cache at: …/ip.cache`) e saía com status 2. O timer
-  # de 5 min consertava depois — então isso nunca apareceu como quebrado, só como
-  # um `failed` no boot que a gente aprendeu a ignorar. O custo real era o
-  # ssh.v1cferr.dev ficar apontando pro IP velho na PIOR hora possível: logo depois
-  # de uma queda de energia, que é justamente quando o IP público costuma mudar
-  # e quando se quer entrar de fora.
-  # HOUVE UMA SEGUNDA CAUSA, e ela MORREU com o Tailscale (08/08/2026): o
-  # /etc/resolv.conf apontava pro 100.100.100.100, servido pelo próprio tailscaled, que
-  # subia 11ms DEPOIS deste serviço — as quatro APIs de "qual é meu IP" falhavam por
-  # resolução, não por rota. Isso exigia um `after = tailscaled.service` que agora não
-  # tem mais alvo. Com o resolver de volta ao normal, a corrida de DNS não existe.
+  # MEASURED on the 01/08 boot: the service came up at T+3s and network-online was only ready
+  # at T+9.8s (NetworkManager-wait-online takes 6.5s waiting for DHCP). The result, EVERY boot:
+  # the four "what is my IP" APIs came back unreachable, it DELETED the cache
+  # (`Deleting cache at: …/ip.cache`) and exited with status 2. The 5 min timer fixed it
+  # afterwards, so this never showed up as broken, only as a `failed` at boot that we learned to
+  # ignore. The real cost was ssh.v1cferr.dev pointing at the old IP at the WORST possible
+  # moment: right after a power outage, which is precisely when the public IP tends to change
+  # and when you want to get in from outside.
+  # THERE WAS A SECOND CAUSE, and it DIED with Tailscale (08/08/2026): /etc/resolv.conf pointed
+  # at 100.100.100.100, served by tailscaled itself, which came up 11ms AFTER this service, so
+  # the four "what is my IP" APIs failed on resolution, not on routing. That required an
+  # `after = tailscaled.service` that now has no target.
+  # With the resolver back to normal, the DNS race does not exist.
   #
-  # O RETRY ABAIXO FICA, e não é resíduo: a primeira causa (DHCP demorando ~6,5s depois
-  # do target) é independente do Tailscale e continua valendo. Tolerar a corrida e
-  # tentar de novo é mais robusto que adivinhar ordem — o Restart deixa a janela de IP
-  # velho em ≤20s, contra os ≤5min do timer. O StartLimit é o freio pra não virar loop
-  # infinito quando a falha for real (token inválido, Cloudflare fora): 6 tentativas em
-  # 5min e ele desiste, deixando o `failed` visível pro timer assumir depois.
+  # THE RETRY BELOW STAYS, and it is not residue: the first cause (DHCP taking ~6.5s after the
+  # target) is independent of Tailscale and still holds. Tolerating the race and trying again is
+  # more robust than guessing the ordering, and the Restart keeps the stale-IP window at <=20s
+  # against the timer's <=5min. The StartLimit is the brake so it does not become an infinite
+  # loop when the failure is real (an invalid token, Cloudflare down): 6 attempts in 5min and it
+  # gives up, leaving the `failed` visible for the timer to take over later.
   systemd.services.cloudflare-dyndns = {
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];

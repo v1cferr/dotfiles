@@ -1,32 +1,38 @@
-# TELA DE BLOQUEIO + OCIOSIDADE — hyprlock (lock) + hypridle (idle), declarados.
+# LOCK SCREEN + IDLE: hyprlock (lock) plus hypridle (idle), declared.
 #
-# Filosofia deste módulo: NADA de scripts .sh soltos. A lógica pesada mora onde é
-# declarativa e reprodutível — no BUILD (Nix puro) ou no SYSTEMD — e o runtime é
-# só comando de 1 linha, com binário por caminho ABSOLUTO (${pkgs...}/bin/x), sem
-# depender de PATH. Assim isto sobrevive a upgrades (durável 2032+):
-#   • quote   → serviço+timer systemd busca um lote da ZenQuotes API 1×/dia, traduz
-#               p/ pt-BR (DeepL) e formata em pango num cache; no lock só `shuf -n1`.
-#   • weather → um serviço+timer systemd busca o wttr.in a cada 10 min p/ um cache;
-#               no lock só roda `cat`. Fonte estável, sem raspar HTML.
-#   • idle    → só TRANCA aos 5min (loginctl lock-session). SEM dpms-off — ver ponto 3.
-#   • lock    → `hyprlock.service`, unit DECLARADA. Trancar não depende do hypridle
-#               estar vivo; ver o bloco da unit para o incidente que motivou isso.
+# This module's philosophy: NO loose .sh scripts. The heavy logic lives where it is
+# declarative and reproducible, in the BUILD (pure Nix) or in SYSTEMD, and the runtime is a
+# 1-line command with the binary at an ABSOLUTE path (${pkgs...}/bin/x), not depending on the
+# PATH. That is how this survives upgrades (durable into 2032+):
+#   • quote   -> a systemd service plus timer fetches a batch from the ZenQuotes API once a
+#                day, translates it to pt-BR (DeepL) and formats it in pango into a cache; the
+#                lock only runs `shuf -n1`.
+#   • weather -> a systemd service plus timer fetches wttr.in every 10 min into a cache; the
+#                lock only runs `cat`. A stable source, with no HTML scraping.
+#   • idle    -> it only LOCKS after 5min (loginctl lock-session). NO dpms-off, see point 3.
+#   • lock    -> `hyprlock.service`, a DECLARED unit. Locking does not depend on hypridle
+#                being alive; see the unit's block for the incident that motivated it.
 #
-# Regra da pasta: apps de USUÁRIO → home/. programs.hyprlock instala o hyprlock e
-# services.hypridle sobe o daemon (systemd --user, igual ao hyprsunset). Por isso o
-# hypridle saiu do system/packages.nix. PAM (system/desktop.nix) é OBRIGATÓRIO —
-# sem ele o hyprlock não autentica e TRANCA você pra fora. Locale pt_BR
-# (system/core.nix) é p/ a data por extenso do relógio.
+# The folder rule: USER apps go to home/. programs.hyprlock installs hyprlock and
+# services.hypridle brings the daemon up (systemd --user, like hyprsunset). That is why
+# hypridle left system/packages.nix. PAM (system/desktop.nix) is MANDATORY: without it
+# hyprlock does not authenticate and LOCKS YOU OUT. The pt_BR locale (system/core.nix) is for
+# the clock's spelled-out date.
 #
-# APRENDIZADOS DE HARDWARE (duráveis, independem da GPU), NÃO mexer:
-#   1. Wallpaper ESTÁTICO, nunca `path = screenshot`: o screencopy/DMA segfalha o
-#      hyprlock ao acordar do idle (frame DMA destruído no exit → lockout).
-#   2. Nada de GIF/reload contínuo: o gatherer assíncrono corre com o exit() e
-#      corrompe a heap (SIGABRT no unlock).
-#   3. dpms-off REMOVIDO (jul/2026): desligar a tela no idle BUGAVA o acesso remoto —
-#      o Sunshine (captura wlr no driver xe) pegava TELA PRETA do monitor apagado, e
-#      alternar dpms sob captura deu ENGINE-RESET da GPU (xe RCS, travou o scanout).
-#      Agora o idle SÓ tranca. Se um dia quiser escurecer, use gamma do hyprsunset.
+# LANGUAGE, and it is a deliberate exception: the system is en-US, and the LOCKSCREEN is full
+# pt-BR (the spelled-out date, the weather, "Digite a senha…", the DeepL-translated quotes).
+# That decision is recorded in the july history, so the strings below are NOT untranslated
+# debt, they are the product.
+#
+# HARDWARE LESSONS (durable, independent of the GPU), do NOT touch:
+#   1. A STATIC wallpaper, never `path = screenshot`: screencopy/DMA segfaults hyprlock when
+#      waking from idle (the DMA frame is destroyed on exit, so a lockout).
+#   2. No GIF and no continuous reload: the asynchronous gatherer races with exit() and
+#      corrupts the heap (SIGABRT on unlock).
+#   3. dpms-off REMOVED (jul/2026): turning the screen off on idle BROKE remote access,
+#      because Sunshine (wlr capture on the xe driver) got a BLACK SCREEN from the powered-off
+#      monitor, and toggling dpms under capture caused a GPU ENGINE RESET (xe RCS, which froze
+#      the scanout). Now idle ONLY locks. If dimming is ever wanted, use hyprsunset's gamma.
 # Ref: https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/
 {
   config,
@@ -36,20 +42,20 @@
 }:
 
 let
-  # ── Wallpapers: oficiais do NixOS via pkgs.nixos-artwork (declarativos, sem
-  #    binário no git; bump junto com o nixpkgs). ──
+  # ── Wallpapers: the official NixOS ones through pkgs.nixos-artwork (declarative, with no
+  #    binary in git; they bump along with nixpkgs). ──
   art = pkgs.nixos-artwork.wallpapers;
-  wallMain = "${art.catppuccin-mocha}/share/backgrounds/nixos/nixos-wallpaper-catppuccin-mocha.png"; # principal (borrado no lock)
-  wallTv = "${art.moonscape}/share/backgrounds/nixos/nix-wallpaper-moonscape.png"; # TV (imagem estática, sem login)
+  wallMain = "${art.catppuccin-mocha}/share/backgrounds/nixos/nixos-wallpaper-catppuccin-mocha.png"; # main (blurred on the lock)
+  wallTv = "${art.moonscape}/share/backgrounds/nixos/nix-wallpaper-moonscape.png"; # TV (a static image, no login)
 
-  # ── Monitores: SSOT em system/desktop/monitors.nix (regra 11) ────────────────
-  primary = osConfig.my.monitors.primary; # LG ULTRAGEAR — desktop borrado + login
-  secondary = osConfig.my.monitors.secondary; # TV — imagem estática + cadeado
+  # ── Monitors: the SSOT is system/desktop/monitors.nix (rule 11) ──────────────
+  primary = osConfig.my.monitors.primary; # LG ULTRAGEAR: blurred desktop plus login
+  secondary = osConfig.my.monitors.secondary; # TV: static image plus a padlock
 
-  # ── Cores do tema ativo (my.theme) + fonte ───────────────────────────────────
-  palette = config.my.theme.palette; # fonte única (home/desktop/palette.nix)
+  # ── Colors from the active theme (my.theme) plus the font ────────────────────
+  palette = config.my.theme.palette; # the single source (home/desktop/palette.nix)
   font = osConfig.my.fonts.ui; # SSOT (system/hardware/fonts.nix)
-  bg = "rgba(${palette.bg}d9)"; # fundo do lock (d9 ≈ 85% opacidade)
+  bg = "rgba(${palette.bg}d9)"; # the lock's background (d9 is ~85% opacity)
   fg = "rgb(${palette.text})";
   muted = "rgb(${palette.dim})";
   blue = "rgba(${palette.blue}ee)";
@@ -57,37 +63,38 @@ let
   green = "rgba(${palette.green}ee)";
   red = "rgba(${palette.red}ee)";
 
-  # ── Binários por caminho absoluto (não dependem de PATH — durável) ────────────
+  # ── Binaries at absolute paths (not depending on the PATH, which is durable) ──
   hyprlockBin = "${pkgs.hyprlock}/bin/hyprlock";
-  pidof = "${pkgs.procps}/bin/pidof"; # ExecCondition da unit: não sobe 2º hyprlock
+  pidof = "${pkgs.procps}/bin/pidof"; # the unit's ExecCondition: do not start a 2nd hyprlock
   loginctlBin = "${pkgs.systemd}/bin/loginctl";
   systemctlBin = "${pkgs.systemd}/bin/systemctl";
   shuf = "${pkgs.coreutils}/bin/shuf";
   catBin = "${pkgs.coreutils}/bin/cat";
 
-  # ── Quote: cache atualizado por timer systemd (ZenQuotes + DeepL; runtime = shuf -n1)
-  # Substituiu o quotes.tsv vendorizado. O timer busca um LOTE (~50) do zenquotes.io
-  # /api/quotes (EN), filtra (não-vazio, <=120 chars, sem o placeholder de rate-limit)
-  # e TRADUZ p/ pt-BR via DeepL (chave em /run/secrets/deepl_api_key, sops) — só as
-  # FRASES num único request em lote; o autor fica no original. Escapa &<> (pango) e
-  # grava atômico; o lock só roda shuf -n1. FALLBACK seguro: sem chave/DeepL fora →
-  # usa o lote em INGLÊS; sem rede na 1ª vez → uma frase embutida (pt-BR).
+  # ── Quote: a cache refreshed by a systemd timer (ZenQuotes + DeepL; the runtime is
+  # shuf -n1). It replaced the vendored quotes.tsv. The timer fetches a BATCH (~50) from
+  # zenquotes.io /api/quotes (EN), filters it (non-empty, <=120 chars, without the rate-limit
+  # placeholder) and TRANSLATES it to pt-BR through DeepL (the key is in
+  # /run/secrets/deepl_api_key, from sops), sending only the QUOTES in a single batched
+  # request while the author stays in the original. It escapes &<> (pango) and writes
+  # atomically; the lock only runs shuf -n1. A safe FALLBACK: with no key or DeepL down it
+  # uses the ENGLISH batch; with no network on the first run, one built-in quote (pt-BR).
   quotesCache = "${config.xdg.cacheHome}/lockscreen/quotes";
-  deeplKeyFile = "/run/secrets/deepl_api_key"; # sops (owner v1cferr); ausente ⇒ mantém EN
+  deeplKeyFile = "/run/secrets/deepl_api_key"; # sops (owner v1cferr); if absent, it stays EN
   quotesFetch = pkgs.writeShellScript "lockscreen-quotes-fetch" ''
     ${pkgs.coreutils}/bin/mkdir -p ${config.xdg.cacheHome}/lockscreen
     tmp="${quotesCache}.tmp"
     ${pkgs.coreutils}/bin/rm -f "$tmp"
 
-    # 1) Lote EN filtrado → array compacto [{q,a}] (q=frase, a=autor).
+    # 1) A filtered EN batch into a compact array [{q,a}] (q=quote, a=author).
     filtered="$(${pkgs.curl}/bin/curl -s --max-time 15 'https://zenquotes.io/api/quotes' \
       | ${pkgs.jq}/bin/jq -c '[.[]
           | select((.q | length) > 0 and (.q | length) <= 120 and .a != "zenquotes.io")
           | {q, a}]' 2>/dev/null || true)"
 
-    # 2) Se há lote e a chave do DeepL existe, traduz as FRASES (1 request em lote,
-    #    target PT-BR) e recombina com o autor original NA ORDEM. Erro/len divergente
-    #    → 'translated' vazio ⇒ cai no EN adiante.
+    # 2) If there is a batch and the DeepL key exists, translate the QUOTES (1 batched
+    #    request, target PT-BR) and recombine them with the original author IN ORDER. An
+    #    error or a length mismatch leaves 'translated' empty, so it falls back to EN below.
     translated=""
     if [ -n "$filtered" ] && [ "$filtered" != "[]" ] && [ -r "${deeplKeyFile}" ]; then
       key="$(${pkgs.coreutils}/bin/cat "${deeplKeyFile}")"
@@ -102,28 +109,29 @@ let
          else empty end' 2>/dev/null || true)"
     fi
 
-    # 3) Fonte final: traduzida se deu certo, senão o lote EN. Formata em pango.
+    # 3) The final source: the translated one if it worked, otherwise the EN batch. Formatted
+    #    in pango.
     src=""
     if   [ -n "$translated" ] && [ "$translated" != "null" ] && [ "$translated" != "[]" ]; then src="$translated"
     elif [ -n "$filtered" ]   && [ "$filtered"   != "[]" ];                                 then src="$filtered"
     fi
     if [ -n "$src" ]; then
       ${pkgs.coreutils}/bin/printf '%s' "$src" | ${pkgs.jq}/bin/jq -r '.[]
-          | "<i>“" + (.q | gsub("&";"&amp;") | gsub("<";"&lt;") | gsub(">";"&gt;")) + "”</i>  <b>— "
+          | "<i>“" + (.q | gsub("&";"&amp;") | gsub("<";"&lt;") | gsub(">";"&gt;")) + "”</i>  <b>"
             + (.a | gsub("&";"&amp;") | gsub("<";"&lt;") | gsub(">";"&gt;")) + "</b>"' > "$tmp" 2>/dev/null || true
     fi
 
-    # 4) Publica atômico se deu certo; senão descarta e mantém o cache anterior.
+    # 4) Publish atomically if it worked; otherwise discard and keep the previous cache.
     if [ -s "$tmp" ]; then ${pkgs.coreutils}/bin/mv "$tmp" ${quotesCache}; else ${pkgs.coreutils}/bin/rm -f "$tmp"; fi
-    # fallback: garante ao menos 1 frase (1º boot sem rede) p/ o shuf não vir vazio.
-    [ -s ${quotesCache} ] || echo '<i>“A melhor forma de prever o futuro é inventá-lo.”</i>  <b>— Alan Kay</b>' > ${quotesCache}
+    # fallback: guarantees at least 1 quote (first boot with no network) so shuf is not empty.
+    [ -s ${quotesCache} ] || echo '<i>“A melhor forma de prever o futuro é inventá-lo.”</i>  <b>Alan Kay</b>' > ${quotesCache}
   '';
 
-  # ── Weather: cache atualizado por timer systemd (wttr.in; runtime = cat) ───────
+  # ── Weather: a cache refreshed by a systemd timer (wttr.in; the runtime is cat) ──
   weatherDir = "${config.xdg.cacheHome}/lockscreen";
   weatherCache = "${weatherDir}/weather";
-  # São Carlos/SP por COORDENADAS (sem ambiguidade de geocoding). Escreve atômico
-  # (.tmp + mv) p/ o hyprlock nunca ler um cache pela metade.
+  # São Carlos/SP by COORDINATES (no geocoding ambiguity). It writes atomically (.tmp plus mv)
+  # so hyprlock never reads a half-written cache.
   weatherFetch = pkgs.writeShellScript "lockscreen-weather-fetch" ''
     ${pkgs.coreutils}/bin/mkdir -p ${weatherDir}
     ${pkgs.curl}/bin/curl -s --max-time 15 -H 'Accept-Language: pt' \
@@ -132,13 +140,14 @@ let
   '';
 in
 {
-  # ── hyprlock: a tela de bloqueio em si ───────────────────────────────────────
+  # ── hyprlock: the lock screen itself ─────────────────────────────────────────
   programs.hyprlock = {
     enable = true;
     settings = {
-      general.hide_cursor = true; # some o cursor no lock
+      general.hide_cursor = true; # hides the cursor on the lock
 
-      # Fade suave ao entrar/sair (bezier vai pro topo do bloco via importantPrefixes)
+      # A smooth fade in and out (the bezier goes to the top of the block through
+      # importantPrefixes)
       animations = {
         enabled = true;
         bezier = "easeOut, 0.25, 1, 0.5, 1";
@@ -149,26 +158,26 @@ in
         ];
       };
 
-      # Fundos: principal borrado (blur nativo do hyprlock) + TV estática.
+      # Backgrounds: the main one blurred (hyprlock's native blur) plus a static TV.
       background = [
         {
           monitor = primary;
-          path = "${wallMain}"; # PNG nítido; o hyprlock faz o blur/brilho
-          blur_passes = 2; # aliviado de 3 → a wallpaper aparece mais (widgets seguem legíveis)
+          path = "${wallMain}"; # a sharp PNG; hyprlock does the blur and brightness
+          blur_passes = 2; # eased from 3, so the wallpaper shows more (the widgets stay legible)
           blur_size = 6;
           noise = 0.012;
           contrast = 0.92;
-          brightness = 0.40; # escuro o bastante p/ o relógio/frase ficarem bem legíveis (a wallpaper ainda aparece)
+          brightness = 0.40; # dark enough for the clock and quote to be well legible (the wallpaper still shows)
           vibrancy = 0.17;
         }
         {
           monitor = secondary;
-          color = "rgba(${palette.bg}ff)"; # fallback enquanto a imagem carrega
+          color = "rgba(${palette.bg}ff)"; # a fallback while the image loads
           path = "${wallTv}";
         }
       ];
 
-      # Campo de senha (só no monitor principal).
+      # The password field (main monitor only).
       input-field = {
         monitor = primary;
         size = "340, 56";
@@ -177,9 +186,9 @@ in
         inner_color = bg;
         font_color = fg;
         font_family = font;
-        outer_color = "${blue} ${magenta} 45deg"; # borda gradiente
-        check_color = "${green} ${blue} 120deg"; # verificando a senha
-        fail_color = red; # senha errada
+        outer_color = "${blue} ${magenta} 45deg"; # a gradient border
+        check_color = "${green} ${blue} 120deg"; # while checking the password
+        fail_color = red; # a wrong password
         placeholder_text = ''<span foreground="##${palette.dim}">Digite a senha…</span>'';
         fail_text = ''<span foreground="##f7768e">$PAMFAIL</span>'';
         dots_spacing = 0.3;
@@ -190,7 +199,7 @@ in
       };
 
       label = [
-        # Relógio grande (com segundos)
+        # A big clock (with seconds)
         {
           monitor = primary;
           text = ''cmd[update:1000] date +"%H:%M:%S" '';
@@ -201,9 +210,9 @@ in
           halign = "center";
           valign = "center";
         }
-        # Data completa em pt-BR (a LOCKSCREEN é exceção: full pt-BR mesmo com o
-        # sistema em en-US) — LC_TIME pt_BR pra data por extenso; sed capitaliza a
-        # 1ª letra + nº da semana.
+        # The full date in pt-BR (the LOCKSCREEN is the exception: full pt-BR even with the
+        # system in en-US). LC_TIME pt_BR gives the spelled-out date, and sed capitalizes the
+        # 1st letter and adds the week number.
         {
           monitor = primary;
           text = ''cmd[update:60000] LC_TIME=pt_BR.UTF-8 date +"%A, %d de %B de %Y  ·  Semana %V" | sed 's/./\u&/' '';
@@ -214,7 +223,7 @@ in
           halign = "center";
           valign = "center";
         }
-        # Usuário logado
+        # The logged-in user
         {
           monitor = primary;
           text = "   ${config.home.username}";
@@ -225,7 +234,8 @@ in
           halign = "center";
           valign = "center";
         }
-        # Frase no rodapé esquerdo (cache da ZenQuotes API atualizado por timer → shuf -n1)
+        # The quote in the bottom left (the ZenQuotes API cache refreshed by a timer, then
+        # shuf -n1)
         {
           monitor = primary;
           text = "cmd[update:150000] ${shuf} -n1 ${quotesCache}";
@@ -236,7 +246,7 @@ in
           halign = "left";
           valign = "bottom";
         }
-        # Clima no canto superior esquerdo (só lê o cache do timer systemd)
+        # The weather in the top left corner (it only reads the systemd timer's cache)
         {
           monitor = primary;
           text = "cmd[update:60000] ${catBin} ${weatherCache} 2>/dev/null";
@@ -247,7 +257,7 @@ in
           halign = "left";
           valign = "top";
         }
-        # Cadeado discreto na TV
+        # A discreet padlock on the TV
         {
           monitor = secondary;
           text = "󰌾";
@@ -262,70 +272,72 @@ in
     };
   };
 
-  # ── hyprlock como UNIT DECLARADA: TRANCAR NÃO PODE DEPENDER DO HYPRIDLE ──────
-  # Até 10/08/2026 o único caminho pra trancar era `loginctl lock-session`, que NÃO
-  # tranca nada sozinho: só marca LockedHint e emite o sinal Lock no D-Bus. Quem
-  # escutava e subia o hyprlock era o hypridle, via lock_cmd. Consequência: com o
-  # hypridle parado, o sinal caía no VAZIO — o botão "Bloquear" da barra clicava e
-  # não acontecia nada, sem erro nenhum. Foi o que houve por 6h em 10/08/2026, com o
-  # guard do Sunshine (../..//system/services/sunshine.nix) segurando o hypridle
-  # parado depois de um cliente morrer sem teardown.
+  # ── hyprlock as a DECLARED UNIT: LOCKING CANNOT DEPEND ON HYPRIDLE ───────────
+  # Until 10/08/2026 the only path to locking was `loginctl lock-session`, which does NOT lock
+  # anything on its own: it only sets LockedHint and emits the Lock signal on D-Bus. What
+  # listened and brought hyprlock up was hypridle, through lock_cmd. The consequence: with
+  # hypridle stopped, the signal fell into the VOID, so the bar's "Lock" button clicked and
+  # nothing happened, with no error at all. That is what happened for 6h on 10/08/2026, with
+  # the Sunshine guard (../../system/services/sunshine.nix) holding hypridle stopped after a
+  # client died with no teardown.
   #
-  # É a dependência errada: bloquear a tela é FUNÇÃO DE SEGURANÇA, e não pode ficar
-  # refém de um daemon de OCIOSIDADE que qualquer coisa pode parar (o guard do
-  # Sunshine, a pill da barra, um crash). Agora o hyprlock é uma unit própria e quem
-  # quer trancar dá `systemctl --user start hyprlock.service`, direto.
+  # It is the wrong dependency: locking the screen is a SECURITY FUNCTION, and it cannot be
+  # hostage to an IDLE daemon that anything can stop (the Sunshine guard, the bar's pill, a
+  # crash). Now hyprlock is a unit of its own and whoever wants to lock runs
+  # `systemctl --user start hyprlock.service`, directly.
   #
-  # UNIT PRÓPRIA, e não `systemd-run` transiente (que era o truque anterior), pelo
-  # mesmo motivo de antes MAIS dois: continua FORA do cgroup do hypridle.service —
-  # o que impede o LOCKOUT REMOTO diagnosticado em 03/08/2026, quando
-  # `systemctl --user stop hypridle` do guard do Sunshine matava o cgroup inteiro
-  # (KillMode=control-group) e levava junto o hyprlock, deixando o compositor
-  # TRANCADO SEM CLIENTE pra desenhar o campo de senha. E de quebra:
-  #   • idempotência de graça — `start` numa unit já ativa é no-op, então o antigo
-  #     `pidof hyprlock ||` sai de cena. Duas superfícies de session-lock confundem
-  #     o grab do teclado e o campo de senha para de digitar; o systemd garante uma.
-  #   • o nome não fica ocupado após o unlock (era o papel do `--collect`).
-  # O env (WAYLAND_DISPLAY, HYPRLAND_INSTANCE_SIGNATURE) vem do systemd --user, que
-  # a sessão já importa. Sem Restart: hyprlock que sai é unlock, não falha a reerguer.
+  # A UNIT OF ITS OWN, and not a transient `systemd-run` (which was the previous trick), for
+  # the same reason as before PLUS two more: it stays OUTSIDE the hypridle.service cgroup,
+  # which is what prevents the REMOTE LOCKOUT diagnosed on 03/08/2026, when the Sunshine
+  # guard's `systemctl --user stop hypridle` killed the whole cgroup (KillMode=control-group)
+  # and took hyprlock with it, leaving the compositor LOCKED WITH NO CLIENT to draw the
+  # password field. And as a bonus:
+  #   • idempotence for free, since `start` on an already active unit is a no-op, so the old
+  #     `pidof hyprlock ||` goes away. Two session-lock surfaces confuse the keyboard grab and
+  #     the password field stops typing; systemd guarantees one.
+  #   • the name is not left occupied after the unlock (which was `--collect`'s job).
+  # The env (WAYLAND_DISPLAY, HYPRLAND_INSTANCE_SIGNATURE) comes from systemd --user, which the
+  # session already imports. No Restart: a hyprlock that exits is an unlock, not a failure to
+  # bring back up.
   systemd.user.services.hyprlock = {
     Unit = {
-      Description = "Tela de bloqueio (hyprlock)";
-      # Sem sessão gráfica não há o que trancar — e o lock morre junto com ela.
+      Description = "Lock screen (hyprlock)";
+      # With no graphical session there is nothing to lock, and the lock dies with it.
       PartOf = [ "graphical-session.target" ];
       After = [ "graphical-session.target" ];
     };
     Service = {
-      Type = "simple"; # roda enquanto a tela está trancada; sai no unlock
-      # Herdeiro do antigo `pidof hyprlock ||`: cobre o hyprlock que NÃO nasceu desta
-      # unit — hoje só o do resgate de lockout por TTY (ver allow_session_lock_restore
-      # em hypr/lua/appearance.lua), já que boot/idle/botão passam todos por aqui.
-      # ExecCondition e não ExecStartPre de propósito: falhar aqui SALTA a partida em
-      # silêncio (unit fica inactive), enquanto o StartPre a marcaria como `failed`.
+      Type = "simple"; # it runs while the screen is locked and exits on unlock
+      # The heir of the old `pidof hyprlock ||`: it covers a hyprlock that was NOT born from
+      # this unit, which today is only the TTY lockout rescue (see allow_session_lock_restore
+      # in hypr/lua/appearance.lua), since boot, idle and the button all go through here.
+      # ExecCondition and not ExecStartPre on purpose: failing here SKIPS the start silently
+      # (the unit stays inactive), while a StartPre would mark it as `failed`.
       ExecCondition = "${pkgs.bash}/bin/bash -c '! ${pidof} hyprlock'";
       ExecStart = hyprlockBin;
     };
-    # SEM Install/wantedBy DE PROPÓSITO: quem tranca é o clique ou o idle, nunca o
-    # boot. O hyprlock do boot continua sendo o do autostart (../autostart.nix).
+    # NO Install/wantedBy ON PURPOSE: what locks is the click or the idle, never the boot. The
+    # hyprlock at boot is still the autostart one (../autostart.nix).
   };
 
-  # ── hypridle: só TRANCA aos 5 min (SEM dpms-off — bugava o moon/Sunshine) ─────
+  # ── hypridle: it only LOCKS after 5 min (NO dpms-off, which broke moon/Sunshine) ──
   services.hypridle = {
     enable = true;
     settings = {
       general = {
-        # Delega pra unit declarada acima — ver lá o porquê de não ser nem o hyprlock
-        # direto (lockout remoto) nem `systemd-run` transiente. `start` é idempotente,
-        # então isto nunca sobe um segundo hyprlock.
+        # It delegates to the unit declared above; see there why it is neither hyprlock
+        # directly (remote lockout) nor a transient `systemd-run`. `start` is idempotent, so
+        # this never brings up a second hyprlock.
         lock_cmd = "${systemctlBin} --user start hyprlock.service";
-        # Se um dia suspender (hoje não), tranca antes de dormir.
+        # If it ever suspends (it does not today), lock before sleeping.
         before_sleep_cmd = "${loginctlBin} lock-session";
         ignore_dbus_inhibit = true;
       };
       listener = [
-        # 5 min: tranca. loginctl → lock_cmd (protegido), nunca duplica o hyprlock.
-        # NÃO há listener de dpms-off: desligar a tela quebrava o acesso remoto (ver
-        # cabeçalho, ponto 3). O monitor fica ligado; o moon captura sempre.
+        # 5 min: lock. loginctl leads to lock_cmd (protected), and it never duplicates
+        # hyprlock.
+        # There is NO dpms-off listener: turning the screen off broke remote access (see the
+        # header, point 3). The monitor stays on; moon always captures.
         {
           timeout = 300;
           on-timeout = "${loginctlBin} lock-session";
@@ -334,37 +346,37 @@ in
     };
   };
 
-  # ── Weather: cache do wttr.in via serviço oneshot + timer (nada de script solto)
+  # ── Weather: the wttr.in cache through a oneshot service plus a timer (no loose script)
   systemd.user.services.lockscreen-weather = {
-    Unit.Description = "Atualiza o cache de clima da tela de bloqueio (wttr.in)";
+    Unit.Description = "Refreshes the lock screen weather cache (wttr.in)";
     Service = {
       Type = "oneshot";
       ExecStart = "${weatherFetch}";
     };
   };
   systemd.user.timers.lockscreen-weather = {
-    Unit.Description = "Atualiza o clima da tela de bloqueio a cada 10 min";
+    Unit.Description = "Refreshes the lock screen weather every 10 min";
     Timer = {
-      OnBootSec = "1min"; # 1ª busca logo após o boot
-      OnUnitActiveSec = "10min"; # e a cada 10 min depois
+      OnBootSec = "1min"; # the 1st fetch right after boot
+      OnUnitActiveSec = "10min"; # and every 10 min afterwards
       Persistent = true;
     };
     Install.WantedBy = [ "timers.target" ];
   };
 
-  # ── Quotes: cache do ZenQuotes via serviço oneshot + timer (substituiu o TSV) ──
+  # ── Quotes: the ZenQuotes cache through a oneshot service plus a timer (it replaced the TSV)
   systemd.user.services.lockscreen-quotes = {
-    Unit.Description = "Atualiza o cache de frases da tela de bloqueio (ZenQuotes)";
+    Unit.Description = "Refreshes the lock screen quote cache (ZenQuotes)";
     Service = {
       Type = "oneshot";
       ExecStart = "${quotesFetch}";
     };
   };
   systemd.user.timers.lockscreen-quotes = {
-    Unit.Description = "Renova o lote de frases da tela de bloqueio 1×/dia";
+    Unit.Description = "Renews the lock screen quote batch once a day";
     Timer = {
-      OnBootSec = "1min"; # 1º lote logo após o boot
-      OnUnitActiveSec = "1d"; # renova 1×/dia: ~50 frases ⇒ folga na cota grátis do DeepL (500k/mês)
+      OnBootSec = "1min"; # the 1st batch right after boot
+      OnUnitActiveSec = "1d"; # renews once a day: ~50 quotes leaves room in DeepL's free quota (500k/month)
       Persistent = true;
     };
     Install.WantedBy = [ "timers.target" ];

@@ -1,30 +1,29 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# BOOT — GRUB (UEFI) com tema minegrub, em DUALBOOT com o Windows 11.
+# BOOT: GRUB (UEFI) with the minegrub theme, in DUALBOOT with Windows 11.
 #
-# POR QUE GRUB, e não o systemd-boot que estava aqui até ago/2026: cada sistema tem
-# a SUA ESP, em disco separado — NixOS no Kingston (`nvme0n1p1`, /boot) e Windows 11
-# na ESP da SanDisk (label SYSTEM, UUID 904C-B9D0 — a LETRA `sd*` TROCA entre boots,
-# então identifique por modelo, nunca por `sdX`). O systemd-boot só carrega binário
-# EFI da PRÓPRIA ESP, então ele é incapaz de listar o Windows: trocar de SO viraria
-# F8 no POST toda vez. O GRUB lê as duas. Isso também é o que descarta o
-# lanzaboote (o caminho oficial de Secure Boot no NixOS), que é systemd-boot-only —
-# a assinatura mora em ./secureboot.nix.
+# WHY GRUB, and not the systemd-boot that was here until aug/2026: each system has ITS OWN
+# ESP, on a separate disk. NixOS on the Kingston (`nvme0n1p1`, /boot) and Windows 11 on the
+# SanDisk's ESP (label SYSTEM, UUID 904C-B9D0; the `sd*` LETTER SWAPS between boots, so
+# identify it by model, never by `sdX`). systemd-boot only loads an EFI binary from its OWN
+# ESP, so it is incapable of listing Windows: switching OS would become F8 at POST every time.
+# GRUB reads both. That is also what rules out lanzaboote (the official Secure Boot path on
+# NixOS), which is systemd-boot-only; the signing lives in ./secureboot.nix.
 #
-# ⚠️ OS ÍCONES DO TEMA CASAM POR `--class`, NÃO PELO TÍTULO DA ENTRADA. É a única
-# pegadinha real aqui, e ela falha em SILÊNCIO (cai num ícone genérico sem texto):
-#   • `nixos`   vem do default `entryOptions = "--class nixos --unrestricted"`;
-#   • `windows` vem do `--class windows` escrito à mão no extraEntries abaixo;
-#   • `submenu` é o das gerações antigas (install-grub.pl emite `--class submenu`).
-# Cada `name` do customIcons vira o arquivo `icons/<name>.png` do tema, e o texto
-# das duas linhas é RENDERIZADO DENTRO do PNG na fonte do Minecraft — não é texto
-# do GRUB. Por isso todas as gerações mostram a mesma descrição: elas compartilham
-# a classe `nixos`. É limitação do tema, não erro de config.
+# THE THEME'S ICONS MATCH BY `--class`, NOT BY THE ENTRY'S TITLE. It is the only real trap
+# here, and it fails SILENTLY (falling back to a generic icon with no text):
+#   • `nixos`   comes from the default `entryOptions = "--class nixos --unrestricted"`;
+#   • `windows` comes from the `--class windows` written by hand in the extraEntries below;
+#   • `submenu` is the one for old generations (install-grub.pl emits `--class submenu`).
+# Each customIcons `name` becomes the theme's `icons/<name>.png` file, and the two lines of
+# text are RENDERED INSIDE the PNG in the Minecraft font, so it is not GRUB text. That is why
+# every generation shows the same description: they share the `nixos` class. It is a theme
+# limitation, not a config error.
 #
-# Os kernels são copiados pra ESP automaticamente (install-grub.pl:107 liga o
-# copyKernels quando /boot está em outro filesystem que /nix/store) — o que evita
-# depender do GRUB saber ler btrfs+zstd. O arquivo é nomeado pelo hash da store,
-# então gerações que compartilham kernel ocupam espaço UMA vez: os 10 limites cabem
-# folgados no 1 GiB da ESP (hoje: 13 MiB de kernel + 47 MiB de initrd por versão).
+# The kernels are copied to the ESP automatically (install-grub.pl:107 turns copyKernels on
+# when /boot is on a different filesystem from /nix/store), which avoids depending on GRUB
+# being able to read btrfs+zstd. The file is named by the store hash, so generations sharing a
+# kernel occupy space ONCE: the 10-generation limit fits comfortably in the ESP's 1 GiB (today:
+# 13 MiB of kernel plus 47 MiB of initrd per version).
 # ═══════════════════════════════════════════════════════════════════════════
 {
   config,
@@ -36,20 +35,20 @@
 {
   imports = [ inputs.minegrub-world-sel-theme.nixosModules.default ];
 
-  # KERNEL MAINLINE (7.1.x) em vez do default do release (6.18.x). O motivo é o
-  # DRIVER DE VÍDEO: o `xe` da Arc B580 mora no kernel, então kernel novo = driver
-  # novo — e é o único lever de driver que NÃO exige atravessar canal (o
-  # `linuxPackages_latest` vem do próprio 26.05). Ver o bloco ⚠️ em
-  # hardware/gpu.nix pra por que o resto do stack gráfico fica no estável.
-  # Seguro aqui porque: zero módulo out-of-tree (nada de zfs/virtualbox pra casar
-  # com a versão) e o Secure Boot desta máquina assina o GRUB, não o kernel
-  # (./secureboot.nix) — trocar de kernel não pede re-enroll de chave.
-  # PREFERIR `nixos-rebuild boot` + reboot ao trocar de versão de kernel — mas
-  # `switch` NÃO quebra: o NixOS guarda `/run/booted-system/kernel-modules` com a
-  # árvore do kernel que está RODANDO, então modprobe/udev continuam resolvendo
-  # (verificado em 06/08/2026: switch de 6.18.42→7.1.6 com zero serviço falhando).
-  # A vantagem do `boot` é só não reiniciar serviço dentro de uma geração cujo
-  # kernel ainda não subiu. Rollback = geração anterior no menu do GRUB.
+  # A MAINLINE KERNEL (7.1.x) instead of the release default (6.18.x). The reason is the VIDEO
+  # DRIVER: the Arc B580's `xe` lives in the kernel, so a new kernel means a new driver, and it
+  # is the only driver lever that does NOT require crossing channels (`linuxPackages_latest`
+  # comes from 26.05 itself). See the warning block in hardware/gpu.nix for why the rest of the
+  # graphics stack stays on stable.
+  # It is safe here because: zero out-of-tree modules (no zfs or virtualbox to version match)
+  # and this machine's Secure Boot signs GRUB, not the kernel (./secureboot.nix), so changing
+  # kernels does not ask for a key re-enroll.
+  # PREFER `nixos-rebuild boot` plus a reboot when changing kernel versions, but `switch` does
+  # NOT break it: NixOS keeps `/run/booted-system/kernel-modules` with the tree of the RUNNING
+  # kernel, so modprobe and udev keep resolving (verified on 06/08/2026: a switch from 6.18.42
+  # to 7.1.6 with zero failing services).
+  # The advantage of `boot` is only not restarting a service inside a generation whose kernel
+  # has not come up yet. Rollback is the previous generation in the GRUB menu.
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   boot.loader.efi.canTouchEfiVariables = true;
@@ -57,22 +56,22 @@
   boot.loader.grub = {
     enable = true;
     efiSupport = true;
-    device = "nodev"; # instala o GRUB-EFI na ESP (não num MBR)
-    configurationLimit = 10; # gerações no menu (rollback) sem encher a ESP
+    device = "nodev"; # installs GRUB-EFI on the ESP (not into an MBR)
+    configurationLimit = 10; # generations in the menu (rollback) without filling the ESP
 
-    # OS-PROBER DESLIGADO, Windows fixado à mão logo abaixo. Ele FUNCIONAVA (achou o
-    # `bootmgfw.efi` da SanDisk de primeira), mas achava DEMAIS: o
-    # Seagate (ST9320423AS) ainda tem a raiz do NixOS antigo — hoje o disco é só o destino
-    # do restic, e o sistema velho continua lá porque não dá pra formatar sem perder
-    # os backups. Resultado: uma terceira entrada que boota um sistema morto.
-    # Trocar sondagem por UUID resolve isso por CONSTRUÇÃO, e ainda: o switch deixa de
-    # montar disco alheio (era o passo mais lento e o único com efeito colateral) e o
-    # menu passa a ser declarativo de verdade (regra 3) em vez de depender do que uma
-    # varredura encontrar naquele boot.
-    # PREÇO, explícito: se o Windows for reinstalado ou mudar de disco, o UUID muda e
-    # a entrada quebra em silêncio (some do menu). O os-prober se adaptaria sozinho.
-    # É edição de UMA linha, e já está no radar — o plano é mover o Windows pra um
-    # NVMe novo. Conferir com `lsblk -o NAME,LABEL,UUID`.
+    # OS-PROBER OFF, with Windows pinned by hand right below. It WORKED (it found the
+    # SanDisk's `bootmgfw.efi` on the first try), but it found TOO MUCH: the Seagate
+    # (ST9320423AS) still has the old NixOS root. Today that disk is only the restic
+    # destination, and the old system is still there because it cannot be formatted without
+    # losing the backups. The result was a third entry booting a dead system.
+    # Trading probing for a UUID solves that by CONSTRUCTION, and on top of it: the switch
+    # stops mounting somebody else's disk (it was the slowest step and the only one with a side
+    # effect) and the menu becomes genuinely declarative (rule 3) instead of depending on what
+    # a scan finds on that boot.
+    # THE PRICE, stated: if Windows is reinstalled or moves disks, the UUID changes and the
+    # entry breaks silently (it disappears from the menu). os-prober would adapt on its own.
+    # It is a ONE-line edit, and it is already on the radar, since the plan is to move Windows
+    # to a new NVMe. Check with `lsblk -o NAME,LABEL,UUID`.
     useOSProber = false;
     extraEntries = ''
       menuentry "Windows 11" --class windows --class os {
@@ -84,43 +83,42 @@
       }
     '';
 
-    # O tema desenha o próprio fundo. O default do NixOS (wallpaper cinza) só
-    # apareceria por um frame atrás dele e ainda copiaria 1 MiB inútil pra ESP.
+    # The theme draws its own background. The NixOS default (a gray wallpaper) would only show
+    # for one frame behind it and would still copy 1 useless MiB to the ESP.
     splashImage = null;
 
-    # "auto" deixa o GRUB escolher pelo EDID, e aqui há uma TV no HDMI além do
-    # monitor: modo errado = tema esticado ou menu na tela apagada. Lista com
-    # fallback — o GRUB tenta em ordem e só cai no "auto" se o GOP não oferecer 1080p.
+    # "auto" lets GRUB choose by EDID, and here there is a TV on HDMI besides the monitor: the
+    # wrong mode means a stretched theme or a menu on the powered-off screen. A list with a
+    # fallback: GRUB tries in order and only falls back to "auto" if the GOP does not offer
+    # 1080p.
     gfxmodeEfi = "1920x1080,auto";
 
-    # ═══ O QUE FAZ O GRUB BOOTAR COM SECURE BOOT LIGADO ═══════════════════════
-    # Sem estas duas flags o resultado é `error: prohibited by secure boot
-    # policy` + `grub rescue>` — medido em 02/08/2026, na primeira tentativa.
-    # A firmware ACEITOU o grubx64.efi assinado (a assinatura estava certa); quem
-    # recusou foi o GRUB, contra si mesmo. São dois bloqueios distintos:
+    # ═══ WHAT MAKES GRUB BOOT WITH SECURE BOOT ON ════════════════════════════
+    # Without these two flags the result is `error: prohibited by secure boot policy` plus
+    # `grub rescue>`, measured on 02/08/2026, on the first attempt. The firmware ACCEPTED the
+    # signed grubx64.efi (the signature was right); what refused was GRUB, against itself.
+    # There are two distinct blocks:
     #
-    # 1. `--modules=…` — com Secure Boot ativo o GRUB desliga o `insmod` (é
-    #    side-load de código). Como o `grub-install` embute só o mínimo pra achar
-    #    o /boot, o `normal` (o módulo que DESENHA O MENU) vinha do disco e era
-    #    barrado → rescue direto, antes de qualquer menu. Tudo que o boot precisa
-    #    tem que estar DENTRO do binário assinado. Nomes conferidos um a um contra
-    #    o grub2_efi: os 47 existem.
+    # 1. `--modules=…`: with Secure Boot active GRUB disables `insmod` (it is code side-load).
+    #    Since `grub-install` embeds only the minimum needed to find /boot, `normal` (the
+    #    module that DRAWS THE MENU) came from the disk and was blocked, so it went straight to
+    #    rescue, before any menu. Everything the boot needs has to be INSIDE the signed binary.
+    #    The names were checked one by one against grub2_efi: all 47 exist.
     #
-    # 2. `--disable-shim-lock` — esta é a não-óbvia, e embutir módulos SOZINHO não
-    #    resolveria: o menu apareceria e aí falhariam o NixOS E o Windows. Em
-    #    kern/efi/sb.c, o `grub_shim_lock_verifier_setup()` só NÃO registra o
-    #    verificador em dois casos: Secure Boot desligado, ou a imagem trazer o
-    #    marcador OBJ_TYPE_DISABLE_SHIM_LOCK (que é o que esta flag embute).
-    #    Registrado, ele cobre GRUB_FILE_TYPE_LINUX_KERNEL e
-    #    GRUB_FILE_TYPE_EFI_CHAINLOADED_IMAGE, e o `write` dele chama o protocolo
-    #    do shim — que aqui NÃO EXISTE, porque não usamos shim → todo boot morre
-    #    em "shim_lock protocol not found".
+    # 2. `--disable-shim-lock`: this is the non-obvious one, and embedding modules ALONE would
+    #    not solve it. The menu would appear and then BOTH NixOS AND Windows would fail. In
+    #    kern/efi/sb.c, `grub_shim_lock_verifier_setup()` only does NOT register the verifier in
+    #    two cases: Secure Boot off, or the image carrying the OBJ_TYPE_DISABLE_SHIM_LOCK marker
+    #    (which is what this flag embeds). Once registered, it covers
+    #    GRUB_FILE_TYPE_LINUX_KERNEL and GRUB_FILE_TYPE_EFI_CHAINLOADED_IMAGE, and its `write`
+    #    calls the shim protocol, which here DOES NOT EXIST, because we use no shim, so every
+    #    boot dies in "shim_lock protocol not found".
     #
-    # ⚠️ A flag 2 é literalmente "não verifique nada depois de mim", e é o que
-    # torna concreto o caveat já documentado em ./secureboot.nix: a cadeia é
-    # verificada pela firmware ATÉ o GRUB, e não além. Quem quiser além disso
-    # precisa de shim (e aí kernel assinado pela Microsoft) ou do lanzaboote (e
-    # aí sem menu e sem tema). Não há terceira porta.
+    # Flag 2 is literally "do not verify anything after me", and it is what makes concrete the
+    # caveat already documented in ./secureboot.nix: the chain is verified by the firmware UP TO
+    # GRUB, and not beyond. Whoever wants more than that needs a shim (and then a
+    # Microsoft-signed kernel) or lanzaboote (and then no menu and no theme). There is no third
+    # door.
     extraGrubInstallArgs = [
       "--disable-shim-lock"
       (
@@ -180,21 +178,21 @@
     minegrub-world-sel.enable = true;
     minegrub-world-sel.customIcons = [
       {
-        name = "nixos"; # = --class de entryOptions
+        name = "nixos"; # matches the --class of entryOptions
         imgName = "nixos";
         lineTop = "NixOS ${config.system.nixos.release} (${config.system.nixos.codeName})";
         lineBottom = "Survival Mode, No Cheats";
       }
       {
-        name = "windows"; # = --class da entrada em extraEntries
+        name = "windows"; # matches the --class of the entry in extraEntries
         imgName = "windows11";
         lineTop = "Windows 11 (SanDisk SSD PLUS)";
         lineBottom = "Creative Mode, Cheats Enabled";
       }
       {
-        # Gerações antigas. Em en-US como todo o resto da UI do sistema (a exceção
-        # pt-BR é só a lockscreen) — e sobrescreve o texto default do tema, que é
-        # um "Select To Enter" que não diz o que tem lá dentro.
+        # Old generations. In en-US like the rest of the system UI (the pt-BR exception is only
+        # the lockscreen), and it overrides the theme's default text, which is a "Select To
+        # Enter" that does not say what is in there.
         name = "submenu";
         imgName = "submenu";
         lineTop = "Older Generations";
@@ -203,9 +201,9 @@
     ];
   };
 
-  # Suporte a NTFS — o driver `ntfs3` já vem no kernel, mas o que o `mount` procura
-  # é o helper de userspace `mount.ntfs-3g`, que só existe com esta opção. Mantido
-  # depois do dualboot pronto pra conseguir ler o disco do Windows sob demanda
-  # (montagem manual; nenhum mount permanente dele — ver hosts/nixos-kingston).
+  # NTFS support: the `ntfs3` driver already ships in the kernel, but what `mount` looks for is
+  # the userspace helper `mount.ntfs-3g`, which only exists with this option. Kept after the
+  # dualboot was done so the Windows disk can be read on demand (a manual mount; there is no
+  # permanent mount of it, see hosts/nixos-kingston).
   boot.supportedFilesystems.ntfs = true;
 }

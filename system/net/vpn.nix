@@ -25,7 +25,9 @@ let
   };
 
   # CLI `vpn`: connect/disconnect ufscar|fai|all + status-json (que alimenta o pill E o
-  # popover da barra — quickshell/bar/VpnPopover.qml) + diagnose/watch (abaixo).
+  # popover de ações — quickshell/bar/VpnPopover.qml) + stats-json (latência/jitter/
+  # perda/tráfego do túnel, p/ o popover de hover — VpnStatsPopover.qml) +
+  # diagnose/watch (abaixo).
   #
   # DIAGNOSE/WATCH (31/07) — falha de conexão era SILENCIOSA: clicava em Conectar, nada
   # acontecia, e do lado de cá parecia problema da máquina pessoal. O objetivo aqui não é
@@ -50,6 +52,8 @@ let
       libnotify
       iproute2
       gnugrep
+      gawk # awk — já usado pelo heal_one, agora também pelo stats-json
+      iputils # ping — descoberta do alvo da sonda (roda sem root: ping_group_range)
       coreutils
       bash
     ];
@@ -243,6 +247,111 @@ let
           | tail -n 3 || true
         return 1
       }
+
+      # ── Estatísticas do túnel (hover do pill) ──────────────────────────────
+      # SEPARADO do status-json de propósito: aquele responde "tem túnel?" a cada 5s e
+      # é o que pinta o pill; este responde "com o quê?" — interface, IP, MTU, tempo no
+      # ar, bytes da sessão e QUAL host serve de alvo de sonda. A barra só o chama
+      # quando há túnel (20s de fundo, 3s com o painel aberto).
+      # A LATÊNCIA NÃO SAI DAQUI: quem mede é a barra, com ping contínuo (ver stats_one).
+      iface_of() {
+        case "$1" in
+          fai)    ip -o link show type ppp | awk -F': ' 'NR==1 { print $2 }' ;;
+          # mesmo filtro tun[0-9] do ufscar_conn: `type tun` casa tailscale0 também
+          ufscar) ip -o link show type tun | awk -F': ' '$2 ~ /^tun[0-9]+$/ { print $2; exit }' ;;
+        esac
+      }
+      nstat() { cat "/sys/class/net/$1/statistics/$2" 2>/dev/null || echo 0; }
+
+      # ALVO DA SONDA. Latência de túnel exige alguém que responda DENTRO dele, e o
+      # candidato óbvio NÃO serve: o peer do ppp da FAI é 192.0.2.1 — TEST-NET-1, um
+      # endereço de fachada do SonicWall — e ignora ICMP (MEDIDO em 14/08/2026: 100%
+      # de perda). Quem responde é 200.136.209.236 (fai.ufscar.br): IP público, mas a
+      # rota 200.136.209.128/25 sai pelo ppp0, então o ping mede o TÚNEL (31ms, 0%).
+      # NÃO uso o host da workstation: `my.fai.workstation` é opção do home-manager e
+      # módulo de sistema não lê opção do HM (regra 11) — e servidor institucional cai
+      # menos que estação de trabalho.
+      # A UFSCar entra SEM candidato fixo: nunca medi host interno dela com o túnel de
+      # pé, e chutar endereço produziria número errado, que é pior que número ausente.
+      # Ela cai no fallback das rotas; se um dia um alvo se provar, o lugar é aqui.
+      probe_candidates() {
+        case "$1" in
+          fai) echo "200.136.209.236" ;;
+          *) ;;
+        esac
+        ip -4 route show dev "$2" 2>/dev/null | awk '/ via /{ print $3 }' | sort -u
+      }
+
+      # O `-I <iface>` não é detalhe: prende o pacote ao túnel (SO_BINDTODEVICE). Sem
+      # ele, alvo que deixasse de ser roteado pela VPN sairia pela internet de casa e o
+      # painel exibiria uma latência ÓTIMA que não é a do túnel. Com o bind, esse caso
+      # vira silêncio — e "sem sonda" é uma resposta honesta; 8ms mentindo, não.
+      probe_alive() { ping -n -q -c 1 -W 1 -I "$1" "$2" >/dev/null 2>&1; }
+
+      # Descobre e MEMORIZA o alvo (senão cada amostra varreria a lista de novo). A
+      # chave do cache é iface+IP: túnel novo = sonda nova. Alvo vivo vale a sessão
+      # inteira; "não achei" é reavaliado a cada 5 min, senão um alvo fora do ar no
+      # instante da conexão condenaria o painel a "sem sonda" até desconectar.
+      probe_for() {
+        id="$1"; ifc="$2"; ipaddr="$3"
+        f="''${XDG_RUNTIME_DIR:-/tmp}/vpn-probe-$id"
+        now="$(date +%s)"
+        c_if=""; c_ip=""; c_tgt=""; c_ts=0
+        if [ -r "$f" ]; then
+          read -r c_if c_ip c_tgt c_ts < "$f" || true
+        fi
+        case "$c_ts" in "" | *[!0-9]*) c_ts=0 ;; esac
+        if [ "$c_if" = "$ifc" ] && [ "$c_ip" = "$ipaddr" ] && { [ "$c_tgt" != "-" ] || [ $((now - c_ts)) -lt 300 ]; }; then
+          echo "$c_tgt"; return 0
+        fi
+        found="-"
+        while read -r t; do
+          [ -n "$t" ] || continue
+          if probe_alive "$ifc" "$t"; then found="$t"; break; fi
+        done <<< "$(probe_candidates "$id" "$ifc")"
+        echo "$ifc $ipaddr $found $now" > "$f"
+        echo "$found"
+      }
+
+      # Um objeto JSON por VPN. Desconectada sai só com connected:false — sem iface não
+      # há o que medir, e emitir campo zerado faria o painel desenhar gráfico de nada.
+      stats_one() {
+        id="$1"; name="$2"
+        ifc=""
+        conn_of "$id" && ifc="$(iface_of "$id")"
+        if [ -z "$ifc" ]; then
+          printf '{"id":"%s","name":"%s","connected":false}' "$id" "$name"
+          return 0
+        fi
+        # ppp devolve "inet <local> peer <remoto>/32"; tun devolve "inet <ip>/32". O
+        # campo 4 é o endereço local nos dois casos, e o cut tira o prefixo quando há.
+        ipaddr="$(ip -o -4 addr show dev "$ifc" 2>/dev/null | awk 'NR==1 { print $4 }' | cut -d/ -f1)"
+        mtu="$(cat "/sys/class/net/$ifc/mtu" 2>/dev/null || echo 0)"
+        case "$mtu" in "" | *[!0-9]*) mtu=0 ;; esac
+        rx="$(nstat "$ifc" rx_bytes)"; tx="$(nstat "$ifc" tx_bytes)"
+        errs=$(( $(nstat "$ifc" rx_errors) + $(nstat "$ifc" tx_errors) ))
+        drops=$(( $(nstat "$ifc" rx_dropped) + $(nstat "$ifc" tx_dropped) ))
+        # Os contadores do sysfs nascem com a interface, então já são "da sessão": ppp0
+        # e tun0 são criados no connect e destruídos no disconnect.
+        read -r unit _ _ <<< "$(vpn_meta "$id")"
+        since_us="$(systemctl show "$unit" -p ActiveEnterTimestampMonotonic --value)"
+        up_s="$(cut -d' ' -f1 /proc/uptime)"
+        uptime_s="$(awk -v s="''${since_us:-0}" -v u="$up_s" \
+          'BEGIN { v = (s > 0) ? int(u - s / 1000000) : 0; if (v < 0) v = 0; print v }')"
+
+        # Aqui NÃO se mede latência, e a divisão é o ponto: quem mede é a barra, com um
+        # ping CONTÍNUO de 1 pacote/s (Bar.qml, VpnProbe). Este comando só entrega o
+        # ALVO — descobrir quem responde dentro do túnel é trabalho de shell (varrer
+        # rotas, testar candidatos, memorizar), medir é trabalho de quem observa o
+        # tempo todo. A versão anterior media aqui, em rajadas de 3 pacotes, e o número
+        # saía BONITO E FALSO: ver o bloco VpnProbe p/ a medição que provou isso.
+        probe=null
+        tgt="$(probe_for "$id" "$ifc" "$ipaddr")"
+        [ "$tgt" = "-" ] || probe="\"$tgt\""
+        printf '{"id":"%s","name":"%s","connected":true,"iface":"%s","ip":"%s","mtu":%s,"uptime":%s,"rx":%s,"tx":%s,"errors":%s,"drops":%s,"probe":%s}' \
+          "$id" "$name" "$ifc" "$ipaddr" "$mtu" "$uptime_s" "$rx" "$tx" "$errs" "$drops" "$probe"
+      }
+
       case "''${1:-}" in
         connect)
           case "''${2:-}" in
@@ -282,13 +391,18 @@ let
           fai_conn    && fai=true
           ufscar_conn && ufscar=true
           printf '{"vpns":[{"id":"fai","name":"FAI","connected":%s},{"id":"ufscar","name":"UFSCar","connected":%s}]}\n' "$fai" "$ufscar" ;;
+        # Estado do túnel p/ o popover de HOVER (bar/VpnStatsPopover.qml). Mesma forma
+        # do status-json (lista de vpns) porque é o mesmo consumidor — mas não
+        # substitui aquele: este só vale com túnel de pé. Ver o bloco stats_one acima.
+        stats-json)
+          printf '{"vpns":[%s,%s]}\n' "$(stats_one fai FAI)" "$(stats_one ufscar UFSCar)" ;;
         # REMOVIDO (30/07) o subcomando `menu`, que abria um rofi solto no meio da tela.
         # A UI agora é um popover ANCORADO na barra (quickshell/bar/VpnPopover.qml), no tema
         # do shell. Não é só estética: o menu do rofi montava os rótulos com `systemctl
         # is-active`, que MENTE (ver fai_conn/ufscar_conn acima) — ele dizia "Desconectar"
         # durante o crash-loop do nxBender, sem existir túnel. O popover lê o status-json,
         # que checa o túnel de verdade. Uma fonte de verdade só, e a correta.
-        *) echo "uso: vpn connect|disconnect <ufscar|fai|all> | status-json | diagnose <id> | watch <id> [seg] | heal [id]" >&2; exit 1 ;;
+        *) echo "uso: vpn connect|disconnect <ufscar|fai|all> | status-json | stats-json | diagnose <id> | watch <id> [seg] | heal [id]" >&2; exit 1 ;;
       esac
     '';
   };

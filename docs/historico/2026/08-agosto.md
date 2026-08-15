@@ -1,6 +1,79 @@
 # Histórico — agosto de 2026
 
-56 entradas. Índice em [README.md](../README.md).
+57 entradas. Índice em [README.md](../README.md).
+
+- [x] Hover no pill da VPN mostra qualidade do túnel (14/08/2026) — o pill respondia só
+      "tem túnel?"; faltava "e está bom?", que é a pergunta de quem está com SSH ou chamada
+      dependendo dele. Agora o HOVER abre `bar/VpnStatsPopover.qml` (latência, jitter,
+      perda, gráfico da série, tráfego da sessão, tempo no ar) e o CLIQUE segue abrindo o
+      `VpnPopover` de sempre, com conectar/desconectar. Informação no hover, AÇÃO no clique.
+      • DIVISÃO DE TRABALHO: o `vpn stats-json` (novo) entrega o ESTADO — iface, IP, MTU,
+        tempo no ar, bytes da sessão e QUAL host serve de alvo de sonda — e a barra MEDE a
+        latência com ping contínuo. Não virou campo do `status-json` porque aquele é o
+        polling de 5s que pinta o pill e tem de ser barato; este só roda com túnel de pé.
+        Descobrir alvo (varrer rota, testar candidato, memorizar) é trabalho de shell;
+        observar o tempo todo é trabalho de quem fica aberto.
+      • ⚠️ O ALVO ÓBVIO DA SONDA NÃO SERVE: o peer do ppp da FAI é `192.0.2.1`, que é
+        TEST-NET-1 — endereço de fachada do SonicWall — e ignora ICMP (MEDIDO: 100% de
+        perda). Quem responde é `200.136.209.236` (fai.ufscar.br): IP público, mas a rota
+        `200.136.209.128/25` sai pelo ppp0, então o ping mede o TÚNEL. Baseline medida a 1
+        pacote/s: média ~34ms, mdev 0,8ms, 0% de perda — é dela que saem os cortes do
+        veredito (estável / lenta / instável / ruim).
+      • O `ping -I <iface>` não é detalhe de estilo: prende o pacote ao túnel
+        (SO_BINDTODEVICE). Sem ele, um alvo que deixasse de ser roteado pela VPN sairia pela
+        internet de casa e o painel exibiria uma latência ÓTIMA que não é a do túnel. Número
+        errado é pior que número ausente — com o bind, esse caso vira "sem sonda". PROVA
+        medida: o mesmo alvo preso ao `enp7s0` dá 100% de perda, então o número exibido não
+        tem como vir de fora do túnel.
+      • ⚠️⚠️ A 1ª VERSÃO MEDIA POR RAJADA E OS NÚMEROS ERAM BONITOS E FALSOS — o painel já
+        estava pronto e aprovado ("está tudo certo") quando a pergunta "esses números são
+        confiáveis?" derrubou metade dele. Ele pingava 3 pacotes a cada 20s. MEDIDO lado a
+        lado na mesma hora: a rajada dava mdev **0,4ms**; uma janela de 20s dava mdev
+        **3,3ms e pico de 54,7ms**. Ou seja, observava 0,6s de cada 20s (3% do tempo), então
+        engasgo de 2s era invisível em 97% dos casos — e a perda, com 3 pacotes, tinha
+        RESOLUÇÃO DE 33%: 1-3% de perda real aparecia como "0%". Só a média sobreviveu à
+        auditoria (33,6 contra 34,4 da referência de 40 pacotes). Lição: amostra curta não
+        responde pergunta sobre ESTABILIDADE, e um painel que exibe jitter de meio segundo
+        com cara de vigilância mente por omissão de escala.
+      • A CORREÇÃO foi virar sonda CONTÍNUA de 1 pacote/s (componente VpnProbe, no
+        `Bar.qml`) com estatística sobre a janela dos últimos 60 pacotes: jitter de verdade,
+        perda com resolução de 1,7% e uma barra por segundo no gráfico. Custo medido: 84 B/s,
+        e 30 pacotes a 1/s deram 0% de perda — o alvo não faz rate-limit nessa cadência.
+        O `-O` do ping é OBRIGATÓRIO: sem ele, pacote perdido é SILÊNCIO e a série ficaria só
+        com os que voltaram — perda 0% eterna, o mesmo tipo de mentira de novo.
+      • O `ping` é line-buffered mesmo escrevendo em pipe (verificado: uma linha por segundo,
+        sem `stdbuf`), que é o que torna a leitura do fluxo viável.
+      • WATCHDOG, porque sonda morta é a pior falha possível AQUI: com o `-O` o ping fala a
+        cada segundo mesmo quando o alvo some, então SILÊNCIO não é perda de pacote — é o
+        processo quebrado. Sem watchdog o painel congelaria exibindo a última janela boa,
+        com cara de "estável", que é a mentira que ele existe pra não contar. 5s sem linha =
+        marca o buraco na série e ressuscita o ping. TESTADO matando a sonda: voltou em 10s.
+      • O TÚNEL CAIU E VOLTOU no meio do trabalho, e ensinou duas coisas. (1) O `ping -I` NÃO
+        morre no reconnect: o ppp0 volta a se chamar ppp0 e o bind re-resolve — verificado
+        pelo `wchar` do processo, que seguiu crescendo ~1 linha/s. (2) Justamente por isso a
+        série emendaria dois túneis diferentes como se fossem um; o IP entrou na chave da
+        sonda (mudou de 192.168.50.2 p/ .3) pra forçar série nova.
+      • ⚠️ Pra VALIDAR mudança de QML aqui, `qs-restart`: o hot-reload manteve VIVO um Timer
+        da árvore antiga (um `console.log` de depuração continuou saindo depois de o arquivo
+        já estar limpo e de o log dizer "Configuration Loaded"). O quickshell.nix já avisa
+        que o hot-reload não reaplica tudo — vale pra objeto com Timer/Process, não só pra
+        delegate de Repeater.
+      • O GRÁFICO existe porque "está estável?" é pergunta sobre o TEMPO: um "34 ms" sozinho
+        não distingue túnel liso de túnel que oscilou 30→900ms no último minuto. A escala
+        começa em ZERO (teto = 60ms, ou 15% acima do pico) — auto-escalar pelo mínimo faria
+        0,5ms de variação virar serrote dramático, o oposto da leitura honesta.
+      • Duas pegadinhas de QML, as duas de sintoma mudo: `readonly property real top` no
+        delegate morre com "Cannot override FINAL property" (o nome colide com herança do
+        Item) — virou `scaleTop`; e INLINE COMPONENT NÃO ENXERGA O `id` DO DOCUMENTO que o
+        declara, então o `root.vpnStats[...]` dentro do VpnProbe estourava em ReferenceError,
+        a instância não nascia, e quem reclamava era o POPOVER — `undefined` a três arquivos
+        de distância da causa. O dado passou a CHEGAR por propriedade.
+      • Alvo memorizado em `$XDG_RUNTIME_DIR/vpn-probe-<id>`, com chave iface+IP: túnel novo
+        = sonda nova, e "não achei" é reavaliado a cada 5 min (senão um alvo fora do ar no
+        instante da conexão condenaria o painel a "sem sonda" até desconectar).
+      • O painel nasceu com 300px e o rodapé cortava o IP da sonda ("200.136.209…"). Foi p/
+        360 com rodapé em duas linhas: painel de diagnóstico que elide dado é contraditório —
+        quem abre está justamente atrás do detalhe.
 
 - [x] Azure MCP Server, e SÓ na conta da FAI (14/08/2026) — o pedido era mexer no
       portal.azure.com por comando em vez de clicar na interface. Virou `pkgs/azure-mcp.nix`

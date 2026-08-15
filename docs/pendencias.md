@@ -28,6 +28,19 @@ armadilha conhecida. Vale mais o parágrafo do que o título.
         no cliente". Só o olho de quem usa respondia.
       • O que sobra pra essa máquina: teto de bitrate e FEC, ambos no host.
 
+- [ ] Sonda de qualidade da VPN da UFSCar: sem alvo medido (aberto em 14/08/2026) — o
+      popover de hover do pill mede latência/jitter/perda pingando um host DENTRO do túnel.
+      Pra FAI o alvo está fixado e medido (`200.136.209.236`, ver histórico de hoje); pra
+      UFSCar não há nenhum, porque nunca liguei aquele túnel com o painel pronto pra
+      descobrir quem responde lá dentro. Enquanto isso o `vpn stats-json` cai no fallback
+      (gateways das rotas do tun) e, se ninguém responder, o painel diz "sem sonda".
+      • ⚠️ NÃO CHUTAR UM IP DA UFSCar pra "resolver": alvo que não é roteado pelo túnel
+        mediria a internet de casa. O `-I <iface>` protege contra isso (vira silêncio em vez
+        de número errado), mas o silêncio é o sintoma de estar chutando.
+      • COMO FECHAR: conectar (`vpn connect ufscar`), ver `ip -4 route show dev tun0`, pingar
+        candidatos com `ping -I tun0 <ip>` e fixar o que responder em `probe_candidates()`,
+        em `system/net/vpn.nix` — junto com a medição, como está o da FAI.
+
 - [ ] Peer `fai-workstation` (10.10.10.5) do WireGuard: vivo ou legado? (aberto em
       10/08/2026) — medido com o `wg-status` novo: em **17 dias** de uptime do roteador ele
       não fez UM handshake. E não é peer passivo esquecido: tem `persistent_keepalive = 25`,

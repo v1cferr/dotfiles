@@ -319,6 +319,293 @@ Scope {
         }
     }
 
+    // ===== Qualidade da VPN — popover de HOVER do pill =====
+    // O pill respondia só "tem túnel?"; faltava "e está bom?" — que é a pergunta de
+    // quem está com uma sessão SSH ou uma chamada dependendo dele.
+    // DUAS FONTES, de propósito: o `vpn stats-json` traz o ESTADO (iface, IP, MTU,
+    // tempo no ar, bytes, e qual host serve de alvo) a cada 20s — 3s com o painel
+    // aberto —, e a latência vem da sonda CONTÍNUA logo abaixo. Sem túnel nada disso
+    // roda, então o custo em repouso é zero; é por isso que não entrou no status-json,
+    // que roda a cada 5s o dia inteiro só p/ pintar o pill.
+    property var vpnStats: ({})   // id -> objeto do `vpn stats-json`
+    function parseVpnStats(text) {
+        try {
+            const j = JSON.parse(text);
+            const st = ({});
+            (j.vpns || []).forEach(v => st[v.id] = v);
+            root.vpnStats = st;
+        } catch (e) {}
+    }
+
+    // ── Sonda contínua: 1 pacote/s, janela de 60s ─────────────────────────────
+    // POR QUE CONTÍNUA, e não uma rajada a cada leitura — MEDIDO em 14/08/2026 no
+    // túnel da FAI, e foi o que condenou a 1ª versão: 3 pacotes em 0,6s davam mdev
+    // 0,4ms enquanto uma janela de 20s dava mdev 3,3ms e PICO DE 54,7ms. Ou seja, a
+    // rajada observava 3% do tempo e um engasgo de 2s era invisível em 97% dos casos;
+    // pior, a perda tinha resolução de 33% (3 pacotes!), então 1-3% de perda real
+    // aparecia como "0%". Número bonito e falso é pior que número ausente.
+    // O CUSTO é irrisório e foi medido: 84 B/s, e 30 pacotes a 1/s deram 0% de perda —
+    // o alvo não faz rate-limit nessa cadência. A janela de 60 amostras dá jitter de
+    // verdade e resolução de perda de 1,7%.
+    // O `ping` é LINE-BUFFERED mesmo escrevendo em pipe (verificado: uma linha por
+    // segundo, sem stdbuf), então dá pra ler o fluxo em vez de esperar ele terminar.
+    // QUEM DESCOBRE O ALVO é o CLI (system/net/vpn.nix): varrer rota e testar
+    // candidato é trabalho de shell; observar o tempo todo é trabalho de quem fica
+    // aberto. Sem alvo, esta sonda simplesmente não sobe e o painel diz "sem sonda".
+    component VpnProbe: Scope {
+        id: probe
+        // `info` CHEGA de fora (o objeto desta VPN no vpn stats-json) em vez de ser
+        // buscado aqui: inline component não enxerga o `id` do documento que o declara,
+        // então um `root.vpnStats[...]` daqui de dentro estoura em ReferenceError e a
+        // instância inteira não nasce — o sintoma foi `vpnProbeStat` virar undefined.
+        required property var info
+        readonly property string iface: probe.info.connected === true ? (probe.info.iface || "") : ""
+        readonly property string target: probe.info.connected === true ? (probe.info.probe || "") : ""
+        // Túnel novo (ou alvo novo) = série nova: emendar duas sessões desenharia um
+        // degrau que nunca existiu. O IP entra na chave porque o NOME da interface se
+        // repete: num reconnect o ppp0 volta a ser ppp0 (visto em 14/08/2026, o IP indo
+        // de 192.168.50.2 p/ .3) e sem ele a série atravessaria a queda como se nada
+        // tivesse acontecido.
+        readonly property string key: probe.iface + "@" + probe.ip + "@" + probe.target
+        readonly property string ip: probe.info.connected === true ? (probe.info.ip || "") : ""
+        readonly property int window: 60 // 1 min a 1 pacote/s
+        property var series: []          // ms por amostra; null = pacote sem resposta
+
+        onKeyChanged: {
+            probe.series = [];
+            pingProc.running = false;
+            if (probe.iface !== "" && probe.target !== "") {
+                // -O emite "no answer yet" na hora do timeout: sem isso, pacote perdido
+                // seria SILÊNCIO e a série ficaria só com os que voltaram (perda 0%
+                // eterna). -n não resolve DNS; -W 1 casa com o intervalo de 1s.
+                pingProc.command = ["ping", "-n", "-O", "-i", "1", "-W", "1", "-I", probe.iface, probe.target];
+                probe.lastAt = Date.now();
+                pingProc.running = true;
+            }
+        }
+        function push(v) {
+            const s = probe.series.slice(-(probe.window - 1));
+            s.push(v);
+            probe.series = s;
+        }
+        function feed(line) {
+            probe.lastAt = Date.now(); // qualquer linha prova que a sonda está viva
+            const m = line.match(/time=([0-9.]+) ms/);
+            if (m)
+                probe.push(Number(m[1]));
+            else if (line.indexOf("no answer yet") >= 0)
+                probe.push(null);
+            // cabeçalho e ruído não viram amostra, mas contam como sinal de vida
+        }
+        // WATCHDOG. Com o -O o ping FALA a cada segundo mesmo quando o alvo some, então
+        // SILÊNCIO não é perda de pacote: é a sonda quebrada (processo morto, interface
+        // recriada debaixo dele). Sem isto o painel congelaria exibindo a última janela
+        // boa, com cara de "estável" — exatamente a mentira que ele existe pra não
+        // contar. Marca o buraco na série E ressuscita o processo.
+        property double lastAt: 0
+        Timer {
+            interval: 5000
+            repeat: true
+            running: probe.iface !== "" && probe.target !== ""
+            onTriggered: {
+                if (Date.now() - probe.lastAt < 5000)
+                    return;
+                probe.push(null);
+                probe.lastAt = Date.now();
+                pingProc.running = false;
+                reviveTimer.restart();
+            }
+        }
+        Timer {
+            id: reviveTimer
+            interval: 300 // deixa o processo morrer antes de renascer
+            onTriggered: if (probe.iface !== "" && probe.target !== "")
+                pingProc.running = true
+        }
+        // Estatística da janela. O `mdev` é o desvio padrão das respondidas — a mesma
+        // conta do iputils, p/ o número aqui bater com o do `ping` no terminal.
+        readonly property var stat: {
+            const s = probe.series;
+            let n = 0, sum = 0, sum2 = 0, mn = 0, mx = 0, lost = 0;
+            for (let i = 0; i < s.length; i++) {
+                const v = s[i];
+                if (v === null) {
+                    lost++;
+                    continue;
+                }
+                if (n === 0 || v < mn)
+                    mn = v;
+                if (v > mx)
+                    mx = v;
+                n++;
+                sum += v;
+                sum2 += v * v;
+            }
+            const avg = n ? sum / n : 0;
+            return {
+                n: s.length,
+                answered: n,
+                lost: lost,
+                loss: s.length ? lost * 100 / s.length : 0,
+                avg: avg,
+                min: mn,
+                max: mx,
+                mdev: n ? Math.sqrt(Math.max(0, sum2 / n - avg * avg)) : 0
+            };
+        }
+        Process {
+            id: pingProc
+            stdout: SplitParser {
+                splitMarker: "\n"
+                onRead: data => probe.feed(data)
+            }
+        }
+    }
+    // Uma sonda por VPN — as mesmas duas que o CLI conhece (system/net/vpn.nix).
+    VpnProbe {
+        id: faiProbe
+        info: root.vpnStats["fai"] || ({})
+    }
+    VpnProbe {
+        id: ufscarProbe
+        info: root.vpnStats["ufscar"] || ({})
+    }
+    readonly property var vpnProbeStat: ({
+            fai: faiProbe.stat,
+            ufscar: ufscarProbe.stat
+        })
+    readonly property var vpnProbeSeries: ({
+            fai: faiProbe.series,
+            ufscar: ufscarProbe.series
+        })
+
+    // Veredito, com os cortes ancorados na baseline MEDIDA do túnel da FAI (14/08/2026,
+    // 1 pacote/s: média ~34ms, mdev 0,8ms, 0% de perda). A ORDEM é a do estrago: perda
+    // primeiro (mata sessão), jitter antes da média — 200ms estáveis se trabalha, 40ms
+    // serrilhados travam SSH e chamada.
+    // Os NÚMEROS não são chutados: 2% de perda = 2 pacotes perdidos na janela de 60, e
+    // um pacote solto por minuto é rotina demais p/ acender alarme; mdev de 10ms é uma
+    // ordem de grandeza acima do medido em túnel saudável.
+    // "medindo…" antes de 5 amostras porque veredito com 2 pacotes é adivinhação.
+    function vpnQuality(s, pr) {
+        if (!s || !s.connected)
+            return {
+                label: "—",
+                color: Theme.colDim
+            };
+        if (!s.probe)
+            return {
+                label: "sem sonda",
+                color: Theme.colDim
+            };
+        if (!pr || pr.n < 5)
+            return {
+                label: "medindo…",
+                color: Theme.colDim
+            };
+        if (pr.loss >= 20)
+            return {
+                label: "ruim",
+                color: Theme.colRed
+            };
+        if (pr.loss >= 2 || pr.mdev > 10)
+            return {
+                label: "instável",
+                color: Theme.colPeach
+            };
+        if (pr.avg > 150)
+            return {
+                label: "lenta",
+                color: Theme.colYellow
+            };
+        return {
+            label: "estável",
+            color: Theme.colGreen
+        };
+    }
+    // Taxa AGORA da interface do túnel: sai do netRates que a barra já calcula a cada
+    // 2s (/proc/net/dev) — o stats-json não repete essa conta. Interface parada não
+    // aparece naquela lista, e "não apareceu" quer dizer 0 B/s.
+    function vpnRate(iface) {
+        const r = (root.netRates || []).find(n => n.iface === iface);
+        return r || {
+            rx: 0,
+            tx: 0
+        };
+    }
+    function fmtBytes(b) {
+        if (b >= 1073741824)
+            return (b / 1073741824).toFixed(1) + " GB";
+        if (b >= 1048576)
+            return (b / 1048576).toFixed(1) + " MB";
+        if (b >= 1024)
+            return Math.round(b / 1024) + " KB";
+        return Math.round(b) + " B";
+    }
+    function fmtDur(s) {
+        if (s >= 86400)
+            return Math.floor(s / 86400) + "d " + Math.floor((s % 86400) / 3600) + "h";
+        if (s >= 3600)
+            return Math.floor(s / 3600) + "h " + Math.floor((s % 3600) / 60) + "min";
+        if (s >= 60)
+            return Math.floor(s / 60) + "min";
+        return Math.round(s) + "s";
+    }
+    // Só as CONECTADAS entram no painel: linha de VPN desligada não tem estatística,
+    // e o popover de AÇÕES (clique) é que lista as duas p/ ligar/desligar.
+    readonly property var vpnStatsList: {
+        const out = [];
+        const l = root.vpnList || [];
+        for (let i = 0; i < l.length; i++) {
+            if (l[i].connected !== true)
+                continue;
+            out.push(root.vpnStats[l[i].id] || {
+                    id: l[i].id,
+                    name: l[i].name,
+                    connected: true
+                });
+        }
+        return out;
+    }
+    // O painel de estatísticas é do HOVER; o de ações, do CLIQUE. Os dois ancoram no
+    // MESMO ponto da barra, então enquanto o menu está aberto este some — senão um
+    // desenharia por cima do outro (e o mouse continua sobre o pill o tempo todo).
+    property bool vpnPillHovered: false
+    property bool vpnStatsPopHovered: false
+    property bool vpnStatsPopVisible: false
+    readonly property bool vpnStatsWanted: (root.vpnPillHovered || root.vpnStatsPopHovered) && root.vpnConnected && !root.vpnPopVisible
+    onVpnStatsWantedChanged: {
+        if (root.vpnStatsWanted) {
+            vpnStatsCloseTimer.stop();
+            root.vpnStatsPopVisible = true;
+            vpnStatsProc.running = true; // amostra fresca ao abrir
+        } else {
+            vpnStatsCloseTimer.restart();
+        }
+    }
+    // Mesma folga de 300ms dos outros popovers de hover: dá pra atravessar o vão
+    // entre o pill e o painel sem ele fechar na cara.
+    Timer {
+        id: vpnStatsCloseTimer
+        interval: 300
+        onTriggered: if (!root.vpnStatsWanted)
+            root.vpnStatsPopVisible = false
+    }
+    Timer {
+        interval: root.vpnStatsPopVisible ? 3000 : 20000
+        running: root.vpnConnected
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: vpnStatsProc.running = true
+    }
+    Process {
+        id: vpnStatsProc
+        command: [root.vpnBin, "stats-json"]
+        stdout: StdioCollector {
+            onStreamFinished: root.parseVpnStats(text)
+        }
+    }
+
     // ===== Hypridle (toggle-hypridle.sh) =====
     property string hypridleIcon: "󰒲"
     property bool hypridleOn: false
@@ -1119,6 +1406,11 @@ Scope {
         bar: root
     }
 
+    // ===== Popover de estatísticas da VPN (hover) — view em bar/VpnStatsPopover.qml =====
+    VpnStatsPopover {
+        bar: root
+    }
+
     // ===== Barra por monitor =====
     Variants {
         model: Quickshell.screens
@@ -1254,11 +1546,20 @@ Scope {
                         // popover ANCORADO na barra (bar/VpnPopover.qml) — antes lançava
                         // `vpn menu`, um rofi solto no meio da tela, fora do tema do shell.
                         // Clique-direito segue sendo o atalho de derrubar tudo.
+                        // HOVER (com túnel de pé) mostra as estatísticas — VpnStatsPopover.qml.
+                        // A divisão é intencional: informação no hover, AÇÃO no clique. Painel
+                        // com botão que abre sozinho no hover some na primeira distração, e o
+                        // de estatísticas não tem nada pra clicar (mesmo critério do calendário).
                         id: vpnPill
                         icon: "󰦝"
                         label: root.vpnConnected ? root.vpnName : ""
                         accent: root.vpnConnected ? Theme.colGreen : Theme.colDim
                         maxWidth: 150
+                        onHoveredChanged: {
+                            root.vpnPillHovered = hovered;
+                            if (hovered)
+                                root.anchorPopover(vpnPill, barContent, bar.screen);
+                        }
                         onClicked: {
                             root.anchorPopover(vpnPill, barContent, bar.screen);
                             root.vpnPopVisible = !root.vpnPopVisible;

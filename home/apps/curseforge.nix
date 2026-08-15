@@ -1,37 +1,41 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# CurseForge — app oficial de modpacks do Minecraft. O PACOTE (AppImage oficial
-# reempacotado) mora em pkgs/curseforge.nix; aqui é o lado do usuário.
+# CurseForge: the official Minecraft modpack app. The PACKAGE (the official AppImage,
+# repackaged) lives in pkgs/curseforge.nix; this is the user side.
 #
-# SUBSTITUIU o prismlauncher em 14/08/2026: o Prism importa um .zip de modpack, mas quem
-# mantém a biblioteca e ATUALIZA o pack é o app do CurseForge — que é o uso real aqui.
+# It REPLACED prismlauncher on 14/08/2026: Prism imports a modpack .zip, but what keeps the
+# library and UPDATES the pack is the CurseForge app, which is the real use here.
 #
-# E a troca ENCOLHEU o sistema em 1,5 GiB, o contrário do que "nativo → Electron" sugere:
-# 27,2 → 25,7 GiB, medido com `nix store diff-closures`. curseforge +340,2 MiB contra
-# prismlauncher −17,6 MiB e openjdk (8, 17, 21 e 25, que o wrapper do Prism embrulhava)
-# −1,8 GiB. Os quatro JDKs saíram porque aqui NINGUÉM declara Java: quem provê é o próprio
-# app, que baixa a JRE dele.
+# And the swap SHRANK the system by 1.5 GiB, the opposite of what "native to Electron"
+# suggests: 27.2 to 25.7 GiB, measured with `nix store diff-closures`. curseforge +340.2 MiB
+# against prismlauncher -17.6 MiB and openjdk (8, 17, 21 and 25, which the Prism wrapper
+# bundled) -1.8 GiB. The four JDKs left because NOBODY declares Java here: the provider is
+# the app itself, which downloads its own JRE.
 #
-# ⚠️ O JAVA É DELE, NÃO NOSSO — e declarar Java aqui já foi tentado e NÃO funciona: o app
-# só consulta a JRE que ele mesmo gerencia (com três JRE instalados, o log do agent citou
-# 18× o java dele e ZERO vez o nosso). Quando aparecer "Java Runtime Environment is missing
-# or out of date", a causa NÃO é falta de Java — é o extrator dele perder o bit +x. Quem
-# conserta é o `curseforge-fix-java` abaixo; o diagnóstico inteiro está no pacote dele.
+# THE JAVA IS THEIRS, NOT OURS, and declaring Java here has already been tried and does
+# NOT work: the app only consults the JRE it manages itself (with three JREs installed, the
+# agent log went on citing ITS java 18 times and ours ZERO times). When "Java Runtime
+# Environment is missing or out of date" shows up, the cause is NOT a missing Java, it is
+# their extractor losing the `+x` bit. And that same extractor takes down the game launch
+# too, behind a different message ("An unexpected error occurred. Operation failed.",
+# 15/08/2026). What fixes both is `curseforge-fix-perms` below, and the whole diagnosis
+# lives in that package.
 #
-# Instâncias, mods e login são ESTADO (regra 6 → restic), não declaração:
-#   ~/.config/CurseForge/  (config + sessão)   ~/Documents/curseforge/  (instâncias)
+# Instances, mods and login are STATE (rule 6, so restic), not declaration:
+#   ~/.config/CurseForge/  (config + session)   ~/Documents/curseforge/  (instances)
 #
-# ⚠️ POR QUE OS SCHEMES ESTÃO AQUI E NÃO SÃO OPCIONAIS — o app tenta se registrar como
-# handler de `curseforge://`/`cfauth://` em RUNTIME (Electron setAsDefaultProtocolClient),
-# e isso NUNCA vai funcionar neste sistema: o ~/.config/mimeapps.list é gerenciado pelo
-# home-manager e aponta pra /nix/store, que é read-only (regra 14 — o Nix é o dono). Medido
-# em 14/08/2026, o log do app diz exatamente isso na largada:
+# WHY THE SCHEMES ARE HERE AND ARE NOT OPTIONAL: the app tries to register itself as the
+# handler for `curseforge://`/`cfauth://` at RUNTIME (Electron setAsDefaultProtocolClient),
+# and that will NEVER work on this system: ~/.config/mimeapps.list is managed by home-manager
+# and points into /nix/store, which is read-only (rule 14: Nix is the owner). Measured on
+# 14/08/2026, the app log says exactly that on startup:
 #     [BackgroundController] Failed subscribing app protocol.
 #     [LoginService] Failed to register login scheme 'cfauth'. This might create issues
 #                    with the login process..
-# E o `cfauth://` não é detalhe: é o callback do LOGIN (o app abre o browser e espera o
-# redirect de volta). Sem handler, o login volta pro nada. A associação declarativa abaixo
-# é o registro que o app não consegue fazer sozinho — o .desktop do pacote já declara os
-# três schemes no MimeType, aqui só se diz que ELE é o default.
+# And `cfauth://` is no detail: it is the LOGIN callback (the app opens the browser and waits
+# for the redirect back). With no handler, the login comes back to nothing. The declarative
+# association below is the registration the app cannot make on its own: the package's
+# .desktop already declares the three schemes in MimeType, here we only say that IT is the
+# default.
 # ═══════════════════════════════════════════════════════════════════════════
 { pkgs, lib, ... }:
 
@@ -40,27 +44,29 @@ let
 in
 {
   home.packages = [
-    pkgs.curseforge # AppImage oficial reempacotado (./pkgs) — unfree
-    # Recalcula version+hash do pkgs/curseforge.nix. No PATH porque quem o chama por nome
-    # é o alias `update` (home/shell/zsh.nix) — mesmo arranjo do vscode-bump.
+    pkgs.curseforge # the official AppImage, repackaged (./pkgs), unfree
+    # Recomputes version+hash of pkgs/curseforge.nix. On the PATH because what calls it by
+    # name is the `update` alias (home/shell/zsh.nix), the same arrangement as vscode-bump.
     pkgs.curseforge-bump
-    # Conserto do +x da JRE do app (ver o pacote). No PATH porque o download que quebra
-    # pode acontecer NO MEIO de uma sessão, e aí a activation abaixo já passou — nesse
-    # caso é rodar `curseforge-fix-java` e reabrir o app, sem esperar rebuild.
-    pkgs.curseforge-fix-java
+    # Gives back the `+x` on what the app unpacks (see the package). On the PATH because the
+    # download that breaks can happen IN THE MIDDLE of a session, by which point the
+    # activation below has already run: then it is a matter of running `curseforge-fix-perms`
+    # and reopening the app, with no rebuild to wait for.
+    pkgs.curseforge-fix-perms
   ];
 
-  # A JRE do app é ESTADO (regra 6) e quem a escreve é ele (regra 14) — por isso activation
-  # IDEMPOTENTE em vez de gerenciar o arquivo: o Nix não vira dono de nada aqui, só desfaz
-  # um estrago conhecido. `writeBoundary` porque o pacote precisa estar no perfil antes.
-  home.activation.curseforgeFixJava = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    run ${lib.getExe pkgs.curseforge-fix-java}
+  # What the app unpacks is STATE (rule 6) and it is the app that writes it (rule 14), hence
+  # an IDEMPOTENT activation instead of managing the files: Nix does not become the owner of
+  # anything here, it only undoes a known bit of damage. `writeBoundary` because the package
+  # has to be in the profile first.
+  home.activation.curseforgeFixPerms = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    run ${lib.getExe pkgs.curseforge-fix-perms}
   '';
 
-  # Funde com as associações do home/desktop/xdg.nix (browser) e do media.nix.
+  # Merges with the associations from home/desktop/xdg.nix (browser) and media.nix.
   xdg.mimeApps.defaultApplications = {
-    "x-scheme-handler/cfauth" = curseforge; # callback do login — o que mais importa
-    "x-scheme-handler/curseforge" = curseforge; # botão "Install" no site do modpack
-    "x-scheme-handler/curseforge-checkout" = curseforge; # compra de add-on premium
+    "x-scheme-handler/cfauth" = curseforge; # the login callback, the one that matters most
+    "x-scheme-handler/curseforge" = curseforge; # the "Install" button on the modpack site
+    "x-scheme-handler/curseforge-checkout" = curseforge; # buying a premium add-on
   };
 }

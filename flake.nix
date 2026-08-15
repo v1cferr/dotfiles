@@ -1,131 +1,137 @@
 {
-  description = "Sistema declarativo do v1cferr — NixOS (nixos-kingston) + home-manager unificados";
+  description = "My declarative system: NixOS (nixos-kingston) + home-manager, unified";
 
   inputs = {
-    # BASE do sistema: canal ESTÁVEL (release, tipo Debian/Ubuntu, ~6 meses).
-    # É onde a maioria dos pacotes fica — previsível, sem surpresa.
+    # SYSTEM BASE: the STABLE channel (a release, like Debian/Ubuntu, ~6 months).
+    # It is where most packages come from: predictable, no surprises.
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
-    # BLEEDING-EDGE sob demanda: canal unstable (rolling, tipo Arch). NÃO é a
-    # base — só alimenta o overlay `unstable.*` pra pacotes escolhidos a dedo.
+    # BLEEDING EDGE on demand: the unstable channel (rolling, like Arch). It is NOT
+    # the base, it only feeds the `unstable.*` overlay for hand-picked packages.
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     home-manager = {
-      # Branch de release CASA com o nixpkgs estável (evita mismatch de opções).
+      # The release branch MATCHES the stable nixpkgs (it avoids option mismatches).
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Particionamento declarativo — reservado p/ futuros hosts bare-metal.
+    # Declarative partitioning, kept for future bare-metal hosts.
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Segredos criptografados versionados no repo (senha, tokens…). A chave-mestra
-    # age fica FORA do git e é a única coisa a carregar no cutover.
+    # Encrypted secrets versioned in the repo (passwords, tokens...). The age master
+    # key lives OUTSIDE git and is the only thing to carry over on a cutover.
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Zen Browser — NÃO está no nixpkgs; este flake segue os releases do upstream.
-    # "Sempre a última versão" = bump com `nix flake update zen-browser`.
+    # Zen Browser: NOT in nixpkgs, so this flake follows the upstream releases.
+    # "Always the latest version" = bump with `nix flake update zen-browser`.
     zen-browser = {
       url = "github:0xc000022070/zen-browser-flake";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.home-manager.follows = "home-manager"; # dedup: evita home-manager_2 no lock
+      inputs.home-manager.follows = "home-manager"; # dedup: keeps home-manager_2 out of the lock
     };
 
-    # duo-streak-daemon — o app (daemon Playwright + API + web + Docker) mora no
-    # SEU repo. Aqui é só DEPLOY: fixamos o commit no flake.lock (bump com
-    # `nix flake update duo-streak-daemon`) e o docker-compose builda do store-path.
-    # flake = false: é um repo de código comum, não expõe outputs Nix.
+    # duo-streak-daemon: the app (Playwright daemon + API + web + Docker) lives in ITS
+    # OWN repo. Here it is only DEPLOY: the commit is pinned in flake.lock (bump with
+    # `nix flake update duo-streak-daemon`) and docker-compose builds from the store path.
+    # flake = false: it is a plain code repo, it exposes no Nix outputs.
     duo-streak-daemon = {
-      # Repo PRIVADO → git+ssh (reusa a chave SSH; sem token no sops). O `nix flake
-      # lock`/update roda como USUÁRIO (tem a chave) e popula a store; o rebuild
-      # como root reusa o store-path já fixado, sem re-fetch.
+      # PRIVATE repo, so git+ssh (it reuses the SSH key, no token in sops). `nix flake
+      # lock`/update runs as the USER (who has the key) and populates the store; the
+      # rebuild as root reuses the store path already pinned, with no re-fetch.
       url = "git+ssh://git@github.com/v1cferr/duo-streak-daemon.git";
       flake = false;
     };
 
-    # Tema do GRUB estilo "seleção de mundo" do Minecraft — cada SO/geração vira um
-    # "mundo" com ícone e descrição. É o do dualboot NixOS ⇄ Windows 11, ATIVO em
-    # system/core/boot.nix. O outro tema do mesmo autor (minegrub-theme, o menu
-    # principal do Minecraft) foi preterido: entrada vira botão, sem ícone por SO.
+    # A GRUB theme in the style of the Minecraft "world selection" screen: each
+    # OS/generation becomes a "world" with an icon and a description. It is the one for
+    # the NixOS ⇄ Windows 11 dualboot, ACTIVE in system/core/boot.nix. The other theme by
+    # the same author (minegrub-theme, the Minecraft main menu) was passed over: an entry
+    # becomes a button, with no icon per OS.
     minegrub-world-sel-theme = {
       url = "github:Lxtharia/minegrub-world-sel-theme";
-      inputs.nixpkgs.follows = "nixpkgs"; # dedup: não puxa um 2º nixpkgs pro lock
+      inputs.nixpkgs.follows = "nixpkgs"; # dedup: does not pull a 2nd nixpkgs into the lock
     };
 
-    # Quickshell — shell/bar em QML (outfoxxed), NÃO no nixpkgs. "Sempre a última":
-    # bump com `nix flake update quickshell`. A config QML mora no repo
-    # (home/desktop/quickshell/) e é linkada por mkOutOfStoreSymlink → hot-reload.
+    # Quickshell: a shell/bar in QML (outfoxxed), NOT in nixpkgs. "Always the latest"
+    # means bumping with `nix flake update quickshell`. The QML config lives in the repo
+    # (home/desktop/quickshell/) and is linked by mkOutOfStoreSymlink, so it hot-reloads.
     quickshell = {
       url = "git+https://git.outfoxxed.me/quickshell/quickshell";
       inputs.nixpkgs.follows = "nixpkgs"; # dedup
     };
 
-    # Claude Desktop — NÃO está no nixpkgs (a issue #366213 foi fechada; o canal só
-    # tem claude-code/claude-monitor). Este flake REEMPACOTA o .deb OFICIAL que a
-    # Anthropic passou a publicar em 30/06/2026 (beta Linux, APT próprio) — padrão
-    # nixpkgs de vendor binário (dpkg-deb + autoPatchelfHook), como discord/vscode.
-    # Preterido: k3d3/claude-desktop-linux-flake (o pioneiro, mas fazia RE do binário
-    # de Windows e está parado desde nov/2025) e heytcass/claude-for-linux (extrai do
-    # DMG do macOS; 6 estrelas, 77 issues). CI do upstream bumpa versão+hash sozinha,
-    # então "última versão" = `nix flake update claude-desktop`.
+    # Claude Desktop: NOT in nixpkgs (issue #366213 was closed; the channel only has
+    # claude-code/claude-monitor). This flake REPACKAGES the OFFICIAL .deb that Anthropic
+    # started publishing on 30/06/2026 (Linux beta, its own APT), which is the nixpkgs
+    # pattern for a vendored binary (dpkg-deb + autoPatchelfHook), like discord/vscode.
+    # Passed over: k3d3/claude-desktop-linux-flake (the pioneer, but it reverse engineered
+    # the Windows binary and has been idle since nov/2025) and heytcass/claude-for-linux
+    # (extracts from the macOS DMG; 6 stars, 77 issues). Upstream CI bumps version+hash on
+    # its own, so "the latest version" = `nix flake update claude-desktop`.
     claude-desktop = {
       url = "github:aaddrick/claude-desktop-debian";
-      inputs.nixpkgs.follows = "nixpkgs"; # dedup: só afeta o lock (o overlay usa o pkgs DAQUI)
+      inputs.nixpkgs.follows = "nixpkgs"; # dedup: only affects the lock (the overlay uses the pkgs FROM HERE)
     };
 
-    # git-hooks.nix — pre-commit gerenciado por Nix. É o que faz o lint pegar ANTES do
-    # commit em vez de depois do push: sem ele, `nix flake check` e o CI só reprovam
-    # quando o erro já está na história. As HOOKS ficam declaradas em checks abaixo, e
-    # o `shellHook` que instala o .git/hooks/pre-commit vem do devShells.
-    # (cachix/git-hooks.nix é o nome atual; o repo antigo pre-commit-hooks.nix redireciona.)
+    # git-hooks.nix: pre-commit managed by Nix. It is what makes the lint catch things
+    # BEFORE the commit instead of after the push: without it, `nix flake check` and the CI
+    # only fail once the mistake is already in the history. The HOOKS are declared in checks
+    # below, and the `shellHook` that installs .git/hooks/pre-commit comes from devShells.
+    # (cachix/git-hooks.nix is the current name; the old pre-commit-hooks.nix repo redirects.)
     git-hooks = {
       url = "github:cachix/git-hooks.nix";
-      inputs.nixpkgs.follows = "nixpkgs"; # dedup: statix/deadnix/nixfmt vêm da MESMA base
+      inputs.nixpkgs.follows = "nixpkgs"; # dedup: statix/deadnix/nixfmt come from the SAME base
     };
 
-    # Google Chrome canais DEV/BETA — o nixpkgs só empacota o stable. Este flake
-    # mantido (nix-community) traz o google-chrome-dev sempre fresco; "latest" = bump
-    # com `nix flake update browser-previews`. Usado em home/packages.nix.
+    # Google Chrome DEV/BETA channels: nixpkgs only packages stable. This maintained flake
+    # (nix-community) keeps google-chrome-dev fresh; "latest" = bump with
+    # `nix flake update browser-previews`. Used in home/packages.nix.
     browser-previews = {
       url = "github:nix-community/browser-previews";
-      inputs.nixpkgs.follows = "nixpkgs"; # dedup (derivation própria, sem dep do unstable)
+      inputs.nixpkgs.follows = "nixpkgs"; # dedup (its own derivation, no dep on unstable)
     };
 
-    # VS Code do tarball OFICIAL do canal stable, em versão FIXA. Existe porque o nixpkgs
-    # não serve: o bump lá é humano/bot e fica 3-14 dias atrás, às vezes PULANDO release
-    # (1.125→1.127, 1.127→1.129.1 em jul/26). A causa é estrutural — o auto-updater do VS Code
-    # não roda com a store read-only, então a versão é literalmente o que está no lock. NÃO é o
-    # Insiders (build de teste diária). `flake = false` porque é tarball, não flake.
+    # VS Code from the OFFICIAL stable-channel tarball, at a FIXED version. It exists because
+    # nixpkgs does not serve: the bump there is human/bot and runs 3 to 14 days behind, and it
+    # sometimes SKIPS a release (1.125 to 1.127, 1.127 to 1.129.1 in jul/26). The cause is
+    # structural: the VS Code auto-updater does not run with a read-only store, so the version
+    # is literally whatever is in the lock. This is NOT Insiders (the daily test build).
+    # `flake = false` because it is a tarball, not a flake.
     #
-    # NOME: chamava-se `vscode-latest` até 05/08/2026, e o nome virou mentira no minuto em
-    # que a URL foi fixada — "latest" prometia um acompanhamento automático que não existe
-    # mais. `-tarball` diz o que É (e explica o `flake = false`), sem prometer versão.
+    # THE NAME: it was called `vscode-latest` until 05/08/2026, and the name turned into a lie
+    # the minute the URL was pinned: "latest" promised an automatic tracking that no longer
+    # exists. `-tarball` says what it IS (and explains the `flake = false`), without promising
+    # a version.
     #
-    # URL VERSIONADA e não `/latest/` — mudou em 05/08/2026, e o motivo foi o CI ficar VERMELHO:
-    #   error: mismatch in field 'narHash' of input '…/latest/linux-x64/stable'
-    #          lock: sha256-2Fzf… | servido: sha256-PLpT…
-    # A causa: `/latest/` é PONTEIRO. Saiu a 1.132.0, o ponteiro andou, e o narHash travado (que
-    # era da 1.131.0) deixou de casar. Aqui passava porque o tarball velho já estava na store;
-    # em máquina limpa — CI, clone novo, reinstalação — o flake não avaliava mais. Ou seja: o
-    # furo na regra 13 não era um risco de 2032, era quebra a cada release do VS Code.
+    # A VERSIONED URL and not `/latest/`: this changed on 05/08/2026, and the reason was the CI
+    # going RED:
+    #   error: mismatch in field 'narHash' of input '.../latest/linux-x64/stable'
+    #          lock: sha256-2Fzf... | served: sha256-PLpT...
+    # The cause: `/latest/` is a POINTER. 1.132.0 shipped, the pointer moved, and the pinned
+    # narHash (which was 1.131.0's) stopped matching. Here it passed because the old tarball was
+    # already in the store; on a clean machine (CI, a fresh clone, a reinstall) the flake did not
+    # evaluate anymore. In other words: the hole in rule 13 was not a 2032 risk, it broke on
+    # every VS Code release.
     #
-    # Medido antes de trocar (o que prova que a URL versionada resolve): `/1.131.0/` devolve
-    # exatamente o `sha256-2Fzf…` que estava no lock, e `/1.132.0/` devolve `sha256-PLpT…` —
-    # os dois estáveis em fetches repetidos. Artefato versionado é imutável; ponteiro não é.
+    # Measured before switching, which is what proves the versioned URL fixes it: `/1.131.0/`
+    # returns exactly the `sha256-2Fzf...` that was in the lock, and `/1.132.0/` returns
+    # `sha256-PLpT...`, both stable across repeated fetches. A versioned artifact is immutable;
+    # a pointer is not.
     #
-    # PREÇO da URL fixa: `nix flake update` não traz versão nova sozinho. Quem paga é o
-    # `vscode-bump` (pkgs/vscode-bump.nix) desde 06/08/2026 — consulta a API oficial,
-    # reescreve o número DESTA linha e roda `nix flake update vscode-tarball`. Ele é o
-    # primeiro passo dos aliases `update`/`upgrade` (home/shell/zsh.nix), então "sempre na
-    # última stable" acontece no rebuild, sem edição manual e sem furar a regra 13 (o hash
-    # continua travado no lock; o que mudou é QUEM o atualiza). Subir na mão continua
-    # possível: editar aqui + `nix flake update vscode-tarball`.
+    # THE PRICE of a fixed URL: `nix flake update` does not bring a new version on its own. Who
+    # pays it is `vscode-bump` (pkgs/vscode-bump.nix) since 06/08/2026: it queries the official
+    # API, rewrites the number on THIS line and runs `nix flake update vscode-tarball`. It is the
+    # first step of the `update`/`upgrade` aliases (home/shell/zsh.nix), so "always on the latest
+    # stable" happens at rebuild time, with no manual edit and without breaking rule 13 (the hash
+    # is still pinned in the lock; what changed is WHO updates it). Bumping by hand is still
+    # possible: edit here + `nix flake update vscode-tarball`.
     vscode-tarball = {
       url = "tarball+https://update.code.visualstudio.com/1.132.0/linux-x64/stable";
       flake = false;
@@ -134,7 +140,7 @@
 
   outputs =
     {
-      self, # usado em devShells (lê o shellHook do checks.pre-commit)
+      self, # used in devShells (it reads the shellHook from checks.pre-commit)
       nixpkgs,
       nixpkgs-unstable,
       home-manager,
@@ -145,44 +151,45 @@
     let
       system = "x86_64-linux";
 
-      # UMA instância do canal unstable, criada FORA do overlay de propósito. Dentro
-      # dele, o `import` corre por instância de `pkgs` — e overlay vale também pros
-      # SPLICES (`pkgsi686Linux`, que o Steam instancia por causa do 32-bit): no dia
-      # que alguém tocar `pkgs.pkgsi686Linux.unstable`, a árvore unstable seria
-      # importada OUTRA vez. Hoje é lazy e não custa nada; içar o import é o que
-      # garante que continue assim. É também a forma que a comunidade associa a OOM
-      # em avaliação (discourse 1517) — o custo aparece quando as instâncias somam.
+      # ONE instance of the unstable channel, created OUTSIDE the overlay on purpose. Inside
+      # it, the `import` runs once per `pkgs` instance, and an overlay also applies to the
+      # SPLICES (`pkgsi686Linux`, which Steam instantiates because of 32-bit): the day someone
+      # touches `pkgs.pkgsi686Linux.unstable`, the unstable tree would be imported ANOTHER
+      # time. Today it is lazy and costs nothing; hoisting the import is what keeps it that
+      # way. It is also what the community associates with evaluation OOM (discourse 1517):
+      # the cost shows up once the instances add up.
       pkgsUnstable = import nixpkgs-unstable {
         inherit system;
         config.allowUnfree = true;
       };
 
-      # Overlay que expõe `pkgs.unstable.<pacote>` = versão do canal unstable,
-      # mantendo TODO o resto do sistema na base estável. É isso que dá a
-      # escolha por pacote: `pkgs.foo` (estável) vs `pkgs.unstable.foo` (última).
+      # Overlay that exposes `pkgs.unstable.<package>` = the unstable channel's version, while
+      # the whole rest of the system stays on the stable base. That is what gives the choice
+      # per package: `pkgs.foo` (stable) vs `pkgs.unstable.foo` (the latest).
       overlayUnstable = _: _: { unstable = pkgsUnstable; };
 
-      # Spotify: `--no-zygote` embutido no PACOTE, sem o qual o app não abre. O CEF dele
-      # aborta com "GPU process isn't usable. Goodbye." e cai de SIGTRAP em ~270ms, sem
-      # janela e sem erro visível. `--disable-gpu` e `--no-sandbox` não mudam nada; só
-      # esta flag contorna (medido 11/08/2026 na 1.2.92.147 — a suspeita anterior, de que
-      # era a VERSÃO, estava errada: a 1.2.92 crasha igual à 1.2.90).
+      # Spotify: `--no-zygote` baked into the PACKAGE, without which the app does not open. Its
+      # CEF aborts with "GPU process isn't usable. Goodbye." and dies of SIGTRAP in ~270ms, with
+      # no window and no visible error. `--disable-gpu` and `--no-sandbox` change nothing, only
+      # this flag works around it (measured 11/08/2026 on 1.2.92.147; the earlier suspicion,
+      # that it was the VERSION, was wrong: 1.2.92 crashes just like 1.2.90).
       #
-      # POR QUE NO PACOTE e não no `exec` do home/desktop/autostart.nix, que seria a
-      # linha mais curta: o `.desktop` do Spotify usa `Exec=spotify` — nome NU, resolvido
-      # pelo PATH. Flag só no autostart consertaria o boot e deixaria o MENU crashando,
-      # com dois lugares pra manter em sincronia. Embrulhando o pacote, todo caminho que
-      # chega no `spotify` do perfil pega a flag (regra 15: uma dona só).
+      # WHY IN THE PACKAGE and not in the `exec` of home/desktop/autostart.nix, which would be
+      # the shorter line: Spotify's `.desktop` uses `Exec=spotify`, a BARE name resolved through
+      # PATH. A flag only in the autostart would fix boot and leave the MENU crashing, with two
+      # places to keep in sync. Wrapping the package, every path that reaches the profile's
+      # `spotify` gets the flag (rule 15: a single owner).
       #
-      # postFixup e não postInstall: a receita do nixpkgs faz o wrap dela no installPhase,
-      # e o fixupPhase roda DEPOIS — envelopar antes seria envelopar o que ainda não existe.
-      # `$out/bin/spotify` é symlink pra ../share/spotify/spotify; o wrapProgram move o
-      # symlink pra bin/.spotify-wrapped (destino relativo segue válido, mesmo dir) e põe o
-      # wrapper no lugar dele.
+      # postFixup and not postInstall: the nixpkgs recipe does its own wrap in installPhase, and
+      # fixupPhase runs AFTER, so wrapping earlier would wrap what does not exist yet.
+      # `$out/bin/spotify` is a symlink to ../share/spotify/spotify; wrapProgram moves the
+      # symlink to bin/.spotify-wrapped (the relative target stays valid, same dir) and puts the
+      # wrapper in its place.
       #
-      # Patcha DENTRO de `unstable` (por isso depois do overlayUnstable), mesmo motivo do
-      # overlayVscodeTarball: `unstable` é outro import de nixpkgs.
-      # REMOVER quando o Spotify voltar a abrir sem flag — testar é `spotify` sem ela.
+      # It patches INSIDE `unstable` (hence after overlayUnstable), for the same reason as
+      # overlayVscodeTarball: `unstable` is another import of nixpkgs.
+      # REMOVE once Spotify opens again without the flag. Testing that is running `spotify`
+      # without it.
       overlaySpotifyNoZygote = _: prev: {
         unstable = prev.unstable // {
           spotify = prev.unstable.spotify.overrideAttrs (old: {
@@ -193,16 +200,17 @@
         };
       };
 
-      # Troca só o SRC do vscode pelo tarball do input vscode-tarball, mantendo a RECEITA do
-      # unstable — o generic.nix do nixpkgs tem lógica versionada (`versionAtLeast
-      # vscodeVersion "1.129.0"`), então patchar receita fresca é o delta mínimo; sobre a
-      # receita da 26.05 (era 1.119) o salto de 12 versões passaria por ramos que não existem.
-      # Patcha DENTRO de `unstable` (por isso vem depois do overlayUnstable) porque `unstable`
-      # é outro import de nixpkgs, que os overlays daqui não alcançam.
-      #   version: lido do package.json do próprio tarball. O input já é store path em eval,
-      #            então é readFile puro — sem IFD, sem hash duplicado pra manter.
-      #   sourceRoot: o fetcher de tarball do flake REMOVE o dir de topo (VSCode-linux-x64),
-      #               diferente do fetchurl do nixpkgs (que usa sourceRoot = "").
+      # Swaps only the vscode SRC for the tarball from the vscode-tarball input, keeping the
+      # RECIPE from unstable: the nixpkgs generic.nix has version-gated logic (`versionAtLeast
+      # vscodeVersion "1.129.0"`), so patching a fresh recipe is the minimal delta; over the
+      # 26.05 recipe (which was 1.119) a 12-version jump would go through branches that do not
+      # exist. It patches INSIDE `unstable` (hence after overlayUnstable) because `unstable` is
+      # another import of nixpkgs, which the overlays here do not reach.
+      #   version: read from the package.json of the tarball itself. The input is already a
+      #            store path at eval time, so it is a plain readFile: no IFD, no second hash
+      #            to maintain.
+      #   sourceRoot: the flake tarball fetcher STRIPS the top-level dir (VSCode-linux-x64),
+      #               unlike the nixpkgs fetchurl (which uses sourceRoot = "").
       overlayVscodeTarball = _: prev: {
         unstable = prev.unstable // {
           vscode = prev.unstable.vscode.overrideAttrs (_: {
@@ -216,41 +224,43 @@
         };
       };
 
-      # btop com suporte à GPU Intel Xe — TEMPORÁRIO, com data de validade explícita.
+      # btop with Intel Xe GPU support: TEMPORARY, with an explicit expiry date.
       #
-      # O btop 1.4.7 (o que está no nixpkgs) JÁ vem com `-DBTOP_GPU=ON`; o furo não é build
-      # flag nem permissão de root — é que o backend Intel dele é i915 e SÓ i915. A Arc B580
-      # é Battlemage, roda no driver `xe`, e o i915 nem suporta esse chip. Medido no binário
-      # da 1.4.7: só existem `i915`/`intel_i915_info`, nenhuma referência a `xe`. Ou seja,
-      # `sudo btop` também não mostraria nada — não há código pra ler o contador.
-      # Upstream: issues #1407 (feature request Xe) e #1073 (esta placa, B580) ABERTAS.
+      # btop 1.4.7 (the one in nixpkgs) ALREADY ships `-DBTOP_GPU=ON`; the gap is neither a
+      # build flag nor a root permission, it is that its Intel backend is i915 and ONLY i915.
+      # The Arc B580 is Battlemage, runs on the `xe` driver, and i915 does not even support that
+      # chip. Measured on the 1.4.7 binary: only `i915`/`intel_i915_info` exist, no reference to
+      # `xe`. Which means `sudo btop` would show nothing either: there is no code to read the
+      # counter. Upstream: issues #1407 (the Xe feature request) and #1073 (this card, B580) are
+      # both OPEN.
       #
-      # O PR #1457 implementa Xe (util por fdinfo com fallback gtidle/PMU, clock por sysfs,
-      # VRAM dedicada, power por hwmon) e foi testado em B580. Aqui roda SEM root.
+      # PR #1457 implements Xe (util through fdinfo with a gtidle/PMU fallback, clock through
+      # sysfs, dedicated VRAM, power through hwmon) and was tested on a B580. Here it runs
+      # WITHOUT root.
       #
-      # Por que o fork inteiro e não `patches = [ (fetchpatch …) ]`, que seria o delta menor:
-      # o PR é contra `main`, e o diff NÃO aplica sobre a tag v1.4.7 (`git apply --check`
-      # falha em src/linux/btop_collect.cpp:317). Trocar o `src` é o mesmo padrão do
-      # overlayVscodeTarball acima — receita do nixpkgs, código de outro lugar.
+      # Why the whole fork and not `patches = [ (fetchpatch ...) ]`, which would be the smaller
+      # delta: the PR is against `main`, and the diff does NOT apply on top of tag v1.4.7 (`git
+      # apply --check` fails at src/linux/btop_collect.cpp:317). Swapping the `src` is the same
+      # pattern as overlayVscodeTarball above: the nixpkgs recipe, code from somewhere else.
       #
-      # REMOVER quando o #1457 mergear e a release com ele chegar ao canal: apagar este
-      # overlay, a linha na lista de overlays e o `btop` de packages.${system}. Aí o
-      # `pkgs.btop` volta a ser o do nixpkgs, já com Xe. (Regra: zero legado — isto não
-      # pode virar mobília.)
+      # REMOVE once #1457 merges and the release carrying it reaches the channel: delete this
+      # overlay, its line in the overlay list and the `btop` in packages.${system}. Then
+      # `pkgs.btop` goes back to being the nixpkgs one, Xe included. (Rule: zero legacy, this
+      # must not become furniture.)
       #
-      # version: convenção do nixpkgs pra snapshot não-lançado (`-unstable-<data do commit>`),
-      #          porque o CMakeLists do fork ainda diz 1.4.7 e chamar de "1.4.7" seco
-      #          esconderia que não é a release. Como o binário reporta 1.4.7 e não esta
-      #          string, o versionCheckHook reprovaria — daí o doInstallCheck = false.
-      # changelog: o do nixpkgs é interpolado com a version e apontaria pra uma tag que não
-      #            existe; aqui vale o próprio PR.
+      # version: the nixpkgs convention for an unreleased snapshot (`-unstable-<commit date>`),
+      #          because the fork's CMakeLists still says 1.4.7 and calling it plain "1.4.7"
+      #          would hide that it is not the release. Since the binary reports 1.4.7 and not
+      #          this string, versionCheckHook would fail it, hence doInstallCheck = false.
+      # changelog: the nixpkgs one is interpolated with the version and would point at a tag
+      #            that does not exist; here the PR itself is what counts.
       overlayBtopXe = _: prev: {
         btop = prev.btop.overrideAttrs (old: {
           version = "1.4.7-unstable-2026-07-20";
           src = prev.fetchFromGitHub {
             owner = "deveworld";
             repo = "btop";
-            rev = "76530c80dd6184ccb72d7048c2589afdc4bdee52"; # feature/xe-gpu-support, head do PR #1457
+            rev = "76530c80dd6184ccb72d7048c2589afdc4bdee52"; # feature/xe-gpu-support, head of PR #1457
             hash = "sha256-zBzr2NmekUvK8Hae5N/8qu9OdfGK5+Kzu7maZOVK/sY=";
           };
           doInstallCheck = false;
@@ -260,26 +270,26 @@
         });
       };
 
-      # Pacotes LOCAIS (fora do nixpkgs), empacotados em ./pkgs e expostos como
-      # `pkgs.<nome>`. callPackage injeta as deps automaticamente.
+      # LOCAL packages (outside nixpkgs), packaged in ./pkgs and exposed as `pkgs.<name>`.
+      # callPackage injects the deps automatically.
       overlayLocalPkgs = final: _: {
         claude-code-discord-status = final.callPackage ./pkgs/claude-code-discord-status.nix { };
-        azure-mcp = final.callPackage ./pkgs/azure-mcp.nix { }; # Azure MCP Server (`azmcp`) — só no claude-fai
-        nxbender = final.callPackage ./pkgs/nxbender.nix { }; # cliente FOSS da VPN SonicWall (FAI)
-        vscode-bump = final.callPackage ./pkgs/vscode-bump.nix { }; # bump do vscode-tarball p/ a última stable
-        curseforge = final.callPackage ./pkgs/curseforge.nix { }; # AppImage oficial de modpacks (unfree)
-        curseforge-bump = final.callPackage ./pkgs/curseforge-bump.nix { }; # version+hash do curseforge.nix
-        curseforge-fix-java = final.callPackage ./pkgs/curseforge-fix-perms.nix { }; # +x na JRE que o app baixa
+        azure-mcp = final.callPackage ./pkgs/azure-mcp.nix { }; # Azure MCP Server (`azmcp`), only in claude-fai
+        nxbender = final.callPackage ./pkgs/nxbender.nix { }; # FOSS client for the SonicWall VPN (FAI)
+        vscode-bump = final.callPackage ./pkgs/vscode-bump.nix { }; # bumps vscode-tarball to the latest stable
+        curseforge = final.callPackage ./pkgs/curseforge.nix { }; # official modpack AppImage (unfree)
+        curseforge-bump = final.callPackage ./pkgs/curseforge-bump.nix { }; # version+hash of curseforge.nix
+        curseforge-fix-perms = final.callPackage ./pkgs/curseforge-fix-perms.nix { }; # +x on what the app unpacks
       };
 
-      # Claude Desktop: força o backend de secret. O Electron autodetecta pelo
-      # XDG_CURRENT_DESKTOP, "Hyprland" não casa com nenhum caso do os_crypt do
-      # Chromium, ele cai no "basic text" e aí o safeStorage se declara indisponível
-      # → o app avisa "your sign-in won't be saved" e pede login TODA vez. É o MESMO
-      # bug e o MESMO remédio do VS Code (home/packages.nix), mas sem `commandLineArgs`
-      # (não é o electron do nixpkgs) — daí o wrapper. Só o `claude-desktop` é
-      # embrulhado: o overlay do upstream monta o -fhs sobre `final.claude-desktop`,
-      # que é o do FIXPOINT, então a variante FHS herda este wrap sozinha.
+      # Claude Desktop: forces the secret backend. Electron autodetects it from
+      # XDG_CURRENT_DESKTOP, "Hyprland" matches no case in Chromium's os_crypt, it falls back
+      # to "basic text" and safeStorage then declares itself unavailable, so the app warns
+      # "your sign-in won't be saved" and asks for a login EVERY time. It is the SAME bug and
+      # the SAME remedy as VS Code (home/packages.nix), but without `commandLineArgs` (this is
+      # not the nixpkgs electron), hence the wrapper. Only `claude-desktop` is wrapped: the
+      # upstream overlay builds the -fhs variant on top of `final.claude-desktop`, which is the
+      # FIXPOINT one, so the FHS variant inherits this wrap by itself.
       overlayClaudeKeyring = _: prev: {
         claude-desktop = prev.claude-desktop.overrideAttrs (old: {
           postInstall = (old.postInstall or "") + ''
@@ -288,51 +298,51 @@
         });
       };
 
-      # Um host = módulos COMUNS (overlay, sops, disko, ./system, home-manager) +
-      # a PASTA específica do host. Novo host? Cria hosts/<host>/ (default.nix +
-      # disko.nix + services.nix) e adiciona uma linha em nixosConfigurations abaixo.
+      # A host = the COMMON modules (overlay, sops, disko, ./system, home-manager) + the
+      # host's own FOLDER. A new host? Create hosts/<host>/ (default.nix + disko.nix +
+      # services.nix) and add one line to nixosConfigurations below.
       #   sudo nixos-rebuild switch --flake .#<host>
-      # (home-manager entra como módulo → um rebuild aplica sistema + usuário.)
+      # (home-manager comes in as a module, so one rebuild applies system + user.)
       #
-      # O que é do HOST e não do ./system: hostname, discos, kernel, monitores,
-      # stateVersion e o painel my.services. O system/ declara as opções; o host
-      # responde (ver convenção 6 do README).
+      # What belongs to the HOST and not to ./system: hostname, disks, kernel, monitors,
+      # stateVersion and the my.services panel. system/ declares the options; the host answers
+      # them (see convention 6 in the README).
       mkHost =
         hostModule:
         nixpkgs.lib.nixosSystem {
           specialArgs = { inherit inputs; };
           modules = [
-            # `hostPlatform` no lugar do argumento `system` do nixosSystem: o próprio
-            # nixpkgs chama aquele de saída "legacy" e o zera no wrapper do flake —
+            # `hostPlatform` instead of the `system` argument of nixosSystem: nixpkgs itself
+            # calls that one a "legacy" output and zeroes it in the flake wrapper:
             # «Allow system to be set modularly in nixpkgs.system. We set it to null,
             # to remove the "legacy" entrypoint's non-hermetic default.» (nixpkgs/flake.nix).
-            # O default dele é `builtins.currentSystem`, que é IMPURO; declarar como opção
-            # de módulo é a forma hermética, e um host cross-compilado só sobrescreve aqui.
+            # Its default is `builtins.currentSystem`, which is IMPURE; declaring it as a module
+            # option is the hermetic way, and a cross-compiled host would only override it here.
             { nixpkgs.hostPlatform = system; }
 
-            # `unstable.*` + pacotes locais (./pkgs) + claude-desktop (flake; overlay
-            # em vez de packages.<system> pra buildar contra ESTA base, sem 3º nixpkgs)
-            # (o overlayClaudeKeyring vem DEPOIS do upstream: ele reembrulha o pacote dele)
+            # `unstable.*` + local packages (./pkgs) + claude-desktop (a flake; an overlay
+            # instead of packages.<system> so it builds against THIS base, with no 3rd nixpkgs)
+            # (overlayClaudeKeyring comes AFTER the upstream one: it re-wraps their package)
             {
               nixpkgs.overlays = [
                 overlayUnstable
-                overlayVscodeTarball # DEPOIS do overlayUnstable: patcha o `unstable.vscode` dele
-                overlaySpotifyNoZygote # idem: embute a flag sem a qual o Spotify não abre
-                overlayBtopXe # temporário: GPU Intel Xe (Arc B580) até o PR #1457 mergear
+                overlayVscodeTarball # AFTER overlayUnstable: it patches that `unstable.vscode`
+                overlaySpotifyNoZygote # same: bakes in the flag without which Spotify does not open
+                overlayBtopXe # temporary: Intel Xe GPU (Arc B580) until PR #1457 merges
                 overlayLocalPkgs
                 inputs.claude-desktop.overlays.default
                 overlayClaudeKeyring
               ];
             }
             sops-nix.nixosModules.sops
-            disko.nixosModules.disko # inerte em hosts sem disko.devices
+            disko.nixosModules.disko # inert on hosts with no disko.devices
             ./system
             hostModule
 
             home-manager.nixosModules.home-manager
             {
-              home-manager.useGlobalPkgs = true; # usa o nixpkgs do sistema (+ overlay)
-              home-manager.useUserPackages = true; # instala no perfil do usuário
+              home-manager.useGlobalPkgs = true; # uses the system nixpkgs (+ overlay)
+              home-manager.useUserPackages = true; # installs into the user profile
               home-manager.extraSpecialArgs = { inherit inputs; };
               home-manager.users.v1cferr = import ./home;
             }
@@ -341,119 +351,122 @@
     in
     {
       nixosConfigurations = {
-        # ÚNICO host — NVMe Kingston KC3000, MOBO ASUS EX-B560M-V5, btrfs com
-        # subvolumes prontos pra impermanência. Disco declarativo via disko.
-        # Novo host? hosts/<host>/ + uma linha aqui.
+        # The ONLY host: NVMe Kingston KC3000, ASUS EX-B560M-V5 motherboard, btrfs with
+        # subvolumes ready for impermanence. Declarative disk through disko.
+        # A new host? hosts/<host>/ + one line here.
         #   sudo nixos-rebuild switch --flake .#nixos-kingston
         nixos-kingston = mkHost ./hosts/nixos-kingston;
       };
 
-      # O que ESTE repo empacota ou reembrulha, exposto peça por peça:
+      # What THIS repo packages or re-wraps, exposed piece by piece:
       #   nix build .#nxbender
-      # Antes só existiam dentro do overlay, o que os tornava inconstruíveis
-      # isoladamente — não dava pra testar um patch sem passar por um rebuild inteiro.
+      # They used to exist only inside the overlay, which made them unbuildable in isolation:
+      # there was no way to test a patch without going through a whole rebuild.
       #
-      # O `pkgs` vem do PRÓPRIO host e não de um `import nixpkgs` novo, por dois
-      # motivos: é o MESMO objeto que o sistema instala (então o check abaixo não pode
-      # divergir do que a máquina recebe — regra 14), e não acrescenta uma 2ª
-      # instanciação de nixpkgs à avaliação (o mesmo cuidado do pkgsUnstable acima).
+      # `pkgs` comes from the HOST ITSELF and not from a fresh `import nixpkgs`, for two
+      # reasons: it is the SAME object the system installs (so the check below cannot diverge
+      # from what the machine receives, rule 14), and it does not add a 2nd nixpkgs
+      # instantiation to the evaluation (the same care as pkgsUnstable above).
       packages.${system} =
         let
           pkgs = self.nixosConfigurations.nixos-kingston.pkgs;
         in
         {
           inherit (pkgs)
-            claude-code-discord-status # ./pkgs — daemon do Rich Presence
-            nxbender # ./pkgs — cliente da VPN SonicWall (3 patches sobre o upstream)
-            claude-desktop # flake de terceiro + o wrapper de keyring daqui
-            vscode-bump # ./pkgs — o build é o shellcheck do script (regra 7)
-            curseforge-bump # ./pkgs — idem: shellcheck no build
-            curseforge-fix-java # ./pkgs — idem
-            curseforge # ./pkgs — AppImage oficial (fora do CHECK abaixo, ver o porquê lá)
-            btop # nixpkgs + src do PR #1457 (GPU Intel Xe) — vive aqui pra o check COMPILAR o fork
+            claude-code-discord-status # ./pkgs: the Rich Presence daemon
+            nxbender # ./pkgs: the SonicWall VPN client (3 patches on top of upstream)
+            claude-desktop # someone else's flake + the keyring wrapper from here
+            vscode-bump # ./pkgs: the build IS the script's shellcheck (rule 7)
+            curseforge-bump # ./pkgs: same, shellcheck at build time
+            curseforge-fix-perms # ./pkgs: same
+            curseforge # ./pkgs: the official AppImage (outside the CHECK below, the why is there)
+            btop # nixpkgs + the src from PR #1457 (Intel Xe GPU): here so the check COMPILES the fork
             ;
-          inherit (pkgs.unstable) vscode; # receita do unstable com o SRC do tarball oficial
+          inherit (pkgs.unstable) vscode; # the unstable recipe with the SRC from the official tarball
         };
 
-      # `nix fmt` — formatter do repo. Sem este output, o nixfmt existiria SÓ dentro do
-      # VS Code (via nixd/nix-ide), e "o estilo do repo" dependeria de qual editor a
-      # pessoa abriu. Declarar aqui torna o padrão verificável de fora do editor, que é
-      # o que um CI usaria. nixfmt é o formatter OFICIAL desde a RFC 166 (o mesmo que o
-      # nixpkgs adotou), então isto é alinhar com o upstream, não escolher gosto.
+      # `nix fmt`: the repo's formatter. Without this output, nixfmt would exist ONLY inside VS
+      # Code (through nixd/nix-ide), and "the repo style" would depend on which editor someone
+      # opened. Declaring it here makes the standard verifiable from outside the editor, which
+      # is what a CI would use. nixfmt is the OFFICIAL formatter since RFC 166 (the same one
+      # nixpkgs adopted), so this is aligning with upstream, not picking a taste.
       #
-      # `nixfmt-tree` e NÃO `nixfmt` cru — os dois motivos vieram de erro real (03/08):
-      #   1. `nix fmt` sem caminho não passa argumento, e o nixfmt cru cai na invocação
-      #      por STDIN (a deprecada) com stdin vazio → "unexpected end of input".
-      #   2. `nix fmt .` faz o nixfmt cru andar a árvore INTEIRA, incluindo o symlink
-      #      ./result de um `nixos-rebuild build`. Ele entrou no /nix/store e morreu com
-      #      "openTempFileWithDefaultPermissions: permission denied (Read-only file
-      #      system)" tentando formatar .nix dentro de node_modules do bitwarden.
-      # O wrapper (treefmt) resolve os dois: funciona sem argumento e respeita o
-      # .gitignore, então nunca sai do que é versionado. O aviso do próprio nixfmt
-      # recomenda exatamente ele.
+      # `nixfmt-tree` and NOT bare `nixfmt`: both reasons came from a real mistake (03/08):
+      #   1. `nix fmt` with no path passes no argument, and bare nixfmt falls back to the STDIN
+      #      invocation (the deprecated one) with an empty stdin, so "unexpected end of input".
+      #   2. `nix fmt .` makes bare nixfmt walk the WHOLE tree, including the ./result symlink
+      #      of a `nixos-rebuild build`. It walked into /nix/store and died with
+      #      "openTempFileWithDefaultPermissions: permission denied (Read-only file system)"
+      #      trying to format a .nix inside bitwarden's node_modules.
+      # The wrapper (treefmt) fixes both: it works with no argument and respects the .gitignore,
+      # so it never leaves what is versioned. nixfmt's own warning recommends exactly it.
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt-tree;
 
-      # GATE de qualidade — UMA definição, DOIS consumidores: o `nix flake check` e o
-      # hook de pre-commit nascem daqui. Antes eram três derivações artesanais que
-      # lintavam exatamente o mesmo que os hooks iriam lintar: duas definições da mesma
-      # regra, que é a receita de drift silencioso da regra 14 (o gate passa, o hook
-      # reprova, e ninguém entende por quê). O git-hooks.nix colapsa as duas.
+      # QUALITY GATE: ONE definition, TWO consumers. Both `nix flake check` and the pre-commit
+      # hook are born here. They used to be three hand-made derivations linting exactly what the
+      # hooks were going to lint: two definitions of the same rule, which is the recipe for the
+      # silent drift of rule 14 (the gate passes, the hook fails, and nobody understands why).
+      # git-hooks.nix collapses the two.
       #
-      # E o CI (.github/workflows/nix.yml) virou o TERCEIRO consumidor da mesma
-      # definição em 04/08/2026: roda `nix flake check` com `--override-input
-      # duo-streak-daemon path:./ci/stub-duo` (o stub dispensa deploy key pro input
-      # privado). Ou seja, mexer nos hooks abaixo muda o CI sozinho — não há mais uma
-      # segunda lista de linters no workflow.
+      # And the CI (.github/workflows/nix.yml) became the THIRD consumer of the same definition
+      # on 04/08/2026: it runs `nix flake check` with `--override-input duo-streak-daemon
+      # path:./ci/stub-duo` (the stub avoids needing a deploy key for the private input). Which
+      # means touching the hooks below changes the CI by itself: there is no second list of
+      # linters in the workflow anymore.
       checks.${system} = {
         pre-commit = inputs.git-hooks.lib.${system}.run {
           src = ./.;
           hooks = {
-            # nixfmt-rfc-style e NÃO `nixfmt`: neste conjunto de hooks o nome `nixfmt`
-            # ainda aponta pro clássico. Pedir o errado reformataria o repo no estilo
-            # velho — o mesmo cuidado de nome do home/packages.nix.
-            # (04/08/2026: o `nix flake check` já AVISA "nixfmt-rfc-style is now the same
-            # as pkgs.nixfmt which should be used instead" — a distinção acima está
-            # expirando no nixpkgs. Quando o hook set do git-hooks.nix acompanhar, o nome
-            # certo volta a ser `nixfmt`; até lá, trocar reformataria no estilo velho.)
+            # nixfmt-rfc-style and NOT `nixfmt`: in this hook set the name `nixfmt` still points
+            # at the classic one. Asking for the wrong one would reformat the repo in the old
+            # style, the same naming care as home/packages.nix.
+            # (04/08/2026: `nix flake check` already WARNS "nixfmt-rfc-style is now the same as
+            # pkgs.nixfmt which should be used instead", so the distinction above is expiring in
+            # nixpkgs. Once the git-hooks.nix hook set follows, the right name goes back to
+            # being `nixfmt`; until then, switching would reformat in the old style.)
             nixfmt-rfc-style.enable = true;
-            # Ambos leem a config do repo (./statix.toml) porque rodam com o cwd na raiz.
+            # Both read the repo config (./statix.toml) because they run with cwd at the root.
             statix.enable = true;
             deadnix.enable = true;
-            # Cobre os `.sh` de ./scripts — a regra 7 diz que a lógica mora no build, e
-            # o sync-secrets.sh já ganha shellcheck de graça por vir de um
-            # writeShellApplication. O owfetch.sh NÃO ganha: ele roda em ash no OpenWrt,
-            # não aqui, então nenhuma derivação o embrulha. Sem este hook, o único `.sh`
-            # do repo que executa em máquina ALHEIA seria o único sem verificação.
+            # Covers the `.sh` files in ./scripts: rule 7 says the logic lives in the build, and
+            # sync-secrets.sh already gets shellcheck for free by coming from a
+            # writeShellApplication. owfetch.sh does NOT: it runs in ash on OpenWrt, not here,
+            # so no derivation wraps it. Without this hook, the only `.sh` in the repo that runs
+            # on SOMEONE ELSE'S machine would be the only one with no verification.
             shellcheck.enable = true;
           };
         };
 
-        # CONSTRÓI o que o repo empacota — a parte que o gate NÃO cobria (04/08/2026).
-        # O `nix flake check` constrói o que está em `checks` («the derivations specified
-        # by the flake's checks output can be built successfully»), mas de
-        # `nixosConfigurations` só exige que o toplevel «must be derivations»: ele
-        # AVALIA o host e para aí. Medido antes desta linha: o check imprimia
-        # "running 1 flake checks…" — a única coisa construída era o pre-commit.
+        # BUILDS what the repo packages, the part the gate did NOT cover (04/08/2026).
+        # `nix flake check` builds what is in `checks` («the derivations specified by the
+        # flake's checks output can be built successfully»), but of `nixosConfigurations` it
+        # only requires that the toplevel «must be derivations»: it EVALUATES the host and stops
+        # there. Measured before this line, the check printed "running 1 flake checks...", and
+        # the only thing built was pre-commit.
         #
-        # A diferença importa porque o frágil aqui não é avaliação, é EMPACOTAMENTO: os
-        # 3 patches do nxbender, o `sourceRoot = "source"` do vscode e o wrapProgram
-        # sobre o .deb do claude-desktop são suposições sobre árvore de terceiro. Nenhuma
-        # quebra no eval — quebram no build, DEPOIS do `nix flake update`. E `upgrade` é
-        # `update && nh os switch`, então a quebra caía no meio do switch.
+        # The difference matters because what is fragile here is not evaluation, it is
+        # PACKAGING: nxbender's 3 patches, vscode's `sourceRoot = "source"` and the wrapProgram
+        # over claude-desktop's .deb are assumptions about someone else's tree. None of them
+        # breaks at eval, they break at build, AFTER a `nix flake update`. And `upgrade` is
+        # `update && nh os switch`, so the breakage landed in the middle of the switch.
         #
-        # linkFarm e não symlinkJoin: farm não funde diretórios, então dois pacotes com
-        # o mesmo `bin/` não colidem. O derivado é descartável — o valor é o build.
+        # linkFarm and not symlinkJoin: a farm does not merge directories, so two packages with
+        # the same `bin/` do not collide. The derivation is disposable, the value is the build.
         #
-        # DE PROPÓSITO não é o `system.build.toplevel`: construir o sistema inteiro no
-        # runner do GitHub arrastaria o quickshell (Qt/C++). Aqui só entram os pacotes
-        # que o repo controla, que é onde os patches podem apodrecer.
-        # `curseforge` fica DE FORA, e é a única exceção: o src dele é uma URL-PONTEIRO
-        # (`curseforge-latest-linux.AppImage` — a Overwolf não publica URL versionada),
-        # então a cada release deles o hash travado deixa de casar e o check ficaria
-        # VERMELHO por algo que não está neste repo. É a mesma dor do `/latest/` do VS
-        # Code, só que aqui não há URL fixa pra escolher: o remédio é o `curseforge-bump`
-        # (que roda no `update` e ENTRA no check, porque o shellcheck dele é estável).
-        # Testar o empacotamento continua sendo `nix build .#curseforge`, na mão.
+        # DELIBERATELY not `system.build.toplevel`: building the whole system on the GitHub
+        # runner would drag in quickshell (Qt/C++). Only the packages this repo controls come in
+        # here, which is where the patches can rot.
+        # `curseforge` stays OUT, and it is the only exception: its src is a POINTER URL
+        # (`curseforge-latest-linux.AppImage`, since Overwolf publishes no versioned URL), so on
+        # every release of theirs the pinned hash stops matching and the check would go RED for
+        # something that is not in this repo. It is the same pain as VS Code's `/latest/`,
+        # except there is no fixed URL to pick here: the remedy is `curseforge-bump` (which runs
+        # on `update` and DOES enter the check, because its shellcheck is stable). Testing the
+        # packaging is still `nix build .#curseforge`, by hand.
+        #
+        # The attribute keeps its pt-BR name on purpose: `checks.pacotes` is cited BY NAME in
+        # the comments of .github/workflows/nix.yml, so renaming it here alone would leave that
+        # file lying. It goes out when that workflow is translated (rule 17).
         pacotes = nixpkgs.legacyPackages.${system}.linkFarm "checks-pacotes-do-repo" (
           nixpkgs.lib.mapAttrsToList (name: path: { inherit name path; }) (
             removeAttrs self.packages.${system} [ "curseforge" ]
@@ -461,24 +474,24 @@
         );
       };
 
-      # devShell — existe por um motivo CONCRETO, não por completude: entrar nele é o
-      # que INSTALA o hook em .git/hooks/pre-commit (o `shellHook` do git-hooks faz
-      # isso). Sem ele, "temos pre-commit" seria mentira: o arquivo de hook nunca
-      # apareceria. Com o direnv (home/shell/direnv.nix) o `cd` no repo já entra aqui,
-      # então o hook se instala sozinho em qualquer clone novo.
+      # devShell: it exists for a CONCRETE reason, not for completeness. Entering it is what
+      # INSTALLS the hook into .git/hooks/pre-commit (the `shellHook` from git-hooks does that).
+      # Without it, "we have pre-commit" would be a lie: the hook file would never appear. With
+      # direnv (home/shell/direnv.nix) a `cd` into the repo already enters here, so the hook
+      # installs itself in any fresh clone.
       #
-      # `enabledPackages` traz statix/deadnix/nixfmt na versão que os hooks usam — logo,
-      # rodar na mão dentro do shell é idêntico ao que o hook vai rodar.
+      # `enabledPackages` brings statix/deadnix/nixfmt at the version the hooks use, so running
+      # them by hand inside the shell is identical to what the hook will run.
       devShells.${system}.default =
         let
           pkgs = nixpkgs.legacyPackages.${system};
           inherit (self.checks.${system}.pre-commit) shellHook enabledPackages;
         in
-        # mkShellNoCC e NÃO mkShell: nada aqui compila C — são linters de Nix e o LSP. O
-        # mkShell arrasta o stdenv com wrapper de cc/binutils, e o efeito VISÍVEL é o
-        # direnv despejando um parágrafo de `export +AR +AS +CC +CXX +LD +NM +OBJCOPY
-        # +RANLIB +NIX_CFLAGS_COMPILE +NIX_HARDENING_ENABLE …` a cada `cd` no repo. Sem o
-        # CC isso encurta pro que interessa, e o shell fica mais leve de montar.
+        # mkShellNoCC and NOT mkShell: nothing here compiles C, they are Nix linters and the LSP.
+        # mkShell drags in the stdenv with the cc/binutils wrapper, and the VISIBLE effect is
+        # direnv dumping a paragraph of `export +AR +AS +CC +CXX +LD +NM +OBJCOPY +RANLIB
+        # +NIX_CFLAGS_COMPILE +NIX_HARDENING_ENABLE ...` on every `cd` into the repo. Without the
+        # CC that shortens to what matters, and the shell is lighter to build.
         pkgs.mkShellNoCC {
           inherit shellHook;
           buildInputs = enabledPackages ++ [ pkgs.nixd ];

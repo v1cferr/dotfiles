@@ -1,8 +1,7 @@
-# dotfiles: v1cferr's NixOS + home-manager
+# dotfiles: my NixOS + home-manager
 
-A **declarative**, reproducible system: NixOS (the base) and home-manager (the
-user's dotfiles) in a single flake. One `rebuild` applies system **and** user at
-once.
+A **declarative**, reproducible system: NixOS (the base) and home-manager (my
+dotfiles) in a single flake. One `rebuild` applies system **and** user at once.
 
 - **Base:** stable nixpkgs `nixos-26.05` plus an `unstable.*` overlay on demand, per package.
 - **Active host:** `nixos-kingston`, an NVMe KC3000 on btrfs with subvolumes (groundwork for impermanence).
@@ -24,8 +23,8 @@ gc        # sudo nix-collect-garbage -d, drops old generations
 
 `update` is the maintenance ritual, and it does more than bump `flake.lock`: it
 recomputes the pinned version and hash of the vendored binaries (VS Code,
-CurseForge) and refreshes the VS Code extension mirror. It runs as the **user**,
-because that is who holds the SSH key for the private inputs.
+CurseForge) and refreshes the VS Code extension mirror. It runs as my user
+rather than root, because that is who holds the SSH key for the private inputs.
 
 With no `#host`, `nixos-rebuild` matches the current `hostname` against
 `nixosConfigurations`. For a specific host: `sudo nixos-rebuild switch --flake .#<host>`.
@@ -95,7 +94,7 @@ docs/                    what is NOT declarable, plus the repo's diary (see docs
 Two mirrored central lists: [`system/packages.nix`](system/packages.nix) and
 [`home/packages.nix`](home/packages.nix). The per-package decision:
 
-1. **The default is `home/`.** A day-to-day app/CLI of yours with no config is
+1. **The default is `home/`.** A day-to-day app/CLI with no config of its own is
    1 line in [`home/packages.nix`](home/packages.nix), then `rebuild`.
 2. An app **with** declarative config (dotfiles / `programs.*`) gets its own
    module under `home/`, so package and config travel together. For example
@@ -154,8 +153,8 @@ nix shell nixpkgs#sops -c sops secrets/secrets.yaml   # edit secrets
 ⚠️ Editing a secret requires a `rebuild`, otherwise `/run/secrets` is not
 refreshed.
 
-What it holds today: the user's password hash, the Cloudflare DDNS token and
-(through Bitwarden) the restic repository password.
+What it holds today: my password hash, the Cloudflare DDNS token and (through
+Bitwarden) the restic repository password.
 
 ## Backup and remote access
 
@@ -184,8 +183,8 @@ The summary that does **not** age, for the next install from scratch:
   never by `sdX`. Those letters shuffle between boots, and they already changed
   twice on this machine.
 - The **age key** goes in **before** `nixos-install`. Without it sops cannot
-  decrypt `hashedPasswordFile` and the user is created with no password. Source:
-  Bitwarden.
+  decrypt `hashedPasswordFile` and my account is created with no password.
+  Source: Bitwarden.
 - `~` comes over **disk to disk**, never from the backup. restic is an archive,
   not an input.
 - Whatever is not declared (`/var/lib`, SSH host keys, NetworkManager profiles)

@@ -55,7 +55,7 @@ home/                    USER (home-manager): dotfiles + user apps
   desktop/               hypr (+helpers), quickshell (bar), hyprsunset, lockscreen, theme, palette, xdg
   apps/                  apps WITH config of their own: dropbox, media, dolphin, flameshot,
                          vscode, mangohud, office, openal, curseforge
-  services/              drive-mount, fai-workstation-mount, arch-antigo-mount,
+  services/              drive-mount, fai-workstation-mount, arch-legacy-mount,
                          cs2-saves-backup, claude-discord-rpc, disk-hygiene
 
 pkgs/                    own derivations (outside nixpkgs), exposed in `packages.x86_64-linux`
@@ -72,13 +72,13 @@ scripts/                 bash/python read by `writeShellApplication` (shellcheck
                          sync-secrets, router-sync, router-moonlight-forward, owfetch
 router/                  mirror of the OpenWrt UCI config (router-sync): visible, not declarable
 docs/                    what is NOT declarable, plus the repo's diary (see docs/README.md)
-  regras.md              the 17 rules. The NUMBERING is API: 169 comments cite "regra N"
-  pendencias.md          what is still open
-  historico/<year>/<month>  what was done and WHY (including what was tried and REJECTED)
-  ideias.md              considered, not yet decided
-  arch-legado.md         a closed chapter + how to open the old Arch archive
-  guias/                 step by step for what Nix cannot reach (BIOS, Secure Boot, router, Windows)
-  testes/                reusable test protocols
+  rules.md              the 17 rules. The NUMBERING is API: 169 comments cite "regra N"
+  open-items.md          what is still open
+  history/<year>/<month>  what was done and WHY (including what was tried and REJECTED)
+  ideas.md              considered, not yet decided
+  arch-legacy.md         a closed chapter + how to open the old Arch archive
+  guides/                 step by step for what Nix cannot reach (BIOS, Secure Boot, router, Windows)
+  tests/                reusable test protocols
 ```
 
 `README.md` is the only doc at the root. Everything else lives in `docs/`.
@@ -110,10 +110,10 @@ package, through the overlay.
 
 ## Repo conventions
 
-The full set lives in [`docs/regras.md`](docs/regras.md). The ones you need to
+The full set lives in [`docs/rules.md`](docs/rules.md). The ones you need to
 read this tree:
 
-Deliberately unnumbered, because in `docs/regras.md` the numbering is API and a
+Deliberately unnumbered, because in `docs/rules.md` the numbering is API and a
 competing list here would be read as rule numbers.
 
 - **`system/` vs `home/` separation** (see "Where does a package go?").

@@ -1,6 +1,6 @@
 # Pendências
 
-O que está em aberto. Item concluído migra para [historico/](historico/) —
+O que está em aberto. Item concluído migra para [history/](history/) —
 este arquivo só cresce com trabalho novo, e encolhe quando trabalho termina.
 
 Convenção herdada do arquivo único: cada item explica o QUE, o PORQUÊ e a
@@ -73,7 +73,7 @@ armadilha conhecida. Vale mais o parágrafo do que o título.
         AC Power Loss* na BIOS — e aí o WoL fica irrelevante, porque a máquina liga sozinha.
 
 - [ ] MTU do túnel — medir e anotar (herdado do teste de 10/08/2026). Protocolo em
-      [testes/wireguard-moonlight.md](testes/wireguard-moonlight.md).
+      [testes/wireguard-moonlight.md](tests/wireguard-moonlight.md).
       • Impossível testar de casa: não há interface WireGuard nesta máquina (o túnel termina
         no ROTEADOR), então ping pro 10.10.10.1 sai pelo cabo e mede a LAN. Sinal de teste
         inválido: latência de ~0,3 ms.
@@ -269,7 +269,7 @@ armadilha conhecida. Vale mais o parágrafo do que o título.
 
 - [~] Claude Code, o que SOBROU das duas contas (11/08/2026) — a estrutura foi declarada em
       `home/shell/claude-code.nix` e a entrada está no [histórico de
-      agosto](historico/2026/08-agosto.md): wrappers `claude-fai`/`claude-pessoal`,
+      agosto](history/2026/08-august.md): wrappers `claude-fai`/`claude-pessoal`,
       `claude-pick`, `settings.json` versionado, `projects/` compartilhado e o `claude` puro
       caindo na FAI. Três pontas seguem abertas, e nenhuma delas é declarável:
       • O `/login` de cada conta. NÃO restaurei o `.credentials.json` (nem o do backup do
@@ -290,7 +290,7 @@ armadilha conhecida. Vale mais o parágrafo do que o título.
         frase (é drift de texto, regra 16; os hooks em `/etc` seguem certos e necessários).
 
 - [ ] MCP do Azure ainda não tem em QUE trabalhar (14/08/2026) — o servidor está declarado,
-      conectado e autenticado (ver o [histórico de agosto](historico/2026/08-agosto.md)),
+      conectado e autenticado (ver o [histórico de agosto](history/2026/08-august.md)),
       mas as 68 tools dele operam sobre SUBSCRIPTION, e o tenant do dia a dia (`FAIUFSCar`)
       é só diretório: `azmcp subscription list` responde 200 com lista VAZIA. Quem tem
       assinatura é o tenant `BHS`, e entrar nele exige MFA — `az login --tenant

@@ -269,7 +269,7 @@
         vscode-bump = final.callPackage ./pkgs/vscode-bump.nix { }; # bump do vscode-tarball p/ a última stable
         curseforge = final.callPackage ./pkgs/curseforge.nix { }; # AppImage oficial de modpacks (unfree)
         curseforge-bump = final.callPackage ./pkgs/curseforge-bump.nix { }; # version+hash do curseforge.nix
-        curseforge-fix-java = final.callPackage ./pkgs/curseforge-fix-java.nix { }; # +x na JRE que o app baixa
+        curseforge-fix-java = final.callPackage ./pkgs/curseforge-fix-perms.nix { }; # +x na JRE que o app baixa
       };
 
       # Claude Desktop: força o backend de secret. O Electron autodetecta pelo

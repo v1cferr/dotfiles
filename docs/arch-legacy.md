@@ -17,9 +17,9 @@ antigo não dizia que era o Arch).
 **Não há comando pra rodar**: desde 11/08/2026 o acervo fica montado em
 `/mnt/arch-antigo` desde o login — é só abrir o bookmark **Arch antigo** no Dolphin. Quem
 monta é a unit de usuário `arch-antigo-mount`
-([`home/services/arch-antigo-mount.nix`](../home/services/arch-antigo-mount.nix)); o
+([`home/services/arch-legacy-mount.nix`](../home/services/arch-legacy-mount.nix)); o
 mountpoint e a SSOT do caminho são do lado sistema
-([`system/services/arch-antigo.nix`](../system/services/arch-antigo.nix)). O alias
+([`system/services/arch-legacy.nix`](../system/services/arch-legacy.nix)). O alias
 `arch-browse` morreu junto — pasta vazia aqui virou sintoma, não estado normal:
 
 ```bash

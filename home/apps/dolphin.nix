@@ -69,12 +69,12 @@ let
       path = "/mnt/backup"; # repo do home no Drive; read-only, um dir por snapshot
       icon = "folder-tar";
     }
-    # Este, ao contrário, está SEMPRE montado desde 11/08/2026 (home/services/arch-antigo-mount.nix):
+    # Este, ao contrário, está SEMPRE montado desde 11/08/2026 (home/services/arch-legacy-mount.nix):
     # o repo é estático e o mount dispensa lock, então sobrou só o custo de RAM. Pasta
     # vazia aqui virou SINTOMA de verdade — `systemctl --user status arch-antigo-mount`.
     {
       title = "Arch antigo";
-      path = osConfig.my.archAntigo.local; # SSOT: system/services/arch-antigo.nix (regra 11)
+      path = osConfig.my.archAntigo.local; # SSOT: system/services/arch-legacy.nix (regra 11)
       icon = "folder-locked";
     }
   ];

@@ -334,8 +334,8 @@
       foi abrir o bookmark no Dolphin e ver pasta vazia. Não havia defeito: segredos
       legíveis, repo respondendo, mount subindo em ~20 s quando pedido. O defeito era o
       DESENHO — automação sem dono declarado (regra 15), viva só enquanto o terminal do
-      alias ficasse aberto. Virou serviço: `home/services/arch-antigo-mount.nix` (a unit
-      que monta) + `system/services/arch-antigo.nix` (mountpoint e SSOT do caminho, que o
+      alias ficasse aberto. Virou serviço: `home/services/arch-legacy-mount.nix` (a unit
+      que monta) + `system/services/arch-legacy.nix` (mountpoint e SSOT do caminho, que o
       bookmark passou a ler — regra 11).
       • POR QUE DOIS ARQUIVOS, e não é preciosismo de regra 4: quem MONTA tem que ser o
         usuário (mount FUSE é privado de quem montou; `sudo restic mount` gera pasta que o
@@ -515,7 +515,7 @@
         quase virou "essa instalação do Git é mínima e não tem os utilitários".
       • O script é idempotente (`-split ";" -notcontains`), porque PATH de máquina é
         exatamente o tipo de coisa que se aplica duas vezes sem perceber.
-      • **Nasceu o guia** [`docs/guias/cesar-windows-passos-manuais.md`](../../guias/cesar-windows-passos-manuais.md):
+      • **Nasceu o guia** [`docs/guides/cesar-windows-manual-steps.md`](../../guides/cesar-windows-manual-steps.md):
         chave autorizada, PATH, Scoop e Claude Code. São os passos que o Nix NÃO alcança
         (a máquina não é NixOS e não é nossa), e sem eles escritos a reinstalação do
         Windows viraria redescoberta do zero. Mesma natureza do `authorized_keys` do
@@ -722,7 +722,7 @@
         Pelo túnel chega 10.10.10.x = LAN → `lan_encryption_mode = 0` (o túnel cifra). Direto
         chega público = WAN → `wan_encryption_mode = 1`, ligado por default.
       • ✅ VALIDADO NO MESMO DIA, com sessão real de 21m58s + 9min. Medições e método completos
-        em [testes/moonlight-direto.md](../../testes/moonlight-direto.md); o essencial:
+        em [testes/moonlight-direto.md](../../tests/moonlight-direct.md); o essencial:
         0% de perda em 100 pacotes de 1 KB, RTT 35,5 ms, jitter 0,54 ms. A prova de que a
         sessão funciona de ponta a ponta foi o próprio Claude passar a rodar SEM `SSH_CLIENT`
         e com `DISPLAY=:0` — dentro da sessão gráfica sendo streamada.
@@ -757,7 +757,7 @@
         igual. Registrado explicitamente para ninguém atribuir ganho a isto depois.
 
 - [x] ~~CGNAT~~ o item morto que sobreviveu à própria correção (10/08/2026) — a entrada de
-      07/08 em `docs/pendencias.md` ("NÃO HÁ ENTRADA … NENHUMA regra de port forward pode
+      07/08 em `docs/open-items.md` ("NÃO HÁ ENTRADA … NENHUMA regra de port forward pode
       funcionar") continuou lá por três dias DEPOIS de a entrada de 08/08 deste arquivo já a
       ter desmentido inteira. Apagada.
       • O CUSTO NÃO FOI TEÓRICO: ela é a primeira coisa que se lê ao perguntar "dá pra expor
@@ -946,7 +946,7 @@
         SINAL, com a luz de fundo no talo) mas alcança AS DUAS — e uniformidade venceu.
       • ⚠️ A ALTERNATIVA que continua valendo, se um dia o incômodo voltar: ajustar o
         backlight da TV UMA VEZ pelo controle remoto dela (é config de aparelho, persiste, e
-        cai na mesma categoria do docs/guias/bios-*.md) e retomar o DDC no monitor. Foi
+        cai na mesma categoria do docs/guides/bios-*.md) e retomar o DDC no monitor. Foi
         RECUSADA por não ser automática, não por não funcionar.
       • FICOU do experimento: `wayland-utils` (wayland-info), que entrou junto e é útil por
         si; e a correção do cabeçalho do hyprsunset.nix sobre shader e sobre os 13 perfis.

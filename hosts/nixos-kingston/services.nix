@@ -36,7 +36,7 @@
   #   "public" → internet, sujeito ao `auth` declarado
   #
   # ⚠️ "public" hoje é DECLARAÇÃO, não conectividade: este host está atrás de
-  # CGNAT e nada entra (ver a entrada do CGNAT em docs/historico/2026/08-agosto.md). O gate correto
+  # CGNAT e nada entra (ver a entrada do CGNAT em docs/history/2026/08-august.md). O gate correto
   # já é aplicado; falta o caminho de entrada (IP público ou cloudflared).
   #
   # Omitir `expose` FECHA (default = "lan") — esquecimento não vira exposição.

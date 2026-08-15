@@ -9,13 +9,13 @@ age (pendências) e o que se consulta (histórico) têm ritmos diferentes.
 
 | Arquivo | O que é | Quando se lê |
 | --- | --- | --- |
-| [regras.md](regras.md) | As 16 regras do repo | Antes de decidir qualquer coisa |
-| [pendencias.md](pendencias.md) | O que está aberto | Ao escolher no que trabalhar |
-| [historico/](historico/) | O que foi feito e por quê — pasta por ano, arquivo por mês | "Por que isto está assim?" |
-| [ideias.md](ideias.md) | Considerado, ainda não decidido | Ao planejar |
-| [arch-legado.md](arch-legado.md) | Capítulo encerrado + como abrir o acervo | Raramente |
-| [guias/](guias/) | Passo a passo do que o Nix não alcança (BIOS, Secure Boot, roteador, Windows) | Ao reinstalar ou mexer fora do repo |
-| [testes/](testes/) | Protocolos de teste reutilizáveis | Ao validar mudança |
+| [rules.md](rules.md) | As 16 regras do repo | Antes de decidir qualquer coisa |
+| [open-items.md](open-items.md) | O que está aberto | Ao escolher no que trabalhar |
+| [history/](history/) | O que foi feito e por quê — pasta por ano, arquivo por mês | "Por que isto está assim?" |
+| [ideas.md](ideas.md) | Considerado, ainda não decidido | Ao planejar |
+| [arch-legacy.md](arch-legacy.md) | Capítulo encerrado + como abrir o acervo | Raramente |
+| [guias/](guides/) | Passo a passo do que o Nix não alcança (BIOS, Secure Boot, roteador, Windows) | Ao reinstalar ou mexer fora do repo |
+| [testes/](tests/) | Protocolos de teste reutilizáveis | Ao validar mudança |
 
 ## Convenções
 
@@ -27,5 +27,5 @@ entra no fim, regra morta vira tachado.
 o-quê. As entradas mais valiosas aqui são as que registram algo TENTADO E
 RECUSADO, porque impedem a próxima pessoa (ou você em seis meses) de repetir.
 
-**Item concluído migra** de `pendencias.md` para `historico/<mês>.md`. Um arquivo só
+**Item concluído migra** de `open-items.md` para `history/<mês>.md`. Um arquivo só
 cresce, o outro encolhe.

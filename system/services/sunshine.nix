@@ -2,7 +2,7 @@
 # a forma recomendada de acesso remoto no Hyprland/Wayland: captura via wlr-screencopy
 # (o `wlr`, auto-selecionado) e encoda na GPU. O Arc B580 tem encoder AV1/HEVC (VA-API)
 # → stream fluido e de baixa latência. Era Tailscale até 08/08/2026 — a troca está
-# registrada em docs/historico/2026/08-agosto.md.
+# registrada em docs/history/2026/08-august.md.
 #
 # COMO SE CHEGA AQUI — DOIS caminhos desde 10/08/2026, e `openFirewall = false`
 # continua valendo nos dois (nenhum deles abre porta em toda interface):
@@ -99,7 +99,7 @@ let
   # divergirem, o roteador encaminha e o host derruba — e o sintoma é "Moonlight não
   # conecta", que é indistinguível de tudo o mais.
   #
-  # OS DOIS BLOCOS NÃO VALEM O MESMO, e isso está medido (docs/historico/2026/08-agosto.md,
+  # OS DOIS BLOCOS NÃO VALEM O MESMO, e isso está medido (docs/history/2026/08-august.md,
   # entrada do falso alarme de CGNAT): a rede da FAI DESCARTA O SYN-ACK de volta — o SYN
   # sai de lá, chega aqui, o host responde, o conntrack do roteador fica em `SYN_RECV` e o
   # ACK final nunca volta. Ou seja, do /21 a conexão pode simplesmente não fechar, e não há
@@ -365,7 +365,7 @@ in
       # este arquivo já documenta: o WireGuard descarta em SILÊNCIO, sem ICMP e sem log, e
       # o cliente cai em ~4 s. O teto útil é o do MENOR caminho, sempre.
       # Só faz sentido subir se o caminho do túnel for APOSENTADO — e aí o número a mirar
-      # é o do teste em docs/testes/wireguard-moonlight.md, não um chute.
+      # é o do teste em docs/tests/wireguard-moonlight.md, não um chute.
       packet_size = 1024;
       # TETO DE BITRATE no host. O default é 0 = "obedece o que o Moonlight pedir", e o
       # cliente pedia até 79 Mbps: medindo as 67 sessões de 7 dias (jul/2026), as de

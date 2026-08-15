@@ -57,7 +57,7 @@ lib.mkIf config.my.services.restic {
   # alheio → restic sai 3 → o prune não roda). Fora do home, nem existe o problema.
   #
   # O /mnt/arch-antigo era criado aqui até 11/08/2026 e saiu pra
-  # system/services/arch-antigo.nix: aquele mount deixou de ser consulta sob demanda e
+  # system/services/arch-legacy.nix: aquele mount deixou de ser consulta sob demanda e
   # virou serviço permanente, então o diretório dele não pode depender deste toggle.
   systemd.tmpfiles.rules = [
     "d /mnt/backup 0755 v1cferr users -" # repo do home, no Drive
@@ -81,7 +81,7 @@ lib.mkIf config.my.services.restic {
     # todo consumidor que roda como USUÁRIO passa a morrer sem conseguir ler o rclone.conf:
     # o `backup-browse` (alias em home/shell/zsh.nix), o ~/Drive e — desde 11/08/2026, o
     # mais sensível a isso, porque é serviço e não comando — o mount permanente do acervo
-    # do Arch antigo (home/services/arch-antigo-mount.nix).
+    # do Arch antigo (home/services/arch-legacy-mount.nix).
     # Diagnosticado em 07/08/2026: boot 07:29 → sops põe v1cferr → o backup atrasado das
     # 03:00 rodou 07:54:39 → mtime do segredo virou root:users às 07:54:40. Na prática o
     # navegador do backup ficava quebrado quase sempre, e "consertava" sozinho no reboot.

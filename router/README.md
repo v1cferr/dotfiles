@@ -34,7 +34,7 @@ público (`public_key`) ou como caminho de arquivo.
 exige commit-confirm — aplica, agenda rollback, confirma só se ainda houver
 acesso — senão uma linha errada de rede tranca você fora e a saída é modo failsafe
 com acesso físico. A decisão sobre a ferramenta de push está aberta em
-`docs/pendencias.md`.
+`docs/open-items.md`.
 
 **O que não é UCI.** `authorized_keys`, `/etc/sudoers.d/`, `~/bin/owfetch` e o
 `/etc/profile.d/99-owfetch.sh` vivem fora do UCI e continuam sendo passos manuais,

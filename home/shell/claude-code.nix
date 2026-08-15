@@ -112,7 +112,7 @@
 #   • o RESTO do ~/.claude (history.jsonl, settings.json, sessions/, shell-snapshots/…) —
 #     sobra de quando ele era conta, e sobra é LEGADO: o que valia a pena foi copiado pro
 #     ~/.claude-fai na virada e o resto se poda depois que a conta nova provar que anda
-#     (está anotado em docs/pendencias.md — regra 16).
+#     (está anotado em docs/open-items.md — regra 16).
 # ═══════════════════════════════════════════════════════════════════════════
 {
   config,

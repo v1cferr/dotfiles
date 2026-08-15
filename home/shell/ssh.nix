@@ -78,7 +78,7 @@ in
       #
       # Isto declara SÓ o lado cliente. Os passos do lado Windows — chave autorizada,
       # coreutils no PATH de máquina, Scoop, Claude Code — não são alcançáveis pelo Nix
-      # e estão em docs/guias/cesar-windows-passos-manuais.md, pra serem refeitos em
+      # e estão em docs/guides/cesar-windows-manual-steps.md, pra serem refeitos em
       # minutos se aquele Windows for reinstalado.
       #
       # É WINDOWS 11 com OpenSSH_for_Windows_9.5, e é daí que vêm todas as pegadinhas:

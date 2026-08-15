@@ -5,7 +5,7 @@
 # 12/08/2026: o Cudy WR3000 tem 1,3 MB livres em /overlay (de 6,1 MB, 78% usado) e
 # nenhum python3. O nxBender é Python + requests + pyroute2 + configargparse +
 # colorlog — 15-25 MB no OpenWrt. Falta uma ORDEM DE GRANDEZA. É a mesma parede que
-# ../../docs/ideias.md já registrou pro Jellyfin/Sunshine/Caddy, pelos mesmos números.
+# ../../docs/ideas.md já registrou pro Jellyfin/Sunshine/Caddy, pelos mesmos números.
 #
 # Então o túnel fica AQUI e esta máquina vira o gateway da rede:
 #
@@ -16,7 +16,7 @@
 # encaminha, mas ninguém manda tráfego pra cá. As rotas estáticas e o split-DNS vivem
 # no UCI do OpenWrt, e ./router.nix recusa push de propósito — "uma linha errada de
 # rede ou firewall tranca você fora e a saída é modo failsafe com acesso FÍSICO".
-# Os comandos estão em ../../docs/guias/fai-gateway-roteador.md.
+# Os comandos estão em ../../docs/guides/fai-gateway-router.md.
 #
 # E o circuito estava aberto DESTE lado, não do outro: as seis rotas `fai_r1..fai_r6`
 # JÁ EXISTIAM no roteador (e commitadas em ../../router/uci/network.conf) apontando pra

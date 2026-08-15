@@ -6,7 +6,7 @@
     ./toggles.nix # INTERFACE: declara as chaves my.services.* (os VALORES são do host)
     ./caddy.nix # proxy reverso de *.<domínio> (cert curinga DNS-01) + jail do fail2ban
     ./restic.nix # backup cifrado do estado do usuário (repo no HDD por ora)
-    ./arch-antigo.nix # mountpoint + SSOT do acervo do Arch antigo (quem monta é o home)
+    ./arch-legacy.nix # mountpoint + SSOT do acervo do Arch antigo (quem monta é o home)
     ./btrbk.nix # snapshots btrfs horários do @home (desfazer local; NÃO é backup)
     ./claude-code.nix # hooks do Claude Code (managed-settings /etc) → Discord Rich Presence
     ./jellyfin.nix # servidor de mídia Jellyfin (nativo, systemd, biblioteca em /srv/media)

@@ -11,8 +11,8 @@ Uma pasta por ano, um arquivo por mês. Entrada nova vai no mês corrente, no to
 
 | Mês | Entradas |
 | --- | --- |
-| [agosto](2026/08-agosto.md) | 59 |
-| [julho](2026/07-julho.md) | 63 |
+| [agosto](2026/08-august.md) | 59 |
+| [julho](2026/07-july.md) | 63 |
 
 ## Como as datas foram atribuídas
 

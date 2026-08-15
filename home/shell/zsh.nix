@@ -96,7 +96,7 @@ in
       #
       # Só sobrou o do HOME. O gêmeo `arch-browse` (acervo do Arch antigo) MORREU em
       # 11/08/2026: aquele mount virou permanente e tem dono declarado agora
-      # (home/services/arch-antigo-mount.nix) — /mnt/arch-antigo já está montado, não há
+      # (home/services/arch-legacy-mount.nix) — /mnt/arch-antigo já está montado, não há
       # comando pra rodar. Este aqui segue sob demanda de propósito: o repo do HOME é
       # justamente o que a poda diária precisa travar sozinha.
       backup-browse = "RCLONE_CONFIG=/run/secrets/rclone_gdrive_conf restic -r rclone:gdrive:BACKUPS_EX-B560M-V5/HOME --password-file /run/secrets/restic_password mount /mnt/backup";

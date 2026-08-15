@@ -11,7 +11,7 @@ DUAS AÇÕES, as duas seguras:
 
 NÃO ESCREVE NO ROTEADOR. Empurrar config é decisão separada, com risco próprio
 (uma linha errada de rede tranca você fora) e exige commit-confirm — ver o item
-do TODO em docs/pendencias.md.
+do TODO em docs/open-items.md.
 
 ⚠️ REDAÇÃO DE SEGREDO É FAIL-SAFE, e a direção importa: redige por DEFAULT tudo
 que o nome sugere ser credencial, e só libera o que reconhece como público. Um
@@ -25,7 +25,7 @@ import sys
 from pathlib import Path
 
 HOST = "v1cferr@192.168.1.1"
-MARCA = "<REDIGIDO — valor real no roteador; ver docs/historico/>"
+MARCA = "<REDIGIDO — valor real no roteador; ver docs/history/>"
 
 # Nome da opção (folha) que carrega credencial. `key` genérico entra porque é o
 # nome que o wireless usa pra senha do WiFi.

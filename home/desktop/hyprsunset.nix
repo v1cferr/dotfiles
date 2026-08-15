@@ -13,7 +13,7 @@
 # ocorrências de transition/interpolate/gradual, e a issue "Graduated transition"
 # segue ABERTA. Ele salta seco no horário de cada perfil. Degrau pequeno e frequente
 # é a ÚNICA forma de obter curva suave numa ferramenta que só sabe saltar — se um dia
-# ele interpolar, isto colapsa pra 3 perfis (ver docs/ideias.md).
+# ele interpolar, isto colapsa pra 3 perfis (ver docs/ideas.md).
 #
 # O módulo services.hyprsunset sobe um SERVIÇO systemd --user (dispensa exec-once)
 # e gera ~/.config/hypr/hyprsunset.conf a partir de `settings`. Os `profile` trocam
@@ -30,7 +30,7 @@
 # SEGUNDA DESCIDA (13/08/2026): a de 06/08 ainda parecia fraca, e esta tira mais
 # ~200–400K de cada degrau pós-18h. O maior degrau segue sendo o das 18h (5000→3800)
 # e às 19h já está em 3200K — onde a curva anterior só chegava às 20h.
-# ⚠️ ESCOLHIDO O EIXO DA COR, e isso CONTRARIA o que docs/ideias.md registra como
+# ⚠️ ESCOLHIDO O EIXO DA COR, e isso CONTRARIA o que docs/ideas.md registra como
 # prioridade (reduzir BRILHO vem antes de temperatura de cor). Foi deliberado: o
 # dim automático por gamma já existiu e foi REVERTIDO em 08/08 junto com o DDC, e
 # trazê-lo de volta às 18h é mudança maior que baixar Kelvin. Se esta curva não
@@ -65,7 +65,7 @@
       # Uma tela a 32% ao lado de outra a 100% obriga a pupila a se readaptar toda
       # vez que o olhar troca, e isso cansa mais do que o ganho na tela boa.
       # Decisão: dimming pior nas duas > dimming ótimo em uma. Detalhes e a medição
-      # que motivou tudo (o monitor estava em 100% às 20h) em docs/historico/2026/.
+      # que motivou tudo (o monitor estava em 100% às 20h) em docs/history/2026/.
       #
       # Auto-dim SÓ de noite: dia e início de noite em brilho cheio (pode estar
       # trabalhando); das 22h em diante escurece até 0.8 (piso) e volta de manhã.

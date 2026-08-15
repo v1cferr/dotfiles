@@ -10,7 +10,7 @@
 # ── POR QUE UNIT DO USUÁRIO, E NÃO DO SISTEMA ───────────────────────────────
 # Mount FUSE é privado de quem montou: `sudo restic mount` gera pasta que o Dolphin não
 # abre (foi o defeito da 1ª versão do alias). O mountpoint em si é criado por root via
-# tmpfiles, em system/services/arch-antigo.nix, que também guarda a SSOT do caminho.
+# tmpfiles, em system/services/arch-legacy.nix, que também guarda a SSOT do caminho.
 #
 # ── O PREÇO DE DEIXAR DE PÉ (medido em 11/08/2026) ──────────────────────────
 # ~195 MiB de RSS residentes: 115 MiB do restic (índice do repo em memória, 44,6 GiB de

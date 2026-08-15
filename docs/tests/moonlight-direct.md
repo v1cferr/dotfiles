@@ -1,7 +1,7 @@
 # Teste: Moonlight direto, sem VPN, da UFSCar
 
 **Onde:** UFSCar, no notebook da FAI, **sem WireGuard e sem nenhuma VPN ativa**.
-**Por quê:** o caminho direto (`docs/historico/2026/08-agosto.md` não cobre — foi
+**Por quê:** o caminho direto (`docs/history/2026/08-august.md` não cobre — foi
 aberto em 10/08/2026) troca o túnel por port-forward restrito. O TCP está provado; o
 UDP não. Este protocolo separa "não passa UDP" de "problema de vídeo", que produzem
 sintomas quase idênticos.

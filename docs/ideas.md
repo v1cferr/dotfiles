@@ -1,8 +1,8 @@
 # Ideias
 
 Coisas consideradas, referências e o que ainda não virou decisão. O que já virou
-está em [historico/](historico/); o que está para fazer, em
-[pendencias.md](pendencias.md).
+está em [history/](history/); o que está para fazer, em
+[open-items.md](open-items.md).
 
 > Quickshell: DECIDIDO — migrei tudo pro Quickshell (ver TODO). Personalizável em QML
 > com hot-reload; o Hyprland também virou hot-reload (hyprland.lua via mkOutOfStoreSymlink).

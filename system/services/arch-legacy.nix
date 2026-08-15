@@ -1,7 +1,7 @@
 # ═══════════════════════════════════════════════════════════════════════════
 # ACERVO DO ARCH ANTIGO — lado SISTEMA: o ponto de montagem e a SSOT do caminho.
 #
-# Quem MONTA é o usuário (home/services/arch-antigo-mount.nix): mount FUSE é privado de
+# Quem MONTA é o usuário (home/services/arch-legacy-mount.nix): mount FUSE é privado de
 # quem montou, então `sudo restic mount` produz pasta que o Dolphin não abre. Root só
 # entra aqui pra CRIAR o diretório, porque /mnt é dele e o usuário não escreve lá.
 #
@@ -17,7 +17,7 @@
 # `backup-browse`, que é do domínio do restic.
 #
 # O repo é ESTÁTICO: nada escreve nele desde 01/08/2026, quando o Kingston foi formatado
-# (ver docs/arch-legado.md). Isso não é curiosidade — é a premissa que autoriza o
+# (ver docs/arch-legacy.md). Isso não é curiosidade — é a premissa que autoriza o
 # `--no-lock` do lado do home.
 # ═══════════════════════════════════════════════════════════════════════════
 { config, lib, ... }:

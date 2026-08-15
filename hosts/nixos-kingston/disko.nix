@@ -4,7 +4,7 @@
 # ⚠️ DESTRUTIVO: apaga o disco inteiro. NÃO roda em rebuild normal — só no
 # CUTOVER, que JÁ ACONTECEU (01/08/2026). O Arch que morava aqui foi arquivado no
 # Google Drive antes disso, e o `check --read-data` provou o repo em 05/08 — como
-# chegar nele está em docs/historico/ (o módulo que criava o repo já foi apagado).
+# chegar nele está em docs/history/ (o módulo que criava o repo já foi apagado).
 #
 # Seleção por by-id (nomes sd/nvme EMBARALHAM entre boots). NUNCA usar /dev/nvmeXnY.
 #
@@ -15,7 +15,7 @@
 #
 # ── POR QUE BTRFS AQUI, se o SanDisk é ext4 ────────────────────────────────
 # Não é pelo btrfs em si: é pelo LAYOUT DE SUBVOLUMES, que é pré-requisito da
-# IMPERMANÊNCIA (docs/historico/2026/07-julho.md, entrada de 30/07 — raiz efêmera + lista explícita do
+# IMPERMANÊNCIA (docs/history/2026/07-july.md, entrada de 30/07 — raiz efêmera + lista explícita do
 # que persiste, inspirado no Foundry do Misterio77). Impermanência exige /nix e
 # /persist em volumes separados da raiz DESDE A INSTALAÇÃO; instalar ext4 plano
 # significaria reinstalar de novo pra adotá-la. A feature NÃO está ligada ainda —

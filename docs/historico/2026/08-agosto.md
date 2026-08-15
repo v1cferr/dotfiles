@@ -1,6 +1,50 @@
 # Histórico — agosto de 2026
 
-58 entradas. Índice em [README.md](../README.md).
+59 entradas. Índice em [README.md](../README.md).
+
+- [x] OneDrive da FAI montado no Linux: CONSTRUÍDO, MEDIDO E REMOVIDO — o tenant não deixa
+      (15/08/2026) — a ideia era `~/OneDrive` como pasta normal no Dolphin, do mesmo jeito
+      que o `~/Drive` e o `~/FAI-workstation`: onedriver (FUSE, on-demand) pelo caminho
+      oficial — Microsoft Graph + login Entra ID —, já que cliente de OneDrive pra Linux a
+      Microsoft nunca publicou. O módulo ficou pronto e o login foi tentado de verdade.
+      Parou em **"Need admin approval"**, e a medição mostrou que não há o que fazer deste
+      lado. O código saiu inteiro (regra de zero legado); ressuscita com
+      `git show 4a14cd6:home/services/onedrive-mount.nix`.
+      • ⚠️ A PERMISSÃO NÃO ERA O PROBLEMA, e é aqui que a intuição erra: o
+        `Files.ReadWrite.All` é `type=User` no catálogo do Graph
+        (`AdminConsentRequired = No`), ou seja, usuário comum PODERIA consentir. Quem barra
+        é o cruzamento de duas coisas do tenant da FAI: a política é
+        `ManagePermissionGrantsForSelf.microsoft-user-default-low`, que só libera quando
+        **todas** as permissões estão classificadas como low-impact, e as classificadas lá
+        são só as CINCO de fábrica (`User.Read`, `openid`, `email`, `profile`,
+        `offline_access`). O onedriver pede `user.read files.readwrite.all offline_access`,
+        então o `.All` cai fora da lista e o consentimento de usuário morre ali.
+      • ⚠️ TROCAR O `clientId` NÃO CURA — e essa era a saída óbvia, que eu tinha escrito no
+        próprio módulo como remédio. Registrar um app DENTRO do tenant (dá: o
+        `allowedToCreateApps` está `true`) satisfaz o "apps registered in your tenant" da
+        política, mas não CLASSIFICA permissão nenhuma: a mesma tela de aprovação volta.
+        Necessário e insuficiente. Consentir por conta própria também não era opção —
+        `/me/memberOf` devolve só grupos, nenhum papel de diretório.
+      • COMO SE MEDE ISSO EM 3 COMANDOS, que é o que valeu a pena aprender:
+        `az rest --url ".../v1.0/policies/authorizationPolicy"` dá a política;
+        `az rest --url ".../servicePrincipals(appId='00000003-0000-0000-c000-000000000000')/delegatedPermissionClassifications"`
+        dá o que é low-impact; e `onedriver -a -n <mnt>` imprime a URL de auth com o
+        `scope=` exato — ler o scope da URL, e não do comentário do código, foi o que fechou
+        a conta.
+      • O QUE DESTRAVARIA, e as duas passam pelo TI: admin consent no app, ou classificar a
+        permissão como low-impact. `Files.ReadWrite` (só o drive do usuário) seria pedido
+        bem mais fácil de aprovar que o `.All`, mas exigiria patch no onedriver, que enterra
+        o scope no binário. Sem acesso ao TI, nenhuma das duas é minha pra puxar.
+      • POR QUE REMOVER EM VEZ DE DEIXAR DE STANDBY: módulo não importado NUNCA É AVALIADO —
+        não entra em `nix eval`, nem no `checks`, nem no rebuild. Apodreceria em silêncio
+        (pacote sumindo do nixpkgs, opção do home-manager mudando de nome) e daria a
+        sensação falsa de "está pronto, é só ligar". Ficou 4 dias assim, órfão desde o
+        `6600ad0`, sem ninguém notar. E não há dor operacional segurando: o OneDrive pela
+        web funciona.
+      • A DECISÃO DE MOUNT (e não sync) segue registrada aqui porque ela sobrevive ao
+        módulo: é conta INSTITUCIONAL, e sync PROPAGA delete — um apagão local viraria
+        apagão no OneDrive da FAI, que não é meu pra recuperar. Se um dia isto voltar, volta
+        como mount.
 
 - [x] CurseForge substitui o PrismLauncher — e "falta Java" era PERMISSÃO (14-15/08/2026) —
       o Prism importa um `.zip` de modpack, mas quem mantém biblioteca e ATUALIZA o pack é o

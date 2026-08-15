@@ -92,13 +92,45 @@ in
       default = "3470c3fa-bc10-45ab-a0a9-2d30836485d1";
       description = ''
         App registration que pede o consentimento. O default é o app público do
-        onedriver (multi-tenant, resolve no tenant da FAI). TROCAR AQUI se o Entra
-        da FAI bloquear consentimento de usuário para app de terceiro
-        (AADSTS65001/AADSTS90094, tela "Precisa de aprovação do administrador"):
-        registra-se um app próprio DENTRO do tenant — público (sem secret),
-        redirect `https://login.live.com/oauth20_desktop.srf` como "Mobile and
-        desktop applications", delegated `User.Read` + `Files.ReadWrite.All` +
-        `offline_access` — e põe-se o client ID dele nesta linha. Nada mais muda.
+        onedriver (multi-tenant, resolve no tenant da FAI).
+
+        ⚠️⚠️ MEDIDO EM 15/08/2026, E O VEREDITO É "SÓ O TI RESOLVE": o login
+        interativo bateu em "Need admin approval". A causa NÃO é a permissão em
+        si — `Files.ReadWrite.All` é `type=User` no catálogo do Graph
+        (`AdminConsentRequired = No`), usuário comum poderia consentir. O que
+        barra é o cruzamento de duas coisas DESTE tenant:
+          • a política é `ManagePermissionGrantsForSelf.microsoft-user-default-low`
+            (`az rest --url ".../v1.0/policies/authorizationPolicy"`), que só deixa
+            o usuário consentir quando TODAS as permissões pedidas estão
+            classificadas como low-impact;
+          • e as classificadas aqui são só as CINCO de fábrica — `User.Read`,
+            `openid`, `email`, `profile`, `offline_access` (`az rest --url
+            ".../servicePrincipals(appId='00000003-0000-0000-c000-000000000000')/delegatedPermissionClassifications"`).
+        O onedriver pede `user.read files.readwrite.all offline_access` (lido na
+        própria URL de auth, com `onedriver -a -n`), então o `files.readwrite.all`
+        fica de fora da lista e o consentimento de usuário morre ali.
+
+        ⚠️ TROCAR ESTA LINHA NÃO RESOLVE SOZINHO — e essa era a saída óbvia.
+        Registrar um app DENTRO do tenant (dá: `allowedToCreateApps` está `true`)
+        satisfaz o "apps registered in your tenant" da política, mas não
+        CLASSIFICA permissão nenhuma: o `files.readwrite.all` continua fora e a
+        tela de aprovação volta igual. E consentir por conta própria também não é
+        opção — `/me/memberOf` devolve só grupos, nenhum papel de diretório.
+
+        O QUE DESTRAVA (as duas passam pelo TI da FAI): admin consent no app — e
+        aí um app registrado no tenant AJUDA, porque é um app que eles veem e
+        controlam, em vez de um multi-tenant de terceiro —, ou classificar a
+        permissão como low-impact. Se for pedir, `Files.ReadWrite` (só o drive do
+        usuário) é pedido bem mais fácil de aprovar que o `.All`, mas exige patch
+        no onedriver, que enterra o scope no binário.
+
+        ⚠️ App próprio, quando chegar a hora: tem que ser PÚBLICO (sem client
+        secret — o onedriver não manda nenhum) e o redirect TEM que ser exatamente
+        `https://login.live.com/oauth20_desktop.srf` como "Mobile and desktop
+        applications". Esse literal está HARDCODED em C na janela de login
+        (`auth_complete_url` em fs/graph/oauth2_gtk.c): com outro redirect o popup
+        autentica e simplesmente NUNCA FECHA, porque ninguém captura o `code`.
+        Com outro redirect só funciona o fluxo `-n` (colar a URL no terminal).
       '';
     };
   };

@@ -1,23 +1,23 @@
--- ── Entrypoint modular do Hyprland (Lua 0.55) ───────────────────────────────
--- A config foi quebrada por categoria em ~/.config/hypr/lua/*.lua (espelha o
--- layout modular do setup Arch e a regra 5 do projeto: 1 assunto por arquivo).
--- Este arquivo SÓ carrega os módulos, na ordem. `hl` é global e fica visível
--- dentro de cada módulo carregado por dofile.
+-- ── Hyprland's modular entrypoint (Lua 0.55) ────────────────────────────────
+-- The config was broken up by category into ~/.config/hypr/lua/*.lua (it mirrors the Arch
+-- setup's modular layout and the project's rule 5: 1 subject per file).
+-- This file ONLY loads the modules, in order. `hl` is global and stays visible inside every
+-- module loaded through dofile.
 --
--- HOT-RELOAD: nem este arquivo nem os módulos ficam na store — vêm por
--- mkOutOfStoreSymlink (home/desktop/hypr.nix) dos arquivos reais no repo. Edita
--- qualquer .lua + `hyprctl reload` → aplica na hora, sem rebuild. Os scripts que
--- os binds chamam (minimize-others, brightness-osd, monitor-toggle) entram no
--- PATH via home.packages, então os módulos os invocam por nome.
+-- HOT-RELOAD: neither this file nor the modules live in the store, they come through
+-- mkOutOfStoreSymlink (home/desktop/hypr.nix) from the real files in the repo. Edit any .lua plus
+-- `hyprctl reload` and it applies right away, with no rebuild. The scripts the binds call
+-- (minimize-others, brightness-osd, monitor-toggle) enter the PATH through home.packages, so the
+-- modules invoke them by name.
 local dir = os.getenv("HOME") .. "/.config/hypr/lua/"
 for _, mod in ipairs({
-  "environment", -- hl.env: cursor, tema Qt, plataforma Wayland
-  "monitors",    -- hl.monitor + hl.workspace_rule (conectores do my.monitors, ws 1–8)
-  "appearance",  -- general/decoration/animations: bordas, blur, shadow, curvas
-  "input",       -- teclado ABNT2 + mouse (accel flat, numlock)
+  "environment", -- hl.env: the cursor, the Qt theme, the Wayland platform
+  "monitors",    -- hl.monitor plus hl.workspace_rule (my.monitors' connectors, ws 1 to 8)
+  "appearance",  -- general/decoration/animations: borders, blur, shadow, curves
+  "input",       -- the ABNT2 keyboard plus the mouse (flat accel, numlock)
   "autostart",   -- hl.on("hyprland.start"): systemd, quickshell, clipboard
   "rules",       -- hl.window_rule: opacity, PiP, Ascension, Flameshot
-  "keybinds",    -- todos os hl.bind
+  "keybinds",    -- every hl.bind
 }) do
   dofile(dir .. mod .. ".lua")
 end

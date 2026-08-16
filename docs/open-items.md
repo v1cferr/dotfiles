@@ -271,7 +271,8 @@ finished work. What was closed is in the [august history](history/2026/08-august
       reason, which is the only entry there, and emptying that list is the goal.
       • WHY IT IS NOT ALREADY DONE: deleting a key from sops needs root's age key, so it is a
         `sudo` step and not something a build can do.
-      • HOW TO CLOSE IT: `sudo nix shell nixpkgs#sops -c sops secrets/secrets.yaml`, delete the
-        line, save, then `sudo nixos-rebuild switch` (without the rebuild `/run/secrets` does not
-        change), and finally drop the entry from ALLOWED in `pkgs/dead-config.nix` so the check
-        goes back to guarding an empty list.
+      • HOW TO CLOSE IT: the runbook is in [notes/repo/secrets.md](notes/repo/secrets.md), and it
+        is NOT the bare `sops secrets/secrets.yaml` this item said at first: that fails, because
+        the age key is root's and sops does not look in `/var/lib/sops-nix/`. Delete the line,
+        `chown` the file back to the user, `nixos-rebuild switch`, and then drop the entry from
+        ALLOWED in `pkgs/dead-config.nix` so the check goes back to guarding an empty list.

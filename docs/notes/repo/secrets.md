@@ -70,12 +70,43 @@ token is regenerable, so it does not need the vault.
 
 ## Editing by hand
 
+**The obvious command does NOT work**, and it was written down wrong in this repo until
+16/08/2026, in `.sops.yaml`'s header and then here. `sops secrets/secrets.yaml` on its own fails
+with `Failed to get the data key required to decrypt the SOPS file`, listing every default
+location it searched. None of them is the right one: the age key belongs to ROOT and lives at
+`/var/lib/sops-nix/key.txt`, which sops does not look in.
+
 ```sh
-nix shell nixpkgs#sops -c sops secrets/secrets.yaml           # edit
-nix shell nixpkgs#sops -c sops updatekeys secrets/secrets.yaml # after adding a recipient
+cd ~/Projects/GitHub/v1cferr/dotfiles
+sudo EDITOR=nano SOPS_AGE_KEY_FILE=/var/lib/sops-nix/key.txt \
+  nix shell nixpkgs#sops -c sops secrets/secrets.yaml
+
+# sops rewrote the file AS ROOT, and sync-secrets runs as the user:
+sudo chown v1cferr:users secrets/secrets.yaml && chmod 644 secrets/secrets.yaml
+
+# WITHOUT THIS the services keep the OLD value:
+sudo nixos-rebuild switch --flake .#nixos-kingston
 ```
 
-A `rebuild` is MANDATORY after editing, otherwise `/run/secrets` does not update.
+Three things that each cost a failed attempt:
+
+- **`SOPS_AGE_KEY_FILE` is not optional.** Without it the error names eight locations it tried and
+  none is `/var/lib/sops-nix/key.txt`, so it reads like a corrupted vault when it is only a key
+  sops was never told about.
+- **The `chown` afterwards.** The file is `v1cferr:users` at 0644 precisely so `sync-secrets` can
+  write to it; editing as root flips it and the next sync fails.
+- **The `rebuild` is MANDATORY.** sops-nix only decrypts into `/run/secrets` at ACTIVATION, so
+  saving the yaml changes nothing that is running. Restart the affected service too.
+
+For `updatekeys` (after adding a recipient) the same environment applies:
+
+```sh
+sudo EDITOR=nano SOPS_AGE_KEY_FILE=/var/lib/sops-nix/key.txt \
+  nix shell nixpkgs#sops -c sops updatekeys -y secrets/secrets.yaml
+```
+
+`sync-secrets` does NOT replace this: it runs `sops set` on the EXISTING file, which already
+requires a key that decrypts.
 
 ## Two recipients, and the `updatekeys` trap
 
@@ -91,10 +122,7 @@ There are TWO on purpose:
   repo the day that key disappears, since sops has no recovery and its only backup was Bitwarden,
   the SPOF of everything. With two, losing one is an annoyance; losing both is the disaster.
 
-```sh
-nix shell nixpkgs#sops -c sops secrets/secrets.yaml             # edit
-nix shell nixpkgs#sops -c sops updatekeys secrets/secrets.yaml  # re-encrypt for new keys
-```
+The commands are in [Editing by hand](#editing-by-hand) above.
 
 **WARNING**: `creation_rules` only applies to a NEW file. Adding a recipient does NOT re-encrypt
 what already exists, so without running `updatekeys` the new key decrypts nothing and the backup is

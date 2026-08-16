@@ -1,34 +1,14 @@
 # Open items
 
-What is still open. A finished item migrates to [historico/](history/):
+What is still open. A finished item migrates to [history/](history/):
 this file only grows with new work, and shrinks when work ends.
 
 Convention inherited from the single-file era: every item explains the WHAT, the WHY and the
 known trap. The paragraph is worth more than the title.
 
-- [x] HEVC on Moonlight: TESTED AND DROPPED for the FAI notebook (10/08/2026). Turned on at
-      14:43, it negotiated `hevc_vaapi` / clean Rec. 709 against `h264_vaapi` / Rec. 601, and I
-      turned it off at 14:57 because in practice it was **"way too buggy"**. **H.264 is the
-      final choice for this machine**, and it is DELIBERATE, not a forgotten default.
-      • THE FAILURE MODE IS THE WORST POSSIBLE ONE TO DIAGNOSE, and that is why this item
-        survives closed: on the HOST side everything looked right. The journal recorded
-        `Creating encoder [hevc_vaapi]`, the colorimetry even IMPROVED (Rec. 601 to 709, which
-        is an actual correction, since 601 on HD content shifts color), and the delivered image
-        was still bad. The host encodes; who decodes is the client, and the host cannot see
-        that. A clean negotiation is not the same as good playback.
-      • THIS CONTRADICTS THE 03/08 NOTE in system/services/sunshine.nix FOR THIS CLIENT.
-        There it says that turning on HEVC/AV1 "is worth more than any tweak in this file", and
-        it is, where the decode is any good. Here it is not. Without this record, the next
-        person (or me) follows that advice and loses the afternoon again.
-      • TWO WRONG TURNS BEFORE GETTING IT RIGHT, and the lesson is the same in both directions:
-        1. I closed it as "no action" based on a REPORT ("it has no dedicated GPU"), and the
-           measurement disproved that in 10 min, because an Intel iGPU has decoded HEVC since
-           ~2015;
-        2. I reopened it as "it works" based on a HOST MEASUREMENT, and real use disproved that
-           in 15 min.
-        Neither instrument answered the right question, which was "how does the image look on
-        the client". Only the eye of whoever uses it answered.
-      • What is left for this machine: the bitrate ceiling and FEC, both on the host.
+AUDITED on 16/08/2026 against the actual tree, because this file had drifted the way rule 16
+describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
+finished work. What was closed is in the [august history](history/2026/08-august.md).
 
 - [ ] Quality probe for the UFSCar VPN: no measured target (opened on 14/08/2026). The pill's
       hover popover measures latency/jitter/loss by pinging a host INSIDE the tunnel. For FAI
@@ -91,103 +71,39 @@ known trap. The paragraph is worth more than the title.
         actionable again if the tunnel is retired. Measuring anyway is worth it: it is what says
         WHICH of the two is the lower one.
 
-- [~] Tray: the CLICK already worked (30/07). The Bar.qml delegate has left `activate()`, middle
-      `secondaryActivate()`, right opening the native SNI menu (TrayMenu) and it handles
-      `scroll()`. The item was marked pending while being done, the inverse of the
-      wallpaper/screenDP1/ws-pill pattern, and just as misleading.
-      What WAS broken in there was something else: the right-click fallback for an SNI with no
-      DBusMenu (xembedsniproxy: wine/Battle.net, pamac) called
-      `$HOME/.config/waybar/scripts/tray-native-menu.sh`, a WAYBAR path, and Waybar was removed
-      in the migration; the dir does not exist and the script was not in the repo. Ported from
-      the legacy tree to writeShellApplication (rule 7) and called BY NAME through the PATH.
-      HOVER ON THE MENU (30/07): the tray menu opened and did NOT receive ONE pointer event, no
-      hover at all, and it closed after 4s with the mouse sitting on top of it. It was NOT color
-      and NOT QML: hyprwm/Hyprland#6682, a Qt popup RESIZED after being shown ends up with the
-      wrong input region. It fits exactly, because openAt() makes the window visible BEFORE
-      QsMenuOpener populates the items, so the card is born small and grows. Reproduced with
-      Quickshell ITSELF, CLOSED as "not planned". FIX: PopupWindow to PanelWindow (a layer
-      surface), which does not go through xdg_surface::set_window_geometry. It was in plain
-      sight: it was the ONLY PopupWindow in the shell, the other 4 panels are PanelWindow and
-      all of them had hover. As a bonus it also covers opening a SUBMENU, which grows after
-      being shown too. The price: positioning by hand (no anchor.rect/PopupAdjustment.Slide),
-      X comes from the icon plus a clamp.
-      THE MEASUREMENT that closed the case: sampling `hyprctl layers` every 0.4s (the menu now
-      IS a layer, so it SHOWS UP there, observability the popup did not give), one window stayed
-      up for 7.46s, past the 4s timer, so the HoverHandler does see the cursor. Before that
-      EVERY window died in ~3.7s.
-      VISIBLE HOVER: the highlight existed and was INVISIBLE. `border`@20% over the menu
-      background gives 1.11:1 of contrast (measured). Swapped for `accent`@30% = 1.77:1 AND a
-      HUE change (gray to blue), which is what the eye catches. Tokens colMenuHoverBg{,Danger}
-      in the Theme, plus a 3px accent bar sliding in from the left (the background is an AREA
-      signal, the bar is a POSITION signal). The measurement also disproved a choice of mine: I
-      had made the text light up in accent, which over the lit background drops to 3.83:1
-      against colText's 5.97:1, so it made legibility worse as a side effect.
-      XEmbed TO SNI BRIDGE (30/07): the comments in this repo cited `xembedsniproxy` in 3 places
-      as if it existed, and it was NEVER INSTALLED. The tray-native-menu was dead code, because
-      no icon without DBusMenu ever came to exist. A legacy X11 app (Wine/Bottles to Battle.net)
-      publishes its icon over XEmbed, not SNI; with no XEmbed host, Wine draws the tray in a
-      LITTLE WINDOW of its own (measured: class=explorer.exe, 160x20, floating). Now the proxy
-      is declared (home/desktop/quickshell.nix). Causality demonstrated in BOTH directions:
-      proxy up = 4 items in the watcher and explorer.exe=0; proxy dead = 3 items and the little
-      window is back. COST measured and accepted: 758 MiB added to the closure (429 of them
-      qtwebengine, plus kwin/breeze/oxygen), because the binary only exists inside
-      kdePackages.plasma-workspace. Alternatives discarded with a reason: `snixembed` goes the
-      OPPOSITE way (it publishes SNI as XEmbed) and therefore tries to be the watcher, dying
-      with "could not acquire watcher name" (Quickshell already is one); there is no standalone
-      in nixpkgs; extracting the binary does not escape it (plasma-workspace references
-      kwin/breeze/oxygen DIRECTLY); stalonetray = a floating window all over again.
-      LIMITATION of the icon that comes over the bridge, measured: no name and no menu. `Id` is
-      the X11 window ID in decimal ("14680083"), `Title`/`ToolTip` are empty, `Menu` does not
-      exist. Right-click falls into tray-native-menu (which only NOW has a real use) and the
-      pending tooltip cannot settle for the `Id`: for these it would have to resolve the
-      WM_CLASS.
-      GHOST ICON (30/07): closing Battle.net left the icon on the bar, answering no click at
-      all. It was NOT a proxy bug: `battle.net.exe` exits without removing its registration and
-      Wine's `explorer.exe` keeps holding the window (xprop: WM_CLASS=explorer.exe,
-      `_NET_WM_PID` alive). On the X side the window exists; on the app side there is nobody to answer. The
-      helper works: `tray-native-menu <id>` returns exit=0, it found the item and called
-      ContextMenu(). The fix: `wineserver -k` in the Bottles prefix (NOT a reboot); the proxy
-      then CLEANS the item correctly (4 to 3 items, 0 windows, the unit intact). If some day an
-      item is left with the window already dead, `systemctl --user restart xembedsniproxy`.
-      MISSING: the TOOLTIP, which does not exist anywhere on the bar. Quickshell's SNI exposes
-      `tooltipTitle`/`tooltipDescription` ready to use; the pattern to follow is the popovers
-      (an anchored PanelWindow, see MetricsPopover.qml). MEASURED on today's items: Discord
-      publishes a ToolTip with the title "Discord", Sunshine leaves it EMPTY and only has
-      Title="sunshine", and the icon from the XEmbed bridge has neither, so the cascade needs to
-      be tooltipTitle to title to id, and for the bridged ones, WM_CLASS.
-      MEASUREMENT NOTE: I counted tray items with `busctl --user list | grep
-      StatusNotifierItem` and got 0, which is FALSE, because an app that registers under a
-      unique name (`:1.82`) does not match that pattern. The authoritative source is the
-      watcher's `RegisteredStatusNotifierItems` property (which is what tray-native-menu reads):
-      3 items.
+- [ ] Tray: the TOOLTIP, which does not exist anywhere on the bar (opened 30/07, narrowed
+      16/08/2026). Everything else in this item was DONE and its reasoning now lives in
+      [notes/desktop/bar.md](notes/desktop/bar.md) and
+      [notes/desktop/quickshell.md](notes/desktop/quickshell.md): the click, the hover fix
+      (PopupWindow to a layer surface, Hyprland#6682), the visible-hover contrast tokens, the
+      XEmbed bridge and the ghost-icon diagnosis. The item had been carrying 70 lines of finished
+      work, which is the drift rule 16 describes.
+      • Quickshell's SNI exposes `tooltipTitle`/`tooltipDescription` ready to use; the pattern to
+        follow is the popovers (an anchored PanelWindow, see MetricsPopover.qml).
+      • MEASURED on the live items, and it is why a single field will not do: Discord publishes a
+        ToolTip with the title "Discord", Sunshine leaves it EMPTY and only has Title="sunshine",
+        and the icon from the XEmbed bridge has NEITHER. So the cascade is tooltipTitle to title
+        to id, and for the bridged ones it has to resolve the X11 WM_CLASS.
+      • MEASUREMENT NOTE: counting tray items with `busctl --user list | grep StatusNotifierItem`
+        gives 0, which is FALSE, because an app registered under a unique name (`:1.82`) does not
+        match. The authoritative source is the watcher's `RegisteredStatusNotifierItems`.
 
-- [ ] VS Code: the language server of `kamikillerto.vscode-colorize` aborts in a loop (found on
-      09/08/2026). 15 coredumps in 2 days, roughly every 6 to 30 min of session. It is NOT the
-      editor and NOT nix: `coredumpctl info` hands over the command line with
-      `.vscode/extensions/kamikillerto.vscode-colorize-0.17.1/server/out/server.js`.
-      • The price PER abort, measured: 58 s of CPU, 2.6 GB of peak RAM, 2.7 GB written to the
-        NVMe just to record the dump. It is the freeze you can feel, and it is disk wear.
-      • The immediate fix is disabling the extension (or restricting `colorize.include`). All
-        that is lost is the color highlight. The extension comes from Settings Sync, NOT from
-        nix, so the fix lives outside this repo while the declarative VSCode item is open.
-      • It is NOT the same bug as the 90 s "stop job" (which also pointed at VS Code): there
-        it is the `app-code-*.scope` ignoring SIGTERM at shutdown; here it is a child aborting
-        in the middle of the session. Fixing one does not fix the other.
-
-- [ ] SSOT still pending: all that is left is the HOME `/home/v1cferr` (5 files: dolphin.nix,
-      Theme.qml, restic.nix, fai-workstation-mount.nix, home/default.nix) to `my.user.home`.
+- [ ] SSOT still pending: the HOME `/home/v1cferr` to `my.user.home`. RECOUNTED on 16/08/2026
+      and the item was understating it: **8 files**, not the 5 written here before
+      (dolphin.nix, Theme.qml, restic.nix, fai-workstation-mount.nix, home/default.nix, plus
+      core.nix, drive-mount.nix and grad-radar.nix).
       LOW priority on purpose: unlike font/color/connector, the path does not change when the
-      hardware changes.
-
-- [ ] Check whether encrypted declarative state is possible
+      hardware changes. That is also why the count drifted unnoticed, and why `dead-config`
+      cannot catch this one: a literal is not a dead declaration, it is a missing one.
 
 - [ ] IMPERMANENCE on the Kingston: my idea (30/07), inspired by
       <https://github.com/Misterio77/Foundry>. An ephemeral root (tmpfs or a subvolume wiped at
       boot) plus an EXPLICIT list of what persists. It fits two things this repo already has:
       rule 6 (Nix = app+config; state = restic) would stop being a convention and become
       ENFORCED by the system, since whatever is not declared as persistent simply does not
-      survive the boot; and it answers the item above (encrypted declarative state), because the
-      natural pair is impermanence + LUKS.
+      survive the boot; and it absorbs what used to be a separate one-line item ("check whether encrypted
+      declarative state is possible"), because the natural pair is impermanence + LUKS, and LUKS
+      is already decided against below.
       POINTS TO DECIDE FIRST, measured today: the 567 GiB of non-Nix (Bottles 319, Jellyfin 132,
       Games 47) are LARGE and legitimate state. Impermanence does not erase them, but it forces
       declaring every path, and getting the list wrong means losing a save or a prefix on
@@ -258,26 +174,10 @@ known trap. The paragraph is worth more than the title.
       DynamicUser breaks. And `@snapshots` (btrbk) survives by design: it is top-level, it does
       not live inside `@`.
 
-- [ ] Set up WoW Ascension with Bottles so we can play, and configure the system along the way.
-      (Written as "once I am on the SSD"; the cutover already happened on 01/08 and the daily
-      driver is the NVMe Kingston, so this one is free to go.)
-
-- [ ] **M.2 heatsink for the KC3000**: measured on 01/08/2026, 77 to 80 °C under load, and the
-      thermal management counter GOES UP during heavy I/O (`T1 Trans Count` went from 17 to 18
-      in a single benchmark; 24,781 s accumulated). It never crossed the controller's warning
-      threshold and the disk is spotless (`media_errors: 0`, spare 100%, 4% of life used, reads
-      at 6911 MB/s = 98.7% of the spec sheet), but Kingston specifies operation up to **70 °C**
-      and it is now the daily driver, not the idle secondary disk anymore.
-      Check first whether the board has a heatsink on the slot and what the airflow near the Arc
-      B580 looks like. Prefer a PASSIVE one: a 30 mm fan fed by Molex runs at a fixed speed,
-      whines, has no tachometer and dies in 1 to 2 years, and a dead fan inside a closed case is
-      worse than a passive heatsink. Measure afterwards with
-      `sudo nvme smart-log /dev/nvme0n1 | grep -E "^temperature|Sensor 2|T1 Trans"`.
-
-- [ ] Turn off every LED on every piece of hardware in AFK mode
-
-- [ ] Install the driver/software for my Razer Deathadder v2 mouse (add the notification for
-      when my DPI changes, and so on)
+- [ ] Turn off every LED on every piece of hardware in AFK mode. Nothing is declared for this
+      yet (`dead-config` confirms there is no OpenRGB anywhere in the tree). The blocker is the
+      Steel Legend B580's RGB, which OpenRGB does not support: reverse engineering it is a
+      separate, bigger piece of work, and the fans are not controllable at all.
 
 - [~] Passwordless remote maintenance on the router and on the switch (OpenWrt).
       • ROUTER, done: SSH was already key-based (`ssh v1cferr@192.168.1.1` runs in BatchMode),
@@ -311,12 +211,9 @@ known trap. The paragraph is worth more than the title.
         PRUNE BEFORE the new account proves it walks: until the FAI `/login` happens, those
         leftovers are the only place where that account's state exists. And NEVER touch
         `projects/`, which is the archive, the target of both accounts' symlinks.
-      • The header block of `system/services/claude-code.nix` states that the user's
-        `settings.json` "CANNOT become a symlink". The sentence holds for a STORE symlink
-        (read-only), which is what it was talking about, but today it reads as if it contradicted
-        this module, which links to the repo through `mkOutOfStoreSymlink` and was measured.
-        Rewrite the sentence (it is text drift, rule 16; the hooks in `/etc` are still right and
-        still necessary).
+      (A third bullet lived here until 16/08/2026: the header of `system/services/claude-code.nix`
+      claimed the user's `settings.json` "CANNOT become a symlink", which read as contradicting
+      the module that links it. The rule 2 sweep rewrote that header, so the drift is gone.)
 
 - [ ] The Azure MCP has nothing to work ON yet (14/08/2026). The server is declared, connected
       and authenticated (see the [august history](history/2026/08-august.md)), but its 68
@@ -366,8 +263,15 @@ known trap. The paragraph is worth more than the title.
       because what I want fresh already comes through `unstable.*` and through the direct
       upstream inputs.
 
-- [ ] Make VSCode declarative with Nix and at the same time always keep the sync with my
-      GitHub/Microsoft account updated (I want it centralized in
-      <https://github.com/v1cferr/dotfiles>)
-
 - [ ] Add the current public IP to Fastfetch?
+
+- [ ] Remove `jellyfin_api_key` from sops (found by `dead-config` on 16/08/2026). It is in
+      `secrets/secrets.yaml`, consumed by NOTHING, and it belongs to the OLD Jellyfin server, so
+      it answers 401: not merely unused, unusable. It is on the checker's ALLOWED list with that
+      reason, which is the only entry there, and emptying that list is the goal.
+      • WHY IT IS NOT ALREADY DONE: deleting a key from sops needs root's age key, so it is a
+        `sudo` step and not something a build can do.
+      • HOW TO CLOSE IT: `sudo nix shell nixpkgs#sops -c sops secrets/secrets.yaml`, delete the
+        line, save, then `sudo nixos-rebuild switch` (without the rebuild `/run/secrets` does not
+        change), and finally drop the entry from ALLOWED in `pkgs/dead-config.nix` so the check
+        goes back to guarding an empty list.

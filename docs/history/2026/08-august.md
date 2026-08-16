@@ -1,6 +1,47 @@
 # History: august 2026
 
-63 entries. Index in [README.md](../README.md).
+64 entries. Index in [README.md](../README.md).
+
+- [x] Audited `open-items.md` against the tree, and closed six items that were already done
+      (16/08/2026). The file's own header says a finished item migrates here, and it had stopped
+      happening: this is rule 16's drift applied to the TODO list, where the cost is not a broken
+      build but re-reading work that is finished. 21 items became 15.
+      • **M.2 heatsink for the KC3000: DONE on 09/08/2026.** The item asked for one at 77 to
+        80 °C under load; after installing it the drive reads 41.8 °C idle and 47.8 °C under
+        write. The test the item defined still stands and is worth keeping in mind: if
+        `Thermal Mgmt T1 Trans Count` stays at 18 after weeks of heavy use, the throttling is
+        gone for good. The counters are CUMULATIVE and include the era with no heatsink.
+      • **VS Code / vscode-colorize: DONE by removal.** The extension was aborting in a loop, 15
+        coredumps in 2 days at 58 s of CPU and 2.7 GB written to the NVMe each. It is no longer
+        in `home/apps/vscode/extensions.txt`, which is exactly what that mirror file was added
+        for: the fix happened outside this repo (Settings Sync owns the extensions) and the repo
+        still recorded it.
+      • **HEVC on Moonlight: closed as TESTED AND DROPPED**, and it migrates with its full
+        reasoning, because the value is the negative result. H.264 is the deliberate choice for
+        the FAI notebook. The failure mode is the worst kind to diagnose: on the HOST everything
+        looked right (`Creating encoder [hevc_vaapi]`, the colorimetry even IMPROVED from
+        Rec. 601 to 709) and the delivered image was still bad. The host encodes, the CLIENT
+        decodes, and the host cannot see that. Two wrong turns before getting it right: closed
+        as "no action" from a REPORT, then reopened as "it works" from a HOST MEASUREMENT.
+        Neither instrument answered "how does the image look on the client".
+      • **WoW Ascension with Bottles: done.** Bottles is declared, the window rule exists in
+        `rules.lua` (floating, centered on the LG, opaque, idle-inhibiting) and the addons are
+        set up. The item was written as "once I am on the SSD", and the cutover was 01/08.
+      • **Razer Deathadder v2: obsolete, not done.** The mouse on this machine is an MX Master 3S
+        (`system/hardware/mouse.nix`) and there is no Razer anywhere in the tree. Closing it as
+        "obsolete" rather than "done" is the honest label.
+      • **VSCode declarative: the DECISION was made and recorded**, which is what the item was
+        really asking for. What it wanted, "centralized in the dotfiles", is done: settings,
+        keybindings and mcp.json are versioned and linked, and the extensions are mirrored in
+        `extensions.txt`. What it did NOT get is Nix ENFORCING them, and that was refused on
+        purpose, because Settings Sync serves the FAI Windows machine too. The reasoning is in
+        `notes/apps/vscode.md`. An item asking for something the repo deliberately decided
+        against is not open, it is answered.
+      • TWO ITEMS WERE CORRECTED rather than closed. The Tray item was carrying 70 lines of
+        FINISHED work (the click, the hover fix, the XEmbed bridge, the ghost icon), all of it
+        now in `notes/desktop/`, so it shrank to the one thing still missing, the tooltip. And
+        the SSOT item claimed 5 files still holding a `/home/v1cferr` literal; recounting found
+        **8**. A count nobody recounts is a number that decays.
 
 - [x] The notes got a folder structure and, more importantly, a CHECKER (16/08/2026). Right
       after the rule 2 sweep, `docs/notes/` was 51 flat pages with no index, and nothing in the

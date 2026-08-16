@@ -334,6 +334,22 @@ single definition. If it ever gets annoying, the way back is this file in the hi
 `ci/stub-duo`, which is useful anyway for running `flake check` in any clone without the private
 key.
 
+### Two community tools looked at and REJECTED (16/08/2026)
+
+**`DeterminateSystems/flake-checker-action`** is what the community reaches for to catch input
+drift, and it loses here on two counts. It defaults to `send-statistics: true`, which contradicts
+the no-vendor decision recorded just below for the installer; and its headline check is "the root
+Nixpkgs input has been updated within the last 30 days", which fights a RELEASE PIN on purpose,
+since only backports land in `nixos-26.05` and the age of the pin is not a defect. `check-outdated`
+can be turned off, but a checker running with its main check disabled is not worth an action.
+
+**An input-age check of our own** was prototyped and dropped for a subtler reason, worth writing
+down because it looks correct: `lastModified` in `flake.lock` is the UPSTREAM commit date, not the
+date we last fetched. `disko` measured 66 days old with `nix flake update` freshly run, purely
+because disko has not had a commit in 66 days. Measuring OUR staleness would mean measuring the
+lock file's git mtime, which is a much weaker signal than it looks. See
+[`dead-config.md`](dead-config.md) for the other checks that were prototyped and refused.
+
 **`cachix/install-nix-action` and NOT `DeterminateSystems/nix-installer-action`**: the second is
 faster and brings a cache for free, but it installs the Determinate Nix distribution (its support
 for upstream Nix ended on 01/01/2026) and pulls toward FlakeHub Cache. For a personal repo that has

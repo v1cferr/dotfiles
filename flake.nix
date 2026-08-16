@@ -168,6 +168,7 @@
         curseforge-bump = final.callPackage ./pkgs/curseforge-bump.nix { }; # version+hash of curseforge.nix
         curseforge-fix-perms = final.callPackage ./pkgs/curseforge-fix-perms.nix { }; # +x on what the app unpacks
         docs-links = final.callPackage ./pkgs/docs-links.nix { }; # it fails when a docs/ pointer breaks
+        dead-config = final.callPackage ./pkgs/dead-config.nix { }; # it fails on declared-and-unused
       };
 
       # Claude Desktop: it forces the secret backend, since Electron does not recognize "Hyprland" and
@@ -241,6 +242,7 @@
             curseforge-bump # ./pkgs: same, shellcheck at build time
             curseforge-fix-perms # ./pkgs: same
             docs-links # ./pkgs: the build IS the script's flake8; the CHECK below runs it
+            dead-config # ./pkgs: same, and the CHECK below runs it too
             curseforge # ./pkgs: the official AppImage (outside the CHECK below, the why is there)
             btop # nixpkgs + the src from PR #1457 (Intel Xe GPU): here so the check COMPILES the fork
             ;
@@ -266,25 +268,44 @@
             # It covers ./scripts because owfetch.sh runs in ash on OpenWrt, so no derivation wraps it: it
             # would otherwise be the only .sh here running on SOMEONE ELSE'S machine with no check.
             shellcheck.enable = true;
+            # The two repo checkers run HERE too, not only in the gate: the whole reason
+            # git-hooks.nix is an input is catching it before the commit instead of after the
+            # push. pass_filenames = false because both audit the TREE, not a file list.
+            docs-links = {
+              enable = true;
+              name = "docs-links";
+              entry = "${self.packages.${system}.docs-links}/bin/docs-links";
+              language = "system";
+              pass_filenames = false;
+            };
+            dead-config = {
+              enable = true;
+              name = "dead-config";
+              entry = "${self.packages.${system}.dead-config}/bin/dead-config";
+              language = "system";
+              pass_filenames = false;
+            };
           };
         };
 
-        # Rule 16 made a note that stops being true a bug, and rule 2 made the pointer the ONLY path
-        # from a module to its reasoning. This is what stops both rotting: docs/notes/repo/link-checker.md
-        docs-links =
-          nixpkgs.legacyPackages.${system}.runCommandNoCC "check-docs-links"
+        # Rule 16 says dead config leaves and a stale note is a bug, and rule 2 made the pointer the
+        # ONLY path from a module to its reasoning. Both were enforced by memory alone until here.
+        repo-audit =
+          nixpkgs.legacyPackages.${system}.runCommandNoCC "check-repo-audit"
             {
               nativeBuildInputs = [
                 self.packages.${system}.docs-links
+                self.packages.${system}.dead-config
                 nixpkgs.legacyPackages.${system}.git
               ];
             }
             ''
               cp -r ${./.} src && chmod -R +w src && cd src
-              # The flake source has no .git, and the checker walks `git ls-files` on purpose (it
-              # should see what the repo SHIPS). A throwaway repo gives it that list.
+              # The flake source has no .git, and both checkers walk `git ls-files` on purpose
+              # (they should see what the repo SHIPS). A throwaway repo gives them that list.
               git init -q && git add -A
               docs-links
+              dead-config
               touch $out
             '';
 

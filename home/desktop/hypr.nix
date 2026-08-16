@@ -1,19 +1,5 @@
-# The Hyprland CONFIG in Lua (~/.config/hypr/hyprland.lua), declared. The compositor and the
-# session come from system/ (programs.hyprland.enable); here it is ONLY the config file (the
-# folder rule: home/ configures, it does not install).
-#
-# The Lua format (Hyprland 0.55+) replaces the old hyprland.conf (hyprlang), which is
-# deprecated. `hl` is a global object injected by Hyprland. If hyprland.lua exists, it is
-# loaded instead of the .conf. Docs: https://wiki.hypr.land
-#
-# The keybinds and window rules are at PARITY with the Arch/Kingston setup (the `arch`
-# branch), with the tools adapted to the NixOS stack (wofi/dolphin/quickshell).
-#
-# HOT-RELOAD: hyprland.lua does NOT live in the store, it comes through mkOutOfStoreSymlink
-# from home/desktop/hypr/hyprland.lua (a real file in the repo). Editing the .lua plus
-# `hyprctl reload` applies it immediately, with no rebuild. The Lua's scripts
-# (minimize-others, brightness-osd) enter the PATH through home.packages, so the .lua calls
-# them by name.
+# HYPRLAND's config in Lua (0.55+ replaces hyprlang), hot-reloaded through mkOutOfStoreSymlink.
+# The 4 helper scripts and the remote-access safety net: docs/notes/hypr.md
 {
   pkgs,
   config,
@@ -23,13 +9,10 @@
 }:
 
 let
-  # The Quickshell package (a flake input). Bound once because the full path goes past 130
-  # columns and repeated itself in every consumer in this file.
+  # The Quickshell package (a flake input), bound once because the path repeats in every consumer.
   qsPkg = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
-  # minimize-others: sends the OTHER windows of the current workspace to special:minimized
-  # (pressing it again brings them back). Rewritten for the 0.55 Lua dispatch, since the old
-  # `hyprctl dispatch movetoworkspacesilent` broke; now it is hl.dsp.window.move with
-  # follow=false (silent). jq and hyprctl enter the script's own PATH.
+  # minimize-others (SUPER+M): the others go to special:minimized, and again brings them back.
+  # Rewritten for the 0.55 Lua dispatch, since `movetoworkspacesilent` broke.
   minimizeOthers = pkgs.writeShellApplication {
     name = "minimize-others";
     runtimeInputs = with pkgs; [
@@ -49,7 +32,7 @@ let
         exit 0
       fi
 
-      # Moves a specific window (by address), without following focus. $1=addr $2=target.
+      # Moves a specific window by address, without following focus. $1=addr $2=target.
       move() {
         hyprctl dispatch "hl.dsp.window.move({workspace=\"$2\", window=\"address:$1\", follow=false})" >/dev/null || true
       }
@@ -78,8 +61,7 @@ let
         exit 0
       fi
 
-      # Fallback: the state was lost but there are windows in special:minimized, so restore
-      # everything.
+      # Fallback: the state was lost but there ARE minimized windows, so restore everything.
       mapfile -t mins < <(
         jq -r '.[] | select(.workspace.name=="special:minimized") | .address' <<< "$clients"
       )
@@ -89,13 +71,8 @@ let
     '';
   };
 
-  # brightness-osd: "brightness" through hyprsunset's gamma (this desktop has no real
-  # backlight, since brightnessctl and ddcutil are absent). It shows Quickshell's NATIVE OSD
-  # (a bottom-center bar) through IPC, and it is not a toast. It only has an effect with
-  # hyprsunset running.
-  # Usage: brightness-osd up|down|reset. It reads the current gamma, computes the new one and
-  # CLAMPS it to [floor, ceil] by setting an ABSOLUTE value, because hyprsunset only clamps the
-  # ceiling (max-gamma); below that it went to 0 or negative and glitched the screen.
+  # brightness-osd: "brightness" through hyprsunset's gamma, since this desktop has no backlight.
+  # It CLAMPS to an absolute [floor, ceil], because hyprsunset only clamps the ceiling.
   brightnessOsd = pkgs.writeShellApplication {
     name = "brightness-osd";
     runtimeInputs = [
@@ -108,9 +85,7 @@ let
       floor=20  # the floor: never leaves the screen black or glitched
       ceil=150  # the ceiling is hyprsunset.nix's max-gamma
 
-      # the gamma comes as a FLOAT (for instance "90.000015"), so take only the integer part
-      # (cut at the dot), otherwise tr would join the digits ("90000015") and the value would
-      # explode.
+      # the gamma comes as a FLOAT, so cut at the dot: `tr` alone would join the digits and explode.
       cur="$(hyprctl hyprsunset gamma 2>/dev/null | cut -d. -f1 | tr -dc '0-9' || true)"
       [ -n "$cur" ] || cur=100
 
@@ -125,18 +100,13 @@ let
       if [ "$new" -gt "$ceil" ];  then new=$ceil;  fi
       hyprctl hyprsunset gamma "$new" >/dev/null 2>&1 || true
 
-      # pushes Quickshell's native OSD (the bottom-center bar) through IPC; the handler is in
-      # home/desktop/quickshell/osd/Osd.qml (target "osd", func brightness).
+      # pushes Quickshell's native OSD through IPC (the handler is in quickshell/osd/Osd.qml).
       qs ipc call osd brightness "$new" "$ceil" >/dev/null 2>&1 || true
     '';
   };
 
-  # monitor-toggle: turns the TV (my.monitors.secondary) on and off IN HYPRLAND, by hand. It is
-  # necessary because the TV (or the receiver/switch in between) keeps the HDMI link alive even
-  # when off, so DRM stays "connected" and Hyprland NEVER emits monitorremoved, which means
-  # monitor-watch has no event to react to and the "ghost monitor" remains (the cursor going to
-  # a screen that disappeared). On disable, Hyprland gathers workspaces 5 to 8 back onto the LG
-  # by itself; re-enabling restores them with the hyprland.lua params.
+  # monitor-toggle (SUPER+SHIFT+T): the TV keeps the HDMI link alive when off, so Hyprland never
+  # emits monitorremoved and the ghost monitor stays. This is the manual way out.
   monitorToggle = pkgs.writeShellApplication {
     name = "monitor-toggle";
     runtimeInputs = with pkgs; [
@@ -147,14 +117,12 @@ let
     text = ''
       name="${osConfig.my.monitors.secondary}" # SSOT: system/desktop/monitors.nix
 
-      # In the Lua parser (0.55) `hyprctl keyword` is blocked ("Use eval"), so runtime monitor
-      # config goes through `hyprctl eval` calling the SAME hl.monitor as hyprland.lua. Turning
-      # it back on repeats mode/position/scale from there (keeping the TV to the left of the
-      # LG); turning it off is just disabled=true.
+      # In the 0.55 parser `hyprctl keyword` is blocked ("Use eval"), so this calls the SAME
+      # hl.monitor as hyprland.lua does, repeating mode/position/scale from there.
       on="hl.monitor({ output = \"$name\", mode = \"1920x1080@60\", position = \"-1920x0\", scale = 1, disabled = false })"
       off="hl.monitor({ output = \"$name\", disabled = true })"
 
-      # present in `hyprctl monitors` (only the ACTIVE ones) means it is on, so turn it off.
+      # present in `hyprctl monitors` (the ACTIVE ones) means it is on, so turn it off.
       if hyprctl -j monitors | jq -e --arg n "$name" 'any(.[]; .name==$n)' >/dev/null 2>&1; then
         hyprctl eval "$off" >/dev/null 2>&1 || true
         hyprctl notify -1 2000 "rgb(f38ba8)" "TV off, workspaces on the LG" >/dev/null 2>&1 || true
@@ -165,11 +133,8 @@ let
     '';
   };
 
-  # hypr-session-ensure: derives the Wayland environment FROM THE SOCKET (not from the config)
-  # and brings hyprland-session.target up. It has to derive it because it runs outside the
-  # compositor: HYPRLAND_INSTANCE_SIGNATURE is the directory name in $XDG_RUNTIME_DIR/hypr/ and
-  # WAYLAND_DISPLAY is the wayland-N socket. Without those two in the systemd --user
-  # environment, the session's services come up unable to talk to the compositor.
+  # hypr-session-ensure: it DERIVES the Wayland env from the SOCKET, because it runs outside the
+  # compositor and the session's services cannot talk to it without those two variables.
   sessionWatch = pkgs.writeShellApplication {
     name = "hypr-session-ensure";
     runtimeInputs = with pkgs; [
@@ -178,22 +143,19 @@ let
       findutils
     ];
     text = ''
-      # It runs every 30s, so it exits SILENTLY in the normal case, otherwise that is ~2900
-      # lines/day in the journal. It only speaks when it actually had to act, which is the
-      # event worth investigating.
+      # It runs every 30s, so it is silent in the normal case (~2900 lines/day otherwise).
       if systemctl --user --quiet is-active hyprland-session.target; then
         exit 0
       fi
 
       rt="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 
-      # The most RECENT instance (the dir survives a crash, so take the one with the newest
-      # mtime).
+      # The most RECENT instance: the dir survives a crash, so take the newest mtime.
       sig="$(find "$rt/hypr" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %f\n' 2>/dev/null \
              | sort -rn | head -1 | cut -d' ' -f2-)"
       [ -n "$sig" ] || { echo "no Hyprland instance in $rt/hypr, nothing to do"; exit 0; }
 
-      # WAYLAND_DISPLAY: the first wayland-N socket (ignoring the .lock ones).
+      # WAYLAND_DISPLAY: the first wayland-N socket, ignoring the .lock ones.
       wl="$(find "$rt" -mindepth 1 -maxdepth 1 -name 'wayland-[0-9]*' -not -name '*.lock' \
             -printf '%f\n' 2>/dev/null | sort | head -1)"
       [ -n "$wl" ] || { echo "no wayland socket in $rt, nothing to do"; exit 0; }
@@ -203,18 +165,13 @@ let
 
       # A no-op if autostart.lua's exec-once already brought the target up.
       systemctl --user start hyprland-session.target
-      # <4> = warning: it survives LogLevelMax and marks the ONLY time worth having in the
-      # journal.
+      # <4> = warning: it survives LogLevelMax and marks the ONLY moment worth logging.
       echo "<4>hyprland-session.target ensured (sig=$sig display=$wl)"
     '';
   };
 
-  # hypr-monitor-watch: listens to Hyprland's events (socket2) and runs `hyprctl reload` when a
-  # monitor CONNECTS or DISCONNECTS. The reload reapplies the config, which recalculates the
-  # layout (killing the "ghost monitor", the cursor going to a screen that disappeared) and
-  # MOVES the lost monitor's workspaces to the remaining one (TV gone means ws 5-8 land on the
-  # LG). It runs as a systemd --user service (not an exec-once in the Lua, so it does not
-  # duplicate on reload).
+  # hypr-monitor-watch: on monitoradded/removed it reloads, which kills the ghost and moves the
+  # orphaned workspaces. A user SERVICE and not an exec-once, so a reload does not duplicate it.
   monitorWatch = pkgs.writeShellApplication {
     name = "hypr-monitor-watch";
     runtimeInputs = with pkgs; [
@@ -236,11 +193,7 @@ let
   };
 in
 {
-  # Hyprland SESSION tools that the Lua below invokes (keybinds/autostart), with app and config
-  # in home (rule 4). The launcher is rofi (home/desktop/launcher.nix, the same tool as the
-  # clipboard). wl-clipboard and wl-clip-persist are the clipboard's base (the cliphist history
-  # and the rofi picker live in clipboard.nix); pamixer and playerctl serve the media keys;
-  # pavucontrol is the mixer (SUPER+S).
+  # The Hyprland SESSION tools the Lua invokes BY NAME, which is what keeps the .lua static.
   home.packages = with pkgs; [
     minimizeOthers # SUPER+M: minimizes the other windows (the Lua calls it by name)
     brightnessOsd # brightness through hyprsunset's gamma (SHIFT+Vol/0; called by name)
@@ -252,29 +205,15 @@ in
     pavucontrol
   ];
 
-  # Idleness (dim at 3 min plus lock at 5 min) and the lock screen live in
-  # home/desktop/lockscreen.nix: hypridle and hyprlock through their module (a systemd --user
-  # service), no longer a hand-written .conf. SUPER+L (a manual lock) is in the keybinds below.
-  #
-  # MODULAR CONFIG PLUS HOT-RELOAD: the hyprland.lua entrypoint only does a dofile of the
-  # modules in ~/.config/hypr/lua/*.lua (one subject per file:
-  # monitors/appearance/input/keybinds/rules/autostart/environment). Both come through
-  # mkOutOfStoreSymlink from the REAL files in the repo (mutable), so editing any .lua plus
-  # `hyprctl reload` applies immediately, with NO rebuild (the same scheme as quickshell). The
-  # scripts the binds call (minimize-others/brightness-osd/monitor-toggle) go to the PATH
-  # (home.packages above), so the modules invoke them by NAME, which is why the .lua files can
-  # be static.
+  # HOT-RELOAD: both come through mkOutOfStoreSymlink from the REAL files, so editing a .lua plus
+  # `hyprctl reload` applies with NO rebuild. Idle and the lock are in ./lockscreen.nix.
   xdg.configFile."hypr/hyprland.lua".source =
     config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/desktop/hypr/hyprland.lua";
   xdg.configFile."hypr/lua".source =
     config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/desktop/hypr/lua";
 
-  # The user's systemd session. LightDM launches Hyprland "raw" (with no systemd integration),
-  # so graphical-session.target, which the desktop's --user services (hyprsunset/hypridle) use
-  # as WantedBy, was never activated and none of them came up at login. This target activates
-  # it through BindsTo (graphical-session.target refuses a manual start, only a dependency
-  # works); the autostart above starts it. It mirrors what the
-  # wayland.windowManager.hyprland module would do, since here the config is raw.
+  # LightDM launches Hyprland RAW, so graphical-session.target was never activated and none of
+  # the --user desktop services came up. This target activates it through BindsTo.
   systemd.user.targets.hyprland-session = {
     Unit = {
       Description = "Hyprland session (activates graphical-session.target)";
@@ -284,22 +223,8 @@ in
     };
   };
 
-  # ── The remote access SAFETY NET ────────────────────────────────────────────
-  # autostart.lua brings hyprland-session.target up through exec-once. That has a hole that
-  # cost dearly on 29/07: if the Lua config BLOWS UP, the following modules do not run, and
-  # "autostart" comes after "monitors", so the target never comes up and the machine is left
-  # WITHOUT Sunshine and WITHOUT Quickshell. Remotely that is unrecoverable: Hyprland is alive,
-  # but nothing else that depends on graphical-session.target is.
-  #
-  # This takes remote access out of the config's hands: it checks the compositor's SOCKET,
-  # which exists even with a broken config, and brings the target up on its own. Redundant with
-  # the exec-once on purpose, since `systemctl start` on an already active target is a no-op.
-  #
-  # A TIMER, not a path unit: with `PathExistsGlob` systemd re-triggers while the condition
-  # stays true, so the oneshot exits, the socket is still there, it triggers again, and it
-  # loops until `unit-start-limit-hit` (tested, it failed exactly like that). A path unit only
-  # works when the service CONSUMES the path. The timer is idempotent by construction and costs
-  # nothing.
+  # THE REMOTE ACCESS SAFETY NET: a Lua config that blows up would leave the machine with no
+  # Sunshine and no Quickshell, unrecoverable from outside. A TIMER, not a path unit: the notes.
   systemd.user.timers.hyprland-session-watch = {
     Unit.Description = "Periodically ensures Hyprland's graphical-session.target";
     Timer = {
@@ -314,16 +239,13 @@ in
     Service = {
       Type = "oneshot";
       ExecStart = "${sessionWatch}/bin/hypr-session-ensure";
-      # It runs every 30s: without this SYSTEMD logs "Starting…/Finished…" on its own and
-      # drowns the journal (measured: 1708 lines in one day). Making the script exit silently
-      # is NOT enough, since those lines are systemd's, not the script's. `warning` cuts the
-      # info out and lets through what the script emits with the <4> prefix, which is precisely
-      # the time it acted.
+      # Without this SYSTEMD's own "Starting/Finished" drowns the journal (1708 lines in a day);
+      # `warning` still lets the script's <4> through, which is the moment it acted.
       LogLevelMax = "warning";
     };
   };
 
-  # Reapplies the config on a monitor hotplug (kills the ghost plus moves workspaces).
+  # Reapplies the config on a monitor hotplug (it kills the ghost and moves workspaces).
   systemd.user.services.hypr-monitor-watch = {
     Unit = {
       Description = "Reapplies the Hyprland config when a monitor connects or disconnects";

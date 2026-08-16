@@ -1,36 +1,5 @@
-# DISK HYGIENE: a free space alarm plus trash expiry.
-#
-# WHY THIS EXISTS, and why it is NOT more GC: the Nix GC is already automatic
-# (system/core/core.nix) and it works, but MEASURED on 30/07 it covers 9% of the disk, since
-# /nix/store held 58 GiB against 626 GiB used. The other 91% is games and media (Bottles
-# 319 GiB, Jellyfin 132, Games 47, Steam 8), and NONE of that can be deleted automatically:
-# nobody should delete somebody's game on their own. So the right answer to "do not let the
-# disk fill up" is not deleting more, it is WARNING with enough data for me to decide.
-#
-# TWO THINGS of different natures, together because they are the same task (keeping the disk
-# under control) and both are user timers:
-#   • disk-watch   -> the alarm: it notifies when free space drops, ALREADY WITH the biggest
-#                     consumers in the message (the request was "to evaluate what I want to
-#                     remove", and for that the notification has to say WHAT grew).
-#   • trash-expire -> the trash was the only REAL garbage found in the measurement: 1.7 GiB
-#                     sitting there, which nobody expired and which restic already excludes
-#                     from the backup (restic.nix), so it was pure waste.
-#
-# THE DESIGN of the alarm (the reason it has two phases): `du` over the whole tree takes
-# MINUTES on this machine (measured). Running that every 30 min would be absurd. So the timer
-# only does the CHEAP check (`df`, instant) and the EXPENSIVE sweep only happens when the disk
-# is actually low, which is the moment when spending a few minutes is exactly what you want.
-# `nice` plus `ionice` so it does not compete with the session.
-#
-# ANTI-SPAM: a notification repeating every 30 min becomes noise and starts being ignored, the
-# same mistake as my timers that drowned the journal (see bb8690c). It re-warns at most once
-# every 12h per severity, but IMMEDIATELY if the severity goes up (warn to crit). The state
-# lives in $XDG_RUNTIME_DIR, which resets at boot.
-#
-# THE OWNER (rule 15): a systemd --user timer, tied to graphical-session, because it needs the
-# session, since what delivers the notification is Quickshell (the
-# org.freedesktop.Notifications daemon).
-# ═══════════════════════════════════════════════════════════════════════════
+# DISK HYGIENE: a free-space alarm that names the biggest consumers, plus trash expiry.
+# Why warning beats deleting, and the 2-phase design: docs/notes/disk-hygiene.md
 {
   config,
   lib,
@@ -54,8 +23,7 @@ let
       gawk
     ];
     text = ''
-      # --- phase 1: the cheap check ---------------------------------------
-      # `df --output=avail -BG` comes out as "  123G", so strip the G and the space.
+      # phase 1: the cheap check. `df --output=avail -BG` prints "  123G", so strip it down.
       free="$(df --output=avail -BG ${lib.escapeShellArg cfg.filesystem} | tail -1 | tr -dc '0-9')"
       [ -n "$free" ] || exit 0   # df failed (the fs disappeared?), so do not invent an alarm
 
@@ -70,7 +38,7 @@ let
         exit 0
       fi
 
-      # --- anti-spam ------------------------------------------------------
+      # anti-spam: 12h per severity, but a severity that WENT UP gets through immediately.
       now="$(date +%s)"
       if [ -f "$state" ]; then
         read -r last_sev last_ts < "$state" || true
@@ -81,9 +49,8 @@ let
         fi
       fi
 
-      # --- phase 2: the EXPENSIVE sweep, only now -------------------------
-      # MiB so it can be sorted numerically; the output is formatted in GiB. `|| true`: a
-      # nonexistent path or one without permission cannot take the alarm down.
+      # phase 2: the EXPENSIVE sweep, only now. MiB so it sorts numerically; `|| true` because an
+      # unreadable path cannot take the alarm down.
       body="$(
         nice -n 19 ionice -c 3 du -sx --block-size=1M ${watchArgs} 2>/dev/null \
           | sort -rn \
@@ -114,8 +81,7 @@ let
     name = "trash-expire";
     runtimeInputs = [ pkgs.trash-cli ];
     text = ''
-      # -f means do not ask (the default only asks with -i, but in a timer it is better to be
-      # explicit: a unit waiting for an answer hangs forever).
+      # -f: a unit waiting for an answer hangs forever, so never leave it implicit.
       trash-empty -f ${toString cfg.trashDays}
     '';
   };
@@ -154,17 +120,12 @@ in
   };
 
   config = {
-    # ── THE PANEL: the thresholds and what to measure ──────────────────────
-    # 100/40 GiB and not a percentage: what matters is whether the NEXT game or patch fits, and
-    # that is an absolute number. (There are 915 G in total here; on 30/07 there were 243 GiB
-    # free, so 100 warns with real room to decide.)
+    # THE PANEL. 100/40 GiB and NOT a percentage: what matters is whether the next game fits.
     my.disk = {
       warnFreeGiB = 100;
       critFreeGiB = 40;
-      # The weights measured on 30/07, from largest to smallest. It is deliberately NOT a full
-      # `du /`: sweeping everything would take extra minutes and bring noise (/proc, /sys,
-      # network mounts). If a new consumer shows up outside this list, it is 1 line here, and
-      # filelight and czkawka exist precisely to discover it.
+      # The weights measured on 30/07. Deliberately not a full `du /`, which would add minutes and
+      # noise; a new consumer is 1 line here, and filelight/czkawka exist to discover it.
       watchPaths = [
         "${config.home.homeDirectory}/.local/share/bottles" # 319 GiB (Wine/Bottles: Battlenet, CS-II, Ascension)
         "/srv/media" # 132 GiB, the Jellyfin library
@@ -182,7 +143,7 @@ in
       trashExpire
     ];
 
-    # ── The space alarm ────────────────────────────────────────────────────
+    # The space alarm.
     systemd.user.services.disk-watch = {
       Unit = {
         Description = "Disk space alarm (it notifies with the biggest consumers)";
@@ -194,9 +155,7 @@ in
       Service = {
         Type = "oneshot";
         ExecStart = "${diskWatch}/bin/disk-watch";
-        # The script already exits silently when there is nothing to say; this cuts the
-        # "Starting…/Finished…" that SYSTEMD logs on its own, the lesson of bb8690c, where two
-        # timers of mine added up to 2148 lines/day in the journal.
+        # The script is silent when there is nothing to say; this cuts SYSTEMD's own per-trigger lines.
         LogLevelMax = "warning";
       };
       Install.WantedBy = [ "graphical-session.target" ];
@@ -211,7 +170,7 @@ in
       Install.WantedBy = [ "timers.target" ];
     };
 
-    # ── Trash expiry ───────────────────────────────────────────────────────
+    # Trash expiry.
     systemd.user.services.trash-expire = {
       Unit.Description = "Expires trash items older than ${toString cfg.trashDays} days";
       Service = {

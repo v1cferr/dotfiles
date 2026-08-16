@@ -1,12 +1,5 @@
-# A clipboard manager (Wayland): history with an image PREVIEW plus an icon per file TYPE.
-# cliphist stores text/image/URI (a declarative service); the picker is rofi (-show-icons) with a
-# Tokyo Night theme. The SUPER+SHIFT+V bind lives in home/desktop/hypr/lua/keybinds.lua. It
-# replaces the old wofi picker (text only).
-#
-# Migrated from my Arch (cliphist-rofi-img.sh) WITH improvements: besides the image thumbnail,
-# copied files (a file://… URI) now get an ICON for their type (zip/video/pdf and so on)
-# resolved by the active icon theme (my.theme.iconTheme). Rules 1 and 3: idiomatic and
-# declarative.
+# CLIPBOARD (cliphist plus a rofi picker): history with an image THUMBNAIL and an icon per file
+# TYPE. rofi is declared HERE and shared with the launcher: docs/notes/desktop-plumbing.md
 {
   pkgs,
   config,
@@ -16,11 +9,8 @@
 
 let
   palette = config.my.theme.palette; # the active theme's colors (home/desktop/palette.nix)
-  # clipboard-menu: it builds the cliphist list with icons and shows it in rofi; the choice goes
-  # back to the clipboard (paste it with Ctrl+V). A single pass (list, rofi, decode, copy).
-  #   • an image (binary png/jpg/…) -> decoded into the cache and used as a THUMBNAIL
-  #   • a file (a file://… URI)     -> a NAMED icon for the type (from the extension)
-  #   • text                        -> a text icon
+  # clipboard-menu: one pass (list, rofi, decode, copy), with 3 cases: an image becomes a
+  # THUMBNAIL, a file:// URI gets a named icon for its type, and text gets the text icon.
   clipboardMenu = pkgs.writeShellApplication {
     name = "clipboard-menu";
     runtimeInputs = with pkgs; [
@@ -34,7 +24,7 @@ let
       cache="''${XDG_CACHE_HOME:-$HOME/.cache}/cliphist/thumbnails"
       mkdir -p "$cache"
 
-      # extension -> a freedesktop icon name (resolved by the active icon theme).
+      # extension to a freedesktop icon name, resolved by the active icon theme.
       ext_icon() {
         case "$1" in
           zip|tar|gz|xz|bz2|7z|rar|zst)             echo application-x-archive ;;
@@ -84,8 +74,7 @@ let
   };
 in
 {
-  # cliphist's declarative service (it replaces the `wl-paste --watch` from hypr's autostart).
-  # allowImages also brings up the image watcher, on top of the text one.
+  # cliphist's declarative service (it replaced the `wl-paste --watch` in hypr's autostart).
   services.cliphist = {
     enable = true;
     allowImages = true;
@@ -96,11 +85,8 @@ in
     clipboardMenu
   ];
 
-  # The ACTIVE THEME's colors (my.theme): rofi's palette follows the single source. icon-theme
-  # comes from my.theme.iconTheme (the same one as the system) and resolves the icons named per
-  # file type. An explicit `font`: without it rofi falls back to the default "mono 12". Do NOT
-  # comment inside the .rasi with '#', since there '#' opens a color literal and breaks the parse
-  # of the whole theme.
+  # The colors follow my.theme, so a preset switch recolors this too. An explicit `font` is
+  # required, and '#' inside a .rasi opens a COLOR literal, not a comment.
   xdg.configFile."rofi/clipboard.rasi".text = ''
     configuration {
       show-icons:  true;

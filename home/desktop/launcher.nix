@@ -1,19 +1,13 @@
-# The app launcher: rofi `drun` with ICONS (my.theme.iconTheme) plus sorting by most/recently used
-# (rofi's history, on by default: it shows the recent ones when it opens, and filters fuzzily as
-# you type) plus a Tokyo Night theme coming from the SINGLE palette (my.theme, so it recolors
-# along when you switch presets).
-# The SUPER+Q (apps) / SUPER+R (binaries) binds are in home/desktop/hypr/lua/keybinds.lua.
-# The rofi package already comes from clipboard.nix (do not redeclare it, since it is the same
-# tool for the launcher and the clipboard).
+# LAUNCHER: rofi `drun` with icons and rofi's own recency history, themed from my.theme.
+# rofi itself comes from clipboard.nix; the binds are in keybinds.lua (SUPER+Q / SUPER+R).
 { config, osConfig, ... }:
 
 let
   palette = config.my.theme.palette; # the active theme's colors (home/desktop/palette.nix)
 in
 {
-  # An explicit `font` in the configuration block: without it rofi falls back to the default
-  # "mono 12". Do NOT comment inside the .rasi with '#', since there '#' opens a color literal and
-  # breaks the parse.
+  # An explicit `font`, or rofi falls back to "mono 12". Do NOT comment inside a .rasi with '#':
+  # there '#' opens a color literal and breaks the parse.
   xdg.configFile."rofi/launcher.rasi".text = ''
     configuration {
       show-icons: true;

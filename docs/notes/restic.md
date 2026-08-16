@@ -144,3 +144,24 @@ sudo restic-home-gdrive mount /mnt/backup    # Ctrl+C unmounts
 The wrapper the module generates already carries `RCLONE_CONFIG`, the password and rclone on the
 PATH. The user-facing alias is `backup-browse` (see [shell](shell.md)), which runs with no sudo for
 the FUSE reason above.
+
+## The CS2 saves, and why they need their own mirror
+
+`home/services/cs2-saves-backup.nix`.
+
+restic EXCLUDES `~/.local/share/bottles` (Wine prefixes, ~154 G that is reinstallable), but the
+Cities: Skylines II SAVES live in there and are irreplaceable: a pirated repack, with NO Steam
+Cloud.
+
+The timer MIRRORS the saves into `~/CS2-Saves-Backup`, which sits in `/home`, OUTSIDE the exclude,
+and the daily restic takes it to the off-disk Seagate. It closes the "state = restic" rule and the
+note in this module itself ("saves… back them up separately").
+
+`rsync --delete`, so the mirror reflects the CURRENT state. The versioned history, for undoing an
+accidental overwrite, is what restic keeps with keep-daily/weekly.
+
+It is cheap: rsync is incremental and a no-op when nothing changed, so running it hourly does not
+weigh. It mirrors 5 min after boot and every hour, which catches a game session that just closed.
+The script only acts if a save already exists, so it does not fail before the first game.
+
+For another game later, replicate the src/dst pair in a new module.

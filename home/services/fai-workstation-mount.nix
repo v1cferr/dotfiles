@@ -1,10 +1,5 @@
-# The FAI workstation mounted as a local folder (~/FAI-workstation) through rclone SFTP plus a VFS
-# cache, so it shows up in Dolphin as a normal folder, fast (a read/write cache, rereading from
-# disk). It comes up ONLY when the FAI VPN connects (`vpn connect fai` starts the mount; a
-# disconnect takes it down), since the host 200.136.209.229 only exists through the VPN, so there
-# is no ghost/stale mount at boot (SSHFS would freeze Dolphin in that scenario; rclone fails clean
-# and reconnects).
-# SFTP through key_file (the SSH key that already exists), so ZERO secrets in nix.
+# ~/FAI-workstation: the workstation's root over rclone SFTP plus a VFS cache. VPN-GATED, since
+# the host only exists through the tunnel and SSHFS would freeze Dolphin: docs/notes/fai-workstation.md
 { config, ... }:
 
 let
@@ -23,16 +18,13 @@ in
         known_hosts_file = "/home/v1cferr/.ssh/known_hosts"; # the workstation is already trusted
       };
       mounts."/" = {
-        # "/" = the workstation's whole root (not just the home). The user v1cferr sees what they
-        # have permission to read; the rest shows up but stays inaccessible (normal for a
-        # non-root).
+        # "/" = the whole root: the user sees what they may read, and the rest is visible but closed.
         enable = true;
         autoMount = false; # it does NOT mount at boot; `vpn connect fai` brings it up (VPN-gated)
         mountPoint = "/home/v1cferr/FAI-workstation";
         options = {
-          # "writes": READS go straight through (streaming, they do NOT pile up on disk), and only
-          # what you write/copy is cached until it uploads. The disk stays lean. (Switch it to
-          # "full" if you want maximum speed reopening files, at the cost of filling the cache.)
+          # "writes": READS stream through without piling up on disk; only what you write is cached.
+          # Switch to "full" for faster reopening, at the cost of filling the cache.
           vfs-cache-mode = "writes";
           vfs-cache-max-age = "6h"; # it evicts the write cache quickly
           vfs-cache-max-size = "2G"; # a low ceiling for the on-disk cache (~/.cache/rclone)
@@ -45,10 +37,8 @@ in
     };
   };
 
-  # The VPN comes up asynchronously (~10s until the tunnel/routes). Without this systemd would
-  # give up after 5 quick failures (StartLimit) before the host became reachable. It retries every
-  # 10s until it connects, and since `vpn connect fai` gives the start and `disconnect` gives the
-  # stop, it does not loop forever when the VPN is intentionally off.
+  # The VPN takes ~10s to route, so the StartLimit is cleared: systemd would otherwise give up
+  # before the host was reachable. `vpn connect fai` starts it and `disconnect` stops it.
   systemd.user.services."rclone-mount:.@faiws" = {
     Unit.StartLimitIntervalSec = 0;
     Service.RestartSec = 10;

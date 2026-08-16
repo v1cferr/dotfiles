@@ -1,18 +1,9 @@
-# MEDIA (user level): viewers, players and the DEFAULT apps per type.
-#
-# The home/ rule (see home/default.nix): a USER app lives here. The stack choice: KDE Gear
-# (Gwenview/Okular), because this system is already Qt/Kvantum plus Dolphin, so it comes in themed
-# for free and integrates with the file manager (open-with, thumbnails).
-# kimageformats plus qtimageformats give the modern formats (AVIF/HEIF/JXL/WebP/RAW).
-#
-# The xdg.mimeApps associations below MERGE with the ones in home/xdg.nix (the browser), since
-# home-manager merges the defaultApplications from every module into a single mimeapps.list.
-# ═══════════════════════════════════════════════════════════════════════════
+# MEDIA: the KDE Gear stack (Gwenview/Okular) plus VLC, already themed by Qt/Kvantum.
+# ALWAYS the CANONICAL mimetype, never an alias: docs/notes/apps-and-mime.md
 { pkgs, ... }:
 
 let
-  # The apps' .desktop files (used only in the type associations below; they do not collide with
-  # pkgs)
+  # The apps' .desktop files, used only in the associations below.
   app = {
     gwenview = "org.kde.gwenview.desktop";
     okular = "org.kde.okular.desktop";
@@ -28,7 +19,7 @@ in
     vlc # the do-everything GUI video player (it is the video default, further down)
   ];
 
-  # mpv: a light, scriptable player, VLC's companion. A programs.* module, so idiomatic.
+  # mpv: VLC's light, scriptable companion, through its own module (idiomatic).
   programs.mpv = {
     enable = true;
     config = {
@@ -37,14 +28,11 @@ in
     };
   };
 
-  # The default apps per file type (declarative). It merges with home/xdg.nix.
+  # The default apps per file type. It merges with xdg.nix and office.nix.
   xdg.mimeApps = {
     enable = true;
     defaultApplications = {
-      # ── Images -> Gwenview ──
-      # ALWAYS shared-mime-info's CANONICAL type: an alias does not match in the lookup and the
-      # entry dies in silence. (image/heic is an alias of image/heif; Gwenview's .desktop declares
-      # only image/x-psd, an alias of image/vnd.adobe.photoshop.)
+      # Images. ALWAYS the CANONICAL type: an ALIAS does not match and dies in silence (see notes).
       "image/png" = app.gwenview;
       "image/jpeg" = app.gwenview;
       "image/gif" = app.gwenview;
@@ -57,11 +45,11 @@ in
       "image/jxl" = app.gwenview;
       "image/vnd.microsoft.icon" = app.gwenview; # .ico (Qt reads it natively; the .desktop does not declare it)
       "image/vnd.adobe.photoshop" = app.gwenview; # .psd (through kimageformats)
-      # ── Documents -> Okular ──
+      # Documents.
       "application/pdf" = app.okular;
       "application/epub+zip" = app.okular;
       "application/vnd.comicbook+zip" = app.okular; # .cbz
-      # ── Video -> VLC (mpv is left for opening manually / from the CLI) ──
+      # Video. mpv is left for opening by hand or from the CLI.
       "video/mp4" = app.vlc; # .mp4/.m4v
       "video/x-matroska" = app.vlc; # .mkv
       "video/webm" = app.vlc;
@@ -72,8 +60,7 @@ in
       "video/x-ms-wmv" = app.vlc; # .wmv
       "video/3gpp" = app.vlc; # .3gp
       "video/ogg" = app.vlc; # .ogv
-      # ── Audio -> VLC (the same logic as video; without this mpv.desktop took the association by
-      # claiming the types in its .desktop, against the intent above) ──
+      # Audio, listed explicitly: otherwise mpv.desktop takes the association by claiming the types.
       "audio/mpeg" = app.vlc; # .mp3
       "audio/flac" = app.vlc;
       "audio/ogg" = app.vlc; # .ogg/.opus

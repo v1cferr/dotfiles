@@ -1,11 +1,5 @@
-# MONITOR data for the ones that HOT-RELOAD (Hyprland in Lua and Quickshell in QML): they read a
-# file at runtime, and Nix does not write inside the symlinked trees of ~/.config/hypr and
-# ~/.config/quickshell, so the value leaves the option and becomes a file here (the same mechanics
-# as the palette in home/desktop/palette.nix).
-#
-# THE OPTION itself does NOT live here anymore: `my.monitors` has been a system option since
-# 04/08/2026 (system/desktop/monitors.nix), because Sunshine also needs the connector to pick which
-# monitor to capture. Here it is only read, through `osConfig`.
+# MONITOR data for the HOT-RELOAD consumers (Hyprland's Lua, Quickshell's QML), since Nix cannot
+# write inside their symlinked trees. The OPTION is system/desktop/monitors.nix; here it is read.
 { osConfig, ... }:
 
 let

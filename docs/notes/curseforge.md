@@ -104,3 +104,48 @@ and `wrapType2` does not expose it.
 The `version` string comes from the `X-AppImage-Version` of the `.desktop` inside the AppImage.
 The `.deb` of the same release says `1.316.0~37372-37372`; the repeated `.37372` is
 electron-builder noise.
+
+## The user side
+
+`home/apps/curseforge.nix`. The package (the official AppImage, repackaged) lives in
+`pkgs/curseforge.nix`; this module is the home side.
+
+**It REPLACED prismlauncher on 14/08/2026**: Prism imports a modpack `.zip`, but what keeps the
+library and UPDATES the pack is the CurseForge app, which is the real use here.
+
+And the swap SHRANK the system by 1.5 GiB, the opposite of what "native to Electron" suggests:
+27.2 to 25.7 GiB, measured with `nix store diff-closures`. curseforge +340.2 MiB against
+prismlauncher -17.6 MiB and openjdk (8, 17, 21 and 25, which the Prism wrapper bundled) -1.8 GiB.
+The four JDKs left because NOBODY declares Java here: the provider is the app itself, which
+downloads its own JRE.
+
+Instances, mods and login are STATE (rule 6, so restic), not declaration: `~/.config/CurseForge/`
+holds config plus session, `~/Documents/curseforge/` holds the instances.
+
+The activation runs `curseforge-fix-perms` idempotently rather than managing files: the app is the
+owner of what it unpacks (rule 14), so Nix only undoes a known bit of damage. `writeBoundary`
+because the package has to be in the profile first. It is ALSO on the PATH, because the download
+that breaks can happen IN THE MIDDLE of a session, by which point the activation has already run;
+then it is a matter of running it by hand and reopening the app, with no rebuild to wait for.
+
+### Why the schemes are declared here, and are not optional
+
+The app tries to register itself as the handler for `curseforge://` and `cfauth://` at RUNTIME
+(Electron's `setAsDefaultProtocolClient`), and that will NEVER work on this system:
+`~/.config/mimeapps.list` is managed by home-manager and points into `/nix/store`, which is
+read-only (rule 14, Nix is the owner). Measured on 14/08/2026, the app's log says exactly that on
+startup:
+
+```text
+[BackgroundController] Failed subscribing app protocol.
+[LoginService] Failed to register login scheme 'cfauth'. This might create issues
+               with the login process..
+```
+
+And `cfauth://` is no detail: it is the LOGIN callback, since the app opens the browser and waits
+for the redirect back. With no handler, the login comes back to nothing.
+
+The declarative association is the registration the app cannot make on its own. The package's
+`.desktop` already declares the three schemes in `MimeType`; the module only says that IT is the
+default. The three are `cfauth` (the login callback, the one that matters most), `curseforge` (the
+"Install" button on the modpack site) and `curseforge-checkout` (buying a premium add-on).

@@ -1,7 +1,5 @@
-# The FAI workstation: the host's SSOT (rule 11) plus `wake-workstation` (Wake-on-LAN).
-# The IP/user were literals repeated in 3 consumers (ssh.nix, the rclone mount and this module);
-# now they come from here. All the consumers are in home/, so the option lives in home/ (rule 11:
-# it lives at the LOWEST level that needs it).
+# The FAI workstation: the host's SSOT (rule 11, at the lowest level that needs it) plus
+# `wake-workstation`. Why 3 WoL paths and why python: docs/notes/fai-workstation.md
 {
   config,
   lib,
@@ -13,10 +11,8 @@ let
   ws = config.my.fai.workstation;
   macHex = lib.toLower (lib.replaceStrings [ ":" "-" ] [ "" "" ] ws.mac);
 
-  # A magic packet = 6x 0xFF plus 16x the MAC. Python (not nixpkgs' wakeonlan, which is Perl and
-  # drags Perl-Critic/Perl-Tidy into the build), and it is the SAME code that runs on the relay,
-  # where I cannot install anything. SO_BROADCAST is mandatory: without it the kernel refuses to
-  # send to a broadcast address. Ports 9 and 7 because an old NIC sometimes only listens on 7.
+  # A magic packet, in python because nixpkgs' wakeonlan is Perl and it is also the code that
+  # runs on the relay. SO_BROADCAST is mandatory; ports 9 and 7, since an old NIC may want 7.
   mkSender =
     targets:
     pkgs.writeText "wol-send.py" ''
@@ -34,7 +30,7 @@ let
     ws.host
     ws.broadcast
   ];
-  # The relay: it runs ON the fai-vm, which is on the same subnet, so a real L2 broadcast.
+  # The relay runs ON the fai-vm, on the same subnet, so it is a real L2 broadcast.
   senderRelay = mkSender [ "255.255.255.255" ];
 
   wakeCli = pkgs.writeShellApplication {
@@ -52,25 +48,21 @@ let
 
       if up; then echo "the workstation is already up ($host)"; exit 0; fi
 
-      # With no tunnel there is no route to FAI, and failing here with the right cause avoids
-      # chasing ghosts.
+      # With no tunnel there is no route to FAI, and failing here with the right cause avoids ghosts.
       if [ -z "$(ip -o link show type ppp)" ]; then
         echo "the FAI VPN is down, run 'vpn connect fai' first ($host only exists through the tunnel)." >&2
         exit 1
       fi
 
       echo "sending a magic packet to ${ws.mac}..."
-      # 1) A RELAY through the fai-vm: the only path that wakes a machine that has been off FOR A
-      #    WHILE, because it broadcasts on the L2 segment. The other two depend on a warm cache
-      #    (ARP/CAM). The script goes through the remote python3's STDIN, so there is nothing to
-      #    install on the other side.
+      # 1) The RELAY is the only path that wakes a machine off FOR A WHILE (a real L2 broadcast); the
+      #    other two need a warm ARP/CAM cache. The script goes in through the remote python's stdin.
       if ssh -o BatchMode=yes -o ConnectTimeout=8 fai-vm python3 - < ${senderRelay} 2>/dev/null; then
         echo "  ok: an L2 broadcast through the fai-vm"
       else
         echo "  the fai-vm is unavailable (host key not accepted? VM down?), only the weak paths left"
       fi
-      # 2) unicast through the tunnel (it works while the router's ARP is warm) plus
-      # 3) a directed broadcast to ${ws.broadcast} (a router usually drops it, RFC 2644)
+      # 2) unicast (warm ARP) and 3) a directed broadcast, which a router usually drops (RFC 2644)
       python3 ${senderLocal} && echo "  ok: unicast plus a directed broadcast through the tunnel"
 
       echo -n "waiting for the host to answer (up to 120s)"

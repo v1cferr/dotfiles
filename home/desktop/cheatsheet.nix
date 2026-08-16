@@ -1,16 +1,5 @@
-# A keybind cheatsheet in rofi (SUPER+H), listing ALL the Hyprland binds.
-#
-# GENERATED from keybinds.lua at RUNTIME, never written by hand: a duplicated list would become
-# a lie on the first new bind. The file it reads is ~/.config/hypr/lua/keybinds.lua, which is a
-# mkOutOfStoreSymlink into the repo (home/desktop/hypr.nix), so the cheatsheet even follows a
-# hot-reload edit, with no rebuild.
-#
-# Why SUPER+H and not SUPER+/: Moonlight does NOT send the ABNT2 "/ ?" key (bug #1789, the same
-# reason as the ScrollLock remap in keybinds.lua), so SUPER+/ would die over remote access. H is
-# free and gets through on any path.
-#
-# The rofi package comes from clipboard.nix (do not redeclare it, since it is the same tool for
-# the launcher, the clipboard and here).
+# A keybind cheatsheet in rofi (SUPER+H), GENERATED from keybinds.lua at runtime so it can never
+# drift. The awk parser's rules and why not SUPER+/: docs/notes/desktop-plumbing.md
 {
   pkgs,
   config,
@@ -21,22 +10,11 @@
 let
   palette = config.my.theme.palette; # the active theme's colors (home/desktop/palette.nix)
 
-  # A parser in awk. The rules it follows, all dictated by keybinds.lua's real format:
-  #   • the group       = the 1st line of the comment block right ABOVE the bind;
-  #   • the description = the comment at the END of the bind's line; with none, it falls back to
-  #                       the group's text;
-  #   • the submap      = binds inside hl.define_submap get a prefix, otherwise "1"/"2"/"Esc"
-  #                       would show up loose and meaningless in the list.
-  # Two details that broke earlier versions and are therefore explicit:
-  #   • the comment is found by the LAST " -- " on the line, not by a "no hyphen" regex:
-  #     legitimate descriptions contain a hyphen ("no-op", "qs-restart") and were disappearing;
-  #   • the keys are translated TOKEN BY TOKEN (comma to ","), not with a blind gsub, otherwise
-  #     the "left" inside "mouse_left" would be substituted too.
+  # The parser. Its rules, and the 2 details that broke earlier versions, are in the notes.
   parser = pkgs.writeText "keybinds-cheatsheet.awk" ''
     function clean(c) { sub(/^-- ?/, "", c); gsub(/─/, "", c); sub(/^ +| +$/, "", c); return c }
     function short(t) {
-      # it cuts only at the 1st ". " (the end of a sentence). Do NOT cut at ": ", since groups
-      # like "Mouse: move / resize the window" would become the useless "Mouse".
+      # it cuts only at the 1st ". ", never at ": ", or "Mouse: move…" would become "Mouse"
       if (match(t, /\. /)) t = substr(t, 1, RSTART - 1)
       sub(/[.:]$/, "", t)
       if (length(t) > 66) t = substr(t, 1, 63) "…"
@@ -95,13 +73,12 @@ let
     ];
     text = ''
       src="$HOME/.config/hypr/lua/keybinds.lua"
-      # It fails LOUDLY if the symlink disappears: an empty cheatsheet would lie by saying
-      # "there are no binds".
+      # It fails LOUDLY if the symlink is gone: an empty list would lie by saying there are no binds.
       if [ ! -r "$src" ]; then
         rofi -e "keybinds-cheatsheet: could not read $src" -theme cheatsheet
         exit 1
       fi
-      # It only displays: the choice is discarded (it is a reference, not an action runner).
+      # It only displays: the choice is discarded, since this is a reference, not an action runner.
       awk -f ${parser} "$src" | rofi -dmenu -i -p "󰌌 Keybinds" -theme cheatsheet > /dev/null
     '';
   };
@@ -109,10 +86,8 @@ in
 {
   home.packages = [ cheatsheet ];
 
-  # An explicit `font`: without it rofi falls back to the default "mono 12". my.fonts.ui is also
-  # the system monospace (system/hardware/fonts.nix), so the columns line up.
-  # Do NOT comment inside the .rasi with '#': there '#' opens a color literal and breaks the
-  # parse.
+  # An explicit `font`, or rofi falls back to "mono 12". Do NOT comment inside a .rasi with '#':
+  # there '#' opens a color literal and breaks the parse.
   xdg.configFile."rofi/cheatsheet.rasi".text = ''
     configuration {
       show-icons: false;

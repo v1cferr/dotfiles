@@ -1,15 +1,5 @@
-# THE USER (home-manager): MY DOTFILES, declared.
-#
-# This folder's rule: home-manager owns the USER's PACKAGES AND CONFIG. The idiomatic way is
-# `programs.<tool>` (it installs plus integrates shell/config, versioned); packages with no module
-# of their own go into `home.packages`. system/ keeps only the system level (services, drivers,
-# root's packages). A separation of privilege: breaking home does NOT take the boot down, which is
-# what makes these dotfiles reproducible.
-#
-# Organized by CATEGORY (a subfolder with its own default.nix importing its modules), so the top
-# does not become a pile of loose files. A new module? Create home/<category>/<app>.nix and add 1
-# line to the category's default.nix.
-# ═══════════════════════════════════════════════════════════════════════════
+# THE USER (home-manager): the user's PACKAGES AND CONFIG, by CATEGORY. Breaking home does NOT
+# take the boot down, which is the separation that makes these dotfiles reproducible.
 { ... }:
 
 {

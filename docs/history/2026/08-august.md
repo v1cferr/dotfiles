@@ -1,6 +1,42 @@
 # History: august 2026
 
-61 entries. Index in [README.md](../README.md).
+62 entries. Index in [README.md](../README.md).
+
+- [x] Rule 2 stopped allowing a wall of prose, and the reasoning moved to `docs/notes/`
+      (16/08/2026). The rule permitted a header block "as long as it needs to be", and the
+      blocks grew: 6062 comment lines out of 16634 across the tree, 36%, with
+      `home/shell/claude-code.nix` carrying a 123-line header. A header that long is not
+      documentation, it is a wall you scroll past to reach the code. The tree now sits at 1601
+      lines out of 13299, 12%, and NO comment anywhere runs longer than 2 lines.
+      • NOTHING WAS DELETED, and that is the whole point. 51 pages in `docs/notes/` hold every
+        measurement, every rejected alternative and every correction that used to live in a
+        header, and the 2-line header points at its page. Deleting would have been faster and
+        would have thrown away things that cost days to learn: the VPN probe's cadence, btrfs'
+        reclaim decision, the Dolphin ViewMode enum, Spotify's 4145 restarts.
+      • THE CAP IS PER COMMENT, not per module, and that correction came mid-task. I had capped
+        only the headers, and `home/packages.nix` was still 101 comment lines because every
+        package carried its own paragraph. The rule now says AT MOST 2 LINES, ANYWHERE: the
+        header, a config, a package, a list item.
+      • `keybinds.lua` was the one file that needed care instead of a sweep, because its
+        comments are FUNCTIONAL: the SUPER+H cheatsheet is generated from them at runtime, the
+        first line of a block becoming the group and the trailing comment the description.
+        Verified by running the awk parser against the old and the new file: 78 binds both
+        times, in the same order. Four labels that fall back to the group came out worse than
+        before ("VPN (Arch parity)" says nothing) and were rewritten, because shorter is not
+        the goal, it is the constraint.
+      • THE GATE CAUGHT ONE REAL BREAK, which is the argument for running it per batch rather
+        than at the end: a stray `>` leaked from a python heredoc into
+        `curseforge-fix-perms`, and `nix flake check` failed on the derivation. From there the
+        gate also became the toplevel BUILD and not only `nix eval`, because several of these
+        files carry `writeShellApplication` bodies, so a comment run inside a shell string is
+        script content and shellcheck is the only thing that sees a bad edit to it. That is
+        also why the btrfs alert units changed derivation while doing nothing different: the
+        comments I rewrote were inside the script, not in the Nix.
+      • WHAT THIS BUYS beyond the reading: the reasoning was invisible from `docs/`. To find
+        out why Caddy has a fail2ban jail you had to already know to open
+        `system/services/caddy.nix`. `notes/` is indexed, cross-linked and covered by rule 16,
+        so a page that stops being true is a bug, whereas a stale header block was just
+        furniture.
 
 - [x] The rules left the prompt and became `/etc/claude-code/CLAUDE.md` (15/08/2026). Three
       rules were being retyped BY HAND at the top of every prompt I wrote for Claude Code

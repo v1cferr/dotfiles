@@ -138,8 +138,23 @@ writers.writePython3Bin "dead-config"
                 for k in sorted(index) if k not in vault]
 
 
+    # Build output and editor droppings that should never be committed. A .gitignore only stops
+    # what is not tracked YET: `scripts/__pycache__/router-sync.cpython-313.pyc` was committed
+    # before the rule existed, so it stayed tracked and invisible to the ignore file.
+    ARTIFACTS = re.compile(
+        r"(^|/)(__pycache__|\.direnv|node_modules|result(-.*)?)(/|$)"
+        r"|\.py[cod]$|\.(swp|swo|orig|rej|bak|tmp)$|(^|/)\.DS_Store$"
+    )
+
+
+    def check_artifacts(files, _code):
+        """A tracked build artifact is dead by definition: it is regenerated, never read."""
+        return [("artifact", f, "build output or editor dropping, should not be tracked")
+                for f in sorted(files) if ARTIFACTS.search(f)]
+
+
     CHECKS = (check_modules, check_inputs, check_options, check_notes, check_secrets,
-              check_secret_index)
+              check_secret_index, check_artifacts)
 
 
     def main():

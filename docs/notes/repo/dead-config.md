@@ -6,7 +6,7 @@
 Rule 16 says dead config leaves the repo. Until this existed, the only thing enforcing that was me
 remembering, which is the same "intention, not a standard" the CI's own header rejects.
 
-## The five checks
+## The seven checks
 
 | Check | What is dead | Why it is silent |
 | --- | --- | --- |
@@ -15,6 +15,8 @@ remembering, which is the same "intention, not a standard" the CI's own header r
 | option | a `my.*` option nobody reads through `config`/`osConfig` | an SSOT with no consumer, which is the thing rule 11 exists to prevent |
 | note | a page in `docs/notes/` no module points at | rule 2 made the pointer the ONLY path in, so an unpointed page is unreachable |
 | secret | a key in `secrets.yaml` nothing consumes | a credential kept, re-encrypted for two recipients and rotated for nobody |
+| secret-index | a key in `bitwarden-secrets.json` with no value in the vault | it breaks at `nixos-rebuild`, which is a far slower loop than a hook |
+| artifact | a tracked build output or editor dropping | a `.gitignore` only stops what is not tracked YET |
 
 ## What it found on the first run
 
@@ -49,6 +51,16 @@ side.
 
 This is also why `dead-config` reports a secret as dead from the CONSUMPTION side and not the
 declaration side: a declaration is not a use, and here there were two declarations and zero uses.
+
+### The artifact check exists because .gitignore is not retroactive
+
+`scripts/__pycache__/router-sync.cpython-313.pyc` was tracked for months. `.gitignore` had no rule
+for python bytecode, and by the time one was added the file was already in the index, where the
+ignore file has no effect. Nothing surfaced it, because a `.pyc` breaks nothing: it is simply
+regenerated and never read.
+
+That is the whole shape of the problem this tool exists for. The rule and the check are two
+different guarantees: the rule stops the NEXT one, the check finds the one already in.
 
 ## The naive version of each check is wrong, and that matters
 

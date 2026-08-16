@@ -12,3 +12,7 @@ result-*
 
 # the direnv/nix-direnv cache
 .direnv/
+
+# python bytecode: router-sync.py runs from ./scripts, and the cache got COMMITTED once
+__pycache__/
+*.py[cod]

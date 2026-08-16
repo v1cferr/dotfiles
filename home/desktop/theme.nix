@@ -1,5 +1,5 @@
 # THEME / DARK MODE plus the UI font. GTK follows color-scheme, Qt is 100% Kvantum (Dolphin).
-# The 2 vendored themes and the 3 build traps in the icons: docs/notes/theme.md
+# The 2 vendored themes and the 3 build traps in the icons: docs/notes/desktop/theme.md
 {
   pkgs,
   lib,
@@ -32,7 +32,7 @@ let
   };
 
   # The Windows 11 ICONS, pinned by commit and vendored (not in nixpkgs). Chosen over
-  # fluent-icon-theme on 07/08/2026; the reasons and the price: docs/notes/theme.md
+  # fluent-icon-theme on 07/08/2026; the reasons and the price: docs/notes/desktop/theme.md
   win11-icons = pkgs.stdenvNoCC.mkDerivation {
     pname = "win11-icon-theme";
     version = "0-unstable-a5b460a";

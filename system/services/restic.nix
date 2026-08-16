@@ -1,5 +1,5 @@
 # BACKUP (restic): user state to Google Drive, encrypted, deduplicated, versioned.
-# Why the Drive only, and the FUSE-in-paths trap that broke it 3 times: docs/notes/restic.md
+# Why the Drive only, and the FUSE-in-paths trap that broke: docs/notes/boot-and-storage/restic.md
 {
   config,
   lib,

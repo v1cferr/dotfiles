@@ -1,5 +1,5 @@
 # vscode-bump: rewrites the vscode-tarball version in flake.nix to the latest stable.
-# Why a versioned URL needs a bump script at all: docs/notes/version-bumps.md
+# Why a versioned URL needs a bump script at all: docs/notes/repo/version-bumps.md
 {
   writeShellApplication,
   curl,

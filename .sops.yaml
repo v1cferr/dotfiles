@@ -1,5 +1,5 @@
 # sops' rules: the PUBLIC keys of who can decrypt. TWO recipients on purpose, because a single
-# one is irreversible loss. `updatekeys` is MANDATORY after adding one: docs/notes/secrets.md
+# one is irreversible loss. `updatekeys` is MANDATORY after adding one: docs/notes/repo/secrets.md
 keys:
   - &host_nixos_kingston age132kmspxjsqzc3nnd6407svq744ju4q6vl85hq2v02pgqc2yf7caq03plfn
   - &backup_offline age1eexkwwdh60rxp78407dq4d5xcmzanupnh8f4l4llpukhq0fmxv0ql5lnvk

@@ -1,5 +1,5 @@
 # DUO-STREAK-DAEMON: the compose stack DECLARED in Nix (a flake input plus a sops-rendered .env),
-# up at boot. Turning it on, `duo-login` and the 3 Docker traps: docs/notes/duo.md
+# up at boot. Turning it on, `duo-login` and the 3 Docker traps: docs/notes/services/duo.md
 {
   config,
   pkgs,

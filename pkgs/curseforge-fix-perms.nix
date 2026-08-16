@@ -1,5 +1,5 @@
 # curseforge-fix-perms: restores the exec bit the CurseForge extractor drops on what it unpacks.
-# The 115 files it found, why ELF magic and not names, and why Instances/ is out: docs/notes/curseforge-fix-perms.md
+# The 115 files it found, and why ELF magic and not names: docs/notes/apps/curseforge-fix-perms.md
 {
   writeShellApplication,
   findutils,

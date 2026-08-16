@@ -1,5 +1,5 @@
 # XDG: the default browser (Zen) plus the file associations. Nothing is INSTALLED here (rule 4).
-# Why applications.menu is mandatory for the KDE apps: docs/notes/desktop-plumbing.md
+# Why applications.menu is mandatory for the KDE apps: docs/notes/desktop/desktop-plumbing.md
 { ... }:
 
 let

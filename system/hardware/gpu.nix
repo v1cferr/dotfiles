@@ -1,5 +1,5 @@
 # GPU: an Intel Arc B580 (Battlemage) on the open source `xe` driver plus Mesa, no CUDA.
-# Why extraPackages must NOT go unstable, and why Mesa is the exception: docs/notes/gpu.md
+# Why extraPackages must NOT go unstable, and why Mesa is the exception: docs/notes/hardware/gpu.md
 { pkgs, ... }:
 
 {

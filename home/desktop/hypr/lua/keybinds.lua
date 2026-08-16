@@ -1,5 +1,5 @@
 -- Keybinds (parity with the Arch/Kingston). The comments here GENERATE the SUPER+H cheatsheet.
--- The monitor pcall fallback is load-order critical; every why: docs/notes/keybinds.md
+-- The monitor pcall fallback is load-order critical; every why: docs/notes/desktop/keybinds.md
 local ok_M, M = pcall(dofile, os.getenv("HOME") .. "/.config/theme/monitors.lua")
 if not ok_M or type(M) ~= "table" then M = { primary = "DP-2", secondary = "HDMI-A-3" } end
 
@@ -34,7 +34,7 @@ hl.bind(mainMod .. " + H",         hl.dsp.exec_cmd("keybinds-cheatsheet"))      
 hl.bind(mainMod .. " + L",         hl.dsp.exec_cmd("loginctl lock-session"))      -- lock the screen
 
 -- The "/" key over remote access: Moonlight does not send the ABNT2 "/ ?", so ScrollLock is
--- remapped. `code:97` and NOT `slash`, because of xkb modifier levels: docs/notes/keybinds.md
+-- remapped. `code:97` and NOT `slash`, because of xkb modifier: docs/notes/desktop/keybinds.md
 hl.bind("Scroll_Lock",         hl.dsp.send_shortcut({ mods = 0,       key = "code:97", window = "activewindow" }))  -- "/"
 hl.bind("SHIFT + Scroll_Lock", hl.dsp.send_shortcut({ mods = "SHIFT", key = "code:97", window = "activewindow" }))  -- "?" (Shift+/)
 
@@ -62,7 +62,7 @@ hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
 hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 
 -- The scrolling layout's tape (global; see appearance.lua). NO GUARD, because ALL workspaces
--- are scrolling: if any goes back to dwindle, read docs/notes/keybinds.md FIRST.
+-- are scrolling: if any goes back to dwindle, read docs/notes/desktop/keybinds.md FIRST.
 hl.bind(mainMod .. " + comma",          hl.dsp.layout("move -col"))       -- tape left, 1 column
 hl.bind(mainMod .. " + period",         hl.dsp.layout("move +col"))       -- tape right, 1 column
 -- The MX Master's thumbwheel = SUPER plus the horizontal wheel; logiops no longer diverts it,
@@ -97,7 +97,7 @@ hl.bind(mainMod .. " + F1", hl.dsp.focus({ monitor = M.primary }))
 hl.bind(mainMod .. " + F2", hl.dsp.focus({ monitor = M.secondary }))
 
 -- Turning the TV on and off in Hyprland, by hand. Workspaces 5-8 come back to the LG.
--- It is needed because the TV keeps the HDMI link alive while off: docs/notes/hypr.md
+-- It is needed because the TV keeps the HDMI link alive while off: docs/notes/desktop/hypr.md
 hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("monitor-toggle"))
 
 -- Workspaces 1 to 8 (SUPER switches; SUPER+SHIFT moves the window). 1-4 on the LG, 5-8 on the TV.
@@ -149,7 +149,7 @@ hl.bind("SHIFT + XF86AudioLowerVolume", hl.dsp.exec_cmd("brightness-osd down"), 
 hl.bind(mainMod .. " + SHIFT + B",      hl.dsp.exec_cmd("brightness-osd reset"), { locked = true })
 
 -- Screenshot (Flameshot v14). Print = the native flow; SUPER+SHIFT+S = the KEYBOARD flow, a
--- submap where 1/2 pick the monitor and Esc cancels. See docs/notes/flameshot.md
+-- submap where 1/2 pick the monitor and Esc cancels. See docs/notes/apps/flameshot.md
 hl.bind("Print",                   hl.dsp.exec_cmd("flameshot gui"))
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("flameshot-screenshot"))
 

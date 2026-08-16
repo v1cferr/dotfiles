@@ -1,5 +1,5 @@
 # LocalSend: the package (the module ties it to the firewall) plus 53317 opened to the LAN ONLY.
-# Why openFirewall = false, and what changing the port breaks: docs/notes/network.md
+# Why openFirewall = false, and what changing the port breaks: docs/notes/network/network.md
 { config, ... }:
 
 let

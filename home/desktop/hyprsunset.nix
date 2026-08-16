@@ -1,5 +1,5 @@
 # BLUE LIGHT FILTER (hyprsunset), through the compositor's CTM, so it never enters a screenshot.
-# Why 13 profiles, and why the night is aggressive: docs/notes/hyprsunset.md
+# Why 13 profiles, and why the night is aggressive: docs/notes/desktop/hyprsunset.md
 { ... }:
 
 {

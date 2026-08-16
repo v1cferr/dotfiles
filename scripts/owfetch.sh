@@ -1,6 +1,6 @@
 #!/bin/sh
 # owfetch: a BusyBox-only system summary for the router, because fastfetch would fill its
-# ~1.4 MB of free flash. Pure ash, no bashisms: docs/notes/network.md
+# ~1.4 MB of free flash. Pure ash, no bashisms: docs/notes/network/network.md
 
 # A REAL ESC and not a literal "\033": the colors go as an ARGUMENT (%s), never inside the
 # format string (SC2059), and %s does not interpret escapes.

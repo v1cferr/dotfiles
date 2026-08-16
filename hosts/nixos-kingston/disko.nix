@@ -1,5 +1,5 @@
 # DESTRUCTIVE disk layout for nixos-kingston (KC3000). It runs on a CUTOVER, never on a rebuild.
-# Why btrfs, the zstd:1 choice and the swapfile trap: docs/notes/disko.md
+# Why btrfs, the zstd:1 choice and the swapfile trap: docs/notes/boot-and-storage/disko.md
 {
   disko.devices.disk.kingston = {
     type = "disk";

@@ -1,5 +1,5 @@
 # MONITORS: the SSOT of the connector NAMES (rule 11), which were duplicated across 8 files.
-# Why system/ and not home/, and why there is NO default: docs/notes/monitors.md
+# Why system/ and not home/, and why there is NO default: docs/notes/hardware/monitors.md
 { lib, ... }:
 
 {

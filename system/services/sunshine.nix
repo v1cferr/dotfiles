@@ -1,5 +1,5 @@
 # Sunshine: screen streaming for Moonlight, captured through wlr and encoded on the Arc.
-# The two access paths, the DPMS trap and why packet_size is 1024: docs/notes/sunshine.md
+# The two access paths, the DPMS trap and why packet_size is 1024: docs/notes/network/sunshine.md
 {
   pkgs,
   lib,
@@ -205,7 +205,7 @@ in
       # The value is global and the ceiling is the SMALLER path's, always.
       packet_size = 1024;
       # A host-side bitrate ceiling, so it holds for ANY client that pairs. 20000 is the de facto
-      # rate made explicit, not an experiment. The codec is NEGOTIATED: docs/notes/sunshine.md
+      # rate made explicit, not an experiment. On the codec: docs/notes/network/sunshine.md
       max_bitrate = 20000; # Kbps
       # More FEC: the path to FAI loses packets (1.67%, RTT spiking 20 to 312 ms).
       # It costs bandwidth, which is why it travels with the ceiling above.
@@ -224,7 +224,7 @@ in
     };
 
     # Apps DECLARED (rule 3). A factory app dropped every stream with an xrandr prep-cmd, and
-    # declaring these makes the web UI's Applications tab read-only: docs/notes/sunshine.md
+    # declaring these makes the web UI's Applications tab read-only: docs/notes/network/sunshine.md
     applications = {
       apps = [
         # Remote desktop: Sunshine's "special" app (with no cmd it streams the session).

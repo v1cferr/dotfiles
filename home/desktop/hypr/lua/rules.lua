@@ -1,5 +1,5 @@
 -- Window rules, ported from the Arch window-rules.conf.
--- The Flameshot v14 rule is the subtle one: docs/notes/hypr.md
+-- The Flameshot v14 rule is the subtle one: docs/notes/desktop/hypr.md
 
 -- Nix data with a SELF-CONTAINED FALLBACK: a bare dofile would BLOW UP and abort the config,
 -- and "autostart" loads later, so the session would come up with no services at all.
@@ -30,7 +30,7 @@ hl.window_rule({
 })
 
 -- Flameshot v14: the old -1920/3840 stretch BREAKS it, since v14 opens a PICKER first. Only
--- float plus center, matched by TITLE (the class is empty). Every flag: docs/notes/hypr.md
+-- float plus center, matched by TITLE (the class is empty). Every flag: docs/notes/desktop/hypr.md
 hl.window_rule({
   name = "flameshot-v14-overlay",
   match = { title = "^flameshot$" },

@@ -1,5 +1,5 @@
 # CLIPBOARD (cliphist plus a rofi picker): history with an image THUMBNAIL and an icon per file
-# TYPE. rofi is declared HERE and shared with the launcher: docs/notes/desktop-plumbing.md
+# TYPE. rofi is declared HERE and shared with the launcher: docs/notes/desktop/desktop-plumbing.md
 {
   pkgs,
   config,

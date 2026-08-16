@@ -1,5 +1,5 @@
 # statix's config. Two lints are turned off below, and it is a decision, not annoyance: a lint
-# we ignore in practice trains the eye to skip the real finding too. Why: docs/notes/flake.md
+# we ignore in practice trains the eye to skip the real finding too. Why: docs/notes/repo/flake.md
 
 disabled = [
   # repeated_keys: the DOTTED PATH is nixpkgs' idiom, it keeps the diff per-service isolated, and

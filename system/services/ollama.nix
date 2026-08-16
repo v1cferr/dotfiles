@@ -1,5 +1,5 @@
 # OLLAMA: a runtime for LOCAL models, on the Arc B580 through Vulkan.
-# Why the -vulkan package and not `acceleration`, and the Arc crash trap: docs/notes/ollama.md
+# Why the -vulkan package and not `acceleration`, and the Arc crash: docs/notes/services/ollama.md
 { pkgs, config, ... }:
 
 {

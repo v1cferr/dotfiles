@@ -1,5 +1,5 @@
 # qBittorrent: the headless download client plus its Web UI, in the 'media' group (rule 6: the
-# save paths and the categories are state, set in the UI). See docs/notes/jellyfin.md
+# save paths and the categories are state, set in the UI). See docs/notes/services/jellyfin.md
 { config, ... }:
 
 {

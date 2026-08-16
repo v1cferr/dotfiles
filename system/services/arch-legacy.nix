@@ -1,5 +1,5 @@
 # THE OLD ARCH ARCHIVE, the SYSTEM side: the mountpoint plus the path's SSOT (rule 11).
-# What MOUNTS it is home/services/arch-legacy-mount.nix. The whole story: docs/notes/arch-legacy.md
+# What MOUNTS it is the home side. The whole story: docs/notes/boot-and-storage/arch-legacy.md
 { config, lib, ... }:
 
 {
@@ -23,7 +23,7 @@
   };
 
   # OUTSIDE /home on purpose: inside it, the user's FUSE would enter the backup's `paths` and
-  # make restic exit 3, which stops the `forget --prune`. See docs/notes/restic.md
+  # make restic exit 3, which stops the `forget --prune`. See docs/notes/boot-and-storage/restic.md
   config = lib.mkIf config.my.services.arch-antigo-mount {
     systemd.tmpfiles.rules = [
       "d ${config.my.archAntigo.local} 0755 v1cferr users -" # the owner is the user: they are the one who mounts

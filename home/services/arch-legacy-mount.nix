@@ -1,5 +1,5 @@
 # /mnt/arch-antigo: the old Arch archive mounted PERMANENTLY (a restic mount, read-only).
-# Why a user unit, why --no-lock and the readiness wait: docs/notes/arch-legacy.md
+# Why a user unit, why --no-lock and the readiness wait: docs/notes/boot-and-storage/arch-legacy.md
 {
   osConfig,
   lib,

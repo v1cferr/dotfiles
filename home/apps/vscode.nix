@@ -1,5 +1,5 @@
 # VS CODE: the package plus the 3 config JSONs linked MUTABLE from the repo, because the app
-# rewrites them (Settings Sync stays on). Why a mirror and not a source: docs/notes/vscode.md
+# rewrites them (Settings Sync stays on). Why a mirror and not a source: docs/notes/apps/vscode.md
 { config, pkgs, ... }:
 
 let

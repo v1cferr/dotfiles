@@ -1,5 +1,5 @@
 # THE AUTOSTART PANEL: the GUI apps that open with the session, as one --user unit each.
-# The 3 places boot-time things live, and Spotify's 4145 restarts: docs/notes/autostart.md
+# The 3 places boot-time things live, and Spotify's 4145 restarts: docs/notes/desktop/autostart.md
 {
   config,
   lib,
@@ -17,7 +17,7 @@ let
     };
     localsend = {
       # `--hidden` = the tray icon only, which is what a RECEIVER needs. Do NOT also turn on the
-      # app's own autostart: that is a second owner (rule 15). The rest: docs/notes/autostart.md
+      # app's own autostart, which is a second owner (rule 15): docs/notes/desktop/autostart.md
       exec = "${osConfig.programs.localsend.package}/bin/localsend_app --hidden";
       desc = "file transfer over the LAN";
     };

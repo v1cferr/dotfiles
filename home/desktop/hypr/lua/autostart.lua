@@ -1,5 +1,5 @@
 -- Autostart. hyprland.start fires ONCE at session boot, not on a reload; hypridle is a
--- systemd --user service instead. What each line does: docs/notes/hypr.md
+-- systemd --user service instead. What each line does: docs/notes/desktop/hypr.md
 hl.on("hyprland.start", function()
   -- Without this the --user services do NOT come up, since LightDM launches a BARE Hyprland.
   hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP && systemctl --user start hyprland-session.target")

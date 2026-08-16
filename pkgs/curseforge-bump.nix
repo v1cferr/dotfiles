@@ -1,5 +1,5 @@
 # curseforge-bump: rewrites version AND hash in pkgs/curseforge.nix to Overwolf's latest.
-# Why the .deb answers "did it change?" for 256 KiB: docs/notes/version-bumps.md
+# Why the .deb answers "did it change?" for 256 KiB: docs/notes/repo/version-bumps.md
 {
   writeShellApplication,
   curl,

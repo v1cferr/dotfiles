@@ -1,5 +1,5 @@
 # MEDIA: the KDE Gear stack (Gwenview/Okular) plus VLC, already themed by Qt/Kvantum.
-# ALWAYS the CANONICAL mimetype, never an alias: docs/notes/apps-and-mime.md
+# ALWAYS the CANONICAL mimetype, never an alias: docs/notes/apps/apps-and-mime.md
 { pkgs, ... }:
 
 let

@@ -1,5 +1,5 @@
 -- Monitors. primary = the LG at 0x0, secondary = the TV on the LEFT; keeping the main one at
--- the origin is what makes a disconnected TV clean. See docs/notes/hypr.md
+-- the origin is what makes a disconnected TV clean. See docs/notes/desktop/hypr.md
 
 -- Nix data with a SELF-CONTAINED FALLBACK: a bare dofile would BLOW UP and abort the config,
 -- and "autostart" loads later, so the session would come up with no services at all.

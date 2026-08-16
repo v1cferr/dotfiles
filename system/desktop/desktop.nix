@@ -1,5 +1,5 @@
 # DESKTOP: Hyprland on Wayland, with LightDM as the greeter. In a Wayland session the keyboard and
-# the monitors are HYPRLAND config, not the system's xkb/xrandr. The rest: docs/notes/desktop.md
+# the monitors are HYPRLAND config, not the system's xkb: docs/notes/desktop/desktop.md
 { pkgs, ... }:
 
 {
@@ -23,7 +23,7 @@
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
 
   # THE PORTALS. gtk serves org.freedesktop.appearance (dark mode in Electron); wlr implements
-  # Screenshot, which portal-hyprland declares and then refuses. See docs/notes/desktop.md
+  # Screenshot, which portal-hyprland declares and then refuses. See docs/notes/desktop/desktop.md
   xdg.portal.extraPortals = [
     pkgs.xdg-desktop-portal-gtk
     pkgs.xdg-desktop-portal-wlr

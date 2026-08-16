@@ -1,5 +1,5 @@
 # THE POLKIT AGENT: without one, polkitd decides but NOBODY asks for the password, so every
-# auth_admin action failed silently (01/08/2026). The trap: docs/notes/desktop-plumbing.md
+# auth_admin action failed silently (01/08/2026). The trap: docs/notes/desktop/desktop-plumbing.md
 { pkgs, ... }:
 
 {

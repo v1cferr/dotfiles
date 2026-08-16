@@ -1,5 +1,5 @@
 # GRADRADAR: the app stack up at BOOT plus the tracking chain on a timer (collect, verify, notify).
-# Why systemd, why the working-tree path and why that order: docs/notes/grad-radar.md
+# Why systemd, why the working-tree path and why that order: docs/notes/services/grad-radar.md
 {
   config,
   pkgs,

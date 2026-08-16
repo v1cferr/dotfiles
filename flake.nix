@@ -30,7 +30,7 @@
     };
 
     # Zen: not in nixpkgs. It follows the UNSTABLE base, the only `follows` here that does, because
-    # upstream started needing ffmpeg_9 and 26.05 stops at 7. The follows hazard: docs/notes/flake.md
+    # upstream started needing ffmpeg_9 and 26.05 stops at 7. The follows: docs/notes/repo/flake.md
     zen-browser = {
       url = "github:0xc000022070/zen-browser-flake";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
@@ -54,14 +54,14 @@
     };
 
     # Quickshell: a shell/bar in QML, not in nixpkgs. The QML lives in the repo and hot-reloads;
-    # see docs/notes/quickshell.md
+    # see docs/notes/desktop/quickshell.md
     quickshell = {
       url = "git+https://git.outfoxxed.me/quickshell/quickshell";
       inputs.nixpkgs.follows = "nixpkgs"; # dedup
     };
 
     # Claude Desktop: not in nixpkgs. This flake repackages the OFFICIAL .deb (the nixpkgs pattern
-    # for a vendored binary). The 2 alternatives that were passed over: docs/notes/flake.md
+    # for a vendored binary). The 2 alternatives that were passed over: docs/notes/repo/flake.md
     claude-desktop = {
       url = "github:aaddrick/claude-desktop-debian";
       inputs.nixpkgs.follows = "nixpkgs"; # dedup: only affects the lock (the overlay uses the pkgs FROM HERE)
@@ -81,7 +81,7 @@
     };
 
     # VS Code from the OFFICIAL tarball at a FIXED, VERSIONED url: `/latest/` is a POINTER and broke
-    # the eval on every release. What bumps it is vscode-bump, on `update`: docs/notes/flake.md
+    # the eval on every release. What bumps it is vscode-bump, on `update`: docs/notes/repo/flake.md
     vscode-tarball = {
       url = "tarball+https://update.code.visualstudio.com/1.133.0/linux-x64/stable";
       flake = false;
@@ -113,7 +113,7 @@
       overlayUnstable = _: _: { unstable = pkgsUnstable; };
 
       # Spotify: `--no-zygote` baked into the PACKAGE (not the autostart), or CEF dies of SIGTRAP in
-      # 270ms with no window. REMOVE when it opens without it. The measurement: docs/notes/flake.md
+      # 270ms with no window. REMOVE when it opens without it: docs/notes/repo/flake.md
       overlaySpotifyNoZygote = _: prev: {
         unstable = prev.unstable // {
           spotify = prev.unstable.spotify.overrideAttrs (old: {
@@ -125,7 +125,7 @@
       };
 
       # It swaps only the SRC, keeping unstable's RECIPE, because generic.nix is version-gated and the
-      # 26.05 one is 12 versions behind. Why readFile and sourceRoot: docs/notes/flake.md
+      # 26.05 one is 12 versions behind. Why readFile and sourceRoot: docs/notes/repo/flake.md
       overlayVscodeTarball = _: prev: {
         unstable = prev.unstable // {
           vscode = prev.unstable.vscode.overrideAttrs (_: {
@@ -140,7 +140,7 @@
       };
 
       # btop with Intel Xe: TEMPORARY. nixpkgs' btop has GPU on, but its Intel backend is i915-ONLY and
-      # the B580 is xe. REMOVE when PR #1457 lands in the channel: docs/notes/flake.md
+      # the B580 is xe. REMOVE when PR #1457 lands in the channel: docs/notes/repo/flake.md
       overlayBtopXe = _: prev: {
         btop = prev.btop.overrideAttrs (old: {
           version = "1.4.7-unstable-2026-07-20";
@@ -167,6 +167,7 @@
         curseforge = final.callPackage ./pkgs/curseforge.nix { }; # official modpack AppImage (unfree)
         curseforge-bump = final.callPackage ./pkgs/curseforge-bump.nix { }; # version+hash of curseforge.nix
         curseforge-fix-perms = final.callPackage ./pkgs/curseforge-fix-perms.nix { }; # +x on what the app unpacks
+        docs-links = final.callPackage ./pkgs/docs-links.nix { }; # it fails when a docs/ pointer breaks
       };
 
       # Claude Desktop: it forces the secret backend, since Electron does not recognize "Hyprland" and
@@ -239,6 +240,7 @@
             vscode-bump # ./pkgs: the build IS the script's shellcheck (rule 7)
             curseforge-bump # ./pkgs: same, shellcheck at build time
             curseforge-fix-perms # ./pkgs: same
+            docs-links # ./pkgs: the build IS the script's flake8; the CHECK below runs it
             curseforge # ./pkgs: the official AppImage (outside the CHECK below, the why is there)
             btop # nixpkgs + the src from PR #1457 (Intel Xe GPU): here so the check COMPILES the fork
             ;
@@ -246,7 +248,7 @@
         };
 
       # `nix fmt`, so the standard is verifiable OUTSIDE the editor. `nixfmt-tree` and not bare nixfmt,
-      # which breaks with no argument AND walks into ./result: docs/notes/flake.md
+      # which breaks with no argument AND walks into ./result: docs/notes/repo/flake.md
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt-tree;
 
       # THE QUALITY GATE: ONE definition, THREE consumers (flake check, the pre-commit hook, the CI).
@@ -266,6 +268,25 @@
             shellcheck.enable = true;
           };
         };
+
+        # Rule 16 made a note that stops being true a bug, and rule 2 made the pointer the ONLY path
+        # from a module to its reasoning. This is what stops both rotting: docs/notes/repo/link-checker.md
+        docs-links =
+          nixpkgs.legacyPackages.${system}.runCommandNoCC "check-docs-links"
+            {
+              nativeBuildInputs = [
+                self.packages.${system}.docs-links
+                nixpkgs.legacyPackages.${system}.git
+              ];
+            }
+            ''
+              cp -r ${./.} src && chmod -R +w src && cd src
+              # The flake source has no .git, and the checker walks `git ls-files` on purpose (it
+              # should see what the repo SHIPS). A throwaway repo gives it that list.
+              git init -q && git add -A
+              docs-links
+              touch $out
+            '';
 
         # It BUILDS what the repo packages, which `nix flake check` does NOT: it only EVALUATES a host.
         # What is fragile here is packaging, and that breaks at build. curseforge is out: the notes.

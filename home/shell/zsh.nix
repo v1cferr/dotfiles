@@ -1,5 +1,5 @@
 # The zsh config (~/.zshrc). The LOGIN shell is set in system/core/users.nix.
-# Why the aliases are composed and why the flake path is explicit: docs/notes/shell.md
+# Why the aliases are composed and why the flake path is explicit: docs/notes/repo/shell.md
 { osConfig, ... }:
 
 let

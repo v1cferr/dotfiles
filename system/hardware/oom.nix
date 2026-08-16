@@ -1,5 +1,5 @@
 # OOM: earlyoom kills the biggest process EARLY, so the machine never freezes for 30-60 s.
-# Why it coexists with systemd-oomd, and the 3 traps in the regex: docs/notes/oom.md
+# Why it coexists with systemd-oomd, and the 3 traps in the regex: docs/notes/hardware/oom.md
 { ... }:
 
 {

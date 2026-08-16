@@ -1,5 +1,5 @@
 # LOCK SCREEN plus IDLE: hyprlock and hypridle. No loose scripts: the work is in systemd timers
-# and the runtime is 1 line. The 3 hardware lessons NOT to undo: docs/notes/lockscreen.md
+# and the runtime is 1 line. The 3 hardware lessons NOT to undo: docs/notes/desktop/lockscreen.md
 {
   config,
   pkgs,
@@ -37,7 +37,7 @@ let
   catBin = "${pkgs.coreutils}/bin/cat";
 
   # Quote: a daily timer fetches ~50 from ZenQuotes and batch-translates them through DeepL; the
-  # lock only runs shuf. The layered fallbacks are in docs/notes/lockscreen.md
+  # lock only runs shuf. The layered fallbacks are in docs/notes/desktop/lockscreen.md
   quotesCache = "${config.xdg.cacheHome}/lockscreen/quotes";
   deeplKeyFile = "/run/secrets/deepl_api_key"; # sops (owner v1cferr); if absent, it stays EN
   quotesFetch = pkgs.writeShellScript "lockscreen-quotes-fetch" ''

@@ -75,10 +75,10 @@ docs/                    what is NOT declarable, plus the repo's diary (see docs
   rules.md               the 18 rules. The NUMBERING is API: the code cites "rule N"
   open-items.md          what is still open
   history/<year>/<month>    what was done and WHY (including what was tried and REJECTED)
+  notes/<subject>/          why each module is the way it is; the 2-line headers point here
   ideas.md               considered, not yet decided
-  arch-legacy.md         a closed chapter + how to open the old Arch archive
-  guides/                step by step for what Nix cannot reach (BIOS, Secure Boot, router, Windows)
-  tests/                 reusable test protocols
+  arch-linux.md          a closed chapter + how to open the old Arch archive
+  guides/                step by step for what Nix cannot reach + test protocols (BIOS, Secure Boot, router, Windows)
 ```
 
 `README.md` is the only doc at the root. Everything else lives in `docs/`.

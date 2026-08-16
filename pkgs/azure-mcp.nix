@@ -1,5 +1,5 @@
 # azure-mcp: Microsoft's `azmcp`, the MCP server that drives portal.azure.com by command.
-# Why a vendored binary, why LD_LIBRARY_PATH, and how to bump: docs/notes/azure-mcp.md
+# Why a vendored binary, why LD_LIBRARY_PATH, and how to bump: docs/notes/apps/azure-mcp.md
 {
   lib,
   stdenv,

@@ -1,5 +1,5 @@
 # MANGOHUD: the overlay's config only; the INJECTION comes from the bottle's `mangohud: true`.
-# What stays EMPTY on the Arc's xe driver, and why it is left on: docs/notes/apps-and-mime.md
+# What stays EMPTY on the Arc's xe driver: docs/notes/apps/apps-and-mime.md
 { ... }:
 
 {

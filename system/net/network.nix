@@ -1,5 +1,5 @@
 # NETWORK AND REMOTE ACCESS: NetworkManager, exposed SSH, fail2ban, dynamic DNS, no suspend.
-# The WoL trap, the DDNS wildcard and why split-DNS lies to dig: docs/notes/network.md
+# The WoL trap, the DDNS wildcard and why split-DNS lies to dig: docs/notes/network/network.md
 { config, ... }:
 
 {

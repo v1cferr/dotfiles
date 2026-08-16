@@ -80,7 +80,7 @@ known trap. The paragraph is worth more than the title.
         machine turns itself on.
 
 - [ ] Tunnel MTU: measure and write it down (inherited from the 10/08/2026 test). The protocol
-      is in [testes/wireguard-moonlight.md](tests/wireguard-moonlight.md).
+      is in [guides/wireguard-moonlight.md](guides/wireguard-moonlight.md).
       • Impossible to test from home: there is no WireGuard interface on this machine (the
         tunnel terminates at the ROUTER), so a ping to 10.10.10.1 goes out over the cable and
         measures the LAN. The sign of an invalid test: ~0.3 ms of latency.

@@ -1,5 +1,5 @@
 -- Appearance: general plus decoration plus animations, ported from the Arch look-and-feel.conf.
--- The gradient border must be a TABLE in the Lua API; the rest: docs/notes/hypr.md
+-- The gradient border must be a TABLE in the Lua API; the rest: docs/notes/desktop/hypr.md
 
 -- The palette comes from Nix (my.theme), hexes WITHOUT '#'; the rgba() is assembled below.
 local C = dofile(os.getenv("HOME") .. "/.config/theme/hypr-colors.lua")

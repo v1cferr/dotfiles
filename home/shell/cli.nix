@@ -1,5 +1,5 @@
 # The modern CLI toolkit. Each tool filled a REAL gap in a debugging session, not a list slot.
-# Which gap, and why difftastic was passed over: docs/notes/shell.md
+# Which gap, and why difftastic was passed over: docs/notes/repo/shell.md
 { pkgs, lib, ... }:
 
 {

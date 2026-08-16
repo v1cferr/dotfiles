@@ -1,5 +1,5 @@
 # LOCAL SNAPSHOTS (btrbk): the minutes-scale "undo" for @home. It is NOT a backup, that is restic.
-# Why @home only, the /.snapshots prerequisite and the retention: docs/notes/btrbk.md
+# Why @home only, and the /.snapshots prerequisite: docs/notes/boot-and-storage/btrbk.md
 { config, lib, ... }:
 
 lib.mkIf config.my.services.btrbk {

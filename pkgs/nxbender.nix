@@ -1,5 +1,5 @@
 # nxBender: FOSS client for the SonicWall SSL VPN (FAI), replacing the proprietary netExtender.
-# What its 3 patches fix: docs/notes/version-bumps.md
+# What its 3 patches fix: docs/notes/repo/version-bumps.md
 {
   lib,
   python3Packages,

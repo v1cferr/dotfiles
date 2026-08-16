@@ -1,5 +1,5 @@
 # A keybind cheatsheet in rofi (SUPER+H), GENERATED from keybinds.lua at runtime so it can never
-# drift. The awk parser's rules and why not SUPER+/: docs/notes/desktop-plumbing.md
+# drift. The awk parser's rules and why not SUPER+/: docs/notes/desktop/desktop-plumbing.md
 {
   pkgs,
   config,

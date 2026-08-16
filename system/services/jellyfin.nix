@@ -1,5 +1,5 @@
 # JELLYFIN: a native media server (systemd, 24/7). The library is /srv/media, shared through the
-# 'media' group. The UMask override, DLNA on the TV and the rest: docs/notes/jellyfin.md
+# 'media' group. The UMask override, DLNA on the TV and the rest: docs/notes/services/jellyfin.md
 { config, lib, ... }:
 
 {

@@ -1,5 +1,5 @@
 # CS2 SAVES: an hourly rsync mirror out of the Bottles prefix, which restic EXCLUDES, into a
-# folder it covers. The saves are irreplaceable (no Steam Cloud): docs/notes/restic.md
+# folder it covers. The saves are irreplaceable (no Steam: docs/notes/boot-and-storage/restic.md
 {
   pkgs,
   config,

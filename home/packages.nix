@@ -1,5 +1,5 @@
 # THE USER'S PACKAGES: the central list for an app/CLI with no config of its own (rule 4).
-# Why unstable, why azure-cli stays and wrangler did not: docs/notes/packages.md
+# Why unstable, why azure-cli stays and wrangler did not: docs/notes/repo/packages.md
 { pkgs, inputs, ... }:
 
 {

@@ -1,5 +1,5 @@
 # QUICKSHELL: the shell/bar in QML, from the official flake. The QML lives in the REPO and is
-# linked mutable, so it hot-reloads on save. The XEmbed bridge's cost: docs/notes/quickshell.md
+# linked mutable, so it hot-reloads on save: docs/notes/desktop/quickshell.md
 {
   pkgs,
   config,

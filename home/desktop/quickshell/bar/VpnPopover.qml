@@ -1,5 +1,5 @@
 // The VPN ACTIONS popover (click): a row per VPN plus "Disconnect all". It replaced a loose rofi,
-// and it shares the Bar's single source. Why click and not hover: docs/notes/bar.md
+// and it shares the Bar's single source. Why click and not hover: docs/notes/desktop/bar.md
 import Quickshell
 import QtQuick
 import QtQuick.Layouts

@@ -1,5 +1,5 @@
 # CADDY: the reverse proxy for *.<domain>, one wildcard cert through DNS-01.
-# The auto-gate, client_ip vs remote_ip and the port map: docs/notes/caddy.md
+# The auto-gate, client_ip vs remote_ip and the port map: docs/notes/network/caddy.md
 {
   config,
   lib,

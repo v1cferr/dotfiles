@@ -1,5 +1,5 @@
 # FONTS: the SSOT of the UI family, `my.fonts.ui`. The home/ side reads it through osConfig.
-# Why it lives here, and the fallback coverage that is a CHOICE: docs/notes/fonts.md
+# Why it lives here, and the fallback coverage that is a CHOICE: docs/notes/hardware/fonts.md
 {
   pkgs,
   lib,

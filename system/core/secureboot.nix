@@ -1,5 +1,5 @@
 # SECURE BOOT: our own keys through sbctl, signing GRUB on every switch.
-# The runbook, what it does NOT protect, and why -m is mandatory: docs/notes/boot.md
+# The runbook, and what it does NOT protect: docs/notes/boot-and-storage/boot.md
 { pkgs, ... }:
 
 let

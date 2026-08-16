@@ -1,5 +1,5 @@
 # BTRFS: the SSOT of btrfs POLICY (scrub, alarm, reclaim, trim, nocow). The LAYOUT is disko's and
-# the SNAPSHOTS are btrbk's. Every decision and its measurement: docs/notes/btrfs.md
+# the SNAPSHOTS are btrbk's. Every decision, measured: docs/notes/boot-and-storage/btrfs.md
 {
   config,
   lib,

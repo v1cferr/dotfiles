@@ -1,5 +1,5 @@
 # DISCORD RICH PRESENCE for Claude Code: the daemon plus its config, fully declarative (no
-# `claude-presence setup`). The hook that feeds it is system-level: docs/notes/claude-code.md
+# `claude-presence setup`). The hook that feeds it is system-level: docs/notes/apps/claude-code.md
 {
   pkgs,
   osConfig,

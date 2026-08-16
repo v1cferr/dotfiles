@@ -1,6 +1,6 @@
 //@ pragma UseQApplication
 // The shell's root: it only COMPOSES the components, there is no logic here. A ~190-line VPN panel
-// was REMOVED from here on 30/07 as dead code on 3 levels: docs/notes/quickshell.md
+// was REMOVED from here on 30/07 as dead code on 3 levels: docs/notes/desktop/quickshell.md
 import Quickshell
 import QtQuick
 import "root:/bar"

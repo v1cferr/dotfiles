@@ -1,5 +1,5 @@
 # ~/Drive: the Google Drive root mounted as a normal folder (rclone plus a VFS cache). It is a
-# WINDOW, NOT a backup: deleting here deletes there. Why not bisync: docs/notes/restic.md
+# WINDOW, NOT a backup: deleting here deletes there. Why not: docs/notes/boot-and-storage/restic.md
 {
   config,
   osConfig,
@@ -41,7 +41,7 @@ in
         Type = "notify";
 
         # A WRITABLE COPY of rclone.conf (rclone rewrites the OAuth token) and --config on the COMMAND,
-        # never RCLONE_CONFIG. THE MOUNTPOINT MUST BE EMPTY, and that cost a boot: docs/notes/restic.md
+        # never RCLONE_CONFIG. THE MOUNTPOINT MUST BE EMPTY,: docs/notes/boot-and-storage/restic.md
         ExecStartPre = [
           "${pkgs.coreutils}/bin/mkdir -p ${cfg.local}"
           "${pkgs.coreutils}/bin/install -m600 /run/secrets/rclone_gdrive_conf %t/rclone-gdrive.conf"

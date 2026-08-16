@@ -913,7 +913,7 @@
         default.
       • VALIDATED THE SAME DAY, with a real session of 21m58s plus 9min. The full
         measurements and method are in
-        [tests/moonlight-direct.md](../../tests/moonlight-direct.md); the essentials: 0% loss
+        [guides/moonlight-direct.md](../../guides/moonlight-direct.md); the essentials: 0% loss
         across 100 packets of 1 KB, RTT 35.5 ms, jitter 0.54 ms. The proof that the session
         works end to end was Claude itself starting to run WITHOUT `SSH_CLIENT` and with
         `DISPLAY=:0`, inside the graphical session being streamed.

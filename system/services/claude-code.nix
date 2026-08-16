@@ -1,5 +1,5 @@
 # CLAUDE CODE (system): the 2 things that have to be IMPOSED, the lifecycle HOOKS and the managed
-# CLAUDE.md every project inherits. Why /etc and not the user's dir: docs/notes/claude-code.md
+# CLAUDE.md every project inherits. Why /etc and not the user's dir: docs/notes/apps/claude-code.md
 { lib, pkgs, ... }:
 
 let

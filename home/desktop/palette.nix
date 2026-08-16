@@ -1,5 +1,5 @@
 # THE PALETTE: the theme's SSOT. Switching = `my.theme.name` plus a rebuild. Nix consumers read
-# the option; the hot-reload ones read the files generated below. Details: docs/notes/theme.md
+# the option; the hot-reload ones read the files below: docs/notes/desktop/theme.md
 {
   config,
   lib,

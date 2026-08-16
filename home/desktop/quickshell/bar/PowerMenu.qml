@@ -1,5 +1,5 @@
 // A taskbar-style Start button: the NixOS logo, opening lock/log out/suspend/reboot/shut down.
-// No sudo (logind authorizes an active session). The lock's history: docs/notes/bar.md
+// No sudo (logind authorizes an active session). The lock's history: docs/notes/desktop/bar.md
 import Quickshell
 import Quickshell.Io
 import QtQuick

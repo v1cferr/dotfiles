@@ -1,5 +1,5 @@
 // The tray's context menu, themed: it renders the DBusMenu native SNIs expose. It is a LAYER
-// SURFACE and not a PopupWindow (Hyprland#6682, closed as not planned): docs/notes/quickshell.md
+// SURFACE and not a PopupWindow (Hyprland#6682, closed as not: docs/notes/desktop/quickshell.md
 import Quickshell
 import Quickshell.Hyprland
 import QtQuick

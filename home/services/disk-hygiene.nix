@@ -1,5 +1,5 @@
 # DISK HYGIENE: a free-space alarm that names the biggest consumers, plus trash expiry.
-# Why warning beats deleting, and the 2-phase design: docs/notes/disk-hygiene.md
+# Why warning beats deleting, and the 2-phase design: docs/notes/boot-and-storage/disk-hygiene.md
 {
   config,
   lib,

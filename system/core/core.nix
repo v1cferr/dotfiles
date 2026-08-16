@@ -1,5 +1,5 @@
 # THE CORE: Nix/flakes, the GC ceilings, the journal cap, nix-ld and the locale.
-# Why every ceiling is the number it is: docs/notes/core.md
+# Why each ceiling is the number it is: docs/notes/repo/core.md
 { ... }:
 
 {

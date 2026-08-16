@@ -1,5 +1,5 @@
 -- The environment (hl.env). The cursor comes from Nix, and the Qt vars are pinned here because
--- Wayland does not always load the session vars: docs/notes/hypr.md
+-- Wayland does not always load the session vars: docs/notes/desktop/hypr.md
 
 -- Nix data with a SELF-CONTAINED FALLBACK: a bare dofile would BLOW UP and abort the config,
 -- and "autostart" loads later, so the session would come up with no services at all.

@@ -1,5 +1,5 @@
 # BOOT: GRUB (UEFI) with the minegrub theme, dualbooting Windows 11 off a SECOND disk's ESP.
-# Why GRUB and not systemd-boot, and the --class icon trap: docs/notes/boot.md
+# Why GRUB and not systemd-boot, and the --class icon trap: docs/notes/boot-and-storage/boot.md
 {
   config,
   inputs,
@@ -23,7 +23,7 @@
     configurationLimit = 10; # generations in the menu (rollback) without filling the ESP
 
     # OS-PROBER OFF, Windows pinned by UUID: probing also found the Seagate's DEAD NixOS root and
-    # made a third entry. The price is a silent break if Windows moves: docs/notes/boot.md
+    # made a third entry. The price is a silent break if: docs/notes/boot-and-storage/boot.md
     useOSProber = false;
     extraEntries = ''
       menuentry "Windows 11" --class windows --class os {
@@ -44,7 +44,7 @@
     gfxmodeEfi = "1920x1080,auto";
 
     # THE 2 FLAGS THAT MAKE GRUB BOOT UNDER SECURE BOOT. Without them: `prohibited by secure boot
-    # policy` plus `grub rescue>`, and GRUB is what refuses, not the firmware. Why: docs/notes/boot.md
+    # policy` plus `grub rescue>`, and GRUB is what refuses,: docs/notes/boot-and-storage/boot.md
     extraGrubInstallArgs = [
       "--disable-shim-lock"
       (

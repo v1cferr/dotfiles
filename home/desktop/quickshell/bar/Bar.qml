@@ -1,5 +1,5 @@
 // The desktop's bar, the only one, loaded by shell.qml; the popovers are files next to it.
-// The probe, the holidays and the tray traps: docs/notes/bar.md
+// The probe, the holidays and the tray traps: docs/notes/desktop/bar.md
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
@@ -302,7 +302,7 @@ Scope {
     }
 
     // VPN QUALITY. The pill answered "is there a tunnel?"; this answers "and is it any good?".
-    // Two sources, and zero cost with no tunnel. The measurements: docs/notes/bar.md
+    // Two sources, and zero cost with no tunnel. The measurements: docs/notes/desktop/bar.md
     property var vpnStats: ({})   // id -> the object from `vpn stats-json`
     function parseVpnStats(text) {
         try {
@@ -314,7 +314,7 @@ Scope {
     }
 
     // A CONTINUOUS probe, 1 packet/s over 60s, and it is measured, not taste: a 3-packet burst
-    // observed 3% of the time and resolved loss at 33%. See docs/notes/bar.md before changing it.
+    // observed 3% of the time and resolved loss at docs/notes/desktop/bar.md before changing it.
     component VpnProbe: Scope {
         id: probe
         // `info` ARRIVES from outside: an inline component cannot see the declaring document's id, so
@@ -434,7 +434,7 @@ Scope {
         })
 
     // The verdict. The ORDER is the order of the damage (loss, then jitter, then the mean), and the
-    // cutoffs are anchored to a MEASURED baseline, not guessed: docs/notes/bar.md
+    // cutoffs are anchored to a MEASURED baseline, not guessed: docs/notes/desktop/bar.md
     function vpnQuality(s, pr) {
         if (!s || !s.connected)
             return {
@@ -850,7 +850,7 @@ Scope {
     }
 
     // Holidays (nac/sp/sc), rechecked 08/08/2026. THIS LIST DOES NOT UPDATE ITSELF: the movable ones
-    // derive from Easter, the fixed ones are LAW by hand. The bases and the 2 traps: docs/notes/bar.md
+    // derive from Easter, the fixed ones are LAW by hand: docs/notes/desktop/bar.md
     readonly property var holidayDefs: [
         { name: "Ano-Novo", scope: "nac", m: 1, d: 1 },
         { name: "Carnaval (segunda)", scope: "nac", off: -48, fac: true },
@@ -1454,7 +1454,7 @@ Scope {
                     }
                     Pill {
                         // VPN: click opens the actions popover, HOVER shows the statistics, right click drops everything.
-                        // Information on hover, ACTION on click; it replaced a loose rofi. See docs/notes/bar.md
+                        // Information on hover, ACTION on click; it docs/notes/desktop/bar.md
                         id: vpnPill
                         icon: "󰦝"
                         label: root.vpnConnected ? root.vpnName : ""
@@ -1561,7 +1561,7 @@ Scope {
                                                 modelData.secondaryActivate();
                                             else if (modelData.hasMenu) {
                                                 // A native SNI gets our themed menu. It is a LAYER SURFACE (Hyprland#6682 breaks a PopupWindow's
-                                                // input region), so it positions by SCREEN X, not anchor.rect. See docs/notes/quickshell.md
+                                                // input region), docs/notes/desktop/quickshell.md
                                                 const pt = trayDel.mapToItem(barContent, 0, trayDel.height);
                                                 trayCtxMenu.openAt(modelData.menu, bar, pt.x + bar.margins.left);
                                             } else {

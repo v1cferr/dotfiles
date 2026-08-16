@@ -1,5 +1,5 @@
 // The VPN STATISTICS popover (hover): verdict, a 60s graph, latency, jitter, loss, traffic,
-// uptime. Why the scale starts at ZERO and why 360 wide: docs/notes/bar.md
+// uptime. Why the scale starts at ZERO and why 360 wide: docs/notes/desktop/bar.md
 import Quickshell
 import QtQuick
 import QtQuick.Layouts

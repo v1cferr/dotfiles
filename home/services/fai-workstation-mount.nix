@@ -1,5 +1,5 @@
 # ~/FAI-workstation: the workstation's root over rclone SFTP plus a VFS cache. VPN-GATED, since
-# the host only exists through the tunnel and SSHFS would freeze Dolphin: docs/notes/fai-workstation.md
+# the host only exists through the tunnel and SSHFS would: docs/notes/network/fai-workstation.md
 { config, ... }:
 
 let

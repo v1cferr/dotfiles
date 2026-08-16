@@ -1,5 +1,5 @@
 # The SSH client config. The private key is state, so it comes from the backup (rule 6).
-# Every timeout here is sized to VS Code's 17s budget: docs/notes/ssh.md
+# Every timeout here is sized to VS Code's 17s budget: docs/notes/network/ssh.md
 { config, ... }:
 
 let
@@ -38,7 +38,7 @@ in
         }; # the right colors on the remote terminal
       };
       # The home router. No faiResilience: this is a LAN hop, and inheriting it would be cargo cult.
-      # A reflash regenerates the Dropbear host key, and the key install is manual: docs/notes/ssh.md
+      # A reflash regenerates the Dropbear host key, and the key install: docs/notes/network/ssh.md
       router = {
         HostName = "192.168.1.1";
         User = "v1cferr";
@@ -50,7 +50,7 @@ in
       };
 
       # My brother's PC (Windows 11, OpenSSH 9.5), which is where every trap here comes from.
-      # The admin authorized_keys path and the Git Bash swap: docs/notes/ssh.md
+      # The admin authorized_keys path and the Git Bash swap: docs/notes/network/ssh.md
       cesar = {
         HostName = "192.168.1.40";
         User = "v1cferr";

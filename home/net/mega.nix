@@ -1,5 +1,5 @@
 # MEGA from the CLI: megatools plus a `mega-dl` wrapper with a PATIENT loop that resumes on its
-# own, quota crossings included. Why megatools, and why it WAITS: docs/notes/mega.md
+# own, quota crossings included. Why megatools, and why it WAITS: docs/notes/apps/mega.md
 {
   config,
   pkgs,

@@ -14,9 +14,8 @@ act on (the open items) and what you look up (the history) have different rhythm
 | [history/](history/) | What was done and why, a folder per year and a file per month | "What happened that day?" |
 | [notes/](notes/) | One page per module: why it is the way it is, and the traps | "Why is THIS module like this?" |
 | [ideas.md](ideas.md) | Considered, not decided yet | When planning |
-| [arch-legacy.md](arch-legacy.md) | A closed chapter + how to open the archive | Rarely |
-| [guides/](guides/) | Step by step for what Nix cannot reach (BIOS, Secure Boot, router, Windows) | When reinstalling or working outside the repo |
-| [tests/](tests/) | Reusable test protocols | When validating a change |
+| [arch-linux.md](arch-linux.md) | A closed chapter + how to open the archive | Rarely |
+| [guides/](guides/) | Step by step for what Nix cannot reach (BIOS, Secure Boot, router, Windows), plus the reusable TEST protocols | When reinstalling, working outside the repo, or validating a change |
 
 ## Conventions
 

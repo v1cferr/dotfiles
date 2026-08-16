@@ -1,5 +1,5 @@
 # HYPRLAND's config in Lua (0.55+ replaces hyprlang), hot-reloaded through mkOutOfStoreSymlink.
-# The 4 helper scripts and the remote-access safety net: docs/notes/hypr.md
+# The 4 helper scripts and the remote-access safety net: docs/notes/desktop/hypr.md
 {
   pkgs,
   config,

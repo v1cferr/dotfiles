@@ -1,5 +1,5 @@
 # The FAI workstation: the host's SSOT (rule 11, at the lowest level that needs it) plus
-# `wake-workstation`. Why 3 WoL paths and why python: docs/notes/fai-workstation.md
+# `wake-workstation`. Why 3 WoL paths and why python: docs/notes/network/fai-workstation.md
 {
   config,
   lib,
@@ -80,7 +80,7 @@ let
 in
 {
   # THE RECEIVING SIDE IS NOT DECLARABLE FROM HERE (somebody else's Ubuntu). Arming WoL there is a
-  # manual netplan step, and it is measured as NOT armed: docs/notes/fai-workstation.md
+  # manual netplan step, and it is measured as NOT armed: docs/notes/network/fai-workstation.md
   options.my.fai.workstation = {
     host = lib.mkOption {
       type = lib.types.str;

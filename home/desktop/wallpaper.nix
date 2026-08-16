@@ -1,5 +1,5 @@
 # WALLPAPER (hyprpaper), the same 2 images as the lockscreen so unlocking changes nothing.
-# The 0.8 format change that turned the screen BLACK: docs/notes/desktop-plumbing.md
+# The 0.8 format change that turned the screen BLACK: docs/notes/desktop/desktop-plumbing.md
 { pkgs, osConfig, ... }:
 
 let

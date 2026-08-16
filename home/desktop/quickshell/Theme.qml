@@ -105,7 +105,7 @@ Singleton {
     readonly property color colHoverBgOk: aa(pal.green, "33"); // a confirming action
     readonly property color colHoverBgAccent: aa(pal.accent, "33"); // a focused control
     // A MENU ROW has no border, so the background is the only signal, and 20% is invisible (1.11:1,
-    // measured). The accent at 30% gives 1.77:1 AND changes hue. See docs/notes/quickshell.md
+    // measured). The accent at 30% gives 1.77:1 AND changes hue. docs/notes/desktop/quickshell.md
     readonly property color colMenuHoverBg: aa(pal.accent, "4d"); // a menu row under the cursor
     readonly property color colMenuHoverBgDanger: aa(pal.red, "4d"); // the same, a destructive action
     // 120ms and not the Pill's 200ms: in a MENU the cursor crosses several items and 200ms leaves 2-3

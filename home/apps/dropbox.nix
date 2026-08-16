@@ -1,5 +1,5 @@
 # DROPBOX: ~/Dropbox synced (the Obsidian vault plus documents), as a USER service.
-# The tray icon's cost, and the 10 days it spent syncing NOTHING: docs/notes/dropbox.md
+# The tray icon's cost, and the 10 days it spent syncing NOTHING: docs/notes/apps/dropbox.md
 {
   config,
   lib,

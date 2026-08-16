@@ -1,5 +1,5 @@
 # The FAI (nxBender/SonicWall) and UFSCar (openconnect/GlobalProtect) VPNs, on demand.
-# Why `is-active` lies, the two watchdogs and the probe target: docs/notes/vpn.md
+# Why `is-active` lies, the two watchdogs and the probe target: docs/notes/network/vpn.md
 { pkgs, config, ... }:
 
 let

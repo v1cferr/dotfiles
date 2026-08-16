@@ -1,6 +1,6 @@
 #!/bin/sh
 # It opens the Moonlight ports on the OpenWrt, restricted to UFSCar's blocks. IT RUNS ON THE
-# ROUTER, in 2 steps, and it needs a password. The commands and why: docs/notes/network.md
+# ROUTER, in 2 steps, and it needs a password. The commands and why: docs/notes/network/network.md
 set -eu
 
 LAN_HOST='192.168.1.10' # the Sunshine host (a fixed DHCP lease)
@@ -72,7 +72,7 @@ uci commit firewall
 /etc/init.d/firewall reload
 
 # It verifies AGAINST THE EFFECTIVE nftables, never `uci show`: that was the 1st version's
-# mistake, printing "OK, permanent" with ZERO rules live. See docs/notes/network.md
+# mistake, printing "OK, permanent" with ZERO rules live. See docs/notes/network/network.md
 echo
 echo "=== the effective dstnat_wan ==="
 nft list chain inet fw4 dstnat_wan

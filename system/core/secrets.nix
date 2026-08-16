@@ -1,5 +1,5 @@
 # SECRETS: Bitwarden is the source of truth, sops-nix is the vault, the repo holds none (rule 12).
-# The index, the two recipients and who can read what: docs/notes/secrets.md
+# The index, the two recipients and who can read what: docs/notes/repo/secrets.md
 { pkgs, lib, ... }:
 
 let

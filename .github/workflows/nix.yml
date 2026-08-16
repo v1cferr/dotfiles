@@ -1,5 +1,5 @@
 # THE QUALITY CI: on every push it runs EXACTLY the local `nix flake check` gate, with the
-# private input stubbed by --override-input (no deploy key needed): docs/notes/flake.md
+# private input stubbed by --override-input (no deploy key needed): docs/notes/repo/flake.md
 name: nix
 
 on:
@@ -33,4 +33,4 @@ jobs:
         run: nix flake check --override-input duo-streak-daemon path:./ci/stub-duo
 
 # PLAN B, only if a module ever READS from the private repo at eval time and the empty stub stops
-# doing: a DEDICATED deploy key, never a personal one. The 4 steps: docs/notes/flake.md
+# doing: a DEDICATED deploy key, never a personal one. The 4 steps: docs/notes/repo/flake.md

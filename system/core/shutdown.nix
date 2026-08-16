@@ -1,5 +1,5 @@
 # SHUTDOWN: how long systemd waits for a unit to stop before the SIGKILL.
-# Where the 90s came from and why the two sides differ: docs/notes/shutdown.md
+# Where the 90s came from and why the two sides differ: docs/notes/boot-and-storage/shutdown.md
 { ... }:
 
 {

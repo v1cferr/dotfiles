@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # It syncs the secrets from Bitwarden into secrets/secrets.yaml (sops), with no --impure.
-# Adding one: Bitwarden, then 1 line in bitwarden-secrets.json, then this: docs/notes/secrets.md
+# Adding one: Bitwarden, then 1 line in bitwarden-secrets.json, then: docs/notes/repo/secrets.md
 set -euo pipefail
 
 repo="$(git rev-parse --show-toplevel)"

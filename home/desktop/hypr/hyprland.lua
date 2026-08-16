@@ -1,5 +1,5 @@
 -- Hyprland's modular entrypoint (Lua 0.55): it ONLY loads the modules, IN ORDER, and `hl` stays
--- visible inside each one. Hot-reloaded from the repo. The tree: docs/notes/hypr.md
+-- visible inside each one. Hot-reloaded from the repo: docs/notes/desktop/hypr.md
 local dir = os.getenv("HOME") .. "/.config/hypr/lua/"
 for _, mod in ipairs({
   "environment", -- hl.env: the cursor, the Qt theme, the Wayland platform

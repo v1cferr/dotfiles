@@ -1,5 +1,5 @@
 // The OSD for volume, mic mute and brightness (= hyprsunset's gamma, since there is no backlight).
-// Volume/mic react to Pipewire; brightness is PUSHED through IPC. See docs/notes/quickshell.md
+// Volume/mic react to Pipewire; brightness is PUSHED through IPC. docs/notes/desktop/quickshell.md
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Pipewire

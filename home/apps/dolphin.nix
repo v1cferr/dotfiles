@@ -1,5 +1,5 @@
 # DOLPHIN: the keys forced by an ACTIVATION script, because Dolphin rewrites its own KConfig and
-# a managed symlink would fight it. The ViewMode trap and the Win11 parity: docs/notes/dolphin.md
+# a managed symlink would fight it. The ViewMode trap and the Win11: docs/notes/apps/dolphin.md
 {
   pkgs,
   lib,
@@ -31,7 +31,7 @@ let
       icon = "folder-gdrive";
     }
     # Empty means NOT mounted, and that is information: a permanent mount of the HOME repo would
-    # hold a lock the daily prune needs for itself. See docs/notes/dolphin.md
+    # hold a lock the daily prune needs for itself. See docs/notes/apps/dolphin.md
     {
       title = "Backup (snapshots)";
       path = "/mnt/backup"; # the home repo on the Drive; read-only, one dir per snapshot

@@ -1,5 +1,5 @@
 # `notify`: pushes a notification to the phone (ntfy) from any script or timer.
-# The topic IS the password (sops), and it never takes the caller down: docs/notes/shell.md
+# The topic IS the password (sops), and it never takes the caller down: docs/notes/repo/shell.md
 { pkgs, ... }:
 
 let

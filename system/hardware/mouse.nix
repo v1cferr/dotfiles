@@ -1,5 +1,5 @@
 # The Logitech MX Master 3S over Bluetooth, configured declaratively through logiops (logid).
-# The boot race, the native thumb wheel and the gestures: docs/notes/mouse.md
+# The boot race, the native thumb wheel and the gestures: docs/notes/hardware/mouse.md
 { pkgs, ... }:
 
 {
@@ -25,7 +25,7 @@
           };
 
           # NO `thumbwheel` block on purpose: native REL_HWHEEL is what makes horizontal scroll work
-          # INSIDE the apps. The divert that used to be here, and why it left: docs/notes/mouse.md
+          # INSIDE the apps. The divert that used to be here, and why: docs/notes/hardware/mouse.md
 
           buttons = [
             {

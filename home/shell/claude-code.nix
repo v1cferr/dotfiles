@@ -1,5 +1,5 @@
 # CLAUDE CODE (CLI): the package plus the two accounts (claude-fai, claude-pessoal).
-# Why ~/.claude is the shared archive and not a config dir: docs/notes/claude-code.md
+# Why ~/.claude is the shared archive and not a config dir: docs/notes/apps/claude-code.md
 {
   config,
   lib,

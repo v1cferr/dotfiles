@@ -1,5 +1,5 @@
 # THE FAI GATEWAY: NAT plus forward so the home LAN reaches FAI through ppp0.
-# Why it cannot live on the router, and the anti-loop rule: docs/notes/network.md
+# Why it cannot live on the router, and the anti-loop rule: docs/notes/network/network.md
 { config, lib, ... }:
 
 let

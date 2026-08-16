@@ -1,5 +1,5 @@
 # OFFICE: ONLYOFFICE, whose NATIVE format is OOXML, so a .docx opens without repaginating.
-# Why not LibreOffice, the fonts, and the 61-mimetype trap: docs/notes/apps-and-mime.md
+# Why not LibreOffice, the fonts, and the 61-mimetype trap: docs/notes/apps/apps-and-mime.md
 { pkgs, ... }:
 
 let

@@ -1,31 +1,5 @@
-# curseforge-bump: it keeps CurseForge on the latest version, with no editing pkgs/curseforge.nix
-# by hand. A sibling of vscode-bump, and it exists for the SAME structural reason: a src with a
-# locked hash never updates on its own; what exists is an AUTOMATED BUMP.
-#
-# The difference from vscode-bump: there we could use a versioned URL and the bump only changes
-# the number. Here there is NO versioned URL (Overwolf only publishes
-# `curseforge-latest-linux.AppImage`), so the hash is the only anchor, and it has to be
-# RECOMPUTED, not just swapped. Without that, Overwolf's next release breaks
-# `nix build .#curseforge` on any cold store (the file behind the URL changed).
-#
-# WHERE IT RUNS: in the `update`/`upgrade` alias (home/shell/zsh.nix), next to vscode-bump.
-#
-# WHY THE .deb DECIDES WHETHER IT CHANGED: downloading 139 MiB on every `update` just to find out
-# nothing changed would be absurd, and there is no version API. The `.deb` of the SAME release
-# carries the version in its `control`, which sits in the file's first few KiB, so a 256 KiB range
-# request answers "did it change?" for ~0.2% of the cost. The AppImage is only downloaded when the
-# answer is yes. Measured on 14/08/2026: both artifacts are published at the same instant and
-# carry the same release (`1.316.0~37372-37372` in the .deb, `1.316.0-37372.37372` in
-# X-AppImage-Version); the strings only differ in formatting, hence the normalization below. If
-# they ever get out of sync, the worst case is downloading the AppImage for nothing: the script
-# compares and rewrites, it does not break.
-#
-# THE TRAPS (the same ones as vscode-bump):
-#   • The repo's path comes as an ARGUMENT, never a literal here (rule 11).
-#   • `nix` does NOT go into runtimeInputs: it uses the system's, so as not to drag a second Nix
-#     into the store with a version possibly diverging from the daemon's.
-#   • It leaves the repo DIRTY on purpose, since the commit is the user's, atomic (rule 13).
-#   • It is a NO-OP when already on the latest, because it runs on every `upgrade`.
+# curseforge-bump: rewrites version AND hash in pkgs/curseforge.nix to Overwolf's latest.
+# Why the .deb answers "did it change?" for 256 KiB: docs/notes/version-bumps.md
 {
   writeShellApplication,
   curl,
@@ -62,18 +36,14 @@ writeShellApplication {
     tmp=$(mktemp -d)
     trap 'rm -rf "$tmp"' EXIT
 
-    # ONLY the start of the .deb: the `control` lives before the `data.tar.*`, which is the whole
-    # bulk.
+    # ONLY the start of the .deb: `control` sits before the `data.tar.*` bulk.
     curl -fsSL -r 0-262143 -o "$tmp/head.deb" "$base/curseforge-latest-linux.deb"
     member=$(ar t "$tmp/head.deb" | sed -n '/^control\.tar/p' | head -1)
     if [ -z "$member" ]; then
       echo "curseforge-bump: the .deb has no control.tar* in the first 256 KiB" >&2
       exit 1
     fi
-    # It goes through a FILE and not through a pipe on purpose: GNU tar only autodetects the
-    # compression when it can seek, so `ar p … | tar -xO` dies with "Archive is compressed. Use -J
-    # option" (measured). From a file it works it out on its own, which also lets the script
-    # survive the day Overwolf swaps .xz for .zst.
+    # A FILE and not a pipe: GNU tar only autodetects the compression when it can seek.
     ar p "$tmp/head.deb" "$member" > "$tmp/control.tar"
     # `1.316.0~37372-37372` -> `1.316.0-37372`: the `~` becomes `-` and the repeated build at the
     # end drops off.
@@ -95,8 +65,7 @@ writeShellApplication {
     curl -fsSL -o "$tmp/cf.AppImage" "$base/curseforge-latest-linux.AppImage"
     new_hash=$(nix hash file --type sha256 --sri "$tmp/cf.AppImage")
 
-    # One `version` and one `hash` in the file; it matches the generic pattern and not the
-    # interpolated current value (whose dots would become regex wildcards).
+    # The generic pattern, not the interpolated value (whose dots are regex wildcards).
     sed -i \
       -e "s|^  version = \".*\";$|  version = \"$latest\";|" \
       -e "s|hash = \"sha256-[^\"]*\";|hash = \"$new_hash\";|" \

@@ -1,8 +1,5 @@
-# nxBender: a FOSS client (Python) for SonicWall/Dell SSL VPNs (NetExtender).
-# A FOSS replacement for the proprietary netExtender (which is not in nixpkgs) for the FAI VPN. It
-# establishes the SSL tunnel and brings up pppd (PPP-over-SSL, the way NetExtender does).
-# Usage: sudo nxBender --server HOST:PORT -u USER -p PASSWORD -d DOMAIN [--fingerprint ...].
-# Repo: https://github.com/abrasive/nxBender (IPv4 only; no 2FA, no auto-reconnect).
+# nxBender: FOSS client for the SonicWall SSL VPN (FAI), replacing the proprietary netExtender.
+# What its 3 patches fix: docs/notes/version-bumps.md
 {
   lib,
   python3Packages,
@@ -31,23 +28,15 @@ python3Packages.buildPythonApplication {
   ];
   nativeBuildInputs = [ makeWrapper ];
 
-  # Python 3.12+ REMOVED ssl.wrap_socket, so nxBender's tunnel broke (AttributeError). Swapped for
-  # the modern API: an unverified context (CERT_NONE), which is wrap_socket's original behavior
-  # with no args (nxBender validates the server through its own fingerprint, not through the
-  # certificate chain).
+  # Three upstream fixes; each one is explained in the note.
   postPatch = ''
     substituteInPlace nxbender/sslconn.py \
       --replace-fail "self.s = ssl.wrap_socket(sock)" \
                      "self.s = ssl._create_unverified_context().wrap_socket(sock)"
-    # pppd 2.5+ (nixpkgs) does not have the 'nomp' option (which turns multilink off), so it gives
-    # "unrecognized option". Multilink already comes OFF by default on a single link, so the
-    # option is redundant.
+    # pppd 2.5+ has no 'nomp' (it answers "unrecognized option"), and it was redundant anyway.
     substituteInPlace nxbender/ppp.py \
       --replace-fail "'nomp'," "# 'nomp' removed: pppd 2.5+ has no multilink (the option does not exist)"
-    # SPLIT-TUNNEL: FAI pushes a default route (0.0.0.0/0) that would throw ALL of the internet
-    # through the tunnel. It filters the /0 out in setup_routes, so only FAI's internal subnets go
-    # through the VPN and the user's internet keeps going over the LAN. (On teardown ppp0 goes
-    # down and the kernel cleans up.)
+    # SPLIT-TUNNEL: drops FAI's 0.0.0.0/0 so only their subnets go through the tunnel.
     substituteInPlace nxbender/nx.py \
       --replace-fail "for route in set(self.routes):" \
                      "for route in [r for r in set(self.routes) if ipaddress.IPv4Network(unicode(r)).prefixlen != 0]:"

@@ -1,12 +1,5 @@
-# ═══════════════════════════════════════════════════════════════════════════
-# nixos-kingston's SERVICE PANEL: it turns the optional ones on and off in a single place.
-# Edit true/false below plus `rebuild`.
-#
-# It lives in the HOST and not in system/ because the answer is per MACHINE: a laptop does not
-# serve media (jellyfin), does not stream its screen (sunshine) and is not a torrent destination.
-# The LIST of keys that exist belongs to the repo and lives in system/services/toggles.nix; what
-# each machine turns on is here.
-# ═══════════════════════════════════════════════════════════════════════════
+# THE PANEL: which optional services and subdomains THIS machine turns on. Edit and rebuild.
+# The keys come from system/services/toggles.nix; the reach rules from system/net/ingress.nix.
 { ... }:
 
 {
@@ -29,17 +22,8 @@
     cs2-backup = true; # a backup of the CS2 saves
   };
 
-  # ── THE EXPOSURE PANEL: who has a subdomain and how far it reaches ─────────
-  # It generates Caddy's vhosts (the schema is in system/net/ingress.nix). SWITCHING = changing
-  # the `expose` word:
-  #   "lan"    -> the LAN plus the router's WireGuard plus the TAILNET (the real remote access today)
-  #   "public" -> the internet, subject to the declared `auth`
-  #
-  # WARNING: "public" today is a DECLARATION, not connectivity: this host is behind CGNAT and
-  # nothing gets in (see the CGNAT entry in docs/history/2026/08-august.md). The right gate is
-  # already applied; what is missing is the inbound path (a public IP or cloudflared).
-  #
-  # Omitting `expose` CLOSES (the default is "lan"), so forgetting does not become exposure.
+  # EXPOSURE: `expose` is "lan" (home plus WireGuard) or "public" (internet, subject to `auth`).
+  # Omitting it CLOSES. Today "public" is a declaration, not connectivity: this host is behind CGNAT.
   my.ingress = {
     pos = {
       upstream = 3006;
@@ -47,10 +31,8 @@
         "/api/*" = 8006;
       }; # FastAPI; the prefix is NOT stripped, so the same URL holds inside the container
       expose = "public";
-      # NO basic_auth, on purpose: the login is going to live in the application (Next.js), and a
-      # proxy password in front would mean typing two. Until F2 the page is OPEN, and what it
-      # shows are public call-for-application dates and no personal data (none of the three names
-      # is rendered). The day there is anything per candidate, the app's login has to exist FIRST.
+      # NO basic_auth: the login belongs to the app (F2). Until then the page shows only public
+      # dates and no personal data. Anything per candidate needs the app's login FIRST.
       comment = "GradRadar (V1C-72), shared with JP and César. Open: auth will come in the app itself (F2).";
     };
 

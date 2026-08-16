@@ -1,13 +1,10 @@
-# kitty: Hyprland's default terminal (SUPER+Q, the keybind is in home/desktop/hypr.nix).
-# `programs.kitty` INSTALLS the package AND writes ~/.config/kitty/kitty.conf (app plus config in
-# home, rule 4). The prompt is starship (home/shell/starship.nix) and the shell is zsh
-# (home/shell/zsh.nix).
+# kitty, Hyprland's default terminal. The prompt is starship, the shell is zsh.
+# The color scheme follows my.theme.name through the table below.
 { config, osConfig, ... }:
 
 let
-  # kitty-themes has file names OF ITS OWN, so my.theme's preset needs a translation (rule 11: the
-  # consumer adapts, but it does not hold the value). A new preset in palette.nix with no entry
-  # here BREAKS the eval, on purpose: it fails loudly, not in silence.
+  # kitty-themes has names of its own, so the preset needs translating. A new preset with no
+  # entry here BREAKS the eval on purpose: fail loudly, not silently.
   kittyThemes = {
     tokyo-night = "tokyo_night_night";
     catppuccin-mocha = "Catppuccin-Mocha";
@@ -24,9 +21,8 @@ in
       size = 12;
     };
 
-    # The color scheme FOLLOWS my.theme.name (it used to be pinned to tokyo_night: switching
-    # presets recolored everything but the terminal). A kitty-themes file, without the .conf
-    # suffix.
+    # It follows my.theme.name; it used to be pinned and the terminal was the one thing that
+    # did not recolor.
     themeFile = kittyThemes.${config.my.theme.name};
 
     # kitty injects helpers into the shell (jumping between prompts, opening output in the pager

@@ -3,12 +3,8 @@
 { pkgs, lib, ... }:
 
 {
-  # Claude Code's `github` plugin talks to the remote MCP (api.githubcopilot.com) and reads the
-  # token ONLY from the GITHUB_PERSONAL_ACCESS_TOKEN env; without it the header comes out as an
-  # empty `Bearer ` and the server answers HTTP 400. It reuses the token gh already keeps, instead
-  # of generating a new PAT and leaving it in plain text. gh only reads GH_TOKEN/GITHUB_TOKEN, so
-  # this name does NOT hijack `gh auth status/refresh`. `|| true` means a machine with gh not
-  # logged in does not break.
+  # The github MCP reads the token ONLY from this env var; it reuses gh's, instead of a new PAT.
+  # The name does not hijack `gh auth`, which reads GH_TOKEN/GITHUB_TOKEN.
   programs.zsh.initContent = lib.mkOrder 1000 ''
     export GITHUB_PERSONAL_ACCESS_TOKEN="$(${pkgs.gh}/bin/gh auth token 2>/dev/null || true)"
   '';

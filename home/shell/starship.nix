@@ -1,7 +1,5 @@
-# The starship CONFIG (~/.config/starship.toml), declared. A fast cross-shell prompt (Rust); here
-# it runs on zsh (home/zsh.nix) and the integration is injected automatically
-# (enableZshIntegration, on by default, so `eval "$(starship init zsh)"`). The package comes from
-# this home-manager module. The icons come from JetBrains Mono Nerd Font (system/).
+# The starship prompt (~/.config/starship.toml). The zsh integration is injected automatically.
+# Icons come from the Nerd Font declared in system/hardware/fonts.nix.
 { ... }:
 
 {

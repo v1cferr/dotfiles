@@ -1,6 +1,29 @@
 # History: august 2026
 
-64 entries. Index in [README.md](../README.md).
+65 entries. Index in [README.md](../README.md).
+
+- [x] Removed the dead `jellyfin_api_key`, and the removal taught the checker a sixth check
+      (16/08/2026). `dead-config` had flagged it the day it was written: in the vault, consumed by
+      nothing, and belonging to the OLD Jellyfin server, so it answered 401. Not merely unused,
+      unusable.
+      • THE RUNBOOK I WROTE FOR IT WAS WRONG, in two different ways, and both only surfaced by
+        running it. First, the documented edit command does not work at all: `sops
+        secrets/secrets.yaml` fails with "Failed to get the data key", because the age key is
+        ROOT's and lives at `/var/lib/sops-nix/key.txt`, which is none of the eight locations sops
+        searches. That command was wrong in `.sops.yaml`'s header before I moved it into the
+        notes, so the repo had been documenting an unusable command for a while.
+      • Second, and this is the interesting one: deleting the key from `secrets.yaml` BROKE THE
+        BUILD. `sops-install-secrets: the key 'jellyfin_api_key' cannot be found`. The vault holds
+        the VALUE; the DECLARATION is `secrets/bitwarden-secrets.json`, which
+        `system/core/secrets.nix` maps into one `sops.secrets.<name>` per entry. This one was
+        declared TWICE, since it also had a hand-written `owner`/`mode` override. Three deletions,
+        not one.
+      • THE FAILURE WAS LOUD, which is the good case, but it surfaces at `nixos-rebuild`, and that
+        is a slow loop for a mistake this mechanical. So `dead-config` gained a sixth check:
+        every key in the index must have a value in the vault. Verified by putting the broken
+        state back and watching it fail, then removing it again.
+      • `ALLOWED` is empty again, which was the stated goal when the list was introduced with its
+        single entry. A checker whose exception list only grows is a checker on its way out.
 
 - [x] Audited `open-items.md` against the tree, and closed six items that were already done
       (16/08/2026). The file's own header says a finished item migrates here, and it had stopped

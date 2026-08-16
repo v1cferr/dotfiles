@@ -19,12 +19,36 @@ remembering, which is the same "intention, not a standard" the CI's own header r
 ## What it found on the first run
 
 **`jellyfin_api_key`**: in `secrets.yaml`, consumed by nothing. It belongs to the OLD Jellyfin
-server and answers 401, so it was not merely unused, it was unusable. It is on the ALLOWED list
-with that reason and tracked in [`../../open-items.md`](../../open-items.md), because deleting a
-key from sops needs root's age key.
+server and answers 401, so it was not merely unused, it was unusable. REMOVED on 16/08/2026, and
+`ALLOWED` is empty again, which is where it should stay.
 
 Everything else came back clean, so the other four checks are REGRESSION GUARDS rather than
 bug-finders. That is the honest description of them.
+
+### Removing a secret takes THREE deletions, not one
+
+The first attempt deleted only the key from `secrets.yaml` and broke the build:
+
+```text
+sops-install-secrets: manifest is not valid: secret jellyfin_api_key in
+/nix/store/…-secrets.yaml is not valid: the key 'jellyfin_api_key' cannot be found
+```
+
+The vault is the VALUE; the DECLARATION lives elsewhere, in two places at once:
+
+1. `secrets/secrets.yaml`, the encrypted value.
+2. `secrets/bitwarden-secrets.json`, the index, which `system/core/secrets.nix` turns into one
+   `sops.secrets.<name>` per entry through `lib.mapAttrs`.
+3. `system/core/secrets.nix` itself, when the secret also has a hand-written override (this one
+   had `owner`/`mode`, so it was declared twice over).
+
+Delete from the yaml alone and sops-nix still declares the secret, then fails at BUILD time
+because the key it was told to install is gone. That is a loud failure, which is the good case;
+the reverse (an entry in the index with no value in the vault) is the same error from the other
+side.
+
+This is also why `dead-config` reports a secret as dead from the CONSUMPTION side and not the
+declaration side: a declaration is not a use, and here there were two declarations and zero uses.
 
 ## The naive version of each check is wrong, and that matters
 

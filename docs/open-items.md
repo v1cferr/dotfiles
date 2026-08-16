@@ -264,15 +264,3 @@ finished work. What was closed is in the [august history](history/2026/08-august
       upstream inputs.
 
 - [ ] Add the current public IP to Fastfetch?
-
-- [ ] Remove `jellyfin_api_key` from sops (found by `dead-config` on 16/08/2026). It is in
-      `secrets/secrets.yaml`, consumed by NOTHING, and it belongs to the OLD Jellyfin server, so
-      it answers 401: not merely unused, unusable. It is on the checker's ALLOWED list with that
-      reason, which is the only entry there, and emptying that list is the goal.
-      • WHY IT IS NOT ALREADY DONE: deleting a key from sops needs root's age key, so it is a
-        `sudo` step and not something a build can do.
-      • HOW TO CLOSE IT: the runbook is in [notes/repo/secrets.md](notes/repo/secrets.md), and it
-        is NOT the bare `sops secrets/secrets.yaml` this item said at first: that fails, because
-        the age key is root's and sops does not look in `/var/lib/sops-nix/`. Delete the line,
-        `chown` the file back to the user, `nixos-rebuild switch`, and then drop the entry from
-        ALLOWED in `pkgs/dead-config.nix` so the check goes back to guarding an empty list.

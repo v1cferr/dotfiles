@@ -55,7 +55,7 @@ Most secrets are root-only. These are not, and each has a reason:
 | --- | --- | --- |
 | `rclone_gdrive_conf` | v1cferr 0400 | the `~/Drive` mount is a `--user` service and has to read it without sudo |
 | `restic_password`, `restic_password_arch_kingston` | v1cferr 0400 | `restic mount` is only browsable by WHOEVER MOUNTED IT |
-| `jellyfin_api_key`, `deepl_api_key`, `ntfy_topic` | v1cferr 0400 | consumed by user tooling and `--user` timers |
+| `deepl_api_key`, `ntfy_topic` | v1cferr 0400 | consumed by user tooling and `--user` timers |
 
 The restic one is the least obvious and the most defensible: a FUSE mount is private by default,
 which this config already proved inside out, since restic as ROOT could not even `lstat` the
@@ -123,6 +123,18 @@ There are TWO on purpose:
   the SPOF of everything. With two, losing one is an annoyance; losing both is the disaster.
 
 The commands are in [Editing by hand](#editing-by-hand) above.
+
+## The index and the vault are TWO declarations
+
+`bitwarden-secrets.json` is not just a lookup table: `system/core/secrets.nix` turns every key of
+it into a `sops.secrets.<name>` through `lib.mapAttrs`. So the index DECLARES the secret and the
+yaml holds the VALUE, and a secret can be declared twice over when it also has a hand-written
+override for `owner`/`mode`.
+
+**Removing a secret therefore takes three deletions**, and doing one of them alone fails at
+`nixos-rebuild` with `sops-install-secrets: the key '<name>' cannot be found`. `dead-config`'s
+sixth check catches that mismatch at commit time instead; see
+[`dead-config.md`](dead-config.md).
 
 **WARNING**: `creation_rules` only applies to a NEW file. Adding a recipient does NOT re-encrypt
 what already exists, so without running `updatekeys` the new key decrypts nothing and the backup is

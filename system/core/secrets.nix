@@ -28,10 +28,6 @@ in
     // {
       v1cferr_password_hash.neededForUsers = true; # the password hash: it is needed early (the user)
       cloudflare_ddns_token = { };
-      jellyfin_api_key = {
-        owner = "v1cferr";
-        mode = "0400";
-      }; # user-readable: consumed by user tooling
       deepl_api_key = {
         owner = "v1cferr";
         mode = "0400";

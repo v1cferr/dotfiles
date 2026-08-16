@@ -22,11 +22,7 @@ writers.writePython3Bin "dead-config"
 
     # A tracked exception needs a REASON, so it shows up in the diff instead of rotting in silence.
     # Emptying this list is the goal, not growing it.
-    ALLOWED = {
-        "secret:jellyfin_api_key":
-            "the key belongs to the OLD server and answers 401; removing it needs root's age key, "
-            "so it is tracked in docs/open-items.md instead of being deleted from here",
-    }
+    ALLOWED = {}
 
     CODE_EXT = (".nix", ".lua", ".qml", ".sh", ".toml", ".yaml", ".yml")
 
@@ -128,7 +124,22 @@ writers.writePython3Bin "dead-config"
         return dead
 
 
-    CHECKS = (check_modules, check_inputs, check_options, check_notes, check_secrets)
+    def check_secret_index(_files, _code):
+        """An index entry with no value in the vault breaks the BUILD, not the evaluation.
+
+        `system/core/secrets.nix` turns every key of bitwarden-secrets.json into a
+        `sops.secrets.<name>`, so the index is a DECLARATION and the yaml is the VALUE. Deleting
+        from one side only gets you `sops-install-secrets: the key '<name>' cannot be found`, and
+        it surfaces at `nixos-rebuild`, which is a much slower loop than a pre-commit hook.
+        """
+        index = json.loads(read("secrets/bitwarden-secrets.json"))
+        vault = set(re.findall(r"^([a-z0-9_]+):", read("secrets/secrets.yaml"), re.M))
+        return [("secret-index", k, "in bitwarden-secrets.json, no value in secrets.yaml")
+                for k in sorted(index) if k not in vault]
+
+
+    CHECKS = (check_modules, check_inputs, check_options, check_notes, check_secrets,
+              check_secret_index)
 
 
     def main():

@@ -168,3 +168,89 @@ name, model, fingerprint) with no authentication at all.
 The port is repeated in the rule because the module does not expose it as an option (it is an
 internal `firewallPort = 53317`). If you change the port INSIDE the app, this rule stops matching
 and RECEIVING DIES IN SILENCE: no build error, no log, just "the phone cannot find me".
+
+## The router half that Nix does not reach
+
+`scripts/router-moonlight-forward.sh` opens the Moonlight ports on the OpenWrt, restricted to
+UFSCar's blocks. It RUNS ON THE ROUTER, not here, in TWO steps:
+
+```sh
+ssh v1cferr@192.168.1.1 'cat > /tmp/ml.sh' < scripts/router-moonlight-forward.sh
+ssh -t v1cferr@192.168.1.1 'sudo sh /tmp/ml.sh; rm -f /tmp/ml.sh'
+```
+
+The other half (the HOST's firewall) is declarative, in `system/services/sunshine.nix`, and **the
+two source lists HAVE to match**, otherwise the router forwards and the host drops.
+
+**Why two steps** and not the obvious `ssh … 'sudo sh -s' < script`: with the script coming in
+through STDIN, sudo has no way to ask for the password, since stdin is already the script and not
+the terminal, and it fails without even asking. Copying first and running afterwards frees stdin for
+the prompt, which is also why the second command carries `-t` to force a pty.
+
+**And why it needs a password**: this router's sudoers gives NOPASSWD only to `/sbin/uci`,
+`/usr/sbin/nft`, `/sbin/reboot` and `/etc/init.d/dnsmasq`, measured on 10/08/2026 with `sudo -l`.
+The `/etc/init.d/firewall reload` at the end is NOT on that list. It is also why `root@` does not
+work: dropbear has `RootLogin='off'` and `RootPasswordAuth='off'`.
+
+`/tmp` on OpenWrt is tmpfs, so copying there does not spend the ~1.4 MB of free flash.
+
+### ONE REDIRECT PER SOURCE, and it is not style
+
+In fw4 a `redirect`'s `src_ip` **cannot be a list**. In a `rule` it can, which is where the wrong
+version came from. Measured on 10/08/2026, and the failure mode is the worst possible:
+
+```text
+Section @redirect[3] (Moonlight-HTTPS) option 'src_ip' must not be a list
+Section @redirect[3] (Moonlight-HTTPS) skipped due to invalid options
+```
+
+`uci commit` ACCEPTS it, `uci show` DISPLAYS the redirect nicely, and fw4 DISCARDS it when
+generating the ruleset. The config is present, the effect is none.
+
+**So the verification reads the EFFECTIVE nftables ruleset, never `uci show`.** That was exactly
+the first version's mistake: `uci show` reads the CONFIG, and the config was there. The script
+printed "OK, the change is permanent" with ZERO rules live. The expected count is 4 port groups
+times 2 sources, and without that number the script does not know whether it worked.
+
+Both source blocks are UFSCar's (registro.br, CNPJ 45.358.058/0001-40); the label goes into the
+redirect's name only to stay readable in LuCI. **Do NOT swap it for `0.0.0.0/0`**: the house is NOT
+behind CGNAT (measured 10/08/2026, port 2222 answers from Austria, Canada and Iran), so that would
+mean the planet.
+
+The ports were checked against the Sunshine build in use (2026.516.143833), not copied from a blog:
+the UDP 48002 ("mic") that almost every list includes does NOT exist in this version, and 47990 (the
+web UI) stays OUT on purpose. See [`sunshine.md`](sunshine.md).
+
+### Two safety details
+
+**The watchdog uses `nohup … &` and not a `( … ) &` subshell.** The watchdog exists precisely for
+the case where the change drops your SSH, and that is exactly when the subshell would take the
+SIGHUP along and die, so the safety net would disappear in the accident it was supposed to cover. It
+restores `/etc/config/firewall` if this shell dies halfway, if the final verification fails, or if
+the change locks you out.
+
+**The cleanup iterates back to front.** Deleting by index reindexes what comes after, so iterating
+forward skips an entry on every removal, which is the classic UCI mistake. It counts SECTIONS
+(`…@redirect[N]=redirect`) and not lines, because each redirect yields ~8 lines in `uci show` and
+counting lines gives an inflated ceiling. That would not break, since a nonexistent index returns
+empty, but it would loop dozens of times for nothing.
+
+The whole script is IDEMPOTENT: it deletes any previous `Moonlight-*` redirect before creating, so
+running it twice does not stack duplicates.
+
+## owfetch: why a script and not fastfetch
+
+`scripts/owfetch.sh`. This router's `/overlay` has ~1.4 MB free out of 6.1 MB. fastfetch weighs
+1-2 MB and neofetch would drag bash along on top of that, so either one fills the flash, and a
+router with full flash cannot even write its config. This uses only BusyBox: zero installation cost.
+
+Pure ash, no bashisms: no arrays, no `[[ ]]`, no `${var^^}`. The field ORDER mirrors
+`home/shell/fastfetch.nix` so the two read alike.
+
+**A REAL ESC, and not the literal `\033` sequence**: the colors are passed as an ARGUMENT (`%s`) and
+not inside printf's format string. A format with a variable inside is shellcheck's SC2059, and its
+reason for existing is real, since a value containing `%` would become a formatting directive. Since
+`%s` does not interpret escapes, the `\033` has to arrive already expanded.
+
+It is also the only `.sh` in this repo that runs on SOMEONE ELSE'S machine, which is why the
+shellcheck hook covers `./scripts` explicitly; see [`flake.md`](flake.md).

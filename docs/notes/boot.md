@@ -114,3 +114,77 @@ with SB on. Recovery: SB off in the BIOS, redo steps 1 to 5.
 
 It is the FIRST item to declare when impermanence lands (see
 [`../open-items.md`](../open-items.md)), otherwise a reboot wipes the keys.
+
+## The mainline kernel
+
+`linuxPackages_latest` (7.1.x) instead of the release default (6.18.x). The reason is the VIDEO
+DRIVER: the Arc B580's `xe` lives in the kernel, so a new kernel means a new driver, and it is the
+only driver lever that does NOT require crossing channels, since `linuxPackages_latest` comes from
+26.05 itself. See [`gpu.md`](gpu.md) for why the rest of the graphics stack stays on stable.
+
+It is safe here because there are zero out-of-tree modules (no zfs or virtualbox to version match)
+and this machine's Secure Boot signs GRUB, not the kernel, so changing kernels does not ask for a
+key re-enroll.
+
+**PREFER `nixos-rebuild boot` plus a reboot** when changing kernel versions, but `switch` does NOT
+break it: NixOS keeps `/run/booted-system/kernel-modules` with the tree of the RUNNING kernel, so
+modprobe and udev keep resolving. Verified on 06/08/2026: a switch from 6.18.42 to 7.1.6 with zero
+failing services. The advantage of `boot` is only not restarting a service inside a generation
+whose kernel has not come up yet. Rollback is the previous generation in the GRUB menu.
+
+## os-prober is OFF, and Windows is pinned by UUID
+
+os-prober WORKED, finding the SanDisk's `bootmgfw.efi` on the first try, but it found TOO MUCH: the
+Seagate (ST9320423AS) still has the old NixOS root. Today that disk is only the restic destination,
+and the old system is still there because it cannot be formatted without losing the backups. The
+result was a third entry booting a dead system.
+
+Trading probing for a UUID solves that by CONSTRUCTION, and on top of it: the switch stops mounting
+somebody else's disk, which was the slowest step and the only one with a side effect, and the menu
+becomes genuinely declarative (rule 3) instead of depending on what a scan finds on that boot.
+
+**The price, stated**: if Windows is reinstalled or moves disks, the UUID changes and the entry
+breaks silently, disappearing from the menu. os-prober would adapt on its own. It is a ONE-line
+edit, and it is already on the radar, since the plan is to move Windows to a new NVMe. Check with
+`lsblk -o NAME,LABEL,UUID`.
+
+## What makes GRUB boot with Secure Boot on
+
+Without two flags the result is `error: prohibited by secure boot policy` plus `grub rescue>`,
+measured on 02/08/2026, on the first attempt. The firmware ACCEPTED the signed `grubx64.efi`, since
+the signature was right; what refused was GRUB, against itself.
+
+**1. `--modules=…`.** With Secure Boot active GRUB disables `insmod`, because that is code
+side-load. Since `grub-install` embeds only the minimum needed to find `/boot`, `normal` (the module
+that DRAWS THE MENU) came from the disk and was blocked, so it went straight to rescue, before any
+menu. Everything the boot needs has to be INSIDE the signed binary. The names were checked one by
+one against grub2_efi: all 47 exist.
+
+**2. `--disable-shim-lock`.** This is the non-obvious one, and embedding modules ALONE would not
+solve it: the menu would appear and then BOTH NixOS AND Windows would fail.
+
+In `kern/efi/sb.c`, `grub_shim_lock_verifier_setup()` only does NOT register the verifier in two
+cases: Secure Boot off, or the image carrying the `OBJ_TYPE_DISABLE_SHIM_LOCK` marker, which is
+what this flag embeds. Once registered, it covers `GRUB_FILE_TYPE_LINUX_KERNEL` and
+`GRUB_FILE_TYPE_EFI_CHAINLOADED_IMAGE`, and its `write` calls the shim protocol, which here DOES
+NOT EXIST, because we use no shim, so every boot dies in "shim_lock protocol not found".
+
+Flag 2 is literally "do not verify anything after me", and it is what makes concrete the caveat
+above: the chain is verified by the firmware UP TO GRUB, and not beyond. Whoever wants more than
+that needs a shim (and then a Microsoft-signed kernel) or lanzaboote (and then no menu and no
+theme). There is no third door.
+
+## Two smaller boot details
+
+**`gfxmode` is a list with a fallback**, not `"auto"`. `auto` lets GRUB choose by EDID, and here
+there is a TV on HDMI besides the monitor, so the wrong mode means a stretched theme or a menu on
+the powered-off screen. GRUB tries the list in order and only falls back to `auto` if the GOP does
+not offer 1080p.
+
+**NTFS support**: the `ntfs3` driver already ships in the kernel, but what `mount` looks for is the
+userspace helper `mount.ntfs-3g`, which only exists with `boot.supportedFilesystems`. Kept after the
+dualboot was done so the Windows disk can be read on demand. There is no permanent mount of it.
+
+The "old generations" submenu title is in en-US like the rest of the system UI (the pt-BR exception
+is only the lockscreen), and it overrides the theme's default text, which is a "Select To Enter"
+that does not say what is in there.

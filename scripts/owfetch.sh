@@ -1,19 +1,9 @@
 #!/bin/sh
-# owfetch: a system summary for OpenWrt, in fastfetch's spirit.
-#
-# WHY A SCRIPT AND NOT FASTFETCH: this router's /overlay has ~1.4 MB free out of 6.1 MB.
-# fastfetch weighs 1-2 MB and neofetch would drag bash along on top of that, so either one fills
-# the flash, and a router with full flash cannot even write its config. This uses only BusyBox:
-# zero installation cost.
-#
-# Pure ash, no bashisms: no arrays, no [[ ]], no ${var^^}. The field ORDER mirrors
-# home/shell/fastfetch.nix (title, separator, os, host, kernel, uptime, cpu, memory, disk,
-# localip, colors) so the two read alike.
+# owfetch: a BusyBox-only system summary for the router, because fastfetch would fill its
+# ~1.4 MB of free flash. Pure ash, no bashisms: docs/notes/network.md
 
-# A REAL ESC, and not the literal "\033" sequence: the colors are passed as an ARGUMENT (%s) and
-# not inside printf's format string. A format with a variable inside is shellcheck's SC2059, and
-# its reason for existing is real: a value containing % would become a formatting directive.
-# Since %s does not interpret escapes, the \033 has to arrive already expanded from here.
+# A REAL ESC and not a literal "\033": the colors go as an ARGUMENT (%s), never inside the
+# format string (SC2059), and %s does not interpret escapes.
 ESC=$(printf '\033')
 C_LBL="${ESC}[1;34m" # blue:  the labels
 C_TTL="${ESC}[1;37m" # white: the title

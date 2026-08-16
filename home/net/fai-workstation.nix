@@ -79,20 +79,8 @@ let
   };
 in
 {
-  # ─────────────────────────────────────────────────────────────────────────
-  # THE RECEIVING SIDE IS NOT DECLARABLE FROM HERE. The workstation is somebody else's
-  # Ubuntu 26.04 (superintendencia-server), out of these dotfiles' reach, and sudo over
-  # there asks for a password. To arm WoL, run ON THE WORKSTATION, once:
-  #   sudo ethtool enp7s0 | grep -i wake   # "Supports Wake-on: ...g" means it can be used
-  #   sudo ethtool -s enp7s0 wol g         # arms it now (it does NOT survive a reboot)
-  # To persist it: that machine uses NETPLAN plus systemd-networkd (NOT NetworkManager, so no
-  # nmcli). In /etc/netplan/00-installer-config.yaml, under `ethernets: enp7s0:`, add
-  # `wakeonlan: true` and run `sudo netplan apply`.
-  # It usually also requires "Wake on LAN/PCIe" TURNED ON in the BIOS/UEFI.
-  # THE MEASURED STATE (jul/2026): /sys/class/net/enp7s0/device/power/wakeup = disabled, so
-  # almost certainly NOT armed. There is no confirming it from here: ethtool's Wake-on fields
-  # require root and without it the read gives "netlink error: Operation not permitted".
-  # ─────────────────────────────────────────────────────────────────────────
+  # THE RECEIVING SIDE IS NOT DECLARABLE FROM HERE (somebody else's Ubuntu). Arming WoL there is a
+  # manual netplan step, and it is measured as NOT armed: docs/notes/fai-workstation.md
   options.my.fai.workstation = {
     host = lib.mkOption {
       type = lib.types.str;

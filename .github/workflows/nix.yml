@@ -1,42 +1,5 @@
-# ═══════════════════════════════════════════════════════════════════════════════
-# THE QUALITY CI: on every push it runs EXACTLY the local `nix flake check` gate.
-#
-# WHY it exists: the flake's gate (checks.x86_64-linux in flake.nix) only runs when somebody TYPES
-# `nix flake check`. A standard that depends on remembering is an intention, not a standard, and
-# the intention is the first thing to evaporate in a rushed rebuild in 2027.
-#
-# WHY TODAY IT IS A REAL `nix flake check` (changed on 04/08/2026): this flake has a PRIVATE input
-#   duo-streak-daemon = ssh://git@github.com/v1cferr/duo-streak-daemon.git
-# and Nix fetches ALL the inputs locked in the lock file when evaluating the flake, not only the
-# ones the requested output uses. That is why the CI used to run statix/deadnix/nixfmt straight
-# from nixpkgs: that way the LOCAL flake was never evaluated and no credential entered the game.
-# The price was twofold and it is recorded below. The way out was `--override-input`, which swaps
-# the input BEFORE the fetch for an EMPTY directory versioned in ci/stub-duo, so no deploy key, no
-# secret in Actions, and the flake evaluates in full. Verified on 04/08/2026: "checking NixOS
-# configuration 'nixosConfigurations.nixos-kingston'" plus "all checks passed!". Why empty is
-# enough: see ci/stub-duo/.gitkeep.
-#
-# WHAT THAT BOUGHT, and they were two real holes:
-#   1. The CI did not verify that `nixosConfigurations.nixos-kingston` EVALUATES, so a module
-#      error passed green and only showed up on the `rebuild`. Now it fails here.
-#      EVALUATING IS NOT BUILDING: `flake check` builds what is in `checks` and from
-#      `nixosConfigurations` it only demands that the toplevel BE a derivation. That is why
-#      `checks.packages` (flake.nix) exists: it is what makes the CI actually build the packages
-#      this repo packages. The WHOLE system stays out on purpose, since it would drag quickshell
-#      (Qt/C++) onto the runner.
-#   2. The three `nix run` invocations were a THIRD definition of the same rule flake.nix and the
-#      pre-commit hook already defined: rule 14's silent drift waiting to happen (the gate passes,
-#      the hook fails, nobody understands why). Now there is ONE definition, and touching the
-#      hooks in flake.nix changes the CI automatically, with no edit to this file. The
-#      `env NIXPKGS` that existed only to pin the linters' version goes away too: they now come
-#      from flake.lock, identical to the local ones by construction.
-#
-# THE COST, accepted on purpose: `flake check` fetches ALL the inputs (~1.43 GiB across 19 inputs)
-# and evaluates the whole config, so the CI went from seconds to minutes. The trade is machine
-# time for coverage and for a single definition. If it ever gets annoying, the way back is this
-# file in the history, not undoing ci/stub-duo, which is useful anyway for running `flake check`
-# in any clone without the private key.
-# ═══════════════════════════════════════════════════════════════════════════════
+# THE QUALITY CI: on every push it runs EXACTLY the local `nix flake check` gate, with the
+# private input stubbed by --override-input (no deploy key needed): docs/notes/flake.md
 name: nix
 
 on:
@@ -57,34 +20,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # cachix/install-nix-action and NOT DeterminateSystems/nix-installer-action: the second one
-      # is faster and brings a cache for free, but it installs the Determinate Nix distribution
-      # (its support for upstream Nix ended on 01/01/2026) and pulls toward FlakeHub Cache. For a
-      # personal repo that has to last until 2032+, upstream Nix with no vendor is the safer bet,
-      # and switching later is 1 line.
+      # cachix/install-nix-action and NOT the Determinate one: that distribution ended its upstream
+      # Nix support on 01/01/2026 and pulls toward FlakeHub. Switching later is 1 line.
       - uses: cachix/install-nix-action@v31
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
 
-      # ONE command = the whole gate: the three linters (hooks declared in flake.nix), the host's
-      # evaluation, the BUILD of the repo's packages (checks.packages) and the other outputs. The
-      # --override-input is what removes the need for a credential for the private input (see the
-      # header). Locally it is ~30s with a warm store; on the runner, cold, vscode and
-      # claude-desktop are blob unpacking (no compiling), not a source build.
+      # ONE command = the WHOLE gate: the linters, the host's evaluation and the BUILD of the repo's
+      # packages. The --override-input is what removes the need for a credential.
       - name: nix flake check (linters + host + the packages build)
         run: nix flake check --override-input duo-streak-daemon path:./ci/stub-duo
 
-# ── PLAN B: a deploy key, if the empty stub ever does NOT do ────────────────────
-# It is only necessary if a module starts READING content from the private repo at evaluation time
-# (today `system/services/duo.nix` only uses the input as a Docker build context). On that day the
-# stub would need the file being read; if that becomes impractical:
-# 1. Generate a key pair just for this:  ssh-keygen -t ed25519 -f ci_key -N ""
-# 2. The public one  -> the duo-streak-daemon repo -> Settings -> Deploy keys (read only).
-# 3. The private one -> the dotfiles repo -> Settings -> Secrets -> Actions -> SSH_PRIVATE_KEY.
-# 4. Before the check:
-#      - uses: webfactory/ssh-agent@v0.9.0
-#        with: { ssh-private-key: "${{ secrets.SSH_PRIVATE_KEY }}" }
-#    and drop the --override-input from the command above.
-# A DEDICATED key, never your personal one: a deploy key leaves the repo with one click, while a
-# compromised personal key is your whole GitHub.
+# PLAN B, only if a module ever READS from the private repo at eval time and the empty stub stops
+# doing: a DEDICATED deploy key, never a personal one. The 4 steps: docs/notes/flake.md

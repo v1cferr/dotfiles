@@ -52,8 +52,27 @@ The VPN comes up asynchronously, taking ~10 s until the tunnel and routes exist,
 the host became reachable. It retries every 10 s until it connects, and since `vpn connect fai`
 gives the start and `disconnect` gives the stop, there is exactly one owner.
 
-**The cache options** are the same shape as `~/Drive` (see the drive-mount comments):
+**The cache options** are the same shape as `~/Drive` (see [`restic.md`](restic.md)):
 `vfs-cache-mode = "writes"` means READS go straight through, streaming, without piling up on disk,
 and only what you write is cached until it uploads. Switch it to `"full"` for maximum speed
 reopening files, at the cost of filling the cache. `dir-cache-time = 5m` makes browsing FAST, with
 F5 to reload; `timeout`/`contimeout` keep it from hanging forever when the VPN drops.
+
+## The receiving side is NOT declarable from here
+
+The workstation is somebody else's Ubuntu 26.04 (`superintendencia-server`), out of these dotfiles'
+reach, and sudo over there asks for a password. To arm WoL, run ON THE WORKSTATION, once:
+
+```sh
+sudo ethtool enp7s0 | grep -i wake   # "Supports Wake-on: ...g" means it can be used
+sudo ethtool -s enp7s0 wol g         # arms it now (it does NOT survive a reboot)
+```
+
+To persist it: that machine uses NETPLAN plus systemd-networkd, NOT NetworkManager, so there is no
+`nmcli`. In `/etc/netplan/00-installer-config.yaml`, under `ethernets: enp7s0:`, add
+`wakeonlan: true` and run `sudo netplan apply`. It usually also requires "Wake on LAN/PCIe" TURNED
+ON in the BIOS/UEFI.
+
+**The measured state (jul/2026)**: `/sys/class/net/enp7s0/device/power/wakeup = disabled`, so it is
+almost certainly NOT armed. There is no confirming it from here: ethtool's Wake-on fields require
+root, and without it the read gives "netlink error: Operation not permitted".

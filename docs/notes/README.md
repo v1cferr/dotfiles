@@ -13,7 +13,12 @@ reasoning was reachable from `docs/`: to find out why Caddy has a jail, you had 
 to open `system/services/caddy.nix`.
 
 So the reasoning moved here instead of being deleted. The module keeps a 2-line header that says
-what it is and points at its page.
+what it is and points at its page. After the sweep the tree is at **1601 comment lines out of
+13299**, 12%, and no comment anywhere runs longer than 2 lines.
+
+**Nothing was deleted.** Every measurement, every rejected alternative and every correction that
+was in a header is on one of these pages. If you find something here that the code no longer
+does, that is rule 16 and the page is the bug.
 
 ## How it relates to the rest of docs/
 

@@ -7,15 +7,13 @@
   # The interactive config and the prompt live in home/shell/.
   programs.zsh.enable = true;
 
-  # ── The user (a declared capability; password/keys = "who I am") ────────────
-  # The password hash comes through sops (outside git). The SSH public keys are public, so that is
-  # fine.
+  # THE USER, a declared capability. The password hash comes through sops (outside git); the SSH
+  # public keys are public, so they sit here in the clear.
   users.users.v1cferr = {
     isNormalUser = true;
     description = "Victor";
-    # linger: it brings v1cferr's systemd --user up at BOOT, with no need to log in, so the user
-    # services (Dropbox and so on) run 24/7 on this always-on remote-access machine, even with no
-    # graphical/SSH session open.
+    # linger: the user's systemd --user comes up at BOOT with no login, so the user services run
+    # 24/7 on this always-on machine even with no graphical or SSH session open.
     linger = true;
     extraGroups = [
       "wheel"

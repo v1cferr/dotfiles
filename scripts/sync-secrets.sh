@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # It syncs the secrets from Bitwarden into secrets/secrets.yaml (sops), with no --impure.
-# The source of truth: secrets/bitwarden-secrets.json (name-in-sops -> item-in-Bitwarden).
-# The flow for adding a secret: register it in Bitwarden -> 1 more line in the JSON ->
-# sync-secrets -> nixos-rebuild (pure). Nix generates the sops.secrets from the JSON on its own.
+# Adding one: Bitwarden, then 1 line in bitwarden-secrets.json, then this: docs/notes/secrets.md
 set -euo pipefail
 
 repo="$(git rev-parse --show-toplevel)"
@@ -36,7 +34,6 @@ done < <(jq -r 'to_entries[] | "\(.key)\t\(.value)"' "$map")
 git -C "$repo" add secrets/secrets.yaml secrets/bitwarden-secrets.json
 echo ""
 echo "$n secret(s) synced. Apply them with:"
-# $HOSTNAME is a bash builtin, so it does not depend on the PATH (writeShellApplication has a
-# STRICT runtimeInputs, and `hostname` is not in it). It used to be the literal "nixos-sandisk",
-# a host that died in the cutover, telling you to paste a target that does not exist.
+# $HOSTNAME is a BUILTIN, so it does not depend on the PATH (writeShellApplication's
+# runtimeInputs is strict). It used to name a host that died in the cutover.
 echo "  sudo nixos-rebuild switch --flake .#$HOSTNAME"

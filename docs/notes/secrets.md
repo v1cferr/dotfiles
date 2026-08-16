@@ -76,3 +76,30 @@ nix shell nixpkgs#sops -c sops updatekeys secrets/secrets.yaml # after adding a 
 ```
 
 A `rebuild` is MANDATORY after editing, otherwise `/run/secrets` does not update.
+
+## Two recipients, and the `updatekeys` trap
+
+`.sops.yaml` lists the PUBLIC keys of who CAN decrypt; each one's private half lives OUTSIDE git.
+There are TWO on purpose:
+
+- **host**: `/var/lib/sops-nix/key.txt` on the machine. It is what sops-nix uses at boot to populate
+  `/run/secrets`, and what you carry across a cutover. The anchor said `nixos_seagate` until
+  04/08/2026, because the key was BORN on that host and was carried in the cutover to the Kingston
+  (01/08/2026): the same key, a new host, an old name.
+- **backup**: an OFFLINE key (generated 04/08/2026) that does NOT sit on a machine nor in the cloud
+  in the clear. It exists because a SINGLE recipient means IRREVERSIBLE loss of every secret in the
+  repo the day that key disappears, since sops has no recovery and its only backup was Bitwarden,
+  the SPOF of everything. With two, losing one is an annoyance; losing both is the disaster.
+
+```sh
+nix shell nixpkgs#sops -c sops secrets/secrets.yaml             # edit
+nix shell nixpkgs#sops -c sops updatekeys secrets/secrets.yaml  # re-encrypt for new keys
+```
+
+**WARNING**: `creation_rules` only applies to a NEW file. Adding a recipient does NOT re-encrypt
+what already exists, so without running `updatekeys` the new key decrypts nothing and the backup is
+imaginary.
+
+And the regex only catches `secrets/*.yaml`. `bitwarden-secrets.json` is plain text ON PURPOSE (a
+name-in-sops to item-in-Bitwarden map, with no credential), but a `.json` that some day holds a
+secret would NOT be encrypted by this rule.

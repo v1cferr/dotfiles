@@ -24,9 +24,8 @@ in
   };
 
   networking.firewall = {
-    # FORWARD needs an explicit ACCEPT: Docker sets the policy to DROP, and `-I 1` because it
-    # inserts its own rules at the TOP. The return path is conntrack, never a symmetric ACCEPT.
-    # The REJECT rules are the anti-loop: with the VPN off the router still routes FAI here.
+    # FORWARD needs an explicit ACCEPT (Docker sets the policy to DROP) and `-I 1`, since Docker
+    # inserts at the TOP. The REJECTs are the anti-loop: with the VPN off the router still routes here.
     extraCommands = ''
       iptables -I FORWARD 1 -s ${config.my.net.lanSubnet} -o ppp0 -j ACCEPT
       iptables -I FORWARD 1 -d ${config.my.net.lanSubnet} -i ppp0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT

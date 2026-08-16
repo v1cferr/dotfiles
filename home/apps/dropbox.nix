@@ -50,9 +50,7 @@ let
             exit 0
           fi
 
-          # Anti-spam, the same idiom as disk-watch: 12 h per state. Without it an unlink would
-          # become a notification every 30 min and the person would learn to ignore it, and an
-          # alarm that tires is an alarm that does not protect.
+          # Anti-spam, 12 h per state (the disk-watch idiom): an alarm that tires does not protect.
           now="$(date +%s)"
           if [ -f "$state" ]; then
             read -r last_state last_ts < "$state" || true

@@ -30,9 +30,7 @@
     };
   };
 
-  # ── Never suspend ────────────────────────────────────────────────────────
-  # It is a remote access desktop (SSH). If it suspends, SSH drops and you cannot reach it from
-  # another PC. This disables every sleep target.
+  # NEVER SUSPEND: this is a remote-access desktop, and a suspend drops SSH with no way back in.
   systemd.targets.sleep.enable = false;
   systemd.targets.suspend.enable = false;
   systemd.targets.hibernate.enable = false;
@@ -46,9 +44,8 @@
   services.fail2ban = {
     enable = true;
     bantime = "1h";
-    # This holds for fail2ban's [DEFAULT], which means ALL jails inherit it, including
-    # caddy-pos. 127.0.0.1/8 and ::1 are deliberately absent here: the nixpkgs module already
-    # prepends them, and declaring them again came out duplicated in the generated jail.local.
+    # This is fail2ban's [DEFAULT], so ALL jails inherit it. Loopback is deliberately ABSENT: the
+    # module already prepends it, and declaring it again came out duplicated in jail.local.
     ignoreIP = [
       config.my.net.lanSubnet
       # The WireGuard range goes in with it: coming in from outside through the VPN and

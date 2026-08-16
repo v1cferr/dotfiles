@@ -165,3 +165,63 @@ weigh. It mirrors 5 min after boot and every hour, which catches a game session 
 The script only acts if a save already exists, so it does not fail before the first game.
 
 For another game later, replicate the src/dst pair in a new module.
+
+## ~/Drive: a window, not a backup
+
+`home/services/drive-mount.nix` mounts the ROOT of Google Drive as a local folder (rclone mount
+plus a VFS cache), so it shows up in Dolphin as a normal folder with a bookmark. It serves the real
+case: "sometimes I need a file I do not have here but that is on the Drive". You see everything
+right away, with no downloading.
+
+**It is a WINDOW into the Drive: deleting here deletes there, for real.** The backup is restic, and
+that is the only thing that satisfies rule 6.
+
+The restic repo lives in `BACKUPS_EX-B560M-V5/` and is EXCLUDED from the mount: it is ~48 GiB of
+encrypted blobs that would only pollute the file manager, and an accidental Delete in there
+CORRUPTS the backup. To look inside the backup there is `backup-browse`, a restic mount, read-only.
+
+### Why a mount and not bisync (decided 05/08/2026)
+
+The first version was `rclone bisync`. It was swapped after LISTING the remote and seeing that the
+root holds ~19.6 GiB of real archive (family photos, documents):
+
+- bisync would download those 19.6 GiB onto the NVMe to give the same access the mount gives with
+  zero downloading;
+- and a sync PROPAGATES, so deleting locally would delete on the Drive, family folder included. In
+  a mount every operation is explicit and singular; there is no algorithm reconciling two listings
+  that could conclude "the other side should be empty".
+
+What you lose is OFFLINE access and editing with no network. An accepted trade, since what needs to
+work offline is the backup, and that is another module.
+
+### The three unit details
+
+- **`Type = "notify"`**, supported by rclone (it is in `rclone mount --help`, the systemd section):
+  the unit only goes "started" AFTER the mountpoint is ready. With `Type=simple`, Dolphin could
+  open the folder before it exists and cache it as "empty". This is exactly what
+  [`arch-legacy.md`](arch-legacy.md) could NOT do, since `restic mount` has no sd_notify.
+- **A WRITABLE COPY of rclone.conf.** rclone renews the OAuth token and tries to persist the new
+  one into the config file; against the sops secret (0400, in a non-writable directory) that
+  becomes `Failed to save config … permission denied`. Not fatal, but a recurring ERROR in the
+  journal hiding a real error. `%t` is `XDG_RUNTIME_DIR`, a tmpfs, 0600.
+  The `--config` goes on the COMMAND and NOT as `RCLONE_CONFIG` in the environment, because
+  `programs.rclone` generates the rclone.conf for the `faiws` remote and exporting the variable
+  would make the FAI mount look for its remote in the wrong file. rclone's docs also warn that a
+  systemd unit does not inherit the environment, another reason for the flag.
+- **`ExecStopPost` force-unmounts.** rclone unmounts on its own on SIGTERM; this is the safety net
+  for a hung mount (the `-` ignores an already-unmounted one). It has to be NixOS' setuid WRAPPER,
+  since the package's fusermount3 has no privilege.
+
+`StartLimitIntervalSec = 0` because at login the network usually takes a few seconds, and without
+it systemd would give up after 5 quick failures and the folder would stay empty until a manual
+start.
+
+### THE MOUNTPOINT HAS TO BE EMPTY
+
+rclone refuses with "…is not empty, use --allow-non-empty to mount anyway", and
+`--allow-non-empty` stays OUT on purpose: mounting over an existing file HIDES it, and then you
+have invisible data that only reappears when the mount goes down.
+
+It cost the first start (05/08/2026): the bisync version of this module created an `RCLONE_TEST`
+here, and the orphaned 0-byte file locked the mount into a restart loop. **If the mount does not
+come up, check `ls -a ~/Drive` BEFORE suspecting the network.**

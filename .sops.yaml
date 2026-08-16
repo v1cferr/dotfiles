@@ -1,22 +1,5 @@
-# sops' rules. The PUBLIC keys below are who CAN decrypt; each one's private half lives OUTSIDE
-# git. TWO recipients on purpose:
-#   host   -> /var/lib/sops-nix/key.txt on the machine; it is what sops-nix uses at boot to
-#             populate /run/secrets, and what you carry across a cutover. The anchor said
-#             `nixos_seagate` until 04/08/2026: the key was BORN on that host and was carried in
-#             the cutover to the Kingston (01/08/2026), so the same key, a new host, an old name.
-#   backup -> an OFFLINE key (generated 04/08/2026) that does NOT sit on a machine nor in the
-#             cloud in the clear. It exists because a SINGLE recipient = IRREVERSIBLE loss of
-#             every secret in the repo the day that key disappears: sops has no recovery, and its
-#             only backup was Bitwarden (the SPOF of everything). With two, losing one is an
-#             annoyance; losing both is the disaster.
-# To edit secrets:   nix shell nixpkgs#sops -c sops secrets/secrets.yaml
-# To re-encrypt for new keys:   nix shell nixpkgs#sops -c sops updatekeys secrets/secrets.yaml
-#
-# WARNING: `creation_rules` only applies to a NEW file. Adding a recipient here does NOT
-# re-encrypt what already exists, so without running `updatekeys` the new key decrypts nothing and
-# the backup is imaginary. And the regex only catches `secrets/*.yaml`: bitwarden-secrets.json is
-# plain text ON PURPOSE (a name-in-sops to item-in-Bitwarden map, with no credential), but a .json
-# that some day holds a secret would NOT be encrypted by this rule.
+# sops' rules: the PUBLIC keys of who can decrypt. TWO recipients on purpose, because a single
+# one is irreversible loss. `updatekeys` is MANDATORY after adding one: docs/notes/secrets.md
 keys:
   - &host_nixos_kingston age132kmspxjsqzc3nnd6407svq744ju4q6vl85hq2v02pgqc2yf7caq03plfn
   - &backup_offline age1eexkwwdh60rxp78407dq4d5xcmzanupnh8f4l4llpukhq0fmxv0ql5lnvk

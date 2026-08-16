@@ -1,40 +1,12 @@
-# statix's config (an anti-pattern lint for Nix). Read by `statix check` and by the flake's check
-# (`nix flake check`).
-#
-# THE MEASUREMENT that motivated this file (03/08/2026, 79 files): 77 findings, of which
-#   63x W20 repeated_keys   (82% of everything)
-#   10x W10 empty_pattern
-#    4x W4  manual_inherit_from
-# The 4 W4s were FIXED (they became `inherit (x) a b;`). The other two are turned off below, not
-# for being annoying, but for being WRONG for a repo of NixOS modules. A lint we ignore in
-# practice is worse than a lint turned off: it trains the eye to skip over the whole output, the
-# real finding included.
+# statix's config. Two lints are turned off below, and it is a decision, not annoyance: a lint
+# we ignore in practice trains the eye to skip the real finding too. Why: docs/notes/flake.md
 
 disabled = [
-  # W20 wants `services.openssh = {…}` and `services.fail2ban = {…}` to become a single
-  # `services = { openssh = …; fail2ban = …; }`. Refused for three reasons:
-  #
-  #   1. THE DOTTED PATH IS NIXOS' IDIOM. All of nixpkgs and every doc write
-  #      `services.foo.enable = true`. Following W20 would leave this repo diverging from the
-  #      ecosystem, the opposite of what "best practices" means.
-  #   2. IT MAKES THE DIFF WORSE. With top-level attributes, adding or removing a service is an
-  #      isolated hunk. Nested, every change touches the structure around it and the diff grows
-  #      with nothing else having changed.
-  #   3. IT MAKES READING THIS REPO WORSE specifically: the modules here have large comment blocks
-  #      PER CONFIG (rule 2). Nesting everything under one key would push comment and value to 3-4
-  #      levels of indentation and system/net/network.nix would become a giant ~100-line attrset.
-  #
-  # It is a TASTE lint with a defensible side (grouping what belongs to the same domain), but the
-  # repo's taste is nixpkgs' taste, and it is declared here instead of being ignored in silence on
-  # every run.
+  # repeated_keys: the DOTTED PATH is nixpkgs' idiom, it keeps the diff per-service isolated, and
+  # nesting would push this repo's comments to 4 levels of indentation.
   "repeated_keys",
 
-  # W10 wants `_:` instead of `{ ... }:` when the module uses no argument at all. Refused because
-  # `{ ... }:` is the NixOS MODULE SIGNATURE: whoever opens the file sees right away that it
-  # receives the module args and happens to use none. `_:` only says "it receives something and
-  # ignores it". And when `pkgs` is needed, the edit is `{ ... }:` to `{ pkgs, ... }:`, smaller
-  # than rebuilding from `_:`.
-  # (This is the weaker of the two arguments; if I ever prefer `_:`, it is just removing it from
-  # here and running `statix fix`.)
+  # empty_pattern: `{ ... }:` IS the NixOS module signature, which `_:` does not convey. The weaker
+  # of the two arguments; changing my mind is deleting this line and running `statix fix`.
   "empty_pattern",
 ]

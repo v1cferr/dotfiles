@@ -48,3 +48,10 @@ If it is ever worth it, that is where it goes, with `package32 = pkgs.unstable.p
 IN THAT ORDER. Today it is not worth it: nixpkgs backports the point release into the release
 (mesa 26.1.5 vs 26.1.6, and the kernel and linux-firmware are IDENTICAL in both channels). For the
 kernel the lever is `linuxPackages_latest`, from stable itself; see `system/core/boot.nix`.
+
+## `iris` is broken for shader workloads
+
+Mesa's `iris`, the OpenGL driver, calls `abort()` when the kernel refuses a batch submission, and
+on this card any Minecraft shaderpack trips it within two minutes. ANV, the Vulkan driver, is fine,
+so the escape is `MESA_LOADER_DRIVER_OVERRIDE=zink` per app rather than system wide. The six
+coredumps and everything that was ruled out are in [`curseforge.md`](curseforge.md).

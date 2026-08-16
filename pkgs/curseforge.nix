@@ -23,6 +23,10 @@ appimageTools.wrapAppImage {
   inherit pname version;
   src = appimageContents;
 
+  # Shaders abort the game on Mesa's iris; zink (GL over Vulkan/ANV) is the measured fix.
+  # The six coredumps and why it lives in `profile`: docs/notes/curseforge.md
+  profile = "export MESA_LOADER_DRIVER_OVERRIDE=zink";
+
   # Upstream's .desktop with only AppRun swapped. The %U and the scheme handler are what make
   # the site's "Install" button work; the default is claimed in home/apps/curseforge.nix.
   extraInstallCommands = ''

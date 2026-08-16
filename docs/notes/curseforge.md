@@ -20,6 +20,40 @@ them in.
 The "Java Runtime Environment is missing" error is NOT fixed from here: the cause is PERMISSIONS,
 see [`curseforge-fix-perms`](curseforge-fix-perms.md).
 
+## Shaders need zink, iris aborts the game
+
+Turning on any Oculus shaderpack kills Minecraft with SIGABRT in under two minutes. There is no
+crash-report and no Java exception, and the log just cuts mid-line, because the abort comes from
+the video driver and not from the JVM. Measured on 15 and 16/08/2026, six coredumps.
+
+All six carry the same stack: `abort()` reached from `_iris_batch_flush`, which in this release
+build of Mesa 26.1.5 disassembles to a lone `call abort@plt`. That is the branch iris takes when
+the kernel refuses the batch submission, and it takes the process down with no GL error to catch.
+The call sites vary (`iris_transfer_map` while creating the pipeline, `st_TexSubImage` during
+ordinary gameplay, `iris_fence_flush` on a context flush), which is what says compiling the
+shaderpack is not special: any GPU work with shaders on eventually fails to submit.
+
+The obvious suspects were measured, not guessed, and all cleared:
+
+- `dmesg` is clean, so no GPU hang and no reset on the `xe` driver.
+- The signal is SIGABRT, not the SIGKILL an OOM kill sends. earlyoom never fired.
+- `vm.max_map_count` is 1048576 against 29259 mappings, counted from the `PT_LOAD` headers of the
+  coredump.
+- The card has 12 GiB of VRAM with ReBAR on.
+- RAM is not it either, and this is what settles it: the zink run survives on 1274 MB of
+  `MemAvailable` at its lowest, tighter than any iris crash had.
+
+`MESA_LOADER_DRIVER_OVERRIDE=zink` swaps only the broken half of the stack. Same Mesa, same GPU,
+same `xe` kernel driver, but OpenGL is translated to Vulkan and leaves through ANV, where Intel
+actually puts its effort, instead of iris, the legacy GL path that is barely exercised on
+Battlemage. See [`gpu.md`](gpu.md).
+
+It goes in the derivation's `profile` and NOT in the `.desktop` because who needs the variable is
+the JAVA the app spawns, not the Electron app. `buildFHSEnv` appends it to the `/etc/profile` of
+the FHS and its init sources that file before `exec`, so every child inherits it. The scope stays
+on this package on purpose: the rest of the system runs fine on iris and has no reason to carry a
+workaround.
+
 ## Why AppImage and not the .deb
 
 Both sources exist and are the SAME release. Everything that matters here is a binary the app

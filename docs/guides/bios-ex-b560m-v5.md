@@ -51,10 +51,10 @@ reinforcement.
 
 ## The OS side (this part IS declarative)
 
-- `boot.kernelParams = [ "reboot=pci" ]` in `system/gpu.nix` (the intel profile): it forces a
+- `boot.kernelParams = [ "reboot=pci" ]` in `system/hardware/gpu.nix`: it forces a
   full reset through 0xCF9 on `reboot`, the GPU reinitializes clean as in a cold boot and the
   POST does not fail, so CSM is never turned back on. **It fixes the warm-reboot hang.**
-- `services.fwupd.enable = true` in `system/hardware.nix`: it does NOT cover this board's
+- `services.fwupd.enable = true` in `system/hardware/hardware.nix`: it does NOT cover this board's
   BIOS (ASUS is outside LVFS); it serves SSD firmware and other components.
 
 ## Backup and restore

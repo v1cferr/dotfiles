@@ -61,7 +61,8 @@ home/                    USER (home-manager): dotfiles + user apps
 pkgs/                    own derivations (outside nixpkgs), exposed in `packages.x86_64-linux`
                          so that `nix build .#nxbender` works. Vendored binaries and helper
                          scripts live here: nxbender, azure-mcp, curseforge (+bump, +fix-perms),
-                         vscode-bump, claude-code-discord-status
+                         vscode-bump, claude-code-discord-status, and the two repo checkers
+                         (docs-links, dead-config) that the gate and the pre-commit hooks run
 hosts/                   per-machine specifics (hostname, disks, monitors, stateVersion)
   nixos-kingston/        <- the ONLY host (NVMe KC3000, btrfs + subvolumes)
     default.nix          hostname, kernel, extra mounts, my.monitors, stateVersion

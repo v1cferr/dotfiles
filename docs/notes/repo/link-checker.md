@@ -28,6 +28,30 @@ way to know that landed was to check all 274 afterwards.
 | --- | --- |
 | code (`.nix`, `.lua`, `.qml`, `.sh`, `.toml`, `.yaml`, `.yml`) | a bare `docs/…md` path, which is the form the headers use |
 | markdown | only a real `](target)` link, resolved against the file's own directory |
+| markdown outside `docs/history/` | a repo path quoted in prose, like `` `system/hardware/gpu.nix` `` |
+
+### The prose-path check, and why history is exempt
+
+A backticked path is the most common way these docs point at a module, and nothing was checking
+it. Added 16/08/2026, it raised the count from 336 references to 531 and found three stale ones on
+the first run. `docs/guides/bios-ex-b560m-v5.md` still pointed at a `gpu.nix` and a
+`hardware.nix` directly under `system/`, from before the reorganisation into categories, and
+`docs/ideas.md` referred to a `ddc.nix` that never survived: the DDC brightness curve was built
+and REVERTED.
+
+Note that this paragraph cannot QUOTE those paths, because the check would flag its own example.
+That is the check working, not a limitation: a dead path in a doc that describes the present is
+exactly what it exists to catch, and prose about a dead path reads better without the backticks
+anyway.
+
+`docs/history/` is exempt on purpose. It is a diary, it names files that were deleted deliberately,
+and editing it to keep paths alive would stop it being evidence. That is the same reason
+[`README.md`](../README.md) gives for history being append-only while notes are kept current.
+
+A path belonging to SOMEBODY ELSE'S repo is written `Repo:path/to/file`, and the regex refuses to
+match after a colon. Two Foundry paths in the impermanence item looked exactly like local ones
+(`hosts/common/…`) and would have been permanent false positives otherwise, so they got the prefix
+and now say what they are.
 
 **A bare path inside markdown is PROSE, not a pointer**, and that distinction is not pedantry: the
 first version checked those too and flagged `docs/rules.md` for the sentence saying that the old

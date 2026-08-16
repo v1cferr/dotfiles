@@ -1,6 +1,32 @@
 # History: august 2026
 
-65 entries. Index in [README.md](../README.md).
+66 entries. Index in [README.md](../README.md).
+
+- [x] Audited what the cleanup could not see, and the docs were the only thing rotting
+      (16/08/2026). The repo itself came back clean: every QML component and Lua module is
+      reachable, `ci/stub-duo` is load-bearing (without it the CI needs a deploy key for the
+      private input), the `router/uci` mirror is IN SYNC (ran `router-sync`, zero diff), and the
+      five packages that appear nowhere else in the tree are interactive tools, not dead
+      declarations. One dead file in 242: a `.pyc` committed before `.gitignore` had a rule.
+      • THE REAL FIND WAS PROSE. Docs point at modules with a backticked path, and nothing
+        checked those, so `docs-links` gained an eighth thing to verify. It went from 336
+        references to 533 and caught three stale on the first run: a guide still naming a
+        `gpu.nix` and a `hardware.nix` directly under `system/`, from before the reorganisation
+        into categories, and `ideas.md` describing a DDC module that was built and reverted, in a
+        sentence that read as if it still existed.
+      • `docs/history/` IS EXEMPT, and that exemption is the whole design. A diary names files
+        that were deleted on purpose; editing it to keep paths resolving would stop it being
+        evidence. The same reason it is append-only while notes are kept current.
+      • A path in SOMEBODY ELSE'S repo is now written `Repo:path/to/file`. Two Foundry paths in
+        the impermanence item looked exactly like local ones (`hosts/common/…`) and would have
+        been permanent false positives. The prefix makes them say what they are, which is better
+        writing regardless of the checker.
+      • THE CHECK FLAGGED THE NOTE THAT DOCUMENTS IT, twice, because I quoted the dead paths
+        while explaining that they are dead. That is the check working. The fix was to stop
+        backticking them, and prose about a dead path reads better without the quotes anyway.
+      • The other half is `dead-config`'s seventh check, for tracked build artifacts. A
+        `.gitignore` rule and the check are DIFFERENT guarantees: the rule stops the next one,
+        the check finds the one already in the index, where an ignore file has no effect.
 
 - [x] Removed the dead `jellyfin_api_key`, and the removal taught the checker a sixth check
       (16/08/2026). `dead-config` had flagged it the day it was written: in the vault, consumed by

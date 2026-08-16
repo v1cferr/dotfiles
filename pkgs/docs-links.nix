@@ -24,6 +24,13 @@ writers.writePython3Bin "docs-links"
 
     # A bare `docs/...` path written inside code or prose, the form the 2-line headers use.
     POINTER = re.compile(r"\bdocs/[A-Za-z0-9_./-]+\.md\b")
+    # A repo path inside backticks. The leading `(?<![:\w/])` keeps `Foundry:hosts/...` out, which
+    # is how a path in another repo is written so it does not read as one of ours.
+    PROSEPATH = re.compile(
+        r"`(?<![:\w/])((?:system|home|pkgs|hosts|scripts|secrets|ci|router)"
+        r"/[A-Za-z0-9_./-]+\.(?:nix|sh|py|lua|qml|json|txt|conf|yaml))`"
+    )
+
     # A markdown link. Only relative targets matter: http(s) and #anchors are out of scope.
     MDLINK = re.compile(r"\]\(([^)\s#]+\.(?:md|nix|lua|qml|sh|toml|yaml|yml))(?:#[^)]*)?\)")
 
@@ -59,7 +66,17 @@ writers.writePython3Bin "docs-links"
                     if not os.path.isfile(os.path.join(ROOT, target)):
                         broken.append((rel, target, "pointer"))
 
-            # 2. Relative markdown links, resolved against the file's own directory.
+            # 2. A repo path quoted in prose, in docs that describe the PRESENT. `docs/history/`
+            # is exempt: it is a diary, so it names files that were deleted on purpose, and
+            # editing it to keep paths alive would stop it being evidence. A path belonging to
+            # SOMEBODY ELSE'S repo is written `Repo:path/to/file`, which does not match here.
+            if rel.endswith(".md") and not rel.startswith("docs/history/"):
+                for target in PROSEPATH.findall(text):
+                    checked += 1
+                    if not os.path.isfile(os.path.join(ROOT, target)):
+                        broken.append((rel, target, "prose path"))
+
+            # 3. Relative markdown links, resolved against the file's own directory.
             if rel.endswith(".md"):
                 base = os.path.dirname(path)
                 for target in MDLINK.findall(text):

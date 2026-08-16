@@ -144,8 +144,9 @@ finished work. What was closed is in the [august history](history/2026/08-august
       community is a tmpfs root, and with a bind mount it even runs on ext4. The choice is still
       RIGHT, but for the right reason: btrfs gives an ephemeral root without spending RAM, and
       RAM is exactly what is short here (15 GB). Do not repeat "it is mandatory".
-      It is only two files in Foundry: `hosts/common/optional/ephemeral-btrfs.nix` (the wipe) and
-      `hosts/common/global/optin-persistence.nix` (the list). The rest of the persistence is
+      It is only two files in Foundry, and the paths below are THEIRS, not paths in this repo:
+      `Foundry:hosts/common/optional/ephemeral-btrfs.nix` (the wipe) and
+      `Foundry:hosts/common/global/optin-persistence.nix` (the list). The rest of the persistence is
       DISTRIBUTED: each service module declares what it needs to keep (openssh.nix, podman.nix,
       jellyfin.nix...). That is the pattern to copy, and it matches system/services/*.nix.
       `/srv` IS THE BIGGEST RISK, and it was not written down: it is NOT a subvolume, it lives

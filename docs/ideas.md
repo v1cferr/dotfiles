@@ -3,7 +3,7 @@
 Things considered, references, and what has not become a decision yet. What already did is
 in [history/](history/); what is still to do is in [open-items.md](open-items.md).
 
-> Quickshell: DECIDED, I migrated everything to Quickshell (see the TODO). Customizable in
+> Quickshell: DECIDED, I migrated everything to Quickshell. Customizable in
 > QML with hot-reload; Hyprland became hot-reload too (hyprland.lua through
 > mkOutOfStoreSymlink).
 > For inspiration: <https://github.com/Misterio77/Foundry>
@@ -20,9 +20,9 @@ what disguises the jump.
 
 **The priority order against eye strain** is the opposite of the intuition: reducing
 BRIGHTNESS comes before color temperature, and night mode does not replace adequate
-brightness. That is what motivated `system/hardware/ddc.nix`: gamma darkens the signal, not
-the light being emitted. The DDC/CI brightness curve was BUILT and REVERTED, since it
-worked, but only on the main monitor, and the HDMI TV has no automatic path. See the august
+brightness. That is what motivated a `ddc.nix` that no longer exists: gamma darkens the signal, not
+the light being emitted. The DDC/CI brightness curve was BUILT and REVERTED on 08/08/2026,
+so there is no module to open; it worked, but only on the main monitor, and the HDMI TV has no automatic path. See the august
 history. What is still open:
 
 - **Progressive gamma from 18:00 on**, the next step if the color curve is not enough, and

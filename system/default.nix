@@ -1,9 +1,5 @@
-# THE SYSTEM: the config COMMON to every host (machine-agnostic). Organized by CATEGORY (a
-# subfolder with its own default.nix). What is specific to each machine (hostname, disks, kernel,
-# stateVersion) lives in hosts/<host>/default.nix.
-# A new module? Create system/<category>/<topic>.nix and add it to the category's default.nix.
-# A new category? Create system/<category>/ and add 1 line here.
-# ═══════════════════════════════════════════════════════════════════════════
+# THE SYSTEM: the config COMMON to every host, by CATEGORY. What is per-machine (hostname, disks,
+# kernel, stateVersion) lives in hosts/<host>/. A new category = a folder plus 1 line here.
 { ... }:
 
 {

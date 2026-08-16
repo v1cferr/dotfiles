@@ -1,11 +1,5 @@
-# AUDIO: PipeWire (it replaces PulseAudio/JACK) ───────────────────────────────
-# The default sound stack on modern NixOS plus Wayland. WirePlumber (the session manager) comes
-# along and handles the routing, Bluetooth audio (A2DP/HFP) included, with no need for an extra
-# module the way old PulseAudio did. rtkit gives the server real-time priority (which avoids
-# xruns/crackles).
-# Control: `wpctl` (a CLI, it comes with wireplumber), `pavucontrol` (a GUI) and, in Hyprland's
-# keybinds, `pamixer` (volume) plus `playerctl` (play/pause/next).
-# ═══════════════════════════════════════════════════════════════════════════
+# AUDIO: PipeWire plus WirePlumber (it replaces PulseAudio/JACK, Bluetooth audio included).
+# rtkit gives it real-time priority, which is what avoids xruns and crackling.
 { ... }:
 
 {

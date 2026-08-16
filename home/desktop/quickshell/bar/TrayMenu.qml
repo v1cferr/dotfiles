@@ -1,33 +1,5 @@
-// The system tray's context menu, themed TokyoNight (harmonious with the rest of the bar). It
-// renders the DBusMenu (com.canonical.dbusmenu) the native SNIs expose, through QsMenuOpener. It
-// only serves items WITH a DBusMenu (hasMenu); the icons that come through the xembedsniproxy
-// bridge (wine/Battle.net, pamac) have no DBusMenu and fall into tray-native-menu over in
-// Bar.qml, since those the app draws itself and there is no theming them here. MEASURED on one of
-// those icons (Battle.net in Bottles): the Id is the X11 window ID ("14680080"), Title/ToolTip
-// are empty, Menu does not exist.
-//
-// It supports: separators, checkbox/radio (buttonType plus checkState), disabled items and ONE
-// level of submenu (a column on the right, which covers nm-applet's "VPN Connections"). It closes
-// on a click outside through HyprlandFocusGrab.
-//
-// WHY PanelWindow (a layer surface) AND NOT PopupWindow, a HYPRLAND bug: as a PopupWindow, this
-// menu APPEARED but did not receive a SINGLE pointer event: no hover, and it closed on its own
-// after 4s with the mouse sitting on it. The cause: hyprwm/Hyprland#6682, a Qt popup RESIZED
-// after being shown ends up with the wrong input region (it stays "centered", misaligned from
-// what you see). That is exactly what happens here: openAt() makes the window visible BEFORE
-// QsMenuOpener finishes populating the items, so the card is born small and grows, and the input
-// region does not follow. The issue was reproduced with Quickshell ITSELF and is CLOSED as "not
-// planned": no fix is coming from there, it has to be avoided here.
-//
-// A layer surface does not go through that path (no xdg_surface::set_window_geometry) and it is
-// what the other 4 panels of this bar already use with working hover (PowerMenu, Metrics,
-// Calendar, Weather). As a bonus it covers OPENING A SUBMENU, which also makes the card grow
-// after being shown.
-//
-// The price is positioning by hand: a layer surface has no anchor.rect and no
-// PopupAdjustment.Slide, so the X comes from the clicked icon (through openAt) and the edge clamp
-// is explicit. The Y comes for free: the bar reserves exclusiveZone 30, and a layer surface with
-// no zone of its own is already positioned BELOW what is reserved.
+// The tray's context menu, themed: it renders the DBusMenu native SNIs expose. It is a LAYER
+// SURFACE and not a PopupWindow (Hyprland#6682, closed as not planned): docs/notes/quickshell.md
 import Quickshell
 import Quickshell.Hyprland
 import QtQuick
@@ -58,9 +30,7 @@ PanelWindow {
     }
     margins {
         top: 4 // 4px below the bar; its exclusiveZone 30 is already discounted
-        // It aligns with the icon without spilling off the screen. Since the tray sits at the
-        // RIGHT END, in practice it is the clamp that rules and the menu touches the edge, which
-        // is what PopupAdjustment.Slide did on its own when this was a PopupWindow.
+        // It aligns with the icon and clamps at the edge, which is what PopupAdjustment.Slide used to do.
         left: {
             const sw = root.screen ? root.screen.width : 1920;
             return Math.max(4, Math.min(root.desiredX, sw - root.implicitWidth - 4));
@@ -109,9 +79,8 @@ PanelWindow {
         onCleared: root.closeMenu()
     }
 
-    // A delegate reused by the main column and by the submenu's.
-    // `menu` receives the controller (root itself) through a property, which avoids depending on
-    // access to an external id inside the inline component.
+    // Reused by both columns. The controller arrives through a property, which avoids depending on an
+    // external id inside an inline component.
     component MenuEntry: Item {
         id: entry
         required property var modelData
@@ -151,10 +120,8 @@ PanelWindow {
                 }
             }
 
-            // An accent bar that SLIDES in from the left. It goes along with the background on
-            // purpose: it is a POSITION signal (it points at the row), while the background is an
-            // area signal. Cheap redundancy: it works even if the background difference goes
-            // unnoticed.
+            // An accent bar sliding in from the left: a POSITION signal next to the background's AREA signal.
+            // Cheap redundancy, and it works even if the background difference goes unnoticed.
             Rectangle {
                 anchors.left: parent.left
                 anchors.leftMargin: 2
@@ -193,9 +160,8 @@ PanelWindow {
                     elide: Text.ElideRight
                     // it strips the "_" mnemonics from the DBusMenu label
                     text: ("" + entry.modelData.text).replace(/_(.)/g, "$1")
-                    // It does NOT light up in the accent: over the lit background the accent
-                    // drops to 3.83:1 of contrast, against colText's 5.97:1. Legibility beats
-                    // effect.
+                    // The text does NOT light up: over the lit background the accent drops to 3.83:1, against
+                    // colText's 5.97:1. Legibility beats effect.
                     color: entry.modelData.enabled ? Theme.colText : Theme.colDim
                     font.family: Theme.uiFont
                     font.pixelSize: 12

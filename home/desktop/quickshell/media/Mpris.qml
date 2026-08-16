@@ -1,7 +1,5 @@
-// The media control panel (Spotify), modeled on the VPN panel.
-// It opens and closes through:  qs ipc call mpris toggle   (used by the on-click of Waybar's
-// custom/spotify module). It uses the native Quickshell.Services.Mpris service.
-// Bottom/top-left on the main monitor (near the Spotify pill).
+// The media panel (Spotify), through the native Mpris service. `qs ipc call mpris toggle`.
+// Bottom/top-left on the main monitor, near the Spotify pill.
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Mpris

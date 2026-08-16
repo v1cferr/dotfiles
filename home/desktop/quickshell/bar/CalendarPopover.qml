@@ -1,6 +1,5 @@
-// The calendar popover (the whole year plus the upcoming holidays), opened by hovering the bar's
-// clock. The state and the logic (calMap, calUpcoming, monthCells, the holidays and so on) live
-// in the Bar and arrive by reference through `bar`.
+// The calendar popover (the whole year plus upcoming holidays), on hovering the clock. The state
+// and the logic live in the Bar and arrive by reference through `bar`.
 import Quickshell
 import QtQuick
 import QtQuick.Layouts

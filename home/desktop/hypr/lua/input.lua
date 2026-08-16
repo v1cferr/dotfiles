@@ -1,6 +1,5 @@
--- ── Input (keyboard/mouse) ──────────────────────────────────────────────────
--- Ported from the Arch input.conf. An ABNT2 keyboard; the mouse with no acceleration (flat) and
--- numlock on (a desktop). There is no real touchpad, but it is left configured.
+-- Input, ported from the Arch input.conf: an ABNT2 keyboard, a flat (unaccelerated) mouse and
+-- numlock on. There is no real touchpad here, but it is left configured.
 hl.config({
   input = {
     kb_layout = "br",

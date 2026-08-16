@@ -42,10 +42,8 @@ PanelWindow {
             anchors.margins: 14
             spacing: 10
 
-            // A centered header: the hero (the icon plus the big temperature) and the
-            // condition on top; the metrics on a single line separated by "·". All centered.
-            // AlignHCenter (and not fillWidth) centers the block inside the grid's width, since
-            // fillWidth does not stretch in this Quickshell context.
+            // A centered header, then the metrics on one line. AlignHCenter and not fillWidth, which does not
+            // stretch in this Quickshell context.
             ColumnLayout {
                 Layout.alignment: Qt.AlignHCenter
                 spacing: 8

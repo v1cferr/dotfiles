@@ -1,8 +1,5 @@
-// A notification card (used by the toasts and by the center).
-// It is its own FILE on purpose: in an inline component (component X: ...) the root's id and
-// properties do NOT resolve inside nested handlers on this Qt (a ReferenceError), which broke
-// dismiss and the actions. In a separate file, card.notif resolves at any depth. Tokyo Night
-// style.
+// A notification card (toasts plus the center). Its OWN file because in an inline component the
+// root's id does not resolve in nested handlers, which broke dismiss and the actions.
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Notifications
@@ -42,12 +39,8 @@ Rectangle {
         });
     }
 
-    // ===== The icon of the app that notified =====
-    // Quickshell hands the icon over as "image://icon/<name>". If it exists in the CURRENT theme
-    // (Win11-dark plus hicolor) we use it directly; otherwise we try the same name in breeze (a
-    // complete theme), only in this card, WITHOUT changing the system's theme. With none of that,
-    // it falls back to the bell. (hasThemeIcon avoids the checkered placeholder the provider
-    // returns when the icon is not in the theme.)
+    // The notifying app's icon: the current theme first, then breeze ONLY in this card, then the bell.
+    // hasThemeIcon avoids the checkered placeholder the provider returns for a missing icon.
     readonly property string wantedName: {
         if (!card.notif)
             return "";

@@ -1,8 +1,5 @@
-// The notifications' UI: toasts (the main monitor's top right corner) plus the notification
-// center (toggled by the bar's bell). It reads the Notifs.qml service. Tokyo Night style, aligned
-// with the bar / OSD / panels.
-// The card (NotifCard.qml) and the header's button (HeaderBtn.qml) are files of their own, since
-// an inline component breaks the root's scope inside handlers on this Qt.
+// The notifications' UI: toasts plus the center, reading the Notifs.qml service. The card and the
+// header button are separate FILES, since an inline component breaks scope in handlers.
 import Quickshell
 import Quickshell.Services.Notifications
 import QtQuick

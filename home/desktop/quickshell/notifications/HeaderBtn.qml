@@ -1,6 +1,5 @@
-// A header button of the notification center (DND, Clear).
-// Its own file (not inline) so the MouseArea's handler can see the root's id on this Qt: in an
-// inline component the id does not resolve inside a handler.
+// A header button of the notification center (DND, Clear). Its OWN file because an inline
+// component's root id does not resolve inside a handler on this Qt.
 import QtQuick
 import "root:/"
 

@@ -1,13 +1,5 @@
-// The OSD (a toast) for volume plus microphone mute plus brightness (hyprsunset's gamma), in
-// Tokyo Night style. Volume/mic show up reacting to Pipewire; brightness is pushed through IPC
-// (qs ipc call osd brightness <value> <max>) by the XF86MonBrightness keys. It disappears on its
-// own after ~1.5s. Pinned bottom-center on the main monitor.
-//
-// Brightness here = hyprsunset's gamma (this desktop has no real backlight;
-// brightnessctl/ddcutil are absent). gamma 100 = normal, going up to max-gamma (150).
-//
-// A note: "Translate ID error: -1 (default-nodes-api)" in the log is libpipewire's own noise, not
-// this QML's.
+// The OSD for volume, mic mute and brightness (= hyprsunset's gamma, since there is no backlight).
+// Volume/mic react to Pipewire; brightness is PUSHED through IPC. See docs/notes/quickshell.md
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Pipewire
@@ -26,10 +18,8 @@ Scope {
     property int brightnessValue: 100
     property int brightnessMax: 150
 
-    // An anti-flash (boot) plus anti-device-switch lock for Pipewire's reactive path. Every
-    // settling event pushes the arming back; the real show is coalesced into a Timer(0) that only
-    // shows if "armed" is still true on the event loop's next cycle. (Brightness through IPC does
-    // NOT go through that lock, since it is an explicit action.)
+    // An anti-flash lock for Pipewire's reactive path: every settling event pushes the arming back and
+    // a Timer(0) coalesces the show. Brightness through IPC skips it, being an explicit action.
     property bool armed: false
 
     PwObjectTracker {

@@ -1,17 +1,5 @@
-// The VPN popover, opened by CLICKING the bar's 󰦝 pill. One row per VPN (FAI/UFSCar), with a
-// state dot and a button that toggles Connect/Disconnect, plus "Disconnect all" at the foot. The
-// state and the actions live in the Bar and arrive by reference through `bar` (the same contract
-// as the other popovers in this folder).
-//
-// It REPLACES the rofi menu (`vpn menu`): that was a LOOSE window in the middle of the screen,
-// with no visual relation to the bar and outside the shell's theme. The list comes from the same
-// `vpn status-json` the pill already queries every 5s, a single source of truth, instead of rofi
-// reassembling the labels on its own with `systemctl is-active` (which, as vpn.nix' comment
-// warns, LIES: during nxBender's crash loop it says "active" with no tunnel existing).
-//
-// It is a CLICK and not a hover, unlike the calendar/weather: here you click buttons inside the
-// panel, and a panel that opens on hover closes at the first distraction. The same choice as
-// PowerMenu, which also has actions inside.
+// The VPN ACTIONS popover (click): a row per VPN plus "Disconnect all". It replaced a loose rofi,
+// and it shares the Bar's single source. Why click and not hover: docs/notes/bar.md
 import Quickshell
 import QtQuick
 import QtQuick.Layouts

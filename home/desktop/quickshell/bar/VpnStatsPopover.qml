@@ -1,23 +1,5 @@
-// The VPN STATISTICS popover, opened by HOVERING the bar's 󰦝 pill. One column per CONNECTED
-// VPN: the quality verdict, a graph of the last minute, latency, jitter, loss, traffic and
-// uptime. The state and the computation live in the Bar and arrive by reference through `bar`
-// (the same contract as the other popovers in this folder).
-//
-// THE SPLIT with VpnPopover (which is the CLICK one): here it is INFORMATION, there it is
-// ACTION. That is why this one opens on hover and that one does not: a panel with a button that
-// appears on its own disappears at the first distraction, and this one has nothing to click (the
-// same criterion as the calendar and the metrics popover). Both anchor at the SAME point of the
-// bar, so the Bar hides this one while the actions menu is open.
-//
-// A WIDTH of 360 and not 300: in the 1st version the footer cut the probe's IP
-// ("200.136.209…") and the rows were squeezed. A diagnostics panel with elided data is a
-// contradiction: whoever opens it is precisely after the detail.
-//
-// THE GRAPH is the reason the panel exists. "Is the VPN steady?" is a question about TIME: a
-// lone "34 ms" does not distinguish a smooth tunnel from one that swung between 30 and 900ms in
-// the last minute. One bar per second (60 = the probe's whole window), the most recent on the
-// right, and the scale starts at ZERO: auto-scaling from the minimum would turn 0.5ms of
-// variation into a dramatic sawtooth, the opposite of an honest read.
+// The VPN STATISTICS popover (hover): verdict, a 60s graph, latency, jitter, loss, traffic,
+// uptime. Why the scale starts at ZERO and why 360 wide: docs/notes/bar.md
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -113,9 +95,7 @@ PanelWindow {
                     readonly property var q: statsPop.bar.vpnQuality(blk.s, blk.pr)
                     readonly property var series: statsPop.bar.vpnProbeSeries[blk.s.id] || []
                     readonly property var rate: statsPop.bar.vpnRate(blk.s.iface || "")
-                    // The graph's ceiling: a 60ms floor so the normal case does not become a
-                    // sawtooth, and 15% above the peak when it goes past that (then the scale is
-                    // the peak).
+                    // The ceiling: a 60ms floor so the normal case is not a sawtooth, and 15% above a higher peak.
                     readonly property real scaleTop: Math.max(60, (blk.pr ? blk.pr.max : 0) * 1.15)
 
                     Layout.fillWidth: true
@@ -190,10 +170,8 @@ PanelWindow {
                                 delegate: Item {
                                     id: sample
                                     required property var modelData
-                                    // a packet with no answer = a full bar in faded red: the
-                                    // hole has to JUMP OUT, not disappear. The test is broad
-                                    // because the series' null can arrive here as undefined,
-                                    // depending on how the model is converted.
+                                    // a lost packet = a full bar in faded red: the hole must JUMP OUT. The test is broad because the
+                                    // series' null can arrive as undefined.
                                     readonly property bool dead: sample.modelData === null || sample.modelData === undefined || isNaN(sample.modelData)
 
                                     Layout.fillWidth: true
@@ -212,9 +190,8 @@ PanelWindow {
                         }
                     }
 
-                    // The graph's legend: without it the drawing does not say what it covers,
-                    // and "1 packet/s" is the information that separates this panel from a
-                    // guess.
+                    // The legend: without it the drawing does not say what it covers, and "1 packet/s" is what
+                    // separates this panel from a guess.
                     RowLayout {
                         Layout.fillWidth: true
                         Layout.bottomMargin: 3

@@ -1,10 +1,6 @@
 pragma Singleton
-// The notification service: Quickshell becomes the org.freedesktop.Notifications daemon (it
-// replaces swaync). It holds the state (DND, live toasts, history) and exposes IPC:
-//   qs ipc call notif toggle   -> opens/closes the center
-//   qs ipc call notif dnd      -> toggles Do Not Disturb
-//   qs ipc call notif clear    -> clears the history
-// The UI is in Notifications.qml; the bar reads Notifs.barIcon / Notifs.count / Notifs.dnd.
+// The notification service: Quickshell IS the org.freedesktop.Notifications daemon (it replaced
+// swaync). IPC: `qs ipc call notif toggle|dnd|clear`. The UI is Notifications.qml.
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Notifications

@@ -1,9 +1,5 @@
-// The desktop's bar, the only one; Waybar left in the migration to Quickshell.
-// It is loaded by shell.qml (`Bar {}`); the popovers live in files next to it
-// (Calendar/Metrics/Vpn/Weather/Tray/PowerMenu).
-// It shows: the workspaces per monitor plus the title · the clock · cpu/ram/disk/temp · the GPU ·
-// audio (Pipewire) · Spotify (Mpris) · the network · the VPN · the weather · the tray ·
-// notifications.
+// The desktop's bar, the only one, loaded by shell.qml; the popovers are files next to it.
+// The probe, the holidays and the tray traps: docs/notes/bar.md
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
@@ -19,13 +15,8 @@ Scope {
     id: root
 
     property int barExclusiveZone: 30
-    // It hides the bar on demand (through IPC). It exists because of Flameshot's overlay: on
-    // Hyprland a normal WINDOW never covers a `top` layer, and the bar lives in one, so the
-    // overlay shows a FROZEN frame that already contains the bar and the LIVE bar draws on top,
-    // giving the "duplicated bar" effect. There is no window rule that solves it (it is an open
-    // feature request: hyprwm/Hyprland#4847), so the only path is hiding.
-    // `visible: false` unmaps the layer surface, so the 30px strip stops capturing clicks, which
-    // matters for being able to select a region at the top of the screen.
+    // It hides the bar on demand (IPC), because a normal window never covers a `top` layer and
+    // Flameshot's frozen overlay would show a DUPLICATED bar. `visible:false` also frees the clicks.
     property bool hidden: false
     readonly property int trayCount: SystemTray.items ? SystemTray.items.values.length : 0
     readonly property string vpnBin: "vpn" // the CLI on the PATH (system/net/vpn.nix)
@@ -39,9 +30,8 @@ Scope {
         Quickshell.execDetached(cmd);
     }
 
-    // qs ipc call bar hide / unhide, used by flameshot-screenshot (home/apps/flameshot.nix).
-    // Do NOT name it "show": it collides with the `qs ipc show` subcommand and the CLI never
-    // calls the function (the same trap already documented in shell.qml, in the vpn IpcHandler).
+    // Used by flameshot-screenshot. Do NOT name it "show": it collides with `qs ipc show` and the
+    // CLI never calls the function (the same trap as shell.qml's vpn IpcHandler).
     IpcHandler {
         target: "bar"
 
@@ -54,14 +44,8 @@ Scope {
         }
     }
 
-    // ===== The clock =====
-    // The time AND the date ALWAYS visible, in the same pill. It used to be a toggle on click
-    // (showDate): one or the other, and to see the date you had to click twice (there and back).
-    // The time comes first and the date goes into the Pill's `sub` (a discreet color): a
-    // hierarchy, not a separation.
-    // The weekday comes from dowAbbr here, and not from Qt's "ddd": Qt's format depends on the
-    // process' locale, so "sáb" would become "Sat" if the bar came up with no LC_TIME.
-    // No year; whoever needs it has the calendar on hover.
+    // The clock: time AND date always visible in one pill, the date in `sub` (a hierarchy, not a
+    // toggle). The weekday is local, not Qt's "ddd", which follows the process locale.
     property string dateStr: ""
     property string timeStr: ""
     SystemClock {
@@ -208,9 +192,8 @@ Scope {
     }
     Process {
         id: gpuProc
-        // Intel Arc B580 (the xe driver): the temp through hwmon; the usage % does NOT exist on
-        // xe, so 0. The output is "0,<temp>" for parseGpu (it was nvidia-smi's "usage,temp" on
-        // Arch).
+        // Intel Arc B580 (xe): the temp through hwmon; the usage % does NOT exist on xe, so it is 0.
+        // The output is "0,<temp>" for parseGpu (it was nvidia-smi's "usage,temp" on Arch).
         command: ["sh", "-c", "for t in /sys/class/drm/card*/device/hwmon/hwmon*/temp*_input; do d=$(dirname \"$t\"); [ \"$(cat \"$d/name\" 2>/dev/null)\" = xe ] && echo \"0,$(($(cat \"$t\")/1000))\" && break; done"]
         stdout: StdioCollector {
             onStreamFinished: root.parseGpu(text)
@@ -272,11 +255,8 @@ Scope {
         }
     ]
 
-    // ===== VPN (vpn status-json) =====
-    // vpnList holds the RAW list [{id,name,connected}] because the popover needs one row per
-    // VPN; vpnConnected/vpnName remain the aggregate the pill shows.
-    // A single read feeds both: rofi used to reassemble the labels on its own with
-    // `systemctl is-active`, which LIES during nxBender's crash loop (see vpn.nix).
+    // VPN. vpnList is the RAW list (the popover needs a row per VPN); the aggregate paints the pill.
+    // ONE read feeds both, because `systemctl is-active` LIES during nxBender's crash loop.
     property bool vpnConnected: false
     property string vpnName: ""
     property var vpnList: []
@@ -297,9 +277,8 @@ Scope {
             root.vpnName = n;
         } catch (e) {}
     }
-    // Connecting/disconnecting from the popover. A Process (and not launch()) so we know WHEN it
-    // finished: then the state is reread right away instead of waiting for the 5s poll, and
-    // vpnBusy holds the panel open and the buttons inert during the action.
+    // A Process and not launch(), so we know WHEN it finished and can reread instead of waiting the
+    // 5s poll; vpnBusy holds the panel open and the buttons inert meanwhile.
     function runVpn(action, target) {
         root.vpnBusy = true;
         vpnActionProc.command = [root.vpnBin, action, target];
@@ -322,14 +301,8 @@ Scope {
         }
     }
 
-    // ===== VPN quality: the pill's HOVER popover =====
-    // The pill only answered "is there a tunnel?"; what was missing was "and is it any good?",
-    // which is the question of somebody with an SSH session or a call depending on it.
-    // TWO SOURCES, on purpose: `vpn stats-json` brings the STATE (iface, IP, MTU, uptime, bytes,
-    // and which host serves as the target) every 20s (3s with the panel open), and the latency
-    // comes from the CONTINUOUS probe right below. With no tunnel none of it runs, so the cost at
-    // rest is zero; that is why it did not go into status-json, which runs every 5s all day long
-    // just to paint the pill.
+    // VPN QUALITY. The pill answered "is there a tunnel?"; this answers "and is it any good?".
+    // Two sources, and zero cost with no tunnel. The measurements: docs/notes/bar.md
     property var vpnStats: ({})   // id -> the object from `vpn stats-json`
     function parseVpnStats(text) {
         try {
@@ -340,34 +313,17 @@ Scope {
         } catch (e) {}
     }
 
-    // ── A continuous probe: 1 packet/s, a 60s window ──────────────────────────
-    // WHY CONTINUOUS, and not a burst on every read. MEASURED on 14/08/2026 on the FAI tunnel,
-    // and it is what condemned the 1st version: 3 packets in 0.6s gave an mdev of 0.4ms while a
-    // 20s window gave an mdev of 3.3ms and a PEAK OF 54.7ms. Which means the burst observed 3% of
-    // the time and a 2s hiccup was invisible in 97% of cases; worse, the loss had a resolution of
-    // 33% (3 packets!), so 1-3% of real loss showed up as "0%". A pretty, false number is worse
-    // than an absent number.
-    // THE COST is negligible and it was measured: 84 B/s, and 30 packets at 1/s gave 0% loss, so
-    // the target does not rate-limit at that cadence. The 60-sample window gives real jitter and a
-    // loss resolution of 1.7%.
-    // `ping` is LINE-BUFFERED even when writing into a pipe (verified: one line per second, with
-    // no stdbuf), so the stream can be read instead of waiting for it to finish.
-    // WHAT DISCOVERS THE TARGET is the CLI (system/net/vpn.nix): sweeping routes and testing
-    // candidates is shell work; observing all the time is the work of whoever stays open. With no
-    // target this probe simply does not come up and the panel says "no probe".
+    // A CONTINUOUS probe, 1 packet/s over 60s, and it is measured, not taste: a 3-packet burst
+    // observed 3% of the time and resolved loss at 33%. See docs/notes/bar.md before changing it.
     component VpnProbe: Scope {
         id: probe
-        // `info` ARRIVES from outside (this VPN's object in vpn stats-json) instead of being
-        // fetched here: an inline component does not see the `id` of the document that declares
-        // it, so a `root.vpnStats[...]` from in here blows up with a ReferenceError and the whole
-        // instance is never born; the symptom was `vpnProbeStat` becoming undefined.
+        // `info` ARRIVES from outside: an inline component cannot see the declaring document's id, so
+        // reading root.vpnStats in here is a ReferenceError and the instance is never born.
         required property var info
         readonly property string iface: probe.info.connected === true ? (probe.info.iface || "") : ""
         readonly property string target: probe.info.connected === true ? (probe.info.probe || "") : ""
-        // A new tunnel (or a new target) = a new series: splicing two sessions would draw a step
-        // that never existed. The IP goes into the key because the interface's NAME repeats: on a
-        // reconnect ppp0 becomes ppp0 again (seen on 14/08/2026, the IP going from 192.168.50.2 to
-        // .3) and without it the series would cross the drop as if nothing had happened.
+        // A new tunnel or target = a NEW series; the IP is in the key because ppp0 reappears as ppp0
+        // on a reconnect, and splicing would draw a step that never existed.
         readonly property string key: probe.iface + "@" + probe.ip + "@" + probe.target
         readonly property string ip: probe.info.connected === true ? (probe.info.ip || "") : ""
         readonly property int window: 60 // 1 min at 1 packet/s
@@ -377,9 +333,8 @@ Scope {
             probe.series = [];
             pingProc.running = false;
             if (probe.iface !== "" && probe.target !== "") {
-                // -O emits "no answer yet" at timeout: without it a lost packet would be
-                // SILENCE and the series would only hold the ones that came back (an eternal 0%
-                // loss). -n does not resolve DNS; -W 1 matches the 1s interval.
+                // -O emits "no answer yet" at timeout: without it a lost packet is SILENCE and the series would
+                // hold only the ones that came back (an eternal 0% loss). -n no DNS; -W 1 matches the interval.
                 pingProc.command = ["ping", "-n", "-O", "-i", "1", "-W", "1", "-I", probe.iface, probe.target];
                 probe.lastAt = Date.now();
                 pingProc.running = true;
@@ -399,11 +354,8 @@ Scope {
                 probe.push(null);
             // the header and noise do not become samples, but they count as a sign of life
         }
-        // A WATCHDOG. With -O, ping SPEAKS every second even when the target disappears, so
-        // SILENCE is not packet loss: it is the probe broken (a dead process, an interface
-        // recreated under it). Without this the panel would freeze showing the last good window,
-        // looking "stable", which is exactly the lie it exists not to tell. It marks the hole in
-        // the series AND resurrects the process.
+        // A WATCHDOG: with -O, silence is NOT loss, it is the probe broken. Without this the panel would
+        // freeze on the last good window, looking "stable", which is the lie it exists not to tell.
         property double lastAt: 0
         Timer {
             interval: 5000
@@ -481,14 +433,8 @@ Scope {
             ufscar: ufscarProbe.series
         })
 
-    // The verdict, with the cutoffs anchored to the MEASURED baseline of the FAI tunnel
-    // (14/08/2026, 1 packet/s: a ~34ms mean, 0.8ms mdev, 0% loss). The ORDER is the order of the
-    // damage: loss first (it kills a session), jitter before the mean, since 200ms of steady
-    // latency is workable and 40ms of jagged latency freezes SSH and calls.
-    // The NUMBERS are not guesses: 2% loss = 2 packets lost in the 60-sample window, and one
-    // stray packet a minute is far too routine to raise an alarm; a 10ms mdev is an order of
-    // magnitude above what a healthy tunnel measures.
-    // "measuring…" before 5 samples, because a verdict with 2 packets is guesswork.
+    // The verdict. The ORDER is the order of the damage (loss, then jitter, then the mean), and the
+    // cutoffs are anchored to a MEASURED baseline, not guessed: docs/notes/bar.md
     function vpnQuality(s, pr) {
         if (!s || !s.connected)
             return {
@@ -525,9 +471,8 @@ Scope {
             color: Theme.colGreen
         };
     }
-    // The tunnel interface's rate RIGHT NOW: it comes from the netRates the bar already computes
-    // every 2s (/proc/net/dev), since stats-json does not repeat that calculation. An idle
-    // interface does not show up in that list, and "it did not show up" means 0 B/s.
+    // The tunnel's rate now, from the netRates the bar already computes every 2s. An idle interface
+    // is absent from that list, and absent means 0 B/s.
     function vpnRate(iface) {
         const r = (root.netRates || []).find(n => n.iface === iface);
         return r || {
@@ -569,9 +514,8 @@ Scope {
         }
         return out;
     }
-    // The statistics panel belongs to HOVER; the actions one to the CLICK. Both anchor at the
-    // SAME point of the bar, so while the menu is open this one disappears; otherwise one would
-    // draw on top of the other (and the mouse stays over the pill the whole time).
+    // Statistics on HOVER, actions on CLICK, both anchored at the same point: this one hides while
+    // the menu is open, or they would draw on top of each other.
     property bool vpnPillHovered: false
     property bool vpnStatsPopHovered: false
     property bool vpnStatsPopVisible: false
@@ -625,9 +569,8 @@ Scope {
         }
     }
 
-    // ===== Notifications =====
-    // Quickshell is the daemon (the Notifs.qml service plus the Notifications.qml UI). The bell
-    // below reads Notifs.barIcon/dnd and calls the toggles straight on the singleton.
+    // Notifications: Quickshell is the daemon (Notifs.qml plus Notifications.qml). The bell reads
+    // Notifs.barIcon/dnd and calls the toggles on the singleton.
 
     // ===== Weather (Open-Meteo, JSON; São Carlos' lat/long) =====
     property string wTemp: ""
@@ -885,9 +828,8 @@ Scope {
         return Math.round(bps) + "B";
     }
 
-    // ===== Popover positioning (always right below the element) =====
-    // An alias of Theme's (it used to be a 2nd implementation, diverging from that one; see
-    // Theme.qml).
+    // Popover positioning (always right below the element). An alias of Theme's, which used to be a
+    // 2nd diverging implementation.
     readonly property var screenPrimary: Theme.screenPrimary
     property var popScreen: null
     property real popCenterX: 0   // the anchored element's center, in the bar window's coordinates
@@ -907,36 +849,8 @@ Scope {
         return Math.round(Math.max(4, Math.min(root.popCenterX + 4 - popW / 2, sw - popW - 4)));
     }
 
-    // ===== Holidays (national plus SP plus São Carlos), RECHECKED on 08/08/2026 =====
-    // The NAMES stay in pt-BR on purpose: they are the official names of Brazilian holidays, the
-    // same class of literal as the city's name. The chrome around them is en-US.
-    // scope: "nac" | "sp" | "sc". off = the offset in days from Easter SUNDAY (the movable
-    // dates); otherwise a fixed m/d. fac = an optional public holiday (it does not guarantee a
-    // day off), so it stays discreet in the grid and OUT of "upcoming holidays" (computeUpcoming
-    // filters it).
-    //
-    // THIS LIST DOES NOT UPDATE ITSELF, and it is the only part of the calendar that does not.
-    // The MOVABLE ones derive from Easter (easterDate) and scale forever; the FIXED ones are LAW
-    // written by hand here. A new law, or the city touching a holiday, leaves the grid wrong IN
-    // SILENCE. Review it when news of a new holiday shows up, not by the calendar: 2027 is
-    // already covered, because nothing here depends on the year.
-    //
-    // THE LEGAL BASES (this used to say "see the workflow notes", a pointer outside the repo):
-    //   nac  Law 662/1949 plus 6.802/1980 (Aparecida) plus 9.093/1995 (Good Friday)
-    //        plus 14.759/2023 (Consciência Negra, national since 2024, NOT just SP anymore)
-    //   sp   State law 9.497/1997 (Revolução Constitucionalista, july 9th)
-    //   sc   Municipal law 7.502/1974 (Corpus Christi) plus Babilônia 15/08 plus the city's
-    //        anniversary 04/11
-    //
-    // TWO TRAPS the calendar websites fall into and this list does not:
-    // 1. CARNAVAL and CINZAS are neither a national NOR a municipal holiday in São Carlos, they
-    //    are an optional public holiday (state decree 70.273 plus the city hall). Hence fac: true.
-    // 2. CORPUS CHRISTI is a FEDERAL optional public holiday, but a MUNICIPAL holiday here (the
-    //    law above), which is why it goes in as "sc" and WITHOUT fac. In another city it would be
-    //    fac.
-    // THE CHECK: the non-fac entries in this list add up to 14, which is the number the city hall
-    // and the local press publish for São Carlos. If it ever diverges, that is a sign of a new
-    // law.
+    // Holidays (nac/sp/sc), rechecked 08/08/2026. THIS LIST DOES NOT UPDATE ITSELF: the movable ones
+    // derive from Easter, the fixed ones are LAW by hand. The bases and the 2 traps: docs/notes/bar.md
     readonly property var holidayDefs: [
         { name: "Ano-Novo", scope: "nac", m: 1, d: 1 },
         { name: "Carnaval (segunda)", scope: "nac", off: -48, fac: true },
@@ -1020,20 +934,8 @@ Scope {
         all.sort((a, b) => a.date.getTime() - b.date.getTime());
         return all.slice(0, n);
     }
-    // What makes the calendar roll the year over on its own: updateClock() compares the
-    // yyyy-MM-dd against calDayKey, and on the SystemClock's first beat after midnight it calls
-    // this. It holds for 01/01 too: calYear changes and the whole popover (the header plus the 12
-    // grids) reevaluates, with no rebuild and no restarting the shell. MEASURED on 08/08/2026
-    // simulating the 31/12/2026 -> 01/01/2027 rollover: a 2027 header, "today" on 01/01, Carnaval
-    // painted on 08-09/02. If the machine crosses the rollover suspended, the resume falls into
-    // the same path.
-    //
-    // DO NOT OPTIMIZE THIS INTO MUTATING THE OBJECTS IN PLACE. The popover reads calMap through a
-    // binding (`Repeater { model: bar.monthCells(...) }`), and a QML binding only reevaluates
-    // when the PROPERTY is reassigned: writing inside the existing object (calMap[k] = v) emits
-    // no signal at all. The calendar would freeze IN SILENCE: nothing breaks, nothing logs, it
-    // just stops rolling the year over. Measured in headless qml: reassigning propagates,
-    // mutating does not.
+    // The year rolls over on the first SystemClock beat after midnight (measured across 2026-2027).
+    // DO NOT mutate calMap in place: a QML binding only reevaluates on REASSIGNMENT. See the notes.
     function refreshCalendar() {
         const d = sysClock.date;
         root.calYear = d.getFullYear();
@@ -1389,11 +1291,8 @@ Scope {
             id: wsArea
             anchors.fill: parent
             hoverEnabled: true
-            // The 0.55 LUA syntax: `dispatch` became a shortcut for hl.dispatch(...), so the
-            // old form ("dispatch", "workspace", N) assembles `hl.dispatch(workspace 3)` and
-            // blows up in the parser, so the click died in silence, with nothing on screen.
-            // Careful: `hl.dsp.workspace` is a TABLE, not a function (it becomes "attempt to
-            // call a table value"); what switches workspaces is focus, just like keybinds.lua.
+            // The 0.55 Lua syntax made `dispatch` a shortcut, so the old 3-arg form blows up in the parser
+            // and the click died silently. `hl.dsp.workspace` is a TABLE; what switches is focus.
             onClicked: root.launch(["hyprctl", "dispatch", "hl.dsp.focus({ workspace = " + wsbtn.wsid + " })"])
         }
     }
@@ -1554,15 +1453,8 @@ Scope {
                         onHoveredChanged: hovered ? root.showMetric("usage", usagePill, barContent, bar.screen) : root.unhoverMetric()
                     }
                     Pill {
-                        // VPN: green plus the name when connected, gray when off. A click opens
-                        // the popover ANCHORED to the bar (bar/VpnPopover.qml); it used to launch
-                        // `vpn menu`, a loose rofi in the middle of the screen, outside the
-                        // shell's theme. Right click is still the shortcut for taking everything
-                        // down. HOVER (with a tunnel up) shows the statistics
-                        // (VpnStatsPopover.qml). The split is intentional: information on hover,
-                        // ACTION on click. A panel with a button that opens on its own on hover
-                        // disappears at the first distraction, and the statistics one has nothing
-                        // to click (the same criterion as the calendar).
+                        // VPN: click opens the actions popover, HOVER shows the statistics, right click drops everything.
+                        // Information on hover, ACTION on click; it replaced a loose rofi. See docs/notes/bar.md
                         id: vpnPill
                         icon: "󰦝"
                         label: root.vpnConnected ? root.vpnName : ""
@@ -1603,9 +1495,8 @@ Scope {
                         accent: root.hypridleOn ? Theme.colGreen : Theme.colRed
                         onClicked: root.launch(["sh", "-c", "systemctl --user is-active --quiet hypridle.service && systemctl --user stop hypridle.service || systemctl --user start hypridle.service"])
                     }
-                    // The system tray (StatusNotifier), a single background for the icon group.
-                    // It populates when qs is the watcher (with Waybar gone). Left=activate,
-                    // middle=secondaryActivate, scroll, right=the native menu (QsMenuAnchor).
+                    // The system tray (StatusNotifier), one background for the group. Left=activate,
+                    // middle=secondaryActivate, scroll, right=the native menu.
                     Rectangle {
                         visible: root.trayCount > 0
                         implicitHeight: 22
@@ -1624,10 +1515,8 @@ Scope {
                                     id: trayDel
                                     implicitWidth: 20
                                     implicitHeight: 22
-                                    // Some SNIs (Dropbox, say) publish the icon as
-                                    // image://icon/<name>?path=<dir> in a hicolor theme
-                                    // Quickshell's provider does not resolve. I look for the
-                                    // real file in <dir> and point at file://.
+                                    // Some SNIs (Dropbox) publish image://icon/<name>?path=<dir> in a theme the provider does not
+                                    // resolve, so we find the real file in <dir> and point at file://.
                                     readonly property string rawIcon: "" + modelData.icon
                                     readonly property bool isPathIcon: /^image:\/\/icon\/[^?]+\?path=/.test(trayDel.rawIcon)
                                     property string resolvedIcon: ""
@@ -1671,25 +1560,13 @@ Scope {
                                             else if (m.button === Qt.MiddleButton)
                                                 modelData.secondaryActivate();
                                             else if (modelData.hasMenu) {
-                                                // A native SNI: our own themed menu. The menu is a
-                                                // layer surface (see TrayMenu.qml: a PopupWindow
-                                                // receives no pointer because of Hyprland#6682), so
-                                                // it positions itself by SCREEN X, not by
-                                                // anchor.rect: the icon's X inside barContent plus
-                                                // the bar's left margin. The Y is implicit (it sits
-                                                // under the exclusiveZone).
+                                                // A native SNI gets our themed menu. It is a LAYER SURFACE (Hyprland#6682 breaks a PopupWindow's
+                                                // input region), so it positions by SCREEN X, not anchor.rect. See docs/notes/quickshell.md
                                                 const pt = trayDel.mapToItem(barContent, 0, trayDel.height);
                                                 trayCtxMenu.openAt(modelData.menu, bar, pt.x + bar.margins.left);
                                             } else {
-                                                // xembedsniproxy (wine/Battle.net/pamac): no DBusMenu.
-                                                // This path was DEAD until 30/07, because the proxy was
-                                                // not installed, so no icon like that ever came to
-                                                // exist. Now it is declared in
-                                                // home/desktop/quickshell.nix. Quickshell's display()
-                                                // refuses items with no menu ("No menu present"), so we
-                                                // fire the SNI's native ContextMenu() through a helper:
-                                                // the proxy forwards the click and the app draws its own
-                                                // menu at the cursor.
+                                                // xembedsniproxy icons have NO DBusMenu, and display() refuses them, so we fire the SNI's own
+                                                // ContextMenu() through a helper and the app draws its menu at the cursor.
                                                 root.launch(["tray-native-menu", "" + modelData.id]);
                                             }
                                         }

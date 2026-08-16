@@ -1,6 +1,5 @@
-// The bar's reusable pill/chip. It used to be an inline component inside Bar.qml; now it is its
-// own file (reuse, plus the root's id resolves in the handlers, which an inline component does
-// not guarantee on this Qt). The colors come from Theme.
+// The bar's reusable pill. Its OWN file (reuse, plus the root id resolves in handlers, which an
+// inline component does not guarantee on this Qt). The colors come from Theme.
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -9,11 +8,8 @@ Rectangle {
     id: pill
     property string icon: ""
     property string label: ""
-    // Secondary text in the SAME pill: after the label and in a discreet color, for two pieces
-    // of data that travel together without becoming two pills (the date next to the time, say).
-    // It comes AFTER on purpose: the label is the main information and sits on the left edge,
-    // which is where the eye enters the pill, and `sub` is the complement and does not compete
-    // for that spot.
+    // Secondary text in the SAME pill, AFTER the label on purpose: the label is the main information
+    // and owns the left edge, where the eye enters the pill.
     property string sub: ""
     property color accent: Theme.colText
     property int maxWidth: 0

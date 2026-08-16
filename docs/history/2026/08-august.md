@@ -1,6 +1,35 @@
 # History: august 2026
 
-62 entries. Index in [README.md](../README.md).
+63 entries. Index in [README.md](../README.md).
+
+- [x] The notes got a folder structure and, more importantly, a CHECKER (16/08/2026). Right
+      after the rule 2 sweep, `docs/notes/` was 51 flat pages with no index, and nothing in the
+      repo verified that a single pointer still resolved. Both were fixed, in that order: the
+      checker first, because it is what made moving 51 files safe.
+      • `pkgs/docs-links.nix` walks `git ls-files`, checks bare `docs/` paths in CODE and
+        relative `](target)` links in MARKDOWN, and fails `nix flake check`, so also the CI. It
+        caught a real one on its first run: `docs/rules.md` still pointed at the old pt-BR
+        filename, which the en-US migration of 15/08 missed. I then broke a pointer ON PURPOSE
+        to confirm the gate goes red, because a checker that cannot fail is decoration.
+      • A BARE PATH IN MARKDOWN IS PROSE, not a pointer, and the first version got that wrong:
+        it flagged `rules.md` for the sentence saying the old filename "became" the current one.
+        That sentence is history and it is correct. A file that names its own past is not a
+        broken link, so in markdown only a real link counts.
+      • GROUPED BY SUBJECT AND NOT BY REPO PATH, and that was measured, not taste: 16 of the 51
+        pages cross the `system/` and `home/` boundary and 19 reference two or more modules.
+        They cross because the ARTIFACT crosses (arch-legacy is two modules, claude-code is two,
+        monitors is two), so a mirror of the tree would have had to split a third of the pages
+        or file them under a half-truth. Seven folders, 5 to 10 pages each.
+      • THE COST of the move, stated because it is the part that could rot: 128 pointers in 92
+        files and 113 links inside the notes, all rewritten. 34 header lines blew past 100
+        columns with the longer path, and trimming them mechanically left 16 with a dangling
+        article ("... The: docs/notes/x.md"), which I rewrote by hand. Shorter is the
+        constraint, not the goal.
+      • TWO SMALLER THINGS came out of looking at `docs/` as a whole: `docs/arch-legacy.md` was
+        colliding with the note of the same name while being a different subject (the distro
+        chapter versus the mount), so it became `arch-linux.md`; and `docs/tests/` folded into
+        `guides/`, since both files describe themselves as REUSABLE PROTOCOLS, which is what
+        `guides/` already means. One fewer top-level category.
 
 - [x] Rule 2 stopped allowing a wall of prose, and the reasoning moved to `docs/notes/`
       (16/08/2026). The rule permitted a header block "as long as it needs to be", and the

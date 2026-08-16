@@ -1,26 +1,5 @@
-# ═══════════════════════════════════════════════════════════════════════════
-# INGRESS = the SINGLE SOURCE of who is exposed and how far (rule 11). Every service that gets a
-# subdomain declares itself HERE, and the Caddyfile is GENERATED from here, never the other way
-# around.
-#
-# THE PROBLEM THIS SOLVES: before, each service's reach was implicit and scattered through the
-# Caddyfile. `duo` and `ai` had a hand-written `respond @externo 403`; `jellyfin` and `torrent`
-# simply did NOT, and only the comment next to them said that was on purpose. To know what was
-# exposed you had to read 60 lines of Caddyfile and notice an ABSENCE, which is the worst way to
-# encode a security decision, because forgetting to write it becomes "exposed" in silence. With
-# `expose`, the default is `lan`: forgetting CLOSES.
-#
-# HOW TO SWITCH: one word in the host's panel (hosts/*/services.nix).
-#   expose = "lan"    -> the home network only (LAN plus the router's WireGuard)
-#   expose = "public" -> reachable from outside, subject to the declared `auth`
-#
-# `public` really WORKS: the router has a public IP on pppoe-wan and forwards 80/443 here (there
-# was a CGNAT scare on 07/08/2026 that proved false, see docs/history/2026/08-august.md). A
-# service marked `public` is reachable from the internet TODAY.
-#
-# The option lives in net/ and not inside caddy.nix because it describes NETWORK REACH, not a
-# proxy detail. Today Caddy is the only consumer, but the decision is not its.
-# ═══════════════════════════════════════════════════════════════════════════
+# INGRESS: the SSOT of who gets a subdomain and how far it reaches. Caddy is generated FROM here.
+# The default is `lan`, so forgetting to declare `expose` CLOSES instead of exposing.
 { lib, ... }:
 
 {
@@ -35,8 +14,7 @@
             description = "The port on 127.0.0.1 that serves everything not matching a `routes` entry.";
           };
 
-          # A CLOSED default on purpose: see the header's block. Forgetting to declare it cannot
-          # mean "open to the internet".
+          # A CLOSED default: forgetting to declare it cannot mean "open to the internet".
           expose = lib.mkOption {
             type = lib.types.enum [
               "lan"
@@ -46,9 +24,8 @@
             description = "The reach: `lan` (home plus WireGuard) or `public` (the internet). A closed default, so omitting it NEVER exposes anything.";
           };
 
-          # user -> the name of the environment variable carrying the bcrypt hash (the value comes
-          # from sops through caddy.env; rule 12: no secret in the store).
-          # It only applies to whoever comes from OUTSIDE; on the home network it opens directly.
+          # user -> the env var holding the bcrypt hash (from sops, rule 12). It applies only
+          # to whoever comes from OUTSIDE.
           auth = lib.mkOption {
             type = lib.types.attrsOf lib.types.str;
             default = { };
@@ -58,8 +35,7 @@
             description = "The basic_auth required from whoever comes from outside: user -> the .env variable holding the bcrypt hash.";
           };
 
-          # A path prefix -> a port. Evaluated BEFORE the `upstream`, in the order Caddy resolves
-          # `handle` (most specific first).
+          # A path prefix -> a port, evaluated BEFORE the `upstream` (most specific first).
           routes = lib.mkOption {
             type = lib.types.attrsOf lib.types.port;
             default = { };

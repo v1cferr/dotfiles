@@ -1,13 +1,10 @@
-# ═══════════════════════════════════════════════════════════════════════════
-# USER & SHELL: zsh as the login shell plus the v1cferr account (identity).
-# ═══════════════════════════════════════════════════════════════════════════
+# USER and SHELL: zsh as the login shell plus the v1cferr account.
+# The password hash comes from sops; the SSH public keys are public, so they live here.
 { config, pkgs, ... }:
 
 {
-  # ── The shell: zsh ──────────────────────────────────────────────────────────
-  # NixOS requires the system-wide enable to use zsh as a login shell: it registers it in
-  # /etc/shells, creates /etc/zshrc and turns global completion on. The interactive config
-  # (history/aliases/plugins) and the prompt (starship) live in home/ (zsh.nix).
+  # The system-wide enable is required for a login shell (/etc/shells, /etc/zshrc).
+  # The interactive config and the prompt live in home/shell/.
   programs.zsh.enable = true;
 
   # ── The user (a declared capability; password/keys = "who I am") ────────────

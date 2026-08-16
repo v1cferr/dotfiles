@@ -23,6 +23,7 @@ foxundermoon.shell-format
 george-alisson.html-preview-vscode
 github.vscode-github-actions
 github.vscode-pull-request-github
+gleam.gleam
 james-yu.latex-workshop
 jnoortheen.nix-ide
 khaeransori.json2csv
@@ -54,7 +55,6 @@ ms-vscode-remote.remote-wsl
 ms-vscode.vscode-chat-customizations-evaluations
 neverdh.fah-meme
 njpwerner.autodocstring
-oracle.oracle-java
 pmneo.tsimporter
 qwtel.sqlite-viewer
 redhat.java

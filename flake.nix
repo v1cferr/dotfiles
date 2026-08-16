@@ -31,9 +31,27 @@
 
     # Zen Browser: NOT in nixpkgs, so this flake follows the upstream releases.
     # "Always the latest version" = bump with `nix flake update zen-browser`.
+    #
+    # IT FOLLOWS THE UNSTABLE BASE, and that is the only `follows` in this file pointing there.
+    # It said `follows = "nixpkgs"` (stable) until 15/08/2026, when a `nix flake update` broke the
+    # eval outright:
+    #   lib.customisation.callPackageWith: Function called without required argument "ffmpeg_9",
+    #   did you mean "ffmpeg_4", "ffmpeg_6" or "ffmpeg_7"?
+    # Upstream started asking for `ffmpeg_9` in its package.nix, and 26.05 stops at ffmpeg_7. That
+    # is the `follows` hazard: forcing somebody else's flake onto MY pin works right up to the day
+    # they use an attribute that only exists in a newer nixpkgs, and then it fails at EVAL, with a
+    # message that names a package I never wrote.
+    #
+    # `nixpkgs-unstable` and not "drop the follows": zen's own lock pins nixpkgs at the exact
+    # commit our unstable input is already at (0e251e24, checked, not assumed), so this keeps the
+    # dedup the line existed for, adds ZERO inputs to the lock, and stops fighting what upstream
+    # already expects. Dropping the follows would pull a THIRD nixpkgs into the closure.
+    #
+    # home-manager keeps following ours: only `packages.<system>.default` is consumed here (see
+    # home/packages.nix), never the hm-module, so that side never gets evaluated.
     zen-browser = {
       url = "github:0xc000022070/zen-browser-flake";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
       inputs.home-manager.follows = "home-manager"; # dedup: keeps home-manager_2 out of the lock
     };
 
@@ -133,7 +151,7 @@
     # is still pinned in the lock; what changed is WHO updates it). Bumping by hand is still
     # possible: edit here + `nix flake update vscode-tarball`.
     vscode-tarball = {
-      url = "tarball+https://update.code.visualstudio.com/1.132.0/linux-x64/stable";
+      url = "tarball+https://update.code.visualstudio.com/1.133.0/linux-x64/stable";
       flake = false;
     };
   };

@@ -1,30 +1,5 @@
-# ═══════════════════════════════════════════════════════════════════════════
-# BOOT: GRUB (UEFI) with the minegrub theme, in DUALBOOT with Windows 11.
-#
-# WHY GRUB, and not the systemd-boot that was here until aug/2026: each system has ITS OWN
-# ESP, on a separate disk. NixOS on the Kingston (`nvme0n1p1`, /boot) and Windows 11 on the
-# SanDisk's ESP (label SYSTEM, UUID 904C-B9D0; the `sd*` LETTER SWAPS between boots, so
-# identify it by model, never by `sdX`). systemd-boot only loads an EFI binary from its OWN
-# ESP, so it is incapable of listing Windows: switching OS would become F8 at POST every time.
-# GRUB reads both. That is also what rules out lanzaboote (the official Secure Boot path on
-# NixOS), which is systemd-boot-only; the signing lives in ./secureboot.nix.
-#
-# THE THEME'S ICONS MATCH BY `--class`, NOT BY THE ENTRY'S TITLE. It is the only real trap
-# here, and it fails SILENTLY (falling back to a generic icon with no text):
-#   • `nixos`   comes from the default `entryOptions = "--class nixos --unrestricted"`;
-#   • `windows` comes from the `--class windows` written by hand in the extraEntries below;
-#   • `submenu` is the one for old generations (install-grub.pl emits `--class submenu`).
-# Each customIcons `name` becomes the theme's `icons/<name>.png` file, and the two lines of
-# text are RENDERED INSIDE the PNG in the Minecraft font, so it is not GRUB text. That is why
-# every generation shows the same description: they share the `nixos` class. It is a theme
-# limitation, not a config error.
-#
-# The kernels are copied to the ESP automatically (install-grub.pl:107 turns copyKernels on
-# when /boot is on a different filesystem from /nix/store), which avoids depending on GRUB
-# being able to read btrfs+zstd. The file is named by the store hash, so generations sharing a
-# kernel occupy space ONCE: the 10-generation limit fits comfortably in the ESP's 1 GiB (today:
-# 13 MiB of kernel plus 47 MiB of initrd per version).
-# ═══════════════════════════════════════════════════════════════════════════
+# BOOT: GRUB (UEFI) with the minegrub theme, dualbooting Windows 11 off a SECOND disk's ESP.
+# Why GRUB and not systemd-boot, and the --class icon trap: docs/notes/boot.md
 {
   config,
   inputs,

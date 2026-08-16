@@ -1,26 +1,9 @@
-# The FAI and UFSCar VPNs, 100% declarative and on demand (they do not come up at boot; the
-# `vpn` CLI plus the SUPER+N / SUPER+SHIFT+N / SUPER+CTRL+N binds turn them on and off). They
-# run as system systemd services (a VPN needs tun and routes, so root).
-#   • UFSCar goes to GlobalProtect (Palo Alto) through openconnect --protocol=gp (FOSS, in
-#     nixpkgs).
-#   • FAI goes to the SonicWall SSL VPN through nxBender (FOSS, pkgs/nxbender.nix; it replaces
-#     the proprietary netExtender from the Arch days). If it stops connecting, the fallback is
-#     packaging netExtender.
-# Passwords come from sops (Bitwarden): openconnect reads on STDIN (out of `ps`), and nxBender
-# reads a config rendered by sops.templates (out of the store and out of git). The `vpn` CLI
-# starts the services without `sudo` thanks to the polkit rule below (otherwise the bind would
-# ask for a password).
+# The FAI (nxBender/SonicWall) and UFSCar (openconnect/GlobalProtect) VPNs, on demand.
+# Why `is-active` lies, the two watchdogs and the probe target: docs/notes/vpn.md
 { pkgs, config, ... }:
 
 let
-  # EXPONENTIAL BACKOFF, with no hard ceiling. The previous ceiling (6 attempts/10 min) had a
-  # hole: when the SonicWall ACCEPTS the connection and drops it in ~24s (SIGHUP), each cycle
-  # lasts ~34s, so the 6 attempts burned in ~3.5 min and systemd marked start-limit-hit,
-  # leaving the unit PERMANENTLY in `failed`. Worse than the original bug: not even
-  # `vpn connect fai` would come up anymore, without a manual `systemctl reset-failed`.
-  # Now it is 10s to 300s progressively and it never gives up. A wrong password means ~12
-  # attempts/h in the worst case, gentle enough not to trigger an account lockout at the
-  # portal.
+  # Exponential backoff with NO ceiling: a hard limit left the unit permanently `failed`.
   vpnRestart = {
     Restart = "always";
     RestartSec = 10;
@@ -28,28 +11,8 @@ let
     RestartMaxDelaySec = 300;
   };
 
-  # The `vpn` CLI: connect/disconnect ufscar|fai|all plus status-json (which feeds the pill AND
-  # the action popover, quickshell/bar/VpnPopover.qml) plus stats-json (tunnel latency, jitter,
-  # loss and traffic, for the hover popover, VpnStatsPopover.qml) plus diagnose/watch (below).
-  #
-  # DIAGNOSE/WATCH (31/07): a connection failure was SILENT. You clicked Connect, nothing
-  # happened, and from this side it looked like a problem with the personal machine. The goal
-  # here is not dumping logs, it is having the notification SAY WHOSE FAULT IT IS, because that
-  # is the information that changes what you do next (wait for FAI to come back vs touch your
-  # own network or password).
-  #
-  # WHY A WATCHER and not systemd's `OnFailure=`: these units have Restart=always with
-  # startLimitIntervalSec=0, so they NEVER enter `failed`, they stay in an eternal crash-loop
-  # and an OnFailure would never fire. The trigger has to be time: 45s after the connection
-  # request, if there is no tunnel, diagnose and warn once.
-  #
-  # THE CLASSIFICATION comes from signatures MEASURED in this machine's journal (2 days), not
-  # invented: a ConnectTimeout on /cgi-bin/userLogin (the portal is down) is the most common
-  # case, 152 occurrences; "Connection reset by peer" (27); "Modem hangup"/"Peer not
-  # responding"/"No response to N echo-requests" (the tunnel came up and dropped). The order of
-  # the tests matters: internet from here, then the portal being reachable, and only then the
-  # log. Without that, a "timeout" in the log would be read as FAI's fault even with your own
-  # network down.
+  # The `vpn` CLI: connect/disconnect, status-json (the pill), stats-json (the hover panel)
+  # and diagnose/watch, whose job is to name WHOSE fault a failure is.
   vpnCli = pkgs.writeShellApplication {
     name = "vpn";
     runtimeInputs = with pkgs; [
@@ -64,16 +27,10 @@ let
     ];
     text = ''
       note() { notify-send -a VPN "VPN" "$1" 2>/dev/null || true; }
-      # "Connected" means the unit is active AND the tunnel actually exists. `is-active` alone
-      # LIES: with the FAI portal down, nxBender enters a crash-loop and systemd reports active
-      # during each attempt (~2min), with zero ppp0, so the pill stayed green for nothing.
-      # UFSCar: it filters tun[0-9] because `type tun` matches ANY tun (tailscale0 was the
-      # concrete case until 08/08/2026; the filter stays, the reason still holds).
+      # Connected = the unit is active AND the tunnel exists; `is-active` alone lies.
       fai_conn()    { systemctl is-active --quiet vpn-fai.service    && [ -n "$(ip -o link show type ppp)" ]; }
       ufscar_conn() { systemctl is-active --quiet vpn-ufscar.service && ip -o link show type tun | grep -q ': tun[0-9]'; }
-      # The rclone mount of the FAI workstation (~/FAI-workstation) comes up and goes down WITH
-      # the FAI VPN (home/services/fai-workstation-mount.nix). --no-block: it does not block
-      # waiting for the tunnel; the service retries on its own until the host is reachable.
+      # ~/FAI-workstation rises and falls with this tunnel; --no-block, the mount retries.
       mnt='rclone-mount:.@faiws.service'
       # reset-failed before every start: a unit that died in `failed` REFUSES `start` until it
       # is cleared, and then the SUPER+N bind did nothing with no explanation. Idempotent.
@@ -96,30 +53,8 @@ let
       # implementation; this machine's `nc -zv` exits silently, which already fooled me once).
       tcp_open() { timeout "''${3:-6}" bash -c "exec 3<>/dev/tcp/$1/$2" 2>/dev/null; }
 
-      # ── Self-healing the HANG ──────────────────────────────────────────────
-      # nxBender calls the portal WITHOUT a timeout (seen in the traceback: "connect
-      # timeout=None"). When the SonicWall accepts the TCP but does NOT answer the session
-      # request, the process sleeps forever: the unit stays `active/running`, with not ONE log
-      # line and no tunnel, and Restart=always never acts, because it only reacts to a process
-      # that EXITS. MEASURED on 31/07: 11 min hung with the connection in ESTAB and Recv-Q and
-      # Send-Q at zero; a `systemctl restart` connected in 10s. The same shape as the Sunshine
-      # HTTPS handler hang (system/services/sunshine.nix): active, exit 0, invisible by
-      # definition.
-      #
-      # It only acts when all THREE conditions hold: the unit is active (which means somebody
-      # asked to connect), the tunnel is absent, and it has been active for longer than the
-      # grace. The grace exists because connecting legitimately takes ~10 to 30s; without it
-      # the watchdog would kill the connection in progress and become the problem itself.
-      # AUTO-STOP on an UNRECOVERABLE error. `Restart=always` is right for the common case (the
-      # FAI portal flapping) and WRONG for a credential: an expired password does not improve
-      # with retries, and each cycle is one failed login at the SonicWall, 59 of them in ~18h
-      # during the 11-12/08/2026 episode, with a real risk of locking the account. Here the
-      # policy INVERTS: if the log signature is a credential one, it STOPS the unit instead of
-      # restarting. Only I can solve it (changing the password in AD), and until then insisting
-      # only accumulates damage.
-      #
-      # A 10 min window on the log: the evidence has to be from the attempt in progress, not
-      # from yesterday's episode, which would make this stop a healthy VPN.
+      # Heals the HANG (active, no tunnel, no log) and STOPS on a credential error, because
+      # retrying a wrong password is a login storm, not a recovery.
       stop_if_unrecoverable() {
         id="$1"
         unit="$2"
@@ -140,11 +75,7 @@ let
         id="$1"
         meta="$(vpn_meta "$id")" || return 0
         read -r unit _ _ <<< "$meta"
-        # The SAME care as the diag() gate, and this was the THIRD appearance of that mistake
-        # in this file: `is-active --quiet` is false while `activating`, which is precisely the
-        # crash-loop state, so this healer NEVER acted during the login storm, at the exact
-        # minute it was needed. Without this, the auto-stop above would be dead code: it would
-        # not even be called.
+        # ActiveState, never `is-active --quiet`: it is false while `activating`.
         case "$(systemctl show "$unit" -p ActiveState --value)" in
           inactive | deactivating) return 0 ;; # nobody asked for a connection
         esac
@@ -176,20 +107,8 @@ let
           return 0
         fi
 
-        # A STOPPED unit is not a failure, it is "you did not ask to connect". Without this
-        # gate the diagnosis classified using a log from DAYS earlier and said "still trying"
-        # about a VPN nobody tried to bring up, caught on the 1st real test (UFSCar, 31/07).
-        #
-        # Do NOT use `is-active --quiet` HERE, and this was the bite of 12/08/2026: in a
-        # crash-loop the unit is `activating` (SubState=auto-restart) and `is-active` exits
-        # NON-ZERO. The gate then announced "unit stopped, no attempt in progress" while
-        # nxBender had been trying for 18 hours, the exact opposite of the truth, in precisely
-        # the scenario this diagnosis was written for. It cost the whole session: it sent me
-        # looking for a network problem in a credential failure.
-        # `ActiveState` separates the three cases that matter: inactive = nobody asked;
-        # activating = trying right now; failed = tried and gave up (the last two MUST go on to
-        # the classifier). `fai_conn`/`ufscar_conn` up top keep `is-active` on purpose, since
-        # there "connected" requires it to be REALLY active.
+        # ActiveState separates inactive (nobody asked) from activating (trying now) and
+        # failed (gave up). `is-active --quiet` here announced the opposite of the truth.
         state="$(systemctl show "$unit" -p ActiveState --value)"
         case "$state" in
           inactive | deactivating)
@@ -198,12 +117,8 @@ let
             ;;
         esac
 
-        # A 15 min window: it guarantees the evidence is from the CURRENT attempt and not from
-        # an old session left in the journal (the same trap as the gate above).
-        # `-o cat` means only the MESSAGE, with no "date host unit[pid]:" prefix. That used to
-        # be done afterwards, with `sed 's/.*nixos-sandisk //'`, which became a no-op the day
-        # the hostname changed, and then the evidence came out with the prefix again. Asking
-        # the tool for the right format cannot age; cutting by name can.
+        # 15 min so the evidence is from THIS attempt. `-o cat` asks for the bare message:
+        # stripping the prefix with sed died silently when the hostname changed.
         log="$(journalctl -u "$unit" --since '-15 min' --no-pager -o cat 2>/dev/null || true)"
 
         # A deliberate ORDER: the most local first. Blaming FAI for a "timeout" in the log
@@ -216,16 +131,8 @@ let
           detail="$host:$port refuses the connection and the internet from here is fine"
         else
           case "$log" in
-            # AN EXPIRED PASSWORD comes FIRST on purpose: it is the only case on this list
-            # where RETRYING NEVER WORKS, and Restart=always turns that into a login storm,
-            # 59 attempts in ~18h between 11 and 12/08/2026, with a real risk of locking the
-            # account. Without this case the failure fell into "unclassified cause" and the
-            # evidence alone misled: the SonicWall phrase ("please check TLS, server writable
-            # or other config") looks like a configuration error on OUR side, and it actually
-            # says the APPLIANCE cannot write the password change into AD.
-            # MEASURED on 12/08: the web portal refuses the same way (E_UNAUTHORIZED /
-            # "Password expired.") and does not even offer a change form, so no client solves
-            # it and the cure is elsewhere. What worked: Ctrl+Alt+Del on a domain machine.
+            # FIRST on purpose: the only case where retrying never works. The SonicWall
+            # phrase blames our config, but it means the appliance cannot write AD.
             *"Password change needed"* | *"Password expired"* | *"password has expired"*)
               verdict="PASSWORD EXPIRED in AD, retrying does NOT fix it"
               detail="change it on a domain machine (Ctrl+Alt+Del), then sops plus nixos-rebuild switch. Run 'vpn disconnect $id' NOW, to stop accumulating failed logins." ;;
@@ -252,13 +159,8 @@ let
         return 1
       }
 
-      # ── Tunnel statistics (the pill's hover) ───────────────────────────────
-      # SEPARATE from status-json on purpose: that one answers "is there a tunnel?" every 5s
-      # and is what paints the pill; this one answers "with what?", meaning interface, IP, MTU,
-      # uptime, session bytes and WHICH host serves as the probe target. The bar only calls it
-      # when there is a tunnel (every 20s in the background, every 3s with the panel open).
-      # LATENCY DOES NOT COME FROM HERE: what measures it is the bar, with a continuous ping
-      # (see stats_one).
+      # Tunnel stats for the hover panel. Separate from status-json, and it does NOT measure
+      # latency: the bar does that with a continuous ping.
       iface_of() {
         case "$1" in
           fai)    ip -o link show type ppp | awk -F': ' 'NR==1 { print $2 }' ;;
@@ -268,18 +170,8 @@ let
       }
       nstat() { cat "/sys/class/net/$1/statistics/$2" 2>/dev/null || echo 0; }
 
-      # THE PROBE TARGET. Tunnel latency requires somebody who answers INSIDE it, and the
-      # obvious candidate does NOT work: the FAI ppp peer is 192.0.2.1, TEST-NET-1, a facade
-      # address of the SonicWall, and it ignores ICMP (MEASURED on 14/08/2026: 100% loss). What
-      # answers is 200.136.209.236 (fai.ufscar.br): a public IP, but the 200.136.209.128/25
-      # route goes out through ppp0, so the ping measures the TUNNEL (31ms, 0%).
-      # I do not use the workstation host: `my.fai.workstation` is a home-manager option and a
-      # system module cannot read an HM option (rule 11), and an institutional server goes down
-      # less often than a workstation.
-      # UFSCar enters with NO fixed candidate: I never measured an internal host of theirs with
-      # the tunnel up, and guessing an address would produce a wrong number, which is worse
-      # than a missing number. It falls back to the routes; if a target ever proves itself, the
-      # place is here.
+      # The probe target. The FAI ppp peer (192.0.2.1) ignores ICMP; .236 answers through the
+      # tunnel. UFSCar has no fixed candidate, because a guessed one would be a wrong number.
       probe_candidates() {
         case "$1" in
           fai) echo "200.136.209.236" ;;
@@ -288,17 +180,10 @@ let
         ip -4 route show dev "$2" 2>/dev/null | awk '/ via /{ print $3 }' | sort -u
       }
 
-      # The `-I <iface>` is not a detail: it pins the packet to the tunnel (SO_BINDTODEVICE).
-      # Without it, a target that stopped being routed through the VPN would go out over the
-      # home internet and the panel would display a GREAT latency that is not the tunnel's.
-      # With the bind, that case becomes silence, and "no probe" is an honest answer while 8ms
-      # lying is not.
+      # -I pins the packet to the tunnel: without it a stray route would time a LIE.
       probe_alive() { ping -n -q -c 1 -W 1 -I "$1" "$2" >/dev/null 2>&1; }
 
-      # Discovers and MEMORIZES the target (otherwise every sample would sweep the list again).
-      # The cache key is iface+IP: a new tunnel means a new probe. A live target holds for the
-      # whole session; "not found" is reevaluated every 5 min, otherwise a target that was down
-      # at the instant of connection would condemn the panel to "no probe" until disconnecting.
+      # Memorized per iface+IP. "Not found" is retried every 5 min, never cached forever.
       probe_for() {
         id="$1"; ifc="$2"; ipaddr="$3"
         f="''${XDG_RUNTIME_DIR:-/tmp}/vpn-probe-$id"
@@ -320,9 +205,7 @@ let
         echo "$found"
       }
 
-      # One JSON object per VPN. A disconnected one comes out with just connected:false, since
-      # with no iface there is nothing to measure, and emitting zeroed fields would make the
-      # panel draw a graph of nothing.
+      # A disconnected VPN emits only connected:false: zeroed fields would draw a fake graph.
       stats_one() {
         id="$1"; name="$2"
         ifc=""
@@ -347,13 +230,7 @@ let
         uptime_s="$(awk -v s="''${since_us:-0}" -v u="$up_s" \
           'BEGIN { v = (s > 0) ? int(u - s / 1000000) : 0; if (v < 0) v = 0; print v }')"
 
-        # Latency is NOT measured here, and the division is the point: what measures it is the
-        # bar, with a CONTINUOUS ping of 1 packet/s (Bar.qml, VpnProbe). This command only
-        # delivers the TARGET, because discovering who answers inside the tunnel is shell work
-        # (sweeping routes, testing candidates, memorizing) while measuring is the work of
-        # whoever watches all the time. The previous version measured here, in bursts of 3
-        # packets, and the number came out PRETTY AND FALSE: see the VpnProbe block for the
-        # measurement that proved it.
+        # This delivers the TARGET only. Measuring is the bar's job, continuously.
         probe=null
         tgt="$(probe_for "$id" "$ifc" "$ipaddr")"
         [ "$tgt" = "-" ] || probe="\"$tgt\""
@@ -381,10 +258,7 @@ let
         # On-demand diagnosis, in the terminal: `vpn diagnose fai`.
         diagnose)
           diag "''${2:-fai}" ;;
-        # Called by vpn-watch@<id>.service, triggered by fai_up/ufscar_up. It waits and, if it
-        # did not connect, warns ONCE with the verdict. Total silence when it connects, because
-        # a notification that shows up on the happy path becomes noise and starts being
-        # ignored.
+        # Warns ONCE, and only on failure: a notification on the happy path becomes noise.
         watch)
           id="''${2:-fai}"
           sleep "''${3:-45}"
@@ -401,18 +275,10 @@ let
           fai_conn    && fai=true
           ufscar_conn && ufscar=true
           printf '{"vpns":[{"id":"fai","name":"FAI","connected":%s},{"id":"ufscar","name":"UFSCar","connected":%s}]}\n' "$fai" "$ufscar" ;;
-        # Tunnel state for the HOVER popover (bar/VpnStatsPopover.qml). The same shape as
-        # status-json (a list of vpns) because it is the same consumer, but it does not replace
-        # that one: this only works with a tunnel up. See the stats_one block above.
+        # For the hover popover. Same shape as status-json, but only works with a tunnel up.
         stats-json)
           printf '{"vpns":[%s,%s]}\n' "$(stats_one fai FAI)" "$(stats_one ufscar UFSCar)" ;;
-        # REMOVED (30/07): the `menu` subcommand, which opened a loose rofi in the middle of
-        # the screen. The UI is now a popover ANCHORED to the bar
-        # (quickshell/bar/VpnPopover.qml), in the shell's theme. It is not only cosmetic: the
-        # rofi menu built its labels with `systemctl is-active`, which LIES (see
-        # fai_conn/ufscar_conn above), so it said "Disconnect" during the nxBender crash-loop,
-        # with no tunnel existing. The popover reads status-json, which checks the real tunnel.
-        # One source of truth, and the correct one.
+        # The `menu` subcommand was REMOVED on 30/07: the UI is a popover anchored to the bar.
         *) echo "usage: vpn connect|disconnect <ufscar|fai|all> | status-json | stats-json | diagnose <id> | watch <id> [sec] | heal [id]" >&2; exit 1 ;;
       esac
     '';
@@ -421,17 +287,8 @@ in
 {
   environment.systemPackages = [ vpnCli ];
 
-  # The connection watcher: what fires it is the CLI itself (fai_up/ufscar_up), and it exists
-  # as a DECLARED UNIT and not as a background subshell on purpose, per rule 15, an explicit
-  # owner. A loose `&` in the CLI would be parented to Quickshell (which invokes it through
-  # Process) and would disappear on a shell restart, at exactly the minute it should warn.
-  # A @<id> template because there are two VPNs with different portals and different symptoms.
-  # It is a USER unit because what delivers the notification is Quickshell, in the session.
-  # The hang watchdog (see heal_one in the CLI) is also a USER unit because it needs to notify
-  # (Quickshell is the daemon) and because the polkit rule above already lets this user restart
-  # the vpn-* units: no root needed for that. Under autologin the session is always up, so the
-  # watchdog is always in effect; if that ever changes, it stops running without a session, and
-  # that is the known limitation.
+  # A DECLARED unit (rule 15): a loose `&` would be parented to Quickshell and vanish on a
+  # shell restart, at the exact minute it should warn.
   systemd.user.services.vpn-heal = {
     description = "Unsticks a hung VPN (active, no tunnel, past the grace)";
     serviceConfig = {
@@ -461,12 +318,8 @@ in
     };
   };
 
-  # The nxBender config (FAI) rendered by sops: static params plus the password from the vault.
-  # It lives in /run/secrets/rendered (root-only), never in the store and never in git. The
-  # fingerprint belongs to FAI's SELF-SIGNED cert (public, not a secret), and without it
-  # nxBender refuses the SSL. If FAI swaps the certificate, get the new one with:
-  #   openssl s_client -connect 200.133.233.101:4433 | openssl x509 -noout -fingerprint -sha1
-  #   (the nxBender format is lowercase sha1 with ':').
+  # Rendered by sops into /run/secrets/rendered, never the store. The fingerprint is FAI's
+  # self-signed cert (public); how to refresh it is in the note.
   sops.templates."nxbender-fai.conf".content = ''
     server = 200.133.233.101
     port = 4433
@@ -476,9 +329,7 @@ in
     password = ${config.sops.placeholder.fai_vpn_password}
   '';
 
-  # UFSCar: GlobalProtect through openconnect, with the sops password on STDIN (so it does not
-  # leak into ps). --authgroup picks the gateway (the portal offers 5); without it openconnect
-  # asks interactively and the service dies (stdin is only the password, so EOF).
+  # The password goes on STDIN (out of `ps`); --authgroup picks one of the portal's 5 gateways.
   systemd.services.vpn-ufscar = {
     description = "UFSCar VPN (GlobalProtect through openconnect)";
     wants = [ "network-online.target" ];

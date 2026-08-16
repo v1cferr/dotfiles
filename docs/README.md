@@ -11,7 +11,8 @@ act on (the open items) and what you look up (the history) have different rhythm
 | --- | --- | --- |
 | [rules.md](rules.md) | The repo's 18 rules | Before deciding anything |
 | [open-items.md](open-items.md) | What is still open | When picking what to work on |
-| [history/](history/) | What was done and why, a folder per year and a file per month | "Why is this like this?" |
+| [history/](history/) | What was done and why, a folder per year and a file per month | "What happened that day?" |
+| [notes/](notes/) | One page per module: why it is the way it is, and the traps | "Why is THIS module like this?" |
 | [ideas.md](ideas.md) | Considered, not decided yet | When planning |
 | [arch-legacy.md](arch-legacy.md) | A closed chapter + how to open the archive | Rarely |
 | [guides/](guides/) | Step by step for what Nix cannot reach (BIOS, Secure Boot, router, Windows) | When reinstalling or working outside the repo |
@@ -29,3 +30,7 @@ REJECTED, because they keep the next person (or you in six months) from repeatin
 
 **A finished item migrates** from `open-items.md` to `history/<month>.md`. One file only
 grows, the other one shrinks.
+
+**History is append-only, notes are kept current.** The diary keeps a stale entry, because a
+diary that gets edited stops being evidence. A `notes/` page that stops being true is a bug
+(rule 16).

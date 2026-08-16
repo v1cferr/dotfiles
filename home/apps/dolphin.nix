@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # DOLPHIN (KDE): the view mode always "Details", declared.
 #
 # Dolphin REWRITES its KConfig at runtime, so an immutable home-manager symlink would break the

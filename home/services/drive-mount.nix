@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # ~/Drive: the ROOT of Google Drive mounted as a local folder (rclone mount plus a VFS cache), so
 # it shows up in Dolphin as a normal folder, with a bookmark in home/apps/dolphin.nix.
 #

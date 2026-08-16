@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # MANGOHUD: a performance overlay in games (FPS, temps, usage, clocks and so on).
 #
 # The config is 100% declared here (it generates ~/.config/MangoHud/MangoHud.conf). The INJECTION

@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # SYSTEM PACKAGES (root level) ────────────────────────────────────────────────
 # SYSTEM-LEVEL tools only: rescue/base, diagnosis and whatever root/the services need. USER apps
 # and CLIs live in home/ (rule 4): programs.* when there is a module, otherwise home.packages

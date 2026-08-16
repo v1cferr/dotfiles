@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # DISK HYGIENE: a free space alarm plus trash expiry.
 #
 # WHY THIS EXISTS, and why it is NOT more GC: the Nix GC is already automatic

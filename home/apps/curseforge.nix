@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # CurseForge: the official Minecraft modpack app. The PACKAGE (the official AppImage,
 # repackaged) lives in pkgs/curseforge.nix; this is the user side.
 #

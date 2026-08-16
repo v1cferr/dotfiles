@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # AUDIO: PipeWire (it replaces PulseAudio/JACK) ───────────────────────────────
 # The default sound stack on modern NixOS plus Wayland. WirePlumber (the session manager) comes
 # along and handles the routing, Bluetooth audio (A2DP/HFP) included, with no need for an extra

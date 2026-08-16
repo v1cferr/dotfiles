@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # FONTS AND TYPOGRAPHY: the SINGLE SOURCE (SSOT) of the UI family, `my.fonts.ui`.
 #
 # It lives here, and not in my.theme (home/desktop/palette.nix, which handles the COLORS), for two

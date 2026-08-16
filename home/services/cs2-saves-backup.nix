@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # A BACKUP OF THE CITIES: SKYLINES II SAVES (Bottles) into a folder restic covers.
 #
 # Why: restic EXCLUDES ~/.local/share/bottles (Wine prefixes, ~154G that is reinstallable), but

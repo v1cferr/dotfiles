@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # XDG: the default browser (Zen) plus the application menu for the KDE apps.
 #
 # THE DEFAULT BROWSER (declarative): Zen Browser.

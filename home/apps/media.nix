@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # MEDIA (user level): viewers, players and the DEFAULT apps per type.
 #
 # The home/ rule (see home/default.nix): a USER app lives here. The stack choice: KDE Gear

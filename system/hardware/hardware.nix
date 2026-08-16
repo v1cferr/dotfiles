@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # HARDWARE: CPU/microcode, firmware, zram, Bluetooth and removable media. The SAME physical
 # machine on every host (an ASUS EX-B560M-V5 board). The GPU (an Intel Arc B580) lives in
 # system/gpu.nix.

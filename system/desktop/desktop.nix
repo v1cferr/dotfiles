@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # DESKTOP: Hyprland (Wayland) ─────────────────────────────────────────────────
 # A Wayland compositor. LightDM (an X11 greeter) launches the Hyprland session; Xwayland covers
 # X11 apps. Careful: in a Wayland session the keyboard and the monitors do NOT come from the

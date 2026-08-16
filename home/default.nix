@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # THE USER (home-manager): MY DOTFILES, declared.
 #
 # This folder's rule: home-manager owns the USER's PACKAGES AND CONFIG. The idiomatic way is

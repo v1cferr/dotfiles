@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # OFFICE: ONLYOFFICE Desktop Editors.
 #
 # The stack choice: OnlyOffice uses OOXML as its NATIVE format, so .docx/.xlsx/.pptx open with no

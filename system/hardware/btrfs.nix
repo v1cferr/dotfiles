@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # BTRFS: filesystem integrity and maintenance (the SSOT of btrfs POLICY).
 #
 # The division of labor, so nobody looks in the wrong place:

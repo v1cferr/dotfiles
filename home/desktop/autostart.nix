@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # THE AUTOSTART PANEL: what OPENS along with the graphical session, in a single place.
 # Edit true/false in the panel below plus `rebuild`. It mirrors the idiom of
 # system/services/toggles.nix (mkEnableOption plus a gate), but for GUI APPS.

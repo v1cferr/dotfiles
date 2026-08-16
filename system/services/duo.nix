@@ -1,41 +1,5 @@
-# ═══════════════════════════════════════════════════════════════════════════
-# duo-streak-daemon: the app's stack (a Playwright daemon plus API plus web plus Postgres)
-# through Docker Compose, DECLARED in Nix (systemd brings it up at boot). The "brain" (the
-# solver) is the host's NATIVE Ollama (see ./ollama.nix), and the compose talks to it on
-# localhost:11434 through network_mode: host, exactly as the app was designed.
-#
-# Declarative end to end:
-#   • the code is the `duo-streak-daemon` flake input (a commit pinned in flake.lock); the
-#     compose builds straight from the store path, with no mutable clone and no manual build.
-#   • the secrets are a sops template rendered into /run/secrets/rendered/duo.env (never in
-#     plain text in git and never in /nix/store).
-#
-# AUTO-GATE: the module only ACTIVATES when the `duo_db_password` secret exists. Until it is
-# provisioned (Bitwarden, then bitwarden-secrets.json, then sync-secrets), it stays INERT and
-# the system keeps building normally.
-#
-# Turning it on (once):
-#   1. Bitwarden: create the items (the VALUE always goes in the *password* field, because
-#      sync-secrets uses `bw get password`):
-#        "Duo DB Password"  (generate a strong password)   [required]
-#        "Gemini API Key"   (a solver fallback)             [optional]
-#        "ntfy Topic"       (the streak-at-risk alert; a shared topic)
-#        "Duolingo"         (the account password)          [optional; the login fallback]
-#        "Duolingo Email"   (the login email, in the password field) [the fallback's pair]
-#   2. secrets/bitwarden-secrets.json: add the corresponding lines:
-#        "duo_db_password": "Duo DB Password",
-#        "gemini_api_key":  "Gemini API Key",      (only if created)
-#        "ntfy_topic":      "ntfy Topic",           (already in the index)
-#        "duolingo_password": "Duolingo",          (only if created)
-#        "duolingo_username": "Duolingo Email"     (only if created)
-#   3. `sync-secrets`  then  `sudo nixos-rebuild switch --flake .#nixos-kingston`
-#
-# The Duolingo session (a one-time interactive login, since the anti-bot does not like a
-# headless one):
-#   `duo-login` opens the browser, you sign in, and the session is saved in the duo-data
-#   volume. After that the daemon keeps the streak alive on its own (once a day). To run it
-#   right away: `duo-run-once`.
-# ═══════════════════════════════════════════════════════════════════════════
+# DUO-STREAK-DAEMON: the compose stack DECLARED in Nix (a flake input plus a sops-rendered .env),
+# up at boot. Turning it on, `duo-login` and the 3 Docker traps: docs/notes/duo.md
 {
   config,
   pkgs,
@@ -45,37 +9,30 @@
 }:
 
 let
-  # It only turns on once the Postgres password has been provisioned (see AUTO-GATE above).
+  # The auto-gate: it stays inert until the Postgres password is provisioned.
   enabled = config.sops.secrets ? duo_db_password;
 
   duoSrc = inputs.duo-streak-daemon; # the repo's store path (pinned in flake.lock)
   envPath = config.sops.templates."duo.env".path; # /run/secrets/rendered/duo.env
 
-  # Waits for the Docker daemon to be REALLY ready (its API answering) before building. The
-  # `after=docker.service` is not enough when dockerd comes up through socket activation and
-  # BuildKit is still initializing (a race on the 1st boot).
+  # dockerd comes up through socket activation, so `after=docker.service` loses the race.
   dockerReady = pkgs.writeShellScript "duo-wait-docker" ''
     for _ in $(seq 1 60); do ${pkgs.docker}/bin/docker info >/dev/null 2>&1 && exit 0; sleep 1; done
     echo "duo-stack: docker did not become ready in time" >&2; exit 1
   '';
 
-  # Prepares a writable DOCKER_CONFIG (/run/duo) with the buildx and compose plugins linked in.
-  # Without this, the service's root does not DISCOVER buildx and `compose build` falls back to
-  # the LEGACY builder, which does not support `RUN --mount` (the error that blocked
-  # everything).
+  # A writable DOCKER_CONFIG with the plugins: without it buildx is not found and the LEGACY
+  # builder takes over, which does not support `RUN --mount`. See the notes.
   dockerCfgSetup = pkgs.writeShellScript "duo-docker-cfg" ''
     mkdir -p /run/duo/cli-plugins
     ln -sf ${pkgs.docker-buildx}/libexec/docker/cli-plugins/docker-buildx /run/duo/cli-plugins/docker-buildx
     ln -sf ${pkgs.docker-compose}/libexec/docker/cli-plugins/docker-compose /run/duo/cli-plugins/docker-compose
   '';
 
-  # `docker compose` (the PLUGIN, not the standalone binary, since only the plugin routes to
-  # buildx/BuildKit) plus a FIXED project name 'duo' (otherwise the name would become the store
-  # path's hash and the volumes and containers would change on every bump).
+  # The PLUGIN (only it routes to buildx) plus a FIXED project name, so the volumes survive a bump.
   dc = "${pkgs.docker}/bin/docker compose -p duo --env-file ${envPath} -f ${composeFile}";
 
-  # The DEPLOY manifest (the repo has the DEV one): contexts are store paths, and the secrets
-  # come through an env_file pointing at the file rendered by sops (not the values).
+  # The DEPLOY manifest (the repo ships the DEV one): store paths plus a sops-rendered env_file.
   composeFile = pkgs.writeText "duo-compose.yml" ''
     services:
       duo-daemon:
@@ -123,9 +80,7 @@ let
       duo-db-data: {}
   '';
 
-  # The one-time interactive login: it starts an ephemeral container from the SAME image with
-  # the browser visible (through Xwayland/DISPLAY), and the session persists in the
-  # duo_duo-data volume.
+  # The one-time interactive login: the browser visible through Xwayland, the session in the volume.
   duo-login = pkgs.writeShellApplication {
     name = "duo-login";
     runtimeInputs = [
@@ -144,7 +99,7 @@ let
     '';
   };
 
-  # Runs the routine NOW (ignoring the "it already ran today"), useful for testing or forcing.
+  # Runs the routine NOW, ignoring the "it already ran today".
   duo-run-once = pkgs.writeShellApplication {
     name = "duo-run-once";
     runtimeInputs = [ pkgs.docker ];
@@ -154,8 +109,7 @@ in
 lib.mkIf (enabled && config.my.services.duo) {
   virtualisation.docker = {
     enable = true; # the engine declared in Nix
-    # The app's Dockerfiles use `RUN --mount=type=cache`, which requires BuildKit (the legacy
-    # builder ignores it). This turns BuildKit on as the daemon's default.
+    # The Dockerfiles use `RUN --mount=type=cache`, which the legacy builder ignores.
     daemon.settings.features.buildkit = true;
   };
   users.users.v1cferr.extraGroups = [ "docker" ]; # to run docker and duo-login without sudo
@@ -166,10 +120,8 @@ lib.mkIf (enabled && config.my.services.duo) {
     pkgs.docker-compose
   ];
 
-  # The .env rendered by sops: config as text plus secrets through placeholders. The optional
-  # lines only enter if the corresponding secret was provisioned.
-  # owner = v1cferr: the service runs as root (and reads everything), but `duo-login` runs as
-  # the user and needs to READ this file (--env-file).
+  # The .env rendered by sops: config as text plus secrets through placeholders, the optional ones
+  # only if provisioned. owner = v1cferr because `duo-login` runs as the user and reads it.
   sops.templates."duo.env".owner = "v1cferr";
   sops.templates."duo.env".content = ''
     TZ=America/Sao_Paulo
@@ -202,8 +154,7 @@ lib.mkIf (enabled && config.my.services.duo) {
     config.sops.secrets ? duolingo_password
   ) "DUOLINGO_PASSWORD=${config.sops.placeholder.duolingo_password}\n";
 
-  # Brings the stack up and down through compose. It only builds what is missing (the layers
-  # are cached). It depends on Docker and on the native Ollama (the solver the daemon consumes).
+  # It only builds what is missing (the layers are cached), and it needs the native Ollama.
   systemd.services.duo-stack = {
     description = "duo-streak-daemon stack (compose: daemon + api + web + db)";
     after = [
@@ -218,16 +169,12 @@ lib.mkIf (enabled && config.my.services.duo) {
     ];
     wantedBy = [ "multi-user.target" ];
     path = [ pkgs.docker ];
-    # Changing the compose OR the STRUCTURE of the .env makes the switch restart the service,
-    # and `up -d` recreates the affected containers (applying the new env). (A change in the
-    # VALUE of a secret alone does not change the hash here; in that case:
-    # systemctl restart duo-stack.)
+    # A change in a secret's VALUE alone does not move this hash: `systemctl restart duo-stack`.
     restartTriggers = [
       composeFile
       config.sops.templates."duo.env".content
     ];
-    # DOCKER_CONFIG points at the dir with the plugins (see dockerCfgSetup), so Compose finds
-    # buildx and uses BuildKit. DOCKER_BUILDKIT=1 reinforces it.
+    # DOCKER_CONFIG points at the dir with the plugins, so Compose finds buildx.
     environment = {
       DOCKER_CONFIG = "/run/duo";
       DOCKER_BUILDKIT = "1";
@@ -237,7 +184,7 @@ lib.mkIf (enabled && config.my.services.duo) {
       RemainAfterExit = true;
       RuntimeDirectory = "duo"; # creates /run/duo (writable for the DOCKER_CONFIG above)
       TimeoutStartSec = "1800"; # the 1st start builds 3 images (Playwright/Next.js), which takes a while
-      # wait for the daemon, then prepare the plugins, then build (with cache, quickly)
+      # wait for the daemon, prepare the plugins, then build (cached, quick)
       ExecStartPre = [
         dockerReady
         dockerCfgSetup

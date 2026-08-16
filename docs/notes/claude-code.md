@@ -118,9 +118,17 @@ reason:
 that cannot be merely suggested, both in `/etc`, which has the highest precedence and is read-only
 by nature:
 
-**The lifecycle hooks** feed the Discord Rich Presence: the hook POSTs the event to the local
-daemon, which paints the card. Same format `claude-presence setup` would write, only declared. The
-path is FIXED in `/etc`, outside `CLAUDE_CONFIG_DIR`, so they hold for both accounts at once.
+**The lifecycle hooks** feed the Discord Rich Presence: six events POST to the local daemon
+([`home/services/claude-discord-rpc.nix`](../../home/services/claude-discord-rpc.nix)), which
+paints the card. Same format `claude-presence setup` would write, only declared. The path is FIXED
+in `/etc`, outside `CLAUDE_CONFIG_DIR`, so they hold for both accounts at once. `SessionStart` is
+sync and the rest are async, so they do not block CC. The hook is wrapped in a
+`writeShellApplication` because CC runs it with the USER's PATH, which may not have `jq`; the
+`exec` makes the wrapper disappear and leaves the real script.
+
+The reason `/etc` and not the user's `settings.json`: CC WRITES to the user's settings at runtime
+(`/config`, permission approvals), so it can never become a read-only symlink into the store. The
+managed file is read-only by nature and does not fight those writes.
 
 **The global rules** (`/etc/claude-code/CLAUDE.md`, 15/08/2026) are rule 3 applied to the agent
 contract. The three mandatory ones (incremental commits, everything in en-US, never a

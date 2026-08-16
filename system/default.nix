@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # THE SYSTEM: the config COMMON to every host (machine-agnostic). Organized by CATEGORY (a
 # subfolder with its own default.nix). What is specific to each machine (hostname, disks, kernel,
 # stateVersion) lives in hosts/<host>/default.nix.

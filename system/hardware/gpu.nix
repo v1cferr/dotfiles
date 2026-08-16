@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # GPU: an Intel Arc B580 (Battlemage), the open source `xe` driver plus Mesa. The machine: an
 # Intel i5-11400 plus an Arc B580. A SINGLE driver, declarative, with no CUDA.
 #

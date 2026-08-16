@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # DISCORD RICH PRESENCE FOR CLAUDE CODE (user level): the daemon plus the config.
 #
 # The tool's trio: the hook (system/claude-code.nix, which POSTs the events) -> the daemon (here,

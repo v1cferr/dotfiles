@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # OpenAL: it forces the PulseAudio backend for games that use OpenAL-soft (it generates
 # ~/.config/alsoft.conf, read by ANY OpenAL-soft, the one bundled with the game included). Without
 # this, the OpenAL 1.18.2 that ships with the HashLink/Heaps games (Northgard, Dead Cells,

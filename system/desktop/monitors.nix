@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # MONITORS = the SINGLE SOURCE of the connector names (rule 11). It was the repo's worst case of
 # duplication: DP-2 in 8 files and HDMI-A-3 in 7, across Nix, Lua and QML, so changing a monitor
 # (or a cable) meant hunting a string through everything.

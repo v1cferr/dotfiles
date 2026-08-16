@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # DROPBOX: the ~/Dropbox folder synced (the Obsidian vault plus documents).
 #
 # A conscious exception to the "home/ does not install" rule: services.dropbox is a USER

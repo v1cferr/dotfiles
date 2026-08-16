@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # MEGA from the command line: megatools (`megadl`) plus the `mega-dl` wrapper, which is megadl
 # with a PATIENT loop, resuming on its own until the file finishes, quota crossings included.
 #

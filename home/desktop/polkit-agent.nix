@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # THE POLKIT AGENT: what shows the password dialog when a GRAPHICAL app needs authorization
 # (mounting another user's disk, writing to a block device, controlling a systemd unit from the
 # GUI and so on).

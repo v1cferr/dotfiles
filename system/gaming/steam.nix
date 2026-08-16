@@ -1,4 +1,3 @@
-# ═══════════════════════════════════════════════════════════════════════════
 # STEAM: the client plus the Proton runtime (system level, mandatory: programs.steam FHS-wraps the
 # client and injects the steam-runtime). unfree is already allowed (core.nix) and the 32-bit libs
 # are already on for Wine/Proton (gpu.nix: enable32Bit).

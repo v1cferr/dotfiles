@@ -6,6 +6,24 @@ let
   # The public index: { "<name-in-sops>" = "<item-in-Bitwarden>"; ... }
   bwMap = builtins.fromJSON (builtins.readFile ../../secrets/bitwarden-secrets.json);
 
+  # The keys secrets.yaml ACTUALLY holds. sops encrypts the values and leaves the
+  # keys in plain text, so this is readable at eval time, with no age key and no
+  # --impure.
+  sopsKeys =
+    let
+      lines = lib.splitString "\n" (builtins.readFile ../../secrets/secrets.yaml);
+      declared = builtins.filter (line: builtins.match "[A-Za-z0-9_]+:.*" line != null) lines;
+    in
+    # "sops" is sops' own metadata block, not a secret.
+    lib.subtractLists [ "sops" ] (map (line: builtins.head (lib.splitString ":" line)) declared);
+
+  # The index, minus whatever has not been synced yet. This is what takes the ORDER
+  # out of it: a declared secret missing from secrets.yaml passes the BUILD and
+  # breaks the ACTIVATION, so adding a line here and rebuilding before running
+  # `sync-secrets` used to bring the whole switch down over one line of JSON. A new
+  # entry now stays inert until it actually exists.
+  syncedMap = lib.filterAttrs (key: _item: builtins.elem key sopsKeys) bwMap;
+
   sync-secrets = pkgs.writeShellApplication {
     name = "sync-secrets";
     runtimeInputs = with pkgs; [
@@ -24,7 +42,7 @@ in
 
   # One sops.secrets.<name> per index entry, merged with the hand-declared ones.
   sops.secrets =
-    (lib.mapAttrs (_key: _item: { }) bwMap)
+    (lib.mapAttrs (_key: _item: { }) syncedMap)
     // {
       v1cferr_password_hash.neededForUsers = true; # the password hash: it is needed early (the user)
       cloudflare_ddns_token = { };
@@ -48,9 +66,9 @@ in
         mode = "0400";
       };
     }
-    # Conditional on the index: a declared secret missing from secrets.yaml passes the BUILD and
-    # breaks the ACTIVATION, so this stays inert until `sync-secrets` has run.
-    // lib.optionalAttrs (bwMap ? ntfy_topic) {
+    # Conditional on the VAULT, not on the index: an owner and a mode only mean
+    # something once the secret exists, and secrets.yaml is what decides that.
+    // lib.optionalAttrs (builtins.elem "ntfy_topic" sopsKeys) {
       ntfy_topic = {
         owner = "v1cferr";
         mode = "0400";

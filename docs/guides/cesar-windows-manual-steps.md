@@ -15,7 +15,7 @@ declares the client, the server is another system's territory.
 | --- | --- |
 | Host / IP | `CESAR` / `192.168.1.40` (DHCP, see the trap at the end) |
 | My account there | `v1cferr`, **a member of Administrators** |
-| The owner's account | `drakk`, [never operate as them](../../home/shell/ssh.nix) |
+| The owner's account | `drakk` (linked to a Microsoft account), [never operate as them](../../home/shell/ssh.nix) |
 | sshd | `OpenSSH_for_Windows_9.5`, on `22` (LAN) and `2223` (exposed on the WAN) |
 
 **An admin's SSH session on Windows already comes with an ELEVATED token.** That is why
@@ -190,6 +190,47 @@ they reach an account that can be locked out. It is the cheapest line in this gu
 
 Then `Restart-Service sshd -Force`, which the current SSH session survives
 (measured 18/08/2026): each connection is its own process.
+
+### He logs in as himself, and the password is the Microsoft one
+
+`ssh drakk@...` authenticates the Windows account `drakk`, lands in
+`C:\Users\drakk` (its `ProfileImagePath`, confirmed) and never touches my profile.
+There is no `HKLM\SOFTWARE\OpenSSH\DefaultShell` on this machine, so the session
+opens `cmd.exe` in his own home, and `C:\Users\drakk\.local\bin` is already on his
+user `PATH`, so `claude` resolves with no extra step from him.
+
+**His account is `PrincipalSource: MicrosoftAccount`**, and that is what can
+surprise him: the password sshd checks is the **Microsoft account password**, not
+the Windows Hello PIN and not the fingerprint. Somebody who signs in with a PIN
+every day may never have typed it. A local credential does exist (`net user drakk`
+gives `Password required: Yes`, `Password expires: Never`), and changing the
+password at `account.microsoft.com` refreshes the cached local one on the next
+interactive sign-in, not instantly.
+
+The short name is the right one as far as can be measured without his password:
+sshd resolved `drakk` to a real, allowed account and moved on to ask for one. The
+`MicrosoftAccount\email@domain` form that gets documented for these accounts was
+not needed to get that far.
+
+### Telling a refused name from a wrong password
+
+`Applications and Services Logs > OpenSSH > Operational` is where the two separate,
+and that distinction is the entire debugging tool for `AllowUsers`:
+
+```powershell
+Get-WinEvent -LogName OpenSSH/Operational -MaxEvents 25 |
+  Select-Object TimeCreated, Message | Format-List
+```
+
+```text
+sshd: Connection closed by authenticating user drakk ...   <- valid AND allowed
+sshd: Invalid user admin from ...                          <- unknown OR refused by AllowUsers
+```
+
+sshd marks a user refused by `AllowUsers` as invalid, exactly like one that does
+not exist, so the CLIENT sees the same `Permission denied` in both cases. The log
+is the only place they are distinguishable, which means testing `AllowUsers` from
+the client side alone will mislead you.
 
 ### Validating without locking yourself out
 

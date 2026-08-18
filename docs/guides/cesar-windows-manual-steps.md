@@ -42,6 +42,24 @@ to the password, without telling the client anything:
 - `Add-Content` without `-Encoding ascii` writes UTF-16, which sshd does not read;
 - without the `icacls`, the file stays writable by more people and sshd **refuses** it.
 
+**That file serves EVERY administrator, and config cannot narrow it** (measured
+18/08/2026). A `Match` block later in the file setting `AuthorizedKeysFile` to
+`.ssh/authorized_keys`, or even to `none`, does NOT stop key authentication from
+succeeding through the shared file: the `Match Group administrators` block in the
+shipped config is not the whole mechanism, the Windows port enforces it underneath.
+
+The control that makes the measurement trustworthy, because otherwise it only shows
+that a `Match` block was ignored: with `AllowUsers nosuchuser` in that SAME
+`Match LocalPort 2223` block, the connection was refused and port `22` kept working.
+The block is applied; only `AuthorizedKeysFile` inside it has no effect.
+
+The consequence is about ownership, not about privilege. Any key in
+`administrators_authorized_keys` logs in as ANY administrator account here, so a key
+added for my brother would also open my account, and mine already opens his. It
+changes little in practice, since both accounts are Administrators on the same
+machine and either could reach the other's profile regardless. It does mean there is
+no such thing as "his key" on this box: there are only the machine's admin keys.
+
 Validate unambiguously (`BatchMode` forbids the password prompt, so it only passes if the key
 did it):
 

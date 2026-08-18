@@ -259,9 +259,9 @@
         pre-commit = inputs.git-hooks.lib.${system}.run {
           src = ./.;
           hooks = {
-            # nixfmt-rfc-style and NOT `nixfmt`: in THIS hook set that name still points at the classic one.
-            # The distinction is expiring in nixpkgs; until the hook set follows, switching reformats it all.
-            nixfmt-rfc-style.enable = true;
+            # `nixfmt` and NOT `nixfmt-rfc-style`: that distinction EXPIRED on 18/08/2026. Both hooks
+            # now resolve to the same nixfmt-1.4.0 and entry; only the old alias warns on eval.
+            nixfmt.enable = true;
             # Both read the repo config (./statix.toml) because they run with cwd at the root.
             statix.enable = true;
             deadnix.enable = true;

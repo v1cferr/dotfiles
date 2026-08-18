@@ -242,12 +242,15 @@ The CI (`.github/workflows/nix.yml`) became the THIRD consumer on 04/08/2026: it
 the need for a deploy key for the private input. So touching the hooks changes the CI by itself;
 there is no second list of linters in the workflow.
 
-**`nixfmt-rfc-style` and NOT `nixfmt`**: in this hook set the name `nixfmt` still points at the
-classic one, and asking for the wrong one would reformat the repo in the old style. As of
-04/08/2026 `nix flake check` already WARNS "nixfmt-rfc-style is now the same as pkgs.nixfmt which
-should be used instead", so the distinction is expiring in nixpkgs. Once the git-hooks.nix hook set
-follows, the right name goes back to being `nixfmt`; until then, switching would reformat in the old
-style.
+**`nixfmt`, and it was `nixfmt-rfc-style` until 18/08/2026.** The hook set used to point the name
+`nixfmt` at the CLASSIC formatter, so asking for it would have reformatted the whole repo in the old
+style, and the alias was the only safe name. The condition this note set for going back was "once
+the git-hooks.nix hook set follows", and the lock bump of 18/08 is where it did: both hook names now
+resolve to the SAME derivation AND the same entry (nixfmt-1.4.0, compared by evaluating
+`checks.<system>.pre-commit.config.hooks.<name>.entry` for each), and `nixfmt --check` over every
+tracked `.nix` passes, so the switch reformats nothing. What outlived the distinction is the
+`evaluation warning` the old alias prints on EVERY eval, including the rebuild; that is what the
+rename removes.
 
 **The shellcheck hook covers `./scripts`.** Rule 7 says the logic lives in the build, and
 `sync-secrets.sh` already gets shellcheck for free by coming from a `writeShellApplication`.

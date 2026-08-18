@@ -16,6 +16,15 @@ for arg in "$@"; do
   esac
 done
 
+# sops comes from the devShell (flake.nix), which direnv enters on a `cd` into the repo.
+# Checked HERE because without it the failure landed on the first `sops set`, already past
+# the vault read, reading as "line NN: command not found" with no hint of what to do.
+if ! command -v sops >/dev/null 2>&1; then
+  echo "sops is not on PATH. Enter the devShell (direnv allow, or nix develop) and rerun," >&2
+  echo "or: nix shell nixpkgs#sops -c $0" >&2
+  exit 1
+fi
+
 if ! bw status | jq -e '.status == "unlocked"' >/dev/null 2>&1; then
   echo "Bitwarden is locked or logged out. Run:" >&2
   echo "  bw login                            # if you have not logged in yet" >&2
@@ -28,8 +37,19 @@ SOPS_AGE_KEY="$(sudo cat /var/lib/sops-nix/key.txt)"
 export SOPS_AGE_KEY
 
 # The file is decrypted ONCE, into JSON, instead of once per key: it is the same age key
-# either way, and the per-key loop below stays a plain lookup. Absent file = every key new.
-cur_json="$(sops -d --output-type json "$yaml" 2>/dev/null || echo '{}')"
+# either way, and the per-key loop below stays a plain lookup.
+# An EMPTY (or absent) file legitimately means "every key is new". A decrypt that FAILS does
+# not: swallowing it into {} classified everything as new and turned the gate below off,
+# which is the one failure this script must never have.
+if [ -s "$yaml" ]; then
+  if ! cur_json="$(sops -d --output-type json "$yaml")"; then
+    echo "Could not decrypt $yaml (see the sops error above). Refusing to continue: with no" >&2
+    echo "current values to compare against, every secret would look new and be overwritten." >&2
+    exit 1
+  fi
+else
+  cur_json='{}'
+fi
 
 # ── Pass 1: read both sides and classify. It writes NOTHING, so the prompt below can
 # still describe the whole change instead of reporting damage already done.

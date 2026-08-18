@@ -329,7 +329,12 @@
         # paragraph of +CC/+LD/+NIX_CFLAGS exports on every cd into the repo.
         pkgs.mkShellNoCC {
           inherit shellHook;
-          buildInputs = enabledPackages ++ [ pkgs.nixd ];
+          # sops: `scripts/sync-secrets.sh` needs it and it is NOT in any profile, so without
+          # this the script died at its first `sops set`, mid-run, on 18/08/2026.
+          buildInputs = enabledPackages ++ [
+            pkgs.nixd
+            pkgs.sops
+          ];
         };
     };
 }

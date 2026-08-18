@@ -18,7 +18,10 @@ name-in-sops to item-in-Bitwarden. It is not a secret, so it goes into git. From
    overwriting one is a decision (`--yes`, or answering the prompt) and never a side effect.
 
 Adding a secret: register it in Bitwarden, add 1 line to the JSON, run `sync-secrets`, then
-`nixos-rebuild switch`. Secrets that do NOT come from Bitwarden (the user's password hash, for
+`nixos-rebuild switch`. `sync-secrets` needs `sops` on the PATH and it is in NO profile: it comes
+from the devShell, which direnv enters on a `cd` into the repo. Outside it, the run dies partway
+through, so the script checks up front; from a bare shell use
+`nix shell nixpkgs#sops -c ./scripts/sync-secrets.sh`. Secrets that do NOT come from Bitwarden (the user's password hash, for
 instance) stay declared by hand.
 
 **The order matters.** Entering the index makes sops DECLARE the secret, and a declared secret

@@ -7,6 +7,15 @@ repo="$(git rev-parse --show-toplevel)"
 map="$repo/secrets/bitwarden-secrets.json"
 yaml="$repo/secrets/secrets.yaml"
 
+# --yes skips the overwrite prompt, for a non-interactive run that means to rotate.
+assume_yes=0
+for arg in "$@"; do
+  case "$arg" in
+    -y | --yes) assume_yes=1 ;;
+    *) echo "usage: $(basename "$0") [--yes]" >&2; exit 2 ;;
+  esac
+done
+
 if ! bw status | jq -e '.status == "unlocked"' >/dev/null 2>&1; then
   echo "Bitwarden is locked or logged out. Run:" >&2
   echo "  bw login                            # if you have not logged in yet" >&2
@@ -18,8 +27,17 @@ fi
 SOPS_AGE_KEY="$(sudo cat /var/lib/sops-nix/key.txt)"
 export SOPS_AGE_KEY
 
-n=0
+# The file is decrypted ONCE, into JSON, instead of once per key: it is the same age key
+# either way, and the per-key loop below stays a plain lookup. Absent file = every key new.
+cur_json="$(sops -d --output-type json "$yaml" 2>/dev/null || echo '{}')"
+
+# ── Pass 1: read both sides and classify. It writes NOTHING, so the prompt below can
+# still describe the whole change instead of reporting damage already done.
+declare -A spec_of=() vault_of=()
+declare -a fresh=() changed=()
+same=0
 missing=0
+
 while IFS=$'\t' read -r key spec; do
   [ -z "$key" ] && continue
   # spec = "Item" (the default field: password) OR "Item:field" ("duolingo.com:username", say)
@@ -35,10 +53,56 @@ while IFS=$'\t' read -r key spec; do
     missing=$((missing + 1))
     continue
   fi
-  sops set "$yaml" "[\"$key\"]" "\"$val\""
-  echo "  ok  $key  <-  Bitwarden: \"$item\" ($field)"
-  n=$((n + 1))
+  spec_of["$key"]="\"$item\" ($field)"
+  vault_of["$key"]="$val"
+  # A key the vault and the file already agree on is SKIPPED, not re-set: sops keeps the
+  # ciphertext of an unchanged value, and re-setting it would churn the diff for nothing.
+  if cur="$(jq -er --arg k "$key" '.[$k]' <<< "$cur_json")"; then
+    if [ "$cur" = "${vault_of["$key"]}" ]; then
+      same=$((same + 1))
+    else
+      changed+=("$key")
+    fi
+  else
+    fresh+=("$key")
+  fi
 done < <(jq -r 'to_entries[] | "\(.key)\t\(.value)"' "$map")
+
+# ── The gate. A value that DIFFERS is the dangerous case: on 17/08 a run meant to add
+# one topic silently reverted the FAI VPN password, and the VPN only died at the reboot.
+if [ "${#changed[@]}" -gt 0 ]; then
+  echo "" >&2
+  echo "These $((${#changed[@]})) secret(s) DIFFER between the vault and $(basename "$yaml"):" >&2
+  for key in "${changed[@]}"; do
+    echo "  ~  $key  <-  Bitwarden: ${spec_of["$key"]}" >&2
+  done
+  echo "" >&2
+  echo "Bitwarden wins, so the file's value is LOST. That is right after a rotation you" >&2
+  echo "did in the vault, and wrong if you edited sops directly and the vault is stale." >&2
+  if [ "$assume_yes" = 1 ]; then
+    echo "--yes given: overwriting." >&2
+  elif [ -t 0 ]; then
+    read -r -p "Overwrite with the vault's value? [y/N] " ans
+    case "$ans" in
+      y | Y | yes | YES) ;;
+      *) echo "Aborted, nothing was written." >&2; exit 1 ;;
+    esac
+  else
+    echo "Refusing to overwrite with no tty. Re-run with --yes if that is what you mean." >&2
+    exit 1
+  fi
+fi
+
+# ── Pass 2: write. Only what is new or was just confirmed reaches `sops set`.
+n=0
+for key in ${fresh[@]+"${fresh[@]}"} ${changed[@]+"${changed[@]}"}; do
+  sops set "$yaml" "[\"$key\"]" "\"${vault_of["$key"]}\""
+  echo "  ok  $key  <-  Bitwarden: ${spec_of["$key"]}"
+  n=$((n + 1))
+done
+if [ "$same" -gt 0 ]; then
+  echo "  --  $same already matched the vault, left alone"
+fi
 
 git -C "$repo" add secrets/secrets.yaml secrets/bitwarden-secrets.json
 echo ""
@@ -49,6 +113,11 @@ if [ "$missing" -gt 0 ]; then
   echo "$n synced, $missing missing. Fix those before applying: a secret the index" >&2
   echo "declares and the vault does not have stays inert, so it would fail at use." >&2
   exit 1
+fi
+
+if [ "$n" -eq 0 ]; then
+  echo "Nothing to do: all $same secret(s) already match the vault."
+  exit 0
 fi
 
 echo "$n secret(s) synced. Apply them with:"

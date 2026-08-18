@@ -13,7 +13,9 @@ name-in-sops to item-in-Bitwarden. It is not a secret, so it goes into git. From
 
 1. Nix GENERATES the `sops.secrets.<name>` entries on its own, so no declaring one by hand again.
 2. `sync-secrets` pulls the values from Bitwarden and writes them ENCRYPTED into `secrets.yaml`
-   (through `sops set`), which is what keeps the rebuild PURE, with no `--impure`.
+   (through `sops set`), which is what keeps the rebuild PURE, with no `--impure`. It writes only
+   what is NEW: a key whose value DIFFERS from the vault's is listed and the run stops, so
+   overwriting one is a decision (`--yes`, or answering the prompt) and never a side effect.
 
 Adding a secret: register it in Bitwarden, add 1 line to the JSON, run `sync-secrets`, then
 `nixos-rebuild switch`. Secrets that do NOT come from Bitwarden (the user's password hash, for
@@ -97,6 +99,13 @@ Three things that each cost a failed attempt:
   write to it; editing as root flips it and the next sync fails.
 - **The `rebuild` is MANDATORY.** sops-nix only decrypts into `/run/secrets` at ACTIVATION, so
   saving the yaml changes nothing that is running. Restart the affected service too.
+- **A hand edit is UNDONE by the next `sync-secrets`.** The sync writes vault to file and never
+  the reverse, so a value changed only here goes back to Bitwarden's on the next run, whatever
+  that run was actually FOR. It killed the FAI VPN on 18/08/2026: the new AD password went into
+  sops on 12/08 and never into the vault, a sync on 17/08 meant only to add `ntfy_topic` reverted
+  it as a side effect, and nothing broke until the next boot renewed `/run/secrets`, six days
+  after the edit that doomed it. Change it IN BITWARDEN and sync; hand-edit only what the vault
+  does not hold.
 
 For `updatekeys` (after adding a recipient) the same environment applies:
 

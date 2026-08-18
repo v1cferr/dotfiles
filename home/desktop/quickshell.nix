@@ -70,7 +70,6 @@ in
 {
   home.packages = [
     qsPkg # `qs` / `quickshell`
-    pkgs.lm_sensors # `sensors`, the CPU temp read by bar/Bar.qml
     qsRestart # `qs-restart`, used by the SUPER+ESCAPE bind (keybinds.lua)
     trayNativeMenu # `tray-native-menu`, right click on an SNI with no DBusMenu (Bar.qml)
   ];

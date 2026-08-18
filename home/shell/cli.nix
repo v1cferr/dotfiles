@@ -50,6 +50,9 @@
     procs
     # hyperfine: `time` measures one sample, this measures the distribution.
     hyperfine
+    # lm_sensors: `sensors` by hand. The bar does NOT use it anymore (it reads hwmon straight),
+    # and it stays because checking a temperature over SSH is worth one command.
+    lm_sensors
   ];
 
   # The toolkit's aliases; the shell and system ones stay in zsh.nix.

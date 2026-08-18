@@ -3,6 +3,7 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
+import "root:/widgets"
 
 PanelWindow {
     id: wPop
@@ -20,26 +21,16 @@ PanelWindow {
     exclusiveZone: 0
     // The card fits the content (+28 = the 14*2 margins). With no fixed width there is no empty
     // space left on the right: the 7-day grid defines the width.
-    implicitWidth: wContent.implicitWidth + 28
-    implicitHeight: wContent.implicitHeight + 28
+    implicitWidth: card.implicitWidth
+    implicitHeight: card.implicitHeight
     color: "transparent"
 
-    Rectangle {
-        anchors.fill: parent
-        radius: 12
-        color: "#f21a1b26"
-        border.color: "#414868"
-        border.width: 1
-
-        HoverHandler {
-            id: wPopHover
-            onHoveredChanged: bar.wPopHovered = hovered
-        }
+    PopCard {
+        id: card
+        onHoveredChanged: wPop.bar.wPopHovered = card.hovered
 
         ColumnLayout {
             id: wContent
-            anchors.fill: parent
-            anchors.margins: 14
             spacing: 10
 
             // A centered header, then the metrics on one line. AlignHCenter and not fillWidth, which does not
@@ -126,12 +117,7 @@ PanelWindow {
                 }
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                height: 1
-                color: "#414868"
-                opacity: 0.5
-            }
+            Hairline {}
 
             RowLayout {
                 Layout.fillWidth: true

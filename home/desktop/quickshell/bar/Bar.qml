@@ -1268,7 +1268,7 @@ Scope {
             height: 7
             radius: 3.5
             color: Theme.colPeach
-            border.color: "#1a1b26"
+            border.color: Theme.colBgSolid
             border.width: 1
             SequentialAnimation on opacity {
                 running: wsbtn.activity && !wsbtn.active

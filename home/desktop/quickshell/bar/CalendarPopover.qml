@@ -4,6 +4,7 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
+import "root:/widgets"
 
 PanelWindow {
     id: calPop
@@ -22,18 +23,13 @@ PanelWindow {
     implicitWidth: 880
     implicitHeight: 470
     color: "transparent"
-    Rectangle {
-        anchors.fill: parent
-        radius: 12
-        color: "#f21a1b26"
-        border.color: "#414868"
-        border.width: 1
-        HoverHandler {
-            onHoveredChanged: bar.calPopHovered = hovered
-        }
+    PopCard {
+        id: card
+        onHoveredChanged: calPop.bar.calPopHovered = card.hovered
+
         RowLayout {
-            anchors.fill: parent
-            anchors.margins: 14
+            Layout.fillWidth: true
+            Layout.fillHeight: true
             spacing: 14
 
             // ---- The upcoming holidays (the left column) ----
@@ -48,12 +44,7 @@ PanelWindow {
                     font.pixelSize: 15
                     font.bold: true
                 }
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 1
-                    color: "#414868"
-                    opacity: 0.5
-                }
+                Hairline {}
                 Repeater {
                     model: bar.calUpcoming
                     RowLayout {
@@ -125,7 +116,7 @@ PanelWindow {
             Rectangle {
                 Layout.fillHeight: true
                 width: 1
-                color: "#414868"
+                color: Theme.colBorder
                 opacity: 0.5
             }
 
@@ -185,7 +176,7 @@ PanelWindow {
                                         Text {
                                             anchors.centerIn: parent
                                             text: parent.isHead ? parent.modelData.head : (parent.modelData.d > 0 ? ("" + parent.modelData.d) : "")
-                                            color: parent.isHead ? Theme.colDim : (parent.isToday ? "#1a1b26" : (parent.hol && !parent.hol.fac ? "#1a1b26" : (parent.hol && parent.hol.fac ? bar.scopeColor(parent.hol.scope) : Theme.colWsInactive)))
+                                            color: parent.isHead ? Theme.colDim : (parent.isToday ? Theme.colBgSolid : (parent.hol && !parent.hol.fac ? Theme.colBgSolid : (parent.hol && parent.hol.fac ? bar.scopeColor(parent.hol.scope) : Theme.colWsInactive)))
                                             font.family: Theme.uiFont
                                             font.pixelSize: parent.isHead ? 8 : 9
                                             font.bold: parent.isToday || (parent.hol && !parent.hol.fac) || parent.isHead

@@ -115,7 +115,7 @@ Scope {
                             id: badge
                             anchors.centerIn: parent
                             text: "" + Notifs.count
-                            color: "#1a1b26"
+                            color: Theme.colBgSolid
                             font.family: Theme.uiFont
                             font.pixelSize: 10
                             font.bold: true

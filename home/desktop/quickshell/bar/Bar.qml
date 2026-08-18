@@ -482,6 +482,47 @@ Scope {
         };
     }
 
+    // The chip's OTHER sensors, condensed into one line. Families are collapsed by stripping the
+    // trailing number, so 6 cores and 12 VRAM channels do not become 18 rows.
+    function tempDetail(chip, primaryLabel) {
+        const fams = ({});
+        const order = [];
+        const t = root.hwTemps;
+        for (let i = 0; i < t.length; i++) {
+            if (t[i].chip !== chip || t[i].label === primaryLabel)
+                continue;
+            const fam = t[i].label.replace(/[\s_]*\d+$/, "") || t[i].label;
+            if (!fams[fam]) {
+                fams[fam] = {
+                    n: 0,
+                    min: 999,
+                    max: -999
+                };
+                order.push(fam);
+            }
+            const f = fams[fam];
+            f.n++;
+            f.min = Math.min(f.min, t[i].temp);
+            f.max = Math.max(f.max, t[i].temp);
+        }
+        const out = [];
+        for (let i = 0; i < order.length; i++) {
+            const f = fams[order[i]];
+            const lo = Math.round(f.min), hi = Math.round(f.max);
+            out.push((f.n > 1 ? f.n + " " + order[i] + " " : order[i] + " ") + (lo === hi ? hi + "°" : lo + "-" + hi + "°"));
+        }
+        return out.join(" · ");
+    }
+    // The chips actually publishing a temperature, for the panel's footer: it is where "which
+    // driver said that" lives.
+    readonly property var tempChips: {
+        const seen = [];
+        for (let i = 0; i < root.hwTemps.length; i++)
+            if (seen.indexOf(root.hwTemps[i].chip) < 0)
+                seen.push(root.hwTemps[i].chip);
+        return seen;
+    }
+
     // The USAGE verdict, in the ORDER OF THE DAMAGE: what stalls the machine comes before what is
     // merely busy, and PSI is the kernel saying it out loud instead of us inferring it.
     readonly property var usageQuality: {
@@ -544,27 +585,6 @@ Scope {
         }
     }
 
-    // Consolidated usage, the headline is the CPU. The GPU has no percentage on xe, so what stands
-    // in for it is the CLOCK against its own ceiling: measured, instead of a 0% that lies.
-    readonly property var usageList: [
-        {
-            name: "CPU",
-            pct: root.cpuPct
-        },
-        {
-            name: "RAM",
-            pct: root.memPct
-        },
-        {
-            name: "GPU clock",
-            pct: root.gpuFreqMax > 0 ? Math.round(root.gpuFreq / root.gpuFreqMax * 100) : 0
-        },
-        {
-            name: "Disk",
-            pct: root.diskPct
-        }
-    ]
-
     // VPN. vpnList is the RAW list (the popover needs a row per VPN); the aggregate paints the pill.
     // ONE read feeds both, because `systemctl is-active` LIES during nxBender's crash loop.
     property bool vpnConnected: false
@@ -623,116 +643,23 @@ Scope {
         } catch (e) {}
     }
 
-    // A CONTINUOUS probe, 1 packet/s over 60s, and it is measured, not taste: a 3-packet burst
-    // observed 3% of the time and resolved loss at docs/notes/desktop/bar.md before changing it.
-    component VpnProbe: Scope {
-        id: probe
-        // `info` ARRIVES from outside: an inline component cannot see the declaring document's id, so
-        // reading root.vpnStats in here is a ReferenceError and the instance is never born.
-        required property var info
-        readonly property string iface: probe.info.connected === true ? (probe.info.iface || "") : ""
-        readonly property string target: probe.info.connected === true ? (probe.info.probe || "") : ""
-        // A new tunnel or target = a NEW series; the IP is in the key because ppp0 reappears as ppp0
-        // on a reconnect, and splicing would draw a step that never existed.
-        readonly property string key: probe.iface + "@" + probe.ip + "@" + probe.target
-        readonly property string ip: probe.info.connected === true ? (probe.info.ip || "") : ""
-        readonly property int window: 60 // 1 min at 1 packet/s
-        property var series: []          // ms per sample; null = a packet with no answer
-
-        onKeyChanged: {
-            probe.series = [];
-            pingProc.running = false;
-            if (probe.iface !== "" && probe.target !== "") {
-                // -O emits "no answer yet" at timeout: without it a lost packet is SILENCE and the series would
-                // hold only the ones that came back (an eternal 0% loss). -n no DNS; -W 1 matches the interval.
-                pingProc.command = ["ping", "-n", "-O", "-i", "1", "-W", "1", "-I", probe.iface, probe.target];
-                probe.lastAt = Date.now();
-                pingProc.running = true;
-            }
-        }
-        function push(v) {
-            const s = probe.series.slice(-(probe.window - 1));
-            s.push(v);
-            probe.series = s;
-        }
-        function feed(line) {
-            probe.lastAt = Date.now(); // any line proves the probe is alive
-            const m = line.match(/time=([0-9.]+) ms/);
-            if (m)
-                probe.push(Number(m[1]));
-            else if (line.indexOf("no answer yet") >= 0)
-                probe.push(null);
-            // the header and noise do not become samples, but they count as a sign of life
-        }
-        // A WATCHDOG: with -O, silence is NOT loss, it is the probe broken. Without this the panel would
-        // freeze on the last good window, looking "stable", which is the lie it exists not to tell.
-        property double lastAt: 0
-        Timer {
-            interval: 5000
-            repeat: true
-            running: probe.iface !== "" && probe.target !== ""
-            onTriggered: {
-                if (Date.now() - probe.lastAt < 5000)
-                    return;
-                probe.push(null);
-                probe.lastAt = Date.now();
-                pingProc.running = false;
-                reviveTimer.restart();
-            }
-        }
-        Timer {
-            id: reviveTimer
-            interval: 300 // it lets the process die before being reborn
-            onTriggered: if (probe.iface !== "" && probe.target !== "")
-                pingProc.running = true
-        }
-        // The window's statistics. The `mdev` is the standard deviation of the answered ones,
-        // the same calculation iputils does, so the number here matches `ping` in the terminal.
-        readonly property var stat: {
-            const s = probe.series;
-            let n = 0, sum = 0, sum2 = 0, mn = 0, mx = 0, lost = 0;
-            for (let i = 0; i < s.length; i++) {
-                const v = s[i];
-                if (v === null) {
-                    lost++;
-                    continue;
-                }
-                if (n === 0 || v < mn)
-                    mn = v;
-                if (v > mx)
-                    mx = v;
-                n++;
-                sum += v;
-                sum2 += v * v;
-            }
-            const avg = n ? sum / n : 0;
-            return {
-                n: s.length,
-                answered: n,
-                lost: lost,
-                loss: s.length ? lost * 100 / s.length : 0,
-                avg: avg,
-                min: mn,
-                max: mx,
-                mdev: n ? Math.sqrt(Math.max(0, sum2 / n - avg * avg)) : 0
-            };
-        }
-        Process {
-            id: pingProc
-            stdout: SplitParser {
-                splitMarker: "\n"
-                onRead: data => probe.feed(data)
-            }
-        }
-    }
-    // One probe per VPN, the same two the CLI knows about (system/net/vpn.nix).
-    VpnProbe {
+    // One probe per VPN, the same two the CLI knows about (system/net/vpn.nix). The component is
+    // widgets/PingProbe.qml, shared with the link probe on the network panel.
+    PingProbe {
         id: faiProbe
-        info: root.vpnStats["fai"] || ({})
+        readonly property var info: root.vpnStats["fai"] || ({})
+        enabled: info.connected === true
+        iface: info.iface || ""
+        target: info.probe || ""
+        session: info.ip || ""
     }
-    VpnProbe {
+    PingProbe {
         id: ufscarProbe
-        info: root.vpnStats["ufscar"] || ({})
+        readonly property var info: root.vpnStats["ufscar"] || ({})
+        enabled: info.connected === true
+        iface: info.iface || ""
+        target: info.probe || ""
+        session: info.ip || ""
     }
     readonly property var vpnProbeStat: ({
             fai: faiProbe.stat,
@@ -1179,8 +1106,21 @@ Scope {
         root.netRates = rates;
     }
 
-    // The link's verdict. The order is the order of the damage: with no carrier nothing else
-    // matters, and a link with no gateway is a LAN that does not reach the world.
+    // The link's own probe. It aims at an anycast anchor OUTSIDE the ISP on purpose: "is the cable
+    // plugged in" is already answered by the carrier and the gateway, and what is missing is the rest.
+    readonly property string netProbeTarget: "1.1.1.1"
+    PingProbe {
+        id: netProbe
+        enabled: root.netMain !== "" && root.netGw !== ""
+        iface: root.netMain
+        target: root.netProbeTarget
+        session: root.netAddr[root.netMain] || ""
+    }
+    readonly property var netProbeStat: netProbe.stat
+    readonly property var netProbeSeries: netProbe.series
+
+    // The link's verdict, the SAME order of the damage as the VPN's: no carrier beats everything,
+    // then no gateway, then loss, then jitter, then the mean.
     readonly property var netQuality: {
         const l = root.netLink[root.netMain] || ({});
         if (root.netMain === "" || l.carrier === "0")
@@ -1193,16 +1133,39 @@ Scope {
                 label: "no gateway",
                 color: Theme.colPeach
             };
-        const errs = root.netStats[root.netMain];
-        if (errs && (errs.rxErr + errs.txErr) > 0)
+        const pr = root.netProbeStat;
+        if (!pr || pr.n < 5)
             return {
-                label: "errors",
+                label: "measuring…",
+                color: Theme.colDim
+            };
+        if (pr.loss >= 20)
+            return {
+                label: "bad",
+                color: Theme.colRed
+            };
+        if (pr.loss >= 2 || pr.mdev > 10)
+            return {
+                label: "unstable",
                 color: Theme.colPeach
             };
+        if (pr.avg > 150)
+            return {
+                label: "slow",
+                color: Theme.colYellow
+            };
         return {
-            label: l.speed && Number(l.speed) > 0 ? Number(l.speed) >= 1000 ? (Number(l.speed) / 1000) + " Gb/s" : l.speed + " Mb/s" : "up",
+            label: "steady",
             color: Theme.colGreen
         };
+    }
+    // The link's speed, as the interface itself reports it. A bridge says 10000 and means nothing,
+    // so it is only shown for the interface the route actually uses.
+    readonly property string netSpeed: {
+        const s = Number((root.netLink[root.netMain] || {}).speed || 0);
+        if (!(s > 0))
+            return "";
+        return s >= 1000 ? (s / 1000) + " Gb/s" : s + " Mb/s";
     }
 
     function fmtRate(bps) {
@@ -1391,34 +1354,13 @@ Scope {
             root.calPopVisible = false
     }
 
-    // ===== The metrics popover's hover (temp / usage / network) =====
+    // ===== The system panels' hover (temp / usage / net) =====
+    // The three share ONE hover state machine and one anchor: only one of them can be open, since
+    // the cursor is on a single pill.
     property string metricShown: ""   // "temp" | "usage" | "net"
     property bool metricHovering: false
     property bool metricPopHovered: false
     property bool metricPopVisible: false
-    readonly property var metricRows: {
-        const m = root.metricShown;
-        if (m === "temp")
-            return root.tempList.map(t => ({
-                        label: t.name,
-                        value: t.temp + "\u00b0C",
-                        frac: root.tempFrac(t),
-                        barColor: root.tempColor(t)
-                    }));
-        if (m === "usage")
-            return root.usageList.map(u => ({
-                        label: u.name,
-                        value: u.pct + "%",
-                        frac: Math.max(0, Math.min(1, u.pct / 100)),
-                        barColor: root.stateColor(u.pct, Theme.colAccent)
-                    }));
-        if (m === "net")
-            return root.netRates.map(n => ({
-                        label: n.iface,
-                        value: "\u2193" + root.fmtRate(n.rx) + " \u2191" + root.fmtRate(n.tx)
-                    }));
-        return [];
-    }
     function showMetric(which, pillItem, barContentItem, scr) {
         root.metricShown = which;
         root.metricHovering = true;
@@ -1684,8 +1626,18 @@ Scope {
         bar: root
     }
 
-    // ===== The metrics popover, the view is in bar/MetricsPopover.qml =====
-    MetricsPopover {
+    // ===== The usage panel, the view is in bar/UsagePopover.qml =====
+    UsagePopover {
+        bar: root
+    }
+
+    // ===== The temperatures panel, the view is in bar/TempsPopover.qml =====
+    TempsPopover {
+        bar: root
+    }
+
+    // ===== The network panel, the view is in bar/NetPopover.qml =====
+    NetPopover {
         bar: root
     }
 
@@ -1859,7 +1811,7 @@ Scope {
                         id: netPill
                         icon: "󰛳"
                         label: "↓" + root.fmtRate(root.netMainRx) + " ↑" + root.fmtRate(root.netMainTx)
-                        accent: root.netConnected ? Theme.colTeal : Theme.colRed
+                        accent: root.netQuality.color
                         onHoveredChanged: hovered ? root.showMetric("net", netPill, barContent, bar.screen) : root.unhoverMetric()
                         onClicked: root.launch(["nm-connection-editor"])
                     }

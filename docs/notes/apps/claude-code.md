@@ -79,6 +79,20 @@ But it resolves the realpath FIRST: the link survived intact and what changed in
 **No comments inside the JSON**, on purpose: CC rewrites the whole file on save (it is not JSONC
 like VS Code's) and would erase them.
 
+**The `permissions.allow` list is declared HERE, by hand**, because `/auto-mode-setup` refuses to
+save it (18/08/2026). It reports `Could not write ~/.claude-fai/settings.json, check file
+permissions and disk space` and neither is true: the file opens for writing as the user, the
+target resolves to the repo, and the disk had 363G free. The link survived the attempt, so the
+atomic-write guard measured above still holds; what the command dislikes about this path was not
+determined. It does not matter much, since the answer is the repo's answer for everything else:
+the rule goes in the versioned file and `git diff` shows it.
+
+The list covers READ-ONLY commands only. `git add`/`commit`/`push`, `nix build`, `nixos-rebuild`
+and `systemctl start`/`stop` are OUT on purpose, since a prompt on the command that CHANGES
+something is the prompt worth keeping. That is also why the systemctl verbs are spelled out one by
+one: the tempting `Bash(systemctl --user *)` is a PREFIX rule, so it would quietly cover `start`
+and `stop` as well.
+
 `theme: dark-ansi` is not neutral, it is as TokyoNight as it gets: it tells the TUI to use the
 terminal's 16 ANSI colors, which in this repo's kitty ALREADY are the `my.theme` palette (rule 9).
 

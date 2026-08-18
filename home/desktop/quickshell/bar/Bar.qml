@@ -73,157 +73,365 @@ Scope {
         hyprProc.running = true;
     }
 
-    // ===== CPU / RAM / Disk =====
-    property int cpuPct: 0
-    property int memPct: 0
-    property int diskPct: 0
-    property var cpuPrev: null
-    function parseCpu(text) {
-        const parts = text.trim().split(/\s+/);
-        if (parts[0] !== "cpu")
-            return;
-        const n = parts.slice(1).map(Number);
-        const total = n.reduce((a, b) => a + b, 0);
-        const idle = (n[3] || 0) + (n[4] || 0);
-        if (root.cpuPrev) {
-            const dt = total - root.cpuPrev.total;
-            const di = idle - root.cpuPrev.idle;
-            if (dt > 0)
-                root.cpuPct = Math.round((1 - di / dt) * 100);
-        }
-        root.cpuPrev = {
-            total: total,
-            idle: idle
-        };
+    // ===== The system snapshot: ONE read of /proc and sysfs per tick =====
+    // `head -v` prefixes every file with its own path, so a single fork replaces the five that used
+    // to read the CPU, the memory, the sensors, the GPU and the links: docs/notes/desktop/bar.md
+    readonly property int sysInterval: 2000
+    readonly property int histWindow: 60 // 60 samples at 2 s = the last 2 minutes
+    readonly property string sysCmd: "head -n 200 -v /proc/stat /proc/loadavg /proc/uptime /proc/meminfo /proc/diskstats /proc/net/dev /proc/pressure/cpu /proc/pressure/memory /proc/pressure/io /sys/class/hwmon/hwmon*/name /sys/class/hwmon/hwmon*/temp*_input /sys/class/hwmon/hwmon*/temp*_label /sys/class/hwmon/hwmon*/temp*_max /sys/class/hwmon/hwmon*/temp*_crit /sys/class/hwmon/hwmon*/fan*_input /sys/class/hwmon/hwmon*/energy*_input /sys/class/hwmon/hwmon*/power*_cap /sys/class/drm/card*/device/tile*/gt*/freq0/act_freq /sys/class/drm/card*/device/tile*/gt*/freq0/max_freq /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq 2>/dev/null || true"
+
+    // A history series is REASSIGNED, never mutated: writing inside the array emits no change
+    // signal, the same trap the calendar's year rollover documents.
+    function pushed(arr, v) {
+        const s = (arr || []).slice(-(root.histWindow - 1));
+        s.push(v);
+        return s;
     }
-    function parseMem(text) {
-        let total = 0, avail = 0;
-        const lines = text.split("\n");
-        for (let i = 0; i < lines.length; i++) {
-            const m = lines[i].match(/^(\w+):\s+(\d+)/);
-            if (!m)
-                continue;
-            if (m[1] === "MemTotal")
-                total = Number(m[2]);
-            else if (m[1] === "MemAvailable")
-                avail = Number(m[2]);
+    function parseSys(text) {
+        const sec = ({});
+        const blocks = text.split("==> ");
+        for (let i = 1; i < blocks.length; i++) {
+            const cut = blocks[i].indexOf(" <==\n");
+            if (cut > 0)
+                sec[blocks[i].slice(0, cut)] = blocks[i].slice(cut + 5);
         }
-        if (total > 0)
-            root.memPct = Math.round((total - avail) / total * 100);
+        root.parseCpu(sec["/proc/stat"] || "");
+        root.parseMem(sec["/proc/meminfo"] || "");
+        root.parseLoad(sec["/proc/loadavg"] || "", sec["/proc/uptime"] || "");
+        root.parsePsi(sec);
+        root.parseCpuFreq(sec);
+        root.parseHwmon(sec);
+        root.parseGpuFreq(sec);
+        root.parseDiskIo(sec["/proc/diskstats"] || "");
+        root.parseNetDev(sec["/proc/net/dev"] || "");
     }
     Process {
-        id: cpuProc
-        command: ["sh", "-c", "head -n1 /proc/stat"]
+        id: sysProc
+        command: ["sh", "-c", root.sysCmd]
         stdout: StdioCollector {
-            onStreamFinished: root.parseCpu(text)
-        }
-    }
-    Process {
-        id: memProc
-        command: ["sh", "-c", "grep -E 'MemTotal|MemAvailable' /proc/meminfo"]
-        stdout: StdioCollector {
-            onStreamFinished: root.parseMem(text)
-        }
-    }
-    Process {
-        id: diskProc
-        command: ["sh", "-c", "df -P / | awk 'NR==2{gsub(\"%\",\"\",$5); print $5}'"]
-        stdout: StdioCollector {
-            onStreamFinished: root.diskPct = parseInt(text.trim()) || 0
+            onStreamFinished: root.parseSys(text)
         }
     }
 
-    // ===== Temperatures (sensors -j) plus the GPU temp (xe's hwmon; see gpuProc) =====
-    property real cpuTempC: 0
-    property real moboTempC: 0
-    property var nvmeTempsC: []
-    property int gpuUsage: 0
-    property real gpuTempC: 0
-    function parseSensors(text) {
-        try {
-            const d = JSON.parse(text);
-            const nvmes = [];
-            for (const chip in d) {
-                const s = d[chip];
-                if (typeof s !== "object")
-                    continue;
-                let pick = null, key = "";
-                if (chip.indexOf("coretemp") === 0) {
-                    pick = s["Package id 0"];
-                    key = "cpu";
-                } else if (chip.indexOf("nct") === 0) {
-                    pick = s["SYSTIN"];
-                    key = "mobo";
-                } else if (chip.indexOf("nvme") === 0) {
-                    pick = s["Composite"];
-                    key = "nvme";
-                }
-                if (!pick || typeof pick !== "object")
-                    continue;
-                let val = 0;
-                for (const k in pick)
-                    if (k.indexOf("_input") >= 0) {
-                        val = pick[k];
-                        break;
-                    }
-                if (key === "cpu")
-                    root.cpuTempC = val;
-                else if (key === "mobo")
-                    root.moboTempC = val;
-                else if (key === "nvme")
-                    nvmes.push(val);
+    // ===== CPU =====
+    property int cpuPct: 0
+    property var cpuCoreP: []      // one % per THREAD, in /proc/stat order
+    property var cpuHist: []
+    property var cpuPrev: ({})
+    property real cpuMhz: 0
+    property real cpuMhzMax: 0
+    property string cpuModel: ""
+    property int cpuThreads: 0
+    property int cpuCores: 0
+    property var loadAvg: [0, 0, 0]
+    property real uptimeSec: 0
+    // The kernel's own stall percentages. `some` is "somebody waited", `full` is "everybody did",
+    // which is the difference between a busy machine and a stopped one.
+    property real psiCpu: 0
+    property real psiMem: 0
+    property real psiIo: 0
+
+    function parseCpu(text) {
+        const lines = text.split("\n");
+        const cur = ({});
+        const cores = [];
+        for (let i = 0; i < lines.length; i++) {
+            const p = lines[i].trim().split(/\s+/);
+            if (!p[0] || p[0].indexOf("cpu") !== 0)
+                continue;
+            const n = p.slice(1).map(Number);
+            if (n.length < 5)
+                continue;
+            let total = 0;
+            for (let k = 0; k < n.length; k++)
+                total += n[k];
+            const idle = (n[3] || 0) + (n[4] || 0);
+            const prev = root.cpuPrev[p[0]];
+            cur[p[0]] = {
+                total: total,
+                idle: idle
+            };
+            let pct = -1;
+            if (prev) {
+                const dt = total - prev.total;
+                if (dt > 0)
+                    pct = Math.round((1 - (idle - prev.idle) / dt) * 100);
             }
-            root.nvmeTempsC = nvmes;
-        } catch (e) {}
+            if (p[0] === "cpu") {
+                if (pct >= 0) {
+                    root.cpuPct = pct;
+                    root.cpuHist = root.pushed(root.cpuHist, pct);
+                }
+            } else if (pct >= 0) {
+                cores.push(pct);
+            }
+        }
+        root.cpuPrev = cur;
+        if (cores.length > 0)
+            root.cpuCoreP = cores;
+    }
+    function parseLoad(loadText, upText) {
+        const p = loadText.trim().split(/\s+/);
+        if (p.length >= 3)
+            root.loadAvg = [Number(p[0]), Number(p[1]), Number(p[2])];
+        const u = Number(upText.trim().split(/\s+/)[0]);
+        if (u > 0)
+            root.uptimeSec = u;
+    }
+    // avg10 and not avg60: the panel is opened to answer "is it stalling RIGHT NOW".
+    function psiValue(text, kind) {
+        const lines = (text || "").split("\n");
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].indexOf(kind) !== 0)
+                continue;
+            const m = lines[i].match(/avg10=([0-9.]+)/);
+            if (m)
+                return Number(m[1]);
+        }
+        return 0;
+    }
+    function parsePsi(sec) {
+        root.psiCpu = root.psiValue(sec["/proc/pressure/cpu"], "some");
+        root.psiMem = root.psiValue(sec["/proc/pressure/memory"], "full");
+        root.psiIo = root.psiValue(sec["/proc/pressure/io"], "full");
+    }
+    function parseCpuFreq(sec) {
+        let sum = 0, n = 0;
+        for (const path in sec) {
+            if (path.indexOf("/cpufreq/scaling_cur_freq") < 0)
+                continue;
+            const v = Number((sec[path] || "").trim());
+            if (v > 0) {
+                sum += v;
+                n++;
+            }
+        }
+        if (n > 0) {
+            root.cpuMhz = Math.round(sum / n / 1000);
+            root.cpuThreads = n;
+        }
+    }
+    // Read ONCE: the model, the core count and the ceiling do not change while the shell runs.
+    function parseCpuInfo(text) {
+        const parts = text.split("@@@");
+        root.cpuModel = (parts[0] || "").trim().replace(/\(R\)|\(TM\)|CPU |Processor /g, "").replace(/\s+/g, " ");
+        root.cpuCores = parseInt((parts[1] || "").trim()) || 0;
+        root.cpuMhzMax = Math.round((parseInt((parts[2] || "").trim()) || 0) / 1000);
     }
     Process {
-        id: sensorsProc
-        command: ["sh", "-c", "sensors -j 2>/dev/null"]
+        id: cpuInfoProc
+        command: ["sh", "-c", "grep -m1 'model name' /proc/cpuinfo | cut -d: -f2; echo @@@; grep '^core id' /proc/cpuinfo | sort -u | wc -l; echo @@@; cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq 2>/dev/null || echo 0"]
+        running: true
         stdout: StdioCollector {
-            onStreamFinished: root.parseSensors(text)
+            onStreamFinished: root.parseCpuInfo(text)
         }
     }
-    function parseGpu(text) {
-        const m = text.trim().split(",");
-        if (m.length >= 2) {
-            root.gpuUsage = parseInt(m[0]) || 0;
-            root.gpuTempC = parseInt(m[1]) || 0;
+
+    // ===== Memory =====
+    property int memPct: 0
+    property var memHist: []
+    property real memTotal: 0
+    property real memAvail: 0
+    property real memCached: 0
+    property real swapTotal: 0
+    property real swapFree: 0
+    readonly property real memUsed: Math.max(0, root.memTotal - root.memAvail)
+    readonly property real swapUsed: Math.max(0, root.swapTotal - root.swapFree)
+    // MemAvailable and not MemFree: the cache is memory you HAVE, and reading MemFree is what makes
+    // every "my RAM is full" panic start.
+    function parseMem(text) {
+        const lines = text.split("\n");
+        const kb = ({});
+        for (let i = 0; i < lines.length; i++) {
+            const m = lines[i].match(/^(\w+):\s+(\d+)/);
+            if (m)
+                kb[m[1]] = Number(m[2]) * 1024;
         }
+        root.memTotal = kb["MemTotal"] || 0;
+        root.memAvail = kb["MemAvailable"] || 0;
+        root.memCached = (kb["Cached"] || 0) + (kb["SReclaimable"] || 0);
+        root.swapTotal = kb["SwapTotal"] || 0;
+        root.swapFree = kb["SwapFree"] || 0;
+        if (root.memTotal > 0) {
+            root.memPct = Math.round(root.memUsed / root.memTotal * 100);
+            root.memHist = root.pushed(root.memHist, root.memPct);
+        }
+    }
+
+    // ===== Disk (the root filesystem plus its device's I/O) =====
+    property int diskPct: 0
+    property real diskTotal: 0
+    property real diskUsed: 0
+    property real diskFree: 0
+    property string diskFs: ""
+    property string diskDev: ""
+    property real diskReadBps: 0
+    property real diskWriteBps: 0
+    property var diskPrev: null
+    function parseDf(text) {
+        const p = text.trim().split(/\s+/);
+        if (p.length < 6)
+            return;
+        root.diskDev = p[0].replace(/^\/dev\//, "");
+        root.diskFs = p[1];
+        root.diskTotal = Number(p[2]);
+        root.diskUsed = Number(p[3]);
+        root.diskFree = Number(p[4]);
+        root.diskPct = parseInt(p[5].replace("%", "")) || 0;
     }
     Process {
-        id: gpuProc
-        // Intel Arc B580 (xe): the temp through hwmon; the usage % does NOT exist on xe, so it is 0.
-        // The output is "0,<temp>" for parseGpu (it was nvidia-smi's "usage,temp" on Arch).
-        command: ["sh", "-c", "for t in /sys/class/drm/card*/device/hwmon/hwmon*/temp*_input; do d=$(dirname \"$t\"); [ \"$(cat \"$d/name\" 2>/dev/null)\" = xe ] && echo \"0,$(($(cat \"$t\")/1000))\" && break; done"]
+        id: diskProc
+        command: ["sh", "-c", "df -PT -B1 / | awk 'NR==2{print $1, $2, $3, $4, $5, $6}'"]
         stdout: StdioCollector {
-            onStreamFinished: root.parseGpu(text)
+            onStreamFinished: root.parseDf(text)
         }
     }
-    // A curated list of temperatures plus the hottest one (the headline)
+    // A sector is 512 B in /proc/diskstats REGARDLESS of the disk's physical sector size, which is
+    // the mistake that turns a correct read into a number 8 times too big.
+    function parseDiskIo(text) {
+        if (root.diskDev === "")
+            return;
+        const lines = text.split("\n");
+        for (let i = 0; i < lines.length; i++) {
+            const p = lines[i].trim().split(/\s+/);
+            if (p.length < 10 || p[2] !== root.diskDev)
+                continue;
+            const rd = Number(p[5]) * 512, wr = Number(p[9]) * 512;
+            if (root.diskPrev) {
+                const dt = root.sysInterval / 1000;
+                root.diskReadBps = Math.max(0, (rd - root.diskPrev.rd) / dt);
+                root.diskWriteBps = Math.max(0, (wr - root.diskPrev.wr) / dt);
+            }
+            root.diskPrev = {
+                rd: rd,
+                wr: wr
+            };
+            return;
+        }
+    }
+
+    // ===== The sensors, read from hwmon directly =====
+    // Straight from hwmon and not from `sensors -j`: it brings each sensor's OWN limit, and the xe
+    // chip repeats the key "card" in that JSON, so the power cap is lost on parse.
+    property var hwTemps: []      // {chip, label, temp, max, crit}
+    property real gpuFreq: 0
+    property real gpuFreqMax: 0
+    property real gpuWatts: 0
+    property real gpuWattsCap: 0
+    property real gpuFan: -1      // -1 = the card publishes no tachometer
+    property real gpuEnergyPrev: 0
+    property var tempHist: []
+
+    // The chip's FAMILY, so another board does not need a new branch here (rule 3).
+    function chipLabel(chip) {
+        const c = (chip || "").toLowerCase();
+        if (c.indexOf("coretemp") === 0 || c.indexOf("k10temp") === 0 || c.indexOf("zenpower") === 0)
+            return "CPU";
+        if (c.indexOf("xe") === 0 || c.indexOf("i915") === 0 || c.indexOf("amdgpu") === 0 || c.indexOf("nouveau") === 0)
+            return "GPU";
+        if (c.indexOf("nvme") === 0)
+            return "NVMe";
+        if (c.indexOf("acpitz") === 0 || c.indexOf("nct") === 0 || c.indexOf("it87") === 0)
+            return "Board";
+        return chip;
+    }
+    function parseHwmon(sec) {
+        const names = ({});
+        for (const path in sec) {
+            const m = path.match(/^(\/sys\/class\/hwmon\/hwmon\d+)\/name$/);
+            if (m)
+                names[m[1]] = (sec[path] || "").trim();
+        }
+        const temps = [];
+        let energy = 0, fan = -1, cap = 0;
+        for (const path in sec) {
+            const m = path.match(/^(\/sys\/class\/hwmon\/hwmon\d+)\/(temp|fan|energy|power)(\d+)_(input|cap)$/);
+            if (!m)
+                continue;
+            const chip = names[m[1]] || "hwmon";
+            const val = Number((sec[path] || "").trim());
+            if (isNaN(val))
+                continue;
+            if (m[2] === "temp" && m[4] === "input") {
+                const base = m[1] + "/temp" + m[3] + "_";
+                temps.push({
+                    chip: chip,
+                    label: (sec[base + "label"] || "").trim() || ("temp" + m[3]),
+                    temp: val / 1000,
+                    max: Number((sec[base + "max"] || "0").trim()) / 1000,
+                    crit: Number((sec[base + "crit"] || "0").trim()) / 1000
+                });
+            } else if (root.chipLabel(chip) === "GPU") {
+                // The card's counters. energy1/power1 is the whole BOARD, energy2 is the chip alone,
+                // and the board is what the PSU actually delivers.
+                if (m[2] === "fan" && val >= 0)
+                    fan = val;
+                else if (m[2] === "energy" && m[3] === "1")
+                    energy = val;
+                else if (m[2] === "power" && m[4] === "cap")
+                    cap = val / 1000000;
+            }
+        }
+        // A temperature of exactly 0 is a sensor that is not wired (the xe pcie one), not a cold one.
+        root.hwTemps = temps.filter(t => t.temp > 0);
+        root.gpuFan = fan;
+        if (cap > 0)
+            root.gpuWattsCap = cap;
+        if (energy > 0) {
+            if (root.gpuEnergyPrev > 0 && energy > root.gpuEnergyPrev)
+                root.gpuWatts = (energy - root.gpuEnergyPrev) / 1000000 / (root.sysInterval / 1000);
+            root.gpuEnergyPrev = energy;
+        }
+        if (root.tempMax > 0)
+            root.tempHist = root.pushed(root.tempHist, root.tempMax);
+    }
+    function parseGpuFreq(sec) {
+        let act = 0, mx = 0;
+        for (const path in sec) {
+            const v = Number((sec[path] || "").trim());
+            if (isNaN(v))
+                continue;
+            if (path.indexOf("/freq0/act_freq") >= 0 && v > act)
+                act = v;
+            else if (path.indexOf("/freq0/max_freq") >= 0 && v > mx)
+                mx = v;
+        }
+        root.gpuFreq = act;
+        if (mx > 0)
+            root.gpuFreqMax = mx;
+    }
+
+    // The PRIMARY sensor of each chip: the package or the composite, falling back to the first the
+    // chip publishes. The rest (per core, VRAM, the NVMe's second sensor) is detail for the panel.
     readonly property var tempList: {
-        const arr = [];
-        if (root.cpuTempC > 0)
-            arr.push({
-                name: "CPU",
-                temp: Math.round(root.cpuTempC)
+        const t = root.hwTemps;
+        const byChip = ({});
+        const order = [];
+        for (let i = 0; i < t.length; i++) {
+            const key = t[i].chip;
+            const lbl = t[i].label.toLowerCase();
+            const primary = lbl.indexOf("package") === 0 || lbl.indexOf("composite") === 0 || lbl === "pkg" || lbl.indexOf("tctl") === 0;
+            if (order.indexOf(key) < 0)
+                order.push(key);
+            if (!byChip[key] || (primary && !byChip[key].primary))
+                byChip[key] = {
+                    s: t[i],
+                    primary: primary
+                };
+        }
+        const out = [];
+        for (let i = 0; i < order.length; i++) {
+            const s = byChip[order[i]].s;
+            out.push({
+                name: root.chipLabel(s.chip),
+                chip: s.chip,
+                label: s.label,
+                temp: Math.round(s.temp),
+                max: s.max,
+                crit: s.crit
             });
-        if (root.gpuTempC > 0)
-            arr.push({
-                name: "GPU",
-                temp: Math.round(root.gpuTempC)
-            });
-        if (root.moboTempC > 0)
-            arr.push({
-                name: "Board",
-                temp: Math.round(root.moboTempC)
-            });
-        const nv = root.nvmeTempsC;
-        for (let i = 0; i < nv.length; i++)
-            arr.push({
-                name: nv.length > 1 ? "NVMe " + (i + 1) : "NVMe",
-                temp: Math.round(nv[i])
-            });
-        return arr;
+        }
+        return out;
     }
     readonly property int tempMax: {
         let m = 0;
@@ -232,10 +440,112 @@ Scope {
                 m = root.tempList[i].temp;
         return m;
     }
-    function tempColor(t) {
-        return t >= 85 ? Theme.colRed : (t >= 70 ? Theme.colPeach : Theme.colSapphire);
+    // How close the sensor is to ITS OWN ceiling. It is the only honest way to compare a CPU that
+    // dies at 100 with a GPU package whose limit is 60, which the old /100 bar did not.
+    function tempLimit(t) {
+        return t.crit > 0 ? t.crit : (t.max > 0 ? t.max : 100);
     }
-    // Consolidated usage (CPU/RAM/GPU/Disk), the headline is the CPU
+    function tempFrac(t) {
+        return Math.max(0, Math.min(1, t.temp / root.tempLimit(t)));
+    }
+    function tempColor(t) {
+        const r = root.tempFrac(t);
+        return r >= 0.9 ? Theme.colRed : (r >= 0.8 ? Theme.colPeach : (r >= 0.7 ? Theme.colYellow : Theme.colSapphire));
+    }
+    readonly property var tempQuality: {
+        let worst = 0;
+        for (let i = 0; i < root.tempList.length; i++)
+            worst = Math.max(worst, root.tempFrac(root.tempList[i]));
+        if (worst <= 0)
+            return {
+                label: "no sensors",
+                color: Theme.colDim
+            };
+        if (worst >= 0.9)
+            return {
+                label: "critical",
+                color: Theme.colRed
+            };
+        if (worst >= 0.8)
+            return {
+                label: "hot",
+                color: Theme.colPeach
+            };
+        if (worst >= 0.7)
+            return {
+                label: "warm",
+                color: Theme.colYellow
+            };
+        return {
+            label: "cool",
+            color: Theme.colGreen
+        };
+    }
+
+    // The USAGE verdict, in the ORDER OF THE DAMAGE: what stalls the machine comes before what is
+    // merely busy, and PSI is the kernel saying it out loud instead of us inferring it.
+    readonly property var usageQuality: {
+        if (root.psiMem >= 10 || root.psiIo >= 20)
+            return {
+                label: "stalling",
+                color: Theme.colRed
+            };
+        if (root.memPct >= 92)
+            return {
+                label: "memory tight",
+                color: Theme.colRed
+            };
+        const per = root.cpuThreads > 0 ? root.loadAvg[0] / root.cpuThreads : 0;
+        if (per >= 1)
+            return {
+                label: "saturated",
+                color: Theme.colRed
+            };
+        if (per >= 0.7 || root.cpuPct >= 85)
+            return {
+                label: "loaded",
+                color: Theme.colPeach
+            };
+        if (root.cpuPct >= 40 || root.memPct >= 80)
+            return {
+                label: "busy",
+                color: Theme.colYellow
+            };
+        return {
+            label: "idle",
+            color: Theme.colGreen
+        };
+    }
+
+    // The heaviest processes, polled ONLY while the usage panel is open: `ps -e` walks all of /proc
+    // and there is no reason to pay for that with the panel closed.
+    property var topCpu: []
+    property var topMem: []
+    function parseProcs(text) {
+        const parts = text.split("@@@");
+        const rows = s => (s || "").trim().split("\n").map(l => {
+            const p = l.trim().split(/\s+/);
+            return {
+                cpu: Number(p[0]),
+                mem: Number(p[1]),
+                name: p.slice(2).join(" ")
+            };
+        }).filter(r => r.name && r.name !== "ps" && r.name !== "sh").slice(0, 3);
+        root.topCpu = rows(parts[0]);
+        root.topMem = rows(parts[1]);
+    }
+    Process {
+        id: procsProc
+        // `ps` itself always reads as 100%, since its cpu time covers its whole (tiny) life; the
+        // filter is in parseProcs, where it does not fight with the shell quoting.
+        command: ["sh", "-c", "ps -eo pcpu,pmem,comm --sort=-pcpu --no-headers | head -n 5; echo @@@; ps -eo pcpu,pmem,comm --sort=-pmem --no-headers | head -n 5"]
+        stdout: StdioCollector {
+            onStreamFinished: root.parseProcs(text)
+        }
+    }
+
+    // Consolidated usage, the headline is the CPU. The GPU has no percentage on xe, so what stands
+    // in for it is the CLOCK against its own ceiling: measured, instead of a 0% that lies.
     readonly property var usageList: [
         {
             name: "CPU",
@@ -246,8 +556,8 @@ Scope {
             pct: root.memPct
         },
         {
-            name: "GPU",
-            pct: root.gpuUsage
+            name: "GPU clock",
+            pct: root.gpuFreqMax > 0 ? Math.round(root.gpuFreq / root.gpuFreqMax * 100) : 0
         },
         {
             name: "Disk",
@@ -743,83 +1053,158 @@ Scope {
     readonly property string spText: root.spHasPlayer ? (root.spArtist ? root.spArtist + " - " + root.spTitle : root.spTitle) : ""
     readonly property color spColor: root.spPlaying ? Theme.colGreen : (root.spHasPlayer ? Theme.colYellow : Theme.colDim)
 
-    // ===== Network (nmcli) =====
+    // ===== Network =====
+    // ONE read for the whole link: what NetworkManager thinks, the default route, the addresses and
+    // the sysfs link files. The MAIN interface is the ROUTE's, never a name written in here.
     property bool netConnected: false
     property bool netEthernet: false
-    function parseNet(text) {
+    property string netMain: ""
+    property string netGw: ""
+    property var netDevs: ({})    // iface -> {type, state}
+    property var netAddr: ({})    // iface -> "ip/cidr"
+    property var netLink: ({})    // iface -> {speed, duplex, mtu, carrier}
+
+    function parseNetInfo(text) {
+        const parts = text.split("@@@");
         let conn = false, eth = false;
-        const lines = text.split("\n");
-        for (let i = 0; i < lines.length; i++) {
-            const p = lines[i].split(":");
-            if (p.length < 3)
-                continue;
-            const type = p[1], state = p[2];
-            if ((type === "ethernet" || type === "wifi") && state.indexOf("connected") === 0 && state.indexOf("externally") < 0) {
+        const devs = ({});
+        (parts[0] || "").split("\n").forEach(l => {
+            const p = l.split(":");
+            if (p.length < 3 || !p[0])
+                return;
+            devs[p[0]] = {
+                type: p[1],
+                state: p[2]
+            };
+            if ((p[1] === "ethernet" || p[1] === "wifi") && p[2].indexOf("connected") === 0 && p[2].indexOf("externally") < 0) {
                 conn = true;
-                if (type === "ethernet")
+                if (p[1] === "ethernet")
                     eth = true;
             }
-        }
+        });
+        root.netDevs = devs;
         root.netConnected = conn;
         root.netEthernet = eth;
+
+        const rt = (parts[1] || "").match(/default\s+via\s+(\S+)\s+dev\s+(\S+)/);
+        root.netGw = rt ? rt[1] : "";
+        root.netMain = rt ? rt[2] : "";
+
+        const addr = ({});
+        (parts[2] || "").split("\n").forEach(l => {
+            const m = l.match(/^\d+:\s+(\S+)\s+inet\s+(\S+)/);
+            if (m && !addr[m[1]])
+                addr[m[1]] = m[2];
+        });
+        root.netAddr = addr;
+
+        const link = ({});
+        const blocks = (parts[3] || "").split("==> ");
+        for (let i = 1; i < blocks.length; i++) {
+            const cut = blocks[i].indexOf(" <==\n");
+            if (cut < 0)
+                continue;
+            const m = blocks[i].slice(0, cut).match(/\/sys\/class\/net\/([^/]+)\/(\w+)$/);
+            if (!m)
+                continue;
+            if (!link[m[1]])
+                link[m[1]] = ({});
+            link[m[1]][m[2]] = blocks[i].slice(cut + 5).trim();
+        }
+        root.netLink = link;
     }
     Process {
         id: netProc
-        command: ["sh", "-c", "nmcli -t -f DEVICE,TYPE,STATE device status"]
+        command: ["sh", "-c", "nmcli -t -f DEVICE,TYPE,STATE device status; echo @@@; ip route show default; echo @@@; ip -o -4 addr show; echo @@@; head -n 1 -v /sys/class/net/*/speed /sys/class/net/*/duplex /sys/class/net/*/mtu /sys/class/net/*/carrier 2>/dev/null || true"]
         stdout: StdioCollector {
-            onStreamFinished: root.parseNet(text)
+            onStreamFinished: root.parseNetInfo(text)
         }
     }
 
-    // throughput per interface (/proc/net/dev); the rate = the delta / 2s (the timer's interval)
+    // The counters and the rate per interface, from /proc/net/dev inside the system snapshot.
+    // Columns 3 and 4 are the RX errors and drops, 11 and 12 the TX ones.
     property var netPrev: ({})
     property var netRates: []
+    property var netStats: ({})
     property real netMainRx: 0
     property real netMainTx: 0
+    property var netRxHist: []
+    property var netTxHist: []
     function parseNetDev(text) {
         const lines = text.split("\n");
-        const cur = {};
+        const cur = ({});
         for (let i = 0; i < lines.length; i++) {
-            const m = lines[i].trim().match(/^([\w-]+):\s*(\d+)(?:\s+\d+){7}\s+(\d+)/);
-            if (!m)
+            const c = lines[i].indexOf(":");
+            if (c < 0)
                 continue;
-            const iface = m[1];
-            if (iface === "lo" || iface.indexOf("veth") === 0)
+            const iface = lines[i].slice(0, c).trim();
+            if (iface === "" || iface === "lo" || iface.indexOf("veth") === 0)
+                continue;
+            const f = lines[i].slice(c + 1).trim().split(/\s+/).map(Number);
+            if (f.length < 12 || isNaN(f[0]))
                 continue;
             cur[iface] = {
-                rx: Number(m[2]),
-                tx: Number(m[3])
+                rx: f[0],
+                tx: f[8],
+                rxErr: f[2],
+                rxDrop: f[3],
+                txErr: f[10],
+                txDrop: f[11]
             };
         }
+        const dt = root.sysInterval / 1000;
         const rates = [];
         for (const iface in cur) {
             const prev = root.netPrev[iface];
-            if (prev) {
-                const rxr = Math.max(0, (cur[iface].rx - prev.rx) / 2);
-                const txr = Math.max(0, (cur[iface].tx - prev.tx) / 2);
-                if (iface === "enp7s0") {
-                    root.netMainRx = rxr;
-                    root.netMainTx = txr;
-                }
-                if (rxr > 0 || txr > 0 || iface === "enp7s0")
-                    rates.push({
-                        iface: iface,
-                        rx: rxr,
-                        tx: txr
-                    });
+            if (!prev)
+                continue;
+            const rxr = Math.max(0, (cur[iface].rx - prev.rx) / dt);
+            const txr = Math.max(0, (cur[iface].tx - prev.tx) / dt);
+            if (iface === root.netMain) {
+                root.netMainRx = rxr;
+                root.netMainTx = txr;
+                root.netRxHist = root.pushed(root.netRxHist, rxr);
+                root.netTxHist = root.pushed(root.netTxHist, txr);
             }
+            if (rxr > 0 || txr > 0 || iface === root.netMain)
+                rates.push({
+                    iface: iface,
+                    rx: rxr,
+                    tx: txr
+                });
         }
         root.netPrev = cur;
+        root.netStats = cur;
         rates.sort((a, b) => (b.rx + b.tx) - (a.rx + a.tx));
         root.netRates = rates;
     }
-    Process {
-        id: netDevProc
-        command: ["sh", "-c", "cat /proc/net/dev"]
-        stdout: StdioCollector {
-            onStreamFinished: root.parseNetDev(text)
-        }
+
+    // The link's verdict. The order is the order of the damage: with no carrier nothing else
+    // matters, and a link with no gateway is a LAN that does not reach the world.
+    readonly property var netQuality: {
+        const l = root.netLink[root.netMain] || ({});
+        if (root.netMain === "" || l.carrier === "0")
+            return {
+                label: "offline",
+                color: Theme.colRed
+            };
+        if (root.netGw === "")
+            return {
+                label: "no gateway",
+                color: Theme.colPeach
+            };
+        const errs = root.netStats[root.netMain];
+        if (errs && (errs.rxErr + errs.txErr) > 0)
+            return {
+                label: "errors",
+                color: Theme.colPeach
+            };
+        return {
+            label: l.speed && Number(l.speed) > 0 ? Number(l.speed) >= 1000 ? (Number(l.speed) / 1000) + " Gb/s" : l.speed + " Mb/s" : "up",
+            color: Theme.colGreen
+        };
     }
+
     function fmtRate(bps) {
         if (bps >= 1048576)
             return (bps / 1048576).toFixed(1) + "M";
@@ -1017,8 +1402,8 @@ Scope {
             return root.tempList.map(t => ({
                         label: t.name,
                         value: t.temp + "\u00b0C",
-                        frac: Math.max(0, Math.min(1, t.temp / 100)),
-                        barColor: root.tempColor(t.temp)
+                        frac: root.tempFrac(t),
+                        barColor: root.tempColor(t)
                     }));
         if (m === "usage")
             return root.usageList.map(u => ({
@@ -1059,25 +1444,16 @@ Scope {
     }
 
     // ===== The polling timers =====
+    // The system snapshot carries the CPU, the memory, the sensors, the GPU and the interfaces in
+    // ONE fork, so what used to be four timers at 2/3/5 s is this one.
     Timer {
-        interval: 2000
+        interval: root.sysInterval
         running: true
         repeat: true
         triggeredOnStart: true
         onTriggered: {
-            cpuProc.running = true;
+            sysProc.running = true;
             hypridleProc.running = true;
-            netDevProc.running = true;
-        }
-    }
-    Timer {
-        interval: 3000
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: {
-            sensorsProc.running = true;
-            gpuProc.running = true;
         }
     }
     Timer {
@@ -1085,10 +1461,7 @@ Scope {
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: {
-            memProc.running = true;
-            vpnProc.running = true;
-        }
+        onTriggered: vpnProc.running = true
     }
     Timer {
         interval: 10000
@@ -1103,6 +1476,15 @@ Scope {
         repeat: true
         triggeredOnStart: true
         onTriggered: diskProc.running = true
+    }
+    // The process list costs a walk over all of /proc, so it only runs with the panel OPEN, the
+    // same rule as the VPN probe.
+    Timer {
+        interval: 3000
+        running: root.metricPopVisible && root.metricShown === "usage"
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: procsProc.running = true
     }
 
     // ===== Hyprland: the workspaces (hyprctl plus events) plus the window's title =====
@@ -1442,7 +1824,7 @@ Scope {
                         id: tempPill
                         icon: "󰔏"
                         label: root.tempMax + "°C"
-                        accent: root.tempColor(root.tempMax)
+                        accent: root.tempQuality.color
                         onHoveredChanged: hovered ? root.showMetric("temp", tempPill, barContent, bar.screen) : root.unhoverMetric()
                     }
                     Pill {

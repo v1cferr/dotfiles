@@ -80,7 +80,9 @@
       "Bash(statix check *)",
       "Bash(deadnix *)",
       "Bash(nixfmt --check *)",
-      "Bash(markdownlint *)"
+      "Bash(markdownlint *)",
+      "Bash(lspci)",
+      "Bash(sudo -n true)"
     ]
   }
 }

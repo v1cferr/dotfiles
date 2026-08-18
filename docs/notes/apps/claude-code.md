@@ -87,6 +87,12 @@ atomic-write guard measured above still holds; what the command dislikes about t
 determined. It does not matter much, since the answer is the repo's answer for everything else:
 the rule goes in the versioned file and `git diff` shows it.
 
+`settings.local.json`, in that same directory and NOT a symlink, is where the TUI writes an
+"always allow" answered at a prompt. It carried three rules from 23/07/2026 (`lspci`, `lspci -nn`,
+`sudo -n true`), which were merged into the versioned list on 18/08 and the file deleted. It comes
+BACK the next time a permission is approved in the UI, and that is fine: it is app state, it wins
+over this file by precedence, and what deserves to survive a reinstall gets moved HERE.
+
 The list covers READ-ONLY commands only. `git add`/`commit`/`push`, `nix build`, `nixos-rebuild`
 and `systemctl start`/`stop` are OUT on purpose, since a prompt on the command that CHANGES
 something is the prompt worth keeping. That is also why the systemctl verbs are spelled out one by

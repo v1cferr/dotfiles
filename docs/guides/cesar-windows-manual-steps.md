@@ -17,6 +17,7 @@ declares the client, the server is another system's territory.
 | My account there | `v1cferr`, **a member of Administrators** |
 | The owner's account | `drakk` (linked to a Microsoft account), [never operate as them](../../home/shell/ssh.nix) |
 | sshd | `OpenSSH_for_Windows_9.5`, on `22` (LAN) and `2223` (exposed on the WAN) |
+| Session shell | Windows PowerShell 5.1, through `DefaultShell` (step 6) |
 
 **An admin's SSH session on Windows already comes with an ELEVATED token.** That is why
 the commands below write to `C:\ProgramData` and to the machine PATH with no UAC, and also
@@ -25,7 +26,8 @@ why the Scoop installer refuses to install without `-RunAsAdmin`.
 ## 1. Key-based login
 
 `ssh-copy-id` **does not work**: it assumes a POSIX shell, and the default shell of the
-Windows sshd is `cmd.exe`. And because the account is an administrator, sshd **ignores** its
+Windows sshd is not one (`cmd.exe` back then, PowerShell since step 6). And because the account is
+an administrator, sshd **ignores** its
 `~/.ssh/authorized_keys`, so only the machine file counts:
 
 ```powershell
@@ -195,8 +197,8 @@ Then `Restart-Service sshd -Force`, which the current SSH session survives
 
 `ssh drakk@...` authenticates the Windows account `drakk`, lands in
 `C:\Users\drakk` (its `ProfileImagePath`, confirmed) and never touches my profile.
-There is no `HKLM\SOFTWARE\OpenSSH\DefaultShell` on this machine, so the session
-opens `cmd.exe` in his own home, and `C:\Users\drakk\.local\bin` is already on his
+The session opens in his own home with the shell from step 6, and
+`C:\Users\drakk\.local\bin` is already on his
 user `PATH`, so `claude` resolves with no extra step from him.
 
 **His account is `PrincipalSource: MicrosoftAccount`**, and that is what can
@@ -277,6 +279,43 @@ curl -s -H 'Accept: application/json' 'https://check-host.net/check-result/<requ
 Two of the three nodes connecting is a pass (18/08/2026: Israel 0.28s, USA 0.17s,
 Iran timed out, which is Iran's filtering and not ours).
 
+## 6. PowerShell as the session's shell
+
+He already drives Claude Code from PowerShell sitting at the machine, so the SSH
+session should land in the same place instead of in `cmd.exe`. Win32-OpenSSH has
+no per-user shell: the setting is global, and it takes TWO values.
+
+```powershell
+New-Item -Path HKLM:\SOFTWARE\OpenSSH -Force | Out-Null
+New-ItemProperty -Path HKLM:\SOFTWARE\OpenSSH -Name DefaultShell `
+  -Value "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" `
+  -PropertyType String -Force
+New-ItemProperty -Path HKLM:\SOFTWARE\OpenSSH -Name DefaultShellCommandOption `
+  -Value "-c" -PropertyType String -Force
+```
+
+No service restart is needed: sshd reads the registry per session.
+
+**`DefaultShellCommandOption` is not optional**, and leaving it out is the worst
+kind of half-broken. sshd hands a one-off command to the shell with `/c`, which is
+cmd's switch and which PowerShell rejects, so interactive sessions keep working
+while EVERY `ssh host <command>` dies. The whole `cesar-cmd` half of
+[`home/shell/ssh.nix`](../../home/shell/ssh.nix) depends on this value.
+
+**`scp` and `sftp` survive the swap** because they go through the `Subsystem` line
+and never touch the login shell (verified, not assumed). That is also the reason
+this went through the registry instead of `Match User drakk` plus `ForceCommand`,
+which is per-user but applies to subsystems too and would have cost him exactly
+those.
+
+Only `powershell.exe` (Windows PowerShell 5.1) exists here; there is no `pwsh`.
+
+**This swap is what makes `ssh cesar` need a `&`.** In PowerShell a quoted path at
+the start of a line is a STRING, not a command, so the previous `RemoteCommand`
+stopped launching Git Bash and started returning a parse error. The client-side
+fix lives in [`home/shell/ssh.nix`](../../home/shell/ssh.nix) and needs a rebuild
+to take effect.
+
 ## Traps that outlive this guide
 
 - **The IP is DHCP.** If the address changes, the alias breaks. The fix is a DHCP
@@ -285,8 +324,7 @@ Iran timed out, which is Iran's filtering and not ours).
   9.5 and `mlkem768x25519` only exists from 9.9 on. It goes away when Microsoft updates
   Win32-OpenSSH. Deliberately **not** silenced with `WarnWeakCrypto`.
 - **Stdin does not reach PowerShell through that sshd.** `powershell -Command -`
-  reads nothing, because the default shell is `cmd.exe` and the session's stdin is
-  not a console. Multi-line work goes inline through `-Command "..."`, or gets
+  reads nothing, because the session's stdin is not a console. Multi-line work goes inline through `-Command "..."`, or gets
   copied over first and run with `-File`.
 - **`where bash` lies over there.** The only `bash` on the PATH is
   `C:\Windows\System32\bash.exe`, which is the legacy WSL stub (with no distro installed).

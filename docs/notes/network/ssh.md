@@ -54,8 +54,10 @@ The IP is a literal because it is the ONLY place in the repo naming the gateway 
 steps live in [`../guides/cesar-windows-manual-steps.md`](../../guides/cesar-windows-manual-steps.md)
 so they can be redone in minutes if that Windows gets reinstalled.
 
-**No `SetEnv TERM`.** The default shell of the Windows sshd is `cmd.exe`, which does not read TERM,
-and that sshd does not ship `AcceptEnv`, so the variable would be discarded on the server anyway.
+**No `SetEnv TERM`.** That sshd does not ship `AcceptEnv`, so the variable is discarded on the
+server no matter what the client sends. The reason used to be doubled up (the default shell was
+`cmd.exe`, which does not read TERM), and that half expired with the shell swap below; the
+`AcceptEnv` half is the one that was load-bearing.
 
 **The post-quantum warning is honest noise.** `connection is not using a post-quantum key exchange`
 shows up on EVERY connection and is not our misconfiguration: `mlkem768x25519` only exists from
@@ -78,15 +80,30 @@ The `icacls` is not decoration: the sshd REFUSES the file, and falls back to the
 on the client side, if anybody else can write to it. And `ssh-copy-id` does NOT work here, because
 it assumes a POSIX shell on the other end.
 
-**The RemoteCommand swaps cmd.exe for Git Bash.** `where git` gives
+**The RemoteCommand swaps the login shell for Git Bash.** `where git` gives
 `C:\Program Files\Git\cmd\git.exe`, but `where bash` does NOT find that bash, because only
 `Git\cmd` is on the PATH while `bash.exe` lives in `Git\bin`, hence the absolute path. The only
 `bash` on the PATH is `C:\Windows\System32\bash.exe`, which is NOT bash: it is the legacy WSL stub,
 and the machine has no distro installed.
 
-Swapping the shell through the registry (`HKLM:\SOFTWARE\OpenSSH\DefaultShell`) was REFUSED: it is
-global and would change the shell of EVERY SSH session on that machine, the owner's included. On
-the client side the choice is ours alone and it goes away with this file.
+**The registry shell swap was refused once, and then the owner asked for it** (18/08/2026).
+`HKLM:\SOFTWARE\OpenSSH\DefaultShell` is now
+`C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe`, because he drives Claude Code from
+PowerShell and wanted his SSH session to land there. The old refusal is not being retracted as
+wrong: its reason was that a GLOBAL setting would impose a shell on the OWNER, and it is the owner
+who reversed the premise. Win32-OpenSSH has no per-user shell, and the per-user alternative
+(`Match User` plus `ForceCommand`) applies to subsystems as well, so it would have cost him scp,
+sftp and Remote-SSH.
+
+**`DefaultShellCommandOption` has to be set along with it**, and forgetting it is the worst kind of
+half-broken: sshd hands a one-off command to the shell with `/c`, which is cmd's switch and which
+PowerShell rejects, so interactive sessions keep working while EVERY non-interactive one dies. The
+second value is `-c`, and it is what keeps `ssh cesar-cmd <command>` alive.
+
+**That swap is also why `RemoteCommand` carries a `&`.** In PowerShell a quoted path at the start
+of a line is a STRING, not a command, so the old `"C:\Program Files\Git\bin\bash.exe" -l -i`
+stopped launching bash and started returning a parse error. The `&` call operator runs it. Both
+forms measured on 18/08/2026.
 
 **Why `cesar-cmd` exists, and it is not duplication.** `RemoteCommand` and a command line are
 MUTUALLY EXCLUSIVE in ssh (`Cannot execute command-line and remote command`), so with the

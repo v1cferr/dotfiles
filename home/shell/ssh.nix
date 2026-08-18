@@ -57,7 +57,8 @@ in
         Port = 22;
         IdentityFile = "~/.ssh/id_ed25519";
         RequestTTY = "yes"; # a RemoteCommand with no TTY is an interactive shell with no echo and no readline
-        RemoteCommand = ''"C:\Program Files\Git\bin\bash.exe" -l -i'';
+        # The leading `&` is PowerShell's call operator: without it the quoted path is just a string.
+        RemoteCommand = ''& "C:\Program Files\Git\bin\bash.exe" -l -i'';
       };
 
       # The SAME host with no RemoteCommand, and NOT duplication: the two are mutually exclusive in

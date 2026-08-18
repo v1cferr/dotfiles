@@ -123,6 +123,36 @@ Port 2222 is open to the world (a port forward on the OpenWrt) WITH passwords en
 is mandatory. It mirrors the Arch jail: ban after 4 failures in 10min, for 1h, never banning the
 LAN or loopback.
 
+## The second exposed port is not this machine
+
+`2223` lands on my brother's Windows 11 (`192.168.1.40`), not here, through
+`firewall.ssh_cesar` on the OpenWrt. He asked to drive Claude Code from his phone
+from anywhere, the same way I do. The Windows side and the security trade live in
+[`cesar-windows-manual-steps.md`](../../guides/cesar-windows-manual-steps.md);
+what belongs HERE is the part that is the network's:
+
+**The DDNS did not have to learn a new name.** `cesar-ssh.<domain>` resolved
+correctly before anything was configured, because the zone's `*.<domain>` CNAME
+already points at the anchor. That is the wildcard from the section above paying
+for itself: a SECOND host on the same public IP costs one port, not one DNS
+record, and nothing new can go stale.
+
+**The split-DNS did have to learn it.** `address=/<domain>/192.168.1.10` was
+answering for that name too, so from inside the house the command would have hit
+THIS machine, quietly and with a confusing error. The fix is one more entry,
+`address=/cesar-ssh.<domain>/192.168.1.40`, which wins by dnsmasq's longest match
+without touching any other subdomain. That is also why the forward keeps the same
+port on both ends (`2223` to `2223`, not `2223` to `22`): with the name resolving
+straight to the LAN address at home and to the public IP outside, only a matching
+port number gives him ONE command instead of two.
+
+**fail2ban does not cover it**, and cannot: it reads THIS host's journal, and that
+sshd is another machine's. What replaces it is Windows' own account lockout plus
+`limit='30/minute'` on the redirect, which fw4 supports directly on a `redirect`
+section (`redir.limit` in `/usr/share/ucode/fw4.uc`) and renders inside the DNAT
+rule, so there is no companion rule to keep in sync. It brakes, it does not ban,
+and it is global rather than per source.
+
 ## The FAI gateway: the counterpart is not declarable
 
 `fai-gateway.nix` lets the home LAN reach FAI through `ppp0`. The request was "put the VPN on the

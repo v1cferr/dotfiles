@@ -192,6 +192,28 @@ a discreet color, for two pieces of data that travel together without becoming t
 next to the time). It comes AFTER on purpose: the label is the main information and sits on the
 left edge, which is where the eye enters the pill, so `sub` does not compete for that spot.
 
+### `widgets/`: the shell's shared vocabulary
+
+Beyond the pill, the panels are built out of seven small files: `PopCard` (the glass, the radius,
+the border and the hover flag every popover repeats), `PopHeader` (title, verdict, hairline),
+`Verdict` (the outlined chip that answers "is this fine?"), `StatRow` (label, context, value with
+the value column aligned), `MeterRow` (a StatRow plus its bar), `Sparkline` (the history graph) and
+`Hairline` (the separator).
+
+They are an EXTRACTION and not an invention: `VpnStatsPopover` already had all of them as inline
+components, where no other file could reach them. Pulling them out is what let the temperature,
+usage and network panels be written without copying that code three more times, and it is the same
+separate-file rule as above.
+
+It also closed a rule 11 hole: the calendar, the weather, the metrics popover and the notification
+badge painted `#f21a1b26`, `#414868` and `#1a1b26` as LITERALS. Those three surfaces did not follow
+`my.theme.name` at all, and nothing failed to say so, since the literals happened to be the Tokyo
+Night values.
+
+`PingProbe.qml` is the eighth, and it is not decoration: the continuous ping with its watchdog, now
+shared by the VPN panel and the network one. Its reasoning stays in
+[`bar.md`](bar.md).
+
 ## TrayMenu: why a layer surface and not a PopupWindow
 
 `bar/TrayMenu.qml` renders the DBusMenu (`com.canonical.dbusmenu`) that native SNIs expose, through

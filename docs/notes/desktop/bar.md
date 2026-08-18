@@ -30,11 +30,117 @@ The weekday comes from a local `dowAbbr` and NOT from Qt's `"ddd"`, because Qt's
 the PROCESS' locale, so "sáb" would become "Sat" if the bar came up with no `LC_TIME`. There is no
 year; whoever needs it has the calendar on hover.
 
-## The GPU reading
+## The system snapshot: one read per tick
 
-Intel Arc B580 on the `xe` driver: the temperature comes through hwmon, and the usage % does NOT
-exist on xe, so it is 0. The output is `"0,<temp>"` for `parseGpu`, which was nvidia-smi's
-`"usage,temp"` back on Arch.
+The bar used to read the machine through FIVE forks on three cadences: `/proc/stat` every 2 s,
+`/proc/meminfo` every 5 s, `sensors -j` and the GPU hwmon every 3 s, `/proc/net/dev` every 2 s.
+Today it is ONE `head -n 200 -v` over a fixed list of /proc and sysfs paths.
+
+The trick is `head -v` itself: with several files it prefixes each one with `==> path <==`, so the
+output is SELF-LABELING and the QML splits it by section, with no marker of our own to keep in sync
+between the shell and the parser.
+
+MEASURED on 18/08/2026: 9 ms and 16 KB per snapshot, against 11 ms for the `sensors -j` call ALONE
+that it removes. Fewer forks and five times the data.
+
+Every rate on the panels (the CPU percentage, the disk's I/O, the throughput, the GPU's watts) is a
+DELTA between two consecutive snapshots divided by `sysInterval`, never a number the kernel hands
+over ready. That is why the interval is a property and not a literal: change it in one place and
+every rate stays correct.
+
+### Reading hwmon directly, and not `sensors -j`
+
+Two reasons, and the second one is a bug that was live:
+
+1. **Each sensor's own limit comes with it.** `tempN_max` is where the part starts throttling and
+   `tempN_crit` is where it gives up, and without them a panel can only draw `temp / 100`.
+2. **`sensors -j` LOSES data on this machine.** The `xe` chip publishes two entries named `card`
+   (one with `power1_cap`, another with `energy1_input`), and a JSON object cannot hold a repeated
+   key, so whichever parses it keeps only the last: the GPU's power cap disappears on parse.
+
+The chip FAMILIES are matched by prefix (`coretemp`/`k10temp` are the CPU, `xe`/`i915`/`amdgpu` the
+GPU, `nvme`, `acpitz`/`nct`/`it87` the board), so another machine does not need a new branch here.
+
+That also fixed a reading that never appeared: the old code looked for a chip named `nct*` to get
+the board temperature, and this machine HAS NO `nct`. It has `acpitz`. The row was empty for months
+without ever failing, which is the silent-drift failure rule 16 describes.
+
+### The GPU reading
+
+Intel Arc B580 on the `xe` driver, and the usage percentage does NOT exist: the driver publishes no
+`gpu_busy_percent`, and `intel_gpu_top` only speaks i915 (verified on 18/08/2026: "No device filter
+specified and no discrete/integrated i915 devices found"). The old bar drew that absence as a
+literal `0%`, which is the same class of lie as the pretty-and-false latency the VPN probe exists
+to avoid.
+
+What the card DOES publish is measured and real, so that is what the panel shows: the render clock
+against its ceiling (`tile0/gt0/freq0/act_freq` against `max_freq`, 400 to 2850 MHz here), the whole
+BOARD's power (the `energy1_input` counter in microjoules, turned into watts by the same delta as
+every other rate, against the 210 W `power1_cap`) and the fan's RPM.
+
+`energy1` is the board and `energy2` is the chip alone; the board is what the power supply actually
+delivers, so that is the one on screen.
+
+## The three system panels
+
+The temperature, usage and network pills opened the SAME popover: a title, a list of label/value,
+and a bar drawn at `value / 100`. It answered "how much" and stopped there, while the VPN panel
+right next to it answered "is this fine, and since when". The three now speak that same language:
+
+| Panel | Verdict | Graph | Provenance |
+| --- | --- | --- | --- |
+| `UsagePopover.qml` | idle to stalling | the CPU over 2 min, plus one bar per thread | the CPU model, cores/threads, uptime |
+| `TempsPopover.qml` | cool to critical | the hottest sensor over 2 min | how many sensors, and from which chips |
+| `NetPopover.qml` | offline to steady | throughput mirrored over 2 min | the interface, its type, who manages it |
+
+The window is 60 samples at one every 2 s, so two minutes, and it accumulates whether the panel is
+open or not, because the snapshot that feeds it runs anyway. Opening the panel costs nothing extra,
+with one exception below.
+
+### What each one answers that a number could not
+
+**Usage.** One bar per THREAD, because an average of 20% is a different machine when it is one core
+pinned at 100 and when it is twelve at a fifth, and only the shape tells them apart. The load is
+shown PER THREAD as well: a raw "8" means nothing without knowing there are 12 of them. Memory is
+counted against `MemAvailable` with the cache on its own row, since the cache is memory you HAVE and
+reading `MemFree` is what starts every "my RAM is full" panic.
+
+The kernel's PSI stall percentages only show up when something actually stalled. A row pinned at
+0.0 trains the eye to skip it, and this is precisely the row that has to be noticed the day it
+moves. Same rule as the VPN panel's errors row.
+
+**The heaviest processes are the exception to "costs nothing".** `ps -e` walks all of /proc, so that
+poll only runs while the panel is OPEN, the same gate the VPN probe uses. It answers the one
+question an aggregate never can: who is eating the machine. `ps` itself always reads as 100%, since
+its CPU time covers its whole tiny life, so it is filtered out in the parser, where it does not
+fight with the shell quoting.
+
+**Temperatures.** Every sensor is drawn against ITS OWN ceiling. The old `temp / 100` compared the
+incomparable: a CPU package at 47 of a 100 ceiling and a GPU package at 47 of a 60 one drew exactly
+the same bar. The row's context now says "throttles at 82, crit at 100", which is the number that
+decides whether 78 degrees is fine.
+
+The chip's remaining sensors are condensed on ONE line, grouped by family by stripping the trailing
+number: 6 cores and 12 VRAM channels stay two strings instead of 18 rows. The NVMe's `Sensor 2` is
+one of them on purpose: the drive's thermal thresholds apply to `Composite`, so that is the
+headline, and the hotter secondary sensor is detail and not an alarm.
+
+**The GPU fan says "stopped", not 0.** This card idles at zero RPM and only spins up under load, and
+a bare `0 rpm` reads as a dead fan.
+
+**Network.** The throughput graph is MIRRORED, download growing down from the top and upload up from
+the bottom, sharing ONE ceiling. Two scales would be prettier and would lie about which direction is
+bigger. The floor is 128 KB/s so an idle link is not a dramatic sawtooth, the same reasoning as the
+VPN graph's 60 ms floor.
+
+**The main interface comes from the DEFAULT ROUTE**, not from the literal `enp7s0` that used to be
+written into the parser. That is what "main" means, and it works on a machine that never saw this
+motherboard.
+
+**The link probe aims OUTSIDE the ISP** (an anycast anchor, 1 packet/s, the same
+`widgets/PingProbe.qml` the VPN uses). Whether the cable is plugged in is already answered by the
+carrier flag and the gateway; what was missing is everything past the router. The verdict follows
+the VPN's order of the damage: no carrier, then no gateway, then loss, then jitter, then the mean.
 
 ## The VPN: three surfaces, one source
 
@@ -57,7 +163,7 @@ and the buttons inert during the action.
   at the first distraction. Same choice as PowerMenu, which also has actions inside.
 - **`VpnStatsPopover.qml` (hover)**: the quality verdict, a graph of the last minute, latency,
   jitter, loss, traffic and uptime. It has nothing to click, the same criterion as the calendar and
-  the metrics popover.
+  the three system panels.
 
 Both anchor at the SAME point of the bar, so the Bar hides the stats one while the actions menu is
 open; otherwise one would draw on top of the other, since the mouse stays over the pill the whole

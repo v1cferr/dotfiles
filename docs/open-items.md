@@ -79,7 +79,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
       XEmbed bridge and the ghost-icon diagnosis. The item had been carrying 70 lines of finished
       work, which is the drift rule 16 describes.
       • Quickshell's SNI exposes `tooltipTitle`/`tooltipDescription` ready to use; the pattern to
-        follow is the popovers (an anchored PanelWindow, see MetricsPopover.qml).
+        follow is the popovers (an anchored PanelWindow, see UsagePopover.qml).
       • MEASURED on the live items, and it is why a single field will not do: Discord publishes a
         ToolTip with the title "Discord", Sunshine leaves it EMPTY and only has Title="sunshine",
         and the icon from the XEmbed bridge has NEITHER. So the cascade is tooltipTitle to title

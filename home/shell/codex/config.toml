@@ -3,3 +3,6 @@
 
 # The ChatGPT subscription is the credential, never an API key pasted into a shell (rule 12).
 forced_login_method = "chatgpt"
+
+[projects."/home/v1cferr/Projects/GitHub/v1cferr/dotfiles"]
+trust_level = "trusted"

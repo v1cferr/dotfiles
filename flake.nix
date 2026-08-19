@@ -83,7 +83,7 @@
     # VS Code from the OFFICIAL tarball at a FIXED, VERSIONED url: `/latest/` is a POINTER and broke
     # the eval on every release. What bumps it is vscode-bump, on `update`: docs/notes/repo/flake.md
     vscode-tarball = {
-      url = "tarball+https://update.code.visualstudio.com/1.133.0/linux-x64/stable";
+      url = "tarball+https://update.code.visualstudio.com/1.134.0/linux-x64/stable";
       flake = false;
     };
   };

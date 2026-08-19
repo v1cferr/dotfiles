@@ -151,7 +151,7 @@ Five legs, and only the last three needed any work:
 | leg | where it lives |
 | --- | --- |
 | the name resolving from outside | already done: the `*.v1cferr.dev` wildcard CNAME points at the zone's anchor |
-| the anchor tracking the public IP | already done: `services.cloudflare-dyndns` in [`system/net/network.nix`](../../system/net/network.nix) |
+| the anchor tracking the public IP | already done: `ddns-scripts` on the OpenWrt, [`router/uci/ddns.conf`](../../router/uci/ddns.conf) |
 | WAN `2223` reaching `192.168.1.40` | `firewall.ssh_cesar`, mirrored in [`router/uci/firewall.conf`](../../router/uci/firewall.conf) |
 | the name working INSIDE the house | `dhcp.@dnsmasq[0].address`, in [`router/uci/dhcp.conf`](../../router/uci/dhcp.conf) |
 | Windows answering on `2223` | the three steps below |

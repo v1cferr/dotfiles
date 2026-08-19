@@ -56,19 +56,50 @@ A contrast worth keeping: [`wake-workstation`](../../../home/net/fai-workstation
 problem and could NOT be declared, because there the receiver is somebody else's Ubuntu and the fix
 is netplan by hand. Here the receiver is this machine.
 
-## Dynamic DNS: one anchor, one wildcard
+## Dynamic DNS: one anchor, one wildcard, and it runs on the ROUTER
 
-The DDNS keeps `ssh.<domain>` pointing at the current public IP, so `ssh …@ssh.<domain>` works
-from anywhere with no VPN. The token stays out of git through sops. `proxied=false` means a
-DNS-only record, because SSH does not go through Cloudflare's HTTP proxy.
+`ssh.<domain>` points at the current public IP, so `ssh …@ssh.<domain>` works from anywhere with
+no VPN. `proxied=false` means a DNS-only record, because SSH does not go through Cloudflare's HTTP
+proxy.
 
 **That record is the whole zone's IP anchor, and the only one the DDNS touches.** The services do
 NOT each get a record: the zone uses a `*.<domain>` WILDCARD CNAME pointing here, so a new
-subdomain works with no DNS work at all.
+subdomain works with no DNS work at all. That is what made my brother's `cesar-ssh.<domain>`
+resolve correctly before anybody had configured anything for it.
 
-**Do NOT add `*.<domain>` to the DDNS.** Tested on 07/08/2026: the tool only knows how to create
-and update an A record, and the API refuses with code 81054 (`A CNAME record with that host
-already exists`). The service enters a restart loop and exits 3. The wildcard has to stay a CNAME.
+**Do NOT add `*.<domain>` to the DDNS.** Tested on 07/08/2026: a DDNS client only knows how to
+create and update an A record, and the API refuses with code 81054 (`A CNAME record with that host
+already exists`). The wildcard has to stay a CNAME, and the rule outlived the move below because it
+belongs to the API, not to the client.
+
+### Why it moved off this machine (18/08/2026)
+
+It used to be `services.cloudflare-dyndns` here. It is now `ddns-scripts` on the OpenWrt
+([`router/uci/ddns.conf`](../../../router/uci/ddns.conf)), and my brother is the reason: his PC is
+now reachable from outside through THIS same anchor, so a DDNS that only refreshes while this
+machine is awake made his access depend on mine being on. The router is up whenever the internet
+is, which is the definition of when the record needs to be right.
+
+It cost 104 KB of the router's `/overlay` (measured: 1392 KB free before, 1288 KB after), against
+the 15-25 MB that made nxBender not fit. Same flash, opposite verdict, and the difference is one
+order of magnitude in both directions.
+
+Two failure modes died with the move, and neither of them was ever a configuration mistake:
+
+- **The "what is my IP" APIs are gone.** The router carries the public address DIRECTLY on
+  `pppoe-wan`, so `ip_source='network'` reads it locally, off `netifd`. Here the client had to ASK
+  four external APIs, which is what made it fail on every single boot for a while: it started
+  before connectivity existed and deleted its own cache on the way out.
+- **The DNS lookup is gone too**, and that one was a trap waiting to spring. `ddns-scripts`
+  normally resolves `lookup_host` to learn which IP is registered, and the router's own split-DNS
+  answers `192.168.1.10` for anything in this zone, so it would have compared against the wrong
+  value forever and pushed an update every cycle. `option use_api_check '1'` asks the Cloudflare
+  API for the record instead of asking DNS, and the log says so out loud:
+  `Using provider API for registered IP check`.
+
+The token went with it, into `/etc/config/ddns`, where `router-sync` redacts it by name (`password`
+is on the fail-safe list). It left sops in the same movement, because nothing here consumes it any
+more and a secret with no consumer is legacy (rule 16).
 
 **Do NOT trust `dig` from inside the house to audit this zone.** The router does split-DNS of
 `*.<domain>` to 192.168.1.10 and answers BEFORE any external server, including when you point dig
@@ -82,40 +113,9 @@ curl -s -H 'accept: application/dns-json' \
   'https://cloudflare-dns.com/dns-query?name=ssh.<domain>&type=A' | jq
 ```
 
-The cache (`/var/lib/cloudflare-dyndns/ip.cache`) compares the current IP against what IT wrote
-last, never against the real record, so a change made through the dashboard leaves it blind
-("Every domain is up-to-date", without calling the API). Deleting it forces a real write.
-
 The public IP does answer from outside: the router has it directly on `pppoe-wan` and forwards
-80/443/2222. Proven on 08/08/2026 through Cloudflare's edge. There was a CGNAT scare on 07/08 that
-proved FALSE; the diagnosis and the three ways that test can lie are in the august history.
-
-## `network.target` is not connectivity
-
-The nixpkgs module orders the DDNS only by `network.target`
-(`services/networking/cloudflare-dyndns.nix:79`), and that target does NOT mean "there is
-internet", it means "the network stack was started". What means connectivity is
-`network-online.target`, and it requires BOTH ends: the `wants` (otherwise the target is not even
-pulled in) and the `after` (otherwise there is no ordering).
-
-Measured on the 01/08 boot: the service came up at T+3s and network-online was only ready at
-T+9.8s, because NetworkManager-wait-online spends 6.5s waiting for DHCP. The result, EVERY boot:
-the four "what is my IP" APIs came back unreachable, it DELETED the cache and exited with status
-2. The 5 min timer fixed it afterwards, so this never showed up as broken, only as a `failed` at
-boot that we learned to ignore. The real cost was `ssh.v1cferr.dev` pointing at the old IP at the
-WORST possible moment: right after a power outage, which is precisely when the public IP tends to
-change and when you want to get in from outside.
-
-There was a SECOND cause that died with Tailscale (08/08/2026): `/etc/resolv.conf` pointed at
-`100.100.100.100`, served by tailscaled itself, which came up 11ms AFTER this service, so the APIs
-failed on resolution, not on routing. That required an `after = tailscaled.service` that now has
-no target.
-
-**The retry stays, and it is not residue**: the first cause (DHCP taking ~6.5s after the target) is
-independent of Tailscale. Tolerating the race and trying again is more robust than guessing the
-ordering, and the `Restart` keeps the stale-IP window at <=20s against the timer's <=5min. The
-StartLimit is the brake so it does not become an infinite loop when the failure is real (an invalid
-token, Cloudflare down): 6 attempts in 5min and it gives up, leaving the `failed` visible.
+80/443/2222/2223. Proven on 08/08/2026 through Cloudflare's edge. There was a CGNAT scare on 07/08
+that proved FALSE; the diagnosis and the three ways that test can lie are in the august history.
 
 ## fail2ban
 

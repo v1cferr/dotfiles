@@ -14,7 +14,6 @@
     "tor"
     "restic"
     "btrbk"
-    "cloudflare-ddns"
     "dropbox"
     "drive-mount"
     "arch-antigo-mount"

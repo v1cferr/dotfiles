@@ -14,7 +14,6 @@
     tor = true; # a local SOCKS5 at 127.0.0.1:9050 (client only; the consumer is `mega-tor`)
     restic = true; # the automatic backup (off-disk, daily)
     btrbk = true; # local @home snapshots (hourly), complementing restic
-    cloudflare-ddns = true; # dynamic DNS (it keeps the external SSH alive)
     dropbox = true; # ~/Dropbox syncing
     drive-mount = true; # ~/Drive = the Drive's root mounted (rclone mount), showing up in Dolphin
     arch-antigo-mount = true; # /mnt/arch-antigo = the old Arch archive mounted ALWAYS (restic)

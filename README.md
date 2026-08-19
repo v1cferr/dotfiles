@@ -43,7 +43,7 @@ system/                  SYSTEM, shared by every host (machine-agnostic)
   default.nix            imports the categories below + packages.nix
   core/                  Nix/flakes, boot, users, secrets, locale
   hardware/              CPU/microcode, GPU (Arc B580), audio (PipeWire), fonts
-  net/                   NetworkManager, exposed SSH, fail2ban, DDNS, VPNs
+  net/                   NetworkManager, exposed SSH, fail2ban, VPNs
   desktop/               LightDM, Hyprland, xkb, portal, gnome-keyring
   services/              restic, btrbk, Caddy, Jellyfin/qBittorrent, Sunshine, Ollama/duo
   packages.nix           CENTRAL LIST of SYSTEM packages (rescue/base + diagnostics)
@@ -155,8 +155,8 @@ nix shell nixpkgs#sops -c sops secrets/secrets.yaml   # edit secrets
 Editing a secret requires a `rebuild`, otherwise `/run/secrets` is not
 refreshed.
 
-What it holds today: my password hash, the Cloudflare DDNS token and (through
-Bitwarden) the restic repository password.
+What it holds today: my password hash and (through Bitwarden) the restic
+repository password.
 
 ## Backup and remote access
 
@@ -164,9 +164,10 @@ Bitwarden) the restic repository password.
   encrypted, offsite backup of `~` (Zen, `.claude`, VS Code, documents) to
   **Google Drive**. To browse it: `sudo restic-home-gdrive mount /mnt/backup`,
   which gives one folder per snapshot.
-- **SSH** on port `2222` (root off, `fail2ban` on) plus **Cloudflare DDNS**
-  keeping `ssh.v1cferr.dev` pointed at the current public IP, so the machine is
-  reachable from anywhere without a VPN.
+- **SSH** on port `2222` (root off, `fail2ban` on), reachable from anywhere with
+  no VPN. The **DDNS** that keeps `ssh.v1cferr.dev` pointed at the current public
+  IP lives on the ROUTER since 18/08/2026, so external access no longer depends
+  on this machine being awake: [`router/uci/ddns.conf`](router/uci/ddns.conf).
 
 ## Reinstalling from scratch / migrating disks
 

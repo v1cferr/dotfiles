@@ -45,7 +45,6 @@ in
     (lib.mapAttrs (_key: _item: { }) syncedMap)
     // {
       v1cferr_password_hash.neededForUsers = true; # the password hash: it is needed early (the user)
-      cloudflare_ddns_token = { };
       deepl_api_key = {
         owner = "v1cferr";
         mode = "0400";

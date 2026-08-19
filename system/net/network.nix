@@ -60,30 +60,4 @@
       findtime = "10m";
     };
   };
-
-  # Dynamic DNS: ssh.<domain> is the zone's only IP anchor, and a wildcard CNAME follows it.
-  # Do NOT add the wildcard here (API 81054), and do NOT audit the zone with dig from home.
-  services.cloudflare-dyndns = {
-    enable = config.my.services.cloudflare-ddns;
-    apiTokenFile = config.sops.secrets.cloudflare_ddns_token.path;
-    domains = [ "ssh.${config.my.net.domain}" ];
-    proxied = false;
-    ipv4 = true;
-    ipv6 = false;
-  };
-
-  # network-online.target, not network.target: the module's default let it run 6.5s before
-  # DHCP and fail EVERY boot. The retry stays, because that race is independent.
-  systemd.services.cloudflare-dyndns = {
-    after = [ "network-online.target" ];
-    wants = [ "network-online.target" ];
-    serviceConfig = {
-      Restart = "on-failure";
-      RestartSec = "20s";
-    };
-    unitConfig = {
-      StartLimitIntervalSec = "5m";
-      StartLimitBurst = 6;
-    };
-  };
 }

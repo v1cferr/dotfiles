@@ -3,6 +3,14 @@
 
 # The ChatGPT subscription is the credential, never an API key pasted into a shell (rule 12).
 forced_login_method = "chatgpt"
+model = "gpt-5.6-sol"
+model_reasoning_effort = "high"
 
 [projects."/home/v1cferr/Projects/GitHub/v1cferr/dotfiles"]
 trust_level = "trusted"
+
+[projects."/home/v1cferr/Downloads"]
+trust_level = "trusted"
+
+[tui]
+theme = "dracula"

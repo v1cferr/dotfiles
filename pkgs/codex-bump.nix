@@ -49,7 +49,7 @@ writeShellApplication {
     tmp=$(mktemp -d)
     trap 'rm -rf "$tmp"' EXIT
     curl -fsSL -o "$tmp/codex.tar.gz" \
-      "$project/releases/download/rust-v$latest/codex-x86_64-unknown-linux-musl.tar.gz"
+      "$project/releases/download/rust-v$latest/codex-package-x86_64-unknown-linux-musl.tar.gz"
     new_hash=$(nix hash file --type sha256 --sri "$tmp/codex.tar.gz")
 
     # The generic pattern, not the interpolated value (whose dots are regex wildcards).

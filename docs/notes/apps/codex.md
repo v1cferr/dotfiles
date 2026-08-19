@@ -87,16 +87,41 @@ compiles Codex from Rust, so overriding its `src` would mean recomputing a vendo
 recompiling a 251 MiB binary on a project that tags almost daily. The published artifact is the
 same thing without the wait.
 
-The packaging is short because upstream ships a STATIC musl binary: it runs unpatched, with no
-interpreter to fix and no library to find. Measured before writing the derivation, straight out
-of the tarball, it answered `codex-cli 0.148.0` and passed `codex doctor`.
+**Take the `-package-` asset, not the bare `codex-` one**, and this is the trap that cost a broken
+session on 19/08/2026. The bare tarball is the entrypoint ALONE, one 251 MiB file, and it looks
+complete. It is not: Codex spawns a SECOND binary to run commands, `codex-code-mode-host`, and
+looks for it NEXT TO its own executable. Without it every command dies with
+
+```text
+failed to spawn code-mode host <store-path>/bin/codex-code-mode-host: No such file or directory
+Code mode will fail closed; enable `features.code_mode_host` and install `codex-code-mode-host`
+```
+
+which reads like a Codex bug and is a packaging bug. nixpkgs ships the extra binaries and that is
+the detail this repo skipped when it left. `-package-` is the OFFICIAL layout, declared in a
+`codex-package.json` at its root (`entrypoint`, `pathDir`, `resourcesDir`), so there is one asset,
+one hash and nothing to assemble by hand.
+
+Only `bin/` is installed. What is deliberately left behind:
+
+| Dropped | Why |
+| --- | --- |
+| `codex-path/rg` | nixpkgs' ripgrep goes on the PATH instead, and it gets security updates |
+| `codex-resources/bwrap` | same, and Codex takes a system `bwrap` from the PATH by its own message |
+| `codex-resources/zsh` | the ONE dynamically linked file in the tarball, so it could not run here |
+
+Dropping the zsh is verified and not a hope: with it gone Codex ran its command through
+`/run/current-system/sw/bin/zsh -lc`, the system shell.
+
+The rest is short because upstream ships STATIC musl. Measured before writing the derivation,
+straight out of the tarball: no interpreter, `codex-cli 0.148.0`, clean `codex doctor`.
 
 Two things still have to be added, and they are the two nixpkgs also adds:
 
 | PATH entry | What breaks without it |
 | --- | --- |
 | `ripgrep` | the search, which reports `Install ripgrep or repair the bundled Codex package` |
-| `bubblewrap` | the sandbox; the release bundles its own `bwrap` and this package does not take it |
+| `bubblewrap` | the sandbox; Codex says it takes either a PATH `bwrap` or the bundled one |
 
 `--inherit-argv0` on the wrapper, and NOT a plain shell wrapper, because Codex re-executes itself
 as its own sandbox helper. Verified with `env -i`, where `rg` can only come from the wrapper:

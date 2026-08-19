@@ -1,8 +1,9 @@
 # codex
 
-Module: [`home/shell/codex.nix`](../../../home/shell/codex.nix)
+Modules: [`home/shell/codex.nix`](../../../home/shell/codex.nix),
+[`pkgs/codex.nix`](../../../pkgs/codex.nix)
 
-OpenAI's terminal agent. The whole page is about ONE decision: who owns `config.toml`.
+OpenAI's terminal agent. Two decisions: who owns `config.toml`, and where the binary comes from.
 
 ## Why `programs.codex.settings` is left empty
 
@@ -72,10 +73,44 @@ bad value on purpose is the only way to tell a live config line from a decorativ
 Logging in is `codex login`, once, interactively: it opens the browser against `localhost:1455`,
 so it cannot happen at build time and does not need to.
 
-## Why unstable
+## Why the OFFICIAL binary and not nixpkgs
 
-Upstream releases most days: on 19/08/2026 the latest tag was 0.148.0, from the day before, while
-`nixpkgs-unstable` had 0.147.0 and stable 26.05 had 0.146.0. Stable freezes whatever landed at
-branch-off and the gap only widens across the release, which for an agent CLI means missing model
-support and not just missing features. The middle layer is the right one: close to upstream
-without this repo taking on the packaging.
+Upstream releases most days, and the third layer of the version strategy exists for exactly that.
+On 19/08/2026 the count was: stable 26.05 on 0.146.0, `nixpkgs-unstable` on 0.147.0, upstream on
+0.148.0. The middle layer was the first answer here and lasted a few hours, until Codex itself
+printed the update banner for a release nixpkgs did not have yet. For an agent CLI the gap is
+missing model support, not missing polish, so the layer that ends the question is upstream.
+
+`fetchurl` on the GitHub release asset, with the version and hash rewritten by
+[`codex-bump`](../repo/version-bumps.md) on every `update`. **NOT** a source build: nixpkgs
+compiles Codex from Rust, so overriding its `src` would mean recomputing a vendor hash and
+recompiling a 251 MiB binary on a project that tags almost daily. The published artifact is the
+same thing without the wait.
+
+The packaging is short because upstream ships a STATIC musl binary: it runs unpatched, with no
+interpreter to fix and no library to find. Measured before writing the derivation, straight out
+of the tarball, it answered `codex-cli 0.148.0` and passed `codex doctor`.
+
+Two things still have to be added, and they are the two nixpkgs also adds:
+
+| PATH entry | What breaks without it |
+| --- | --- |
+| `ripgrep` | the search, which reports `Install ripgrep or repair the bundled Codex package` |
+| `bubblewrap` | the sandbox; the release bundles its own `bwrap` and this package does not take it |
+
+`--inherit-argv0` on the wrapper, and NOT a plain shell wrapper, because Codex re-executes itself
+as its own sandbox helper. Verified with `env -i`, where `rg` can only come from the wrapper:
+`codex doctor` reported `ripgrep 15.1.0` and `restricted fs + restricted network`.
+
+`dontStrip` is deliberate: it is a released artifact, and stripping it makes the binary stop
+matching what upstream published for no gain.
+
+**The in-app updater is not the path here.** The banner Codex prints ("Update available, run to
+install") and its `codex update` subcommand both want to overwrite the binary, which is in the
+read-only store. What updates Codex on this machine is `update`, the alias, like everything else.
+
+**A third-party flake was passed over.** There are several that track Codex upstream and would
+have cost one input instead of two files (`sadjow/codex-cli-nix` even rebuilds hourly). For a tool
+that holds the ChatGPT session and executes shell commands, the fetch goes straight to the
+publisher with a hash this repo pins, and the trusted set does not grow by one stranger. The
+`pkgs/` file is 50 lines and the bump script is the one that was going to exist anyway.

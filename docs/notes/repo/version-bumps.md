@@ -1,28 +1,30 @@
-# vscode-bump and curseforge-bump
+# vscode-bump, curseforge-bump and codex-bump
 
 Modules: [`pkgs/vscode-bump.nix`](../../../pkgs/vscode-bump.nix),
-[`pkgs/curseforge-bump.nix`](../../../pkgs/curseforge-bump.nix)
+[`pkgs/curseforge-bump.nix`](../../../pkgs/curseforge-bump.nix),
+[`pkgs/codex-bump.nix`](../../../pkgs/codex-bump.nix)
 
-Two scripts that keep a vendored binary on its latest version without anybody editing a hash by
-hand. They share a reason and differ in one detail, so they live on one page.
+Three scripts that keep a vendored binary on its latest version without anybody editing a hash by
+hand. They share a reason and differ in how they ask "did it change?", so they live on one page.
 
-## The structural reason both exist
+## The structural reason all three exist
 
 Rule 13 pins the dependency universe: no fetch without a hash, no implicit "latest". That rule has
 a consequence people miss: **a src with a locked hash never updates itself.** What exists is not
 an "input that follows upstream", it is an AUTOMATED BUMP.
 
-Both run from the `update`/`upgrade` alias ([`home/shell/zsh.nix`](../../../home/shell/zsh.nix)),
-before `nix flake update`, so "always on the latest" happens at rebuild time. Both are a NO-OP
-when already current, because they run on every `upgrade`.
+All three run from the `update`/`upgrade` alias
+([`home/shell/zsh.nix`](../../../home/shell/zsh.nix)), before `nix flake update`, so "always on
+the latest" happens at rebuild time. All three are a NO-OP when already current, because they run
+on every `upgrade`.
 
 ## Where they differ
 
-| | vscode-bump | curseforge-bump |
-| --- | --- | --- |
-| Upstream URL | versioned (`/1.133.0/linux-x64/stable`) | a POINTER (`curseforge-latest-linux.AppImage`) |
-| What the bump changes | only the version number | version **and** the recomputed hash |
-| How it learns the version | the official update API, `productVersion` | the `control` file of the `.deb` of the same release |
+| | vscode-bump | curseforge-bump | codex-bump |
+| --- | --- | --- | --- |
+| Upstream URL | versioned (`/1.133.0/linux-x64/stable`) | a POINTER (`curseforge-latest-linux.AppImage`) | versioned (`/rust-v0.148.0/…musl.tar.gz`) |
+| What the bump changes | only the version number | version **and** the recomputed hash | version **and** the recomputed hash |
+| How it learns the version | the official update API, `productVersion` | the `control` file of the `.deb` of the same release | the redirect of `/releases/latest` |
 
 **VS Code.** The input URL is versioned on purpose. `/latest/` is a pointer, so on every release
 the pinned narHash stops matching and the flake no longer evaluates on a clean machine. That
@@ -57,6 +59,25 @@ One shell trap in there: the control member goes through a FILE and not a pipe, 
 only autodetects the compression when it can seek, so `ar p … | tar -xO` dies with
 `Archive is compressed. Use -J option`. From a file it works it out on its own, which also lets
 the script survive the day Overwolf swaps `.xz` for `.zst`.
+
+**Codex.** A GitHub release is the easy case of both halves: the asset URL is versioned, so it is
+immutable like VS Code's, and the question "did it change?" costs ONE HEAD request, because
+`/releases/latest` REDIRECTS to the tag:
+
+```text
+https://github.com/openai/codex/releases/latest
+  -> https://github.com/openai/codex/releases/tag/rust-v0.148.0
+```
+
+The REST API would answer the same thing and spend one of the 60 anonymous calls per hour, and it
+would drag `jq` in to read the JSON. The redirect needs neither. Only when the tag differs does
+the script pull the 93 MiB tarball to compute the hash.
+
+The tag carries a `rust-v` prefix because that repo releases more than one artifact line, so the
+version is `''${tag##*/rust-v}`. When a tag does NOT match that shape the stripping is a no-op and
+the whole URL stays in the variable, which is what the plausibility `case` catches: slashes and
+letters are not a version. Prereleases never reach it, since `/releases/latest` skips them, and
+`0.149.0-alpha.2` existed the day this was written.
 
 ## Shared conventions
 

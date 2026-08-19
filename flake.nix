@@ -157,13 +157,15 @@
         });
       };
 
-      # LOCAL packages (outside nixpkgs), packaged in ./pkgs and exposed as `pkgs.<name>`.
-      # callPackage injects the deps automatically.
+      # LOCAL packages in ./pkgs, exposed as `pkgs.<name>`; callPackage injects the deps. Most are
+      # outside nixpkgs, `codex` REPLACES the one there (the note says why).
       overlayLocalPkgs = final: _: {
         claude-code-discord-status = final.callPackage ./pkgs/claude-code-discord-status.nix { };
         azure-mcp = final.callPackage ./pkgs/azure-mcp.nix { }; # Azure MCP Server (`azmcp`), only in claude-fai
         nxbender = final.callPackage ./pkgs/nxbender.nix { }; # FOSS client for the SonicWall VPN (FAI)
         vscode-bump = final.callPackage ./pkgs/vscode-bump.nix { }; # bumps vscode-tarball to the latest stable
+        codex = final.callPackage ./pkgs/codex.nix { }; # OpenAI's CLI, the OFFICIAL release binary
+        codex-bump = final.callPackage ./pkgs/codex-bump.nix { }; # version+hash of codex.nix
         curseforge = final.callPackage ./pkgs/curseforge.nix { }; # official modpack AppImage (unfree)
         curseforge-bump = final.callPackage ./pkgs/curseforge-bump.nix { }; # version+hash of curseforge.nix
         curseforge-fix-perms = final.callPackage ./pkgs/curseforge-fix-perms.nix { }; # +x on what the app unpacks
@@ -240,6 +242,8 @@
             nxbender # ./pkgs: the SonicWall VPN client (3 patches on top of upstream)
             claude-desktop # someone else's flake + the keyring wrapper from here
             vscode-bump # ./pkgs: the build IS the script's shellcheck (rule 7)
+            codex # ./pkgs: the official binary, so the check proves the fetch and the wrapper
+            codex-bump # ./pkgs: same shellcheck at build time
             curseforge-bump # ./pkgs: same, shellcheck at build time
             curseforge-fix-perms # ./pkgs: same
             docs-links # ./pkgs: the build IS the script's flake8; the CHECK below runs it

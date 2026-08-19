@@ -9,8 +9,8 @@ in
 {
   programs.codex = {
     enable = true;
-    # unstable: upstream ships a release most days and 26.05 freezes whatever landed at branch-off.
-    package = pkgs.unstable.codex;
+    # ./pkgs/codex.nix, the OFFICIAL release binary: even unstable lags upstream by a release.
+    package = pkgs.codex;
     # `settings` stays EMPTY on purpose: it generates a STORE file, and Codex PERSISTS into
     # config.toml at runtime (/model, /theme, approvals). The link below owns it instead.
   };

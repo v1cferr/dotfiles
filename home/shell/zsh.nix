@@ -10,7 +10,7 @@ let
   rebuildCmd = "nh os switch ${flake} && { hyprctl -i 0 reload || true; }";
   # The order matters: vscode-bump raises the version BEFORE the lock update, and the `&&`
   # stops the chain if it fails, so nothing is applied with the repo half-edited.
-  updateCmd = "vscode-bump ${flake} && curseforge-bump ${flake} && nix flake update --flake ${flake} && vscode-extensions-dump ${flake}";
+  updateCmd = "vscode-bump ${flake} && curseforge-bump ${flake} && codex-bump ${flake} && nix flake update --flake ${flake} && vscode-extensions-dump ${flake}";
 in
 {
   programs.zsh = {

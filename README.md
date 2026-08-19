@@ -70,7 +70,7 @@ hosts/                   per-machine specifics (hostname, disks, monitors, state
     services.nix         PANEL: which optional services THIS machine turns on (my.services.*)
 secrets/                 secrets.yaml (sops) + bitwarden-secrets.json
 scripts/                 bash/python read by `writeShellApplication` (shellcheck runs at build time):
-                         sync-secrets, router-sync, router-moonlight-forward, owfetch
+                         sync-secrets, router-sync, owfetch
 router/                  mirror of the OpenWrt UCI config (router-sync): visible, not declarable
 docs/                    what is NOT declarable, plus the repo's diary (see docs/README.md)
   rules.md               the 18 rules. The NUMBERING is API: the code cites "rule N"

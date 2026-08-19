@@ -1,6 +1,34 @@
 # History: august 2026
 
-71 entries. Index in [README.md](../README.md).
+72 entries. Index in [README.md](../README.md).
+
+- [x] The direct path from UFSCar is RETIRED, and the checker INVERTED with it (19/08/2026). Its
+      stated reason for existing was that a third VPN client on the FAI machine would be a routing
+      conflict, and that machine now runs the client without one. Three measurements finished it: it
+      never reached the subnet that machine actually uses (`200.136.204.0/23`, never declared), the
+      `/21` rules had forwarded ZERO packets ever, and the tunnel reaches the host from any network,
+      including the campus `/20` the direct path was serving.
+      • WHAT DIED WITH IT, in the same commit that removed its use (rule 16): 8 generated rules in
+        `sunshine.nix`, 8 `Moonlight-*` redirects on the router, `scripts/router-moonlight-forward.sh`
+        and the `moonlight-direct` test guide.
+      • WHAT SURVIVED, RELOCATED. The four traps of changing the router BY HAND are about the router
+        and not about that path, so they moved into `network.md`: `uci` accepts what fw4 DISCARDS (a
+        `redirect`'s `src_ip` cannot be a list, and the config looks perfect with zero effect), sudo
+        cannot prompt when the script arrives on stdin, `sudo uci commit` leaves `/etc/config` at
+        0600, and a watchdog for a risky change needs `nohup` and not a subshell.
+      • THE RDAP TABLE IS THE MEASURED FACT WORTH KEEPING. UFSCar has at least four blocks under
+        CNPJ 45358058000140, and only two were ever declared here: `200.133.224.0/20` (campus, the
+        only one ever proven to work), `200.136.192.0/21` (declared, zero packets ever),
+        `200.136.204.0/23` (the work PC, never declared) and `200.136.208.0/20` (the FAI
+        workstation, never declared). The list was incomplete from the day it was written.
+      • THE CHECKER DID NOT LOSE ITS JOB, it inverted. The repo declares zero sources now, so
+        `router-ssot` asserts the device forwards NOTHING, and a redirect that comes back through
+        LuCI is a finding instead of a surprise. It also refused to let this commit exist while the
+        two sides disagreed, which is the first time a checker here blocked its own author.
+      • HOW TO BRING IT BACK, if the premise ever flips again: the module block and the script are
+        in git, and the 8 redirects are written out in this file. What it would cost is what it
+        always cost, `/serverinfo` with no authentication offered to two UFSCar blocks, plus 16
+        rules mirrored by hand across two systems.
 
 - [x] The router's mirror gained a CONTRACT, and the checker found its own bug first
       (19/08/2026). Rule 11 wants ONE owner per value, and the router is the single piece of
@@ -1143,7 +1171,7 @@
         default.
       • VALIDATED THE SAME DAY, with a real session of 21m58s plus 9min. The full
         measurements and method are in
-        [guides/moonlight-direct.md](../../guides/moonlight-direct.md); the essentials: 0% loss
+        `docs/guides/moonlight-direct.md` (deleted 19/08/2026 with the path itself); the essentials: 0% loss
         across 100 packets of 1 KB, RTT 35.5 ms, jitter 0.54 ms. The proof that the session
         works end to end was Claude itself starting to run WITHOUT `SSH_CLIENT` and with
         `DISPLAY=:0`, inside the graphical session being streamed.

@@ -114,8 +114,9 @@ anywhere, and with 1420 MEASURED the arithmetic is no longer a guess:
 | **1164** | The same ABSOLUTE headroom, 1420 minus 256 |
 | 1312 | Sunshine's own 1392-for-1500 default, 108 bytes of headroom. Do not start here |
 
-The tunnel is the SMALLER of the two paths (1420 against the direct one's 1492), so a value
-calibrated for it is safe on both, and retiring path 2 would not raise this ceiling.
+The tunnel is the ONLY path since 19/08/2026, so 1420 is the ceiling with nothing else to satisfy.
+It was left at 1024 anyway, because the ask that day was stability and the smaller packet is the
+robust one: what a bigger packet buys is overhead per frame, and what it risks is the silent drop.
 
 **Do not jump straight to the ceiling.** Blowing past the MTU makes WireGuard drop
 SILENTLY, with no ICMP and no log. The host streams normally, the client receives half of

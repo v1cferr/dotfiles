@@ -147,29 +147,34 @@ writers.writePython3Bin "router-ssot"
 
 
     def check_moonlight_sources(d, conf):
-        """The divergence that costs a morning: the router forwards and the host drops."""
-        rules = moonlight(conf)
-        if not rules:
-            return [("moonlight", "no Moonlight-* redirect in the mirror",
-                     "the router lost them, or the mirror is stale")]
-        on_router = sorted({s.get("src_ip", "") for s in rules})
+        """SET EQUALITY, in both directions, and the empty case is the point now: the direct path was
+        retired on 19/08/2026, so the repo declares NO sources and the router must forward NOTHING.
+        A redirect that reappears on the device is drift the same way a missing one used to be."""
+        on_router = sorted({s.get("src_ip", "") for s in moonlight(conf)})
         in_repo = sorted(d["moonlight_sources"])
         if on_router != in_repo:
             return [("moonlight", f"router src_ip is {on_router}, moonlightSources is {in_repo}",
-                     "same truth in two places: when they differ the symptom is `Moonlight does not connect`")]
+                     "the router forwards exactly what the repo declares: a redirect the repo does not know "
+                     "about is a port open to UFSCar, and one declared without the redirect is `Moonlight "
+                     "does not connect`")]
         return []
 
 
     def check_moonlight_ports(d, conf):
-        """The ports are DERIVED from one base in the module, so the router repeats a derivation."""
+        """The ports are DERIVED from one base in the module, so a redirect repeats a derivation.
+        With no source declared there is nothing to forward, so the expected set is EMPTY and any
+        port on the device is a finding."""
         base = d["base_port"]
-        want = {("tcp", str(base - 5)), ("tcp", str(base)), ("tcp", str(base + 21)),
-                ("udp", f"{base + 9}-{base + 11}")}
+        want = set() if not d["moonlight_sources"] else {
+            ("tcp", str(base - 5)), ("tcp", str(base)), ("tcp", str(base + 21)),
+            ("udp", f"{base + 9}-{base + 11}"),
+        }
         got = {(s.get("proto", ""), s.get("src_dport", "").replace(":", "-")) for s in moonlight(conf)}
         out = []
         if got != want:
             out.append(("moonlight", f"redirect ports are {sorted(got)}, basePort derives {sorted(want)}",
-                        "the offsets live in system/services/sunshine.nix"))
+                        "the offsets live in system/services/sunshine.nix, and an EMPTY expectation means "
+                        "the direct path is retired, so the device should forward nothing"))
         for s in moonlight(conf):
             if s.get("src_dport", "") != s.get("dest_port", ""):
                 out.append(("moonlight", f"{s.get('name')} maps {s.get('src_dport')} to {s.get('dest_port')}",

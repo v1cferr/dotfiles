@@ -1,5 +1,5 @@
 # Sunshine: screen streaming for Moonlight, captured through wlr and encoded on the Arc.
-# The two access paths, the DPMS trap and why packet_size is 1024: docs/notes/network/sunshine.md
+# The single access path, the DPMS trap and why packet_size is 1024: docs/notes/network/sunshine.md
 {
   pkgs,
   lib,
@@ -12,43 +12,6 @@ let
   # The UDP 48002 that every blog lists does NOT exist in this version.
   basePort = 47989; # Sunshine's `port`; moving this moves all the others
   sp = n: toString (basePort + n);
-
-  # 47990 (the ADMIN PANEL) is out of this list ON PURPOSE: it never leaves the house.
-  moonlightPorts = [
-    {
-      proto = "tcp";
-      dport = sp (-5);
-    } # 47984, HTTPS: this is how an ALREADY PAIRED host gets in
-    {
-      proto = "tcp";
-      dport = sp 0;
-    } # 47989, HTTP: /serverinfo and PIN pairing
-    {
-      proto = "tcp";
-      dport = sp 21;
-    } # 48010, RTSP: session negotiation
-    {
-      proto = "udp";
-      dport = "${sp 9}:${sp 11}";
-    } # 47998-48000: video, audio and control
-  ];
-
-  # The UFSCar blocks, mirrored BY HAND in the router's Moonlight-* redirects.
-  # Never 0.0.0.0/0: /serverinfo has no auth, and this house is not behind CGNAT.
-  moonlightSources = [
-    "200.133.224.0/20" # UFSCar campus. Proven twice: SSH on 10/08 and the Moonlight session of 19/08
-    # Believed to be "the FAI range", and it is NOT: no FAI address ever observed falls inside it.
-    # The two that were seen (200.136.204.0/23 and 200.136.208.0/20) are NOT declared, so Moonlight
-    # from them cannot connect. Widening this is a deliberate call about exposing /serverinfo, not a
-    # bugfix, and the measurement that decides it is in docs/notes/network/sunshine.md.
-    "200.136.192.0/21"
-  ];
-
-  # GENERATED, because the stop list has to match the start list exactly or reload stacks
-  # duplicates.
-  fwMatches = lib.concatMap (
-    src: map (p: "-s ${src} -p ${p.proto} --dport ${p.dport}") moonlightPorts
-  ) moonlightSources;
 
   # A mark so the watchdog does not undo a hypridle toggle made by hand from the bar.
   pauseStamp = ''"''${XDG_RUNTIME_DIR:-/run/user/$(${pkgs.coreutils}/bin/id -u)}/sunshine-hypridle-paused"'';
@@ -259,7 +222,10 @@ in
     # NO capSysAdmin: the capture is wlr (wlr-screencopy), which does NOT need CAP_SYS_ADMIN.
     # Only a KMS grab would, and KMS does not even work on the xe driver. Less privilege.
     autoStart = true; # comes up with the graphical session (a --user service, WantedBy graphical-session)
-    openFirewall = false; # closed everywhere; what opens it is the 10.10.10.0/24 rule (../net/network.nix)
+    # Closed everywhere, and now there is exactly ONE door: the `10.10.10.0/24` rule in
+    # ../net/network.nix, which is the router's WireGuard. The UFSCar direct path (8 rules here plus
+    # 8 redirects on the router) was RETIRED on 19/08/2026, and the why is in the notes.
+    openFirewall = false;
     settings = {
       # The name that shows up in Moonlight. DERIVED from the hostname, never a literal: it
       # stayed "nixos-sandisk" for a month after the cutover, lying about which machine it is.
@@ -269,8 +235,9 @@ in
       # Not kms: kmsgrab does not enumerate on `xe`. The monitor is pinned by NAME, because
       # the TV enumerates first and Moonlight opened on the wrong screen.
       output_name = config.my.monitors.primary; # SSOT: system/desktop/monitors.nix
-      # `wan` on purpose: the firewall decides the reach, not Sunshine. It stays safe ONLY while
-      # 47990 is not forwarded, which is why it is out of both port lists.
+      # `wan` on purpose: the firewall decides the reach, not Sunshine. Since the direct path was
+      # retired (19/08/2026) NOTHING is forwarded, so the panel only answers from the LAN and from
+      # the tunnel. Do not read this value as "exposed": read the firewall.
       origin_web_ui_allowed = "wan";
       # The CSRF origin is a SNAPSHOT of the LAN IP: an IP cannot be derived at build time.
       # It was silently wrong once, because only the web UI breaks, never the stream.
@@ -345,18 +312,6 @@ in
       LogLevelMax = "warning";
       SyslogLevel = "warning";
     };
-  };
-
-  # The other half is the router's DNAT, so this rule alone exposes nothing. The `-s` is the
-  # second lock, the one that survives somebody touching LuCI.
-  networking.firewall = lib.mkIf config.my.services.sunshine {
-    extraCommands = lib.concatMapStringsSep "\n" (
-      m: "iptables -I nixos-fw 1 ${m} -j nixos-fw-accept"
-    ) fwMatches;
-    # Without this, a firewall `reload` stacks duplicates of the rules above.
-    extraStopCommands = lib.concatMapStringsSep "\n" (
-      m: "iptables -D nixos-fw ${m} -j nixos-fw-accept 2>/dev/null || true"
-    ) fwMatches;
   };
 
   # Diagnostics live in system/ next to what they diagnose (the healthcheck above lives here

@@ -6,28 +6,39 @@ Screen streaming for Moonlight, over Hyprland/Wayland. It captures through wlr-s
 encodes on the Arc B580's AV1/HEVC encoder (VA-API). It replaced Tailscale as the remote access
 path on 08/08/2026.
 
-## Two ways in, and neither opens a port on every interface
+## One way in, and it does not open a port on any interface
 
-`openFirewall = false` holds for both.
+`openFirewall = false`, and the only door is **the router's WireGuard**, through the
+`10.10.10.0/24` source rule in [`network.md`](network.md). The tunnel terminates on the ROUTER, so
+this machine has no WireGuard interface and nothing here has to be up for the path to exist.
 
-1. **The router's WireGuard**, through the `10.10.10.0/24` source rule in
-   [`network.md`](network.md).
-2. **The internet, directly**, restricted to the UFSCar blocks: the rules at the end of the module
-   plus the `Moonlight-*` redirects on the router.
+There is no relay: the endpoint is the home router itself. That was a Tailscale risk (DERP), and
+Tailscale is gone since 08/08/2026.
 
-Path 2 exists because the FAI notebook already runs nxBender plus openconnect, and a third VPN
-client there is a routing conflict waiting to happen.
+**A second path existed from 10/08 to 19/08/2026 and was RETIRED**: the internet directly,
+restricted to two UFSCar blocks by 8 rules here plus 8 `Moonlight-*` redirects on the router. Its
+stated reason was that adding a third VPN client to the FAI machine would be a routing conflict,
+and that premise died the day the client went on that machine and worked. Three measurements
+finished it:
 
-**Path 2 is NOT "more direct" than path 1**, and that was the premise that motivated it. The
-WireGuard endpoint is the home router ITSELF, so both travel UFSCar to internet to the house.
-There is no relay (that was a Tailscale risk, and Tailscale is gone). What path 2 actually gains is
-MTU, 1492 from PPPoE against 1420 through the tunnel, and what it gains in latency is noise. Do
-not rewrite this as a routing gain.
+- it did NOT reach the subnet that machine actually uses (`200.136.204.0/23`), which was never
+  declared, so it was not the fallback it looked like
+- the `/21` rules had forwarded ZERO packets, ever
+- the tunnel reaches the host from any network, including the campus `/20` the direct path served
 
-**Encryption is not downgraded.** Sunshine classifies the client by IP: through the tunnel it
-arrives as `10.10.10.x` = LAN, so `lan_encryption_mode = 0` (the tunnel already encrypts); over
-the internet it arrives public = WAN, so `wan_encryption_mode = 1`, the default, stays ON. Do not
-touch those two: they are what keeps path 2 from streaming in the clear.
+What it cost while it lived: `/serverinfo` with NO authentication, offered to two UFSCar blocks, and
+16 rules mirrored by hand across two systems, which is the divergence that cost the morning of
+19/08. The full story is in the august history, and `router-ssot` now FAILS if a redirect reappears
+on the router, so coming back is a decision and not an accident.
+
+**47990, the admin panel, was never forwarded**, and now there is nothing to forward it through.
+Whoever adds a redirect for it publishes user creation and client pairing on the internet.
+
+**Encryption, and why it is not downgraded.** Sunshine classifies the client by IP. Through the
+tunnel it arrives as `10.10.10.x`, which is LAN, so `lan_encryption_mode = 0` and the TUNNEL is
+what encrypts. `wan_encryption_mode = 1` stays at its default and no longer has a path to serve.
+Do not "fix" the LAN value without noticing that the tunnel is now the only way in: turning it on
+costs CPU to encrypt what WireGuard already encrypted.
 
 ## The port list is derived, because the blogs are wrong
 
@@ -38,88 +49,9 @@ through `port+11`.
 Almost every list on the internet includes a UDP 48002 ("mic") that **does not exist** in this
 version. There are three UDP ports, not four. Check the js in the store when updating.
 
-The 8 firewall rules (sources times ports) are GENERATED and not written by hand, because the stop
-list has to match the start list EXACTLY: a rule that does not match is not removed on reload and
-stacks a duplicate on every rebuild. Writing 16 mirrored lines by hand is precisely how you leave
-one behind.
-
-## Why the source list is a literal, and what mirrors it
-
-The UFSCar blocks were confirmed on registro.br on 10/08/2026, both under the same CNPJ. It is a
-literal and not an option because rule 11 asks for 2+ consumers and here there is one. Two of them
-were confirmed, not all of them, which is the subject of the correction at the end of this section.
-
-**But there is a mirror to keep in sync by hand**: the `src_ip` of the `Moonlight-*` redirects in
-`router/uci/firewall.conf`. If the two lists diverge, the router forwards and the host drops, and
-the symptom is "Moonlight does not connect", indistinguishable from everything else.
-
-**Do NOT swap it for `0.0.0.0/0`.** The house is NOT behind CGNAT (measured 10/08/2026: port 2222
-answers from Austria, Canada and Iran), so that literally means the planet. What these ports hand
-to whoever reaches them is `/serverinfo` with NO authentication: hostname, GPU, app list and
-whether there is an active session. Pairing still needs the PIN typed on the host; inventorying the
-machine needs nothing.
-
-### The list is INCOMPLETE, measured 19/08/2026
-
-UFSCar does not have two blocks, it has at least four, all `REASSIGNED` under the same CNPJ
-45358058000140 (Coordenadoria de Infraestrutura de TI). Queried over RDAP at `rdap.registro.br`:
-
-| Block | Declared here? | Seen in use by |
-| --- | --- | --- |
-| `200.133.224.0/20` | yes | 200.133.233.101, the client of the session that WORKED on 19/08 |
-| `200.136.192.0/21` | yes | nothing, ever. See below |
-| `200.136.204.0/23` | **no** | 200.136.205.252, the work PC on 19/08 |
-| `200.136.208.0/20` | **no** | 200.136.209.229, the FAI workstation (`ssh workstation`) |
-
-So a Moonlight client on the last two cannot connect AT ALL, and nothing about the symptom says so:
-the router does not match the `src_ip` of any `Moonlight-*` redirect and drops the packet before the
-DNAT, which leaves NO trace on this host. Measured on 19/08 while the failure was live: no conntrack
-entry, no refused packet in the kernel log, and not one connection attempt in Sunshine's own log.
-The `/serverinfo` on 47989 answered 200 to loopback the whole time.
-
-**The list was deliberately NOT widened.** Doing it means editing two places that have to stay in
-sync, and it hands `/serverinfo` with no authentication to more of UFSCar, which is a call to make
-on purpose and not while chasing a symptom. It was never needed: on the same day the work PC became
-the WireGuard peer `pc-trampo` (`10.10.10.4`) and reaches Sunshine through path 1, where the source
-rules do not apply at all. That also makes **retiring path 2** a live option, which would take
-`/serverinfo` off the internet entirely. It would NOT unpin `packet_size`: the binding constraint is
-the SMALLER path, and that is the tunnel's 1420, measured on 19/08 in
-[`guides/wireguard-moonlight.md`](../../guides/wireguard-moonlight.md).
-
-### The SYN-ACK theory is DEAD, measured 19/08/2026
-
-What this file used to state as measured: the FAI network drops the SYN-ACK on the way back, the SYN
-arrives, the host answers, the router's conntrack sits in `SYN_RECV` and the final ACK never comes,
-so a connection from the /21 may not complete.
-
-The problem with it is the table above. **No FAI address ever observed falls inside the declared
-/21**, so for the machines actually used the rule never matched in the first place, and from the
-client the two causes are IDENTICAL: a SYN goes out and nothing comes back. The `SYN_RECV`
-observation is the one piece that does not fit the simpler explanation, and it was not re-checked.
-
-**It came out as outcome 2: our list.** There is no `tcpdump` on the router (6 MB of flash, 1.3 MB
-free in `/overlay`, and nothing gets installed for one measurement), so the instrument was a
-TEMPORARY `nft` counter on `input_wan` matching `ip saddr <work PC> tcp dport 47989`, with no
-verdict, removed right after. It counted **11 packets** while the client retried.
-
-So the SYN ARRIVES. It matches no `Moonlight-*` `src_ip`, falls through to `reject_from_wan` and
-gets `reject with tcp reset`. Their firewall on the way out was never the problem.
-
-The DNAT counters say the same thing from the other side, and they are free to read:
-
-| Rule | Packets |
-| --- | --- |
-| `Moonlight-*-Campus`, `200.133.224.0/20` | 5, 4, 7 and 3, the session of that morning |
-| `Moonlight-*-FAI`, `200.136.192.0/21` | 0, 0, 0, 0 |
-
-**One loose end, stated instead of hidden.** `handle_reject` sends a TCP reset, so `nc` should have
-failed FAST with "connection refused", and it hung instead. Something eats the return packet, which
-is the same SHAPE as the old theory even though the packet is a reset and not a SYN-ACK. The return
-path was never instrumented, and it stopped mattering the same day: the machine that produced the
-symptom now comes in through the tunnel (`10.10.10.4`), where none of this applies.
-
-The /20 (campus) DOES get through, proven twice: the SSH session of 10/08/2026 and the Moonlight
-session of 19/08/2026, whose client was 200.133.233.101.
+The offsets are still load bearing with the direct path gone: `sunshine-health` probes `port-5` and
+reads `/serverinfo` on `port`, and `sunshine-stream-active` looks for `port+9` through `port+11`.
+Moving `basePort` moves all of them at once, which is the entire point of deriving them.
 
 ## The black screen was DPMS, not a codec
 
@@ -219,13 +151,15 @@ it SILENTLY (no ICMP, no log): the host streams normally, the client receives ha
 reassemble the frame and disconnects in ~4 s. That is what happened on 29/07 with tailscale0
 (MTU 1280).
 
-Since 10/08/2026 this is no longer conservatism. The value is GLOBAL, one for every client, and
-there are now two paths with DIFFERENT MTU: the tunnel (~1420) and the direct one from UFSCar
-(1492). Whoever calibrates for the direct path breaks the tunnel one, in the worst way this file
-documents. **The useful ceiling is the smaller path's, always.**
+With the direct path retired on 19/08/2026 there is ONE path again, and its MTU is measured rather
+than assumed: **1420 exactly**, end to end from this host to the peer. So 1024 is no longer
+calibrated for a number that stopped existing (tailscale0's 1280) and there IS headroom: 1136 by the
+same proportion, 1164 by the same absolute margin, with the arithmetic in
+[`guides/wireguard-moonlight.md`](../../guides/wireguard-moonlight.md).
 
-It only makes sense to raise it if the tunnel path is RETIRED, and then the number comes from
-[`guides/wireguard-moonlight.md`](../../guides/wireguard-moonlight.md), not from a guess.
+**It was left at 1024 on purpose.** The ask that day was stability, and the smaller packet is the
+robust one: every byte closer to the ceiling is a byte closer to the silent drop described above,
+and the win on the other side is overhead per frame, not anything you can see.
 
 ## Two more settings that look wrong and are not
 
@@ -400,16 +334,3 @@ acceptable remedy instead of a last resort.
 
 It is a mop and not a fix. The bug is upstream, in Sunshine not closing a session whose client
 vanished, and `ping_timeout` does not cover it: that drops the STREAM, never the bookkeeping.
-
-## The firewall rule can land first, and the `-s` is not redundant
-
-The other half lives ON THE ROUTER (the `Moonlight-*` redirects), which Nix does not reach. This
-rule on its own exposes nothing: without the DNAT over there, no packet from the internet reaches
-these ports. That is why it can land FIRST, and that is the right order, since the reverse would
-leave the router forwarding to a host that refuses.
-
-The `-s` is the second lock, and the one that survives somebody touching LuCI without reading this
-page.
-
-**47990 is deliberately out of every list.** It is the ADMIN PANEL, the screen that creates users
-and pairs clients. Whoever adds it publishes that on the internet.

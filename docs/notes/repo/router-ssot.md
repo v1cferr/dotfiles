@@ -14,14 +14,19 @@ does not declare, so the router matched no `src_ip`, dropped the packet BEFORE t
 trace on the host: no conntrack entry, no refused packet, no connection attempt in Sunshine's log.
 From the client it is indistinguishable from the host being broken.
 
+**That path was retired the same day**, which did not make these checks pointless, it INVERTED
+three of them. The repo now declares zero Moonlight sources, so the contract reads "the router must
+forward nothing", and a redirect that comes back through LuCI without the repo is a finding instead
+of a surprise.
+
 ## The seven checks
 
 | Check | What it compares | Why the drift is silent |
 | --- | --- | --- |
 | subnet | the router's `lan.ipaddr` and `wg0.addresses` against `my.net.lanSubnet` / `vpnSubnet` | a range that moved keeps working for everything that already knows the old one |
-| moonlight (sources) | the `Moonlight-*` `src_ip` against `moonlightSources` | the router forwards, the host drops, and neither side logs it |
-| moonlight (ports) | the redirect ports against the offsets DERIVED from `basePort` | a translated port lets the client negotiate and then find nothing |
-| moonlight (dest) | every `dest_ip` against this host's address | one DHCP change points eight rules at whoever took the address |
+| moonlight (sources) | the `Moonlight-*` `src_ip` against `moonlightSources`, as SET EQUALITY | since the direct path was retired the repo declares NONE, so a redirect that reappears on the device is a port silently open to UFSCar |
+| moonlight (ports) | the redirect ports against the offsets DERIVED from `basePort`, EMPTY while no source is declared | a translated port lets the client negotiate and then find nothing |
+| moonlight (dest) | every `dest_ip` against this host's address | one DHCP change would point the rules at whoever took the address |
 | fai | the `fai_r*` static routes against `faiSubnets`, and their gateway against the host | a route to an undeclared range sends traffic to a host that will not answer for it |
 | ssh | that some redirect still sends `services.openssh.ports` to the host | the port is one number in two configs, and only the OUTSIDE notices |
 | dns | every split-DNS answer inside the LAN against the hosts this repo declares | a name pointing at a machine that is not there breaks only by name |

@@ -17,10 +17,11 @@ This REPLACED the `trustedInterfaces = [ "tailscale0" ]` that died with Tailscal
 and it is what keeps Sunshine reachable THROUGH THE TUNNEL, since Sunshine runs with
 `openFirewall = false` on purpose. Whoever deletes this has to open its ports.
 
-It is no longer the only path: direct access from UFSCar, with no VPN, has its own rules in
-[`sunshine.md`](sunshine.md). The two coexist deliberately. This one covers the phone and any new
-peer; that one covers the FAI notebook, where adding a third VPN client would be a routing
-conflict. Deleting either does not take the other down.
+It is the ONLY path again since 19/08/2026. The direct access from UFSCar was retired: its premise
+was that a third VPN client on the FAI machine would be a routing conflict, and that machine now
+runs the client without one, while the direct path never reached the subnet it actually uses. The
+whole reasoning is in [`sunshine.md`](sunshine.md). So this rule is now load bearing on its own:
+whoever deletes it takes remote Moonlight down with it.
 
 **`-I nixos-fw 1` and not `-A`, with a correction attached** (08/08/2026): this used to claim that
 "the chain ends in a refuse, so `-A` is never reached", which is FALSE for `extraCommands`. Read
@@ -225,74 +226,44 @@ The port is repeated in the rule because the module does not expose it as an opt
 internal `firewallPort = 53317`). If you change the port INSIDE the app, this rule stops matching
 and RECEIVING DIES IN SILENCE: no build error, no log, just "the phone cannot find me".
 
-## The router half that Nix does not reach
+## Changing the router BY HAND, and the four traps it has already sprung
 
-`scripts/router-moonlight-forward.sh` opens the Moonlight ports on the OpenWrt, restricted to
-UFSCar's blocks. It RUNS ON THE ROUTER, not here, in TWO steps:
+The mirror is read-only and there is no push tool, so every router change is typed over SSH. Four
+things this repo has already paid for, and none of them are about the change itself:
 
-```sh
-ssh v1cferr@192.168.1.1 'cat > /tmp/ml.sh' < scripts/router-moonlight-forward.sh
-ssh -t v1cferr@192.168.1.1 'sudo sh /tmp/ml.sh; rm -f /tmp/ml.sh'
-```
+1. **`uci` ACCEPTS what fw4 DISCARDS.** In fw4 a `redirect`'s `src_ip` cannot be a list (in a `rule`
+   it can, which is where the wrong version came from). `uci commit` accepts it, `uci show` displays
+   it nicely, and fw4 drops the whole section when it generates the ruleset:
 
-The other half (the HOST's firewall) is declarative, in `system/services/sunshine.nix`, and **the
-two source lists HAVE to match**, otherwise the router forwards and the host drops.
+   ```text
+   Section @redirect[3] (Moonlight-HTTPS) option 'src_ip' must not be a list
+   Section @redirect[3] (Moonlight-HTTPS) skipped due to invalid options
+   ```
 
-**Why two steps** and not the obvious `ssh … 'sudo sh -s' < script`: with the script coming in
-through STDIN, sudo has no way to ask for the password, since stdin is already the script and not
-the terminal, and it fails without even asking. Copying first and running afterwards frees stdin for
-the prompt, which is also why the second command carries `-t` to force a pty.
+   So a verification that reads `uci show` proves NOTHING: the config was there and the effect was
+   zero. Read the EFFECTIVE ruleset with `nft list ruleset`, and know the expected count before
+   looking. Measured 10/08/2026.
 
-**And why it needs a password**: this router's sudoers gives NOPASSWD only to `/sbin/uci`,
-`/usr/sbin/nft`, `/sbin/reboot` and `/etc/init.d/dnsmasq`, measured on 10/08/2026 with `sudo -l`.
-The `/etc/init.d/firewall reload` at the end is NOT on that list. It is also why `root@` does not
-work: dropbear has `RootLogin='off'` and `RootPasswordAuth='off'`.
+2. **`sudo` cannot ask for a password when the script arrives on stdin.** `ssh … 'sudo sh -s' <
+   script` fails without even prompting, because stdin is the script and not the terminal. Copy
+   first, run afterwards, and carry `-t` to force a pty. The same trap in miniature: a one line
+   `ssh router 'sudo …'` without `-t` cannot prompt either, which cost a retry on 19/08/2026.
 
-`/tmp` on OpenWrt is tmpfs, so copying there does not spend the ~1.4 MB of free flash.
+3. **`sudo uci commit` leaves /etc/config as 0600**, which breaks `router-sync`, since it reads UCI
+   as the normal user and not as root. Repair with `chmod 644`. Measured 19/08/2026, and written
+   down where the tool lives: [`../../../router/README.md`](../../../router/README.md).
 
-### ONE REDIRECT PER SOURCE, and it is not style
+4. **A watchdog for a risky change needs `nohup … &`, never `( … ) &`.** The watchdog exists for the
+   case where the change drops your SSH, and that is exactly when a subshell takes the SIGHUP with
+   it, so the safety net dies in the accident it was written for.
 
-In fw4 a `redirect`'s `src_ip` **cannot be a list**. In a `rule` it can, which is where the wrong
-version came from. Measured on 10/08/2026, and the failure mode is the worst possible:
+**What is NOPASSWD here**, measured 19/08/2026 with `sudo -l` and grown since the 10/08 note:
+`/sbin/reboot`, `/usr/sbin/nft`, `/sbin/uci`, `/etc/init.d/dnsmasq`, `/etc/init.d/firewall` and
+`/usr/bin/wg-status`, plus a blanket `(ALL) ALL` that DOES ask. So a `uci` edit and a firewall reload
+need no password while `wg` does, which is worth knowing before writing a one liner that mixes them.
+`root@` does not work at all: dropbear has `RootLogin='off'` and `RootPasswordAuth='off'`.
 
-```text
-Section @redirect[3] (Moonlight-HTTPS) option 'src_ip' must not be a list
-Section @redirect[3] (Moonlight-HTTPS) skipped due to invalid options
-```
-
-`uci commit` ACCEPTS it, `uci show` DISPLAYS the redirect nicely, and fw4 DISCARDS it when
-generating the ruleset. The config is present, the effect is none.
-
-**So the verification reads the EFFECTIVE nftables ruleset, never `uci show`.** That was exactly
-the first version's mistake: `uci show` reads the CONFIG, and the config was there. The script
-printed "OK, the change is permanent" with ZERO rules live. The expected count is 4 port groups
-times 2 sources, and without that number the script does not know whether it worked.
-
-Both source blocks are UFSCar's (registro.br, CNPJ 45.358.058/0001-40); the label goes into the
-redirect's name only to stay readable in LuCI. **Do NOT swap it for `0.0.0.0/0`**: the house is NOT
-behind CGNAT (measured 10/08/2026, port 2222 answers from Austria, Canada and Iran), so that would
-mean the planet.
-
-The ports were checked against the Sunshine build in use (2026.516.143833), not copied from a blog:
-the UDP 48002 ("mic") that almost every list includes does NOT exist in this version, and 47990 (the
-web UI) stays OUT on purpose. See [`sunshine.md`](sunshine.md).
-
-### Two safety details
-
-**The watchdog uses `nohup … &` and not a `( … ) &` subshell.** The watchdog exists precisely for
-the case where the change drops your SSH, and that is exactly when the subshell would take the
-SIGHUP along and die, so the safety net would disappear in the accident it was supposed to cover. It
-restores `/etc/config/firewall` if this shell dies halfway, if the final verification fails, or if
-the change locks you out.
-
-**The cleanup iterates back to front.** Deleting by index reindexes what comes after, so iterating
-forward skips an entry on every removal, which is the classic UCI mistake. It counts SECTIONS
-(`…@redirect[N]=redirect`) and not lines, because each redirect yields ~8 lines in `uci show` and
-counting lines gives an inflated ceiling. That would not break, since a nonexistent index returns
-empty, but it would loop dozens of times for nothing.
-
-The whole script is IDEMPOTENT: it deletes any previous `Moonlight-*` redirect before creating, so
-running it twice does not stack duplicates.
+`/tmp` on OpenWrt is tmpfs, so staging a file there does not spend the ~1.3 MB of free flash.
 
 ## owfetch: why a script and not fastfetch
 

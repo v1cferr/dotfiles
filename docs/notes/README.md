@@ -137,3 +137,5 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [secrets](repo/secrets.md) | sops-nix, Bitwarden, and the two recipients |
 | [version-bumps](repo/version-bumps.md) | the three-layer version strategy, and the bump scripts |
 | [link-checker](repo/link-checker.md) | what keeps these pointers from rotting |
+| [dead-config](repo/dead-config.md) | what is declared and never used, and the seven checks |
+| [router-ssot](repo/router-ssot.md) | the values the router repeats, and who guards them |

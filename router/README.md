@@ -22,6 +22,13 @@ After touching anything through LuCI or through `uci set`, run `pull` and
 commit. The `diff` is what keeps this directory from becoming a copy that used
 to be true.
 
+`diff` answers whether the mirror equals the DEVICE. Whether it equals the
+REPO is a different question, and `router-ssot` answers that one: it fails when
+a value this repo declares (the subnets, the Moonlight sources and ports, the
+FAI routes, the sshd port) stops matching what the router repeats. It runs in
+the pre-commit hooks and reads only this directory, never the device. See
+[`../docs/notes/repo/router-ssot.md`](../docs/notes/repo/router-ssot.md).
+
 **`sudo uci commit` leaves /etc/config as 0600.** Measured 19/08/2026: committing `dhcp`
 and `network` through sudo left both files root-only, while `firewall`, untouched that day,
 stayed 0644. The symptom on the next read is `uci: I/O error` for the normal user, and it

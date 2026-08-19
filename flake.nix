@@ -169,6 +169,7 @@
         curseforge-fix-perms = final.callPackage ./pkgs/curseforge-fix-perms.nix { }; # +x on what the app unpacks
         docs-links = final.callPackage ./pkgs/docs-links.nix { }; # it fails when a docs/ pointer breaks
         dead-config = final.callPackage ./pkgs/dead-config.nix { }; # it fails on declared-and-unused
+        router-ssot = final.callPackage ./pkgs/router-ssot.nix { }; # it fails when the router's mirror diverges
       };
 
       # Claude Desktop: it forces the secret backend, since Electron does not recognize "Hyprland" and
@@ -243,6 +244,7 @@
             curseforge-fix-perms # ./pkgs: same
             docs-links # ./pkgs: the build IS the script's flake8; the CHECK below runs it
             dead-config # ./pkgs: same, and the CHECK below runs it too
+            router-ssot # ./pkgs: same, and the CHECK below runs it too
             curseforge # ./pkgs: the official AppImage (outside the CHECK below, the why is there)
             btop # nixpkgs + the src from PR #1457 (Intel Xe GPU): here so the check COMPILES the fork
             ;
@@ -268,9 +270,9 @@
             # It covers ./scripts because owfetch.sh runs in ash on OpenWrt, so no derivation wraps it: it
             # would otherwise be the only .sh here running on SOMEONE ELSE'S machine with no check.
             shellcheck.enable = true;
-            # The two repo checkers run HERE too, not only in the gate: the whole reason
+            # The three repo checkers run HERE too, not only in the gate: the whole reason
             # git-hooks.nix is an input is catching it before the commit instead of after the
-            # push. pass_filenames = false because both audit the TREE, not a file list.
+            # push. pass_filenames = false because all three audit the TREE, not a file list.
             docs-links = {
               enable = true;
               name = "docs-links";
@@ -285,17 +287,26 @@
               language = "system";
               pass_filenames = false;
             };
+            router-ssot = {
+              enable = true;
+              name = "router-ssot";
+              entry = "${self.packages.${system}.router-ssot}/bin/router-ssot";
+              language = "system";
+              pass_filenames = false;
+            };
           };
         };
 
-        # Rule 16 says dead config leaves and a stale note is a bug, and rule 2 made the pointer the
-        # ONLY path from a module to its reasoning. Both were enforced by memory alone until here.
+        # Rule 16 says dead config leaves and a stale note is a bug, rule 2 made the pointer the ONLY
+        # path from a module to its reasoning, and rule 11 says a value has ONE owner even when the
+        # second copy lives on a device Nix cannot reach. All three were memory alone until here.
         repo-audit =
           nixpkgs.legacyPackages.${system}.runCommandNoCC "check-repo-audit"
             {
               nativeBuildInputs = [
                 self.packages.${system}.docs-links
                 self.packages.${system}.dead-config
+                self.packages.${system}.router-ssot
                 nixpkgs.legacyPackages.${system}.git
               ];
             }
@@ -306,6 +317,7 @@
               git init -q && git add -A
               docs-links
               dead-config
+              router-ssot
               touch $out
             '';
 

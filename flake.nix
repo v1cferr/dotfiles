@@ -301,7 +301,7 @@
         # path from a module to its reasoning, and rule 11 says a value has ONE owner even when the
         # second copy lives on a device Nix cannot reach. All three were memory alone until here.
         repo-audit =
-          nixpkgs.legacyPackages.${system}.runCommandNoCC "check-repo-audit"
+          nixpkgs.legacyPackages.${system}.runCommand "check-repo-audit"
             {
               nativeBuildInputs = [
                 self.packages.${system}.docs-links

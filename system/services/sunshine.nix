@@ -65,10 +65,15 @@ let
   # for 6h. The signal is the SOCKETS, because Sunshine's own session bookkeeping lies.
   hypridleGuard = pkgs.writeShellApplication {
     name = "hypridle-guard";
+    # gawk is NOT optional. A systemd USER unit gets a FIXED PATH (coreutils, findutils, gnugrep,
+    # gnused, systemd) and writeShellApplication only APPENDS it, so an awk that is not declared
+    # here does not exist at runtime: the guard exited 127 on the /proc/uptime line every 5 min
+    # from 10/08 to 19/08/2026. Running it by hand always worked, which is what hid it.
     runtimeInputs = with pkgs; [
       systemd
       iproute2
       coreutils
+      gawk
     ];
     text = ''
       stamp=${pauseStamp}
@@ -252,8 +257,12 @@ in
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${sunshineHealth}/bin/sunshine-health";
-      # LogLevelMax cuts the 440 lines/day a 2min timer would log; real failures stay visible.
+      # LogLevelMax cuts the 440 lines/day a 2min timer would log. SyslogLevel is what makes the
+      # second half of that sentence true: systemd logs a script's stdout AND stderr at INFO, so
+      # the filter alone also ate every shell error, and 7 straight failures of the guard logged
+      # not one reason (19/08/2026). A `<3>`/`<4>` prefix keeps its own level either way.
       LogLevelMax = "warning";
+      SyslogLevel = "warning";
     };
   };
 
@@ -263,7 +272,9 @@ in
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${hypridleGuard}/bin/hypridle-guard";
-      LogLevelMax = "warning"; # same reason as the healthcheck: no Starting/Finished
+      # The same pair as the healthcheck, for the same two reasons.
+      LogLevelMax = "warning";
+      SyslogLevel = "warning";
     };
   };
 

@@ -116,7 +116,7 @@ The guard writes a mark in `XDG_RUNTIME_DIR` saying the hypridle pause belongs t
 human, because the bar's pill also stops hypridle on purpose, and without the mark the watchdog
 would undo that manual toggle within 5 min.
 
-## Two shell traps this file paid for
+## Three shell traps this file paid for
 
 **`set -o pipefail` plus `grep -q` inverts the result.** `grep -q` exits on the 1st match, the
 producer dies of SIGPIPE, and the pipeline returns an ERROR despite having matched. In
@@ -126,6 +126,15 @@ pipe at all. The same trap appears in [`vpn.md`](vpn.md).
 
 **`ss` filters itself**, for the same reason. And it is `not dst X`, never `dst != X`: the second
 looks natural and the parser rejects it with `bison bellows (syntax error)`. Tested 10/08/2026.
+
+**A `runtimeInputs` missing a binary is a LATENT bug, not a build error.**
+`writeShellApplication` PREPENDS its inputs and then appends the inherited PATH, so a command it
+does not declare still resolves when you run the script by hand, because an interactive shell has
+`/run/current-system/sw/bin`. Under systemd it does not: a USER unit gets a fixed PATH of
+coreutils, findutils, gnugrep, gnused and systemd, and nothing else. `hypridle-guard` used `awk`
+without declaring `gawk`, so it exited **127** on the `/proc/uptime` line every 5 min from 10/08 to
+19/08/2026: the watchdog was dead for those 9 days while testing by hand kept saying it worked.
+Measured on 19/08: `ExecMainStatus=127` with `Result=exit-code`.
 
 `sunshine-health` does a real TLS handshake on 47984, because `-brief` prints `Protocol version:`
 only when the handshake COMPLETES. An accepted TCP is not enough, which was exactly the hung state
@@ -277,8 +286,12 @@ Hence the active probe: the only way to detect it is to ATTEMPT the handshake. T
 with an active stream, because a host with a hung HTTPS is already useless.
 
 The timer runs every 2 min, which would make systemd log "Starting…/Finished…" 440 lines/day
-(measured), so `LogLevelMax = warning` cuts the info out while the probe's own failures stay
-visible.
+(measured), so `LogLevelMax = warning` cuts the info out. **It needs `SyslogLevel = warning` beside
+it**, which was missing until 19/08/2026: systemd logs a script's stdout AND stderr at INFO, so the
+filter alone also swallowed everything the script did not prefix by hand. That is why the 127 above
+logged no reason at all, seven times in a row. A `<3>` or `<4>` prefix carries its own level and was
+always visible, which is the asymmetry that hid the crash while showing the guard's deliberate
+warning.
 
 The idle guard also has a **2 min grace** between the `do` that stops hypridle and the bind of the
 video ports. In "Steam Big Picture" that window lasts the whole Steam launch, and turning hypridle

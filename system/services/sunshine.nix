@@ -36,8 +36,12 @@ let
   # The UFSCar blocks, mirrored BY HAND in the router's Moonlight-* redirects.
   # Never 0.0.0.0/0: /serverinfo has no auth, and this house is not behind CGNAT.
   moonlightSources = [
-    "200.133.224.0/20" # UFSCar, campus. This is where the notebook goes out today, and it WORKS
-    "200.136.192.0/21" # UFSCar, the FAI range. See above: the connection may not complete
+    "200.133.224.0/20" # UFSCar campus. Proven twice: SSH on 10/08 and the Moonlight session of 19/08
+    # Believed to be "the FAI range", and it is NOT: no FAI address ever observed falls inside it.
+    # The two that were seen (200.136.204.0/23 and 200.136.208.0/20) are NOT declared, so Moonlight
+    # from them cannot connect. Widening this is a deliberate call about exposing /serverinfo, not a
+    # bugfix, and the measurement that decides it is in docs/notes/network/sunshine.md.
+    "200.136.192.0/21"
   ];
 
   # GENERATED, because the stop list has to match the start list exactly or reload stacks

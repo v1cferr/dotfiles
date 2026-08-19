@@ -46,7 +46,8 @@ one behind.
 ## Why the source list is a literal, and what mirrors it
 
 The UFSCar blocks were confirmed on registro.br on 10/08/2026, both under the same CNPJ. It is a
-literal and not an option because rule 11 asks for 2+ consumers and here there is one.
+literal and not an option because rule 11 asks for 2+ consumers and here there is one. Two of them
+were confirmed, not all of them, which is the subject of the correction at the end of this section.
 
 **But there is a mirror to keep in sync by hand**: the `src_ip` of the `Moonlight-*` redirects in
 `router/uci/firewall.conf`. If the two lists diverge, the router forwards and the host drops, and
@@ -58,12 +59,51 @@ to whoever reaches them is `/serverinfo` with NO authentication: hostname, GPU, 
 whether there is an active session. Pairing still needs the PIN typed on the host; inventorying the
 machine needs nothing.
 
-**The two blocks are not worth the same**, and that is measured: the FAI network DROPS THE SYN-ACK
-on the way back. The SYN leaves there, arrives here, the host answers, the router's conntrack sits
-in `SYN_RECV` and the final ACK never comes back, so a connection from the /21 may simply not
-complete and there is nothing on this side that fixes it. The /20 (campus) DOES get through, proven
-by the SSH session of 10/08/2026. The /21 stays on the list anyway: it costs one rule, and the
-block is THEIR firewall's, which can change without notice.
+### The list is INCOMPLETE, measured 19/08/2026
+
+UFSCar does not have two blocks, it has at least four, all `REASSIGNED` under the same CNPJ
+45358058000140 (Coordenadoria de Infraestrutura de TI). Queried over RDAP at `rdap.registro.br`:
+
+| Block | Declared here? | Seen in use by |
+| --- | --- | --- |
+| `200.133.224.0/20` | yes | 200.133.233.101, the client of the session that WORKED on 19/08 |
+| `200.136.192.0/21` | yes | nothing, ever. See below |
+| `200.136.204.0/23` | **no** | 200.136.205.252, the work PC on 19/08 |
+| `200.136.208.0/20` | **no** | 200.136.209.229, the FAI workstation (`ssh workstation`) |
+
+So a Moonlight client on the last two cannot connect AT ALL, and nothing about the symptom says so:
+the router does not match the `src_ip` of any `Moonlight-*` redirect and drops the packet before the
+DNAT, which leaves NO trace on this host. Measured on 19/08 while the failure was live: no conntrack
+entry, no refused packet in the kernel log, and not one connection attempt in Sunshine's own log.
+The `/serverinfo` on 47989 answered 200 to loopback the whole time.
+
+**The list was deliberately NOT widened in the same commit.** Doing it means editing two places that
+have to stay in sync, and it hands `/serverinfo` with no authentication to more of UFSCar, which is
+a call to make on purpose and not while chasing a symptom.
+
+### The SYN-ACK theory is now UNVERIFIED
+
+What this file used to state as measured: the FAI network drops the SYN-ACK on the way back, the SYN
+arrives, the host answers, the router's conntrack sits in `SYN_RECV` and the final ACK never comes,
+so a connection from the /21 may not complete.
+
+The problem with it is the table above. **No FAI address ever observed falls inside the declared
+/21**, so for the machines actually used the rule never matched in the first place, and from the
+client the two causes are IDENTICAL: a SYN goes out and nothing comes back. The `SYN_RECV`
+observation is the one piece that does not fit the simpler explanation, and it was not re-checked.
+
+The experiment that settles it, from the work PC while `tcpdump -ni pppoe-wan 'tcp port 47989 and
+host <client>'` runs on the router:
+
+1. Nothing arrives on `pppoe-wan`: it is THEIR firewall on the way out.
+2. The SYN arrives, no DNAT to 192.168.1.10 and no answer: OUR list dropped it, and the source
+   block is simply not declared.
+3. The SYN arrives, is DNAT'd, the host answers and the ACK never comes back: the original theory
+   holds.
+
+Until that runs, treat the /21 as a rule that costs nothing and has never been shown to carry
+anything. The /20 (campus) DOES get through, proven twice: the SSH session of 10/08/2026 and the
+Moonlight session of 19/08/2026, whose client was 200.133.233.101.
 
 ## The black screen was DPMS, not a codec
 

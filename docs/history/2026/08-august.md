@@ -1,6 +1,44 @@
 # History: august 2026
 
-74 entries. Index in [README.md](../README.md).
+75 entries. Index in [README.md](../README.md).
+
+- [x] Codex went to the THIRD layer the same day it arrived on the second, and the tool itself
+      made the argument (19/08/2026). Hours after the entry below chose `nixpkgs-unstable` and
+      recorded upstream-direct as "passed over", Codex opened printing its own banner:
+      `Update available! 0.147.0 -> 0.148.0`. That entry stays as written, because a diary that
+      gets edited stops being evidence, and being wrong within the day is the useful part.
+      • WHAT THE BANNER PROVED is not that 0.148.0 mattered, it is the CADENCE. Upstream tags
+        almost daily, so the middle layer is not "a bit behind", it is behind by default and the
+        tool says so out loud. For an agent CLI the gap is model support, not polish.
+      • NOT AN OVERRIDE OF NIXPKGS' `src`, which is the reflex and is wrong here: that derivation
+        compiles from Rust, so every bump would want a vendor hash and a full recompile of a
+        251 MiB binary. `pkgs/codex.nix` is a `fetchurl` on the release asset instead.
+      • THE PACKAGING IS 50 LINES BECAUSE UPSTREAM SHIPS STATIC MUSL. Measured straight out of the
+        tarball, before any derivation existed: no interpreter, `codex-cli 0.148.0`, clean doctor.
+        Nothing to patchelf. `dontStrip`, since stripping a released artifact makes it stop
+        matching what was published and buys nothing.
+      • THE TWO THINGS THAT STILL HAVE TO BE ADDED are the two nixpkgs adds: `ripgrep`, or search
+        dies with `Install ripgrep or repair the bundled Codex package`, and `bubblewrap`, since
+        the release bundles its own `bwrap` and this package does not take it. Plus
+        `--inherit-argv0`, because Codex RE-EXECUTES ITSELF as its sandbox helper. Verified under
+        `env -i`, where `rg` can only come from the wrapper: `ripgrep 15.1.0` and
+        `restricted fs + restricted network`.
+      • `codex-bump` MAKES THREE, and a GitHub release is the easy case of both halves the other
+        two split. The asset URL is versioned, so it is immutable like VS Code's, AND "did it
+        change?" costs ONE HEAD, because `/releases/latest` REDIRECTS to the tag. The REST API
+        would answer the same and spend one of the 60 anonymous calls per hour, and would drag
+        `jq` in to read it. Tested on both paths: the no-op, and a faked 0.140.0 whose recomputed
+        hash came out identical to the pinned one.
+      • THE IN-APP UPDATER IS A DEAD END HERE, and the banner is the invitation to it. `codex
+        update` wants to overwrite a binary in the read-only store. What updates Codex is
+        `update`, the alias, like everything else.
+      • A THIRD-PARTY FLAKE WAS PASSED OVER, and it would have been ONE input instead of two files
+        (one of them even rebuilds hourly). For a tool that holds the ChatGPT session and executes
+        shell commands, the fetch goes to the publisher with a hash this repo pins, rather than
+        growing the trusted set by a stranger.
+      • THE TRUST PROMPT'S ANSWER CAME BACK AS A DIFF, unplanned and the best evidence yet that the
+        mirror works: Codex persisted `trust_level = "trusted"` for this repo into `config.toml`,
+        and git showed it. Committed and not reverted, since reverting only means answering again.
 
 - [x] Codex is declared, and the home-manager option built for it is the one thing NOT used
       (19/08/2026). `programs.codex.settings` renders the attrset into `/nix/store`, and Codex

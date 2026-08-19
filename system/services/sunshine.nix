@@ -49,6 +49,10 @@ let
   # A mark so the watchdog does not undo a hypridle toggle made by hand from the bar.
   pauseStamp = ''"''${XDG_RUNTIME_DIR:-/run/user/$(${pkgs.coreutils}/bin/id -u)}/sunshine-hypridle-paused"'';
 
+  # The ghost reaper's first strike. It is a MARK and not a counter, because what matters is HOW
+  # LONG the ghost has been standing, and a file's mtime already carries that.
+  ghostStrike = ''"''${XDG_RUNTIME_DIR:-/run/user/$(${pkgs.coreutils}/bin/id -u)}/sunshine-ghost-strike"'';
+
   # Stream start: stops hypridle so the remote session does not LOCK mid-way through idle.
   # `|| true`: a prep-cmd that fails would cancel the stream in Sunshine.
   streamBegin = pkgs.writeShellScript "sunshine-stream-begin" ''
@@ -61,8 +65,25 @@ let
     ${pkgs.systemd}/bin/systemctl --user start hypridle.service || true
   '';
 
+  # "Is there a REAL stream?", EXTRACTED because there are two consumers now (rule 11): the idle
+  # guard and the ghost reaper. The signal is the SOCKETS, because Sunshine's own bookkeeping lies:
+  # on 10/08/2026 `/serverinfo` still said SUNSHINE_SERVER_BUSY with the client dead for 2h30.
+  # Exit 0 = there is a stream. `ss` filters itself, no pipe: pipefail plus grep -q inverts it.
+  streamActive = pkgs.writeShellApplication {
+    name = "sunshine-stream-active";
+    runtimeInputs = [ pkgs.iproute2 ];
+    text = ''
+      # Video, audio and control UDP: Sunshine binds these PER SESSION and closes them at the end.
+      [ -z "$(ss -uanH "sport >= :${sp 9} and sport <= :${sp 11}")" ] || exit 0
+      # Or HTTPS/RTSP established with a peer that is not us. `not dst X`, never `dst != X`: the
+      # second one looks natural and the parser answers `bison bellows (syntax error)`.
+      [ -z "$(ss -tanH state established "( sport = :${sp (-5)} or sport = :${sp 21} ) and not dst 127.0.0.0/8 and not dst [::1]")" ] || exit 0
+      exit 1
+    '';
+  };
+
   # The `undo` is not a guarantee: a client that dies with no teardown left hypridle stopped
-  # for 6h. The signal is the SOCKETS, because Sunshine's own session bookkeeping lies.
+  # for 6h. The signal is the SOCKETS, see `streamActive` above.
   hypridleGuard = pkgs.writeShellApplication {
     name = "hypridle-guard";
     # gawk is NOT optional. A systemd USER unit gets a FIXED PATH (coreutils, findutils, gnugrep,
@@ -71,9 +92,9 @@ let
     # from 10/08 to 19/08/2026. Running it by hand always worked, which is what hid it.
     runtimeInputs = with pkgs; [
       systemd
-      iproute2
       coreutils
       gawk
+      streamActive
     ];
     text = ''
       stamp=${pauseStamp}
@@ -92,10 +113,8 @@ let
       now=$(awk '{printf "%d", $1 * 1000000}' /proc/uptime)
       if [ "$paused" -gt 0 ] && [ "$((now - paused))" -lt 120000000 ]; then exit 0; fi
 
-      # 4) A real stream: video UDP bound, or control TCP established with a non-loopback peer.
-      #    `ss` filters itself (no pipe: pipefail plus grep -q inverts the result).
-      [ -z "$(ss -uanH "sport >= :${sp 9} and sport <= :${sp 11}")" ] || exit 0
-      [ -z "$(ss -tanH state established "( sport = :${sp (-5)} or sport = :${sp 21} ) and not dst 127.0.0.0/8 and not dst [::1]")" ] || exit 0
+      # 4) A real stream, by the sockets and not by Sunshine's bookkeeping.
+      if sunshine-stream-active; then exit 0; fi
 
       echo "<4>hypridle stopped with no active stream, turning it back on (Sunshine's undo did not run)"
       rm -f "$stamp"
@@ -111,18 +130,64 @@ let
       openssl
       systemd
       coreutils
+      findutils # `find -mmin`, which is how the strike below measures its own age
+      curl
+      streamActive
     ];
     text = ''
+      strike=${ghostStrike}
+
+      # 1) THE HANDLER HANG (29/07): an accepted TCP is not enough, only a COMPLETED handshake
+      #    proves the HTTPS side is alive, so `-brief` printing `Protocol version:` is the test.
+      handshake=""
       for attempt in 1 2 3; do
-        out="$(timeout 8 openssl s_client -connect 127.0.0.1:47984 -brief </dev/null 2>&1 || true)"
+        out="$(timeout 8 openssl s_client -connect 127.0.0.1:${sp (-5)} -brief </dev/null 2>&1 || true)"
         case "$out" in
-          *"Protocol version:"*) exit 0 ;;
+          *"Protocol version:"*)
+            handshake=ok
+            break
+            ;;
         esac
-        echo "<4>TLS handshake on 47984 failed (attempt $attempt/3)" # <4>=warning
+        echo "<4>TLS handshake on ${sp (-5)} failed (attempt $attempt/3)" # <4>=warning
         [ "$attempt" = 3 ] || sleep 5
       done
-      echo "<3>HTTPS handler hung, restarting sunshine.service" >&2 # <3>=err
-      systemctl --user restart sunshine.service
+      if [ -z "$handshake" ]; then
+        echo "<3>HTTPS handler hung, restarting sunshine.service" >&2 # <3>=err
+        rm -f "$strike"
+        systemctl --user restart sunshine.service
+        exit 0
+      fi
+
+      # 2) THE GHOST SESSION (10/08, again on 19/08): the handshake above PASSES while the host is
+      #    unusable, because Sunshine kept a session that no longer exists. Moonlight reads
+      #    `SUNSHINE_SERVER_BUSY` and refuses to open a new one, and only a restart clears it.
+      #    `/serverinfo` needs no auth over loopback; the id is a dummy, only PairStatus reads it.
+      info="$(timeout 5 curl -s "http://127.0.0.1:${sp 0}/serverinfo?uniqueid=0123456789ABCDEF" || true)"
+      case "$info" in
+        *SUNSHINE_SERVER_BUSY*) ;;
+        # Free, or no answer at all: either way there is no ghost to reap.
+        *)
+          rm -f "$strike"
+          exit 0
+          ;;
+      esac
+      if sunshine-stream-active; then
+        rm -f "$strike"
+        exit 0
+      fi
+
+      # A BUSY session with no socket is a ghost, and the only thing separating it from a session
+      # being BORN is time: between the app launching and the client binding video there is a
+      # window that lasts the whole Steam Big Picture launch. So the condition has to HOLD, and
+      # restarting a live stream is the expensive mistake here, not reaping a ghost 6 min late.
+      if [ -e "$strike" ] && [ -n "$(find "$strike" -mmin +5)" ]; then
+        echo "<3>session BUSY with no stream for over 5 min, restarting sunshine.service" >&2
+        rm -f "$strike"
+        systemctl --user restart sunshine.service
+      elif [ ! -e "$strike" ]; then
+        echo "<4>session BUSY with no stream, holding before calling it a ghost"
+        touch "$strike"
+      fi
     '';
   };
   # Session QUALITY, because the Sunshine log says CLIENT DISCONNECTED for every cause.

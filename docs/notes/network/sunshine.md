@@ -112,6 +112,15 @@ Honest about the evidence: the NEGATIVE side was measured (no stream implies no 
 positive one is a strong inference, not an observation. Check on the next stream with
 `ss -uan | grep 4799` before treating it as fact.
 
+Since 19/08/2026 that test is one script, `sunshine-stream-active`, because a second consumer showed
+up (the ghost reaper below) and the `ss` filters were worth writing once instead of twice.
+
+**The second consumer changes the stakes of the measurement still pending.** The guard only turns
+hypridle back on, so a wrong answer costs a lock. The reaper RESTARTS Sunshine, so a live stream
+with no bound socket would cost a dropped session, and that failure mode is precisely the negation
+of the inference nobody has confirmed yet. That is why the reaper does not trust the sockets on the
+first look and waits.
+
 The guard writes a mark in `XDG_RUNTIME_DIR` saying the hypridle pause belongs to IT and not to a
 human, because the bar's pill also stops hypridle on purpose, and without the mark the watchdog
 would undo that manual toggle within 5 min.
@@ -296,6 +305,33 @@ warning.
 The idle guard also has a **2 min grace** between the `do` that stops hypridle and the bind of the
 video ports. In "Steam Big Picture" that window lasts the whole Steam launch, and turning hypridle
 back on inside it is the 03/08 remote lockout all over again.
+
+## The ghost session, which the handshake probe cannot see
+
+19/08/2026, the second occurrence. A session ran from 08:15 to 08:24 and the client left with no
+clean teardown. Sunshine never closed the session: `/serverinfo` kept answering
+`state=SUNSHINE_SERVER_BUSY` with `currentgame=958645192` while there were **zero** UDP sockets on
+47998-48000 and **no** established TCP on 47984 or 48010. Moonlight reads that state and will not
+open a new session, so from the client the host is simply broken.
+
+**The 29/07 probe cannot detect this, by construction.** The TLS handshake on 47984 completes
+perfectly the whole time, because the HTTPS handler is healthy; what is stuck is the SESSION behind
+it. Two different failures, the same remedy (`restart`), and detectors that share nothing. Measured
+on 19/08: `sunshine-health` ran every 2 min through the entire ghost and exited 0 every time, which
+is correct behaviour for what it was asked to check and useless for what was actually wrong.
+
+The reaper's condition is `SUNSHINE_SERVER_BUSY` plus no socket, HELD for over 5 min (three probes
+at 2 min) before restarting. **The hold is not caution for its own sake**: between the app launching
+and the client binding video there is a window that lasts the whole Steam Big Picture launch, the
+same window the idle guard needs its 2 min grace for, and restarting inside it kills a session that
+was being born. Reaping a ghost 6 min late costs nothing, since nobody can connect either way.
+
+**A restart does not lose pairing.** The paired clients live in `~/.config/sunshine`, which is state
+and survives (verified on 19/08: `fai pc` was still there afterwards). That is what makes restart an
+acceptable remedy instead of a last resort.
+
+It is a mop and not a fix. The bug is upstream, in Sunshine not closing a session whose client
+vanished, and `ping_timeout` does not cover it: that drops the STREAM, never the bookkeeping.
 
 ## The firewall rule can land first, and the `-s` is not redundant
 

@@ -164,9 +164,16 @@ What did not lie in the same measurement: **the sockets**. With the ghost sessio
 Sunshine had ZERO UDP sockets on the video ports; it creates them per session and closes them at
 the end. So `bound` means a real stream.
 
-Honest about the evidence: the NEGATIVE side was measured (no stream implies no socket); the
-positive one is a strong inference, not an observation. Check on the next stream with
-`ss -uan | grep 4799` before treating it as fact.
+Honest about the evidence, and the check is now DONE. The negative side was measured on 10/08 (no
+stream implies no socket). The positive side stopped being an inference on 19/08/2026, during a live
+session over the tunnel: all THREE ports bound, `47998`, `47999` and `48000`. So `bound` means a
+real stream, observed and no longer assumed.
+
+**The same measurement demoted the other half of the test.** During that live stream there was NOT
+ONE established TCP on 47984 or 48010: Moonlight closes them after negotiation and the session runs
+on UDP alone. So the `ss -tanH state established` check only covers the NEGOTIATION window, and
+everything that protects a stream in progress rests on the UDP sockets. Do not remove it, it is what
+covers the window before the video binds, but do not read it as a second independent signal either.
 
 Since 19/08/2026 that test is one script, `sunshine-stream-active`, because a second consumer showed
 up (the ghost reaper below) and the `ss` filters were worth writing once instead of twice.
@@ -267,9 +274,14 @@ slider, because that way it is declarative and holds for ANY client that pairs.
 
 10000 became 20000 on 31/07, and two measurements changed the arithmetic:
 
-1. The encoder in use is **AV1** (`av1_vaapi`, confirmed live), not h264 as the comment used to
+1. The encoder in use was **AV1** (`av1_vaapi`, confirmed live), not h264 as the comment used to
    claim. AV1 delivers ~40 to 50% more per bit, so 10 Mbps already amounted to ~18 to 20 Mbps of
    h264. The ceiling was looser than it looked, but by a mistaken premise.
+   **Careful, because this is NOT a host property**: the codec is what the CLIENT asks for, per
+   session. On 19/08/2026 the Windows client of `pc-trampo` negotiated `h264_vaapi`, 8-bit, Rec. 601,
+   while the host offers h264, HEVC and AV1 alike. So the AV1 arithmetic above holds for the client
+   that was measured in jul/2026 and NOT for every session. Read the encoder off the log of the
+   session in question (`Creating encoder [...]`) before reasoning about bitrate.
 2. The "79 Mbps" was NOT what the client asked that week. Cross-referencing bitrate against
    encoder in the journal, the 7 days ran at 19.4 Mbps, and the SHORT sessions on 31/07 (15 to
    68 s) were ALSO at 19.4. So a short drop happens at a moderate bitrate and the cap is not what

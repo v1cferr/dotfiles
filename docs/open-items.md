@@ -35,12 +35,10 @@ finished work. What was closed is in the [august history](history/2026/08-august
       • DO NOT DELETE BEFORE CHECKING: the `~/FAI-workstation` mount (rclone SFTP) comes up
         with the FAI VPN, not with this tunnel, so the peer LOOKS orphaned without being it.
         Check from over there with `wg` before deciding.
-      • The `notebook` peer (.2) has no handshake either. Until 19/08/2026 this file called that
-        EXPECTED, because the direct access of 10/08 had replaced it, and that premise died: the
-        direct path does not exist from the block where the work PC actually lives, and that machine
-        now comes in as the peer `pc-trampo` (.4), with its own fresh keypair. So the question is no
-        longer whether .2 is expected, it is whether .2 IS the same machine, in which case it is
-        legacy with a key nobody holds any more.
+      • The `notebook` peer (.2) WAS REMOVED on 19/08/2026, for the reason this item is still open
+        about: nobody could say which machine held its private key, and the `wg` zone reaches the
+        whole LAN. That one had never handshaked at all, which made the call easy. THIS one has a
+        `persistent_keepalive`, so somebody expected it to be up, and that is the difference.
 
 - [~] ACTUALLY TEST Wake-on-LAN (opened on 10/08/2026). The config is applied and the
       `40-enp7s0.link` is generated with `WakeOnLan=magic`, but NONE of that proves the machine

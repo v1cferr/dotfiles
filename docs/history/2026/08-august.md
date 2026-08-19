@@ -1,6 +1,22 @@
 # History: august 2026
 
-72 entries. Index in [README.md](../README.md).
+73 entries. Index in [README.md](../README.md).
+
+- [x] The `notebook` WireGuard peer is gone, and "I do not know whose it is" was the argument FOR
+      removing it (19/08/2026). It predated the mirror (it was already there on 08/08, in the commit
+      that created `router/uci`), it never completed one handshake in any measured interface
+      lifetime, and nobody could say which machine held the private key. The `wg` zone forwards to
+      `lan`, so an unaccounted peer key is an unaccounted door into the house.
+      • ITS OPEN ITEM HAD A PREMISE THAT DIED TWICE. The note called the missing handshake EXPECTED,
+        because "the direct access of 10/08 replaced it", and that direct access was retired the
+        same day this peer was.
+      • REVERSIBLE ON PURPOSE: the public key stays in git and in this file, the symptom of being
+        wrong is immediate and unambiguous (exactly one machine stops connecting), and the correct
+        repair would be a FRESH keypair anyway, which is better hygiene than reusing a key whose
+        provenance nobody can state.
+      • `10.10.10.2` is free again. What is left is `celular` (.3), `pc-trampo` (.4) and
+        `fai-workstation` (.5), and the last one stays an open item for the same shape of reason:
+        no handshake in 17 days and a `persistent_keepalive` that says somebody expected otherwise.
 
 - [x] The direct path from UFSCar is RETIRED, and the checker INVERTED with it (19/08/2026). Its
       stated reason for existing was that a third VPN client on the FAI machine would be a routing

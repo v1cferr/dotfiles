@@ -25,22 +25,6 @@ finished work. What was closed is in the [august history](history/2026/08-august
         `probe_candidates()`, in `system/net/vpn.nix`, together with the measurement, the way
         the FAI one is.
 
-- [ ] The VPN endpoint name is PINNED in the router's DNS (opened on 19/08/2026). The Windows peer
-      `pc-trampo` uses the router as its DNS, so the tunnel's `Endpoint` cannot be a name the
-      zone-wide split-DNS answers for. Today that is solved with
-      `address=/vpn.<domain>/<public IP>` on the router, a literal that goes stale the day the WAN
-      address changes.
-      • WHY NOT `server=` (forwarding the name upstream): it drags the wildcard's CNAME chain back,
-        `vpn` to `ssh` to the public A, and dnsmasq CACHES the `ssh` record, which then overrides
-        `address=/<domain>/192.168.1.10` for the whole house for 300 s. Measured on 19/08, see
-        [notes/network/network.md](notes/network/network.md).
-      • HOW TO CLOSE IT: give the endpoint a leaf record of its own in Cloudflare instead of letting
-        it inherit the wildcard, and a second ddns-scripts instance to keep it fresh. Then the
-        upstream answer has no chain to poison and no address to go stale, and the router's DNS
-        entry disappears with the problem.
-      • DO NOT close it by pointing the client at a public resolver: that is what breaks
-        `fai2008.ufscar.br`, which only resolves through the router's forward.
-
 - [ ] WireGuard peer `fai-workstation` (10.10.10.5): alive or legacy? (opened on 10/08/2026)
       Measured with the new `wg-status`: in **17 days** of router uptime it did not do ONE
       handshake. And it is not a forgotten passive peer: it has `persistent_keepalive = 25`,
@@ -78,18 +62,6 @@ finished work. What was closed is in the [august history](history/2026/08-august
         away the +5VSB and the NIC loses the armed register. For "the power went out" the answer
         is *Restore on AC Power Loss* in the BIOS, and then WoL becomes irrelevant, because the
         machine turns itself on.
-
-- [ ] Tunnel MTU: measure and write it down (inherited from the 10/08/2026 test). The protocol
-      is in [guides/wireguard-moonlight.md](guides/wireguard-moonlight.md).
-      • Impossible to test from home: there is no WireGuard interface on this machine (the
-        tunnel terminates at the ROUTER), so a ping to 10.10.10.1 goes out over the cable and
-        measures the LAN. The sign of an invalid test: ~0.3 ms of latency.
-      • IT CHANGED IN VALUE ON 10/08/2026, and it is worth saying why: this test existed to
-        decide whether `packet_size = 1024` could go up. It cannot anymore, because with the
-        direct path live the value is GLOBAL and serves TWO paths with different MTU (tunnel
-        ~1420, direct 1492), so the useful ceiling is the lower one. The number only becomes
-        actionable again if the tunnel is retired. Measuring anyway is worth it: it is what says
-        WHICH of the two is the lower one.
 
 - [ ] Tray: the TOOLTIP, which does not exist anywhere on the bar (opened 30/07, narrowed
       16/08/2026). Everything else in this item was DONE and its reasoning now lives in

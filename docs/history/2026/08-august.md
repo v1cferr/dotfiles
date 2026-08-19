@@ -1,6 +1,117 @@
 # History: august 2026
 
-66 entries. Index in [README.md](../README.md).
+71 entries. Index in [README.md](../README.md).
+
+- [x] The router's mirror gained a CONTRACT, and the checker found its own bug first
+      (19/08/2026). Rule 11 wants ONE owner per value, and the router is the single piece of
+      infrastructure Nix does not reach, so a handful of values live in both places. The only thing
+      keeping them equal was a sentence in the Sunshine notes admitting "there is a mirror to keep
+      in sync by hand", and that sentence cost the morning three entries below. `router-ssot`
+      compares the mirror against what the repo declares, in seven checks.
+      • TWO LAYERS, and neither replaces the other. `router-sync diff` asks whether the mirror
+        equals the DEVICE; this asks whether it equals the REPO. Green over a stale mirror proves
+        nothing, which is why the mirror check reports ALONE when it fails: six findings about a
+        truncated file would send the next reader to the wrong place entirely.
+      • IT READS THE MIRROR, NEVER THE DEVICE, in this order of reasons: it runs in a pre-commit
+        hook so it has to be fast and offline, it must never be able to lock anybody out so it
+        opens no connection at all, and freshness is already somebody else's job.
+      • THE FIRST RUN FOUND A BUG IN THE CHECKER, not drift. The extractor read `the FAI range`
+        out of a COMMENT beside `moonlightSources` and reported a third source block that does not
+        exist. Comments are stripped now, ignoring a `#` that lives inside a quoted string, because
+        `127.0.0.1#5053` is a legitimate value in these same files. That is the shape of every text
+        based checker's failure: the weak part is the parser, never the comparison.
+      • PROVEN IN BOTH DIRECTIONS, because a checker that only passes is decoration: eight
+        mutations on the mirror side and six on the repo side, each firing its own kind. The host
+        address is the costliest value to get wrong, firing 9 findings across 4 checks, which is
+        exactly the blast radius its 19 occurrences in the mirror predict.
+      • The hook did not run on its own commit. `.pre-commit-config.yaml` is GENERATED and
+        gitignored, so a new hook only exists after a dev shell re-entry regenerates it.
+
+- [x] The wildcard POISONED the anchor, and the fix was a leaf record instead of a literal
+      (19/08/2026). The new Windows peer uses the router as its DNS, which is what keeps
+      `fai2008.ufscar.br` resolving through the forward already there, and that makes
+      `ssh.<domain>` unusable as the tunnel's `Endpoint`: a re-resolution answers 192.168.1.10, an
+      address INSIDE the tunnel being built.
+      • The obvious exemption was one more entry in the pattern the notes already documented,
+        `server=/vpn.<domain>/` forwarding a single name upstream. It poisoned `ssh.<domain>` FOR
+        THE WHOLE HOUSE: the upstream answer for a wildcard name is a CNAME chain, `vpn` to `ssh`
+        to the public A, and dnsmasq caches every record in it, so the cached exact name beats the
+        suffix rule for the full 300 s TTL. Measured with a control name in the same zone still
+        answering 192.168.1.10.
+      • SO THE RULE WAS NARROWER THAN WRITTEN. Longest match decides WHICH entry applies; whether
+        the answer comes from inside or from upstream decides whether the cache can overwrite the
+        override you are relying on.
+      • The first fix was a pinned literal, which worked and lied: a value the DDNS already owns,
+        duplicated into a second place. Closed the same day with a leaf record of its own in
+        Cloudflare plus a second ddns-scripts instance, so the upstream answer is a single A with
+        no chain to cache and nothing to go stale.
+      • HONEST ABOUT THE SIZE OF THE WIN: hygiene, not availability. When the pin went stale the
+        tunnel was already down, so the router's DNS was unreachable anyway and Windows fell back
+        to the FAI resolver and got the right answer.
+
+- [x] The work PC became a WireGuard peer, and the Windows client CARVES AllowedIPs (19/08/2026).
+      It also closes the tunnel MTU item inherited from 10/08. Measured from the host toward the
+      peer: path MTU exactly 1420 (`-s 1392` passes, `-s 1393` fails), RTT 35.7 ms over 40 packets
+      with ZERO loss, against 1.67% loss and RTT spiking from 20 to 312 ms on the direct path.
+      • A LITERAL `0.0.0.0/0` TURNS ON THE APP'S KILL-SWITCH, which blocks every packet outside
+        the tunnel including the LOCAL network, and keeping the FAI network reachable is the entire
+        reason the peer exists on that machine. The app looks for a route of prefix length 0, so a
+        list that covers everything WITHOUT ever writing `/0` gets full-tunnel routing and no
+        kill-switch. Hence 62 blocks, generated and not hand written.
+      • THE MTU ITEM'S PREMISE WAS WRONG, and closing it corrects it. It said the number was not
+        actionable until the tunnel is retired. `packet_size = 1024` was calibrated for tailscale's
+        1280, which no longer exists anywhere, so with the binding path at 1420 there IS headroom:
+        1136 by the same proportion, 1164 by the same absolute margin.
+      • NOT TAKEN, on purpose. The ask was stability, and the smaller packet is the robust one:
+        raising it moves toward the ceiling whose overflow WireGuard drops SILENTLY, which is the
+        4 s disconnect this repo already paid for once.
+      • The peer went into uci AND was applied with `wg set`, so no `network reload` was needed.
+        That is the command that could have dropped the PPPoE and the session in the same second.
+
+- [x] "Moonlight does not connect" was OUR OWN source list, and the SYN-ACK theory died
+      (19/08/2026). RDAP at registro.br: UFSCar does not have two blocks, it has at least four
+      under the same CNPJ, and two in daily use are not declared here. The router matched no
+      `src_ip`, dropped the packet BEFORE the DNAT, and left no trace on this host: no conntrack
+      entry, no refused packet, no connection attempt in Sunshine's log.
+      • THE INSTRUMENT WAS A TEMPORARY `nft` COUNTER on `input_wan`, with no verdict and removed
+        right after, because there is no tcpdump on the router and nothing gets installed for one
+        measurement. It counted 11 packets: the SYN ARRIVES.
+      • The DNAT counters said the same thing for free, and they are always there to read: the /20
+        rules show the morning's session, the /21 rules show ZERO on all four. That block has never
+        carried a packet.
+      • ONE LOOSE END, written down instead of buried: `handle_reject` sends a TCP reset, so `nc`
+        should have failed FAST with "connection refused" and it hung instead. Something eats the
+        return packet, which is the same SHAPE as the theory this retires even though the packet is
+        a reset and not a SYN-ACK. It was never instrumented, and it stopped mattering the same day.
+      • THE LIST WAS NOT WIDENED. It means editing two places that have to agree and handing
+        `/serverinfo` with no authentication to more of UFSCar, which is a deliberate call about
+        exposure and not something to do while chasing a symptom.
+
+- [x] Moonlight could not connect and the host was FINE: a ghost session, plus a watchdog that had
+      never run (19/08/2026). `/serverinfo` kept answering `SUNSHINE_SERVER_BUSY` with a
+      `currentgame` set, after a client left at 08:24 with no clean teardown, and Moonlight reads
+      that state and refuses to open a new session. Zero UDP sockets and no established TCP proved
+      it was a ghost by the notes' own test. A restart cleared it and the pairing survived.
+      • THE HEALTHCHECK COULD NOT SEE IT, by construction. The TLS handshake on 47984 completes the
+        whole time, because the HTTPS handler is healthy and what is stuck is the SESSION behind
+        it. It ran every 2 min through the entire ghost and exited 0 every time, which is correct
+        for what it was asked to check and useless for what was actually wrong.
+      • `hypridle-guard` HAD BEEN DEAD FOR 9 DAYS with exit 127. It used `awk` without declaring
+        `gawk`, and a systemd USER unit gets a FIXED PATH with no awk in it, while running the
+        script by hand always worked because an interactive shell has one. That is the whole reason
+        it survived: the only way to test it was the way that could not fail.
+      • AND THE LOG FILTER HID IT. `LogLevelMax = warning` was supposed to cut the noise and keep
+        real failures visible, and systemd logs a script's stdout AND stderr at INFO, so the filter
+        also ate the shell's own error. Seven consecutive failures logged not one reason.
+        `SyslogLevel = warning` is the missing half.
+      • The reaper that replaced the guesswork needs BUSY plus no socket HELD for over 5 min,
+        because between an app launching and the client binding video there is a window that lasts
+        a whole Steam Big Picture launch, and restarting inside it kills a session being born.
+      • A LIVE SESSION THAT AFTERNOON CLOSED A CHECK OPEN SINCE 10/08: all three UDP ports bound,
+        so "bound means a real stream" is an OBSERVATION now and not an inference, which matters
+        because the reaper restarts Sunshine on the strength of it. The same measurement DEMOTED
+        the other half: during a real stream there is no established TCP on 47984 or 48010 at all,
+        so that check only ever covers the negotiation window.
 
 - [x] Audited what the cleanup could not see, and the docs were the only thing rotting
       (16/08/2026). The repo itself came back clean: every QML component and Lua module is

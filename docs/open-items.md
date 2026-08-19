@@ -25,6 +25,22 @@ finished work. What was closed is in the [august history](history/2026/08-august
         `probe_candidates()`, in `system/net/vpn.nix`, together with the measurement, the way
         the FAI one is.
 
+- [ ] The VPN endpoint name is PINNED in the router's DNS (opened on 19/08/2026). The Windows peer
+      `pc-trampo` uses the router as its DNS, so the tunnel's `Endpoint` cannot be a name the
+      zone-wide split-DNS answers for. Today that is solved with
+      `address=/vpn.<domain>/<public IP>` on the router, a literal that goes stale the day the WAN
+      address changes.
+      • WHY NOT `server=` (forwarding the name upstream): it drags the wildcard's CNAME chain back,
+        `vpn` to `ssh` to the public A, and dnsmasq CACHES the `ssh` record, which then overrides
+        `address=/<domain>/192.168.1.10` for the whole house for 300 s. Measured on 19/08, see
+        [notes/network/network.md](notes/network/network.md).
+      • HOW TO CLOSE IT: give the endpoint a leaf record of its own in Cloudflare instead of letting
+        it inherit the wildcard, and a second ddns-scripts instance to keep it fresh. Then the
+        upstream answer has no chain to poison and no address to go stale, and the router's DNS
+        entry disappears with the problem.
+      • DO NOT close it by pointing the client at a public resolver: that is what breaks
+        `fai2008.ufscar.br`, which only resolves through the router's forward.
+
 - [ ] WireGuard peer `fai-workstation` (10.10.10.5): alive or legacy? (opened on 10/08/2026)
       Measured with the new `wg-status`: in **17 days** of router uptime it did not do ONE
       handshake. And it is not a forgotten passive peer: it has `persistent_keepalive = 25`,
@@ -35,8 +51,12 @@ finished work. What was closed is in the [august history](history/2026/08-august
       • DO NOT DELETE BEFORE CHECKING: the `~/FAI-workstation` mount (rclone SFTP) comes up
         with the FAI VPN, not with this tunnel, so the peer LOOKS orphaned without being it.
         Check from over there with `wg` before deciding.
-      • The `notebook` peer (.2) has no handshake either, but that is EXPECTED and is not an
-        item: it is exactly what the direct access from 10/08 replaced.
+      • The `notebook` peer (.2) has no handshake either. Until 19/08/2026 this file called that
+        EXPECTED, because the direct access of 10/08 had replaced it, and that premise died: the
+        direct path does not exist from the block where the work PC actually lives, and that machine
+        now comes in as the peer `pc-trampo` (.4), with its own fresh keypair. So the question is no
+        longer whether .2 is expected, it is whether .2 IS the same machine, in which case it is
+        legacy with a key nobody holds any more.
 
 - [~] ACTUALLY TEST Wake-on-LAN (opened on 10/08/2026). The config is applied and the
       `40-enp7s0.link` is generated with `WakeOnLan=magic`, but NONE of that proves the machine

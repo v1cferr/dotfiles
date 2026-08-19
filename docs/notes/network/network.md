@@ -117,6 +117,32 @@ The public IP does answer from outside: the router has it directly on `pppoe-wan
 80/443/2222/2223. Proven on 08/08/2026 through Cloudflare's edge. There was a CGNAT scare on 07/08
 that proved FALSE; the diagnosis and the three ways that test can lie are in the august history.
 
+### The wildcard POISONS the anchor when a name goes upstream (19/08/2026)
+
+A third case of the same split-DNS mechanism, and the only one that bit back before it was
+understood. The work PC became a WireGuard peer, and its client uses the ROUTER as its DNS, which is
+what keeps `fai2008.ufscar.br` resolving through the forward already configured there. That makes
+`ssh.<domain>` unusable as the tunnel's `Endpoint`: a re-resolution would answer 192.168.1.10 and
+point WireGuard at an address INSIDE the tunnel it is trying to build.
+
+The first attempt was one more entry in the pattern above, `server=/vpn.<domain>/127.0.0.1#5053`,
+forwarding just that name upstream. It looked right, and it **poisoned `ssh.<domain>` for the whole
+house**. The upstream answer for a wildcard name is a CNAME CHAIN, `vpn` to `ssh` to the public A,
+and dnsmasq caches every record in it. The cached exact-name `ssh` then beats the suffix rule
+`address=/<domain>/192.168.1.10` for the full TTL, 300 s. Measured live: a control name in the same
+zone still answered 192.168.1.10 while `ssh` answered the public address.
+
+So the rule is narrower than "longest match wins": **an `address=` never leaves the house, a
+`server=` does, and what comes back can overwrite the very override you are relying on.** The fix
+was `address=/vpn.<domain>/<public IP>`, answered locally, so no chain returns and nothing is
+cached.
+
+The cost is a PINNED address, stale the day the WAN IP changes, which is exactly what the DDNS
+exists to prevent. It is acceptable only because the failure is narrow and recoverable: from outside
+the name still resolves through Cloudflare, so the tunnel comes back, and the stale answer only
+bites a re-resolution that happens while the tunnel is already up. The structural fix is an open
+item.
+
 ## fail2ban
 
 Port 2222 is open to the world (a port forward on the OpenWrt) WITH passwords enabled, so fail2ban

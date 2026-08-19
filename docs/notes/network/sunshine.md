@@ -77,11 +77,16 @@ DNAT, which leaves NO trace on this host. Measured on 19/08 while the failure wa
 entry, no refused packet in the kernel log, and not one connection attempt in Sunshine's own log.
 The `/serverinfo` on 47989 answered 200 to loopback the whole time.
 
-**The list was deliberately NOT widened in the same commit.** Doing it means editing two places that
-have to stay in sync, and it hands `/serverinfo` with no authentication to more of UFSCar, which is
-a call to make on purpose and not while chasing a symptom.
+**The list was deliberately NOT widened.** Doing it means editing two places that have to stay in
+sync, and it hands `/serverinfo` with no authentication to more of UFSCar, which is a call to make
+on purpose and not while chasing a symptom. It was never needed: on the same day the work PC became
+the WireGuard peer `pc-trampo` (`10.10.10.4`) and reaches Sunshine through path 1, where the source
+rules do not apply at all. That also makes **retiring path 2** a live option, which would take
+`/serverinfo` off the internet entirely. It would NOT unpin `packet_size`: the binding constraint is
+the SMALLER path, and that is the tunnel's 1420, measured on 19/08 in
+[`guides/wireguard-moonlight.md`](../../guides/wireguard-moonlight.md).
 
-### The SYN-ACK theory is now UNVERIFIED
+### The SYN-ACK theory is DEAD, measured 19/08/2026
 
 What this file used to state as measured: the FAI network drops the SYN-ACK on the way back, the SYN
 arrives, the host answers, the router's conntrack sits in `SYN_RECV` and the final ACK never comes,
@@ -92,18 +97,29 @@ The problem with it is the table above. **No FAI address ever observed falls ins
 client the two causes are IDENTICAL: a SYN goes out and nothing comes back. The `SYN_RECV`
 observation is the one piece that does not fit the simpler explanation, and it was not re-checked.
 
-The experiment that settles it, from the work PC while `tcpdump -ni pppoe-wan 'tcp port 47989 and
-host <client>'` runs on the router:
+**It came out as outcome 2: our list.** There is no `tcpdump` on the router (6 MB of flash, 1.3 MB
+free in `/overlay`, and nothing gets installed for one measurement), so the instrument was a
+TEMPORARY `nft` counter on `input_wan` matching `ip saddr <work PC> tcp dport 47989`, with no
+verdict, removed right after. It counted **11 packets** while the client retried.
 
-1. Nothing arrives on `pppoe-wan`: it is THEIR firewall on the way out.
-2. The SYN arrives, no DNAT to 192.168.1.10 and no answer: OUR list dropped it, and the source
-   block is simply not declared.
-3. The SYN arrives, is DNAT'd, the host answers and the ACK never comes back: the original theory
-   holds.
+So the SYN ARRIVES. It matches no `Moonlight-*` `src_ip`, falls through to `reject_from_wan` and
+gets `reject with tcp reset`. Their firewall on the way out was never the problem.
 
-Until that runs, treat the /21 as a rule that costs nothing and has never been shown to carry
-anything. The /20 (campus) DOES get through, proven twice: the SSH session of 10/08/2026 and the
-Moonlight session of 19/08/2026, whose client was 200.133.233.101.
+The DNAT counters say the same thing from the other side, and they are free to read:
+
+| Rule | Packets |
+| --- | --- |
+| `Moonlight-*-Campus`, `200.133.224.0/20` | 5, 4, 7 and 3, the session of that morning |
+| `Moonlight-*-FAI`, `200.136.192.0/21` | 0, 0, 0, 0 |
+
+**One loose end, stated instead of hidden.** `handle_reject` sends a TCP reset, so `nc` should have
+failed FAST with "connection refused", and it hung instead. Something eats the return packet, which
+is the same SHAPE as the old theory even though the packet is a reset and not a SYN-ACK. The return
+path was never instrumented, and it stopped mattering the same day: the machine that produced the
+symptom now comes in through the tunnel (`10.10.10.4`), where none of this applies.
+
+The /20 (campus) DOES get through, proven twice: the SSH session of 10/08/2026 and the Moonlight
+session of 19/08/2026, whose client was 200.133.233.101.
 
 ## The black screen was DPMS, not a codec
 

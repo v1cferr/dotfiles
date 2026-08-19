@@ -22,6 +22,13 @@ After touching anything through LuCI or through `uci set`, run `pull` and
 commit. The `diff` is what keeps this directory from becoming a copy that used
 to be true.
 
+**`sudo uci commit` leaves /etc/config as 0600.** Measured 19/08/2026: committing `dhcp`
+and `network` through sudo left both files root-only, while `firewall`, untouched that day,
+stayed 0644. The symptom on the next read is `uci: I/O error` for the normal user, and it
+breaks `router-sync`, which reads UCI over SSH as that user and NOT as root. The repair is
+`chmod 644` on whatever was committed. Suspect this first when a `pull` cannot read a config
+it read the day before.
+
 ## What is NOT here
 
 **Secrets.** The seven credential values come out redacted (rule 12): the

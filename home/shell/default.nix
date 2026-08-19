@@ -8,6 +8,7 @@
     ./cli.nix # the modern CLI toolkit (eza/bat/fzf/zoxide/direnv/yazi/tealdeer) plus the zsh integration
     ./kitty.nix # ~/.config/kitty/kitty.conf (Hyprland's default terminal)
     ./claude-code.nix # the package plus the separate accounts (claude-fai/claude-pessoal/claude-pick)
+    ./codex.nix # OpenAI's CLI, with config.toml versioned in the repo (the app rewrites it)
     ./git.nix # programs.git, hence ~/.gitconfig
     ./ssh.nix # ~/.ssh/config, hence the FAI hosts (workstation/fai-vm) through the VPN
     ./ntfy.nix # the `notify` command, a push to the phone (the ntfy topic comes from sops)

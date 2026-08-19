@@ -1,0 +1,5 @@
+# Codex CLI config. Nix owns the LINK, Codex owns the CONTENT: it writes here on /model, /theme
+# and every approval it remembers. What the trap is: docs/notes/apps/codex.md
+
+# The ChatGPT subscription is the credential, never an API key pasted into a shell (rule 12).
+forced_login_method = "chatgpt"

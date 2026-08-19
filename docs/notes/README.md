@@ -108,6 +108,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [dropbox](apps/dropbox.md) | the tray icon's cost, and 10 days of syncing nothing |
 | [vscode](apps/vscode.md) | a versioned mirror and not an immutable source |
 | [claude-code](apps/claude-code.md) | two accounts, one archive, and the rules every project inherits |
+| [codex](apps/codex.md) | who owns `config.toml`, and why the settings option is left empty |
 | [azure-mcp](apps/azure-mcp.md) | the Azure MCP server, FAI only |
 | [flameshot](apps/flameshot.md) | the v14 keyboard flow, and the duplicated bar |
 | [curseforge](apps/curseforge.md) | the repackaged AppImage, and why the schemes are declared |

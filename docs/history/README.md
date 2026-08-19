@@ -10,7 +10,7 @@ top (reverse chronological order inside each file).
 
 | Month | Entries |
 | --- | --- |
-| [august](2026/08-august.md) | 73 |
+| [august](2026/08-august.md) | 74 |
 | [july](2026/07-july.md) | 63 |
 
 ## How the dates were assigned

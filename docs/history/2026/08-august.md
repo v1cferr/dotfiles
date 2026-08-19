@@ -1,6 +1,38 @@
 # History: august 2026
 
-73 entries. Index in [README.md](../README.md).
+74 entries. Index in [README.md](../README.md).
+
+- [x] Codex is declared, and the home-manager option built for it is the one thing NOT used
+      (19/08/2026). `programs.codex.settings` renders the attrset into `/nix/store`, and Codex
+      WRITES to `config.toml` at runtime: `/model`, `/theme`, `mcp add`, every approval the TUI
+      remembers. Measured on 0.147.0 against exactly the file that option would generate, those
+      writes die with `Read-only file system (os error 30)`. Failing loudly is the good case and
+      still the wrong one: the option trades every runtime setting for the two lines it declares.
+      • SO THE OPTION IS ENABLED AND ITS `settings` LEFT EMPTY, which the module's own
+        `mkIf (mergedSettings != { })` turns into "generate nothing", freeing the path for a
+        `mkOutOfStoreSymlink` into the repo. Same contract as Claude Code's `settings.json`: Nix
+        owns the LINK, Codex owns the CONTENT, and what the TUI changes lands as a git diff
+        (rules 14 and 16).
+      • THIS ONE HAD TO BE MEASURED, BECAUSE IT USED TO BE BROKEN. openai/codex#6646 reports the
+        CLI replacing a symlinked `config.toml` with a regular file, and upstream first answered
+        that the behavior was "by design" before fixing it and closing on 19/01/2026. A note that
+        trusted the fix without checking would be describing someone else's version.
+      • THE REAL TEST IS TWO HOPS AND NOT ONE, which the scratchpad version missed:
+        `~/.codex/config.toml` points at the home-manager files in the store, and only THAT points
+        at the repo. A `codex mcp add` through the chain kept the inode, kept the symlink, and put
+        the new `[mcp_servers]` table in the repo file, so Codex resolves the realpath all the way
+        down instead of stopping at the store.
+      • COMMENTS SURVIVE HERE, which they do not in Claude Code's JSON, so this config can carry
+        its own 2-line header. Codex vendors `toml_edit` 0.24 and edits in place instead of
+        re-serializing the document.
+      • `forced_login_method = "chatgpt"` is the only line in it: the subscription is the
+        credential, never an API key pasted into a shell (rule 12). PROVING A CONFIG LINE IS ALIVE
+        NEEDS A BAD VALUE, because Codex accepts unknown top-level keys in SILENCE. An invented
+        `bogus_key_test` loaded clean; `forced_login_method = "bogus"` failed with
+        `expected chatgpt or api`. `codex login` then reported "Logged in using ChatGPT".
+      • unstable and not stable: upstream ships most days (0.148.0 on 18/08, 0.147.0 on unstable,
+        0.146.0 on 26.05), and for an agent CLI the gap is missing model support, not missing
+        polish. Upstream-direct was passed over: a hash bump almost every day buys one day.
 
 - [x] The `notebook` WireGuard peer is gone, and "I do not know whose it is" was the argument FOR
       removing it (19/08/2026). It predated the mirror (it was already there on 08/08, in the commit

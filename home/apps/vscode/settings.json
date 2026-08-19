@@ -221,7 +221,8 @@
   "remote.SSH.remotePlatform": {
     "ssh.v1cferr.dev": "linux",
     "workstation": "linux",
-    "casa": "linux"
+    "casa": "linux",
+    "200.136.209.229": "linux"
   },
   "security.allowedUNCHosts": [
     "wsl.localhost",

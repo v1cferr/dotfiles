@@ -87,10 +87,13 @@ lib.mkIf (enabled && config.my.services.caddy) {
   services.caddy = {
     enable = true;
 
-    # The `hash` is the Go vendor's: recompute with lib.fakeHash when the version changes.
+    # The `hash` is the Go VENDOR's, so it tracks the module graph and the builder, NOT the Caddy
+    # version. It moved on the nixpkgs bump of 19/08/2026 with 2.11.4 on BOTH sides (measured across
+    # generations 87 and 89), so recompute it with lib.fakeHash whenever a bump breaks the build,
+    # and not only when the version changes.
     package = pkgs.caddy.withPlugins {
       plugins = [ "github.com/caddy-dns/cloudflare@v0.2.4" ];
-      hash = "sha256-7GoH8YLCoPmPExQxoga2FHB58zQDoZVf1BBwkVi0SsQ=";
+      hash = "sha256-PWadA5qr/gR2qDcT8l8u1Xku7LM2HIfWTLOkzezCYy0=";
     };
 
     # Secrets through the environment, never in /nix/store (rule 12): the Caddyfile holds only

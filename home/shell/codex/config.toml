@@ -6,6 +6,11 @@ forced_login_method = "chatgpt"
 model = "gpt-5.6-sol"
 model_reasoning_effort = "high"
 
+# Auto mode PINNED, so it does not ride on whatever the default is per release. It runs commands
+# on its own, and the sandbox is what bounds that: workspace only, no network.
+sandbox_mode = "workspace-write"
+approval_policy = "never"
+
 [projects."/home/v1cferr/Projects/GitHub/v1cferr/dotfiles"]
 trust_level = "trusted"
 

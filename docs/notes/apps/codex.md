@@ -73,6 +73,28 @@ bad value on purpose is the only way to tell a live config line from a decorativ
 Logging in is `codex login`, once, interactively: it opens the browser against `localhost:1455`,
 so it cannot happen at build time and does not need to.
 
+## Auto mode is pinned, and where the two keys sit is load-bearing
+
+`sandbox_mode = "workspace-write"` plus `approval_policy = "never"`: Codex runs commands on its
+own, and the SANDBOX is what bounds that, not a prompt. Reaching outside the working directory or
+onto the network fails instead of asking. Pinned rather than left implicit because the measured
+default already WAS that sandbox with `on-request`, and a default is upstream's to change.
+
+**Both keys must sit ABOVE the first table header**, which cost a wrong measurement on
+19/08/2026. Appended at the END of the file they landed after `[tui]`, so TOML read them as
+`tui.sandbox_mode` and `tui.approval_policy`, Codex ignored two keys it did not know THERE, and
+`codex doctor` kept reporting `approval OnRequest` with the file looking correct. This is the
+silent-unknown-key behavior from the section above, met from the other direction: the value was
+right and the SCOPE was wrong. `codex doctor` is what settles it, since it prints the effective
+policy rather than the file:
+
+```text
+sandbox   restricted fs + restricted network - approval Never
+```
+
+That matters more than usual here, because Codex WRITES to this file: anything appended by hand
+after the app has added a `[projects.…]` or `[tui]` table is in that table, not at the root.
+
 ## Why the OFFICIAL binary and not nixpkgs
 
 Upstream releases most days, and the third layer of the version strategy exists for exactly that.

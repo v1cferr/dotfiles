@@ -13,6 +13,22 @@ let
   # raw number is a TRAP: the MENU lists them in another order. See the notes.
   viewModeDetails = 1;
 
+  # An IMMUTABLE view property (`Key[$i]`), the ONLY kind that survives Dolphin's own
+  # cleanDotDirectoryFile(). The 3-branch guard and the sed promotion: docs/notes/apps/dolphin.md
+  immutableViewProp = group: key: value: ''
+    if grep -qF '${key}[$i]=${value}' "$dir/.directory" 2>/dev/null; then
+      : # already at the right value and immutable
+    elif grep -qF '${key}[$i]=' "$dir/.directory" 2>/dev/null; then
+      # Immutable with ANOTHER value: kwriteconfig6 would exit 2, so rewrite it with sed.
+      run ${pkgs.gnused}/bin/sed -i \
+        's/^${key}\[\$i\]=.*$/${key}[$i]=${value}/' "$dir/.directory"
+    else
+      run "$kw" --file "$dir/.directory" --group ${group} --key ${key} ${value}
+      run ${pkgs.gnused}/bin/sed -i \
+        's/^${key}=${value}$/${key}[$i]=${value}/' "$dir/.directory"
+    fi
+  '';
+
   # FIXED PLACES. Adding one is 1 line here; a wrong icon name only falls back to a generic one.
   places = [
     {
@@ -108,19 +124,18 @@ in
     dir="$HOME/.local/share/dolphin/view_properties/global"
     run mkdir -p "$dir"
     run "$kw" --file "$dir/.directory" --group Dolphin --key Version 4
-    # kwriteconfig6 cannot write the [$i] marker, so sed promotes it. The 3-branch guard is
-    # mandatory: over an immutable key kwriteconfig6 exits 2 and `set -e` aborts the activation.
-    if grep -qF 'ViewMode[$i]=${toString viewModeDetails}' "$dir/.directory" 2>/dev/null; then
-      : # already at the right value and immutable
-    elif grep -qF 'ViewMode[$i]=' "$dir/.directory" 2>/dev/null; then
-      # Immutable with ANOTHER value (the 2 to 1 case): kwriteconfig6 would exit 2, so rewrite it.
-      run ${pkgs.gnused}/bin/sed -i \
-        's/^ViewMode\[\$i\]=.*$/ViewMode[$i]=${toString viewModeDetails}/' "$dir/.directory"
-    else
-      run "$kw" --file "$dir/.directory" --group Dolphin --key ViewMode ${toString viewModeDetails}
-      run ${pkgs.gnused}/bin/sed -i \
-        's/^ViewMode=${toString viewModeDetails}$/ViewMode[$i]=${toString viewModeDetails}/' "$dir/.directory"
-    fi
+    ${immutableViewProp "Dolphin" "ViewMode" (toString viewModeDetails)}
+    # HIDDEN FILES always on, and immutable for the same reason as ViewMode: save() deletes the
+    # `[Settings]` group too, so only the marker keeps the key alive.
+    ${immutableViewProp "Settings" "HiddenFilesShown" "true"}
+  '';
+
+  # "Open Terminal Here": with NO key KTerminalLauncherJob falls back to konsole and then to
+  # xterm, which is what was opening. kdeglobals is KDE-wide; see docs/notes/apps/dolphin.md
+  home.activation.dolphinTerminalApp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    kw="${pkgs.kdePackages.kconfig}/bin/kwriteconfig6"
+    # The bare NAME and never a store path: the file is mutable and would pin a dead kitty.
+    run "$kw" --file "$HOME/.config/kdeglobals" --group General --key TerminalApplication kitty
   '';
 
   # The Places bookmarks: inserted only if the PATH is not there yet, so Dolphin keeps writing to

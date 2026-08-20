@@ -33,8 +33,8 @@ As `ViewMode[$i]=1`, KConfig's kiosk marker. This is not fussiness.
 
 Since 26.04 Dolphin stores the view properties in a directory xattr
 (`user.kde.fm.viewproperties#1`) and treats the `.directory` as legacy, so its `save()` calls
-`cleanDotDirectoryFile()`, which does `deleteGroup("Dolphin")` and DELETES the file
-(`viewproperties.cpp`).
+`cleanDotDirectoryFile()`, which deletes the `[Dolphin]` and `[Settings]` groups and then DELETES
+the file if nothing is left (`viewproperties.cpp`).
 
 Only the marker survives that: KConfig refuses the removal, the group does not end up empty, and
 the file stays. And since the `.directory` takes precedence over the xattr on READ, it is the
@@ -50,6 +50,48 @@ creates and positions the right group) and `sed` promotes it to immutable. The g
 over an already immutable key `kwriteconfig6` exits 2, and the activation runs with `set -e`, so it
 would abort the rest of home-manager. The three cases are: already right, already immutable but
 with ANOTHER value (the 2 to 1 case, rewritten with sed), and not there yet.
+
+It is a FUNCTION (`immutableViewProp group key value`) and not inline text, because there are two
+keys taking this path now and the second one would have been ten lines copied with a name swapped.
+
+## Hidden files, always on
+
+`[Settings] HiddenFilesShown[$i]=true`, in the same global `.directory`. It is a VIEW PROPERTY and
+not a `dolphinrc` key (`dolphin_directoryviewpropertysettings.kcfg` declares it under `[Settings]`),
+so with `GlobalViewProps=true` the global file is what answers for every folder.
+
+IT HAS TO BE IMMUTABLE, for a harder reason than ViewMode's: `cleanDotDirectoryFile()` deletes
+`[Dolphin]` AND `[Settings]`, both named in the group test (`viewproperties.cpp`), so a mutable
+`HiddenFilesShown` would be erased on the first `save()` and the file would go back to carrying
+only the ViewMode marker. Ctrl+H still works during the session, it just does not persist, which is
+exactly what "always on" means.
+
+## "Open Terminal Here" opens kitty
+
+`kdeglobals [General] TerminalApplication=kitty`, forced by its own activation because KDE rewrites
+that file (the same pattern as `[Icons] Theme` in `home/desktop/theme.nix`, which is the other
+writer of the same file, each one owning its own key).
+
+WITH NO KEY THE ACTION IS NOT DEAD, WHICH IS WORSE THAN DEAD. `KTerminalLauncherJob` walks
+`TerminalService` (a desktop id), then `TerminalApplication` (an exec string), then the
+`org.kde.konsole` service, then `konsole` and finally `xterm` on PATH
+(`kio/src/gui/kterminallauncherjob.cpp`). Konsole is not installed here, so it landed on xterm, and
+what looked like a broken Dolphin on 19/08/2026 was a WHITE XTERM tiled next to it by Hyprland.
+
+`TerminalApplication` and not `TerminalService`: the exec string needs no `ksycoca` lookup, and a
+`TerminalService` that fails to resolve does NOT fall back to `TerminalApplication`, it drops
+straight into the konsole/xterm chain, so it would fail the same silent way. THE BARE NAME and
+never a store path: `kdeglobals` is mutable and outlives the generation that wrote it, so a pinned
+`/nix/store/...` would break on the first GC.
+
+The working directory needs no argument. Dolphin calls `setWorkingDirectory()`
+(`dolphinmainwindow.cpp`, `openTerminalJob`) and `KIO::CommandLauncherJob` sets the process cwd, so
+kitty opens in the folder with no `--working-directory`. Only konsole gets a `--workdir` there, and
+that is why the fallback chain looked like it worked for everyone else.
+
+The F4 TERMINAL PANEL is a different mechanism and this key does not reach it: it embeds a
+`konsolepart` (Konsole's KPart), which is not installed, so the panel stays unavailable instead of
+becoming a second terminal with a second theme.
 
 ## The icon size, and why it is `PreviewSize`
 

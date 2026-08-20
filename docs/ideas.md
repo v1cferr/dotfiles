@@ -117,3 +117,63 @@ not on the UPS.
 `router/uci/etherwake.conf` is DEAD CONFIG: `name='example'`,
 `mac='11:22:33:44:55:66'`, the factory placeholder of the LuCI app, never filled in. What
 works is `/usr/bin/wake-desktop`, with the MAC baked in. Do not trust the LuCI screen.
+
+## DeepSeek Harness: the local agent works, the harness is the risk
+
+<https://github.com/deepseek-ai/deepseek-harness>, an agent harness where "everything is a
+plugin" over the Cordis kernel: models, tools, skills, sandbox, storage, loop and the UI are
+all swappable rows in a patch tree. It ships a Web UI, a one-shot `headless` mode and a
+Python SDK. Tested on 20/08/2026 against the local Ollama.
+
+**DECISION: not adopted. It stays a scratch experiment, with no NixOS module.**
+
+This evaluation separated two questions that look like one. "Can this machine run a local
+coding agent" is now answered YES, and that answer outlives the harness. "Should dsh be the
+harness" is a NO with a reopen condition.
+
+### What the test proved, and this part is keepable
+
+Two real tasks finished end to end with `qwen3.5` (9B) on the B580: find and fix a bug in a
+file, then write a unittest suite, run it with `python3` and report the outcome. The second
+took 25 s over 5 requests. The 9B never fumbled a tool schema, which is exactly what I
+expected it to fail at.
+
+The number that decides everything: the harness sends around **8.2k tokens of FIXED prefix
+per turn**, 1051 of system prompt plus 7128 for 25 tool definitions (`bash`, `edit`,
+`subagent`, `workflow`, `web_search`, `skill` and others). Out of a 32k window, a quarter is
+spent before a single file is read. That is a ceiling on ANY local agent here, not a dsh
+detail, and it is why `OLLAMA_CONTEXT_LENGTH` had to move off the 4k default.
+
+### Why it is not adopted
+
+- **The documented quickstart does not boot.** `npx @deepseek-ai/dsh` installs the launcher
+  at 0.1.0-rc.7 and every bundle at rc.8, because a caret on a prerelease accepts it, and the
+  boot dies on `--expose-internals is required for HMR service` even though the headless
+  bundle marks that row `disabled: true` (confirmed with `--dump-config`). It only runs by
+  calling `node --expose-internals` on `bin.js` by hand.
+- **A documented config path is refused in SILENCE.** `reasoningEfforts` with the `off` key,
+  documented in both of its spellings, makes the whole `llm-pi-ai` section be discarded. No
+  error is printed: the only symptom is `NO_ADAPTER: no adapter registered for provider
+  "ollama"` at request time, and finding it took bisecting the YAML field by field. That key
+  is not cosmetic here, because with thinking ON the model drops its answer into the
+  `reasoning` field and returns an EMPTY `content`, intermittently and worst right after a
+  tool result. The workaround is to declare another level whose wire spelling is `none`, and
+  `PARAMETER think` does not exist in Ollama 0.32.3, so it cannot be baked into the model.
+- **Version 0.1.0-rc.8, one week old**, with "THERE WILL BE COMPATIBILITY-BREAKING CHANGES"
+  in the README. Issues are disabled, feedback goes through Discussions.
+- **It is imperative by design.** `dsh plugin` forwards to pnpm and installs into
+  `$DSH_HOME/profiles` at runtime, so its plugins cannot be declared in this repo.
+- **Headless approves everything.** It wrote files and ran `python3` with no gate at all, so
+  it belongs in a disposable workspace and nowhere near a real checkout.
+
+### What is worth stealing from it
+
+The session log is append-only and records everything the model saw, context injections
+included, which is the honest answer to "why did it do that". And the profile model, an
+ordered stack of patch layers with `--dump-config` to inspect the composed tree before
+booting, is a good idea whatever harness ends up winning.
+
+### Trigger to look again
+
+A tagged release that is not a release candidate, with the `npx` quickstart booting exactly
+as written. Until then, the local-model half of this is served by Ollama on its own.

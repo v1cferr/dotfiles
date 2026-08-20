@@ -44,3 +44,25 @@ was designed to talk to the HOST's Ollama (`network_mode: host`, so
 `loadModels` downloads them declaratively: `ollama-model-loader` (systemd) pulls at activation and
 is idempotent. `qwen3:4b` (~2.6 GB) is a text-first solver, it does not need vision; `bge-m3` is
 the embeddings model for duo-streak-daemon's few-shot memory. To test: `ollama run qwen3:4b`.
+
+`qwen3.5` (9B q4_K_M, 6.6 GB) is the one that calls tools, and the only one here that
+sustains an agent loop. Measured on the B580 on 20/08/2026: 681 tok/s of prefill on an
+8.3k-token prompt, 44 to 54 tok/s of decode, 100% GPU. The 27B of the same family does NOT
+fit: 18 GB against 11.9 GiB of VRAM, and the 15 GiB of system RAM leave no room to offload
+the rest either.
+
+## The context default is 4k here, whatever the VRAM suggests
+
+`ollama serve --help` describes the default as "4k/32k/256k based on VRAM", and this machine
+lands on the FLOOR. Measured on 20/08/2026, with 11.9 GiB free: `qwen3:4b` AND the 9B
+`qwen3.5` both load showing `CONTEXT 4096` in `ollama ps`. The tier is not decided per model,
+so pulling a bigger model does not lift it.
+
+At 4k the truncation is SILENT, which is why `OLLAMA_CONTEXT_LENGTH = "32768"` sits in the
+module. An agent harness spends around 8k tokens of FIXED prefix before reading a single
+file (measured with DeepSeek Harness: 1051 tokens of system prompt plus 7128 of tool
+definitions), so at 4k the prompt is cut before the task even arrives, and the model looks
+stupid when it is merely blindfolded.
+
+The price was measured and it is cheap: `qwen3.5` is 5.6 GB at 4k and 6.6 GB at 32k, so 28k
+extra tokens of KV cache cost about 1 GB and it stays 100% on the GPU.

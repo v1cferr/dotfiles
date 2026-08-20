@@ -36,10 +36,65 @@ consumed only by home-manager's qt/gtk modules, the same case as `adwaita-qt`.
 
 ### `win11os-kvantum`
 
-Only the Kvantum folder of yeyushengfan258/Win11OS-kde, pinned by commit. The
-`/share/Kvantum/<Theme>` layout is what `qt.kvantum.themes` expects, since it does
-`stripPrefix "/share/Kvantum"`. It only copies SVG and kvconfig files, so there is nothing to
-configure or compile.
+Only the Kvantum folder of yeyushengfan258/Win11OS-kde, pinned by commit, RECOLORED BY THE PALETTE
+at build time (19/08/2026). The `/share/Kvantum/<Theme>` layout is what `qt.kvantum.themes` expects,
+since it does `stripPrefix "/share/Kvantum"`.
+
+The theme is called `Win11OS-<preset>` (`Win11OS-tokyo-night` today) because that is what it is: the
+Win11OS GEOMETRY carrying this repo's colors. Switching `my.theme.name` renames the directory too,
+and home-manager drops the old symlinks on the switch, since `qt.kvantum` writes them with
+`xdg.configFile` and `recursive = true`.
+
+WHY RECOLOR INSTEAD OF ADOPTING A READY-MADE TOKYO NIGHT THEME: what was picked in july was the
+WIDGET SHAPE (the Windows 11 corners, the underline on focus, the flat toolbar) and the colors came
+along as a side effect, which left rule 9 broken in the app that is on screen the most. Recoloring
+keeps the shape and puts the palette back in charge, and it also means the preset switch finally
+reaches Dolphin, which it never did before.
+
+#### One attrset, applied to both files
+
+`kvantumRecolor` maps the Win11OS hex to a palette KEY, never to another hex, and a single `sed`
+runs it over the `.kvconfig` and the `.svg` together, so `[GeneralColors]` and the SVG surfaces
+cannot drift apart. The `I` flag is not decoration: `link.color` is the uppercase `#0057AE`.
+
+The colors live in BOTH files, which is why one map has to cover both:
+
+- the `.kvconfig` holds the Qt PALETTE (`[GeneralColors]`) plus a `text.*.color` per widget, and
+  that is what paints the file view, the sidebar and every label;
+- the `.svg` holds the widget ART, and the window itself is in there (`window-normal`, `#1e1e1e` at
+  0.8 opacity), along with the toolbar and the tab strip (`menubar-normal`, `#191919`).
+
+WHAT IS DELIBERATELY LEFT OUT OF THE MAP:
+
+- **the white and black overlays** (`#ffffff` 207 times, `#000000` 117): the theme draws selection,
+  hover, the active tab and the menu items as WHITE AT 0.1 to 0.2 OPACITY, so they already follow
+  whatever sits underneath. Recoloring them would replace a mechanism that already works.
+- **`#b74aff` and `#9f5aff`**: they are the `*-shadow-hint` elements, Kvantum's markers for the
+  shadow geometry, and they are never painted.
+- **the neutral grays** (`#646464`, `#6c6e70`, `#969696` and so on): grooves and tick marks, which
+  read as gray under any palette.
+
+#### Two decisions the palette does not make on its own
+
+**`surface` is LIGHTER than `bg` here, and the Night variant does the opposite.** In
+folke/tokyonight.nvim, `night` is `storm` with `bg`, `bg_dark` and `bg_dark1` overridden, so night's
+own `bg_dark` is `#16161e` (DARKER than `bg`), while this repo's `surface = #1f2335` is STORM's
+`bg_dark` (lighter). Both are official hexes; what `surface` means here is ELEVATED. So the popups
+(menu, tooltip, the column header) take `surface` and the WINDOW CHROME takes `bg`: the toolbar and
+the tab strip go flat with the window, which is what Explorer does and what "cleaner" was asking
+for.
+
+**`highlight.text.color` stays `#ffffff`.** The reflex is to set it to `bg`, for dark text over the
+light blue `#7aa2f7`, and it would be WRONG: `[Hacks] no_selection_tint=true`, so the selected row
+is not painted with the highlight color at all, it is `itemview-toggled`, white at 0.2 over `bg`.
+Dark text there would be dark on dark. The highlight color shows up as the focus frame and as the
+selection inside a line edit, where white over `#7aa2f7` is the usual Tokyo Night trade.
+
+#### The two keys upstream never sets
+
+`tooltip.base.color` and `shadow.color`, appended after the recolor because there is nothing to
+substitute for them. Kvantum's `Theme-Config` is explicit that an absent key is taken "from the
+currently used color palette", which is Qt's LIGHT default, so absent does not mean unused.
 
 ### `win11-icons`
 
@@ -96,7 +151,8 @@ enough that a broken consumer is obvious at a glance.
 
 There are two kinds of consumer:
 
-- **Nix consumers** (rofi, lockscreen, flameshot) read `config.my.theme.palette.<color>` directly.
+- **Nix consumers** (rofi, lockscreen, flameshot, the Kvantum theme) read
+  `config.my.theme.palette.<color>` directly.
 - **Hot-reload consumers** (Quickshell in QML, Hyprland in Lua) read DATA FILES generated into
   `~/.config/theme/`, because Nix cannot write inside the symlinked `quickshell/` and `hypr/` trees.
 

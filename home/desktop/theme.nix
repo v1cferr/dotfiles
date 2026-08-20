@@ -9,6 +9,50 @@
 }:
 
 let
+  p = config.my.theme.palette; # SSOT: home/desktop/palette.nix (rule 9)
+
+  # The theme is the Win11OS GEOMETRY recolored by the palette, so the name carries both.
+  kvantumTheme = "Win11OS-${config.my.theme.name}";
+
+  # The Win11OS hex -> palette key map: ONLY surfaces, text and the accent. The white and black
+  # overlays stay untouched because they already adapt by OPACITY: docs/notes/desktop/theme.md
+  kvantumRecolor = {
+    "4bc8ff" = "accent"; # THE accent: focus frame, pressed, progress, slider
+    "0057ae" = "blue"; # link.color, the one uppercase pair in the kvconfig
+    "e040fb" = "magenta"; # link.visited.color
+    "315bef" = "blue"; # the disabled progress pattern
+    "4e9ff2" = "blue";
+    "5887b6" = "blue";
+    "69b2fd" = "sky";
+    "f04a50" = "red";
+    "242932" = "bg"; # window.color and base.color: the sidebar and the file view
+    "1e1e1e" = "bg"; # window-normal, the whole window
+    "23272f" = "bg"; # dark.color
+    "141414" = "shadow";
+    "191919" = "bg"; # menubar/toolbar and the tab strip, FLAT like Explorer's
+    "2d2d2d" = "surface"; # the menu and tooltip interiors
+    "212327" = "surface"; # the column header strip
+    "26272a" = "surface";
+    "272c35" = "surface"; # alt.base.color, the alternating row
+    "2b303b" = "surface"; # mid.color
+    "333333" = "surface"; # titlebar and dock
+    "313338" = "track"; # lineedit and combo
+    "343031" = "track"; # the window edges
+    "36383e" = "track"; # header-normal
+    "3c3c46" = "track";
+    "3c4352" = "track"; # mid.light.color
+    "414958" = "track"; # button.color
+    "475061" = "border"; # light.color
+    "586379" = "dim"; # disabled.text.color
+    "a6abae" = "subtext";
+    "b4b4b4" = "subtext"; # the button overlay, at 0.25 opacity
+    "b6b6b6" = "subtext";
+    "d9dce3" = "text"; # text.color and every text.*.color in the kvconfig
+    "dfdfdf" = "text"; # the indicator artwork (arrows, checks, marks)
+    "eaeaea" = "text";
+    "edeff3" = "text"; # tooltip.text.color
+  };
+
   # ONLY the Kvantum folder of Win11OS-kde, pinned by commit. The /share/Kvantum layout is what
   # qt.kvantum.themes expects. An exception to "home/ does not install": it is a theme asset.
   win11os-kvantum = pkgs.stdenvNoCC.mkDerivation {
@@ -23,10 +67,28 @@ let
     # It only copies SVG/kvconfig, so there is nothing to configure or compile.
     dontConfigure = true;
     dontBuild = true;
+    # ONE sed over BOTH files, so [GeneralColors] and the SVG surfaces cannot drift apart. The
+    # `I` flag is not decoration: link.color is the uppercase `#0057AE`.
     installPhase = ''
       runHook preInstall
-      mkdir -p "$out/share/Kvantum"
-      cp -r Kvantum/Win11OS-dark "$out/share/Kvantum/"
+      dir="$out/share/Kvantum/${kvantumTheme}"
+      mkdir -p "$dir"
+      cp Kvantum/Win11OS-dark/Win11OS-dark.kvconfig "$dir/${kvantumTheme}.kvconfig"
+      cp Kvantum/Win11OS-dark/Win11OS-dark.svg "$dir/${kvantumTheme}.svg"
+      sed -i \
+        ${
+          lib.concatStringsSep " \\\n        " (
+            lib.mapAttrsToList (hex: key: "-e 's/#${hex}/#${p.${key}}/Ig'") kvantumRecolor
+          )
+        } \
+        "$dir/${kvantumTheme}.kvconfig" "$dir/${kvantumTheme}.svg"
+
+      # The 2 keys Win11OS never sets. Unset does NOT mean unused: Kvantum takes them from Qt's
+      # palette, which is the LIGHT default.
+      sed -i \
+        -e '/^\[GeneralColors\]$/a tooltip.base.color=#${p.surface}' \
+        -e '/^\[GeneralColors\]$/a shadow.color=#${p.shadow}' \
+        "$dir/${kvantumTheme}.kvconfig"
       runHook postInstall
     '';
   };
@@ -104,11 +166,11 @@ in
     style.name = "kvantum"; # QT_STYLE_OVERRIDE=kvantum -> Kvantum draws the widgets
   };
 
-  # It selects Win11OS-dark and copies it into ~/.config/Kvantum.
+  # It selects the recolored theme and copies it into ~/.config/Kvantum.
   qt.kvantum = {
     enable = true;
-    themes = [ win11os-kvantum ]; # copies into ~/.config/Kvantum/Win11OS-dark/
-    settings.General.theme = "Win11OS-dark";
+    themes = [ win11os-kvantum ]; # copies into ~/.config/Kvantum/<theme>/
+    settings.General.theme = kvantumTheme; # SSOT: it follows my.theme.name
   };
 
   # Kvantum does NOT set icons: KDE reads kdeglobals [Icons] Theme, and it rewrites that file, so

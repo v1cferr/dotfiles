@@ -337,4 +337,8 @@
   "breadcrumbs.showEditorType": true,
   "jdk.telemetry.enabled": false,
   "window.zoomLevel": -1,
+  // direnv: it restarts the extension host as soon as the .envrc environment loads, with no
+  // prompt. WITHOUT this the language servers of a project whose toolchain lives ONLY in its
+  // devShell (gleam in acuttis-point) start BEFORE the PATH exists and die with ENOENT.
+  "direnv.restart.automatic": true,
 }

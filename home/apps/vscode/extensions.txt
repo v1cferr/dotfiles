@@ -30,6 +30,7 @@ khaeransori.json2csv
 mechatroner.rainbow-csv
 mhutchie.git-graph
 mikestead.dotenv
+mkhl.direnv
 ms-azuretools.vscode-containers
 ms-dotnettools.csdevkit
 ms-dotnettools.csharp

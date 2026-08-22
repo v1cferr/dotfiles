@@ -1,6 +1,46 @@
 # History: august 2026
 
-77 entries. Index in [README.md](../README.md).
+78 entries. Index in [README.md](../README.md).
+
+- [x] The T480 ended the day with TWO paths instead of one, and a reboot proved the unattended one
+      (22/08/2026, closing the day). What forced the second path was a measurement, not a
+      preference: with a stream running, closing the laptop lid froze Moonlight, video and input
+      alike, while the machine stayed perfectly alive underneath, tunnel up and SSH answering.
+      • THE LOG NAMED IT: `Failed to locate an output device`, and on the next attempt the capture
+        INITIALIZES, enumerating 1920x1080 at 60 Hz and creating `h264_qsv`, and then delivers no
+        frame. The tunnel counters, read on the ROUTER so the machine could not lie about itself,
+        said 50 KiB in three minutes. Sunshine duplicates what is being DISPLAYED, and a closed
+        lid displays nothing. It is this repo's own DPMS lesson, met again on Windows.
+      • SO RDP IS NOT A SECOND WAY TO DO THE SAME THING. It creates a session instead of
+        duplicating a screen, which is why it works with the panel off. Moonlight to see HER screen
+        while she uses the machine, with her watching what I do; RDP to work on it with nobody in
+        front. A virtual display driver or an EDID dummy plug would have made Moonlight work
+        headless, and both were passed over for the same reason: they put a SECOND screen on the
+        desktop of somebody who will not go hunting for a window that vanished.
+      • THE REBOOT TEST FOUND A BUG TEN MINUTES BEFORE IT RAN, which is the best argument for
+        running it at all. `TermService` was `DEMAND_START` and, by `sc qtriggerinfo`, registered
+        for no trigger at all: enabling RDP through the registry does not touch the service, so
+        after a reboot nothing would listen on 3389 until somebody logged in ON the machine, which
+        is precisely the situation RDP exists to be the way back from.
+      • THE NUMBERS, with the lid shut, on battery, nobody touching it: boot at 16:54:34, WireGuard
+        handshake back at 16:55:03, ssh and rdp answering at 16:55:09, Sunshine listening at
+        16:55:29. **29 seconds from boot to reachable, 55 to everything.** That is the answer to
+        "the power went out at her place".
+      • AND IT ENDS ON THE LOGIN SCREEN, not in a session. Sunshine bound its ports at 16:55:29 as
+        SYSTEM in session 1 with nobody logged in, and the first interactive logon came at 16:57:54,
+        three minutes later, by hand. No autologon exists (`AutoAdminLogon` absent, and ARSO would
+        have left the session LOCKED, with `LogonUI` and a 4800 event, neither of which happened).
+        So the machine stays password-protected AND reachable, which is the pair I had assumed
+        would have to be traded against each other.
+      • THE COMMAND GOT A NAME AND THE ADDRESS GOT AN OWNER. 90 characters of freerdp flags became
+        `t480` and `t480 mae`, a wrapper rather than an alias because the account has to be an
+        ARGUMENT, and because a second literal of 10.10.10.6 is what rule 11 forbids. `my.t480`
+        owns it now and `ssh.nix` reads it, which made `router-ssot` fail loudly the moment the
+        literal left, exactly as its own note promises for a moved anchor.
+      • A SMALL ONE WORTH KEEPING: `t480 mae` RECONNECTS to her session, windows and all, while
+        `t480` disconnects her and starts a fresh one. One active session per Windows client SKU,
+        and the choice of account is the whole difference between "help her with her thing" and
+        "work on the machine".
 
 - [x] Full tunnel became the T480's DEFINITIVE mode, and that decision drags four other things
       with it (22/08/2026, later the same day). The reason is hers and not the network's: she is

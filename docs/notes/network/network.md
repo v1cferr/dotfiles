@@ -175,10 +175,18 @@ measure the tunnel's MTU.
 **Her home subnet is a coin flip that can kill the access in silence.** `192.168.1.0/24` is the most
 common default there is, and if her router uses it, the on-link route above wins over there too: her
 REPLY to my `192.168.1.10` leaves through her own LAN instead of the tunnel. The handshake stays
-perfect, `wg show` looks healthy, and SSH and Moonlight simply never answer. The fix is a
-MASQUERADE on the router for traffic toward `10.10.10.6`, so she sees the client as `10.10.10.1` and
-answers into the tunnel, which also means her `AllowedIPs` never needs to carry my LAN at all. **NOT
-APPLIED YET**: the command and the reasoning are in [`../../open-items.md`](../../open-items.md).
+perfect, `wg show` looks healthy, and SSH and Moonlight simply never answer.
+
+`firewall.t480_snat` is the answer: a MASQUERADE on traffic toward `10.10.10.6`, so she sees the
+client as `10.10.10.1` and answers into the tunnel, whatever her house numbers its LAN. Applied the
+same day and confirmed in the ruleset, `ip daddr 10.10.10.6 counter masquerade` inside `srcnat_wg`,
+with the counter already moving. It also SIMPLIFIES her side: her `AllowedIPs` never needs to carry
+my LAN, which is one less range to conflict with whatever her router hands out.
+
+**A MASQUERADE hides the origin, and here that costs nothing**, which is worth stating because it
+usually does. Everything that reaches her comes from this house through one tunnel, and Sunshine
+classifies `10.10.10.1` as LAN exactly as it classified `192.168.1.10`. If a second machine here ever
+needs to reach her and be told apart, this is the line that has to change.
 
 ## fail2ban
 

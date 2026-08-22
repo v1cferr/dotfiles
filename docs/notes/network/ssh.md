@@ -2,7 +2,7 @@
 
 Module: [`home/shell/ssh.nix`](../../../home/shell/ssh.nix)
 
-The client config. Four hosts, and almost every line in there is a trap somebody else's server
+The client config. Five hosts, and almost every line in there is a trap somebody else's server
 handed us.
 
 The private key is state and a secret, so it comes from the backup, not from Nix (rule 6).
@@ -47,6 +47,58 @@ No `faiResilience` here: that sizes keepalive and multiplexing for the SonicWall
 
 The IP is a literal because it is the ONLY place in the repo naming the gateway (Caddy uses the
 /24 range, not the .1), and a lone literal does not trigger rule 11.
+
+## The mother's T480 is the second Windows, and it repeats almost none of the traps
+
+`ssh t480` reaches a ThinkPad T480 (Windows 11 IoT Enterprise LTSC 24H2) being prepared for my
+mother. Everything below was measured on 22/08/2026, from this side, and the interesting part is
+how little of the `cesar` section applies.
+
+**The address is the TUNNEL address, and that is not a shortcut.** `10.10.10.6` is the WireGuard
+peer, and over there `sshd_config` carries `ListenAddress 10.10.10.6`, so there is no path to that
+sshd from the LAN even while the machine is still in the house. It is the machine's own rule: no
+port of that host is exposed, and SSH, Sunshine and RDP accept the tunnel and the home LAN only.
+
+**That bind is why sshd there DEPENDS on the tunnel**, and it is the sharpest thing this host has to
+teach. `sc qc sshd` gives `WireGuardTunnel$mae-t480`, because an address that does not exist yet
+cannot be bound and a Win32 service that fails to bind does not retry. The dependency is not the
+whole answer either: Windows guarantees the ORDER at boot, and when a dependency RESTARTS the
+dependent is stopped and NOT brought back. What covers that is a watchdog on the machine itself, and
+knowing this is what keeps "SSH died" from being investigated on this side.
+
+**No `RemoteCommand`, and no `-cmd` twin.** `HKLM\SOFTWARE\OpenSSH\DefaultShell` over there is
+already `C:\Program Files\Git\bin\bash.exe` WITH `DefaultShellCommandOption = -c`, so an
+interactive session and `ssh t480 <command>` both work with nothing on the client. The `cesar` pair
+exists because that machine's shell is PowerShell, which needs the `&`, not because Windows demands
+it.
+
+**No `SetEnv TERM`**, for the same reason as cesar: that sshd ships no `AcceptEnv`, so the variable
+dies on the server whatever the client sends.
+
+**No keepalive block, and NOT because the path is short.** The server sends them
+(`ClientAliveInterval 30`, `ClientAliveCountMax 4`), so a client-side copy would be a second
+mechanism doing one job. That answers the temptation `faiResilience` creates every time a host is
+added over a link that is not a LAN hop.
+
+**The admin key trap applies, and the `icacls` half of it was a NO-OP here.** `v1cferr` is an
+administrator there, so sshd reads only `C:\ProgramData\ssh\administrators_authorized_keys`, the
+same as cesar. But the file inherited exactly `BUILTIN\Administrators:(F)` and `SYSTEM:(F)` from
+that directory, which is precisely what sshd demands, so the permissions step had nothing to fix.
+What DID fail was running the cesar guide's `icacls` line inside Git Bash: MSYS rewrites
+`/inheritance:r` into a path, and on a pt-BR Windows the local groups are not named `Administrators`
+and `SYSTEM`. If it ever has to run there: `MSYS_NO_PATHCONV=1` plus the SIDs, `*S-1-5-32-544` and
+`*S-1-5-18`.
+
+**Appending the key from bash removes the UTF-16 trap by construction.** `>>` in bash writes LF and
+ASCII, which is the encoding sshd wants, so the `-Encoding ascii` that PowerShell's `Add-Content`
+needs has no counterpart to get wrong.
+
+**The Windows side is deliberately NOT documented in this repo.** That machine carries a repo of its
+own (`~/dotfiles` on the T480: numbered idempotent scripts, an inventory, a `winget configure` DSC
+file), so a guide here would be a second owner for one procedure, which is rule 14, and the copy
+that is not applied is the one that drifts, which is rule 16. The `cesar` guide exists because that
+machine has no repo. What belongs here is only the CONTRACT between the two: the peer address, the
+name the router answers, and the fact that nothing is forwarded to it.
 
 ## The brother's PC is Windows 11, and that is where all the traps come from
 

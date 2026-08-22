@@ -70,6 +70,15 @@ in
         IdentityFile = "~/.ssh/id_ed25519";
       };
 
+      # My mother's ThinkPad T480 (Windows 11 IoT LTSC): sshd binds the TUNNEL address only, and
+      # the Windows side is owned by a repo on that machine: docs/notes/network/ssh.md
+      t480 = {
+        HostName = "10.10.10.6";
+        User = "v1cferr";
+        Port = 22;
+        IdentityFile = "~/.ssh/id_ed25519";
+      };
+
       # A support VM at FAI.
       fai-vm = faiResilience // {
         HostName = "200.136.209.248";

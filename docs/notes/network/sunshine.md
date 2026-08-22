@@ -218,6 +218,27 @@ is the same 1420, but the last leg is her Wi-Fi and her ISP rather than this LAN
 that has not been measured. The protocol to measure it is the same one in
 [`guides/wireguard-moonlight.md`](../../guides/wireguard-moonlight.md), run from her side.
 
+**A closed lid stops the capture, and that is why the client set has TWO tools.** Measured on
+22/08/2026: with a stream running, closing the laptop lid froze Moonlight, video and input alike,
+while the tunnel stayed up and the machine stayed reachable over SSH the whole time. The host's log
+says it plainly, `Failed to locate an output device`, and on the next attempt the capture
+INITIALIZES (it enumerates 1920x1080 at 60 Hz and creates `h264_qsv`) and then delivers no frame at
+all. The tunnel counters agree: 50 KiB in three minutes, which is not video. Sunshine duplicates
+what is being DISPLAYED, and with the panel off there is nothing being displayed. It is the DPMS
+lesson of this file, arrived at again on the other operating system.
+
+**So RDP is not a duplicate of Moonlight there, it is the other half.** RDP creates a session of its
+own instead of duplicating a screen, so it does not depend on a panel and works with the lid shut.
+The division: Moonlight to see HER screen while she is using it, RDP to work on the machine with
+nobody in front of it. That is also why `freerdp` sits next to `moonlight-qt` in
+[`home/packages.nix`](../../../home/packages.nix). The price is real and worth stating: a Windows
+client SKU has ONE active session, so an RDP login DISCONNECTS whoever is on the console.
+
+**The alternative was measured against and passed over**: a virtual display driver, or an EDID dummy
+plug, would give Sunshine a panel that never turns off. Both work, and both put a SECOND screen on
+her desktop for windows to get lost in, on a machine used by somebody who will not go hunting for a
+window that vanished. RDP does natively what those emulate.
+
 **Nothing is forwarded to it, and that is now checked.** `router-ssot` fails on any redirect whose
 `dest_ip` is inside `vpnSubnet`, so Moonlight to that machine works through the tunnel or does not
 work at all. It is the same conclusion the direct path reached here on 19/08/2026, arrived at before

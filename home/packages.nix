@@ -42,6 +42,9 @@
     # The Moonlight CLIENT, for my mother's T480: this machine is the client and that one is the
     # host, the reverse of system/services/sunshine.nix. What to set: docs/notes/network/sunshine.md
     moonlight-qt
+    # RDP for the SAME machine, and not redundant: Moonlight shows HER screen and dies with the
+    # laptop lid, RDP makes a session of its own. Why both: docs/notes/network/sunshine.md
+    freerdp # `wlfreerdp` is the native Wayland client, no Xwayland in the path
 
     # ── Disk / cleanup ──
     czkawka # finds what is DISPOSABLE (duplicates, empties), where filelight only shows size

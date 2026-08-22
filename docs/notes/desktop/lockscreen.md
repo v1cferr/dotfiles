@@ -12,7 +12,7 @@ durable into 2032+).
 | Piece | Where the work happens | What the lock runs |
 | --- | --- | --- |
 | quote | a service plus a daily timer: ZenQuotes, DeepL, pango | `shuf -n1` |
-| weather | a service plus a 10-min timer: wttr.in | `cat` |
+| weather | a service plus a 10-min timer: Open-Meteo | `cat` |
 | idle | hypridle, and it ONLY locks | `loginctl lock-session` |
 | lock | `hyprlock.service`, a declared unit | `systemctl --user start` |
 
@@ -100,6 +100,11 @@ month.
 São Carlos/SP by COORDINATES, so there is no geocoding ambiguity. It writes atomically (`.tmp` plus
 `mv`). A stable source, with no HTML scraping. Refreshed every 10 min, first fetch 1 min after
 boot.
+
+The SOURCE and the pt-BR words are the SSOT in `my.weather` (`home/desktop/weather.nix`), the same
+one the bar reads, and the script's `case` arms are generated from it. It used to be wttr.in with
+its own coordinates, and on 22/08/2026 the lock said 18°C while the bar said 22°C in the same
+minute. The full reasoning, and every measured failure path, is in [`weather.md`](weather.md).
 
 ## The visual details worth keeping
 

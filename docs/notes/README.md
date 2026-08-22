@@ -95,6 +95,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [quickshell](desktop/quickshell.md) | the shell in QML, and the 758 MiB XEmbed bridge |
 | [bar](desktop/bar.md) | the bar and its popovers, the VPN probe, the holiday table |
 | [lockscreen](desktop/lockscreen.md) | hyprlock and hypridle, and the three hardware lessons |
+| [weather](desktop/weather.md) | one source for the bar and the lock, and the icon-by-regex trap |
 | [theme](desktop/theme.md) | dark mode, Kvantum, the Win11 icons, the palette SSOT |
 | [autostart](desktop/autostart.md) | what opens at login, and Spotify's 4145 restarts |
 | [hyprsunset](desktop/hyprsunset.md) | the blue light curve, and why 13 profiles |

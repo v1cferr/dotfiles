@@ -264,6 +264,16 @@ contradiction, since whoever opens it is precisely after the detail. The graph c
 because without it the drawing does not say what it covers, and "1 packet/s" is the information
 that separates this panel from a guess.
 
+## The weather
+
+Open-Meteo, and the coordinates plus the WMO code to pt-BR table are the SSOT in `my.weather`
+(`home/desktop/weather.nix`), read through a generated JSON the same way the palette is.
+
+The pill's ICON derives from the integer `weather_code`, NEVER from the label. It used to regex the
+en-US prose, so translating the label to pt-BR would have turned every icon into the default cloud
+in total silence. That trap, the 4-degree disagreement with the lock screen that motivated the
+SSOT, and the measured failure paths are in [`weather.md`](weather.md).
+
 ## The holidays table (rechecked 08/08/2026)
 
 The NAMES stay in pt-BR on purpose: they are the official names of Brazilian holidays, the same

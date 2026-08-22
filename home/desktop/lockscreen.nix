@@ -2,6 +2,7 @@
 # and the runtime is 1 line. The 3 hardware lessons NOT to undo: docs/notes/desktop/lockscreen.md
 {
   config,
+  lib,
   pkgs,
   osConfig,
   ...
@@ -84,15 +85,45 @@ let
     [ -s ${quotesCache} ] || echo '<i>“A melhor forma de prever o futuro é inventá-lo.”</i>  <b>Alan Kay</b>' > ${quotesCache}
   '';
 
-  # Weather: a 10-min timer caches wttr.in; the runtime is cat.
+  # Weather: a 10-min timer caches Open-Meteo; the runtime is cat.
   weatherDir = "${config.xdg.cacheHome}/lockscreen";
   weatherCache = "${weatherDir}/weather";
+  # The coordinates and the pt-BR table are the SSOT in my.weather (home/desktop/weather.nix), the
+  # SAME ones the bar reads, so the two surfaces cannot disagree about the same minute.
+  weatherUrl =
+    "https://api.open-meteo.com/v1/forecast"
+    + "?latitude=${config.my.weather.latitude}&longitude=${config.my.weather.longitude}"
+    + "&current=temperature_2m,weather_code&timezone=auto";
+  # The case arms are GENERATED from the same attrset, so the lock and the bar never drift (rule 16).
+  weatherCase = lib.concatStrings (
+    lib.mapAttrsToList (
+      code: text: "  ${code}) text=${lib.escapeShellArg text} ;;\n"
+    ) config.my.weather.conditions
+  );
   # São Carlos/SP by COORDINATES (no geocoding ambiguity), written atomically.
   weatherFetch = pkgs.writeShellScript "lockscreen-weather-fetch" ''
     ${pkgs.coreutils}/bin/mkdir -p ${weatherDir}
-    ${pkgs.curl}/bin/curl -s --max-time 15 -H 'Accept-Language: pt' \
-      'https://wttr.in/-22.0087,-47.8909?format=%C,+%t' -o ${weatherCache}.tmp \
-      && ${pkgs.coreutils}/bin/mv ${weatherCache}.tmp ${weatherCache}
+    data=$(${pkgs.curl}/bin/curl -sS --max-time 15 ${lib.escapeShellArg weatherUrl} || true)
+    # ONE jq pass, and `select` drops the whole line if either field is missing: a partial read
+    # must not become a label. weather_code 0 survives it, since only null/false are falsy in jq.
+    fields=$(${pkgs.coreutils}/bin/printf '%s' "$data" | ${pkgs.jq}/bin/jq -r '.current
+      | select(.weather_code != null and .temperature_2m != null)
+      | "\(.weather_code) \(.temperature_2m | round)"' || true)
+    # No data: the PREVIOUS cache stays on screen. An empty label reads as "the lock is broken".
+    [ -n "$fields" ] || exit 0
+    set -- $fields
+    # The arms are generated; the fallback shows the temperature ALONE, never an invented condition.
+    case "$1" in
+    ${weatherCase}  *) text="" ;;
+    esac
+    tmp="${weatherCache}.tmp"
+    if [ -n "$text" ]; then
+      ${pkgs.coreutils}/bin/printf '%s, %s°C' "$text" "$2" > "$tmp"
+    else
+      ${pkgs.coreutils}/bin/printf '%s°C' "$2" > "$tmp"
+    fi
+    # No trailing newline: hyprlock renders the label RAW and a \n becomes an empty second line.
+    ${pkgs.coreutils}/bin/mv "$tmp" ${weatherCache}
   '';
 in
 {
@@ -265,9 +296,9 @@ in
     };
   };
 
-  # Weather: the wttr.in cache, as a oneshot plus a timer (no loose script).
+  # Weather: the Open-Meteo cache, as a oneshot plus a timer (no loose script).
   systemd.user.services.lockscreen-weather = {
-    Unit.Description = "Refreshes the lock screen weather cache (wttr.in)";
+    Unit.Description = "Refreshes the lock screen weather cache (Open-Meteo)";
     Service = {
       Type = "oneshot";
       ExecStart = "${weatherFetch}";

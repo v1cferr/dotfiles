@@ -47,7 +47,7 @@ PanelWindow {
                         Layout.alignment: Qt.AlignHCenter
                         spacing: 10
                         Text {
-                            text: bar.weatherIcon(bar.wText, bar.isDayNow())
+                            text: bar.weatherIcon(bar.wCode, bar.isDayNow())
                             color: Theme.colSapphire
                             font.family: Theme.uiFont
                             font.pixelSize: 34
@@ -138,7 +138,7 @@ PanelWindow {
                         }
                         Text {
                             Layout.alignment: Qt.AlignHCenter
-                            text: bar.weatherIcon(modelData.text, true)
+                            text: bar.weatherIcon(modelData.code, true)
                             color: Theme.colSapphire
                             font.family: Theme.uiFont
                             font.pixelSize: 18

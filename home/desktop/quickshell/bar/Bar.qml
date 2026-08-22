@@ -809,51 +809,67 @@ Scope {
     // Notifications: Quickshell is the daemon (Notifs.qml plus Notifications.qml). The bell reads
     // Notifs.barIcon/dnd and calls the toggles on the singleton.
 
-    // ===== Weather (Open-Meteo, JSON; São Carlos' lat/long) =====
+    // ===== Weather (Open-Meteo; the coords and the pt-BR table are my.weather) =====
     property string wTemp: ""
-    property string wText: ""
+    property int wCode: -1
     property string wFeels: ""
     property string wHumidity: ""
     property string wWind: ""
     property var wForecast: []
     readonly property bool wHas: root.wTemp !== ""
-    // The WMO code (Open-Meteo) -> en-US text. The strings match weatherIcon()'s regexes below,
-    // so the icon is derived from the text with no touching of the map.
+    readonly property string wText: root.wmoText(root.wCode)
+
+    // The coordinates and the WMO -> pt-BR table come from Nix (my.weather), the SAME source the
+    // lock screen's fetch reads, so the two surfaces cannot disagree about the same minute. Same
+    // FileView pattern as Theme.qml: a generated JSON is the only path into a hot-reload tree.
+    property var wConf: ({})
+    FileView {
+        id: weatherFile
+        path: "/home/v1cferr/.config/theme/weather.json"
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            try {
+                root.wConf = JSON.parse(weatherFile.text());
+            } catch (e) {
+                root.wConf = {};
+            }
+        }
+    }
+    // The load is ASYNC (measured: the table is still empty at Component.onCompleted), so these
+    // fallbacks are what keep the FIRST fetch valid, and what keeps a MISSING JSON harmless, the
+    // same choice as Theme.qml's palette: the temperature and the icon still work, and only the
+    // pt-BR label degrades to "—". They hold the same numbers as the SSOT, so nothing diverges.
+    readonly property string wLat: root.wConf.latitude || "-22.0087"
+    readonly property string wLon: root.wConf.longitude || "-47.8909"
+    // The pt-BR status. An unknown code says so instead of inventing a condition.
     function wmoText(code) {
-        const c = code;
-        if (c === 0 || c === 1) return "Clear";
-        if (c === 2) return "Partly cloudy";
-        if (c === 3) return "Cloudy";
-        if (c === 45 || c === 48) return "Fog";
-        if (c >= 51 && c <= 57) return "Drizzle";
-        if (c >= 61 && c <= 67) return "Rain";
-        if ((c >= 71 && c <= 77) || c === 85 || c === 86) return "Snow";
-        if (c >= 80 && c <= 82) return "Showers";
-        if (c === 95) return "Thunderstorm";
-        if (c === 96 || c === 99) return "Thunderstorm w/ hail";
-        return "—";
+        const t = root.wConf.conditions;
+        return (t && t[code] !== undefined) ? t[code] : "—";
     }
     // The wind's direction (degrees -> the compass rose, 8 points).
     function windDir(deg) {
         const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
         return dirs[Math.round(deg / 45) % 8];
     }
-    function weatherIcon(text, isDay) {
-        const c = (text || "").toLowerCase();
-        if (/clear|sunny|\bsun\b/.test(c))
+    // The icon comes from the CODE, never from the label. It used to regex the en-US prose, so
+    // translating the label would have turned EVERY icon into the default cloud, in silence.
+    function weatherIcon(code, isDay) {
+        const c = code;
+        if (c === 0 || c === 1)
             return isDay ? "󰖙" : "󰖔";
-        if (/partly/.test(c))
+        if (c === 2)
             return isDay ? "󰖕" : "󰼶";
-        if (/cloud|overcast/.test(c))
+        if (c === 3)
             return "󰖐";
-        if (/fog|mist|haze/.test(c))
+        if (c === 45 || c === 48)
             return "󰖑";
-        if (/thunder|storm/.test(c))
+        if (c === 95 || c === 96 || c === 99)
             return "󰖓";
-        if (/rain|drizzle|shower/.test(c))
-            return "󰖗";
-        if (/snow|ice|hail|sleet/.test(c))
+        if ((c >= 71 && c <= 77) || c === 85 || c === 86)
             return "󰖘";
+        if ((c >= 51 && c <= 67) || (c >= 80 && c <= 82))
+            return "󰖗";
         return "󰖐";
     }
     function isDayNow() {
@@ -870,7 +886,7 @@ Scope {
         const cur = data.current;
         if (cur) {
             root.wTemp = "" + Math.round(cur.temperature_2m);
-            root.wText = root.wmoText(cur.weather_code);
+            root.wCode = cur.weather_code;
             root.wFeels = "" + Math.round(cur.apparent_temperature);
             root.wHumidity = "" + cur.relative_humidity_2m;
             root.wWind = Math.round(cur.wind_speed_10m) + " km/h " + root.windDir(cur.wind_direction_10m);
@@ -887,7 +903,7 @@ Scope {
                     day: root.dowAbbr[dt.getDay()],
                     low: "" + Math.round(dy.temperature_2m_min[i]),
                     high: "" + Math.round(dy.temperature_2m_max[i]),
-                    text: root.wmoText(dy.weather_code[i]),
+                    code: dy.weather_code[i],
                     precip: (pp === null || pp === undefined) ? "" : "" + pp
                 });
             }
@@ -896,7 +912,7 @@ Scope {
     }
     Process {
         id: weatherProc
-        command: ["curl", "-sS", "-m", "10", "https://api.open-meteo.com/v1/forecast?latitude=-21.9977&longitude=-47.8827&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=8"]
+        command: ["curl", "-sS", "-m", "10", "https://api.open-meteo.com/v1/forecast?latitude=" + root.wLat + "&longitude=" + root.wLon + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=8"]
         stdout: StdioCollector {
             onStreamFinished: root.parseWeather(text)
         }
@@ -1731,7 +1747,7 @@ Scope {
                     Pill {
                         id: weatherPill
                         visible: root.wHas
-                        icon: root.weatherIcon(root.wText, root.isDayNow())
+                        icon: root.weatherIcon(root.wCode, root.isDayNow())
                         label: root.wTemp + "°C"
                         accent: Theme.colSapphire
                         onHoveredChanged: {

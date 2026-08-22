@@ -25,6 +25,21 @@ finished work. What was closed is in the [august history](history/2026/08-august
         `vpn.v1cferr.dev`. The protocol: phone hotspot, tunnel coming up on its own, `ssh t480`
         answering, and a Moonlight session lasting past 2 min (a drop at ~4 s is the MTU
         signature). Do it while the machine is still within arm's reach.
+      • THE GHOST REAPER DOES NOT EXIST OVER THERE, and it bit once already on 22/08: a client
+        that vanishes with no teardown leaves Sunshine answering `SUNSHINE_SERVER_BUSY` forever,
+        and Moonlight then refuses to open a new session, so from the client the host is simply
+        broken. The remedy is a `restart` and the pairing survives it, which is what makes a
+        watchdog cheap to write. A flaky public Wi-Fi is a ghost factory, so this is not an edge
+        case at her place.
+        • THE WINDOWS VARIANT NEEDS A DIFFERENT SIGNAL. Here the reaper reads `BUSY` plus no bound
+          UDP socket; over there the three sockets WERE bound with the client long gone, so that
+          test would never fire. What did not lie is the traffic: `wg show <tunnel> transfer`
+          barely moved. Condition: BUSY plus a byte delta under a floor, HELD for a few cycles so
+          a session being born is not killed.
+        • IT DROPPED IN PRIORITY THE MOMENT RDP LANDED, and that is worth writing down instead of
+          just doing the work: a ghost used to mean the machine was unreachable, and now it means
+          one service needs restarting through a path that does not depend on it. Convenience,
+          not a lifeline.
       • NO REAL SESSION HAS RUN YET. Paired is not streaming: `moonlight list 10.10.10.6` answers
         `Desktop`, which proves the pairing and nothing about video. Until a session runs, the
         encoder, the packet size and the bitrate are all still theory.

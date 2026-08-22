@@ -1,6 +1,40 @@
 # History: august 2026
 
-76 entries. Index in [README.md](../README.md).
+77 entries. Index in [README.md](../README.md).
+
+- [x] Full tunnel became the T480's DEFINITIVE mode, and that decision drags four other things
+      with it (22/08/2026, later the same day). The reason is hers and not the network's: she is
+      going to use public Wi-Fi, and this house is more trustworthy than a mall's.
+      • IPv6 DOES NOT LEAK, and it was measured instead of assumed, which matters because this is
+        where a full tunnel usually fails quietly. `::/1` and `8000::/1` sit on the tunnel
+        interface at metric 0, and `Find-NetRoute` for `2606:4700:4700::1111` answers `mae-t480`.
+        The tunnel carries no v6, so the effect is a fast failure and a fall back to IPv4 INSIDE
+        the tunnel. On a v6-enabled public network, without those two halves, a good share of her
+        traffic would leave outside the tunnel with nothing to show for it.
+      • THE DoH POLICY WAS THE MISSING HALF, not an extra. DNS-over-HTTPS happens INSIDE the
+        browser's own HTTPS connection, so Chrome talks straight to Google and dnsmasq never sees
+        the query: the traffic rides the tunnel and only the DNS escapes, which makes the filtering
+        and the visibility that justify routing her through here fiction. Applied as MACHINE policy
+        and confirmed in the registry.
+      • THE WATCHDOG'S NUMBERS CAME FROM THE PROTOCOL, and they corrected a number I had
+        recommended out loud an hour earlier. 180 s sounded fine and is wrong: WireGuard rekeys
+        every 120 s and keeps retrying for up to 90 s, so a HEALTHY tunnel coming out of a hiccup
+        reaches ~210 s with no fresh handshake, and a limit under that tears down what was about to
+        recover. On a public network that teardown is exactly the exposure the tunnel exists to
+        prevent. 240 s, and the real win came from the CYCLE: the task only evaluates every
+        `IntervaloMin`, so 5 min to 2 min took the worst case from ~15 min to ~6.
+      • WHAT THOSE MINUTES ACTUALLY ARE: a captive portal. With `DNS = 10.10.10.1` and the tunnel
+        up, the Wi-Fi login page cannot open, because there is no DNS before the portal is passed.
+        The watchdog is what gives her the internet back so she can log in, so its timer IS the
+        time she spends looking at a page that will not load with no idea what to do.
+      • THE PIN GOES THE OTHER WAY from what the panel suggests. Sunshine's `/pin` page waits for a
+        number the CLIENT generates, so "I do not know what PIN to type" is the expected state of
+        somebody looking at the host. `moonlight pair <host> --pin 4271` chooses it up front, which
+        turns a two-window dance into one number handed over. Paired: `moonlight list 10.10.10.6`
+        answers `Desktop`.
+      • AND THE CLIENT SIDE CORROBORATED THE ENCODER FINDING from the other direction:
+        `/serverinfo` reports `MaxLumaPixelsHEVC` as `0`. The host itself advertises no HEVC, which
+        is the same verdict its log gave, arrived at without reading a log.
 
 - [x] My mother's T480 became reachable, and the interesting half of the day was everything that
       was NOT the streaming (22/08/2026). The machine is a ThinkPad T480 with Windows 11 IoT

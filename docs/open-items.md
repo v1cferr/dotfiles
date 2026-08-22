@@ -14,26 +14,20 @@ finished work. What was closed is in the [august history](history/2026/08-august
       to another city, and after that every mistake here costs a phone call instead of a minute.
       The Windows side lives in that machine's OWN repo; what is listed here is either this repo's
       or a joint decision.
-      • FIRST, AND IT BLOCKS EVERYTHING ELSE: the MASQUERADE on the router for traffic toward
-        10.10.10.6. Without it, if her house serves `192.168.1.0/24` (the commonest default there
-        is), her reply to my 192.168.1.10 leaves through HER LAN instead of the tunnel, because an
-        on-link `/24` beats the tunnel's two `/1` halves. The handshake stays perfect and nothing
-        answers, which is the worst possible failure to debug from 20 km away. The command:
-        `uci set firewall.t480_snat=nat` with `name='SNAT-to-t480'`, `src='wg'`,
-        `dest_ip='10.10.10.6'`, `proto='all'`, `target='MASQUERADE'`, then
-        `uci commit firewall`, `/etc/init.d/firewall reload` and CONFIRM in
-        `nft list chain inet fw4 srcnat`, never in `uci show` (trap 1 of the router section).
-        Then `router-sync pull`. It also SIMPLIFIES her side: with the client arriving as
-        10.10.10.1, her `AllowedIPs` never needs to carry my LAN.
+      • CLOSED THE SAME DAY, so nobody reads this item as untouched: the MASQUERADE toward
+        10.10.10.6, the panel user, the Moonlight pairing, the DoH policy on her browsers and the
+        watchdog's numbers. The reasoning for each is in the [august
+        history](history/2026/08-august.md); what is left below is what genuinely cannot be closed
+        from this side of the house.
       • THE ONLY VALID TEST IS FROM ANOTHER NETWORK, and none of today's proves anything about her
         house. With the machine on the home Wi-Fi the tunnel closes by hairpin on the router
         itself, and `wg show` even displays `192.168.1.1` as the endpoint while the file says
         `vpn.v1cferr.dev`. The protocol: phone hotspot, tunnel coming up on its own, `ssh t480`
         answering, and a Moonlight session lasting past 2 min (a drop at ~4 s is the MTU
         signature). Do it while the machine is still within arm's reach.
-      • SUNSHINE IS INSTALLED AND CONFIGURED, AND NOT YET USABLE: the panel has no user
-        (`sunshine.exe --creds`, password from the vault) and Moonlight is not paired (the PIN is
-        interactive on both ends). Neither is scriptable, both need doing before it travels.
+      • NO REAL SESSION HAS RUN YET. Paired is not streaming: `moonlight list 10.10.10.6` answers
+        `Desktop`, which proves the pairing and nothing about video. Until a session runs, the
+        encoder, the packet size and the bitrate are all still theory.
       • `max_bitrate` IS A PLACEHOLDER at 10000. The bottleneck out of there is HER upload, which
         nobody has measured. Raise it after a real session, not before.
       • THE MACHINE'S REPO HAS NO REMOTE. It is a local git on a laptop that is leaving, so the

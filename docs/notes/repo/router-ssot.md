@@ -19,7 +19,7 @@ three of them. The repo now declares zero Moonlight sources, so the contract rea
 forward nothing", and a redirect that comes back through LuCI without the repo is a finding instead
 of a surprise.
 
-## The seven checks
+## The nine checks
 
 | Check | What it compares | Why the drift is silent |
 | --- | --- | --- |
@@ -29,7 +29,45 @@ of a surprise.
 | moonlight (dest) | every `dest_ip` against this host's address | one DHCP change would point the rules at whoever took the address |
 | fai | the `fai_r*` static routes against `faiSubnets`, and their gateway against the host | a route to an undeclared range sends traffic to a host that will not answer for it |
 | ssh | that some redirect still sends `services.openssh.ports` to the host | the port is one number in two configs, and only the OUTSIDE notices |
-| dns | every split-DNS answer inside the LAN against the hosts this repo declares | a name pointing at a machine that is not there breaks only by name |
+| dns | every answer the router gives from its own tables, `address=` override AND `config domain` record, against the hosts this repo declares, inside the LAN or inside the TUNNEL | a name pointing at a machine that is not there breaks only by name |
+| peer | every `ssh.nix` host at a tunnel address against the `allowed_ips` of the wg0 peers | the name resolves and nothing answers, which reads as "the machine is off" |
+| dnat | every redirect's `dest_ip` against `vpnSubnet`, and the answer is always no | a port published for a machine that is off site, in somebody else's house, with no gate in front of it |
+
+## What the t480 taught it (22/08/2026)
+
+My mother's ThinkPad became a WireGuard peer and got a name in the router's DNS, and the checker
+saw NEITHER of the two values that arrived with it. Not a bug in the comparison, a gap in what was
+being read, which is the same failure shape as the parser bug below:
+
+**dnsmasq answers a local name through two different mechanisms**, and the checker only knew the
+first. `dhcp.@dnsmasq[0].address` is a SUFFIX override (`/v1cferr.dev/192.168.1.10`, the split-DNS
+of the zone); `config domain` is a static A record for one name, expanded into `t480.lan` by
+`domain=lan` plus `expandhosts=1`. LuCI writes the second one from the Hostnames tab, which is the
+natural place to add a machine, so the mechanism the checker ignored is the one a human reaches for.
+
+**And the range was hard-wired to the LAN.** `t480` answers 10.10.10.6, which is inside
+`vpnSubnet`, so even reading the section would have skipped it. Both ranges are legitimate now, and
+the option that owns each one already existed.
+
+**The eighth check is the other half of the same value.** A DNS answer with no peer behind it
+is worse than a wrong answer: the name resolves, the packet routes, and nothing replies, which from
+the client is indistinguishable from the machine being off. It runs in ONE direction on purpose,
+declared-host implies peer, because `celular`, `pc-trampo` and `fai-workstation` are peers with no
+`ssh.nix` entry and always will be. It would have caught the `notebook` peer's removal on
+19/08/2026 if that peer had ever had a host declared here.
+
+**And the ninth is a rule from ANOTHER repo, checked here.** The T480 carries its own repo, and
+its stated invariant is that no port of that host is exposed: SSH, Sunshine and RDP accept the
+tunnel and the home LAN only. That rule is about a machine, and the only place it can be VERIFIED is
+the router's mirror, so it lives here. It reads as a policy check rather than a mirror comparison,
+which is why the expected set is a constant: nothing is ever forwarded into `vpnSubnet`.
+
+**Writing it uncovered a hole in the checks that already existed.** `moonlight()` read only the
+ANONYMOUS `@redirect[N]` sections, and a redirect typed by hand is born NAMED: `firewall.ssh_cesar`
+is one, and it is the only redirect in this mirror that a human added. So a `Moonlight-HTTPS` coming
+back as `firewall.ml_https` would have passed every Moonlight check in silence, which is precisely
+the drift the retirement of the direct path made those checks exist for. Both forms are read now,
+and the mutation below is the proof.
 
 ## Two layers, and neither replaces the other
 
@@ -94,6 +132,15 @@ A checker that only ever passes is decoration. Every check was verified in BOTH 
 - **Six on the repo side**, which is the likelier accident: a new block in `moonlightSources`, a
   changed `basePort`, a changed host address, a range deleted from `faiSubnets`, a changed sshd port
   and a changed `lanSubnet`.
+- **Four more on 22/08/2026**, for the two checks added that day, and each fired exactly one
+  finding: a `config domain` record moved to an undeclared tunnel address, a second one invented
+  inside the LAN (which proves the new mechanism is read in BOTH ranges), the t480 peer's
+  `allowed_ips` moved off .6, and the repo side of the same value, `ssh.nix` pointing at a .7 nobody
+  serves. That last one fires TWO findings, one per check, which is the pair working: the address is
+  unknown to the mirror and unserved by the router at the same time.
+- **Two more the same day, for the ninth check and for the hole it uncovered**: a named
+  `Sunshine-t480` redirect pointing at 10.10.10.6 fires `dnat`, and a `Moonlight-HTTPS` written as a
+  NAMED section fires the two Moonlight checks that could not see it before.
 
 The host address is the most expensive value to get wrong: changing it fires **9 findings across 4
 checks**, which is exactly the blast radius its 19 occurrences in the mirror predict.

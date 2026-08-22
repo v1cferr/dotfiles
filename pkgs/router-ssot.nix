@@ -65,6 +65,17 @@ writers.writePython3Bin "router-ssot"
         return out
 
 
+    def sections(conf, kind):
+        """Every section of one kind, ANONYMOUS and NAMED. A rule typed by hand is born named
+        (firewall.ssh_cesar is one), so reading only the anonymous ones is how it hides."""
+        out = list(anon(conf, kind).values())
+        for key, vals in conf.items():
+            if re.match(r"\w+\.\w+$", key) and vals and vals[0] == kind:
+                out.append({k.rsplit(".", 1)[-1]: v[0]
+                            for k, v in conf.items() if k.startswith(key + ".")})
+        return out
+
+
     def strip_comment(line):
         """Drop a trailing Nix comment, ignoring a `#` that lives INSIDE a quoted string."""
         out, quoted = [], False
@@ -142,7 +153,7 @@ writers.writePython3Bin "router-ssot"
 
     def moonlight(conf):
         """The Moonlight-* redirects, the hand kept mirror of moonlightSources."""
-        return [s for s in anon(conf["firewall"], "redirect").values()
+        return [s for s in sections(conf["firewall"], "redirect")
                 if s.get("name", "").startswith("Moonlight-")]
 
 
@@ -218,16 +229,37 @@ writers.writePython3Bin "router-ssot"
         return []
 
 
+    def home_ranges(d):
+        """The two ranges a local DNS answer can legitimately land in. The VPN one is in here since
+        22/08/2026: `t480` answers 10.10.10.6, an address that only exists inside the tunnel."""
+        out = []
+        for opt in ("lanSubnet", "vpnSubnet"):
+            if d["subnets"].get(opt):
+                out.append(ipaddress.ip_network(d["subnets"][opt]))
+        return out
+
+
+    def local_answers(conf):
+        """Every name the router answers from its own tables, as (what to print, the address).
+        TWO MECHANISMS, and reading only the first one is how the t480 entry stayed invisible: an
+        `address=` suffix override, and a `config domain` static record expanded by domain=lan."""
+        out = [(e, e.rsplit("/", 1)[-1])
+               for e in conf["dhcp"].get("dhcp.@dnsmasq[0].address", [])]
+        out += [(f"domain {s.get('name', '?')}", s.get("ip", ""))
+                for s in anon(conf["dhcp"], "domain").values()]
+        return out
+
+
     def check_split_dns(d, conf):
         """A split-DNS answer pointing at an address no host here claims is drift with no symptom
         until somebody uses the name. It caught a poisoned anchor once already."""
-        lan = ipaddress.ip_network(d["subnets"].get("lanSubnet", "0.0.0.0/0"))
-        known = {d["host_ip"]} | {h for h in d["ssh_hosts"] if ipaddress.ip_address(h) in lan}
+        ranges = home_ranges(d)
+        known = {d["host_ip"]} | {h for h in d["ssh_hosts"]
+                                  if any(ipaddress.ip_address(h) in r for r in ranges)}
         out = []
-        for entry in conf["dhcp"].get("dhcp.@dnsmasq[0].address", []):
-            ip = entry.rsplit("/", 1)[-1]
+        for entry, ip in local_answers(conf):
             try:
-                inside = ipaddress.ip_address(ip) in lan
+                inside = any(ipaddress.ip_address(ip) in r for r in ranges)
             except ValueError:
                 continue
             if inside and ip not in known:
@@ -236,8 +268,45 @@ writers.writePython3Bin "router-ssot"
         return out
 
 
+    def check_vpn_peers(d, conf):
+        """A host declared at a TUNNEL address needs a peer to answer for it. ONE DIRECTION on
+        purpose: celular, pc-trampo and fai-workstation are peers with no ssh host, legitimately."""
+        vpn = d["subnets"].get("vpnSubnet")
+        if not vpn:
+            return []
+        allowed = {ip.split("/")[0]
+                   for s in anon(conf["network"], "wireguard_wg0").values()
+                   for ip in s.get("allowed_ips", "").split()}
+        out = []
+        for host in sorted(d["ssh_hosts"]):
+            if ipaddress.ip_address(host) in ipaddress.ip_network(vpn) and host not in allowed:
+                out.append(("peer", f"ssh.nix reaches {host}, and no wg0 peer holds that address",
+                            "the peer left the router or never landed: the name resolves and nothing "
+                            "answers, which reads as `the machine is off`"))
+        return out
+
+
+    def check_no_vpn_dnat(d, conf):
+        """Nothing is forwarded INTO the tunnel. A peer is off site by definition, one of them is my
+        mother's machine, and a DNAT there would publish its port with no gate at all."""
+        vpn = d["subnets"].get("vpnSubnet")
+        if not vpn:
+            return []
+        net, out = ipaddress.ip_network(vpn), []
+        for s in sections(conf["firewall"], "redirect"):
+            try:
+                inside = ipaddress.ip_address(s.get("dest_ip", "")) in net
+            except ValueError:
+                continue
+            if inside:
+                out.append(("dnat", f"{s.get('name', '?')} forwards to {s.get('dest_ip')}, a tunnel address",
+                            "the tunnel is the only door for a peer: the T480's own repo states that "
+                            "rule for the machine that leaves the house, and this is where it is checked"))
+        return out
+
+
     CHECKS = (check_subnets, check_moonlight_sources, check_moonlight_ports, check_moonlight_dest,
-              check_fai_routes, check_ssh_port, check_split_dns)
+              check_fai_routes, check_ssh_port, check_split_dns, check_vpn_peers, check_no_vpn_dnat)
 
 
     def main():

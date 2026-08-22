@@ -124,7 +124,16 @@ writers.writePython3Bin "router-ssot"
         out["fai_subnets"] = nix_list(read("system/net/fai-gateway.nix"), "faiSubnets")
         ssh = re.search(r"ports\s*=\s*\[\s*(\d+)\s*\]", read("system/net/network.nix"))
         out["ssh_port"] = ssh.group(1) if ssh else ""
-        out["ssh_hosts"] = set(re.findall(r'HostName\s*=\s*"([\d.]+)"', read("home/shell/ssh.nix")))
+        # TWO anchors, because one address already left ssh.nix. The T480's went into an option
+        # the day the RDP wrapper became a second consumer, which is rule 11 doing its job; the
+        # other hosts are still literals. Losing this line does not weaken the check quietly: the
+        # dns one starts reporting an answer "no host declares", which is how it was found.
+        hosts = set(re.findall(r'HostName\s*=\s*"([\d.]+)"', read("home/shell/ssh.nix")))
+        opt = re.search(r'host\s*=\s*lib\.mkOption\s*\{.*?default\s*=\s*"([\d.]+)"',
+                        read("home/net/t480.nix"), re.S)
+        if opt:
+            hosts.add(opt.group(1))
+        out["ssh_hosts"] = hosts
         return out
 
 

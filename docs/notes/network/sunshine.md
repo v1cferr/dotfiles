@@ -234,12 +234,25 @@ nobody in front of it. That is also why `freerdp` sits next to `moonlight-qt` in
 [`home/packages.nix`](../../../home/packages.nix). The price is real and worth stating: a Windows
 client SKU has ONE active session, so an RDP login DISCONNECTS whoever is on the console.
 
-**The invocation, and the two flags that are not decoration:**
+**The invocation is a command, not an alias**, and it lives in
+[`home/net/t480.nix`](../../../home/net/t480.nix) beside the option that owns the address:
 
 ```sh
-sdl-freerdp /v:10.10.10.6 /d:DESKTOP-MEM12EE /u:v1cferr \
+t480          # the maintenance account
+t480 mae      # her account, which RECONNECTS to her session instead of replacing it
+t480 mae /f   # anything after the account still reaches freerdp untouched
+```
+
+It expands to this, and every flag in it earns its place:
+
+```sh
+sdl-freerdp /v:10.10.10.6 /d:DESKTOP-MEM12EE /u:<conta> \
   /cert:tofu,name:DESKTOP-MEM12EE /dynamic-resolution +clipboard
 ```
+
+A wrapper and not a `shellAliases` entry for two reasons: the account has to be an ARGUMENT, and
+the address would have become a second literal of a value `ssh.nix` already holds, which rule 11
+forbids. Both consumers read `my.t480` now, the same shape as `wake-workstation`.
 
 `sdl-freerdp` and NOT `wlfreerdp`: upstream deprecated the Wayland client and prints five lines
 saying so on every run. The SDL3 client is the replacement and is just as native.

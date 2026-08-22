@@ -41,10 +41,9 @@
     # ── Remote access ──
     # The Moonlight CLIENT, for my mother's T480: this machine is the client and that one is the
     # host, the reverse of system/services/sunshine.nix. What to set: docs/notes/network/sunshine.md
+    # RDP reaches the same machine and is NOT redundant (Moonlight dies with the laptop lid), but
+    # it owns its package next to the `t480` wrapper, in home/net/t480.nix.
     moonlight-qt
-    # RDP for the SAME machine, and not redundant: Moonlight shows HER screen and dies with the
-    # laptop lid, RDP makes a session of its own. Why both: docs/notes/network/sunshine.md
-    freerdp # the binary is `sdl-freerdp`: upstream deprecated `wlfreerdp` and says so on every run
 
     # ── Disk / cleanup ──
     czkawka # finds what is DISPOSABLE (duplicates, empties), where filelight only shows size

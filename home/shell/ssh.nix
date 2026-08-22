@@ -4,6 +4,7 @@
 
 let
   ws = config.my.fai.workstation; # SSOT: home/net/fai-workstation.nix (rule 11)
+  t480 = config.my.t480; # SSOT: home/net/t480.nix, shared with the `t480` RDP wrapper
 
   # Sized to fit VS Code Remote-SSH's FIXED 17s budget, not to comfort.
   faiResilience = {
@@ -73,8 +74,8 @@ in
       # My mother's ThinkPad T480 (Windows 11 IoT LTSC): sshd binds the TUNNEL address only, and
       # the Windows side is owned by a repo on that machine: docs/notes/network/ssh.md
       t480 = {
-        HostName = "10.10.10.6";
-        User = "v1cferr";
+        HostName = t480.host;
+        User = t480.user;
         Port = 22;
         IdentityFile = "~/.ssh/id_ed25519";
       };

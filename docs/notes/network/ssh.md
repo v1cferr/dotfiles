@@ -56,7 +56,9 @@ how little of the `cesar` section applies.
 
 **The address is the TUNNEL address, and that is not a shortcut.** `10.10.10.6` is the WireGuard
 peer, and over there `sshd_config` carries `ListenAddress 10.10.10.6`, so there is no path to that
-sshd from the LAN even while the machine is still in the house. It is the machine's own rule: no
+sshd from the LAN even while the machine is still in the house. It is NOT a literal here any more:
+the RDP wrapper became a second consumer, so the value moved into `my.t480`
+([`home/net/t480.nix`](../../../home/net/t480.nix)) and this block reads it, which is rule 11. It is the machine's own rule: no
 port of that host is exposed, and SSH, Sunshine and RDP accept the tunnel and the home LAN only.
 
 **That bind is why sshd there DEPENDS on the tunnel**, and it is the sharpest thing this host has to

@@ -5,5 +5,6 @@
   imports = [
     ./fai-workstation.nix # the SSOT of the FAI workstation's host plus `wake-workstation` (WoL)
     ./mega.nix # megatools plus `mega-dl` (a MEGA link with patient resuming; --tor/--proxy)
+    ./t480.nix # the SSOT of my mother's T480 plus `t480` (RDP, the lid-shut path)
   ];
 }

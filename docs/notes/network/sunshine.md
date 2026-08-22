@@ -234,6 +234,26 @@ nobody in front of it. That is also why `freerdp` sits next to `moonlight-qt` in
 [`home/packages.nix`](../../../home/packages.nix). The price is real and worth stating: a Windows
 client SKU has ONE active session, so an RDP login DISCONNECTS whoever is on the console.
 
+**The invocation, and the two flags that are not decoration:**
+
+```sh
+sdl-freerdp /v:10.10.10.6 /d:DESKTOP-MEM12EE /u:v1cferr \
+  /cert:tofu,name:DESKTOP-MEM12EE /dynamic-resolution +clipboard
+```
+
+`sdl-freerdp` and NOT `wlfreerdp`: upstream deprecated the Wayland client and prints five lines
+saying so on every run. The SDL3 client is the replacement and is just as native.
+
+`name:DESKTOP-MEM12EE` is what silences a wall of MITM warnings WITHOUT silencing the check. Windows
+signs RDP with a self-signed certificate whose CN is the COMPUTER name, and the connection is made
+to an address, so the names differ and FreeRDP shouts CERTIFICATE NAME MISMATCH plus REMOTE HOST
+IDENTIFICATION HAS CHANGED. Telling it which name to expect makes the comparison correct instead of
+absent, and `tofu` then pins the fingerprint on first use, so a real change still warns. `/cert:ignore`
+would have hidden both, which is the version of this that people paste from the internet.
+
+`/d:DESKTOP-MEM12EE` skips the `Domain:` prompt: for a LOCAL Windows account the domain is the
+machine's own name.
+
 **The alternative was measured against and passed over**: a virtual display driver, or an EDID dummy
 plug, would give Sunshine a panel that never turns off. Both work, and both put a SECOND screen on
 her desktop for windows to get lost in, on a machine used by somebody who will not go hunting for a

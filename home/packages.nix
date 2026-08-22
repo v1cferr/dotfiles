@@ -44,7 +44,7 @@
     moonlight-qt
     # RDP for the SAME machine, and not redundant: Moonlight shows HER screen and dies with the
     # laptop lid, RDP makes a session of its own. Why both: docs/notes/network/sunshine.md
-    freerdp # `wlfreerdp` is the native Wayland client, no Xwayland in the path
+    freerdp # the binary is `sdl-freerdp`: upstream deprecated `wlfreerdp` and says so on every run
 
     # ── Disk / cleanup ──
     czkawka # finds what is DISPOSABLE (duplicates, empties), where filelight only shows size

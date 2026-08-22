@@ -34,10 +34,14 @@ finished work. What was closed is in the [august history](history/2026/08-august
         inventory, the scripts and the reasoning die with the disk. It is not this repo's content
         and does not belong in it (rule 14, and it holds her machine's specifics), so the answer is
         a PRIVATE repository of its own, pushed before the trip.
+      • THE LID QUESTION IS ANSWERED AND THE ANSWER COSTS NOTHING: a closed lid stops Sunshine's
+        capture, because there is no panel to duplicate, so RDP is the headless path and both are
+        declared. What remains is the DISPLAY TIMEOUT, 15 min on AC, which is the same class of
+        failure and has not been tested: if a stream comes back black with the lid OPEN, that is
+        the first suspect.
       • STILL OPEN OVER THERE, decided by whoever owns that machine: `PasswordAuthentication` is
-        still `yes` on an sshd that only listens inside the tunnel; RDP is off; BitLocker is
-        `FullyDecrypted` on a laptop that will live in someone else's house; and the screen sleeps
-        after 15 min on AC, which is the first suspect if a stream ever comes back black.
+        still `yes` on an sshd that only listens inside the tunnel, and BitLocker is
+        `FullyDecrypted` on a laptop that will live in someone else's house.
 
 - [ ] Quality probe for the UFSCar VPN: no measured target (opened on 14/08/2026). The pill's
       hover popover measures latency/jitter/loss by pinging a host INSIDE the tunnel. For FAI

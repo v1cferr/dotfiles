@@ -254,6 +254,15 @@ would have hidden both, which is the version of this that people paste from the 
 `/d:DESKTOP-MEM12EE` skips the `Domain:` prompt: for a LOCAL Windows account the domain is the
 machine's own name.
 
+**The client hangs on to the keyboard, and the key that gives it back is not the obvious one.** The
+SDL client's hotkey modifier is the RIGHT SHIFT (`SDL_KeyModMask`, default `KMOD_RSHIFT`), so
+`RShift+G` toggles the keyboard and mouse grab, `RShift+Enter` goes fullscreen, `RShift+R` toggles
+resizable, `RShift+M` minimizes and `RShift+D` disconnects. While the grab is ON the man page is
+explicit that "local system shortcuts do no longer work and are sent to the remote system", which is
+why Hyprland's `SUPER + drag` does nothing until the grab is released. `-grab-keyboard` on the
+command line disables it for good, at the cost of never being able to send Super or Alt+Tab to
+Windows. Moonlight's equivalent, for the muscle memory, is `Ctrl+Alt+Shift+Z`.
+
 **The alternative was measured against and passed over**: a virtual display driver, or an EDID dummy
 plug, would give Sunshine a panel that never turns off. Both work, and both put a SECOND screen on
 her desktop for windows to get lost in, on a machine used by somebody who will not go hunting for a

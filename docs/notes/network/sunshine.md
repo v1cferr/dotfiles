@@ -192,11 +192,25 @@ bitrate slider live in `~/.config/Moonlight Game Streaming Project`, which the a
 runtime, so rule 14 says Nix declares the PACKAGE and nothing else. There is no client-side
 equivalent of `system/services/sunshine.nix`.
 
-**HEVC in the client is where the win is, and there it is not optional.** This repo measured that
-the codec is NEGOTIATED and the client picks: the FAI machine asked for `h264_vaapi` 8-bit while
-this host announced HEVC and AV1. The T480 encodes on an UHD 620, whose QuickSync does H.264 and
-HEVC and has NO AV1 encoder at all, so AV1 is not a choice to make and HEVC is the only step up
-available. Turn it on in the client for that host.
+**There is no codec to choose there, and the sentence that used to sit here was wrong.** It said
+"HEVC is the only step up available, turn it on in the client", reasoning from the hardware: an
+UHD 620 is Kaby Lake-R, which does have an HEVC encoder. Then that host's own log answered, on its
+first run (22/08/2026):
+
+```text
+Trying encoder [nvenc]      -> Encoder [nvenc] is not supported on this GPU
+Creating encoder [hevc_qsv] -> some encoding parameters are not supported by the QSV runtime
+Retrying with fallback ...  -> Could not open codec [hevc_qsv]: Function not implemented
+Creating encoder [av1_qsv]  -> Could not open codec [av1_qsv]: Unknown error occurred
+Found H.264 encoder: h264_qsv [quicksync]
+```
+
+**H.264 only**, so asking for HEVC in the client gets H.264 anyway and every bit of quality has to
+come out of bitrate, FEC and resolution. The useful part is not the verdict, it is why the guess
+failed: what refuses is the QSV RUNTIME on the driver in use (`31.0.101.2135`, from 2023), not the
+silicon, and no spec sheet says that. This repo already knew the codec is negotiated per session and
+has to be read off the log; it now also knows that the ENCODER LIST has to be read off the log,
+never inferred from the GPU. A newer Intel driver is the candidate to test, not a fix.
 
 **`packet_size` is the host's setting, and that host has its own tunnel.** The 1024 above was
 calibrated for the path from HERE. The T480 reaches the same router over WireGuard, so the ceiling

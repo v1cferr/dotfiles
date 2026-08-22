@@ -144,6 +144,42 @@ the name still resolves through Cloudflare, so the tunnel comes back, and the st
 bites a re-resolution that happens while the tunnel is already up. The structural fix is an open
 item.
 
+## The third machine on the tunnel, and the first one that leaves
+
+22/08/2026. My mother's ThinkPad T480 is peer `10.10.10.6`, and unlike `celular` or
+`pc-trampo` it is going to live in another house. What belongs here is the network's half; the
+Windows side has a repo of its own, on the machine.
+
+**The reach is cut at the ROUTER, not at her end.** `firewall.wg_t480` REJECTs wg to lan for source
+`10.10.10.6` and leaves lan to wg untouched: I reach her, she reaches nothing of mine. It cannot
+live on her side, and that is not a preference. WireGuard's crypto-routing is bidirectional, so the
+`AllowedIPs` range that lets MY packets IN is the same one that would let her OUT. Narrowing it
+there would cost exactly the access the rule exists to protect.
+
+**`proto` is not optional in that rule**, and the first version of it was wrong. With no `proto`,
+fw4 renders TWO rules, `meta l4proto tcp` and `meta l4proto udp`, and everything else, ICMP
+included, walks past them into the `accept_to_lan` right below. `proto='all'` renders a single
+`ip saddr 10.10.10.6 ... jump reject_to_lan`. It is trap 1 of the section above in a new costume:
+the config looked complete and the ruleset said otherwise.
+
+**REJECT and not DROP**, the same choice as the FAI anti-loop rule: an ICMP unreachable makes
+whatever she is running fail right away instead of hanging.
+
+**The rule cannot be tested from inside the house, and it answered YES while working.** Measured the
+same day: with the machine on the home Wi-Fi, `192.168.1.0/24` is an ON-LINK route on her adapter
+and beats the tunnel's two `/1` halves, so a packet to `192.168.1.10` never reaches the router. Ping
+and TCP both answered normally with the rule already in place. That is not the rule failing, it is
+the test being invalid, and it is the same class of invalid test as pinging the router from home to
+measure the tunnel's MTU.
+
+**Her home subnet is a coin flip that can kill the access in silence.** `192.168.1.0/24` is the most
+common default there is, and if her router uses it, the on-link route above wins over there too: her
+REPLY to my `192.168.1.10` leaves through her own LAN instead of the tunnel. The handshake stays
+perfect, `wg show` looks healthy, and SSH and Moonlight simply never answer. The fix is a
+MASQUERADE on the router for traffic toward `10.10.10.6`, so she sees the client as `10.10.10.1` and
+answers into the tunnel, which also means her `AllowedIPs` never needs to carry my LAN at all. **NOT
+APPLIED YET**: the command and the reasoning are in [`../../open-items.md`](../../open-items.md).
+
 ## fail2ban
 
 Port 2222 is open to the world (a port forward on the OpenWrt) WITH passwords enabled, so fail2ban

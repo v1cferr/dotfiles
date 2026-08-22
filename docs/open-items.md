@@ -10,6 +10,41 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
+- [~] The T480 before it leaves the house (opened 22/08/2026). It is my mother's machine, it goes
+      to another city, and after that every mistake here costs a phone call instead of a minute.
+      The Windows side lives in that machine's OWN repo; what is listed here is either this repo's
+      or a joint decision.
+      • FIRST, AND IT BLOCKS EVERYTHING ELSE: the MASQUERADE on the router for traffic toward
+        10.10.10.6. Without it, if her house serves `192.168.1.0/24` (the commonest default there
+        is), her reply to my 192.168.1.10 leaves through HER LAN instead of the tunnel, because an
+        on-link `/24` beats the tunnel's two `/1` halves. The handshake stays perfect and nothing
+        answers, which is the worst possible failure to debug from 20 km away. The command:
+        `uci set firewall.t480_snat=nat` with `name='SNAT-to-t480'`, `src='wg'`,
+        `dest_ip='10.10.10.6'`, `proto='all'`, `target='MASQUERADE'`, then
+        `uci commit firewall`, `/etc/init.d/firewall reload` and CONFIRM in
+        `nft list chain inet fw4 srcnat`, never in `uci show` (trap 1 of the router section).
+        Then `router-sync pull`. It also SIMPLIFIES her side: with the client arriving as
+        10.10.10.1, her `AllowedIPs` never needs to carry my LAN.
+      • THE ONLY VALID TEST IS FROM ANOTHER NETWORK, and none of today's proves anything about her
+        house. With the machine on the home Wi-Fi the tunnel closes by hairpin on the router
+        itself, and `wg show` even displays `192.168.1.1` as the endpoint while the file says
+        `vpn.v1cferr.dev`. The protocol: phone hotspot, tunnel coming up on its own, `ssh t480`
+        answering, and a Moonlight session lasting past 2 min (a drop at ~4 s is the MTU
+        signature). Do it while the machine is still within arm's reach.
+      • SUNSHINE IS INSTALLED AND CONFIGURED, AND NOT YET USABLE: the panel has no user
+        (`sunshine.exe --creds`, password from the vault) and Moonlight is not paired (the PIN is
+        interactive on both ends). Neither is scriptable, both need doing before it travels.
+      • `max_bitrate` IS A PLACEHOLDER at 10000. The bottleneck out of there is HER upload, which
+        nobody has measured. Raise it after a real session, not before.
+      • THE MACHINE'S REPO HAS NO REMOTE. It is a local git on a laptop that is leaving, so the
+        inventory, the scripts and the reasoning die with the disk. It is not this repo's content
+        and does not belong in it (rule 14, and it holds her machine's specifics), so the answer is
+        a PRIVATE repository of its own, pushed before the trip.
+      • STILL OPEN OVER THERE, decided by whoever owns that machine: `PasswordAuthentication` is
+        still `yes` on an sshd that only listens inside the tunnel; RDP is off; BitLocker is
+        `FullyDecrypted` on a laptop that will live in someone else's house; and the screen sleeps
+        after 15 min on AC, which is the first suspect if a stream ever comes back black.
+
 - [ ] Quality probe for the UFSCar VPN: no measured target (opened on 14/08/2026). The pill's
       hover popover measures latency/jitter/loss by pinging a host INSIDE the tunnel. For FAI
       the target is pinned and measured (`200.136.209.236`, see today's history); for UFSCar

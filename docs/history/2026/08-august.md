@@ -1,6 +1,78 @@
 # History: august 2026
 
-75 entries. Index in [README.md](../README.md).
+76 entries. Index in [README.md](../README.md).
+
+- [x] My mother's T480 became reachable, and the interesting half of the day was everything that
+      was NOT the streaming (22/08/2026). The machine is a ThinkPad T480 with Windows 11 IoT
+      Enterprise LTSC, being prepared before going to her place, and it arrives here already a
+      WireGuard peer with sshd, a firewall and power settings done. What this repo added is the
+      client side, the router side and the checks; the Windows side has an owner already.
+      • THE OWNERSHIP CALL CAME FIRST, and it is why there is no guide for this machine. It carries
+        a repo OF ITS OWN (numbered idempotent scripts, an inventory, a `winget configure` DSC
+        file), so copying the procedure into `docs/guides/` would give one procedure two owners
+        (rule 14) and the copy nobody applies is the one that drifts (rule 16). The `cesar` guide
+        exists because that machine has no repo. What lives here is the CONTRACT: the peer address,
+        the name the router answers, and that nothing is forwarded to it.
+      • THE DRIFT WAS EXACTLY WHAT THE MIRROR IS FOR: `router-sync diff` came back with `dhcp` and
+        `network`, a `config domain` answering `t480` with 10.10.10.6 and a `wireguard_wg0` peer
+        named `t480-mae`. The peer had handshaked 2 minutes earlier with 144 MiB in and 635 MiB
+        out, which is the shape of config that WORKS and would never be missed until it broke.
+      • NO DHCP RESERVATION FOR IT, on purpose: the machine leaves, so its LAN lease stops being an
+        access path and pinning .191 would declare a value nobody reads. And no
+        `persistent_keepalive` on the router side either, since the router has the public endpoint
+        and learns the peer's from each handshake: keepalives have to come from behind the NAT,
+        and putting them here would look like a fix and change nothing.
+      • THE REACH IS CUT AT THE ROUTER, and it CANNOT be cut at her end. WireGuard's crypto-routing
+        is bidirectional, so the `AllowedIPs` range that lets my packets IN is the same one that
+        would let her OUT. `firewall.wg_t480` REJECTs wg to lan for 10.10.10.6 and leaves lan to wg
+        alone.
+      • `proto` IS NOT OPTIONAL IN THAT RULE. Without it fw4 renders TWO rules, `meta l4proto tcp`
+        and `meta l4proto udp`, and ICMP plus everything else walks past them into the
+        `accept_to_lan` below. Read in `nft`, fixed with `proto='all'`, which renders one
+        `ip saddr 10.10.10.6 jump reject_to_lan`. Trap 1 of the router section in a new costume.
+      • AND THE RULE ANSWERED "YES" WHILE WORKING, because the test was invalid: with the machine on
+        the home Wi-Fi, `192.168.1.0/24` is an ON-LINK route on its own adapter and beats the
+        tunnel's two `/1` halves, so ping and TCP to 192.168.1.10 never reach the router at all.
+        Same class as pinging the router from home to measure the tunnel MTU.
+      • THAT SAME ROUTING FACT IS A LANDMINE FOR HER HOUSE, and it is the finding of the day. If her
+        router serves `192.168.1.0/24`, the most common default there is, her REPLY to my
+        192.168.1.10 leaves through HER LAN instead of the tunnel: perfect handshake, healthy
+        `wg show`, and SSH and Moonlight simply never answer. The fix is a MASQUERADE on the router
+        for traffic toward 10.10.10.6, so she sees the client as 10.10.10.1, and it also means her
+        `AllowedIPs` never needs my LAN in it. Still to apply: open-items.
+      • `router-ssot` GAINED TWO CHECKS AND FIXED A HOLE. dnsmasq answers a local name through two
+        mechanisms and the checker read only `dhcp.@dnsmasq[0].address`, missing the `config domain`
+        section that LuCI writes from the Hostnames tab; the range was also hard-wired to the LAN
+        while this answer lives in the tunnel. The eighth check is the other half of that value (a
+        host declared at a tunnel address needs a peer holding it), the ninth forbids any DNAT into
+        `vpnSubnet`, and writing the ninth uncovered that `moonlight()` read only ANONYMOUS
+        redirect sections, so a `Moonlight-HTTPS` typed by hand as a NAMED section would have passed
+        every Moonlight check in silence.
+      • SUNSHINE WENT IN BY `winget`, and it is the SAME build this repo already measured
+        (2026.516.143833), so the derived port list transferred with no adjustment. `packet_size`
+        1024 for the same tunnel reason, `fec_percentage` 30, and `max_bitrate` at a deliberately
+        conservative 10000, since the bottleneck out of there is HER upload and nobody has measured
+        it.
+      • THE ENCODER IS H.264 AND THE HARDWARE ARGUMENT WAS WRONG. I wrote "HEVC is the only step up,
+        turn it on in the client", reasoning that Kaby Lake-R has an HEVC encoder. Its own log:
+        `hevc_qsv` refused with "some encoding parameters are not supported by the QSV runtime" even
+        after Sunshine's fallback retry, `av1_qsv` did not open, and the verdict was
+        `Found H.264 encoder: h264_qsv [quicksync]`. What refuses is the QSV RUNTIME on a 2023
+        driver, not the silicon. The encoder list is read off the log, never inferred from the GPU.
+      • THE INSTALLER OPENS THE FIREWALL FOR THE WHOLE PROGRAM: two rules, `TCP/Any` and `UDP/Any`,
+        remote `Any`, every profile, for `sunshine.exe`. Not ports, the program. That is exactly
+        what the machine's own script anticipated, and it means "run the firewall script again"
+        belongs after every Sunshine UPDATE, not just after the install.
+      • TWO OWNERS ON `sunshine.conf`, found before it cost anything: Sunshine writes the panel's
+        `username`, `password` and `salt` INTO that file, so a script that rewrites it wipes the
+        login. It now carries those three keys over from the live file. The first version had also
+        used `config\credentials\` as the "panel already has a user" signal, which is wrong:
+        `cacert.pem` and `cakey.pem` live there and the installer always creates them.
+      • AND THE `.gitignore` OVER THERE ATE THE CONFIG IN SILENCE. That repo ignores `*.conf` in
+        bulk so the WireGuard private key can never escape, so `git add -A` skipped
+        `sunshine/sunshine.conf` without a word and the commit went green with the file existing
+        only on disk. The fix was NOT widening the net: `!*.conf.template` was already the
+        exception, so the repo's copy took that name.
 
 - [x] Codex went to the THIRD layer the same day it arrived on the second, and the tool itself
       made the argument (19/08/2026). Hours after the entry below chose `nixpkgs-unstable` and

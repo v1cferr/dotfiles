@@ -180,6 +180,35 @@ WireGuard peer arrives. An IP cannot be derived at build time, so it is worth gu
 lease on the router: without one, changing IP breaks the panel again and you only find out when you
 try to open it.
 
+## The other direction: this machine as the CLIENT
+
+Since 22/08/2026 there is a second Sunshine in the picture and it is not this one. My mother's T480
+(Windows, `10.10.10.6`) is the HOST there and this machine is the client, through `moonlight-qt` in
+[`home/packages.nix`](../../../home/packages.nix). Everything above describes the opposite role, so
+these are the pieces that do NOT transfer:
+
+**The client's config is state, not config.** The paired hosts, the per-host resolution and the
+bitrate slider live in `~/.config/Moonlight Game Streaming Project`, which the app rewrites at
+runtime, so rule 14 says Nix declares the PACKAGE and nothing else. There is no client-side
+equivalent of `system/services/sunshine.nix`.
+
+**HEVC in the client is where the win is, and there it is not optional.** This repo measured that
+the codec is NEGOTIATED and the client picks: the FAI machine asked for `h264_vaapi` 8-bit while
+this host announced HEVC and AV1. The T480 encodes on an UHD 620, whose QuickSync does H.264 and
+HEVC and has NO AV1 encoder at all, so AV1 is not a choice to make and HEVC is the only step up
+available. Turn it on in the client for that host.
+
+**`packet_size` is the host's setting, and that host has its own tunnel.** The 1024 above was
+calibrated for the path from HERE. The T480 reaches the same router over WireGuard, so the ceiling
+is the same 1420, but the last leg is her Wi-Fi and her ISP rather than this LAN, which is the part
+that has not been measured. The protocol to measure it is the same one in
+[`guides/wireguard-moonlight.md`](../../guides/wireguard-moonlight.md), run from her side.
+
+**Nothing is forwarded to it, and that is now checked.** `router-ssot` fails on any redirect whose
+`dest_ip` is inside `vpnSubnet`, so Moonlight to that machine works through the tunnel or does not
+work at all. It is the same conclusion the direct path reached here on 19/08/2026, arrived at before
+the mistake instead of after it.
+
 ## moonlight-stats
 
 "It drops all the time" is not measurable, and the Sunshine log only says `CLIENT DISCONNECTED`,

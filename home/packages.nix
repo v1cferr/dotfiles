@@ -38,6 +38,11 @@
     rpcs3 # a PS3 emulator; the firmware and games are state, you provide them
     # CurseForge owns its package in home/apps/curseforge.nix (the login scheme handler).
 
+    # ── Remote access ──
+    # The Moonlight CLIENT, for my mother's T480: this machine is the client and that one is the
+    # host, the reverse of system/services/sunshine.nix. What to set: docs/notes/network/sunshine.md
+    moonlight-qt
+
     # ── Disk / cleanup ──
     czkawka # finds what is DISPOSABLE (duplicates, empties), where filelight only shows size
 

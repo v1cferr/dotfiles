@@ -293,6 +293,9 @@
             # expressions, zizmor for the security audit. Both are scoped to .github/workflows.
             actionlint.enable = true;
             zizmor.enable = true;
+            # Rule 17's commit GRAMMAR, at the commit-msg stage. It is the only hook here that the
+            # gate cannot run: `pre-commit run --all-files` has no message to look at.
+            convco.enable = true;
             # The three repo checkers run HERE too, not only in the gate: the whole reason
             # git-hooks.nix is an input is catching it before the commit instead of after the
             # push. pass_filenames = false because all three audit the TREE, not a file list.

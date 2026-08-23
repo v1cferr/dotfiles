@@ -286,6 +286,20 @@ plaintext BY DESIGN (see [`secrets.md`](secrets.md)). Narrowing to `^secrets/.*\
 keeps the check honest, and `.sops.yaml` at the root stays out of it for the same reason: it holds
 the recipients, not a secret.
 
+**`convco` checks the commit GRAMMAR, and it is the first hook that the gate cannot run
+(23/08/2026).** Rule 17 requires conventional commits (`feat|fix|docs|chore(scope): subject`), and
+until now that was memory: the message is written after the last hook has already passed. `convco`
+runs at the `commit-msg` stage, and git-hooks' installer arms `.git/hooks/commit-msg` on its own,
+because it installs one hook file per stage the config actually uses.
+
+MEASURED before enabling it: `convco check HEAD~40..HEAD` returns "no errors in 40 commits", so it
+comes in as a regression guard here too.
+
+THE LIMIT, and it is honest to write it down: `nix flake check` runs `pre-commit run --all-files`,
+which only runs `pre-commit`-stage hooks. There is no message inside that sandbox, so this one is
+enforced on THIS machine, at commit time, and not by the CI. Checking the grammar of what was
+already pushed would take a separate job running `convco check` over the pushed range.
+
 ### `checks.packages`: building what the gate did not cover (04/08/2026)
 
 `nix flake check` builds what is in `checks` («the derivations specified by the flake's checks output

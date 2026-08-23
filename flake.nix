@@ -380,6 +380,14 @@
               enable = true;
               entry = "${nixpkgs.legacyPackages.${system}.ruff}/bin/ruff check";
             };
+            # EXTERNAL links, `.md` only. It needs NETWORK, so it can NEVER be part of the gate
+            # (the build sandbox has none) and sits at the `manual` stage, run weekly by the CI.
+            lychee = {
+              enable = true;
+              stages = [ "manual" ];
+              files = "\\.md$";
+              settings.flags = "--max-concurrency 6 --no-progress --scheme https --scheme http";
+            };
             # Rule 17's commit GRAMMAR, at the commit-msg stage. It is the only hook here that the
             # gate cannot run: `pre-commit run --all-files` has no message to look at.
             convco.enable = true;

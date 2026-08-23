@@ -79,3 +79,28 @@ It walks `git ls-files`, so an untracked file is invisible to it. That is delibe
 should see what the repo ships, not what is lying around in the working tree), but it means a note
 you created and did not `git add` will read as a broken pointer, and the fix is `git add`, not the
 checker.
+
+## The external half: lychee, and why it can NEVER be a gate hook
+
+`docs-links` owns the pointers that stay INSIDE the repo. This owns the ones that leave it, and the
+two reasons it cannot sit in the gate are structural, not a preference: a Nix build sandbox has NO
+network, so the check would fail by construction, and a 429 from somebody's rate limiter is not a
+defect in this repo.
+
+So the `lychee` hook is declared at the `manual` stage. It lives in `flake.nix` next to every other
+linter, which keeps one definition of the linter set; the gate skips it because
+`pre-commit run --all-files` only runs `pre-commit`-stage hooks; and the canary workflow runs it
+weekly with `pre-commit run --hook-stage manual lychee --all-files`. Running it by hand is the same
+command inside the devShell.
+
+**Markdown ONLY, and that is a measurement, not a taste.** Over the `.md`: 15 external links, 278
+checks, 0 errors, with no config file and no exclude list at all. Over EVERY tracked file: 17
+errors, every one of them false, and they name themselves. The DoH endpoints in `router/uci/` answer
+400 to a GET carrying no DNS query. The loopback and the LAN address are this machine talking to
+itself, which no runner can reach. CurseForge answers 403 to anything that is not a browser, the
+same bot wall that already keeps its download URL unversioned.
+
+A URL in a code comment is a CITATION, not a reference a reader clicks, and an exclude list long
+enough to silence those is precisely the "lint you learn to ignore" that
+[`flake.md`](flake.md) argues against for the two disabled statix rules. If a `.md` ever gains a LAN
+URL, the fix is one `exclude` in a lychee config, not turning the check off.

@@ -402,6 +402,35 @@ single definition. If it ever gets annoying, the way back is this file in the hi
 `ci/stub-duo`, which is useful anyway for running `flake check` in any clone without the private
 key.
 
+### The canary: the question the gate cannot ask (23/08/2026)
+
+`.github/workflows/canary.yml`, weekly, and it exists because **its answer changes with no commit of
+mine**. The gate asks "is this tree correct". The canary asks "is the WORLD still compatible with
+this tree", which is the question that decides whether a config written in 2026 still rebuilds in
+2028.
+
+```text
+nix flake check -L --keep-going \
+  --recreate-lock-file --no-write-lock-file \
+  --override-input duo-streak-daemon path:./ci/stub-duo
+```
+
+`--recreate-lock-file` resolves EVERY input at its branch head, `--no-write-lock-file` leaves the
+committed pin untouched, and the stub keeps the private input out of it. A failure means "the next
+`update` would break you", and nothing here measures the AGE of a pin, which is exactly the
+objection recorded below against `flake-checker`: that one fights a release pin on purpose, and this
+one does not care how old the pin is.
+
+MEASURED the day it was written, locally with a warm store: 1m41s, and `all checks passed` against
+the heads of `nixos-26.05`, `nixos-unstable` and `release-26.05`. In the CI the store is cold, so it
+fetches the ~1.43 GiB of inputs first and takes minutes. That cost is why it is weekly and why it is
+a SEPARATE workflow from the gate: nothing gates on it, so a red canary is information and not a
+blocked push. GitHub emails the owner when a scheduled run fails, which is the whole alarm.
+
+The second job runs the `manual`-stage lychee hook, the external half of the link checking:
+[`link-checker.md`](link-checker.md) has the measurement that keeps it out of the gate. The two jobs
+are independent on purpose, so a rotten link cannot hide a broken input.
+
 ### Two community tools looked at and REJECTED (16/08/2026)
 
 **`DeterminateSystems/flake-checker-action`** is what the community reaches for to catch input

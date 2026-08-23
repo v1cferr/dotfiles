@@ -109,6 +109,9 @@ Two other things belong to that day, and neither is in this file: the age key fr
 [`../repo/secrets.md`](../repo/secrets.md), it is the only thing not in git) and `@snapshots`, which
 disko creates on a real install but has to be created by hand on a machine that is already up.
 
+The protocol that rehearses all of it, including this layout being formatted from scratch, is
+[`../../guides/disaster-recovery.md`](../../guides/disaster-recovery.md).
+
 ## Formatting it from scratch, in a VM (23/08/2026)
 
 `nix run .#disko-vm` builds a 24 GiB image with THIS layout, runs the real disko script against it

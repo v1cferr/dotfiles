@@ -172,9 +172,22 @@ Scope {
                 // The current mode's icon. With no font.family (the same Nerd fallback as shell.qml).
                 Text {
                     Layout.alignment: Qt.AlignVCenter
-                    text: root.mode === "mic" ? (root.micMuted ? "󰍭" : "󰍬") : root.mode === "brightness" ? root.brightIcon() : root.mode === "dpi" ? "󰍽" : root.volIcon()
+                    visible: root.mode !== "dpi"
+                    text: root.mode === "mic" ? (root.micMuted ? "󰍭" : "󰍬") : root.mode === "brightness" ? root.brightIcon() : root.volIcon()
                     color: ((root.mode === "mic" && root.micMuted) || (root.mode === "volume" && root.sinkMuted)) ? Theme.colRed : Theme.colAccent
                     font.pixelSize: 26
+                }
+
+                // DPI mode: the Razer mark itself, since no Nerd Font ships one and a generic mouse
+                // glyph would say less than the logo of the thing that actually changed.
+                Image {
+                    Layout.alignment: Qt.AlignVCenter
+                    Layout.preferredWidth: 26
+                    Layout.preferredHeight: 26
+                    visible: root.mode === "dpi"
+                    source: "root:/assets/razer.svg"
+                    sourceSize: Qt.size(26, 26) // rasterize AT the drawn size, or the SVG comes out soft
+                    fillMode: Image.PreserveAspectFit
                 }
 
                 // VOLUME mode: a bar plus a percentage

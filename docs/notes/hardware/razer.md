@@ -6,6 +6,17 @@ mode in `home/desktop/quickshell/osd/Osd.qml`.
 The goal was the thing Synapse does on Windows: press the DPI button under the scroll wheel and
 see the new value on screen. The result does exactly that, with **no kernel module anywhere**.
 
+## There is no official Razer driver to use
+
+Worth stating plainly, because it is the first thing anyone asks. **Razer ships no Linux driver
+and no Linux Synapse.** Synapse is Windows and macOS only, and the company has never published a
+driver for these peripherals on Linux. So "use the official driver instead" is not an option that
+was passed over, it is an option that does not exist.
+
+What people mean by "the Razer driver on Linux" is openrazer, which is a COMMUNITY project that
+reverse engineered the USB protocol. It is the de facto standard and it is the right thing to
+reach for first. It is also, on this kernel, unbuildable.
+
 ## openrazer is OUT, and it is not a configuration problem
 
 `hardware.openrazer.enable` exists in nixpkgs 26.05 and the module is fine. The DRIVER does not
@@ -132,6 +143,12 @@ repo has to be numbered below 73 for the same reason.
 already use, so the DPI toast is the same widget as volume and brightness rather than a second
 notification system. The push is best effort: if Quickshell is not up, the watcher logs and
 carries on, because the OSD is a nicety and not a reason to take the watcher down.
+
+The icon is the Razer mark in `assets/razer.svg`, and it is the one thing in the OSD that is an
+IMAGE rather than a Nerd Font glyph, because no Nerd Font ships that logo. Its `#44D62C` is the
+brand green on purpose and does NOT come from the Nix palette: it identifies the device, so
+following the theme accent would make it a generic green blob. `sourceSize` is pinned to the drawn
+size, or Qt rasterizes the SVG at its natural size and scales it down soft.
 
 ## The history entry that said this was obsolete
 

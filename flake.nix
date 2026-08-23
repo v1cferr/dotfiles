@@ -275,6 +275,14 @@
             # It covers ./scripts because owfetch.sh runs in ash on OpenWrt, so no derivation wraps it: it
             # would otherwise be the only .sh here running on SOMEONE ELSE'S machine with no check.
             shellcheck.enable = true;
+            # The ENTRY is overridden to read ./.markdownlint.jsonc, the same file the editor reads:
+            # the hook's own `settings.configuration` would be a 2nd owner of the ruleset (rule 14).
+            markdownlint = {
+              enable = true;
+              entry = "${
+                nixpkgs.legacyPackages.${system}.markdownlint-cli
+              }/bin/markdownlint --config .markdownlint.jsonc";
+            };
             # The three repo checkers run HERE too, not only in the gate: the whole reason
             # git-hooks.nix is an input is catching it before the commit instead of after the
             # push. pass_filenames = false because all three audit the TREE, not a file list.

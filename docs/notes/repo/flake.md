@@ -258,6 +258,21 @@ rename removes.
 Without this hook, the only `.sh` in the repo that runs on SOMEONE ELSE'S machine would be the only
 one with no verification.
 
+**The markdownlint hook has its ENTRY overridden, so the ruleset keeps ONE owner (23/08/2026).**
+The built-in hook builds a config out of its own `settings.configuration` and passes
+`-c <that generated json>`, which would give the rules two owners (rule 14): the
+`.markdownlint.jsonc` the editor reads and a Nix attrset nobody ever opens. Reading the file back
+with `fromJSON (readFile ./.markdownlint.jsonc)` is not a way out either, because the file is JSONC
+and a `//` comment breaks `fromJSON`. Overriding the entry to `--config .markdownlint.jsonc` keeps
+the single file, and the hook runs with cwd at the root, the same reason statix finds
+`./statix.toml`.
+
+MEASURED before enabling it: `markdownlint` over the 73 tracked `.md` returned 0 findings, so this
+comes in as a REGRESSION GUARD and not as a cleanup. Until then the `.markdownlint.jsonc` was
+config with no executable owner: the editor obeyed it, and nothing checked the CI or a commit made
+from another machine. 73 `.md` are the most valuable thing in this repo and they were the least
+verified part of it.
+
 ### `checks.packages`: building what the gate did not cover (04/08/2026)
 
 `nix flake check` builds what is in `checks` («the derivations specified by the flake's checks output

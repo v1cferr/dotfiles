@@ -142,3 +142,4 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [link-checker](repo/link-checker.md) | what keeps these pointers from rotting |
 | [dead-config](repo/dead-config.md) | what is declared and never used, and the seven checks |
 | [router-ssot](repo/router-ssot.md) | the values the router repeats, and who guards them |
+| [prose-style](repo/prose-style.md) | rule 17's bans, and what counts as a literal instead of prose |

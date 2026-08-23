@@ -337,6 +337,14 @@ here, so the hook installs itself in any fresh clone.
 `enabledPackages` brings statix, deadnix and nixfmt at the version the hooks use, so running them by
 hand inside the shell is identical to what the hook will run.
 
+**A NEW hook does not exist locally until the shellHook runs AGAIN**, measured on 23/08/2026 while
+adding these ones. The installer compares before writing (see [`.envrc`'s
+comment](../../../.envrc)), so a `git commit` from a shell whose direnv had not reloaded yet ran the
+OLD `.pre-commit-config.yaml`, and a message the new commit-msg hook refuses went in on the first
+try. `nix develop --command true` forces the reinstall, and `git reset --soft HEAD~1` is the way
+back. Worth knowing because it looks like the hook does not work, when the hook is simply not
+installed yet.
+
 **`mkShellNoCC` and NOT `mkShell`**: nothing here compiles C, they are Nix linters and the LSP.
 `mkShell` drags in the stdenv with the cc/binutils wrapper, and the VISIBLE effect is direnv dumping
 a paragraph of `export +AR +AS +CC +CXX +LD +NM +OBJCOPY +RANLIB +NIX_CFLAGS_COMPILE

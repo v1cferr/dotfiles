@@ -171,6 +171,7 @@
         curseforge-fix-perms = final.callPackage ./pkgs/curseforge-fix-perms.nix { }; # +x on what the app unpacks
         razer-dpi = final.callPackage ./pkgs/razer-dpi.nix { }; # the Razer mouse's live DPI, over hidraw
         docs-links = final.callPackage ./pkgs/docs-links.nix { }; # it fails when a docs/ pointer breaks
+        prose-style = final.callPackage ./pkgs/prose-style.nix { }; # rule 17's bans, in prose and in a message
         dead-config = final.callPackage ./pkgs/dead-config.nix { }; # it fails on declared-and-unused
         router-ssot = final.callPackage ./pkgs/router-ssot.nix { }; # it fails when the router's mirror diverges
       };
@@ -248,6 +249,7 @@
             curseforge-bump # ./pkgs: same, shellcheck at build time
             curseforge-fix-perms # ./pkgs: same
             docs-links # ./pkgs: the build IS the script's flake8; the CHECK below runs it
+            prose-style # ./pkgs: same flake8 at build time; the HOOKS below run it, in two modes
             dead-config # ./pkgs: same, and the CHECK below runs it too
             router-ssot # ./pkgs: same, and the CHECK below runs it too
             curseforge # ./pkgs: the official AppImage (outside the CHECK below, the why is there)
@@ -296,6 +298,24 @@
             # Rule 17's commit GRAMMAR, at the commit-msg stage. It is the only hook here that the
             # gate cannot run: `pre-commit run --all-files` has no message to look at.
             convco.enable = true;
+            # Rule 17's three BANS, in the TREE: no em dash, no emoji, and a quoted literal is the
+            # exception. pass_filenames = false because it audits the tree, like the three below.
+            prose-style = {
+              enable = true;
+              name = "prose-style";
+              entry = "${self.packages.${system}.prose-style}/bin/prose-style";
+              language = "system";
+              pass_filenames = false;
+            };
+            # The SAME script over the MESSAGE, where it also refuses a Co-Authored-By trailer.
+            # pre-commit appends the message file, which is the argument the mode needs.
+            prose-style-commit-msg = {
+              enable = true;
+              name = "prose-style (commit message)";
+              entry = "${self.packages.${system}.prose-style}/bin/prose-style --commit-msg";
+              language = "system";
+              stages = [ "commit-msg" ];
+            };
             # The three repo checkers run HERE too, not only in the gate: the whole reason
             # git-hooks.nix is an input is catching it before the commit instead of after the
             # push. pass_filenames = false because all three audit the TREE, not a file list.

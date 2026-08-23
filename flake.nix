@@ -357,6 +357,18 @@
             # expressions, zizmor for the security audit. Both are scoped to .github/workflows.
             actionlint.enable = true;
             zizmor.enable = true;
+            # The 8 Hyprland `.lua`, type-checked by the LSP itself, reading THE SAME ./.luarc.json
+            # the editor reads: that file is plain JSON, so `fromJSON` can (markdownlint's cannot).
+            lua-ls = {
+              enable = true;
+              settings.configuration = builtins.fromJSON (builtins.readFile ./.luarc.json);
+            };
+            # `scripts/router-sync.py`, the only loose .py and the one that WRITES to the router.
+            # `check` with no --fix on purpose: a linter that rewrites Python is not a formatter.
+            ruff = {
+              enable = true;
+              entry = "${nixpkgs.legacyPackages.${system}.ruff}/bin/ruff check";
+            };
             # Rule 17's commit GRAMMAR, at the commit-msg stage. It is the only hook here that the
             # gate cannot run: `pre-commit run --all-files` has no message to look at.
             convco.enable = true;

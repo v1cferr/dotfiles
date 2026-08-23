@@ -286,6 +286,21 @@ plaintext BY DESIGN (see [`secrets.md`](secrets.md)). Narrowing to `^secrets/.*\
 keeps the check honest, and `.sops.yaml` at the root stays out of it for the same reason: it holds
 the recipients, not a secret.
 
+**The Lua and the loose Python stopped being the uncovered corner (23/08/2026).** Before this the
+gate covered `.nix`, `.sh`, `.md` and the workflow, and 36 files had no checker of their own.
+
+`lua-ls` is the LSP itself in `--check` mode over the 8 Hyprland `.lua`, and it reads
+`settings.configuration = fromJSON (readFile ./.luarc.json)`, so the editor and the hook share ONE
+file. That is the ending markdownlint could not have: `.luarc.json` is plain JSON, while
+`.markdownlint.jsonc` has `//` comments that break `fromJSON`. MEASURED before enabling it:
+"Diagnosis completed, no problems found" on all 8. The hook has `files = "\\.lua$"`, so a commit
+that touches no Lua does not pay for it.
+
+`ruff` covers `scripts/router-sync.py`, the only loose `.py` in the repo and the one that WRITES to
+the router; the Python inside `pkgs/*.nix` already gets flake8 at build time through `writers`. The
+entry is overridden to plain `check`, dropping the hook's default `--fix`: nixfmt rewriting layout
+is one thing, a linter rewriting Python at commit time is another. MEASURED: "All checks passed!".
+
 **`convco` checks the commit GRAMMAR, and it is the first hook that the gate cannot run
 (23/08/2026).** Rule 17 requires conventional commits (`feat|fix|docs|chore(scope): subject`), and
 until now that was memory: the message is written after the last hook has already passed. `convco`

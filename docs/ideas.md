@@ -177,3 +177,57 @@ booting, is a good idea whatever harness ends up winning.
 
 A tagged release that is not a release candidate, with the `npx` quickstart booting exactly
 as written. Until then, the local-model half of this is served by Ollama on its own.
+
+## The CI, and what would make it last (researched on 23/08/2026)
+
+The question behind this section is not "is NixOS good today", it is whether this repo can keep
+being the SSOT of my infrastructure until 2032. The blind spots of the GATE were closed the same
+day (see the [august history](history/2026/08-august.md) and
+[notes/repo/flake.md](notes/repo/flake.md)); what is below was researched and NOT decided, in the
+order the research put it.
+
+- **A Nix store cache in the CI**: `nix-community/cache-nix-action@v7`, which saves and restores
+  `/nix` through GitHub's own cache. It is the option with NO vendor, which is what keeps the
+  decision recorded against the Determinate installer intact (`magic-nix-cache` and FlakeHub Cache
+  fail on exactly that count). Today the run fetches ~1.43 GiB of inputs and recompiles the btop
+  fork every time. THE CAVEATS, and they are the reason this is not a one-liner: 10 GB of cache per
+  repository with LRU eviction, and `gc-max-store-size` is mandatory or the cache grows until it is
+  useless.
+- **A weekly CANARY, scheduled and non-blocking.** This is the item that most answers the 2032
+  question, and it is NOT the `flake-checker` that this repo already rejected: that one measures the
+  AGE of the pin, which fights a release pin on purpose. This measures BREAKAGE, with the lock
+  untouched:
+
+  ```text
+  nix flake check --override-input duo-streak-daemon path:./ci/stub-duo \
+    --override-input nixpkgs github:NixOS/nixpkgs/nixos-26.05 \
+    --override-input nixpkgs-unstable github:NixOS/nixpkgs/nixos-unstable
+  ```
+
+  It answers "would the next `update` break me", and Nix declines to write the lock when there are
+  overrides, which is the wanted behavior here. The risk in 2032 is not Nix dying, it is an option
+  rename landing silently between two updates of mine.
+- **`system.build.toplevel` in the CI: researched and NOT recommended.** A free runner has ~20 GB
+  free and this closure drags Quickshell (Qt/C++) in, while the cache above caps at 10 GB. The three
+  ways out are `nix-fast-build --skip-cached` plus an action that reclaims disk, a self-hosted
+  runner on the Kingston itself (attractive, since the machine is always up, but on a PUBLIC repo it
+  has to be restricted to `push` and never `pull_request`, or a fork runs code on my PC), or not
+  doing it. Rule 8 already requires `nixos-rebuild build` before the switch, which is the same
+  guarantee bought with hardware I already own.
+- **Automating the `update`**: `update-flake-lock` v3 no longer installs Determinate Nix, so the
+  vendor objection is gone, and Renovate does update `flake.lock`. Both trip on the PRIVATE input:
+  they would need the deploy key of Plan B. Rule 13 keeps `update` as the USER, and the canary above
+  is what says when it is worth running.
+- **The 27 `.qml` and the 8 `.lua` have no checker.** A typo in `Bar.qml` only shows up when the bar
+  breaks, and it hot-reloads, which delays the discovery even more. `luacheck`/`selene` on the Lua
+  is the cheap half; `qmllint` needs the Quickshell types on the import path or it turns into
+  "unresolved type" noise, so it is a separate commit.
+- **Tags for the milestones.** There are two tags in the repo and neither marks a state. Tagging the
+  cutover, the GPU swap and the day impermanence lands makes "the state that worked" addressable,
+  which is worth more the further 2032 gets.
+- **A disaster-recovery drill, quarterly**, next to the test protocols already in
+  [guides/](guides/): clean clone, age key from the vault, rebuild in a VM. The right tool is
+  `nix build .#nixosConfigurations.nixos-kingston.config.system.build.vmWithDisko`, and NOT
+  `nixos-rebuild build-vm`, which is known to hang waiting for the root partition on a disko layout
+  (disko issue #668). It is the only thing that turns "the repo reconstructs my machine" from a
+  belief into evidence.

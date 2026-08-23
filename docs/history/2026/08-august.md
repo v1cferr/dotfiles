@@ -1,6 +1,50 @@
 # History: august 2026
 
-78 entries. Index in [README.md](../README.md).
+79 entries. Index in [README.md](../README.md).
+
+- [x] The gate stopped depending on my memory in five places (23/08/2026). The question that
+      started it was not "which linter is missing", it was whether this repo can keep being the
+      SSOT of my infrastructure until 2032, and the answer that came out of the research is that
+      the risk is not Nix dying: it is a rule of mine that only exists because I remember it. Five
+      of those became executable, and every one of them was MEASURED before being turned on, so
+      all five land as regression guards and not as cleanups.
+      • MARKDOWNLINT, over 73 `.md`: 0 findings. The `.markdownlint.jsonc` had existed since the
+        docs split with no executable owner, so the editor obeyed it and nothing else did. The
+        hook's ENTRY is overridden to read that same file, because its `settings.configuration`
+        would generate a second config and give the ruleset two owners (rule 14), and `fromJSON`
+        cannot read the file back: it is JSONC and the `//` comments break the parse.
+      • THE SOPS HOOK, and its default filter is WRONG here: `^secrets` flags
+        `secrets/bitwarden-secrets.json`, which is the index of names and is plaintext by design.
+        Narrowed to the yaml. What it buys is the one accident rule 12 cannot survive and neither
+        of the existing guards catches: a `secrets.yaml` staged in the clear after a `sops -d`.
+      • THE WORKFLOW GOT LINTED for the first time, with actionlint and zizmor, and it was the
+        only executable file in the repo with no checker. Three findings, all fixed: the two
+        actions were pinned BY TAG (a pointer the author can move, the same class of trap as VS
+        Code's `/latest/`, so now pinned by hash with the tag in a comment), the job had no
+        `permissions:` block and inherited write scope for the token, and `checkout` was leaving
+        the token in `.git/config` for every later step.
+      • RULE 17 BECAME EXECUTABLE, which is the one I care about most: `convco` for the commit
+        grammar ("no errors in 40 commits" before it went in) and `pkgs/prose-style.nix` for the
+        three mechanical bans, in the tree and in the message. The history is the argument: 3
+        commits carry a `Co-Authored-By` trailer, written before the rule existed. This stops the
+        fourth.
+      • THE NAIVE VERSION OF THE PROSE CHECK IS WRONG, and measuring came first: all 18 em dashes
+        in the tree are LEGITIMATE, since rule 17's own exception is the em dash as a literal. So
+        a code span, a fenced block, a quoted glyph of at most 3 chars and a table cell whose whole
+        content is the dash all drop out, and in code only the comment counts, with the string
+        literals stripped FIRST, which is also what keeps a hex color from reading as the start of
+        a `#` comment. 236 files of prose, 0 findings.
+      • THE TRAP THAT BIT ME WHILE DOING IT: a new hook does not exist locally until the devShell
+        shellHook runs again (the installer compares before writing), so my own probe message with
+        an em dash AND a trailer went in on the first attempt, refused only after
+        `nix develop --command true`. It looks like the hook is broken when the hook is simply not
+        installed yet.
+      • WHAT WAS RESEARCHED AND NOT DONE is in [ideas.md](../../ideas.md): the store cache with no
+        vendor, the weekly canary that measures BREAKAGE instead of the age of the pin, why
+        `system.build.toplevel` on a free runner is not worth it, the QML and Lua that still have
+        no checker, the milestone tags and the disaster-recovery drill in a VM. The two follow-ups
+        this day created (dependabot for the hashes, and the message being checked only here) are
+        in [open-items.md](../../open-items.md).
 
 - [x] The T480 ended the day with TWO paths instead of one, and a reboot proved the unattended one
       (22/08/2026, closing the day). What forced the second path was a measurement, not a

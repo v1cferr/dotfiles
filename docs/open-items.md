@@ -10,6 +10,25 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
+- [ ] The two follow-ups the gate's hardening left behind (23/08/2026). Both are consequences of
+      what landed that day, written down here so they do not become the drift rule 16 describes.
+      • DEPENDABOT for the actions. `nix.yml` now pins `checkout` and `install-nix-action` BY HASH,
+        which is rule 13 applied to the CI, and a hash does not follow a security release of the
+        action. The piece that closes it is a `.github/dependabot.yml` with the `github-actions`
+        ecosystem, weekly, which bumps the hash AND the tag kept in the trailing comment.
+      • THE COMMIT MESSAGE IS ONLY CHECKED HERE. `convco` and `prose-style` run at the commit-msg
+        stage, which `nix flake check` cannot reach: there is no message inside that sandbox. So a
+        commit written on another machine, or with `--no-verify`, is unchecked. The fix is a CI step
+        running both over the PUSHED RANGE, and it is only worth doing the day a second machine
+        starts writing to this repo.
+
+- [ ] The page count in `docs/notes/README.md` has drifted (measured 23/08/2026). The Conventions
+      section says "16 of the 51 pages cross the `system/` and `home/` boundary", and there are 58
+      pages today. The number is not decoration, it is the measurement that REJECTED mirroring the
+      tree, so fixing it means recounting both halves (how many pages cross, how many reference two
+      or more modules) and not just editing the total. Left as an item instead of a blind edit,
+      because a re-measured number is worth something and a guessed one is worse than the stale one.
+
 - [~] The T480 before it leaves the house (opened 22/08/2026). It is my mother's machine, it goes
       to another city, and after that every mistake here costs a phone call instead of a minute.
       The Windows side lives in that machine's OWN repo; what is listed here is either this repo's
@@ -212,6 +231,27 @@ finished work. What was closed is in the [august history](history/2026/08-august
       `RemainAfterExit = false` on systemd-tmpfiles-resetup), otherwise a service with
       DynamicUser breaks. And `@snapshots` (btrbk) survives by design: it is top-level, it does
       not live inside `@`.
+      ── HOW TO DE-RISK THE SWITCH (23/08/2026), because the fear here is the correct one ──
+      The premise of this item is a persistence list that has to be right on the FIRST boot, and it
+      does not have to be: the ORDER is what makes a wrong list cheap.
+      • IN A VM FIRST, and there is a tool for exactly this:
+        `nix build .#nixosConfigurations.nixos-kingston.config.system.build.vmWithDisko` formats
+        VIRTUAL disks with THIS repo's disko layout, so the same `@ @home @nix @persist` exist and
+        a wrong list costs an image instead of the 132 GiB Jellyfin library. `nixos-rebuild
+        build-vm` is the WRONG tool here: with a disko layout it hangs waiting for the root
+        partition (disko issue #668).
+      • BTRFS GIVES A ROLLBACK THAT TMPFS CANNOT, and that is what dissolves the fear: the wipe
+        is `snapshot @ -> @-old-N` BEFORE restoring `@-blank`, keeping the last N roots. A path
+        forgotten on the list stops being a loss and becomes "mount the previous snapshot and copy
+        what was missing". Retaining N is the most important line of the wipeScript, more than the
+        wipe itself.
+      • ONE BOOT RISK PER COMMIT, which extends what is already written above: (1) the script
+        plus `dont-wipe`, inert; (2) systemd initrd alone, reboot, confirm; (3) `/persist` with
+        `neededForBoot` and the declared list, reboot WITHOUT the wipe, which proves the binds work
+        while the system is still persistent; (4) only then the wipe.
+      • PROVE THE RESTIC RESTORE BEFORE ANY OF IT. Rule 6 says state lives in restic and
+        impermanence is that rule becoming law. Turning the law on without ever having restored
+        something from that backup is the one version of this that costs real money.
 
 - [ ] Turn off every LED on every piece of hardware in AFK mode. Nothing is declared for this
       yet (`dead-config` confirms there is no OpenRGB anywhere in the tree). The blocker is the

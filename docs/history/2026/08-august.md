@@ -1,6 +1,46 @@
 # History: august 2026
 
-82 entries. Index in [README.md](../README.md).
+83 entries. Index in [README.md](../README.md).
+
+- [x] The disk layout got formatted from scratch in a VM, and it found a first-boot bug that had
+      been there since the cutover (23/08/2026, last piece of the day). The layout is the one thing
+      in this repo that cannot be fixed after the fact, and until today nothing checked it.
+      • `nix run .#disko-vm` builds a 24 GiB image, runs the REAL disko script against it, boots the
+        config on the result and PRINTS a report: subvolumes, btrfs mounts with their real options,
+        the ESP, the active swap, and any failed unit with its journal. A console you cannot log into
+        shows nothing, so the report is the interface.
+      • THE REPORT PROVED THIS MORNING'S CLAIM IN BOTH DIRECTIONS. `@swap` came up with `relatime`
+        while every other subvolume has `noatime`, because atime is a VFS flag and IS per mount. And
+        `@swap` came up WITH `compress=zstd:1`, which this config never asks for there, because
+        compression is a btrfs option and the FIRST mount decides for the whole filesystem. The
+        swapfile works anyway, which proves what matters is `mkswapfile`'s attributes on the FILE.
+      • THE BUG: `home-manager-v1cferr.service` failed with `cd: /home/v1cferr: No such file or
+        directory` and `/home` was empty. The chain, every step measured inside the VM: 26.05 boots
+        with the systemd initrd by default and the WHOLE activation runs there (stage 2's
+        `nixos-activation.service` logs literally "-- No entries --"); at that point only the
+        `neededForBoot` filesystems are mounted and `@home` is not one; so `createHome` created
+        `/home/v1cferr` on `@`; stage 2 then mounted `@home` over `/home` and MASKED it. Proven by
+        mounting `subvolid=5` inside the VM and finding `drwx------ v1cferr users @/home/v1cferr`
+        sitting there invisible.
+      • WHY IT NEVER SHOWED UP HERE: the cutover copied files into `@home`, so the directory existed,
+        and any later `switch` runs the activation with everything mounted. It only bites on a FIRST
+        boot after a fresh install, which is exactly the disaster-recovery path. A machine restored
+        from this repo would have come up with an empty home and a broken home-manager.
+      • THE FIX is `systemd.tmpfiles.rules` in `system/core/users.nix`, because tmpfiles runs in
+        STAGE 2, after `local-fs.target`. The path is read from `config.users.users.v1cferr.home`
+        instead of becoming a ninth copy of the literal. Verified in the same VM: home in the right
+        place, nothing masked underneath, zero failed units.
+      • THE BOOT TEST CANNOT CATCH IT, and that is why both VMs exist: `vm-boot.nix` clears
+        `disko.devices`, so there is no separate `/home` for anything to mask.
+      • TWO MORE THINGS THE REPORT SHOWED, neither of them declared anywhere here: systemd creates
+        `srv`, `var/tmp`, `var/lib/machines` and `var/lib/portables` as subvolumes INSIDE `@` (which
+        is the /srv risk the impermanence item flags, now with evidence), and `space_cache=v2` is on
+        by default.
+      • AND THE AGE KEY QUESTION got answered in a guide instead of a `.env`: the key does not enter
+        the repo, because this one is public, a working-tree key is one `git add -f` from being
+        published with no way to rotate out of it, and `$HOME` is inside restic's reach. The drill
+        reads it into the ENVIRONMENT or a tmpfs, which is the same rule `sync-secrets.sh` already
+        follows with `sudo cat`.
 
 - [x] The CI stopped paying full price on every push, and the hash pins got a bot (23/08/2026,
       after the canary). Two small pieces that only make sense together with what came before them.

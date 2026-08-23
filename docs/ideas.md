@@ -216,10 +216,10 @@ order the research put it.
 - **Tags for the milestones.** There are two tags in the repo and neither marks a state. Tagging the
   cutover, the GPU swap and the day impermanence lands makes "the state that worked" addressable,
   which is worth more the further 2032 gets.
-- **The disaster-recovery drill, and stage 1 of it LANDED the same day**: `nix build .#vm-boot`
-  boots this host in QEMU weekly and asserts the config was applied
-  ([notes/repo/vm-boot.md](notes/repo/vm-boot.md)). What is still an idea is the other half, the one
-  that needs a human: `nix build .#nixosConfigurations.nixos-kingston.config.system.build.vmWithDisko`
-  formats virtual disks with the REAL disko layout, and a clean clone plus the age key from the vault
-  is what proves the piece that is not in git. `nixos-rebuild build-vm` is the wrong tool for the
-  disk half, it hangs waiting for the root partition on a disko layout (disko issue #668).
+- **DONE the same day, all three stages**: D1 is the weekly boot test, D2 is `nix run .#disko-vm`
+  (the real layout formatted from scratch, with a report), and D3 is the secrets rehearsal from a
+  clean clone plus the vault. The protocol is
+  [guides/disaster-recovery.md](guides/disaster-recovery.md). What remains an idea is automating D3,
+  which would need a throwaway age key and a fake `secrets.yaml` so a test can prove the sops
+  PLUMBING without ever touching a real value; today those two activation failures sit in the boot
+  test's ALLOWED list instead.

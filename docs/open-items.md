@@ -248,6 +248,11 @@ finished work. What was closed is in the [august history](history/2026/08-august
       • PROVE THE RESTIC RESTORE BEFORE ANY OF IT. Rule 6 says state lives in restic and
         impermanence is that rule becoming law. Turning the law on without ever having restored
         something from that backup is the one version of this that costs real money.
+      • MEASURED 23/08/2026 IN THE DISKO VM, and it confirms the /srv worry with evidence:
+        systemd creates `srv`, `var/tmp`, `var/lib/machines` and `var/lib/portables` as SUBVOLUMES
+        INSIDE `@`, so a wipe of `@` takes them along. `btrfs subvolume list /` on a fresh install
+        shows them at "top level 256", which is `@` itself. `/persist` also still has
+        `neededForBoot = false`, and it has to be true before the wipe lands.
 
 - [ ] Turn off every LED on every piece of hardware in AFK mode. Nothing is declared for this
       yet (`dead-config` confirms there is no OpenRGB anywhere in the tree). The blocker is the

@@ -186,43 +186,46 @@
         });
       };
 
+      # The modules EVERY host gets, hoisted OUT of mkHost so the boot test can build the same list
+      # plus its own overrides: one definition, two consumers, instead of a copy that drifts.
+      commonModules = [
+        # `hostPlatform` and not nixosSystem's `system`, which nixpkgs itself calls legacy and zeroes:
+        # its default is builtins.currentSystem, which is IMPURE. As a module option it is hermetic.
+        { nixpkgs.hostPlatform = system; }
+
+        # unstable.* plus ./pkgs plus claude-desktop, as an OVERLAY so it builds against THIS base and
+        # adds no 3rd nixpkgs. The keyring one comes AFTER, since it re-wraps their package.
+        {
+          nixpkgs.overlays = [
+            overlayUnstable
+            overlayVscodeTarball # AFTER overlayUnstable: it patches that `unstable.vscode`
+            overlaySpotifyNoZygote # same: bakes in the flag without which Spotify does not open
+            overlayBtopXe # temporary: Intel Xe GPU (Arc B580) until PR #1457 merges
+            overlayLocalPkgs
+            inputs.claude-desktop.overlays.default
+            overlayClaudeKeyring
+          ];
+        }
+        sops-nix.nixosModules.sops
+        disko.nixosModules.disko # inert on hosts with no disko.devices
+        ./system
+
+        home-manager.nixosModules.home-manager
+        {
+          home-manager.useGlobalPkgs = true; # uses the system nixpkgs (+ overlay)
+          home-manager.useUserPackages = true; # installs into the user profile
+          home-manager.extraSpecialArgs = { inherit inputs; };
+          home-manager.users.v1cferr = import ./home;
+        }
+      ];
+
       # A host = the COMMON modules plus its own FOLDER. hostname/disks/kernel/monitors/stateVersion
       # and the my.services panel belong to the HOST; system/ only declares the options.
       mkHost =
         hostModule:
         nixpkgs.lib.nixosSystem {
           specialArgs = { inherit inputs; };
-          modules = [
-            # `hostPlatform` and not nixosSystem's `system`, which nixpkgs itself calls legacy and zeroes:
-            # its default is builtins.currentSystem, which is IMPURE. As a module option it is hermetic.
-            { nixpkgs.hostPlatform = system; }
-
-            # unstable.* plus ./pkgs plus claude-desktop, as an OVERLAY so it builds against THIS base and
-            # adds no 3rd nixpkgs. The keyring one comes AFTER, since it re-wraps their package.
-            {
-              nixpkgs.overlays = [
-                overlayUnstable
-                overlayVscodeTarball # AFTER overlayUnstable: it patches that `unstable.vscode`
-                overlaySpotifyNoZygote # same: bakes in the flag without which Spotify does not open
-                overlayBtopXe # temporary: Intel Xe GPU (Arc B580) until PR #1457 merges
-                overlayLocalPkgs
-                inputs.claude-desktop.overlays.default
-                overlayClaudeKeyring
-              ];
-            }
-            sops-nix.nixosModules.sops
-            disko.nixosModules.disko # inert on hosts with no disko.devices
-            ./system
-            hostModule
-
-            home-manager.nixosModules.home-manager
-            {
-              home-manager.useGlobalPkgs = true; # uses the system nixpkgs (+ overlay)
-              home-manager.useUserPackages = true; # installs into the user profile
-              home-manager.extraSpecialArgs = { inherit inputs; };
-              home-manager.users.v1cferr = import ./home;
-            }
-          ];
+          modules = commonModules ++ [ hostModule ];
         };
     in
     {
@@ -256,6 +259,65 @@
             btop # nixpkgs + the src from PR #1457 (Intel Xe GPU): here so the check COMPILES the fork
             ;
           inherit (pkgs.unstable) vscode; # the unstable recipe with the SRC from the official tarball
+
+          # THE BOOT TEST: it boots THIS host in QEMU and reads which units actually came up. A
+          # PACKAGE and not a check on purpose, the gate reason is in docs/notes/repo/vm-boot.md
+          vm-boot = pkgs.testers.runNixOSTest {
+            name = "vm-boot";
+            node.specialArgs = { inherit inputs; };
+            # runNixOSTest pins the node's pkgs and makes `nixpkgs.*` READ-ONLY; this config sets
+            # both (the overlays here, allowUnfree in system/core), so the node builds its own.
+            node.pkgsReadOnly = false;
+            nodes.machine.imports = commonModules ++ [
+              ./hosts/nixos-kingston
+              ./hosts/nixos-kingston/vm-boot.nix
+            ];
+            testScript =
+              let
+                # Units that CANNOT come up inside a VM, each with its reason. Empty, and emptying
+                # it is the goal: same contract as the other checkers' ALLOWED.
+                allowedUnits = [ ];
+                # ACTIVATION snippets, which do NOT show up in `systemctl --failed`: the first
+                # version of this test passed green while these two had already failed.
+                allowedSnippets = [
+                  # Both need /var/lib/sops-nix/key.txt, which lives OUTSIDE git by design (rule
+                  # 12). A VM with no key cannot install secrets, and that is the drill's job.
+                  "setupSecrets"
+                  "setupSecretsForUsers"
+                ];
+              in
+              ''
+                machine.wait_for_unit("multi-user.target")
+                machine.wait_for_unit("sshd.service")
+
+                # The config APPLIED, not just booted: the user, their shell, and the whole
+                # home-manager generation having been activated.
+                machine.succeed("getent passwd v1cferr | grep -q zsh")
+                machine.succeed(
+                    "systemctl show -p Result --value home-manager-v1cferr.service | grep -qx success"
+                )
+
+                out = machine.succeed(
+                    "systemctl list-units --state=failed --plain --no-legend --no-pager || true"
+                )
+                failed = [line.split()[0] for line in out.splitlines() if line.strip()]
+                print("failed units:", failed)
+                unexpected = [u for u in failed if u not in ${builtins.toJSON allowedUnits}]
+                assert not unexpected, "unexpected failed units: " + repr(unexpected)
+
+                journal = machine.succeed("journalctl -b -o cat || true")
+                snippets = sorted(
+                    {
+                        line.split("'")[1]
+                        for line in journal.splitlines()
+                        if "Activation script snippet" in line and "failed" in line
+                    }
+                )
+                print("failed activation snippets:", snippets)
+                unexpected = [s for s in snippets if s not in ${builtins.toJSON allowedSnippets}]
+                assert not unexpected, "unexpected activation failures: " + repr(unexpected)
+              '';
+          };
         };
 
       # `nix fmt`, so the standard is verifiable OUTSIDE the editor. `nixfmt-tree` and not bare nixfmt,
@@ -371,7 +433,10 @@
         # What is fragile here is packaging, and that breaks at build. curseforge is out: the notes.
         packages = nixpkgs.legacyPackages.${system}.linkFarm "checks-repo-packages" (
           nixpkgs.lib.mapAttrsToList (name: path: { inherit name path; }) (
-            removeAttrs self.packages.${system} [ "curseforge" ]
+            removeAttrs self.packages.${system} [
+              "curseforge" # a POINTER url: its hash rots on every release of theirs, the why is above
+              "vm-boot" # a whole system closure plus a QEMU run: same reason toplevel stays out
+            ]
           )
         );
       };

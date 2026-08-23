@@ -253,3 +253,37 @@ menu, so the shell speaks ONE hover language.
 
 The row's TEXT does not light up in the accent: over the lit background the accent drops to 3.83:1
 of contrast, against `colText`'s 5.97:1. Legibility beats effect.
+
+## qmllint: exactly one category, and the measurement that decided it
+
+The 27 `.qml` had no checker at all until 23/08/2026, and `nixos-rebuild build` will never be one:
+the tree reaches the session through `mkOutOfStoreSymlink` (see the hot-reload section above), so
+Nix never reads its contents. A typo shipped, and the first sign of it was a bar that did not come
+up.
+
+The obvious answer is qmllint, and MEASURED against this tree it is unusable as a whole: 2321
+findings bare, and 2267 with Quickshell's own QML types on the import path
+(`-I <quickshell>/lib/qt-6/qml`). What survives is not signal, it is a linter that does not model
+Quickshell:
+
+| Category | Count | Verdict |
+| --- | --- | --- |
+| `unqualified` | 1014 | style, and this is how Quickshell code is written |
+| `import` | 520 | it still cannot resolve part of the module tree |
+| `unresolved-type` | 366 | the same cause |
+| `uncreatable-type` | 14 | it calls `PanelWindow` not creatable, and the whole bar is made of them |
+| `incompatible-type` | 14 | it rejects `color: "transparent"`, which is valid QML |
+
+A lint that flags `PanelWindow` is a lint you learn to skip, and that is the argument
+[`../repo/flake.md`](../repo/flake.md) already records for the two statix rules that are off. So
+`pkgs/qml-syntax.nix` keeps exactly ONE category, `[syntax]`, which means a file that does not
+PARSE: 0 findings on the tree today, and it fires on a deliberately broken copy.
+
+**The discriminator is the CATEGORY, not the severity.** qmllint prints a parse failure as
+`Warning: ... [syntax]` and exits non-zero for any warning at all, so "fail on Error lines" would
+never fire and "fail on a non-zero exit" would always fire.
+
+**And the first version LIED**, which is worth recording because it looked correct: it piped
+qmllint's output into grep through a shell variable, and on 2267 lines that died with "Argument
+list too long" AND still exited 0. A check that cannot fail is worse than no check, so the output
+goes to a temp file and the grep reads the file.

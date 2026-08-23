@@ -172,6 +172,7 @@
         razer-dpi = final.callPackage ./pkgs/razer-dpi.nix { }; # the Razer mouse's live DPI, over hidraw
         docs-links = final.callPackage ./pkgs/docs-links.nix { }; # it fails when a docs/ pointer breaks
         prose-style = final.callPackage ./pkgs/prose-style.nix { }; # rule 17's bans, in prose and in a message
+        qml-syntax = final.callPackage ./pkgs/qml-syntax.nix { }; # it fails on a .qml that does not parse
         dead-config = final.callPackage ./pkgs/dead-config.nix { }; # it fails on declared-and-unused
         router-ssot = final.callPackage ./pkgs/router-ssot.nix { }; # it fails when the router's mirror diverges
       };
@@ -253,6 +254,7 @@
             curseforge-fix-perms # ./pkgs: same
             docs-links # ./pkgs: the build IS the script's flake8; the CHECK below runs it
             prose-style # ./pkgs: same flake8 at build time; the HOOKS below run it, in two modes
+            qml-syntax # ./pkgs: the build IS the wrapper's shellcheck; the HOOK below runs it
             dead-config # ./pkgs: same, and the CHECK below runs it too
             router-ssot # ./pkgs: same, and the CHECK below runs it too
             curseforge # ./pkgs: the official AppImage (outside the CHECK below, the why is there)
@@ -362,6 +364,15 @@
             lua-ls = {
               enable = true;
               settings.configuration = builtins.fromJSON (builtins.readFile ./.luarc.json);
+            };
+            # The 27 `.qml`: PARSE only. The rest of qmllint does not understand Quickshell's
+            # types and produced 2267 findings, almost all false: docs/notes/desktop/quickshell.md
+            qml-syntax = {
+              enable = true;
+              name = "qml-syntax";
+              entry = "${self.packages.${system}.qml-syntax}/bin/qml-syntax";
+              language = "system";
+              files = "\\.qml$";
             };
             # `scripts/router-sync.py`, the only loose .py and the one that WRITES to the router.
             # `check` with no --fix on purpose: a linter that rewrites Python is not a formatter.

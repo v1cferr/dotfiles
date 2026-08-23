@@ -108,3 +108,42 @@ wrong disk, which is the one mistake in this file that cannot be undone.
 Two other things belong to that day, and neither is in this file: the age key from the vault (see
 [`../repo/secrets.md`](../repo/secrets.md), it is the only thing not in git) and `@snapshots`, which
 disko creates on a real install but has to be created by hand on a machine that is already up.
+
+## Formatting it from scratch, in a VM (23/08/2026)
+
+`nix run .#disko-vm` builds a 24 GiB image with THIS layout, runs the real disko script against it
+and boots the config on the result. It is the only check of this file: the gate proves the flake
+evaluates, and nothing proved the partitioning still works, which is the one thing here that cannot
+be fixed after the fact.
+
+`hosts/nixos-kingston/vm-disko.nix` holds the three overrides that make it cheap: 24 GiB of image
+instead of 953 (`size = "100%"` follows the image), 1 GiB of swap instead of 16 (`mkswapfile`
+ALLOCATES it, so the real number would mean writing 16 GiB to check an integer), and the console on
+the terminal so the drill also works over SSH. Leaving the VM is Ctrl-A then X.
+
+**It REPORTS instead of waiting for a login**, because a console you cannot log into shows nothing:
+a systemd unit prints the subvolumes, the btrfs mounts with their real options, the ESP, the active
+swap and the failed units with their journal. What it printed on the first run:
+
+```text
+ID 256 gen 19 top level 5 path @        (plus @home @log @nix @persist @snapshots @swap)
+/       /dev/vda2[/@]      rw,noatime,compress=zstd:1,discard=async,space_cache=v2,subvol=/@
+/swap   /dev/vda2[/@swap]  rw,relatime,compress=zstd:1,discard=async,space_cache=v2,subvol=/@swap
+/boot   /dev/vda1  vfat    rw,relatime,fmask=0077,dmask=0077,...
+/swap/swapfile file 1024M
+```
+
+**That output PROVES the mount-option claim above, in both directions.** `@swap` came up with
+`relatime` while every other subvolume has `noatime`, because atime is a VFS flag and IS per mount.
+And `@swap` came up WITH `compress=zstd:1` even though this file never asks for it there, because
+compression is a btrfs option and the FIRST mount decides for the whole filesystem. The swapfile
+works anyway, which is the proof that what matters is `mkswapfile`'s attributes on the FILE.
+
+Two more things it showed, neither of them in this file: systemd creates `srv`, `var/tmp`,
+`var/lib/machines` and `var/lib/portables` as subvolumes INSIDE `@`, which matters for impermanence
+(a wipe of `@` takes `/srv` along, and that is the 132 GiB library the open item already flags); and
+`space_cache=v2` is on without being asked for, since it has been the default since 5.15.
+
+WHAT IT DOES NOT PROVE: the bootloader. The VM boots the kernel directly (`useBootLoader` is off),
+so GRUB, its Secure Boot signature and `os-prober` are outside this test. That half is still the
+BIOS plus [`../../guides/secure-boot.md`](../../guides/secure-boot.md).

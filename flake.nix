@@ -262,6 +262,17 @@
             ;
           inherit (pkgs.unstable) vscode; # the unstable recipe with the SRC from the official tarball
 
+          # THE DISK LAYOUT, formatted from scratch and booted: `nix run .#disko-vm`. The REAL
+          # disko config on a 24 GiB image, and the only check of it: docs/notes/boot-and-storage/disko.md
+          disko-vm =
+            (nixpkgs.lib.nixosSystem {
+              specialArgs = { inherit inputs; };
+              modules = commonModules ++ [
+                ./hosts/nixos-kingston
+                ./hosts/nixos-kingston/vm-disko.nix
+              ];
+            }).config.system.build.vmWithDisko;
+
           # THE BOOT TEST: it boots THIS host in QEMU and reads which units actually came up. A
           # PACKAGE and not a check on purpose, the gate reason is in docs/notes/repo/vm-boot.md
           vm-boot = pkgs.testers.runNixOSTest {
@@ -467,6 +478,7 @@
             removeAttrs self.packages.${system} [
               "curseforge" # a POINTER url: its hash rots on every release of theirs, the why is above
               "vm-boot" # a whole system closure plus a QEMU run: same reason toplevel stays out
+              "disko-vm" # building it means building a 24 GiB image, and it is interactive anyway
             ]
           )
         );

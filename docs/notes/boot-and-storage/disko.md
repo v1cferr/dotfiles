@@ -37,6 +37,17 @@ and the `+C` for those cases is declared in
 
 ## The mount options, and why these
 
+**They are ONE binding in the file, and that is not cosmetic (23/08/2026).** The options used to be
+repeated per subvolume, because disko has no inheritance, and the btrfs manual explains why 6 copies
+were worse than duplication: *"Most mount options apply to the whole filesystem and only options in
+the first mounted subvolume will take effect."* So the 5 copies outside `@` were DECORATION: editing
+`@home`'s list alone would change nothing at runtime and read as if it had. One `btrfsOptions`
+binding (rule 11) makes the truth visible and the change 1 line.
+
+The consequence to remember: what the filesystem actually runs with comes from the FIRST mount,
+which here is `/`. A per-subvolume policy is not something this layout can express, whatever the
+config looks like.
+
 **`compress=zstd:1` and not bare `zstd`** (which is level 3): on a Gen4 at ~7 GB/s the bottleneck
 becomes the COMPRESSOR, not the disk. zstd:1 compresses several times faster for ~5-10% less
 ratio, and DECOMPRESSION runs at the same speed on both levels, so reads lose nothing. On a 953 G
@@ -55,8 +66,14 @@ on in the same commit.
 ## The swap trap
 
 On btrfs a swapfile requires NOCOW and zero compression, otherwise the kernel refuses to activate
-it. That is why `@swap` is a subvolume OF ITS OWN and WITHOUT compress, and disko uses
-`btrfs filesystem mkswapfile`, which already applies the right attributes.
+it. disko uses `btrfs filesystem mkswapfile`, which applies both attributes TO THE FILE, and that is
+what actually makes it work.
+
+REFINED on 23/08/2026, because this section used to say the missing `compress` on `@swap` was the
+reason: it is not, since per the manual above a per-subvolume compress setting would not take effect
+anyway. Leaving the options off `@swap` is honest bookkeeping, not the mechanism. What DOES depend on
+`@swap` being its own subvolume is everything else: the swapfile stays out of the btrbk snapshots and
+out of the future impermanence wipe.
 
 The consequence: the `/swapfile` `swapDevices` left
 [`system/hardware/hardware.nix`](../../../system/hardware/hardware.nix) (which is shared) and became
@@ -79,3 +96,15 @@ sudo mount -o subvolid=5 /dev/nvme0n1p2 /mnt \
 
 With `nofail`, forgetting that step costs you "btrbk does not run" (it demands the mount through
 `RequiresMountsFor`) instead of "the boot falls into the emergency shell".
+
+## What changes the day the disk dies (the 2032 question)
+
+`device` carries the drive's SERIAL
+(`/dev/disk/by-id/nvme-KINGSTON_SKC3000S1024G_50026B7686B3D2F6`), so a replacement drive is a ONE
+LINE edit here and nothing else in the repo. That literal is the deliberate cost of `by-id`, which is
+the only stable naming: `/dev/nvme0n1` shuffles between boots and would point the destroy at the
+wrong disk, which is the one mistake in this file that cannot be undone.
+
+Two other things belong to that day, and neither is in this file: the age key from the vault (see
+[`../repo/secrets.md`](../repo/secrets.md), it is the only thing not in git) and `@snapshots`, which
+disko creates on a real install but has to be created by hand on a machine that is already up.

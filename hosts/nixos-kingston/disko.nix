@@ -1,5 +1,14 @@
 # DESTRUCTIVE disk layout for nixos-kingston (KC3000). It runs on a CUTOVER, never on a rebuild.
 # Why btrfs, the zstd:1 choice and the swapfile trap: docs/notes/boot-and-storage/disko.md
+let
+  # ONE definition (rule 11), and not only to avoid 6 copies: upstream says most btrfs options apply
+  # to the WHOLE filesystem and only the FIRST mounted subvolume's take effect. The note has it.
+  btrfsOptions = [
+    "compress=zstd:1"
+    "noatime"
+    "discard=async"
+  ];
+in
 {
   disko.devices.disk.kingston = {
     type = "disk";
@@ -27,56 +36,31 @@
               # The impermanence rollback's future target: wiped every boot once that lands.
               "@" = {
                 mountpoint = "/";
-                mountOptions = [
-                  "compress=zstd:1"
-                  "noatime"
-                  "discard=async"
-                ];
+                mountOptions = btrfsOptions;
               };
               "@home" = {
                 mountpoint = "/home";
-                mountOptions = [
-                  "compress=zstd:1"
-                  "noatime"
-                  "discard=async"
-                ];
+                mountOptions = btrfsOptions;
               };
               # /nix is immutable and huge: noatime avoids a write on every read.
               "@nix" = {
                 mountpoint = "/nix";
-                mountOptions = [
-                  "compress=zstd:1"
-                  "noatime"
-                  "discard=async"
-                ];
+                mountOptions = btrfsOptions;
               };
               # Empty TODAY. It becomes the destination of the explicit persistence list.
               "@persist" = {
                 mountpoint = "/persist";
-                mountOptions = [
-                  "compress=zstd:1"
-                  "noatime"
-                  "discard=async"
-                ];
+                mountOptions = btrfsOptions;
               };
               # Separate: impermanence would take the journal, which explains the bad boot.
               "@log" = {
                 mountpoint = "/var/log";
-                mountOptions = [
-                  "compress=zstd:1"
-                  "noatime"
-                  "discard=async"
-                ];
+                mountOptions = btrfsOptions;
               };
               # btrbk's snapshots. Top-level and `nofail`: created BY HAND once, see the note.
               "@snapshots" = {
                 mountpoint = "/.snapshots";
-                mountOptions = [
-                  "compress=zstd:1"
-                  "noatime"
-                  "discard=async"
-                  "nofail"
-                ];
+                mountOptions = btrfsOptions ++ [ "nofail" ];
               };
               # NO compress and NO noatime: btrfs' mkswapfile requires pure NOCOW.
               "@swap" = {

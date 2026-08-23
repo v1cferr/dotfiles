@@ -107,6 +107,25 @@ plugdev-style group openrazer wants, and it leaves no group membership to mainta
 matches the four nodes by `idVendor`/`idProduct`, since udev cannot tell which one is the control
 interface.
 
+### The trap: `services.udev.extraRules` is TOO LATE for uaccess
+
+The first version used `services.udev.extraRules`, and the ACL never appeared. The tag was applied
+and the permissions were untouched, which is a confusing pair of symptoms:
+
+```text
+E: CURRENT_TAGS=:seat:uaccess:      <- the tag IS there
+/dev/hidraw2 root:root 600          <- and no ACL was granted
+```
+
+`TAG+="uaccess"` does nothing by itself. What grants the ACL is systemd's `73-seat-late.rules`,
+which matches `TAG=="uaccess"` and appends `RUN{builtin}+="uaccess"`. Rules run in FILENAME order,
+and `services.udev.extraRules` writes into `99-local.rules`, so by the time the tag exists rule 73
+has already run and decided. The tag is set, nothing reads it.
+
+So the rule ships through `services.udev.packages` as `60-razer.rules` instead, which is the only
+reason that option is used here rather than the shorter `extraRules`. Any `uaccess` rule in this
+repo has to be numbered below 73 for the same reason.
+
 ## The OSD path
 
 `razer-dpi watch` pushes `qs ipc call osd dpi <value>`, the same IPC door the brightness keys

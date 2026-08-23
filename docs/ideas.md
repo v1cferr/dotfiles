@@ -192,21 +192,14 @@ order the research put it.
   fail on exactly that count). Today the run fetches ~1.43 GiB of inputs and recompiles the btop
   fork every time. THE CAVEATS, and they are the reason this is not a one-liner: 10 GB of cache per
   repository with LRU eviction, and `gc-max-store-size` is mandatory or the cache grows until it is
-  useless.
-- **A weekly CANARY, scheduled and non-blocking.** This is the item that most answers the 2032
-  question, and it is NOT the `flake-checker` that this repo already rejected: that one measures the
-  AGE of the pin, which fights a release pin on purpose. This measures BREAKAGE, with the lock
-  untouched:
-
-  ```text
-  nix flake check --override-input duo-streak-daemon path:./ci/stub-duo \
-    --override-input nixpkgs github:NixOS/nixpkgs/nixos-26.05 \
-    --override-input nixpkgs-unstable github:NixOS/nixpkgs/nixos-unstable
-  ```
-
-  It answers "would the next `update` break me", and Nix declines to write the lock when there are
-  overrides, which is the wanted behavior here. The risk in 2032 is not Nix dying, it is an option
-  rename landing silently between two updates of mine.
+  useless. THE CANARY RAISED THE STAKES here: it is now the heaviest job in the repo, since it
+  refetches every input at HEAD, so this is the piece that would make it cheap.
+- **DONE the same day, and the shape got simpler than this sketch**: the canary is
+  `.github/workflows/canary.yml`, weekly, with `--recreate-lock-file --no-write-lock-file` instead of
+  one `--override-input` per input. Same guarantee, one flag: every input at its branch head and the
+  committed pin untouched. MEASURED at 1m41s locally, all checks passing, so today nothing upstream
+  is broken. The reasoning is in [notes/repo/flake.md](notes/repo/flake.md), and the external link
+  half is in [notes/repo/link-checker.md](notes/repo/link-checker.md).
 - **`system.build.toplevel` in the CI: researched and NOT recommended.** A free runner has ~20 GB
   free and this closure drags Quickshell (Qt/C++) in, while the cache above caps at 10 GB. The three
   ways out are `nix-fast-build --skip-cached` plus an action that reclaims disk, a self-hosted

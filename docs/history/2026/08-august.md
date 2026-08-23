@@ -1,6 +1,32 @@
 # History: august 2026
 
-80 entries. Index in [README.md](../README.md).
+81 entries. Index in [README.md](../README.md).
+
+- [x] The canary went in, and today the answer is that nothing upstream is broken (23/08/2026,
+      closing the day). Everything until now answered "is this tree correct". This asks the other
+      question, the one whose answer changes with NO commit of mine: is the world still compatible
+      with this tree?
+      • `nix flake check --recreate-lock-file --no-write-lock-file` resolves EVERY input at its
+        branch head and leaves the committed pin alone. So a failure means "the next `update` would
+        break you", and nothing in it measures the AGE of a pin, which is the precise objection that
+        got `flake-checker` rejected on 16/08: that one fights a release pin on purpose.
+      • MEASURED, warm store, locally, on a throwaway copy so the real lock could not be touched:
+        1m41s, and `all checks passed` against the heads of nixos-26.05, nixos-unstable and
+        release-26.05. The lock of the copy came out byte-identical, which is what
+        `--no-write-lock-file` promises and what I wanted proof of before putting it in a workflow.
+      • WEEKLY AND IN ITS OWN WORKFLOW, not in the gate: it refetches ~1.43 GiB on a cold runner, so
+        nothing should block on it, and a red canary is information rather than a blocked push. The
+        alarm is GitHub's own email for a failed scheduled run, so there is no machinery to maintain.
+      • THE SECOND JOB is lychee, and it can NEVER be a gate hook for two structural reasons: a
+        build sandbox has no network, and a 429 from somebody's rate limiter is not a defect here. It
+        is declared at the `manual` stage, so the linter set still has ONE definition in `flake.nix`
+        while `pre-commit run --all-files` skips it.
+      • MARKDOWN ONLY, and that was measured both ways. Over the `.md`: 15 external links, 278
+        checks, 0 errors, with no config file and no exclude list. Over EVERY tracked file: 17
+        errors, all false, and they name themselves (the DoH endpoints answering 400 to a GET with no
+        DNS query, the loopback and LAN addresses of this machine, CurseForge's 403 bot wall). A URL
+        in a code comment is a citation, not a link a reader follows, and the exclude list needed to
+        silence 17 of them is the "lint you learn to ignore" this repo keeps arguing against.
 
 - [x] The config got BOOTED on hardware that is not this machine, and the test found a bug before
       it ever booted (23/08/2026, second half of the day). The question was drift: rule 8 proves the

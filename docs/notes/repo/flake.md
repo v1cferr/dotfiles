@@ -389,6 +389,28 @@ to last until 2032+, upstream Nix with no vendor is the safer bet, and switching
 The `concurrency` block cancels the previous run of the same ref, because three commits in a row
 would otherwise queue three CIs when only the last one matters.
 
+### The workflow is linted too, and the token is read-only (23/08/2026)
+
+`actionlint` and `zizmor` came into the hooks, so the workflow gets what the `.nix` tree already
+had: the first checks the YAML and the `${{ }}` expressions, the second audits it for the known
+GitHub Actions traps. The workflow was the only executable file in the repo with no checker, which
+is the same hole `owfetch.sh` had before the shellcheck hook.
+
+What zizmor found on the first run, all three fixed in the same commit:
+
+- **`unpinned-uses` (high, twice)**: `actions/checkout@v7` and `install-nix-action@v31` are TAGS,
+  and a tag is a pointer the author can move under me. This is rule 13's "no fetch without a hash"
+  applied to the CI, and the same class of trap as VS Code's `/latest/` above. Both are pinned by
+  commit hash now, with the tag kept in a trailing comment so the file still reads. THE COST,
+  accepted: a hash does not follow a security release of the action, so the bump is manual until a
+  dependabot config lands (it is in [`../../ideas.md`](../../ideas.md)).
+- **`excessive-permissions` (medium)**: with no `permissions:` block the job inherits the default
+  write scope for the token. It clones and checks, so `contents: read` is the whole need.
+- **`artipacked` (low)**: `checkout` leaves the token in `.git/config` for every later step to
+  read. Nothing after it talks to GitHub, so `persist-credentials: false`.
+
+Verified after the change: actionlint clean, and zizmor "No findings to report".
+
 ### Plan B: a deploy key, if the empty stub ever does NOT do
 
 Only necessary if a module starts READING content from the private repo at EVALUATION time; today

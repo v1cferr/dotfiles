@@ -289,6 +289,10 @@
               enable = true;
               files = "^secrets/.*\\.yaml$";
             };
+            # The workflow gets what the .nix tree already had: actionlint for the YAML and the
+            # expressions, zizmor for the security audit. Both are scoped to .github/workflows.
+            actionlint.enable = true;
+            zizmor.enable = true;
             # The three repo checkers run HERE too, not only in the gate: the whole reason
             # git-hooks.nix is an input is catching it before the commit instead of after the
             # push. pass_filenames = false because all three audit the TREE, not a file list.

@@ -16,3 +16,6 @@ result-*
 # python bytecode: router-sync.py runs from ./scripts, and the cache got COMMITTED once
 __pycache__/
 *.py[cod]
+
+# the OVMF variable store QEMU writes in the CWD on every `nix run .#disko-vm` (the layout drill)
+*-efi-vars.fd

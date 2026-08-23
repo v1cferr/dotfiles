@@ -273,6 +273,19 @@ config with no executable owner: the editor obeyed it, and nothing checked the C
 from another machine. 73 `.md` are the most valuable thing in this repo and they were the least
 verified part of it.
 
+**`pre-commit-hook-ensure-sops`, and its `files` had to be narrowed (23/08/2026).** Rule 12 says
+the repo never holds a credential, and `sops.validateSopsFiles` already fails at eval on "declared
+and absent". What neither of them catches is the opposite accident, the loud one: a `secrets.yaml`
+staged in PLAINTEXT after a `sops -d` left the decrypted file behind. This hook opens the file and
+fails when the values are not encrypted, which is the only check here that would run BEFORE the
+leak instead of after it.
+
+The hook's default is `files = "^secrets"`, and MEASURED against this repo it fails: it flags
+`secrets/bitwarden-secrets.json`, which is the INDEX of names and carries no value, so it is
+plaintext BY DESIGN (see [`secrets.md`](secrets.md)). Narrowing to `^secrets/.*\.yaml$` is what
+keeps the check honest, and `.sops.yaml` at the root stays out of it for the same reason: it holds
+the recipients, not a secret.
+
 ### `checks.packages`: building what the gate did not cover (04/08/2026)
 
 `nix flake check` builds what is in `checks` («the derivations specified by the flake's checks output

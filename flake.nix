@@ -283,6 +283,12 @@
                 nixpkgs.legacyPackages.${system}.markdownlint-cli
               }/bin/markdownlint --config .markdownlint.jsonc";
             };
+            # It fails on a `secrets/*.yaml` that is NOT encrypted, the one accident rule 12 cannot
+            # survive. `files` is NARROWED: the hook's default `^secrets` fails on the plain INDEX.
+            pre-commit-hook-ensure-sops = {
+              enable = true;
+              files = "^secrets/.*\\.yaml$";
+            };
             # The three repo checkers run HERE too, not only in the gate: the whole reason
             # git-hooks.nix is an input is catching it before the commit instead of after the
             # push. pass_filenames = false because all three audit the TREE, not a file list.

@@ -1,5 +1,6 @@
-// The OSD for volume, mic mute and brightness (= hyprsunset's gamma, since there is no backlight).
-// Volume/mic react to Pipewire; brightness is PUSHED through IPC. docs/notes/desktop/quickshell.md
+// The OSD for volume, mic mute, brightness (= hyprsunset's gamma, since there is no backlight) and
+// the mouse DPI. Volume/mic react to Pipewire; brightness and DPI are PUSHED through IPC.
+// docs/notes/desktop/quickshell.md
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Pipewire
@@ -10,13 +11,16 @@ import "root:/"
 Scope {
     id: root
 
-    // "volume" | "mic" | "brightness": what fired the OSD last
+    // "volume" | "mic" | "brightness" | "dpi": what fired the OSD last
     property string mode: "volume"
     property bool shown: false
 
     // Brightness (pushed through IPC by the brightness keys)
     property int brightnessValue: 100
     property int brightnessMax: 150
+
+    // Mouse DPI (pushed through IPC by razer-dpi, which watches the mouse's ONBOARD button)
+    property int dpiValue: 0
 
     // An anti-flash lock for Pipewire's reactive path: every settling event pushes the arming back and
     // a Timer(0) coalesces the show. Brightness through IPC skips it, being an explicit action.
@@ -79,8 +83,8 @@ Scope {
         return "󰃠";
     }
 
-    // Brightness pushed by the XF86MonBrightness keys through:
-    //   qs ipc call osd brightness <value> <max>
+    // Pushed in: `qs ipc call osd brightness <value> <max>` by the XF86MonBrightness keys, and
+    // `qs ipc call osd dpi <value>` by the razer-dpi watcher (home/services/razer-dpi.nix).
     IpcHandler {
         target: "osd"
 
@@ -88,6 +92,11 @@ Scope {
             root.brightnessMax = max > 0 ? max : 150;
             root.brightnessValue = value;
             root.showNow("brightness");
+        }
+
+        function dpi(value: int): void {
+            root.dpiValue = value;
+            root.showNow("dpi");
         }
     }
 
@@ -163,7 +172,7 @@ Scope {
                 // The current mode's icon. With no font.family (the same Nerd fallback as shell.qml).
                 Text {
                     Layout.alignment: Qt.AlignVCenter
-                    text: root.mode === "mic" ? (root.micMuted ? "󰍭" : "󰍬") : root.mode === "brightness" ? root.brightIcon() : root.volIcon()
+                    text: root.mode === "mic" ? (root.micMuted ? "󰍭" : "󰍬") : root.mode === "brightness" ? root.brightIcon() : root.mode === "dpi" ? "󰍽" : root.volIcon()
                     color: ((root.mode === "mic" && root.micMuted) || (root.mode === "volume" && root.sinkMuted)) ? Theme.colRed : Theme.colAccent
                     font.pixelSize: 26
                 }
@@ -248,6 +257,17 @@ Scope {
                     visible: root.mode === "mic"
                     text: root.micMuted ? "Microphone muted" : "Microphone live"
                     color: root.micMuted ? Theme.colRed : Theme.colText
+                    font.pixelSize: 15
+                    font.bold: true
+                }
+
+                // DPI mode: the value alone. No bar, because the stages live in the mouse's ONBOARD
+                // memory, so there is no range to draw a fraction against: docs/notes/hardware/razer.md
+                Text {
+                    Layout.fillWidth: true
+                    visible: root.mode === "dpi"
+                    text: root.dpiValue + " DPI"
+                    color: Theme.colText
                     font.pixelSize: 15
                     font.bold: true
                 }

@@ -169,6 +169,7 @@
         curseforge = final.callPackage ./pkgs/curseforge.nix { }; # official modpack AppImage (unfree)
         curseforge-bump = final.callPackage ./pkgs/curseforge-bump.nix { }; # version+hash of curseforge.nix
         curseforge-fix-perms = final.callPackage ./pkgs/curseforge-fix-perms.nix { }; # +x on what the app unpacks
+        razer-dpi = final.callPackage ./pkgs/razer-dpi.nix { }; # the Razer mouse's live DPI, over hidraw
         docs-links = final.callPackage ./pkgs/docs-links.nix { }; # it fails when a docs/ pointer breaks
         dead-config = final.callPackage ./pkgs/dead-config.nix { }; # it fails on declared-and-unused
         router-ssot = final.callPackage ./pkgs/router-ssot.nix { }; # it fails when the router's mirror diverges

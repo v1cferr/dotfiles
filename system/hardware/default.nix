@@ -10,5 +10,6 @@
     ./audio.nix # PipeWire plus rtkit
     ./fonts.nix # the SSOT of the UI font (my.fonts.ui) plus fontconfig plus the MS metrics
     ./mouse.nix # a Logitech MX Master 3S through logiops (gestures, DPI, smartshift)
+    ./razer.nix # a Razer DeathAdder V2: hidraw for the user, no kernel driver (openrazer is out)
   ];
 }

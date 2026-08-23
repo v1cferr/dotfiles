@@ -72,6 +72,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [monitors](hardware/monitors.md) | the connector SSOT, and why it lives on the system side |
 | [fonts](hardware/fonts.md) | the UI font SSOT, and the fallback coverage |
 | [mouse](hardware/mouse.md) | the MX Master, the boot race, and the gestures |
+| [razer](hardware/razer.md) | the DeathAdder's DPI OSD, and why openrazer does not build on 7.x |
 | [oom](hardware/oom.md) | earlyoom, and the three traps in its regex |
 
 ### network

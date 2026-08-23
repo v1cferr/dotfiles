@@ -21,6 +21,28 @@ So this one runs HERE, on the machine that has the store warm, and it needs a we
 a check nobody remembers to run is a check that does not exist, which is the argument the CI's own
 header makes.
 
+## The weekly drill
+
+`home/services/vm-boot-drill.nix`, a `systemd --user` timer on Sundays at 11:00, `Persistent` so a
+machine that was off runs it on the next boot. It is SILENT on success (the journal has the line)
+and pushes one ntfy notification when it fails.
+
+**User level and not system level**, for two reasons that both point the same way: the flake has a
+PRIVATE input over `git+ssh`, and the key belongs to the user (the same reason rule 13 keeps
+`update` as the user), and the checkout it builds is the user's. `programs.nh.flake` is read through
+`osConfig`, so the repo path keeps one owner (rule 11).
+
+**A cache HIT is the normal case, and that is the point.** The test is one derivation over the
+config, so with nothing changed since the last run `nix build` returns from the store in seconds and
+no VM boots. The VM only really boots again when a rebuild changed the closure, which is exactly
+"re-verify what is new, and pay nothing for what was already verified". A `nix-collect-garbage` that
+sweeps the result also forces an honest re-run, which is fine.
+
+TWO HONEST FALSE ALARMS to expect. The drill builds the WORKING TREE, so a broken edit sitting
+uncommitted on a Sunday fires it, and that is arguably useful. And a failure to fetch the private
+input (no network, a rotated key) fires it too, which is not a config regression: the journal says
+which one it was.
+
 ## The variant is not a second config
 
 `commonModules` was hoisted out of `mkHost` for this: the test builds the SAME module list the host

@@ -186,14 +186,12 @@ day (see the [august history](history/2026/08-august.md) and
 [notes/repo/flake.md](notes/repo/flake.md)); what is below was researched and NOT decided, in the
 order the research put it.
 
-- **A Nix store cache in the CI**: `nix-community/cache-nix-action@v7`, which saves and restores
-  `/nix` through GitHub's own cache. It is the option with NO vendor, which is what keeps the
-  decision recorded against the Determinate installer intact (`magic-nix-cache` and FlakeHub Cache
-  fail on exactly that count). Today the run fetches ~1.43 GiB of inputs and recompiles the btop
-  fork every time. THE CAVEATS, and they are the reason this is not a one-liner: 10 GB of cache per
-  repository with LRU eviction, and `gc-max-store-size` is mandatory or the cache grows until it is
-  useless. THE CANARY RAISED THE STAKES here: it is now the heaviest job in the repo, since it
-  refetches every input at HEAD, so this is the piece that would make it cheap.
+- **DONE the same day**: `nix-community/cache-nix-action@v7` in the gate workflow, keyed on
+  `flake.lock`, with `gc-max-store-size-linux: 5G` and a weekly purge to stay inside GitHub's 10 GB
+  per repository. The canary deliberately gets NO cache, because resolving every input at HEAD would
+  miss every week and evict the gate's entry. `.github/dependabot.yml` went in beside it, since a
+  hash pin does not follow a security release on its own. Both are in
+  [notes/repo/flake.md](notes/repo/flake.md).
 - **DONE the same day, and the shape got simpler than this sketch**: the canary is
   `.github/workflows/canary.yml`, weekly, with `--recreate-lock-file --no-write-lock-file` instead of
   one `--override-input` per input. Same guarantee, one flag: every input at its branch head and the

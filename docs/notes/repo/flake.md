@@ -402,6 +402,34 @@ single definition. If it ever gets annoying, the way back is this file in the hi
 `ci/stub-duo`, which is useful anyway for running `flake check` in any clone without the private
 key.
 
+### The store cache, and why the canary does NOT get one (23/08/2026)
+
+`nix-community/cache-nix-action@v7` in the gate workflow, keyed on `flake.lock`. Before it every
+push refetched the ~1.43 GiB of inputs and recompiled the btop fork; with an unchanged lock the run
+restores `/nix` instead.
+
+**`nix-community` and NOT `magic-nix-cache`**, which is the obvious alternative: that one is
+Determinate's and pulls toward FlakeHub Cache, the same vendor objection recorded below for the
+installer. This one uses GitHub's own cache, so there is no account and no third party.
+
+THE CAVEATS, and they are the entire configuration:
+
+- **10 GB per REPOSITORY**, evicted LRU and shared with every other cache the repo has. So
+  `gc-max-store-size-linux: 5G` collects the store down before saving, leaving room for one older
+  entry.
+- **`purge-created: 604800` with `purge-primary-key: never`** drops entries older than a week, and
+  never the one this run just wrote.
+- **The key is `hashFiles('flake.lock')`**, so a lock bump is a deliberate MISS, and
+  `restore-prefixes-first-match` then falls back to the newest older entry instead of to nothing.
+
+**The canary deliberately has NO cache.** Its whole job is to resolve every input at HEAD, so its
+store paths differ every week: the hit rate would be near zero and its saves would evict the gate's
+cache, which is the one that pays. A cold canary is also the honest one.
+
+Next to it, `.github/dependabot.yml` closes the cost the hash pinning accepted: weekly, actions
+only, grouped into ONE pull request, with `commit-message.prefix: chore(ci)` so the bump satisfies
+rule 17's conventional commit.
+
 ### The canary: the question the gate cannot ask (23/08/2026)
 
 `.github/workflows/canary.yml`, weekly, and it exists because **its answer changes with no commit of

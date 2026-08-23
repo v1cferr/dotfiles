@@ -1,0 +1,17 @@
+# DEPENDABOT, for the ACTIONS only: they are pinned by hash, and a hash does not follow a security
+# release on its own. Why the pin is by hash: docs/notes/repo/flake.md
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/" # for this ecosystem it means .github/workflows, not the repo root
+    schedule:
+      interval: weekly
+      day: monday
+    # Rule 17 requires a conventional commit, and this prefix is the only knob dependabot has.
+    commit-message:
+      prefix: chore(ci)
+    # ONE pr for the whole week: three actions bumping separately is three reviews of one decision.
+    groups:
+      actions:
+        patterns: ["*"]
+    open-pull-requests-limit: 2

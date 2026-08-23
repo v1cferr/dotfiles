@@ -10,12 +10,8 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
-- [ ] The two follow-ups the gate's hardening left behind (23/08/2026). Both are consequences of
-      what landed that day, written down here so they do not become the drift rule 16 describes.
-      • DEPENDABOT for the actions. `nix.yml` now pins `checkout` and `install-nix-action` BY HASH,
-        which is rule 13 applied to the CI, and a hash does not follow a security release of the
-        action. The piece that closes it is a `.github/dependabot.yml` with the `github-actions`
-        ecosystem, weekly, which bumps the hash AND the tag kept in the trailing comment.
+- [ ] The one follow-up the gate's hardening left open (23/08/2026). The dependabot half was
+      CLOSED the same day (see the august history); this is what stayed.
       • THE COMMIT MESSAGE IS ONLY CHECKED HERE. `convco` and `prose-style` run at the commit-msg
         stage, which `nix flake check` cannot reach: there is no message inside that sandbox. So a
         commit written on another machine, or with `--no-verify`, is unchecked. The fix is a CI step

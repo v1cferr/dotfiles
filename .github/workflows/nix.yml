@@ -37,6 +37,18 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
 
+      # THE STORE CACHE, and only in THIS workflow: the key is the lock, so a push that did not
+      # change it skips refetching ~1.43 GiB. The canary stays cold: docs/notes/repo/flake.md
+      - uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+          gc-max-store-size-linux: 5G # GitHub gives 10 GB per REPO, and it evicts by LRU
+          purge: true
+          purge-prefixes: nix-${{ runner.os }}-
+          purge-created: 604800 # a week in seconds
+          purge-primary-key: never # never the one this run just wrote
+
       # ONE command = the WHOLE gate: the linters, the host's evaluation and the BUILD of the repo's
       # packages. The --override-input is what removes the need for a credential.
       - name: nix flake check (linters + host + the packages build)

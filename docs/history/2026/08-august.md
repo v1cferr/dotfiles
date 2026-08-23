@@ -1,6 +1,28 @@
 # History: august 2026
 
-81 entries. Index in [README.md](../README.md).
+82 entries. Index in [README.md](../README.md).
+
+- [x] The CI stopped paying full price on every push, and the hash pins got a bot (23/08/2026,
+      after the canary). Two small pieces that only make sense together with what came before them.
+      • THE STORE CACHE, `nix-community/cache-nix-action@v7` keyed on `flake.lock`. Until now every
+        push refetched ~1.43 GiB of inputs and recompiled the btop fork. `nix-community` and NOT
+        `magic-nix-cache`: that one is Determinate's and pulls toward FlakeHub Cache, which is the
+        same vendor objection already recorded against their installer. This one uses GitHub's own
+        cache, so no account and no third party.
+      • THE CONFIGURATION IS ALL CAVEAT, and the caveat is the 10 GB per REPOSITORY with LRU
+        eviction: `gc-max-store-size-linux: 5G` collects the store down before saving,
+        `purge-created` drops entries older than a week and `purge-primary-key: never` protects the
+        one the run just wrote. The key is the lock's hash, so a bump is a deliberate miss and the
+        prefix fallback restores the newest older entry instead of nothing.
+      • THE CANARY GETS NO CACHE, on purpose, and it is worth writing down because the instinct is
+        to cache the slowest job: it resolves every input at HEAD, so its paths change every week,
+        the hit rate would be near zero, and its saves would EVICT the gate's entry, which is the
+        one that actually pays. A cold canary is also the honest canary.
+      • DEPENDABOT, actions only, weekly, grouped into ONE pr, with `commit-message.prefix` set to
+        `chore(ci)` so the bump satisfies rule 17. It closes the cost accepted earlier in the day
+        when the actions were pinned by hash: a hash is immune to somebody moving a tag under me,
+        and equally immune to a security release, so it needs a bot or it needs me remembering.
+      • actionlint and zizmor over both workflows after the change: clean, no findings.
 
 - [x] The canary went in, and today the answer is that nothing upstream is broken (23/08/2026,
       closing the day). Everything until now answered "is this tree correct". This asks the other

@@ -147,3 +147,34 @@ Two more things it showed, neither of them in this file: systemd creates `srv`, 
 WHAT IT DOES NOT PROVE: the bootloader. The VM boots the kernel directly (`useBootLoader` is off),
 so GRUB, its Secure Boot signature and `os-prober` are outside this test. That half is still the
 BIOS plus [`../../guides/secure-boot.md`](../../guides/secure-boot.md).
+
+### The first-boot bug it found, and it had been there since the cutover
+
+On its first real run, `home-manager-v1cferr.service` FAILED with
+`cd: /home/v1cferr: No such file or directory`, and `/home` was empty. The chain, each step
+measured inside the VM:
+
+1. NixOS 26.05 boots with the SYSTEMD INITRD by default, and the whole activation runs there:
+   `initrd-nixos-activation.service` logs "running activation script..." and
+   `nixos-activation.service` in stage 2 has literally `-- No entries --`.
+2. At that point only the `neededForBoot` filesystems are mounted, and `@home` is NOT one of them.
+3. So `createHome` (which `isNormalUser` turns on) created `/home/v1cferr` on the `@` subvolume.
+4. Stage 2 then mounted `@home` over `/home`, MASKING it. Proven by mounting `subvolid=5` inside
+   the VM and finding `drwx------ v1cferr users @/home/v1cferr` sitting there, invisible.
+5. home-manager runs later, cannot `cd` into a home that is now hidden, and fails.
+
+**Why it never showed up on this machine**: the cutover COPIED files into `@home`, so the directory
+already existed, and a `nixos-rebuild switch` runs the activation in stage 2 with everything mounted,
+which creates it properly. The bug only appears on a FIRST boot after a fresh install, which is
+precisely the disaster-recovery path: a machine restored from this repo would come up with an empty
+home and a broken home-manager, and self-heal only after one `switch`.
+
+THE FIX is in [`../../../system/core/users.nix`](../../../system/core/users.nix):
+`systemd.tmpfiles.rules` creates the home, because tmpfiles runs in STAGE 2, after `local-fs.target`
+and before `multi-user.target`. The path is read from `config.users.users.v1cferr.home` instead of
+being typed again (rule 11). Verified in the same VM: `/home/v1cferr` present on `@home`, nothing
+masked underneath, and ZERO failed units.
+
+The boot test cannot catch this one, and that is worth knowing: `vm-boot.nix` clears `disko.devices`,
+so there is no separate `/home` to mask anything. The two VMs answer different questions, which is
+why both exist.

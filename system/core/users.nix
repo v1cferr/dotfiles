@@ -28,5 +28,12 @@
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINRHYth5yugzhdulstjLPJAqHuzXE6j/EVl7dHcWKIUI dev.victorferreira@gmail.com"
     ];
   };
+  # THE HOME, created by tmpfiles and not only by `createHome`: with the systemd initrd the WHOLE
+  # activation runs before /home is mounted, so the dir lands on `@` and @home hides it. Proof and
+  # the first-boot symptom: docs/notes/boot-and-storage/disko.md
+  systemd.tmpfiles.rules = [
+    "d ${config.users.users.v1cferr.home} 0700 v1cferr users - -"
+  ];
+
   security.sudo.wheelNeedsPassword = true;
 }

@@ -5,8 +5,14 @@
 {
   # The media's shared group: the owner is me (I copy/manage), the reader is jellyfin.
   users.groups.media = { };
-  users.users.v1cferr.extraGroups = [ "media" ]; # (it adds to wheel/networkmanager)
-  users.users.jellyfin.extraGroups = [ "media" ]; # the service reads the library
+  # The jellyfin USER only exists when the SERVICE does, so it sits behind the toggle: with the
+  # panel off it stood alone as a half-declared user and the EVAL failed (found by the boot test).
+  users.users = lib.mkMerge [
+    { v1cferr.extraGroups = [ "media" ]; } # (it adds to wheel/networkmanager)
+    (lib.mkIf config.my.services.jellyfin {
+      jellyfin.extraGroups = [ "media" ]; # the service reads the library
+    })
+  ];
 
   # /srv/media with setgid (the '2' in 2775): everything inside inherits the 'media' group.
   systemd.tmpfiles.rules = [
@@ -22,5 +28,8 @@
   };
 
   # Upstream's UMask 0077 makes the downloaded art/nfo 0600 and unreadable to me; 0002 fixes it.
-  systemd.services.jellyfin.serviceConfig.UMask = lib.mkForce "0002";
+  # Behind the toggle for the same reason as the user: with no service there is no unit to override.
+  systemd.services = lib.mkIf config.my.services.jellyfin {
+    jellyfin.serviceConfig.UMask = lib.mkForce "0002";
+  };
 }

@@ -1,6 +1,47 @@
 # History: august 2026
 
-79 entries. Index in [README.md](../README.md).
+80 entries. Index in [README.md](../README.md).
+
+- [x] The config got BOOTED on hardware that is not this machine, and the test found a bug before
+      it ever booted (23/08/2026, second half of the day). The question was drift: rule 8 proves the
+      tree evaluates and builds, and nothing proved it BOOTS anywhere else, which is the only
+      question that matters the day the hardware dies.
+      • `nix build .#vm-boot` boots this host in QEMU and asserts the config was APPLIED, not just
+        that it evaluated: multi-user reached, sshd up, the user existing with zsh, the whole
+        home-manager generation activated with `Result=success`, and no failed unit. MEASURED: 9.96s
+        to boot (666ms kernel, 3.675s initrd, 5.618s userspace), 11.26s for the whole test.
+      • IT FOUND A REAL BUG AT EVAL TIME, before QEMU ever started: `my.services.jellyfin = false`
+        did not evaluate, because `users.users.jellyfin.extraGroups` sat outside the toggle and left
+        a half-declared user. The panel in `hosts/<host>/services.nix` was offering a switch that
+        did not work, and nothing could have caught it while this machine kept jellyfin ON. That is
+        the whole class this test exists for: a declaration that only works because another module
+        happens to complete it.
+      • THE FIRST VERSION OF THE TEST LIED, and this is the part worth remembering: it asserted only
+        on `systemctl --failed` and went GREEN while two activation snippets had failed
+        (`setupSecrets` and `setupSecretsForUsers`, both needing the age key that lives outside git
+        by design). Activation snippets are not units, so they never show up there. A boot test that
+        cannot see half of the activation is a green light over a broken system. It now parses the
+        journal, with an ALLOWED of exactly those two.
+      • THE WEEKLY TRIGGER is a `systemd --user` timer, Sundays at 11:00, Persistent, silent on
+        success and one ntfy push on failure. User level because the flake has a private input over
+        git+ssh and the key is the user's, the same reason rule 13 keeps `update` as the user. And a
+        cache HIT is the normal case: the test is one derivation over the config, so nothing changed
+        means it returns from the store in seconds and no VM boots. That is exactly "re-verify what
+        is new, pay nothing for what was already verified".
+      • THE LAST 36 UNCOVERED FILES got a checker in the same movement: the 8 Lua through `lua-ls`
+        reading the repo's OWN `.luarc.json` (plain JSON, so `fromJSON` works where
+        `.markdownlint.jsonc` could not), `scripts/router-sync.py` through `ruff` (the only loose
+        `.py`, and the one that writes to the router), and the 27 QML through a parse check.
+      • QMLLINT AS A WHOLE IS UNUSABLE HERE, measured: 2321 findings bare, 2267 with Quickshell's own
+        QML types on the import path, and what survives is a linter that does not model Quickshell
+        (1014 `unqualified`, 14 calling `PanelWindow` not creatable, 14 rejecting
+        `color: "transparent"`). So the check keeps ONE category, `[syntax]`, which is a file that
+        does not parse. THE DISCRIMINATOR IS THE CATEGORY, NOT THE SEVERITY: a parse failure prints
+        as `Warning`, and qmllint exits non-zero for any warning at all.
+      • AND THAT ONE LIED TOO, on the first attempt: piping 2267 lines into grep through a shell
+        variable died with "Argument list too long" AND still exited 0. Twice in one day a check
+        that could not fail, which is the failure mode to look for first when a new check goes
+        green immediately.
 
 - [x] The gate stopped depending on my memory in five places (23/08/2026). The question that
       started it was not "which linter is missing", it was whether this repo can keep being the

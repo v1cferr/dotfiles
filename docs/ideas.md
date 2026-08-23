@@ -218,16 +218,17 @@ order the research put it.
   vendor objection is gone, and Renovate does update `flake.lock`. Both trip on the PRIVATE input:
   they would need the deploy key of Plan B. Rule 13 keeps `update` as the USER, and the canary above
   is what says when it is worth running.
-- **The 27 `.qml` and the 8 `.lua` have no checker.** A typo in `Bar.qml` only shows up when the bar
-  breaks, and it hot-reloads, which delays the discovery even more. `luacheck`/`selene` on the Lua
-  is the cheap half; `qmllint` needs the Quickshell types on the import path or it turns into
-  "unresolved type" noise, so it is a separate commit.
+- **DONE the same day, and the prediction about qmllint was right**: the Lua goes through `lua-ls`
+  reading the repo's own `.luarc.json`, the loose Python through `ruff`, and the QML through a parse
+  check that keeps ONE qmllint category, because the rest of it produced 2267 findings that are
+  almost all false. The measurements are in [notes/desktop/quickshell.md](notes/desktop/quickshell.md).
 - **Tags for the milestones.** There are two tags in the repo and neither marks a state. Tagging the
   cutover, the GPU swap and the day impermanence lands makes "the state that worked" addressable,
   which is worth more the further 2032 gets.
-- **A disaster-recovery drill, quarterly**, next to the test protocols already in
-  [guides/](guides/): clean clone, age key from the vault, rebuild in a VM. The right tool is
-  `nix build .#nixosConfigurations.nixos-kingston.config.system.build.vmWithDisko`, and NOT
-  `nixos-rebuild build-vm`, which is known to hang waiting for the root partition on a disko layout
-  (disko issue #668). It is the only thing that turns "the repo reconstructs my machine" from a
-  belief into evidence.
+- **The disaster-recovery drill, and stage 1 of it LANDED the same day**: `nix build .#vm-boot`
+  boots this host in QEMU weekly and asserts the config was applied
+  ([notes/repo/vm-boot.md](notes/repo/vm-boot.md)). What is still an idea is the other half, the one
+  that needs a human: `nix build .#nixosConfigurations.nixos-kingston.config.system.build.vmWithDisko`
+  formats virtual disks with the REAL disko layout, and a clean clone plus the age key from the vault
+  is what proves the piece that is not in git. `nixos-rebuild build-vm` is the wrong tool for the
+  disk half, it hangs waiting for the root partition on a disko layout (disko issue #668).

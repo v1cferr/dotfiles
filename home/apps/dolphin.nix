@@ -60,6 +60,15 @@ let
       path = osConfig.my.archAntigo.local; # SSOT: system/services/arch-legacy.nix (rule 11)
       icon = "folder-locked";
     }
+    # APPEND, never insert: the KDE <ID> below comes from the INDEX, so a new entry in the middle
+    # would collide with the id of a bookmark already written into the user's xbel.
+    {
+      title = "Context";
+      path = config.my.memory.dir; # SSOT: home/services/basic-memory.nix (rule 11)
+      # `folder-database` and not `folder-library`/`folder-book`: those two are symlinks to ACTION
+      # icons at 22px (an institution, an address book), so they break the folder look.
+      icon = "folder-database";
+    }
   ];
 
   # One XBEL file per place. KDE's <ID> comes from the INDEX, so it is unique with no magic

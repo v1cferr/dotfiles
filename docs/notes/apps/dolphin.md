@@ -11,6 +11,16 @@ keys we want, idempotently, and leaves the rest mutable.
 The same reasoning applies to the Places panel: Dolphin rewrites `user-places.xbel` at runtime
 (mounting a disk, adding a place), so a symlink would fight it and freeze your places.
 
+**A new place is APPENDED to the list in the module, never inserted**, and that is not cosmetic:
+the KDE `<ID>` is built from the entry's INDEX, so an entry slipped into the middle would be
+written with an id that a bookmark already in my xbel is using. The insert itself is guarded by
+PATH, so the older bookmarks are never rewritten to make room.
+
+**Check the icon at 22px before choosing it.** In the Win11 theme several `folder-*` names are
+SYMLINKS to action icons at that size: `folder-library` lands on an institution and `folder-book`
+on an address book, so both stop looking like folders in the panel. `folder-database`, which the
+`Context` place uses, is a real icon at 22 and in `scalable`.
+
 ## "Always Details" is two keys
 
 ```text

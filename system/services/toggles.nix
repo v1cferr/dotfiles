@@ -18,6 +18,7 @@
     "drive-mount"
     "arch-antigo-mount"
     "discord-rpc"
+    "basic-memory"
     "cs2-backup"
   ] (n: lib.mkEnableOption n);
 }

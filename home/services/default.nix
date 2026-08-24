@@ -10,6 +10,7 @@
     ./arch-legacy-mount.nix # /mnt/arch-antigo = the old Arch archive mounted always (a restic mount)
     ./disk-hygiene.nix # the free space alarm (it notifies with the biggest consumers) plus an expiring trash
     ./razer-dpi.nix # the OSD for the Razer mouse's onboard DPI button (it polls hidraw)
+    ./basic-memory.nix # the MCP memory server over ~/context, shared by Claude Code, codex and agy
     ./vm-boot-drill.nix # the weekly drill: it rebuilds the VM boot test and only speaks on failure
   ];
 }

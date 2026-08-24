@@ -18,6 +18,7 @@
     drive-mount = true; # ~/Drive = the Drive's root mounted (rclone mount), showing up in Dolphin
     arch-antigo-mount = true; # /mnt/arch-antigo = the old Arch archive mounted ALWAYS (restic)
     discord-rpc = true; # Claude Code's Rich Presence on Discord
+    basic-memory = true; # the MCP memory server over ~/context (Claude Code, codex and agy share it)
     cs2-backup = true; # a backup of the CS2 saves
   };
 

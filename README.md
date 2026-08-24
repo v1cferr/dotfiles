@@ -52,7 +52,7 @@ system/                  SYSTEM, shared by every host (machine-agnostic)
 home/                    USER (home-manager): dotfiles + user apps
   default.nix            imports packages.nix + the categories + stateVersion
   packages.nix           CENTRAL LIST of user apps/CLIs (the ones with no config of their own)
-  shell/                 zsh, starship, cli, kitty, git, ssh, claude-code, codex, ntfy
+  shell/                 zsh, starship, cli, kitty, git, ssh, claude-code, codex, antigravity, ntfy
   desktop/               hypr (+helpers), quickshell (bar), hyprsunset, lockscreen, theme, palette, xdg
   apps/                  apps WITH config of their own: dropbox, media, dolphin, flameshot,
                          vscode, mangohud, office, openal, curseforge

@@ -1,10 +1,12 @@
 # antigravity-cli
 
 Modules: [`pkgs/antigravity-cli.nix`](../../../pkgs/antigravity-cli.nix),
-[`home/packages.nix`](../../../home/packages.nix)
+[`pkgs/antigravity-bump.nix`](../../../pkgs/antigravity-bump.nix),
+[`home/shell/antigravity.nix`](../../../home/shell/antigravity.nix)
 
 Google's terminal agent, `agy`. Three decisions: why it is here in place of the Gemini CLI, where
-the binary comes from, and why NOTHING under `~/.gemini` is declared.
+the binary comes from, and why the only thing declared under `~/.gemini` is merged in, never
+linked.
 
 ## Why not gemini-cli, which is what I went looking for
 
@@ -128,12 +130,21 @@ live, and what keeps it from existing is the sparse persistence above, proven by
 hand and watching both keys take effect. `config.json` and `settings.json` are two different files
 with two different jobs, and only the second one would ever be mine.
 
-## Where an MCP server would go
+## The MCP servers, which ARE declared, by merging
 
-`~/.gemini/config/mcp_config.json`, created empty on the first run. That is the file that would
-point `agy` at a shared MCP server, which is the reason I am looking at basic-memory: one memory
-for the three agents instead of one archive each.
+`~/.gemini/config/mcp_config.json` is where `agy` reads its servers from, and it is created empty
+(0 bytes) on the first run. Since 24/08/2026 it points at
+[basic-memory](basic-memory.md), the memory the three CLIs share.
 
-It is app-owned like everything else above, so declaring it means the OTHER half of rule 14, an
-idempotent activation that merges the keys I own into whatever is there, never a symlink. Nothing
-of that exists yet, and it should not until there is a server worth pointing at.
+Given everything above, the mechanism is the merge and not a link:
+[`home/shell/antigravity.nix`](../../../home/shell/antigravity.nix) runs a `jq` merge at
+activation, so Nix owns the key it declares and whatever else lives in that file survives. `*` and
+not `+` in the jq, because the recursive merge is what leaves a sibling server intact. It is
+idempotent, so every rebuild reasserts the endpoint, and an empty file is treated as `{}` since jq
+cannot parse zero bytes.
+
+**`serverUrl` and NOT `url`**: their docs say the legacy key is no longer supported, and the
+failure mode is silence. A server that does not parse is simply not there, with no message.
+
+The endpoint itself is never a literal here: it comes from `my.memory.url`, the option declared in
+[`home/services/basic-memory.nix`](../../../home/services/basic-memory.nix) (rule 11).

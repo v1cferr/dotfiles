@@ -1,6 +1,48 @@
 # History: august 2026
 
-83 entries. Index in [README.md](../README.md).
+84 entries. Index in [README.md](../README.md).
+
+- [x] The third agent CLI is NOT gemini-cli, because that door closed in June (24/08/2026). I went
+      to install it on the same terms as Claude Code and codex, a subscription login and no API
+      key, and the research killed the premise before the first line of Nix.
+      • THE FACT: Google announced the transition to Antigravity CLI on 19/05/2026, and on
+        18/06/2026 the Gemini CLI STOPPED SERVING free tier, AI Pro and Ultra. Only paid enterprise
+        licenses kept it. The CLI's own answer is
+        `UNSUPPORTED_CLIENT ... migrate to the Antigravity suite of products`
+        (google-gemini/gemini-cli#28846, open), and nixpkgs already evaluates the package with a
+        `problem: removal` marker naming the replacement.
+      • THE UPSTREAM README STILL ADVERTISES THE FREE TIER with a personal Google account, which is
+        the trap worth recording: a project's own front page is not evidence about a backend that
+        was switched off. What settled it was the error message plus the issue tracker plus the
+        distro's marker, three sources that agree.
+      • WHAT WENT IN: `pkgs/antigravity-cli.nix`, the official release binary, `agy`. Upstream and
+        not nixpkgs for the codex reason, counted today: the publisher's `latest` said 1.1.20 and
+        `nixpkgs-unstable` was on 1.1.13, with the nixpkgs bumps landing every 8 to 10 days against
+        an upstream that ships almost daily. One file in the tarball, Go, glibc-linked, so
+        `autoPatchelfHook` is the whole build, and ripgrep is EMBEDDED (its own error string says
+        `no embedded ripgrep binary`), so unlike codex there is no wrapper and no PATH dependency.
+      • THE MEASUREMENT THAT DECIDED THE CONFIG: I tried the codex contract, a `mkOutOfStoreSymlink`
+        to a mirror versioned here, and `agy` REFUSES it. Pointed at a mirror holding `{}`, the
+        first write brought the path back as a regular file with the app's own content while the
+        mirror still held `{}`; pointed at a mirror that already had the key, the symlink survived
+        because nothing was written. So the link only holds while the app has nothing to say, which
+        is drift wearing the costume of ownership (rule 14). Nothing under `~/.gemini` is declared:
+        the package is the declaration, the rest is state and restic already covers it.
+      • THE BUMP IS THE CHEAPEST OF THE FOUR. "Did it change?" is a `latest` file holding the bare
+        version, and the release manifest publishes the sha512 of every platform, so the new hash is
+        a base16 to SRI conversion with `nix hash convert` and NOT a 56 MiB download. Three values
+        move together, not two: the URL carries an opaque build id (`6563996145418240`) that is not
+        derivable from the version. Tested by rolling a copy back to 1.1.13 and running it: the file
+        it produced is byte for byte the one I had written by hand for 1.1.20.
+      • AND IT UNCOVERED A LIVE BUG. `codex-bump` had been in the overlay and in the flake's packages
+        since 19/08 and on NOBODY'S PATH, so the `update` alias, which calls it by name, died at
+        `codex-bump: command not found` and, because the chain is `&&`, never reached
+        `nix flake update`. Five days of an update that updated nothing and said so only in a line
+        nobody reads. vscode-bump and curseforge-bump were right all along: each is installed next
+        to the thing it bumps, and codex-bump now is too.
+      • WHAT IS NOT DONE: the login itself, which is mine to do in a browser, and the shared-memory
+        question that started all of this. `~/.gemini/config/mcp_config.json` is where an MCP server
+        would land for `agy`, and basic-memory is the candidate; it is an open item, not a decision.
 
 - [x] The disk layout got formatted from scratch in a VM, and it found a first-boot bug that had
       been there since the cutover (23/08/2026, last piece of the day). The layout is the one thing

@@ -10,6 +10,27 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
+- [ ] One memory shared by the three agent CLIs, and the login that is mine to type (opened
+      24/08/2026). `agy` is installed and declared (see the
+      [august history](history/2026/08-august.md) and
+      [notes/apps/antigravity-cli.md](notes/apps/antigravity-cli.md)); these two are what the
+      package cannot do for me.
+      • THE LOGIN is interactive by design: `agy` prints a Google OAuth URL, opens the browser and
+        parks the token in the keyring, so it cannot happen at build time. Over SSH it prints a code
+        to paste back instead, which is worth knowing before trying it from the workstation.
+      • THE REAL QUESTION IS MEMORY. Today each agent keeps its own archive, so the same context
+        gets re-explained three times. basic-memory (basicmachines-co) is the candidate: an MCP
+        server over plain Markdown files, which every one of the three can read. It is NOT in
+        nixpkgs, in any channel, and its dependency tree is the reason to think before packaging:
+        `fastmcp==4.0.0b1` pinned to a BETA, plus fastembed (ONNX), litellm, sqlite-vec, asyncpg and
+        psycopg. Three paths, none of them started: uv2nix over the `uv.lock` the repo versions,
+        which is the declarative one; the published container behind the compose plus systemd
+        pattern that duo already uses here; or neither, and each agent keeps its own memory.
+      • WHERE IT WOULD LAND for `agy` is `~/.gemini/config/mcp_config.json`, and that file is
+        app-owned like everything else there, so declaring it means an idempotent activation that
+        merges what I own, never a symlink. That is the same trap the note records, met from the
+        other side.
+
 - [ ] The one follow-up the gate's hardening left open (23/08/2026). The dependabot half was
       CLOSED the same day (see the august history); this is what stayed.
       • THE COMMIT MESSAGE IS ONLY CHECKED HERE. `convco` and `prose-style` run at the commit-msg

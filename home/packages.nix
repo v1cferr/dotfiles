@@ -16,10 +16,7 @@
     # ── AI ──
     # The FHS variant: the MCP servers need node/uv, and Cowork looks for QEMU at hardcoded paths.
     claude-desktop-fhs
-    # `agy`, Google's agent CLI. It has no config of its own HERE on purpose: it rewrites
-    # everything under ~/.gemini and clobbers a symlink (docs/notes/apps/antigravity-cli.md).
-    antigravity-cli
-    antigravity-bump # the `update` alias calls it BY NAME, so it has to be on the PATH
+    # `agy` owns its package in home/shell/antigravity.nix (it declares its MCP servers now).
 
     # ── Notes / media ──
     obsidian # Markdown notes (a local vault)

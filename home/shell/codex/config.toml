@@ -19,3 +19,8 @@ trust_level = "trusted"
 
 [tui]
 theme = "dracula"
+
+# The SHARED memory server (home/services/basic-memory.nix). Streamable HTTP, because one server
+# serves the three CLIs; this mirror is the one consumer that cannot read `my.memory.url`.
+[mcp_servers.basic-memory]
+url = "http://127.0.0.1:8765/mcp"

@@ -82,7 +82,22 @@
       "Bash(nixfmt --check *)",
       "Bash(markdownlint *)",
       "Bash(lspci)",
-      "Bash(sudo -n true)"
+      "Bash(sudo -n true)",
+      "mcp__basic-memory__recent_activity",
+      "mcp__basic-memory__search",
+      "mcp__basic-memory__search_notes",
+      "mcp__basic-memory__read_note",
+      "mcp__basic-memory__view_note",
+      "mcp__basic-memory__read_content",
+      "mcp__basic-memory__build_context",
+      "mcp__basic-memory__list_directory",
+      "mcp__basic-memory__list_memory_projects",
+      "mcp__basic-memory__basic_memory_diagnostics",
+      "mcp__basic-memory__schema_validate",
+      "mcp__basic-memory__schema_infer",
+      "mcp__basic-memory__schema_diff",
+      "mcp__basic-memory__write_note",
+      "mcp__basic-memory__edit_note"
     ]
   }
 }

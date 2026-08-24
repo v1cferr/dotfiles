@@ -124,6 +124,40 @@ browser runtime: state, not a declaration.
 are registered commands. There is NO Gemini importer, so a Google Takeout needs a converter of my
 own before it can land here.
 
+## Verifying the three clients, and two answers that look like failures
+
+Measured after the first switch, 24/08/2026:
+
+| Client | What it says | What it means |
+| --- | --- | --- |
+| `agy` | `/mcp` prints `Restarted server: basic-memory` | connected |
+| codex | `codex mcp list` shows `enabled`, `auth_status: unsupported` | connected; the server advertises no OAuth, which is what a local one should do |
+| Claude Code | `claude mcp list` does NOT show it | expected: that command lists CONFIGURED scopes, and both this and the Azure MCP arrive through `--mcp-config` |
+
+The Claude one is worth spelling out because it reads like a bug. The proof it is not: a fresh
+session answered `Permission required for mcp__basic-memory__recent_activity`, so the tool was
+there all along, and once the permission was declared the same session came back with results. The
+Azure MCP has always been invisible to `mcp list` for exactly the same reason.
+
+**Permissions are split on purpose.** The reads and the two ordinary writes (`write_note`,
+`edit_note`) are allowed, because a memory that prompts on every read is a memory nobody uses, and
+a bad note is a `git revert` away. `delete_note`, `delete_project`, `move_note`,
+`create_memory_project`, `list_workspaces` and `fetch` still prompt: the first four destroy or
+relocate, and `fetch` is a web request made BY the server, which is not the same thing as reading
+my own notes.
+
+## ~/context, and who writes the frontmatter
+
+The knowledge base is its own git repository, with the layout and the rules in its README:
+`archive/` is evidence (append-only, per provider and year), `knowledge/` is what is true today
+(curated, and allowed to contradict the archive), `sources/` is one note per export, `schema/` is
+what `bm schema infer <type> --save` writes.
+
+**The index writes back into my files**, which surprised me and is correct: with
+`ensure_frontmatter_on_sync` the watcher adds `title`, `type` and `permalink` to a Markdown file
+the moment it appears. So a note handwritten in Obsidian comes back with a permalink, and a note
+written through MCP arrives with one. It touches the frontmatter and never the body.
+
 ## What is state, and where it lives
 
 | Path | What it is |

@@ -40,6 +40,18 @@
         `[mcp_servers.basic-memory] url` in its versioned mirror, verified with `codex mcp list`;
         and `agy` gets a jq merge at activation, with `serverUrl` and NOT `url`, since the legacy
         key is refused and the failure mode is silence.
+      • VERIFIED AFTER THE SWITCH, and two of the three answers look like failures and are not.
+        `agy` prints `Restarted server: basic-memory`; codex reports `enabled` with
+        `auth_status: unsupported`, which is a local server correctly advertising no OAuth; and
+        `claude mcp list` does NOT show it at all, because that command lists CONFIGURED scopes and
+        this arrives through `--mcp-config`, exactly like the Azure MCP that has been invisible
+        there for weeks. The proof was the permission error naming
+        `mcp__basic-memory__recent_activity`, and a fresh session answering from the index once the
+        permission was declared.
+      • `~/context` IS A GIT REPO NOW, with archive/knowledge/sources/schema, the frontmatter
+        contract and one worked example. And the index WRITES BACK: with
+        `ensure_frontmatter_on_sync` the watcher added `title`, `type` and `permalink` to the README
+        seconds after I saved it, touching the frontmatter and never the body.
       • WHAT I DID NOT DO: `uvx` (a fetch with no hash at runtime), the official container (a
         Docker daemon in the loop for a local CLI), and their paid cloud (the entire point is that
         the files stay here). The importers that made this worth doing are real and in the source,

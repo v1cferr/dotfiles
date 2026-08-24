@@ -15,9 +15,9 @@ finished work. What was closed is in the [august history](history/2026/08-august
       [august history](history/2026/08-august.md) and
       [notes/apps/basic-memory.md](notes/apps/basic-memory.md)). None of what is below is
       declarable, which is exactly why it is here.
-      • THE DIRECTORY IS NOT A GIT REPO YET. `~/context` is the product and the index is derived,
-        so it deserves its own history, separate from this one. Restic already covers it, but
-        restic answers "what did I lose", not "when did this belief change".
+      • THE DIRECTORY IS A GIT REPO as of 24/08/2026, with the layout, the frontmatter contract
+        and one worked example committed. It has NO remote yet, and that is the next small
+        decision: this is personal context, so if it goes anywhere it goes private.
       • ARCHIVE AND KNOWLEDGE ARE NOT THE SAME THING, and dumping years of chats into one pile
         would produce a memory that confidently quotes a preference I dropped in 2024. What goes in
         is `archive/` (evidence, immutable, per provider and year) and `knowledge/` (what is true

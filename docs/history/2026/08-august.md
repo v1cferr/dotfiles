@@ -1,6 +1,51 @@
 # History: august 2026
 
-84 entries. Index in [README.md](../README.md).
+85 entries. Index in [README.md](../README.md).
+
+- [x] One memory for the three agent CLIs, declared and pinned (24/08/2026, second piece of the
+      day). The `~/context` Markdown is the PRODUCT; basic-memory is the index over it, and that
+      order is the whole design: the day the index stops paying for itself, the directory is still
+      readable and still an Obsidian vault.
+      • WHY IT NEEDED uv2nix: it is in no nixpkgs channel, and its tree says why nobody bothered.
+        `fastmcp==4.0.0b1` pinned to a BETA, plus fastembed with ONNX, litellm, sqlite-vec, asyncpg
+        and psycopg. uv2nix builds a package set FROM a `uv.lock`, so the exact resolution is the
+        pin and every wheel carries its hash, which is rule 13 satisfied by a lock instead of by
+        hand. Measured: 173 packages, 712 MiB closure, two sdists needing a build-system fix
+        (`pybars3` and `pymeta3` never declared setuptools).
+      • THE WORKSPACE IS MINE, not upstream's, and that was the second good decision.
+        `pkgs/basic-memory/pyproject.toml` declares ONE dependency and the lock next to it is the
+        pin. Upstream builds through `uv-dynamic-versioning`, which reads the version from GIT
+        metadata, so building their tree from a tarball would mean faking a tag; the published
+        wheel does not have the problem. `prerelease = "allow"` has to be in that file or uv
+        refuses the resolution outright, with `Because there is no version of fastmcp==4.0.0b1`.
+      • HTTP AND NOT STDIO, which is the default everywhere and the wrong default here: each client
+        SPAWNS its own server over stdio, so three processes would index and write one SQLite over
+        one directory. Three owners of one artifact (rules 14 and 15) before the first note gets
+        written. One systemd user unit on loopback, three clients, and the handshake answers
+        protocol 2025-06-18.
+      • THE CONFIG QUESTION GOT ITS THIRD ANSWER IN ONE DAY. codex tolerates a symlinked mirror,
+        `agy` clobbers it, and basic-memory needs neither: its 88 settings all read from
+        `BASIC_MEMORY_<KEY>`, so the unit's `Environment=` owns what I declare and
+        `~/.basic-memory/config.json` stays state. The tool itself reports the winner:
+        `bm config get auto_update` answers `Overridden by $BASIC_MEMORY_AUTO_UPDATE`.
+        `PROJECT_ROOT` is a guard and not decoration: every project stays under `~/context`, so an
+        agent cannot point the knowledge base at another corner of my home.
+      • THE FIRST-START TRAP: before the server has run once, `bm tool write-note` fails with
+        `No projects are set up yet` while `bm project add` answers that the project already
+        EXISTS. The config knows it and the database does not, and the MCP server's lifespan is
+        what reconciles the two. So the unit comes first and the CLI second.
+      • THE THREE CLIENTS, each with its own mechanism and none holding a literal (rule 11):
+        Claude Code gets a generated `--mcp-config` with `"type": "http"` on BOTH accounts, because
+        splitting memory per account would rebuild the archive-per-agent I am leaving; codex gets
+        `[mcp_servers.basic-memory] url` in its versioned mirror, verified with `codex mcp list`;
+        and `agy` gets a jq merge at activation, with `serverUrl` and NOT `url`, since the legacy
+        key is refused and the failure mode is silence.
+      • WHAT I DID NOT DO: `uvx` (a fetch with no hash at runtime), the official container (a
+        Docker daemon in the loop for a local CLI), and their paid cloud (the entire point is that
+        the files stay here). The importers that made this worth doing are real and in the source,
+        not just the docs: `import_chatgpt`, `import_claude_conversations`, `import_claude_projects`
+        and `import_memory_json`. There is NO Gemini importer, so a Takeout needs a converter of my
+        own.
 
 - [x] The third agent CLI is NOT gemini-cli, because that door closed in June (24/08/2026). I went
       to install it on the same terms as Claude Code and codex, a subscription login and no API

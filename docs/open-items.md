@@ -10,26 +10,26 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
-- [ ] One memory shared by the three agent CLIs, and the login that is mine to type (opened
-      24/08/2026). `agy` is installed and declared (see the
+- [~] The shared memory exists; what is open is the KNOWLEDGE in it (opened 24/08/2026). The
+      server, the package and the three clients landed the same day (see the
       [august history](history/2026/08-august.md) and
-      [notes/apps/antigravity-cli.md](notes/apps/antigravity-cli.md)); these two are what the
-      package cannot do for me.
-      • THE LOGIN is interactive by design: `agy` prints a Google OAuth URL, opens the browser and
-        parks the token in the keyring, so it cannot happen at build time. Over SSH it prints a code
-        to paste back instead, which is worth knowing before trying it from the workstation.
-      • THE REAL QUESTION IS MEMORY. Today each agent keeps its own archive, so the same context
-        gets re-explained three times. basic-memory (basicmachines-co) is the candidate: an MCP
-        server over plain Markdown files, which every one of the three can read. It is NOT in
-        nixpkgs, in any channel, and its dependency tree is the reason to think before packaging:
-        `fastmcp==4.0.0b1` pinned to a BETA, plus fastembed (ONNX), litellm, sqlite-vec, asyncpg and
-        psycopg. Three paths, none of them started: uv2nix over the `uv.lock` the repo versions,
-        which is the declarative one; the published container behind the compose plus systemd
-        pattern that duo already uses here; or neither, and each agent keeps its own memory.
-      • WHERE IT WOULD LAND for `agy` is `~/.gemini/config/mcp_config.json`, and that file is
-        app-owned like everything else there, so declaring it means an idempotent activation that
-        merges what I own, never a symlink. That is the same trap the note records, met from the
-        other side.
+      [notes/apps/basic-memory.md](notes/apps/basic-memory.md)). None of what is below is
+      declarable, which is exactly why it is here.
+      • THE DIRECTORY IS NOT A GIT REPO YET. `~/context` is the product and the index is derived,
+        so it deserves its own history, separate from this one. Restic already covers it, but
+        restic answers "what did I lose", not "when did this belief change".
+      • ARCHIVE AND KNOWLEDGE ARE NOT THE SAME THING, and dumping years of chats into one pile
+        would produce a memory that confidently quotes a preference I dropped in 2024. What goes in
+        is `archive/` (evidence, immutable, per provider and year) and `knowledge/` (what is true
+        TODAY, curated, with the archive as its source). The extraction between the two is work,
+        not an import.
+      • PROVENANCE IS THE PART THAT MAKES IT TRUSTWORTHY: who said it (me, or a model inferring),
+        when, from which conversation, and whether it still holds. basic-memory has `bm schema`
+        (validate, infer, diff), so the frontmatter contract can be CHECKED instead of hoped for.
+      • THE IMPORTS ARE READY ON TWO OF THREE: `bm import chatgpt` and `bm import claude
+        conversations|projects` exist in the source. Gemini has no importer, so a Google Takeout
+        needs a converter of mine, and the honest shape is a canonical JSON of my own in between,
+        so the next index (whatever replaces basic-memory) reads the same files.
 
 - [ ] The one follow-up the gate's hardening left open (23/08/2026). The dependabot half was
       CLOSED the same day (see the august history); this is what stayed.

@@ -166,6 +166,7 @@
         vscode-bump = final.callPackage ./pkgs/vscode-bump.nix { }; # bumps vscode-tarball to the latest stable
         codex = final.callPackage ./pkgs/codex.nix { }; # OpenAI's CLI, the OFFICIAL release binary
         codex-bump = final.callPackage ./pkgs/codex-bump.nix { }; # version+hash of codex.nix
+        antigravity-cli = final.callPackage ./pkgs/antigravity-cli.nix { }; # Google's agent CLI (`agy`)
         curseforge = final.callPackage ./pkgs/curseforge.nix { }; # official modpack AppImage (unfree)
         curseforge-bump = final.callPackage ./pkgs/curseforge-bump.nix { }; # version+hash of curseforge.nix
         curseforge-fix-perms = final.callPackage ./pkgs/curseforge-fix-perms.nix { }; # +x on what the app unpacks
@@ -250,6 +251,7 @@
             vscode-bump # ./pkgs: the build IS the script's shellcheck (rule 7)
             codex # ./pkgs: the official binary, so the check proves the fetch and the wrapper
             codex-bump # ./pkgs: same shellcheck at build time
+            antigravity-cli # ./pkgs: the official binary, so the check proves the fetch and the patchelf
             curseforge-bump # ./pkgs: same, shellcheck at build time
             curseforge-fix-perms # ./pkgs: same
             docs-links # ./pkgs: the build IS the script's flake8; the CHECK below runs it

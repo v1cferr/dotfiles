@@ -4,6 +4,7 @@
   config,
   lib,
   pkgs,
+  osConfig,
   ...
 }:
 
@@ -32,18 +33,33 @@ let
     }
   );
 
+  # The SHARED memory (home/services/basic-memory.nix), over HTTP because there is ONE server for
+  # the three CLIs. `my.memory.url` is the SSOT; nothing here holds the port.
+  memoryMcp = pkgs.writeText "mcp-basic-memory.json" (
+    builtins.toJSON {
+      mcpServers.basic-memory = {
+        type = "http";
+        url = config.my.memory.url;
+      };
+    }
+  );
+
+  # BOTH accounts get it, and that is the point: one memory, not one archive per account. It
+  # follows the service's toggle, so a host without the server does not carry a dead endpoint.
+  memory = lib.optional osConfig.my.services.basic-memory memoryMcp;
+
   # The accounts' SSOT (rule 11): wrappers, menu, symlinks and MCP all come from here.
   # A new account = one entry plus its settings-<name>.json.
   profiles = {
     fai = {
       dir = ".claude-fai";
       label = "FAI      (victor.ferreira@fai.ufscar.br)";
-      mcp = [ azureMcp ]; # the work cloud belongs to this account only
+      mcp = [ azureMcp ] ++ memory; # the work cloud belongs to this account only
     };
     pessoal = {
       dir = ".claude-pessoal";
       label = "Pessoal  (dragons10021@outlook.com)";
-      mcp = [ ];
+      mcp = memory;
     };
   };
 

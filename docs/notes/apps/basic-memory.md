@@ -122,7 +122,8 @@ browser runtime: state, not a declaration.
 **The importers are real, and one is missing.** In the source, not just the docs:
 `import_chatgpt`, `import_claude_conversations`, `import_claude_projects` and `import_memory_json`
 are registered commands. There is NO Gemini importer, so a Google Takeout needs a converter of my
-own before it can land here.
+own before it can land here. The click by click for all three, plus the flag that changes name
+between the two Claude commands, is in [the export guide](../../guides/context-exports.md).
 
 ## Verifying the three clients, and two answers that look like failures
 

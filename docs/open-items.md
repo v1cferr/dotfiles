@@ -16,8 +16,9 @@ finished work. What was closed is in the [august history](history/2026/08-august
       [notes/apps/basic-memory.md](notes/apps/basic-memory.md)). None of what is below is
       declarable, which is exactly why it is here.
       • THE DIRECTORY IS A GIT REPO as of 24/08/2026, with the layout, the frontmatter contract
-        and one worked example committed. It has NO remote yet, and that is the next small
-        decision: this is personal context, so if it goes anywhere it goes private.
+        and one worked example committed, pushed to `v1cferr/context`, PRIVATE. Private is not a
+        detail here: it is the only repo of mine that holds personal context rather than
+        configuration, so it is the one place where "public by default" would be wrong.
       • ARCHIVE AND KNOWLEDGE ARE NOT THE SAME THING, and dumping years of chats into one pile
         would produce a memory that confidently quotes a preference I dropped in 2024. What goes in
         is `archive/` (evidence, immutable, per provider and year) and `knowledge/` (what is true
@@ -28,8 +29,12 @@ finished work. What was closed is in the [august history](history/2026/08-august
         (validate, infer, diff), so the frontmatter contract can be CHECKED instead of hoped for.
       • THE IMPORTS ARE READY ON TWO OF THREE: `bm import chatgpt` and `bm import claude
         conversations|projects` exist in the source. Gemini has no importer, so a Google Takeout
-        needs a converter of mine, and the honest shape is a canonical JSON of my own in between,
-        so the next index (whatever replaces basic-memory) reads the same files.
+        needs a converter of mine, and the honest shape is Markdown in `archive/gemini/<year>/`
+        with the same frontmatter as the other two, so the next index reads it without knowing
+        which provider it came from.
+      • THE ORDER I CHOSE: Gemini and ChatGPT first, Claude later. The Claude export is not
+        blocked, since I am the Primary Owner of the FAI organization and that is who Anthropic
+        lets request it; it is just not the first pile worth curating.
 
 - [ ] The one follow-up the gate's hardening left open (23/08/2026). The dependabot half was
       CLOSED the same day (see the august history); this is what stayed.

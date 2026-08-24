@@ -77,24 +77,40 @@ and aliases, is a job Nix already did.
 
 ## Nothing under `~/.gemini` is declared, and that is a measurement
 
-The obvious move was the codex contract: `mkOutOfStoreSymlink` from the app's config file to a
-mirror versioned here, so every change lands as a `git diff` (rule 16). **That contract does not
-hold for this app**, tested on 24/08/2026 with 1.1.13 in an isolated `HOME`:
+Two facts, in this order: there is nothing to declare YET, and the codex contract would not hold
+if there were.
+
+**Sparse persistence is why the repo looks empty next to codex's.** Their docs are explicit that
+the CLI writes only the values that DIFFER from the defaults, so with the settings untouched there
+is no `settings.json` at all. Measured after my own login, on 1.1.20: `~/.gemini/config/config.json`
+holds ONE generated key, `mcp_config.json` is 0 bytes, and no settings file exists. Codex is the
+opposite: `config.toml` is there from the first run and the app persists into it, which is what
+makes a mirror worth having THERE.
+
+**And the symlink does not survive a write**, tested on 1.1.20 against the path their docs name,
+`~/.gemini/antigravity-cli/settings.json`:
 
 | Step | Result |
 | --- | --- |
-| First run | it creates `~/.gemini/config/{config.json,mcp_config.json,projects/}` |
-| Symlink to a mirror holding `{}`, then run | the path comes back a REGULAR file with the new key, and the MIRROR still holds `{}` |
-| Symlink to a mirror that already has the key | the symlink SURVIVES, because nothing was written |
+| Hand-written keys reached through a symlink | READ and honored: `colorScheme` and `showTips` both survived |
+| The same run, afterwards | the path is a REGULAR file, re-serialized pretty-printed by the app |
+| The mirror at the other end | untouched, still holding what I wrote |
 
-So the link only survives while the app has nothing to write, and the day it writes, the mirror
-silently stops being the truth while still looking owned. That is exactly the drift rule 14
-exists to prevent, and it is the opposite of what codex does today, where the same test kept the
-inode and the symlink.
+`~/.gemini/config/config.json` behaves the same way: pointed at a mirror holding `{}`, the first
+write detaches the link and the mirror stays at `{}`. The key it rewrites there is
+`userSettings.remoteControlHostname`, a generated name (`nixos-kingston-fiery-ion`, then
+`-orbital-mars`, then `-deep-drift`), which also says what that file is: the app's scratch space,
+not my config.
 
-The key it kept rewriting is `userSettings.remoteControlHostname`, a generated name
-(`nixos-kingston-fiery-ion`, then `-orbital-mars`, then `-deep-drift`), which also makes the point
-that this file is the app's scratch space and not my config.
+So editing by hand WORKS and a symlink does not, which is the opposite pair from codex. The day a
+setting here is worth owning (`toolPermission`, `enableTerminalSandbox`, `enableTelemetry`, or an
+MCP server), the mechanism is rule 14's other half: an idempotent activation that merges my keys
+into whatever the app left, never a link.
+
+**The login is not under `HOME` at all**, which the same test proved by accident: a run with `HOME`
+pointed at an empty scratch directory answered the prompt anyway. The token is in the keyring,
+reached over D-Bus, and the keyring is per USER, so isolating `HOME` does not isolate auth and no
+file under `~/.gemini` carries the credential.
 
 So the declaration is the PACKAGE and nothing else. Everything the tool keeps is state and belongs
 to restic (rule 6), which `paths = [ "/home/v1cferr" ]` already covers:
@@ -102,12 +118,15 @@ to restic (rule 6), which `paths = [ "/home/v1cferr" ]` already covers:
 | Path | What it holds |
 | --- | --- |
 | `~/.gemini/config/` | `config.json`, `mcp_config.json`, per-project files, a `.migrated` marker |
-| `~/.gemini/antigravity-cli/` | conversations, knowledge, brain, logs, crashes, `installation_id` |
+| `~/.gemini/antigravity-cli/` | `settings.json` and `keybindings.json` once touched, plus conversations, knowledge, brain, logs, crashes |
 | `~/.cache/ms-playwright-go/` | the browser runtime it downloads on its own for the browser tools |
 
-One trap for later: their docs still name `~/.gemini/antigravity-cli/settings.json` as the
-settings file, and 1.1.13 does not use it. The `.migrated` marker next to `config.json` is the
-migration that moved it, so the docs describe the previous layout.
+**A correction worth keeping** (24/08/2026, same day): I first read the missing
+`settings.json` plus the `.migrated` marker next to `config.json` as the settings file having
+MOVED, and wrote here that their docs described a previous layout. Wrong. The documented path is
+live, and what keeps it from existing is the sparse persistence above, proven by writing one by
+hand and watching both keys take effect. `config.json` and `settings.json` are two different files
+with two different jobs, and only the second one would ever be mine.
 
 ## Where an MCP server would go
 

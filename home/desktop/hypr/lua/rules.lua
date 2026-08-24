@@ -29,6 +29,11 @@ hl.window_rule({
   idle_inhibit = "focus",
 })
 
+-- Hearthstone: off screen the game CRAWLS to 1 fps and its render AND audio only catch up when the
+-- workspace comes back, because an invisible surface gets no frame callback. render_unfocused keeps
+-- it drawing at misc.render_unfocused_fps. Measured: docs/notes/desktop/hypr.md
+hl.window_rule({ match = { class = "^(hearthstone\\.exe)$" }, render_unfocused = true })
+
 -- Flameshot v14: the old -1920/3840 stretch BREAKS it, since v14 opens a PICKER first. Only
 -- float plus center, matched by TITLE (the class is empty). Every flag: docs/notes/desktop/hypr.md
 hl.window_rule({

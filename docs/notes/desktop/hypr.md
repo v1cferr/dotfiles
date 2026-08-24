@@ -157,7 +157,7 @@ does not stick.
 the ONLY value away from the default (0.5); the other six `scrolling` settings already are what we
 want, so they are not written. The `dwindle` block left along with the layout.
 
-Two `misc` settings worth keeping:
+Three `misc` settings worth keeping:
 
 - **`vrr = 2`** (G-Sync only in fullscreen games). The LG UltraGear is G-Sync Compatible, and on
   the Arc (`xe`) the freeze NVIDIA used to give on the lockscreen does NOT reproduce, which is why
@@ -166,6 +166,9 @@ Two `misc` settings worth keeping:
   teardown, relaunching `hyprlock` from a TTY REATTACHES the locked session instead of refusing,
   which avoids a `sudo reboot` to escape an orphaned lock screen. It is the one path that produces
   a hyprlock NOT born from `hyprlock.service`, which is what the unit's `ExecCondition` covers.
+- **`render_unfocused_fps = 30`**, the GLOBAL ceiling for the windows that carry the
+  `render_unfocused` rule (a game on a workspace that is off screen). It is 30 and not the default
+  15 because 15 measured JITTERY; the table is in "Window rules" below.
 
 The custom beziers go through `hl.curve` (hyprlang's old `bezier=`); "default" and "linear" are
 Hyprland's built-ins and the four others are ours. In `hl.animation`, `leaf` is the animation's
@@ -223,6 +226,42 @@ inactive), maximize requests suppressed since that behaves better under tiling, 
 drag fix for classless floating windows that steal focus. Picture-in-Picture stays fully opaque,
 and Ascension (a private WoW through Wine) is floating, centered on the LG, opaque and
 idle-inhibiting.
+
+**Hearthstone and the workspace that is off screen.** Leaving the game's workspace made its render
+AND its audio fall behind, and both only caught up on coming back. It is not a Hyprland bug and
+there is no switch that turns it off: a Wayland surface that is not on screen receives no
+`wl_surface.frame` callback, so the client's next buffer swap BLOCKS and the whole game loop stops
+with it, audio included. XWayland surfaces, which is what Wine and Bottles produce, are hit the
+same way.
+
+Measured with `glxgears` parked on a workspace that was off screen (0.55.4, Arc B580):
+
+| State | FPS |
+| --- | --- |
+| Visible | 141.78 (vsync at 144 Hz) |
+| Off screen, no rule | 1.000 |
+| Off screen, `render_unfocused` + `render_unfocused_fps = 15` | 8 to 18, jittery |
+| Off screen, `render_unfocused` + `render_unfocused_fps = 30` | 30.28, steady |
+
+`render_unfocused = true` per class is the intended fix; the wiki's own example is Dark Souls, which
+disconnects when the fps flutters. The ceiling is not per rule, it is the global
+`misc.render_unfocused_fps` in appearance.lua.
+
+The class to match is the LOWERCASED file name of the .exe, which is what Wine puts on the XWayland
+window: `Hearthstone.exe` becomes `hearthstone.exe`, `Ascension Launcher.exe` becomes
+`ascension launcher.exe`. Another game that crawls is one more line with its class.
+
+Ascension does NOT carry the rule. Off screen it keeps burning 56% of a core, so its loop is not
+blocked (D3D9 through wined3d is a different present path), and the rule would pay 30 fps of GPU
+for nothing.
+
+An upstream hole worth knowing (hyprwm/Hyprland#12463): a window rendering unfocused still leans on
+its MONITOR having a reason to draw, so on a completely static screen it can fall under the ceiling.
+There is nothing to configure, and it did not show up in the measurement above.
+
+Two knobs that would be relevant do NOT exist in 0.55.4: `misc:vfr` was removed in 0.55, and
+`render:not_shown_fifo_lock`, which controls exactly this locking for invisible surfaces, is only on
+main. Worth a look on the next bump.
 
 **The Flameshot rule is the subtle one.** The `-1920/3840` stretch of the OLD flow (v13 with grim)
 BREAKS v14, since v14 opens a monitor PICKER (a normal window) and then a fullscreen overlay on the

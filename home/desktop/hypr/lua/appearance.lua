@@ -51,6 +51,10 @@ hl.config({
     -- A safety net against a lockout: relaunching hyprlock from a TTY REATTACHES the locked
     -- session instead of refusing, so there is no `sudo reboot` to escape an orphaned lock.
     allow_session_lock_restore = true,
+    -- The ceiling for the `render_unfocused` windows in rules.lua (a game on a hidden workspace).
+    -- 30 and not the default 15 because at 15 the measurement came out JITTERY (8 to 18 fps) and
+    -- the game loop drives the AUDIO too; at 30 it holds steady. It only costs while one exists.
+    render_unfocused_fps = 30,
   },
 })
 

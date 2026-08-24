@@ -1,10 +1,11 @@
-# vscode-bump, curseforge-bump and codex-bump
+# vscode-bump, curseforge-bump, codex-bump and antigravity-bump
 
 Modules: [`pkgs/vscode-bump.nix`](../../../pkgs/vscode-bump.nix),
 [`pkgs/curseforge-bump.nix`](../../../pkgs/curseforge-bump.nix),
-[`pkgs/codex-bump.nix`](../../../pkgs/codex-bump.nix)
+[`pkgs/codex-bump.nix`](../../../pkgs/codex-bump.nix),
+[`pkgs/antigravity-bump.nix`](../../../pkgs/antigravity-bump.nix)
 
-Three scripts that keep a vendored binary on its latest version without anybody editing a hash by
+Four scripts that keep a vendored binary on its latest version without anybody editing a hash by
 hand. They share a reason and differ in how they ask "did it change?", so they live on one page.
 
 ## The structural reason all three exist
@@ -13,18 +14,20 @@ Rule 13 pins the dependency universe: no fetch without a hash, no implicit "late
 a consequence people miss: **a src with a locked hash never updates itself.** What exists is not
 an "input that follows upstream", it is an AUTOMATED BUMP.
 
-All three run from the `update`/`upgrade` alias
+All four run from the `update`/`upgrade` alias
 ([`home/shell/zsh.nix`](../../../home/shell/zsh.nix)), before `nix flake update`, so "always on
-the latest" happens at rebuild time. All three are a NO-OP when already current, because they run
-on every `upgrade`.
+the latest" happens at rebuild time. All four are a NO-OP when already current, because they run
+on every `upgrade`. The alias calls them BY NAME, so each one is installed next to the thing it
+bumps and not only exposed as a flake package: a script that is not on the PATH breaks the whole
+chain at its `&&`.
 
 ## Where they differ
 
-| | vscode-bump | curseforge-bump | codex-bump |
-| --- | --- | --- | --- |
-| Upstream URL | versioned (`/1.133.0/linux-x64/stable`) | a POINTER (`curseforge-latest-linux.AppImage`) | versioned (`/rust-v0.148.0/…musl.tar.gz`) |
-| What the bump changes | only the version number | version **and** the recomputed hash | version **and** the recomputed hash |
-| How it learns the version | the official update API, `productVersion` | the `control` file of the `.deb` of the same release | the redirect of `/releases/latest` |
+| | vscode-bump | curseforge-bump | codex-bump | antigravity-bump |
+| --- | --- | --- | --- | --- |
+| Upstream URL | versioned (`/1.133.0/linux-x64/stable`) | a POINTER (`curseforge-latest-linux.AppImage`) | versioned (`/rust-v0.148.0/…musl.tar.gz`) | versioned, plus an opaque build id |
+| What the bump changes | only the version number | version **and** the recomputed hash | version **and** the recomputed hash | version, build id **and** the PUBLISHED hash |
+| How it learns the version | the official update API, `productVersion` | the `control` file of the `.deb` of the same release | the redirect of `/releases/latest` | a `latest` file holding the bare version |
 
 **VS Code.** The input URL is versioned on purpose. `/latest/` is a pointer, so on every release
 the pinned narHash stops matching and the flake no longer evaluates on a clean machine. That
@@ -78,6 +81,26 @@ version is `''${tag##*/rust-v}`. When a tag does NOT match that shape the stripp
 the whole URL stays in the variable, which is what the plausibility `case` catches: slashes and
 letters are not a version. Prereleases never reach it, since `/releases/latest` skips them, and
 `0.149.0-alpha.2` existed the day this was written.
+
+**Antigravity.** The only one that never downloads the artifact, because Google publishes a
+`manifest.json` per release with the URL and the **sha512 of every platform**. `fetchurl` takes an
+SRI hash and the manifest speaks base16, so the conversion is arithmetic:
+
+```bash
+nix hash convert --hash-algo sha512 --from base16 --to sri "$sha512"
+```
+
+That is why [`pkgs/antigravity-cli.nix`](../../../pkgs/antigravity-cli.nix) pins a `sha512-` hash
+where the other two pin `sha256-`: taking the algorithm they publish is what makes the 56 MiB
+download unnecessary. The fetch still verifies it, so a manifest that lied would fail the build
+instead of installing something else.
+
+"Did it change?" is cheaper still: `/latest` is a text file holding `1.1.20` and nothing else.
+
+The third field is what makes this one different from codex. The download URL is
+`/<version>-<build id>/linux-x64/…`, and that build id (`6563996145418240`) is opaque: it is not
+derivable from the version, and only the manifest knows it. So the script rewrites THREE values,
+and it reads the id back out of the URL the manifest gave it rather than guessing a format.
 
 ## Shared conventions
 

@@ -16,15 +16,16 @@ Aliases defined in [`home/shell/zsh.nix`](home/shell/zsh.nix):
 
 ```bash
 rebuild   # nh os switch <flake> && hyprctl reload
-update    # vscode-bump + curseforge-bump + nix flake update + vscode-extensions-dump
+update    # the four bump scripts + nix flake update + vscode-extensions-dump
 upgrade   # update && rebuild, the equivalent of `apt update && apt full-upgrade`
 gc        # sudo nix-collect-garbage -d, drops old generations
 ```
 
 `update` is the maintenance ritual, and it does more than bump `flake.lock`: it
 recomputes the pinned version and hash of the vendored binaries (VS Code,
-CurseForge) and refreshes the VS Code extension mirror. It runs as my user
-rather than root, because that is who holds the SSH key for the private inputs.
+CurseForge, codex and the Antigravity CLI) and refreshes the VS Code extension
+mirror. It runs as my user rather than root, because that is who holds the SSH
+key for the private inputs.
 
 With no `#host`, `nixos-rebuild` matches the current `hostname` against
 `nixosConfigurations`. For a specific host: `sudo nixos-rebuild switch --flake .#<host>`.
@@ -61,7 +62,7 @@ home/                    USER (home-manager): dotfiles + user apps
 pkgs/                    own derivations (outside nixpkgs), exposed in `packages.x86_64-linux`
                          so that `nix build .#nxbender` works. Vendored binaries and helper
                          scripts live here: nxbender, azure-mcp, curseforge (+bump, +fix-perms),
-                         codex (+bump), antigravity-cli, vscode-bump, claude-code-discord-status,
+                         codex (+bump), antigravity-cli (+bump), vscode-bump, claude-code-discord-status,
                          and the checkers (docs-links, dead-config) that the gate and the
                          pre-commit hooks run
 hosts/                   per-machine specifics (hostname, disks, monitors, stateVersion)

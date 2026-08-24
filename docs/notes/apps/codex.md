@@ -109,6 +109,11 @@ compiles Codex from Rust, so overriding its `src` would mean recomputing a vendo
 recompiling a 251 MiB binary on a project that tags almost daily. The published artifact is the
 same thing without the wait.
 
+**The bump script is installed next to the package**, and that line is load-bearing: the alias
+calls it by name, so while it was only a flake package the chain died at
+`codex-bump: command not found` and never reached `nix flake update`. Caught on 24/08/2026, five
+days after the package landed, which is five days of an `update` that bumped nothing.
+
 **Take the `-package-` asset, not the bare `codex-` one**, and this is the trap that cost a broken
 session on 19/08/2026. The bare tarball is the entrypoint ALONE, one 251 MiB file, and it looks
 complete. It is not: Codex spawns a SECOND binary to run commands, `codex-code-mode-host`, and

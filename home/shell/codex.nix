@@ -7,6 +7,10 @@ let
   repo = "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/shell/codex";
 in
 {
+  # The `update` alias calls it BY NAME, so it has to be on the PATH: exposed only as a flake
+  # package, the chain died at `codex-bump: command not found` and never reached the lock.
+  home.packages = [ pkgs.codex-bump ];
+
   programs.codex = {
     enable = true;
     # ./pkgs/codex.nix, the OFFICIAL release binary: even unstable lags upstream by a release.

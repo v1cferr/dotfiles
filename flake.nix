@@ -80,6 +80,24 @@
       inputs.nixpkgs.follows = "nixpkgs"; # dedup (its own derivation, no dep on unstable)
     };
 
+    # uv2nix and its two halves: they turn a `uv.lock` into a Nix package set, which is how
+    # basic-memory gets built. Why not nixpkgs: docs/notes/apps/basic-memory.md
+    pyproject-nix = {
+      url = "github:pyproject-nix/pyproject.nix";
+      inputs.nixpkgs.follows = "nixpkgs"; # dedup
+    };
+    uv2nix = {
+      url = "github:pyproject-nix/uv2nix";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    pyproject-build-systems = {
+      url = "github:pyproject-nix/build-system-pkgs";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.uv2nix.follows = "uv2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # VS Code from the OFFICIAL tarball at a FIXED, VERSIONED url: `/latest/` is a POINTER and broke
     # the eval on every release. What bumps it is vscode-bump, on `update`: docs/notes/repo/flake.md
     vscode-tarball = {
@@ -168,6 +186,7 @@
         codex-bump = final.callPackage ./pkgs/codex-bump.nix { }; # version+hash of codex.nix
         antigravity-cli = final.callPackage ./pkgs/antigravity-cli.nix { }; # Google's agent CLI (`agy`)
         antigravity-bump = final.callPackage ./pkgs/antigravity-bump.nix { }; # version+id+hash of it
+        basic-memory = final.callPackage ./pkgs/basic-memory.nix { inherit inputs; }; # `bm`, the MCP memory
         curseforge = final.callPackage ./pkgs/curseforge.nix { }; # official modpack AppImage (unfree)
         curseforge-bump = final.callPackage ./pkgs/curseforge-bump.nix { }; # version+hash of curseforge.nix
         curseforge-fix-perms = final.callPackage ./pkgs/curseforge-fix-perms.nix { }; # +x on what the app unpacks
@@ -254,6 +273,7 @@
             codex-bump # ./pkgs: same shellcheck at build time
             antigravity-cli # ./pkgs: the official binary, so the check proves the fetch and the patchelf
             antigravity-bump # ./pkgs: same shellcheck at build time
+            basic-memory # ./pkgs: building it IS the proof that our uv.lock still resolves
             curseforge-bump # ./pkgs: same, shellcheck at build time
             curseforge-fix-perms # ./pkgs: same
             docs-links # ./pkgs: the build IS the script's flake8; the CHECK below runs it

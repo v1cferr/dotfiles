@@ -57,14 +57,14 @@ home/                    USER (home-manager): dotfiles + user apps
   apps/                  apps WITH config of their own: dropbox, media, dolphin, flameshot,
                          vscode, mangohud, office, openal, curseforge
   services/              drive-mount, fai-workstation-mount, arch-legacy-mount,
-                         cs2-saves-backup, claude-discord-rpc, disk-hygiene
+                         cs2-saves-backup, claude-discord-rpc, disk-hygiene, basic-memory
 
 pkgs/                    own derivations (outside nixpkgs), exposed in `packages.x86_64-linux`
                          so that `nix build .#nxbender` works. Vendored binaries and helper
                          scripts live here: nxbender, azure-mcp, curseforge (+bump, +fix-perms),
-                         codex (+bump), antigravity-cli (+bump), vscode-bump, claude-code-discord-status,
-                         and the checkers (docs-links, dead-config) that the gate and the
-                         pre-commit hooks run
+                         codex (+bump), antigravity-cli (+bump), basic-memory (uv2nix),
+                         vscode-bump, claude-code-discord-status, and the checkers
+                         (docs-links, dead-config) that the gate and the pre-commit hooks run
 hosts/                   per-machine specifics (hostname, disks, monitors, stateVersion)
   nixos-kingston/        <- the ONLY host (NVMe KC3000, btrfs + subvolumes)
     default.nix          hostname, kernel, extra mounts, my.monitors, stateVersion

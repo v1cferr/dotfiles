@@ -5,6 +5,8 @@
 let
   ws = config.my.fai.workstation; # SSOT: home/net/fai-workstation.nix (rule 11)
   t480 = config.my.t480; # SSOT: home/net/t480.nix, shared with the `t480` RDP wrapper
+  # My brother's PC. One address, DUAL BOOT, so three blocks here share it (rule 11 inside the file).
+  cesarHost = "192.168.1.40";
 
   # Sized to fit VS Code Remote-SSH's FIXED 17s budget, not to comfort.
   faiResilience = {
@@ -53,10 +55,11 @@ in
       # My brother's PC (Windows 11, OpenSSH 9.5), which is where every trap here comes from.
       # The admin authorized_keys path and the Git Bash swap: docs/notes/network/ssh.md
       cesar = {
-        HostName = "192.168.1.40";
+        HostName = cesarHost;
         User = "v1cferr";
         Port = 22;
         IdentityFile = "~/.ssh/id_ed25519";
+        HostKeyAlias = "cesar-windows"; # known_hosts keys by NAME, and this address answers with two keys
         RequestTTY = "yes"; # a RemoteCommand with no TTY is an interactive shell with no echo and no readline
         # The leading `&` is PowerShell's call operator: without it the quoted path is just a string.
         RemoteCommand = ''& "C:\Program Files\Git\bin\bash.exe" -l -i'';
@@ -65,10 +68,21 @@ in
       # The SAME host with no RemoteCommand, and NOT duplication: the two are mutually exclusive in
       # ssh, so without this twin `scp` and `rsync` stop working.
       cesar-cmd = {
-        HostName = "192.168.1.40";
+        HostName = cesarHost;
         User = "v1cferr";
         Port = 22;
         IdentityFile = "~/.ssh/id_ed25519";
+        HostKeyAlias = "cesar-windows"; # the twin verifies the same host key as `cesar`, never the Linux one
+      };
+
+      # The SAME machine booted into Linux (OpenSSH 10.5): two sshd, two host keys, one IP. It inherits
+      # NOTHING from the twins above, because every trap up there belongs to Win32-OpenSSH.
+      cesar-linux = {
+        HostName = cesarHost;
+        User = "v1cferr";
+        Port = 22;
+        IdentityFile = "~/.ssh/id_ed25519";
+        HostKeyAlias = "cesar-linux"; # the other half of the split: without it the two keys collide
       };
 
       # My mother's ThinkPad T480 (Windows 11 IoT LTSC): sshd binds the TUNNEL address only, and

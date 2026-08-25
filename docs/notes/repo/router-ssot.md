@@ -97,6 +97,13 @@ today: `moonlightSources`, `basePort`, `faiSubnets`, `csrf_allowed_origins`, `po
 mismatch against a router that still has the value, and the subnet check says "could not read" in as
 many words. Failing loudly on a rename is the only failure mode a checker is allowed to have.
 
+**And the `ssh.nix` addresses need one anchor each, as they stop being `HostName` literals.**
+Two have left already: the T480's went into `my.t480` (a second consumer, the RDP wrapper), and the
+brother's became the `cesarHost` binding on 25/08/2026, when his DUAL BOOT made three blocks share
+one address. The second one was found BY THIS HOOK, in the commit that moved it: the dns check
+reported `/cesar-ssh.v1cferr.dev/192.168.1.40 answers 192.168.1.40, which no host in this repo
+declares`, which is precisely the loud failure the paragraph above promises.
+
 ## What the first run found, and it was a bug in the checker
 
 Not drift. A false positive of the parser's own making: the extractor read the quoted strings of the

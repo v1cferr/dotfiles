@@ -166,5 +166,54 @@ declarative way out: `cesar` to sit down and work, `cesar-cmd` to copy a file or
 The alternative was memorizing `-o RemoteCommand=none` on every invocation, which is exactly what
 the repo exists so you do not have to remember.
 
-The IP is literal and comes from DHCP: if the router hands out another address the alias breaks,
-and the fix is a DHCP reservation on the OpenWrt, not one more `my.*` option.
+The IP stopped being a literal per block and became a `let` binding, `cesarHost`, the day the third
+block appeared (rule 11 applied INSIDE the module: no `my.*` option, because nothing outside this
+file reads it). It comes from DHCP: if the router hands out another address the alias breaks, and
+the fix is the reservation on the OpenWrt (`dhcp.arch_cesar`), not one more option.
+
+## That machine DUAL BOOTS, and known_hosts keys by name and not by address
+
+`ssh v1cferr@192.168.1.40` died with `REMOTE HOST IDENTIFICATION HAS CHANGED` on 25/08/2026, and it
+was not an attack: the machine had booted into Linux. Two operating systems, each with its OWN sshd
+and its own host keys (`C:\ProgramData\ssh\ssh_host_*` on Windows, `/etc/ssh/ssh_host_*` on the
+Linux side), answering on the SAME address and port. Measured that day, none of the three keys
+matched:
+
+| | Windows (OpenSSH 9.5) | Linux (OpenSSH 10.5) |
+| --- | --- | --- |
+| ed25519 | `SHA256:PfytwEuINkNhyNE5RMzea0NkL4O1AFWuoeOhCI5CWdE` | `SHA256:ovue+UzduT+luQHHLT3KUfOwVbbGMA949wdQJPBdUmQ` |
+| rsa | `SHA256:GNgSXh/w+P8nbk/eQ373Bd3DlPSQlTwj38ShskQF3Dg` | `SHA256:KWrwbOOK0X4OD/2W0SNpxYO2fR6FjbwCUBqFnEJ7RLQ` |
+| ecdsa | `SHA256:MOzk0McYirsptnTn2Y4tRL8ucV4yfEDRNGmlRInuxqQ` | `SHA256:HyD7k1eBqJwpKEYqnaPiCNf/7Bi38SwgnQdHw9a51yo` |
+
+**The alarm is CORRECT and cannot be tuned away.** `known_hosts` maps a NAME (a host, an IP) to a
+key, so one address with two identities is, to the client, indistinguishable from somebody having
+taken over the address. `ssh-keygen -R 192.168.1.40` "fixes" it for the OS booted right now and
+breaks the next reboot, forever, which is how a real hijack ends up looking like routine.
+
+**`HostKeyAlias` is the fix, and it is one word per block.** It changes ONLY the name used to look
+the host key up, never the address dialed, so the three blocks keep `cesarHost` and split into two
+identities: `cesar` and `cesar-cmd` verify under `cesar-windows`, `cesar-linux` under `cesar-linux`.
+Both sets coexist in `known_hosts` and neither boot touches the other's line.
+
+**The price is that the raw IP is now off limits.** `ssh v1cferr@192.168.1.40` carries no alias, so
+it keeps flapping between the two keys: the alias IS the interface. Same hole on the external path,
+`cesar-ssh.v1cferr.dev:2223`, whose entry here still holds the Windows key only, and whose real
+client is the phone, out of this config's reach.
+
+**Asking for the wrong OS now raises the SAME warning, and that is the design.** With Linux up,
+`ssh cesar` aborts with `REMOTE HOST IDENTIFICATION HAS CHANGED` on the `cesar-windows` line, and
+that reading is exact: the alias is a statement about WHICH identity is expected, so a mismatch is a
+refusal to talk to the other one. Verified in both directions on 25/08/2026: `cesar-linux` connected
+against the live keys (it only stopped at the password prompt), `cesar-windows` refused.
+
+**`known_hosts` is state, so the split was done by hand** (25/08/2026): the Windows trio, already
+trusted, was relabeled from `192.168.1.40` to `cesar-windows`, and the Linux trio was seeded from
+`ssh-keyscan` piped through `sed`. That seed is trust-on-first-use on the LAN, NOT verification: the
+ed25519 above still has to be compared against `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub`
+read on that machine. Backup at `~/.ssh/known_hosts.bak-20260825`.
+
+**`cesar-linux` does not authenticate yet**, and this side cannot tell why. It answers
+`Permission denied (publickey,password)`, which is what sshd says both for a key that is not in
+`authorized_keys` and for a user that does not exist, because OpenSSH refuses to enumerate users.
+Closing it takes one command over there, and `ssh-copy-id` DOES work on this half (the Windows
+`administrators_authorized_keys` detour above is Win32-OpenSSH's, not Linux's).

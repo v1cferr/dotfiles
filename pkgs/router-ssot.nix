@@ -124,11 +124,17 @@ writers.writePython3Bin "router-ssot"
         out["fai_subnets"] = nix_list(read("system/net/fai-gateway.nix"), "faiSubnets")
         ssh = re.search(r"ports\s*=\s*\[\s*(\d+)\s*\]", read("system/net/network.nix"))
         out["ssh_port"] = ssh.group(1) if ssh else ""
-        # TWO anchors, because one address already left ssh.nix. The T480's went into an option
-        # the day the RDP wrapper became a second consumer, which is rule 11 doing its job; the
-        # other hosts are still literals. Losing this line does not weaken the check quietly: the
-        # dns one starts reporting an answer "no host declares", which is how it was found.
-        hosts = set(re.findall(r'HostName\s*=\s*"([\d.]+)"', read("home/shell/ssh.nix")))
+        # THREE anchors, because two addresses no longer sit in a `HostName` literal. The T480's
+        # went into an option the day the RDP wrapper became a second consumer, and the brother's
+        # became the `cesarHost` binding the day his DUAL BOOT needed a third block for the same
+        # address; both are rule 11 doing its job. Losing an anchor does not weaken the check
+        # quietly: the dns one starts reporting an answer "no host declares", which is how the
+        # cesar one was found, by this hook, in the very commit that moved it.
+        ssh_nix = read("home/shell/ssh.nix")
+        hosts = set(re.findall(r'HostName\s*=\s*"([\d.]+)"', ssh_nix))
+        bound = re.search(r'cesarHost\s*=\s*"([\d.]+)"', ssh_nix)
+        if bound:
+            hosts.add(bound.group(1))
         opt = re.search(r'host\s*=\s*lib\.mkOption\s*\{.*?default\s*=\s*"([\d.]+)"',
                         read("home/net/t480.nix"), re.S)
         if opt:

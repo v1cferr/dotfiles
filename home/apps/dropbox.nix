@@ -129,7 +129,9 @@ in
       # The script is silent when fine; this cuts systemd's own "Starting/Finished" per trigger.
       LogLevelMax = "warning";
     };
-    Install.WantedBy = [ "graphical-session.target" ];
+    # NO Install, on purpose: the TIMER is the only trigger. A `WantedBy=graphical-session.target`
+    # here ALSO fired the oneshot at session start, before the daemon's handshake and before any
+    # notification daemon existed, and every boot logged a FALSE "down" plus a dead toast.
   };
 
   systemd.user.timers.dropbox-link-watch = lib.mkIf enabled {

@@ -140,6 +140,21 @@ It only NOTIFIES, it never restarts. What keeps the daemon up is block 1; two ow
 automation is rule 15. And in the unlink case restarting would solve nothing, because relinking
 requires authorizing in the BROWSER.
 
+**Only the timer triggers it**, and that is why the service carries NO `Install`. It used to also
+be `WantedBy=graphical-session.target`, and that made the oneshot fire at session start, before the
+daemon finished its handshake and before there was any notification daemon to receive the toast.
+The result was a FALSE alarm in every boot, three minutes ahead of the real probe:
+
+```text
+07:11:23 dropbox-link-watch[2180]: Dropbox is down, dead
+07:11:23 dropbox-link-watch[2241]: Failed to show notification: ...ServiceUnknown
+07:14:21 dropbox-link-watch[12004]: Dropbox UNLINKED, nothing is syncing, unlinked
+```
+
+The `OnActiveSec` below exists to cover exactly that transient, and the `WantedBy` on the service
+went over its head. An alarm that cries at every boot is the alarm that tires, which is the same
+thing the 12 h anti-spam is there to prevent.
+
 **The timer**: `OnActiveSec = 3min` so the daemon can come up and handshake with the cloud before
 the first probe, otherwise the transient startup state would become a false alarm.
 `OnUnitActiveSec = 30min` is plenty of resolution: an unlink does not resolve itself, and the

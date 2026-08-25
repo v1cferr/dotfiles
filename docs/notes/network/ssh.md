@@ -212,8 +212,20 @@ trusted, was relabeled from `192.168.1.40` to `cesar-windows`, and the Linux tri
 ed25519 above still has to be compared against `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub`
 read on that machine. Backup at `~/.ssh/known_hosts.bak-20260825`.
 
-**`cesar-linux` does not authenticate yet**, and this side cannot tell why. It answers
-`Permission denied (publickey,password)`, which is what sshd says both for a key that is not in
-`authorized_keys` and for a user that does not exist, because OpenSSH refuses to enumerate users.
-Closing it takes one command over there, and `ssh-copy-id` DOES work on this half (the Windows
-`administrators_authorized_keys` detour above is Win32-OpenSSH's, not Linux's).
+**`cesar-linux` still refuses the key, and the reason is a home directory that does not exist.**
+The Linux half is Arch (`arch-cesar`, kernel 7.1.8, OpenSSH 10.5), and the same `v1cferr` exists
+there: a password login worked on 25/08/2026 and landed on
+`Could not chdir to home directory /home/v1cferr: No such file or directory`, which is `useradd`
+without `-m`. That single line explains the refusal: with no `/home/v1cferr` there is nowhere for
+`~/.ssh/authorized_keys` to live, so PUBLIC KEY auth cannot work no matter what this side sends, and
+`ssh-copy-id` cannot create the directory either. The order is the home first (with sudo over there,
+`install -d -m 700 -o v1cferr -g v1cferr /home/v1cferr` plus `/etc/skel`), then `ssh-copy-id
+cesar-linux` from here, which DOES work on this half: the `administrators_authorized_keys` detour
+above belongs to Win32-OpenSSH, not to Linux.
+
+**The raw IP proved the split from the other side, too.** Connecting to `192.168.1.40` by hand after
+the change did not warn about a changed key: it asked to confirm a NEW host and said
+`This host key is known by the following other names/addresses: ~/.ssh/known_hosts:21: cesar-linux`,
+which is ssh confirming the identity is already trusted under its alias. Answering `yes` there adds
+a bare-IP line back, and that line is the one that screams on the next Windows boot, so it was
+removed again. The alias is the interface; the address is an implementation detail of the alias.

@@ -212,16 +212,18 @@ trusted, was relabeled from `192.168.1.40` to `cesar-windows`, and the Linux tri
 ed25519 above still has to be compared against `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub`
 read on that machine. Backup at `~/.ssh/known_hosts.bak-20260825`.
 
-**`cesar-linux` still refuses the key, and the reason is a home directory that does not exist.**
-The Linux half is Arch (`arch-cesar`, kernel 7.1.8, OpenSSH 10.5), and the same `v1cferr` exists
-there: a password login worked on 25/08/2026 and landed on
-`Could not chdir to home directory /home/v1cferr: No such file or directory`, which is `useradd`
-without `-m`. That single line explains the refusal: with no `/home/v1cferr` there is nowhere for
-`~/.ssh/authorized_keys` to live, so PUBLIC KEY auth cannot work no matter what this side sends, and
-`ssh-copy-id` cannot create the directory either. The order is the home first (with sudo over there,
-`install -d -m 700 -o v1cferr -g v1cferr /home/v1cferr` plus `/etc/skel`), then `ssh-copy-id
-cesar-linux` from here, which DOES work on this half: the `administrators_authorized_keys` detour
-above belongs to Win32-OpenSSH, not to Linux.
+**The key was refused by a home directory that did not exist, and that is now closed.** The Linux
+half is Arch (`arch-cesar`, kernel 7.1.8, OpenSSH 10.5p1) and the same `v1cferr` lives there, in
+`wheel`: a password login worked on 25/08/2026 and landed on `Could not chdir to home directory
+/home/v1cferr: No such file or directory`, which is `useradd` without `-m`. That one line explained
+the refusal: with no `/home/v1cferr` there is nowhere for `~/.ssh/authorized_keys` to live, so public
+key auth CANNOT work whatever the client sends, and `ssh-copy-id` cannot bootstrap it either, since
+it does not create the home. The order was the home first, with sudo over there
+(`install -d -m 700 -o v1cferr -g v1cferr /home/v1cferr`, then `/etc/skel` on top), and the key
+after. Verified from here the same day: key auth, and `scp` with no `-cmd` twin, because
+`RemoteCommand` is a Windows problem and this half never had it. The `administrators_authorized_keys`
+detour of the section above is Win32-OpenSSH's too: on Linux being in `wheel` changes nothing about
+WHICH file sshd reads.
 
 **The raw IP proved the split from the other side, too.** Connecting to `192.168.1.40` by hand after
 the change did not warn about a changed key: it asked to confirm a NEW host and said

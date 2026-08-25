@@ -2,6 +2,7 @@
 # The tray icon's cost, and the 10 days it spent syncing NOTHING: docs/notes/apps/dropbox.md
 {
   config,
+  inputs,
   lib,
   osConfig,
   pkgs,
@@ -10,6 +11,36 @@
 
 let
   enabled = osConfig.my.services.dropbox;
+
+  # The session's browser, the SAME derivation home/packages.nix installs (rule 4).
+  zen = inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default;
+
+  # nixpkgs hardcodes `export BROWSER=firefox` in the daemon's launcher and ships a whole
+  # firefox-bin INSIDE the FHS sandbox, so the relink page opens in a browser that has never seen
+  # this account and the flow dead-ends. Pointing it at the session's browser makes the daemon's
+  # own relink one click. Measured on 25/08/2026, and detailed in the notes.
+  dropboxFhs = pkgs.dropbox.override {
+    buildFHSEnv =
+      args:
+      pkgs.buildFHSEnv (
+        args
+        // {
+          # `--replace-fail` on purpose: a nixpkgs bump that touches this line BREAKS the build
+          # instead of silently handing the browser back to Firefox.
+          runScript = pkgs.runCommand "install-and-start-dropbox" { } ''
+            substitute ${args.runScript} "$out" \
+              --replace-fail 'export BROWSER=firefox' 'export BROWSER=${lib.getExe' zen "zen-beta"}'
+            chmod +x "$out"
+          '';
+          # With the browser outside the sandbox, firefox-bin is 316 MB of dead closure.
+          targetPkgs = ps: lib.filter (p: (p.pname or "") != "firefox-bin") (args.targetPkgs ps);
+        }
+      );
+  };
+
+  # dropbox-cli takes the FHS package as an ARGUMENT, so the override has to reach it too:
+  # otherwise the CLI would keep starting the stock daemon and the override would be decorative.
+  dropboxCli = pkgs.dropbox-cli.override { dropbox = dropboxFhs; };
 
   # The daemon runs with its OWN HOME, and the CLI only finds its socket with the SAME HOME: a
   # plain `dropbox status` LIES with the daemon alive. That lie is how the incident hid.
@@ -84,6 +115,7 @@ let
 in
 {
   services.dropbox.enable = enabled; # the default folder is ~/Dropbox
+  services.dropbox.package = lib.mkIf enabled dropboxCli;
 
   home.packages = lib.mkIf enabled [ dropboxHm ];
 

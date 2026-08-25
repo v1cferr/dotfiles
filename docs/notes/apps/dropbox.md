@@ -13,11 +13,17 @@ loses its config on logout (nixpkgs#307898).
 The intended use is only Obsidian `.md` notes and documents (the free plan, 2 GB): no binaries, no
 large files. The restic repo does NOT come here.
 
-**First use or RE-linking**: the daemon prints a URL to authorize in the browser.
+**First use or RE-linking**: the daemon OPENS the browser by itself, at the session's browser (see
+"The browser the daemon opens" below). If you would rather do it by hand:
 
 ```sh
-dropbox-hm status   # copy the link and authorize
+dropbox-hm status   # copy the link and authorize, ONCE
 ```
+
+Run it **once**. Measured on 25/08/2026: every `status` call on an unlinked daemon mints a NEW
+nonce, so re-running it to "check whether it worked" invalidates the URL still open in the browser.
+To follow a relink without disturbing it, watch the files instead: `instance1/sync/` reappearing
+and `sync_history.db` moving is the link completing.
 
 Do NOT use plain `dropbox status`; see the wrapper below. The client downloads its own binary into
 `~/.dropbox-dist` (state, outside Nix), which is the imperative part Dropbox imposes; the rest is
@@ -81,6 +87,36 @@ The consequence is honest: **WITH NO SESSION THERE IS NO SYNC.** On this machine
 `home/desktop/polkit-agent.nix` (home-manager#8547): if `graphical-session.target` ever goes
 inactive, the sync stops with it. That is why the watcher also LOGS at warning level and does not
 only notify.
+
+## The browser the daemon opens
+
+nixpkgs hardcodes Firefox into this package in two places, `nixpkgs:pkgs/by-name/dr/dropbox/package.nix`:
+`firefox-bin` in `targetPkgs` (a whole browser inside the FHS sandbox) and `export BROWSER=firefox`
+as the first line of the launcher the unit runs.
+
+That is not cosmetic. The daemon's HOME is `~/.dropbox-hm`, so it never reads the user's
+`x-scheme-handler/https`, and the relink page lands in a browser that has never seen this account:
+the flow dead-ends and the person falls back to copying URLs by hand, into the nonce trap above.
+Confirmed on 25/08/2026 by the Firefox profile the daemon had created inside its own HOME, at
+`~/.dropbox-hm/.cache/mozilla/firefox/`.
+
+The override reaches it through `.override`, since the package comes from `callPackage`:
+
+- `runScript` is rebuilt with `substitute --replace-fail` over the `BROWSER` line. `--replace-fail`
+  and not `--replace`: a nixpkgs bump that touches that line must BREAK THE BUILD, not silently
+  hand the browser back to Firefox.
+- `firefox-bin` is filtered out of `targetPkgs`. With the browser now outside the sandbox it is
+  316 MB of dead closure, and `nix-store -qR` on the new toplevel confirms it is gone.
+- `dropbox-cli` takes the FHS package as an ARGUMENT, so it is overridden too. Without that the CLI
+  would keep starting the stock daemon and the whole override would be decorative.
+
+The browser is referenced as the same Zen derivation `home/packages.nix` installs, not by name on
+PATH, so it is the store path that is guaranteed and not the search order (rule 4). `ldd` says Zen
+resolves entirely under `/nix`, which the sandbox binds, so it runs from in there.
+
+**What is not proven yet**: that Zen really comes up from inside the bwrap. It only gets exercised
+on the next unlink. If it fails, the fallback is no window at all, which is no worse than a Firefox
+nobody is logged into, and `dropbox-hm status` still prints the URL.
 
 ## Block 1: making systemd notice the daemon dying
 

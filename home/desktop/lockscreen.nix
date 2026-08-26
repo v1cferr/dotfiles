@@ -36,6 +36,8 @@ let
   systemctlBin = "${pkgs.systemd}/bin/systemctl";
   shuf = "${pkgs.coreutils}/bin/shuf";
   catBin = "${pkgs.coreutils}/bin/cat";
+  sleepBin = "${pkgs.coreutils}/bin/sleep";
+  playerctlBin = "${pkgs.playerctl}/bin/playerctl"; # the media gate reads MPRIS through it
 
   # Quote: a daily timer fetches ~50 from ZenQuotes and batch-translates them through DeepL; the
   # lock only runs shuf. The layered fallbacks are in docs/notes/desktop/lockscreen.md
@@ -124,6 +126,24 @@ let
     fi
     # No trailing newline: hyprlock renders the label RAW and a \n becomes an empty second line.
     ${pkgs.coreutils}/bin/mv "$tmp" ${weatherCache}
+  '';
+
+  # The idle lock GATED by media: any MPRIS player in Playing holds it back. It WAITS instead of
+  # skipping, because hypridle fires each timeout ONCE per idle cycle. Reasoning: the notes.
+  idleLock = pkgs.writeShellScript "lockscreen-idle-lock" ''
+    playing() {
+      # A `case` and not `| grep -q`: with no pipe there is no SIGPIPE and no pipefail trap.
+      case "$(${playerctlBin} --all-players status 2>/dev/null)" in
+      *Playing*) return 0 ;;
+      *) return 1 ;;
+      esac
+    }
+    # Priority 5 (notice) ONCE, so the journal answers "why did the screen not lock" (rule 16).
+    if playing; then
+      echo "<5>media is playing, the idle lock waits for it to stop"
+      while playing; do ${sleepBin} 30; done
+    fi
+    ${loginctlBin} lock-session
   '';
 in
 {
@@ -275,7 +295,25 @@ in
     # NO Install/wantedBy ON PURPOSE: what locks is the click or the idle, never the boot.
   };
 
-  # hypridle: it ONLY locks after 5 min. NO dpms-off, which broke moon/Sunshine (see the notes).
+  # The idle lock deferred by media. A unit of its own because it has to OUTLIVE the `on-timeout`
+  # that fired it, sometimes by a whole movie, and rule 15 wants one declared owner.
+  systemd.user.services.lockscreen-idle-lock = {
+    Unit = {
+      Description = "Locks on idle, holding it back while media is playing";
+      # A PENDING lock belongs to the daemon that scheduled it: the Sunshine guard stops hypridle
+      # so the stream does not lock, and this has to die with it.
+      PartOf = [ "hypridle.service" ];
+      After = [ "hypridle.service" ];
+    };
+    Service = {
+      Type = "simple"; # it stays alive while media plays and exits right after locking
+      ExecStart = "${idleLock}";
+    };
+    # NO Install: hypridle's listener is the only trigger, the same as hyprlock above.
+  };
+
+  # hypridle: it ONLY locks after 5 min, and not while media plays. NO dpms-off, which broke
+  # moon/Sunshine (see the notes).
   services.hypridle = {
     enable = true;
     settings = {
@@ -284,13 +322,18 @@ in
         lock_cmd = "${systemctlBin} --user start hyprlock.service";
         # If it ever suspends (it does not today), lock before sleeping.
         before_sleep_cmd = "${loginctlBin} lock-session";
+        # Kept true: the media gate below is the SINGLE decision point, so no app can hold an
+        # inhibit forever and disable locking in silence.
         ignore_dbus_inhibit = true;
       };
       listener = [
-        # 5 min: lock. There is NO dpms-off listener; the monitor stays on so moon always captures.
+        # 5 min: lock THROUGH the gate. There is NO dpms-off listener; the monitor stays on so moon
+        # always captures.
         {
           timeout = 300;
-          on-timeout = "${loginctlBin} lock-session";
+          on-timeout = "${systemctlBin} --user start lockscreen-idle-lock.service";
+          # Back at the keyboard cancels a lock that was still waiting for the media to end.
+          on-resume = "${systemctlBin} --user stop lockscreen-idle-lock.service";
         }
       ];
     };

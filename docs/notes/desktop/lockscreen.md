@@ -13,7 +13,8 @@ durable into 2032+).
 | --- | --- | --- |
 | quote | a service plus a daily timer: ZenQuotes, DeepL, pango | `shuf -n1` |
 | weather | a service plus a 10-min timer: Open-Meteo | `cat` |
-| idle | hypridle, and it ONLY locks | `loginctl lock-session` |
+| idle | hypridle, and it ONLY locks | `systemctl --user start` (the gate) |
+| media | `lockscreen-idle-lock.service`: it waits while a player is Playing | `loginctl lock-session` |
 | lock | `hyprlock.service`, a declared unit | `systemctl --user start` |
 
 ## The folder rule
@@ -78,6 +79,41 @@ just the TTY lockout rescue (`allow_session_lock_restore` in `hypr/lua/appearanc
 
 **No `Install`/`wantedBy` on purpose**: what locks is the click or the idle, never the boot. The
 hyprlock at boot is still the autostart one.
+
+## Media holds the lock back
+
+The 5 min timeout has no business landing in the middle of a movie. The gate is
+`lockscreen-idle-lock.service`: hypridle's `on-timeout` starts it, and it only calls
+`loginctl lock-session` when NO MPRIS player is in `Playing`.
+
+IT WAITS, IT DOES NOT SKIP, and that is the whole design. Each hypridle listener fires ONCE per
+idle cycle, so a gate that simply returned without locking would leave the machine open until the
+next keystroke: a movie ending at 3 AM would mean an unlocked desktop until morning. Waiting keeps
+the lock PENDING, and it lands up to 30 s after the last player stops, which is the poll interval.
+
+Coming back to the keyboard cancels it, through the listener's `on-resume` (`systemctl --user
+stop`). The remaining race is the poll's width: the media would have to stop inside the same 30 s
+window in which I come back, and the worst case there is a lock I was already getting anyway.
+
+`PartOf = hypridle.service` because a PENDING lock belongs to the daemon that scheduled it. That is
+what keeps the Sunshine guard working: `stream-begin` stops hypridle so the remote session does not
+lock mid-way, and a gate left waiting in the background would fire the moment the music ended.
+
+THE SIGNAL IS MPRIS (`playerctl --all-players status`), the same D-Bus interface behind the bar's
+Spotify pill, so it covers every player the bar already sees. The consequence is deliberate: AUDIO
+COUNTS, and Spotify left playing overnight keeps the machine unlocked. Narrowing it to video would
+mean filtering the players, not trusting an inhibit, which is the next section.
+
+## Why `ignore_dbus_inhibit` stays true
+
+Because the opposite looks like the obvious fix and is not. An app's inhibit is UNBOUNDED: a
+browser that leaks one disables locking forever and in silence, and nothing on screen says so. The
+gate is a single decision point, re-evaluated every 30 s, and it states its reason in the journal
+(`media is playing, the idle lock waits`, at notice priority).
+
+Worth recording because it was not always so: the Arch `hypridle.conf` this module replaced carried
+`ignore_dbus_inhibit = false`, and the port on 24/07/2026 flipped it to `true` with no reason
+written down. It is a decision now, not a leftover.
 
 ## The quote cache
 

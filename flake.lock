@@ -176,6 +176,22 @@
         "type": "github"
       }
     },
+    "mattpocock-skills": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787581197,
+        "narHash": "sha256-N5tpUIHO2VFeJntBTl6/VLDIVpqoshwFxNJlfXXUwsQ=",
+        "owner": "mattpocock",
+        "repo": "skills",
+        "rev": "6654f6b60cd9d5be8b54c6fafe44346dabeb3b76",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mattpocock",
+        "repo": "skills",
+        "type": "github"
+      }
+    },
     "minegrub-world-sel-theme": {
       "inputs": {
         "nixpkgs": [
@@ -317,6 +333,7 @@
         "duo-streak-daemon": "duo-streak-daemon",
         "git-hooks": "git-hooks",
         "home-manager": "home-manager",
+        "mattpocock-skills": "mattpocock-skills",
         "minegrub-world-sel-theme": "minegrub-world-sel-theme",
         "nixpkgs": "nixpkgs",
         "nixpkgs-unstable": "nixpkgs-unstable",

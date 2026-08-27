@@ -1,6 +1,11 @@
-# CLAUDE CODE (system): the 2 things that have to be IMPOSED, the lifecycle HOOKS and the managed
-# CLAUDE.md every project inherits. Why /etc and not the user's dir: docs/notes/apps/claude-code.md
-{ lib, pkgs, ... }:
+# CLAUDE CODE (system): the 3 things that have to be IMPOSED, the lifecycle HOOKS, the managed
+# CLAUDE.md and the shared SKILLS. Why /etc and not the user's dir: docs/notes/apps/claude-code.md
+{
+  inputs,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   ccds = pkgs.claude-code-discord-status;
@@ -45,6 +50,10 @@ let
         }
       ];
     };
+
+  # The skills come from the PINNED input (rule 13), never from a marketplace fetched at runtime.
+  # Which ones, and the 3 delivery paths that were rejected: docs/notes/apps/claude-code.md
+  skills = "${inputs.mattpocock-skills}/skills/productivity";
 in
 {
   # The MANAGED memory, read unconditionally by CC and never written to. KEEP IT SHORT: this
@@ -87,4 +96,9 @@ in
       SessionEnd = [ (asyncHook null) ];
     };
   };
+
+  # MANAGED skills, the one layer that reaches BOTH accounts and every repo at once. CC follows a
+  # symlink here, so an entry is the store path itself. STATELESS ones only: see the note.
+  environment.etc."claude-code/.claude/skills/grill-me".source = "${skills}/grill-me";
+  environment.etc."claude-code/.claude/skills/grilling".source = "${skills}/grilling";
 }

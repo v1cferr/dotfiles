@@ -67,6 +67,13 @@
       inputs.nixpkgs.follows = "nixpkgs"; # dedup: only affects the lock (the overlay uses the pkgs FROM HERE)
     };
 
+    # Claude Code SKILLS from someone else's repo, delivered as MANAGED skills by
+    # system/services/claude-code.nix. flake = false: it is markdown, exposing no Nix outputs.
+    mattpocock-skills = {
+      url = "github:mattpocock/skills";
+      flake = false;
+    };
+
     # git-hooks.nix: it makes the lint catch things BEFORE the commit, not after the push. The HOOKS
     # are in `checks` below and the installer shellHook is in devShells.
     git-hooks = {

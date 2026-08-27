@@ -1,6 +1,37 @@
 # History: august 2026
 
-85 entries. Index in [README.md](../README.md).
+86 entries. Index in [README.md](../README.md).
+
+- [x] grill-me declared as a managed skill, so both accounts get it (27/08/2026). It is an
+      interview that grills a plan until every branch of the decision tree resolves, and the most
+      installed skill in the ecosystem after the `find-skills` that every `npx skills` install
+      carries along. It went into `/etc/claude-code/.claude/skills/`, next to the managed
+      `CLAUDE.md`, which is rule 18 gaining a third item.
+      • TWO SKILLS AND NOT ONE: `grill-me` is a one-line SHIM that calls the Skill tool with
+        `grilling`, so installed alone it is a command that does nothing, and it fails SILENTLY:
+        the agent guesses what grilling means and dumps every question at once.
+      • THE LAYER WAS CHOSEN BY MEASUREMENT (2.1.234), since a skill that is never read fails
+        exactly like a skill being ignored: the managed loader reads
+        `join(managedDir, ".claude", "skills")`, which is `/etc/claude-code` on Linux, while the
+        personal one follows `CLAUDE_CONFIG_DIR` and here would be `~/.claude-fai/skills` AND
+        `~/.claude-pessoal/skills`, two copies of one artifact (rule 14). What makes the Nix
+        delivery possible at all is that CC FOLLOWS a symlink in that directory, so the entry is
+        the store path itself.
+      • WHAT WAS REJECTED, and the tempting one was a single line: `enabledPlugins` with
+        `mattpocock-skills@claude-plugins-official`, a marketplace already registered here, fetches
+        the CONTENT at runtime into `plugins/cache/`, so the version becomes the day of the fetch
+        instead of the lock (rule 13) and git sees none of it (rule 16). The whole input as a
+        `@skills-dir` plugin would pin all 25 skills with ONE symlink, but the docs list that shape
+        for the personal and project directories only, and 25 is not what I want machine-wide.
+      • THE CRITERION FOR THIS LAYER IS STATELESSNESS, not popularity: the neighbouring
+        `grill-with-docs` and `improve-codebase-architecture` write a `CONTEXT.md` glossary and ADRs
+        under `docs/adr/`, a second documentation system alongside `docs/`, which already splits by
+        function. They stay out, and belong to the `.claude/skills/` of the repo whose conventions
+        they obey.
+      • CONTEXT WAS NOT THE ARGUMENT, and the correction is worth keeping because it was my
+        first one: the listing of names and descriptions gets 1% of the model's window, so on 1M
+        even the full set of 25 fits with room to spare. What is expensive about a machine-wide
+        skill is its blast radius. The detail: docs/notes/apps/claude-code.md
 
 - [x] One memory for the three agent CLIs, declared and pinned (24/08/2026, second piece of the
       day). The `~/context` Markdown is the PRODUCT; basic-memory is the index over it, and that

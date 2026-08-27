@@ -134,8 +134,8 @@ reason:
 
 ## The system side: what has to be IMPOSED
 
-[`system/services/claude-code.nix`](../../../system/services/claude-code.nix) holds the two things
-that cannot be merely suggested, both in `/etc`, which has the highest precedence and is read-only
+[`system/services/claude-code.nix`](../../../system/services/claude-code.nix) holds the three things
+that cannot be merely suggested, all in `/etc`, which has the highest precedence and is read-only
 by nature:
 
 **The lifecycle hooks** feed the Discord Rich Presence: six events POST to the local daemon
@@ -174,6 +174,68 @@ JSON one-liner with escaped newlines, unreadable in a `git diff` and unreachable
 **Keep that file short.** It enters the context of EVERY conversation on this machine, so it is
 the most expensive documentation in the repo per line. It holds the rules and nothing else; the
 reasoning lives in [`../rules.md`](../../rules.md).
+
+**The shared skills** (`/etc/claude-code/.claude/skills/`, 27/08/2026) are the third: `grill-me`
+and `grilling`, from the pinned `mattpocock-skills` input. The next section is the reasoning.
+
+## The managed skills, and why not a plugin
+
+`grill-me` interviews me about a plan until every branch of the decision tree is resolved, and it
+is the second most installed skill in the ecosystem (985k, behind only the 3.1M of the
+`find-skills` that every `npx skills` install carries along). It writes NOTHING: what comes out of
+a session is a decision, in my head and in the conversation. That property is the whole reason it
+can live at machine level.
+
+**Two skills and not one, because `grill-me` is a SHIM.** Its `SKILL.md` is one line, `Call the
+Skill tool with "grilling"`, and all the content is in `grilling`. Installed alone it is a command
+that does nothing, and the failure is SILENT: the agent guesses what grilling means and dumps every
+question at once, with no rounds and no recommended answers.
+
+**Why the ENTERPRISE layer**, measured in the bundle on 2.1.234, because a skill that is never read
+fails exactly like a skill being ignored: the loader resolves the managed one to
+`join(managedDir, ".claude", "skills")`, with `managedDir` returning `/etc/claude-code` on Linux,
+and the personal one to `userConfigDir("skills")`, which follows `CLAUDE_CONFIG_DIR`. So the
+personal path here is `~/.claude-fai/skills` AND `~/.claude-pessoal/skills`, two copies of one
+artifact (rule 14), and a third the day an account is added. `/etc` is ONE declaration for both
+accounts and every repo, and it is read-only by nature, the same argument that put `CLAUDE.md`
+there.
+
+**What makes the Nix delivery work is that the entry may be a SYMLINK.** CC follows a
+`<skill-name>` symlink in the enterprise, personal and project locations, reads `SKILL.md` from the
+target, and loads the skill once when two locations resolve to the same target. So the entry IS the
+store path, with no copy: the built tree is
+`/etc/claude-code/.claude/skills/grill-me -> /nix/store/...-source/skills/productivity/grill-me`.
+
+**The precedence TRAP: enterprise beats personal, project AND the bundled skill of the same name**,
+though not that bundled skill's aliases, so a `code-review` declared here would answer
+`/code-review` while `/review` kept reaching the bundled one. Nothing in this module may be named
+after a bundled skill, or I shadow it on the whole machine and only find out through the behavior.
+
+**Three delivery paths were REJECTED**, and the tempting one is the first:
+
+- **`enabledPlugins` in the versioned `settings.json`.** It is one line, and `mattpocock-skills` IS
+  in `claude-plugins-official`, which is already registered here. But the plugin CONTENT is fetched
+  at runtime into `plugins/cache/`, so the version would depend on the day of the fetch instead of
+  the lock, which is rule 13 backwards, and git would see none of it (rule 16).
+- **The per-account `skills/`**: two copies of one artifact, the same reason as above.
+- **The whole repo as a `@skills-dir` plugin.** A folder carrying `.claude-plugin/plugin.json`
+  inside a skills directory loads as a plugin with no marketplace and no install step, and this
+  input has that manifest at its root, so ONE symlink would bring all 25 skills, pinned. It loses
+  twice: the docs list that shape for the personal and project directories only, not for the
+  enterprise one, and 25 skills is not what I want machine-wide.
+
+**The criterion for entering this layer is STATELESSNESS, not popularity.** Among the neighbours in
+the same input, `grill-with-docs` writes a `CONTEXT.md` glossary at the repo root plus ADRs under
+`docs/adr/`, and `improve-codebase-architecture` writes into `CONTEXT.md` as well. Both would stand
+up a second documentation system next to [`docs/`](../../README.md), which already splits by
+function and keeps the tried-and-rejected in `notes/`: two owners of one subject (rule 14) becoming
+drift (rule 16) within weeks. Whatever writes into a repo belongs to THAT repo's `.claude/skills/`,
+where its conventions are the ones in force.
+
+**And context is NOT the constraint here**, which is worth writing down because it was my first
+argument and it was wrong: the listing of names and descriptions gets a budget of 1% of the model's
+window, so on a 1M model even the full set of 25 would fit with room to spare. What is expensive
+about a machine-wide skill is its blast radius, not its line in the prompt.
 
 ## What is NOT declared here
 

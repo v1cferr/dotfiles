@@ -133,6 +133,13 @@ sudo uci show dhcp | grep fai2008
 If this becomes recurrent, just re-run the `add_list` commands, since they are idempotent
 through `uci_add_list_if_new`.
 
+**Measured 29/08/2026: the backup currently HAS them.** The `doh_backup_server` in
+[`router/uci/dhcp.conf`](../../router/uci/dhcp.conf) lists the four FAI and VPN entries,
+because the service re-created the backup after they already existed (a side effect of the
+dnsmasq restart in [`per-client-dns-block.md`](per-client-dns-block.md)). So the failure
+mode above is disarmed right now, and it re-arms itself the day a new `server` entry is
+added without the service taking a fresh backup afterwards.
+
 **Do NOT use `serversfile` as a plan B.** That slot belongs to **adblock-fast**, which
 points it at its own `/var/run/adblock-fast/dnsmasq.servers` and removes it when it stops
 (seen happening in the `router-sync pull` of 12/08/2026). Overwriting it would take down ad

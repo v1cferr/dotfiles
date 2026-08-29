@@ -31,10 +31,16 @@ the pre-commit hooks and reads only this directory, never the device. See
 
 **`sudo uci commit` leaves /etc/config as 0600.** Measured 19/08/2026: committing `dhcp`
 and `network` through sudo left both files root-only, while `firewall`, untouched that day,
-stayed 0644. The symptom on the next read is `uci: I/O error` for the normal user, and it
-breaks `router-sync`, which reads UCI over SSH as that user and NOT as root. The repair is
-`chmod 644` on whatever was committed. Suspect this first when a `pull` cannot read a config
-it read the day before.
+stayed 0644. Measured again 29/08/2026, and it is not even consistent within one session:
+`adblock-fast` and `https-dns-proxy` came out root-only while `dhcp`, committed in the same
+breath, stayed 0644. The symptom is `uci: I/O error` on the next `uci show` typed WITHOUT
+sudo, and the repair is `chmod 644` on whatever was committed.
+
+**It does not break `router-sync`, and this page used to claim it did.** The script reads
+with `sudo uci show` and has since its first commit (`a2a7b6f`), with `/sbin/uci` in the
+router's NOPASSWD list, so the mode of the file never reaches it. Proven on 29/08/2026: a
+`pull` read both root-only configs and updated them normally. What the 19/08 diagnosis
+actually caught was the command typed by hand.
 
 ## What is NOT here
 

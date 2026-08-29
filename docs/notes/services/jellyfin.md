@@ -26,6 +26,22 @@ It stopped being core in 10.10; it is the official "DLNA" plugin, installed thro
 "virtual" what is listed in `VirtualInterfaceNames` (Dashboard > Network). With no `docker`/`br-`
 there, it announces the Docker bridge's IP and the TV never finds the server.
 
+`ppp` belongs in that list too (16/08/2026). Bringing the VPN up creates a `ppp0` interface, and
+the plugin starts announcing on BOTH the LAN and the tunnel:
+
+```text
+Registering publisher ... on 192.168.1.10    <- the LAN, correct
+Registering publisher ... on 192.168.50.1    <- the VPN tunnel, unreachable from the TV
+```
+
+The TV can then cache a `http://192.168.50.1:8096/...` URL it will never reach. The list today is
+`veth`, `docker`, `br-`, `ppp`.
+
+Like the libraries, this is jellyfin's state and not Nix (rule 6): it lives in
+`/var/lib/jellyfin/config/network.xml`, which the server rewrites on its own. A rebuild does not
+revert it, but a machine rebuilt from scratch starts without it, so the list is recorded here
+instead of enforced.
+
 ## The rest of the old stack
 
 jellyseerr and the \*arr apps come later, one module at a time. qbittorrent is already migrated

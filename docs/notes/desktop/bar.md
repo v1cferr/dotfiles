@@ -307,6 +307,26 @@ The legal bases:
 **The check**: the non-`fac` entries add up to 14, which is the number the city hall and the local
 press publish for São Carlos. If it ever diverges, that is a sign of a new law.
 
+## The grid's three signals (28/08/2026)
+
+A day cell encodes THREE independent facts, and each one owns a different signal, never one more
+color:
+
+| Signal | Meaning |
+| --- | --- |
+| A solid chip | A holiday, painted with its scope's color |
+| An outlined chip | An optional public holiday (`fac`), which stays discreet |
+| A ring plus a glow around the whole cell | TODAY |
+
+Today used to be a solid chip in `colAccent`, and it was NOT findable: `accent` and `blue` are the
+SAME hex in tokyo-night (`#7aa2f7`) and in catppuccin-mocha (`#89b4fa`), and `blue` is the `sp`
+scope, so today was pixel for pixel an SP holiday among the other 20 painted days. The fix is not a
+fourth color, which the next palette would collide with again, but a signal no chip uses.
+
+It also stopped OVERWRITING the holiday: the chip is always the holiday's, so 07/09 shows a red
+chip inside the ring and Carnaval keeps its outline. The current month gets a pill behind its name,
+because the accent on the text alone was too close to `colText` to find at a glance.
+
 ## The calendar's year rollover
 
 `updateClock()` compares the `yyyy-MM-dd` against `calDayKey`, and on the SystemClock's first beat

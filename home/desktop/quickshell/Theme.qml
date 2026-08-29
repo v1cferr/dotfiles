@@ -98,6 +98,10 @@ Singleton {
     readonly property color colWsActiveBorder: aa(pal.accent, "e6")
     readonly property color colWsInactive: pal.subtext
 
+    // The CALENDAR's "now" (the current month and today): a FILL already means a holiday and an
+    // OUTLINE a facultative one, so today needs a third signal instead of a fourth color.
+    readonly property color colNowBg: aa(pal.accent, "2b")
+
     // HOVER tokens (rule 11): this was written by hand in 7 files, 4 of them still in the OLD
     // Catppuccin palette, so "danger" was painted with a red from ANOTHER theme.
     readonly property color colHoverBg: aa(pal.border, "33"); // neutral (the default)

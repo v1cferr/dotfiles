@@ -8,7 +8,7 @@
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
-    "//": "Last update at 8/15/2026, 7:24:09 PM",
+    "//": "Last update at 8/26/2026, 8:53:47 AM",
     ".agent": ".agent, .claude, .cline, .codebuddy, .codex, .commandcode, .continue, .crush, .cursor, .factory, .gemini, .goose, .junie, .kilocode, .kiro, .kode, .mcpjam, .mux, .neovate, .opencode, .openhands, .pi, .pochi, .qoder, .qwen, .roo, .trae, .windsurf, .zencoder",
     ".clang-tidy": ".clang-format, .clangd, compile_commands.json",
     ".env": "*.env, .env.*, .envrc, env.d.ts",
@@ -258,7 +258,7 @@
     "*.copilotmd": "vscode.markdown.preview.editor",
     "{git,gitlens,chat-editing-snapshot-text-model,copilot,git-graph,git-graph-3}:/**/*.qrc": "default",
     "*.pdf": "pdf.preview",
-    "*.docx": "docxreader.docxEditor",
+    "*.docx": "docxxlsx.docxEditor",
     "*.qrc": "qt-core.qrcEditor"
   },
   "json.schemaDownload.trustedDomains": {
@@ -336,9 +336,10 @@
   },
   "breadcrumbs.showEditorType": true,
   "jdk.telemetry.enabled": false,
-  "window.zoomLevel": -1,
   // direnv: it restarts the extension host as soon as the .envrc environment loads, with no
   // prompt. WITHOUT this the language servers of a project whose toolchain lives ONLY in its
   // devShell (gleam in acuttis-point) start BEFORE the PATH exists and die with ENOENT.
   "direnv.restart.automatic": true,
+  "claudeCode.preferredLocation": "panel",
+  "window.zoomLevel": -1,
 }

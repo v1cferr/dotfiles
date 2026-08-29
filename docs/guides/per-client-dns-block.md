@@ -113,7 +113,10 @@ NFT
 { echo "table inet fw4check {"; cat /tmp/20-dns-block-reddit.nft; echo "}"; } > /tmp/check.nft
 sudo nft -c -f /tmp/check.nft && echo "SYNTAX OK"
 
-sudo install -m 644 /tmp/20-dns-block-reddit.nft /etc/nftables.d/
+# `cp` and `chmod`, because BusyBox here has no install(1). Measured 29/08/2026:
+# `sudo: install: command not found`.
+sudo cp /tmp/20-dns-block-reddit.nft /etc/nftables.d/
+sudo chmod 644 /etc/nftables.d/20-dns-block-reddit.nft
 sudo /etc/init.d/firewall restart
 ```
 

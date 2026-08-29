@@ -100,7 +100,9 @@ Singleton {
 
     // The CALENDAR's "now" (the current month and today): a FILL already means a holiday and an
     // OUTLINE a facultative one, so today needs a third signal instead of a fourth color.
-    readonly property color colNowBg: aa(pal.accent, "2b")
+    readonly property color colNowBg: aa(pal.accent, "2b") // today's cell, and the month's name pill
+    readonly property color colNowPanel: aa(pal.accent, "12") // the panel behind the WHOLE current month
+    readonly property color colNowBorder: aa(pal.accent, "59") // that panel's edge, quieter than the ring
 
     // HOVER tokens (rule 11): this was written by hand in 7 files, 4 of them still in the OLD
     // Catppuccin palette, so "danger" was painted with a red from ANOTHER theme.

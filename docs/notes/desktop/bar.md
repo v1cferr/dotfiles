@@ -324,8 +324,12 @@ scope, so today was pixel for pixel an SP holiday among the other 20 painted day
 fourth color, which the next palette would collide with again, but a signal no chip uses.
 
 It also stopped OVERWRITING the holiday: the chip is always the holiday's, so 07/09 shows a red
-chip inside the ring and Carnaval keeps its outline. The current month gets a pill behind its name,
-because the accent on the text alone was too close to `colText` to find at a glance.
+chip inside the ring and Carnaval keeps its outline.
+
+The CURRENT MONTH is the coarse signal, and it works at a different scale: a tinted panel with a
+border around the whole block, plus a pill behind the name. The eye lands on the block first and
+only then hunts for the ring inside it, which is why the accent on the name alone was not enough,
+being too close to `colText`. The panel's padding is what pushed the popover from 880 to 920 wide.
 
 ## The calendar's year rollover
 

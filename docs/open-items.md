@@ -332,8 +332,6 @@ finished work. What was closed is in the [august history](history/2026/08-august
       Registration does NOT depend on this: it already works through `az ad` on FAIUFSCar, which
       was the goal.
 
-- [ ] Keep setting up the dualboot with Secure Boot
-
 - [ ] Release jump 26.05 to 27.05 (~may/2027). It is NOT a reinstall: it is TWO STRINGS in
       flake.nix, `nixpkgs.url` (nixos-27.05) and `home-manager.url` (release-27.05), which change
       TOGETHER (the HM release branch matches the base, otherwise there is an option mismatch).

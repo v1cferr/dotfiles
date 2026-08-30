@@ -149,7 +149,7 @@ Two more things it showed, neither of them in this file: systemd creates `srv`, 
 
 WHAT IT DOES NOT PROVE: the bootloader. The VM boots the kernel directly (`useBootLoader` is off),
 so GRUB, its Secure Boot signature and `os-prober` are outside this test. That half is still the
-BIOS plus [`../../guides/secure-boot.md`](../../guides/secure-boot.md).
+BIOS plus [`boot.md`](boot.md).
 
 ### The first-boot bug it found, and it had been there since the cutover
 

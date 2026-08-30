@@ -65,7 +65,7 @@ prints a report. Read four things in it:
 
 It does NOT prove the bootloader: the VM boots the kernel directly, so GRUB, its Secure Boot
 signature and `os-prober` are outside it. That half lives in
-[`secure-boot.md`](secure-boot.md) and in the BIOS.
+[`boot.md`](../notes/boot-and-storage/boot.md) and in the BIOS.
 
 ## D3, yearly or before touching hardware: the secrets half
 
@@ -124,7 +124,7 @@ In order, and step 4 is the one that is easy to forget and expensive to skip.
    [disko note](../notes/boot-and-storage/disko.md)), then restore from restic what rule 6 says was
    never declared (saves, Wine prefixes, app sessions).
 7. Secure Boot needs its own pass: the sbctl keys live in `/var/lib/sbctl`, are NOT in git, and
-   enrolling them is manual ([`secure-boot.md`](secure-boot.md)).
+   enrolling them is manual ([`boot.md`](../notes/boot-and-storage/boot.md)).
 
 ## What no drill here covers
 

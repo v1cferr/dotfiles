@@ -1,6 +1,42 @@
 # History: august 2026
 
-86 entries. Index in [README.md](../README.md).
+87 entries. Index in [README.md](../README.md).
+
+- [x] Secure Boot ON in both systems, and the two gates that were NOT the signature (30/08/2026).
+      The keys had been enrolled since 02/08 and the runbook said the only thing left was flipping
+      it in the BIOS. Flipping it killed BOTH entries, and neither failure was a bad signature: the
+      firmware accepted `grubx64.efi` every single time, and what refused was GRUB, twice, for two
+      unrelated reasons.
+      • GATE 1, `verification requested but nobody cares`. `kern/efi/init.c:123` calls
+        `grub_lockdown()` UNCONDITIONALLY when SB is on and only THEN the shim_lock setup, so
+        `--disable-shim-lock` takes out the verifier that WOULD answer and leaves the lockdown one,
+        which merely defers (`kern/lockdown.c:55`); `verifiers.c:118` refuses a file that everybody
+        deferred and nobody claimed. The fix is `tpm` EMBEDDED in the module list: its `init`
+        returns `SINGLE_CHUNK` (`commands/tpm.c:33`), so it claims the file, measures it into PCR 9
+        and lets it through. Embedded and not on disk, because lockdown defers on `GRUB_MODULE`
+        too, and it only works because this board's TPM 2.0 publishes TCG2. Measured afterwards:
+        PCR 9 is not zeroed.
+      • GATE 2, the kernel, and WINDOWS is what proved it: with gate 1 open, Windows 11 booted with
+        SB on and NixOS still did not. On `x86_64-efi` the `linux` module is `loader/efi/linux.c`,
+        and line 211 loads nothing, it hands the buffer to the FIRMWARE's `LoadImage`, which
+        validates against `db` like any other image. `bootmgfw.efi` passes on its own, since
+        Microsoft signed it and that CA is in `db` because of the `enroll-keys -m`. The locally
+        built `bzImage` had nobody to sign it, so `secureboot.nix` now also sweeps
+        `/boot/kernels/*bzImage`, with no `-s`: the name carries the store hash, the GC deletes it,
+        and recording it would fill sbctl's database with dead entries.
+      • THE CHAIN IS WORTH MORE THAN THIS REPO CLAIMED, for a reason that is not GRUB's doing.
+        `boot.md` said verification stopped at GRUB. It does not: GRUB itself checks nothing, since
+        `tpm` measures and flag 2 literally says "do not verify anything after me", but the kernel
+        leaves through `LoadImage`, which puts the firmware back in the loop. What stays uncovered
+        is the INITRD, handed over by GRUB's own protocol and filed under "does not affect
+        secureboot state" (`sb.c:149`) even on the shim road. Closing that means a UKI, which means
+        lanzaboote, and then there is no menu and no theme.
+      • A PREFLIGHT NUMBER THAT WAS A GUESS almost aborted a binary that was correct: the runbook
+        demanded `grubx64.efi` at ">= 1.5 MB" and the signed image is 1.16 MB. The honest check is
+        a reference image, not a round number: `grub-mkimage` with the same 48 names gives 1159168
+        bytes against 1161272 on the ESP, and the 2104 of difference are sbctl's PKCS#7 signature.
+        Without the list it would be 139264, which is what that threshold was really trying to
+        catch. The whole mechanism: docs/notes/boot-and-storage/boot.md
 
 - [x] grill-me declared as a managed skill, so both accounts get it (27/08/2026). It is an
       interview that grills a plan until every branch of the decision tree resolves, and the most

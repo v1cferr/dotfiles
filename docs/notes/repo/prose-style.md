@@ -28,8 +28,8 @@ as a LITERAL. The measurement that shaped every rule below is that list.
 
 - **A code span is not prose.** `docs/notes/desktop/weather.md` writes the bar's no-value output as
   a span three times, and the august history discusses `U+2764` by quoting the glyph itself. Fenced
-  blocks go out for the same reason: `docs/guides/secure-boot.md` quotes `sbctl status` printing a
-  check mark, which is program output and not decoration.
+  blocks go out for the same reason, and the case that motivated it was a runbook quoting `sbctl
+  status` printing a check mark: a program's own output is a literal, not decoration.
 - **A quoted GLYPH is not prose, a quoted PHRASE is.** `docs/rules.md` names the exception by
   writing the glyph in double quotes. So a quoted run of at most 3 characters is dropped, and
   anything longer stays checked: the point is to exempt a symbol, never a sentence.

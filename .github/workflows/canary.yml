@@ -59,3 +59,55 @@ jobs:
         run: |
           nix develop --override-input duo-streak-daemon path:./ci/stub-duo \
             --command pre-commit run --hook-stage manual lychee --all-files
+
+  # THE ALERT: this workflow asks a question nobody is sitting there waiting for, and its answer
+  # only changes on a Monday. A red run that lands in an email is a red run I find out about a week
+  # later, which turns a warning about the future into a surprise in the present. ntfy is the path
+  # the machine already uses for this (home/shell/ntfy.nix): the TOPIC is the password, so it is a
+  # repo secret and not a literal. Why NOT `nix run` the repo's own `notify`: the runner has no
+  # /run/secrets to read the topic from, and installing Nix to send one curl costs a minute.
+  notify:
+    name: push a failure to the phone
+    needs:
+      - inputs
+      - links
+    if: failure()
+    runs-on: ubuntu-latest
+    # It reads nothing and writes nothing: the token has no business existing in this job.
+    permissions: {}
+    steps:
+      # The values arrive through env and are never interpolated into the script: a `${{ }}` inside
+      # a `run` is the template injection zizmor reports, and it is one habit, not one exception.
+      - name: ntfy
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          INPUTS: ${{ needs.inputs.result }}
+          LINKS: ${{ needs.links.result }}
+        run: |
+          # No topic provisioned sends nothing and says so, instead of failing: the run is already
+          # red, and a second red mark that only means "the warning did not go out" reads as a
+          # second problem. Same contract as the `notify` command on the machine.
+          if [ -z "$NTFY_TOPIC" ]; then
+            echo "NTFY_TOPIC is not set on this repo, so no alert was sent" >&2
+            exit 0
+          fi
+
+          # WHICH job died is the whole message, because the two mean opposite things: `inputs` is
+          # "the next update would break the config" and `links` is "a pointer in docs/ rotted".
+          message="inputs: $INPUTS
+          links: $LINKS"
+
+          # priority 4 (high) on purpose: at 3 the phone stays quiet, and a quiet alert is the
+          # email problem again with more steps.
+          body="$(jq -n \
+            --arg topic "$NTFY_TOPIC" \
+            --arg message "$message" \
+            --arg click "$RUN_URL" \
+            '{topic: $topic, title: "canary failed", message: $message,
+              priority: 4, tags: ["warning"], click: $click}')"
+
+          curl --silent --show-error --fail --max-time 10 \
+            --header "Content-Type: application/json" \
+            --data "$body" \
+            https://ntfy.sh >/dev/null

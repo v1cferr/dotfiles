@@ -473,11 +473,41 @@ MEASURED the day it was written, locally with a warm store: 1m41s, and `all chec
 the heads of `nixos-26.05`, `nixos-unstable` and `release-26.05`. In the CI the store is cold, so it
 fetches the ~1.43 GiB of inputs first and takes minutes. That cost is why it is weekly and why it is
 a SEPARATE workflow from the gate: nothing gates on it, so a red canary is information and not a
-blocked push. GitHub emails the owner when a scheduled run fails, which is the whole alarm.
+blocked push. What raises the alarm is the third job, below.
 
 The second job runs the `manual`-stage lychee hook, the external half of the link checking:
 [`link-checker.md`](link-checker.md) has the measurement that keeps it out of the gate. The two jobs
 are independent on purpose, so a rotten link cannot hide a broken input.
+
+#### The ntfy job: an alarm that is not an email (30/08/2026)
+
+The original alarm was GitHub emailing the owner when a scheduled run fails, and that is the weakest
+part of the whole arrangement: this workflow runs on a Monday morning and asks a question nobody is
+sitting there waiting for, so an email is read whenever the inbox is read. A warning about the
+FUTURE that arrives a week late has become a surprise in the present, which is the one thing the
+canary exists to prevent.
+
+So a third job pushes to ntfy, the same path the machine already uses
+([`ntfy.nix`](../../../home/shell/ntfy.nix)). It runs `if: failure()` and depends on both jobs, and
+the message is WHICH one died, because the two mean opposite things: `inputs` is "the next `update`
+would break the config" and `links` is "a pointer in `docs/` rotted". Priority 4 on purpose, since
+at 3 the phone stays quiet and a quiet alert is the email problem again with more steps. The run URL
+goes in `click`, so the notification opens the log.
+
+**Why it does NOT reuse the repo's own `notify` command**, which would be the rule 14 answer: that
+script reads the topic from `/run/secrets/ntfy_topic`, which does not exist on a runner, and
+installing Nix in a job that otherwise sends one `curl` costs a minute of runner time for nothing.
+What is duplicated is three lines of JSON, not a ruleset.
+
+**The topic is the password**, and on the machine it comes from sops. A runner cannot read that, so
+it is a REPO SECRET (`NTFY_TOPIC`), and the job is inert without it: no topic sends nothing, says so
+in the log and exits 0. Failing the job because a notification did not go out would put a second red
+mark on a run that is already red, and the second one would mean something else entirely.
+
+The job carries `permissions: {}` because it reads and writes nothing, and every value reaches the
+script through `env` instead of a `${{ }}` inside `run`, which is the template injection zizmor
+reports. MEASURED before the commit: the block scalar yields the two-line message unindented, the
+no-topic path exits 0, and the payload is the expected JSON.
 
 ### Two community tools looked at and REJECTED (16/08/2026)
 

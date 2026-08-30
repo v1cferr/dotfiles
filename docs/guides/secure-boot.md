@@ -32,12 +32,50 @@ Before going to Phase 4, do the preflight, which is exactly what burned on 02/08
 
 ```bash
 sudo sbctl status && sudo sbctl verify
-ls -la /boot/EFI/NixOS-boot/grubx64.efi   # >= ~1.5 MB means the 47 modules are embedded
+sudo ls -l /boot/EFI/NixOS-boot/grubx64.efi   # ~1.15 MB, the 47 modules are embedded
 ```
 
-`verify` will complain about `/boot/EFI/BOOT/BOOTX64.EFI`: that is expected noise
-(systemd-boot is already deleted and it stayed in the sbctl database, see the cleanup at the
-end of this file). Do not abort because of it.
+The `sudo` on the `ls` is not decoration. `/boot/EFI` is `0700 root`, and the shell expands a
+glob BEFORE `sudo` runs, so `sudo ls -l /boot/EFI/*/grubx64.efi` dies with "no matches found"
+on a file that is sitting right there.
+
+**Where the 1.15 MB comes from, MEASURED on 30/08/2026.** This line used to say ">= ~1.5 MB",
+a round number nobody had measured, and it nearly aborted a preflight on a binary that was
+correct. Do not trust the number, rebuild the reference and compare:
+
+| Image | Bytes |
+| --- | --- |
+| reference, `grub-mkimage` with exactly the 47 modules of `boot.nix` | 1150976 |
+| what is on the ESP | 1153080 |
+| the same image WITHOUT the list (`part_gpt fat` only) | 139264 |
+
+The 2104 bytes of difference are the PKCS#7 signature that `sbctl` appends to the PE. The
+near exact match is also what proves `--disable-shim-lock` took effect: without it
+`grub-install` embeds `shim_lock` on top, and the sizes stop lining up. To redo the
+reference, feeding it the same 47 names that are in
+[`system/core/boot.nix`](../../system/core/boot.nix):
+
+```bash
+nix shell nixpkgs#grub2 --command grub-mkimage \
+  -O x86_64-efi -p /EFI/NixOS-boot -o /tmp/ref-grubx64.efi \
+  all_video boot btrfs cat chain configfile echo efifwsetup efi_gop efi_uga ext2 fat font \
+  gettext gfxmenu gfxterm gfxterm_background gzio halt help jpeg keystatus linux loadenv \
+  loopback ls lsefi minicmd normal part_gpt part_msdos png probe reboot regexp search \
+  search_fs_file search_fs_uuid search_label sleep terminal test true video video_fb \
+  videoinfo zstd
+```
+
+`verify` also flags four files that do NOT block the boot, so do not abort because of them:
+
+- `/boot/EFI/BOOT/BOOTX64.EFI` **does not exist**. It was systemd-boot, deleted in the ESP
+  cleanup, and it stayed in sbctl's database (see the cleanup at the end of this file).
+- `/boot/grub/x86_64-efi/core.efi` and `grub.efi` are what `grub-install` leaves in the GRUB
+  directory before copying the image to the ESP. No firmware ever executes those paths;
+  `sbctl verify` finds them only because it sweeps all of `/boot` looking for EFI binaries.
+- the kernel `bzImage` is unsigned BY DESIGN. With `--disable-shim-lock` GRUB loads the
+  kernel without verifying it, so the chain stops at GRUB. That is the deliberate trade for
+  keeping the menu and the theme, and it is written down in
+  [`boot.md`](../notes/boot-and-storage/boot.md).
 
 ## What can go wrong, and why it is not serious
 

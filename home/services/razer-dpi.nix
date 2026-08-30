@@ -8,6 +8,10 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs) razer-dpi;
+
   qsPkg = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
 in
 {
@@ -18,7 +22,7 @@ in
       After = [ "graphical-session.target" ];
     };
     Service = {
-      ExecStart = "${pkgs.razer-dpi}/bin/razer-dpi watch";
+      ExecStart = "${razer-dpi}/bin/razer-dpi watch";
       # `qs` is the ONLY thing called out of PATH, and it is how the OSD gets pushed.
       Environment = [ "PATH=${lib.makeBinPath [ qsPkg ]}" ];
       # With no mouse the watcher idles on a 5 s rescan instead of exiting, so unplugging and

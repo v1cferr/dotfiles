@@ -9,6 +9,13 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    coreutils
+    rclone
+    ;
+
   cfg = config.my.drive;
 in
 {
@@ -43,12 +50,12 @@ in
         # A WRITABLE COPY of rclone.conf (rclone rewrites the OAuth token) and --config on the COMMAND,
         # never RCLONE_CONFIG. THE MOUNTPOINT MUST BE EMPTY,: docs/notes/boot-and-storage/restic.md
         ExecStartPre = [
-          "${pkgs.coreutils}/bin/mkdir -p ${cfg.local}"
-          "${pkgs.coreutils}/bin/install -m600 /run/secrets/rclone_gdrive_conf %t/rclone-gdrive.conf"
+          "${coreutils}/bin/mkdir -p ${cfg.local}"
+          "${coreutils}/bin/install -m600 /run/secrets/rclone_gdrive_conf %t/rclone-gdrive.conf"
         ];
 
         ExecStart = lib.concatStringsSep " " [
-          "${pkgs.rclone}/bin/rclone --config %t/rclone-gdrive.conf mount"
+          "${rclone}/bin/rclone --config %t/rclone-gdrive.conf mount"
           cfg.remote
           cfg.local
           # It hides the restic repo from the mount (see the header): noise in Dolphin, and an

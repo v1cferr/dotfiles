@@ -8,14 +8,26 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    coreutils
+    gawk
+    gnused
+    libnotify
+    trash-cli
+    util-linux
+    writeShellApplication
+    ;
+
   cfg = config.my.disk;
 
   # The list of paths as shell arguments, already quoted.
   watchArgs = lib.escapeShellArgs cfg.watchPaths;
 
-  diskWatch = pkgs.writeShellApplication {
+  diskWatch = writeShellApplication {
     name = "disk-watch";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       coreutils
       libnotify
       util-linux
@@ -77,9 +89,9 @@ let
     '';
   };
 
-  trashExpire = pkgs.writeShellApplication {
+  trashExpire = writeShellApplication {
     name = "trash-expire";
-    runtimeInputs = [ pkgs.trash-cli ];
+    runtimeInputs = [ trash-cli ];
     text = ''
       # -f: a unit waiting for an answer hangs forever, so never leave it implicit.
       trash-empty -f ${toString cfg.trashDays}

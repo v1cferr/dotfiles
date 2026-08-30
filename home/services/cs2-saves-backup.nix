@@ -9,6 +9,14 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    coreutils
+    rsync
+    writeShellScript
+    ;
+
   home = config.home.homeDirectory;
   # the source: the CS2 Saves folder inside the Wine prefix of the Cities-Skylines-II bottle
   savesSrc = "${home}/.local/share/bottles/bottles/Cities-Skylines-II/drive_c/users/steamuser/AppData/LocalLow/Colossal Order/Cities Skylines II/Saves";
@@ -16,11 +24,11 @@ let
   savesDst = "${home}/CS2-Saves-Backup";
 
   # it only acts if a save already exists, so it does not fail before the 1st game
-  mirrorSaves = pkgs.writeShellScript "cs2-saves-mirror" ''
+  mirrorSaves = writeShellScript "cs2-saves-mirror" ''
     set -eu
-    ${pkgs.coreutils}/bin/mkdir -p "${savesDst}"
+    ${coreutils}/bin/mkdir -p "${savesDst}"
     if [ -d "${savesSrc}" ]; then
-      ${pkgs.rsync}/bin/rsync -a --delete "${savesSrc}/" "${savesDst}/"
+      ${rsync}/bin/rsync -a --delete "${savesSrc}/" "${savesDst}/"
     fi
   '';
 in

@@ -8,13 +8,23 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    coreutils
+    rclone
+    restic
+    util-linux
+    writeShellApplication
+    ;
+
   cfg = osConfig.my.archAntigo;
 
   # READINESS: `restic mount` does not speak sd_notify, so Type=simple would call the unit ready
   # BEFORE the mountpoint exists and Dolphin would cache an empty folder. See the notes.
-  waitMount = pkgs.writeShellApplication {
+  waitMount = writeShellApplication {
     name = "arch-antigo-wait-mount";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       coreutils
       util-linux
     ];
@@ -44,19 +54,19 @@ lib.mkIf osConfig.my.services.arch-antigo-mount {
 
       # Its OWN writable copy of rclone.conf: rclone rewrites the token, and two units sharing one
       # copy is the stomping that hit the backup on 07/08/2026. `%t` = XDG_RUNTIME_DIR, a tmpfs.
-      ExecStartPre = "${pkgs.coreutils}/bin/install -m600 /run/secrets/rclone_gdrive_conf %t/rclone-arch-antigo.conf";
+      ExecStartPre = "${coreutils}/bin/install -m600 /run/secrets/rclone_gdrive_conf %t/rclone-arch-antigo.conf";
 
       # Only the rclone backend reads this, and it reads it from the environment. Safe here (the
       # unit's own); the warning in drive-mount.nix is about exporting it from the SESSION.
       Environment = [ "RCLONE_CONFIG=%t/rclone-arch-antigo.conf" ];
 
       ExecStart = lib.concatStringsSep " " [
-        "${pkgs.restic}/bin/restic"
+        "${restic}/bin/restic"
         "-r ${cfg.repo}"
         "--password-file /run/secrets/restic_password_arch_kingston"
         # The `rclone:` backend EXECUTES rclone, and a unit does not inherit the session's PATH: the
         # store path goes PINNED here. The same trap that once cost the whole backup service.
-        "-o rclone.program=${pkgs.rclone}/bin/rclone"
+        "-o rclone.program=${rclone}/bin/rclone"
         "mount ${cfg.local}"
         # NO LOCK, and it is measured: a mount that dies unclean leaves the lock STUCK (3 of them on
         # 11/08/2026). The premise is that this repo is STATIC; see the notes before removing it.

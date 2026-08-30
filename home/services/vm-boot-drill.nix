@@ -8,6 +8,14 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    coreutils
+    nix
+    writeShellApplication
+    ;
+
   # The repo path has ONE owner, `programs.nh.flake` on the system side (rule 11).
   flake = osConfig.programs.nh.flake;
 
@@ -15,9 +23,9 @@ let
   # same reason btrfs.nix spells libnotify out.
   notify = "${config.home.profileDirectory}/bin/notify";
 
-  drill = pkgs.writeShellApplication {
+  drill = writeShellApplication {
     name = "vm-boot-drill";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       coreutils
       nix
     ];

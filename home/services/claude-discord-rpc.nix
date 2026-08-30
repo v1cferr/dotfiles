@@ -8,7 +8,14 @@
 }:
 
 let
-  ccds = pkgs.claude-code-discord-status;
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    claude-code-discord-status
+    nodejs
+    ;
+
+  ccds = claude-code-discord-status;
   daemonEntry = "${ccds}/lib/node_modules/claude-code-discord-status/dist/daemon/index.js";
 in
 lib.mkIf osConfig.my.services.discord-rpc {
@@ -32,7 +39,7 @@ lib.mkIf osConfig.my.services.discord-rpc {
       PartOf = [ "graphical-session.target" ];
     };
     Service = {
-      ExecStart = "${pkgs.nodejs}/bin/node ${daemonEntry}";
+      ExecStart = "${nodejs}/bin/node ${daemonEntry}";
       Restart = "on-failure";
       RestartSec = 5;
     };

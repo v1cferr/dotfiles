@@ -9,6 +9,13 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    basic-memory
+    coreutils
+    ;
+
   cfg = config.my.memory;
 in
 {
@@ -36,7 +43,7 @@ in
 
   config = lib.mkIf osConfig.my.services.basic-memory {
     # The CLI travels with the server: `bm import`, `bm tool` and `bm doctor` are the human side.
-    home.packages = [ pkgs.basic-memory ];
+    home.packages = [ basic-memory ];
 
     systemd.user.services.basic-memory = {
       Unit = {
@@ -47,8 +54,8 @@ in
 
       Service = {
         # The server creates the project on its first start, but not the directory it points at.
-        ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${cfg.dir}";
-        ExecStart = "${lib.getExe pkgs.basic-memory} mcp --transport streamable-http --host 127.0.0.1 --port ${toString cfg.port}";
+        ExecStartPre = "${coreutils}/bin/mkdir -p ${cfg.dir}";
+        ExecStart = "${lib.getExe basic-memory} mcp --transport streamable-http --host 127.0.0.1 --port ${toString cfg.port}";
 
         # THE ENVIRONMENT IS THE CONFIG (rule 14). `~/.basic-memory/config.json` holds all 88
         # settings and the app rewrites it, so what I own is declared here and it WINS: `bm config

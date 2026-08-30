@@ -21,8 +21,8 @@ let
   qsPkg = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
   fs = unstable.flameshot; # v14
 
-  # flameshot-screenshot: v14 ALWAYS shows a monitor picker and it only takes a CLICK, so this
-  # opens it and enters a submap; the watcher resets the submap when flameshot closes.
+  # flameshot-screenshot: the v14 picker only takes a CLICK, so this opens it and enters a submap,
+  # but ONLY with 2+ monitors, which is when a picker exists at all. The watcher resets the submap.
   flameshotScreenshot = writeShellApplication {
     name = "flameshot-screenshot";
     # `qs` hides the bar while the overlay exists. runtimeInputs is mandatory: writeShellApplication
@@ -35,8 +35,13 @@ let
       qsPkg
     ];
     text = ''
+      # With ONE monitor v14 skips the picker and opens the selection straight away, where 1/2/Esc
+      # are flameshot's own keys: entering the submap there hijacks them into a bogus click.
+      picker=false
+      if [ "$(hyprctl monitors -j | jq 'length')" -gt 1 ]; then picker=true; fi
+
       flameshot gui >/dev/null 2>&1 &
-      hyprctl dispatch 'hl.dsp.submap("screenshot")' >/dev/null 2>&1 || true
+      if $picker; then hyprctl dispatch 'hl.dsp.submap("screenshot")' >/dev/null 2>&1 || true; fi
 
       fs_open() { hyprctl clients -j | jq -e 'any(.[]; .title=="flameshot")' >/dev/null 2>&1; }
       (
@@ -46,7 +51,7 @@ let
         fs_open && qs ipc call bar hide >/dev/null 2>&1 || true
         c=0; while [ "$c" -lt 300 ]; do fs_open || break; sleep 0.2;  c=$((c+1)); done  # wait for it to close (<=60s)
         qs ipc call bar unhide >/dev/null 2>&1 || true  # it ALWAYS comes back, the 60s timeout included
-        hyprctl dispatch 'hl.dsp.submap("reset")' >/dev/null 2>&1 || true
+        if $picker; then hyprctl dispatch 'hl.dsp.submap("reset")' >/dev/null 2>&1 || true; fi
       ) >/dev/null 2>&1 &
     '';
   };

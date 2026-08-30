@@ -21,6 +21,13 @@ v14 ALWAYS shows a monitor picker on a multi-monitor setup. There is no skipping
 So SUPER+SHIFT+S opens the picker and enters a submap, and `1`/`2` SYNTHESIZE the click on the
 right monitor's preview (move the cursor, then `send_shortcut mouse:272`).
 
+**With ONE monitor there is no picker**, and that was the other half of the single-monitor bug,
+fixed on 30/08/2026. v14 opens the selection overlay straight away, so `flameshot-screenshot` counts
+the ACTIVE monitors and only enters the submap when there are 2 or more. Entering it with a single
+monitor HIJACKED flameshot's own keys: `1`/`2` moved the cursor to the middle of the overlay and
+synthesized a left click, which drags a bogus selection instead of capturing a screen, and Esc left
+through `flameshot-cancel` instead of flameshot's own cancel.
+
 The flameshot window has an EMPTY class plus the title `flameshot`, so the selectors and the window
 rule (`rules.lua`) match on the TITLE.
 

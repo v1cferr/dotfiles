@@ -9,8 +9,23 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being used
+  # fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    bash
+    coreutils
+    curl
+    hyprlock
+    jq
+    nixos-artwork
+    playerctl
+    procps
+    systemd
+    writeShellScript
+    ;
+
   # Wallpapers: pkgs.nixos-artwork, so no binary in git and they bump with nixpkgs.
-  art = pkgs.nixos-artwork.wallpapers;
+  art = nixos-artwork.wallpapers;
   wallMain = "${art.catppuccin-mocha}/share/backgrounds/nixos/nixos-wallpaper-catppuccin-mocha.png"; # main (blurred on the lock)
   wallTv = "${art.moonscape}/share/backgrounds/nixos/nix-wallpaper-moonscape.png"; # TV (a static image, no login)
 
@@ -30,27 +45,27 @@ let
   red = "rgba(${palette.red}ee)";
 
   # Binaries at absolute paths, so nothing depends on the PATH (rule 7).
-  hyprlockBin = "${pkgs.hyprlock}/bin/hyprlock";
-  pidof = "${pkgs.procps}/bin/pidof"; # the unit's ExecCondition: do not start a 2nd hyprlock
-  loginctlBin = "${pkgs.systemd}/bin/loginctl";
-  systemctlBin = "${pkgs.systemd}/bin/systemctl";
-  shuf = "${pkgs.coreutils}/bin/shuf";
-  catBin = "${pkgs.coreutils}/bin/cat";
-  sleepBin = "${pkgs.coreutils}/bin/sleep";
-  playerctlBin = "${pkgs.playerctl}/bin/playerctl"; # the media gate reads MPRIS through it
+  hyprlockBin = "${hyprlock}/bin/hyprlock";
+  pidof = "${procps}/bin/pidof"; # the unit's ExecCondition: do not start a 2nd hyprlock
+  loginctlBin = "${systemd}/bin/loginctl";
+  systemctlBin = "${systemd}/bin/systemctl";
+  shuf = "${coreutils}/bin/shuf";
+  catBin = "${coreutils}/bin/cat";
+  sleepBin = "${coreutils}/bin/sleep";
+  playerctlBin = "${playerctl}/bin/playerctl"; # the media gate reads MPRIS through it
 
   # Quote: a daily timer fetches ~50 from ZenQuotes and batch-translates them through DeepL; the
   # lock only runs shuf. The layered fallbacks are in docs/notes/desktop/lockscreen.md
   quotesCache = "${config.xdg.cacheHome}/lockscreen/quotes";
   deeplKeyFile = "/run/secrets/deepl_api_key"; # sops (owner v1cferr); if absent, it stays EN
-  quotesFetch = pkgs.writeShellScript "lockscreen-quotes-fetch" ''
-    ${pkgs.coreutils}/bin/mkdir -p ${config.xdg.cacheHome}/lockscreen
+  quotesFetch = writeShellScript "lockscreen-quotes-fetch" ''
+    ${coreutils}/bin/mkdir -p ${config.xdg.cacheHome}/lockscreen
     tmp="${quotesCache}.tmp"
-    ${pkgs.coreutils}/bin/rm -f "$tmp"
+    ${coreutils}/bin/rm -f "$tmp"
 
     # 1) A filtered EN batch into a compact array [{q,a}].
-    filtered="$(${pkgs.curl}/bin/curl -s --max-time 15 'https://zenquotes.io/api/quotes' \
-      | ${pkgs.jq}/bin/jq -c '[.[]
+    filtered="$(${curl}/bin/curl -s --max-time 15 'https://zenquotes.io/api/quotes' \
+      | ${jq}/bin/jq -c '[.[]
           | select((.q | length) > 0 and (.q | length) <= 120 and .a != "zenquotes.io")
           | {q, a}]' 2>/dev/null || true)"
 
@@ -58,13 +73,13 @@ let
     #    the original author IN ORDER. A mismatch leaves it empty, so it falls back to EN.
     translated=""
     if [ -n "$filtered" ] && [ "$filtered" != "[]" ] && [ -r "${deeplKeyFile}" ]; then
-      key="$(${pkgs.coreutils}/bin/cat "${deeplKeyFile}")"
-      payload="$(${pkgs.coreutils}/bin/printf '%s' "$filtered" \
-        | ${pkgs.jq}/bin/jq -c '{text: [.[].q], target_lang: "PT-BR", source_lang: "EN"}')"
-      resp="$(${pkgs.curl}/bin/curl -s --max-time 30 \
+      key="$(${coreutils}/bin/cat "${deeplKeyFile}")"
+      payload="$(${coreutils}/bin/printf '%s' "$filtered" \
+        | ${jq}/bin/jq -c '{text: [.[].q], target_lang: "PT-BR", source_lang: "EN"}')"
+      resp="$(${curl}/bin/curl -s --max-time 30 \
         -H "Authorization: DeepL-Auth-Key $key" -H 'Content-Type: application/json' \
         -d "$payload" 'https://api-free.deepl.com/v2/translate' 2>/dev/null || true)"
-      translated="$(${pkgs.jq}/bin/jq -cn --argjson f "$filtered" --argjson r "$resp" \
+      translated="$(${jq}/bin/jq -cn --argjson f "$filtered" --argjson r "$resp" \
         'if ($r.translations | type) == "array" and ($r.translations | length) == ($f | length)
          then [range(0; ($f | length)) | {q: $r.translations[.].text, a: $f[.].a}]
          else empty end' 2>/dev/null || true)"
@@ -76,13 +91,13 @@ let
     elif [ -n "$filtered" ]   && [ "$filtered"   != "[]" ];                                 then src="$filtered"
     fi
     if [ -n "$src" ]; then
-      ${pkgs.coreutils}/bin/printf '%s' "$src" | ${pkgs.jq}/bin/jq -r '.[]
+      ${coreutils}/bin/printf '%s' "$src" | ${jq}/bin/jq -r '.[]
           | "<i>“" + (.q | gsub("&";"&amp;") | gsub("<";"&lt;") | gsub(">";"&gt;")) + "”</i>  <b>"
             + (.a | gsub("&";"&amp;") | gsub("<";"&lt;") | gsub(">";"&gt;")) + "</b>"' > "$tmp" 2>/dev/null || true
     fi
 
     # 4) Publish atomically if it worked; otherwise keep the previous cache.
-    if [ -s "$tmp" ]; then ${pkgs.coreutils}/bin/mv "$tmp" ${quotesCache}; else ${pkgs.coreutils}/bin/rm -f "$tmp"; fi
+    if [ -s "$tmp" ]; then ${coreutils}/bin/mv "$tmp" ${quotesCache}; else ${coreutils}/bin/rm -f "$tmp"; fi
     # fallback: at least 1 quote on a first boot with no network, so shuf is never empty.
     [ -s ${quotesCache} ] || echo '<i>“A melhor forma de prever o futuro é inventá-lo.”</i>  <b>Alan Kay</b>' > ${quotesCache}
   '';
@@ -103,12 +118,12 @@ let
     ) config.my.weather.conditions
   );
   # São Carlos/SP by COORDINATES (no geocoding ambiguity), written atomically.
-  weatherFetch = pkgs.writeShellScript "lockscreen-weather-fetch" ''
-    ${pkgs.coreutils}/bin/mkdir -p ${weatherDir}
-    data=$(${pkgs.curl}/bin/curl -sS --max-time 15 ${lib.escapeShellArg weatherUrl} || true)
+  weatherFetch = writeShellScript "lockscreen-weather-fetch" ''
+    ${coreutils}/bin/mkdir -p ${weatherDir}
+    data=$(${curl}/bin/curl -sS --max-time 15 ${lib.escapeShellArg weatherUrl} || true)
     # ONE jq pass, and `select` drops the whole line if either field is missing: a partial read
     # must not become a label. weather_code 0 survives it, since only null/false are falsy in jq.
-    fields=$(${pkgs.coreutils}/bin/printf '%s' "$data" | ${pkgs.jq}/bin/jq -r '.current
+    fields=$(${coreutils}/bin/printf '%s' "$data" | ${jq}/bin/jq -r '.current
       | select(.weather_code != null and .temperature_2m != null)
       | "\(.weather_code) \(.temperature_2m | round)"' || true)
     # No data: the PREVIOUS cache stays on screen. An empty label reads as "the lock is broken".
@@ -120,17 +135,17 @@ let
     esac
     tmp="${weatherCache}.tmp"
     if [ -n "$text" ]; then
-      ${pkgs.coreutils}/bin/printf '%s, %s°C' "$text" "$2" > "$tmp"
+      ${coreutils}/bin/printf '%s, %s°C' "$text" "$2" > "$tmp"
     else
-      ${pkgs.coreutils}/bin/printf '%s°C' "$2" > "$tmp"
+      ${coreutils}/bin/printf '%s°C' "$2" > "$tmp"
     fi
     # No trailing newline: hyprlock renders the label RAW and a \n becomes an empty second line.
-    ${pkgs.coreutils}/bin/mv "$tmp" ${weatherCache}
+    ${coreutils}/bin/mv "$tmp" ${weatherCache}
   '';
 
   # The idle lock GATED by media: any MPRIS player in Playing holds it back. It WAITS instead of
   # skipping, because hypridle fires each timeout ONCE per idle cycle. Reasoning: the notes.
-  idleLock = pkgs.writeShellScript "lockscreen-idle-lock" ''
+  idleLock = writeShellScript "lockscreen-idle-lock" ''
     playing() {
       # A `case` and not `| grep -q`: with no pipe there is no SIGPIPE and no pipefail trap.
       case "$(${playerctlBin} --all-players status 2>/dev/null)" in
@@ -289,7 +304,7 @@ in
       Type = "simple"; # it runs while the screen is locked and exits on unlock
       # The heir of the old `pidof hyprlock ||`, now covering only the TTY rescue. ExecCondition and
       # not ExecStartPre: failing here SKIPS silently instead of marking the unit failed.
-      ExecCondition = "${pkgs.bash}/bin/bash -c '! ${pidof} hyprlock'";
+      ExecCondition = "${bash}/bin/bash -c '! ${pidof} hyprlock'";
       ExecStart = hyprlockBin;
     };
     # NO Install/wantedBy ON PURPOSE: what locks is the click or the idle, never the boot.

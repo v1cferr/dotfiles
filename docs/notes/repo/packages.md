@@ -123,3 +123,58 @@ the repo.
 
 The GPU benchmarks (vulkan-tools, mesa-demos, glmark2, vkmark, unigine, clpeak) were removed after
 validating the Arc: they were one-offs. Only the day-to-day monitors stayed.
+
+## A module names its packages once, at the top
+
+Adopted on 29/08/2026, across 30 modules. The `let` of a module opens with an `inherit (pkgs) ...;`
+listing what that module reaches for, and the body uses the bare name.
+
+**The idea comes from nixpkgs, where it already exists.** A derivation's file header
+(`{ lib, stdenv, curl, jq }:`) IS its dependency list, filled in by `callPackage`. That does not
+transfer to a NixOS module, because a module's arguments are fixed by the module system: only
+`config`, `options`, `lib`, `pkgs` and whatever `specialArgs` provides ever arrive there, and
+`{ pkgs, curl, ... }:` fails at eval. Forcing it through `_module.args = pkgs;` would dump the whole
+of nixpkgs into every module's scope and risk infinite recursion, since module arguments have to
+resolve before imports do. So the `let` is where the list goes, and it is the closest legitimate
+form.
+
+**What it actually buys**, beyond reading better:
+
+- **deadnix checks it.** An inherited name that stops being used is an unused binding, which fails
+  `nix flake check` and the pre-commit hook. Rule 16 usually depends on somebody remembering to
+  audit; here the linter does it.
+- **It kills the mixed-scope list.** `runtimeInputs = with pkgs; [ systemd coreutils streamActive ]`
+  in [`sunshine.nix`](../../../system/services/sunshine.nix) and
+  `home.packages = with pkgs; [ minimizeOthers wl-clipboard ... ]` in
+  [`hypr.nix`](../../../home/desktop/hypr.nix) both mixed real packages with shell applications built
+  a few lines above, resolved by `with` losing to a `let` binding. Nothing on the page said which
+  name was which. This is the case [nix.dev](https://nix.dev/guides/best-practices.html) has in mind
+  when it says not to use `with`: it defeats static analysis and hides where a name comes from.
+- **One place to swap a channel** for that module, instead of a grep through its shell strings.
+
+**What deliberately does NOT go in the block.** The comment above it claims the list is the module's
+packages, so anything else in there would be a lie:
+
+- **Platform queries.** `pkgs.stdenv.hostPlatform.system` keeps its prefix (hypr, quickshell,
+  flameshot, dropbox, razer-dpi). It is not something the module installs.
+- **Namespaces.** `kdePackages` and friends are not packages, so what gets named is the ATTRIBUTE
+  the module uses: `inherit (pkgs.kdePackages) kconfig;`, not the whole set.
+- **The unstable channel**, which is the one exception that stays a namespace: it is inherited as
+  `unstable` so every use site still reads `unstable.spotify`. The table above is kept honest by
+  grepping for `unstable.` across the tree, and a package that stops spelling out its channel
+  vanishes from that grep while still being on it.
+
+**Where it does not apply.** A flat install list (`home.packages`, `environment.systemPackages`,
+`fonts.packages`, `hardware.graphics.extraPackages`) keeps `with pkgs;`: every name in it comes from
+the same place, there is nothing to disambiguate, and the `with` is the nixpkgs idiom for exactly
+that shape. Five modules were left untouched for want of a payoff, all of them with no `let` block
+and one or two single-use references: `system/hardware/mouse.nix`, `system/hardware/razer.nix`,
+`hosts/nixos-kingston/vm-disko.nix`, `home/shell/git.nix` and `home/shell/cli.nix`.
+
+**How the sweep was verified.** The change is textual, so the proof is that nothing moved: the
+system's `drvPath` was read before the first edit and after every commit, and it stayed
+`5hakbijzd1nq2fxh6mxf3vp3rfvglgds` throughout. Since home-manager enters as a NixOS module here, that
+one hash covers both trees. It is a real check and not a formality: every service toggle is on for
+this host, so all the touched modules do evaluate, and a name attributed to the wrong scope fails
+loudly (`undefined variable`, or a missing attribute in the `inherit`) instead of silently building
+something else.

@@ -131,6 +131,13 @@ competing list here would be read as rule numbers.
   header block per module saying what it is, WHY it was chosen and the known
   traps. The line keeps it readable; the block is what gives hours back when the
   problem returns six months later.
+- **A module names its packages once, at the top.** Whatever it reaches for goes
+  into an `inherit (pkgs) ...;` opening the `let`, and the body uses the bare
+  name. That is the dependency header a nixpkgs derivation gets from
+  `callPackage`, which a NixOS module cannot have, since its arguments are fixed
+  by the module system. Flat install lists (`home.packages`,
+  `environment.systemPackages`) keep their `with pkgs;`; a list that MIXES
+  packages with local bindings does not.
 - **Validate before applying**: `nixos-rebuild build` / `nix eval` clean, and
   atomic commits per feature/task before the switch.
 - **An option is DECLARED in `system/` and DEFINED in `hosts/`.** `my.*` is the

@@ -34,8 +34,8 @@ hl.window_rule({
 -- it drawing at misc.render_unfocused_fps. Measured: docs/notes/desktop/hypr.md
 hl.window_rule({ match = { class = "^(hearthstone\\.exe)$" }, render_unfocused = true })
 
--- Flameshot v14: the old -1920/3840 stretch BREAKS it, since v14 opens a PICKER first. Only
--- float plus center, matched by TITLE (the class is empty). Every flag: docs/notes/desktop/hypr.md
+-- Flameshot v14: the overlay ASKS for fullscreen and suppressing it left it 17 px low, under the
+-- bar's reserved area. float plus center is for the PICKER only. Every flag: docs/notes/desktop/hypr.md
 hl.window_rule({
   name = "flameshot-v14-overlay",
   match = { title = "^flameshot$" },
@@ -48,5 +48,4 @@ hl.window_rule({
   no_blur = true,
   no_shadow = true,
   rounding = 0,
-  suppress_event = "fullscreen",
 })

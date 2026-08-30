@@ -267,10 +267,19 @@ main. Worth a look on the next bump.
 BREAKS v14, since v14 opens a monitor PICKER (a normal window) and then a fullscreen overlay on the
 chosen monitor, and forcing a giant move/size scrambles the picker.
 
-So the rule only leaves it floating and centered, with no animation.
-`suppress_event = "fullscreen"` keeps the overlay a floating window, so it does not enter
-Hyprland's fullscreen and there is no wallpaper flash on close. `opacity`/`no_blur`/`no_shadow`
+So the rule only leaves it floating and centered, with no animation. `opacity`/`no_blur`/`no_shadow`
 because the overlay is a FROZEN FRAME and must not inherit the global transparency and blur.
+
+**`suppress_event = "fullscreen"` WAS the single-monitor bug**, removed on 30/08/2026. The overlay
+ASKS the compositor for fullscreen; suppressing the request left it a plain floating window, and
+Hyprland centers a floating window INSIDE the reserved area. With the bar reserving 34 px at the
+top, a 1080-tall overlay on a 1080-tall monitor came out at `0,17`: the frozen frame sat 17 px low,
+everything under the cursor was off by that much and the bottom strip fell outside the screen. With
+two monitors the FIRST window is the 900x349 PICKER, which centering places correctly, which is why
+the bug only ever showed up with the TV disconnected. Measured the same day, with the line gone:
+the overlay is `at 0,0 size 1920x1080 fullscreen=2` and the picker is untouched at `510,383`. The
+suppression came from the Arch port and not from a v14 finding, and the wallpaper flash on close it
+claimed to prevent belongs to the v13 flow: a flash is cosmetic, the 17 px were not.
 
 It matches by TITLE, because on this box the flameshot window (both the picker and the overlay) has
 an EMPTY class and the title `flameshot`. With no `float` it falls into dwindle's tiling, born

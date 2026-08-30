@@ -9,6 +9,11 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being used
+  # fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs) gnused writeText;
+  inherit (pkgs.kdePackages) kconfig; # kwriteconfig6, the activation's only tool
+
   # `DolphinView::Mode` (dolphinview.h): 0 = Icons, 1 = Details, 2 = Compact. Named because the
   # raw number is a TRAP: the MENU lists them in another order. See the notes.
   viewModeDetails = 1;
@@ -20,11 +25,11 @@ let
       : # already at the right value and immutable
     elif grep -qF '${key}[$i]=' "$dir/.directory" 2>/dev/null; then
       # Immutable with ANOTHER value: kwriteconfig6 would exit 2, so rewrite it with sed.
-      run ${pkgs.gnused}/bin/sed -i \
+      run ${gnused}/bin/sed -i \
         's/^${key}\[\$i\]=.*$/${key}[$i]=${value}/' "$dir/.directory"
     else
       run "$kw" --file "$dir/.directory" --group ${group} --key ${key} ${value}
-      run ${pkgs.gnused}/bin/sed -i \
+      run ${gnused}/bin/sed -i \
         's/^${key}=${value}$/${key}[$i]=${value}/' "$dir/.directory"
     fi
   '';
@@ -77,7 +82,7 @@ let
     i: p:
     p
     // {
-      file = pkgs.writeText "dolphin-place-${toString i}.xbel" ''
+      file = writeText "dolphin-place-${toString i}.xbel" ''
         <bookmark href="file://${p.path}">
          <title>${p.title}</title>
          <info>
@@ -105,7 +110,7 @@ in
   ];
 
   home.activation.dolphinDetailsView = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    kw="${pkgs.kdePackages.kconfig}/bin/kwriteconfig6"
+    kw="${kconfig}/bin/kwriteconfig6"
     run "$kw" --file "$HOME/.config/dolphinrc" --group General --key GlobalViewProps true
 
     # THE KEY IS `PreviewSize`, NOT `IconSize` (dolphinitemlistview.cpp:172), and 32 is the first
@@ -142,7 +147,7 @@ in
   # "Open Terminal Here": with NO key KTerminalLauncherJob falls back to konsole and then to
   # xterm, which is what was opening. kdeglobals is KDE-wide; see docs/notes/apps/dolphin.md
   home.activation.dolphinTerminalApp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    kw="${pkgs.kdePackages.kconfig}/bin/kwriteconfig6"
+    kw="${kconfig}/bin/kwriteconfig6"
     # The bare NAME and never a store path: the file is mutable and would pin a dead kitty.
     run "$kw" --file "$HOME/.config/kdeglobals" --group General --key TerminalApplication kitty
   '';

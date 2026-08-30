@@ -88,7 +88,10 @@ jobs:
           # No topic provisioned sends nothing and says so, instead of failing: the run is already
           # red, and a second red mark that only means "the warning did not go out" reads as a
           # second problem. Same contract as the `notify` command on the machine.
-          if [ -z "$NTFY_TOPIC" ]; then
+          # Stripped for the same reason the `notify` command strips it: a secret set from a file
+          # with a trailing newline yields a topic ntfy answers 400 to, which reads as nothing.
+          topic="$(printf '%s' "$NTFY_TOPIC" | tr -d '[:space:]')"
+          if [ -z "$topic" ]; then
             echo "NTFY_TOPIC is not set on this repo, so no alert was sent" >&2
             exit 0
           fi
@@ -101,7 +104,7 @@ jobs:
           # priority 4 (high) on purpose: at 3 the phone stays quiet, and a quiet alert is the
           # email problem again with more steps.
           body="$(jq -n \
-            --arg topic "$NTFY_TOPIC" \
+            --arg topic "$topic" \
             --arg message "$message" \
             --arg click "$RUN_URL" \
             '{topic: $topic, title: "canary failed", message: $message,

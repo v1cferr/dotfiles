@@ -1,7 +1,23 @@
 # JELLYFIN: a native media server (systemd, 24/7). The library is /srv/media, shared through the
 # 'media' group. The UMask override, DLNA on the TV and the rest: docs/notes/services/jellyfin.md
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
+let
+  # It exits 0 on timeout ON PURPOSE: this is a best-effort delay, and a machine with no network
+  # still has to bring its server up instead of failing the unit.
+  waitForIpv4 = pkgs.writeShellScript "jellyfin-wait-for-ipv4" ''
+    for _ in $(seq 1 30); do
+      ${pkgs.iproute2}/bin/ip -4 route show default | ${pkgs.gnugrep}/bin/grep -q . && exit 0
+      sleep 1
+    done
+    exit 0
+  '';
+in
 {
   # The media's shared group: the owner is me (I copy/manage), the reader is jellyfin.
   users.groups.media = { };
@@ -30,6 +46,16 @@
   # Upstream's UMask 0077 makes the downloaded art/nfo 0600 and unreadable to me; 0002 fixes it.
   # Behind the toggle for the same reason as the user: with no service there is no unit to override.
   systemd.services = lib.mkIf config.my.services.jellyfin {
-    jellyfin.serviceConfig.UMask = lib.mkForce "0002";
+    jellyfin.serviceConfig = {
+      UMask = lib.mkForce "0002";
+      # network-online.target is NOT enough, and the unit already orders after it: wait-online
+      # returns as soon as ONE address family is up, and here IPv6 by SLAAC beats DHCPv4. On the
+      # boot of 29/08/2026 the target was reached at 19:03:11 and enp7s0 only got its IPv4 at
+      # 19:03:13, so the DLNA plugin enumerated interfaces in between and published the server on
+      # 127.0.0.1. That failure HIDES ITSELF: the web UI answers normally and only the TV, which
+      # depends on SSDP discovery, cannot find anything. Waiting for the default ROUTE is what
+      # actually means "IPv4 is usable", and the docker/br- bridges never create one.
+      ExecStartPre = [ "${waitForIpv4}" ];
+    };
   };
 }

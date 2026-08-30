@@ -65,14 +65,24 @@ hold is `--region`, which v14 ignores.
 | --- | --- |
 | `screenshot` | `flameshot gui`, an interactive selection |
 | `scfull` | both screens, to the clipboard |
-| `sc1` | the TV (HDMI-A-3), to the clipboard |
-| `sc2` | the main one (DP-2), to the clipboard |
+| `sc1` | the TV (`my.monitors.secondary`), to the clipboard |
+| `sc2` | the main one (`my.monitors.primary`), to the clipboard |
 
-**`--number` is a Qt screen index, NOT a monitor name**, so it does not come out of `my.monitors`
-(rule 11 does not apply: there is no way to derive it). The mapping was measured by capturing both
-screens and comparing against the wallpapers: 0 = the main one (DP-2), 1 = the TV (HDMI-A-3). If
-the monitor layout changes, MEASURE AGAIN. The numbers inherited from Arch already match the
-screenshot submap (1 = TV, 2 = main).
+**`--number` is a Qt screen index and NOT a monitor name**, and it was a measured literal here until
+30/08/2026, guarded by nothing but a "if the layout changes, MEASURE AGAIN". It also broke with the
+TV disconnected: index 1 stops existing, so `sc1` answered `Requested screen exceeds screen count`
+and exited 2.
+
+`flameshot-screen` takes the NAME, which does come from `my.monitors` (rule 11), and DERIVES the
+index: Qt numbers the screens in the order the compositor advertises the `wl_output`s, which is
+Hyprland's monitor `id` order, so the index is the target's position among the ACTIVE monitors
+sorted by `id`. A monitor that is not connected gets a notification instead of a capture, and the
+numbers still match the screenshot submap (1 = TV, 2 = main).
+
+MEASURED on 30/08/2026 with a HEADLESS output standing in for the TV (`hyprctl output create
+headless HDMI-A-3`, which `monitors.lua` then places at `-1920x0` exactly like the real one):
+`--number 0` captured the LG and `--number 1` the stand-in, which is the `id` order (DP-2 = 0,
+HDMI-A-3 = 1) and the same mapping that had been measured by hand against the wallpapers.
 
 ## Two small things
 

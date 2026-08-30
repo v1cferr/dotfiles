@@ -1,6 +1,7 @@
 # v14 plus the keyboard-flow scripts, called by the submap in keybinds.lua.
 {
   config,
+  osConfig,
   pkgs,
   inputs,
   ...
@@ -92,6 +93,31 @@ let
     '';
   };
 
+  # flameshot-screen: sc1/sc2 by monitor NAME. Qt numbers the screens in wl_output order, which is
+  # Hyprland's monitor id order, so `--number` is DERIVED and not measured by hand (rule 11).
+  flameshotScreen = writeShellApplication {
+    name = "flameshot-screen";
+    runtimeInputs = [
+      fs
+      hyprland
+      jq
+    ];
+    text = ''
+      target="''${1:?usage: flameshot-screen <monitor>}"
+
+      # the target's 0-based position among the ACTIVE monitors sorted by id, which is what
+      # `--number` counts. Absent means there is nothing to capture (a disconnected TV, say).
+      idx="$(hyprctl monitors -j | jq -r --arg t "$target" '
+        ([ .[] | { name, id } ] | sort_by(.id) | map(.name) | index($t)) // empty')"
+      if [ -z "$idx" ]; then
+        hyprctl notify -1 2000 "rgb(${config.my.theme.palette.red})" "$target is not connected" >/dev/null 2>&1 || true
+        exit 0
+      fi
+
+      flameshot screen --number "$idx" -c
+    '';
+  };
+
   # flameshot-cancel: Esc closes the picker and leaves the submap.
   flameshotCancel = writeShellApplication {
     name = "flameshot-cancel";
@@ -108,16 +134,17 @@ in
     fs
     flameshotScreenshot
     flameshotPick
+    flameshotScreen
     flameshotCancel
   ];
 
   # The screenshot aliases live next to the tool, not in zsh.nix (the eza/bat convention).
-  # `--number` is a Qt index and NOT a monitor name: if the layout changes, MEASURE AGAIN.
+  # They take a monitor NAME (rule 11), and flameshot-screen turns it into the Qt `--number`.
   programs.zsh.shellAliases = {
     screenshot = "flameshot gui"; # an interactive selection (it opens the v14 picker)
     scfull = "flameshot full -c"; # both screens, to the clipboard
-    sc1 = "flameshot screen --number 1 -c"; # the TV (HDMI-A-3), to the clipboard
-    sc2 = "flameshot screen --number 0 -c"; # the main one (DP-2), to the clipboard
+    sc1 = "flameshot-screen ${osConfig.my.monitors.secondary}"; # the TV, to the clipboard
+    sc2 = "flameshot-screen ${osConfig.my.monitors.primary}"; # the main one, to the clipboard
   };
 
   # Flameshot does not create the output folder reliably on its own.

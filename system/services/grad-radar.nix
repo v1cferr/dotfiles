@@ -8,8 +8,8 @@
 }:
 
 let
-  # Every package this module reaches for, named ONCE and up front: an entry that stops being used
-  # fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  # Rule 19: everything this module reaches for, named once. deadnix fails the build on an
+  # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
     docker
     docker-buildx

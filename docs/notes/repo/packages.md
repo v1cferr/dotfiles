@@ -124,9 +124,9 @@ the repo.
 The GPU benchmarks (vulkan-tools, mesa-demos, glmark2, vkmark, unigine, clpeak) were removed after
 validating the Arc: they were one-offs. Only the day-to-day monitors stayed.
 
-## A module names its packages once, at the top
+## A module names its packages once, at the top (rule 19)
 
-Adopted on 29/08/2026, across 30 modules. The `let` of a module opens with an `inherit (pkgs) ...;`
+Adopted on 29/08/2026, across 35 modules. The `let` of a module opens with an `inherit (pkgs) ...;`
 listing what that module reaches for, and the body uses the bare name.
 
 **The idea comes from nixpkgs, where it already exists.** A derivation's file header

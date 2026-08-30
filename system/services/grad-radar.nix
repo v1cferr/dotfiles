@@ -8,30 +8,39 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being used
+  # fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    docker
+    docker-buildx
+    docker-compose
+    writeShellScript
+    ;
+
   # The working tree, not a store path (see the notes). Nix never reads it at eval time.
   repo = "/home/v1cferr/Projects/GitHub/v1cferr/grad-radar";
   composeFile = "${repo}/docker-compose.dev.yml";
 
   # The same race as ./duo.nix: `after = docker.service` loses to socket activation.
-  dockerReady = pkgs.writeShellScript "grad-radar-wait-docker" ''
-    for _ in $(seq 1 60); do ${pkgs.docker}/bin/docker info >/dev/null 2>&1 && exit 0; sleep 1; done
+  dockerReady = writeShellScript "grad-radar-wait-docker" ''
+    for _ in $(seq 1 60); do ${docker}/bin/docker info >/dev/null 2>&1 && exit 0; sleep 1; done
     echo "grad-radar: docker was not ready in time" >&2; exit 1
   '';
 
   # A writable DOCKER_CONFIG with the plugins linked in: without it root does not find buildx.
-  dockerCfgSetup = pkgs.writeShellScript "grad-radar-docker-cfg" ''
+  dockerCfgSetup = writeShellScript "grad-radar-docker-cfg" ''
     mkdir -p /run/grad-radar/cli-plugins
-    ln -sf ${pkgs.docker-buildx}/libexec/docker/cli-plugins/docker-buildx /run/grad-radar/cli-plugins/docker-buildx
-    ln -sf ${pkgs.docker-compose}/libexec/docker/cli-plugins/docker-compose /run/grad-radar/cli-plugins/docker-compose
+    ln -sf ${docker-buildx}/libexec/docker/cli-plugins/docker-buildx /run/grad-radar/cli-plugins/docker-buildx
+    ln -sf ${docker-compose}/libexec/docker/cli-plugins/docker-compose /run/grad-radar/cli-plugins/docker-compose
   '';
 
   # `-p grad-radar` matches the compose's `name:`, so `just dev` and the service share volumes.
-  dc = "${pkgs.docker}/bin/docker compose -p grad-radar -f ${composeFile}";
+  dc = "${docker}/bin/docker compose -p grad-radar -f ${composeFile}";
 in
 lib.mkIf config.my.services.grad-radar {
   virtualisation.docker.enable = true;
   users.users.v1cferr.extraGroups = [ "docker" ];
-  environment.systemPackages = [ pkgs.docker-compose ];
+  environment.systemPackages = [ docker-compose ];
 
   systemd.services.grad-radar = {
     description = "GradRadar stack (compose: frontend + backend + db)";
@@ -42,7 +51,7 @@ lib.mkIf config.my.services.grad-radar {
     requires = [ "docker.service" ];
     wants = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
-    path = [ pkgs.docker ];
+    path = [ docker ];
 
     environment = {
       DOCKER_CONFIG = "/run/grad-radar";
@@ -75,7 +84,7 @@ lib.mkIf config.my.services.grad-radar {
     description = "GradRadar: checks the official sources once";
     after = [ "grad-radar.service" ];
     requires = [ "grad-radar.service" ];
-    path = [ pkgs.docker ];
+    path = [ docker ];
     unitConfig.ConditionPathExists = composeFile;
     serviceConfig = {
       Type = "oneshot";

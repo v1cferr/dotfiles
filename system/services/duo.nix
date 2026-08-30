@@ -9,6 +9,18 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being used
+  # fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    docker
+    docker-buildx
+    docker-compose
+    writeShellApplication
+    writeShellScript
+    writeText
+    xhost
+    ;
+
   # The auto-gate: it stays inert until the Postgres password is provisioned.
   enabled = config.sops.secrets ? duo_db_password;
 
@@ -16,24 +28,24 @@ let
   envPath = config.sops.templates."duo.env".path; # /run/secrets/rendered/duo.env
 
   # dockerd comes up through socket activation, so `after=docker.service` loses the race.
-  dockerReady = pkgs.writeShellScript "duo-wait-docker" ''
-    for _ in $(seq 1 60); do ${pkgs.docker}/bin/docker info >/dev/null 2>&1 && exit 0; sleep 1; done
+  dockerReady = writeShellScript "duo-wait-docker" ''
+    for _ in $(seq 1 60); do ${docker}/bin/docker info >/dev/null 2>&1 && exit 0; sleep 1; done
     echo "duo-stack: docker did not become ready in time" >&2; exit 1
   '';
 
   # A writable DOCKER_CONFIG with the plugins: without it buildx is not found and the LEGACY
   # builder takes over, which does not support `RUN --mount`. See the notes.
-  dockerCfgSetup = pkgs.writeShellScript "duo-docker-cfg" ''
+  dockerCfgSetup = writeShellScript "duo-docker-cfg" ''
     mkdir -p /run/duo/cli-plugins
-    ln -sf ${pkgs.docker-buildx}/libexec/docker/cli-plugins/docker-buildx /run/duo/cli-plugins/docker-buildx
-    ln -sf ${pkgs.docker-compose}/libexec/docker/cli-plugins/docker-compose /run/duo/cli-plugins/docker-compose
+    ln -sf ${docker-buildx}/libexec/docker/cli-plugins/docker-buildx /run/duo/cli-plugins/docker-buildx
+    ln -sf ${docker-compose}/libexec/docker/cli-plugins/docker-compose /run/duo/cli-plugins/docker-compose
   '';
 
   # The PLUGIN (only it routes to buildx) plus a FIXED project name, so the volumes survive a bump.
-  dc = "${pkgs.docker}/bin/docker compose -p duo --env-file ${envPath} -f ${composeFile}";
+  dc = "${docker}/bin/docker compose -p duo --env-file ${envPath} -f ${composeFile}";
 
   # The DEPLOY manifest (the repo ships the DEV one): store paths plus a sops-rendered env_file.
-  composeFile = pkgs.writeText "duo-compose.yml" ''
+  composeFile = writeText "duo-compose.yml" ''
     services:
       duo-daemon:
         build: { context: ${duoSrc}, dockerfile: src/daemon/Dockerfile }
@@ -81,11 +93,11 @@ let
   '';
 
   # The one-time interactive login: the browser visible through Xwayland, the session in the volume.
-  duo-login = pkgs.writeShellApplication {
+  duo-login = writeShellApplication {
     name = "duo-login";
     runtimeInputs = [
-      pkgs.docker
-      pkgs.xhost
+      docker
+      xhost
     ];
     text = ''
       xhost +local: >/dev/null 2>&1 || true
@@ -100,9 +112,9 @@ let
   };
 
   # Runs the routine NOW, ignoring the "it already ran today".
-  duo-run-once = pkgs.writeShellApplication {
+  duo-run-once = writeShellApplication {
     name = "duo-run-once";
-    runtimeInputs = [ pkgs.docker ];
+    runtimeInputs = [ docker ];
     text = ''docker exec -it duo-daemon duo-streak-daemon run-once --force "$@"'';
   };
 in
@@ -117,7 +129,7 @@ lib.mkIf (enabled && config.my.services.duo) {
   environment.systemPackages = [
     duo-login
     duo-run-once
-    pkgs.docker-compose
+    docker-compose
   ];
 
   # The .env rendered by sops: config as text plus secrets through placeholders, the optional ones
@@ -168,7 +180,7 @@ lib.mkIf (enabled && config.my.services.duo) {
       "ollama.service"
     ];
     wantedBy = [ "multi-user.target" ];
-    path = [ pkgs.docker ];
+    path = [ docker ];
     # A change in a secret's VALUE alone does not move this hash: `systemctl restart duo-stack`.
     restartTriggers = [
       composeFile

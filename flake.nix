@@ -201,6 +201,7 @@
         docs-links = final.callPackage ./pkgs/docs-links.nix { }; # it fails when a docs/ pointer breaks
         prose-style = final.callPackage ./pkgs/prose-style.nix { }; # rule 17's bans, in prose and in a message
         qml-syntax = final.callPackage ./pkgs/qml-syntax.nix { }; # it fails on a .qml that does not parse
+        data-syntax = final.callPackage ./pkgs/data-syntax.nix { }; # it fails on a .json/.toml that does not parse
         dead-config = final.callPackage ./pkgs/dead-config.nix { }; # it fails on declared-and-unused
         router-ssot = final.callPackage ./pkgs/router-ssot.nix { }; # it fails when the router's mirror diverges
       };
@@ -286,6 +287,7 @@
             docs-links # ./pkgs: the build IS the script's flake8; the CHECK below runs it
             prose-style # ./pkgs: same flake8 at build time; the HOOKS below run it, in two modes
             qml-syntax # ./pkgs: the build IS the wrapper's shellcheck; the HOOK below runs it
+            data-syntax # ./pkgs: same flake8 at build time; the HOOK below runs it
             dead-config # ./pkgs: same, and the CHECK below runs it too
             router-ssot # ./pkgs: same, and the CHECK below runs it too
             curseforge # ./pkgs: the official AppImage (outside the CHECK below, the why is there)
@@ -415,6 +417,16 @@
               entry = "${self.packages.${system}.qml-syntax}/bin/qml-syntax";
               language = "system";
               files = "\\.qml$";
+            };
+            # The 14 `.json`/`.jsonc`/`.toml`. Nix parses two of them (`.luarc.json` and the
+            # secrets index) and fails at eval; the rest are read by a TOOL, which answers a
+            # broken file by falling back to its defaults and saying nothing.
+            data-syntax = {
+              enable = true;
+              name = "data-syntax";
+              entry = "${self.packages.${system}.data-syntax}/bin/data-syntax";
+              language = "system";
+              files = "\\.(json|jsonc|toml)$";
             };
             # `scripts/router-sync.py`, the only loose .py and the one that WRITES to the router.
             # `check` with no --fix on purpose: a linter that rewrites Python is not a formatter.

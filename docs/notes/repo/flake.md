@@ -315,6 +315,26 @@ which only runs `pre-commit`-stage hooks. There is no message inside that sandbo
 enforced on THIS machine, at commit time, and not by the CI. Checking the grammar of what was
 already pushed would take a separate job running `convco check` over the pushed range.
 
+**`data-syntax`: the 14 `.json`/`.jsonc`/`.toml` nobody was checking (29/08/2026).** Found by
+auditing the gate's coverage BY EXTENSION instead of trusting that it was complete: `.nix`, `.md`,
+`.qml`, `.lua`, `.sh`, `.py` and the workflow YAML each had a hook, and the data files had none.
+That is the worst class of gap here, because of WHO reads those files. Nix parses two of them
+(`.luarc.json` through `fromJSON`, and the secrets index that `system/core/secrets.nix` walks), so
+those fail loudly at eval. The other twelve are read by a TOOL at runtime, and a tool answers a
+broken config by falling back to its defaults and saying nothing: an MCP server that does not
+appear, a keybinding that does not exist, a linter running its own ruleset instead of mine.
+
+THE DIALECT IS THE WHOLE DESIGN, and getting it wrong in either direction makes the check useless.
+VS Code DOCUMENTS comments in its own `settings.json` and `keybindings.json`, so parsing those
+strictly would fail on three correct files and the hook would be turned off within a day. Parsing
+everything laxly would accept a comment in `.mcp.json`, which its reader rejects. So the checker
+parses each file in the dialect its CONSUMER accepts: json5 for the three VS Code paths and any
+`.jsonc`, `json.loads` for the rest, `tomllib` for TOML.
+
+MEASURED both ways before committing, because a check that cannot fail is not a check: the 14 files
+in the tree parse; a truncated `.json` and an unterminated `.toml` both exit 1 with the parser's own
+message; a `//` comment fails in a strict file and passes in `.vscode/settings.json`.
+
 ### `checks.packages`: building what the gate did not cover (04/08/2026)
 
 `nix flake check` builds what is in `checks` («the derivations specified by the flake's checks output

@@ -142,10 +142,10 @@ let
       # present in `hyprctl monitors` (the ACTIVE ones) means it is on, so turn it off.
       if hyprctl -j monitors | jq -e --arg n "$name" 'any(.[]; .name==$n)' >/dev/null 2>&1; then
         hyprctl eval "$off" >/dev/null 2>&1 || true
-        hyprctl notify -1 2000 "rgb(f38ba8)" "TV off, workspaces on the LG" >/dev/null 2>&1 || true
+        hyprctl notify -1 2000 "rgb(${config.my.theme.palette.red})" "TV off, workspaces on the LG" >/dev/null 2>&1 || true
       else
         hyprctl eval "$on" >/dev/null 2>&1 || true
-        hyprctl notify -1 2000 "rgb(a6e3a1)" "TV back on" >/dev/null 2>&1 || true
+        hyprctl notify -1 2000 "rgb(${config.my.theme.palette.green})" "TV back on" >/dev/null 2>&1 || true
       fi
     '';
   };

@@ -8,7 +8,7 @@
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
-    "//": "Last update at 8/26/2026, 8:53:47 AM",
+    "//": "Last update at 8/29/2026, 7:45:04 PM",
     ".agent": ".agent, .claude, .cline, .codebuddy, .codex, .commandcode, .continue, .crush, .cursor, .factory, .gemini, .goose, .junie, .kilocode, .kiro, .kode, .mcpjam, .mux, .neovate, .opencode, .openhands, .pi, .pochi, .qoder, .qwen, .roo, .trae, .windsurf, .zencoder",
     ".clang-tidy": ".clang-format, .clangd, compile_commands.json",
     ".env": "*.env, .env.*, .envrc, env.d.ts",
@@ -351,5 +351,6 @@
   "qt-qml.qmlls.enabled": false,
   "qt-qml.doNotAskForQmllsDownload": true,
   "claudeCode.preferredLocation": "panel",
+  "qt-core.showWelcomePageOnActivation": false,
   "window.zoomLevel": -1,
 }

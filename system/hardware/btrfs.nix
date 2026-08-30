@@ -9,6 +9,16 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    btrfs-progs
+    coreutils
+    libnotify
+    util-linux
+    writeShellApplication
+    ;
+
   rootIsBtrfs = config.fileSystems ? "/" && config.fileSystems."/".fsType == "btrfs";
 
   # The unit's name is DERIVED, not typed: if the scrub's target changes, the onFailure follows.
@@ -19,9 +29,9 @@ let
 
   # THE ALARM: the journal first (it survives nobody being logged in), then a critical bubble in
   # every live session. runuser + the session bus, because Quickshell is what delivers. Notes.
-  btrfsAlert = pkgs.writeShellApplication {
+  btrfsAlert = writeShellApplication {
     name = "btrfs-alert";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       coreutils
       libnotify
       util-linux
@@ -40,7 +50,7 @@ let
         [ -S "$bus" ] || continue   # no live session, so only the journal, and that is fine
         # The ABSOLUTE path: runuser can rebuild the PATH and libnotify would fall out of reach.
         runuser -u "$u" -- env "DBUS_SESSION_BUS_ADDRESS=unix:path=$bus" \
-          ${pkgs.libnotify}/bin/notify-send -a "btrfs" -u critical \
+          ${libnotify}/bin/notify-send -a "btrfs" -u critical \
           -i drive-harddisk "$title" "$body" || true
       done
     '';
@@ -77,7 +87,7 @@ lib.mkIf rootIsBtrfs {
     onFailure = [ "btrfs-alert-devstats.service" ];
     serviceConfig = {
       Type = "oneshot";
-      ExecStart = "${pkgs.btrfs-progs}/bin/btrfs device stats -c /";
+      ExecStart = "${btrfs-progs}/bin/btrfs device stats -c /";
       LogLevelMax = "warning"; # does not log "Starting/Finished" every day (the bb8690c lesson)
     };
   };

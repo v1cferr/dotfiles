@@ -8,11 +8,19 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    gnugrep
+    iproute2
+    writeShellScript
+    ;
+
   # It exits 0 on timeout ON PURPOSE: this is a best-effort delay, and a machine with no network
   # still has to bring its server up instead of failing the unit.
-  waitForIpv4 = pkgs.writeShellScript "jellyfin-wait-for-ipv4" ''
+  waitForIpv4 = writeShellScript "jellyfin-wait-for-ipv4" ''
     for _ in $(seq 1 30); do
-      ${pkgs.iproute2}/bin/ip -4 route show default | ${pkgs.gnugrep}/bin/grep -q . && exit 0
+      ${iproute2}/bin/ip -4 route show default | ${gnugrep}/bin/grep -q . && exit 0
       sleep 1
     done
     exit 0

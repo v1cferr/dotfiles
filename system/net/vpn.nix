@@ -3,6 +3,23 @@
 { pkgs, config, ... }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    bash
+    coreutils
+    gawk
+    gnugrep
+    iproute2
+    iputils
+    libnotify
+    nxbender
+    openconnect
+    systemd
+    writeShellApplication
+    writeShellScript
+    ;
+
   # Exponential backoff with NO ceiling: a hard limit left the unit permanently `failed`.
   vpnRestart = {
     Restart = "always";
@@ -13,9 +30,9 @@ let
 
   # The `vpn` CLI: connect/disconnect, status-json (the pill), stats-json (the hover panel)
   # and diagnose/watch, whose job is to name WHOSE fault a failure is.
-  vpnCli = pkgs.writeShellApplication {
+  vpnCli = writeShellApplication {
     name = "vpn";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       systemd
       libnotify
       iproute2
@@ -338,9 +355,9 @@ in
     # no wantedBy, so it is ON DEMAND (the `vpn` CLI turns it on)
     serviceConfig = {
       Type = "simple";
-      ExecStart = pkgs.writeShellScript "vpn-ufscar-up" ''
-        ${pkgs.coreutils}/bin/cat ${config.sops.secrets.ufscar_vpn_password.path} \
-          | ${pkgs.openconnect}/bin/openconnect --protocol=gp --user=857722 \
+      ExecStart = writeShellScript "vpn-ufscar-up" ''
+        ${coreutils}/bin/cat ${config.sops.secrets.ufscar_vpn_password.path} \
+          | ${openconnect}/bin/openconnect --protocol=gp --user=857722 \
               --authgroup=acessoremoto.ufscar.br --passwd-on-stdin acessoremoto-scl.ufscar.br
       '';
     }
@@ -358,7 +375,7 @@ in
     restartIfChanged = false; # same: reconnecting the VPN is my decision, not a rebuild side effect
     serviceConfig = {
       Type = "simple";
-      ExecStart = "${pkgs.nxbender}/bin/nxBender -c ${config.sops.templates."nxbender-fai.conf".path}";
+      ExecStart = "${nxbender}/bin/nxBender -c ${config.sops.templates."nxbender-fai.conf".path}";
     }
     // vpnRestart;
     startLimitIntervalSec = 0;

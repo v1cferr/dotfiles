@@ -3,6 +3,16 @@
 { pkgs, lib, ... }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    bitwarden-cli
+    git
+    jq
+    sops
+    writeShellApplication
+    ;
+
   # The public index: { "<name-in-sops>" = "<item-in-Bitwarden>"; ... }
   bwMap = builtins.fromJSON (builtins.readFile ../../secrets/bitwarden-secrets.json);
 
@@ -24,9 +34,9 @@ let
   # entry now stays inert until it actually exists.
   syncedMap = lib.filterAttrs (key: _item: builtins.elem key sopsKeys) bwMap;
 
-  sync-secrets = pkgs.writeShellApplication {
+  sync-secrets = writeShellApplication {
     name = "sync-secrets";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       bitwarden-cli
       jq
       sops

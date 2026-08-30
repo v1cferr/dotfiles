@@ -3,10 +3,17 @@
 { pkgs, ... }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    sbctl
+    writeShellApplication
+    ;
+
   # Signs GRUB on every switch: grub-install rewrites grubx64.efi when you least expect it.
-  signGrub = pkgs.writeShellApplication {
+  signGrub = writeShellApplication {
     name = "grub-sbctl-sign";
-    runtimeInputs = [ pkgs.sbctl ];
+    runtimeInputs = [ sbctl ];
     text = ''
       # No keys yet = warn and exit 0, or step 2 of the runbook would abort the activation.
       if [ ! -d /var/lib/sbctl/keys ]; then
@@ -27,7 +34,7 @@ let
 in
 {
   # The tool for the runbook above (create-keys / enroll-keys / status / verify).
-  environment.systemPackages = [ pkgs.sbctl ];
+  environment.systemPackages = [ sbctl ];
 
   # It runs at the end of install-grub.sh, after the menu entries (grub.nix:837).
   boot.loader.grub.extraInstallCommands = "${signGrub}/bin/grub-sbctl-sign";

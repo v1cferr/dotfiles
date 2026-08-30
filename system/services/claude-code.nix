@@ -8,14 +8,26 @@
 }:
 
 let
-  ccds = pkgs.claude-code-discord-status;
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    bash
+    claude-code-discord-status
+    coreutils
+    curl
+    jq
+    nodejs
+    writeShellApplication
+    ;
+
+  ccds = claude-code-discord-status;
   hookScript = "${ccds}/lib/node_modules/claude-code-discord-status/src/hooks/claude-hook.sh";
 
   # CC runs the hook with the USER's PATH (which may not have jq), so it is wrapped with the tools
   # guaranteed on the PATH. `exec` makes the wrapper disappear and leaves the real script.
-  hook = pkgs.writeShellApplication {
+  hook = writeShellApplication {
     name = "claude-presence-hook";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       bash
       coreutils
       curl

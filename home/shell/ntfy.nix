@@ -3,9 +3,18 @@
 { pkgs, ... }:
 
 let
-  notify = pkgs.writeShellApplication {
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    coreutils
+    curl
+    jq
+    writeShellApplication
+    ;
+
+  notify = writeShellApplication {
     name = "notify";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       coreutils
       curl
       jq

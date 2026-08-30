@@ -8,6 +8,17 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    iproute2
+    iputils
+    openssh
+    python3
+    writeShellApplication
+    writeText
+    ;
+
   ws = config.my.fai.workstation;
   macHex = lib.toLower (lib.replaceStrings [ ":" "-" ] [ "" "" ] ws.mac);
 
@@ -15,7 +26,7 @@ let
   # runs on the relay. SO_BROADCAST is mandatory; ports 9 and 7, since an old NIC may want 7.
   mkSender =
     targets:
-    pkgs.writeText "wol-send.py" ''
+    writeText "wol-send.py" ''
       import socket
       pkt = bytes.fromhex("ff" * 6 + "${macHex}" * 16)
       s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -33,9 +44,9 @@ let
   # The relay runs ON the fai-vm, on the same subnet, so it is a real L2 broadcast.
   senderRelay = mkSender [ "255.255.255.255" ];
 
-  wakeCli = pkgs.writeShellApplication {
+  wakeCli = writeShellApplication {
     name = "wake-workstation";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       python3
       iputils
       openssh

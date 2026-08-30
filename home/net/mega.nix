@@ -7,12 +7,21 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    coreutils
+    curl
+    megatools
+    writeShellApplication
+    ;
+
   torSocks = "socks5h://127.0.0.1:9050"; # the same port as client.socksListenAddress
   destDefault = "${config.home.homeDirectory}/Downloads/mega";
 
-  megaDl = pkgs.writeShellApplication {
+  megaDl = writeShellApplication {
     name = "mega-dl";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       megatools
       curl
       coreutils
@@ -121,7 +130,7 @@ let
 in
 {
   home.packages = [
-    pkgs.megatools # raw `megadl`, for a short download with no loop
+    megatools # raw `megadl`, for a short download with no loop
     megaDl
   ];
 }

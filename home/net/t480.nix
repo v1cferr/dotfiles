@@ -8,13 +8,20 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    freerdp
+    writeShellApplication
+    ;
+
   t = config.my.t480;
 
   # The account is the FIRST argument when it is not a freerdp flag, so `t480` and `t480 mae`
   # both read naturally and anything after that still reaches the client untouched.
-  rdpCli = pkgs.writeShellApplication {
+  rdpCli = writeShellApplication {
     name = "t480";
-    runtimeInputs = [ pkgs.freerdp ];
+    runtimeInputs = [ freerdp ];
     text = ''
       account='${t.user}'
       case "''${1:-}" in
@@ -69,6 +76,6 @@ in
   # with different flags should not have to fight the wrapper's defaults.
   config.home.packages = [
     rdpCli
-    pkgs.freerdp
+    freerdp
   ];
 }

@@ -7,21 +7,31 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    coreutils
+    hyprland
+    jq
+    unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
+    writeShellApplication
+    ;
+
   # The Quickshell package (a flake input), bound once because the path repeats below.
   qsPkg = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
-  fs = pkgs.unstable.flameshot; # v14
+  fs = unstable.flameshot; # v14
 
   # flameshot-screenshot: v14 ALWAYS shows a monitor picker and it only takes a CLICK, so this
   # opens it and enters a submap; the watcher resets the submap when flameshot closes.
-  flameshotScreenshot = pkgs.writeShellApplication {
+  flameshotScreenshot = writeShellApplication {
     name = "flameshot-screenshot";
     # `qs` hides the bar while the overlay exists. runtimeInputs is mandatory: writeShellApplication
     # uses a restricted PATH, not the user's.
     runtimeInputs = [
       fs
-      pkgs.hyprland
-      pkgs.jq
-      pkgs.coreutils
+      hyprland
+      jq
+      coreutils
       qsPkg
     ];
     text = ''
@@ -43,12 +53,12 @@ let
 
   # flameshot-pick: it clicks the target's preview, resolving the slice DYNAMICALLY from the
   # monitors' physical order, so it survives a turned-off TV or a rearrangement.
-  flameshotPick = pkgs.writeShellApplication {
+  flameshotPick = writeShellApplication {
     name = "flameshot-pick";
     runtimeInputs = [
-      pkgs.hyprland
-      pkgs.jq
-      pkgs.coreutils
+      hyprland
+      jq
+      coreutils
     ];
     text = ''
       target="''${1:?usage: flameshot-pick <monitor>}"
@@ -78,9 +88,9 @@ let
   };
 
   # flameshot-cancel: Esc closes the picker and leaves the submap.
-  flameshotCancel = pkgs.writeShellApplication {
+  flameshotCancel = writeShellApplication {
     name = "flameshot-cancel";
-    runtimeInputs = [ pkgs.hyprland ];
+    runtimeInputs = [ hyprland ];
     text = ''
       hyprctl dispatch 'hl.dsp.window.close({ window = "title:flameshot" })' >/dev/null 2>&1 || true
       hyprctl dispatch 'hl.dsp.submap("reset")' >/dev/null 2>&1 || true

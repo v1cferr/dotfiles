@@ -3,21 +3,30 @@
 { config, pkgs, ... }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    coreutils
+    unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
+    vscode-bump
+    writeShellApplication
+    ;
+
   # The CLONED repo's path: there is no deriving it at eval time (the flake goes to the store).
   # The same literal as home/desktop/hypr.nix; if it moves, VS Code cannot save settings.
   repo = "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/apps/vscode";
 
-  code = pkgs.unstable.vscode.override {
+  code = unstable.vscode.override {
     commandLineArgs = "--password-store=gnome-libsecret";
   };
 
   # vscode-extensions-dump: it rewrites extensions.txt with what IS installed, so the extensions
   # stop being invisible to git. It MIRRORS without GOVERNING; the format's why: the notes.
-  extensionsDump = pkgs.writeShellApplication {
+  extensionsDump = writeShellApplication {
     name = "vscode-extensions-dump";
     runtimeInputs = [
       code
-      pkgs.coreutils
+      coreutils
     ];
     text = ''
       repo="''${1:?usage: vscode-extensions-dump <repo-path>}"
@@ -49,7 +58,7 @@ in
     # always the latest stable. The password-store override: Electron misdetects the keyring.
     code
     # It bumps the vscode-tarball input to the latest stable.
-    pkgs.vscode-bump
+    vscode-bump
     # Both are on the PATH because the `update` alias calls them BY NAME; they are not services.
     extensionsDump
   ];

@@ -10,6 +10,18 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    buildFHSEnv
+    coreutils
+    dropbox
+    dropbox-cli
+    libnotify
+    runCommand
+    writeShellApplication
+    ;
+
   enabled = osConfig.my.services.dropbox;
 
   # The session's browser, the SAME derivation home/packages.nix installs (rule 4).
@@ -19,15 +31,15 @@ let
   # firefox-bin INSIDE the FHS sandbox, so the relink page opens in a browser that has never seen
   # this account and the flow dead-ends. Pointing it at the session's browser makes the daemon's
   # own relink one click. Measured on 25/08/2026, and detailed in the notes.
-  dropboxFhs = pkgs.dropbox.override {
+  dropboxFhs = dropbox.override {
     buildFHSEnv =
       args:
-      pkgs.buildFHSEnv (
+      buildFHSEnv (
         args
         // {
           # `--replace-fail` on purpose: a nixpkgs bump that touches this line BREAKS the build
           # instead of silently handing the browser back to Firefox.
-          runScript = pkgs.runCommand "install-and-start-dropbox" { } ''
+          runScript = runCommand "install-and-start-dropbox" { } ''
             substitute ${args.runScript} "$out" \
               --replace-fail 'export BROWSER=firefox' 'export BROWSER=${lib.getExe' zen "zen-beta"}'
             chmod +x "$out"
@@ -40,7 +52,7 @@ let
 
   # dropbox-cli takes the FHS package as an ARGUMENT, so the override has to reach it too:
   # otherwise the CLI would keep starting the stock daemon and the override would be decorative.
-  dropboxCli = pkgs.dropbox-cli.override { dropbox = dropboxFhs; };
+  dropboxCli = dropbox-cli.override { dropbox = dropboxFhs; };
 
   # The daemon runs with its OWN HOME, and the CLI only finds its socket with the SAME HOME: a
   # plain `dropbox status` LIES with the daemon alive. That lie is how the incident hid.
@@ -48,7 +60,7 @@ let
   dropboxCmd = lib.getExe' config.services.dropbox.package "dropbox";
 
   # The CLI with the right HOME. It references the module's SAME store path (rule 4).
-  dropboxHm = pkgs.writeShellApplication {
+  dropboxHm = writeShellApplication {
     name = "dropbox-hm";
     text = ''
       export HOME=${lib.escapeShellArg dropboxHome}
@@ -56,9 +68,9 @@ let
     '';
   };
 
-  linkWatch = pkgs.writeShellApplication {
+  linkWatch = writeShellApplication {
     name = "dropbox-link-watch";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       coreutils
       libnotify
     ];

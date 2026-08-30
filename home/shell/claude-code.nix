@@ -9,18 +9,29 @@
 }:
 
 let
-  claude = pkgs.unstable.claude-code;
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    azure-mcp
+    coreutils
+    fzf
+    unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
+    writeShellApplication
+    writeText
+    ;
+
+  claude = unstable.claude-code;
 
   # The CLONED repo path: it cannot be derived, since the flake is copied into the store.
   repo = "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/shell/claude";
 
   # The Azure MCP. `--mode namespace` gives one tool per service (68); auth is azmcp's own
   # device code in the keyring, never here (rule 12).
-  azureMcp = pkgs.writeText "mcp-azure.json" (
+  azureMcp = writeText "mcp-azure.json" (
     builtins.toJSON {
       mcpServers.azure = {
         type = "stdio";
-        command = lib.getExe pkgs.azure-mcp;
+        command = lib.getExe azure-mcp;
         args = [
           "server"
           "start"
@@ -35,7 +46,7 @@ let
 
   # The SHARED memory (home/services/basic-memory.nix), over HTTP because there is ONE server for
   # the three CLIs. `my.memory.url` is the SSOT; nothing here holds the port.
-  memoryMcp = pkgs.writeText "mcp-basic-memory.json" (
+  memoryMcp = writeText "mcp-basic-memory.json" (
     builtins.toJSON {
       mcpServers.basic-memory = {
         type = "http";
@@ -71,7 +82,7 @@ let
   # it `mcp list` breaks, with it always `--version` opens a session. See the note.
   mkLauncher =
     binName: p:
-    pkgs.writeShellApplication {
+    writeShellApplication {
       name = binName;
       text = ''
         export CLAUDE_CONFIG_DIR="$HOME/${p.dir}"
@@ -105,11 +116,11 @@ let
   ) (lib.attrNames profiles);
 
   # An interactive selector: pick the account on the spot. `claude-pick [args…]`.
-  pick = pkgs.writeShellApplication {
+  pick = writeShellApplication {
     name = "claude-pick";
     runtimeInputs = [
-      pkgs.fzf
-      pkgs.coreutils
+      fzf
+      coreutils
     ];
     text = ''
       # `|| exit 0`: Esc or Ctrl-C in fzf exits with 130 and `set -e` would kill the script with
@@ -130,11 +141,11 @@ in
     # bin/claude would collide at activation.
     claudeDefault
     # ccusage reads the SHARED archive, so the report is per machine, not per subscription.
-    pkgs.unstable.ccusage
+    unstable.ccusage
     pick
     # Also a command, because the device-code login has to happen OUTSIDE a session.
     # Closure cost zero: the MCP config already references this store path.
-    pkgs.azure-mcp
+    azure-mcp
   ]
   ++ lib.attrValues launchers;
 

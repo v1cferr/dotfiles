@@ -150,9 +150,9 @@ edit, and it is already on the radar, since the plan is to move Windows to a new
 
 ## What makes GRUB boot with Secure Boot on
 
-Without two flags the result is `error: prohibited by secure boot policy` plus `grub rescue>`,
-measured on 02/08/2026, on the first attempt. The firmware ACCEPTED the signed `grubx64.efi`, since
-the signature was right; what refused was GRUB, against itself.
+THREE things, each one learned by a boot dying in a different way. In none of them was the firmware
+the one refusing: it ACCEPTED the signed `grubx64.efi` every single time. What refuses is GRUB,
+against itself, and the three messages below are all GRUB strings, not UEFI ones.
 
 **1. `--modules=…`.** With Secure Boot active GRUB disables `insmod`, because that is code
 side-load. Since `grub-install` embeds only the minimum needed to find `/boot`, `normal` (the module
@@ -169,10 +169,36 @@ what this flag embeds. Once registered, it covers `GRUB_FILE_TYPE_LINUX_KERNEL` 
 `GRUB_FILE_TYPE_EFI_CHAINLOADED_IMAGE`, and its `write` calls the shim protocol, which here DOES
 NOT EXIST, because we use no shim, so every boot dies in "shim_lock protocol not found".
 
-Flag 2 is literally "do not verify anything after me", and it is what makes concrete the caveat
-above: the chain is verified by the firmware UP TO GRUB, and not beyond. Whoever wants more than
-that needs a shim (and then a Microsoft-signed kernel) or lanzaboote (and then no menu and no
-theme). There is no third door.
+**3. `tpm` in the module list.** Flags 1 and 2 drew the menu and then killed BOTH entries with
+`error: verification requested but nobody cares`, measured on 30/08/2026. The chain of causes is
+worth reading in order, because the message names no file that is wrong:
+
+- `kern/efi/init.c:123` calls `grub_lockdown()` UNCONDITIONALLY when Secure Boot is on, and only
+  afterwards `grub_shim_lock_verifier_setup()`. Flag 2 skips the second one, never the first.
+- `kern/lockdown.c:55` registers a verifier that answers `GRUB_VERIFY_FLAGS_DEFER_AUTH` for
+  `LINUX_KERNEL`, `EFI_CHAINLOADED_IMAGE`, `GRUB_MODULE` and 14 other types. DEFER does not mean
+  "denied", it means "I do not verify this, somebody else has to".
+- `kern/verifiers.c:100` walks the registered verifiers. If one deferred and NOBODY else claimed the
+  file, line 118 fails with the message above. So the error is not a bad signature: it is a file
+  that needed an owner and had none.
+- `commands/tpm.c:33` is the owner. Its `init` returns `SINGLE_CHUNK`, neither SKIP nor DEFER, so
+  the loop STOPS there and the file goes through, hashed into PCR 9 along the way.
+
+Order helps instead of hurting: verifiers are pushed onto a list, and `tpm` loads with the modules,
+after `grub_efi_init`, so it sits in FRONT of the lockdown one and answers first.
+
+It has to be EMBEDDED, never loaded off `/boot`: lockdown defers on `GRUB_FILE_TYPE_GRUB_MODULE`
+too, so a `tpm.mod` on disk would need a verifier in order to load the verifier. And it only works
+because this machine has a TPM 2.0 (`MSFT0101`) whose TCG2 protocol the firmware publishes, which is
+exactly what `grub_tpm_present()` looks for. Turning the TPM off in the BIOS brings the error back.
+
+**What the chain is worth, stated.** `tpm` MEASURES, it does not verify: it hashes the kernel and
+lets it through. Flag 2 is literally "do not verify anything after me". So the chain is verified by
+the firmware UP TO GRUB and not one step further, which stops a bootloader swapped in from outside
+and does NOT stop whoever already has root from swapping the kernel. Wanting more means a shim (and
+then a Microsoft-signed kernel, and nixpkgs carries no shim package) or lanzaboote (and then no menu
+and no theme). And not even the shim road would cover the initrd: `sb.c:149` files
+`GRUB_FILE_TYPE_LINUX_INITRD` under "does not affect secureboot state" and skips it.
 
 ## Two smaller boot details
 

@@ -5,9 +5,13 @@
 > [`system/core/secureboot.nix`](../../system/core/secureboot.nix); this one is only the
 > sequence for the night. A completed runbook that stays in the repo turns into a lie later.
 
-## WHERE THIS STOPPED (measured on 09/08/2026)
+## WHERE THIS STOPPED (measured on 30/08/2026)
 
-**Phases 0 through 3 are DONE. Only Phase 4 is left, turning Secure Boot on in the BIOS.**
+**Phases 0 through 3 are DONE. Phase 4 was ATTEMPTED on 30/08 and it failed**, with
+`error: verification requested but nobody cares` on both entries, NixOS and Windows. The cause was
+GRUB's lockdown, not the keys or the signature (the whole mechanism is in
+[`boot.md`](../notes/boot-and-storage/boot.md)), and the fix is the `tpm` module embedded by
+`boot.nix`. So Phase 4 now has a `rebuild` BEFORE the BIOS, and it has not been retried yet.
 
 | Phase | State | How it was measured |
 | --- | --- | --- |
@@ -15,7 +19,7 @@
 | 1, GRUB + `create-keys` | done | `/var/lib/sbctl/keys` exists (02/08 03:07) |
 | 2, Setup Mode | done (and already left) | `SetupMode = 0` |
 | 3, `enroll-keys -m` | done | `PK`/`KEK`/`db` are the sbctl keys (valid 02/08/2026 to 02/08/2031) and the `db` carries both the 2011 **and** 2023 Microsoft CAs |
-| 4, **turn SB on** | PENDING | `SecureBoot = 0`, the firmware is in User Mode with the right keys, only with SB off |
+| 4, **turn SB on** | FAILED on 30/08, fix committed, NOT retried | `SecureBoot = 0` again, since the way out of the failure is turning SB off. The firmware stays in User Mode with the right keys |
 
 Measure it again without root, at any time:
 
@@ -207,6 +211,12 @@ sbctl status
 
 ## Phase 4, BIOS: turn Secure Boot on
 
+> **First a `rebuild`, always.** Turning SB on with a GRUB that does not carry `tpm` embedded
+> reproduces the 30/08 failure exactly. The module list only reaches the ESP through
+> `grub-install`, and `install-grub.pl:740` only re-runs it when `extraGrubInstallArgs` CHANGED, so
+> confirm the switch printed `installing the GRUB 2 boot loader into /boot`. If it did not print
+> that, the binary on the ESP is still the old one.
+
 1. `Boot → Secure Boot → OS Type` → **`Windows UEFI mode`** (this is the on/off switch; in
    `Other OS` Secure Boot stays inactive).
 2. Confirm that `Secure Boot State` became **Enabled**.
@@ -236,6 +246,7 @@ On Windows, `msinfo32` → **Secure Boot State: On**.
 
 | Symptom | What it is |
 | --- | --- |
+| `verification requested but nobody cares` | **This happened on 30/08.** GRUB locks down whenever SB is on, and with `--disable-shim-lock` there is no verifier left to answer for the kernel or for the chainloaded `bootmgfw.efi`. Fixed by `tpm` in the module list of [`boot.nix`](../../system/core/boot.nix); it comes back if the TPM is turned off in the BIOS |
 | The firmware boots nothing / "Invalid signature" | GRUB was rewritten without a signature. **BIOS → Secure Boot: Disabled**, boot, `sudo sbctl sign -s /boot/EFI/*/grubx64.efi`, turn SB back on |
 | `prohibited by secure boot policy` + `grub rescue>` | **This happened on 02/08.** The signature was RIGHT (the firmware executed GRUB), what was missing were the embedded modules. Solved by `extraGrubInstallArgs` in [`system/core/boot.nix`](../../system/core/boot.nix); check that the `rebuild` reinstalled GRUB |
 | `shim_lock protocol not found` | `--disable-shim-lock` is missing from `extraGrubInstallArgs`. Without it GRUB demands a shim that does not exist here, and neither NixOS nor Windows boots |

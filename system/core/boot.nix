@@ -43,8 +43,8 @@
     # draws the menu on the powered-off screen. GRUB tries in order, falling back to auto.
     gfxmodeEfi = "1920x1080,auto";
 
-    # THE 2 FLAGS THAT MAKE GRUB BOOT UNDER SECURE BOOT. Without them: `prohibited by secure boot
-    # policy` plus `grub rescue>`, and GRUB is what refuses,: docs/notes/boot-and-storage/boot.md
+    # THE 3 THINGS THAT MAKE GRUB BOOT UNDER SECURE BOOT: the embedded modules, shim-lock off and
+    # `tpm` ANSWERING for the lockdown verifier. Each one alone: docs/notes/boot-and-storage/boot.md
     extraGrubInstallArgs = [
       "--disable-shim-lock"
       (
@@ -92,6 +92,8 @@
           "sleep"
           "terminal"
           "test"
+          # Do NOT remove: under lockdown it is the verifier that ANSWERS, or nothing boots (boot.md).
+          "tpm"
           "true"
           "video"
           "video_fb"

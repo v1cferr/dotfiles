@@ -101,13 +101,24 @@ In the Lua parser (0.55) `hyprctl keyword` is blocked ("Use eval"), so runtime m
 through `hyprctl eval` calling the SAME `hl.monitor` as `hyprland.lua`. Turning it back on repeats
 mode, position and scale from there; turning it off is just `disabled=true`.
 
-On disable, Hyprland gathers workspaces 5 to 8 back onto the LG by itself.
+On disable, Hyprland gathers workspaces 5 to 8 back onto the LG by itself, and on enable it puts
+them back on the TV, windows included. See the measurement below.
 
 ### `hypr-monitor-watch`
 
 Listens to Hyprland's events (socket2) and runs `hyprctl reload` when a monitor CONNECTS or
-DISCONNECTS. The reload recalculates the layout (killing the ghost monitor) and MOVES the lost
-monitor's workspaces to the remaining one.
+DISCONNECTS, which recalculates the layout and kills the ghost monitor.
+
+**What the reload does NOT do is move the workspaces**, and this note claimed it did until
+30/08/2026. MEASURED with the service STOPPED, using a headless output as a stand-in for the TV
+(`hyprctl output create headless HDMI-A-3`, which the `hl.monitor` rule then places at `-1920x0`
+exactly like the real one): on disconnect Hyprland gathers ws 5 to 8 onto the LG, and on reconnect
+it puts them BACK on the TV, windows included, with NO reload in between. The disable/enable pair
+`monitor-toggle` uses behaves the same. 0.55.4 re-homes by RULE on both edges, so the reload is a
+belt and braces step and not what does the moving.
+
+What was genuinely broken on a disconnect was the BAR, which had no button for the orphans:
+[`bar.md`](bar.md).
 
 It is a `systemd --user` service and NOT an `exec-once` in the Lua, so it does not duplicate on
 reload. The `sleep 0.4` lets Hyprland settle the hotplug before the reload.

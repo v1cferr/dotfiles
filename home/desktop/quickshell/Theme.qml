@@ -129,4 +129,14 @@ Singleton {
                 return s[i];
         return s.length ? s[0] : null;
     }
+
+    // Is the SECONDARY there right now? With the TV off its workspaces fall onto the primary, and
+    // the bar has to take them over. Reactive: Quickshell.screens follows the hotplug.
+    readonly property bool secondaryConnected: {
+        const s = Quickshell.screens;
+        for (let i = 0; i < s.length; i++)
+            if (s[i].name === theme.secondaryMonitor)
+                return true;
+        return false;
+    }
 }

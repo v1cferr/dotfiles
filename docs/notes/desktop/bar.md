@@ -359,6 +359,22 @@ click died in silence, with nothing on screen.
 Careful: `hl.dsp.workspace` is a TABLE, not a function, and calling it gives "attempt to call a
 table value". What switches workspaces is `focus`, exactly as in `keybinds.lua`.
 
+## The orphan workspaces of a disconnected TV (30/08/2026)
+
+Each bar shows ITS monitor's workspaces: 1 to 4 on the LG, 5 to 8 on the TV. With the TV gone,
+Hyprland gathers 5 to 8 onto the LG (it re-homes them by RULE, see [`hypr.md`](hypr.md)), but the
+model was a literal pair of arrays, so those workspaces had NO button anywhere: a window parked on
+ws 5 stayed on screen with nothing in the bar pointing at it, reachable only by SUPER+5.
+
+`wsModelFor` fixes the model at the source: the secondary's bar keeps 5 to 8, and the primary's
+shows 1 to 4 plus whichever of 5 to 8 EXISTS while `Theme.secondaryConnected` is false. Existing is
+the right test and not "has windows", because Hyprland destroys an empty workspace, so the extra
+buttons appear only while there is something to go back to, and the bar returns to four the moment
+the TV comes back.
+
+`Theme.secondaryConnected` reads `Quickshell.screens`, which follows the hotplug, so the whole
+thing is a binding and needs no event of its own.
+
 ## The tray
 
 A StatusNotifier tray with a single background for the icon group. It populates when `qs` is the

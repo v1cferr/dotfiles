@@ -1464,6 +1464,15 @@ Scope {
     function wsIcon(id) {
         return root.wsIcons[id] || "󰊠";
     }
+    // The workspaces THIS bar shows: its monitor's own, plus the ORPHANS of a disconnected
+    // secondary, which Hyprland gathers onto the primary and which had no button at all.
+    function wsModelFor(monName) {
+        if (monName === Theme.secondaryMonitor)
+            return [5, 6, 7, 8];
+        if (Theme.secondaryConnected)
+            return [1, 2, 3, 4];
+        return [1, 2, 3, 4].concat([5, 6, 7, 8].filter(id => root.wsExist[id] === true));
+    }
     function parseHypr(text) {
         const parts = text.split("@@@");
         try {
@@ -1713,7 +1722,7 @@ Scope {
                         visible: bar.modelData && bar.modelData.name === Theme.primaryMonitor
                     }
                     Repeater {
-                        model: (bar.modelData && bar.modelData.name === Theme.secondaryMonitor) ? [5, 6, 7, 8] : [1, 2, 3, 4]
+                        model: root.wsModelFor(bar.modelData ? bar.modelData.name : "")
                         WsBtn {
                             wsid: modelData
                             active: root.wsActive[bar.modelData.name] === modelData

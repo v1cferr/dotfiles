@@ -8,37 +8,54 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being used
+  # fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    coreutils
+    curl
+    findutils
+    gawk
+    iproute2
+    openssl
+    python3
+    systemd
+    util-linux
+    writeShellApplication
+    writeShellScript
+    writeText
+    ;
+
   # Ports DERIVED from the base with Sunshine's own offsets (read from its web assets).
   # The UDP 48002 that every blog lists does NOT exist in this version.
   basePort = 47989; # Sunshine's `port`; moving this moves all the others
   sp = n: toString (basePort + n);
 
   # A mark so the watchdog does not undo a hypridle toggle made by hand from the bar.
-  pauseStamp = ''"''${XDG_RUNTIME_DIR:-/run/user/$(${pkgs.coreutils}/bin/id -u)}/sunshine-hypridle-paused"'';
+  pauseStamp = ''"''${XDG_RUNTIME_DIR:-/run/user/$(${coreutils}/bin/id -u)}/sunshine-hypridle-paused"'';
 
   # The ghost reaper's first strike. It is a MARK and not a counter, because what matters is HOW
   # LONG the ghost has been standing, and a file's mtime already carries that.
-  ghostStrike = ''"''${XDG_RUNTIME_DIR:-/run/user/$(${pkgs.coreutils}/bin/id -u)}/sunshine-ghost-strike"'';
+  ghostStrike = ''"''${XDG_RUNTIME_DIR:-/run/user/$(${coreutils}/bin/id -u)}/sunshine-ghost-strike"'';
 
   # Stream start: stops hypridle so the remote session does not LOCK mid-way through idle.
   # `|| true`: a prep-cmd that fails would cancel the stream in Sunshine.
-  streamBegin = pkgs.writeShellScript "sunshine-stream-begin" ''
-    ${pkgs.coreutils}/bin/touch ${pauseStamp} || true
-    ${pkgs.systemd}/bin/systemctl --user stop hypridle.service || true
+  streamBegin = writeShellScript "sunshine-stream-begin" ''
+    ${coreutils}/bin/touch ${pauseStamp} || true
+    ${systemd}/bin/systemctl --user stop hypridle.service || true
   '';
   # Stream end: turns hypridle back on, so it locks again after 5min of idleness.
-  streamEnd = pkgs.writeShellScript "sunshine-stream-end" ''
-    ${pkgs.coreutils}/bin/rm -f ${pauseStamp} || true
-    ${pkgs.systemd}/bin/systemctl --user start hypridle.service || true
+  streamEnd = writeShellScript "sunshine-stream-end" ''
+    ${coreutils}/bin/rm -f ${pauseStamp} || true
+    ${systemd}/bin/systemctl --user start hypridle.service || true
   '';
 
   # "Is there a REAL stream?", EXTRACTED because there are two consumers now (rule 11): the idle
   # guard and the ghost reaper. The signal is the SOCKETS, because Sunshine's own bookkeeping lies:
   # on 10/08/2026 `/serverinfo` still said SUNSHINE_SERVER_BUSY with the client dead for 2h30.
   # Exit 0 = there is a stream. `ss` filters itself, no pipe: pipefail plus grep -q inverts it.
-  streamActive = pkgs.writeShellApplication {
+  streamActive = writeShellApplication {
     name = "sunshine-stream-active";
-    runtimeInputs = [ pkgs.iproute2 ];
+    runtimeInputs = [ iproute2 ];
     text = ''
       # Video, audio and control UDP: Sunshine binds these PER SESSION and closes them at the end.
       [ -z "$(ss -uanH "sport >= :${sp 9} and sport <= :${sp 11}")" ] || exit 0
@@ -51,13 +68,13 @@ let
 
   # The `undo` is not a guarantee: a client that dies with no teardown left hypridle stopped
   # for 6h. The signal is the SOCKETS, see `streamActive` above.
-  hypridleGuard = pkgs.writeShellApplication {
+  hypridleGuard = writeShellApplication {
     name = "hypridle-guard";
     # gawk is NOT optional. A systemd USER unit gets a FIXED PATH (coreutils, findutils, gnugrep,
     # gnused, systemd) and writeShellApplication only APPENDS it, so an awk that is not declared
     # here does not exist at runtime: the guard exited 127 on the /proc/uptime line every 5 min
     # from 10/08 to 19/08/2026. Running it by hand always worked, which is what hid it.
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       systemd
       coreutils
       gawk
@@ -91,9 +108,9 @@ let
 
   # A real TLS handshake on 47984: an accepted TCP is not enough (the 29/07 hang).
   # No pipe on purpose: pipefail plus grep -q would read success as failure.
-  sunshineHealth = pkgs.writeShellApplication {
+  sunshineHealth = writeShellApplication {
     name = "sunshine-health";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       openssl
       systemd
       coreutils
@@ -159,7 +176,7 @@ let
   };
   # Session QUALITY, because the Sunshine log says CLIENT DISCONNECTED for every cause.
   # It answered the 31/07 question: the duration distribution is BIMODAL.
-  statsPy = pkgs.writeText "moonlight-stats.py" ''
+  statsPy = writeText "moonlight-stats.py" ''
     import datetime, statistics, subprocess, sys
 
     DAYS = sys.argv[1] if len(sys.argv) > 1 else "7"
@@ -207,9 +224,9 @@ let
   '';
 
   # The logic lives in the build (rule 7); python3 is explicit in runtimeInputs.
-  moonlightStats = pkgs.writeShellApplication {
+  moonlightStats = writeShellApplication {
     name = "moonlight-stats";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       python3
       systemd
     ];
@@ -274,11 +291,11 @@ in
         # on the session PATH is what resolves it.
         {
           name = "Steam Big Picture";
-          detached = [ "${pkgs.util-linux}/bin/setsid steam steam://open/bigpicture" ];
+          detached = [ "${util-linux}/bin/setsid steam steam://open/bigpicture" ];
           prep-cmd = [
             {
               do = "";
-              undo = "${pkgs.util-linux}/bin/setsid steam steam://close/bigpicture";
+              undo = "${util-linux}/bin/setsid steam steam://close/bigpicture";
             }
           ];
         }

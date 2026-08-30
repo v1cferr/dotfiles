@@ -192,13 +192,23 @@ too, so a `tpm.mod` on disk would need a verifier in order to load the verifier.
 because this machine has a TPM 2.0 (`MSFT0101`) whose TCG2 protocol the firmware publishes, which is
 exactly what `grub_tpm_present()` looks for. Turning the TPM off in the BIOS brings the error back.
 
-**What the chain is worth, stated.** `tpm` MEASURES, it does not verify: it hashes the kernel and
-lets it through. Flag 2 is literally "do not verify anything after me". So the chain is verified by
-the firmware UP TO GRUB and not one step further, which stops a bootloader swapped in from outside
-and does NOT stop whoever already has root from swapping the kernel. Wanting more means a shim (and
-then a Microsoft-signed kernel, and nixpkgs carries no shim package) or lanzaboote (and then no menu
-and no theme). And not even the shim road would cover the initrd: `sb.c:149` files
-`GRUB_FILE_TYPE_LINUX_INITRD` under "does not affect secureboot state" and skips it.
+**4. The kernel signed, because GRUB does not load it.** Getting past the verifier only gets the
+file OPEN. On `x86_64-efi` the `linux` module is `loader/efi/linux.c` (Makefile.core.def), and line
+211 hands the buffer to the FIRMWARE's `LoadImage`, with `start_image` right after. Under Secure
+Boot that call validates the PE against `db` like any other image, and an unsigned kernel comes back
+as `error: cannot load image`. So `secureboot.nix` signs `/boot/kernels/*bzImage` on every switch,
+with no `-s`: the name carries the store hash, the GC deletes it, and recording it in sbctl's
+database would only pile up entries for files that no longer exist.
+
+**What the chain is worth, stated.** Better than the earlier note in this file claimed, and for a
+reason that is not GRUB's doing. `tpm` MEASURES and does not verify, and flag 2 is literally "do not
+verify anything after me", so GRUB itself checks nothing. But the kernel goes out through
+`LoadImage`, which puts the FIRMWARE back in the loop: swapping it for an unsigned one does not
+boot, and signing one demands the key in `db`. What stays unprotected is the INITRD, which GRUB
+hands over through its own protocol, without ever going near `LoadImage`, and which `sb.c:149` files
+under "does not affect secureboot state" even on the shim road. Whoever has root swaps the initrd,
+not the kernel. Closing that means a UKI (kernel plus initrd plus cmdline in ONE signed PE), which
+is lanzaboote, and then there is no menu and no theme.
 
 ## Two smaller boot details
 

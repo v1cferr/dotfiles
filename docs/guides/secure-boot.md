@@ -7,11 +7,17 @@
 
 ## WHERE THIS STOPPED (measured on 30/08/2026)
 
-**Phases 0 through 3 are DONE. Phase 4 was ATTEMPTED on 30/08 and it failed**, with
-`error: verification requested but nobody cares` on both entries, NixOS and Windows. The cause was
-GRUB's lockdown, not the keys or the signature (the whole mechanism is in
-[`boot.md`](../notes/boot-and-storage/boot.md)), and the fix is the `tpm` module embedded by
-`boot.nix`. So Phase 4 now has a `rebuild` BEFORE the BIOS, and it has not been retried yet.
+**Phases 0 through 3 are DONE. Phase 4 was attempted TWICE on 30/08**, and each try moved one gate,
+because there are two and they are not the same gate (both are dissected in
+[`boot.md`](../notes/boot-and-storage/boot.md)):
+
+1. `verification requested but nobody cares`, on BOTH entries. GRUB's own lockdown, not the keys and
+   not the signature. Fixed by the `tpm` module embedded through `boot.nix`.
+2. **Windows then booted with Secure Boot ON**, which proves the keys and the whole firmware side.
+   NixOS did not: the `bzImage` was unsigned, and GRUB does not load the kernel, it hands it to the
+   firmware. Fixed by `secureboot.nix` also signing `/boot/kernels/*bzImage`.
+
+Both fixes are committed and the SECOND one has not been retried in the BIOS yet.
 
 | Phase | State | How it was measured |
 | --- | --- | --- |
@@ -36,27 +42,28 @@ Before going to Phase 4, do the preflight, which is exactly what burned on 02/08
 
 ```bash
 sudo sbctl status && sudo sbctl verify
-sudo ls -l /boot/EFI/NixOS-boot/grubx64.efi   # ~1.15 MB, the 47 modules are embedded
+sudo ls -l /boot/EFI/NixOS-boot/grubx64.efi   # ~1.16 MB, the 48 modules are embedded
 ```
 
 The `sudo` on the `ls` is not decoration. `/boot/EFI` is `0700 root`, and the shell expands a
 glob BEFORE `sudo` runs, so `sudo ls -l /boot/EFI/*/grubx64.efi` dies with "no matches found"
 on a file that is sitting right there.
 
-**Where the 1.15 MB comes from, MEASURED on 30/08/2026.** This line used to say ">= ~1.5 MB",
+**Where the 1.16 MB comes from, MEASURED on 30/08/2026.** This line used to say ">= ~1.5 MB",
 a round number nobody had measured, and it nearly aborted a preflight on a binary that was
 correct. Do not trust the number, rebuild the reference and compare:
 
 | Image | Bytes |
 | --- | --- |
-| reference, `grub-mkimage` with exactly the 47 modules of `boot.nix` | 1150976 |
-| what is on the ESP | 1153080 |
+| reference, `grub-mkimage` with exactly the 48 modules of `boot.nix` | 1159168 |
+| what is on the ESP | 1161272 |
 | the same image WITHOUT the list (`part_gpt fat` only) | 139264 |
+| the same reference before `tpm` joined the list, for scale | 1150976 |
 
 The 2104 bytes of difference are the PKCS#7 signature that `sbctl` appends to the PE. The
 near exact match is also what proves `--disable-shim-lock` took effect: without it
 `grub-install` embeds `shim_lock` on top, and the sizes stop lining up. To redo the
-reference, feeding it the same 47 names that are in
+reference, feeding it the same 48 names that are in
 [`system/core/boot.nix`](../../system/core/boot.nix):
 
 ```bash
@@ -65,7 +72,7 @@ nix shell nixpkgs#grub2 --command grub-mkimage \
   all_video boot btrfs cat chain configfile echo efifwsetup efi_gop efi_uga ext2 fat font \
   gettext gfxmenu gfxterm gfxterm_background gzio halt help jpeg keystatus linux loadenv \
   loopback ls lsefi minicmd normal part_gpt part_msdos png probe reboot regexp search \
-  search_fs_file search_fs_uuid search_label sleep terminal test true video video_fb \
+  search_fs_file search_fs_uuid search_label sleep terminal test tpm true video video_fb \
   videoinfo zstd
 ```
 
@@ -76,10 +83,14 @@ nix shell nixpkgs#grub2 --command grub-mkimage \
 - `/boot/grub/x86_64-efi/core.efi` and `grub.efi` are what `grub-install` leaves in the GRUB
   directory before copying the image to the ESP. No firmware ever executes those paths;
   `sbctl verify` finds them only because it sweeps all of `/boot` looking for EFI binaries.
-- the kernel `bzImage` is unsigned BY DESIGN. With `--disable-shim-lock` GRUB loads the
-  kernel without verifying it, so the chain stops at GRUB. That is the deliberate trade for
-  keeping the menu and the theme, and it is written down in
-  [`boot.md`](../notes/boot-and-storage/boot.md).
+- the kernel `bzImage`, on the other hand, **HAS to be signed**, and if `verify` says it is
+  not, do not go to the BIOS: `rebuild` first. GRUB does not load the kernel itself, it hands
+  it to the firmware's `LoadImage`, which validates against `db`
+  ([`boot.md`](../notes/boot-and-storage/boot.md)). The hook in
+  [`secureboot.nix`](../../system/core/secureboot.nix) signs it on every switch, and the line
+  in `sudo sbctl verify` flips to signed on its own: `verify` sweeps the ESP looking for EFI
+  binaries, it does not read sbctl's database, which is why the `-s` the hook skips changes
+  nothing here.
 
 ## What can go wrong, and why it is not serious
 
@@ -246,6 +257,7 @@ On Windows, `msinfo32` → **Secure Boot State: On**.
 
 | Symptom | What it is |
 | --- | --- |
+| `cannot load image` on the NixOS entry | The `bzImage` has no signature and the firmware's `LoadImage` refuses it (`loader/efi/linux.c:211`). A `rebuild` signs it, since the hook in [`secureboot.nix`](../../system/core/secureboot.nix) sweeps `/boot/kernels`; by hand it is `sudo sbctl sign /boot/kernels/*bzImage` |
 | `verification requested but nobody cares` | **This happened on 30/08.** GRUB locks down whenever SB is on, and with `--disable-shim-lock` there is no verifier left to answer for the kernel or for the chainloaded `bootmgfw.efi`. Fixed by `tpm` in the module list of [`boot.nix`](../../system/core/boot.nix); it comes back if the TPM is turned off in the BIOS |
 | The firmware boots nothing / "Invalid signature" | GRUB was rewritten without a signature. **BIOS → Secure Boot: Disabled**, boot, `sudo sbctl sign -s /boot/EFI/*/grubx64.efi`, turn SB back on |
 | `prohibited by secure boot policy` + `grub rescue>` | **This happened on 02/08.** The signature was RIGHT (the firmware executed GRUB), what was missing were the embedded modules. Solved by `extraGrubInstallArgs` in [`system/core/boot.nix`](../../system/core/boot.nix); check that the `rebuild` reinstalled GRUB |

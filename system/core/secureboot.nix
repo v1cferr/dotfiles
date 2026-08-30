@@ -1,4 +1,4 @@
-# SECURE BOOT: our own keys through sbctl, signing GRUB on every switch.
+# SECURE BOOT: our own keys through sbctl, signing GRUB AND every kernel on each switch.
 # The runbook, and what it does NOT protect: docs/notes/boot-and-storage/boot.md
 { pkgs, ... }:
 
@@ -10,7 +10,7 @@ let
     writeShellApplication
     ;
 
-  # Signs GRUB on every switch: grub-install rewrites grubx64.efi when you least expect it.
+  # Signs on every switch: grub-install rewrites grubx64.efi, and each generation brings a kernel.
   signGrub = writeShellApplication {
     name = "grub-sbctl-sign";
     runtimeInputs = [ sbctl ];
@@ -28,6 +28,16 @@ let
         [ -e "$efi" ] || continue
         # Idempotent (sign.go:88). -s records it in sbctl's db so `verify` sees the file.
         sbctl sign -s "$efi"
+      done
+
+      # THE KERNEL TOO, and this is not belt and braces: on x86_64-efi GRUB does not load the
+      # kernel itself, it hands the buffer to the firmware's LoadImage (loader/efi/linux.c:211),
+      # which under Secure Boot demands a `db` signature and answers "cannot load image".
+      # NO -s here: every generation has its own store hash and the GC deletes it, so recording
+      # them would fill sbctl's database with files that stopped existing.
+      for kernel in /boot/kernels/*bzImage; do
+        [ -e "$kernel" ] || continue
+        sbctl sign "$kernel"
       done
     '';
   };

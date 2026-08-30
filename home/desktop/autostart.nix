@@ -9,10 +9,16 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs) discord;
+  # It must MATCH home/packages.nix, or the autostart opens a different build from the menu.
+  inherit (pkgs.unstable) spotify;
+
   # The apps table: adding one is 1 entry here plus 1 line in the panel below.
   apps = {
     discord = {
-      exec = "${pkgs.discord}/bin/Discord";
+      exec = "${discord}/bin/Discord";
       desc = "chat/voice";
     };
     localsend = {
@@ -22,9 +28,8 @@ let
       desc = "file transfer over the LAN";
     };
     spotify = {
-      # unstable.* must MATCH home/packages.nix, or the autostart opens a different build from the
-      # menu. The --no-zygote flag belongs to the PACKAGE (flake.nix), so both share one owner.
-      exec = "${pkgs.unstable.spotify}/bin/spotify";
+      # The --no-zygote flag belongs to the PACKAGE (flake.nix), so the menu and this share an owner.
+      exec = "${spotify}/bin/spotify";
       desc = "music";
       # Exiting 1 is the NORMAL path here (it escapes into its own scope). Without this, on-failure
       # restarts every 5s and the window reappears by itself.

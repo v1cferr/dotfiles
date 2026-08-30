@@ -8,10 +8,19 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    gawk
+    rofi
+    writeShellApplication
+    writeText
+    ;
+
   palette = config.my.theme.palette; # the active theme's colors (home/desktop/palette.nix)
 
   # The parser. Its rules, and the 2 details that broke earlier versions, are in the notes.
-  parser = pkgs.writeText "keybinds-cheatsheet.awk" ''
+  parser = writeText "keybinds-cheatsheet.awk" ''
     function clean(c) { sub(/^-- ?/, "", c); gsub(/─/, "", c); sub(/^ +| +$/, "", c); return c }
     function short(t) {
       # it cuts only at the 1st ". ", never at ": ", or "Mouse: move…" would become "Mouse"
@@ -65,9 +74,9 @@ let
     }
   '';
 
-  cheatsheet = pkgs.writeShellApplication {
+  cheatsheet = writeShellApplication {
     name = "keybinds-cheatsheet";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       gawk
       rofi
     ];

@@ -8,12 +8,23 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    cliphist
+    coreutils
+    gnugrep
+    rofi
+    wl-clipboard
+    writeShellApplication
+    ;
+
   palette = config.my.theme.palette; # the active theme's colors (home/desktop/palette.nix)
   # clipboard-menu: one pass (list, rofi, decode, copy), with 3 cases: an image becomes a
   # THUMBNAIL, a file:// URI gets a named icon for its type, and text gets the text icon.
-  clipboardMenu = pkgs.writeShellApplication {
+  clipboardMenu = writeShellApplication {
     name = "clipboard-menu";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       cliphist
       wl-clipboard
       rofi
@@ -81,7 +92,7 @@ in
   };
 
   home.packages = [
-    pkgs.rofi # the picker with -show-icons (an image thumbnail / an icon per type)
+    rofi # the picker with -show-icons (an image thumbnail / an icon per type)
     clipboardMenu
   ];
 

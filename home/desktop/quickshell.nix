@@ -8,13 +8,23 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    coreutils
+    hyprland
+    systemd
+    writeShellApplication
+    ;
+  inherit (pkgs.kdePackages) plasma-workspace; # xembedsniproxy lives in this one
+
   # The Quickshell package (a flake input), bound once because the path repeats in every consumer.
   qsPkg = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
   # qs-restart (SUPER+ESCAPE): the hot-reload does NOT reapply a Repeater delegate, so the
   # process has to restart. Why a script and not the bind: rules 7 and 15, plus the notes.
-  trayNativeMenu = pkgs.writeShellApplication {
+  trayNativeMenu = writeShellApplication {
     name = "tray-native-menu";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       hyprland
       systemd
       coreutils
@@ -52,12 +62,12 @@ let
     '';
   };
 
-  qsRestart = pkgs.writeShellApplication {
+  qsRestart = writeShellApplication {
     name = "qs-restart";
     runtimeInputs = [
       qsPkg
-      pkgs.hyprland
-      pkgs.coreutils
+      hyprland
+      coreutils
     ];
     text = ''
       qs kill >/dev/null 2>&1 || true # with no instance running, the kill fails and that is fine
@@ -90,7 +100,7 @@ in
       StartLimitBurst = 3;
     };
     Service = {
-      ExecStart = "${pkgs.kdePackages.plasma-workspace}/bin/xembedsniproxy";
+      ExecStart = "${plasma-workspace}/bin/xembedsniproxy";
       # It needs XWayland. DISPLAY comes from the systemd --user env and is NOT hardcoded, otherwise
       # it breaks when XWayland changes number; the 3 attempts cover it not being up yet.
       Restart = "on-failure";

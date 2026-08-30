@@ -9,6 +9,17 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    bibata-cursors
+    fetchFromGitHub
+    gnome-themes-extra
+    gtk3
+    stdenvNoCC
+    ;
+  inherit (pkgs.kdePackages) kconfig; # kwriteconfig6, which the activation writes with
+
   p = config.my.theme.palette; # SSOT: home/desktop/palette.nix (rule 9)
 
   # The theme is the Win11OS GEOMETRY recolored by the palette, so the name carries both.
@@ -55,10 +66,10 @@ let
 
   # ONLY the Kvantum folder of Win11OS-kde, pinned by commit. The /share/Kvantum layout is what
   # qt.kvantum.themes expects. An exception to "home/ does not install": it is a theme asset.
-  win11os-kvantum = pkgs.stdenvNoCC.mkDerivation {
+  win11os-kvantum = stdenvNoCC.mkDerivation {
     pname = "win11os-kvantum";
     version = "0-unstable-9f021c3";
-    src = pkgs.fetchFromGitHub {
+    src = fetchFromGitHub {
       owner = "yeyushengfan258";
       repo = "Win11OS-kde";
       rev = "9f021c3e71da7baf59a0614ab858d53b1e455fd5";
@@ -95,10 +106,10 @@ let
 
   # The Windows 11 ICONS, pinned by commit and vendored (not in nixpkgs). Chosen over
   # fluent-icon-theme on 07/08/2026; the reasons and the price: docs/notes/desktop/theme.md
-  win11-icons = pkgs.stdenvNoCC.mkDerivation {
+  win11-icons = stdenvNoCC.mkDerivation {
     pname = "win11-icon-theme";
     version = "0-unstable-a5b460a";
-    src = pkgs.fetchFromGitHub {
+    src = fetchFromGitHub {
       owner = "yeyushengfan258";
       repo = "Win11-icon-theme";
       rev = "a5b460a407da143b32f19a503d7fcebb3edf2371";
@@ -108,7 +119,7 @@ let
     dontBuild = true;
     # gtk3 is ONLY for the binary: install.sh ends each variant with gtk-update-icon-cache, and
     # under `set -eo pipefail` the missing command killed it BEFORE Win11-dark existed.
-    nativeBuildInputs = [ pkgs.gtk3 ];
+    nativeBuildInputs = [ gtk3 ];
     # It runs install.sh, not a hand copy: the script also builds the SYMLINK FARM that maps
     # hundreds of mime names onto one SVG. A hand copy delivers generic icons.
     installPhase = ''
@@ -127,7 +138,7 @@ in
 
 {
   # The Bibata cursor is referenced by NAME, so the package has to be in the user's profile.
-  home.packages = [ pkgs.bibata-cursors ];
+  home.packages = [ bibata-cursors ];
 
   # GTK apps read the UI font FROM HERE, not from fontconfig. The suffix is the size in pt.
   dconf.settings."org/gnome/desktop/interface" = {
@@ -148,7 +159,7 @@ in
     enable = true;
     theme = {
       name = "Adwaita-dark";
-      package = pkgs.gnome-themes-extra; # it brings Adwaita-dark
+      package = gnome-themes-extra; # it brings Adwaita-dark
     };
     iconTheme = {
       name = config.my.theme.iconTheme; # SSOT: my.theme.iconTheme
@@ -176,7 +187,7 @@ in
   # Kvantum does NOT set icons: KDE reads kdeglobals [Icons] Theme, and it rewrites that file, so
   # only that key is forced (the same pattern as home/apps/dolphin.nix).
   home.activation.kdeIconTheme = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    kw="${pkgs.kdePackages.kconfig}/bin/kwriteconfig6"
+    kw="${kconfig}/bin/kwriteconfig6"
     run "$kw" --file "$HOME/.config/kdeglobals" --group Icons --key Theme ${config.my.theme.iconTheme}
   '';
 }

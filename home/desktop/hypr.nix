@@ -9,13 +9,30 @@
 }:
 
 let
+  # Every package this module reaches for, named ONCE and up front: an entry that stops being
+  # used fails the build under deadnix, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs)
+    coreutils
+    findutils
+    hyprland
+    jq
+    pamixer
+    pavucontrol
+    playerctl
+    socat
+    systemd
+    wl-clip-persist
+    wl-clipboard
+    writeShellApplication
+    ;
+
   # The Quickshell package (a flake input), bound once because the path repeats in every consumer.
   qsPkg = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
   # minimize-others (SUPER+M): the others go to special:minimized, and again brings them back.
   # Rewritten for the 0.55 Lua dispatch, since `movetoworkspacesilent` broke.
-  minimizeOthers = pkgs.writeShellApplication {
+  minimizeOthers = writeShellApplication {
     name = "minimize-others";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       hyprland
       jq
       coreutils
@@ -73,11 +90,11 @@ let
 
   # brightness-osd: "brightness" through hyprsunset's gamma, since this desktop has no backlight.
   # It CLAMPS to an absolute [floor, ceil], because hyprsunset only clamps the ceiling.
-  brightnessOsd = pkgs.writeShellApplication {
+  brightnessOsd = writeShellApplication {
     name = "brightness-osd";
     runtimeInputs = [
-      pkgs.hyprland
-      pkgs.coreutils
+      hyprland
+      coreutils
       qsPkg
     ];
     text = ''
@@ -107,9 +124,9 @@ let
 
   # monitor-toggle (SUPER+SHIFT+T): the TV keeps the HDMI link alive when off, so Hyprland never
   # emits monitorremoved and the ghost monitor stays. This is the manual way out.
-  monitorToggle = pkgs.writeShellApplication {
+  monitorToggle = writeShellApplication {
     name = "monitor-toggle";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       hyprland
       jq
       coreutils
@@ -135,9 +152,9 @@ let
 
   # hypr-session-ensure: it DERIVES the Wayland env from the SOCKET, because it runs outside the
   # compositor and the session's services cannot talk to it without those two variables.
-  sessionWatch = pkgs.writeShellApplication {
+  sessionWatch = writeShellApplication {
     name = "hypr-session-ensure";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       systemd
       coreutils
       findutils
@@ -172,9 +189,9 @@ let
 
   # hypr-monitor-watch: on monitoradded/removed it reloads, which kills the ghost and moves the
   # orphaned workspaces. A user SERVICE and not an exec-once, so a reload does not duplicate it.
-  monitorWatch = pkgs.writeShellApplication {
+  monitorWatch = writeShellApplication {
     name = "hypr-monitor-watch";
-    runtimeInputs = with pkgs; [
+    runtimeInputs = [
       hyprland
       socat
       coreutils
@@ -194,7 +211,7 @@ let
 in
 {
   # The Hyprland SESSION tools the Lua invokes BY NAME, which is what keeps the .lua static.
-  home.packages = with pkgs; [
+  home.packages = [
     minimizeOthers # SUPER+M: minimizes the other windows (the Lua calls it by name)
     brightnessOsd # brightness through hyprsunset's gamma (SHIFT+Vol/0; called by name)
     monitorToggle # SUPER+SHIFT+T: turns the TV on and off in Hyprland (the TV-off ghost)

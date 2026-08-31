@@ -10,6 +10,30 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
+- [ ] ~230 GiB of candidates that only I can decide on (opened 30/08/2026). The measuring is
+      DONE and declarative (`disk-insight.nix`, the 30/08 history entry); what is open is the
+      deleting, which is deliberately not automated: rule 15 aside, nobody should remove somebody
+      else's game on their own.
+      • THE SAMPLER ONLY KNOWS FROM 30/08 FORWARD. It has no history to recover, so "not once
+        since sampling began" means exactly that many days and NOT "never used". Give it a couple
+        of weeks before treating the column as evidence, and read it with `disk-report`.
+      • DIABLO IV, 88.4 GiB, is the clearest one. Last write 07/08, three weeks before the
+        measurement, and it is not in the "stays on Linux" set the way CS2, Ascension and
+        Hearthstone are. Overwatch (75.9) and Hearthstone (12.0) were both written to on 30/08, so
+        those two are in use and the ranking by SIZE would have told me nothing about that.
+      • CITIES SKYLINES II, 84.7 GiB, has a trap and must NOT be treated as a plain reinstall: the
+        SAVES in that prefix are irreplaceable (a repack with no Steam cloud), which is the whole
+        reason `cs2-saves-backup.nix` exists. Check that mirror landed in restic BEFORE touching
+        the bottle.
+      • `Downloads` HOLDS 31 GiB IN TWO ITEMS, `mega/world.rar` (17.4) and `Stranger` (13.4). The
+        .rar is not junk: it is the Tor download from 04/08 recorded in the history, verified by
+        megadl's MAC. It is excluded from restic (`Downloads` is "transient"), so deleting it is
+        final and re-downloading it is another 3h19m on that path.
+      • `Games/PS3` IS ONE 46.3 GiB ISO, Uncharted 3, and its saves live OUTSIDE the restic set.
+      • `~/.config/Claude/vm_bundles`, 13.8 GiB, is two 10 GiB sparse images for the local agent
+        sandbox. Regenerable, and worth knowing about because a "config" directory is the last
+        place anyone would look for 14 GiB.
+
 - [~] The shared memory exists; what is open is the KNOWLEDGE in it (opened 24/08/2026). The
       server, the package and the three clients landed the same day (see the
       [august history](history/2026/08-august.md) and

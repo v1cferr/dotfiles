@@ -18,6 +18,7 @@ let
     libnotify
     trash-cli
     util-linux
+    uv
     writeShellApplication
     ;
 
@@ -113,6 +114,35 @@ let
     '';
   };
 
+  # The caches with an OWNER. Everything reclaimable in ~/.cache that is safe to touch turned out
+  # to be exactly this one, and the two obvious generic approaches are both wrong here:
+  #
+  # `-atime`: the filesystem is mounted `noatime` (`hosts/nixos-kingston/disko.nix`), so every
+  # access time in there is frozen at the day the file landed on this disk. An age-by-access rule
+  # would sweep the whole cache or none of it, and neither answer means anything.
+  #
+  # `-mtime -delete`: `~/.cache/nix/tarball-cache-v2` is 1.2 GiB and is a bare GIT OBJECT STORE
+  # (`objects/`, `refs/`, `HEAD`). Deleting loose objects out of it by age corrupts the cache
+  # rather than trimming it, and nix would not notice until a flake input failed to resolve.
+  #
+  # So it prunes through the tool that knows what is still referenced. MEASURED on 30/08: 23230
+  # files and 1.1 GiB on the first run.
+  cacheExpire = writeShellApplication {
+    name = "cache-expire";
+    runtimeInputs = [ uv ];
+    text = ''
+      # No --force: that flag ignores the in-use check, and a prune racing a live `uv` would pull
+      # wheels out from under it.
+      #
+      # A prune that cannot get the lock is a NO-OP and NEVER a failure. MEASURED on 30/08: an
+      # ad-hoc `uv run ... serve` held the cache lock and the default 300 s wait ended in exit 2.
+      # A unit that goes red to say "somebody was building, try next week" teaches you to ignore
+      # red units, and 60 s is already long enough for anything that is merely passing through.
+      export UV_LOCK_TIMEOUT=60
+      uv cache prune || echo "cache in use, skipping this run" >&2
+    '';
+  };
+
   trashExpire = writeShellApplication {
     name = "trash-expire";
     runtimeInputs = [ trash-cli ];
@@ -187,6 +217,7 @@ in
 
     home.packages = [
       diskWatch
+      cacheExpire
       trashExpire
     ];
 
@@ -213,6 +244,26 @@ in
       Timer = {
         OnActiveSec = "2min"; # gives the session time to come up before the 1st check
         OnUnitActiveSec = "30min";
+      };
+      Install.WantedBy = [ "timers.target" ];
+    };
+
+    # Cache expiry. WEEKLY and not daily: unlike the trash, a pruned cache costs a redownload on
+    # the next build, so there is no point paying that every day for a ~1 GiB drip.
+    systemd.user.services.cache-expire = {
+      Unit.Description = "Prunes the unreachable objects out of the uv cache";
+      Service = {
+        Type = "oneshot";
+        ExecStart = "${cacheExpire}/bin/cache-expire";
+        LogLevelMax = "warning";
+      };
+    };
+
+    systemd.user.timers.cache-expire = {
+      Unit.Description = "Weekly cache prune";
+      Timer = {
+        OnCalendar = "Sun 05:15"; # ahead of the 05:30 trend snapshot, so it measures the result
+        Persistent = true;
       };
       Install.WantedBy = [ "timers.target" ];
     };

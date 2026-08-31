@@ -94,6 +94,40 @@ the alarm lists the biggest individual files under it.
 The `find` only runs in phase 2, for the same reason the `du` does: it is minutes of work that is
 only worth spending once the disk is actually short.
 
+## The cache expiry, and the two generic approaches that are both wrong here
+
+`~/.cache` was 9 GiB with no policy at all. What survived scrutiny was ONE command, because the two
+obvious generic reapers are actively harmful on this machine:
+
+**`find -atime`: meaningless.** The filesystem is mounted `noatime`
+(`hosts/nixos-kingston/disko.nix`), so every access time under `~/.cache` is frozen at the day the
+file landed on this disk. An age-by-access rule sweeps everything or nothing. This is the same
+`noatime` fact that sent `disk-insight.nix` to `/proc` instead of the filesystem.
+
+**`find -mtime -delete`: corrupting.** `~/.cache/nix/tarball-cache-v2` is 1.2 GiB and is a bare GIT
+OBJECT STORE (it has `objects/`, `refs/` and a `HEAD`). Deleting loose objects out of it by age
+does not trim the cache, it breaks it, and nix would only find out when a flake input failed to
+resolve.
+
+So the prune goes through the tool that knows what is still referenced. MEASURED on 30/08: 23230
+files and 1.1 GiB on the first run.
+
+`pnpm` is deliberately NOT in there even though `~/.cache/pnpm` exists. It is a devShell tool and
+never on the global PATH, so a user timer could not call it anyway, and a branch that can never run
+is the dead code rule 16 is about.
+
+### It fails by staying quiet
+
+MEASURED the same day: an ad-hoc `uv run ... serve` was holding the cache lock, and the default
+300 s wait ends in exit 2. A weekly unit that goes red to report "somebody was building" is a unit
+you learn to ignore, so the timeout drops to 60 s and losing the race exits 0. `--force` exists and
+stays off: it ignores the in-use check, which is how a prune pulls wheels out from under a live
+build.
+
+Weekly and not daily, unlike the trash: a pruned cache costs a redownload on the next build, and
+that is not worth paying every day for a ~1 GiB drip. It runs at 05:15, ahead of the 05:30 trend
+snapshot, so the log measures the result instead of the backlog.
+
 ## Small script details
 
 - `df --output=avail -BG` comes out as `"  123G"`, so strip the G and the space. If `df` fails

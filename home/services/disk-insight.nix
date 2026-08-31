@@ -106,9 +106,19 @@ let
       state=${lib.escapeShellArg stateDir}
       mkdir -p "$state"
       stamp="$(date +%Y-%m-%d)"
-      # nice/ionice: a full du competes with the session, and this one runs unattended.
-      nice -n 19 ionice -c 3 du -sx --block-size=1M ${watchArgs} ${usageArgs} 2>/dev/null \
-        | awk -F'\t' -v d="$stamp" '{ print d "\t" $1 "\t" $2 }' >> "$state/trend.tsv" || true
+
+      # TWO du runs and not one with both lists. MEASURED: du deduplicates by inode WITHIN an
+      # invocation, so passing a parent and a path nested under it drops the nested one from the
+      # output entirely, not even as a zero. Every usagePath lives under a watchPath, so a single
+      # run would have logged the buckets and silently lost every game.
+      snap() {
+        # nice/ionice: a full du competes with the session, and this one runs unattended.
+        nice -n 19 ionice -c 3 du -sx --block-size=1M "$@" 2>/dev/null \
+          | awk -F'\t' -v d="$stamp" '{ print d "\t" $1 "\t" $2 }' >> "$state/trend.tsv" || true
+      }
+
+      snap ${watchArgs}
+      snap ${usageArgs}
     '';
   };
 
@@ -150,7 +160,10 @@ let
                 }
               }
               {
+                # The last component, except when it is a generic container name that would say
+                # nothing on its own ("common" is every Steam library ever).
                 n = split($2, parts, "/"); label = parts[n]
+                if (label == "common" || label == "drive_c") label = parts[n-1] "/" label
                 if ($2 in seen) {
                   days = int((now - seen[$2]) / 86400)
                   when = (days == 0) ? "today" : days " days ago"

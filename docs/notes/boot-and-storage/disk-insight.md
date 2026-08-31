@@ -75,6 +75,16 @@ prune so they are not fighting over the same NVMe. `disk-report` diffs the last 
 Append-only for the same reason the history folder is (`docs/README.md`): a series that gets
 rewritten stops being evidence of what happened.
 
+### The `du` trap that cost this module a silent hole
+
+It runs `du` TWICE, once per list, and that is not stylistic. MEASURED while testing: `du`
+deduplicates by inode WITHIN a single invocation, so passing a parent and something nested under it
+drops the nested path from the output **entirely**, not even as a zero.
+
+Every `usagePath` lives under some `watchPath` (`Diablo IV` under `bottles`, `PS3` under `Games`).
+One combined run logged the 11 buckets and silently lost all 7 games, and nothing about the output
+looked wrong: a shorter file is not an error. Two invocations, two inode sets.
+
 ## Why the state is not in `~/.cache`
 
 `~/.cache` is disposable by definition, and restic excludes it. The "last used" table is the one

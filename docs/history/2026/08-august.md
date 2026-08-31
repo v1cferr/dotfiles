@@ -1,7 +1,58 @@
 # History: august 2026
 
-87 entries. Index in [README.md](../README.md).
+88 entries. Index in [README.md](../README.md).
 
+- [x] Disk monitoring, and the obvious answer (atime) being the wrong one (30/08/2026).
+      664 GiB used of 953. The alarm from 30/07 existed and had NEVER fired once (it speaks below
+      100 GiB free, and there were 282), so there was no data behind "what can I delete".
+      • THE LIST HAD ROTTED IN A MONTH, which is the lesson and not an aside. `/srv/media` was off
+        by 3x (132 to 45), `~/Downloads` had gone 2.5 to 35 GiB, and `~/.config` had become the 4th
+        biggest consumer at 27 GiB WITHOUT EVER BEING ON THE LIST, so the alarm was structurally
+        blind to it. A hardcoded ranking is a snapshot pretending to be a policy, which is why the
+        answer was a trend LOG and not a better list.
+      • ATIME REFUSED, TWICE OVER, and this was the whole design decision. `lazytime` does not
+        exist on btrfs: the original series covered it and that support was dropped before merge
+        over dirty inode tracking, so the mount ACCEPTS the option and silently does nothing.
+        And plain `relatime` is expensive precisely here: its documented worst case is a file older
+        than 24 h that is SNAPSHOTTED, because the atime update has to CoW the metadata shared with
+        the snapshot. btrbk keeps 36 snapshots of `@home` and `@home` holds 370 GiB of games, so
+        opening Diablo IV once reads ~88 GiB against 36 snapshots. Upstream's example is 4 GiB with
+        10 snapshots taking metadata from 300 MB to 2.59 GiB. Turning atime on would have SPENT
+        disk to measure disk.
+      • SO IT SAMPLES `/proc` INSTEAD, which is also the better question: whether the game RAN, not
+        whether something read its files (an indexer and a backup do the latter without anyone
+        playing). The rule that keeps it honest: `exe` and `cwd` are EVIDENCE, `argv` is only a
+        MENTION and counts for launchers alone. RPCS3 needs argv (its binary is in `/nix/store` and
+        the ISO is an argument), but trusting argv everywhere makes any shell that types the path
+        look like a session, which I tripped over while testing. The ignore list is the backstop
+        for the sweepers, `cs2-saves-backup` being the one that would have marked Cities Skylines
+        II played forever, hourly, from its rsync argv.
+      • THE `du` TRAP THAT ALMOST SHIPPED SILENT: `du` deduplicates by inode WITHIN one invocation,
+        so a parent and something nested under it cannot share a call, the nested one disappears
+        from the output ENTIRELY, not even as a zero. Every game path sits under a bucket path, so
+        the first trend snapshot logged the 11 buckets and lost all 7 games, and nothing looked
+        wrong: a shorter file is not an error. Two invocations, two inode sets.
+      • DOCKER HAD NO VOLUME POLICY AT ALL, worth 4.5 GiB in 36 orphaned anonymous volumes of
+        ~127 MB, one per container recreation. `system prune` does not touch volumes and the only
+        NixOS knob is `allVolumes`, refused here because it takes named ones. That refusal is now
+        DEMONSTRATED rather than argued: with grad-radar merely stopped, `caddy_config` and
+        `caddy_data` were already dangling. `docker volume prune` without `-a` is the middle ground
+        the option does not expose, anonymous only by construction. Safe to lose too, since
+        grad-radar declares one on purpose for the container venv and docker refills it FROM THE
+        IMAGE on first use: a copy at start, not a rebuild. The system prune also went daily,
+        because six days after the last run the build cache was back to 10.45 GB.
+      • `~/.cache` AND THE TWO REAPERS THAT WOULD HAVE BEEN BUGS. `-atime` is meaningless under
+        `noatime` (every access time is frozen at the day the file landed on this disk), and
+        `-mtime -delete` would CORRUPT rather than trim, because `~/.cache/nix/tarball-cache-v2` is
+        1.2 GiB of bare GIT OBJECT STORE and nix would only notice at the next unresolvable flake
+        input. What was left was `uv cache prune`, which knows what is still reachable: 23230 files
+        and 1.1 GiB on the first run. It exits 0 when it loses the lock, because an ad-hoc
+        `uv run ... serve` was holding it and the default 300 s wait ends in exit 2, and a weekly
+        unit that goes red to say "somebody was building" is one you learn to ignore.
+      • NOT SHORTENED, and measured before deciding: `nix.gc`'s `--delete-older-than 30d`. The
+        store had already fallen 58 to 46 GiB on its own, the CURRENT system closure alone is
+        25.9 of those, and only 4 generations exist. A shorter window would trade real rollback
+        depth for a couple of GB that `nix-optimise` largely shares anyway.
 - [x] Secure Boot ON in both systems, and the two gates that were NOT the signature (30/08/2026).
       The keys had been enrolled since 02/08 and the runbook said the only thing left was flipping
       it in the BIOS. Flipping it killed BOTH entries, and neither failure was a bad signature: the

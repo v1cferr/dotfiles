@@ -62,6 +62,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [restic](boot-and-storage/restic.md) | the real backup, plus `~/Drive` and the CS2 saves |
 | [arch-legacy](boot-and-storage/arch-legacy.md) | the old Arch archive, permanently mounted, and `--no-lock` |
 | [disk-hygiene](boot-and-storage/disk-hygiene.md) | the space alarm that names the biggest consumers |
+| [disk-insight](boot-and-storage/disk-insight.md) | the size trend, the usage sampler, and why not atime |
 | [shutdown](boot-and-storage/shutdown.md) | why the machine takes that long to go down |
 
 ### hardware

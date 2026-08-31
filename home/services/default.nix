@@ -9,6 +9,7 @@
     ./drive-mount.nix # ~/Drive = the Google Drive's root mounted (rclone mount), to browse in Dolphin
     ./arch-legacy-mount.nix # /mnt/arch-antigo = the old Arch archive mounted always (a restic mount)
     ./disk-hygiene.nix # the free space alarm (it notifies with the biggest consumers) plus an expiring trash
+    ./disk-insight.nix # the weekly size trend, the /proc usage sampler and the `disk-report` command
     ./razer-dpi.nix # the OSD for the Razer mouse's onboard DPI button (it polls hidraw)
     ./basic-memory.nix # the MCP memory server over ~/context, shared by Claude Code, codex and agy
     ./vm-boot-drill.nix # the weekly drill: it rebuilds the VM boot test and only speaks on failure

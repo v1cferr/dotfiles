@@ -12,6 +12,7 @@ let
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
     coreutils
+    findutils
     gawk
     gnused
     libnotify
@@ -29,63 +30,86 @@ let
     name = "disk-watch";
     runtimeInputs = [
       coreutils
+      findutils
       libnotify
       util-linux
       gnused
       gawk
     ];
     text = ''
-      # phase 1: the cheap check. `df --output=avail -BG` prints "  123G", so strip it down.
-      free="$(df --output=avail -BG ${lib.escapeShellArg cfg.filesystem} | tail -1 | tr -dc '0-9')"
-      [ -n "$free" ] || exit 0   # df failed (the fs disappeared?), so do not invent an alarm
+            # phase 1: the cheap check. `df --output=avail -BG` prints "  123G", so strip it down.
+            free="$(df --output=avail -BG ${lib.escapeShellArg cfg.filesystem} | tail -1 | tr -dc '0-9')"
+            [ -n "$free" ] || exit 0   # df failed (the fs disappeared?), so do not invent an alarm
 
-      if   [ "$free" -lt ${toString cfg.critFreeGiB} ]; then sev=crit
-      elif [ "$free" -lt ${toString cfg.warnFreeGiB} ]; then sev=warn
-      else sev=ok
-      fi
+            if   [ "$free" -lt ${toString cfg.critFreeGiB} ]; then sev=crit
+            elif [ "$free" -lt ${toString cfg.warnFreeGiB} ]; then sev=warn
+            else sev=ok
+            fi
 
-      state="''${XDG_RUNTIME_DIR:-/tmp}/disk-watch.state"
-      if [ "$sev" = ok ]; then
-        rm -f "$state"   # back to normal, so the next squeeze warns immediately
-        exit 0
-      fi
+            state="''${XDG_RUNTIME_DIR:-/tmp}/disk-watch.state"
+            if [ "$sev" = ok ]; then
+              rm -f "$state"   # back to normal, so the next squeeze warns immediately
+              exit 0
+            fi
 
-      # anti-spam: 12h per severity, but a severity that WENT UP gets through immediately.
-      now="$(date +%s)"
-      if [ -f "$state" ]; then
-        read -r last_sev last_ts < "$state" || true
-        # the same severity and less than 12h ago means stay quiet. A severity that WENT UP
-        # gets through.
-        if [ "$last_sev" = "$sev" ] && [ "$((now - last_ts))" -lt 43200 ]; then
-          exit 0
-        fi
-      fi
+            # anti-spam: 12h per severity, but a severity that WENT UP gets through immediately.
+            now="$(date +%s)"
+            if [ -f "$state" ]; then
+              read -r last_sev last_ts < "$state" || true
+              # the same severity and less than 12h ago means stay quiet. A severity that WENT UP
+              # gets through.
+              if [ "$last_sev" = "$sev" ] && [ "$((now - last_ts))" -lt 43200 ]; then
+                exit 0
+              fi
+            fi
 
-      # phase 2: the EXPENSIVE sweep, only now. MiB so it sorts numerically; `|| true` because an
-      # unreadable path cannot take the alarm down.
-      body="$(
-        nice -n 19 ionice -c 3 du -sx --block-size=1M ${watchArgs} 2>/dev/null \
-          | sort -rn \
-          | head -n ${toString cfg.topN} \
-          | awk -v home="$HOME" '{
-              size = $1 / 1024
-              $1 = ""
-              sub(/^ /, "")
-              path = $0
-              sub("^" home, "~", path)
-              printf "%6.1f GiB  %s\n", size, path
-            }' || true
-      )"
+            # phase 2: the EXPENSIVE sweep, only now. MiB so it sorts numerically; `|| true` because an
+            # unreadable path cannot take the alarm down. `-F'\t'` and not the default split: du
+            # separates with a TAB, and a path with spaces (every Windows game has them) loses its tail
+            # to whitespace splitting.
+            dirs="$(
+              nice -n 19 ionice -c 3 du -sx --block-size=1M ${watchArgs} 2>/dev/null \
+                | sort -rn \
+                | head -n ${toString cfg.topN} \
+                | awk -F'\t' -v home="$HOME" '{
+                    path = $2
+                    sub("^" home, "~", path)
+                    printf "%6.1f GiB  %s\n", $1 / 1024, path
+                  }' || true
+            )"
 
-      case "$sev" in
-        crit) urgency=critical; title="Disk critical, $free GiB free" ;;
-        *)    urgency=normal;   title="Disk low, $free GiB free" ;;
-      esac
+            # The directory ranking answers WHERE and stops there. MEASURED on 30/08: Downloads showed up
+            # at 34.9 GiB and 17.4 of those were ONE .rar. The folder is not the thing you delete, so the
+            # alarm names the file too.
+            files="$(
+              nice -n 19 ionice -c 3 find "$HOME" -xdev -type f -size +${toString cfg.bigFileGiB}G \
+                -printf '%s\t%p\n' 2>/dev/null \
+                | sort -rn \
+                | head -n ${toString cfg.alarmTopFiles} \
+                | awk -F'\t' -v home="$HOME" '{
+                    path = $2
+                    sub("^" home, "~", path)
+                    printf "%6.1f GiB  %s\n", $1 / 1073741824, path
+                  }' || true
+            )"
 
-      notify-send -a "Disk" -u "$urgency" -i drive-harddisk \
-        "$title" "$body" || true
+            body="$dirs"
+            if [ -n "$files" ]; then
+              body="$body
 
-      printf '%s %s\n' "$sev" "$now" > "$state"
+      Biggest files:
+      $files"
+            fi
+
+            case "$sev" in
+              crit) urgency=critical; title="Disk critical, $free GiB free" ;;
+              *)    urgency=normal;   title="Disk low, $free GiB free" ;;
+            esac
+
+            notify-send -a "Disk" -u "$urgency" -i drive-harddisk \
+              "$title" "$body" || true
+
+            printf '%s %s\n' "$sev" "$now" > "$state"
     '';
   };
 
@@ -117,8 +141,13 @@ in
     };
     topN = lib.mkOption {
       type = lib.types.int;
-      default = 5;
+      default = 6;
       description = "How many top consumers to list in the notification.";
+    };
+    alarmTopFiles = lib.mkOption {
+      type = lib.types.int;
+      default = 3;
+      description = "How many individual files the notification names. `bigFileGiB` sets the floor.";
     };
     trashDays = lib.mkOption {
       type = lib.types.int;
@@ -132,21 +161,27 @@ in
   };
 
   config = {
-    # THE PANEL. 100/40 GiB and NOT a percentage: what matters is whether the next game fits.
+    # THE PANEL. Absolute GiB and NOT a percentage: what matters is whether the next game fits.
+    # 150 and not the old 100: the biggest single consumer here is now a ~88 GiB game, so 100 GiB
+    # free is barely one install of headroom, which is too late to still be a CHOICE.
     my.disk = {
-      warnFreeGiB = 100;
+      warnFreeGiB = 150;
       critFreeGiB = 40;
-      # The weights measured on 30/07. Deliberately not a full `du /`, which would add minutes and
-      # noise; a new consumer is 1 line here, and filelight/czkawka exist to discover it.
+      # The weights REMEASURED on 30/08 (the 30/07 list had drifted badly: /srv/media was 3x off
+      # and the 4th biggest consumer was not even here). Deliberately not a full `du /`, which
+      # would add minutes and noise; a new consumer is 1 line here.
       watchPaths = [
-        "${config.home.homeDirectory}/.local/share/bottles" # 319 GiB (Wine/Bottles: Battlenet, CS-II, Ascension)
-        "/srv/media" # 132 GiB, the Jellyfin library
-        "${config.home.homeDirectory}/Games" # 47 GiB
-        "/nix/store" # 58 GiB, handled by the GC (core.nix), not deletable by hand
+        "${config.home.homeDirectory}/.local/share/bottles" # 316 GiB (Wine/Bottles: Battlenet, CS-II, Ascension)
+        "${config.home.homeDirectory}/Games" # 46 GiB
+        "/nix/store" # 46 GiB, handled by the GC (core.nix), not deletable by hand
+        "/srv/media" # 45 GiB, the Jellyfin library
+        "${config.home.homeDirectory}/Downloads" # 35 GiB, and it was 2.5 a month earlier
+        "${config.home.homeDirectory}/.config" # 27 GiB, which a config dir has no business being
+        "${config.home.homeDirectory}/Projects" # 18 GiB
+        "${config.home.homeDirectory}/.cache" # 9 GiB
         "${config.home.homeDirectory}/.local/share/Steam" # 8 GiB
-        "${config.home.homeDirectory}/.cache" # 3.9 GiB
-        "${config.home.homeDirectory}/Downloads" # 2.5 GiB
-        "${config.home.homeDirectory}/.local/share/Trash" # 1.7 GiB (it expires on its own, below)
+        "${config.home.homeDirectory}/Documents" # 4.5 GiB
+        "${config.home.homeDirectory}/.local/share/Trash" # 0.1 GiB (it expires on its own, below)
       ];
     };
 

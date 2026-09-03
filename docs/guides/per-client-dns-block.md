@@ -7,6 +7,11 @@ that covers both halves of his dual boot at once, so the block lives there and n
 The mechanism is generic. Reddit is only the first tenant: any zone can be added to the same
 instance, and any MAC can be added to the same chain.
 
+**It is NOT installed right now.** He asked to be unblocked on 03/09/2026 and the whole thing came
+down with it: the nft file, the second dnsmasq instance and the two pins. The page stays because
+the recipe is what turns putting it back into a five minute job, and because the measurements in it
+were expensive to get. The teardown, which has an order that matters, is at the end.
+
 ```text
 his PC :53 ─ nft priority -110 ─→ dnsmasq `blocked` :5453 ─ NXDOMAIN for reddit
                                           └─ everything else → dnsmasq `main` :53
@@ -54,12 +59,16 @@ primary instance to have a stable name. Hence `uci rename dhcp.@dnsmasq[0]='main
 addressing keeps working after the rename, so the `dhcp.@dnsmasq[0]` commands in
 [`fai-gateway-router.md`](fai-gateway-router.md) are unaffected.
 
-**`serversfile` is staged and uncommitted on purpose.** `adblock-fast` writes
-`dhcp.main.serversfile=/var/run/adblock-fast/dnsmasq.servers` as a UCI change it never commits, and
-reverts it when it stops. A plain `uci commit dhcp` would have persisted it, and at the next boot
-dnsmasq would point at a file under `/var/run` that does not exist yet. The recipe below reverts it
-before committing and re-sets it afterwards, which reproduces the runtime state exactly without
-persisting anything that belongs to the service.
+**`serversfile` is staged, and "it never commits" turned out to be false.** `adblock-fast` writes
+`dhcp.main.serversfile=/var/run/adblock-fast/dnsmasq.servers` as a UCI change, and on 29/08/2026 it
+sat there staged and uncommitted, which is why the recipe below reverts it before committing and
+re-sets it after: persisting another service's runtime state is not this repo's business.
+
+Then the service went and committed it itself. Read on 03/09/2026, `option serversfile` is line 47
+of `/etc/config/dhcp`. The consequence this page feared did not happen either: the router rebooted
+on 30/08/2026 with that line in place and dnsmasq came up normally, so a `servers-file` that does
+not exist yet is a log line, not a fatal error. Keep the revert anyway, and do not go out of your
+way to undo what the service decided to persist.
 
 ## Redoing it from scratch
 
@@ -100,7 +109,9 @@ sudo /etc/init.d/dnsmasq restart
 
 The firewall half is a file, and `cp`/`chmod` are **not** in the NOPASSWD list, so this part asks
 for your password. `/etc/nftables.d/` survives `sysupgrade` on its own (it is listed in
-`/lib/upgrade/keep.d/firewall4`), so it needs no entry in `/etc/sysupgrade.conf`:
+`/lib/upgrade/keep.d/firewall4`), so it needs no entry in `/etc/sysupgrade.conf`. It survives a
+plain reboot too, proven on 30/08/2026: the router came back up and the chain was there, rebuilt
+from the file with its counter at zero.
 
 ```sh
 cat > /tmp/20-dns-block-reddit.nft <<'NFT'
@@ -175,3 +186,32 @@ DoH in the browser (Chrome's Secure DNS, Firefox's TRR), any VPN, the phone's ho
 853, which nothing hijacks today. This is a speed bump, not a wall, and that is the right size for
 what was asked: **the request came from him**. Turning it into a wall means blocking 853 and the
 known DoH addresses for that MAC, and it stops being self-control the moment he has to fight it.
+
+## Taking it down
+
+**The order matters, and getting it backwards costs that machine its DNS entirely** instead of just
+Reddit. The nft rule points at a port and the instance IS that port, so the rule goes first. Between
+the two steps he is already unblocked, which is the point: the first command needs no password and
+takes effect immediately.
+
+```sh
+sudo nft delete chain inet fw4 dns_block_reddit   # instant, NOPASSWD, unblocks right away
+sudo rm /etc/nftables.d/20-dns-block-reddit.nft   # asks for the password, and THIS is the one
+sudo /etc/init.d/firewall restart                 # that decides what comes back after a reboot
+
+sudo uci delete dhcp.blocked
+sudo uci set adblock-fast.config.dnsmasq_instance='*'
+sudo uci set https-dns-proxy.config.dnsmasq_config_update='*'
+sudo uci commit dhcp && sudo uci commit adblock-fast && sudo uci commit https-dns-proxy
+sudo /etc/init.d/dnsmasq restart
+```
+
+Then `router-sync pull` and commit, because none of that is declarative.
+
+Two things stay behind on purpose. The `main` name, because undoing the rename means deleting and
+recreating the section that serves the whole house its DNS and its DHCP, which is real risk for
+zero gain. And `dhcp.lan.instance='main'`, because an explicit owner for the pool is precisely the
+guard against the first trap above, on the day a second instance shows up again.
+
+A leftover to ignore: `/var/etc/dnsmasq.conf.blocked` stays in `/var` until the next reboot. It is
+tmpfs and nothing reads it, the same way `dnsmasq.conf.cfg01411c` lingered after the rename.

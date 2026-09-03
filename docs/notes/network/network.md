@@ -224,11 +224,14 @@ section (`redir.limit` in `/usr/share/ucode/fw4.uc`) and renders inside the DNAT
 rule, so there is no companion rule to keep in sync. It brakes, it does not ban,
 and it is global rather than per source.
 
-**It is also the only machine with a DNS of its own.** He asked for Reddit blocked
-on his PC (29/08/2026), which on this router means a second dnsmasq instance plus
-an nft chain that runs BEFORE the force-DNS redirect, because a rule written in
-UCI lands after it and never matches. Why it has that shape, and the commands, are
-in [`per-client-dns-block.md`](../../guides/per-client-dns-block.md).
+**For five days it was also the only machine with a DNS of its own.** He asked for
+Reddit blocked on his PC (29/08/2026) and asked to be unblocked again
+(03/09/2026). On this router that meant a second dnsmasq instance plus an nft
+chain running BEFORE the force-DNS redirect, because a rule written in UCI lands
+after it and never matches. None of it is installed today. The shape, the
+measurements and the teardown order, which is the part that can cost that machine
+its DNS entirely, are in
+[`per-client-dns-block.md`](../../guides/per-client-dns-block.md).
 
 ## The FAI gateway: the counterpart is not declarable
 

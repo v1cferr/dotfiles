@@ -12,5 +12,6 @@
     ./mangohud.nix # the FPS/temps/usage overlay in games (a declarative config plus a toggle)
     ./openal.nix # ~/.config/alsoft.conf: it forces the pulse backend (sound in OpenAL/HashLink games)
     ./curseforge.nix # Minecraft modpacks: the package (./pkgs) plus the login scheme handler
+    ./games-disk.nix # the games that live on the Windows disk, symlinked where each launcher looks
   ];
 }

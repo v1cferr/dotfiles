@@ -32,7 +32,10 @@
     ];
   };
 
-  # The SanDisk (Windows 11's C:). It used to be deliberately unmounted, and BOTH of the reasons
+  # The SanDisk (Windows 11's C:). The full reasoning, the verification that preceded deleting the
+  # local copies and the `force` option that must stay off: docs/notes/boot-and-storage/games-disk.md
+  #
+  # It used to be deliberately unmounted, and BOTH of the reasons
   # written here then have since been answered rather than ignored. It is mounted now because the
   # games live in `C:\\Games` and are meant to be ONE install played from either system, instead of
   # a copy on each disk (MEASURED on 31/08: 135 GiB of the Kingston was a duplicate of what was

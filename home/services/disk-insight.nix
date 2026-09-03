@@ -290,14 +290,21 @@ in
       let
         bnet = "${config.home.homeDirectory}/.local/share/bottles/bottles/Battlenet/drive_c/Program Files (x86)";
         bottles = "${config.home.homeDirectory}/.local/share/bottles/bottles";
+        # Rule 11: the mount point is stated once, in home/apps/games-disk.nix.
+        games = config.my.games.root;
       in
       [
-        "${bnet}/Diablo IV"
+        # ALREADY ON THE WINDOWS DISK, and they have to be listed at their REAL path. The sampler
+        # resolves with `readlink -f`, so a process running through the symlink reports the NTFS
+        # path; leaving the old $HOME path here would silently never match again.
+        "${games}/Diablo IV"
+        "${games}/PS3"
+
+        # Still on the Kingston.
         "${bnet}/Overwatch"
         "${bnet}/Hearthstone"
         "${bottles}/Cities-Skylines-II"
         "${bottles}/Ascension"
-        "${config.home.homeDirectory}/Games/PS3"
         "${config.home.homeDirectory}/.local/share/Steam/steamapps/common"
       ];
 

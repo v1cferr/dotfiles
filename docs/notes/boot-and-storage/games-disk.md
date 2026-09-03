@@ -91,6 +91,28 @@ corruption would look exactly like a size match.
 Overwatch is the reason this table exists: it would have passed a `du -sh` eyeball (74 vs 76 GiB)
 and deleting the local copy would have thrown away the NEWER build.
 
+## The trap: deleting does not free the space, the snapshots still hold it
+
+MEASURED on 03/09, right after removing 135 GiB from `@home`: `df` did not move by a single GiB.
+All **59** btrbk snapshots still contained both games, because they had existed continuously up to
+the moment of the deletion, and a snapshot holding an extent keeps that extent alive.
+
+This is not a btrbk bug and there is nothing to fix in it. 59 is the exact steady state of
+`snapshot_preserve = "48h 7d 4w"` (48 hourly + 7 daily + 4 weekly), working as designed.
+
+What it changes is the TIMELINE, and this is worth planning around before moving the rest:
+
+- The space comes back GRADUALLY, as each snapshot ages out of the retention window. The oldest
+  here was from 02/08, so full reclaim lands about four weeks after the deletion.
+- Expiring the snapshots by hand returns it immediately and costs the undo window for everything
+  else in `$HOME`, which is the whole reason btrbk exists ([btrbk.md](btrbk.md)).
+- It is a ONE-TIME cost per game. Once a game lives on the NTFS disk it is outside `@home`
+  entirely, so it never enters another snapshot, and patching it stops churning them.
+
+The structural alternative, had the games been staying on the Kingston, would have been making the
+games directory its OWN subvolume: btrbk snapshots subvolumes, and a snapshot does not descend into
+a nested one. It is moot here precisely because the destination is another disk.
+
 ## Known gap: nothing watches the games disk filling up
 
 `disk-hygiene.nix` alarms on `/` only, and `watchPaths` is deliberately NOT extended with

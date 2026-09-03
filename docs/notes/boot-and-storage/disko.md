@@ -21,7 +21,11 @@ sudo nix run github:nix-community/disko -- --mode destroy,format,mount \
 sudo nixos-install --flake .#nixos-kingston
 ```
 
-## Why btrfs here, when the SanDisk is ext4
+## Why btrfs here, when the SanDisk's NixOS was ext4
+
+The comparison is with the install this one REPLACED: the SanDisk ran NixOS on flat ext4 until
+02/08/2026, when that disk became Windows 11 (it is NTFS today, mounted at `/mnt/windows` for the
+games). The question was live at cutover time, and the answer is why the layout looks like this.
 
 It is not for btrfs itself, it is for the SUBVOLUME LAYOUT, which is a prerequisite for
 IMPERMANENCE (see the 30/07 entry in [`../history/2026/07-july.md`](../../history/2026/07-july.md):

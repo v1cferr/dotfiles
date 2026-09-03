@@ -44,6 +44,18 @@ let
     }
   );
 
+  # The Stitch MCP (Google's UI generator). The key is sops and the launcher puts it in the
+  # environment; what lands in the store is the REFERENCE, never the credential (rule 12).
+  stitchMcp = writeText "mcp-stitch.json" (
+    builtins.toJSON {
+      mcpServers.stitch = {
+        type = "http";
+        url = "https://stitch.googleapis.com/mcp";
+        headers."X-Goog-Api-Key" = "\${STITCH_API_KEY}";
+      };
+    }
+  );
+
   # The SHARED memory (home/services/basic-memory.nix), over HTTP because there is ONE server for
   # the three CLIs. `my.memory.url` is the SSOT; nothing here holds the port.
   memoryMcp = writeText "mcp-basic-memory.json" (
@@ -65,7 +77,11 @@ let
     fai = {
       dir = ".claude-fai";
       label = "FAI      (victor.ferreira@fai.ufscar.br)";
-      mcp = [ azureMcp ] ++ memory; # the work cloud belongs to this account only
+      mcp = [
+        azureMcp
+        stitchMcp
+      ]
+      ++ memory; # the work cloud and the design tool belong to this account only
     };
     pessoal = {
       dir = ".claude-pessoal";
@@ -84,8 +100,20 @@ let
     binName: p:
     writeShellApplication {
       name = binName;
+      runtimeInputs = [ coreutils ]; # `cat`, for the sops read below
       text = ''
         export CLAUDE_CONFIG_DIR="$HOME/${p.dir}"
+
+        # The Stitch MCP expands $STITCH_API_KEY when it connects, so the key has to be in
+        # THIS process. Read here and not exported from the shell: only claude needs it
+        # (the `notify` pattern). Absent, Stitch falls back to OAuth and fails on its own
+        # without taking the session down. The assignment is split from the export because
+        # `X="$(cmd)"` masks the exit code and shellcheck FAILS the build for it (SC2155).
+        secret=/run/secrets/stitch_api_key
+        if [ -r "$secret" ]; then
+          STITCH_API_KEY="$(cat "$secret")"
+          export STITCH_API_KEY
+        fi
       ''
       + (
         if p.mcp == [ ] then

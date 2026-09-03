@@ -82,6 +82,12 @@ in
         owner = "v1cferr";
         mode = "0400";
       };
+    }
+    // lib.optionalAttrs (builtins.elem "stitch_api_key" sopsKeys) {
+      stitch_api_key = {
+        owner = "v1cferr";
+        mode = "0400";
+      }; # user-readable: the `claude` launcher reads it to reach the Stitch MCP
     };
 
   environment.systemPackages = [ sync-secrets ];

@@ -59,6 +59,15 @@
         `watchPaths` though: that ranking exists to explain why the ROOT filesystem is full, and
         another disk in it answers a question nobody asked. That the games disk has no ALARM is a
         gap, written down as a gap.
+      • THE OUTCOME WAS BIGGER THAN THE GAMES, measured after the cleaner settled: **659 GiB used
+        went to 196**, so **463 GiB came back** against the 351 the games weigh. The extra ~112 GiB
+        was snapshot-EXCLUSIVE data with nothing to do with this migration: a month of `@home`
+        churn (Downloads, game patches, caches) that only those 59 snapshots were still holding.
+        Worth knowing on its own: the retention was costing about 112 GiB in the steady state, and
+        it had never been visible because `du` on the live tree cannot see it.
+        The space arrives GRADUALLY, over minutes: `btrfs subvolume delete` prints `(no-commit)`
+        and hands the extents to the cleaner thread, so the first `df` right after the purge still
+        read 659 and looked like a failure.
       • STEAM STAYED, on purpose. Of its 7.9 GiB only 4.3 are the game; the rest is the Steam Linux
         Runtime, which cannot leave Linux. Valve does not support an NTFS library either, so moving
         4 GiB would have bought trouble at no gain.

@@ -123,6 +123,16 @@ What it changes is the TIMELINE, and this is worth planning around before moving
 - It is a ONE-TIME cost per game. Once a game lives on the NTFS disk it is outside `@home`
   entirely, so it never enters another snapshot, and patching it stops churning them.
 
+MEASURED after purging all 59 and letting the cleaner settle: **659 GiB used became 196**, so
+463 GiB came back against the 351 the games weigh. The extra ~112 GiB was snapshot-exclusive data
+unrelated to the games, a month of `@home` churn that only those snapshots still held. That is what
+the `48h 7d 4w` retention costs in the steady state, and it is invisible to any `du` of the live
+tree.
+
+The space also arrives GRADUALLY. `btrfs subvolume delete` prints `(no-commit)` and hands the
+extents to the cleaner thread, so the `df` immediately after the purge still read 659 GiB and
+looked like the purge had failed.
+
 The structural alternative, had the games been staying on the Kingston, would have been making the
 games directory its OWN subvolume: btrbk snapshots subvolumes, and a snapshot does not descend into
 a nested one. It is moot here precisely because the destination is another disk.

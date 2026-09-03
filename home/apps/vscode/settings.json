@@ -8,7 +8,7 @@
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
-    "//": "Last update at 8/29/2026, 7:45:04 PM",
+    "//": "Last update at 8/31/2026, 3:09:20 PM",
     ".agent": ".agent, .claude, .cline, .codebuddy, .codex, .commandcode, .continue, .crush, .cursor, .factory, .gemini, .goose, .junie, .kilocode, .kiro, .kode, .mcpjam, .mux, .neovate, .opencode, .openhands, .pi, .pochi, .qoder, .qwen, .roo, .trae, .windsurf, .zencoder",
     ".clang-tidy": ".clang-format, .clangd, compile_commands.json",
     ".env": "*.env, .env.*, .envrc, env.d.ts",
@@ -340,17 +340,10 @@
   // prompt. WITHOUT this the language servers of a project whose toolchain lives ONLY in its
   // devShell (gleam in acuttis-point) start BEFORE the PATH exists and die with ENOENT.
   "direnv.restart.automatic": true,
-  // qt-qml: the extension downloads a prebuilt qmlls into globalStorage, and that binary is not
-  // patched for NixOS, so it dies with `libbrotlidec.so.1: cannot open shared object file` on
-  // every start until the client gives up after 5 crashes. The store HAS a working qmlls
-  // (qt6.qtdeclarative), and pointing customExePath at it is not the fix: qmlls reports what
-  // qmllint reports, and MEASURED on this tree that is 2267 findings that do not model
-  // Quickshell (docs/notes/desktop/quickshell.md), the same reason pkgs/qml-syntax.nix keeps
-  // only the `[syntax]` category. Off, the extension still gives .qml highlighting and the .qrc
-  // editor. The second line keeps the download prompt from bringing the binary back.
   "qt-qml.qmlls.enabled": false,
   "qt-qml.doNotAskForQmllsDownload": true,
   "claudeCode.preferredLocation": "panel",
   "qt-core.showWelcomePageOnActivation": false,
   "window.zoomLevel": -1,
+  "editor.unicodeHighlight.invisibleCharacters": false,
 }

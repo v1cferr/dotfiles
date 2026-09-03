@@ -88,8 +88,22 @@ metadata the Battle.net agent rebuilds. The ISO got a full hash rather than a si
 is a single file with no launcher to repair it, and the SanDisk is a budget SSD where silent
 corruption would look exactly like a size match.
 
-Overwatch is the reason this table exists: it would have passed a `du -sh` eyeball (74 vs 76 GiB)
-and deleting the local copy would have thrown away the NEWER build.
+**Overwatch is the reason this table exists.** It would have passed a `du -sh` eyeball, 74 GiB
+against 76, and deleting the local copy would have thrown away the NEWER build.
+
+### The four that were copied, not deduplicated
+
+Overwatch, Hearthstone, Cities Skylines II and the Ascension launcher had no counterpart on the
+Windows disk, or a stale one. They went over with `rsync -rt --no-perms --no-owner --no-group`
+(NTFS has no unix ownership, and asking rsync to set it only produces errors) and `--delete`, so
+Overwatch's outdated copy became a faithful replica instead of a merge of two builds.
+
+Each was then re-checked by path and size, not by total, for exactly the reason the table above
+gives. All four came back with zero differences across 24425 files.
+
+Only the GAME folder moved, never the bottle. A Wine prefix does not survive on NTFS (no unix
+permissions, no symlinks, no case sensitivity) and does not need to: afterwards the three prefixes
+together weigh **8.4 GiB, down from 225**.
 
 ## The trap: deleting does not free the space, the snapshots still hold it
 

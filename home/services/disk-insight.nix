@@ -288,23 +288,23 @@ in
     # which is exactly the resolution that hides the one game nobody has touched in a month.
     my.disk.usagePaths =
       let
-        bnet = "${config.home.homeDirectory}/.local/share/bottles/bottles/Battlenet/drive_c/Program Files (x86)";
-        bottles = "${config.home.homeDirectory}/.local/share/bottles/bottles";
         # Rule 11: the mount point is stated once, in home/apps/games-disk.nix.
         games = config.my.games.root;
       in
       [
-        # ALREADY ON THE WINDOWS DISK, and they have to be listed at their REAL path. The sampler
-        # resolves with `readlink -f`, so a process running through the symlink reports the NTFS
-        # path; leaving the old $HOME path here would silently never match again.
+        # Every game listed at its REAL path on the Windows disk, never at the $HOME symlink. The
+        # sampler resolves with `readlink -f`, so a process launched through the link reports the
+        # NTFS path; the old path here would match nothing forever and read as "never played".
         "${games}/Diablo IV"
+        "${games}/Overwatch"
+        "${games}/Hearthstone"
+        "${games}/Cities - Skylines II"
+        "${games}/Ascension Launcher"
         "${games}/PS3"
 
-        # Still on the Kingston.
-        "${bnet}/Overwatch"
-        "${bnet}/Hearthstone"
-        "${bottles}/Cities-Skylines-II"
-        "${bottles}/Ascension"
+        # The only one still on the Kingston, on purpose: of its 7.9 GiB just 4.3 are the game, the
+        # rest being the Steam Linux Runtime, which cannot leave Linux. Valve does not support an
+        # NTFS library either, so moving 4 GiB would buy trouble.
         "${config.home.homeDirectory}/.local/share/Steam/steamapps/common"
       ];
 

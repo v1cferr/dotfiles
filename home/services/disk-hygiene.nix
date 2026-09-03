@@ -197,20 +197,25 @@ in
     my.disk = {
       warnFreeGiB = 150;
       critFreeGiB = 40;
-      # The weights REMEASURED on 30/08 (the 30/07 list had drifted badly: /srv/media was 3x off
-      # and the 4th biggest consumer was not even here). Deliberately not a full `du /`, which
-      # would add minutes and noise; a new consumer is 1 line here.
+      # The weights REMEASURED on 03/09, after the games moved to the Windows disk
+      # (home/apps/games-disk.nix). Deliberately not a full `du /`, which would add minutes and
+      # noise; a new consumer is 1 line here.
+      #
+      # `/mnt/windows/Games` is deliberately NOT in this list even though it now holds ~350 GiB.
+      # This ranking exists to explain why the ROOT filesystem is full, and a different disk in it
+      # would be an answer to a question nobody asked. The games disk is covered by the trend log
+      # and disk-report instead; that it has no ALARM is a known gap, written down in the note.
       watchPaths = [
-        "${config.home.homeDirectory}/.local/share/bottles" # 316 GiB (Wine/Bottles: Battlenet, CS-II, Ascension)
-        "${config.home.homeDirectory}/Games" # 46 GiB
         "/nix/store" # 46 GiB, handled by the GC (core.nix), not deletable by hand
         "/srv/media" # 45 GiB, the Jellyfin library
-        "${config.home.homeDirectory}/Downloads" # 35 GiB, and it was 2.5 a month earlier
+        "${config.home.homeDirectory}/Downloads" # 35 GiB, and it was 2.5 two months earlier
         "${config.home.homeDirectory}/.config" # 27 GiB, which a config dir has no business being
         "${config.home.homeDirectory}/Projects" # 18 GiB
-        "${config.home.homeDirectory}/.cache" # 9 GiB
-        "${config.home.homeDirectory}/.local/share/Steam" # 8 GiB
+        "${config.home.homeDirectory}/.cache" # 8 GiB
+        "${config.home.homeDirectory}/.local/share/Steam" # 8 GiB, and 4.3 of those are the Linux runtime
+        "${config.home.homeDirectory}/.local/share/bottles" # 8.4 GiB: the Wine prefixes ALONE now, was 316
         "${config.home.homeDirectory}/Documents" # 4.5 GiB
+        "${config.home.homeDirectory}/Games" # ~0: a symlink to the other disk, kept in case it refills
         "${config.home.homeDirectory}/.local/share/Trash" # 0.1 GiB (it expires on its own, below)
       ];
     };

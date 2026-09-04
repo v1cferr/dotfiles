@@ -380,10 +380,16 @@ finished work. What was closed is in the [august history](history/2026/08-august
       IT IS INTERMITTENT, so ONE result decides nothing: 1 stream came through in 17 attempts on
       04/09/2026, and the one that worked left no trace in the log at all. Whatever is tested has to
       be tested several times, in both directions, or the conclusion is noise.
-      THE TEST: plug it straight into a rear motherboard port, no hub, and stream again with
-      `guvcview` (or `v4l2-ctl -d /dev/video0 --stream-mmap --stream-count=1`). Bus 2, the USB 3
-      root, has no devices on it, so ports are free. If it streams, the hub is the answer and this
-      item closes with a port change and no code. If it fails on a USB 2 AND a USB 3 port, the
-      video half of the camera is dead, and the trap to recognize is that its MICROPHONE keeps
-      working the whole time, so "the camera is fine, PipeWire sees it" is not evidence of
-      anything.
+      THE SOFTWARE SIDE IS CLOSED, so what is left is four physical steps, cheapest first. The
+      probe for all of them is the same, and it must write to a path the USER owns:
+      `v4l2-ctl -d /dev/video0 --stream-mmap --stream-count=3 --stream-to=~/cam.raw`, then check
+      that the file is NON-EMPTY, because v4l2-ctl exits 0 even when the stream fails.
+      1. Pull the USB Audio and HID device off the hub, leaving only the camera. The only
+         current-budget test that does not need a different port.
+      2. A different port on the same hub.
+      3. A REAR MOTHERBOARD PORT, no hub. This is the decisive one; bus 2, the USB 3 root, has no
+         devices on it at all, so ports are free.
+      4. Boot Windows and open the camera there. That settles "is it the device" without any Linux
+         in the picture: if it fails there too, this is an RMA and not a configuration.
+      The trap to recognize at every step is that the MICROPHONE keeps working the whole time, so
+      "the camera is fine, PipeWire sees it" is not evidence of anything.

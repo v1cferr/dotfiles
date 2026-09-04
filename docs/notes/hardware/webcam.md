@@ -49,7 +49,7 @@ from device number 6 to 10: the device REBOOTS ITSELF when the video function is
 a stream and the negotiation fails.
 
 IT IS INTERMITTENT, NOT DEAD, and that is the fact that took the longest to see: **1 stream in
-17 attempts on 04/09/2026**, with 11 self-reboots in the same day. The one that worked captured a
+more than 20 attempts on 04/09/2026**, with a self-reboot on nearly every failure. The one that worked captured a
 clean frame with NOTHING in the log, no probe error and no reset, and it was the first access to a
 device that had sat untouched for about three hours. Every attempt after it failed, including the
 one 90 seconds later. So a single success proves nothing here, and neither does a single failure:
@@ -106,7 +106,9 @@ query, and the camera works elsewhere with it.
 `v4l2-ctl` EXITS 0 EVEN WHEN THE STREAM FAILS. `--stream-mmap` printing
 `VIDIOC_STREAMON returned -1` still gives `$?` of 0, so any script that branches on the exit code
 reports success while the camera is dead. Check the BYTES captured (`--stream-to` a file, then test
-it is non-empty), never the status.
+it is non-empty), never the status. And point `--stream-to` at a path your USER owns: a file left
+behind by a run under `sudo` cannot be overwritten, and that failure prints right next to the
+camera's and reads like part of it.
 
 `modprobe -r uvcvideo` CANNOT WORK WITH THE GRAPHICAL SESSION UP: the module sits at refcount 1
 with no process holding `/dev/video*` or `/dev/media*`, since what pins it is the input device the

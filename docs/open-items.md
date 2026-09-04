@@ -377,6 +377,9 @@ finished work. What was closed is in the [august history](history/2026/08-august
       the remaining suspicion is not declarable: the camera hangs off a bus-powered USB 2.0 hub
       that advertises 100 mA, shared with a USB Audio and HID device, and its own descriptor asks
       for 500 mA.
+      IT IS INTERMITTENT, so ONE result decides nothing: 1 stream came through in 17 attempts on
+      04/09/2026, and the one that worked left no trace in the log at all. Whatever is tested has to
+      be tested several times, in both directions, or the conclusion is noise.
       THE TEST: plug it straight into a rear motherboard port, no hub, and stream again with
       `guvcview` (or `v4l2-ctl -d /dev/video0 --stream-mmap --stream-count=1`). Bus 2, the USB 3
       root, has no devices on it, so ports are free. If it streams, the hub is the answer and this

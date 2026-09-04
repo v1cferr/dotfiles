@@ -34,7 +34,7 @@ preference to fix on the day it annoys me and not a fault.
 
 ## The failure
 
-Every attempt to start the stream dies the same way, in the kernel log:
+Nearly every attempt to start the stream dies the same way, in the kernel log:
 
 ```text
 uvcvideo 1-8.2:1.1: Failed to set UVC probe control : -71 (exp. 26).
@@ -45,8 +45,15 @@ usb 1-8.2: new high-speed USB device number 10 using xhci_hcd
 
 Userspace sees `VIDIOC_STREAMON: Protocol error` on the first try and `Input/output error` on the
 ones after, because by then the camera is re-enumerating. In one session on 04/09/2026 it went
-from device number 6 to 10: the device REBOOTS ITSELF every time the video function is asked to
-negotiate a stream.
+from device number 6 to 10: the device REBOOTS ITSELF when the video function is asked to negotiate
+a stream and the negotiation fails.
+
+IT IS INTERMITTENT, NOT DEAD, and that is the fact that took the longest to see: **1 stream in
+17 attempts on 04/09/2026**, with 11 self-reboots in the same day. The one that worked captured a
+clean frame with NOTHING in the log, no probe error and no reset, and it was the first access to a
+device that had sat untouched for about three hours. Every attempt after it failed, including the
+one 90 seconds later. So a single success proves nothing here, and neither does a single failure:
+whatever is marginal is marginal in the electrical sense, not in the driver.
 
 `-71` is EPROTO, and where it happens is the whole point. The probe and commit controls are
 CONTROL transfers on endpoint 0, which run BEFORE any isochronous bandwidth is reserved. A camera
@@ -69,8 +76,18 @@ are the answers the internet offers first:
   with a 2000 ms delay, it was suspended when the first attempt ran, and EPROTO on the first
   control transfer after a resume is a documented UVC quirk. It is still not the cause: four more
   attempts with the device already `active` logged the same failure on both the probe and the commit
-  control. A udev rule pinning `power/control = on` was therefore NOT declared, because rule 16
-  means a workaround that fixes nothing is worse than none.
+  control. That first measurement was contaminated, since a device mid-reset also reads `active`,
+  so it was redone cleanly: four iterations that WOKE the device with a control transfer first,
+  each starting from a fresh enumeration (device numbers 11 through 14), confirmed `active`, and
+  every one still failed at STREAMON. A udev rule pinning `power/control = on` was therefore NOT
+  declared, because rule 16 means a workaround that fixes nothing is worse than none.
+- **NOT the cheapest mode either.** YUYV at 320x240, the mode that asks least of both the bus and
+  the JPEG encoder, fails the same way as the FIRST access to a settled device. The earlier test of
+  it was contaminated (the camera was already wedged), which is why it was run again.
+- **NOT contention.** No process holds `/dev/video0` or `/dev/video1`, and the camera's own
+  microphone reads `closed` at the ALSA level, so the audio function is not occupying the device
+  when the video function tries to negotiate. Worth checking because this device is the DEFAULT
+  PipeWire source, so something monitoring input would have been a plausible explanation.
 - **NOT a missing quirk.** Nothing in the kernel's UVC quirk table names `0c45:636b`, and the
   community reports of `-71` converge on power and cabling, with replugging as the usual
   workaround. Replugging was tried here and the failure survived it.

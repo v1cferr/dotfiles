@@ -1,6 +1,42 @@
 # History: september 2026
 
-1 entry. Index in [README.md](../README.md).
+2 entries. Index in [README.md](../README.md).
+
+- [~] The webcam is recognized, declared, and still does not stream (04/09/2026). What I asked for
+      was a viewer, and the viewer was the easy half: `guvcview` plus `v4l-utils` and nothing else,
+      because the camera (Sonix `0c45:636b`, sold as a REDRAGON Live Camera) needs no driver, no
+      udev rule and no quirk. Every measurement is in
+      [notes/hardware/webcam.md](../../notes/hardware/webcam.md); what is worth keeping here is the
+      shape of the diagnosis, because I nearly declared a workaround.
+      • THE FAILURE IS THE TRANSPORT, NOT THE DRIVER, and WHERE it happens is what says so.
+        `Failed to set UVC probe control : -71` is EPROTO on a CONTROL transfer, endpoint 0, which
+        runs BEFORE any isochronous bandwidth is reserved. A camera asking for more bandwidth than
+        the bus has fails later and differently, at STREAMON with ENOSPC. So dropping the
+        resolution, which is the first thing every forum suggests, changes nothing: MJPG at
+        1280x720 and 640x480 and YUYV at 640x480 and 320x240 all die identically. And the device
+        REBOOTS ITSELF on each attempt, going from USB device number 6 to 10 in one session.
+      • THE MICROPHONE IS THE EVIDENCE, which is why I recorded from it before blaming anything.
+        The same physical device exposes `snd-usb-audio` interfaces, and 3 seconds of real
+        non-silent audio came through the same cable and the same hub. Enumeration works, endpoint
+        0 works for the audio function, and the link carries isochronous traffic. That is what
+        narrows a vague "USB problem" down to the video function alone, and it is the reason the
+        remaining suspicion is CURRENT: the sensor and the JPEG encoder are what draw the 500 mA
+        the descriptor asks for, and they only switch on at the moment of stream negotiation, which
+        is exactly where it dies. The hub it hangs off advertises 100 mA and is shared with a USB
+        Audio and HID device.
+      • THE WORKAROUND I DID NOT DECLARE is the part I want to remember. The camera sits at
+        `power/control = auto` with a 2000 ms delay, it WAS suspended when the first attempt ran,
+        and EPROTO on the first control transfer after a resume is a documented UVC quirk with a
+        one-line udev fix. It fit so well that I almost wrote it. Four more attempts with the
+        device already `active` logged the same failure on both the probe and the commit control,
+        so autosuspend is not the cause and the rule would have been dead config that LOOKS like a
+        fix (rule 16). The honest output of an afternoon can be two packages and a page saying what
+        the problem is not.
+      • WHAT IS LEFT IS NOT DECLARABLE, so it went to open-items: plugging the camera into a rear
+        motherboard port with no hub. Bus 2, the USB 3 root, has no devices on it at all. If it
+        streams there the hub is the answer; if it fails on a USB 2 and a USB 3 port too, the video
+        half of the camera is dead while its microphone keeps working, which is the confusing state
+        this whole entry exists to make recognizable.
 
 - [x] The games moved to the Windows disk, 351 GiB, and the two traps on the way (03/09/2026).
       Wanting them on the SATA SSD started as a preference ("I play on Windows sometimes") and

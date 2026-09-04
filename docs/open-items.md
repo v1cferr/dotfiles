@@ -368,3 +368,19 @@ finished work. What was closed is in the [august history](history/2026/08-august
       upstream inputs.
 
 - [ ] Add the current public IP to Fastfetch?
+
+- [ ] The webcam's ONE remaining test, and it is a cable (opened 04/09/2026). The viewer and the
+      diagnosis are declared and the camera is recognized, but it does not stream: it fails at the
+      UVC probe control with `-71` and reboots itself, and the measurements that rule out the
+      driver, the format, the bandwidth and USB autosuspend are in
+      [notes/hardware/webcam.md](notes/hardware/webcam.md). It is here and not in a module because
+      the remaining suspicion is not declarable: the camera hangs off a bus-powered USB 2.0 hub
+      that advertises 100 mA, shared with a USB Audio and HID device, and its own descriptor asks
+      for 500 mA.
+      THE TEST: plug it straight into a rear motherboard port, no hub, and stream again with
+      `guvcview` (or `v4l2-ctl -d /dev/video0 --stream-mmap --stream-count=1`). Bus 2, the USB 3
+      root, has no devices on it, so ports are free. If it streams, the hub is the answer and this
+      item closes with a port change and no code. If it fails on a USB 2 AND a USB 3 port, the
+      video half of the camera is dead, and the trap to recognize is that its MICROPHONE keeps
+      working the whole time, so "the camera is fine, PipeWire sees it" is not evidence of
+      anything.

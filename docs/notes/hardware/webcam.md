@@ -88,13 +88,33 @@ are the answers the internet offers first:
   microphone reads `closed` at the ALSA level, so the audio function is not occupying the device
   when the video function tries to negotiate. Worth checking because this device is the DEFAULT
   PipeWire source, so something monitoring input would have been a plausible explanation.
-- **NOT a missing quirk.** Nothing in the kernel's UVC quirk table names `0c45:636b`, and the
-  community reports of `-71` converge on power and cabling, with replugging as the usual
-  workaround. Replugging was tried here and the failure survived it.
+- **NOT a missing quirk, and this one was TESTED and not merely reasoned about.** Nothing in the
+  kernel's UVC quirk table names `0c45:636b`, and the error names the control SIZE (`exp. 26`, the
+  UVC 1.0 probe control, which is what the driver sends because the device declares UVC 1.00), so
+  firmware wanting the larger 1.1 layout was a real candidate. Forced at runtime through the module
+  parameter with a full re-probe between each: `quirks=6` (`PROBE_MINMAX` plus
+  `PROBE_EXTRAFIELDS`), then `4`, then `2`. All three fail identically. The community reports of
+  `-71` converge on power and cabling instead, with replugging as the usual workaround, and
+  replugging was tried here and the failure survived it.
 
 One line does appear at every enumeration and is harmless, so it is not the trail to follow:
 `Failed to query (GET_INFO) UVC control 5 on unit 1`. That is firmware not answering an optional
 query, and the camera works elsewhere with it.
+
+## Two traps for whoever tests this next
+
+`v4l2-ctl` EXITS 0 EVEN WHEN THE STREAM FAILS. `--stream-mmap` printing
+`VIDIOC_STREAMON returned -1` still gives `$?` of 0, so any script that branches on the exit code
+reports success while the camera is dead. Check the BYTES captured (`--stream-to` a file, then test
+it is non-empty), never the status.
+
+`modprobe -r uvcvideo` CANNOT WORK WITH THE GRAPHICAL SESSION UP: the module sits at refcount 1
+with no process holding `/dev/video*` or `/dev/media*`, since what pins it is the input device the
+camera registers for its own button, which the compositor's libinput keeps open. So a quirk is
+tested WITHOUT unloading anything: write `/sys/module/uvcvideo/parameters/quirks`, then force a
+re-probe by toggling `/sys/bus/usb/devices/1-8.2/authorized` off and on, which is a software
+replug. The default to restore is `4294967295`, the unsigned form of the `-1` that means "use the
+driver's own table", NOT `0`, which would force "no quirks at all".
 
 ## What is left, and it is physical
 

@@ -21,6 +21,8 @@
     # ── Notes / media ──
     obsidian # Markdown notes (a local vault)
     unstable.spotify # the CEF zygote crashes; --no-zygote is baked into the package by the overlay
+    # The one that shows the image AND the UVC controls, which is what a flaky camera needs.
+    guvcview # the webcam viewer; why mine does not stream yet: docs/notes/hardware/webcam.md
 
     # ── Editor / dev ──
     # VS Code owns its package in home/apps/vscode.nix (it has settings of its own).

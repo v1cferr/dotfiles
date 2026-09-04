@@ -30,5 +30,9 @@
     intel-gpu-tools # intel_gpu_top: the Intel driver's engines/frequencies
     # It answers "does Hyprland still serve wlr-gamma-control?" without guessing (08/08/2026).
     wayland-utils # wayland-info
+
+    # ── Webcam: diagnosis ──
+    # A viewer only ever shows THAT the stream failed: docs/notes/hardware/webcam.md
+    v4l-utils # v4l2-ctl: the formats, the controls and the stream, straight from the driver
   ];
 }

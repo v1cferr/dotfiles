@@ -66,6 +66,13 @@ in
         "Cities - Skylines II";
       ".local/share/bottles/bottles/Ascension/drive_c/Program Files/Ascension Launcher" =
         "Ascension Launcher";
+
+      # NEVER duplicated, unlike everything above: the repack installed it straight onto the
+      # Windows disk on 25/08 and the Kingston has never held a copy. The `Black-Flag` bottle was
+      # created EMPTY for this game alone (DX12 through vkd3d, which the Battle.net one does not
+      # need), so the 67 GiB stay exactly where they already were.
+      ".local/share/bottles/bottles/Black-Flag/drive_c/Games/Assassin Creed Black Flag Resynced" =
+        "Assassin Creed Black Flag Resynced";
     };
 
     # mkOutOfStoreSymlink and NOT a plain `source`: the target is MUTABLE game data that the

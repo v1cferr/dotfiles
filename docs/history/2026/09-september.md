@@ -1,6 +1,38 @@
 # History: september 2026
 
-2 entries. Index in [README.md](../README.md).
+3 entries. Index in [README.md](../README.md).
+
+- [x] Black Flag Resynced plays on Linux, and the Windows save came with it (05/09/2026). The game
+      had been on the shared disk since 25/08, so what was missing was a bottle, and the bottle was
+      the easy half: `Black-Flag` with GE-Proton and vkd3d-proton, opening at 1920x1080 on the
+      first try, with 10287 pipelines compiled that first time and 11 on the second. The part worth
+      keeping is the save, and it is written down in
+      [notes/boot-and-storage/games-disk.md](../../notes/boot-and-storage/games-disk.md).
+      • THE SAVE NEEDED NO PATCHING, for a structural reason and not a lucky one. The repack
+        authenticates through a Ubisoft Connect emulator whose `upc_r2.ini` sits NEXT TO THE EXE,
+        on the disk both systems read, so the `UserId` is the same on both BY CONSTRUCTION. The
+        only thing that differs between the systems is where `%APPDATA%` points. 12 blobs, the
+        manifest of the game's own save-storage layer and the `.ini`, all verified by sha256 on
+        both sides.
+      • THE PATH THAT LOOKS RIGHT AND IS NOT is `drive_c/users/v1cferr`. A GE-Proton prefix has
+        no user named after the account, only `steamuser`, so a copy into the obvious one lands in
+        a directory the game never opens, and the result is indistinguishable from a save that did
+        not survive the transfer.
+      • THE SETTINGS TRANSFERRED 1:1 for a reason that will not repeat on another machine: the
+        `.ini` carries `AdapterVendorID=32902` and `AdapterDeviceID=57867`, which are `0x8086` and
+        `0xE20B`. Windows had been played on this SAME Arc B580, so the quality profile was already
+        tuned for the GPU it would run on here. Its `NVStreamline` DLLs, on the other hand, are
+        dead weight on an Intel card: XeSS is the upscaler that works.
+      • THE SYMLINK I DID NOT DECLARE was the tempting one: point the prefix at the Windows save
+        so both systems share ONE progress, exactly like the game data already does. It costs
+        restic, whose `paths` is `/home/v1cferr` and would not cover a save on NTFS, and it turns
+        this disk's DELIBERATE refusal to mount after a Windows hybrid shutdown into a game with
+        nowhere to write instead of a mount that fails loudly. Copied on purpose, diverging on
+        purpose, and the copy is dated: 29/08.
+      • THE SAMPLER HAD TO LEARN THE GAME, which is the kind of omission that hides for a month.
+        `usagePaths` lists every game individually, at game granularity and not bucket, so without
+        a line for this one the BIGGEST game on the disk, 67 GiB of it, would have been the one the
+        report never names.
 
 - [~] The webcam is recognized, declared, and still does not stream (04/09/2026). What I asked for
       was a viewer, and the viewer was the easy half: `guvcview` plus `v4l-utils` and nothing else,

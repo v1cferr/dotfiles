@@ -153,3 +153,53 @@ statement is that it is a gap and not a decision.
 The sampler resolves with `readlink -f`, so a process launched through the symlink reports the NTFS
 path; leaving the old path in `usagePaths` would match nothing, forever, and look like a game
 nobody plays.
+
+## The game that was never duplicated, and the save that came back with it
+
+Black Flag Resynced is absent from the table above because it was never a duplicate: the repack
+installed it straight into `/mnt/windows/Games` on 25/08 and the Kingston has never held a copy of
+its 67 GiB. All it needed on this side was a bottle, and the work turned out not to be the game.
+
+`Black-Flag` is its OWN prefix and not the Battle.net one because it is a DX12 game, so it needs
+vkd3d-proton where the others need only DXVK. Nothing had to be installed into it: a GE-Proton
+prefix already carries `vcruntime140` and `msvcp140`, so the `VC_redist.x64.exe` the repack bundles
+never ran. MEASURED on the first launch, 10287 pipelines compiled; the second created 11. The
+`NVStreamline` DLLs in the folder are dead weight here, since the GPU is an Arc: XeSS is the
+upscaler that works and DLSS is not.
+
+### The save transfers with no patching, because the identity is in the SHARED folder
+
+The repack authenticates through a Ubisoft Connect emulator whose config, `upc_r2.ini`, sits next
+to the exe, which is on the disk both systems read. The `UserId` is therefore the same on Windows
+and here BY CONSTRUCTION, and nothing in the save has to be rewritten. The only thing that differs
+between the two systems is where `%APPDATA%` points.
+
+| What | Where it goes in the prefix |
+| --- | --- |
+| the 12 save blobs | `drive_c/users/steamuser/AppData/Roaming/Goldberg UplayEmu Saves/66088/` |
+| manifest and journal | `drive_c/users/steamuser/AppData/Local/Ubisoft/<game>/save/` |
+| language and graphics | `drive_c/users/steamuser/Documents/<game>/ACBlackFlag.ini` |
+
+**`steamuser`, never `v1cferr`.** A GE-Proton prefix has no user named after the account, so a copy
+into `drive_c/users/v1cferr` lands in a directory the game will never open, and it looks exactly
+like a save that did not survive.
+
+The manifest is not optional either. The game keeps its own save-storage layer
+(`SaveStorageManifest-05AC24EB-UPC.json` plus a journal), and blobs without it leave that layer
+disagreeing with what is on disk.
+
+The `.ini` came over for a reason that will not generalize to another machine:
+`AdapterVendorID=32902` and `AdapterDeviceID=57867` are `0x8086` and `0xE20B`, this same Arc B580.
+The Windows session was tuned on the SAME GPU, so the quality profile transfers 1:1.
+
+### The save stays in $HOME, and that is what costs the shared progress
+
+Restic's `paths` is `/home/v1cferr` ([restic.md](restic.md)), so a save inside the prefix is backed
+up and a save on `/mnt/windows` is not. Pointing the prefix at the Windows save with a symlink would
+have given the two systems ONE progress, which is what this disk already does for the game data. It
+was rejected on 05/09 for two reasons: the save would leave restic's reach, and a `/mnt/windows`
+that fails to mount (by design, after a Windows hybrid shutdown) would leave the game with nowhere
+to write instead of failing loudly.
+
+So the copy is one-way and dated: 12 files from 29/08, verified by sha256 on both sides. From here
+the two progresses diverge, and repeating the copy is the only way back.

@@ -188,11 +188,71 @@ usually does. Everything that reaches her comes from this house through one tunn
 classifies `10.10.10.1` as LAN exactly as it classified `192.168.1.10`. If a second machine here ever
 needs to reach her and be told apart, this is the line that has to change.
 
-## fail2ban
+## The exposed port: what the numbers say, and what actually defends it
 
-Port 2222 is open to the world (a port forward on the OpenWrt) WITH passwords enabled, so fail2ban
-is mandatory. It mirrors the Arch jail: ban after 4 failures in 10min, for 1h, never banning the
-LAN or loopback.
+Port 2222 is open to the world (a port forward on the OpenWrt) WITH passwords enabled, and the
+password STAYS: one command from any borrowed machine is the whole point of exposing it, and a
+key-only door would cost exactly the access it exists to give.
+
+Measured on 06/09/2026 over the previous 7 days of `journalctl -u sshd`: 3599 failed attempts from
+1121 DISTINCT addresses, spread over 991 distinct /24s, and 76 bans by fail2ban. The names tried
+are the usual dictionary, `admin` 206 times, `user` 141, `support` 131, `test` 122, `ubnt` 108,
+and none of them exists on this machine.
+
+That spread is the finding, and it changes what is worth building. **fail2ban is not the wall
+here**: an attack from 1121 addresses that each try three names does not care about a per address
+ban. It is a broom for the loud ones, and they are real (two neighbours, `176.53.159.197` and
+`.198`, ate 25 and 26 bans in 30 days by themselves). The wall is the ENTROPY of one password,
+multiplied by how few guesses each source gets before the door shuts. Every layer below is one of
+those two things.
+
+1. **`AllowUsers v1cferr`**, and nothing else is even a candidate: the other name is refused before
+   PAM is consulted. It costs nothing today and it is what keeps a future service account with a
+   password from silently becoming a second door.
+2. **`MaxAuthTries 4`**, down from 6. NOT 3, and the reason is a footgun worth writing down: the
+   client spends one try per key the agent offers BEFORE it ever prompts, so a laptop with two keys
+   loaded runs out and fails with "Too many authentication failures" on the machine you trust most.
+3. **`LoginGraceTime 45`**, down from 120s. Enough to type a passphrase on a phone keyboard, short
+   for a bot that opens the connection and sits on it holding a pre-auth slot.
+4. **`PerSourcePenalties`**, which is sshd refusing a source BY ITSELF, with no fail2ban in the
+   loop. It exists since OpenSSH 9.8 and is ON by default in the 10.5 that ships here, so it was
+   already working before any of this (2226 `srclimit_penalise` lines in the same 7 days) with
+   defaults that are symbolic: 5s for a failed authentication, 5s for an invalid user. The tuned
+   values make an invalid user cost 10min, which is the safe one to stretch, since a legitimate
+   login never types a name that does not exist.
+5. **An ESCALATING ban**, `bantime.increment`, so the address that comes back after its hour gets
+   2h, then 4h, up to a week.
+
+**The ban count lives in a database that forgets in a day.** `dbpurgeage` defaults to `1d` in
+`fail2ban.conf`, and fail2ban's own `jail.conf` says so in a comment right next to the increment
+option. With the default, the address that returns tomorrow is a first offender again and the
+escalation never leaves its second step, silently. `daemonSettings.Definition.dbpurgeage = "30d"`
+is what makes it real, and it has to outlive `bantime.maxtime`.
+
+**All of this can be overdone safely because the tunnel is the way back in.** A ban and a penalty
+are both applied to the SOURCE address, and WireGuard arrives as `10.10.10.x`, which is in
+`ignoreip` and in `PerSourcePenaltyExemptList`. Locking yourself out of the front door from mobile
+data costs a tunnel toggle, not a walk to the machine.
+
+### Three hardenings deliberately NOT applied
+
+- **A lower `MaxStartups`** would hand the flood the win: shrinking the number of concurrent
+  pre-auth slots is precisely what a bot needs to fill them and keep the legitimate connection out.
+  At ~21 attempts an hour there is no resource here to protect.
+- **fail2ban's `aggressive` mode** bans on a pre-auth disconnect, which is what YOUR client does
+  when you hit Ctrl-C at the password prompt. Four of those, under the escalation above, is a
+  week's ban on the address you are sitting at.
+- **`PerSourceNetBlockSize 24`**, grouping penalties per /24, only pays against the clustered pairs
+  above. With 1121 addresses in 991 /24s the grouping would almost never meet a second offender,
+  and the cost is banning a stranger who shares a CGNAT block with one.
+
+### What is left open, and it is not brute force
+
+500 guesses a day against a passphrase is not a race anybody wins, so the path this does not cover
+is a password that LEAKS: typed on the borrowed machine that is the reason password auth is on at
+all. The answer to that one is a TOTP on top of it (`security.pam.services.sshd.googleAuthenticator`),
+which costs a six digit code per login and flips `KbdInteractiveAuthentication` back on. Not
+installed, and it is the next decision here rather than an oversight.
 
 ## The second exposed port is not this machine
 

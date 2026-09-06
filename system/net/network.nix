@@ -19,6 +19,8 @@
   };
 
   # ── SSH (mirrors Arch: port 2222, root off, password as a fallback) ────────
+  # The password STAYS: one command from any borrowed machine is the feature. What defends it
+  # instead, and the three hardenings deliberately left out: docs/notes/network/network.md
   services.openssh = {
     enable = true;
     ports = [ 2222 ];
@@ -27,6 +29,18 @@
       PermitRootLogin = "no";
       PasswordAuthentication = true;
       KbdInteractiveAuthentication = false;
+
+      # The ONLY name that can be tried, so `admin`, `support` and `ubnt` die before PAM.
+      AllowUsers = [ "v1cferr" ];
+      # 4 and not 3: the client spends one try per key the agent offers BEFORE the password.
+      MaxAuthTries = 4;
+      # Enough to type a passphrase on a phone, short for a bot that opens and sits (was 120s).
+      LoginGraceTime = 45;
+      # sshd refusing the source BY ITSELF, no fail2ban involved. The defaults are symbolic (5s);
+      # `invaliduser` is the safe one to stretch, since a real login never uses a name that is gone.
+      PerSourcePenalties = "authfail:30s invaliduser:10m grace-exceeded:2m max:1h min:20s";
+      # The house and the tunnel are never penalised: a typo from inside cannot cost the way back.
+      PerSourcePenaltyExemptList = "${config.my.net.lanSubnet},${config.my.net.vpnSubnet}";
     };
   };
 
@@ -44,6 +58,15 @@
   services.fail2ban = {
     enable = true;
     bantime = "1h";
+    # The same address comes back after the hour, so each new ban DOUBLES it: 1h, 2h, 4h, up to a
+    # week. Measured: one single address ate 26 bans in 30 days under the flat 1h.
+    bantime-increment = {
+      enable = true;
+      maxtime = "168h";
+    };
+    # The ban count lives in the sqlite, and fail2ban's own default forgets it in 1d, which would
+    # cap the escalation above at its second step. It has to outlive `maxtime`.
+    daemonSettings.Definition.dbpurgeage = "30d";
     # This is fail2ban's [DEFAULT], so ALL jails inherit it. Loopback is deliberately ABSENT: the
     # module already prepends it, and declaring it again came out duplicated in jail.local.
     ignoreIP = [

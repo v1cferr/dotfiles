@@ -27,15 +27,25 @@
     openFirewall = true; # opens 2222 in the firewall
     settings = {
       PermitRootLogin = "no";
+      # STAYS true even though the password now travels inside PAM: the module derives
+      # `security.pam.services.sshd.unixAuth` from this flag, and turning it off would silently drop
+      # `pam_unix`, leaving the six digits ALONE as the whole authentication. What gates the door is
+      # `AuthenticationMethods` below, not this.
       PasswordAuthentication = true;
-      KbdInteractiveAuthentication = false;
+      # The channel PAM needs to ask two things (password, then code) in one authentication.
+      KbdInteractiveAuthentication = true;
+      # A key by ITSELF, or password plus TOTP. Publickey never runs the PAM auth stack, so it is
+      # also the way back in the day the code stops working.
+      AuthenticationMethods = "publickey keyboard-interactive:pam";
 
       # The ONLY name that can be tried, so `admin`, `support` and `ubnt` die before PAM.
       AllowUsers = [ "v1cferr" ];
       # 4 and not 3: the client spends one try per key the agent offers BEFORE the password.
       MaxAuthTries = 4;
-      # Enough to type a passphrase on a phone, short for a bot that opens and sits (was 120s).
-      LoginGraceTime = 45;
+      # BACK to the default, and 45 was the mistake: it fits one prompt, not the two that the TOTP
+      # asks for. Measured 06/09/2026, four connections from the phone died in
+      # `Timeout before authentication` while typing the password and then the code.
+      LoginGraceTime = 120;
       # sshd refusing the source BY ITSELF, no fail2ban involved. The defaults are symbolic (5s);
       # `invaliduser` is the safe one to stretch, since a real login never uses a name that is gone.
       PerSourcePenalties = "authfail:30s invaliduser:10m grace-exceeded:2m max:1h min:20s";
@@ -43,6 +53,11 @@
       PerSourcePenaltyExemptList = "${config.my.net.lanSubnet},${config.my.net.vpnSubnet}";
     };
   };
+
+  # The SECOND FACTOR of the exposed port, `required` and with no `nullok`: whoever has no
+  # `~/.google_authenticator` does not log in by password at all. That file is STATE, created once
+  # per user by hand (the command and the remote-safe order: docs/notes/network/network.md).
+  security.pam.services.sshd.googleAuthenticator.enable = true;
 
   # NEVER SUSPEND: this is a remote-access desktop, and a suspend drops SSH with no way back in.
   systemd.targets.sleep.enable = false;

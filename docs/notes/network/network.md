@@ -253,38 +253,45 @@ is a password that LEAKS: typed on the borrowed machine that is the reason passw
 all. The answer to that one is a TOTP on top of it (`security.pam.services.sshd.googleAuthenticator`),
 which costs a six digit code per login and flips `KbdInteractiveAuthentication` back on.
 
-**HELD on purpose (06/09/2026), and the precondition is not the config.** It waits on a working
+**INSTALLED on 06/09/2026**, and the precondition was never the config: it waited on a working
 Moonlight, because every safety net for this change has to be a path that does NOT depend on sshd.
-Applying it while the only way in is the very thing being changed is the one version of this that
-can cost the machine. The research is below so the day it happens is an afternoon, not a study.
+Applying it while the only way in is the very thing being changed is the version of this that can
+cost the machine.
 
 The order that makes it safe from far away, cheapest step first:
 
-1. **A key from the device in your hand, in `users.nix`, applied and TESTED first.** Publickey does
-   not run the PAM auth stack (only `account` and `session`), so a broken TOTP is incapable of
-   closing that door. This is the real net; the rest is comfort.
-2. **`google-authenticator -t -d -f -r 3 -R 30 -W -e 5`**, which only writes `~/.google_authenticator`
-   and changes no service. Scanning the QR is impossible when the phone IS the terminal, so take the
-   secret in text. The emergency codes go to the vault, and NOT next to the SSH password: in the
-   same entry the second factor is the first one wearing a hat.
+1. **A key from the device in your hand, applied and TESTED first.** Publickey does not run the PAM
+   auth stack (only `account` and `session`), so a broken TOTP is incapable of closing that door.
+2. **`google-authenticator -t -d -f -w 3 -r 3 -R 30 -e 5`**, which only writes
+   `~/.google_authenticator` and changes no service. `-w 3` and NOT `-W`: the minimal window accepts
+   only the current 30s step, and a second of delay typing on a phone is enough to lose it.
 3. **The config, with the session left open.** `sshd.service` carries `KillMode=process`, so the
-   restart a `switch` performs does not kill the session applying it. A watchdog armed BEFORE the
-   switch (`systemd-run --on-active=10m --unit=ssh-lifeboat nixos-rebuild switch --rollback`,
-   stopped by hand once a NEW connection proves it works) is the same pattern the router changes use.
+   restart a `switch` performs does not kill the session applying it.
 
 Two traps found reading the module, both silent:
 
 - **`PasswordAuthentication = false` also removes `pam_unix`.** The sshd module derives
   `security.pam.services.sshd.unixAuth` from it (`sshd.nix:879`), so the obvious "the password now
   comes through PAM" ends with `keyboard-interactive` asking ONLY for the six digits. The password
-  stays `true` and the gate is `AuthenticationMethods = "publickey keyboard-interactive:pam"`,
-  verified with `sshd -T -C addr=...` before anything is applied.
+  stays `true` and the gate is `AuthenticationMethods = "publickey keyboard-interactive:pam"`.
 - **There is no per source exemption for free.** With `UsePAM yes` the `password` method runs the
   whole PAM auth stack, so a `Match Address` giving the tunnel `password` still meets a `required`
-  google_authenticator and fails. Exempting the LAN would take `pam_access` in the stack, which is
-  not worth it: a key from inside already skips PAM auth entirely, which is the same result.
+  google_authenticator and fails. A key from inside skips PAM auth entirely, same result, no
+  `pam_access` in the stack.
 
-fail2ban keeps working through the change: its filter matches `Failed <cmnfailed>`, and `cmnfailed`
+And two that only showed up in the first real login from the phone, the same day:
+
+- **`LoginGraceTime 45` does not survive a second prompt.** It was sized for typing one password;
+  the TOTP asks for two things and four connections died in `Timeout before authentication` while
+  the phone was still being typed on. Back to the 120s default, which is the number this trades
+  against bots holding pre-auth slots, and the trade is worth it now.
+- **A client that stores the password answers the FIRST prompt by itself.** The signature in the
+  journal is unmistakable: `pam_unix ... authentication failure` in the SAME second as the
+  connection, with `Accepted google_authenticator` arriving 37 seconds later. The password is not
+  wrong at the keyboard, it is wrong in the client's vault, and the fix is on that side. It costs
+  an authentication that reads as "the code is right and it still refuses me".
+
+fail2ban keeps working through all of this: its filter matches `Failed <cmnfailed>`, and `cmnfailed`
 resolves to `\S+`, so `keyboard-interactive/pam` counts exactly like `password` did.
 
 ## The second exposed port is not this machine

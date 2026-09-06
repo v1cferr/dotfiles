@@ -251,8 +251,41 @@ data costs a tunnel toggle, not a walk to the machine.
 500 guesses a day against a passphrase is not a race anybody wins, so the path this does not cover
 is a password that LEAKS: typed on the borrowed machine that is the reason password auth is on at
 all. The answer to that one is a TOTP on top of it (`security.pam.services.sshd.googleAuthenticator`),
-which costs a six digit code per login and flips `KbdInteractiveAuthentication` back on. Not
-installed, and it is the next decision here rather than an oversight.
+which costs a six digit code per login and flips `KbdInteractiveAuthentication` back on.
+
+**HELD on purpose (06/09/2026), and the precondition is not the config.** It waits on a working
+Moonlight, because every safety net for this change has to be a path that does NOT depend on sshd.
+Applying it while the only way in is the very thing being changed is the one version of this that
+can cost the machine. The research is below so the day it happens is an afternoon, not a study.
+
+The order that makes it safe from far away, cheapest step first:
+
+1. **A key from the device in your hand, in `users.nix`, applied and TESTED first.** Publickey does
+   not run the PAM auth stack (only `account` and `session`), so a broken TOTP is incapable of
+   closing that door. This is the real net; the rest is comfort.
+2. **`google-authenticator -t -d -f -r 3 -R 30 -W -e 5`**, which only writes `~/.google_authenticator`
+   and changes no service. Scanning the QR is impossible when the phone IS the terminal, so take the
+   secret in text. The emergency codes go to the vault, and NOT next to the SSH password: in the
+   same entry the second factor is the first one wearing a hat.
+3. **The config, with the session left open.** `sshd.service` carries `KillMode=process`, so the
+   restart a `switch` performs does not kill the session applying it. A watchdog armed BEFORE the
+   switch (`systemd-run --on-active=10m --unit=ssh-lifeboat nixos-rebuild switch --rollback`,
+   stopped by hand once a NEW connection proves it works) is the same pattern the router changes use.
+
+Two traps found reading the module, both silent:
+
+- **`PasswordAuthentication = false` also removes `pam_unix`.** The sshd module derives
+  `security.pam.services.sshd.unixAuth` from it (`sshd.nix:879`), so the obvious "the password now
+  comes through PAM" ends with `keyboard-interactive` asking ONLY for the six digits. The password
+  stays `true` and the gate is `AuthenticationMethods = "publickey keyboard-interactive:pam"`,
+  verified with `sshd -T -C addr=...` before anything is applied.
+- **There is no per source exemption for free.** With `UsePAM yes` the `password` method runs the
+  whole PAM auth stack, so a `Match Address` giving the tunnel `password` still meets a `required`
+  google_authenticator and fails. Exempting the LAN would take `pam_access` in the stack, which is
+  not worth it: a key from inside already skips PAM auth entirely, which is the same result.
+
+fail2ban keeps working through the change: its filter matches `Failed <cmnfailed>`, and `cmnfailed`
+resolves to `\S+`, so `keyboard-interactive/pam` counts exactly like `password` did.
 
 ## The second exposed port is not this machine
 

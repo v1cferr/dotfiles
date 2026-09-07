@@ -37,7 +37,7 @@
     bitwarden-cli # `bw`, used by sync-secrets
 
     # ── Games / emulators (prefixes and ROMs are state, so restic, rule 6) ──
-    (bottles.override { removeWarningPopup = true; }) # Wine/Proton FHS-wrapped
+    # Bottles owns its package in home/apps/bottles.nix (it declares the library there now).
     rpcs3 # a PS3 emulator; the firmware and games are state, you provide them
     # CurseForge owns its package in home/apps/curseforge.nix (the login scheme handler).
 

@@ -245,4 +245,5 @@ of them, the other seven being `_CommonRedist` and the readme, and 56 GiB agains
 on the disk.
 
 `Bodycam` is its OWN prefix, for the same reason `Black-Flag` is: UE5 renders through DX12, so it
-needs vkd3d-proton, which the Battle.net bottle has no use for.
+needs vkd3d-proton, which the Battle.net bottle has no use for. What each bottle LISTS is declared
+in `home/apps/bottles.nix` ([bottles.md](../apps/bottles.md)); the prefix itself stays state.

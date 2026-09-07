@@ -13,5 +13,6 @@
     ./openal.nix # ~/.config/alsoft.conf: it forces the pulse backend (sound in OpenAL/HashLink games)
     ./curseforge.nix # Minecraft modpacks: the package (./pkgs) plus the login scheme handler
     ./games-disk.nix # the games that live on the Windows disk, symlinked where each launcher looks
+    ./bottles.nix # Bottles: the package plus the library each bottle lists (through activation)
   ];
 }

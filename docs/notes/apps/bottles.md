@@ -1,0 +1,108 @@
+# Bottles: the library is declared, the prefixes are not
+
+`home/apps/bottles.nix` owns the package and the list of programs each bottle shows.
+[games-disk.md](../boot-and-storage/games-disk.md) covers where the game DATA lives.
+
+## The split, and why it is not arbitrary
+
+A bottle is a Wine prefix, which is STATE (rule 6): it is created once, the runner patches it, and
+it comes back from restic and not from a rebuild. Declaring one would mean owning a tree of tens of
+thousands of files that Wine rewrites at will.
+
+What IS declarable is the answer to "which programs does this bottle list", because that is a short
+list of names, paths and command lines, and it is exactly what a restore loses: the prefix comes
+back from backup with its library intact only if the backup caught it, and nothing says what SHOULD
+be there.
+
+So the module declares `my.games.library` and an activation inserts what is missing. It never
+writes `bottle.yml`.
+
+## Why activation and not a managed file
+
+Bottles rewrites `bottle.yml` on every change: adding a program, changing a runner, even opening
+the bottle's settings updates `Update_Date`. A `home.file` on that path would be a second owner
+(rule 14), and the failure mode of two owners is not a crash, it is silent drift.
+
+The activation has the same shape as `dolphinPlaces`: for each declared program, if the bottle
+exists and its `bottle.yml` does not already name that program, run `bottles-cli add`. The entry it
+writes is byte-identical in shape to the one the GUI produces (`folder`, `path`, `dxvk`, `vkd3d`,
+`dxvk_nvapi` and a fresh uuid), which was checked before trusting it.
+
+Two limits worth stating instead of discovering:
+
+- **A program deleted in the GUI comes back on the next rebuild.** That is the declaration working,
+  not a bug, but it means the way to remove one for good is to remove it from the module.
+- **The check is a `grep` for `name: <name>` in `bottle.yml`.** Renaming a program in the GUI makes
+  the declared name absent, so the next rebuild adds it again and the bottle ends up with both.
+
+The activation SKIPS a bottle whose `bottle.yml` is not there, instead of failing. On a fresh
+machine there are no prefixes at all, and a rebuild that dies because a game is not installed yet
+would be the tail wagging the dog.
+
+## The trap: the name it shows is not the directory it lives in
+
+`bottles-cli add -b Battlenet` answers `Bottle Battlenet not found`, and the bottle is right there.
+The directory is `Battlenet`, and inside its `bottle.yml` the `Name:` field says `Battle.net`. The
+CLI takes the NAME; every path takes the directory.
+
+That is why the activation reads the name back out of the file
+(`sed -n 's/^Name: //p'`) instead of the module carrying it: one of the two is already written down
+in the prefix, and repeating it here would be a literal that can rot (rule 11).
+
+Bottles derives the directory from the name at CREATION time by stripping what a path cannot hold,
+so the two agree for every other bottle here and will disagree again for any name with a dot in it.
+
+## Where each command line came from
+
+Nothing in the list was invented. The five programs that already existed were read back out of
+`bottle.yml`, and the two that were missing came from the `.lnk` files Battle.net itself wrote
+inside the prefix, decoded from `drive_c/users/Public/Desktop`:
+
+| Program | What it runs | Evidence |
+| --- | --- | --- |
+| Battle.net | `Battle.net.exe` with its Chromium flags | the entry that was already there |
+| Hearthstone | `Battle.net.exe --exec="launch WTCG"` plus the same flags | the entry that was already there |
+| Diablo IV | `Diablo IV Launcher.exe`, no arguments | its shortcut in the prefix |
+| Overwatch | `Overwatch Launcher.exe --productcode=pro` | its shortcut in the prefix |
+| Cities Skylines II | `Cities2.exe` | the entry that was already there |
+| Black Flag Resynced | `ACBlackFlag.exe` | the entry that was already there |
+| Ascension Launcher | `cmd.exe /c start "" "...\Ascension Launcher.exe"` | the entry that was already there |
+| Bodycam | `Bodycam.exe` | the release's own layout |
+
+**Hearthstone goes through Battle.net and the other two do not**, which looks inconsistent and is
+not. Hearthstone's entry predates this module and it works, so it was transcribed rather than
+rewritten. If either shim turns out to fail under Wine, the fallback is Hearthstone's route with
+that game's product code, and Battle.net's own config names the installed products (`hs_beta`,
+`fenris`, `prometheus`) if the code ever has to be looked up.
+
+The `start ""` in the Ascension entry is an EMPTY WINDOW TITLE and not a stray pair of quotes:
+`start` reads a first quoted argument as the title, so dropping it would make it try to open the
+launcher's path as a window name. `cmd.exe` is there because the launcher exits as soon as it has
+spawned the real process, and Bottles would otherwise call the program dead.
+
+## The paths are not repeated, they are looked up
+
+A library entry for a game names the game and its exe, never the bottle or the folder:
+
+```nix
+"Bodycam" = inGame "Bodycam" "Bodycam.exe";
+```
+
+`inGame` searches `my.games.linked` for the entry pointing at that game on the Windows disk and
+takes the bottle and the prefix path from its key (rule 11). Two things follow, and the second is
+the point: a game that is not linked FAILS AT EVAL with a message saying so, instead of producing a
+library entry aimed at a path that does not exist.
+
+`inBottle` is the escape hatch for a program that is not a game's own exe, which is Battle.net,
+Hearthstone and the Ascension `cmd.exe`.
+
+## A leftover that will confuse the next reader
+
+`~/.local/share/bottles/bottles/` holds SIX directories and Bottles lists FIVE. `Battle.net` (with
+the dot) is a prefix with no `bottle.yml`, 688 MiB, last touched on 05/07/2026, and it is invisible
+to the app for exactly that reason: what makes a directory a bottle is that file.
+
+It is almost certainly the first attempt at the Battle.net bottle, kept when the second one was
+created under the name that produced the `Battlenet` directory. Nothing here references it, and it
+sits inside `@home`, so it is 688 MiB of snapshot weight for nothing. It is listed here rather than
+deleted because deleting somebody's prefix on a hunch is how a save disappears.

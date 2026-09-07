@@ -1,6 +1,40 @@
 # History: september 2026
 
-4 entries. Index in [README.md](../README.md).
+5 entries. Index in [README.md](../README.md).
+
+- [x] The Bottles library stopped being a thing I had only clicked (07/09/2026). Eight programs
+      across five bottles existed nowhere but in the GUI, so nothing in the repo said what a
+      restored prefix SHOULD list, and the answer after a restore would be "whatever the backup
+      happened to catch". `home/apps/bottles.nix` declares it now, and the reasoning is in
+      [notes/apps/bottles.md](../../notes/apps/bottles.md).
+      • THE PREFIX STAYS STATE AND THE LIST BECOMES CONFIG, which is the whole design. A bottle is
+        tens of thousands of files Wine rewrites at will, so it comes back from restic (rule 6);
+        the programs it shows are a handful of names, paths and command lines, which is precisely
+        what a restore cannot reconstruct on its own.
+      • ADDED BY ACTIVATION, NEVER WRITTEN, because Bottles rewrites `bottle.yml` on every change
+        and a managed file there would be a second owner (rule 14). Same shape as `dolphinPlaces`:
+        insert only what is missing. Checked before trusting it, `bottles-cli add` produces an
+        entry identical to the GUI's, down to `folder` and the dxvk flags.
+      • THE NAME IS NOT THE DIRECTORY, and this is what makes the CLI look broken:
+        `bottles-cli add -b Battlenet` answers `Bottle Battlenet not found` with the bottle sitting
+        right there, because the directory is `Battlenet` and the `Name:` inside its `bottle.yml`
+        is `Battle.net`. So the activation reads the name back out of the file instead of the
+        module carrying a second copy of it (rule 11).
+      • NOTHING IN THE LIST WAS INVENTED. The five entries that already existed were transcribed
+        from `bottle.yml`, and the two that were missing came from the `.lnk` files Battle.net
+        itself wrote in the prefix: `Diablo IV Launcher.exe` with no arguments, and
+        `Overwatch Launcher.exe --productcode=pro`. Guessing a product code would have produced a
+        library entry that looks right and launches nothing.
+      • THE PATHS ARE LOOKED UP AND NOT REPEATED: an entry names the game and its exe, and `inGame`
+        finds the bottle and the prefix path in `my.games.linked`. A game that is not linked fails
+        at EVAL with a message saying so, which is the opposite of the silent wrong path.
+      • WHAT IT DOES NOT DO, said here so it is not discovered later: a program deleted in the GUI
+        comes back on the next rebuild (that is the declaration working), and renaming one in the
+        GUI makes the declared name absent, so the bottle ends up with both.
+      • A LEFTOVER FOUND ON THE WAY: `bottles/` holds six directories and the app lists five.
+        `Battle.net` with the dot has no `bottle.yml`, which is exactly what makes a directory
+        invisible to Bottles, and it is 688 MiB of `@home` from 05/07 that nothing references.
+        Left alone rather than deleted on a hunch, and written down so it stops being a mystery.
 
 - [~] Bodycam is on the shared disk and declared, and nothing has launched it yet (07/09/2026). It
       arrived as a STEAMRIP release: one RAR5 of **55.9 GiB across 367 entries**, no installer, and

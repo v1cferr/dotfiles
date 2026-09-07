@@ -302,6 +302,7 @@ in
         "${games}/Ascension Launcher"
         "${games}/PS3"
         "${games}/Assassin Creed Black Flag Resynced"
+        "${games}/Bodycam"
 
         # The only one still on the Kingston, on purpose: of its 7.9 GiB just 4.3 are the game, the
         # rest being the Steam Linux Runtime, which cannot leave Linux. Valve does not support an

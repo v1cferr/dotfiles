@@ -144,7 +144,7 @@ a nested one. It is moot here precisely because the destination is another disk.
 would be an answer to a question nobody asked.
 
 The games disk is covered by the trend log and by `disk-report` (through `usagePaths`), but there
-is no alarm on it. With ~249 GiB free after the full migration that is not urgent, and the honest
+is no alarm on it. With 270 GiB still free after Bodycam landed (measured 07/09) that is not urgent, and the honest
 statement is that it is a gap and not a decision.
 
 ## The monitoring has to point at the REAL path
@@ -203,3 +203,46 @@ to write instead of failing loudly.
 
 So the copy is one-way and dated: 12 files from 29/08, verified by sha256 on both sides. From here
 the two progresses diverge, and repeating the copy is the only way back.
+
+## The game that arrives as an archive, and where it gets extracted
+
+Bodycam came in as a STEAMRIP release: one RAR5 file in `~/Downloads`, 55.9 GiB across 367 entries,
+no installer, and a readme whose whole instruction is "extract into `C:\Games` and run the exe". The
+layout inside is stock UE5, `Bodycam.exe` at the root next to `Bodycam/` and `Engine/`, which is
+already the shape of this folder: one directory per game with the exe at its top.
+
+**The extraction target was the destination, never `$HOME`.** That is not a shortcut, it is the
+snapshot section above applied BEFORE the fact instead of after. Unpacking into `~/Downloads` or
+into the bottle would have written 56 GiB inside `@home`, btrbk snapshots hourly, and from that
+moment the space stays pinned for the four weeks of `48h 7d 4w` however fast the files are moved out
+afterwards. Writing straight into `/mnt/windows/Games` puts those bytes outside every subvolume on
+the first pass, and leaves nothing to reclaim.
+
+The archive itself is the one copy that does pay that cost, since it was downloaded into
+`~/Downloads` and is already inside the snapshots. Deleting it frees nothing today, for exactly the
+reason the section above measured.
+
+**THE MASK DOES NOT RESTRICT ANYTHING**, and that is the one thing worth remembering from the
+unpacking itself. `unrar x <archive> "Bodycam/" /mnt/windows/Games/` reads as "only that folder" and
+extracts the WHOLE archive: a mask with a trailing slash and no wildcard matches nothing and unrar
+falls back to everything, so the `.url` ad, the readme and `_CommonRedist/` all landed at the root
+of `Games/`, next to every other game. MEASURED TWICE, because the second invocation was written the
+same way and started duplicating the game into `Bodycam/Bodycam/Bodycam/`, 25 GiB of it before it
+was killed. The mask that works carries a wildcard (`"Bodycam/*"`), and the cheaper habit is to
+unpack everything and then move, which on one filesystem is a rename.
+
+What the folder keeps afterwards is the game root plus `_CommonRedist` INSIDE it, the way Cities
+Skylines II keeps its `_Redist`: 32 MiB of Windows installers Wine should not need (a GE-Proton
+prefix already carries `vcruntime140` and `msvcp140`, measured on Black Flag) but the Windows side
+might, and keeping them there is what stops that fallback from depending on holding on to a 55.9 GiB
+archive. The `.url` went out, and so did everything the first pass had spilled at the root of
+`Games/`.
+
+VERIFIED after extracting, because on this disk that is the house rule and `unrar` printing `All OK`
+only says the CRCs matched what the archive claims about itself: every file compared to the listing
+by relative path and size, **258 files, zero missing, zero size mismatches**. The folder holds 265
+of them, the other seven being `_CommonRedist` and the readme, and 56 GiB against 270 GiB still free
+on the disk.
+
+`Bodycam` is its OWN prefix, for the same reason `Black-Flag` is: UE5 renders through DX12, so it
+needs vkd3d-proton, which the Battle.net bottle has no use for.

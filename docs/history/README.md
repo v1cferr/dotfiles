@@ -10,7 +10,7 @@ top (reverse chronological order inside each file).
 
 | Month | Entries |
 | --- | --- |
-| [september](2026/09-september.md) | 3 |
+| [september](2026/09-september.md) | 4 |
 | [august](2026/08-august.md) | 88 |
 | [july](2026/07-july.md) | 63 |
 

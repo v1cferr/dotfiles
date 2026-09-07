@@ -73,6 +73,10 @@ in
       # need), so the 67 GiB stay exactly where they already were.
       ".local/share/bottles/bottles/Black-Flag/drive_c/Games/Assassin Creed Black Flag Resynced" =
         "Assassin Creed Black Flag Resynced";
+
+      # NEVER duplicated either, and for the simplest reason there is: the archive was extracted
+      # straight into /mnt/windows/Games on 07/09, so these 56 GiB have never been on the Kingston.
+      ".local/share/bottles/bottles/Bodycam/drive_c/Games/Bodycam" = "Bodycam";
     };
 
     # mkOutOfStoreSymlink and NOT a plain `source`: the target is MUTABLE game data that the

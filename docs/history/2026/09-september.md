@@ -1,6 +1,50 @@
 # History: september 2026
 
-3 entries. Index in [README.md](../README.md).
+4 entries. Index in [README.md](../README.md).
+
+- [~] Bodycam is on the shared disk and declared, and nothing has launched it yet (07/09/2026). It
+      arrived as a STEAMRIP release: one RAR5 of **55.9 GiB across 367 entries**, no installer, and
+      a readme whose entire instruction is "extract and run the exe". So the work was deciding WHERE
+      to unpack it, not how, and the reasoning is in
+      [notes/boot-and-storage/games-disk.md](../../notes/boot-and-storage/games-disk.md).
+      • THE EXTRACTION TARGET IS THE WHOLE DECISION, and it is the snapshot trap of the entry below
+        applied BEFORE the fact instead of measured after it. Unpacking into `~/Downloads` or into
+        the prefix would have written 56 GiB inside `@home`, which btrbk snapshots hourly, and from
+        there the space stays pinned for the four weeks of `48h 7d 4w` however fast the files are
+        moved out afterwards. Written straight into `/mnt/windows/Games`, those bytes never enter a
+        subvolume at all and there is nothing left to reclaim. The ARCHIVE is the one copy that does
+        pay that cost, since it was downloaded into `~/Downloads` and is already in the snapshots:
+        deleting it today frees nothing.
+      • THE MASK I WROTE RESTRICTS NOTHING, and it took two passes to see it.
+        `unrar x <archive> "Bodycam/" /mnt/windows/Games/` reads as "only that folder" and unpacks
+        the WHOLE archive, because a mask with a trailing slash and no wildcard matches nothing and
+        unrar falls back to everything: the `.url` ad, the readme and `_CommonRedist/` landed at the
+        root of `Games/`, next to every other game. The second invocation, written the same way to
+        pull `_CommonRedist` alone, started duplicating the game into `Bodycam/Bodycam/Bodycam/` and
+        had 25 GiB in there before it was killed. `"Bodycam/*"` is the form that restricts.
+      • WHAT THE FOLDER KEEPS is the game root plus `_CommonRedist` INSIDE it, the way Cities
+        Skylines II keeps its `_Redist`: 32 MiB Wine should not need (a GE-Proton prefix already
+        carries `vcruntime140` and `msvcp140`, measured on Black Flag) but the Windows side might,
+        kept so that fallback does not depend on holding on to a 55.9 GiB archive. The ad went out,
+        and so did everything the first pass had spilled at the root of `Games/`.
+      • VERIFIED against the archive's own listing, path by path and size by size, because `du -sh`
+        is not proof and that is the house rule on this disk: **258 files, zero missing, zero size
+        mismatches**. THE COUNT IS THE HALF THAT EARNED ITS KEEP, since every named file matched
+        while the folder held 365 of them and 81 GiB, and that gap is the only reason the duplicate
+        above was noticed instead of sitting there.
+      • THE BOTTLE IS ITS OWN, `Bodycam`, created with the SAME components as `Black-Flag` and for
+        the same reason: UE5 renders through DX12, so it needs vkd3d-proton, which the Battle.net
+        bottle has no use for. `bottles-cli new` takes every one of them as a flag, so the prefix
+        was created from the terminal and its `Parameters` block came out identical to Black-Flag's.
+      • WHAT IS NOT DONE is why this entry is not `[x]`: the bottle has never run the game. The trap
+        already visible in `Binaries/Win64` is `winmm.dll` sitting next to the exe with a
+        `dlllist.txt` naming `OnlineFix64.dll`. That is a proxy DLL, and it loads on Windows because
+        the application directory comes first in the DLL search order, while Wine resolves a system
+        name to its BUILTIN first. Expected, NOT measured, and it is the first thing to check if the
+        game opens and the online half does not.
+      • THE UPSCALER SITUATION REPEATS BLACK FLAG'S, with the same conclusion on the same GPU: the
+        release ships DLSS 8.8.0 and the whole Streamline set, dead weight on an Arc B580, next to
+        FSR 4.1.1 and XeSS 3.0.5. XeSS is the one that runs here.
 
 - [x] Black Flag Resynced plays on Linux, and the Windows save came with it (05/09/2026). The game
       had been on the shared disk since 25/08, so what was missing was a bottle, and the bottle was

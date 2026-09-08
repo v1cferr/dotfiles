@@ -38,6 +38,39 @@ immune to modifiers.
 
 The same reasoning is why the cheatsheet is on SUPER+H and not SUPER+/.
 
+### AltGr+Q and AltGr+W need no bind at all
+
+ScrollLock is not the only way in, and on a LAPTOP it is the wrong one, because a laptop usually
+has no ScrollLock key (or hides it behind Fn), so the bind above is present and unreachable. The
+ABNT2 layout ALREADY carries both characters on level 3, on two ordinary letter keys:
+
+```text
+key <AD01> { [ q, Q, slash,    slash        ] };   Q, AltGr = "/"
+key <AD02> { [ w, W, question, question     ] };   W, AltGr = "?"
+key <AB11> { [ slash, question, degree, questiondown ] };   the key Moonlight drops
+key <RALT> { type= "ONE_LEVEL", symbols[1]= [ ISO_Level3_Shift ] };   AltGr IS right Alt
+```
+
+Measured the same way as the 97 above, `xkbcli compile-keymap --layout br --variant abnt2`:
+`<AD01>` is keycode 24, `<AD02>` is 25 and `<RALT>` is 108. So **AltGr+Q types "/" and AltGr+W
+types "?"**, over the stream and locally, with NOTHING declared: they ride on keys every keyboard
+has and that Moonlight does transmit, which is exactly what `<AB11>` is not.
+
+This is worth writing down rather than rediscovering, because the ScrollLock bind reads as if it
+were the only path and it sent me looking for a second bind when the layout already answered.
+The bind still earns its place on the desktop: a dedicated key beats a three-finger combo when
+the key is sitting there idle. What it does NOT do is cover the laptop.
+
+### SSH is not one of these surfaces
+
+An SSH session cannot be fixed from this repo, and expecting it to is a category error worth
+naming once: SSH carries BYTES, not key events, so the client resolves the physical key into a
+character with ITS OWN layout before anything reaches the wire. There is no server-side layout in
+the path, which is why `console.keyMap`, `services.xserver.xkb` and Hyprland's `kb_variant` are
+all irrelevant to it. If a character does not come out over SSH, the machine to fix is the one
+being typed on. The remote-access surfaces this section covers are Moonlight and Sunshine, where
+a virtual keyboard (`keyboard-passthrough` in `hyprctl devices`) does go through the host's xkb.
+
 ## The scrolling layout's tape
 
 `move` scrolls the VIEW without touching the focus; with `follow_mouse=1` passing the mouse over

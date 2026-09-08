@@ -9,6 +9,17 @@ let
     okular = "org.kde.okular.desktop";
     vlc = "vlc.desktop";
   };
+
+  # My oldest playlist, still updated today. Named once: two aliases below read it.
+  playlist = "https://www.youtube.com/playlist?list=PLFxBBkriBXUVCKyD3LKYZRAACJX67A-ng";
+
+  # 1080p ceiling. av01 is NO LONGER excluded: that was an NVIDIA-era workaround and the Arc
+  # B580 decodes AV1 in hardware (`vainfo`: VAProfileAV1Profile0, VAEntrypointVLD).
+  ytFormat = "bestvideo[height<=1080]+bestaudio/best[height<=1080]";
+  ytRetries = "extractor-retries=3,fragment-retries=3,retries=3"; # a flaky CDN is the normal case
+  # hwdec and vo are ABSENT on purpose: they belong to programs.mpv below, one owner (rule 14).
+  ytVideo = ''mpv --profile=fast --cache=yes --ytdl-raw-options="${ytRetries}" --ytdl-format="${ytFormat}"'';
+  ytAudio = "mpv --no-video --force-window=no --ytdl-format=bestaudio";
 in
 {
   home.packages = with pkgs; [
@@ -26,6 +37,15 @@ in
       hwdec = "auto-safe"; # it decodes on the GPU when that is safe (it spares the CPU)
       vo = "gpu-next"; # a modern video output (better HDR/tone-mapping on Wayland)
     };
+  };
+
+  # The YouTube aliases, next to the tool that runs them (the flameshot.nix convention).
+  # `yttui` did NOT come back: it aliased a `yt` binary this tree does not declare.
+  programs.zsh.shellAliases = {
+    ytmix = ''${ytAudio} --save-position-on-quit=no --shuffle "${playlist}"''; # the playlist, audio only
+    ytvideo = ''${ytVideo} --shuffle "${playlist}"''; # the playlist, up to 1080p
+    ytaudio = ytAudio; # any link, audio only (a URL is the argument)
+    ytwatch = ytVideo; # any link, up to 1080p
   };
 
   # The default apps per file type. It merges with xdg.nix and office.nix.

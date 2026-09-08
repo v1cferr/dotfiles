@@ -106,6 +106,21 @@ WORSE than one column. Per invocation it still works: `git diff --side-by-side`.
 (home-manager#9349) is turning the automatic integration off and reinjecting at mkOrder 2000,
 after every mkAfter, so the doctor is genuinely satisfied with nothing silenced.
 
+### atuin takes Ctrl+R from fzf, and it is LOAD ORDER that decides
+
+Both bind `^R`, so whichever initializes LAST wins, and neither module says so out loud.
+Measured in the pinned home-manager: fzf injects at `mkOrder 910` (its own comment explains it,
+oh-my-zsh is 800 and would otherwise take precedence) and atuin injects with NO `mkOrder`, which
+lands at the default 1000. So 910 then 1000 then zoxide's 2000, and atuin wins.
+
+It works out with nothing declared, which is exactly why it is written down: if fzf's order ever
+moves past 1000, Ctrl+R silently goes back to `fzf-history-widget` and nothing fails. The other
+fzf bindings are untouched, since atuin only claims `^R`: Ctrl+T (file) and Alt+C (cd) stay.
+
+Two halves of atuin are STATE and not declarable (rule 6): `atuin login` for the sync account,
+and `atuin import auto` to pull the existing `~/.zsh_history` into the database. Until the
+import runs, the search is empty and it looks broken rather than new.
+
 ### And `_ZO_DOCTOR=0` on top of that, which is NOT undoing the fix above
 
 MEASURED on 08/09/2026, because the warning kept showing up in Claude Code's output long after

@@ -27,7 +27,19 @@
   programs.zsh.initContent = lib.mkOrder 2000 ''
     eval "$(${pkgs.zoxide}/bin/zoxide init zsh --cmd cd)"
   '';
-  programs.fzf.enable = true; # a fuzzy finder: Ctrl+R (history), Ctrl+T (file), Alt+C (cd)
+  programs.fzf.enable = true; # a fuzzy finder: Ctrl+T (file), Alt+C (cd); atuin takes Ctrl+R below
+  # atuin: the history in SQLite, so Ctrl+R searches with exit code, duration and cwd per entry.
+  # It WINS Ctrl+R from fzf by load order, and the archived config: docs/notes/repo/shell.md
+  programs.atuin = {
+    enable = true;
+    # ONLY what differs from `atuin default-config` (18.15.2). filter_mode, enter_accept,
+    # keymap_mode and sync.records were in the Arch file and are already the defaults.
+    settings = {
+      style = "compact"; # inline instead of taking the whole screen (default is "auto")
+      inline_height = 20; # the compact height; the default 0 means "full screen"
+      show_help = false; # no key legend, after the first hundred searches it is just noise
+    };
+  };
   programs.yazi.enable = true; # a TUI file manager with previews (it uses bat; `y` cds on exit)
   programs.tealdeer = {
     enable = true; # `tldr <cmd>` gives practical examples (tldr in Rust)

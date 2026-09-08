@@ -1,6 +1,6 @@
 # History: september 2026
 
-5 entries. Index in [README.md](../README.md).
+6 entries. Index in [README.md](../README.md).
 
 - [x] The Bottles library stopped being a thing I had only clicked (07/09/2026). Eight programs
       across five bottles existed nowhere but in the GUI, so nothing in the repo said what a
@@ -57,6 +57,37 @@
         `Battle.net` with the dot has no `bottle.yml`, which is exactly what makes a directory
         invisible to Bottles, and it is 688 MiB of `@home` from 05/07 that nothing references.
         Left alone rather than deleted on a hunch, and written down so it stops being a mystery.
+
+- [x] Bodycam runs, and the two errors on the way were both about a DLL nobody loaded (08/09/2026).
+      The game data landed on 07/09 (the entry below); this is the bottle finally opening it, and
+      both fixes are declared in `my.games.onlineFix`, so the next repack of this kind is one list
+      entry. Full trace in [notes/apps/bottles.md](../../notes/apps/bottles.md).
+      • THE FIRST ERROR WAS THE ONE I HAD PREDICTED, `Failed to get OnlineFix interface`, and the
+        prediction was right for the right reason: the repack's `winmm.dll` sits next to the exe as
+        a proxy that loads `OnlineFix64.dll`, Windows loads it because the application directory
+        comes first in the DLL search order, and Wine prefers its builtin for a system name. So
+        the fix was never loaded, and the message reads like the fix is broken instead.
+        `WINEDLLOVERRIDES=winmm=native,builtin`, and `winecommand.py` MERGES that env var into the
+        bottle's `DLL_Overrides` instead of replacing it, which is what made the env-var route safe
+        to use when the CLI has no flag for overrides.
+      • THE SECOND ERROR WAS BETTER HIDDEN: `Failed to load original steamclient. Error code: 126`,
+        which is `ERROR_MOD_NOT_FOUND`. The fix reads a path out of
+        `HKCU\Software\Valve\Steam\ActiveProcess` and LoadLibrary's it. Static inspection was
+        USELESS here, 13 MB of packed DLL with not one readable string, so the answer came from
+        `WINEDEBUG=+loaddll` instead of from guessing.
+      • THE TRACE ANSWERED THE QUESTION I WAS ABOUT TO GET WRONG. I had written that the next step
+        would probably be installing Steam inside the bottle. It is not: `lsteamclient.dll` loads
+        as a BUILTIN from GE-Proton and forwards Steam API traffic to the client running on the
+        HOST, so opening the ordinary Linux Steam is what made the game come up. Nothing goes in
+        the prefix except two symlinks to the Windows DLLs the fix insists on finding, 47 MiB that
+        follow Steam's updates instead of being copied and going stale.
+      • RUNNING THE RUNNER DIRECTLY DOES NOT WORK, and knowing why saves the next debugging hour:
+        `wine` from `runners/ge-proton11-1` dies with `/lib/ld-linux.so.2: could not open`, because
+        it needs the FHS environment the Bottles wrapper builds. So `WINEDEBUG` has to go in the
+        bottle's own `Environment_Variables`, since `Limit_System_Environment` drops anything not
+        on the inherited list.
+      • WHAT IS NOT DECLARED, because it is not config: this game wants the Linux Steam client
+        RUNNING. 6m40s of play with it open.
 
 - [~] Bodycam is on the shared disk and declared, and nothing has launched it yet (07/09/2026). It
       arrived as a STEAMRIP release: one RAR5 of **55.9 GiB across 367 entries**, no installer, and

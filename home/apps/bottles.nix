@@ -8,6 +8,8 @@
 }:
 
 let
+  inherit (config.lib.file) mkOutOfStoreSymlink;
+
   # Rule 19: what this module reaches for, named once.
   inherit (pkgs)
     bottles
@@ -24,6 +26,13 @@ let
   bottlesApp = bottles.override { removeWarningPopup = true; };
 
   bottlesDir = "${config.home.homeDirectory}/.local/share/bottles/bottles";
+
+  # The two Windows DLLs an OnlineFix repack insists on LoadLibrary'ing. Symlinks into the Steam
+  # that is already installed, since they weigh 47 MiB and this way they follow its updates.
+  steamclients = [
+    "steamclient64.dll"
+    "steamclient.dll"
+  ];
 
   # The DIRECTORY, which is not the name the bottle shows ("Battle.net"). See the notes.
   battlenet = "Battlenet";
@@ -136,6 +145,12 @@ let
   };
 in
 {
+  options.my.games.onlineFix = lib.mkOption {
+    type = lib.types.listOf lib.types.str;
+    default = [ ];
+    description = "Bottle directories whose game is an OnlineFix repack (see the notes).";
+  };
+
   options.my.games.library = lib.mkOption {
     default = { };
     description = "The name Bottles SHOWS mapped to what it needs to list the program.";
@@ -162,6 +177,21 @@ in
 
   config = {
     home.packages = [ bottlesApp ];
+
+    # The Bodycam repack, and the only bottle that needs any of this so far.
+    my.games.onlineFix = [ "Bodycam" ];
+
+    # MEASURED with `WINEDEBUG=+loaddll` on 08/09: the game dir's WINMM.dll loads native, it loads
+    # OnlineFix64.dll, and that one LoadLibrary's this steamclient64.dll by its registry path.
+    home.file = lib.mkMerge (
+      lib.concatMap (
+        d:
+        map (dll: {
+          ".local/share/bottles/bottles/${d}/drive_c/Program Files (x86)/Steam/${dll}".source =
+            mkOutOfStoreSymlink "${config.home.homeDirectory}/.local/share/Steam/${dll}";
+        }) steamclients
+      ) config.my.games.onlineFix
+    );
 
     # WHERE EACH ARGUMENT COMES FROM: the entries that already existed were read back out of
     # bottle.yml, and the two new ones from the .lnk Battle.net itself wrote in the prefix.
@@ -213,6 +243,31 @@ in
           run ${lib.getExe libraryAdd} ${lib.escapeShellArg p.dir} ${lib.escapeShellArg name}
         '') config.my.games.library
       )
+    );
+
+    # AN ONLINEFIX REPACK NEEDS TWO THINGS Wine does not give it: `winmm` resolved to the proxy
+    # next to the exe, and a real steamclient at the path the registry names. Both idempotent.
+    home.activation.bottlesOnlineFix = lib.hm.dag.entryAfter [ "writeBoundary" ] (
+      lib.concatMapStrings (d: ''
+        yml=${lib.escapeShellArg "${bottlesDir}/${d}/bottle.yml"}
+        reg=${lib.escapeShellArg "${bottlesDir}/${d}/user.reg"}
+        if [ -f "$yml" ]; then
+          name="$(sed -n 's/^Name: //p' "$yml")"
+
+          # `winmm` BUILTIN wins by default, and then nothing loads OnlineFix64.dll at all: the
+          # error is `Failed to get OnlineFix interface`. Only the key is checked, not the value.
+          if ! grep -q '^    WINEDLLOVERRIDES:' "$yml"; then
+            run ${bottlesApp}/bin/bottles-cli edit -b "$name"               --env-var 'WINEDLLOVERRIDES=winmm=native,builtin'
+          fi
+
+          # Without these the fix dies with `Failed to load original steamclient. Error code: 126`,
+          # which is ERROR_MOD_NOT_FOUND: it reads the path here and the file was not there.
+          if [ -f "$reg" ] && ! grep -q '"SteamClientDll64"' "$reg"; then
+            run ${bottlesApp}/bin/bottles-cli reg add -b "$name"               -k 'HKEY_CURRENT_USER\Software\Valve\Steam\ActiveProcess'               -v SteamClientDll64 -t REG_SZ               -d 'C:\Program Files (x86)\Steam\steamclient64.dll'
+            run ${bottlesApp}/bin/bottles-cli reg add -b "$name"               -k 'HKEY_CURRENT_USER\Software\Valve\Steam\ActiveProcess'               -v SteamClientDll -t REG_SZ               -d 'C:\Program Files (x86)\Steam\steamclient.dll'
+          fi
+        fi
+      '') config.my.games.onlineFix
     );
   };
 }

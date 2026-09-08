@@ -149,3 +149,49 @@ It is almost certainly the first attempt at the Battle.net bottle, kept when the
 created under the name that produced the `Battlenet` directory. Nothing here references it, and it
 sits inside `@home`, so it is 688 MiB of snapshot weight for nothing. It is listed here rather than
 deleted because deleting somebody's prefix on a hunch is how a save disappears.
+
+## An OnlineFix repack needs two things Wine does not give it
+
+Bodycam is a STEAMRIP release whose multiplayer runs through OnlineFix, and getting it to open cost
+two distinct fixes. Both are declared in `my.games.onlineFix`, which is a list of bottle
+directories, so the next repack is one entry and not another afternoon.
+
+**`winmm` has to resolve to the proxy next to the exe.** The repack ships a `winmm.dll` in
+`Binaries/Win64` with a `dlllist.txt` naming `OnlineFix64.dll`: on Windows that loads because the
+application directory comes first in the DLL search order, and Wine prefers its BUILTIN for a
+system name, so nothing ever loads the fix. The symptom is a dialog saying
+`Failed to get OnlineFix interface`, which reads like the fix is broken when it was never loaded.
+The bottle carries `WINEDLLOVERRIDES=winmm=native,builtin`, set through `bottles-cli edit`, because
+the CLI has no DLL-override flag; `winecommand.py` merges that environment variable into the
+bottle's own `DLL_Overrides` rather than replacing it, which is what makes the env-var route safe.
+
+**The fix then LoadLibrary's the real steamclient by its registry path.** Missing, it says
+`Failed to load original steamclient. Error code: 126`, which is `ERROR_MOD_NOT_FOUND`. So
+`HKCU\Software\Valve\Steam\ActiveProcess` gets `SteamClientDll64` and `SteamClientDll`, and the
+two Windows DLLs are placed at `C:\Program Files (x86)\Steam\` as out-of-store symlinks into the
+Steam that is already installed on this machine. Symlinks and not copies: they weigh 47 MiB
+together and this way they follow Steam's updates instead of going stale.
+
+### What the load trace proved, and why no Steam goes inside the bottle
+
+MEASURED with `WINEDEBUG=+loaddll` on 08/09/2026, in this order:
+
+| Module | Where from | Kind |
+| --- | --- | --- |
+| `WINMM.dll` | the game's `Binaries/Win64` | native |
+| `OnlineFix64.dll` | same folder, loaded BY the proxy | native |
+| `steamclient64.dll` | `C:\Program Files (x86)\Steam` | native |
+| `lsteamclient.dll` | `C:\windows\system32` | builtin |
+
+That last line is the answer to the question the error messages made look hard. `lsteamclient` is
+GE-Proton's own bridge, and it forwards Steam API traffic to the Steam client running on the HOST,
+which is why the game came up the moment the ordinary Linux Steam was open and why **nothing has to
+be installed inside the prefix**. The `fixme:steamclient:manual_convert_...` line in the same trace
+is that bridge doing the conversions.
+
+The cost of that is a runtime dependency worth stating plainly: this game wants the Linux Steam
+client RUNNING. It is not declared anywhere, because it is not config, it is something to remember.
+
+The idempotency checks are the same kind as everywhere else here: the env var is looked for BY KEY
+in `bottle.yml`, so a value changed by hand is left alone, and `SteamClientDll64` is looked for in
+`user.reg`. The DLL symlinks need no check at all, since home-manager owns those two paths.

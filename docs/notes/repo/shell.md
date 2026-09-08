@@ -106,6 +106,38 @@ WORSE than one column. Per invocation it still works: `git diff --side-by-side`.
 (home-manager#9349) is turning the automatic integration off and reinjecting at mkOrder 2000,
 after every mkAfter, so the doctor is genuinely satisfied with nothing silenced.
 
+### And `_ZO_DOCTOR=0` on top of that, which is NOT undoing the fix above
+
+MEASURED on 08/09/2026, because the warning kept showing up in Claude Code's output long after
+mkOrder 2000 had fixed the real problem, and the two look identical on screen.
+
+What the doctor actually tests is one line, and it is not about init order at all:
+
+```zsh
+[[ ${chpwd_functions[(Ie)__zoxide_hook]:-} -eq 0 ]] || return 0
+```
+
+`(Ie)` returns the INDEX of `__zoxide_hook` in `chpwd_functions`, or 0 when it is absent, so
+`-eq 0` means "not registered", the `return` is skipped and it prints. It runs from INSIDE the
+`cd` function (`--cmd cd`), never at init, so it can only ever fire on an actual `cd`.
+
+In the interactive shell it is satisfied, and that is the measurement that matters:
+`zsh -i -c 'print -r -- $chpwd_functions'` gives `_direnv_hook __zoxide_hook`, the hook present
+and LAST. Sourcing `.zshrc` in a non-interactive shell gives the same array. Nothing warns.
+
+What warns is an AGENT'S SHELL, and the reason is worth knowing before blaming this config:
+Claude Code does not re-source `.zshrc` per command, it replays a snapshot of the shell's
+functions from `~/.claude/shell-snapshots/`. That snapshot carries every zoxide function, the
+`cd` wrapper and the doctor included, and its ONLY mention of `chpwd_functions` is the doctor's
+own test quoted above. So the wrapper exists, the registration never re-runs, and `cd` reports a
+hook that genuinely is missing THERE.
+
+Which makes it a true statement about a shell I do not control and a false one about this repo.
+It is also the behavior I would pick anyway: directories an agent visits should not enter my
+frecency database. `home.sessionVariables` is inherited by every child process, so the variable
+reaches that shell where a guard inside `.zshrc` never could. The mkOrder 2000 reinjection STAYS,
+and removing it would bring the real problem back with the warning now muted.
+
 ## `notify` never takes the caller down
 
 The ntfy topic is the password: on the public ntfy.sh, whoever knows the topic name can read and

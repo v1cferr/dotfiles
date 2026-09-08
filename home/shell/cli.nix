@@ -21,6 +21,9 @@
   programs.zoxide.enable = true; # it installs the binary (the zsh init goes at the end, below)
   # Reinjected at the END (mkOrder 2000): HM's early init trips zoxide's doctor.
   programs.zoxide.enableZshIntegration = false;
+  # The doctor can now ONLY fire in a shell that replays functions without the chpwd hook, which
+  # is an agent's snapshot shell and not this config: docs/notes/repo/shell.md
+  home.sessionVariables._ZO_DOCTOR = "0";
   programs.zsh.initContent = lib.mkOrder 2000 ''
     eval "$(${pkgs.zoxide}/bin/zoxide init zsh --cmd cd)"
   '';

@@ -52,7 +52,7 @@
     czkawka # finds what is DISPOSABLE (duplicates, empties), where filelight only shows size
 
     # ── CLIs ──
-    gh # the GitHub CLI, and the credential helper for git over HTTPS
+    # gh owns its package in home/shell/git.nix (it IS git's credential helper there).
     azure-cli # the ONLY path to the Entra ID App Registration; the Azure MCP does not cover it
     unstable.yt-dlp # it breaks when the sites change
     unstable.speedtest-cli # it follows speedtest.net's changes

@@ -12,6 +12,10 @@
     settings.aliases.co = "pr checkout";
   };
 
+  # `force` because the token export below runs gh on EVERY shell start, and gh writes a stub
+  # config when the file is missing, so it wins the race against activation: notes/repo/packages.md
+  xdg.configFile."gh/config.yml".force = true;
+
   # The github MCP reads the token ONLY from this env var; it reuses gh's, instead of a new PAT.
   # The name does not hijack `gh auth`, which reads GH_TOKEN/GITHUB_TOKEN.
   programs.zsh.initContent = lib.mkOrder 1000 ''

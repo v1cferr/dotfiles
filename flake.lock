@@ -341,6 +341,7 @@
         "pyproject-nix": "pyproject-nix",
         "quickshell": "quickshell",
         "sops-nix": "sops-nix",
+        "spicetify-nix": "spicetify-nix",
         "uv2nix": "uv2nix",
         "vscode-tarball": "vscode-tarball",
         "zen-browser": "zen-browser"
@@ -366,6 +367,27 @@
         "type": "github"
       }
     },
+    "spicetify-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "systems": "systems_2"
+      },
+      "locked": {
+        "lastModified": 1788683578,
+        "narHash": "sha256-bERpuakmPAC2b36zgXy6OXh+SkZUjbaV+vV2sPmm6p8=",
+        "owner": "Gerg-L",
+        "repo": "spicetify-nix",
+        "rev": "a4ef43fb13e3615f36e5a0935aabe8cc29363dc9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Gerg-L",
+        "repo": "spicetify-nix",
+        "type": "github"
+      }
+    },
     "systems": {
       "locked": {
         "lastModified": 1680978846,
@@ -378,6 +400,21 @@
       "original": {
         "owner": "nix-systems",
         "repo": "x86_64-linux",
+        "type": "github"
+      }
+    },
+    "systems_2": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
         "type": "github"
       }
     },

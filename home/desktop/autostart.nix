@@ -13,7 +13,6 @@ let
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
     discord
-    unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
     ;
 
   # The apps table: adding one is 1 entry here plus 1 line in the panel below.
@@ -29,9 +28,9 @@ let
       desc = "file transfer over the LAN";
     };
     spotify = {
-      # unstable.* must MATCH home/packages.nix, or the autostart opens a different build from the
-      # menu. The --no-zygote flag belongs to the PACKAGE (flake.nix), so both share one owner.
-      exec = "${unstable.spotify}/bin/spotify";
+      # The SPICED package (rule 11), so the autostart cannot open an unthemed build the menu does
+      # not have. It carries --no-zygote through, since the overlay put it in postFixup.
+      exec = "${config.programs.spicetify.spicedSpotify}/bin/spotify";
       desc = "music";
       # Exiting 1 is the NORMAL path here (it escapes into its own scope). Without this, on-failure
       # restarts every 5s and the window reappears by itself.

@@ -14,5 +14,6 @@
     ./curseforge.nix # Minecraft modpacks: the package (./pkgs) plus the login scheme handler
     ./games-disk.nix # the games that live on the Windows disk, symlinked where each launcher looks
     ./bottles.nix # Bottles: the package plus the library each bottle lists (through activation)
+    ./spotify.nix # Spotify through spicetify (the theme, and the package the autostart reads)
   ];
 }

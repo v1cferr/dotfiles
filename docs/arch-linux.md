@@ -1,7 +1,9 @@
 # Arch Linux legacy
 
 A CLOSED chapter. It stays here because the archive still exists, and a repo nobody knows
-how to open is worse than a repo that was deleted.
+how to open is worse than a repo that was deleted. This page is about the DATA;
+what the old CONFIG still holds that this branch does not is measured in
+[arch-parity-audit.md](arch-parity-audit.md).
 
 > These are my legacy Arch Linux configs, which we are migrating entirely to Nix and NixOS
 > so that everything is declarative instead of manual, and so that it works on any hardware

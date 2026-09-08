@@ -15,6 +15,7 @@ act on (the open items) and what you look up (the history) have different rhythm
 | [notes/](notes/) | One page per module: why it is the way it is, and the traps | "Why is THIS module like this?" |
 | [ideas.md](ideas.md) | Considered, not decided yet | When planning |
 | [arch-linux.md](arch-linux.md) | A closed chapter + how to open the archive | Rarely |
+| [arch-parity-audit.md](arch-parity-audit.md) | `main` against `nixos`, area by area: what was ported, replaced, dropped and still missing | Before retiring the Arch refs |
 | [guides/](guides/) | Step by step for what Nix cannot reach (BIOS, Secure Boot, router, Windows), plus the reusable TEST protocols | When reinstalling, working outside the repo, or validating a change |
 
 ## Conventions

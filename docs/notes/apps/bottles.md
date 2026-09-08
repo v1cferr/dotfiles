@@ -32,8 +32,13 @@ Two things about it worth knowing before it surprises you:
 - **Close Bottles before a rebuild that will add tiles.** The app holds `library.yml` in memory and
   writes the whole file, so an append made while it is open is lost the next time it saves. The
   next rebuild puts the tiles back, which makes this annoying rather than dangerous.
-- **A new tile has no cover art** (`thumbnail: null`) and shows as a text tile, the way the
-  Ascension Launcher one always has. The art is fetched by the app, not by us.
+- **The cover art is fetched when the tile is created, and only then.** Bottles resolves it
+  through a proxy of its own, `steamgrid.usebottles.com/api/search/<name>`, which answers with a
+  SteamGridDB url; the image lands in `bottles/<dir>/grids/<uuid>.png` and the entry says
+  `thumbnail: grid:<file>`. The request is BEST EFFORT with an 8 second cap, because a rebuild
+  must never hang on somebody's CDN: on a failure the tile is a text tile, exactly as it was
+  before, and the way to retry is to remove the tile so the next rebuild recreates it. Steady
+  state makes ZERO requests, since an entry that already exists is skipped before any of this.
 
 ## The split, and why it is not arbitrary
 

@@ -24,6 +24,12 @@
         no CLI subcommand covers that file at all. `bottles-library-add` does it, as a package so
         shellcheck sees the awk (rule 7). Validated by parsing the result back: eight entries,
         each id resolving to a program with a matching name in the right bottle.
+      • THE TILES CAME UP BLANK, and the covers turned out to be declarable too. Bottles resolves
+        art through a proxy of its own (`steamgrid.usebottles.com/api/search/<name>`) and saves it
+        under `bottles/<dir>/grids/`, so the script does the same when it creates a tile: 8 second
+        cap, failure leaves a text tile, and an entry that already exists is skipped before any
+        request, so the steady state touches the network zero times. It answered for all eight
+        names, `Battle.net` and `Ascension Launcher` included, 219 to 899 KiB each.
       • THE FIRST SWITCH FAILED, and the reason is worth more than the fix: `-l` takes a value
         that starts with `--` and argparse reads it as another option, so
         `-l '--productcode=pro'` dies with `expected one argument` and takes the whole

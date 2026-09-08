@@ -12,9 +12,11 @@ let
   inherit (pkgs)
     bottles
     coreutils
+    curl
     gawk
     gnugrep
     gnused
+    jq
     writeShellApplication
     ;
 
@@ -54,9 +56,11 @@ let
     name = "bottles-library-add";
     runtimeInputs = [
       coreutils
+      curl
       gawk
       gnugrep
       gnused
+      jq
     ];
     text = ''
       dir="$1"
@@ -91,6 +95,29 @@ let
         : > "$lib"
       fi
 
+      # THE COVER comes from Bottles' own proxy, the endpoint its GUI calls. BEST EFFORT on
+      # purpose: no art is a text tile, and a rebuild must never hang on somebody's CDN.
+      thumb=""
+      endpoint="https://steamgrid.usebottles.com/api/search/$(jq -rn --arg s "$program" '$s|@uri')"
+      if raw="$(curl -fsS --max-time 8 "$endpoint" 2>/dev/null)"; then
+        url="$(printf '%s' "$raw" | jq -r 'if type == "string" then . else empty end' 2>/dev/null || true)"
+        if [ -n "$url" ]; then
+          # The extension comes off the URL, and anything unexpected is treated as a png.
+          case "''${url##*.}" in
+            png | jpg | jpeg | webp) ext="''${url##*.}" ;;
+            *) ext=png ;;
+          esac
+          file="$(cat /proc/sys/kernel/random/uuid).$ext"
+          grids="${bottlesDir}/$dir/grids"
+          mkdir -p "$grids"
+          if curl -fsS --max-time 20 -o "$grids/$file" "$url" 2>/dev/null && [ -s "$grids/$file" ]; then
+            thumb="grid:$file"
+          else
+            rm -f "$grids/$file"
+          fi
+        fi
+      fi
+
       {
         printf '%s:\n' "$(cat /proc/sys/kernel/random/uuid)"
         printf '  bottle:\n'
@@ -99,7 +126,11 @@ let
         printf '  icon: ""\n'
         printf '  id: %s\n' "$id"
         printf '  name: "%s"\n' "$(quote "$program")"
-        printf '  thumbnail: null\n'
+        if [ -n "$thumb" ]; then
+          printf '  thumbnail: "%s"\n' "$thumb"
+        else
+          printf '  thumbnail: null\n'
+        fi
       } >> "$lib"
     '';
   };

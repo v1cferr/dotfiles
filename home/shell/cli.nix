@@ -32,6 +32,12 @@
   # It WINS Ctrl+R from fzf by load order, and the archived config: docs/notes/repo/shell.md
   programs.atuin = {
     enable = true;
+    # It grabs THREE keys by default, not just Ctrl+R. Two are given back: the up arrow keeps
+    # walking this shell's history, and `?` stays a character (measured: docs/notes/repo/shell.md).
+    flags = [
+      "--disable-up-arrow"
+      "--disable-ai"
+    ];
     # ONLY what differs from `atuin default-config` (18.15.2). filter_mode, enter_accept,
     # keymap_mode and sync.records were in the Arch file and are already the defaults.
     settings = {

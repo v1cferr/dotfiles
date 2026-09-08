@@ -114,12 +114,37 @@ oh-my-zsh is 800 and would otherwise take precedence) and atuin injects with NO 
 lands at the default 1000. So 910 then 1000 then zoxide's 2000, and atuin wins.
 
 It works out with nothing declared, which is exactly why it is written down: if fzf's order ever
-moves past 1000, Ctrl+R silently goes back to `fzf-history-widget` and nothing fails. The other
-fzf bindings are untouched, since atuin only claims `^R`: Ctrl+T (file) and Alt+C (cd) stay.
+moves past 1000, Ctrl+R silently goes back to `fzf-history-widget` and nothing fails. fzf's other
+bindings survive either way, because they are different keys: Ctrl+T (file) and Alt+C (cd).
 
-Two halves of atuin are STATE and not declarable (rule 6): `atuin login` for the sync account,
-and `atuin import auto` to pull the existing `~/.zsh_history` into the database. Until the
-import runs, the search is empty and it looks broken rather than new.
+### It grabs THREE keys, and two are given back
+
+CORRECTED on 08/09/2026, because the first version of this page said atuin "only claims `^R`"
+and that is false. Read from `atuin init zsh` itself, it binds:
+
+- `^r` to `atuin-search`, which is the point of installing it
+- **`^[[A` and `^[OA`, the UP ARROW**, to `atuin-up-search`
+- **`?` to `self-atuin-ai-question-mark`**, which on an EMPTY buffer runs `atuin ai inline`
+  instead of typing the character (with text already on the line it falls through to
+  `self-insert`, so `?` mid-command still works)
+
+`atuin init zsh --help` offers exactly one flag per binding, and two are passed in `cli.nix`:
+`--disable-up-arrow`, because the up arrow is the most muscle-memory-bound key in a shell and
+walking THIS session's history is what it should keep doing, and `--disable-ai`, because a key
+that is already awkward to type over Moonlight should not also be a trigger
+([`keybinds.md`](../desktop/keybinds.md)). `--disable-ctrl-r` exists too and is NOT passed, since
+that binding is the reason atuin is here.
+
+### It does NOT touch `~/.zsh_history`
+
+Worth stating because it is the first thing to worry about, and the answer is measured:
+`atuin init zsh` contains ZERO mentions of `HISTFILE`, `HISTSIZE`, `SAVEHIST` or any `setopt`. It
+registers a `preexec` and a `precmd` hook and records into its own SQLite, in PARALLEL. zsh keeps
+writing its flat file exactly as before, so the two coexist and nothing is converted.
+
+`atuin import auto` READS that file into the database and does not write to it. Both it and
+`atuin login` (the sync account) are STATE and not declarable (rule 6). Until the import runs the
+search is empty, which reads as broken rather than new.
 
 ### And `_ZO_DOCTOR=0` on top of that, which is NOT undoing the fix above
 

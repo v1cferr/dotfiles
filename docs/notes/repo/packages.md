@@ -178,3 +178,47 @@ one hash covers both trees. It is a real check and not a formality: every servic
 this host, so all the touched modules do evaluate, and a name attributed to the wrong scope fails
 loudly (`undefined variable`, or a missing attribute in the `inherit`) instead of silently building
 something else.
+
+## Adopting `programs.<app>` breaks the FIRST switch, and that is the module working
+
+Hit on 08/09/2026 with gh and atuin, and it will happen again with every module adopted for an
+app that has already run on this machine. The switch dies like this:
+
+```text
+Existing file '/home/v1cferr/.config/gh/config.yml' would be clobbered
+Existing file '/home/v1cferr/.config/atuin/config.toml' would be clobbered
+warning: the following units failed: home-manager-v1cferr.service
+```
+
+That is rule 14 DEFENDING ITSELF: the file has an owner and it is not Nix yet, so home-manager
+refuses to become a second one silently. The failure is the correct behavior and the temptation
+is to reach for `force = true` to make it go away, which would make Nix win on every activation
+and quietly discard whatever the app writes from then on.
+
+**The fix for an ADOPTION is one move, not a config change**, because the conflict exists only
+while a real file sits where the symlink goes. Read the file first, confirm what would be lost,
+then move it aside and switch:
+
+```bash
+mv ~/.config/gh/config.yml ~/.config/gh/config.yml.pre-hm
+```
+
+Both files that day held NOTHING worth keeping, which is the part to check rather than assume:
+gh's 27 lines were its own defaults plus the one alias now declared in
+[`home/shell/git.nix`](../../../home/shell/git.nix), and atuin's was the default template.
+
+**Do not sweep up the neighbours.** `~/.config/gh/hosts.yml` is the auth token, it is STATE
+(rule 6) and no module manages it. And a directory sitting where a `recursive = true` entry
+points is EXPECTED, not a conflict: `xdg.configFile.Kvantum` is recursive, so `~/.config/Kvantum`
+is a real directory whose contents are individually linked.
+
+**The pre-flight that avoids a second failed switch**, since the error names one file at a time
+and `xdg.configFile` is a separate option from `home.file`:
+
+```bash
+nix eval --json '.#nixosConfigurations.nixos-kingston.config.home-manager.users.v1cferr.xdg.configFile' \
+  | jq -r 'keys[]' | while read -r f; do
+      p="$HOME/.config/$f"
+      [ -e "$p" ] && [ ! -L "$p" ] && [ ! -d "$p" ] && echo "CONFLICT: $p"
+    done
+```

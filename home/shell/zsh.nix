@@ -1,6 +1,6 @@
 # The zsh config (~/.zshrc). The LOGIN shell is set in system/core/users.nix.
 # Why the aliases are composed and why the flake path is explicit: docs/notes/repo/shell.md
-{ osConfig, ... }:
+{ osConfig, lib, ... }:
 
 let
   # SSOT of the repo path (rule 11): programs.nh.flake, read here through osConfig.
@@ -51,4 +51,29 @@ in
       "..." = "cd ../..";
     };
   };
+
+  # The terminal editor for git, `systemctl edit` and visudo. Set ONCE here and NOT also as
+  # git's core.editor, which would be a second owner of the same decision (rule 14).
+  home.sessionVariables.EDITOR = "vim";
+
+  # 1500 and not the tail: mkOrder 2000 belongs to zoxide's init (see cli.nix).
+  # Only the TWO bindings that were measured missing came back from the Arch shell; Home, End,
+  # Delete and the arrows are already bound, so porting those would be dead config (rule 16).
+  programs.zsh.initContent = lib.mkOrder 1500 ''
+    bindkey "^[[1;5C" forward-word   # Ctrl+Right: jump a word forward
+    bindkey "^[[1;5D" backward-word  # Ctrl+Left: jump a word back
+
+    # Esc Esc prefixes (or strips) sudo on the line being typed. With an EMPTY line it pulls the
+    # previous command first, which is the case it actually gets used for.
+    sudo-command-line() {
+      [[ -z $BUFFER ]] && zle up-history
+      if [[ $BUFFER == sudo\ * ]]; then
+        LBUFFER="''${LBUFFER#sudo }"
+      else
+        LBUFFER="sudo $LBUFFER"
+      fi
+    }
+    zle -N sudo-command-line
+    bindkey "\e\e" sudo-command-line
+  '';
 }

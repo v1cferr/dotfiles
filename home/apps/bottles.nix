@@ -108,9 +108,11 @@ in
           yml=${lib.escapeShellArg "${bottlesDir}/${p.dir}/bottle.yml"}
           # No bottle, nothing to do: a prefix is STATE (rule 6), restored from backup, not declared.
           if [ -f "$yml" ] && ! grep -qF ${lib.escapeShellArg "name: ${name}"} "$yml"; then
+            # `--launch-options=` and NEVER `-l`: argparse reads a value starting with `--` as
+            # another option, and every Battle.net command line here starts with one.
             run ${bottlesApp}/bin/bottles-cli add -b "$(sed -n 's/^Name: //p' "$yml")" \
               -n ${lib.escapeShellArg name} -p ${lib.escapeShellArg p.path} \
-              ${lib.optionalString (p.arguments != "") "-l ${lib.escapeShellArg p.arguments}"}
+              ${lib.optionalString (p.arguments != "") "--launch-options=${lib.escapeShellArg p.arguments}"}
           fi
         '') config.my.games.library
       )

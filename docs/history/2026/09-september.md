@@ -15,6 +15,13 @@
         and a managed file there would be a second owner (rule 14). Same shape as `dolphinPlaces`:
         insert only what is missing. Checked before trusting it, `bottles-cli add` produces an
         entry identical to the GUI's, down to `folder` and the dxvk flags.
+      • THE FIRST SWITCH FAILED, and the reason is worth more than the fix: `-l` takes a value
+        that starts with `--` and argparse reads it as another option, so
+        `-l '--productcode=pro'` dies with `expected one argument` and takes the whole
+        home-manager activation with it. `--launch-options=<value>` is the form that survives.
+        What made this hide until the switch is that the same command typed BY HAND had worked,
+        because the entries I tested by hand were the ones with no arguments; three of the eight
+        carry Battle.net command lines and all three would have failed.
       • THE NAME IS NOT THE DIRECTORY, and this is what makes the CLI look broken:
         `bottles-cli add -b Battlenet` answers `Bottle Battlenet not found` with the bottle sitting
         right there, because the directory is `Battlenet` and the `Name:` inside its `bottle.yml`

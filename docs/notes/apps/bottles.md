@@ -1,7 +1,39 @@
-# Bottles: the library is declared, the prefixes are not
+# Bottles: the programs are declared, the prefixes are not
 
-`home/apps/bottles.nix` owns the package and the list of programs each bottle shows.
-[games-disk.md](../boot-and-storage/games-disk.md) covers where the game DATA lives.
+`home/apps/bottles.nix` owns the package, the programs each bottle lists and the tiles in the
+Library tab. [games-disk.md](../boot-and-storage/games-disk.md) covers where the game DATA lives.
+
+## TWO FILES, and confusing them costs an afternoon
+
+"The library" is two different things in Bottles, they live in two files, and declaring one does
+nothing for the other:
+
+| What you see | Where it lives | What it holds |
+| --- | --- | --- |
+| the program list on a bottle's own page | `bottles/<dir>/bottle.yml`, key `External_Programs` | the exe, its arguments, dxvk/vkd3d per program |
+| the tiles in the **Library** tab | `library.yml`, next to the `bottles/` folder | one entry per tile, pointing at a program by UUID |
+
+MEASURED the hard way on 08/09/2026: all eight programs were declared and registered, every one of
+them visible on its bottle's page, and the Library tab still showed THREE tiles. `library.yml` had
+never been touched, because nothing in `External_Programs` implies a tile.
+
+**The Library entry references the program by the UUID `bottles-cli add` generated**, which is why
+it cannot simply be declared: the id is created at add time and lives only in the prefix. So the
+entry is built by reading that uuid back out of `bottle.yml`, and the module can only ever say
+"this program belongs in the Library", never "this is its id".
+
+`bottles-cli` has no library subcommand at all (`info list programs add tools reg reg-rules edit
+new run standalone shell`), so this is the one file here written without the app's own API, by
+`bottles-library-add`. It is a package and not activation text because the parsing needs awk, and
+rule 7 wants that logic in the build where shellcheck sees it.
+
+Two things about it worth knowing before it surprises you:
+
+- **Close Bottles before a rebuild that will add tiles.** The app holds `library.yml` in memory and
+  writes the whole file, so an append made while it is open is lost the next time it saves. The
+  next rebuild puts the tiles back, which makes this annoying rather than dangerous.
+- **A new tile has no cover art** (`thumbnail: null`) and shows as a text tile, the way the
+  Ascension Launcher one always has. The art is fetched by the app, not by us.
 
 ## The split, and why it is not arbitrary
 
@@ -9,13 +41,13 @@ A bottle is a Wine prefix, which is STATE (rule 6): it is created once, the runn
 it comes back from restic and not from a rebuild. Declaring one would mean owning a tree of tens of
 thousands of files that Wine rewrites at will.
 
-What IS declarable is the answer to "which programs does this bottle list", because that is a short
-list of names, paths and command lines, and it is exactly what a restore loses: the prefix comes
-back from backup with its library intact only if the backup caught it, and nothing says what SHOULD
-be there.
+What IS declarable is the answer to "which programs does this bottle list, and which of them get a
+tile", because that is a short list of names, paths and command lines, and it is exactly what a
+restore loses: the prefix comes back from backup with its programs intact only if the backup caught
+it, and nothing says what SHOULD be there.
 
-So the module declares `my.games.library` and an activation inserts what is missing. It never
-writes `bottle.yml`.
+So the module declares `my.games.library` and an activation inserts what is missing, into both
+files. It never OWNS either of them.
 
 ## Why activation and not a managed file
 

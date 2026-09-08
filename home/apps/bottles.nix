@@ -9,7 +9,14 @@
 
 let
   # Rule 19: what this module reaches for, named once.
-  inherit (pkgs) bottles;
+  inherit (pkgs)
+    bottles
+    coreutils
+    gawk
+    gnugrep
+    gnused
+    writeShellApplication
+    ;
 
   # The popup on every launch is noise; this override used to sit in home/packages.nix.
   bottlesApp = bottles.override { removeWarningPopup = true; };
@@ -39,6 +46,62 @@ let
   inBottle = dir: exe: {
     inherit dir;
     path = "${bottlesDir}/${dir}/drive_c/${exe}";
+  };
+
+  # THE LIBRARY IS A SECOND FILE and no CLI covers it, so this is what inserts into it. It exists
+  # as a package and not as activation text because the parsing needs awk (rule 7, shellcheck).
+  libraryAdd = writeShellApplication {
+    name = "bottles-library-add";
+    runtimeInputs = [
+      coreutils
+      gawk
+      gnugrep
+      gnused
+    ];
+    text = ''
+      dir="$1"
+      program="$2"
+      yml="${bottlesDir}/$dir/bottle.yml"
+      lib="${config.home.homeDirectory}/.local/share/bottles/library.yml"
+
+      # No bottle at all: a prefix is STATE (rule 6), so there is nothing to link yet.
+      [ -f "$yml" ] || exit 0
+
+      # THE ENTRY POINTS AT THE PROGRAM'S UUID, the one `bottles-cli add` generated, so it can
+      # only be read back out of the bottle. No program registered, no library entry.
+      id="$(gawk -v want="        name: $program" '
+        /^External_Programs:/ { blk = 1; next }
+        /^[A-Za-z]/ { blk = 0 }
+        blk && /^    [0-9a-f-]+:$/ { id = substr($1, 1, length($1) - 1) }
+        blk && $0 == want { print id; exit }
+      ' "$yml")"
+      [ -n "$id" ] || exit 0
+
+      # The UUID is the identity and the name is not: the same game can sit in two bottles.
+      if [ -f "$lib" ] && grep -qxF "  id: $id" "$lib"; then
+        exit 0
+      fi
+
+      bottleName="$(sed -n 's/^Name: //p' "$yml")"
+      # A DOUBLE-quoted YAML scalar, which carries an apostrophe with no escaping at all.
+      quote() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
+
+      # `{}` is what Bottles writes for an empty library, and appending after it is invalid YAML.
+      if [ ! -s "$lib" ] || [ "$(tr -d '[:space:]' < "$lib")" = "{}" ]; then
+        : > "$lib"
+      fi
+
+      {
+        printf '%s:\n' "$(cat /proc/sys/kernel/random/uuid)"
+        printf '  bottle:\n'
+        printf '    name: "%s"\n' "$(quote "$bottleName")"
+        printf '    path: "%s"\n' "$(quote "$dir")"
+        printf '  icon: ""\n'
+        printf '  id: %s\n' "$id"
+        printf '  name: "%s"\n' "$(quote "$program")"
+        printf '  thumbnail: null\n'
+      } >> "$lib"
+    '';
   };
 in
 {
@@ -114,6 +177,9 @@ in
               -n ${lib.escapeShellArg name} -p ${lib.escapeShellArg p.path} \
               ${lib.optionalString (p.arguments != "") "--launch-options=${lib.escapeShellArg p.arguments}"}
           fi
+          # THE LIBRARY IS A SEPARATE FILE from the bottle's program list, and this is the half
+          # that puts the tile in the Library tab. Idempotent, so it runs unconditionally.
+          run ${lib.getExe libraryAdd} ${lib.escapeShellArg p.dir} ${lib.escapeShellArg name}
         '') config.my.games.library
       )
     );

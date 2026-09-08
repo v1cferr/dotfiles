@@ -15,6 +15,15 @@
         and a managed file there would be a second owner (rule 14). Same shape as `dolphinPlaces`:
         insert only what is missing. Checked before trusting it, `bottles-cli add` produces an
         entry identical to the GUI's, down to `folder` and the dxvk flags.
+      • I DECLARED THE WRONG "LIBRARY" FIRST, and this is the part worth remembering. Bottles has
+        TWO of them: `External_Programs` inside each `bottle.yml`, which is the list on a bottle's
+        own page, and `library.yml` next to the `bottles/` folder, which is the Library TAB. All
+        eight programs were registered and visible on their bottles, and the tab still showed
+        three tiles. A tile REFERENCES a program by the uuid `bottles-cli add` generated, so it
+        cannot be declared outright, only built by reading that uuid back out of the prefix, and
+        no CLI subcommand covers that file at all. `bottles-library-add` does it, as a package so
+        shellcheck sees the awk (rule 7). Validated by parsing the result back: eight entries,
+        each id resolving to a program with a matching name in the right bottle.
       • THE FIRST SWITCH FAILED, and the reason is worth more than the fix: `-l` takes a value
         that starts with `--` and argparse reads it as another option, so
         `-l '--productcode=pro'` dies with `expected one argument` and takes the whole

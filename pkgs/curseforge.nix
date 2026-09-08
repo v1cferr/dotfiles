@@ -9,11 +9,11 @@
 let
   pname = "curseforge";
   # From the AppImage's `X-AppImage-Version`; curseforge-bump rewrites it.
-  version = "1.316.0-37372";
+  version = "1.320.0-39237";
 
   src = fetchurl {
     url = "https://curseforge.overwolf.com/downloads/curseforge-latest-linux.AppImage";
-    hash = "sha256-ZH4ZkFSoT8bQgcQPkszcux4gds4DHwrD7Vyub+13mgQ=";
+    hash = "sha256-ddF+Xz+xKqeMKrK1uDHCvKT29swfX1V7Dt6+/suDAxI=";
   };
 
   # extract + wrapAppImage, not wrapType2: extraInstallCommands has to READ the extracted tree.

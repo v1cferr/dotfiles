@@ -444,14 +444,14 @@
     "vscode-tarball": {
       "flake": false,
       "locked": {
-        "lastModified": 1788561488,
-        "narHash": "sha256-a9KO1L7OAEzhLFDrYfz2amMGVPjm2y397+9neON5Y+Y=",
+        "lastModified": 1788901892,
+        "narHash": "sha256-0plLUn7dvroBaT9E9ybIWcUG3etPyle5WAYtdeSWaYI=",
         "type": "tarball",
-        "url": "https://update.code.visualstudio.com/1.136.2/linux-x64/stable"
+        "url": "https://update.code.visualstudio.com/1.137.0/linux-x64/stable"
       },
       "original": {
         "type": "tarball",
-        "url": "https://update.code.visualstudio.com/1.136.2/linux-x64/stable"
+        "url": "https://update.code.visualstudio.com/1.137.0/linux-x64/stable"
       }
     },
     "zen-browser": {

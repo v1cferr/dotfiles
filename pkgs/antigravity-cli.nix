@@ -11,17 +11,17 @@
 let
   # An opaque BUILD ID sits next to the version in the URL, and only the manifest knows it.
   # antigravity-bump rewrites it together with the version and the hash.
-  buildId = "4857247478710272";
+  buildId = "5210873191596032";
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "antigravity-cli";
   # From the publisher's `latest` endpoint, which is what the bump asks.
-  version = "1.1.28";
+  version = "1.2.0";
 
   src = fetchurl {
     url = "https://storage.googleapis.com/antigravity-public/antigravity-cli/${finalAttrs.version}-${buildId}/linux-x64/cli_linux_x64.tar.gz";
     # sha512 because that is what the manifest PUBLISHES: the bump converts it and downloads nothing.
-    hash = "sha512-PbtkW7Wjlfrjqt5B6WliQDM/Sf08nOjY9u1J3dWuhpVvmo2g0Yaoa0m3BOoTDu5+x/5yPJ01oSZGI6/a7VGXXQ==";
+    hash = "sha512-0ZCyWgTtKgOwWHg4R2SUrlnQ0yTuY3MmPKvlhDUsJU+QUfNonHmsSt2IF/9us0sRaUrNdwAsVekb0dKLbf2uIg==";
   };
 
   # The tarball is ONE file at the root (`antigravity`), so there is no directory to chdir into.

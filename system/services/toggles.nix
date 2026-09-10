@@ -9,6 +9,7 @@
     "ollama"
     "duo"
     "grad-radar"
+    "credit-radar"
     "sunshine"
     "qbittorrent"
     "tor"

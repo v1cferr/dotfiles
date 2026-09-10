@@ -53,3 +53,45 @@ root.
 
 The order does not matter here: Caddy resolves the most specific prefix first, so `/api/*` and
 `/health` cannot shadow each other or the upstream.
+
+## The stack at boot
+
+`system/services/credit-radar.nix`. A `oneshot` with `RemainAfterExit` runs
+`compose up -d --wait` at boot, the same shape as `grad-radar.nix` and for the same reason: Caddy
+comes up on its own and so does Docker, but the containers do not, so without this the subdomain
+answers 502 until somebody runs compose by hand. `--wait` blocks on the healthchecks, so a green
+unit means the proxy actually has an upstream rather than a promise of one.
+
+The three Docker traps are inherited unchanged from `duo.nix`, and each cost a debugging session
+somewhere in this tree already: `after = docker.service` loses to socket activation, so the unit
+waits on `docker info` in a loop; root does not discover buildx without a writable
+`DOCKER_CONFIG` with the plugins linked in, and the build silently falls back to the legacy
+builder; and `TimeoutStartSec` has to be generous because the first start builds two images with
+a `pnpm install` and a full `next build` inside the frontend one.
+
+### Two places where this differs from grad-radar, on purpose
+
+**It serves a production build, not `next dev`.** GradRadar runs the dev server and its note
+calls that out as a conscious compromise for three people checking a deadline. CreditRadar
+already has a multi-stage image that produces Next.js standalone output, so there is no reason to
+pay the dev server's memory and first-hit latency here.
+
+**The compose keeps `restart: unless-stopped`.** GradRadar's dev compose declares `restart: "no"`
+so that containers cannot resurrect as orphans after a daemon restart, which is the right call
+for a file that a person also runs interactively with `just dev`. This compose is only ever
+driven by the unit, and `ExecStop` runs `compose down`, which REMOVES the containers, so there is
+nothing left for Docker to bring back. What `unless-stopped` buys instead is the thing the
+oneshot cannot do: a crashed backend at 3am comes back on its own, because `RemainAfterExit`
+makes systemd stop watching once the start succeeded.
+
+### Why there is no collection timer yet
+
+`grad-radar.nix` pairs its stack with a timer, because a monitor that depends on somebody
+remembering to run it is not a monitor. The same argument applies here, and the historical series
+is the whole point of the project, so this is a real gap rather than a decision.
+
+It is deliberately not filled yet: collection today is only reachable as an HTTP endpoint, so a
+timer would have to `curl` the app from outside itself, and a scheduled job whose interface is a
+URL breaks the moment a route is renamed. The step is a collection command in the backend first,
+then a timer that calls it, and re-ingestion is already idempotent (an unchanged value inserts
+nothing) so the timer will be safe to run as often as it needs to be.

@@ -9,6 +9,7 @@
     ollama = true; # local AI (the Duolingo solver)
     duo = true; # duo-streak-daemon (the automatic Duolingo streak)
     grad-radar = true; # GradRadar at boot plus the call-for-applications monitor 2x/day (V1C-72)
+    credit-radar = true; # CreditRadar at boot, reachable from home only (V1C-76)
     sunshine = true; # screen streaming for Moonlight
     qbittorrent = true; # the torrent client
     tor = true; # a local SOCKS5 at 127.0.0.1:9050 (client only; the consumer is `mega-tor`)

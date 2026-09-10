@@ -14,6 +14,7 @@
     ./ollama.nix # the local AI runtime (CPU); duo-streak-daemon's solver
     ./duo.nix # duo-streak-daemon's stack (a declarative compose; it self-activates with the secret)
     ./grad-radar.nix # GradRadar's stack at boot plus the call-for-applications monitor's timer
+    ./credit-radar.nix # CreditRadar's stack at boot (LAN only; see the `credit` ingress entry)
     ./docker.nix # the engine's weekly prune (the POLICY only; what turns docker on are the stacks)
     ./sunshine.nix # remote screen streaming (Moonlight); KMS capture, access only through WireGuard
   ];

@@ -34,6 +34,9 @@
       # `git pull` rebases the local commits on top of the remote (a linear history; it ends the
       # "divergent branches" prompt). A personal single-author repo means rebase is clean.
       pull.rebase = true;
+      # The rebase above stashes and restores a dirty working tree by itself, so editor churn
+      # (the VS Code file nesting timestamp) stops refusing the pull with "unstaged changes".
+      rebase.autoStash = true;
     };
   };
 }

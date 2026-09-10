@@ -23,7 +23,10 @@
   };
 
   # EXPOSURE: `expose` is "lan" (home plus WireGuard) or "public" (internet, subject to `auth`).
-  # Omitting it CLOSES. Today "public" is a declaration, not connectivity: this host is behind CGNAT.
+  # Omitting it CLOSES. "public" REALLY REACHES the internet: the router holds the public IP
+  # directly on `pppoe-wan` and forwards 80/443, proven on 08/08/2026 through Cloudflare's edge
+  # (docs/notes/network/network.md). The CGNAT scare of 07/08 proved FALSE, so `public` is a
+  # decision about reach and not a formality.
   my.ingress = {
     pos = {
       upstream = 3006;

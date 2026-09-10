@@ -1,6 +1,6 @@
-# CREDITRADAR: the app stack (Next.js + FastAPI + Postgres) up at BOOT, reachable only from home.
-# Why boot, why the working-tree path and why no collection timer yet:
-# docs/notes/services/credit-radar.md
+# CREDITRADAR: the app stack (Next.js + FastAPI + Postgres) up at BOOT plus the daily market
+# collection, reachable only from home. Why boot, why the working-tree path and why the
+# collection window is what it is: docs/notes/services/credit-radar.md
 {
   config,
   pkgs,
@@ -84,6 +84,45 @@ lib.mkIf config.my.services.credit-radar {
       # upstream. The one-shot migration service exiting 0 does not break it.
       ExecStart = "${dc} up -d --remove-orphans --wait";
       ExecStop = "${dc} down";
+    };
+  };
+
+  # THE COLLECTOR. Up to here the historical series only grew when somebody fired an HTTP
+  # request by hand, which for a project whose whole asset is the history is the failure it
+  # exists to avoid, only quieter.
+  systemd.services.credit-radar-collect = {
+    description = "CreditRadar: collects the market indicators once";
+    after = [ "credit-radar.service" ];
+    requires = [ "credit-radar.service" ];
+    path = [ docker ];
+    unitConfig.ConditionPathExists = composeFile;
+    serviceConfig = {
+      Type = "oneshot";
+      # `--quiet` so a day when nothing moved leaves NO line in the journal. A journal with
+      # seven "same as yesterday" entries per day is a journal nobody reads.
+      #
+      # A command and not a `curl`: a scheduled job whose interface is a URL breaks the first
+      # time a route is renamed, and this one has to keep working unattended for years.
+      ExecStart = "${dc} exec -T backend credit-radar collect --quiet";
+    };
+  };
+
+  systemd.timers.credit-radar-collect = {
+    description = "CreditRadar: daily market collection";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      # Once a day is enough: the daily series move at most once per business day and the
+      # monthly ones once a month. What each run buys beyond the newest point is the REVISION
+      # of an already-recorded period, and revisions do not arrive hourly either.
+      #
+      # 09:30 because SGS publishes with a lag, so asking before the business day has produced
+      # anything just spends a request to learn nothing.
+      OnCalendar = "09:30";
+      # The desktop spends nights and travel days off. Without this a missed day disappears
+      # forever, and a hole in the series is the one thing this project cannot backfill: the
+      # value can be re-read later, but WHAT WAS PUBLISHED ON WHICH DAY cannot.
+      Persistent = true;
+      RandomizedDelaySec = "20m";
     };
   };
 }

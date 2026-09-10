@@ -84,14 +84,46 @@ nothing left for Docker to bring back. What `unless-stopped` buys instead is the
 oneshot cannot do: a crashed backend at 3am comes back on its own, because `RemainAfterExit`
 makes systemd stop watching once the start succeeded.
 
-### Why there is no collection timer yet
+## The collector, and why the window is a year wide
 
-`grad-radar.nix` pairs its stack with a timer, because a monitor that depends on somebody
-remembering to run it is not a monitor. The same argument applies here, and the historical series
-is the whole point of the project, so this is a real gap rather than a decision.
+`credit-radar collect --quiet`, daily at 09:30. Up to here the historical series only grew when
+somebody fired an HTTP request by hand, which for a project whose entire asset is the history is
+the failure it exists to avoid, only quieter.
 
-It is deliberately not filled yet: collection today is only reachable as an HTTP endpoint, so a
-timer would have to `curl` the app from outside itself, and a scheduled job whose interface is a
-URL breaks the moment a route is renamed. The step is a collection command in the backend first,
-then a timer that calls it, and re-ingestion is already idempotent (an unchanged value inserts
-nothing) so the timer will be safe to run as often as it needs to be.
+**A command and not a `curl`.** A scheduled job whose interface is a URL breaks the first time a
+route is renamed, and this one has to keep working unattended for years. It is also the only
+version that can be tested without standing up the API.
+
+**The window is sized per indicator, not fixed.** Each run re-reads roughly thirteen months of a
+monthly series and about a month of a daily one, taken from the frequency the app's own catalog
+already records. The reason is that the point of collecting daily is not the newest point, which
+would still be there tomorrow: it is the REVISION of a period already on record. IPCA is revised
+after publication, so a narrow window would only ever confirm what the last run saw. Re-reading
+costs one request and stores nothing when the value has not changed, because an unchanged
+observation hits a unique constraint that spans the value itself.
+
+**`--quiet` so silence means "nothing moved".** Seven "same as yesterday" lines a day is a
+journal nobody reads, which is how a real failure goes unnoticed for a week. On a day with no
+change the unit writes nothing at all.
+
+**`Persistent = true`, for the reason that matters most here.** This desktop spends nights and
+travel days off. A missed run has to happen late rather than vanish, because a hole in the series
+is the one thing this project cannot repair after the fact: the VALUE of a Banco Central series
+can be re-read at any time, but what was published on which day cannot, and the credit bureaus
+coming later publish no history at all. What is not collected on the day is gone.
+
+**Once a day, at 09:30.** The daily series move at most once per business day and the monthly ones
+once a month, so more frequent runs would be load on Banco Central for nothing. The half hour is
+because SGS publishes with a lag; asking before the business day has produced anything spends a
+request to learn nothing.
+
+### One failure is data, every failure is an incident
+
+The command exits zero when a single indicator fails, and non-zero only when they all do.
+
+That split is deliberate. A flaky upstream series is already recorded as a failed collection run
+and shows up in the dashboard as a stale source, so it needs no second alarm; a unit that goes
+red because Banco Central had a bad minute trains you to ignore red units, which is the same
+lesson `ConditionPathExists` above is protecting. Every indicator failing at once is a different
+claim: it points at the network or the configuration rather than at one series, and that is worth
+a red unit.

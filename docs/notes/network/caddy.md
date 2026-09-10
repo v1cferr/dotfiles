@@ -124,6 +124,7 @@ A new project picks a free one and WRITES IT DOWN here, otherwise the next colli
 | 3000 | open-webui | 3001 | spendflow |
 | 3003 | homepage | 3004 | filebrowser |
 | 3005 | housing-radar | 3006 | GRAD-RADAR (front) |
+| 3007 | CREDIT-RADAR (front) | 8007 | CREDIT-RADAR (api) |
 | 3010 | duo-web | 8000 | spendflow-api (reserved) |
 | 8006 | GRAD-RADAR (api) | 8010 | duo-api |
 | 8080 | qbittorrent | 8096 | jellyfin |

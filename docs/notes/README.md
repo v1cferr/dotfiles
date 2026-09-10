@@ -133,6 +133,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [ollama](services/ollama.md) | local models on the Arc through Vulkan |
 | [duo](services/duo.md) | the compose stack declared in Nix, and the three Docker traps |
 | [grad-radar](services/grad-radar.md) | the stack at boot, and the monitor chain's order |
+| [credit-radar](services/credit-radar.md) | why the most sensitive service never leaves the house |
 | [docker-prune](services/docker-prune.md) | the 11 GB with no ceiling, and the two options that destroy data |
 
 ### repo

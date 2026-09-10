@@ -63,5 +63,26 @@
       expose = "lan";
       comment = "Ollama has NO native auth. `lan` is the ONLY protection; do not change it without putting auth in front.";
     };
+
+    # Why `lan` and not `public`, and why `auth` would rot here:
+    # docs/notes/services/credit-radar.md
+    credit = {
+      upstream = 3007;
+      # FastAPI owns the WHOLE `/api` prefix, the interactive docs included, so one route
+      # covers the entire backend. `/health` is the only backend path living outside it.
+      routes = {
+        "/api/*" = 8007;
+        "/health" = 8007;
+      };
+      expose = "lan";
+      # The SAME criterion as `ai`, and for a heavier reason: CreditRadar has NO auth of its
+      # own, and what it accumulates is a CPF, debts, credit scores and SCR exposure. It is
+      # the most sensitive service on this panel, so `lan` is the ONLY protection and
+      # `public` would publish a credit report. Do not change it without putting auth in
+      # front, and note that `auth` alone would NOT help here: the module applies both the
+      # 403 and the basic_auth to `@externo`, so under `lan` the gate answers first and the
+      # hashes would be dead config (rule 16).
+      comment = "CreditRadar (V1C-76), my credit position. NO auth of its own and it holds a CPF: `lan` is the only protection.";
+    };
   };
 }

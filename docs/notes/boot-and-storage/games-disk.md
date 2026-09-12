@@ -192,17 +192,32 @@ The `.ini` came over for a reason that will not generalize to another machine:
 `AdapterVendorID=32902` and `AdapterDeviceID=57867` are `0x8086` and `0xE20B`, this same Arc B580.
 The Windows session was tuned on the SAME GPU, so the quality profile transfers 1:1.
 
-### The save stays in $HOME, and that is what costs the shared progress
+### The save stays in $HOME, and what that reasoning got wrong
 
-Restic's `paths` is `/home/v1cferr` ([restic.md](restic.md)), so a save inside the prefix is backed
-up and a save on `/mnt/windows` is not. Pointing the prefix at the Windows save with a symlink would
-have given the two systems ONE progress, which is what this disk already does for the game data. It
-was rejected on 05/09 for two reasons: the save would leave restic's reach, and a `/mnt/windows`
-that fails to mount (by design, after a Windows hybrid shutdown) would leave the game with nowhere
-to write instead of failing loudly.
+Pointing the prefix at the Windows save with a symlink would have given the two systems ONE
+progress, which is what this disk already does for the game data. It was rejected on 05/09 for two
+reasons, and REVISITED on 12/09 when Victoria 3 asked the same question. Both are weaker than they
+read, and the rejection is left standing here on a third reason neither of them named.
 
-So the copy is one-way and dated: 12 files from 29/08, verified by sha256 on both sides. From here
-the two progresses diverge, and repeating the copy is the only way back.
+The first was that the save would leave restic's reach. That was already false when it was written.
+`paths` is `/home/v1cferr`, but `.local/share/bottles` sits in the EXCLUDES ([restic.md](restic.md))
+and has since 15/08, so a save inside a prefix is not backed up either. That exclusion is the whole
+reason `home/services/cs2-saves-backup.nix` exists as a job of its own. The choice was never backed
+up against not backed up, it was between two unbacked places.
+
+The second was that a `/mnt/windows` failing to mount (by design, after a Windows hybrid shutdown)
+would leave the game with nowhere to write instead of failing loudly. But the GAME sits on that same
+mount, so a failed mount means it does not launch at all, and the options carry no `force`, so ntfs3
+refuses a dirty volume outright instead of degrading to read-only. The loud failure is what happens
+either way.
+
+WHAT ACTUALLY SEPARATES THE TWO GAMES is where the save already was. Black Flag's was inside the
+prefix, on the Kingston, so the symlink would have meant MOVING it onto NTFS to buy the sharing, and
+a move is the one operation that can lose it. Victoria 3's had never been anywhere else, and that is
+why the same question gets the opposite answer below.
+
+So for this game the copy is one-way and dated: 12 files from 29/08, verified by sha256 on both
+sides. From here the two progresses diverge, and repeating the copy is the only way back.
 
 ## The game that arrives as an archive, and where it gets extracted
 
@@ -247,3 +262,50 @@ on the disk.
 `Bodycam` is its OWN prefix, for the same reason `Black-Flag` is: UE5 renders through DX12, so it
 needs vkd3d-proton, which the Battle.net bottle has no use for. What each bottle LISTS is declared
 in `home/apps/bottles.nix` ([bottles.md](../apps/bottles.md)); the prefix itself stays state.
+
+## The game whose save was already on the Windows disk
+
+Victoria 3 is the third that was never duplicated: a RUNE repack installed straight into
+`/mnt/windows/Games` on 29/08, 16 GiB, which only got a bottle on 12/09. The game side holds no
+surprise. `Victoria-3` is its own prefix with the components the other repacks use, and the program
+declared in `home/apps/bottles.nix` is `binaries/victoria3.exe` and NOT `launcher/dowser.exe`: the
+Paradox launcher opens on a Steam login a repack cannot pass, and what answers for Steam here is the
+`steam_api64.dll` sitting next to the exe.
+
+The save is what is new, and it is the case the section above did not have. Paradox writes into the
+Windows user profile and not into the game folder, and on that install Documents is REDIRECTED into
+OneDrive:
+
+`/mnt/windows/Users/vfla1/OneDrive/Documentos/Paradox Interactive/Victoria 3/save games`
+
+It has lived there since 29/08 and has never been on the Kingston, so linking it moves nothing and
+costs no backup that existed. It gains one: OneDrive syncs that folder whenever Windows is the
+system running, which is more than a save inside a prefix gets here.
+
+That path is also why `my.games.linked` could not carry it. Its values are relative to
+`my.games.root` and this one is nowhere near `Games/`, so `home/apps/games-disk.nix` grew a second
+attrset, `my.games.saves`, whose values are absolute.
+
+### `save games` alone, and what stays out of the link on purpose
+
+The rest of the profile sits right beside it and none of it crosses:
+
+| What | Why it stays per system |
+| --- | --- |
+| `shadercache` | compiled against the API in use, DX11 native on Windows against DXVK here |
+| `pdx_settings.json` | carries the other system's resolution and video adapter |
+| `logs`, `crashes`, `dumps` | churn, on a disk that takes none |
+| `continue_game.json` | points at a last-played path, the one thing that genuinely differs |
+
+The price is the Continue button, which reads that last file. The save itself comes back from the
+Load menu, so the cost is one extra click and never a lost campaign.
+
+**VERIFIED THAT THE FILE WAS REAL before anything pointed at it.** OneDrive can leave a dehydrated
+placeholder that reports the full size and holds no data, and a symlink to one resolves fine and
+fails at load, which reads as a corrupt save rather than a missing download. `japan_ironman.v3`
+allocates 37464 blocks against 19178897 bytes, so it is fully materialized, and its header reads
+`SAV01` straight from Linux.
+
+It is IRREPLACEABLE in the ironman sense and it is not in restic, the same as every other save in a
+bottle. OneDrive is the off-machine copy and it only runs when Windows does. If that stops being
+enough, the shape to copy is `home/services/cs2-saves-backup.nix`.

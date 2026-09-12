@@ -217,6 +217,10 @@ in
         inGame "Assassin Creed Black Flag Resynced" "ACBlackFlag.exe";
       "Bodycam" = inGame "Bodycam" "Bodycam.exe";
 
+      # `binaries/` and NOT `launcher/dowser.exe`: the Paradox launcher is what the repack replaced
+      # a Steam login with, and going straight to the exe skips a login that cannot succeed.
+      "Victoria 3" = inGame "Victoria 3" "binaries/victoria3.exe";
+
       # cmd.exe and not the launcher: it exits right after spawning, and Bottles would call the
       # program dead. The `start ""` argument is an EMPTY TITLE, not a stray pair of quotes.
       "Ascension Launcher" = inBottle "Ascension" "windows/system32/cmd.exe" // {

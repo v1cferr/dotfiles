@@ -24,6 +24,11 @@ in
       default = { };
       description = "A path under $HOME mapped to a path under `root`. Each becomes a symlink.";
     };
+    saves = lib.mkOption {
+      type = lib.types.attrsOf lib.types.str;
+      default = { };
+      description = "A path under $HOME mapped to an ABSOLUTE path, for saves outside `root`.";
+    };
   };
 
   config = {
@@ -77,12 +82,36 @@ in
       # NEVER duplicated either, and for the simplest reason there is: the archive was extracted
       # straight into /mnt/windows/Games on 07/09, so these 56 GiB have never been on the Kingston.
       ".local/share/bottles/bottles/Bodycam/drive_c/Games/Bodycam" = "Bodycam";
+
+      # NEVER duplicated either, same as the two above: the repack was installed straight onto the
+      # Windows disk on 29/08 and only got a bottle on 12/09, so these 16 GiB never moved at all.
+      ".local/share/bottles/bottles/Victoria-3/drive_c/Games/Victoria 3" = "Victoria 3";
+    };
+
+    # SAVES ARE NOT UNDER `root`, which is why they need their own attrset: Paradox writes into
+    # the Windows user profile, and on that install Documents is redirected into OneDrive.
+    my.games.saves = {
+      # `save games` ALONE and not the whole `Victoria 3` profile, which sits right beside it.
+      # What is deliberately left out and why: `shadercache` is built against the graphics API in
+      # use, DX11 native on Windows against DXVK here, so a shared one is stutter at best;
+      # `pdx_settings.json` carries the resolution and the video adapter of the other system; and
+      # `logs`, `crashes` and `dumps` are churn this repo keeps off NTFS on purpose. The cost is
+      # the Continue button, which reads `continue_game.json`: the save loads from the menu.
+      #
+      # NOT IN RESTIC, and nothing here changes that: `paths` is /home/v1cferr with
+      # `.local/share/bottles` excluded, so the off-machine copy is OneDrive, which only syncs
+      # when Windows is the one running. One 19 MiB ironman save, accepted knowingly.
+      ".local/share/bottles/bottles/Victoria-3/drive_c/users/steamuser/Documents/Paradox Interactive/Victoria 3/save games" =
+        "/mnt/windows/Users/vfla1/OneDrive/Documentos/Paradox Interactive/Victoria 3/save games";
     };
 
     # mkOutOfStoreSymlink and NOT a plain `source`: the target is MUTABLE game data that the
     # launcher patches in place. Copying it into the store would be absurd (89 GiB) and read-only.
-    home.file = lib.mapAttrs (_name: target: {
-      source = mkOutOfStoreSymlink "${cfg.root}/${target}";
-    }) cfg.linked;
+    home.file = lib.mkMerge [
+      (lib.mapAttrs (_name: target: {
+        source = mkOutOfStoreSymlink "${cfg.root}/${target}";
+      }) cfg.linked)
+      (lib.mapAttrs (_name: target: { source = mkOutOfStoreSymlink target; }) cfg.saves)
+    ];
   };
 }

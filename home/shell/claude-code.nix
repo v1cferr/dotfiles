@@ -56,6 +56,17 @@ let
     }
   );
 
+  # The Vercel MCP, the official endpoint and the only supported one. Nothing to deliver here:
+  # the OAuth runs inside the session, per account, and the token is app state (rule 6).
+  vercelMcp = writeText "mcp-vercel.json" (
+    builtins.toJSON {
+      mcpServers.vercel = {
+        type = "http";
+        url = "https://mcp.vercel.com";
+      };
+    }
+  );
+
   # The SHARED memory (home/services/basic-memory.nix), over HTTP because there is ONE server for
   # the three CLIs. `my.memory.url` is the SSOT; nothing here holds the port.
   memoryMcp = writeText "mcp-basic-memory.json" (
@@ -71,6 +82,9 @@ let
   # follows the service's toggle, so a host without the server does not carry a dead endpoint.
   memory = lib.optional osConfig.my.services.basic-memory memoryMcp;
 
+  # What BOTH accounts carry, so a server that serves the two is declared ONCE (rule 11).
+  shared = [ vercelMcp ] ++ memory;
+
   # The accounts' SSOT (rule 11): wrappers, menu, symlinks and MCP all come from here.
   # A new account = one entry plus its settings-<name>.json.
   profiles = {
@@ -81,12 +95,12 @@ let
         azureMcp
         stitchMcp
       ]
-      ++ memory; # the work cloud and the design tool belong to this account only
+      ++ shared; # the work cloud and the design tool belong to this account only
     };
     pessoal = {
       dir = ".claude-pessoal";
       label = "Pessoal  (dragons10021@outlook.com)";
-      mcp = memory;
+      mcp = shared;
     };
   };
 

@@ -132,6 +132,30 @@ reason:
   EXCLUSIVE control, and CC stops loading EVERYTHING else, including the MCP servers of the
   `github` and `atlassian` plugins that are in use. It would gain Azure and lose two.
 
+## The Vercel MCP is on BOTH accounts, and the login is per account
+
+`https://mcp.vercel.com` is Vercel's official remote server, HTTP with OAuth, and its
+[docs](https://vercel.com/docs/agent-resources/vercel-mcp) open the security section by asking that
+the endpoint be VERIFIED before connecting. That is not boilerplate: a client that connects gets
+the same access as my Vercel user, so a look-alike domain behind a one-click button from some
+marketplace owns the account. Declared here, the URL is typed once and reviewed in a diff, which is
+the one place a wrong character shows up.
+
+It enters through `shared` and not twice inside `profiles`, because the same server written in two
+places is rule 11's duplicate waiting to drift. Both accounts carry it: unlike Azure, which is the
+work cloud, deploys happen on either side.
+
+**The OAuth is not declared, and it CANNOT be**: the token is app state (rule 6) and it lives in
+each account's `.credentials.json`, inside `CLAUDE_CONFIG_DIR`. So it is one `/mcp` in `claude-fai`
+and another in `claude-pessoal`, each authorizing in the browser, and what Nix writes is the URL
+and nothing else (rule 12).
+
+`claude mcp add --transport http vercel https://mcp.vercel.com`, the command in the docs, is the
+imperative form of this same line. It writes into `.claude.json`, which CC rewrites at runtime, so
+it would be a second owner on a file the app owns (rule 14) and invisible to git. The wrapper's
+`--mcp-config` puts it in the build instead, which is also why it reaches BOTH accounts without
+being done twice by hand.
+
 ## The system side: what has to be IMPOSED
 
 [`system/services/claude-code.nix`](../../../system/services/claude-code.nix) holds the three things

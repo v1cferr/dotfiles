@@ -287,6 +287,12 @@ after it until it finds a token starting with `-`.
 Hence the `case` in the wrapper: what starts with `-` (or nothing, the interactive TUI) goes
 WITHOUT the terminator; a bare word (a subcommand or a prompt) goes WITH it.
 
+**And the price of the terminator is that `mcp list` does not SEE those servers**, measured on
+2.1.263 (12/09/2026): the listing shows the user and project scopes only, so vercel, azure, stitch
+and basic-memory are all absent from it while working fine in a session. The flag belongs to the
+default command and the `--` hands the subcommand a clean argument list. The check is `/mcp` inside
+a session, or calling one of the server's tools; a missing line in `mcp list` proves nothing.
+
 `exec` is there so the wrapper leaves the process tree and only the real claude remains, which is
 what makes signals and the TUI's TTY arrive directly.
 

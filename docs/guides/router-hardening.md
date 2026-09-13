@@ -26,6 +26,12 @@ so there is no unzoned interface carrying the global prefix. That part was alrea
 
 ## The findings, in the order they were fixed
 
+**STATUS as of 13/09/2026.** Applied and verified on the device: findings 2, 5 and 6, the whole
+firewall half, which is the half that runs unattended because `uci` and `/etc/init.d/firewall` are
+NOPASSWD. Still open: finding 1, blocked by `owut` refusing the upgrade (see the note inside it),
+and findings 3 and 4, which need `/etc/init.d/dropbear` and `/etc/init.d/uhttpd` and therefore the
+password.
+
 ### 1. The firmware was one service release behind, and it mattered
 
 25.12.5 (01/07/2026) fixes five CVEs in **odhcpd**, the DHCPv6/RA server that is enabled here
@@ -144,6 +150,13 @@ sudo uci delete firewall.@rule[8]                          # Allow-ISAKMP
 sudo uci delete firewall.@rule[7]                          # Allow-IPSec-ESP
 sudo uci commit firewall && sudo /etc/init.d/firewall reload
 ```
+
+**Deleting them RENUMBERED two named rules, and that is the argument for named sections proving
+itself in the same commit.** `Allow-WireGuard` fell from `@rule[9]` to `@rule[7]` and
+`WG-t480-allow-desktop` from `@rule[10]` to `@rule[8]`, because everything above a deleted
+anonymous section slides down. Nothing here referenced them by index, so nothing broke. The lesson
+is what it would have cost if something had: an index is not an identity, and a rule whose deletion
+costs remote access must never be reachable only by one.
 
 ### 6. The exposed SSH had no rate limit, and it is the port being scanned
 

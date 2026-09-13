@@ -26,10 +26,11 @@ so there is no unzoned interface carrying the global prefix. That part was alrea
 
 ## The findings, in the order they were fixed
 
-**STATUS as of 13/09/2026.** Applied and VERIFIED IN THE EFFECTIVE STATE, which for this device
-means the nft ruleset or the running process and never `uci show`: findings 2, 4, 5 and 6. Finding
-3 is committed and pending the detached restart documented inside it. Finding 1 is blocked by
-`owut` refusing the upgrade.
+**STATUS as of 13/09/2026: all seven closed, and every one VERIFIED IN THE EFFECTIVE STATE**,
+which on this device means the nft ruleset, the running process or the server's own answer, and
+never `uci show`. The upgrade to 25.12.5 landed last and carried finding 3 with it, since the
+reboot is what finally gave dropbear its `-s`. Finding 7 was not on the list at all: the upgrade
+put adblock-fast's config in a diff and the diff had a password in it.
 
 ### 1. The firmware was one service release behind, and it mattered
 
@@ -138,9 +139,11 @@ zero the script tests for, since line 320 reads
 experiment: the live process carries `-g` and `-w`, which are emitted by the identical test against
 `RootPasswordAuth` and `RootLogin`, and both of those are stored as `'off'` in the same file.
 
-So this one applies at the next boot, which the firmware upgrade provides anyway, and `reboot` is
-NOPASSWD if it needs to come sooner. What must NOT happen is calling it done on the strength of
-`uci show`.
+So this one applied at the next boot, which the firmware upgrade provided the same evening.
+**CONFIRMED after it**: the daemon came up as PID 1954 with
+`-F -P ... -p 22 -s -g -w -K 300 -T 3`, and the server now answers
+`Authentications that can continue: publickey` and nothing else. The deduction held, and what must
+NOT happen is calling this done on the strength of `uci show`.
 
 **So the verification cannot read `uci`, it has to read the PROCESS.** This is the same lesson as
 the `src_ip` list one section above, in a different disguise: the config was correct and the effect
@@ -224,6 +227,55 @@ It does not replace what is on the other end: the desktop's sshd already demands
 password plus TOTP, refuses every user but one, and fail2ban escalates bans to a week
 ([`../notes/network/network.md`](../notes/network/network.md)). This just stops the noise one hop
 earlier.
+
+### 7. A system password was published, and the audit did not find it: the UPGRADE did
+
+Not on the original list, because nothing on the router was wrong. The leak was in the tool that
+mirrors it, and it only surfaced because the 25.12.5 upgrade moved adblock-fast to 1.2.4 and put
+its config block in a diff somebody actually read.
+
+`adblock-fast.config.rpcd_token` sat in the mirror in the clear, in a PUBLIC repo, since commit
+`a2a7b6f` on 08/08/2026. Five weeks. `router-sync`'s `redact()` tested
+`leaf not in SUSPECT`, and `in` on a set is EQUALITY, so `rpcd_token` was not `token` and walked
+straight through a function whose docstring promises the opposite.
+
+**And it is not a token.** `/usr/share/rpcd/ucode/luci.adblock-fast` says so in a comment: "Token
+becomes the adblock-fast-api system password", and `rpcd.adblock_fast_api.password` holds
+`$p$adblock-fast-api`, the form that authenticates against the system password. The published
+string was a working credential for an account on the router.
+
+**What it could and could not reach, measured rather than assumed.** Never the internet: the wan
+zone has always rejected port 22, and 80/443 are DNATed to the desktop, so the router's own uhttpd
+never answered from outside. It WAS reachable from the whole LAN and, until finding 2 landed that
+same day, from every WireGuard peer. The account carries `/bin/false` and an rpcd ACL scoped to
+adblock-fast, not root.
+
+The fix is two halves and the second one is the one that matters:
+
+```sh
+# On the router, through the method that moves UCI and the system password together.
+new=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 24)
+sudo ubus call luci.adblock-fast setRpcdToken "{\"name\":\"adblock-fast\",\"token\":\"$new\"}"
+```
+
+**Rewriting git history was considered and REJECTED.** The value is in a public repo, so it has to
+be assumed harvested whatever the history says, and a force push over a published tree damages
+something real (every clone, every permalink) to hide something already gone. Rotation makes the
+published string worthless, which is the only outcome that actually helps.
+
+**The verification had to be built, because `result: true` proves nothing here.** The ucode calls
+`system(... passwd ...)` and never checks its return, then returns true regardless. Four pieces
+together are what closed it: the UCI value changed, `/etc/shadow` was rewritten at the rotation
+minute, the leaked password draws `{"result":[6]}` (PERMISSION_DENIED) from
+`https://192.168.1.1/ubus`, which is the path an attacker would use and needs no shell, and the
+argument that ties it, that a silently failed `passwd` would have left the old password valid and
+made that same login SUCCEED.
+
+**Two verification attempts before that one were worthless, and the control is what exposed them.**
+`ubus call session login` from the shell answered `Not found` for the leaked password, which read
+like a denial and was not: `ubus list` cannot even see the `session` object as a non-root user, and
+a deliberately nonexistent username produced the identical answer. A test whose failure mode and
+success mode look the same measures nothing.
 
 ## What was found and NOT fixed the same day
 

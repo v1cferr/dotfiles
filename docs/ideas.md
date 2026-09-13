@@ -223,3 +223,44 @@ order the research put it.
   which would need a throwaway age key and a fake `secrets.yaml` so a test can prove the sops
   PLUMBING without ever touching a real value; today those two activation failures sit in the boot
   test's ALLOWED list instead.
+
+## Onion routing and dVPN: where they fit, and the number that settles half of it
+
+Raised on 13/09/2026, alongside the router audit. Nothing decided, nothing applied.
+
+**On the router, it does not fit, and it is not an architecture call.** Measured that day: **1.3 MB
+free on the overlay and no USB port** on the Cudy WR3000 v1. No USB means no extroot, and Tor plus
+a data directory does not go into 1.3 MB even trimmed. Every "Tor transparent proxy on OpenWrt"
+guide assumes a router with storage to spare, and the ones that talk numbers ask for 8 MB of flash
+and 64 MB of RAM as a floor. This one has the RAM and not the flash.
+
+So the question is only ever about the desktop, which has both and is already the gateway the
+router forwards to (`system/net/fai-gateway.nix` is exactly that shape).
+
+**Three options, and they are not variations of one thing:**
+
+- **`services.tor` with SOCKS on localhost, used per application.** The honest default. Changes
+  nothing about what already works, because nothing routes through it unless it is asked to. This
+  is the one to start with if the goal is "understand the terrain".
+- **An onion service in front of sshd.** The only one that is a SECURITY gain and not just a
+  privacy one, and the reason it is worth writing down: it would let the 2222 DNAT leave the WAN
+  entirely, and a port that does not exist cannot be scanned. The audit measured **5411 packets on
+  that DNAT in 14 days** against 17 on the brother's, which is the scanning it would delete. The
+  price is Tor's latency on every SSH session, and it does not retire `ssh.v1cferr.dev`, because
+  Caddy still needs the name and the address.
+- **Transparent proxy for the whole LAN.** What almost every tutorial teaches, and the one to
+  refuse here. It collides head-on with Sunshine, Jellyfin and everything that depends on latency
+  and on a stable address, which is most of what this house runs.
+
+**dVPN is a different product than the name suggests, and for this setup it is a no.** Mysterium,
+Sentinel and Orchid are bandwidth marketplaces with a token, not privacy infrastructure with a
+threat model. As a CLIENT the exit is an anonymous stranger's connection, which is strictly worse
+than my own WireGuard back home for everything I actually do remotely. As an EXIT OPERATOR the
+abuse traffic leaves through this IP, and this IP is the one that has to stay clean and reachable
+for Caddy, Sunshine and SSH: the two goals pull in opposite directions, so running both is paying
+for one to damage the other. The single case where a dVPN wins is censorship circumvention on a
+hostile network, where a residential exit passes where a datacenter one does not, and with the FAI
+and UFSCar tunnels plus WireGuard home already in place, that need does not exist here.
+
+**What would change the answer:** a router with storage (extroot or a different device) reopens the
+first question, and travelling somewhere that blocks WireGuard reopens the last one.

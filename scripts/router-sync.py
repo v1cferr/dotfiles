@@ -27,8 +27,11 @@ from pathlib import Path
 HOST = "v1cferr@192.168.1.1"
 MARKER = "<REDACTED: the real value is on the router; see docs/history/>"
 
-# The name of the option (the leaf) that carries a credential. The generic `key` is in there
-# because that is the name wireless uses for the WiFi password.
+# The name of the option (the leaf) that carries a credential, matched as a SUBSTRING and never by
+# equality. `rpcd_token` is why, and it cost a real leak: it is not EXACTLY `token`, so adblock's
+# API token mirrored in the clear into a PUBLIC repo, which is the one thing the fail-safe
+# direction above promises cannot happen. The generic `key` is in there because that is the name
+# wireless uses for the WiFi password.
 SUSPECT = {
     "private_key",
     "preshared_key",
@@ -40,12 +43,17 @@ SUSPECT = {
     "key",
 }
 
-# Exceptions checked ONE by ONE, with the reason, since without that the list would become faith:
-#   public_key  -> it is public by definition (the WireGuard peers)
+# Exceptions checked ONE by ONE, with the reason, since without that the list would become faith.
+# Compared in LOWERCASE, because UCI spells two of these in camel case. Substring matching is what
+# made the last three necessary, and each was MEASURED against the mirror before being released:
+#   public_key        -> public by definition (the WireGuard peers)
+#   key_type          -> uhttpd's certificate ALGORITHM ('ec'), never a key
+#   passwordauth      -> dropbear's on/off switch, and its VALUE is the thing being audited
+#   rootpasswordauth  -> the same switch for root
 # The other common case, `uhttpd.main.key` and `luci.flash_keep.passwd`, needs NO exception by
 # name: both hold a file PATH, and a path is not a secret. Hence the "starts with /" test below,
 # which generalizes to future options.
-PUBLIC = {"public_key"}
+PUBLIC = {"public_key", "key_type", "passwordauth", "rootpasswordauth"}
 
 
 def repo_root():
@@ -85,8 +93,8 @@ def redact(line):
     if "=" not in line:
         return line
     option, value = line.split("=", 1)
-    leaf = option.rsplit(".", 1)[-1]
-    if leaf in PUBLIC or leaf not in SUSPECT:
+    leaf = option.rsplit(".", 1)[-1].lower()
+    if leaf in PUBLIC or not any(s in leaf for s in SUSPECT):
         return line
     # A file path is not a secret, it is a pointer. It covers uhttpd.main.key and the like.
     if value.strip("'\"").startswith("/"):

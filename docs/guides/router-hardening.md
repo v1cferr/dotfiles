@@ -26,11 +26,10 @@ so there is no unzoned interface carrying the global prefix. That part was alrea
 
 ## The findings, in the order they were fixed
 
-**STATUS as of 13/09/2026.** Applied and verified on the device: findings 2, 5 and 6, the whole
-firewall half, which is the half that runs unattended because `uci` and `/etc/init.d/firewall` are
-NOPASSWD. Still open: finding 1, blocked by `owut` refusing the upgrade (see the note inside it),
-and findings 3 and 4, which need `/etc/init.d/dropbear` and `/etc/init.d/uhttpd` and therefore the
-password.
+**STATUS as of 13/09/2026.** Applied and VERIFIED IN THE EFFECTIVE STATE, which for this device
+means the nft ruleset or the running process and never `uci show`: findings 2, 4, 5 and 6. Finding
+3 is committed and pending the detached restart documented inside it. Finding 1 is blocked by
+`owut` refusing the upgrade.
 
 ### 1. The firmware was one service release behind, and it mattered
 
@@ -77,11 +76,12 @@ sudo uci set firewall.wg_icmp.proto='icmp'
 sudo uci set firewall.wg_icmp.icmp_type='echo-request'
 sudo uci set firewall.wg_icmp.target='ACCEPT'
 
-# Administration from the phone only, which is the peer I actually hold.
+# Administration from the two peers whose private key I can account for.
 sudo uci set firewall.wg_admin=rule
-sudo uci set firewall.wg_admin.name='WG-Admin-From-Phone'
+sudo uci set firewall.wg_admin.name='WG-Admin-Phone-And-Trampo'
 sudo uci set firewall.wg_admin.src='wg'
-sudo uci set firewall.wg_admin.src_ip='10.10.10.3'
+sudo uci add_list firewall.wg_admin.src_ip='10.10.10.3'
+sudo uci add_list firewall.wg_admin.src_ip='10.10.10.4'
 sudo uci set firewall.wg_admin.proto='tcp'
 sudo uci add_list firewall.wg_admin.dest_port='22'
 sudo uci add_list firewall.wg_admin.dest_port='443'
@@ -92,7 +92,19 @@ sudo uci commit firewall && sudo /etc/init.d/firewall reload
 
 **The named sections are deliberate**, like `ssh_cesar` before them. An anonymous `@rule[N]`
 renumbers when anything above it is deleted, and these are the rules whose deletion by accident
-costs remote access.
+costs remote access. Finding 5 proved it in the same session.
+
+**`src_ip` as a LIST is legal here and illegal one section type over**, which is worth knowing
+before widening the admin rule: in a `rule` fw4 accepts the list, in a `redirect` it silently
+discards the whole section
+([`../notes/network/network.md`](../notes/network/network.md), measured 10/08/2026). So the
+verification reads `nft list chain inet fw4 input_wg` and never `uci show`, because `uci` displays
+the bad version just as nicely as the good one.
+
+`pc-trampo` (10.10.10.4) joined the phone on 13/09/2026, by decision: administering the router
+from the work machine over the tunnel is worth more than the marginal narrowing. `pc-nizario` is
+deliberately NOT on the list, and the desktop needs no rule at all because it reaches the router
+through `input_lan`.
 
 **Apply it from the LAN, never from the tunnel.** Getting this wrong costs the tunnel's access to
 the router and nothing else, and from a LAN session the fix is one `uci` away. From the phone it
@@ -106,8 +118,30 @@ installed for `v1cferr`, so the cost of closing it is a key that is already in u
 
 ```sh
 sudo uci set dropbear.main.PasswordAuth='off'
-sudo uci commit dropbear && sudo /etc/init.d/dropbear restart   # asks for the password
+sudo uci commit dropbear
+# DETACHED on purpose, see below.
+sudo sh -c 'nohup /etc/init.d/dropbear restart >/dev/null 2>&1 &'
 ```
+
+**`/etc/init.d/dropbear restart` run in the foreground DOES NOT FINISH, and it fails silently.**
+Measured on 13/09/2026: the commit landed, `uci show` read `PasswordAuth='off'`, and the daemon
+serving connections was still **PID 1738 from boot**, fourteen days old, with flags
+`-F -P ... -p 22 -g -w -K 300 -T 3` and no `-s`. The restart kills dropbear's children, the session
+running the command IS one of them, so the init script dies halfway through its own stop phase and
+the old listener is never replaced. Detaching it with `nohup` lets the restart outlive the session
+it is about to kill.
+
+**So the verification cannot read `uci`, it has to read the PROCESS.** This is the same lesson as
+the `src_ip` list one section above, in a different disguise: the config was correct and the effect
+was zero.
+
+```sh
+ps w | grep '[d]ropbear -F'          # the running flags must contain -s
+ssh -v -o PubkeyAuthentication=no router true 2>&1 | grep -i 'can continue'
+```
+
+The second line is the one that matters, because it asks the SERVER what it accepts: `publickey`
+alone means it is done, `publickey,password` means it is not, whatever `uci` says.
 
 **`Interface 'lan'` was considered and REJECTED**, and this is the part worth writing down.
 Binding Dropbear to the LAN is the advice every hardening guide gives, and here it would delete the
@@ -222,8 +256,8 @@ ping 10.10.10.1                   # must answer
 ssh router                        # must open, because the phone is the admin source
 ```
 
-From any OTHER peer (the T480, `pc-trampo`), `ssh 10.10.10.1` has to be **refused**. A peer that
-still gets in means `src_ip` did not match and the rule is decoration.
+From a peer that is NOT on the admin list (the T480, `pc-nizario`), `ssh 10.10.10.1` has to be
+**refused**. A peer that still gets in means `src_ip` did not match and the rule is decoration.
 
 ## Rollback
 

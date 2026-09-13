@@ -294,6 +294,50 @@ And two that only showed up in the first real login from the phone, the same day
 fail2ban keeps working through all of this: its filter matches `Failed <cmnfailed>`, and `cmnfailed`
 resolves to `\S+`, so `keyboard-interactive/pam` counts exactly like `password` did.
 
+## The alert is the only DETECTION here, and everything above it is prevention
+
+Added 13/09/2026, out of the router audit
+([`../../guides/router-hardening.md`](../../guides/router-hardening.md)), which found the same gap
+on both machines: a great deal of prevention and no way to know whether any of it failed. A
+successful login left no trace anybody reads.
+
+`pam_exec` fires `/etc/pam-exec/ssh-login-alert` on `open_session`, and the script pushes through
+`notify` when the source is neither the house nor the tunnel. The ranges come from
+`my.net.lanSubnet` and `my.net.vpnSubnet`, so they are the SAME pair sshd exempts from penalties
+and fail2ban from bans, and widening any of them cannot leave this one behind.
+
+**Why PAM and not a journal tail.** A watcher on `Accepted ...` in the journal needs a daemon that
+can die quietly, and a dead watcher is worse than none, because it reads as "nothing happened".
+PAM cannot be silently absent: it is in the login path.
+
+**Why `systemd-run --no-block` and not calling `notify` directly.** A PAM session hook is
+SYNCHRONOUS, and `notify` carries `--max-time 10`, so a bad day at ntfy.sh would add up to ten
+seconds to every login from outside. The transient unit also puts the push outside the session's
+cgroup, where a fast logout cannot kill it half sent, and it gives the automation one explicit
+owner, which is rule 15.
+
+**Three traps found building it, all at eval or build time:**
+
+- **A `settings` key cannot hold a store path.** The rule DERIVES `args` from `settings`, so
+  defining `args` clashes, and the program has to arrive as a bare `settings` key. But a key is an
+  attribute NAME, and Nix refuses one that refers to the store:
+  `error: the string '/nix/store/...-ssh-login-alert/bin/ssh-login-alert' is not allowed to refer
+  to a store path`. Hence `environment.etc."pam-exec/ssh-login-alert"`, a stable path with no
+  context, which pam_exec follows as a symlink without complaint.
+- **`notify` had to stop being a home-manager package.** A system module cannot reach one (rule 4),
+  so the script moved to [`../../../pkgs/notify.nix`](../../../pkgs/notify.nix) and is exposed
+  through the local overlay. `home/shell/ntfy.nix` is now the consumer that puts it on the PATH,
+  which is rule 11: one owner, two readers.
+- **`exit 0` at the end is not decoration.** `optional` already keeps a failure from blocking the
+  login, and the explicit exit is the second lock, because a hook that can cost the exposed SSH is
+  not worth having at any price.
+
+**Verified before switching, and the first attempt at verifying it was WORTHLESS.** Running the
+script with a LAN address and seeing exit 0 proves nothing, since BOTH branches end in exit 0. What
+separates them is `bash -x` and looking for `systemd-run` in the trace: `192.168.1.40` and
+`10.10.10.3` never reach it, `45.7.16.59` does. Same lesson as the router that day, for the third
+time: measure the effect, never the intention.
+
 ## The second exposed port is not this machine
 
 `2223` lands on my brother's Windows 11 (`192.168.1.40`), not here, through

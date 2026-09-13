@@ -1,7 +1,48 @@
 # NETWORK AND REMOTE ACCESS: NetworkManager, exposed SSH, fail2ban, dynamic DNS, no suspend.
 # The WoL trap, the DDNS wildcard and why split-DNS lies to dig: docs/notes/network/network.md
-{ config, ... }:
+{ config, pkgs, ... }:
 
+let
+  # Rule 19: what this module reaches for, named once. `pam` is here for pam_exec.so, the only
+  # hook sshd offers for "a session just opened".
+  inherit (pkgs)
+    grepcidr
+    notify
+    pam
+    systemd
+    writeShellApplication
+    ;
+
+  # The ONLY detection on this machine: everything else in this file is prevention.
+  # Why pam_exec and not a journal tail, and why systemd-run: docs/notes/network/network.md
+  sshLoginAlert = writeShellApplication {
+    name = "ssh-login-alert";
+    runtimeInputs = [
+      grepcidr
+      systemd
+    ];
+    text = ''
+      # pam_exec fires on every phase; only an OPENING session is a login.
+      [ "''${PAM_TYPE:-}" = "open_session" ] || exit 0
+
+      rhost="''${PAM_RHOST:-}"
+      [ -n "$rhost" ] || exit 0 # no remote host at all is the local console
+
+      # The house and the tunnel are not news, and it is the same pair sshd and fail2ban exempt.
+      inside='${config.my.net.lanSubnet},${config.my.net.vpnSubnet}'
+      if printf '%s\n' "$rhost" | grepcidr "$inside" >/dev/null 2>&1; then
+        exit 0
+      fi
+
+      # --no-block so a login NEVER waits on ntfy, and the transient unit owns it (rule 15).
+      systemd-run --quiet --collect --no-block \
+        ${notify}/bin/notify -p high -T warning \
+        "SSH from outside" "''${PAM_USER:-?} from $rhost" || true
+
+      exit 0 # `optional` already covers this, but a hook that can cost a login is not worth having
+    '';
+  };
+in
 {
   # ── Network ────────────────────────────────────────────────────────────────
   networking.networkmanager.enable = true;
@@ -58,6 +99,19 @@
   # `~/.google_authenticator` does not log in by password at all. That file is STATE, created once
   # per user by hand (the command and the remote-safe order: docs/notes/network/network.md).
   security.pam.services.sshd.googleAuthenticator.enable = true;
+
+  # The hook needs a path with NO store context: a `settings` key is an attribute NAME, and those
+  # cannot refer to the store. This is that stable path, and pam_exec follows the symlink fine.
+  environment.etc."pam-exec/ssh-login-alert".source = "${sshLoginAlert}/bin/ssh-login-alert";
+
+  # The alert for a login from OUTSIDE, `optional` so it can never cost one. The program is a
+  # `settings` KEY because the rule DERIVES `args` from settings, and defining `args` would clash.
+  security.pam.services.sshd.rules.session.ssh-login-alert = {
+    order = 13000; # last in the stack: after pam_systemd (12000) and pam_limits (12200)
+    control = "optional";
+    modulePath = "${pam}/lib/security/pam_exec.so";
+    settings."/etc/pam-exec/ssh-login-alert" = true;
+  };
 
   # NEVER SUSPEND: this is a remote-access desktop, and a suspend drops SSH with no way back in.
   systemd.targets.sleep.enable = false;

@@ -205,6 +205,7 @@
         curseforge-bump = final.callPackage ./pkgs/curseforge-bump.nix { }; # version+hash of curseforge.nix
         curseforge-fix-perms = final.callPackage ./pkgs/curseforge-fix-perms.nix { }; # +x on what the app unpacks
         razer-dpi = final.callPackage ./pkgs/razer-dpi.nix { }; # the Razer mouse's live DPI, over hidraw
+        notify = final.callPackage ./pkgs/notify.nix { }; # the ntfy push, shared by the shell and sshd's PAM
         docs-links = final.callPackage ./pkgs/docs-links.nix { }; # it fails when a docs/ pointer breaks
         prose-style = final.callPackage ./pkgs/prose-style.nix { }; # rule 17's bans, in prose and in a message
         qml-syntax = final.callPackage ./pkgs/qml-syntax.nix { }; # it fails on a .qml that does not parse

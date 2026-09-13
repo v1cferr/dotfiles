@@ -123,13 +123,24 @@ sudo uci commit dropbear
 sudo sh -c 'nohup /etc/init.d/dropbear restart >/dev/null 2>&1 &'
 ```
 
-**`/etc/init.d/dropbear restart` run in the foreground DOES NOT FINISH, and it fails silently.**
-Measured on 13/09/2026: the commit landed, `uci show` read `PasswordAuth='off'`, and the daemon
-serving connections was still **PID 1738 from boot**, fourteen days old, with flags
-`-F -P ... -p 22 -g -w -K 300 -T 3` and no `-s`. The restart kills dropbear's children, the session
-running the command IS one of them, so the init script dies halfway through its own stop phase and
-the old listener is never replaced. Detaching it with `nohup` lets the restart outlive the session
-it is about to kill.
+**`/etc/init.d/dropbear restart` OVER SSH DOES NOT TAKE, and it fails silently.** Measured on
+13/09/2026: the commit landed, `uci show` read `PasswordAuth='off'`, and the daemon serving
+connections was still **PID 1738 from boot**, fourteen days old, with flags
+`-F -P ... -p 22 -g -w -K 300 -T 3` and no `-s`. The restart has to stop the listener that owns the
+session issuing it, so the init script never gets past its own stop phase. **Detaching it with
+`nohup` was tried and did NOT help either**: PID 1738 survived that too, which says the background
+job dies with the session's process group rather than merely being hung up on.
+
+**The config is right and only the birth is pending, and the running process is what proves it.**
+The doubt worth resolving before rebooting anything is whether `'off'` validates as the boolean
+zero the script tests for, since line 320 reads
+`[ "${PasswordAuth}" -eq 0 ] && procd_append_param command -s`. It does, and the evidence needs no
+experiment: the live process carries `-g` and `-w`, which are emitted by the identical test against
+`RootPasswordAuth` and `RootLogin`, and both of those are stored as `'off'` in the same file.
+
+So this one applies at the next boot, which the firmware upgrade provides anyway, and `reboot` is
+NOPASSWD if it needs to come sooner. What must NOT happen is calling it done on the strength of
+`uci show`.
 
 **So the verification cannot read `uci`, it has to read the PROCESS.** This is the same lesson as
 the `src_ip` list one section above, in a different disguise: the config was correct and the effect

@@ -42,6 +42,13 @@ router's NOPASSWD list, so the mode of the file never reaches it. Proven on 29/0
 `pull` read both root-only configs and updated them normally. What the 19/08 diagnosis
 actually caught was the command typed by hand.
 
+## The security posture is audited, not assumed
+
+What is closed on this device, what was deliberately left open and why, plus the rollback for each
+change, is in [`../docs/guides/router-hardening.md`](../docs/guides/router-hardening.md). Read it
+before changing a firewall zone here: the `wg` zone in particular now carries three named rules
+whose deletion costs remote administration.
+
 ## What is NOT here
 
 **Secrets.** The seven credential values come out redacted (rule 12): the

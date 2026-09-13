@@ -128,6 +128,35 @@ finished work. What was closed is in the [august history](history/2026/08-august
         about: nobody could say which machine held its private key, and the `wg` zone reaches the
         whole LAN. That one had never handshaked at all, which made the call easy. THIS one has a
         `persistent_keepalive`, so somebody expected it to be up, and that is the difference.
+      • MEASURED AGAIN on 13/09/2026, in the hardening audit: still no handshake, now across 14
+        days of a DIFFERENT uptime. Two independent measurements a month apart agreeing is as
+        close to an answer as this item is going to get without asking the workstation, so the
+        reading has shifted from "unknown" to "residue", and what is missing is the `wg` from
+        over there to make it final.
+
+- [ ] WireGuard peers have no `preshared_key` (opened on 13/09/2026, from the hardening audit).
+      All five peers authenticate with the key pair alone. The PSK is the standard second layer:
+      it defends against harvest-now-decrypt-later, and it is what keeps a LEAKED private key
+      from being enough on its own.
+      • WHY IT WAS NOT DONE WITH THE REST: it is not a router-side change. A peer whose PSK is
+        set on one end and not the other stops handshaking, so every client config has to be
+        updated inside the same window, and two of those clients live in other people's houses
+        (the mother's T480, my brother's PC). That is a scheduled operation, not a `uci set`.
+      • ORDER THAT DOES NOT LOCK ANYBODY OUT: one peer at a time, starting with the phone, which
+        is the one I hold and the one that is now the only admin source for the router
+        ([guides/router-hardening.md](guides/router-hardening.md)).
+
+- [ ] The router keeps no log that survives a reboot (opened on 13/09/2026, from the same audit).
+      `system.@system[0].log_size='128'` KB in RAM and no `log_ip`, so the evidence of a
+      compromise dies with the next power cut. Everything the audit fixed is PREVENTION; there is
+      currently no DETECTION at all on this device.
+      • THE FIX IS NOT A `uci set`: it is `log_ip='192.168.1.10'` plus a syslog receiver on the
+        desktop, which is a NixOS module and belongs in `system/net/`. The router half is one
+        line and the useful half is the other one.
+      • THE TRAP TO SIZE FIRST: the desktop is also the DNAT target for 80/443/2222, so a log
+        pipe from the router into it is a service listening on the LAN, and it has to refuse
+        everything that is not 192.168.1.1. A log receiver open to the house is a way to forge
+        the record you installed it to trust.
 
 - [~] ACTUALLY TEST Wake-on-LAN (opened on 10/08/2026). The config is applied and the
       `40-enp7s0.link` is generated with `WakeOnLan=magic`, but NONE of that proves the machine

@@ -123,6 +123,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [bottles](apps/bottles.md) | the library declared without owning the prefix, and the name that is not the directory |
 | [mega](apps/mega.md) | megatools, the quota, and why the loop waits |
 | [apps-and-mime](apps/apps-and-mime.md) | media, office, MangoHud, OpenAL, and the CANONICAL mimetype |
+| [zen](apps/zen.md) | the launch guard, and the NSS check that had to be written backwards |
 
 ### services
 

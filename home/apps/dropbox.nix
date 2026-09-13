@@ -2,7 +2,6 @@
 # The tray icon's cost, and the 10 days it spent syncing NOTHING: docs/notes/apps/dropbox.md
 {
   config,
-  inputs,
   lib,
   osConfig,
   pkgs,
@@ -24,8 +23,9 @@ let
 
   enabled = osConfig.my.services.dropbox;
 
-  # The session's browser, the SAME derivation home/packages.nix installs (rule 4).
-  zen = inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default;
+  # The session's browser, THE one home/apps/zen.nix wraps: the relink must not slip past the
+  # launch guard (rule 11).
+  zen = config.my.zen.package;
 
   # nixpkgs hardcodes `export BROWSER=firefox` in the daemon's launcher and ships a whole
   # firefox-bin INSIDE the FHS sandbox, so the relink page opens in a browser that has never seen

@@ -8,7 +8,6 @@
     librewolf # a hardened Firefox (privacy)
     # Chrome's DEV channel; nixpkgs only packages stable.
     inputs.browser-previews.packages.${stdenv.hostPlatform.system}.google-chrome-dev
-    inputs.zen-browser.packages.${stdenv.hostPlatform.system}.default # Zen (a flake; see flake.nix)
 
     # ── Communication ──
     discord # it exposes the IPC socket Claude Code's Rich Presence needs

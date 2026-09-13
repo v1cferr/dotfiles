@@ -239,9 +239,12 @@ router forwards to (`system/net/fai-gateway.nix` is exactly that shape).
 
 **Three options, and they are not variations of one thing:**
 
-- **`services.tor` with SOCKS on localhost, used per application.** The honest default. Changes
-  nothing about what already works, because nothing routes through it unless it is asked to. This
-  is the one to start with if the goal is "understand the terrain".
+- **`services.tor` with SOCKS on localhost, used per application: ALREADY DONE, and this entry
+  first said otherwise.** [`system/net/tor.nix`](../system/net/tor.nix) has been there all along,
+  client only, `ClientOnly` and `SafeSocks` locking the role, enabled through `my.services.tor` on
+  `nixos-kingston`, with `mega-tor` as the consumer. Verified running on 13/09/2026: `tor.service`
+  active, listening on `127.0.0.1:9050`. So the cheapest option was never open, it was shipped, and
+  the terrain to understand is what sits ABOVE it.
 - **An onion service in front of sshd.** The only one that is a SECURITY gain and not just a
   privacy one, and the reason it is worth writing down: it would let the 2222 DNAT leave the WAN
   entirely, and a port that does not exist cannot be scanned. The audit measured **5411 packets on

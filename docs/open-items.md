@@ -157,6 +157,13 @@ finished work. What was closed is in the [august history](history/2026/08-august
         pipe from the router into it is a service listening on the LAN, and it has to refuse
         everything that is not 192.168.1.1. A log receiver open to the house is a way to forge
         the record you installed it to trust.
+      • AND IT IS WORSE THAN "NOT DURABLE": `logread` as `v1cferr` does not fail, it HANGS.
+        Measured 13/09/2026 while looking for auth failures: the command returned empty on this
+        side because the ssh call timed out, and TWO invocations were still sitting on the
+        router afterwards, blocked on the log socket. So the log is not merely lost at the next
+        reboot, it is unreadable without `sudo` and it swallows whoever tries. Any collector
+        written for this has to run as root on the router side, and anything that shells out to
+        `logread` unprivileged needs a timeout or it leaks processes.
 
 - [~] ACTUALLY TEST Wake-on-LAN (opened on 10/08/2026). The config is applied and the
       `40-enp7s0.link` is generated with `WakeOnLan=magic`, but NONE of that proves the machine

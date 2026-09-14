@@ -302,9 +302,18 @@ on both machines: a great deal of prevention and no way to know whether any of i
 successful login left no trace anybody reads.
 
 `pam_exec` fires `/etc/pam-exec/ssh-login-alert` on `open_session`, and the script pushes through
-`notify` when the source is neither the house nor the tunnel. The ranges come from
-`my.net.lanSubnet` and `my.net.vpnSubnet`, so they are the SAME pair sshd exempts from penalties
-and fail2ban from bans, and widening any of them cannot leave this one behind.
+`notify` for everything that is not the house. The ranges come from `my.net.lanSubnet` and
+`my.net.vpnSubnet`, the SAME pair sshd exempts from penalties and fail2ban from bans, so widening
+either cannot leave this behind.
+
+**The tunnel is reported and LABELLED, and the first version skipped it, which was wrong.** It
+looked symmetric with the sshd and fail2ban exemptions, and the exemptions are about not PUNISHING
+a trusted source, which is a different question from not TELLING me about it. The first real login
+after shipping it arrived from `10.10.10.4` on 14/09/2026, `pc-trampo`'s tunnel address, because a
+machine outside the house had hopped through that peer: the detector stayed silent on the path
+actually used. It now sends `through the tunnel` at `default` priority and `from outside` at
+`high`, and only the home LAN is silent. An attacker holding a WireGuard key had been invisible to
+it too, which is the half that mattered more.
 
 **Why PAM and not a journal tail.** A watcher on `Accepted ...` in the journal needs a daemon that
 can die quietly, and a dead watcher is worse than none, because it reads as "nothing happened".
@@ -331,6 +340,12 @@ owner, which is rule 15.
 - **`exit 0` at the end is not decoration.** `optional` already keeps a failure from blocking the
   login, and the explicit exit is the second lock, because a hook that can cost the exposed SSH is
   not worth having at any price.
+- **The first version swallowed its own failure, and that was a real defect.** `--quiet` silenced
+  systemd-run, `|| true` silenced its exit code, and the script returned 0 regardless, so a broken
+  queue would have produced exactly the silence this hook reads as "nothing happened". That is the
+  argument used two paragraphs up to choose PAM over a journal tail, reproduced by accident. The
+  `|| true` is now a `logger -t ssh-login-alert -p auth.warning`, so the failure lands in the
+  journal where `journalctl -t ssh-login-alert` finds it.
 
 **Verified before switching, and the first attempt at verifying it was WORTHLESS.** Running the
 script with a LAN address and seeing exit 0 proves nothing, since BOTH branches end in exit 0. What

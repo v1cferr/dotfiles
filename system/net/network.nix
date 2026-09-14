@@ -10,6 +10,7 @@ let
     notify
     pam
     systemd
+    util-linux
     writeShellApplication
     ;
 
@@ -20,6 +21,7 @@ let
     runtimeInputs = [
       grepcidr
       systemd
+      util-linux # logger, for the case where the push itself cannot be queued
     ];
     text = ''
       # pam_exec fires on every phase; only an OPENING session is a login.
@@ -28,16 +30,29 @@ let
       rhost="''${PAM_RHOST:-}"
       [ -n "$rhost" ] || exit 0 # no remote host at all is the local console
 
-      # The house and the tunnel are not news, and it is the same pair sshd and fail2ban exempt.
-      inside='${config.my.net.lanSubnet},${config.my.net.vpnSubnet}'
-      if printf '%s\n' "$rhost" | grepcidr "$inside" >/dev/null 2>&1; then
+      # The house is the ONLY silence: it is the one place where a login is not news.
+      if printf '%s\n' "$rhost" | grepcidr '${config.my.net.lanSubnet}' >/dev/null 2>&1; then
         exit 0
       fi
 
+      # The tunnel is REPORTED and labelled, not skipped. Skipping it left the detection blind to
+      # the path actually used, and to anyone who got hold of a WireGuard key.
+      if printf '%s\n' "$rhost" | grepcidr '${config.my.net.vpnSubnet}' >/dev/null 2>&1; then
+        origin="through the tunnel"
+        priority=default
+      else
+        origin="from outside"
+        priority=high
+      fi
+
       # --no-block so a login NEVER waits on ntfy, and the transient unit owns it (rule 15).
+      # The failure goes to the journal: a detector that cannot report its own silence is the
+      # defect this hook exists to avoid.
       systemd-run --quiet --collect --no-block \
-        ${notify}/bin/notify -p high -T warning \
-        "SSH from outside" "''${PAM_USER:-?} from $rhost" || true
+        ${notify}/bin/notify -p "$priority" -T warning \
+        "SSH $origin" "''${PAM_USER:-?} from $rhost" \
+        || logger -t ssh-login-alert -p auth.warning \
+             "could not queue the alert for $rhost; the push did NOT go out"
 
       exit 0 # `optional` already covers this, but a hook that can cost a login is not worth having
     '';
@@ -104,8 +119,8 @@ in
   # cannot refer to the store. This is that stable path, and pam_exec follows the symlink fine.
   environment.etc."pam-exec/ssh-login-alert".source = "${sshLoginAlert}/bin/ssh-login-alert";
 
-  # The alert for a login from OUTSIDE, `optional` so it can never cost one. The program is a
-  # `settings` KEY because the rule DERIVES `args` from settings, and defining `args` would clash.
+  # The alert for any login that is not from the house, `optional` so it can never cost one. The
+  # program is a `settings` KEY: the rule DERIVES `args` from settings and defining `args` clashes.
   security.pam.services.sshd.rules.session.ssh-login-alert = {
     order = 13000; # last in the stack: after pam_systemd (12000) and pam_limits (12200)
     control = "optional";

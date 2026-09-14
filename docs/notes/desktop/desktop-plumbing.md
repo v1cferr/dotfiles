@@ -155,8 +155,10 @@ active icon theme. Rules 1 and 3: idiomatic and declarative.
 
 ### clipboard-push: the clipboard onto a remote host
 
-`clipboard-push [host]` (SUPER+ALT+V, and the host defaults to `workstation`) sends what is in the
-clipboard over scp and leaves the ABSOLUTE REMOTE PATH in the clipboard. It exists for one
+`clipboard-push [host|local]` (SUPER+ALT+V, and the destination defaults to `workstation`) sends
+what is in the clipboard over scp and leaves the ABSOLUTE REMOTE PATH in the clipboard. With `local`
+it skips the network and drops the file in `~/.cache/clipboard-push` instead, which is the half the
+kitten below uses when the window is not an ssh. It exists for one
 workflow: Claude Code running on the FAI workstation over ssh reads THAT machine's filesystem and
 cannot see this one's clipboard, so an image only reaches it as a path.
 
@@ -179,6 +181,46 @@ newline pasted into a TUI SUBMITS the prompt instead of typing into it.
 It costs one handshake and not two, because the `workstation` block in `home/shell/ssh.nix` sets
 `ControlMaster auto`: the scp reuses the master the ssh above opened. And the image is not lost when
 the path takes its place in the clipboard, since cliphist still holds it, one SUPER+SHIFT+V away.
+
+### ctrl+shift+v decides, and the kitten is how
+
+`home/shell/kitty/smart-paste.py`, bound to `ctrl+shift+v` in `home/shell/kitty.nix`. Two keys for
+one intention was the wrong shape: push with SUPER+ALT+V, then paste, and remember which window was
+an ssh and which was not. The terminal already knows, so the kitten asks it.
+
+**The divergence is narrow ON PURPOSE.** Only an IMAGE in the clipboard takes the new path, and
+everything else falls through to kitty's own paste, with the bracketed paste, the `paste_actions`
+filters and the large-paste confirmation that come with it. The most used key on this machine is the
+wrong place to reimplement pasting. SUPER+ALT+V is still what pushes a copied FILE, which the kitten
+ignores deliberately.
+
+**The destination comes from the window's FOREGROUND PROCESS** (`window.child.foreground_processes`,
+the same data `kitty @ ls` prints). An `ssh` there means the destination is its host, parsed by
+skipping the flags that swallow the next argument, where the test is the LAST letter: that is what
+tells `-p 22`, a value follows, from `-p22`, attached. Anything else means `local`. What this cannot
+see: an ssh started INSIDE the session (a second hop, tmux) and the `cesar` alias, whose
+`RemoteCommand` is exactly why scp needs the `cesar-cmd` twin ([ssh.md](../network/ssh.md)).
+
+**It never blocks kitty**, and this is the part that is easy to get wrong: `handle_result` runs IN
+the kitty process, so a blocking scp would freeze the whole terminal for as long as the transfer
+lasts, and for 14 s with the VPN down (`ConnectTimeout 7`, two attempts). The child is spawned
+instead, and `boss.monitor_pid` does the paste when it dies. `no_ui=True` on the handler is what
+keeps an overlay window from flashing: with it kitty skips `main()` and calls the handler in
+process. `main()` still has to EXIST, since the loader reads it unconditionally.
+
+**The paste targets the window the key was pressed in**, never the active one. After a transfer of a
+couple of seconds those are not necessarily the same window, and a path pasted into whatever was
+switched to in the meantime is worse than no paste at all.
+
+**ctrl+alt+v stays bound to the plain paste**, because a kitten that breaks takes ctrl+shift+v down
+with it, and rule 15's point about an automation with no fallback holds for a keystroke too.
+
+MEASURED on 14/09/2026, driving a throwaway kitty over its own remote control: text pasted
+unchanged; an image in a window running `ssh workstation` arrived on the workstation and pasted as
+`/home/v1cferr/.cache/clipboard-push/clip-<stamp>.png`; the same image in a local shell landed in
+`~/.cache` and pasted the local path. A Wayland trap showed up in the harness and not in the
+feature: an UNFOCUSED window gets no selection offer, so `get_clipboard_string()` there is empty and
+even kitty's own `paste_from_clipboard` pastes nothing.
 
 **The launcher** is rofi `drun` with icons, sorted by most and recently used (rofi's history is on
 by default: it shows the recent ones when it opens and filters fuzzily as you type). SUPER+Q is

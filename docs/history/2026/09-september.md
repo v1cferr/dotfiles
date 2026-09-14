@@ -5,8 +5,8 @@
 - [x] An image in the clipboard reaches the TUI on the workstation (14/09/2026). Claude Code over
       ssh reads the WORKSTATION's filesystem and has no idea this machine has a clipboard, so an
       image copied here had exactly one way in: a path it can open on that side. `clipboard-push`
-      is that path, in `home/desktop/clipboard.nix` next to `clipboard-menu`, bound to SUPER+ALT+V.
-      The full reasoning is in
+      is that path, in `home/desktop/clipboard.nix` next to `clipboard-menu`, bound to SUPER+ALT+V,
+      and by the end of the day it was ctrl+shift+v deciding on its own. The full reasoning is in
       [notes/desktop/desktop-plumbing.md](../../notes/desktop/desktop-plumbing.md).
       • THE CLIPBOARD COMES BACK CARRYING THE REMOTE PATH, which is the whole trick: push,
         paste, done, with no second terminal and no thinking about where the file went. The image
@@ -30,6 +30,27 @@
       • MEASURED END TO END the same day, with the VPN up: an 8x8 PNG through `image/png`, then
         the same file as a `text/uri-list` with a space in the name. Both arrived intact (`file`
         confirms the PNG on the far side) and both came back in the clipboard as an absolute path.
+      • TWO KEYS FOR ONE INTENTION WAS THE WRONG SHAPE, and that is the second half of the day:
+        push, then paste, and remember which window was an ssh. The terminal already knows, so
+        `home/shell/kitty/smart-paste.py` asks it: the window's FOREGROUND PROCESS is an `ssh`, so
+        the destination is that ssh's host, and anything else is `local`, a drop in `~/.cache` with
+        the path pasted from there. ctrl+shift+v, one key, no decision left to me.
+      • WHAT DOES NOT DIVERGE IS THE POINT. Only an IMAGE takes the new path; every other paste
+        falls through to kitty's own, keeping the bracketed paste, the `paste_actions` filters and
+        the large-paste confirmation. The most used key on this machine is the wrong place to
+        reimplement pasting, and ctrl+alt+v stays bound to the plain paste so a broken kitten
+        cannot take it down with it (rule 15).
+      • THE FREEZE I DID NOT SHIP: `handle_result` runs INSIDE the kitty process, so a blocking scp
+        would hold the whole terminal for the length of the transfer, and for 14 s with the VPN
+        down. The child is spawned and `boss.monitor_pid` pastes when it dies. The paste also aims
+        at the window the key was pressed in and not at the active one, which after a two second
+        transfer is not necessarily the same window.
+      • THE TEST LIED BEFORE THE FEATURE DID. Driving a throwaway kitty over its own remote control
+        pasted NOTHING, and the cause was Wayland and not the kitten: an unfocused window never
+        receives a selection offer, so `get_clipboard_string()` is empty there and even kitty's own
+        `paste_from_clipboard` does nothing. With a focused window all three cases passed: text
+        unchanged, an image in an `ssh workstation` window arriving as a remote path, and the same
+        image in a local shell arriving as a `~/.cache` path.
 
 - [x] The Bottles library stopped being a thing I had only clicked (07/09/2026). Eight programs
       across five bottles existed nowhere but in the GUI, so nothing in the repo said what a

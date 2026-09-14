@@ -153,6 +153,33 @@ active icon theme. Rules 1 and 3: idiomatic and declarative.
 - a `file://` URI gets a NAMED freedesktop icon derived from the extension;
 - anything else gets the text icon.
 
+### clipboard-push: the clipboard onto a remote host
+
+`clipboard-push [host]` (SUPER+ALT+V, and the host defaults to `workstation`) sends what is in the
+clipboard over scp and leaves the ABSOLUTE REMOTE PATH in the clipboard. It exists for one
+workflow: Claude Code running on the FAI workstation over ssh reads THAT machine's filesystem and
+cannot see this one's clipboard, so an image only reaches it as a path.
+
+**An image wins, a copied file is the fallback.** `wl-paste --list-types` decides: the first
+`image/*` becomes `clip-<timestamp>.<ext>`, and failing that a `file://` URI (what Dolphin leaves
+in the clipboard) goes up under its own basename. The URI is percent-decoded, because a name with a
+space arrives as `a%20b.png` and would land as a file nobody can find.
+
+**The remote half goes in through ssh's STDIN**, the same trick as `wake-workstation`
+([fai-workstation.md](../network/fai-workstation.md)), for the same reason: the workstation is
+somebody else's Ubuntu and nothing may be installed on it. That one connection does three things:
+it creates `~/.cache/clipboard-push`, deletes what is older than a week, and prints `$HOME`
+RESOLVED, which is what scp and the TUI both need, since a `~` pasted into a prompt is not expanded
+by whatever reads it. The prune shares the pass on purpose: a drop that only grows, on a machine
+that is not mine, is the kind of mess nobody comes back to clean.
+
+**`wl-copy` gets the path with NO trailing newline**, and that is the detail the flow lives on: a
+newline pasted into a TUI SUBMITS the prompt instead of typing into it.
+
+It costs one handshake and not two, because the `workstation` block in `home/shell/ssh.nix` sets
+`ControlMaster auto`: the scp reuses the master the ssh above opened. And the image is not lost when
+the path takes its place in the clipboard, since cliphist still holds it, one SUPER+SHIFT+V away.
+
 **The launcher** is rofi `drun` with icons, sorted by most and recently used (rofi's history is on
 by default: it shows the recent ones when it opens and filters fuzzily as you type). SUPER+Q is
 apps, SUPER+R is binaries.

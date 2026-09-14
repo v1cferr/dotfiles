@@ -58,6 +58,11 @@ and only what you write is cached until it uploads. Switch it to `"full"` for ma
 reopening files, at the cost of filling the cache. `dir-cache-time = 5m` makes browsing FAST, with
 F5 to reload; `timeout`/`contimeout` keep it from hanging forever when the VPN drops.
 
+**The other direction, one file at a time**, does not go through the mount: `clipboard-push` scp's
+what is in the clipboard into a drop on the workstation and hands the remote path back, which is how
+an image reaches a TUI over ssh. See
+[desktop-plumbing.md](../desktop/desktop-plumbing.md).
+
 ## The receiving side is NOT declarable from here
 
 The workstation is somebody else's Ubuntu 26.04 (`superintendencia-server`), out of these dotfiles'

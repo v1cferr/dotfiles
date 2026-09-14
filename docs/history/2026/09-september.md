@@ -1,6 +1,35 @@
 # History: september 2026
 
-6 entries. Index in [README.md](../README.md).
+7 entries. Index in [README.md](../README.md).
+
+- [x] An image in the clipboard reaches the TUI on the workstation (14/09/2026). Claude Code over
+      ssh reads the WORKSTATION's filesystem and has no idea this machine has a clipboard, so an
+      image copied here had exactly one way in: a path it can open on that side. `clipboard-push`
+      is that path, in `home/desktop/clipboard.nix` next to `clipboard-menu`, bound to SUPER+ALT+V.
+      The full reasoning is in
+      [notes/desktop/desktop-plumbing.md](../../notes/desktop/desktop-plumbing.md).
+      • THE CLIPBOARD COMES BACK CARRYING THE REMOTE PATH, which is the whole trick: push,
+        paste, done, with no second terminal and no thinking about where the file went. The image
+        is not destroyed by being replaced, since cliphist still holds it one SUPER+SHIFT+V away.
+      • NO TRAILING NEWLINE ON THE PATH. `wl-copy "$path"` and not an echo into it, because a
+        newline pasted into a TUI SUBMITS the prompt instead of typing into it, which would have
+        made the feature actively annoying while looking like it worked.
+      • THE REMOTE HALF GOES IN THROUGH SSH'S STDIN, the same shape `wake-workstation` already
+        uses for its python: the workstation is somebody else's Ubuntu 26.04 and nothing may be
+        installed there. It answers `$HOME` RESOLVED, which is what scp and the TUI both need (a
+        `~` pasted into a prompt is not expanded by whatever reads it), and it prunes the drop of
+        what is over a week old in the same pass, so a folder on a machine that is not mine cannot
+        grow forever.
+      • TWO CONNECTIONS, ONE HANDSHAKE. The `workstation` block already sets `ControlMaster
+        auto` with a 10 min persist for VS Code's sake, so the scp rides the master the ssh above
+        opened instead of paying a second SonicWall round trip.
+      • A COPIED FILE IS THE FALLBACK, and it is not decoration: half the time what is in the
+        clipboard is a Dolphin selection, which is a `file://` URI and not image bytes. It is
+        percent-decoded before the transfer, because a name with a space arrives as `a%20b.png` and
+        would land on the other side as a file nobody can find.
+      • MEASURED END TO END the same day, with the VPN up: an 8x8 PNG through `image/png`, then
+        the same file as a `text/uri-list` with a space in the name. Both arrived intact (`file`
+        confirms the PNG on the far side) and both came back in the clipboard as an absolute path.
 
 - [x] The Bottles library stopped being a thing I had only clicked (07/09/2026). Eight programs
       across five bottles existed nowhere but in the GUI, so nothing in the repo said what a

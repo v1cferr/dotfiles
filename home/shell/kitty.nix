@@ -40,6 +40,10 @@ in
     };
 
     keybindings = {
+      # SMART PASTE: with an IMAGE in the clipboard it materializes a file and pastes its PATH
+      # (over ssh, on the remote side); anything else is kitty's own paste, untouched.
+      "ctrl+shift+v" = "kitten smart-paste.py";
+      "ctrl+alt+v" = "paste_from_clipboard"; # the way out if the kitten ever breaks (rule 15)
       "ctrl+shift+enter" = "new_window"; # a new kitty window (a split)
       "ctrl+shift+t" = "new_tab"; # a new tab
       "ctrl+equal" = "change_font_size all +1.0"; # it increases the font
@@ -47,4 +51,8 @@ in
       "ctrl+0" = "change_font_size all 0"; # it resets the font size
     };
   };
+
+  # The kitten of the bind above. A real .py in the tree, which is what the ruff hook checks;
+  # it calls `clipboard-push` (home/desktop/clipboard.nix) and never duplicates its logic.
+  xdg.configFile."kitty/smart-paste.py".source = ./kitty/smart-paste.py;
 }

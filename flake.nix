@@ -436,7 +436,7 @@
               language = "system";
               files = "\\.(json|jsonc|toml)$";
             };
-            # `scripts/router-sync.py`, the only loose .py and the one that WRITES to the router.
+            # The two .py in the tree: `scripts/router-sync.py` and kitty's smart-paste kitten.
             # `check` with no --fix on purpose: a linter that rewrites Python is not a formatter.
             ruff = {
               enable = true;

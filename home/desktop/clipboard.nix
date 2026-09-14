@@ -96,8 +96,8 @@ let
     printf %s "$d"
   '';
 
-  # clipboard-push: the clipboard to a remote host over scp, leaving the REMOTE PATH in the
-  # clipboard. It is how an image reaches a TUI over ssh: docs/notes/desktop/desktop-plumbing.md
+  # clipboard-push: the clipboard to a file (over scp, or `local` right here), leaving its PATH in
+  # the clipboard. It is how an image reaches a TUI: docs/notes/desktop/desktop-plumbing.md
   clipboardPush = writeShellApplication {
     name = "clipboard-push";
     runtimeInputs = [
@@ -108,7 +108,7 @@ let
       libnotify
     ];
     text = ''
-      host="''${1:-workstation}" # any Host of ~/.ssh/config; the workstation is the everyday one
+      dest="''${1:-workstation}" # an ssh Host of ~/.ssh/config, or `local` for a drop on this machine
 
       note() { notify-send -a Clipboard -i edit-paste "clipboard-push" "$1" 2>/dev/null || true; }
       fail() {
@@ -138,15 +138,28 @@ let
         name="$(basename "$src")"
       fi
 
-      # Two connections, one handshake: `workstation` multiplexes (ControlMaster, home/shell/ssh.nix).
-      dir="$(ssh -o BatchMode=yes "$host" sh -s < ${remoteDrop})" ||
-        fail "$host did not answer (is the VPN up?)"
-      scp -q "$src" "$host:$dir/$name" || fail "the transfer to $host failed"
+      if [ "$dest" = local ]; then
+        # An image only exists in a temp file and has to land somewhere; a copied file is already
+        # on disk, so its own path is the answer and nothing is duplicated.
+        if [ -n "$mime" ]; then
+          dir="''${XDG_CACHE_HOME:-$HOME/.cache}/clipboard-push"
+          mkdir -p "$dir"
+          find "$dir" -type f -mtime +7 -delete 2>/dev/null || true
+          mv "$src" "$dir/$name"
+        else
+          dir="$(dirname "$src")"
+        fi
+      else
+        # Two connections, one handshake: `workstation` multiplexes (ControlMaster, home/shell/ssh.nix).
+        dir="$(ssh -o BatchMode=yes "$dest" sh -s < ${remoteDrop})" ||
+          fail "$dest did not answer (is the VPN up?)"
+        scp -q "$src" "$dest:$dir/$name" || fail "the transfer to $dest failed"
+      fi
 
       # NO trailing newline: pasted into a TUI, one would SUBMIT the prompt instead of typing it.
       wl-copy "$dir/$name"
       echo "$dir/$name"
-      note "$host:$dir/$name"
+      note "$dest: $dir/$name"
     '';
   };
 in

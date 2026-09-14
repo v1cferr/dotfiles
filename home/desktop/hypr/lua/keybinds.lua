@@ -41,6 +41,7 @@ hl.bind("SHIFT + Scroll_Lock", hl.dsp.send_shortcut({ mods = "SHIFT", key = "cod
 -- clipboard: cliphist's history in rofi, with an image thumbnail and an icon per file type.
 -- The script and the theme are in home/desktop/clipboard.nix.
 hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("clipboard-menu"))
+hl.bind(mainMod .. " + ALT + V",   hl.dsp.exec_cmd("clipboard-push"))  -- scp it to the workstation and copy the REMOTE path (an image for a TUI over ssh)
 
 -- VPN: SUPER+N = UFSCar (GlobalProtect), SHIFT+N = FAI (nxBender), CTRL+N disconnects all.
 -- On-demand systemd services (system/net/vpn.nix); the `vpn` CLI needs no password (polkit).

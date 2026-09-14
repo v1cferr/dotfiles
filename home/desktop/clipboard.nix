@@ -1,5 +1,5 @@
-# CLIPBOARD (cliphist plus a rofi picker): history with an image THUMBNAIL and an icon per file
-# TYPE. rofi is declared HERE and shared with the launcher: docs/notes/desktop/desktop-plumbing.md
+# CLIPBOARD: cliphist plus a rofi picker (a THUMBNAIL and an icon per type), and clipboard-push,
+# which scp's it to a remote host. rofi is declared HERE: docs/notes/desktop/desktop-plumbing.md
 {
   pkgs,
   config,
@@ -14,9 +14,12 @@ let
     cliphist
     coreutils
     gnugrep
+    libnotify
+    openssh
     rofi
     wl-clipboard
     writeShellApplication
+    writeText
     ;
 
   palette = config.my.theme.palette; # the active theme's colors (home/desktop/palette.nix)
@@ -83,6 +86,69 @@ let
       printf '%s' "$choice" | cliphist decode | wl-copy
     '';
   };
+  # What runs ON THE REMOTE, through its stdin (the same trick as `wake-workstation`, so there is
+  # nothing to install over there): it creates the drop, prunes the week-old files and answers the
+  # ABSOLUTE path, which is what scp and the TUI both need.
+  remoteDrop = writeText "clipboard-drop.sh" ''
+    d="$HOME/.cache/clipboard-push"
+    mkdir -p "$d"
+    find "$d" -type f -mtime +7 -delete 2>/dev/null
+    printf %s "$d"
+  '';
+
+  # clipboard-push: the clipboard to a remote host over scp, leaving the REMOTE PATH in the
+  # clipboard. It is how an image reaches a TUI over ssh: docs/notes/desktop/desktop-plumbing.md
+  clipboardPush = writeShellApplication {
+    name = "clipboard-push";
+    runtimeInputs = [
+      wl-clipboard
+      openssh
+      coreutils
+      gnugrep
+      libnotify
+    ];
+    text = ''
+      host="''${1:-workstation}" # any Host of ~/.ssh/config; the workstation is the everyday one
+
+      note() { notify-send -a Clipboard -i edit-paste "clipboard-push" "$1" 2>/dev/null || true; }
+      fail() {
+        notify-send -a Clipboard -u critical -i dialog-error "clipboard-push" "$1" 2>/dev/null || true
+        echo "$1" >&2
+        exit 1
+      }
+
+      # An IMAGE wins; failing that, a copied FILE, which Dolphin leaves as a file:// URI.
+      mime="$(wl-paste --list-types 2>/dev/null | grep -m1 '^image/' || true)"
+      if [ -n "$mime" ]; then
+        ext="''${mime#image/}"
+        [ "$ext" = jpeg ] && ext=jpg
+        src="$(mktemp --suffix=".$ext")"
+        trap 'rm -f "$src"' EXIT
+        wl-paste --no-newline --type "$mime" > "$src" || fail "the image could not be read"
+        name="clip-$(date +%Y%m%d-%H%M%S).$ext"
+      else
+        uri="$(wl-paste --no-newline 2>/dev/null || true)"
+        case "$uri" in
+          # %XX becomes \xXX and printf decodes it: a file:// URI encodes spaces and accents.
+          file://*) enc="''${uri#file://}"; src="$(printf '%b' "''${enc//%/\\x}")" ;;
+          /*) src="$uri" ;;
+          *) src="" ;;
+        esac
+        if [ -z "$src" ] || [ ! -f "$src" ]; then fail "there is no image or file in the clipboard"; fi
+        name="$(basename "$src")"
+      fi
+
+      # Two connections, one handshake: `workstation` multiplexes (ControlMaster, home/shell/ssh.nix).
+      dir="$(ssh -o BatchMode=yes "$host" sh -s < ${remoteDrop})" ||
+        fail "$host did not answer (is the VPN up?)"
+      scp -q "$src" "$host:$dir/$name" || fail "the transfer to $host failed"
+
+      # NO trailing newline: pasted into a TUI, one would SUBMIT the prompt instead of typing it.
+      wl-copy "$dir/$name"
+      echo "$dir/$name"
+      note "$host:$dir/$name"
+    '';
+  };
 in
 {
   # cliphist's declarative service (it replaced the `wl-paste --watch` in hypr's autostart).
@@ -94,6 +160,7 @@ in
   home.packages = [
     rofi # the picker with -show-icons (an image thumbnail / an icon per type)
     clipboardMenu
+    clipboardPush
   ];
 
   # The colors follow my.theme, so a preset switch recolors this too. An explicit `font` is

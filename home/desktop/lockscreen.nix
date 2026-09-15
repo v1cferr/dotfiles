@@ -27,7 +27,7 @@ let
   # Wallpapers: pkgs.nixos-artwork, so no binary in git and they bump with nixpkgs.
   art = nixos-artwork.wallpapers;
   wallMain = "${art.catppuccin-mocha}/share/backgrounds/nixos/nixos-wallpaper-catppuccin-mocha.png"; # main (blurred on the lock)
-  wallSecondary = "${art.moonscape}/share/backgrounds/nixos/nix-wallpaper-moonscape.png"; # the secondary (static, no login)
+  wallSecondary = "${art.waterfall}/share/backgrounds/nixos/nix-wallpaper-waterfall.png"; # the secondary (static, no login)
 
   # Monitors: the SSOT is system/desktop/monitors.nix (rule 11).
   primary = osConfig.my.monitors.primary; # the main one: blurred desktop plus login

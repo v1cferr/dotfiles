@@ -65,8 +65,13 @@ uses the `XDG_MENU_PREFIX=plasma-` prefix and ignores this file, so there is no 
 
 `home/desktop/wallpaper.nix`. hyprpaper (Hyprland's official daemon: static, light, declarative).
 The images come through `pkgs.nixos-artwork`, so no binary in git and they bump with nixpkgs. The
-main one is catppuccin-mocha and the secondary is moonscape, the SAME two as the lockscreen, so unlocking
-does not change the background underneath.
+main one is catppuccin-mocha and the secondary is waterfall, the SAME two as the lockscreen, so
+unlocking does not change the background underneath.
+
+Both images are 3840x2160, and the secondary stands on its pivot, so hyprpaper covers 1080x1920 by
+keeping the CENTRAL 32% of the width. That is why the choice there is a waterfall: the subject runs
+along the axis that survives the crop. Any of the gradients would do as well, for the opposite
+reason, since they have no subject to lose.
 
 **The config format (hyprpaper 0.8.x) is why the screen went BLACK.** 0.8 swapped the flat format
 (`wallpaper = MONITOR,path` plus `preload =` plus `ipc =`) for a CATEGORY

@@ -7,7 +7,7 @@ let
 
   # THE CHOICE: 1 line each. `nix eval nixpkgs#nixos-artwork.wallpapers --apply builtins.attrNames`
   main = art.catppuccin-mocha; # the main one: the SAME image as the lockscreen (home/desktop/lockscreen.nix)
-  secondary = art.moonscape; # the secondary: the same image as the lockscreen
+  secondary = art.waterfall; # the secondary, standing: the same image as the lockscreen
 
   # The FILE name follows no pattern across packages, so building the path by string breaks on a
   # swap. It reads the directory and takes whatever is in there.

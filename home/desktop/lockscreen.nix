@@ -27,11 +27,11 @@ let
   # Wallpapers: pkgs.nixos-artwork, so no binary in git and they bump with nixpkgs.
   art = nixos-artwork.wallpapers;
   wallMain = "${art.catppuccin-mocha}/share/backgrounds/nixos/nixos-wallpaper-catppuccin-mocha.png"; # main (blurred on the lock)
-  wallTv = "${art.moonscape}/share/backgrounds/nixos/nix-wallpaper-moonscape.png"; # TV (a static image, no login)
+  wallSecondary = "${art.moonscape}/share/backgrounds/nixos/nix-wallpaper-moonscape.png"; # the secondary (static, no login)
 
   # Monitors: the SSOT is system/desktop/monitors.nix (rule 11).
-  primary = osConfig.my.monitors.primary; # LG ULTRAGEAR: blurred desktop plus login
-  secondary = osConfig.my.monitors.secondary; # TV: static image plus a padlock
+  primary = osConfig.my.monitors.primary; # the main one: blurred desktop plus login
+  secondary = osConfig.my.monitors.secondary; # the secondary: static image plus a padlock
 
   # Colors from my.theme (palette.nix) plus the font from my.fonts.ui.
   palette = config.my.theme.palette; # the single source (home/desktop/palette.nix)
@@ -194,7 +194,7 @@ in
         {
           monitor = secondary;
           color = "rgba(${palette.bg}ff)"; # a fallback while the image loads
-          path = "${wallTv}";
+          path = "${wallSecondary}";
         }
       ];
 

@@ -67,10 +67,14 @@ step, not flattening the whole curve.
 dimming that reaches BOTH screens. It came back on 08/08/2026 after an attempt at using real
 backlight was REVERTED.
 
-**The attempt**: DP-2 accepts DDC/CI and got a real backlight curve, much better than gamma, which
-darkens the SIGNAL with the backlight wide open. But the LG TV on HDMI does NOT speak DDC/CI, it is
-not on the network (no webOS), and CEC does not cover brightness, so there is no automatic path for
-it.
+**The attempt**: the UltraGear accepts DDC/CI and got a real backlight curve, much better than
+gamma, which darkens the SIGNAL with the backlight wide open. What killed it was the OTHER screen
+of the time, a TV on HDMI that does not speak DDC/CI, is not on the network (no webOS), and CEC
+does not cover brightness, so it had no automatic path at all.
+
+**That blocker LEFT with the TV on 15/09/2026**, so the path is open again for whoever wants to
+redo the curve. What is NOT measured yet is whether the XG27ACS answers MCCS, and the decision
+below is what makes the attempt worth redoing only if BOTH screens can follow.
 
 One screen at 32% next to another at 100% forces the pupil to readapt every time the gaze switches,
 and that tires more than the gain on the good screen. **The decision: worse dimming on both beats

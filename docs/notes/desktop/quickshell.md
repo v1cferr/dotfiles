@@ -134,9 +134,10 @@ item does not become a flat block of blue.
 several items in a row, and 200 ms leaves a trail of 2-3 items lit at the same time. 120 ms still
 reads as a fade but keeps up with the cursor.
 
-**The main monitor** falls back to the first available one. It USED to be `"DP-1"`, which does NOT
-exist on this machine: it never matched and always fell into `s[0]`, so the toast and the OSD could
-open on the TV depending on the enumeration order.
+**The main monitor** falls back to the first available one. It USED to be a literal `"DP-1"`,
+written when no such connector existed here: it never matched and always fell into `s[0]`, so the
+toast and the OSD could open on the wrong screen depending on the enumeration order. The name comes
+from the SSOT now, which is what makes it survive a monitor swap.
 
 ### What was REMOVED from `shell.qml` (30/07)
 

@@ -159,7 +159,7 @@ at all.
   toast, so it stays harmless.
 - SUPER+L goes `loginctl` to logind to hypridle's `lock_cmd`, and never duplicates hyprlock. See
   [`lockscreen.md`](lockscreen.md).
-- The screenshot submap's `1`/`2` are POSITIONAL: 1 is the LEFT screen (the TV), 2 is the RIGHT one
+- The screenshot submap's `1`/`2` are POSITIONAL: 1 is the LEFT screen (the secondary), 2 is the RIGHT one
   (the main LG). See [`flameshot.md`](../apps/flameshot.md).
 - SUPER+F9 toggles the hyprsunset SERVICE; the other three F9 binds are one-off IPC overrides that
   hold until the schedule's next profile takes over. See [`hyprsunset.md`](hyprsunset.md).

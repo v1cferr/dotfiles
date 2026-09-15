@@ -70,11 +70,13 @@ Hyprland that probe fires `hyprland-share-picker`, which does not render (a miss
 HANGS Sunshine, so it never opens the ports. Video is wlr, input is uinput through the
 `/dev/uinput` uaccess ACL, both with no portal.
 
-**Pin WHICH monitor.** Without it wlgrab takes the FIRST in the enumeration, and the TV enumerates
-before the LG, so Moonlight opened on the SECONDARY monitor. Measured in the log:
-`Monitor 0 is HDMI-A-3 / Monitor 1 is DP-2` then `Selected monitor [... LG TV]`. It is not the
-client's choice: Moonlight gets what the host sends. It matches by connector NAME and not by index,
-because the index depends on enumeration order, which is exactly what went wrong.
+**Pin WHICH monitor.** Without it wlgrab takes the FIRST in the enumeration, which is not
+necessarily the one being used. Measured on the setup of the time (a TV on HDMI that left in
+09/2026): `Monitor 0 is HDMI-A-3 / Monitor 1 is DP-2` then `Selected monitor [... LG TV]`, so
+Moonlight opened on the SECONDARY. It is not the client's choice: Moonlight gets what the host
+sends. It matches by connector NAME and not by index, because the index depends on enumeration
+order, which is exactly what went wrong. Following `my.monitors.primary` means it now captures the
+QHD panel at 180Hz, which costs more to encode than the 1080p it was written for.
 
 ## The idle guard, and why it needs a watchdog
 

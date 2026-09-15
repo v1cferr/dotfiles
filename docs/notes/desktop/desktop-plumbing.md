@@ -65,7 +65,7 @@ uses the `XDG_MENU_PREFIX=plasma-` prefix and ignores this file, so there is no 
 
 `home/desktop/wallpaper.nix`. hyprpaper (Hyprland's official daemon: static, light, declarative).
 The images come through `pkgs.nixos-artwork`, so no binary in git and they bump with nixpkgs. The
-main one is catppuccin-mocha and the TV is moonscape, the SAME two as the lockscreen, so unlocking
+main one is catppuccin-mocha and the secondary is moonscape, the SAME two as the lockscreen, so unlocking
 does not change the background underneath.
 
 **The config format (hyprpaper 0.8.x) is why the screen went BLACK.** 0.8 swapped the flat format

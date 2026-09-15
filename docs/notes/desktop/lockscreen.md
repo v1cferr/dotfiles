@@ -150,7 +150,7 @@ more while the widgets stay legible, and `brightness = 0.40` is dark enough for 
 without hiding the image.
 
 The monitors come from the SSOT (`system/desktop/monitors.nix`, rule 11): the primary gets the
-blurred desktop plus the login, the secondary (the TV) gets a static image plus a discreet padlock.
+blurred desktop plus the login, the secondary gets a static image plus a discreet padlock.
 The colors come from `my.theme` and the font from `my.fonts.ui`.
 
 The date label uses `LC_TIME=pt_BR.UTF-8` for the spelled-out form, with `sed` capitalizing the

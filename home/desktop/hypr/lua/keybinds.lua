@@ -93,15 +93,11 @@ hl.bind(mainMod .. " + O",              hl.dsp.layout("expel"))           -- exp
 hl.bind(mainMod .. " + G",              hl.dsp.layout("fit active"))      -- recenter the active column
 hl.bind(mainMod .. " + SHIFT + G",      hl.dsp.layout("fit expand"))      -- expand the window into the free space
 
--- Focus by monitor: F1 = the LG (main), F2 = the TV (secondary). The names: my.monitors.
+-- Focus by monitor: F1 = the main one, F2 = the secondary. The names: my.monitors.
 hl.bind(mainMod .. " + F1", hl.dsp.focus({ monitor = M.primary }))
 hl.bind(mainMod .. " + F2", hl.dsp.focus({ monitor = M.secondary }))
 
--- Turning the TV on and off in Hyprland, by hand. Workspaces 5-8 come back to the LG.
--- It is needed because the TV keeps the HDMI link alive while off: docs/notes/desktop/hypr.md
-hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("monitor-toggle"))
-
--- Workspaces 1 to 8 (SUPER switches; SUPER+SHIFT moves the window). 1-4 on the LG, 5-8 on the TV.
+-- Workspaces 1 to 8 (SUPER switches; SUPER+SHIFT moves the window). 1-4 primary, 5-8 secondary.
 for i = 1, 8 do
   hl.bind(mainMod .. " + " .. i,         hl.dsp.focus({ workspace = i }))
   hl.bind(mainMod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
@@ -112,7 +108,7 @@ end
 hl.bind(mainMod .. " + TAB",         hl.dsp.focus({ workspace = "e+1" }))
 hl.bind(mainMod .. " + SHIFT + TAB", hl.dsp.focus({ workspace = "e-1" }))
 
--- Moving the active window between monitors: CTRL+left to the TV, CTRL+right to the LG.
+-- Moving the active window between monitors: CTRL+left to the secondary, CTRL+right to the main one.
 hl.bind(mainMod .. " + CTRL + left",  hl.dsp.window.move({ monitor = M.secondary }))
 hl.bind(mainMod .. " + CTRL + right", hl.dsp.window.move({ monitor = M.primary }))
 
@@ -155,9 +151,9 @@ hl.bind("Print",                   hl.dsp.exec_cmd("flameshot gui"))
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("flameshot-screenshot"))
 
 hl.define_submap("screenshot", function()
-  -- positional: 1 = the LEFT screen (the TV), 2 = the RIGHT screen (the main LG).
-  hl.bind("1",      hl.dsp.exec_cmd("flameshot-pick " .. M.secondary)) -- secondary (the TV, on the left)
-  hl.bind("2",      hl.dsp.exec_cmd("flameshot-pick " .. M.primary))     -- main (the LG, on the right)
+  -- positional: 1 = the LEFT screen (the secondary), 2 = the RIGHT screen (the main one).
+  hl.bind("1",      hl.dsp.exec_cmd("flameshot-pick " .. M.secondary)) -- the secondary, on the left
+  hl.bind("2",      hl.dsp.exec_cmd("flameshot-pick " .. M.primary))     -- the main one, on the right
   hl.bind("escape", hl.dsp.exec_cmd("flameshot-cancel"))        -- cancel plus leave the submap
 end)
 

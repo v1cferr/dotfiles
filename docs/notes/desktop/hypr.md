@@ -17,7 +17,7 @@ files in the repo. The entrypoint only does a `dofile` of the modules in `~/.con
 one subject per file: monitors, appearance, input, keybinds, rules, autostart, environment.
 
 Editing any `.lua` plus `hyprctl reload` applies immediately, with NO rebuild. Same scheme as
-quickshell. The scripts the binds call (`minimize-others`, `brightness-osd`, `monitor-toggle`) go
+quickshell. The scripts the binds call (`minimize-others`, `brightness-osd`) go
 to the PATH through `home.packages`, so the modules invoke them by NAME, which is what lets the
 `.lua` files stay static.
 
@@ -65,7 +65,7 @@ one day). Making the script exit silently is NOT enough, since those lines are s
 script's. `warning` cuts the info out and lets through what the script emits with the `<4>` prefix,
 which is precisely the time it acted.
 
-## The four helper scripts
+## The three helper scripts
 
 ### `minimize-others` (SUPER+M)
 
@@ -90,32 +90,17 @@ One trap: the gamma comes back as a FLOAT (for instance `90.000015`), so take on
 by cutting at the dot. Otherwise `tr -dc '0-9'` would join the digits into `90000015` and the value
 would explode.
 
-### `monitor-toggle` (SUPER+SHIFT+T)
-
-Turns the TV on and off IN HYPRLAND, by hand. It is necessary because the TV (or the
-receiver/switch in between) keeps the HDMI link alive even when off, so DRM stays "connected" and
-Hyprland NEVER emits `monitorremoved`. `monitor-watch` has no event to react to, and the "ghost
-monitor" remains: the cursor going to a screen that disappeared.
-
-In the Lua parser (0.55) `hyprctl keyword` is blocked ("Use eval"), so runtime monitor config goes
-through `hyprctl eval` calling the SAME `hl.monitor` as `hyprland.lua`. Turning it back on repeats
-mode, position and scale from there; turning it off is just `disabled=true`.
-
-On disable, Hyprland gathers workspaces 5 to 8 back onto the LG by itself, and on enable it puts
-them back on the TV, windows included. See the measurement below.
-
 ### `hypr-monitor-watch`
 
 Listens to Hyprland's events (socket2) and runs `hyprctl reload` when a monitor CONNECTS or
 DISCONNECTS, which recalculates the layout and kills the ghost monitor.
 
 **What the reload does NOT do is move the workspaces**, and this note claimed it did until
-30/08/2026. MEASURED with the service STOPPED, using a headless output as a stand-in for the TV
-(`hyprctl output create headless HDMI-A-3`, which the `hl.monitor` rule then places at `-1920x0`
-exactly like the real one): on disconnect Hyprland gathers ws 5 to 8 onto the LG, and on reconnect
-it puts them BACK on the TV, windows included, with NO reload in between. The disable/enable pair
-`monitor-toggle` uses behaves the same. 0.55.4 re-homes by RULE on both edges, so the reload is a
-belt and braces step and not what does the moving.
+30/08/2026. MEASURED with the service STOPPED, using a headless output as a stand-in for the
+secondary, which the `hl.monitor` rule then places exactly like the real one: on disconnect
+Hyprland gathers ws 5 to 8 onto the primary, and on reconnect it puts them BACK, windows included,
+with NO reload in between. 0.55.4 re-homes by RULE on both edges, so the reload is a belt and
+braces step and not what does the moving.
 
 What was genuinely broken on a disconnect was the BAR, which had no button for the orphans:
 [`bar.md`](bar.md).
@@ -188,10 +173,12 @@ variation.
 
 ### Monitors
 
-The connector names were confirmed through `hyprctl monitors`. The primary is the LG ULTRAGEAR
-(1080p 144Hz) at the origin `0x0`; the secondary is the LG TV on the LEFT, at a negative x, Full HD
-60Hz. Keeping the main one at `0x0` is what makes a disconnected TV clean: the LG stands alone with
-no ghost offset and workspaces 5 to 8 fall back onto it automatically.
+The connector names were confirmed through `hyprctl monitors`. The primary is the ASUS XG27ACS
+(QHD 180Hz) at the origin `0x0`; the secondary is the LG ULTRAGEAR standing on its own pivot, on
+the LEFT at a negative x. Rotated it is 1080x1920 LOGICAL, so `x = -1080` sets it beside the
+primary and `y = -240` lines the two middles up, which is where the pointer crosses. Keeping the
+main one at `0x0` is what makes a disconnected secondary clean: the primary stands alone with no
+ghost offset and workspaces 5 to 8 fall back onto it automatically.
 
 Four workspaces per monitor. `default = true` marks the workspace that opens on each monitor when
 the session boots. There is no `layout` per workspace, since scrolling is global ever since the

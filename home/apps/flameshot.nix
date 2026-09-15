@@ -58,7 +58,7 @@ let
   };
 
   # flameshot-pick: it clicks the target's preview, resolving the slice DYNAMICALLY from the
-  # monitors' physical order, so it survives a turned-off TV or a rearrangement.
+  # monitors' physical order, so it survives a turned-off monitor or a rearrangement.
   flameshotPick = writeShellApplication {
     name = "flameshot-pick";
     runtimeInputs = [
@@ -81,7 +81,7 @@ let
         ([ .[] | { name, x } ] | sort_by(.x)) as $m
         | ($m | map(.name) | index($t)) as $i
         | if $i == null then empty else "\($i) \($m | length)" end')"
-      if [ -z "$info" ]; then reset; exit 0; fi  # the target is not active (a turned-off TV, say)
+      if [ -z "$info" ]; then reset; exit 0; fi  # the target is not active (a turned-off monitor, say)
       read -r i n <<<"$info"
 
       # the preview's center: slice i horizontally, 55% of the height.
@@ -143,7 +143,7 @@ in
   programs.zsh.shellAliases = {
     screenshot = "flameshot gui"; # an interactive selection (it opens the v14 picker)
     scfull = "flameshot full -c"; # both screens, to the clipboard
-    sc1 = "flameshot-screen ${osConfig.my.monitors.secondary}"; # the TV, to the clipboard
+    sc1 = "flameshot-screen ${osConfig.my.monitors.secondary}"; # the secondary, to the clipboard
     sc2 = "flameshot-screen ${osConfig.my.monitors.primary}"; # the main one, to the clipboard
   };
 

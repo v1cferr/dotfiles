@@ -7,7 +7,7 @@ let
 
   # THE CHOICE: 1 line each. `nix eval nixpkgs#nixos-artwork.wallpapers --apply builtins.attrNames`
   main = art.catppuccin-mocha; # the main one: the SAME image as the lockscreen (home/desktop/lockscreen.nix)
-  tv = art.moonscape; # the TV: the same image as the lockscreen
+  secondary = art.moonscape; # the secondary: the same image as the lockscreen
 
   # The FILE name follows no pattern across packages, so building the path by string breaks on a
   # swap. It reads the directory and takes whatever is in there.
@@ -32,6 +32,6 @@ in
   xdg.configFile."hypr/hyprpaper.conf".text = ''
     splash = false
     ${wallpaperFor osConfig.my.monitors.primary (pathOf main)}
-    ${wallpaperFor osConfig.my.monitors.secondary (pathOf tv)}
+    ${wallpaperFor osConfig.my.monitors.secondary (pathOf secondary)}
   '';
 }

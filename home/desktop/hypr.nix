@@ -1,9 +1,8 @@
 # HYPRLAND's config in Lua (0.55+ replaces hyprlang), hot-reloaded through mkOutOfStoreSymlink.
-# The 4 helper scripts and the remote-access safety net: docs/notes/desktop/hypr.md
+# The 3 helper scripts and the remote-access safety net: docs/notes/desktop/hypr.md
 {
   pkgs,
   config,
-  osConfig,
   inputs,
   ...
 }:
@@ -122,34 +121,6 @@ let
     '';
   };
 
-  # monitor-toggle (SUPER+SHIFT+T): the TV keeps the HDMI link alive when off, so Hyprland never
-  # emits monitorremoved and the ghost monitor stays. This is the manual way out.
-  monitorToggle = writeShellApplication {
-    name = "monitor-toggle";
-    runtimeInputs = [
-      hyprland
-      jq
-      coreutils
-    ];
-    text = ''
-      name="${osConfig.my.monitors.secondary}" # SSOT: system/desktop/monitors.nix
-
-      # In the 0.55 parser `hyprctl keyword` is blocked ("Use eval"), so this calls the SAME
-      # hl.monitor as hyprland.lua does, repeating mode/position/scale from there.
-      on="hl.monitor({ output = \"$name\", mode = \"1920x1080@60\", position = \"-1920x0\", scale = 1, disabled = false })"
-      off="hl.monitor({ output = \"$name\", disabled = true })"
-
-      # present in `hyprctl monitors` (the ACTIVE ones) means it is on, so turn it off.
-      if hyprctl -j monitors | jq -e --arg n "$name" 'any(.[]; .name==$n)' >/dev/null 2>&1; then
-        hyprctl eval "$off" >/dev/null 2>&1 || true
-        hyprctl notify -1 2000 "rgb(${config.my.theme.palette.red})" "TV off, workspaces on the LG" >/dev/null 2>&1 || true
-      else
-        hyprctl eval "$on" >/dev/null 2>&1 || true
-        hyprctl notify -1 2000 "rgb(${config.my.theme.palette.green})" "TV back on" >/dev/null 2>&1 || true
-      fi
-    '';
-  };
-
   # hypr-session-ensure: it DERIVES the Wayland env from the SOCKET, because it runs outside the
   # compositor and the session's services cannot talk to it without those two variables.
   sessionWatch = writeShellApplication {
@@ -214,7 +185,6 @@ in
   home.packages = [
     minimizeOthers # SUPER+M: minimizes the other windows (the Lua calls it by name)
     brightnessOsd # brightness through hyprsunset's gamma (SHIFT+Vol/0; called by name)
-    monitorToggle # SUPER+SHIFT+T: turns the TV on and off in Hyprland (the TV-off ghost)
     wl-clipboard # wl-copy/wl-paste (used by wl-clip-persist and by hand)
     wl-clip-persist # keeps the copy alive after the app closes (cliphist is in clipboard.nix)
     pamixer

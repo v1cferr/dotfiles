@@ -14,8 +14,8 @@
   # MONITORS: the SSOT of the connector names, read by Nix, Lua and QML. Declared (with no
   # default, on purpose) in system/desktop/monitors.nix.
   my.monitors = {
-    primary = "DP-2"; # an LG ULTRAGEAR (DisplayPort)
-    secondary = "HDMI-A-3"; # an LG TV (HDMI)
+    primary = "DP-1"; # an ASUS ROG Strix XG27ACS, QHD (DisplayPort)
+    secondary = "DP-2"; # an LG ULTRAGEAR, standing on its pivot (DisplayPort)
   };
 
   # EXTRA MOUNTS (the root and /boot come from disko). By UUID, since sdX/nvmeX shuffle.

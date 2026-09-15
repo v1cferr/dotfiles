@@ -1704,6 +1704,10 @@ Scope {
             implicitHeight: 30
             visible: !root.hidden
             exclusiveZone: root.barExclusiveZone
+
+            // COMPACT: the three Groups are ANCHORED, so on a narrow panel they overlap instead
+            // of pushing. Below the width the full set needs, only the essentials stay: bar.md
+            readonly property bool compact: bar.width < 1600
             color: "transparent"
 
             // A full-width Item used as the coordinate reference for the popovers (mapToItem
@@ -1735,10 +1739,10 @@ Scope {
                         label: root.winTitle
                         accent: Theme.colSky
                         italic: true
-                        maxWidth: 340
+                        maxWidth: Math.round(bar.width * 0.13)
                     }
                     Pill {
-                        visible: root.spHasPlayer
+                        visible: root.spHasPlayer && !bar.compact
                         icon: "󰝚"
                         label: root.spText
                         accent: root.spColor
@@ -1755,7 +1759,7 @@ Scope {
                     anchors.centerIn: parent
                     Pill {
                         id: weatherPill
-                        visible: root.wHas
+                        visible: root.wHas && !bar.compact
                         icon: root.weatherIcon(root.wCode, root.isDayNow())
                         label: root.wTemp + "°C"
                         accent: Theme.colSapphire
@@ -1782,6 +1786,7 @@ Scope {
                         }
                     }
                     Pill {
+                        visible: !bar.compact
                         // the || covers the singleton's init instant on a reload
                         icon: Notifs.barIcon || "󰂜"
                         // the count when there are notifications; an adaptive color:
@@ -1795,6 +1800,7 @@ Scope {
 
                 // RIGHT: temp, usage, vpn, network, audio, hypridle, the tray
                 Group {
+                    visible: !bar.compact
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     Pill {

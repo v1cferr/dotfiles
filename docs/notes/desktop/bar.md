@@ -20,6 +20,25 @@ for selecting a region at the top of the screen.
 **Do NOT name the handler "show"**: it collides with the `qs ipc show` subcommand and the CLI never
 calls the function. The same trap is documented in `shell.qml`, in the vpn `IpcHandler`.
 
+## The compact bar on a narrow panel
+
+The three Groups are ANCHORED (`left`, `centerIn`, `right`), and anchors in QML do not push, they
+let things overlap. On the 2560 px panel that never shows; on the secondary standing on its pivot,
+1080 px wide, the right group alone (7 pills plus the tray) lands on top of the centered clock.
+
+`compact` reads the panel's own WIDTH and not "is this the secondary", so rotating the monitor back
+restores the full bar with no config change (rule 3). The threshold is 1600 px, which is what the
+full set needs in the WORST case: the left group reaches around 620 px with a long title and
+Spotify playing, and the centered group starts at `(width - 280) / 2`, so below that they touch.
+
+What stays on a compact panel is what a support screen actually needs: the workspaces, the window
+title and the clock. What goes is either duplicated from the main bar or system state that belongs
+in ONE place: Spotify, the weather, the notification counter and the whole right group. It is the
+same split the Quickshell and Waybar communities land on for a secondary bar.
+
+The title's `maxWidth` is a SHARE of the panel (13%) instead of the old 340 px literal, so it
+shrinks with the bar instead of being the thing that causes the collision.
+
 ## The clock
 
 The time AND the date are ALWAYS visible, in the same pill. It used to be a toggle on click: one or

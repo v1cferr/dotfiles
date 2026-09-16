@@ -66,9 +66,20 @@ and nowhere else.
 the component takes that Scope as `host` and reads it. The month is `monthCells()`, the same
 function the year popover renders, at 17 px instead of 9.
 
-**The horizon.** The panel's bottom edge is the CPU sparkline of the last 2 minutes. It divides the
-glance zone from the work zone with the one signal worth catching out of the corner of an eye,
-instead of with a decorative rule.
+**The horizon.** The panel's bottom edge is the CPU of the last 2 minutes, in `dash/Horizon.qml`.
+It divides the glance zone from the work zone with the one signal worth catching out of the corner
+of an eye, instead of with a decorative rule. It is its OWN component and not the shared
+`Sparkline`: the band wants a gradient crest, a brighter newest bar and an animated height, and
+none of that should follow the widget into the popovers, where a flat bar is the right answer.
+
+It carries a `CPU · 2 MIN` caption because the first person to see it read the shape as audio. A
+graph with no label invites the wrong guess, and the label costs 10 px of dim text.
+
+**The date block.** The clock shows HH:mm:ss at one size, then the weekday spelled out, then an ISO
+line (`2026-09-15 · Setembro · W38`). The order is deliberate: the weekday is what a person wants
+off a clock, and the ISO date plus the ISO-8601 week are the precise record underneath. `isoWeek()`
+counts the week against the year its THURSDAY falls in, which is what puts 01/01 on week 53 of the
+year before when it lands on a Friday.
 
 **`host` is NOT a required property, and that is not sloppiness.** Quickshell's `Variants` creates
 the delegate with `modelData` as the only initial property, so a SECOND required property fails the

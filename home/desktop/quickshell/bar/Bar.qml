@@ -1238,6 +1238,7 @@ Scope {
     readonly property var monthNames: ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
     readonly property var weekHeads: ["D", "S", "T", "Q", "Q", "S", "S"]
     readonly property var dowAbbr: ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"]
+    readonly property var dowNames: ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"]
     readonly property var monAbbr: ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
     function easterDate(y) {
         const a = y % 19, b = Math.floor(y / 100), c = y % 100;
@@ -1277,6 +1278,7 @@ Scope {
     property int calYear: 0
     property int calTodayM: 0
     property int calTodayD: 0
+    property int calTodayW: 0 // today's weekday, 0 = Sunday, for the spelled-out name
     property var calMap: ({})
     property var calUpcoming: []
     property string calDayKey: ""
@@ -1306,8 +1308,18 @@ Scope {
         root.calYear = d.getFullYear();
         root.calTodayM = d.getMonth() + 1;
         root.calTodayD = d.getDate();
+        root.calTodayW = d.getDay();
         root.calMap = root.buildCalMap(root.calYear);
         root.calUpcoming = root.computeUpcoming(d, 7);
+    }
+    // ISO-8601 week number: the week's THURSDAY decides the year it counts against, which is what
+    // makes 01/01 land on week 53 of the year before when it falls on a Friday.
+    function isoWeek(y, m, d) {
+        const dt = new Date(Date.UTC(y, m - 1, d));
+        const dow = dt.getUTCDay() || 7;
+        dt.setUTCDate(dt.getUTCDate() + 4 - dow);
+        const jan1 = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
+        return Math.ceil(((dt - jan1) / 86400000 + 1) / 7);
     }
     function monthCells(m) {
         const cells = [];

@@ -33,14 +33,45 @@ PanelWindow {
     color: "transparent"
 
     Rectangle {
+        id: card
         anchors.fill: parent
         radius: 14
         color: Theme.colCard
         border.width: 1
         border.color: Theme.colGroupBorder
         clip: true
+        opacity: 0
+
+        // ONE entrance, not an effect per element: the card fades while the content rises into it,
+        // and the horizon follows a beat later so the eye lands on the time first.
+        Component.onCompleted: intro.start()
+        SequentialAnimation {
+            id: intro
+            ParallelAnimation {
+                NumberAnimation {
+                    target: card
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 240
+                    easing.type: Easing.OutCubic
+                }
+                NumberAnimation {
+                    target: rise
+                    property: "y"
+                    from: 14
+                    to: 0
+                    duration: 380
+                    easing.type: Easing.OutCubic
+                }
+            }
+        }
 
         ColumnLayout {
+            transform: Translate {
+                id: rise
+                y: 14
+            }
             anchors.fill: parent
             anchors.margins: 20
             anchors.bottomMargin: 0 // the horizon sits flush with the card's edge
@@ -53,37 +84,36 @@ PanelWindow {
                 spacing: 22
 
                 ColumnLayout {
-                    Layout.preferredWidth: 380
+                    Layout.preferredWidth: 400
                     Layout.fillHeight: true
                     spacing: 2
 
                     // HH:mm carries the glance; the seconds are there to prove the panel is alive.
-                    RowLayout {
-                        spacing: 8
-                        Text {
-                            text: dash.host.timeStr.slice(0, 5)
-                            color: Theme.colText
-                            font.family: Theme.uiFont
-                            font.pixelSize: 72
-                            font.bold: true
-                            font.letterSpacing: -2
-                        }
-                        Text {
-                            Layout.alignment: Qt.AlignBottom
-                            Layout.bottomMargin: 14
-                            text: dash.host.timeStr.slice(6, 8)
-                            color: Theme.colDim
-                            font.family: Theme.uiFont
-                            font.pixelSize: 24
-                        }
+                    Text {
+                        text: dash.host.timeStr
+                        color: Theme.colText
+                        font.family: Theme.uiFont
+                        font.pixelSize: 68
+                        font.bold: true
+                        font.letterSpacing: -1
                     }
 
+                    // The spelled-out weekday is what a person actually wants off a clock; the ISO
+                    // line under it is the precise record, and W is the ISO-8601 week.
                     Text {
-                        text: dash.host.dateStr.slice(0, 3).toUpperCase() + "  " + dash.host.calTodayD + "  ·  " + (dash.host.monthNames[dash.host.calTodayM - 1] || "").toUpperCase()
+                        Layout.topMargin: 2
+                        text: dash.host.dowNames[dash.host.calTodayW] || ""
+                        color: Theme.colText
+                        font.family: Theme.uiFont
+                        font.pixelSize: 22
+                    }
+                    Text {
+                        Layout.topMargin: 3
+                        text: dash.host.calYear + "-" + ("0" + dash.host.calTodayM).slice(-2) + "-" + ("0" + dash.host.calTodayD).slice(-2) + "  ·  " + (dash.host.monthNames[dash.host.calTodayM - 1] || "") + "  ·  W" + dash.host.isoWeek(dash.host.calYear, dash.host.calTodayM, dash.host.calTodayD)
                         color: Theme.colSubtext
                         font.family: Theme.uiFont
-                        font.pixelSize: 15
-                        font.letterSpacing: 3
+                        font.pixelSize: 13
+                        font.letterSpacing: 1
                     }
 
                     Item {
@@ -165,7 +195,18 @@ PanelWindow {
                             radius: 12
                             color: bellArea.containsMouse ? Theme.colHoverBgAccent : Theme.colGroupBg
                             border.width: 1
-                            border.color: Theme.colPillBorder
+                            border.color: bellArea.containsMouse ? Theme.colHoverBorder : Theme.colPillBorder
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Theme.hoverAnim
+                                }
+                            }
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: Theme.hoverAnim
+                                }
+                            }
 
                             RowLayout {
                                 id: bell
@@ -292,14 +333,25 @@ PanelWindow {
             }
 
             // ── The horizon: the last 2 minutes of CPU, and the line where the work area starts ──
-            Sparkline {
+            Horizon {
+                id: horizon
                 Layout.fillWidth: true
-                Layout.preferredHeight: 26
+                Layout.preferredHeight: 62
                 series: dash.host.cpuHist
-                scaleTop: 100
-                fill: Theme.colBlue
-                placeholder: ""
-                opacity: 0.55
+                caption: "CPU · 2 MIN"
+                opacity: 0
+
+                // A beat behind the card, so the reading arrives after the time and not with it.
+                Component.onCompleted: horizonIn.start()
+                NumberAnimation {
+                    id: horizonIn
+                    target: horizon
+                    property: "opacity"
+                    from: 0
+                    to: 0.9
+                    duration: 420
+                    easing.type: Easing.OutCubic
+                }
             }
         }
     }

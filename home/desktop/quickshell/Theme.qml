@@ -68,6 +68,7 @@ Singleton {
     readonly property color colCard: aa(pal.surface, "f2")
     readonly property color colBorder: pal.border
     readonly property color colText: pal.text
+    readonly property color colSubtext: pal.subtext // one step under colText, for a line that is not the subject
     readonly property color colDim: pal.dim
     readonly property color colTrack: pal.track
 
@@ -117,6 +118,10 @@ Singleton {
     // 120ms and not the Pill's 200ms: in a MENU the cursor crosses several items and 200ms leaves 2-3
     // lit at once.
     readonly property int hoverAnim: 120;
+
+    // A panel narrower than this cannot hold the bar's full set, and it is where the glance band
+    // takes over instead. Measured against the widest left group: docs/notes/desktop/bar.md
+    readonly property int compactWidth: 1600;
 
     readonly property string uiFont: pal.uiFont
 

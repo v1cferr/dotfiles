@@ -10,6 +10,7 @@ import QtQuick
 import QtQuick.Layouts
 import "root:/"
 import "root:/widgets"
+import "root:/dash"
 
 Scope {
     id: root
@@ -1682,6 +1683,17 @@ Scope {
     }
 
     // ===== One bar per monitor =====
+    // The GLANCE band, on the screens too narrow for the full bar. Same model as the bar below, so
+    // it follows the hotplug; the component is in dash/Dashboard.qml.
+    Variants {
+        model: Quickshell.screens
+
+        Dashboard {
+            host: root
+            visible: !root.hidden && modelData && modelData.width < Theme.compactWidth
+        }
+    }
+
     Variants {
         model: Quickshell.screens
 
@@ -1706,8 +1718,8 @@ Scope {
             exclusiveZone: root.barExclusiveZone
 
             // COMPACT: the three Groups are ANCHORED, so on a narrow panel they overlap instead
-            // of pushing. Below the width the full set needs, only the essentials stay: bar.md
-            readonly property bool compact: bar.width < 1600
+            // of pushing. Below the token's width only the essentials stay, and the band takes over.
+            readonly property bool compact: bar.width < Theme.compactWidth
             color: "transparent"
 
             // A full-width Item used as the coordinate reference for the popovers (mapToItem
@@ -1772,6 +1784,7 @@ Scope {
                     }
                     Pill {
                         id: clockPill
+                        visible: !bar.compact
                         icon: "󰥔"
                         label: root.timeStr
                         sub: root.dateStr

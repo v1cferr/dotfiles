@@ -39,6 +39,41 @@ same split the Quickshell and Waybar communities land on for a secondary bar.
 The title's `maxWidth` is a SHARE of the panel (13%) instead of the old 340 px literal, so it
 shrinks with the bar instead of being the thing that causes the collision.
 
+## The glance band on the standing monitor
+
+`dash/Dashboard.qml`. The top 30% of the standing secondary, reserved so that no window lands in
+it.
+
+**Why it exists.** A 27" panel on its pivot is 597 mm tall, so its top third sits ABOVE eye level
+for anyone sitting at the desk, while the ergonomic target is 0 to -30 degrees below the
+horizontal. A window up there is a neck problem, not a layout preference. The split is 30/70 on
+purpose: 576 px of band against 1344 px of work area, on a 1920 px screen.
+
+**How the space is taken: `exclusiveZone`, not a gap.** A workspace rule with
+`gaps_out = { top = N }` reserves the same strip, and it was the first attempt, but N would then
+have to be kept in sync BY HAND with the panel's height, and it only covers the workspaces it
+names. A layer surface declares its own height and Hyprland tiles below it, so ONE number governs
+both. That number subtracts the bar's own zone (`host.barExclusiveZone`) and the two 4 px margins,
+which is what makes the bar and the band together add up to the 30%.
+
+**What earns a place.** The top of a standing screen is for what is read in two seconds and never
+clicked: the time, the month, the machine's four vitals and what is playing. Everything that takes
+a click stays in the 70%. The notification FEED is deliberately not there, only a bell with the
+count: a feed in the eyeline is the opposite of a glance surface, so the centre opens on a click
+and nowhere else.
+
+**No new data.** Every number is already collected in `Bar.qml` for the bar and its popovers, so
+the component takes that Scope as `host` and reads it. The month is `monthCells()`, the same
+function the year popover renders, at 17 px instead of 9.
+
+**The horizon.** The panel's bottom edge is the CPU sparkline of the last 2 minutes. It divides the
+glance zone from the work zone with the one signal worth catching out of the corner of an eye,
+instead of with a decorative rule.
+
+**`host` is NOT a required property, and that is not sloppiness.** Quickshell's `Variants` creates
+the delegate with `modelData` as the only initial property, so a SECOND required property fails the
+creation with `failed to create variant with object` and the layer never appears at all.
+
 ## The clock
 
 The time AND the date are ALWAYS visible, in the same pill. It used to be a toggle on click: one or

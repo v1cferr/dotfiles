@@ -249,6 +249,8 @@ in
       sunshine_name = config.networking.hostName;
       # FORCES wlr: the portalgrab probe fires hyprland-share-picker, which hangs Sunshine.
       capture = "wlr";
+      # PINNED: one GPU on `xe`/iHD and no CUDA here, so probing nvenc only ever logs errors.
+      encoder = "vaapi";
       # Not kms: kmsgrab does not enumerate on `xe`. The monitor is pinned by NAME, because
       # the TV enumerates first and Moonlight opened on the wrong screen.
       output_name = config.my.monitors.primary; # SSOT: system/desktop/monitors.nix

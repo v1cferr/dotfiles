@@ -163,6 +163,32 @@ same proportion, 1164 by the same absolute margin, with the arithmetic in
 robust one: every byte closer to the ceiling is a byte closer to the silent drop described above,
 and the win on the other side is overhead per frame, not anything you can see.
 
+## The encoder is pinned, and the codec still is not the host's to choose
+
+`encoder = "vaapi"` since 16/09/2026. There is exactly ONE GPU here, `card0` on `xe`
+(`8086:E20B`, the B580) with a single render node, so auto-detection cannot pick the wrong adapter
+and `adapter_name` would be a declaration that changes nothing (rule 16).
+
+What the pin buys is the PROBE. With no `encoder` set, Sunshine walks its whole list on every start
+and the log opens with:
+
+```text
+Error: [CUDA @ 0x...] Could not dynamically load CUDA
+Error: Failed to create a CUDA device: Operation not permitted
+```
+
+which is NVENC being probed on a machine that removed NVIDIA for good. It is harmless, and Sunshine
+itself prints `// Ignore any errors mentioned above //` right after, but an error line that is
+always there is an error line nobody reads, and that is rule 16's argument applied to a log.
+
+`vainfo` is what says the pin lands on something real, and it lists all three entry points:
+`VAProfileH264High`, `VAProfileHEVCMain` / `Main10` and `VAProfileAV1Profile0`, every one of them
+with `VAEntrypointEncSlice`. The host announces all three at startup.
+
+**The pin does NOT choose the codec**, and that is the trap worth repeating: the codec is
+NEGOTIATED per session and the CLIENT picks. See the correction of 03/08/2026 below, which is still
+the most useful paragraph in this file.
+
 ## Two more settings that look wrong and are not
 
 **`origin_web_ui_allowed = wan`** is kept at the more permissive value on purpose, because what
@@ -350,6 +376,23 @@ for H.264 8-bit, the LEAST efficient codec available, so the AV1 arithmetic does
 **The practical consequence: turning HEVC/AV1 on IN THE CLIENT'S Moonlight is worth more than any
 tweak in this file**, and it is where to look first when the stream suffers. There is no host
 setting that forces it; `hevc_mode`/`av1_mode` only ANNOUNCE support, which is already announced.
+
+**Which one to ask for, and why it is HEVC and not AV1.** The choice is decided by the CLIENT'S
+DECODER, not by this host, which offers all three. HEVC decodes in fixed-function silicon on
+essentially anything since ~2016 (Intel from Skylake, NVIDIA from Maxwell 2, AMD from Polaris), and
+it is worth roughly 25 to 35% over H.264 at equal quality. AV1 is better again, by ~20% over HEVC,
+but its hardware decode only starts at Intel Tiger Lake / Arc, NVIDIA RTX 30 and AMD RX 6000, so on
+an unknown work notebook it is a gamble and the losing side of it is SOFTWARE decode at 1440p60.
+
+So: ask for **HEVC** first. Asking costs nothing, because Moonlight checks its own decoder and
+falls back on its own, and the verification does not depend on trusting the client's UI. The host
+log names what was actually negotiated:
+
+```sh
+journalctl --user -u sunshine.service --since -10min | grep 'Creating encoder'
+```
+
+`hevc_vaapi` there means it took. `h264_vaapi` means the client refused or was never asked.
 
 **FEC at more than the default 20%** because the path to FAI loses packets: measured at 1.67% loss
 with RTT jumping from 20 to 312 ms in a burst of 300 packets of 1 KB. FEC recovers loss without

@@ -55,7 +55,21 @@ tunnel plus the LAN leg:
   and the Sunshine host narrows it further.
 - **RTT 35.7 ms** average over 40 packets (min 31.2, max 77.9, mdev 8.1), with **0% loss**.
 - For contrast, the DIRECT path from that same machine measured 1.67% loss with RTT spiking from 20
-  to 312 ms, which is the number that justified `fec_percentage = 30`.
+  to 312 ms, which is the number that justified `fec_percentage = 30` at the time.
+
+## Measured again on 16/09/2026, mid-session, from the host
+
+The same step 2, with a live stream running, and it is the measurement that RETIRED the 30:
+
+- **RTT 33.0 ms** average over 100 packets (min 29.4, max 39.4, **mdev 1.8**), **0% loss**.
+- Path MTU still **exactly 1420**: `-s 1392` passes, `-s 1412` fails. It is the WireGuard default,
+  which is also how you can tell nothing else is encapsulating the traffic on the way.
+- TTL **127** on the reply, from a Windows client that starts at 128, so there is exactly ONE
+  router between the two machines: the tunnel collapses the whole public path into one IP hop.
+
+Two clean measurements a month apart, and the jitter dropped from mdev 8.1 to 1.8. `fec_percentage`
+went back to Sunshine's default of 20 on the strength of that; the reasoning is in
+[`../notes/network/sunshine.md`](../notes/network/sunshine.md).
 
 Pinging the PEER is a valid test from either end, because the packet has to cross the tunnel to be
 answered. The guide's warning about a ~0.3 ms result applies to pinging the ROUTER from home, which

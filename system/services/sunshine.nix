@@ -267,9 +267,9 @@ in
       # A host-side bitrate ceiling, so it holds for ANY client that pairs. 20000 is the de facto
       # rate made explicit, not an experiment. On the codec: docs/notes/network/sunshine.md
       max_bitrate = 20000; # Kbps
-      # More FEC: the path to FAI loses packets (1.67%, RTT spiking 20 to 312 ms).
-      # It costs bandwidth, which is why it travels with the ceiling above.
-      fec_percentage = 30;
+      # Back to Sunshine's default: the 30 answered the DIRECT path, retired on 19/08/2026.
+      # The tunnel measured 0% loss twice (19/08 and 16/09), so the extra 10 only cost bitrate.
+      fec_percentage = 20;
       # Tolerates a transient hole. It only helps when the HOST gives up, and it is not free:
       # a dead client's session holds hypridle paused for longer.
       ping_timeout = 20000; # ms

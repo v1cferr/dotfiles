@@ -394,11 +394,18 @@ journalctl --user -u sunshine.service --since -10min | grep 'Creating encoder'
 
 `hevc_vaapi` there means it took. `h264_vaapi` means the client refused or was never asked.
 
-**FEC at more than the default 20%** because the path to FAI loses packets: measured at 1.67% loss
-with RTT jumping from 20 to 312 ms in a burst of 300 packets of 1 KB. FEC recovers loss without
-retransmitting, which in real time would arrive late. It costs bandwidth, which is why it travels
-with the ceiling. Caveat: the measurement is ICMP, which switches and firewalls deprioritize, so it
-indicates a bad path rather than proving what the video flow suffers.
+**FEC is back at the default 20% (16/09/2026)**, and the 30 is what a number looks like when it
+outlives its reason. It was set for the DIRECT path, measured at 1.67% loss with RTT jumping from 20
+to 312 ms in a burst of 300 packets of 1 KB, and that path was retired on 19/08/2026. The tunnel
+that replaced it has now measured **0% loss twice**: 40 packets on 19/08, and 100 packets on
+16/09 at RTT 29.4/33.0/39.4 ms with mdev 1.8 ms. FEC recovers loss without retransmitting, which in
+real time would arrive late, but it is paid for in bitrate: against the 20 Mbps ceiling the 10
+points returned are ~2 Mbps that carry picture instead of parity.
+
+Caveat, and it is the same one the 30 carried: both measurements are ICMP, which switches and
+firewalls deprioritize, so they indicate a good path rather than proving what the video flow gets.
+**If sessions start breaking up, this is the first number to put back**, and the second is
+`packet_size`.
 
 **`ping_timeout` above the 10 s default** tolerates a transient hole. It only helps when the HOST
 is the one giving up, and the logs cannot tell that from the client giving up. It is not free: a

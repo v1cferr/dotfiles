@@ -75,6 +75,19 @@ none of that should follow the widget into the popovers, where a flat bar is the
 It carries a `CPU · 2 MIN` caption because the first person to see it read the shape as audio. A
 graph with no label invites the wrong guess, and the label costs 10 px of dim text.
 
+**It SCROLLS, it does not morph, and that is the whole difference.** Animating 60 bar heights on
+every sample makes the graph writhe for 220 ms and then sit still, which reads as a stutter even
+though nothing is dropping frames (`qs` was at 3% of a core while doing it). A new sample shifts the
+data one step LEFT, so the track jumps one step RIGHT at that same instant and walks back over
+exactly `sysInterval`, and the pixels never jump: one animated property instead of sixty, and
+motion that never stops. The step is `width / (window - 1)` and not `width / window`, because the
+track has to be ONE step wider than the viewport or the left edge shows a sliver of nothing at the
+start of every cycle.
+
+MEASURED: 3% of a core morphing against 7% scrolling, on a 144 Hz panel. The band is drawing every
+frame now, forever, which is what that difference buys. If it ever needs to stop costing that, the
+cheap variant is the same slide over 600 ms with the graph at rest for the remaining 1.4 s.
+
 **The date block.** The clock shows HH:mm:ss at one size, then the weekday spelled out, then an ISO
 line (`2026-09-15 · Setembro · W38`). The order is deliberate: the weekday is what a person wants
 off a clock, and the ISO date plus the ISO-8601 week are the precise record underneath. `isoWeek()`

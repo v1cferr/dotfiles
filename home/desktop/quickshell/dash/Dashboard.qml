@@ -53,16 +53,16 @@ PanelWindow {
                     property: "opacity"
                     from: 0
                     to: 1
-                    duration: 240
-                    easing.type: Easing.OutCubic
+                    duration: 320
+                    easing.type: Easing.OutQuad
                 }
                 NumberAnimation {
                     target: rise
                     property: "y"
-                    from: 14
+                    from: 18
                     to: 0
-                    duration: 380
-                    easing.type: Easing.OutCubic
+                    duration: 560
+                    easing.type: Easing.OutQuint
                 }
             }
         }
@@ -84,7 +84,7 @@ PanelWindow {
                 spacing: 22
 
                 ColumnLayout {
-                    Layout.preferredWidth: 400
+                    Layout.preferredWidth: 420
                     Layout.fillHeight: true
                     spacing: 2
 
@@ -98,21 +98,22 @@ PanelWindow {
                         font.letterSpacing: -1
                     }
 
-                    // The spelled-out weekday is what a person actually wants off a clock; the ISO
-                    // line under it is the precise record, and W is the ISO-8601 week.
+                    // The spelled-out weekday is what a person actually wants off a clock, so it
+                    // gets a size close to the time's; the ISO line under it is the record.
                     Text {
-                        Layout.topMargin: 2
+                        Layout.topMargin: 4
                         text: dash.host.dowNames[dash.host.calTodayW] || ""
                         color: Theme.colText
                         font.family: Theme.uiFont
-                        font.pixelSize: 22
+                        font.pixelSize: 38
+                        font.letterSpacing: -1
                     }
                     Text {
-                        Layout.topMargin: 3
+                        Layout.topMargin: 6
                         text: dash.host.calYear + "-" + ("0" + dash.host.calTodayM).slice(-2) + "-" + ("0" + dash.host.calTodayD).slice(-2) + "  ·  " + (dash.host.monthNames[dash.host.calTodayM - 1] || "") + "  ·  W" + dash.host.isoWeek(dash.host.calYear, dash.host.calTodayM, dash.host.calTodayD)
                         color: Theme.colSubtext
                         font.family: Theme.uiFont
-                        font.pixelSize: 13
+                        font.pixelSize: 22
                         font.letterSpacing: 1
                     }
 
@@ -338,6 +339,8 @@ PanelWindow {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 62
                 series: dash.host.cpuHist
+                window: dash.host.histWindow
+                period: dash.host.sysInterval
                 caption: "CPU · 2 MIN"
                 opacity: 0
 
@@ -349,8 +352,8 @@ PanelWindow {
                     property: "opacity"
                     from: 0
                     to: 0.9
-                    duration: 420
-                    easing.type: Easing.OutCubic
+                    duration: 520
+                    easing.type: Easing.OutQuad
                 }
             }
         }

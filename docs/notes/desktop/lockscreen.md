@@ -142,6 +142,36 @@ one the bar reads, and the script's `case` arms are generated from it. It used t
 its own coordinates, and on 22/08/2026 the lock said 18°C while the bar said 22°C in the same
 minute. The full reasoning, and every measured failure path, is in [`weather.md`](weather.md).
 
+## The standing monitor's wallpaper, drawn from my own folder
+
+The secondary shows a random image out of `~/Pictures/lockscreen/` on every lock, and the packaged
+`nixos-artwork` one when that folder is empty.
+
+**The images are STATE, not config (rule 6).** They are art I collect by hand, not something the
+build should carry: no binary enters git, no URL can rot the build a year from now, and adding one
+is dropping a file in a folder with no rebuild and no commit. Restic already covers it, since it
+backs up `/home/v1cferr` minus a short exclude list that this folder is not on.
+
+**The link is EXTENSIONLESS on purpose.** hyprlock loads images through hyprgraphics, whose
+`formatFromFile()` includes `<magic.h>`: the decoder is chosen by libmagic from the file's CONTENT
+and never from its name. So one fixed path, `~/.cache/lockscreen/secondary`, serves png, jpg, webp
+and bmp from the same folder, and the picker can symlink whatever it drew without renaming it.
+
+**Three fallbacks, because a lock screen has no acceptable failure.** The picker falls back to the
+packaged image when the folder is empty or missing; hyprlock keeps its `color` under the image, so
+even a dangling link shows the palette's background and not black; and the `ExecStartPre` carries a
+leading `-`, so a picker that stumbles cannot turn into a lock that refuses to open. A security
+function taken down by a wallpaper would be an absurd way to lose a session.
+
+It runs in TWO places for one reason each: `ExecStartPre` on `hyprlock.service` is what makes the
+draw happen per lock, and the home-manager activation is what makes the link exist before the FIRST
+lock after a switch.
+
+Animated GIFs do not work and it is not a config mistake: hyprlock's formats are png, jpg and webp
+with no animation (upstream issue #632, open). The community fork that adds it was last pushed in
+08/2025 against a project that shipped v0.9.6 in 07/2026, and a year-stale fork is not what should
+stand between a locked session and the machine.
+
 ## The visual details worth keeping
 
 The wallpapers are the official NixOS ones through `pkgs.nixos-artwork`, so there is no binary in

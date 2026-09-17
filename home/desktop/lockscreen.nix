@@ -29,6 +29,32 @@ let
   wallMain = "${art.catppuccin-mocha}/share/backgrounds/nixos/nixos-wallpaper-catppuccin-mocha.png"; # main (blurred on the lock)
   wallSecondary = "${art.waterfall}/share/backgrounds/nixos/nix-wallpaper-waterfall.png"; # the secondary (static, no login)
 
+  # MY OWN art for the standing monitor's lock, as STATE and not config (rule 6): restic already
+  # backs up everything under home but the excluded list, so the folder rides along.
+  wallDir = "${config.home.homeDirectory}/Pictures/lockscreen";
+  # Extensionless ON PURPOSE: hyprgraphics sniffs the CONTENT with libmagic, never the name, so one
+  # fixed link serves png, jpg, webp and bmp from the same folder. See the notes.
+  wallLink = "${cacheDir}/secondary";
+
+  # A random file out of that folder per lock, falling back to the packaged image, so the screen is
+  # NEVER left without one. The runtime is one line and the logic is here (rule 7).
+  wallpaperPick = writeShellScript "lockscreen-wallpaper-pick" ''
+    set -u
+    ${coreutils}/bin/mkdir -p ${cacheDir} ${wallDir} || exit 0
+
+    files=()
+    for f in ${wallDir}/*; do
+      [ -f "$f" ] && files+=("$f")
+    done
+
+    pick=""
+    [ ''${#files[@]} -gt 0 ] && pick="''${files[RANDOM % ''${#files[@]}]}"
+    [ -n "$pick" ] || pick="${wallSecondary}"
+
+    ${coreutils}/bin/ln -sfn "$pick" ${wallLink}
+    exit 0
+  '';
+
   # Monitors: the SSOT is system/desktop/monitors.nix (rule 11).
   primary = osConfig.my.monitors.primary; # the main one: blurred desktop plus login
   secondary = osConfig.my.monitors.secondary; # the secondary: static image plus a padlock
@@ -56,10 +82,11 @@ let
 
   # Quote: a daily timer fetches ~50 from ZenQuotes and batch-translates them through DeepL; the
   # lock only runs shuf. The layered fallbacks are in docs/notes/desktop/lockscreen.md
-  quotesCache = "${config.xdg.cacheHome}/lockscreen/quotes";
+  cacheDir = "${config.xdg.cacheHome}/lockscreen"; # the lock's own cache: quotes, weather, the link
+  quotesCache = "${cacheDir}/quotes";
   deeplKeyFile = "/run/secrets/deepl_api_key"; # sops (owner v1cferr); if absent, it stays EN
   quotesFetch = writeShellScript "lockscreen-quotes-fetch" ''
-    ${coreutils}/bin/mkdir -p ${config.xdg.cacheHome}/lockscreen
+    ${coreutils}/bin/mkdir -p ${cacheDir}
     tmp="${quotesCache}.tmp"
     ${coreutils}/bin/rm -f "$tmp"
 
@@ -103,7 +130,7 @@ let
   '';
 
   # Weather: a 10-min timer caches Open-Meteo; the runtime is cat.
-  weatherDir = "${config.xdg.cacheHome}/lockscreen";
+  weatherDir = cacheDir;
   weatherCache = "${weatherDir}/weather";
   # The coordinates and the pt-BR table are the SSOT in my.weather (home/desktop/weather.nix), the
   # SAME ones the bar reads, so the two surfaces cannot disagree about the same minute.
@@ -193,8 +220,8 @@ in
         }
         {
           monitor = secondary;
-          color = "rgba(${palette.bg}ff)"; # a fallback while the image loads
-          path = "${wallSecondary}";
+          color = "rgba(${palette.bg}ff)"; # a fallback while the image loads, and if the link dangles
+          path = "${wallLink}";
         }
       ];
 
@@ -291,6 +318,12 @@ in
     };
   };
 
+  # The link has to exist BEFORE the first lock, so a screen locked right after a switch is not the
+  # one time it comes up imageless. Same picker the unit runs, and idempotent.
+  home.activation.lockscreenWallpaper = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    run ${wallpaperPick}
+  '';
+
   # hyprlock as its OWN UNIT, because locking is a SECURITY function and cannot be hostage to an
   # idle daemon anything can stop. The 6h outage and the remote lockout: the notes.
   systemd.user.services.hyprlock = {
@@ -305,6 +338,9 @@ in
       # The heir of the old `pidof hyprlock ||`, now covering only the TTY rescue. ExecCondition and
       # not ExecStartPre: failing here SKIPS silently instead of marking the unit failed.
       ExecCondition = "${bash}/bin/bash -c '! ${pidof} hyprlock'";
+      # The leading `-` makes it BEST EFFORT: a picker that stumbles must not turn into a lock
+      # that refuses to open, which would be a security function taken down by a wallpaper.
+      ExecStartPre = "-${wallpaperPick}";
       ExecStart = hyprlockBin;
     };
     # NO Install/wantedBy ON PURPOSE: what locks is the click or the idle, never the boot.

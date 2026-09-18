@@ -159,6 +159,16 @@ live target holds for the whole session; "not found" is reevaluated every 5 min,
 target that was down at the instant of connection would condemn the panel to "no probe" until
 disconnecting.
 
+**The routes arrive AFTER the interface, and that race cost the first 5 min of every session.**
+Measured on 18/09/2026: ppp0 got its address at 18:49:39 and nxBender only logged
+`Remote routing configured, VPN is up` at 18:49:49, ten seconds later. The pill turns green on the
+interface, so the first `stats-json` probed at 18:49:41, when `200.136.209.128/25` still did not go
+out through the tunnel; the ping failed instantly and the 5 min "not found" pinned
+`no probe target inside the tunnel` on a panel whose tunnel was already answering in 31ms. The fix
+is not a bigger timeout: a candidate is only tested when `ip route get` says the tunnel ROUTES to
+it, and a sweep where nothing was routable yet is NOT memorized, so the next poll fills the panel
+the moment the routes land.
+
 ## Ownership details
 
 The connection watcher is a DECLARED UNIT and not a background subshell (rule 15). A loose `&` in

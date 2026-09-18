@@ -200,6 +200,10 @@ let
       # -I pins the packet to the tunnel: without it a stray route would time a LIE.
       probe_alive() { ping -n -q -c 1 -W 1 -I "$1" "$2" >/dev/null 2>&1; }
 
+      # A candidate only counts once the tunnel ROUTES to it: nxBender pushes the routes ~10s
+      # AFTER ppp0 exists, and the pill is already green in that window.
+      routed() { ip -4 route get "$2" 2>/dev/null | grep -q " dev $1 "; }
+
       # Memorized per iface+IP. "Not found" is retried every 5 min, never cached forever.
       probe_for() {
         id="$1"; ifc="$2"; ipaddr="$3"
@@ -214,10 +218,16 @@ let
           echo "$c_tgt"; return 0
         fi
         found="-"
+        routable=0
         while read -r t; do
           [ -n "$t" ] || continue
+          routed "$ifc" "$t" || continue
+          routable=1
           if probe_alive "$ifc" "$t"; then found="$t"; break; fi
         done <<< "$(probe_candidates "$id" "$ifc")"
+        # Nothing was routable YET: that is the race, not a verdict, so it is not memorized.
+        # Caching it pinned "no probe" for the 5 min after the tunnel was already fine.
+        if [ "$found" = "-" ] && [ "$routable" = 0 ]; then echo "-"; return 0; fi
         echo "$ifc $ipaddr $found $now" > "$f"
         echo "$found"
       }

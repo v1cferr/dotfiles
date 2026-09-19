@@ -46,7 +46,10 @@ writers.writePython3Bin "docs-links"
     def main():
         broken = []
         checked = 0
-        for rel in tracked():
+        files = tracked()
+        # The SAME list as a set: a link leaving docs/ is checked against it, not just the disk.
+        known = set(files)
+        for rel in files:
             path = os.path.join(ROOT, rel)
             try:
                 text = open(path, encoding="utf-8").read()
@@ -83,8 +86,15 @@ writers.writePython3Bin "docs-links"
                     if target.startswith(("http://", "https://", "mailto:")):
                         continue
                     checked += 1
-                    if not os.path.isfile(os.path.normpath(os.path.join(base, target))):
+                    resolved = os.path.normpath(os.path.join(base, target))
+                    if not os.path.isfile(resolved):
                         broken.append((rel, target, "link"))
+                        continue
+                    # A link LEAVING docs/ is published as a GitHub blob URL by the site's
+                    # hook, and an untracked file is a 404 there while resolving fine here.
+                    out = os.path.relpath(resolved, ROOT)
+                    if not out.startswith("docs" + os.sep) and out not in known:
+                        broken.append((rel, target, "untracked"))
 
         if broken:
             print(f"docs-links: {len(broken)} broken of {checked} checked\n", file=sys.stderr)

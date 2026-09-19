@@ -29,6 +29,20 @@ way to know that landed was to check all 274 afterwards.
 | code (`.nix`, `.lua`, `.qml`, `.sh`, `.toml`, `.yaml`, `.yml`) | a bare `docs/…md` path, which is the form the headers use |
 | markdown | only a real `](target)` link, resolved against the file's own directory |
 | markdown outside `docs/history/` | a repo path quoted in prose, like `` `system/hardware/gpu.nix` `` |
+| a markdown link LEAVING `docs/` | the target must ALSO be git-tracked, because the site publishes it as a blob URL |
+
+### Existing is not enough once the docs are a site (19/09/2026)
+
+A link from a page to the module it documents is rewritten into a GitHub blob URL when
+[`site.md`](site.md) builds the site, because MkDocs serves nothing outside `docs/`. That moves
+the goalposts: a target that exists ON DISK resolves here and 404s there, since GitHub can only
+serve what was pushed.
+
+So a link whose target leaves `docs/` is checked against `git ls-files` as well, which the
+checker was already holding to pick its inputs. At 921 references, none of them is untracked
+today, so this catches nothing right now and that is the point: the gap opens the day somebody
+links a page at a file they have not added yet, and the failure would appear on the published
+site rather than in the working tree.
 
 ### The prose-path check, and why history is exempt
 

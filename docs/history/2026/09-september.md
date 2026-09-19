@@ -1,6 +1,6 @@
 # History: september 2026
 
-10 entries. Index in [README.md](../README.md).
+11 entries. Index in [README.md](../README.md).
 
 - [~] A KVM host for a DISPOSABLE Windows 11, and three wiki steps that do not survive 26.05
       (19/09/2026). The host is declared, switched and verified; no guest exists yet, which is why
@@ -66,6 +66,26 @@
         both deliberately absent, unused today (rule 16) and both holes in the isolation this VM
         exists to provide. One claim also stays unproven until the guest boots: that libvirt's
         jump sits ahead of `nixos-fw` in `INPUT`. The first DHCP lease settles it.
+
+- [x] The docs contract became rule 20, and the day found its own counterexample (19/09/2026).
+      Two days of decisions about the site were living in a note, which is where reasoning goes,
+      not where a contract goes. The rule states it and
+      [notes/repo/site.md](../../notes/repo/site.md) keeps the reasoning, which is the usual
+      split here.
+      • WHAT THE RULE ACTUALLY FIXES is not that the docs are published, it is that the TREE and
+        the NAV are separate and the tree never moves to match a renderer. Regrouping `docs/` by
+        topic to mirror a sidebar reads as tidying and is the tree mirror
+        [notes/README.md](../../notes/README.md) already measured and rejected, it would rewrite
+        197 pointers across 136 code files, and rule 17 wants a `git mv` history that survives.
+      • THE RULE CAUGHT SOMETHING WHILE I WAS WRITING IT, which is the best argument it could
+        have made for itself: `notes/services/libvirt.md` had been written the day before,
+        indexed in the notes README, and left out of the nav. The build refuses that, so the
+        page would have shipped unreachable and the CI would have gone red on the next push.
+      • AND IT EXPOSED THAT THE ENFORCEMENT WAS A STEP LATE. Only the gate builds the site, so
+        the omission survived two commits. The build moved to `pre-push` as well, which is a
+        MEASUREMENT and not a taste: 7.12s per run, and a page is added rarely, so every docs
+        edit paying it buys nothing while one run per push keeps the CI from being where I find
+        out. git-hooks.nix installs the hook type from the stage on its own.
 
 - [x] The site draws diagrams, and stopped calling out to anybody (19/09/2026). Follow-up to the
       day before: the first diagram went in, and putting it there exposed two third parties the

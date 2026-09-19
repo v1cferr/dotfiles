@@ -95,8 +95,8 @@ markdown_extensions:
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
 
-# THE NAV IS THE ONLY TOPIC LAYER, and it is deliberate: the FILES stay grouped the way the repo
-# needs them, and the reader gets a manual. The two are decoupled, so neither constrains the other.
+# THE NAV IS THE ONLY TOPIC LAYER (rule 20): the FILES stay grouped the way the repo needs them
+# and the reader still gets a manual, because the two are decoupled and neither constrains the other.
 nav:
   - Home: README.md
   - Rules: rules.md

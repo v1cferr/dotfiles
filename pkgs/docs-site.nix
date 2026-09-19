@@ -1,5 +1,5 @@
-# docs-site: it builds docs/ into the static site served at dotfiles.v1cferr.dev.
-# Why MkDocs, why the tree did not move, and the two manual halves: docs/notes/repo/site.md
+# docs-site: it builds docs/ into the static site served at dotfiles.v1cferr.dev (rule 20).
+# Why MkDocs, why the tree did not move, and the halves Nix cannot reach: docs/notes/repo/site.md
 {
   lib,
   stdenvNoCC,

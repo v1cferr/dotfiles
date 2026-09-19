@@ -8,6 +8,10 @@ reader outside a file tree. This builds it into a static site at
 `pkgs/docs-site.nix`. Build it with `nix build .#docs-site`, preview it with `mkdocs serve`
 inside the devShell.
 
+**Rule 20 is what this page argues for**, and the split between the two is the usual one here:
+the rule states the contract, and everything below is the reasoning, the measurements and what
+was tried and rejected on the way to it.
+
 ## Why MkDocs, and not a framework
 
 MkDocs is written in Python, and that is the only Python fact that matters here: it is a

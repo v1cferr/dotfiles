@@ -64,6 +64,38 @@ VERIFIED BEFORE SWITCHING, because this is the part that could have quietly brok
 smaller emulator that dropped the Secure Boot firmware would have traded a gigabyte for an
 installer that refuses to start.
 
+## A qemu change does NOT reach the running daemon, and that binds a VM to a dead path
+
+This bit on the very switch that introduced `qemu_kvm`, and it will bite again on any nixpkgs bump
+that moves qemu, so it is written here rather than rediscovered.
+
+nixpkgs patches libvirt so a domain's XML records `/run/libvirt/nix-emulators/qemu-kvm`, a stable
+path, and NOT the store path: the comment at `pkgs/by-name/li/libvirt/package.nix:322` says it is
+"to avoid bound VMs to particular qemu derivations". `libvirtd-config` is what populates that
+directory with symlinks.
+
+The trap is that `libvirtd.service` carries `restartIfChanged = false` upstream, and
+`libvirtd-config` is only pulled in through libvirtd's `requires`. So a switch that changes qemu
+rebuilds both units and starts NEITHER, and the symlinks keep pointing at the previous emulator.
+MEASURED right after the `qemu_kvm` switch on 19/09/2026: the active unit declared
+`qemu-host-cpu-only` while `/run/libvirt/nix-emulators/qemu-kvm` still resolved to the full
+`qemu-10.2.4`, timestamped from the switch BEFORE it.
+
+Left alone, that is a silent one: a VM created in that window records the stable path, the stable
+path resolves to a store path no generation references any more, and the VM stops booting at the
+next `nix-collect-garbage` with an error that says nothing about garbage collection.
+
+```text
+sudo systemctl restart libvirtd-config libvirtd
+```
+
+A reboot does the same thing, which is why this mostly stays invisible on a machine that reboots
+often. CHECK IT after any switch that moved qemu, and before creating a domain:
+
+```text
+readlink /run/libvirt/nix-emulators/qemu-kvm   # must match the qemu in the CURRENT generation
+```
+
 ## The `libvirtd` group goes in; `kvm` still stays out
 
 These look like the same decision and they are not, which is why both are written down.

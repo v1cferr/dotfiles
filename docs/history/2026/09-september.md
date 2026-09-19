@@ -50,6 +50,17 @@
         system closure, 26.89 GiB to 25.95, 940 MiB. VERIFIED BEFORE SWITCHING, because this is
         the half that could have quietly broken the installer: `qemu_kvm` ships the SAME eight
         firmware descriptors, the Secure Boot one included.
+      • THE SWAP DID NOT REACH THE RUNNING DAEMON, caught before creating any VM. nixpkgs
+        patches libvirt so a domain records `/run/libvirt/nix-emulators/qemu-kvm` instead of a
+        store path, to keep VMs off a particular derivation. But `libvirtd.service` carries
+        `restartIfChanged = false` upstream and `libvirtd-config` only comes in through its
+        `requires`, so the switch rebuilt both units and started NEITHER: the active unit
+        declared `qemu-host-cpu-only` while the symlink still resolved to the full `qemu-10.2.4`
+        from the switch before it. A VM created in that window would have recorded the stable
+        path, had it resolve to a store path no generation references, and stopped booting at the
+        next `nix-collect-garbage` with an error saying nothing about garbage collection.
+        `systemctl restart libvirtd-config libvirtd` fixes it, a reboot does too, and that is why
+        it normally stays invisible here.
       • WHAT IS LEFT, and it is the guest: install Windows with UEFI secure plus a TPM 2.0 on
         Q35, then the payload. USB passthrough and a virtiofs shared folder are both one line and
         both deliberately absent, unused today (rule 16) and both holes in the isolation this VM

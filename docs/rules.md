@@ -1,9 +1,16 @@
 # Rules
 
 The rules that govern this repo. **THE NUMBERING IS API**: the code cites
-"rule 11", "rule 14" and so on in ~180 comments, and renumbering would break all
-of them silently. A new rule goes in at the END; a rule that dies gets struck
-through instead of disappearing.
+"rule 11", "rule 14" and so on in 212 comments (measured 19/09/2026), and
+renumbering would break all of them silently. A new rule goes in at the END; a
+rule that dies gets struck through instead of disappearing.
+
+**HOW MANY RULES THERE ARE IS NOT WRITTEN ANYWHERE BUT HERE.** Two places said
+"18" while this file already held 20, which is rule 16 charging its smallest
+possible interest: a derived number has one owner, and copying it just buys a
+second thing to forget. The dated measurement above is the other half of the
+same idea, since a number with a date cannot go stale, only a number without
+one can.
 
 > 1. Always research the best practices and what the NixOS community is using most for each package/software (to have a reference and suggestions)
 > 2. COMMENTS ARE SHORT, in EVERY file and with no exception. **AT MOST 2 LINES, ANYWHERE**: that is the cap for the module header AND for every comment inside it, per config, per package, per list item. The header says what the module is and where the detail lives. The detail itself goes to [`notes/`](notes/), never into the file. A comment records the why and the trap in one line, never the thing the code already says. THE REASON THIS RULE CHANGED TWICE: it first forbade the header block, then allowed it because the repo had them anyway, and the blocks grew until 36% of the tree was comment and one module carried a 123-line header (measured on 16/08/2026, 6062 comment lines in 16634). A header that long is not documentation, it is a wall you scroll past to reach the code, and the reasoning inside it was invisible to anyone reading `docs/`. So the reasoning MOVED instead of being deleted: `notes/<module>.md` holds the why, the measurements and what was tried and rejected, and the 2-line header points at it. The sweep landed on 16/08/2026: 1601 comment lines in 13299, 12%, with NOTHING deleted, only relocated. Whatever you touch, you shorten.

@@ -78,7 +78,7 @@ scripts/                 bash/python read by `writeShellApplication` (shellcheck
                          sync-secrets, router-sync, owfetch
 router/                  mirror of the OpenWrt UCI config (router-sync): visible, not declarable
 docs/                    what is NOT declarable, plus the repo's diary (see docs/README.md)
-  rules.md               the 18 rules. The NUMBERING is API: the code cites "rule N"
+  rules.md               the repo rules. The NUMBERING is API: the code cites "rule N"
   open-items.md          what is still open
   history/<year>/<month>    what was done and WHY (including what was tried and REJECTED)
   notes/<subject>/          why each module is the way it is; the 2-line headers point here

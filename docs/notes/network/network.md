@@ -473,6 +473,30 @@ The static routes and the split DNS live in the router's UCI, and
 [`router.nix`](../../../system/net/router.nix) refuses to push on purpose. The commands are in
 [`../guides/fai-gateway-router.md`](../../guides/fai-gateway-router.md).
 
+### `faiSubnets` mirrors THEIR routing, so the divergence is checked (19/09/2026)
+
+The anti-loop REJECT rules need the FAI ranges written down, and that list is not mine: it
+arrives in the IPCP and FAI can change it without anything here moving. A list that mirrors
+somebody else's data with nothing reconciling it is rule 16's drift, the same shape the router
+mirror has, and the same answer applies: make the divergence detectable.
+
+`fai-routes-check`, with the tunnel UP, compares the declared list against what `ip route show
+dev ppp0` actually holds and reports BOTH directions. A range they added that the list does not
+have means traffic that should reach FAI gets REJECTed; a range they dropped that the list still
+declares means a REJECT rule standing over traffic that should now go out normally. The second
+one is the half nobody notices, which is why it is reported and not just counted.
+
+**DERIVING the list instead of declaring it was tried on paper and rejected.** The REJECT rules
+exist for when the tunnel is DOWN, and `ip route show dev ppp0` only answers when it is UP, so
+deriving means caching the last connection's routes, and a cold boot before the first connect
+would have no anti-loop rules at all. That trades a drift risk for a hole in a safety rule. The
+interface-shaped alternative (`-i lan ! -o ppp0 -j REJECT`) was rejected for a harder reason: it
+would also reject LAN traffic to `virbr0` and `docker0`, which is the KVM guest and the
+containers.
+
+It CANNOT be a gate: a build sandbox has no VPN. It is a command, like `router-sync diff`, and
+the moment to run it is after connecting.
+
 ## LocalSend is opened to the LAN only
 
 `openFirewall = false` against the module's default, and the reason is NOT the internet: the router

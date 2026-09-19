@@ -317,9 +317,19 @@ finished work. What was closed is in the [august history](history/2026/08-august
         `neededForBoot = false`, and it has to be true before the wipe lands.
 
 - [ ] Turn off every LED on every piece of hardware in AFK mode. Nothing is declared for this
-      yet (`dead-config` confirms there is no OpenRGB anywhere in the tree). The blocker is the
-      Steel Legend B580's RGB, which OpenRGB does not support: reverse engineering it is a
-      separate, bigger piece of work, and the fans are not controllable at all.
+      yet (`dead-config` confirms there is no OpenRGB anywhere in the tree).
+      • THE BLOCKER IS GONE (19/09/2026). The Steel Legend B580's RGB is reachable, and it
+        took no reverse engineering in the end: the LED sits behind the card's AMC at 0x36 on
+        the GPU's OWN internal I2C bus, not on the chipset SMBus, and it answers the protocol
+        that OpenRGB's ASRock GPU controller already implements for the Radeon Steel Legend
+        cards. The patch is written, built and tested on the card, and drives the three zones
+        (logo, fans, ARGB header) independently. It lives in `~/Projects/Codeberg/OpenRGB`
+        and is waiting to be submitted upstream.
+      • WHAT REMAINS is packaging, not discovery: nixpkgs ships openrgb 1.0rc3, too old to
+        even contain the ASRock GPU controller, so `services.hardware.openrgb` only becomes
+        useful through an overlay carrying master plus the patches. That overlay is a debt
+        that is born the day the merge request lands and dies the day nixpkgs catches up,
+        which is the argument for deciding it separately. The fans stay uncontrollable.
 
 - [~] Passwordless remote maintenance on the router and on the switch (OpenWrt).
       • ROUTER, done: SSH was already key-based (`ssh v1cferr@192.168.1.1` runs in BatchMode),

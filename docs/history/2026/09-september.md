@@ -1,6 +1,60 @@
 # History: september 2026
 
-9 entries. Index in [README.md](../README.md).
+10 entries. Index in [README.md](../README.md).
+
+- [~] A KVM host for a DISPOSABLE Windows 11, and three wiki steps that do not survive 26.05
+      (19/09/2026). The host is declared, switched and verified; no guest exists yet, which is why
+      this is not closed. [notes/services/libvirt.md](../../notes/services/libvirt.md) holds the
+      detail.
+      • THE REASON IS A SANDBOX AND NOT VIRTUALISATION AS A HOBBY. A static review of a game
+        loader the same morning came back clean on the loader and BLACK BOX on the trainer payload
+        it deploys, which only decrypts against the vendor's server. The report's own advice was
+        to run it on something I can afford to reset, so half the decisions below are about
+        keeping the guest AWAY from the host rather than about making it comfortable.
+      • THREE THINGS BOTH WIKI PAGES TELL YOU TO DO ARE WRONG HERE, and I only know because I
+        checked each against the PINNED tree instead of copying it. `qemu.ovmf.packages` is
+        REMOVED in 26.05 and carries an assertion that FAILS the build on it; the tmpfiles line
+        for `/var/lib/qemu/firmware` is already emitted by the module itself; and `dnsmasq` is
+        already on libvirt's wrapped `binPath`. Nothing about UEFI is declared as a result, and
+        that is not an omission: the pinned `qemu-10.2.4` ships `50-edk2-x86_64-secure.json`,
+        which is the Secure Boot firmware Windows 11 asks for. `swtpm` is the only requirement on
+        that list Nix still has to declare.
+      • THE `libvirtd` GROUP GOES IN AND `kvm` STILL DOES NOT, which look like one decision and
+        are two. 11/08 disproved the `kvm` one by measuring that `/dev/kvm` is born 0666, and it
+        still is. `libvirtd` is the opposite: the module's own polkit rule keys
+        `org.libvirt.unix.manage` on that group, so without it every action is a password prompt.
+        MEASURED after the switch, `virsh -c qemu:///system list --all` answers with none.
+      • `virbr0` IS DELIBERATELY NOT A TRUSTED INTERFACE, against what both pages say. This host
+        is listening on 2222, 8096, 8080 and 11434, and handing an unreviewed Windows payload a
+        free pass to all of it defeats the purpose of the VM. It is not needed either: libvirt
+        installs its own rules, and `LIBVIRT_INP` was measured accepting EXACTLY dport 53 and 67
+        on `virbr0` and nothing else, so the guest gets DHCP, DNS and NAT while everything else it
+        aims at the host falls through to the NixOS firewall.
+      • QEMU RUNS UNPRIVILEGED, `runAsRoot = false`, which is what Debian and Fedora do and what
+        NixOS does not. THE PRICE IS THE MEDIA PATH and it bites at once, so it is written down
+        rather than discovered: `qemu-libvirtd` cannot traverse a 0700 home, so an ISO in
+        `~/Downloads` is unreadable to it no matter what libvirt chowns, because the failure is
+        traversal and not ownership. Media lives in `/var/lib/libvirt/images`, and
+        `sudo -u qemu-libvirtd test -r` on the moved ISO answers YES. It went in NOW because the
+        option's own documentation says flipping it later breaks an existing guest's permissions.
+      • TWO HAND-TYPED STEPS WERE DECLARED AWAY. `virsh net-autostart default` is one symlink,
+        so it is a tmpfiles `L+` line, and the network came up `active` with `autostart yes` on
+        the first boot with nobody typing anything. And the images pool is NOCOW through a
+        tmpfiles `h` line, since a qcow2 over btrfs CoW plus zstd fragments as the guest writes
+        it: `lsattr -d` reads `---------------C------`, the same lesson `@swap` already carries.
+      • THE CLOSURE PAID FOR AN EMULATOR THE MACHINE ALREADY HAD. `libvirtd` defaults
+        `qemu.package` to the full `pkgs.qemu`, which emulates alien architectures, and this host
+        runs x86_64 on x86_64. The find was not the size but WHOSE path it is: claude-desktop's
+        FHS already pulls that exact `qemu-host-cpu-only`, recorded in
+        [notes/repo/packages.md](../../notes/repo/packages.md) since 30/07. MEASURED on the whole
+        system closure, 26.89 GiB to 25.95, 940 MiB. VERIFIED BEFORE SWITCHING, because this is
+        the half that could have quietly broken the installer: `qemu_kvm` ships the SAME eight
+        firmware descriptors, the Secure Boot one included.
+      • WHAT IS LEFT, and it is the guest: install Windows with UEFI secure plus a TPM 2.0 on
+        Q35, then the payload. USB passthrough and a virtiofs shared folder are both one line and
+        both deliberately absent, unused today (rule 16) and both holes in the isolation this VM
+        exists to provide. One claim also stays unproven until the guest boots: that libvirt's
+        jump sits ahead of `nixos-fw` in `INPUT`. The first DHCP lease settles it.
 
 - [x] The site draws diagrams, and stopped calling out to anybody (19/09/2026). Follow-up to the
       day before: the first diagram went in, and putting it there exposed two third parties the

@@ -116,6 +116,7 @@ nav:
 
   - Hardware:
       - GPU: notes/hardware/gpu.md
+      - GPU RGB: notes/hardware/gpu-rgb.md
       - Monitors: notes/hardware/monitors.md
       - Fonts: notes/hardware/fonts.md
       - Mouse: notes/hardware/mouse.md

@@ -71,6 +71,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | Page | What you would come here asking |
 | --- | --- |
 | [gpu](hardware/gpu.md) | the Arc B580 on `xe`, and why the driver stack must NOT go unstable |
+| [gpu-rgb](hardware/gpu-rgb.md) | the Steel Legend's LED, the bus everyone assumed wrong, and when to delete the patches |
 | [monitors](hardware/monitors.md) | the connector SSOT, and why it lives on the system side |
 | [fonts](hardware/fonts.md) | the UI font SSOT, and the fallback coverage |
 | [mouse](hardware/mouse.md) | the MX Master, the boot race, and the gestures |

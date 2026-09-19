@@ -31,6 +31,34 @@ BY HAND into a firewall that is already up. `-I 1` is still right for another re
 reproduces the `trustedInterfaces` semantics, since the whole range passes before ANY other
 decision in the chain. (The backend here is iptables; `networking.nftables.enable = false`.)
 
+## BBR, because the path to FAI loses packets
+
+Measured on 19/09/2026 with the FAI tunnel up, the same battery on both sides (4 runs of 40 MB up
+and 4 of 60 MB down, over ssh to the workstation) and inside ONE window, so the path condition is
+comparable: RTT to the portal was 33 to 36ms in both.
+
+| | cubic | BBR |
+| --- | --- | --- |
+| Download | 55, 55, 56, 56 Mbps | 59, 61, 58, 60 Mbps |
+| Upload | 46, 53, 24, 50 Mbps | 59, 57, 19, 58 Mbps |
+| Retransmission in the interval | 0.38% | 0.10% |
+
+What cubic does wrong here is visible in the socket to the SonicWall: `cwnd:85` (122 KB) against
+an `rcv_wnd` of 1.5 MB, so the window was never the limit, loss was. cubic reads every loss as
+congestion, and on a path that reorders (`reordering:300`) and drops ~0.4% it keeps the window
+shut. BBR paces by measured bandwidth and RTT instead, which is why `net.core.default_qdisc` goes
+to `fq`: that is the qdisc that executes the pacing.
+
+Two honest caveats. The collapse to ~20 Mbps in one run out of four happens under BOTH algorithms,
+so it is the path or the appliance and was NOT the reason to switch. And the ceiling does not
+move: the link does 535/447 Mbps while the tunnel does ~60, with nxBender at 17% of one core
+(1.66s of CPU for 80 MB), so the bottleneck stays on the SonicWall's side. What keeps the other
+470 Mbps away from it is the split tunnel ([`vpn.md`](vpn.md)).
+
+The module has to be loaded for the sysctl to take: `boot.kernelModules = [ "tcp_bbr" ]` is not
+decoration, and the order is safe because `systemd-sysctl.service` runs After
+`systemd-modules-load.service`.
+
 ## Wake-on-LAN was armed on the wrong end
 
 Found on 10/08/2026, and the symptom was invisible. The router had ALL the pieces to wake this PC

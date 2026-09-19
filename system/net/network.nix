@@ -62,6 +62,14 @@ in
   # ── Network ────────────────────────────────────────────────────────────────
   networking.networkmanager.enable = true;
 
+  # cubic reads the ~0.4% loss of the FAI tunnel's path as congestion and pins the window shut.
+  # Measured 19/09/2026 in one window: +7% down, +10% up, retransmission 0.38% to 0.10%.
+  boot.kernelModules = [ "tcp_bbr" ];
+  boot.kernel.sysctl = {
+    "net.ipv4.tcp_congestion_control" = "bbr";
+    "net.core.default_qdisc" = "fq"; # BBR paces its packets; fq is what executes the pacing
+  };
+
   # The WireGuard server is the ROUTER, so there is no local wg0: trust goes by SOURCE.
   # It is what keeps Sunshine reachable through the tunnel with openFirewall = false.
   networking.firewall = {

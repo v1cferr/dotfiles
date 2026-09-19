@@ -89,10 +89,12 @@ GitHub. It runs at `on_page_markdown`, so the rewrite happens before MkDocs vali
 the markdown ON DISK is never touched: the link keeps working when the file is read on GitHub,
 which is still where most of these pages get read.
 
-Two details it has to get right. **The branch is `nixos`**, this repo's default, and `main` is a
-separate orphan history, so a blob URL built from `main` is a 404 for every path here. **A fenced
-code block is skipped**, or an example showing a markdown link would be rewritten into something
-the example does not mean.
+Two details it has to get right. **The repo and the branch are READ from `mkdocs.yml`**, out of
+`repo_url` and `edit_uri`, and not written in the hook as well: that would be a second owner of
+a value whose staleness breaks 134 links at once, which is rule 11. Which branch it is matters,
+because `main` here is a separate orphan history and a blob URL built from it is a 404 for every
+path. **A fenced code block is skipped**, or an example showing a markdown link would be
+rewritten into something the example does not mean.
 
 A link to a FOLDER (`history/`) gets that folder's index page, which is why `guides/` got a
 `README.md` it never had. GitHub renders a folder listing for those and a static site has nothing

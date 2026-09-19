@@ -3,19 +3,15 @@
 A page here links to the module it documents (`../../../system/services/caddy.nix`), and MkDocs
 serves nothing outside `docs_dir`, so those 134 links would each be a build error under
 --strict. The hook resolves every relative target against the page's own directory, the same
-rule `docs-links` applies, and the ones that escape `docs/` become blob URLs on GitHub. The
-markdown on disk is never touched, so the same link keeps working when the file is read there.
+rule `docs-links` applies, and the ones that escape `docs/` become blob URLs on GitHub, built
+from the repo and branch `mkdocs.yml` already declares. The markdown on disk is never touched,
+so the same link keeps working when the file is read there.
 
 What was rejected, and the rest of the reasoning: docs/notes/repo/site.md
 """
 
 import posixpath
 import re
-
-# The branch is this repo's DEFAULT, and `main` is a separate orphan history: a blob URL built
-# from the wrong one resolves to a 404 for every path here.
-BLOB = "https://github.com/v1cferr/dotfiles/blob/nixos"
-TREE = "https://github.com/v1cferr/dotfiles/tree/nixos"
 
 # An inline markdown link's target: it stops at the first space, so `](path "title")` keeps its
 # title, and at `)`, so it never swallows the rest of the line.
@@ -27,7 +23,19 @@ FENCE = re.compile(r"^\s*(?:```|~~~)")
 EXTERNAL = ("http://", "https://", "mailto:", "#", "/")
 
 
-def _rewrite(src_uri, target, index_of):
+def _bases(config):
+    """The blob and tree bases, READ from mkdocs.yml so the repo and branch have one owner."""
+    repo = (config.repo_url or "").rstrip("/")
+    # `edit_uri` is `edit/<branch>/docs/`, the only place the branch is written down. It matters
+    # which one: `main` here is a separate orphan history, so its blob URLs are all 404.
+    parts = (config.edit_uri or "").strip("/").split("/")
+    branch = parts[1] if len(parts) > 2 and parts[0] == "edit" else ""
+    if not repo or not branch:
+        raise ValueError(f"cannot derive the blob base from repo_url={repo!r} edit_uri={config.edit_uri!r}")
+    return f"{repo}/blob/{branch}", f"{repo}/tree/{branch}"
+
+
+def _rewrite(src_uri, target, index_of, blob, tree):
     """Point a target that escapes docs/ at GitHub; leave everything else to MkDocs."""
     if target.startswith(EXTERNAL):
         return target
@@ -47,11 +55,11 @@ def _rewrite(src_uri, target, index_of):
     if path.endswith("/"):
         if not escapes and inside in index_of:
             return posixpath.join(path, index_of[inside]) + (f"#{anchor}" if anchor else "")
-        return f"{TREE}/{repo_rel}"
+        return f"{tree}/{repo_rel}"
 
     if not escapes:
         return target
-    return f"{BLOB}/{repo_rel}" + (f"#{anchor}" if anchor else "")
+    return f"{blob}/{repo_rel}" + (f"#{anchor}" if anchor else "")
 
 
 def on_page_markdown(markdown, page, config, files, **kwargs):
@@ -62,12 +70,15 @@ def on_page_markdown(markdown, page, config, files, **kwargs):
         if f.is_documentation_page() and posixpath.basename(f.src_uri) in ("index.md", "README.md"):
             index_of[posixpath.dirname(f.src_uri)] = posixpath.basename(f.src_uri)
 
+    blob, tree = _bases(config)
     src_uri = page.file.src_uri
     out, fenced = [], False
     for line in markdown.split("\n"):
         if FENCE.match(line):
             fenced = not fenced
         out.append(
-            line if fenced else MDLINK.sub(lambda m: _rewrite(src_uri, m.group(0), index_of), line)
+            line
+            if fenced
+            else MDLINK.sub(lambda m: _rewrite(src_uri, m.group(0), index_of, blob, tree), line)
         )
     return "\n".join(out)

@@ -177,6 +177,15 @@ one-line change.
 The token, as with Vercel, is app state per account (rule 6): one `/mcp` login in `claude-fai` and
 another in `claude-pessoal`, each in its own `.credentials.json`.
 
+**The prerequisite that is not in the URL, and that the client cannot tell you about.** On
+GitLab.com the server answers only to a user who belongs to at least one TOP-LEVEL GROUP with
+"Allow access to the MCP server" turned on, under Settings > General > Permissions and group
+features. The setting exists for groups only: a personal namespace cannot carry it. Without a
+group the OAuth flow still succeeds, the token is issued and stored, and the connection is then
+refused with a 403, which the client reports as credentials being rejected. That reads as an
+authentication problem and is not one, so it is written here: the fix is to belong to an enabled
+group, not to authenticate again.
+
 ## The system side: what has to be IMPOSED
 
 [`system/services/claude-code.nix`](../../../system/services/claude-code.nix) holds the three things

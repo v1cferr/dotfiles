@@ -25,6 +25,10 @@ let
     "172.16.0.0/12"
     "192.168.0.0/16"
   ];
+
+  # A guest reaching for the LAN is the loudest signal it can give, so it is RECORDED and not only
+  # refused. Rate limited, so a scan cannot flood the journal (grep the prefix).
+  blockedPrefix = "libvirt-guest blocked: ";
 in
 lib.mkIf config.my.services.libvirt {
   virtualisation.libvirtd = {
@@ -65,6 +69,10 @@ lib.mkIf config.my.services.libvirt {
         net:
         "iptables -I FORWARD 1 -i ${guestBridge} -d ${net} -j REJECT --reject-with icmp-admin-prohibited"
       ) privateRanges}
+      ${lib.concatMapStringsSep "\n" (
+        net:
+        "iptables -I FORWARD 1 -i ${guestBridge} -d ${net} -m limit --limit 10/min -j LOG --log-prefix \"${blockedPrefix}\""
+      ) privateRanges}
       iptables -I FORWARD 1 -i ${guestBridge} -d ${guestSubnet} -j ACCEPT
     '';
     # Without this, a firewall `reload` piles up duplicates of the rules above.
@@ -73,6 +81,10 @@ lib.mkIf config.my.services.libvirt {
       ${lib.concatMapStringsSep "\n" (
         net:
         "iptables -D FORWARD -i ${guestBridge} -d ${net} -j REJECT --reject-with icmp-admin-prohibited 2>/dev/null || true"
+      ) privateRanges}
+      ${lib.concatMapStringsSep "\n" (
+        net:
+        "iptables -D FORWARD -i ${guestBridge} -d ${net} -m limit --limit 10/min -j LOG --log-prefix \"${blockedPrefix}\" 2>/dev/null || true"
       ) privateRanges}
       iptables -D FORWARD -i ${guestBridge} -d ${guestSubnet} -j ACCEPT 2>/dev/null || true
     '';

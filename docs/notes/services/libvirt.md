@@ -211,6 +211,14 @@ iptables -I FORWARD 1 -i virbr0 -d 192.168.0.0/16 -j REJECT --reject-with icmp-a
 iptables -I FORWARD 1 -i virbr0 -d 192.168.122.0/24 -j ACCEPT
 ```
 
+A guest reaching for the LAN is the loudest signal it can give, so it is RECORDED and not merely
+refused: a `LOG` rule sits above each `REJECT`, rate limited at 10/min so a port scan cannot flood
+the journal. Nothing is logged in normal operation, which is what makes a line worth reading:
+
+```text
+journalctl -k --grep 'libvirt-guest blocked'
+```
+
 THE ORDER IS THE WHOLE TRICK and it reads backwards: `-I 1` inserts at the TOP, so the guest's own
 subnet, written LAST, ends up FIRST and survives the `192.168.0.0/16` refusal that would otherwise
 swallow it. Read the generated `firewall-start` if in doubt, never the source order.

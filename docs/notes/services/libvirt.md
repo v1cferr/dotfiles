@@ -144,17 +144,58 @@ machine the host is listening: sshd on 2222, Jellyfin on 8096, qBittorrent on 80
 11434, the radar stacks. Handing an unreviewed Windows payload a free pass to all of it is a
 strange thing to do with a machine built to isolate it.
 
-It is not needed either. libvirt installs its own rules and inserts the jump at the TOP of
-`INPUT`, ahead of the `nixos-fw` chain, and those rules accept exactly DHCP and DNS on `virbr0`.
-So the guest gets an address, resolves names and reaches the internet through NAT, and anything
-else it aims at the host falls through to the NixOS firewall and is dropped. The backend is
-`iptables` here because `networking.nftables.enable` is not set, which is what the option's
-default keys on.
-
-VERIFY IT, do not trust the paragraph:
+It is not needed either, and the ordering that makes it unnecessary is MEASURED, not assumed:
 
 ```text
-sudo iptables -S | grep virbr0   # dport 53 and 67 accepted, nothing else
+-P INPUT ACCEPT
+-A INPUT -j LIBVIRT_INP
+-A INPUT -j nixos-fw
+```
+
+libvirt's jump comes FIRST, and `LIBVIRT_INP` accepts exactly DHCP and DNS on `virbr0`. So the
+guest gets an address and resolves names before `nixos-fw` ever sees the packet, and its internet
+goes through `FORWARD`, which `INPUT` does not touch at all. The backend is `iptables` here
+because `networking.nftables.enable` is not set, which is what the option's default keys on.
+
+### Dropping `trustedInterfaces` was NOT enough, and I had this wrong (19/09/2026)
+
+The first version of this page claimed that anything else the guest aimed at the host "falls
+through to the NixOS firewall and is dropped". That was FALSE, and the same `iptables -S INPUT`
+that confirmed the ordering is what exposed it.
+
+`networking.firewall.allowedTCPPorts` opens a port on EVERY interface. It has no notion of where
+a packet came from, so the guest sat on the same footing as the LAN:
+
+```text
+tcp 80 443 2222 8080 8096 8920 27036 27037 27040
+udp 1900 5353 7359 10400 10401 27036
+```
+
+That is sshd, Caddy, qBittorrent and Jellyfin, all reachable from a VM whose whole purpose is
+running something I have not read. Ollama was the one I named in the original claim that was
+actually safe, since 11434 is not on that list, which is a fair measure of how much the claim was
+worth.
+
+So the interface gets an explicit refusal, the mirror of the accept idiom `localsend.nix` uses:
+
+```text
+iptables -I nixos-fw 1 -i virbr0 -j nixos-fw-refuse
+```
+
+It cannot cost the guest its network, and the ordering above is exactly why: DHCP and DNS are
+already accepted in `LIBVIRT_INP` before `nixos-fw` runs, and NAT lives in `FORWARD`. What it
+removes is the host's own listening services, which is the only thing the guest should never have
+had.
+
+THE GENERAL LESSON, worth more than this module: "the firewall drops it" is not a property of the
+firewall being ON. `allowedTCPPorts` is a global hole, and any reasoning of the form "an untrusted
+interface cannot reach X" has to name the rule that stops it, or it is a guess.
+
+VERIFY BOTH ENDS:
+
+```text
+sudo iptables -S INPUT                 # LIBVIRT_INP must come before nixos-fw
+sudo iptables -S nixos-fw | head -3    # the virbr0 refusal must be at the top
 ```
 
 ## qemu runs unprivileged, and what that costs

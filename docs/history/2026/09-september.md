@@ -24,12 +24,23 @@
         still is. `libvirtd` is the opposite: the module's own polkit rule keys
         `org.libvirt.unix.manage` on that group, so without it every action is a password prompt.
         MEASURED after the switch, `virsh -c qemu:///system list --all` answers with none.
-      • `virbr0` IS DELIBERATELY NOT A TRUSTED INTERFACE, against what both pages say. This host
-        is listening on 2222, 8096, 8080 and 11434, and handing an unreviewed Windows payload a
-        free pass to all of it defeats the purpose of the VM. It is not needed either: libvirt
-        installs its own rules, and `LIBVIRT_INP` was measured accepting EXACTLY dport 53 and 67
-        on `virbr0` and nothing else, so the guest gets DHCP, DNS and NAT while everything else it
-        aims at the host falls through to the NixOS firewall.
+      • `virbr0` IS DELIBERATELY NOT A TRUSTED INTERFACE, against what both pages say, and the
+        ordering that makes it safe is measured: `INPUT` jumps to `LIBVIRT_INP` BEFORE `nixos-fw`,
+        and `LIBVIRT_INP` accepts exactly dport 53 and 67 on `virbr0`. So the guest gets DHCP and
+        DNS before the NixOS firewall sees the packet, and its internet is `FORWARD`, which
+        `INPUT` never touches.
+      • AND DROPPING `trustedInterfaces` WAS NOT ENOUGH, WHICH I HAD WRONG. I wrote that anything
+        else the guest aimed at the host "falls through to the NixOS firewall and is dropped", and
+        the same `iptables -S INPUT` that confirmed the ordering disproved it:
+        `allowedTCPPorts` opens a port on EVERY interface, with no notion of where a packet came
+        from, so 80, 443, 2222, 8080, 8096 and 8920 were all reachable from the guest. That is
+        sshd, Caddy, qBittorrent and Jellyfin exposed to a VM whose entire purpose is running
+        something I have not read. Ollama, the one service I had named, was the only one actually
+        safe, since 11434 is not on that list. Fixed with the mirror of localsend.nix's idiom,
+        `iptables -I nixos-fw 1 -i virbr0 -j nixos-fw-refuse`, which cannot cost the guest its
+        network for the reason above. THE LESSON OUTLIVES THE MODULE: "the firewall drops it" is
+        not a property of the firewall being on, and any claim that an untrusted interface cannot
+        reach something has to NAME the rule that stops it or it is a guess.
       • QEMU RUNS UNPRIVILEGED, `runAsRoot = false`, which is what Debian and Fedora do and what
         NixOS does not. THE PRICE IS THE MEDIA PATH and it bites at once, so it is written down
         rather than discovered: `qemu-libvirtd` cannot traverse a 0700 home, so an ISO in

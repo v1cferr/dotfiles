@@ -7,13 +7,21 @@
   ...
 }:
 
+let
+  # Rule 19: everything this module reaches for, named once. deadnix fails the build on an
+  # entry that stops being used, so the list cannot rot into a lie (rule 16).
+  inherit (pkgs) qemu_kvm;
+
+  # libvirt's NAT bridge, named once because the firewall rule and its undo both spell it (rule 11).
+  guestBridge = "virbr0";
+in
 lib.mkIf config.my.services.libvirt {
   virtualisation.libvirtd = {
     enable = true;
 
     # host-cpu-only, and claude-desktop's FHS ALREADY pulls this exact path, so the guest costs no
     # new closure. It drops alien-arch emulation and keeps the firmware identical (the note).
-    qemu.package = pkgs.qemu_kvm;
+    qemu.package = qemu_kvm;
 
     # TPM 2.0 is a Windows 11 INSTALL requirement and the only item on that list Nix declares: the
     # Secure Boot UEFI already ships with qemu, and declaring OVMF now FAILS the build (the note).
@@ -34,6 +42,19 @@ lib.mkIf config.my.services.libvirt {
   # The module's own polkit rule keys `org.libvirt.unix.manage` on THIS group, so without it every
   # VM action is a password prompt. `kvm` stays out: /dev/kvm is born 0666 (measured 11/08/2026).
   users.users.v1cferr.extraGroups = [ "libvirtd" ];
+
+  # THE GUEST REACHES NO HOST SERVICE. `allowedTCPPorts` opens a port on EVERY interface, so
+  # 2222/8080/8096/80/443 were reachable from the guest. DHCP and DNS survive (the note).
+  networking.firewall = {
+    # `-I 1` like localsend.nix, so it holds wherever upstream injects its own rules.
+    extraCommands = ''
+      iptables -I nixos-fw 1 -i ${guestBridge} -j nixos-fw-refuse
+    '';
+    # Without this, a firewall `reload` piles up duplicates of the rule above.
+    extraStopCommands = ''
+      iptables -D nixos-fw -i ${guestBridge} -j nixos-fw-refuse 2>/dev/null || true
+    '';
+  };
 
   systemd.tmpfiles.rules = [
     # libvirt SHIPS the `default` NAT but starts only what is symlinked here, which is all that

@@ -3,6 +3,9 @@
 A **declarative**, reproducible system: NixOS (the base) and home-manager (my
 dotfiles) in a single flake. One `rebuild` applies system **and** user at once.
 
+The reasoning behind every module is in [`docs/`](docs/), published with search and a
+nav by subject at <https://dotfiles.v1cferr.dev/>.
+
 - **Base:** stable nixpkgs `nixos-26.05` plus an `unstable.*` overlay on demand, per package.
 - **Active host:** `nixos-kingston`, an NVMe KC3000 on btrfs with subvolumes (groundwork for impermanence).
 - **Boot:** UEFI/**GRUB** with the minegrub theme, in **dualboot with Windows 11** (SanDisk SSD),

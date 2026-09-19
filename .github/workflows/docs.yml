@@ -1,0 +1,72 @@
+# THE PUBLISH: it builds the SAME derivation the gate builds and hands the result to GitHub
+# Pages. The two settings that live outside this repo: docs/notes/repo/site.md
+name: docs
+
+on:
+  push:
+    branches: [nixos]
+    # Only what the site is built FROM, which is the same list `pkgs/docs-site.nix` fences its
+    # `src` with: a push touching system/ has nothing to republish.
+    paths:
+      - docs/**
+      - mkdocs.yml
+      - scripts/mkdocs-hooks.py
+      - pkgs/docs-site.nix
+      - flake.nix
+      - flake.lock
+      - .github/workflows/docs.yml
+  workflow_dispatch: # it allows running by hand from the Actions tab
+
+# Two pushes in a row publish the last one: an intermediate deploy has no value here.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# READ-ONLY at the top, and the write scope goes on the job that actually publishes.
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # `pages` and `id-token` are what deploy-pages needs (the token is exchanged for an OIDC
+    # one). Scoped to THIS job so nothing else in the repo inherits a write token.
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      # PINNED BY HASH, rule 13 applied to the CI: a tag is a pointer its author can move.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # Or the token stays in .git/config for every later step to read (zizmor's artipacked).
+          persist-credentials: false
+
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      # NO store cache here, deliberately: a job that publishes and restores a cache is exactly
+      # zizmor's cache-poisoning finding. The gate in nix.yml is the one that caches.
+      # The override is the same as the gate's: the package set comes from the HOST, whose
+      # evaluation reaches the private input.
+      - name: nix build .#docs-site
+        run: nix build .#docs-site --override-input duo-streak-daemon path:./ci/stub-duo
+
+      # The store path is read-only and the upload tars what it is given, so it gets a writable
+      # copy instead of the symlink.
+      - name: Stage the site
+        run: |
+          cp -rL result site
+          chmod -R u+w site
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          path: site
+
+      - id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

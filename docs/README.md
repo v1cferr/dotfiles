@@ -18,6 +18,10 @@ act on (the open items) and what you look up (the history) have different rhythm
 | [arch-parity-audit.md](arch-parity-audit.md) | `main` against `nixos`, area by area: what was ported, replaced, dropped and still missing | Before retiring the Arch refs |
 | [guides/](guides/) | Step by step for what Nix cannot reach (BIOS, Secure Boot, router, Windows), plus the reusable TEST protocols | When reinstalling, working outside the repo, or validating a change |
 
+**This tree is also a site.** <https://dotfiles.v1cferr.dev/> renders exactly these files,
+with search and a nav grouped by subject. The files did not move to match that nav, and
+[notes/repo/site.md](notes/repo/site.md) says why.
+
 ## Conventions
 
 **The rule numbering is API.** The code cites "rule 11" and "rule 14" in more than seventy

@@ -307,6 +307,43 @@
             ;
           inherit (pkgs.unstable) vscode; # the unstable recipe with the SRC from the official tarball
 
+          # THE EVALUATED STATE, for a reader who would otherwise have to INFER it from Nix, which
+          # the rule 16 secrets episode proved is not always possible: docs/notes/repo/flake.md
+          system-facts =
+            let
+              cfg = self.nixosConfigurations.nixos-kingston.config;
+              inherit (nixpkgs) lib;
+            in
+            pkgs.writeText "system-facts.json" (
+              builtins.toJSON {
+                host = {
+                  hostname = cfg.networking.hostName;
+                  inherit system;
+                  stateVersion = cfg.system.stateVersion;
+                  homeStateVersion = cfg.home-manager.users.v1cferr.home.stateVersion;
+                  kernel = cfg.boot.kernelPackages.kernel.version;
+                  uiFont = cfg.my.fonts.ui;
+                };
+                # The host's own panel: which optional services THIS machine turns on.
+                services = cfg.my.services;
+                # `auth` is dropped: it names the variables holding password hashes, and a facts
+                # file that lists them teaches an attacker where to look for nothing.
+                ingress = lib.mapAttrs (_: s: {
+                  inherit (s) expose upstream;
+                  routes = lib.attrNames s.routes;
+                }) cfg.my.ingress;
+                monitors = cfg.my.monitors;
+                filesystems = lib.mapAttrs (_: f: f.fsType) cfg.fileSystems;
+                firewall = {
+                  inherit (cfg.networking.firewall) allowedTCPPorts allowedUDPPorts;
+                };
+                # NAMES only. A value here would be rule 12 broken in one line.
+                secrets = lib.attrNames cfg.sops.secrets;
+                # What the lock actually pinned, so "which revision am I on" needs no lock reading.
+                inputs = lib.mapAttrs (_: i: i.rev or i.narHash or "unknown") (removeAttrs inputs [ "self" ]);
+              }
+            );
+
           # THE DISK LAYOUT, formatted from scratch and booted: `nix run .#disko-vm`. The REAL
           # disko config on a 24 GiB image, and the only check of it: docs/notes/boot-and-storage/disko.md
           disko-vm =

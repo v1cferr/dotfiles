@@ -236,6 +236,28 @@ test a patch without going through a whole rebuild.
 SAME object the system installs, so the check below cannot diverge from what the machine receives
 (rule 14), and it does not add a second nixpkgs instantiation to the evaluation.
 
+### `system-facts`: the evaluated state, for a reader who cannot evaluate
+
+`nix build .#system-facts` writes a 2.6 KB JSON of what the configuration RESOLVED to:
+hostname, both stateVersions, kernel, the `my.services` panel, the ingress map, filesystems by
+type, the open ports, the declared secret NAMES, the monitors and every input's pinned revision.
+
+**Why it exists**: Nix is a language, so the final state is not always greppable. Rule 16 records
+the day that bit, when a `grep` over the `.nix` tree returned zero for secrets that had been
+declared the whole time through a JSON the module walked with `mapAttrs`. A reader who only reads
+source, human or agent, reaches a wrong conclusion exactly the same way, and the answer is not to
+read harder, it is to hand over the evaluated result as well.
+
+**It is a package and not a committed file**, deliberately. `checks.packages` builds it, so an
+attribute path that stops existing fails the gate instead of leaving a stale artifact behind, and
+nothing in the repo can drift from it because nothing holds a copy. A committed mirror would only
+pay off for the one case the command cannot serve, a machine that no longer evaluates, which is
+disaster recovery, and that is a separate decision with the public-repo question attached to it.
+
+**NAMES and never a VALUE** for the secrets (rule 12), and `auth` is dropped from the ingress map
+on the same reasoning: it names the variables that hold the password hashes, and a facts file
+that lists them tells an attacker where to look for nothing.
+
 ## `nix fmt`
 
 Without this output, nixfmt would exist ONLY inside VS Code (through nixd/nix-ide), and "the repo

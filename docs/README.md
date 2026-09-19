@@ -1,5 +1,22 @@
 # docs
 
+The reasoning behind every module of this machine, the procedures Nix cannot reach, and the
+record of what was tried and rejected.
+
+## Start here
+
+| If you want to | Go to |
+| --- | --- |
+| understand how the repo is put together | [rules.md](rules.md), then [notes/repo/flake.md](notes/repo/flake.md) |
+| rebuild or recover the machine | [guides/disaster-recovery.md](guides/disaster-recovery.md) |
+| read about one subsystem | [notes/](notes/), grouped by subject |
+| know what is open right now | [open-items.md](open-items.md) |
+
+Nothing on this page repeats a fact from the [repository README](../README.md): host, base,
+desktop and storage have one owner and it is that file.
+
+## How this folder is organized
+
 It used to be a single file (`ANOTACOES.md`, 1949 lines). It became six, because a god
 file hides things: with 98 closed entries mixed in with 15 open ones, finding what to do
 today meant scrolling through six months of history.

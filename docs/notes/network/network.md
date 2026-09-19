@@ -53,10 +53,22 @@ lands exactly on cubic's number, and the three later batteries agree with each o
 Comparing two batteries taken hours apart was the methodological error, and the confirmation run
 is what caught it.
 
-What DOES hold is the retransmission: 0.38% under cubic against 0.10% and 0.26% in the two BBR
-intervals. The setting stays for that, and for the pacing, with no throughput claim attached. The
-upload collapses to ~20 Mbps in one run out of four happen under BOTH algorithms, so they are the
-path or the appliance.
+What DOES hold is the tail under load, which is the metric that matters here, since what hurts is
+ssh freezing while rclone moves a file. Pinging the portal with a 60 MB upload running through the
+tunnel, at an idle baseline of ~30.5ms:
+
+| | avg | max | mdev |
+| --- | --- | --- | --- |
+| cubic, loaded | 30.3ms | **36.5ms** | 1.78 |
+| BBR, loaded, 3 runs | 30.8 / 29.8 / 30.2ms | 32.0 / 31.1 / 32.4ms | 0.74 / 0.96 / 1.09 |
+
+The average is flat in both, so neither bloats the queue in the usual sense. The difference is the
+tail: cubic adds ~5ms to the worst packet and doubles the jitter, while BBR's three runs stay
+within ~1.3ms of the idle maximum. Retransmission agrees, 0.38% under cubic against 0.10% and
+0.26% in the two BBR intervals. That pair is the whole case for the setting, with no throughput
+claim attached, and cubic's side of the latency table is a SINGLE battery, so it is evidence, not
+proof. The upload collapses to ~20 Mbps in one run out of four happen under BOTH algorithms, so
+they are the path or the appliance.
 
 The ceiling is not here to be moved: the link does 535/447 Mbps while the tunnel does ~55, with
 nxBender at 17% of one core (1.66s of CPU for 80 MB) and three parallel flows summing to the same

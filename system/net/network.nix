@@ -62,8 +62,8 @@ in
   # ── Network ────────────────────────────────────────────────────────────────
   networking.networkmanager.enable = true;
 
-  # cubic reads the ~0.4% loss of the FAI tunnel's path as congestion and pins the window shut.
-  # Measured 19/09/2026 in one window: +7% down, +10% up, retransmission 0.38% to 0.10%.
+  # Kept for the RETRANSMISSION, not for throughput: at the same RTT the two tie at ~55 Mbps in
+  # the FAI tunnel and only the loss changes, 0.38% to 0.10-0.26%. Four batteries: network.md.
   boot.kernelModules = [ "tcp_bbr" ];
   boot.kernel.sysctl = {
     "net.ipv4.tcp_congestion_control" = "bbr";

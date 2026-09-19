@@ -31,29 +31,37 @@ BY HAND into a firewall that is already up. `-I 1` is still right for another re
 reproduces the `trustedInterfaces` semantics, since the whole range passes before ANY other
 decision in the chain. (The backend here is iptables; `networking.nftables.enable = false`.)
 
-## BBR, because the path to FAI loses packets
+## BBR, and the measurement that corrected itself
 
-Measured on 19/09/2026 with the FAI tunnel up, the same battery on both sides (4 runs of 40 MB up
-and 4 of 60 MB down, over ssh to the workstation) and inside ONE window, so the path condition is
-comparable: RTT to the portal was 33 to 36ms in both.
+The FAI tunnel runs over a path that loses ~0.3% and reorders heavily (`reordering:300`), and the
+socket to the SonicWall sat at `cwnd:85` (122 KB) against an `rcv_wnd` of 1.5 MB, so the window was
+never the limit: loss was. cubic reads every loss as congestion; BBR paces by measured bandwidth
+and RTT instead, hence `net.core.default_qdisc = fq`, the qdisc that executes the pacing.
 
-| | cubic | BBR |
-| --- | --- | --- |
-| Download | 55, 55, 56, 56 Mbps | 59, 61, 58, 60 Mbps |
-| Upload | 46, 53, 24, 50 Mbps | 59, 57, 19, 58 Mbps |
-| Retransmission in the interval | 0.38% | 0.10% |
+That was the hypothesis, and the first A/B seemed to confirm it. It did not survive the control.
+Four batteries of 4 downloads of 60 MB each, over ssh to the workstation, on 19/09/2026:
 
-What cubic does wrong here is visible in the socket to the SonicWall: `cwnd:85` (122 KB) against
-an `rcv_wnd` of 1.5 MB, so the window was never the limit, loss was. cubic reads every loss as
-congestion, and on a path that reorders (`reordering:300`) and drops ~0.4% it keeps the window
-shut. BBR paces by measured bandwidth and RTT instead, which is why `net.core.default_qdisc` goes
-to `fq`: that is the qdisc that executes the pacing.
+| Battery | RTT to the portal | Download | Mean |
+| --- | --- | --- | --- |
+| cubic, 00h15 | 33.3ms | 55, 55, 56, 56 | 55.5 |
+| BBR, 22h | 35.7ms | 59, 61, 58, 60 | 59.5 |
+| BBR, 06h09 | 35.8ms | 54, 56, 56, 56 | 55.5 |
+| BBR, 06h15 | 33.0ms | 56, 56, 56, 54 | 55.5 |
 
-Two honest caveats. The collapse to ~20 Mbps in one run out of four happens under BOTH algorithms,
-so it is the path or the appliance and was NOT the reason to switch. And the ceiling does not
-move: the link does 535/447 Mbps while the tunnel does ~60, with nxBender at 17% of one core
-(1.66s of CPU for 80 MB), so the bottleneck stays on the SonicWall's side. What keeps the other
-470 Mbps away from it is the split tunnel ([`vpn.md`](vpn.md)).
+The +7% of the second line was **the hour, not the algorithm**: BBR measured again in the morning
+lands exactly on cubic's number, and the three later batteries agree with each other within 2%.
+Comparing two batteries taken hours apart was the methodological error, and the confirmation run
+is what caught it.
+
+What DOES hold is the retransmission: 0.38% under cubic against 0.10% and 0.26% in the two BBR
+intervals. The setting stays for that, and for the pacing, with no throughput claim attached. The
+upload collapses to ~20 Mbps in one run out of four happen under BOTH algorithms, so they are the
+path or the appliance.
+
+The ceiling is not here to be moved: the link does 535/447 Mbps while the tunnel does ~55, with
+nxBender at 17% of one core (1.66s of CPU for 80 MB) and three parallel flows summing to the same
+as one. The bottleneck is the appliance on the FAI side, and what keeps the other 470 Mbps away
+from it is the split tunnel ([`vpn.md`](vpn.md)).
 
 The module has to be loaded for the sysctl to take: `boot.kernelModules = [ "tcp_bbr" ]` is not
 decoration, and the order is safe because `systemd-sysctl.service` runs After

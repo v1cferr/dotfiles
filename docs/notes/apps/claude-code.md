@@ -156,6 +156,27 @@ it would be a second owner on a file the app owns (rule 14) and invisible to git
 `--mcp-config` puts it in the build instead, which is also why it reaches BOTH accounts without
 being done twice by hand.
 
+## The GitLab MCP registers ITSELF, so there is no application to create
+
+`https://gitlab.com/api/v4/mcp` is GitLab's official endpoint, HTTP, and it is declared next to
+Vercel's for the same reasons. What is different is the login: GitLab uses OAuth 2.0 **dynamic
+client registration**, so the client announces itself on first connect and gets its own
+credentials. There is no application to pre-create under Settings, no `clientId` to paste, and
+therefore nothing here that could ever become a secret in the store (rule 12). The
+[docs](https://docs.gitlab.com/user/model_context_protocol/mcp_server/) do offer a pre-registered
+shared application with the `mcp` scope, which is the answer for an instance that wants to pin
+which clients may connect; on gitlab.com, for one personal account, it would be ceremony with
+nothing on the other side.
+
+It enters through `shared` rather than only through `pessoal`, even though the account is a
+personal one. The reason is the work it exists for: upstream contribution does not belong to an
+employer or to a side of the machine, and having it only on one side would mean switching accounts
+to open a merge request. If that ever stops being true, moving it into `profiles.pessoal.mcp` is a
+one-line change.
+
+The token, as with Vercel, is app state per account (rule 6): one `/mcp` login in `claude-fai` and
+another in `claude-pessoal`, each in its own `.credentials.json`.
+
 ## The system side: what has to be IMPOSED
 
 [`system/services/claude-code.nix`](../../../system/services/claude-code.nix) holds the three things

@@ -67,6 +67,18 @@ let
     }
   );
 
+  # The GitLab MCP, the official endpoint. Same shape as Vercel's, HTTP with OAuth, with one
+  # difference that matters: the client REGISTERS ITSELF on first connect (OAuth dynamic client
+  # registration), so there is no application to pre-create and still no credential here (rule 12).
+  gitlabMcp = writeText "mcp-gitlab.json" (
+    builtins.toJSON {
+      mcpServers.gitlab = {
+        type = "http";
+        url = "https://gitlab.com/api/v4/mcp";
+      };
+    }
+  );
+
   # The SHARED memory (home/services/basic-memory.nix), over HTTP because there is ONE server for
   # the three CLIs. `my.memory.url` is the SSOT; nothing here holds the port.
   memoryMcp = writeText "mcp-basic-memory.json" (
@@ -83,7 +95,11 @@ let
   memory = lib.optional osConfig.my.services.basic-memory memoryMcp;
 
   # What BOTH accounts carry, so a server that serves the two is declared ONCE (rule 11).
-  shared = [ vercelMcp ] ++ memory;
+  shared = [
+    vercelMcp
+    gitlabMcp
+  ]
+  ++ memory;
 
   # The accounts' SSOT (rule 11): wrappers, menu, symlinks and MCP all come from here.
   # A new account = one entry plus its settings-<name>.json.

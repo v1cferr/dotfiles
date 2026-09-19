@@ -21,5 +21,6 @@
     "discord-rpc"
     "basic-memory"
     "cs2-backup"
+    "libvirt"
   ] (n: lib.mkEnableOption n);
 }

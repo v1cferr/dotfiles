@@ -17,5 +17,6 @@
     ./credit-radar.nix # CreditRadar's stack at boot (LAN only; see the `credit` ingress entry)
     ./docker.nix # the engine's weekly prune (the POLICY only; what turns docker on are the stacks)
     ./sunshine.nix # remote screen streaming (Moonlight); KMS capture, access only through WireGuard
+    ./libvirt.nix # the libvirt/KVM daemon (virt-manager, the GUI, is in home/apps)
   ];
 }

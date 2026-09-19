@@ -16,5 +16,6 @@
     ./bottles.nix # Bottles: the package plus the library each bottle lists (through activation)
     ./spotify.nix # Spotify through spicetify (the theme, and the package the autostart reads)
     ./zen.nix # Zen: the browser plus the launch guard (a locked screen closes it)
+    ./virt-manager.nix # the libvirt GUI (the daemon is in system/services/libvirt.nix)
   ];
 }

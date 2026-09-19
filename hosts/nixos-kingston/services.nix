@@ -21,6 +21,7 @@
     discord-rpc = true; # Claude Code's Rich Presence on Discord
     basic-memory = true; # the MCP memory server over ~/context (Claude Code, codex and agy share it)
     cs2-backup = true; # a backup of the CS2 saves
+    libvirt = true; # libvirt/KVM plus virt-manager (a disposable Windows 11 guest)
   };
 
   # EXPOSURE: `expose` is "lan" (home plus WireGuard) or "public" (internet, subject to `auth`).

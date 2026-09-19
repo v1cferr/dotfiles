@@ -68,10 +68,20 @@ A hand-written nav is a SECOND owner of the page list, next to the tables in
 [`../README.md`](../README.md), and rule 14 says that is drift waiting to happen. It is not
 theoretical: `notes/apps/spotify.md` had already fallen out of that table before this existed.
 
-No new checker was written for it. `validation.nav.omitted_files: error` plus `--strict` makes
-MkDocs itself refuse to build a site that leaves a page out of the nav, and
-`validation.nav.not_found` refuses a nav entry with no file. The build IS the check, which is the
-same trade rule 7 makes for shell scripts.
+No new checker was written for it. `validation.nav.omitted_files` plus `--strict` makes MkDocs
+itself refuse to build a site that leaves a page out of the nav, and `validation.nav.not_found`
+refuses a nav entry with no file. The build IS the check, which is the same trade rule 7 makes
+for shell scripts.
+
+`warn` and not `error` in those options, which looks wrong and is not: `error` is the one value
+they REFUSE, and `--strict` is what promotes every warning into a failure. That is also why
+`links.anchors` sits at `info`, which `--strict` leaves alone.
+
+**It runs at `pre-push`, not at the commit** (`pkgs/docs-site-check.nix`, wired into the hooks in
+`flake.nix`). The build is 7.12s, measured, and a page is added rarely, so charging every docs
+edit for it buys nothing. One push is the right unit, and it is the unit that keeps the CI from
+being where I find out: `notes/services/libvirt.md` lived one day written, indexed in
+[`../README.md`](../README.md) and absent from the nav, with only the gate to say so.
 
 `validation.links.anchors` is at `warn` and not `error`, on purpose: a heading rename is a real
 class of drift, but the links here are 252 between pages and only 2 carry an anchor, so promoting

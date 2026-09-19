@@ -34,6 +34,8 @@ validation:
 theme:
   name: material
   language: en
+  # It holds ONE override: the vendored mermaid, so no page reaches for a CDN.
+  custom_dir: overrides
   features:
     # No `navigation.tabs`: twelve top-level sections overflow the tab bar and start scrolling.
     - navigation.sections
@@ -80,7 +82,12 @@ markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        # Mermaid, which GitHub renders from the same fence: one source, two renderers.
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
 
 # THE NAV IS THE ONLY TOPIC LAYER, and it is deliberate: the FILES stay grouped the way the repo
 # needs them, and the reader gets a manual. The two are decoupled, so neither constrains the other.

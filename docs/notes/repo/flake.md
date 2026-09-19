@@ -192,6 +192,31 @@ system and user together.
 What belongs to the HOST and not to `./system`: hostname, disks, kernel, monitors, stateVersion and
 the `my.services` panel. `system/` declares the options; the host answers them.
 
+**THE MODULE LIST IS HOISTED, and that is the part the text above does not show**: the same
+`commonModules` feeds the machine and both VM outputs, so the drill and the boot test cannot
+evaluate a different system from the one that gets installed.
+
+```mermaid
+flowchart TD
+    I["inputs<br>nixpkgs · home-manager · sops-nix · disko · zen · quickshell · ..."]
+    O["overlays<br>unstable.* · ./pkgs · the vendored binaries"]
+
+    I --> C
+    O --> C
+
+    C["commonModules<br>hostPlatform · overlays · sops · disko · ./system<br>home-manager AS a NixOS module, users.v1cferr = ./home"]
+
+    C -->|"++ hosts/nixos-kingston"| H["nixosConfigurations.nixos-kingston<br>the machine this runs on"]
+    C -->|"++ vm-disko.nix"| D["packages.disko-vm<br>the layout, formatted from scratch and booted"]
+    C -->|"++ vm-boot.nix"| V["packages.vm-boot<br>does this config still boot elsewhere"]
+
+    H --> P["packages.x86_64-linux<br>pkgs taken FROM the host, never a fresh import"]
+    P --> K["checks.packages<br>the gate builds what the repo ships"]
+```
+
+home-manager entering as a MODULE and not as a separate output is what makes one `drvPath` cover
+both trees, which is the measurement rule 19 leans on: 35 modules swept and the hash did not move.
+
 `nixos-kingston` is the ONLY host: an NVMe Kingston KC3000 on an ASUS EX-B560M-V5, btrfs with
 subvolumes ready for impermanence, declarative disk through disko.
 

@@ -4,9 +4,20 @@
   lib,
   stdenvNoCC,
   python3,
+  fetchurl,
 }:
 
 let
+  # Mermaid VENDORED, pinned to an exact version and a hash. Material's theme otherwise pulls
+  # `unpkg.com/mermaid@11` at page load, which is rule 13's moving pointer in the reader's browser.
+  # mermaid-cli was the obvious source and was measured at 2.1 GiB of closure: it drags chromium.
+  # fetchurl and not fetchzip: this hash is the TARBALL's, which `sha256sum` and npm's own
+  # integrity field both reproduce, instead of a NAR hash only Nix can check.
+  mermaid = fetchurl {
+    url = "https://registry.npmjs.org/mermaid/-/mermaid-11.12.0.tgz";
+    hash = "sha256-k0kuTWCb6DZTpBxDX0y9fnRBn3+mtPyQqMmDGV9kr4I=";
+  };
+
   # Both on ONE interpreter, which is what puts `mkdocs` on PATH with the theme importable.
   mkdocsEnv = python3.withPackages (ps: [
     ps.mkdocs
@@ -23,6 +34,7 @@ stdenvNoCC.mkDerivation {
     fileset = lib.fileset.unions [
       ../docs
       ../mkdocs.yml
+      ../overrides
       ../scripts/mkdocs-hooks.py
     ];
   };
@@ -37,6 +49,10 @@ stdenvNoCC.mkDerivation {
     runHook preInstall
     export HOME=$TMPDIR
     mkdocs build --strict --site-dir $out
+    # AFTER the build: the override references this path, and mkdocs validates nothing a
+    # template emits, so the file never has to sit inside docs/ or in git.
+    mkdir -p $out/assets/javascripts
+    tar -xzOf ${mermaid} package/dist/mermaid.min.js > $out/assets/javascripts/mermaid.min.js
     runHook postInstall
   '';
 

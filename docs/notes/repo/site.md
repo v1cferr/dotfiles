@@ -141,8 +141,29 @@ the device is reached.
 `docs/CNAME` is what claims the custom domain in the artifact, and it ships inside the site
 because everything under `docs_dir` that is not markdown is copied verbatim.
 
-## Diagrams
+## Diagrams, and the CDN that came with them
 
-Mermaid is NOT enabled. Material renders it with a five-line `superfences` block and no library,
-but enabling a renderer for zero diagrams is a declaration nobody reads, which is rule 16. The
-block goes in with the first diagram, in the same commit.
+A ```` ```mermaid ```` fence renders on GitHub natively and on the site through
+`pymdownx.superfences`, so one source has two renderers. The first one is the module graph in
+[`flake.md`](flake.md).
+
+**Material fetches Mermaid from `unpkg.com/mermaid@11` at page load**, which is a moving pointer
+in the reader's browser, the same class of trap as the VS Code `/latest/` URL, and it was the
+only third-party request this site would make. So the library is VENDORED: pinned at 11.12.0 by
+hash in `pkgs/docs-site.nix`, copied into the site after the build, and loaded by the one
+override in `overrides/`.
+
+Three details make that work, and each one was the reason an easier version failed:
+
+- **The loader has a guard.** Material's bundle reads `typeof mermaid == "undefined"` before
+  reaching for the CDN, so defining the global first is enough to keep it home. A `<script>` in
+  the head, emitted synchronously, cannot lose that race.
+- **Only on pages that draw something.** The override tests the page's markdown for the fence,
+  because 2.7 MB on all 90 pages to serve one diagram is a worse trade than the CDN was.
+- **`mermaid-cli` was the obvious source and is 2.1 GiB of closure**: it drags chromium. The
+  tarball straight from the npm registry is 2.7 MB and the hash is one `sha256sum` away, which
+  is what rule 13 asks for.
+
+In a local `mkdocs serve` the vendored copy does not exist, since it is placed by the
+derivation, so the preview falls back to the CDN and the published site never does. Preview with
+`nix build .#docs-site` when that distinction matters.

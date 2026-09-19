@@ -1,0 +1,80 @@
+From aa6a97ff50878121b4a844f5cbcae707f91db514 Mon Sep 17 00:00:00 2001
+From: Victor Ferreira <dev.victorferreira@gmail.com>
+Date: Sat, 19 Sep 2026 11:50:53 -0300
+Subject: [PATCH] [New Device] ASRock Intel Arc B580 Steel Legend 12GB OC
+
+The card carries the same RGB controller as the Radeon Steel Legend cards
+already supported: address 0x36, channels 3 (ARGB header), 6 (top side) and
+7 (fan).  It needs no new controller, only the PCI ID registration.
+
+Verified on the hardware: the card reports channel bitmap 0x00C8 for its own
+zones, and each channel drives the part of the board its name says it does.
+
+Intel discrete GPUs register several i2c adapters under one PCI device, nine
+gmbus and three DisplayPort AUX besides the internal DesignWare bus the RGB
+controller lives on, and all of them carry the card's PCI IDs.  Detection is
+therefore restricted to the internal bus, mirroring the AMD guard above it.
+Without it the probe packet would also be written to the monitors' DDC buses.
+
+Requires !3612 both for the bus enumeration and for is_intel_gpu_i2c_bus().
+---
+ .../ASRockGPUSMBusControllerDetect.cpp            | 15 +++++++++++++++
+ pci_ids/pci_ids.h                                 |  5 +++++
+ 2 files changed, 20 insertions(+)
+
+diff --git a/Controllers/ASRockSMBusController/ASRockGPUSMBusController/ASRockGPUSMBusControllerDetect.cpp b/Controllers/ASRockSMBusController/ASRockGPUSMBusController/ASRockGPUSMBusControllerDetect.cpp
+index 18b59e6..aa7fa32 100644
+--- a/Controllers/ASRockSMBusController/ASRockGPUSMBusController/ASRockGPUSMBusControllerDetect.cpp
++++ b/Controllers/ASRockSMBusController/ASRockGPUSMBusController/ASRockGPUSMBusControllerDetect.cpp
+@@ -12,6 +12,7 @@
+ #include "LogManager.h"
+ #include "RGBController_ASRockGPUSMBus.h"
+ #include "i2c_amd_gpu.h"
++#include "i2c_intel_gpu.h"
+ #include "i2c_smbus.h"
+ #include "pci_ids.h"
+ 
+@@ -24,6 +25,19 @@ DetectedControllers DetectASRockGPUSMBusControllers(i2c_smbus_interface* bus, ui
+         return(detected_controllers);
+     }
+ 
++    /*-----------------------------------------------------*\
++    | Intel discrete GPUs register several i2c adapters     |
++    | under the same PCI device: gmbus and DisplayPort AUX  |
++    | for the outputs, plus the internal DesignWare bus the |
++    | RGB controller lives on.  All of them carry the       |
++    | card's PCI IDs, so without this the probe packet      |
++    | would also be written to the monitors' DDC buses.     |
++    \*-----------------------------------------------------*/
++    if(bus->info.pci_vendor == INTEL_VEN && !is_intel_gpu_i2c_bus(bus))
++    {
++        return(detected_controllers);
++    }
++
+     LOG_DEBUG("[ASRock GPU] Checking GPU I2C bus for RGB controller at 0x%02X", address);
+ 
+     ASRockGPUSMBusController* controller = new ASRockGPUSMBusController(bus, address, name);
+@@ -45,3 +59,4 @@ REGISTER_I2C_PCI_DETECTOR("ASRock Radeon RX 9070 XT Steel Legend",   DetectASRoc
+ REGISTER_I2C_PCI_DETECTOR("ASRock Radeon RX 9070 XT Steel Legend Dark", DetectASRockGPUSMBusControllers, AMD_GPU_VEN, AMD_NAVI48_DEV, ASROCK_SUB_VEN, 0x5414, ASROCK_GPU_SMBUS_ADDRESS);
+ REGISTER_I2C_PCI_DETECTOR("ASRock Radeon RX 9070 XT Taichi 16GB OC", DetectASRockGPUSMBusControllers, AMD_GPU_VEN, AMD_NAVI48_DEV, ASROCK_SUB_VEN, 0x5401, ASROCK_GPU_SMBUS_ADDRESS);
+ REGISTER_I2C_PCI_DETECTOR("ASRock Radeon RX 9060 XT Steel Legend",   DetectASRockGPUSMBusControllers, AMD_GPU_VEN, AMD_NAVI44_DEV, ASROCK_SUB_VEN, 0x5407, ASROCK_GPU_SMBUS_ADDRESS);
++REGISTER_I2C_PCI_DETECTOR("ASRock Intel Arc B580 Steel Legend 12GB OC", DetectASRockGPUSMBusControllers, INTEL_VEN, INTEL_ARC_B580_DEV, ASROCK_SUB_VEN, 0x6020, ASROCK_GPU_SMBUS_ADDRESS);
+diff --git a/pci_ids/pci_ids.h b/pci_ids/pci_ids.h
+index 4306c45..177d8df 100644
+--- a/pci_ids/pci_ids.h
++++ b/pci_ids/pci_ids.h
+@@ -61,6 +61,11 @@
+ #define INTEL_RAPTOR_LAKE_SMBUS_DEV                             0x7A23
+ #define INTEL_ARROW_LAKE_SMBUS_DEV                              0x7F23
+ 
++/*-----------------------------------------------------*\
++| Intel GPU Device IDs                                  |
++\*-----------------------------------------------------*/
++#define INTEL_ARC_B580_DEV                                      0xE20B
++
+ /*-----------------------------------------------------*\
+ | Nvidia Device IDs                                     |
+ \*-----------------------------------------------------*/
+-- 
+2.54.0
+

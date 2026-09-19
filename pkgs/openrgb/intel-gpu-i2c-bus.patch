@@ -1,0 +1,127 @@
+From 50f0221ff903abefc981fcf86a8664d8d8bd51ee Mon Sep 17 00:00:00 2001
+From: cert4u <cert4u@users.noreply.gitlab.com>
+Date: Sat, 19 Sep 2026 11:49:23 -0300
+Subject: [PATCH] Improve Intel GPU I2C bus detection
+
+Local copy of upstream merge request !3612 by cert4u, applied only so that
+the ASRock Arc B580 work can be built and tested before it merges.  Not
+part of the change we submit.
+---
+ i2c_smbus/Linux/i2c_smbus_linux.cpp | 42 +++++++++++++++++-------
+ i2c_smbus/i2c_intel_gpu.h           | 50 +++++++++++++++++++++++++++++
+ 2 files changed, 81 insertions(+), 11 deletions(-)
+ create mode 100644 i2c_smbus/i2c_intel_gpu.h
+
+diff --git a/i2c_smbus/Linux/i2c_smbus_linux.cpp b/i2c_smbus/Linux/i2c_smbus_linux.cpp
+index e122a8a..d197322 100644
+--- a/i2c_smbus/Linux/i2c_smbus_linux.cpp
++++ b/i2c_smbus/Linux/i2c_smbus_linux.cpp
+@@ -175,18 +175,38 @@ bool i2c_smbus_linux_detect()
+                         path[sizeof(path) - 1] = '\0';
+                         free(ptr);
+ 
+-                        /*-------------------------------------------------------------*\
+-                        | Truncate at last '/' to get the parent PCI device directory.  |
+-                        | For AMDGPU i2c buses the realpath resolves to something like: |
+-                        |   /sys/devices/pci.../0000:03:00.0/i2c-4                      |
+-                        | The parent (0000:03:00.0) contains vendor/device/subsystem    |
+-                        | files. Using /..' traversal is unreliable in sysfs; directly  |
+-                        | truncating the path is correct and portable.                  |
+-                        \*-------------------------------------------------------------*/
+-                        char* last_slash = strrchr(path, '/');
+-                        if(last_slash == NULL || last_slash == path)
++                        /*-----------------------------------------------------*\
++                        | Walk up sysfs to the nearest PCI device.              |
++                        | Some I2C adapters sit below an intermediate device.    |
++                        \*-----------------------------------------------------*/
++                        while(true)
++                        {
++                            char pci_vendor_path[PATH_MAX];
++                            char pci_device_path[PATH_MAX];
++
++                            snprintf(pci_vendor_path, sizeof(pci_vendor_path), "%s/vendor", path);
++                            snprintf(pci_device_path, sizeof(pci_device_path), "%s/device", path);
++
++                            if(access(pci_vendor_path, R_OK) == 0 && access(pci_device_path, R_OK) == 0)
++                            {
++                                break;
++                            }
++
++                            char* last_slash = strrchr(path, '/');
++
++                            if(last_slash == NULL || last_slash == path)
++                            {
++                                path[0] = '\0';
++                                break;
++                            }
++
++                            *last_slash = '\0';
++                        }
++
++                        if(path[0] == '\0')
++                        {
+                             continue;
+-                        *last_slash = '\0';
++                        }
+                     }
+                     else
+                     {
+diff --git a/i2c_smbus/i2c_intel_gpu.h b/i2c_smbus/i2c_intel_gpu.h
+new file mode 100644
+index 0000000..a8b1c78
+--- /dev/null
++++ b/i2c_smbus/i2c_intel_gpu.h
+@@ -0,0 +1,50 @@
++/*---------------------------------------------------------*\
++| i2c_intel_gpu.h                                           |
++|                                                           |
++|   Bits specific to Intel GPUs to reliably detect          |
++|   the I2C bus that has RGB control                        |
++|                                                           |
++|   Jan Dvořák                                  13 Sep 2026 |
++|                                                           |
++|   This file is part of the OpenRGB project                |
++|   SPDX-License-Identifier: GPL-2.0-or-later               |
++\*---------------------------------------------------------*/
++
++#pragma once
++
++#include <cstring>
++
++#include "i2c_smbus.h"
++#include "pci_ids.h"
++
++inline constexpr const char * RECOGNIZED_INTEL_I2C_BUS_NAMES[] =
++{
++    /*-----------------------------------------------------*\
++    | Linux Intel discrete GPU internal I2C controller      |
++    \*-----------------------------------------------------*/
++    "Synopsys DesignWare I2C adapter",
++    nullptr
++};
++
++inline bool is_intel_gpu_i2c_bus(const i2c_smbus_interface *bus)
++{
++    if(bus->info.pci_vendor != INTEL_VEN)
++    {
++        return false;
++    }
++
++    const char *name;
++    size_t idx = 0;
++
++    while((name = RECOGNIZED_INTEL_I2C_BUS_NAMES[idx++]) != nullptr)
++    {
++        const char *pos = std::strstr(bus->info.device_name, name);
++
++        if(pos == bus->info.device_name)
++        {
++            return true;
++        }
++    }
++
++    return false;
++}
+-- 
+2.54.0
+

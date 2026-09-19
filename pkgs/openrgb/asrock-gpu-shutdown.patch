@@ -1,0 +1,33 @@
+From 292a98149559b1da27c4fb968b8279bb3085461f Mon Sep 17 00:00:00 2001
+From: Victor Ferreira <dev.victorferreira@gmail.com>
+Date: Sat, 19 Sep 2026 12:01:22 -0300
+Subject: [PATCH] Call Shutdown() in the ASRock GPU controller destructor
+
+Every other ASRock controller shuts the device thread down before deleting
+the controller.  This one did not, so tearing it down logs
+
+  Device thread still active in base class destructor, ensure Shutdown()
+  was called from inherited destructor
+
+on every exit.  Seen on an ASRock Intel Arc B580 Steel Legend, but the file
+is shared with the Radeon Steel Legend and Taichi cards.
+---
+ .../ASRockGPUSMBusController/RGBController_ASRockGPUSMBus.cpp   | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Controllers/ASRockSMBusController/ASRockGPUSMBusController/RGBController_ASRockGPUSMBus.cpp b/Controllers/ASRockSMBusController/ASRockGPUSMBusController/RGBController_ASRockGPUSMBus.cpp
+index bb08d40..bbbaacb 100644
+--- a/Controllers/ASRockSMBusController/ASRockGPUSMBusController/RGBController_ASRockGPUSMBus.cpp
++++ b/Controllers/ASRockSMBusController/ASRockGPUSMBusController/RGBController_ASRockGPUSMBus.cpp
+@@ -44,6 +44,8 @@ RGBController_ASRockGPUSMBus::RGBController_ASRockGPUSMBus(ASRockGPUSMBusControl
+ 
+ RGBController_ASRockGPUSMBus::~RGBController_ASRockGPUSMBus()
+ {
++    Shutdown();
++
+     delete controller;
+ }
+ 
+-- 
+2.54.0
+

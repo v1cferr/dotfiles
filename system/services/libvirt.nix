@@ -1,10 +1,19 @@
 # LIBVIRT/KVM: the daemon plus what a Windows 11 guest needs (TPM, an autostarted NAT, NOCOW images).
 # Why virbr0 is NOT trusted and why OVMF is not declared: docs/notes/services/libvirt.md
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 lib.mkIf config.my.services.libvirt {
   virtualisation.libvirtd = {
     enable = true;
+
+    # host-cpu-only, and claude-desktop's FHS ALREADY pulls this exact path, so the guest costs no
+    # new closure. It drops alien-arch emulation and keeps the firmware identical (the note).
+    qemu.package = pkgs.qemu_kvm;
 
     # TPM 2.0 is a Windows 11 INSTALL requirement and the only item on that list Nix declares: the
     # Secure Boot UEFI already ships with qemu, and declaring OVMF now FAILS the build (the note).

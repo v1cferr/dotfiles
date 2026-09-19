@@ -40,6 +40,30 @@ the flake actually pins, not the one the registry resolves to.
 The only Windows 11 requirement Nix does have to declare is the TPM, `qemu.swtpm.enable = true`.
 Without it the installer stops at the requirements check.
 
+## The emulator is `qemu_kvm`, and it is free here
+
+`virtualisation.libvirtd.qemu.package` defaults to `pkgs.qemu`, which can emulate alien
+architectures. Nothing here wants that: an x86_64 Windows on an x86_64 host, with KVM underneath.
+The option's own documentation names the alternative, `pkgs.qemu_kvm`, host CPU only.
+
+What made it worth changing is not the package delta (2.01 GiB against 1.45 GiB of closure) but
+WHOSE path it is: `claude-desktop`'s FHS wrapper already pulls that exact
+`qemu-host-cpu-only` store path, which `repo/packages.md` has recorded since 30/07/2026. So the
+default was paying for a second, nearly identical emulator to sit next to one the machine already
+had.
+
+MEASURED on the whole system closure, 19/09/2026:
+
+```text
+qemu        26.89 GiB
+qemu_kvm    25.95 GiB     940 MiB
+```
+
+VERIFIED BEFORE SWITCHING, because this is the part that could have quietly broken Windows 11:
+`qemu_kvm` ships the SAME eight firmware descriptors, `50-edk2-x86_64-secure.json` included. A
+smaller emulator that dropped the Secure Boot firmware would have traded a gigabyte for an
+installer that refuses to start.
+
 ## The `libvirtd` group goes in; `kvm` still stays out
 
 These look like the same decision and they are not, which is why both are written down.

@@ -207,6 +207,7 @@
         razer-dpi = final.callPackage ./pkgs/razer-dpi.nix { }; # the Razer mouse's live DPI, over hidraw
         notify = final.callPackage ./pkgs/notify.nix { }; # the ntfy push, shared by the shell and sshd's PAM
         docs-links = final.callPackage ./pkgs/docs-links.nix { }; # it fails when a docs/ pointer breaks
+        docs-site = final.callPackage ./pkgs/docs-site.nix { }; # docs/ built into the static site
         prose-style = final.callPackage ./pkgs/prose-style.nix { }; # rule 17's bans, in prose and in a message
         qml-syntax = final.callPackage ./pkgs/qml-syntax.nix { }; # it fails on a .qml that does not parse
         data-syntax = final.callPackage ./pkgs/data-syntax.nix { }; # it fails on a .json/.toml that does not parse
@@ -293,6 +294,7 @@
             curseforge-bump # ./pkgs: same, shellcheck at build time
             curseforge-fix-perms # ./pkgs: same
             docs-links # ./pkgs: the build IS the script's flake8; the CHECK below runs it
+            docs-site # ./pkgs: `mkdocs build --strict`, so the CHECK below proves the site builds
             prose-style # ./pkgs: same flake8 at build time; the HOOKS below run it, in two modes
             qml-syntax # ./pkgs: the build IS the wrapper's shellcheck; the HOOK below runs it
             data-syntax # ./pkgs: same flake8 at build time; the HOOK below runs it
@@ -551,6 +553,8 @@
           buildInputs = enabledPackages ++ [
             pkgs.nixd
             pkgs.sops
+            # `mkdocs serve` with live reload, from the SAME env the site derivation builds with.
+            self.packages.${system}.docs-site.env
           ];
         };
     };

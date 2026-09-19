@@ -19,3 +19,7 @@ __pycache__/
 
 # the OVMF variable store QEMU writes in the CWD on every `nix run .#disko-vm` (the layout drill)
 *-efi-vars.fd
+
+# the static site `mkdocs build` writes in the CWD. The versioned artifact is the SOURCE
+# (docs/ + mkdocs.yml); the build belongs to the derivation and to Pages, never to git.
+/site/

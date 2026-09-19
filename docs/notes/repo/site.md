@@ -25,6 +25,18 @@ There is nothing interactive here. What this needs is markdown, navigation, sear
 highlighting and a diagram now and then, which is the exact problem Material for MkDocs is built
 for.
 
+### The upstream is frozen, and that is a known cost
+
+MkDocs 1.x has not shipped a release in 24 months, and MkDocs 2.0 is a rewrite that drops the
+plugin system, moves the config to TOML and carries no license. Material's own team answered it
+by building Zensical, which reads this `mkdocs.yml` as it stands.
+
+Choosing a frozen generator is a decision and not an oversight, so the numbers, the reasoning and
+the trigger to migrate are in [`../../ideas.md`](../../ideas.md). The short version is that a
+generator is a build-time tool pinned in `flake.lock`, with no network exposure and nothing
+running in production, and that the tree not having moved makes the switch a config change rather
+than a migration.
+
 ## The nav is the ONLY topic layer, and the tree did not move
 
 The obvious first instinct is to reorganise `docs/` to match the site: `architecture/`, `system/`,

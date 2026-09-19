@@ -267,3 +267,56 @@ and UFSCar tunnels plus WireGuard home already in place, that need does not exis
 
 **What would change the answer:** a router with storage (extroot or a different device) reopens the
 first question, and travelling somewhere that blocks WireGuard reopens the last one.
+
+## MkDocs 2.0 split the ecosystem, and Zensical is the exit (measured on 18/09/2026)
+
+The site of [`notes/repo/site.md`](notes/repo/site.md) runs on MkDocs 1.6.1 plus Material for
+MkDocs 9.7.6, and Material's build prints a warning about MkDocs 2.0 on every run. It is not
+marketing. The numbers below were checked against the upstream repositories that same day, not
+taken from the warning.
+
+**MkDocs 1.x is frozen.** Last release 1.6.1 on 30/08/2024, so 24 months with no release. Last
+commit on `master` on 20/10/2025, 11 months. BSD-2-Clause, 22.4k stars, NOT archived, which is the
+worst of the three states: nobody has declared it over, and nobody is shipping.
+
+**MkDocs 2.0 is a different project wearing the same name.** A pre-release on PyPI as of
+30/08/2026: the plugin system REMOVED, the theming rewritten, the config moved from YAML to TOML,
+no migration path, contributions closed ("do not open issues or pull requests"), and no license
+declared at all. Material's analysis of 18/02/2026 is that nothing built on the current
+architecture survives it.
+
+**Material itself is alive**, and that is what makes waiting cheap: MIT, 27.5k stars, release
+9.7.7 on 17/07/2026, pushed 15/09/2026.
+
+**Zensical is the same team's replacement.** MIT, repository opened 18/05/2025, 5.7k stars, and
+shipping constantly: v0.0.62 on 13/09/2026, with releases every few days. It is already in
+nixpkgs, 0.0.43 on 26.05 and 0.0.59 on unstable. It reads an existing `mkdocs.yml`, and `nav`,
+`theme` and `extra` carry over unchanged.
+
+### Why not switch now
+
+**The version number is the whole argument.** 0.0.62 with a release every two days is a project
+finding its shape, and rule 13 pins dependencies precisely so that this repo does not ride
+somebody's daily churn. A 0.0.x in the lock means a bump that can break the build on any week.
+
+**The one piece that would not carry over is `scripts/mkdocs-hooks.py`.** Zensical's
+compatibility page documents plugin REPLACEMENTS, not the MkDocs hook API, so the 134 links to
+source files would need whatever mechanism replaces it, and that mechanism is not documented yet.
+
+**Nothing is at risk while waiting.** A frozen generator is not a running service: it has no
+network exposure, it is pinned in `flake.lock`, and the only thing it ever touches is markdown in
+a build sandbox. The failure mode of "unmaintained" here is a bug that never gets fixed, not a
+CVE that gets exploited.
+
+### Why the cost of being wrong is small, by construction
+
+The tree did not move to match the generator, which was decided for other reasons and pays off
+exactly here. What is MkDocs-specific is `mkdocs.yml`, one hook and one derivation. `docs/` is 88
+markdown files that any generator in this class consumes, so switching is a config change, not a
+migration.
+
+### Trigger to migrate
+
+Zensical reaching **1.0 with a stable config format**, or Material 9.x announcing an end date,
+whichever comes first. Prototype then: build both, diff the output, and keep whichever one still
+resolves the links to source. Check `nix flake check` passes before switching the deploy over.

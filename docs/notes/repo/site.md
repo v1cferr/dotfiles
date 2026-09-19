@@ -113,6 +113,32 @@ same one-definition-three-consumers shape as the pre-commit gate in [`flake.md`]
 The sandbox has no network, which rules out the plugins that need one (`git-revision-date`,
 Material's social cards). Nothing here wants them.
 
+## Google Fonts, removed on the same reasoning (19/09/2026)
+
+Material links Roboto and Roboto Mono from `fonts.gstatic.com` by DEFAULT, on every page, so
+rendering the text of this site sent every reader to a third party. It is the mermaid trade
+again, except at 90 pages instead of one, and it was invisible: an early check for external
+assets looked at `src=` and fonts arrive through `href=`.
+
+`theme.font: false` stops the link and `docs/assets/stylesheets/fonts.css` says what to use
+instead, `system-ui` for prose and JetBrains Mono for code. Neither is REQUIRED: both are
+prepended to Material's own fallback chain, so a machine without them loses nothing.
+
+Measured after: the only external URLs left in the built site are the ones the pages THEMSELVES
+cite, like nix.dev and the Hyprland wiki. Those are content, not assets.
+
+## What checks the links this generates
+
+The same split [`link-checker.md`](link-checker.md) already draws, extended to the links that
+exist only after a build:
+
+- **In the gate, offline.** `docs-links` requires a target that leaves `docs/` to be
+  git-TRACKED, not merely present, because those two stopped being the same question the day
+  such a link started being published as a blob URL.
+- **In the canary, weekly.** `lychee` over the BUILT site, filtered to this repo's own URLs,
+  which it reads out of `mkdocs.yml` rather than repeating. The markdown run cannot see one of
+  these links, since none of them appears in any `.md`. First run: 91 unique URLs, 0 errors.
+
 ## The three halves Nix does not reach
 
 Deploy is `.github/workflows/docs.yml`, on every push to `nixos`. Three settings live outside

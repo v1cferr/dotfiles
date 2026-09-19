@@ -36,6 +36,9 @@ theme:
   language: en
   # It holds ONE override: the vendored mermaid, so no page reaches for a CDN.
   custom_dir: overrides
+  # NO Google Fonts. The default links Roboto from gstatic on every page, which sends every
+  # reader to a third party to render text: the stack is in assets/stylesheets/fonts.css.
+  font: false
   features:
     # No `navigation.tabs`: twelve top-level sections overflow the tab bar and start scrolling.
     - navigation.sections
@@ -64,6 +67,9 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+
+extra_css:
+  - assets/stylesheets/fonts.css
 
 plugins:
   - search

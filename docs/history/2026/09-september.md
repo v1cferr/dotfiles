@@ -1,6 +1,42 @@
 # History: september 2026
 
-7 entries. Index in [README.md](../README.md).
+8 entries. Index in [README.md](../README.md).
+
+- [x] docs/ became a site, and the tree did not move to get there (18/09/2026). 88 pages and
+      ~188k words were a manual with no reader outside a file tree. MkDocs plus Material for
+      MkDocs turns them into static HTML at <https://dotfiles.v1cferr.dev/>, built by the flake
+      and published by `.github/workflows/docs.yml`. The whole reasoning is in
+      [notes/repo/site.md](../../notes/repo/site.md).
+      • THE ONE DECISION WORTH THE DAY WAS NOT REORGANISING `docs/`. The obvious move is to
+        regroup the tree by topic to match a sidebar, and it is wrong three times over: sections
+        named after the repo's own directories are the tree mirror that
+        [notes/README.md](../../notes/README.md) already measured and rejected, the move would
+        rewrite 193 pointers across 132 code files, and rule 17 wants a `git mv` history that
+        survives. MkDocs writes the nav in its own config, so the sidebar is topic-first and the
+        files never moved. Nine of the twelve sections are subjects.
+      • THE NAV IS CHECKED BY THE BUILD, not by a new checker. `validation.nav.omitted_files`
+        plus `--strict` makes MkDocs refuse to build a site that left a page out of the nav,
+        which is the same trade rule 7 makes for shell scripts. It paid for itself immediately:
+        `notes/apps/spotify.md` had been written and never indexed, 15 of 16 apps in the table.
+      • 134 LINKS POINT AT SOURCE FILES OUTSIDE `docs/`, which MkDocs does not serve, so under
+        --strict every one of them is a build error. `scripts/mkdocs-hooks.py` resolves each
+        target against the page's own directory, the same rule `docs-links` applies, and rewrites
+        the ones that escape into blob URLs. The markdown on disk is untouched, so the link still
+        works when the page is read on GitHub, which is where most of them get read.
+      • A FOLDER LINK NEEDS AN INDEX PAGE. GitHub renders a listing for `guides/` and a static
+        site has nothing to render, so `docs/guides/README.md` was born, the counterpart of the
+        one `notes/` and `history/` already had.
+      • THE UPSTREAM IS FROZEN AND I FOUND OUT FROM THE BUILD, which is the kind of thing worth
+        checking before trusting a warning: MkDocs 1.x has no release in 24 months and no commit
+        in 11, and 2.0 is a pre-release that drops plugins, moves to TOML and carries no license.
+        Material's answer is Zensical, MIT, which reads this config as it stands but sits at
+        0.0.62 with a release every two days. The numbers and the trigger to migrate went to
+        [ideas.md](../../ideas.md). The tree not having moved is what makes that a config change
+        later instead of a migration.
+      • TWO HALVES STAY OUTSIDE THE REPO, and both are worth knowing before debugging a 404: the
+        Pages source has to be "GitHub Actions" and not a branch, and `dotfiles.v1cferr.dev`
+        needs a DNS record of its own, since the wildcard for this zone points home and Caddy
+        would answer for a site that is not there.
 
 - [x] An image in the clipboard reaches the TUI on the workstation (14/09/2026). Claude Code over
       ssh reads the WORKSTATION's filesystem and has no idea this machine has a clipboard, so an

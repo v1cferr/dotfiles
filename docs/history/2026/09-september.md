@@ -72,6 +72,15 @@
         next `nix-collect-garbage` with an error saying nothing about garbage collection.
         `systemctl restart libvirtd-config libvirtd` fixes it, a reboot does too, and that is why
         it normally stays invisible here.
+      • AND SEALING THE HOST WAS ONLY HALF, found when I asked whether the VM was actually
+        isolated enough to run the payload. `INPUT` governs the host, `FORWARD` governs everything
+        the guest routes THROUGH it, and libvirt's rule there accepts ANY destination. So with the
+        host's ports closed the guest still reached `192.168.1.0/24` and, over the tunnel,
+        `10.10.10.0/24`: the router, the house, the T480. A sandbox that cannot touch the machine
+        it runs on but can port scan the house is not a sandbox. Three REJECTs in `FORWARD` over
+        every RFC1918 range, not the two subnets I happen to have, plus a re-ACCEPT of the guest's
+        own subnet written LAST so `-I 1` puts it FIRST. The internet stays on purpose: the
+        loader has to reach its license server for the payload to decrypt at all.
       • WHAT IS LEFT, and it is the guest: install Windows with UEFI secure plus a TPM 2.0 on
         Q35, then the payload. USB passthrough and a virtiofs shared folder are both one line and
         both deliberately absent, unused today (rule 16) and both holes in the isolation this VM

@@ -187,6 +187,38 @@ already accepted in `LIBVIRT_INP` before `nixos-fw` runs, and NAT lives in `FORW
 removes is the host's own listening services, which is the only thing the guest should never have
 had.
 
+### And the host was only half of it: the guest could reach the whole LAN
+
+Closing the host's ports says nothing about where else the guest can go, and those are separate
+questions answered by separate chains. `INPUT` governs the host; `FORWARD` governs everything the
+guest routes THROUGH the host, which is the entire point of a NAT. libvirt's own rule there is:
+
+```text
+-A LIBVIRT_FWO -s 192.168.122.0/24 -i virbr0 -j ACCEPT
+```
+
+ANY destination. So with the host sealed, the guest still reached `192.168.1.0/24` and
+`10.10.10.0/24`: the router, the LAN, and over the tunnel the T480. A sandbox that cannot touch
+the machine it runs on but can port scan the house is not a sandbox.
+
+Three refusals in `FORWARD`, covering every RFC1918 range rather than the two subnets I happen to
+have today, so a network added tomorrow is covered without editing this list:
+
+```text
+iptables -I FORWARD 1 -i virbr0 -d 10.0.0.0/8     -j REJECT --reject-with icmp-admin-prohibited
+iptables -I FORWARD 1 -i virbr0 -d 172.16.0.0/12  -j REJECT --reject-with icmp-admin-prohibited
+iptables -I FORWARD 1 -i virbr0 -d 192.168.0.0/16 -j REJECT --reject-with icmp-admin-prohibited
+iptables -I FORWARD 1 -i virbr0 -d 192.168.122.0/24 -j ACCEPT
+```
+
+THE ORDER IS THE WHOLE TRICK and it reads backwards: `-I 1` inserts at the TOP, so the guest's own
+subnet, written LAST, ends up FIRST and survives the `192.168.0.0/16` refusal that would otherwise
+swallow it. Read the generated `firewall-start` if in doubt, never the source order.
+
+What the guest keeps is the internet, which is deliberate: the loader has to reach its license
+server for the payload to decrypt at all, and that handshake is the thing being observed. What it
+loses is every private address, which it never had a reason to want.
+
 THE GENERAL LESSON, worth more than this module: "the firewall drops it" is not a property of the
 firewall being ON. `allowedTCPPorts` is a global hole, and any reasoning of the form "an untrusted
 interface cannot reach X" has to name the rule that stops it, or it is a guess.

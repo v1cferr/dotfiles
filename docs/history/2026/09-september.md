@@ -1,6 +1,40 @@
 # History: september 2026
 
-8 entries. Index in [README.md](../README.md).
+9 entries. Index in [README.md](../README.md).
+
+- [x] The site draws diagrams, and stopped calling out to anybody (19/09/2026). Follow-up to the
+      day before: the first diagram went in, and putting it there exposed two third parties the
+      site was quietly talking to. Both are gone. [notes/repo/site.md](../../notes/repo/site.md)
+      holds the detail.
+      • THE FIRST DIAGRAM IS THE ONE THE PROSE COULD NOT DRAW: `commonModules` is hoisted, so
+        the machine, the disko drill and the boot test all evaluate the SAME list plus their own
+        override, and none of the three can drift from what gets installed. It lives in
+        [notes/repo/flake.md](../../notes/repo/flake.md), as a ```mermaid fence that GitHub
+        renders natively and the site renders through superfences: one source, two renderers.
+      • MERMAID CAME WITH A CDN ATTACHED. Material fetches `unpkg.com/mermaid@11` at page load,
+        a moving pointer running in the reader's browser, which is rule 13's trap on somebody
+        else's machine. Its loader guards on `typeof mermaid == "undefined"`, so a vendored copy
+        defined first keeps it home: pinned at 11.12.0 by hash from the npm registry, and the
+        one template override serves it ONLY on pages whose markdown has the fence, because 2.7
+        MB on all 90 pages to draw one diagram is a worse deal than the CDN was. `mermaid-cli`
+        was the obvious source and measures 2.1 GiB of closure, since it drags chromium.
+      • THE BIGGER ONE WAS THE FONTS, and it had been there since the first commit: Material
+        links Roboto from `fonts.gstatic.com` on EVERY page, so reading this site sent every
+        visitor to Google ninety times over. It survived the first audit because that one
+        grepped for `src=` and a font arrives through `href=`. `theme.font: false` plus a stack
+        naming `system-ui` and JetBrains Mono, neither required, both prepended to Material's
+        own fallback chain. What is left pointing outward is what the pages cite on purpose.
+      • EXISTING STOPPED BEING THE WHOLE TEST for a link. Once a link leaving `docs/` is
+        published as a blob URL, a target that is present but UNTRACKED resolves in the working
+        tree and 404s on the site. `docs-links` now checks those against `git ls-files`, which
+        it was already reading, and it catches nothing today on purpose: 921 references, zero
+        untracked, the gap being the one that opens later.
+      • AND THE REPO AND BRANCH GOT ONE OWNER. The hook had both hardcoded next to a
+        `mkdocs.yml` that already declares them, which is two owners of a value whose staleness
+        breaks 134 links at once. It derives them from `repo_url` and `edit_uri` now, proven by
+        pointing `edit_uri` elsewhere and watching every published link follow. The network half
+        is a weekly `lychee` over the BUILT site in the canary, 91 URLs, since none of those
+        links appears in any `.md` for the markdown run to find.
 
 - [x] docs/ became a site, and the tree did not move to get there (18/09/2026). 88 pages and
       ~188k words were a manual with no reader outside a file tree. MkDocs plus Material for

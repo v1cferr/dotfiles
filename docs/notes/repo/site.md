@@ -111,19 +111,35 @@ same one-definition-three-consumers shape as the pre-commit gate in [`flake.md`]
 The sandbox has no network, which rules out the plugins that need one (`git-revision-date`,
 Material's social cards). Nothing here wants them.
 
-## The two halves Nix does not reach
+## The three halves Nix does not reach
 
-Deploy is `.github/workflows/docs.yml`, on every push to `nixos`. Two settings live outside the
-repo and are worth knowing about before debugging a 404:
+Deploy is `.github/workflows/docs.yml`, on every push to `nixos`. Three settings live outside
+the repo, all configured on 18/09/2026, and all three are worth knowing about before debugging a
+404:
 
-- **Pages source has to be "GitHub Actions"** in the repository settings, not "Deploy from a
-  branch". The workflow uploads an artifact and the classic branch mode ignores it.
-- **The DNS record for `dotfiles.v1cferr.dev`** has to be explicit. The wildcard for this zone
-  points home, so without a record of its own the name resolves to the house and Caddy answers
-  for a site that is not there.
+- **The Pages source is "GitHub Actions"**, not "Deploy from a branch". The workflow uploads an
+  artifact and the classic branch mode ignores it, so the build goes green and nothing appears.
+- **`dotfiles.v1cferr.dev` is a CNAME of its own** to `v1cferr.github.io`, DNS-only and not
+  proxied. Explicit because the `*.v1cferr.dev` wildcard points home; DNS-only because GitHub
+  issues the certificate for this name and a proxy in front of it is what breaks that.
+- **The router stops swallowing the name.** This is the one nobody predicts, and it fails in the
+  worst direction: the site works for the world and not for me.
 
-`docs/CNAME` is what tells GitHub the custom domain, and it ships inside the site because
-everything under `docs_dir` that is not markdown is copied verbatim.
+### The split-DNS trap, which cost nothing to fix and everything to find
+
+`address=/v1cferr.dev/192.168.1.10` in the router's dnsmasq matches the domain AND every
+subdomain, so from inside the house the name resolved to this machine and landed on Caddy, which
+has no vhost for it. Every LAN query is forced through the router, so even asking `1.1.1.1`
+directly returned the local answer, and the only way to see the real record from here is DoH.
+
+The fix is four `add_list` entries forwarding that one name to the DoH proxies, the same shape
+`vpn.v1cferr.dev` already uses for the same reason, on `server` and `doh_backup_server` both.
+dnsmasq resolves the LONGEST matching domain, which `cesar-ssh.v1cferr.dev` already proves in
+that file. See [`../../guides/router-hardening.md`](../../guides/router-hardening.md) for how
+the device is reached.
+
+`docs/CNAME` is what claims the custom domain in the artifact, and it ships inside the site
+because everything under `docs_dir` that is not markdown is copied verbatim.
 
 ## Diagrams
 

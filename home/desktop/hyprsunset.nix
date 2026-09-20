@@ -6,26 +6,23 @@
   services.hyprsunset = {
     enable = true;
     settings = {
-      max-gamma = 150; # the gamma ceiling in % (default 100); slack for tuning through IPC
+      max-gamma = 150; # the ceiling for the MANUAL override (SUPER+Vol); the schedule no longer dims
 
-      # Profiles by time of day. gamma = PERCEIVED brightness, and it is the only auto-dim that
-      # reaches BOTH screens (the DDC attempt was reverted; see the notes). No gamma = back to 1.0.
+      # Profiles by time of day, COLOR ONLY: the dimming moved to the real backlight over DDC
+      # (home/desktop/backlight.nix), which reads these same times. No gamma here means 1.0.
       profile = [
         {
           time = "0:00";
           temperature = 2000;
-          gamma = 0.8;
-        } # the small hours: warm plus dark
+        } # the small hours: the warmest point
         {
           time = "6:00";
           temperature = 3000;
-          gamma = 0.9;
-        } # dawn: it cools down and brightens
+        } # dawn: it starts cooling down
         {
           time = "7:00";
           temperature = 4000;
-          gamma = 1.0;
-        } # morning: normal brightness back
+        } # morning
         {
           time = "8:00";
           identity = true;
@@ -57,17 +54,14 @@
         {
           time = "22:00";
           temperature = 2600;
-          gamma = 0.9;
-        } # pre-sleep: less blue plus a light dim
+        } # pre-sleep: less blue
         {
           time = "23:00";
           temperature = 2400;
-          gamma = 0.85;
         }
         {
           time = "23:30";
           temperature = 2200;
-          gamma = 0.8;
         } # the final transition into the small hours
       ];
     };

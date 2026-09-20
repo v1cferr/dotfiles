@@ -61,25 +61,27 @@ becomes the usual gesture when opening media at night; the clock's next profile 
 back up on its own. If it gets in the way too much, the adjustment is raising ONLY the 18h/18:30
 step, not flattening the whole curve.
 
-## The gamma story, and why it dims both screens badly instead of one perfectly
+## The gamma story, and how it ended
 
-`gamma` is PERCEIVED brightness (1.0 = normal, below 1 darkens), and it is the only automatic
-dimming that reaches BOTH screens. It came back on 08/08/2026 after an attempt at using real
-backlight was REVERTED.
+`gamma` is PERCEIVED brightness (1.0 = normal, below 1 darkens). Between 08/08/2026 and 20/09/2026
+it was the only automatic dimming that reached BOTH screens, and the profiles carried it down to
+0.8 in the small hours.
 
-**The attempt**: the UltraGear accepts DDC/CI and got a real backlight curve, much better than
-gamma, which darkens the SIGNAL with the backlight wide open. What killed it was the OTHER screen
-of the time, a TV on HDMI that does not speak DDC/CI, is not on the network (no webOS), and CEC
-does not cover brightness, so it had no automatic path at all.
+**The attempt it replaced**: the UltraGear accepts DDC/CI and got a real backlight curve, much
+better than gamma, which darkens the SIGNAL with the backlight wide open. What killed it was the
+OTHER screen of the time, a TV on HDMI that does not speak DDC/CI, is not on the network (no
+webOS), and CEC does not cover brightness. One screen at 32% next to another at 100% forces the
+pupil to readapt on every glance, which tires more than the gain on the good screen, so the
+decision was **worse dimming on both over perfect dimming on one**.
 
-**That blocker LEFT with the TV on 15/09/2026**, so the path is open again for whoever wants to
-redo the curve. What is NOT measured yet is whether the XG27ACS answers MCCS, and the decision
-below is what makes the attempt worth redoing only if BOTH screens can follow.
+**That blocker left with the TV, and both panels that replaced the pair answer DDC.** Since
+20/09/2026 the dimming is the real lamp, in [`backlight.md`](backlight.md), and these profiles
+carry COLOR ONLY: every `gamma` line is gone from them. The two quantities were never the same
+thing, and one number was standing in for both only because the hardware could not be reached.
 
-One screen at 32% next to another at 100% forces the pupil to readapt every time the gaze switches,
-and that tires more than the gain on the good screen. **The decision: worse dimming on both beats
-perfect dimming on one.** The measurement that motivated all of it (the monitor was at 100% at 20h)
-is in `docs/history/2026/`.
+`max-gamma = 150` stays, because gamma is still the MANUAL override: SUPER+Vol moves it instantly,
+which a 650 ms DDC write per panel could never do. The measurement that motivated all of it (the
+monitor was at 100% at 20h) is in `docs/history/2026/`.
 
 So auto-dim runs ONLY at night: the day and early evening stay at full brightness, since I may be
 working; from 22h onward it darkens down to 0.8 (the floor) and comes back in the morning.

@@ -138,13 +138,13 @@ in
     flameshotCancel
   ];
 
-  # The screenshot aliases live next to the tool, not in zsh.nix (the eza/bat convention).
-  # They take a monitor NAME (rule 11), and flameshot-screen turns it into the Qt `--number`.
+  # The screenshot aliases live next to the tool, not in zsh.nix (the eza/bat convention). They
+  # take a monitor NAME (rule 11); 1 is the MAIN panel everywhere in this repo, never a position.
   programs.zsh.shellAliases = {
     screenshot = "flameshot gui"; # an interactive selection (it opens the v14 picker)
     scfull = "flameshot full -c"; # both screens, to the clipboard
-    sc1 = "flameshot-screen ${osConfig.my.monitors.secondary}"; # the secondary, to the clipboard
-    sc2 = "flameshot-screen ${osConfig.my.monitors.primary}"; # the main one, to the clipboard
+    sc1 = "flameshot-screen ${osConfig.my.monitors.primary}"; # the main one, to the clipboard
+    sc2 = "flameshot-screen ${osConfig.my.monitors.secondary}"; # the secondary, to the clipboard
   };
 
   # Flameshot does not create the output folder reliably on its own.

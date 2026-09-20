@@ -151,9 +151,10 @@ hl.bind("Print",                   hl.dsp.exec_cmd("flameshot gui"))
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("flameshot-screenshot"))
 
 hl.define_submap("screenshot", function()
-  -- positional: 1 = the LEFT screen (the secondary), 2 = the RIGHT screen (the main one).
-  hl.bind("1",      hl.dsp.exec_cmd("flameshot-pick " .. M.secondary)) -- the secondary, on the left
-  hl.bind("2",      hl.dsp.exec_cmd("flameshot-pick " .. M.primary))     -- the main one, on the right
+  -- By ROLE and never by position: 1 is the MAIN panel here, in sc1 and in wp1. The pick script
+  -- still resolves the preview's slice from the physical order, so a swap changes nothing.
+  hl.bind("1",      hl.dsp.exec_cmd("flameshot-pick " .. M.primary))   -- the main one
+  hl.bind("2",      hl.dsp.exec_cmd("flameshot-pick " .. M.secondary)) -- the secondary
   hl.bind("escape", hl.dsp.exec_cmd("flameshot-cancel"))        -- cancel plus leave the submap
 end)
 

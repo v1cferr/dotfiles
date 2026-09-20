@@ -76,7 +76,9 @@ necessarily the one being used. Measured on the setup of the time (a TV on HDMI 
 Moonlight opened on the SECONDARY. It is not the client's choice: Moonlight gets what the host
 sends. It matches by connector NAME and not by index, because the index depends on enumeration
 order, which is exactly what went wrong. Following `my.monitors.primary` means it now captures the
-QHD panel at 180Hz, which costs more to encode than the 1080p it was written for.
+QHD panel at 180Hz, which costs more to encode than the 1080p it was written for. DECIDED to keep
+it that way (20/09/2026): the main panel is what there is any point in streaming, and paying the
+encoder for it is the trade being bought, not an oversight to fix.
 
 ## The idle guard, and why it needs a watchdog
 

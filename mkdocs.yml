@@ -143,6 +143,7 @@ nav:
       - Theme: notes/desktop/theme.md
       - Autostart: notes/desktop/autostart.md
       - hyprsunset: notes/desktop/hyprsunset.md
+      - Backlight: notes/desktop/backlight.md
       - Desktop plumbing: notes/desktop/desktop-plumbing.md
 
   - Apps:

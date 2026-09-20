@@ -12,7 +12,8 @@
     ./clipboard.nix # cliphist (the history) plus rofi (a picker with an image/type preview); Tokyo Night
     ./launcher.nix # the app launcher (rofi drun: icons plus recency plus Tokyo Night)
     ./cheatsheet.nix # SUPER+H: the keybind list in rofi, GENERATED from keybinds.lua at runtime
-    ./wallpaper.nix # hyprpaper: the desktop wallpaper (nixos-artwork; a dark main one plus a waterfall)
+    ./wallpaper.nix # hyprpaper: a random DARK photo per monitor, one pool per orientation
+    ./backlight.nix # DDC/CI: both panels held at one declared brightness and white point
     ./hyprsunset.nix # the blue light filter (a systemd service plus profiles by time of day)
     ./lockscreen.nix # hyprlock (the lock screen) plus hypridle (idle: dim plus lock)
     ./quickshell.nix # the shell/bar/OSD/media plus NOTIFICATIONS in QML; hot-reload through mkOutOfStoreSymlink

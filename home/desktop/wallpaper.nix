@@ -41,8 +41,8 @@ let
   linkWide = "${linkDir}/wide";
   linkTall = "${linkDir}/tall";
 
-  # One draw per pool. The symlink is what the config reads at START; the IPC is what applies it
-  # NOW, and it carries the REAL path because hyprpaper caches by path and the link never changes.
+  # One draw per pool, or just the one asked for. The symlink is what the config reads at START;
+  # the IPC is what applies it NOW, with the REAL path, since hyprpaper caches by path.
   shuffle = writeShellApplication {
     name = "wallpaper-shuffle";
     runtimeInputs = [
@@ -50,28 +50,48 @@ let
       hyprland
     ];
     text = ''
-      pick() { # $1 = pool, $2 = link, $3 = fallback
+      pick() { # $1 = pool, $2 = link, $3 = fallback; prints what it drew
         local files=() f chosen
         for f in "$1"/*; do
-          [ -f "$f" ] && files+=("$f")
+          if [ -f "$f" ]; then files+=("$f"); fi
         done
         chosen="$3"
-        [ ''${#files[@]} -gt 0 ] && chosen="''${files[RANDOM % ''${#files[@]}]}"
+        if [ ''${#files[@]} -gt 0 ]; then chosen="''${files[RANDOM % ''${#files[@]}]}"; fi
         ln -sfn "$chosen" "$2"
         printf '%s' "$chosen"
       }
 
-      mkdir -p ${linkDir} ${poolWide} ${poolTall}
-      wide=$(pick ${poolWide} ${linkWide} ${fallbackWide})
-      tall=$(pick ${poolTall} ${linkTall} ${fallbackTall})
+      apply() { # $1 = monitor, $2 = image
+        hyprctl hyprpaper preload "$2" >/dev/null 2>&1 || true
+        hyprctl hyprpaper wallpaper "$1,$2" >/dev/null 2>&1 || true
+      }
 
-      if hyprctl hyprpaper listactive >/dev/null 2>&1; then
-        hyprctl hyprpaper preload "$wide" >/dev/null 2>&1 || true
-        hyprctl hyprpaper preload "$tall" >/dev/null 2>&1 || true
-        hyprctl hyprpaper wallpaper "${osConfig.my.monitors.primary},$wide" >/dev/null 2>&1 || true
-        hyprctl hyprpaper wallpaper "${osConfig.my.monitors.secondary},$tall" >/dev/null 2>&1 || true
-        hyprctl hyprpaper unload unused >/dev/null 2>&1 || true
+      # 1 is the MAIN panel and 2 the standing one, the same numbering my.monitors uses.
+      target="''${1:-both}"
+      case "$target" in
+        1 | 2 | both) ;;
+        *)
+          echo "usage: wallpaper-shuffle [1|2]  (1 = main, 2 = standing, none = both)" >&2
+          exit 2
+          ;;
+      esac
+
+      mkdir -p ${linkDir} ${poolWide} ${poolTall}
+
+      # Every branch below is an `if` and never `[ x ] && y`: under set -e a failing left side
+      # takes the whole script with it, and the empty-pool path lands exactly there.
+      live=no
+      if hyprctl hyprpaper listactive >/dev/null 2>&1; then live=yes; fi
+
+      if [ "$target" != 2 ]; then
+        wide=$(pick ${poolWide} ${linkWide} ${fallbackWide})
+        if [ "$live" = yes ]; then apply "${osConfig.my.monitors.primary}" "$wide"; fi
       fi
+      if [ "$target" != 1 ]; then
+        tall=$(pick ${poolTall} ${linkTall} ${fallbackTall})
+        if [ "$live" = yes ]; then apply "${osConfig.my.monitors.secondary}" "$tall"; fi
+      fi
+      if [ "$live" = yes ]; then hyprctl hyprpaper unload unused >/dev/null 2>&1 || true; fi
     '';
   };
 

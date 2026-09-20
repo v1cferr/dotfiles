@@ -46,6 +46,11 @@ in
       # Rereads the whole repo (~24 GiB) to prove a restore works. Manual: it is a full download.
       backup-verify = "sudo restic-home-gdrive check --read-data";
 
+      # Wallpaper: 1 is the main panel and 2 the standing one, no argument redraws both.
+      wp = "wallpaper-shuffle";
+      wp1 = "wallpaper-shuffle 1";
+      wp2 = "wallpaper-shuffle 2";
+
       # ls/ll/la/lt (eza) and cat (bat) live in cli.nix, next to the toolkit.
       ".." = "cd ..";
       "..." = "cd ../..";

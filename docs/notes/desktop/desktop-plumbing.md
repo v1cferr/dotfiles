@@ -75,11 +75,23 @@ of its height. Mixing the two pools would mean half the draws landing badly crop
 in git, no URL that can rot the build, and adding one is dropping a file. Restic covers the path.
 
 **DARK is a measurement here, not a taste.** The criterion is ImageMagick's `%[fx:mean]`, the mean
-luminance on a 0 to 1 scale, and the bar is roughly 0.15. The four that shipped measure 0.070 to
-0.124 (Serra da Canastra, Chapada dos Veadeiros, Casarão do Jabre, and the standing Chapada), while
-the daylight dune shots that the same search returned came back at 0.30 and up. `identify -format
+luminance on a 0 to 1 scale, and the bar is roughly 0.15. What shipped measures 0.067 to 0.164
+(Milky Way over Chapada dos Veadeiros, Serra da Canastra, Serra Catarinense and others, plus one
+Hubble galaxy), while the daylight dune shots that the same search returned came back at 0.30 and
+up. `identify -format
 "%f|%w|%h|%[fx:mean]\n"` over a folder ranks candidates in one pass, and it is worth rerunning on
 anything new that goes in.
+
+**One monitor at a time.** `wallpaper-shuffle` takes `1` for the main panel, `2` for the standing
+one and nothing for both, which is the numbering `my.monitors` already uses. The aliases are `wp1`,
+`wp2` and `wp`. Anything else prints the usage and exits 2, so a typo does not silently redraw the
+wrong screen.
+
+**Every branch in that script is an `if` and never `[ x ] && y`.** `writeShellApplication` turns on
+`set -e`, and a failing left side of `&&` takes the whole script down. The empty-pool path lands
+exactly there, which is the one case that MUST survive: a pool with nothing in it is supposed to
+fall back to the packaged image, not abort and leave the screen bare. Tested with the pool emptied:
+it falls back and exits 0.
 
 **The symlink is read at START, the IPC applies it NOW.** The config points at
 `~/.cache/wallpaper/{wide,tall}`, which is what hyprpaper reads when it comes up; `wallpaper-shuffle`

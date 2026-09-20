@@ -63,15 +63,34 @@ uses the `XDG_MENU_PREFIX=plasma-` prefix and ignores this file, so there is no 
 
 ## The wallpaper
 
-`home/desktop/wallpaper.nix`. hyprpaper (Hyprland's official daemon: static, light, declarative).
-The images come through `pkgs.nixos-artwork`, so no binary in git and they bump with nixpkgs. The
-main one is catppuccin-mocha and the secondary is waterfall, the SAME two as the lockscreen, so
-unlocking does not change the background underneath.
+`home/desktop/wallpaper.nix`. hyprpaper (Hyprland's official daemon: static, light, declarative),
+drawing a random photo per monitor out of `~/Pictures/wallpapers/`, with the packaged
+`nixos-artwork` one as the fallback for an empty pool.
 
-Both images are 3840x2160, and the secondary stands on its pivot, so hyprpaper covers 1080x1920 by
-keeping the CENTRAL 32% of the width. That is why the choice there is a waterfall: the subject runs
-along the axis that survives the crop. Any of the gradients would do as well, for the opposite
-reason, since they have no subject to lose.
+**One pool per ORIENTATION, `wide/` and `tall/`, and that is not tidiness.** hyprpaper covers, so a
+16:9 frame on the standing panel keeps 56% of its width and a 9:16 one on the main panel keeps 32%
+of its height. Mixing the two pools would mean half the draws landing badly cropped.
+
+**The photos are STATE, not config (rule 6)**, the same call the lock screen's art made: no binary
+in git, no URL that can rot the build, and adding one is dropping a file. Restic covers the path.
+
+**DARK is a measurement here, not a taste.** The criterion is ImageMagick's `%[fx:mean]`, the mean
+luminance on a 0 to 1 scale, and the bar is roughly 0.15. The four that shipped measure 0.070 to
+0.124 (Serra da Canastra, Chapada dos Veadeiros, Casarão do Jabre, and the standing Chapada), while
+the daylight dune shots that the same search returned came back at 0.30 and up. `identify -format
+"%f|%w|%h|%[fx:mean]\n"` over a folder ranks candidates in one pass, and it is worth rerunning on
+anything new that goes in.
+
+**The symlink is read at START, the IPC applies it NOW.** The config points at
+`~/.cache/wallpaper/{wide,tall}`, which is what hyprpaper reads when it comes up; `wallpaper-shuffle`
+repoints those and then calls `hyprctl hyprpaper preload` plus `wallpaper` with the REAL path,
+because hyprpaper caches by path and the link's own path never changes. It runs on activation, as a
+non-fatal `ExecStartPre` on the unit, and by hand whenever a new photo goes in the folder.
+
+**It no longer matches the lock screen, on purpose.** The old contract was "the same 2 images, so
+unlocking changes nothing", and it died when the lock started drawing from its own art folder. The
+two surfaces now have different jobs: the lock is where art gets looked at, the desktop is what
+sits behind the work, which is why one is picked for the subject and the other for being dark.
 
 **The config format (hyprpaper 0.8.x) is why the screen went BLACK.** 0.8 swapped the flat format
 (`wallpaper = MONITOR,path` plus `preload =` plus `ipc =`) for a CATEGORY

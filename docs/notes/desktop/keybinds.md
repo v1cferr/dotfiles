@@ -144,7 +144,7 @@ The DRAG does not do that.
 ## Brightness, and the parenthesis that stopped working
 
 There are no brightness keys on this keyboard, and no backlight on this desktop, so "brightness" is
-hyprsunset's gamma with Quickshell's own OSD. SHIFT+VolUp is brighter, SHIFT+VolDown is darker, and
+hyprsunset's gamma with Quickshell's own OSD. SUPER+VolUp is brighter, SUPER+VolDown is darker, and
 SUPER+SHIFT+B resets to 100%.
 
 The reset used to be SHIFT+`code:19`, the physical 0 key. Binding that CONSUMED the keystroke, and

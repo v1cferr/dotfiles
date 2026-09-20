@@ -139,10 +139,10 @@ hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = tr
 -- brightness = hyprsunset's gamma (a desktop with no backlight); the OSD is Quickshell's own.
 hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightness-osd up"),   { locked = true, repeating = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightness-osd down"), { locked = true, repeating = true })
--- Brightness (gamma): SHIFT+Vol up = brighter, SHIFT+Vol down = darker, SUPER+SHIFT+B resets.
+-- Brightness (gamma): SUPER+Vol up = brighter, SUPER+Vol down = darker, SUPER+SHIFT+B resets.
 -- NOT SHIFT+0, which consumed the keystroke and made ")" untypable on ABNT2.
-hl.bind("SHIFT + XF86AudioRaiseVolume", hl.dsp.exec_cmd("brightness-osd up"),    { locked = true, repeating = true })
-hl.bind("SHIFT + XF86AudioLowerVolume", hl.dsp.exec_cmd("brightness-osd down"),  { locked = true, repeating = true })
+hl.bind(mainMod .. " + XF86AudioRaiseVolume", hl.dsp.exec_cmd("brightness-osd up"),   { locked = true, repeating = true })
+hl.bind(mainMod .. " + XF86AudioLowerVolume", hl.dsp.exec_cmd("brightness-osd down"), { locked = true, repeating = true })
 hl.bind(mainMod .. " + SHIFT + B",      hl.dsp.exec_cmd("brightness-osd reset"), { locked = true })
 
 -- Screenshot (Flameshot v14). Print = the native flow; SUPER+SHIFT+S = the KEYBOARD flow, a

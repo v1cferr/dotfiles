@@ -184,7 +184,7 @@ in
   # The Hyprland SESSION tools the Lua invokes BY NAME, which is what keeps the .lua static.
   home.packages = [
     minimizeOthers # SUPER+M: minimizes the other windows (the Lua calls it by name)
-    brightnessOsd # brightness through hyprsunset's gamma (SHIFT+Vol/0; called by name)
+    brightnessOsd # brightness through hyprsunset's gamma (SUPER+Vol; called by name)
     wl-clipboard # wl-copy/wl-paste (used by wl-clip-persist and by hand)
     wl-clip-persist # keeps the copy alive after the app closes (cliphist is in clipboard.nix)
     pamixer

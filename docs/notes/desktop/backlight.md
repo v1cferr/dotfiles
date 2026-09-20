@@ -52,7 +52,7 @@ by itself.
 
 A full run is about 2.9 s: one `detect` plus two `setvcp` calls per panel at roughly 650 ms each.
 That is fine for a login and for an occasional `backlight-sync 30` by hand, and it is exactly why
-the instant control (SHIFT+Vol, hyprsunset's gamma) stays where it is. A key held down cannot wait
+the instant control (SUPER+Vol, hyprsunset's gamma) stays where it is. A key held down cannot wait
 650 ms per step.
 
 ## The number is the knob, and the same number is not the same light

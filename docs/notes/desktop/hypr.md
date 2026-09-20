@@ -76,7 +76,7 @@ broke; now it is `hl.dsp.window.move` with `follow=false` (silent).
 It keeps a state file per workspace so the toggle knows what to restore, and has a fallback: if the
 state was lost but there ARE windows in `special:minimized`, restore everything.
 
-### `brightness-osd` (SHIFT+Vol/0)
+### `brightness-osd` (SUPER+Vol)
 
 "Brightness" through hyprsunset's gamma, because this desktop has no real backlight (brightnessctl
 and ddcutil are absent). It shows Quickshell's NATIVE OSD, a bottom-center bar, through IPC, and it

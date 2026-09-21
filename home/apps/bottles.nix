@@ -221,11 +221,10 @@ in
       # a Steam login with, and going straight to the exe skips a login that cannot succeed.
       "Victoria 3" = inGame "Victoria 3" "binaries/victoria3.exe";
 
-      # cmd.exe and not the launcher: it exits right after spawning, and Bottles would call the
-      # program dead. The `start ""` argument is an EMPTY TITLE, not a stray pair of quotes.
-      "Ascension Launcher" = inBottle "Ascension" "windows/system32/cmd.exe" // {
-        arguments = ''/c start "" "C:\Program Files\Ascension Launcher\Ascension Launcher.exe"'';
-      };
+      # The CoA local build runs its own exe directly (no launcher): the official launcher does
+      # web auth and cannot reach a local server, so the native-v4 patched client is used, logging
+      # into the LOCAL account on the local AzerothCore.
+      "Conquest of Azeroth" = inGame "Conquest of Azeroth" "Ascension.exe";
     };
 
     # ADDED, NEVER WRITTEN: Bottles rewrites bottle.yml on every change, so managing the file here

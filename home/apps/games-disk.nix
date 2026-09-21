@@ -69,8 +69,10 @@ in
       # home/services/cs2-saves-backup.nix maintains.
       ".local/share/bottles/bottles/Cities-Skylines-II/drive_c/Games/Cities - Skylines II" =
         "Cities - Skylines II";
-      ".local/share/bottles/bottles/Ascension/drive_c/Program Files/Ascension Launcher" =
-        "Ascension Launcher";
+      # Conquest of Azeroth (Ascension WotLK) LOCAL build. The official launcher client did web
+      # auth and could not reach a local server; this is the native-v4 patched client that logs
+      # straight into the local AzerothCore. The whole game folder lives on the Windows disk.
+      ".local/share/bottles/bottles/Ascension/drive_c/Games/Conquest of Azeroth" = "Conquest of Azeroth";
 
       # NEVER duplicated, unlike everything above: the repack installed it straight onto the
       # Windows disk on 25/08 and the Kingston has never held a copy. The `Black-Flag` bottle was

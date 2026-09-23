@@ -20,7 +20,7 @@ writers.writePython3Bin "docs-links"
         capture_output=True, text=True, check=True,
     ).stdout.strip()
 
-    CODE_EXT = (".nix", ".lua", ".qml", ".sh", ".toml", ".yaml", ".yml")
+    CODE_EXT = (".nix", ".lua", ".qml", ".sh", ".toml", ".yaml", ".yml", ".ts", ".tsx", ".mjs")
 
     # A bare `docs/...` path written inside code or prose, the form the 2-line headers use.
     POINTER = re.compile(r"\bdocs/[A-Za-z0-9_./-]+\.md\b")

@@ -41,6 +41,10 @@ writers.writePython3Bin "prose-style"
         ".lua": ["--"],
         ".qml": ["//"],
         ".js": ["//"],
+        ".mjs": ["//"],
+        ".ts": ["//"],
+        ".tsx": ["//"],
+        ".css": ["/*"],
         ".json": ["//"],
         ".jsonc": ["//"],
     }

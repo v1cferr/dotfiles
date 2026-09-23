@@ -18,13 +18,15 @@ writers.writePython3Bin "data-syntax"
 
     import json5
 
-    # VS Code DOCUMENTS comments in its own settings and keybindings, so these three are JSONC in
-    # spite of the .json name. Every other .json here is read by a STRICT parser (Nix's fromJSON,
-    # an MCP client, Claude Code), and there a comment is a broken file and not a note.
+    # VS Code DOCUMENTS comments in its own settings and keybindings, and so does oxlint in its
+    # own config, so these four are JSONC in spite of the .json name. Every other .json here is
+    # read by a STRICT parser (Nix's fromJSON, an MCP client, Claude Code), and there a comment
+    # is a broken file and not a note.
     JSONC = (
         ".vscode/settings.json",
         "home/apps/vscode/settings.json",
         "home/apps/vscode/keybindings.json",
+        "docs-site/.oxlintrc.json",
     )
 
 

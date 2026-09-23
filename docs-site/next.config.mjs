@@ -44,6 +44,9 @@ const config = {
   images: { unoptimized: true },
   // docs/ lives OUTSIDE this directory on purpose (rule 20): the tree never moves for a renderer.
   outputFileTracingRoot: path.resolve(ROOT, '..'),
+  // `next dev` WRITES an AGENTS.md and a CLAUDE.md into this directory otherwise. The agent
+  // contract of this machine is declared once, in /etc (rule 18), and is not a build artifact.
+  agentRules: false,
 };
 
 export default createMDX()(config);

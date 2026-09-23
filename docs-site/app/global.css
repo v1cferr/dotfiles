@@ -26,10 +26,3 @@
   /* The pages are 100-column prose and code blocks wider than that: the default 97rem crops them. */
   --fd-layout-width: 110rem;
 }
-
-/* A table here is usually a decision matrix, so it scrolls instead of squeezing the page. */
-#nd-page table {
-  display: block;
-  overflow-x: auto;
-  white-space: nowrap;
-}

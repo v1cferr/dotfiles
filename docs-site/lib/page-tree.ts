@@ -4,82 +4,113 @@
 // A hand-written nav is a second owner of the page list (rule 14), and the build is what keeps it
 // honest, the same trade rule 7 makes for shell scripts. It earned that once already: a page was
 // written, indexed and left out of the nav, with only this class of check to say so.
+//
+// It reads docs/ with node:fs and NOTHING else, so the pre-push hook can run it on bare node,
+// with no bundler and no node_modules: one definition, two consumers.
+import fs from 'node:fs';
+import path from 'node:path';
 import type * as PageTree from 'fumadocs-core/page-tree';
 import { type NavItem, type NavPage, type NavSection, navigation } from './navigation.ts';
-import { source } from './source.ts';
-import { docSlugs } from './urls.ts';
+import { titleFromMarkdown } from './title.ts';
+import { INDEX_FILE, PAGE_EXTENSION, docPathToUrl } from './urls.ts';
 
-const INDEX_FILE = /(^|\/)(README|index)\.mdx?$/;
+/** Every page of docs/, as a path relative to it. */
+export function listPages(docsRoot: string, prefix = ''): string[] {
+  const found: string[] = [];
+  for (const entry of fs.readdirSync(path.join(docsRoot, prefix), { withFileTypes: true })) {
+    const rel = path.posix.join(prefix, entry.name);
+    if (entry.isDirectory()) found.push(...listPages(docsRoot, rel));
+    else if (PAGE_EXTENSION.test(entry.name)) found.push(rel);
+  }
+  return found;
+}
 
 function isSection(item: NavItem): item is NavSection {
   return 'section' in item;
 }
 
-class NavigationError extends Error {
-  constructor(problems: string[]) {
-    super(`the nav and docs/ disagree:\n\n${problems.map((p) => `  ${p}`).join('\n')}\n`);
-    this.name = 'NavigationError';
-  }
+interface Walk {
+  docsRoot: string;
+  pages: Set<string>;
+  seen: Map<string, string>;
+  problems: string[];
 }
 
-/** One walk: it builds the tree and collects every problem, so one build reports them all. */
-function build(items: NavItem[], seen: Map<string, string>, problems: string[]) {
+function pageNode(item: NavPage, walk: Walk): PageTree.Item | undefined {
+  if (!walk.pages.has(item.doc)) {
+    walk.problems.push(`nav entry "${item.doc}" has no such page under docs/`);
+    return;
+  }
+
+  const url = docPathToUrl(item.doc);
+  const duplicate = walk.seen.get(url);
+  if (duplicate !== undefined) {
+    walk.problems.push(`"${item.doc}" and "${duplicate}" both land on ${url}`);
+    return;
+  }
+  walk.seen.set(url, item.doc);
+
+  // No title in the nav means the page names itself, and the H1 is where that name lives.
+  const name =
+    item.title ?? titleFromMarkdown(fs.readFileSync(path.join(walk.docsRoot, item.doc), 'utf8'));
+  if (name === undefined) {
+    walk.problems.push(`"${item.doc}" has no H1, so nothing names it`);
+    return;
+  }
+
+  return { type: 'page', name, url };
+}
+
+/** One walk: it builds the nodes and collects every problem, so one build reports them all. */
+function build(items: NavItem[], walk: Walk): PageTree.Node[] {
   const nodes: PageTree.Node[] = [];
 
   for (const item of items) {
-    if (isSection(item)) {
-      const children = build(item.items, seen, problems);
-      // A README with no title of its own is the section's page, which is what
-      // `navigation.indexes` gave the nav in MkDocs.
-      const first = item.items[0];
-      const leadsWithIndex =
-        first !== undefined && !isSection(first) && first.title === undefined && INDEX_FILE.test(first.doc);
-
-      nodes.push({
-        type: 'folder',
-        name: item.section,
-        index: leadsWithIndex ? (children.shift() as PageTree.Item) : undefined,
-        children,
-      });
+    if (!isSection(item)) {
+      const node = pageNode(item, walk);
+      if (node) nodes.push(node);
       continue;
     }
 
-    const node = page(item, seen, problems);
-    if (node) nodes.push(node);
+    const children = build(item.items, walk);
+    // A README with no title of its own is the section's page, which is what
+    // `navigation.indexes` gave the nav in MkDocs.
+    const first = item.items[0];
+    const leadsWithIndex =
+      first !== undefined &&
+      !isSection(first) &&
+      first.title === undefined &&
+      INDEX_FILE.test(path.posix.basename(first.doc));
+
+    nodes.push({
+      type: 'folder',
+      name: item.section,
+      index: leadsWithIndex ? (children.shift() as PageTree.Item) : undefined,
+      children,
+    });
   }
 
   return nodes;
 }
 
-function page(item: NavPage, seen: Map<string, string>, problems: string[]): PageTree.Item | undefined {
-  const found = source.getPage(docSlugs(item.doc));
-  if (!found) {
-    problems.push(`nav entry "${item.doc}" has no such page under docs/`);
-    return;
-  }
-
-  const duplicate = seen.get(found.url);
-  if (duplicate !== undefined) {
-    problems.push(`"${item.doc}" and "${duplicate}" both land on ${found.url}`);
-    return;
-  }
-  seen.set(found.url, item.doc);
-
-  return { type: 'page', name: item.title ?? found.data.title, url: found.url };
-}
-
-function pageTree(): PageTree.Root {
-  const problems: string[] = [];
-  const seen = new Map<string, string>();
-  const children = build(navigation, seen, problems);
+export function buildPageTree(docsRoot: string): PageTree.Root {
+  const walk: Walk = {
+    docsRoot,
+    pages: new Set(listPages(docsRoot)),
+    seen: new Map(),
+    problems: [],
+  };
+  const children = build(navigation, walk);
 
   // The half no hand-written nav catches on its own: a page that exists and nothing points at.
-  for (const found of source.getPages()) {
-    if (!seen.has(found.url)) problems.push(`docs/${found.path} is not in the nav`);
+  for (const page of walk.pages) {
+    if (!walk.seen.has(docPathToUrl(page))) walk.problems.push(`docs/${page} is not in the nav`);
   }
 
-  if (problems.length > 0) throw new NavigationError(problems.toSorted());
+  if (walk.problems.length > 0) {
+    const listed = walk.problems.toSorted().map((problem) => `  ${problem}`);
+    throw new Error(`the nav and docs/ disagree:\n\n${listed.join('\n')}\n`);
+  }
+
   return { name: 'dotfiles', children };
 }
-
-export const tree = pageTree();

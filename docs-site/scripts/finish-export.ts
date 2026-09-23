@@ -6,7 +6,8 @@
 //   3. no published page fetches an asset from a third party (rule 20).
 import fs from 'node:fs';
 import path from 'node:path';
-import { PAGE_EXTENSION, docPathToUrl } from '../lib/urls.ts';
+import { listPages } from '../lib/page-tree.ts';
+import { docPathToUrl } from '../lib/urls.ts';
 
 const ROOT = process.cwd();
 const DOCS = path.resolve(ROOT, '../docs');
@@ -41,11 +42,7 @@ function copyDomain(problems: string[]) {
 }
 
 function checkUrls(problems: string[]) {
-  const expected = new Set(
-    walk(DOCS, (file) => PAGE_EXTENSION.test(file)).map((file) =>
-      docPathToUrl(path.relative(DOCS, file)),
-    ),
-  );
+  const expected = new Set(listPages(DOCS).map(docPathToUrl));
   const published = new Set(
     walk(OUT, (file) => path.basename(file) === 'index.html').map(
       (file) => '/' + path.relative(OUT, path.dirname(file)).split(path.sep).filter(Boolean).join('/'),

@@ -1,70 +1,94 @@
 # docs-site: it builds docs/ into the static site served at dotfiles.v1cferr.dev (rule 20).
-# Why MkDocs, why the tree did not move, and the halves Nix cannot reach: docs/notes/repo/site.md
+# Why Fumadocs, and how a Node toolchain stays hermetic here: docs/notes/repo/site.md
 {
   lib,
   stdenvNoCC,
-  python3,
-  fetchurl,
+  nodejs_24,
+  pnpm_10,
 }:
 
 let
-  # Mermaid VENDORED, pinned to an exact version and a hash. Material's theme otherwise pulls
-  # `unpkg.com/mermaid@11` at page load, which is rule 13's moving pointer in the reader's browser.
-  # mermaid-cli was the obvious source and was measured at 2.1 GiB of closure: it drags chromium.
-  # fetchurl and not fetchzip: this hash is the TARBALL's, which `sha256sum` and npm's own
-  # integrity field both reproduce, instead of a NAR hash only Nix can check.
-  mermaid = fetchurl {
-    url = "https://registry.npmjs.org/mermaid/-/mermaid-11.12.0.tgz";
-    hash = "sha256-k0kuTWCb6DZTpBxDX0y9fnRBn3+mtPyQqMmDGV9kr4I=";
-  };
+  # The MAJOR is pinned and not taken from the `pnpm` alias: the store format changes between
+  # majors, and the fetcher and the build have to agree on one.
+  pnpm = pnpm_10;
 
-  # Both on ONE interpreter, which is what puts `mkdocs` on PATH with the theme importable.
-  mkdocsEnv = python3.withPackages (ps: [
-    ps.mkdocs
-    ps.mkdocs-material
-  ]);
+  # What the DEPENDENCIES are resolved from, and nothing else: a page edit must not invalidate
+  # the fetch, which is the one step of this build that needs the network.
+  manifest = lib.fileset.toSource {
+    root = ../docs-site;
+    fileset = lib.fileset.unions [
+      ../docs-site/package.json
+      ../docs-site/pnpm-lock.yaml
+    ];
+  };
 in
-stdenvNoCC.mkDerivation {
+stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "docs-site";
   version = "0";
 
-  # ONLY what the site is built from, so a commit touching system/ does not rebuild it.
+  # ONLY what the site is built from, so a commit touching system/ does not rebuild it. The build
+  # outputs are subtracted by name: `maybeMissing` because a fresh clone has none of them.
   src = lib.fileset.toSource {
     root = ../.;
     fileset = lib.fileset.unions [
       ../docs
-      ../mkdocs.yml
-      ../overrides
-      ../scripts/mkdocs-hooks.py
+      (lib.fileset.difference ../docs-site (
+        lib.fileset.unions (
+          map lib.fileset.maybeMissing [
+            ../docs-site/node_modules
+            ../docs-site/.next
+            ../docs-site/.source
+            ../docs-site/out
+            ../docs-site/next-env.d.ts
+          ]
+        )
+      ))
     ];
   };
 
-  nativeBuildInputs = [ mkdocsEnv ];
+  nativeBuildInputs = [
+    nodejs_24
+    pnpm.configHook
+  ];
 
-  dontBuild = true;
+  # The node_modules of the lockfile, fetched ONCE as a fixed-output derivation. Bump the hash in
+  # the same commit as the lockfile, or the build resolves yesterday's tree (rule 13).
+  pnpmDeps = pnpm.fetchDeps {
+    inherit (finalAttrs) pname version;
+    src = manifest;
+    fetcherVersion = 3;
+    hash = "sha256-snrVW3R/CFchPbHqNW9NSBiL9bwWFBKeiZ3bsr9CXuA=";
+  };
+  # Relative to the source root: the app is a subdirectory, because docs/ is its sibling.
+  pnpmRoot = "docs-site";
 
-  # --strict is the whole point: it turns the nav and link validation in mkdocs.yml from a report
-  # nobody reads into a build failure. HOME because mkdocs writes a cache directory.
+  # NO network from here on. The telemetry ping is the one thing Next.js would still try.
+  env.NEXT_TELEMETRY_DISABLED = "1";
+
+  buildPhase = ''
+    runHook preBuild
+    pnpm --dir docs-site build
+    runHook postBuild
+  '';
+
   installPhase = ''
     runHook preInstall
-    export HOME=$TMPDIR
-    mkdocs build --strict --site-dir $out
-    # AFTER the build: the override references this path, and mkdocs validates nothing a
-    # template emits, so the file never has to sit inside docs/ or in git.
-    mkdir -p $out/assets/javascripts
-    tar -xzOf ${mermaid} package/dist/mermaid.min.js > $out/assets/javascripts/mermaid.min.js
+    cp -r docs-site/out $out
     runHook postInstall
   '';
 
   dontFixup = true;
 
-  # The devShell reuses THIS env for `mkdocs serve`, so the preview and the build are
-  # one definition and cannot drift apart (rule 11).
-  passthru.env = mkdocsEnv;
+  # The devShell and the nav gate reuse THESE, so the preview, the check and the build are one
+  # definition and cannot drift apart (rule 11).
+  passthru = {
+    nodejs = nodejs_24;
+    inherit pnpm;
+  };
 
   meta = {
     description = "The docs/ tree of this repo, built into a static site";
     homepage = "https://dotfiles.v1cferr.dev/";
     platforms = lib.platforms.all;
   };
-}
+})

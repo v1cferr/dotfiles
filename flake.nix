@@ -568,14 +568,24 @@
             # git-hooks.nix is an input is catching it before the commit instead of after the
             # push. pass_filenames = false because all three audit the TREE, not a file list.
             # The SITE's own validation, which is what keeps every page reachable (rule 20). At
-            # `pre-push` and not `pre-commit`: it is a 7.12s build, and a page is added rarely.
+            # the COMMIT since the Fumadocs migration: it stopped being a 7.12s build of the whole
+            # site and became a read of docs/ plus one file, so the cheap unit is the right one.
             docs-site = {
               enable = true;
               name = "docs-site";
               entry = "${self.packages.${system}.docs-site-check}/bin/docs-site-check";
               language = "system";
               pass_filenames = false;
-              stages = [ "pre-push" ];
+            };
+            # The JS half of the lint, over the site's own TypeScript. The BINARY comes from
+            # nixpkgs like every other linter here, so the lock pins it (rule 13); the rules live
+            # in `docs-site/.oxlintrc.json`, which is the file the editor reads too.
+            oxlint = {
+              enable = true;
+              name = "oxlint";
+              entry = "${nixpkgs.legacyPackages.${system}.oxlint}/bin/oxlint";
+              language = "system";
+              files = "^docs-site/.*\\.(ts|tsx|mjs)$";
             };
             docs-links = {
               enable = true;
@@ -654,8 +664,10 @@
           buildInputs = enabledPackages ++ [
             pkgs.nixd
             pkgs.sops
-            # `mkdocs serve` with live reload, from the SAME env the site derivation builds with.
-            self.packages.${system}.docs-site.env
+            # `pnpm --dir docs-site dev` with live reload, on the SAME node and pnpm the site
+            # derivation builds with: the preview and the build cannot drift (rule 11).
+            self.packages.${system}.docs-site.nodejs
+            self.packages.${system}.docs-site.pnpm
           ];
         };
     };

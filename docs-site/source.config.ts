@@ -5,11 +5,9 @@ import path from 'node:path';
 import { remarkMdxMermaid } from 'fumadocs-core/mdx-plugins';
 import { defineConfig } from 'fumadocs-mdx/config';
 import { remarkDocTitle } from './plugins/remark-doc-title.ts';
+import { DOCS_ROOT } from './lib/docs-root.ts';
+import { INDEX_FILE } from './lib/urls.ts';
 import { remarkRepoLinks } from './plugins/remark-repo-links.ts';
-
-// From the CWD and not from this file: the config is bundled into .source/ before it runs, so
-// `import.meta.dirname` is that directory and not this one. Next.js always runs from its root.
-const DOCS_ROOT = path.resolve(process.cwd(), '../docs');
 
 /** Folders under docs/ that own a README, so a `history/` link lands on a page and not nowhere. */
 function indexedFolders(root: string, prefix = ''): Set<string> {
@@ -19,7 +17,7 @@ function indexedFolders(root: string, prefix = ''): Set<string> {
       for (const folder of indexedFolders(root, path.posix.join(prefix, entry.name))) {
         found.add(folder);
       }
-    } else if (/^(README|index)\.mdx?$/.test(entry.name)) {
+    } else if (INDEX_FILE.test(entry.name)) {
       found.add(prefix);
     }
   }

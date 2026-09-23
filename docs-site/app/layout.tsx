@@ -6,13 +6,14 @@ import type { Metadata } from 'next';
 import { DocsLayout } from 'fumadocs-ui/layouts/docs';
 import type { ReactNode } from 'react';
 import { baseOptions } from '../lib/layout.shared.tsx';
-import { tree } from '../lib/page-tree.ts';
+import { DOCS_ROOT } from '../lib/docs-root.ts';
+import { buildPageTree } from '../lib/page-tree.ts';
 import { SITE_DESCRIPTION, SITE_NAME } from '../lib/repo.ts';
 import './global.css';
 import { Provider } from './provider.tsx';
 
-// From the CWD, which is this directory: the bundler leaves no module path to resolve against.
-const domain = fs.readFileSync(path.resolve(process.cwd(), '../docs/CNAME'), 'utf8').trim();
+const domain = fs.readFileSync(path.join(DOCS_ROOT, 'CNAME'), 'utf8').trim();
+const tree = buildPageTree(DOCS_ROOT);
 
 export const metadata: Metadata = {
   metadataBase: new URL(`https://${domain}/`),

@@ -73,9 +73,12 @@ jobs:
           # link rewriting: hardcoding it here would be the second owner that file exists to
           # avoid. The runner's own node parses it, so this needs nothing from the devShell.
           repo=$(node -p "require('./docs-site/site.json').repo")
+          # THE HTML ONLY. Next.js writes a plain-text RSC payload next to every page, and lychee
+          # reads those as prose: a `file://...` inside backticks became a parse ERROR there.
           nix develop --override-input duo-streak-daemon path:./ci/stub-duo --command \
             lychee --root-dir "$site" --include "$repo/(blob|tree)/" \
-            --max-concurrency 6 --no-progress "$site"
+            --scheme https --scheme http \
+            --max-concurrency 6 --no-progress "$site/**/*.html"
 
   # THE ALERT: this workflow asks a question nobody is sitting there waiting for, and its answer
   # only changes on a Monday. A red run that lands in an email is a red run I find out about a week

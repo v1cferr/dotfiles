@@ -306,7 +306,15 @@ exist only after a build:
   since the headers there carry the same pointers every other module's do.
 - **In the canary, weekly.** `lychee` over the BUILT site, filtered to this repo's own URLs,
   which it reads out of `docs-site/site.json` rather than repeating. The markdown run cannot see
-  one of these links, since none of them appears in any `.md`.
+  one of these links, since none of them appears in any `.md`. 186 of them now, up from 91,
+  because every page carries its own "Edit on GitHub".
+
+  **It reads the HTML and nothing else, and that is a trap this migration walked into.** Next.js
+  writes a plain-text RSC payload next to every page, and lychee reads a `.txt` as prose: the
+  `file://...` that `notes/desktop/desktop-plumbing.md` quotes inside backticks is a code span in
+  the HTML and a bare URL in the payload, so the weekly run started failing on a link that does
+  not exist. Scoping it to `**/*.html` also cut the run from 32s to 12s, since the payload is the
+  same content a second time.
 
 `oxlint` is the JS half of the gate, over `docs-site/`. Its binary comes from nixpkgs like every
 other linter here, so the lock pins it (rule 13) and nothing enters `package.json` for it; the

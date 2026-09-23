@@ -347,7 +347,7 @@
             curseforge-bump # ./pkgs: same, shellcheck at build time
             curseforge-fix-perms # ./pkgs: same
             docs-links # ./pkgs: the build IS the script's flake8; the CHECK below runs it
-            docs-site # ./pkgs: `mkdocs build --strict`, so the CHECK below proves the site builds
+            docs-site # ./pkgs: the static export, so the CHECK below proves the site builds
             docs-site-check # ./pkgs: the build IS the wrapper's shellcheck; the HOOK below runs it
             prose-style # ./pkgs: same flake8 at build time; the HOOKS below run it, in two modes
             qml-syntax # ./pkgs: the build IS the wrapper's shellcheck; the HOOK below runs it

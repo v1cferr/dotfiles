@@ -26,7 +26,7 @@ way to know that landed was to check all 274 afterwards.
 
 | Where | What counts |
 | --- | --- |
-| code (`.nix`, `.lua`, `.qml`, `.sh`, `.toml`, `.yaml`, `.yml`) | a bare `docs/…md` path, which is the form the headers use |
+| code (`.nix`, `.lua`, `.qml`, `.sh`, `.toml`, `.yaml`, `.yml`, `.ts`, `.tsx`, `.mjs`) | a bare `docs/…md` path, which is the form the headers use |
 | markdown | only a real `](target)` link, resolved against the file's own directory |
 | markdown outside `docs/history/` | a repo path quoted in prose, like `` `system/hardware/gpu.nix` `` |
 | a markdown link LEAVING `docs/` | the target must ALSO be git-tracked, because the site publishes it as a blob URL |
@@ -34,7 +34,7 @@ way to know that landed was to check all 274 afterwards.
 ### Existing is not enough once the docs are a site (19/09/2026)
 
 A link from a page to the module it documents is rewritten into a GitHub blob URL when
-[`site.md`](site.md) builds the site, because MkDocs serves nothing outside `docs/`. That moves
+[`site.md`](site.md) builds the site, because the site serves nothing outside `docs/`. That moves
 the goalposts: a target that exists ON DISK resolves here and 404s there, since GitHub can only
 serve what was pushed.
 

@@ -1,6 +1,6 @@
 # History: september 2026
 
-11 entries. Index in [README.md](../README.md).
+12 entries. Index in [README.md](../README.md).
 
 - [~] A KVM host for a DISPOSABLE Windows 11, and three wiki steps that do not survive 26.05
       (19/09/2026). The host is declared, switched and verified; no guest exists yet, which is why
@@ -86,6 +86,39 @@
         both deliberately absent, unused today (rule 16) and both holes in the isolation this VM
         exists to provide. One claim also stays unproven until the guest boots: that libvirt's
         jump sits ahead of `nixos-fw` in `INPUT`. The first DHCP lease settles it.
+
+- [x] The site left MkDocs for Fumadocs, and the tree still did not move (23/09/2026). The bet
+      recorded on 18/09 came due: MkDocs 1.x has shipped nothing in 24 months and MkDocs 2.0 is a
+      different project wearing the same name. Zensical was the candidate and lost on its own
+      version number, 0.0.x with a release every two days, which is the churn rule 13 exists to
+      keep out. [notes/repo/site.md](../../notes/repo/site.md) holds the whole of it.
+      • THE MIGRATION IS THE PROOF OF THE ORIGINAL DECISION, which is the part worth keeping.
+        Because the tree never moved to suit the renderer, what had to change was one directory
+        and one derivation: `docs/` gained not one byte, not one file was renamed, and all 92
+        URLs came out identical, diffed between the two builds. A generator being replaceable
+        stopped being a claim on the day it was replaced.
+      • WHAT `--strict` GUARANTEED IS NOW A TYPESCRIPT FILE I WROTE, and it got cheaper by fifty
+        times in the move. `docs-site/lib/page-tree.ts` refuses to build on a page left out of
+        the nav, a nav entry with no file, two entries on one URL or a page with no H1. It reads
+        `docs/` on BARE NODE with no bundler and no `node_modules`, 0.14s against the 7.12s
+        `mkdocs build --strict` cost, so the check moved from `pre-push` back to the COMMIT.
+      • NO PAGE GAINED FRONTMATTER, and that was the one place the framework's defaults pushed
+        back. Fumadocs wants a `title`, and adding `---` blocks to 92 files would have put a
+        second owner next to every H1 (rule 14). The schema is handed the raw source before the
+        markdown compiles, so the H1 IS the title, and a page without one fails the build.
+      • `nix build --rebuild` CAUGHT THREE THINGS THAT WERE NOT REPRODUCIBLE, which MkDocs never
+        gave me a reason to check. Next.js mints a random build id and stamps it into every page;
+        shiki loads a grammar on first use, so the one `cpp` fence in these docs came out
+        unhighlighted on some builds; and the loader returns pages in the order a parallel build
+        compiled them, which the search index numbers its documents from. All three are fixed and
+        five rebuilds in a row are byte-identical. A generator that is pinned but not
+        deterministic is only half of rule 13.
+      • THE COST IS A FRONTEND TOOLCHAIN AND IT IS NOT SMALL: 495 packages in the lockfile and a
+        600 MiB dependency store, against two Python packages. What makes it acceptable is that
+        none of it runs in production or in a reader's browser, the lock pins it like everything
+        else, and the search index staying LOCAL was never in question: 2.1 MB over the wire,
+        fetched only when the dialog opens, and Algolia was passed over for the same reason the
+        mermaid CDN was.
 
 - [x] The docs contract became rule 20, and the day found its own counterexample (19/09/2026).
       Two days of decisions about the site were living in a note, which is where reasoning goes,

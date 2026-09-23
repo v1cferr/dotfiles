@@ -1,8 +1,8 @@
 // THE NAV, and it is the ONLY topic layer: docs/ stays grouped the way the repo needs it, and the
 // reader still gets a manual, because the two are decoupled (rule 20): docs/notes/repo/site.md
 //
-// It carried over from `mkdocs.yml` unchanged. `lib/page-tree.tsx` is what refuses to build when
-// this list and docs/ stop agreeing, which is the guarantee `mkdocs build --strict` used to give.
+// It carried over from the MkDocs nav unchanged. `lib/page-tree.ts` is what refuses to build
+// when this list and docs/ stop agreeing, which is the guarantee `--strict` used to give.
 
 /** A page. `doc` is the path under docs/; with no `title` the page's own H1 names it. */
 export interface NavPage {

@@ -6,7 +6,7 @@
 // escape docs/ become blob URLs on GitHub. The markdown on disk is never touched, so the same link
 // keeps working when the file is read there.
 //
-// It replaces `scripts/mkdocs-hooks.py`, and what was rejected: docs/notes/repo/site.md
+// It replaces the MkDocs hook that did this, and what was rejected: docs/notes/repo/site.md
 import path from 'node:path';
 import type { Link, Root } from 'mdast';
 import { visit } from 'unist-util-visit';

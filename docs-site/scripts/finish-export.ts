@@ -7,14 +7,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { listPages } from '../lib/page-tree.ts';
-import { docPathToUrl } from '../lib/urls.ts';
+import { docPathToUrl, docUrl } from '../lib/urls.ts';
 
 const ROOT = process.cwd();
 const DOCS = path.resolve(ROOT, '../docs');
 const OUT = path.resolve(ROOT, 'out');
 
 // Next writes its own not-found route twice, and neither is a page of docs/.
-const NOT_A_PAGE = new Set(['/404/', '/_not-found/']);
+const NOT_A_PAGE = new Set(['/404', '/_not-found']);
 
 // A `rel` that describes the document instead of pulling a file in.
 const METADATA_REL = /\brel\s*=\s*"(canonical|alternate|author|me|license|prev|next)"/i;
@@ -43,21 +43,17 @@ function copyDomain(problems: string[]) {
 
 function checkUrls(problems: string[]) {
   const expected = new Set(listPages(DOCS).map(docPathToUrl));
+  // A page is published as `<url>/index.html`, which is what `trailingSlash` asks Next.js for.
   const published = new Set(
-    walk(OUT, (file) => path.basename(file) === 'index.html').map(
-      (file) => '/' + path.relative(OUT, path.dirname(file)).split(path.sep).filter(Boolean).join('/'),
+    walk(OUT, (file) => path.basename(file) === 'index.html').map((file) =>
+      docUrl(path.relative(OUT, path.dirname(file)).split(path.sep).filter(Boolean)),
     ),
   );
 
-  for (const url of expected) if (!published.has(normalize(url))) problems.push(`${url} was not published`);
+  for (const url of expected) if (!published.has(url)) problems.push(`${url} was not published`);
   for (const url of published) {
-    const trailing = url === '/' ? '/' : `${url}/`;
-    if (!expected.has(trailing) && !NOT_A_PAGE.has(trailing)) problems.push(`${trailing} has no page under docs/`);
+    if (!expected.has(url) && !NOT_A_PAGE.has(url)) problems.push(`${url} has no page under docs/`);
   }
-}
-
-function normalize(url: string): string {
-  return url === '/' ? '/' : url.replace(/\/$/, '');
 }
 
 function checkThirdParty(problems: string[]) {

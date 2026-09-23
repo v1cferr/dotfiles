@@ -119,9 +119,15 @@ A slug rule cannot drift between them because there is only one of it.
 
 Two Next.js settings make it come out that way. `trailingSlash: true` writes
 `/notes/repo/site/index.html` instead of `/notes/repo/site.html`, which is what Pages serves for a
-directory URL. And `README.md` is NOT renamed to `index.md`: the loader's `slugs()` treats both
-names as the folder's own page, so the file GitHub renders as a directory listing is the same file
-the site renders as a section page.
+directory URL, and it is also what puts the slash back on every link. And `README.md` is NOT
+renamed to `index.md`: the loader's `slugs()` treats both names as the folder's own page, so the
+file GitHub renders as a directory listing is the same file the site renders as a section page.
+
+**The URL this code passes around therefore has NO trailing slash**, which looks inconsistent with
+what a reader sees and is not: Fumadocs strips the slash before matching a route against the page
+tree, so a tree carrying `/notes/repo/site/` matches nothing. The symptom was narrow enough to
+miss, since the sidebar has its own matcher and kept highlighting the right page: the BREADCRUMB
+went silently empty. Looking at the rendered page in a browser is what found it.
 
 **What proves it:** `docs-site/scripts/finish-export.ts` runs after every build and compares the
 URLs derived from `docs/` against the directories actually written to `out/`, in both directions.

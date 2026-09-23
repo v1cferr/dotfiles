@@ -12,7 +12,7 @@ import type { Link, Root } from 'mdast';
 import { visit } from 'unist-util-visit';
 import type { VFile } from 'vfile';
 import { BLOB_BASE, TREE_BASE } from '../lib/repo.ts';
-import { PAGE_EXTENSION, docPathToUrl } from '../lib/urls.ts';
+import { PAGE_EXTENSION, docPathToUrl, docUrl } from '../lib/urls.ts';
 
 const EXTERNAL = ['http://', 'https://', 'mailto:', '#', '/'];
 
@@ -61,7 +61,7 @@ function normalize(target: string): string {
 }
 
 function folderUrl(folder: string): string {
-  return folder === '' ? '/' : `/${folder}/`;
+  return docUrl(folder === '' ? [] : folder.split('/'));
 }
 
 export function remarkRepoLinks(options: RepoLinksOptions) {

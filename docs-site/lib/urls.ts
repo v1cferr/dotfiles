@@ -15,9 +15,14 @@ export function docSlugs(path: string): string[] {
   return segments;
 }
 
-/** The published URL of a page. The trailing slash is what MkDocs served and Pages still expects. */
+/**
+ * The published URL of a page, with NO trailing slash: that is the form Fumadocs normalizes to
+ * before matching a route against the page tree, and the breadcrumb goes silent without it.
+ * The slash a reader sees comes back from `trailingSlash` in next.config.mjs, which is also what
+ * writes `/notes/repo/site/index.html` instead of `/notes/repo/site.html`.
+ */
 export function docUrl(slugs: string[]): string {
-  return '/' + slugs.map((segment) => segment + '/').join('');
+  return slugs.length === 0 ? '/' : '/' + slugs.join('/');
 }
 
 /** Both halves at once, for a path relative to docs/. */

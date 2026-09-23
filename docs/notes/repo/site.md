@@ -249,7 +249,7 @@ time somebody opens the dialog. No endpoint, no backend, no third party, which i
 search Pages can host and the only kind that does not tell somebody else what I look up in my own
 notes.
 
-**It is 8.1 MB raw and 2.1 MB over the wire**, measured on 23/09/2026, which is the honest cost of
+**It is 8.2 MB raw and 2.1 MB over the wire**, measured on 23/09/2026, which is the honest cost of
 full-text search over 200k words and worth knowing before it surprises somebody on a phone. Three
 things make it acceptable: it is fetched LAZILY, only when the dialog is opened and not on page
 load; Pages serves it compressed; and it is cached afterwards.

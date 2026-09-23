@@ -61,16 +61,18 @@ jobs:
             --command pre-commit run --hook-stage manual lychee --all-files
 
       # THE OTHER HALF, which the step above cannot see: the links from a page to the module it
-      # documents only EXIST in the built site, written there by the hook (notes/repo/site.md).
+      # documents only EXIST in the built site, written there by the site's own remark plugin
+      # (notes/repo/site.md).
       - name: lychee over the links the site generates
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           site=$(nix build .#docs-site --no-link --print-out-paths \
             --override-input duo-streak-daemon path:./ci/stub-duo)
-          # The pattern is READ from mkdocs.yml, which already owns the repo URL: hardcoding it
-          # here would be the second owner the hook was just cured of.
-          repo=$(sed -n 's|^repo_url: https\?://||p' mkdocs.yml)
+          # The pattern is READ from docs-site/site.json, which already owns the repo for the
+          # link rewriting: hardcoding it here would be the second owner that file exists to
+          # avoid. The runner's own node parses it, so this needs nothing from the devShell.
+          repo=$(node -p "require('./docs-site/site.json').repo")
           nix develop --override-input duo-streak-daemon path:./ci/stub-duo --command \
             lychee --root-dir "$site" --include "$repo/(blob|tree)/" \
             --max-concurrency 6 --no-progress "$site"

@@ -9,8 +9,7 @@ on:
     # `src` with: a push touching system/ has nothing to republish.
     paths:
       - docs/**
-      - mkdocs.yml
-      - scripts/mkdocs-hooks.py
+      - docs-site/**
       - pkgs/docs-site.nix
       - flake.nix
       - flake.lock

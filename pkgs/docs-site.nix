@@ -3,7 +3,9 @@
 {
   lib,
   stdenvNoCC,
+  fetchPnpmDeps,
   nodejs_24,
+  pnpmConfigHook,
   pnpm_10,
 }:
 
@@ -46,15 +48,19 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     ];
   };
 
+  # The hook is pnpm-AGNOSTIC and finds the binary on PATH, which is why pnpm is listed here
+  # and not passed to it: that is what makes the pin above the only place a version is chosen.
   nativeBuildInputs = [
     nodejs_24
-    pnpm.configHook
+    pnpm
+    pnpmConfigHook
   ];
 
   # The node_modules of the lockfile, fetched ONCE as a fixed-output derivation. Bump the hash in
   # the same commit as the lockfile, or the build resolves yesterday's tree (rule 13).
-  pnpmDeps = pnpm.fetchDeps {
+  pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version;
+    inherit pnpm;
     src = manifest;
     fetcherVersion = 3;
     hash = "sha256-snrVW3R/CFchPbHqNW9NSBiL9bwWFBKeiZ3bsr9CXuA=";

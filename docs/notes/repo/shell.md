@@ -13,15 +13,21 @@ is the same rule in two places, so the day only one copy changes, `upgrade` stop
 name says and nobody notices. That is rule 11 applied to a shell string.
 
 ```text
-rebuild   nh os switch <flake> && hyprctl -i 0 reload
+rebuild   nh os switch -vvv <flake> && hyprctl -i 0 reload
 update    vscode-bump && curseforge-bump && nix flake update && vscode-extensions-dump
-upgrade   update && rebuild -vvv
+upgrade   update && rebuild
 ```
 
-**Only `upgrade` is verbose.** The `-vvv` is a PARAMETER of the rebuild line, not a second copy of
-it, so the composition above is still one written rebuild. It rides on `upgrade` alone because that
-is the long unattended run: when it breaks after twenty minutes of building, nh's trace is the only
-record of WHERE. `rebuild` stays quiet, since that one is watched while it runs.
+**The `-vvv` lives in the rebuild line, so BOTH carry it.** It is nh's own trace log, and it is
+fixed instead of optional because a build fails minutes after the command scrolled off the screen:
+deciding to be verbose once it already broke is deciding too late. Passing it by hand is not an
+option anyway, see below.
+
+**An alias takes no arguments, and this one ERRORS if you try.** `upgrade -vvv` dies with
+`zsh: parse error near '-vvv'` (23/09/2026). An alias is text substitution, so the argument lands
+at the END of the expansion, after the `{ hyprctl -i 0 reload || true; }` group, and a bare word
+after a closing `}` is a syntax error. Whatever these three need has to be written INTO them; the
+day one really needs an argument it stops being an alias and becomes a function (rule 7).
 
 **The order inside `update` is load-bearing.** `vscode-bump` runs BEFORE `nix flake update`
 because the `vscode-tarball` input has a versioned URL, so it is the bump that raises the number

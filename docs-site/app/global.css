@@ -1,0 +1,35 @@
+/*
+  The whole stylesheet: a Fumadocs preset plus the few values this site sets itself.
+  Why NO font is fetched and what the palette is chosen for: docs/notes/repo/site.md
+*/
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+@source '../app';
+@source '../components';
+@source '../lib';
+
+@theme {
+  /*
+    NO Google Fonts, and no webfont at all: rule 13 reaches the reader's browser, so a face either
+    is on their machine or falls through. JetBrains Mono renders here and degrades everywhere else.
+  */
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  --font-mono:
+    'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono',
+    monospace;
+}
+
+:root {
+  /* The pages are 100-column prose and code blocks wider than that: the default 97rem crops them. */
+  --fd-layout-width: 110rem;
+}
+
+/* A table here is usually a decision matrix, so it scrolls instead of squeezing the page. */
+#nd-page table {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}

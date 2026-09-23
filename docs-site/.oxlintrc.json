@@ -1,0 +1,17 @@
+{
+  // The JS half of the lint. The BINARY comes from nixpkgs through flake.nix, like every other
+  // linter here, so rule 13 pins it: docs/notes/repo/site.md
+  "plugins": ["typescript", "react", "unicorn", "import"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "error"
+  },
+  "rules": {
+    // React 17's automatic runtime is what compiles JSX here, so nothing has to be in scope.
+    "react/react-in-jsx-scope": "off",
+    // `import './global.css'` is how a stylesheet enters a Next.js build: there is nothing to bind.
+    "import/no-unassigned-import": "off"
+  },
+  "ignorePatterns": [".next", ".source", "out", "node_modules"]
+}

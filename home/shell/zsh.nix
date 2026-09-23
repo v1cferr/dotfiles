@@ -6,8 +6,12 @@ let
   # SSOT of the repo path (rule 11): programs.nh.flake, read here through osConfig.
   flake = osConfig.programs.nh.flake;
 
-  # Composed, never written twice: `upgrade` IS `update && rebuild` by definition.
-  rebuildCmd = "nh os switch ${flake} && { hyprctl -i 0 reload || true; }";
+  # Composed, never written twice: `upgrade` IS `update && rebuild` by definition. The verbosity
+  # is a PARAMETER and not a second copy of the line, so there is still ONE rebuild written here.
+  mkRebuild =
+    verbose:
+    "nh os switch ${lib.optionalString verbose "-vvv "}${flake} && { hyprctl -i 0 reload || true; }";
+  rebuildCmd = mkRebuild false;
   # The order matters: vscode-bump raises the version BEFORE the lock update, and the `&&`
   # stops the chain if it fails, so nothing is applied with the repo half-edited.
   updateCmd = "vscode-bump ${flake} && curseforge-bump ${flake} && codex-bump ${flake} && antigravity-bump ${flake} && nix flake update --flake ${flake} && vscode-extensions-dump ${flake}";
@@ -36,7 +40,8 @@ in
       rebuild = rebuildCmd;
       update = updateCmd; # bumps the lock plus the vendored versions
       # As the USER first (it holds the SSH key for private inputs), then root.
-      upgrade = "${updateCmd} && ${rebuildCmd}";
+      # `-vvv` ONLY here: upgrade is the long unattended run, and nh's trace is what says WHERE it broke.
+      upgrade = "${updateCmd} && ${mkRebuild true}";
       # CAREFUL: `-d` deletes ALL old generations, so there is no rollback afterwards.
       gc = "sudo nix-collect-garbage -d";
 

@@ -15,8 +15,13 @@ name says and nobody notices. That is rule 11 applied to a shell string.
 ```text
 rebuild   nh os switch <flake> && hyprctl -i 0 reload
 update    vscode-bump && curseforge-bump && nix flake update && vscode-extensions-dump
-upgrade   update && rebuild
+upgrade   update && rebuild -vvv
 ```
+
+**Only `upgrade` is verbose.** The `-vvv` is a PARAMETER of the rebuild line, not a second copy of
+it, so the composition above is still one written rebuild. It rides on `upgrade` alone because that
+is the long unattended run: when it breaks after twenty minutes of building, nh's trace is the only
+record of WHERE. `rebuild` stays quiet, since that one is watched while it runs.
 
 **The order inside `update` is load-bearing.** `vscode-bump` runs BEFORE `nix flake update`
 because the `vscode-tarball` input has a versioned URL, so it is the bump that raises the number

@@ -120,6 +120,32 @@ the 535/447 Mbps in the BBR section above was taken on 19/09, in between two dow
 throughput number from this link is only meaningful next to what `enp7s0`'s `speed` said at that
 moment, and any figure measured between 15/09 and the fix is suspect by default.
 
+### `ethtool` closed it, and it is an OPEN PAIR and not noise (24/09/2026)
+
+Three lines settle the whole thing:
+
+```text
+Advertised link modes:                1000baseT/Full
+Link partner advertised link modes:   1000baseT/Full
+Speed: 100Mb/s
+```
+
+Both ends OFFER gigabit, autonegotiation is on, and the result is still 100. When the two ends
+agree and the outcome disagrees with both, what is left is the medium.
+
+The error counters narrow it further, by being EMPTY: `tx_errors`, `rx_errors`, `align_errors` and
+`tx_underrun` are all 0. That rules out noise. The reason is geometric: 100BASE-TX uses only pairs
+1-2 and 3-6, so the counters are clean because the two pairs currently carrying traffic are fine.
+The fault is in the other two, the ones only 1000BASE-T ever touches, which means **pins 4, 5, 7 or
+8**: an open pair or a bad contact, not a noisy cable. A broken RJ45 tab, a half-seated connector,
+a bad crimp on one pair or a pinched run all produce exactly this.
+
+**`ethtool --cable-test` is NOT available here**, which is worth writing down because the command
+exists and looks like it should work: `netlink error: PHY driver does not support cable testing`.
+The PHY binds to `Generic FE-GE Realtek PHY`, the fallback driver, and TDR lives only in the
+model-specific Realtek PHY drivers. So there is no software way to name the guilty pair on this
+machine, and the diagnosis above is as far as it goes without a cable in hand.
+
 The order of elimination, cheapest first: the CABLE, then another port on the router, then the NIC
 or the wall jack. Every link event brings it back up at 1 Gbps before it degrades again, so
 `ip link set enp7s0 down && ip link set enp7s0 up` buys gigabit back for a while and proves

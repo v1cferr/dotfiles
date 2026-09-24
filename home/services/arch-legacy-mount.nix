@@ -12,7 +12,6 @@ let
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
     coreutils
-    rclone
     restic
     util-linux
     writeShellApplication
@@ -28,7 +27,8 @@ let
       coreutils
       util-linux
     ];
-    # 120 attempts of 1 s: a cold cache took ~20 s, and the ceiling lets Restart=on-failure retry.
+    # 120 attempts of 1 s: a cold cache took ~20 s over the Drive and is far quicker off the
+    # local disk. The ceiling stays so Restart=on-failure can retry instead of hanging.
     text = ''
       for _ in $(seq 1 120); do
         mountpoint -q ${cfg.local} && exit 0
@@ -43,30 +43,20 @@ lib.mkIf osConfig.my.services.arch-antigo-mount {
   systemd.user.services.arch-antigo-mount = {
     Unit = {
       Description = "The old Arch archive mounted at ${cfg.local} (restic mount, read-only)";
-      After = [ "network-online.target" ];
-      Wants = [ "network-online.target" ];
-      # At login the network takes a few seconds; without this systemd gives up after 5 quick tries.
+      # NO network dependency since 24/09/2026: the repo is a local path. What this needs is
+      # /mnt/seagate-old, a SYSTEM mount ordered before local-fs.target and therefore up long
+      # before this session. It is `nofail` though, so a slow HDD can still lose the race, and
+      # without this systemd would give up after 5 quick tries and leave the folder empty.
       StartLimitIntervalSec = 0;
     };
 
     Service = {
       Type = "simple"; # sd_notify does not exist here; see `waitMount` above
 
-      # Its OWN writable copy of rclone.conf: rclone rewrites the token, and two units sharing one
-      # copy is the stomping that hit the backup on 07/08/2026. `%t` = XDG_RUNTIME_DIR, a tmpfs.
-      ExecStartPre = "${coreutils}/bin/install -m600 /run/secrets/rclone_gdrive_conf %t/rclone-arch-antigo.conf";
-
-      # Only the rclone backend reads this, and it reads it from the environment. Safe here (the
-      # unit's own); the warning in drive-mount.nix is about exporting it from the SESSION.
-      Environment = [ "RCLONE_CONFIG=%t/rclone-arch-antigo.conf" ];
-
       ExecStart = lib.concatStringsSep " " [
         "${restic}/bin/restic"
         "-r ${cfg.repo}"
         "--password-file /run/secrets/restic_password_arch_kingston"
-        # The `rclone:` backend EXECUTES rclone, and a unit does not inherit the session's PATH: the
-        # store path goes PINNED here. The same trap that once cost the whole backup service.
-        "-o rclone.program=${rclone}/bin/rclone"
         "mount ${cfg.local}"
         # NO LOCK, and it is measured: a mount that dies unclean leaves the lock STUCK (3 of them on
         # 11/08/2026). The premise is that this repo is STATIC; see the notes before removing it.

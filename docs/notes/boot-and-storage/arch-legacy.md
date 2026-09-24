@@ -66,7 +66,8 @@ the instant the process is born, which is to say BEFORE the mountpoint exists, a
 open the empty folder and cache that: exactly the symptom this module came to solve.
 
 So `ExecStartPost` blocks "started" until the mount actually shows up: 120 attempts of 1 s. A cold
-cache (the index not yet downloaded from the Drive) took ~20 s in the measurement; the slack is
+cache (the index not yet downloaded from the Drive) took ~20 s when the repo was still there,
+and off the local disk it is far quicker; the slack is
 for a bad network, and the ceiling exists so `Restart=on-failure` can try again instead of leaving
 the unit "activating" forever. `TimeoutStartSec = 180` because 120 s of waiting plus restic's
 startup do not fit in the default 90 s, and blowing past it KILLS the unit mid-wait.
@@ -74,24 +75,35 @@ startup do not fit in the default 90 s, and blowing past it KILLS the unit mid-w
 It is a `writeShellApplication` and not a loose `.sh` nor a two-line `sh -c` (rule 7): the logic
 lives in the build, and that way it goes through shellcheck.
 
-## Two rclone details
+## Why the repo left the Drive (24/09/2026)
 
-- Its OWN writable copy of `rclone.conf` (`%t/rclone-arch-antigo.conf`), not `~/Drive`'s. rclone
-  renews the OAuth token and tries to persist it over the config; against the sops secret (0400,
-  in a non-writable directory) that becomes a recurring `permission denied` ERROR in the journal
-  hiding a real one. Two units rewriting the SAME copy is the stomping the backup did on the
-  secret (07/08/2026).
-- `RCLONE_CONFIG` in the unit's Environment is safe here: restic has no flag for pointing at
-  rclone.conf, only the backend reads it, and it reads it from the environment. The warning in
-  `drive-mount.nix` is about exporting it from the SESSION, which would make the FAI mount look
-  for its `faiws` remote in the wrong file.
-- `-o rclone.program=<store path>`: the `rclone:` backend EXECUTES the rclone binary, and a
-  systemd unit does not inherit the session's PATH. This is the same trap that once cost the whole
-  backup service.
+It used to live at `rclone:gdrive:BACKUPS_EX-B560M-V5/ARCH-KINGSTON` and came down to
+`/mnt/seagate-old/restic-arch-kingston`. The trigger was the Google account blowing past its 15
+GiB quota: 130 GiB in use, of which 78.75 were the two restic repos and 30.62 were packs that
+`forget --prune` had deleted straight into the Drive's TRASH, where they went on counting against
+the quota. The whole measurement is in [restic](restic.md).
 
-## If the network drops
+This archive is 23.67 GiB holding a 44.6 GiB snapshot, and it has NO source to regenerate it, so
+deleting was never on the table. Local it costs no quota, and it is the better fit anyway: the
+repo is STATIC and read on demand, which is what belongs on a cold disk.
 
-A read hangs until rclone's timeout and the mount can go zombie ("Transport endpoint is not
-connected"). The remedy is `systemctl --user restart arch-antigo-mount`; the `ExecStopPost`
-force-unmounts the leftovers before coming back up. Same exposure as `~/Drive`, which has run this
-way since 05/08/2026 with no incident.
+Three things left the unit along with the Drive, because none of them has a local equivalent: the
+writable copy of `rclone.conf`, `RCLONE_CONFIG` in the environment, and
+`-o rclone.program=<store path>`. So did the `network-online.target` ordering. What the unit needs
+now is `/mnt/seagate-old`, a SYSTEM mount ordered before `local-fs.target` and therefore up long
+before this session.
+
+## What replaced "if the network drops"
+
+The old failure mode was rclone timing out and the mount going zombie
+("Transport endpoint is not connected"), fixed with
+`systemctl --user restart arch-antigo-mount`. That one is gone with the network.
+
+What replaced it is the DISK, and it is worse. The Seagate is a 2009 Momentus 7200.4 with 840
+thousand load cycles (40% past spec) and 348 CRC errors, the exact numbers that got it retired as
+a backup destination on 05/08/2026. `nofail` in `hosts/nixos-kingston/default.nix` means a disk
+that does not show up lets the boot through and leaves the folder empty, and `Restart=on-failure`
+keeps retrying behind it.
+
+**So the archive is ONE copy on a dying disk. That is a known debt, not a design**, and it is
+open until the new storage arrives.

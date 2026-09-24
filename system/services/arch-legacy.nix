@@ -12,18 +12,19 @@
 
     repo = lib.mkOption {
       type = lib.types.str;
-      default = "rclone:gdrive:BACKUPS_EX-B560M-V5/ARCH-KINGSTON";
+      default = "/mnt/seagate-old/restic-arch-kingston";
       description = ''
-        The archive's restic repo. `rclone:<remote>:<path>`: restic brings up an
-        `rclone serve restic --stdio` and talks to it. The folder on the Drive was
-        called `KINGSTON` and became `ARCH-KINGSTON` on 05/08/2026 (the old name did
-        not say it was the Arch).
+        The archive's restic repo: a LOCAL path on the Seagate since 24/09/2026. It lived on the
+        Drive as `rclone:gdrive:BACKUPS_EX-B560M-V5/ARCH-KINGSTON` (renamed from `KINGSTON` on
+        05/08/2026, because the old name did not say it was the Arch) until the account blew past
+        its 15 GiB quota. Local, the mount costs no quota and needs no network.
       '';
     };
   };
 
-  # OUTSIDE /home on purpose: inside it, the user's FUSE would enter the backup's `paths` and
-  # make restic exit 3, which stops the `forget --prune`. See docs/notes/boot-and-storage/restic.md
+  # OUTSIDE /home on purpose: inside it, the user's FUSE would have entered the daily backup's
+  # `paths` and made restic exit 3, stopping the `forget --prune`. That backup is gone since
+  # 24/09/2026, but the lesson outlived it: docs/notes/boot-and-storage/restic.md
   config = lib.mkIf config.my.services.arch-antigo-mount {
     systemd.tmpfiles.rules = [
       "d ${config.my.archAntigo.local} 0755 v1cferr users -" # the owner is the user: they are the one who mounts

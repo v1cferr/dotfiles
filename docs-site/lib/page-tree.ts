@@ -11,7 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type * as PageTree from 'fumadocs-core/page-tree';
 import { type NavItem, type NavPage, type NavSection, navigation } from './navigation.ts';
-import { titleFromMarkdown } from './title.ts';
+import { titleFromMarkdown } from './summary.ts';
 import { INDEX_FILE, PAGE_EXTENSION, docPathToUrl } from './urls.ts';
 
 /** Every page of docs/, as a path relative to it. */

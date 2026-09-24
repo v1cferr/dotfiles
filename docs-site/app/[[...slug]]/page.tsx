@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { getMDXComponents } from '../../components/mdx.tsx';
 import { BLOB_BASE } from '../../lib/repo.ts';
 import { source } from '../../lib/source.ts';
+import { servedUrl } from '../../lib/urls.ts';
 
 export default async function Page(props: PageProps<'/[[...slug]]'>) {
   const params = await props.params;
@@ -36,5 +37,15 @@ export async function generateMetadata(props: PageProps<'/[[...slug]]'>): Promis
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
-  return { title: page.data.title, description: page.data.description };
+  const { title, description } = page.data;
+  // The SERVED url, with the slash: a canonical that redirects is a canonical that is ignored.
+  const url = servedUrl(page.url);
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { type: 'article', title, description, url },
+    twitter: { card: 'summary', title, description },
+  };
 }

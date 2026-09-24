@@ -4,7 +4,7 @@ import { loader } from 'fumadocs-core/source';
 import { pageSchema } from 'fumadocs-core/source/schema';
 import { defineDocs } from 'fumadocs-mdx/macro';
 import { z } from 'zod';
-import { titleFromMarkdown } from './title.ts';
+import { descriptionFromMarkdown, titleFromMarkdown } from './summary.ts';
 import { docSlugs, docUrl } from './urls.ts';
 
 const docs = defineDocs({
@@ -15,7 +15,13 @@ const docs = defineDocs({
     schema: (ctx) => {
       const title = titleFromMarkdown(ctx.source);
       if (title === undefined) throw new Error(`${ctx.path} has no H1, so the page has no title`);
-      return pageSchema.extend({ title: z.string().default(title) });
+      // The description feeds the meta tag, the social card and the search result, all from the
+      // page's own opening paragraph.
+      const description = descriptionFromMarkdown(ctx.source);
+      return pageSchema.extend({
+        title: z.string().default(title),
+        description: description === undefined ? z.string().optional() : z.string().default(description),
+      });
     },
   },
 });

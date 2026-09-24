@@ -29,3 +29,11 @@ export function docUrl(slugs: string[]): string {
 export function docPathToUrl(path: string): string {
   return docUrl(docSlugs(path));
 }
+
+/**
+ * The URL as a reader SEES it, with the slash `trailingSlash` puts back. Anything that states an
+ * address instead of linking to one needs this form: the canonical tag and the sitemap.
+ */
+export function servedUrl(url: string): string {
+  return url.endsWith('/') ? url : `${url}/`;
+}

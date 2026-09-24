@@ -135,6 +135,31 @@ A page that stopped being published and a page published from nothing both fail 
 migration itself was verified by diffing the two site outputs: 92 URLs, identical, plus the
 `/404/` Next.js writes for its own not-found route.
 
+## What each page says about itself
+
+MkDocs emitted a description, a canonical link and a `sitemap.xml` for free, and the first
+Fumadocs build emitted none of the three. That is worth recording as a MISS rather than as a
+feature: nothing failed, the pages just quietly stopped being findable, which is rule 16's drift
+in its most typical shape.
+
+**The description is the page's own first paragraph**, read by `docs-site/lib/summary.ts`, the
+same file and the same reasoning as the title: no frontmatter in `docs/`, because a `description:`
+sitting next to the paragraph that already says it is a second owner of one string (rule 14). It
+is flattened to plain text, cut at a word boundary at 160 characters, and it feeds three things at
+once: the meta tag, the Open Graph card and the search result.
+
+**The canonical URL carries the trailing slash** and the internal one does not, which is the
+distinction `servedUrl()` exists for: a canonical that redirects is a canonical a crawler ignores.
+
+`sitemap.xml` and `robots.txt` are generated from the same page list the rest of the build uses,
+with absolute URLs, since a relative `loc` is one a crawler rejects. There is no `og:image`, and
+the Twitter card is `summary` and not `summary_large_image` on purpose: there is no image to put
+in one, and claiming an image that does not exist renders as a broken box.
+
+**The build refuses to publish a page that says nothing**, which is the half that keeps this from
+happening twice: `finish-export.ts` checks every one of the 92 pages for a description and for a
+canonical pointing at its own URL, and checks that the sitemap lists exactly those pages.
+
 ## The remark plugin, and the 140 links the site cannot serve
 
 A page points at the module it documents, and of the 452 markdown links in `docs/`, 140 have

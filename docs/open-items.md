@@ -10,6 +10,28 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
+- [ ] NO BACKUP since 24/09/2026, and new storage is what closes it (opened 24/09/2026). The
+      daily restic to Google Drive was RETIRED, not paused: the module, the toggle and the
+      aliases are gone from the repo and the `HOME` repo was permanently deleted from the Drive.
+      The whole measurement, the cause and the checklist for bringing it back are in
+      [notes/boot-and-storage/restic.md](notes/boot-and-storage/restic.md).
+      • WHY IT DIED: a 15 GiB quota holding 130 GiB, of which 109.37 were restic. 30.62 of those
+        were packs the `forget --prune` had deleted straight into the Drive's TRASH, where a
+        deleted file goes on counting. The prune was working the whole time and the account
+        filled up anyway, which is the part worth remembering when picking the next backend.
+      • WHAT IS EXPOSED MEANWHILE: everything in `~` that is not in git. btrbk still takes
+        hourly snapshots of `@home`, but they share the disk they protect, so they cover an
+        accidental overwrite and NOTHING else. A dead NVMe, a theft or a fire is total loss.
+      • THE ARCH ARCHIVE IS ONE COPY on the Seagate (`/mnt/seagate-old/restic-arch-kingston`),
+        a 44.6 GiB snapshot with no source to regenerate it, on a 2009 disk with 840 thousand
+        load cycles and 348 CRC errors. Giving it a second copy is part of this item, not a
+        separate one.
+      • THE LINK IS 100 Mb/s, found on 24/09/2026: `enp7s0` negotiated 100 with an `r8169`, a
+        gigabit Realtek, and the August measurement of 215 Mbps proves it used to be gigabit.
+        Gigabit needs 4 pairs and 100 needs 2, so a damaged cable downgrades in silence. This
+        caps any offsite restore, so it is worth fixing BEFORE choosing a remote destination.
+        `ethtool` is not installed on this machine, which is why it went unnoticed.
+
 - [~] The shared memory exists; what is open is the KNOWLEDGE in it (opened 24/08/2026). The
       server, the package and the three clients landed the same day (see the
       [august history](history/2026/08-august.md) and
@@ -204,8 +226,9 @@ finished work. What was closed is in the [august history](history/2026/08-august
         match. The authoritative source is the watcher's `RegisteredStatusNotifierItems`.
 
 - [ ] SSOT still pending: the HOME `/home/v1cferr` to `my.user.home`. RECOUNTED on 16/08/2026
-      and the item was understating it: **8 files**, not the 5 written here before
-      (dolphin.nix, Theme.qml, restic.nix, fai-workstation-mount.nix, home/default.nix, plus
+      and the item was understating it: **7 files** since restic.nix left on 24/09/2026, not
+      the 5 written here before
+      (dolphin.nix, Theme.qml, fai-workstation-mount.nix, home/default.nix, plus
       core.nix, drive-mount.nix and grad-radar.nix).
       LOW priority on purpose: unlike font/color/connector, the path does not change when the
       hardware changes. That is also why the count drifted unnoticed, and why `dead-config`
@@ -214,7 +237,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
 - [ ] IMPERMANENCE on the Kingston: my idea (30/07), inspired by
       <https://github.com/Misterio77/Foundry>. An ephemeral root (tmpfs or a subvolume wiped at
       boot) plus an EXPLICIT list of what persists. It fits two things this repo already has:
-      rule 6 (Nix = app+config; state = restic) would stop being a convention and become
+      rule 6 (Nix = app+config; state is not declared) would stop being a convention and become
       ENFORCED by the system, since whatever is not declared as persistent simply does not
       survive the boot; and it absorbs what used to be a separate one-line item ("check whether encrypted
       declarative state is possible"), because the natural pair is impermanence + LUKS, and LUKS
@@ -307,9 +330,10 @@ finished work. What was closed is in the [august history](history/2026/08-august
         plus `dont-wipe`, inert; (2) systemd initrd alone, reboot, confirm; (3) `/persist` with
         `neededForBoot` and the declared list, reboot WITHOUT the wipe, which proves the binds work
         while the system is still persistent; (4) only then the wipe.
-      • PROVE THE RESTIC RESTORE BEFORE ANY OF IT. Rule 6 says state lives in restic and
-        impermanence is that rule becoming law. Turning the law on without ever having restored
-        something from that backup is the one version of this that costs real money.
+      • PROVE A RESTORE BEFORE ANY OF IT, and since 24/09/2026 there is nothing to restore
+        FROM: the daily restic went out with the Drive quota. Impermanence is rule 6 becoming
+        law, and turning that law on while the state has no backup at all is the one version
+        of this that costs real money. THE NEW STORAGE COMES FIRST.
       • MEASURED 23/08/2026 IN THE DISKO VM, and it confirms the /srv worry with evidence:
         systemd creates `srv`, `var/tmp`, `var/lib/machines` and `var/lib/portables` as SUBVOLUMES
         INSIDE `@`, so a wipe of `@` takes them along. `btrfs subvolume list /` on a fresh install

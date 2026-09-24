@@ -13,7 +13,6 @@
     "sunshine"
     "qbittorrent"
     "tor"
-    "restic"
     "btrbk"
     "dropbox"
     "drive-mount"

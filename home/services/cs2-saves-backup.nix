@@ -1,5 +1,9 @@
-# CS2 SAVES: an hourly rsync mirror out of the Bottles prefix, which restic EXCLUDES, into a
-# folder it covers. The saves are irreplaceable (no Steam: docs/notes/boot-and-storage/restic.md
+# CS2 SAVES: an hourly rsync mirror out of the Bottles prefix into a plain folder in $HOME. The
+# saves are irreplaceable (a repack, so no Steam cloud).
+#
+# It used to be HALF of a pair: the mirror put the saves where the daily restic would pick them
+# up. That backup was retired on 24/09/2026 and nothing replaced it yet, so today this is a
+# same-disk mirror and NOT a backup: docs/notes/boot-and-storage/restic.md
 {
   pkgs,
   config,
@@ -20,7 +24,7 @@ let
   home = config.home.homeDirectory;
   # the source: the CS2 Saves folder inside the Wine prefix of the Cities-Skylines-II bottle
   savesSrc = "${home}/.local/share/bottles/bottles/Cities-Skylines-II/drive_c/users/steamuser/AppData/LocalLow/Colossal Order/Cities Skylines II/Saves";
-  # the destination: a plain folder in $HOME, inside what restic includes in the daily backup
+  # the destination: a plain folder in $HOME, outside the Bottles prefix (see the header)
   savesDst = "${home}/CS2-Saves-Backup";
 
   # it only acts if a save already exists, so it does not fail before the 1st game
@@ -33,9 +37,9 @@ let
   '';
 in
 lib.mkIf osConfig.my.services.cs2-backup {
-  # a oneshot: it fires the mirroring, and the daily restic does the rest
+  # a oneshot: it fires the mirroring and exits
   systemd.user.services.cs2-saves-backup = {
-    Unit.Description = "Mirrors the CS2 saves (Bottles) into a folder restic covers";
+    Unit.Description = "Mirrors the CS2 saves out of the Bottles prefix";
     Service = {
       Type = "oneshot";
       ExecStart = "${mirrorSaves}";

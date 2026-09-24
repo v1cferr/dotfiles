@@ -1,11 +1,10 @@
-# System services: backup, hooks, media and AI (daemons/systemd).
+# System services: snapshots, hooks, media and AI (daemons/systemd).
 { ... }:
 
 {
   imports = [
     ./toggles.nix # THE INTERFACE: it declares the my.services.* keys (the VALUES belong to the host)
     ./caddy.nix # the reverse proxy for *.<domain> (a DNS-01 wildcard cert) plus the fail2ban jail
-    ./restic.nix # the encrypted backup of the user's state (the repo is on the HDD for now)
     ./arch-legacy.nix # the mountpoint plus the SSOT of the old Arch archive (home is what mounts it)
     ./btrbk.nix # hourly btrfs snapshots of @home (a local undo; it is NOT a backup)
     ./claude-code.nix # Claude Code's hooks (managed-settings in /etc) for the Discord Rich Presence

@@ -75,7 +75,7 @@ lib.mkIf rootIsBtrfs {
       ExecStart = ''
         ${btrfsAlert}/bin/btrfs-alert \
           "btrfs: error in the scrub of /" \
-          "The monthly scrub failed. Run 'sudo btrfs scrub status /' and 'sudo btrfs device stats /'. If there is an uncorrectable error, the affected data is lost in this copy, so restore it from restic."
+          "The monthly scrub failed. Run 'sudo btrfs scrub status /' and 'sudo btrfs device stats /'. If there is an uncorrectable error, the affected data is lost in this copy, and since 24/09/2026 there is NO off-disk backup to restore it from."
       '';
     };
   };

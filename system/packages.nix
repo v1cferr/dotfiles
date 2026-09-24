@@ -20,9 +20,10 @@
     python3 # the Python interpreter (running scripts; per-project libs live in uv/venv)
     uv # a fast Python manager (venv/deps/pythons); its pythons run through nix-ld
     unzip # it extracts .zip files (a base utility)
-    # RESCUE: the restic module only generates wrappers PER REPO, so the Arch archive would need a
-    # `nix shell` to read. A backup that requires gymnastics to read is half a backup.
-    restic # the restic client, to inspect/restore ANY repo (see docs/history/)
+    # RESCUE, and since 24/09/2026 the ONLY way in: the nixpkgs restic module left with the daily
+    # backup, and the per-repo wrappers it generated went with it. The frozen repos on the
+    # Seagate are read with this client directly (docs/notes/boot-and-storage/restic.md).
+    restic # the restic client, to inspect/restore ANY repo
 
     # ── GPU: monitoring (Arc B580) ──
     # The benchmarks left after the Arc was validated; only the day-to-day monitors remain.

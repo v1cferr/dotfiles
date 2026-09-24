@@ -1,9 +1,11 @@
-# LOCAL SNAPSHOTS (btrbk): the minutes-scale "undo" for @home. It is NOT a backup, that is restic.
+# LOCAL SNAPSHOTS (btrbk): the minutes-scale "undo" for @home. It is NOT a backup and never
+# became one: a snapshot shares the disk it protects. The off-disk half was restic, retired on
+# 24/09/2026, so today this is the ONLY automatic copy (docs/notes/boot-and-storage/restic.md).
 # Why @home only, and the /.snapshots prerequisite: docs/notes/boot-and-storage/btrbk.md
 { config, lib, ... }:
 
 lib.mkIf config.my.services.btrbk {
-  # The same lock as restic: with /.snapshots unmounted, btrbk would write inside `@`, where
+  # With /.snapshots unmounted, btrbk would write inside `@`, where
   # impermanence erases everything, and without the owner noticing.
   systemd.services.btrbk-home.unitConfig.RequiresMountsFor = "/.snapshots";
 
@@ -18,7 +20,7 @@ lib.mkIf config.my.services.btrbk {
       # "onchange": idle would otherwise mint 24 identical snapshots a day and evict the useful ones.
       snapshot_create = "onchange";
 
-      # 48h/7d/4w: it starts exactly where restic's --keep-daily 7 is too coarse to reach.
+      # 48h/7d/4w: sized to start where restic's --keep-daily 7 was too coarse to reach.
       snapshot_preserve = "48h 7d 4w";
       snapshot_preserve_min = "latest"; # it never ends up with NO snapshot at all
 

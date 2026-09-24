@@ -41,12 +41,6 @@ in
       # CAREFUL: `-d` deletes ALL old generations, so there is no rollback afterwards.
       gc = "sudo nix-collect-garbage -d";
 
-      # NO sudo on purpose: a FUSE mount is private to whoever mounted it, and a root mount
-      # produces a folder Dolphin cannot open.
-      backup-browse = "RCLONE_CONFIG=/run/secrets/rclone_gdrive_conf restic -r rclone:gdrive:BACKUPS_EX-B560M-V5/HOME --password-file /run/secrets/restic_password mount /mnt/backup";
-      # Rereads the whole repo (~24 GiB) to prove a restore works. Manual: it is a full download.
-      backup-verify = "sudo restic-home-gdrive check --read-data";
-
       # Wallpaper: 1 is the main panel and 2 the standing one, no argument redraws both.
       wp = "wallpaper-shuffle";
       wp1 = "wallpaper-shuffle 1";

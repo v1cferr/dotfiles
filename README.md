@@ -49,7 +49,7 @@ system/                  SYSTEM, shared by every host (machine-agnostic)
   hardware/              CPU/microcode, GPU (Arc B580), audio (PipeWire), fonts
   net/                   NetworkManager, exposed SSH, fail2ban, VPNs
   desktop/               LightDM, Hyprland, xkb, portal, gnome-keyring
-  services/              restic, btrbk, Caddy, Jellyfin/qBittorrent, Sunshine, Ollama/duo
+  services/              btrbk, Caddy, Jellyfin/qBittorrent, Sunshine, Ollama/duo
   packages.nix           CENTRAL LIST of SYSTEM packages (rescue/base + diagnostics)
 
 home/                    USER (home-manager): dotfiles + user apps
@@ -128,8 +128,9 @@ competing list here would be read as rule numbers.
   Since home-manager enters as a NixOS module (`useGlobalPkgs` +
   `useUserPackages`), one `rebuild` applies both.
 - **Organization by category**: each subject in a subfolder with a `default.nix`.
-- **Nix = app + config; state = restic.** Saves, Wine prefixes, app
-  tokens/sessions are **not** declared. They go to the backup.
+- **Nix = app + config; state is not declared.** Saves, Wine prefixes, app
+  tokens/sessions stay out of the repo and go to the backup. Since 24/09/2026
+  there is no backup for them to go to: see "Backup and remote access".
 - **One summary comment line per config** in `.nix`/`.lua`/`.conf`, plus a
   header block per module saying what it is, WHY it was chosen and the known
   traps. The line keeps it readable; the block is what gives hours back when the
@@ -168,14 +169,16 @@ Editing a secret requires a `rebuild`, otherwise `/run/secrets` is not
 refreshed.
 
 What it holds today: my password hash and (through Bitwarden) the restic
-repository password.
+repository passwords, which stay even with the backup gone: without them the
+frozen repos on the Seagate are encrypted garbage.
 
 ## Backup and remote access
 
-- **restic** ([`system/services/restic.nix`](system/services/restic.nix)):
-  encrypted, offsite backup of `~` (Zen, `.claude`, VS Code, documents) to
-  **Google Drive**. To browse it: `sudo restic-home-gdrive mount /mnt/backup`,
-  which gives one folder per snapshot.
+- **NO automatic backup since 24/09/2026.** The daily restic of `~` to Google
+  Drive was retired when the account blew past its 15 GiB quota, and nothing
+  has replaced it yet. What is left is local and on the same disk it protects:
+  hourly btrbk snapshots of `@home`. The frozen repos that survived, and how to
+  read them, are in [restic](docs/notes/boot-and-storage/restic.md).
 - **SSH** on port `2222` (root off, `fail2ban` on), reachable from anywhere with
   no VPN. The **DDNS** that keeps `ssh.v1cferr.dev` pointed at the current public
   IP lives on the ROUTER since 18/08/2026, so external access no longer depends
@@ -200,7 +203,7 @@ The summary that does **not** age, for the next install from scratch:
 - The **age key** goes in **before** `nixos-install`. Without it sops cannot
   decrypt `hashedPasswordFile` and my account is created with no password.
   Source: Bitwarden.
-- `~` comes over **disk to disk**, never from the backup. restic is an archive,
+- `~` comes over **disk to disk**, never from a backup. A backup is an archive,
   not an input.
 - Whatever is not declared (`/var/lib`, SSH host keys, NetworkManager profiles)
   crosses by hand, and that is exactly the list impermanence will force into

@@ -35,7 +35,7 @@
     bitwarden-desktop # Electron 39 is EOL and allowed explicitly in system/core/core.nix
     bitwarden-cli # `bw`, used by sync-secrets
 
-    # ── Games / emulators (prefixes and ROMs are state, so restic, rule 6) ──
+    # ── Games / emulators (prefixes and ROMs are state, not config: rule 6) ──
     # Bottles owns its package in home/apps/bottles.nix (it declares the library there now).
     rpcs3 # a PS3 emulator; the firmware and games are state, you provide them
     # CurseForge owns its package in home/apps/curseforge.nix (the login scheme handler).

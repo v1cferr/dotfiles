@@ -65,7 +65,7 @@ in
       #
       # The CS2 saves are IRREPLACEABLE (a repack, so no Steam cloud) and live in
       # `drive_c/users/...`, a different tree from `drive_c/Games`, so this move does not touch
-      # them. Verified before and after: 40 files, 1.3 GiB, matching the restic mirror that
+      # them. Verified before and after: 40 files, 1.3 GiB, matching the rsync mirror that
       # home/services/cs2-saves-backup.nix maintains.
       ".local/share/bottles/bottles/Cities-Skylines-II/drive_c/Games/Cities - Skylines II" =
         "Cities - Skylines II";
@@ -100,9 +100,10 @@ in
       # `logs`, `crashes` and `dumps` are churn this repo keeps off NTFS on purpose. The cost is
       # the Continue button, which reads `continue_game.json`: the save loads from the menu.
       #
-      # NOT IN RESTIC, and nothing here changes that: `paths` is /home/v1cferr with
-      # `.local/share/bottles` excluded, so the off-machine copy is OneDrive, which only syncs
-      # when Windows is the one running. One 19 MiB ironman save, accepted knowingly.
+      # NEVER WAS IN THE BACKUP, and nothing here changes that: the daily restic's `paths` was
+      # /home/v1cferr with `.local/share/bottles` excluded, and that backup is gone since
+      # 24/09/2026. The off-machine copy is OneDrive, which only syncs when Windows is the one
+      # running. One 19 MiB ironman save, accepted knowingly.
       ".local/share/bottles/bottles/Victoria-3/drive_c/users/steamuser/Documents/Paradox Interactive/Victoria 3/save games" =
         "/mnt/windows/Users/vfla1/OneDrive/Documentos/Paradox Interactive/Victoria 3/save games";
     };

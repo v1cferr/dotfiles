@@ -32,7 +32,7 @@ let
   fallbackWide = pathOf art.catppuccin-mocha;
   fallbackTall = pathOf art.waterfall;
 
-  # MY OWN photos, as STATE and not config (rule 6), which restic already backs up. One pool per
+  # MY OWN photos, as STATE and not config (rule 6). One pool per
   # orientation: a 16:9 frame on the standing panel would keep 56% of its width.
   poolWide = "${config.home.homeDirectory}/Pictures/wallpapers/wide";
   poolTall = "${config.home.homeDirectory}/Pictures/wallpapers/tall";

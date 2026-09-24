@@ -21,8 +21,9 @@
   # EXTRA MOUNTS (the root and /boot come from disko). By UUID, since sdX/nvmeX shuffle.
   # nofail + device-timeout=5s: without it systemd waits 90s and freezes the switch.
 
-  # The Seagate (an HDD): the destination of the off-disk restic backup. See
-  # system/services/restic.nix.
+  # The Seagate (an HDD): COLD STORAGE. It holds the frozen restic repos, the old Arch archive
+  # that /mnt/arch-antigo reads included, since the daily backup was retired on 24/09/2026.
+  # See docs/notes/boot-and-storage/restic.md
   fileSystems."/mnt/seagate-old" = {
     device = "/dev/disk/by-uuid/85788f24-b8a0-4c3e-af4f-8af1f8b52147";
     fsType = "ext4";
@@ -41,8 +42,9 @@
   # a copy on each disk (MEASURED on 31/08: 135 GiB of the Kingston was a duplicate of what was
   # already sitting here).
   #
-  # "restic sweeping 900 GB" does not apply: restic's `paths` is `/home/v1cferr` and nothing else,
-  # so a mount under /mnt was never in its scope (`system/services/restic.nix`).
+  # "restic sweeping 900 GB" does not apply: the daily backup's `paths` was `/home/v1cferr` and
+  # nothing else, so a mount under /mnt was never in its scope. That backup is gone since
+  # 24/09/2026 anyway (docs/notes/boot-and-storage/restic.md), which settles it for good.
   #
   # "NTFS writes with fast-startup pending" is real and is handled by what is ABSENT here: the
   # ntfs3 `force` option. Without it the driver REFUSES a read-write mount of a dirty volume, so a

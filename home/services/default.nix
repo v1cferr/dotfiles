@@ -3,7 +3,7 @@
 
 {
   imports = [
-    ./cs2-saves-backup.nix # the timer that mirrors the CS2 saves (Bottles) into restic's folder
+    ./cs2-saves-backup.nix # the timer that mirrors the CS2 saves out of the Bottles prefix
     ./claude-discord-rpc.nix # the daemon plus config of the Discord Rich Presence for Claude Code
     ./fai-workstation-mount.nix # ~/FAI-workstation = SFTP to the FAI workstation (rclone plus cache), under the VPN
     ./drive-mount.nix # ~/Drive = the Google Drive's root mounted (rclone mount), to browse in Dolphin

@@ -9,8 +9,8 @@ lib.mkIf config.virtualisation.docker.enable {
   virtualisation.docker.autoPrune = {
     enable = true;
 
-    # NOT systemd's `weekly` (Mon 00:00), which is nix-gc's slot. 04:30 queues after restic and
-    # nix-optimise instead of fighting them on the same NVMe. `persistent` is already true.
+    # NOT systemd's `weekly` (Mon 00:00), which is nix-gc's slot. 04:30 queues after
+    # nix-optimise instead of fighting it on the same NVMe. `persistent` is already true.
     #
     # DAILY and no longer Mon-only. MEASURED on 30/08, six days after the last run: the build
     # cache was back to 10.45 GB with 7.6 reclaimable. grad-radar runs `compose build` in its

@@ -250,7 +250,7 @@ in
     trendOnCalendar = lib.mkOption {
       type = lib.types.str;
       default = "Sun 05:30";
-      description = "When the trend snapshot runs. After restic, nix-optimise and docker prune.";
+      description = "When the trend snapshot runs. After nix-optimise and docker prune.";
     };
   };
 

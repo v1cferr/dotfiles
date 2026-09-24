@@ -17,7 +17,7 @@ one can.
 > 3. Always declarative and never "manual" (so it works on any hardware later on)
 > 4. Keep `system/` and `home/` apart: system level (services, drivers, root packages) in `system/`; the app **and** the user config in `home/` (`programs.*` when there is a module, otherwise `home.packages`). Never the same package in both.
 > 5. Organize by category: each subject in its own subfolder with its `default.nix` (adding a module = 1 line in the category's `default.nix`; the top level does not change).
-> 6. Nix = app + config; state = restic: saves, Wine prefixes, app tokens/sessions are **not** declared, they go to the backup.
+> 6. Nix = app + config; state is NOT declared: saves, Wine prefixes, app tokens/sessions stay out of the repo and go to the backup. That backup was restic, RETIRED on 24/09/2026 when the Google account blew past its 15 GiB quota, and until new storage arrives there is NONE. The rule still decides what stays out of git; what it stopped promising is that the state is safe somewhere ([restic](notes/boot-and-storage/restic.md)).
 > 7. No loose `.sh`: the logic lives in the build (Nix) or in systemd; runtime is a 1-line command (shellcheck at build time catches mistakes early).
 > 8. Validate before applying: `nixos-rebuild build` / `nix eval` OK and atomic commits per feature/task, before the switch.
 > 9. Everything in the TokyoNight theme, centralized in a Nix PALETTE of my own (`home/desktop/palette.nix`, option `my.theme.name`), so changing themes = 1 line (presets: tokyo-night/catppuccin-mocha/gruvbox-dark). nix-colors was DISCARDED: archived (apr/2026) and a base16 of only 16 colors does not reproduce the exact hexes.

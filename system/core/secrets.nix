@@ -64,8 +64,9 @@ in
         owner = "v1cferr";
         mode = "0400";
       };
-      # User-readable because a FUSE mount is private to whoever mounted it: `sudo restic mount`
-      # produces a folder Dolphin cannot open.
+      # It STAYS after the daily backup was retired on 24/09/2026: without it the frozen home
+      # repo on the Seagate is encrypted garbage. User-readable because a FUSE mount is private
+      # to whoever mounted it, and `sudo restic mount` yields a folder Dolphin cannot open.
       restic_password = {
         owner = "v1cferr";
         mode = "0400";

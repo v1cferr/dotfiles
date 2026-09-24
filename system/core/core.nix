@@ -11,7 +11,7 @@
   # SCHEDULED dedup, not auto-optimise-store: on btrfs the per-build metadata churn is CoW.
   nix.optimise = {
     automatic = true;
-    dates = [ "03:45" ]; # idle, and far from the weekly GC and the daily restic
+    dates = [ "03:45" ]; # idle, and far from the weekly GC
   };
   nix.gc = {
     automatic = true;

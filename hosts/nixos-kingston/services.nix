@@ -13,14 +13,13 @@
     sunshine = true; # screen streaming for Moonlight
     qbittorrent = true; # the torrent client
     tor = true; # a local SOCKS5 at 127.0.0.1:9050 (client only; the consumer is `mega-tor`)
-    restic = true; # the automatic backup (off-disk, daily)
-    btrbk = true; # local @home snapshots (hourly), complementing restic
+    btrbk = true; # local @home snapshots (hourly); since 24/09/2026 the ONLY automatic copy
     dropbox = true; # ~/Dropbox syncing
     drive-mount = true; # ~/Drive = the Drive's root mounted (rclone mount), showing up in Dolphin
     arch-antigo-mount = true; # /mnt/arch-antigo = the old Arch archive mounted ALWAYS (restic)
     discord-rpc = true; # Claude Code's Rich Presence on Discord
     basic-memory = true; # the MCP memory server over ~/context (Claude Code, codex and agy share it)
-    cs2-backup = true; # a backup of the CS2 saves
+    cs2-backup = true; # an hourly mirror of the CS2 saves out of the Bottles prefix (NOT a backup)
     libvirt = true; # libvirt/KVM plus virt-manager (a disposable Windows 11 guest)
   };
 

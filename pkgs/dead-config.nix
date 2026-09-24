@@ -22,7 +22,12 @@ writers.writePython3Bin "dead-config"
 
     # A tracked exception needs a REASON, so it shows up in the diff instead of rotting in silence.
     # Emptying this list is the goal, not growing it.
-    ALLOWED = {}
+    ALLOWED = {
+        # The daily backup left on 24/09/2026 and this password did NOT: without it the
+        # frozen home repo on the Seagate is encrypted garbage. It goes back into use the
+        # day new storage arrives (docs/notes/boot-and-storage/restic.md).
+        "secret:restic_password": "reads the frozen home repo on the Seagate",
+    }
 
     CODE_EXT = (".nix", ".lua", ".qml", ".sh", ".toml", ".yaml", ".yml")
 

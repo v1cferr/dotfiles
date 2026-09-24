@@ -29,8 +29,8 @@ let
   wallMain = "${art.catppuccin-mocha}/share/backgrounds/nixos/nixos-wallpaper-catppuccin-mocha.png"; # main (blurred on the lock)
   wallSecondary = "${art.waterfall}/share/backgrounds/nixos/nix-wallpaper-waterfall.png"; # the secondary (static, no login)
 
-  # MY OWN art for the standing monitor's lock, as STATE and not config (rule 6): restic already
-  # backs up everything under home but the excluded list, so the folder rides along.
+  # MY OWN art for the standing monitor's lock, as STATE and not config (rule 6). It lives under
+  # home, so whatever backs the home up carries it along (nothing does, since 24/09/2026).
   wallDir = "${config.home.homeDirectory}/Pictures/lockscreen";
   # Extensionless ON PURPOSE: hyprgraphics sniffs the CONTENT with libmagic, never the name, so one
   # fixed link serves png, jpg, webp and bmp from the same folder. See the notes.

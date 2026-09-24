@@ -59,7 +59,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [disko](boot-and-storage/disko.md) | the subvolume layout, and why the swapfile belongs to the host |
 | [btrfs](boot-and-storage/btrfs.md) | the scrub, the alarm, the reclaim, and why fstrim is off |
 | [btrbk](boot-and-storage/btrbk.md) | the local snapshots, which are NOT a backup |
-| [restic](boot-and-storage/restic.md) | the real backup, plus `~/Drive` and the CS2 saves |
+| [restic](boot-and-storage/restic.md) | why the backup is gone, the frozen repos, and `~/Drive` |
 | [arch-legacy](boot-and-storage/arch-legacy.md) | the old Arch archive, permanently mounted, and `--no-lock` |
 | [disk-hygiene](boot-and-storage/disk-hygiene.md) | the space alarm that names the biggest consumers |
 | [disk-insight](boot-and-storage/disk-insight.md) | the size trend, the usage sampler, and why not atime |

@@ -35,5 +35,10 @@
     # ── Webcam: diagnosis ──
     # A viewer only ever shows THAT the stream failed: docs/notes/hardware/webcam.md
     v4l-utils # v4l2-ctl: the formats, the controls and the stream, straight from the driver
+
+    # ── Ethernet: diagnosis ──
+    # The link downshifted to 100 Mb/s for nine days and NOTHING on this machine could say so,
+    # which is half of why it went unnoticed: docs/notes/network/network.md
+    ethtool # the negotiated link modes, the PHY counters and the cable test
   ];
 }

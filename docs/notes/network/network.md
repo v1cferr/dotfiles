@@ -79,6 +79,55 @@ The module has to be loaded for the sysctl to take: `boot.kernelModules = [ "tcp
 decoration, and the order is safe because `systemd-sysctl.service` runs After
 `systemd-modules-load.service`.
 
+## The link silently downshifts to 100 Mb/s, and it is the cable (24/09/2026)
+
+MEASURED while pulling 23.67 GiB off Google Drive: rclone would not pass 10.4 MiB/s, and the HDD
+receiving it sat at 3.4% utilization, so neither the disk nor the remote was the limit. `enp7s0`
+read `speed=100` in sysfs, on an `r8169`, which is a gigabit Realtek.
+
+The kernel had been naming the cause every single time:
+
+```text
+Link is Up - 1Gbps/Full - flow control rx/tx
+Link is Down
+Generic FE-GE Realtek PHY: Downshift occurred from negotiated speed 1Gbps
+to actual speed 100Mbps, check cabling!
+Link is Up - 100Mbps/Full (downshifted)
+```
+
+**There is no 100 Mb/s port in this story.** Autonegotiation SUCCEEDS at 1 Gbps, both ends agree,
+and only then does the PHY fail to sustain it and fall back on its own. 1000BASE-T uses all four
+pairs in both directions while 100BASE-TX uses two, so one bad pair trains at gigabit, fails, and
+lands at 100 with no error surfaced above the driver.
+
+It is recent, and it is getting worse. The journal reaches back to 01/08 and the FIRST downshift
+is **15/09 19:50**:
+
+| day | downshifts |
+| --- | ---: |
+| 15/09 | 1 |
+| 21/09 | 1 |
+| 22/09 | 1 |
+| 23/09 | 2 |
+| 24/09 | 1 |
+
+Six weeks with none, then six in nine days, and one or more on each of the last four. That shape
+is a cable or a connector degrading, not a setting that changed.
+
+**Two measurements already in this repo are only readable with this in hand.** The first restic
+snapshot, on 05/08, moved 23.6 GiB in 15 min, which is 215 Mbps and impossible at 100 Mb/s. And
+the 535/447 Mbps in the BBR section above was taken on 19/09, in between two downshifts. So a
+throughput number from this link is only meaningful next to what `enp7s0`'s `speed` said at that
+moment, and any figure measured between 15/09 and the fix is suspect by default.
+
+The order of elimination, cheapest first: the CABLE, then another port on the router, then the NIC
+or the wall jack. Every link event brings it back up at 1 Gbps before it degrades again, so
+`ip link set enp7s0 down && ip link set enp7s0 up` buys gigabit back for a while and proves
+nothing about the cause.
+
+`ethtool` was not installed here, which is the other half of why nine days went by with the
+machine at a tenth of its link and no way to ask it why. It is in `system/packages.nix` now.
+
 ## Wake-on-LAN was armed on the wrong end
 
 Found on 10/08/2026, and the symptom was invisible. The router had ALL the pieces to wake this PC

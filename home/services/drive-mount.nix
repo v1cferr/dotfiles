@@ -58,9 +58,6 @@ in
           "${rclone}/bin/rclone --config %t/rclone-gdrive.conf mount"
           cfg.remote
           cfg.local
-          # It hides the restic repo from the mount (see the header): noise in Dolphin, and an
-          # accidental Delete in there would corrupt the backup.
-          "--exclude BACKUPS_EX-B560M-V5/**" # no quotes: systemd does not expand a glob in Exec*
           # "writes": a READ goes straight through (streaming, it does NOT pile up on disk), and
           # only what you write/copy is cached until it uploads. The same choice as the FAI mount.
           "--vfs-cache-mode writes"

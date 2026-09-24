@@ -67,6 +67,7 @@ qwtel.sqlite-viewer
 redhat.java
 redhat.vscode-xml
 redhat.vscode-yaml
+rust-lang.rust-analyzer
 shahilkumar.docxreader
 shubhamprajapati1202.office-editor
 steoates.autoimport

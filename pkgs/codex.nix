@@ -19,13 +19,13 @@ in
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "codex";
   # From the release tag (`rust-v<version>`); codex-bump rewrites it along with the hash.
-  version = "0.154.0";
+  version = "0.156.1";
 
   # The `-package-` asset and NOT the bare `codex-` one: that ships the entrypoint ALONE, and
   # `codex-code-mode-host` next to it is what runs commands. See the note.
   src = fetchurl {
     url = "https://github.com/openai/codex/releases/download/rust-v${finalAttrs.version}/codex-package-x86_64-unknown-linux-musl.tar.gz";
-    hash = "sha256-/G4+O4Xyz31mRSDuXGan/kqhK659RoNPR+LxZf0Nb3g=";
+    hash = "sha256-i3EVIL7d84VGe42k0sk3NmN8a6HkaBHPDYYGt8SQtvY=";
   };
 
   # Several entries at the root (bin/, codex-path/, codex-resources/), so unpackPhase has no

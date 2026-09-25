@@ -71,8 +71,20 @@ nix shell nixpkgs#cloudflared -c cloudflared tunnel create basic-memory
 # add "cloudflared_tunnel_credentials": "Cloudflare Tunnel Credentials" to secrets/bitwarden-secrets.json
 sync-secrets
 # then set my.net.tunnel.id = "<id>" in hosts/nixos-kingston/services.nix, build, switch
+# CREATE THE ACCESS APP FOR THE HOSTNAME FIRST, and only then:
+nix shell nixpkgs#cloudflared -c cloudflared tunnel route dns basic-memory memory.v1cferr.dev
 rm ~/.cloudflared/<id>.json ~/.cloudflared/cert.pem              # Bitwarden is the copy now
 ```
+
+**The order is the gate.** On 25/09/2026 the DNS route went in before the Access app existed, and
+for about eight minutes (23:44 to 23:52 UTC) `memory.v1cferr.dev/mcp` answered `initialize` with a
+200 to anyone, through the edge over IPv6. The server log for that window holds exactly two
+requests, both my own probes. A tunnel with a live route and no Access app is a PUBLIC service, so
+the Access app is created first, and the route is what turns it on.
+
+The LAN does not see any of this: the router's split DNS answers `*.v1cferr.dev` with the host's
+LAN address, so `memory` over IPv4 at home lands on Caddy and gets its 404, since a `tunnel` entry
+has no vhost. Testing the edge from home means forcing IPv6 or another resolver.
 
 The `cert.pem` is an account-wide credential for creating tunnels and editing DNS, which is why it
 does not stay on disk.
@@ -85,9 +97,9 @@ in the dashboard or through the API.
 | Piece | Value |
 | --- | --- |
 | Tunnel | `basic-memory`, `3376a3fe-8193-489d-9cb2-8132ff65d74b` (created 25/09/2026) |
-| DNS | `memory.v1cferr.dev` CNAME `<id>.cfargotunnel.com`, proxied (pending) |
+| DNS | `memory.v1cferr.dev` CNAME `3376a3fe-...cfargotunnel.com`, proxied, created by `tunnel route dns`; it overrides the `*` wildcard |
 | Identity provider | GitHub (pending) |
-| Access app (upstream) | `memory.v1cferr.dev`, self-hosted, managed OAuth, policy: GitHub login, only me (pending) |
+| Access app (upstream) | `basic-memory (general)`, `7bbdfbfb-e8b7-4ed9-b78b-60c9a60d2cbd`, self-hosted on `memory.v1cferr.dev`. Policy `only me` by email over the one-time PIN until GitHub exists; managed OAuth pending |
 | MCP server | `https://memory.v1cferr.dev/mcp` (pending) |
 | MCP portal | `mcp.v1cferr.dev`, same policy (pending) |
 | Tool allowlist | `default_disabled`, then only the eleven tools below |

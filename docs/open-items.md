@@ -32,31 +32,21 @@ finished work. What was closed is in the [august history](history/2026/08-august
         caps any offsite restore, so it is worth fixing BEFORE choosing a remote destination.
         `ethtool` is not installed on this machine, which is why it went unnoticed.
 
-- [~] The shared memory exists; what is open is the KNOWLEDGE in it (opened 24/08/2026). The
-      server, the package and the three clients landed the same day (see the
-      [august history](history/2026/08-august.md) and
-      [notes/apps/basic-memory.md](notes/apps/basic-memory.md)). None of what is below is
-      declarable, which is exactly why it is here.
-      • THE DIRECTORY IS A GIT REPO as of 24/08/2026, with the layout, the frontmatter contract
-        and one worked example committed, pushed to `v1cferr/context`, PRIVATE. Private is not a
-        detail here: it is the only repo of mine that holds personal context rather than
-        configuration, so it is the one place where "public by default" would be wrong.
-      • ARCHIVE AND KNOWLEDGE ARE NOT THE SAME THING, and dumping years of chats into one pile
-        would produce a memory that confidently quotes a preference I dropped in 2024. What goes in
-        is `archive/` (evidence, immutable, per provider and year) and `knowledge/` (what is true
-        TODAY, curated, with the archive as its source). The extraction between the two is work,
-        not an import.
-      • PROVENANCE IS THE PART THAT MAKES IT TRUSTWORTHY: who said it (me, or a model inferring),
-        when, from which conversation, and whether it still holds. basic-memory has `bm schema`
-        (validate, infer, diff), so the frontmatter contract can be CHECKED instead of hoped for.
-      • THE IMPORTS ARE READY ON TWO OF THREE: `bm import chatgpt` and `bm import claude
-        conversations|projects` exist in the source. Gemini has no importer, so a Google Takeout
-        needs a converter of mine, and the honest shape is Markdown in `archive/gemini/<year>/`
-        with the same frontmatter as the other two, so the next index reads it without knowing
-        which provider it came from.
-      • THE ORDER I CHOSE: Gemini and ChatGPT first, Claude later. The Claude export is not
-        blocked, since I am the Primary Owner of the FAI organization and that is who Anthropic
-        lets request it; it is just not the first pile worth curating.
+- [~] The memory servers exist; what is open is how the providers reach them (opened 24/08/2026,
+      reshaped 25/09/2026). The servers landed on 24/08/2026 and split in two on 25/09/2026 (see
+      [notes/apps/basic-memory.md](notes/apps/basic-memory.md)). The knowledge work itself moved to
+      the context repository, which tracks it in its own ADRs and issues, so what stays here is
+      runtime.
+      • THE REMOTE ENDPOINT FOR THE WEB APPS is undecided. ChatGPT web only talks to a public HTTPS
+        MCP server with OAuth, and Basic Memory has no authentication of its own, so it needs a
+        tunnel plus an OAuth layer in front of the GENERAL server only (Cloudflare Tunnel with
+        Access is the candidate). Allowed through it: reads, `write_note`, `edit_note`; the
+        destructive tools are refused at the gateway. The FAI server is never exposed.
+      • GEMINI WEB IS OUT FOR NOW: its custom MCP apps are limited to the US (checked
+        25/09/2026), so Gemini reaches the memory through agy, locally.
+      • CODEX'S ENDPOINT IS A LITERAL in its versioned mirror (`home/shell/codex/config.toml`),
+        the one consumer that cannot read `my.memory.servers.general.url`. A port change has to
+        touch it by hand until codex takes a generated fragment.
 
 - [ ] The one follow-up the gate's hardening left open (23/08/2026). The dependabot half was
       CLOSED the same day (see the august history); this is what stayed.

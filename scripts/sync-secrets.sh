@@ -116,7 +116,8 @@ fi
 # ── Pass 2: write. Only what is new or was just confirmed reaches `sops set`.
 n=0
 for key in ${fresh[@]+"${fresh[@]}"} ${changed[@]+"${changed[@]}"}; do
-  sops set "$yaml" "[\"$key\"]" "\"${vault_of["$key"]}\""
+  # jq and not "\"$v\"": a value holding `"` or `\` (a JSON credential, say) is not valid JSON otherwise.
+  sops set "$yaml" "[\"$key\"]" "$(jq -n --arg v "${vault_of["$key"]}" '$v')"
   echo "  ok  $key  <-  Bitwarden: ${spec_of["$key"]}"
   n=$((n + 1))
 done

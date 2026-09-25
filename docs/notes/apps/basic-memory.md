@@ -1,6 +1,7 @@
 # basic-memory
 
 Modules: [`pkgs/basic-memory.nix`](../../../pkgs/basic-memory.nix),
+[`system/services/basic-memory.nix`](../../../system/services/basic-memory.nix),
 [`home/services/basic-memory.nix`](../../../home/services/basic-memory.nix)
 
 Two memory servers over my context repository, split at the FAI boundary, instead of one archive
@@ -106,8 +107,10 @@ against the running unit's endpoint, the handshake answers:
 
 Every client supports it: Claude Code takes `"type": "http"`, codex 0.148 takes `codex mcp add
 --url` (which writes `[mcp_servers.<name>] url`), and agy reads `~/.gemini/config/mcp_config.json`.
-The ports and paths have ONE owner, `my.memory.servers` in the module, and no client holds a literal
-(rule 11), except codex's versioned mirror, which cannot read an option.
+The ports and projects have ONE owner, `my.memory.servers`, and no client holds a literal (rule 11),
+except codex's versioned mirror, which cannot read an option. It is a SYSTEM option because the
+tunnel is a system module that needs the general server's port, and a system module cannot read a
+home-manager one; home reads it through `osConfig`. The path, `my.memory.dir`, stays in home.
 
 ## The environment is the config
 

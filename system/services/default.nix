@@ -5,6 +5,7 @@
   imports = [
     ./toggles.nix # THE INTERFACE: it declares the my.services.* keys (the VALUES belong to the host)
     ./caddy.nix # the reverse proxy for *.<domain> (a DNS-01 wildcard cert) plus the fail2ban jail
+    ./basic-memory.nix # the Basic Memory servers' SSOT (ports, projects); home is what runs them
     ./arch-legacy.nix # the mountpoint plus the SSOT of the old Arch archive (home is what mounts it)
     ./btrbk.nix # hourly btrfs snapshots of @home (a local undo; it is NOT a backup)
     ./claude-code.nix # Claude Code's hooks (managed-settings in /etc) for the Discord Rich Presence

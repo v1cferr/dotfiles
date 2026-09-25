@@ -86,7 +86,7 @@ let
       builtins.toJSON {
         mcpServers.basic-memory = {
           type = "http";
-          url = config.my.memory.servers.fai.url;
+          url = osConfig.my.memory.servers.fai.url;
         };
       }
     )

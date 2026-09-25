@@ -147,5 +147,5 @@ cannot parse zero bytes.
 failure mode is silence. A server that does not parse is simply not there, with no message.
 
 The endpoint itself is never a literal here: it comes from `my.memory.servers.general.url`, the
-option declared in [`home/services/basic-memory.nix`](../../../home/services/basic-memory.nix)
+option declared in [`system/services/basic-memory.nix`](../../../system/services/basic-memory.nix)
 (rule 11).

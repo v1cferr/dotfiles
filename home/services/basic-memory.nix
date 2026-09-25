@@ -63,54 +63,12 @@ let
   };
 in
 {
-  # The SSOT the CLIs read (rule 11): the clients never hold a port or a path as a literal.
+  # The path's SSOT (rule 11); the ports and projects are the system's: system/services/basic-memory.nix
   options.my.memory = {
     dir = lib.mkOption {
       type = lib.types.str;
       default = "${config.home.homeDirectory}/Projects/GitHub/v1cferr/context";
       description = "The context repository. Its Markdown is the source of truth; every index is derived.";
-    };
-
-    servers = lib.mkOption {
-      type = lib.types.attrsOf (
-        lib.types.submodule (
-          { config, ... }:
-          {
-            options = {
-              port = lib.mkOption {
-                type = lib.types.port;
-                description = "Loopback port where this server listens.";
-              };
-              projects = lib.mkOption {
-                type = lib.types.nonEmptyListOf lib.types.str;
-                description = "Scope directories under knowledge/, one Basic Memory project each.";
-              };
-              url = lib.mkOption {
-                type = lib.types.str;
-                readOnly = true;
-                default = "http://127.0.0.1:${toString config.port}/mcp";
-                description = "The endpoint an MCP client points at. Derived, never set by hand.";
-              };
-            };
-          }
-        )
-      );
-      # Split at the FAI boundary: general never indexes a FAI file, so it cannot return one.
-      default = {
-        general = {
-          port = 8765;
-          projects = [
-            "personal"
-            "study"
-            "projects"
-          ];
-        };
-        fai = {
-          port = 8766;
-          projects = [ "fai" ];
-        };
-      };
-      description = "The Basic Memory servers, each with its own config directory and index.";
     };
   };
 
@@ -118,6 +76,6 @@ in
     # The CLI travels with the servers: `bm status`, `bm reindex` and `bm doctor` are the human side.
     home.packages = [ basic-memory ];
 
-    systemd.user.services = lib.mapAttrs' mkServer cfg.servers;
+    systemd.user.services = lib.mapAttrs' mkServer osConfig.my.memory.servers;
   };
 }

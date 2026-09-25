@@ -23,7 +23,7 @@ let
   # `serverUrl` and NOT `url`: the legacy key is refused by 1.1.x, and the CLI says nothing when a
   # server fails to parse, it just is not there.
   declared = builtins.toJSON {
-    mcpServers.basic-memory.serverUrl = config.my.memory.servers.general.url;
+    mcpServers.basic-memory.serverUrl = osConfig.my.memory.servers.general.url;
   };
 in
 {

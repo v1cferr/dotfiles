@@ -23,7 +23,8 @@
     libvirt = true; # libvirt/KVM plus virt-manager (a disposable Windows 11 guest)
   };
 
-  # EXPOSURE: `expose` is "lan" (home plus WireGuard) or "public" (internet, subject to `auth`).
+  # EXPOSURE: `expose` is "lan" (home plus WireGuard), "public" (internet, subject to `auth`) or
+  # "tunnel" (only through the Cloudflare Tunnel, behind Access; Caddy gets no vhost for it).
   # Omitting it CLOSES. "public" REALLY REACHES the internet: the router holds the public IP
   # directly on `pppoe-wan` and forwards 80/443, proven on 08/08/2026 through Cloudflare's edge
   # (docs/notes/network/network.md). The CGNAT scare of 07/08 proved FALSE, so `public` is a

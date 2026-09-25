@@ -37,6 +37,11 @@ The Caddyfile stopped being written by hand: what decides reach is
 [`system/net/ingress.nix`](../../../system/net/ingress.nix), where forgetting to declare CLOSES
 instead of exposing, because the `expose` default is `lan`.
 
+**A `tunnel` entry gets NO vhost.** That reach means "only through the Cloudflare Tunnel, gated by
+Access at the edge", and cloudflared delivers straight to the upstream, never to Caddy. A vhost here
+would put the same service on the router's forwarded 443 with no Access in front, which is exactly
+the way around the gate the tunnel exists to close.
+
 **Concatenation and not interpolation** when emitting `{$VAR}`: `"{$" + v + "}"` is the only
 unambiguous form, because `$${v}` in a Nix string is a SYNTAX ERROR, not an escape. It bit once:
 the first generated file came out with a literal `{$${v}}`, which would become an empty hash at
@@ -70,11 +75,12 @@ not NAT, so the source IP arrives preserved. If WireGuard ever moves to the host
 with it.
 
 Today `client_ip` and `remote_ip` are identical, since with no trusted proxy the client IS the
-connection. The difference shows up with cloudflared, which delivers over LOOPBACK: with
+connection. The difference would show up if cloudflared ever delivered INTO Caddy (today it goes straight to
+the upstream), since it connects over LOOPBACK: with
 `remote_ip`, all the tunnel traffic would become "home" and bypass basic_auth SILENTLY. Using
 `client_ip` now costs nothing and removes the trap before it exists.
 
-**Do NOT add `trusted_proxies` while there is no tunnel.** Without it the `X-Forwarded-For` header
+**Do NOT add `trusted_proxies` while no tunnel delivers into Caddy.** Without it the `X-Forwarded-For` header
 is ignored, which is what we want; with it, any local process could start forging the source IP.
 
 Two things that changed with Tailscale leaving (08/08/2026): this range is now what REMOTE ACCESS

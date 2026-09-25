@@ -1,11 +1,11 @@
-# INGRESS: the SSOT of who gets a subdomain and how far it reaches. Caddy is generated FROM here.
+# INGRESS: the SSOT of who gets a subdomain and how far it reaches. Caddy and the tunnel are generated FROM here.
 # The default is `lan`, so forgetting to declare `expose` CLOSES instead of exposing.
-{ lib, ... }:
+{ config, lib, ... }:
 
 {
   options.my.ingress = lib.mkOption {
     default = { };
-    description = "Services with a subdomain of their own under `my.net.domain`. It generates Caddy's vhosts (and, in the future, the tunnel's ingress).";
+    description = "Services with a subdomain of their own under `my.net.domain`. It generates Caddy's vhosts and the Cloudflare Tunnel's ingress.";
     type = lib.types.attrsOf (
       lib.types.submodule {
         options = {
@@ -16,12 +16,14 @@
 
           # A CLOSED default: forgetting to declare it cannot mean "open to the internet".
           expose = lib.mkOption {
+            # `tunnel` gets NO Caddy vhost: Caddy's 443 would be a way around the Access gate.
             type = lib.types.enum [
               "lan"
               "public"
+              "tunnel"
             ];
             default = "lan";
-            description = "The reach: `lan` (home plus WireGuard) or `public` (the internet). A closed default, so omitting it NEVER exposes anything.";
+            description = "The reach: `lan` (home plus WireGuard), `public` (the internet through Caddy) or `tunnel` (only through the Cloudflare Tunnel, gated by Access at the edge). A closed default, so omitting it NEVER exposes anything.";
           };
 
           # user -> the env var holding the bcrypt hash (from sops, rule 12). It applies only
@@ -61,4 +63,9 @@
       }
     );
   };
+  # Caddy owns `auth`, `routes` and `proxyConfig`; on a tunnel entry they would be dead config (rule 16).
+  config.assertions = lib.mapAttrsToList (name: s: {
+    assertion = s.expose != "tunnel" || (s.auth == { } && s.routes == { } && s.proxyConfig == "");
+    message = "my.ingress.${name}: a `tunnel` entry maps one hostname to one port; `auth`, `routes` and `proxyConfig` are Caddy's and would be ignored.";
+  }) config.my.ingress;
 }

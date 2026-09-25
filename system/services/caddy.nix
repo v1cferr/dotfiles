@@ -17,7 +17,7 @@ let
 
   # AUTO-GATE: all four together, because one missing makes Caddy refuse the WHOLE config.
   # The hash list is DERIVED from the SSOT, never fixed: a stale one would take the proxy down.
-  authVars = lib.unique (lib.concatMap (s: lib.attrValues s.auth) (lib.attrValues config.my.ingress));
+  authVars = lib.unique (lib.concatMap (s: lib.attrValues s.auth) (lib.attrValues svcs));
   requiredSecrets = [
     "caddy_acme_email"
     "caddy_cloudflare_dns_token"
@@ -25,8 +25,9 @@ let
   ++ map lib.toLower authVars;
   enabled = lib.all (s: builtins.hasAttr s config.sops.secrets) requiredSecrets;
 
-  # Generated from the ingress SSOT: forgetting to declare CLOSES instead of exposing.
-  svcs = config.my.ingress;
+  # Generated from the ingress SSOT: forgetting to declare CLOSES instead of exposing. A `tunnel`
+  # entry is left out, because a vhost here would be a way in that skips Cloudflare Access.
+  svcs = lib.filterAttrs (_: s: s.expose != "tunnel") config.my.ingress;
 
   # A `handle` per prefix, before the upstream. Caddy resolves the most specific first, so the
   # order among them does not matter; the order AGAINST the upstream does.

@@ -26,7 +26,7 @@ in
     services.cloudflared = {
       enable = true;
       tunnels.${id} = {
-        credentialsFile = config.sops.secrets.${secret}.path; # LoadCredential, so root-only is fine
+        credentialsFile = config.sops.secrets.cloudflared_tunnel_credentials.path; # LoadCredential: root-only is fine
         # One hostname, one loopback port, nothing else: an unmapped name gets a 404.
         ingress = lib.mapAttrs' (
           name: s:

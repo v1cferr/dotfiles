@@ -5,6 +5,7 @@
 {
   options.my.services = lib.genAttrs [
     "caddy"
+    "tunnel"
     "jellyfin"
     "ollama"
     "duo"

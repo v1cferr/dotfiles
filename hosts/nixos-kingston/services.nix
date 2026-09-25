@@ -1,10 +1,11 @@
 # THE PANEL: which optional services and subdomains THIS machine turns on. Edit and rebuild.
 # The keys come from system/services/toggles.nix; the reach rules from system/net/ingress.nix.
-{ ... }:
+{ config, ... }:
 
 {
   my.services = {
     caddy = true; # the *.v1cferr.dev reverse proxy (inert until the secrets exist)
+    tunnel = true; # the Cloudflare Tunnel (inert until `my.net.tunnel.id` and its credentials exist)
     jellyfin = true; # the media server (/srv/media)
     ollama = true; # local AI (the Duolingo solver)
     duo = true; # duo-streak-daemon (the automatic Duolingo streak)
@@ -29,6 +30,9 @@
   # directly on `pppoe-wan` and forwards 80/443, proven on 08/08/2026 through Cloudflare's edge
   # (docs/notes/network/network.md). The CGNAT scare of 07/08 proved FALSE, so `public` is a
   # decision about reach and not a formality.
+  # null until the tunnel exists: docs/notes/network/tunnel.md has the one-time creation.
+  my.net.tunnel.id = null;
+
   my.ingress = {
     pos = {
       upstream = 3006;
@@ -58,6 +62,14 @@
       proxyConfig = "flush_interval -1"; # SSE (/api/events) with no buffering
       expose = "lan";
       comment = "duo-streak-daemon (V1C-71). It exposes details of the automation, so it never leaves the house.";
+    };
+
+    # The ChatGPT connector's upstream (V1C-82). Basic Memory has NO auth of its own, so Access at the
+    # edge is the only gate, and only the GENERAL server: the fai one never gets an entry.
+    memory = {
+      upstream = config.my.memory.servers.general.port;
+      expose = "tunnel";
+      comment = "Basic Memory (general), for the mcp.v1cferr.dev portal. Access (GitHub, only me) in front.";
     };
 
     ai = {

@@ -88,6 +88,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [ssh](network/ssh.md) | the exposed SSH, the hosts, and reaching the FAI workstation |
 | [sunshine](network/sunshine.md) | remote access, the black screen, and why dpms is forbidden |
 | [caddy](network/caddy.md) | the reverse proxy, the auto-gate, `client_ip` vs `remote_ip` |
+| [tunnel](network/tunnel.md) | the Cloudflare Tunnel behind Access, the MCP portal, what is NOT in git |
 | [fai-workstation](network/fai-workstation.md) | the host SSOT, Wake-on-LAN, and the rclone mount |
 
 ### desktop

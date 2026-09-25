@@ -58,6 +58,7 @@ export const navigation: NavItem[] = [
       { title: "SSH", doc: "notes/network/ssh.md" },
       { title: "Sunshine", doc: "notes/network/sunshine.md" },
       { title: "Caddy", doc: "notes/network/caddy.md" },
+      { title: "Tunnel", doc: "notes/network/tunnel.md" },
       { title: "FAI workstation", doc: "notes/network/fai-workstation.md" },
     ],
   },

@@ -134,7 +134,7 @@ with two different jobs, and only the second one would ever be mine.
 
 `~/.gemini/config/mcp_config.json` is where `agy` reads its servers from, and it is created empty
 (0 bytes) on the first run. Since 24/08/2026 it points at
-[basic-memory](basic-memory.md), the memory the three CLIs share.
+[basic-memory](basic-memory.md), its general server (never the FAI one).
 
 Given everything above, the mechanism is the merge and not a link:
 [`home/shell/antigravity.nix`](../../../home/shell/antigravity.nix) runs a `jq` merge at
@@ -146,5 +146,6 @@ cannot parse zero bytes.
 **`serverUrl` and NOT `url`**: their docs say the legacy key is no longer supported, and the
 failure mode is silence. A server that does not parse is simply not there, with no message.
 
-The endpoint itself is never a literal here: it comes from `my.memory.url`, the option declared in
-[`home/services/basic-memory.nix`](../../../home/services/basic-memory.nix) (rule 11).
+The endpoint itself is never a literal here: it comes from `my.memory.servers.general.url`, the
+option declared in [`home/services/basic-memory.nix`](../../../home/services/basic-memory.nix)
+(rule 11).

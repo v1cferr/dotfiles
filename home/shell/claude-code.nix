@@ -79,27 +79,24 @@ let
     }
   );
 
-  # The SHARED memory (home/services/basic-memory.nix), over HTTP because there is ONE server for
-  # the three CLIs. `my.memory.url` is the SSOT; nothing here holds the port.
-  memoryMcp = writeText "mcp-basic-memory.json" (
-    builtins.toJSON {
-      mcpServers.basic-memory = {
-        type = "http";
-        url = config.my.memory.url;
-      };
-    }
+  # The FAI memory server (home/services/basic-memory.nix). Keyed `basic-memory` so the permission
+  # rules in settings-fai.json still match; it follows the service toggle, so no dead endpoint.
+  faiMemory = lib.optional osConfig.my.services.basic-memory (
+    writeText "mcp-basic-memory-fai.json" (
+      builtins.toJSON {
+        mcpServers.basic-memory = {
+          type = "http";
+          url = config.my.memory.servers.fai.url;
+        };
+      }
+    )
   );
-
-  # BOTH accounts get it, and that is the point: one memory, not one archive per account. It
-  # follows the service's toggle, so a host without the server does not carry a dead endpoint.
-  memory = lib.optional osConfig.my.services.basic-memory memoryMcp;
 
   # What BOTH accounts carry, so a server that serves the two is declared ONCE (rule 11).
   shared = [
     vercelMcp
     gitlabMcp
-  ]
-  ++ memory;
+  ];
 
   # The accounts' SSOT (rule 11): wrappers, menu, symlinks and MCP all come from here.
   # A new account = one entry plus its settings-<name>.json.
@@ -111,12 +108,13 @@ let
         azureMcp
         stitchMcp
       ]
-      ++ shared; # the work cloud and the design tool belong to this account only
+      ++ shared
+      ++ faiMemory; # the work cloud, the design tool and the FAI memory belong to this account only
     };
     pessoal = {
       dir = ".claude-pessoal";
       label = "Pessoal  (dragons10021@outlook.com)";
-      mcp = shared;
+      mcp = shared; # no memory server on purpose: see docs/notes/apps/basic-memory.md
     };
   };
 

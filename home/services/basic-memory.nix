@@ -1,5 +1,5 @@
-# BASIC MEMORY: ONE MCP server over ~/context, which the three agent CLIs share.
-# Why HTTP and not stdio, and who owns the 88 settings: docs/notes/apps/basic-memory.md
+# BASIC MEMORY: two MCP servers over the context repo, split at the FAI boundary.
+# Why two, why HTTP and who owns the settings: docs/notes/apps/basic-memory.md
 {
   config,
   lib,
@@ -17,59 +17,40 @@ let
     ;
 
   cfg = config.my.memory;
-in
-{
-  # The SSOT the CLIs read (rule 11): the clients never hold the port or the path as a literal.
-  options.my.memory = {
-    port = lib.mkOption {
-      type = lib.types.port;
-      default = 8765;
-      description = "Loopback port where the MCP memory server listens.";
-    };
+  knowledge = "${cfg.dir}/knowledge";
 
-    dir = lib.mkOption {
-      type = lib.types.str;
-      default = "${config.home.homeDirectory}/context";
-      description = "The Markdown knowledge base. It is the source of truth; the index is derived.";
-    };
-
-    url = lib.mkOption {
-      type = lib.types.str;
-      readOnly = true;
-      default = "http://127.0.0.1:${toString cfg.port}/mcp";
-      description = "The endpoint every MCP client points at. Derived, never set by hand.";
-    };
-  };
-
-  config = lib.mkIf osConfig.my.services.basic-memory {
-    # The CLI travels with the server: `bm import`, `bm tool` and `bm doctor` are the human side.
-    home.packages = [ basic-memory ];
-
-    systemd.user.services.basic-memory = {
+  mkServer = name: server: {
+    name = "basic-memory-${name}";
+    value = {
       Unit = {
-        Description = "Basic Memory: the MCP knowledge server over ${cfg.dir}";
+        Description = "Basic Memory (${name}): MCP server over ${lib.concatStringsSep ", " server.projects}";
         # No graphical session: an agent over SSH needs this as much as one in the terminal here.
         After = [ "default.target" ];
       };
 
       Service = {
-        # The server creates the project on its first start, but not the directory it points at.
-        ExecStartPre = "${coreutils}/bin/mkdir -p ${cfg.dir}";
-        ExecStart = "${lib.getExe basic-memory} mcp --transport streamable-http --host 127.0.0.1 --port ${toString cfg.port}";
+        ExecStartPre = "${coreutils}/bin/mkdir -p ${
+          lib.concatMapStringsSep " " (p: "${knowledge}/${p}") server.projects
+        }";
+        ExecStart = "${lib.getExe basic-memory} mcp --transport streamable-http --host 127.0.0.1 --port ${toString server.port}";
 
-        # THE ENVIRONMENT IS THE CONFIG (rule 14). `~/.basic-memory/config.json` holds all 88
-        # settings and the app rewrites it, so what I own is declared here and it WINS: `bm config
-        # get auto_update` answers "Overridden by $BASIC_MEMORY_AUTO_UPDATE".
+        # THE ENVIRONMENT IS THE CONFIG (rule 14), and each server's CONFIG_DIR is its own SQLite.
+        # The JSON is single-quoted: unquoted, systemd strips its double quotes (measured).
         Environment = [
-          "BASIC_MEMORY_HOME=${cfg.dir}"
-          "BASIC_MEMORY_DEFAULT_PROJECT=main"
-          # Every project stays under ~/context, so an agent cannot point the knowledge base at
-          # some other corner of my home.
-          "BASIC_MEMORY_PROJECT_ROOT=${cfg.dir}"
+          "BASIC_MEMORY_CONFIG_DIR=${config.home.homeDirectory}/.basic-memory/${name}"
+          "'BASIC_MEMORY_PROJECTS=${
+            builtins.toJSON (
+              lib.genAttrs server.projects (p: {
+                path = "${knowledge}/${p}";
+              })
+            )
+          }'"
+          "BASIC_MEMORY_DEFAULT_PROJECT=${builtins.head server.projects}"
+          # Projects stay under knowledge/, so an agent cannot index some other corner of my home.
+          "BASIC_MEMORY_PROJECT_ROOT=${knowledge}"
           # The store is read-only, so its updater can only nag. `update` is what bumps this.
           "BASIC_MEMORY_AUTO_UPDATE=false"
-          # PINNED and not left implicit: it is what makes an edit in Obsidian reach the index,
-          # which is the whole point of the shared directory, and a default is upstream's to change.
+          # Pinned: it is what makes an edit in Obsidian reach the index, and a default can move.
           "BASIC_MEMORY_INDEX_CHANGES=true"
         ];
 
@@ -79,5 +60,64 @@ in
 
       Install.WantedBy = [ "default.target" ];
     };
+  };
+in
+{
+  # The SSOT the CLIs read (rule 11): the clients never hold a port or a path as a literal.
+  options.my.memory = {
+    dir = lib.mkOption {
+      type = lib.types.str;
+      default = "${config.home.homeDirectory}/Projects/GitHub/v1cferr/context";
+      description = "The context repository. Its Markdown is the source of truth; every index is derived.";
+    };
+
+    servers = lib.mkOption {
+      type = lib.types.attrsOf (
+        lib.types.submodule (
+          { config, ... }:
+          {
+            options = {
+              port = lib.mkOption {
+                type = lib.types.port;
+                description = "Loopback port where this server listens.";
+              };
+              projects = lib.mkOption {
+                type = lib.types.nonEmptyListOf lib.types.str;
+                description = "Scope directories under knowledge/, one Basic Memory project each.";
+              };
+              url = lib.mkOption {
+                type = lib.types.str;
+                readOnly = true;
+                default = "http://127.0.0.1:${toString config.port}/mcp";
+                description = "The endpoint an MCP client points at. Derived, never set by hand.";
+              };
+            };
+          }
+        )
+      );
+      # Split at the FAI boundary: general never indexes a FAI file, so it cannot return one.
+      default = {
+        general = {
+          port = 8765;
+          projects = [
+            "personal"
+            "study"
+            "projects"
+          ];
+        };
+        fai = {
+          port = 8766;
+          projects = [ "fai" ];
+        };
+      };
+      description = "The Basic Memory servers, each with its own config directory and index.";
+    };
+  };
+
+  config = lib.mkIf osConfig.my.services.basic-memory {
+    # The CLI travels with the servers: `bm status`, `bm reindex` and `bm doctor` are the human side.
+    home.packages = [ basic-memory ];
+
+    systemd.user.services = lib.mapAttrs' mkServer cfg.servers;
   };
 }

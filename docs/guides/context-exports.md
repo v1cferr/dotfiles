@@ -1,28 +1,26 @@
-# Exports into ~/context: the provider steps Nix cannot reach
+# Exports for the context repo: the provider steps Nix cannot reach
 
-The [memory server](../notes/apps/basic-memory.md) indexes `~/context`, and what it indexes has to
-get there first. Two of the three providers ship an importer; the third does not. All three
-require clicking through a web UI and waiting for an email, which is why this is a guide and not a
-module.
+The [memory servers](../notes/apps/basic-memory.md) index the context repository, and my history
+with each provider has to reach it first. All three providers require clicking through a web UI and
+waiting for an email, which is why this is a guide and not a module. This guide stops at the file
+on disk: turning an export into knowledge is the context repo's own tooling.
 
 ## The two rules that make the rest safe
 
-1. **Raw exports never enter the vault's git.** They are large, binary and immutable. They live in
-   `~/context-raw/<provider>/<date>/`, which restic covers because it covers my whole home, and
-   `.gitignore` in the vault guards the accident.
-2. **An import lands in `archive/`, never in `knowledge/`.** The archive is evidence: what was
-   said, when. `knowledge/` is what is true today, and it is written by hand or by an agent on
-   purpose, with the archive cited as its source. Skipping that step is how a knowledge base ends
-   up quoting a preference I dropped two years ago.
+1. **Raw exports never enter any git.** They are large, immutable, and an export mixes every scope,
+   FAI included, in the same files, so no path inside a repository could hold one safely. They live
+   in `~/context-raw/<product>/<YYYY-MM-DD>/`, outside the work tree (the context repo's ADR 0005).
+2. **Nothing derived from an export reaches a committed path before it is classified by scope.**
+   Classification runs on a local model and I review it (ADR 0004). That is why `bm import` is not
+   used: it writes an export straight into a project, FAI conversations included.
 
 ## Fixed context
 
 | What | Value |
 | --- | --- |
-| Vault | `~/context` (private repo `v1cferr/context`, branch `main`) |
-| Raw exports | `~/context-raw/<provider>/<YYYY-MM-DD>/` (outside git, inside restic) |
-| Importer | `bm`, on the PATH from `pkgs/basic-memory.nix` |
-| Server | `systemctl --user status basic-memory`, which must be RUNNING before any import |
+| Knowledge base | the context repo, `my.memory.dir` (private `v1cferr/context`) |
+| Raw exports | `~/context-raw/<product>/<YYYY-MM-DD>/`, outside git |
+| Backup | none right now (rule 6); a provider can produce an export again while the account exists |
 
 ## 1. ChatGPT
 
@@ -34,17 +32,7 @@ link arrives by email, and two limits matter: it can take up to 7 days to be bui
 the personal plans.
 
 **What is inside.** A zip whose useful file is `conversations.json`, next to an HTML rendering and
-the account metadata. A very large history is split into numbered files, and the importer takes one
-file at a time.
-
-```bash
-mkdir -p ~/context-raw/chatgpt/$(date +%F) && cd ~/context-raw/chatgpt/$(date +%F)
-unzip ~/Downloads/<the-export>.zip
-bm import chatgpt conversations.json --folder archive/chatgpt
-```
-
-`--folder` is not optional in practice: its default is `conversations`, which would drop the whole
-history at the root of the vault instead of into the archive.
+the account metadata. A very large history is split into numbered files.
 
 ## 2. Gemini (Google Takeout)
 
@@ -59,9 +47,8 @@ history at the root of the vault instead of into the archive.
    archive takes hours to build.
 5. Delivery by email link, `.zip`, and pick a max archive size that avoids being split if possible.
 
-**There is no importer**, so this one stops here until the converter exists. What it has to produce
-is Markdown in `archive/gemini/<year>/` with the same frontmatter the other two importers write, so
-that whatever indexes the vault next reads all three without knowing which provider they came from.
+Takeout can also repeat the export on a schedule (every 2 months for a year), which removes the
+clicking for this provider.
 
 ## 3. Claude
 
@@ -71,35 +58,17 @@ app and on Claude Desktop, and NOT on mobile. The link arrives by email and **ex
 **Who may ask.** On Free, Pro and Max, the person themselves. On Team and Enterprise, only the
 organization's **Primary Owner**, which is what makes the FAI account exportable at all: I am it.
 
-```bash
-mkdir -p ~/context-raw/claude/$(date +%F) && cd ~/context-raw/claude/$(date +%F)
-unzip ~/Downloads/<the-export>.zip
-bm import claude conversations conversations.json --folder archive/claude
-bm import claude projects projects.json --base-folder archive/claude-projects
-```
-
-Note the flag changes name between the two: `--folder` for conversations, `--base-folder` for
-projects.
-
-## 4. After every import, the same four steps
+## 4. After every download, the same two steps
 
 ```bash
-# 1. the checksum of what came in, so the archive can be proven later
-sha256sum ~/context-raw/<provider>/<date>/*.json > ~/context-raw/<provider>/<date>/SHA256SUMS
+# 1. the export, unchanged, in its dated directory
+mkdir -p ~/context-raw/<product>/$(date +%F)
+mv ~/Downloads/<the-export>.zip ~/context-raw/<product>/$(date +%F)/
 
-# 2. the index picks the new files up on its own (BASIC_MEMORY_INDEX_CHANGES), and this says so
-bm status
-
-# 3. what actually landed, before committing thousands of files blind
-cd ~/context && git status --short | head
-
-# 4. the vault's own history
-git add -A && git commit -m "chore(archive): import <provider> export of <date>"
+# 2. the checksum of what came in, so an import can later be proven to have read exactly this
+sha256sum ~/context-raw/<product>/<date>/* > ~/context-raw/<product>/<date>/SHA256SUMS
 ```
 
-Then write the note in `sources/`: what the export is, when it was requested, its checksum, and
-where the raw file sits. That note is what makes a claim in `knowledge/` traceable back to a file
-on disk instead of to a memory of having imported something once.
-
-If the index and the files ever disagree, `bm reindex` rebuilds the index from the Markdown. The
-Markdown is the source of truth, so that direction always works, and never the other way.
+Then it waits for the context repo's importer, which records a committed manifest (paths, sizes
+and checksums, never content) and runs the classification before anything is written to
+`knowledge/`.

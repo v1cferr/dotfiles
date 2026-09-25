@@ -26,4 +26,4 @@ in full and a guide that stopped working is a bug.
 | [per-client-dns-block](per-client-dns-block.md) | blocking a domain for ONE machine, across its dual boot |
 | [wireguard-moonlight](wireguard-moonlight.md) | the tunnel MTU and Moonlight test, and why it cannot run from home |
 | [cesar-windows-manual-steps](cesar-windows-manual-steps.md) | what has to exist INSIDE my brother's Windows |
-| [context-exports](context-exports.md) | the provider exports that feed `~/context`, one web UI at a time |
+| [context-exports](context-exports.md) | getting each provider's export onto disk for the context repository, one web UI at a time |

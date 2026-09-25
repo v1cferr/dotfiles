@@ -84,7 +84,7 @@ in the dashboard or through the API.
 
 | Piece | Value |
 | --- | --- |
-| Tunnel | `basic-memory`, id pending |
+| Tunnel | `basic-memory`, `3376a3fe-8193-489d-9cb2-8132ff65d74b` (created 25/09/2026) |
 | DNS | `memory.v1cferr.dev` CNAME `<id>.cfargotunnel.com`, proxied (pending) |
 | Identity provider | GitHub (pending) |
 | Access app (upstream) | `memory.v1cferr.dev`, self-hosted, managed OAuth, policy: GitHub login, only me (pending) |

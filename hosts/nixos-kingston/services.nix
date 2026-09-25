@@ -30,8 +30,8 @@
   # directly on `pppoe-wan` and forwards 80/443, proven on 08/08/2026 through Cloudflare's edge
   # (docs/notes/network/network.md). The CGNAT scare of 07/08 proved FALSE, so `public` is a
   # decision about reach and not a formality.
-  # null until the tunnel exists: docs/notes/network/tunnel.md has the one-time creation.
-  my.net.tunnel.id = null;
+  # The `basic-memory` tunnel (created 25/09/2026). Not a secret: it is the CNAME target.
+  my.net.tunnel.id = "3376a3fe-8193-489d-9cb2-8132ff65d74b";
 
   my.ingress = {
     pos = {

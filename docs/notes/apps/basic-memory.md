@@ -170,6 +170,11 @@ session answered `Permission required for mcp__basic-memory__recent_activity`, s
 there all along, and once the permission was declared the same session came back with results. The
 Azure MCP has always been invisible to `mcp list` for exactly the same reason.
 
+Re-measured after the split, 25/09/2026, asking each server over MCP (`list_memory_projects`):
+8765 answers `personal`, `projects`, `study` and 8766 answers `fai` alone. On the client side,
+`claude-fai` carries only the 8766 endpoint, `claude-pessoal` carries none, and agy and codex point
+at 8765. The old `basic-memory.service` is gone, and nothing was written into the repository.
+
 **Permissions are split on purpose**, in the FAI account's settings, the only Claude account with a
 memory server. The reads and the two ordinary writes (`write_note`, `edit_note`) are allowed,
 because a memory that prompts on every read is a memory nobody uses, and a bad note is a

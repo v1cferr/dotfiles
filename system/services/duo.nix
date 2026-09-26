@@ -52,6 +52,7 @@ let
         image: duo-daemon:latest
         container_name: duo-daemon
         restart: unless-stopped
+        init: true # tini as PID 1 reaps the headless Chrome children Python leaves defunct
         env_file: [ ${envPath} ]
         environment: { DATA_DIR: /data, HEADLESS: "true" }
         network_mode: host

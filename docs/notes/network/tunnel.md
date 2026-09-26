@@ -99,10 +99,10 @@ in the dashboard or through the API.
 | Tunnel | `basic-memory`, `3376a3fe-8193-489d-9cb2-8132ff65d74b` (created 25/09/2026) |
 | DNS | `memory.v1cferr.dev` CNAME `3376a3fe-...cfargotunnel.com`, proxied, created by `tunnel route dns`; it overrides the `*` wildcard |
 | Identity provider | GitHub, `2ca7e97c-46a5-46fa-8f4f-d3ed9c5286fd`, backed by the GitHub OAuth App "Cloudflare Access (v1cferr)"; client credentials in Bitwarden as "Cloudflare Access GitHub OAuth" |
-| Service token | `mcp-portal`, `1d72166b-14b0-4d96-b48c-f6f955cab886`, expires 2036-09-22. What the portal sends upstream, so the upstream never asks for a second login |
+| Service token | `mcp-portal`, `1d72166b-14b0-4d96-b48c-f6f955cab886`, expires 2036-09-22. What the portal sends upstream, so the upstream never asks for a second login. Rotating it means a new token, the upstream app's `Service Auth` policy and the MCP server's headers, together |
 | Access app (upstream) | `basic-memory (general)`, `7bbdfbfb-...`, self-hosted on `memory.v1cferr.dev`: `only me` (email plus login method GitHub) and `Service Auth` (the token above) |
 | MCP server | `basic-memory-general` at `https://memory.v1cferr.dev/mcp`, bearer auth carrying the token's two `cf-access-client-*` headers. Its own Access app (`df5f0dab-...`, type `mcp`) holds `only me (GitHub)`, without which the server is hidden from me in the portal |
-| MCP portal | `mcp` at `mcp.v1cferr.dev`, managed OAuth (the default on a new portal). Its Access app (`70ae5647-...`) holds ONLY `only me (GitHub)` |
+| MCP portal | `mcp` at `mcp.v1cferr.dev`, managed OAuth (the default on a new portal), `code_mode: off` (a client could otherwise opt in through the URL; ChatGPT does not need it). Its Access app (`70ae5647-...`) holds ONLY `only me (GitHub)` |
 | Tool allowlist | `default_disabled: true`, then only the eleven tools below |
 
 What the checks returned on 26/09/2026, with no credential: the portal answers 401 with a
@@ -114,7 +114,7 @@ End to end, from ChatGPT on the web the same day: the OAuth login went through G
 `list_memory_projects` returned personal, projects and study (no fai), no delete tool was offered,
 and a `write_note` into `personal/tests/` landed on disk and came back through `read_note`. The
 server log showed every call arriving from the portal's range (`2a06:98c0::/29`) on the general
-server, and zero requests on the fai one. An EMPTY answer at first was not a bug: `knowledge/`
+server, and zero requests on the fai one. The test note was removed afterwards. An EMPTY answer at first was not a bug: `knowledge/`
 held no notes yet, only the directory markers.
 
 **Two things the dashboard got wrong on the first pass, both fixed through the API**: the portal

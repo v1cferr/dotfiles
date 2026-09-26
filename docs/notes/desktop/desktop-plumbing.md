@@ -100,6 +100,21 @@ Picture of the Week IDs are predictable enough to sweep a year from the 700 px t
 The keepers were picked by eye off a contact sheet, since luminance alone let lensing clusters and
 near-empty frames through: one galaxy carrying the frame, like the Megamaser that started it.
 
+**Each photo can carry a CAPTION**, drawn by the shell in the bottom-right corner of its screen
+(`quickshell/caption/Caption.qml`). The facts live next to the image as `<name>.json` (name of the
+object, the ESA title, distance, constellation, credit), and the shuffle copies the chosen photo's
+file to `~/.cache/wallpaper/{wide,tall}.json`, which the component watches. A photo with no sidecar
+writes an EMPTY caption rather than leaving the previous one on screen.
+
+It is NOT burnt into the image, for three reasons: hyprpaper covers, so a bottom-right corner is
+exactly what a crop can cut; the text would change size with every photo's resolution; and the
+originals would turn into edited copies. It sits on the BOTTOM layer, over the wallpaper and under
+every window, reserves nothing and takes no input, so it is visible exactly when the wallpaper is.
+The credit line is not decoration either: the ESA/Hubble frames are CC BY 4.0, which asks for it.
+
+A distance is left blank when the source has none, instead of filled from memory: ESA leaves some
+empty, and NGC 5765B (the Megamaser) had no reliable figure in any source checked.
+
 **Every branch in that script is an `if` and never `[ x ] && y`.** `writeShellApplication` turns on
 `set -e`, and a failing left side of `&&` takes the whole script down. The empty-pool path lands
 exactly there, which is the one case that MUST survive: a pool with nothing in it is supposed to

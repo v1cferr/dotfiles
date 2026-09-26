@@ -7,6 +7,7 @@ import "root:/bar"
 import "root:/notifications"
 import "root:/osd"
 import "root:/media"
+import "root:/caption"
 
 ShellRoot {
     id: root
@@ -19,6 +20,9 @@ ShellRoot {
 
     // The main bar, replacing Waybar. The component is in Bar.qml.
     Bar {}
+
+    // What the wallpaper shows, bottom-right under the windows. The component is in Caption.qml.
+    Caption {}
 
     // Quickshell owns org.freedesktop.Notifications: the daemon is Notifs.qml and the UI is
     // Notifications.qml. The bar's bell reads Notifs.count/dnd.

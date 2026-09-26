@@ -50,12 +50,23 @@ let
       hyprland
     ];
     text = ''
+      # The CAPTION rides along: a photo's facts live next to it as `<name>.json`, and the screen's
+      # copy is `<link>.json`, which Quickshell watches. No sidecar means an empty caption, not a stale one.
+      caption() { # $1 = chosen image, $2 = link
+        if [ -f "''${1%.*}.json" ]; then
+          cp "''${1%.*}.json" "$2.json"
+        else
+          printf '%s' '{"name":"","title":"","distance":"","constellation":"","credit":""}' > "$2.json"
+        fi
+      }
+
       pick() { # $1 = pool, $2 = link, $3 = fallback, $4 = "boot" to honour the pin; prints the choice
         local files=() f chosen
         # The PIN is `.pinned` inside the pool: a dotfile, so the `*` below never draws it.
         if [ "''${4:-}" = boot ] && [ -f "$1/.pinned" ]; then
           chosen="$(readlink -f "$1/.pinned")"
           ln -sfn "$chosen" "$2"
+          caption "$chosen" "$2"
           printf '%s' "$chosen"
           return 0
         fi
@@ -65,6 +76,7 @@ let
         chosen="$3"
         if [ ''${#files[@]} -gt 0 ]; then chosen="''${files[RANDOM % ''${#files[@]}]}"; fi
         ln -sfn "$chosen" "$2"
+        caption "$chosen" "$2"
         printf '%s' "$chosen"
       }
 

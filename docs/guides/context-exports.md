@@ -58,17 +58,15 @@ app and on Claude Desktop, and NOT on mobile. The link arrives by email and **ex
 **Who may ask.** On Free, Pro and Max, the person themselves. On Team and Enterprise, only the
 organization's **Primary Owner**, which is what makes the FAI account exportable at all: I am it.
 
-## 4. After every download, the same two steps
+## 4. After every download, one command
+
+From the context repository, inside its `nix develop` shell:
 
 ```bash
-# 1. the export, unchanged, in its dated directory
-mkdir -p ~/context-raw/<product>/$(date +%F)
-mv ~/Downloads/<the-export>.zip ~/context-raw/<product>/$(date +%F)/
-
-# 2. the checksum of what came in, so an import can later be proven to have read exactly this
-sha256sum ~/context-raw/<product>/<date>/* > ~/context-raw/<product>/<date>/SHA256SUMS
+just raw-add <product> ~/Downloads/<the-export>.zip
 ```
 
-Then it waits for the context repo's importer, which records a committed manifest (paths, sizes
-and checksums, never content) and runs the classification before anything is written to
-`knowledge/`.
+It copies the export, unchanged, into `~/context-raw/<product>/<date>/`, writes `SHA256SUMS` next
+to it, and records a manifest in the repo (file names, sizes and checksums, never content). It is
+idempotent and refuses to overwrite a file with different content; `just raw-verify` checks later
+that the local exports still match. The import itself, with the classification, comes after.

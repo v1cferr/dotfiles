@@ -87,6 +87,16 @@ atomic-write guard measured above still holds; what the command dislikes about t
 determined. It does not matter much, since the answer is the repo's answer for everything else:
 the rule goes in the versioned file and `git diff` shows it.
 
+`/model` hit the same wall on 26/09/2026 (2.1.280), with a more useful message: `couldn't save
+it as your default: ~/.claude-fai/settings.json can't be written (EROFS)`. The chain is
+`~/.claude-fai/settings.json` to `/nix/store/…-home-manager-files/.claude-fai/settings.json` to
+`/nix/store/…-hm_settingsfai.json` to the repo file. The repo file is writable and `/home` is
+`rw`, but `/nix/store` is mounted `ro`, so the write lands on a hop inside the store. The likely
+cause is that these commands follow ONE link instead of the full realpath before the atomic
+write. That is a hypothesis: confirming it takes an `strace -f -e trace=file` of a `/model` save.
+The answer is the same as for the permissions: a setting the TUI cannot save goes in the
+versioned file by hand. `model` is deliberately NOT pinned, so the account follows the default.
+
 `settings.local.json`, in that same directory and NOT a symlink, is where the TUI writes an
 "always allow" answered at a prompt. It carried three rules from 23/07/2026 (`lspci`, `lspci -nn`,
 `sudo -n true`), which were merged into the versioned list on 18/08 and the file deleted. It comes

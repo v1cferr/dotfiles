@@ -4,30 +4,29 @@ Modules: [`home/shell/zsh.nix`](../../../home/shell/zsh.nix),
 [`home/shell/cli.nix`](../../../home/shell/cli.nix),
 [`home/shell/ntfy.nix`](../../../home/shell/ntfy.nix)
 
-zsh, the maintenance aliases and the modern CLI toolkit.
+zsh, the maintenance functions and the modern CLI toolkit.
 
-## The three maintenance aliases are COMPOSED, not written three times
+## The three maintenance functions are COMPOSED, not written three times
 
 `upgrade` IS `update && rebuild` by definition. Restating it in full (as it was until 06/08/2026)
 is the same rule in two places, so the day only one copy changes, `upgrade` stops being what its
 name says and nobody notices. That is rule 11 applied to a shell string.
 
 ```text
-rebuild   nh os switch -vvv <flake> && hyprctl -i 0 reload
-update    vscode-bump && curseforge-bump && nix flake update && vscode-extensions-dump
-upgrade   update && rebuild
+rebuild [nh flags]   nh os switch <flags> <flake> && hyprctl -i 0 reload
+update               vscode-bump && curseforge-bump && nix flake update && vscode-extensions-dump
+upgrade [nh flags]   update && rebuild <flags>
 ```
 
-**The `-vvv` lives in the rebuild line, so BOTH carry it.** It is nh's own trace log, and it is
-fixed instead of optional because a build fails minutes after the command scrolled off the screen:
-deciding to be verbose once it already broke is deciding too late. Passing it by hand is not an
-option anyway, see below.
+**Quiet by default, verbose on request.** `rebuild -v`, `rebuild -vvv` or `upgrade -vv` hand the
+flags to nh, which raises its log level one step per `v`. Until 26/09/2026 the `-vvv` was fixed
+in the command, on the theory that a failed build is too late to ask for the trace; in practice
+the trace buried every normal run, and a failed build is cheap to rerun with `-vvv`.
 
-**An alias takes no arguments, and this one ERRORS if you try.** `upgrade -vvv` dies with
-`zsh: parse error near '-vvv'` (23/09/2026). An alias is text substitution, so the argument lands
-at the END of the expansion, after the `{ hyprctl -i 0 reload || true; }` group, and a bare word
-after a closing `}` is a syntax error. Whatever these three need has to be written INTO them; the
-day one really needs an argument it stops being an alias and becomes a function (rule 7).
+**They are functions (`programs.zsh.siteFunctions`), not aliases, because they take arguments.**
+As aliases, `upgrade -vvv` died with `zsh: parse error near '-vvv'` (23/09/2026): an alias is
+text substitution, so the argument landed after the closing `}` of the hyprctl group. A function
+receives it as `$@`, and `upgrade` forwards it to `rebuild` only; `update` takes none.
 
 **The order inside `update` is load-bearing.** `vscode-bump` runs BEFORE `nix flake update`
 because the `vscode-tarball` input has a versioned URL, so it is the bump that raises the number
@@ -49,11 +48,11 @@ Learned the hard way on 03/08/2026. `programs.nh.flake` publishes the variable t
 LOGIN. The graphical session in progress does not have it, and a new terminal inherits the
 session's environment instead of rereading `/etc/profile`.
 
-So the alias broke exactly after the switch that introduced it, with the misleading message
+So `rebuild` broke exactly after the switch that introduced it, with the misleading message
 `no flake found at /etc/nixos/flake.nix`, as if the config were in the wrong place. Passing the
 path makes it work on the first `rebuild` with no relogin. `programs.nh.flake` still holds, since
-it is the SSOT read here and it serves a bare `nh`; it just is not a dependency of the alias
-anymore.
+it is the SSOT read here and it serves a bare `nh`; it just is not a dependency of the
+function anymore.
 
 ## `hyprctl -i 0` is what makes rebuild work over SSH
 

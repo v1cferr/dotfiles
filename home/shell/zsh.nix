@@ -7,11 +7,9 @@ let
   flake = osConfig.programs.nh.flake;
 
   # Composed, never written twice: `upgrade` IS `update && rebuild` by definition.
-  # `-vvv` is nh's trace log, FIXED here: an alias takes no argument, so it cannot be asked for later.
-  rebuildCmd = "nh os switch -vvv ${flake} && { hyprctl -i 0 reload || true; }";
   # The order matters: vscode-bump raises the version BEFORE the lock update, and the `&&`
   # stops the chain if it fails, so nothing is applied with the repo half-edited.
-  updateCmd = "vscode-bump ${flake} && curseforge-bump ${flake} && codex-bump ${flake} && antigravity-bump ${flake} && nix flake update --flake ${flake} && vscode-extensions-dump ${flake}";
+  update = "vscode-bump ${flake} && curseforge-bump ${flake} && codex-bump ${flake} && antigravity-bump ${flake} && nix flake update --flake ${flake} && vscode-extensions-dump ${flake}";
 in
 {
   programs.zsh = {
@@ -31,13 +29,17 @@ in
       share = true; # shared between tabs in real time
     };
 
-    shellAliases = {
+    # Functions, not aliases: they take arguments, so `rebuild -vv` or `upgrade -vvv` reach nh.
+    siteFunctions = {
       # The `-i 0` is what makes this work over SSH: hyprctl otherwise demands
       # HYPRLAND_INSTANCE_SIGNATURE, which only exists inside the graphical session.
-      rebuild = rebuildCmd;
-      update = updateCmd; # bumps the lock plus the vendored versions
+      rebuild = ''nh os switch "$@" ${flake} && { hyprctl -i 0 reload || true; }'';
+      inherit update; # bumps the lock plus the vendored versions
       # As the USER first (it holds the SSH key for private inputs), then root.
-      upgrade = "${updateCmd} && ${rebuildCmd}";
+      upgrade = ''update && rebuild "$@"'';
+    };
+
+    shellAliases = {
       # CAREFUL: `-d` deletes ALL old generations, so there is no rollback afterwards.
       gc = "sudo nix-collect-garbage -d";
 

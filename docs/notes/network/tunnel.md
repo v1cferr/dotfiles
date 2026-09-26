@@ -98,11 +98,22 @@ in the dashboard or through the API.
 | --- | --- |
 | Tunnel | `basic-memory`, `3376a3fe-8193-489d-9cb2-8132ff65d74b` (created 25/09/2026) |
 | DNS | `memory.v1cferr.dev` CNAME `3376a3fe-...cfargotunnel.com`, proxied, created by `tunnel route dns`; it overrides the `*` wildcard |
-| Identity provider | GitHub (pending) |
-| Access app (upstream) | `basic-memory (general)`, `7bbdfbfb-e8b7-4ed9-b78b-60c9a60d2cbd`, self-hosted on `memory.v1cferr.dev`. Policy `only me` by email over the one-time PIN until GitHub exists; managed OAuth pending |
-| MCP server | `https://memory.v1cferr.dev/mcp` (pending) |
-| MCP portal | `mcp.v1cferr.dev`, same policy (pending) |
-| Tool allowlist | `default_disabled`, then only the eleven tools below |
+| Identity provider | GitHub, `2ca7e97c-46a5-46fa-8f4f-d3ed9c5286fd`, backed by the GitHub OAuth App "Cloudflare Access (v1cferr)"; client credentials in Bitwarden as "Cloudflare Access GitHub OAuth" |
+| Service token | `mcp-portal`, `1d72166b-14b0-4d96-b48c-f6f955cab886`, expires 2036-09-22. What the portal sends upstream, so the upstream never asks for a second login |
+| Access app (upstream) | `basic-memory (general)`, `7bbdfbfb-...`, self-hosted on `memory.v1cferr.dev`: `only me` (email plus login method GitHub) and `Service Auth` (the token above) |
+| MCP server | `basic-memory-general` at `https://memory.v1cferr.dev/mcp`, bearer auth carrying the token's two `cf-access-client-*` headers. Its own Access app (`df5f0dab-...`, type `mcp`) holds `only me (GitHub)`, without which the server is hidden from me in the portal |
+| MCP portal | `mcp` at `mcp.v1cferr.dev`, managed OAuth (the default on a new portal). Its Access app (`70ae5647-...`) holds ONLY `only me (GitHub)` |
+| Tool allowlist | `default_disabled: true`, then only the eleven tools below |
+
+What the checks returned on 26/09/2026, with no credential: the portal answers 401 with a
+`WWW-Authenticate` pointing at its protected-resource metadata, and publishes an authorization
+server with dynamic client registration and S256; the upstream answers 302 to the Access login,
+with or without a forged service token; the LAN over IPv4 gets Caddy's 404.
+
+**Two things the dashboard got wrong on the first pass, both fixed through the API**: the portal
+was created with every tool enabled (21, `delete_project` among them), and the portal's Access app
+held only the service token's policy, which would have refused my own login. The token belongs on
+the UPSTREAM app, never on the portal's.
 
 The allowlist is inverted on purpose (`default_disabled: true`): a tool Basic Memory adds in a bump
 stays hidden until it is listed here, instead of appearing in ChatGPT by default.

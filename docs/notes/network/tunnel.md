@@ -110,6 +110,13 @@ What the checks returned on 26/09/2026, with no credential: the portal answers 4
 server with dynamic client registration and S256; the upstream answers 302 to the Access login,
 with or without a forged service token; the LAN over IPv4 gets Caddy's 404.
 
+End to end, from ChatGPT on the web the same day: the OAuth login went through GitHub,
+`list_memory_projects` returned personal, projects and study (no fai), no delete tool was offered,
+and a `write_note` into `personal/tests/` landed on disk and came back through `read_note`. The
+server log showed every call arriving from the portal's range (`2a06:98c0::/29`) on the general
+server, and zero requests on the fai one. An EMPTY answer at first was not a bug: `knowledge/`
+held no notes yet, only the directory markers.
+
 **Two things the dashboard got wrong on the first pass, both fixed through the API**: the portal
 was created with every tool enabled (21, `delete_project` among them), and the portal's Access app
 held only the service token's policy, which would have refused my own login. The token belongs on

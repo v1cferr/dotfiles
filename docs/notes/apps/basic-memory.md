@@ -210,5 +210,5 @@ is completed, and that is the intended gate.
 
 The index being derived is what makes a backup boring: what matters is the Markdown, which lives
 in git. There is no backup of this machine right now (rule 6), so the Markdown's only other copy
-is the pushed remote. `~/.basic-memory/config.json` and `memory.db` at the top level belong to the
-single server that preceded the split, and are unused after the switch.
+is the pushed remote. The single server's state at the top of `~/.basic-memory` was deleted on
+26/09/2026, so only the per-server directories remain.

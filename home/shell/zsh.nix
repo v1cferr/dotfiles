@@ -43,8 +43,9 @@ in
       # CAREFUL: `-d` deletes ALL old generations, so there is no rollback afterwards.
       gc = "sudo nix-collect-garbage -d";
 
-      # Wallpaper: 1 is the main panel and 2 the standing one, no argument redraws both.
-      wp = "wallpaper-shuffle";
+      # Wallpaper: 1 is the main panel and 2 the standing one; wppin keeps what is on screen at boot.
+      wp = "wallpaper-shuffle both";
+      wppin = "wallpaper-shuffle pin";
       wp1 = "wallpaper-shuffle 1";
       wp2 = "wallpaper-shuffle 2";
 

@@ -50,8 +50,15 @@ let
       hyprland
     ];
     text = ''
-      pick() { # $1 = pool, $2 = link, $3 = fallback; prints what it drew
+      pick() { # $1 = pool, $2 = link, $3 = fallback, $4 = "boot" to honour the pin; prints the choice
         local files=() f chosen
+        # The PIN is `.pinned` inside the pool: a dotfile, so the `*` below never draws it.
+        if [ "''${4:-}" = boot ] && [ -f "$1/.pinned" ]; then
+          chosen="$(readlink -f "$1/.pinned")"
+          ln -sfn "$chosen" "$2"
+          printf '%s' "$chosen"
+          return 0
+        fi
         for f in "$1"/*; do
           if [ -f "$f" ]; then files+=("$f"); fi
         done
@@ -67,14 +74,24 @@ let
       }
 
       # 1 is the MAIN panel and 2 the standing one, the same numbering my.monitors uses.
-      target="''${1:-both}"
+      # No argument is the BOOT path: the pinned image if there is one, a draw otherwise. 1, 2 and
+      # both always draw; `pin` freezes whatever is on screen now as the boot choice.
+      target="''${1:-boot}"
       case "$target" in
-        1 | 2 | both) ;;
+        boot | 1 | 2 | both) ;;
+        pin)
+          ln -sfn "$(readlink -f ${linkWide})" ${poolWide}/.pinned
+          ln -sfn "$(readlink -f ${linkTall})" ${poolTall}/.pinned
+          printf 'pinned: %s\n        %s\n' "$(readlink ${poolWide}/.pinned)" "$(readlink ${poolTall}/.pinned)"
+          exit 0
+          ;;
         *)
-          echo "usage: wallpaper-shuffle [1|2]  (1 = main, 2 = standing, none = both)" >&2
+          echo "usage: wallpaper-shuffle [1|2|both|pin]  (1 = main, 2 = standing, none = boot)" >&2
           exit 2
           ;;
       esac
+      mode=draw
+      if [ "$target" = boot ]; then mode=boot; fi
 
       mkdir -p ${linkDir} ${poolWide} ${poolTall}
 
@@ -84,11 +101,11 @@ let
       if hyprctl hyprpaper listactive >/dev/null 2>&1; then live=yes; fi
 
       if [ "$target" != 2 ]; then
-        wide=$(pick ${poolWide} ${linkWide} ${fallbackWide})
+        wide=$(pick ${poolWide} ${linkWide} ${fallbackWide} "$mode")
         if [ "$live" = yes ]; then apply "${osConfig.my.monitors.primary}" "$wide"; fi
       fi
       if [ "$target" != 1 ]; then
-        tall=$(pick ${poolTall} ${linkTall} ${fallbackTall})
+        tall=$(pick ${poolTall} ${linkTall} ${fallbackTall} "$mode")
         if [ "$live" = yes ]; then apply "${osConfig.my.monitors.secondary}" "$tall"; fi
       fi
       if [ "$live" = yes ]; then hyprctl hyprpaper unload unused >/dev/null 2>&1 || true; fi

@@ -87,6 +87,19 @@ one and nothing for both, which is the numbering `my.monitors` already uses. The
 `wp2` and `wp`. Anything else prints the usage and exits 2, so a typo does not silently redraw the
 wrong screen.
 
+**The boot draws NOTHING when a pin exists.** A pool can hold a `.pinned` symlink; with no
+argument (the activation and the unit's `ExecStartPre`) the script honours it, so the same pair
+comes back on every boot. `1`, `2` and `both` always draw, and `wallpaper-shuffle pin` (alias
+`wppin`) freezes whatever is on screen as the new boot choice. The pin is a DOTFILE on purpose:
+the `*` glob that feeds the draw never sees it, so it cannot be drawn as if it were a photo.
+
+**The Hubble set comes from ESA/Hubble, not from images.nasa.gov.** The NASA archive serves most
+Hubble frames at 1280 px wide, which a 2560 panel would stretch twice over; the ESA/Hubble CDN
+(`cdn.esahubble.org/archives/images/large/potwAASSa.jpg`, CC BY 4.0) has them at full size, and the
+Picture of the Week IDs are predictable enough to sweep a year from the 700 px thumbnails first.
+The keepers were picked by eye off a contact sheet, since luminance alone let lensing clusters and
+near-empty frames through: one galaxy carrying the frame, like the Megamaser that started it.
+
 **Every branch in that script is an `if` and never `[ x ] && y`.** `writeShellApplication` turns on
 `set -e`, and a failing left side of `&&` takes the whole script down. The empty-pool path lands
 exactly there, which is the one case that MUST survive: a pool with nothing in it is supposed to

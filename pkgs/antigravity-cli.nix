@@ -6,6 +6,7 @@
   fetchurl,
   autoPatchelfHook,
   versionCheckHook,
+  antigravity-bump,
 }:
 
 let
@@ -43,6 +44,9 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   # It runs `agy --version` against the store path, which is what proves the patch took.
   nativeInstallCheckInputs = [ versionCheckHook ];
   doInstallCheck = true;
+
+  # What vendored-bump runs on `update`: version, build id and the hash the manifest publishes.
+  passthru.updateScript = antigravity-bump;
 
   meta = {
     description = "Google's agent CLI, the successor to Gemini CLI (official release binary)";

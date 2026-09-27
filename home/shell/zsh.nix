@@ -1,15 +1,22 @@
 # The zsh config (~/.zshrc). The LOGIN shell is set in system/core/users.nix.
 # Why the aliases are composed and why the flake path is explicit: docs/notes/repo/shell.md
-{ osConfig, lib, ... }:
+{
+  osConfig,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
+  # Rule 19: everything this module reaches for, named once.
+  inherit (pkgs) vendored-bump;
+
   # SSOT of the repo path (rule 11): programs.nh.flake, read here through osConfig.
   flake = osConfig.programs.nh.flake;
 
-  # Composed, never written twice: `upgrade` IS `update && rebuild` by definition.
-  # The order matters: vscode-bump raises the version BEFORE the lock update, and the `&&`
-  # stops the chain if it fails, so nothing is applied with the repo half-edited.
-  update = "vscode-bump ${flake} && curseforge-bump ${flake} && codex-bump ${flake} && antigravity-bump ${flake} && nix flake update --flake ${flake} && vscode-extensions-dump ${flake}";
+  # Composed, never written twice: `upgrade` IS `update && rebuild` by definition. The bumps go
+  # BEFORE the lock (vscode's raises a versioned input), and `&&` stops a half-edited repo.
+  update = "${lib.getExe vendored-bump} ${flake} && nix flake update --flake ${flake} && vscode-extensions-dump ${flake}";
 in
 {
   programs.zsh = {

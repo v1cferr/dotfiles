@@ -14,7 +14,7 @@ name says and nobody notices. That is rule 11 applied to a shell string.
 
 ```text
 rebuild [nh flags]   nh os switch <flags> <flake> && hyprctl -i 0 reload
-update               vscode-bump && curseforge-bump && nix flake update && vscode-extensions-dump
+update               vendored-bump && nix flake update && vscode-extensions-dump
 upgrade [nh flags]   update && rebuild <flags>
 ```
 
@@ -28,10 +28,13 @@ As aliases, `upgrade -vvv` died with `zsh: parse error near '-vvv'` (23/09/2026)
 text substitution, so the argument landed after the closing `}` of the hyprctl group. A function
 receives it as `$@`, and `upgrade` forwards it to `rebuild` only; `update` takes none.
 
-**The order inside `update` is load-bearing.** `vscode-bump` runs BEFORE `nix flake update`
-because the `vscode-tarball` input has a versioned URL, so it is the bump that raises the number
-(see [version-bumps](version-bumps.md)). If it fails (the API down, the repo in another format)
-the `&&` stops there and nothing is applied with the repo half-edited.
+**The order inside `update` is load-bearing.** `vendored-bump` runs BEFORE `nix flake update`
+because the `vscode-tarball` input has a versioned URL, so it is a bump that raises the number
+(see [version-bumps](version-bumps.md)). If one fails (the API down, the repo in another format)
+the run stops there and nothing is applied with the repo half-edited.
+
+**`update` names no package.** `vendored-bump` is called by store path, and the list of what it
+bumps is derived from the packages themselves, so adding one never edits this file.
 
 `vscode-extensions-dump` goes LAST and touches no input: it rewrites the mirror of the installed
 extensions so the repo shows in the diff which extension came or went. Its trigger is `update` and

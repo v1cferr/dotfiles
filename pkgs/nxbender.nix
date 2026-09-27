@@ -49,6 +49,10 @@ python3Packages.buildPythonApplication {
     wrapProgram $out/bin/nxBender --prefix PATH : ${lib.makeBinPath [ ppp ]}
   '';
 
+  # buildPythonApplication brings a default nix-update, and vendored-bump must NOT run it: the
+  # src is a pinned commit carrying 3 patches, so a bump is a human reading the diff.
+  passthru.updateScript = null;
+
   meta = {
     description = "FOSS client for SonicWall/Dell NetExtender SSL VPNs";
     homepage = "https://github.com/abrasive/nxBender";

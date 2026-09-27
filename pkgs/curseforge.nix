@@ -4,6 +4,7 @@
   lib,
   appimageTools,
   fetchurl,
+  curseforge-bump,
 }:
 
 let
@@ -38,6 +39,9 @@ appimageTools.wrapAppImage {
     # than electing a single size: the icon comes out sharp both in the bar and in the menu.
     cp -r ${appimageContents}/usr/share/icons $out/share/
   '';
+
+  # What vendored-bump runs on `update`: the .deb's control file says whether anything changed.
+  passthru.updateScript = curseforge-bump;
 
   meta = {
     description = "Official CurseForge app: modpack library and updates (Minecraft/WoW)";

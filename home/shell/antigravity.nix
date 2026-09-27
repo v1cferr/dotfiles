@@ -12,7 +12,6 @@ let
   # Rule 19: everything this module reaches for, named once. deadnix fails the build on an
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
-    antigravity-bump
     antigravity-cli
     jq
     writeText
@@ -27,10 +26,7 @@ let
   };
 in
 {
-  home.packages = [
-    antigravity-cli
-    antigravity-bump # the `update` alias calls it BY NAME, so it has to be on the PATH
-  ];
+  home.packages = [ antigravity-cli ];
 
   # A MERGE and never a generated file: `agy` rewrites this path itself, so Nix owns the keys it
   # declares and leaves the rest alone (rule 14). Idempotent, so every rebuild reasserts it.

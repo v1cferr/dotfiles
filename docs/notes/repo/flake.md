@@ -87,8 +87,8 @@ repeated fetches. A versioned artifact is immutable; a pointer is not.
 
 **The price** of a fixed URL is that `nix flake update` does not bring a new version on its own. Who
 pays it is `vscode-bump` since 06/08/2026: it queries the official API, rewrites the number on that
-line and runs `nix flake update vscode-tarball`. It is the first step of the `update`/`upgrade`
-aliases, so "always on the latest stable" happens at rebuild time, with no manual edit and without
+line and runs `nix flake update vscode-tarball`. It runs inside `vendored-bump`, the first step of
+the `update`/`upgrade` aliases, so "always on the latest stable" happens at rebuild time, with no manual edit and without
 breaking rule 13, since the hash is still pinned in the lock. What changed is WHO updates it.
 Bumping by hand still works: edit the line plus `nix flake update vscode-tarball`.
 

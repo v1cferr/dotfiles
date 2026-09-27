@@ -158,15 +158,19 @@
 
       # It swaps only the SRC, keeping unstable's RECIPE, because generic.nix is version-gated and the
       # 26.05 one is 12 versions behind. Why readFile and sourceRoot: docs/notes/repo/flake.md
-      overlayVscodeTarball = _: prev: {
+      overlayVscodeTarball = final: prev: {
         unstable = prev.unstable // {
-          vscode = prev.unstable.vscode.overrideAttrs (_: {
+          vscode = prev.unstable.vscode.overrideAttrs (old: {
             inherit
               (builtins.fromJSON (builtins.readFile "${inputs.vscode-tarball}/resources/app/package.json"))
               version
               ;
             src = inputs.vscode-tarball;
             sourceRoot = "source";
+            # OURS replaces nixpkgs' update-vscode.sh, which edits nixpkgs and not this input.
+            passthru = old.passthru // {
+              updateScript = final.vscode-bump;
+            };
           });
         };
       };
@@ -242,7 +246,7 @@
 
       # LOCAL packages in ./pkgs, exposed as `pkgs.<name>`; callPackage injects the deps. Most are
       # outside nixpkgs, `codex` REPLACES the one there (the note says why).
-      overlayLocalPkgs = final: _: {
+      localPkgs = final: {
         claude-code-discord-status = final.callPackage ./pkgs/claude-code-discord-status.nix { };
         azure-mcp = final.callPackage ./pkgs/azure-mcp.nix { }; # Azure MCP Server (`azmcp`), only in claude-fai
         nxbender = final.callPackage ./pkgs/nxbender.nix { }; # FOSS client for the SonicWall VPN (FAI)
@@ -266,6 +270,21 @@
         dead-config = final.callPackage ./pkgs/dead-config.nix { }; # it fails on declared-and-unused
         router-ssot = final.callPackage ./pkgs/router-ssot.nix { }; # it fails when the router's mirror diverges
       };
+      overlayLocalPkgs =
+        final: _:
+        localPkgs final
+        // {
+          # Every package carrying a passthru.updateScript, DERIVED: a new one never touches `update`.
+          vendored-bump = final.callPackage ./pkgs/vendored-bump.nix {
+            packages =
+              nixpkgs.lib.filterAttrs (_: p: p.updateScript or null != null) (
+                nixpkgs.lib.getAttrs (builtins.attrNames (localPkgs final)) final
+              )
+              // {
+                inherit (final.unstable) vscode; # not a ./pkgs package, but its src bumps the same way
+              };
+          };
+        };
 
       # Claude Desktop: it forces the secret backend, since Electron does not recognize "Hyprland" and
       # falls back to plaintext, so the login is asked EVERY time. Only the fixpoint one is wrapped.
@@ -345,6 +364,7 @@
             antigravity-bump # ./pkgs: same shellcheck at build time
             basic-memory # ./pkgs: building it IS the proof that our uv.lock still resolves
             curseforge-bump # ./pkgs: same, shellcheck at build time
+            vendored-bump # ./pkgs: same, and building it proves every updateScript still resolves
             curseforge-fix-perms # ./pkgs: same
             docs-links # ./pkgs: the build IS the script's flake8; the CHECK below runs it
             docs-site # ./pkgs: the static export, so the CHECK below proves the site builds

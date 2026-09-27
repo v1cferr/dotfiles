@@ -8,9 +8,6 @@ in
 {
   home.packages = [
     pkgs.curseforge # the official AppImage, repackaged (./pkgs), unfree
-    # Recomputes version+hash of pkgs/curseforge.nix. On the PATH because the `update` alias calls
-    # it by name, the same arrangement as vscode-bump.
-    pkgs.curseforge-bump
     # Gives back the `+x` on what the app unpacks. On the PATH because the breaking download can
     # happen mid-session, when the activation below has already run.
     pkgs.curseforge-fix-perms

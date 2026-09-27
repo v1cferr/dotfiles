@@ -8,7 +8,6 @@ let
   inherit (pkgs)
     coreutils
     unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
-    vscode-bump
     writeShellApplication
     ;
 
@@ -57,9 +56,7 @@ in
     # The unstable recipe with the SRC swapped for the official tarball (see flake.nix), so it is
     # always the latest stable. The password-store override: Electron misdetects the keyring.
     code
-    # It bumps the vscode-tarball input to the latest stable.
-    vscode-bump
-    # Both are on the PATH because the `update` alias calls them BY NAME; they are not services.
+    # On the PATH because the `update` alias calls it BY NAME; it is not a service.
     extensionsDump
   ];
 

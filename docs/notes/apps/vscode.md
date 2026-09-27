@@ -89,8 +89,10 @@ ALWAYS the latest stable.
 `--password-store=gnome-libsecret` because under Hyprland Electron does not autodetect the secret
 backend and shows "couldn't identify OS keyring".
 
-`vscode-bump` and `vscode-extensions-dump` are on the PATH because the `update` alias
-(`home/shell/zsh.nix`) calls them by NAME, and they are not services.
+`vscode-extensions-dump` is on the PATH because the `update` alias (`home/shell/zsh.nix`) calls
+it by NAME, and it is not a service. `vscode-bump` is NOT: it is the `passthru.updateScript` the
+overlay puts on the package, and `vendored-bump` runs it by store path
+([version-bumps](../repo/version-bumps.md)).
 
 ## `mcp.json`
 

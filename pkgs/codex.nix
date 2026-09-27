@@ -7,6 +7,7 @@
   makeBinaryWrapper,
   ripgrep,
   bubblewrap,
+  codex-bump,
 }:
 
 let
@@ -51,6 +52,9 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   postFixup = ''
     wrapProgram $out/bin/codex --inherit-argv0 --prefix PATH : ${runtimeDeps}
   '';
+
+  # What vendored-bump runs on `update`: the version, and the hash recomputed from the tarball.
+  passthru.updateScript = codex-bump;
 
   meta = {
     description = "Lightweight coding agent that runs in your terminal (official release binary)";

@@ -1,14 +1,16 @@
-# vscode-bump, curseforge-bump, codex-bump and antigravity-bump
+# vendored-bump and the four scripts it runs
 
-Modules: [`pkgs/vscode-bump.nix`](../../../pkgs/vscode-bump.nix),
+Modules: [`pkgs/vendored-bump.nix`](../../../pkgs/vendored-bump.nix),
+[`pkgs/vscode-bump.nix`](../../../pkgs/vscode-bump.nix),
 [`pkgs/curseforge-bump.nix`](../../../pkgs/curseforge-bump.nix),
 [`pkgs/codex-bump.nix`](../../../pkgs/codex-bump.nix),
 [`pkgs/antigravity-bump.nix`](../../../pkgs/antigravity-bump.nix)
 
 Four scripts that keep a vendored binary on its latest version without anybody editing a hash by
-hand. They share a reason and differ in how they ask "did it change?", so they live on one page.
+hand, and one runner that finds them. They share a reason and differ in how they ask "did it
+change?", so they live on one page.
 
-## The structural reason all three exist
+## The structural reason they exist
 
 Rule 13 pins the dependency universe: no fetch without a hash, no implicit "latest". That rule has
 a consequence people miss: **a src with a locked hash never updates itself.** What exists is not
@@ -17,9 +19,42 @@ an "input that follows upstream", it is an AUTOMATED BUMP.
 All four run from the `update`/`upgrade` alias
 ([`home/shell/zsh.nix`](../../../home/shell/zsh.nix)), before `nix flake update`, so "always on
 the latest" happens at rebuild time. All four are a NO-OP when already current, because they run
-on every `upgrade`. The alias calls them BY NAME, so each one is installed next to the thing it
-bumps and not only exposed as a flake package: a script that is not on the PATH breaks the whole
-chain at its `&&`.
+on every `upgrade`.
+
+## One runner, and the list is DERIVED
+
+Each script is the `passthru.updateScript` of the package it bumps, the nixpkgs convention for "this
+package knows how to update itself". For VS Code, which is not a `./pkgs` package, the overlay that
+swaps its src sets it, replacing nixpkgs' `update-vscode.sh` (that one edits nixpkgs, not this
+input). `vendored-bump` is built from `overlayLocalPkgs` in [`flake.nix`](../../../flake.nix):
+every local package whose `updateScript` is not null, plus VS Code, each called by STORE PATH.
+
+Until 26/09/2026 the alias listed the four by NAME, which cost two things. Adding a package meant
+editing a 250-character string in `zsh.nix`, and each script had to be on the PATH, so one that was
+only a flake package broke the chain at its `&&` (`codex-bump: command not found`, 24/08/2026).
+Now a new vendored package bumps by declaring `passthru.updateScript`, and nothing else changes.
+
+The contract differs from nixpkgs' on one point: the runner passes the repo path as `$1`
+(rule 11), where nixpkgs runs the script from its own root. And it only takes the DERIVATION form.
+A list or attrset `updateScript` is a `throw` at eval time, never a silent skip.
+
+**`nxbender` opts out with `updateScript = null`.** `buildPythonApplication` brings a default
+`nix-update` on its own, and its src is a pinned commit carrying 3 patches: a bump there is a human
+reading the diff, not a script.
+
+## Why not a community flake or nvfetcher
+
+Researched on 26/09/2026 (rule 1), and both lost on measurement, not taste:
+
+- **[numtide/llm-agents.nix](https://github.com/numtide/llm-agents.nix)** packages codex and
+  antigravity-cli with a daily CI and a binary cache. At its HEAD that day its `antigravity-cli`
+  was on 1.2.11 while this repo was already on 1.2.12, and its codex is compiled from source with
+  LTO turned off, so it is not the artifact OpenAI ships. Going upstream directly is FASTER here,
+  and it is the third layer of the version strategy anyway.
+- **[nvfetcher](https://github.com/berberman/nvfetcher)** centralizes sources in a TOML, but it
+  hashes by downloading, which throws away the two cheap answers below (the `.deb` range request
+  and the published sha512). It would also add a generated file and a tool to do what 60 lines of
+  shell already do.
 
 ## Where they differ
 

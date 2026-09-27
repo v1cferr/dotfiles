@@ -109,10 +109,11 @@ compiles Codex from Rust, so overriding its `src` would mean recomputing a vendo
 recompiling a 251 MiB binary on a project that tags almost daily. The published artifact is the
 same thing without the wait.
 
-**The bump script is installed next to the package**, and that line is load-bearing: the alias
-calls it by name, so while it was only a flake package the chain died at
-`codex-bump: command not found` and never reached `nix flake update`. Caught on 24/08/2026, five
-days after the package landed, which is five days of an `update` that bumped nothing.
+**The bump script is the package's `passthru.updateScript`**, and `vendored-bump` runs it by store
+path. That retired a failure class: while the alias called it by NAME, being only a flake package
+made the chain die at `codex-bump: command not found` before `nix flake update`. Caught on
+24/08/2026, five days after the package landed, which is five days of an `update` that bumped
+nothing. Since 26/09/2026 there is no PATH entry to forget.
 
 **Take the `-package-` asset, not the bare `codex-` one**, and this is the trap that cost a broken
 session on 19/08/2026. The bare tarball is the entrypoint ALONE, one 251 MiB file, and it looks

@@ -118,3 +118,13 @@ A URL in a code comment is a CITATION, not a reference a reader clicks, and an e
 enough to silence those is precisely the "lint you learn to ignore" that
 [`flake.md`](flake.md) argues against for the two disabled statix rules. If a `.md` ever gains a LAN
 URL, the fix is one `exclude` in a lychee config, not turning the check off.
+
+**A red has to survive three tries, two minutes apart**, in both canary steps. The two reds before
+that rule were both a server having a bad minute: a `522` from phoronix.com on 21/09/2026 (the
+Cloudflare edge timing out on the origin) and a `503` from github.com itself on 27/09/2026, each
+link answering 200 when checked by hand. lychee's own `--max-retries` does NOT cover that:
+MEASURED against a local server that always answers 503, lychee 0.24.1 sent exactly ONE request
+with `--max-retries 4`, so it retries network errors and never a 5xx. Hence the loop in the
+workflow, which reruns the whole check (about 15 s) and fails only on the third red. Accepting
+5xx instead would have been the cheap fix and the wrong one, since a server that is really gone
+answers 5xx too. A link that is dead three times in four minutes is dead.

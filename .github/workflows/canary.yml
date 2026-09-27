@@ -56,9 +56,15 @@ jobs:
         env:
           # github.com is 10 of the links: without a token the runner's shared IP hits the API limit.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # 3 tries, 2 min apart: lychee never retries a 5xx, and both reds so far were a server's
+        # blip (522, 503). A link dead 3 times in 4 minutes is dead: docs/notes/repo/link-checker.md
         run: |
-          nix develop --override-input duo-streak-daemon path:./ci/stub-duo \
-            --command pre-commit run --hook-stage manual lychee --all-files
+          for try in 1 2 3; do
+            nix develop --override-input duo-streak-daemon path:./ci/stub-duo \
+              --command pre-commit run --hook-stage manual lychee --all-files && exit 0
+            [ "$try" -lt 3 ] && echo "::warning::lychee failed, try $try of 3" && sleep 120
+          done
+          exit 1
 
       # THE OTHER HALF, which the step above cannot see: the links from a page to the module it
       # documents only EXIST in the built site, written there by the site's own remark plugin
@@ -75,10 +81,15 @@ jobs:
           repo=$(node -p "require('./docs-site/site.json').repo")
           # THE HTML ONLY. Next.js writes a plain-text RSC payload next to every page, and lychee
           # reads those as prose: a `file://...` inside backticks became a parse ERROR there.
-          nix develop --override-input duo-streak-daemon path:./ci/stub-duo --command \
-            lychee --root-dir "$site" --include "$repo/(blob|tree)/" \
-            --scheme https --scheme http \
-            --max-concurrency 6 --no-progress "$site/**/*.html"
+          # The same 3 tries as the step above, for the same reason.
+          for try in 1 2 3; do
+            nix develop --override-input duo-streak-daemon path:./ci/stub-duo --command \
+              lychee --root-dir "$site" --include "$repo/(blob|tree)/" \
+              --scheme https --scheme http \
+              --max-concurrency 6 --no-progress "$site/**/*.html" && exit 0
+            [ "$try" -lt 3 ] && echo "::warning::lychee failed, try $try of 3" && sleep 120
+          done
+          exit 1
 
   # The WHOLE history, which the pre-commit hook never sees: a `--no-verify` commit, or a rule a
   # newer gitleaks learned. Known findings: .gitleaksignore, and docs/notes/repo/github-settings.md

@@ -1,7 +1,7 @@
 # antigravity-cli
 
-Modules: [`pkgs/antigravity-cli.nix`](../../../pkgs/antigravity-cli.nix),
-[`pkgs/antigravity-bump.nix`](../../../pkgs/antigravity-bump.nix),
+Modules: [`pkgs/antigravity-cli/package.nix`](../../../pkgs/antigravity-cli/package.nix),
+[`pkgs/antigravity-cli/bump.nix`](../../../pkgs/antigravity-cli/bump.nix),
 [`home/shell/antigravity.nix`](../../../home/shell/antigravity.nix)
 
 Google's terminal agent, `agy`. Three decisions: why it is here in place of the Gemini CLI, where

@@ -252,8 +252,7 @@
         nxbender = final.callPackage ./pkgs/nxbender.nix { }; # FOSS client for the SonicWall VPN (FAI)
         vscode-bump = final.callPackage ./pkgs/vscode-bump.nix { }; # bumps vscode-tarball to the latest stable
         codex = final.callPackage ./pkgs/codex/package.nix { }; # OpenAI's CLI, the OFFICIAL release binary
-        antigravity-cli = final.callPackage ./pkgs/antigravity-cli.nix { }; # Google's agent CLI (`agy`)
-        antigravity-bump = final.callPackage ./pkgs/antigravity-bump.nix { }; # version+id+hash of it
+        antigravity-cli = final.callPackage ./pkgs/antigravity-cli/package.nix { }; # Google's agent CLI (`agy`)
         basic-memory = final.callPackage ./pkgs/basic-memory.nix { inherit inputs; }; # `bm`, the MCP memory
         curseforge = final.callPackage ./pkgs/curseforge.nix { }; # official modpack AppImage (unfree)
         curseforge-bump = final.callPackage ./pkgs/curseforge-bump.nix { }; # version+hash of curseforge.nix
@@ -363,7 +362,6 @@
             vscode-bump # ./pkgs: the build IS the script's shellcheck (rule 7)
             codex # ./pkgs: the official binary, so the check proves the fetch and the wrapper
             antigravity-cli # ./pkgs: the official binary, so the check proves the fetch and the patchelf
-            antigravity-bump # ./pkgs: same shellcheck at build time
             basic-memory # ./pkgs: building it IS the proof that our uv.lock still resolves
             curseforge-bump # ./pkgs: same, shellcheck at build time
             vendored-bump # ./pkgs: same, and building it proves every updateScript still resolves

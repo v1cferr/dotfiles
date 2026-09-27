@@ -6,24 +6,18 @@
   fetchurl,
   autoPatchelfHook,
   versionCheckHook,
-  antigravity-bump,
+  callPackage,
 }:
 
 let
-  # An opaque BUILD ID sits next to the version in the URL, and only the manifest knows it.
-  # antigravity-bump rewrites it together with the version and the hash.
-  buildId = "4585245538910208";
+  # version, url and hash: the ONLY file the bump writes. sha512 is what the manifest PUBLISHES.
+  source = lib.importJSON ./source.json;
 in
-stdenvNoCC.mkDerivation (finalAttrs: {
+stdenvNoCC.mkDerivation {
   pname = "antigravity-cli";
-  # From the publisher's `latest` endpoint, which is what the bump asks.
-  version = "1.2.12";
+  inherit (source) version;
 
-  src = fetchurl {
-    url = "https://storage.googleapis.com/antigravity-public/antigravity-cli/${finalAttrs.version}-${buildId}/linux-x64/cli_linux_x64.tar.gz";
-    # sha512 because that is what the manifest PUBLISHES: the bump converts it and downloads nothing.
-    hash = "sha512-hgTFpoymJC2T6uwkt3xWzXHWLWG4MjI8uf0Brrz/8zYM+HXQBmx8SO++I4+zg7DcOy8ktPI954Tad1j8NQCbfA==";
-  };
+  src = fetchurl { inherit (source) url hash; };
 
   # The tarball is ONE file at the root (`antigravity`), so there is no directory to chdir into.
   sourceRoot = ".";
@@ -45,8 +39,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   nativeInstallCheckInputs = [ versionCheckHook ];
   doInstallCheck = true;
 
-  # What vendored-bump runs on `update`: version, build id and the hash the manifest publishes.
-  passthru.updateScript = antigravity-bump;
+  # What vendored-bump runs on `update`.
+  passthru.updateScript = callPackage ./bump.nix { };
 
   meta = {
     description = "Google's agent CLI, the successor to Gemini CLI (official release binary)";
@@ -57,4 +51,4 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     platforms = [ "x86_64-linux" ];
     mainProgram = "agy";
   };
-})
+}

@@ -5,7 +5,7 @@ Modules: [`pkgs/vendored-bump.nix`](../../../pkgs/vendored-bump.nix),
 [`pkgs/vscode-bump.nix`](../../../pkgs/vscode-bump.nix),
 [`pkgs/curseforge-bump.nix`](../../../pkgs/curseforge-bump.nix),
 [`pkgs/codex/bump.nix`](../../../pkgs/codex/bump.nix),
-[`pkgs/antigravity-bump.nix`](../../../pkgs/antigravity-bump.nix)
+[`pkgs/antigravity-cli/bump.nix`](../../../pkgs/antigravity-cli/bump.nix)
 
 Four scripts that keep a vendored binary on its latest version without anybody editing a hash by
 hand, and one runner that finds them. They share a reason and differ in how they ask "did it
@@ -154,7 +154,7 @@ SRI hash and the manifest speaks base16, so the conversion is arithmetic:
 nix hash convert --hash-algo sha512 --from base16 --to sri "$sha512"
 ```
 
-That is why [`pkgs/antigravity-cli.nix`](../../../pkgs/antigravity-cli.nix) pins a `sha512-` hash
+That is why [`pkgs/antigravity-cli/package.nix`](../../../pkgs/antigravity-cli/package.nix) pins a `sha512-` hash
 where the other two pin `sha256-`: taking the algorithm they publish is what makes the 56 MiB
 download unnecessary. The fetch still verifies it, so a manifest that lied would fail the build
 instead of installing something else.

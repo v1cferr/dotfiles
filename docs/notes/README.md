@@ -158,3 +158,4 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [prose-style](repo/prose-style.md) | rule 17's bans, and what counts as a literal instead of prose |
 | [vm-boot](repo/vm-boot.md) | whether this config still boots on a machine that is not this one |
 | [site](repo/site.md) | how docs/ becomes a site, and why the tree did not move to match it |
+| [github-settings](repo/github-settings.md) | what protects the repo on GitHub, outside git |

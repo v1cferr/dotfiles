@@ -80,6 +80,40 @@ jobs:
             --scheme https --scheme http \
             --max-concurrency 6 --no-progress "$site/**/*.html"
 
+  # A ruleset disabled for an emergency and never re-enabled fails SILENTLY, so each week this diffs
+  # GitHub against .github/rulesets/: docs/notes/repo/github-settings.md
+  rulesets:
+    name: the live rulesets match the declared ones
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      # Matched by NAME, the file's own key, so no ruleset id has a second owner. bypass_actors is
+      # left out: a read-only token gets it as null.
+      - name: diff each declared ruleset against GitHub
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          fields='{name, target, enforcement, conditions, rules}'
+          status=0
+          for file in .github/rulesets/*.json; do
+            name=$(jq -r .name "$file")
+            id=$(gh api "repos/$GITHUB_REPOSITORY/rulesets" --jq ".[] | select(.name == \"$name\") | .id")
+            if [ -z "$id" ]; then
+              echo "::error file=$file::ruleset '$name' does not exist on GitHub"
+              status=1
+              continue
+            fi
+            if ! diff -u <(jq -S "$fields" "$file") \
+              <(gh api "repos/$GITHUB_REPOSITORY/rulesets/$id" | jq -S "$fields"); then
+              echo "::error file=$file::ruleset '$name' drifted from the declared file"
+              status=1
+            fi
+          done
+          exit "$status"
+
   # THE ALERT: this workflow asks a question nobody is sitting there waiting for, and its answer
   # only changes on a Monday. A red run that lands in an email is a red run I find out about a week
   # later, which turns a warning about the future into a surprise in the present. ntfy is the path
@@ -91,6 +125,7 @@ jobs:
     needs:
       - inputs
       - links
+      - rulesets
     if: failure()
     runs-on: ubuntu-latest
     # It reads nothing and writes nothing: the token has no business existing in this job.
@@ -104,6 +139,7 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           INPUTS: ${{ needs.inputs.result }}
           LINKS: ${{ needs.links.result }}
+          RULESETS: ${{ needs.rulesets.result }}
         run: |
           # No topic provisioned sends nothing and says so, instead of failing: the run is already
           # red, and a second red mark that only means "the warning did not go out" reads as a
@@ -119,7 +155,8 @@ jobs:
           # WHICH job died is the whole message, because the two mean opposite things: `inputs` is
           # "the next update would break the config" and `links` is "a pointer in docs/ rotted".
           message="inputs: $INPUTS
-          links: $LINKS"
+          links: $LINKS
+          rulesets: $RULESETS"
 
           # priority 4 (high) on purpose: at 3 the phone stays quiet, and a quiet alert is the
           # email problem again with more steps.

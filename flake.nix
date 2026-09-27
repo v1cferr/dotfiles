@@ -111,13 +111,6 @@
       inputs.uv2nix.follows = "uv2nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    # VS Code from the OFFICIAL tarball at a FIXED, VERSIONED url: `/latest/` is a POINTER and broke
-    # the eval on every release. What bumps it is vscode-bump, on `update`: docs/notes/repo/flake.md
-    vscode-tarball = {
-      url = "tarball+https://update.code.visualstudio.com/1.139.1/linux-x64/stable";
-      flake = false;
-    };
   };
 
   outputs =
@@ -156,22 +149,14 @@
         };
       };
 
-      # It swaps only the SRC, keeping unstable's RECIPE, because generic.nix is version-gated and the
-      # 26.05 one is 12 versions behind. Why readFile and sourceRoot: docs/notes/repo/flake.md
-      overlayVscodeTarball = final: prev: {
+      # unstable's RECIPE with the SRC from pkgs/vscode. `import` and not callPackage, so the result
+      # keeps nixpkgs' `.override` (home/apps/vscode.nix passes commandLineArgs through it).
+      overlayVscode = final: prev: {
         unstable = prev.unstable // {
-          vscode = prev.unstable.vscode.overrideAttrs (old: {
-            inherit
-              (builtins.fromJSON (builtins.readFile "${inputs.vscode-tarball}/resources/app/package.json"))
-              version
-              ;
-            src = inputs.vscode-tarball;
-            sourceRoot = "source";
-            # OURS replaces nixpkgs' update-vscode.sh, which edits nixpkgs and not this input.
-            passthru = old.passthru // {
-              updateScript = final.vscode-bump;
-            };
-          });
+          vscode = import ./pkgs/vscode/package.nix {
+            inherit (final) lib fetchurl callPackage;
+            inherit (prev.unstable) vscode;
+          };
         };
       };
 
@@ -250,7 +235,6 @@
         claude-code-discord-status = final.callPackage ./pkgs/claude-code-discord-status.nix { };
         azure-mcp = final.callPackage ./pkgs/azure-mcp.nix { }; # Azure MCP Server (`azmcp`), only in claude-fai
         nxbender = final.callPackage ./pkgs/nxbender.nix { }; # FOSS client for the SonicWall VPN (FAI)
-        vscode-bump = final.callPackage ./pkgs/vscode-bump.nix { }; # bumps vscode-tarball to the latest stable
         codex = final.callPackage ./pkgs/codex/package.nix { }; # OpenAI's CLI, the OFFICIAL release binary
         antigravity-cli = final.callPackage ./pkgs/antigravity-cli/package.nix { }; # Google's agent CLI (`agy`)
         basic-memory = final.callPackage ./pkgs/basic-memory.nix { inherit inputs; }; # `bm`, the MCP memory
@@ -309,7 +293,7 @@
         {
           nixpkgs.overlays = [
             overlayUnstable
-            overlayVscodeTarball # AFTER overlayUnstable: it patches that `unstable.vscode`
+            overlayVscode # AFTER overlayUnstable: it patches that `unstable.vscode`
             overlaySpotifyNoZygote # same: bakes in the flag without which Spotify does not open
             overlayBtopXe # temporary: Intel Xe GPU (Arc B580) until PR #1457 merges
             overlayOpenrgbArc # temporary: the Arc B580's RGB, until the merge requests land
@@ -358,7 +342,6 @@
             claude-code-discord-status # ./pkgs: the Rich Presence daemon
             nxbender # ./pkgs: the SonicWall VPN client (3 patches on top of upstream)
             claude-desktop # someone else's flake + the keyring wrapper from here
-            vscode-bump # ./pkgs: the build IS the script's shellcheck (rule 7)
             codex # ./pkgs: the official binary, so the check proves the fetch and the wrapper
             antigravity-cli # ./pkgs: the official binary, so the check proves the fetch and the patchelf
             basic-memory # ./pkgs: building it IS the proof that our uv.lock still resolves

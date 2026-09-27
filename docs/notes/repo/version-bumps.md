@@ -1,15 +1,15 @@
-# vendored-bump and the four scripts it runs
+# vendored-bump and the vendored package layout
 
 Modules: [`pkgs/vendored-bump.nix`](../../../pkgs/vendored-bump.nix),
 [`pkgs/lib/mk-vendored-bump.nix`](../../../pkgs/lib/mk-vendored-bump.nix),
-[`pkgs/vscode-bump.nix`](../../../pkgs/vscode-bump.nix),
+[`pkgs/vscode/bump.nix`](../../../pkgs/vscode/bump.nix),
 [`pkgs/curseforge/bump.nix`](../../../pkgs/curseforge/bump.nix),
 [`pkgs/codex/bump.nix`](../../../pkgs/codex/bump.nix),
 [`pkgs/antigravity-cli/bump.nix`](../../../pkgs/antigravity-cli/bump.nix)
 
-Four scripts that keep a vendored binary on its latest version without anybody editing a hash by
-hand, and one runner that finds them. They share a reason and differ in how they ask "did it
-change?", so they live on one page.
+Every package that is in neither nixpkgs nor a flake follows ONE layout, and one runner keeps all
+of them on upstream's latest without anybody editing a hash by hand. They share a reason and differ
+only in how they ask "did it change?", so they live on one page.
 
 ## The structural reason they exist
 
@@ -24,11 +24,11 @@ on every `upgrade`.
 
 ## One runner, and the list is DERIVED
 
-Each script is the `passthru.updateScript` of the package it bumps, the nixpkgs convention for "this
-package knows how to update itself". For VS Code, which is not a `./pkgs` package, the overlay that
-swaps its src sets it, replacing nixpkgs' `update-vscode.sh` (that one edits nixpkgs, not this
-input). `vendored-bump` is built from `overlayLocalPkgs` in [`flake.nix`](../../../flake.nix):
-every local package whose `updateScript` is not null, plus VS Code, each called by STORE PATH.
+Each bump is the `passthru.updateScript` of the package it bumps, the nixpkgs convention for "this
+package knows how to update itself". VS Code's replaces nixpkgs' `update-vscode.sh`, which edits
+nixpkgs and not this repo. `vendored-bump` is built from `overlayLocalPkgs` in
+[`flake.nix`](../../../flake.nix): every local package whose `updateScript` is not null, plus VS
+Code (an override of unstable's, so not in `localPkgs`), each called by STORE PATH.
 
 Until 26/09/2026 the alias listed the four by NAME, which cost two things. Adding a package meant
 editing a 250-character string in `zsh.nix`, and each script had to be on the PATH, so one that was
@@ -87,92 +87,59 @@ Researched on 26/09/2026 (rule 1), and both lost on measurement, not taste:
 
 ## Where they differ
 
-| | vscode-bump | curseforge-bump | codex-bump | antigravity-bump |
+Only in the two answers, which is the point of the layout:
+
+| | vscode | curseforge | codex | antigravity-cli |
 | --- | --- | --- | --- | --- |
-| Upstream URL | versioned (`/1.133.0/linux-x64/stable`) | a POINTER (`curseforge-latest-linux.AppImage`) | versioned (`/rust-v0.148.0/…musl.tar.gz`) | versioned, plus an opaque build id |
-| What the bump changes | only the version number | version **and** the recomputed hash | version **and** the recomputed hash | version, build id **and** the PUBLISHED hash |
-| How it learns the version | the official update API, `productVersion` | the `control` file of the `.deb` of the same release | the redirect of `/releases/latest` | a `latest` file holding the bare version |
+| Upstream URL | versioned (`/1.139.1/linux-x64/stable`) | a POINTER (`curseforge-latest-linux.AppImage`) | versioned (`/rust-v0.157.1/…musl.tar.gz`) | versioned, plus an opaque build id |
+| `latest` asks | the official update API, `productVersion` | the `control` file of the `.deb` | the redirect of `/releases/latest` | a `latest` file holding the bare version |
+| `resolve` hashes by | `sri`: the API publishes the sha256 | `prefetch`: 139 MiB, only on a new version | `prefetch`: 93 MiB, only on a new tag | `sri`: the manifest publishes the sha512 |
 
-**VS Code.** The input URL is versioned on purpose. `/latest/` is a pointer, so on every release
-the pinned narHash stops matching and the flake no longer evaluates on a clean machine. That
-broke the CI on 05/08/2026:
-
-```text
-error: mismatch in field 'narHash' of input '.../latest/linux-x64/stable'
-       lock: sha256-2Fzf... | served: sha256-PLpT...
-```
-
-It passed locally only because the old tarball was already in the store. Measured before
-switching: `/1.131.0/` returns exactly the `sha256-2Fzf...` that was in the lock and `/1.132.0/`
-returns `sha256-PLpT...`, both stable across repeated fetches. A versioned artifact is immutable;
-a pointer is not.
-
-The script reads `productVersion` and NOT `version` from the API, because the second one is the
-commit hash (`df53daa…`), not the `1.133.0` that goes in the URL.
+**VS Code.** The URL is versioned because `/latest/` is a pointer that broke the eval on every
+release ([flake](flake.md) has the CI failure). `latest` reads `productVersion` and NOT `version`
+from the API, because the second one is the commit hash (`df53daa…`). The API response is kept in
+`$tmp`, so `resolve` converts the `sha256hash` of the SAME answer and a release landing between the
+two questions cannot pair one version with another's hash.
 
 **CurseForge.** Overwolf publishes no versioned URL, so the hash is the only anchor and it has to
-be RECOMPUTED, not just swapped. Downloading 139 MiB on every `update` to find out nothing changed
-would be absurd, and there is no version API, so what answers "did it change?" is a **256 KiB
-range request on the `.deb`**: the `control` file sits in the first few KiB and carries the
-version. The AppImage is only downloaded when the answer is yes.
+be RECOMPUTED. Downloading 139 MiB on every `update` to find out nothing changed would be absurd,
+and there is no version API, so what answers "did it change?" is a **256 KiB range request on the
+`.deb`**: the `control` file sits in the first few KiB and carries the version. The AppImage is
+only downloaded when the answer is yes.
 
 Measured on 14/08/2026: both artifacts are published at the same instant and carry the same
 release (`1.316.0~37372-37372` in the `.deb`, `1.316.0-37372.37372` in `X-AppImage-Version`); the
-strings differ only in formatting, hence the normalization in the script. If they ever get out of
-sync, the worst case is downloading the AppImage for nothing, since the script compares and
-rewrites, it does not break.
+strings differ only in formatting, hence the normalization. If they ever get out of sync, the worst
+case is downloading the AppImage for nothing: the skeleton compares and rewrites, it does not break.
 
 One shell trap in there: the control member goes through a FILE and not a pipe, because GNU tar
 only autodetects the compression when it can seek, so `ar p … | tar -xO` dies with
-`Archive is compressed. Use -J option`. From a file it works it out on its own, which also lets
-the script survive the day Overwolf swaps `.xz` for `.zst`.
+`Archive is compressed. Use -J option`. From a file it works it out on its own, which also survives
+the day Overwolf swaps `.xz` for `.zst`.
 
 **Codex.** A GitHub release is the easy case of both halves: the asset URL is versioned, so it is
-immutable like VS Code's, and the question "did it change?" costs ONE HEAD request, because
-`/releases/latest` REDIRECTS to the tag:
+immutable, and "did it change?" costs ONE HEAD request, because `/releases/latest` REDIRECTS to the
+tag (`…/releases/tag/rust-v0.157.1`). The REST API would answer the same and spend one of the 60
+anonymous calls per hour. The tag carries a `rust-v` prefix because that repo releases more than
+one artifact line; a tag of another shape leaves the whole URL behind, which the skeleton's
+plausibility check rejects. Prereleases never reach it, since `/releases/latest` skips them.
 
-```text
-https://github.com/openai/codex/releases/latest
-  -> https://github.com/openai/codex/releases/tag/rust-v0.148.0
-```
-
-The REST API would answer the same thing and spend one of the 60 anonymous calls per hour, and it
-would drag `jq` in to read the JSON. The redirect needs neither. Only when the tag differs does
-the script pull the 93 MiB tarball to compute the hash.
-
-The tag carries a `rust-v` prefix because that repo releases more than one artifact line, so the
-version is `''${tag##*/rust-v}`. When a tag does NOT match that shape the stripping is a no-op and
-the whole URL stays in the variable, which is what the plausibility `case` catches: slashes and
-letters are not a version. Prereleases never reach it, since `/releases/latest` skips them, and
-`0.149.0-alpha.2` existed the day this was written.
-
-**Antigravity.** The only one that never downloads the artifact, because Google publishes a
-`manifest.json` per release with the URL and the **sha512 of every platform**. `fetchurl` takes an
-SRI hash and the manifest speaks base16, so the conversion is arithmetic:
-
-```bash
-nix hash convert --hash-algo sha512 --from base16 --to sri "$sha512"
-```
-
-That is why [`pkgs/antigravity-cli/package.nix`](../../../pkgs/antigravity-cli/package.nix) pins a `sha512-` hash
-where the other two pin `sha256-`: taking the algorithm they publish is what makes the 56 MiB
-download unnecessary. The fetch still verifies it, so a manifest that lied would fail the build
-instead of installing something else.
-
-"Did it change?" is cheaper still: `/latest` is a text file holding `1.1.20` and nothing else.
-
-The third field is what makes this one different from codex. The download URL is
-`/<version>-<build id>/linux-x64/…`, and that build id (`6563996145418240`) is opaque: it is not
-derivable from the version, and only the manifest knows it. So the script rewrites THREE values,
-and it reads the id back out of the URL the manifest gave it rather than guessing a format.
+**Antigravity.** Google publishes a `manifest.json` per release with the URL and the **sha512 of
+every platform**, which is why its `source.json` pins a `sha512-` hash where the others pin
+`sha256-`: taking the algorithm they publish is what makes the 56 MiB download unnecessary. The
+fetch still verifies it, so a manifest that lied would fail the build instead of installing
+something else. The URL carries an opaque build id (`/<version>-<build id>/linux-x64/…`) that only
+the manifest knows, and storing the url whole is what keeps it from being a field of its own.
 
 ## Shared conventions
 
 - The repo path comes as an ARGUMENT, never a literal in the script (rule 11).
 - `nix` does NOT go into `runtimeInputs`: they use the system's, so as not to drag a second Nix
   into the store with a version possibly diverging from the daemon's.
-- They leave the repo DIRTY on purpose. The commit is the user's, atomic, and the lock goes in the
-  same commit as the change that required it (rule 13).
+- They leave the repo DIRTY on purpose. The commit is the user's and atomic, one per package
+  (`chore(<name>): <old> -> <new>`), which is what each bump prints.
+- A round trip is the test: set `source.json` to an older version and a fake hash, run the bump, and
+  the file must come back byte-identical to the committed one. All four passed it on 26/09/2026.
 
 ## nxBender's three patches
 

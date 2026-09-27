@@ -28,10 +28,9 @@ As aliases, `upgrade -vvv` died with `zsh: parse error near '-vvv'` (23/09/2026)
 text substitution, so the argument landed after the closing `}` of the hyprctl group. A function
 receives it as `$@`, and `upgrade` forwards it to `rebuild` only; `update` takes none.
 
-**The order inside `update` is load-bearing.** `vendored-bump` runs BEFORE `nix flake update`
-because the `vscode-tarball` input has a versioned URL, so it is a bump that raises the number
-(see [version-bumps](version-bumps.md)). If one fails (the API down, the repo in another format)
-the run stops there and nothing is applied with the repo half-edited.
+**The bumps run BEFORE `nix flake update`**, so a failing one (the API down, an answer in another
+format) stops the run before anything else moves, and the repo is never applied half-edited (see
+[version-bumps](version-bumps.md)).
 
 **`update` names no package.** `vendored-bump` is called by store path, and the list of what it
 bumps is derived from the packages themselves, so adding one never edits this file.

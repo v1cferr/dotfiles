@@ -81,10 +81,10 @@ Two guards in the script:
 
 ## The package
 
-The unstable recipe with the SRC swapped for the official tarball (the `vscode-tarball` input plus
-`overlayVscodeTarball` in `flake.nix`), ahead of whatever nixpkgs bumped to. The input's URL is
-versioned, and what raises the number is `vscode-bump`, called by `update`/`upgrade`: in practice,
-ALWAYS the latest stable.
+The unstable recipe with the SRC swapped for the official tarball
+([`pkgs/vscode/`](../../../pkgs/vscode/package.nix) plus `overlayVscode` in `flake.nix`), ahead of
+whatever nixpkgs bumped to. The URL is versioned, and what raises the number is `vscode-bump`,
+run by `update`/`upgrade`: in practice, ALWAYS the latest stable.
 
 `--password-store=gnome-libsecret` because under Hyprland Electron does not autodetect the secret
 backend and shows "couldn't identify OS keyring".

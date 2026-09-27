@@ -57,17 +57,13 @@ binary and has been idle since nov/2025; and `heytcass/claude-for-linux`, which 
 macOS DMG and has 6 stars against 77 issues. Upstream CI bumps version and hash on its own, so "the
 latest version" is `nix flake update claude-desktop`.
 
-### vscode-tarball, and why the URL is versioned
+### VS Code, and why the URL is versioned
 
 VS Code from the OFFICIAL stable-channel tarball, at a FIXED version. It exists because nixpkgs
 does not serve: the bump there is human or bot and runs 3 to 14 days behind, and it sometimes SKIPS
 a release (1.125 to 1.127, 1.127 to 1.129.1 in jul/26). The cause is structural: the VS Code
-auto-updater does not run with a read-only store, so the version is literally whatever is in the
-lock. This is NOT Insiders.
-
-**The name**: it was `vscode-latest` until 05/08/2026, and the name turned into a lie the minute the
-URL was pinned, since "latest" promised an automatic tracking that no longer exists. `-tarball` says
-what it IS, and explains the `flake = false`, without promising a version.
+auto-updater does not run with a read-only store, so the version is literally whatever is pinned.
+This is NOT Insiders.
 
 **A VERSIONED URL and not `/latest/`**, changed on 05/08/2026 because the CI went RED:
 
@@ -79,18 +75,17 @@ error: mismatch in field 'narHash' of input '.../latest/linux-x64/stable'
 `/latest/` is a POINTER. 1.132.0 shipped, the pointer moved, and the pinned narHash (1.131.0's)
 stopped matching. Here it passed because the old tarball was already in the store; on a clean
 machine (CI, a fresh clone, a reinstall) the flake did not evaluate anymore. **The hole in rule 13
-was not a 2032 risk, it broke on every VS Code release.**
+was not a 2032 risk, it broke on every VS Code release.** A versioned artifact is immutable; a
+pointer is not.
 
-Measured before switching, which is what proves the fix: `/1.131.0/` returns exactly the
-`sha256-2Fzf...` that was in the lock and `/1.132.0/` returns `sha256-PLpT...`, both stable across
-repeated fetches. A versioned artifact is immutable; a pointer is not.
-
-**The price** of a fixed URL is that `nix flake update` does not bring a new version on its own. Who
-pays it is `vscode-bump` since 06/08/2026: it queries the official API, rewrites the number on that
-line and runs `nix flake update vscode-tarball`. It runs inside `vendored-bump`, the first step of
-the `update`/`upgrade` aliases, so "always on the latest stable" happens at rebuild time, with no manual edit and without
-breaking rule 13, since the hash is still pinned in the lock. What changed is WHO updates it.
-Bumping by hand still works: edit the line plus `nix flake update vscode-tarball`.
+**It was a flake input (`vscode-tarball`) until 26/09/2026**, and it is now a vendored package like
+the others ([`pkgs/vscode/`](../../../pkgs/vscode/package.nix), see
+[version-bumps](version-bumps.md)). The input needed `readFile` on the unpacked `package.json` for
+the version and a `sourceRoot` for the tree the flake fetcher strips, and its bump had to edit
+`flake.nix` with `sed` and then run `nix flake update` on it. A `fetchurl` with the hash in
+`source.json` is what nixpkgs itself does for this package, so both workarounds went away. The
+update API publishes the tarball's sha256 (measured identical to a download on 26/09/2026), so the
+bump downloads nothing either.
 
 ## The unstable instance, and why it is hoisted
 
@@ -138,10 +133,9 @@ version-gated logic (`versionAtLeast vscodeVersion "1.129.0"`), so patching a fr
 minimal delta; over the 26.05 recipe (which was 1.119) a 12-version jump would go through branches
 that do not exist.
 
-Two details: `version` is read from the `package.json` of the tarball itself, and since the input is
-already a store path at eval time that is a plain `readFile`, so no IFD and no second hash to
-maintain. And `sourceRoot` is set because the flake tarball fetcher STRIPS the top-level dir
-(`VSCode-linux-x64`), unlike the nixpkgs `fetchurl`, which uses `sourceRoot = ""`.
+`overlayVscode` calls the package with `import` and NOT `callPackage`. `callPackage` would wrap the
+result in a fresh `.override` that only knows `pkgs/vscode/package.nix`'s own arguments, and
+`home/apps/vscode.nix` passes `commandLineArgs` through `.override`, which has to reach nixpkgs'.
 
 ### btop with Intel Xe support: TEMPORARY, with an expiry date
 
@@ -390,7 +384,7 @@ derivations»: it EVALUATES the host and stops there. Measured before this line,
 "running 1 flake checks..." and the only thing built was pre-commit.
 
 The difference matters because what is fragile here is not evaluation, it is PACKAGING: nxbender's
-3 patches, vscode's `sourceRoot` and the `wrapProgram` over claude-desktop's `.deb` are assumptions
+3 patches, vscode's recipe over a newer tarball and the `wrapProgram` over claude-desktop's `.deb` are assumptions
 about someone else's tree. None of them breaks at eval, they break at BUILD, AFTER a
 `nix flake update`. And `upgrade` is `update && nh os switch`, so the breakage landed in the middle
 of the switch.
@@ -406,8 +400,8 @@ patches can rot.
 (`curseforge-latest-linux.AppImage`, since Overwolf publishes no versioned URL), so on every release
 of theirs the pinned hash stops matching and the check would go RED for something that is not in
 this repo. Same pain as VS Code's `/latest/`, except there is no fixed URL to pick: the remedy is
-`curseforge-bump`, which runs on `update` and DOES enter the check, because its shellcheck is
-stable. Testing the packaging is `nix build .#curseforge`, by hand.
+`curseforge-bump`, which runs on `update` and DOES enter the check (inside `vendored-bump`),
+because its shellcheck is stable. Testing the packaging is `nix build .#curseforge`, by hand.
 
 ## The devShell
 

@@ -63,7 +63,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     inherit pnpm;
     src = manifest;
     fetcherVersion = 3;
-    hash = "sha256-snrVW3R/CFchPbHqNW9NSBiL9bwWFBKeiZ3bsr9CXuA=";
+    hash = "sha256-pzbjOGSFQMWMS9qMM7rt4KvNn2yg77r/v2bUUnxtO+s=";
   };
   # Relative to the source root: the app is a subdirectory, because docs/ is its sibling.
   pnpmRoot = "docs-site";

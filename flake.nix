@@ -250,6 +250,7 @@
         data-syntax = final.callPackage ./pkgs/data-syntax.nix { }; # it fails on a .json/.toml that does not parse
         dead-config = final.callPackage ./pkgs/dead-config.nix { }; # it fails on declared-and-unused
         router-ssot = final.callPackage ./pkgs/router-ssot.nix { }; # it fails when the router's mirror diverges
+        eval-metrics = final.callPackage ./pkgs/eval-metrics.nix { }; # what evaluating each host costs
       };
       overlayLocalPkgs =
         final: _:
@@ -355,6 +356,7 @@
             data-syntax # ./pkgs: same flake8 at build time; the HOOK below runs it
             dead-config # ./pkgs: same, and the CHECK below runs it too
             router-ssot # ./pkgs: same, and the CHECK below runs it too
+            eval-metrics # ./pkgs: same flake8 at build time; the gate WORKFLOW runs it after the check
             curseforge # ./pkgs: the official AppImage (outside the CHECK below, the why is there)
             btop # nixpkgs + the src from PR #1457 (Intel Xe GPU): here so the check COMPILES the fork
             ;

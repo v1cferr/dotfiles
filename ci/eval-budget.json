@@ -1,0 +1,10 @@
+{
+  "lockNodes": 30,
+  "hosts": {
+    "nixos-kingston": {
+      "derivations": 26000,
+      "functionCalls": 16500000,
+      "heapBytes": 3000000000
+    }
+  }
+}

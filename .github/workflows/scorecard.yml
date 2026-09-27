@@ -1,0 +1,36 @@
+# THE SCORE: OpenSSF Scorecard grades the supply chain weekly, SARIF in the Security tab. Which
+# checks stay low on a solo repo, on purpose: docs/notes/repo/github-settings.md
+name: scorecard
+
+on:
+  schedule:
+    - cron: "43 9 * * 1" # Mondays, after the canary, an odd minute to dodge the top-of-hour queue
+  branch_protection_rule: # a ruleset change moves the Branch-Protection check, so re-grade then
+  workflow_dispatch: # it allows running by hand from the Actions tab
+
+# READ-ONLY at the top, and the two write scopes go on the one job that needs them.
+permissions: read-all
+
+jobs:
+  analysis:
+    runs-on: ubuntu-latest
+    # security-events to upload the SARIF, id-token to publish the result to the public API.
+    permissions:
+      security-events: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      # publish_results is what makes the score public (the API and the badge), and it is also
+      # why this job has no `run` step: publishing refuses a workflow that could forge the result.
+      - uses: ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc # v2.4.4
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: results.sarif

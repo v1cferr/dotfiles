@@ -68,3 +68,30 @@ scan on 27/09/2026 read 1419 commits and found exactly these two, both already d
 A new finding means one of two things. A real credential gets ROTATED first, since it is already
 public and rewriting history is not an option (the `history` ruleset exists to forbid it). A false
 positive gets its fingerprint appended here, with its line in the table above.
+
+## OpenSSF Scorecard
+
+[`.github/workflows/scorecard.yml`](../../../.github/workflows/scorecard.yml) grades the repo's
+supply chain every Monday, and again whenever a ruleset changes. The SARIF lands in the Security
+tab and `publish_results` makes the score public, at
+<https://scorecard.dev/viewer/?uri=github.com/v1cferr/dotfiles>. That score is the METRIC for this
+side of the repo: a number with a date, instead of "I think the CI is safe".
+
+**Most of the checks were already paid for** before the workflow existed: actions pinned by hash
+(Pinned-Dependencies), a read-only token by default (Token-Permissions), Dependabot on the actions
+(Dependency-Update-Tool), zizmor on every workflow (Dangerous-Workflow). The `history` ruleset
+feeds Branch-Protection, and [`SECURITY.md`](../../../SECURITY.md) with private vulnerability
+reporting turned on (27/09/2026) feeds Security-Policy.
+
+**Some checks stay low ON PURPOSE**, and chasing them would be theatre:
+
+| Check | Why it stays low |
+| --- | --- |
+| Code-Review | one maintainer pushing straight to `nixos`; nobody else could review |
+| Branch-Protection | partial for the same reason: no required review, no required check |
+| SAST | CodeQL has no Nix analyser; the linters in `nix flake check` are that layer |
+| Fuzzing, Packaging, Signed-Releases, CII-Best-Practices | a machine config, not a released artifact |
+| Contributors | a personal repo |
+
+So the number to watch is the TREND, not the absolute. A drop means something that was paid for
+stopped being true, like a new workflow with a tag instead of a hash, and that is worth a look.

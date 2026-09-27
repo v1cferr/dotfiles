@@ -4,18 +4,16 @@
   lib,
   appimageTools,
   fetchurl,
-  curseforge-bump,
+  callPackage,
 }:
 
 let
+  # version, url and hash: the ONLY file the bump writes. The url is a POINTER, see the note.
+  source = lib.importJSON ./source.json;
   pname = "curseforge";
-  # From the AppImage's `X-AppImage-Version`; curseforge-bump rewrites it.
-  version = "1.321.1-39714";
+  inherit (source) version;
 
-  src = fetchurl {
-    url = "https://curseforge.overwolf.com/downloads/curseforge-latest-linux.AppImage";
-    hash = "sha256-4DQZNlrJGY1gGAyqB74+vhhI9lCDPAEQrayhSX5G0Uc=";
-  };
+  src = fetchurl { inherit (source) url hash; };
 
   # extract + wrapAppImage, not wrapType2: extraInstallCommands has to READ the extracted tree.
   appimageContents = appimageTools.extract { inherit pname version src; };
@@ -40,8 +38,8 @@ appimageTools.wrapAppImage {
     cp -r ${appimageContents}/usr/share/icons $out/share/
   '';
 
-  # What vendored-bump runs on `update`: the .deb's control file says whether anything changed.
-  passthru.updateScript = curseforge-bump;
+  # What vendored-bump runs on `update`.
+  passthru.updateScript = callPackage ./bump.nix { };
 
   meta = {
     description = "Official CurseForge app: modpack library and updates (Minecraft/WoW)";

@@ -254,8 +254,7 @@
         codex = final.callPackage ./pkgs/codex/package.nix { }; # OpenAI's CLI, the OFFICIAL release binary
         antigravity-cli = final.callPackage ./pkgs/antigravity-cli/package.nix { }; # Google's agent CLI (`agy`)
         basic-memory = final.callPackage ./pkgs/basic-memory.nix { inherit inputs; }; # `bm`, the MCP memory
-        curseforge = final.callPackage ./pkgs/curseforge.nix { }; # official modpack AppImage (unfree)
-        curseforge-bump = final.callPackage ./pkgs/curseforge-bump.nix { }; # version+hash of curseforge.nix
+        curseforge = final.callPackage ./pkgs/curseforge/package.nix { }; # official modpack AppImage (unfree)
         curseforge-fix-perms = final.callPackage ./pkgs/curseforge-fix-perms.nix { }; # +x on what the app unpacks
         razer-dpi = final.callPackage ./pkgs/razer-dpi.nix { }; # the Razer mouse's live DPI, over hidraw
         notify = final.callPackage ./pkgs/notify.nix { }; # the ntfy push, shared by the shell and sshd's PAM
@@ -363,7 +362,6 @@
             codex # ./pkgs: the official binary, so the check proves the fetch and the wrapper
             antigravity-cli # ./pkgs: the official binary, so the check proves the fetch and the patchelf
             basic-memory # ./pkgs: building it IS the proof that our uv.lock still resolves
-            curseforge-bump # ./pkgs: same, shellcheck at build time
             vendored-bump # ./pkgs: same, and building it proves every updateScript still resolves
             curseforge-fix-perms # ./pkgs: same
             docs-links # ./pkgs: the build IS the script's flake8; the CHECK below runs it

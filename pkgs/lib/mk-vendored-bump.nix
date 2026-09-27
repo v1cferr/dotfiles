@@ -8,7 +8,7 @@
 
 {
   pname, # names the bump and locates pkgs/<pname>/source.json
-  latest, # shell that PRINTS upstream's latest version, as cheaply as upstream allows
+  latest, # shell that PRINTS upstream's latest version, as cheaply as upstream allows; $tmp is scratch
   resolve, # shell that, with $version set, PRINTS {"url": ..., "hash": ...} for that release
   runtimeInputs ? [ ],
 }:
@@ -21,11 +21,16 @@ writeShellApplication {
   ]
   ++ runtimeInputs;
 
-  # set -euo pipefail already comes from writeShellApplication (the default bashOptions).
+  # set -euo pipefail comes from writeShellApplication; inherit_errexit makes it reach into $(...).
   text = ''
+    shopt -s inherit_errexit
     repo="''${1:?usage: ${pname}-bump <path-to-the-flake-repo>}"
     file="$repo/pkgs/${pname}/source.json"
     current=$(jq -er .version "$file")
+
+    # A scratch dir for `latest`/`resolve`, cleaned on ANY exit so a package never has to.
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
 
     # Two helpers for `resolve`: hash by downloading, or convert the hash upstream PUBLISHES.
     prefetch() { nix store prefetch-file --json --hash-type sha256 "$1" | jq -er .hash; }

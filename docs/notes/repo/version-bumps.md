@@ -3,7 +3,7 @@
 Modules: [`pkgs/vendored-bump.nix`](../../../pkgs/vendored-bump.nix),
 [`pkgs/lib/mk-vendored-bump.nix`](../../../pkgs/lib/mk-vendored-bump.nix),
 [`pkgs/vscode-bump.nix`](../../../pkgs/vscode-bump.nix),
-[`pkgs/curseforge-bump.nix`](../../../pkgs/curseforge-bump.nix),
+[`pkgs/curseforge/bump.nix`](../../../pkgs/curseforge/bump.nix),
 [`pkgs/codex/bump.nix`](../../../pkgs/codex/bump.nix),
 [`pkgs/antigravity-cli/bump.nix`](../../../pkgs/antigravity-cli/bump.nix)
 

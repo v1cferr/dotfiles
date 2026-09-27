@@ -1,6 +1,6 @@
 # curseforge
 
-Module: [`pkgs/curseforge.nix`](../../../pkgs/curseforge.nix)
+Module: [`pkgs/curseforge/package.nix`](../../../pkgs/curseforge/package.nix)
 
 The OFFICIAL Minecraft modpack app (Electron, by Overwolf). It replaced prismlauncher on
 14/08/2026: Prism installs a CurseForge modpack by importing a `.zip`, without the library and
@@ -74,7 +74,7 @@ patterns `-1.316.0-`, `~37372` and `latest.yml` were all tested, all 404).
 The `hash` in the module PINS the content, so the build is reproducible, but the day Overwolf
 publishes the next version the fetch starts failing with a hash mismatch on a cold store, which is
 exactly what VS Code's `/latest/` caused in the CI. Who pays that price is
-[`curseforge-bump`](../../../pkgs/curseforge-bump.nix), which runs on the `update` alias and rewrites
+[`curseforge-bump`](../../../pkgs/curseforge/bump.nix), which runs on the `update` alias and rewrites
 version and hash there. Do NOT swap it for `lib.fakeHash` or for a fetch with no hash (rule 13).
 
 ## The internal auto-updater does not work
@@ -108,7 +108,7 @@ electron-builder noise.
 ## The user side
 
 `home/apps/curseforge.nix`. The package (the official AppImage, repackaged) lives in
-`pkgs/curseforge.nix`; this module is the home side.
+`pkgs/curseforge/package.nix`; this module is the home side.
 
 **It REPLACED prismlauncher on 14/08/2026**: Prism imports a modpack `.zip`, but what keeps the
 library and UPDATES the pack is the CurseForge app, which is the real use here.

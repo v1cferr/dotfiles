@@ -81,7 +81,7 @@ defensible than judging one by one which ones would load anyway.
 That is the obvious attempt and the wrong one. Putting `java` in the FHS PATH does nothing,
 because the app only consults the JRE it manages itself. With three JREs installed the agent log
 went on citing ITS java 18 times and ours ZERO times. That is why
-[`pkgs/curseforge.nix`](../../../pkgs/curseforge.nix) has no Java in it, and why this script exists.
+[`pkgs/curseforge/package.nix`](../../../pkgs/curseforge/package.nix) has no Java in it, and why this script exists.
 
 ## Where it runs
 

@@ -272,8 +272,9 @@ vendored tarball and the MkDocs template that loaded it, and for the same reason
 pins lodash-es EXACTLY at 4.17.23, which carries GHSA-f23m-r3pf-42rh and GHSA-r5fr-rjxr-66jc
 (OpenSSF Scorecard found them on 27/09/2026). No bump could fix it, since that was already the
 newest mermaid. The jump is a patch inside 4.x, and the site built unchanged with it. REMOVE the
-override when mermaid moves to a chevrotain that no longer pins 4.17.23 (13.x no longer depends on lodash-es at all); check
-with `pnpm why lodash-es` inside `docs-site/`, which should list only one version.
+override when mermaid moves to a chevrotain that no longer pins 4.17.23 (13.x does not depend on
+lodash-es at all); check with `pnpm why lodash-es` inside `docs-site/`, which should list only one
+version.
 
 **No webfont, for the same reason.** Material linked Roboto from `fonts.gstatic.com` on every
 page; Fumadocs UI ships no default font at all, so there is nothing to turn off. The stack in

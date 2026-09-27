@@ -115,6 +115,23 @@ a service needs it.*
 `pkgs.foo` is the stable base; `pkgs.unstable.foo` is the unstable channel, per
 package, through the overlay.
 
+### Where does it come FROM?
+
+Stop at the first one that fits:
+
+1. **The stable channel**, `pkgs.foo`. Search the 26.05 channel first.
+2. **The unstable channel**, `pkgs.unstable.foo`, when stable lacks it or lags in
+   a way that matters.
+3. **Upstream's own flake**, as an input in [`flake.nix`](flake.nix), when it
+   publishes one. `nix flake update` then brings new versions with no script.
+4. **A vendored package** in `pkgs/<name>/`, for an official artifact with no
+   flake: `package.nix`, `source.json` and `bump.nix`, and `update` keeps it on
+   the latest release on its own. The layout and the recipe are in
+   [version-bumps](docs/notes/repo/version-bumps.md#the-layout-every-vendored-package-follows).
+5. **Built from source** in `pkgs/`, only when there is no artifact at all. It
+   sets `passthru.updateScript = null` unless a bump is cheap, since a new
+   version can mean a new vendor hash and a full rebuild.
+
 ## Repo conventions
 
 The full set lives in [`docs/rules.md`](docs/rules.md). The ones you need to

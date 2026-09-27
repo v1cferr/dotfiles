@@ -68,8 +68,28 @@ silently. `jq` reads and writes a structure, and `lib.importJSON` is the only re
 side. The `url` is stored WHOLE even when it is derivable from the version, so no package carries
 a second format of the same URL (rule 11), and antigravity's opaque build id stops being a field.
 
-Adding one is: the folder, one `callPackage` line in `localPkgs`, and the `home.packages` entry.
-`vendored-bump` and `update` find it on their own.
+### Adding one
+
+Start from the package closest in SHAPE, since `latest` and `resolve` are what differ:
+
+| Upstream publishes | Copy from |
+| --- | --- |
+| a GitHub release asset | [`pkgs/codex/`](../../../pkgs/codex/bump.nix): a HEAD on `/releases/latest`, `prefetch` |
+| a version API with the hash in it | [`pkgs/vscode/`](../../../pkgs/vscode/bump.nix): one JSON kept in `$tmp`, `sri` |
+| a manifest per release | [`pkgs/antigravity-cli/`](../../../pkgs/antigravity-cli/bump.nix): `sri` on the published sha512 |
+| only a pointer url | [`pkgs/curseforge/`](../../../pkgs/curseforge/bump.nix): the version from somewhere cheap, `prefetch` |
+
+1. Create `pkgs/<name>/` with the three files. `pname` in `bump.nix` MUST be the folder name,
+   because that is how the skeleton finds `source.json`. Start `source.json` as the placeholder
+   `{"version": "0", "url": "", "hash": ""}`, since `0` is never the latest.
+2. Add `<name> = final.callPackage ./pkgs/<name>/package.nix { };` to `localPkgs` in
+   [`flake.nix`](../../../flake.nix), and the `home.packages` entry in the app's module.
+3. `git add` the folder (a flake only sees tracked files) and run `update`: the runner picks the
+   new bump up and fills `source.json` for real. Measured on 26/09/2026 against codex, the
+   placeholder came back byte-identical to the committed file.
+4. `rebuild`, and commit the package with its filled `source.json`.
+
+Nothing else changes: not `zsh.nix`, not the flake's `packages`, not any list.
 
 ## Why not a community flake or nvfetcher
 

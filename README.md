@@ -225,3 +225,19 @@ The summary that does **not** age, for the next install from scratch:
 - Whatever is not declared (`/var/lib`, SSH host keys, NetworkManager profiles)
   crosses by hand, and that is exactly the list impermanence will force into
   declaration.
+
+## License
+
+Use it as a reference freely; copying it means giving credit.
+
+- **The code** (everything outside `docs/`) is [MIT](LICENSE): keep the copyright notice in
+  whatever you copy.
+- **The documentation** in `docs/` is [CC BY 4.0](docs/LICENSE): credit
+  "Victor Ferreira, <https://github.com/v1cferr/dotfiles>", link the license, and say what you
+  changed.
+- **Not mine to relicense**, so these keep their own terms: the patches in `pkgs/openrgb/` are
+  GPL-2.0-or-later like OpenRGB itself (one of them is by another author), and
+  `home/desktop/quickshell/assets/razer.svg` is simple-icons' CC0 data for a mark that is Razer's
+  trademark.
+
+Why this split, and what was passed over: [docs/notes/repo/license.md](docs/notes/repo/license.md).

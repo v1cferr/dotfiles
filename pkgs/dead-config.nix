@@ -27,6 +27,8 @@ writers.writePython3Bin "dead-config"
         # frozen home repo on the Seagate is encrypted garbage. It goes back into use the
         # day new storage arrives (docs/notes/boot-and-storage/restic.md).
         "secret:restic_password": "reads the frozen home repo on the Seagate",
+        # A policy no module implements: the README's License section is its only way in.
+        "note:license.md": "the why of LICENSE, reached from the README",
     }
 
     CODE_EXT = (".nix", ".lua", ".qml", ".sh", ".toml", ".yaml", ".yml")

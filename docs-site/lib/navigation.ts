@@ -130,6 +130,7 @@ export const navigation: NavItem[] = [
       { title: "Site", doc: "notes/repo/site.md" },
       { title: "GitHub settings", doc: "notes/repo/github-settings.md" },
       { title: "Eval metrics", doc: "notes/repo/eval-metrics.md" },
+      { title: "License", doc: "notes/repo/license.md" },
     ],
   },
   {

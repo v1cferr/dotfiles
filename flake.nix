@@ -251,8 +251,7 @@
         azure-mcp = final.callPackage ./pkgs/azure-mcp.nix { }; # Azure MCP Server (`azmcp`), only in claude-fai
         nxbender = final.callPackage ./pkgs/nxbender.nix { }; # FOSS client for the SonicWall VPN (FAI)
         vscode-bump = final.callPackage ./pkgs/vscode-bump.nix { }; # bumps vscode-tarball to the latest stable
-        codex = final.callPackage ./pkgs/codex.nix { }; # OpenAI's CLI, the OFFICIAL release binary
-        codex-bump = final.callPackage ./pkgs/codex-bump.nix { }; # version+hash of codex.nix
+        codex = final.callPackage ./pkgs/codex/package.nix { }; # OpenAI's CLI, the OFFICIAL release binary
         antigravity-cli = final.callPackage ./pkgs/antigravity-cli.nix { }; # Google's agent CLI (`agy`)
         antigravity-bump = final.callPackage ./pkgs/antigravity-bump.nix { }; # version+id+hash of it
         basic-memory = final.callPackage ./pkgs/basic-memory.nix { inherit inputs; }; # `bm`, the MCP memory
@@ -274,6 +273,10 @@
         final: _:
         localPkgs final
         // {
+          # The skeleton every pkgs/<name>/bump.nix is built from, OUTSIDE localPkgs: it is a function.
+          mkVendoredBump = import ./pkgs/lib/mk-vendored-bump.nix {
+            inherit (final) writeShellApplication curl jq;
+          };
           # Every package carrying a passthru.updateScript, DERIVED: a new one never touches `update`.
           vendored-bump = final.callPackage ./pkgs/vendored-bump.nix {
             packages =
@@ -359,7 +362,6 @@
             claude-desktop # someone else's flake + the keyring wrapper from here
             vscode-bump # ./pkgs: the build IS the script's shellcheck (rule 7)
             codex # ./pkgs: the official binary, so the check proves the fetch and the wrapper
-            codex-bump # ./pkgs: same shellcheck at build time
             antigravity-cli # ./pkgs: the official binary, so the check proves the fetch and the patchelf
             antigravity-bump # ./pkgs: same shellcheck at build time
             basic-memory # ./pkgs: building it IS the proof that our uv.lock still resolves

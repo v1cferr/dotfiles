@@ -1,9 +1,10 @@
 # vendored-bump and the four scripts it runs
 
 Modules: [`pkgs/vendored-bump.nix`](../../../pkgs/vendored-bump.nix),
+[`pkgs/lib/mk-vendored-bump.nix`](../../../pkgs/lib/mk-vendored-bump.nix),
 [`pkgs/vscode-bump.nix`](../../../pkgs/vscode-bump.nix),
 [`pkgs/curseforge-bump.nix`](../../../pkgs/curseforge-bump.nix),
-[`pkgs/codex-bump.nix`](../../../pkgs/codex-bump.nix),
+[`pkgs/codex/bump.nix`](../../../pkgs/codex/bump.nix),
 [`pkgs/antigravity-bump.nix`](../../../pkgs/antigravity-bump.nix)
 
 Four scripts that keep a vendored binary on its latest version without anybody editing a hash by
@@ -41,6 +42,34 @@ A list or attrset `updateScript` is a `throw` at eval time, never a silent skip.
 **`nxbender` opts out with `updateScript = null`.** `buildPythonApplication` brings a default
 `nix-update` on its own, and its src is a pinned commit carrying 3 patches: a bump there is a human
 reading the diff, not a script.
+
+## The layout every vendored package follows
+
+A package that is in neither nixpkgs nor a flake lives in a folder of its own, always the same
+three files:
+
+```text
+pkgs/<name>/
+  package.nix   reads version, url and hash from source.json; passthru.updateScript = ./bump.nix
+  source.json   { "version", "url", "hash" }, the ONLY file a bump writes
+  bump.nix      mkVendoredBump { pname; latest; resolve; }
+```
+
+[`mkVendoredBump`](../../../pkgs/lib/mk-vendored-bump.nix) owns everything the four scripts used to
+repeat: reading the current version, rejecting an implausible answer, the no-op when current, the
+write through a temp file and the suggested commit. A package answers only the two questions that
+are really its own. `latest` prints upstream's newest version, as cheaply as upstream allows.
+`resolve` prints the `url` and `hash` of that version, through one of two helpers: `prefetch URL`
+downloads and hashes, and `sri ALGO HEX` converts a hash upstream already publishes.
+
+**JSON and not `sed` on a `.nix`.** The old scripts found the version with a regex on the source
+and rewrote it the same way, so a reformat by nixfmt or a renamed attribute broke the bump
+silently. `jq` reads and writes a structure, and `lib.importJSON` is the only reader on the Nix
+side. The `url` is stored WHOLE even when it is derivable from the version, so no package carries
+a second format of the same URL (rule 11), and antigravity's opaque build id stops being a field.
+
+Adding one is: the folder, one `callPackage` line in `localPkgs`, and the `home.packages` entry.
+`vendored-bump` and `update` find it on their own.
 
 ## Why not a community flake or nvfetcher
 

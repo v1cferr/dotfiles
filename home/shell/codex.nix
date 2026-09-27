@@ -9,7 +9,7 @@ in
 {
   programs.codex = {
     enable = true;
-    # ./pkgs/codex.nix, the OFFICIAL release binary: even unstable lags upstream by a release.
+    # ./pkgs/codex, the OFFICIAL release binary: even unstable lags upstream by a release.
     package = pkgs.codex;
     # `settings` stays EMPTY on purpose: it generates a STORE file, and Codex PERSISTS into
     # config.toml at runtime (/model, /theme, approvals). The link below owns it instead.

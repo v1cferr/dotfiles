@@ -1,7 +1,7 @@
 # codex
 
 Modules: [`home/shell/codex.nix`](../../../home/shell/codex.nix),
-[`pkgs/codex.nix`](../../../pkgs/codex.nix)
+[`pkgs/codex/package.nix`](../../../pkgs/codex/package.nix)
 
 OpenAI's terminal agent. Two decisions: who owns `config.toml`, and where the binary comes from.
 

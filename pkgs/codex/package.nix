@@ -7,27 +7,26 @@
   makeBinaryWrapper,
   ripgrep,
   bubblewrap,
-  codex-bump,
+  callPackage,
 }:
 
 let
+  # version, url and hash: the ONLY file the bump writes.
+  source = lib.importJSON ./source.json;
+
   # Hoisted out of the antiquotation: inline, nixfmt explodes the list across the shell snippet.
   runtimeDeps = lib.makeBinPath [
     ripgrep
     bubblewrap
   ];
 in
-stdenvNoCC.mkDerivation (finalAttrs: {
+stdenvNoCC.mkDerivation {
   pname = "codex";
-  # From the release tag (`rust-v<version>`); codex-bump rewrites it along with the hash.
-  version = "0.157.1";
+  inherit (source) version;
 
   # The `-package-` asset and NOT the bare `codex-` one: that ships the entrypoint ALONE, and
   # `codex-code-mode-host` next to it is what runs commands. See the note.
-  src = fetchurl {
-    url = "https://github.com/openai/codex/releases/download/rust-v${finalAttrs.version}/codex-package-x86_64-unknown-linux-musl.tar.gz";
-    hash = "sha256-DiEYaMn9c8tJrTWsZ1ter99rn0U9+KST35gMWaWQ/l8=";
-  };
+  src = fetchurl { inherit (source) url hash; };
 
   # Several entries at the root (bin/, codex-path/, codex-resources/), so unpackPhase has no
   # single directory to chdir into and refuses with "unpacker produced multiple directories".
@@ -53,8 +52,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     wrapProgram $out/bin/codex --inherit-argv0 --prefix PATH : ${runtimeDeps}
   '';
 
-  # What vendored-bump runs on `update`: the version, and the hash recomputed from the tarball.
-  passthru.updateScript = codex-bump;
+  # What vendored-bump runs on `update`.
+  passthru.updateScript = callPackage ./bump.nix { };
 
   meta = {
     description = "Lightweight coding agent that runs in your terminal (official release binary)";
@@ -63,4 +62,4 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     platforms = [ "x86_64-linux" ];
     mainProgram = "codex";
   };
-})
+}

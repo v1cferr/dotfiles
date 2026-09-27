@@ -44,3 +44,27 @@ and flipping `enforcement` in the file makes the diff fail.
 Secret scanning and its **push protection** are ON (checked 27/09/2026 through
 `gh api repos/v1cferr/dotfiles --jq .security_and_analysis`). Push protection refuses a push
 carrying a token from a known provider, on the server, before it lands.
+
+That covers the known providers and nothing else, and it only sees pushes. A generic token (the
+`rpcd_token` of 08/08/2026 was one, see [router-hardening](../../guides/router-hardening.md)) walks
+straight through it, so the repo adds two layers of its own, both running gitleaks:
+
+- **The `gitleaks` hook** scans the STAGED diff before each commit, and the whole tree inside
+  `nix flake check`, since the gate's throwaway repo stages everything. MEASURED: a clean tree
+  passes, and a planted `ghp_` token is refused.
+- **The canary's `secrets` job** scans every commit once a week, which is what catches a
+  `--no-verify` commit or a rule that a newer gitleaks learned. Its version is the devShell's, so
+  the hook and the job never disagree about the rules.
+
+**The two known findings live in [`.gitleaksignore`](../../../.gitleaksignore)**, by fingerprint
+(`commit:file:rule:line`), so each one silences that exact spot and nothing else. The first full
+scan on 27/09/2026 read 1419 commits and found exactly these two, both already dealt with:
+
+| Commit | What it is |
+| --- | --- |
+| `a2a7b6f` | the router's `rpcd_token`, a real credential: rotated, and the sync redacts it since `0277caf` |
+| `dd73404` | a `curl -H "Authorization: Bearer ..."` placeholder in an `.env.example` |
+
+A new finding means one of two things. A real credential gets ROTATED first, since it is already
+public and rewriting history is not an option (the `history` ruleset exists to forbid it). A false
+positive gets its fingerprint appended here, with its line in the table above.

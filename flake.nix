@@ -505,6 +505,20 @@
             # expressions, zizmor for the security audit. Both are scoped to .github/workflows.
             actionlint.enable = true;
             zizmor.enable = true;
+            # A credential in the STAGED diff, the class that leaked the rpcd_token on 08/08. The
+            # history half runs in the canary: docs/notes/repo/github-settings.md
+            gitleaks =
+              let
+                inherit (nixpkgs.legacyPackages.${system}) gitleaks;
+              in
+              {
+                enable = true;
+                name = "gitleaks";
+                package = gitleaks;
+                entry = "${gitleaks}/bin/gitleaks git --pre-commit --staged --no-banner --redact";
+                language = "system";
+                pass_filenames = false;
+              };
             # The 8 Hyprland `.lua`, type-checked by the LSP itself, reading THE SAME ./.luarc.json
             # the editor reads: that file is plain JSON, so `fromJSON` can (markdownlint's cannot).
             lua-ls = {

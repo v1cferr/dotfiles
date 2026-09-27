@@ -80,6 +80,28 @@ jobs:
             --scheme https --scheme http \
             --max-concurrency 6 --no-progress "$site/**/*.html"
 
+  # The WHOLE history, which the pre-commit hook never sees: a `--no-verify` commit, or a rule a
+  # newer gitleaks learned. Known findings: .gitleaksignore, and docs/notes/repo/github-settings.md
+  secrets:
+    name: no credential anywhere in the history
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0 # every commit, or this scans one
+
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      # The devShell's gitleaks, so the version is the hook's and lives in flake.nix.
+      - name: gitleaks over every commit
+        run: |
+          nix develop --override-input duo-streak-daemon path:./ci/stub-duo \
+            --command gitleaks git --no-banner --redact .
+
   # A ruleset disabled for an emergency and never re-enabled fails SILENTLY, so each week this diffs
   # GitHub against .github/rulesets/: docs/notes/repo/github-settings.md
   rulesets:
@@ -126,6 +148,7 @@ jobs:
       - inputs
       - links
       - rulesets
+      - secrets
     if: failure()
     runs-on: ubuntu-latest
     # It reads nothing and writes nothing: the token has no business existing in this job.
@@ -140,6 +163,7 @@ jobs:
           INPUTS: ${{ needs.inputs.result }}
           LINKS: ${{ needs.links.result }}
           RULESETS: ${{ needs.rulesets.result }}
+          SECRETS: ${{ needs.secrets.result }}
         run: |
           # No topic provisioned sends nothing and says so, instead of failing: the run is already
           # red, and a second red mark that only means "the warning did not go out" reads as a
@@ -156,7 +180,8 @@ jobs:
           # "the next update would break the config" and `links` is "a pointer in docs/ rotted".
           message="inputs: $INPUTS
           links: $LINKS
-          rulesets: $RULESETS"
+          rulesets: $RULESETS
+          secrets: $SECRETS"
 
           # priority 4 (high) on purpose: at 3 the phone stays quiet, and a quiet alert is the
           # email problem again with more steps.

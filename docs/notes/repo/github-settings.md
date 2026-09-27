@@ -93,5 +93,11 @@ reporting turned on (27/09/2026) feeds Security-Policy.
 | Fuzzing, Packaging, Signed-Releases, CII-Best-Practices | a machine config, not a released artifact |
 | Contributors | a personal repo |
 
+**The first score, 27/09/2026: 6.5.** Beyond the low checks above, two had something to act on:
+License is 0 because the repo has no license file, which is a decision about reuse and not a CI
+fix; and Vulnerabilities is 8 over two lodash advisories (GHSA-f23m-r3pf-42rh, GHSA-r5fr-rjxr-66jc,
+fixed in 4.18.0), both from a `lodash-es@4.17.23` that the site's `pnpm-lock.yaml` pulls in
+transitively. Neither was decided that day.
+
 So the number to watch is the TREND, not the absolute. A drop means something that was paid for
 stopped being true, like a new workflow with a tag instead of a hash, and that is worth a look.

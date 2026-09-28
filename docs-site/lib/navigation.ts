@@ -46,6 +46,7 @@ export const navigation: NavItem[] = [
       { title: "Fonts", doc: "notes/hardware/fonts.md" },
       { title: "Mouse", doc: "notes/hardware/mouse.md" },
       { title: "Razer", doc: "notes/hardware/razer.md" },
+      { title: "Android", doc: "notes/hardware/android.md" },
       { title: "OOM", doc: "notes/hardware/oom.md" },
       { title: "Webcam", doc: "notes/hardware/webcam.md" },
     ],

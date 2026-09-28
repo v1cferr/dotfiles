@@ -76,6 +76,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [fonts](hardware/fonts.md) | the UI font SSOT, and the fallback coverage |
 | [mouse](hardware/mouse.md) | the MX Master, the boot race, and the gestures |
 | [razer](hardware/razer.md) | the DeathAdder's DPI OSD, and why openrazer does not build on 7.x |
+| [android](hardware/android.md) | pairing the phone over wireless ADB, and why SFTP could not clean it |
 | [oom](hardware/oom.md) | earlyoom, and the three traps in its regex |
 | [webcam](hardware/webcam.md) | the UVC `-71`, everything it is NOT, and the one test left |
 

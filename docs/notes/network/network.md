@@ -540,9 +540,38 @@ VPN being down.
 `! -o ppp0` and not `-i enp7s0 -o enp7s0`: the condition that matters is "traffic for FAI that is
 NOT entering the tunnel", regardless of where it was going to leave, and it names no NIC, so it
 survives a card swap. REJECT and not DROP, on purpose: the ICMP net-unreachable makes the client
-fail RIGHT AWAY with "no route to host" instead of hanging. There is no making the site work
-without the VPN (measured: neither .236 nor .229 accepts a connection from outside), so the best
-possible is failing fast and legibly.
+fail RIGHT AWAY with "no route to host" instead of hanging, which is the best possible for the
+hosts that only answer through the tunnel.
+
+### The public face bypasses the /25 through the WAN (29/09/2026)
+
+The note above used to say the site cannot work without the VPN, "measured: neither .236 nor
+.229 accepts a connection from outside". **Half of that was wrong, and the wrong half is the
+public site.** FAI filters by COUNTRY, so a probe from abroad times out on everything; from a
+Brazilian vantage (check-host.net `br1`, 29/09/2026) the split is clean:
+
+| host | from a Brazilian IP, no VPN |
+| --- | --- |
+| `.236`, every `*.fai.ufscar.br` name (it is a wildcard) | 80 and 443 OPEN, `sistemas` answers 200 |
+| `.229` workstation, `.248` fai-vm | refused |
+| `.247`, `.252` AD DNS | timed out |
+
+So the router's `fai_r6` (the whole /25 to this host) was taking `sistemas.fai.ufscar.br` down
+with the VPN for EVERY device in the house, this one included: this host's own packet goes out
+the default, the router hands it back, and the anti-loop REJECT kills it.
+
+The fix is a longest-prefix exception on the router, `fai_pub1`: `200.136.209.236/32` on
+interface `wan`, no gateway. It out-prefixes the /25, so the public face always leaves through
+`pppoe-wan`, and the rest of the /25 still goes through this host to the tunnel. With the VPN
+up nothing changes here: `ppp0` carries the /25 for this host's own traffic, since the IPCP
+installs it. The list lives in `faiPublicHosts` in `fai-gateway.nix`: `router-ssot` checks
+the `fai_pub*` routes against it as set equality, and `fai-routes-check` flags an entry the
+tunnel no longer carries, whose exception is then dead weight.
+
+**Deleting `fai_r6` instead was rejected**: the router's own split-DNS for `fai2008.ufscar.br`
+asks `.252`/`.247`, which only answer through the tunnel, and so does anything at home that
+wants the workstation. A name that shows up at a NEW public address in the /25 needs one more
+entry, and the test is the same probe from Brazil, never one from abroad.
 
 The static routes and the split DNS live in the router's UCI, and
 [`router.nix`](../../../system/net/router.nix) refuses to push on purpose. The commands are in

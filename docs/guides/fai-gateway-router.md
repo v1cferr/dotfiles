@@ -76,6 +76,22 @@ sudo uci commit network
 sudo /etc/init.d/network reload   # <- asks for the password
 ```
 
+**And the exception that keeps the public site alive** (added 29/09/2026). The /25 above also
+holds `200.136.209.236`, the address of every public `*.fai.ufscar.br` name, and without this
+host route it dies with the VPN for the whole house. One `fai_pub*` section per entry of
+`faiPublicHosts` in [`system/net/fai-gateway.nix`](../../system/net/fai-gateway.nix), a /32 on
+`wan` with no gateway; why it exists is in
+[`../notes/network/network.md`](../notes/network/network.md):
+
+```sh
+sudo uci set network.fai_pub1=route
+sudo uci set network.fai_pub1.interface='wan'
+sudo uci set network.fai_pub1.target='200.136.209.236'
+sudo uci set network.fai_pub1.netmask='255.255.255.255'
+sudo uci commit network
+sudo /etc/init.d/network reload   # <- asks for the password
+```
+
 ## Part 2: split-DNS for the FAI zones
 
 **APPLIED on 13/08/2026**: the three `add_list` entries below are already on the device
@@ -152,6 +168,7 @@ anyway):
 
 ```sh
 ip route get 200.136.209.229      # should go out through 192.168.1.10
+ip route get 200.136.209.236      # on the router: dev pppoe-wan, the public face
 nslookup fai2008.ufscar.br        # should return 192.168.130.2/.3
 nc -vz 200.136.209.229 22         # should open
 ```

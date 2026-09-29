@@ -1,5 +1,5 @@
-# dead-config: it fails when something is DECLARED and never used. Rule 16 says dead config leaves,
-# and until this existed only memory enforced it. The 5 checks: docs/notes/repo/dead-config.md
+# dead-config: it fails when something is DECLARED and never used (rule 16, which only memory
+# enforced before). The checks and the review dates: docs/notes/repo/dead-config.md
 { writers }:
 
 writers.writePython3Bin "dead-config"
@@ -9,6 +9,7 @@ writers.writePython3Bin "dead-config"
   }
   ''
     """Fail when a module, an input, an option, a note or a secret is declared and never used."""
+    import datetime
     import json
     import os
     import re
@@ -20,15 +21,15 @@ writers.writePython3Bin "dead-config"
         capture_output=True, text=True, check=True,
     ).stdout.strip()
 
-    # A tracked exception needs a REASON, so it shows up in the diff instead of rotting in silence.
+    # A tracked exception needs a REASON and a REVIEW date (rule 22); the canary runs --expired weekly.
     # Emptying this list is the goal, not growing it.
     ALLOWED = {
         # The daily backup left on 24/09/2026 and this password did NOT: without it the
         # frozen home repo on the Seagate is encrypted garbage. It goes back into use the
         # day new storage arrives (docs/notes/boot-and-storage/restic.md).
-        "secret:restic_password": "reads the frozen home repo on the Seagate",
+        "secret:restic_password": ("reads the frozen home repo on the Seagate", "2026-12-31"),
         # A policy no module implements: the README's License section is its only way in.
-        "note:docs/notes/repo/license.md": "the why of LICENSE, reached from the README",
+        "note:docs/notes/repo/license.md": ("the why of LICENSE, reached from the README", "2027-09-29"),
     }
 
     CODE_EXT = (".nix", ".lua", ".qml", ".sh", ".toml", ".yaml", ".yml")
@@ -164,7 +165,22 @@ writers.writePython3Bin "dead-config"
               check_secret_index, check_artifacts)
 
 
+    def expired():
+        """Rule 22's clock half: an exception past its review date. It never runs in the gate."""
+        today = datetime.date.today().isoformat()
+        late = [(key, why, by) for key, (why, by) in sorted(ALLOWED.items()) if by < today]
+        for key, why, by in late:
+            print(f"dead-config: {key} was due for review on {by} ({why})", file=sys.stderr)
+        if late:
+            print("\nDelete it, or move the date in a commit that says why.", file=sys.stderr)
+            return 1
+        print(f"dead-config: {len(ALLOWED)} exceptions, none past its review date")
+        return 0
+
+
     def main():
+        if sys.argv[1:] == ["--expired"]:
+            return expired()
         files = tracked()
         code = "\n".join(read(f) for f in files if f.endswith(CODE_EXT))
 
@@ -175,13 +191,14 @@ writers.writePython3Bin "dead-config"
                 (allowed if key in ALLOWED else findings).append((kind, name, why, key))
 
         for kind, name, _why, key in allowed:
-            print(f"dead-config: allowed {kind} {name}: {ALLOWED[key]}")
+            why, by = ALLOWED[key]
+            print(f"dead-config: allowed {kind} {name}: {why} (review by {by})")
 
         if findings:
             print(f"\ndead-config: {len(findings)} declared and never used\n", file=sys.stderr)
             for kind, name, why, _key in findings:
                 print(f"  {kind}: {name} ({why})", file=sys.stderr)
-            print("\nRemove it, or add it to ALLOWED with a reason.", file=sys.stderr)
+            print("\nRemove it, or add it to ALLOWED with a reason and a review date.", file=sys.stderr)
             return 1
 
         print(f"dead-config: {len(CHECKS)} checks, nothing declared and unused")

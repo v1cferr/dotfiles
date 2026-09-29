@@ -102,3 +102,23 @@ DeterminateSystems flake-checker was rejected for the same reason plus a vendor 
 A tracked exception needs a REASON string, so it appears in the diff instead of rotting in silence.
 Emptying that list is the goal, not growing it. If a finding is real, the fix is deleting the thing,
 not adding a line.
+
+### Every exception has a review date (rule 22, 29/09/2026)
+
+Each entry is `(reason, "YYYY-MM-DD")`. A reason alone explains why an exception exists TODAY, and
+says nothing about whether it still does in 2029; without a date the list only grows, because
+nobody deletes a line that looks deliberate. The date is not a deadline for the THING, it is the day
+the question comes back: on it, the exception is deleted or the date moves in a commit that says
+why, which is the same contract as a budget in `ci/eval-budget.json`.
+
+| Exception | Review by | Why that date |
+| --- | --- | --- |
+| `secret:restic_password` | 2026-12-31 | new storage was the plan; a quarter is when to ask again |
+| `note:docs/notes/repo/license.md` | 2027-09-29 | a policy, so a yearly look is enough |
+
+**The date check is `dead-config --expired`, and it runs in the CANARY, never in the gate.** The
+gate is hermetic and its result is cached by input: a date would make the same commit pass on
+Monday and fail on Tuesday, and a cached green would hide the Tuesday anyway. "The answer changes
+with no commit of mine" is the canary's definition ([flake.md](flake.md)), so the job lives there
+and a red run reaches the phone through the ntfy job. MEASURED: with the restic date moved to
+2026-01-01 by hand, `--expired` printed the entry and exited 1; reverted, it exits 0.

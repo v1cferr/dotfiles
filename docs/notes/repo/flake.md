@@ -543,6 +543,10 @@ The second job runs the `manual`-stage lychee hook, the external half of the lin
 [`link-checker.md`](link-checker.md) has the measurement that keeps it out of the gate. The two jobs
 are independent on purpose, so a rotten link cannot hide a broken input.
 
+The `exceptions` job (29/09/2026) is rule 22's clock: `dead-config --expired` fails when an entry
+of its `ALLOWED` list is past its review date. It is here for the same reason as the rest of the
+file, a date is an answer that changes with no commit: [`dead-config.md`](dead-config.md).
+
 #### The ntfy job: an alarm that is not an email (30/08/2026)
 
 The original alarm was GitHub emailing the owner when a scheduled run fails, and that is the weakest

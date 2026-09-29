@@ -114,6 +114,26 @@ jobs:
           nix develop --override-input duo-streak-daemon path:./ci/stub-duo \
             --command gitleaks git --no-banner --redact .
 
+  # Rule 22's clock half: an exception past its review date. It lives HERE and not in the gate,
+  # because a date turns a cached, hermetic check into one whose answer changes with no commit.
+  exceptions:
+    name: no exception past its review date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: dead-config --expired
+        run: |
+          nix run .#dead-config --override-input duo-streak-daemon path:./ci/stub-duo \
+            -- --expired
+
   # A ruleset disabled for an emergency and never re-enabled fails SILENTLY, so each week this diffs
   # GitHub against .github/rulesets/: docs/notes/repo/github-settings.md
   rulesets:
@@ -157,6 +177,7 @@ jobs:
   notify:
     name: push a failure to the phone
     needs:
+      - exceptions
       - inputs
       - links
       - rulesets
@@ -172,6 +193,7 @@ jobs:
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          EXCEPTIONS: ${{ needs.exceptions.result }}
           INPUTS: ${{ needs.inputs.result }}
           LINKS: ${{ needs.links.result }}
           RULESETS: ${{ needs.rulesets.result }}
@@ -190,7 +212,8 @@ jobs:
 
           # WHICH job died is the whole message, because the two mean opposite things: `inputs` is
           # "the next update would break the config" and `links` is "a pointer in docs/ rotted".
-          message="inputs: $INPUTS
+          message="exceptions: $EXCEPTIONS
+          inputs: $INPUTS
           links: $LINKS
           rulesets: $RULESETS
           secrets: $SECRETS"

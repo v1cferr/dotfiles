@@ -251,6 +251,7 @@
         dead-config = final.callPackage ./pkgs/dead-config.nix { }; # it fails on declared-and-unused
         router-ssot = final.callPackage ./pkgs/router-ssot.nix { }; # it fails when the router's mirror diverges
         eval-metrics = final.callPackage ./pkgs/eval-metrics.nix { }; # what evaluating each host costs
+        usage-audit = final.callPackage ./pkgs/usage-audit.nix { }; # each app next to the traces of its use
       };
       overlayLocalPkgs =
         final: _:
@@ -357,6 +358,7 @@
             dead-config # ./pkgs: same, and the CHECK below runs it too
             router-ssot # ./pkgs: same, and the CHECK below runs it too
             eval-metrics # ./pkgs: same flake8 at build time; the gate WORKFLOW runs it after the check
+            usage-audit # ./pkgs: same flake8 at build time; I run it by hand, it reads my ~
             curseforge # ./pkgs: the official AppImage (outside the CHECK below, the why is there)
             btop # nixpkgs + the src from PR #1457 (Intel Xe GPU): here so the check COMPILES the fork
             ;

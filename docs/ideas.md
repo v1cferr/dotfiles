@@ -224,6 +224,15 @@ order the research put it.
   PLUMBING without ever touching a real value; today those two activation failures sit in the boot
   test's ALLOWED list instead.
 
+## App usage as observability
+
+Opened 29/09/2026, NOT researched yet. `usage-audit` answers "which apps show a trace of use" on the
+machine, since it reads my `~`. The idea is to keep a HISTORY of those answers in a versioned file,
+so the pipeline can read the trend (what I use more, what went quiet) and feed the README, without
+ever reaching the machine and without ever removing anything: observability, read-only. The open
+questions are the format, who writes it (a timer on the machine is rule 15's single owner), and
+what of my usage is fine to publish in a public repo.
+
 ## Onion routing and dVPN: where they fit, and the number that settles half of it
 
 Raised on 13/09/2026, alongside the router audit. Nothing decided, nothing applied.

@@ -161,5 +161,6 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [vm-boot](repo/vm-boot.md) | whether this config still boots on a machine that is not this one |
 | [site](repo/site.md) | how docs/ becomes a site, and why the tree did not move to match it |
 | [github-settings](repo/github-settings.md) | what protects the repo on GitHub, outside git |
-| [eval-metrics](repo/eval-metrics.md) | what evaluating the config costs, and its budget |
+| [eval-metrics](repo/eval-metrics.md) | what evaluating the config costs, how big the code is, and the budgets |
+| [usage-audit](repo/usage-audit.md) | which apps show any sign of being used, and why it is not a gate |
 | [license](repo/license.md) | MIT for the code, CC BY 4.0 for the docs, and what neither covers |

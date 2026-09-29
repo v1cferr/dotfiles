@@ -10,6 +10,11 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
+- [ ] The quarterly app review, first due 31/12/2026 (opened 29/09/2026). `nix run .#usage-audit`
+      lists the apps with no trace of use; the first run left 22. Each one is either deleted in its
+      own commit or kept on purpose, and the answer is the point, not the count:
+      [notes/repo/usage-audit.md](notes/repo/usage-audit.md).
+
 - [ ] NO BACKUP since 24/09/2026, and new storage is what closes it (opened 24/09/2026). The
       daily restic to Google Drive was RETIRED, not paused: the module, the toggle and the
       aliases are gone from the repo and the `HOME` repo was permanently deleted from the Drive.

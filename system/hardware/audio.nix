@@ -62,7 +62,8 @@ in
     jack.enable = true; # compatibility: pro-audio apps that speak JACK
     wireplumber.enable = true;
 
-    # Speaker EQ as a virtual sink in PipeWire's own filter-chain: no extra app in the path, near-zero CPU.
+    # Speaker EQ in PipeWire's own filter-chain: no extra app in the path, near-zero CPU.
+    # A WirePlumber smart filter: it slots in front of the G1500 only while audio goes there, and is gone otherwise.
     # Mono graph of chained biquads; filter-chain copies it per channel (audio.channels = 2).
     extraConfig.pipewire."90-speaker-eq"."context.modules" = [
       {
@@ -94,11 +95,13 @@ in
           "capture.props" = {
             "node.name" = "effect_input.speaker_eq";
             "media.class" = "Audio/Sink";
+            "filter.smart" = true;
+            "filter.smart.name" = "speaker-eq";
+            "filter.smart.target"."node.name" = speaker; # no speaker plugged in, no EQ anywhere
           };
           "playback.props" = {
             "node.name" = "effect_output.speaker_eq";
             "node.passive" = true; # the chain only runs while something plays
-            "target.object" = speaker;
           };
         };
       }

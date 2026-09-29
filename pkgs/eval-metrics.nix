@@ -1,13 +1,13 @@
-# eval-metrics: what evaluating each host COSTS, against the budget in ci/eval-budget.json. It warns
-# instead of failing, since a budget is a question to answer: docs/notes/repo/eval-metrics.md
-{ writers }:
+# eval-metrics: what evaluating each host COSTS and how big the code is, against ci/eval-budget.json.
+# It warns instead of failing, since a budget is a question to answer: docs/notes/repo/eval-metrics.md
+{ writers, scc }:
 
 writers.writePython3Bin "eval-metrics"
   {
     flakeIgnore = [ "E501" ]; # the repo's line length is 100, not flake8's 79
   }
   ''
-    """Evaluate every host, measure the cost, and compare it with the declared budget."""
+    """Evaluate every host and count the code, then compare both with the declared budget."""
     import json
     import os
     import subprocess
@@ -19,6 +19,7 @@ writers.writePython3Bin "eval-metrics"
     # Only numbers that do not depend on the MACHINE get a budget: the same commit gives the same
     # count on the runner and here. cpuTime is reported, never judged.
     BUDGETED = ("derivations", "functionCalls", "heapBytes")
+    SCC = "${scc}/bin/scc"
 
 
     def nix(args, extra, **kw):
@@ -40,6 +41,38 @@ writers.writePython3Bin "eval-metrics"
             "heapBytes": data["gc"]["totalBytes"],
             "cpuSeconds": round(data["cpuTime"], 1),
         }
+
+
+    def code(budget, warnings):
+        """Count the tree with scc; the total is shown, only the ratios and the outliers are judged."""
+        out = subprocess.run([SCC, "--format", "json", "--by-file", "--no-cocomo", "--no-complexity", "."],
+                             check=True, text=True, capture_output=True).stdout
+        langs = sorted(json.loads(out), key=lambda lang: -lang["Code"])
+        rows = []
+        for lang in langs:
+            big = max(lang["Files"], key=lambda f: f["Lines"])
+            cap = budget["maxFileLines"].get(lang["Name"])
+            if cap is not None and big["Lines"] > cap:
+                warnings.append(f"{big['Location']}: {big['Lines']:,} lines, the {lang['Name']} budget is {cap:,}")
+            shown = f"{cap:,}" if cap else ""
+            rows.append(f"| {lang['Name']} | {lang['Count']:,} | {lang['Code']:,} | {lang['Comment']:,} "
+                        f"| {big['Location']} ({big['Lines']:,}) | {shown} |")
+        if len(langs) > budget["languages"]:
+            warnings.append(f"{len(langs)} languages, budget {budget['languages']}: does the new one have a linter?")
+        nix = next(lang for lang in langs if lang["Name"] == "Nix")
+        ratio = nix["Comment"] / nix["Lines"]
+        if ratio > budget["nixCommentRatio"]:
+            warnings.append(f"Nix comment ratio {ratio:.1%}, budget {budget['nixCommentRatio']:.0%} (rule 2)")
+        total = sum(lang["Code"] for lang in langs)
+        return "\n".join([
+            f"### Code size ({total:,} lines of code, {len(langs)} languages, "
+            f"Nix comments {ratio:.1%} of {budget['nixCommentRatio']:.0%})",
+            "",
+            "| Language | Files | Code | Comments | Largest file | Budget |",
+            "| --- | ---: | ---: | ---: | --- | ---: |",
+            *rows,
+            "",
+        ])
 
 
     def main():
@@ -72,6 +105,7 @@ writers.writePython3Bin "eval-metrics"
             *rows,
             "",
         ])
+        table += "\n" + code(budget["code"], warnings)
         print(table)
         if os.environ.get("GITHUB_STEP_SUMMARY"):
             with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as fh:

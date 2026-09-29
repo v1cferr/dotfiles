@@ -1,4 +1,4 @@
-# eval-metrics: what evaluating the config costs
+# eval-metrics: what evaluating the config costs, and how big the code is
 
 `pkgs/eval-metrics.nix`, run by the gate workflow right after `nix flake check`, and by hand with
 `nix run .#eval-metrics`. It evaluates every host in `nixosConfigurations`, writes a table into the
@@ -36,6 +36,32 @@ is already covered locally: `nh os switch` prints the package diff of every `reb
 
 **The eval cache is off** for the measurement (`--option eval-cache false`), or it would answer
 from the gate's own run a step earlier and measure nothing.
+
+## The code size, counted by scc (29/09/2026)
+
+The same run counts the tracked tree with [scc](https://github.com/boyter/scc), from nixpkgs so the
+lock pins it (rule 13), and writes a second table: files, code and comment lines per language, plus
+the largest file of each. scc and not tokei: scc ships releases through 2026 and reports the
+per-file numbers in its JSON, which the largest-file column needs.
+
+**The TOTAL is shown and never judged.** A repo that is the SSOT of a machine grows when the machine
+does, so a budget on the line count would be raised on every new service and would mean nothing.
+What gets a budget is what ties to a rule:
+
+| Budget | Measured on 29/09/2026 | Set at | Why |
+| --- | ---: | ---: | --- |
+| `nixCommentRatio` | 21.2% | 22% | rule 2: comments short, the reasoning in `docs/notes/` |
+| `languages` | 17 | 17 | a new language in the tree should arrive WITH its linter |
+| `maxFileLines` | Nix 691, QML 1978, TS 175, Lua 166, Python 162, Shell 147 | about 20% over | a file past it is asking to be split |
+
+**The comment ratio is scc's, and it is not the 12% of rule 2.** That number (16/08/2026) had no
+recorded method. Counting only whole-line `#` comments in the `.nix` files gives 15.6% at the end of
+that day and 17.1% today; scc also counts the Python and shell embedded in `.nix` strings, which is
+why it reads 21.2%. The budget uses ONE counter from now on, so the trend is comparable with itself,
+which is the only comparison that means anything.
+
+MEASURED on the warning path: with the three budgets lowered by hand, the run printed all three
+`::warning::` lines and exited 0.
 
 ## The budget, and why a warning and not a failure
 

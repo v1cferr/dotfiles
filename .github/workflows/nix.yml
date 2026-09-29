@@ -56,9 +56,9 @@ jobs:
           nix flake check --option abort-on-warn true \
             --override-input duo-streak-daemon path:./ci/stub-duo
 
-      # The COST of each host into the run's summary, and a warning over ci/eval-budget.json. It
-      # never fails the run: a budget is a question to answer: docs/notes/repo/eval-metrics.md
-      - name: eval-metrics (what each host costs to evaluate)
+      # Each host's COST and the code size into the run's summary, warning over ci/eval-budget.json.
+      # It never fails the run: a budget is a question to answer: docs/notes/repo/eval-metrics.md
+      - name: eval-metrics (what each host costs, and how big the code is)
         run: |
           nix run .#eval-metrics --override-input duo-streak-daemon path:./ci/stub-duo -- \
             --override-input duo-streak-daemon path:./ci/stub-duo

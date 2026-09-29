@@ -55,7 +55,7 @@
     photos = {
       upstream = 2283;
       expose = "public";
-      comment = "Immich: its own login, the same criterion as jellyfin. The phone app backs up from anywhere.";
+      comment = "Immich, the ARCHIVE next to Google Photos: its own login, the same criterion as jellyfin, so the archive is viewable from anywhere.";
     };
 
     torrent = {

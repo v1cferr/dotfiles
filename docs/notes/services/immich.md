@@ -1,8 +1,21 @@
 # Immich, the photo library
 
-`system/services/immich.nix`, served at `photos.v1cferr.dev`. A self-hosted Google Photos: a
-timeline, face recognition, text search over the photos ("beach", "dog") and a phone app that
-backs up in the background. All of it runs on this machine, the machine learning included.
+`system/services/immich.nix`, served at `photos.v1cferr.dev`. A self-hosted photo library: a
+timeline, face recognition and text search over the photos ("beach", "dog"), with the machine
+learning running on this machine.
+
+## The role: an archive, NOT a Google Photos replacement
+
+Google Photos stays the primary: it keeps backing up the phone. Immich is where photos go to LEAVE
+it, so they stop costing phone storage and the free 15 GB of the Google account. The flow, when the
+quota gets close:
+
+1. Export the oldest photos with Google Takeout.
+2. Import them with [`immich-go`](https://github.com/simulot/immich-go), which reads Takeout's
+   `.json` sidecars, so dates, places and albums survive.
+3. Check the counts in Immich, and only then delete them from Google Photos.
+
+So the phone app's background backup is NOT used here. It stays optional, for browsing.
 
 ## Why Immich
 
@@ -48,11 +61,12 @@ panel read-only. So the settings live in the UI, like Jellyfin's libraries. The 
 
 ## Reach
 
-`public`, the same criterion as Jellyfin: Immich has its own login, and the phone app has to reach
-the server from outside the house for backup to work. Under `lan`, backup would depend on the
-WireGuard tunnel being up.
+`public`, the same criterion as Jellyfin: Immich has its own login, and the archive stays viewable
+from the phone outside the house without bringing the WireGuard tunnel up.
 
 ## It is NOT a backup
 
 `/srv` is not in btrbk and the daily restic stopped on 24/09/2026, so a photo that exists only here
-has ONE copy, on one NVMe. Do not delete a photo from the phone on the strength of Immich alone.
+has ONE copy, on one NVMe. That is the WHOLE point of the archive role, so it cuts the other way
+too: a photo deleted from Google after step 3 exists only here. It needs a second copy on another
+disk before the Google copy goes.

@@ -121,7 +121,9 @@ writers.writePython3Bin "router-ssot"
         host = re.search(r'csrf_allowed_origins\s*=\s*"https://([\d.]+):', sunshine)
         out["host_ip"] = host.group(1) if host else ""
 
-        out["fai_subnets"] = nix_list(read("system/net/fai-gateway.nix"), "faiSubnets")
+        fai = read("system/net/fai-gateway.nix")
+        out["fai_subnets"] = nix_list(fai, "faiSubnets")
+        out["fai_public_hosts"] = nix_list(fai, "faiPublicHosts")
         ssh = re.search(r"ports\s*=\s*\[\s*(\d+)\s*\]", read("system/net/network.nix"))
         out["ssh_port"] = ssh.group(1) if ssh else ""
         # THREE anchors, because two addresses no longer sit in a `HostName` literal. The T480's
@@ -233,6 +235,25 @@ writers.writePython3Bin "router-ssot"
         return out
 
 
+    def check_fai_public(d, conf):
+        """The public FAI hosts bypass the /25 above through the WAN, or the site dies with the VPN."""
+        want = set(d["fai_public_hosts"])
+        if not want:
+            return [("fai", "could not read faiPublicHosts",
+                     "an anchor moved: fix this checker, do not delete the check")]
+        out, got = [], set()
+        for name, s in sorted(named(conf["network"], "fai_pub").items()):
+            got.add(s.get("target", ""))
+            if s.get("netmask") != "255.255.255.255" or s.get("interface") != "wan" or s.get("gateway"):
+                out.append(("fai", f"{name} is not a gateway-less /32 on wan",
+                            "the host route has to out-prefix the /25 and leave through pppoe-wan"))
+        if got != want:
+            out.append(("fai", f"fai_pub* routes {sorted(got)}, faiPublicHosts declares {sorted(want)}",
+                        "a missing one loops through this host with the VPN off; "
+                        "system/net/fai-gateway.nix holds the list"))
+        return out
+
+
     def check_ssh_port(d, conf):
         """The exposed port is one number in two configs, and the repo owns it."""
         port = d["ssh_port"]
@@ -321,7 +342,7 @@ writers.writePython3Bin "router-ssot"
 
 
     CHECKS = (check_subnets, check_moonlight_sources, check_moonlight_ports, check_moonlight_dest,
-              check_fai_routes, check_ssh_port, check_split_dns, check_vpn_peers, check_no_vpn_dnat)
+              check_fai_routes, check_fai_public, check_ssh_port, check_split_dns, check_vpn_peers, check_no_vpn_dnat)
 
 
     def main():

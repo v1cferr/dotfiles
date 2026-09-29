@@ -21,6 +21,12 @@ let
     "200.136.209.128/25"
   ];
 
+  # The PUBLIC face inside that /25 (every *.fai.ufscar.br name). The router's `fai_pub*` /32s
+  # send it out the WAN, so it works with the VPN off. router-ssot mirrors it: docs/notes/network/network.md
+  faiPublicHosts = [
+    "200.136.209.236"
+  ];
+
   # The list above MIRRORS somebody else's routing, so it can go stale with nothing here
   # changing. This reads what the IPCP actually handed over and says so: docs/notes/network/network.md
   faiRoutesCheck = writeShellApplication {
@@ -47,8 +53,19 @@ let
       missing=$(comm -13 <(echo "$declared") <(echo "$actual"))
       extra=$(comm -23 <(echo "$declared") <(echo "$actual"))
 
+      # A public host the tunnel no longer carries makes its router exception dead weight.
+      stale=""
+      public=(${lib.escapeShellArgs faiPublicHosts})
+      for h in "''${public[@]}"; do
+        ip -4 route get "$h" | grep -q ' dev ppp0 ' || stale="$stale $h"
+      done
+      if [ -n "$stale" ]; then
+        echo "fai-routes-check: faiPublicHosts outside every ppp0 range, drop their fai_pub*:$stale" >&2
+      fi
+
       if [ -z "$missing" ] && [ -z "$extra" ]; then
         echo "fai-routes-check: $(echo "$actual" | wc -l) ranges, all declared"
+        [ -z "$stale" ] || exit 1
         exit 0
       fi
 

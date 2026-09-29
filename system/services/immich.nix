@@ -31,8 +31,9 @@ in
     # The stable MODULE runs it as is (compared on 28/09/2026). Drop this line on the 26.11 upgrade.
     package = pkgs.unstable.immich;
     mediaLocation = "/srv/photos/immich";
+    # Not the default "localhost": it resolved to [::1] only, and my.ingress proxies 127.0.0.1 (502).
+    host = "127.0.0.1";
     # `settings` stays null ON PURPOSE: a non-null value makes the WHOLE admin panel read-only.
-    # The server listens on localhost:2283 and the phone reaches it through Caddy (`photos`).
   };
 
   # Sockets only: duo-db (Docker) already holds 127.0.0.1:5432, and immich talks over

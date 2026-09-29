@@ -53,6 +53,12 @@ The module turns on the NATIVE `services.postgresql` (with VectorChord), and `du
 already holds `127.0.0.1:5432`. Postgres would die on the port conflict at boot. Immich talks over
 `/run/postgresql` anyway, so `listen_addresses = ""` removes the conflict at no cost.
 
+## It listens on 127.0.0.1, not "localhost"
+
+The module's default `host` is `"localhost"`, which here resolved to `[::1]` ONLY. `my.ingress`
+proxies to `127.0.0.1`, so the first boot answered 502 through Caddy with every unit active and
+nothing in the logs. `host = "127.0.0.1"` matches the ingress contract.
+
 ## `settings` stays null
 
 A non-null `services.immich.settings` writes a config file, and Immich then makes the WHOLE admin

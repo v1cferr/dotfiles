@@ -50,9 +50,11 @@ jobs:
           purge-primary-key: never # never the one this run just wrote
 
       # ONE command = the WHOLE gate: the linters, the host's evaluation and the BUILD of the repo's
-      # packages. The --override-input is what removes the need for a credential.
+      # packages. abort-on-warn is rule 21: an evaluation warning fails like an error does.
       - name: nix flake check (linters + host + the packages build)
-        run: nix flake check --override-input duo-streak-daemon path:./ci/stub-duo
+        run: |
+          nix flake check --option abort-on-warn true \
+            --override-input duo-streak-daemon path:./ci/stub-duo
 
       # The COST of each host into the run's summary, and a warning over ci/eval-budget.json. It
       # never fails the run: a budget is a question to answer: docs/notes/repo/eval-metrics.md

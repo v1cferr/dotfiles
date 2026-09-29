@@ -31,9 +31,10 @@ jobs:
 
       # --recreate-lock-file resolves EVERY input at its branch head and --no-write-lock-file leaves
       # the committed pin alone: this measures BREAKAGE, never the age of a pin (rule 13 stands).
+      # abort-on-warn turns an upstream DEPRECATION into a red Monday, a release before it breaks.
       - name: nix flake check against the channel heads
         run: |
-          nix flake check -L --keep-going \
+          nix flake check -L --keep-going --option abort-on-warn true \
             --recreate-lock-file --no-write-lock-file \
             --override-input duo-streak-daemon path:./ci/stub-duo
 

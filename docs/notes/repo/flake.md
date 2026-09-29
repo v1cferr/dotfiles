@@ -403,6 +403,29 @@ this repo. Same pain as VS Code's `/latest/`, except there is no fixed URL to pi
 `curseforge-bump`, which runs on `update` and DOES enter the check (inside `vendored-bump`),
 because its shellcheck is stable. Testing the packaging is `nix build .#curseforge`, by hand.
 
+### Zero evaluation warnings: `abort-on-warn` (29/09/2026)
+
+Rule 21, enforced. Both the gate and the canary run `nix flake check --option abort-on-warn true`,
+which turns every `evaluation warning:` into an error. That covers `lib.warn`, the NixOS
+`warnings` list and every `mkRenamedOptionModule`, which is the path nixpkgs and home-manager use
+to deprecate an option: it WARNS for a release and only then becomes an error.
+
+The two placements answer different questions:
+
+- **The gate** (pinned lock) keeps a warning from entering through a commit of mine.
+- **The canary** (every input at its head) turns an upstream deprecation into a red Monday, a
+  release before it would break a `rebuild`. That is the early notice the plain canary could not
+  give, since a warning is green.
+
+MEASURED before the switch: the host evaluated with ZERO warnings, so the gate went in with nothing
+to clean up, and `all checks passed` with the flag in 1m38s locally. The proof in the other
+direction used a sentinel `warnings = [ "SENTINEL" ];` in the host: the toplevel `drvPath` exited 0
+without the flag and 1 with it, and the sentinel was reverted.
+
+**Why the flag lives in the workflow and not in `nix.settings`**: on the machine it would make any
+warning block `rebuild`, including the day a rebuild IS the fix. The local form of the gate is the
+same command: `nix flake check --option abort-on-warn true`.
+
 ## The devShell
 
 It exists for a CONCRETE reason, not for completeness: entering it is what INSTALLS the hook into

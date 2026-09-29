@@ -10,6 +10,7 @@
     ./btrbk.nix # hourly btrfs snapshots of @home (a local undo; it is NOT a backup)
     ./claude-code.nix # Claude Code's hooks (managed-settings in /etc) for the Discord Rich Presence
     ./jellyfin.nix # the Jellyfin media server (native, systemd, the library in /srv/media)
+    ./immich.nix # Immich, a self-hosted Google Photos (native, systemd, the library in /srv/photos)
     ./qbittorrent.nix # the download client (a Web UI on 8080; it writes to /srv/media/torrents)
     ./ollama.nix # the local AI runtime (CPU); duo-streak-daemon's solver
     ./duo.nix # duo-streak-daemon's stack (a declarative compose; it self-activates with the secret)

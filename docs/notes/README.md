@@ -136,6 +136,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | --- | --- |
 | [service-toggles](services/service-toggles.md) | the optional-service list, and why it is centralized |
 | [jellyfin](services/jellyfin.md) | the media library, the UMask override, DLNA on the TV |
+| [immich](services/immich.md) | the photo library, why it lives in /srv, and why it is not a backup |
 | [ollama](services/ollama.md) | local models on the Arc through Vulkan |
 | [duo](services/duo.md) | the compose stack declared in Nix, and the three Docker traps |
 | [grad-radar](services/grad-radar.md) | the stack at boot, and the monitor chain's order |

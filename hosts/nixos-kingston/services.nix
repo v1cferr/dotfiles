@@ -7,6 +7,7 @@
     caddy = true; # the *.v1cferr.dev reverse proxy (inert until the secrets exist)
     tunnel = true; # the Cloudflare Tunnel (inert until `my.net.tunnel.id` and its credentials exist)
     jellyfin = true; # the media server (/srv/media)
+    immich = true; # the photo library, a self-hosted Google Photos (/srv/photos)
     ollama = true; # local AI (the Duolingo solver)
     duo = true; # duo-streak-daemon (the automatic Duolingo streak)
     grad-radar = true; # GradRadar at boot plus the call-for-applications monitor 2x/day (V1C-72)
@@ -49,6 +50,12 @@
       upstream = 8096;
       expose = "public";
       comment = "It has its own login; exposed at the same level as on Arch. The upstream is on loopback (the native service listens on 0.0.0.0).";
+    };
+
+    photos = {
+      upstream = 2283;
+      expose = "public";
+      comment = "Immich: its own login, the same criterion as jellyfin. The phone app backs up from anywhere.";
     };
 
     torrent = {

@@ -7,6 +7,7 @@
     "caddy"
     "tunnel"
     "jellyfin"
+    "immich"
     "ollama"
     "duo"
     "grad-radar"

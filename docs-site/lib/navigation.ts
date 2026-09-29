@@ -106,6 +106,7 @@ export const navigation: NavItem[] = [
     items: [
       { title: "Service toggles", doc: "notes/services/service-toggles.md" },
       { title: "Jellyfin", doc: "notes/services/jellyfin.md" },
+      { title: "Immich", doc: "notes/services/immich.md" },
       { title: "Ollama", doc: "notes/services/ollama.md" },
       { title: "Duo", doc: "notes/services/duo.md" },
       { title: "grad-radar", doc: "notes/services/grad-radar.md" },

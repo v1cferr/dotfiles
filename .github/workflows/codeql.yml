@@ -1,0 +1,46 @@
+# THE SAST: CodeQL over the three languages it can read here, the checkers' Python, the site's
+# TypeScript and these workflows. Nix has no analyser: docs/notes/repo/github-settings.md
+name: codeql
+
+on:
+  push:
+    branches: [nixos]
+  pull_request:
+  schedule:
+    - cron: "29 9 * * 1" # Mondays, between the canary and the scorecard, an odd minute
+  workflow_dispatch: # it allows running by hand from the Actions tab
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# READ-ONLY at the top; the one write scope, uploading the results, goes on the job.
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        # build-mode none for all three: none of them needs a build to be read, and a build here
+        # would mean Nix on the runner for nothing.
+        language: [actions, python, javascript-typescript]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+
+      - uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          category: /language:${{ matrix.language }}

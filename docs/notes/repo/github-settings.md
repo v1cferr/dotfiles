@@ -121,7 +121,6 @@ reporting turned on (27/09/2026) feeds Security-Policy.
 | --- | --- |
 | Code-Review | one maintainer pushing straight to `nixos`; nobody else could review |
 | Branch-Protection | partial for the same reason: no required review, no required check |
-| SAST | CodeQL has no Nix analyser; the linters in `nix flake check` are that layer |
 | Fuzzing, Packaging, Signed-Releases, CII-Best-Practices | a machine config, not a released artifact |
 | Contributors | a personal repo |
 
@@ -132,6 +131,21 @@ fixed in 4.18.0), both from a `lodash-es@4.17.23` that the site's `pnpm-lock.yam
 transitively. The lodash one was fixed the same day with a pnpm override, whose reason and removal
 condition live in [site](site.md). The license went in the same day too ([license](license.md)), and the
 re-run gave **6.9**, with both License and Vulnerabilities at 10.
+
+**SAST moved out of that table on 30/09/2026, and the reason it was in was half true.** CodeQL has
+no Nix analyser, but this repo is not only Nix: it reads the checkers' Python, the site's TypeScript
+and the workflows themselves (the `actions` language), which is real coverage and not a badge.
+[`codeql.yml`](../../../.github/workflows/codeql.yml) runs the three on every push and weekly, with
+`build-mode: none`, since none of them needs a build and a build would mean Nix on the runner for
+nothing. The same day [`SECURITY.md`](../../../SECURITY.md) got its timeline (acknowledged in 7
+days, fixed or explained in 30), which is the part Security-Policy scored 9 without.
+
+**The ceiling, computed with Scorecard's weights on 30/09/2026: about 7.7.** The 6.9 is 625 points
+over 90 of weight. SAST at 10 adds 50, Security-Policy at 10 adds 5, and a passing OpenSSF Best
+Practices badge would add 12.5. What is left measures a TEAM: a second reviewer (Code-Review, and
+Branch-Protection, whose next tier needs one before anything else counts) and more than one
+organization (Contributors). One person cannot have those, and faking them is the theatre the
+table above refuses.
 
 So the number to watch is the TREND, not the absolute. A drop means something that was paid for
 stopped being true, like a new workflow with a tag instead of a hash, and that is worth a look.

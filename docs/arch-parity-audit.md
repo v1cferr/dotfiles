@@ -181,7 +181,7 @@ gone by policy, since toolchains live in a devShell reached by direnv now.
 | --- | --- |
 | `vpn`, `vpn-off` | The `vpn` CLI in `system/net/vpn.nix`, and it needs no password (polkit) |
 | `wake-fai` | `wake-workstation` in [`home/net/fai-workstation.nix`](../home/net/fai-workstation.nix), with three WoL paths instead of one |
-| `dark-mode`, `tokyo-night` | Obsolete by construction: the theme is a Nix palette applied at build time (rule 9) |
+| `dark-mode`, `tokyo-night` | Obsolete by construction: the theme is a Nix palette applied at build time (rule 11, decision 0001) |
 | `hypr-quick` | Missing. Mostly subsumed by the binds, EXCEPT its wallpaper actions |
 | `zen-sync` | Missing, and it is the delivery half of the Zen customization below |
 

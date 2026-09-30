@@ -47,7 +47,7 @@ and home-manager drops the old symlinks on the switch, since `qt.kvantum` writes
 
 WHY RECOLOR INSTEAD OF ADOPTING A READY-MADE TOKYO NIGHT THEME: what was picked in july was the
 WIDGET SHAPE (the Windows 11 corners, the underline on focus, the flat toolbar) and the colors came
-along as a side effect, which left rule 9 broken in the app that is on screen the most. Recoloring
+along as a side effect, which left rule 11 broken (the palette, decision 0001) in the app that is on screen the most. Recoloring
 keeps the shape and puts the palette back in charge, and it also means the preset switch finally
 reaches Dolphin, which it never did before.
 

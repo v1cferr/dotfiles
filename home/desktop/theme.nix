@@ -20,7 +20,7 @@ let
     ;
   inherit (pkgs.kdePackages) kconfig; # kwriteconfig6, which the activation writes with
 
-  p = config.my.theme.palette; # SSOT: home/desktop/palette.nix (rule 9)
+  p = config.my.theme.palette; # SSOT: home/desktop/palette.nix (rule 11, decision 0001)
 
   # The theme is the Win11OS GEOMETRY recolored by the palette, so the name carries both.
   kvantumTheme = "Win11OS-${config.my.theme.name}";

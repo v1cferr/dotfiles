@@ -110,7 +110,7 @@ one: the tempting `Bash(systemctl --user *)` is a PREFIX rule, so it would quiet
 and `stop` as well.
 
 `theme: dark-ansi` is not neutral, it is as TokyoNight as it gets: it tells the TUI to use the
-terminal's 16 ANSI colors, which in this repo's kitty ALREADY are the `my.theme` palette (rule 9).
+terminal's 16 ANSI colors, which in this repo's kitty ALREADY are the `my.theme` palette (rule 11, decision 0001).
 
 **How the FAI settings were built**: the personal one came from Arch whole; the FAI one is a MERGE
 of the Arch file with what `~/.claude` had in use, namely the `github`, `atlassian` and

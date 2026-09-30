@@ -71,17 +71,35 @@ No loose `.sh`: the logic lives in the build (Nix) or in systemd; runtime is a 1
 
 Validate before applying: `nixos-rebuild build` / `nix eval` OK and atomic commits per feature/task, before the switch.
 
-## 9. One theme palette
+## 9. ~~One theme palette~~
 
-Everything in the TokyoNight theme, centralized in a Nix PALETTE of my own (`home/desktop/palette.nix`, option `my.theme.name`), so changing themes = 1 line (presets: tokyo-night/catppuccin-mocha/gruvbox-dark). nix-colors was DISCARDED: archived (apr/2026) and a base16 of only 16 colors does not reproduce the exact hexes.
+Retired on 30/09/2026 and folded into rule 11, of which it was one application. The choice
+it recorded is [decision 0001](decisions/0001-own-nix-palette.md), and its text is in
+[ownership](notes/repo/ownership.md#the-former-rule-9).
 
-## 10. One UI font
+## 10. ~~One UI font~~
 
-The UI FONT has its OWN SSOT, separate from the colors: `my.fonts.ui` in `system/hardware/fonts.nix` (next to the package, because a font is system level, rule 4; and fontconfig also needs the name, and a system module cannot read a home-manager option). Changing the font = 1 line + the package. A user-side consumer reads it through `osConfig.my.fonts.ui`, never as a literal.
+Retired on 30/09/2026 and folded into rule 11, of which it was one application. The choice
+it recorded is [decision 0002](decisions/0002-ui-font-in-system.md), and its text is in
+[ownership](notes/repo/ownership.md#the-former-rule-10).
 
 ## 11. One source of truth
 
-SSOT ALWAYS: a value repeated in 2+ places becomes a `my.<domain>.<thing>` option and a consumer NEVER holds a literal. Today those are `my.theme.name`/`.palette` (colors, rule 9), `my.fonts.ui` (font, rule 10) and `my.services.<n>` (optional services). The option lives at the LOWEST level that needs it: if any module in `system/` consumes it, it is a system option and `home/` reads it through `osConfig`. The opposite does NOT exist (a system module cannot read a home-manager option). A HOT-RELOAD consumer (Quickshell/Hyprland) does not accept Nix interpolation, because the tree is a symlink: the module GENERATES a data file (JSON/Lua) that it reads, and then the only legitimate literal is the "file was missing" fallback. VALIDATE by swapping the option for a SENTINEL: rebuild, check that ALL consumers changed, revert and check that the store path came back identical.
+A value used in two or more places **MUST** become a `my.<domain>.<thing>` option, and a consumer
+**MUST NOT** hold it as a literal. The option lives at the lowest level that needs it: if a system
+module reads it, it is a system option and `home/` reads it through `osConfig` (the reverse does
+not exist). A hot-reload consumer (Hyprland, Quickshell) gets a GENERATED data file, and its only
+legitimate literal is the fallback for a missing file. A change is proven with a SENTINEL value:
+every consumer moves, and reverting restores the same store path.
+
+**Why**: a repeated value drifts silently, one copy at a time. The theme palette
+([decision 0001](decisions/0001-own-nix-palette.md)) and the UI font
+([decision 0002](decisions/0002-ui-font-in-system.md)) are this rule applied, and were rules 9 and 10.
+
+**Enforced by**: `dead-config` (an option nobody reads), `router-ssot` (the router's copies of a
+value); a literal copied into a consumer by review.
+
+**Detail**: [the long form](notes/repo/ownership.md#the-long-form-of-rule-11).
 
 ## 12. Secrets are a separate layer
 

@@ -21,7 +21,14 @@ export type NavItem = NavPage | NavSection;
 export const navigation: NavItem[] = [
   { title: "Home", doc: "README.md" },
   { title: "Rules", doc: "rules.md" },
-  { title: "Decisions", doc: "decisions/README.md" },
+  {
+    section: "Decisions",
+    items: [
+      { doc: "decisions/README.md" },
+      { title: "0001 Own Nix palette", doc: "decisions/0001-own-nix-palette.md" },
+      { title: "0002 UI font in system", doc: "decisions/0002-ui-font-in-system.md" },
+    ],
+  },
   { title: "How the notes work", doc: "notes/README.md" },
   {
     section: "Boot and storage",
@@ -129,6 +136,7 @@ export const navigation: NavItem[] = [
       { title: "Link checker", doc: "notes/repo/link-checker.md" },
       { title: "Dead config", doc: "notes/repo/dead-config.md" },
       { title: "Rules index", doc: "notes/repo/rules-index.md" },
+      { title: "Ownership", doc: "notes/repo/ownership.md" },
       { title: "Router SSOT", doc: "notes/repo/router-ssot.md" },
       { title: "Prose style", doc: "notes/repo/prose-style.md" },
       { title: "VM boot", doc: "notes/repo/vm-boot.md" },

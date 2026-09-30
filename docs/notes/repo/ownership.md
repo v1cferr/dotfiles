@@ -24,3 +24,17 @@ Everything in the TokyoNight theme, centralized in a Nix PALETTE of my own (`hom
 Moved here VERBATIM from rules.md on 30/09/2026, when it was folded into rule 11.
 
 The UI FONT has its OWN SSOT, separate from the colors: `my.fonts.ui` in `system/hardware/fonts.nix` (next to the package, because a font is system level, rule 4; and fontconfig also needs the name, and a system module cannot read a home-manager option). Changing the font = 1 line + the package. A user-side consumer reads it through `osConfig.my.fonts.ui`, never as a literal.
+
+## The long form of rule 14
+
+Moved here VERBATIM from [rules.md](../../rules.md) on 30/09/2026, when rule 14 became a
+card. Nothing was cut; the card links back here.
+
+ONE OWNER per artifact: if Nix generates the file, only Nix writes to it; if the app rewrites it at runtime, Nix does NOT manage it as a file, it uses an idempotent activation or an immutability marker (`ViewMode[$i]`). Two layers on the same file = SILENT DRIFT, the worst kind: nothing fails, it just ends up wrong. Real cases from this repo: hyprpaper (the HM module generating the old format against the config the daemon required, so a black screen for months), `~/.config/theme/*` (deleted as "temporary" when they were HM symlinks, so a boot with no session), `dolphinrc` (Dolphin rewrites it, so activation + `[$i]`).
+
+## The long form of rule 15
+
+Moved here VERBATIM from [rules.md](../../rules.md) on 30/09/2026, when rule 15 became a
+card. Nothing was cut; the card links back here.
+
+Every piece of AUTOMATION has an explicit and SINGLE owner: whoever starts it is declared (a systemd unit, the compositor's `exec-once`, a timer). An orphan process parented to some shell dies with it. And a single owner with NO FALLBACK is a point of failure: if the automation sustains remote access, it needs a safety net independent of the config that can break (that was the case with `graphical-session.target`, which only `exec-once` brought up).

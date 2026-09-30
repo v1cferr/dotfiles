@@ -69,6 +69,31 @@ A new finding means one of two things. A real credential gets ROTATED first, sin
 public and rewriting history is not an option (the `history` ruleset exists to forbid it). A false
 positive gets its fingerprint appended here, with its line in the table above.
 
+### A public address is a leak no credential scanner sees (29/09/2026)
+
+Every layer above looks for CREDENTIALS. What a public repo of infrastructure leaks more easily is
+a MAP: the public IPv4 of the house, or of someone else's network. So [`.gitleaks.toml`](../../../.gitleaks.toml)
+extends the default rules with `public-ipv4`, and the same hook and the same canary job run it.
+
+The regex only accepts real octets (0 to 255, no leading zero), which already drops most version
+numbers and dates. What remains legitimate is an ALLOWLIST, one block per reason, and each block
+carries a `# review-by:` date that `dead-config --expired` reads in the canary, which is rule 22
+applied to this list too. The first pass, measured over the tree and every commit:
+
+| Allowlist | Review by | Why |
+| --- | --- | --- |
+| not a public address | never | RFC 1918, loopback, CGNAT, link-local, multicast, the TEST-NETs |
+| public DNS resolvers | 2027-09-29 | upstreams and probes, named on purpose |
+| two version numbers | 2027-09-29 | codex `1.2.92.147`, a postgres tag |
+| the Arch-era package lists | 2027-09-29 | history-only files, full of versions |
+| this house, and addresses that attacked it | 2027-09-29 | the home IP is already public through the DNS of `ssh.v1cferr.dev` |
+| FAI and UFSCar | **2026-12-31** | someone else's network, kept until I decide if it belongs in a public repo |
+
+With it in, the full history scan reads no leaks. MEASURED in the other direction: a staged file
+with a new public address fails the hook, while an FAI address, a LAN address, a TEST-NET example
+and a version number in the same file pass. SVGs are skipped by gitleaks' own global allowlist,
+which is why the digits of a path in `razer.svg` never needed an entry.
+
 ## OpenSSF Scorecard
 
 [`.github/workflows/scorecard.yml`](../../../.github/workflows/scorecard.yml) grades the repo's

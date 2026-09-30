@@ -116,6 +116,10 @@ why, which is the same contract as a budget in `ci/eval-budget.json`.
 | `secret:restic_password` | 2026-12-31 | new storage was the plan; a quarter is when to ask again |
 | `note:docs/notes/repo/license.md` | 2027-09-29 | a policy, so a yearly look is enough |
 
+**`--expired` also reads `.gitleaks.toml`**: the `# review-by:` line above each allowlist block,
+keyed by its `description` ([github-settings](github-settings.md)). One clock for every exception
+list in the repo, instead of one per tool.
+
 **The date check is `dead-config --expired`, and it runs in the CANARY, never in the gate.** The
 gate is hermetic and its result is cached by input: a date would make the same commit pass on
 Monday and fail on Tuesday, and a cached green would hide the Tuesday anyway. "The answer changes

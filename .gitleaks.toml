@@ -1,0 +1,65 @@
+# gitleaks: the default rules plus what a credential scanner cannot see, a PUBLIC address. Every
+# allowed one has a reason and a review-by date (rule 22): docs/notes/repo/github-settings.md
+
+[extend]
+useDefault = true
+
+# A public IPv4 is not a secret, it is a MAP: of this house, of someone else's network. So a new one
+# is a decision, taken in the diff, and never an accident found later.
+[[rules]]
+id = "public-ipv4"
+description = "A public IPv4 address, which says where something lives"
+# Octets are 0-255 with no leading zero, which already drops most version numbers and dates.
+regex = '''\b(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\b'''
+keywords = ["."]
+
+# What is not public, or not an address: RFC 1918, loopback, CGNAT, link-local, multicast, the
+# three TEST-NETs the docs use as examples, and the all-zero and broadcast forms.
+[[rules.allowlists]]
+description = "not a public address"
+regexTarget = "match"
+regexes = [
+  '''^(?:10|127|0)\.''',
+  '''^192\.168\.''',
+  '''^172\.(?:1[6-9]|2\d|3[01])\.''',
+  '''^100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.''',
+  '''^169\.254\.''',
+  '''^2(?:2[4-9]|3\d|[45]\d)\.''',
+  '''^(?:192\.0\.2|198\.51\.100|203\.0\.113)\.''',
+]
+
+# review-by: 2027-09-29
+# The public resolvers, named on purpose as upstreams and as probes.
+[[rules.allowlists]]
+description = "public DNS resolvers"
+regexTarget = "match"
+regexes = ['''^(?:1\.1\.1\.1|1\.0\.0\.1|8\.8\.8\.8|8\.8\.4\.4|9\.9\.9\.9|149\.112\.112\.112)$''']
+
+# review-by: 2027-09-29
+# Not addresses: two version numbers (codex 1.2.92.147, a postgres tag).
+[[rules.allowlists]]
+description = "four dotted numbers that are not an address"
+regexTarget = "match"
+regexes = ['''^(?:1\.2\.92\.147|17\.6\.1\.142)$''']
+
+# review-by: 2027-09-29
+# Files that only exist in the HISTORY and are full of versions: the Arch-era package lists.
+[[rules.allowlists]]
+description = "the Arch-era package lists, versions and not addresses"
+paths = ['''^scripts/packages/''']
+
+# review-by: 2027-09-29
+# The home address: it is already public through the DNS of ssh.v1cferr.dev, so writing it adds no
+# exposure. Plus two attackers measured in the sshd journal, and a dead one from the history.
+[[rules.allowlists]]
+description = "this house, and addresses that attacked it"
+regexTarget = "match"
+regexes = ['''^(?:177\.52\.84\.188|177\.52\.80\.0|176\.53\.159\.19[78]|179\.135\.127\.74|45\.7\.16\.59)$''']
+
+# review-by: 2026-12-31
+# SOMEONE ELSE'S network: FAI and UFSCar, in the VPN, the gateway and the SSH config. Kept until I
+# decide whether it belongs in a public repo at all (a private input is the alternative).
+[[rules.allowlists]]
+description = "FAI and UFSCar addresses, pending a decision"
+regexTarget = "match"
+regexes = ['''^(?:200\.136\.(?:19[2-9]|2[01]\d)\.\d{1,3}|200\.133\.2(?:2[4-9]|3\d)\.\d{1,3}|186\.219\.(?:8\d|9[0-5])\.\d{1,3})$''']

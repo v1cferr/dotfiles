@@ -165,16 +165,27 @@ writers.writePython3Bin "dead-config"
               check_secret_index, check_artifacts)
 
 
+    def gitleaks_dates():
+        """The `# review-by:` above each allowlist in .gitleaks.toml, keyed by its description."""
+        path = os.path.join(ROOT, ".gitleaks.toml")
+        if not os.path.exists(path):
+            return {}
+        text = open(path).read()
+        pairs = re.findall(r"# review-by: (\d{4}-\d{2}-\d{2})\n(?:#.*\n)*\[\[rules\.allowlists\]\]\ndescription = \"([^\"]+)\"", text)
+        return {f"gitleaks:{desc}": (desc, by) for by, desc in pairs}
+
+
     def expired():
         """Rule 22's clock half: an exception past its review date. It never runs in the gate."""
         today = datetime.date.today().isoformat()
-        late = [(key, why, by) for key, (why, by) in sorted(ALLOWED.items()) if by < today]
+        every = {**ALLOWED, **gitleaks_dates()}
+        late = [(key, why, by) for key, (why, by) in sorted(every.items()) if by < today]
         for key, why, by in late:
             print(f"dead-config: {key} was due for review on {by} ({why})", file=sys.stderr)
         if late:
             print("\nDelete it, or move the date in a commit that says why.", file=sys.stderr)
             return 1
-        print(f"dead-config: {len(ALLOWED)} exceptions, none past its review date")
+        print(f"dead-config: {len(every)} exceptions, none past its review date")
         return 0
 
 

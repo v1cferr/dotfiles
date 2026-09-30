@@ -45,7 +45,18 @@ Always research the best practices and what the NixOS community is using most fo
 
 ## 2. Comments are short
 
-COMMENTS ARE SHORT, in EVERY file and with no exception. **AT MOST 2 LINES, ANYWHERE**: that is the cap for the module header AND for every comment inside it, per config, per package, per list item. The header says what the module is and where the detail lives. The detail itself goes to [`notes/`](notes/), never into the file. A comment records the why and the trap in one line, never the thing the code already says. THE REASON THIS RULE CHANGED TWICE: it first forbade the header block, then allowed it because the repo had them anyway, and the blocks grew until 36% of the tree was comment and one module carried a 123-line header (measured on 16/08/2026, 6062 comment lines in 16634). A header that long is not documentation, it is a wall you scroll past to reach the code, and the reasoning inside it was invisible to anyone reading `docs/`. So the reasoning MOVED instead of being deleted: `notes/<module>.md` holds the why, the measurements and what was tried and rejected, and the 2-line header points at it. The sweep landed on 16/08/2026: 1601 comment lines in 13299, 12%, with NOTHING deleted, only relocated. Whatever you touch, you shorten.
+A comment **MUST NOT** run past 2 lines, anywhere: the module header, a config, a package, a list
+item. The header says what the module is and points at its note in `docs/notes/`, which is where
+the reasoning, the measurements and what was rejected live. A comment records the why or the trap,
+never what the code already says. Whatever you touch, you shorten.
+
+**Why**: by 16/08/2026 comments had grown to 36% of the tree and one header to 123 lines, a wall
+scrolled past, with reasoning invisible to anyone reading `docs/`. It moved to notes, nothing
+deleted.
+
+**Enforced by**: review; `eval-metrics` warns when the Nix comment ratio passes its budget.
+
+**Detail**: [the long form](notes/repo/prose-style.md#the-long-form-of-rule-2).
 
 ## 3. Declarative, never manual
 

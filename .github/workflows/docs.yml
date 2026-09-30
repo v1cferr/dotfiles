@@ -1,19 +1,12 @@
-# THE PUBLISH: it builds the SAME derivation the gate builds and hands the result to GitHub
+# THE PUBLISH: it builds `.#pages` (the site plus the README's stats) and hands it to GitHub
 # Pages. The two settings that live outside this repo: docs/notes/repo/site.md
 name: docs
 
 on:
   push:
+    # EVERY push, no `paths` filter: the stats under /stats are counted from the WHOLE tree, so a
+    # push touching system/ changes them. The cost, a rebuild per push: docs/notes/repo/readme.md
     branches: [nixos]
-    # Only what the site is built FROM, which is the same list `pkgs/docs-site.nix` fences its
-    # `src` with: a push touching system/ has nothing to republish.
-    paths:
-      - docs/**
-      - docs-site/**
-      - pkgs/docs-site.nix
-      - flake.nix
-      - flake.lock
-      - .github/workflows/docs.yml
   workflow_dispatch: # it allows running by hand from the Actions tab
 
 # Two pushes in a row publish the last one: an intermediate deploy has no value here.
@@ -53,8 +46,8 @@ jobs:
       # zizmor's cache-poisoning finding. The gate in nix.yml is the one that caches.
       # The override is the same as the gate's: the package set comes from the HOST, whose
       # evaluation reaches the private input.
-      - name: nix build .#docs-site
-        run: nix build .#docs-site --override-input duo-streak-daemon path:./ci/stub-duo
+      - name: nix build .#pages
+        run: nix build .#pages --override-input duo-streak-daemon path:./ci/stub-duo
 
       # The store path is read-only and the upload tars what it is given, so it gets a writable
       # copy instead of the symlink.

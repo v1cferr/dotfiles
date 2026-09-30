@@ -401,6 +401,31 @@
               }
             );
 
+          # THE README'S NUMBERS, counted from this very source at build, so a commit and its stats
+          # cannot disagree. The facts only Nix knows come in here: docs/notes/repo/readme.md
+          repo-stats = pkgs.callPackage ./pkgs/repo-stats/package.nix {
+            src = self;
+            facts =
+              let
+                lock = builtins.fromJSON (builtins.readFile ./flake.lock);
+                inherit (self.checks.${system}.pre-commit.config) hooks;
+              in
+              {
+                release = lock.nodes.nixpkgs.original.ref;
+                inputs = builtins.length (builtins.attrNames lock.nodes.root.inputs);
+                hooks = builtins.length (builtins.filter (h: h.enable) (builtins.attrValues hooks));
+                date = self.lastModifiedDate or "19700101000000";
+              };
+          };
+
+          # WHAT GITHUB PAGES SERVES: the site plus the stats under /stats, joined here and not
+          # inside docs-site, whose src stays fenced to docs/ so a system/ commit does not rebuild it.
+          pages = pkgs.runCommand "pages" { } ''
+            cp -r ${pkgs.docs-site} $out
+            chmod -R u+w $out
+            cp -r ${self.packages.${system}.repo-stats} $out/stats
+          '';
+
           # THE DISK LAYOUT, formatted from scratch and booted: `nix run .#disko-vm`. The REAL
           # disko config on a 24 GiB image, and the only check of it: docs/notes/boot-and-storage/disko.md
           disko-vm =

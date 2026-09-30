@@ -1,5 +1,7 @@
 # 0002. The UI font is a system option, apart from the colors
 
+The UI font is one system option, next to its package and apart from the colors, read everywhere.
+
 - **Status**: accepted
 - **Date**: 29/07/2026; it was rule 10 until 30/09/2026
 

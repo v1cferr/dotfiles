@@ -1,5 +1,7 @@
 # 0003. The agent contract lives in Claude Code's managed layer
 
+What I expect from an AI agent everywhere is generated into Claude Code's read-only managed file.
+
 - **Status**: accepted
 - **Date**: 15/08/2026, when rule 18 was written
 

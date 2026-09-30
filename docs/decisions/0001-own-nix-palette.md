@@ -1,5 +1,7 @@
 # 0001. The theme is a Nix palette of my own
 
+Every themed program reads one palette of my own, picked by one option, instead of nix-colors.
+
 - **Status**: accepted
 - **Date**: 29/07/2026, first recorded; it was rule 9 until 30/09/2026
 

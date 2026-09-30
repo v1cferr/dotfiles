@@ -1,5 +1,7 @@
 # 0005. The site is built with Fumadocs
 
+The published docs are a static Fumadocs export, built hermetically by Nix, after MkDocs froze.
+
 - **Status**: accepted
 - **Date**: 23/09/2026; it supersedes [0004](0004-mkdocs-for-the-site.md)
 

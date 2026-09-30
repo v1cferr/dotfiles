@@ -1,5 +1,7 @@
 # 0004. The site is built with MkDocs
 
+The first generator of the published docs, chosen as a bet with a trigger, and replaced five days later.
+
 - **Status**: superseded by [0005](0005-fumadocs-for-the-site.md) on 23/09/2026
 - **Date**: 18/09/2026
 

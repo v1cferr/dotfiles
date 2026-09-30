@@ -21,6 +21,7 @@ export type NavItem = NavPage | NavSection;
 export const navigation: NavItem[] = [
   { title: "Home", doc: "README.md" },
   { title: "Rules", doc: "rules.md" },
+  { title: "Decisions", doc: "decisions/README.md" },
   { title: "How the notes work", doc: "notes/README.md" },
   {
     section: "Boot and storage",

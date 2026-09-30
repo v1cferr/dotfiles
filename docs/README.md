@@ -27,6 +27,7 @@ act on (the open items) and what you look up (the history) have different rhythm
 | File | What it is | When you read it |
 | --- | --- | --- |
 | [rules.md](rules.md) | The rules that govern this repo | Before deciding anything |
+| [decisions/](decisions/README.md) | The choices made on a date, with what was compared, and their status | "Why this tool and not that one?" |
 | [open-items.md](open-items.md) | What is still open | When picking what to work on |
 | [history/](history/) | What was done and why, a folder per year and a file per month | "What happened that day?" |
 | [notes/](notes/) | One page per module: why it is the way it is, and the traps | "Why is THIS module like this?" |
@@ -41,9 +42,9 @@ with search and a nav grouped by subject. The files did not move to match that n
 
 ## Conventions
 
-**The rule numbering is API.** The code cites "rule 11" and "rule 14" in more than seventy
-comments. Renumbering would break all of them silently: a new rule goes in at the end, a
-dead rule gets struck through instead of disappearing.
+**The rule numbering is API**, and how often it is cited is measured in [rules.md](rules.md),
+which is the only place that number lives: a new rule goes in at the end, a dead rule gets struck
+through instead of disappearing, and `rules-index` fails on a citation that points at neither.
 
 **A good entry explains the WHY and the trap**, not the what, because the code already says
 the what. The most valuable entries here are the ones recording something TRIED AND

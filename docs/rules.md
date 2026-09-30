@@ -1,16 +1,43 @@
 # Rules
 
-The rules that govern this repo. **THE NUMBERING IS API**: the code cites
-"rule 11", "rule 14" and so on in 212 comments (measured 19/09/2026), and
-renumbering would break all of them silently. A new rule goes in at the END; a
-rule that dies gets struck through instead of disappearing.
+The INVARIANTS of this repo: what must stay true of every commit. A DECISION (which theme, which
+generator, which file the agent reads) is not a rule, and lives in [decisions](decisions/README.md)
+with its date and its status.
 
-**HOW MANY RULES THERE ARE IS NOT WRITTEN ANYWHERE BUT HERE.** Two places said
-"18" while this file already held 20, which is rule 16 charging its smallest
-possible interest: a derived number has one owner, and copying it just buys a
-second thing to forget. The dated measurement above is the other half of the
-same idea, since a number with a date cannot go stale, only a number without
-one can.
+## How to read a card
+
+Every rule is one card with the same four parts:
+
+- **The rule**, in one or two sentences. **MUST**, **MUST NOT**, **SHOULD** and **MAY** mean what
+  [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) says they mean. They are in BOLD because
+  plain CAPS in this repo is emphasis, and the two must not be confused.
+- **Why**: the reason, in at most three lines.
+- **Enforced by**: the check that fails when the rule breaks, or `review` when only a reader
+  catches it. [`rules-index`](notes/repo/rules-index.md) counts both.
+- **Detail**: where the measurements, the incidents and what was rejected live. The long form of
+  a rule is never deleted, it is moved there.
+
+## The numbering is API
+
+The tree cites a rule 512 times and 178 commit messages cite one too (measured 30/09/2026), and
+those messages can never be edited. So a number is never reused and never shuffled: a new rule
+goes in at the END, and a rule that dies keeps its heading, struck through, with the rule that
+absorbed it. `rules-index` fails on a citation of a number that does not exist or was retired.
+
+**How many rules there are is written nowhere but here**: a derived number has one owner, and
+copying it only buys a second thing to forget.
+
+## By theme
+
+| Theme | Rules |
+| --- | --- |
+| Layout | 4 `system/` and `home/` apart |
+| Reproducibility | 3 declarative, 8 validate first, 13 the lock pins, 21 zero warnings |
+| Ownership | 11 one source of truth, 14 one owner per artifact, 15 one owner per automation |
+| State and secrets | 6 state is not declared, 12 secrets are a separate layer |
+| Hygiene | 2 short comments, 7 no loose scripts, 16 dead config leaves, 19 packages named once, 22 exceptions expire |
+| Writing and docs | 17 en-US and how, 20 the docs are a product |
+| Working | 1 research first, 18 the agent contract is declared |
 
 ## 1. Research first
 

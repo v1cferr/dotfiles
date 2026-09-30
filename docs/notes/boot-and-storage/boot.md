@@ -12,8 +12,13 @@ Each system has ITS OWN ESP, on a separate disk: NixOS on the Kingston (`nvme0n1
 Windows 11 on the SanDisk's ESP (label SYSTEM, UUID 904C-B9D0). The `sd*` LETTER SWAPS between
 boots, so identify that one by model, never by `sdX`.
 
-systemd-boot only loads an EFI binary from its OWN ESP, so it is incapable of listing Windows:
-switching OS would become F8 at POST every time. GRUB reads both.
+systemd-boot, on its own, lists only what is on its OWN ESP, so this machine's Windows would not
+show up and switching OS would become F8 at POST every time. GRUB reads both.
+
+**CORRECTED on 30/09/2026**: that is no longer a hard limit. NixOS has
+`boot.loader.systemd-boot.windows.<name>.efiDeviceHandle`, which boots Windows from another ESP
+through the EDK2 UEFI shell. GRUB stayed anyway, and why is
+[decision 0007](../../decisions/0007-grub-over-lanzaboote.md).
 
 That is also what rules out **lanzaboote**, the official Secure Boot path on NixOS, which is
 systemd-boot-only. The dualboot with a menu is worth more than an end-to-end verified chain, and

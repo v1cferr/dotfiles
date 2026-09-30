@@ -27,6 +27,7 @@ export const navigation: NavItem[] = [
       { doc: "decisions/README.md" },
       { title: "0001 Own Nix palette", doc: "decisions/0001-own-nix-palette.md" },
       { title: "0002 UI font in system", doc: "decisions/0002-ui-font-in-system.md" },
+      { title: "0003 Agent contract", doc: "decisions/0003-agent-contract-in-managed-layer.md" },
     ],
   },
   { title: "How the notes work", doc: "notes/README.md" },

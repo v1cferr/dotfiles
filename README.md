@@ -152,7 +152,9 @@ docs/            what is NOT declarable, plus the diary: rules, notes, history, 
 docs-site/       docs/ built into https://dotfiles.v1cferr.dev (Fumadocs, hermetic in Nix)
 ```
 
-`README.md` is the only doc at the root. Everything else lives in [`docs/`](docs/).
+The docs at the root are the three GitHub reads from there: this README,
+[`CONTRIBUTING.md`](CONTRIBUTING.md) and [`SECURITY.md`](SECURITY.md). Everything else lives in
+[`docs/`](docs/).
 
 ## Where does a package go?
 

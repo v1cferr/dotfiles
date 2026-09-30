@@ -168,7 +168,9 @@ land only when I press "Save (and continue)" with the robot icon, which is the o
 them, and the two personal attestations (`know_secure_design`, `know_common_errors`) are mine to
 confirm there. Kept in the repo and not in the form so the answers are versioned and reviewed like
 any other claim here; a change to the file needs that robot save again. The five `Unmet` are all
-SUGGESTED, so none of them blocks the badge.
+SUGGESTED, so none of them blocks the badge. MEASURED through the project's API the same day,
+after the robot save: `badge_level` passing, 100% of the passing criteria, 115% tiered (15% of
+the way to silver).
 
 So the number to watch is the TREND, not the absolute. A drop means something that was paid for
 stopped being true, like a new workflow with a tag instead of a hash, and that is worth a look.

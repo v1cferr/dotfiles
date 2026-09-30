@@ -5,6 +5,7 @@
   <a href="https://github.com/v1cferr/dotfiles/actions/workflows/nix.yml"><img alt="gate" src="https://github.com/v1cferr/dotfiles/actions/workflows/nix.yml/badge.svg?branch=nixos"></a>
   <a href="https://github.com/v1cferr/dotfiles/actions/workflows/canary.yml"><img alt="canary" src="https://github.com/v1cferr/dotfiles/actions/workflows/canary.yml/badge.svg?branch=nixos"></a>
   <a href="https://scorecard.dev/viewer/?uri=github.com/v1cferr/dotfiles"><img alt="OpenSSF Scorecard" src="https://api.scorecard.dev/projects/github.com/v1cferr/dotfiles/badge"></a>
+  <a href="https://www.bestpractices.dev/projects/15115"><img alt="OpenSSF Best Practices" src="https://www.bestpractices.dev/projects/15115/badge"></a>
   <br>
   <img alt="nixos" src="https://dotfiles.v1cferr.dev/stats/nixos.svg">
   <img alt="lines of code" src="https://dotfiles.v1cferr.dev/stats/loc.svg">

@@ -37,7 +37,7 @@ copying it only buys a second thing to forget.
 | State and secrets | 6 state is not declared, 12 secrets are a separate layer |
 | Hygiene | 2 short comments, 7 no loose scripts, 16 dead config leaves, 19 packages named once, 22 exceptions expire |
 | Writing and docs | 17 en-US and how, 20 the docs are a product |
-| Working | 1 research first, 18 the agent contract is declared |
+| Working | 1 research first, 18 the agent contract is declared, 23 a claim carries its date |
 
 ## 1. Research first
 
@@ -340,3 +340,18 @@ deliberate, and by 2032 "exception" and "leftover" read the same.
 allowlists), never in the gate: a clock would make a cached check change with no commit.
 
 **Detail**: [dead-config](notes/repo/dead-config.md#every-exception-has-a-review-date-rule-22-29092026).
+
+## 23. A claim carries its measurement and its date
+
+A number or a claim about the system, in a note, a card or a commit message, **SHOULD** say how
+it was measured and when (`MEASURED on 30/09/2026`), and a claim that was reasoned and not
+measured **MUST** say so. A number that changes gets a new measurement and a new date, never a
+silent edit.
+
+**Why**: a number with a date can only be old, and a reader can tell; a number without one can be
+wrong, and nobody can. This repo already works this way: the rule writes it down so the next page
+does too.
+
+**Enforced by**: review.
+
+**Detail**: [eval-metrics](notes/repo/eval-metrics.md), whose budgets are the same idea as a check.

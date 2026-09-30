@@ -120,7 +120,26 @@ reports, never fails.
 
 ## 17. Written in en-US, and how
 
-**EVERYTHING IN THIS REPO IS WRITTEN IN en-US**: code comments, module header blocks, docs, option `description`s, commit messages, and file/directory names. The reason is REACH, not style. This repo is public, it is the most detailed record of how I work, and it is meant to be read by people who do not speak Portuguese. THE MIGRATION IS INCREMENTAL, AND HALF-TRANSLATED IS THE WORST OF THE THREE STATES, so it needs a hard boundary instead of good intentions: **whatever you touch, you leave in en-US.** New files are born in en-US; an edited file gets translated IN THE SAME COMMIT that edits it, never in a "translation pass later" that never comes (that is rule 16's drift, applied to language). Rules 1-16 above, all of `docs/`, the `.nix` tree, the Hyprland Lua, the Quickshell QML, `scripts/`, the CI workflow and the tooling files were all translated and renamed on 15/08/2026, the day this rule was written, so THE MIGRATION IS DONE and this rule now only governs what comes next. What deliberately stays in pt-BR is a short, closed list, and each item says why where it lives: the LOCKSCREEN (a product decision, recorded in the july history), the names of Brazilian holidays plus the month and weekday names in the bar's calendar (official names of local events, the same class of literal as a city's name), and runtime identifiers whose rename would be a behavior change and not a translation (the `my.archAntigo` option, the `arch-antigo-mount` unit, `/mnt/arch-antigo`, the "Arch antigo" Dolphin bookmark, `/srv/media/media/Filmes`). RENAME WITH `git mv`, NEVER delete+create, because the history of a file IS the product here and delete+create severs it. THE RULE NUMBERING SURVIVES TRANSLATION: `docs/regras.md` became `docs/rules.md`, and the comments citing "regra N" became "rule N" **with the same N**. The numbering is API (see this file's header), so translating it renames the WORD, never the number. COMMITS: conventional commits (`feat|fix|docs|chore(scope): subject`), subject AND body in en-US, and **one commit per feature/task**, never one blob at the end of the day. That is rule 8 seen from the git side, and it matters for the same reason the header blocks matter: the history is the diary that explains WHY, and a blob erases it. **NEVER a `Co-Authored-By:` trailer**, for Claude or any other tool: who typed is not who decided, and the authorship of this repo is not shared. **NO EM DASHES** (`—`) in prose, anywhere. A comma, a colon or a new sentence always reads better, and leaning on the em dash is a tic that flattens every paragraph into the same shape. The exception is the em dash as a LITERAL and not as prose: the "—" glyph used on screen to mean "no value", and a regex matching somebody else's window title that contains one. **NO EMOJI**, on the same terms and for a stricter reason: not in docs, not in comments, not in commit messages, not in an option `description`. A marker like the warning sign is not emphasis, it is a claim that THIS paragraph matters more than the one next to it, and when every trap carries one the marker stops meaning anything. What already earned emphasis has CAPS and bold, which survive `grep`, a diff and a terminal with no font for pictographs. The exception is anything that is a literal being quoted and not decoration: a program's own output (`sbctl status` prints a check mark) or a codepoint the text is discussing (`U+2764`). Same exception as the em dash, for the same reason. **FIRST PERSON, NOT MY OWN NAME**: this repo is mine, so it says "my dotfiles", never "v1cferr's dotfiles" or the impersonal "the user's dotfiles", which read like a third party documenting my machine. Second person is reserved for the READER ("the ones you need to read this tree"), which keeps the two voices from colliding. The exception is anything that is a literal identifier and not a figure of speech: `ssh.v1cferr.dev`, the `v1cferr` user account, paths under `/home/v1cferr`.
+Everything in the repo **MUST** be written in en-US: code, comments, docs, option descriptions,
+commit messages and file names. The closed list of pt-BR exceptions lives where each item is used,
+with its reason. And every text follows the same habits:
+
+- **Whatever you touch, you leave in en-US**, in the same commit; never a translation pass later.
+- **Rename with `git mv`**, never delete and create: the history of a file is the product.
+- **Commits** are conventional (`feat|fix|docs|chore(scope): subject`), in en-US, **one per
+  task**, and **MUST NOT** carry a `Co-Authored-By:` trailer: who typed is not who decided.
+- **No em dash and no emoji in prose.** A quoted literal (a program's output, a codepoint being
+  discussed, a glyph used on screen) is the exception.
+- **First person, not my name**: "my dotfiles"; second person is for the reader. A literal
+  identifier (`v1cferr`, `ssh.v1cferr.dev`) is not a figure of speech.
+
+**Why**: reach. The repo is public and the most detailed record of how I work, and it is meant for
+people who do not read Portuguese. Half-translated is the worst of the three states.
+
+**Enforced by**: `prose-style` (em dash, emoji, the trailer), `convco` (the commit grammar); the
+language itself by review.
+
+**Detail**: [the long form](notes/repo/prose-style.md#the-long-form-of-rule-17).
 
 ## 18. The agent contract is declared
 

@@ -1,4 +1,5 @@
-# v14 plus the keyboard-flow scripts, called by the submap in keybinds.lua.
+# FLAMESHOT v14 plus the keyboard-flow scripts, called by the submap in keybinds.lua.
+# The portal-only capture and what broke on the way: docs/notes/apps/flameshot.md
 {
   config,
   osConfig,

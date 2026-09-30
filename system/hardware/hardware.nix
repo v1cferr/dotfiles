@@ -1,4 +1,5 @@
-# BlueZ plus blueman (the tray applet, since Hyprland has no DE). BT audio goes through PipeWire.
+# BlueZ plus blueman (the tray applet, since Hyprland has no DE); BT audio goes through PipeWire.
+# No note: nothing here needs more than this.
 { ... }:
 
 {

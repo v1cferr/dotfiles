@@ -1,5 +1,5 @@
-# STEAM: the client plus the Proton runtime. System level and mandatory, since programs.steam
-# FHS-wraps the client and injects the steam-runtime. Games/prefixes are STATE (rule 6).
+# STEAM: the client plus the Proton runtime, system level since programs.steam FHS-wraps it.
+# Games and prefixes are STATE (rule 6). No note: nothing here needs more than this.
 { pkgs, ... }:
 
 {

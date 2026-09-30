@@ -1,5 +1,5 @@
-# Tor, CLIENT ONLY: a SOCKS5 on 127.0.0.1:9050 for a CLI that accepts a proxy (`mega-dl`).
-# Never a relay or exit. The wiki's 9063 port does not exist in this nixpkgs.
+# Tor, CLIENT ONLY: a SOCKS5 on 127.0.0.1:9050 for a CLI that takes a proxy (`mega-dl`), never a
+# relay or exit. Why a native proxy over torsocks: docs/notes/apps/mega.md
 { config, ... }:
 
 {

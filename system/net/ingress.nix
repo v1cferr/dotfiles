@@ -1,5 +1,5 @@
-# INGRESS: the SSOT of who gets a subdomain and how far it reaches. Caddy and the tunnel are generated FROM here.
-# The default is `lan`, so forgetting to declare `expose` CLOSES instead of exposing.
+# INGRESS: the SSOT of who gets a subdomain and how far; Caddy and the tunnel are generated from
+# it, and the default `lan` CLOSES when `expose` is forgotten: docs/notes/network/caddy.md
 { config, lib, ... }:
 
 {

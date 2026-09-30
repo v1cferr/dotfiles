@@ -1,6 +1,5 @@
 # CREDITRADAR: the app stack (Next.js + FastAPI + Postgres) up at BOOT plus the daily market
-# collection, reachable only from home. Why boot, why the working-tree path and why the
-# collection window is what it is: docs/notes/services/credit-radar.md
+# collection, home only. Why boot and why that window: docs/notes/services/credit-radar.md
 {
   config,
   pkgs,

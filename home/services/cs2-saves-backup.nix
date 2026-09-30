@@ -1,9 +1,5 @@
-# CS2 SAVES: an hourly rsync mirror out of the Bottles prefix into a plain folder in $HOME. The
-# saves are irreplaceable (a repack, so no Steam cloud).
-#
-# It used to be HALF of a pair: the mirror put the saves where the daily restic would pick them
-# up. That backup was retired on 24/09/2026 and nothing replaced it yet, so today this is a
-# same-disk mirror and NOT a backup: docs/notes/boot-and-storage/restic.md
+# CS2 SAVES: an hourly rsync mirror out of the Bottles prefix into $HOME. A same-disk mirror, NOT
+# a backup since restic left (24/09/2026): docs/notes/boot-and-storage/games-disk.md
 {
   pkgs,
   config,

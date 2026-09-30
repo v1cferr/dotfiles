@@ -1,5 +1,5 @@
-# SYSTEM PACKAGES: rescue, diagnosis and whatever root or a service needs. USER apps are home/'s
-# (rule 4). `pkgs.foo` = the stable base; `pkgs.unstable.foo` = bleeding edge (see the overlay).
+# SYSTEM PACKAGES: rescue, diagnosis and what root or a service needs; user apps are home/'s
+# (rule 4), `pkgs.unstable.foo` is the edge. Where a package goes: docs/notes/repo/packages.md
 { pkgs, ... }:
 
 {

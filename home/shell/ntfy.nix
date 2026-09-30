@@ -1,5 +1,5 @@
-# `notify` on the PATH. The script itself moved to `pkgs/notify.nix` the day sshd's PAM hook
-# became a second consumer, and a home-manager package is out of a system module's reach (rule 4).
+# `notify` on the PATH; the script is `pkgs/notify.nix`, since sshd's PAM hook is a second
+# consumer a home-manager package cannot reach (rule 4): docs/notes/repo/shell.md
 { pkgs, ... }:
 
 {

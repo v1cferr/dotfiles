@@ -1,7 +1,5 @@
-# LOCAL SNAPSHOTS (btrbk): the minutes-scale "undo" for @home. It is NOT a backup and never
-# became one: a snapshot shares the disk it protects. The off-disk half was restic, retired on
-# 24/09/2026, so today this is the ONLY automatic copy (docs/notes/boot-and-storage/restic.md).
-# Why @home only, and the /.snapshots prerequisite: docs/notes/boot-and-storage/btrbk.md
+# LOCAL SNAPSHOTS (btrbk): the minutes-scale "undo" for @home, NOT a backup (same disk, and no
+# off-disk copy since 24/09/2026). @home only and /.snapshots: docs/notes/boot-and-storage/btrbk.md
 { config, lib, ... }:
 
 lib.mkIf config.my.services.btrbk {

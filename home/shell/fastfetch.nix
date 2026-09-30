@@ -1,5 +1,5 @@
 # fastfetch, with the module list repeated in full because there is no per-module override.
-# The terminal field uses {process-name}: VS Code's cmdline blew up the layout.
+# The terminal field uses {process-name}, and owfetch mirrors it: docs/notes/network/network.md
 { pkgs, ... }:
 
 {

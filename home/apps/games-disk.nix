@@ -1,6 +1,5 @@
-# GAMES ON THE WINDOWS DISK: the heavy game data lives on /mnt/windows (NTFS, shared with Windows
-# 11) and is symlinked back into the place each launcher already looks.
-# Why symlink instead of relocating: docs/notes/boot-and-storage/games-disk.md
+# GAMES ON THE WINDOWS DISK: heavy game data on /mnt/windows (NTFS), symlinked back into the
+# path each launcher already looks. Why symlink: docs/notes/boot-and-storage/games-disk.md
 {
   config,
   lib,

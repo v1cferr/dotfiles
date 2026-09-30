@@ -1,5 +1,5 @@
-# USER and SHELL: zsh as the login shell plus the v1cferr account.
-# The password hash comes from sops; the SSH public keys are public, so they live here.
+# USER and SHELL: zsh as the login shell plus the v1cferr account; the password hash comes from
+# sops and the SSH public keys live here. No note: the home-dir trap is in disko.md, cited below.
 { config, pkgs, ... }:
 
 {

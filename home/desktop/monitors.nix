@@ -1,5 +1,5 @@
-# MONITOR data for the HOT-RELOAD consumers (Hyprland's Lua, Quickshell's QML), since Nix cannot
-# write inside their symlinked trees. The OPTION is system/desktop/monitors.nix; here it is read.
+# MONITOR data for the HOT-RELOAD consumers (Lua, QML), which Nix cannot write into. The option
+# is system/desktop/monitors.nix; the two panels and their modes: docs/notes/hardware/monitors.md
 { osConfig, ... }:
 
 let

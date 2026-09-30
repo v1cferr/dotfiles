@@ -1,5 +1,5 @@
-# The home ranges (SSOT, rule 11): the LAN and the router's WireGuard, kept SEPARATE.
-# They mirror the router, which is what really defines them; Nix does not reach it.
+# The home ranges (SSOT, rule 11): the LAN and the router's WireGuard, kept SEPARATE, mirroring
+# the router that defines them. Trust by source: docs/notes/network/network.md
 { lib, ... }:
 
 {

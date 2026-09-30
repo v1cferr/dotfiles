@@ -1,5 +1,5 @@
-# kitty, Hyprland's default terminal. The prompt is starship, the shell is zsh.
-# The color scheme follows my.theme.name through the table below.
+# kitty, Hyprland's default terminal, colored from my.theme.name through the table below.
+# The prompt is starship and the shell is zsh. No note: nothing here needs more than this.
 { config, osConfig, ... }:
 
 let

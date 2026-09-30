@@ -1,5 +1,5 @@
-# AUDIO: PipeWire plus WirePlumber (it replaces PulseAudio/JACK, Bluetooth audio included).
-# rtkit gives it real-time priority, which is what avoids xruns and crackling.
+# AUDIO: PipeWire plus WirePlumber (in place of PulseAudio/JACK, Bluetooth included), with rtkit
+# for real-time priority. No note yet: the speaker EQ's reasoning is in its own comments below.
 { lib, ... }:
 
 let

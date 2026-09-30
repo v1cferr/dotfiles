@@ -1,5 +1,5 @@
-# The git CONFIG (~/.gitconfig), declared. The `git` binary comes from system/ (systemPackages).
-# Here it is only the identity/preferences, plus gh, which is git's credential helper below.
+# The git CONFIG (~/.gitconfig): identity, preferences and gh as the credential helper. The binary
+# is system/'s (systemPackages). No note: the settings below are the whole story.
 { config, lib, ... }:
 
 {

@@ -1,5 +1,5 @@
-# LAUNCHER: rofi `drun` with icons and rofi's own recency history, themed from my.theme.
-# rofi itself comes from clipboard.nix; the binds are in keybinds.lua (SUPER+Q / SUPER+R).
+# LAUNCHER: rofi `drun` with icons and recency, themed from my.theme; rofi comes from clipboard.nix,
+# the binds from keybinds.lua (SUPER+Q / SUPER+R). No note: nothing here needs more than this.
 { config, osConfig, ... }:
 
 let

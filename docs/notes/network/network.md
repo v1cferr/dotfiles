@@ -79,6 +79,28 @@ The module has to be loaded for the sysctl to take: `boot.kernelModules = [ "tcp
 decoration, and the order is safe because `systemd-sysctl.service` runs After
 `systemd-modules-load.service`.
 
+## The kernel sysctls: only what the defaults left open (30/09/2026)
+
+The NixOS wiki's Hardening page lists a dozen sysctls, and `profiles/hardened` sets more. Most were
+ALREADY in place: MEASURED on the running kernel before any change, `dmesg_restrict` was 1,
+`accept_source_route` 0, `unprivileged_bpf_disabled` 2, `yama.ptrace_scope` 1 and
+`tcp_syncookies` 1. So `boot.kernel.sysctl` only closes what was open:
+
+| sysctl | Before | Now | Why |
+| --- | ---: | ---: | --- |
+| `net.ipv4.conf.{all,default}.accept_redirects` | 0 / 1 | 0 | an ICMP redirect is a way to reroute this host |
+| `net.ipv4.conf.{all,default}.secure_redirects` | 1 | 0 | the same, from a "gateway" |
+| `net.ipv6.conf.{all,default}.accept_redirects` | 1 | 0 | the IPv6 half of the same |
+| `net.ipv4.conf.{all,default}.send_redirects` | 1 | 0 | this host forwards (the FAI gateway), and has no reason to steer its neighbours |
+| `kernel.kptr_restrict` | 1 | 2 | kernel addresses hidden from root as well |
+
+**`rp_filter` stays 0 on purpose**: `networking.firewall.checkReversePath` is `true` (evaluated),
+so the firewall already drops spoofed sources, and a kernel strict mode on top would be a second
+owner of the same check, with the VPN's split tunnel as the first thing to break.
+
+**Not `profiles/hardened` wholesale**: it swaps the allocator and restricts things a desktop
+uses, which is why only this subset is here.
+
 ## The link silently downshifts to 100 Mb/s, and it is the cable (24/09/2026)
 
 MEASURED while pulling 23.67 GiB off Google Drive: rclone would not pass 10.4 MiB/s, and the HDD

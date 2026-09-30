@@ -68,6 +68,17 @@ in
   boot.kernel.sysctl = {
     "net.ipv4.tcp_congestion_control" = "bbr";
     "net.core.default_qdisc" = "fq"; # BBR paces its packets; fq is what executes the pacing
+    # Hardening, only what the kernel defaults left open (measured, network.md): no ICMP redirect
+    # in or out, and kernel pointers hidden from root too. rp_filter stays 0: checkReversePath does it.
+    "net.ipv4.conf.all.accept_redirects" = 0;
+    "net.ipv4.conf.default.accept_redirects" = 0;
+    "net.ipv4.conf.all.secure_redirects" = 0;
+    "net.ipv4.conf.default.secure_redirects" = 0;
+    "net.ipv6.conf.all.accept_redirects" = 0;
+    "net.ipv6.conf.default.accept_redirects" = 0;
+    "net.ipv4.conf.all.send_redirects" = 0;
+    "net.ipv4.conf.default.send_redirects" = 0;
+    "kernel.kptr_restrict" = 2;
   };
 
   # The WireGuard server is the ROUTER, so there is no local wg0: trust goes by SOURCE.

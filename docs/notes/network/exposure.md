@@ -41,9 +41,18 @@ The anchor and the port come from the host's evaluated config (`my.net.domain`,
 
 ## Why this is safe to run against my own house
 
-The scan is a single weekly sweep from a runner address that changes each run. fail2ban does not
-react to it (no authentication fails), and `PerSourcePenalties` may penalise the runner for a few
-seconds, which costs nothing, since the job reads its answers before that matters.
+The scan is a single weekly sweep from a runner address that changes each run, and fail2ban does
+not react to it (no authentication fails).
+
+**`PerSourcePenalties` DOES react, and it broke the first run (29/09/2026).** ssh-audit completes a
+key exchange and leaves without authenticating, which sshd penalises, and the `min:20s` floor in
+this config makes that at least 20 seconds. The method probe ran right after it, got no method
+list, and the job failed with `2222 offers []` while ssh-audit had just reported the same port
+clean. So the probe now runs FIRST, retries once after 30s (past the floor), and a failure prints
+the probe's own last line instead of an empty list. `2223` showed the same blank for its own
+reason: the router's `limit='30/minute'` on that forward. That this was the cause is the best
+reading of the run, not a measurement: from the LAN I am exempt from the penalty, so the next CI
+run is what confirms it.
 
 MEASURED on 29/09/2026 against the LAN address instead of the anchor, to prove the mechanics
 before the first CI run: 41s for the full sweep, `2222` reported as `OpenSSH_10.5, clean, auth:

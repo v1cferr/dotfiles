@@ -21,6 +21,7 @@ writers.writePython3Bin "exposure-check"
     import socket
     import subprocess
     import sys
+    import time
 
     HOST = "${host}"
     FIREWALL = "router/uci/firewall.conf"
@@ -68,17 +69,27 @@ writers.writePython3Bin "exposure-check"
             return ""
 
 
+    def methods(port):
+        """What sshd offers to a login with no credential; one retry past the 20s penalty floor."""
+        for attempt in (1, 2):
+            probe = subprocess.run(
+                ["${openssh}/bin/ssh", "-o", "BatchMode=yes", "-o", "PreferredAuthentications=none",
+                 "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "ConnectTimeout=10",
+                 "-p", str(port), f"v1cferr@{HOST}", "true"], text=True, capture_output=True).stderr
+            m = re.search(r"Permission denied \(([^)]*)\)", probe)
+            if m:
+                return set(m[1].split(",")), ""
+            if attempt == 1:
+                time.sleep(30)
+        return set(), probe.strip().splitlines()[-1] if probe.strip() else "no answer"
+
+
     def audit(port):
-        """ssh-audit's verdict and the methods offered to a login with no credential at all."""
+        """The methods FIRST (the only thing judged), then ssh-audit, whose bare disconnect penalises."""
+        offered, why = methods(port)
         res = subprocess.run(["${ssh-audit}/bin/ssh-audit", "-j", "-p", str(port), HOST], text=True, capture_output=True)
         data = json.loads(res.stdout or "{}")
-        probe = subprocess.run(
-            ["${openssh}/bin/ssh", "-o", "BatchMode=yes", "-o", "PreferredAuthentications=none",
-             "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "ConnectTimeout=10",
-             "-p", str(port), f"v1cferr@{HOST}", "true"], text=True, capture_output=True).stderr
-        m = re.search(r"Permission denied \(([^)]*)\)", probe)
-        methods = set(m[1].split(",")) if m else set()
-        return data.get("banner", {}).get("software", "?"), res.returncode, data.get("recommendations") or {}, methods
+        return data.get("banner", {}).get("software", "?"), res.returncode, data.get("recommendations") or {}, offered, why
 
 
     def main():
@@ -92,15 +103,15 @@ writers.writePython3Bin "exposure-check"
                 warnings.append(f"{expected[port]} ({port}) is forwarded but did not answer: is the machine up?")
             rows.append(f"| {port} | {expected.get(port, '**not declared**')} | {state} | |")
             if port in found and banner(port).startswith("SSH-"):
-                software, code, recs, methods = audit(port)
+                software, code, recs, offered, why = audit(port)
                 verdict = "clean" if code == 0 and not recs else f"exit {code}, {json.dumps(recs)}"
-                rows[-1] = f"| {port} | {expected.get(port, '**not declared**')} | open | {software}, {verdict}, auth: {','.join(sorted(methods)) or '?'} |"
+                rows[-1] = f"| {port} | {expected.get(port, '**not declared**')} | open | {software}, {verdict}, auth: {','.join(sorted(offered)) or why} |"
                 # Only THIS machine's sshd is judged; another one (2223 is my brother's Windows) warns.
                 mine = errors if port == SSH_PORT else warnings
                 if code != 0 or recs:
                     mine.append(f"ssh-audit on {port}: {verdict}")
-                if port == SSH_PORT and methods != SSH_METHODS:
-                    errors.append(f"{port} offers {sorted(methods)}, expected {sorted(SSH_METHODS)}")
+                if port == SSH_PORT and offered != SSH_METHODS:
+                    errors.append(f"{port} offers {sorted(offered)} ({why or 'answered'}), expected {sorted(SSH_METHODS)}")
 
         table = "\n".join([f"### {HOST} from outside", "", "| Port | Declared as | State | SSH |",
                            "| --- | --- | --- | --- |", *rows, ""])

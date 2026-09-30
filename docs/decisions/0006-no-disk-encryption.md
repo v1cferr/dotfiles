@@ -26,4 +26,4 @@ accepted for a desktop that does not leave the house.
 - **The `docker` group is root-equivalent** for `v1cferr`, so a compromised session is root either
   way; rootless Docker was not adopted, since three stacks use host networking.
 - The review date is when this is asked again, and the natural moment to change it is the next
-  reinstall, with a backup in place first, which is decision 0008.
+  reinstall, with a backup in place first ([0008](0008-no-offsite-backup-yet.md)).

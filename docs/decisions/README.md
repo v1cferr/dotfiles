@@ -19,3 +19,4 @@ Each record follows the same short shape, after [Michael Nygard's ADR](https://a
 | [0005](0005-fumadocs-for-the-site.md) | The site is built with Fumadocs | accepted |
 | [0006](0006-no-disk-encryption.md) | The disks are not encrypted | accepted, review by 2027-09-30 |
 | [0007](0007-grub-over-lanzaboote.md) | GRUB stays, over lanzaboote | accepted |
+| [0008](0008-no-offsite-backup-yet.md) | No offsite backup, for now | accepted risk, review by 2026-12-31 |

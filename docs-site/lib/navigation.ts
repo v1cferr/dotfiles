@@ -32,6 +32,7 @@ export const navigation: NavItem[] = [
       { title: "0005 Fumadocs", doc: "decisions/0005-fumadocs-for-the-site.md" },
       { title: "0006 No disk encryption", doc: "decisions/0006-no-disk-encryption.md" },
       { title: "0007 GRUB over lanzaboote", doc: "decisions/0007-grub-over-lanzaboote.md" },
+      { title: "0008 No offsite backup yet", doc: "decisions/0008-no-offsite-backup-yet.md" },
     ],
   },
   { title: "How the notes work", doc: "notes/README.md" },

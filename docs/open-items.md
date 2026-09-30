@@ -19,7 +19,9 @@ finished work. What was closed is in the [august history](history/2026/08-august
       daily restic to Google Drive was RETIRED, not paused: the module, the toggle and the
       aliases are gone from the repo and the `HOME` repo was permanently deleted from the Drive.
       The whole measurement, the cause and the checklist for bringing it back are in
-      [notes/boot-and-storage/restic.md](notes/boot-and-storage/restic.md).
+      [notes/boot-and-storage/restic.md](notes/boot-and-storage/restic.md). Waiting is an
+      accepted risk with a review date, and the three destinations compared are in
+      [decision 0008](decisions/0008-no-offsite-backup-yet.md).
       • WHY IT DIED: a 15 GiB quota holding 130 GiB, of which 109.37 were restic. 30.62 of those
         were packs the `forget --prune` had deleted straight into the Drive's TRASH, where a
         deleted file goes on counting. The prune was working the whole time and the account

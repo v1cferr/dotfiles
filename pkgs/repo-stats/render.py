@@ -116,8 +116,8 @@ def main():
         "code": sum(lang["Code"] for lang in langs),
         "languages": len(langs),
         "modules": next(lang["Count"] for lang in langs if lang["Name"] == "Nix"),
-        # A rule is a numbered quote line; a struck-through one still holds its number (rules.md).
-        "rules": len(re.findall(r"^> \d+\. ", rules, re.M)),
+        # A rule is a `## N. Title` heading; only the live ones count, a retired one opens with `~~`.
+        "rules": len(re.findall(r"^## \d+\. (?!~~)", rules, re.M)),
         "pages": sum(f.endswith(".md") for _, _, fs in os.walk(os.path.join(src, "docs")) for f in fs),
         **facts,
         # lastModifiedDate is YYYYMMDDHHMMSS, the commit's own date and not the build's.

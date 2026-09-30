@@ -25,10 +25,10 @@ writers.writePython3Bin "rules-index"
     # `rule 11`, `rules 14 and 15`, `rules 1, 3 and 7`: every number in the run is a citation. A
     # number followed by `/` is a date (`rule 22, 29/09/2026`), so it ends the run instead.
     CITE = re.compile(r"\b[Rr]ules? (\d{1,3}(?![\d/])(?:(?:, | and | or )\d{1,3}(?![\d/]))*)")
-    # A rule is `> N. ...`; a retired one keeps its number and opens with a strike: `> N. ~~`.
-    RULE = re.compile(r"^> (\d+)\. (~~)?", re.M)
+    # A rule is a `## N. Title` heading; a retired one keeps its number and strikes it: `## N. ~~`.
+    RULE = re.compile(r"^## (\d+)\. (~~)?", re.M)
     # A card names what enforces it; a rule without the line is enforced by memory alone.
-    ENFORCED = re.compile(r"^> +\*\*Enforced by\*\*: (.+)$", re.M)
+    ENFORCED = re.compile(r"^\*\*Enforced by\*\*: (.+)$", re.M)
 
 
     def rules():

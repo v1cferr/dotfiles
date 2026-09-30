@@ -3,5 +3,7 @@
   "default": true,
   // The prose is wrapped at ~100 columns on purpose; tables go past 80.
   // There is no sense in policing line length here.
-  "MD013": false
+  "MD013": false,
+  // The README's header is HTML: GitHub has no Markdown for a badge row or a collapsible.
+  "MD033": { "allowed_elements": ["p", "a", "img", "br", "details", "summary", "b"] }
 }

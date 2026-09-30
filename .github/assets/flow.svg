@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 300" width="880" height="300" role="img"
+     aria-label="A change goes from a commit through the hooks and the gate to a build and an atomic switch, while a weekly canary tests the world against the pinned lock.">
+
+  <title>From a commit to the running system</title>
+  <desc>commit, gate, build, switch; and the weekly canary that asks what the gate cannot.</desc>
+
+  <style>
+    .mono  { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; }
+    .panel { fill: #0d1117; }
+    .edge  { stroke: #30363d; fill: none; }
+    .box   { fill: #161b22; stroke: #30363d; }
+    .dim   { fill: #8b949e; }
+    .fg    { fill: #c9d1d9; }
+    .nix   { fill: #7ebae4; }
+    .warn  { fill: #d29922; }
+  </style>
+
+  <rect class="panel" x="0.5" y="0.5" width="879" height="299" rx="12" stroke="#30363d"/>
+
+  <g class="mono" font-size="12">
+    <text class="nix" x="40" y="38">nixos</text>
+    <text class="dim" x="84" y="38">my machine, declared. one flake, one gate.</text>
+  </g>
+
+  <!-- the main line: four stages, each lit in turn as the pulse passes (a 6s loop) -->
+  <g>
+    <rect class="box" x="40" y="66" width="176" height="64" rx="8">
+      <animate attributeName="stroke" dur="6s" repeatCount="indefinite"
+               values="#30363d;#7ebae4;#30363d;#30363d" keyTimes="0;0.06;0.2;1"/>
+    </rect>
+    <rect class="box" x="256" y="66" width="176" height="64" rx="8">
+      <animate attributeName="stroke" dur="6s" repeatCount="indefinite"
+               values="#30363d;#30363d;#7ebae4;#30363d;#30363d" keyTimes="0;0.2;0.28;0.42;1"/>
+    </rect>
+    <rect class="box" x="472" y="66" width="176" height="64" rx="8">
+      <animate attributeName="stroke" dur="6s" repeatCount="indefinite"
+               values="#30363d;#30363d;#7ebae4;#30363d;#30363d" keyTimes="0;0.42;0.5;0.64;1"/>
+    </rect>
+    <rect class="box" x="688" y="66" width="152" height="64" rx="8">
+      <animate attributeName="stroke" dur="6s" repeatCount="indefinite"
+               values="#30363d;#30363d;#7ebae4;#7ebae4;#30363d" keyTimes="0;0.64;0.72;0.9;1"/>
+    </rect>
+  </g>
+
+  <g class="mono">
+    <text class="fg"  x="56"  y="94"  font-size="13">git commit</text>
+    <text class="dim" x="56"  y="114" font-size="11">the hooks run first</text>
+    <text class="fg"  x="272" y="94"  font-size="13">nix flake check</text>
+    <text class="dim" x="272" y="114" font-size="11">CI, zero warnings</text>
+    <text class="fg"  x="488" y="94"  font-size="13">nixos-rebuild build</text>
+    <text class="dim" x="488" y="114" font-size="11">validate, then apply</text>
+    <text class="fg"  x="704" y="94"  font-size="13">nh os switch</text>
+    <text class="dim" x="704" y="114" font-size="11">atomic, rollback</text>
+  </g>
+
+  <g class="edge" stroke-width="1.2">
+    <path d="M216,98 H250"/><path d="M244,93 L251,98 L244,103"/>
+    <path d="M432,98 H466"/><path d="M460,93 L467,98 L460,103"/>
+    <path d="M648,98 H682"/><path d="M676,93 L683,98 L676,103"/>
+  </g>
+
+  <!-- the pulse: one change, travelling the main line -->
+  <circle r="4" class="nix">
+    <animateMotion dur="6s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;0.06;0.72;1"
+                   calcMode="linear" path="M128,98 H764"/>
+    <animate attributeName="opacity" dur="6s" repeatCount="indefinite"
+             values="0;1;1;0;0" keyTimes="0;0.06;0.72;0.76;1"/>
+  </circle>
+
+  <!-- the canary: every Monday, every input at its head, against the same gate -->
+  <rect class="box" x="256" y="196" width="392" height="64" rx="8" stroke-dasharray="4 4"/>
+  <g class="mono">
+    <text class="warn" x="272" y="224" font-size="13">canary, every Monday</text>
+    <text class="dim"  x="272" y="244" font-size="11">the world vs. this lock: inputs, links, secrets</text>
+  </g>
+
+  <!-- update: a green canary is when the lock is worth moving, back into a commit -->
+  <g class="edge" stroke-width="1.2" stroke-dasharray="3 4">
+    <path d="M256,228 H128 V136"/><path d="M123,142 L128,135 L133,142"/>
+  </g>
+  <text class="mono dim" x="140" y="220" font-size="11">update</text>
+
+  <!-- a red canary reaches the phone -->
+  <rect class="box" x="688" y="196" width="152" height="64" rx="8"/>
+  <g class="mono">
+    <text class="fg"  x="704" y="224" font-size="13">ntfy</text>
+    <text class="dim" x="704" y="244" font-size="11">a red run, pushed</text>
+  </g>
+  <g class="edge" stroke-width="1.2">
+    <path d="M648,228 H682"/><path d="M676,223 L683,228 L676,233"/>
+  </g>
+
+  <!-- the canary's own pulse, slower: a question asked once a week -->
+  <circle r="3" class="warn">
+    <animateMotion dur="6s" repeatCount="indefinite" calcMode="linear"
+                   path="M452,228 H256 H128 V136"/>
+    <animate attributeName="opacity" dur="6s" repeatCount="indefinite"
+             values="0;0.9;0.9;0" keyTimes="0;0.1;0.85;1"/>
+  </circle>
+</svg>

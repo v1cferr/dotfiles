@@ -36,4 +36,6 @@
   ];
 
   security.sudo.wheelNeedsPassword = true;
+  # Only wheel may even EXECUTE sudo (NixOS wiki, Hardening): every caller here is v1cferr, in wheel.
+  security.sudo.execWheelOnly = true;
 }

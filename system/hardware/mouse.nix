@@ -1,6 +1,6 @@
 # The Logitech MX Master 3S over Bluetooth, configured declaratively through logiops (logid).
 # The boot race, the native thumb wheel and the gestures: docs/notes/hardware/mouse.md
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 {
   services.logiops = {
@@ -113,7 +113,7 @@
   '';
   systemd.services.logid-reapply = {
     description = "Reapplies the logid config when the MX Master (BT) connects and becomes ready";
-    serviceConfig = {
+    serviceConfig = config.my.systemd.hardened // {
       Type = "oneshot";
       ExecStartPre = "${pkgs.coreutils}/bin/sleep 5"; # wait for the BT HID++ to wake up
       ExecStart = "${pkgs.systemd}/bin/systemctl try-restart logid.service";

@@ -85,7 +85,7 @@ lib.mkIf rootIsBtrfs {
   systemd.services.btrfs-device-stats = {
     description = "Checks the btrfs I/O error counters";
     onFailure = [ "btrfs-alert-devstats.service" ];
-    serviceConfig = {
+    serviceConfig = config.my.systemd.hardened // {
       Type = "oneshot";
       ExecStart = "${btrfs-progs}/bin/btrfs device stats -c /";
       LogLevelMax = "warning"; # does not log "Starting/Finished" every day (the bb8690c lesson)
@@ -120,7 +120,8 @@ lib.mkIf rootIsBtrfs {
     description = "Turns automatic block group reclaim on (dynamic plus periodic)";
     wantedBy = [ "multi-user.target" ];
     after = [ "local-fs.target" ];
-    serviceConfig = {
+    # Not ProtectKernelTunables: the whole point of this unit is writing /sys.
+    serviceConfig = config.my.systemd.hardened // {
       Type = "oneshot";
       RemainAfterExit = true;
     };

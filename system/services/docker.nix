@@ -36,7 +36,7 @@ lib.mkIf config.virtualisation.docker.enable {
     description = "Prunes ANONYMOUS unused docker volumes (never named ones)";
     after = [ "docker.service" ];
     requires = [ "docker.service" ];
-    serviceConfig = {
+    serviceConfig = config.my.systemd.hardened // {
       Type = "oneshot";
       ExecStart = "${docker}/bin/docker volume prune -f";
     };

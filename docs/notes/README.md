@@ -159,6 +159,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [dead-config](repo/dead-config.md) | what is declared and never used, and the seven checks |
 | [rules-index](repo/rules-index.md) | every `rule N` points at a live rule, and which rules a check enforces |
 | [ownership](repo/ownership.md) | the long form of rules 11, 14 and 15: one source, one writer, one starter |
+| [hardening](repo/hardening.md) | the systemd sandbox baseline for this repo's own root services, with scores |
 | [router-ssot](repo/router-ssot.md) | the values the router repeats, and who guards them |
 | [prose-style](repo/prose-style.md) | rule 17's bans, and what counts as a literal instead of prose |
 | [vm-boot](repo/vm-boot.md) | whether this config still boots on a machine that is not this one |

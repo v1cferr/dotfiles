@@ -143,6 +143,7 @@ export const navigation: NavItem[] = [
       { title: "Dead config", doc: "notes/repo/dead-config.md" },
       { title: "Rules index", doc: "notes/repo/rules-index.md" },
       { title: "Ownership", doc: "notes/repo/ownership.md" },
+      { title: "Hardening", doc: "notes/repo/hardening.md" },
       { title: "Router SSOT", doc: "notes/repo/router-ssot.md" },
       { title: "Prose style", doc: "notes/repo/prose-style.md" },
       { title: "VM boot", doc: "notes/repo/vm-boot.md" },

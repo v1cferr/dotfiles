@@ -21,4 +21,6 @@
   # cannot start would drown the failed-unit list they exist to read.
   services.xserver.displayManager.lightdm.enable = lib.mkForce false;
   services.displayManager.autoLogin.enable = lib.mkForce false;
+  # The Arc B580's LEDs: no GPU in a VM, so the unit could only fail, and did every drill since 19/09.
+  systemd.services.openrgb-gpu.enable = lib.mkForce false;
 }

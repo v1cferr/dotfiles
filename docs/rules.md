@@ -64,11 +64,22 @@ Always declarative and never "manual" (so it works on any hardware later on)
 
 ## 4. `system/` and `home/` apart
 
-Keep `system/` and `home/` apart: system level (services, drivers, root packages) in `system/`; the app **and** the user config in `home/` (`programs.*` when there is a module, otherwise `home.packages`). Never the same package in both.
+System level (services, drivers, root packages) goes in `system/`; the app **and** its user
+config go in `home/` (`programs.*` when there is a module, `home.packages` otherwise), and a
+package **MUST NOT** be in both. Inside each, every subject is a subfolder with its own
+`default.nix`, so adding a module is one line there and the top level never changes.
 
-## 5. Organized by category
+**Why**: one `rebuild` applies both halves, so the split is about WHO needs a thing (root, a
+service, or me), and a category tree keeps a file findable at 150 modules and beyond.
 
-Organize by category: each subject in its own subfolder with its `default.nix` (adding a module = 1 line in the category's `default.nix`; the top level does not change).
+**Enforced by**: `dead-config`, which fails on a module no `imports` reaches; the placement by review.
+
+**Detail**: the decision per package is in the [README](../README.md#where-does-a-package-go).
+
+## 5. ~~Organized by category~~
+
+Retired on 30/09/2026 and folded into rule 4, which now says where a module goes AND how the
+tree around it is organized. Its text was: Organize by category: each subject in its own subfolder with its `default.nix` (adding a module = 1 line in the category's `default.nix`; the top level does not change).
 
 ## 6. State is not declared
 

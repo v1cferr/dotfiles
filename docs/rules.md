@@ -63,7 +63,9 @@ never what the code already says. Whatever you touch, you shorten.
 scrolled past, with reasoning invisible to anyone reading `docs/`. It moved to notes, nothing
 deleted.
 
-**Enforced by**: review; `eval-metrics` warns when the Nix comment ratio passes its budget.
+**Enforced by**: `docs-links`, which fails on a module header in `system/` or `home/` longer than
+2 lines or with neither a `docs/` pointer nor a plain "No note"; `eval-metrics` warns when the Nix
+comment ratio passes its budget; the rest of the cap by review.
 
 **Detail**: [the long form](notes/repo/prose-style.md#the-long-form-of-rule-2).
 

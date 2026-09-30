@@ -30,6 +30,17 @@ way to know that landed was to check all 274 afterwards.
 | markdown | only a real `](target)` link, resolved against the file's own directory |
 | markdown outside `docs/history/` | a repo path quoted in prose, like `` `system/hardware/gpu.nix` `` |
 | a markdown link LEAVING `docs/` | the target must ALSO be git-tracked, because the site publishes it as a blob URL |
+| a `.nix` module under `system/` or `home/` (not `default.nix`) | its header: at most 2 comment lines, with a `docs/` pointer or a plain "No note" |
+
+### The header check: rule 2, enforced (30/09/2026)
+
+Rule 2 caps a module header at 2 lines and makes it point at the note that holds the reasoning,
+and until this day only a reader enforced it. MEASURED when it was written: 21 of the modules had
+no pointer in their first two lines, and four of those had headers of 3, 4 and 6 lines, with the
+pointer pushed down to the third. All 21 were rewritten, each pointing at the note that already
+covered it, or saying "No note" where nothing does (a module whose two lines are the whole story).
+MEASURED in the other direction with two sentinels: a 3-line header and a pointerless one both
+failed, and the tree passed.
 
 ### Existing is not enough once the docs are a site (19/09/2026)
 

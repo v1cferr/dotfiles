@@ -96,6 +96,20 @@ writers.writePython3Bin "docs-links"
                     if not out.startswith("docs" + os.sep) and out not in known:
                         broken.append((rel, target, "untracked"))
 
+            # 4. Rule 2's header: a module in system/ or home/ opens with at most 2 comment lines,
+            # holding its docs/ pointer or a plain "No note". An aggregator default.nix is exempt.
+            if rel.startswith(("system/", "home/")) and rel.endswith(".nix") and not rel.endswith("default.nix"):
+                header = []
+                for line in text.splitlines():
+                    if not line.startswith("#"):
+                        break
+                    header.append(line)
+                checked += 1
+                if len(header) > 2:
+                    broken.append((rel, f"{len(header)} lines, the cap is 2", "header"))
+                elif not POINTER.search("\n".join(header)) and "No note" not in "\n".join(header):
+                    broken.append((rel, "no docs/ pointer and no 'No note'", "header"))
+
         if broken:
             print(f"docs-links: {len(broken)} broken of {checked} checked\n", file=sys.stderr)
             for rel, target, kind in broken:

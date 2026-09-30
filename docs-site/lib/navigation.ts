@@ -28,6 +28,8 @@ export const navigation: NavItem[] = [
       { title: "0001 Own Nix palette", doc: "decisions/0001-own-nix-palette.md" },
       { title: "0002 UI font in system", doc: "decisions/0002-ui-font-in-system.md" },
       { title: "0003 Agent contract", doc: "decisions/0003-agent-contract-in-managed-layer.md" },
+      { title: "0004 MkDocs (superseded)", doc: "decisions/0004-mkdocs-for-the-site.md" },
+      { title: "0005 Fumadocs", doc: "decisions/0005-fumadocs-for-the-site.md" },
     ],
   },
   { title: "How the notes work", doc: "notes/README.md" },

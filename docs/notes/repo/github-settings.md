@@ -159,5 +159,16 @@ and a red run reaches the phone like the other jobs. MEASURED: it exits 0 on the
 in an `osv-scanner.toml` `[[IgnoredVulns]]` with a `reason` and an `ignoreUntil`, which is rule 22
 built into the tool.
 
+**The OpenSSF Best Practices answers live in the repo**, in [`.bestpractices.json`](../../../.bestpractices.json)
+at the root, which [bestpractices.dev](https://www.bestpractices.dev/en/projects/15115) reads to
+PROPOSE every answer of the passing level (project 15115, opened 30/09/2026). One key pair per
+criterion, `<criterion>_status` and `<criterion>_justification`, 67 criteria read from the badge's
+own `criteria/criteria.yml`. The site saves nothing on its own: the proposals are highlighted and
+land only when I press "Save (and continue)" with the robot icon, which is the owner signing
+them, and the two personal attestations (`know_secure_design`, `know_common_errors`) are mine to
+confirm there. Kept in the repo and not in the form so the answers are versioned and reviewed like
+any other claim here; a change to the file needs that robot save again. The five `Unmet` are all
+SUGGESTED, so none of them blocks the badge.
+
 So the number to watch is the TREND, not the absolute. A drop means something that was paid for
 stopped being true, like a new workflow with a tag instead of a hash, and that is worth a look.

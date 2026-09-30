@@ -252,6 +252,7 @@
         router-ssot = final.callPackage ./pkgs/router-ssot.nix { }; # it fails when the router's mirror diverges
         eval-metrics = final.callPackage ./pkgs/eval-metrics.nix { }; # what evaluating each host costs
         usage-audit = final.callPackage ./pkgs/usage-audit.nix { }; # each app next to the traces of its use
+        rules-index = final.callPackage ./pkgs/rules-index.nix { }; # it fails on a citation of no live rule
       };
       overlayLocalPkgs =
         final: _:
@@ -359,6 +360,7 @@
             router-ssot # ./pkgs: same, and the CHECK below runs it too
             eval-metrics # ./pkgs: same flake8 at build time; the gate WORKFLOW runs it after the check
             usage-audit # ./pkgs: same flake8 at build time; I run it by hand, it reads my ~
+            rules-index # ./pkgs: same, and the CHECK below runs it too
             curseforge # ./pkgs: the official AppImage (outside the CHECK below, the why is there)
             btop # nixpkgs + the src from PR #1457 (Intel Xe GPU): here so the check COMPILES the fork
             ;
@@ -663,6 +665,13 @@
               language = "system";
               pass_filenames = false;
             };
+            rules-index = {
+              enable = true;
+              name = "rules-index";
+              entry = "${self.packages.${system}.rules-index}/bin/rules-index";
+              language = "system";
+              pass_filenames = false;
+            };
           };
         };
 
@@ -676,6 +685,7 @@
                 self.packages.${system}.docs-links
                 self.packages.${system}.dead-config
                 self.packages.${system}.router-ssot
+                self.packages.${system}.rules-index
                 nixpkgs.legacyPackages.${system}.git
               ];
             }
@@ -687,6 +697,7 @@
               docs-links
               dead-config
               router-ssot
+              rules-index
               touch $out
             '';
 

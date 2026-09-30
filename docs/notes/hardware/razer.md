@@ -130,7 +130,7 @@ E: CURRENT_TAGS=:seat:uaccess:      <- the tag IS there
 
 `TAG+="uaccess"` does nothing by itself. What grants the ACL is systemd's `73-seat-late.rules`,
 which matches `TAG=="uaccess"` and appends `RUN{builtin}+="uaccess"`. Rules run in FILENAME order,
-and `services.udev.extraRules` writes into `99-local.rules`, so by the time the tag exists rule 73
+and `services.udev.extraRules` writes into `99-local.rules`, so by the time the tag exists `73-seat-late`
 has already run and decided. The tag is set, nothing reads it.
 
 So the rule ships through `services.udev.packages` as `60-razer.rules` instead, which is the only

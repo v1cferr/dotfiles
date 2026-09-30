@@ -127,6 +127,7 @@ export const navigation: NavItem[] = [
       { title: "Version bumps", doc: "notes/repo/version-bumps.md" },
       { title: "Link checker", doc: "notes/repo/link-checker.md" },
       { title: "Dead config", doc: "notes/repo/dead-config.md" },
+      { title: "Rules index", doc: "notes/repo/rules-index.md" },
       { title: "Router SSOT", doc: "notes/repo/router-ssot.md" },
       { title: "Prose style", doc: "notes/repo/prose-style.md" },
       { title: "VM boot", doc: "notes/repo/vm-boot.md" },

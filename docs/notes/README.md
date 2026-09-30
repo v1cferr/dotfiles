@@ -157,6 +157,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [version-bumps](repo/version-bumps.md) | the three-layer version strategy, and the four bump scripts |
 | [link-checker](repo/link-checker.md) | what keeps these pointers from rotting |
 | [dead-config](repo/dead-config.md) | what is declared and never used, and the seven checks |
+| [rules-index](repo/rules-index.md) | every `rule N` points at a live rule, and which rules a check enforces |
 | [router-ssot](repo/router-ssot.md) | the values the router repeats, and who guards them |
 | [prose-style](repo/prose-style.md) | rule 17's bans, and what counts as a literal instead of prose |
 | [vm-boot](repo/vm-boot.md) | whether this config still boots on a machine that is not this one |

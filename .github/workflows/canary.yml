@@ -114,6 +114,25 @@ jobs:
           nix develop --override-input duo-streak-daemon path:./ci/stub-duo \
             --command gitleaks git --no-banner --redact .
 
+  # An advisory published against a pinned dependency changes the answer with NO commit of mine:
+  # every lockfile osv-scanner reads (uv.lock, pnpm-lock.yaml): docs/notes/repo/github-settings.md
+  advisories:
+    name: no known vulnerability in the lockfiles
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      # --inputs-from: the scanner is the nixpkgs of THIS lock, not the registry's (rule 13).
+      - name: osv-scanner over every lockfile
+        run: nix run --inputs-from . nixpkgs#osv-scanner -- scan source -r .
+
   # THE HOUSE FROM OUTSIDE: a runner is off my network, so it sees what an attacker sees. A port the
   # router mirror does not forward fails, and so does a weaker sshd: docs/notes/network/exposure.md
   exposure:
@@ -195,6 +214,7 @@ jobs:
   notify:
     name: push a failure to the phone
     needs:
+      - advisories
       - exceptions
       - exposure
       - inputs
@@ -212,6 +232,7 @@ jobs:
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          ADVISORIES: ${{ needs.advisories.result }}
           EXCEPTIONS: ${{ needs.exceptions.result }}
           EXPOSURE: ${{ needs.exposure.result }}
           INPUTS: ${{ needs.inputs.result }}
@@ -232,7 +253,8 @@ jobs:
 
           # WHICH job died is the whole message, because the two mean opposite things: `inputs` is
           # "the next update would break the config" and `links` is "a pointer in docs/ rotted".
-          message="exceptions: $EXCEPTIONS
+          message="advisories: $ADVISORIES
+          exceptions: $EXCEPTIONS
           exposure: $EXPOSURE
           inputs: $INPUTS
           links: $LINKS

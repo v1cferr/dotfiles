@@ -147,5 +147,17 @@ Branch-Protection, whose next tier needs one before anything else counts) and mo
 organization (Contributors). One person cannot have those, and faking them is the theatre the
 table above refuses.
 
+**Vulnerabilities dropped from 10 to 0 on 30/09/2026 with no commit of mine**, and that is the
+check that taught the most. Scorecard's osv scan found 14 advisories (one critical) published
+against `pyjwt` 2.13.0 and `urllib3` 2.7.0, both transitive in `pkgs/basic-memory/uv.lock`, and a
+`uv lock --upgrade-package` of those two brought it back to 10 and the total to 7.6. What it
+exposed is that nothing of the repo's OWN watched the lockfiles: Dependabot covers the actions
+only, and Scorecard reports a score, it does not alert. So the canary's `advisories` job runs
+`osv-scanner scan source -r .` every Monday, from the nixpkgs of this lock (`--inputs-from .`),
+and a red run reaches the phone like the other jobs. MEASURED: it exits 0 on the fixed tree, and
+1 on the old `uv.lock` (15 vulnerabilities, 1 critical). An advisory that cannot be fixed yet goes
+in an `osv-scanner.toml` `[[IgnoredVulns]]` with a `reason` and an `ignoreUntil`, which is rule 22
+built into the tool.
+
 So the number to watch is the TREND, not the absolute. A drop means something that was paid for
 stopped being true, like a new workflow with a tag instead of a hash, and that is worth a look.

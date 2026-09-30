@@ -30,6 +30,7 @@ export const navigation: NavItem[] = [
       { title: "0003 Agent contract", doc: "decisions/0003-agent-contract-in-managed-layer.md" },
       { title: "0004 MkDocs (superseded)", doc: "decisions/0004-mkdocs-for-the-site.md" },
       { title: "0005 Fumadocs", doc: "decisions/0005-fumadocs-for-the-site.md" },
+      { title: "0006 No disk encryption", doc: "decisions/0006-no-disk-encryption.md" },
     ],
   },
   { title: "How the notes work", doc: "notes/README.md" },

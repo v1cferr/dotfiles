@@ -17,3 +17,4 @@ Each record follows the same short shape, after [Michael Nygard's ADR](https://a
 | [0003](0003-agent-contract-in-managed-layer.md) | The agent contract lives in Claude Code's managed layer | accepted |
 | [0004](0004-mkdocs-for-the-site.md) | The site is built with MkDocs | superseded by 0005 |
 | [0005](0005-fumadocs-for-the-site.md) | The site is built with Fumadocs | accepted |
+| [0006](0006-no-disk-encryption.md) | The disks are not encrypted | accepted, review by 2027-09-30 |

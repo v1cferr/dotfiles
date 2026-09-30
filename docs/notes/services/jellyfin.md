@@ -75,3 +75,20 @@ jellyseerr and the \*arr apps come later, one module at a time. qbittorrent is a
 (`system/services/qbittorrent.nix`), in the same `media` group, writing to `/srv/media/torrents`,
 with the Web UI on 8080. Its save paths and categories are set in that Web UI: state again.
 The initial login is user `admin`, with a temporary password in `journalctl -u qbittorrent`.
+
+### The Web UI port is closed, and the password was never set (30/09/2026)
+
+`openFirewall = true` looked like "the peer port plus the Web UI on the LAN". MEASURED on the
+evaluated firewall, it opened exactly one port, 8080, on EVERY interface: no `torrentingPort` is
+set, so there was no peer port to open. The only consumer that needs 8080 is Caddy, which reaches
+it on `127.0.0.1`, so the opening was a plain-HTTP door to the Web UI that skipped Caddy's TLS
+from anywhere on the LAN. It is `false` now, and `torrent.<domain>` is the one way in.
+
+The same look found that the Web UI's admin password was NEVER set: every start logs a new
+temporary one, and the `torrent` vhost is `public`. Set it in the Web UI (it is state, rule 6),
+and the temporary passwords stop.
+
+Scoping Jellyfin's and Steam's ports to the LAN interface was measured and left out: the only
+extra interfaces are Docker's bridges (`virbr0` is already refused, see [libvirt](libvirt.md)),
+and doing it would need the interface name as a second literal, so an option of its own
+(rule 11), for a gain that small.

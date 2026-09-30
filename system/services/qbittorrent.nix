@@ -5,7 +5,8 @@
 {
   services.qbittorrent = {
     enable = config.my.services.qbittorrent;
-    openFirewall = true; # it opens the torrent port (peers) plus the Web UI on the LAN
+    # CLOSED: with no torrentingPort it opened only the Web UI, a plain-HTTP way around Caddy.
+    openFirewall = false;
     webuiPort = 8080; # the web panel (the same as the old setup)
     user = "qbittorrent";
     group = "media"; # a shared group, so it writes into the /srv/media library

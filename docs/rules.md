@@ -41,7 +41,16 @@ copying it only buys a second thing to forget.
 
 ## 1. Research first
 
-Always research the best practices and what the NixOS community is using most for each package/software (to have a reference and suggestions)
+Before adopting a package, a module or a pattern, I **MUST** look at what upstream recommends and
+what the NixOS community actually uses, and the choice records what was compared and why the
+others lost.
+
+**Why**: a config meant to last until 2032 should stand on the idiomatic path, which is the one
+that keeps being maintained, and a recorded "rejected because" keeps me from trying it twice.
+
+**Enforced by**: review.
+
+**Detail**: every note's "rejected" sections, and [decisions](decisions/README.md).
 
 ## 2. Comments are short
 
@@ -60,7 +69,15 @@ deleted.
 
 ## 3. Declarative, never manual
 
-Always declarative and never "manual" (so it works on any hardware later on)
+Everything **MUST** be declared. A manual step is either a bug to remove, or something Nix cannot
+reach (a BIOS setting, the router, Windows), written as a guide in [`guides/`](guides/).
+
+**Why**: so the config works on any hardware later on, and a reinstall is a command, not a memory.
+
+**Enforced by**: the boot test (`nix run .#vm-boot`) and the disk drill (`nix run .#disko-vm`),
+which bring a machine up from the config alone; the rest by review.
+
+**Detail**: [disaster recovery](guides/disaster-recovery.md).
 
 ## 4. `system/` and `home/` apart
 
@@ -83,15 +100,42 @@ tree around it is organized. Its text was: Organize by category: each subject in
 
 ## 6. State is not declared
 
-Nix = app + config; state is NOT declared: saves, Wine prefixes, app tokens/sessions stay out of the repo and go to the backup. That backup was restic, RETIRED on 24/09/2026 when the Google account blew past its 15 GiB quota, and until new storage arrives there is NONE. The rule still decides what stays out of git; what it stopped promising is that the state is safe somewhere ([restic](notes/boot-and-storage/restic.md)).
+State (saves, Wine prefixes, app tokens and sessions) **MUST NOT** be declared: Nix holds the app
+and its config, and state stays out of git, for a backup to keep.
+
+**Why**: state is written by the app at runtime, so declaring it would put two owners on it
+(rule 14). There has been NO backup since 24/09/2026, when restic's Google quota ran out: the rule
+still decides what stays out of git, and no longer promises the state is safe anywhere.
+
+**Enforced by**: `dead-config`'s artifact check (a tracked build output or dropping); the rest by
+review.
+
+**Detail**: [restic](notes/boot-and-storage/restic.md).
 
 ## 7. No loose scripts
 
-No loose `.sh`: the logic lives in the build (Nix) or in systemd; runtime is a 1-line command (shellcheck at build time catches mistakes early).
+Logic **MUST NOT** live in a loose shell script: it lives in the build (`writeShellApplication`,
+which runs shellcheck) or in systemd, and what runs is a one-line command. The one exception is a
+script that runs on ANOTHER machine, which gets the shellcheck hook instead.
+
+**Why**: a script in the build is checked every time it is built, and a loose one only when it
+fails.
+
+**Enforced by**: shellcheck at build time, and the `shellcheck` hook over `scripts/`.
+
+**Detail**: [owfetch](notes/network/network.md#owfetch-why-a-script-and-not-fastfetch), the exception.
 
 ## 8. Validate before applying
 
-Validate before applying: `nixos-rebuild build` / `nix eval` OK and atomic commits per feature/task, before the switch.
+Before a switch, the change **MUST** build (`nixos-rebuild build` or `nix flake check`) and be
+committed as its own task.
+
+**Why**: a switch that fails half-way is a slower loop than a build that fails, and a commit per
+task is what makes the one bad change the one to revert.
+
+**Enforced by**: the gate in the CI on every push; the local build by habit.
+
+**Detail**: [the quality gate](notes/repo/flake.md#the-quality-gate-one-definition-three-consumers).
 
 ## 9. ~~One theme palette~~
 
@@ -125,11 +169,29 @@ value); a literal copied into a consumer by review.
 
 ## 12. Secrets are a separate layer
 
-SECRETS are a SEPARATE layer and the repo NEVER holds a credential: the source is Bitwarden, the delivery is sops-nix (root's age key). A consumer reads `/run/secrets/<name>` at RUNTIME, never at build time, because `/nix/store` is world-readable, so a secret interpolated into a derivation LEAKS. Editing a secret requires a `rebuild`, otherwise `/run/secrets` does not update.
+The repo **MUST NOT** hold a credential. The source is Bitwarden, the delivery is sops-nix under
+root's age key, and a consumer reads `/run/secrets/<name>` at RUNTIME, never at build time.
+Editing a secret needs a `rebuild` for `/run/secrets` to change.
+
+**Why**: `/nix/store` is world-readable, so a secret interpolated into a derivation leaks.
+
+**Enforced by**: `gitleaks` (the staged diff at the commit, the whole history weekly),
+`pre-commit-hook-ensure-sops` (no plain `secrets/*.yaml`), and `dead-config`'s two secret checks.
+
+**Detail**: [secrets](notes/repo/secrets.md).
 
 ## 13. The lock pins everything
 
-The `flake.lock` PINS the dependency universe: no `nix-channel`, no fetch without a hash, no implicit "latest". Bumps only through `update`/`upgrade`, and `update` runs as the USER because that is who holds the SSH key for the private inputs, and the lock goes into the SAME commit as the change that required it, otherwise yesterday's build is not reproducible today.
+The `flake.lock` pins the dependency universe: no `nix-channel`, no fetch without a hash, no
+implicit "latest". Bumps happen only through `update`, run as my user (who holds the SSH key for
+the private inputs), and the lock **MUST** go in the same commit as the change that needed it.
+
+**Why**: otherwise yesterday's build is not reproducible today.
+
+**Enforced by**: Nix itself, which refuses an unhashed fetch in a pure evaluation; Scorecard's
+Pinned-Dependencies for the workflows; the canary says when an `update` is safe.
+
+**Detail**: [the flake](notes/repo/flake.md), and [version bumps](notes/repo/version-bumps.md).
 
 ## 14. One owner per artifact
 
@@ -254,8 +316,27 @@ the canary for the external links.
 
 ## 21. Zero evaluation warnings
 
-**THE EVALUATION EMITS ZERO WARNINGS**: a warning is a deprecation with a date on it that nobody wrote down, so it fails like an error. The gate and the canary run `nix flake check --option abort-on-warn true`: the gate stops a warning entering through my commit, and the canary, with every input at its head, turns an upstream rename into a red Monday a release before it breaks a `rebuild`. A warning that arrives with an `update` is fixed IN THE SAME COMMIT as the lock, never "later", which is rule 16's drift applied to someone else's deprecation. It is a CI flag and not `nix.settings`, because on the machine it would block the very `rebuild` that fixes it. The measurement and the sentinel proof: [`notes/repo/flake.md`](notes/repo/flake.md#zero-evaluation-warnings-abort-on-warn-29092026).
+The evaluation **MUST** emit zero warnings. A warning that arrives with an `update` is fixed in
+the same commit as the lock.
+
+**Why**: a warning is a deprecation with a date nobody wrote down. It is a CI flag and not
+`nix.settings`, because on the machine it would block the very `rebuild` that fixes it.
+
+**Enforced by**: `nix flake check --option abort-on-warn true`, in the gate (my commits) and in the
+canary (every input at its head, a release before a rename breaks a `rebuild`).
+
+**Detail**: [the measurement and the sentinel proof](notes/repo/flake.md#zero-evaluation-warnings-abort-on-warn-29092026).
 
 ## 22. Every exception has a review date
 
-**EVERY EXCEPTION HAS A REASON AND A REVIEW DATE**: an entry in an exception list (`dead-config`'s `ALLOWED` today, any allow list tomorrow) is `(reason, "YYYY-MM-DD")`. The reason says why it exists NOW; the date is the day the question comes back, when it is deleted or its date moves in a commit that says why. Without a date an exception list only grows, because nobody deletes a line that looks deliberate, and by 2032 "exception" and "leftover" read the same, which is rule 16 charging interest on its own escape hatch. The DATE is checked by the CANARY (`dead-config --expired`), never by the gate: a clock would make a hermetic, cached check pass on Monday and fail on Tuesday for the same commit. What this does NOT cover is a DECISION with its reasoning written down, such as the two statix lints turned off in `statix.toml`: that is policy, not an exception, and it changes by argument, not by calendar. The detail: [`notes/repo/dead-config.md`](notes/repo/dead-config.md#every-exception-has-a-review-date-rule-22-29092026).
+Every entry in an exception list **MUST** carry a reason and a review date. On the date it is
+deleted, or its date moves in a commit that says why. A DECISION with its reasoning written down
+(the two statix lints off in `statix.toml`) is policy, not an exception, and changes by argument.
+
+**Why**: without a date an exception list only grows, since nobody deletes a line that looks
+deliberate, and by 2032 "exception" and "leftover" read the same.
+
+**Enforced by**: `dead-config --expired` in the canary (`ALLOWED` and the `.gitleaks.toml`
+allowlists), never in the gate: a clock would make a cached check change with no commit.
+
+**Detail**: [dead-config](notes/repo/dead-config.md#every-exception-has-a-review-date-rule-22-29092026).

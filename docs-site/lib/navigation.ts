@@ -55,6 +55,7 @@ export const navigation: NavItem[] = [
     section: "Network",
     items: [
       { title: "Network", doc: "notes/network/network.md" },
+      { title: "Exposure", doc: "notes/network/exposure.md" },
       { title: "VPN", doc: "notes/network/vpn.md" },
       { title: "SSH", doc: "notes/network/ssh.md" },
       { title: "Sunshine", doc: "notes/network/sunshine.md" },

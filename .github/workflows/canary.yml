@@ -114,6 +114,24 @@ jobs:
           nix develop --override-input duo-streak-daemon path:./ci/stub-duo \
             --command gitleaks git --no-banner --redact .
 
+  # THE HOUSE FROM OUTSIDE: a runner is off my network, so it sees what an attacker sees. A port the
+  # router mirror does not forward fails, and so does a weaker sshd: docs/notes/network/exposure.md
+  exposure:
+    name: what the internet can reach
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: exposure-check
+        run: nix run .#exposure-check --override-input duo-streak-daemon path:./ci/stub-duo
+
   # Rule 22's clock half: an exception past its review date. It lives HERE and not in the gate,
   # because a date turns a cached, hermetic check into one whose answer changes with no commit.
   exceptions:
@@ -178,6 +196,7 @@ jobs:
     name: push a failure to the phone
     needs:
       - exceptions
+      - exposure
       - inputs
       - links
       - rulesets
@@ -194,6 +213,7 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           EXCEPTIONS: ${{ needs.exceptions.result }}
+          EXPOSURE: ${{ needs.exposure.result }}
           INPUTS: ${{ needs.inputs.result }}
           LINKS: ${{ needs.links.result }}
           RULESETS: ${{ needs.rulesets.result }}
@@ -213,6 +233,7 @@ jobs:
           # WHICH job died is the whole message, because the two mean opposite things: `inputs` is
           # "the next update would break the config" and `links` is "a pointer in docs/ rotted".
           message="exceptions: $EXCEPTIONS
+          exposure: $EXPOSURE
           inputs: $INPUTS
           links: $LINKS
           rulesets: $RULESETS

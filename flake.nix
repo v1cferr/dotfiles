@@ -418,6 +418,17 @@
               };
           };
 
+          # THE HOUSE FROM OUTSIDE, for the canary: the anchor and the port come from the host's own
+          # config, the expected forwards from the router's mirror: docs/notes/network/exposure.md
+          exposure-check =
+            let
+              cfg = self.nixosConfigurations.nixos-kingston.config;
+            in
+            pkgs.callPackage ./pkgs/exposure-check.nix {
+              host = "ssh.${cfg.my.net.domain}";
+              sshPort = builtins.head cfg.services.openssh.ports;
+            };
+
           # WHAT GITHUB PAGES SERVES: the site plus the stats under /stats, joined here and not
           # inside docs-site, whose src stays fenced to docs/ so a system/ commit does not rebuild it.
           pages = pkgs.runCommand "pages" { } ''

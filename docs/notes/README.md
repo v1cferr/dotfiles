@@ -85,6 +85,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | Page | What you would come here asking |
 | --- | --- |
 | [network](network/network.md) | the firewall by SOURCE, the DDNS that moved to the router, fail2ban, the FAI gateway |
+| [exposure](network/exposure.md) | the house seen from outside: open ports and the sshd, weekly |
 | [vpn](network/vpn.md) | FAI (nxBender) and UFSCar (openconnect), always split-tunnel |
 | [ssh](network/ssh.md) | the exposed SSH, the hosts, and reaching the FAI workstation |
 | [sunshine](network/sunshine.md) | remote access, the black screen, and why dpms is forbidden |

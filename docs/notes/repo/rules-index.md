@@ -16,6 +16,9 @@ one place the repo explains itself. Before the rewrite of the rules into cards, 
 - **FAILS** on `rule N` (and `rules N and M`, `rules N, M or P`) anywhere in the tree when `N` is
   not a rule in `rules.md`, or is a RETIRED one (its line opens with `~~`).
 - **SKIPS** `docs/history/`: a citation there is right about the day it was written, forever.
+- **ALLOWS a retired number where the text is about the past**: a record in `docs/decisions/`,
+  and a section titled "The long form of rule N" or "The former rule N", which holds a rule's
+  text moved verbatim when it became a card. A number that never existed fails there too.
 - **SKIPS** anything inside backticks, which is a quoted literal and not a citation: the same
   exception rule 17 makes for an em dash, and what lets this page show its own examples.
 - **REPORTS** how many live rules name a check in their `**Enforced by**:` line and how many are

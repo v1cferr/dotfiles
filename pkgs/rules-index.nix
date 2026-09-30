@@ -22,6 +22,10 @@ writers.writePython3Bin "rules-index"
     RULES = "docs/rules.md"
     # The history is a diary: a citation there is right about the day it was written, forever.
     FROZEN = "docs/history/"
+    # A RETIRED rule may still be named where the text is about the past: a decision record, and
+    # a section holding a rule's long form, moved verbatim when the rule became a card.
+    PAST_DIRS = ("docs/decisions/",)
+    PAST_SECTION = re.compile(r"^#+ The (long form of rule|former rule) \d+")
     # `rule 11`, `rules 14 and 15`, `rules 1, 3 and 7`: every number in the run is a citation. A
     # number followed by `/` is a date (`rule 22, 29/09/2026`), so it ends the run instead.
     CITE = re.compile(r"\b[Rr]ules? (\d{1,3}(?![\d/])(?:(?:, | and | or )\d{1,3}(?![\d/]))*)")
@@ -54,13 +58,16 @@ writers.writePython3Bin "rules-index"
                 text = open(os.path.join(ROOT, f)).read()
             except UnicodeDecodeError:
                 continue
+            past = f.startswith(PAST_DIRS)
             for lineno, line in enumerate(text.splitlines(), 1):
+                if line.startswith("#"):
+                    past = f.startswith(PAST_DIRS) or bool(PAST_SECTION.match(line))
                 # Inside backticks it is a quoted literal, the repo's standing exception (rule 17).
                 for m in CITE.finditer(re.sub(r"`[^`]*`", "", line)):
                     for n in map(int, re.findall(r"\d+", m[1])):
                         if n not in found:
                             bad.append(f"{f}:{lineno}: rule {n} does not exist")
-                        elif found[n]:
+                        elif found[n] and not past:
                             bad.append(f"{f}:{lineno}: rule {n} is retired")
 
         live = [n for n, retired in sorted(found.items()) if not retired]

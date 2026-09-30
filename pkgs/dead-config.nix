@@ -108,11 +108,14 @@ writers.writePython3Bin "dead-config"
 
 
     def check_notes(files, code):
-        """A note no module points at is unreachable: rule 2 made the pointer the only path in."""
+        """A note no module points at is unreachable: rule 2 made the pointer the only path in. The
+        other door is a rule card's Detail link, for a note that holds a rule's long form."""
+        cards = set(re.findall(r"\]\((notes/[^)#]+\.md)", read("docs/rules.md")))
+
         def orphan(f):
             if not f.startswith("docs/notes/") or not f.endswith(".md"):
                 return False
-            return os.path.basename(f) != "README.md" and f not in code
+            return os.path.basename(f) != "README.md" and f not in code and f.removeprefix("docs/") not in cards
 
         return [("note", f, "no pointer from any module") for f in sorted(files) if orphan(f)]
 

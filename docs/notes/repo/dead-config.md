@@ -80,6 +80,8 @@ prototyped, produced a false positive, and was fixed before being written down:
 - **modules**: resolving every `./path` in the file flags nothing, but it also PROVES nothing,
   since it counts a path mentioned in a comment. The check parses `imports = [ … ]` blocks and
   walks reachability from the real roots (`system/default.nix`, `home/default.nix`, `hosts/*`).
+  Both `./x` and `../x` resolve, so a host importing a shared module by a relative path counts as
+  a reach; before 30/09/2026 a `../` was resolved one level too shallow and read as unreached.
   `pkgs/` is deliberately exempt: it is reached by `callPackage` in `flake.nix`, not by an
   `imports` list.
 

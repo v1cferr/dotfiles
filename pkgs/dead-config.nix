@@ -58,7 +58,9 @@ writers.writePython3Bin "dead-config"
             found = []
             base = os.path.dirname(f)
             for block in re.findall(r"imports\s*=\s*\[(.*?)\]", nix.get(f, ""), re.S):
-                for m in re.finditer(r"\./([A-Za-z0-9_./-]+)", block):
+                # `./x` and `../x` alike: a host reaches a shared module through `../../modules/…`,
+                # and the lookbehind keeps the `./` inside a `../` from matching a level too shallow.
+                for m in re.finditer(r"(?<![\w.])(\.\.?/[A-Za-z0-9_./-]+)", block):
                     p = os.path.normpath(os.path.join(base, m.group(1)))
                     for cand in (p + ".nix", os.path.join(p, "default.nix"), p):
                         if cand in nix:

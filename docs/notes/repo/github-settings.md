@@ -45,6 +45,13 @@ Secret scanning and its **push protection** are ON (checked 27/09/2026 through
 `gh api repos/v1cferr/dotfiles --jq .security_and_analysis`). Push protection refuses a push
 carrying a token from a known provider, on the server, before it lands.
 
+**The two advanced toggles do not exist for this repo.** Non-provider patterns and validity checks
+were turned on through the API on 29/09/2026: the `PATCH` answered 200 and both stayed `disabled`,
+with no error. They are sold as part of GitHub Secret Protection, for ORGANIZATION-owned
+repositories, and a user-owned repo silently ignores the request. Nothing is lost by it: the
+generic shapes they would add (private keys, connection strings, generic API keys) are in the
+default gitleaks rules this repo already runs, below.
+
 That covers the known providers and nothing else, and it only sees pushes. A generic token (the
 `rpcd_token` of 08/08/2026 was one, see [router-hardening](../../guides/router-hardening.md)) walks
 straight through it, so the repo adds two layers of its own, both running gitleaks:

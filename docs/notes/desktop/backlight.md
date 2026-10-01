@@ -1,6 +1,6 @@
 # The backlight, over DDC/CI
 
-`home/desktop/backlight.nix`. Both panels are held at ONE declared brightness and ONE white point,
+`modules/home/desktop/backlight.nix`. Both panels are held at ONE declared brightness and ONE white point,
 set through DDC/CI instead of through the OSD's buttons.
 
 ## What made this possible, and what it explains

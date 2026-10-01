@@ -30,7 +30,7 @@ way to know that landed was to check all 274 afterwards.
 | markdown | only a real `](target)` link, resolved against the file's own directory |
 | markdown outside `docs/history/` | a repo path quoted in prose, like `` `modules/nixos/hardware/gpu.nix` `` |
 | a markdown link LEAVING `docs/` | the target must ALSO be git-tracked, because the site publishes it as a blob URL |
-| a `.nix` module under `modules/nixos/` or `home/` (not `default.nix`) | its header: at most 2 comment lines, with a `docs/` pointer or a plain "No note" |
+| a `.nix` module under `modules/nixos/` or `modules/home/` (not `default.nix`) | its header: at most 2 comment lines, with a `docs/` pointer or a plain "No note" |
 
 ### The header check: rule 2, enforced (30/09/2026)
 

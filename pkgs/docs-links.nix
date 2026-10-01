@@ -96,9 +96,9 @@ writers.writePython3Bin "docs-links"
                     if not out.startswith("docs" + os.sep) and out not in known:
                         broken.append((rel, target, "untracked"))
 
-            # 4. Rule 2's header: a module in modules/nixos/ or home/ opens with at most 2 comment lines,
+            # 4. Rule 2's header: a module in modules/nixos/ or modules/home/ opens with at most 2 comment lines,
             # holding its docs/ pointer or a plain "No note". An aggregator default.nix is exempt.
-            if rel.startswith(("modules/nixos/", "home/")) and rel.endswith(".nix") and not rel.endswith("default.nix"):
+            if rel.startswith(("modules/nixos/", "modules/home/")) and rel.endswith(".nix") and not rel.endswith("default.nix"):
                 header = []
                 for line in text.splitlines():
                     if not line.startswith("#"):

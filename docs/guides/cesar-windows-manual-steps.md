@@ -1,6 +1,6 @@
 # CESAR (my brother's Windows): the steps Nix cannot reach
 
-The `cesar` host is declared in [`home/shell/ssh.nix`](../../home/shell/ssh.nix), but that
+The `cesar` host is declared in [`modules/home/shell/ssh.nix`](../../modules/home/shell/ssh.nix), but that
 is **the client side only**. Everything that has to exist *inside* Windows (the authorized
 key, the PATH, the packages) lives outside Nix's reach, because the machine is not NixOS and
 is not mine. This guide exists so that it can be **redone in minutes** if Windows is
@@ -15,7 +15,7 @@ declares the client, the server is another system's territory.
 | --- | --- |
 | Host / IP | `CESAR` / `192.168.1.40` (DHCP, see the trap at the end) |
 | My account there | `v1cferr`, **a member of Administrators** |
-| The owner's account | `drakk` (linked to a Microsoft account), [never operate as them](../../home/shell/ssh.nix) |
+| The owner's account | `drakk` (linked to a Microsoft account), [never operate as them](../../modules/home/shell/ssh.nix) |
 | sshd | `OpenSSH_for_Windows_9.5`, on `22` (LAN) and `2223` (exposed on the WAN) |
 | Session shell | Windows PowerShell 5.1, through `DefaultShell` (step 6) |
 
@@ -318,7 +318,7 @@ No service restart is needed: sshd reads the registry per session.
 kind of half-broken. sshd hands a one-off command to the shell with `/c`, which is
 cmd's switch and which PowerShell rejects, so interactive sessions keep working
 while EVERY `ssh host <command>` dies. The whole `cesar-cmd` half of
-[`home/shell/ssh.nix`](../../home/shell/ssh.nix) depends on this value.
+[`modules/home/shell/ssh.nix`](../../modules/home/shell/ssh.nix) depends on this value.
 
 **`scp` and `sftp` survive the swap** because they go through the `Subsystem` line
 and never touch the login shell (verified, not assumed). That is also the reason
@@ -331,7 +331,7 @@ Only `powershell.exe` (Windows PowerShell 5.1) exists here; there is no `pwsh`.
 **This swap is what makes `ssh cesar` need a `&`.** In PowerShell a quoted path at
 the start of a line is a STRING, not a command, so the previous `RemoteCommand`
 stopped launching Git Bash and started returning a parse error. The client-side
-fix lives in [`home/shell/ssh.nix`](../../home/shell/ssh.nix) and needs a rebuild
+fix lives in [`modules/home/shell/ssh.nix`](../../modules/home/shell/ssh.nix) and needs a rebuild
 to take effect.
 
 ## Traps that outlive this guide

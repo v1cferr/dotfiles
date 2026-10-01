@@ -1,4 +1,4 @@
-# FONTS: the SSOT of the UI family, `my.fonts.ui`. The home/ side reads it through osConfig.
+# FONTS: the SSOT of the UI family, `my.fonts.ui`. The modules/home/ side reads it through osConfig.
 # Why it lives here, and the fallback coverage that is a CHOICE: docs/notes/hardware/fonts.md
 {
   pkgs,
@@ -11,7 +11,7 @@
   options.my.fonts.ui = lib.mkOption {
     type = lib.types.str;
     default = "JetBrainsMono Nerd Font";
-    description = "The UI font family (SSOT). Read by fontconfig and, through osConfig, by the home/ modules.";
+    description = "The UI font family (SSOT). Read by fontconfig and, through osConfig, by the modules/home/ modules.";
   };
 
   config.fonts = {

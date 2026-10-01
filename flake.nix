@@ -150,7 +150,7 @@
       };
 
       # unstable's RECIPE with the SRC from pkgs/vscode. `import` and not callPackage, so the result
-      # keeps nixpkgs' `.override` (home/apps/vscode.nix passes commandLineArgs through it).
+      # keeps nixpkgs' `.override` (modules/home/apps/vscode.nix passes commandLineArgs through it).
       overlayVscode = final: prev: {
         unstable = prev.unstable // {
           vscode = import ./pkgs/vscode/package.nix {
@@ -314,7 +314,7 @@
           home-manager.useGlobalPkgs = true; # uses the system nixpkgs (+ overlay)
           home-manager.useUserPackages = true; # installs into the user profile
           home-manager.extraSpecialArgs = { inherit inputs; };
-          home-manager.users.v1cferr = import ./home;
+          home-manager.users.v1cferr = import ./modules/home;
         }
       ];
 

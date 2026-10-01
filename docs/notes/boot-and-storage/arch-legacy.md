@@ -3,7 +3,7 @@
 Two modules, one artifact:
 
 - `modules/nixos/services/arch-legacy.nix`: the mountpoint and the path's SSOT.
-- `home/services/arch-legacy-mount.nix`: what actually mounts it.
+- `modules/home/services/arch-legacy-mount.nix`: what actually mounts it.
 
 ## Why the split
 

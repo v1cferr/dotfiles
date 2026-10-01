@@ -4,7 +4,7 @@ Small modules whose reasoning is longer than their config.
 
 ## The polkit agent
 
-`home/desktop/polkit-agent.nix`. What shows the password dialog when a GRAPHICAL app needs
+`modules/home/desktop/polkit-agent.nix`. What shows the password dialog when a GRAPHICAL app needs
 authorization: mounting another user's disk, writing to a block device, controlling a systemd unit
 from the GUI.
 
@@ -33,7 +33,7 @@ To check: `systemctl --user status hyprpolkitagent`.
 
 ## XDG associations
 
-`home/desktop/xdg.nix`. Nothing is INSTALLED here (the Zen package comes from the flake, in
+`modules/home/desktop/xdg.nix`. Nothing is INSTALLED here (the Zen package comes from the flake, in
 `modules/nixos/`). It only ASSOCIATES: which `.desktop` opens what.
 
 `xdg.mimeApps` writes `~/.config/mimeapps.list` (managed, read-only), and that is what
@@ -63,7 +63,7 @@ uses the `XDG_MENU_PREFIX=plasma-` prefix and ignores this file, so there is no 
 
 ## The wallpaper
 
-`home/desktop/wallpaper.nix`. hyprpaper (Hyprland's official daemon: static, light, declarative),
+`modules/home/desktop/wallpaper.nix`. hyprpaper (Hyprland's official daemon: static, light, declarative),
 drawing a random photo per monitor out of `~/Pictures/wallpapers/`, with the packaged
 `nixos-artwork` one as the fallback for an empty pool.
 
@@ -155,7 +155,7 @@ The options are in
 
 ## The keybind cheatsheet
 
-`home/desktop/cheatsheet.nix`. A rofi list of ALL the Hyprland binds, on SUPER+H.
+`modules/home/desktop/cheatsheet.nix`. A rofi list of ALL the Hyprland binds, on SUPER+H.
 
 **GENERATED from `keybinds.lua` at RUNTIME, never written by hand**: a duplicated list would become
 a lie on the first new bind. The file it reads is `~/.config/hypr/lua/keybinds.lua`, which is a
@@ -198,7 +198,7 @@ also the system monospace so the columns line up. Do NOT comment inside a `.rasi
 
 ## The clipboard and the launcher
 
-`home/desktop/clipboard.nix` and `launcher.nix`. Both are rofi, and the rofi PACKAGE is declared
+`modules/home/desktop/clipboard.nix` and `launcher.nix`. Both are rofi, and the rofi PACKAGE is declared
 once, in `clipboard.nix`. Do not redeclare it: it is the same tool for the launcher, the clipboard
 and the cheatsheet.
 
@@ -242,13 +242,13 @@ that is not mine, is the kind of mess nobody comes back to clean.
 **`wl-copy` gets the path with NO trailing newline**, and that is the detail the flow lives on: a
 newline pasted into a TUI SUBMITS the prompt instead of typing into it.
 
-It costs one handshake and not two, because the `workstation` block in `home/shell/ssh.nix` sets
+It costs one handshake and not two, because the `workstation` block in `modules/home/shell/ssh.nix` sets
 `ControlMaster auto`: the scp reuses the master the ssh above opened. And the image is not lost when
 the path takes its place in the clipboard, since cliphist still holds it, one SUPER+SHIFT+V away.
 
 ### ctrl+shift+v decides, and the kitten is how
 
-`home/shell/kitty/smart-paste.py`, bound to `ctrl+shift+v` in `home/shell/kitty.nix`. Two keys for
+`modules/home/shell/kitty/smart-paste.py`, bound to `ctrl+shift+v` in `modules/home/shell/kitty.nix`. Two keys for
 one intention was the wrong shape: push with SUPER+ALT+V, then paste, and remember which window was
 an ssh and which was not. The terminal already knows, so the kitten asks it.
 

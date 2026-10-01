@@ -2,7 +2,7 @@
 
 Modules: [`pkgs/basic-memory.nix`](../../../pkgs/basic-memory.nix),
 [`modules/nixos/services/basic-memory.nix`](../../../modules/nixos/services/basic-memory.nix),
-[`home/services/basic-memory.nix`](../../../home/services/basic-memory.nix)
+[`modules/home/services/basic-memory.nix`](../../../modules/home/services/basic-memory.nix)
 
 Two memory servers over my context repository, split at the FAI boundary, instead of one archive
 per agent CLI. Each is an MCP server over plain Markdown, so what it indexes is a directory I own and

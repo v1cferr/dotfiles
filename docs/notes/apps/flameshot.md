@@ -1,8 +1,8 @@
 # Flameshot v14: the keyboard flow, and the duplicated bar
 
-`home/apps/flameshot.nix`. v14 from the UNSTABLE channel (through flake.nix's overlay) plus the
+`modules/home/apps/flameshot.nix`. v14 from the UNSTABLE channel (through flake.nix's overlay) plus the
 config and the keyboard-flow scripts. The binds (Print, SUPER+SHIFT+S, and the "screenshot" submap)
-live in `home/desktop/hypr/lua/keybinds.lua`.
+live in `modules/home/desktop/hypr/lua/keybinds.lua`.
 
 ## Capture goes through the portal
 
@@ -54,7 +54,7 @@ ALWAYS comes back, the 60 s timeout included.
 
 ## The aliases
 
-They stay next to the tool and not in `home/shell/zsh.nix`, the same convention as eza and bat,
+They stay next to the tool and not in `modules/home/shell/zsh.nix`, the same convention as eza and bat,
 which live in `cli.nix`. `zsh.nix` keeps only the shell and system ones.
 
 VERIFIED on this machine's v14/Wayland: only `gui` opens the monitor picker; `full` and

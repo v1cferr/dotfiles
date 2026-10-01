@@ -1,6 +1,6 @@
 # codex
 
-Modules: [`home/shell/codex.nix`](../../../home/shell/codex.nix),
+Modules: [`modules/home/shell/codex.nix`](../../../modules/home/shell/codex.nix),
 [`pkgs/codex/package.nix`](../../../pkgs/codex/package.nix)
 
 OpenAI's terminal agent. Two decisions: who owns `config.toml`, and where the binary comes from.
@@ -37,7 +37,7 @@ generates NOTHING and the path stays free for the link below.
 
 ## The contract instead: a mirror versioned in the repo
 
-`mkOutOfStoreSymlink` to [`home/shell/codex/config.toml`](../../../home/shell/codex/config.toml),
+`mkOutOfStoreSymlink` to [`modules/home/shell/codex/config.toml`](../../../modules/home/shell/codex/config.toml),
 the same contract as [Claude Code's `settings.json`](claude-code.md) and VS Code's. Nix owns the
 LINK, Codex owns the CONTENT, and what Codex changes lands as a `git diff` instead of drifting
 where nobody can see it (rule 16).

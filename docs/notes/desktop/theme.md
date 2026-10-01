@@ -1,6 +1,6 @@
 # The theme: dark mode, Kvantum and the Windows 11 icons
 
-`home/desktop/theme.nix`. Here we only CONFIGURE; the theme package (`gnome-themes-extra`, which
+`modules/home/desktop/theme.nix`. Here we only CONFIGURE; the theme package (`gnome-themes-extra`, which
 brings Adwaita-dark) and the GTK portal live in `modules/nixos/`.
 
 ## Dark mode on Hyprland has two fronts
@@ -31,7 +31,7 @@ The Bibata cursor is referenced by NAME (the dconf `cursor-theme` plus the XCURS
 
 ## The two vendored derivations
 
-Both are an exception to the "`home/` does not install a package" rule: they are theme assets
+Both are an exception to the "`modules/home/` does not install a package" rule: they are theme assets
 consumed only by home-manager's qt/gtk modules, the same case as `adwaita-qt`.
 
 ### `win11os-kvantum`
@@ -141,7 +141,7 @@ rewrites that file at runtime, so only that key is forced, idempotently, the sam
 
 ## The palette is the SSOT, and how it reaches a hot-reloaded file
 
-`home/desktop/palette.nix`. Switching themes means changing `my.theme.name` (1 line) and
+`modules/home/desktop/palette.nix`. Switching themes means changing `my.theme.name` (1 line) and
 rebuilding. Each preset carries the exact OFFICIAL hexes of its palette, stored WITHOUT the `#`
 and 6 digits long, so each consumer formats them as it needs.
 
@@ -160,7 +160,7 @@ That is why `uiFont` rides along in `quickshell-colors.json` and the cursor ride
 `hypr-colors.lua`: those JSON and Lua files are the ONLY path into a hot-reloaded tree, even though
 neither value is a color. Both file names are historical.
 
-`home/desktop/monitors.nix` exists for exactly the same reason and generates
+`modules/home/desktop/monitors.nix` exists for exactly the same reason and generates
 `~/.config/theme/monitors.lua` and `monitors.json`. Note that the monitors OPTION does not live
 there: it moved to `modules/nixos/desktop/monitors.nix` on 04/08/2026 because Sunshine needs it too (see
 [`monitors.md`](../hardware/monitors.md)). The home module only READS it through `osConfig`.

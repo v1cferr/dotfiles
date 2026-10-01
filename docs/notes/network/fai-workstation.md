@@ -1,13 +1,13 @@
 # The FAI workstation: SSOT, Wake-on-LAN and the mount
 
-Two modules: `home/net/fai-workstation.nix` (the host's SSOT plus `wake-workstation`) and
-`home/services/fai-workstation-mount.nix` (the rclone SFTP mount).
+Two modules: `modules/home/net/fai-workstation.nix` (the host's SSOT plus `wake-workstation`) and
+`modules/home/services/fai-workstation-mount.nix` (the rclone SFTP mount).
 
 ## The SSOT
 
 The IP and user were literals repeated in 3 consumers (`ssh.nix`, the rclone mount, and the wake
-script). Now they come from one option. All the consumers are in `home/`, so the option lives in
-`home/` too: rule 11 says it lives at the LOWEST level that needs it. Contrast with `my.monitors`,
+script). Now they come from one option. All the consumers are in `modules/home/`, so the option lives in
+`modules/home/` too: rule 11 says it lives at the LOWEST level that needs it. Contrast with `my.monitors`,
 which had to move up because a system service needed it.
 
 ## Wake-on-LAN, and why three paths

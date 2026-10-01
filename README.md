@@ -57,7 +57,7 @@ stats, no bot commits to keep them fresh, and nothing drawn by a third party. Ho
 
 ## Day-to-day use
 
-Defined in [`home/shell/zsh.nix`](home/shell/zsh.nix):
+Defined in [`modules/home/shell/zsh.nix`](modules/home/shell/zsh.nix):
 
 ```bash
 rebuild   # nh os switch <flake> && hyprctl reload
@@ -87,7 +87,7 @@ flowchart LR
   lock[flake.lock<br/>the pinned universe] --> flake[flake.nix]
   flake --> host[hosts/ex-b560m-v5<br/>disks, monitors, my.services]
   host --> system[modules/nixos/<br/>core, hardware, net,<br/>desktop, gaming, services]
-  system -->|home-manager module| home[home/<br/>shell, desktop, apps,<br/>net, services]
+  system -->|home-manager module| home[modules/home/<br/>shell, desktop, apps,<br/>net, services]
   pkgs[pkgs/<br/>vendored + checkers] -.->|overlay| system
   pkgs -.->|overlay| home
   secrets[secrets/<br/>sops + age] -.->|/run/secrets at runtime| system
@@ -134,7 +134,7 @@ modules/nixos/          SYSTEM, shared by every host (machine-agnostic)
   services/      btrbk, Caddy, Jellyfin, qBittorrent, Immich, Ollama, Docker, libvirt, ...
   packages.nix   the CENTRAL LIST of system packages (rescue/base + diagnostics)
 
-home/            USER (home-manager): dotfiles + user apps
+modules/home/            USER (home-manager): dotfiles + user apps
   packages.nix   the CENTRAL LIST of user apps/CLIs (the ones with no config of their own)
   shell/         zsh, starship, kitty, git, ssh, the AI CLIs (claude, codex, antigravity), ntfy
   desktop/       hypr (Lua), quickshell (the bar), lockscreen, launcher, palette, wallpaper, xdg
@@ -160,16 +160,16 @@ The docs at the root are the three GitHub reads from there: this README,
 ## Where does a package go?
 
 Two mirrored central lists: [`modules/nixos/packages.nix`](modules/nixos/packages.nix) and
-[`home/packages.nix`](home/packages.nix). The per-package decision:
+[`modules/home/packages.nix`](modules/home/packages.nix). The per-package decision:
 
-1. **The default is `home/`.** A day-to-day app/CLI with no config of its own is 1 line in
-   [`home/packages.nix`](home/packages.nix), then `rebuild`.
-2. An app **with** declarative config (dotfiles / `programs.*`) gets its own module under `home/`,
+1. **The default is `modules/home/`.** A day-to-day app/CLI with no config of its own is 1 line in
+   [`modules/home/packages.nix`](modules/home/packages.nix), then `rebuild`.
+2. An app **with** declarative config (dotfiles / `programs.*`) gets its own module under `modules/home/`,
    so package and config travel together. For example `kitty`, `dolphin`, `flameshot`.
 3. It only goes to **`modules/nixos/`** if it needs **root/rescue** (say `git`/`vim` in a root shell), is
    a **driver/service**, or a **system service uses** it.
 
-Rule of thumb: *when in doubt, `home/`; it only moves up to `modules/nixos/` if root or a service needs
+Rule of thumb: *when in doubt, `modules/home/`; it only moves up to `modules/nixos/` if root or a service needs
 it.*
 
 ### Where does it come FROM?
@@ -195,8 +195,8 @@ The full set lives in [`docs/rules.md`](docs/rules.md), and its numbering is API
 "rule N". The ones you need to read this tree, deliberately unnumbered here so they are not read
 as rule numbers:
 
-- **`modules/nixos/` vs `home/`.** System level under `modules/nixos/`; the app **and** its user config under
-  `home/`, never the same package in both.
+- **`modules/nixos/` vs `modules/home/`.** System level under `modules/nixos/`; the app **and** its user config under
+  `modules/home/`, never the same package in both.
 - **Nix = app + config; state is not declared.** Saves, Wine prefixes, app tokens and sessions
   stay out of the repo.
 - **Comments are short, at most 2 lines, anywhere.** The header says what a module is and points
@@ -258,7 +258,7 @@ Use it as a reference freely; copying it means giving credit.
   <https://github.com/v1cferr/dotfiles>", link the license, and say what you changed.
 - **Not mine to relicense**, so these keep their own terms: the patches in `pkgs/openrgb/` are
   GPL-2.0-or-later like OpenRGB itself (one of them is by another author), and
-  `home/desktop/quickshell/assets/razer.svg` is simple-icons' CC0 data for a mark that is Razer's
+  `modules/home/desktop/quickshell/assets/razer.svg` is simple-icons' CC0 data for a mark that is Razer's
   trademark.
 
 Why this split, and what was passed over: [docs/notes/repo/license.md](docs/notes/repo/license.md).

@@ -22,7 +22,7 @@
   // (nixpkgs-fmt deprecated) has been fixed. Redeclaring a default here would freeze the
   // choice against a future upstream improvement, which is the opposite of lasting.
   //
-  // BINARIES BY NAME, resolved through the $PATH (nixd/nixfmt come from home/packages.nix).
+  // BINARIES BY NAME, resolved through the $PATH (nixd/nixfmt come from modules/home/packages.nix).
   // NEVER put a /nix/store path here: the first `nix-collect-garbage` would delete the
   // target and the config would break in silence.
   //

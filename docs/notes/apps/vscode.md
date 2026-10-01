@@ -1,6 +1,6 @@
 # VS Code: a versioned mirror, not an immutable source
 
-`home/apps/vscode.nix`. The package (an app WITH a config of its own owns its package) plus the
+`modules/home/apps/vscode.nix`. The package (an app WITH a config of its own owns its package) plus the
 THREE user config JSONs (`settings`, `keybindings`, `mcp`) versioned here and linked into
 `~/.config/Code/User`. The rest of that directory (`globalStorage`, `History`,
 `workspaceStorage`, `sync`) is STATE and stays out on purpose: it goes to restic, not to git.
@@ -56,7 +56,7 @@ EXTENSIONS keep being INSTALLED by Sync (the account), not declared here. Declar
 require the `nix-vscode-extensions` input (the nixpkgs set lags) plus `mutableExtensionsDir =
 false`, which breaks the UI's install button and auto-update.
 
-But the repo does RECORD which ones are installed, in `home/apps/vscode/extensions.txt`, written by
+But the repo does RECORD which ones are installed, in `modules/home/apps/vscode/extensions.txt`, written by
 `vscode-extensions-dump`. Without that, extensions were the only corner of VS Code invisible to
 git. Same contract as `settings.json`, one level up: mirror without governing.
 
@@ -89,7 +89,7 @@ run by `update`/`upgrade`: in practice, ALWAYS the latest stable.
 `--password-store=gnome-libsecret` because under Hyprland Electron does not autodetect the secret
 backend and shows "couldn't identify OS keyring".
 
-`vscode-extensions-dump` is on the PATH because the `update` alias (`home/shell/zsh.nix`) calls
+`vscode-extensions-dump` is on the PATH because the `update` alias (`modules/home/shell/zsh.nix`) calls
 it by NAME, and it is not a service. `vscode-bump` is NOT: it is the `passthru.updateScript` the
 overlay puts on the package, and `vendored-bump` runs it by store path
 ([version-bumps](../repo/version-bumps.md)).
@@ -111,7 +111,7 @@ being versionable in the clear and the path becomes sops, not a commit.
 
 The `repo` path cannot be derived from inside the evaluation: the flake is copied into the store,
 and what we need is the working directory. So it is read from `programs.nh.flake`, the clone's
-one declared path (rule 11), like every other hot-reload link in `home/`. If the repo is not
+one declared path (rule 11), like every other hot-reload link in `modules/home/`. If the repo is not
 there, the symlink dangles and VS Code cannot save settings, identically to `hyprland.lua`.
 
 The nixd config that carries a PATH (`nixd.options`/`nixpkgs`) lives in this repo's root

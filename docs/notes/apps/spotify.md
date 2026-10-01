@@ -1,6 +1,6 @@
 # Spotify and spicetify
 
-`home/apps/spotify.nix`. The theme is the easy line; what took the reading was proving that the
+`modules/home/apps/spotify.nix`. The theme is the easy line; what took the reading was proving that the
 patch does not eat the flag Spotify needs to start at all.
 
 ## Why this is declarable, when it looked like it was not
@@ -63,8 +63,8 @@ producing an unthemed Spotify.
 Spotifys and let the autostart open the unthemed one, which is rule 14's silent drift with a
 visible symptom. What changed, all in the same commit:
 
-- `home/packages.nix` no longer lists it, since the module installs it (rule 4)
-- `home/desktop/autostart.nix` reads `config.programs.spicetify.spicedSpotify` instead of
+- `modules/home/packages.nix` no longer lists it, since the module installs it (rule 4)
+- `modules/home/desktop/autostart.nix` reads `config.programs.spicetify.spicedSpotify` instead of
   `unstable.spotify`, so the menu and the autostart cannot diverge
 - the overlay stays where it is, feeding `spotifyPackage`
 

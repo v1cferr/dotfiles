@@ -1,6 +1,6 @@
 # The games disk: one install, two systems
 
-`hosts/ex-b560m-v5/default.nix` mounts it, `home/apps/games-disk.nix` links into it.
+`hosts/ex-b560m-v5/default.nix` mounts it, `modules/home/apps/games-disk.nix` links into it.
 
 ## The problem it solves
 
@@ -60,7 +60,7 @@ failing after any Windows session.
 
 ## Why symlinks, and why AT THE OLD PATH
 
-`home/apps/games-disk.nix` maps a path under `$HOME` to a path under `/mnt/windows/Games` and
+`modules/home/apps/games-disk.nix` maps a path under `$HOME` to a path under `/mnt/windows/Games` and
 declares it with `mkOutOfStoreSymlink`. Out-of-store because the target is MUTABLE data the
 launcher patches in place: copying 89 GiB into the nix store would be absurd and read-only.
 
@@ -202,7 +202,7 @@ read, and the rejection is left standing here on a third reason neither of them 
 The first was that the save would leave restic's reach. That was already false when it was written.
 `paths` is `/home/v1cferr`, but `.local/share/bottles` sits in the EXCLUDES ([restic.md](restic.md))
 and has since 15/08, so a save inside a prefix is not backed up either. That exclusion is the whole
-reason `home/services/cs2-saves-backup.nix` exists as a job of its own. The choice was never backed
+reason `modules/home/services/cs2-saves-backup.nix` exists as a job of its own. The choice was never backed
 up against not backed up, it was between two unbacked places.
 
 The second was that a `/mnt/windows` failing to mount (by design, after a Windows hybrid shutdown)
@@ -261,14 +261,14 @@ on the disk.
 
 `Bodycam` is its OWN prefix, for the same reason `Black-Flag` is: UE5 renders through DX12, so it
 needs vkd3d-proton, which the Battle.net bottle has no use for. What each bottle LISTS is declared
-in `home/apps/bottles.nix` ([bottles.md](../apps/bottles.md)); the prefix itself stays state.
+in `modules/home/apps/bottles.nix` ([bottles.md](../apps/bottles.md)); the prefix itself stays state.
 
 ## The game whose save was already on the Windows disk
 
 Victoria 3 is the third that was never duplicated: a RUNE repack installed straight into
 `/mnt/windows/Games` on 29/08, 16 GiB, which only got a bottle on 12/09. The game side holds no
 surprise. `Victoria-3` is its own prefix with the components the other repacks use, and the program
-declared in `home/apps/bottles.nix` is `binaries/victoria3.exe` and NOT `launcher/dowser.exe`: the
+declared in `modules/home/apps/bottles.nix` is `binaries/victoria3.exe` and NOT `launcher/dowser.exe`: the
 Paradox launcher opens on a Steam login a repack cannot pass, and what answers for Steam here is the
 `steam_api64.dll` sitting next to the exe.
 
@@ -283,7 +283,7 @@ costs no backup that existed. It gains one: OneDrive syncs that folder whenever 
 system running, which is more than a save inside a prefix gets here.
 
 That path is also why `my.games.linked` could not carry it. Its values are relative to
-`my.games.root` and this one is nowhere near `Games/`, so `home/apps/games-disk.nix` grew a second
+`my.games.root` and this one is nowhere near `Games/`, so `modules/home/apps/games-disk.nix` grew a second
 attrset, `my.games.saves`, whose values are absolute.
 
 ### `save games` alone, and what stays out of the link on purpose
@@ -308,4 +308,4 @@ allocates 37464 blocks against 19178897 bytes, so it is fully materialized, and 
 
 It is IRREPLACEABLE in the ironman sense and it is not in restic, the same as every other save in a
 bottle. OneDrive is the off-machine copy and it only runs when Windows does. If that stops being
-enough, the shape to copy is `home/services/cs2-saves-backup.nix`.
+enough, the shape to copy is `modules/home/services/cs2-saves-backup.nix`.

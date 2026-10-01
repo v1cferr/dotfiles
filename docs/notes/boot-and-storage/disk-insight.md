@@ -1,6 +1,6 @@
 # Disk insight: what grew, and what nobody opens
 
-`home/services/disk-insight.nix`. The trend log, the `/proc` usage sampler and `disk-report`.
+`modules/home/services/disk-insight.nix`. The trend log, the `/proc` usage sampler and `disk-report`.
 
 ## Why the alarm was not enough
 

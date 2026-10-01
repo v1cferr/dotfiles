@@ -1,6 +1,6 @@
 # The autostart panel, and Spotify's 4145 restarts
 
-`home/desktop/autostart.nix`. What OPENS along with the graphical session, in a single place. Edit
+`modules/home/desktop/autostart.nix`. What OPENS along with the graphical session, in a single place. Edit
 true/false in the panel plus `rebuild`. It mirrors the idiom of `modules/nixos/services/toggles.nix`
 (`mkEnableOption` plus a gate), but for GUI APPS.
 
@@ -69,7 +69,7 @@ require walking to the PC to open the app.
   `pkgs.localsend`: if it ever becomes `unstable.localsend` in `modules/nixos/`, the autostart follows on
   its own. It is the Spotify trap solved by construction instead of by attention.
 
-**Spotify**: `unstable.*` has to MATCH `home/packages.nix`, otherwise the autostart brings up the
+**Spotify**: `unstable.*` has to MATCH `modules/home/packages.nix`, otherwise the autostart brings up the
 broken version from the base while the menu opens the good one. The `--no-zygote` flag that keeps
 the app standing does NOT come from here: it belongs to the PACKAGE, baked in by `flake.nix`'s
 `overlaySpotifyNoZygote`, so the menu (`Exec=spotify` through the PATH) gets the same flag as this
@@ -77,6 +77,6 @@ autostart. A single owner, rule 15.
 
 ## Where the packages come from
 
-`home/packages.nix`, except LocalSend, whose owner is `modules/nixos/net/localsend.nix` (the nixpkgs
+`modules/home/packages.nix`, except LocalSend, whose owner is `modules/nixos/net/localsend.nix` (the nixpkgs
 module ties package and firewall together). Here we only REFERENCE the binary by store path, so it
 is not installed again and rule 4 holds.

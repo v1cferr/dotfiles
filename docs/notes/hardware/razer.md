@@ -1,7 +1,7 @@
 # The Razer DeathAdder V2, its DPI OSD, and why there is no driver
 
-`modules/nixos/hardware/razer.nix`, `pkgs/razer-dpi.nix`, `home/services/razer-dpi.nix`, plus the `dpi`
-mode in `home/desktop/quickshell/osd/Osd.qml`.
+`modules/nixos/hardware/razer.nix`, `pkgs/razer-dpi.nix`, `modules/home/services/razer-dpi.nix`, plus the `dpi`
+mode in `modules/home/desktop/quickshell/osd/Osd.qml`.
 
 The goal was the thing Synapse does on Windows: press the DPI button under the scroll wheel and
 see the new value on screen. The result does exactly that, with **no kernel module anywhere**.

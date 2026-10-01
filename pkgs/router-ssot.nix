@@ -132,13 +132,13 @@ writers.writePython3Bin "router-ssot"
         # address; both are rule 11 doing its job. Losing an anchor does not weaken the check
         # quietly: the dns one starts reporting an answer "no host declares", which is how the
         # cesar one was found, by this hook, in the very commit that moved it.
-        ssh_nix = read("home/shell/ssh.nix")
+        ssh_nix = read("modules/home/shell/ssh.nix")
         hosts = set(re.findall(r'HostName\s*=\s*"([\d.]+)"', ssh_nix))
         bound = re.search(r'cesarHost\s*=\s*"([\d.]+)"', ssh_nix)
         if bound:
             hosts.add(bound.group(1))
         opt = re.search(r'host\s*=\s*lib\.mkOption\s*\{.*?default\s*=\s*"([\d.]+)"',
-                        read("home/net/t480.nix"), re.S)
+                        read("modules/home/net/t480.nix"), re.S)
         if opt:
             hosts.add(opt.group(1))
         out["ssh_hosts"] = hosts

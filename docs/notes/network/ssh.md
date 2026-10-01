@@ -1,6 +1,6 @@
 # ssh
 
-Module: [`home/shell/ssh.nix`](../../../home/shell/ssh.nix)
+Module: [`modules/home/shell/ssh.nix`](../../../modules/home/shell/ssh.nix)
 
 The client config. Five hosts, and almost every line in there is a trap somebody else's server
 handed us.
@@ -58,7 +58,7 @@ how little of the `cesar` section applies.
 peer, and over there `sshd_config` carries `ListenAddress 10.10.10.6`, so there is no path to that
 sshd from the LAN even while the machine is still in the house. It is NOT a literal here any more:
 the RDP wrapper became a second consumer, so the value moved into `my.t480`
-([`home/net/t480.nix`](../../../home/net/t480.nix)) and this block reads it, which is rule 11. It is the machine's own rule: no
+([`modules/home/net/t480.nix`](../../../modules/home/net/t480.nix)) and this block reads it, which is rule 11. It is the machine's own rule: no
 port of that host is exposed, and SSH, Sunshine and RDP accept the tunnel and the home LAN only.
 
 **That bind is why sshd there DEPENDS on the tunnel**, and it is the sharpest thing this host has to

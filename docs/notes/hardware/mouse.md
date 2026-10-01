@@ -24,7 +24,7 @@ for HID++ to wake up and ONLY THEN restarts logid.
 There is no `thumbwheel` block. Native means `REL_HWHEEL`, which is what makes horizontal
 scrolling work INSIDE the apps: VS Code, a wide table in the browser, Dolphin. What scrolls the
 Hyprland tape is SUPER plus the wheel, bound on `mouse_left`/`mouse_right` in
-`home/desktop/hypr/lua/keybinds.lua`.
+`modules/home/desktop/hypr/lua/keybinds.lua`.
 
 There used to be a `thumbwheel.divert = true` here synthesizing SUPER+CTRL+`,`/`.`. The reason was
 escaping the 300 ms ceiling of `binds:scroll_event_delay`, which throttles a wheel bind to ~3

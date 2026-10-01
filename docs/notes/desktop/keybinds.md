@@ -1,6 +1,6 @@
 # The Hyprland keybinds
 
-`home/desktop/hypr/lua/keybinds.lua`. At parity with the Arch/Kingston setup, with the tools
+`modules/home/desktop/hypr/lua/keybinds.lua`. At parity with the Arch/Kingston setup, with the tools
 adapted to the NixOS stack.
 
 **The comments in that file are not only comments**: the cheatsheet (SUPER+H) is GENERATED from

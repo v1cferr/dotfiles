@@ -60,29 +60,29 @@ does not read them as paths that should exist on this branch.
 
 | Arch area | Where it lives now |
 | --- | --- |
-| `main:hypr/` (37 files) | [`home/desktop/hypr.nix`](../home/desktop/hypr.nix) plus 7 Lua files. Two deltas, below |
-| `main:quickshell/` (17) | [`home/desktop/quickshell.nix`](../home/desktop/quickshell.nix) plus 25 QML files, a superset |
-| `main:vscode/` (8) | [`home/apps/vscode.nix`](../home/apps/vscode.nix): settings, keybindings, MCP and the extension mirror |
+| `main:hypr/` (37 files) | [`modules/home/desktop/hypr.nix`](../modules/home/desktop/hypr.nix) plus 7 Lua files. Two deltas, below |
+| `main:quickshell/` (17) | [`modules/home/desktop/quickshell.nix`](../modules/home/desktop/quickshell.nix) plus 25 QML files, a superset |
+| `main:vscode/` (8) | [`modules/home/apps/vscode.nix`](../modules/home/apps/vscode.nix): settings, keybindings, MCP and the extension mirror |
 | `main:netextender/` (12) | [`modules/nixos/net/vpn.nix`](../modules/nixos/net/vpn.nix) (nxBender) plus [`modules/nixos/net/fai-gateway.nix`](../modules/nixos/net/fai-gateway.nix); the WoL scripts became `wake-workstation` |
 | `main:networkmanager/` | The UFSCar profile became openconnect/GlobalProtect in the same `vpn.nix` |
 | `main:fail2ban/` (5) | [`modules/nixos/net/network.nix`](../modules/nixos/net/network.nix) plus the generated jail in [`modules/nixos/services/caddy.nix`](../modules/nixos/services/caddy.nix) |
-| `main:ssh/` (4) | `network.nix` (port 2222, now with TOTP) plus [`home/shell/ssh.nix`](../home/shell/ssh.nix) |
+| `main:ssh/` (4) | `network.nix` (port 2222, now with TOTP) plus [`modules/home/shell/ssh.nix`](../modules/home/shell/ssh.nix) |
 | `main:caddy/` (3) | `caddy.nix`, with the vhosts GENERATED from `my.ingress`. The subdomain SET is smaller, see Partial |
 | `main:wireguard/` | [`router/uci/`](../router/uci/network.conf), because the tunnel moved to the router |
 | `main:system/` (14) | [`modules/nixos/core/core.nix`](../modules/nixos/core/core.nix) (locale, timezone, `br-abnt2`), `hostName` per host, [`modules/nixos/core/boot.nix`](../modules/nixos/core/boot.nix) |
 | `main:swap/` | `zramSwap.enable` in [`modules/nixos/hardware/hardware.nix`](../modules/nixos/hardware/hardware.nix) |
 | `main:fontconfig/` | [`modules/nixos/hardware/fonts.nix`](../modules/nixos/hardware/fonts.nix), a superset: CJK plus corefonts plus vista-fonts |
-| `main:gtk-3.0/`, `main:gtk-4.0/` | [`home/desktop/theme.nix`](../home/desktop/theme.nix) plus [`home/desktop/palette.nix`](../home/desktop/palette.nix) |
-| `main:rofi/` | [`home/desktop/launcher.nix`](../home/desktop/launcher.nix) plus [`home/desktop/clipboard.nix`](../home/desktop/clipboard.nix), themed from the palette |
-| `main:kitty/` | [`home/shell/kitty.nix`](../home/shell/kitty.nix). Small deltas, below |
-| `main:starship/` | [`home/shell/starship.nix`](../home/shell/starship.nix) |
-| `main:git/` | [`home/shell/git.nix`](../home/shell/git.nix) |
-| `main:fastfetch/` | [`home/shell/fastfetch.nix`](../home/shell/fastfetch.nix) |
-| `main:flameshot/` | [`home/apps/flameshot.nix`](../home/apps/flameshot.nix), with the `sc1`/`sc2` aliases by monitor NAME |
-| `main:mpv/` | `programs.mpv` in [`home/apps/media.nix`](../home/apps/media.nix) |
+| `main:gtk-3.0/`, `main:gtk-4.0/` | [`modules/home/desktop/theme.nix`](../modules/home/desktop/theme.nix) plus [`modules/home/desktop/palette.nix`](../modules/home/desktop/palette.nix) |
+| `main:rofi/` | [`modules/home/desktop/launcher.nix`](../modules/home/desktop/launcher.nix) plus [`modules/home/desktop/clipboard.nix`](../modules/home/desktop/clipboard.nix), themed from the palette |
+| `main:kitty/` | [`modules/home/shell/kitty.nix`](../modules/home/shell/kitty.nix). Small deltas, below |
+| `main:starship/` | [`modules/home/shell/starship.nix`](../modules/home/shell/starship.nix) |
+| `main:git/` | [`modules/home/shell/git.nix`](../modules/home/shell/git.nix) |
+| `main:fastfetch/` | [`modules/home/shell/fastfetch.nix`](../modules/home/shell/fastfetch.nix) |
+| `main:flameshot/` | [`modules/home/apps/flameshot.nix`](../modules/home/apps/flameshot.nix), with the `sc1`/`sc2` aliases by monitor NAME |
+| `main:mpv/` | `programs.mpv` in [`modules/home/apps/media.nix`](../modules/home/apps/media.nix) |
 | `main:uv/` | The package in [`modules/nixos/packages.nix`](../modules/nixos/packages.nix); the receipt is state (rule 6) |
-| `main:autostart/` | [`home/apps/dropbox.nix`](../home/apps/dropbox.nix) plus [`home/desktop/autostart.nix`](../home/desktop/autostart.nix), one unit per app |
-| `main:claude/` | `claude-desktop-fhs` in [`home/packages.nix`](../home/packages.nix) |
+| `main:autostart/` | [`modules/home/apps/dropbox.nix`](../modules/home/apps/dropbox.nix) plus [`modules/home/desktop/autostart.nix`](../modules/home/desktop/autostart.nix), one unit per app |
+| `main:claude/` | `claude-desktop-fhs` in [`modules/home/packages.nix`](../modules/home/packages.nix) |
 | `main:.claude/` | [`.claude/settings.json`](../.claude/settings.json), plus the managed layer of [`modules/nixos/services/claude-code.nix`](../modules/nixos/services/claude-code.nix) |
 | The root `.md` files | The whole of [docs/](README.md). `ANOTACOES.md` was 1949 lines and became this tree |
 
@@ -180,7 +180,7 @@ gone by policy, since toolchains live in a devShell reached by direnv now.
 | Script | Status |
 | --- | --- |
 | `vpn`, `vpn-off` | The `vpn` CLI in `modules/nixos/net/vpn.nix`, and it needs no password (polkit) |
-| `wake-fai` | `wake-workstation` in [`home/net/fai-workstation.nix`](../home/net/fai-workstation.nix), with three WoL paths instead of one |
+| `wake-fai` | `wake-workstation` in [`modules/home/net/fai-workstation.nix`](../modules/home/net/fai-workstation.nix), with three WoL paths instead of one |
 | `dark-mode`, `tokyo-night` | Obsolete by construction: the theme is a Nix palette applied at build time (rule 11, decision 0001) |
 | `hypr-quick` | Missing. Mostly subsumed by the binds, EXCEPT its wallpaper actions |
 | `zen-sync` | Missing, and it is the delivery half of the Zen customization below |
@@ -199,12 +199,12 @@ became either a `writeShellApplication` or a systemd timer. The two that did not
   the FEATURE was not written down as one.
 - **The 3-minute idle dim.** Arch had a listener that zeroed the gamma at 180s, before the lock
   at 300s, through `idle-dim.sh`. This branch has ONLY the 300s lock listener.
-  [`home/desktop/hyprsunset.nix`](../home/desktop/hyprsunset.nix) dims by time of day, which
+  [`modules/home/desktop/hyprsunset.nix`](../modules/home/desktop/hyprsunset.nix) dims by time of day, which
   covers the evening but not "I walked away at noon".
 
 One more, cosmetic: the lockscreen's notification COUNT label (`lockscreen_notifs.sh`, reading
 `qs ipc call notif count`) has no counterpart in
-[`home/desktop/lockscreen.nix`](../home/desktop/lockscreen.nix). The clock, date, user, quote
+[`modules/home/desktop/lockscreen.nix`](../modules/home/desktop/lockscreen.nix). The clock, date, user, quote
 and weather labels are all there, and the quotes got better (a ZenQuotes plus DeepL timer
 replaced the vendored TSV).
 
@@ -226,7 +226,7 @@ immutability marker, not a managed file.
 ### `main:zen-browser/`
 
 The browser is declared and is the default (`$BROWSER`, and the mime associations in
-[`home/desktop/xdg.nix`](../home/desktop/xdg.nix)). Its CUSTOMIZATION is not: `userChrome.css`
+[`modules/home/desktop/xdg.nix`](../modules/home/desktop/xdg.nix)). Its CUSTOMIZATION is not: `userChrome.css`
 (618 lines) and `user.js` (18 prefs). This is the pair `zen-sync` used to deliver.
 
 ### `main:scripts/`
@@ -245,7 +245,7 @@ Ordered by what I would actually miss, not alphabetically:
 1. **atuin** (`main:atuin/`). The shell history with search, stats and sync. Nothing on this
    branch. It has a home-manager module (`programs.atuin`), and the trap is already documented
    next door: whatever initializes last fights zoxide's doctor, so the `mkOrder` in
-   [`home/shell/cli.nix`](../home/shell/cli.nix) is the place to read first.
+   [`modules/home/shell/cli.nix`](../modules/home/shell/cli.nix) is the place to read first.
 2. **easyeffects** (`main:easyeffects/`, 4 files). CORRECTED on 08/09/2026, because the first
    pass of this page called these "presets" and they are not: `equalizerrc` and `compressorrc` are
    EMPTY, `bassEnhancerrc` holds one line (`floorActive=true`), and `easyeffectsrc` only records

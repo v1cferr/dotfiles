@@ -1,5 +1,5 @@
 # Host ex-b560m-v5: an ASUS EX-B560M-V5 board, the daily driver, running off the Kingston KC3000.
-# Only what is specific to this machine; the shared config is ../../system.
+# Only what is specific to this machine; the shared config is ../../modules/nixos.
 { modulesPath, ... }:
 
 {

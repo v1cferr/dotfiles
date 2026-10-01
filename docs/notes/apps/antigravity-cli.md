@@ -2,7 +2,7 @@
 
 Modules: [`pkgs/antigravity-cli/package.nix`](../../../pkgs/antigravity-cli/package.nix),
 [`pkgs/antigravity-cli/bump.nix`](../../../pkgs/antigravity-cli/bump.nix),
-[`home/shell/antigravity.nix`](../../../home/shell/antigravity.nix)
+[`modules/home/shell/antigravity.nix`](../../../modules/home/shell/antigravity.nix)
 
 Google's terminal agent, `agy`. Three decisions: why it is here in place of the Gemini CLI, where
 the binary comes from, and why the only thing declared under `~/.gemini` is merged in, never
@@ -137,7 +137,7 @@ with two different jobs, and only the second one would ever be mine.
 [basic-memory](basic-memory.md), its general server (never the FAI one).
 
 Given everything above, the mechanism is the merge and not a link:
-[`home/shell/antigravity.nix`](../../../home/shell/antigravity.nix) runs a `jq` merge at
+[`modules/home/shell/antigravity.nix`](../../../modules/home/shell/antigravity.nix) runs a `jq` merge at
 activation, so Nix owns the key it declares and whatever else lives in that file survives. `*` and
 not `+` in the jq, because the recursive merge is what leaves a sibling server intact. It is
 idempotent, so every rebuild reasserts the endpoint, and an empty file is treated as `{}` since jq

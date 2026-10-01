@@ -51,7 +51,7 @@ writers.writePython3Bin "dead-config"
 
 
     def check_modules(files, _code):
-        """A .nix under modules/nixos/ or home/ that no `imports` reaches is a file nobody evaluates."""
+        """A .nix under modules/nixos/ or modules/home/ that no `imports` reaches is a file nobody evaluates."""
         nix = {f: read(f) for f in files if f.endswith(".nix")}
 
         def imports_of(f):
@@ -68,7 +68,7 @@ writers.writePython3Bin "dead-config"
                             break
             return found
 
-        roots = ["modules/nixos/default.nix", "home/default.nix"]
+        roots = ["modules/nixos/default.nix", "modules/home/default.nix"]
         roots += [f for f in nix if f.startswith("hosts/")]
         seen, stack = set(), list(roots)
         while stack:

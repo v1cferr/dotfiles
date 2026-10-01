@@ -10,7 +10,7 @@ remembering, which is the same "intention, not a standard" the CI's own header r
 
 | Check | What is dead | Why it is silent |
 | --- | --- | --- |
-| module | a `.nix` under `modules/nixos/` or `home/` that no `imports` reaches | it evaluates to nothing, so nothing fails; the file just sits there looking live |
+| module | a `.nix` under `modules/nixos/` or `modules/home/` that no `imports` reaches | it evaluates to nothing, so nothing fails; the file just sits there looking live |
 | input | a flake input nothing consumes | it is still fetched, locked and evaluated on every build |
 | option | a `my.*` option nobody reads through `config`/`osConfig` | an SSOT with no consumer, which is the thing rule 11 exists to prevent |
 | note | a page in `docs/notes/` no module points at | rule 2 made the pointer the ONLY path in, so an unpointed page is unreachable |
@@ -72,14 +72,14 @@ prototyped, produced a false positive, and was fixed before being written down:
   bare argument of `outputs` and used as `import nixpkgs-unstable`. The check subtracts the
   declaration block and then looks for the name ANYWHERE, which catches both forms. It also has to
   scan the whole tree and not just `flake.nix`, because `zen-browser` is consumed in
-  `home/packages.nix` through `specialArgs`.
+  `modules/home/packages.nix` through `specialArgs`.
 - **options**: "declared and used at most once" flagged four live options
   (`my.fai.workstation`, `my.disk`, `my.net.domain`, `my.ingress`), because a consumer reads a
   CHILD (`config.my.ingress.<svc>`) or reads it several times in one file. The check looks for a
   read through `config.` or `osConfig.` specifically.
 - **modules**: resolving every `./path` in the file flags nothing, but it also PROVES nothing,
   since it counts a path mentioned in a comment. The check parses `imports = [ … ]` blocks and
-  walks reachability from the real roots (`modules/nixos/default.nix`, `home/default.nix`, `hosts/*`).
+  walks reachability from the real roots (`modules/nixos/default.nix`, `modules/home/default.nix`, `hosts/*`).
   Both `./x` and `../x` resolve, so a host importing a shared module by a relative path counts as
   a reach; before 30/09/2026 a `../` was resolved one level too shallow and read as unreached.
   `pkgs/` is deliberately exempt: it is reached by `callPackage` in `flake.nix`, not by an
@@ -88,7 +88,7 @@ prototyped, produced a false positive, and was fixed before being written down:
 ## Two checks that were considered and REJECTED
 
 **A secret consumed but NOT provisioned.** It sounds like the more valuable direction, and it
-produces a false positive immediately: `home/shell/ntfy.nix` reads `/run/secrets/ntfy_topic`, which
+produces a false positive immediately: `modules/home/shell/ntfy.nix` reads `/run/secrets/ntfy_topic`, which
 does not exist, and that is BY DESIGN. The script tests `[ ! -r "$secret" ]`, warns and exits 0,
 because "the caller must not break because the warning did not go out". A check that cannot tell a
 guarded read from an unguarded one would flag good code.

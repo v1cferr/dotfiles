@@ -1,6 +1,6 @@
 # Bottles: the programs are declared, the prefixes are not
 
-`home/apps/bottles.nix` owns the package, the programs each bottle lists and the tiles in the
+`modules/home/apps/bottles.nix` owns the package, the programs each bottle lists and the tiles in the
 Library tab. [games-disk.md](../boot-and-storage/games-disk.md) covers where the game DATA lives.
 
 ## TWO FILES, and confusing them costs an afternoon

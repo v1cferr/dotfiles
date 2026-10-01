@@ -6,9 +6,9 @@ It was the repo's worst case of duplication: `DP-2` in 8 files and `HDMI-A-3` in
 and QML, so changing a monitor (or a cable) meant hunting a string through everything.
 
 Only the NAMES live there, which is what was repeated. The mode, position and refresh stay in
-`home/desktop/hypr/lua/monitors.lua`: each appears once, and they are not the SSOT of anything.
+`modules/home/desktop/hypr/lua/monitors.lua`: each appears once, and they are not the SSOT of anything.
 
-## Why in `modules/nixos/` and not in `home/` (changed 04/08/2026)
+## Why in `modules/nixos/` and not in `modules/home/` (changed 04/08/2026)
 
 A connector is a HARDWARE fact, and whoever needs it is not only the user: Sunshine, a system
 service, picks WHICH monitor to capture by this name.
@@ -21,11 +21,11 @@ side and EVERYBODY reads downward.
 | Consumer | Reads |
 | --- | --- |
 | `modules/nixos/` modules | `config.my.monitors.<n>` |
-| `home/` modules | `osConfig.my.monitors.<n>` |
-| hot-reload (Hyprland, Quickshell) | the data files generated in `home/desktop/monitors.nix` |
+| `modules/home/` modules | `osConfig.my.monitors.<n>` |
+| hot-reload (Hyprland, Quickshell) | the data files generated in `modules/home/desktop/monitors.nix` |
 
 The hot-reload case exists because Nix does not write inside the symlinked trees. Same mechanics as
-the palette in `home/desktop/palette.nix`.
+the palette in `modules/home/desktop/palette.nix`.
 
 ## No `default`, on purpose (04/08/2026)
 

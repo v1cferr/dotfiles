@@ -1,8 +1,8 @@
 # Dropbox: the tray icon, and 10 days of syncing nothing
 
-`home/apps/dropbox.nix`. The `~/Dropbox` folder synced (the Obsidian vault plus documents).
+`modules/home/apps/dropbox.nix`. The `~/Dropbox` folder synced (the Obsidian vault plus documents).
 
-A conscious exception to the "`home/` does not install" rule: `services.dropbox` is a USER SERVICE
+A conscious exception to the "`modules/home/` does not install" rule: `services.dropbox` is a USER SERVICE
 (`systemd --user`), not a package in `environment.systemPackages`. The home-manager module already
 brings `dropbox-cli` and starts the daemon, so here it is only ENABLED.
 
@@ -60,7 +60,7 @@ Dropbox. It was never the bar's fault.
 That default is INVERTED here, because the icon is wanted. It is enough for the daemon to inherit
 the session's display for it to register `dropbox_client_<pid>` in the watcher immediately
 (measured). And the bar already knows how to draw it: the `image://icon/<name>?path=<dir>` that
-Dropbox publishes has its own handling in `home/desktop/quickshell/bar/Bar.qml`.
+Dropbox publishes has its own handling in `modules/home/desktop/quickshell/bar/Bar.qml`.
 
 `DISPLAY=:0` and `WAYLAND_DISPLAY=wayland-1` are NOT hardcoded: the socket name belongs to the
 session, not to the host, and tomorrow it is `wayland-2`. `autostart.lua` already does
@@ -84,7 +84,7 @@ restart an already-active unit).
 
 The consequence is honest: **WITH NO SESSION THERE IS NO SYNC.** On this machine that is cheap
 (autologin, always on), but it is a real trade, and it inherits the trap already noted in
-`home/desktop/polkit-agent.nix` (home-manager#8547): if `graphical-session.target` ever goes
+`modules/home/desktop/polkit-agent.nix` (home-manager#8547): if `graphical-session.target` ever goes
 inactive, the sync stops with it. That is why the watcher also LOGS at warning level and does not
 only notify.
 
@@ -110,7 +110,7 @@ The override reaches it through `.override`, since the package comes from `callP
 - `dropbox-cli` takes the FHS package as an ARGUMENT, so it is overridden too. Without that the CLI
   would keep starting the stock daemon and the whole override would be decorative.
 
-The browser is referenced as the same Zen derivation `home/packages.nix` installs, not by name on
+The browser is referenced as the same Zen derivation `modules/home/packages.nix` installs, not by name on
 PATH, so it is the store path that is guaranteed and not the search order (rule 4). `ldd` says Zen
 resolves entirely under `/nix`, which the sandbox binds, so it runs from in there.
 
@@ -137,7 +137,7 @@ and the cgroup is something systemd really controls (the daemon does not escape 
 on 260.
 
 `Restart=always` and not `on-failure`, and here the choice is the OPPOSITE of
-`home/desktop/autostart.nix`, on purpose: there, closing an app by hand is a decision to respect;
+`modules/home/desktop/autostart.nix`, on purpose: there, closing an app by hand is a decision to respect;
 here a stopped sync daemon is always a defect, including when what stopped it was
 `dropbox-hm stop`. An explicit `systemctl --user stop dropbox` still stops it for real, since an
 explicit stop never triggers Restart.
@@ -163,7 +163,7 @@ Four details in the script:
   script exists to cover.
 - `case` and NEVER `grep -q`: with `writeShellApplication`'s pipefail the grep exits on the first
   match, the producer dies of SIGPIPE, and the pipeline returns an ERROR despite the match. Same
-  trap as in `home/net/mega.nix`. The matched texts come from the official CLI: "To link this
+  trap as in `modules/home/net/mega.nix`. The matched texts come from the official CLI: "To link this
   computer to a Dropbox account, visit the following url" and "Dropbox isn't running!".
 - **Anti-spam of 12 h per state**, the same idiom as `disk-watch`. Without it an unlink would
   become a notification every 30 min and the person would learn to ignore it, and an alarm that

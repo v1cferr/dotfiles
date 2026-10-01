@@ -98,7 +98,7 @@ and `wrapType2` does not expose it.
 - `%U` plus the `x-scheme-handler/curseforge...` MimeType entries are what make the "Install"
   button on the site open the app (a deep link). Declaring the scheme here is not enough: what
   says THIS `.desktop` is the default is
-  [`home/apps/curseforge.nix`](../../../home/apps/curseforge.nix), and without that the LOGIN does not
+  [`modules/home/apps/curseforge.nix`](../../../modules/home/apps/curseforge.nix), and without that the LOGIN does not
   come back.
 
 The `version` string comes from the `X-AppImage-Version` of the `.desktop` inside the AppImage.
@@ -107,7 +107,7 @@ electron-builder noise.
 
 ## The user side
 
-`home/apps/curseforge.nix`. The package (the official AppImage, repackaged) lives in
+`modules/home/apps/curseforge.nix`. The package (the official AppImage, repackaged) lives in
 `pkgs/curseforge/package.nix`; this module is the home side.
 
 **It REPLACED prismlauncher on 14/08/2026**: Prism imports a modpack `.zip`, but what keeps the

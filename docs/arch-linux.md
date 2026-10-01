@@ -23,7 +23,7 @@ The folder on the Drive was renamed from `KINGSTON` to **`ARCH-KINGSTON`** on 05
 **There is no command to run**: since 11/08/2026 the archive stays mounted at
 `/mnt/arch-antigo` from login on, so it is just a matter of opening the **Arch antigo**
 bookmark in Dolphin. What mounts it is the user unit `arch-antigo-mount`
-([`home/services/arch-legacy-mount.nix`](../home/services/arch-legacy-mount.nix)); the
+([`modules/home/services/arch-legacy-mount.nix`](../modules/home/services/arch-legacy-mount.nix)); the
 mountpoint and the SSOT of the path belong to the system side
 ([`modules/nixos/services/arch-legacy.nix`](../modules/nixos/services/arch-legacy.nix)). The
 `arch-browse` alias died along with it, and an empty folder here became a symptom rather
@@ -42,7 +42,7 @@ away.
 
 The mount runs as the USER on purpose: a FUSE mount is private to whoever mounted it, so
 `sudo restic mount` produces a folder the file manager cannot open. The Arch dotfiles are at
-`home/v1cferr/dotfiles` inside the snapshot (`6d7e3ee7`, 44.6 GiB). Both secrets are still
+`modules/home/v1cferr/dotfiles` inside the snapshot (`6d7e3ee7`, 44.6 GiB). Both secrets are still
 declared on purpose: they are the KEY to the archive, not leftovers from the module.
 
 - Repo on GitHub: <https://github.com/v1cferr/dotfiles>

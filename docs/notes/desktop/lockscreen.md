@@ -1,6 +1,6 @@
 # The lock screen: hyprlock plus hypridle
 
-`home/desktop/lockscreen.nix`. Ref: <https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/>
+`modules/home/desktop/lockscreen.nix`. Ref: <https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/>
 
 ## The philosophy: no loose `.sh` scripts
 
@@ -19,7 +19,7 @@ durable into 2032+).
 
 ## The folder rule
 
-USER apps go to `home/`. `programs.hyprlock` installs hyprlock and `services.hypridle` brings the
+USER apps go to `modules/home/`. `programs.hyprlock` installs hyprlock and `services.hypridle` brings the
 daemon up (`systemd --user`, like hyprsunset), which is why hypridle left `modules/nixos/packages.nix`.
 
 PAM (`modules/nixos/desktop/desktop.nix`) is MANDATORY: without it hyprlock does not authenticate and
@@ -137,7 +137,7 @@ São Carlos/SP by COORDINATES, so there is no geocoding ambiguity. It writes ato
 `mv`). A stable source, with no HTML scraping. Refreshed every 10 min, first fetch 1 min after
 boot.
 
-The SOURCE and the pt-BR words are the SSOT in `my.weather` (`home/desktop/weather.nix`), the same
+The SOURCE and the pt-BR words are the SSOT in `my.weather` (`modules/home/desktop/weather.nix`), the same
 one the bar reads, and the script's `case` arms are generated from it. It used to be wttr.in with
 its own coordinates, and on 22/08/2026 the lock said 18°C while the bar said 22°C in the same
 minute. The full reasoning, and every measured failure path, is in [`weather.md`](weather.md).

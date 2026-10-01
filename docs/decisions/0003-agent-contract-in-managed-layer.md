@@ -19,7 +19,7 @@ user's `$CLAUDE_CONFIG_DIR/CLAUDE.md`.
 ## Consequences
 
 - **The user file was rejected for two reasons**: it is per ACCOUNT, so the two accounts of
-  `home/shell/claude-code.nix` would hold two copies drifting apart; and Claude Code WRITES to it
+  `modules/home/shell/claude-code.nix` would hold two copies drifting apart; and Claude Code WRITES to it
   (the `#` shortcut appends a memory), so declaring it would put two owners on one file (rule 14).
   The managed file is read-only by nature, and Claude Code only reads it.
 - It costs context in every session on this machine, so it holds the rules and nothing else; the

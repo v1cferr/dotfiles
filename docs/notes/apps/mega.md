@@ -1,6 +1,6 @@
 # MEGA from the command line
 
-`home/net/mega.nix`. `megatools` (`megadl`) plus the `mega-dl` wrapper, which is megadl with a
+`modules/home/net/mega.nix`. `megatools` (`megadl`) plus the `mega-dl` wrapper, which is megadl with a
 PATIENT loop, resuming on its own until the file finishes, quota crossings included.
 
 ## Why megatools, after looking at the three alternatives

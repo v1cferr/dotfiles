@@ -85,6 +85,6 @@ went on citing ITS java 18 times and ours ZERO times. That is why
 
 ## Where it runs
 
-In the home-manager activation ([`home/apps/curseforge.nix`](../../../home/apps/curseforge.nix)), on
+In the home-manager activation ([`modules/home/apps/curseforge.nix`](../../../modules/home/apps/curseforge.nix)), on
 every rebuild, and by hand when the app downloads something new in the middle of a session. It is
 idempotent: with nothing to fix it writes nothing and says nothing.

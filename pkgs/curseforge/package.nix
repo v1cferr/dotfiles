@@ -27,7 +27,7 @@ appimageTools.wrapAppImage {
   profile = "export MESA_LOADER_DRIVER_OVERRIDE=zink";
 
   # Upstream's .desktop with only AppRun swapped. The %U and the scheme handler are what make
-  # the site's "Install" button work; the default is claimed in home/apps/curseforge.nix.
+  # the site's "Install" button work; the default is claimed in modules/home/apps/curseforge.nix.
   extraInstallCommands = ''
     install -Dm444 ${appimageContents}/curseforge.desktop \
       -t $out/share/applications

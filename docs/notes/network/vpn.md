@@ -182,7 +182,7 @@ is needed. Under autologin the session is always up; if that ever changes, the w
 running without a session, and that is the known limitation.
 
 The `~/FAI-workstation` rclone mount comes up and goes down WITH the FAI VPN
-([`home/services/fai-workstation-mount.nix`](../../../home/services/fai-workstation-mount.nix)),
+([`modules/home/services/fai-workstation-mount.nix`](../../../modules/home/services/fai-workstation-mount.nix)),
 started with `--no-block` so it does not wait on the tunnel; the service retries until the host is
 reachable.
 

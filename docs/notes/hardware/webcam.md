@@ -1,6 +1,6 @@
 # The webcam, and the USB -71 that kills the stream
 
-Two packages and no module: `guvcview` in [`home/packages.nix`](../../../home/packages.nix) (the
+Two packages and no module: `guvcview` in [`modules/home/packages.nix`](../../../modules/home/packages.nix) (the
 viewer) and `v4l-utils` in [`modules/nixos/packages.nix`](../../../modules/nixos/packages.nix) (the diagnosis,
 next to the other hardware monitors, rule 4). There is nothing else to declare, and that is the
 finding rather than an omission: measured on 04/09/2026, the camera needs no driver, no udev rule

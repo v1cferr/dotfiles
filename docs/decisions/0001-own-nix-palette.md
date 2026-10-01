@@ -13,7 +13,7 @@ same colors, and switching themes should not mean editing each of them. The comm
 
 ## Decision
 
-A palette of my own in `home/desktop/palette.nix`, picked by one option, `my.theme.name`, with
+A palette of my own in `modules/home/desktop/palette.nix`, picked by one option, `my.theme.name`, with
 presets for tokyo-night (the default), catppuccin-mocha and gruvbox-dark. Every consumer reads
 `my.theme.palette`, never a hex (rule 11).
 

@@ -1,8 +1,8 @@
 # shell
 
-Modules: [`home/shell/zsh.nix`](../../../home/shell/zsh.nix),
-[`home/shell/cli.nix`](../../../home/shell/cli.nix),
-[`home/shell/ntfy.nix`](../../../home/shell/ntfy.nix)
+Modules: [`modules/home/shell/zsh.nix`](../../../modules/home/shell/zsh.nix),
+[`modules/home/shell/cli.nix`](../../../modules/home/shell/cli.nix),
+[`modules/home/shell/ntfy.nix`](../../../modules/home/shell/ntfy.nix)
 
 zsh, the maintenance functions and the modern CLI toolkit.
 

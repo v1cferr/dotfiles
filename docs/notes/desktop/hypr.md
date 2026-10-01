@@ -1,8 +1,8 @@
 # Hyprland: the Lua config and its session services
 
-`home/desktop/hypr.nix`. The compositor and the session come from `modules/nixos/`
+`modules/home/desktop/hypr.nix`. The compositor and the session come from `modules/nixos/`
 (`programs.hyprland.enable`); here it is ONLY the config file plus the helper services, following
-the folder rule (`home/` configures, it does not install).
+the folder rule (`modules/home/` configures, it does not install).
 
 Docs: <https://wiki.hypr.land>
 

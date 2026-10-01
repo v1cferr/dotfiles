@@ -18,7 +18,7 @@ a consequence people miss: **a src with a locked hash never updates itself.** Wh
 an "input that follows upstream", it is an AUTOMATED BUMP.
 
 All four run from the `update`/`upgrade` alias
-([`home/shell/zsh.nix`](../../../home/shell/zsh.nix)), before `nix flake update`, so "always on
+([`modules/home/shell/zsh.nix`](../../../modules/home/shell/zsh.nix)), before `nix flake update`, so "always on
 the latest" happens at rebuild time. All four are a NO-OP when already current, because they run
 on every `upgrade`.
 

@@ -21,7 +21,7 @@ anybody touching the machine. A bonus: if Hyprland crashes, LightDM logs back in
 enters.
 
 **The security trade**: the boot lands in an UNLOCKED session. The mitigation is hypridle locking
-at 5 min (`home/desktop/lockscreen.nix`) plus remote access only through WireGuard. If you want it
+at 5 min (`modules/home/desktop/lockscreen.nix`) plus remote access only through WireGuard. If you want it
 locked right at boot, an `exec-once` of hyprlock in the autostart does it.
 
 ## The portals
@@ -59,5 +59,5 @@ GUI, to manage or change the keyring's password.
 
 `security.pam.services.hyprlock = { }` exists so hyprlock can authenticate the user's password.
 WITHOUT it hyprlock does not unlock and it LOCKS YOU OUT. The package and config belong to the
-user (`home/desktop/lockscreen.nix`); here it is only the PAM service, which is system level. The
+user (`modules/home/desktop/lockscreen.nix`); here it is only the PAM service, which is system level. The
 empty attrset means it inherits the default login stack.

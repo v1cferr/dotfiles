@@ -1,5 +1,5 @@
 # BASIC MEMORY, the SYSTEM side: the servers' SSOT (rule 11), read by the tunnel and the clients.
-# What RUNS them is home/services/basic-memory.nix. Why two servers: docs/notes/apps/basic-memory.md
+# What RUNS them is modules/home/services/basic-memory.nix. Why two servers: docs/notes/apps/basic-memory.md
 { lib, ... }:
 
 {

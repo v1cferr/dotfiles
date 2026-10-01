@@ -214,7 +214,7 @@ try to open it.
 
 Since 22/08/2026 there is a second Sunshine in the picture and it is not this one. My mother's T480
 (Windows, `10.10.10.6`) is the HOST there and this machine is the client, through `moonlight-qt` in
-[`home/packages.nix`](../../../home/packages.nix). Everything above describes the opposite role, so
+[`modules/home/packages.nix`](../../../modules/home/packages.nix). Everything above describes the opposite role, so
 these are the pieces that do NOT transfer:
 
 **The client's config is state, not config.** The paired hosts, the per-host resolution and the
@@ -261,11 +261,11 @@ lesson of this file, arrived at again on the other operating system.
 own instead of duplicating a screen, so it does not depend on a panel and works with the lid shut.
 The division: Moonlight to see HER screen while she is using it, RDP to work on the machine with
 nobody in front of it. That is also why `freerdp` sits next to `moonlight-qt` in
-[`home/packages.nix`](../../../home/packages.nix). The price is real and worth stating: a Windows
+[`modules/home/packages.nix`](../../../modules/home/packages.nix). The price is real and worth stating: a Windows
 client SKU has ONE active session, so an RDP login DISCONNECTS whoever is on the console.
 
 **The invocation is a command, not an alias**, and it lives in
-[`home/net/t480.nix`](../../../home/net/t480.nix) beside the option that owns the address:
+[`modules/home/net/t480.nix`](../../../modules/home/net/t480.nix) beside the option that owns the address:
 
 ```sh
 t480          # the maintenance account

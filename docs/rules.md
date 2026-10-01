@@ -31,7 +31,7 @@ copying it only buys a second thing to forget.
 
 | Theme | Rules |
 | --- | --- |
-| Layout | 4 `modules/nixos/` and `home/` apart |
+| Layout | 4 `modules/nixos/` and `modules/home/` apart |
 | Reproducibility | 3 declarative, 8 validate first, 13 the lock pins, 21 zero warnings |
 | Ownership | 11 one source of truth, 14 one owner per artifact, 15 one owner per automation |
 | State and secrets | 6 state is not declared, 12 secrets are a separate layer |
@@ -63,7 +63,7 @@ never what the code already says. Whatever you touch, you shorten.
 scrolled past, with reasoning invisible to anyone reading `docs/`. It moved to notes, nothing
 deleted.
 
-**Enforced by**: `docs-links`, which fails on a module header in `modules/nixos/` or `home/` longer than
+**Enforced by**: `docs-links`, which fails on a module header in `modules/nixos/` or `modules/home/` longer than
 2 lines or with neither a `docs/` pointer nor a plain "No note"; `eval-metrics` warns when the Nix
 comment ratio passes its budget; the rest of the cap by review.
 
@@ -81,10 +81,10 @@ which bring a machine up from the config alone; the rest by review.
 
 **Detail**: [disaster recovery](guides/disaster-recovery.md).
 
-## 4. `modules/nixos/` and `home/` apart
+## 4. `modules/nixos/` and `modules/home/` apart
 
 System level (services, drivers, root packages) goes in `modules/nixos/`; the app **and** its user
-config go in `home/` (`programs.*` when there is a module, `home.packages` otherwise), and a
+config go in `modules/home/` (`programs.*` when there is a module, `home.packages` otherwise), and a
 package **MUST NOT** be in both. Inside each, every subject is a subfolder with its own
 `default.nix`, so adding a module is one line there and the top level never changes.
 
@@ -155,7 +155,7 @@ it recorded is [decision 0002](decisions/0002-ui-font-in-system.md), and its tex
 
 A value used in two or more places **MUST** become a `my.<domain>.<thing>` option, and a consumer
 **MUST NOT** hold it as a literal. The option lives at the lowest level that needs it: if a system
-module reads it, it is a system option and `home/` reads it through `osConfig` (the reverse does
+module reads it, it is a system option and `modules/home/` reads it through `osConfig` (the reverse does
 not exist). A hot-reload consumer (Hyprland, Quickshell) gets a GENERATED data file, and its only
 legitimate literal is the fallback for a missing file. A change is proven with a SENTINEL value:
 every consumer moves, and reverting restores the same store path.

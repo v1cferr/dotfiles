@@ -1,6 +1,6 @@
 # The bar, and its popovers
 
-`home/desktop/quickshell/bar/`. The desktop's bar, the only one; Waybar left in the migration to
+`modules/home/desktop/quickshell/bar/`. The desktop's bar, the only one; Waybar left in the migration to
 Quickshell. It is loaded by `shell.qml` (`Bar {}`), and the popovers live in files next to it.
 
 It shows: the workspaces per monitor plus the title, the clock, cpu/ram/disk/temp, the GPU, audio
@@ -345,7 +345,7 @@ that separates this panel from a guess.
 ## The weather
 
 Open-Meteo, and the coordinates plus the WMO code to pt-BR table are the SSOT in `my.weather`
-(`home/desktop/weather.nix`), read through a generated JSON the same way the palette is.
+(`modules/home/desktop/weather.nix`), read through a generated JSON the same way the palette is.
 
 The pill's ICON derives from the integer `weather_code`, NEVER from the label. It used to regex the
 en-US prose, so translating the label to pt-BR would have turned every icon into the default cloud

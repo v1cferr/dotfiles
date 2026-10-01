@@ -1,6 +1,6 @@
 # Dolphin: forcing keys that the app itself rewrites
 
-`home/apps/dolphin.nix`.
+`modules/home/apps/dolphin.nix`.
 
 ## Why an activation script and not a managed file
 
@@ -79,7 +79,7 @@ exactly what "always on" means.
 ## "Open Terminal Here" opens kitty
 
 `kdeglobals [General] TerminalApplication=kitty`, forced by its own activation because KDE rewrites
-that file (the same pattern as `[Icons] Theme` in `home/desktop/theme.nix`, which is the other
+that file (the same pattern as `[Icons] Theme` in `modules/home/desktop/theme.nix`, which is the other
 writer of the same file, each one owning its own key).
 
 WITH NO KEY THE ACTION IS NOT DEAD, WHICH IS WORSE THAN DEAD. `KTerminalLauncherJob` walks

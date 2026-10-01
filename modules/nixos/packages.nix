@@ -1,4 +1,4 @@
-# SYSTEM PACKAGES: rescue, diagnosis and what root or a service needs; user apps are home/'s
+# SYSTEM PACKAGES: rescue, diagnosis and what root or a service needs; user apps are modules/home/'s
 # (rule 4), `pkgs.unstable.foo` is the edge. Where a package goes: docs/notes/repo/packages.md
 { pkgs, ... }:
 

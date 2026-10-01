@@ -1,0 +1,58 @@
+# kitty, Hyprland's default terminal, colored from my.theme.name through the table below.
+# The prompt is starship and the shell is zsh. No note: nothing here needs more than this.
+{ config, osConfig, ... }:
+
+let
+  # kitty-themes has names of its own, so the preset needs translating. A new preset with no
+  # entry here BREAKS the eval on purpose: fail loudly, not silently.
+  kittyThemes = {
+    tokyo-night = "tokyo_night_night";
+    catppuccin-mocha = "Catppuccin-Mocha";
+    gruvbox-dark = "gruvbox-dark";
+  };
+in
+{
+  programs.kitty = {
+    enable = true;
+
+    # The same font as the rest of the system (SSOT: my.fonts.ui, hence starship's icons).
+    font = {
+      name = osConfig.my.fonts.ui;
+      size = 12;
+    };
+
+    # It follows my.theme.name; it used to be pinned and the terminal was the one thing that
+    # did not recolor.
+    themeFile = kittyThemes.${config.my.theme.name};
+
+    # kitty injects helpers into the shell (jumping between prompts, opening output in the pager
+    # and so on).
+    shellIntegration.mode = "enabled";
+
+    settings = {
+      background_opacity = "0.95"; # a light transparency (Hyprland's compositor)
+      scrollback_lines = 10000; # a generous scrollback history
+      enable_audio_bell = false; # no beep; it uses a visual flash instead
+      confirm_os_window_close = 0; # it closes the window without asking for confirmation
+      window_padding_width = 8; # breathing room between the text and the border
+      cursor_blink_interval = 0; # a steady cursor (it does not blink)
+      copy_on_select = "clipboard"; # selecting already copies to the clipboard
+    };
+
+    keybindings = {
+      # SMART PASTE: with an IMAGE in the clipboard it materializes a file and pastes its PATH
+      # (over ssh, on the remote side); anything else is kitty's own paste, untouched.
+      "ctrl+shift+v" = "kitten smart-paste.py";
+      "ctrl+alt+v" = "paste_from_clipboard"; # the way out if the kitten ever breaks (rule 15)
+      "ctrl+shift+enter" = "new_window"; # a new kitty window (a split)
+      "ctrl+shift+t" = "new_tab"; # a new tab
+      "ctrl+equal" = "change_font_size all +1.0"; # it increases the font
+      "ctrl+minus" = "change_font_size all -1.0"; # it decreases the font
+      "ctrl+0" = "change_font_size all 0"; # it resets the font size
+    };
+  };
+
+  # The kitten of the bind above. A real .py in the tree, which is what the ruff hook checks;
+  # it calls `clipboard-push` (modules/home/desktop/clipboard.nix) and never duplicates its logic.
+  xdg.configFile."kitty/smart-paste.py".source = ./kitty/smart-paste.py;
+}

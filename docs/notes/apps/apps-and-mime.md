@@ -1,10 +1,10 @@
 # Apps and MIME associations
 
-`home/apps/media.nix`, `office.nix`, `mangohud.nix`, `openal.nix`.
+`modules/home/apps/media.nix`, `office.nix`, `mangohud.nix`, `openal.nix`.
 
 home-manager merges `defaultApplications` from EVERY module into a single `mimeapps.list`, so
-these modules each declare only their own types and the result composes. `home/desktop/xdg.nix`
-holds the browser plus text/code, and `home/apps/curseforge.nix` holds the URL schemes.
+these modules each declare only their own types and the result composes. `modules/home/desktop/xdg.nix`
+holds the browser plus text/code, and `modules/home/apps/curseforge.nix` holds the URL schemes.
 
 ## Media: the KDE Gear stack
 

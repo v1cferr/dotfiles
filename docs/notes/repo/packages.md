@@ -1,6 +1,6 @@
 # packages
 
-Modules: [`home/packages.nix`](../../../home/packages.nix),
+Modules: [`modules/home/packages.nix`](../../../modules/home/packages.nix),
 [`modules/nixos/packages.nix`](../../../modules/nixos/packages.nix)
 
 The two mirrored central lists. Everything here is a decision that a one-line comment cannot
@@ -146,7 +146,7 @@ form.
 - **It kills the mixed-scope list.** `runtimeInputs = with pkgs; [ systemd coreutils streamActive ]`
   in [`sunshine.nix`](../../../modules/nixos/services/sunshine.nix) and
   `home.packages = with pkgs; [ minimizeOthers wl-clipboard ... ]` in
-  [`hypr.nix`](../../../home/desktop/hypr.nix) both mixed real packages with shell applications built
+  [`hypr.nix`](../../../modules/home/desktop/hypr.nix) both mixed real packages with shell applications built
   a few lines above, resolved by `with` losing to a `let` binding. Nothing on the page said which
   name was which. This is the case [nix.dev](https://nix.dev/guides/best-practices.html) has in mind
   when it says not to use `with`: it defeats static analysis and hides where a name comes from.
@@ -169,7 +169,7 @@ packages, so anything else in there would be a lie:
 the same place, there is nothing to disambiguate, and the `with` is the nixpkgs idiom for exactly
 that shape. Five modules were left untouched for want of a payoff, all of them with no `let` block
 and one or two single-use references: `modules/nixos/hardware/mouse.nix`, `modules/nixos/hardware/razer.nix`,
-`hosts/ex-b560m-v5/vm-disko.nix`, `home/shell/git.nix` and `home/shell/cli.nix`.
+`hosts/ex-b560m-v5/vm-disko.nix`, `modules/home/shell/git.nix` and `modules/home/shell/cli.nix`.
 
 **How the sweep was verified.** The change is textual, so the proof is that nothing moved: the
 system's `drvPath` was read before the first edit and after every commit, and it stayed
@@ -205,7 +205,7 @@ mv ~/.config/gh/config.yml ~/.config/gh/config.yml.pre-hm
 
 Both files that day held NOTHING worth keeping, which is the part to check rather than assume:
 gh's 27 lines were its own defaults plus the one alias now declared in
-[`home/shell/git.nix`](../../../home/shell/git.nix), and atuin's was the default template.
+[`modules/home/shell/git.nix`](../../../modules/home/shell/git.nix), and atuin's was the default template.
 
 ### The one case where `force = true` IS the answer
 

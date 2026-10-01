@@ -1,6 +1,6 @@
 # Zen: the launch guard, and the NSS check that had to be written backwards
 
-`home/apps/zen.nix`. The browser, plus a guard that closes it when the screen stays locked and asks
+`modules/home/apps/zen.nix`. The browser, plus a guard that closes it when the screen stays locked and asks
 for Zen's own primary password on the next launch.
 
 ## What this is NOT, and why that is the point

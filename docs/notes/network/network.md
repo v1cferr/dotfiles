@@ -198,7 +198,7 @@ NetworkManager has its own `connection.wol`; its default is not to touch it, but
 on a link change the symptom is WoL working right after boot and stopping later, which only shows
 up by actually powering off and sending the packet.
 
-A contrast worth keeping: [`wake-workstation`](../../../home/net/fai-workstation.nix) solves the SAME
+A contrast worth keeping: [`wake-workstation`](../../../modules/home/net/fai-workstation.nix) solves the SAME
 problem and could NOT be declared, because there the receiver is somebody else's Ubuntu and the fix
 is netplan by hand. Here the receiver is this machine.
 
@@ -480,7 +480,7 @@ owner, which is rule 15.
   context, which pam_exec follows as a symlink without complaint.
 - **`notify` had to stop being a home-manager package.** A system module cannot reach one (rule 4),
   so the script moved to [`../../../pkgs/notify.nix`](../../../pkgs/notify.nix) and is exposed
-  through the local overlay. `home/shell/ntfy.nix` is now the consumer that puts it on the PATH,
+  through the local overlay. `modules/home/shell/ntfy.nix` is now the consumer that puts it on the PATH,
   which is rule 11: one owner, two readers.
 - **`exit 0` at the end is not decoration.** `optional` already keeps a failure from blocking the
   login, and the explicit exit is the second lock, because a hook that can cost the exposed SSH is
@@ -682,7 +682,7 @@ need no password while `wg` does, which is worth knowing before writing a one li
 router with full flash cannot even write its config. This uses only BusyBox: zero installation cost.
 
 Pure ash, no bashisms: no arrays, no `[[ ]]`, no `${var^^}`. The field ORDER mirrors
-`home/shell/fastfetch.nix` so the two read alike.
+`modules/home/shell/fastfetch.nix` so the two read alike.
 
 **A REAL ESC, and not the literal `\033` sequence**: the colors are passed as an ARGUMENT (`%s`) and
 not inside printf's format string. A format with a variable inside is shellcheck's SC2059, and its

@@ -4,12 +4,12 @@
 
 ## Why the SSOT lives on the system side
 
-It is not in `my.theme` (`home/desktop/palette.nix`, which handles the COLORS) for two reasons:
+It is not in `my.theme` (`modules/home/desktop/palette.nix`, which handles the COLORS) for two reasons:
 the font's PACKAGE is system level (rule 4), so the name and the package stay together; and the
 fontconfig below also needs the name, and a system module cannot read a home-manager option.
 
 The USER consumers read it through `osConfig`, the same pattern as `my.services`: GTK and Qt
-(`home/desktop/theme.nix`), kitty, hyprlock, rofi and Quickshell's JSON.
+(`modules/home/desktop/theme.nix`), kitty, hyprlock, rofi and Quickshell's JSON.
 
 Switching fonts is 1 line (`my.fonts.ui`) plus the corresponding package in the list.
 
@@ -41,7 +41,7 @@ default nobody here asked for.
 
 `corefonts` (Arial, Times New Roman, Courier New, Verdana, so Office 2003 and earlier) and
 `vista-fonts` (Calibri, Cambria, Consolas, and the modern `.docx` uses Calibri by default) exist so
-OnlyOffice (`home/apps/office.nix`) opens `.docx`/`.xlsx` with the right layout. Without them
+OnlyOffice (`modules/home/apps/office.nix`) opens `.docx`/`.xlsx` with the right layout. Without them
 fontconfig substitutes and the pagination shifts.
 
 ## The defaultFonts ordering

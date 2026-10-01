@@ -8,13 +8,13 @@ in [history/](history/); what is still to do is in [open-items.md](open-items.md
 > mkOutOfStoreSymlink).
 > For inspiration: <https://github.com/Misterio77/Foundry>
 > Nix wallpapers: <https://github.com/NixOS/nixos-artwork/tree/master/wallpapers>
-> Centralized themes: `home/desktop/palette.nix` (`my.theme`). nix-colors was discarded
+> Centralized themes: `modules/home/desktop/palette.nix` (`my.theme`). nix-colors was discarded
 > (archived + base16 caps it at 16 colors).
 
 ## Blue light filter and eye strain
 
 **If hyprsunset gains a gradual transition** (the *Graduated transition* issue, opened on
-08/08/2026), the 13 profiles in `home/desktop/hyprsunset.nix` collapse into 3 (day, night
+08/08/2026), the 13 profiles in `modules/home/desktop/hyprsunset.nix` collapse into 3 (day, night
 and late night) and the tool interpolates. Today it jumps abruptly, and the small steps are
 what disguises the jump.
 

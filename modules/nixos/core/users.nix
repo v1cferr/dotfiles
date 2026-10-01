@@ -4,7 +4,7 @@
 
 {
   # The system-wide enable is required for a login shell (/etc/shells, /etc/zshrc).
-  # The interactive config and the prompt live in home/shell/.
+  # The interactive config and the prompt live in modules/home/shell/.
   programs.zsh.enable = true;
 
   # THE USER, a declared capability. The password hash comes through sops (outside git); the SSH
@@ -19,7 +19,7 @@
       "wheel"
       "networkmanager"
     ];
-    shell = pkgs.zsh; # the login shell is zsh (the interactive config is in home/zsh.nix)
+    shell = pkgs.zsh; # the login shell is zsh (the interactive config is in modules/home/shell/zsh.nix)
     hashedPasswordFile = config.sops.secrets.v1cferr_password_hash.path;
     openssh.authorizedKeys.keys = [
       # the key that gets into the Arch today (~/.ssh/authorized_keys)

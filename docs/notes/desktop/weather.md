@@ -1,8 +1,8 @@
 # The weather: one source for the bar and the lock screen
 
-`home/desktop/weather.nix` holds the SSOT (rule 11): the coordinates and the WMO code to pt-BR
-table. The two surfaces that draw weather read it, `home/desktop/quickshell/bar/Bar.qml` and the
-lock screen's fetch in `home/desktop/lockscreen.nix`.
+`modules/home/desktop/weather.nix` holds the SSOT (rule 11): the coordinates and the WMO code to pt-BR
+table. The two surfaces that draw weather read it, `modules/home/desktop/quickshell/bar/Bar.qml` and the
+lock screen's fetch in `modules/home/desktop/lockscreen.nix`.
 
 ## Why the SSOT exists: they disagreed on screen
 

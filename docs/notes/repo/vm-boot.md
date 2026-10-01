@@ -23,7 +23,7 @@ header makes.
 
 ## The weekly drill
 
-`home/services/vm-boot-drill.nix`, a `systemd --user` timer on Sundays at 11:00, `Persistent` so a
+`modules/home/services/vm-boot-drill.nix`, a `systemd --user` timer on Sundays at 11:00, `Persistent` so a
 machine that was off runs it on the next boot. It is SILENT on success (the journal has the line)
 and pushes one ntfy notification when it fails.
 

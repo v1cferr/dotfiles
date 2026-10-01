@@ -124,7 +124,7 @@ read it.
 Diagnosed on 07/08/2026: boot at 07:29, sops sets v1cferr, the delayed backup ran at 07:54:39,
 and the secret's owner became `root:users` at 07:54:40. The fix is `install -m600` into
 `$XDG_RUNTIME_DIR` and pointing at the copy. This still applies to
-[`drive-mount.nix`](../../../home/services/drive-mount.nix), which is why each unit keeps its OWN
+[`drive-mount.nix`](../../../modules/home/services/drive-mount.nix), which is why each unit keeps its OWN
 copy.
 
 **Never the `rcloneConfig` attrset option**: it leaks the token into `/nix/store`, which is
@@ -156,7 +156,7 @@ restore is capped by this number, and 100 Mb/s turns a 50 GiB restore into ~75 m
 
 ## `~/Drive`: a window, not a backup
 
-[`home/services/drive-mount.nix`](../../../home/services/drive-mount.nix) mounts the ROOT of
+[`modules/home/services/drive-mount.nix`](../../../modules/home/services/drive-mount.nix) mounts the ROOT of
 Google Drive as a local folder (rclone mount plus a VFS cache), so it shows up in Dolphin as a
 normal folder. It serves the real case: "sometimes I need a file I do not have here but that is
 on the Drive". You see everything right away, with no downloading.
@@ -188,7 +188,7 @@ orphaned 0-byte file locked the mount into a restart loop. **If the mount does n
 
 ## The CS2 saves, and what they lost
 
-[`home/services/cs2-saves-backup.nix`](../../../home/services/cs2-saves-backup.nix) mirrors the
+[`modules/home/services/cs2-saves-backup.nix`](../../../modules/home/services/cs2-saves-backup.nix) mirrors the
 Cities: Skylines II saves out of `~/.local/share/bottles` (which the backup excluded, ~154 G of
 reinstallable Wine prefixes) into `~/CS2-Saves-Backup`. The saves are irreplaceable: a pirated
 repack, so no Steam Cloud.

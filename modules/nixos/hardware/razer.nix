@@ -17,7 +17,7 @@ let
 in
 {
   # `razer-dpi get` for diagnosis. The watcher that pushes the OSD is a USER unit
-  # (home/services/razer-dpi.nix), since `qs ipc` only exists inside the graphical session.
+  # (modules/home/services/razer-dpi.nix), since `qs ipc` only exists inside the graphical session.
   environment.systemPackages = [ pkgs.razer-dpi ];
 
   services.udev.packages = [ rules ];

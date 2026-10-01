@@ -51,7 +51,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
         destructive tools are refused at the gateway. The FAI server is never exposed.
       • GEMINI WEB IS OUT FOR NOW: its custom MCP apps are limited to the US (checked
         25/09/2026), so Gemini reaches the memory through agy, locally.
-      • CODEX'S ENDPOINT IS A LITERAL in its versioned mirror (`home/shell/codex/config.toml`),
+      • CODEX'S ENDPOINT IS A LITERAL in its versioned mirror (`modules/home/shell/codex/config.toml`),
         the one consumer that cannot read `my.memory.servers.general.url`. A port change has to
         touch it by hand until codex takes a generated fragment.
 
@@ -64,7 +64,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
         starts writing to this repo.
 
 - [ ] The page count in `docs/notes/README.md` has drifted (measured 23/08/2026). The Conventions
-      section says "16 of the 51 pages cross the `modules/nixos/` and `home/` boundary", and there are 58
+      section says "16 of the 51 pages cross the `modules/nixos/` and `modules/home/` boundary", and there are 58
       pages today. The number is not decoration, it is the measurement that REJECTED mirroring the
       tree, so fixing it means recounting both halves (how many pages cross, how many reference two
       or more modules) and not just editing the total. Left as an item instead of a blind edit,
@@ -225,7 +225,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
 - [ ] SSOT still pending: the HOME `/home/v1cferr` to `my.user.home`. RECOUNTED on 16/08/2026
       and the item was understating it: **7 files** since restic.nix left on 24/09/2026, not
       the 5 written here before
-      (dolphin.nix, Theme.qml, fai-workstation-mount.nix, home/default.nix, plus
+      (dolphin.nix, Theme.qml, fai-workstation-mount.nix, modules/home/default.nix, plus
       core.nix, drive-mount.nix and grad-radar.nix).
       LOW priority on purpose: unlike font/color/connector, the path does not change when the
       hardware changes. That is also why the count drifted unnoticed, and why `dead-config`
@@ -369,7 +369,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
         `sysupgrade`.
 
 - [~] Claude Code, what is LEFT of the two accounts (11/08/2026). The structure was declared in
-      `home/shell/claude-code.nix` and the entry is in the [august
+      `modules/home/shell/claude-code.nix` and the entry is in the [august
       history](history/2026/08-august.md): the `claude-fai`/`claude-pessoal` wrappers,
       `claude-pick`, a versioned `settings.json`, a shared `projects/` and plain `claude`
       falling through to FAI. Three ends are still open, and none of them is declarable:
@@ -415,7 +415,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
       is a pointer that only advances after Hydra builds and the test suite passes, the same
       gating as nixos-unstable.
       The `stateVersion` DOES NOT CHANGE, not on the jump, not ever. It stays "26.05" forever
-      in hosts/ex-b560m-v5/default.nix and home/default.nix. The name misleads: it is not "the
+      in hosts/ex-b560m-v5/default.nix and modules/home/default.nix. The name misleads: it is not "the
       version of my system", it is "the NixOS version my STATE ON DISK is compatible with". 54
       nixpkgs modules read that value, and the canonical case is postgresql.nix, which picks the
       Postgres MAJOR from it (`versionAtLeast stateVersion "26.11"` gives postgresql_18; "25.11"

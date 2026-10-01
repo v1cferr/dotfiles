@@ -135,7 +135,7 @@ that do not exist.
 
 `overlayVscode` calls the package with `import` and NOT `callPackage`. `callPackage` would wrap the
 result in a fresh `.override` that only knows `pkgs/vscode/package.nix`'s own arguments, and
-`home/apps/vscode.nix` passes `commandLineArgs` through `.override`, which has to reach nixpkgs'.
+`modules/home/apps/vscode.nix` passes `commandLineArgs` through `.override`, which has to reach nixpkgs'.
 
 ### btop with Intel Xe support: TEMPORARY, with an expiry date
 
@@ -178,12 +178,12 @@ overlay in the list: it re-wraps their package.
 
 ## Hosts
 
-A host is the COMMON modules (overlay, sops, disko, `./system`, home-manager) plus the host's own
+A host is the COMMON modules (overlay, sops, disko, `./modules/nixos`, home-manager) plus the host's own
 FOLDER. A new host means creating `hosts/<host>/` (`default.nix`, `disko.nix`, `services.nix`) and
 adding one line to `nixosConfigurations`. home-manager comes in as a module, so one rebuild applies
 system and user together.
 
-What belongs to the HOST and not to `./system`: hostname, disks, kernel, monitors, stateVersion and
+What belongs to the HOST and not to `./modules/nixos`: hostname, disks, kernel, monitors, stateVersion and
 the `my.services` panel. `modules/nixos/` declares the options; the host answers them.
 
 **THE MODULE LIST IS HOISTED, and that is the part the text above does not show**: the same
@@ -198,7 +198,7 @@ flowchart TD
     I --> C
     O --> C
 
-    C["commonModules<br>hostPlatform · overlays · sops · disko · ./system<br>home-manager AS a NixOS module, users.v1cferr = ./home"]
+    C["commonModules<br>hostPlatform · overlays · sops · disko · ./modules/nixos<br>home-manager AS a NixOS module, users.v1cferr = ./modules/home"]
 
     C -->|"++ hosts/ex-b560m-v5"| H["nixosConfigurations.ex-b560m-v5<br>the machine this runs on"]
     C -->|"++ vm-disko.nix"| D["packages.disko-vm<br>the layout, formatted from scratch and booted"]
@@ -556,7 +556,7 @@ FUTURE that arrives a week late has become a surprise in the present, which is t
 canary exists to prevent.
 
 So a third job pushes to ntfy, the same path the machine already uses
-([`ntfy.nix`](../../../home/shell/ntfy.nix)). It runs `if: failure()` and depends on both jobs, and
+([`ntfy.nix`](../../../modules/home/shell/ntfy.nix)). It runs `if: failure()` and depends on both jobs, and
 the message is WHICH one died, because the two mean opposite things: `inputs` is "the next `update`
 would break the config" and `links` is "a pointer in `docs/` rotted". Priority 4 on purpose, since
 at 3 the phone stays quiet and a quiet alert is the email problem again with more steps. The run URL

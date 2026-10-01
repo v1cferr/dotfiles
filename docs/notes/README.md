@@ -7,7 +7,7 @@ way it is**, the measurements behind each number, and what was tried and rejecte
 
 Rule 2 used to allow a header block "as long as it needs to be". Measured on 16/08/2026, that
 had grown into **6062 comment lines out of 16634** across the tree, 36%, with one module
-(`home/shell/claude-code.nix`) carrying a **123-line header**. A header that long stops being
+(`modules/home/shell/claude-code.nix`) carrying a **123-line header**. A header that long stops being
 documentation and becomes a wall you scroll past to reach the code. Worse, none of that
 reasoning was reachable from `docs/`: to find out why Caddy has a jail, you had to already know
 to open `modules/nixos/services/caddy.nix`.
@@ -35,7 +35,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 ## Conventions
 
 - **Grouped by SUBJECT, not by repo path.** A mirror of the tree was measured and rejected: 16 of
-  the 51 pages cross the `modules/nixos/` and `home/` boundary (arch-legacy, claude-code, monitors, theme,
+  the 51 pages cross the `modules/nixos/` and `modules/home/` boundary (arch-legacy, claude-code, monitors, theme,
   restic, vpn, fonts and others) and 19 reference two or more modules. They cross because the
   ARTIFACT crosses, so a mirror would have to split a third of the pages or file them under a
   half-truth. The folder answers "where would I go looking", which is the question a reader

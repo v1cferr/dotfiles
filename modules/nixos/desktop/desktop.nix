@@ -45,6 +45,6 @@
   programs.seahorse.enable = true; # the "Passwords and Keys" GUI, to manage/change the keyring's password
 
   # hyprlock's PAM. WITHOUT this it does not unlock and it LOCKS YOU OUT. The package and config
-  # are the user's (home/desktop/lockscreen.nix); {} inherits the default login stack.
+  # are the user's (modules/home/desktop/lockscreen.nix); {} inherits the default login stack.
   security.pam.services.hyprlock = { };
 }

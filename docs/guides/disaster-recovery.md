@@ -40,7 +40,7 @@ through the ENVIRONMENT or through a tmpfs that dies with the boot, never throug
 
 ## D1, weekly and automatic: does the config still boot
 
-Nothing to do. `home/services/vm-boot-drill.nix` runs `nix build .#vm-boot` every Sunday, silent on
+Nothing to do. `modules/home/services/vm-boot-drill.nix` runs `nix build .#vm-boot` every Sunday, silent on
 success and one ntfy push on failure. It boots the whole config in QEMU and asserts that it was
 APPLIED: `multi-user.target`, sshd, the user with their shell, the home-manager generation with
 `Result=success`, and no failed unit ([`../notes/repo/vm-boot.md`](../notes/repo/vm-boot.md)).

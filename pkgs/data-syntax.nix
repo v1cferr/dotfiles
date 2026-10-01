@@ -24,8 +24,8 @@ writers.writePython3Bin "data-syntax"
     # is a broken file and not a note.
     JSONC = (
         ".vscode/settings.json",
-        "home/apps/vscode/settings.json",
-        "home/apps/vscode/keybindings.json",
+        "modules/home/apps/vscode/settings.json",
+        "modules/home/apps/vscode/keybindings.json",
         "docs-site/.oxlintrc.json",
     )
 

@@ -1,6 +1,6 @@
 # Disk hygiene: a space alarm plus trash expiry
 
-`home/services/disk-hygiene.nix`.
+`modules/home/services/disk-hygiene.nix`.
 
 ## Why this exists, and why it is NOT more GC
 

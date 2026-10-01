@@ -1,10 +1,12 @@
 // The markdown pipeline: it turns docs/ into pages without asking docs/ to change shape.
-// The three plugins below are the whole of what is renderer-specific: docs/notes/repo/site.md
+// The plugins below are the whole of what is renderer-specific: docs/notes/repo/site.md
 import fs from 'node:fs';
 import path from 'node:path';
-import { rehypeCodeDefaultOptions, remarkMdxMermaid } from 'fumadocs-core/mdx-plugins';
+import { rehypeCodeDefaultOptions, remarkMdxMermaid, remarkSteps } from 'fumadocs-core/mdx-plugins';
 import { defineConfig } from 'fumadocs-mdx/config';
+import type { Root } from 'mdast';
 import { type BundledLanguage, bundledLanguages } from 'shiki';
+import type { VFile } from 'vfile';
 import { DOCS_ROOT } from './lib/docs-root.ts';
 import { listPages } from './lib/page-tree.ts';
 import { INDEX_FILE } from './lib/urls.ts';
@@ -37,6 +39,18 @@ function indexedFolders(root: string, prefix = ''): Set<string> {
   return found;
 }
 
+/**
+ * `### 1. Title` becomes a step, in guides/ ONLY: a numbered heading there is a procedure, and in
+ * rules.md it is an API number. On GitHub it stays a plain numbered heading.
+ */
+function remarkGuideSteps() {
+  const steps = remarkSteps();
+  return (tree: Root, file: VFile) => {
+    const [top] = path.relative(DOCS_ROOT, file.path).split(path.sep);
+    if (top === 'guides') steps(tree, file, () => {});
+  };
+}
+
 // Read ONCE: `remarkPlugins` is called for every file compiled.
 const repoLinks = { root: DOCS_ROOT, indexed: indexedFolders(DOCS_ROOT) };
 
@@ -54,6 +68,8 @@ export default defineConfig({
       // A ```mermaid fence becomes the component, so one source still has two renderers.
       remarkMdxMermaid,
       ...plugins,
+      // LAST, so the anchor and the TOC entry keep the number GitHub gives the same heading.
+      remarkGuideSteps,
     ],
   },
 });

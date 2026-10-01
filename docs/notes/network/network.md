@@ -221,7 +221,7 @@ belongs to the API, not to the client.
 ### Why it moved off this machine (18/08/2026)
 
 It used to be `services.cloudflare-dyndns` here. It is now `ddns-scripts` on the OpenWrt
-([`router/uci/ddns.conf`](../../../router/uci/ddns.conf)), and my brother is the reason: his PC is
+([`hosts/cudy-wr3000/uci/ddns.conf`](../../../hosts/cudy-wr3000/uci/ddns.conf)), and my brother is the reason: his PC is
 now reachable from outside through THIS same anchor, so a DDNS that only refreshes while this
 machine is awake made his access depend on mine being on. The router is up whenever the internet
 is, which is the definition of when the record needs to be right.
@@ -661,7 +661,7 @@ things this repo has already paid for, and none of them are about the change its
 
 3. **`sudo uci commit` leaves /etc/config as 0600**, which breaks `router-sync`, since it reads UCI
    as the normal user and not as root. Repair with `chmod 644`. Measured 19/08/2026, and written
-   down where the tool lives: [`../../../router/README.md`](../../../router/README.md).
+   down where the tool lives: [`../../../hosts/cudy-wr3000/README.md`](../../../hosts/cudy-wr3000/README.md).
 
 4. **A watchdog for a risky change needs `nohup … &`, never `( … ) &`.** The watchdog exists for the
    case where the change drops your SSH, and that is exactly when a subshell takes the SIGHUP with
@@ -677,7 +677,7 @@ need no password while `wg` does, which is worth knowing before writing a one li
 
 ## owfetch: why a script and not fastfetch
 
-`scripts/owfetch.sh`. This router's `/overlay` has ~1.4 MB free out of 6.1 MB. fastfetch weighs
+`hosts/cudy-wr3000/owfetch.sh`. This router's `/overlay` has ~1.4 MB free out of 6.1 MB. fastfetch weighs
 1-2 MB and neofetch would drag bash along on top of that, so either one fills the flash, and a
 router with full flash cannot even write its config. This uses only BusyBox: zero installation cost.
 

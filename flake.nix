@@ -526,8 +526,8 @@
             # Both read the repo config (./statix.toml) because they run with cwd at the root.
             statix.enable = true;
             deadnix.enable = true;
-            # It covers ./scripts because owfetch.sh runs in ash on OpenWrt, so no derivation wraps it: it
-            # would otherwise be the only .sh here running on SOMEONE ELSE'S machine with no check.
+            # It covers hosts/cudy-wr3000/owfetch.sh, which runs in ash on OpenWrt with no derivation
+            # around it: otherwise the one .sh running on SOMEONE ELSE'S machine would go unchecked.
             shellcheck.enable = true;
             # The ENTRY is overridden to read ./.markdownlint.jsonc, the same file the editor reads:
             # the hook's own `settings.configuration` would be a 2nd owner of the ruleset (rule 14).

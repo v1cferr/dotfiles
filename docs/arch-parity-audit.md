@@ -68,7 +68,7 @@ does not read them as paths that should exist on this branch.
 | `main:fail2ban/` (5) | [`modules/nixos/network/network.nix`](../modules/nixos/network/network.nix) plus the generated jail in [`modules/nixos/services/caddy.nix`](../modules/nixos/services/caddy.nix) |
 | `main:ssh/` (4) | `network.nix` (port 2222, now with TOTP) plus [`modules/home/shell/ssh.nix`](../modules/home/shell/ssh.nix) |
 | `main:caddy/` (3) | `caddy.nix`, with the vhosts GENERATED from `my.ingress`. The subdomain SET is smaller, see Partial |
-| `main:wireguard/` | [`router/uci/`](../router/uci/network.conf), because the tunnel moved to the router |
+| `main:wireguard/` | [`hosts/cudy-wr3000/uci/`](../hosts/cudy-wr3000/uci/network.conf), because the tunnel moved to the router |
 | `main:system/` (14) | [`modules/nixos/core/core.nix`](../modules/nixos/core/core.nix) (locale, timezone, `br-abnt2`), `hostName` per host, [`modules/nixos/core/boot.nix`](../modules/nixos/core/boot.nix) |
 | `main:swap/` | `zramSwap.enable` in [`modules/nixos/hardware/hardware.nix`](../modules/nixos/hardware/hardware.nix) |
 | `main:fontconfig/` | [`modules/nixos/hardware/fonts.nix`](../modules/nixos/hardware/fonts.nix), a superset: CJK plus corefonts plus vista-fonts |
@@ -98,7 +98,7 @@ Same job, a different tool, and each one has its reasoning already recorded:
 | `main:greetd/` (7) | LightDM plus autologin in [`modules/nixos/desktop/desktop.nix`](../modules/nixos/desktop/desktop.nix) | Sunshine captures a LIVE session, so the machine has to log itself in |
 | `main:kwallet/` | gnome-keyring in the same `desktop.nix` | It is the `org.freedesktop.secrets` provider VS Code asks for |
 | `main:openrazer/` | hidraw plus `razer-dpi` in [`modules/nixos/hardware/razer.nix`](../modules/nixos/hardware/razer.nix) | openrazer does not build on kernel 7.1 or newer |
-| `main:cloudflare-ddns/` (4) | `ddns-scripts` on the router, [`router/uci/ddns.conf`](../router/uci/ddns.conf) | The anchor stopped depending on this machine being awake |
+| `main:cloudflare-ddns/` (4) | `ddns-scripts` on the router, [`hosts/cudy-wr3000/uci/ddns.conf`](../hosts/cudy-wr3000/uci/ddns.conf) | The anchor stopped depending on this machine being awake |
 | `main:docker/` | [`modules/nixos/services/docker.nix`](../modules/nixos/services/docker.nix), the prune policy | The only content was the nvidia runtime, and the GPU is an Arc now |
 | `main:bash/` | zsh as the login shell | `.bashrc` was already vestigial |
 
@@ -235,7 +235,7 @@ The browser is declared and is the default (`$BROWSER`, and the mime association
 timer, the AUR supply-chain checker, `stow-sync.sh`, the rEFInd menu cleanup, and one `deploy.sh`
 per service, which is what "no declarative layer" costs. What had real content came across:
 the secrets backup became [`scripts/sync-secrets.sh`](../scripts/sync-secrets.sh) plus sops-nix,
-the wireguard and WoL router scripts became `router/uci/`, and the VPN scripts became the `vpn`
+the wireguard and WoL router scripts became `hosts/cudy-wr3000/uci/`, and the VPN scripts became the `vpn`
 CLI. Nothing here needs porting; it needs deleting along with the branch.
 
 ## The eight missing areas

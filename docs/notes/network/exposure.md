@@ -7,7 +7,7 @@ the split-DNS answers `192.168.1.10` and every port the LAN is allowed to reach 
 ## What it checks
 
 1. **Every TCP port of the anchor** (`ssh.<my.net.domain>`), with `nmap -p-`, against what
-   [`router/uci/firewall.conf`](../../../router/uci/firewall.conf) opens on the WAN: the DNAT
+   [`hosts/cudy-wr3000/uci/firewall.conf`](../../../hosts/cudy-wr3000/uci/firewall.conf) opens on the WAN: the DNAT
    forwards and the router's own ACCEPT rules. The expected list is READ from the mirror, never
    typed, so it has one owner (rule 11). An open port the mirror does not declare FAILS: that is a
    forward added by hand on the router, or a service on it listening on the WAN by mistake.

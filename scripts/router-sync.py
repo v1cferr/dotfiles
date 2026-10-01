@@ -116,7 +116,7 @@ def export():
 
 def main():
     action = sys.argv[1] if len(sys.argv) > 1 else "diff"
-    root = repo_root() / "router" / "uci"
+    root = repo_root() / "hosts" / "cudy-wr3000" / "uci"
     live = export()
 
     if action == "pull":

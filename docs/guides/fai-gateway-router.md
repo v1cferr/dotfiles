@@ -42,7 +42,7 @@ ip route show dev ppp0 | grep via | awk '{print $1}'
 
 **THIS PART IS ALREADY DONE** (verified 12/08/2026). The six routes exist as NAMED
 sections `fai_r1` through `fai_r6`, see
-[`router/uci/network.conf`](../../router/uci/network.conf). They predate this guide and sat
+[`hosts/cudy-wr3000/uci/network.conf`](../../hosts/cudy-wr3000/uci/network.conf). They predate this guide and sat
 there for years with no effect, because they pointed at a `192.168.1.10` that did not
 forward: **the missing half was the PC's**, not this one.
 
@@ -150,7 +150,7 @@ If this becomes recurrent, just re-run the `add_list` commands, since they are i
 through `uci_add_list_if_new`.
 
 **Measured 29/08/2026: the backup currently HAS them.** The `doh_backup_server` in
-[`router/uci/dhcp.conf`](../../router/uci/dhcp.conf) lists the four FAI and VPN entries,
+[`hosts/cudy-wr3000/uci/dhcp.conf`](../../hosts/cudy-wr3000/uci/dhcp.conf) lists the four FAI and VPN entries,
 because the service re-created the backup after they already existed (a side effect of the
 dnsmasq restart in [`per-client-dns-block.md`](per-client-dns-block.md)). So the failure
 mode above is disarmed right now, and it re-arms itself the day a new `server` entry is
@@ -194,8 +194,8 @@ sudo uci commit dhcp && sudo /etc/init.d/dnsmasq restart
 ## After applying
 
 ```sh
-router-sync pull && git -C ~/Projects/GitHub/v1cferr/dotfiles diff router/
+router-sync pull && git -C ~/Projects/GitHub/v1cferr/dotfiles diff hosts/cudy-wr3000/
 ```
 
-Without the `pull`, the mirror in `router/uci/` becomes a copy of something that used to be
+Without the `pull`, the mirror in `hosts/cudy-wr3000/uci/` becomes a copy of something that used to be
 true, which is exactly what `router-sync diff` exists to prevent.

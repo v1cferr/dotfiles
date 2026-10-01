@@ -21,7 +21,7 @@ writers.writePython3Bin "router-ssot"
         capture_output=True, text=True, check=True,
     ).stdout.strip()
 
-    MIRROR = "router/uci"
+    MIRROR = "hosts/cudy-wr3000/uci"
 
 
     def read(rel):

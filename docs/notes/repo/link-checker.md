@@ -120,7 +120,7 @@ command inside the devShell.
 
 **Markdown ONLY, and that is a measurement, not a taste.** Over the `.md`: 15 external links, 278
 checks, 0 errors, with no config file and no exclude list at all. Over EVERY tracked file: 17
-errors, every one of them false, and they name themselves. The DoH endpoints in `router/uci/` answer
+errors, every one of them false, and they name themselves. The DoH endpoints in `hosts/cudy-wr3000/uci/` answer
 400 to a GET carrying no DNS query. The loopback and the LAN address are this machine talking to
 itself, which no runner can reach. CurseForge answers 403 to anything that is not a browser, the
 same bot wall that already keeps its download URL unversioned.

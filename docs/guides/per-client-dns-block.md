@@ -39,7 +39,7 @@ is Fastly, shared with thousands of unrelated sites.
 sends everything to `main`, so it inherits the ad blocklist, the `.lan` names and the local
 overrides (`v1cferr.dev` → `192.168.1.10`) instead of duplicating them and drifting. On top of that,
 one `server=/zone/` per blocked zone, which is dnsmasq's NXDOMAIN idiom and the same one the canary
-domains in [`router/uci/dhcp.conf`](../../router/uci/dhcp.conf) already use.
+domains in [`hosts/cudy-wr3000/uci/dhcp.conf`](../../hosts/cudy-wr3000/uci/dhcp.conf) already use.
 
 **One nft chain at priority -110**, which is `dstnat - 10`, so it is evaluated before fw4's own
 `dstnat` and therefore before the force-DNS rules described above.
@@ -132,7 +132,7 @@ sudo /etc/init.d/firewall restart
 ```
 
 **`sudo uci commit` leaves the file it touched as `0600`** (the trap recorded in
-[`router/README.md`](../../router/README.md)). Measured again here on 29/08/2026: `adblock-fast` and
+[`hosts/cudy-wr3000/README.md`](../../hosts/cudy-wr3000/README.md)). Measured again here on 29/08/2026: `adblock-fast` and
 `https-dns-proxy` came out root-only while `dhcp`, committed in the same breath, stayed `0644`. It
 does NOT break `router-sync`, which reads with `sudo uci show`, proven by the `pull` of the same day
 going through both files. Repair it anyway, so a hand-typed `uci show` keeps working:

@@ -114,7 +114,7 @@ as the rescue for a normal shutdown, (3) a UPS on the router and modem if the in
 keep the internet up DURING the outage, but that does not turn the PC on, because the PC is
 not on the UPS.
 
-`router/uci/etherwake.conf` is DEAD CONFIG: `name='example'`,
+`hosts/cudy-wr3000/uci/etherwake.conf` is DEAD CONFIG: `name='example'`,
 `mac='11:22:33:44:55:66'`, the factory placeholder of the LuCI app, never filled in. What
 works is `/usr/bin/wake-desktop`, with the MAC baked in. Do not trust the LuCI screen.
 

@@ -147,7 +147,7 @@ hosts/           per-machine answers (hostname, disks via disko, monitors, state
 pkgs/            my own derivations: vendored binaries, patched builds, and the checkers
 secrets/         secrets.yaml (sops) + the Bitwarden index
 scripts/         bash/python read by writeShellApplication (shellcheck runs at build time)
-router/          mirror of the OpenWrt UCI config: visible, not declarable
+hosts/cudy-wr3000/          mirror of the OpenWrt UCI config: visible, not declarable
 ci/              the eval budget and the stub for the private input
 docs/            what is NOT declarable, plus the diary: rules, notes, history, guides, ideas
 docs-site/       docs/ built into https://dotfiles.v1cferr.dev (Fumadocs, hermetic in Nix)
@@ -233,7 +233,7 @@ refreshed.
 - **SSH** on port `2222` (root off, `fail2ban` on), reachable from anywhere with no VPN. The
   **DDNS** that keeps `ssh.v1cferr.dev` pointed at the current public IP lives on the ROUTER, so
   external access does not depend on this machine being awake:
-  [`router/uci/ddns.conf`](router/uci/ddns.conf).
+  [`hosts/cudy-wr3000/uci/ddns.conf`](hosts/cudy-wr3000/uci/ddns.conf).
 
 ## Reinstalling from scratch
 

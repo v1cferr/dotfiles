@@ -27,7 +27,7 @@ REPO is a different question, and `router-ssot` answers that one: it fails when
 a value this repo declares (the subnets, the Moonlight sources and ports, the
 FAI routes, the sshd port) stops matching what the router repeats. It runs in
 the pre-commit hooks and reads only this directory, never the device. See
-[`../docs/notes/repo/router-ssot.md`](../docs/notes/repo/router-ssot.md).
+[`../../docs/notes/repo/router-ssot.md`](../../docs/notes/repo/router-ssot.md).
 
 **`sudo uci commit` leaves /etc/config as 0600.** Measured 19/08/2026: committing `dhcp`
 and `network` through sudo left both files root-only, while `firewall`, untouched that day,
@@ -45,7 +45,7 @@ actually caught was the command typed by hand.
 ## The security posture is audited, not assumed
 
 What is closed on this device, what was deliberately left open and why, plus the rollback for each
-change, is in [`../docs/guides/router-hardening.md`](../docs/guides/router-hardening.md). Read it
+change, is in [`../../docs/guides/router-hardening.md`](../../docs/guides/router-hardening.md). Read it
 before changing a firewall zone here: the `wg` zone in particular now carries three named rules
 whose deletion costs remote administration.
 

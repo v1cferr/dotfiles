@@ -151,9 +151,9 @@ Five legs, and only the last three needed any work:
 | leg | where it lives |
 | --- | --- |
 | the name resolving from outside | already done: the `*.v1cferr.dev` wildcard CNAME points at the zone's anchor |
-| the anchor tracking the public IP | already done: `ddns-scripts` on the OpenWrt, [`router/uci/ddns.conf`](../../router/uci/ddns.conf) |
-| WAN `2223` reaching `192.168.1.40` | `firewall.ssh_cesar`, mirrored in [`router/uci/firewall.conf`](../../router/uci/firewall.conf) |
-| the name working INSIDE the house | `dhcp.@dnsmasq[0].address`, in [`router/uci/dhcp.conf`](../../router/uci/dhcp.conf) |
+| the anchor tracking the public IP | already done: `ddns-scripts` on the OpenWrt, [`hosts/cudy-wr3000/uci/ddns.conf`](../../hosts/cudy-wr3000/uci/ddns.conf) |
+| WAN `2223` reaching `192.168.1.40` | `firewall.ssh_cesar`, mirrored in [`hosts/cudy-wr3000/uci/firewall.conf`](../../hosts/cudy-wr3000/uci/firewall.conf) |
+| the name working INSIDE the house | `dhcp.@dnsmasq[0].address`, in [`hosts/cudy-wr3000/uci/dhcp.conf`](../../hosts/cudy-wr3000/uci/dhcp.conf) |
 | Windows answering on `2223` | the three steps below |
 
 **`2222` was not available**: it is already forwarded to `192.168.1.10`, my

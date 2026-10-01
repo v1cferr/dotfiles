@@ -346,7 +346,7 @@ That is why the key is tested from a second session before the restart, and why
 ## After applying
 
 ```sh
-router-sync pull && git -C ~/Projects/GitHub/v1cferr/dotfiles diff router/
+router-sync pull && git -C ~/Projects/GitHub/v1cferr/dotfiles diff hosts/cudy-wr3000/
 ```
 
 Without the `pull` the mirror becomes a copy of something that used to be true, which is the exact

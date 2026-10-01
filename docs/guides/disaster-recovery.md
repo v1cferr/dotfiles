@@ -4,6 +4,23 @@ This repo claims to be the SSOT of my infrastructure. A claim with no rehearsal 
 day it stops being true is the day I need it. So there are three drills, cheapest first, and each one
 says exactly what it does NOT prove.
 
+```mermaid
+flowchart LR
+    accTitle: The drills, cheapest first, and the restore they rehearse
+    accDescr: D1 boots the config weekly, D2 formats the layout quarterly, D3 decrypts the secrets yearly, and the real restore needs all three halves plus the parts no drill reaches.
+
+    D1["D1 · weekly, automatic<br>nix build .#vm-boot<br>does the config still boot"]
+    D2["D2 · quarterly, ~10 min<br>nix run .#disko-vm<br>does the layout still format"]
+    D3["D3 · yearly<br>clean clone + the vault's key<br>do the secrets decrypt"]
+    R["The real thing<br>new disk, installer, key, nixos-install"]
+    X["No drill reaches<br>GPU · compositor · router · Windows · BIOS"]
+
+    D1 --> R
+    D2 --> R
+    D3 --> R
+    X -.-> R
+```
+
 ## The one thing that is not in git
 
 The age key. Everything else, including every secret, is either in the tree or reproducible from it;
@@ -103,28 +120,43 @@ a backup nobody knows is empty.
 
 In order, and step 4 is the one that is easy to forget and expensive to skip.
 
-1. Boot the installer USB stick, `git clone https://github.com/v1cferr/dotfiles`.
-2. **ONE line changes**: `device` in `hosts/ex-b560m-v5/disko.nix` carries the drive's SERIAL, so
-   the new disk needs its own `by-id` path. Nothing else in the repo knows the disk.
-3. Format and mount:
+### 1. Boot the installer and clone the repo
 
-   ```sh
-   sudo nix run github:nix-community/disko -- --mode destroy,format,mount --flake .#ex-b560m-v5
-   ```
+Boot the installer USB stick, `git clone https://github.com/v1cferr/dotfiles`.
 
-4. **Put the key in place BEFORE the first boot**, or the cascade at the top of this page happens on
-   a machine you are trying to rescue:
+### 2. Point disko at the new disk
 
-   ```sh
-   sudo install -D -m 0600 /dev/stdin /mnt/var/lib/sops-nix/key.txt   # paste the key, then Ctrl-D
-   ```
+**ONE line changes**: `device` in `hosts/ex-b560m-v5/disko.nix` carries the drive's SERIAL, so the
+new disk needs its own `by-id` path. Nothing else in the repo knows the disk.
 
-5. `sudo nixos-install --flake .#ex-b560m-v5`, then reboot.
-6. After the first boot: create `@snapshots` by hand (the command is in the
-   [disko note](../notes/boot-and-storage/disko.md)), then restore from restic what rule 6 says was
-   never declared (saves, Wine prefixes, app sessions).
-7. Secure Boot needs its own pass: the sbctl keys live in `/var/lib/sbctl`, are NOT in git, and
-   enrolling them is manual ([`boot.md`](../notes/boot-and-storage/boot.md)).
+### 3. Format and mount
+
+```sh
+sudo nix run github:nix-community/disko -- --mode destroy,format,mount --flake .#ex-b560m-v5
+```
+
+### 4. Put the key in place BEFORE the first boot
+
+Skip it and the cascade at the top of this page happens on a machine you are trying to rescue:
+
+```sh
+sudo install -D -m 0600 /dev/stdin /mnt/var/lib/sops-nix/key.txt   # paste the key, then Ctrl-D
+```
+
+### 5. Install and reboot
+
+`sudo nixos-install --flake .#ex-b560m-v5`, then reboot.
+
+### 6. Restore what was never declared
+
+After the first boot: create `@snapshots` by hand (the command is in the
+[disko note](../notes/boot-and-storage/disko.md)), then restore from restic what rule 6 says was
+never declared (saves, Wine prefixes, app sessions).
+
+### 7. Enroll Secure Boot
+
+Secure Boot needs its own pass: the sbctl keys live in `/var/lib/sbctl`, are NOT in git, and
+enrolling them is manual ([`boot.md`](../notes/boot-and-storage/boot.md)).
 
 ## What no drill here covers
 

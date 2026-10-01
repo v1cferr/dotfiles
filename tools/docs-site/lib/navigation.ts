@@ -10,9 +10,23 @@ export interface NavPage {
   doc: string;
 }
 
+/** The Lucide icon a top-level group carries, by name: this file runs on bare node, without React. */
+export type SectionIcon =
+  | 'scale'
+  | 'hard-drive'
+  | 'cpu'
+  | 'network'
+  | 'monitor'
+  | 'app-window'
+  | 'server'
+  | 'git-branch'
+  | 'book-open'
+  | 'scroll-text';
+
 /** A group in the sidebar. A `doc` with no title as its first item becomes the group's own page. */
 export interface NavSection {
   section: string;
+  icon?: SectionIcon;
   items: NavItem[];
 }
 
@@ -23,6 +37,7 @@ export const navigation: NavItem[] = [
   { title: "Rules", doc: "rules.md" },
   {
     section: "Decisions",
+    icon: "scale",
     items: [
       { doc: "decisions/README.md" },
       { title: "0001 Own Nix palette", doc: "decisions/0001-own-nix-palette.md" },
@@ -39,6 +54,7 @@ export const navigation: NavItem[] = [
   { title: "How the notes work", doc: "notes/README.md" },
   {
     section: "Boot and storage",
+    icon: "hard-drive",
     items: [
       { title: "Boot", doc: "notes/boot-and-storage/boot.md" },
       { title: "Disko", doc: "notes/boot-and-storage/disko.md" },
@@ -54,6 +70,7 @@ export const navigation: NavItem[] = [
   },
   {
     section: "Hardware",
+    icon: "cpu",
     items: [
       { title: "GPU", doc: "notes/hardware/gpu.md" },
       { title: "GPU RGB", doc: "notes/hardware/gpu-rgb.md" },
@@ -68,6 +85,7 @@ export const navigation: NavItem[] = [
   },
   {
     section: "Network",
+    icon: "network",
     items: [
       { title: "Network", doc: "notes/network/network.md" },
       { title: "Exposure", doc: "notes/network/exposure.md" },
@@ -81,6 +99,7 @@ export const navigation: NavItem[] = [
   },
   {
     section: "Desktop",
+    icon: "monitor",
     items: [
       { title: "Desktop", doc: "notes/desktop/desktop.md" },
       { title: "Hyprland", doc: "notes/desktop/hypr.md" },
@@ -98,6 +117,7 @@ export const navigation: NavItem[] = [
   },
   {
     section: "Apps",
+    icon: "app-window",
     items: [
       { title: "Dolphin", doc: "notes/apps/dolphin.md" },
       { title: "Dropbox", doc: "notes/apps/dropbox.md" },
@@ -119,6 +139,7 @@ export const navigation: NavItem[] = [
   },
   {
     section: "Services",
+    icon: "server",
     items: [
       { title: "Service toggles", doc: "notes/services/service-toggles.md" },
       { title: "Jellyfin", doc: "notes/services/jellyfin.md" },
@@ -133,6 +154,7 @@ export const navigation: NavItem[] = [
   },
   {
     section: "Repo",
+    icon: "git-branch",
     items: [
       { title: "Flake", doc: "notes/repo/flake.md" },
       { title: "Core", doc: "notes/repo/core.md" },
@@ -158,6 +180,7 @@ export const navigation: NavItem[] = [
   },
   {
     section: "Guides",
+    icon: "book-open",
     items: [
       { doc: "guides/README.md" },
       { title: "BIOS EX-B560M-V5", doc: "guides/bios-ex-b560m-v5.md" },
@@ -172,6 +195,7 @@ export const navigation: NavItem[] = [
   },
   {
     section: "Log",
+    icon: "scroll-text",
     items: [
       { title: "Open items", doc: "open-items.md" },
       { title: "Ideas", doc: "ideas.md" },

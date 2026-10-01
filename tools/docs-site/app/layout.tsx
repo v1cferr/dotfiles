@@ -3,6 +3,7 @@
 import type { Metadata } from 'next';
 import { DocsLayout } from 'fumadocs-ui/layouts/docs';
 import type { ReactNode } from 'react';
+import { sectionIcon } from '../components/section-icon.tsx';
 import { baseOptions } from '../lib/layout.shared.tsx';
 import { DOCS_ROOT } from '../lib/docs-root.ts';
 import { SITE_ORIGIN } from '../lib/domain.ts';
@@ -11,7 +12,7 @@ import { SITE_DESCRIPTION, SITE_NAME } from '../lib/repo.ts';
 import './global.css';
 import { Provider } from './provider.tsx';
 
-const tree = buildPageTree(DOCS_ROOT);
+const tree = buildPageTree(DOCS_ROOT, sectionIcon);
 
 // What every page inherits. A page overrides the title, the description and the canonical URL;
 // the rest states the same thing on all 92 of them.

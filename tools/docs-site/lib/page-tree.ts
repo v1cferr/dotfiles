@@ -10,7 +10,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type * as PageTree from 'fumadocs-core/page-tree';
-import { type NavItem, type NavPage, type NavSection, navigation } from './navigation.ts';
+import type { ReactNode } from 'react';
+import {
+  type NavItem,
+  type NavPage,
+  type NavSection,
+  type SectionIcon,
+  navigation,
+} from './navigation.ts';
 import { titleFromMarkdown } from './summary.ts';
 import { INDEX_FILE, PAGE_EXTENSION, docPathToUrl } from './urls.ts';
 
@@ -31,6 +38,7 @@ function isSection(item: NavItem): item is NavSection {
 
 interface Walk {
   docsRoot: string;
+  icon?: (name: SectionIcon) => ReactNode;
   pages: Set<string>;
   seen: Map<string, string>;
   problems: string[];
@@ -85,6 +93,7 @@ function build(items: NavItem[], walk: Walk): PageTree.Node[] {
     nodes.push({
       type: 'folder',
       name: item.section,
+      icon: item.icon && walk.icon?.(item.icon),
       index: leadsWithIndex ? (children.shift() as PageTree.Item) : undefined,
       children,
     });
@@ -93,9 +102,14 @@ function build(items: NavItem[], walk: Walk): PageTree.Node[] {
   return nodes;
 }
 
-export function buildPageTree(docsRoot: string): PageTree.Root {
+/** `icon` renders a group's icon; the gate passes none, since it runs with no React to render. */
+export function buildPageTree(
+  docsRoot: string,
+  icon?: (name: SectionIcon) => ReactNode,
+): PageTree.Root {
   const walk: Walk = {
     docsRoot,
+    icon,
     pages: new Set(listPages(docsRoot)),
     seen: new Map(),
     problems: [],

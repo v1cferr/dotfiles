@@ -22,8 +22,8 @@ let
 
   claude = unstable.claude-code;
 
-  # The CLONED repo path: it cannot be derived, since the flake is copied into the store.
-  repo = "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/shell/claude";
+  # The CLONED repo, from its SSOT programs.nh.flake (rule 11): the flake itself is in the store.
+  repo = "${osConfig.programs.nh.flake}/home/shell/claude";
 
   # The Azure MCP. `--mode namespace` gives one tool per service (68); auth is azmcp's own
   # device code in the keyring, never here (rule 12).

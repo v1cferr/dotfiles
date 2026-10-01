@@ -3,6 +3,7 @@
 {
   pkgs,
   config,
+  osConfig,
   inputs,
   ...
 }:
@@ -195,9 +196,9 @@ in
   # HOT-RELOAD: both come through mkOutOfStoreSymlink from the REAL files, so editing a .lua plus
   # `hyprctl reload` applies with NO rebuild. Idle and the lock are in ./lockscreen.nix.
   xdg.configFile."hypr/hyprland.lua".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/desktop/hypr/hyprland.lua";
+    config.lib.file.mkOutOfStoreSymlink "${osConfig.programs.nh.flake}/home/desktop/hypr/hyprland.lua";
   xdg.configFile."hypr/lua".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/desktop/hypr/lua";
+    config.lib.file.mkOutOfStoreSymlink "${osConfig.programs.nh.flake}/home/desktop/hypr/lua";
 
   # LightDM launches Hyprland RAW, so graphical-session.target was never activated and none of
   # the --user desktop services came up. This target activates it through BindsTo.

@@ -3,6 +3,7 @@
 {
   pkgs,
   config,
+  osConfig,
   inputs,
   ...
 }:
@@ -86,7 +87,7 @@ in
 
   # ~/.config/quickshell points at the real file in the repo (mutable), which is the hot-reload.
   xdg.configFile."quickshell".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/desktop/quickshell";
+    config.lib.file.mkOutOfStoreSymlink "${osConfig.programs.nh.flake}/home/desktop/quickshell";
 
   # THE XEmbed to SNI BRIDGE: Wine/Battle.net publishes the old X11 protocol, and with no host it
   # draws its own floating window. It costs 758 MiB of closure, measured and accepted (notes).

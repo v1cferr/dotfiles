@@ -1,10 +1,15 @@
 # CODEX (OpenAI's CLI): the package plus config.toml as a mirror versioned in the repo.
 # Why the config is not generated into the store: docs/notes/apps/codex.md
-{ config, pkgs, ... }:
+{
+  config,
+  osConfig,
+  pkgs,
+  ...
+}:
 
 let
-  # The CLONED repo path: it cannot be derived, since the flake is copied into the store.
-  repo = "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/shell/codex";
+  # The CLONED repo, from its SSOT programs.nh.flake (rule 11): the flake itself is in the store.
+  repo = "${osConfig.programs.nh.flake}/home/shell/codex";
 in
 {
   programs.codex = {

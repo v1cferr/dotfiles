@@ -1,6 +1,11 @@
 # VS CODE: the package plus the 3 config JSONs linked MUTABLE from the repo, because the app
 # rewrites them (Settings Sync stays on). Why a mirror and not a source: docs/notes/apps/vscode.md
-{ config, pkgs, ... }:
+{
+  config,
+  osConfig,
+  pkgs,
+  ...
+}:
 
 let
   # Rule 19: everything this module reaches for, named once. deadnix fails the build on an
@@ -11,9 +16,8 @@ let
     writeShellApplication
     ;
 
-  # The CLONED repo's path: there is no deriving it at eval time (the flake goes to the store).
-  # The same literal as home/desktop/hypr.nix; if it moves, VS Code cannot save settings.
-  repo = "${config.home.homeDirectory}/Projects/GitHub/v1cferr/dotfiles/home/apps/vscode";
+  # The CLONED repo, from its SSOT programs.nh.flake (rule 11): the flake itself is in the store.
+  repo = "${osConfig.programs.nh.flake}/home/apps/vscode";
 
   code = unstable.vscode.override {
     commandLineArgs = "--password-store=gnome-libsecret";

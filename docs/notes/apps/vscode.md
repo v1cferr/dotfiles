@@ -109,10 +109,10 @@ being versionable in the clear and the path becomes sops, not a commit.
 
 ## Two loose ends
 
-The `repo` path is a literal, because there is no deriving it from inside the evaluation: the flake
-is copied into the store, and what we need is the working directory. Same literal as
-`home/desktop/hypr.nix`. If the repo is not there, the symlink dangles and VS Code cannot save
-settings, identically to what already happens with `hyprland.lua`.
+The `repo` path cannot be derived from inside the evaluation: the flake is copied into the store,
+and what we need is the working directory. So it is read from `programs.nh.flake`, the clone's
+one declared path (rule 11), like every other hot-reload link in `home/`. If the repo is not
+there, the symlink dangles and VS Code cannot save settings, identically to `hyprland.lua`.
 
 The nixd config that carries a PATH (`nixd.options`/`nixpkgs`) lives in this repo's root
 `.vscode/settings.json`; it only holds with this flake as the workspace.

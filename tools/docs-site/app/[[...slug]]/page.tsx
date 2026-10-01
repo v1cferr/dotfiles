@@ -3,9 +3,11 @@
 import { DocsBody, DocsPage, DocsTitle, EditOnGitHub } from 'fumadocs-ui/layouts/docs/page';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { HomeHero, HomeSections } from '../../components/home.tsx';
 import { getMDXComponents } from '../../components/mdx.tsx';
 import { BLOB_BASE } from '../../lib/repo.ts';
 import { source } from '../../lib/source.ts';
+import { tree } from '../../lib/tree.ts';
 import { servedUrl } from '../../lib/urls.ts';
 
 export default async function Page(props: PageProps<'/[[...slug]]'>) {
@@ -15,12 +17,16 @@ export default async function Page(props: PageProps<'/[[...slug]]'>) {
 
   const MDX = page.data.body;
 
+  // The home opens on an overview of the site, and its prose follows as on any other page.
+  const isHome = page.url === '/';
+
   return (
     <DocsPage toc={page.data.toc} tableOfContent={{ style: 'clerk' }}>
-      <DocsTitle>{page.data.title}</DocsTitle>
+      {isHome ? <HomeHero /> : <DocsTitle>{page.data.title}</DocsTitle>}
       {/* The file on GitHub, which is still where most of these pages get read. NOT Fumadocs'
           ViewOptionsPopover: it always carries a hardcoded link into a third-party AI service. */}
       <EditOnGitHub className="w-fit" href={`${BLOB_BASE}/docs/${page.path}`} />
+      {isHome && <HomeSections tree={tree} />}
       <DocsBody>
         <MDX components={getMDXComponents()} />
       </DocsBody>

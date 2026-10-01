@@ -85,11 +85,11 @@ in
         language = "system";
         files = "\\.(json|jsonc|toml)$";
       };
-      # The two .py in the tree: `modules/nixos/network/router-sync.py` and kitty's smart-paste kitten.
-      # `check` with no --fix on purpose: a linter that rewrites Python is not a formatter.
+      # The two loose .py (router-sync, kitty's smart-paste). `check` with no --fix, since a linter
+      # that rewrites Python is not a formatter; no cache, which two files never earn back.
       ruff = {
         enable = true;
-        entry = "${nixpkgs.legacyPackages.${system}.ruff}/bin/ruff check";
+        entry = "${nixpkgs.legacyPackages.${system}.ruff}/bin/ruff check --no-cache";
       };
       # EXTERNAL links, `.md` only. It needs NETWORK, so it can NEVER be part of the gate
       # (the build sandbox has none) and sits at the `manual` stage, run weekly by the CI.

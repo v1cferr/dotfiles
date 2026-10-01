@@ -1,7 +1,7 @@
 # secrets
 
 Modules: [`modules/nixos/core/secrets.nix`](../../../modules/nixos/core/secrets.nix),
-[`modules/nixos/core/sync-secrets.sh`](../../../modules/nixos/core/sync-secrets.sh), [`.sops.yaml`](../../../.sops.yaml)
+[`modules/nixos/core/sync-secrets.sh`](../../../modules/nixos/core/sync-secrets.sh), [`secrets/.sops.yaml`](../../../secrets/.sops.yaml)
 
 Bitwarden is the source of truth, sops is the vault, and the repo never holds a credential
 (rule 12).
@@ -31,7 +31,7 @@ the module stays inert until `sync-secrets` has run.
 
 ## Two recipients, on purpose
 
-The public keys in `.sops.yaml` are who CAN decrypt; each private half lives outside git.
+The public keys in `secrets/.sops.yaml` are who CAN decrypt; each private half lives outside git.
 
 | Recipient | Where the private key is | Why it exists |
 | --- | --- | --- |
@@ -76,7 +76,7 @@ token is regenerable, so it does not need the vault.
 ## Editing by hand
 
 **The obvious command does NOT work**, and it was written down wrong in this repo until
-16/08/2026, in `.sops.yaml`'s header and then here. `sops secrets/secrets.yaml` on its own fails
+16/08/2026, in `secrets/.sops.yaml`'s header and then here. `sops secrets/secrets.yaml` on its own fails
 with `Failed to get the data key required to decrypt the SOPS file`, listing every default
 location it searched. None of them is the right one: the age key belongs to ROOT and lives at
 `/var/lib/sops-nix/key.txt`, which sops does not look in.
@@ -110,11 +110,13 @@ Three things that each cost a failed attempt:
   after the edit that doomed it. Change it IN BITWARDEN and sync; hand-edit only what the vault
   does not hold.
 
-For `updatekeys` (after adding a recipient) the same environment applies:
+For `updatekeys` (after adding a recipient) the same environment applies, plus the rules' path:
+`updatekeys` is the one command here that READS the rules, they live in `secrets/.sops.yaml` since
+01/10/2026, and `sudo` drops the devShell's `SOPS_CONFIG`, so the flag carries it:
 
 ```sh
 sudo EDITOR=nano SOPS_AGE_KEY_FILE=/var/lib/sops-nix/key.txt \
-  nix shell nixpkgs#sops -c sops updatekeys -y secrets/secrets.yaml
+  nix shell nixpkgs#sops -c sops --config secrets/.sops.yaml updatekeys -y secrets/secrets.yaml
 ```
 
 `sync-secrets` does NOT replace this: it runs `sops set` on the EXISTING file, which already
@@ -122,7 +124,7 @@ requires a key that decrypts.
 
 ## Two recipients, and the `updatekeys` trap
 
-`.sops.yaml` lists the PUBLIC keys of who CAN decrypt; each one's private half lives OUTSIDE git.
+`secrets/.sops.yaml` lists the PUBLIC keys of who CAN decrypt; each one's private half lives OUTSIDE git.
 There are TWO on purpose:
 
 - **host**: `/var/lib/sops-nix/key.txt` on the machine. It is what sops-nix uses at boot to populate

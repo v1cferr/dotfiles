@@ -39,6 +39,8 @@ in
       pre-commit-hook-ensure-sops = {
         enable = true;
         files = "^secrets/.*\\.yaml$";
+        # sops' own config lives beside the vault now: plain recipients, never a secret.
+        excludes = [ "^secrets/\\.sops\\.yaml$" ];
       };
       # The workflow gets what the .nix tree already had: actionlint for the YAML and the
       # expressions, zizmor for the security audit. Both are scoped to .github/workflows.

@@ -15,7 +15,10 @@ in
 # mkShellNoCC and NOT mkShell: nothing here compiles C, and mkShell's stdenv makes direnv dump a
 # paragraph of +CC/+LD/+NIX_CFLAGS exports on every cd into the repo.
 pkgs.mkShellNoCC {
-  inherit shellHook;
+  # sops' config lives beside the vault, where sops cannot find it from the root on its own.
+  shellHook = shellHook + ''
+    export SOPS_CONFIG="$(git rev-parse --show-toplevel)/secrets/.sops.yaml"
+  '';
   # sops: `modules/nixos/core/sync-secrets.sh` needs it and it is NOT in any profile, so without
   # this the script died at its first `sops set`, mid-run, on 18/08/2026.
   buildInputs = enabledPackages ++ [

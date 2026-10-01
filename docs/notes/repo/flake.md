@@ -352,8 +352,8 @@ leak instead of after it.
 The hook's default is `files = "^secrets"`, and MEASURED against this repo it fails: it flags
 `secrets/bitwarden-secrets.json`, which is the INDEX of names and carries no value, so it is
 plaintext BY DESIGN (see [`secrets.md`](secrets.md)). Narrowing to `^secrets/.*\.yaml$` is what
-keeps the check honest, and `.sops.yaml` at the root stays out of it for the same reason: it holds
-the recipients, not a secret.
+keeps the check honest, and `secrets/.sops.yaml` is EXCLUDED from it for the same reason: it
+holds the recipients, not a secret.
 
 **The Lua and the loose Python stopped being the uncovered corner (23/08/2026).** Before this the
 gate covered `.nix`, `.sh`, `.md` and the workflow, and 36 files had no checker of their own.

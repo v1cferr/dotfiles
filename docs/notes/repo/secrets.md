@@ -1,6 +1,6 @@
 # secrets
 
-Modules: [`system/core/secrets.nix`](../../../system/core/secrets.nix),
+Modules: [`modules/nixos/core/secrets.nix`](../../../modules/nixos/core/secrets.nix),
 [`scripts/sync-secrets.sh`](../../../scripts/sync-secrets.sh), [`.sops.yaml`](../../../.sops.yaml)
 
 Bitwarden is the source of truth, sops is the vault, and the repo never holds a credential
@@ -138,7 +138,7 @@ The commands are in [Editing by hand](#editing-by-hand) above.
 
 ## The index and the vault are TWO declarations
 
-`bitwarden-secrets.json` is not just a lookup table: `system/core/secrets.nix` turns every key of
+`bitwarden-secrets.json` is not just a lookup table: `modules/nixos/core/secrets.nix` turns every key of
 it into a `sops.secrets.<name>` through `lib.mapAttrs`. So the index DECLARES the secret and the
 yaml holds the VALUE, and a secret can be declared twice over when it also has a hand-written
 override for `owner`/`mode`.

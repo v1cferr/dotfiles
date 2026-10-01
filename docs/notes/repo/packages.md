@@ -1,7 +1,7 @@
 # packages
 
 Modules: [`home/packages.nix`](../../../home/packages.nix),
-[`system/packages.nix`](../../../system/packages.nix)
+[`modules/nixos/packages.nix`](../../../modules/nixos/packages.nix)
 
 The two mirrored central lists. Everything here is a decision that a one-line comment cannot
 carry: why a package is on the unstable channel, why one was refused, or why one is NOT in the
@@ -144,7 +144,7 @@ form.
   `nix flake check` and the pre-commit hook. Rule 16 usually depends on somebody remembering to
   audit; here the linter does it.
 - **It kills the mixed-scope list.** `runtimeInputs = with pkgs; [ systemd coreutils streamActive ]`
-  in [`sunshine.nix`](../../../system/services/sunshine.nix) and
+  in [`sunshine.nix`](../../../modules/nixos/services/sunshine.nix) and
   `home.packages = with pkgs; [ minimizeOthers wl-clipboard ... ]` in
   [`hypr.nix`](../../../home/desktop/hypr.nix) both mixed real packages with shell applications built
   a few lines above, resolved by `with` losing to a `let` binding. Nothing on the page said which
@@ -168,7 +168,7 @@ packages, so anything else in there would be a lie:
 `fonts.packages`, `hardware.graphics.extraPackages`) keeps `with pkgs;`: every name in it comes from
 the same place, there is nothing to disambiguate, and the `with` is the nixpkgs idiom for exactly
 that shape. Five modules were left untouched for want of a payoff, all of them with no `let` block
-and one or two single-use references: `system/hardware/mouse.nix`, `system/hardware/razer.nix`,
+and one or two single-use references: `modules/nixos/hardware/mouse.nix`, `modules/nixos/hardware/razer.nix`,
 `hosts/ex-b560m-v5/vm-disko.nix`, `home/shell/git.nix` and `home/shell/cli.nix`.
 
 **How the sweep was verified.** The change is textual, so the proof is that nothing moved: the

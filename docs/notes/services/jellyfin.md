@@ -1,6 +1,6 @@
 # Jellyfin and the media library
 
-`system/services/jellyfin.nix`. A native media server on systemd, 24/7, up at boot. Migrated from
+`modules/nixos/services/jellyfin.nix`. A native media server on systemd, 24/7, up at boot. Migrated from
 the Arch Docker stack: isolated in the `jellyfin` user, with no container overhead.
 
 ## The shared group
@@ -72,7 +72,7 @@ If the TV ever fails to find the server again, `systemctl restart jellyfin` is t
 ## The rest of the old stack
 
 jellyseerr and the \*arr apps come later, one module at a time. qbittorrent is already migrated
-(`system/services/qbittorrent.nix`), in the same `media` group, writing to `/srv/media/torrents`,
+(`modules/nixos/services/qbittorrent.nix`), in the same `media` group, writing to `/srv/media/torrents`,
 with the Web UI on 8080. Its save paths and categories are set in that Web UI: state again.
 The initial login is user `admin`, with a temporary password in `journalctl -u qbittorrent`.
 

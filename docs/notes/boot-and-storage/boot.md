@@ -1,7 +1,7 @@
 # boot and Secure Boot
 
-Modules: [`system/core/boot.nix`](../../../system/core/boot.nix),
-[`system/core/secureboot.nix`](../../../system/core/secureboot.nix)
+Modules: [`modules/nixos/core/boot.nix`](../../../modules/nixos/core/boot.nix),
+[`modules/nixos/core/secureboot.nix`](../../../modules/nixos/core/secureboot.nix)
 
 GRUB (UEFI) with the minegrub theme, in dualboot with Windows 11, signed with our own keys
 through sbctl. The two modules share one decision, so they share a page.

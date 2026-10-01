@@ -1,4 +1,4 @@
-# VIRT-MANAGER: the GUI only, pointed at the SYSTEM daemon. The daemon is system/services/libvirt.nix.
+# VIRT-MANAGER: the GUI only, pointed at the SYSTEM daemon. The daemon is modules/nixos/services/libvirt.nix.
 # Why NOT programs.virt-manager.enable, which is what the wiki says: docs/notes/services/libvirt.md
 {
   lib,

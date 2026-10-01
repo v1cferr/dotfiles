@@ -20,7 +20,7 @@ Scope {
     // Flameshot's frozen overlay would show a DUPLICATED bar. `visible:false` also frees the clicks.
     property bool hidden: false
     readonly property int trayCount: SystemTray.items ? SystemTray.items.values.length : 0
-    readonly property string vpnBin: "vpn" // the CLI on the PATH (system/net/vpn.nix)
+    readonly property string vpnBin: "vpn" // the CLI on the PATH (modules/nixos/net/vpn.nix)
 
     // The palette and the font come from the Theme singleton (Theme.colX / Theme.uiFont).
 
@@ -644,7 +644,7 @@ Scope {
         } catch (e) {}
     }
 
-    // One probe per VPN, the same two the CLI knows about (system/net/vpn.nix). The component is
+    // One probe per VPN, the same two the CLI knows about (modules/nixos/net/vpn.nix). The component is
     // widgets/PingProbe.qml, shared with the link probe on the network panel.
     PingProbe {
         id: faiProbe

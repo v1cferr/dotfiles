@@ -1,11 +1,11 @@
 # earlyoom, and the three traps in its regex
 
-`system/hardware/oom.nix`. It avoids the FREEZE caused by running out of RAM (Chrome/Electron
+`modules/nixos/hardware/oom.nix`. It avoids the FREEZE caused by running out of RAM (Chrome/Electron
 eating everything).
 
 ## Why two layers
 
-A companion to zram (`system/hardware/hardware.nix`): when RAM gets tight, zram compresses; when
+A companion to zram (`modules/nixos/hardware/hardware.nix`): when RAM gets tight, zram compresses; when
 not even that holds, somebody has to die BEFORE the kernel freezes the machine.
 
 `systemd-oomd` (on by default in NixOS) is PSI/cgroup based and reacts slowly, and under Hyprland

@@ -31,8 +31,8 @@
     deadnix # dead declarations (unused args, let-bindings, patterns)
 
     # ── Torrent / passwords ──
-    qbittorrent # the GUI, separate from the headless service (system/services/qbittorrent.nix)
-    bitwarden-desktop # Electron 39 is EOL and allowed explicitly in system/core/core.nix
+    qbittorrent # the GUI, separate from the headless service (modules/nixos/services/qbittorrent.nix)
+    bitwarden-desktop # Electron 39 is EOL and allowed explicitly in modules/nixos/core/core.nix
     bitwarden-cli # `bw`, used by sync-secrets
 
     # ── Games / emulators (prefixes and ROMs are state, not config: rule 6) ──
@@ -42,7 +42,7 @@
 
     # ── Remote access ──
     # The Moonlight CLIENT, for my mother's T480: this machine is the client and that one is the
-    # host, the reverse of system/services/sunshine.nix. What to set: docs/notes/network/sunshine.md
+    # host, the reverse of modules/nixos/services/sunshine.nix. What to set: docs/notes/network/sunshine.md
     # RDP reaches the same machine and is NOT redundant (Moonlight dies with the laptop lid), but
     # it owns its package next to the `t480` wrapper, in home/net/t480.nix.
     moonlight-qt

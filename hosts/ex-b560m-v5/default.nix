@@ -12,7 +12,7 @@
   networking.hostName = "ex-b560m-v5";
 
   # MONITORS: the SSOT of the connector names, read by Nix, Lua and QML. Declared (with no
-  # default, on purpose) in system/desktop/monitors.nix.
+  # default, on purpose) in modules/nixos/desktop/monitors.nix.
   my.monitors = {
     primary = "DP-1"; # an ASUS ROG Strix XG27ACS, QHD (DisplayPort)
     secondary = "DP-2"; # an LG ULTRAGEAR, standing on its pivot (DisplayPort)
@@ -68,7 +68,7 @@
     ];
   };
 
-  # The btrfs POLICY (scrub, alarms, reclaim, TRIM) lives in system/hardware/btrfs.nix: it is
+  # The btrfs POLICY (scrub, alarms, reclaim, TRIM) lives in modules/nixos/hardware/btrfs.nix: it is
   # guarded by "is the root btrfs?", not by the host. Only the LAYOUT is host-specific.
 
   # The kernel: the SAME hardware as the SanDisk's (the same board/CPU); only the root became an

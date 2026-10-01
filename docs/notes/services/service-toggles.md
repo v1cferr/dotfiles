@@ -1,6 +1,6 @@
 # The optional-service toggles
 
-`system/services/toggles.nix` declares the LIST of keys that exist. Nothing is turned on there:
+`modules/nixos/services/toggles.nix` declares the LIST of keys that exist. Nothing is turned on there:
 the value is each machine's decision, in `hosts/<host>/services.nix`.
 
 ## Why the declarations are centralized (04/08/2026)

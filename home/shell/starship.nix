@@ -1,5 +1,5 @@
 # The starship prompt (~/.config/starship.toml), injected into zsh automatically, with icons from
-# the Nerd Font in system/hardware/fonts.nix. No note: nothing here needs more than this.
+# the Nerd Font in modules/nixos/hardware/fonts.nix. No note: nothing here needs more than this.
 { ... }:
 
 {

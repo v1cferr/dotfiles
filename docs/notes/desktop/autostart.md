@@ -1,7 +1,7 @@
 # The autostart panel, and Spotify's 4145 restarts
 
 `home/desktop/autostart.nix`. What OPENS along with the graphical session, in a single place. Edit
-true/false in the panel plus `rebuild`. It mirrors the idiom of `system/services/toggles.nix`
+true/false in the panel plus `rebuild`. It mirrors the idiom of `modules/nixos/services/toggles.nix`
 (`mkEnableOption` plus a gate), but for GUI APPS.
 
 ## The index: what comes up at boot lives in three places
@@ -9,7 +9,7 @@ true/false in the panel plus `rebuild`. It mirrors the idiom of `system/services
 | Place | For what | Why separate |
 | --- | --- | --- |
 | `my.autostart` (here) | GUI apps with no service of their own: Discord, Spotify, LocalSend | LocalSend has a NixOS module, but only for the package and the firewall; what BRINGS IT UP is this panel |
-| `my.services.<n>` | real services with a module or daemon (dropbox, jellyfin, ollama, sunshine, restic) | keys in `system/services/toggles.nix`, values in `hosts/<host>/services.nix` |
+| `my.services.<n>` | real services with a module or daemon (dropbox, jellyfin, ollama, sunshine, restic) | keys in `modules/nixos/services/toggles.nix`, values in `hosts/<host>/services.nix` |
 | `hypr/lua/autostart.lua` | session infrastructure that NEEDS the compositor's `exec-once`: hyprlock, quickshell, wl-clip-persist | only the compositor knows the right moment |
 
 hyprlock is the interesting case: the TRIGGER is still the `exec-once`, but hyprlock itself is a
@@ -66,7 +66,7 @@ require walking to the PC to open the app.
   into `~/.config/autostart` and would become a SECOND owner of the same automation (rule 15), with
   two instances fighting over port 53317.
 - The binary is `localsend_app`, and the package comes from the MODULE's option rather than
-  `pkgs.localsend`: if it ever becomes `unstable.localsend` in `system/`, the autostart follows on
+  `pkgs.localsend`: if it ever becomes `unstable.localsend` in `modules/nixos/`, the autostart follows on
   its own. It is the Spotify trap solved by construction instead of by attention.
 
 **Spotify**: `unstable.*` has to MATCH `home/packages.nix`, otherwise the autostart brings up the
@@ -77,6 +77,6 @@ autostart. A single owner, rule 15.
 
 ## Where the packages come from
 
-`home/packages.nix`, except LocalSend, whose owner is `system/net/localsend.nix` (the nixpkgs
+`home/packages.nix`, except LocalSend, whose owner is `modules/nixos/net/localsend.nix` (the nixpkgs
 module ties package and firewall together). Here we only REFERENCE the binary by store path, so it
 is not installed again and rule 4 holds.

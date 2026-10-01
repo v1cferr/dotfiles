@@ -1,5 +1,5 @@
 # The git CONFIG (~/.gitconfig): identity, preferences and gh as the credential helper. The binary
-# is system/'s (systemPackages). No note: the settings below are the whole story.
+# is modules/nixos/'s (systemPackages). No note: the settings below are the whole story.
 { config, lib, ... }:
 
 {

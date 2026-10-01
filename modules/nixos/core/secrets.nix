@@ -14,14 +14,14 @@ let
     ;
 
   # The public index: { "<name-in-sops>" = "<item-in-Bitwarden>"; ... }
-  bwMap = builtins.fromJSON (builtins.readFile ../../secrets/bitwarden-secrets.json);
+  bwMap = builtins.fromJSON (builtins.readFile ../../../secrets/bitwarden-secrets.json);
 
   # The keys secrets.yaml ACTUALLY holds. sops encrypts the values and leaves the
   # keys in plain text, so this is readable at eval time, with no age key and no
   # --impure.
   sopsKeys =
     let
-      lines = lib.splitString "\n" (builtins.readFile ../../secrets/secrets.yaml);
+      lines = lib.splitString "\n" (builtins.readFile ../../../secrets/secrets.yaml);
       declared = builtins.filter (line: builtins.match "[A-Za-z0-9_]+:.*" line != null) lines;
     in
     # "sops" is sops' own metadata block, not a secret.
@@ -42,12 +42,12 @@ let
       sops
       git
     ];
-    text = builtins.readFile ../../scripts/sync-secrets.sh; # bash in its own file = shellcheck at build time
+    text = builtins.readFile ../../../scripts/sync-secrets.sh; # bash in its own file = shellcheck at build time
   };
 in
 {
   # The age key (/var/lib/sops-nix/key.txt) stays OUT of git: it is what you carry on a cutover.
-  sops.defaultSopsFile = ../../secrets/secrets.yaml;
+  sops.defaultSopsFile = ../../../secrets/secrets.yaml;
   sops.age.keyFile = "/var/lib/sops-nix/key.txt";
 
   # One sops.secrets.<name> per index entry, merged with the hand-declared ones.

@@ -1,6 +1,6 @@
 # sunshine
 
-Module: [`system/services/sunshine.nix`](../../../system/services/sunshine.nix)
+Module: [`modules/nixos/services/sunshine.nix`](../../../modules/nixos/services/sunshine.nix)
 
 Screen streaming for Moonlight, over Hyprland/Wayland. It captures through wlr-screencopy and
 encodes on the Arc B580's AV1/HEVC encoder (VA-API). It replaced Tailscale as the remote access
@@ -220,7 +220,7 @@ these are the pieces that do NOT transfer:
 **The client's config is state, not config.** The paired hosts, the per-host resolution and the
 bitrate slider live in `~/.config/Moonlight Game Streaming Project`, which the app rewrites at
 runtime, so rule 14 says Nix declares the PACKAGE and nothing else. There is no client-side
-equivalent of `system/services/sunshine.nix`.
+equivalent of `modules/nixos/services/sunshine.nix`.
 
 **There is no codec to choose there, and the sentence that used to sit here was wrong.** It said
 "HEVC is the only step up available, turn it on in the client", reasoning from the hardware: an

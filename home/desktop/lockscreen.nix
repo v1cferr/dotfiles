@@ -55,13 +55,13 @@ let
     exit 0
   '';
 
-  # Monitors: the SSOT is system/desktop/monitors.nix (rule 11).
+  # Monitors: the SSOT is modules/nixos/desktop/monitors.nix (rule 11).
   primary = osConfig.my.monitors.primary; # the main one: blurred desktop plus login
   secondary = osConfig.my.monitors.secondary; # the secondary: static image plus a padlock
 
   # Colors from my.theme (palette.nix) plus the font from my.fonts.ui.
   palette = config.my.theme.palette; # the single source (home/desktop/palette.nix)
-  font = osConfig.my.fonts.ui; # SSOT (system/hardware/fonts.nix)
+  font = osConfig.my.fonts.ui; # SSOT (modules/nixos/hardware/fonts.nix)
   bg = "rgba(${palette.bg}d9)"; # the lock's background (d9 is ~85% opacity)
   fg = "rgb(${palette.text})";
   muted = "rgb(${palette.dim})";

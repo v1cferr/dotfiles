@@ -5,7 +5,7 @@ name: docs
 on:
   push:
     # EVERY push, no `paths` filter: the stats under /stats are counted from the WHOLE tree, so a
-    # push touching system/ changes them. The cost, a rebuild per push: docs/notes/repo/readme.md
+    # push touching modules/nixos/ changes them. The cost, a rebuild per push: docs/notes/repo/readme.md
     branches: [nixos]
   workflow_dispatch: # it allows running by hand from the Actions tab
 

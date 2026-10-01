@@ -1,6 +1,6 @@
 # The GPU: an Intel Arc B580 on `xe`
 
-`system/hardware/gpu.nix`. The machine is an i5-11400 plus an Arc B580 (Battlemage), on the open
+`modules/nixos/hardware/gpu.nix`. The machine is an i5-11400 plus an Arc B580 (Battlemage), on the open
 source `xe` driver plus Mesa. A SINGLE driver, declarative, with no CUDA.
 
 ## History
@@ -14,7 +14,7 @@ Ollama runs ON THIS GPU through Vulkan/Mesa ANV, so the Mesa here is a critical 
 only for games. See [`ollama.md`](../services/ollama.md).
 
 The Battlemage requirements are already satisfied: kernel 6.18 (needs >= 6.12), Mesa 25.x (needs
->= 24.3), redistributable firmware turned on (`system/hardware/hardware.nix`).
+>= 24.3), redistributable firmware turned on (`modules/nixos/hardware/hardware.nix`).
 Ref: <https://www.phoronix.com/review/intel-arc-b580-graphics-linux>
 
 ## The two boot details
@@ -47,7 +47,7 @@ MESA is NOT covered by that rule, and this is measured, not a guess: `libgbm` is
 If it is ever worth it, that is where it goes, with `package32 = pkgs.unstable.pkgsi686Linux.mesa`,
 IN THAT ORDER. Today it is not worth it: nixpkgs backports the point release into the release
 (mesa 26.1.5 vs 26.1.6, and the kernel and linux-firmware are IDENTICAL in both channels). For the
-kernel the lever is `linuxPackages_latest`, from stable itself; see `system/core/boot.nix`.
+kernel the lever is `linuxPackages_latest`, from stable itself; see `modules/nixos/core/boot.nix`.
 
 ## `iris` is broken for shader workloads
 

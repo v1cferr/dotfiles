@@ -1,8 +1,8 @@
 # duo-streak-daemon: the stack declared in Nix
 
-`system/services/duo.nix`. The app's stack (a Playwright daemon + API + web + Postgres) through
+`modules/nixos/services/duo.nix`. The app's stack (a Playwright daemon + API + web + Postgres) through
 Docker Compose, declared in Nix, brought up at boot by systemd. The solver is the host's NATIVE
-Ollama (`system/services/ollama.nix`), reached on `localhost:11434` through `network_mode: host`,
+Ollama (`modules/nixos/services/ollama.nix`), reached on `localhost:11434` through `network_mode: host`,
 exactly as the app was designed.
 
 ## Declarative end to end

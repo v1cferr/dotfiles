@@ -31,7 +31,7 @@ copying it only buys a second thing to forget.
 
 | Theme | Rules |
 | --- | --- |
-| Layout | 4 `system/` and `home/` apart |
+| Layout | 4 `modules/nixos/` and `home/` apart |
 | Reproducibility | 3 declarative, 8 validate first, 13 the lock pins, 21 zero warnings |
 | Ownership | 11 one source of truth, 14 one owner per artifact, 15 one owner per automation |
 | State and secrets | 6 state is not declared, 12 secrets are a separate layer |
@@ -63,7 +63,7 @@ never what the code already says. Whatever you touch, you shorten.
 scrolled past, with reasoning invisible to anyone reading `docs/`. It moved to notes, nothing
 deleted.
 
-**Enforced by**: `docs-links`, which fails on a module header in `system/` or `home/` longer than
+**Enforced by**: `docs-links`, which fails on a module header in `modules/nixos/` or `home/` longer than
 2 lines or with neither a `docs/` pointer nor a plain "No note"; `eval-metrics` warns when the Nix
 comment ratio passes its budget; the rest of the cap by review.
 
@@ -81,9 +81,9 @@ which bring a machine up from the config alone; the rest by review.
 
 **Detail**: [disaster recovery](guides/disaster-recovery.md).
 
-## 4. `system/` and `home/` apart
+## 4. `modules/nixos/` and `home/` apart
 
-System level (services, drivers, root packages) goes in `system/`; the app **and** its user
+System level (services, drivers, root packages) goes in `modules/nixos/`; the app **and** its user
 config go in `home/` (`programs.*` when there is a module, `home.packages` otherwise), and a
 package **MUST NOT** be in both. Inside each, every subject is a subfolder with its own
 `default.nix`, so adding a module is one line there and the top level never changes.
@@ -276,7 +276,7 @@ project's own agent file refines it and **MUST NOT** contradict it.
 day it is forgotten. Where it lives is [decision 0003](decisions/0003-agent-contract-in-managed-layer.md).
 
 **Enforced by**: the build, which generates `/etc/claude-code/CLAUDE.md` from
-`system/services/claude-code.nix`; `prose-style` refuses the trailer in every commit message.
+`modules/nixos/services/claude-code.nix`; `prose-style` refuses the trailer in every commit message.
 
 **Detail**: [the long form](notes/apps/claude-code.md#the-long-form-of-rule-18).
 

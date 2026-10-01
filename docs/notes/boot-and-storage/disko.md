@@ -37,7 +37,7 @@ NOT on yet, and `@persist` is born empty on purpose. Turning it on later becomes
 On a KC3000 (Phison E18, 800 TB TBW), CoW's write amplification is irrelevant at that volume, and
 zstd REDUCES writes on compressible data. CoW fragmentation only bothers a database or a VM image,
 and the `+C` for those cases is declared in
-[`system/hardware/btrfs.nix`](../../../system/hardware/btrfs.nix).
+[`modules/nixos/hardware/btrfs.nix`](../../../modules/nixos/hardware/btrfs.nix).
 
 ## The mount options, and why these
 
@@ -63,7 +63,7 @@ would multiply the used disk. Do not do it.
 
 **`discard=async`** has been the kernel default since 6.2, but it is EXPLICIT on purpose: it is
 what justifies `services.fstrim.enable = false` in
-[`system/hardware/btrfs.nix`](../../../system/hardware/btrfs.nix). A policy that depends on an
+[`modules/nixos/hardware/btrfs.nix`](../../../modules/nixos/hardware/btrfs.nix). A policy that depends on an
 implicit kernel default breaks silently on a bump, so if you take it out of here, turn fstrim back
 on in the same commit.
 
@@ -80,12 +80,12 @@ anyway. Leaving the options off `@swap` is honest bookkeeping, not the mechanism
 out of the future impermanence wipe.
 
 The consequence: the `/swapfile` `swapDevices` left
-[`system/hardware/hardware.nix`](../../../system/hardware/hardware.nix) (which is shared) and became
+[`modules/nixos/hardware/hardware.nix`](../../../modules/nixos/hardware/hardware.nix) (which is shared) and became
 a host matter, declared here by disko.
 
 ## `@snapshots` is top-level, and it is not born on a rebuild
 
-It holds the btrbk snapshots ([`system/services/btrbk.nix`](../../../system/services/btrbk.nix)). It
+It holds the btrbk snapshots ([`modules/nixos/services/btrbk.nix`](../../../modules/nixos/services/btrbk.nix)). It
 is a TOP-LEVEL subvolume and not a directory inside `@`, for two reasons: the impermanence
 rollback would wipe `@` and take along exactly the history that exists to save your skin, and
 outside `@home` restic never trips over it (otherwise it would back up every snapshot).
@@ -176,7 +176,7 @@ which creates it properly. The bug only appears on a FIRST boot after a fresh in
 precisely the disaster-recovery path: a machine restored from this repo would come up with an empty
 home and a broken home-manager, and self-heal only after one `switch`.
 
-THE FIX is in [`../../../system/core/users.nix`](../../../system/core/users.nix):
+THE FIX is in [`../../../modules/nixos/core/users.nix`](../../../modules/nixos/core/users.nix):
 `systemd.tmpfiles.rules` creates the home, because tmpfiles runs in STAGE 2, after `local-fs.target`
 and before `multi-user.target`. The path is read from `config.users.users.v1cferr.home` instead of
 being typed again (rule 11). Verified in the same VM: `/home/v1cferr` present on `@home`, nothing

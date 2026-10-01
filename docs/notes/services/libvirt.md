@@ -1,6 +1,6 @@
 # libvirt/KVM, and the Windows 11 guest
 
-`system/services/libvirt.nix` (the daemon) and `home/apps/virt-manager.nix` (the GUI). Two
+`modules/nixos/services/libvirt.nix` (the daemon) and `home/apps/virt-manager.nix` (the GUI). Two
 modules because rule 4 splits them: the daemon is system level, the window is the user's app.
 
 The reason it exists is a SANDBOX and not virtualisation as a hobby: a static review of a game

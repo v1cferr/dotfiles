@@ -4,7 +4,7 @@
 
 ## Why this exists, and why it is NOT more GC
 
-The Nix GC is already automatic (`system/core/core.nix`) and it works, but MEASURED on 30/07 it
+The Nix GC is already automatic (`modules/nixos/core/core.nix`) and it works, but MEASURED on 30/07 it
 covers **9% of the disk**: `/nix/store` held 58 GiB against 626 GiB used. REMEASURED on 30/08 the
 GC had done its job on its own, taking the store down to 46 GiB, and the share it covers fell to
 **7% of 664 GiB used**.

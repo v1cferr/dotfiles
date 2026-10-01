@@ -62,7 +62,7 @@ let
     # pt-BR title stays: the bookmark is matched by PATH, so renaming it would only diverge.
     {
       title = "Arch antigo";
-      path = osConfig.my.archAntigo.local; # SSOT: system/services/arch-legacy.nix (rule 11)
+      path = osConfig.my.archAntigo.local; # SSOT: modules/nixos/services/arch-legacy.nix (rule 11)
       icon = "folder-locked";
     }
     # APPEND, never insert: the KDE <ID> below comes from the INDEX, so a new entry in the middle

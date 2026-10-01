@@ -4,7 +4,7 @@
 
 {
   imports = [
-    ./packages.nix # the CENTRAL LIST of the user's apps/CLIs (it mirrors system/packages.nix)
+    ./packages.nix # the CENTRAL LIST of the user's apps/CLIs (it mirrors modules/nixos/packages.nix)
     ./shell # terminal, shell and dev CLI (zsh/starship/cli/kitty/git)
     ./desktop # Hyprland plus Wayland plus appearance (hypr/quickshell/lockscreen/theme/xdg…)
     ./apps # user apps WITH a config of their own (dropbox/media/dolphin/flameshot/mangohud)

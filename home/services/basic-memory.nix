@@ -63,7 +63,7 @@ let
   };
 in
 {
-  # The path's SSOT (rule 11); the ports and projects are the system's: system/services/basic-memory.nix
+  # The path's SSOT (rule 11); the ports and projects are the system's: modules/nixos/services/basic-memory.nix
   options.my.memory = {
     dir = lib.mkOption {
       type = lib.types.str;

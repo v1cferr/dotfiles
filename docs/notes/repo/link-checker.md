@@ -28,9 +28,9 @@ way to know that landed was to check all 274 afterwards.
 | --- | --- |
 | code (`.nix`, `.lua`, `.qml`, `.sh`, `.toml`, `.yaml`, `.yml`, `.ts`, `.tsx`, `.mjs`) | a bare `docs/…md` path, which is the form the headers use |
 | markdown | only a real `](target)` link, resolved against the file's own directory |
-| markdown outside `docs/history/` | a repo path quoted in prose, like `` `system/hardware/gpu.nix` `` |
+| markdown outside `docs/history/` | a repo path quoted in prose, like `` `modules/nixos/hardware/gpu.nix` `` |
 | a markdown link LEAVING `docs/` | the target must ALSO be git-tracked, because the site publishes it as a blob URL |
-| a `.nix` module under `system/` or `home/` (not `default.nix`) | its header: at most 2 comment lines, with a `docs/` pointer or a plain "No note" |
+| a `.nix` module under `modules/nixos/` or `home/` (not `default.nix`) | its header: at most 2 comment lines, with a `docs/` pointer or a plain "No note" |
 
 ### The header check: rule 2, enforced (30/09/2026)
 
@@ -60,7 +60,7 @@ site rather than in the working tree.
 A backticked path is the most common way these docs point at a module, and nothing was checking
 it. Added 16/08/2026, it raised the count from 336 references to 531 and found three stale ones on
 the first run. `docs/guides/bios-ex-b560m-v5.md` still pointed at a `gpu.nix` and a
-`hardware.nix` directly under `system/`, from before the reorganisation into categories, and
+`hardware.nix` directly under `modules/nixos/`, from before the reorganisation into categories, and
 `docs/ideas.md` referred to a `ddc.nix` that never survived: the DDC brightness curve was built
 and REVERTED.
 

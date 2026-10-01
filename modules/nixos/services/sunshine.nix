@@ -253,7 +253,7 @@ in
       encoder = "vaapi";
       # Not kms: kmsgrab does not enumerate on `xe`. The monitor is pinned by NAME, because
       # the TV enumerates first and Moonlight opened on the wrong screen.
-      output_name = config.my.monitors.primary; # SSOT: system/desktop/monitors.nix
+      output_name = config.my.monitors.primary; # SSOT: modules/nixos/desktop/monitors.nix
       # `wan` on purpose: the firewall decides the reach, not Sunshine. Since the direct path was
       # retired (19/08/2026) NOTHING is forwarded, so the panel only answers from the LAN and from
       # the tunnel. Do not read this value as "exposed": read the firewall.
@@ -333,8 +333,8 @@ in
     };
   };
 
-  # Diagnostics live in system/ next to what they diagnose (the healthcheck above lives here
-  # for the same reason): system/ is rescue, base and DIAGNOSTICS.
+  # Diagnostics live in modules/nixos/ next to what they diagnose (the healthcheck above lives here
+  # for the same reason): modules/nixos/ is rescue, base and DIAGNOSTICS.
   environment.systemPackages = lib.mkIf config.my.services.sunshine [ moonlightStats ];
 
   systemd.user.timers.sunshine-healthcheck = lib.mkIf config.my.services.sunshine {

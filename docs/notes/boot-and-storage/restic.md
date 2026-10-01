@@ -1,6 +1,6 @@
 # restic, and why the backup is gone
 
-Module: NONE since 24/09/2026. The service module under `system/services/` was deleted, and with
+Module: NONE since 24/09/2026. The service module under `modules/nixos/services/` was deleted, and with
 it the `restic` toggle, the `/mnt/backup` mountpoint and the `backup-browse` / `backup-verify`
 aliases.
 
@@ -71,7 +71,7 @@ The Arch one needs no `sudo` (the directory belongs to the user) and is normally
 `/mnt/arch-antigo`, which mounts it permanently: [arch-legacy](arch-legacy.md).
 
 The nixpkgs module used to generate a wrapper PER REPO, and that module left with the daily
-backup. The `restic` client in `system/packages.nix` is now the only way in, which is exactly why
+backup. The `restic` client in `modules/nixos/packages.nix` is now the only way in, which is exactly why
 it is declared there.
 
 **The two sops secrets STAY.** `restic_password` and `restic_password_arch_kingston` are not
@@ -204,7 +204,7 @@ says so.
    made so. Re-read the trash section above before trusting any retention setting.
 2. Bring back the module and the `restic` toggle. Git still holds the deleted file, with the
    excludes, the `--pack-size=128`, the retention and the prune ceiling already tuned:
-   `git log --diff-filter=D --name-only -- system/services/` finds the commit that removed it.
+   `git log --diff-filter=D --name-only -- modules/nixos/services/` finds the commit that removed it.
 3. Put `~/Drive`, `~/FAI-workstation` and `/mnt/arch-antigo` in `paths`' exclude list on day one,
    or read the FUSE section again the hard way.
 4. Give the Arch archive a SECOND copy while you are at it. Right now it has one, on a dying disk.

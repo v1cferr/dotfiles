@@ -10,7 +10,7 @@ had grown into **6062 comment lines out of 16634** across the tree, 36%, with on
 (`home/shell/claude-code.nix`) carrying a **123-line header**. A header that long stops being
 documentation and becomes a wall you scroll past to reach the code. Worse, none of that
 reasoning was reachable from `docs/`: to find out why Caddy has a jail, you had to already know
-to open `system/services/caddy.nix`.
+to open `modules/nixos/services/caddy.nix`.
 
 So the reasoning moved here instead of being deleted. The module keeps a 2-line header that says
 what it is and points at its page. After the sweep the tree is at **1601 comment lines out of
@@ -35,12 +35,12 @@ rule 16 applies in full, so a note that stops being true is a bug.
 ## Conventions
 
 - **Grouped by SUBJECT, not by repo path.** A mirror of the tree was measured and rejected: 16 of
-  the 51 pages cross the `system/` and `home/` boundary (arch-legacy, claude-code, monitors, theme,
+  the 51 pages cross the `modules/nixos/` and `home/` boundary (arch-legacy, claude-code, monitors, theme,
   restic, vpn, fonts and others) and 19 reference two or more modules. They cross because the
   ARTIFACT crosses, so a mirror would have to split a third of the pages or file them under a
   half-truth. The folder answers "where would I go looking", which is the question a reader
   actually has.
-- **The file name mirrors the module**, so `system/services/caddy.nix` becomes
+- **The file name mirrors the module**, so `modules/nixos/services/caddy.nix` becomes
   `network/caddy.md`. When a page covers several modules it takes the name of the SUBJECT
   (`desktop-plumbing.md`, `apps-and-mime.md`).
 - **A page is created only when there is something to say.** A module whose header compresses to

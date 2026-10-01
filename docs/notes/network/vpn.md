@@ -1,6 +1,6 @@
 # vpn
 
-Module: [`system/net/vpn.nix`](../../../system/net/vpn.nix)
+Module: [`modules/nixos/net/vpn.nix`](../../../modules/nixos/net/vpn.nix)
 
 The FAI and UFSCar VPNs, declarative and on demand. They do not come up at boot: the `vpn` CLI
 and the SUPER+N / SUPER+SHIFT+N / SUPER+CTRL+N binds turn them on and off. They are system

@@ -28,7 +28,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "docs-site";
   version = "0";
 
-  # ONLY what the site is built from, so a commit touching system/ does not rebuild it. The build
+  # ONLY what the site is built from, so a commit touching modules/nixos/ does not rebuild it. The build
   # outputs are subtracted by name: `maybeMissing` because a fresh clone has none of them.
   src = lib.fileset.toSource {
     root = ../.;

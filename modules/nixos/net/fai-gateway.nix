@@ -69,7 +69,7 @@ let
         exit 0
       fi
 
-      echo "fai-routes-check: system/net/fai-gateway.nix disagrees with the tunnel" >&2
+      echo "fai-routes-check: modules/nixos/net/fai-gateway.nix disagrees with the tunnel" >&2
       if [ -n "$missing" ]; then
         while IFS= read -r r; do
           echo "  ppp0 routes it, faiSubnets does not: $r" >&2

@@ -40,7 +40,7 @@ grep -c no-zygote "$(nix eval --raw \
 
 That conditional `fixupPhase` is the one thing that WOULD replace the phase, and it only applies
 when `wayland != null`. The option's default is `null`, meaning "rely on `$NIXOS_OZONE_WL`",
-which `system/desktop/desktop.nix` already sets to `1` for every Electron app on this machine.
+which `modules/nixos/desktop/desktop.nix` already sets to `1` for every Electron app on this machine.
 So leaving it alone keeps one owner for that decision AND keeps the fixup phase intact. Setting
 `wayland = true` would hardcode the ozone flags here and drop the phase that carries
 `--no-zygote`, which is a lot of damage for a flag that is already set system-wide.

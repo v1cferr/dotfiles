@@ -75,7 +75,7 @@
     };
 
     # Claude Code SKILLS from someone else's repo, delivered as MANAGED skills by
-    # system/services/claude-code.nix. flake = false: it is markdown, exposing no Nix outputs.
+    # modules/nixos/services/claude-code.nix. flake = false: it is markdown, exposing no Nix outputs.
     mattpocock-skills = {
       url = "github:mattpocock/skills";
       flake = false;
@@ -307,7 +307,7 @@
         }
         sops-nix.nixosModules.sops
         disko.nixosModules.disko # inert on hosts with no disko.devices
-        ./system
+        ./modules/nixos
 
         home-manager.nixosModules.home-manager
         {
@@ -319,7 +319,7 @@
       ];
 
       # A host = the COMMON modules plus its own FOLDER. hostname/disks/kernel/monitors/stateVersion
-      # and the my.services panel belong to the HOST; system/ only declares the options.
+      # and the my.services panel belong to the HOST; modules/nixos/ only declares the options.
       mkHost =
         hostModule:
         nixpkgs.lib.nixosSystem {
@@ -432,7 +432,7 @@
             };
 
           # WHAT GITHUB PAGES SERVES: the site plus the stats under /stats, joined here and not
-          # inside docs-site, whose src stays fenced to docs/ so a system/ commit does not rebuild it.
+          # inside docs-site, whose src stays fenced to docs/ so a modules/nixos/ commit does not rebuild it.
           pages = pkgs.runCommand "pages" { } ''
             cp -r ${pkgs.docs-site} $out
             chmod -R u+w $out
@@ -456,7 +456,7 @@
             name = "vm-boot";
             node.specialArgs = { inherit inputs; };
             # runNixOSTest pins the node's pkgs and makes `nixpkgs.*` READ-ONLY; this config sets
-            # both (the overlays here, allowUnfree in system/core), so the node builds its own.
+            # both (the overlays here, allowUnfree in modules/nixos/core), so the node builds its own.
             node.pkgsReadOnly = false;
             nodes.machine.imports = commonModules ++ [
               ./hosts/ex-b560m-v5

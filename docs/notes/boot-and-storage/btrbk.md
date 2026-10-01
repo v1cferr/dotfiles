@@ -1,6 +1,6 @@
 # btrbk: local snapshots of @home
 
-`system/services/btrbk.nix`. The minutes-scale "undo".
+`modules/nixos/services/btrbk.nix`. The minutes-scale "undo".
 
 ## It is NOT a backup
 

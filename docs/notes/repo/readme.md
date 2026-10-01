@@ -25,7 +25,7 @@ cannot run, so it lives where it already did: the gate's run summary, from
 [`eval-metrics`](eval-metrics.md).
 
 **The cost of the choice**: `docs.yml` used to fire only on a push touching the site, and now fires
-on every push, since a commit to `system/` changes the stats. That job keeps no store cache on
+on every push, since a commit to `modules/nixos/` changes the stats. That job keeps no store cache on
 purpose (a publishing job restoring a cache is zizmor's cache-poisoning finding), so each push
 rebuilds the site on the runner. The machine time is the trade for numbers that are never stale.
 

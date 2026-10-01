@@ -14,7 +14,7 @@ let
     ;
 
   # Python and not shell: the redaction is fail-safe per option, which sed would get wrong.
-  routerSyncPy = writeText "router-sync.py" (builtins.readFile ../../scripts/router-sync.py);
+  routerSyncPy = writeText "router-sync.py" (builtins.readFile ../../../scripts/router-sync.py);
 in
 {
   # The logic lives in the build (rule 7); openssh is explicit so it never uses the user's PATH.

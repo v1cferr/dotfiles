@@ -1,6 +1,6 @@
 # The MX Master 3S, logiops, and the boot race
 
-`system/hardware/mouse.nix`. A declarative configuration through logiops (the `logid` daemon),
+`modules/nixos/hardware/mouse.nix`. A declarative configuration through logiops (the `logid` daemon),
 which runs as a systemd service (root, so it reaches hidraw) and applies the config on hotplug.
 
 It is connected over Bluetooth (logiops 0.3.x already speaks HID++ over BT). If one day it is not

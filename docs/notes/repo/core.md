@@ -1,6 +1,6 @@
 # core
 
-Module: [`system/core/core.nix`](../../../system/core/core.nix)
+Module: [`modules/nixos/core/core.nix`](../../../modules/nixos/core/core.nix)
 
 Nix and flakes, the ceilings on disk growth, nix-ld and the locale. Everything here is about
 keeping something from growing without bound.

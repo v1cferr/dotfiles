@@ -45,7 +45,7 @@ where it stopped. Tested on this machine.
   that MEGA blocks part of the exit nodes.
 - `--proxy URL` takes any SINGLE proxy, a VPN's `socks5h://` for instance. **socks5h and not
   socks5**: the `h` makes the proxy resolve the DNS, since with plain socks5 the query goes out in
-  the clear, and the `SafeSocks` in `system/net/tor.nix` would refuse the connection anyway.
+  the clear, and the `SafeSocks` in `modules/nixos/net/tor.nix` would refuse the connection anyway.
 
 The Tor circuit probe is NOT a safety net: megadl with `--proxy` does not fall back to a direct
 connection. It is there to know WHERE it goes out (the exit IP) and to fail with the right cause

@@ -11,7 +11,7 @@ recorded traces back to one of them having two owners, or none.
 Moved here VERBATIM from [rules.md](../../rules.md) on 30/09/2026, when rule 11 became a
 card. Nothing was cut; the card links back here.
 
-SSOT ALWAYS: a value repeated in 2+ places becomes a `my.<domain>.<thing>` option and a consumer NEVER holds a literal. Today those are `my.theme.name`/`.palette` (colors, rule 9), `my.fonts.ui` (font, rule 10) and `my.services.<n>` (optional services). The option lives at the LOWEST level that needs it: if any module in `system/` consumes it, it is a system option and `home/` reads it through `osConfig`. The opposite does NOT exist (a system module cannot read a home-manager option). A HOT-RELOAD consumer (Quickshell/Hyprland) does not accept Nix interpolation, because the tree is a symlink: the module GENERATES a data file (JSON/Lua) that it reads, and then the only legitimate literal is the "file was missing" fallback. VALIDATE by swapping the option for a SENTINEL: rebuild, check that ALL consumers changed, revert and check that the store path came back identical.
+SSOT ALWAYS: a value repeated in 2+ places becomes a `my.<domain>.<thing>` option and a consumer NEVER holds a literal. Today those are `my.theme.name`/`.palette` (colors, rule 9), `my.fonts.ui` (font, rule 10) and `my.services.<n>` (optional services). The option lives at the LOWEST level that needs it: if any module in `modules/nixos/` consumes it, it is a system option and `home/` reads it through `osConfig`. The opposite does NOT exist (a system module cannot read a home-manager option). A HOT-RELOAD consumer (Quickshell/Hyprland) does not accept Nix interpolation, because the tree is a symlink: the module GENERATES a data file (JSON/Lua) that it reads, and then the only legitimate literal is the "file was missing" fallback. VALIDATE by swapping the option for a SENTINEL: rebuild, check that ALL consumers changed, revert and check that the store path came back identical.
 
 ## The former rule 9
 
@@ -23,7 +23,7 @@ Everything in the TokyoNight theme, centralized in a Nix PALETTE of my own (`hom
 
 Moved here VERBATIM from rules.md on 30/09/2026, when it was folded into rule 11.
 
-The UI FONT has its OWN SSOT, separate from the colors: `my.fonts.ui` in `system/hardware/fonts.nix` (next to the package, because a font is system level, rule 4; and fontconfig also needs the name, and a system module cannot read a home-manager option). Changing the font = 1 line + the package. A user-side consumer reads it through `osConfig.my.fonts.ui`, never as a literal.
+The UI FONT has its OWN SSOT, separate from the colors: `my.fonts.ui` in `modules/nixos/hardware/fonts.nix` (next to the package, because a font is system level, rule 4; and fontconfig also needs the name, and a system module cannot read a home-manager option). Changing the font = 1 line + the package. A user-side consumer reads it through `osConfig.my.fonts.ui`, never as a literal.
 
 ## The long form of rule 14
 

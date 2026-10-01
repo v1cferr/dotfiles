@@ -1,6 +1,6 @@
 // remark-repo-links: it makes the repo's own links work on a site that only serves docs/.
 //
-// A page links to the module it documents (`../../../system/services/caddy.nix`), and 140 of those
+// A page links to the module it documents (`../../../modules/nixos/services/caddy.nix`), and 140 of those
 // targets sit outside docs/, where the site has nothing to serve. This resolves every relative
 // target against the page's own directory, the same rule `docs-links` applies, and the ones that
 // escape docs/ become blob URLs on GitHub. The markdown on disk is never touched, so the same link

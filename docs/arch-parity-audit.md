@@ -63,15 +63,15 @@ does not read them as paths that should exist on this branch.
 | `main:hypr/` (37 files) | [`home/desktop/hypr.nix`](../home/desktop/hypr.nix) plus 7 Lua files. Two deltas, below |
 | `main:quickshell/` (17) | [`home/desktop/quickshell.nix`](../home/desktop/quickshell.nix) plus 25 QML files, a superset |
 | `main:vscode/` (8) | [`home/apps/vscode.nix`](../home/apps/vscode.nix): settings, keybindings, MCP and the extension mirror |
-| `main:netextender/` (12) | [`system/net/vpn.nix`](../system/net/vpn.nix) (nxBender) plus [`system/net/fai-gateway.nix`](../system/net/fai-gateway.nix); the WoL scripts became `wake-workstation` |
+| `main:netextender/` (12) | [`modules/nixos/net/vpn.nix`](../modules/nixos/net/vpn.nix) (nxBender) plus [`modules/nixos/net/fai-gateway.nix`](../modules/nixos/net/fai-gateway.nix); the WoL scripts became `wake-workstation` |
 | `main:networkmanager/` | The UFSCar profile became openconnect/GlobalProtect in the same `vpn.nix` |
-| `main:fail2ban/` (5) | [`system/net/network.nix`](../system/net/network.nix) plus the generated jail in [`system/services/caddy.nix`](../system/services/caddy.nix) |
+| `main:fail2ban/` (5) | [`modules/nixos/net/network.nix`](../modules/nixos/net/network.nix) plus the generated jail in [`modules/nixos/services/caddy.nix`](../modules/nixos/services/caddy.nix) |
 | `main:ssh/` (4) | `network.nix` (port 2222, now with TOTP) plus [`home/shell/ssh.nix`](../home/shell/ssh.nix) |
 | `main:caddy/` (3) | `caddy.nix`, with the vhosts GENERATED from `my.ingress`. The subdomain SET is smaller, see Partial |
 | `main:wireguard/` | [`router/uci/`](../router/uci/network.conf), because the tunnel moved to the router |
-| `main:system/` (14) | [`system/core/core.nix`](../system/core/core.nix) (locale, timezone, `br-abnt2`), `hostName` per host, [`system/core/boot.nix`](../system/core/boot.nix) |
-| `main:swap/` | `zramSwap.enable` in [`system/hardware/hardware.nix`](../system/hardware/hardware.nix) |
-| `main:fontconfig/` | [`system/hardware/fonts.nix`](../system/hardware/fonts.nix), a superset: CJK plus corefonts plus vista-fonts |
+| `main:system/` (14) | [`modules/nixos/core/core.nix`](../modules/nixos/core/core.nix) (locale, timezone, `br-abnt2`), `hostName` per host, [`modules/nixos/core/boot.nix`](../modules/nixos/core/boot.nix) |
+| `main:swap/` | `zramSwap.enable` in [`modules/nixos/hardware/hardware.nix`](../modules/nixos/hardware/hardware.nix) |
+| `main:fontconfig/` | [`modules/nixos/hardware/fonts.nix`](../modules/nixos/hardware/fonts.nix), a superset: CJK plus corefonts plus vista-fonts |
 | `main:gtk-3.0/`, `main:gtk-4.0/` | [`home/desktop/theme.nix`](../home/desktop/theme.nix) plus [`home/desktop/palette.nix`](../home/desktop/palette.nix) |
 | `main:rofi/` | [`home/desktop/launcher.nix`](../home/desktop/launcher.nix) plus [`home/desktop/clipboard.nix`](../home/desktop/clipboard.nix), themed from the palette |
 | `main:kitty/` | [`home/shell/kitty.nix`](../home/shell/kitty.nix). Small deltas, below |
@@ -80,10 +80,10 @@ does not read them as paths that should exist on this branch.
 | `main:fastfetch/` | [`home/shell/fastfetch.nix`](../home/shell/fastfetch.nix) |
 | `main:flameshot/` | [`home/apps/flameshot.nix`](../home/apps/flameshot.nix), with the `sc1`/`sc2` aliases by monitor NAME |
 | `main:mpv/` | `programs.mpv` in [`home/apps/media.nix`](../home/apps/media.nix) |
-| `main:uv/` | The package in [`system/packages.nix`](../system/packages.nix); the receipt is state (rule 6) |
+| `main:uv/` | The package in [`modules/nixos/packages.nix`](../modules/nixos/packages.nix); the receipt is state (rule 6) |
 | `main:autostart/` | [`home/apps/dropbox.nix`](../home/apps/dropbox.nix) plus [`home/desktop/autostart.nix`](../home/desktop/autostart.nix), one unit per app |
 | `main:claude/` | `claude-desktop-fhs` in [`home/packages.nix`](../home/packages.nix) |
-| `main:.claude/` | [`.claude/settings.json`](../.claude/settings.json), plus the managed layer of [`system/services/claude-code.nix`](../system/services/claude-code.nix) |
+| `main:.claude/` | [`.claude/settings.json`](../.claude/settings.json), plus the managed layer of [`modules/nixos/services/claude-code.nix`](../modules/nixos/services/claude-code.nix) |
 | The root `.md` files | The whole of [docs/](README.md). `ANOTACOES.md` was 1949 lines and became this tree |
 
 ### Replaced
@@ -95,11 +95,11 @@ Same job, a different tool, and each one has its reasoning already recorded:
 | `main:waybar/` (23) | The Quickshell bar | The port happened while still on Arch; the bar is QML now |
 | `main:swaync/` | Quickshell's notification service | One daemon fewer, and it is already the tray owner |
 | `main:xsettingsd/` | `gtk` plus `dconf` in `theme.nix` | The idiomatic home-manager path; no X11 daemon |
-| `main:greetd/` (7) | LightDM plus autologin in [`system/desktop/desktop.nix`](../system/desktop/desktop.nix) | Sunshine captures a LIVE session, so the machine has to log itself in |
+| `main:greetd/` (7) | LightDM plus autologin in [`modules/nixos/desktop/desktop.nix`](../modules/nixos/desktop/desktop.nix) | Sunshine captures a LIVE session, so the machine has to log itself in |
 | `main:kwallet/` | gnome-keyring in the same `desktop.nix` | It is the `org.freedesktop.secrets` provider VS Code asks for |
-| `main:openrazer/` | hidraw plus `razer-dpi` in [`system/hardware/razer.nix`](../system/hardware/razer.nix) | openrazer does not build on kernel 7.1 or newer |
+| `main:openrazer/` | hidraw plus `razer-dpi` in [`modules/nixos/hardware/razer.nix`](../modules/nixos/hardware/razer.nix) | openrazer does not build on kernel 7.1 or newer |
 | `main:cloudflare-ddns/` (4) | `ddns-scripts` on the router, [`router/uci/ddns.conf`](../router/uci/ddns.conf) | The anchor stopped depending on this machine being awake |
-| `main:docker/` | [`system/services/docker.nix`](../system/services/docker.nix), the prune policy | The only content was the nvidia runtime, and the GPU is an Arc now |
+| `main:docker/` | [`modules/nixos/services/docker.nix`](../modules/nixos/services/docker.nix), the prune policy | The only content was the nvidia runtime, and the GPU is an Arc now |
 | `main:bash/` | zsh as the login shell | `.bashrc` was already vestigial |
 
 ### Dropped on purpose
@@ -122,9 +122,9 @@ and never existed over there.
 | Subdomain | Port | On NixOS |
 | --- | --- | --- |
 | `jellyfin` | 8096 | Yes, and NATIVE now instead of a container |
-| `torrent` | 8080 | Yes, native ([`system/services/qbittorrent.nix`](../system/services/qbittorrent.nix)) |
-| `ai` | 11434 | Yes, `expose = "lan"` ([`system/services/ollama.nix`](../system/services/ollama.nix)) |
-| `duo` | 3010 | Yes ([`system/services/duo.nix`](../system/services/duo.nix)) |
+| `torrent` | 8080 | Yes, native ([`modules/nixos/services/qbittorrent.nix`](../modules/nixos/services/qbittorrent.nix)) |
+| `ai` | 11434 | Yes, `expose = "lan"` ([`modules/nixos/services/ollama.nix`](../modules/nixos/services/ollama.nix)) |
+| `duo` | 3010 | Yes ([`modules/nixos/services/duo.nix`](../modules/nixos/services/duo.nix)) |
 | `chat` | 3000 | No. open-webui |
 | `jellyseerr` | 5055 | No |
 | `prowlarr` | 9696 | No |
@@ -179,7 +179,7 @@ gone by policy, since toolchains live in a devShell reached by direnv now.
 
 | Script | Status |
 | --- | --- |
-| `vpn`, `vpn-off` | The `vpn` CLI in `system/net/vpn.nix`, and it needs no password (polkit) |
+| `vpn`, `vpn-off` | The `vpn` CLI in `modules/nixos/net/vpn.nix`, and it needs no password (polkit) |
 | `wake-fai` | `wake-workstation` in [`home/net/fai-workstation.nix`](../home/net/fai-workstation.nix), with three WoL paths instead of one |
 | `dark-mode`, `tokyo-night` | Obsolete by construction: the theme is a Nix palette applied at build time (rule 11, decision 0001) |
 | `hypr-quick` | Missing. Mostly subsumed by the binds, EXCEPT its wallpaper actions |

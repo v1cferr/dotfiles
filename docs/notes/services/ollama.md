@@ -1,6 +1,6 @@
 # Ollama on the Arc B580
 
-`system/services/ollama.nix`. A runtime for local models, on the GPU through Vulkan
+`modules/nixos/services/ollama.nix`. A runtime for local models, on the GPU through Vulkan
 (`pkgs.ollama-vulkan`).
 
 ## Acceleration is a package choice now
@@ -12,7 +12,7 @@ used to run here without anyone noticing.
 
 ## Why Vulkan and not SYCL/oneAPI/ipex-llm
 
-Vulkan talks to Mesa ANV, which is already on the system (`system/hardware/gpu.nix`) and is the
+Vulkan talks to Mesa ANV, which is already on the system (`modules/nixos/hardware/gpu.nix`) and is the
 SAME driver as the rest of the desktop: zero new dependencies, zero hand packaging. The SYCL path
 would mean packaging Intel's fork (ipex-llm), which is not in nixpkgs.
 

@@ -27,7 +27,7 @@ writers.writePython3Bin "docs-links"
     # A repo path inside backticks. The leading `(?<![:\w/])` keeps `Foundry:hosts/...` out, which
     # is how a path in another repo is written so it does not read as one of ours.
     PROSEPATH = re.compile(
-        r"`(?<![:\w/])((?:system|home|pkgs|hosts|scripts|secrets|ci|router)"
+        r"`(?<![:\w/])((?:modules|home|pkgs|hosts|scripts|secrets|ci|router)"
         r"/[A-Za-z0-9_./-]+\.(?:nix|sh|py|lua|qml|json|txt|conf|yaml))`"
     )
 
@@ -96,9 +96,9 @@ writers.writePython3Bin "docs-links"
                     if not out.startswith("docs" + os.sep) and out not in known:
                         broken.append((rel, target, "untracked"))
 
-            # 4. Rule 2's header: a module in system/ or home/ opens with at most 2 comment lines,
+            # 4. Rule 2's header: a module in modules/nixos/ or home/ opens with at most 2 comment lines,
             # holding its docs/ pointer or a plain "No note". An aggregator default.nix is exempt.
-            if rel.startswith(("system/", "home/")) and rel.endswith(".nix") and not rel.endswith("default.nix"):
+            if rel.startswith(("modules/nixos/", "home/")) and rel.endswith(".nix") and not rel.endswith("default.nix"):
                 header = []
                 for line in text.splitlines():
                     if not line.startswith("#"):

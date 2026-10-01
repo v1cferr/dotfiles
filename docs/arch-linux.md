@@ -25,7 +25,7 @@ The folder on the Drive was renamed from `KINGSTON` to **`ARCH-KINGSTON`** on 05
 bookmark in Dolphin. What mounts it is the user unit `arch-antigo-mount`
 ([`home/services/arch-legacy-mount.nix`](../home/services/arch-legacy-mount.nix)); the
 mountpoint and the SSOT of the path belong to the system side
-([`system/services/arch-legacy.nix`](../system/services/arch-legacy.nix)). The
+([`modules/nixos/services/arch-legacy.nix`](../modules/nixos/services/arch-legacy.nix)). The
 `arch-browse` alias died along with it, and an empty folder here became a symptom rather
 than a normal state:
 

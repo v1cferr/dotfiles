@@ -91,7 +91,7 @@ that survive. The exclusion list, and where each entry comes from:
 
 | Excluded | Why |
 | --- | --- |
-| `192.168.90.0/24`, `.100`, `.110`, `.130`, `.223` | The FAI ranges already listed in `system/net/fai-gateway.nix` |
+| `192.168.90.0/24`, `.100`, `.110`, `.130`, `.223` | The FAI ranges already listed in `modules/nixos/net/fai-gateway.nix` |
 | `200.136.209.128/25` | FAI too, and it contains the workstation `.229` and the DNS `.247`/`.252` |
 | `200.136.204.0/23` | The work PC's own subnet, from the RDAP query of 19/08/2026 |
 
@@ -118,7 +118,7 @@ is what forced the endpoint to stop being `ssh.v1cferr.dev`: see the split-DNS t
 
 ## 4. What to do with the result
 
-Today `packet_size = 1024` in `system/services/sunshine.nix`. It was calibrated for the
+Today `packet_size = 1024` in `modules/nixos/services/sunshine.nix`. It was calibrated for the
 **1280** MTU of the old `tailscale0`, leaving 256 bytes of headroom. That MTU no longer exists
 anywhere, and with 1420 MEASURED the arithmetic is no longer a guess:
 

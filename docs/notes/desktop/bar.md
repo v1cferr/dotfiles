@@ -282,7 +282,7 @@ Three flags carry weight: `-O` emits "no answer yet" at timeout, and without it 
 be SILENCE and the series would only hold the ones that came back, an eternal 0% loss; `-n` skips
 DNS; `-W 1` matches the 1 s interval.
 
-**WHAT DISCOVERS THE TARGET is the CLI** (`system/net/vpn.nix`): sweeping routes and testing
+**WHAT DISCOVERS THE TARGET is the CLI** (`modules/nixos/net/vpn.nix`): sweeping routes and testing
 candidates is shell work, while observing all the time is the work of whoever stays open. With no
 target this probe simply does not come up and the panel says "no probe".
 

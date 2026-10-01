@@ -1,6 +1,6 @@
 # GradRadar: the stack at boot and the monitor on a timer
 
-`system/services/grad-radar.nix`. The app stack (Next.js + FastAPI + Postgres) comes up at BOOT,
+`modules/nixos/services/grad-radar.nix`. The app stack (Next.js + FastAPI + Postgres) comes up at BOOT,
 and the call-for-applications chain runs on a timer: collect, re-evaluate the schedule, notify.
 
 ## The problem this solves

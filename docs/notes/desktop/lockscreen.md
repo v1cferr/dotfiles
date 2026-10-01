@@ -20,10 +20,10 @@ durable into 2032+).
 ## The folder rule
 
 USER apps go to `home/`. `programs.hyprlock` installs hyprlock and `services.hypridle` brings the
-daemon up (`systemd --user`, like hyprsunset), which is why hypridle left `system/packages.nix`.
+daemon up (`systemd --user`, like hyprsunset), which is why hypridle left `modules/nixos/packages.nix`.
 
-PAM (`system/desktop/desktop.nix`) is MANDATORY: without it hyprlock does not authenticate and
-LOCKS YOU OUT. The `pt_BR` locale (`system/core/core.nix`) is for the clock's spelled-out date.
+PAM (`modules/nixos/desktop/desktop.nix`) is MANDATORY: without it hyprlock does not authenticate and
+LOCKS YOU OUT. The `pt_BR` locale (`modules/nixos/core/core.nix`) is for the clock's spelled-out date.
 
 ## Language: a deliberate exception
 
@@ -179,7 +179,7 @@ git and they bump along with nixpkgs. `blur_passes` was eased from 3 to 2 so the
 more while the widgets stay legible, and `brightness = 0.40` is dark enough for the clock and quote
 without hiding the image.
 
-The monitors come from the SSOT (`system/desktop/monitors.nix`, rule 11): the primary gets the
+The monitors come from the SSOT (`modules/nixos/desktop/monitors.nix`, rule 11): the primary gets the
 blurred desktop plus the login, the secondary gets a static image plus a discreet padlock.
 The colors come from `my.theme` and the font from `my.fonts.ui`.
 

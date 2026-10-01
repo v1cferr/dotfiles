@@ -5,7 +5,7 @@
   imports = [
     ./dropbox.nix # the user's sync service (~/Dropbox: Obsidian plus docs)
     ./media.nix # viewers (Gwenview/Okular) plus players (VLC/mpv) plus the default apps
-    ./office.nix # ONLYOFFICE: the default for .docx/.xlsx/.pptx/ODF (the MS fonts are in system/)
+    ./office.nix # ONLYOFFICE: the default for .docx/.xlsx/.pptx/ODF (the MS fonts are in modules/nixos/)
     ./dolphin.nix # Dolphin: the view mode always "Details" (through activation)
     ./vscode.nix # VS Code: the package plus versioned settings/keybindings (hot-reload through a symlink)
     ./flameshot.nix # ~/.config/flameshot/flameshot.ini (screenshots; the keybind is in hypr.nix)
@@ -16,6 +16,6 @@
     ./bottles.nix # Bottles: the package plus the library each bottle lists (through activation)
     ./spotify.nix # Spotify through spicetify (the theme, and the package the autostart reads)
     ./zen.nix # Zen: the browser plus the launch guard (a locked screen closes it)
-    ./virt-manager.nix # the libvirt GUI (the daemon is in system/services/libvirt.nix)
+    ./virt-manager.nix # the libvirt GUI (the daemon is in modules/nixos/services/libvirt.nix)
   ];
 }

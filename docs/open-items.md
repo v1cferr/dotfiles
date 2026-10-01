@@ -64,7 +64,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
         starts writing to this repo.
 
 - [ ] The page count in `docs/notes/README.md` has drifted (measured 23/08/2026). The Conventions
-      section says "16 of the 51 pages cross the `system/` and `home/` boundary", and there are 58
+      section says "16 of the 51 pages cross the `modules/nixos/` and `home/` boundary", and there are 58
       pages today. The number is not decoration, it is the measurement that REJECTED mirroring the
       tree, so fixing it means recounting both halves (how many pages cross, how many reference two
       or more modules) and not just editing the total. Left as an item instead of a blind edit,
@@ -130,7 +130,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
         guessing.
       • HOW TO CLOSE IT: connect (`vpn connect ufscar`), look at `ip -4 route show dev tun0`,
         ping candidates with `ping -I tun0 <ip>` and pin whichever answers in
-        `probe_candidates()`, in `system/net/vpn.nix`, together with the measurement, the way
+        `probe_candidates()`, in `modules/nixos/net/vpn.nix`, together with the measurement, the way
         the FAI one is.
 
 - [ ] WireGuard peer `fai-workstation` (10.10.10.5): alive or legacy? (opened on 10/08/2026)
@@ -170,7 +170,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
       compromise dies with the next power cut. Everything the audit fixed is PREVENTION; there is
       currently no DETECTION at all on this device.
       • THE FIX IS NOT A `uci set`: it is `log_ip='192.168.1.10'` plus a syslog receiver on the
-        desktop, which is a NixOS module and belongs in `system/net/`. The router half is one
+        desktop, which is a NixOS module and belongs in `modules/nixos/net/`. The router half is one
         line and the useful half is the other one.
       • THE TRAP TO SIZE FIRST: the desktop is also the DNAT target for 80/443/2222, so a log
         pipe from the router into it is a service listening on the LAN, and it has to refuse
@@ -266,7 +266,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
         feature lands, so it has to move to /persist and be declared. That is the work, not a
         bug.
         `/var/lib/sbctl` IS FIRST ON THE LIST and the only one that makes the machine NOT
-        BOOT if it is forgotten: those are the Secure Boot keys (see system/core/secureboot.nix).
+        BOOT if it is forgotten: those are the Secure Boot keys (see modules/nixos/core/secureboot.nix).
         Without them the next switch does not sign GRUB, and with Secure Boot on the firmware
         refuses the bootloader. Recovery = turn SB off in the BIOS + `sbctl create-keys` +
         `enroll-keys -m` again, with the BIOS in Setup Mode. Declare it BEFORE turning the
@@ -283,7 +283,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
       `Foundry:hosts/common/optional/ephemeral-btrfs.nix` (the wipe) and
       `Foundry:hosts/common/global/optin-persistence.nix` (the list). The rest of the persistence is
       DISTRIBUTED: each service module declares what it needs to keep (openssh.nix, podman.nix,
-      jellyfin.nix...). That is the pattern to copy, and it matches system/services/*.nix.
+      jellyfin.nix...). That is the pattern to copy, and it matches modules/nixos/services/*.nix.
       `/srv` IS THE BIGGEST RISK, and it was not written down: it is NOT a subvolume, it lives
       in `@`, and it is where the Jellyfin library lives (132 GiB). Foundry persists `/srv`
       explicitly. Turning the ephemeral root on without that ERASES the library on the first
@@ -384,7 +384,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
         PRUNE BEFORE the new account proves it walks: until the FAI `/login` happens, those
         leftovers are the only place where that account's state exists. And NEVER touch
         `projects/`, which is the archive, the target of both accounts' symlinks.
-      (A third bullet lived here until 16/08/2026: the header of `system/services/claude-code.nix`
+      (A third bullet lived here until 16/08/2026: the header of `modules/nixos/services/claude-code.nix`
       claimed the user's `settings.json` "CANNOT become a symlink", which read as contradicting
       the module that links it. The rule 2 sweep rewrote that header, so the drift is gone.)
 

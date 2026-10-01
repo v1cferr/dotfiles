@@ -73,7 +73,7 @@ in
   environment.etc."claude-code/CLAUDE.md".text = ''
     # Rules for every project on this machine
 
-    Managed memory, declared in `system/services/claude-code.nix`. It holds for every
+    Managed memory, declared in `modules/nixos/services/claude-code.nix`. It holds for every
     account and every repository, and a project's own `CLAUDE.md` refines it instead of
     contradicting it. Changing a rule here means editing that module and rebuilding, never
     editing this file.

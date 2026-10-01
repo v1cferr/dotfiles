@@ -51,7 +51,7 @@ writers.writePython3Bin "dead-config"
 
 
     def check_modules(files, _code):
-        """A .nix under system/ or home/ that no `imports` reaches is a file nobody evaluates."""
+        """A .nix under modules/nixos/ or home/ that no `imports` reaches is a file nobody evaluates."""
         nix = {f: read(f) for f in files if f.endswith(".nix")}
 
         def imports_of(f):
@@ -68,7 +68,7 @@ writers.writePython3Bin "dead-config"
                             break
             return found
 
-        roots = ["system/default.nix", "home/default.nix"]
+        roots = ["modules/nixos/default.nix", "home/default.nix"]
         roots += [f for f in nix if f.startswith("hosts/")]
         seen, stack = set(), list(roots)
         while stack:
@@ -140,7 +140,7 @@ writers.writePython3Bin "dead-config"
     def check_secret_index(_files, _code):
         """An index entry with no value in the vault breaks the BUILD, not the evaluation.
 
-        `system/core/secrets.nix` turns every key of bitwarden-secrets.json into a
+        `modules/nixos/core/secrets.nix` turns every key of bitwarden-secrets.json into a
         `sops.secrets.<name>`, so the index is a DECLARATION and the yaml is the VALUE. Deleting
         from one side only gets you `sops-install-secrets: the key '<name>' cannot be found`, and
         it surfaces at `nixos-rebuild`, which is a much slower loop than a pre-commit hook.

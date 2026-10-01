@@ -1,6 +1,6 @@
 # The desktop: Hyprland, autologin, portals, keyring
 
-`system/desktop/desktop.nix`. A Wayland compositor. LightDM (an X11 greeter) launches the Hyprland
+`modules/nixos/desktop/desktop.nix`. A Wayland compositor. LightDM (an X11 greeter) launches the Hyprland
 session; Xwayland covers X11 apps.
 
 Careful: in a Wayland session the keyboard and the monitors do NOT come from the system's

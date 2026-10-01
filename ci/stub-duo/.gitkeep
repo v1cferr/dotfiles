@@ -5,7 +5,7 @@ It exists because Nix fetches ALL the inputs locked in the lock file when evalua
   nix flake check --override-input duo-streak-daemon path:./ci/stub-duo
 the input is swapped BEFORE the fetch and no key enters the CI.
 
-Empty is enough because the only consumer (system/services/duo.nix) uses the input purely as
+Empty is enough because the only consumer (modules/nixos/services/duo.nix) uses the input purely as
 Docker build CONTEXT (`context: ${duoSrc}`), which is path interpolation, with no readFile at
 evaluation time. If the module ever starts READING a file from the repo, the corresponding file
 has to exist here (empty) or the check breaks.

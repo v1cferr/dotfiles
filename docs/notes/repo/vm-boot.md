@@ -59,12 +59,12 @@ another machine:
 
 `node.pkgsReadOnly = false` is needed because `runNixOSTest` pins the node's `pkgs` and makes the
 `nixpkgs.*` options read-only, while this config sets both `nixpkgs.overlays` (in `flake.nix`) and
-`nixpkgs.config.allowUnfree` (in `system/core/core.nix`). Without it the eval dies on
+`nixpkgs.config.allowUnfree` (in `modules/nixos/core/core.nix`). Without it the eval dies on
 "nixpkgs.config is set to read-only".
 
 ## What it found on the first run, before it ever booted
 
-**`my.services.jellyfin = false` did not evaluate.** `system/services/jellyfin.nix` declared
+**`my.services.jellyfin = false` did not evaluate.** `modules/nixos/services/jellyfin.nix` declared
 `users.users.jellyfin.extraGroups` OUTSIDE the toggle, so with the service off the user was
 half-declared and the assertion fired: "Exactly one of isSystemUser and isNormalUser must be set".
 The panel in `hosts/<host>/services.nix` was offering a switch that did not work, and nothing could

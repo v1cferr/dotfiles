@@ -41,7 +41,7 @@ LibreOffice is the NixOS community's default and has more features (Draw, Base, 
 native in ODF and CONVERTS OOXML, losing fidelity on a complex document. Switching is 1 line plus
 the defaults.
 
-**The fonts come from `system/hardware/fonts.nix`** (corefonts plus vista-fonts). The package is a
+**The fonts come from `modules/nixos/hardware/fonts.nix`** (corefonts plus vista-fonts). The package is a
 `buildFHSEnv` and `/etc/fonts` comes from the HOST (`build-fhsenv-bubblewrap`), so the system's
 fontconfig already sees them. There is NO need for the "copy the .ttf into
 `~/.local/share/fonts`" that the NixOS wiki tells you to do by hand (rule 3). See

@@ -1,15 +1,15 @@
 # btrfs policy
 
-`system/hardware/btrfs.nix` is the SSOT of btrfs POLICY. The division of labor, so nobody looks in
+`modules/nixos/hardware/btrfs.nix` is the SSOT of btrfs POLICY. The division of labor, so nobody looks in
 the wrong place:
 
 | Concern | Where |
 | --- | --- |
 | LAYOUT (subvolumes, mount options) | `hosts/<host>/disko.nix` |
-| POLICY (scrub, alarm, reclaim) | `system/hardware/btrfs.nix` |
-| SNAPSHOTS (retention, schedule) | `system/services/btrbk.nix` |
+| POLICY (scrub, alarm, reclaim) | `modules/nixos/hardware/btrfs.nix` |
+| SNAPSHOTS (retention, schedule) | `modules/nixos/services/btrbk.nix` |
 
-It is machine-agnostic on purpose (it lives in `system/`, not in `hosts/`): everything is behind
+It is machine-agnostic on purpose (it lives in `modules/nixos/`, not in `hosts/`): everything is behind
 the `is the root btrfs?` guard, so a future ext4 host simply receives none of it, instead of
 breaking with a scrub unit pointing at a filesystem that has no checksums.
 

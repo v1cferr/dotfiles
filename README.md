@@ -76,7 +76,7 @@ a specific host: `sudo nixos-rebuild switch --flake .#<host>`.
 
 ## Architecture
 
-One flake, one host. The host picks from `system/` (shared, machine-agnostic), home-manager enters
+One flake, one host. The host picks from `modules/nixos/` (shared, machine-agnostic), home-manager enters
 as a NixOS module, so a single `rebuild` applies both halves, and `pkgs/` is overlaid on top.
 
 <details>
@@ -86,7 +86,7 @@ as a NixOS module, so a single `rebuild` applies both halves, and `pkgs/` is ove
 flowchart LR
   lock[flake.lock<br/>the pinned universe] --> flake[flake.nix]
   flake --> host[hosts/ex-b560m-v5<br/>disks, monitors, my.services]
-  host --> system[system/<br/>core, hardware, net,<br/>desktop, gaming, services]
+  host --> system[modules/nixos/<br/>core, hardware, net,<br/>desktop, gaming, services]
   system -->|home-manager module| home[home/<br/>shell, desktop, apps,<br/>net, services]
   pkgs[pkgs/<br/>vendored + checkers] -.->|overlay| system
   pkgs -.->|overlay| home
@@ -125,7 +125,7 @@ never changes.
 flake.nix        inputs + overlays + the host + packages + checks, the one entry point
 flake.lock       pinned input versions (rule 13: no implicit "latest", anywhere)
 
-system/          SYSTEM, shared by every host (machine-agnostic)
+modules/nixos/          SYSTEM, shared by every host (machine-agnostic)
   core/          Nix/flakes, boot, Secure Boot, users, secrets, locale, shutdown
   hardware/      CPU, GPU (Arc B580), audio (PipeWire), fonts, btrfs, RGB, mouse, OOM
   net/           NetworkManager, SSH, VPNs, ingress, the router, Tor, the FAI gateway
@@ -159,17 +159,17 @@ The docs at the root are the three GitHub reads from there: this README,
 
 ## Where does a package go?
 
-Two mirrored central lists: [`system/packages.nix`](system/packages.nix) and
+Two mirrored central lists: [`modules/nixos/packages.nix`](modules/nixos/packages.nix) and
 [`home/packages.nix`](home/packages.nix). The per-package decision:
 
 1. **The default is `home/`.** A day-to-day app/CLI with no config of its own is 1 line in
    [`home/packages.nix`](home/packages.nix), then `rebuild`.
 2. An app **with** declarative config (dotfiles / `programs.*`) gets its own module under `home/`,
    so package and config travel together. For example `kitty`, `dolphin`, `flameshot`.
-3. It only goes to **`system/`** if it needs **root/rescue** (say `git`/`vim` in a root shell), is
+3. It only goes to **`modules/nixos/`** if it needs **root/rescue** (say `git`/`vim` in a root shell), is
    a **driver/service**, or a **system service uses** it.
 
-Rule of thumb: *when in doubt, `home/`; it only moves up to `system/` if root or a service needs
+Rule of thumb: *when in doubt, `home/`; it only moves up to `modules/nixos/` if root or a service needs
 it.*
 
 ### Where does it come FROM?
@@ -195,7 +195,7 @@ The full set lives in [`docs/rules.md`](docs/rules.md), and its numbering is API
 "rule N". The ones you need to read this tree, deliberately unnumbered here so they are not read
 as rule numbers:
 
-- **`system/` vs `home/`.** System level under `system/`; the app **and** its user config under
+- **`modules/nixos/` vs `home/`.** System level under `modules/nixos/`; the app **and** its user config under
   `home/`, never the same package in both.
 - **Nix = app + config; state is not declared.** Saves, Wine prefixes, app tokens and sessions
   stay out of the repo.
@@ -205,7 +205,7 @@ as rule numbers:
 - **A module names its packages once, at the top**, in an `inherit (pkgs) ...;` opening the `let`.
   Flat install lists keep their `with pkgs;`.
 - **One owner per value and per file.** A value used twice becomes a `my.*` option, DECLARED in
-  `system/` and DEFINED in `hosts/`; a file Nix generates is never also written by the app.
+  `modules/nixos/` and DEFINED in `hosts/`; a file Nix generates is never also written by the app.
 - **Dead config leaves in the same commit that removed its use**, and `dead-config` enforces it.
 - **Validate before applying**: `nixos-rebuild build` clean and atomic commits per task, before the
   switch.
@@ -218,7 +218,7 @@ Secrets stay encrypted in [`secrets/secrets.yaml`](secrets/secrets.yaml), versio
 unreadable without the key. They are decrypted at runtime into `/run/secrets*`, never into the
 store. The private **age** key lives at `/var/lib/sops-nix/key.txt`, **outside git**, and is the
 one thing to carry into a reinstall (it comes out of the Bitwarden vault). The groundwork is in
-[`system/core/secrets.nix`](system/core/secrets.nix).
+[`modules/nixos/core/secrets.nix`](modules/nixos/core/secrets.nix).
 
 The source of truth is **Bitwarden**: a value is changed there, and `scripts/sync-secrets.sh`
 brings it into sops. Editing a secret requires a `rebuild`, otherwise `/run/secrets` is not

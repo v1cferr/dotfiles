@@ -154,7 +154,7 @@ in
   };
 
   # It writes ~/.config/gtk-3.0 and gtk-4.0. The packages are declared HERE (rule 4); the font
-  # comes from system/.
+  # comes from modules/nixos/.
   gtk = {
     enable = true;
     theme = {
@@ -165,7 +165,7 @@ in
       name = config.my.theme.iconTheme; # SSOT: my.theme.iconTheme
       package = win11-icons; # the Windows 11 icons (Win11-dark); see the derivation in the let
     };
-    font.name = osConfig.my.fonts.ui; # SSOT: system/hardware/fonts.nix
+    font.name = osConfig.my.fonts.ui; # SSOT: modules/nixos/hardware/fonts.nix
     font.size = 11;
   };
 

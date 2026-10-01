@@ -184,7 +184,7 @@ adding one line to `nixosConfigurations`. home-manager comes in as a module, so 
 system and user together.
 
 What belongs to the HOST and not to `./system`: hostname, disks, kernel, monitors, stateVersion and
-the `my.services` panel. `system/` declares the options; the host answers them.
+the `my.services` panel. `modules/nixos/` declares the options; the host answers them.
 
 **THE MODULE LIST IS HOISTED, and that is the part the text above does not show**: the same
 `commonModules` feeds the machine and both VM outputs, so the drill and the boot test cannot
@@ -360,7 +360,7 @@ already pushed would take a separate job running `convco check` over the pushed 
 auditing the gate's coverage BY EXTENSION instead of trusting that it was complete: `.nix`, `.md`,
 `.qml`, `.lua`, `.sh`, `.py` and the workflow YAML each had a hook, and the data files had none.
 That is the worst class of gap here, because of WHO reads those files. Nix parses two of them
-(`.luarc.json` through `fromJSON`, and the secrets index that `system/core/secrets.nix` walks), so
+(`.luarc.json` through `fromJSON`, and the secrets index that `modules/nixos/core/secrets.nix` walks), so
 those fail loudly at eval. The other twelve are read by a TOOL at runtime, and a tool answers a
 broken config by falling back to its defaults and saying nothing: an MCP server that does not
 appear, a keybinding that does not exist, a linter running its own ruleset instead of mine.
@@ -626,7 +626,7 @@ Verified after the change: actionlint clean, and zizmor "No findings to report".
 ### Plan B: a deploy key, if the empty stub ever does NOT do
 
 Only necessary if a module starts READING content from the private repo at EVALUATION time; today
-`system/services/duo.nix` only uses the input as a Docker build context. On that day the stub would
+`modules/nixos/services/duo.nix` only uses the input as a Docker build context. On that day the stub would
 need the file being read, and if that becomes impractical:
 
 1. Generate a key pair just for this: `ssh-keygen -t ed25519 -f ci_key -N ""`
@@ -658,7 +658,7 @@ included.
    hunk. Nested, every change touches the structure around it and the diff grows with nothing else
    having changed.
 3. IT MAKES READING THIS REPO WORSE. Nesting everything under one key would push comment and value
-   to 3-4 levels of indentation, and `system/net/network.nix` would become a giant ~100-line
+   to 3-4 levels of indentation, and `modules/nixos/net/network.nix` would become a giant ~100-line
    attrset.
 
 It is a TASTE lint with a defensible side (grouping what belongs to the same domain), but the repo's

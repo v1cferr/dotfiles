@@ -1,8 +1,8 @@
 # network and remote access
 
-Modules: [`system/net/network.nix`](../../../system/net/network.nix),
-[`system/net/fai-gateway.nix`](../../../system/net/fai-gateway.nix),
-[`system/net/localsend.nix`](../../../system/net/localsend.nix)
+Modules: [`modules/nixos/net/network.nix`](../../../modules/nixos/net/network.nix),
+[`modules/nixos/net/fai-gateway.nix`](../../../modules/nixos/net/fai-gateway.nix),
+[`modules/nixos/net/localsend.nix`](../../../modules/nixos/net/localsend.nix)
 
 NetworkManager, the exposed SSH, fail2ban, dynamic DNS and "never suspend". The theme: this is a
 machine for remote access.
@@ -174,7 +174,7 @@ or the wall jack. Every link event brings it back up at 1 Gbps before it degrade
 nothing about the cause.
 
 `ethtool` was not installed here, which is the other half of why nine days went by with the
-machine at a tenth of its link and no way to ask it why. It is in `system/packages.nix` now.
+machine at a tenth of its link and no way to ask it why. It is in `modules/nixos/packages.nix` now.
 
 ## Wake-on-LAN was armed on the wrong end
 
@@ -596,7 +596,7 @@ wants the workstation. A name that shows up at a NEW public address in the /25 n
 entry, and the test is the same probe from Brazil, never one from abroad.
 
 The static routes and the split DNS live in the router's UCI, and
-[`router.nix`](../../../system/net/router.nix) refuses to push on purpose. The commands are in
+[`router.nix`](../../../modules/nixos/net/router.nix) refuses to push on purpose. The commands are in
 [`../guides/fai-gateway-router.md`](../../guides/fai-gateway-router.md).
 
 ### `faiSubnets` mirrors THEIR routing, so the divergence is checked (19/09/2026)

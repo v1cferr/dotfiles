@@ -31,7 +31,7 @@ the rest waits for a login: the page IS the personal data.
 The instinct is to add `basic_auth` as a second layer and set `expose = "public"`, or to keep
 `lan` and add the hashes anyway. Neither works with this module.
 
-`system/services/caddy.nix` applies BOTH the 403 and the `basic_auth` to `@externo`, the "not
+`modules/nixos/services/caddy.nix` applies BOTH the 403 and the `basic_auth` to `@externo`, the "not
 home" matcher. Under `lan` the 403 answers first, so the hashes would never be consulted: dead
 config by rule 16, plus two Bitwarden items and two sops secrets that exist to do nothing. Under
 `public`, `basic_auth` becomes the only thing between the internet and a credit report, which is
@@ -56,7 +56,7 @@ The order does not matter here: Caddy resolves the most specific prefix first, s
 
 ## The stack at boot
 
-`system/services/credit-radar.nix`. A `oneshot` with `RemainAfterExit` runs
+`modules/nixos/services/credit-radar.nix`. A `oneshot` with `RemainAfterExit` runs
 `compose up -d --wait` at boot, the same shape as `grad-radar.nix` and for the same reason: Caddy
 comes up on its own and so does Docker, but the containers do not, so without this the subdomain
 answers 502 until somebody runs compose by hand. `--wait` blocks on the healthchecks, so a green

@@ -1,6 +1,6 @@
 # hardening: a sandbox for this repo's own root services
 
-`my.systemd.hardened`, a read-only option in `system/core/hardening.nix`, is one `serviceConfig`
+`my.systemd.hardened`, a read-only option in `modules/nixos/core/hardening.nix`, is one `serviceConfig`
 baseline that a consumer merges in: `serviceConfig = config.my.systemd.hardened // { ... }`. One
 owner for the set, so a unit either takes all of it or says, in its own comment, what it drops.
 

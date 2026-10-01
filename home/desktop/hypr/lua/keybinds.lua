@@ -44,7 +44,7 @@ hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("clipboard-menu"))
 hl.bind(mainMod .. " + ALT + V",   hl.dsp.exec_cmd("clipboard-push"))  -- scp it to the workstation and copy the REMOTE path (an image for a TUI over ssh)
 
 -- VPN: SUPER+N = UFSCar (GlobalProtect), SHIFT+N = FAI (nxBender), CTRL+N disconnects all.
--- On-demand systemd services (system/net/vpn.nix); the `vpn` CLI needs no password (polkit).
+-- On-demand systemd services (modules/nixos/net/vpn.nix); the `vpn` CLI needs no password (polkit).
 hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd("vpn connect ufscar"))
 hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("vpn connect fai"))
 hl.bind(mainMod .. " + CTRL + N",  hl.dsp.exec_cmd("vpn disconnect all"))

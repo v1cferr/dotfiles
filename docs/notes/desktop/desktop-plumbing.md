@@ -34,7 +34,7 @@ To check: `systemctl --user status hyprpolkitagent`.
 ## XDG associations
 
 `home/desktop/xdg.nix`. Nothing is INSTALLED here (the Zen package comes from the flake, in
-`system/`). It only ASSOCIATES: which `.desktop` opens what.
+`modules/nixos/`). It only ASSOCIATES: which `.desktop` opens what.
 
 `xdg.mimeApps` writes `~/.config/mimeapps.list` (managed, read-only), and that is what
 `xdg-settings get default-web-browser` and the GTK/Electron apps consult. Zen's `.desktop` is

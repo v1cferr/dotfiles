@@ -1,7 +1,7 @@
 # basic-memory
 
 Modules: [`pkgs/basic-memory.nix`](../../../pkgs/basic-memory.nix),
-[`system/services/basic-memory.nix`](../../../system/services/basic-memory.nix),
+[`modules/nixos/services/basic-memory.nix`](../../../modules/nixos/services/basic-memory.nix),
 [`home/services/basic-memory.nix`](../../../home/services/basic-memory.nix)
 
 Two memory servers over my context repository, split at the FAI boundary, instead of one archive

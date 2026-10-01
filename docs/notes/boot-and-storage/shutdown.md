@@ -1,6 +1,6 @@
 # shutdown
 
-Module: [`system/core/shutdown.nix`](../../../system/core/shutdown.nix)
+Module: [`modules/nixos/core/shutdown.nix`](../../../modules/nixos/core/shutdown.nix)
 
 How long systemd waits for a unit to stop before the SIGKILL.
 

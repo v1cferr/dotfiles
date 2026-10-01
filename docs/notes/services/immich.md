@@ -1,6 +1,6 @@
 # Immich, the photo library
 
-`system/services/immich.nix`, served at `photos.v1cferr.dev`. A self-hosted photo library: a
+`modules/nixos/services/immich.nix`, served at `photos.v1cferr.dev`. A self-hosted photo library: a
 timeline, face recognition and text search over the photos ("beach", "dog"), with the machine
 learning running on this machine.
 

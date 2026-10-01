@@ -153,6 +153,11 @@ let
             *"Password change needed"* | *"Password expired"* | *"password has expired"*)
               verdict="PASSWORD EXPIRED in AD, retrying does NOT fix it"
               detail="change it on a domain machine (Ctrl+Alt+Del), then sops plus nixos-rebuild switch. Run 'vpn disconnect $id' NOW, to stop accumulating failed logins." ;;
+            # The SonicWall serves its factory cert (CN=192.168.168.168) while it reboots or
+            # updates; it fails before the login, so retrying is harmless and it heals itself.
+            *"Fingerprints did not match"*)
+              verdict="THE PORTAL IS SERVING ANOTHER CERTIFICATE, it is not your machine"
+              detail="most likely the SonicWall factory cert during maintenance; wait, do NOT re-pin it (see docs/notes/network/vpn.md)" ;;
             *"Login failed"*|*"Authentication failed"*|*"invalid credential"*)
               verdict="CREDENTIAL REJECTED"
               detail="the portal answered and refused the login, so review the password in sops" ;;

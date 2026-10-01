@@ -23,6 +23,12 @@ openssl s_client -connect 200.133.233.101:4433 | openssl x509 -noout -fingerprin
 # nxBender wants lowercase sha1 with ':'
 ```
 
+Before re-pinning, check the subject. `CN=192.168.168.168` (valid 1970 to 2038, fingerprint
+`14:0f:b2:…`) is the SonicWall FACTORY cert, served while the appliance reboots or updates. It
+happened on 2026-08-07 (about 1h20) and 2026-10-01, and both times the real cert came back on its
+own. Pinning it would break again the moment FAI recovers, so wait. The SSL fails before the
+login, so the retry loop sends no credentials and cannot lock the AD account.
+
 `--authgroup` on the UFSCar side picks the gateway (the portal offers 5). Without it openconnect
 asks interactively and the service dies, because stdin holds only the password, so it gets EOF.
 

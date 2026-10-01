@@ -23,7 +23,7 @@ Everything in the TokyoNight theme, centralized in a Nix PALETTE of my own (`mod
 
 Moved here VERBATIM from rules.md on 30/09/2026, when it was folded into rule 11.
 
-The UI FONT has its OWN SSOT, separate from the colors: `my.fonts.ui` in `modules/nixos/hardware/fonts.nix` (next to the package, because a font is system level, rule 4; and fontconfig also needs the name, and a system module cannot read a home-manager option). Changing the font = 1 line + the package. A user-side consumer reads it through `osConfig.my.fonts.ui`, never as a literal.
+The UI FONT has its OWN SSOT, separate from the colors: `my.fonts.ui` in `modules/nixos/desktop/fonts.nix` (next to the package, because a font is system level, rule 4; and fontconfig also needs the name, and a system module cannot read a home-manager option). Changing the font = 1 line + the package. A user-side consumer reads it through `osConfig.my.fonts.ui`, never as a literal.
 
 ## The long form of rule 14
 

@@ -61,7 +61,7 @@ let
 
   # Colors from my.theme (palette.nix) plus the font from my.fonts.ui.
   palette = config.my.theme.palette; # the single source (modules/home/desktop/palette.nix)
-  font = osConfig.my.fonts.ui; # SSOT (modules/nixos/hardware/fonts.nix)
+  font = osConfig.my.fonts.ui; # SSOT (modules/nixos/desktop/fonts.nix)
   bg = "rgba(${palette.bg}d9)"; # the lock's background (d9 is ~85% opacity)
   fg = "rgb(${palette.text})";
   muted = "rgb(${palette.dim})";

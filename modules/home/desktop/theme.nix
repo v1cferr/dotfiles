@@ -165,7 +165,7 @@ in
       name = config.my.theme.iconTheme; # SSOT: my.theme.iconTheme
       package = win11-icons; # the Windows 11 icons (Win11-dark); see the derivation in the let
     };
-    font.name = osConfig.my.fonts.ui; # SSOT: modules/nixos/hardware/fonts.nix
+    font.name = osConfig.my.fonts.ui; # SSOT: modules/nixos/desktop/fonts.nix
     font.size = 11;
   };
 

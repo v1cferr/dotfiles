@@ -12,7 +12,7 @@ system level, while most of the consumers are home-manager modules.
 
 ## Decision
 
-`my.fonts.ui` is declared in `modules/nixos/hardware/fonts.nix`, next to the font package, and not next
+`my.fonts.ui` is declared in `modules/nixos/desktop/fonts.nix`, next to the font package, and not next
 to the palette. A home-side consumer reads it through `osConfig.my.fonts.ui`.
 
 ## Consequences

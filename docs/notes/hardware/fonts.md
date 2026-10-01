@@ -1,6 +1,6 @@
 # Fonts and typography
 
-`modules/nixos/hardware/fonts.nix` is the SSOT of the UI family, `my.fonts.ui`.
+`modules/nixos/desktop/fonts.nix` is the SSOT of the UI family, `my.fonts.ui`.
 
 ## Why the SSOT lives on the system side
 

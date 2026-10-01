@@ -118,7 +118,7 @@ in
       };
     };
   };
-  # The UI FONT is `my.fonts.ui`, in modules/nixos/hardware/fonts.nix, next to its package (rule 4).
+  # The UI FONT is `my.fonts.ui`, in modules/nixos/desktop/fonts.nix, next to its package (rule 4).
 
   config = {
     my.theme.palette = p;

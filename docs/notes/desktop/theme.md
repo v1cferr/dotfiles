@@ -24,7 +24,7 @@ the same exception as `adwaita-qt`.
 
 The font in the dconf block is what GTK/GNOME apps use in the interface. fontconfig already covers
 mono/sans/serif, but GTK apps read the UI font FROM HERE, not from fontconfig. The numeric suffix
-is the size in pt. The SSOT is `modules/nixos/hardware/fonts.nix`; see [`fonts.md`](../hardware/fonts.md).
+is the size in pt. The SSOT is `modules/nixos/desktop/fonts.nix`; see [`fonts.md`](../hardware/fonts.md).
 
 The Bibata cursor is referenced by NAME (the dconf `cursor-theme` plus the XCURSOR envs in
 `hypr/lua/environment.lua`), so the package has to be in the user's profile.
@@ -174,5 +174,5 @@ there: it moved to `modules/nixos/desktop/monitors.nix` on 04/08/2026 because Su
 - **`cursor.name` and `cursor.size`**, same reasoning; the package (`bibata-cursors`) lives in
   `theme.nix`. The size is global here, not per context.
 
-The UI FONT deliberately does NOT live here: it is `my.fonts.ui`, in `modules/nixos/hardware/fonts.nix`,
+The UI FONT deliberately does NOT live here: it is `my.fonts.ui`, in `modules/nixos/desktop/fonts.nix`,
 next to its package (rule 4).

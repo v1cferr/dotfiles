@@ -71,7 +71,7 @@ does not read them as paths that should exist on this branch.
 | `main:wireguard/` | [`hosts/cudy-wr3000/uci/`](../hosts/cudy-wr3000/uci/network.conf), because the tunnel moved to the router |
 | `main:system/` (14) | [`modules/nixos/core/core.nix`](../modules/nixos/core/core.nix) (locale, timezone, `br-abnt2`), `hostName` per host, [`modules/nixos/core/boot.nix`](../modules/nixos/core/boot.nix) |
 | `main:swap/` | `zramSwap.enable` in [`modules/nixos/hardware/hardware.nix`](../modules/nixos/hardware/hardware.nix) |
-| `main:fontconfig/` | [`modules/nixos/hardware/fonts.nix`](../modules/nixos/hardware/fonts.nix), a superset: CJK plus corefonts plus vista-fonts |
+| `main:fontconfig/` | [`modules/nixos/desktop/fonts.nix`](../modules/nixos/desktop/fonts.nix), a superset: CJK plus corefonts plus vista-fonts |
 | `main:gtk-3.0/`, `main:gtk-4.0/` | [`modules/home/desktop/theme.nix`](../modules/home/desktop/theme.nix) plus [`modules/home/desktop/palette.nix`](../modules/home/desktop/palette.nix) |
 | `main:rofi/` | [`modules/home/desktop/launcher.nix`](../modules/home/desktop/launcher.nix) plus [`modules/home/desktop/clipboard.nix`](../modules/home/desktop/clipboard.nix), themed from the palette |
 | `main:kitty/` | [`modules/home/shell/kitty.nix`](../modules/home/shell/kitty.nix). Small deltas, below |

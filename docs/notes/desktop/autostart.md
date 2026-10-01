@@ -77,6 +77,6 @@ autostart. A single owner, rule 15.
 
 ## Where the packages come from
 
-`modules/home/packages.nix`, except LocalSend, whose owner is `modules/nixos/net/localsend.nix` (the nixpkgs
+`modules/home/packages.nix`, except LocalSend, whose owner is `modules/nixos/network/localsend.nix` (the nixpkgs
 module ties package and firewall together). Here we only REFERENCE the binary by store path, so it
 is not installed again and rule 4 holds.

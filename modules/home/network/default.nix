@@ -1,4 +1,4 @@
-# The user's networking: remote hosts and network CLIs (it mirrors modules/nixos/net/, with no privilege).
+# The user's networking: remote hosts and network CLIs (it mirrors modules/nixos/network/, with no privilege).
 { ... }:
 
 {

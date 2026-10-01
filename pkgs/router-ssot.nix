@@ -102,7 +102,7 @@ writers.writePython3Bin "router-ssot"
     def declared():
         """Every value this repo owns and the router repeats. ANCHORED, so a rename fails here
         loudly instead of turning a check into a no-op that passes for the wrong reason."""
-        subnets = read("modules/nixos/net/subnets.nix")
+        subnets = read("modules/nixos/network/subnets.nix")
         sunshine = read("modules/nixos/services/sunshine.nix")
 
         out = {"subnets": {}}
@@ -121,10 +121,10 @@ writers.writePython3Bin "router-ssot"
         host = re.search(r'csrf_allowed_origins\s*=\s*"https://([\d.]+):', sunshine)
         out["host_ip"] = host.group(1) if host else ""
 
-        fai = read("modules/nixos/net/fai-gateway.nix")
+        fai = read("modules/nixos/network/fai-gateway.nix")
         out["fai_subnets"] = nix_list(fai, "faiSubnets")
         out["fai_public_hosts"] = nix_list(fai, "faiPublicHosts")
-        ssh = re.search(r"ports\s*=\s*\[\s*(\d+)\s*\]", read("modules/nixos/net/network.nix"))
+        ssh = re.search(r"ports\s*=\s*\[\s*(\d+)\s*\]", read("modules/nixos/network/network.nix"))
         out["ssh_port"] = ssh.group(1) if ssh else ""
         # THREE anchors, because two addresses no longer sit in a `HostName` literal. The T480's
         # went into an option the day the RDP wrapper became a second consumer, and the brother's
@@ -138,7 +138,7 @@ writers.writePython3Bin "router-ssot"
         if bound:
             hosts.add(bound.group(1))
         opt = re.search(r'host\s*=\s*lib\.mkOption\s*\{.*?default\s*=\s*"([\d.]+)"',
-                        read("modules/home/net/t480.nix"), re.S)
+                        read("modules/home/network/t480.nix"), re.S)
         if opt:
             hosts.add(opt.group(1))
         out["ssh_hosts"] = hosts
@@ -228,7 +228,7 @@ writers.writePython3Bin "router-ssot"
                 cidr = str(ipaddress.ip_network(f"{target}/{mask}", strict=False))
                 if cidr not in d["fai_subnets"]:
                     out.append(("fai", f"{name} routes {cidr}, which faiSubnets does not list",
-                                "modules/nixos/net/fai-gateway.nix holds that list"))
+                                "modules/nixos/network/fai-gateway.nix holds that list"))
             if s.get("gateway") and s.get("gateway") != d["host_ip"]:
                 out.append(("fai", f"{name} points at {s.get('gateway')}, not {d['host_ip']}",
                             "the gateway for the FAI ranges is this host, where nxBender runs"))
@@ -250,7 +250,7 @@ writers.writePython3Bin "router-ssot"
         if got != want:
             out.append(("fai", f"fai_pub* routes {sorted(got)}, faiPublicHosts declares {sorted(want)}",
                         "a missing one loops through this host with the VPN off; "
-                        "modules/nixos/net/fai-gateway.nix holds the list"))
+                        "modules/nixos/network/fai-gateway.nix holds the list"))
         return out
 
 
@@ -261,7 +261,7 @@ writers.writePython3Bin "router-ssot"
                 if s.get("dest_ip") == d["host_ip"] and s.get("dest_port") == port]
         if not hits:
             return [("ssh", f"no redirect sends {port} to {d['host_ip']}",
-                     "services.openssh.ports in modules/nixos/net/network.nix owns that number")]
+                     "services.openssh.ports in modules/nixos/network/network.nix owns that number")]
         return []
 
 

@@ -6,7 +6,7 @@ device** that day, not read off the mirror, because the mirror had drifted in tw
 hardening plan written against a stale copy hardens the wrong machine.
 
 Same two reasons for being manual as
-[`fai-gateway-router.md`](fai-gateway-router.md): `modules/nixos/net/router.nix` refuses to push UCI
+[`fai-gateway-router.md`](fai-gateway-router.md): `modules/nixos/network/router.nix` refuses to push UCI
 without commit-confirm, and the router's sudoers only carries `reboot`, `nft`, `uci`, `dnsmasq`,
 `firewall` and `wg-status` as NOPASSWD. **That split decides who types what**: the firewall work
 below runs unattended, because `uci` and `/etc/init.d/firewall` are both on the list; anything

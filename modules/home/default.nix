@@ -9,7 +9,7 @@
     ./desktop # Hyprland plus Wayland plus appearance (hypr/quickshell/lockscreen/theme/xdg…)
     ./apps # user apps WITH a config of their own (dropbox/media/dolphin/flameshot/mangohud)
     ./services # the user's services/timers (cs2-saves-backup, claude-discord-rpc)
-    ./net # remote hosts and network CLIs (the FAI workstation's SSOT plus wake-workstation)
+    ./network # remote hosts and network CLIs (the FAI workstation's SSOT plus wake-workstation)
   ];
 
   home.username = "v1cferr";

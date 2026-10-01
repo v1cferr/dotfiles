@@ -3,8 +3,8 @@
 { config, ... }:
 
 let
-  ws = config.my.fai.workstation; # SSOT: modules/home/net/fai-workstation.nix (rule 11)
-  t480 = config.my.t480; # SSOT: modules/home/net/t480.nix, shared with the `t480` RDP wrapper
+  ws = config.my.fai.workstation; # SSOT: modules/home/network/fai-workstation.nix (rule 11)
+  t480 = config.my.t480; # SSOT: modules/home/network/t480.nix, shared with the `t480` RDP wrapper
   # My brother's PC. One address, DUAL BOOT, so three blocks here share it (rule 11 inside the file).
   cesarHost = "192.168.1.40";
 

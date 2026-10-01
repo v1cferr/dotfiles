@@ -44,7 +44,7 @@
     # The Moonlight CLIENT, for my mother's T480: this machine is the client and that one is the
     # host, the reverse of modules/nixos/services/sunshine.nix. What to set: docs/notes/network/sunshine.md
     # RDP reaches the same machine and is NOT redundant (Moonlight dies with the laptop lid), but
-    # it owns its package next to the `t480` wrapper, in modules/home/net/t480.nix.
+    # it owns its package next to the `t480` wrapper, in modules/home/network/t480.nix.
     moonlight-qt
 
     # ── Disk / cleanup ──

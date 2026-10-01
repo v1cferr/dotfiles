@@ -1,6 +1,6 @@
 # The FAI workstation: SSOT, Wake-on-LAN and the mount
 
-Two modules: `modules/home/net/fai-workstation.nix` (the host's SSOT plus `wake-workstation`) and
+Two modules: `modules/home/network/fai-workstation.nix` (the host's SSOT plus `wake-workstation`) and
 `modules/home/services/fai-workstation-mount.nix` (the rclone SFTP mount).
 
 ## The SSOT

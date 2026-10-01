@@ -6,7 +6,7 @@
   imports = [
     ./core # Nix/flakes, boot, users, secrets, locale
     ./hardware # CPU/microcode, the GPU (Arc B580), audio (PipeWire), fonts
-    ./net # NetworkManager, the exposed SSH, fail2ban, DDNS
+    ./network # NetworkManager, the exposed SSH, fail2ban, DDNS
     ./desktop # LightDM, Hyprland, xkb, the portal (dark mode), gnome-keyring
     ./services # snapshots (btrbk), hooks (Claude Code), media (Jellyfin/qBit), AI (Ollama/duo)
     ./gaming # Steam plus Proton-GE plus gamemode (a system-level FHS-wrap/firewall)

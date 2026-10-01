@@ -163,7 +163,7 @@ Four details in the script:
   script exists to cover.
 - `case` and NEVER `grep -q`: with `writeShellApplication`'s pipefail the grep exits on the first
   match, the producer dies of SIGPIPE, and the pipeline returns an ERROR despite the match. Same
-  trap as in `modules/home/net/mega.nix`. The matched texts come from the official CLI: "To link this
+  trap as in `modules/home/network/mega.nix`. The matched texts come from the official CLI: "To link this
   computer to a Dropbox account, visit the following url" and "Dropbox isn't running!".
 - **Anti-spam of 12 h per state**, the same idiom as `disk-watch`. Without it an unlink would
   become a notification every 30 min and the person would learn to ignore it, and an alarm that

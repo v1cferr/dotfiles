@@ -34,7 +34,7 @@ issuance HANGS.
 ## The vhosts are GENERATED from the ingress SSOT
 
 The Caddyfile stopped being written by hand: what decides reach is
-[`modules/nixos/net/ingress.nix`](../../../modules/nixos/net/ingress.nix), where forgetting to declare CLOSES
+[`modules/nixos/network/ingress.nix`](../../../modules/nixos/network/ingress.nix), where forgetting to declare CLOSES
 instead of exposing, because the `expose` default is `lan`.
 
 **A `tunnel` entry gets NO vhost.** That reach means "only through the Cloudflare Tunnel, gated by

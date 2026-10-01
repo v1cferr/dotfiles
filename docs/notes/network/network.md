@@ -1,8 +1,8 @@
 # network and remote access
 
-Modules: [`modules/nixos/net/network.nix`](../../../modules/nixos/net/network.nix),
-[`modules/nixos/net/fai-gateway.nix`](../../../modules/nixos/net/fai-gateway.nix),
-[`modules/nixos/net/localsend.nix`](../../../modules/nixos/net/localsend.nix)
+Modules: [`modules/nixos/network/network.nix`](../../../modules/nixos/network/network.nix),
+[`modules/nixos/network/fai-gateway.nix`](../../../modules/nixos/network/fai-gateway.nix),
+[`modules/nixos/network/localsend.nix`](../../../modules/nixos/network/localsend.nix)
 
 NetworkManager, the exposed SSH, fail2ban, dynamic DNS and "never suspend". The theme: this is a
 machine for remote access.
@@ -198,7 +198,7 @@ NetworkManager has its own `connection.wol`; its default is not to touch it, but
 on a link change the symptom is WoL working right after boot and stopping later, which only shows
 up by actually powering off and sending the packet.
 
-A contrast worth keeping: [`wake-workstation`](../../../modules/home/net/fai-workstation.nix) solves the SAME
+A contrast worth keeping: [`wake-workstation`](../../../modules/home/network/fai-workstation.nix) solves the SAME
 problem and could NOT be declared, because there the receiver is somebody else's Ubuntu and the fix
 is netplan by hand. Here the receiver is this machine.
 
@@ -596,7 +596,7 @@ wants the workstation. A name that shows up at a NEW public address in the /25 n
 entry, and the test is the same probe from Brazil, never one from abroad.
 
 The static routes and the split DNS live in the router's UCI, and
-[`router.nix`](../../../modules/nixos/net/router.nix) refuses to push on purpose. The commands are in
+[`router.nix`](../../../modules/nixos/network/router.nix) refuses to push on purpose. The commands are in
 [`../guides/fai-gateway-router.md`](../../guides/fai-gateway-router.md).
 
 ### `faiSubnets` mirrors THEIR routing, so the divergence is checked (19/09/2026)

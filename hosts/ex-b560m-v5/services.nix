@@ -1,5 +1,5 @@
 # THE PANEL: which optional services and subdomains THIS machine turns on. Edit and rebuild.
-# The keys come from modules/nixos/services/toggles.nix; the reach rules from modules/nixos/net/ingress.nix.
+# The keys come from modules/nixos/services/toggles.nix; the reach rules from modules/nixos/network/ingress.nix.
 { config, ... }:
 
 {

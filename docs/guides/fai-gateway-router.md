@@ -1,7 +1,7 @@
 # FAI VPN gateway: the half that lives on the router
 
 The manual counterpart of
-[`modules/nixos/net/fai-gateway.nix`](../../modules/nixos/net/fai-gateway.nix). That file makes the PC
+[`modules/nixos/network/fai-gateway.nix`](../../modules/nixos/network/fai-gateway.nix). That file makes the PC
 forward and masquerade; **this one makes somebody send traffic to it.** Without both sides,
 nothing happens.
 
@@ -14,7 +14,7 @@ phone/notebook → router → 192.168.1.10 → ppp0 → FAI
 
 Two independent reasons, and neither of them is laziness:
 
-1. **`modules/nixos/net/router.nix` refuses to push UCI on purpose**: "one wrong network or
+1. **`modules/nixos/network/router.nix` refuses to push UCI on purpose**: "one wrong network or
    firewall line locks you out and the way back is failsafe mode with PHYSICAL access".
    Applying over SSH with no commit-confirm is exactly what that decision avoids.
 2. **The router's sudoers does not include `/etc/init.d/network`.** The NOPASSWD entries are
@@ -79,7 +79,7 @@ sudo /etc/init.d/network reload   # <- asks for the password
 **And the exception that keeps the public site alive** (added 29/09/2026). The /25 above also
 holds `200.136.209.236`, the address of every public `*.fai.ufscar.br` name, and without this
 host route it dies with the VPN for the whole house. One `fai_pub*` section per entry of
-`faiPublicHosts` in [`modules/nixos/net/fai-gateway.nix`](../../modules/nixos/net/fai-gateway.nix), a /32 on
+`faiPublicHosts` in [`modules/nixos/network/fai-gateway.nix`](../../modules/nixos/network/fai-gateway.nix), a /32 on
 `wan` with no gateway; why it exists is in
 [`../notes/network/network.md`](../notes/network/network.md):
 

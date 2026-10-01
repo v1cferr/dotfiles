@@ -658,7 +658,7 @@ included.
    hunk. Nested, every change touches the structure around it and the diff grows with nothing else
    having changed.
 3. IT MAKES READING THIS REPO WORSE. Nesting everything under one key would push comment and value
-   to 3-4 levels of indentation, and `modules/nixos/net/network.nix` would become a giant ~100-line
+   to 3-4 levels of indentation, and `modules/nixos/network/network.nix` would become a giant ~100-line
    attrset.
 
 It is a TASTE lint with a defensible side (grouping what belongs to the same domain), but the repo's

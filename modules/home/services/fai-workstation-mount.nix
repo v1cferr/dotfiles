@@ -3,7 +3,7 @@
 { config, ... }:
 
 let
-  ws = config.my.fai.workstation; # SSOT: modules/home/net/fai-workstation.nix (rule 11)
+  ws = config.my.fai.workstation; # SSOT: modules/home/network/fai-workstation.nix (rule 11)
 in
 {
   programs.rclone = {

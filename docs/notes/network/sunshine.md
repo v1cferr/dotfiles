@@ -265,7 +265,7 @@ nobody in front of it. That is also why `freerdp` sits next to `moonlight-qt` in
 client SKU has ONE active session, so an RDP login DISCONNECTS whoever is on the console.
 
 **The invocation is a command, not an alias**, and it lives in
-[`modules/home/net/t480.nix`](../../../modules/home/net/t480.nix) beside the option that owns the address:
+[`modules/home/network/t480.nix`](../../../modules/home/network/t480.nix) beside the option that owns the address:
 
 ```sh
 t480          # the maintenance account

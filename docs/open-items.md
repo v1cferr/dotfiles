@@ -130,7 +130,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
         guessing.
       • HOW TO CLOSE IT: connect (`vpn connect ufscar`), look at `ip -4 route show dev tun0`,
         ping candidates with `ping -I tun0 <ip>` and pin whichever answers in
-        `probe_candidates()`, in `modules/nixos/net/vpn.nix`, together with the measurement, the way
+        `probe_candidates()`, in `modules/nixos/network/vpn.nix`, together with the measurement, the way
         the FAI one is.
 
 - [ ] WireGuard peer `fai-workstation` (10.10.10.5): alive or legacy? (opened on 10/08/2026)
@@ -170,7 +170,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
       compromise dies with the next power cut. Everything the audit fixed is PREVENTION; there is
       currently no DETECTION at all on this device.
       • THE FIX IS NOT A `uci set`: it is `log_ip='192.168.1.10'` plus a syslog receiver on the
-        desktop, which is a NixOS module and belongs in `modules/nixos/net/`. The router half is one
+        desktop, which is a NixOS module and belongs in `modules/nixos/network/`. The router half is one
         line and the useful half is the other one.
       • THE TRAP TO SIZE FIRST: the desktop is also the DNAT target for 80/443/2222, so a log
         pipe from the router into it is a service listening on the LAN, and it has to refuse

@@ -1,7 +1,7 @@
 # tunnel
 
-Modules: [`modules/nixos/net/tunnel.nix`](../../../modules/nixos/net/tunnel.nix),
-[`modules/nixos/net/ingress.nix`](../../../modules/nixos/net/ingress.nix)
+Modules: [`modules/nixos/network/tunnel.nix`](../../../modules/nixos/network/tunnel.nix),
+[`modules/nixos/network/ingress.nix`](../../../modules/nixos/network/ingress.nix)
 
 An outbound-only Cloudflare Tunnel, born for one consumer: ChatGPT on the web reaching the GENERAL
 Basic Memory server through a Cloudflare MCP server portal (V1C-82). Nothing listens for it on the

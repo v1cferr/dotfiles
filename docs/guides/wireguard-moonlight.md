@@ -91,7 +91,7 @@ that survive. The exclusion list, and where each entry comes from:
 
 | Excluded | Why |
 | --- | --- |
-| `192.168.90.0/24`, `.100`, `.110`, `.130`, `.223` | The FAI ranges already listed in `modules/nixos/net/fai-gateway.nix` |
+| `192.168.90.0/24`, `.100`, `.110`, `.130`, `.223` | The FAI ranges already listed in `modules/nixos/network/fai-gateway.nix` |
 | `200.136.209.128/25` | FAI too, and it contains the workstation `.229` and the DNS `.247`/`.252` |
 | `200.136.204.0/23` | The work PC's own subnet, from the RDAP query of 19/08/2026 |
 

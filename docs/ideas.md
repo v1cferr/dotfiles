@@ -244,12 +244,12 @@ guide assumes a router with storage to spare, and the ones that talk numbers ask
 and 64 MB of RAM as a floor. This one has the RAM and not the flash.
 
 So the question is only ever about the desktop, which has both and is already the gateway the
-router forwards to (`modules/nixos/net/fai-gateway.nix` is exactly that shape).
+router forwards to (`modules/nixos/network/fai-gateway.nix` is exactly that shape).
 
 **Three options, and they are not variations of one thing:**
 
 - **`services.tor` with SOCKS on localhost, used per application: ALREADY DONE, and this entry
-  first said otherwise.** [`modules/nixos/net/tor.nix`](../modules/nixos/net/tor.nix) has been there all along,
+  first said otherwise.** [`modules/nixos/network/tor.nix`](../modules/nixos/network/tor.nix) has been there all along,
   client only, `ClientOnly` and `SafeSocks` locking the role, enabled through `my.services.tor` on
   `nixos-kingston`, with `mega-tor` as the consumer. Verified running on 13/09/2026: `tor.service`
   active, listening on `127.0.0.1:9050`. So the cheapest option was never open, it was shipped, and

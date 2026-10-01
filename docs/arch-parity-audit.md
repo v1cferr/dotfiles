@@ -63,9 +63,9 @@ does not read them as paths that should exist on this branch.
 | `main:hypr/` (37 files) | [`modules/home/desktop/hypr.nix`](../modules/home/desktop/hypr.nix) plus 7 Lua files. Two deltas, below |
 | `main:quickshell/` (17) | [`modules/home/desktop/quickshell.nix`](../modules/home/desktop/quickshell.nix) plus 25 QML files, a superset |
 | `main:vscode/` (8) | [`modules/home/apps/vscode.nix`](../modules/home/apps/vscode.nix): settings, keybindings, MCP and the extension mirror |
-| `main:netextender/` (12) | [`modules/nixos/net/vpn.nix`](../modules/nixos/net/vpn.nix) (nxBender) plus [`modules/nixos/net/fai-gateway.nix`](../modules/nixos/net/fai-gateway.nix); the WoL scripts became `wake-workstation` |
+| `main:netextender/` (12) | [`modules/nixos/network/vpn.nix`](../modules/nixos/network/vpn.nix) (nxBender) plus [`modules/nixos/network/fai-gateway.nix`](../modules/nixos/network/fai-gateway.nix); the WoL scripts became `wake-workstation` |
 | `main:networkmanager/` | The UFSCar profile became openconnect/GlobalProtect in the same `vpn.nix` |
-| `main:fail2ban/` (5) | [`modules/nixos/net/network.nix`](../modules/nixos/net/network.nix) plus the generated jail in [`modules/nixos/services/caddy.nix`](../modules/nixos/services/caddy.nix) |
+| `main:fail2ban/` (5) | [`modules/nixos/network/network.nix`](../modules/nixos/network/network.nix) plus the generated jail in [`modules/nixos/services/caddy.nix`](../modules/nixos/services/caddy.nix) |
 | `main:ssh/` (4) | `network.nix` (port 2222, now with TOTP) plus [`modules/home/shell/ssh.nix`](../modules/home/shell/ssh.nix) |
 | `main:caddy/` (3) | `caddy.nix`, with the vhosts GENERATED from `my.ingress`. The subdomain SET is smaller, see Partial |
 | `main:wireguard/` | [`router/uci/`](../router/uci/network.conf), because the tunnel moved to the router |
@@ -179,8 +179,8 @@ gone by policy, since toolchains live in a devShell reached by direnv now.
 
 | Script | Status |
 | --- | --- |
-| `vpn`, `vpn-off` | The `vpn` CLI in `modules/nixos/net/vpn.nix`, and it needs no password (polkit) |
-| `wake-fai` | `wake-workstation` in [`modules/home/net/fai-workstation.nix`](../modules/home/net/fai-workstation.nix), with three WoL paths instead of one |
+| `vpn`, `vpn-off` | The `vpn` CLI in `modules/nixos/network/vpn.nix`, and it needs no password (polkit) |
+| `wake-fai` | `wake-workstation` in [`modules/home/network/fai-workstation.nix`](../modules/home/network/fai-workstation.nix), with three WoL paths instead of one |
 | `dark-mode`, `tokyo-night` | Obsolete by construction: the theme is a Nix palette applied at build time (rule 11, decision 0001) |
 | `hypr-quick` | Missing. Mostly subsumed by the binds, EXCEPT its wallpaper actions |
 | `zen-sync` | Missing, and it is the delivery half of the Zen customization below |

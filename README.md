@@ -128,7 +128,7 @@ flake.lock       pinned input versions (rule 13: no implicit "latest", anywhere)
 modules/nixos/          SYSTEM, shared by every host (machine-agnostic)
   core/          Nix/flakes, boot, Secure Boot, users, secrets, locale, shutdown
   hardware/      CPU, GPU (Arc B580), audio (PipeWire), fonts, btrfs, RGB, mouse, OOM
-  net/           NetworkManager, SSH, VPNs, ingress, the router, Tor, the FAI gateway
+  network/       NetworkManager, SSH, VPNs, ingress, the router, Tor, the FAI gateway
   desktop/       LightDM, Hyprland, monitors
   gaming/        Steam + Proton-GE + gamemode
   services/      btrbk, Caddy, Jellyfin, qBittorrent, Immich, Ollama, Docker, libvirt, ...
@@ -139,7 +139,7 @@ modules/home/            USER (home-manager): dotfiles + user apps
   shell/         zsh, starship, kitty, git, ssh, the AI CLIs (claude, codex, antigravity), ntfy
   desktop/       hypr (Lua), quickshell (the bar), lockscreen, launcher, palette, wallpaper, xdg
   apps/          apps WITH a config of their own: vscode, dolphin, flameshot, media, zen, ...
-  net/           remote hosts: the FAI workstation, the T480, MEGA
+  network/       remote hosts: the FAI workstation, the T480, MEGA
   services/      the user's units and timers: mounts, disk hygiene, backups of saves, RPC
 
 hosts/           per-machine answers (hostname, disks via disko, monitors, stateVersion)

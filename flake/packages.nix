@@ -9,9 +9,14 @@
 
 let
   inherit (inputs) nixpkgs;
+  # THE REFERENCE HOST, named once (rule 11): the packages, the facts, the probe and both VM drills
+  # are built from it. A second host changes this name and nothing else here.
+  hostName = "ex-b560m-v5";
+  host = self.nixosConfigurations.${hostName};
+  hostDir = ../hosts + "/${hostName}";
   # `nix build .#nxbender` works in isolation, and `pkgs` comes from the HOST, so the check cannot
   # diverge from what the machine gets (rule 14).
-  pkgs = self.nixosConfigurations.ex-b560m-v5.pkgs;
+  inherit (host) pkgs;
 in
 {
   inherit (pkgs)
@@ -43,7 +48,7 @@ in
   # the rule 16 secrets episode proved is not always possible: docs/notes/repo/flake.md
   system-facts =
     let
-      cfg = self.nixosConfigurations.ex-b560m-v5.config;
+      cfg = host.config;
       inherit (nixpkgs) lib;
     in
     pkgs.writeText "system-facts.json" (
@@ -97,7 +102,7 @@ in
   # config, the expected forwards from the router's mirror: docs/notes/network/exposure.md
   exposure-check =
     let
-      cfg = self.nixosConfigurations.ex-b560m-v5.config;
+      cfg = host.config;
     in
     pkgs.callPackage ../tools/exposure-check.nix {
       host = "ssh.${cfg.my.net.domain}";
@@ -118,12 +123,19 @@ in
     (nixpkgs.lib.nixosSystem {
       specialArgs = { inherit inputs; };
       modules = commonModules ++ [
-        ../hosts/ex-b560m-v5
-        ../hosts/ex-b560m-v5/vm-disko.nix
+        hostDir
+        (hostDir + "/vm-disko.nix")
       ];
     }).config.system.build.vmWithDisko;
 
   # THE BOOT TEST: it boots THIS host in QEMU and reads which units actually came up. A
   # PACKAGE and not a check on purpose, the gate reason is in docs/notes/repo/vm-boot.md
-  vm-boot = import ./vm-boot.nix { inherit inputs pkgs commonModules; };
+  vm-boot = import ./vm-boot.nix {
+    inherit
+      inputs
+      pkgs
+      commonModules
+      hostDir
+      ;
+  };
 }

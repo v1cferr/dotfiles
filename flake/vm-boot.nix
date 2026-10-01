@@ -4,6 +4,7 @@
   inputs,
   pkgs,
   commonModules,
+  hostDir,
 }:
 
 pkgs.testers.runNixOSTest {
@@ -13,8 +14,8 @@ pkgs.testers.runNixOSTest {
   # both (the overlays here, allowUnfree in modules/nixos/core), so the node builds its own.
   node.pkgsReadOnly = false;
   nodes.machine.imports = commonModules ++ [
-    ../hosts/ex-b560m-v5
-    ../hosts/ex-b560m-v5/vm-boot.nix
+    hostDir
+    (hostDir + "/vm-boot.nix")
   ];
   testScript =
     let

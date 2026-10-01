@@ -157,9 +157,9 @@ secrets/           secrets.yaml (sops) + the Bitwarden index
 docs/              what is NOT declarable, plus the diary: rules, notes, history, guides, ideas
 ```
 
-The docs at the root are the three GitHub reads from there: this README,
-[`CONTRIBUTING.md`](CONTRIBUTING.md) and [`SECURITY.md`](SECURITY.md). Everything else lives in
-[`docs/`](docs/).
+GitHub reads this README from the root, and
+[`CONTRIBUTING.md`](.github/CONTRIBUTING.md) and [`SECURITY.md`](.github/SECURITY.md) from
+`.github/`, the first place it looks. Everything else lives in [`docs/`](docs/).
 
 ## Where does a package go?
 

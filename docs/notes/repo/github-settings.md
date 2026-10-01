@@ -112,7 +112,7 @@ side of the repo: a number with a date, instead of "I think the CI is safe".
 **Most of the checks were already paid for** before the workflow existed: actions pinned by hash
 (Pinned-Dependencies), a read-only token by default (Token-Permissions), Dependabot on the actions
 (Dependency-Update-Tool), zizmor on every workflow (Dangerous-Workflow). The `history` ruleset
-feeds Branch-Protection, and [`SECURITY.md`](../../../SECURITY.md) with private vulnerability
+feeds Branch-Protection, and [`SECURITY.md`](../../../.github/SECURITY.md) with private vulnerability
 reporting turned on (27/09/2026) feeds Security-Policy.
 
 **Some checks stay low ON PURPOSE**, and chasing them would be theatre:
@@ -137,7 +137,7 @@ no Nix analyser, but this repo is not only Nix: it reads the checkers' Python, t
 and the workflows themselves (the `actions` language), which is real coverage and not a badge.
 [`codeql.yml`](../../../.github/workflows/codeql.yml) runs the three on every push and weekly, with
 `build-mode: none`, since none of them needs a build and a build would mean Nix on the runner for
-nothing. The same day [`SECURITY.md`](../../../SECURITY.md) got its timeline (acknowledged in 7
+nothing. The same day [`SECURITY.md`](../../../.github/SECURITY.md) got its timeline (acknowledged in 7
 days, fixed or explained in 30), which is the part Security-Policy scored 9 without.
 
 **The ceiling, computed with Scorecard's weights on 30/09/2026: about 7.7.** The 6.9 is 625 points

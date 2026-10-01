@@ -16,7 +16,7 @@ idiom, or a security problem are all welcome.
 
 - **The gate passes**: `nix flake check --option abort-on-warn true`. The devShell (`nix develop`,
   or `direnv allow`) installs the same checks as git hooks, so they run before each commit.
-- **It follows [the rules](docs/rules.md)**: en-US everywhere, conventional commits (`feat|fix|
+- **It follows [the rules](../docs/rules.md)**: en-US everywhere, conventional commits (`feat|fix|
   docs|chore(scope): subject`), one commit per task, and never a `Co-Authored-By:` trailer.
 - **The reasoning goes to `docs/notes/`**, and the comment in the code stays at most two lines,
   pointing at it.

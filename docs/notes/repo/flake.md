@@ -25,6 +25,27 @@ configuration of every hook kept their drvPath.
 The version strategy these inputs implement (stable base, unstable per package, upstream directly)
 is in [`version-bumps.md`](version-bumps.md).
 
+Where a package comes from, which is what every section below is a case of:
+
+```mermaid
+flowchart LR
+    accTitle: Where a package comes from
+    accDescr: The stable nixpkgs release is the base for everything; one hoisted unstable instance is picked per package; upstream flakes, the vendored packages of ./pkgs and the patched builds cover what neither channel does. All of it lands in one system that includes home-manager.
+
+    S["nixpkgs, the stable release<br>the base, for everything by default"]
+    U["nixpkgs-unstable, ONE hoisted instance<br>pkgs.unstable.name, picked per package"]
+    F["upstream flakes<br>zen-browser · quickshell · browser-previews · ..."]
+    V["./pkgs, vendored<br>in neither nixpkgs nor a flake, bumped by vendored-bump"]
+    P["patched builds<br>spotify · vscode · btop · claude-desktop"]
+    SYS["one system<br>NixOS and home-manager, from one drvPath"]
+
+    S --> SYS
+    U --> SYS
+    F --> SYS
+    V --> SYS
+    P --> SYS
+```
+
 ## The inputs
 
 ### zen-browser, and the `follows` hazard
@@ -310,6 +331,35 @@ The CI (`.github/workflows/nix.yml`) became the THIRD consumer on 04/08/2026: it
 `nix flake check` with `--override-input duo-streak-daemon path:./tools/ci/stub-duo`, the stub avoiding
 the need for a deploy key for the private input. So touching the hooks changes the CI by itself;
 there is no second list of linters in the workflow.
+
+```mermaid
+flowchart TD
+    accTitle: The quality gate, from an edit to the weekly canary
+    accDescr: One definition in flake/checks.nix feeds the pre-commit hook on this machine and nix flake check in the CI on every push; the commit message is checked only locally; the docs workflow builds and publishes the site; the canary runs every Monday against every input at its head and pushes to ntfy on failure.
+
+    DEF["checks, in flake/checks.nix<br>ONE definition"]
+
+    subgraph local["On this machine"]
+        E["edit"] --> PC["pre-commit<br>every hook, the nav gate included"]
+        PC --> CM["commit-msg<br>convco · prose-style"]
+    end
+
+    subgraph push["On every push to nixos"]
+        CI["nix.yml<br>nix flake check, private input stubbed<br>+ checks.packages"]
+        DOCS["docs.yml<br>nix build .#pages, then GitHub Pages"]
+    end
+
+    subgraph weekly["Every Monday"]
+        CAN["canary.yml<br>every input at its head<br>links · secrets · advisories · exposure · exceptions · rulesets"]
+        CAN -->|on failure| NTFY["ntfy push"]
+    end
+
+    DEF --> PC
+    DEF --> CI
+    CM --> CI
+    CM --> DOCS
+    CI ~~~ CAN
+```
 
 **`nixfmt`, and it was `nixfmt-rfc-style` until 18/08/2026.** The hook set used to point the name
 `nixfmt` at the CLASSIC formatter, so asking for it would have reformatted the whole repo in the old

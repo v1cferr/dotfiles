@@ -118,40 +118,43 @@ The reasoning behind each line is in [notes/repo/flake.md](docs/notes/repo/flake
 
 ## Layout
 
-Organized **by category**: every subject is a subfolder with its own `default.nix` importing that
-category's modules. Adding a module is 1 line in the category's `default.nix`, and the top level
-never changes.
+Every question about where a thing goes has one folder for an answer. `modules/` OFFERS
+capabilities, `hosts/` decides which ones each machine gets, and every subject inside `modules/`
+is a subfolder whose `default.nix` lists its files: adding a module is one line there. The why:
+[decision 0009](docs/decisions/0009-modules-hosts-tools-layout.md).
 
 ```text
-flake.nix        description + inputs + the wiring of every output, the one entry point
-flake/           how each output is built: overlays, hosts, packages, vm-boot, checks, devShell
-flake.lock       pinned input versions (rule 13: no implicit "latest", anywhere)
+flake.nix          description, inputs, and one line of wiring per output
+flake/             how each output is built: overlays, hosts, packages, vm-boot, checks, devShell
+flake.lock         pinned input versions (rule 13: no implicit "latest", anywhere)
 
-modules/nixos/          SYSTEM, shared by every host (machine-agnostic)
-  core/          Nix/flakes, boot, Secure Boot, users, secrets, locale, shutdown
-  hardware/      firmware, audio (PipeWire), fonts, btrfs, OOM; device modules hosts pick
-  network/       NetworkManager, SSH, VPNs, ingress, the router, Tor, the FAI gateway
-  desktop/       LightDM, Hyprland, monitors
-  gaming/        Steam + Proton-GE + gamemode
-  services/      btrbk, Caddy, Jellyfin, qBittorrent, Immich, Ollama, Docker, libvirt, ...
-  packages.nix   the CENTRAL LIST of system packages (rescue/base + diagnostics)
+hosts/             the INVENTORY: one folder per machine, whatever it runs
+  ex-b560m-v5/     the desktop (NixOS): identity, hardware.nix, disko, the my.services panel
+  cudy-wr3000/     the router (OpenWrt): a read-only UCI mirror, plus owfetch.sh
 
-modules/home/            USER (home-manager): dotfiles + user apps
-  packages.nix   the CENTRAL LIST of user apps/CLIs (the ones with no config of their own)
-  shell/         zsh, starship, kitty, git, ssh, the AI CLIs (claude, codex, antigravity), ntfy
-  desktop/       hypr (Lua), quickshell (the bar), lockscreen, launcher, palette, wallpaper, xdg
-  apps/          apps WITH a config of their own: vscode, dolphin, flameshot, media, zen, ...
-  network/       remote hosts: the FAI workstation, the T480, MEGA
-  services/      the user's units and timers: mounts, disk hygiene, backups of saves, RPC
+modules/nixos/     NixOS capabilities, offered to every host
+  core/            Nix/flakes, boot, Secure Boot, users, secrets, locale, shutdown
+  hardware/        firmware, audio, fonts, btrfs, OOM; plus device modules a host picks
+  network/         NetworkManager, SSH, VPNs, ingress, router-sync, Tor, the FAI gateway
+  desktop/         LightDM, Hyprland, monitors
+  gaming/          Steam + Proton-GE + gamemode
+  services/        btrbk, Caddy, Jellyfin, qBittorrent, Immich, Ollama, Docker, libvirt, ...
+  packages.nix     the CENTRAL LIST of system packages (rescue/base + diagnostics)
 
-hosts/           per-machine answers (hostname, disks via disko, monitors, stateVersion)
-  ex-b560m-v5/  the ONLY host; services.nix is the panel of which my.services it turns on
-pkgs/            software this repo packages: vendored binaries, patched builds
-tools/           what maintains the repo itself: the checkers, metrics, stats, version bumps
-secrets/         secrets.yaml (sops) + the Bitwarden index
-hosts/cudy-wr3000/          mirror of the OpenWrt UCI config: visible, not declarable
-docs/            what is NOT declarable, plus the diary: rules, notes, history, guides, ideas
-tools/docs-site/       docs/ built into https://dotfiles.v1cferr.dev (Fumadocs, hermetic in Nix)
+modules/home/      Home Manager capabilities: dotfiles + user apps
+  packages.nix     the CENTRAL LIST of user apps/CLIs (the ones with no config of their own)
+  shell/           zsh, starship, kitty, git, ssh, the AI CLIs (claude, codex, antigravity), ntfy
+  desktop/         hypr (Lua), quickshell (the bar), lockscreen, launcher, palette, wallpaper, xdg
+  apps/            apps WITH a config of their own: vscode, dolphin, flameshot, media, zen, ...
+  network/         remote hosts: the FAI workstation, the T480, MEGA
+  services/        the user's units and timers: mounts, disk hygiene, backups of saves, RPC
+
+pkgs/              software this repo packages: vendored binaries, patched builds
+tools/             what maintains the repo itself: checkers, metrics, stats, bumps, the site
+  docs-site/       docs/ built into https://dotfiles.v1cferr.dev (Fumadocs, hermetic in Nix)
+  ci/              the stub that stands in for the private input
+secrets/           secrets.yaml (sops) + the Bitwarden index
+docs/              what is NOT declarable, plus the diary: rules, notes, history, guides, ideas
 ```
 
 The docs at the root are the three GitHub reads from there: this README,

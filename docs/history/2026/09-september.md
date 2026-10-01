@@ -1,6 +1,29 @@
 # History: september 2026
 
-12 entries. Index in [README.md](../README.md).
+13 entries. Index in [README.md](../README.md).
+
+- [x] The repo was laid out as infrastructure, and the machine did not notice (30/09/2026). Recorded
+      as [decision 0009](../../decisions/0009-modules-hosts-tools-layout.md); 14 commits, each
+      green on its own, from `e00cb70` to the one that wrote this.
+      • THE QUESTION WAS "WHERE DOES IT GO", and every answer is now one folder: `hosts/` is the
+        inventory (the desktop AND the router), `modules/{nixos,home}/` offer capabilities,
+        `pkgs/` is software, `tools/` maintains the repo, `flake/` implements the outputs. The
+        host is `ex-b560m-v5`, after the board, since a name taken from a disk dies with the disk.
+      • NO BEHAVIOR CHANGE WAS CLAIMED WITHOUT A MEASUREMENT. Every step was compared against the
+        previous system with `nix-diff`: the rename moved the hostname (and with it the mDNS name,
+        which I had not counted on, since Avahi is on implicitly), the moves moved only strings
+        that cite a path at runtime, and the hardware step reordered `environment.systemPackages`
+        and nothing else, the built `sw/` tree identical to the running one, link by link.
+      • THREE THINGS BIT, AND ALL THREE ARE THE KIND THIS REPO NOW CHECKS FOR. `dead-config`
+        resolved a `../` import one level too shallow, so a host composing shared modules would
+        have read as dead: fixed first, by mutation. A pre-commit hook kept running the PREVIOUS
+        build of `router-ssot` and failed a correct commit, which is the `.pre-commit-config.yaml`
+        trap the `.envrc` already describes. And a `git reset` meant to keep VS Code's own edit
+        out of a commit dropped a file mid-rename; it was folded back before any push.
+      • COVERAGE DID NOT SHRINK IN SILENCE. `docs-links` keeps the retired roots (`system/`,
+        `home/`, `scripts/`, `router/`) in its path pattern so a leftover FAILS, and
+        `dead-config` now walks `flake.nix`'s plain imports instead of exempting `flake/`. The
+        reference counts were compared at every step, and the one that dropped was explained.
 
 - [~] A KVM host for a DISPOSABLE Windows 11, and three wiki steps that do not survive 26.05
       (19/09/2026). The host is declared, switched and verified; no guest exists yet, which is why

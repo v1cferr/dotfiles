@@ -31,7 +31,7 @@ copying it only buys a second thing to forget.
 
 | Theme | Rules |
 | --- | --- |
-| Layout | 4 `modules/nixos/` and `modules/home/` apart |
+| Layout | 4 modules offer, hosts compose |
 | Reproducibility | 3 declarative, 8 validate first, 13 the lock pins, 21 zero warnings |
 | Ownership | 11 one source of truth, 14 one owner per artifact, 15 one owner per automation |
 | State and secrets | 6 state is not declared, 12 secrets are a separate layer |
@@ -81,19 +81,26 @@ which bring a machine up from the config alone; the rest by review.
 
 **Detail**: [disaster recovery](guides/disaster-recovery.md).
 
-## 4. `modules/nixos/` and `modules/home/` apart
+## 4. Modules offer, hosts compose
 
-System level (services, drivers, root packages) goes in `modules/nixos/`; the app **and** its user
-config go in `modules/home/` (`programs.*` when there is a module, `home.packages` otherwise), and a
-package **MUST NOT** be in both. Inside each, every subject is a subfolder with its own
-`default.nix`, so adding a module is one line there and the top level never changes.
+A capability lives in `modules/`: system level (services, drivers, root packages) in
+`modules/nixos/`, the app **and** its user config in `modules/home/` (`programs.*` when there is a
+module, `home.packages` otherwise), and a package **MUST NOT** be in both. A machine, whatever it
+runs, is a folder in `hosts/`, and a module that describes ONE device **MUST** be imported by the
+host that has it, never by a shared `default.nix`. Software the repo packages goes in `pkgs/`,
+what maintains the repo in `tools/`, and the outputs' implementation in `flake/`. Inside each
+`modules/` half, every subject is a subfolder with its own `default.nix`, so adding a module is
+one line there and the top level never changes.
 
 **Why**: one `rebuild` applies both halves, so the split is about WHO needs a thing (root, a
-service, or me), and a category tree keeps a file findable at 150 modules and beyond.
+service, or me); a host folder answers WHERE it runs, so a second machine never inherits this
+desk's peripherals; and a fixed answer per question keeps a file findable at 150 modules and beyond.
 
-**Enforced by**: `dead-config`, which fails on a module no `imports` reaches; the placement by review.
+**Enforced by**: `dead-config`, which fails on a module, host or flake file that nothing imports;
+`docs-links`, which fails on a path under a retired root; the placement by review.
 
-**Detail**: the decision per package is in the [README](../README.md#where-does-a-package-go).
+**Detail**: [decision 0009](decisions/0009-modules-hosts-tools-layout.md), and the decision per
+package in the [README](../README.md#where-does-a-package-go).
 
 ## 5. ~~Organized by category~~
 

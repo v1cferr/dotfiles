@@ -111,7 +111,7 @@ Each entry is `(reason, "YYYY-MM-DD")`. A reason alone explains why an exception
 says nothing about whether it still does in 2029; without a date the list only grows, because
 nobody deletes a line that looks deliberate. The date is not a deadline for the THING, it is the day
 the question comes back: on it, the exception is deleted or the date moves in a commit that says
-why, which is the same contract as a budget in `ci/eval-budget.json`.
+why, which is the same contract as a budget in `tools/eval-metrics/budget.json`.
 
 | Exception | Review by | Why that date |
 | --- | --- | --- |

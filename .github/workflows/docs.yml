@@ -47,7 +47,7 @@ jobs:
       # The override is the same as the gate's: the package set comes from the HOST, whose
       # evaluation reaches the private input.
       - name: nix build .#pages
-        run: nix build .#pages --override-input duo-streak-daemon path:./ci/stub-duo
+        run: nix build .#pages --override-input duo-streak-daemon path:./tools/ci/stub-duo
 
       # The store path is read-only and the upload tars what it is given, so it gets a writable
       # copy instead of the symlink.

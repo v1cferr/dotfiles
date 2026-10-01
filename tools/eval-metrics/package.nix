@@ -1,4 +1,4 @@
-# eval-metrics: what evaluating each host COSTS and how big the code is, against ci/eval-budget.json.
+# eval-metrics: what evaluating each host COSTS and how big the code is, against ./budget.json.
 # It warns instead of failing, since a budget is a question to answer: docs/notes/repo/eval-metrics.md
 { writers, scc }:
 
@@ -14,7 +14,7 @@ writers.writePython3Bin "eval-metrics"
     import sys
     import tempfile
 
-    BUDGET = "ci/eval-budget.json"
+    BUDGET = "tools/eval-metrics/budget.json"
 
     # Only numbers that do not depend on the MACHINE get a budget: the same commit gives the same
     # count on the runner and here. cpuTime is reported, never judged.

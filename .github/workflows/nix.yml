@@ -54,14 +54,14 @@ jobs:
       - name: nix flake check (linters + host + the packages build)
         run: |
           nix flake check --option abort-on-warn true \
-            --override-input duo-streak-daemon path:./ci/stub-duo
+            --override-input duo-streak-daemon path:./tools/ci/stub-duo
 
-      # Each host's COST and the code size into the run's summary, warning over ci/eval-budget.json.
+      # Each host's COST and the code size into the run's summary, warning over its budget.json.
       # It never fails the run: a budget is a question to answer: docs/notes/repo/eval-metrics.md
       - name: eval-metrics (what each host costs, and how big the code is)
         run: |
-          nix run .#eval-metrics --override-input duo-streak-daemon path:./ci/stub-duo -- \
-            --override-input duo-streak-daemon path:./ci/stub-duo
+          nix run .#eval-metrics --override-input duo-streak-daemon path:./tools/ci/stub-duo -- \
+            --override-input duo-streak-daemon path:./tools/ci/stub-duo
 
 # PLAN B, only if a module ever READS from the private repo at eval time and the empty stub stops
 # doing: a DEDICATED deploy key, never a personal one. The 4 steps: docs/notes/repo/flake.md

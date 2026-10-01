@@ -3,7 +3,7 @@
 `tools/eval-metrics/package.nix`, run by the gate workflow right after `nix flake check`, and by hand with
 `nix run .#eval-metrics`. It evaluates every host in `nixosConfigurations`, writes a table into the
 run's summary, and raises a WARNING annotation for any number over
-[`ci/eval-budget.json`](../../../ci/eval-budget.json).
+[`tools/eval-metrics/budget.json`](../../../tools/eval-metrics/budget.json).
 
 ## Why it exists
 
@@ -76,7 +76,7 @@ Set on 27/09/2026 at about 20% over what was measured that day:
 
 Crossing it is a QUESTION, not a bug: a new host service can be worth 10% more derivations. So the
 run stays green and carries the warning, and the answer is a commit, either the fix or a raised
-number in `ci/eval-budget.json` whose message says why. That commit is the point: the history then
+number in `tools/eval-metrics/budget.json` whose message says why. That commit is the point: the history then
 records every time the config got heavier on purpose.
 
 A new host without an entry is reported and warned about, never skipped in silence.

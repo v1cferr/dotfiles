@@ -288,7 +288,7 @@ rule, which is the recipe for rule 14's silent drift, where the gate passes, the
 nobody understands why. git-hooks.nix collapses the two.
 
 The CI (`.github/workflows/nix.yml`) became the THIRD consumer on 04/08/2026: it runs
-`nix flake check` with `--override-input duo-streak-daemon path:./ci/stub-duo`, the stub avoiding
+`nix flake check` with `--override-input duo-streak-daemon path:./tools/ci/stub-duo`, the stub avoiding
 the need for a deploy key for the private input. So touching the hooks changes the CI by itself;
 there is no second list of linters in the workflow.
 
@@ -474,9 +474,9 @@ statix/deadnix/nixfmt straight from nixpkgs: the LOCAL flake was never evaluated
 entered the game.
 
 The way out is `--override-input`, which swaps the input BEFORE the fetch for an EMPTY directory
-versioned in `ci/stub-duo`. No deploy key, no secret in Actions, and the flake evaluates in full.
+versioned in `tools/ci/stub-duo`. No deploy key, no secret in Actions, and the flake evaluates in full.
 Verified on 04/08/2026: "checking NixOS configuration 'nixosConfigurations.nixos-kingston'" plus
-"all checks passed!". Why empty is enough is in `ci/stub-duo/.gitkeep`.
+"all checks passed!". Why empty is enough is in `tools/ci/stub-duo/.gitkeep`.
 
 **What that bought**, and they were two real holes:
 
@@ -492,7 +492,7 @@ Verified on 04/08/2026: "checking NixOS configuration 'nixosConfigurations.nixos
 **The cost, accepted**: `flake check` fetches ALL the inputs (~1.43 GiB across 19) and evaluates the
 whole config, so the CI went from seconds to minutes. The trade is machine time for coverage and a
 single definition. If it ever gets annoying, the way back is this file in the history, not undoing
-`ci/stub-duo`, which is useful anyway for running `flake check` in any clone without the private
+`tools/ci/stub-duo`, which is useful anyway for running `flake check` in any clone without the private
 key.
 
 ### The store cache, and why the canary does NOT get one (23/08/2026)
@@ -533,7 +533,7 @@ this tree", which is the question that decides whether a config written in 2026 
 ```text
 nix flake check -L --keep-going \
   --recreate-lock-file --no-write-lock-file \
-  --override-input duo-streak-daemon path:./ci/stub-duo
+  --override-input duo-streak-daemon path:./tools/ci/stub-duo
 ```
 
 `--recreate-lock-file` resolves EVERY input at its branch head, `--no-write-lock-file` leaves the

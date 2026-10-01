@@ -2,7 +2,7 @@ An EMPTY stub that replaces the private `duo-streak-daemon` input in the CI.
 
 It exists because Nix fetches ALL the inputs locked in the lock file when evaluating the flake, so
 `nix flake check` would demand a read credential for the private repo. With
-  nix flake check --override-input duo-streak-daemon path:./ci/stub-duo
+  nix flake check --override-input duo-streak-daemon path:./tools/ci/stub-duo
 the input is swapped BEFORE the fetch and no key enters the CI.
 
 Empty is enough because the only consumer (modules/nixos/services/duo.nix) uses the input purely as

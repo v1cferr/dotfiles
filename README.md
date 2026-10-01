@@ -106,7 +106,7 @@ flowchart LR
 | --- | --- | --- |
 | every commit | the pre-commit hooks: formatters, linters, gitleaks, the repo checkers, the commit message | yes |
 | every push | [`nix.yml`](.github/workflows/nix.yml): `nix flake check`, zero warnings, plus the packages build | yes |
-| every push | `eval-metrics`: the evaluation cost and the code size against [`ci/eval-budget.json`](ci/eval-budget.json) | no, it warns |
+| every push | `eval-metrics`: the evaluation cost and the code size against [`tools/eval-metrics/budget.json`](tools/eval-metrics/budget.json) | no, it warns |
 | every push | [`docs.yml`](.github/workflows/docs.yml): the site and these stats, to GitHub Pages | yes |
 | every Monday | [`canary.yml`](.github/workflows/canary.yml): inputs at their heads, links, the whole history for secrets, the rulesets, exceptions past their date; a red run reaches my phone | yes |
 | every Monday | [`scorecard.yml`](.github/workflows/scorecard.yml): the OpenSSF supply-chain grade | no, it grades |
@@ -149,7 +149,6 @@ pkgs/            software this repo packages: vendored binaries, patched builds
 tools/           what maintains the repo itself: the checkers, metrics, stats, version bumps
 secrets/         secrets.yaml (sops) + the Bitwarden index
 hosts/cudy-wr3000/          mirror of the OpenWrt UCI config: visible, not declarable
-ci/              the eval budget and the stub for the private input
 docs/            what is NOT declarable, plus the diary: rules, notes, history, guides, ideas
 docs-site/       docs/ built into https://dotfiles.v1cferr.dev (Fumadocs, hermetic in Nix)
 ```

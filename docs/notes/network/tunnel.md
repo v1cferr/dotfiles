@@ -70,7 +70,7 @@ nix shell nixpkgs#cloudflared -c cloudflared tunnel create basic-memory
 # -> ~/.cloudflared/<id>.json: paste its ONE line into Bitwarden as "Cloudflare Tunnel Credentials"
 # add "cloudflared_tunnel_credentials": "Cloudflare Tunnel Credentials" to secrets/bitwarden-secrets.json
 sync-secrets
-# then set my.net.tunnel.id = "<id>" in hosts/nixos-kingston/services.nix, build, switch
+# then set my.net.tunnel.id = "<id>" in hosts/ex-b560m-v5/services.nix, build, switch
 # CREATE THE ACCESS APP FOR THE HOSTNAME FIRST, and only then:
 nix shell nixpkgs#cloudflared -c cloudflared tunnel route dns basic-memory memory.v1cferr.dev
 rm ~/.cloudflared/<id>.json ~/.cloudflared/cert.pem              # Bitwarden is the copy now

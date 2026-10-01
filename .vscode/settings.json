@@ -4,7 +4,7 @@
   //
   // WHY HERE and not in the user's settings.json: the expressions below depend on the
   // workspace's root BEING this flake (the `./.` resolves to it) and they name the host
-  // `nixos-kingston`. In the user's settings.json, which Settings Sync propagates, that
+  // `ex-b560m-v5`. In the user's settings.json, which Settings Sync propagates, that
   // would hold for any Nix project opened, and in the others the `getFlake` would fail.
   // Here it stays versioned next to the flake it references. The `nix.enableLanguageServer`
   // toggle lives in the user's settings.json on purpose: it is independent of machine and
@@ -28,7 +28,7 @@
   //
   // TWO COUPLINGS that do not fail visibly: nixd just STOPS completing and it looks like
   // the extension got worse.
-  //   1. `nixos-kingston` is the host's name in the flake. Renaming the host breaks it. I
+  //   1. `ex-b560m-v5` is the host's name in the flake. Renaming the host breaks it. I
   //      preferred the explicit name over a `builtins.head (attrValues …)`: the head would
   //      survive the rename, but it would pick an ARBITRARY host the day there is a second
   //      one.
@@ -59,14 +59,14 @@
       // `services.openss` giving `openssh` in a real LSP session.
       "options": {
         "nixos": {
-          "expr": "(builtins.getFlake (builtins.toString ./.)).nixosConfigurations.nixos-kingston.options"
+          "expr": "(builtins.getFlake (builtins.toString ./.)).nixosConfigurations.ex-b560m-v5.options"
         },
         // home-manager is a NixOS MODULE here, so its options are not at the top of the
         // config: they come out of `home-manager.users`, whose type is a submodule, hence
         // the `getSubOptions []`. With a plain `.options.home-manager` only the wrapper's 3
         // options would come (users/useGlobalPkgs/…), not the hundreds inside.
         "home-manager": {
-          "expr": "(builtins.getFlake (builtins.toString ./.)).nixosConfigurations.nixos-kingston.options.home-manager.users.type.getSubOptions []"
+          "expr": "(builtins.getFlake (builtins.toString ./.)).nixosConfigurations.ex-b560m-v5.options.home-manager.users.type.getSubOptions []"
         }
       }
     }

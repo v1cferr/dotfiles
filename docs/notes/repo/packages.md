@@ -169,7 +169,7 @@ packages, so anything else in there would be a lie:
 the same place, there is nothing to disambiguate, and the `with` is the nixpkgs idiom for exactly
 that shape. Five modules were left untouched for want of a payoff, all of them with no `let` block
 and one or two single-use references: `system/hardware/mouse.nix`, `system/hardware/razer.nix`,
-`hosts/nixos-kingston/vm-disko.nix`, `home/shell/git.nix` and `home/shell/cli.nix`.
+`hosts/ex-b560m-v5/vm-disko.nix`, `home/shell/git.nix` and `home/shell/cli.nix`.
 
 **How the sweep was verified.** The change is textual, so the proof is that nothing moved: the
 system's `drvPath` was read before the first edit and after every commit, and it stayed
@@ -236,7 +236,7 @@ is a real directory whose contents are individually linked.
 and `xdg.configFile` is a separate option from `home.file`:
 
 ```bash
-nix eval --json '.#nixosConfigurations.nixos-kingston.config.home-manager.users.v1cferr.xdg.configFile' \
+nix eval --json '.#nixosConfigurations.ex-b560m-v5.config.home-manager.users.v1cferr.xdg.configFile' \
   | jq -r 'keys[]' | while read -r f; do
       p="$HOME/.config/$f"
       [ -e "$p" ] && [ ! -L "$p" ] && [ ! -d "$p" ] && echo "CONFLICT: $p"

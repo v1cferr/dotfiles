@@ -1,6 +1,6 @@
-# disko (nixos-kingston)
+# disko (ex-b560m-v5)
 
-Module: [`hosts/nixos-kingston/disko.nix`](../../../hosts/nixos-kingston/disko.nix)
+Module: [`hosts/ex-b560m-v5/disko.nix`](../../../hosts/ex-b560m-v5/disko.nix)
 
 The declarative disk layout for the KINGSTON KC3000 (NVMe Gen4).
 
@@ -17,8 +17,8 @@ To apply on a cutover, booting from the installer USB stick:
 
 ```sh
 sudo nix run github:nix-community/disko -- --mode destroy,format,mount \
-  --flake .#nixos-kingston
-sudo nixos-install --flake .#nixos-kingston
+  --flake .#ex-b560m-v5
+sudo nixos-install --flake .#ex-b560m-v5
 ```
 
 ## Why btrfs here, when the SanDisk's NixOS was ext4
@@ -123,7 +123,7 @@ and boots the config on the result. It is the only check of this file: the gate 
 evaluates, and nothing proved the partitioning still works, which is the one thing here that cannot
 be fixed after the fact.
 
-`hosts/nixos-kingston/vm-disko.nix` holds the three overrides that make it cheap: 24 GiB of image
+`hosts/ex-b560m-v5/vm-disko.nix` holds the three overrides that make it cheap: 24 GiB of image
 instead of 953 (`size = "100%"` follows the image), 1 GiB of swap instead of 16 (`mkswapfile`
 ALLOCATES it, so the real number would mean writing 16 GiB to check an integer), and the console on
 the terminal so the drill also works over SSH. Leaving the VM is Ctrl-A then X.

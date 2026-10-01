@@ -90,7 +90,7 @@ sudo EDITOR=nano SOPS_AGE_KEY_FILE=/var/lib/sops-nix/key.txt \
 sudo chown v1cferr:users secrets/secrets.yaml && chmod 644 secrets/secrets.yaml
 
 # WITHOUT THIS the services keep the OLD value:
-sudo nixos-rebuild switch --flake .#nixos-kingston
+sudo nixos-rebuild switch --flake .#ex-b560m-v5
 ```
 
 Three things that each cost a failed attempt:

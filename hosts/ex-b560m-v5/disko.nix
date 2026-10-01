@@ -1,4 +1,4 @@
-# DESTRUCTIVE disk layout for nixos-kingston (KC3000). It runs on a CUTOVER, never on a rebuild.
+# DESTRUCTIVE disk layout for ex-b560m-v5 (its KC3000). It runs on a CUTOVER, never on a rebuild.
 # Why btrfs, the zstd:1 choice and the swapfile trap: docs/notes/boot-and-storage/disko.md
 let
   # ONE definition (rule 11), and not only to avoid 6 copies: upstream says most btrfs options apply

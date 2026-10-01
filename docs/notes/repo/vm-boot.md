@@ -1,7 +1,7 @@
 # vm-boot: does this config still boot on a machine that is not this one?
 
 `nix build .#vm-boot`. A NixOS test that boots THIS host inside QEMU and asserts that the config
-was APPLIED, not merely that it evaluated. `hosts/nixos-kingston/vm-boot.nix` is the variant it
+was APPLIED, not merely that it evaluated. `hosts/ex-b560m-v5/vm-boot.nix` is the variant it
 boots.
 
 Rule 8 requires `nixos-rebuild build` before the switch, which proves the tree EVALUATES and
@@ -46,7 +46,7 @@ which one it was.
 ## The variant is not a second config
 
 `commonModules` was hoisted out of `mkHost` for this: the test builds the SAME module list the host
-builds, plus `hosts/nixos-kingston/vm-boot.nix`. One definition, two consumers, instead of a copy
+builds, plus `hosts/ex-b560m-v5/vm-boot.nix`. One definition, two consumers, instead of a copy
 that drifts (rule 14). What the variant turns off is only what needs the real hardware, a secret or
 another machine:
 
@@ -105,7 +105,7 @@ up; the user exists with zsh as their shell; the whole home-manager generation a
 
 DOES NOT PROVE: the secrets (no age key), the compositor and the GPU, the optional services (all
 off), the real disk layout, or anything about hardware. The disk layout is the next stage:
-`nix build .#nixosConfigurations.nixos-kingston.config.system.build.vmWithDisko` formats virtual
+`nix build .#nixosConfigurations.ex-b560m-v5.config.system.build.vmWithDisko` formats virtual
 disks with the real disko layout, and `nixos-rebuild build-vm` is the WRONG tool for it (it hangs
 waiting for the root partition on a disko layout, disko issue #668).
 

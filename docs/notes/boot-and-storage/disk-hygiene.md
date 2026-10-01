@@ -100,7 +100,7 @@ only worth spending once the disk is actually short.
 obvious generic reapers are actively harmful on this machine:
 
 **`find -atime`: meaningless.** The filesystem is mounted `noatime`
-(`hosts/nixos-kingston/disko.nix`), so every access time under `~/.cache` is frozen at the day the
+(`hosts/ex-b560m-v5/disko.nix`), so every access time under `~/.cache` is frozen at the day the
 file landed on this disk. An age-by-access rule sweeps everything or nothing. This is the same
 `noatime` fact that sent `disk-insight.nix` to `/proc` instead of the filesystem.
 

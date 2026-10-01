@@ -313,7 +313,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
       The premise of this item is a persistence list that has to be right on the FIRST boot, and it
       does not have to be: the ORDER is what makes a wrong list cheap.
       • IN A VM FIRST, and there is a tool for exactly this:
-        `nix build .#nixosConfigurations.nixos-kingston.config.system.build.vmWithDisko` formats
+        `nix build .#nixosConfigurations.ex-b560m-v5.config.system.build.vmWithDisko` formats
         VIRTUAL disks with THIS repo's disko layout, so the same `@ @home @nix @persist` exist and
         a wrong list costs an image instead of the 132 GiB Jellyfin library. `nixos-rebuild
         build-vm` is the WRONG tool here: with a disko layout it hangs waiting for the root
@@ -415,7 +415,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
       is a pointer that only advances after Hydra builds and the test suite passes, the same
       gating as nixos-unstable.
       The `stateVersion` DOES NOT CHANGE, not on the jump, not ever. It stays "26.05" forever
-      in hosts/nixos-kingston/default.nix and home/default.nix. The name misleads: it is not "the
+      in hosts/ex-b560m-v5/default.nix and home/default.nix. The name misleads: it is not "the
       version of my system", it is "the NixOS version my STATE ON DISK is compatible with". 54
       nixpkgs modules read that value, and the canonical case is postgresql.nix, which picks the
       Postgres MAJOR from it (`versionAtLeast stateVersion "26.11"` gives postgresql_18; "25.11"

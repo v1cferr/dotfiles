@@ -1,4 +1,4 @@
-# Host nixos-kingston: ASUS EX-B560M-V5, daily driver, running off the Kingston KC3000.
+# Host ex-b560m-v5: an ASUS EX-B560M-V5 board, the daily driver, running off the Kingston KC3000.
 # Only what is specific to this machine; the shared config is ../../system.
 { modulesPath, ... }:
 
@@ -9,7 +9,7 @@
     (modulesPath + "/installer/scan/not-detected.nix")
   ];
 
-  networking.hostName = "nixos-kingston";
+  networking.hostName = "ex-b560m-v5";
 
   # MONITORS: the SSOT of the connector names, read by Nix, Lua and QML. Declared (with no
   # default, on purpose) in system/desktop/monitors.nix.

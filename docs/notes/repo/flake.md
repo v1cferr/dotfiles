@@ -200,7 +200,7 @@ flowchart TD
 
     C["commonModules<br>hostPlatform · overlays · sops · disko · ./system<br>home-manager AS a NixOS module, users.v1cferr = ./home"]
 
-    C -->|"++ hosts/nixos-kingston"| H["nixosConfigurations.nixos-kingston<br>the machine this runs on"]
+    C -->|"++ hosts/ex-b560m-v5"| H["nixosConfigurations.ex-b560m-v5<br>the machine this runs on"]
     C -->|"++ vm-disko.nix"| D["packages.disko-vm<br>the layout, formatted from scratch and booted"]
     C -->|"++ vm-boot.nix"| V["packages.vm-boot<br>does this config still boot elsewhere"]
 
@@ -211,7 +211,7 @@ flowchart TD
 home-manager entering as a MODULE and not as a separate output is what makes one `drvPath` cover
 both trees, which is the measurement rule 19 leans on: 35 modules swept and the hash did not move.
 
-`nixos-kingston` is the ONLY host: an NVMe Kingston KC3000 on an ASUS EX-B560M-V5, btrfs with
+`ex-b560m-v5` is the ONLY host: an NVMe Kingston KC3000 on an ASUS EX-B560M-V5, btrfs with
 subvolumes ready for impermanence, declarative disk through disko.
 
 **`hostPlatform` instead of nixosSystem's `system` argument.** nixpkgs itself calls that one a

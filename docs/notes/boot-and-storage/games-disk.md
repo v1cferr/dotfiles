@@ -1,6 +1,6 @@
 # The games disk: one install, two systems
 
-`hosts/nixos-kingston/default.nix` mounts it, `home/apps/games-disk.nix` links into it.
+`hosts/ex-b560m-v5/default.nix` mounts it, `home/apps/games-disk.nix` links into it.
 
 ## The problem it solves
 

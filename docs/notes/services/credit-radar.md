@@ -1,6 +1,6 @@
 # CreditRadar: why the most sensitive service on the panel never leaves the house
 
-`hosts/nixos-kingston/services.nix` (the `credit` entry in `my.ingress`). CreditRadar is my
+`hosts/ex-b560m-v5/services.nix` (the `credit` entry in `my.ingress`). CreditRadar is my
 personal credit intelligence system (V1C-76): it consolidates what the credit bureaus, Banco
 Central and my creditors each know separately, and keeps the history so a change in the profile
 can be explained afterwards.

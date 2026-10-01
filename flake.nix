@@ -1,5 +1,5 @@
 {
-  description = "My declarative system: NixOS (nixos-kingston) + home-manager, unified";
+  description = "My declarative system: NixOS (ex-b560m-v5) + home-manager, unified";
 
   inputs = {
     # SYSTEM BASE: the STABLE channel (a release, like Debian/Ubuntu, ~6 months).
@@ -330,15 +330,15 @@
     {
       nixosConfigurations = {
         # The ONLY host: an NVMe Kingston KC3000 on an ASUS EX-B560M-V5, btrfs through disko.
-        #   sudo nixos-rebuild switch --flake .#nixos-kingston
-        nixos-kingston = mkHost ./hosts/nixos-kingston;
+        #   sudo nixos-rebuild switch --flake .#ex-b560m-v5
+        ex-b560m-v5 = mkHost ./hosts/ex-b560m-v5;
       };
 
       # What THIS repo packages, exposed piece by piece so `nix build .#nxbender` works in isolation.
       # `pkgs` comes from the HOST, so the check cannot diverge from what the machine gets (rule 14).
       packages.${system} =
         let
-          pkgs = self.nixosConfigurations.nixos-kingston.pkgs;
+          pkgs = self.nixosConfigurations.ex-b560m-v5.pkgs;
         in
         {
           inherit (pkgs)
@@ -370,7 +370,7 @@
           # the rule 16 secrets episode proved is not always possible: docs/notes/repo/flake.md
           system-facts =
             let
-              cfg = self.nixosConfigurations.nixos-kingston.config;
+              cfg = self.nixosConfigurations.ex-b560m-v5.config;
               inherit (nixpkgs) lib;
             in
             pkgs.writeText "system-facts.json" (
@@ -424,7 +424,7 @@
           # config, the expected forwards from the router's mirror: docs/notes/network/exposure.md
           exposure-check =
             let
-              cfg = self.nixosConfigurations.nixos-kingston.config;
+              cfg = self.nixosConfigurations.ex-b560m-v5.config;
             in
             pkgs.callPackage ./pkgs/exposure-check.nix {
               host = "ssh.${cfg.my.net.domain}";
@@ -445,8 +445,8 @@
             (nixpkgs.lib.nixosSystem {
               specialArgs = { inherit inputs; };
               modules = commonModules ++ [
-                ./hosts/nixos-kingston
-                ./hosts/nixos-kingston/vm-disko.nix
+                ./hosts/ex-b560m-v5
+                ./hosts/ex-b560m-v5/vm-disko.nix
               ];
             }).config.system.build.vmWithDisko;
 
@@ -459,8 +459,8 @@
             # both (the overlays here, allowUnfree in system/core), so the node builds its own.
             node.pkgsReadOnly = false;
             nodes.machine.imports = commonModules ++ [
-              ./hosts/nixos-kingston
-              ./hosts/nixos-kingston/vm-boot.nix
+              ./hosts/ex-b560m-v5
+              ./hosts/ex-b560m-v5/vm-boot.nix
             ];
             testScript =
               let

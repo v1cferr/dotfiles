@@ -44,7 +44,7 @@ stays INERT and the system keeps building normally. Same pattern as `caddy.nix`.
    "duolingo_username": "Duolingo Email"
    ```
 
-3. `sync-secrets`, then `sudo nixos-rebuild switch --flake .#nixos-kingston`.
+3. `sync-secrets`, then `sudo nixos-rebuild switch --flake .#ex-b560m-v5`.
 
 ## The Duolingo session
 

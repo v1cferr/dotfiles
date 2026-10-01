@@ -13,7 +13,7 @@ making it comfortable.
 ## Why it is a toggle and not just `enable = true`
 
 `my.services.libvirt`, declared in `toggles.nix` like every other optional service. The
-convention alone would justify it, but there is a mechanical reason: `hosts/nixos-kingston/vm-common.nix`
+convention alone would justify it, but there is a mechanical reason: `hosts/ex-b560m-v5/vm-common.nix`
 turns every `my.services` key off by reading the OPTION SET, so a new toggle is off inside the VM
 boot drill BY CONSTRUCTION. An unconditional libvirtd would come up inside the drill's own QEMU,
 with no nested `/dev/kvm` under it, and a failed unit on a Sunday is exactly the noise that test

@@ -117,7 +117,7 @@ let
   # The caches with an OWNER. Everything reclaimable in ~/.cache that is safe to touch turned out
   # to be exactly this one, and the two obvious generic approaches are both wrong here:
   #
-  # `-atime`: the filesystem is mounted `noatime` (`hosts/nixos-kingston/disko.nix`), so every
+  # `-atime`: the filesystem is mounted `noatime` (`hosts/ex-b560m-v5/disko.nix`), so every
   # access time in there is frozen at the day the file landed on this disk. An age-by-access rule
   # would sweep the whole cache or none of it, and neither answer means anything.
   #

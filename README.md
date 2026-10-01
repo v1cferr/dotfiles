@@ -22,7 +22,7 @@
 {
   dotfiles = {
     what    = "my whole machine, declared: NixOS + home-manager in one flake";
-    host    = "nixos-kingston";
+    host    = "ex-b560m-v5";
     base    = "nixos-26.05";       # plus `pkgs.unstable.*`, per package
     rebuild = "one command applies the system AND my user";
     until   = 2032;                # the design goal, not a guess
@@ -85,7 +85,7 @@ as a NixOS module, so a single `rebuild` applies both halves, and `pkgs/` is ove
 ```mermaid
 flowchart LR
   lock[flake.lock<br/>the pinned universe] --> flake[flake.nix]
-  flake --> host[hosts/nixos-kingston<br/>disks, monitors, my.services]
+  flake --> host[hosts/ex-b560m-v5<br/>disks, monitors, my.services]
   host --> system[system/<br/>core, hardware, net,<br/>desktop, gaming, services]
   system -->|home-manager module| home[home/<br/>shell, desktop, apps,<br/>net, services]
   pkgs[pkgs/<br/>vendored + checkers] -.->|overlay| system
@@ -143,7 +143,7 @@ home/            USER (home-manager): dotfiles + user apps
   services/      the user's units and timers: mounts, disk hygiene, backups of saves, RPC
 
 hosts/           per-machine answers (hostname, disks via disko, monitors, stateVersion)
-  nixos-kingston/  the ONLY host; services.nix is the panel of which my.services it turns on
+  ex-b560m-v5/  the ONLY host; services.nix is the panel of which my.services it turns on
 pkgs/            my own derivations: vendored binaries, patched builds, and the checkers
 secrets/         secrets.yaml (sops) + the Bitwarden index
 scripts/         bash/python read by writeShellApplication (shellcheck runs at build time)

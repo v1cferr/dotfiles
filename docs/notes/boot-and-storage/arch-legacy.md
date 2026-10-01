@@ -101,7 +101,7 @@ The old failure mode was rclone timing out and the mount going zombie
 
 What replaced it is the DISK, and it is worse. The Seagate is a 2009 Momentus 7200.4 with 840
 thousand load cycles (40% past spec) and 348 CRC errors, the exact numbers that got it retired as
-a backup destination on 05/08/2026. `nofail` in `hosts/nixos-kingston/default.nix` means a disk
+a backup destination on 05/08/2026. `nofail` in `hosts/ex-b560m-v5/default.nix` means a disk
 that does not show up lets the boot through and leaves the folder empty, and `Restart=on-failure`
 keeps retrying behind it.
 

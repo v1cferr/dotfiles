@@ -23,7 +23,7 @@ The overlay in `flake.nix` exists because the CEF zygote crashes here, and losin
 Spotify does not open. Verified statically rather than hoped for:
 
 ```console
-$ nix eval --raw .#nixosConfigurations.nixos-kingston.pkgs.unstable.spotify.postFixup
+$ nix eval --raw .#nixosConfigurations.ex-b560m-v5.pkgs.unstable.spotify.postFixup
 wrapProgram $out/bin/spotify --add-flags "--no-zygote"
 ```
 
@@ -33,7 +33,7 @@ the old one, which is EMPTY here) and, conditionally, `fixupPhase`. It never tou
 
 ```bash
 grep -c no-zygote "$(nix eval --raw \
-  '.#nixosConfigurations.nixos-kingston.config.home-manager.users.v1cferr.programs.spicetify.spicedSpotify')/bin/spotify"
+  '.#nixosConfigurations.ex-b560m-v5.config.home-manager.users.v1cferr.programs.spicetify.spicedSpotify')/bin/spotify"
 ```
 
 ## `wayland` stays UNSET on purpose

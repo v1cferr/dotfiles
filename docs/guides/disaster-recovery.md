@@ -104,12 +104,12 @@ a backup nobody knows is empty.
 In order, and step 4 is the one that is easy to forget and expensive to skip.
 
 1. Boot the installer USB stick, `git clone https://github.com/v1cferr/dotfiles`.
-2. **ONE line changes**: `device` in `hosts/nixos-kingston/disko.nix` carries the drive's SERIAL, so
+2. **ONE line changes**: `device` in `hosts/ex-b560m-v5/disko.nix` carries the drive's SERIAL, so
    the new disk needs its own `by-id` path. Nothing else in the repo knows the disk.
 3. Format and mount:
 
    ```sh
-   sudo nix run github:nix-community/disko -- --mode destroy,format,mount --flake .#nixos-kingston
+   sudo nix run github:nix-community/disko -- --mode destroy,format,mount --flake .#ex-b560m-v5
    ```
 
 4. **Put the key in place BEFORE the first boot**, or the cascade at the top of this page happens on
@@ -119,7 +119,7 @@ In order, and step 4 is the one that is easy to forget and expensive to skip.
    sudo install -D -m 0600 /dev/stdin /mnt/var/lib/sops-nix/key.txt   # paste the key, then Ctrl-D
    ```
 
-5. `sudo nixos-install --flake .#nixos-kingston`, then reboot.
+5. `sudo nixos-install --flake .#ex-b560m-v5`, then reboot.
 6. After the first boot: create `@snapshots` by hand (the command is in the
    [disko note](../notes/boot-and-storage/disko.md)), then restore from restic what rule 6 says was
    never declared (saves, Wine prefixes, app sessions).

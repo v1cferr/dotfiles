@@ -1,7 +1,7 @@
 {
   "lockNodes": 30,
   "hosts": {
-    "nixos-kingston": {
+    "ex-b560m-v5": {
       "derivations": 26000,
       "functionCalls": 16500000,
       "heapBytes": 3000000000

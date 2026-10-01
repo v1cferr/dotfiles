@@ -63,7 +63,7 @@ generated `system.conf` passes and comes out WITHOUT the line. Nothing warns you
 is not "did it build?", it is READING the generated file:
 
 ```sh
-nix eval --raw '.#nixosConfigurations.nixos-kingston.config.environment.etc."systemd/system.conf".text'
+nix eval --raw '.#nixosConfigurations.ex-b560m-v5.config.environment.etc."systemd/system.conf".text'
 ```
 
 To check the effect without a stopwatch, the journal's two stamps:

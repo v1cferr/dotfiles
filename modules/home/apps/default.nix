@@ -13,6 +13,7 @@
     ./openal.nix # ~/.config/alsoft.conf: it forces the pulse backend (sound in OpenAL/HashLink games)
     ./curseforge.nix # Minecraft modpacks: the package (./pkgs) plus the login scheme handler
     ./games-disk.nix # the games that live on the Windows disk, symlinked where each launcher looks
+    ./android.nix # adb over wireless debugging, scrcpy and uad-ng, to inspect and clean the phone
     ./bottles.nix # Bottles: the package plus the library each bottle lists (through activation)
     ./spotify.nix # Spotify through spicetify (the theme, and the package the autostart reads)
     ./zen.nix # Zen: the browser plus the launch guard (a locked screen closes it)

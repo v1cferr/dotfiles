@@ -12,9 +12,9 @@ let
     ;
 in
 {
-  # No `programs.adb` and no adbusers group: systemd 258 grants USB access through uaccess, and
-  # wireless debugging dials OUT to the phone, so the firewall needs no port either.
-  environment.systemPackages = [
+  # User apps with no root need, hence home (rule 4): no `programs.adb` and no adbusers group,
+  # since systemd grants USB access through uaccess and wireless debugging dials OUT to the phone.
+  home.packages = [
     android-tools # adb and fastboot
     scrcpy # the phone's screen mirrored and driven from here
     universal-android-debloater # uad-ng: a GUI over adb with a safety rating per package

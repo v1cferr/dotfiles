@@ -1,6 +1,6 @@
 # Android over ADB, wireless
 
-`modules/nixos/hardware/android.nix`: `adb`, `scrcpy` and `uad-ng`, for looking inside the phone from
+`modules/home/apps/android.nix`: `adb`, `scrcpy` and `uad-ng`, for looking inside the phone from
 this machine and cleaning it up.
 
 ## Why ADB and not SFTP

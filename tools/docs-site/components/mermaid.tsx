@@ -17,6 +17,34 @@ export function Mermaid({ chart }: { chart: string }) {
   return <MermaidContent chart={chart} />;
 }
 
+// `base` is the one theme mermaid lets every color of be set, and each one is READ from the
+// Fumadocs preset at render time, so the diagrams follow the site's palette and own none of it.
+const TOKENS = {
+  primaryColor: 'background',
+  primaryBorderColor: 'border',
+  primaryTextColor: 'foreground',
+  secondaryColor: 'secondary',
+  tertiaryColor: 'muted',
+  lineColor: 'muted-foreground',
+  clusterBkg: 'secondary',
+  clusterBorder: 'border',
+  edgeLabelBackground: 'card',
+  titleColor: 'muted-foreground',
+};
+
+/** A token resolved to `rgb(...)` by the browser, which is a form mermaid's color parser reads. */
+function themeColors(): Record<string, string> {
+  const probe = document.createElement('span');
+  document.body.append(probe);
+  const colors: Record<string, string> = {};
+  for (const [variable, token] of Object.entries(TOKENS)) {
+    probe.style.color = `var(--color-fd-${token})`;
+    colors[variable] = getComputedStyle(probe).color;
+  }
+  probe.remove();
+  return colors;
+}
+
 // The dynamic import is what keeps mermaid out of the pages that draw nothing, which is the same
 // trade the vendored copy made when the loader lived in a MkDocs template.
 const cache = new Map<string, Promise<unknown>>();
@@ -38,8 +66,18 @@ function MermaidContent({ chart }: { chart: string }) {
   mermaid.initialize({
     startOnLoad: false,
     securityLevel: 'strict',
-    fontFamily: 'inherit',
-    theme: resolvedTheme === 'dark' ? 'dark' : 'default',
+    theme: 'base',
+    look: 'neo',
+    themeVariables: {
+      fontFamily: 'var(--font-sans)',
+      fontSize: '14px',
+      radius: 6,
+      dropShadow: 'none',
+      useGradient: false,
+      background: 'transparent',
+      ...themeColors(),
+    },
+    flowchart: { curve: 'basis', padding: 12, nodeSpacing: 36, rankSpacing: 44, wrappingWidth: 260 },
   });
 
   const { svg, bindFunctions } = use(
@@ -48,7 +86,7 @@ function MermaidContent({ chart }: { chart: string }) {
 
   return (
     <div
-      className="my-6 flex justify-center overflow-x-auto rounded-lg border bg-fd-card p-4"
+      className="fd-mermaid my-6 flex justify-center overflow-x-auto rounded-lg border bg-fd-card p-4"
       ref={(container) => {
         if (container) bindFunctions?.(container);
       }}

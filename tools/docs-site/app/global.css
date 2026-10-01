@@ -26,3 +26,10 @@
   /* The pages are 100-column prose and code blocks wider than that: the default 97rem crops them. */
   --fd-layout-width: 110rem;
 }
+
+/* Mermaid's `radius` reaches some shapes and not others, so the corners are set where it misses. */
+.fd-mermaid .node rect,
+.fd-mermaid .cluster rect {
+  rx: 6px;
+  ry: 6px;
+}

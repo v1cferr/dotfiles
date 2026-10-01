@@ -15,6 +15,46 @@ record of what was tried and rejected.
 Nothing on this page repeats a fact from the [repository README](../README.md): host, base,
 desktop and storage have one owner and it is that file.
 
+## The repo in one picture
+
+Every box is a folder at the root of the repo, and [rule 4](rules.md#4-modules-offer-hosts-compose)
+says what goes in which:
+
+```mermaid
+flowchart LR
+    accTitle: How the repo fits together
+    accDescr: flake.lock pins the inputs of flake.nix, whose implementation lives in flake/. A host in hosts/ composes modules/nixos, modules/home and pkgs into one system, with secrets decrypted at runtime. tools/ builds the quality gate and this site from docs/, and GitHub Actions runs the gate and publishes the site on GitHub Pages.
+
+    LOCK["flake.lock<br>pins every input"] --> FLAKE["flake.nix + flake/<br>the wiring, one line per output"]
+
+    subgraph compose["What a host composes"]
+        HOSTS["hosts/<br>a machine, and what it has plugged in"]
+        MN["modules/nixos/<br>services, drivers, root packages"]
+        MH["modules/home/<br>apps and their user config"]
+        PKGS["pkgs/<br>software this repo packages"]
+    end
+
+    FLAKE --> SYS["nixosConfigurations<br>NixOS and home-manager, one rebuild"]
+    HOSTS --> SYS
+    MN --> SYS
+    MH --> SYS
+    PKGS --> SYS
+    SEC["secrets/<br>sops, encrypted in git"] -.->|"/run/secrets, at runtime"| SYS
+
+    subgraph maintain["What keeps it honest"]
+        TOOLS["tools/<br>the checks and this site's builder"]
+        DOCS["docs/<br>the reasoning, these pages"]
+    end
+
+    FLAKE --> GATE["checks<br>the quality gate"]
+    TOOLS --> GATE
+    DOCS --> SITE["docs-site<br>this site"]
+    TOOLS --> SITE
+    GATE --> GHA["GitHub Actions<br>on every push"]
+    SITE --> GHA
+    GHA --> PAGES["GitHub Pages"]
+```
+
 ## How this folder is organized
 
 It used to be a single file (`ANOTACOES.md`, 1949 lines). It became six, because a god

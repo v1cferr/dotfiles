@@ -10,6 +10,21 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
+- [ ] What the layout move left shared on purpose, to split the day a SECOND host exists (opened
+      30/09/2026). [Decision 0009](decisions/0009-modules-hosts-tools-layout.md) made hosts pick
+      their device modules; these four stayed where they are because splitting them now would
+      cut working modules for a machine that does not exist yet.
+      • THE WINDOWS ENTRY in `modules/nixos/core/boot.nix` pins this machine's Windows ESP by
+        UUID. It belongs in `hosts/ex-b560m-v5/`, as a `boot.loader.grub.extraEntries` of its own.
+      • THE SPEAKER EQ in `modules/nixos/hardware/audio.nix` targets the Edifier G1500 by node
+        name. It is inert without that speaker, so it costs nothing today; it becomes a device
+        module the host imports, like the mice.
+      • THE HOME MANAGER SIDE has no per-host layer: the Razer OSD, the DDC backlight of the two
+        panels and the Windows games disk reach every host. The answer is a
+        `hosts/<host>/home.nix` that adds `home-manager.users.v1cferr.imports`.
+      • THE ROUTER'S DHCP RESERVATION still names this machine `v1cferr-nixos`. Renaming it is a
+        change on the device (uci, then `router-sync pull`), not a layout one.
+
 - [ ] The quarterly app review, first due 31/12/2026 (opened 29/09/2026). `nix run .#usage-audit`
       lists the apps with no trace of use; the first run left 22. Each one is either deleted in its
       own commit or kept on purpose, and the answer is the point, not the count:

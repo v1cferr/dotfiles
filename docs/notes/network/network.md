@@ -7,6 +7,53 @@ Modules: [`modules/nixos/network/network.nix`](../../../modules/nixos/network/ne
 NetworkManager, the exposed SSH, fail2ban, dynamic DNS and "never suspend". The theme: this is a
 machine for remote access.
 
+The whole house as the router's mirror declared it on 01/10/2026
+([`firewall.conf`](../../../hosts/cudy-wr3000/uci/firewall.conf),
+[`network.conf`](../../../hosts/cudy-wr3000/uci/network.conf)). Each box is a trust boundary, and
+every section below is one of its arrows:
+
+```mermaid
+flowchart TB
+    accTitle: The network, by trust boundary
+    accDescr: The internet reaches the OpenWrt router, which opens only ports 80, 443, 2222, 2223 and WireGuard on 51820/udp. HTTP, HTTPS and 2222 are forwarded to this machine, 2223 to my brother's PC. WireGuard peers are trusted by their 10.10.10.x source, except the T480, which is rejected from the LAN. This machine is also the gateway to FAI through its own VPN.
+
+    NET["a client anywhere"]
+    CF["Cloudflare DNS<br>ssh.#lt;domain#gt; kept by the router's DDNS<br>*.#lt;domain#gt; a CNAME to it"]
+
+    subgraph router["OpenWrt router · the only edge"]
+        FW["fw4, the WAN opens<br>80 · 443 · 2222 · 2223 · 51820/udp"]
+        WG["WireGuard server<br>10.10.10.1/24"]
+        SD["dnsmasq split-DNS<br>#lt;domain#gt; answers 192.168.1.10"]
+    end
+
+    subgraph lan["LAN · 192.168.1.0/24"]
+        PC["this machine · 192.168.1.10<br>Caddy :80 :443 · sshd :2222<br>Sunshine, closed but to the tunnel"]
+        CESAR["my brother's PC · 192.168.1.40<br>sshd :2223"]
+    end
+
+    subgraph peers["WireGuard peers · trusted by SOURCE"]
+        PHONE["celular"]
+        TRAMPO["pc-trampo · 10.10.10.4"]
+        T480["T480 · 10.10.10.6<br>reached, reaches nothing"]
+    end
+
+    subgraph fai["FAI · another organization"]
+        FAINET["FAI's network"]
+    end
+
+    NET -.->|resolves| CF
+    NET -->|"80 · 443 · 2222 · 2223"| FW
+    FW -->|"DNAT 80 · 443 · 2222"| PC
+    FW -->|"DNAT 2223, 30/min"| CESAR
+    PHONE -->|51820/udp| WG
+    TRAMPO -->|51820/udp| WG
+    T480 -->|51820/udp| WG
+    WG -->|"source 10.10.10.x is trusted"| PC
+    WG -.-x|"REJECT from .6"| lan
+    lan -.->|"every LAN query"| SD
+    PC -->|"ppp0, nxBender, MASQUERADE"| FAINET
+```
+
 ## Trust is by SOURCE, not by interface
 
 The WireGuard server is the ROUTER (OpenWrt), not this machine, so there is NO local `wg0` to put

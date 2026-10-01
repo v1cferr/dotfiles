@@ -586,7 +586,7 @@
               language = "system";
               files = "\\.(json|jsonc|toml)$";
             };
-            # The two .py in the tree: `scripts/router-sync.py` and kitty's smart-paste kitten.
+            # The two .py in the tree: `modules/nixos/network/router-sync.py` and kitty's smart-paste kitten.
             # `check` with no --fix on purpose: a linter that rewrites Python is not a formatter.
             ruff = {
               enable = true;
@@ -725,7 +725,7 @@
         # paragraph of +CC/+LD/+NIX_CFLAGS exports on every cd into the repo.
         pkgs.mkShellNoCC {
           inherit shellHook;
-          # sops: `scripts/sync-secrets.sh` needs it and it is NOT in any profile, so without
+          # sops: `modules/nixos/core/sync-secrets.sh` needs it and it is NOT in any profile, so without
           # this the script died at its first `sops set`, mid-run, on 18/08/2026.
           buildInputs = enabledPackages ++ [
             pkgs.nixd

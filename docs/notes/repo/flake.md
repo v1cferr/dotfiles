@@ -293,7 +293,7 @@ tracked `.nix` passes, so the switch reformats nothing. What outlived the distin
 `evaluation warning` the old alias prints on EVERY eval, including the rebuild; that is what the
 rename removes.
 
-**The shellcheck hook covers `./scripts`.** Rule 7 says the logic lives in the build, and
+**The shellcheck hook covers every shell file, wherever it lives.** Rule 7 says the logic lives in the build, and
 `sync-secrets.sh` already gets shellcheck for free by coming from a `writeShellApplication`.
 `owfetch.sh` does NOT, because it runs in ash on OpenWrt, not here, so no derivation wraps it.
 Without this hook, the only `.sh` in the repo that runs on SOMEONE ELSE'S machine would be the only
@@ -337,7 +337,7 @@ file. That is the ending markdownlint could not have: `.luarc.json` is plain JSO
 "Diagnosis completed, no problems found" on all 8. The hook has `files = "\\.lua$"`, so a commit
 that touches no Lua does not pay for it.
 
-`ruff` covers `scripts/router-sync.py`, the only loose `.py` in the repo and the one that WRITES to
+`ruff` covers `modules/nixos/network/router-sync.py`, the only loose `.py` in the repo and the one that WRITES to
 the router; the Python inside `pkgs/*.nix` already gets flake8 at build time through `writers`. The
 entry is overridden to plain `check`, dropping the hook's default `--fix`: nixfmt rewriting layout
 is one thing, a linter rewriting Python at commit time is another. MEASURED: "All checks passed!".

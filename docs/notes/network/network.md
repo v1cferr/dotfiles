@@ -690,4 +690,4 @@ reason for existing is real, since a value containing `%` would become a formatt
 `%s` does not interpret escapes, the `\033` has to arrive already expanded.
 
 It is also the only `.sh` in this repo that runs on SOMEONE ELSE'S machine, which is why the
-shellcheck hook covers `./scripts` explicitly; see [`flake.md`](../repo/flake.md).
+shellcheck hook covers it, by file type and not by folder; see [`flake.md`](../repo/flake.md).

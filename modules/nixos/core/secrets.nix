@@ -42,7 +42,7 @@ let
       sops
       git
     ];
-    text = builtins.readFile ../../../scripts/sync-secrets.sh; # bash in its own file = shellcheck at build time
+    text = builtins.readFile ./sync-secrets.sh; # bash in its own file = shellcheck at build time
   };
 in
 {

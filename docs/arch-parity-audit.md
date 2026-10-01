@@ -234,7 +234,7 @@ The browser is declared and is the default (`$BROWSER`, and the mime association
 47 files, and most of them are Arch by nature: the pacman and AUR package sync with its systemd
 timer, the AUR supply-chain checker, `stow-sync.sh`, the rEFInd menu cleanup, and one `deploy.sh`
 per service, which is what "no declarative layer" costs. What had real content came across:
-the secrets backup became [`scripts/sync-secrets.sh`](../scripts/sync-secrets.sh) plus sops-nix,
+the secrets backup became [`modules/nixos/core/sync-secrets.sh`](../modules/nixos/core/sync-secrets.sh) plus sops-nix,
 the wireguard and WoL router scripts became `hosts/cudy-wr3000/uci/`, and the VPN scripts became the `vpn`
 CLI. Nothing here needs porting; it needs deleting along with the branch.
 

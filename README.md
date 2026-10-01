@@ -146,7 +146,6 @@ hosts/           per-machine answers (hostname, disks via disko, monitors, state
   ex-b560m-v5/  the ONLY host; services.nix is the panel of which my.services it turns on
 pkgs/            my own derivations: vendored binaries, patched builds, and the checkers
 secrets/         secrets.yaml (sops) + the Bitwarden index
-scripts/         bash/python read by writeShellApplication (shellcheck runs at build time)
 hosts/cudy-wr3000/          mirror of the OpenWrt UCI config: visible, not declarable
 ci/              the eval budget and the stub for the private input
 docs/            what is NOT declarable, plus the diary: rules, notes, history, guides, ideas
@@ -220,7 +219,7 @@ store. The private **age** key lives at `/var/lib/sops-nix/key.txt`, **outside g
 one thing to carry into a reinstall (it comes out of the Bitwarden vault). The groundwork is in
 [`modules/nixos/core/secrets.nix`](modules/nixos/core/secrets.nix).
 
-The source of truth is **Bitwarden**: a value is changed there, and `scripts/sync-secrets.sh`
+The source of truth is **Bitwarden**: a value is changed there, and `modules/nixos/core/sync-secrets.sh`
 brings it into sops. Editing a secret requires a `rebuild`, otherwise `/run/secrets` is not
 refreshed.
 

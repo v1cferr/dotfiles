@@ -57,7 +57,7 @@ PUBLIC = {"public_key", "key_type", "passwordauth", "rootpasswordauth"}
 
 
 def repo_root():
-    """The SAME idiom as scripts/sync-secrets.sh. `__file__` is NO good: the script is copied
+    """The SAME idiom as modules/nixos/core/sync-secrets.sh. `__file__` is NO good: the script is copied
     into /nix/store, so a path relative to it points inside the store (which is read-only)
     instead of the repo. It already bit on the first run."""
     r = subprocess.run(

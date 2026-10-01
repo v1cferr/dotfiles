@@ -123,7 +123,7 @@ script that runs on ANOTHER machine, which gets the shellcheck hook instead.
 **Why**: a script in the build is checked every time it is built, and a loose one only when it
 fails.
 
-**Enforced by**: shellcheck at build time, and the `shellcheck` hook over `scripts/`.
+**Enforced by**: shellcheck at build time, and the `shellcheck` hook over every shell file.
 
 **Detail**: [owfetch](notes/network/network.md#owfetch-why-a-script-and-not-fastfetch), the exception.
 

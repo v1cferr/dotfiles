@@ -1,7 +1,7 @@
 # secrets
 
 Modules: [`modules/nixos/core/secrets.nix`](../../../modules/nixos/core/secrets.nix),
-[`scripts/sync-secrets.sh`](../../../scripts/sync-secrets.sh), [`.sops.yaml`](../../../.sops.yaml)
+[`modules/nixos/core/sync-secrets.sh`](../../../modules/nixos/core/sync-secrets.sh), [`.sops.yaml`](../../../.sops.yaml)
 
 Bitwarden is the source of truth, sops is the vault, and the repo never holds a credential
 (rule 12).

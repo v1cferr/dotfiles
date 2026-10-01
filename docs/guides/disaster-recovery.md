@@ -33,7 +33,7 @@ Refused, and not on principle: three concrete reasons and one precedent.
 3. **The repo folder is inside `$HOME`**, so it is in reach of the backups and of every future
    clone. A secret whose whole design is "outside git" would come back in through restic.
 
-THE PRECEDENT, and it is this repo's own: `scripts/sync-secrets.sh` already needs the key and reads
+THE PRECEDENT, and it is this repo's own: `modules/nixos/core/sync-secrets.sh` already needs the key and reads
 it as `SOPS_AGE_KEY="$(sudo cat /var/lib/sops-nix/key.txt)"`, with the comment "read ONLY into the
 process' memory, it does not go to disk". The drills below follow the same rule: the key passes
 through the ENVIRONMENT or through a tmpfs that dies with the boot, never through the repo.

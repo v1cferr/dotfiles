@@ -1,6 +1,6 @@
 # Flameshot v14: the keyboard flow, and the duplicated bar
 
-`modules/home/apps/flameshot.nix`. v14 from the UNSTABLE channel (through flake.nix's overlay) plus the
+`modules/home/apps/flameshot.nix`. v14 from the UNSTABLE channel (through the overlay in flake/overlays.nix) plus the
 config and the keyboard-flow scripts. The binds (Print, SUPER+SHIFT+S, and the "screenshot" submap)
 live in `modules/home/desktop/hypr/lua/keybinds.lua`.
 

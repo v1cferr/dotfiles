@@ -15,7 +15,7 @@ in
 
   programs.spicetify = {
     enable = true; # it puts `spicedSpotify` in home.packages, so packages.nix must NOT list spotify
-    # MY package, not the module's default: the overlay bakes --no-zygote into it (flake.nix), and
+    # MY package, not the module's default: the overlay bakes --no-zygote into it (flake/overlays.nix), and
     # the builder only overrides postInstall, so postFixup carries the flag through.
     spotifyPackage = pkgs.unstable.spotify;
     spicetifyPackage = pkgs.unstable.spicetify-cli; # the SAME channel as the Spotify above

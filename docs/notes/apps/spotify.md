@@ -19,7 +19,7 @@ points at [`Gerg-L/spicetify-nix`](https://github.com/Gerg-L/spicetify-nix), whi
 
 ## `--no-zygote` survives, and that was the real question
 
-The overlay in `flake.nix` exists because the CEF zygote crashes here, and losing that flag means
+The overlay in `flake/overlays.nix` exists because the CEF zygote crashes here, and losing that flag means
 Spotify does not open. Verified statically rather than hoped for:
 
 ```console

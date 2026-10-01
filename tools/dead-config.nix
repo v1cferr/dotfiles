@@ -51,13 +51,18 @@ writers.writePython3Bin "dead-config"
 
 
     def check_modules(files, _code):
-        """A .nix under modules/nixos/ or modules/home/ that no `imports` reaches is a file nobody evaluates."""
+        """A .nix under modules/, hosts/ or flake/ that nothing imports is a file nobody evaluates."""
         nix = {f: read(f) for f in files if f.endswith(".nix")}
 
         def imports_of(f):
             found = []
             base = os.path.dirname(f)
-            for block in re.findall(r"imports\s*=\s*\[(.*?)\]", nix.get(f, ""), re.S):
+            text = nix.get(f, "")
+            blocks = re.findall(r"imports\s*=\s*\[(.*?)\]", text, re.S)
+            # The flake's own files are reached by a plain `import ./flake/x.nix`, not an imports list.
+            if f == "flake.nix" or f.startswith("flake/"):
+                blocks += re.findall(r"\bimport\s+(\.\.?/[A-Za-z0-9_./-]+)", text)
+            for block in blocks:
                 # `./x` and `../x` alike: a host reaches a shared module through `../../modules/…`,
                 # and the lookbehind keeps the `./` inside a `../` from matching a level too shallow.
                 for m in re.finditer(r"(?<![\w.])(\.\.?/[A-Za-z0-9_./-]+)", block):
@@ -68,7 +73,7 @@ writers.writePython3Bin "dead-config"
                             break
             return found
 
-        roots = ["modules/nixos/default.nix", "modules/home/default.nix"]
+        roots = ["flake.nix", "modules/nixos/default.nix", "modules/home/default.nix"]
         roots += [f for f in nix if f.startswith("hosts/")]
         seen, stack = set(), list(roots)
         while stack:

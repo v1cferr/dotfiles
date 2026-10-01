@@ -58,7 +58,7 @@ another machine:
 | lightdm and autoLogin off | no GPU and no monitor. A session that cannot start would drown the failed-unit list this test exists to read |
 
 `node.pkgsReadOnly = false` is needed because `runNixOSTest` pins the node's `pkgs` and makes the
-`nixpkgs.*` options read-only, while this config sets both `nixpkgs.overlays` (in `flake.nix`) and
+`nixpkgs.*` options read-only, while this config sets both `nixpkgs.overlays` (in `flake/hosts.nix`) and
 `nixpkgs.config.allowUnfree` (in `modules/nixos/core/core.nix`). Without it the eval dies on
 "nixpkgs.config is set to read-only".
 

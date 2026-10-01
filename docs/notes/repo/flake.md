@@ -1,7 +1,26 @@
 # The flake: inputs, overlays and the quality gate
 
-`flake.nix`. Everything here is a decision that cost something to reach, which is why it is written
-down rather than left to be re-derived.
+`flake.nix` and `flake/`. Everything here is a decision that cost something to reach, which is why it
+is written down rather than left to be re-derived.
+
+## Where each output lives (30/09/2026)
+
+`flake.nix` holds the description, the inputs and the WIRING: one line per output, importing its
+implementation from `flake/`. It used to hold all of it, 740 lines with seven responsibilities.
+
+| File | What it builds |
+| --- | --- |
+| `flake/overlays.nix` | the overlays every host gets, in order: unstable, the patched builds, `./pkgs`, `./tools` |
+| `flake/hosts.nix` | `commonModules` and `mkHost`; the hosts themselves are listed in `flake.nix` |
+| `flake/packages.nix` | `packages.<system>`, the facts, the stats, the Pages bundle, `disko-vm` |
+| `flake/vm-boot.nix` | the boot test, a package for the reason in [vm-boot](vm-boot.md) |
+| `flake/checks.nix` | the quality gate: the hooks, `repo-audit`, `checks.packages` |
+| `flake/dev-shell.nix` | the devShell |
+
+Plain `import`s with explicit arguments, and no flake-parts: the split is for reading, and a
+framework would add a second way to define an output without removing the first. Proven a pure
+move: the host, every package that does not read `self`, the devShell, the formatter and the
+configuration of every hook kept their drvPath.
 
 The version strategy these inputs implement (stable base, unstable per package, upstream directly)
 is in [`version-bumps.md`](version-bumps.md).

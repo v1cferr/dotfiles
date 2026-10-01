@@ -123,7 +123,8 @@ category's modules. Adding a module is 1 line in the category's `default.nix`, a
 never changes.
 
 ```text
-flake.nix        inputs + overlays + the host + packages + checks, the one entry point
+flake.nix        description + inputs + the wiring of every output, the one entry point
+flake/           how each output is built: overlays, hosts, packages, vm-boot, checks, devShell
 flake.lock       pinned input versions (rule 13: no implicit "latest", anywhere)
 
 modules/nixos/          SYSTEM, shared by every host (machine-agnostic)

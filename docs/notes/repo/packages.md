@@ -28,7 +28,7 @@ The CEF zygote dies before the first ping: the browser aborts with
 and no visible error. `--disable-gpu` and `--no-sandbox` change nothing; only `--no-zygote` works
 around it.
 
-The flag lives in the PACKAGE (`overlaySpotifyNoZygote`, in [`flake.nix`](../../../flake.nix)), not in
+The flag lives in the PACKAGE (`overlaySpotifyNoZygote`, in [`flake/overlays.nix`](../../../flake/overlays.nix)), not in
 an `exec`, so that opening it from the menu picks up the same fix as the autostart unit. One
 owner, rule 15.
 

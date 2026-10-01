@@ -82,7 +82,7 @@ Two guards in the script:
 ## The package
 
 The unstable recipe with the SRC swapped for the official tarball
-([`pkgs/vscode/`](../../../pkgs/vscode/package.nix) plus `overlayVscode` in `flake.nix`), ahead of
+([`pkgs/vscode/`](../../../pkgs/vscode/package.nix) plus `overlayVscode` in `flake/overlays.nix`), ahead of
 whatever nixpkgs bumped to. The URL is versioned, and what raises the number is `vscode-bump`,
 run by `update`/`upgrade`: in practice, ALWAYS the latest stable.
 

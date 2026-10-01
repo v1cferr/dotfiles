@@ -112,7 +112,7 @@ two reasons it cannot sit in the gate are structural, not a preference: a Nix bu
 network, so the check would fail by construction, and a 429 from somebody's rate limiter is not a
 defect in this repo.
 
-So the `lychee` hook is declared at the `manual` stage. It lives in `flake.nix` next to every other
+So the `lychee` hook is declared at the `manual` stage. It lives in `flake/checks.nix` next to every other
 linter, which keeps one definition of the linter set; the gate skips it because
 `pre-commit run --all-files` only runs `pre-commit`-stage hooks; and the canary workflow runs it
 weekly with `pre-commit run --hook-stage manual lychee --all-files`. Running it by hand is the same

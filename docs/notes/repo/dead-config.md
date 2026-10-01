@@ -79,7 +79,9 @@ prototyped, produced a false positive, and was fixed before being written down:
   read through `config.` or `osConfig.` specifically.
 - **modules**: resolving every `./path` in the file flags nothing, but it also PROVES nothing,
   since it counts a path mentioned in a comment. The check parses `imports = [ … ]` blocks and
-  walks reachability from the real roots (`modules/nixos/default.nix`, `modules/home/default.nix`, `hosts/*`).
+  walks reachability from the real roots (`flake.nix`, `modules/nixos/default.nix`,
+  `modules/home/default.nix`, `hosts/*`). For `flake.nix` and `flake/` it also follows a plain
+  `import ./flake/x.nix`, which is how the outputs reach their implementation.
   Both `./x` and `../x` resolve, so a host importing a shared module by a relative path counts as
   a reach; before 30/09/2026 a `../` was resolved one level too shallow and read as unreached.
   `pkgs/` and `tools/` are deliberately exempt: they are reached by `callPackage` in `flake.nix`,

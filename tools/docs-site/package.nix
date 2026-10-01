@@ -17,10 +17,10 @@ let
   # What the DEPENDENCIES are resolved from, and nothing else: a page edit must not invalidate
   # the fetch, which is the one step of this build that needs the network.
   manifest = lib.fileset.toSource {
-    root = ./docs-site;
+    root = ./.;
     fileset = lib.fileset.unions [
-      ./docs-site/package.json
-      ./docs-site/pnpm-lock.yaml
+      ./package.json
+      ./pnpm-lock.yaml
     ];
   };
 in
@@ -31,17 +31,22 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   # ONLY what the site is built from, so a commit touching modules/ does not rebuild it. The build
   # outputs are subtracted by name: `maybeMissing` because a fresh clone has none of them.
   src = lib.fileset.toSource {
-    root = ../.;
+    root = ../..;
     fileset = lib.fileset.unions [
-      ../docs
-      (lib.fileset.difference ./docs-site (
+      ../../docs
+      (lib.fileset.difference ./. (
         lib.fileset.unions (
-          map lib.fileset.maybeMissing [
-            ./docs-site/node_modules
-            ./docs-site/.next
-            ./docs-site/.source
-            ./docs-site/out
-            ./docs-site/next-env.d.ts
+          # The two derivations live beside the app and are not part of what it builds from.
+          [
+            ./package.nix
+            ./check.nix
+          ]
+          ++ map lib.fileset.maybeMissing [
+            ./node_modules
+            ./.next
+            ./.source
+            ./out
+            ./next-env.d.ts
           ]
         )
       ))

@@ -479,7 +479,7 @@ owner, which is rule 15.
   to a store path`. Hence `environment.etc."pam-exec/ssh-login-alert"`, a stable path with no
   context, which pam_exec follows as a symlink without complaint.
 - **`notify` had to stop being a home-manager package.** A system module cannot reach one (rule 4),
-  so the script moved to [`../../../pkgs/notify.nix`](../../../pkgs/notify.nix) and is exposed
+  so the script moved to [`../../../pkgs/notify/package.nix`](../../../pkgs/notify/package.nix) and is exposed
   through the local overlay. `modules/home/shell/ntfy.nix` is now the consumer that puts it on the PATH,
   which is rule 11: one owner, two readers.
 - **`exit 0` at the end is not decoration.** `optional` already keeps a failure from blocking the

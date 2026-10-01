@@ -34,6 +34,8 @@ Three rules of placement come with it. A host is named after the BOARD it runs o
 guide and the Drive backup folder already were. A module describing ONE device keeps a device name
 and is imported by the host that has it, never by a shared `default.nix`. A script lives next to
 its single owner, so a `scripts/` folder only returns for something genuinely transversal.
+Inside `pkgs/` and `tools/`, every item is a folder holding its `package.nix`, the file name
+nixpkgs' RFC 140 settled on, without its two-letter shards and without auto-discovery.
 
 What was compared and REJECTED:
 

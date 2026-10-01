@@ -1,6 +1,6 @@
 # exposure: the house seen from outside
 
-`tools/exposure-check.nix`, run weekly by the canary's `exposure` job. A GitHub runner is OFF my
+`tools/exposure-check/package.nix`, run weekly by the canary's `exposure` job. A GitHub runner is OFF my
 network, so it sees exactly what an attacker sees, which no check inside the house can: from here
 the split-DNS answers `192.168.1.10` and every port the LAN is allowed to reach looks open.
 

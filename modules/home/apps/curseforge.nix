@@ -1,4 +1,4 @@
-# CURSEFORGE, the user side (the package is pkgs/curseforge.nix). It replaced prismlauncher and
+# CURSEFORGE, the user side (the package is pkgs/curseforge/package.nix). It replaced prismlauncher and
 # SHRANK the closure by 1.5 GiB. The schemes are not optional: docs/notes/apps/curseforge.md
 { pkgs, lib, ... }:
 

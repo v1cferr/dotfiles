@@ -1,6 +1,6 @@
 # curseforge-fix-perms
 
-Module: [`pkgs/curseforge-fix-perms.nix`](../../../pkgs/curseforge-fix-perms.nix)
+Module: [`pkgs/curseforge-fix-perms/package.nix`](../../../pkgs/curseforge-fix-perms/package.nix)
 
 Gives back the exec bit that the CurseForge extractor drops on everything it unpacks under
 `minecraft/Install`. It fixes an APP BUG, not a NixOS quirk: on no distro would those binaries

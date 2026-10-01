@@ -1,6 +1,6 @@
 # azure-mcp
 
-Module: [`pkgs/azure-mcp.nix`](../../../pkgs/azure-mcp.nix)
+Module: [`pkgs/azure-mcp/package.nix`](../../../pkgs/azure-mcp/package.nix)
 
 Microsoft's Azure MCP Server (`azmcp`), which is what lets Claude Code TOUCH portal.azure.com by
 command (resource group, storage, keyvault, monitor, RBAC and so on) instead of clicking through

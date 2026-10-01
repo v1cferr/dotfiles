@@ -114,32 +114,32 @@ let
   # LOCAL packages in ./pkgs, exposed as `pkgs.<name>`; callPackage injects the deps. Most are
   # outside nixpkgs, `codex` REPLACES the one there (the note says why).
   localPkgs = final: {
-    claude-code-discord-status = final.callPackage ../pkgs/claude-code-discord-status.nix { };
-    azure-mcp = final.callPackage ../pkgs/azure-mcp.nix { }; # Azure MCP Server (`azmcp`), only in claude-fai
-    nxbender = final.callPackage ../pkgs/nxbender.nix { }; # FOSS client for the SonicWall VPN (FAI)
+    claude-code-discord-status = final.callPackage ../pkgs/claude-code-discord-status/package.nix { };
+    azure-mcp = final.callPackage ../pkgs/azure-mcp/package.nix { }; # Azure MCP Server (`azmcp`), only in claude-fai
+    nxbender = final.callPackage ../pkgs/nxbender/package.nix { }; # FOSS client for the SonicWall VPN (FAI)
     codex = final.callPackage ../pkgs/codex/package.nix { }; # OpenAI's CLI, the OFFICIAL release binary
     antigravity-cli = final.callPackage ../pkgs/antigravity-cli/package.nix { }; # Google's agent CLI (`agy`)
-    basic-memory = final.callPackage ../pkgs/basic-memory.nix { inherit inputs; }; # `bm`, the MCP memory
+    basic-memory = final.callPackage ../pkgs/basic-memory/package.nix { inherit inputs; }; # `bm`, the MCP memory
     curseforge = final.callPackage ../pkgs/curseforge/package.nix { }; # official modpack AppImage (unfree)
-    curseforge-fix-perms = final.callPackage ../pkgs/curseforge-fix-perms.nix { }; # +x on what the app unpacks
-    razer-dpi = final.callPackage ../pkgs/razer-dpi.nix { }; # the Razer mouse's live DPI, over hidraw
-    notify = final.callPackage ../pkgs/notify.nix { }; # the ntfy push, shared by the shell and sshd's PAM
+    curseforge-fix-perms = final.callPackage ../pkgs/curseforge-fix-perms/package.nix { }; # +x on what the app unpacks
+    razer-dpi = final.callPackage ../pkgs/razer-dpi/package.nix { }; # the Razer mouse's live DPI, over hidraw
+    notify = final.callPackage ../pkgs/notify/package.nix { }; # the ntfy push, shared by the shell and sshd's PAM
   };
 
   # The repo's OWN tools in ./tools: they check, measure and maintain this tree, and are not
   # software the machine runs. Same overlay, so `nix run .#<tool>` and the hooks reach them.
   localTools = final: {
-    docs-links = final.callPackage ../tools/docs-links.nix { }; # it fails when a docs/ pointer breaks
-    prose-style = final.callPackage ../tools/prose-style.nix { }; # rule 17's bans, in prose and in a message
-    qml-syntax = final.callPackage ../tools/qml-syntax.nix { }; # it fails on a .qml that does not parse
-    data-syntax = final.callPackage ../tools/data-syntax.nix { }; # it fails on a .json/.toml that does not parse
-    dead-config = final.callPackage ../tools/dead-config.nix { }; # it fails on declared-and-unused
-    router-ssot = final.callPackage ../tools/router-ssot.nix { inherit router; }; # it fails when the router's mirror diverges
+    docs-links = final.callPackage ../tools/docs-links/package.nix { }; # it fails when a docs/ pointer breaks
+    prose-style = final.callPackage ../tools/prose-style/package.nix { }; # rule 17's bans, in prose and in a message
+    qml-syntax = final.callPackage ../tools/qml-syntax/package.nix { }; # it fails on a .qml that does not parse
+    data-syntax = final.callPackage ../tools/data-syntax/package.nix { }; # it fails on a .json/.toml that does not parse
+    dead-config = final.callPackage ../tools/dead-config/package.nix { }; # it fails on declared-and-unused
+    router-ssot = final.callPackage ../tools/router-ssot/package.nix { inherit router; }; # it fails when the router's mirror diverges
     eval-metrics = final.callPackage ../tools/eval-metrics/package.nix { }; # what evaluating each host costs
-    usage-audit = final.callPackage ../tools/usage-audit.nix { }; # each app next to the traces of its use
-    rules-index = final.callPackage ../tools/rules-index.nix { }; # it fails on a citation of no live rule
-    docs-site = final.callPackage ../tools/docs-site.nix { }; # docs/ built into the static site
-    docs-site-check = final.callPackage ../tools/docs-site-check.nix { }; # the same build, at push time
+    usage-audit = final.callPackage ../tools/usage-audit/package.nix { }; # each app next to the traces of its use
+    rules-index = final.callPackage ../tools/rules-index/package.nix { }; # it fails on a citation of no live rule
+    docs-site = final.callPackage ../tools/docs-site/package.nix { }; # docs/ built into the static site
+    docs-site-check = final.callPackage ../tools/docs-site/check.nix { }; # the same build, at push time
   };
   overlayLocalPkgs =
     final: _:
@@ -147,11 +147,11 @@ let
     // localTools final
     // {
       # The skeleton every pkgs/<name>/bump.nix is built from, OUTSIDE localPkgs: it is a function.
-      mkVendoredBump = import ../pkgs/lib/mk-vendored-bump.nix {
+      mkVendoredBump = import ../tools/vendored-bump/mk-vendored-bump.nix {
         inherit (final) writeShellApplication curl jq;
       };
       # Every package carrying a passthru.updateScript, DERIVED: a new one never touches `update`.
-      vendored-bump = final.callPackage ../tools/vendored-bump.nix {
+      vendored-bump = final.callPackage ../tools/vendored-bump/package.nix {
         packages =
           nixpkgs.lib.filterAttrs (_: p: p.updateScript or null != null) (
             nixpkgs.lib.getAttrs (builtins.attrNames (localPkgs final)) final

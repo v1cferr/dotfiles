@@ -149,8 +149,8 @@ modules/home/      Home Manager capabilities: dotfiles + user apps
   network/         remote hosts: the FAI workstation, the T480, MEGA
   services/        the user's units and timers: mounts, disk hygiene, backups of saves, RPC
 
-pkgs/              software this repo packages: vendored binaries, patched builds
-tools/             what maintains the repo itself: checkers, metrics, stats, bumps, the site
+pkgs/              software this repo packages, one folder each with its package.nix
+tools/             what maintains the repo itself, same shape: checkers, metrics, bumps, the site
   docs-site/       docs/ built into https://dotfiles.v1cferr.dev (Fumadocs, hermetic in Nix)
   ci/              the stub that stands in for the private input
 secrets/           secrets.yaml (sops) + the Bitwarden index

@@ -1,6 +1,6 @@
 # dead-config: what is declared and never used
 
-`tools/dead-config.nix`, wired into `checks` and into the pre-commit hooks. Run it by hand with
+`tools/dead-config/package.nix`, wired into `checks` and into the pre-commit hooks. Run it by hand with
 `nix run .#dead-config`.
 
 Rule 16 says dead config leaves the repo. Until this existed, the only thing enforcing that was me

@@ -124,7 +124,7 @@ permission for an MCP server that never comes up would be declaring the nonexist
 
 ## The Azure MCP is FAI-only, and the delivery path was the hard part
 
-The Azure MCP Server ([`pkgs/azure-mcp.nix`](azure-mcp.md)) enters FAI ONLY, because the cloud is
+The Azure MCP Server ([`pkgs/azure-mcp/package.nix`](azure-mcp.md)) enters FAI ONLY, because the cloud is
 the work one. The personal account has nothing to do with it, and 68 extra tools cost context in
 every session. That is why `mcp` became a field of `profiles`: an account that declares nothing
 gets no flag.

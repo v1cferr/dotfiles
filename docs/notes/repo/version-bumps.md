@@ -1,7 +1,7 @@
 # vendored-bump and the vendored package layout
 
-Modules: [`tools/vendored-bump.nix`](../../../tools/vendored-bump.nix),
-[`pkgs/lib/mk-vendored-bump.nix`](../../../pkgs/lib/mk-vendored-bump.nix),
+Modules: [`tools/vendored-bump/package.nix`](../../../tools/vendored-bump/package.nix),
+[`tools/vendored-bump/mk-vendored-bump.nix`](../../../tools/vendored-bump/mk-vendored-bump.nix),
 [`pkgs/vscode/bump.nix`](../../../pkgs/vscode/bump.nix),
 [`pkgs/curseforge/bump.nix`](../../../pkgs/curseforge/bump.nix),
 [`pkgs/codex/bump.nix`](../../../pkgs/codex/bump.nix),
@@ -55,7 +55,7 @@ pkgs/<name>/
   bump.nix      mkVendoredBump { pname; latest; resolve; }
 ```
 
-[`mkVendoredBump`](../../../pkgs/lib/mk-vendored-bump.nix) owns everything the four scripts used to
+[`mkVendoredBump`](../../../tools/vendored-bump/mk-vendored-bump.nix) owns everything the four scripts used to
 repeat: reading the current version, rejecting an implausible answer, the no-op when current, the
 write through a temp file and the suggested commit. A package answers only the two questions that
 are really its own. `latest` prints upstream's newest version, as cheaply as upstream allows.
@@ -164,7 +164,7 @@ the manifest knows, and storing the url whole is what keeps it from being a fiel
 ## nxBender's three patches
 
 Not a bump script, but the same "vendored upstream that needs fixing" family, and
-[`pkgs/nxbender.nix`](../../../pkgs/nxbender.nix) points here.
+[`pkgs/nxbender/package.nix`](../../../pkgs/nxbender/package.nix) points here.
 
 1. **`ssl.wrap_socket` was REMOVED in Python 3.12+**, so the tunnel broke with an
    `AttributeError`. Swapped for the modern API with an unverified context (CERT_NONE), which is

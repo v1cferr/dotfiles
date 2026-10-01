@@ -1,6 +1,6 @@
 # router-ssot: the values the router repeats
 
-`tools/router-ssot.nix`, wired into `checks` and into the pre-commit hooks. Run it by hand with
+`tools/router-ssot/package.nix`, wired into `checks` and into the pre-commit hooks. Run it by hand with
 `nix run .#router-ssot`.
 
 Rule 11 wants ONE owner per value, and the router is the single piece of infrastructure Nix does not

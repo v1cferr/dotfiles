@@ -1,6 +1,6 @@
 # basic-memory
 
-Modules: [`pkgs/basic-memory.nix`](../../../pkgs/basic-memory.nix),
+Modules: [`pkgs/basic-memory/package.nix`](../../../pkgs/basic-memory/package.nix),
 [`modules/nixos/services/basic-memory.nix`](../../../modules/nixos/services/basic-memory.nix),
 [`modules/home/services/basic-memory.nix`](../../../modules/home/services/basic-memory.nix)
 
@@ -66,7 +66,7 @@ outright, with `Because there is no version of fastmcp==4.0.0b1`. The pre-releas
 choice, and declaring the tolerance in the file is what keeps `uv lock` reproducible from a clean
 clone.
 
-Two sdists need a build-system fix, both in `pkgs/basic-memory.nix`: `pybars3` and `pymeta3` never
+Two sdists need a build-system fix, both in `pkgs/basic-memory/package.nix`: `pybars3` and `pymeta3` never
 declared `setuptools`, so uv refuses to guess it. Everything else installs from a wheel.
 
 ## Two servers, split at the FAI boundary

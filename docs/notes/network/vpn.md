@@ -9,7 +9,7 @@ services, because a VPN needs tun and routes.
 | VPN | Protocol | Client |
 | --- | --- | --- |
 | UFSCar | GlobalProtect (Palo Alto) | `openconnect --protocol=gp`, FOSS, in nixpkgs |
-| FAI | SonicWall SSL VPN | nxBender ([`pkgs/nxbender.nix`](../../../pkgs/nxbender.nix)), replacing the proprietary netExtender |
+| FAI | SonicWall SSL VPN | nxBender ([`pkgs/nxbender/package.nix`](../../../pkgs/nxbender/package.nix)), replacing the proprietary netExtender |
 
 If nxBender ever stops connecting, the fallback is packaging netExtender.
 

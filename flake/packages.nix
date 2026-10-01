@@ -104,7 +104,7 @@ in
     let
       cfg = host.config;
     in
-    pkgs.callPackage ../tools/exposure-check.nix {
+    pkgs.callPackage ../tools/exposure-check/package.nix {
       host = "ssh.${cfg.my.net.domain}";
       sshPort = builtins.head cfg.services.openssh.ports;
       inherit (cfg.my.router) mirror;

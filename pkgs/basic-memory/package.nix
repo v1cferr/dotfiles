@@ -10,7 +10,7 @@
 let
   # OUR workspace, not upstream's: a pyproject declaring ONE dependency, so the lock next to it is
   # the pin (rule 13) and the version bump is a `uv lock` away.
-  workspace = inputs.uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./basic-memory; };
+  workspace = inputs.uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
 
   # Wheels over sdists: the lock hashes both, and this way nothing here compiles from source.
   overlay = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };

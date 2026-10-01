@@ -26,7 +26,7 @@ writers.writePython3Bin "data-syntax"
         ".vscode/settings.json",
         "modules/home/apps/vscode/settings.json",
         "modules/home/apps/vscode/keybindings.json",
-        "docs-site/.oxlintrc.json",
+        "tools/docs-site/.oxlintrc.json",
     )
 
 

@@ -242,8 +242,6 @@
         curseforge-fix-perms = final.callPackage ./pkgs/curseforge-fix-perms.nix { }; # +x on what the app unpacks
         razer-dpi = final.callPackage ./pkgs/razer-dpi.nix { }; # the Razer mouse's live DPI, over hidraw
         notify = final.callPackage ./pkgs/notify.nix { }; # the ntfy push, shared by the shell and sshd's PAM
-        docs-site = final.callPackage ./pkgs/docs-site.nix { }; # docs/ built into the static site
-        docs-site-check = final.callPackage ./pkgs/docs-site-check.nix { }; # the same build, at push time
       };
 
       # The repo's OWN tools in ./tools: they check, measure and maintain this tree, and are not
@@ -258,6 +256,8 @@
         eval-metrics = final.callPackage ./tools/eval-metrics/package.nix { }; # what evaluating each host costs
         usage-audit = final.callPackage ./tools/usage-audit.nix { }; # each app next to the traces of its use
         rules-index = final.callPackage ./tools/rules-index.nix { }; # it fails on a citation of no live rule
+        docs-site = final.callPackage ./tools/docs-site.nix { }; # docs/ built into the static site
+        docs-site-check = final.callPackage ./tools/docs-site-check.nix { }; # the same build, at push time
       };
       overlayLocalPkgs =
         final: _:
@@ -357,8 +357,8 @@
             vendored-bump # ./tools: same, and building it proves every updateScript still resolves
             curseforge-fix-perms # ./pkgs: same
             docs-links # ./tools: the build IS the script's flake8; the CHECK below runs it
-            docs-site # ./pkgs: the static export, so the CHECK below proves the site builds
-            docs-site-check # ./pkgs: the build IS the wrapper's shellcheck; the HOOK below runs it
+            docs-site # ./tools: the static export, so the CHECK below proves the site builds
+            docs-site-check # ./tools: the build IS the wrapper's shellcheck; the HOOK below runs it
             prose-style # ./tools: same flake8 at build time; the HOOKS below run it, in two modes
             qml-syntax # ./tools: the build IS the wrapper's shellcheck; the HOOK below runs it
             data-syntax # ./tools: same flake8 at build time; the HOOK below runs it
@@ -642,13 +642,13 @@
             };
             # The JS half of the lint, over the site's own TypeScript. The BINARY comes from
             # nixpkgs like every other linter here, so the lock pins it (rule 13); the rules live
-            # in `docs-site/.oxlintrc.json`, which is the file the editor reads too.
+            # in `tools/docs-site/.oxlintrc.json`, which is the file the editor reads too.
             oxlint = {
               enable = true;
               name = "oxlint";
               entry = "${nixpkgs.legacyPackages.${system}.oxlint}/bin/oxlint";
               language = "system";
-              files = "^docs-site/.*\\.(ts|tsx|mjs)$";
+              files = "^tools/docs-site/.*\\.(ts|tsx|mjs)$";
             };
             docs-links = {
               enable = true;
@@ -736,7 +736,7 @@
           buildInputs = enabledPackages ++ [
             pkgs.nixd
             pkgs.sops
-            # `pnpm --dir docs-site dev` with live reload, on the SAME node and pnpm the site
+            # `pnpm --dir tools/docs-site dev` with live reload, on the SAME node and pnpm the site
             # derivation builds with: the preview and the build cannot drift (rule 11).
             self.packages.${system}.docs-site.nodejs
             self.packages.${system}.docs-site.pnpm

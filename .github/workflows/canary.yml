@@ -76,10 +76,10 @@ jobs:
         run: |
           site=$(nix build .#docs-site --no-link --print-out-paths \
             --override-input duo-streak-daemon path:./tools/ci/stub-duo)
-          # The pattern is READ from docs-site/site.json, which already owns the repo for the
+          # The pattern is READ from tools/docs-site/site.json, which already owns the repo for the
           # link rewriting: hardcoding it here would be the second owner that file exists to
           # avoid. The runner's own node parses it, so this needs nothing from the devShell.
-          repo=$(node -p "require('./docs-site/site.json').repo")
+          repo=$(node -p "require('./tools/docs-site/site.json').repo")
           # THE HTML ONLY. Next.js writes a plain-text RSC payload next to every page, and lychee
           # reads those as prose: a `file://...` inside backticks became a parse ERROR there.
           # The same 3 tries as the step above, for the same reason.

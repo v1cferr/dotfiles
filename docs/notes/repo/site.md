@@ -4,8 +4,8 @@
 reader outside a file tree. This builds it into a static site at
 <https://dotfiles.v1cferr.dev/>, and it changes nothing about where a file lives.
 
-The app in `docs-site/`, the derivation in `pkgs/docs-site.nix`. Build it with
-`nix build .#docs-site`, preview it with `pnpm --dir docs-site dev` inside the devShell.
+The app in `tools/docs-site/`, the derivation in `tools/docs-site.nix`. Build it with
+`nix build .#docs-site`, preview it with `pnpm --dir tools/docs-site dev` inside the devShell.
 
 **Rule 20 is what this page argues for**, and the split between the two is the usual one here:
 the rule states the contract, and everything below is the reasoning, the measurements and what
@@ -78,7 +78,7 @@ pointers moved.
 **Rule 17 says `git mv`, never delete and create**, because the history of a file is the product
 here. 92 renames survive a `--follow`, but every one of them puts a step in it.
 
-So the nav is written out by hand, now in `docs-site/lib/navigation.ts`, pointing at the paths
+So the nav is written out by hand, now in `tools/docs-site/lib/navigation.ts`, pointing at the paths
 that already exist. It is the MkDocs nav carried over unchanged, entry for entry.
 
 ### What keeps the nav honest, and where it moved to
@@ -88,7 +88,7 @@ A hand-written nav is a SECOND owner of the page list, next to the tables in
 theoretical: `notes/apps/spotify.md` had already fallen out of that table before the site existed,
 and `notes/services/libvirt.md` lived one day written, indexed and absent from the nav.
 
-`docs-site/lib/page-tree.ts` is what refuses to build. It walks `docs/` and the nav together and
+`tools/docs-site/lib/page-tree.ts` is what refuses to build. It walks `docs/` and the nav together and
 fails on a nav entry with no file, a page no entry reaches, two entries landing on one URL, and a
 page with no H1 to name it. That is the same list `validation.nav` plus `--strict` produced, with
 the messages written here instead of read out of a generator's options.
@@ -99,7 +99,7 @@ the messages written here instead of read out of a generator's options.
 measured. At fifty times cheaper the right unit is the commit, and the gap that let libvirt
 through closes by that much more.
 
-`pkgs/docs-site-check.nix` is the wrapper the hook runs, and it takes its `node` from the site
+`tools/docs-site-check.nix` is the wrapper the hook runs, and it takes its `node` from the site
 derivation's `passthru`, so the gate and the build cannot end up on different runtimes.
 
 ## The URLs did not change, and that is checked
@@ -113,7 +113,7 @@ docs/guides/README.md     ->  /guides/
 docs/notes/repo/site.md   ->  /notes/repo/site/
 ```
 
-`docs-site/lib/urls.ts` is the ONE owner of that mapping, and four things read it: the loader that
+`tools/docs-site/lib/urls.ts` is the ONE owner of that mapping, and four things read it: the loader that
 assigns a URL to each page, the plugin that rewrites the links, the nav gate and the export check.
 A slug rule cannot drift between them because there is only one of it.
 
@@ -129,7 +129,7 @@ tree, so a tree carrying `/notes/repo/site/` matches nothing. The symptom was na
 miss, since the sidebar has its own matcher and kept highlighting the right page: the BREADCRUMB
 went silently empty. Looking at the rendered page in a browser is what found it.
 
-**What proves it:** `docs-site/scripts/finish-export.ts` runs after every build and compares the
+**What proves it:** `tools/docs-site/scripts/finish-export.ts` runs after every build and compares the
 URLs derived from `docs/` against the directories actually written to `out/`, in both directions.
 A page that stopped being published and a page published from nothing both fail the build. The
 migration itself was verified by diffing the two site outputs: 92 URLs, identical, plus the
@@ -142,7 +142,7 @@ Fumadocs build emitted none of the three. That is worth recording as a MISS rath
 feature: nothing failed, the pages just quietly stopped being findable, which is rule 16's drift
 in its most typical shape.
 
-**The description is the page's own first paragraph**, read by `docs-site/lib/summary.ts`, the
+**The description is the page's own first paragraph**, read by `tools/docs-site/lib/summary.ts`, the
 same file and the same reasoning as the title: no frontmatter in `docs/`, because a `description:`
 sitting next to the paragraph that already says it is a second owner of one string (rule 14). It
 is flattened to plain text, cut at a word boundary at 160 characters, and it feeds three things at
@@ -166,7 +166,7 @@ A page points at the module it documents, and of the 452 markdown links in `docs
 targets OUTSIDE `docs/` (`../../../modules/nixos/services/caddy.nix`). The site serves `docs/` and
 nothing else, so each one would be a dead link.
 
-`docs-site/plugins/remark-repo-links.ts` resolves every relative target against the page's own
+`tools/docs-site/plugins/remark-repo-links.ts` resolves every relative target against the page's own
 directory, which is the SAME rule `docs-links` applies, and the ones that escape `docs/` become
 blob URLs on GitHub. The markdown ON DISK is never touched, so the link keeps working when the
 file is read there, which is still where most of these pages get read.
@@ -182,7 +182,7 @@ that no longer exists, which is the check working.)
 | a folder with a README | that folder's page |
 | a folder without one | `.../tree/nixos/<path>` |
 
-**The repo and the branch are READ from `docs-site/site.json`**, not written in the plugin as
+**The repo and the branch are READ from `tools/docs-site/site.json`**, not written in the plugin as
 well: that would be a second owner of a value whose staleness breaks 140 links at once, which is
 rule 11. Which branch it is matters, because `main` here is a separate orphan history and a blob
 URL built from it is a 404 for every path. The canary workflow reads the same file to know which
@@ -195,8 +195,8 @@ the class of bug the hook had to defend against cannot occur.
 
 ## Where it runs: Nix around a Node toolchain
 
-`pkgs/docs-site.nix` is the same shape it always was, with the interior swapped. Its `src` is a
-`lib.fileset` of exactly `docs/` and `docs-site/`, so a commit that only touches `modules/nixos/` does
+`tools/docs-site.nix` is the same shape it always was, with the interior swapped. Its `src` is a
+`lib.fileset` of exactly `docs/` and `tools/docs-site/`, so a commit that only touches `modules/nixos/` does
 not rebuild the site, and `checks.packages` builds it, so the site is part of `nix flake check`
 with no second definition of "the site builds".
 
@@ -267,18 +267,18 @@ so it is downloaded only by a reader who opens a page that draws something. That
 vendored tarball and the MkDocs template that loaded it, and for the same reason: Material fetched
 `unpkg.com/mermaid@11`, a moving pointer in somebody else's browser.
 
-**One override, and when it goes.** `docs-site/package.json` forces `lodash-es@4.17.23` to
+**One override, and when it goes.** `tools/docs-site/package.json` forces `lodash-es@4.17.23` to
 `4.18.1` through `pnpm.overrides`. Mermaid 12.0.0 depends on chevrotain `~11.1.2`, and chevrotain
 pins lodash-es EXACTLY at 4.17.23, which carries GHSA-f23m-r3pf-42rh and GHSA-r5fr-rjxr-66jc
 (OpenSSF Scorecard found them on 27/09/2026). No bump could fix it, since that was already the
 newest mermaid. The jump is a patch inside 4.x, and the site built unchanged with it. REMOVE the
 override when mermaid moves to a chevrotain that no longer pins 4.17.23 (13.x does not depend on
-lodash-es at all); check with `pnpm why lodash-es` inside `docs-site/`, which should list only one
+lodash-es at all); check with `pnpm why lodash-es` inside `tools/docs-site/`, which should list only one
 version.
 
 **No webfont, for the same reason.** Material linked Roboto from `fonts.gstatic.com` on every
 page; Fumadocs UI ships no default font at all, so there is nothing to turn off. The stack in
-`docs-site/app/global.css` is `system-ui` for prose and JetBrains Mono for code, neither of them
+`tools/docs-site/app/global.css` is `system-ui` for prose and JetBrains Mono for code, neither of them
 REQUIRED: both sit in front of a fallback chain, so a machine without them loses nothing. That is
 what `docs/assets/stylesheets/fonts.css` used to say, and it left with MkDocs.
 
@@ -339,7 +339,7 @@ exist only after a build:
   such a link started being published as a blob URL. It reads the site's own TypeScript too,
   since the headers there carry the same pointers every other module's do.
 - **In the canary, weekly.** `lychee` over the BUILT site, filtered to this repo's own URLs,
-  which it reads out of `docs-site/site.json` rather than repeating. The markdown run cannot see
+  which it reads out of `tools/docs-site/site.json` rather than repeating. The markdown run cannot see
   one of these links, since none of them appears in any `.md`. 186 of them now, up from 91,
   because every page carries its own "Edit on GitHub".
 
@@ -350,9 +350,9 @@ exist only after a build:
   not exist. Scoping it to `**/*.html` also cut the run from 32s to 12s, since the payload is the
   same content a second time.
 
-`oxlint` is the JS half of the gate, over `docs-site/`. Its binary comes from nixpkgs like every
+`oxlint` is the JS half of the gate, over `tools/docs-site/`. Its binary comes from nixpkgs like every
 other linter here, so the lock pins it (rule 13) and nothing enters `package.json` for it; the
-rules live in `docs-site/.oxlintrc.json`, which is the file the editor reads too.
+rules live in `tools/docs-site/.oxlintrc.json`, which is the file the editor reads too.
 
 ## No frontmatter, and the title is the H1
 
@@ -360,7 +360,7 @@ Fumadocs wants a `title` for every page, and the obvious answer is a `---` block
 92 files. That was REJECTED: a `title:` next to an `# H1` is two owners of one string (rule 14),
 and the drift it invites is a page whose tab says one thing and whose heading says another.
 
-`docs-site/lib/title.ts` reads the first H1 instead, and the collection's schema is handed the raw
+`tools/docs-site/lib/title.ts` reads the first H1 instead, and the collection's schema is handed the raw
 source before the markdown is compiled, which is where that can happen. A page with no H1 fails
 the build rather than getting a made-up name. The H1 is then taken OUT of the rendered body, since
 the layout renders the title itself, and `docs/` gains not one byte.
@@ -368,7 +368,7 @@ the layout renders the title itself, and `docs/` gains not one byte.
 ## What is still worth doing
 
 - The generator is REPLACEABLE, and keeping it that way is the point. If Fumadocs ever goes the
-  way MkDocs did, what has to be rewritten is `docs-site/`, against 92 markdown files that did not
+  way MkDocs did, what has to be rewritten is `tools/docs-site/`, against 92 markdown files that did not
   move. Nothing in `docs/` knows which generator renders it.
 - The 2.1 MB search index is the one number I would like to see smaller without giving the index
   to somebody else. Nothing is planned, and measuring it again after the docs grow is the trigger.
@@ -378,4 +378,4 @@ the layout renders the title itself, and `docs/` gains not one byte.
 Moved here VERBATIM from [rules.md](../../rules.md) on 30/09/2026, when rule 20 became a
 card. Nothing was cut; the card links back here.
 
-**THE DOCUMENTATION IS A PUBLISHED PRODUCT, AND THE TREE IS NOT THE NAV**: `docs/` is built into a static site at <https://dotfiles.v1cferr.dev/> by `pkgs/docs-site.nix`, and that derivation lives in `packages`, so `checks.packages` builds it and the site is part of `nix flake check`: ONE definition of "the docs build", read by the gate, the pre-commit hook, the CI and the deploy, which is rule 14 applied to a renderer. THE RULE IS THE SEPARATION. The FILE TREE answers "where does this page live" and is split by FUNCTION at the top (the rules, the open items, the history, the notes, the guides, the ideas) and by SUBJECT inside [`notes/`](../), documented in [`README.md`](../../README.md) and [`notes/README.md`](../README.md). The NAV answers "how does a reader walk this" and lives in `docs-site/lib/navigation.ts`, written out by hand. **THE TREE NEVER MOVES TO MATCH A RENDERER**, and the temptation is real, because regrouping `docs/` by topic to mirror a sidebar looks like tidying. It is not, for three reasons in order of weight: sections named after the repo's own directories are the tree MIRROR that `notes/README.md` already measured and rejected (16 of the 51 pages of the day crossed the `modules/nixos/` and `modules/home/` boundary and 19 referenced two or more modules, because the ARTIFACT crosses); 221 pointers across 157 code files resolve INTO `docs/` and rule 2 made that pointer the only path from a module to its reasoning; and rule 17 wants a `git mv` history that survives, which 92 renames put a step into for a sidebar the nav expresses for free. A nav leaves with the generator that rendered it and the tree outlives it, so coupling the durable half to the disposable one is backwards, which is the whole of this rule in one sentence. WHAT ENFORCES IT IS THE BUILD AND NOT A NEW CHECKER, the same trade rule 7 makes for shell scripts: the site REFUSES to build when a page is left out of the nav, or a nav entry has no file, or two entries land on one URL, and it earned its keep on the first run by catching `notes/apps/spotify.md`, written and indexed nowhere. IT RUNS AT THE COMMIT AND IN THE GATE, and that placement is a measurement rather than a taste: under MkDocs it was a 7.12s `--strict` build, so it sat at `pre-push`, and since the Fumadocs migration it is a read of `docs/` plus one file on bare node, 0.14s measured, so the cheap unit is the right one. The gap was real for exactly one day: `notes/services/libvirt.md` was written, indexed in `notes/README.md` and left out of the nav, and nothing said so until the gate, two commits later. And EXISTING STOPPED BEING THE WHOLE TEST for a link: a target that leaves `docs/` is published as a GitHub blob URL, so it must be git-TRACKED and not merely present on disk, which `docs-links` now checks. RULE 13 DOES NOT STOP AT MY BUILD, it reaches the reader's browser: **the published site fetches NOTHING from a third party**, and the theme's defaults broke that twice on the day the site was born. Mermaid arrived from `unpkg.com/mermaid@11`, a moving pointer, and Roboto from `fonts.gstatic.com` on every page, which is worse for being invisible: an audit that greps `src=` never sees a font, because a font arrives through `href=`. Both are gone, and since the Fumadocs migration the BUILD is what refuses to publish a page reaching for a third party, instead of an audit somebody remembers to run. The reasoning is that a dependency somebody else can move is not less dangerous for running in a visitor's browser than in my sandbox. It is MORE, because I would never see it fail. AND THE GENERATOR IS REPLACEABLE ON PURPOSE, which stopped being a claim on 23/09/2026: MkDocs was frozen upstream, the bet was recorded with a trigger, and calling it cost one directory. What is generator-specific is `docs-site/` and one derivation, against 92 markdown files that any generator in this class consumes and that did not move by one byte. That is the same reason the tree did not move in the first place: the markdown is the asset, everything around it is scaffolding. The detail, the measurements and what was rejected: `notes/repo/site.md`.
+**THE DOCUMENTATION IS A PUBLISHED PRODUCT, AND THE TREE IS NOT THE NAV**: `docs/` is built into a static site at <https://dotfiles.v1cferr.dev/> by `tools/docs-site.nix`, and that derivation lives in `packages`, so `checks.packages` builds it and the site is part of `nix flake check`: ONE definition of "the docs build", read by the gate, the pre-commit hook, the CI and the deploy, which is rule 14 applied to a renderer. THE RULE IS THE SEPARATION. The FILE TREE answers "where does this page live" and is split by FUNCTION at the top (the rules, the open items, the history, the notes, the guides, the ideas) and by SUBJECT inside [`notes/`](../), documented in [`README.md`](../../README.md) and [`notes/README.md`](../README.md). The NAV answers "how does a reader walk this" and lives in `tools/docs-site/lib/navigation.ts`, written out by hand. **THE TREE NEVER MOVES TO MATCH A RENDERER**, and the temptation is real, because regrouping `docs/` by topic to mirror a sidebar looks like tidying. It is not, for three reasons in order of weight: sections named after the repo's own directories are the tree MIRROR that `notes/README.md` already measured and rejected (16 of the 51 pages of the day crossed the `modules/nixos/` and `modules/home/` boundary and 19 referenced two or more modules, because the ARTIFACT crosses); 221 pointers across 157 code files resolve INTO `docs/` and rule 2 made that pointer the only path from a module to its reasoning; and rule 17 wants a `git mv` history that survives, which 92 renames put a step into for a sidebar the nav expresses for free. A nav leaves with the generator that rendered it and the tree outlives it, so coupling the durable half to the disposable one is backwards, which is the whole of this rule in one sentence. WHAT ENFORCES IT IS THE BUILD AND NOT A NEW CHECKER, the same trade rule 7 makes for shell scripts: the site REFUSES to build when a page is left out of the nav, or a nav entry has no file, or two entries land on one URL, and it earned its keep on the first run by catching `notes/apps/spotify.md`, written and indexed nowhere. IT RUNS AT THE COMMIT AND IN THE GATE, and that placement is a measurement rather than a taste: under MkDocs it was a 7.12s `--strict` build, so it sat at `pre-push`, and since the Fumadocs migration it is a read of `docs/` plus one file on bare node, 0.14s measured, so the cheap unit is the right one. The gap was real for exactly one day: `notes/services/libvirt.md` was written, indexed in `notes/README.md` and left out of the nav, and nothing said so until the gate, two commits later. And EXISTING STOPPED BEING THE WHOLE TEST for a link: a target that leaves `docs/` is published as a GitHub blob URL, so it must be git-TRACKED and not merely present on disk, which `docs-links` now checks. RULE 13 DOES NOT STOP AT MY BUILD, it reaches the reader's browser: **the published site fetches NOTHING from a third party**, and the theme's defaults broke that twice on the day the site was born. Mermaid arrived from `unpkg.com/mermaid@11`, a moving pointer, and Roboto from `fonts.gstatic.com` on every page, which is worse for being invisible: an audit that greps `src=` never sees a font, because a font arrives through `href=`. Both are gone, and since the Fumadocs migration the BUILD is what refuses to publish a page reaching for a third party, instead of an audit somebody remembers to run. The reasoning is that a dependency somebody else can move is not less dangerous for running in a visitor's browser than in my sandbox. It is MORE, because I would never see it fail. AND THE GENERATOR IS REPLACEABLE ON PURPOSE, which stopped being a claim on 23/09/2026: MkDocs was frozen upstream, the bet was recorded with a trigger, and calling it cost one directory. What is generator-specific is `tools/docs-site/` and one derivation, against 92 markdown files that any generator in this class consumes and that did not move by one byte. That is the same reason the tree did not move in the first place: the markdown is the asset, everything around it is scaffolding. The detail, the measurements and what was rejected: `notes/repo/site.md`.

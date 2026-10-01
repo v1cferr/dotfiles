@@ -6,7 +6,7 @@ import path from 'node:path';
 import { createMDX } from 'fumadocs-mdx/next';
 
 const ROOT = process.cwd();
-const DOCS = path.resolve(ROOT, '../docs');
+const DOCS = path.resolve(ROOT, '../../docs');
 
 // What is GENERATED, so hashing the sources below does not hash the previous build.
 const GENERATED = new Set(['node_modules', '.next', '.source', 'out', 'next-env.d.ts', '.git']);
@@ -43,7 +43,7 @@ const config = {
   // `export` cannot run the optimizer, and there is no image in docs/ anyway.
   images: { unoptimized: true },
   // docs/ lives OUTSIDE this directory on purpose (rule 20): the tree never moves for a renderer.
-  outputFileTracingRoot: path.resolve(ROOT, '..'),
+  outputFileTracingRoot: path.resolve(ROOT, '../..'),
   // `next dev` WRITES an AGENTS.md and a CLAUDE.md into this directory otherwise. The agent
   // contract of this machine is declared once, in /etc (rule 18), and is not a build artifact.
   agentRules: false,

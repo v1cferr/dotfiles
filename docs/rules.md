@@ -301,7 +301,7 @@ itself by review.
 
 `docs/` is a published product, built into <https://dotfiles.v1cferr.dev/> by a derivation the
 gate builds. Two layers stay apart: the FILE TREE (split by function at the top, by subject inside
-`notes/`) answers where a page lives, and the NAV (`docs-site/lib/navigation.ts`, by hand)
+`notes/`) answers where a page lives, and the NAV (`tools/docs-site/lib/navigation.ts`, by hand)
 answers how a reader walks it. The tree **MUST NOT** move to match a renderer. Every page
 **MUST** be in the nav, a link that leaves `docs/` **MUST** point at a tracked file, and the
 published site **MUST NOT** fetch anything from a third party.

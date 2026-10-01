@@ -1,9 +1,9 @@
-// The nav gate on BARE NODE: no bundler, no node_modules, so `pkgs/docs-site-check.nix` can run
+// The nav gate on BARE NODE: no bundler, no node_modules, so `tools/docs-site-check.nix` can run
 // it at pre-push in milliseconds instead of building the whole site: docs/notes/repo/site.md
 import path from 'node:path';
 import { buildPageTree, listPages } from '../lib/page-tree.ts';
 
-const docsRoot = path.resolve(import.meta.dirname, '../../docs');
+const docsRoot = path.resolve(import.meta.dirname, '../../../docs');
 
 try {
   buildPageTree(docsRoot);

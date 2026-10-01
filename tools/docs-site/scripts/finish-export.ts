@@ -12,7 +12,7 @@ import { SITE_ORIGIN } from '../lib/domain.ts';
 import { docPathToUrl, docUrl, servedUrl } from '../lib/urls.ts';
 
 const ROOT = process.cwd();
-const DOCS = path.resolve(ROOT, '../docs');
+const DOCS = path.resolve(ROOT, '../../docs');
 const OUT = path.resolve(ROOT, 'out');
 
 // Next writes its own not-found route twice, and neither is a page of docs/.

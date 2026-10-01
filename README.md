@@ -150,7 +150,7 @@ tools/           what maintains the repo itself: the checkers, metrics, stats, v
 secrets/         secrets.yaml (sops) + the Bitwarden index
 hosts/cudy-wr3000/          mirror of the OpenWrt UCI config: visible, not declarable
 docs/            what is NOT declarable, plus the diary: rules, notes, history, guides, ideas
-docs-site/       docs/ built into https://dotfiles.v1cferr.dev (Fumadocs, hermetic in Nix)
+tools/docs-site/       docs/ built into https://dotfiles.v1cferr.dev (Fumadocs, hermetic in Nix)
 ```
 
 The docs at the root are the three GitHub reads from there: this README,

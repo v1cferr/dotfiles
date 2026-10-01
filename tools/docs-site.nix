@@ -17,10 +17,10 @@ let
   # What the DEPENDENCIES are resolved from, and nothing else: a page edit must not invalidate
   # the fetch, which is the one step of this build that needs the network.
   manifest = lib.fileset.toSource {
-    root = ../docs-site;
+    root = ./docs-site;
     fileset = lib.fileset.unions [
-      ../docs-site/package.json
-      ../docs-site/pnpm-lock.yaml
+      ./docs-site/package.json
+      ./docs-site/pnpm-lock.yaml
     ];
   };
 in
@@ -28,20 +28,20 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "docs-site";
   version = "0";
 
-  # ONLY what the site is built from, so a commit touching modules/nixos/ does not rebuild it. The build
+  # ONLY what the site is built from, so a commit touching modules/ does not rebuild it. The build
   # outputs are subtracted by name: `maybeMissing` because a fresh clone has none of them.
   src = lib.fileset.toSource {
     root = ../.;
     fileset = lib.fileset.unions [
       ../docs
-      (lib.fileset.difference ../docs-site (
+      (lib.fileset.difference ./docs-site (
         lib.fileset.unions (
           map lib.fileset.maybeMissing [
-            ../docs-site/node_modules
-            ../docs-site/.next
-            ../docs-site/.source
-            ../docs-site/out
-            ../docs-site/next-env.d.ts
+            ./docs-site/node_modules
+            ./docs-site/.next
+            ./docs-site/.source
+            ./docs-site/out
+            ./docs-site/next-env.d.ts
           ]
         )
       ))
@@ -65,21 +65,21 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     fetcherVersion = 3;
     hash = "sha256-pzbjOGSFQMWMS9qMM7rt4KvNn2yg77r/v2bUUnxtO+s=";
   };
-  # Relative to the source root: the app is a subdirectory, because docs/ is its sibling.
-  pnpmRoot = "docs-site";
+  # Relative to the source root: the app lives in tools/, and docs/ stays at the repo's root.
+  pnpmRoot = "tools/docs-site";
 
   # NO network from here on. The telemetry ping is the one thing Next.js would still try.
   env.NEXT_TELEMETRY_DISABLED = "1";
 
   buildPhase = ''
     runHook preBuild
-    pnpm --dir docs-site build
+    pnpm --dir tools/docs-site build
     runHook postBuild
   '';
 
   installPhase = ''
     runHook preInstall
-    cp -r docs-site/out $out
+    cp -r tools/docs-site/out $out
     runHook postInstall
   '';
 

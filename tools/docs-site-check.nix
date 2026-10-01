@@ -19,6 +19,6 @@ writeShellApplication {
   # 7.12s site build into a check cheap enough to charge every commit for.
   text = ''
     root=$(git rev-parse --show-toplevel)
-    node "$root/docs-site/scripts/check-navigation.ts"
+    node "$root/tools/docs-site/scripts/check-navigation.ts"
   '';
 }

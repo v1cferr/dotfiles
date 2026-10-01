@@ -8,7 +8,7 @@ import { descriptionFromMarkdown, titleFromMarkdown } from './summary.ts';
 import { docSlugs, docUrl } from './urls.ts';
 
 const docs = defineDocs({
-  dir: '../docs',
+  dir: '../../docs',
   docs: {
     // The schema runs BEFORE the markdown is compiled and is handed the raw source, which is the
     // only hook where a title can be derived without writing frontmatter into docs/.

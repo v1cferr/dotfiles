@@ -7,6 +7,7 @@
   openssh,
   host,
   sshPort,
+  mirror,
 }:
 
 writers.writePython3Bin "exposure-check"
@@ -24,7 +25,7 @@ writers.writePython3Bin "exposure-check"
     import time
 
     HOST = "${host}"
-    FIREWALL = "hosts/cudy-wr3000/uci/firewall.conf"
+    FIREWALL = "${mirror}/firewall.conf"
     SSH_PORT = ${toString sshPort}
     # What this machine's sshd must offer and nothing more: a key, or password plus TOTP in PAM. A
     # bare `password` would mean the TOTP got bypassed (docs/notes/network/network.md).

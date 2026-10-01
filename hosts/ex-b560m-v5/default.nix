@@ -11,6 +11,9 @@
 
   networking.hostName = "ex-b560m-v5";
 
+  # The router this machine manages (router-sync, `ssh router`): its facts live in its own folder.
+  my.router = import ../cudy-wr3000;
+
   # Fixed at the 1st install: NEVER change it afterwards. The same value as the old host because
   # it is the same release; the stateVersion follows the installation, not the disk.
   system.stateVersion = "26.05";

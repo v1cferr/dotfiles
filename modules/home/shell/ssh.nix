@@ -1,6 +1,6 @@
 # The SSH client config. The private key is state, so it comes from the backup (rule 6).
 # Every timeout here is sized to VS Code's 17s budget: docs/notes/network/ssh.md
-{ config, ... }:
+{ config, osConfig, ... }:
 
 let
   ws = config.my.fai.workstation; # SSOT: modules/home/network/fai-workstation.nix (rule 11)
@@ -43,8 +43,8 @@ in
       # The home router. No faiResilience: this is a LAN hop, and inheriting it would be cargo cult.
       # A reflash regenerates the Dropbear host key, and the key install: docs/notes/network/ssh.md
       router = {
-        HostName = "192.168.1.1";
-        User = "v1cferr";
+        HostName = osConfig.my.router.address; # SSOT: hosts/cudy-wr3000/default.nix
+        User = osConfig.my.router.sshUser;
         Port = 22;
         IdentityFile = "~/.ssh/id_ed25519";
         SetEnv = {

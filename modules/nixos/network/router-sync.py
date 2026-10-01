@@ -20,11 +20,14 @@ opposite (a block list) would leak in silence. Rule 12: the repo does not hold a
 even by accident.
 """
 
+import os
 import subprocess
 import sys
 from pathlib import Path
 
-HOST = "v1cferr@192.168.1.1"
+# The router's facts come from its data file in hosts/, through the Nix wrapper (rule 11).
+HOST = os.environ["ROUTER_HOST"]
+MIRROR = os.environ["ROUTER_MIRROR"]
 MARKER = "<REDACTED: the real value is on the router; see docs/history/>"
 
 # The name of the option (the leaf) that carries a credential, matched as a SUBSTRING and never by
@@ -116,7 +119,7 @@ def export():
 
 def main():
     action = sys.argv[1] if len(sys.argv) > 1 else "diff"
-    root = repo_root() / "hosts" / "cudy-wr3000" / "uci"
+    root = repo_root() / MIRROR
     live = export()
 
     if action == "pull":

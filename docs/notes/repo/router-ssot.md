@@ -104,6 +104,13 @@ one address. The second one was found BY THIS HOOK, in the commit that moved it:
 reported `/cesar-ssh.v1cferr.dev/192.168.1.40 answers 192.168.1.40, which no host in this repo
 declares`, which is precisely the loud failure the paragraph above promises.
 
+**The router's own facts need no anchor at all (01/10/2026).** Its address, its SSH user and the
+mirror's folder are written once, in [`hosts/cudy-wr3000/default.nix`](../../../hosts/cudy-wr3000/default.nix),
+a plain attrset since OpenWrt runs no Nix. The desktop wires it as `my.router` (read by
+`router-sync` and by `ssh router`), and the flake passes it to this checker and to
+`exposure-check` as an argument. Before, the address sat in `router-sync.py` and `ssh.nix` and the
+mirror path in three files; an argument cannot drift the way a regex over text can.
+
 ## What the first run found, and it was a bug in the checker
 
 Not drift. A false positive of the parser's own making: the extractor read the quoted strings of the

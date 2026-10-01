@@ -1,7 +1,7 @@
 # router-ssot: it fails when the router's mirrored UCI disagrees with the SSOT this repo declares.
 # Rule 11 asks for one owner per value, and the router is the one place Nix does not reach, so until
 # this existed the only guard was "keep it in sync by hand": docs/notes/repo/router-ssot.md
-{ writers }:
+{ writers, router }:
 
 writers.writePython3Bin "router-ssot"
   {
@@ -21,7 +21,8 @@ writers.writePython3Bin "router-ssot"
         capture_output=True, text=True, check=True,
     ).stdout.strip()
 
-    MIRROR = "hosts/cudy-wr3000/uci"
+    MIRROR = "${router.mirror}"
+    ROUTER = "${router.address}"
 
 
     def read(rel):
@@ -141,6 +142,8 @@ writers.writePython3Bin "router-ssot"
                         read("modules/home/network/t480.nix"), re.S)
         if opt:
             hosts.add(opt.group(1))
+        # The router itself is reached over SSH too; its address comes from its data file now.
+        hosts.add(ROUTER)
         out["ssh_hosts"] = hosts
         return out
 

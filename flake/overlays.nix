@@ -5,6 +5,9 @@
 let
   inherit (inputs) nixpkgs nixpkgs-unstable;
 
+  # The router's facts, for the checkers that read its mirror (rule 11): hosts/cudy-wr3000.
+  router = import ../hosts/cudy-wr3000;
+
   # ONE unstable instance, hoisted OUT of the overlay on purpose: inside it the import would run
   # per pkgs instance AND per splice (pkgsi686Linux), which is the OOM everyone hits.
   pkgsUnstable = import nixpkgs-unstable {
@@ -131,7 +134,7 @@ let
     qml-syntax = final.callPackage ../tools/qml-syntax.nix { }; # it fails on a .qml that does not parse
     data-syntax = final.callPackage ../tools/data-syntax.nix { }; # it fails on a .json/.toml that does not parse
     dead-config = final.callPackage ../tools/dead-config.nix { }; # it fails on declared-and-unused
-    router-ssot = final.callPackage ../tools/router-ssot.nix { }; # it fails when the router's mirror diverges
+    router-ssot = final.callPackage ../tools/router-ssot.nix { inherit router; }; # it fails when the router's mirror diverges
     eval-metrics = final.callPackage ../tools/eval-metrics/package.nix { }; # what evaluating each host costs
     usage-audit = final.callPackage ../tools/usage-audit.nix { }; # each app next to the traces of its use
     rules-index = final.callPackage ../tools/rules-index.nix { }; # it fails on a citation of no live rule

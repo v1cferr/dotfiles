@@ -176,8 +176,8 @@ writers.writePython3Bin "dead-config"
 
 
     def gitleaks_dates():
-        """The `# review-by:` above each allowlist in .gitleaks.toml, keyed by its description."""
-        path = os.path.join(ROOT, ".gitleaks.toml")
+        """The `# review-by:` above each allowlist in .config/gitleaks.toml, keyed by its description."""
+        path = os.path.join(ROOT, ".config", "gitleaks.toml")
         if not os.path.exists(path):
             return {}
         text = open(path).read()

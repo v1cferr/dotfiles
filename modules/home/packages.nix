@@ -27,7 +27,7 @@
     # VS Code owns its package in modules/home/apps/vscode.nix (it has settings of its own).
     nixd # the LSP that completes OPTIONS, because it evaluates the config instead of parsing text
     nixfmt # the official formatter since RFC 166; this attribute IS the rfc-style one
-    statix # idiomatic anti-patterns; two lints are disabled in statix.toml
+    statix # idiomatic anti-patterns; two lints are disabled in .config/statix.toml
     deadnix # dead declarations (unused args, let-bindings, patterns)
 
     # ── Torrent / passwords ──

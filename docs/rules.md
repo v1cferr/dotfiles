@@ -340,12 +340,12 @@ canary (every input at its head, a release before a rename breaks a `rebuild`).
 
 Every entry in an exception list **MUST** carry a reason and a review date. On the date it is
 deleted, or its date moves in a commit that says why. A DECISION with its reasoning written down
-(the two statix lints off in `statix.toml`) is policy, not an exception, and changes by argument.
+(the two statix lints off in `.config/statix.toml`) is policy, not an exception, and changes by argument.
 
 **Why**: without a date an exception list only grows, since nobody deletes a line that looks
 deliberate, and by 2032 "exception" and "leftover" read the same.
 
-**Enforced by**: `dead-config --expired` in the canary (`ALLOWED` and the `.gitleaks.toml`
+**Enforced by**: `dead-config --expired` in the canary (`ALLOWED` and the `.config/gitleaks.toml`
 allowlists), never in the gate: a clock would make a cached check change with no commit.
 
 **Detail**: [dead-config](notes/repo/dead-config.md#every-exception-has-a-review-date-rule-22-29092026).

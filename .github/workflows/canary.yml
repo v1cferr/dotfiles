@@ -93,7 +93,7 @@ jobs:
           exit 1
 
   # The WHOLE history, which the pre-commit hook never sees: a `--no-verify` commit, or a rule a
-  # newer gitleaks learned. Known findings: .gitleaksignore, and docs/notes/repo/github-settings.md
+  # newer gitleaks learned. Known findings: .config/.gitleaksignore, and docs/notes/repo/github-settings.md
   secrets:
     name: no credential anywhere in the history
     runs-on: ubuntu-latest
@@ -112,7 +112,8 @@ jobs:
       - name: gitleaks over every commit
         run: |
           nix develop --override-input duo-streak-daemon path:./tools/ci/stub-duo \
-            --command gitleaks git --no-banner --redact .
+            --command gitleaks git --no-banner --redact \
+            --config .config/gitleaks.toml --gitleaks-ignore-path .config .
 
   # An advisory published against a pinned dependency changes the answer with NO commit of mine:
   # every lockfile osv-scanner reads (uv.lock, pnpm-lock.yaml): docs/notes/repo/github-settings.md

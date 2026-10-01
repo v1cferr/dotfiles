@@ -63,7 +63,7 @@ straight through it, so the repo adds two layers of its own, both running gitlea
   `--no-verify` commit or a rule that a newer gitleaks learned. Its version is the devShell's, so
   the hook and the job never disagree about the rules.
 
-**The two known findings live in [`.gitleaksignore`](../../../.gitleaksignore)**, by fingerprint
+**The two known findings live in [`.config/.gitleaksignore`](../../../.config/.gitleaksignore)**, by fingerprint
 (`commit:file:rule:line`), so each one silences that exact spot and nothing else. The first full
 scan on 27/09/2026 read 1419 commits and found exactly these two, both already dealt with:
 
@@ -79,7 +79,7 @@ positive gets its fingerprint appended here, with its line in the table above.
 ### A public address is a leak no credential scanner sees (29/09/2026)
 
 Every layer above looks for CREDENTIALS. What a public repo of infrastructure leaks more easily is
-a MAP: the public IPv4 of the house, or of someone else's network. So [`.gitleaks.toml`](../../../.gitleaks.toml)
+a MAP: the public IPv4 of the house, or of someone else's network. So [`.config/gitleaks.toml`](../../../.config/gitleaks.toml)
 extends the default rules with `public-ipv4`, and the same hook and the same canary job run it.
 
 The regex only accepts real octets (0 to 255, no leading zero), which already drops most version

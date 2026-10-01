@@ -17,19 +17,22 @@ in
       # `nixfmt` and NOT `nixfmt-rfc-style`: that distinction EXPIRED on 18/08/2026. Both hooks
       # now resolve to the same nixfmt-1.4.0 and entry; only the old alias warns on eval.
       nixfmt.enable = true;
-      # Both read the repo config (./statix.toml) because they run with cwd at the root.
-      statix.enable = true;
+      # statix reads the repo's policy from .config/, where every tool config lives (decision 0009).
+      statix = {
+        enable = true;
+        settings.config = ".config/statix.toml";
+      };
       deadnix.enable = true;
       # It covers hosts/cudy-wr3000/owfetch.sh, which runs in ash on OpenWrt with no derivation
       # around it: otherwise the one .sh running on SOMEONE ELSE'S machine would go unchecked.
       shellcheck.enable = true;
-      # The ENTRY is overridden to read ./.markdownlint.jsonc, the same file the editor reads:
+      # The ENTRY is overridden to read .config/markdownlint.jsonc, the same file the editor reads:
       # the hook's own `settings.configuration` would be a 2nd owner of the ruleset (rule 14).
       markdownlint = {
         enable = true;
         entry = "${
           nixpkgs.legacyPackages.${system}.markdownlint-cli
-        }/bin/markdownlint --config .markdownlint.jsonc";
+        }/bin/markdownlint --config .config/markdownlint.jsonc";
       };
       # It fails on a `secrets/*.yaml` that is NOT encrypted, the one accident rule 12 cannot
       # survive. `files` is NARROWED: the hook's default `^secrets` fails on the plain INDEX.
@@ -51,15 +54,15 @@ in
           enable = true;
           name = "gitleaks";
           package = gitleaks;
-          entry = "${gitleaks}/bin/gitleaks git --pre-commit --staged --no-banner --redact";
+          entry = "${gitleaks}/bin/gitleaks git --pre-commit --staged --no-banner --redact --config .config/gitleaks.toml --gitleaks-ignore-path .config";
           language = "system";
           pass_filenames = false;
         };
-      # The 8 Hyprland `.lua`, type-checked by the LSP itself, reading THE SAME ./.luarc.json
+      # The 8 Hyprland `.lua`, type-checked by the LSP itself, reading THE SAME .config/luarc.json
       # the editor reads: that file is plain JSON, so `fromJSON` can (markdownlint's cannot).
       lua-ls = {
         enable = true;
-        settings.configuration = builtins.fromJSON (builtins.readFile ../.luarc.json);
+        settings.configuration = builtins.fromJSON (builtins.readFile ../.config/luarc.json);
       };
       # The 27 `.qml`: PARSE only. The rest of qmllint does not understand Quickshell's
       # types and produced 2267 findings, almost all false: docs/notes/desktop/quickshell.md
@@ -70,7 +73,7 @@ in
         language = "system";
         files = "\\.qml$";
       };
-      # The 14 `.json`/`.jsonc`/`.toml`. Nix parses two of them (`.luarc.json` and the
+      # The 14 `.json`/`.jsonc`/`.toml`. Nix parses two of them (`luarc.json` and the
       # secrets index) and fails at eval; the rest are read by a TOOL, which answers a
       # broken file by falling back to its defaults and saying nothing.
       data-syntax = {

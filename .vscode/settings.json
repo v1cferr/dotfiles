@@ -70,5 +70,9 @@
         }
       }
     }
-  }
+  },
+  // The tool configs live in .config/ (decision 0009), so the two extensions that would only look
+  // at the root are told where: the same files the hooks read, one owner each (rule 14).
+  "markdownlint.configFile": ".config/markdownlint.jsonc",
+  "Lua.misc.parameters": ["--configpath=.config/luarc.json"]
 }

@@ -330,14 +330,14 @@ one with no verification.
 **The markdownlint hook has its ENTRY overridden, so the ruleset keeps ONE owner (23/08/2026).**
 The built-in hook builds a config out of its own `settings.configuration` and passes
 `-c <that generated json>`, which would give the rules two owners (rule 14): the
-`.markdownlint.jsonc` the editor reads and a Nix attrset nobody ever opens. Reading the file back
+`.config/markdownlint.jsonc` the editor reads and a Nix attrset nobody ever opens. Reading the file back
 with `fromJSON (readFile ./.markdownlint.jsonc)` is not a way out either, because the file is JSONC
-and a `//` comment breaks `fromJSON`. Overriding the entry to `--config .markdownlint.jsonc` keeps
+and a `//` comment breaks `fromJSON`. Overriding the entry to `--config .config/markdownlint.jsonc` keeps
 the single file, and the hook runs with cwd at the root, the same reason statix finds
 `./statix.toml`.
 
 MEASURED before enabling it: `markdownlint` over the 73 tracked `.md` returned 0 findings, so this
-comes in as a REGRESSION GUARD and not as a cleanup. Until then the `.markdownlint.jsonc` was
+comes in as a REGRESSION GUARD and not as a cleanup. Until then the `.config/markdownlint.jsonc` was
 config with no executable owner: the editor obeyed it, and nothing checked the CI or a commit made
 from another machine. 73 `.md` are the most valuable thing in this repo and they were the least
 verified part of it.
@@ -360,8 +360,8 @@ gate covered `.nix`, `.sh`, `.md` and the workflow, and 36 files had no checker 
 
 `lua-ls` is the LSP itself in `--check` mode over the 8 Hyprland `.lua`, and it reads
 `settings.configuration = fromJSON (readFile ./.luarc.json)`, so the editor and the hook share ONE
-file. That is the ending markdownlint could not have: `.luarc.json` is plain JSON, while
-`.markdownlint.jsonc` has `//` comments that break `fromJSON`. MEASURED before enabling it:
+file. That is the ending markdownlint could not have: `.config/luarc.json` is plain JSON, while
+`.config/markdownlint.jsonc` has `//` comments that break `fromJSON`. MEASURED before enabling it:
 "Diagnosis completed, no problems found" on all 8. The hook has `files = "\\.lua$"`, so a commit
 that touches no Lua does not pay for it.
 
@@ -388,7 +388,7 @@ already pushed would take a separate job running `convco check` over the pushed 
 auditing the gate's coverage BY EXTENSION instead of trusting that it was complete: `.nix`, `.md`,
 `.qml`, `.lua`, `.sh`, `.py` and the workflow YAML each had a hook, and the data files had none.
 That is the worst class of gap here, because of WHO reads those files. Nix parses two of them
-(`.luarc.json` through `fromJSON`, and the secrets index that `modules/nixos/core/secrets.nix` walks), so
+(`.config/luarc.json` through `fromJSON`, and the secrets index that `modules/nixos/core/secrets.nix` walks), so
 those fail loudly at eval. The other twelve are read by a TOOL at runtime, and a tool answers a
 broken config by falling back to its defaults and saying nothing: an MCP server that does not
 appear, a keybinding that does not exist, a linter running its own ruleset instead of mine.
@@ -667,7 +667,7 @@ compromised personal key is your whole GitHub.
 
 ## statix: the two lints turned off, and why
 
-`statix.toml`. THE MEASUREMENT that motivated the file (03/08/2026, 79 files): 77 findings, of which
+`.config/statix.toml`. THE MEASUREMENT that motivated the file (03/08/2026, 79 files): 77 findings, of which
 63 were `W20 repeated_keys` (82% of everything), 10 were `W10 empty_pattern` and 4 were
 `W4 manual_inherit_from`.
 

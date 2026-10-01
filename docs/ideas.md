@@ -210,7 +210,7 @@ order the research put it.
   they would need the deploy key of Plan B. Rule 13 keeps `update` as the USER, and the canary above
   is what says when it is worth running.
 - **DONE the same day, and the prediction about qmllint was right**: the Lua goes through `lua-ls`
-  reading the repo's own `.luarc.json`, the loose Python through `ruff`, and the QML through a parse
+  reading the repo's own `.config/luarc.json`, the loose Python through `ruff`, and the QML through a parse
   check that keeps ONE qmllint category, because the rest of it produced 2267 findings that are
   almost all false. The measurements are in [notes/desktop/quickshell.md](notes/desktop/quickshell.md).
 - **Tags for the milestones.** There are two tags in the repo and neither marks a state. Tagging the

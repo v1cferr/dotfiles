@@ -76,7 +76,7 @@ mistake would reformat the whole repo in the old style.
 idiomatic anti-patterns (`a = x.a;` that should be `inherit (x) a;`) and deadnix finds dead
 declarations (unused lambda args, let-bindings, patterns). Here they are only available to run by
 hand; what GUARANTEES them is `nix flake check`. Two statix lints are turned off with a
-justification in [`statix.toml`](../../../statix.toml), because 63 of the initial 77 findings were a
+justification in [`.config/statix.toml`](../../../.config/statix.toml), because 63 of the initial 77 findings were a
 single lint that contradicts the nixpkgs idiom.
 
 ## azure-cli earns its 0.95 GiB, wrangler did not earn its 2.2

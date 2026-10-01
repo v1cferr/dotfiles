@@ -47,6 +47,6 @@ on the README even after the site has it. The source of truth is `stats/stats.js
 ## The HTML, and markdownlint
 
 GitHub Markdown has no syntax for a badge row or a collapsible, so the header is HTML.
-`.markdownlint.jsonc` allows exactly the tags the README uses (MD033's `allowed_elements`), and
+`.config/markdownlint.jsonc` allows exactly the tags the README uses (MD033's `allowed_elements`), and
 the image before the first heading is excused on its own line (MD041), so neither rule is off for
 the rest of `docs/`.

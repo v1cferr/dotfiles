@@ -154,6 +154,7 @@ tools/             what maintains the repo itself, same shape: checkers, metrics
   docs-site/       docs/ built into https://dotfiles.v1cferr.dev (Fumadocs, hermetic in Nix)
   ci/              the stub that stands in for the private input
 secrets/           secrets.yaml (sops) + the Bitwarden index
+.config/           how the tools behave: statix, gitleaks, markdownlint, the Lua LSP
 docs/              what is NOT declarable, plus the diary: rules, notes, history, guides, ideas
 ```
 

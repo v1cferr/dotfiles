@@ -127,7 +127,7 @@ flake.lock       pinned input versions (rule 13: no implicit "latest", anywhere)
 
 modules/nixos/          SYSTEM, shared by every host (machine-agnostic)
   core/          Nix/flakes, boot, Secure Boot, users, secrets, locale, shutdown
-  hardware/      CPU, GPU (Arc B580), audio (PipeWire), fonts, btrfs, RGB, mouse, OOM
+  hardware/      firmware, audio (PipeWire), fonts, btrfs, OOM; device modules hosts pick
   network/       NetworkManager, SSH, VPNs, ingress, the router, Tor, the FAI gateway
   desktop/       LightDM, Hyprland, monitors
   gaming/        Steam + Proton-GE + gamemode

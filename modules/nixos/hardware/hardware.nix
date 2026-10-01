@@ -3,7 +3,6 @@
 { ... }:
 
 {
-  hardware.cpu.intel.updateMicrocode = true;
   hardware.enableRedistributableFirmware = true; # it includes the GPU's firmware (Intel Arc)
   zramSwap.enable = true; # compressed swap in RAM (fast; priority 5, so it is used first)
 

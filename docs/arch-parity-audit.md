@@ -97,7 +97,7 @@ Same job, a different tool, and each one has its reasoning already recorded:
 | `main:xsettingsd/` | `gtk` plus `dconf` in `theme.nix` | The idiomatic home-manager path; no X11 daemon |
 | `main:greetd/` (7) | LightDM plus autologin in [`modules/nixos/desktop/desktop.nix`](../modules/nixos/desktop/desktop.nix) | Sunshine captures a LIVE session, so the machine has to log itself in |
 | `main:kwallet/` | gnome-keyring in the same `desktop.nix` | It is the `org.freedesktop.secrets` provider VS Code asks for |
-| `main:openrazer/` | hidraw plus `razer-dpi` in [`modules/nixos/hardware/razer.nix`](../modules/nixos/hardware/razer.nix) | openrazer does not build on kernel 7.1 or newer |
+| `main:openrazer/` | hidraw plus `razer-dpi` in [`modules/nixos/hardware/deathadder-v2.nix`](../modules/nixos/hardware/deathadder-v2.nix) | openrazer does not build on kernel 7.1 or newer |
 | `main:cloudflare-ddns/` (4) | `ddns-scripts` on the router, [`hosts/cudy-wr3000/uci/ddns.conf`](../hosts/cudy-wr3000/uci/ddns.conf) | The anchor stopped depending on this machine being awake |
 | `main:docker/` | [`modules/nixos/services/docker.nix`](../modules/nixos/services/docker.nix), the prune policy | The only content was the nvidia runtime, and the GPU is an Arc now |
 | `main:bash/` | zsh as the login shell | `.bashrc` was already vestigial |

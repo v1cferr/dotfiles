@@ -179,12 +179,21 @@ overlay in the list: it re-wraps their package.
 ## Hosts
 
 A host is the COMMON modules (overlay, sops, disko, `./modules/nixos`, home-manager) plus the host's own
-FOLDER. A new host means creating `hosts/<host>/` (`default.nix`, `disko.nix`, `services.nix`) and
-adding one line to `nixosConfigurations`. home-manager comes in as a module, so one rebuild applies
+FOLDER. A new host means creating `hosts/<host>/` (`default.nix`, `hardware.nix`, `disko.nix`,
+`services.nix`) and adding one line to `nixosConfigurations`. home-manager comes in as a module, so one rebuild applies
 system and user together.
 
 What belongs to the HOST and not to `./modules/nixos`: hostname, disks, kernel, monitors, stateVersion and
 the `my.services` panel. `modules/nixos/` declares the options; the host answers them.
+
+**Devices are picked, not imported for everyone (30/09/2026).** A module that describes ONE device
+(`intel-arc-b580.nix`, `arc-b580-rgb.nix`, `mx-master-3s.nix`, `deathadder-v2.nix`) lives in
+`modules/nixos/hardware/` but is NOT in its `default.nix`: the host's `hardware.nix` imports it by
+path, next to its kernel modules, CPU microcode, extra disks and monitors. modules are what is
+available, a host is what is plugged in. A plain import and not a `my.hardware.*.enable` option:
+with one host, an option would be an abstraction with no second consumer. Moving the imports
+changed only the ORDER of `environment.systemPackages` (the same 249 packages), and the built
+`sw/` tree came out identical, path by path.
 
 **THE MODULE LIST IS HOISTED, and that is the part the text above does not show**: the same
 `commonModules` feeds the machine and both VM outputs, so the drill and the boot test cannot

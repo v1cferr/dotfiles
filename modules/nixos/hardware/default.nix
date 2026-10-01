@@ -1,17 +1,14 @@
-# Hardware: CPU/firmware, GPU, audio, fonts.
+# Hardware ANY host can carry: firmware, btrfs, OOM, audio, fonts, Bluetooth, adb. A device
+# module (one GPU, one mouse) is not imported here: each host's hardware.nix picks its own.
 { ... }:
 
 {
   imports = [
-    ./hardware.nix # CPU/microcode, firmware, zram, Bluetooth, udisks2
+    ./hardware.nix # firmware, zram, fwupd, Bluetooth, udisks2 (the microcode is the host's CPU)
     ./btrfs.nix # the FS' integrity: scrub plus alarm, error counters, reclaim, TRIM
     ./oom.nix # earlyoom: it kills the biggest process before the out-of-RAM freeze (zram's companion)
-    ./gpu.nix # the video driver: an Intel Arc B580 (xe plus Mesa, no CUDA)
-    ./rgb.nix # the GPU's LEDs through a patched OpenRGB (my.rgb.color)
     ./audio.nix # PipeWire plus rtkit
     ./fonts.nix # the SSOT of the UI font (my.fonts.ui) plus fontconfig plus the MS metrics
-    ./mouse.nix # a Logitech MX Master 3S through logiops (gestures, DPI, smartshift)
-    ./razer.nix # a Razer DeathAdder V2: hidraw for the user, no kernel driver (openrazer is out)
     ./android.nix # adb over wireless debugging, scrcpy and uad-ng, to inspect and clean the phone
   ];
 }

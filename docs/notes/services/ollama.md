@@ -12,7 +12,7 @@ used to run here without anyone noticing.
 
 ## Why Vulkan and not SYCL/oneAPI/ipex-llm
 
-Vulkan talks to Mesa ANV, which is already on the system (`modules/nixos/hardware/gpu.nix`) and is the
+Vulkan talks to Mesa ANV, which is already on the system (`modules/nixos/hardware/intel-arc-b580.nix`) and is the
 SAME driver as the rest of the desktop: zero new dependencies, zero hand packaging. The SYCL path
 would mean packaging Intel's fork (ipex-llm), which is not in nixpkgs.
 

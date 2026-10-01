@@ -51,7 +51,7 @@ reinforcement.
 
 ## The OS side (this part IS declarative)
 
-- `boot.kernelParams = [ "reboot=pci" ]` in `modules/nixos/hardware/gpu.nix`: it forces a
+- `boot.kernelParams = [ "reboot=pci" ]` in `modules/nixos/hardware/intel-arc-b580.nix`: it forces a
   full reset through 0xCF9 on `reboot`, the GPU reinitializes clean as in a cold boot and the
   POST does not fail, so CSM is never turned back on. **It fixes the warm-reboot hang.**
 - `services.fwupd.enable = true` in `modules/nixos/hardware/hardware.nix`: it does NOT cover this board's

@@ -1,6 +1,6 @@
 # The GPU's RGB: an ASRock Steel Legend B580 through OpenRGB
 
-[`modules/nixos/hardware/rgb.nix`](../../../modules/nixos/hardware/rgb.nix) declares the colour,
+[`modules/nixos/hardware/arc-b580-rgb.nix`](../../../modules/nixos/hardware/arc-b580-rgb.nix) declares the colour,
 [`flake.nix`](../../../flake.nix) carries the overlay that makes an OpenRGB capable of driving the
 card, and [`pkgs/openrgb/`](../../../pkgs/openrgb/) holds the four patches it applies. All of it is
 temporary by design: the section at the end says exactly when to delete it.
@@ -124,4 +124,4 @@ in and while `uaccess` has therefore granted nothing.
 The merge requests land and the channel catches up. Concretely: when `pkgs.openrgb` is a version
 that contains the ASRock GPU controller AND the Intel bus fix, the overlay in `flake.nix`, the
 whole of `pkgs/openrgb/` and this section stop having a reason to exist. What stays is
-`modules/nixos/hardware/rgb.nix`, which is the part that is actually about this machine.
+`modules/nixos/hardware/arc-b580-rgb.nix`, which is the part that is actually about this machine.

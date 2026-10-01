@@ -168,7 +168,7 @@ packages, so anything else in there would be a lie:
 `fonts.packages`, `hardware.graphics.extraPackages`) keeps `with pkgs;`: every name in it comes from
 the same place, there is nothing to disambiguate, and the `with` is the nixpkgs idiom for exactly
 that shape. Five modules were left untouched for want of a payoff, all of them with no `let` block
-and one or two single-use references: `modules/nixos/hardware/mouse.nix`, `modules/nixos/hardware/razer.nix`,
+and one or two single-use references: `modules/nixos/hardware/mx-master-3s.nix`, `modules/nixos/hardware/deathadder-v2.nix`,
 `hosts/ex-b560m-v5/vm-disko.nix`, `modules/home/shell/git.nix` and `modules/home/shell/cli.nix`.
 
 **How the sweep was verified.** The change is textual, so the proof is that nothing moved: the

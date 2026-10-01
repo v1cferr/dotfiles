@@ -1,6 +1,6 @@
 # The GPU: an Intel Arc B580 on `xe`
 
-`modules/nixos/hardware/gpu.nix`. The machine is an i5-11400 plus an Arc B580 (Battlemage), on the open
+`modules/nixos/hardware/intel-arc-b580.nix`. The machine is an i5-11400 plus an Arc B580 (Battlemage), on the open
 source `xe` driver plus Mesa. A SINGLE driver, declarative, with no CUDA.
 
 ## History

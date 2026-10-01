@@ -1,6 +1,6 @@
 # dead-config: what is declared and never used
 
-`pkgs/dead-config.nix`, wired into `checks` and into the pre-commit hooks. Run it by hand with
+`tools/dead-config.nix`, wired into `checks` and into the pre-commit hooks. Run it by hand with
 `nix run .#dead-config`.
 
 Rule 16 says dead config leaves the repo. Until this existed, the only thing enforcing that was me
@@ -82,8 +82,8 @@ prototyped, produced a false positive, and was fixed before being written down:
   walks reachability from the real roots (`modules/nixos/default.nix`, `modules/home/default.nix`, `hosts/*`).
   Both `./x` and `../x` resolve, so a host importing a shared module by a relative path counts as
   a reach; before 30/09/2026 a `../` was resolved one level too shallow and read as unreached.
-  `pkgs/` is deliberately exempt: it is reached by `callPackage` in `flake.nix`, not by an
-  `imports` list.
+  `pkgs/` and `tools/` are deliberately exempt: they are reached by `callPackage` in `flake.nix`,
+  not by an `imports` list.
 
 ## Two checks that were considered and REJECTED
 

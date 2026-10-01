@@ -1,6 +1,6 @@
 # prose-style: rule 17's bans, in the tree and in the message
 
-`pkgs/prose-style.nix`, wired into the pre-commit hooks in two modes. Run it by hand with
+`tools/prose-style.nix`, wired into the pre-commit hooks in two modes. Run it by hand with
 `nix run .#prose-style`, and over a message with
 `nix run .#prose-style -- --commit-msg .git/COMMIT_EDITMSG`.
 

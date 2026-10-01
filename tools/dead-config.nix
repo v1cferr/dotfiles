@@ -77,10 +77,10 @@ writers.writePython3Bin "dead-config"
                 continue
             seen.add(f)
             stack.extend(imports_of(f))
-        # pkgs/ is reached by callPackage in flake.nix, not by an `imports` list.
+        # pkgs/ and tools/ are reached by callPackage in flake.nix, not by an `imports` list.
         return [("module", f, "no `imports` reaches it")
                 for f in sorted(nix)
-                if f not in seen and not f.startswith("pkgs/") and f != "flake.nix"]
+                if f not in seen and not f.startswith(("pkgs/", "tools/")) and f != "flake.nix"]
 
 
     def check_inputs(_files, code):

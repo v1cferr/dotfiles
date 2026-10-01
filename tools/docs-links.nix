@@ -25,9 +25,10 @@ writers.writePython3Bin "docs-links"
     # A bare `docs/...` path written inside code or prose, the form the 2-line headers use.
     POINTER = re.compile(r"\bdocs/[A-Za-z0-9_./-]+\.md\b")
     # A repo path inside backticks. The leading `(?<![:\w/])` keeps `Foundry:hosts/...` out, which
-    # is how a path in another repo is written so it does not read as one of ours.
+    # is how a path in another repo is written so it does not read as one of ours. The retired roots
+    # (system, home, scripts, router) stay listed, so a path left behind by the layout move FAILS.
     PROSEPATH = re.compile(
-        r"`(?<![:\w/])((?:modules|home|pkgs|hosts|scripts|secrets|ci|router)"
+        r"`(?<![:\w/])((?:modules|hosts|pkgs|tools|secrets|ci|system|home|scripts|router)"
         r"/[A-Za-z0-9_./-]+\.(?:nix|sh|py|lua|qml|json|txt|conf|yaml))`"
     )
 

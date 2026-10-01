@@ -277,7 +277,7 @@ Quickshell:
 
 A lint that flags `PanelWindow` is a lint you learn to skip, and that is the argument
 [`../repo/flake.md`](../repo/flake.md) already records for the two statix rules that are off. So
-`pkgs/qml-syntax.nix` keeps exactly ONE category, `[syntax]`, which means a file that does not
+`tools/qml-syntax.nix` keeps exactly ONE category, `[syntax]`, which means a file that does not
 PARSE: 0 findings on the tree today, and it fires on a deliberately broken copy.
 
 **The discriminator is the CATEGORY, not the severity.** qmllint prints a parse failure as

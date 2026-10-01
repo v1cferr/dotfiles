@@ -1,6 +1,6 @@
 # vendored-bump and the vendored package layout
 
-Modules: [`pkgs/vendored-bump.nix`](../../../pkgs/vendored-bump.nix),
+Modules: [`tools/vendored-bump.nix`](../../../tools/vendored-bump.nix),
 [`pkgs/lib/mk-vendored-bump.nix`](../../../pkgs/lib/mk-vendored-bump.nix),
 [`pkgs/vscode/bump.nix`](../../../pkgs/vscode/bump.nix),
 [`pkgs/curseforge/bump.nix`](../../../pkgs/curseforge/bump.nix),

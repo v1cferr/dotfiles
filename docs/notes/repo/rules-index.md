@@ -1,6 +1,6 @@
 # rules-index: every citation points at a live rule
 
-`pkgs/rules-index.nix`, wired into the pre-commit hooks and the gate's `repo-audit`. Run it by
+`tools/rules-index.nix`, wired into the pre-commit hooks and the gate's `repo-audit`. Run it by
 hand with `nix run .#rules-index`.
 
 ## Why it exists

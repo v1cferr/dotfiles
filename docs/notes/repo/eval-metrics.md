@@ -1,6 +1,6 @@
 # eval-metrics: what evaluating the config costs, and how big the code is
 
-`pkgs/eval-metrics.nix`, run by the gate workflow right after `nix flake check`, and by hand with
+`tools/eval-metrics/package.nix`, run by the gate workflow right after `nix flake check`, and by hand with
 `nix run .#eval-metrics`. It evaluates every host in `nixosConfigurations`, writes a table into the
 run's summary, and raises a WARNING annotation for any number over
 [`ci/eval-budget.json`](../../../ci/eval-budget.json).

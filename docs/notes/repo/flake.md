@@ -202,7 +202,7 @@ evaluate a different system from the one that gets installed.
 ```mermaid
 flowchart TD
     I["inputs<br>nixpkgs · home-manager · sops-nix · disko · zen · quickshell · ..."]
-    O["overlays<br>unstable.* · ./pkgs · the vendored binaries"]
+    O["overlays<br>unstable.* · ./pkgs · ./tools · the vendored binaries"]
 
     I --> C
     O --> C

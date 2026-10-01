@@ -51,7 +51,7 @@
 <a href="https://dotfiles.v1cferr.dev/stats/stats.json"><img alt="The repo measured at build: lines of code, languages, nix files, rules, gate hooks and doc pages, with the share of each language" src="https://dotfiles.v1cferr.dev/stats/card.svg"></a>
 
 The numbers above are counted from the source of the commit that published them, at BUILD,
-by [`pkgs/repo-stats`](pkgs/repo-stats/package.nix): the same commit always shows the same
+by [`tools/repo-stats`](tools/repo-stats/package.nix): the same commit always shows the same
 stats, no bot commits to keep them fresh, and nothing drawn by a third party. How, and why:
 [notes/repo/readme.md](docs/notes/repo/readme.md).
 
@@ -86,12 +86,13 @@ as a NixOS module, so a single `rebuild` applies both halves, and `pkgs/` is ove
 flowchart LR
   lock[flake.lock<br/>the pinned universe] --> flake[flake.nix]
   flake --> host[hosts/ex-b560m-v5<br/>disks, monitors, my.services]
-  host --> system[modules/nixos/<br/>core, hardware, net,<br/>desktop, gaming, services]
-  system -->|home-manager module| home[modules/home/<br/>shell, desktop, apps,<br/>net, services]
-  pkgs[pkgs/<br/>vendored + checkers] -.->|overlay| system
+  host --> system[modules/nixos/<br/>core, hardware, network,<br/>desktop, gaming, services]
+  system -->|home-manager module| home[modules/home/<br/>shell, desktop, apps,<br/>network, services]
+  pkgs[pkgs/<br/>vendored + patched] -.->|overlay| system
   pkgs -.->|overlay| home
   secrets[secrets/<br/>sops + age] -.->|/run/secrets at runtime| system
   flake --> checks[checks<br/>hooks, repo-audit, packages]
+  tools[tools/<br/>checkers, metrics, stats] -.-> checks
   docs[docs/] --> pages[pages<br/>site + stats]
   flake --> pages
 ```
@@ -144,7 +145,8 @@ modules/home/            USER (home-manager): dotfiles + user apps
 
 hosts/           per-machine answers (hostname, disks via disko, monitors, stateVersion)
   ex-b560m-v5/  the ONLY host; services.nix is the panel of which my.services it turns on
-pkgs/            my own derivations: vendored binaries, patched builds, and the checkers
+pkgs/            software this repo packages: vendored binaries, patched builds
+tools/           what maintains the repo itself: the checkers, metrics, stats, version bumps
 secrets/         secrets.yaml (sops) + the Bitwarden index
 hosts/cudy-wr3000/          mirror of the OpenWrt UCI config: visible, not declarable
 ci/              the eval budget and the stub for the private input

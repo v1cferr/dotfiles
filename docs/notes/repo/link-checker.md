@@ -4,7 +4,7 @@ Its sibling is [`dead-config.md`](dead-config.md): this one asks "does every poi
 RESOLVE?", that one asks "is anything DECLARED and never used?". Two questions, two tools,
 one `checks.repo-audit` running both.
 
-`pkgs/docs-links.nix`, wired into `checks` so it runs on `nix flake check` and therefore in the CI
+`tools/docs-links.nix`, wired into `checks` so it runs on `nix flake check` and therefore in the CI
 too. Run it by hand with `nix run .#docs-links`.
 
 ## Why it exists

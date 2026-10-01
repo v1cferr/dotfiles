@@ -1,6 +1,6 @@
 # usage-audit: which apps show any sign of being used
 
-`pkgs/usage-audit.nix`, run by hand with `nix run .#usage-audit`. It lists every app in
+`tools/usage-audit.nix`, run by hand with `nix run .#usage-audit`. It lists every app in
 `home.packages` next to the traces of its use, with the apps that show NO trace at the top.
 
 ## Why it is a report and never a gate

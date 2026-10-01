@@ -6,7 +6,7 @@ SVG, a row of badges, and a `nix` block describing the repo the way the profile 
 
 ## The stats are counted at BUILD, never committed
 
-`pkgs/repo-stats/` runs [scc](https://github.com/boyter/scc) over the flake's own source and draws
+`tools/repo-stats/` runs [scc](https://github.com/boyter/scc) over the flake's own source and draws
 the badges, the stats card and a `stats.json` from the result. The facts only Nix knows (the
 nixpkgs release in the lock, the number of inputs, the enabled hooks, the commit's own date) enter
 through `flake.nix`. `.#pages` joins that output with `docs-site` under `/stats`, and

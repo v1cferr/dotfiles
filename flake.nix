@@ -242,28 +242,34 @@
         curseforge-fix-perms = final.callPackage ./pkgs/curseforge-fix-perms.nix { }; # +x on what the app unpacks
         razer-dpi = final.callPackage ./pkgs/razer-dpi.nix { }; # the Razer mouse's live DPI, over hidraw
         notify = final.callPackage ./pkgs/notify.nix { }; # the ntfy push, shared by the shell and sshd's PAM
-        docs-links = final.callPackage ./pkgs/docs-links.nix { }; # it fails when a docs/ pointer breaks
         docs-site = final.callPackage ./pkgs/docs-site.nix { }; # docs/ built into the static site
         docs-site-check = final.callPackage ./pkgs/docs-site-check.nix { }; # the same build, at push time
-        prose-style = final.callPackage ./pkgs/prose-style.nix { }; # rule 17's bans, in prose and in a message
-        qml-syntax = final.callPackage ./pkgs/qml-syntax.nix { }; # it fails on a .qml that does not parse
-        data-syntax = final.callPackage ./pkgs/data-syntax.nix { }; # it fails on a .json/.toml that does not parse
-        dead-config = final.callPackage ./pkgs/dead-config.nix { }; # it fails on declared-and-unused
-        router-ssot = final.callPackage ./pkgs/router-ssot.nix { }; # it fails when the router's mirror diverges
-        eval-metrics = final.callPackage ./pkgs/eval-metrics.nix { }; # what evaluating each host costs
-        usage-audit = final.callPackage ./pkgs/usage-audit.nix { }; # each app next to the traces of its use
-        rules-index = final.callPackage ./pkgs/rules-index.nix { }; # it fails on a citation of no live rule
+      };
+
+      # The repo's OWN tools in ./tools: they check, measure and maintain this tree, and are not
+      # software the machine runs. Same overlay, so `nix run .#<tool>` and the hooks reach them.
+      localTools = final: {
+        docs-links = final.callPackage ./tools/docs-links.nix { }; # it fails when a docs/ pointer breaks
+        prose-style = final.callPackage ./tools/prose-style.nix { }; # rule 17's bans, in prose and in a message
+        qml-syntax = final.callPackage ./tools/qml-syntax.nix { }; # it fails on a .qml that does not parse
+        data-syntax = final.callPackage ./tools/data-syntax.nix { }; # it fails on a .json/.toml that does not parse
+        dead-config = final.callPackage ./tools/dead-config.nix { }; # it fails on declared-and-unused
+        router-ssot = final.callPackage ./tools/router-ssot.nix { }; # it fails when the router's mirror diverges
+        eval-metrics = final.callPackage ./tools/eval-metrics/package.nix { }; # what evaluating each host costs
+        usage-audit = final.callPackage ./tools/usage-audit.nix { }; # each app next to the traces of its use
+        rules-index = final.callPackage ./tools/rules-index.nix { }; # it fails on a citation of no live rule
       };
       overlayLocalPkgs =
         final: _:
         localPkgs final
+        // localTools final
         // {
           # The skeleton every pkgs/<name>/bump.nix is built from, OUTSIDE localPkgs: it is a function.
           mkVendoredBump = import ./pkgs/lib/mk-vendored-bump.nix {
             inherit (final) writeShellApplication curl jq;
           };
           # Every package carrying a passthru.updateScript, DERIVED: a new one never touches `update`.
-          vendored-bump = final.callPackage ./pkgs/vendored-bump.nix {
+          vendored-bump = final.callPackage ./tools/vendored-bump.nix {
             packages =
               nixpkgs.lib.filterAttrs (_: p: p.updateScript or null != null) (
                 nixpkgs.lib.getAttrs (builtins.attrNames (localPkgs final)) final
@@ -348,19 +354,19 @@
             codex # ./pkgs: the official binary, so the check proves the fetch and the wrapper
             antigravity-cli # ./pkgs: the official binary, so the check proves the fetch and the patchelf
             basic-memory # ./pkgs: building it IS the proof that our uv.lock still resolves
-            vendored-bump # ./pkgs: same, and building it proves every updateScript still resolves
+            vendored-bump # ./tools: same, and building it proves every updateScript still resolves
             curseforge-fix-perms # ./pkgs: same
-            docs-links # ./pkgs: the build IS the script's flake8; the CHECK below runs it
+            docs-links # ./tools: the build IS the script's flake8; the CHECK below runs it
             docs-site # ./pkgs: the static export, so the CHECK below proves the site builds
             docs-site-check # ./pkgs: the build IS the wrapper's shellcheck; the HOOK below runs it
-            prose-style # ./pkgs: same flake8 at build time; the HOOKS below run it, in two modes
-            qml-syntax # ./pkgs: the build IS the wrapper's shellcheck; the HOOK below runs it
-            data-syntax # ./pkgs: same flake8 at build time; the HOOK below runs it
-            dead-config # ./pkgs: same, and the CHECK below runs it too
-            router-ssot # ./pkgs: same, and the CHECK below runs it too
-            eval-metrics # ./pkgs: same flake8 at build time; the gate WORKFLOW runs it after the check
-            usage-audit # ./pkgs: same flake8 at build time; I run it by hand, it reads my ~
-            rules-index # ./pkgs: same, and the CHECK below runs it too
+            prose-style # ./tools: same flake8 at build time; the HOOKS below run it, in two modes
+            qml-syntax # ./tools: the build IS the wrapper's shellcheck; the HOOK below runs it
+            data-syntax # ./tools: same flake8 at build time; the HOOK below runs it
+            dead-config # ./tools: same, and the CHECK below runs it too
+            router-ssot # ./tools: same, and the CHECK below runs it too
+            eval-metrics # ./tools: same flake8 at build time; the gate WORKFLOW runs it after the check
+            usage-audit # ./tools: same flake8 at build time; I run it by hand, it reads my ~
+            rules-index # ./tools: same, and the CHECK below runs it too
             curseforge # ./pkgs: the official AppImage (outside the CHECK below, the why is there)
             btop # nixpkgs + the src from PR #1457 (Intel Xe GPU): here so the check COMPILES the fork
             ;
@@ -405,7 +411,7 @@
 
           # THE README'S NUMBERS, counted from this very source at build, so a commit and its stats
           # cannot disagree. The facts only Nix knows come in here: docs/notes/repo/readme.md
-          repo-stats = pkgs.callPackage ./pkgs/repo-stats/package.nix {
+          repo-stats = pkgs.callPackage ./tools/repo-stats/package.nix {
             src = self;
             facts =
               let
@@ -426,7 +432,7 @@
             let
               cfg = self.nixosConfigurations.ex-b560m-v5.config;
             in
-            pkgs.callPackage ./pkgs/exposure-check.nix {
+            pkgs.callPackage ./tools/exposure-check.nix {
               host = "ssh.${cfg.my.net.domain}";
               sshPort = builtins.head cfg.services.openssh.ports;
             };

@@ -21,3 +21,4 @@ Each record follows the same short shape, after [Michael Nygard's ADR](https://a
 | [0007](0007-grub-over-lanzaboote.md) | GRUB stays, over lanzaboote | accepted |
 | [0008](0008-no-offsite-backup-yet.md) | No offsite backup, for now | accepted risk, review by 2026-12-31 |
 | [0009](0009-modules-hosts-tools-layout.md) | Modules offer, hosts compose, tools maintain | accepted |
+| [0010](0010-visual-layer-without-component-library.md) | The site's visual layer adds no component library | accepted |

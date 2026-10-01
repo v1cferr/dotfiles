@@ -60,6 +60,9 @@ highlighting. Adding a component library on top of that would be maintenance sur
 nothing, and animation on a page whose job is to be read is worse than nothing. `lucide-react`
 comes in as a dependency of Fumadocs UI, which is where the icons already were.
 
+The question came back on 01/10/2026 with a request for a visual layer, and got the same answer
+for the same reason: [decision 0010](../../decisions/0010-visual-layer-without-component-library.md).
+
 ## The tree is the durable half, and it did not move
 
 The obvious first instinct is to reorganise `docs/` to match the site. That instinct was followed
@@ -364,6 +367,55 @@ and the drift it invites is a page whose tab says one thing and whose heading sa
 source before the markdown is compiled, which is where that can happen. A page with no H1 fails
 the build rather than getting a made-up name. The H1 is then taken OUT of the rendered body, since
 the layout renders the title itself, and `docs/` gains not one byte.
+
+## The visual layer, and what it was built from (01/10/2026)
+
+Diagrams, steps, icons and an overview on the home, with not one package added: why that and not
+a component library is [decision 0010](../../decisions/0010-visual-layer-without-component-library.md).
+What is worth knowing about each piece is where it hides a trap.
+
+**A diagram takes its colors from the preset, at render time.** Mermaid's `dark` and `default`
+themes ignore the page around them, so a diagram read as a pasted screenshot. The `base` theme
+lets every color be set, and `components/mermaid.tsx` reads each one off a Fumadocs token through
+a probe element, which the browser resolves to `rgb()`: a form mermaid's color parser accepts,
+which the `hsl()` text of the token is not guaranteed to be. So the diagrams own no palette, and a
+change of preset recolors them. Mermaid's `radius` misses some shapes, and `global.css` rounds
+those.
+
+**Steps are a GUIDE's numbered headings, and only a guide's.** Fumadocs' `remarkSteps` turns any
+`### 1. Title` into a step, and run over everything it would have turned the 23 cards of
+`rules.md` into a procedure, where the number is API and not an order. `remarkGuideSteps` in
+`source.config.ts` runs it under `guides/` only, and it runs LAST, after the plugin that names the
+anchors: the number is still in the heading at that point, so the anchor and the TOC entry are
+`#1-boot-the-installer-...`, the same ones GitHub gives the same heading. Run first, it would
+strip the number before the anchor is named (reasoned from its source, not tried), which is a
+reader's deep link broken by a renderer.
+
+**An icon is DATA in the nav.** `lib/navigation.ts` names a group's icon as a string, because
+`lib/page-tree.ts` reads that file on bare node with no `node_modules`, where React cannot be
+imported. `components/section-icon.tsx` draws the name, and its `Record` over the union makes a
+name with no icon a type error and not a blank square.
+
+**The home owns no fact.** The hero is `site.json`, the cards are the page tree (a group's icon,
+its page count, its first page names), and an entry point to a page that is gone FAILS the build
+instead of publishing a dead button. The tree is built once, in `lib/tree.ts`, so the sidebar and
+the cards cannot disagree.
+
+**A diagram is a fence in `docs/`, never JSX**, so GitHub draws it too, and each one carries an
+`accTitle` and an `accDescr`, which mermaid turns into the SVG's title and description for a
+screen reader. A diagram states what the page around it already says, and points at nothing the
+page does not: the topology in [network](../network/network.md) is read off the router's mirror
+and dated.
+
+**What it cost, MEASURED on 01/10/2026** against the build before it: the JS every page loads up
+front went from 370.6 to 370.9 KiB gzipped, and a page's HTML grew by about 2.3 KB gzipped, which
+is the ten sidebar icons, written once into the HTML and once into the RSC payload. Mermaid is
+still fetched only by a page that draws.
+
+**A local `pnpm build` does not exit.** Measured on 01/10/2026: `next build` wrote the whole
+export and then sat idle until killed, so `finish-export.ts` never ran. The cause was not found.
+`nix build .#docs-site` finishes in about 30s, and it is the build that publishes, so it is the one
+to trust; `pnpm dev` works for previewing.
 
 ## What is still worth doing
 

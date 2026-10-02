@@ -4,6 +4,37 @@ Module: [`hosts/ex-b560m-v5/disko.nix`](../../../hosts/ex-b560m-v5/disko.nix)
 
 The declarative disk layout for the KINGSTON KC3000 (NVMe Gen4).
 
+The layout [`disko.nix`](../../../hosts/ex-b560m-v5/disko.nix) declares, from the disk down to
+where each subvolume mounts:
+
+```mermaid
+flowchart LR
+    accTitle: The Kingston's layout
+    accDescr: One NVMe, a GPT with a 1 GiB vfat ESP at /boot and one btrfs partition with seven subvolumes. Six share compress=zstd:1, noatime and discard=async; @snapshots is created by hand and mounted nofail; @swap has no compression so its swapfile stays NOCOW.
+
+    DISK["Kingston KC3000<br>by-id, its serial in disko.nix"] --> GPT["GPT"]
+    GPT --> ESP["ESP · 1 GiB · vfat<br>/boot, umask=0077"]
+    GPT --> ROOT["btrfs · the rest of the disk<br>compress=zstd:1 · noatime · discard=async"]
+
+    subgraph subvolumes["subvolumes"]
+        S1["@ → /"]
+        S2["@home → /home"]
+        S3["@nix → /nix"]
+        S4["@persist → /persist"]
+        S5["@log → /var/log"]
+        S6["@snapshots → /.snapshots<br>nofail, created by hand"]
+        S7["@swap → /swap<br>16 GiB swapfile, NOCOW"]
+    end
+
+    ROOT --> S1
+    ROOT --> S2
+    ROOT --> S3
+    ROOT --> S4
+    ROOT --> S5
+    ROOT --> S6
+    ROOT --> S7
+```
+
 ## It is destructive, and it has already run
 
 It wipes the whole disk. It does NOT run on a normal rebuild, only on the CUTOVER, which HAPPENED

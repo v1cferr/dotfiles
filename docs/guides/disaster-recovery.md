@@ -150,8 +150,13 @@ sudo install -D -m 0600 /dev/stdin /mnt/var/lib/sops-nix/key.txt   # paste the k
 ### 6. Restore what was never declared
 
 After the first boot: create `@snapshots` by hand (the command is in the
-[disko note](../notes/boot-and-storage/disko.md)), then restore from restic what rule 6 says was
+[disko note](../notes/boot-and-storage/disko.md)), then restore from a backup what rule 6 says was
 never declared (saves, Wine prefixes, app sessions).
+
+**Today there is no backup to restore from.** The daily restic was retired on 24/09/2026, and the
+snapshots of `@home` die with the disk they live on, so on a dead disk this step restores NOTHING
+until [decision 0008](../decisions/0008-no-offsite-backup-yet.md) closes. The Seagate's frozen
+repos hold the state of 05/08/2026 at best ([restic](../notes/boot-and-storage/restic.md)).
 
 ### 7. Enroll Secure Boot
 

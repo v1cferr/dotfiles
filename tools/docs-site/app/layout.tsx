@@ -11,7 +11,7 @@ import './global.css';
 import { Provider } from './provider.tsx';
 
 // What every page inherits. A page overrides the title, the description and the canonical URL;
-// the rest states the same thing on all 92 of them.
+// the rest states the same thing on every one of them.
 export const metadata: Metadata = {
   metadataBase: new URL(`${SITE_ORIGIN}/`),
   title: { default: SITE_NAME, template: `%s - ${SITE_NAME}` },

@@ -23,11 +23,12 @@ openssl s_client -connect 200.133.233.101:4433 | openssl x509 -noout -fingerprin
 # nxBender wants lowercase sha1 with ':'
 ```
 
-Before re-pinning, check the subject. `CN=192.168.168.168` (valid 1970 to 2038, fingerprint
-`14:0f:b2:…`) is the SonicWall FACTORY cert, served while the appliance reboots or updates. It
-happened on 2026-08-07 (about 1h20) and 2026-10-01, and both times the real cert came back on its
-own. Pinning it would break again the moment FAI recovers, so wait. The SSL fails before the
-login, so the retry loop sends no credentials and cannot lock the AD account.
+The portal flips between TWO certs, so `faiFingerprints` in `vpn.nix` allowlists both and
+`vpn-fai-up` pins whichever one it serves at connect time (nxBender's `-f` overrides the file).
+`CN=192.168.168.168` (valid 1970 to 2038, `14:0f:b2:…`) is this appliance's FACTORY cert, served
+after a reboot or update: for 1h20 on 2026-08-07, and from 2026-10-01 for over 15h. Pinning only
+one cert broke the VPN every time it flipped. A cert outside the list is refused before the login,
+so the retry loop sends no credentials; check its subject before adding it to the list.
 
 `--authgroup` on the UFSCar side picks the gateway (the portal offers 5). Without it openconnect
 asks interactively and the service dies, because stdin holds only the password, so it gets EOF.

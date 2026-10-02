@@ -15,6 +15,7 @@ let
     libnotify
     nxbender
     openconnect
+    openssl
     systemd
     writeShellApplication
     writeShellScript
@@ -27,6 +28,26 @@ let
     RestartSteps = 5; # 10s, ~26s, ~68s, and so on up to the ceiling
     RestartMaxDelaySec = 300;
   };
+
+  # The FAI portal's certs we trust: the usual one, and this appliance's FIXED factory cert, which
+  # it serves after a reboot or update (2026-08-07, and since 2026-10-01). Anything else is refused.
+  faiFingerprints = [
+    "a9:db:84:93:e3:09:96:c7:33:6f:4d:05:ba:fa:1d:aa:59:0e:77:01"
+    "14:0f:b2:28:65:52:27:c4:13:13:1a:68:64:72:5d:84:5a:ba:8d:75"
+  ];
+
+  # Pins whichever allowlisted cert the portal serves NOW; nxBender still enforces that pin, so a
+  # cert swapped between this probe and the login fails closed.
+  faiUp = writeShellScript "vpn-fai-up" ''
+    fp="$(echo | ${coreutils}/bin/timeout 10 ${openssl}/bin/openssl s_client -connect 200.133.233.101:4433 2>/dev/null \
+      | ${openssl}/bin/openssl x509 -noout -fingerprint -sha1 | ${coreutils}/bin/cut -d= -f2 | ${coreutils}/bin/tr 'A-F' 'a-f')"
+    case "$fp" in
+      ${builtins.concatStringsSep " | " faiFingerprints}) ;;
+      "") echo "no certificate from the portal (unreachable?)" >&2; exit 1 ;;
+      *) echo "Fingerprints did not match: the portal serves $fp, which is not allowlisted" >&2; exit 1 ;;
+    esac
+    exec ${nxbender}/bin/nxBender -c ${config.sops.templates."nxbender-fai.conf".path} -f "$fp"
+  '';
 
   # The `vpn` CLI: connect/disconnect, status-json (the pill), stats-json (the hover panel)
   # and diagnose/watch, whose job is to name WHOSE fault a failure is.
@@ -153,11 +174,11 @@ let
             *"Password change needed"* | *"Password expired"* | *"password has expired"*)
               verdict="PASSWORD EXPIRED in AD, retrying does NOT fix it"
               detail="change it on a domain machine (Ctrl+Alt+Del), then sops plus nixos-rebuild switch. Run 'vpn disconnect $id' NOW, to stop accumulating failed logins." ;;
-            # The SonicWall serves its factory cert (CN=192.168.168.168) while it reboots or
-            # updates; it fails before the login, so retrying is harmless and it heals itself.
+            # Both known certs are allowlisted, so this is a THIRD one; it fails before the
+            # login, so retrying sends no credentials.
             *"Fingerprints did not match"*)
-              verdict="THE PORTAL IS SERVING ANOTHER CERTIFICATE, it is not your machine"
-              detail="most likely the SonicWall factory cert during maintenance; wait, do NOT re-pin it (see docs/notes/network/vpn.md)" ;;
+              verdict="THE PORTAL IS SERVING AN UNKNOWN CERTIFICATE, it is not your machine"
+              detail="neither of the allowlisted certs; check its subject before adding it (see docs/notes/network/vpn.md)" ;;
             *"Login failed"*|*"Authentication failed"*|*"invalid credential"*)
               verdict="CREDENTIAL REJECTED"
               detail="the portal answered and refused the login, so review the password in sops" ;;
@@ -350,14 +371,13 @@ in
     };
   };
 
-  # Rendered by sops into /run/secrets/rendered, never the store. The fingerprint is FAI's
-  # self-signed cert (public); how to refresh it is in the note.
+  # Rendered by sops into /run/secrets/rendered, never the store. The fingerprint is NOT here:
+  # faiUp passes it with -f, which overrides the file.
   sops.templates."nxbender-fai.conf".content = ''
     server = 200.133.233.101
     port = 4433
     username = victor.ferreira
     domain = fai2008
-    fingerprint = a9:db:84:93:e3:09:96:c7:33:6f:4d:05:ba:fa:1d:aa:59:0e:77:01
     password = ${config.sops.placeholder.fai_vpn_password}
   '';
 
@@ -390,7 +410,7 @@ in
     restartIfChanged = false; # same: reconnecting the VPN is my decision, not a rebuild side effect
     serviceConfig = {
       Type = "simple";
-      ExecStart = "${nxbender}/bin/nxBender -c ${config.sops.templates."nxbender-fai.conf".path}";
+      ExecStart = faiUp;
     }
     // vpnRestart;
     startLimitIntervalSec = 0;

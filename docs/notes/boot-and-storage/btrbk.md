@@ -19,6 +19,21 @@ restic alone left a hole of up to 24 h and a restore that took minutes. btrbk cl
 for ~zero cost, because a CoW snapshot copies nothing: it only starts taking space to the EXTENT
 that the original data diverges.
 
+Where a copy of `@home` exists today, and where none does:
+
+```mermaid
+flowchart LR
+    accTitle: What protects @home, as of 24/09/2026
+    accDescr: btrbk snapshots @home hourly into @snapshots on the same NVMe, keeping 48 hours, 7 days and 4 weeks. The daily restic backup was retired on 24/09/2026; its two old repositories sit frozen on the Seagate inside this machine. There is no offsite copy, by decision 0008.
+
+    subgraph nvme["the Kingston NVMe · ONE disk"]
+        HOME["@home"] -->|"hourly, onchange<br>48h 7d 4w"| SNAP["@snapshots<br>/.snapshots"]
+    end
+
+    HOME -.-x|"restic, daily<br>retired 24/09/2026"| OFF["offsite<br>NONE, decision 0008"]
+    SEA["the Seagate, inside this machine<br>two frozen restic repos, read-only history"]
+```
+
 ## @home only
 
 The root is left out on purpose. On NixOS the system's rollback already IS the GRUB generation

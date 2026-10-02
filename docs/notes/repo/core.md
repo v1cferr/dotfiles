@@ -10,7 +10,7 @@ keeping something from growing without bound.
 `nix.optimise` with a date, and not `auto-optimise-store`. That one runs the hardlinking on EVERY
 build, and on btrfs the metadata churn is CoW, which gets expensive on a machine that rebuilds all
 day. Scheduled, the work leaves the critical path and goes into an idle window (03:45, away from
-the weekly GC and the daily restic).
+the weekly GC, and from the daily restic until it was retired on 24/09/2026).
 
 It is NOT because of the fear that circulates, "auto-optimise corrupts the store": the
 NixOS/nix#7273 race was fixed, and the assert that claims otherwise is nix-darwin policy. The

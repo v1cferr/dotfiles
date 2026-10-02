@@ -4,16 +4,18 @@
 
 ## It is NOT a backup
 
-A snapshot lives on the SAME disk as the data. The Kingston dies, the snapshots die with it. What
-covers that is restic (`docs/notes/restic.md`), off-disk on the Seagate plus the Drive. Both exist
-because they answer different questions:
+A snapshot lives on the SAME disk as the data. The Kingston dies, the snapshots die with it.
+What covered that was [restic](restic.md), daily and off-disk, and it is GONE since 24/09/2026:
+nothing covers a dead disk today, a risk taken knowingly in
+[decision 0008](../../decisions/0008-no-offsite-backup-yet.md). The two answered different
+questions, and only one of them is still asked:
 
 | | answers | cadence |
 | --- | --- | --- |
-| restic | "the disk died / the house burned down" | daily, off-disk, encrypted |
+| restic, retired 24/09/2026 | "the disk died / the house burned down" | was daily, off-disk, encrypted |
 | btrbk | "I overwrote the file 20 minutes ago" | hourly, instant, local |
 
-restic alone leaves a hole of up to 24 h and a restore that takes minutes. btrbk closes that hole
+restic alone left a hole of up to 24 h and a restore that took minutes. btrbk closes that hole
 for ~zero cost, because a CoW snapshot copies nothing: it only starts taking space to the EXTENT
 that the original data diverges.
 
@@ -25,10 +27,10 @@ does not descend into a nested one). Noise with no gain.
 
 ## The prerequisite
 
-The `@snapshots` subvolume mounted at `/.snapshots` (see `docs/notes/disko.md`). On an already
+The `@snapshots` subvolume mounted at `/.snapshots` (see [disko](disko.md)). On an already
 installed system it is created by hand ONCE; the command is over there.
 
-`RequiresMountsFor = "/.snapshots"` is the same lock restic uses: without it mounted, btrbk would
+`RequiresMountsFor = "/.snapshots"` is the same lock restic used: without it mounted, btrbk would
 write inside `@`, the one place where impermanence erases everything, and without the owner
 noticing.
 
@@ -38,8 +40,8 @@ noticing.
   Without it the machine on and idle would generate 24 identical snapshots a day and push the
   useful ones out of the retention window.
 - `snapshot_preserve = "48h 7d 4w"`: about 2 days of fine granularity plus a month of safety net.
-  It matches restic's `--keep-daily 7 --keep-weekly 4`, so btrbk covers exactly what is too short
-  for the daily backup to reach. `snapshot_preserve_min = "latest"` guarantees it never ends up
+  It matched restic's `--keep-daily 7 --keep-weekly 4`, so btrbk covered exactly what was too
+  short for the daily backup to reach; with restic retired, it is the only history there is. `snapshot_preserve_min = "latest"` guarantees it never ends up
   with NO snapshot at all.
 - `timestamp_format = "long"` because an hourly snapshot needs hour:minute in the name.
 - The ABSOLUTE PATH form, with no `volume` section. btrbk's other form (`volume <pool>` plus a

@@ -22,10 +22,10 @@ framework would add a second way to define an output without removing the first.
 move: the host, every package that does not read `self`, the devShell, the formatter and the
 configuration of every hook kept their drvPath.
 
-The version strategy these inputs implement (stable base, unstable per package, upstream directly)
-is in [`version-bumps.md`](version-bumps.md).
-
-Where a package comes from, which is what every section below is a case of:
+The version strategy these inputs implement is three layers: the stable base, unstable picked per
+package, and upstream directly when neither channel has it. The diagram below is where it is
+written down, and every section after it is a case of it. How the vendored half of "upstream
+directly" keeps itself current is [`version-bumps.md`](version-bumps.md).
 
 ```mermaid
 flowchart LR

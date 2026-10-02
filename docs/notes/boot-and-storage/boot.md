@@ -6,6 +6,31 @@ Modules: [`modules/nixos/core/boot.nix`](../../../modules/nixos/core/boot.nix),
 GRUB (UEFI) with the minegrub theme, in dualboot with Windows 11, signed with our own keys
 through sbctl. The two modules share one decision, so they share a page.
 
+What checks what, from power-on, as the section on [what makes GRUB boot](#what-makes-grub-boot-with-secure-boot-on)
+measured it:
+
+```mermaid
+flowchart TD
+    accTitle: The boot chain, and what verifies each step
+    accDescr: The UEFI firmware with Secure Boot verifies GRUB against db, which holds this machine's key and Microsoft's. GRUB draws the menu and verifies nothing itself. A NixOS kernel goes back through the firmware's LoadImage and must be signed; the initrd is handed over by GRUB and is not verified. Windows is chainloaded from the SanDisk's own ESP and is verified as Microsoft-signed.
+
+    FW["UEFI firmware, Secure Boot on<br>db: this machine's key + Microsoft's"]
+    GRUB["grubx64.efi on the Kingston's ESP<br>signed by sbctl, every module embedded, tpm included"]
+    MENU["the minegrub menu<br>one entry per NixOS generation, plus Windows"]
+    K["the kernel<br>signed on every switch"]
+    I["the initrd<br>handed over by GRUB"]
+    NIX["NixOS"]
+    WIN["bootmgfw.efi on the SanDisk's ESP<br>Microsoft-signed"]
+
+    FW -->|"verifies"| GRUB
+    GRUB --> MENU
+    MENU -->|"LoadImage: the firmware verifies"| K
+    MENU -.->|"NOT verified"| I
+    K --> NIX
+    I --> NIX
+    MENU -->|"chainload: the firmware verifies"| WIN
+```
+
 ## Why GRUB, and not the systemd-boot that was here until aug/2026
 
 Each system has ITS OWN ESP, on a separate disk: NixOS on the Kingston (`nvme0n1p1`, `/boot`) and

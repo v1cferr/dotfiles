@@ -56,8 +56,8 @@ noticing.
   useful ones out of the retention window.
 - `snapshot_preserve = "48h 7d 4w"`: about 2 days of fine granularity plus a month of safety net.
   It matched restic's `--keep-daily 7 --keep-weekly 4`, so btrbk covered exactly what was too
-  short for the daily backup to reach; with restic retired, it is the only history there is. `snapshot_preserve_min = "latest"` guarantees it never ends up
-  with NO snapshot at all.
+  short for the daily backup to reach; with restic retired, it is the only history there is.
+  `snapshot_preserve_min = "latest"` guarantees it never ends up with NO snapshot at all.
 - `timestamp_format = "long"` because an hourly snapshot needs hour:minute in the name.
 - The ABSOLUTE PATH form, with no `volume` section. btrbk's other form (`volume <pool>` plus a
   relative subvolume) presumes `subvolid=5` mounted in a directory, and mounting the top

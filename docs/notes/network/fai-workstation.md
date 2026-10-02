@@ -24,7 +24,8 @@ AND 7, because an old NIC sometimes only listens on 7.
 1. **A relay through the fai-vm.** The only path that wakes a machine that has been off FOR A
    WHILE, because it broadcasts on the L2 segment; the other two depend on a warm ARP/CAM cache.
    The script goes through the remote `python3`'s STDIN, so there is nothing to install on the
-   other side.
+   other side. It needs YOUR key authorized on the fai-vm (`ssh-copy-id`); when the relay fails
+   the script prints ssh's own error, because guessing the cause once sent me after the host key.
 2. **Unicast through the tunnel**, which works while the router's ARP is still warm.
 3. **A directed broadcast to the /25**, which a router usually drops (RFC 2644).
 

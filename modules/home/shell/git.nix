@@ -37,6 +37,32 @@
       # The rebase above stashes and restores a dirty working tree by itself, so editor churn
       # (the VS Code file nesting timestamp) stops refusing the pull with "unstaged changes".
       rebase.autoStash = true;
+      # The defaults core Git developers override, kept by git only for backward compatibility:
+      # https://blog.gitbutler.com/how-git-core-devs-configure-git
+      rebase.autoSquash = true; # `fixup!` commits fold in by themselves
+      rebase.updateRefs = true; # stacked branches follow the rebase
+      init.defaultBranch = "main"; # Git 3.0's own default; until then it only silences the hint
+      commit.verbose = true; # the diff sits under the message being written
+      merge.conflictStyle = "zdiff3"; # conflicts also show the common base
+      diff = {
+        algorithm = "histogram"; # cleaner hunks than myers
+        colorMoved = "plain"; # moved code reads apart from new code
+        mnemonicPrefix = true; # i/ w/ c/ instead of a/ b/
+        renames = true;
+      };
+      push = {
+        autoSetupRemote = true; # no more --set-upstream on a new branch
+        followTags = true;
+      };
+      fetch = {
+        prune = true; # drop remote branches and tags deleted upstream
+        pruneTags = true;
+        all = true;
+      };
+      branch.sort = "-committerdate"; # most recent first
+      tag.sort = "version:refname"; # v1.10 after v1.9
+      column.ui = "auto";
+      help.autocorrect = "prompt";
     };
   };
 }

@@ -13,6 +13,8 @@ let
     coreutils
     docker
     findutils
+    jq
+    restic
     writeShellApplication
     ;
 
@@ -44,6 +46,34 @@ let
       '') cfg.postgres
     )
     + cfg.prepare;
+  };
+
+  # THE STALENESS WATCH: catches what onFailure cannot, a backup that simply stopped running
+  # (the disk unplugged, the timer gone). September 2026 went 8 silent days that way.
+  staleness = writeShellApplication {
+    name = "backup-staleness";
+    runtimeInputs = [
+      coreutils
+      jq
+      restic
+    ];
+    text = ''
+      latest="$(restic -r ${cfg.repo} --password-file ${config.sops.secrets.restic_password.path} \
+        --no-lock snapshots --latest 1 --host ${config.networking.hostName} --json | jq -r '.[-1].time // empty')"
+      [ -n "$latest" ] || { echo "backup: the repo holds no snapshot of this host" >&2; exit 1; }
+      age=$(( ($(date +%s) - $(date -d "$latest" +%s)) / 86400 ))
+      echo "backup: the newest snapshot is $age day(s) old ($latest)"
+      [ "$age" -le ${toString cfg.maxAgeDays} ]
+    '';
+  };
+
+  alertUnit = title: body: {
+    description = "Alarm: ${title}";
+    serviceConfig = {
+      Type = "oneshot";
+      # Double quotes, never escapeShellArgs: systemd does not parse the shell's '\'' splice.
+      ExecStart = ''${lib.getExe config.my.alert} backup drive-removable-media "${title}" "${body}"'';
+    };
   };
 in
 {
@@ -91,6 +121,12 @@ in
       type = lib.types.lines;
       default = "";
       description = "Bash run as root before each snapshot; a non-zero exit fails the backup.";
+    };
+
+    maxAgeDays = lib.mkOption {
+      type = lib.types.ints.positive;
+      default = 3;
+      description = "The staleness watch alarms when the newest snapshot is older than this.";
     };
 
     postgres = lib.mkOption {
@@ -194,9 +230,40 @@ in
         "--keep-weekly 4"
         "--keep-monthly 6"
       ];
+
+      # A local disk makes rereading cheap, so every run proves a random slice of the packs.
+      checkOpts = [ "--read-data-subset=2%" ];
     };
 
-    # The disk mounts on demand, so the unit has to ask for it explicitly.
-    systemd.services.restic-backups-usb.unitConfig.RequiresMountsFor = cfg.mountPoint;
+    systemd.services = {
+      restic-backups-usb = {
+        # The disk mounts on demand, so the unit has to ask for it explicitly.
+        unitConfig.RequiresMountsFor = cfg.mountPoint;
+        onFailure = [ "backup-alert-failed.service" ];
+      };
+
+      backup-staleness = {
+        description = "Checks that the newest backup snapshot is recent";
+        unitConfig.RequiresMountsFor = cfg.mountPoint;
+        onFailure = [ "backup-alert-stale.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStart = lib.getExe staleness;
+        };
+      };
+
+      backup-alert-failed = alertUnit "backup: the daily restic run failed" "See 'journalctl -u restic-backups-usb -b'. Until it is fixed, nothing new reaches the USB disk.";
+      backup-alert-stale = alertUnit "backup: no recent snapshot on the USB disk" "The newest snapshot is older than ${toString cfg.maxAgeDays} days, or the disk is unreachable. Plug it in and run 'sudo systemctl start restic-backups-usb'.";
+    };
+
+    systemd.timers.backup-staleness = {
+      description = "Daily check that the backup is still running";
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnCalendar = "12:00";
+        Persistent = true;
+        RandomizedDelaySec = "30min";
+      };
+    };
   };
 }

@@ -30,13 +30,13 @@ finished work. What was closed is in the [august history](history/2026/08-august
       own commit or kept on purpose, and the answer is the point, not the count:
       [notes/repo/usage-audit.md](notes/repo/usage-audit.md).
 
-- [ ] NO BACKUP since 24/09/2026, and new storage is what closes it (opened 24/09/2026). The
-      daily restic to Google Drive was RETIRED, not paused: the module, the toggle and the
-      aliases are gone from the repo and the `HOME` repo was permanently deleted from the Drive.
-      The whole measurement, the cause and the checklist for bringing it back are in
-      [notes/boot-and-storage/restic.md](notes/boot-and-storage/restic.md). Waiting is an
-      accepted risk with a review date, and the three destinations compared are in
-      [decision 0008](decisions/0008-no-offsite-backup-yet.md).
+- [~] NO BACKUP since 24/09/2026, and new storage is what closes it (opened 24/09/2026,
+      reshaped 03/10/2026). The daily restic to Google Drive was RETIRED and its `HOME` repo
+      permanently deleted. ITS REPLACEMENT IS BUILT AND OFF: restic to a local USB disk
+      ([decision 0011](decisions/0011-local-usb-backup.md)), with the restore and drill D4.
+      What is left: BUY THE DISK and walk "Turning it on" in
+      [notes/boot-and-storage/restic.md](notes/boot-and-storage/restic.md). The OFFSITE copy
+      stays an accepted risk ([decision 0008](decisions/0008-no-offsite-backup-yet.md)).
       • WHY IT DIED: a 15 GiB quota holding 130 GiB, of which 109.37 were restic. 30.62 of those
         were packs the `forget --prune` had deleted straight into the Drive's TRASH, where a
         deleted file goes on counting. The prune was working the whole time and the account
@@ -342,8 +342,8 @@ finished work. What was closed is in the [august history](history/2026/08-august
         plus `dont-wipe`, inert; (2) systemd initrd alone, reboot, confirm; (3) `/persist` with
         `neededForBoot` and the declared list, reboot WITHOUT the wipe, which proves the binds work
         while the system is still persistent; (4) only then the wipe.
-      • PROVE A RESTORE BEFORE ANY OF IT, and since 24/09/2026 there is nothing to restore
-        FROM: the daily restic went out with the Drive quota. Impermanence is rule 6 becoming
+      • PROVE A RESTORE BEFORE ANY OF IT: `sudo restore-state --verify` (drill D4) once the USB
+        backup is on; until then there is nothing to restore FROM. Impermanence is rule 6 becoming
         law, and turning that law on while the state has no backup at all is the one version
         of this that costs real money. THE NEW STORAGE COMES FIRST.
       • MEASURED 23/08/2026 IN THE DISKO VM, and it confirms the /srv worry with evidence:

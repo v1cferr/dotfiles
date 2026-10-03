@@ -2,7 +2,8 @@
 
 The machine has no copy outside itself since 24/09/2026, and waiting for storage is a risk taken knowingly.
 
-- **Status**: accepted risk, review by 2026-12-31
+- **Status**: the offsite half is an accepted risk, review by 2026-12-31; the local half is
+  superseded by [0011](0011-local-usb-backup.md) (03/10/2026)
 - **Date**: 30/09/2026
 
 ## Context

@@ -231,10 +231,11 @@ refreshed.
 
 ## Backup and remote access
 
-- **NO automatic backup since 24/09/2026.** The daily restic of `~` to Google Drive was retired
-  when the account blew past its 15 GiB quota, and nothing has replaced it yet. What is left is
-  local and on the same disk it protects: hourly btrbk snapshots of `@home`. The frozen repos that
-  survived, and how to read them, are in [restic](docs/notes/boot-and-storage/restic.md).
+- **Backup: restic to a local USB disk**, built on 03/10/2026 and OFF until the disk exists
+  ([decision 0011](docs/decisions/0011-local-usb-backup.md)). It takes `~`, the photos, the
+  database dumps and the identity keys, alarms when a run fails or stops happening, and
+  `restore-state` brings it all back from the installer. Until it is on, the only copy is btrbk's
+  hourly `@home` snapshots on the same disk: [restic](docs/notes/boot-and-storage/restic.md).
 - **SSH** on port `2222` (root off, `fail2ban` on), reachable from anywhere with no VPN. The
   **DDNS** that keeps `ssh.v1cferr.dev` pointed at the current public IP lives on the ROUTER, so
   external access does not depend on this machine being awake:
@@ -249,9 +250,9 @@ The protocol, including the drills that prove it still works, is
   Those letters shuffle between boots, and they already changed twice on this machine.
 - The **age key** goes in **before** `nixos-install`. Without it sops cannot decrypt
   `hashedPasswordFile` and my account is created with no password.
-- `~` comes over **disk to disk**, never from a backup. A backup is an archive, not an input.
-- Whatever is not declared (`/var/lib`, SSH host keys, NetworkManager profiles) crosses by hand,
-  and that is exactly the list impermanence will force into declaration.
+- With the old disk alive, `~` comes over **disk to disk**. With it dead, `restore-state` puts
+  back `~`, the photos, the dumps and the identity keys (SSH host keys, NM profiles, Secure Boot
+  keys) BEFORE `nixos-install`, so the new install does not mint new ones.
 
 ## License
 

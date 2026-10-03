@@ -1,14 +1,58 @@
-# restic, and why the backup is gone
+# restic: the USB backup, and the Drive one before it
 
-Module: NONE since 24/09/2026. The service module under `modules/nixos/services/` was deleted, and with
-it the `restic` toggle, the `/mnt/backup` mountpoint and the `backup-browse` / `backup-verify`
-aliases.
+Module: [`modules/nixos/services/restic.nix`](../../../modules/nixos/services/restic.nix), toggle
+`restic`, since 03/10/2026. The why of the destination is
+[decision 0011](../../decisions/0011-local-usb-backup.md).
 
-**This machine has no automatic backup today.** What is left is
-[btrbk](btrbk.md): hourly snapshots of `@home` on the SAME disk they protect, which answers "I
-just overwrote it" and nothing else. A dead disk, a theft or a fire takes everything. That is a
-dated, deliberate gap and not an oversight, and it closes when new storage arrives:
-see [open-items](../../open-items.md).
+**Built, and OFF until the disk exists.** Until then the only automatic copy is still
+[btrbk](btrbk.md), on the same disk it protects. Turning it on is the checklist at the end.
+
+## What goes in, and who says so
+
+There is no central list. `my.backup.paths`, `exclude`, `prepare` and `postgres` are options, and
+each module adds its OWN state under its own toggle, so a service that leaves takes its backup
+lines with it (rule 16):
+
+| Source | What | How |
+| --- | --- | --- |
+| `restic.nix` | `~` (minus caches, Wine prefixes, Downloads, FUSE mounts) | files |
+| `restic.nix` | `/var/lib/sbctl`, `/etc/ssh/ssh_host_*`, NM profiles, `/var/lib/bluetooth`, `/var/lib/nixos` | files, the IDENTITY set |
+| `immich.nix` | `/srv/photos`, which holds Immich's own daily database dumps | files, plus a check that the newest dump is under 8 days old |
+| `duo.nix`, `credit-radar.nix`, `grad-radar.nix` | their Postgres | `pg_dump -Fc` into `/var/backup/postgres` before each snapshot |
+
+`/var/lib/nixos` is the quiet one: it maps names to uid/gid, and without it a restored file can
+land owned by whichever user took that number on the new install.
+
+Not in: `/srv/media` (re-downloadable, 168 GiB MEASURED on 03/10/2026), Docker images, Ollama
+models, and the sops age key, which travels through Bitwarden only
+([disaster recovery](../../guides/disaster-recovery.md#why-the-key-does-not-get-copied-into-this-repo)).
+
+The three dumps were MEASURED on 03/10/2026 both ways: taken from the live containers, then
+restored with `pg_restore --clean` into throwaway containers of the same images, exit 0 each,
+grad-radar with 2854 of 2854 rows.
+
+## How it runs, and how it cannot fail quietly
+
+- `/mnt/backup-usb` is `noauto` plus `x-systemd.automount`: the disk mounts when the backup
+  touches it, and `RequiresMountsFor` makes the unit fail, not write to the NVMe, when it is away.
+- Daily at 03:00, `Persistent`, so a machine that was off runs it at the next boot. Retention
+  `7d 4w 6m`, and every run checks a random 2% of the packs (a local reread is cheap; on the
+  Drive it was a download).
+- **Two alarms**, through `my.alert` (the journal plus a critical bubble): `onFailure` when a run
+  fails, and the daily `backup-staleness` watch when the newest snapshot is older than
+  `my.backup.maxAgeDays` (3) or the disk cannot be reached. September 2026 was the second kind:
+  8 nights of failure nobody saw.
+
+## Coming back
+
+From the installer, after disko and the age key: `sudo nix run .#restore-state` puts back every
+path above into `/mnt`. It decrypts the repo password with the age key it finds there, so nothing
+is typed; without a key, restic prompts. After the first boot, `sudo restore-dbs` loads the dumps,
+and Immich restores itself from its welcome screen. The full order is in
+[disaster recovery](../../guides/disaster-recovery.md).
+
+`sudo restore-state --verify` is drill D4: it restores only the identity set into a temporary
+directory and diffs it against the live machine.
 
 ## What killed it: a 15 GiB quota holding 130 GiB
 
@@ -198,15 +242,16 @@ that second half is gone. **Today it is an hourly rsync onto the same disk**, wh
 an accidental overwrite and is still worth running, but it is not a backup and the module now
 says so.
 
-## When the new storage arrives
+## Turning it on
 
-1. Decide the destination FIRST, and prefer one whose delete is permanent by default or can be
-   made so. Re-read the trash section above before trusting any retention setting.
-2. Bring back the module and the `restic` toggle. Git still holds the deleted file, with the
-   excludes, the `--pack-size=128`, the retention and the prune ceiling already tuned:
-   `git log --diff-filter=D --name-only -- modules/nixos/services/` finds the commit that removed it.
-3. Put `~/Drive`, `~/FAI-workstation` and `/mnt/arch-antigo` in `paths`' exclude list on day one,
-   or read the FUSE section again the hard way.
-4. Give the Arch archive a SECOND copy while you are at it. Right now it has one, on a dying disk.
-5. PROVE A RESTORE. Rule 6 has never been tested end to end, and
-   [open-items](../../open-items.md) makes that the precondition for impermanence.
+1. Format the disk: `sudo mkfs.btrfs -L BACKUP /dev/sdX` (the label is how the installer finds it).
+2. Set `my.backup.device = "/dev/disk/by-uuid/<uuid>"` in `hosts/ex-b560m-v5/hardware.nix` and
+   `restic = true` in `services.nix`, then `rebuild`.
+3. `sudo systemctl start restic-backups-usb`, then `journalctl -fu restic-backups-usb`.
+4. `sudo restore-state --verify`: the first proof of a restore, and the precondition
+   [open-items](../../open-items.md) sets for impermanence.
+5. Give the Arch archive its SECOND copy: `sudo restic -r /mnt/backup-usb/restic copy
+   --from-repo /mnt/seagate-old/restic-arch-kingston --from-password-file
+   /run/secrets/restic_password_arch_kingston --password-file /run/secrets/restic_password`.
+6. Unplug the disk once and wait a day: the staleness alarm has to fire. An alarm never seen
+   firing is an alarm nobody knows works.

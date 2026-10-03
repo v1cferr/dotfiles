@@ -1,23 +1,25 @@
 # Disaster recovery: the protocol that proves this repo rebuilds the machine
 
 This repo claims to be the SSOT of my infrastructure. A claim with no rehearsal is a belief, and the
-day it stops being true is the day I need it. So there are three drills, cheapest first, and each one
+day it stops being true is the day I need it. So there are four drills, cheapest first, and each one
 says exactly what it does NOT prove.
 
 ```mermaid
 flowchart LR
     accTitle: The drills, cheapest first, and the restore they rehearse
-    accDescr: D1 boots the config weekly, D2 formats the layout quarterly, D3 decrypts the secrets yearly, and the real restore needs all three halves plus the parts no drill reaches.
+    accDescr: D1 boots the config weekly, D2 formats the layout quarterly, D3 decrypts the secrets yearly, D4 restores the state monthly, and the real restore needs all four plus the parts no drill reaches.
 
     D1["D1 · weekly, automatic<br>nix build .#vm-boot<br>does the config still boot"]
     D2["D2 · quarterly, ~10 min<br>nix run .#disko-vm<br>does the layout still format"]
     D3["D3 · yearly<br>clean clone + the vault's key<br>do the secrets decrypt"]
-    R["The real thing<br>new disk, installer, key, nixos-install"]
+    D4["D4 · monthly, ~1 min<br>sudo restore-state --verify<br>does the state come back"]
+    R["The real thing<br>new disk, installer, key, restore, nixos-install"]
     X["No drill reaches<br>GPU · compositor · router · Windows · BIOS"]
 
     D1 --> R
     D2 --> R
     D3 --> R
+    D4 --> R
     X -.-> R
 ```
 
@@ -116,6 +118,23 @@ substitute for it.
 Do the same with the OFFLINE backup key at least once a year, since a backup nobody has ever read is
 a backup nobody knows is empty.
 
+## D4, monthly, about a minute: does the STATE come back
+
+```sh
+sudo restore-state --verify
+```
+
+It restores the identity set (Secure Boot keys, SSH host keys, NM profiles, Bluetooth pairings,
+`/var/lib/nixos`) from the newest snapshot on the USB disk into a temporary directory, diffs each
+path against the live machine and deletes the copy. Silence plus "matches" is a pass; a `diff`
+line is either a real change since the last snapshot (an NM profile edited today) or a broken
+backup, and only the first is fine.
+
+It does NOT restore `~`, the photos or the databases: those are too big to rehearse monthly, and
+their proof is the backup's own 2% pack check plus the one-time restore of each dump recorded in
+[restic](../notes/boot-and-storage/restic.md). It needs the backup turned on
+([decision 0011](../decisions/0011-local-usb-backup.md)).
+
 ## The real thing: the disk died and a new one is in
 
 In order, and step 4 is the one that is easy to forget and expensive to skip.
@@ -143,25 +162,35 @@ Skip it and the cascade at the top of this page happens on a machine you are try
 sudo install -D -m 0600 /dev/stdin /mnt/var/lib/sops-nix/key.txt   # paste the key, then Ctrl-D
 ```
 
-### 5. Install and reboot
+### 5. Restore the state BEFORE the install
+
+Plug in the USB disk labelled `BACKUP`, then:
+
+```sh
+sudo nix run .#restore-state      # into /mnt; the age key from step 4 decrypts the repo password
+```
+
+It puts back `~`, `/srv/photos`, the database dumps and the identity set. Doing it BEFORE
+`nixos-install` is the point: the system's first boot already finds its SSH host keys, its Wi-Fi,
+its uid map and its Secure Boot keys, instead of minting new ones.
+
+Wine prefixes, Downloads and `/srv/media` are not in the backup on purpose
+([restic](../notes/boot-and-storage/restic.md)).
+
+### 6. Install and reboot
 
 `sudo nixos-install --flake .#ex-b560m-v5`, then reboot.
 
-### 6. Restore what was never declared
+### 7. Bring the databases back
 
-After the first boot: create `@snapshots` by hand (the command is in the
-[disko note](../notes/boot-and-storage/disko.md)), then restore from a backup what rule 6 says was
-never declared (saves, Wine prefixes, app sessions).
+With the stacks up, `sudo restore-dbs` loads each Postgres dump into its container (it asks first:
+`pg_restore --clean` replaces what the fresh container made). Immich restores itself: its welcome
+screen offers "Restore from backup", reading the dumps that came back inside `/srv/photos`.
 
-**Today there is no backup to restore from.** The daily restic was retired on 24/09/2026, and the
-snapshots of `@home` die with the disk they live on, so on a dead disk this step restores NOTHING
-until [decision 0008](../decisions/0008-no-offsite-backup-yet.md) closes. The Seagate's frozen
-repos hold the state of 05/08/2026 at best ([restic](../notes/boot-and-storage/restic.md)).
+### 8. Enroll Secure Boot
 
-### 7. Enroll Secure Boot
-
-Secure Boot needs its own pass: the sbctl keys live in `/var/lib/sbctl`, are NOT in git, and
-enrolling them is manual ([`boot.md`](../notes/boot-and-storage/boot.md)).
+The keys came back in step 5, so this is `sudo sbctl enroll-keys -m` against the new
+firmware, with no new keys to create ([`boot.md`](../notes/boot-and-storage/boot.md)).
 
 ## What no drill here covers
 

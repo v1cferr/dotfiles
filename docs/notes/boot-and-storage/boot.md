@@ -138,9 +138,10 @@ and `set -e` takes the activation down, which is what you want.
 
 ## `/var/lib/sbctl` is critical state
 
-It is not in restic (rule 6 sends state to the backup; this is state the backup does not cover).
-Losing that folder means the next switch does not sign GRUB, which means the machine does not boot
-with SB on. Recovery: SB off in the BIOS, redo steps 1 to 5.
+It is in the backup's identity set since 03/10/2026 ([restic](restic.md)), so a reinstall puts the
+SAME keys back and only `enroll-keys` runs again on new firmware. Losing the folder with no
+backup means the next switch does not sign GRUB, which means the machine does not boot with SB on.
+Recovery then: SB off in the BIOS, redo steps 1 to 5.
 
 It is the FIRST item to declare when impermanence lands (see
 [`../open-items.md`](../../open-items.md)), otherwise a reboot wipes the keys.

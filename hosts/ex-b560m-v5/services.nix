@@ -15,6 +15,7 @@
     sunshine = true; # screen streaming for Moonlight
     qbittorrent = true; # the torrent client
     tor = true; # a local SOCKS5 at 127.0.0.1:9050 (client only; the consumer is `mega-tor`)
+    restic = false; # the daily backup to the USB disk; on once `my.backup.device` names it
     btrbk = true; # local @home snapshots (hourly); since 24/09/2026 the ONLY automatic copy
     dropbox = true; # ~/Dropbox syncing
     drive-mount = true; # ~/Drive = the Drive's root mounted (rclone mount), showing up in Dolphin

@@ -24,6 +24,13 @@
 
   programs.git = {
     enable = true;
+    # What THIS machine's toolchain (direnv + nix build) drops in any repo, forks included, whose
+    # .gitignore is not ours to edit. Written to ~/.config/git/ignore, git's XDG default path.
+    ignores = [
+      ".direnv/"
+      "result"
+      "result-*"
+    ];
     settings = {
       user = {
         name = "Victor Ferreira";

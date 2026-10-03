@@ -99,11 +99,13 @@ The old failure mode was rclone timing out and the mount going zombie
 ("Transport endpoint is not connected"), fixed with
 `systemctl --user restart arch-antigo-mount`. That one is gone with the network.
 
-What replaced it is the DISK, and it is worse. The Seagate is a 2009 Momentus 7200.4 with 840
-thousand load cycles (40% past spec) and 348 CRC errors, the exact numbers that got it retired as
-a backup destination on 05/08/2026. `nofail` in `hosts/ex-b560m-v5/default.nix` means a disk
-that does not show up lets the boot through and leaves the folder empty, and `Restart=on-failure`
-keeps retrying behind it.
+## On the NVMe, with a second copy (03/10/2026)
 
-**So the archive is ONE copy on a dying disk. That is a known debt, not a design**, and it is
-open until the new storage arrives.
+The Seagate was reformatted to hold the backup ([decision 0011](../../decisions/0011-local-disk-backup.md)),
+so the repo moved to `~/Archive/restic-arch-kingston` first. The copy was PROVEN before the format,
+not assumed: `restic check --read-data` read and hashed every pack, "no errors were found".
+
+Its second copy is inside the backup repo, put there with `restic copy` and tagged `archive`,
+which the prune keeps regardless of age. The folder itself is in `my.backup.exclude`, since backing
+up encrypted packs a second time would only store them twice. That ends the "one copy on a dying
+disk" debt this note used to carry.

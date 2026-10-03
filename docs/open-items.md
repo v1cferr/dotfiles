@@ -44,7 +44,8 @@ finished work. What was closed is in the [august history](history/2026/08-august
       • WHAT IS EXPOSED MEANWHILE: everything in `~` that is not in git. btrbk still takes
         hourly snapshots of `@home`, but they share the disk they protect, so they cover an
         accidental overwrite and NOTHING else. A dead NVMe, a theft or a fire is total loss.
-      • THE ARCH ARCHIVE IS ONE COPY on the Seagate (`/mnt/seagate-old/restic-arch-kingston`),
+      • THE ARCH ARCHIVE moved to the NVMe on 03/10/2026 (verified with `check --read-data`);
+        its second copy enters the backup repo with the first run. Before that it was ONE COPY on the Seagate,
         a 44.6 GiB snapshot with no source to regenerate it, on a 2009 disk with 840 thousand
         load cycles and 348 CRC errors. Giving it a second copy is part of this item, not a
         separate one.

@@ -250,8 +250,15 @@ says so.
 3. `sudo systemctl start restic-backups-local`, then `journalctl -fu restic-backups-local`.
 4. `sudo restore-state --verify`: the first proof of a restore, and the precondition
    [open-items](../../open-items.md) sets for impermanence.
-5. Give the Arch archive its SECOND copy: `sudo restic -r /mnt/backup/restic copy
-   --from-repo /mnt/seagate-old/restic-arch-kingston --from-password-file
-   /run/secrets/restic_password_arch_kingston --password-file /run/secrets/restic_password`.
-6. Unplug the disk once and wait a day: the staleness alarm has to fire. An alarm never seen
-   firing is an alarm nobody knows works.
+5. Give the Arch archive its SECOND copy, then tag it so the prune never ages it out:
+
+   ```sh
+   sudo restic -r /mnt/backup/restic --password-file /run/secrets/restic_password copy \
+     --from-repo ~v1cferr/Archive/restic-arch-kingston \
+     --from-password-file /run/secrets/restic_password_arch_kingston
+   sudo restic -r /mnt/backup/restic --password-file /run/secrets/restic_password tag \
+     --add archive --host <the Arch snapshot's host>
+   ```
+
+6. Fire both alarms once by hand (`sudo systemctl start backup-alert-failed backup-alert-stale`):
+   an alarm never seen firing is an alarm nobody knows works.

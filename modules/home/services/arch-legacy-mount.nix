@@ -43,10 +43,8 @@ lib.mkIf osConfig.my.services.arch-antigo-mount {
   systemd.user.services.arch-antigo-mount = {
     Unit = {
       Description = "The old Arch archive mounted at ${cfg.local} (restic mount, read-only)";
-      # NO network dependency since 24/09/2026: the repo is a local path. What this needs is
-      # /mnt/seagate-old, a SYSTEM mount ordered before local-fs.target and therefore up long
-      # before this session. It is `nofail` though, so a slow HDD can still lose the race, and
-      # without this systemd would give up after 5 quick tries and leave the folder empty.
+      # The repo sits on the NVMe since 03/10/2026, so this no longer waits on a slow HDD; it
+      # still never gives up after 5 quick tries and leaves the folder empty.
       StartLimitIntervalSec = 0;
     };
 

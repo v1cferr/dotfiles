@@ -240,6 +240,20 @@ under "does not affect secureboot state" even on the shim road. Whoever has root
 not the kernel. Closing that means a UKI (kernel plus initrd plus cmdline in ONE signed PE), which
 is lanzaboote, and then there is no menu and no theme.
 
+## `/tmp` is wiped at every boot
+
+`/tmp` is a plain directory on the btrfs root, not a tmpfs, so before `boot.tmp.cleanOnBoot` it
+survived every reboot. On 03/10/2026 that broke flameshot's clipboard in silence: a
+KDSingleApplication lock (`/tmp/kdsingleapp-v1cferr-2-org.flameshot.Flameshot.lock`) left on
+26/09 carried the OLD hostname `nixos-kingston`. `QLockFile` can only prove a lock stale by
+checking its PID on the SAME host, so it assumed a live owner elsewhere, and every daemon exited
+with status 0 and no log. On Wayland nothing then held the image, so the capture saved but never
+reached the clipboard.
+
+The symptom to recognize: a single-instance Qt app that "does nothing" and exits 0. `strace -e
+trace=openat` shows the `EEXIST` on the lock. Not a tmpfs on purpose: a large build or download
+in `/tmp` would otherwise eat RAM.
+
 ## Two smaller boot details
 
 **`gfxmode` is a list with a fallback**, not `"auto"`. `auto` lets GRUB choose by EDID, and here

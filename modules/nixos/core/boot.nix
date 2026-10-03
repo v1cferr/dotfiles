@@ -131,4 +131,7 @@
   # NTFS: the driver is in the kernel, but `mount` needs the userspace `mount.ntfs-3g`, which only
   # exists with this option. There is no permanent mount of the Windows disk.
   boot.supportedFilesystems.ntfs = true;
+
+  # /tmp lives on the btrfs root, so wipe it at boot: a stale lock there silently killed flameshot.
+  boot.tmp.cleanOnBoot = true;
 }

@@ -6,6 +6,7 @@
     ./core.nix # Nix/flakes, nixpkgs (unfree/insecure), nix-ld, locale/language
     ./boot.nix # GRUB (UEFI) plus the minegrub theme plus Windows 11 in the menu through os-prober
     ./secureboot.nix # Secure Boot: our own keys (sbctl) and signing GRUB on every switch
+    ./alert.nix # `my.alert`: the journal plus a critical bubble, for root units that must reach me
     ./hardening.nix # the systemd sandbox baseline for this repo's own root oneshots
     ./shutdown.nix # the ceiling on systemd's wait when stopping a unit (the end of the 90 s "stop job")
     ./users.nix # zsh as the login shell plus the v1cferr account

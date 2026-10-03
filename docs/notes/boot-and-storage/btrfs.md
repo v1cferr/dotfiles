@@ -41,6 +41,7 @@ least forgives delay, so it goes out through TWO channels in this order:
 
 Channel 2 is what you see; channel 1 is what guarantees the message existed.
 
+The script is `my.alert` (`modules/nixos/core/alert.nix`), shared with the backup since 03/10/2026.
 `runuser` plus `DBUS_SESSION_BUS_ADDRESS` because what delivers notifications here is Quickshell,
 which runs in the user's session, and a system unit does not talk to it without entering the right
 bus. The ABSOLUTE path of `notify-send` is used because `runuser` can rebuild the PATH when

@@ -9,52 +9,12 @@
 }:
 
 let
-  # Rule 19: everything this module reaches for, named once. deadnix fails the build on an
-  # entry that stops being used, so the list cannot rot into a lie (rule 16).
-  inherit (pkgs)
-    btrfs-progs
-    coreutils
-    libnotify
-    util-linux
-    writeShellApplication
-    ;
+  inherit (pkgs) btrfs-progs;
 
   rootIsBtrfs = config.fileSystems ? "/" && config.fileSystems."/".fsType == "btrfs";
 
   # The unit's name is DERIVED, not typed: if the scrub's target changes, the onFailure follows.
   scrubUnit = "btrfs-scrub-${utils.escapeSystemdPath "/"}";
-
-  # The machine's real users (an SSOT from users.users, rule 11): who can get the bubble.
-  normalUsers = lib.attrNames (lib.filterAttrs (_: u: u.isNormalUser) config.users.users);
-
-  # THE ALARM: the journal first (it survives nobody being logged in), then a critical bubble in
-  # every live session. runuser + the session bus, because Quickshell is what delivers. Notes.
-  btrfsAlert = writeShellApplication {
-    name = "btrfs-alert";
-    runtimeInputs = [
-      coreutils
-      libnotify
-      util-linux
-    ];
-    text = ''
-      title="$1"
-      body="$2"
-
-      printf 'BTRFS ALERT: %s\n%s\n' "$title" "$body" >&2
-
-      # An array, not `for u in <list>`: Nix may generate ONE name and shellcheck flags the loop.
-      users=( ${lib.escapeShellArgs normalUsers} )
-      for u in "''${users[@]}"; do
-        uid="$(id -u "$u" 2>/dev/null)" || continue
-        bus="/run/user/$uid/bus"
-        [ -S "$bus" ] || continue   # no live session, so only the journal, and that is fine
-        # The ABSOLUTE path: runuser can rebuild the PATH and libnotify would fall out of reach.
-        runuser -u "$u" -- env "DBUS_SESSION_BUS_ADDRESS=unix:path=$bus" \
-          ${libnotify}/bin/notify-send -a "btrfs" -u critical \
-          -i drive-harddisk "$title" "$body" || true
-      done
-    '';
-  };
 in
 lib.mkIf rootIsBtrfs {
   # SCRUB. A scrub is per FILESYSTEM, so "/" already covers @home, @nix, @persist and @log.
@@ -73,7 +33,7 @@ lib.mkIf rootIsBtrfs {
     serviceConfig = {
       Type = "oneshot";
       ExecStart = ''
-        ${btrfsAlert}/bin/btrfs-alert \
+        ${lib.getExe config.my.alert} btrfs drive-harddisk \
           "btrfs: error in the scrub of /" \
           "The monthly scrub failed. Run 'sudo btrfs scrub status /' and 'sudo btrfs device stats /'. If there is an uncorrectable error, the affected data is lost in this copy, and since 24/09/2026 there is NO off-disk backup to restore it from."
       '';
@@ -107,7 +67,7 @@ lib.mkIf rootIsBtrfs {
     serviceConfig = {
       Type = "oneshot";
       ExecStart = ''
-        ${btrfsAlert}/bin/btrfs-alert \
+        ${lib.getExe config.my.alert} btrfs drive-harddisk \
           "btrfs: an I/O error counter is not zero" \
           "The disk recorded a read, write or corruption error. See 'sudo btrfs device stats /' and the SMART data ('sudo smartctl -a /dev/nvme0'). Acknowledge with 'sudo btrfs device stats -z /' AFTER investigating."
       '';

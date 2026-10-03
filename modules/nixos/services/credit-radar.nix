@@ -42,6 +42,8 @@ let
   dc = "${docker}/bin/docker compose -p credit-radar -f ${composeFile}";
 in
 lib.mkIf config.my.services.credit-radar {
+  my.backup.postgres.credit-radar = "credit-radar-postgres-1"; # a logical dump before each snapshot, never the hot volume
+
   virtualisation.docker.enable = true;
   users.users.v1cferr.extraGroups = [ "docker" ];
   environment.systemPackages = [ docker-compose ];

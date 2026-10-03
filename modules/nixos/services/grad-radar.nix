@@ -38,6 +38,8 @@ let
   dc = "${docker}/bin/docker compose -p grad-radar -f ${composeFile}";
 in
 lib.mkIf config.my.services.grad-radar {
+  my.backup.postgres.grad-radar = "grad-radar-db-1"; # a logical dump before each snapshot, never the hot volume
+
   virtualisation.docker.enable = true;
   users.users.v1cferr.extraGroups = [ "docker" ];
   environment.systemPackages = [ docker-compose ];

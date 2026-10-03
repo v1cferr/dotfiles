@@ -39,4 +39,16 @@ in
   # Sockets only: duo-db (Docker) already holds 127.0.0.1:5432, and immich talks over
   # /run/postgresql anyway. Without this the native postgres dies on a port conflict at boot.
   services.postgresql.settings.listen_addresses = lib.mkIf config.my.services.immich (lib.mkForce "");
+
+  # Immich dumps its OWN database into mediaLocation (upstream's restore path), so the photos and
+  # the database travel together. The check fails the backup if those dumps stopped (8 days: trips).
+  my.backup = lib.mkIf config.my.services.immich {
+    paths = [ "/srv/photos" ];
+    prepare = ''
+      if [ -z "$(find ${cfg.mediaLocation}/backups -name '*.sql.gz' -mtime -8 2>/dev/null)" ]; then
+        echo "backup: no Immich database dump newer than 8 days in ${cfg.mediaLocation}/backups" >&2
+        exit 1
+      fi
+    '';
+  };
 }

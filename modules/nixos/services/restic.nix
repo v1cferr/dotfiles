@@ -12,6 +12,7 @@ let
   inherit (pkgs)
     coreutils
     docker
+    findutils
     writeShellApplication
     ;
 
@@ -25,6 +26,7 @@ let
     runtimeInputs = [
       coreutils
       docker
+      findutils
     ];
     text = ''
       install -d -m 0700 ${cfg.dumpDir}/postgres

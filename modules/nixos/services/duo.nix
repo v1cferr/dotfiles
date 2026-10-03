@@ -120,6 +120,8 @@ let
   };
 in
 lib.mkIf (enabled && config.my.services.duo) {
+  my.backup.postgres.duo = "duo-db"; # a logical dump before each snapshot, never the hot volume
+
   virtualisation.docker = {
     enable = true; # the engine declared in Nix
     # The Dockerfiles use `RUN --mount=type=cache`, which the legacy builder ignores.

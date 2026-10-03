@@ -16,6 +16,11 @@
   # config when the file is missing, so it wins the race against activation: notes/repo/packages.md
   xdg.configFile."gh/config.yml".force = true;
 
+  # The public half of the signing key below, bound to the commit email.
+  xdg.configFile."git/allowed_signers".text = ''
+    dev.victorferreira@gmail.com namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK2NY1qOnqUqQhPs6sTK5MUCL+onwz1pOjzQo9p6rE+z
+  '';
+
   # The github MCP reads the token ONLY from this env var; it reuses gh's, instead of a new PAT.
   # The name does not hijack `gh auth`, which reads GH_TOKEN/GITHUB_TOKEN.
   programs.zsh.initContent = lib.mkOrder 1000 ''
@@ -31,7 +36,16 @@
       "result"
       "result-*"
     ];
+    # Commits signed with the SSH key (no passphrase, so it works without an agent); GitHub shows
+    # them as Verified once the same key is added there as a SIGNING key, not only an auth one.
+    signing = {
+      format = "ssh";
+      key = "${config.home.homeDirectory}/.ssh/id_ed25519.pub";
+      signByDefault = true;
+    };
     settings = {
+      # Lets `git log --show-signature` verify locally instead of failing on a missing file.
+      gpg.ssh.allowedSignersFile = "${config.xdg.configHome}/git/allowed_signers";
       user = {
         name = "Victor Ferreira";
         email = "dev.victorferreira@gmail.com";

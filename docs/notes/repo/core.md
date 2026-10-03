@@ -16,15 +16,25 @@ It is NOT because of the fear that circulates, "auto-optimise corrupts the store
 NixOS/nix#7273 race was fixed, and the assert that claims otherwise is nix-darwin policy. The
 reason is only WHEN the work happens.
 
-## Two garbage collectors would be one too many
+## The GC caps generations by COUNT, so it is nh's
 
-`programs.nh.clean` is OFF on purpose. It brings up a timer for `nh clean all`, and the GC already
-has an owner: `nix.gc` (weekly, 30d) plus the space-reactive one below.
+The scheduled GC is `programs.nh.clean` (weekly, `nh clean all --keep 10 --keep-one`), and
+`nix.gc` is OFF. Until 03/10/2026 it was the other way around, `nix.gc` with
+`--delete-older-than 30d`. That policy only knows AGE, and on a machine that rebuilds several times
+a day 30 days became 77 system generations, 45 GiB that a manual GC freed at once. Nobody rolls back
+further than a handful of generations, so the honest ceiling is a count, and
+`nix-collect-garbage` has no `--keep N`.
+
+- **10** matches `boot.loader.grub.configurationLimit` (`boot.nix`): every generation kept has a menu
+  entry, and no entry points at a collected one.
+- **`--keep-one`**: `nh clean all` also collects gcroots, the direnv ones included. Without it every
+  project's devShell would be rebuilt after each run.
 
 Two collectors on the same store is exactly rule 14's "two owners for the same artifact". Neither
 fails, and the real retention becomes the INTERSECTION of the two policies, which is to say you
-think you have 30 days of rollback and you have whatever the other one left. If nh's is ever
-preferred, turn `nix.gc` OFF in the same commit.
+think you have 10 generations and you have whatever the other one left. That is why `nix.gc` went
+OFF in the same commit (the nh module also warns when both are on). The space-reactive GC below is
+not a second owner: it only fires on a full disk.
 
 ## The space-reactive GC, and why 15/50 and not 1/5
 

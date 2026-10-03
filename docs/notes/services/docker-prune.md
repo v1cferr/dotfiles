@@ -70,7 +70,7 @@ refusal above: an image really would have to be REBUILT, a volume only refills.
 
 ## The schedule
 
-**`04:30` daily**, not systemd's `weekly` (which is Mon 00:00, EXACTLY nix-gc's time in
+**`04:30` daily**, not systemd's `weekly` (which is Mon 00:00, EXACTLY nh-clean's time in
 `modules/nixos/core/core.nix`). Two I/O-heavy cleanups in the same minute on the same NVMe, with no gain
 in putting them together. 04:30 falls after restic (03:00 plus up to 30 min of random delay) and
 after nix-optimise (03:45), so the small-hours window becomes a queue instead of a fight.

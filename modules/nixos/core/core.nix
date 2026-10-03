@@ -13,18 +13,16 @@
     automatic = true;
     dates = [ "03:45" ]; # idle, and far from the weekly GC
   };
-  nix.gc = {
-    automatic = true;
-    dates = "weekly";
-    options = "--delete-older-than 30d"; # /nix/store does not grow forever
-  };
-
-  # nh: a build progress tree plus a package diff. `clean` stays OFF: nix.gc already owns the
-  # GC, and two collectors on one store is rule 14's two-owners problem.
+  # nh: a build progress tree plus a package diff, and THE scheduled GC. nh's and not nix.gc's:
+  # it caps by COUNT, which nix-collect-garbage cannot (30d of rebuilds had piled up 77 generations).
   programs.nh = {
     enable = true;
     # SSOT of the repo path (rule 11): zsh.nix reads it through osConfig instead of repeating it.
     flake = "/home/v1cferr/Projects/GitHub/v1cferr/dotfiles";
+    clean = {
+      enable = true; # weekly (Mon 00:00); nix.gc stays OFF, two collectors is rule 14
+      extraArgs = "--keep 10 --keep-one"; # 10 = GRUB's menu; --keep-one spares each direnv devShell
+    };
   };
   # Space-reactive GC. 15/50 GiB and not 1/5: the partition is shared with 506 GiB of games and
   # media, so 1 GiB left is already after the accident.

@@ -21,8 +21,8 @@ let
   };
 
   # -a: health, failed attributes, new log errors, pending and offline sectors. standby,q: never
-  # spin a sleeping disk up just to look at it.
-  watch = "-a -n standby,q -M exec ${lib.getExe notify}";
+  # spin a sleeping disk up just to look at it. `-M exec` is refused without `-m`; <nomailer> is it.
+  watch = "-a -n standby,q -m <nomailer> -M exec ${lib.getExe notify}";
 in
 {
   services.smartd = {
@@ -38,7 +38,7 @@ in
     };
     defaults = {
       monitored = watch;
-      autodetected = watch;
+      autodetected = ""; # the DEFAULT line already covers DEVICESCAN; repeating it warns
     };
   };
 }

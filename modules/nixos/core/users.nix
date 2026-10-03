@@ -36,6 +36,7 @@
   ];
 
   security.sudo.wheelNeedsPassword = true;
-  # Only wheel may even EXECUTE sudo (NixOS wiki, Hardening): every caller here is v1cferr, in wheel.
+  # Only wheel may even EXECUTE sudo (NixOS wiki, Hardening). A service user that calls sudo breaks
+  # under it (btrbk did): run that service as root instead (services/btrbk.nix).
   security.sudo.execWheelOnly = true;
 }

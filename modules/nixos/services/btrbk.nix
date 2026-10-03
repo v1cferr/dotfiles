@@ -7,12 +7,20 @@ lib.mkIf config.my.services.btrbk {
   # impermanence erases everything, and without the owner noticing.
   systemd.services.btrbk-home.unitConfig.RequiresMountsFor = "/.snapshots";
 
+  # ROOT, with no sudo in between: the module's `btrbk` user calls sudo, and execWheelOnly (users.nix)
+  # forbids a non-wheel caller from even executing it. Silently broken from 30/09 to 03/10/2026.
+  systemd.services.btrbk-home.serviceConfig = {
+    User = lib.mkForce "root";
+    Group = lib.mkForce "root";
+  };
+
   # (Persistent=true on the timer, which matters on this machine since it reboots a lot, already
   # comes from the btrbk module; there is no need to repeat it here.)
 
   services.btrbk.instances.home = {
     onCalendar = "hourly";
     settings = {
+      backend = "btrfs-progs"; # not the module's btrfs-progs-sudo: it already runs as root
       timestamp_format = "long"; # it includes hour:minute, which an hourly snapshot needs
 
       # "onchange": idle would otherwise mint 24 identical snapshots a day and evict the useful ones.

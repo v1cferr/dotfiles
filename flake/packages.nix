@@ -118,6 +118,10 @@ in
     cp -r ${self.packages.${system}.repo-stats} $out/stats
   '';
 
+  # THE STATE COMING BACK, from the installer: `nix run .#restore-state`. Built from the host so it
+  # restores exactly what the backup takes: docs/guides/disaster-recovery.md
+  restore-state = host.config.my.backup.restoreState;
+
   # THE DISK LAYOUT, formatted from scratch and booted: `nix run .#disko-vm`. The REAL
   # disko config on a 24 GiB image, and the only check of it: docs/notes/boot-and-storage/disko.md
   disko-vm =

@@ -15,6 +15,12 @@ let
 
   # The unit's name is DERIVED, not typed: if the scrub's target changes, the onFailure follows.
   scrubUnit = "btrfs-scrub-${utils.escapeSystemdPath "/"}";
+
+  lostData =
+    if config.my.services.restic then
+      "restic on the USB disk is where to restore it from"
+    else
+      "there is NO off-disk backup to restore it from";
 in
 lib.mkIf rootIsBtrfs {
   # SCRUB. A scrub is per FILESYSTEM, so "/" already covers @home, @nix, @persist and @log.
@@ -35,7 +41,7 @@ lib.mkIf rootIsBtrfs {
       ExecStart = ''
         ${lib.getExe config.my.alert} btrfs drive-harddisk \
           "btrfs: error in the scrub of /" \
-          "The monthly scrub failed. Run 'sudo btrfs scrub status /' and 'sudo btrfs device stats /'. If there is an uncorrectable error, the affected data is lost in this copy, and since 24/09/2026 there is NO off-disk backup to restore it from."
+          "The monthly scrub failed. Run 'sudo btrfs scrub status /' and 'sudo btrfs device stats /'. If there is an uncorrectable error, the affected data is lost in this copy, and ${lostData}."
       '';
     };
   };

@@ -231,8 +231,8 @@ refreshed.
 
 ## Backup and remote access
 
-- **Backup: restic to a local USB disk**, built on 03/10/2026 and OFF until the disk exists
-  ([decision 0011](docs/decisions/0011-local-usb-backup.md)). It takes `~`, the photos, the
+- **Backup: restic to a local backup disk**, built on 03/10/2026 and OFF until the disk exists
+  ([decision 0011](docs/decisions/0011-local-disk-backup.md)). It takes `~`, the photos, the
   database dumps and the identity keys, alarms when a run fails or stops happening, and
   `restore-state` brings it all back from the installer. Until it is on, the only copy is btrbk's
   hourly `@home` snapshots on the same disk: [restic](docs/notes/boot-and-storage/restic.md).

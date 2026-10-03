@@ -50,7 +50,7 @@ export const navigation: NavItem[] = [
       { title: "0008 No offsite backup yet", doc: "decisions/0008-no-offsite-backup-yet.md" },
       { title: "0009 Modules, hosts, tools", doc: "decisions/0009-modules-hosts-tools-layout.md" },
       { title: "0010 No component library", doc: "decisions/0010-visual-layer-without-component-library.md" },
-      { title: "0011 Local USB backup", doc: "decisions/0011-local-usb-backup.md" },
+      { title: "0011 Local disk backup", doc: "decisions/0011-local-disk-backup.md" },
     ],
   },
   { title: "How the notes work", doc: "notes/README.md" },

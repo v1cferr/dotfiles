@@ -32,8 +32,8 @@ finished work. What was closed is in the [august history](history/2026/08-august
 
 - [~] NO BACKUP since 24/09/2026, and new storage is what closes it (opened 24/09/2026,
       reshaped 03/10/2026). The daily restic to Google Drive was RETIRED and its `HOME` repo
-      permanently deleted. ITS REPLACEMENT IS BUILT AND OFF: restic to a local USB disk
-      ([decision 0011](decisions/0011-local-usb-backup.md)), with the restore and drill D4.
+      permanently deleted. ITS REPLACEMENT IS BUILT AND OFF: restic to a local backup disk
+      ([decision 0011](decisions/0011-local-disk-backup.md)), with the restore and drill D4.
       What is left: BUY THE DISK and walk "Turning it on" in
       [notes/boot-and-storage/restic.md](notes/boot-and-storage/restic.md). The OFFSITE copy
       stays an accepted risk ([decision 0008](decisions/0008-no-offsite-backup-yet.md)).
@@ -342,7 +342,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
         plus `dont-wipe`, inert; (2) systemd initrd alone, reboot, confirm; (3) `/persist` with
         `neededForBoot` and the declared list, reboot WITHOUT the wipe, which proves the binds work
         while the system is still persistent; (4) only then the wipe.
-      • PROVE A RESTORE BEFORE ANY OF IT: `sudo restore-state --verify` (drill D4) once the USB
+      • PROVE A RESTORE BEFORE ANY OF IT: `sudo restore-state --verify` (drill D4) once the local
         backup is on; until then there is nothing to restore FROM. Impermanence is rule 6 becoming
         law, and turning that law on while the state has no backup at all is the one version
         of this that costs real money. THE NEW STORAGE COMES FIRST.

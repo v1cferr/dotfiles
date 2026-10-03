@@ -18,7 +18,7 @@ let
 
   lostData =
     if config.my.services.restic then
-      "restic on the USB disk is where to restore it from"
+      "restic on the backup disk is where to restore it from"
     else
       "there is NO off-disk backup to restore it from";
 in

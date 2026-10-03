@@ -7,7 +7,7 @@
     ./caddy.nix # the reverse proxy for *.<domain> (a DNS-01 wildcard cert) plus the fail2ban jail
     ./basic-memory.nix # the Basic Memory servers' SSOT (ports, projects); home is what runs them
     ./arch-legacy.nix # the mountpoint plus the SSOT of the old Arch archive (home is what mounts it)
-    ./restic.nix # the daily restic backup to a local USB disk, plus the my.backup.* hooks
+    ./restic.nix # the daily restic backup to a local backup disk, plus the my.backup.* hooks
     ./btrbk.nix # hourly btrfs snapshots of @home (a local undo; it is NOT a backup)
     ./claude-code.nix # Claude Code's hooks (managed-settings in /etc) for the Discord Rich Presence
     ./jellyfin.nix # the Jellyfin media server (native, systemd, the library in /srv/media)

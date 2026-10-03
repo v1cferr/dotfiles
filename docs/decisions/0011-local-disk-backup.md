@@ -1,6 +1,6 @@
-# 0011. The backup goes to a local USB disk first
+# 0011. The backup goes to a local disk first
 
-The daily restic comes back aimed at a USB disk, which covers a dead NVMe and leaves theft, fire and
+The daily restic comes back aimed at a local disk, which covers a dead NVMe and leaves theft, fire and
 surge to an offsite copy that is still open.
 
 - **Status**: accepted; supersedes the "no destination" half of [0008](0008-no-offsite-backup-yet.md)
@@ -15,12 +15,15 @@ databases, and the identity keys (Secure Boot, SSH host keys, Wi-Fi profiles, Bl
 
 ## Decision
 
-A local USB disk, formatted btrfs with the label `BACKUP`, holding a restic repo:
+A local disk, formatted btrfs with the label `BACKUP`, holding a restic repo. FOR NOW that disk is
+the internal Seagate, reformatted for the job after its SMART read on 03/10/2026 showed clean media
+and worn mechanics ([disk health](../notes/hardware/smart.md)); a new disk replaces it by
+2026-12-31, the same review as the offsite half.
 
 - **Why local first**: the most likely loss on this desk is the NVMe itself, and a local restore of
   ~100 GiB does not wait on a 100 Mb/s link. It costs the disk once and nothing a month.
 - **Why restic and not btrbk `send`**: restic encrypts (the disks are not encrypted,
-  [0006](0006-no-disk-encryption.md), so a stolen USB disk would otherwise be a stolen `~`), it
+  [0006](0006-no-disk-encryption.md), so a stolen backup disk would otherwise be a stolen `~`), it
   dedups across `~`, `/srv` and `/var`, and the same repo format moves to an offsite target later
   with `restic copy`.
 - **Same password as the old repo** (`restic_password`): already in Bitwarden, so no new secret.
@@ -31,7 +34,7 @@ A local USB disk, formatted btrfs with the label `BACKUP`, holding a restic repo
 
 - A dead NVMe now restores in a handful of commands, the identity keys included, so Secure Boot
   re-enrolls the SAME keys instead of new ones.
-- **Theft, fire or surge still take everything**: the disk sits next to the machine. The offsite
+- **Theft, fire or surge still take everything**: the disk sits inside the same case. The offsite
   half of [0008](0008-no-offsite-backup-yet.md) stays an accepted risk until its review on
   2026-12-31, and the cheapest close is a second restic repo (`restic copy`) on a Hetzner Storage
   Box or B2.

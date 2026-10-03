@@ -1,5 +1,5 @@
-# BACKUP (restic): the state Nix does not declare, encrypted and deduplicated onto a local USB disk.
-# Why USB, what is in it and how it comes back: docs/notes/boot-and-storage/restic.md
+# BACKUP (restic): the state Nix does not declare, encrypted and deduplicated onto a local backup disk.
+# Why that disk, what is in it and how it comes back: docs/notes/boot-and-storage/restic.md
 {
   config,
   lib,
@@ -103,12 +103,12 @@ let
       done
 
       work="$(mktemp -d)"
-      trap 'umount "$work/usb" 2>/dev/null || true; rm -rf "$work"' EXIT
+      trap 'umount "$work/disk" 2>/dev/null || true; rm -rf "$work"' EXIT
       repo=${cfg.repo}
       if [ ! -d "$repo" ]; then
-        mkdir "$work/usb"
-        mount -o ro /dev/disk/by-label/${cfg.label} "$work/usb"
-        repo="$work/usb/${lib.removePrefix "${cfg.mountPoint}/" cfg.repo}"
+        mkdir "$work/disk"
+        mount -o ro /dev/disk/by-label/${cfg.label} "$work/disk"
+        repo="$work/disk/${lib.removePrefix "${cfg.mountPoint}/" cfg.repo}"
       fi
 
       # The key the installer step put in /mnt, or the live one; failing both, restic prompts.
@@ -181,7 +181,7 @@ in
       type = lib.types.nullOr lib.types.str;
       default = null;
       example = "/dev/disk/by-uuid/0000-0000";
-      description = "The USB disk holding the repo, by UUID. The host's fact; null keeps the module inert.";
+      description = "The disk holding the repo, by UUID. The host's fact; null keeps the module inert.";
     };
 
     label = lib.mkOption {
@@ -199,7 +199,7 @@ in
 
     mountPoint = lib.mkOption {
       type = lib.types.str;
-      default = "/mnt/backup-usb";
+      default = "/mnt/backup";
       description = "Outside /home on purpose: a mount inside `paths` broke the old backup three times.";
     };
 
@@ -297,7 +297,7 @@ in
       assertions = [
         {
           assertion = cfg.device != null;
-          message = "my.services.restic needs my.backup.device (the USB disk's /dev/disk/by-uuid path).";
+          message = "my.services.restic needs my.backup.device (the backup disk's /dev/disk/by-uuid path).";
         }
       ];
 
@@ -316,7 +316,7 @@ in
         ];
       };
 
-      services.restic.backups.usb = {
+      services.restic.backups.local = {
         repository = cfg.repo;
         passwordFile = config.sops.secrets.restic_password.path;
         initialize = true;
@@ -339,6 +339,7 @@ in
           "--keep-daily 7"
           "--keep-weekly 4"
           "--keep-monthly 6"
+          "--keep-tag archive" # an archive copied in (the old Arch) is never pruned by age
         ];
 
         # A local disk makes rereading cheap, so every run proves a random slice of the packs.
@@ -351,7 +352,7 @@ in
       ];
 
       systemd.services = {
-        restic-backups-usb = {
+        restic-backups-local = {
           # The disk mounts on demand, so the unit has to ask for it explicitly.
           unitConfig.RequiresMountsFor = cfg.mountPoint;
           onFailure = [ "backup-alert-failed.service" ];
@@ -367,8 +368,8 @@ in
           };
         };
 
-        backup-alert-failed = alertUnit "backup: the daily restic run failed" "See 'journalctl -u restic-backups-usb -b'. Until it is fixed, nothing new reaches the USB disk.";
-        backup-alert-stale = alertUnit "backup: no recent snapshot on the USB disk" "The newest snapshot is older than ${toString cfg.maxAgeDays} days, or the disk is unreachable. Plug it in and run 'sudo systemctl start restic-backups-usb'.";
+        backup-alert-failed = alertUnit "backup: the daily restic run failed" "See 'journalctl -u restic-backups-local -b'. Until it is fixed, nothing new reaches the backup disk.";
+        backup-alert-stale = alertUnit "backup: no recent snapshot on the backup disk" "The newest snapshot is older than ${toString cfg.maxAgeDays} days, or the disk is unreachable. Plug it in and run 'sudo systemctl start restic-backups-local'.";
       };
 
       systemd.timers.backup-staleness = {

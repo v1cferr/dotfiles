@@ -23,7 +23,7 @@ Seagate, spun down most of the day.
 ## The Seagate, MEASURED on 03/10/2026
 
 A Momentus 7200.4 laptop disk from 2009, now the backup's home
-([decision 0011](../../decisions/0011-local-usb-backup.md)):
+([decision 0011](../../decisions/0011-local-disk-backup.md)):
 
 | Attribute | Value | Reading |
 | --- | ---: | --- |

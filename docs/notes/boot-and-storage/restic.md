@@ -1,8 +1,8 @@
-# restic: the USB backup, and the Drive one before it
+# restic: the local disk backup, and the Drive one before it
 
 Module: [`modules/nixos/services/restic.nix`](../../../modules/nixos/services/restic.nix), toggle
 `restic`, since 03/10/2026. The why of the destination is
-[decision 0011](../../decisions/0011-local-usb-backup.md).
+[decision 0011](../../decisions/0011-local-disk-backup.md).
 
 **Built, and OFF until the disk exists.** Until then the only automatic copy is still
 [btrbk](btrbk.md), on the same disk it protects. Turning it on is the checklist at the end.
@@ -33,7 +33,7 @@ grad-radar with 2854 of 2854 rows.
 
 ## How it runs, and how it cannot fail quietly
 
-- `/mnt/backup-usb` is `noauto` plus `x-systemd.automount`: the disk mounts when the backup
+- `/mnt/backup` is `noauto` plus `x-systemd.automount`: the disk mounts when the backup
   touches it, and `RequiresMountsFor` makes the unit fail, not write to the NVMe, when it is away.
 - Daily at 03:00, `Persistent`, so a machine that was off runs it at the next boot. Retention
   `7d 4w 6m`, and every run checks a random 2% of the packs (a local reread is cheap; on the
@@ -247,10 +247,10 @@ says so.
 1. Format the disk: `sudo mkfs.btrfs -L BACKUP /dev/sdX` (the label is how the installer finds it).
 2. Set `my.backup.device = "/dev/disk/by-uuid/<uuid>"` in `hosts/ex-b560m-v5/hardware.nix` and
    `restic = true` in `services.nix`, then `rebuild`.
-3. `sudo systemctl start restic-backups-usb`, then `journalctl -fu restic-backups-usb`.
+3. `sudo systemctl start restic-backups-local`, then `journalctl -fu restic-backups-local`.
 4. `sudo restore-state --verify`: the first proof of a restore, and the precondition
    [open-items](../../open-items.md) sets for impermanence.
-5. Give the Arch archive its SECOND copy: `sudo restic -r /mnt/backup-usb/restic copy
+5. Give the Arch archive its SECOND copy: `sudo restic -r /mnt/backup/restic copy
    --from-repo /mnt/seagate-old/restic-arch-kingston --from-password-file
    /run/secrets/restic_password_arch_kingston --password-file /run/secrets/restic_password`.
 6. Unplug the disk once and wait a day: the staleness alarm has to fire. An alarm never seen

@@ -125,7 +125,7 @@ sudo restore-state --verify
 ```
 
 It restores the identity set (Secure Boot keys, SSH host keys, NM profiles, Bluetooth pairings,
-`/var/lib/nixos`) from the newest snapshot on the USB disk into a temporary directory, diffs each
+`/var/lib/nixos`) from the newest snapshot on the backup disk into a temporary directory, diffs each
 path against the live machine and deletes the copy. Silence plus "matches" is a pass; a `diff`
 line is either a real change since the last snapshot (an NM profile edited today) or a broken
 backup, and only the first is fine.
@@ -133,7 +133,7 @@ backup, and only the first is fine.
 It does NOT restore `~`, the photos or the databases: those are too big to rehearse monthly, and
 their proof is the backup's own 2% pack check plus the one-time restore of each dump recorded in
 [restic](../notes/boot-and-storage/restic.md). It needs the backup turned on
-([decision 0011](../decisions/0011-local-usb-backup.md)).
+([decision 0011](../decisions/0011-local-disk-backup.md)).
 
 ## The real thing: the disk died and a new one is in
 
@@ -164,7 +164,7 @@ sudo install -D -m 0600 /dev/stdin /mnt/var/lib/sops-nix/key.txt   # paste the k
 
 ### 5. Restore the state BEFORE the install
 
-Plug in the USB disk labelled `BACKUP`, then:
+Plug in the backup disk labelled `BACKUP`, then:
 
 ```sh
 sudo nix run .#restore-state      # into /mnt; the age key from step 4 decrypts the repo password

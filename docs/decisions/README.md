@@ -22,4 +22,4 @@ Each record follows the same short shape, after [Michael Nygard's ADR](https://a
 | [0008](0008-no-offsite-backup-yet.md) | No offsite backup, for now | offsite: accepted risk, review by 2026-12-31; destination superseded by 0011 |
 | [0009](0009-modules-hosts-tools-layout.md) | Modules offer, hosts compose, tools maintain | accepted |
 | [0010](0010-visual-layer-without-component-library.md) | The site's visual layer adds no component library | accepted |
-| [0011](0011-local-usb-backup.md) | The backup goes to a local USB disk first | accepted |
+| [0011](0011-local-disk-backup.md) | The backup goes to a local disk first | accepted |

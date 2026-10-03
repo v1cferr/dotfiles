@@ -1,7 +1,11 @@
 # The ex-b560m-v5's hardware: its CPU, kernel modules, the disks beyond the root, monitors and
 # devices. modules/ offers device modules; the host picks them: docs/notes/repo/flake.md
-{ modulesPath, ... }:
+{ modulesPath, pkgs, ... }:
 
+let
+  # The Seagate Momentus 7200.4 (2009): its serial, the one fact both rules below key on.
+  seagateSerial = "5VH4YZV8";
+in
 {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
@@ -34,6 +38,21 @@
       "x-systemd.device-timeout=5s"
     ];
   };
+
+  # The Seagate's WEAR, not its media (SMART on 03/10/2026: 0 reallocated, 850k load cycles). APM
+  # 254 stops the head parking every few seconds; -S 241 spins it down after 30 idle minutes.
+  services.udev.extraRules = ''
+    ACTION=="add|change", KERNEL=="sd[a-z]", ENV{ID_SERIAL_SHORT}=="${seagateSerial}", RUN+="${pkgs.hdparm}/bin/hdparm -B 254 -S 241 /dev/%k"
+  '';
+
+  # smartd's defaults (modules/nixos/hardware/smartd.nix) plus what only this old disk needs: a
+  # temperature alarm (spec max 43 C) and self-tests, short weekly and long monthly.
+  services.smartd.devices = [
+    {
+      device = "/dev/disk/by-id/ata-ST9320423AS_${seagateSerial}";
+      options = "-W 4,45,50 -s (S/../../7/04|L/../01/./05)";
+    }
+  ];
 
   # The SanDisk (Windows 11's C:). The full reasoning, the verification that preceded deleting the
   # local copies and the `force` option that must stay off: docs/notes/boot-and-storage/games-disk.md

@@ -5,6 +5,7 @@
 {
   imports = [
     ./hardware.nix # firmware, zram, fwupd, Bluetooth, udisks2 (the microcode is the host's CPU)
+    ./smartd.nix # disk health for every disk, alarming through my.alert (no mailer here)
     ./btrfs.nix # the FS' integrity: scrub plus alarm, error counters, reclaim, TRIM
     ./oom.nix # earlyoom: it kills the biggest process before the out-of-RAM freeze (zram's companion)
     ./audio.nix # PipeWire plus rtkit

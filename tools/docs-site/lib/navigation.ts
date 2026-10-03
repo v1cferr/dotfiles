@@ -82,6 +82,7 @@ export const navigation: NavItem[] = [
       { title: "Razer", doc: "notes/hardware/razer.md" },
       { title: "Android", doc: "notes/hardware/android.md" },
       { title: "OOM", doc: "notes/hardware/oom.md" },
+      { title: "Disk health", doc: "notes/hardware/smart.md" },
       { title: "Webcam", doc: "notes/hardware/webcam.md" },
     ],
   },

@@ -104,10 +104,10 @@ in
         };
       };
 
-      # The KingHost VPS (Ubuntu 24.04 + Docker) that hosts ImobOS. Key-only root, ufw allows 22/80/443.
+      # The KingHost VPS (Ubuntu 24.04 + Docker) that hosts ImobOS. Root cannot SSH in; ufw allows 22/80/443.
       vps = {
         HostName = "vps.v1cferr.dev"; # an A record in Cloudflare, DNS only (a proxied one drops SSH)
-        User = "root";
+        User = "v1cferr"; # sudo NOPASSWD + docker; the KingHost root password opens the web console
         Port = 22;
         IdentityFile = "~/.ssh/id_ed25519";
         SetEnv = {

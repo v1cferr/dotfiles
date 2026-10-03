@@ -35,6 +35,9 @@
       ".direnv/"
       "result"
       "result-*"
+      # Claude Code wrote this line by hand before the file was declarative; keeping it here stops
+      # it from writing the file again (it only does so when the path is not ignored yet).
+      "**/.claude/settings.local.json"
     ];
     # Commits signed with the SSH key (no passphrase, so it works without an agent); GitHub shows
     # them as Verified once the same key is added there as a SIGNING key, not only an auth one.

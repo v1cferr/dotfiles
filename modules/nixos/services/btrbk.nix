@@ -14,6 +14,22 @@ lib.mkIf config.my.services.btrbk {
     Group = lib.mkForce "root";
   };
 
+  # The timer stays "active (waiting)" while every run fails, so the failure itself is the alarm:
+  # without it the 30/09 breakage sat in the journal for 3 days. Pruning dies with it, too.
+  systemd.services.btrbk-home.onFailure = [ "btrbk-alert-failed.service" ];
+
+  systemd.services.btrbk-alert-failed = {
+    description = "Alarm: a btrbk snapshot run failed";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = ''
+        ${lib.getExe config.my.alert} btrbk drive-harddisk \
+          "btrbk: the @home snapshot failed" \
+          "See 'journalctl -u btrbk-home -n 30'. Until it is fixed there is no new snapshot, and old ones are not pruned."
+      '';
+    };
+  };
+
   # (Persistent=true on the timer, which matters on this machine since it reboots a lot, already
   # comes from the btrbk module; there is no need to repeat it here.)
 

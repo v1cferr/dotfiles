@@ -175,8 +175,20 @@ variation.
 
 The connector names were confirmed through `hyprctl monitors`. The primary is the ASUS XG27ACS
 (QHD 180Hz) at the origin `0x0`; the secondary is the LG ULTRAGEAR standing on its own pivot, on
-the LEFT at a negative x. Rotated it is 1080x1920 LOGICAL, so `x = -1080` sets it beside the
-primary and `y = -240` lines the two middles up, which is where the pointer crosses. Keeping the
+the LEFT at a negative x, at scale 0.75. Rotated and scaled it is 1440x2560 LOGICAL, so
+`x = -1440` sets it beside the primary and `y = -560` lines the two middles up.
+
+**Why 0.75 on a panel that is not QHD.** Both are 27", but the ASUS is 109 PPI and the LG 82, so at
+scale 1 a 30 px widget took a third more desk on the LG. `82 / 109 = 0.75`, and it divides both
+axes cleanly (`1080 / 0.75 = 1440`, `1920 / 0.75 = 2560`), so a logical pixel is ~0.233 mm on BOTH
+panels: a window dragged across keeps its physical size, and the pointer crosses the border at the
+height the eye expects, which it did not at scale 1. The cost is known and was accepted after a live
+test: below 1 the compositor renders at 1440x2560 and downsamples, so thin text is softer than at
+native. The panel's own 2560x1440 mode was rejected outright, since that is the monitor's scaler
+doing the same downsampling worse, at 75 Hz. Quickshell does not re-read a screen's geometry on a
+live scale change; a reload of the shell (or a session start) is what resizes the band.
+
+Keeping the
 main one at `0x0` is what makes a disconnected secondary clean: the primary stands alone with no
 ghost offset and workspaces 5 to 8 fall back onto it automatically.
 

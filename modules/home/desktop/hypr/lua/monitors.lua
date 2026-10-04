@@ -8,9 +8,9 @@ if not ok_M or type(M) ~= "table" then M = { primary = "DP-1", secondary = "DP-2
 
 hl.monitor({ output = M.primary, mode = "2560x1440@180", position = "0x0", scale = 1 })
 
--- transform 1 = 90 degrees, so the LG is 1080x1920 LOGICAL: x = -1080 puts it on the left and
--- y = -240 lines its middle up with the shorter primary, which is where the pointer crosses.
-hl.monitor({ output = M.secondary, mode = "1920x1080@143.98", position = "-1080x-240", scale = 1, transform = 1 })
+-- Scale 0.75 = 82/109 PPI, so a logical pixel is the same physical size on both panels. Rotated it is
+-- 1440x2560 LOGICAL: x = -1440 sets it on the left, y = -560 lines the two middles up. See the notes.
+hl.monitor({ output = M.secondary, mode = "1920x1080@143.98", position = "-1440x-560", scale = 0.75, transform = 1 })
 
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })
 

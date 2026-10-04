@@ -114,7 +114,7 @@ and its config, and state stays out of git, for a backup to keep.
 
 **Why**: state is written by the app at runtime, so declaring it would put two owners on it
 (rule 14). The backup that keeps it is restic on a local backup disk
-([decision 0011](decisions/0011-local-disk-backup.md)), built on 03/10/2026 and on once the disk exists.
+([decision 0011](decisions/0011-local-disk-backup.md)), on since 04/10/2026.
 
 **Enforced by**: `dead-config`'s artifact check (a tracked build output or dropping); the rest by
 review.

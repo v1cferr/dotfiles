@@ -4,8 +4,13 @@ Module: [`modules/nixos/services/restic.nix`](../../../modules/nixos/services/re
 `restic`, since 03/10/2026. The why of the destination is
 [decision 0011](../../decisions/0011-local-disk-backup.md).
 
-**Built, and OFF until the disk exists.** Until then the only automatic copy is still
-[btrbk](btrbk.md), on the same disk it protects. Turning it on is the checklist at the end.
+**ON since 04/10/2026**, on the reformatted Seagate. The first run, MEASURED that day: 498,063
+files and 120.4 GiB read in 19 min 14 s, 88.5 GiB added and 68.3 GiB stored after compression,
+`check` with 2% of the packs read and no errors. The same day the Arch archive was copied in and
+tagged `archive`, `restore-state --verify` matched the live identity, and both alarms were fired
+by hand and seen on screen. The run's file list then sent ~28 GiB of self-regenerating data
+(Claude Desktop's VM, VS Code's extensions, Chrome's model, package stores, Immich thumbnails) to
+the exclude list.
 
 ## What goes in, and who says so
 
@@ -217,23 +222,29 @@ that second half is gone. **Today it is an hourly rsync onto the same disk**, wh
 an accidental overwrite and is still worth running, but it is not a backup and the module now
 says so.
 
-## Turning it on
+## Moving to a new disk
 
-1. Format the disk: `sudo mkfs.btrfs -L BACKUP /dev/sdX` (the label is how the installer finds it).
-2. Set `my.backup.device = "/dev/disk/by-uuid/<uuid>"` in `hosts/ex-b560m-v5/hardware.nix` and
-   `restic = true` in `services.nix`, then `rebuild`.
-3. `sudo systemctl start restic-backups-local`, then `journalctl -fu restic-backups-local`.
-4. `sudo restore-state --verify`: the first proof of a restore, and the precondition
-   [open-items](../../open-items.md) sets for impermanence.
-5. Give the Arch archive its SECOND copy, then tag it so the prune never ages it out:
+How it was turned on (04/10/2026), and the same steps for the disk that replaces the Seagate:
+
+1. Format it BY ID, never by `sdX`: the letters swapped between two boots on 04/10/2026, and
+   `sdb` went from the Seagate to the Windows SSD. A partition table, then
+   `sudo mkfs.btrfs -L BACKUP /dev/disk/by-id/<disk>-part1` (the label is how the installer finds
+   it; `-f` if an old signature sits at the same offset).
+2. Set `my.backup.device = "/dev/disk/by-uuid/<uuid>"` in `hosts/ex-b560m-v5/hardware.nix`, then
+   `rebuild`.
+3. On a replacement, carry the history over before the first run:
+   `restic -r /mnt/backup/restic copy --from-repo <old repo>`, which also brings the `archive`
+   snapshot. On a first install, tag the Arch archive after copying it in:
 
    ```sh
    sudo restic -r /mnt/backup/restic --password-file /run/secrets/restic_password copy \
      --from-repo ~v1cferr/Archive/restic-arch-kingston \
      --from-password-file /run/secrets/restic_password_arch_kingston
    sudo restic -r /mnt/backup/restic --password-file /run/secrets/restic_password tag \
-     --add archive --host <the Arch snapshot's host>
+     --add archive --host nixos-sandisk
    ```
 
+4. `sudo systemctl start restic-backups-local`, then `journalctl -fu restic-backups-local`.
+5. `sudo restore-state --verify`, drill D4.
 6. Fire both alarms once by hand (`sudo systemctl start backup-alert-failed backup-alert-stale`):
    an alarm never seen firing is an alarm nobody knows works.

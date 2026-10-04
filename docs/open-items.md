@@ -30,13 +30,13 @@ finished work. What was closed is in the [august history](history/2026/08-august
       own commit or kept on purpose, and the answer is the point, not the count:
       [notes/repo/usage-audit.md](notes/repo/usage-audit.md).
 
-- [~] NO BACKUP since 24/09/2026, and new storage is what closes it (opened 24/09/2026,
-      reshaped 03/10/2026). The daily restic to Google Drive was RETIRED and its `HOME` repo
-      permanently deleted. ITS REPLACEMENT IS BUILT AND OFF: restic to a local backup disk
-      ([decision 0011](decisions/0011-local-disk-backup.md)), with the restore and drill D4.
-      What is left: BUY THE DISK and walk "Turning it on" in
-      [notes/boot-and-storage/restic.md](notes/boot-and-storage/restic.md). The OFFSITE copy
-      stays an accepted risk ([decision 0008](decisions/0008-no-offsite-backup-yet.md)).
+- [~] NO BACKUP from 24/09/2026 to 04/10/2026 (opened 24/09/2026, reshaped 04/10/2026). The
+      daily restic to Google Drive was RETIRED and its `HOME` repo permanently deleted. ITS
+      REPLACEMENT IS ON since 04/10/2026: restic to the reformatted Seagate
+      ([decision 0011](decisions/0011-local-disk-backup.md)), first run and drill D4 passed
+      ([notes/boot-and-storage/restic.md](notes/boot-and-storage/restic.md)). What is left: a
+      NEWER disk to replace a 2009 Seagate by 2026-12-31, and the OFFSITE copy, an accepted risk
+      until the same date ([decision 0008](decisions/0008-no-offsite-backup-yet.md)).
       • WHY IT DIED: a 15 GiB quota holding 130 GiB, of which 109.37 were restic. 30.62 of those
         were packs the `forget --prune` had deleted straight into the Drive's TRASH, where a
         deleted file goes on counting. The prune was working the whole time and the account

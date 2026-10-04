@@ -231,11 +231,11 @@ refreshed.
 
 ## Backup and remote access
 
-- **Backup: restic to a local backup disk**, built on 03/10/2026 and OFF until the disk exists
+- **Backup: daily restic to a local disk**, on since 04/10/2026
   ([decision 0011](docs/decisions/0011-local-disk-backup.md)). It takes `~`, the photos, the
   database dumps and the identity keys, alarms when a run fails or stops happening, and
-  `restore-state` brings it all back from the installer. Until it is on, the only copy is btrbk's
-  hourly `@home` snapshots on the same disk: [restic](docs/notes/boot-and-storage/restic.md).
+  `restore-state` brings it all back from the installer. The disk sits in the same case, so an
+  offsite copy is still open: [restic](docs/notes/boot-and-storage/restic.md).
 - **SSH** on port `2222` (root off, `fail2ban` on), reachable from anywhere with no VPN. The
   **DDNS** that keeps `ssh.v1cferr.dev` pointed at the current public IP lives on the ROUTER, so
   external access does not depend on this machine being awake:

@@ -40,4 +40,5 @@ and worn mechanics ([disk health](../notes/hardware/smart.md)); a new disk repla
   Box or B2.
 - `/srv/media` (168 GiB MEASURED on 03/10/2026) is out: it is re-downloadable, and it would more
   than double the repo.
-- Until the disk is bought the module is built but off (`my.services.restic = false`).
+- It went ON on 04/10/2026: the first run, the restore drill and both alarms passed that day
+  ([restic](../notes/boot-and-storage/restic.md)).

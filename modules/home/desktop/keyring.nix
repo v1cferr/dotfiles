@@ -37,6 +37,7 @@ let
       again="$(systemd-ask-password --timeout=0 'Again:')"
       [ "$pw" = "$again" ] || { echo "the passwords differ, nothing sealed" >&2; exit 1; }
       [ -n "$pw" ] || { echo "an empty password needs no TPM, nothing sealed" >&2; exit 1; }
+      umask 077 # the blob only opens on this TPM, but it is still nobody else's business
       mkdir -p "$(dirname ${credFile})"
       printf '%s' "$pw" | systemd-creds encrypt --user --with-key=host+tpm2 --tpm2-pcrs=7 \
         --name=${credName} - ${credFile}

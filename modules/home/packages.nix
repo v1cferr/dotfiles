@@ -11,6 +11,7 @@
 
     # ── Communication ──
     discord # it exposes the IPC socket Claude Code's Rich Presence needs
+    unstable.teamspeak6-client # TS6 is still in beta and moves fast; teamspeak3 left nixpkgs (qt5 webengine EOL)
 
     # ── AI ──
     # The FHS variant: the MCP servers need node/uv, and Cowork looks for QEMU at hardcoded paths.

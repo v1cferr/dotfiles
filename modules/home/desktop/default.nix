@@ -15,6 +15,7 @@
     ./wallpaper.nix # hyprpaper: a random DARK photo per monitor, one pool per orientation
     ./backlight.nix # DDC/CI: both panels held at one declared brightness and white point
     ./hyprsunset.nix # the blue light filter (a systemd service plus profiles by time of day)
+    ./keyring.nix # the "Login" keyring unlocked at start from a TPM-sealed password (autologin)
     ./lockscreen.nix # hyprlock (the lock screen) plus hypridle (idle: dim plus lock)
     ./quickshell.nix # the shell/bar/OSD/media plus NOTIFICATIONS in QML; hot-reload through mkOutOfStoreSymlink
     ./theme.nix # dark mode (the prefer-dark color-scheme plus GTK Adwaita-dark)

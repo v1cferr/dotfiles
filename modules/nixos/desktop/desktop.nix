@@ -38,7 +38,7 @@
   };
 
   # KEYRING (org.freedesktop.secrets). MIND THE AUTOLOGIN: PAM never types a password, so the
-  # "Login" keyring has an EMPTY one (state, rule 6). The trade is in the notes.
+  # unlock comes from a TPM-sealed one (modules/home/desktop/keyring.nix). See the notes.
   services.gnome.gnome-keyring.enable = true;
   # Only for an INTERACTIVE login (a rescue path); inert under autologin.
   security.pam.services.lightdm.enableGnomeKeyring = true;

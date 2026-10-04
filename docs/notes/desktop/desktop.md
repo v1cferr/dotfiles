@@ -44,12 +44,43 @@ gnome-keyring provides `org.freedesktop.secrets`, where apps store secrets: git 
 NetworkManager, Chrome, Spotify, Dropbox.
 
 MIND THE AUTOLOGIN. `lightdm-autologin`'s PAM does NOT type a password, so `pam_gnome_keyring`
-NEVER receives an authtok, which means the auto-unlock does NOT come from PAM. Here the "Login"
-keyring has an EMPTY password (state, not declarable, rule 6): `gnome-keyring-daemon` unlocks it on
-its own at startup, with no prompt, for ALL the apps.
+NEVER receives an authtok, which means the auto-unlock does NOT come from PAM.
 
-An accepted trade: the session is already autologin and unlocked, and remote access is only
-through WireGuard.
+### The unlock: a TPM-sealed password (04/10/2026)
+
+`modules/home/desktop/keyring.nix`. The "Login" keyring has a REAL password, and a copy of it is
+sealed in the TPM with `systemd-creds --user` (`host+tpm2`, PCR7, the Secure Boot policy). The
+three bus names the daemon owns (`org.freedesktop.secrets`, `org.gnome.keyring`,
+`org.freedesktop.impl.portal.Secret`) get a service file in `$XDG_DATA_HOME/dbus-1/services`,
+which wins over the system copies and points at `gnome-keyring-tpm.service`. That unit decrypts
+the blob and starts the daemon with `--unlock`, so whichever app touches the keyring FIRST gets it
+already open, and there is no race against an autostarted app.
+
+- **The blob** is STATE (rule 6) at `~/.local/state/keyring/login.cred`. It only opens on this
+  TPM, for this user, in this Secure Boot state.
+- **Sealing**: change the password in Seahorse, then run `keyring-tpm-seal` and type the same one.
+- **When PCR7 changes** (new Secure Boot keys, a dbx update), the decrypt fails and the unit starts
+  the daemon LOCKED, logging a warning. The usual prompt asks once; reseal and it is silent again.
+  The secrets are never lost, only the convenience.
+- **What it buys**: the NVMe has no LUKS, so an empty password left every secret in plain text on
+  the disk and in any copy of it. Now the file is encrypted and the key is in the TPM.
+- **What it does not buy**: anyone with the running, logged-in session can read the secrets, the
+  same as before. The protection is at rest.
+
+Verified in an isolated D-Bus session first: the right password opens it, a wrong or empty one
+leaves the daemon running and locked.
+
+### Rejected
+
+- **An empty password** (the setup until 04/10/2026). No prompt, but the keyring is stored in
+  plain text on a disk without LUKS. It also drifted once: the password came back without anyone
+  noticing, and VS Code started asking.
+- **hyprlock unlocking it** (`security.pam.services.hyprlock.enableGnomeKeyring`). Known broken on
+  NixOS: the [Discourse thread](https://discourse.nixos.org/t/automatically-unlock-gnome-keyring-with-hyprlock/54166)
+  ends with people typing the password twice.
+- **A greeter with a password login**: it breaks Sunshine at boot, see the autologin section.
+- **LUKS with a TPM unlock** would protect the whole disk, and an empty keyring password would then
+  be harmless. It needs a reinstall or a conversion, a project of its own.
 
 `security.pam.services.lightdm.enableGnomeKeyring` only serves an INTERACTIVE login, a rescue path
 if the autologin is turned off. It is inert under autologin. `seahorse` is the "Passwords and Keys"

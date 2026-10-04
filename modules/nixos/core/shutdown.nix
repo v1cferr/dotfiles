@@ -1,4 +1,4 @@
-# SHUTDOWN: how long systemd waits for a unit to stop before the SIGKILL.
+# SHUTDOWN: how long systemd waits for a unit to stop before the SIGKILL, and what may trigger it.
 # Where the 90s came from and why the two sides differ: docs/notes/boot-and-storage/shutdown.md
 { ... }:
 
@@ -10,4 +10,14 @@
   systemd.user.extraConfig = ''
     DefaultTimeoutStopSec=5s
   '';
+
+  # Case buttons do nothing while running: shutdown is ssh/CLI only. Holding power ~4 s
+  # still forces off (firmware), and the reset button is wired to the board, out of reach.
+  services.logind.settings.Login = {
+    HandlePowerKey = "ignore";
+    HandlePowerKeyLongPress = "ignore";
+    HandleRebootKey = "ignore";
+    HandleSuspendKey = "ignore";
+    HandleHibernateKey = "ignore";
+  };
 }

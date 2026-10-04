@@ -276,6 +276,16 @@ in
           "${home}/Games"
           "${home}/.local/share/bottles" # Wine prefixes; the CS2 saves have their own mirror
           "${home}/.local/share/Steam"
+          "${home}/.config/Claude/vm_bundles" # Claude Desktop's VM image (14 GiB), downloaded again
+          "${home}/.vscode/extensions" # Settings Sync puts them back
+          "${home}/.vscode-server"
+          "${home}/.config/Code/CachedExtensionVSIXs"
+          "${home}/.npm"
+          "${home}/.local/share/pnpm" # the pnpm store
+          "${home}/.nuget/packages"
+          "**/OptGuideOnDeviceModel" # Chrome's on-device model (4 GiB)
+          "**/Service Worker" # site caches, rebuilt on the next visit
+          "**/.next" # Next.js build output and cache
           "**/node_modules"
           "**/.direnv"
           "**/target"

@@ -44,6 +44,11 @@ in
   # the database travel together. The check fails the backup if those dumps stopped (8 days: trips).
   my.backup = lib.mkIf config.my.services.immich {
     paths = [ "/srv/photos" ];
+    # Immich regenerates both from the originals, and upstream leaves them out of its own backups.
+    exclude = [
+      "${cfg.mediaLocation}/thumbs"
+      "${cfg.mediaLocation}/encoded-video"
+    ];
     prepare = ''
       if [ -z "$(find ${cfg.mediaLocation}/backups -name '*.sql.gz' -mtime -8 2>/dev/null)" ]; then
         echo "backup: no Immich database dump newer than 8 days in ${cfg.mediaLocation}/backups" >&2

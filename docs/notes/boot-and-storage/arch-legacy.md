@@ -89,9 +89,8 @@ repo is STATIC and read on demand, which is what belongs on a cold disk.
 
 Three things left the unit along with the Drive, because none of them has a local equivalent: the
 writable copy of `rclone.conf`, `RCLONE_CONFIG` in the environment, and
-`-o rclone.program=<store path>`. So did the `network-online.target` ordering. What the unit needs
-now is `/mnt/seagate-old`, a SYSTEM mount ordered before `local-fs.target` and therefore up long
-before this session.
+`-o rclone.program=<store path>`. So did the `network-online.target` ordering. What the unit needed
+after that was the Seagate's system mount, until the repo moved to the NVMe on 03/10/2026.
 
 ## What replaced "if the network drops"
 

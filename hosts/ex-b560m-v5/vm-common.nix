@@ -7,12 +7,6 @@
 }:
 
 {
-  # The Seagate is a SECOND physical disk. tmpfs so the mount point exists and nothing waits.
-  fileSystems."/mnt/seagate-old" = lib.mkForce {
-    device = "none";
-    fsType = "tmpfs";
-  };
-
   # EVERY optional service off, read from the OPTION SET and not from a copy of the list, so a
   # toggle added tomorrow is off here by construction (rule 11).
   my.services = lib.genAttrs (builtins.attrNames options.my.services) (_: lib.mkForce false);

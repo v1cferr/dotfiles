@@ -27,17 +27,9 @@ in
   # EXTRA MOUNTS (the root and /boot come from disko). By UUID, since sdX/nvmeX shuffle.
   # nofail + device-timeout=5s: without it systemd waits 90s and freezes the switch.
 
-  # The Seagate (an HDD): COLD STORAGE. It holds the frozen restic repos, the old Arch archive
-  # that /mnt/arch-antigo reads included, since the daily backup was retired on 24/09/2026.
-  # See docs/notes/boot-and-storage/restic.md
-  fileSystems."/mnt/seagate-old" = {
-    device = "/dev/disk/by-uuid/85788f24-b8a0-4c3e-af4f-8af1f8b52147";
-    fsType = "ext4";
-    options = [
-      "nofail"
-      "x-systemd.device-timeout=5s"
-    ];
-  };
+  # The Seagate, reformatted on 04/10/2026 to hold the backup (decision 0011). The module mounts
+  # it on demand; the old /mnt/seagate-old mount went with the format.
+  my.backup.device = "/dev/disk/by-uuid/c4350190-4e14-4995-8052-a47da0bc19c0";
 
   # The Seagate's WEAR, not its media (SMART on 03/10/2026: 0 reallocated, 850k load cycles). APM
   # 254 stops the head parking every few seconds; -S 241 spins it down after 30 idle minutes.

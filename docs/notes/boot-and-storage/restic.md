@@ -95,41 +95,16 @@ decision about the backup at all.
 has the same trap under another name, and it is worth proving with a `rclone about` BEFORE and
 AFTER a prune rather than trusting the retention settings.
 
-## What survived, and how to read it
+## What happened to the old repos (04/10/2026)
 
-Two repos, both on the Seagate, both frozen. **The Drive's `HOME` repo was deleted permanently on
-24/09/2026 WITHOUT being copied down**, a deliberate call, so the snapshot window from 05/08 to
-16/09 no longer exists anywhere.
+The Drive's `HOME` repo was deleted permanently on 24/09/2026 WITHOUT being copied down, a
+deliberate call, so the snapshot window from 05/08 to 16/09 exists nowhere.
 
-```sh
-# the original home repo, 13 snapshots, frozen since 05/08/2026
-sudo restic -r /mnt/seagate-old/restic \
-  --password-file /run/secrets/restic_password snapshots
-
-# the old Arch archive, copied off the Drive on 24/09/2026
-restic -r /mnt/seagate-old/restic-arch-kingston \
-  --password-file /run/secrets/restic_password_arch_kingston snapshots
-```
-
-The Arch one needs no `sudo` (the directory belongs to the user) and is normally read through
-`/mnt/arch-antigo`, which mounts it permanently: [arch-legacy](arch-legacy.md).
-
-The nixpkgs module used to generate a wrapper PER REPO, and that module left with the daily
-backup. The `restic` client in `modules/nixos/packages.nix` is now the only way in, which is exactly why
-it is declared there.
-
-**The two sops secrets STAY.** `restic_password` and `restic_password_arch_kingston` are not
-leftovers: without them both repos above are encrypted garbage.
-
-## What the Seagate is now, and the debt in it
-
-It stopped being a backup destination on 05/08/2026 and became cold storage. The reason has not
-changed and it is not about space: it is a ~2009 Momentus 7200.4 with **840 thousand load
-cycles** (40% past spec) and **348 CRC errors**, INSIDE this machine, so it disappears with it in
-a theft or a fire.
-
-**The Arch archive is now ONE copy on that disk.** It holds a 44.6 GiB snapshot with no source to
-regenerate it. That is a known debt, written down here so it is not discovered later.
+The two repos that survived on the Seagate went different ways when it was reformatted to hold
+this backup: the frozen home repo (13 snapshots up to 05/08/2026, superseded) went with the format,
+and the Arch archive moved to the NVMe first, verified with `check --read-data`
+([arch-legacy](arch-legacy.md)). The Seagate itself, its health and why it is good enough for now,
+is in [disk health](../hardware/smart.md).
 
 ## Lessons that outlived the service
 

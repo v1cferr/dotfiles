@@ -53,7 +53,6 @@ another machine:
 | Override | Why |
 | --- | --- |
 | `disko.devices = mkForce { }` | disko generates the Kingston's fileSystems and the test VM brings its own root; keeping both waits forever for a device that does not exist |
-| `/mnt/seagate-old` as tmpfs | it is a second physical disk, and the mount point still has to exist |
 | every `my.services` off | they need secrets, `/srv`, a GPU or the private input. Read from the OPTION SET (`options.my.services`), never from a copy of the list, so a toggle added tomorrow is off here by construction (rule 11) |
 | lightdm and autoLogin off | no GPU and no monitor. A session that cannot start would drown the failed-unit list this test exists to read |
 

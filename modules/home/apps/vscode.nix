@@ -33,7 +33,7 @@ let
     ];
     text = ''
       repo="''${1:?usage: vscode-extensions-dump <repo-path>}"
-      out="$repo/home/apps/vscode/extensions.txt"
+      out="$repo/modules/home/apps/vscode/extensions.txt"
       if [ ! -d "$(dirname "$out")" ]; then
         echo "vscode-extensions-dump: $(dirname "$out") does not exist, wrong repo path?" >&2
         exit 1

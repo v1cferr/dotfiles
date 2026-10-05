@@ -6,13 +6,14 @@
   fetchPnpmDeps,
   nodejs_24,
   pnpmConfigHook,
-  pnpm_10,
+  unstable,
 }:
 
 let
   # The MAJOR is pinned and not taken from the `pnpm` alias: the store format changes between
-  # majors, and the fetcher and the build have to agree on one.
-  pnpm = pnpm_10;
+  # majors, and the fetcher and the build have to agree on one. From unstable because stable's
+  # 10.34.0 is marked insecure (CVE-2026-55487 and others, 05/10/2026) and only unstable has the fix.
+  pnpm = unstable.pnpm_10;
 
   # What the DEPENDENCIES are resolved from, and nothing else: a page edit must not invalidate
   # the fetch, which is the one step of this build that needs the network.

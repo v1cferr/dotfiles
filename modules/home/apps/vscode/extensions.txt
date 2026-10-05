@@ -27,6 +27,7 @@ gleam.gleam
 james-yu.latex-workshop
 jnoortheen.nix-ide
 khaeransori.json2csv
+matthewpi.caddyfile-support
 mechatroner.rainbow-csv
 mhutchie.git-graph
 mikestead.dotenv

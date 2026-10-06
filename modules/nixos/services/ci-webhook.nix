@@ -15,10 +15,10 @@ let
     writeShellApplication
     ;
 
-  secret = "fai_gitlab_webhook_token";
   # Self-activating with its secret, like the tunnel: the toggle alone keeps it inert until
   # sync-secrets has brought the token, so a half-done setup never listens.
-  enabled = config.my.services.ci-webhook && builtins.hasAttr secret config.sops.secrets;
+  enabled =
+    config.my.services.ci-webhook && builtins.hasAttr "fai_gitlab_webhook_token" config.sops.secrets;
 
   store = writeShellApplication {
     name = "ci-webhook-store";
@@ -71,7 +71,7 @@ in
     };
 
     systemd.services.webhook.serviceConfig = {
-      LoadCredential = "gitlab-token:${config.sops.secrets.${secret}.path}";
+      LoadCredential = "gitlab-token:${config.sops.secrets.fai_gitlab_webhook_token.path}";
       # 0755 so ci-status-json, running as me, reads what the hook wrote.
       StateDirectory = "ci-webhook";
       StateDirectoryMode = "0755";

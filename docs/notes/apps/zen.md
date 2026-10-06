@@ -45,19 +45,22 @@ NSS actually answered, and everything else is a refusal.
 `printf | certutil | grep -q` returns certutil's 255 even when grep matched, because certutil exits
 non-zero on the happy path too ("no keys found"). The output goes into a variable first.
 
-## Two preconditions, and why it disarms out loud instead of proceeding
+## One precondition checked, one enforced, and why it disarms out loud
 
-`arm` checks both and, when either fails, writes a priority-4 line to the journal, leaves Zen alone
-and does not arm:
+**A primary password must exist**, for the reason above. When it does not, `arm` writes a
+priority-4 line to the journal, leaves Zen alone and does not arm: a guard that cannot verify is not
+a guard. It is a UI setting I flip inside Zen, and until I do, the journal says `DISARMED` on every
+lock, which is rule 16's shape of failure: loud, never silent.
 
-1. **A primary password exists**, for the reason above. A guard that cannot verify is not a guard.
-2. **Zen reopens the previous session**. `browser.startup.page` defaults to `1` in Zen 1.22b
-   (measured inside `browser/omni.ja`, `defaults/preferences/firefox.js`), and `prefs.js` only
-   records non-default values, so the pref being absent means the tabs are gone on close. Closing a
-   browser that does not come back is not a security feature, it is data loss.
-
-Both are UI settings I flip inside Zen. Until I do, the journal says `DISARMED` on every lock, which
-is rule 16's shape of failure: loud, never silent.
+**Zen must reopen the previous session**, and this one is NOT checked, it is enforced.
+`browser.startup.page` defaults to `1` in Zen (measured inside `browser/omni.ja`,
+`defaults/preferences/firefox.js`), so every cold start (the guard closing it, an update, a logout)
+dropped the tabs. Closing a browser that does not come back is not a security feature, it is data
+loss. The pref used to live in a `user.js` symlinked from the Arch-era repo, and when that path died
+the session went with it in silence. Now the package carries the `Homepage` policy
+(`StartPage = "previous-session"`, `Locked`), so no `prefs.js` or Settings click can turn it off.
+`about:policies` shows it. A policy writes the DEFAULT branch, so `prefs.js` never gets the line,
+which is why the old `grep` precondition had to go.
 
 ## Killing precisely, because `pgrep -f` is wider than it looks
 

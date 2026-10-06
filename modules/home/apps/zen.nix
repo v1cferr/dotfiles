@@ -27,7 +27,14 @@ let
 
   palette = config.my.theme.palette; # the single source (modules/home/desktop/palette.nix)
 
-  zen = inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default;
+  # The policy pins session restore in the package itself: prefs.js and Settings cannot drop the
+  # tabs on a cold start (an update, a logout, the guard below).
+  zen = inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default.override {
+    extraPolicies.Homepage = {
+      StartPage = "previous-session";
+      Locked = true;
+    };
+  };
 
   # State and NOT /run: a reboot cannot be the way around the prompt.
   armedFlag = "${config.xdg.stateHome}/zen-guard/armed";
@@ -88,13 +95,10 @@ let
           echo "<4>zen-guard: no Zen profile under ~/.zen, staying DISARMED"
           exit 0
         }
-        # Both refusals are LOUD and leave Zen alone: a guard that cannot check is not a guard.
+        # The refusal is LOUD and leaves Zen alone: a guard that cannot check is not a guard.
+        # Session restore needs no check: the package's policy enforces it.
         if nss_accepts "$profile" "probe-$$-$RANDOM"; then
           echo "<4>zen-guard: this Zen profile has NO primary password, so the prompt would take any answer. DISARMED"
-          exit 0
-        fi
-        if ! grep -qF 'user_pref("browser.startup.page", 3);' "$profile/prefs.js"; then
-          echo "<4>zen-guard: Zen does not reopen the previous session, so closing it would drop the tabs. DISARMED"
           exit 0
         fi
         mkdir -p "$(dirname "$flag")"

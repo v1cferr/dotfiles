@@ -104,9 +104,12 @@ in the dashboard or through the API.
 | MCP server | `basic-memory-general` at `https://memory.v1cferr.dev/mcp`, bearer auth carrying the token's two `cf-access-client-*` headers. Its own Access app (`df5f0dab-...`, type `mcp`) holds `only me (GitHub)`, without which the server is hidden from me in the portal |
 | MCP portal | `mcp` at `mcp.v1cferr.dev`, managed OAuth (the default on a new portal), `code_mode: off` (a client could otherwise opt in through the URL; ChatGPT does not need it). Its Access app (`70ae5647-...`) holds ONLY `only me (GitHub)` |
 | Tool allowlist | `default_disabled: true`, then only the eleven tools below |
-| DNS (ci) | PENDING: `ci.v1cferr.dev` through `tunnel route dns basic-memory ci.v1cferr.dev`, AFTER its Access app |
-| Access app (ci) | PENDING: self-hosted on `ci.v1cferr.dev`, ONLY a `Service Auth` policy with the service token `gitlab-webhook` (no human login: nothing there is for a browser) |
-| Service token | PENDING: `gitlab-webhook`, sent by each FAI GitLab project's Pipeline Hook as custom headers ([dash](../desktop/dash.md)) |
+| DNS (ci) | `ci.v1cferr.dev` CNAME `3376a3fe-...cfargotunnel.com`, proxied, record `c0df2c2d...` (created 06/10/2026 through the API, AFTER its Access app) |
+| Access app (ci) | `ci (FAI GitLab pipeline hook)`, `b96afa71-8b2e-463b-8053-72ffe32c2a33`, self-hosted on `ci.v1cferr.dev`: ONLY a `non_identity` policy with the token below, no human login |
+| Service token (ci) | `gitlab-webhook`, `3deac771-5b8d-44ae-93c0-1a3d7a407520`, expires 2036-10-03. Its client id and secret are in Bitwarden as "Cloudflare Access gitlab-webhook" and travel as custom headers on each FAI GitLab project's Pipeline Hook ([dash](../desktop/dash.md)) |
+
+The `ci` gate, checked from the edge on 06/10/2026 (resolving through 1.1.1.1, since the LAN's split
+DNS would land on Caddy): no token 403, a forged secret 403, the real token through to the tunnel.
 
 What the checks returned on 26/09/2026, with no credential: the portal answers 401 with a
 `WWW-Authenticate` pointing at its protected-resource metadata, and publishes an authorization

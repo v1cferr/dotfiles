@@ -4,7 +4,7 @@
 -- Nix data with a SELF-CONTAINED FALLBACK: a bare dofile would BLOW UP and abort the config,
 -- and "autostart" loads later, so the session would come up with no services at all.
 local ok_M, M = pcall(dofile, os.getenv("HOME") .. "/.config/theme/monitors.lua")
-if not ok_M or type(M) ~= "table" then M = { primary = "DP-2", secondary = "HDMI-A-3" } end
+if not ok_M or type(M) ~= "table" then M = { primary = "DP-1", secondary = "DP-2" } end
 
 hl.window_rule({ match = { class = ".*" }, opacity = "0.98 0.96" })
 -- A subtle transparency on everything (0.98 active / 0.96 inactive), then maximize suppressed,
@@ -17,7 +17,7 @@ hl.window_rule({
 })
 -- Picture-in-Picture (a detached video) always 100% opaque.
 hl.window_rule({ match = { title = "^(Picture-in-Picture)$" }, opacity = "1.0" })
--- Ascension (a private WoW through Wine): floating, centered on the LG, opaque, no idle-lock.
+-- Ascension (a private WoW through Wine): floating, centered on the ASUS, opaque, no idle-lock.
 hl.window_rule({
   match = { class = "^(ascension\\.exe)$" },
   float = true,

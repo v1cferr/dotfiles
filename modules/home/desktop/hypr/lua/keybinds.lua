@@ -1,7 +1,7 @@
 -- Keybinds (parity with the Arch/Kingston). The comments here GENERATE the SUPER+H cheatsheet.
 -- The monitor pcall fallback is load-order critical; every why: docs/notes/desktop/keybinds.md
 local ok_M, M = pcall(dofile, os.getenv("HOME") .. "/.config/theme/monitors.lua")
-if not ok_M or type(M) ~= "table" then M = { primary = "DP-2", secondary = "HDMI-A-3" } end
+if not ok_M or type(M) ~= "table" then M = { primary = "DP-1", secondary = "DP-2" } end
 
 local mainMod = "SUPER"
 

@@ -57,10 +57,16 @@ both. That number subtracts the bar's own zone (`host.barExclusiveZone`) and the
 which is what makes the bar and the band together add up to the 30%.
 
 **What earns a place.** The top of a standing screen is for what is read in two seconds and never
-clicked: the time, the month, the machine's four vitals and what is playing. Everything that takes
+clicked: the time, the month, the machine's vitals and what is playing. Everything that takes
 a click stays in the 70%. The notification FEED is deliberately not there, only a bell with the
 count: a feed in the eyeline is the opposite of a glance surface, so the centre opens on a click
 and nowhere else.
+
+**The vitals are tiles, not meter rows.** CPU, RAM, DISK, GPU, TEMP and NET sit in a 3x2 grid
+(`dash/Tile.qml`) with a 36 px value, under an `UP · LOAD` line. The first version reused the
+popovers' `MeterRow`, whose 10 to 12 px text is sized for a hover a hand away; at `scale = 0.75`
+it was unreadable from the chair and left the left column half empty. GPU is power against its
+own cap, because the Arc publishes no busy percentage, and NET is download against the link speed.
 
 **No new data.** Every number is already collected in `Bar.qml` for the bar and its popovers, so
 the component takes that Scope as `host` and reads it. The month is `monthCells()`, the same

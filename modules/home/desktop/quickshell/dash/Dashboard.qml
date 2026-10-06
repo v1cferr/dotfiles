@@ -4,7 +4,6 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
-import "root:/widgets"
 
 PanelWindow {
     id: dash
@@ -84,7 +83,9 @@ PanelWindow {
                 spacing: 22
 
                 ColumnLayout {
-                    Layout.preferredWidth: 420
+                    // fillWidth stays OFF: a nested layout inherits it from the grid and would starve the month.
+                    Layout.fillWidth: false
+                    Layout.preferredWidth: Math.round(dash.width * 0.55)
                     Layout.fillHeight: true
                     spacing: 2
 
@@ -121,41 +122,67 @@ PanelWindow {
                         Layout.fillHeight: true
                     }
 
-                    Hairline {}
-
-                    ColumnLayout {
+                    // Six vitals in a 3x2 grid at a size read from the chair, not from a hover.
+                    GridLayout {
                         Layout.fillWidth: true
-                        Layout.topMargin: 12
-                        spacing: 9
+                        columns: 3
+                        columnSpacing: 28
+                        rowSpacing: 26
 
-                        MeterRow {
+                        Tile {
                             label: "CPU"
                             value: dash.host.cpuPct + "%"
                             hint: dash.host.cpuMhz > 0 ? (dash.host.cpuMhz / 1000).toFixed(1) + " GHz" : ""
                             frac: dash.host.cpuPct / 100
                             barColor: Theme.colBlue
                         }
-                        MeterRow {
+                        Tile {
                             label: "RAM"
                             value: dash.host.memPct + "%"
                             hint: dash.host.fmtBytes(dash.host.memUsed) + " / " + dash.host.fmtBytes(dash.host.memTotal)
                             frac: dash.host.memPct / 100
                             barColor: Theme.colMauve
                         }
-                        MeterRow {
+                        Tile {
                             label: "DISK"
                             value: dash.host.diskPct + "%"
                             hint: dash.host.fmtBytes(dash.host.diskFree) + " free"
                             frac: dash.host.diskPct / 100
                             barColor: Theme.colTeal
                         }
-                        MeterRow {
+                        // The Arc publishes no busy %, so the bar is power against its own cap.
+                        Tile {
+                            label: "GPU"
+                            value: dash.host.gpuWatts.toFixed(0) + " W"
+                            hint: dash.host.gpuFreq > 0 ? (dash.host.gpuFreq / 1000).toFixed(2) + " GHz" : "idle"
+                            frac: dash.host.gpuWattsCap > 0 ? dash.host.gpuWatts / dash.host.gpuWattsCap : 0
+                            barColor: Theme.colPeach
+                        }
+                        Tile {
                             label: "TEMP"
                             value: dash.host.tempMax + "°C"
-                            hint: dash.host.gpuWatts > 0 ? dash.host.gpuWatts.toFixed(0) + " W GPU" : ""
+                            hint: dash.host.tempQuality ? dash.host.tempQuality.label : ""
                             frac: dash.host.tempMax / 100
                             barColor: dash.host.tempQuality ? dash.host.tempQuality.color : Theme.colGreen
                         }
+                        // Download against the link speed, the only ceiling the NIC actually knows.
+                        Tile {
+                            readonly property real linkBps: Number((dash.host.netLink[dash.host.netMain] || {}).speed || 0) * 125000
+                            label: "NET"
+                            value: "↓ " + dash.host.fmtBytes(dash.host.netMainRx) + "/s"
+                            hint: "↑ " + dash.host.fmtBytes(dash.host.netMainTx) + "/s" + (dash.host.netSpeed ? "  ·  " + dash.host.netSpeed : "")
+                            frac: linkBps > 0 ? dash.host.netMainRx / linkBps : 0
+                            barColor: Theme.colSky
+                        }
+                    }
+
+                    Text {
+                        Layout.topMargin: 14
+                        text: "UP " + dash.host.fmtDur(dash.host.uptimeSec) + "   ·   LOAD " + dash.host.loadAvg.map(v => v.toFixed(2)).join("  ")
+                        color: Theme.colSubtext
+                        font.family: Theme.uiFont
+                        font.pixelSize: 14
+                        font.letterSpacing: 2
                     }
                 }
 

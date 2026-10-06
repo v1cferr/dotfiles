@@ -206,9 +206,10 @@ PanelWindow {
                     readonly property var order: Ci.gitlabShown ? [0, 1, 2] : [0, 1]
                     readonly property var titles: [(dash.host.monthNames[dash.host.calTodayM - 1] || "").toUpperCase() + "  " + dash.host.calYear, "GITHUB  ACTIONS", "FAI  ·  GITLAB"]
                     property int page: 0
-                    function next() {
+                    function step(d) {
+                        const n = pages.order.length;
                         const i = pages.order.indexOf(pages.page);
-                        pages.page = pages.order[(i + 1) % pages.order.length];
+                        pages.page = pages.order[(i + d + n) % n];
                     }
                     // A page that leaves the rotation (VPN down) must not stay on screen.
                     onOrderChanged: if (pages.order.indexOf(pages.page) < 0)
@@ -222,7 +223,13 @@ PanelWindow {
                         interval: 15000
                         repeat: true
                         running: dash.visible && !pageHover.hovered
-                        onTriggered: pages.next()
+                        onTriggered: pages.step(1)
+                    }
+                    // The wheel turns the pages too. No timer reset is needed: the pointer is over
+                    // the column, which already holds the rotation until it leaves.
+                    WheelHandler {
+                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                        onWheel: event => pages.step(event.angleDelta.y > 0 ? -1 : 1)
                     }
 
                     RowLayout {
@@ -237,14 +244,19 @@ PanelWindow {
                             font.bold: true
                             font.letterSpacing: 4
                         }
-                        // Where the rotation is, and a click to jump.
+                        // Where the rotation is: arrows to step, a dot to jump.
                         Row {
                             spacing: 6
+                            PageArrow {
+                                glyph: "‹"
+                                onClicked: pages.step(-1)
+                            }
                             Repeater {
                                 model: pages.order
                                 delegate: Rectangle {
                                     required property int modelData
                                     readonly property bool on: pages.page === modelData
+                                    anchors.verticalCenter: parent.verticalCenter
                                     width: on ? 18 : 7
                                     height: 7
                                     radius: 3.5
@@ -261,6 +273,10 @@ PanelWindow {
                                         onClicked: pages.page = parent.modelData
                                     }
                                 }
+                            }
+                            PageArrow {
+                                glyph: "›"
+                                onClicked: pages.step(1)
                             }
                         }
                         Item {

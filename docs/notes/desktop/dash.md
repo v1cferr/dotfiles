@@ -79,7 +79,8 @@ creation with `failed to create variant with object` and the layer never appears
 ## The CI pages: the right column rotates
 
 The month shares its column with two CI pages, one at a time: **month, GitHub Actions, the FAI
-GitLab**, every 15 s, with dots beside the title that say where the rotation is and jump on a click.
+GitLab**, every 15 s, with dots beside the title that say where the rotation is and jump on a click,
+flanked by `‹ ›` arrows (`PageArrow.qml`); the mouse wheel over the column steps the pages too.
 The pointer over the column HOLDS the page, because reading a row must not be a race against the
 timer. The clock and the vitals never rotate: they are what the band is for.
 

@@ -222,7 +222,7 @@ PanelWindow {
                     Timer {
                         interval: 15000
                         repeat: true
-                        running: dash.visible && !pageHover.hovered
+                        running: dash.visible && !pageHover.hovered && !ghList.detailOpen && !glList.detailOpen
                         onTriggered: pages.step(1)
                     }
                     // The wheel turns the pages too. No timer reset is needed: the pointer is over
@@ -248,6 +248,7 @@ PanelWindow {
                         Row {
                             spacing: 6
                             PageArrow {
+                                anchors.verticalCenter: parent.verticalCenter
                                 glyph: "‹"
                                 onClicked: pages.step(-1)
                             }
@@ -275,6 +276,7 @@ PanelWindow {
                                 }
                             }
                             PageArrow {
+                                anchors.verticalCenter: parent.verticalCenter
                                 glyph: "›"
                                 onClicked: pages.step(1)
                             }
@@ -409,7 +411,9 @@ PanelWindow {
                         }
 
                         CiList {
+                            id: ghList
                             anchors.fill: parent
+                            held: pageHover.hovered
                             opacity: pages.page === 1 ? 1 : 0
                             visible: opacity > 0
                             Behavior on opacity {
@@ -425,7 +429,9 @@ PanelWindow {
                                 })
                         }
                         CiList {
+                            id: glList
                             anchors.fill: parent
+                            held: pageHover.hovered
                             opacity: pages.page === 2 ? 1 : 0
                             visible: opacity > 0
                             Behavior on opacity {

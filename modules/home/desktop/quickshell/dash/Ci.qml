@@ -51,6 +51,19 @@ Singleton {
         return Math.floor(s / 86400) + " d";
     }
 
+    // How long a run took, or has been going: "45s", "3m 10s", "1h 5m".
+    function dur(startIso, endIso, live) {
+        if (!startIso)
+            return "";
+        const end = live ? root.now : new Date(endIso);
+        const s = Math.max(0, Math.round((end - new Date(startIso)) / 1000));
+        if (s < 60)
+            return s + "s";
+        if (s < 3600)
+            return Math.floor(s / 60) + "m " + (s % 60) + "s";
+        return Math.floor(s / 3600) + "h " + Math.floor((s % 3600) / 60) + "m";
+    }
+
     Process {
         id: proc
         command: [root.bin, "7"]

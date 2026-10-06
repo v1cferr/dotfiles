@@ -96,6 +96,19 @@ poll and far from GitHub's 5000 an hour.
 the latest run of every workflow created in that window. Dependabot's update jobs (event `dynamic`)
 are dropped: they are bookkeeping, not CI.
 
+**What a run carries.** Besides its state, every run brings the commit or PR title that triggered
+it, who did, when it started and ended, the attempt, and for a failure the first failed job and
+its failed step (GitLab has no steps, so it gives the stage and the failure reason). The failure
+costs one extra API call, and only failures pay it; GitLab also needs one call for the pipeline and
+one for the commit title, since its list endpoint carries neither. A poll takes about 12 s.
+
+**The row and the card.** A row is the repo, the title of the run that leads it (the worst one, not
+the newest), and the workflows as tinted chips. A click opens the repo's CARD in place of the list
+(`CiDetail.qml`): one box per workflow with state, ref, duration (live while it runs), title,
+trigger, author, age, the attempt when it is a re-run, and in red `job › step` when it broke. A
+click on a box opens that run in the browser, and `‹` goes back. While a card is open the rotation
+stops, and the card closes itself 20 s after the pointer leaves, so the column never stays parked.
+
 **One row per repo.** The first version had a row per workflow, and `dotfiles` filled five rows
 saying one thing. A row now wears the WORST state of its workflows (failure, running, queued,
 cancelled, skipped, success, in that order), lists each workflow tinted by its own state so the

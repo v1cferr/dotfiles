@@ -12,7 +12,6 @@ Text {
     font.family: Theme.uiFont
     font.pixelSize: 18
     font.bold: true
-    anchors.verticalCenter: parent ? parent.verticalCenter : undefined
 
     MouseArea {
         id: area

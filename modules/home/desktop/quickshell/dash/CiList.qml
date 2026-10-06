@@ -1,5 +1,5 @@
-// One CI page of the band: a tally, then one row per workflow (or pipeline ref) with its latest
-// state, newest first. Rows that do not fit are dropped from the bottom, never squeezed.
+// One CI page of the band: a tally, then one row per repo with its worst state, newest first. A
+// click opens that repo's card (CiDetail.qml) in place. Rows that do not fit are dropped, never squeezed.
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -16,6 +16,13 @@ ColumnLayout {
     property var errorText: ({})
     // Owner/ prefixes that add nothing on this page (the account's own name).
     property var dropOwners: []
+    // True while the pointer is over the column (Dashboard's HoverHandler): an open card stays.
+    property bool held: false
+
+    // The card is kept by NAME, so a refresh of the feed keeps it open on fresh data.
+    property string openRepo: ""
+    readonly property var openGroup: list.groups.find(g => g.repo === list.openRepo) || null
+    readonly property bool detailOpen: list.openGroup !== null
 
     readonly property var runs: list.source.runs || []
     // ONE row per repo: five green workflows of the same repo were five rows saying one thing.
@@ -39,7 +46,7 @@ ColumnLayout {
                     repo: r.repo,
                     state: r.state,
                     created: r.created,
-                    url: r.url,
+                    lead: r,
                     runs: []
                 });
             }
@@ -47,12 +54,12 @@ ColumnLayout {
             g.runs.push(r);
             if (rank[r.state] < rank[g.state]) {
                 g.state = r.state;
-                g.url = r.url; // a click lands on what is wrong, not on what is newest
+                g.lead = r; // the row tells what is wrong, not what is newest
             }
         }
         return out;
     }
-    readonly property int rowH: 44
+    readonly property int rowH: 62
     readonly property int fits: Math.max(1, Math.floor((list.height - 34) / list.rowH))
 
     spacing: 0
@@ -78,7 +85,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.preferredHeight: 34
         spacing: 18
-        visible: list.source.ok && list.runs.length > 0
+        visible: list.source.ok && list.runs.length > 0 && !list.detailOpen
 
         Repeater {
             model: ["failure", "running", "queued", "success"]
@@ -108,7 +115,7 @@ ColumnLayout {
 
     // ── The rows ──
     Repeater {
-        model: list.source.ok ? list.groups.slice(0, list.fits) : []
+        model: list.source.ok && !list.detailOpen ? list.groups.slice(0, list.fits) : []
 
         delegate: Item {
             id: row
@@ -165,6 +172,15 @@ ColumnLayout {
                         font.bold: true
                         elide: Text.ElideRight
                     }
+                    // What triggered the run that leads the row: the commit or PR title.
+                    Text {
+                        Layout.fillWidth: true
+                        text: row.modelData.lead.title || ""
+                        color: Theme.colSubtext
+                        font.family: Theme.uiFont
+                        font.pixelSize: 13
+                        elide: Text.ElideRight
+                    }
                     // Each workflow as a tinted name, so the one that broke is found without a click.
                     Item {
                         Layout.fillWidth: true
@@ -176,7 +192,7 @@ ColumnLayout {
                                 model: row.modelData.runs
                                 delegate: Text {
                                     required property var modelData
-                                    text: modelData.name + (modelData.ref && ["main", "master", "nixos"].indexOf(modelData.ref) < 0 ? " @" + modelData.ref : "")
+                                    text: modelData.name + (modelData.ref && modelData.ref !== modelData.name && ["main", "master", "nixos"].indexOf(modelData.ref) < 0 ? " @" + modelData.ref : "")
                                     color: modelData.state === "success" ? Theme.colDim : list.stateColor(modelData.state)
                                     font.family: Theme.uiFont
                                     font.pixelSize: 12
@@ -197,9 +213,25 @@ ColumnLayout {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: Qt.openUrlExternally(row.modelData.url)
+                onClicked: list.openRepo = row.modelData.repo
             }
         }
+    }
+
+    // ── The card of one repo, in place of the list ──
+    CiDetail {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        visible: list.detailOpen
+        group: list.openGroup
+        label: list.openGroup ? list.shortRepo(list.openGroup.repo) : ""
+        onBack: list.openRepo = ""
+    }
+    // An open card closes itself 20 s after the pointer leaves, so the rotation never stays parked.
+    Timer {
+        interval: 20000
+        running: list.detailOpen && !list.held
+        onTriggered: list.openRepo = ""
     }
 
     // ── Nothing to list: say why, in the band's own quiet voice ──
@@ -216,5 +248,6 @@ ColumnLayout {
 
     Item {
         Layout.fillHeight: true
+        visible: !list.detailOpen
     }
 }

@@ -39,7 +39,7 @@ github() {
 # ===== GitLab (git.sup): only behind the FAI VPN, read_api token from sops =====
 gitlab() {
   if [ ! -r "$GITLAB_TOKEN_FILE" ]; then
-    jq -n '{ok: false, error: "no-token", runs: [], runners: null}'
+    jq -n '{ok: false, error: "no-token", runs: []}'
     return
   fi
   local token projects
@@ -47,18 +47,20 @@ gitlab() {
   api() { curl -sS -m 8 --fail -H "PRIVATE-TOKEN: $token" "$GITLAB_URL/api/v4/$1"; }
   # Off the VPN the name still resolves but nothing answers: one short probe, not a timeout per project.
   if ! curl -s -m 4 -o /dev/null "$GITLAB_URL/api/v4/version"; then
-    jq -n '{ok: false, error: "unreachable", runs: [], runners: null}'
+    jq -n '{ok: false, error: "unreachable", runs: []}'
     return
   fi
   if ! projects="$(api "projects?membership=true&simple=true&per_page=100&last_activity_after=$since" 2>/dev/null)"; then
-    jq -n '{ok: false, error: "auth", runs: [], runners: null}'
+    jq -n '{ok: false, error: "auth", runs: []}'
     return
   fi
-  local runs runners id path
+  local runs id path
   runs="$(jq -r '.[] | "\(.id) \(.path_with_namespace)"' <<<"$projects" | while read -r id path; do
     api "projects/$id/pipelines?per_page=30&updated_after=$since" 2>/dev/null |
       jq --arg repo "$path" 'group_by(.ref) | map(max_by(.created_at))
-        | map({repo: $repo, name: "pipeline", ref: .ref, event: .source, created: .created_at,
+        | map({repo: $repo, ref: .ref, event: .source, created: .created_at,
+               # A merge request pipeline runs on refs/merge-requests/N/head: GitLab calls it !N.
+               name: (.ref | if test("^refs/merge-requests/[0-9]+/head$") then "!" + split("/")[2] else . end),
                url: .web_url, status: .status})' || echo '[]'
   done | jq -s 'add // [] | map(. + {state: (
       if .status == "running" then "running"
@@ -68,11 +70,8 @@ gitlab() {
       elif .status == "failed" then "failure"
       elif .status == "canceled" then "cancelled"
       else "skipped" end)}) | map(del(.status)) | sort_by(.created) | reverse')"
-  # The runners this token can see; null when the API refuses, which is not the same as "0 online".
-  runners="$(api 'runners?per_page=100' 2>/dev/null |
-    jq '{online: map(select(.status == "online")) | length, total: length}' 2>/dev/null || echo null)"
-  jq -n --argjson runs "$runs" --argjson runners "${runners:-null}" \
-    '{ok: true, error: "", runs: $runs, runners: $runners}'
+  # No runner health here: the FAI runner is instance-wide, and a read_api token only sees its own.
+  jq -n --argjson runs "$runs" '{ok: true, error: "", runs: $runs}'
 }
 
 jq -n --arg now "$(date -u +%FT%TZ)" --argjson gh "$(github)" --argjson gl "$(gitlab)" \

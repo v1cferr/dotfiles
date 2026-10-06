@@ -18,8 +18,7 @@ Singleton {
     property var gitlab: ({
             ok: false,
             error: "loading",
-            runs: [],
-            runners: null
+            runs: []
         })
     property bool loaded: false
     // Ticks the "3 min ago" labels; the feed itself is far slower than this.

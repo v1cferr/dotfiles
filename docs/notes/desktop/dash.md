@@ -131,3 +131,49 @@ and kept in `~/.cache/ci-status/`, and a failed one serves that copy marked `sta
 `offline · 2 h` badge in peach on the page, so old data never passes for live. The page only
 leaves the rotation when the forge has never answered at all. A missing or refused token stays in the rotation with a line that says which, because
 that one is mine to fix.
+
+## The FAI pipelines without the VPN: a pipeline hook through the tunnel
+
+The API is pull and lives behind the VPN, so the band gets the FAI pipelines PUSHED instead: each
+GitLab project sends its **Pipeline Hook** to `https://ci.v1cferr.dev/hooks/gitlab`. The workstation
+reaches the internet like any server, so nothing on it changes beyond the per-project webhook,
+which is GitLab configuration and not the machine's.
+
+```text
+git.sup (FAI) --Pipeline Hook--> ci.v1cferr.dev (Cloudflare edge, Access: service token)
+                                      |  tunnel, outbound from here
+                                      v
+                                 127.0.0.1:9123 webhook (checks X-Gitlab-Token)
+                                      |  ci-webhook-store: payload -> the band's run schema
+                                      v
+                                 /var/lib/ci-webhook/gitlab/<repo>__<ref>.json
+                                      ^  read by ci-status-json when the API does not answer
+```
+
+**Two gates, one per layer.** At the edge, the `ci` hostname has an Access app whose only policy
+is a SERVICE TOKEN (`gitlab-webhook`), and the GitLab webhook carries its `CF-Access-Client-Id` and
+`CF-Access-Client-Secret` as custom headers. Behind it, the receiver only runs the store when
+`X-Gitlab-Token` matches `fai_gitlab_webhook_token`. That token reaches the receiver through
+`LoadCredential` and webhook's `credential` template function, so it is never in the store, and a
+second rule demands a non-empty header, because `credential` yields "" when the file is missing.
+The template uses Go's backtick strings on purpose: `builtins.toJSON` escapes a quote to `\"`,
+and the template parser then refuses the whole file (caught by the end-to-end test below).
+
+**The schema is the API's.** `ci-webhook-store` (`dash/scripts/`) maps the hook payload onto the
+same run object `ci-status.sh` prints (merge request pipelines become `!N` there too, the failed
+build gives `job › stage · reason`), keyed by repo and ref. Hooks can arrive out of order, so an
+OLDER pipeline id never overwrites a newer one. Its files are 0644 in a 0755 `StateDirectory`,
+because `ci-status-json` runs as me.
+
+**Which source wins.** With the VPN up the API is the truth (`via: api`). Without it, the hook
+copy is served live (`via: webhook`, a dim badge on the page). Only when neither has anything does
+the stale cache answer, badged `offline`. The receiver is pure push, so it only knows pipelines
+that ran AFTER the webhook was configured; the API remains the backfill.
+
+**Self-activating.** `ci-webhook.nix` is inert until `fai_gitlab_webhook_token` exists in sops, and
+the host's `ci` ingress entry follows `services.webhook.enable`, so the tunnel never maps the name
+to a closed port.
+
+Tested end to end on 06/10/2026 with the real binary and hook file (webhook 2.8.3): right token
+200 and a file in the run schema, wrong, empty or missing token 403, and the token absent from
+the verbose log.

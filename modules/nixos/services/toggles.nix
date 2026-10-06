@@ -6,6 +6,7 @@
   options.my.services = lib.genAttrs [
     "caddy"
     "tunnel"
+    "ci-webhook"
     "jellyfin"
     "immich"
     "ollama"

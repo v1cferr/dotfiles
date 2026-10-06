@@ -6,7 +6,7 @@
 #   state = running|queued|success|failure|cancelled|skipped, failure = {job, step} or null
 # A source that fails reports {ok:false, error} and never takes the other one down with it; when it
 # has answered before, its last good picture is served instead, marked stale (docs: dash.md).
-# GITLAB_URL and GITLAB_TOKEN_FILE come from runtimeEnv (quickshell.nix).
+# GITLAB_URL, GITLAB_TOKEN_FILE and WEBHOOK_DIR come from runtimeEnv (quickshell.nix).
 set -uo pipefail
 
 days="${1:-7}"
@@ -67,8 +67,15 @@ gitlab() {
   token="$(<"$GITLAB_TOKEN_FILE")"
   api() { curl -sS -m 8 --fail -H "PRIVATE-TOKEN: $token" "$GITLAB_URL/api/v4/$1"; }
   # Off the VPN the name still resolves but nothing answers: one short probe, not a timeout per project.
+  # Then the pipeline hook's copy (ci-webhook-store) is the source: live, just pushed instead of pulled.
   if ! curl -s -m 4 -o /dev/null "$GITLAB_URL/api/v4/version"; then
-    jq -n '{ok: false, error: "unreachable", runs: []}'
+    local hooked=("$WEBHOOK_DIR"/*.json) # stays the literal pattern when the folder is empty
+    if [ -e "${hooked[0]}" ]; then
+      jq -s --arg since "$since" '{ok: true, error: "", via: "webhook",
+        runs: (map(select(.created >= $since)) | map(del(.id)) | sort_by(.created) | reverse)}' "${hooked[@]}"
+    else
+      jq -n '{ok: false, error: "unreachable", runs: []}'
+    fi
     return
   fi
   if ! projects="$(api "projects?membership=true&simple=true&per_page=100&last_activity_after=$since" 2>/dev/null)"; then
@@ -107,7 +114,7 @@ gitlab() {
       elif .status == "canceled" then "cancelled"
       else "skipped" end)}) | map(del(.status)) | sort_by(.created) | reverse')"
   # No runner health here: the FAI runner is instance-wide, and a read_api token only sees its own.
-  jq -n --argjson runs "$runs" '{ok: true, error: "", runs: $runs}'
+  jq -n --argjson runs "$runs" '{ok: true, error: "", via: "api", runs: $runs}'
 }
 
 # A good answer is stamped and kept; a failed one falls back to the last kept one, marked stale.

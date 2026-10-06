@@ -103,6 +103,14 @@ ColumnLayout {
         Item {
             Layout.fillWidth: true
         }
+        // Fed by the pipeline hook instead of the API: live, but only what GitLab has pushed so far.
+        Text {
+            visible: list.source.via === "webhook" && list.source.stale !== true
+            text: "󱂛  webhook"
+            color: Theme.colDim
+            font.family: Theme.uiFont
+            font.pixelSize: 13
+        }
         // A served-from-cache page says so, and how old it is: stale must never pass for live.
         Text {
             visible: list.source.stale === true

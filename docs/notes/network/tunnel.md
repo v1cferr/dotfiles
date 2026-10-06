@@ -104,6 +104,9 @@ in the dashboard or through the API.
 | MCP server | `basic-memory-general` at `https://memory.v1cferr.dev/mcp`, bearer auth carrying the token's two `cf-access-client-*` headers. Its own Access app (`df5f0dab-...`, type `mcp`) holds `only me (GitHub)`, without which the server is hidden from me in the portal |
 | MCP portal | `mcp` at `mcp.v1cferr.dev`, managed OAuth (the default on a new portal), `code_mode: off` (a client could otherwise opt in through the URL; ChatGPT does not need it). Its Access app (`70ae5647-...`) holds ONLY `only me (GitHub)` |
 | Tool allowlist | `default_disabled: true`, then only the eleven tools below |
+| DNS (ci) | PENDING: `ci.v1cferr.dev` through `tunnel route dns basic-memory ci.v1cferr.dev`, AFTER its Access app |
+| Access app (ci) | PENDING: self-hosted on `ci.v1cferr.dev`, ONLY a `Service Auth` policy with the service token `gitlab-webhook` (no human login: nothing there is for a browser) |
+| Service token | PENDING: `gitlab-webhook`, sent by each FAI GitLab project's Pipeline Hook as custom headers ([dash](../desktop/dash.md)) |
 
 What the checks returned on 26/09/2026, with no credential: the portal answers 401 with a
 `WWW-Authenticate` pointing at its protected-resource metadata, and publishes an authorization

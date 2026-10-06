@@ -78,6 +78,7 @@ let
     runtimeEnv = {
       GITLAB_URL = "https://git.sup.fai.ufscar.br";
       GITLAB_TOKEN_FILE = "/run/secrets/fai_gitlab_token";
+      WEBHOOK_DIR = "/var/lib/ci-webhook/gitlab"; # what the pipeline hook stores (modules/nixos/services/ci-webhook.nix)
     };
     text = builtins.readFile ./quickshell/dash/scripts/ci-status.sh; # bash in its own file = shellcheck at build time
   };

@@ -1,11 +1,12 @@
 # THE PANEL: which optional services and subdomains THIS machine turns on. Edit and rebuild.
 # The keys come from modules/nixos/services/toggles.nix; the reach rules from modules/nixos/network/ingress.nix.
-{ config, ... }:
+{ config, lib, ... }:
 
 {
   my.services = {
     caddy = true; # the *.v1cferr.dev reverse proxy (inert until the secrets exist)
     tunnel = true; # the Cloudflare Tunnel (inert until `my.net.tunnel.id` and its credentials exist)
+    ci-webhook = true; # the FAI GitLab pipeline hook for the glance band (inert until its secret exists)
     jellyfin = true; # the media server (/srv/media)
     immich = true; # the photo library, a self-hosted Google Photos (/srv/photos)
     ollama = true; # local AI (the Duolingo solver)
@@ -105,6 +106,14 @@
       # 403 and the basic_auth to `@externo`, so under `lan` the gate answers first and the
       # hashes would be dead config (rule 16).
       comment = "CreditRadar (V1C-76), my credit position. NO auth of its own and it holds a CPF: `lan` is the only protection.";
+    };
+  }
+  # Only while the receiver exists, so the tunnel never maps a name to a closed port.
+  // lib.optionalAttrs config.services.webhook.enable {
+    ci = {
+      upstream = config.services.webhook.port;
+      expose = "tunnel";
+      comment = "The FAI GitLab's Pipeline Hook (glance band). Access (service token `gitlab-webhook`) in front, X-Gitlab-Token behind.";
     };
   };
 }

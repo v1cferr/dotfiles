@@ -1,5 +1,5 @@
 // The GLANCE band: the top 30% of a STANDING monitor, which is the part above eye level where a
-// window would only hurt the neck. What earns a place here, and why: docs/notes/desktop/bar.md
+// window would only hurt the neck. What earns a place here, and why: docs/notes/desktop/dash.md
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -195,23 +195,73 @@ PanelWindow {
                     opacity: 0.4
                 }
 
-                // ── The month, at a size you read from a glance and not from a hover ──
+                // ── The rotating column: the month, then CI. One page at a time, every 15 s ──
                 ColumnLayout {
+                    id: pages
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     spacing: 10
+
+                    // 0 = month, 1 = GitHub Actions, 2 = the FAI GitLab (only while it answers).
+                    readonly property var order: Ci.gitlabShown ? [0, 1, 2] : [0, 1]
+                    readonly property var titles: [(dash.host.monthNames[dash.host.calTodayM - 1] || "").toUpperCase() + "  " + dash.host.calYear, "GITHUB  ACTIONS", "FAI  ·  GITLAB"]
+                    property int page: 0
+                    function next() {
+                        const i = pages.order.indexOf(pages.page);
+                        pages.page = pages.order[(i + 1) % pages.order.length];
+                    }
+                    // A page that leaves the rotation (VPN down) must not stay on screen.
+                    onOrderChanged: if (pages.order.indexOf(pages.page) < 0)
+                        pages.page = 0
+
+                    // The pointer over the column holds the page: reading a row must not be a race.
+                    HoverHandler {
+                        id: pageHover
+                    }
+                    Timer {
+                        interval: 15000
+                        repeat: true
+                        running: dash.visible && !pageHover.hovered
+                        onTriggered: pages.next()
+                    }
 
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 10
 
                         Text {
-                            text: (dash.host.monthNames[dash.host.calTodayM - 1] || "").toUpperCase() + "  " + dash.host.calYear
+                            text: pages.titles[pages.page]
                             color: Theme.colText
                             font.family: Theme.uiFont
                             font.pixelSize: 14
                             font.bold: true
                             font.letterSpacing: 4
+                        }
+                        // Where the rotation is, and a click to jump.
+                        Row {
+                            spacing: 6
+                            Repeater {
+                                model: pages.order
+                                delegate: Rectangle {
+                                    required property int modelData
+                                    readonly property bool on: pages.page === modelData
+                                    width: on ? 18 : 7
+                                    height: 7
+                                    radius: 3.5
+                                    color: on ? Theme.colAccent : Theme.colTrack
+                                    Behavior on width {
+                                        NumberAnimation {
+                                            duration: 200
+                                            easing.type: Easing.OutCubic
+                                        }
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        anchors.margins: -4
+                                        onClicked: pages.page = parent.modelData
+                                    }
+                                }
+                            }
                         }
                         Item {
                             Layout.fillWidth: true
@@ -268,67 +318,112 @@ PanelWindow {
                     // The Grid is sized by the BOX and never by its children, otherwise the cells
                     // reading the Grid's own width close a binding loop on implicitWidth.
                     Item {
-                        id: gridBox
                         Layout.fillWidth: true
                         Layout.fillHeight: true
 
-                        readonly property int cellW: Math.floor(gridBox.width / 7)
-                        readonly property int cellH: Math.floor(gridBox.height / 7)
-
-                        Grid {
-                        id: monthGrid
-                        columns: 7
-                        anchors.fill: parent
-
-                        Repeater {
-                            model: dash.host.monthCells(dash.host.calTodayM)
-
-                            delegate: Item {
-                                id: cell
-                                required property var modelData
-                                readonly property var hol: cell.modelData.holiday
-                                readonly property bool isToday: cell.modelData.today === true
-                                readonly property bool isHead: cell.modelData.head !== undefined
-                                readonly property bool isFilled: (hol && !hol.fac) || (isToday && !hol)
-                                // Days already gone step back, so the eye lands on what is still ahead.
-                                readonly property bool isPast: !isHead && cell.modelData.d > 0 && cell.modelData.d < dash.host.calTodayD
-                                readonly property int side: Math.min(width, height) - 6
-
-                                width: gridBox.cellW
-                                height: gridBox.cellH
-
-                                // TODAY is a ring around the WHOLE cell and never a fourth color: a FILL
-                                // already means a holiday here and an OUTLINE a facultative one.
-                                Rectangle {
-                                    anchors.centerIn: parent
-                                    width: cell.side
-                                    height: cell.side
-                                    radius: 9
-                                    visible: cell.isToday
-                                    color: Theme.colNowBg
-                                    border.width: 1
-                                    border.color: Theme.colAccent
+                        Item {
+                            id: gridBox
+                            anchors.fill: parent
+                            opacity: pages.page === 0 ? 1 : 0
+                            visible: opacity > 0
+                            Behavior on opacity {
+                                NumberAnimation {
+                                    duration: 260
                                 }
-                                Rectangle {
-                                    anchors.centerIn: parent
-                                    width: cell.side - 10
-                                    height: cell.side - 10
-                                    radius: 7
-                                    color: (cell.hol && !cell.hol.fac) ? dash.host.scopeColor(cell.hol.scope) : ((cell.isToday && !cell.hol) ? Theme.colAccent : "transparent")
-                                    border.width: (cell.hol && cell.hol.fac) ? 1 : 0
-                                    border.color: cell.hol ? dash.host.scopeColor(cell.hol.scope) : "transparent"
-                                }
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: cell.isHead ? cell.modelData.head : (cell.modelData.d > 0 ? ("" + cell.modelData.d) : "")
-                                    color: cell.isHead ? Theme.colSubtext : (cell.isFilled ? Theme.colBgSolid : (cell.hol ? dash.host.scopeColor(cell.hol.scope) : (cell.isPast ? Theme.colDim : Theme.colText)))
-                                    font.family: Theme.uiFont
-                                    font.pixelSize: cell.isHead ? 13 : 18
-                                    font.bold: cell.isFilled || cell.isToday || cell.isHead
-                                    font.letterSpacing: cell.isHead ? 2 : 0
+                            }
+
+                            readonly property int cellW: Math.floor(gridBox.width / 7)
+                            readonly property int cellH: Math.floor(gridBox.height / 7)
+
+                            Grid {
+                                id: monthGrid
+                                columns: 7
+                                anchors.fill: parent
+
+                                Repeater {
+                                    model: dash.host.monthCells(dash.host.calTodayM)
+
+                                    delegate: Item {
+                                        id: cell
+                                        required property var modelData
+                                        readonly property var hol: cell.modelData.holiday
+                                        readonly property bool isToday: cell.modelData.today === true
+                                        readonly property bool isHead: cell.modelData.head !== undefined
+                                        readonly property bool isFilled: (hol && !hol.fac) || (isToday && !hol)
+                                        // Days already gone step back, so the eye lands on what is still ahead.
+                                        readonly property bool isPast: !isHead && cell.modelData.d > 0 && cell.modelData.d < dash.host.calTodayD
+                                        readonly property int side: Math.min(width, height) - 6
+
+                                        width: gridBox.cellW
+                                        height: gridBox.cellH
+
+                                        // TODAY is a ring around the WHOLE cell and never a fourth color: a FILL
+                                        // already means a holiday here and an OUTLINE a facultative one.
+                                        Rectangle {
+                                            anchors.centerIn: parent
+                                            width: cell.side
+                                            height: cell.side
+                                            radius: 9
+                                            visible: cell.isToday
+                                            color: Theme.colNowBg
+                                            border.width: 1
+                                            border.color: Theme.colAccent
+                                        }
+                                        Rectangle {
+                                            anchors.centerIn: parent
+                                            width: cell.side - 10
+                                            height: cell.side - 10
+                                            radius: 7
+                                            color: (cell.hol && !cell.hol.fac) ? dash.host.scopeColor(cell.hol.scope) : ((cell.isToday && !cell.hol) ? Theme.colAccent : "transparent")
+                                            border.width: (cell.hol && cell.hol.fac) ? 1 : 0
+                                            border.color: cell.hol ? dash.host.scopeColor(cell.hol.scope) : "transparent"
+                                        }
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: cell.isHead ? cell.modelData.head : (cell.modelData.d > 0 ? ("" + cell.modelData.d) : "")
+                                            color: cell.isHead ? Theme.colSubtext : (cell.isFilled ? Theme.colBgSolid : (cell.hol ? dash.host.scopeColor(cell.hol.scope) : (cell.isPast ? Theme.colDim : Theme.colText)))
+                                            font.family: Theme.uiFont
+                                            font.pixelSize: cell.isHead ? 13 : 18
+                                            font.bold: cell.isFilled || cell.isToday || cell.isHead
+                                            font.letterSpacing: cell.isHead ? 2 : 0
+                                        }
+                                    }
                                 }
                             }
                         }
+
+                        CiList {
+                            anchors.fill: parent
+                            opacity: pages.page === 1 ? 1 : 0
+                            visible: opacity > 0
+                            Behavior on opacity {
+                                NumberAnimation {
+                                    duration: 260
+                                }
+                            }
+                            source: Ci.github
+                            dropOwners: ["v1cferr"]
+                            errorText: ({
+                                    auth: "gh is not logged in",
+                                    loading: "loading…"
+                                })
+                        }
+                        CiList {
+                            anchors.fill: parent
+                            opacity: pages.page === 2 ? 1 : 0
+                            visible: opacity > 0
+                            Behavior on opacity {
+                                NumberAnimation {
+                                    duration: 260
+                                }
+                            }
+                            source: Ci.gitlab
+                            emptyText: "no pipeline in the last 7 days"
+                            errorText: ({
+                                    "no-token": "No GitLab token yet: fai_gitlab_token (read_api) is not in sops.",
+                                    auth: "The GitLab token was refused (expired, or without read_api).",
+                                    loading: "loading…"
+                                })
                         }
                     }
                 }

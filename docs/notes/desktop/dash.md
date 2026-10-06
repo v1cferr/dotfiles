@@ -1,8 +1,9 @@
 # The glance band on the standing monitor
 
 `modules/home/desktop/quickshell/dash/`. Everything that belongs to the band lives in that one
-folder: the panel (`Dashboard.qml`), its pieces (`Tile.qml`, `Horizon.qml`) and the CI script
-(`ci-status.sh`, packaged as `ci-status-json` in `modules/home/desktop/quickshell.nix`). It is the top 30% of the standing secondary, reserved so
+folder: the panel (`Dashboard.qml`), its pieces (`Tile.qml`, `Horizon.qml`, `CiList.qml`), the CI
+feed (`Ci.qml`) and the script behind it (`ci-status.sh`, packaged as `ci-status-json` in
+`modules/home/desktop/quickshell.nix`). It is the top 30% of the standing secondary, reserved so
 that no window lands in it.
 
 The band is a part of the Quickshell tree and not a Nix module of its own on purpose: the QML has to
@@ -73,3 +74,41 @@ year before when it lands on a Friday.
 **`host` is NOT a required property, and that is not sloppiness.** Quickshell's `Variants` creates
 the delegate with `modelData` as the only initial property, so a SECOND required property fails the
 creation with `failed to create variant with object` and the layer never appears at all.
+
+## The CI pages: the right column rotates
+
+The month shares its column with two CI pages, one at a time: **month, GitHub Actions, the FAI
+GitLab**, every 15 s, with dots beside the title that say where the rotation is and jump on a click.
+The pointer over the column HOLDS the page, because reading a row must not be a race against the
+timer. The clock and the vitals never rotate: they are what the band is for.
+
+**One feed, one schema.** `ci-status.sh` (built as `ci-status-json`, so shellcheck runs at build
+time, rule 7) asks both forges and prints ONE JSON in which a run is `{repo, name, ref, state,
+event, created, url}` and `state` is one of six words. The QML never learns that GitHub says
+`completed/failure` and GitLab says `failed`. A source that fails reports `{ok: false, error}` and
+never hides the other one. `Ci.qml` is a singleton, so it polls once whatever the number of
+screens: every minute while something runs, every three otherwise, which is about 15 API calls a
+poll and far from GitHub's 5000 an hour.
+
+**What counts as "recent".** Repos pushed in the last 7 days are the candidates, and from each one
+the latest run of every workflow created in that window. Dependabot's update jobs (event `dynamic`)
+are dropped: they are bookkeeping, not CI.
+
+**One row per repo.** The first version had a row per workflow, and `dotfiles` filled five rows
+saying one thing. A row now wears the WORST state of its workflows (failure, running, queued,
+cancelled, skipped, success, in that order), lists each workflow tinted by its own state so the
+broken one is found without a click, and a click opens the run that is wrong, not the newest one.
+Only a running glyph breathes, so motion itself means "still going".
+
+**GitHub** is `gh`'s own login, the same token git already uses, so there is no second credential.
+It covers every repo the account can see, including the ones where it is a collaborator.
+
+**The FAI forge is GitLab, and it is only reachable on the VPN.** The FAI repos on GitHub run no
+Actions; the pipelines live on `git.sup.fai.ufscar.br`, the GitLab CE on the FAI workstation
+(which replaced Forgejo on 05/10/2026), behind its Caddy. The API answers this machine directly
+over the VPN, so the script talks to it over HTTPS and never through `ssh workstation`. It reads
+a `read_api` token, `fai_gitlab_token`, which is user-readable in `/run/secrets` because the
+script runs as the quickshell user. Off the VPN the name still resolves, so one 4 s probe decides
+it, instead of a timeout per project, and the page LEAVES the rotation rather than showing an error
+every 15 s. A missing or refused token stays in the rotation with a line that says which, because
+that one is mine to fix.

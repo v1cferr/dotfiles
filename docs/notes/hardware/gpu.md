@@ -44,11 +44,10 @@ MESA is NOT covered by that rule, and this is measured, not a guess: `libgbm` is
 (a stub) and `hardware.graphics.package` exists precisely to change Mesa's global version. Tested:
 `unstable.mesa`'s ICD plus the system's loader gave an Arc B580 with `Mesa 26.1.6`, with no error.
 
-It is APPLIED since 06/10/2026, with `package32 = pkgs.unstable.pkgsi686Linux.mesa` alongside, IN
-THAT ORDER. Before, it was not worth it: nixpkgs backports the point release into the release
-(mesa 26.1.5 vs 26.1.6). What tipped it was a MINOR gap (26.1.8 stable vs 26.2.4 unstable). The
-kernel and linux-firmware stay IDENTICAL in both channels, so for the kernel the lever is still
-`linuxPackages_latest`, from stable itself; see `modules/nixos/core/boot.nix`.
+If it is ever worth it, that is where it goes, with `package32 = pkgs.unstable.pkgsi686Linux.mesa`,
+IN THAT ORDER. Today it is not worth it: nixpkgs backports the point release into the release
+(mesa 26.1.5 vs 26.1.6, and the kernel and linux-firmware are IDENTICAL in both channels). For the
+kernel the lever is `linuxPackages_latest`, from stable itself; see `modules/nixos/core/boot.nix`.
 
 ## `iris` is broken for shader workloads
 

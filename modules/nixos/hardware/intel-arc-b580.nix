@@ -6,10 +6,6 @@
   hardware.graphics.enable = true; # OpenGL/Vulkan (formerly hardware.opengl)
   hardware.graphics.enable32Bit = true; # 32-bit libs for Wine/Proton (Bottles/WoW)
 
-  # MESA FROM UNSTABLE (26.2 vs stable's 26.1): the measured exception, safe unlike extraPackages.
-  hardware.graphics.package = pkgs.unstable.mesa;
-  hardware.graphics.package32 = pkgs.unstable.pkgsi686Linux.mesa;
-
   # X (LightDM) uses modesetting/KMS; Wayland/Hyprland goes straight to KMS.
   services.xserver.videoDrivers = [ "modesetting" ];
   boot.initrd.kernelModules = [ "xe" ]; # KMS early, so the screen comes up smooth, with no black screen

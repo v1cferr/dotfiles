@@ -89,6 +89,12 @@ in
         owner = "v1cferr";
         mode = "0400";
       }; # user-readable: the `claude` launcher reads it to reach the Stitch MCP
+    }
+    // lib.optionalAttrs (builtins.elem "fai_gitlab_token" sopsKeys) {
+      fai_gitlab_token = {
+        owner = "v1cferr";
+        mode = "0400";
+      }; # user-readable: read_api only, for the glance band's CI page (ci-status-json)
     };
 
   environment.systemPackages = [ sync-secrets ];

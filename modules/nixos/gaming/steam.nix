@@ -12,4 +12,7 @@
 
   # Feral GameMode: the performance governor plus I/O priority, through `gamemoderun %command%`.
   programs.gamemode.enable = true;
+
+  # NT sync primitives in the kernel: Proton 11/GE pick up /dev/ntsync on their own (beats fsync).
+  boot.kernelModules = [ "ntsync" ];
 }

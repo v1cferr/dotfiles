@@ -3,6 +3,6 @@
 
 {
   imports = [
-    ./steam.nix # the Steam client plus Proton-GE plus gamemode (Remote Play/LAN with the firewall)
+    ./steam.nix # the Steam client plus Proton-GE plus gamemode plus ntsync (Remote Play/LAN with the firewall)
   ];
 }

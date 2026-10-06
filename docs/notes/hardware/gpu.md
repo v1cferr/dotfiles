@@ -45,7 +45,11 @@ MESA is NOT covered by that rule, and this is measured, not a guess: `libgbm` is
 `unstable.mesa`'s ICD plus the system's loader gave an Arc B580 with `Mesa 26.1.6`, with no error.
 
 If it is ever worth it, that is where it goes, with `package32 = pkgs.unstable.pkgsi686Linux.mesa`,
-IN THAT ORDER. Today it is not worth it: nixpkgs backports the point release into the release
+IN THAT ORDER, BUT ONLY WHILE BOTH CHANNELS SHARE A GLIBC. Tried and reverted on 06/10/2026: unstable
+Mesa 26.2.4 is built against glibc 2.44 and the system runs 2.42, so `libgallium` (OpenGL/EGL, iris)
+fails with `GLIBC_2.43 not found` in every stable app and `eglInitialize failed`, a compositor that
+would not start after a reboot. Vulkan (`libvulkan_intel`) still loaded, which hides it. Check first:
+`nix eval .#nixosConfigurations.<host>.pkgs.unstable.glibc.version` against `pkgs.glibc.version`. Today it is not worth it: nixpkgs backports the point release into the release
 (mesa 26.1.5 vs 26.1.6, and the kernel and linux-firmware are IDENTICAL in both channels). For the
 kernel the lever is `linuxPackages_latest`, from stable itself; see `modules/nixos/core/boot.nix`.
 

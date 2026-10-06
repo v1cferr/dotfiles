@@ -96,6 +96,14 @@ ColumnLayout {
         Item {
             Layout.fillWidth: true
         }
+        // A served-from-cache page says so, and how old it is: stale must never pass for live.
+        Text {
+            visible: list.source.stale === true
+            text: "󰖪  offline · " + Ci.ago(list.source.asOf)
+            color: Theme.colPeach
+            font.family: Theme.uiFont
+            font.pixelSize: 13
+        }
     }
 
     // ── The rows ──

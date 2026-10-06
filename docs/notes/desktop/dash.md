@@ -111,6 +111,10 @@ Actions; the pipelines live on `git.sup.fai.ufscar.br`, the GitLab CE on the FAI
 over the VPN, so the script talks to it over HTTPS and never through `ssh workstation`. It reads
 a `read_api` token, `fai_gitlab_token`, which is user-readable in `/run/secrets` because the
 script runs as the quickshell user. Off the VPN the name still resolves, so one 4 s probe decides
-it, instead of a timeout per project, and the page LEAVES the rotation rather than showing an error
-every 15 s. A missing or refused token stays in the rotation with a line that says which, because
+it, instead of a timeout per project.
+
+**Off the VPN it shows the last good picture.** Every good answer of a source is stamped (`asOf`)
+and kept in `~/.cache/ci-status/`, and a failed one serves that copy marked `stale`, with an
+`offline · 2 h` badge in peach on the page, so old data never passes for live. The page only
+leaves the rotation when the forge has never answered at all. A missing or refused token stays in the rotation with a line that says which, because
 that one is mine to fix.

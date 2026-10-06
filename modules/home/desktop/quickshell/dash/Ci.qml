@@ -24,8 +24,9 @@ Singleton {
     // Ticks the "3 min ago" labels; the feed itself is far slower than this.
     property date now: new Date()
 
-    // Off the VPN the FAI page leaves the rotation instead of showing an error every 15 s.
-    readonly property bool gitlabShown: root.loaded && root.gitlab.error !== "unreachable"
+    // Off the VPN the FAI page shows its last good picture (stale); it only leaves the rotation when
+    // there is none yet, instead of showing an error every 15 s.
+    readonly property bool gitlabShown: root.loaded && (root.gitlab.ok || root.gitlab.error !== "unreachable")
     readonly property bool anyRunning: [].concat(root.github.runs || [], root.gitlab.runs || []).some(r => r.state === "running" || r.state === "queued")
 
     function parse(text) {

@@ -70,7 +70,7 @@ own cap, because the Arc publishes no busy percentage, and NET is download again
 
 **No new data.** Every number is already collected in `Bar.qml` for the bar and its popovers, so
 the component takes that Scope as `host` and reads it. The month is `monthCells()`, the same
-function the year popover renders, at 17 px instead of 9.
+function the year popover renders, at 18 px instead of 9, with the days already gone dimmed so the eye lands on what is ahead.
 
 **The horizon.** The panel's bottom edge is the CPU of the last 2 minutes, in `dash/Horizon.qml`.
 It divides the glance zone from the work zone with the one signal worth catching out of the corner

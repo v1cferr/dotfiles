@@ -209,7 +209,7 @@ PanelWindow {
                             text: (dash.host.monthNames[dash.host.calTodayM - 1] || "").toUpperCase() + "  " + dash.host.calYear
                             color: Theme.colText
                             font.family: Theme.uiFont
-                            font.pixelSize: 12
+                            font.pixelSize: 14
                             font.bold: true
                             font.letterSpacing: 4
                         }
@@ -290,6 +290,9 @@ PanelWindow {
                                 readonly property bool isToday: cell.modelData.today === true
                                 readonly property bool isHead: cell.modelData.head !== undefined
                                 readonly property bool isFilled: (hol && !hol.fac) || (isToday && !hol)
+                                // Days already gone step back, so the eye lands on what is still ahead.
+                                readonly property bool isPast: !isHead && cell.modelData.d > 0 && cell.modelData.d < dash.host.calTodayD
+                                readonly property int side: Math.min(width, height) - 6
 
                                 width: gridBox.cellW
                                 height: gridBox.cellH
@@ -297,8 +300,9 @@ PanelWindow {
                                 // TODAY is a ring around the WHOLE cell and never a fourth color: a FILL
                                 // already means a holiday here and an OUTLINE a facultative one.
                                 Rectangle {
-                                    anchors.fill: parent
-                                    anchors.margins: 2
+                                    anchors.centerIn: parent
+                                    width: cell.side
+                                    height: cell.side
                                     radius: 9
                                     visible: cell.isToday
                                     color: Theme.colNowBg
@@ -307,8 +311,8 @@ PanelWindow {
                                 }
                                 Rectangle {
                                     anchors.centerIn: parent
-                                    width: parent.width - 18
-                                    height: parent.height - 14
+                                    width: cell.side - 10
+                                    height: cell.side - 10
                                     radius: 7
                                     color: (cell.hol && !cell.hol.fac) ? dash.host.scopeColor(cell.hol.scope) : ((cell.isToday && !cell.hol) ? Theme.colAccent : "transparent")
                                     border.width: (cell.hol && cell.hol.fac) ? 1 : 0
@@ -317,9 +321,9 @@ PanelWindow {
                                 Text {
                                     anchors.centerIn: parent
                                     text: cell.isHead ? cell.modelData.head : (cell.modelData.d > 0 ? ("" + cell.modelData.d) : "")
-                                    color: cell.isHead ? Theme.colDim : (cell.isFilled ? Theme.colBgSolid : (cell.hol ? dash.host.scopeColor(cell.hol.scope) : Theme.colWsInactive))
+                                    color: cell.isHead ? Theme.colSubtext : (cell.isFilled ? Theme.colBgSolid : (cell.hol ? dash.host.scopeColor(cell.hol.scope) : (cell.isPast ? Theme.colDim : Theme.colText)))
                                     font.family: Theme.uiFont
-                                    font.pixelSize: cell.isHead ? 11 : 17
+                                    font.pixelSize: cell.isHead ? 13 : 18
                                     font.bold: cell.isFilled || cell.isToday || cell.isHead
                                     font.letterSpacing: cell.isHead ? 2 : 0
                                 }

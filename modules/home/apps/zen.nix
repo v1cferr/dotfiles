@@ -22,19 +22,25 @@ let
     procps
     rofi
     symlinkJoin
+    wrapFirefox
     writeShellApplication
     ;
 
   palette = config.my.theme.palette; # the single source (modules/home/desktop/palette.nix)
 
   # The policy pins session restore in the package itself: prefs.js and Settings cannot drop the
-  # tabs on a cold start (an update, a logout, the guard below).
-  zen = inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default.override {
-    extraPolicies.Homepage = {
-      StartPage = "previous-session";
-      Locked = true;
-    };
-  };
+  # tabs on a cold start (an update, a logout, the guard below). It goes on the UNWRAPPED build and
+  # is wrapped again, as the flake's own HM module does: Gecko reads the policies.json next to
+  # /proc/self/exe, so `default.override { extraPolicies }` lands in a file nobody loads (measured).
+  zen = import "${inputs.zen-browser}/wrap-zen.nix" wrapFirefox (
+    inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.beta-unwrapped.override
+      {
+        extraPolicies.Homepage = {
+          StartPage = "previous-session";
+          Locked = true;
+        };
+      }
+  ) { icon = "zen-browser"; };
 
   # State and NOT /run: a reboot cannot be the way around the prompt.
   armedFlag = "${config.xdg.stateHome}/zen-guard/armed";

@@ -364,11 +364,18 @@ PanelWindow {
             Horizon {
                 id: horizon
                 Layout.fillWidth: true
-                Layout.preferredHeight: 62
+                Layout.preferredHeight: 84
                 series: dash.host.cpuHist
                 window: dash.host.histWindow
                 period: dash.host.sysInterval
-                caption: "CPU · 2 MIN"
+                // The ceiling follows the window's peak, in steps of 10: on a fixed 0-100 an idle
+                // desktop at 8% drew a flat line. The caption says the scale, so a tall bar never lies.
+                scaleTop: {
+                    const v = (dash.host.cpuHist || []).filter(x => !isNaN(x));
+                    const peak = v.length ? Math.max.apply(null, v) : 0;
+                    return Math.min(100, Math.max(20, Math.ceil(peak * 1.25 / 10) * 10));
+                }
+                caption: "CPU · 2 MIN · " + scaleTop + "%"
                 opacity: 0
 
                 // A beat behind the card, so the reading arrives after the time and not with it.

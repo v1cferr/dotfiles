@@ -79,7 +79,11 @@ of an eye, instead of with a decorative rule. It is its OWN component and not th
 none of that should follow the widget into the popovers, where a flat bar is the right answer.
 
 It carries a `CPU · 2 MIN` caption because the first person to see it read the shape as audio. A
-graph with no label invites the wrong guess, and the label costs 10 px of dim text.
+graph with no label invites the wrong guess, and the label costs 12 px of text.
+
+**Its ceiling follows the peak.** On a fixed 0 to 100 scale an idle desktop at 8% drew a flat line,
+so `scaleTop` is the window's peak plus 25%, rounded up to a step of 10, never under 20. The
+caption carries that ceiling (`CPU · 2 MIN · 40%`), so a tall bar is never read as a busy machine.
 
 **It SCROLLS, it does not morph, and that is the whole difference.** Animating 60 bar heights on
 every sample makes the graph writhe for 220 ms and then sit still, which reads as a stutter even

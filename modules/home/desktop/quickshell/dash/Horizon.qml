@@ -90,9 +90,9 @@ Item {
         anchors.left: parent.left
         anchors.top: parent.top
         text: horizon.caption
-        color: Theme.colDim
+        color: Theme.colSubtext
         font.family: Theme.uiFont
-        font.pixelSize: 10
+        font.pixelSize: 12
         font.letterSpacing: 2
     }
 }

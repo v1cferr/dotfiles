@@ -79,7 +79,7 @@ let
       GITLAB_URL = "https://git.sup.fai.ufscar.br";
       GITLAB_TOKEN_FILE = "/run/secrets/fai_gitlab_token";
     };
-    text = builtins.readFile ./quickshell/dash/ci-status.sh; # bash in its own file = shellcheck at build time
+    text = builtins.readFile ./quickshell/dash/scripts/ci-status.sh; # bash in its own file = shellcheck at build time
   };
 
   qsRestart = writeShellApplication {

@@ -1,6 +1,6 @@
 # shellcheck shell=bash
 # ci-status-json: the latest run of every workflow (GitHub) and pipeline ref (the FAI GitLab) that
-# moved in the last DAYS, as ONE JSON document for the glance band (Ci.qml, next to this file).
+# moved in the last DAYS, as ONE JSON document for the glance band (dash/Ci.qml).
 # Both sources share a schema, so the QML never learns two vocabularies:
 #   {repo, name, ref, state, event, created, url}, state = running|queued|success|failure|cancelled|skipped
 # A source that fails reports {ok:false, error} and never takes the other one down with it.

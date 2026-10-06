@@ -2,8 +2,9 @@
 
 `modules/home/desktop/quickshell/dash/`. Everything that belongs to the band lives in that one
 folder: the panel (`Dashboard.qml`), its pieces (`Tile.qml`, `Horizon.qml`, `CiList.qml`), the CI
-feed (`Ci.qml`) and the script behind it (`ci-status.sh`, packaged as `ci-status-json` in
-`modules/home/desktop/quickshell.nix`). It is the top 30% of the standing secondary, reserved so
+feed (`Ci.qml`) and, under `scripts/`, the shell behind it (`ci-status.sh`, packaged as
+`ci-status-json` in `modules/home/desktop/quickshell.nix`). The shell sits in its own subfolder so
+the folder reads as QML views on top and build inputs below. It is the top 30% of the standing secondary, reserved so
 that no window lands in it.
 
 The band is a part of the Quickshell tree and not a Nix module of its own on purpose: the QML has to

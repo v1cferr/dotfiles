@@ -102,6 +102,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [keybinds](desktop/keybinds.md) | every bind, and why the cheatsheet is generated from them |
 | [quickshell](desktop/quickshell.md) | the shell in QML, and the 758 MiB XEmbed bridge |
 | [bar](desktop/bar.md) | the bar and its popovers, the VPN probe, the holiday table |
+| [dash](desktop/dash.md) | the glance band on the standing monitor: vitals, month, CI pages |
 | [lockscreen](desktop/lockscreen.md) | hyprlock and hypridle, and the three hardware lessons |
 | [weather](desktop/weather.md) | one source for the bar and the lock, and the icon-by-regex trap |
 | [theme](desktop/theme.md) | dark mode, Kvantum, the Win11 icons, the palette SSOT |

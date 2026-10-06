@@ -1,5 +1,5 @@
 // The HORIZON: the last 2 minutes of CPU along the band's bottom edge, which is also the line where
-// the work area starts. Why it SCROLLS instead of morphing: docs/notes/desktop/bar.md
+// the work area starts. Why it SCROLLS instead of morphing: docs/notes/desktop/dash.md
 import QtQuick
 import "root:/"
 

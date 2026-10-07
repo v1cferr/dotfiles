@@ -203,3 +203,11 @@ same call now also asks for `hourly` with `forecast_hours=13` and exposes `wHour
 rains, a slow breathing glow while the sun is out, and NOTHING for clouds, fog or night, because
 motion that never stops stops meaning anything. It is a handful of rectangles and no shader, since
 the band already repaints every frame for the horizon.
+
+**The week (in the month grid)** is the band's signature: today and the seven days after it carry
+their own forecast INSIDE their cells, the number lifted to make room for the sky glyph, the max in
+bold and the min dimmed. The month already had those days on screen, so the forecast costs no new
+surface, and the days that pass take their weather with them. A filled cell (today, a holiday)
+inks the forecast in the background color so it stays legible on the fill. The glyph's color
+(`WeatherSky.qml`, shared with today's glyph) says the sky before the glyph is read: yellow sun,
+blue rain, neutral otherwise.

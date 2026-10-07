@@ -378,6 +378,9 @@ PanelWindow {
                                         // Days already gone step back, so the eye lands on what is still ahead.
                                         readonly property bool isPast: !isHead && cell.modelData.d > 0 && cell.modelData.d < dash.host.calTodayD
                                         readonly property int side: Math.min(width, height) - 6
+                                        // The WEEK's weather rides on its own days: today and the six after it.
+                                        readonly property var wx: (isHead || !(cell.modelData.d > 0)) ? null : dash.host.wDaily[dash.host.calYear + "-" + ("0" + dash.host.calTodayM).slice(-2) + "-" + ("0" + cell.modelData.d).slice(-2)] || null
+                                        readonly property color ink: cell.isFilled ? Theme.colBgSolid : Theme.colSubtext
 
                                         width: gridBox.cellW
                                         height: gridBox.cellH
@@ -405,12 +408,39 @@ PanelWindow {
                                         }
                                         Text {
                                             anchors.centerIn: parent
+                                            anchors.verticalCenterOffset: cell.wx ? -11 : 0
                                             text: cell.isHead ? cell.modelData.head : (cell.modelData.d > 0 ? ("" + cell.modelData.d) : "")
                                             color: cell.isHead ? Theme.colSubtext : (cell.isFilled ? Theme.colBgSolid : (cell.hol ? dash.host.scopeColor(cell.hol.scope) : (cell.isPast ? Theme.colDim : Theme.colText)))
                                             font.family: Theme.uiFont
                                             font.pixelSize: cell.isHead ? 13 : 18
                                             font.bold: cell.isFilled || cell.isToday || cell.isHead
                                             font.letterSpacing: cell.isHead ? 2 : 0
+                                        }
+                                        Row {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            anchors.verticalCenterOffset: 13
+                                            visible: !!cell.wx
+                                            spacing: 4
+                                            Text {
+                                                text: cell.wx ? dash.host.weatherIcon(cell.wx.code, true) : ""
+                                                color: cell.isFilled ? Theme.colBgSolid : WeatherSky.color(cell.wx ? cell.wx.code : -1)
+                                                font.family: Theme.uiFont
+                                                font.pixelSize: 14
+                                            }
+                                            Text {
+                                                text: cell.wx ? cell.wx.high + "°" : ""
+                                                color: cell.isFilled ? Theme.colBgSolid : Theme.colText
+                                                font.family: Theme.uiFont
+                                                font.pixelSize: 12
+                                                font.bold: true
+                                            }
+                                            Text {
+                                                text: cell.wx ? cell.wx.low + "°" : ""
+                                                color: cell.ink
+                                                font.family: Theme.uiFont
+                                                font.pixelSize: 11
+                                            }
                                         }
                                     }
                                 }

@@ -22,14 +22,6 @@ ColumnLayout {
     spacing: 6
     visible: now.ready
 
-    // The glyph's color says the sky before the glyph is read: sun, rain, or neither.
-    function skyColor(code) {
-        if (code === 0 || code === 1)
-            return Theme.colYellow;
-        if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95)
-            return Theme.colSky;
-        return Theme.colSubtext;
-    }
     // Canvas wants CSS colors; a QML color would stringify as #AARRGGBB, which CSS reads wrong.
     function css(c, a) {
         return "rgba(" + Math.round(c.r * 255) + "," + Math.round(c.g * 255) + "," + Math.round(c.b * 255) + "," + a + ")";
@@ -55,7 +47,7 @@ ColumnLayout {
             Text {
                 anchors.centerIn: parent
                 text: now.ready ? now.host.weatherIcon(now.host.wCode, now.host.isDayNow()) : ""
-                color: now.ready ? now.skyColor(now.host.wCode) : Theme.colSubtext
+                color: now.ready ? WeatherSky.color(now.host.wCode) : Theme.colSubtext
                 font.family: Theme.uiFont
                 font.pixelSize: 54
             }

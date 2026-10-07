@@ -144,6 +144,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [grad-radar](services/grad-radar.md) | the stack at boot, and the monitor chain's order |
 | [credit-radar](services/credit-radar.md) | why the most sensitive service never leaves the house |
 | [docker-prune](services/docker-prune.md) | the 11 GB with no ceiling, and the two options that destroy data |
+| [phone-sync](services/phone-sync.md) | why Syncthing for the phone's photos, and the Revert button that deletes |
 | [libvirt](services/libvirt.md) | the KVM sandbox, and the three wiki steps that are wrong on 26.05 |
 
 ### repo

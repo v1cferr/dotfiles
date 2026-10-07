@@ -20,6 +20,7 @@
     ./docker.nix # the engine's weekly prune (the POLICY only; what turns docker on are the stacks)
     ./sunshine.nix # remote screen streaming (Moonlight); KMS capture, access only through WireGuard
     ./ci-webhook.nix # the FAI GitLab pipeline hook for the glance band (self-activates with the secret)
+    ./phone-sync.nix # Syncthing: the phone's DCIM pulled into ~/Pictures/M51 (receive-only)
     ./libvirt.nix # the libvirt/KVM daemon (virt-manager, the GUI, is in modules/home/apps)
   ];
 }

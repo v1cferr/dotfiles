@@ -20,6 +20,7 @@
     "btrbk"
     "dropbox"
     "drive-mount"
+    "phone-sync"
     "arch-antigo-mount"
     "discord-rpc"
     "basic-memory"

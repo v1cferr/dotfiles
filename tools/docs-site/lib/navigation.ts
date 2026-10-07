@@ -153,6 +153,7 @@ export const navigation: NavItem[] = [
       { title: "grad-radar", doc: "notes/services/grad-radar.md" },
       { title: "credit-radar", doc: "notes/services/credit-radar.md" },
       { title: "Docker prune", doc: "notes/services/docker-prune.md" },
+      { title: "phone-sync", doc: "notes/services/phone-sync.md" },
       { title: "libvirt", doc: "notes/services/libvirt.md" },
     ],
   },

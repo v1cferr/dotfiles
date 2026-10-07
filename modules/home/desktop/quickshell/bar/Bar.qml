@@ -817,8 +817,8 @@ Scope {
     property string wHumidity: ""
     property string wWind: ""
     property var wForecast: []
-    // For the glance band: the whole week keyed by ISO date (today included, for the month grid),
-    // and the next 12 hours (temperature and rain chance, for today's curve).
+    // For the glance band: the whole week keyed by ISO date (today included, for the month grid and
+    // the weather page), and the next 24 hours (temperature, rain chance, sky, day or night).
     property var wDaily: ({})
     property var wHourly: []
     readonly property bool wHas: root.wTemp !== ""
@@ -922,7 +922,9 @@ Scope {
                     low: Math.round(dy.temperature_2m_min[i]),
                     high: Math.round(dy.temperature_2m_max[i]),
                     code: dy.weather_code[i],
-                    precip: dy.precipitation_probability_max[i]
+                    precip: dy.precipitation_probability_max[i],
+                    sunrise: dy.sunrise ? dy.sunrise[i] : "",
+                    sunset: dy.sunset ? dy.sunset[i] : ""
                 };
         root.wDaily = byDate;
 
@@ -931,16 +933,18 @@ Scope {
         if (hr && hr.time)
             for (let i = 0; i < hr.time.length; i++)
                 hours.push({
+                    time: hr.time[i],
                     hour: Number(hr.time[i].slice(11, 13)),
                     temp: hr.temperature_2m[i],
                     precip: hr.precipitation_probability[i],
-                    code: hr.weather_code[i]
+                    code: hr.weather_code[i],
+                    day: hr.is_day ? hr.is_day[i] === 1 : true
                 });
         root.wHourly = hours;
     }
     Process {
         id: weatherProc
-        command: ["curl", "-sS", "-m", "10", "https://api.open-meteo.com/v1/forecast?latitude=" + root.wLat + "&longitude=" + root.wLon + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&hourly=temperature_2m,precipitation_probability,weather_code&forecast_hours=13&timezone=auto&forecast_days=8"]
+        command: ["curl", "-sS", "-m", "10", "https://api.open-meteo.com/v1/forecast?latitude=" + root.wLat + "&longitude=" + root.wLon + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&hourly=temperature_2m,precipitation_probability,weather_code,is_day&forecast_hours=25&timezone=auto&forecast_days=8"]
         stdout: StdioCollector {
             onStreamFinished: root.parseWeather(text)
         }

@@ -165,16 +165,15 @@ The weather is split by TIME, like the rest of the band: what it is now sits wit
 what is coming sits on the calendar, where the days already are. A separate weather card (the
 usual answer, Caelestia's dashboard has one) would have repeated the week the month already shows.
 
-**Today (`WeatherNow.qml`)** fills what was an empty gap under the date: the glyph and the
+**Today (`WeatherNow.qml`)** fills what was an empty gap under the clock: the glyph and the
 temperature in large type, the pt-BR condition, then one line of glyphs (max/min, feels like,
-humidity, wind, rain chance) so it fits without truncating. Under it, the next 12 hours as a curve
-(temperature) over a floor of thin bars (rain chance, drawn only from 10% up), labelled every 3 hours.
-The curve DRAWS IN left to right when the forecast arrives, which reads as "from now on". Canvas
-colors go through `css()`, because a QML color stringifies as `#AARRGGBB` and CSS reads that wrong.
+humidity, wind, rain chance) so it fits without truncating. It used to carry a small 12-hour curve;
+that moved to the weather page, where a chart can be a chart.
 
 **The data is the bar's.** `Bar.qml` already fetched Open-Meteo every 15 minutes for its pill; the
-same call now also asks for `hourly` with `forecast_hours=13` and exposes `wHourly` and `wDaily`
-(keyed by ISO date, today included). No second request, no second source (rule 11).
+same call now also asks for `hourly` (temperature, rain chance, sky and `is_day`, `forecast_hours=25`)
+and the days' `sunrise`/`sunset`, and exposes `wHourly` and `wDaily` (keyed by ISO date, today
+included). No second request, no second source (rule 11).
 
 **The ambient layer (`WeatherAmbient.qml`)** lives behind today's glyph: drops falling while it
 rains, a slow breathing glow while the sun is out, and NOTHING for clouds, fog or night, because
@@ -238,3 +237,34 @@ computes the deltas itself. RAM is `memory.current`, the number `systemctl statu
 
 **The click** opens the site when the service has one, and otherwise a kitty with the live log:
 `journalctl -u` (or `--user-unit`) for units, `docker compose -p <project> logs -f` for stacks.
+
+## The weather page: the week as ranges, the day as one picture
+
+A page of its own in the right column's rotation (month, WEATHER, GitHub, FAI), redone on
+07/10/2026 after the owner found the first curve plain and pointed at MSN's forecast as the bar.
+The research behind it: the modern weather charts (MSN, Apple Weather, the Blue app, meteoblue)
+share three moves, and the page takes all three.
+
+**The color IS the temperature.** `WeatherSky.temp()` maps degrees to the THEME's own hues (blue,
+sky, teal, green, yellow, peach, red, from 8 to 34 °C, São Carlos' range and not the planet's, so a
+19° night and a 31° afternoon look different), interpolated per degree. The chart paints its area
+with a horizontal gradient that has one stop per hour, so the afternoon glows warm and the night
+cools to teal without a legend. The same scale tints the hour labels and the week's bars.
+
+**The week (`WeatherWeek.qml`)** is seven rows: day, sky, rain chance when it is 20% or more, min,
+a bar from min to max on ONE scale for the whole week painted from the min's color to the max's,
+and max. A hot day reads as a long warm bar to the right before a number is read (Apple's move).
+
+**The next 24 hours (`WeatherChart.qml`)**: a ruler every 2 hours (time, sky glyph by day or night,
+temperature in its color), then a smooth hill (Catmull-Rom through the hourly samples, drawn as
+Bezier segments) filled with the temperature gradient and faded toward its base with a
+`destination-in` pass, a crisp crest in the same moving color, the NIGHTS shaded behind it as one
+block each (sunset and sunrise become edges, with their times marked), a "now" line, and a ribbon
+of eight 3-hour blocks with the rain chance, blue only from 10% up. The night shading is ours, MSN
+has none: it is what makes "it cools after 18:12" visible instead of read.
+
+**Two traps, both met.** The reveal animated the `width` of a clip, and a width animation captures
+its target when it starts: the page was still 0 px wide, so it revealed nothing and the chart
+looked broken. It now animates a 0 to 1 `progress` multiplied by the width. And one translucent
+rectangle per night HOUR overlapped at the edges and drew stripes; contiguous night hours are now
+one rectangle.

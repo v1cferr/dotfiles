@@ -231,8 +231,9 @@ PanelWindow {
                     spacing: 10
 
                     // 0 = month, 1 = GitHub Actions, 2 = the FAI GitLab (only while it answers).
-                    readonly property var order: Ci.gitlabShown ? [0, 1, 2] : [0, 1]
-                    readonly property var titles: [(dash.host.monthNames[dash.host.calTodayM - 1] || "").toUpperCase() + "  " + dash.host.calYear, "GITHUB  ACTIONS", "FAI  ·  GITLAB"]
+                    // Page ids are stable (3 = weather was added last); `order` is the rotation.
+                    readonly property var order: Ci.gitlabShown ? [0, 3, 1, 2] : [0, 3, 1]
+                    readonly property var titles: [(dash.host.monthNames[dash.host.calTodayM - 1] || "").toUpperCase() + "  " + dash.host.calYear, "GITHUB  ACTIONS", "FAI  ·  GITLAB", "WEATHER  ·  24 H"]
                     property int page: 0
                     function step(d) {
                         const n = pages.order.length;
@@ -490,6 +491,38 @@ PanelWindow {
                                         }
                                     }
                                 }
+                            }
+                        }
+
+                        // The weather page: the week as ranges, then the next 24 hours as one picture.
+                        ColumnLayout {
+                            anchors.fill: parent
+                            spacing: 18
+                            opacity: pages.page === 3 ? 1 : 0
+                            visible: opacity > 0
+                            Behavior on opacity {
+                                NumberAnimation {
+                                    duration: 260
+                                }
+                            }
+                            transform: Translate {
+                                x: pages.offsetOf(3)
+                                Behavior on x {
+                                    NumberAnimation {
+                                        duration: 420
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+                            }
+                            WeatherWeek {
+                                Layout.fillWidth: true
+                                Layout.topMargin: 6
+                                host: dash.host
+                            }
+                            WeatherChart {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                host: dash.host
                             }
                         }
 

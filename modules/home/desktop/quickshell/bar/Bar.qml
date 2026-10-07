@@ -847,6 +847,7 @@ Scope {
     // pt-BR label degrades to "—". They hold the same numbers as the SSOT, so nothing diverges.
     readonly property string wLat: root.wConf.latitude || "-22.0087"
     readonly property string wLon: root.wConf.longitude || "-47.8909"
+    readonly property string wModel: root.wConf.model || "ecmwf_ifs" // my.weather.model
     // The pt-BR status. An unknown code says so instead of inventing a condition.
     function wmoText(code) {
         const t = root.wConf.conditions;
@@ -944,7 +945,7 @@ Scope {
     }
     Process {
         id: weatherProc
-        command: ["curl", "-sS", "-m", "10", "https://api.open-meteo.com/v1/forecast?latitude=" + root.wLat + "&longitude=" + root.wLon + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&hourly=temperature_2m,precipitation_probability,weather_code,is_day&forecast_hours=25&timezone=auto&forecast_days=8"]
+        command: ["curl", "-sS", "-m", "10", "https://api.open-meteo.com/v1/forecast?latitude=" + root.wLat + "&longitude=" + root.wLon + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&hourly=temperature_2m,precipitation_probability,weather_code,is_day&forecast_hours=25&timezone=auto&forecast_days=8&models=" + root.wModel]
         stdout: StdioCollector {
             onStreamFinished: root.parseWeather(text)
         }

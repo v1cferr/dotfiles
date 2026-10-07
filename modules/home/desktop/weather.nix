@@ -17,6 +17,13 @@ in
       default = "-47.8909";
       description = "The longitude read by the bar and by the lock screen's fetch (São Carlos/SP).";
     };
+    # Pinned, not `best_match`: measured on 07/10/2026, best_match for São Carlos WAS ECMWF IFS (9 km)
+    # hour for hour; pinning keeps it so if Open-Meteo's choice changes, and names the source on screen.
+    model = lib.mkOption {
+      type = lib.types.str;
+      default = "ecmwf_ifs";
+      description = "The Open-Meteo model both the bar and the lock screen ask for (https://open-meteo.com/en/docs).";
+    };
     # The condition TEXT is pt-BR on purpose: it is the product, like the holidays' names, while
     # the chrome around it stays en-US (rule 2). The ICON is NOT here: only the bar draws one, so
     # the code -> glyph mapping lives in Bar.qml and is not duplicated.
@@ -59,6 +66,11 @@ in
   # Data for Quickshell (Bar.qml reads it through FileView), the same path and the same reason as
   # the palette's JSON: this is the ONLY way into a hot-reload tree that Nix cannot template.
   config.home.file.".config/theme/weather.json".text = builtins.toJSON {
-    inherit (cfg) latitude longitude conditions;
+    inherit (cfg)
+      latitude
+      longitude
+      model
+      conditions
+      ;
   };
 }

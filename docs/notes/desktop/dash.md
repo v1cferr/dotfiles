@@ -173,6 +173,12 @@ day: sunrise and sunset, the hours of daylight, and the next rain worth knowing 
 24 hours ("rain likely" from 40%, "a chance of rain" from 20%, otherwise "dry for the next 24 h" in
 green). It answers "when does it get dark" and "will it rain today" without opening a page.
 
+**The model is pinned to ECMWF IFS.** Measured on 07/10/2026: Open-Meteo's `best_match` for São
+Carlos returned the ECMWF IFS 9 km run hour for hour (and its ensemble for the rain chance), with
+GFS, ICON, Météo-France and UKMO up to 2.6 °C apart from it. `my.weather.model = "ecmwf_ifs"` keeps
+that choice if Open-Meteo's ever changes, both the bar and the lock screen ask for it, and the
+weather page names it. Pinning lost no field: current, 25 hourly rain chances, 8 days, the sun.
+
 **The data is the bar's.** `Bar.qml` already fetched Open-Meteo every 15 minutes for its pill; the
 same call now also asks for `hourly` (temperature, rain chance, sky and `is_day`, `forecast_hours=25`)
 and the days' `sunrise`/`sunset`, and exposes `wHourly` and `wDaily` (keyed by ISO date, today

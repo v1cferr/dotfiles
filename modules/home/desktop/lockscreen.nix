@@ -137,7 +137,7 @@ let
   weatherUrl =
     "https://api.open-meteo.com/v1/forecast"
     + "?latitude=${config.my.weather.latitude}&longitude=${config.my.weather.longitude}"
-    + "&current=temperature_2m,weather_code&timezone=auto";
+    + "&current=temperature_2m,weather_code&timezone=auto&models=${config.my.weather.model}";
   # The case arms are GENERATED from the same attrset, so the lock and the bar never drift (rule 16).
   weatherCase = lib.concatStrings (
     lib.mapAttrsToList (

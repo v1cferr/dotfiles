@@ -168,7 +168,10 @@ usual answer, Caelestia's dashboard has one) would have repeated the week the mo
 **Today (`WeatherNow.qml`)** fills what was an empty gap under the clock: the glyph and the
 temperature in large type, the pt-BR condition, then one line of glyphs (max/min, feels like,
 humidity, wind, rain chance) so it fits without truncating. It used to carry a small 12-hour curve;
-that moved to the weather page, where a chart can be a chart.
+that moved to the weather page, where a chart can be a chart. Its place went to ONE line for the
+day: sunrise and sunset, the hours of daylight, and the next rain worth knowing about in the next
+24 hours ("rain likely" from 40%, "a chance of rain" from 20%, otherwise "dry for the next 24 h" in
+green). It answers "when does it get dark" and "will it rain today" without opening a page.
 
 **The data is the bar's.** `Bar.qml` already fetched Open-Meteo every 15 minutes for its pill; the
 same call now also asks for `hourly` (temperature, rain chance, sky and `is_day`, `forecast_hours=25`)

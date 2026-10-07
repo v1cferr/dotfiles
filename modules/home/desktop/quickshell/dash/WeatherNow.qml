@@ -75,4 +75,67 @@ ColumnLayout {
             }
         }
     }
+
+    // ── The day in one line: when it gets dark, how long the light lasts, and the next rain ──
+    RowLayout {
+        Layout.fillWidth: true
+        Layout.topMargin: 10
+        spacing: 22
+        visible: now.ready
+
+        // The next hour worth an umbrella: 40% and up is "likely", 20% and up only "a chance".
+        readonly property var rain: {
+            const hs = now.host ? now.host.wHourly || [] : [];
+            const likely = hs.find(h => (h.precip || 0) >= 40);
+            if (likely)
+                return {
+                    strong: true,
+                    h: likely
+                };
+            const maybe = hs.find(h => (h.precip || 0) >= 20);
+            return maybe ? {
+                strong: false,
+                h: maybe
+            } : null;
+        }
+        function hhmm(iso) {
+            return (iso || "").slice(11, 16);
+        }
+
+        Text {
+            visible: !!now.today && !!now.today.sunrise
+            text: "󰖜 " + parent.hhmm(now.today ? now.today.sunrise : "") + "   󰖛 " + parent.hhmm(now.today ? now.today.sunset : "")
+            color: Theme.colYellow
+            font.family: Theme.uiFont
+            font.pixelSize: 15
+        }
+        Text {
+            visible: !!now.today && !!now.today.sunrise
+            text: {
+                if (!now.today || !now.today.sunrise)
+                    return "";
+                const m = Math.round((new Date(now.today.sunset) - new Date(now.today.sunrise)) / 60000);
+                return Math.floor(m / 60) + "h " + (m % 60) + "m of daylight";
+            }
+            color: Theme.colSubtext
+            font.family: Theme.uiFont
+            font.pixelSize: 15
+        }
+        Item {
+            Layout.fillWidth: true
+        }
+        Text {
+            text: {
+                const r = parent.rain;
+                if (!r)
+                    return "dry for the next 24 h";
+                const when = r.h === (now.host.wHourly || [])[0] ? "now" : "at " + ("0" + r.h.hour).slice(-2) + "h";
+                return "󰖗 " + (r.strong ? "rain likely " : "a chance of rain ") + when + " · " + r.h.precip + "%";
+            }
+            color: parent.rain ? Theme.colSky : Theme.colGreen
+            font.family: Theme.uiFont
+            font.pixelSize: 15
+            font.bold: !!parent.rain && parent.rain.strong
+        }
+    }
 }

@@ -49,8 +49,8 @@ ColumnLayout {
         }
         Text {
             readonly property int bad: strip.all.length - Services.upCount
-            text: bad === 0 ? "all " + strip.all.length + " up" : bad + " of " + strip.all.length + " need a look"
-            color: bad === 0 ? Theme.colGreen : Theme.colPeach
+            text: strip.all.length === 0 ? "no data yet: dash-services-meta has not answered" : (bad === 0 ? "all " + strip.all.length + " up" : bad + " of " + strip.all.length + " need a look")
+            color: strip.all.length === 0 ? Theme.colDim : (bad === 0 ? Theme.colGreen : Theme.colPeach)
             font.family: Theme.uiFont
             font.pixelSize: 13
             font.bold: true

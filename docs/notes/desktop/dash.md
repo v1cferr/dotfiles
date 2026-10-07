@@ -212,8 +212,17 @@ Chosen on 07/10/2026 as "ambient", and every piece of it carries a meaning:
 The bottom of the band shows what this machine RUNS and what each thing costs, three cards a
 page, turning every 10 s like the month column, held under the pointer, stepped by `‹ ›`, the
 dots or the wheel, sliding as one long strip. Trouble sorts first (down, then degraded), then the
-heaviest by CPU and RAM, so a broken service is always on page one, and the header says
-`all 18 up` or `2 of 18 need a look`.
+heaviest, so a broken service is always on page one, and the header says `all 18 up` or
+`2 of 18 need a look`.
+
+**"Heaviest" means RAM by default, and the order holds still.** The first version sorted by the
+instant CPU, and on 07/10/2026 the owner read the strip as alphabetical: it effectively was. At idle
+every service sits at 0.00% of a 16-thread machine (measured: seven services, ten seconds, all
+zero), so the ties fell back to the catalog, which Nix emits sorted by name, and the few non-zero
+readings reshuffled the pages every 3 s. RAM is what actually tells idle services apart (immich
+390 MB against tor 4 MB) and it is steady. A click on `· by RAM ⇅` switches to CPU averaged over
+each service's own 2 minutes, never the instant reading. The rank is recomputed every 30 s and on
+a switch, not on every tick, so a card does not change page under the eye.
 
 **A card, line by line** (`ServiceCard.qml`): a state dot (green up, peach degraded, red down, and
 only trouble breathes), the name, `3/3 containers` or `4/4 units` when it is made of several, the

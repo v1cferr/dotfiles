@@ -19,16 +19,44 @@ Singleton {
     property int cpus: 1
     property real now: Date.now() // the uptime labels' clock, advanced on every read
     property real fetched: 0
+    property bool ranked: false // the first rank waits for the first real numbers
 
-    // What the strip shows: trouble first, then the heaviest. A service that is down or degraded
-    // must never sit on a later page.
-    readonly property var list: {
+    // The ORDER is "most consuming first", by RAM (the default) or by CPU averaged over its 2 minutes.
+    // At idle every service sits near 0.00% CPU and the instant reading is noise, so RAM is the
+    // steady measure; and the order is re-ranked every 30 s, not every 3 s, so the cards do not jump
+    // pages while being read. Trouble (down, degraded) always comes first: docs/notes/desktop/dash.md
+    property string sortBy: "ram"
+    property var order: []
+    function avg(h) {
+        return h && h.length ? h.reduce((a, b) => a + b, 0) / h.length : 0;
+    }
+    function rerank() {
         const rank = {
             down: 0,
             degraded: 1,
             up: 2
         };
-        const out = root.meta.map(s => Object.assign({}, s, root.stats[s.key] || {
+        const st = root.stats;
+        const weight = s => {
+            const x = st[s.key];
+            return !x ? 0 : (root.sortBy === "cpu" ? root.avg(x.hist) : x.mem);
+        };
+        root.order = root.meta.slice().sort((a, b) => (rank[a.state] - rank[b.state]) || (weight(b) - weight(a))).map(s => s.key);
+    }
+    onSortByChanged: root.rerank()
+    onMetaChanged: root.rerank()
+    Timer {
+        interval: 30000
+        running: true
+        repeat: true
+        onTriggered: root.rerank()
+    }
+    readonly property var list: {
+        const byKey = ({});
+        for (const s of root.meta)
+            byKey[s.key] = s;
+        const keys = root.order.filter(k => byKey[k]).concat(root.meta.map(s => s.key).filter(k => root.order.indexOf(k) < 0));
+        return keys.map(k => Object.assign({}, byKey[k], root.stats[k] || {
                 cpu: 0,
                 mem: 0,
                 rd: 0,
@@ -36,8 +64,6 @@ Singleton {
                 tasks: 0,
                 hist: []
             }));
-        out.sort((a, b) => (rank[a.state] - rank[b.state]) || (b.cpu - a.cpu) || (b.mem - a.mem));
-        return out;
     }
     readonly property int upCount: root.meta.filter(s => s.state === "up").length
 
@@ -110,6 +136,10 @@ Singleton {
         }
         root.prev = nextPrev;
         root.stats = stats;
+        if (!root.ranked) {
+            root.ranked = true;
+            root.rerank();
+        }
         root.now = now;
     }
 

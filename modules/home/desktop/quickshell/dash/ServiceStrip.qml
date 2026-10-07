@@ -1,6 +1,6 @@
 // The band's bottom strip: the machine's services, three cards a page, turning every 10 s like the
-// month column, and held while the pointer is over it. Trouble sorts first (Services.list), so a
-// broken service is on page one. The why: docs/notes/desktop/dash.md
+// month column, held under the pointer. Trouble first, then the heaviest by RAM or by CPU (a click
+// on the header switches), so page one is always what matters most. The why: docs/notes/desktop/dash.md
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -54,6 +54,24 @@ ColumnLayout {
             font.family: Theme.uiFont
             font.pixelSize: 13
             font.bold: true
+        }
+        // What the order means, and a click to switch it.
+        Text {
+            text: "· by " + (Services.sortBy === "ram" ? "RAM" : "CPU, 2 min avg") + "  ⇅"
+            color: sortArea.containsMouse ? Theme.colAccent : Theme.colDim
+            font.family: Theme.uiFont
+            font.pixelSize: 13
+            MouseArea {
+                id: sortArea
+                anchors.fill: parent
+                anchors.margins: -4
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    Services.sortBy = Services.sortBy === "ram" ? "cpu" : "ram";
+                    strip.page = 0;
+                }
+            }
         }
         Item {
             Layout.fillWidth: true

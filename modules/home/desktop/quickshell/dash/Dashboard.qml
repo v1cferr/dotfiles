@@ -485,7 +485,7 @@ PanelWindow {
             Horizon {
                 id: horizon
                 Layout.fillWidth: true
-                Layout.preferredHeight: 84
+                Layout.preferredHeight: 104
                 series: dash.host.cpuHist
                 window: dash.host.histWindow
                 period: dash.host.sysInterval
@@ -496,7 +496,8 @@ PanelWindow {
                     const peak = v.length ? Math.max.apply(null, v) : 0;
                     return Math.min(100, Math.max(20, Math.ceil(peak * 1.25 / 10) * 10));
                 }
-                caption: "CPU · 2 MIN · " + scaleTop + "%"
+                caption: "CPU · LAST 2 MIN"
+                nowText: "now " + dash.host.cpuPct + "%"
                 opacity: 0
 
                 // A beat behind the card, so the reading arrives after the time and not with it.

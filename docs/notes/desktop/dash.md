@@ -46,8 +46,12 @@ of an eye, instead of with a decorative rule. It is its OWN component and not th
 `Sparkline`: the band wants a gradient crest, a brighter newest bar and an animated height, and
 none of that should follow the widget into the popovers, where a flat bar is the right answer.
 
-It carries a `CPU · 2 MIN` caption because the first person to see it read the shape as audio. A
-graph with no label invites the wrong guess, and the label costs 12 px of text.
+It explains itself, because the first two readers could not. One read it as audio, and on
+07/10/2026 the owner asked what the moving bars even were: a 10 px caption carrying the scale's
+ceiling (`CPU · 2 MIN · 80%`) was not enough. So it now says what it is on the left
+(`CPU · LAST 2 MIN`), what it reads NOW on the right (`now 4%`, in the newest bar's color), draws
+the ceiling and its half as labelled lines UNDER the bars, and marks the middle of the window as
+`−1 min`. The time marks stay put while the data flows under them.
 
 **Its ceiling follows the peak.** On a fixed 0 to 100 scale an idle desktop at 8% drew a flat line,
 so `scaleTop` is the window's peak plus 25%, rounded up to a step of 10, never under 20. The

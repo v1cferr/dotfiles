@@ -87,7 +87,7 @@ ColumnLayout {
     Item {
         id: curveBox
         Layout.fillWidth: true
-        Layout.preferredHeight: 62
+        Layout.preferredHeight: 56
         visible: now.hours.length > 1
 
         readonly property var temps: now.hours.map(h => h.temp)

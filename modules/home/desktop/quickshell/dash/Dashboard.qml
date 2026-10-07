@@ -121,7 +121,7 @@ PanelWindow {
                     // Today's weather fills what was an empty gap under the date.
                     WeatherNow {
                         Layout.fillWidth: true
-                        Layout.topMargin: 18
+                        Layout.topMargin: 10
                         host: dash.host
                     }
 
@@ -134,7 +134,7 @@ PanelWindow {
                         Layout.fillWidth: true
                         columns: 3
                         columnSpacing: 28
-                        rowSpacing: 26
+                        rowSpacing: 14
 
                         Tile {
                             label: "CPU"

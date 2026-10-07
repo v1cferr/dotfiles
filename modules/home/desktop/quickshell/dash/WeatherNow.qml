@@ -56,13 +56,53 @@ ColumnLayout {
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 2
-            Text {
+            RowLayout {
                 Layout.fillWidth: true
-                text: now.ready ? now.host.wText : ""
-                color: Theme.colText
-                font.family: Theme.uiFont
-                font.pixelSize: 20
-                elide: Text.ElideRight
+                spacing: 12
+                Text {
+                    Layout.fillWidth: true
+                    text: now.ready ? now.host.wText : ""
+                    color: Theme.colText
+                    font.family: Theme.uiFont
+                    font.pixelSize: 20
+                    elide: Text.ElideRight
+                }
+                // An INMET alert in force right now rides on the condition line: no extra height, never missed.
+                Rectangle {
+                    readonly property var al: Inmet.activeNow.length ? Inmet.activeNow[0] : null
+                    readonly property color tone: al ? Inmet.color(al.severity) : Theme.colYellow
+                    visible: !!al
+                    implicitWidth: alertText.implicitWidth + 20
+                    implicitHeight: 24
+                    radius: 12
+                    color: Qt.rgba(tone.r, tone.g, tone.b, 0.2)
+                    border.width: 1
+                    border.color: tone
+                    Text {
+                        id: alertText
+                        anchors.centerIn: parent
+                        text: parent.al ? "󰀦 " + parent.al.event + " · until " + parent.al.until : ""
+                        color: parent.tone
+                        font.family: Theme.uiFont
+                        font.pixelSize: 13
+                        font.bold: true
+                    }
+                    SequentialAnimation on opacity {
+                        running: parent.visible
+                        loops: Animation.Infinite
+                        alwaysRunToEnd: true
+                        NumberAnimation {
+                            to: 0.55
+                            duration: 1400
+                            easing.type: Easing.InOutSine
+                        }
+                        NumberAnimation {
+                            to: 1
+                            duration: 1400
+                            easing.type: Easing.InOutSine
+                        }
+                    }
+                }
             }
             Text {
                 Layout.fillWidth: true

@@ -12,7 +12,8 @@ ColumnLayout {
     readonly property var days: {
         if (!week.host)
             return [];
-        const keys = Object.keys(week.host.wDaily || {}).sort().slice(0, 7);
+        // From TOMORROW: today already has the block under the clock and the start of the 24 h chart.
+        const keys = Object.keys(week.host.wDaily || {}).sort().slice(1, 8);
         return keys.map(k => Object.assign({
                 date: k
             }, week.host.wDaily[k]));
@@ -20,7 +21,7 @@ ColumnLayout {
     readonly property real lo: week.days.length ? Math.min.apply(null, week.days.map(d => d.low)) : 0
     readonly property real hi: week.days.length ? Math.max.apply(null, week.days.map(d => d.high)) : 1
 
-    spacing: 4
+    spacing: 2
 
     Repeater {
         model: week.days
@@ -33,9 +34,9 @@ ColumnLayout {
             spacing: 12
 
             Text {
-                Layout.preferredWidth: 46
-                text: row.index === 0 ? "hoje" : (week.host.dowAbbr[new Date(row.d.date + "T12:00:00").getDay()] || "")
-                color: row.index === 0 ? Theme.colAccent : Theme.colText
+                Layout.preferredWidth: 62
+                text: row.index === 0 ? "amanhã" : (week.host.dowAbbr[new Date(row.d.date + "T12:00:00").getDay()] || "")
+                color: Theme.colText
                 font.family: Theme.uiFont
                 font.pixelSize: 14
                 font.bold: true

@@ -494,7 +494,7 @@ PanelWindow {
                             }
                         }
 
-                        // The weather page: the week as ranges, then the next 24 hours as one picture.
+                        // The weather page (WeatherPage.qml): alerts, the week, INMET's words, the 24 hours.
                         ColumnLayout {
                             anchors.fill: parent
                             spacing: 18
@@ -514,14 +514,10 @@ PanelWindow {
                                     }
                                 }
                             }
-                            WeatherWeek {
-                                Layout.fillWidth: true
-                                Layout.topMargin: 6
-                                host: dash.host
-                            }
-                            WeatherChart {
+                            WeatherPage {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
+                                Layout.topMargin: 6
                                 host: dash.host
                             }
                         }

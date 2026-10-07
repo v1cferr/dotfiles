@@ -286,3 +286,32 @@ its target when it starts: the page was still 0 px wide, so it revealed nothing 
 looked broken. It now animates a 0 to 1 `progress` multiplied by the width. And one translucent
 rectangle per night HOUR overlapped at the edges and drew stripes; contiguous night hours are now
 one rectangle.
+
+## INMET: the official second source, and its alerts
+
+Open-Meteo gives the hourly numbers; INMET (`Inmet.qml`) gives what a forecaster wrote and, above
+all, the ALERTS, the same official warnings Civil Defense acts on (the "Storm - Moderate" MSN
+showed was one of them). Both are polled every 30 minutes, and a failed poll keeps the last answer.
+
+- **Matched by IBGE code, never by name.** `my.weather.ibge = "3548906"`: the alerts list every
+  municipality they cover, and "São Carlos" alone also matches São Carlos/SC (4216008). An alert
+  is ours only when that code is in its `geocodes`.
+- **Where it shows.** An alert in force rides on the condition line of today's block (no extra
+  height), breathing slowly in INMET's severity color (yellow potential danger, orange danger, red
+  great danger, from the theme). The weather page opens with up to two alerts, today's and the next,
+  with the risk text and until or from when. Under the week, INMET's own words for today, per
+  period. The page's last line names the sources.
+- **The week starts tomorrow** on the page: today already has the block under the clock and the
+  start of the 24 h chart, and the row was worth more as height for the chart.
+- **The API is undocumented and picky.** `apiprevmet3.inmet.gov.br` drops clients that do not look
+  like a browser, so the requests send a browser user agent; `riscos` arrives as a JSON string of a
+  list or as the list itself. If it moves, the panel loses the text and the alerts and keeps the
+  ECMWF numbers.
+
+**Why two sources and not the "most reliable" one.** There is no single winner. For the hourly
+temperature over the next two days, the global models are good and ECMWF tends to lead the
+verification scores. For São Carlos' spring rain, isolated afternoon showers, every model
+struggles, and the reference is INMET's forecasters and their alerts. On 07/10/2026 they disagreed
+by 4 °C on Saturday (INMET 35°, ECMWF 31°); the page shows both instead of choosing silently.
+CPTEC/INPE and the BrasilAPI wrapper were unreachable from here that day, and Climatempo's API is
+paid.

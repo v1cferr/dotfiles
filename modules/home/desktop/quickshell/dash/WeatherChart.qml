@@ -13,7 +13,7 @@ Item {
     readonly property int n: chart.hours.length
     readonly property real pad: 18 // the first and last labels must not touch the card's edge
     readonly property real step: (chart.width - 2 * chart.pad) / Math.max(1, chart.n - 1)
-    readonly property real labelsH: 64
+    readonly property real labelsH: 56
     readonly property real ribbonH: 26
     readonly property real plotTop: chart.labelsH + 8
     readonly property real plotH: chart.height - chart.plotTop - chart.ribbonH - 26

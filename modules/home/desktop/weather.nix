@@ -17,6 +17,13 @@ in
       default = "-47.8909";
       description = "The longitude read by the bar and by the lock screen's fetch (São Carlos/SP).";
     };
+    # INMET keys its forecasts and its alerts' municipality lists by the IBGE code, not by name:
+    # "São Carlos" alone also matches São Carlos/SC (4216008).
+    ibge = lib.mkOption {
+      type = lib.types.str;
+      default = "3548906";
+      description = "The IBGE municipality code INMET's forecast and alerts are matched against (São Carlos/SP).";
+    };
     # Pinned, not `best_match`: measured on 07/10/2026, best_match for São Carlos WAS ECMWF IFS (9 km)
     # hour for hour; pinning keeps it so if Open-Meteo's choice changes, and names the source on screen.
     model = lib.mkOption {
@@ -69,6 +76,7 @@ in
     inherit (cfg)
       latitude
       longitude
+      ibge
       model
       conditions
       ;

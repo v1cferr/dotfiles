@@ -181,3 +181,25 @@ to a closed port.
 Tested end to end on 06/10/2026 with the real binary and hook file (webhook 2.8.3): right token
 200 and a file in the run schema, wrong, empty or missing token 403, and the token absent from
 the verbose log.
+
+## The weather: now under the clock, the week on the month
+
+The weather is split by TIME, like the rest of the band: what it is now sits with the clock, and
+what is coming sits on the calendar, where the days already are. A separate weather card (the
+usual answer, Caelestia's dashboard has one) would have repeated the week the month already shows.
+
+**Today (`WeatherNow.qml`)** fills what was an empty gap under the date: the glyph and the
+temperature in large type, the pt-BR condition, then one line of glyphs (max/min, feels like,
+humidity, wind, rain chance) so it fits without truncating. Under it, the next 12 hours as a curve
+(temperature) over a floor of thin bars (rain chance, drawn only from 10% up), labelled every 3 hours.
+The curve DRAWS IN left to right when the forecast arrives, which reads as "from now on". Canvas
+colors go through `css()`, because a QML color stringifies as `#AARRGGBB` and CSS reads that wrong.
+
+**The data is the bar's.** `Bar.qml` already fetched Open-Meteo every 15 minutes for its pill; the
+same call now also asks for `hourly` with `forecast_hours=13` and exposes `wHourly` and `wDaily`
+(keyed by ISO date, today included). No second request, no second source (rule 11).
+
+**The ambient layer (`WeatherAmbient.qml`)** lives behind today's glyph: drops falling while it
+rains, a slow breathing glow while the sun is out, and NOTHING for clouds, fog or night, because
+motion that never stops stops meaning anything. It is a handful of rectangles and no shader, since
+the band already repaints every frame for the horizon.

@@ -118,6 +118,13 @@ PanelWindow {
                         font.letterSpacing: 1
                     }
 
+                    // Today's weather fills what was an empty gap under the date.
+                    WeatherNow {
+                        Layout.fillWidth: true
+                        Layout.topMargin: 18
+                        host: dash.host
+                    }
+
                     Item {
                         Layout.fillHeight: true
                     }

@@ -3,6 +3,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
+import "root:/widgets"
 
 ColumnLayout {
     id: tile
@@ -25,6 +26,9 @@ ColumnLayout {
         tile.shown = tile.number
     // Past its limit the value breathes until it is back, so a hot tile is seen from the corner of an eye.
     property bool alert: false
+    // An optional history drawn beside the value (the CPU's last 2 minutes).
+    property var series: null
+    property real seriesTop: 100
 
     // Equal columns: a zero preferred width leaves fillWidth to split the row evenly.
     Layout.fillWidth: true
@@ -39,30 +43,45 @@ ColumnLayout {
         font.bold: true
         font.letterSpacing: 3
     }
-    Text {
+    RowLayout {
         Layout.fillWidth: true
-        text: isNaN(tile.number) ? tile.value : Math.round(tile.shown) + tile.unit
-        color: tile.barColor
-        SequentialAnimation on opacity {
-            running: tile.alert
-            loops: Animation.Infinite
-            alwaysRunToEnd: true
-            NumberAnimation {
-                to: 0.4
-                duration: 600
-                easing.type: Easing.InOutSine
+        spacing: 10
+        Text {
+            Layout.fillWidth: !tile.series
+            text: isNaN(tile.number) ? tile.value : Math.round(tile.shown) + tile.unit
+            color: tile.barColor
+            SequentialAnimation on opacity {
+                running: tile.alert
+                loops: Animation.Infinite
+                alwaysRunToEnd: true
+                NumberAnimation {
+                    to: 0.4
+                    duration: 600
+                    easing.type: Easing.InOutSine
+                }
+                NumberAnimation {
+                    to: 1
+                    duration: 600
+                    easing.type: Easing.InOutSine
+                }
             }
-            NumberAnimation {
-                to: 1
-                duration: 600
-                easing.type: Easing.InOutSine
-            }
+            font.family: Theme.uiFont
+            font.pixelSize: 36
+            font.bold: true
+            font.letterSpacing: -1
+            elide: Text.ElideRight
         }
-        font.family: Theme.uiFont
-        font.pixelSize: 36
-        font.bold: true
-        font.letterSpacing: -1
-        elide: Text.ElideRight
+        Sparkline {
+            visible: !!tile.series
+            Layout.fillWidth: true
+            Layout.preferredHeight: 26
+            Layout.alignment: Qt.AlignBottom
+            Layout.bottomMargin: 6
+            series: tile.series || []
+            scaleTop: tile.seriesTop
+            fill: tile.barColor
+            placeholder: ""
+        }
     }
     Rectangle {
         Layout.fillWidth: true

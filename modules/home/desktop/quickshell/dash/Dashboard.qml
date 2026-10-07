@@ -73,7 +73,6 @@ PanelWindow {
             }
             anchors.fill: parent
             anchors.margins: 20
-            anchors.bottomMargin: 0 // the horizon sits flush with the card's edge
             spacing: 12
 
             // ── The two columns: the machine on the left, the month on the right ──
@@ -89,33 +88,38 @@ PanelWindow {
                     Layout.fillHeight: true
                     spacing: 2
 
-                    // HH:mm carries the glance; the seconds are there to prove the panel is alive.
-                    Text {
-                        text: dash.host.timeStr
-                        color: Theme.colText
-                        font.family: Theme.uiFont
-                        font.pixelSize: 68
-                        font.bold: true
-                        font.letterSpacing: -1
-                    }
-
-                    // The spelled-out weekday is what a person actually wants off a clock, so it
-                    // gets a size close to the time's; the ISO line under it is the record.
-                    Text {
-                        Layout.topMargin: 4
-                        text: dash.host.dowNames[dash.host.calTodayW] || ""
-                        color: Theme.colText
-                        font.family: Theme.uiFont
-                        font.pixelSize: 38
-                        font.letterSpacing: -1
-                    }
-                    Text {
-                        Layout.topMargin: 6
-                        text: dash.host.calYear + "-" + ("0" + dash.host.calTodayM).slice(-2) + "-" + ("0" + dash.host.calTodayD).slice(-2) + "  ·  " + (dash.host.monthNames[dash.host.calTodayM - 1] || "") + "  ·  W" + dash.host.isoWeek(dash.host.calYear, dash.host.calTodayM, dash.host.calTodayD)
-                        color: Theme.colSubtext
-                        font.family: Theme.uiFont
-                        font.pixelSize: 22
-                        font.letterSpacing: 1
+                    // The time and the day side by side: HH:mm:ss carries the glance, the spelled-out
+                    // weekday is what a person wants off a clock, and the ISO line under it is the record.
+                    // One row instead of three stacked lines frees the height the services strip needs.
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 22
+                        Text {
+                            text: dash.host.timeStr
+                            color: Theme.colText
+                            font.family: Theme.uiFont
+                            font.pixelSize: 68
+                            font.bold: true
+                            font.letterSpacing: -1
+                        }
+                        ColumnLayout {
+                            Layout.alignment: Qt.AlignVCenter
+                            spacing: 2
+                            Text {
+                                text: dash.host.dowNames[dash.host.calTodayW] || ""
+                                color: Theme.colText
+                                font.family: Theme.uiFont
+                                font.pixelSize: 32
+                                font.letterSpacing: -1
+                            }
+                            Text {
+                                text: dash.host.calYear + "-" + ("0" + dash.host.calTodayM).slice(-2) + "-" + ("0" + dash.host.calTodayD).slice(-2) + "  ·  " + (dash.host.monthNames[dash.host.calTodayM - 1] || "") + "  ·  W" + dash.host.isoWeek(dash.host.calYear, dash.host.calTodayM, dash.host.calTodayD)
+                                color: Theme.colSubtext
+                                font.family: Theme.uiFont
+                                font.pixelSize: 18
+                                font.letterSpacing: 1
+                            }
+                        }
                     }
 
                     // Today's weather fills what was an empty gap under the date.
@@ -141,6 +145,13 @@ PanelWindow {
                             number: dash.host.cpuPct
                             unit: "%"
                             alert: dash.host.cpuPct >= 90
+                            // The last 2 minutes, where they mean something: beside the CPU's own number.
+                            series: dash.host.cpuHist
+                            seriesTop: {
+                                const v = (dash.host.cpuHist || []).filter(x => !isNaN(x));
+                                const peak = v.length ? Math.max.apply(null, v) : 0;
+                                return Math.min(100, Math.max(20, Math.ceil(peak * 1.25 / 10) * 10));
+                            }
                             hint: dash.host.cpuMhz > 0 ? (dash.host.cpuMhz / 1000).toFixed(1) + " GHz" : ""
                             frac: dash.host.cpuPct / 100
                             barColor: Theme.colBlue
@@ -571,36 +582,11 @@ PanelWindow {
                 }
             }
 
-            // ── The horizon: the last 2 minutes of CPU, and the line where the work area starts ──
-            Horizon {
-                id: horizon
+            // ── The services: what runs on this machine and what each costs, as a carousel ──
+            ServiceStrip {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 104
-                series: dash.host.cpuHist
-                window: dash.host.histWindow
-                period: dash.host.sysInterval
-                // The ceiling follows the window's peak, in steps of 10: on a fixed 0-100 an idle
-                // desktop at 8% drew a flat line. The caption says the scale, so a tall bar never lies.
-                scaleTop: {
-                    const v = (dash.host.cpuHist || []).filter(x => !isNaN(x));
-                    const peak = v.length ? Math.max.apply(null, v) : 0;
-                    return Math.min(100, Math.max(20, Math.ceil(peak * 1.25 / 10) * 10));
-                }
-                caption: "CPU · LAST 2 MIN"
-                nowText: "now " + dash.host.cpuPct + "%"
-                opacity: 0
-
-                // A beat behind the card, so the reading arrives after the time and not with it.
-                Component.onCompleted: horizonIn.start()
-                NumberAnimation {
-                    id: horizonIn
-                    target: horizon
-                    property: "opacity"
-                    from: 0
-                    to: 0.9
-                    duration: 520
-                    easing.type: Easing.OutQuad
-                }
+                Layout.preferredHeight: 124
+                Layout.bottomMargin: 12
             }
         }
     }

@@ -1,7 +1,7 @@
 # The glance band on the standing monitor
 
 `modules/home/desktop/quickshell/dash/`. Everything that belongs to the band lives in that one
-folder: the panel (`Dashboard.qml`), its pieces (`Tile.qml`, `Horizon.qml`, `CiList.qml`), the CI
+folder: the panel (`Dashboard.qml`), its pieces (`Tile.qml`, `ServiceStrip.qml`, `CiList.qml`), the CI
 feed (`Ci.qml`) and, under `scripts/`, the shell behind it (`ci-status.sh`, packaged as
 `ci-status-json` in `modules/home/desktop/quickshell.nix`). The shell sits in its own subfolder so
 the folder reads as QML views on top and build inputs below. It is the top 30% of the standing secondary, reserved so
@@ -40,41 +40,18 @@ own cap, because the Arc publishes no busy percentage, and NET is download again
 the component takes that Scope as `host` and reads it. The month is `monthCells()`, the same
 function the year popover renders, at 18 px instead of 9, with the days already gone dimmed so the eye lands on what is ahead.
 
-**The horizon.** The panel's bottom edge is the CPU of the last 2 minutes, in `dash/Horizon.qml`.
-It divides the glance zone from the work zone with the one signal worth catching out of the corner
-of an eye, instead of with a decorative rule. It is its OWN component and not the shared
-`Sparkline`: the band wants a gradient crest, a brighter newest bar and an animated height, and
-none of that should follow the widget into the popovers, where a flat bar is the right answer.
+**The bottom strip was a CPU horizon, and it is now the services.** Until 07/10/2026 the band's
+bottom edge was the CPU of the last 2 minutes as scrolling bars. Even after it learned to explain
+itself, the owner found it the least useful thing on the band: the CPU tile already says the
+number, and what the machine is RUNNING was nowhere. So the history moved INTO the CPU tile as a
+sparkline beside its value (`Tile.series`), and the strip became the services carousel (below).
+`Horizon.qml` was deleted with it (rule 16).
 
-It explains itself, because the first two readers could not. One read it as audio, and on
-07/10/2026 the owner asked what the moving bars even were: a 10 px caption carrying the scale's
-ceiling (`CPU · 2 MIN · 80%`) was not enough. So it now says what it is on the left
-(`CPU · LAST 2 MIN`), what it reads NOW on the right (`now 4%`, in the newest bar's color), draws
-the ceiling and its half as labelled lines UNDER the bars, and marks the middle of the window as
-`−1 min`. The time marks stay put while the data flows under them.
-
-**Its ceiling follows the peak.** On a fixed 0 to 100 scale an idle desktop at 8% drew a flat line,
-so `scaleTop` is the window's peak plus 25%, rounded up to a step of 10, never under 20. The
-caption carries that ceiling (`CPU · 2 MIN · 40%`), so a tall bar is never read as a busy machine.
-
-**It SCROLLS, it does not morph, and that is the whole difference.** Animating 60 bar heights on
-every sample makes the graph writhe for 220 ms and then sit still, which reads as a stutter even
-though nothing is dropping frames (`qs` was at 3% of a core while doing it). A new sample shifts the
-data one step LEFT, so the track jumps one step RIGHT at that same instant and walks back over
-exactly `sysInterval`, and the pixels never jump: one animated property instead of sixty, and
-motion that never stops. The step is `width / (window - 1)` and not `width / window`, because the
-track has to be ONE step wider than the viewport or the left edge shows a sliver of nothing at the
-start of every cycle.
-
-MEASURED: 3% of a core morphing against 7% scrolling, on a 144 Hz panel. The band is drawing every
-frame now, forever, which is what that difference buys. If it ever needs to stop costing that, the
-cheap variant is the same slide over 600 ms with the graph at rest for the remaining 1.4 s.
-
-**The date block.** The clock shows HH:mm:ss at one size, then the weekday spelled out, then an ISO
-line (`2026-09-15 · Setembro · W38`). The order is deliberate: the weekday is what a person wants
-off a clock, and the ISO date plus the ISO-8601 week are the precise record underneath. `isoWeek()`
-counts the week against the year its THURSDAY falls in, which is what puts 01/01 on week 53 of the
-year before when it lands on a Friday.
+**The date block.** The clock shows HH:mm:ss, and BESIDE it the weekday spelled out over an ISO
+line (`2026-10-07 · Outubro · W41`). It used to be three stacked lines; one row returned the height
+the services strip needed. The weekday is what a person wants off a clock, and the ISO date plus the
+ISO-8601 week are the precise record underneath. `isoWeek()` counts the week against the year its
+THURSDAY falls in, which is what puts 01/01 on week 53 of the year before when it lands on a Friday.
 
 **`host` is NOT a required property, and that is not sloppiness.** Quickshell's `Variants` creates
 the delegate with `modelData` as the only initial property, so a SECOND required property fails the
@@ -202,7 +179,7 @@ same call now also asks for `hourly` with `forecast_hours=13` and exposes `wHour
 **The ambient layer (`WeatherAmbient.qml`)** lives behind today's glyph: drops falling while it
 rains, a slow breathing glow while the sun is out, and NOTHING for clouds, fog or night, because
 motion that never stops stops meaning anything. It is a handful of rectangles and no shader, since
-the band already repaints every frame for the horizon.
+the band already repaints often (rolling numbers, the services strip).
 
 **The week (in the month grid)** is the band's signature: today and the seven days after it carry
 their own forecast INSIDE their cells, the number lifted to make room for the sky glyph, the max in
@@ -227,3 +204,37 @@ Chosen on 07/10/2026 as "ambient", and every piece of it carries a meaning:
   as a strip of pages and not as a flicker. A wrap from the last page to the first slides forward.
 - **The weather** draws its 12-hour curve in, and rains or shines behind today's glyph
   (`WeatherAmbient.qml`, above).
+
+## The services strip
+
+The bottom of the band shows what this machine RUNS and what each thing costs, three cards a
+page, turning every 10 s like the month column, held under the pointer, stepped by `‹ ›`, the
+dots or the wheel, sliding as one long strip. Trouble sorts first (down, then degraded), then the
+heaviest by CPU and RAM, so a broken service is always on page one, and the header says
+`all 18 up` or `2 of 18 need a look`.
+
+**A card, line by line** (`ServiceCard.qml`): a state dot (green up, peach degraded, red down, and
+only trouble breathes), the name, `3/3 containers` or `4/4 units` when it is made of several, the
+uptime, `↻ N` restarts when there were any, and where a click goes (`↗` the site, `󰆍` the log).
+Then CPU as a share of the WHOLE machine (two decimals under 1%, because idle and almost idle are
+different readings) with its own 2-minute sparkline scaled to its own peak, RAM and task count.
+Then disk read/write per second (tinted once it passes 1 MB/s) and what it is made of
+(`server · machine-learning · redis · postgresql`), or its kind when it is a single unit.
+
+**What counts as a service: a catalog, not "everything running".** `dash/services.nix` maps each
+`my.services` toggle to its units (`immich` sums four, `basic-memory` two, the user units are
+looked up under `--user`) and to the `my.ingress` name a click opens, so a service turned off in
+the host panel leaves the strip, and the URL is the same one Caddy serves. Tunnel-only names get
+no URL, since Access has no browser login there. Docker compose projects are found LIVE by their
+label, so one not in the catalog (`ascension-coa-scraper`) still shows up. "Everything running"
+was rejected: pipewire, portals and hypridle are the desktop, not services.
+
+**Two speeds, no daemon per tick.** `dash-services-meta` (`dash/scripts/services-meta.sh`) runs
+every 30 s: one `systemctl show` per scope for state, `ActiveEnterTimestamp`, `NRestarts` and
+`ControlGroup`, one `docker inspect` for the containers' state, health, restarts and start time,
+and it decides `up`/`degraded`/`down` per service. Then every 3 s `Services.qml` reads those
+cgroups' own counters in ONE `head` (`memory.current`, `cpu.stat`, `io.stat`, `pids.current`) and
+computes the deltas itself. RAM is `memory.current`, the number `systemctl status` shows.
+
+**The click** opens the site when the service has one, and otherwise a kitty with the live log:
+`journalctl -u` (or `--user-unit`) for units, `docker compose -p <project> logs -f` for stacks.

@@ -99,6 +99,8 @@ let
   };
 in
 {
+  imports = [ ./quickshell/dash/services.nix ]; # the band's services carousel: catalog plus its meta script
+
   home.packages = [
     qsPkg # `qs` / `quickshell`
     qsRestart # `qs-restart`, used by the SUPER+ESCAPE bind (keybinds.lua)

@@ -11,7 +11,6 @@ let
   # Rule 19: everything this module reaches for, named once.
   inherit (pkgs)
     coreutils
-    docker-client
     jq
     systemd
     writeShellApplication
@@ -124,7 +123,7 @@ let
     name = "dash-services-meta";
     runtimeInputs = [
       systemd
-      docker-client
+      osConfig.virtualisation.docker.package # the daemon's own CLI, not a second Docker in the closure
       jq
       coreutils
     ];

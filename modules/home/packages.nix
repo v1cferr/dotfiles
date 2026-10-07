@@ -55,6 +55,6 @@
     # gh owns its package in modules/home/shell/git.nix (it IS git's credential helper there).
     azure-cli # the ONLY path to the Entra ID App Registration; the Azure MCP does not cover it
     unstable.yt-dlp # it breaks when the sites change
-    unstable.speedtest-cli # it follows speedtest.net's changes
+    ookla-speedtest # the official Ookla client: multi-connection, so it measures a fast line right
   ];
 }

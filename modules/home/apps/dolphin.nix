@@ -74,6 +74,11 @@ let
       # icons at 22px (an institution, an address book), so they break the folder look.
       icon = "folder-database";
     }
+    {
+      title = "M51";
+      path = osConfig.my.phoneSync.local; # SSOT: modules/nixos/services/phone-sync.nix (rule 11)
+      icon = "folder-pictures";
+    }
   ];
 
   # One XBEL file per place. KDE's <ID> comes from the INDEX, so it is unique with no magic

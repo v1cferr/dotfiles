@@ -48,8 +48,8 @@ exists but is shared with no one, so the service is inert.
 1. On the phone, install **Syncthing-Fork** from F-Droid. The upstream Android app was
    discontinued in December 2024.
 2. Copy the phone's Device ID (menu, then *Show device ID*) into `my.phoneSync.deviceId`, rebuild.
-3. Read this machine's Device ID in the GUI at `http://127.0.0.1:8384` (*Actions*, then
-   *Show ID*) and add it on the phone as a remote device.
+3. Read this machine's Device ID with `syncthing device-id --home ~/.config/syncthing` (or in
+   the GUI at `http://127.0.0.1:8384`) and add it on the phone as a remote device.
 4. On the phone, add a folder: path `DCIM`, folder ID **`m51-dcim`** (it MUST match), type
    **Send Only**, shared with this machine.
 

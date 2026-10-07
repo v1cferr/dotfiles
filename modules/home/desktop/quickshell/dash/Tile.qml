@@ -11,6 +11,20 @@ ColumnLayout {
     property string hint: ""
     property real frac: 0
     property color barColor: Theme.colAccent
+    // A NUMBER rolls to its new value instead of jumping; `value` stays for what cannot roll (NET).
+    property real number: NaN
+    property string unit: ""
+    property real shown: 0
+    Behavior on shown {
+        NumberAnimation {
+            duration: 650
+            easing.type: Easing.OutCubic
+        }
+    }
+    onNumberChanged: if (!isNaN(tile.number))
+        tile.shown = tile.number
+    // Past its limit the value breathes until it is back, so a hot tile is seen from the corner of an eye.
+    property bool alert: false
 
     // Equal columns: a zero preferred width leaves fillWidth to split the row evenly.
     Layout.fillWidth: true
@@ -27,8 +41,23 @@ ColumnLayout {
     }
     Text {
         Layout.fillWidth: true
-        text: tile.value
+        text: isNaN(tile.number) ? tile.value : Math.round(tile.shown) + tile.unit
         color: tile.barColor
+        SequentialAnimation on opacity {
+            running: tile.alert
+            loops: Animation.Infinite
+            alwaysRunToEnd: true
+            NumberAnimation {
+                to: 0.4
+                duration: 600
+                easing.type: Easing.InOutSine
+            }
+            NumberAnimation {
+                to: 1
+                duration: 600
+                easing.type: Easing.InOutSine
+            }
+        }
         font.family: Theme.uiFont
         font.pixelSize: 36
         font.bold: true

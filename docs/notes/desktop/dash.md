@@ -211,3 +211,19 @@ surface, and the days that pass take their weather with them. A filled cell (tod
 inks the forecast in the background color so it stays legible on the fill. The glyph's color
 (`WeatherSky.qml`, shared with today's glyph) says the sky before the glyph is read: yellow sun,
 blue rain, neutral otherwise.
+
+## Motion
+
+Chosen on 07/10/2026 as "ambient", and every piece of it carries a meaning:
+
+- **Numbers roll.** CPU, RAM, DISK, GPU and TEMP ease to their new value over 650 ms (`Tile.number`)
+  instead of jumping. NET does not: its unit flips between KB/s and MB/s, and a rolling number
+  across a unit change reads as a wrong number.
+- **A tile past its limit breathes** (CPU, RAM or DISK at 90% and up, the GPU at 90% of its power
+  cap, a critical temperature) until it is back, so a hot tile is seen out of the corner of an eye.
+  `alwaysRunToEnd` lets the last pulse finish instead of freezing half faded.
+- **Pages slide.** The page coming in enters from the side being moved toward and the one leaving
+  exits the other way (`offsetOf`, 56 px over 420 ms, under the existing fade), so the column reads
+  as a strip of pages and not as a flicker. A wrap from the last page to the first slides forward.
+- **The weather** draws its 12-hour curve in, and rains or shines behind today's glyph
+  (`WeatherAmbient.qml`, above).

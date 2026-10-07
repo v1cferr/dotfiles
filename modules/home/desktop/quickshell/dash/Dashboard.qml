@@ -138,21 +138,27 @@ PanelWindow {
 
                         Tile {
                             label: "CPU"
-                            value: dash.host.cpuPct + "%"
+                            number: dash.host.cpuPct
+                            unit: "%"
+                            alert: dash.host.cpuPct >= 90
                             hint: dash.host.cpuMhz > 0 ? (dash.host.cpuMhz / 1000).toFixed(1) + " GHz" : ""
                             frac: dash.host.cpuPct / 100
                             barColor: Theme.colBlue
                         }
                         Tile {
                             label: "RAM"
-                            value: dash.host.memPct + "%"
+                            number: dash.host.memPct
+                            unit: "%"
+                            alert: dash.host.memPct >= 90
                             hint: dash.host.fmtBytes(dash.host.memUsed) + " / " + dash.host.fmtBytes(dash.host.memTotal)
                             frac: dash.host.memPct / 100
                             barColor: Theme.colMauve
                         }
                         Tile {
                             label: "DISK"
-                            value: dash.host.diskPct + "%"
+                            number: dash.host.diskPct
+                            unit: "%"
+                            alert: dash.host.diskPct >= 90
                             hint: dash.host.fmtBytes(dash.host.diskFree) + " free"
                             frac: dash.host.diskPct / 100
                             barColor: Theme.colTeal
@@ -160,14 +166,18 @@ PanelWindow {
                         // The Arc publishes no busy %, so the bar is power against its own cap.
                         Tile {
                             label: "GPU"
-                            value: dash.host.gpuWatts.toFixed(0) + " W"
+                            number: dash.host.gpuWatts
+                            unit: " W"
+                            alert: dash.host.gpuWattsCap > 0 && dash.host.gpuWatts >= 0.9 * dash.host.gpuWattsCap
                             hint: dash.host.gpuFreq > 0 ? (dash.host.gpuFreq / 1000).toFixed(2) + " GHz" : "idle"
                             frac: dash.host.gpuWattsCap > 0 ? dash.host.gpuWatts / dash.host.gpuWattsCap : 0
                             barColor: Theme.colPeach
                         }
                         Tile {
                             label: "TEMP"
-                            value: dash.host.tempMax + "°C"
+                            number: dash.host.tempMax
+                            unit: "°C"
+                            alert: !!dash.host.tempQuality && dash.host.tempQuality.label === "critical"
                             hint: dash.host.tempQuality ? dash.host.tempQuality.label : ""
                             frac: dash.host.tempMax / 100
                             barColor: dash.host.tempQuality ? dash.host.tempQuality.color : Theme.colGreen
@@ -216,7 +226,20 @@ PanelWindow {
                     function step(d) {
                         const n = pages.order.length;
                         const i = pages.order.indexOf(pages.page);
+                        pages.dir = d > 0 ? 1 : -1;
                         pages.page = pages.order[(i + d + n) % n];
+                    }
+                    // The slide: the page coming in enters from the side being moved toward, and the
+                    // one leaving exits the other way, so the column reads as a strip and not a flicker.
+                    property int dir: 1
+                    property int prevPage: -1
+                    property int curPage: 0
+                    onPageChanged: {
+                        pages.prevPage = pages.curPage;
+                        pages.curPage = pages.page;
+                    }
+                    function offsetOf(i) {
+                        return pages.page === i ? 0 : (i === pages.prevPage ? -pages.dir : pages.dir) * 56;
                     }
                     // A page that leaves the rotation (VPN down) must not stay on screen.
                     onOrderChanged: if (pages.order.indexOf(pages.page) < 0)
@@ -278,7 +301,10 @@ PanelWindow {
                                     MouseArea {
                                         anchors.fill: parent
                                         anchors.margins: -4
-                                        onClicked: pages.page = parent.modelData
+                                        onClicked: {
+                                            pages.dir = parent.modelData > pages.page ? 1 : -1;
+                                            pages.page = parent.modelData;
+                                        }
                                     }
                                 }
                             }
@@ -350,6 +376,15 @@ PanelWindow {
                             id: gridBox
                             anchors.fill: parent
                             opacity: pages.page === 0 ? 1 : 0
+                            transform: Translate {
+                                x: pages.offsetOf(0)
+                                Behavior on x {
+                                    NumberAnimation {
+                                        duration: 420
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+                            }
                             visible: opacity > 0
                             Behavior on opacity {
                                 NumberAnimation {
@@ -452,6 +487,15 @@ PanelWindow {
                             anchors.fill: parent
                             held: pageHover.hovered
                             opacity: pages.page === 1 ? 1 : 0
+                            transform: Translate {
+                                x: pages.offsetOf(1)
+                                Behavior on x {
+                                    NumberAnimation {
+                                        duration: 420
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+                            }
                             visible: opacity > 0
                             Behavior on opacity {
                                 NumberAnimation {
@@ -470,6 +514,15 @@ PanelWindow {
                             anchors.fill: parent
                             held: pageHover.hovered
                             opacity: pages.page === 2 ? 1 : 0
+                            transform: Translate {
+                                x: pages.offsetOf(2)
+                                Behavior on x {
+                                    NumberAnimation {
+                                        duration: 420
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+                            }
                             visible: opacity > 0
                             Behavior on opacity {
                                 NumberAnimation {

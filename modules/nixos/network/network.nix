@@ -185,5 +185,17 @@ in
       maxretry = 4;
       findtime = "10m";
     };
+    # The SLOW brute force: sshd's own 10-min penalty for an invalid user paces a patient bot to one
+    # try per ~10 min, which never fits 4 in the window above (measured 08/10/2026: 25 tries in a
+    # day from one address, 0 bans). Same filter, a day-long window; the increment applies here too.
+    jails.sshd-slow.settings = {
+      enabled = true;
+      filter = "sshd";
+      port = 2222;
+      backend = "systemd";
+      maxretry = 8;
+      findtime = "1d";
+      bantime = "1d";
+    };
   };
 }

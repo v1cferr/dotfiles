@@ -414,6 +414,13 @@ those two things.
    login never types a name that does not exist.
 5. **An ESCALATING ban**, `bantime.increment`, so the address that comes back after its hour gets
    2h, then 4h, up to a week.
+6. **A SLOW jail, `sshd-slow`** (08/10/2026): the same `sshd` filter over a DAY, 8 failures for a
+   1-day ban (escalating like the rest). Layers 4 and the 10-minute `sshd` jail interlock badly:
+   the invalid-user penalty paces a patient bot to one try every ~10 minutes, which can never put
+   4 failures inside a 10-minute window. The glance band's network page showed it on its first
+   day: one address tried `suporte` 25 times in 24 hours with 0 bans. Tested before applying,
+   `fail2ban-regex` against that day's journal: two addresses over the line (23 and 13 matches),
+   nobody from the LAN or the tunnel (both in `ignoreip`).
 
 **The ban count lives in a database that forgets in a day.** `dbpurgeage` defaults to `1d` in
 `fail2ban.conf`, and fail2ban's own `jail.conf` says so in a comment right next to the increment

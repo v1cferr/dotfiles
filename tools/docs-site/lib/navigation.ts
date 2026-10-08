@@ -92,6 +92,7 @@ export const navigation: NavItem[] = [
     items: [
       { title: "Network", doc: "notes/network/network.md" },
       { title: "Exposure", doc: "notes/network/exposure.md" },
+      { title: "Router log", doc: "notes/network/router-log.md" },
       { title: "VPN", doc: "notes/network/vpn.md" },
       { title: "SSH", doc: "notes/network/ssh.md" },
       { title: "Sunshine", doc: "notes/network/sunshine.md" },

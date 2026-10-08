@@ -86,6 +86,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | --- | --- |
 | [network](network/network.md) | the firewall by SOURCE, the DDNS that moved to the router, fail2ban, the FAI gateway |
 | [exposure](network/exposure.md) | the house seen from outside: open ports and the sshd, weekly |
+| [router-log](network/router-log.md) | the router's syslog kept here 30 days: who may send it, and why the order matters |
 | [vpn](network/vpn.md) | FAI (nxBender) and UFSCar (openconnect), always split-tunnel |
 | [ssh](network/ssh.md) | the exposed SSH, the hosts, and reaching the FAI workstation |
 | [sunshine](network/sunshine.md) | remote access, the black screen, and why dpms is forbidden |

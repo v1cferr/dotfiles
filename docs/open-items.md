@@ -213,6 +213,13 @@ finished work. What was closed is in the [august history](history/2026/08-august
       • BLIND SPOTS no router setting removes: LAN-to-LAN traffic is switched (a worm moving PC to
         PC never crosses netfilter), and devices with their own DoH bypass dnsmasq (banIP's `doh`
         feed pushes them back to the router).
+      • PARTLY DONE 08/10/2026, measured: HaGeZi TIF **mini** (239k) and HaGeZi **DoH servers** (3.3k)
+        joined OISD Big and AdAway in adblock-fast, 240394 -> 339542 domains blocked; dnsmasq RSS
+        19 -> 27 MB, available RAM 84 -> 71 MB (TIF medium at 572k would not leave room for banIP).
+        Proven: a TIF domain and `dns.google` now NXDOMAIN, 20 everyday domains still resolve, no
+        UFSCar/FAI name in any list. Same day: the second DoH upstream moved from Google (unfiltered)
+        to Cloudflare's security resolver, and `drop_invalid` went on. Still to do in phase 1:
+        `logqueries`, banIP (with 71 MB left: small feeds only), WAN drop logging, `log_ip`.
       • PHASE 1, the router as a light sensor: HaGeZi TIF (mini or medium, by RAM) as its own
         adblock-fast list plus `logqueries`, since a device resolving a C2 domain is the strongest
         signal a house gets; banIP with Feodo, ThreatFox, Spamhaus DROP and `doh`, both ways,

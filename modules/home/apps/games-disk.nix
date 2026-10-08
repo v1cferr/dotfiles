@@ -45,6 +45,13 @@ in
       ".local/share/bottles/bottles/Battlenet/drive_c/Program Files (x86)/Overwatch" = "Overwatch";
       ".local/share/bottles/bottles/Battlenet/drive_c/Program Files (x86)/Hearthstone" = "Hearthstone";
 
+      # COPIED on 08/10, same rsync and same path-and-size check: both had stayed in the prefix,
+      # 86 GiB of `@home`, with no copy on the Windows disk. VERIFIED: 2214 and 500 files, zero
+      # mismatches.
+      ".local/share/bottles/bottles/Battlenet/drive_c/Program Files (x86)/World of Warcraft" =
+        "World of Warcraft";
+      ".local/share/bottles/bottles/Battlenet/drive_c/Program Files (x86)/Warcraft III" = "Warcraft III";
+
       # The GAME folder only, never the bottle. A Wine prefix on NTFS does not survive (no unix
       # permissions, no symlinks, no case sensitivity), and it does not need to: after this the
       # three prefixes together weigh 8.4 GiB, down from 225.

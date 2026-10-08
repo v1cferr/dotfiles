@@ -297,6 +297,8 @@ in
         # NTFS path; the old path here would match nothing forever and read as "never played".
         "${games}/Overwatch"
         "${games}/Hearthstone"
+        "${games}/World of Warcraft"
+        "${games}/Warcraft III"
         "${games}/Cities - Skylines II"
         "${games}/Assassin Creed Black Flag Resynced"
         "${games}/Victoria 3"

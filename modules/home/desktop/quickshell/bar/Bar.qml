@@ -566,13 +566,13 @@ Scope {
     function parseProcs(text) {
         const parts = text.split("@@@");
         const rows = s => (s || "").trim().split("\n").map(l => {
-            const p = l.trim().split(/\s+/);
-            return {
-                cpu: Number(p[0]),
-                mem: Number(p[1]),
-                name: p.slice(2).join(" ")
-            };
-        }).filter(r => r.name && r.name !== "ps" && r.name !== "sh").slice(0, 3);
+                const p = l.trim().split(/\s+/);
+                return {
+                    cpu: Number(p[0]),
+                    mem: Number(p[1]),
+                    name: p.slice(2).join(" ")
+                };
+            }).filter(r => r.name && r.name !== "ps" && r.name !== "sh").slice(0, 3);
         root.topCpu = rows(parts[0]);
         root.topMem = rows(parts[1]);
     }
@@ -745,10 +745,10 @@ Scope {
             if (l[i].connected !== true)
                 continue;
             out.push(root.vpnStats[l[i].id] || {
-                    id: l[i].id,
-                    name: l[i].name,
-                    connected: true
-                });
+                id: l[i].id,
+                name: l[i].name,
+                connected: true
+            });
         }
         return out;
     }
@@ -845,9 +845,8 @@ Scope {
     // fallbacks are what keep the FIRST fetch valid, and what keeps a MISSING JSON harmless, the
     // same choice as Theme.qml's palette: the temperature and the icon still work, and only the
     // pt-BR label degrades to "—". They hold the same numbers as the SSOT, so nothing diverges.
-    readonly property string wLat: root.wConf.latitude || "-22.0087"
-    readonly property string wLon: root.wConf.longitude || "-47.8909"
-    readonly property string wModel: root.wConf.model || "ecmwf_ifs" // my.weather.model
+    // What was actually fetched ("open-meteo:ecmwf_ifs" -> "ecmwf_ifs"), from the cache's own record.
+    readonly property string wModel: ((weatherFeed.source || "").split(":")[1] || "ecmwf_ifs")
     // The pt-BR status. An unknown code says so instead of inventing a condition.
     function wmoText(code) {
         const t = root.wConf.conditions;
@@ -882,80 +881,84 @@ Scope {
         const h = sysClock.date.getHours();
         return h >= 6 && h < 18;
     }
-    function parseWeather(jsonText) {
-        let data;
-        try {
-            data = JSON.parse(jsonText);
-        } catch (e) {
+    // The forecast is glance-feed's (modules/home/desktop/glance-feed): ONE fetch per model run, shared
+    // with the lock screen, painted from the cache at once after a boot. "Now" is derived from the
+    // run's own hours and re-derived every 5 minutes, so nothing here touches the network.
+    Feed {
+        id: weatherFeed
+        name: "weather"
+        onChanged: root.parseWeather()
+    }
+    Timer {
+        interval: 300000
+        running: true
+        repeat: true
+        onTriggered: root.parseWeather()
+    }
+    function parseWeather() {
+        const data = weatherFeed.data;
+        const hr = data ? data.hourly : null;
+        if (!hr || !hr.time || !hr.time.length)
             return;
-        }
-        const cur = data.current;
-        if (cur) {
-            root.wTemp = "" + Math.round(cur.temperature_2m);
-            root.wCode = cur.weather_code;
-            root.wFeels = "" + Math.round(cur.apparent_temperature);
-            root.wHumidity = "" + cur.relative_humidity_2m;
-            root.wWind = Math.round(cur.wind_speed_10m) + " km/h " + root.windDir(cur.wind_direction_10m);
-        }
+        // The current hour in the forecast's own local clock ("2026-10-08T09:00").
+        const now = new Date();
+        const pad = n => ("0" + n).slice(-2);
+        const key = now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate()) + "T" + pad(now.getHours()) + ":00";
+        let i = hr.time.indexOf(key);
+        if (i < 0)
+            i = Math.max(0, hr.time.filter(t => t <= key).length - 1);
+        // Between two hourly samples, by the minutes past the hour.
+        const f = now.getMinutes() / 60;
+        const at = a => a ? (a[i + 1] === undefined || a[i + 1] === null ? a[i] : a[i] + (a[i + 1] - a[i]) * f) : NaN;
+        root.wTemp = "" + Math.round(at(hr.temperature_2m));
+        root.wCode = hr.weather_code[i];
+        root.wFeels = "" + Math.round(at(hr.apparent_temperature));
+        root.wHumidity = "" + Math.round(at(hr.relative_humidity_2m));
+        root.wWind = Math.round(at(hr.wind_speed_10m)) + " km/h " + root.windDir(hr.wind_direction_10m ? hr.wind_direction_10m[i] : 0);
+
         const dy = data.daily;
+        const today = key.slice(0, 10);
         const fc = [];
-        // Index 0 is today (it is already in the pill); I show from the next day onward
-        // (the next 7 days = up to the same weekday next week).
+        const byDate = ({});
         if (dy && dy.time) {
-            for (let i = 1; i < dy.time.length; i++) {
-                const dt = new Date(dy.time[i] + "T00:00:00");
-                const pp = dy.precipitation_probability_max[i];
+            for (let d = 0; d < dy.time.length; d++) {
+                byDate[dy.time[d]] = {
+                    low: Math.round(dy.temperature_2m_min[d]),
+                    high: Math.round(dy.temperature_2m_max[d]),
+                    code: dy.weather_code[d],
+                    precip: dy.precipitation_probability_max[d],
+                    sunrise: dy.sunrise ? dy.sunrise[d] : "",
+                    sunset: dy.sunset ? dy.sunset[d] : ""
+                };
+                // The pill's popover lists the days AFTER today (today is already in the pill).
+                if (dy.time[d] <= today)
+                    continue;
+                const dt = new Date(dy.time[d] + "T00:00:00");
+                const pp = dy.precipitation_probability_max[d];
                 fc.push({
                     day: root.dowAbbr[dt.getDay()],
-                    low: "" + Math.round(dy.temperature_2m_min[i]),
-                    high: "" + Math.round(dy.temperature_2m_max[i]),
-                    code: dy.weather_code[i],
+                    low: "" + Math.round(dy.temperature_2m_min[d]),
+                    high: "" + Math.round(dy.temperature_2m_max[d]),
+                    code: dy.weather_code[d],
                     precip: (pp === null || pp === undefined) ? "" : "" + pp
                 });
             }
         }
         root.wForecast = fc;
-
-        const byDate = ({});
-        if (dy && dy.time)
-            for (let i = 0; i < dy.time.length; i++)
-                byDate[dy.time[i]] = {
-                    low: Math.round(dy.temperature_2m_min[i]),
-                    high: Math.round(dy.temperature_2m_max[i]),
-                    code: dy.weather_code[i],
-                    precip: dy.precipitation_probability_max[i],
-                    sunrise: dy.sunrise ? dy.sunrise[i] : "",
-                    sunset: dy.sunset ? dy.sunset[i] : ""
-                };
         root.wDaily = byDate;
 
-        const hr = data.hourly;
+        // The next 25 hours from the current one, as the weather page draws them.
         const hours = [];
-        if (hr && hr.time)
-            for (let i = 0; i < hr.time.length; i++)
-                hours.push({
-                    time: hr.time[i],
-                    hour: Number(hr.time[i].slice(11, 13)),
-                    temp: hr.temperature_2m[i],
-                    precip: hr.precipitation_probability[i],
-                    code: hr.weather_code[i],
-                    day: hr.is_day ? hr.is_day[i] === 1 : true
-                });
+        for (let h = i; h < Math.min(hr.time.length, i + 25); h++)
+            hours.push({
+                time: hr.time[h],
+                hour: Number(hr.time[h].slice(11, 13)),
+                temp: hr.temperature_2m[h],
+                precip: hr.precipitation_probability[h],
+                code: hr.weather_code[h],
+                day: hr.is_day ? hr.is_day[h] === 1 : true
+            });
         root.wHourly = hours;
-    }
-    Process {
-        id: weatherProc
-        command: ["curl", "-sS", "-m", "10", "https://api.open-meteo.com/v1/forecast?latitude=" + root.wLat + "&longitude=" + root.wLon + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&hourly=temperature_2m,precipitation_probability,weather_code,is_day&forecast_hours=25&timezone=auto&forecast_days=8&models=" + root.wModel]
-        stdout: StdioCollector {
-            onStreamFinished: root.parseWeather(text)
-        }
-    }
-    Timer {
-        interval: 900000
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: weatherProc.running = true
     }
     // the weather popover's hover
     property bool wPillHovered: false
@@ -1249,23 +1252,106 @@ Scope {
     // Holidays (nac/sp/sc), rechecked 08/08/2026. THIS LIST DOES NOT UPDATE ITSELF: the movable ones
     // derive from Easter, the fixed ones are LAW by hand: docs/notes/desktop/bar.md
     readonly property var holidayDefs: [
-        { name: "Ano-Novo", scope: "nac", m: 1, d: 1 },
-        { name: "Carnaval (segunda)", scope: "nac", off: -48, fac: true },
-        { name: "Carnaval (terça)", scope: "nac", off: -47, fac: true },
-        { name: "Quarta-feira de Cinzas", scope: "nac", off: -46, fac: true },
-        { name: "Sexta-feira Santa", scope: "nac", off: -2 },
-        { name: "Tiradentes", scope: "nac", m: 4, d: 21 },
-        { name: "Dia do Trabalho", scope: "nac", m: 5, d: 1 },
-        { name: "Corpus Christi", scope: "sc", off: 60 },
-        { name: "Revolução Constitucionalista", scope: "sp", m: 7, d: 9 },
-        { name: "N. Sra. da Babilônia", scope: "sc", m: 8, d: 15 },
-        { name: "Independência", scope: "nac", m: 9, d: 7 },
-        { name: "N. Sra. Aparecida", scope: "nac", m: 10, d: 12 },
-        { name: "Finados", scope: "nac", m: 11, d: 2 },
-        { name: "Aniversário de São Carlos", scope: "sc", m: 11, d: 4 },
-        { name: "Proclamação da República", scope: "nac", m: 11, d: 15 },
-        { name: "Consciência Negra", scope: "nac", m: 11, d: 20 },
-        { name: "Natal", scope: "nac", m: 12, d: 25 }
+        {
+            name: "Ano-Novo",
+            scope: "nac",
+            m: 1,
+            d: 1
+        },
+        {
+            name: "Carnaval (segunda)",
+            scope: "nac",
+            off: -48,
+            fac: true
+        },
+        {
+            name: "Carnaval (terça)",
+            scope: "nac",
+            off: -47,
+            fac: true
+        },
+        {
+            name: "Quarta-feira de Cinzas",
+            scope: "nac",
+            off: -46,
+            fac: true
+        },
+        {
+            name: "Sexta-feira Santa",
+            scope: "nac",
+            off: -2
+        },
+        {
+            name: "Tiradentes",
+            scope: "nac",
+            m: 4,
+            d: 21
+        },
+        {
+            name: "Dia do Trabalho",
+            scope: "nac",
+            m: 5,
+            d: 1
+        },
+        {
+            name: "Corpus Christi",
+            scope: "sc",
+            off: 60
+        },
+        {
+            name: "Revolução Constitucionalista",
+            scope: "sp",
+            m: 7,
+            d: 9
+        },
+        {
+            name: "N. Sra. da Babilônia",
+            scope: "sc",
+            m: 8,
+            d: 15
+        },
+        {
+            name: "Independência",
+            scope: "nac",
+            m: 9,
+            d: 7
+        },
+        {
+            name: "N. Sra. Aparecida",
+            scope: "nac",
+            m: 10,
+            d: 12
+        },
+        {
+            name: "Finados",
+            scope: "nac",
+            m: 11,
+            d: 2
+        },
+        {
+            name: "Aniversário de São Carlos",
+            scope: "sc",
+            m: 11,
+            d: 4
+        },
+        {
+            name: "Proclamação da República",
+            scope: "nac",
+            m: 11,
+            d: 15
+        },
+        {
+            name: "Consciência Negra",
+            scope: "nac",
+            m: 11,
+            d: 20
+        },
+        {
+            name: "Natal",
+            scope: "nac",
+            m: 12,
+            d: 25
+        }
     ]
     readonly property var monthNames: ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
     readonly property var weekHeads: ["D", "S", "T", "Q", "Q", "S", "S"]
@@ -1356,10 +1442,14 @@ Scope {
     function monthCells(m) {
         const cells = [];
         for (let i = 0; i < 7; i++)
-            cells.push({ head: root.weekHeads[i] });
+            cells.push({
+                head: root.weekHeads[i]
+            });
         const first = new Date(root.calYear, m - 1, 1).getDay();
         for (let i = 0; i < first; i++)
-            cells.push({ d: 0 });
+            cells.push({
+                d: 0
+            });
         const dim = new Date(root.calYear, m, 0).getDate();
         for (let d = 1; d <= dim; d++) {
             const arr = root.calMap[m * 100 + d];

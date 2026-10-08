@@ -1,88 +1,57 @@
 pragma Singleton
 // INMET, the official second source next to the ECMWF numbers: the forecasters' text per day (per
-// period today and tomorrow) and the ACTIVE ALERTS for this municipality, matched by IBGE code.
-// Polled every 30 min; a failed poll keeps the last good answer. Why: docs/notes/desktop/dash.md
+// period today and tomorrow) and the ACTIVE ALERTS for this municipality. Both come from
+// glance-feed's cache, already matched by IBGE code and stripped of polygons and icons, so this
+// file never touches the network. Why: docs/notes/desktop/dash.md, docs/notes/desktop/glance-feed.md
 import Quickshell
-import Quickshell.Io
 import QtQuick
 import "root:/"
 
 Singleton {
     id: root
 
-    // INMET's API answers only clients that look like a browser (a bare curl gets dropped).
-    readonly property string ua: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36"
-    property string ibge: "3548906" // my.weather.ibge, read from weather.json below
     property var days: ({})  // "YYYY-MM-DD" -> {summary, max, min, periods: {manha, tarde, noite}}
-    property var alerts: []  // this municipality's, soonest first
-    property real fetched: 0
+    property var alerts: []  // this municipality's, soonest first: {event, severity, from, to, until, risk}
+    property real now: Date.now()
 
     // Alerts in force right now, the ones a glance must not miss.
-    readonly property var activeNow: root.alerts.filter(a => a.from <= Date.now() && Date.now() <= a.to)
+    readonly property var activeNow: root.alerts.filter(a => a.from <= root.now && root.now <= a.to)
 
     function isoOf(br) { // "07/10/2026" -> "2026-10-07"
         const p = (br || "").split("/");
         return p.length === 3 ? p[2] + "-" + p[1] + "-" + p[0] : "";
     }
-    function parseForecast(text) {
-        let j;
-        try {
-            j = JSON.parse(text);
-        } catch (e) {
-            return;
-        }
-        const city = j[root.ibge];
-        if (!city)
-            return;
+    function readForecast() {
+        const doc = forecastFeed.data || {};
         const out = ({});
-        for (const br in city) {
-            const d = city[br];
-            const per = d.manha || d.tarde || d.noite ? d : null;
-            const main = per ? (d.tarde || d.manha || d.noite) : d;
+        for (const br in doc) {
+            const d = doc[br];
+            const per = d.periods || null;
+            const parts = per ? ["manha", "tarde", "noite"].filter(k => per[k]).map(k => per[k]) : [d];
+            const main = per ? (per.tarde || per.manha || per.noite) : d;
             out[root.isoOf(br)] = {
                 summary: main.resumo || "",
-                max: Number((per ? Math.max(...["manha", "tarde", "noite"].filter(k => d[k]).map(k => d[k].temp_max)) : d.temp_max)),
-                min: Number((per ? Math.min(...["manha", "tarde", "noite"].filter(k => d[k]).map(k => d[k].temp_min)) : d.temp_min)),
+                max: Math.max(...parts.map(p => Number(p.temp_max))),
+                min: Math.min(...parts.map(p => Number(p.temp_min))),
                 periods: per ? {
-                    manha: d.manha ? d.manha.resumo : "",
-                    tarde: d.tarde ? d.tarde.resumo : "",
-                    noite: d.noite ? d.noite.resumo : ""
+                    manha: per.manha ? per.manha.resumo : "",
+                    tarde: per.tarde ? per.tarde.resumo : "",
+                    noite: per.noite ? per.noite.resumo : ""
                 } : null
             };
         }
         root.days = out;
-        root.fetched = Date.now();
     }
-    function parseAlerts(text) {
-        let j;
-        try {
-            j = JSON.parse(text);
-        } catch (e) {
-            return;
-        }
-        const all = (j.hoje || []).concat(j.futuro || []);
-        const mine = all.filter(a => String(a.geocodes || "").split(",").indexOf(root.ibge) >= 0);
-        // INMET's dates are midnight UTC plus a local hh:mm; local wall time is date + hh:mm.
-        const at = (d, hm) => new Date((d || "").slice(0, 10) + "T" + (hm || "00:00") + ":00").getTime();
-        let risk = "";
-        root.alerts = mine.map(a => {
-            // `riscos` arrives as a JSON string of a list, or as the list itself.
-            try {
-                const r = Array.isArray(a.riscos) ? a.riscos : JSON.parse(a.riscos || "[]");
-                risk = String(Array.isArray(r) ? (r[0] || "") : r);
-            } catch (e) {
-                risk = String(a.riscos || "");
-            }
-            return {
-                id: a.id_aviso,
-                event: a.descricao || "",
-                severity: a.severidade || "",
-                from: at(a.data_inicio, a.hora_inicio),
-                to: at(a.data_fim, a.hora_fim),
-                until: a.hora_fim || "",
-                risk: risk
-            };
-        }).sort((x, y) => x.from - y.from);
+    function readAlerts() {
+        // Local wall times ("2026-10-08T00:00"), as INMET states them.
+        root.alerts = (alertsFeed.data || []).map(a => ({
+                    event: a.event || "",
+                    severity: a.severity || "",
+                    from: new Date(a.start + ":00").getTime(),
+                    to: new Date(a.end + ":59").getTime(),
+                    until: a.until || "",
+                    risk: String(a.risk || "")
+                }));
     }
 
     // The severity's color: INMET's own ladder (potential danger, danger, great danger).
@@ -91,40 +60,21 @@ Singleton {
         return s.indexOf("grande") >= 0 ? Theme.colRed : (s.indexOf("potencial") >= 0 ? Theme.colYellow : Theme.colPeach);
     }
 
-    FileView {
-        path: "/home/v1cferr/.config/theme/weather.json"
-        watchChanges: true
-        onLoaded: {
-            try {
-                const c = JSON.parse(text());
-                if (c.ibge)
-                    root.ibge = c.ibge;
-            } catch (e) {}
-        }
-        onFileChanged: reload()
+    Feed {
+        id: forecastFeed
+        name: "inmet_forecast"
+        onChanged: root.readForecast()
     }
-    Process {
-        id: fc
-        command: ["curl", "-sS", "-m", "20", "-A", root.ua, "https://apiprevmet3.inmet.gov.br/previsao/" + root.ibge]
-        stdout: StdioCollector {
-            onStreamFinished: root.parseForecast(text)
-        }
+    Feed {
+        id: alertsFeed
+        name: "inmet_alerts"
+        onChanged: root.readAlerts()
     }
-    Process {
-        id: av
-        command: ["curl", "-sS", "-m", "20", "-A", root.ua, "https://apiprevmet3.inmet.gov.br/avisos/ativos"]
-        stdout: StdioCollector {
-            onStreamFinished: root.parseAlerts(text)
-        }
-    }
+    // "In force now" is a matter of the clock as much as of the data.
     Timer {
-        interval: 1800000
+        interval: 60000
         running: true
         repeat: true
-        triggeredOnStart: true
-        onTriggered: {
-            fc.running = true;
-            av.running = true;
-        }
+        onTriggered: root.now = Date.now()
     }
 }

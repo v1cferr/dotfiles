@@ -179,10 +179,11 @@ GFS, ICON, Météo-France and UKMO up to 2.6 °C apart from it. `my.weather.mode
 that choice if Open-Meteo's ever changes, both the bar and the lock screen ask for it, and the
 weather page names it. Pinning lost no field: current, 25 hourly rain chances, 8 days, the sun.
 
-**The data is the bar's.** `Bar.qml` already fetched Open-Meteo every 15 minutes for its pill; the
-same call now also asks for `hourly` (temperature, rain chance, sky and `is_day`, `forecast_hours=25`)
-and the days' `sunrise`/`sunset`, and exposes `wHourly` and `wDaily` (keyed by ISO date, today
-included). No second request, no second source (rule 11).
+**The data is glance-feed's** (docs/notes/desktop/glance-feed.md). The bar no longer calls
+Open-Meteo itself: it reads the `weather` document from the SQLite cache (`Feed.qml`), which holds
+the hourly run with feels like, humidity and wind, and derives "now" from it, interpolating by the
+minutes past the hour and re-deriving every 5 minutes. `wHourly`, `wDaily` and `wForecast` keep
+their shapes, so the pill, its popover, the month grid and the weather page did not change.
 
 **The ambient layer (`WeatherAmbient.qml`)** lives behind today's glyph: drops falling while it
 rains, a slow breathing glow while the sun is out, and NOTHING for clouds, fog or night, because
@@ -291,7 +292,8 @@ one rectangle.
 
 Open-Meteo gives the hourly numbers; INMET (`Inmet.qml`) gives what a forecaster wrote and, above
 all, the ALERTS, the same official warnings Civil Defense acts on (the "Storm - Moderate" MSN
-showed was one of them). Both are polled every 30 minutes, and a failed poll keeps the last answer.
+showed was one of them). glance-feed fetches both (the text every 4 hours, the alerts only when
+INMET's RSS set changes) and stores them already filtered; `Inmet.qml` only reads the cache.
 
 - **Matched by IBGE code, never by name.** `my.weather.ibge = "3548906"`: the alerts list every
   municipality they cover, and "São Carlos" alone also matches São Carlos/SC (4216008). An alert
@@ -304,7 +306,7 @@ showed was one of them). Both are polled every 30 minutes, and a failed poll kee
 - **The week starts tomorrow** on the page: today already has the block under the clock and the
   start of the 24 h chart, and the row was worth more as height for the chart.
 - **The API is undocumented and picky.** `apiprevmet3.inmet.gov.br` drops clients that do not look
-  like a browser, so the requests send a browser user agent; `riscos` arrives as a JSON string of a
+  like a browser, so glance-feed sends a browser user agent; `riscos` arrives as a JSON string of a
   list or as the list itself. If it moves, the panel loses the text and the alerts and keeps the
   ECMWF numbers.
 

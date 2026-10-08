@@ -235,7 +235,7 @@ Item {
         y: chart.plotTop + chart.plotH + 10
         spacing: 3
         Repeater {
-            model: Math.floor((chart.n - 1) / 3) // 24 hours = 8 blocks; the 25th sample only closes the curve
+            model: Math.max(0, Math.floor((chart.n - 1) / 3)) // 24 hours = 8 blocks; the 25th sample only closes the curve
             delegate: Rectangle {
                 required property int index
                 readonly property int p: {

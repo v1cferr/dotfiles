@@ -114,9 +114,8 @@ The browser is referenced as the same Zen derivation `modules/home/packages.nix`
 PATH, so it is the store path that is guaranteed and not the search order (rule 4). `ldd` says Zen
 resolves entirely under `/nix`, which the sandbox binds, so it runs from in there.
 
-**What is not proven yet**: that Zen really comes up from inside the bwrap. It only gets exercised
-on the next unlink. If it fails, the fallback is no window at all, which is no worse than a Firefox
-nobody is logged into, and `dropbox-hm status` still prints the URL.
+**Proven on the 06/10/2026 unlink**: Zen comes up from inside the bwrap. The unit's journal shows
+`zen-beta` started by `dropbox-start` on 06/10 and again on 08/10, at the first start after boot.
 
 ## Block 1: making systemd notice the daemon dying
 
@@ -195,3 +194,56 @@ thing the 12 h anti-spam is there to prevent.
 the first probe, otherwise the transient startup state would become a false alarm.
 `OnUnitActiveSec = 30min` is plenty of resolution: an unlink does not resolve itself, and the
 damage grows in days (10, in the incident), not in minutes.
+
+## Second unlink, 06/10/2026
+
+Found on 08/10/2026, three days in. Unlike the first incident, the watcher did its job: it logged
+`Dropbox UNLINKED` 3 minutes after the 06/10 boot and on every probe after that. What failed was
+acting on it, not detecting it.
+
+What the state files prove:
+
+- `sync_history.db` last moved at 05/10 13:05, on a mid-session restart of the unit.
+- `instance1/hostkeys` and `instance_db/hostkeys` were REWRITTEN at 06/10 07:18, the first start
+  after the next boot. A new hostkey is a new device identity: the client threw the old link away
+  locally, so the unlink happened at startup, not mid-session.
+
+What it was NOT, each one checked:
+
+- **Hostname or machine-id**: `ex-b560m-v5` since the cutover, `/etc/machine-id` from 01/08.
+- **The SIGKILL at shutdown**: the daemon logs "Error reading events from display: Broken pipe"
+  when the session goes away, `dropbox stop` answers "Dropbox isn't running!", and systemd kills
+  what is left. That happens on EVERY shutdown, including the ones that stayed linked (01/10 and
+  04/10 twice).
+- **The keyring sealed in the TPM on 04/10**: `login.keyring` last changed 04/10 14:13, and the
+  link survived the whole day of 05/10 after it. No libsecret reference turned up in the client's
+  libraries either.
+- **`line 3: run: command not found`** in the unit's log: upstream's start script calls the
+  activation-script helper `run`, which does not exist in a unit. Every generation has that line,
+  including the one running now; the `mkdir` it skips is redundant because the dirs exist.
+
+**The root cause is still OPEN.** The client's own logs (`~/.dropbox-hm/.dropbox/logs/`) are
+encrypted, so the local side ends here. The next place to look is the account's device list
+(dropbox.com, Settings, Security): a session revoked server side, or the free plan's 3-device
+limit, would both look exactly like this from the machine.
+
+### Relinking took a daemon restart
+
+Three authorizations in the browser did nothing: the state files did not move and `status` kept
+answering "Waiting to be linked". One of them was refused by the page as expired. After
+`systemctl --user restart dropbox` (the daemon had been up since 07:11), the FIRST URL the fresh
+daemon minted linked within a minute: `instance1/sync/` appeared, `sync_history.db` moved, and
+`status` went `Indexing...`, then `Up to date`.
+
+Why the old daemon ignored the authorizations is not known. A plausible suspect is the pile of
+nonces it had minted by then (one for the browser it opened at boot, one per `status` call), but
+that was not proven. The recipe that worked:
+
+```sh
+systemctl --user restart dropbox
+dropbox-hm status   # ONCE, after it leaves "Starting...", then authorize that URL
+```
+
+To verify, watch `instance1/sync_history.db` and `instance1/sync/`, never a second `status` before
+the link completes. And not the bare `instance1/` directory: it survives an unlink, so its
+presence proves nothing.

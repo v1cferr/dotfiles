@@ -23,3 +23,7 @@ step of phase 1 of the threat monitoring plan (docs/open-items.md).
 2. `log_ip` on the router (`system.@system[0].log_ip`, `log_port='5514'`, `log_proto='udp'`).
 3. Only then `logqueries` on dnsmasq: turned on first, the query log would only churn the 128 KB
    ring and push the router's own warnings out of it.
+
+All three were done on 08/10/2026, in that order. A query line reads
+`dnsmasq[1]: <n> <client>/<port> query[A] <name> from <client>`, and a blocked one answers
+`config <name> is NXDOMAIN`.

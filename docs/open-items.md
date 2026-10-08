@@ -229,8 +229,10 @@ finished work. What was closed is in the [august history](history/2026/08-august
         19 -> 27 MB, available RAM 84 -> 71 MB (TIF medium at 572k would not leave room for banIP).
         Proven: a TIF domain and `dns.google` now NXDOMAIN, 20 everyday domains still resolve, no
         UFSCar/FAI name in any list. Same day: the second DoH upstream moved from Google (unfiltered)
-        to Cloudflare's security resolver, and `drop_invalid` went on. Still to do in phase 1:
-        `logqueries`, banIP (with 71 MB left: small feeds only), WAN drop logging, `log_ip`.
+        to Cloudflare's security resolver, and `drop_invalid` went on. Later that day the router's
+        syslog went to the desktop (`log_ip`, kept 30 days: docs/notes/network/router-log.md) and
+        dnsmasq's `logqueries` went on, proven by a blocked domain logged as NXDOMAIN. Still to do
+        in phase 1: banIP (with 71 MB left: small feeds only) and WAN drop logging.
       • PHASE 1, the router as a light sensor: HaGeZi TIF (mini or medium, by RAM) as its own
         adblock-fast list plus `logqueries`, since a device resolving a C2 domain is the strongest
         signal a house gets; banIP with Feodo, ThreatFox, Spamhaus DROP and `doh`, both ways,

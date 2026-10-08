@@ -9,8 +9,8 @@ router reads them from there.
 
 ## Why this exists
 
-The router is the piece of infrastructure Nix does not reach: 6 MB of flash and
-128 MB of RAM put NixOS out of scale. Until 08/08/2026 the ~750 lines of UCI
+The router is the piece of infrastructure Nix does not reach: a 3.9 MB overlay and
+234 MB of RAM (measured 08/10/2026) put NixOS out of scale. Until 08/08/2026 the ~750 lines of UCI
 lived only on the device, with no review, no history, and nobody knowing when
 they changed. This does not make the router declarative; it makes the config
 **visible** and the drift **detectable**, which is what was missing.

@@ -129,15 +129,9 @@ let
     [ -s ${quotesCache} ] || echo '<i>“A melhor forma de prever o futuro é inventá-lo.”</i>  <b>Alan Kay</b>' > ${quotesCache}
   '';
 
-  # Weather: a 10-min timer caches Open-Meteo; the runtime is cat.
+  # Weather: a 10-min timer turns glance-feed's cached forecast into the label; the runtime is cat.
   weatherDir = cacheDir;
   weatherCache = "${weatherDir}/weather";
-  # The coordinates and the pt-BR table are the SSOT in my.weather (modules/home/desktop/weather.nix), the
-  # SAME ones the bar reads, so the two surfaces cannot disagree about the same minute.
-  weatherUrl =
-    "https://api.open-meteo.com/v1/forecast"
-    + "?latitude=${config.my.weather.latitude}&longitude=${config.my.weather.longitude}"
-    + "&current=temperature_2m,weather_code&timezone=auto&models=${config.my.weather.model}";
   # The case arms are GENERATED from the same attrset, so the lock and the bar never drift (rule 16).
   weatherCase = lib.concatStrings (
     lib.mapAttrsToList (
@@ -145,14 +139,17 @@ let
     ) config.my.weather.conditions
   );
   # São Carlos/SP by COORDINATES (no geocoding ambiguity), written atomically.
+  # The SAME forecast the bar draws (one fetch per model run, glance-feed), read locally: the
+  # current hour's sky and temperature, so the lock and the bar cannot disagree about the minute.
   weatherFetch = writeShellScript "lockscreen-weather-fetch" ''
     ${coreutils}/bin/mkdir -p ${weatherDir}
-    data=$(${curl}/bin/curl -sS --max-time 15 ${lib.escapeShellArg weatherUrl} || true)
+    hour=$(${coreutils}/bin/date +%Y-%m-%dT%H:00)
     # ONE jq pass, and `select` drops the whole line if either field is missing: a partial read
     # must not become a label. weather_code 0 survives it, since only null/false are falsy in jq.
-    fields=$(${coreutils}/bin/printf '%s' "$data" | ${jq}/bin/jq -r '.current
-      | select(.weather_code != null and .temperature_2m != null)
-      | "\(.weather_code) \(.temperature_2m | round)"' || true)
+    fields=$(${config.my.glance.feed}/bin/glance-feed read weather | ${jq}/bin/jq -r --arg h "$hour" '.json.hourly
+      | (.time | index($h)) as $i | select($i != null)
+      | select(.weather_code[$i] != null and .temperature_2m[$i] != null)
+      | "\(.weather_code[$i]) \(.temperature_2m[$i] | round)"' || true)
     # No data: the PREVIOUS cache stays on screen. An empty label reads as "the lock is broken".
     [ -n "$fields" ] || exit 0
     set -- $fields
@@ -399,7 +396,7 @@ in
     };
   };
   systemd.user.timers.lockscreen-weather = {
-    Unit.Description = "Refreshes the lock screen weather every 10 min";
+    Unit.Description = "Refreshes the lock screen weather label from the glance cache every 10 min";
     Timer = {
       OnBootSec = "1min"; # the 1st fetch right after boot
       OnUnitActiveSec = "10min"; # and every 10 min afterwards

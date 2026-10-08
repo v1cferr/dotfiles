@@ -1,6 +1,11 @@
 # GLANCE-FEED: the desktop's network data (weather, INMET, CI) fetched only when it can have changed,
 # into one SQLite cache the bar, the glance band and the lock screen READ. docs/notes/desktop/glance-feed.md
-{ config, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   # Rule 19: everything this module reaches for, named once.
@@ -34,9 +39,17 @@ let
   };
 in
 {
-  home.packages = [ feed ]; # `glance-feed read <name>` is how the UI reads
+  # Other modules read the cache through this (the lock screen's weather label), never a path.
+  options.my.glance.feed = lib.mkOption {
+    type = lib.types.package;
+    readOnly = true;
+    default = feed;
+    description = "The glance-feed package; `glance-feed read <name>` prints a cached document.";
+  };
 
-  systemd.user.services.glance-feed = {
+  config.home.packages = [ feed ]; # `glance-feed read <name>` is how the UI reads
+
+  config.systemd.user.services.glance-feed = {
     Unit.Description = "Refreshes the glance cache (weather, INMET, CI) when a source can have changed";
     Service = {
       Type = "oneshot";
@@ -45,7 +58,7 @@ in
     };
   };
   # Every minute it only ASKS each source whether it is due; almost every run touches no network.
-  systemd.user.timers.glance-feed = {
+  config.systemd.user.timers.glance-feed = {
     Unit.Description = "Runs glance-feed every minute; each source keeps its own cadence";
     Timer = {
       OnStartupSec = "15s"; # the first fill right after login; the UI paints from the cache meanwhile

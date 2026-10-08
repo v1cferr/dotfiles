@@ -56,3 +56,12 @@ table that records the bytes and the `304`s per source per day, which is the pro
 The fetching lives in a systemd user timer and not in QML so that it survives a shell restart, the
 bar and the lock screen share ONE weather fetch instead of two, and every decision is in
 `journalctl --user -u glance-feed`.
+
+## Who reads it
+
+- **The bar** (`Bar.qml`, through `Feed.qml`): the `weather` document, deriving "now" from its hours.
+- **The glance band**: the same weather, plus `inmet_forecast` and `inmet_alerts` (`Inmet.qml`).
+- **The lock screen** (`lockscreen.nix`): its 10-minute label job reads the current hour's sky and
+  temperature from the same `weather` document (`my.glance.feed`, a read-only option, is how a
+  module reaches the package). It used to call Open-Meteo on its own every 10 minutes; now the
+  bar and the lock show the same run, and the lock costs no network at all.

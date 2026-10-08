@@ -316,3 +316,21 @@ struggles, and the reference is INMET's forecasters and their alerts. On 07/10/2
 by 4 °C on Saturday (INMET 35°, ECMWF 31°); the page shows both instead of choosing silently.
 CPTEC/INPE and the BrasilAPI wrapper were unreachable from here that day, and Climatempo's API is
 paid.
+
+## The network page
+
+A page of the rotation (month, WEATHER, NETWORK, GitHub, FAI), from glance-feed's `network`
+document (docs/notes/desktop/glance-feed.md), added on 08/10/2026 as the first visible piece of the
+threat-monitoring plan in docs/open-items.md, before any router change.
+
+- **Four numbers:** devices online, new today, remote sessions now, open connections.
+- **The exposed ports, last 24 hours:** failed SSH logins, from how many IPs, fail2ban bans, and the
+  three most persistent addresses. It made the exposure concrete on day one: 97 failures from 45
+  IPs against port 2222.
+- **Devices** as chips: NEW in peach first, then the ones not in the router's static DHCP list,
+  then the known (green). "Not in the list" is not "hostile": the family's phones are there too.
+- **Remote access over WireGuard:** each peer by its description in the router's mirror, connected
+  (a handshake in the last 3 minutes) or last seen, and its traffic from the peer's point of view.
+  The endpoint is deliberately not shown.
+- **A footer that says what is not on yet** (the DNS and banIP threat feeds of phase 1), instead
+  of a page that looks complete.

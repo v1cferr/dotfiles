@@ -231,9 +231,9 @@ PanelWindow {
                     spacing: 10
 
                     // 0 = month, 1 = GitHub Actions, 2 = the FAI GitLab (only while it answers).
-                    // Page ids are stable (3 = weather was added last); `order` is the rotation.
-                    readonly property var order: Ci.gitlabShown ? [0, 3, 1, 2] : [0, 3, 1]
-                    readonly property var titles: [(dash.host.monthNames[dash.host.calTodayM - 1] || "").toUpperCase() + "  " + dash.host.calYear, "GITHUB  ACTIONS", "FAI  ·  GITLAB", "WEATHER  ·  24 H"]
+                    // Page ids are stable (3 = weather, 4 = network, in the order they were added); `order` is the rotation.
+                    readonly property var order: Ci.gitlabShown ? [0, 3, 4, 1, 2] : [0, 3, 4, 1]
+                    readonly property var titles: [(dash.host.monthNames[dash.host.calTodayM - 1] || "").toUpperCase() + "  " + dash.host.calYear, "GITHUB  ACTIONS", "FAI  ·  GITLAB", "WEATHER  ·  24 H", "NETWORK  ·  LAN"]
                     property int page: 0
                     function step(d) {
                         const n = pages.order.length;
@@ -519,6 +519,28 @@ PanelWindow {
                                 Layout.fillHeight: true
                                 Layout.topMargin: 6
                                 host: dash.host
+                            }
+                        }
+
+                        // The network page (NetworkPage.qml): devices, remote access, attacks on the exposed ports.
+                        NetworkPage {
+                            anchors.fill: parent
+                            anchors.topMargin: 6
+                            opacity: pages.page === 4 ? 1 : 0
+                            visible: opacity > 0
+                            Behavior on opacity {
+                                NumberAnimation {
+                                    duration: 260
+                                }
+                            }
+                            transform: Translate {
+                                x: pages.offsetOf(4)
+                                Behavior on x {
+                                    NumberAnimation {
+                                        duration: 420
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
                             }
                         }
 

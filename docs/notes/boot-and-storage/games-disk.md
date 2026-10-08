@@ -320,3 +320,22 @@ Bodycam alone (the recipe is in git history if another OnlineFix repack shows up
 The sections above that tell how those games got here stay, because what they measured (the
 snapshot timeline, the `unrar` mask, the save that travels with the emulator config) does not
 depend on the game.
+
+## The first Steam game, and why its library stays in `$HOME`
+
+Baldur's Gate 3 came back onto the Kingston without anyone choosing that: on 06/10 Steam installed
+it into the only library `libraryfolders.vdf` lists, `~/.local/share/Steam`, so 145 GiB landed in
+`@home`. FOUND on 08/10 while chasing a disk at 70%.
+
+It got the same treatment as the bottles: the game folder copied with the same `rsync` and linked
+back at `steamapps/common/Baldurs Gate 3`. VERIFIED by path and size: **69 files, 144.5 GiB, zero
+mismatches**. Steam keeps its manifest,
+its `compatdata` prefix and its idea of where the game lives, so nothing changes in the UI.
+
+**A second Steam library on `/mnt/windows` was the other option, and it was not taken.** Steam puts
+`compatdata` INSIDE each library, so a library on NTFS drags the Proton prefix onto NTFS with it,
+which is exactly what this note says a Wine prefix does not survive.
+
+The cost is that this repeats: every new Steam install lands in `@home` by default and pays the
+snapshot timeline above. Installing big games straight onto the Windows side, or moving them here
+right after the download, is the habit that avoids it.

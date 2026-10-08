@@ -66,6 +66,11 @@ in
       # NEVER duplicated either, same as the two above: the repack was installed straight onto the
       # Windows disk on 29/08 and only got a bottle on 12/09, so these 16 GiB never moved at all.
       ".local/share/bottles/bottles/Victoria-3/drive_c/Games/Victoria 3" = "Victoria 3";
+
+      # The first STEAM game here, COPIED on 08/10: Steam installed it into the only library it
+      # knows, `@home`, on 06/10. The game folder alone; `compatdata` (the Proton prefix) stays on
+      # btrfs for the same reason every bottle does.
+      ".local/share/Steam/steamapps/common/Baldurs Gate 3" = "Baldurs Gate 3";
     };
 
     # SAVES ARE NOT UNDER `root`, which is why they need their own attrset: Paradox writes into

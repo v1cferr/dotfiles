@@ -300,6 +300,7 @@ in
         "${games}/Cities - Skylines II"
         "${games}/Assassin Creed Black Flag Resynced"
         "${games}/Victoria 3"
+        "${games}/Baldurs Gate 3"
 
         # The only one still on the Kingston, on purpose: of its 7.9 GiB just 4.3 are the game, the
         # rest being the Steam Linux Runtime, which cannot leave Linux. Valve does not support an

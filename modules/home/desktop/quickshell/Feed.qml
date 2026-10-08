@@ -54,5 +54,14 @@ Scope {
             feed.read();
         }
     }
+    // Until the first document arrives (the cache still empty, or `glance-feed` not on the PATH
+    // yet right after a rebuild), ask again every 30 s instead of waiting for a stamp that may not
+    // move for hours.
+    Timer {
+        interval: 30000
+        repeat: true
+        running: feed.data === null
+        onTriggered: feed.read()
+    }
     Component.onCompleted: feed.read()
 }

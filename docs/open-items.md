@@ -149,7 +149,18 @@ finished work. What was closed is in the [august history](history/2026/08-august
         `probe_candidates()`, in `modules/nixos/network/vpn.nix`, together with the measurement, the way
         the FAI one is.
 
-- [ ] WireGuard peer `fai-workstation` (10.10.10.5): alive or legacy? (opened on 10/08/2026)
+- [ ] SEGMENTATION, deferred by the owner on 08/10/2026 (found in the router audit that day).
+      • IoT and guests share the main LAN: the Samsung TV and an unnamed `wlan0` device see every
+        PC. The fix is a second SSID with its own zone, internet only. Deferred because every IoT
+        device has to be re-joined to the new network, not because the risk is small.
+      • The brother's PC is exposed on 2223 (DNAT since 18/08/2026, his request: Claude Code from his
+        phone), with ONLY his Microsoft account password, no second factor and no fail2ban, and it
+        sits in the main LAN, so a leaked password reaches the whole house. Recommended: close 2223
+        and give his phone a WireGuard peer; second best, key-only auth on that port. His PC, so his
+        call too.
+
+- [ ] WireGuard peer `fai-workstation` (10.10.10.5): alive or legacy? (opened on 10/08/2026; on
+      08/10/2026 the owner confirmed it and `pc-nizario` are HIS, used now and then, so both stay)
       Measured with the new `wg-status`: in **17 days** of router uptime it did not do ONE
       handshake. And it is not a forgotten passive peer: it has `persistent_keepalive = 25`,
       which exists precisely to keep the connection up.

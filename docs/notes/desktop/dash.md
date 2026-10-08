@@ -2,9 +2,8 @@
 
 `modules/home/desktop/quickshell/dash/`. Everything that belongs to the band lives in that one
 folder: the panel (`Dashboard.qml`), its pieces (`Tile.qml`, `ServiceStrip.qml`, `CiList.qml`), the CI
-feed (`Ci.qml`) and, under `scripts/`, the shell behind it (`ci-status.sh`, packaged as
-`ci-status-json` in `modules/home/desktop/quickshell.nix`). The shell sits in its own subfolder so
-the folder reads as QML views on top and build inputs below. It is the top 30% of the standing secondary, reserved so
+feed (`Ci.qml`, which reads glance-feed's cache) and, under `scripts/`, the services meta script and
+the pipeline hook's store.
 that no window lands in it.
 
 The band is a part of the Quickshell tree and not a Nix module of its own on purpose: the QML has to
@@ -65,13 +64,12 @@ flanked by `‹ ›` arrows (`PageArrow.qml`); the mouse wheel over the column s
 The pointer over the column HOLDS the page, because reading a row must not be a race against the
 timer. The clock and the vitals never rotate: they are what the band is for.
 
-**One feed, one schema.** `ci-status.sh` (built as `ci-status-json`, so shellcheck runs at build
-time, rule 7) asks both forges and prints ONE JSON in which a run is `{repo, name, ref, state,
-event, created, url}` and `state` is one of six words. The QML never learns that GitHub says
-`completed/failure` and GitLab says `failed`. A source that fails reports `{ok: false, error}` and
-never hides the other one. `Ci.qml` is a singleton, so it polls once whatever the number of
-screens: every minute while something runs, every three otherwise, which is about 15 API calls a
-poll and far from GitHub's 5000 an hour.
+**One feed, one schema.** glance-feed's CI source (docs/notes/desktop/glance-feed.md) asks both
+forges and stores ONE document in which a run is `{repo, name, ref, state, event, created, url}`
+and `state` is one of six words. The QML never learns that GitHub says `completed/failure` and
+GitLab says `failed`. A source that fails reports `{ok: false, error}` and never hides the other
+one. It runs every minute while something runs or waits and every two otherwise, with an ETag on
+every request, so an unchanged forge costs `304`s with no body; `Ci.qml` only reads the cache.
 
 **What counts as "recent".** Repos pushed in the last 7 days are the candidates, and from each one
 the latest run of every workflow created in that window. Dependabot's update jobs (event `dynamic`)
@@ -107,9 +105,10 @@ a `read_api` token, `fai_gitlab_token`, which is user-readable in `/run/secrets`
 script runs as the quickshell user. Off the VPN the name still resolves, so one 4 s probe decides
 it, instead of a timeout per project.
 
-**Off the VPN it shows the last good picture.** Every good answer of a source is stamped (`asOf`)
-and kept in `~/.cache/ci-status/`, and a failed one serves that copy marked `stale`, with an
-`offline · 2 h` badge in peach on the page, so old data never passes for live. The page only
+**Off the VPN it shows the last good picture.** A failed source keeps its last good runs in the
+cached document, marked `stale` with the time it FIRST failed (`staleSince`, so the document does
+not change on every failing run), and the page shows an `offline · 2 h` badge in peach, so old data
+never passes for live. The page only
 leaves the rotation when the forge has never answered at all. A missing or refused token stays in the rotation with a line that says which, because
 that one is mine to fix.
 
@@ -128,7 +127,7 @@ git.sup (FAI) --Pipeline Hook--> ci.v1cferr.dev (Cloudflare edge, Access: servic
                                       |  ci-webhook-store: payload -> the band's run schema
                                       v
                                  /var/lib/ci-webhook/gitlab/<repo>__<ref>.json
-                                      ^  read by ci-status-json when the API does not answer
+                                      ^  read by glance-feed when the API does not answer
 ```
 
 **Two gates, one per layer.** At the edge, the `ci` hostname has an Access app whose only policy
@@ -141,10 +140,10 @@ The template uses Go's backtick strings on purpose: `builtins.toJSON` escapes a 
 and the template parser then refuses the whole file (caught by the end-to-end test below).
 
 **The schema is the API's.** `ci-webhook-store` (`dash/scripts/`) maps the hook payload onto the
-same run object `ci-status.sh` prints (merge request pipelines become `!N` there too, the failed
+same run object glance-feed's CI source writes (merge request pipelines become `!N` there too, the failed
 build gives `job › stage · reason`), keyed by repo and ref. Hooks can arrive out of order, so an
 OLDER pipeline id never overwrites a newer one. Its files are 0644 in a 0755 `StateDirectory`,
-because `ci-status-json` runs as me.
+because glance-feed runs as me.
 
 **Which source wins.** With the VPN up the API is the truth (`via: api`). Without it, the hook
 copy is served live (`via: webhook`, a dim badge on the page). Only when neither has anything does

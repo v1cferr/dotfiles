@@ -1,6 +1,6 @@
 # shellcheck shell=bash
 # ci-webhook-store: one GitLab "Pipeline Hook" payload ($1) -> one file per repo and ref under
-# $STATE_DIRECTORY/gitlab, in the SAME run schema ci-status.sh prints, so the band reads the webhook
+# $STATE_DIRECTORY/gitlab, in the SAME run schema glance-feed's CI source writes, so the band reads the webhook
 # copy exactly like the API one. Run by the webhook receiver (modules/nixos/services/ci-webhook.nix)
 # only after it has checked X-Gitlab-Token. Why a webhook at all: docs/notes/desktop/dash.md
 set -euo pipefail

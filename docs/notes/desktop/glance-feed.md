@@ -34,6 +34,13 @@ every run touches no network at all.
 - **INMET alerts:** every 30 minutes the RSS (196 KB) is read only to hash its set of alert ids;
   the 775 KB list is downloaded only when that set changes, or every 6 hours, and only São
   Carlos' alerts (by IBGE code) are kept.
+- **CI (GitHub and the FAI GitLab):** every 2 minutes, 1 while something runs or waits. Every
+  request carries the `ETag` from the last answer, so an unchanged repo list, run list or pipeline
+  is a `304` with no body; what never changes once it exists (a commit's title by its SHA, the jobs
+  of a finished run) is fetched ONCE and served from `http_cache` forever after. The document holds
+  no per-run timestamp of its own, so it changes only when a run does. Measured on 08/10/2026: a
+  cold run downloaded 88 KB (the old `gh api` path moved ~2.3 MB per poll), and a warm one made 5
+  requests, all `304`, 0 bytes.
 - **Conditional GET everywhere a server allows it:** `http_cache` keeps each URL's `ETag` and body,
   so an unchanged resource answers `304` with no body. GitHub documents that a `304` to an
   authorized conditional request does not count against the rate limit.

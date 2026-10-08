@@ -13,9 +13,7 @@ let
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
     coreutils
-    curl
     hyprland
-    jq
     systemd
     writeShellApplication
     ;
@@ -65,24 +63,6 @@ let
     '';
   };
 
-  # ci-status-json: GitHub Actions (gh's login) plus the FAI GitLab pipelines (VPN only) as one JSON
-  # for the glance band's rotating column (Ci.qml). With no token file the GitLab side says so.
-  ciStatus = writeShellApplication {
-    name = "ci-status-json";
-    runtimeInputs = [
-      config.programs.gh.package
-      curl
-      jq
-      coreutils
-    ];
-    runtimeEnv = {
-      GITLAB_URL = "https://git.sup.fai.ufscar.br";
-      GITLAB_TOKEN_FILE = "/run/secrets/fai_gitlab_token";
-      WEBHOOK_DIR = "/var/lib/ci-webhook/gitlab"; # what the pipeline hook stores (modules/nixos/services/ci-webhook.nix)
-    };
-    text = builtins.readFile ./quickshell/dash/scripts/ci-status.sh; # bash in its own file = shellcheck at build time
-  };
-
   qsRestart = writeShellApplication {
     name = "qs-restart";
     runtimeInputs = [
@@ -105,7 +85,6 @@ in
     qsPkg # `qs` / `quickshell`
     qsRestart # `qs-restart`, used by the SUPER+ESCAPE bind (keybinds.lua)
     trayNativeMenu # `tray-native-menu`, right click on an SNI with no DBusMenu (Bar.qml)
-    ciStatus # `ci-status-json`, the CI pages of the glance band (Ci.qml)
   ];
 
   # ~/.config/quickshell points at the real file in the repo (mutable), which is the hot-reload.

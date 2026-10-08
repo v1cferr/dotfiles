@@ -21,6 +21,7 @@ let
   feed = writeShellApplication {
     name = "glance-feed";
     runtimeInputs = [
+      config.programs.gh.package # the CI source authenticates with gh's own login
       sqlite
       curl
       jq
@@ -34,6 +35,10 @@ let
       GLANCE_MODEL = config.my.weather.model;
       GLANCE_IBGE = config.my.weather.ibge;
       GLANCE_SCHEMA = ./schema.sql;
+      # The CI source: the FAI GitLab (VPN only) and the pipeline hook's copy (ci-webhook.nix).
+      GLANCE_GITLAB_URL = "https://git.sup.fai.ufscar.br";
+      GLANCE_GITLAB_TOKEN_FILE = "/run/secrets/fai_gitlab_token";
+      GLANCE_WEBHOOK_DIR = "/var/lib/ci-webhook/gitlab";
     };
     text = builtins.readFile ./scripts/feed.sh;
   };

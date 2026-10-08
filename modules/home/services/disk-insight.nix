@@ -67,8 +67,8 @@ let
           # exe and cwd are EVIDENCE: a process cannot run from a path or sit in it by accident.
           printf '%s\n' "$exe"
           readlink -f "$p/cwd" 2>/dev/null || true
-          # argv is only a MENTION, so it counts for launchers alone. RPCS3 needs it (the ISO is
-          # an argument and its exe lives in /nix/store), but reading it for every process would
+          # argv is only a MENTION, so it counts for launchers alone. Wine needs it (the .exe is
+          # an argument and its loader lives in /nix/store), but reading it for every process would
           # make any shell that so much as types the path look like a game session.
           if printf '%s\n' "$launchers" | grep -qxF -- "$base"; then
             # The subshell contains the redirect: a pid that dies between the glob and the open
@@ -273,7 +273,6 @@ in
 
     # The launchers that name their target in the argv instead of running from it.
     my.disk.usageLauncherCommands = [
-      "rpcs3"
       "wine"
       "wine64"
       "wine-preloader"

@@ -47,8 +47,8 @@ a `du` or a backup pass does without the game ever opening. This says the game R
 **The evidence rule: `exe` and `cwd` always count, `argv` only for launchers.**
 
 A process cannot be running from a path, or sitting in one, by accident, so those two are proof.
-`argv` is only a MENTION. It is still needed, because RPCS3's binary lives in `/nix/store` and the
-ISO is an argument, so nothing else would ever see `~/Games/PS3`. Trusting it everywhere is what
+`argv` is only a MENTION. It is still needed for launchers, because Wine's loader lives in
+`/nix/store` and the game's `.exe` is an argument, so `exe` alone would never see the game. Trusting it everywhere is what
 breaks: any shell that so much as types the path would look like a game session, and this note's
 own author tripped that while testing.
 

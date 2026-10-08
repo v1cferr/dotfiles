@@ -233,9 +233,7 @@ It does four things:
 
 Ported from the Arch `window-rules.conf`. A subtle global transparency (0.98 active / 0.96
 inactive), maximize requests suppressed since that behaves better under tiling, and an XWayland
-drag fix for classless floating windows that steal focus. Picture-in-Picture stays fully opaque,
-and Ascension (a private WoW through Wine) is floating, centered on the LG, opaque and
-idle-inhibiting.
+drag fix for classless floating windows that steal focus. Picture-in-Picture stays fully opaque.
 
 **Hearthstone and the workspace that is off screen.** Leaving the game's workspace made its render
 AND its audio fall behind, and both only caught up on coming back. It is not a Hyprland bug and
@@ -258,12 +256,9 @@ disconnects when the fps flutters. The ceiling is not per rule, it is the global
 `misc.render_unfocused_fps` in appearance.lua.
 
 The class to match is the LOWERCASED file name of the .exe, which is what Wine puts on the XWayland
-window: `Hearthstone.exe` becomes `hearthstone.exe`, `Ascension Launcher.exe` becomes
-`ascension launcher.exe`. Another game that crawls is one more line with its class.
-
-Ascension does NOT carry the rule. Off screen it keeps burning 56% of a core, so its loop is not
-blocked (D3D9 through wined3d is a different present path), and the rule would pay 30 fps of GPU
-for nothing.
+window: `Hearthstone.exe` becomes `hearthstone.exe`. Another game that crawls is one more line with its
+class, and only one that crawls: a D3D9 game through wined3d keeps its loop running off screen
+(measured on the Ascension client, 56% of a core), so the rule would pay 30 fps of GPU for nothing.
 
 An upstream hole worth knowing (hyprwm/Hyprland#12463): a window rendering unfocused still leans on
 its MONITOR having a reason to draw, so on a completely static screen it can fall under the ceiling.

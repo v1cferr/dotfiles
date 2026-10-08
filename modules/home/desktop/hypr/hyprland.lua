@@ -7,7 +7,7 @@ for _, mod in ipairs({
   "appearance",  -- general/decoration/animations: borders, blur, shadow, curves
   "input",       -- the ABNT2 keyboard plus the mouse (flat accel, numlock)
   "autostart",   -- hl.on("hyprland.start"): systemd, quickshell, clipboard
-  "rules",       -- hl.window_rule: opacity, PiP, Ascension, Flameshot
+  "rules",       -- hl.window_rule: opacity, PiP, Hearthstone, Flameshot
   "keybinds",    -- every hl.bind
 }) do
   dofile(dir .. mod .. ".lua")

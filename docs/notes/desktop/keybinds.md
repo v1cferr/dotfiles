@@ -38,6 +38,23 @@ immune to modifiers.
 
 The same reasoning is why the cheatsheet is on SUPER+H and not SUPER+/.
 
+### Moonlight 6.2.0 sends the key, as the WRONG one
+
+Retested on 08/10/2026 with a 6.2.0 client, and the bind stays. The key no longer vanishes: it now
+types `\`. The cause has two parts, one on each side of the wire:
+
+- **Client.** 6.1.0 did not handle `SDL_SCANCODE_INTERNATIONAL1` at all (`Unhandled button event:
+  135`). 6.2.0 (commit `fabb4fda`) falls it through to the `NONUSBACKSLASH` case, so it goes out
+  as VK `0xE2` (`VK_OEM_102`), the SAME code as the ISO extra key, with only the
+  `SS_KBE_FLAG_NON_NORMALIZED` flag to tell them apart.
+- **Host.** Sunshine on Linux injects through inputtino, which maps `0xE2` to `KEY_102ND`, which is
+  `<LSGT>` (keycode 94) on ABNT2: `backslash, bar`. inputtino has no entry for `0xC1` or `KEY_RO`.
+
+**It cannot be fixed from the host.** The client's real `\ |` key sends that same `0xE2`, so
+remapping `<LSGT>` on Sunshine's virtual keyboard would trade "/" for "\" instead of recovering it.
+The fix proposed on #1789 (send `VK_ABNT_C1`, `0xC1`) is also only half of one for a Linux host:
+inputtino would need a `0xC1` to `KEY_RO` entry as well.
+
 ### AltGr+Q and AltGr+W need no bind at all
 
 ScrollLock is not the only way in, and on a LAPTOP it is the wrong one, because a laptop usually

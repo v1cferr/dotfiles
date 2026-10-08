@@ -181,6 +181,19 @@ finished work. What was closed is in the [august history](history/2026/08-august
         is the one I hold and the one that is now the only admin source for the router
         ([guides/router-hardening.md](guides/router-hardening.md)).
 
+- [ ] adblock-fast did not come up after the router's boot of 07/10/2026 18:46 (found 08/10/2026).
+      Enabled and in `/etc/rc.d` (S20), yet `/var/run/adblock-fast/` stayed EMPTY and
+      `dhcp.main.serversfile` was gone, so for ~25 h nothing was blocked (`doubleclick.net`
+      resolved). A `sudo /etc/init.d/adblock-fast restart` brought it back at once: 240394 domains,
+      `doubleclick.net` NXDOMAIN. The cause is not confirmed: the suspect is the boot order, the
+      lists downloaded before the PPPoE was up, with `procd_boot_wan_timeout='60'` too short for it.
+      • TO CONFIRM after the next reboot: `ssh -t router 'sudo logread -e adblock'` (logread needs
+        root, unprivileged it HANGS) and `ls /var/run/adblock-fast/`. If it is the boot order,
+        raise the timeout or let it retry on the WAN coming up.
+      • WHY IT MATTERS BEYOND ADS: phase 1 of the threat monitoring below puts the HaGeZi TIF
+        threat list in this same service, so a silent failure here is a silent hole in the
+        detector. The glance band's network page should say whether it is blocking.
+
 - [ ] THREAT MONITORING of the house's network, phases 1 and 2 (planned 08/10/2026; it absorbs the
       13/09 "no log that survives a reboot" item below). The owner asked for a log of the LAN and
       the internet link that catches suspicious connections from any device, and chose: phases 1

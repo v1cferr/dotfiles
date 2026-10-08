@@ -29,11 +29,12 @@ regexes = [
 ]
 
 # review-by: 2027-09-29
-# The public resolvers, named on purpose as upstreams and as probes.
+# The public resolvers, named on purpose as upstreams and as probes (1.1.1.2/1.0.0.2: Cloudflare's
+# malware-filtering resolver, the router's second DoH upstream since 08/10/2026).
 [[rules.allowlists]]
 description = "public DNS resolvers"
 regexTarget = "match"
-regexes = ['''^(?:1\.1\.1\.1|1\.0\.0\.1|8\.8\.8\.8|8\.8\.4\.4|9\.9\.9\.9|149\.112\.112\.112)$''']
+regexes = ['''^(?:1\.1\.1\.1|1\.0\.0\.1|1\.1\.1\.2|1\.0\.0\.2|8\.8\.8\.8|8\.8\.4\.4|9\.9\.9\.9|149\.112\.112\.112)$''']
 
 # review-by: 2027-09-29
 # Not addresses: two version numbers (codex 1.2.92.147, a postgres tag).

@@ -94,7 +94,7 @@ in
       fai_gitlab_token = {
         owner = "v1cferr";
         mode = "0400";
-      }; # user-readable: read_api only, for the glance band's CI page (ci-status-json)
+      }; # user-readable: read_api only, for the glance band's CI page (glance-feed)
     };
 
   environment.systemPackages = [ sync-secrets ];

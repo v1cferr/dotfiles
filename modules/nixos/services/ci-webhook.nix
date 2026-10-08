@@ -72,7 +72,7 @@ in
 
     systemd.services.webhook.serviceConfig = {
       LoadCredential = "gitlab-token:${config.sops.secrets.fai_gitlab_webhook_token.path}";
-      # 0755 so ci-status-json, running as me, reads what the hook wrote.
+      # 0755 so glance-feed, running as me, reads what the hook wrote.
       StateDirectory = "ci-webhook";
       StateDirectoryMode = "0755";
       NoNewPrivileges = true;

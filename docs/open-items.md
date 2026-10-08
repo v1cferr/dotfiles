@@ -231,8 +231,12 @@ finished work. What was closed is in the [august history](history/2026/08-august
         UFSCar/FAI name in any list. Same day: the second DoH upstream moved from Google (unfiltered)
         to Cloudflare's security resolver, and `drop_invalid` went on. Later that day the router's
         syslog went to the desktop (`log_ip`, kept 30 days: docs/notes/network/router-log.md) and
-        dnsmasq's `logqueries` went on, proven by a blocked domain logged as NXDOMAIN. Still to do
-        in phase 1: banIP (with 71 MB left: small feeds only) and WAN drop logging.
+        dnsmasq's `logqueries` went on, proven by a blocked domain logged as NXDOMAIN. Then banIP
+        1.9.0 with three small feeds (feodo and threat both ways, dshield inbound): 1460 elements,
+        available RAM 72 -> 65 MB, every drop logged in both directions (which is the WAN drop
+        logging), its log monitor off (`ban_loglimit=0`: the router's sshd is LAN-only and it would
+        grep every DNS line). Its first inbound drops arrived within a minute. Phase 1 is DONE; what
+        is left is phase 2, all on the desktop.
       • PHASE 1, the router as a light sensor: HaGeZi TIF (mini or medium, by RAM) as its own
         adblock-fast list plus `logqueries`, since a device resolving a C2 domain is the strongest
         signal a house gets; banIP with Feodo, ThreatFox, Spamhaus DROP and `doh`, both ways,

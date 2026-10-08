@@ -181,15 +181,21 @@ finished work. What was closed is in the [august history](history/2026/08-august
         is the one I hold and the one that is now the only admin source for the router
         ([guides/router-hardening.md](guides/router-hardening.md)).
 
-- [ ] adblock-fast did not come up after the router's boot of 07/10/2026 18:46 (found 08/10/2026).
-      Enabled and in `/etc/rc.d` (S20), yet `/var/run/adblock-fast/` stayed EMPTY and
-      `dhcp.main.serversfile` was gone, so for ~25 h nothing was blocked (`doubleclick.net`
-      resolved). A `sudo /etc/init.d/adblock-fast restart` brought it back at once: 240394 domains,
-      `doubleclick.net` NXDOMAIN. The cause is not confirmed: the suspect is the boot order, the
-      lists downloaded before the PPPoE was up, with `procd_boot_wan_timeout='60'` too short for it.
-      • TO CONFIRM after the next reboot: `ssh -t router 'sudo logread -e adblock'` (logread needs
-        root, unprivileged it HANGS) and `ls /var/run/adblock-fast/`. If it is the boot order,
-        raise the timeout or let it retry on the WAN coming up.
+- [~] adblock-fast did not come up after the router's boot of 07/10/2026 18:46 (found 08/10/2026).
+      Enabled and in `/etc/rc.d` (S20), yet nothing was blocked for ~25 h (`doubleclick.net`
+      resolved); a `sudo /etc/init.d/adblock-fast restart` brought it back at once (240394 domains).
+      • CAUSE, CONFIRMED by `sudo logread -e adblock`: at 18:46:10 "failed to discover WAN gateway",
+        retried at 18:46:16 when the WAN came up, both lists failed to download at 18:46:28 (the
+        resolver was not ready yet), and it NEVER tried again. curl's `--retry` skips DNS failures,
+        which it does not count as transient.
+      • FIX APPLIED 08/10/2026, UCI only so the mirror shows it: `curl_additional_param='--retry-all-
+        errors --retry-delay 15'` and `curl_retry='5'` (was 3), about 2 minutes of retrying at boot.
+        adblock-fast appends both to its curl command (`/lib/adblock-fast/adblock-fast.uc`), and the
+        router's curl 8.21 was tested with them before applying.
+      • NOT DONE, on purpose: `compressed_cache='1'` would restore the list at boot with no network,
+        but the list is 7 MB (~2 MB gzipped) against 3 MB of free flash, rewritten on every update.
+      • TO CLOSE: after the next router reboot, `ssh router 'ls /var/run/adblock-fast/'` must show
+        `dnsmasq.servers`. Then mark it done.
       • WHY IT MATTERS BEYOND ADS: phase 1 of the threat monitoring below puts the HaGeZi TIF
         threat list in this same service, so a silent failure here is a silent hole in the
         detector. The glance band's network page should say whether it is blocking.

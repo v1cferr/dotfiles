@@ -38,19 +38,6 @@ in
     # a Battle.net config, only the files. Relocating the game inside Battle.net would buy nothing
     # and cost a "locate the install" round through the UI.
     my.games.linked = {
-      # Diablo IV. VERIFIED on 31/08 before deleting the local copy: 1183 files, zero size
-      # mismatches, the only difference being CASC indices that the agent regenerates.
-      ".local/share/bottles/bottles/Battlenet/drive_c/Program Files (x86)/Diablo IV" = "Diablo IV";
-
-      # Uncharted 3, read by RPCS3 through `~/.config/rpcs3/games.yml`, which keeps working
-      # untouched precisely because the symlink sits at the old path. VERIFIED byte for byte:
-      # sha256 9c600ebb6ed8a13a5c7332fa56378a9f04f98405de4bf2e0bd06b8ab31b804b2 on both disks.
-      #
-      # The FILE and not the `PS3` folder: linking the folder would drop the sibling
-      # `Vimm's Lair.txt`, and copying that over is a write to NTFS this pass deliberately avoids.
-      "Games/PS3/Uncharted 3 - Drake's Deception (USA, Canada) (En,Fr,Es,Pt).dec.iso" =
-        "PS3/Uncharted 3 - Drake's Deception (USA, Canada) (En,Fr,Es,Pt).dec.iso";
-
       # COPIED on 03/09, not deduplicated: these four had no counterpart on the Windows disk, or
       # had a STALE one. Overwatch is the stale case, and it is why every one of these was checked
       # file by file (path and size) after the rsync and not merely by total: its Windows copy read
@@ -68,10 +55,6 @@ in
       # modules/home/services/cs2-saves-backup.nix maintains.
       ".local/share/bottles/bottles/Cities-Skylines-II/drive_c/Games/Cities - Skylines II" =
         "Cities - Skylines II";
-      # Conquest of Azeroth (Ascension WotLK) LOCAL build. The official launcher client did web
-      # auth and could not reach a local server; this is the native-v4 patched client that logs
-      # straight into the local AzerothCore. The whole game folder lives on the Windows disk.
-      ".local/share/bottles/bottles/Ascension/drive_c/Games/Conquest of Azeroth" = "Conquest of Azeroth";
 
       # NEVER duplicated, unlike everything above: the repack installed it straight onto the
       # Windows disk on 25/08 and the Kingston has never held a copy. The `Black-Flag` bottle was
@@ -79,10 +62,6 @@ in
       # need), so the 67 GiB stay exactly where they already were.
       ".local/share/bottles/bottles/Black-Flag/drive_c/Games/Assassin Creed Black Flag Resynced" =
         "Assassin Creed Black Flag Resynced";
-
-      # NEVER duplicated either, and for the simplest reason there is: the archive was extracted
-      # straight into /mnt/windows/Games on 07/09, so these 56 GiB have never been on the Kingston.
-      ".local/share/bottles/bottles/Bodycam/drive_c/Games/Bodycam" = "Bodycam";
 
       # NEVER duplicated either, same as the two above: the repack was installed straight onto the
       # Windows disk on 29/08 and only got a bottle on 12/09, so these 16 GiB never moved at all.

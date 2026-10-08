@@ -97,38 +97,31 @@ so the two agree for every other bottle here and will disagree again for any nam
 
 ## Where each command line came from
 
-Nothing in the list was invented. The five programs that already existed were read back out of
-`bottle.yml`, and the two that were missing came from the `.lnk` files Battle.net itself wrote
+Nothing in the list was invented. The programs that already existed were read back out of
+`bottle.yml`, and Overwatch, which was missing, came from the `.lnk` file Battle.net itself wrote
 inside the prefix, decoded from `drive_c/users/Public/Desktop`:
 
 | Program | What it runs | Evidence |
 | --- | --- | --- |
 | Battle.net | `Battle.net.exe` with its Chromium flags | the entry that was already there |
 | Hearthstone | `Battle.net.exe --exec="launch WTCG"` plus the same flags | the entry that was already there |
-| Diablo IV | `Diablo IV Launcher.exe`, no arguments | its shortcut in the prefix |
 | Overwatch | `Overwatch Launcher.exe --productcode=pro` | its shortcut in the prefix |
 | Cities Skylines II | `Cities2.exe` | the entry that was already there |
 | Black Flag Resynced | `ACBlackFlag.exe` | the entry that was already there |
-| Ascension Launcher | `cmd.exe /c start "" "...\Ascension Launcher.exe"` | the entry that was already there |
-| Bodycam | `Bodycam.exe` | the release's own layout |
+| Victoria 3 | `binaries/victoria3.exe` | the repack's own layout |
 
-**Hearthstone goes through Battle.net and the other two do not**, which looks inconsistent and is
+**Hearthstone goes through Battle.net and Overwatch does not**, which looks inconsistent and is
 not. Hearthstone's entry predates this module and it works, so it was transcribed rather than
-rewritten. If either shim turns out to fail under Wine, the fallback is Hearthstone's route with
-that game's product code, and Battle.net's own config names the installed products (`hs_beta`,
-`fenris`, `prometheus`) if the code ever has to be looked up.
-
-The `start ""` in the Ascension entry is an EMPTY WINDOW TITLE and not a stray pair of quotes:
-`start` reads a first quoted argument as the title, so dropping it would make it try to open the
-launcher's path as a window name. `cmd.exe` is there because the launcher exits as soon as it has
-spawned the real process, and Bottles would otherwise call the program dead.
+rewritten. If the shim turns out to fail under Wine, the fallback is Hearthstone's route with the
+product code, and Battle.net's own config names the installed products if the code ever has to be
+looked up.
 
 ## The paths are not repeated, they are looked up
 
 A library entry for a game names the game and its exe, never the bottle or the folder:
 
 ```nix
-"Bodycam" = inGame "Bodycam" "Bodycam.exe";
+"Victoria 3" = inGame "Victoria 3" "binaries/victoria3.exe";
 ```
 
 `inGame` searches `my.games.linked` for the entry pointing at that game on the Windows disk and
@@ -136,8 +129,8 @@ takes the bottle and the prefix path from its key (rule 11). Two things follow, 
 the point: a game that is not linked FAILS AT EVAL with a message saying so, instead of producing a
 library entry aimed at a path that does not exist.
 
-`inBottle` is the escape hatch for a program that is not a game's own exe, which is Battle.net,
-Hearthstone and the Ascension `cmd.exe`.
+`inBottle` is the escape hatch for a program that is not a game's own exe, which is Battle.net
+and Hearthstone.
 
 ## A leftover that will confuse the next reader
 
@@ -149,49 +142,3 @@ It is almost certainly the first attempt at the Battle.net bottle, kept when the
 created under the name that produced the `Battlenet` directory. Nothing here references it, and it
 sits inside `@home`, so it is 688 MiB of snapshot weight for nothing. It is listed here rather than
 deleted because deleting somebody's prefix on a hunch is how a save disappears.
-
-## An OnlineFix repack needs two things Wine does not give it
-
-Bodycam is a STEAMRIP release whose multiplayer runs through OnlineFix, and getting it to open cost
-two distinct fixes. Both are declared in `my.games.onlineFix`, which is a list of bottle
-directories, so the next repack is one entry and not another afternoon.
-
-**`winmm` has to resolve to the proxy next to the exe.** The repack ships a `winmm.dll` in
-`Binaries/Win64` with a `dlllist.txt` naming `OnlineFix64.dll`: on Windows that loads because the
-application directory comes first in the DLL search order, and Wine prefers its BUILTIN for a
-system name, so nothing ever loads the fix. The symptom is a dialog saying
-`Failed to get OnlineFix interface`, which reads like the fix is broken when it was never loaded.
-The bottle carries `WINEDLLOVERRIDES=winmm=native,builtin`, set through `bottles-cli edit`, because
-the CLI has no DLL-override flag; `winecommand.py` merges that environment variable into the
-bottle's own `DLL_Overrides` rather than replacing it, which is what makes the env-var route safe.
-
-**The fix then LoadLibrary's the real steamclient by its registry path.** Missing, it says
-`Failed to load original steamclient. Error code: 126`, which is `ERROR_MOD_NOT_FOUND`. So
-`HKCU\Software\Valve\Steam\ActiveProcess` gets `SteamClientDll64` and `SteamClientDll`, and the
-two Windows DLLs are placed at `C:\Program Files (x86)\Steam\` as out-of-store symlinks into the
-Steam that is already installed on this machine. Symlinks and not copies: they weigh 47 MiB
-together and this way they follow Steam's updates instead of going stale.
-
-### What the load trace proved, and why no Steam goes inside the bottle
-
-MEASURED with `WINEDEBUG=+loaddll` on 08/09/2026, in this order:
-
-| Module | Where from | Kind |
-| --- | --- | --- |
-| `WINMM.dll` | the game's `Binaries/Win64` | native |
-| `OnlineFix64.dll` | same folder, loaded BY the proxy | native |
-| `steamclient64.dll` | `C:\Program Files (x86)\Steam` | native |
-| `lsteamclient.dll` | `C:\windows\system32` | builtin |
-
-That last line is the answer to the question the error messages made look hard. `lsteamclient` is
-GE-Proton's own bridge, and it forwards Steam API traffic to the Steam client running on the HOST,
-which is why the game came up the moment the ordinary Linux Steam was open and why **nothing has to
-be installed inside the prefix**. The `fixme:steamclient:manual_convert_...` line in the same trace
-is that bridge doing the conversions.
-
-The cost of that is a runtime dependency worth stating plainly: this game wants the Linux Steam
-client RUNNING. It is not declared anywhere, because it is not config, it is something to remember.
-
-The idempotency checks are the same kind as everywhere else here: the env var is looked for BY KEY
-in `bottle.yml`, so a value changed by hand is left alone, and `SteamClientDll64` is looked for in
-`user.reg`. The DLL symlinks need no check at all, since home-manager owns those two paths.

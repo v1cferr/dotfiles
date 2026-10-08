@@ -309,3 +309,14 @@ allocates 37464 blocks against 19178897 bytes, so it is fully materialized, and 
 It is IRREPLACEABLE in the ironman sense and it is not in restic, the same as every other save in a
 bottle. OneDrive is the off-machine copy and it only runs when Windows does. If that stops being
 enough, the shape to copy is `modules/home/services/cs2-saves-backup.nix`.
+
+## What left the disk on 08/10
+
+Diablo IV, Uncharted 3, Conquest of Azeroth and Bodycam were deleted from `/mnt/windows/Games`
+on 08/10, 236 GiB, to make room for the games still living in `@home`. Their links, their library
+entries and their `usagePaths` went with them, and so did `my.games.onlineFix`, which existed for
+Bodycam alone (the recipe is in git history if another OnlineFix repack shows up).
+
+The sections above that tell how those games got here stay, because what they measured (the
+snapshot timeline, the `unrar` mask, the save that travels with the emulator config) does not
+depend on the game.

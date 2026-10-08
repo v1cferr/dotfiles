@@ -6,6 +6,7 @@
     ./palette.nix # the SINGLE SOURCE of colors (my.theme.name); it generates the data for Quickshell/Hyprland
     ./monitors.nix # the SINGLE SOURCE of the connectors (my.monitors); it generates the data for Quickshell/Hyprland
     ./weather.nix # the SINGLE SOURCE of the coordinates plus the WMO -> pt-BR table (my.weather)
+    ./glance-feed # the network cache (SQLite) behind the bar's weather, the band and the lock screen
     ./autostart.nix # the PANEL of what opens at login (my.autostart): Discord/Spotify
     ./polkit-agent.nix # the password dialog for a graphical app that needs authorization
     ./hypr.nix # ~/.config/hypr/hyprland.conf (ABNT2 plus monitors plus keybinds)

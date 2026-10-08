@@ -3,8 +3,8 @@
 # changed, into one SQLite cache (schema.sql). `glance-feed` (the timer, every minute) runs what is
 # due; `glance-feed read <name>` prints a source's document for the UI. Why: docs/notes/desktop/glance-feed.md
 # GLANCE_LAT, GLANCE_LON, GLANCE_MODEL, GLANCE_IBGE, GLANCE_SCHEMA, the GLANCE_GITLAB_* /
-# GLANCE_WEBHOOK_DIR of the CI source and GLANCE_ROUTER_UCI of the network source come from
-# runtimeEnv (default.nix).
+# GLANCE_WEBHOOK_DIR of the CI source, GLANCE_ROUTER_UCI of the network source and GLANCE_ROUTER_LOG
+# of the threats source come from runtimeEnv (default.nix).
 set -uo pipefail
 
 dir="${XDG_CACHE_HOME:-$HOME/.cache}/glance"
@@ -340,16 +340,17 @@ network() {
   # ONE ssh round; nothing here needs root except wg-status, which sudoers allows without a
   # password. logread is NOT used: unprivileged, it hangs instead of failing.
   if ! timeout 20 ssh -o BatchMode=yes -o ConnectTimeout=6 router \
-    'cat /tmp/dhcp.leases; echo @@; ip -4 neigh show dev br-lan; echo @@; cat /proc/sys/net/netfilter/nf_conntrack_count; echo @@; sudo -n /usr/bin/wg-status' \
+    'cat /tmp/dhcp.leases; echo @@; ip -4 neigh show dev br-lan; echo @@; cat /proc/sys/net/netfilter/nf_conntrack_count; echo @@; sudo -n /usr/bin/wg-status; echo @@; ip -6 neigh show dev br-lan' \
     >"$raw" 2>/dev/null; then
     fail network "router unreachable over ssh"
     return 0
   fi
-  local leases neigh conntrack wg
+  local leases neigh conntrack wg neigh6
   leases="$(awk 'BEGIN{RS="@@\n"} NR==1' "$raw")"
   neigh="$(awk 'BEGIN{RS="@@\n"} NR==2' "$raw")"
   conntrack="$(awk 'BEGIN{RS="@@\n"} NR==3' "$raw" | tr -dc 0-9)"
   wg="$(awk 'BEGIN{RS="@@\n"} NR==4' "$raw")"
+  neigh6="$(awk 'BEGIN{RS="@@\n"} NR==5' "$raw")"
 
   # Known names: the static DHCP hosts and the WireGuard peers, from the mirror (one owner).
   local known="$work/known.tsv" peers="$work/peers.tsv"
@@ -374,6 +375,10 @@ network() {
          ON CONFLICT(mac) DO UPDATE SET last_seen = excluded.last_seen, last_ip = excluded.last_ip,
            name = CASE WHEN excluded.name <> '' THEN excluded.name ELSE devices.name END"
   done <"$work/neigh.tsv"
+  # Every address a device answers on, v4 and v6, so the threats source can name a log line's client.
+  { cut -f1,2 "$work/neigh.tsv"; printf '%s\n' "$neigh6" | awk '$2 == "lladdr" && $4 != "FAILED" {print tolower($3) "\t" $1}'; } |
+    awk -F'\t' -v now="$now" '$1 != "" && $2 != "" {gsub(/\x27/, "", $2); printf "INSERT INTO addresses(ip, mac, last_seen) VALUES (\x27%s\x27, \x27%s\x27, %d) ON CONFLICT(ip) DO UPDATE SET mac = excluded.mac, last_seen = excluded.last_seen;\n", $2, $1, now}' |
+    sqlite3 -batch -cmd '.timeout 5000' "$db" >/dev/null
   local day_ago=$((now - 86400))
   sqlite3 -batch -json "$db" "SELECT mac, name, last_ip AS ip, first_seen, last_seen FROM devices WHERE last_seen >= $((now - 300)) ORDER BY name" </dev/null >"$work/online.json"
   [ -s "$work/online.json" ] || echo '[]' >"$work/online.json"
@@ -417,10 +422,154 @@ network() {
                  | {sshFails: ($l | length), sshIps: ($l | unique | length),
                     top: ($l | group_by(.) | map({ip: .[0], n: length}) | sort_by(-.n) | .[0:3]),
                     bans: ($bans | tonumber? // 0)}),
-       feeds: {dns: false, banip: false}}' >"$work/net.doc"; then
+       feeds: {dns: true, banip: true}}' >"$work/net.doc"; then
     put network "router+journal" "$work/net.doc"
   else
     fail network "network document unreadable"
+  fi
+}
+
+# ── threats: the router's syslog (router-log.nix) read from where the last run stopped, LOCAL only ──
+# The TIF and DoH lists are the ones adblock-fast blocks with (their URLs come from the router's
+# mirror), refreshed every 12 h with an ETag, so a block can be told apart as threat, DoH or ad.
+list_url() { # list_url NAME_PATTERN: the URL of the adblock-fast list whose name matches it
+  local i
+  i="$(grep -E "\.name='[^']*$1" "$GLANCE_ROUTER_UCI/adblock-fast.conf" | head -1 | grep -oE 'file_url\[[0-9]+\]')"
+  [ -n "$i" ] && grep -F "@$i.url=" "$GLANCE_ROUTER_UCI/adblock-fast.conf" | cut -d"'" -f2
+}
+threats() {
+  due threats || return 0
+  again threats 60
+  local log="$GLANCE_ROUTER_LOG" chunk="$work/chunk" lists="$dir/lists"
+  [ -r "$log" ] || {
+    fail threats "router log unreadable: $log"
+    return 0
+  }
+  mkdir -p "$lists"
+  if due threat_lists; then
+    again threat_lists 43200
+    local kind url
+    for kind in tif doh; do
+      url="$(list_url "$([ "$kind" = tif ] && echo 'Threat Intelligence' || echo 'DoH servers')")"
+      if [ -n "$url" ] && get threats "$url" "$work/list"; then
+        grep -vE '^(#|$)' "$work/list" >"$lists/$kind.txt"
+      else
+        again threat_lists 1800 # keep the copy we have, try sooner
+      fi
+    done
+  fi
+
+  # The new bytes only. After a rotation the rest of the old file (`.1`, compressed only a day
+  # later) is read first; a line still being written is left for the next run.
+  local inode size off prev partial=0
+  inode="$(stat -c %i "$log")"
+  size="$(stat -c %s "$log")"
+  prev="$(state threats:inode)"
+  off="$(state threats:offset)"
+  off="${off:-0}"
+  : >"$chunk"
+  if [ "$prev" != "$inode" ]; then
+    [ -n "$prev" ] && [ -r "$log.1" ] && [ "$(stat -c %i "$log.1")" = "$prev" ] && tail -c +"$((off + 1))" "$log.1" >>"$chunk"
+    off=0
+  elif [ "$size" -lt "$off" ]; then
+    off=0
+  fi
+  tail -c +"$((off + 1))" "$log" | head -c "$((size - off))" >>"$chunk"
+  if [ -s "$chunk" ] && [ "$(tail -c 1 "$chunk" | wc -l)" = 0 ]; then
+    partial="$(tail -n 1 "$chunk" | wc -c)"
+    head -c "-$partial" "$chunk" >"$chunk.whole" && mv "$chunk.whole" "$chunk"
+  fi
+
+  # One line per fact. Q: a query (day, client). B: a block by any list (time, client, name).
+  # I/O: a banIP drop inbound or outbound (time, feed, source, destination:port).
+  awk '
+    function epoch(ts, d) { d = substr(ts, 1, 19); gsub(/[-T:]/, " ", d); return mktime(d) }
+    $3 ~ /^dnsmasq\[/ && $5 ~ /\// {
+      c = $5; sub(/\/[0-9]+$/, "", c)
+      if ($6 ~ /^query\[/) print "Q\t" substr($1, 1, 10) "\t" c
+      else if ($6 == "config" && $9 == "NXDOMAIN" && $7 !~ /\.lan$/) print "B\t" epoch($1) "\t" c "\t" tolower($7)
+      next
+    }
+    /banIP\/(inbound|outbound)\// {
+      dir = ""; feed = ""; src = ""; dst = ""; dpt = ""
+      for (i = 1; i <= NF; i++) {
+        if ($i ~ /^banIP\//) { split($i, p, "/"); dir = p[2]; feed = p[4]; sub(/:$/, "", feed); sub(/\.v[46]$/, "", feed) }
+        else if ($i ~ /^SRC=/) src = substr($i, 5)
+        else if ($i ~ /^DST=/) dst = substr($i, 5)
+        else if ($i ~ /^DPT=/) dpt = substr($i, 5)
+      }
+      if (dir == "outbound") print "O\t" epoch($1) "\t" feed "\t" src "\t" dst (dpt ? ":" dpt : "")
+      else if (dir == "inbound") print "I\t" epoch($1) "\t" feed "\t" src "\t" (dpt ? dpt : "-")
+    }' "$chunk" >"$work/facts.tsv"
+
+  # Which blocks were threats: every suffix of a blocked name against the wildcard lists.
+  awk -F'\t' '$1 == "B" {print $4}' "$work/facts.tsv" | sort -u |
+    awk '{n = split($0, l, "."); s = l[n]; print $0 "\t" s; for (i = n - 1; i >= 1; i--) { s = l[i] "." s; print $0 "\t" s }}' >"$work/suffixes.tsv"
+  local kind
+  for kind in tif doh; do
+    if [ -s "$lists/$kind.txt" ] && [ -s "$work/suffixes.tsv" ]; then
+      cut -f2 "$work/suffixes.tsv" | sort -u | grep -Fxf - "$lists/$kind.txt" >"$work/$kind.hit" || true
+      awk -F'\t' 'NR == FNR {h[$0]; next} $2 in h {print $1}' "$work/$kind.hit" "$work/suffixes.tsv" | sort -u >"$work/$kind.names"
+    else
+      : >"$work/$kind.names"
+    fi
+  done
+
+  {
+    echo "BEGIN;"
+    awk -F'\t' -v doh="$work/doh.names" -v tif="$work/tif.names" '
+      BEGIN { while ((getline l < tif) > 0) t[l]; while ((getline l < doh) > 0) d[l] }
+      function esc(v) { gsub(/\x27/, "", v); return "\x27" v "\x27" }
+      function ev(ts, kind, client, target, feed) {
+        printf "INSERT INTO threat_events(hour, kind, client, target, feed, n, first, last) VALUES (%d, %s, %s, %s, %s, 1, %d, %d) ON CONFLICT(hour, kind, client, target, feed) DO UPDATE SET n = n + 1, last = max(last, excluded.last);\n", int(ts / 3600) * 3600, esc(kind), esc(client), esc(target), esc(feed), ts, ts
+      }
+      $1 == "Q" { q[$2 "\t" $3]++ }
+      $1 == "B" { b[strftime("%Y-%m-%d", $2) "\t" $3]++
+                  if ($4 in t) ev($2, "dns-threat", $3, $4, "tif"); else if ($4 in d) ev($2, "dns-doh", $3, $4, "doh") }
+      $1 == "O" { ev($2, "ip-out", $4, $5, $3) }
+      $1 == "I" { ev($2, "ip-in", $4, $5, $3) }
+      END {
+        for (k in q) { split(k, x, "\t"); printf "INSERT INTO dns_daily(day, client, queries) VALUES (%s, %s, %d) ON CONFLICT(day, client) DO UPDATE SET queries = queries + excluded.queries;\n", esc(x[1]), esc(x[2]), q[k] }
+        for (k in b) { split(k, x, "\t"); printf "INSERT INTO dns_daily(day, client, blocked) VALUES (%s, %s, %d) ON CONFLICT(day, client) DO UPDATE SET blocked = blocked + excluded.blocked;\n", esc(x[1]), esc(x[2]), b[k] }
+      }' "$work/facts.tsv"
+    # The position moves in the SAME transaction as the facts, so a crash never counts a line twice.
+    echo "INSERT INTO state(key, value) VALUES ('threats:inode', '$inode'), ('threats:offset', '$((size - partial))') ON CONFLICT(key) DO UPDATE SET value = excluded.value;"
+    # 30 days, the retention the owner chose, like the raw log's.
+    echo "DELETE FROM threat_events WHERE hour < $((now - 30 * 86400));"
+    echo "DELETE FROM dns_daily WHERE day < '$(date -d @$((now - 30 * 86400)) +%F)';"
+    echo "COMMIT;"
+  } | sqlite3 -batch -cmd '.timeout 5000' "$db" >/dev/null || {
+    fail threats "could not store the router log's facts"
+    return 0
+  }
+
+  # The document: the last 24 h, clients named through addresses -> devices.
+  local since=$((now - 86400)) yday
+  yday="$(date -d @"$since" +%F)"
+  sqlite3 -batch -json -cmd '.timeout 5000' "$db" "
+    WITH named AS (SELECT a.ip, coalesce(nullif(d.name, ''), a.mac) AS name FROM addresses a LEFT JOIN devices d ON d.mac = a.mac)
+    SELECT e.kind, e.client, coalesce(n.name, CASE WHEN e.client IN ('127.0.0.1', '::1') THEN 'router' END) AS name,
+           e.target, e.feed, sum(e.n) AS n, max(e.last) AS last
+    FROM threat_events e LEFT JOIN named n ON n.ip = e.client
+    WHERE e.last >= $since AND e.kind <> 'ip-in'
+    GROUP BY e.kind, e.client, e.target, e.feed ORDER BY last DESC LIMIT 30" </dev/null >"$work/hits.json"
+  sqlite3 -batch -json -cmd '.timeout 5000' "$db" "
+    SELECT feed, sum(n) AS n, count(DISTINCT client) AS sources FROM threat_events
+    WHERE kind = 'ip-in' AND last >= $since GROUP BY feed ORDER BY n DESC" </dev/null >"$work/inbound.json"
+  sqlite3 -batch -json -cmd '.timeout 5000' "$db" "
+    SELECT coalesce(sum(queries), 0) AS queries, coalesce(sum(blocked), 0) AS blocked, count(DISTINCT client) AS clients
+    FROM dns_daily WHERE day >= '$yday'" </dev/null >"$work/dns.json"
+  local f
+  for f in hits inbound dns; do [ -s "$work/$f.json" ] || echo '[]' >"$work/$f.json"; done
+  if jq -n --slurpfile hits "$work/hits.json" --slurpfile inbound "$work/inbound.json" --slurpfile dns "$work/dns.json" \
+    --arg tif "$(wc -l <"$lists/tif.txt" 2>/dev/null || echo 0)" --arg doh "$(wc -l <"$lists/doh.txt" 2>/dev/null || echo 0)" '
+    {dns: ($dns[0][0] // {queries: 0, blocked: 0, clients: 0}),
+     hits: $hits[0],
+     inbound: {drops: ($inbound[0] | map(.n) | add // 0), sources: ($inbound[0] | map(.sources) | add // 0), byFeed: $inbound[0]},
+     lists: {tif: ($tif | tonumber), doh: ($doh | tonumber)}}' >"$work/threats.doc"; then
+    put threats "router log" "$work/threats.doc"
+  else
+    fail threats "threats document unreadable"
   fi
 }
 
@@ -429,3 +578,4 @@ inmet_forecast
 inmet_alerts
 ci
 network
+threats

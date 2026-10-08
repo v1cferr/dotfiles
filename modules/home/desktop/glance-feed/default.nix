@@ -47,6 +47,8 @@ let
       GLANCE_WEBHOOK_DIR = "/var/lib/ci-webhook/gitlab";
       # The network source: names and what counts as KNOWN come from the router's mirror (one owner).
       GLANCE_ROUTER_UCI = ../../../../hosts/cudy-wr3000/uci;
+      # The threats source: the router's syslog as router-log.nix keeps it (readable by wheel).
+      GLANCE_ROUTER_LOG = "/var/log/router/router.log";
     };
     text = builtins.readFile ./scripts/feed.sh;
   };

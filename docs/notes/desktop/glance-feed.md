@@ -49,6 +49,17 @@ every run touches no network at all.
   device is "new" for its first 24 hours; the first run is the baseline and marks nothing new.
   The attacks on the exposed ports (failed SSH logins, fail2ban bans, last 24 hours) come from this
   machine's journal. No byte of it crosses the internet.
+- **Threats (the router's log, local file):** every minute it reads `/var/log/router/router.log`
+  (router-log.nix) from the byte where the last run stopped, finishing the rotated `.1` first after
+  a rotation and leaving a half-written line for the next run; the position moves in the same
+  transaction as the facts, so no line is counted twice. Each DNS query adds to `dns_daily`; each
+  block is checked, by every suffix of the name, against the HaGeZi TIF and DoH lists the router
+  itself uses (their URLs read from adblock-fast's mirror, refreshed every 12 hours with an ETag,
+  ~1.7 MB the first time), so a THREAT block or a DoH bypass becomes a `threat_events` row and an ad
+  is only counted. banIP's drops land there too, `ip-out` (a LAN device reaching a listed address,
+  the compromised-device signal) apart from `ip-in` (the internet's scanners). Clients are named
+  through `addresses`, which the network source fills from the router's IPv4 AND IPv6 neighbour
+  tables (most phones ask DNS over IPv6). Kept 30 days, like the raw log.
 - **Conditional GET everywhere a server allows it:** `http_cache` keeps each URL's `ETag` and body,
   so an unchanged resource answers `304` with no body. GitHub documents that a `304` to an
   authorized conditional request does not count against the rate limit.

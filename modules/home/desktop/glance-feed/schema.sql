@@ -45,3 +45,35 @@ CREATE TABLE IF NOT EXISTS devices (
   last_seen  INTEGER NOT NULL,
   last_ip    TEXT
 );
+
+-- Which device held an address, IPv4 and IPv6, from the router's neighbour tables: how a DNS client
+-- or a banIP line (an address) gets a name (a MAC in `devices`).
+CREATE TABLE IF NOT EXISTS addresses (
+  ip        TEXT PRIMARY KEY,
+  mac       TEXT NOT NULL,
+  last_seen INTEGER NOT NULL
+);
+
+-- The router log digested: per HOUR, kind, client and target, how many times. Kinds: `dns-threat`
+-- and `dns-doh` (a block by the TIF or DoH list), `ip-out` (a LAN device reaching a banIP-listed
+-- address), `ip-in` (the internet hitting one). Ad blocks are only counted, in dns_daily. 30 days.
+CREATE TABLE IF NOT EXISTS threat_events (
+  hour   INTEGER NOT NULL,
+  kind   TEXT NOT NULL,
+  client TEXT NOT NULL,
+  target TEXT NOT NULL,
+  feed   TEXT NOT NULL DEFAULT '',
+  n      INTEGER NOT NULL,
+  first  INTEGER NOT NULL,
+  last   INTEGER NOT NULL,
+  PRIMARY KEY (hour, kind, client, target, feed)
+);
+
+-- DNS per client per day: every query, and how many the blocklists answered. 30 days.
+CREATE TABLE IF NOT EXISTS dns_daily (
+  day     TEXT NOT NULL,
+  client  TEXT NOT NULL,
+  queries INTEGER NOT NULL DEFAULT 0,
+  blocked INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (day, client)
+);

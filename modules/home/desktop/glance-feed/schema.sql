@@ -36,3 +36,12 @@ CREATE TABLE IF NOT EXISTS traffic (
   not_modified INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (day, source)
 );
+
+-- The house's devices as ever seen, for "a device never seen before". Inventory, not a log: kept.
+CREATE TABLE IF NOT EXISTS devices (
+  mac        TEXT PRIMARY KEY,
+  name       TEXT,
+  first_seen INTEGER NOT NULL, -- 0 = already there when the inventory started (the baseline)
+  last_seen  INTEGER NOT NULL,
+  last_ip    TEXT
+);

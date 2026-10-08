@@ -41,6 +41,14 @@ every run touches no network at all.
   no per-run timestamp of its own, so it changes only when a run does. Measured on 08/10/2026: a
   cold run downloaded 88 KB (the old `gh api` path moved ~2.3 MB per poll), and a warm one made 5
   requests, all `304`, 0 bytes.
+- **Network (the house, LAN only):** every 2 minutes ONE ssh round to the router reads the DHCP
+  leases, the IPv4 neighbour table, the conntrack count and `wg-status` (a fixed `wg show` that
+  sudoers allows without a password, so its human output is parsed); `logread` is never used, it
+  hangs unprivileged. Names, and what counts as KNOWN, come from the router's mirror in the repo
+  (static DHCP hosts, WireGuard descriptions). A `devices` table keeps every MAC ever seen, so a
+  device is "new" for its first 24 hours; the first run is the baseline and marks nothing new.
+  The attacks on the exposed ports (failed SSH logins, fail2ban bans, last 24 hours) come from this
+  machine's journal. No byte of it crosses the internet.
 - **Conditional GET everywhere a server allows it:** `http_cache` keeps each URL's `ETag` and body,
   so an unchanged resource answers `304` with no body. GitHub documents that a `304` to an
   authorized conditional request does not count against the rate limit.

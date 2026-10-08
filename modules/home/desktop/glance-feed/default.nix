@@ -12,9 +12,12 @@ let
   inherit (pkgs)
     coreutils
     curl
+    gawk
     gnugrep
     jq
+    openssh
     sqlite
+    systemd
     writeShellApplication
     ;
 
@@ -27,6 +30,9 @@ let
       jq
       coreutils
       gnugrep
+      gawk
+      openssh # the network source asks the router over the LAN
+      systemd # journalctl: the attacks on the exposed ports
     ];
     # The place and the source of truth are my.weather's (weather.nix), never repeated here.
     runtimeEnv = {
@@ -39,6 +45,8 @@ let
       GLANCE_GITLAB_URL = "https://git.sup.fai.ufscar.br";
       GLANCE_GITLAB_TOKEN_FILE = "/run/secrets/fai_gitlab_token";
       GLANCE_WEBHOOK_DIR = "/var/lib/ci-webhook/gitlab";
+      # The network source: names and what counts as KNOWN come from the router's mirror (one owner).
+      GLANCE_ROUTER_UCI = ../../../../hosts/cudy-wr3000/uci;
     };
     text = builtins.readFile ./scripts/feed.sh;
   };

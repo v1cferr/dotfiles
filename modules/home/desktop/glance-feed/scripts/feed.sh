@@ -2,8 +2,9 @@
 # glance-feed: every network source of the desktop's glance surfaces, fetched ONLY when it can have
 # changed, into one SQLite cache (schema.sql). `glance-feed` (the timer, every minute) runs what is
 # due; `glance-feed read <name>` prints a source's document for the UI. Why: docs/notes/desktop/glance-feed.md
-# GLANCE_LAT, GLANCE_LON, GLANCE_MODEL, GLANCE_IBGE, GLANCE_SCHEMA and the GLANCE_GITLAB_* /
-# GLANCE_WEBHOOK_DIR of the CI source come from runtimeEnv (default.nix).
+# GLANCE_LAT, GLANCE_LON, GLANCE_MODEL, GLANCE_IBGE, GLANCE_SCHEMA, the GLANCE_GITLAB_* /
+# GLANCE_WEBHOOK_DIR of the CI source and GLANCE_ROUTER_UCI of the network source come from
+# runtimeEnv (default.nix).
 set -uo pipefail
 
 dir="${XDG_CACHE_HOME:-$HOME/.cache}/glance"
@@ -20,7 +21,7 @@ ua="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrom
 sql() { sqlite3 -batch -cmd '.timeout 5000' "$db" "$@" </dev/null; }
 q() { printf '%s' "${1//\'/\'\'}"; } # a value inside single quotes
 
-[ -s "$db" ] || sqlite3 "$db" <"$GLANCE_SCHEMA" >/dev/null
+sqlite3 "$db" <"$GLANCE_SCHEMA" >/dev/null # idempotent: a new table arrives with the next run
 
 # ── read: the UI's only way in ──
 glance-feed-read() { # the stored document alone, "{}" when there is none yet
@@ -329,7 +330,102 @@ ci() {
   fi
 }
 
+# ── network: the house as the router sees it, over the LAN only (no internet), every 2 min ──
+# Names come from the router's mirror in the repo (static DHCP hosts, WireGuard descriptions),
+# which also defines what is KNOWN. Attacks on the exposed ports come from this machine's journal.
+network() {
+  due network || return 0
+  again network 120
+  local raw="$work/router"
+  # ONE ssh round; nothing here needs root except wg-status, which sudoers allows without a
+  # password. logread is NOT used: unprivileged, it hangs instead of failing.
+  if ! timeout 20 ssh -o BatchMode=yes -o ConnectTimeout=6 router \
+    'cat /tmp/dhcp.leases; echo @@; ip -4 neigh show dev br-lan; echo @@; cat /proc/sys/net/netfilter/nf_conntrack_count; echo @@; sudo -n /usr/bin/wg-status' \
+    >"$raw" 2>/dev/null; then
+    fail network "router unreachable over ssh"
+    return 0
+  fi
+  local leases neigh conntrack wg
+  leases="$(awk 'BEGIN{RS="@@\n"} NR==1' "$raw")"
+  neigh="$(awk 'BEGIN{RS="@@\n"} NR==2' "$raw")"
+  conntrack="$(awk 'BEGIN{RS="@@\n"} NR==3' "$raw" | tr -dc 0-9)"
+  wg="$(awk 'BEGIN{RS="@@\n"} NR==4' "$raw")"
+
+  # Known names: the static DHCP hosts and the WireGuard peers, from the mirror (one owner).
+  local known="$work/known.tsv" peers="$work/peers.tsv"
+  awk -F"'" '/^dhcp\.[^.]*\.name=/{split($0,a,"[.=]"); n[a[2]]=$2} /^dhcp\.[^.]*\.mac=/{split($0,a,"[.=]"); m[a[2]]=tolower($2)}
+             END{for (k in m) if (k in n) print m[k] "\t" n[k]}' "$GLANCE_ROUTER_UCI/dhcp.conf" >"$known"
+  awk -F"'" '/\.description=/{split($0,a,"[]\\[]"); d[a[2]]=$2} /\.public_key=/{split($0,a,"[]\\[]"); k[a[2]]=$2} /\.allowed_ips=/{split($0,a,"[]\\[]"); ip[a[2]]=$2}
+             END{for (i in k) print k[i] "\t" d[i] "\t" ip[i]}' "$GLANCE_ROUTER_UCI/network.conf" >"$peers"
+
+  # Devices: the neighbour table (who answers now) joined with the leases (names, IPs).
+  # "192.168.1.111 lladdr a0:92:08:db:cf:d3 STALE" (no "dev" field once filtered by interface).
+  printf '%s\n' "$neigh" | awk '$2 == "lladdr" && $4 != "FAILED" {print tolower($3) "\t" $1 "\t" $4}' >"$work/neigh.tsv"
+  printf '%s\n' "$leases" | awk 'NF>=4 {print tolower($2) "\t" $3 "\t" $4}' >"$work/leases.tsv"
+  # The inventory: a MAC never seen gets first_seen = now, except on the very first run, where
+  # everything present is the baseline (first_seen = 0) and not "new".
+  local baseline=0 mac ip name
+  [ "$(sql "SELECT count(*) FROM devices")" = 0 ] && baseline=1
+  while IFS=$'\t' read -r mac ip _; do
+    name="$(awk -F'\t' -v m="$mac" '$1==m{print $2}' "$known")"
+    [ -n "$name" ] || name="$(awk -F'\t' -v m="$mac" '$1==m && $3!="*"{print $3}' "$work/leases.tsv")"
+    sql "INSERT INTO devices(mac, name, first_seen, last_seen, last_ip)
+         VALUES ('$(q "$mac")', '$(q "$name")', $([ $baseline = 1 ] && echo 0 || echo "$now"), $now, '$(q "$ip")')
+         ON CONFLICT(mac) DO UPDATE SET last_seen = excluded.last_seen, last_ip = excluded.last_ip,
+           name = CASE WHEN excluded.name <> '' THEN excluded.name ELSE devices.name END"
+  done <"$work/neigh.tsv"
+  local day_ago=$((now - 86400))
+  sqlite3 -batch -json "$db" "SELECT mac, name, last_ip AS ip, first_seen, last_seen FROM devices WHERE last_seen >= $((now - 300)) ORDER BY name" </dev/null >"$work/online.json"
+  [ -s "$work/online.json" ] || echo '[]' >"$work/online.json"
+  cut -f1 "$known" | jq -R . | jq -s . >"$work/known.json"
+
+  # WireGuard: the router's `wg-status` is a FIXED `wg show` (no arguments pass through sudo), so
+  # its human output is parsed: per peer the key, "latest handshake: 35 minutes, 9 seconds ago" as
+  # an absolute time, and "transfer: 274.99 MiB received, 1.43 GiB sent" in bytes. Peers are named
+  # from the mirror; the endpoint is NOT kept, where someone connects from is not for a glance.
+  printf '%s\n' "$wg" | awk -v now="$now" '
+    function bytes(v, u) { return v * (u=="KiB"?1024:u=="MiB"?1048576:u=="GiB"?1073741824:u=="TiB"?1099511627776:1) }
+    function flush() { if (key != "") print key "\t" hs "\t" rx "\t" tx; key=""; hs=0; rx=0; tx=0 }
+    /^peer: / { flush(); key=$2 }
+    /latest handshake:/ { s=0; for (i=3; i<=NF; i++) { n=$i+0; u=$(i+1);
+        if (u ~ /^day/) s+=n*86400; else if (u ~ /^hour/) s+=n*3600; else if (u ~ /^minute/) s+=n*60; else if (u ~ /^second/) s+=n }
+      hs = now - s }
+    /transfer:/ { rx=bytes($2, $3); tx=bytes($5, $6) }
+    END { flush() }' >"$work/wg.tsv"
+  jq -Rn --rawfile peers "$peers" '
+    ($peers | split("\n") | map(select(length>0) | split("\t") | {key: .[0], value: {name: .[1], ip: .[2]}}) | from_entries) as $p
+    | [inputs | split("\t") | select(length >= 4)
+       | {name: ($p[.[0]].name // "unknown peer"), ip: ($p[.[0]].ip // ""), handshake: (.[1] | tonumber), rx: (.[2] | tonumber), tx: (.[3] | tonumber)}]
+    | sort_by(-.handshake)' <"$work/wg.tsv" >"$work/wg.json" 2>/dev/null || echo '[]' >"$work/wg.json"
+
+  # Attacks on the exposed ports, last 24 h, from this machine's own journal (no network).
+  journalctl -u sshd --since "@$day_ago" -o cat -q 2>/dev/null |
+    grep -oE '(Failed (password|publickey)|Invalid user|authentication failure).* from ([0-9]{1,3}\.){3}[0-9]{1,3}' |
+    grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}$' >"$work/ssh.ips" || true
+  journalctl -u fail2ban --since "@$day_ago" -o cat -q 2>/dev/null | grep -cE '\] Ban ' >"$work/bans" || echo 0 >"$work/bans"
+
+  if jq -n --slurpfile online "$work/online.json" --slurpfile known "$work/known.json" --slurpfile wg "$work/wg.json" \
+    --rawfile ips "$work/ssh.ips" --arg bans "$(head -1 "$work/bans")" --arg conntrack "${conntrack:-0}" \
+    --argjson now "$now" --argjson dayago "$day_ago" '
+    ($known[0]) as $k
+    | {devices: ($online[0] | map(. + {known: (.mac as $m | $k | index($m) != null),
+                                        new: (.first_seen > $dayago)})
+                 | sort_by((if .new then 0 elif (.known | not) then 1 else 2 end), ((.name // "") | ascii_downcase))),
+       remote: ($wg[0] | map(. + {active: (.handshake > 0 and ($now - .handshake) < 180)})),
+       connections: ($conntrack | tonumber),
+       attacks: (($ips | split("\n") | map(select(length > 0))) as $l
+                 | {sshFails: ($l | length), sshIps: ($l | unique | length),
+                    top: ($l | group_by(.) | map({ip: .[0], n: length}) | sort_by(-.n) | .[0:3]),
+                    bans: ($bans | tonumber? // 0)}),
+       feeds: {dns: false, banip: false}}' >"$work/net.doc"; then
+    put network "router+journal" "$work/net.doc"
+  else
+    fail network "network document unreadable"
+  fi
+}
+
 weather
 inmet_forecast
 inmet_alerts
 ci
+network

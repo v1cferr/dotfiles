@@ -181,7 +181,43 @@ finished work. What was closed is in the [august history](history/2026/08-august
         is the one I hold and the one that is now the only admin source for the router
         ([guides/router-hardening.md](guides/router-hardening.md)).
 
-- [ ] The router keeps no log that survives a reboot (opened on 13/09/2026, from the same audit).
+- [ ] THREAT MONITORING of the house's network, phases 1 and 2 (planned 08/10/2026; it absorbs the
+      13/09 "no log that survives a reboot" item below). The owner asked for a log of the LAN and
+      the internet link that catches suspicious connections from any device, and chose: phases 1
+      and 2, alerts by ntfy plus a NETWORK page on the glance band plus a daily summary, and a
+      30-day retention. EVERY router step waits for an explicit go: it is the whole house's internet.
+      • MEASURED 08/10/2026, what the router allows: Cudy WR3000 v1, OpenWrt 25.12.5, MT7981 (2x
+        A53), 234 MB RAM (~118 MB free), 3.5 MB free flash, `flow_offloading_hw='1'`. So nothing
+        inline like Suricata: after its first packets a flow leaves the CPU, and only what acts on
+        NEW connections (DNS, IP sets, the conntrack NEW event) works on the router. banIP's floor
+        is 256 MB, so only small feeds, with RAM measured after loading.
+      • BLIND SPOTS no router setting removes: LAN-to-LAN traffic is switched (a worm moving PC to
+        PC never crosses netfilter), and devices with their own DoH bypass dnsmasq (banIP's `doh`
+        feed pushes them back to the router).
+      • PHASE 1, the router as a light sensor: HaGeZi TIF (mini or medium, by RAM) as its own
+        adblock-fast list plus `logqueries`, since a device resolving a C2 domain is the strongest
+        signal a house gets; banIP with Feodo, ThreatFox, Spamhaus DROP and `doh`, both ways,
+        logging hits; rate-limited WAN drop logging (80, 443, 2222, 2223, 51820); DHCP events for
+        a never-seen MAC; and `log_ip` to this machine. Each step is one UCI section, mirrored by
+        `router-sync pull`, so it reverts by a `uci delete` plus a visible diff.
+      • PHASE 2, on this machine, declarative: a syslog receiver (see the trap below), SQLite
+        matching in the glance-feed pattern (block, hit, drop, DHCP event, each with the device by
+        MAC and a known-devices list in the repo), 30-day purge, local only; CrowdSec on Caddy,
+        sshd and the router's firewall log, its decisions exported as a list banIP pulls (no bouncer
+        in the router's RAM); ntfy for C2 or malware hits, unknown devices and bans, a daily
+        summary, and a NETWORK page on the band.
+      • PHASE 3, only if 1 and 2 justify it: a managed switch with port mirroring and Suricata (ET
+        Open) plus Zeek on a sensor. ONT-side mirroring sees every device, Wi-Fi included, but after
+        NAT; LAN-side keeps the device but misses Wi-Fi. With TLS, metadata only (SNI, JA4, DNS).
+      • PRIVACY: the DNS log is everyone's browsing; it never leaves this machine, is purged at 30
+        days, and an alert carries the threat and the device, never the query history.
+      • SOURCES: banIP <https://github.com/openwrt/packages/blob/master/net/banip/files/README.md>,
+        HaGeZi <https://github.com/hagezi/dns-blocklists>, CrowdSec on OpenWrt
+        <https://openwrt.org/docs/guide-user/services/crowdsec>, mirroring for an IDS on OpenWrt
+        <https://forum.openwrt.org/t/can-you-port-mirror-on-openwrt-with-use-with-an-ids/121780>.
+
+- [ ] The router keeps no log that survives a reboot (opened on 13/09/2026, from the same audit;
+      phase 1 of the threat monitoring item above closes it).
       `system.@system[0].log_size='128'` KB in RAM and no `log_ip`, so the evidence of a
       compromise dies with the next power cut. Everything the audit fixed is PREVENTION; there is
       currently no DETECTION at all on this device.

@@ -110,6 +110,16 @@ fail() { # fail NAME MESSAGE: keep the last document, say why, and try again in 
   again "$1" 300
 }
 
+# alert KEY PRIORITY TITLE MESSAGE: a push to the phone (`notify`, ntfy), at most once a day per KEY.
+# It carries the device and the threat, never a query history (docs/open-items.md, PRIVACY).
+alert() {
+  local last
+  last="$(sql "SELECT sent FROM alerts WHERE key = '$(q "$1")'")"
+  [ -n "$last" ] && [ "$((now - last))" -lt 86400 ] && return 0
+  sql "INSERT INTO alerts(key, sent) VALUES ('$(q "$1")', $now) ON CONFLICT(key) DO UPDATE SET sent = excluded.sent"
+  notify -p "$2" -T warning "$3" "$4" >/dev/null 2>&1 || true
+}
+
 # ── weather: Open-Meteo, only when the model has a NEW RUN (ECMWF IFS: every 6 h) ──
 weather() {
   due weather || return 0
@@ -379,6 +389,10 @@ network() {
   { cut -f1,2 "$work/neigh.tsv"; printf '%s\n' "$neigh6" | awk '$2 == "lladdr" && $4 != "FAILED" {print tolower($3) "\t" $1}'; } |
     awk -F'\t' -v now="$now" '$1 != "" && $2 != "" {gsub(/\x27/, "", $2); printf "INSERT INTO addresses(ip, mac, last_seen) VALUES (\x27%s\x27, \x27%s\x27, %d) ON CONFLICT(ip) DO UPDATE SET mac = excluded.mac, last_seen = excluded.last_seen;\n", $2, $1, now}' |
     sqlite3 -batch -cmd '.timeout 5000' "$db" >/dev/null
+  # A MAC never seen before (never on the baseline run) is worth a push: who joined the house.
+  while IFS='|' read -r mac name ip; do
+    alert "new-device|$mac" default "New device on the network" "${name:-unnamed} ($mac) at $ip"
+  done < <(sql "SELECT mac, coalesce(name, ''), last_ip FROM devices WHERE first_seen >= $((now - 600))")
   local day_ago=$((now - 86400))
   sqlite3 -batch -json "$db" "SELECT mac, name, last_ip AS ip, first_seen, last_seen FROM devices WHERE last_seen >= $((now - 300)) ORDER BY name" </dev/null >"$work/online.json"
   [ -s "$work/online.json" ] || echo '[]' >"$work/online.json"
@@ -542,6 +556,39 @@ threats() {
     fail threats "could not store the router log's facts"
     return 0
   }
+
+  # Pushes for what is new since the last run: a threat domain or a listed address reached FROM the
+  # house. A DoH attempt and the internet's scans are not pushed: they are routine, the page has them.
+  local named="WITH named AS (SELECT a.ip, coalesce(nullif(d.name, ''), a.mac) AS name FROM addresses a LEFT JOIN devices d ON d.mac = a.mac)"
+  local mark kind client name target feed n
+  mark="$(state threats:alerted)"
+  [ -n "$mark" ] || mark="$now" # the first run sets the mark: no flood of the backlog
+  while IFS='|' read -r kind client name target feed n; do
+    case "$kind" in
+      dns-threat) alert "$kind|$client|$target" high "Threat domain blocked" "${name:-$client} asked $target (HaGeZi TIF), ${n}x. The router answered NXDOMAIN." ;;
+      ip-out) alert "$kind|$client|$target" high "Known-bad address reached" "${name:-$client} tried $target (banIP $feed), ${n}x. The router rejected it." ;;
+    esac
+  done < <(sql "$named SELECT e.kind, e.client, coalesce(n.name, ''), e.target, e.feed, sum(e.n)
+                FROM threat_events e LEFT JOIN named n ON n.ip = e.client
+                WHERE e.kind IN ('dns-threat', 'ip-out') AND e.last >= $mark
+                GROUP BY e.kind, e.client, e.target, e.feed")
+  state_set threats:alerted "$now"
+
+  # The daily summary, once a day after 08:00, low priority: the shape of the last 24 h.
+  if [ "$(date +%H)" -ge 8 ] && [ "$(state threats:summary)" != "$today" ]; then
+    state_set threats:summary "$today"
+    local summary
+    summary="$(sql "SELECT
+        (SELECT coalesce(sum(queries), 0) FROM dns_daily WHERE day >= date('now', 'localtime', '-1 day')) || ' DNS queries, ' ||
+        (SELECT coalesce(sum(blocked), 0) FROM dns_daily WHERE day >= date('now', 'localtime', '-1 day')) || ' blocked; ' ||
+        (SELECT coalesce(sum(n), 0) FROM threat_events WHERE kind IN ('dns-threat', 'ip-out') AND last >= $((now - 86400))) || ' threat contacts, ' ||
+        (SELECT coalesce(sum(n), 0) FROM threat_events WHERE kind = 'dns-doh' AND last >= $((now - 86400))) || ' DoH attempts, ' ||
+        (SELECT coalesce(sum(n), 0) FROM threat_events WHERE kind = 'ip-in' AND last >= $((now - 86400))) || ' scans dropped; ' ||
+        (SELECT count(*) FROM devices WHERE first_seen >= $((now - 86400))) || ' new devices'")"
+    local ssh
+    ssh="$(glance-feed-read network | jq -r '.attacks | "\(.sshFails // 0) failed SSH logins, \(.bans // 0) bans"' 2>/dev/null)"
+    notify -p low -T bar_chart "House network, last 24 h" "$summary; ${ssh:-SSH unknown}." >/dev/null 2>&1 || true
+  fi
 
   # The document: the last 24 h, clients named through addresses -> devices.
   local since=$((now - 86400)) yday

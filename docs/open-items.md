@@ -235,8 +235,11 @@ finished work. What was closed is in the [august history](history/2026/08-august
         1.9.0 with three small feeds (feodo and threat both ways, dshield inbound): 1460 elements,
         available RAM 72 -> 65 MB, every drop logged in both directions (which is the WAN drop
         logging), its log monitor off (`ban_loglimit=0`: the router's sshd is LAN-only and it would
-        grep every DNS line). Its first inbound drops arrived within a minute. Phase 1 is DONE; what
-        is left is phase 2, all on the desktop.
+        grep every DNS line). Its first inbound drops arrived within a minute. Phase 1 is DONE.
+        Phase 2 the same night: glance-feed's `threats` source digests the log into SQLite (TIF and
+        DoH blocks told from ads, banIP drops in and out, clients named over IPv4 and IPv6), the
+        NETWORK page shows it, and ntfy pushes threat contacts, new devices and a daily summary
+        (docs/notes/desktop/glance-feed.md). Still open in phase 2: CrowdSec.
       • PHASE 1, the router as a light sensor: HaGeZi TIF (mini or medium, by RAM) as its own
         adblock-fast list plus `logqueries`, since a device resolving a C2 domain is the strongest
         signal a house gets; banIP with Feodo, ThreatFox, Spamhaus DROP and `doh`, both ways,

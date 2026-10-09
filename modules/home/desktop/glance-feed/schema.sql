@@ -77,3 +77,9 @@ CREATE TABLE IF NOT EXISTS dns_daily (
   blocked INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (day, client)
 );
+
+-- What already went to the phone, so the same device and threat pushes once a day, not every minute.
+CREATE TABLE IF NOT EXISTS alerts (
+  key  TEXT PRIMARY KEY, -- kind|client|target, or new-device|mac
+  sent INTEGER NOT NULL
+);

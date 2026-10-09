@@ -60,6 +60,13 @@ every run touches no network at all.
   the compromised-device signal) apart from `ip-in` (the internet's scanners). Clients are named
   through `addresses`, which the network source fills from the router's IPv4 AND IPv6 neighbour
   tables (most phones ask DNS over IPv6). Kept 30 days, like the raw log.
+- **Pushes to the phone** (`notify`, ntfy), at most one a day per device and threat (`alerts`):
+  a threat domain asked or a banIP-listed address reached FROM the house (priority high), and a
+  MAC never seen before (default). A DoH attempt and the internet's scans are not pushed, they are
+  routine. Once a day after 08:00, a low-priority summary of the last 24 hours: DNS volume and
+  blocks, threat contacts, DoH attempts, scans dropped, new devices, failed SSH logins and bans.
+  An alert names the device and the threat, never a query history. Proven on 08/10/2026 by asking
+  a TIF domain from this machine: blocked, stored and pushed within the minute.
 - **Conditional GET everywhere a server allows it:** `http_cache` keeps each URL's `ETag` and body,
   so an unchanged resource answers `304` with no body. GitHub documents that a `304` to an
   authorized conditional request does not count against the rate limit.

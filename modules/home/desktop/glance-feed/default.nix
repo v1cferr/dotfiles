@@ -15,6 +15,7 @@ let
     gawk
     gnugrep
     jq
+    notify
     openssh
     sqlite
     systemd
@@ -33,6 +34,7 @@ let
       gawk
       openssh # the network source asks the router over the LAN
       systemd # journalctl: the attacks on the exposed ports
+      notify # the threats source's pushes to the phone (pkgs/notify, ntfy)
     ];
     # The place and the source of truth are my.weather's (weather.nix), never repeated here.
     runtimeEnv = {

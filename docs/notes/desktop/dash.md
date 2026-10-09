@@ -327,10 +327,17 @@ threat-monitoring plan in docs/open-items.md, before any router change.
 - **The exposed ports, last 24 hours:** failed SSH logins, from how many IPs, fail2ban bans, and the
   three most persistent addresses. It made the exposure concrete on day one: 97 failures from 45
   IPs against port 2222.
+- **Threats, last 24 hours** (the `threats` document, from the router's own log): red when a device
+  of the house asked a domain on the TIF list or reached a banIP-listed address, peach when it only
+  tried a DoH server (a browser probing for its own DNS, which would skip the filtering), green
+  when neither; then the house's DNS volume and how much the blocklists answered, and up to four
+  rows naming the device, what it asked or reached, and which list caught it. The internet's
+  scans that banIP dropped are only a number: they are the background noise of a public IP.
 - **Devices** as chips: NEW in peach first, then the ones not in the router's static DHCP list,
   then the known (green). "Not in the list" is not "hostile": the family's phones are there too.
 - **Remote access over WireGuard:** each peer by its description in the router's mirror, connected
   (a handshake in the last 3 minutes) or last seen, and its traffic from the peer's point of view.
   The endpoint is deliberately not shown.
-- **A footer that says what is not on yet** (the DNS and banIP threat feeds of phase 1), instead
-  of a page that looks complete.
+- **A footer** with where the data comes from, how many threat domains the list holds, and how
+  fresh the page is. Until 08/10/2026 it said the threat feeds were not on yet, instead of a page
+  that looked complete.

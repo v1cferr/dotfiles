@@ -1,7 +1,7 @@
 // The NETWORK page of the rotating column: the house as the router sees it (devices, who is in
 // from outside over WireGuard, open connections) and the attacks on the exposed ports, all from
-// glance-feed's `network` document (LAN and local journal only, no internet). What the threat
-// feeds will add is marked as not enabled yet: docs/notes/desktop/dash.md
+// glance-feed's `network` document (LAN and local journal only, no internet), and what the router's
+// own log says about threats (`threats`: DNS blocks by the TIF/DoH lists, banIP): docs/notes/desktop/dash.md
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -16,12 +16,22 @@ ColumnLayout {
     readonly property int newCount: net.devices.filter(d => d.new).length
     readonly property int unlisted: net.devices.filter(d => !d.known).length
     readonly property int remoteOn: net.remote.filter(r => r.active).length
+    readonly property var threats: threatFeed.data || ({})
+    readonly property var dns: net.threats.dns || ({})
+    readonly property var hits: net.threats.hits || []
+    readonly property var inbound: net.threats.inbound || ({})
+    // A threat block or a LAN device reaching a listed IP is red; a DoH bypass attempt only peach.
+    readonly property int danger: net.hits.filter(h => h.kind !== "dns-doh").length
 
     spacing: 12
 
     Feed {
         id: feed
         name: "network"
+    }
+    Feed {
+        id: threatFeed
+        name: "threats"
     }
 
     function bytes(b) {
@@ -129,7 +139,80 @@ ColumnLayout {
         }
     }
 
-    // ── 3. Devices: new first, then the ones not in the router's static list, then the known ──
+    // ── 3. Threats, last 24 h: what the router's lists caught, and whether a device of the house was involved ──
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: 14
+        Text {
+            text: "󰻌"
+            color: net.danger ? Theme.colRed : (net.hits.length ? Theme.colPeach : Theme.colGreen)
+            font.family: Theme.uiFont
+            font.pixelSize: 22
+        }
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 1
+            Text {
+                text: (net.danger ? net.danger + " threat contacts" : "no device reached a known threat") + " · " + (net.inbound.drops || 0) + " scans dropped · 24 h"
+                color: net.danger ? Theme.colRed : Theme.colText
+                font.family: Theme.uiFont
+                font.pixelSize: 14
+                font.bold: true
+            }
+            Text {
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+                text: (net.dns.queries || 0).toLocaleString(Qt.locale(), "f", 0) + " DNS queries from " + (net.dns.clients || 0) + " clients · " + (net.dns.blocked || 0).toLocaleString(Qt.locale(), "f", 0) + " blocked (" + (net.dns.queries ? Math.round(100 * net.dns.blocked / net.dns.queries) : 0) + "%)"
+                color: Theme.colDim
+                font.family: Theme.uiFont
+                font.pixelSize: 12
+            }
+        }
+    }
+    Repeater {
+        model: net.hits.slice(0, 4)
+        delegate: RowLayout {
+            required property var modelData
+            readonly property color tone: modelData.kind === "dns-doh" ? Theme.colPeach : Theme.colRed
+            Layout.fillWidth: true
+            spacing: 10
+            Rectangle {
+                implicitWidth: 8
+                implicitHeight: 8
+                radius: 4
+                color: parent.tone
+            }
+            Text {
+                Layout.preferredWidth: 140
+                elide: Text.ElideRight
+                text: parent.modelData.name || parent.modelData.client
+                color: Theme.colText
+                font.family: Theme.uiFont
+                font.pixelSize: 13
+                font.bold: true
+            }
+            Text {
+                Layout.fillWidth: true
+                elide: Text.ElideMiddle
+                text: (parent.modelData.kind === "ip-out" ? "reached " : "asked ") + parent.modelData.target + (parent.modelData.n > 1 ? " ×" + parent.modelData.n : "")
+                color: Theme.colSubtext
+                font.family: Theme.uiFont
+                font.pixelSize: 12
+            }
+            Text {
+                text: ({
+                        "dns-threat": "threat list",
+                        "dns-doh": "DoH bypass",
+                        "ip-out": "banIP " + parent.modelData.feed
+                    })[parent.modelData.kind] + " · " + net.ago(parent.modelData.last)
+                color: Theme.colDim
+                font.family: Theme.uiFont
+                font.pixelSize: 11
+            }
+        }
+    }
+
+    // ── 4. Devices: new first, then the ones not in the router's static list, then the known ──
     Text {
         text: "DEVICES" + (net.unlisted ? "  ·  " + net.unlisted + " not in the router's list" : "")
         color: Theme.colSubtext
@@ -181,7 +264,7 @@ ColumnLayout {
         }
     }
 
-    // ── 4. Remote access over WireGuard: who is in from outside, and how much went through ──
+    // ── 5. Remote access over WireGuard: who is in from outside, and how much went through ──
     Text {
         text: "REMOTE ACCESS · WIREGUARD"
         color: Theme.colSubtext
@@ -230,11 +313,11 @@ ColumnLayout {
         Layout.fillHeight: true
     }
 
-    // ── 5. What is planned and not on yet, said instead of implied ──
+    // ── 6. Where it comes from, and how fresh ──
     Text {
         Layout.fillWidth: true
         horizontalAlignment: Text.AlignRight
-        text: "threat feeds (DNS, banIP): not enabled yet · router over the LAN · " + (feed.updatedAt ? "updated " + net.ago(feed.updatedAt) : "waiting for the first read")
+        text: "router over the LAN · " + ((net.threats.lists || {}).tif || 0).toLocaleString(Qt.locale(), "f", 0) + " threat domains · " + (feed.updatedAt ? "updated " + net.ago(feed.updatedAt) : "waiting for the first read")
         color: Theme.colDim
         font.family: Theme.uiFont
         font.pixelSize: 11

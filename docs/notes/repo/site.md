@@ -321,6 +321,8 @@ repo, all configured on 18/09/2026, and all three are worth knowing about before
 subdomain, so from inside the house the name resolved to this machine and landed on Caddy, which
 has no vhost for it. Every LAN query is forced through the router, so even asking `1.1.1.1`
 directly returned the local answer, and the only way to see the real record from here is DoH.
+The rule itself became `address=/*.v1cferr.dev/192.168.1.10` on 09/10/2026, which leaves the apex
+out of the override: see [`../network/network.md`](../network/network.md).
 
 The fix is four `add_list` entries forwarding that one name to the DoH proxies, the same shape
 `vpn.v1cferr.dev` already uses for the same reason, on `server` and `doh_backup_server` both.

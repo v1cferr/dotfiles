@@ -40,7 +40,7 @@ saw NEITHER of the two values that arrived with it. Not a bug in the comparison,
 being read, which is the same failure shape as the parser bug below:
 
 **dnsmasq answers a local name through two different mechanisms**, and the checker only knew the
-first. `dhcp.@dnsmasq[0].address` is a SUFFIX override (`/v1cferr.dev/192.168.1.10`, the split-DNS
+first. `dhcp.@dnsmasq[0].address` is a SUFFIX override (`/*.v1cferr.dev/192.168.1.10`, the split-DNS
 of the zone); `config domain` is a static A record for one name, expanded into `t480.lan` by
 `domain=lan` plus `expandhosts=1`. LuCI writes the second one from the Hostnames tab, which is the
 natural place to add a machine, so the mechanism the checker ignored is the one a human reaches for.

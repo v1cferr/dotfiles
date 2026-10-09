@@ -23,7 +23,7 @@ flowchart TB
     subgraph router["OpenWrt router · the only edge"]
         FW["fw4, the WAN opens<br>80 · 443 · 2222 · 2223 · 51820/udp"]
         WG["WireGuard server<br>10.10.10.1/24"]
-        SD["dnsmasq split-DNS<br>#lt;domain#gt; answers 192.168.1.10"]
+        SD["dnsmasq split-DNS<br>*.#lt;domain#gt; answers 192.168.1.10"]
     end
 
     subgraph lan["LAN · 192.168.1.0/24"]
@@ -335,6 +335,22 @@ exists to prevent. It is acceptable only because the failure is narrow and recov
 the name still resolves through Cloudflare, so the tunnel comes back, and the stale answer only
 bites a re-resolution that happens while the tunnel is already up. The structural fix is an open
 item.
+
+### The apex leaves the override, and IPv4-only clients stop breaking (09/10/2026)
+
+`v1cferr.dev` itself did not open from `pc-trampo` over the tunnel. The suffix rule
+`address=/<domain>/192.168.1.10` matches the APEX too, and Caddy only holds `*.<domain>`, so the
+TLS handshake failed against this machine. At home it LOOKED fine by accident: the override only
+answers A, the router passed the public AAAA through, and the browser went to Cloudflare over IPv6.
+The tunnel is IPv4 only (`AllowedIPs` has no v6), so the work PC fell back to the A record. Measured
+from here: `curl https://<domain>` gave 307 over IPv6 while `curl -4` died with exit 35.
+
+The fix is dnsmasq's subdomain-only form (2.86+, the router runs 2.93):
+`address=/*.<domain>/192.168.1.10`. The apex now goes upstream like any other name, and its public
+answer is plain A records from Cloudflare with no CNAME chain, so the cache poisoning above cannot
+repeat through it. Verified with `dig @192.168.1.1`: the apex answers the public addresses, a
+control name and `ssh` still answer 192.168.1.10, and `cesar-ssh`, `vpn` and `dotfiles` are
+unchanged.
 
 ## The third machine on the tunnel, and the first one that leaves
 

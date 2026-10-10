@@ -5,7 +5,8 @@ Modules: [`tools/vendored-bump/package.nix`](../../../tools/vendored-bump/packag
 [`pkgs/vscode/bump.nix`](../../../pkgs/vscode/bump.nix),
 [`pkgs/curseforge/bump.nix`](../../../pkgs/curseforge/bump.nix),
 [`pkgs/codex/bump.nix`](../../../pkgs/codex/bump.nix),
-[`pkgs/antigravity-cli/bump.nix`](../../../pkgs/antigravity-cli/bump.nix)
+[`pkgs/antigravity-cli/bump.nix`](../../../pkgs/antigravity-cli/bump.nix),
+[`pkgs/stack-wallet/bump.nix`](../../../pkgs/stack-wallet/bump.nix)
 
 Every package that is in neither nixpkgs nor a flake follows ONE layout, and one runner keeps all
 of them on upstream's latest without anybody editing a hash by hand. They share a reason and differ
@@ -17,9 +18,9 @@ Rule 13 pins the dependency universe: no fetch without a hash, no implicit "late
 a consequence people miss: **a src with a locked hash never updates itself.** What exists is not
 an "input that follows upstream", it is an AUTOMATED BUMP.
 
-All four run from the `update`/`upgrade` alias
+Every one runs from the `update`/`upgrade` alias
 ([`modules/home/shell/zsh.nix`](../../../modules/home/shell/zsh.nix)), before `nix flake update`, so "always on
-the latest" happens at rebuild time. All four are a NO-OP when already current, because they run
+the latest" happens at rebuild time. Each is a NO-OP when already current, because they run
 on every `upgrade`.
 
 ## One runner, and the list is DERIVED
@@ -78,6 +79,7 @@ Start from the package closest in SHAPE, since `latest` and `resolve` are what d
 | a version API with the hash in it | [`pkgs/vscode/`](../../../pkgs/vscode/bump.nix): one JSON kept in `$tmp`, `sri` |
 | a manifest per release | [`pkgs/antigravity-cli/`](../../../pkgs/antigravity-cli/bump.nix): `sri` on the published sha512 |
 | only a pointer url | [`pkgs/curseforge/`](../../../pkgs/curseforge/bump.nix): the version from somewhere cheap, `prefetch` |
+| a GitHub release among other release lines | [`pkgs/stack-wallet/`](../../../pkgs/stack-wallet/bump.nix): the API filtered by tag, `sri` on the asset digest |
 
 1. Create `pkgs/<name>/` with the three files. `pname` in `bump.nix` MUST be the folder name,
    because that is how the skeleton finds `source.json`. Start `source.json` as the placeholder
@@ -109,11 +111,11 @@ Researched on 26/09/2026 (rule 1), and both lost on measurement, not taste:
 
 Only in the two answers, which is the point of the layout:
 
-| | vscode | curseforge | codex | antigravity-cli |
-| --- | --- | --- | --- | --- |
-| Upstream URL | versioned (`/1.139.1/linux-x64/stable`) | a POINTER (`curseforge-latest-linux.AppImage`) | versioned (`/rust-v0.157.1/…musl.tar.gz`) | versioned, plus an opaque build id |
-| `latest` asks | the official update API, `productVersion` | the `control` file of the `.deb` | the redirect of `/releases/latest` | a `latest` file holding the bare version |
-| `resolve` hashes by | `sri`: the API publishes the sha256 | `prefetch`: 139 MiB, only on a new version | `prefetch`: 93 MiB, only on a new tag | `sri`: the manifest publishes the sha512 |
+| | vscode | curseforge | codex | antigravity-cli | stack-wallet |
+| --- | --- | --- | --- | --- | --- |
+| Upstream URL | versioned (`/1.139.1/linux-x64/stable`) | a POINTER (`curseforge-latest-linux.AppImage`) | versioned (`/rust-v0.157.1/…musl.tar.gz`) | versioned, plus an opaque build id | versioned (`/build_316/sw-v2.7.1-linux.AppImage`) |
+| `latest` asks | the official update API, `productVersion` | the `control` file of the `.deb` | the redirect of `/releases/latest` | a `latest` file holding the bare version | the releases API, the newest `build_*` tag |
+| `resolve` hashes by | `sri`: the API publishes the sha256 | `prefetch`: 139 MiB, only on a new version | `prefetch`: 93 MiB, only on a new tag | `sri`: the manifest publishes the sha512 | `sri`: GitHub's asset digest, matched against the notes |
 
 **VS Code.** The URL is versioned because `/latest/` is a pointer that broke the eval on every
 release ([flake](flake.md) has the CI failure). `latest` reads `productVersion` and NOT `version`
@@ -151,6 +153,13 @@ fetch still verifies it, so a manifest that lied would fail the build instead of
 something else. The URL carries an opaque build id (`/<version>-<build id>/linux-x64/…`) that only
 the manifest knows, and storing the url whole is what keeps it from being a field of its own.
 
+**Stack Wallet.** The same repo also releases `mwebd-*` binaries, and on 10/10/2026
+`/releases/latest` pointed at one of them, so the codex trick would answer the wrong product. One
+API call lists the releases, keeps the newest non-prerelease `build_*` tag and is saved in `$tmp`,
+so `resolve` reads the same answer. Upstream publishes the AppImage's sha256 TWICE, as GitHub's
+asset digest and as a line in the release notes, and the bump requires both to agree before it
+pins either: a release edited after the fact stops the bump instead of moving the hash.
+
 ## Shared conventions
 
 - The repo path comes as an ARGUMENT, never a literal in the script (rule 11).
@@ -159,7 +168,8 @@ the manifest knows, and storing the url whole is what keeps it from being a fiel
 - They leave the repo DIRTY on purpose. The commit is the user's and atomic, one per package
   (`chore(<name>): <old> -> <new>`), which is what each bump prints.
 - A round trip is the test: set `source.json` to an older version and a fake hash, run the bump, and
-  the file must come back byte-identical to the committed one. All four passed it on 26/09/2026.
+  the file must come back byte-identical to the committed one. All four passed it on 26/09/2026,
+  and stack-wallet on 10/10/2026, starting from the `0` placeholder.
 
 ## nxBender's three patches
 

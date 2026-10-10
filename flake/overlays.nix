@@ -122,6 +122,7 @@ let
     basic-memory = final.callPackage ../pkgs/basic-memory/package.nix { inherit inputs; }; # `bm`, the MCP memory
     curseforge = final.callPackage ../pkgs/curseforge/package.nix { }; # official modpack AppImage (unfree)
     curseforge-fix-perms = final.callPackage ../pkgs/curseforge-fix-perms/package.nix { }; # +x on what the app unpacks
+    stack-wallet = final.callPackage ../pkgs/stack-wallet/package.nix { }; # multichain wallet, the official AppImage
     razer-dpi = final.callPackage ../pkgs/razer-dpi/package.nix { }; # the Razer mouse's live DPI, over hidraw
     notify = final.callPackage ../pkgs/notify/package.nix { }; # the ntfy push, shared by the shell and sshd's PAM
   };

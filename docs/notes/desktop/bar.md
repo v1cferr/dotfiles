@@ -190,12 +190,13 @@ time.
 
 Right click on the pill is still the shortcut for taking everything down.
 
-### Tor: its own pill, never the VPN's
+### Tor: a purple badge on the VPN pill, never its green
 
-Tor gets a pill of its OWN, right of the VPN pill: the Tor glyph (`U+F371`, `linux-tor` in the
-Nerd Font) in Tor's purple (`Theme.colLavender`), shown while any Tor below runs and labelled `Bisq`
-while Bisq's does. A click opens the same actions popover, where, below the VPN rows, Tor's STATE
-shows with no button:
+Tor rides on the VPN pill as a BADGE: the Tor glyph (`U+F371`, `linux-tor` in the Nerd Font) in
+Tor's purple (`Theme.colLavender`), last in the row, shown while any Tor below runs and followed by
+`Bisq` while Bisq's does. One pill and not two because both can be up at once (FAI plus Tor), and
+the badge has its own color so the VPN's green keeps meaning only the VPN. The click opens the
+actions popover, where, below the VPN rows, Tor's STATE shows with no button:
 
 - **System Tor**: `tor.service` active, so the SOCKS port on `127.0.0.1:9050` is up.
 - **Bisq 2**: a `tor` process owned by my user whose command line runs from `Bisq2/`, the child
@@ -205,11 +206,11 @@ shows with no button:
 Stack Wallet gets no row: its Tor is a library inside the app's process, with no process or
 service to observe from outside, so a row would be a guess. Its own indicator is the truth.
 
-It stays out of the VPN pill on purpose (a purple pill was the choice over a green VPN pill,
-10/10/2026). The VPN pill means "this machine's traffic goes through a tunnel", and Tor never
-does that here: MEASURED on 10/10/2026, a request through
+It never turns the pill green (chosen 10/10/2026; a separate purple pill came first, then merged
+into this badge so one glance shows both). The green means "this machine's traffic goes through
+a tunnel", and Tor never does that here: MEASURED on 10/10/2026, a request through
 `--socks5-hostname 127.0.0.1:9050` reported `IsTor: true` on `check.torproject.org`, and the same
-request without the proxy reported `false`. A green VPN pill for Tor would say the opposite of that,
+request without the proxy reported `false`. A green pill for Tor would say the opposite of that,
 which is why the popover's footer spells out what it does not cover. Why each app has its own
 Tor: [`crypto.md`](../apps/crypto.md).
 

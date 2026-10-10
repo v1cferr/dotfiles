@@ -12,6 +12,9 @@ Rectangle {
     // and owns the left edge, where the eye enters the pill.
     property string sub: ""
     property color accent: Theme.colText
+    // A second state in its OWN color, last in the row (the VPN pill's Tor), so it never borrows the accent.
+    property string badge: ""
+    property color badgeColor: Theme.colDim
     property int maxWidth: 0
     signal clicked
     signal rightClicked
@@ -67,6 +70,13 @@ Rectangle {
             color: Theme.colDim
             font.family: Theme.uiFont
             font.pixelSize: 11
+        }
+        Text {
+            visible: pill.badge !== ""
+            text: pill.badge
+            color: pill.badgeColor
+            font.family: Theme.uiFont
+            font.pixelSize: 12
         }
     }
     MouseArea {

@@ -632,8 +632,8 @@ Scope {
         }
     }
 
-    // TOR: its own purple pill plus rows in the VPN popover, never the VPN pill: it is a proxy for the
-    // apps pointed at it, not a tunnel for the machine. What each signal means: docs/notes/desktop/bar.md
+    // TOR: a purple badge on the VPN pill plus rows in its popover, never the green: it is a proxy for
+    // the apps pointed at it, not a tunnel for the machine. What each signal means: docs/notes/desktop/bar.md
     property bool torSystem: false
     property bool torBisq: false
     function parseTor(text) {
@@ -1992,7 +1992,10 @@ Scope {
                         icon: "󰦝"
                         label: root.vpnConnected ? root.vpnName : ""
                         accent: root.vpnConnected ? Theme.colGreen : Theme.colDim
-                        maxWidth: 150
+                        // Tor rides along in its own purple: a VPN and Tor can be up at once.
+                        badge: (root.torSystem || root.torBisq) ? "\uf371" + (root.torBisq ? " Bisq" : "") : ""
+                        badgeColor: Theme.colLavender
+                        maxWidth: 190
                         onHoveredChanged: {
                             root.vpnPillHovered = hovered;
                             if (hovered)
@@ -2007,22 +2010,6 @@ Scope {
                             }
                         }
                         onRightClicked: root.runVpn("disconnect", "all")
-                    }
-                    Pill {
-                        // Tor: its OWN pill in Tor's purple, lit while a Tor runs; a click opens the same popover.
-                        id: torPill
-                        visible: root.torSystem || root.torBisq
-                        icon: ""
-                        label: root.torBisq ? "Bisq" : ""
-                        accent: Theme.colLavender
-                        onClicked: {
-                            root.anchorPopover(torPill, barContent, bar.screen);
-                            root.vpnPopVisible = !root.vpnPopVisible;
-                            if (root.vpnPopVisible) {
-                                vpnProc.running = true;
-                                torProc.running = true;
-                            }
-                        }
                     }
                     Pill {
                         id: netPill

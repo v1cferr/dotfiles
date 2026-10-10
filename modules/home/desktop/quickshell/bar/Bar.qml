@@ -775,7 +775,7 @@ Scope {
     property bool vpnPillHovered: false
     property bool vpnStatsPopHovered: false
     property bool vpnStatsPopVisible: false
-    readonly property bool vpnStatsWanted: (root.vpnPillHovered || root.vpnStatsPopHovered) && root.vpnConnected && !root.vpnPopVisible
+    readonly property bool vpnStatsWanted: (root.vpnPillHovered || root.vpnStatsPopHovered) && !root.vpnPopVisible
     onVpnStatsWantedChanged: {
         if (root.vpnStatsWanted) {
             vpnStatsCloseTimer.stop();
@@ -806,6 +806,57 @@ Scope {
         stdout: StdioCollector {
             onStreamFinished: root.parseVpnStats(text)
         }
+    }
+
+    // ===== The HINT on hover, for the pills with no panel (bar/HintPopover.qml) =====
+    // A KEY and not the text, so hintFor() stays a binding and the hint follows the state live.
+    property string hintKey: ""
+    property bool hintVisible: false
+    property var hintTray: null
+    function hoverHint(key, item, barContentItem, scr, on) {
+        if (on) {
+            root.anchorPopover(item, barContentItem, scr);
+            root.hintKey = key;
+            root.hintVisible = true;
+        } else if (root.hintKey === key) {
+            root.hintVisible = false;
+        }
+    }
+    function hintFor(key) {
+        if (key === "win")
+            return {
+                title: root.rawTitle,
+                lines: ["The focused window"]
+            };
+        if (key === "spotify")
+            return {
+                title: root.spTitle || "Spotify",
+                lines: [root.spArtist, root.spPlaying ? "Playing" : "Paused", "Click: media panel", "Right-click: play/pause", "Scroll: next/previous track"].filter(l => l !== "")
+            };
+        if (key === "notifs")
+            return {
+                title: "Notifications",
+                lines: [Notifs.count > 0 ? Notifs.count + " waiting" : "None waiting", Notifs.dnd ? "Do not disturb is ON" : "", "Click: notification center", "Right-click: do not disturb"].filter(l => l !== "")
+            };
+        if (key === "vol")
+            return {
+                title: "Volume " + Math.round(root.volume * 100) + "%" + (root.sinkMuted ? " (muted)" : ""),
+                lines: [root.sink ? (root.sink.description || root.sink.name || "") : "", "Click: mute", "Right-click: pavucontrol", "Scroll: \u00b15%"].filter(l => l !== "")
+            };
+        if (key === "idle")
+            return {
+                title: "Idle: " + (root.hypridleOn ? "on" : "off"),
+                lines: [root.hypridleOn ? "hypridle runs its idle timeouts" : "hypridle is stopped: nothing happens on idle", "Click: turn it " + (root.hypridleOn ? "off" : "on")]
+            };
+        if (key === "tray" && root.hintTray) {
+            const t = root.hintTray;
+            const desc = (t.tooltipDescription || "").replace(/<[^>]*>/g, "").trim();
+            return {
+                title: t.tooltipTitle || t.title || t.id || "",
+                lines: [desc, "Click: open", "Middle-click: secondary action", "Right-click: menu"].filter(l => l !== "")
+            };
+        }
+        return null;
     }
 
     // ===== Hypridle (toggle-hypridle.sh) =====
@@ -1838,6 +1889,11 @@ Scope {
         bar: root
     }
 
+    // ===== The hover hint, the view is in bar/HintPopover.qml =====
+    HintPopover {
+        bar: root
+    }
+
     // ===== One bar per monitor =====
     // The GLANCE band, on the screens too narrow for the full bar. Same model as the bar below, so
     // it follows the hotplug; the component is in dash/Dashboard.qml.
@@ -1903,19 +1959,26 @@ Scope {
                         }
                     }
                     Pill {
+                        id: winPill
                         visible: bar.modelData && bar.modelData.name === root.focusedMon && root.winTitle !== ""
                         label: root.winTitle
                         accent: Theme.colSky
                         italic: true
                         maxWidth: Math.round(bar.width * 0.13)
+                        onHoveredChanged: root.hoverHint("win", winPill, barContent, bar.screen, hovered)
                     }
                     Pill {
+                        id: spPill
                         visible: root.spHasPlayer && !bar.compact
                         icon: "󰝚"
                         label: root.spText
                         accent: root.spColor
                         maxWidth: 240
-                        onClicked: root.launch(["qs", "ipc", "call", "mpris", "toggle"])
+                        onHoveredChanged: root.hoverHint("spotify", spPill, barContent, bar.screen, hovered)
+                        onClicked: {
+                            root.hintVisible = false;
+                            root.launch(["qs", "ipc", "call", "mpris", "toggle"]);
+                        }
                         onRightClicked: root.launch(["playerctl", "--player=spotify", "play-pause"])
                         onScrolledUp: root.launch(["playerctl", "--player=spotify", "next"])
                         onScrolledDown: root.launch(["playerctl", "--player=spotify", "previous"])
@@ -1955,6 +2018,7 @@ Scope {
                         }
                     }
                     Pill {
+                        id: notifPill
                         visible: !bar.compact
                         // the || covers the singleton's init instant on a reload
                         icon: Notifs.barIcon || "󰂜"
@@ -1962,7 +2026,11 @@ Scope {
                         // dim when empty, peach when there are some, red under DND.
                         label: Notifs.count > 0 ? "" + Notifs.count : ""
                         accent: Notifs.dnd ? Theme.colRed : (Notifs.count > 0 ? Theme.colPeach : Theme.colDim)
-                        onClicked: Notifs.toggleCenter()
+                        onHoveredChanged: root.hoverHint("notifs", notifPill, barContent, bar.screen, hovered)
+                        onClicked: {
+                            root.hintVisible = false;
+                            Notifs.toggleCenter();
+                        }
                         onRightClicked: Notifs.toggleDnd()
                     }
                 }
@@ -2021,17 +2089,21 @@ Scope {
                         onClicked: root.launch(["nm-connection-editor"])
                     }
                     Pill {
+                        id: volPill
                         icon: root.volIcon()
                         label: Math.round(root.volume * 100) + "%"
                         accent: root.sinkMuted ? Theme.colDim : Theme.colBlue
+                        onHoveredChanged: root.hoverHint("vol", volPill, barContent, bar.screen, hovered)
                         onClicked: root.toggleMute()
                         onRightClicked: root.launch(["pavucontrol"])
                         onScrolledUp: root.setVol(0.05)
                         onScrolledDown: root.setVol(-0.05)
                     }
                     Pill {
+                        id: idlePill
                         icon: root.hypridleIcon
                         accent: root.hypridleOn ? Theme.colGreen : Theme.colRed
+                        onHoveredChanged: root.hoverHint("idle", idlePill, barContent, bar.screen, hovered)
                         onClicked: root.launch(["sh", "-c", "systemctl --user is-active --quiet hypridle.service && systemctl --user stop hypridle.service || systemctl --user start hypridle.service"])
                     }
                     // The system tray (StatusNotifier), one background for the group. Left=activate,
@@ -2094,7 +2166,13 @@ Scope {
                                         cursorShape: Qt.PointingHandCursor
                                         hoverEnabled: true
                                         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+                                        onContainsMouseChanged: {
+                                            if (containsMouse)
+                                                root.hintTray = modelData;
+                                            root.hoverHint("tray", trayDel, barContent, bar.screen, containsMouse);
+                                        }
                                         onClicked: m => {
+                                            root.hintVisible = false;
                                             if (m.button === Qt.LeftButton)
                                                 modelData.activate();
                                             else if (m.button === Qt.MiddleButton)

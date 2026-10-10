@@ -181,8 +181,9 @@ and the buttons inert during the action.
   click and not a hover because you click buttons inside it, and a panel that opens on hover closes
   at the first distraction. Same choice as PowerMenu, which also has actions inside.
 - **`VpnStatsPopover.qml` (hover)**: the quality verdict, a graph of the last minute, latency,
-  jitter, loss, traffic and uptime. It has nothing to click, the same criterion as the calendar and
-  the three system panels.
+  jitter, loss, traffic and uptime, then Tor's rows. It has nothing to click, the same criterion as
+  the calendar and the three system panels. It opens with NO VPN up too ("none connected" plus
+  Tor), because a hover that shows nothing reads as a broken pill.
 
 Both anchor at the SAME point of the bar, so the Bar hides the stats one while the actions menu is
 open; otherwise one would draw on top of the other, since the mouse stays over the pill the whole
@@ -190,13 +191,29 @@ time.
 
 Right click on the pill is still the shortcut for taking everything down.
 
+### The hover hint: every item answers a hover
+
+Asked for on 10/10/2026: everything on the bar shows something under the cursor. The pills with a
+panel of their own (weather, clock, temperature, usage, VPN, network) already did; the rest (the
+window title, Spotify, notifications, volume, hypridle and each tray icon) get
+`HintPopover.qml`, a small card with the state and what each button does. The click keeps doing
+what it did, so a hover never fires an action.
+
+The Bar stores a KEY (`hintKey`), not the text, and the popover binds to `hintFor(key)`. So the
+hint follows the state while it is open: scrolling the volume updates its percentage live. A click
+that opens something (the media panel, the notification center, a tray menu) hides the hint first,
+or the two would draw on top of each other. A tray icon's hint is its own SNI `tooltipTitle` and
+`tooltipDescription`, with the HTML some apps put there stripped.
+
+Every clickable item also shows the pointing hand, as the dash already did.
+
 ### Tor: a purple badge on the VPN pill, never its green
 
 Tor rides on the VPN pill as a BADGE: the Tor glyph (`U+F371`, `linux-tor` in the Nerd Font) in
 Tor's purple (`Theme.colLavender`), last in the row, shown while any Tor below runs and followed by
 `Bisq` while Bisq's does. One pill and not two because both can be up at once (FAI plus Tor), and
-the badge has its own color so the VPN's green keeps meaning only the VPN. The click opens the
-actions popover, where, below the VPN rows, Tor's STATE shows with no button:
+the badge has its own color so the VPN's green keeps meaning only the VPN. Both VPN popovers,
+the hover one and the click one, show Tor's STATE below the VPN rows (`TorRows.qml`), with no button:
 
 - **System Tor**: `tor.service` active, so the SOCKS port on `127.0.0.1:9050` is up.
 - **Bisq 2**: a `tor` process owned by my user whose command line runs from `Bisq2/`, the child

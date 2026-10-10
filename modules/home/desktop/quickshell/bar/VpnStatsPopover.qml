@@ -1,5 +1,5 @@
-// The VPN STATISTICS popover (hover): verdict, a 60s graph, latency, jitter, loss, traffic,
-// uptime. Why the scale starts at ZERO and why 360 wide: docs/notes/desktop/bar.md
+// The VPN STATISTICS popover (hover): verdict, 60s graph, latency, jitter, loss, traffic, uptime,
+// then Tor; it opens with no VPN up too. Why the scale starts at ZERO and why 360 wide: docs/notes/desktop/bar.md
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -34,6 +34,16 @@ PanelWindow {
     PopCard {
         id: card
         onHoveredChanged: statsPop.bar.vpnStatsPopHovered = card.hovered
+
+        // With no tunnel up the hover still answers: no VPN, and Tor's state below.
+        PopHeader {
+            visible: statsPop.bar.vpnStatsList.length === 0
+            icon: "󰦝"
+            title: "VPN"
+            verdict: "none connected"
+            verdictColor: Theme.colDim
+            rule: false
+        }
 
         Repeater {
             model: statsPop.bar.vpnStatsList
@@ -160,6 +170,20 @@ PanelWindow {
                     font.pixelSize: 10
                 }
             }
+        }
+
+        Hairline {
+            Layout.topMargin: 4
+        }
+        PopHeader {
+            icon: "\uf371"
+            title: "Tor"
+            verdict: statsPop.bar.torSystem || statsPop.bar.torBisq ? "running" : "off"
+            verdictColor: statsPop.bar.torSystem || statsPop.bar.torBisq ? Theme.colLavender : Theme.colDim
+            rule: false
+        }
+        TorRows {
+            bar: statsPop.bar
         }
     }
 }

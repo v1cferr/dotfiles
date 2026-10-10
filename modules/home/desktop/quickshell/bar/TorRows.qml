@@ -11,7 +11,7 @@ ColumnLayout {
     property bool actions: false
 
     Layout.fillWidth: true
-    spacing: 8
+    spacing: 12
 
     Repeater {
         model: [
@@ -32,7 +32,7 @@ ColumnLayout {
             id: torRow
             required property var modelData
             Layout.fillWidth: true
-            spacing: 9
+            spacing: 10
 
             Rectangle {
                 width: 9
@@ -87,7 +87,9 @@ ColumnLayout {
     Text {
         Layout.fillWidth: true
         Layout.maximumWidth: 330
+        Layout.topMargin: 4
         wrapMode: Text.WordWrap
+        lineHeight: 1.35
         text: "Only apps pointed at Tor use it; the rest of this machine is not on Tor. Stack Wallet's Tor is inside the app: check its own indicator."
         color: Theme.colDim
         font.family: Theme.uiFont

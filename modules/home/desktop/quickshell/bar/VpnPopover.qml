@@ -20,7 +20,7 @@ PanelWindow {
         left: bar.popLeft(vpnPop.implicitWidth)
     }
     exclusiveZone: 0
-    implicitWidth: 268
+    implicitWidth: 300
     implicitHeight: card.implicitHeight
     color: "transparent"
 
@@ -35,7 +35,7 @@ PanelWindow {
     Rectangle {
         id: card
         anchors.fill: parent
-        implicitHeight: col.implicitHeight + 24
+        implicitHeight: col.implicitHeight + 36
         radius: 12
         color: Theme.colBg
         border.color: Theme.colBorder
@@ -48,8 +48,11 @@ PanelWindow {
         ColumnLayout {
             id: col
             anchors.fill: parent
-            anchors.margins: 12
-            spacing: 8
+            anchors.leftMargin: 18
+            anchors.rightMargin: 18
+            anchors.topMargin: 16
+            anchors.bottomMargin: 20
+            spacing: 12
 
             Text {
                 text: "󰦝  VPN"
@@ -61,6 +64,7 @@ PanelWindow {
 
             Rectangle {
                 Layout.fillWidth: true
+                Layout.bottomMargin: 2
                 height: 1
                 color: Theme.colBorder
                 opacity: 0.5
@@ -82,7 +86,7 @@ PanelWindow {
                     required property var modelData
                     readonly property bool connected: row.modelData.connected === true
                     Layout.fillWidth: true
-                    spacing: 9
+                    spacing: 10
 
                     Rectangle {
                         width: 9
@@ -153,7 +157,7 @@ PanelWindow {
             // A shortcut for taking both down at once (the same as right-clicking the pill).
             Rectangle {
                 Layout.fillWidth: true
-                implicitHeight: 26
+                implicitHeight: 28
                 radius: 7
                 visible: (vpnPop.bar.vpnList || []).some(v => v.connected === true)
                 color: allArea.containsMouse ? Theme.colMenuHoverBgDanger : "transparent"
@@ -187,9 +191,18 @@ PanelWindow {
                 }
             }
 
-            // Tor: state only, no button. It is per app, so the footer says what it does NOT cover.
+            // Tor: its own titled section, so it never reads as a third VPN.
+            Text {
+                Layout.topMargin: 10
+                text: "\uf371  Tor"
+                color: Theme.colLavender
+                font.family: Theme.uiFont
+                font.pixelSize: 13
+                font.bold: true
+            }
             Rectangle {
                 Layout.fillWidth: true
+                Layout.bottomMargin: 2
                 height: 1
                 color: Theme.colBorder
                 opacity: 0.5
@@ -201,6 +214,7 @@ PanelWindow {
             }
 
             Text {
+                Layout.topMargin: 2
                 visible: vpnPop.bar.vpnBusy || vpnPop.bar.torBusy
                 text: vpnPop.bar.torBusy ? "waiting for the password…" : "running…"
                 color: Theme.colDim

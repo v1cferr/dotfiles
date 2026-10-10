@@ -26,6 +26,8 @@
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKPvFX6AAslYtCXeUnNmSIKL4GESHvgO+irlnJ5+2ltD dev.victorferreira@gmail.com"
       # the local key on the Arch/Kingston, for the Arch -> NixOS hop
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINRHYth5yugzhdulstjLPJAqHuzXE6j/EVl7dHcWKIUI dev.victorferreira@gmail.com"
+      # the phone's Termius key, so mobile logins skip the password + TOTP prompt
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGERwwI0j+DgRdw3PLJAn2m3/Ghwj1s1AATXp/R4OnS4 phone-termius"
     ];
   };
   # THE HOME, created by tmpfiles and not only by `createHome`: with the systemd initrd the WHOLE

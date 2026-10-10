@@ -84,6 +84,26 @@ MEASURED on 10/10/2026, with `HOME` pointed at a scratch directory:
 
 No wallet was created, no seed was generated, and no transaction was made or tested.
 
+### Turning Tor on crashed the wallet (10/10/2026)
+
+Turning on Stack Wallet's Tor closed the app at once: 3 `SIGABRT` cores, each with
+`tor_client_bootstrap` in `libtor_ffi_plugin.so` panicking in a frame that cannot unwind
+(`panic_cannot_unwind`), so the panic aborts the whole process. The cause is the sandbox, not the
+app: `appimageTools` runs it in bwrap's user namespace, where root is unmapped, so `/` and `/home`
+show up owned by `nobody` (65534, MEASURED with the same bwrap). Arti's `fs-mistrust` walks every
+directory up to its state dir and refuses one owned by a user it does not trust.
+
+The fix is `ARTI_FS_DISABLE_PERMISSION_CHECKS=true`, set only inside this app's sandbox through
+`extraBwrapArgs`. That check cannot pass under bwrap at all, so disabling it loses nothing the
+sandbox had; what it guarded (another user writing into the Tor state) is covered by `~` being
+`0700`. The panic message itself was never captured (the launcher drops stderr), so the diagnosis
+rests on the frames plus the ownership measurement; if it still crashes, run `stack-wallet` from a
+terminal and read the `panicked at` line.
+
+**Those cores are memory dumps of a wallet process.** `systemd-coredump` keeps them in
+`/var/lib/systemd/coredump/`, and a dump taken after the wallet was unlocked can hold key material.
+Delete them: `sudo rm /var/lib/systemd/coredump/core.stack_wallet.*`.
+
 ## Where the state lives
 
 All of it is runtime state (rule 6): nothing here is declared.

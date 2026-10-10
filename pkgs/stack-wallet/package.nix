@@ -25,6 +25,14 @@ appimageTools.wrapAppImage {
   # The one library Flutter's GTK runner links that the AppImage FHS does not already carry.
   extraPkgs = pkgs: [ pkgs.libepoxy ];
 
+  # Inside bwrap's user namespace / and /home belong to `nobody`, so Arti's ownership check fails
+  # and the wallet aborts on "Tor ON". The check cannot pass in the sandbox: docs/notes/apps/crypto.md
+  extraBwrapArgs = [
+    "--setenv"
+    "ARTI_FS_DISABLE_PERMISSION_CHECKS"
+    "true"
+  ];
+
   # Upstream's .desktop with only the binary swapped; the AppImage ships a single 512px icon.
   extraInstallCommands = ''
     install -Dm444 ${appimageContents}/stackwallet.desktop -t $out/share/applications

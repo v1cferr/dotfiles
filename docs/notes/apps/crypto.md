@@ -110,6 +110,15 @@ The system Tor ([`tor.nix`](../../../modules/nixos/network/tor.nix)) is a SOCKS 
 - **Stack Wallet** has Tor built in (an in-process library), OFF by default. Turned on in its
   settings, it routes the wallet's node traffic. Nothing else on the machine is affected.
 
+**Stack Wallet's Tor is NOT declarative, on purpose.** The toggle is a preference (`useTor`, next
+to `torKillswitch`, both found in the binary's strings on 10/10/2026) that the app saves in its own
+Hive store under `~/.stackwallet`, the same directory as the encrypted wallet. No launch flag or
+environment variable for it exists in the binary. Writing it from Nix would mean a second writer on
+a binary database the app owns, next to the wallet itself (rule 14), so it is set ONCE by hand and
+then persists across launches; confirm on the second launch that it came back ON. Turn the
+**killswitch** on too: if Tor fails to connect, the app stays offline instead of falling back to
+clearnet.
+
 Nothing forces the system's traffic through Tor, and nothing should.
 
 ## First launch: creating the wallet (by hand)
@@ -118,8 +127,8 @@ Nothing forces the system's traffic through Tor, and nothing should.
    session open on this desk.
 2. Open Stack Wallet from the launcher. Choose a STRONG app password: it is what encrypts
    `~/.stackwallet` on a disk that has no LUKS.
-3. In settings, turn **Tor ON** before adding a wallet, so the first sync already hides my IP from
-   the node.
+3. In settings, turn **Tor ON** and its **killswitch** ON before adding a wallet, so the first
+   sync already hides my IP from the node. It persists; check it is still ON on the next launch.
 4. Add a Bitcoin wallet, "create new". Write the words (12 by default; 24 is offered) **on paper,
    by hand, in order**. Never a photo, a screenshot, a text file, the clipboard, a password
    manager or a cloud note.

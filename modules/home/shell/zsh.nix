@@ -56,6 +56,10 @@ in
       wp1 = "wallpaper-shuffle 1";
       wp2 = "wallpaper-shuffle 2";
 
+      # The system Tor until the next boot (it stays enabled); the bar's purple badge follows within 5s.
+      tor-on = "sudo systemctl start tor";
+      tor-off = "sudo systemctl stop tor";
+
       # ls/ll/la/lt (eza) and cat (bat) live in cli.nix, next to the toolkit.
       ".." = "cd ..";
       "..." = "cd ../..";

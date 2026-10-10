@@ -213,12 +213,19 @@ Tor rides on the VPN pill as a BADGE: the Tor glyph (`U+F371`, `linux-tor` in th
 Tor's purple (`Theme.colLavender`), last in the row, shown while any Tor below runs and followed by
 `Bisq` while Bisq's does. One pill and not two because both can be up at once (FAI plus Tor), and
 the badge has its own color so the VPN's green keeps meaning only the VPN. Both VPN popovers,
-the hover one and the click one, show Tor's STATE below the VPN rows (`TorRows.qml`), with no button:
+the hover one and the click one, show Tor's STATE below the VPN rows (`TorRows.qml`):
 
 - **System Tor**: `tor.service` active, so the SOCKS port on `127.0.0.1:9050` is up.
 - **Bisq 2**: a `tor` process owned by my user whose command line runs from `Bisq2/`, the child
   Tor Bisq starts with the app and kills on exit. A Tor owned by `tor` is the system one, so the
   owner tells them apart.
+
+The click popover adds a **Turn on / Turn off** button on the System Tor row only. It runs a
+plain `systemctl start|stop tor.service`, so the polkit agent asks for the password every time: a
+rule granting it silently was considered and NOT added (10/10/2026), since a button that weakens
+the auth for a root service is a bigger change than the convenience it buys. Until the next boot,
+like `tor-on`/`tor-off` ([shell](../repo/shell.md)); the unit stays enabled. The popover does not
+auto-close while the dialog is up. Bisq's Tor has no button: closing Bisq is what stops it.
 
 Stack Wallet gets no row: its Tor is a library inside the app's process, with no process or
 service to observe from outside, so a row would be a guess. Its own indicator is the truth.

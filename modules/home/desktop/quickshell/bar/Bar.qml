@@ -641,6 +641,22 @@ Scope {
         root.torSystem = lines.indexOf("system") !== -1;
         root.torBisq = lines.some(l => l.indexOf("/Bisq2/") !== -1);
     }
+    // Start/stop asks for the password through the polkit agent: no rule grants it silently.
+    property bool torBusy: false
+    function runTor(action) {
+        root.torBusy = true;
+        torActionProc.command = ["systemctl", action, "tor.service"];
+        torActionProc.running = true;
+    }
+    Process {
+        id: torActionProc
+        onRunningChanged: {
+            if (!running) {
+                root.torBusy = false;
+                torProc.running = true;
+            }
+        }
+    }
     Process {
         id: torProc
         // A user-owned `tor` is an app's own; Bisq's runs from its data dir, the system one as `tor`.

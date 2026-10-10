@@ -7,6 +7,8 @@ import "root:/"
 ColumnLayout {
     id: tor
     required property var bar
+    // The click menu passes true: a Turn on/off button on the system row (the hover panel stays read-only).
+    property bool actions: false
 
     Layout.fillWidth: true
     spacing: 8
@@ -15,11 +17,13 @@ ColumnLayout {
         model: [
             {
                 name: "System Tor",
+                system: true,
                 on: tor.bar.torSystem,
                 detail: tor.bar.torSystem ? "SOCKS :9050" : "off"
             },
             {
                 name: "Bisq 2",
+                system: false,
                 on: tor.bar.torBisq,
                 detail: tor.bar.torBisq ? "own Tor" : "closed"
             }
@@ -49,6 +53,33 @@ ColumnLayout {
                 color: torRow.modelData.on ? Theme.colLavender : Theme.colDim
                 font.family: Theme.uiFont
                 font.pixelSize: 11
+            }
+            Rectangle {
+                visible: tor.actions && torRow.modelData.system
+                implicitWidth: torBtnLabel.implicitWidth + 20
+                implicitHeight: 24
+                radius: 7
+                color: torBtnArea.containsMouse ? (torRow.modelData.on ? Theme.colHoverBgDanger : Theme.colHoverBgOk) : "transparent"
+                border.color: torRow.modelData.on ? Theme.colRed : Theme.colGreen
+                border.width: 1
+                opacity: tor.bar.torBusy ? 0.4 : 1
+
+                Text {
+                    id: torBtnLabel
+                    anchors.centerIn: parent
+                    text: torRow.modelData.on ? "Turn off" : "Turn on"
+                    color: torRow.modelData.on ? Theme.colRed : Theme.colGreen
+                    font.family: Theme.uiFont
+                    font.pixelSize: 11
+                }
+                MouseArea {
+                    id: torBtnArea
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    hoverEnabled: true
+                    enabled: !tor.bar.torBusy
+                    onClicked: tor.bar.runTor(torRow.modelData.on ? "stop" : "start")
+                }
             }
         }
     }

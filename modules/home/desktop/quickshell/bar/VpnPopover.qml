@@ -28,7 +28,7 @@ PanelWindow {
     // otherwise the panel evaporates exactly while you wait for the click's result.
     Timer {
         interval: 2500
-        running: vpnPop.visible && !popHover.hovered && !vpnPop.bar.vpnBusy
+        running: vpnPop.visible && !popHover.hovered && !vpnPop.bar.vpnBusy && !vpnPop.bar.torBusy
         onTriggered: vpnPop.bar.vpnPopVisible = false
     }
 
@@ -197,11 +197,12 @@ PanelWindow {
 
             TorRows {
                 bar: vpnPop.bar
+                actions: true
             }
 
             Text {
-                visible: vpnPop.bar.vpnBusy
-                text: "running…"
+                visible: vpnPop.bar.vpnBusy || vpnPop.bar.torBusy
+                text: vpnPop.bar.torBusy ? "waiting for the password…" : "running…"
                 color: Theme.colDim
                 font.family: Theme.uiFont
                 font.pixelSize: 10

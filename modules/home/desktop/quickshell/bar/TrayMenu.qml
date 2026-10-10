@@ -181,6 +181,7 @@ PanelWindow {
             MouseArea {
                 id: hov
                 anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
                 hoverEnabled: true
                 enabled: entry.modelData.enabled && !entry.modelData.isSeparator
                 onClicked: {

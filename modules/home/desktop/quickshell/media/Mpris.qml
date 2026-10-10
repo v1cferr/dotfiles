@@ -227,6 +227,7 @@ Scope {
 
                         MouseArea {
                             anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
                             enabled: root.player && root.player.canSeek
                             onClicked: mouse => {
                                 if (root.player && root.length > 0) {
@@ -322,6 +323,7 @@ Scope {
         MouseArea {
             id: area
             anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             enabled: btn.enabled
             onClicked: btn.activated()

@@ -162,6 +162,7 @@ Pill {
                         MouseArea {
                             id: itemArea
                             anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
                             hoverEnabled: true
                             onClicked: powerBtn.run(modelData.cmd)
                         }

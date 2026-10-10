@@ -132,6 +132,7 @@ PanelWindow {
                         MouseArea {
                             id: btnArea
                             anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
                             hoverEnabled: true
                             enabled: !vpnPop.bar.vpnBusy
                             onClicked: vpnPop.bar.runVpn(row.connected ? "disconnect" : "connect", row.modelData.id)
@@ -179,6 +180,7 @@ PanelWindow {
                 MouseArea {
                     id: allArea
                     anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
                     hoverEnabled: true
                     enabled: !vpnPop.bar.vpnBusy
                     onClicked: vpnPop.bar.runVpn("disconnect", "all")

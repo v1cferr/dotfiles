@@ -1795,6 +1795,7 @@ Scope {
         MouseArea {
             id: wsArea
             anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             // The 0.55 Lua syntax made `dispatch` a shortcut, so the old 3-arg form blows up in the parser
             // and the click died silently. `hl.dsp.workspace` is a TABLE; what switches is focus.
@@ -2090,6 +2091,7 @@ Scope {
                                     }
                                     MouseArea {
                                         anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
                                         hoverEnabled: true
                                         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
                                         onClicked: m => {

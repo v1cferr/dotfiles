@@ -190,6 +190,25 @@ time.
 
 Right click on the pill is still the shortcut for taking everything down.
 
+### Tor in the actions popover, never on the pill
+
+Below the VPN rows, the click popover shows Tor's STATE, with no button:
+
+- **System Tor**: `tor.service` active, so the SOCKS port on `127.0.0.1:9050` is up.
+- **Bisq 2**: a `tor` process owned by my user whose command line runs from `Bisq2/`, the child
+  Tor Bisq starts with the app and kills on exit. A Tor owned by `tor` is the system one, so the
+  owner tells them apart.
+
+Stack Wallet gets no row: its Tor is a library inside the app's process, with no process or
+service to observe from outside, so a row would be a guess. Its own indicator is the truth.
+
+It stays OUT of the pill on purpose. The pill means "this machine's traffic goes through a
+tunnel", and Tor never does that here: MEASURED on 10/10/2026, a request through
+`--socks5-hostname 127.0.0.1:9050` reported `IsTor: true` on `check.torproject.org`, and the same
+request without the proxy reported `false`. A green pill for Tor would say the opposite of that,
+which is why the popover's footer spells out what it does not cover. Why each app has its own
+Tor: [`crypto.md`](../apps/crypto.md).
+
 ## The VPN quality probe
 
 The pill only answered "is there a tunnel?"; what was missing was "and is it any good?", which is

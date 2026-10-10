@@ -1,4 +1,4 @@
-// The VPN ACTIONS popover (click): a row per VPN plus "Disconnect all". It replaced a loose rofi,
+// The VPN ACTIONS popover (click): a row per VPN, "Disconnect all", then Tor's state. It replaced a loose rofi,
 // and it shares the Bar's single source. Why click and not hover: docs/notes/desktop/bar.md
 import Quickshell
 import QtQuick
@@ -183,6 +183,65 @@ PanelWindow {
                     enabled: !vpnPop.bar.vpnBusy
                     onClicked: vpnPop.bar.runVpn("disconnect", "all")
                 }
+            }
+
+            // Tor: state only, no button. It is per app, so the footer says what it does NOT cover.
+            Rectangle {
+                Layout.fillWidth: true
+                height: 1
+                color: Theme.colBorder
+                opacity: 0.5
+            }
+
+            Repeater {
+                model: [
+                    {
+                        name: "System Tor",
+                        on: vpnPop.bar.torSystem,
+                        detail: vpnPop.bar.torSystem ? "SOCKS :9050" : "off"
+                    },
+                    {
+                        name: "Bisq 2",
+                        on: vpnPop.bar.torBisq,
+                        detail: vpnPop.bar.torBisq ? "own Tor" : "closed"
+                    }
+                ]
+                delegate: RowLayout {
+                    id: torRow
+                    required property var modelData
+                    Layout.fillWidth: true
+                    spacing: 9
+
+                    Rectangle {
+                        width: 9
+                        height: 9
+                        radius: 4.5
+                        Layout.alignment: Qt.AlignVCenter
+                        color: torRow.modelData.on ? Theme.colGreen : Theme.colDim
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: torRow.modelData.name
+                        color: Theme.colText
+                        font.family: Theme.uiFont
+                        font.pixelSize: 12
+                    }
+                    Text {
+                        text: torRow.modelData.detail
+                        color: torRow.modelData.on ? Theme.colGreen : Theme.colDim
+                        font.family: Theme.uiFont
+                        font.pixelSize: 11
+                    }
+                }
+            }
+
+            Text {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                text: "Only apps pointed at Tor use it; the rest of this machine is not on Tor. Stack Wallet's Tor is inside the app: check its own indicator."
+                color: Theme.colDim
+                font.family: Theme.uiFont
+                font.pixelSize: 10
             }
 
             Text {

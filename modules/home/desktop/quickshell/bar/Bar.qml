@@ -632,6 +632,24 @@ Scope {
         }
     }
 
+    // TOR, shown in the VPN popover but never on the pill: it is a proxy for the apps pointed at it,
+    // not a tunnel for the machine. What each line means: docs/notes/desktop/bar.md
+    property bool torSystem: false
+    property bool torBisq: false
+    function parseTor(text) {
+        const lines = text.split("\n");
+        root.torSystem = lines.indexOf("system") !== -1;
+        root.torBisq = lines.some(l => l.indexOf("/Bisq2/") !== -1);
+    }
+    Process {
+        id: torProc
+        // A user-owned `tor` is an app's own; Bisq's runs from its data dir, the system one as `tor`.
+        command: ["sh", "-c", "systemctl is-active --quiet tor.service && echo system; pgrep -u \"$(id -u)\" -a -x tor || true"]
+        stdout: StdioCollector {
+            onStreamFinished: root.parseTor(text)
+        }
+    }
+
     // VPN QUALITY. The pill answered "is there a tunnel?"; this answers "and is it any good?".
     // Two sources, and zero cost with no tunnel. The measurements: docs/notes/desktop/bar.md
     property var vpnStats: ({})   // id -> the object from `vpn stats-json`
@@ -1554,7 +1572,10 @@ Scope {
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: vpnProc.running = true
+        onTriggered: {
+            vpnProc.running = true;
+            torProc.running = true;
+        }
     }
     Timer {
         interval: 10000
@@ -1980,8 +2001,10 @@ Scope {
                         onClicked: {
                             root.anchorPopover(vpnPill, barContent, bar.screen);
                             root.vpnPopVisible = !root.vpnPopVisible;
-                            if (root.vpnPopVisible)
+                            if (root.vpnPopVisible) {
                                 vpnProc.running = true; // a fresh state when it opens
+                                torProc.running = true;
+                            }
                         }
                         onRightClicked: root.runVpn("disconnect", "all")
                     }

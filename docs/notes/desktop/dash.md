@@ -13,8 +13,21 @@ and the hot reload stop working, and it reads every system number from the bar's
 **Why it exists.** A 27" panel on its pivot is 597 mm tall, so its top third sits ABOVE eye level
 for anyone sitting at the desk, while the ergonomic target is 0 to -30 degrees below the
 horizontal. A window up there is a neck problem, not a layout preference. The split is 30/70 on
-purpose: 768 px of band against 1792 px of work area, on the 2560 logical px that the 1920 px
-panel becomes at `scale = 0.75`.
+purpose: 576 px of band against 1344 px of work area on the 1920 px panel, at its native scale.
+
+**It is drawn on a fixed canvas and scaled inside Quickshell.** The band was designed in the week
+the LG ran at `scale = 0.75` (1440x2560 logical), and every size in `dash/` is a pixel of that
+canvas. When the LG went back to native scale (commit `8ba3686`, the reason is in
+[hypr](hypr.md)), the band got 1072x538 logical: the services strip had no room left, and the CI rows
+and the weather line were cut. Instead of re-sizing ~250 literals across 15 files, `Dashboard.qml`
+lays the content out on a 1432-wide `stage` (1440 minus the window's margins) and gives it
+`scale: width / 1432`, 0.749 here. The difference from the compositor's 0.75 is WHERE the scaling
+happens: Hyprland shrinks a frame already rasterized at the bigger size, which is what blurred thin
+text; inside Quickshell, Qt's default distance-field text rasterizes every glyph at its final
+on-screen size, so the same reduction comes out sharp (checked at 300% on 9 px text, 11/10/2026).
+The physical sizes are exactly the ones of the 0.75 week. One trap met on the way: a size computed
+from the WINDOW (`dash.width`) inside the stage is in the wrong units; the left column's 55% now
+reads `stage.width`.
 
 **How the space is taken: `exclusiveZone`, not a gap.** A workspace rule with
 `gaps_out = { top = N }` reserves the same strip, and it was the first attempt, but N would then
@@ -31,8 +44,8 @@ and nowhere else.
 
 **The vitals are tiles, not meter rows.** CPU, RAM, DISK, GPU, TEMP and NET sit in a 3x2 grid
 (`dash/Tile.qml`) with a 36 px value, under an `UP · LOAD` line. The first version reused the
-popovers' `MeterRow`, whose 10 to 12 px text is sized for a hover a hand away; at `scale = 0.75`
-it was unreadable from the chair and left the left column half empty. GPU is power against its
+popovers' `MeterRow`, whose 10 to 12 px text is sized for a hover a hand away; on the band's
+canvas it was unreadable from the chair and left the left column half empty. GPU is power against its
 own cap, because the Arc publishes no busy percentage, and NET is download against the link speed.
 
 **No new data.** Every number is already collected in `Bar.qml` for the bar and its popovers, so

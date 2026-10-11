@@ -463,7 +463,6 @@ PanelWindow {
                                             readonly property int side: Math.min(width, height) - 6
                                             // The WEEK's weather rides on its own days: today and the six after it.
                                             readonly property var wx: (isHead || !(cell.modelData.d > 0)) ? null : dash.host.wDaily[dash.host.calYear + "-" + ("0" + dash.host.calTodayM).slice(-2) + "-" + ("0" + cell.modelData.d).slice(-2)] || null
-                                            readonly property color ink: cell.isFilled ? Theme.colBgSolid : Theme.colSubtext
 
                                             width: gridBox.cellW
                                             height: gridBox.cellH
@@ -518,12 +517,13 @@ PanelWindow {
                                                     font.pixelSize: 12
                                                     font.bold: true
                                                 }
-                                                Text {
-                                                    text: cell.wx ? cell.wx.low + "°" : ""
-                                                    color: cell.ink
-                                                    font.family: Theme.uiFont
-                                                    font.pixelSize: 11
-                                                }
+                                            }
+                                            // The day's minimum, rain, holiday and INMET's words: on hover.
+                                            Tip {
+                                                readonly property string key: dash.host.calYear + "-" + ("0" + dash.host.calTodayM).slice(-2) + "-" + ("0" + cell.modelData.d).slice(-2)
+                                                readonly property var inmet: Inmet.days[key] || null
+                                                title: cell.isHead || !(cell.modelData.d > 0) ? "" : cell.modelData.d + " " + (dash.host.monthNames[dash.host.calTodayM - 1] || "").slice(0, 3).toLowerCase() + (cell.hol ? " · " + cell.hol.name : "")
+                                                lines: !cell.wx ? [] : [dash.host.wmoText(cell.wx.code), "↑" + cell.wx.high + "°  ↓" + cell.wx.low + "°" + (cell.wx.precip ? "  ·  rain " + cell.wx.precip + "%" : ""), inmet ? "INMET: " + inmet.summary : ""].filter(x => x)
                                             }
                                         }
                                     }

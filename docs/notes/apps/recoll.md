@@ -36,6 +36,16 @@ those patterns WILL be indexed: name it to match, or add its pattern.
 `~/Downloads/minecraft-server`; Recoll opens zip files) or sensitive (`~/Downloads/Seguranca`). It
 replaces Recoll's default (`/media`), which no topdir reaches anyway.
 
+## What the first run taught (11/10/2026)
+
+The first full pass was stopped at 291k documents with the index already at 5.6 GB and 5 GB of
+peak memory. The topdirs hold ~170k files, and four places held most of them, none a document:
+a pnpm store inside a repo (59k), scraped game assets (41k), Python `.venv` dirs (10k+ each) and
+Minecraft instances (12k). The documents count is HIGHER than the file count because Recoll
+opens every zip and indexes each member, and a `.jar` is a zip, so one modpack is thousands of
+documents. The fix is the second half of `skippedNames+` (`.venv`, `.pnpm-store`, `*.jar`) and
+the three game folders in `skippedPaths`. Before adding a big topdir, count its files with `fd`.
+
 ## Using it
 
 - GUI: `recoll`. Words go in the box, the type filter narrows to PDF, text, office and so on.

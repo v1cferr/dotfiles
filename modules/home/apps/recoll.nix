@@ -33,6 +33,9 @@ in
         "target"
         ".next"
         "dist"
+        ".venv" # a Python env: 10k+ files per project, none of them mine
+        ".pnpm-store" # a pnpm store inside the repo: 59k files in grad-radar alone
+        "*.jar" # a zip: Recoll expands every member, and a modpack has thousands
         "*.age"
         "*.iso"
         ".env"
@@ -46,6 +49,9 @@ in
         "~/Downloads/Jogos"
         "~/Downloads/minecraft-server"
         "~/Downloads/Seguranca"
+        "~/Documents/curseforge" # Minecraft instances, 12k files of game data
+        "~/Projects/Local/azerothcore-wotlk-coa/data" # game server data dumps
+        "~/Projects/GitHub/v1cferr/ascension-coa-scraper/data/client" # 41k scraped game assets
       ];
     };
   };

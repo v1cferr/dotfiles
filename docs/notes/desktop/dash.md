@@ -43,7 +43,8 @@ count: a feed in the eyeline is the opposite of a glance surface, so the centre 
 and nowhere else.
 
 **The vitals are tiles, not meter rows.** CPU, RAM, DISK, GPU, TEMP and NET sit in a 3x2 grid
-(`dash/Tile.qml`) with a 36 px value, under an `UP · LOAD` line. The first version reused the
+(`dash/Tile.qml`) with a 36 px value and one hint; load and uptime are in the CPU tile's tooltip.
+The first version reused the
 popovers' `MeterRow`, whose 10 to 12 px text is sized for a hover a hand away; on the band's
 canvas it was unreadable from the chair and left the left column half empty. GPU is power against its
 own cap, because the Arc publishes no busy percentage, and NET is download against the link speed.
@@ -59,10 +60,10 @@ number, and what the machine is RUNNING was nowhere. So the history moved INTO t
 sparkline beside its value (`Tile.series`), and the strip became the services carousel (below).
 `Horizon.qml` was deleted with it (rule 16).
 
-**The date block.** The clock shows HH:mm:ss, and BESIDE it the weekday spelled out over an ISO
-line (`2026-10-07 · Outubro · W41`). It used to be three stacked lines; one row returned the height
-the services strip needed. The weekday is what a person wants off a clock, and the ISO date plus the
-ISO-8601 week are the precise record underneath. `isoWeek()` counts the week against the year its
+**The date block.** The clock shows HH:mm:ss, and BESIDE it the weekday spelled out over one short
+line (`11 out · W41`). It used to be three stacked lines; one row returned the height the services
+strip needed. The weekday is what a person wants off a clock; the full date, the ISO date and the
+uptime are in the tooltip of either. `isoWeek()` counts the week against the year its
 THURSDAY falls in, which is what puts 01/01 on week 53 of the year before when it lands on a Friday.
 
 **`host` is NOT a required property, and that is not sloppiness.** Quickshell's `Variants` creates
@@ -178,12 +179,12 @@ what is coming sits on the calendar, where the days already are. A separate weat
 usual answer, Caelestia's dashboard has one) would have repeated the week the month already shows.
 
 **Today (`WeatherNow.qml`)** fills what was an empty gap under the clock: the glyph and the
-temperature in large type, the pt-BR condition, then one line of glyphs (max/min, feels like,
-humidity, wind, rain chance) so it fits without truncating. It used to carry a small 12-hour curve;
-that moved to the weather page, where a chart can be a chart. Its place went to ONE line for the
-day: sunrise and sunset, the hours of daylight, and the next rain worth knowing about in the next
-24 hours ("rain likely" from 40%, "a chance of rain" from 20%, otherwise "dry for the next 24 h" in
-green). It answers "when does it get dark" and "will it rain today" without opening a page.
+temperature in large type, the pt-BR condition, then the day's max and min; feels like, humidity,
+wind and rain chance are in its tooltip. It used to carry a small 12-hour curve; that moved to the
+weather page, where a chart can be a chart. Its place went to ONE line for the day: sunrise and
+sunset, and the next hour of likely rain (40% and up) when there is one. The hours of daylight and
+a weaker chance of rain (from 20%, otherwise "dry for the next 24 h") are on hover. It answers
+"when does it get dark" and "will it rain today" without opening a page.
 
 **The model is pinned to ECMWF IFS.** Measured on 07/10/2026: Open-Meteo's `best_match` for São
 Carlos returned the ECMWF IFS 9 km run hour for hour (and its ensemble for the rain chance), with
@@ -244,12 +245,12 @@ each service's own 2 minutes, never the instant reading. The rank is recomputed 
 a switch, not on every tick, so a card does not change page under the eye.
 
 **A card, line by line** (`ServiceCard.qml`): a state dot (green up, peach degraded, red down, and
-only trouble breathes), the name, `3/3 containers` or `4/4 units` when it is made of several, the
-uptime, `↻ N` restarts when there were any, and where a click goes (`↗` the site, `󰆍` the log).
-Then CPU as a share of the WHOLE machine (two decimals under 1%, because idle and almost idle are
-different readings) with its own 2-minute sparkline scaled to its own peak, RAM and task count.
-Then disk read/write per second (tinted once it passes 1 MB/s) and what it is made of
-(`server · machine-learning · redis · postgresql`), or its kind when it is a single unit.
+only trouble breathes), the name, `2/3 containers` only while it is not whole, the uptime and
+`↻N` restarts when there were any. Then CPU as a share of the WHOLE machine (two decimals under 1%,
+because idle and almost idle are different readings) with its own 2-minute sparkline scaled to its
+own peak, and RAM. The tooltip holds what it is made of (`server · machine-learning · redis ·
+postgresql`, or its kind when it is a single unit), the task count, disk read/write per second and
+where a click goes (the site or the log).
 
 **What counts as a service: a catalog, not "everything running".** `dash/services.nix` maps each
 `my.services` toggle to its units (`immich` sums four, `basic-memory` two, the user units are
@@ -312,9 +313,9 @@ INMET's RSS set changes) and stores them already filtered; `Inmet.qml` only read
   is ours only when that code is in its `geocodes`.
 - **Where it shows.** An alert in force rides on the condition line of today's block (no extra
   height), breathing slowly in INMET's severity color (yellow potential danger, orange danger, red
-  great danger, from the theme). The weather page opens with up to two alerts, today's and the next,
-  with the risk text and until or from when. Under the week, INMET's own words for today, per
-  period. The page's last line names the sources.
+  great danger, from the theme). The weather page opens with ONE alert chip: the worst severity,
+  until or from when, and `+N` for the others; each alert's risk text is in its tooltip. INMET's
+  own words for today, per period, and the sources are glyphs at the foot of the page, on hover.
 - **The week starts tomorrow** on the page: today already has the block under the clock and the
   start of the 24 h chart, and the row was worth more as height for the chart.
 - **The API is undocumented and picky.** `apiprevmet3.inmet.gov.br` drops clients that do not look
@@ -336,21 +337,53 @@ A page of the rotation (month, WEATHER, NETWORK, GitHub, FAI), from glance-feed'
 document (docs/notes/desktop/glance-feed.md), added on 08/10/2026 as the first visible piece of the
 threat-monitoring plan in docs/open-items.md, before any router change.
 
-- **Four numbers:** devices online, new today, remote sessions now, open connections.
-- **The exposed ports, last 24 hours:** failed SSH logins, from how many IPs, fail2ban bans, and the
-  three most persistent addresses. It made the exposure concrete on day one: 97 failures from 45
-  IPs against port 2222.
+- **Four glyph chips:** devices online, new today, remote sessions now, open connections.
+- **The exposed ports, last 24 hours,** one line: failed SSH logins, from how many IPs, fail2ban
+  bans; the most persistent addresses are in its tooltip. It made the exposure concrete on day one:
+  97 failures from 45 IPs against port 2222.
 - **Threats, last 24 hours** (the `threats` document, from the router's own log): red when a device
   of the house asked a domain on the TIF list or reached a banIP-listed address, peach when it only
   tried a DoH server (a browser probing for its own DNS, which would skip the filtering), green
-  when neither; then the house's DNS volume and how much the blocklists answered, and up to four
-  rows naming the device, what it asked or reached, and which list caught it. The internet's
-  scans that banIP dropped are only a number: they are the background noise of a public IP.
-- **Devices** as chips: NEW in peach first, then the ones not in the router's static DHCP list,
-  then the known (green). "Not in the list" is not "hostile": the family's phones are there too.
-- **Remote access over WireGuard:** each peer by its description in the router's mirror, connected
-  (a handshake in the last 3 minutes) or last seen, and its traffic from the peer's point of view.
-  The endpoint is deliberately not shown.
-- **A footer** with where the data comes from, how many threat domains the list holds, and how
-  fresh the page is. Until 08/10/2026 it said the threat feeds were not on yet, instead of a page
-  that looked complete.
+  when neither. Under it at most two events, contacts before DoH attempts, naming the device and
+  what it asked or reached; the rest, the DNS volume and the scans banIP dropped (the background
+  noise of a public IP) are in the tooltip.
+- **Devices** as chips with only the name: NEW in peach first, then the ones not in the router's
+  static DHCP list, then the known (green); address and MAC on hover. "Not in the list" is not
+  "hostile": the family's phones are there too.
+- **Remote access over WireGuard:** the connected peers as chips, by their description in the
+  router's mirror (a handshake in the last 3 minutes), and ONE `N offline` chip whose tooltip says
+  when each of the others was last seen. The endpoint is deliberately not shown.
+- **An info glyph** whose tooltip says where the data comes from, how many threat domains the list
+  holds, and how fresh the page is.
+
+Until 11/10/2026 every one of those was spelled out, and the page ran past its column over the
+services strip; the trim below is what made it fit.
+
+## Density and hover
+
+On 11/10/2026 the band carried about 60 lines of text: label, value, bar and hint on every tile,
+three lines per service, three weather detail lines, INMET twice. It was trimmed by one rule:
+**an icon and the main number, at most ONE secondary line, and the rest in a tooltip.** This is
+progressive disclosure, the usual answer for dashboards: the summary is read in seconds from the
+chair, and the detail is there for the hand that asks.
+
+- **Spacing** follows an 8 / 16 / 24 / 32 scale in design units (the 1432 canvas): 32 around the
+  card, 24 between sections, 8 or 16 inside one.
+- **What never hides in a tooltip:** an INMET alert in force, a service down or not whole, a failed
+  CI run, a NEW device, threat contacts. A tooltip is invisible until someone hovers, so anything
+  that must be noticed stays on the band; the tooltip only holds what explains it.
+- **The timing** (`dash/Tips.qml`): a card opens after 350 ms of rest, so a pointer only crossing
+  the band shows nothing, and for 300 ms after one closes the next opens at once. That is the
+  common 300 to 500 ms open delay plus the "warm" window of OS tooltips, which makes running the
+  pointer along a row of tiles read like one continuous tooltip.
+- **One card per band** (`dash/TipWindow.qml`), fed by any `Tip` dropped inside an item
+  (`dash/Tip.qml`). It is a layer surface on the overlay layer and not a `PopupWindow`, for the
+  same Hyprland #6682 reason as the bar's popovers (docs/notes/desktop/quickshell.md), and its input
+  region is empty, so it never takes the pointer from what it describes and a click still lands on
+  the row under it. Where an item already has a hover `MouseArea` (service cards, CI rows) the
+  `Tip` takes that area's `containsMouse` instead of a second hover handler.
+- **The trap met building it:** the card first checked "is this target mine?" by walking the
+  target's parents up to the root item and comparing it with the window's `contentItem`. It is the
+  same object, but Quickshell returns a new JS wrapper for it, so `===` was always false and the
+  card never opened. The stage now carries a `tipBand` property naming its band, and the walk stops
+  there.

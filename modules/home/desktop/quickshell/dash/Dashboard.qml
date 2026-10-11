@@ -38,8 +38,14 @@ PanelWindow {
     readonly property real designWidth: 1432
     readonly property real k: dash.width > 0 ? dash.width / dash.designWidth : 1
 
+    // The detail on hover: one card per band, fed by any `Tip` inside it (Tip.qml, Tips.qml).
+    TipWindow {
+        band: dash
+    }
+
     Item {
         id: stage
+        readonly property var tipBand: dash // TipWindow.inBand finds the band by it
         width: dash.width / dash.k
         height: dash.height / dash.k
         scale: dash.k
@@ -109,6 +115,10 @@ PanelWindow {
                             Layout.fillWidth: true
                             spacing: 22
                             Text {
+                                Tip {
+                                    title: (dash.host.dowNames[dash.host.calTodayW] || "") + ", " + dash.host.calTodayD + " de " + (dash.host.monthNames[dash.host.calTodayM - 1] || "").toLowerCase() + " de " + dash.host.calYear
+                                    lines: ["ISO week " + dash.host.isoWeek(dash.host.calYear, dash.host.calTodayM, dash.host.calTodayD), "up " + dash.host.fmtDur(dash.host.uptimeSec)]
+                                }
                                 text: dash.host.timeStr
                                 color: Theme.colText
                                 font.family: Theme.uiFont

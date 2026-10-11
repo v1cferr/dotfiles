@@ -29,7 +29,9 @@ stalls the indexer.
 **THE INDEX STORES THE EXTRACTED TEXT IN CLEAR** (under `~/.cache/recoll`), so a file holding a
 secret must not enter it, or the secret ends up copied outside the file's own permissions.
 `skippedNames+` drops `.env` files, `*.age`, `*api_keys*`, `*key*.txt` and `Backup-codes*`, which
-matches the real files in `~/Documents` and `~/Dropbox`. A NEW secret file with a name outside
+matches the real files in `~/Documents` and `~/Dropbox`. The first clean run still caught a GCP
+OAuth `client_secret_*.json`, so the common credential shapes went in too (`client_secret*`,
+`credentials*.json`, `*.pem`, `*.key`, `*.p12`, any dir named `secrets`). A NEW secret file with a name outside
 those patterns WILL be indexed: name it to match, or add its pattern.
 
 `skippedPaths` drops folders under a topdir that are big archives (`~/Downloads/Jogos`,
@@ -45,6 +47,9 @@ Minecraft instances (12k). The documents count is HIGHER than the file count bec
 opens every zip and indexes each member, and a `.jar` is a zip, so one modpack is thousands of
 documents. The fix is the second half of `skippedNames+` (`.venv`, `.pnpm-store`, `*.jar`) and
 the three game folders in `skippedPaths`. Before adding a big topdir, count its files with `fd`.
+
+The clean run after the fix: 16.5k files, 75k documents (zip members included), a 1.7 GB index,
+7.5 minutes, ~830 MB peak RSS. Between runs nothing stays resident: only the timer.
 
 ## Using it
 

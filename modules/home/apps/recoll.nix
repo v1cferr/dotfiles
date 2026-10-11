@@ -43,6 +43,12 @@ in
         "*api_keys*"
         "*key*.txt"
         "Backup-codes*"
+        "client_secret*" # a GCP OAuth client got indexed from ~/Documents/Outros/GCP
+        "credentials*.json"
+        "*.pem"
+        "*.key"
+        "*.p12"
+        "secrets" # the dotfiles secrets/ dir: the Bitwarden map and the sops file
       ];
       # Folders under a topdir that are big archives or sensitive, matched by full path.
       skippedPaths = [

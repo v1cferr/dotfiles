@@ -7,6 +7,7 @@
     ./media.nix # viewers (Gwenview/Okular) plus players (VLC/mpv) plus the default apps
     ./office.nix # ONLYOFFICE: the default for .docx/.xlsx/.pptx/ODF (the MS fonts are in modules/nixos/)
     ./dolphin.nix # Dolphin: the view mode always "Details" (through activation)
+    ./recoll.nix # Recoll: search documents and code by content (an hourly index)
     ./vscode.nix # VS Code: the package plus versioned settings/keybindings (hot-reload through a symlink)
     ./flameshot.nix # ~/.config/flameshot/flameshot.ini (screenshots; the keybind is in hypr.nix)
     ./mangohud.nix # the FPS/temps/usage overlay in games (a declarative config plus a toggle)

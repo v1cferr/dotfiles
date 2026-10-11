@@ -118,6 +118,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | Page | What you would come here asking |
 | --- | --- |
 | [dolphin](apps/dolphin.md) | the ViewMode enum trap, and the Windows Explorer parity |
+| [recoll](apps/recoll.md) | searching by content, and why the index must never see a secret |
 | [dropbox](apps/dropbox.md) | the tray icon's cost, and 10 days of syncing nothing |
 | [vscode](apps/vscode.md) | a versioned mirror and not an immutable source |
 | [claude-code](apps/claude-code.md) | two accounts, one archive, and the rules every project inherits |

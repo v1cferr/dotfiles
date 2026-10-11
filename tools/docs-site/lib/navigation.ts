@@ -126,6 +126,7 @@ export const navigation: NavItem[] = [
     icon: "app-window",
     items: [
       { title: "Dolphin", doc: "notes/apps/dolphin.md" },
+      { title: "Recoll", doc: "notes/apps/recoll.md" },
       { title: "Dropbox", doc: "notes/apps/dropbox.md" },
       { title: "VS Code", doc: "notes/apps/vscode.md" },
       { title: "Claude Code", doc: "notes/apps/claude-code.md" },

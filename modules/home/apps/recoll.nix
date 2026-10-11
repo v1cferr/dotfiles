@@ -1,14 +1,23 @@
 # Recoll: an index of documents and code, so a search finds a file by CONTENT (PDF, Office, text).
 # Why Recoll and not Baloo or yazi, and why each exclusion: docs/notes/apps/recoll.md
-{ config, ... }:
+{ config, pkgs, ... }:
 
+let
+  inherit (pkgs) coreutils;
+  cachedir = "${config.xdg.cacheHome}/recoll";
+in
 {
+  # Xapian creates only the LEAF xapiandb, so a fresh cachedir failed with "mkdir failed".
+  # 0700: the index holds document text in clear, readable by this user only.
+  systemd.user.services.recollindex.Service.ExecStartPre =
+    "${coreutils}/bin/install -d -m 0700 ${cachedir}";
+
   services.recoll = {
     enable = true; # recoll (Qt GUI), recollq (CLI) and the recollindex timer
     configDir = "${config.xdg.configHome}/recoll"; # XDG instead of ~/.recoll
     startAt = "hourly"; # an incremental pass: only changed files are reread
     settings = {
-      cachedir = "${config.xdg.cacheHome}/recoll"; # the index is data, not config
+      inherit cachedir; # the index is data, not config
       # Only where documents and code live: the home is ~194 GB of mostly caches and games.
       topdirs = [
         "~/Documents"

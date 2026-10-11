@@ -59,7 +59,7 @@ ColumnLayout {
         }
         return out;
     }
-    readonly property int rowH: 62
+    readonly property int rowH: 52
     readonly property int fits: Math.max(1, Math.floor((list.height - 34) / list.rowH))
 
     spacing: 0
@@ -180,15 +180,6 @@ ColumnLayout {
                         font.bold: true
                         elide: Text.ElideRight
                     }
-                    // What triggered the run that leads the row: the commit or PR title.
-                    Text {
-                        Layout.fillWidth: true
-                        text: row.modelData.lead.title || ""
-                        color: Theme.colSubtext
-                        font.family: Theme.uiFont
-                        font.pixelSize: 13
-                        elide: Text.ElideRight
-                    }
                     // Each workflow as a tinted name, so the one that broke is found without a click.
                     Item {
                         Layout.fillWidth: true
@@ -222,6 +213,13 @@ ColumnLayout {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: list.openRepo = row.modelData.repo
+            }
+            // What triggered the run that leads the row, the commit or PR title: on hover.
+            Tip {
+                external: true
+                hovered: rowArea.containsMouse
+                title: row.modelData.lead.title || ""
+                lines: [row.modelData.repo + " · " + Ci.ago(row.modelData.created), "click: all its runs"]
             }
         }
     }

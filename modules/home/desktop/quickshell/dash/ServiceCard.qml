@@ -1,6 +1,6 @@
 // One service on the strip: what it is and whether it is whole (line 1), what it costs now and over
-// the last 2 minutes (line 2), its disk traffic and what it is made of (line 3). A click opens its
-// site, or its live log when it has none (Services.open).
+// the last 2 minutes (line 2); the rest is in its tooltip. A click opens its site, or its live log
+// when it has none (Services.open).
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -80,7 +80,7 @@ Rectangle {
                 font.bold: true
             }
             Text {
-                visible: (card.s.expected || 0) > 1
+                visible: (card.s.expected || 0) > 1 && card.s.running < card.s.expected // a whole service says nothing
                 text: card.s.running + "/" + card.s.expected + (card.s.kind === "compose" ? " containers" : " units")
                 color: card.s.running < card.s.expected ? Theme.colPeach : Theme.colDim
                 font.family: Theme.uiFont
@@ -97,33 +97,19 @@ Rectangle {
             }
             Text {
                 visible: (card.s.restarts || 0) > 0
-                text: "↻ " + card.s.restarts
+                text: "↻" + card.s.restarts
                 color: Theme.colPeach
                 font.family: Theme.uiFont
                 font.pixelSize: 12
                 font.bold: true
             }
-            Text {
-                // Where a click goes: the site, or the log.
-                text: card.s.url ? "↗" : "󰆍"
-                color: area.containsMouse ? Theme.colAccent : Theme.colDim
-                font.family: Theme.uiFont
-                font.pixelSize: 13
-            }
         }
 
-        // ── 2. What it costs: CPU with its own 2 minutes, RAM, tasks ──
+        // ── 2. What it costs now: CPU with its own 2 minutes, then RAM ──
         RowLayout {
             Layout.fillWidth: true
             spacing: 8
 
-            Text {
-                text: "CPU"
-                color: Theme.colDim
-                font.family: Theme.uiFont
-                font.pixelSize: 11
-                font.letterSpacing: 2
-            }
             Text {
                 Layout.minimumWidth: 52
                 // Two decimals under 1%: "idle" and "almost idle" are different readings.
@@ -142,48 +128,23 @@ Rectangle {
                 placeholder: ""
             }
             Text {
-                text: "RAM"
-                color: Theme.colDim
-                font.family: Theme.uiFont
-                font.pixelSize: 11
-                font.letterSpacing: 2
-            }
-            Text {
+                Layout.leftMargin: 8
                 text: card.fmtBytes(card.s.mem || 0)
                 color: Theme.colMauve
                 font.family: Theme.uiFont
                 font.pixelSize: 16
                 font.bold: true
             }
-            Text {
-                text: (card.s.tasks || 0) + " tasks"
-                color: Theme.colDim
-                font.family: Theme.uiFont
-                font.pixelSize: 12
-            }
         }
+    }
 
-        // ── 3. Disk traffic and what the service is made of ──
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 8
-            Text {
-                text: "disk ↓ " + card.fmtBytes(card.s.rd || 0) + "/s  ↑ " + card.fmtBytes(card.s.wr || 0) + "/s"
-                color: (card.s.rd || 0) + (card.s.wr || 0) > 1048576 ? Theme.colTeal : Theme.colDim
-                font.family: Theme.uiFont
-                font.pixelSize: 12
-            }
-            Text {
-                Layout.fillWidth: true
-                horizontalAlignment: Text.AlignRight
-                elide: Text.ElideRight
-                // Several parts: name them. One part: say what KIND it is, instead of echoing the label.
-                text: (card.s.parts || []).length > 1 ? card.s.parts.map(p => p.name.replace((card.s.key || "") + "-", "").replace(/-1$/, "")).join(" · ") : (card.s.kind === "compose" ? "1 container" : card.s.kind + " unit")
-                color: Theme.colDim
-                font.family: Theme.uiFont
-                font.pixelSize: 12
-            }
-        }
+    // Tasks, disk traffic, the parts and where a click goes: on hover. Several parts are named; one
+    // part says what KIND it is, instead of echoing the label.
+    Tip {
+        external: true
+        hovered: area.containsMouse
+        title: card.s.label || ""
+        lines: [(card.s.parts || []).length > 1 ? card.s.parts.map(p => p.name.replace((card.s.key || "") + "-", "").replace(/-1$/, "")).join(" · ") : (card.s.kind === "compose" ? "1 container" : card.s.kind + " unit"), (card.s.tasks || 0) + " tasks", "disk ↓ " + card.fmtBytes(card.s.rd || 0) + "/s  ↑ " + card.fmtBytes(card.s.wr || 0) + "/s", (card.s.restarts || 0) > 0 ? "restarted " + card.s.restarts + "× since boot" : "", "click: " + (card.s.url ? "open " + card.s.url : "follow its log")].filter(x => x)
     }
 
     MouseArea {

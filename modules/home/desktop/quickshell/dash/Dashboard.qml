@@ -672,8 +672,7 @@ PanelWindow {
                 // ── The services: what runs on this machine and what each costs, as a carousel ──
                 ServiceStrip {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 124
-                    Layout.bottomMargin: 12
+                    Layout.preferredHeight: 100
                 }
             }
         }

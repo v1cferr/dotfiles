@@ -5,8 +5,11 @@ import QtQuick.Layouts
 import "root:/"
 import "root:/widgets"
 
-ColumnLayout {
+Item {
     id: tile
+    // The detail behind the glance, shown on hover: a title and a few short lines (Tip.qml).
+    property string tipTitle: ""
+    property var tipLines: []
     property string label: ""
     property string value: ""
     property string hint: ""
@@ -33,82 +36,94 @@ ColumnLayout {
     // Equal columns: a zero preferred width leaves fillWidth to split the row evenly.
     Layout.fillWidth: true
     Layout.preferredWidth: 0
-    spacing: 4
+    implicitHeight: col.implicitHeight
 
-    Text {
-        text: tile.label
-        color: Theme.colSubtext
-        font.family: Theme.uiFont
-        font.pixelSize: 13
-        font.bold: true
-        font.letterSpacing: 3
+    Tip {
+        title: tile.tipTitle
+        lines: tile.tipLines
     }
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: 10
+
+    ColumnLayout {
+        id: col
+        anchors.left: parent.left
+        anchors.right: parent.right
+        spacing: 4
+
         Text {
-            Layout.fillWidth: !tile.series
-            text: isNaN(tile.number) ? tile.value : Math.round(tile.shown) + tile.unit
-            color: tile.barColor
-            SequentialAnimation on opacity {
-                running: tile.alert
-                loops: Animation.Infinite
-                alwaysRunToEnd: true
-                NumberAnimation {
-                    to: 0.4
-                    duration: 600
-                    easing.type: Easing.InOutSine
+            text: tile.label
+            color: Theme.colSubtext
+            font.family: Theme.uiFont
+            font.pixelSize: 13
+            font.bold: true
+            font.letterSpacing: 3
+        }
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 10
+            Text {
+                Layout.fillWidth: !tile.series
+                text: isNaN(tile.number) ? tile.value : Math.round(tile.shown) + tile.unit
+                color: tile.barColor
+                SequentialAnimation on opacity {
+                    running: tile.alert
+                    loops: Animation.Infinite
+                    alwaysRunToEnd: true
+                    NumberAnimation {
+                        to: 0.4
+                        duration: 600
+                        easing.type: Easing.InOutSine
+                    }
+                    NumberAnimation {
+                        to: 1
+                        duration: 600
+                        easing.type: Easing.InOutSine
+                    }
                 }
-                NumberAnimation {
-                    to: 1
-                    duration: 600
-                    easing.type: Easing.InOutSine
+                font.family: Theme.uiFont
+                font.pixelSize: 36
+                font.bold: true
+                font.letterSpacing: -1
+                elide: Text.ElideRight
+            }
+            Sparkline {
+                visible: !!tile.series
+                Layout.fillWidth: true
+                Layout.preferredHeight: 26
+                Layout.alignment: Qt.AlignBottom
+                Layout.bottomMargin: 6
+                series: tile.series || []
+                scaleTop: tile.seriesTop
+                fill: tile.barColor
+                placeholder: ""
+            }
+        }
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.topMargin: 2
+            implicitHeight: 6
+            radius: 3
+            color: Theme.colTrack
+            Rectangle {
+                width: parent.width * Math.max(0, Math.min(1, tile.frac))
+                height: parent.height
+                radius: parent.radius
+                color: tile.barColor
+                Behavior on width {
+                    NumberAnimation {
+                        duration: 300
+                        easing.type: Easing.OutCubic
+                    }
                 }
             }
+        }
+        Text {
+            Layout.fillWidth: true
+            Layout.topMargin: 2
+            text: tile.hint
+            color: Theme.colDim
             font.family: Theme.uiFont
-            font.pixelSize: 36
-            font.bold: true
-            font.letterSpacing: -1
+            font.pixelSize: 14
             elide: Text.ElideRight
         }
-        Sparkline {
-            visible: !!tile.series
-            Layout.fillWidth: true
-            Layout.preferredHeight: 26
-            Layout.alignment: Qt.AlignBottom
-            Layout.bottomMargin: 6
-            series: tile.series || []
-            scaleTop: tile.seriesTop
-            fill: tile.barColor
-            placeholder: ""
-        }
-    }
-    Rectangle {
-        Layout.fillWidth: true
-        Layout.topMargin: 2
-        implicitHeight: 6
-        radius: 3
-        color: Theme.colTrack
-        Rectangle {
-            width: parent.width * Math.max(0, Math.min(1, tile.frac))
-            height: parent.height
-            radius: parent.radius
-            color: tile.barColor
-            Behavior on width {
-                NumberAnimation {
-                    duration: 300
-                    easing.type: Easing.OutCubic
-                }
-            }
-        }
-    }
-    Text {
-        Layout.fillWidth: true
-        Layout.topMargin: 2
-        text: tile.hint
-        color: Theme.colDim
-        font.family: Theme.uiFont
-        font.pixelSize: 14
-        elide: Text.ElideRight
     }
 }

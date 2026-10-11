@@ -92,14 +92,14 @@ PanelWindow {
                     y: 14
                 }
                 anchors.fill: parent
-                anchors.margins: 20
-                spacing: 12
+                anchors.margins: 32
+                spacing: 24
 
                 // ── The two columns: the machine on the left, the month on the right ──
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    spacing: 22
+                    spacing: 32
 
                     ColumnLayout {
                         // fillWidth stays OFF: a nested layout inherits it from the grid and would starve the month.
@@ -109,15 +109,20 @@ PanelWindow {
                         spacing: 2
 
                         // The time and the day side by side: HH:mm:ss carries the glance, the spelled-out
-                        // weekday is what a person wants off a clock, and the ISO line under it is the record.
-                        // One row instead of three stacked lines frees the height the services strip needs.
+                        // weekday is what a person wants off a clock, and one short date line under it.
+                        // The full date, the ISO date and the uptime are in the tooltip of either.
                         RowLayout {
+                            id: clockRow
+                            readonly property int week: dash.host.isoWeek(dash.host.calYear, dash.host.calTodayM, dash.host.calTodayD)
+                            readonly property string month: dash.host.monthNames[dash.host.calTodayM - 1] || ""
+                            readonly property string tipTitle: (dash.host.dowNames[dash.host.calTodayW] || "") + ", " + dash.host.calTodayD + " de " + clockRow.month.toLowerCase() + " de " + dash.host.calYear
+                            readonly property var tipLines: [dash.host.calYear + "-" + ("0" + dash.host.calTodayM).slice(-2) + "-" + ("0" + dash.host.calTodayD).slice(-2) + "  ·  ISO week " + clockRow.week, "up " + dash.host.fmtDur(dash.host.uptimeSec)]
                             Layout.fillWidth: true
-                            spacing: 22
+                            spacing: 24
                             Text {
                                 Tip {
-                                    title: (dash.host.dowNames[dash.host.calTodayW] || "") + ", " + dash.host.calTodayD + " de " + (dash.host.monthNames[dash.host.calTodayM - 1] || "").toLowerCase() + " de " + dash.host.calYear
-                                    lines: ["ISO week " + dash.host.isoWeek(dash.host.calYear, dash.host.calTodayM, dash.host.calTodayD), "up " + dash.host.fmtDur(dash.host.uptimeSec)]
+                                    title: clockRow.tipTitle
+                                    lines: clockRow.tipLines
                                 }
                                 text: dash.host.timeStr
                                 color: Theme.colText
@@ -137,7 +142,11 @@ PanelWindow {
                                     font.letterSpacing: -1
                                 }
                                 Text {
-                                    text: dash.host.calYear + "-" + ("0" + dash.host.calTodayM).slice(-2) + "-" + ("0" + dash.host.calTodayD).slice(-2) + "  ·  " + (dash.host.monthNames[dash.host.calTodayM - 1] || "") + "  ·  W" + dash.host.isoWeek(dash.host.calYear, dash.host.calTodayM, dash.host.calTodayD)
+                                    Tip {
+                                        title: clockRow.tipTitle
+                                        lines: clockRow.tipLines
+                                    }
+                                    text: dash.host.calTodayD + " " + clockRow.month.slice(0, 3).toLowerCase() + "  ·  W" + clockRow.week
                                     color: Theme.colSubtext
                                     font.family: Theme.uiFont
                                     font.pixelSize: 18
@@ -149,7 +158,7 @@ PanelWindow {
                         // Today's weather fills what was an empty gap under the date.
                         WeatherNow {
                             Layout.fillWidth: true
-                            Layout.topMargin: 10
+                            Layout.topMargin: 16
                             host: dash.host
                         }
 
@@ -161,8 +170,8 @@ PanelWindow {
                         GridLayout {
                             Layout.fillWidth: true
                             columns: 3
-                            columnSpacing: 28
-                            rowSpacing: 14
+                            columnSpacing: 32
+                            rowSpacing: 24
 
                             Tile {
                                 label: "CPU"
@@ -179,6 +188,8 @@ PanelWindow {
                                 hint: dash.host.cpuMhz > 0 ? (dash.host.cpuMhz / 1000).toFixed(1) + " GHz" : ""
                                 frac: dash.host.cpuPct / 100
                                 barColor: Theme.colBlue
+                                tipTitle: dash.host.cpuModel
+                                tipLines: [dash.host.cpuCores + " cores · " + dash.host.cpuThreads + " threads" + (dash.host.cpuMhzMax > 0 ? " · max " + (dash.host.cpuMhzMax / 1000).toFixed(1) + " GHz" : ""), "load " + dash.host.loadAvg.map(v => v.toFixed(2)).join("  "), "up " + dash.host.fmtDur(dash.host.uptimeSec)]
                             }
                             Tile {
                                 label: "RAM"
@@ -188,6 +199,8 @@ PanelWindow {
                                 hint: dash.host.fmtBytes(dash.host.memUsed) + " / " + dash.host.fmtBytes(dash.host.memTotal)
                                 frac: dash.host.memPct / 100
                                 barColor: Theme.colMauve
+                                tipTitle: "Memory"
+                                tipLines: [dash.host.fmtBytes(dash.host.memAvail) + " available · " + dash.host.fmtBytes(dash.host.memCached) + " cached", dash.host.swapTotal > 0 ? "swap " + dash.host.fmtBytes(dash.host.swapUsed) + " / " + dash.host.fmtBytes(dash.host.swapTotal) : "no swap"]
                             }
                             Tile {
                                 label: "DISK"
@@ -197,6 +210,8 @@ PanelWindow {
                                 hint: dash.host.fmtBytes(dash.host.diskFree) + " free"
                                 frac: dash.host.diskPct / 100
                                 barColor: Theme.colTeal
+                                tipTitle: "Root filesystem" + (dash.host.diskFs ? " · " + dash.host.diskFs : "")
+                                tipLines: [dash.host.fmtBytes(dash.host.diskUsed) + " used of " + dash.host.fmtBytes(dash.host.diskTotal) + (dash.host.diskDev ? " on " + dash.host.diskDev : ""), "read " + dash.host.fmtBytes(dash.host.diskReadBps) + "/s · write " + dash.host.fmtBytes(dash.host.diskWriteBps) + "/s"]
                             }
                             // The Arc publishes no busy %, so the bar is power against its own cap.
                             Tile {
@@ -207,6 +222,8 @@ PanelWindow {
                                 hint: dash.host.gpuFreq > 0 ? (dash.host.gpuFreq / 1000).toFixed(2) + " GHz" : "idle"
                                 frac: dash.host.gpuWattsCap > 0 ? dash.host.gpuWatts / dash.host.gpuWattsCap : 0
                                 barColor: Theme.colPeach
+                                tipTitle: "GPU"
+                                tipLines: [dash.host.gpuWattsCap > 0 ? "power cap " + Math.round(dash.host.gpuWattsCap) + " W" : "", dash.host.gpuFreqMax > 0 ? "clock max " + (dash.host.gpuFreqMax / 1000).toFixed(2) + " GHz" : "", dash.host.gpuFan >= 0 ? "fan " + Math.round(dash.host.gpuFan) + " rpm" : ""].filter(x => x)
                             }
                             Tile {
                                 label: "TEMP"
@@ -216,25 +233,20 @@ PanelWindow {
                                 hint: dash.host.tempQuality ? dash.host.tempQuality.label : ""
                                 frac: dash.host.tempMax / 100
                                 barColor: dash.host.tempQuality ? dash.host.tempQuality.color : Theme.colGreen
+                                tipTitle: "Temperatures"
+                                tipLines: (dash.host.tempList || []).map(s => s.name + "  " + s.temp + "°C")
                             }
                             // Download against the link speed, the only ceiling the NIC actually knows.
                             Tile {
                                 readonly property real linkBps: Number((dash.host.netLink[dash.host.netMain] || {}).speed || 0) * 125000
                                 label: "NET"
                                 value: "↓ " + dash.host.fmtBytes(dash.host.netMainRx) + "/s"
-                                hint: "↑ " + dash.host.fmtBytes(dash.host.netMainTx) + "/s" + (dash.host.netSpeed ? "  ·  " + dash.host.netSpeed : "")
+                                hint: "↑ " + dash.host.fmtBytes(dash.host.netMainTx) + "/s"
                                 frac: linkBps > 0 ? dash.host.netMainRx / linkBps : 0
                                 barColor: Theme.colSky
+                                tipTitle: dash.host.netMain || "offline"
+                                tipLines: [dash.host.netAddr[dash.host.netMain] || "", dash.host.netSpeed ? "link " + dash.host.netSpeed : "", dash.host.netGw ? "gateway " + dash.host.netGw : ""].filter(x => x)
                             }
-                        }
-
-                        Text {
-                            Layout.topMargin: 14
-                            text: "UP " + dash.host.fmtDur(dash.host.uptimeSec) + "   ·   LOAD " + dash.host.loadAvg.map(v => v.toFixed(2)).join("  ")
-                            color: Theme.colSubtext
-                            font.family: Theme.uiFont
-                            font.pixelSize: 14
-                            font.letterSpacing: 2
                         }
                     }
 

@@ -175,18 +175,21 @@ variation.
 
 The connector names were confirmed through `hyprctl monitors`. The primary is the ASUS XG27ACS
 (QHD 180Hz) at the origin `0x0`; the secondary is the LG ULTRAGEAR standing on its own pivot, on
-the LEFT at a negative x, at scale 0.75. Rotated and scaled it is 1440x2560 LOGICAL, so
-`x = -1440` sets it beside the primary and `y = -560` lines the two middles up.
+the LEFT at a negative x, at its NATIVE scale. Rotated it is 1080x1920 LOGICAL, so `x = -1080`
+sets it beside the primary and `y = -240` lines the two middles up.
 
-**Why 0.75 on a panel that is not QHD.** Both are 27", but the ASUS is 109 PPI and the LG 82, so at
-scale 1 a 30 px widget took a third more desk on the LG. `82 / 109 = 0.75`, and it divides both
-axes cleanly (`1080 / 0.75 = 1440`, `1920 / 0.75 = 2560`), so a logical pixel is ~0.233 mm on BOTH
-panels: a window dragged across keeps its physical size, and the pointer crosses the border at the
-height the eye expects, which it did not at scale 1. The cost is known and was accepted after a live
-test: below 1 the compositor renders at 1440x2560 and downsamples, so thin text is softer than at
-native. The panel's own 2560x1440 mode was rejected outright, since that is the monitor's scaler
-doing the same downsampling worse, at 75 Hz. Quickshell does not re-read a screen's geometry on a
-live scale change; a reload of the shell (or a session start) is what resizes the band.
+**Why not 0.75, which was tried.** Both are 27", but the ASUS is 109 PPI and the LG 82, so at
+scale 1 a widget takes about a third more desk on the LG. `82 / 109 = 0.75` divides both axes
+cleanly (1440x2560 logical) and makes a logical pixel the same physical size on both panels, so it
+ran from 04/10 to 11/10. It was REVERTED: below 1 the compositor renders the larger grid and
+downsamples it onto the 1920x1080 panel, and on 82 PPI that left thin text too soft to read
+comfortably. Any scale under 1 is the same downsampling at another ratio, so 0.8 is not a fix; the
+panel's own 2560x1440 mode is the same thing done worse by the monitor's scaler, at 75 Hz. Native
+pixels 1:1 win, and a size mismatch is cheaper than unreadable text. If an app that lives on the LG
+feels too big, its own zoom is the tool, since Wayland has no per-monitor font size.
+
+Quickshell does not re-read a screen's geometry on a live scale change; a reload of the shell (or a
+session start) is what resizes the band.
 
 Keeping the
 main one at `0x0` is what makes a disconnected secondary clean: the primary stands alone with no

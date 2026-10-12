@@ -4,7 +4,7 @@ name: codeql
 
 on:
   push:
-    branches: [nixos]
+    branches: [main]
   pull_request:
   schedule:
     - cron: "29 9 * * 1" # Mondays, between the canary and the scorecard, an odd minute

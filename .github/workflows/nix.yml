@@ -4,7 +4,7 @@ name: nix
 
 on:
   push:
-    branches: [nixos]
+    branches: [main]
   pull_request:
   workflow_dispatch: # it allows running by hand from the Actions tab
 

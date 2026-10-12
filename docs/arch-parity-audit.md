@@ -3,6 +3,11 @@
 The measurement that says whether the migration is DONE. Measured on 08/09/2026, before
 promoting `nixos` to the default branch and retiring the Arch refs.
 
+**Promoted on 12/10/2026.** `nixos` was renamed to `main`. The old Arch `main` was folded into
+`arch` and tagged `archive/arch-final`, so the `main:<path>` references below now resolve as
+`arch:<path>`. The tail of 16 areas was NOT decided first, on purpose: with the Arch tree still
+one branch away, it stopped blocking the rename, and re-measuring it is its own task.
+
 This is not the same page as [arch-linux.md](arch-linux.md), and the difference matters: that
 one is the pointer to the restic ARCHIVE (the 44.6 GiB snapshot of the old machine); this one is
 the diff of the CONFIGURATION that still lives in this repo's own Arch branches. The archive
@@ -26,7 +31,7 @@ no configuration of their own:
 | `backup-ptbr-msgs` | - | Branched off `nixos`. Only pt-BR commit messages, no config of its own |
 | `salvaguarda-voz` | - | Branched off `nixos`. Same thing, the voice safeguard of rule 17 |
 | `fix/jellyfin-wait-ipv4` | - | Already merged into `nixos` (0 commits ahead) |
-| tag `archive/pre-nix-2026-07-16` | - | It preserves the 493 pre-Nix COMMITS, but its TREE is the post-reset clean slate |
+| tag `archive/pre-nix-2026-07-16` | - | It preserves the 493 pre-Nix COMMITS, but its TREE is the post-reset clean slate. It forks off `main` at `2ccecf9`, so the LAST 4 Arch commits are not in it |
 
 So the real comparison is **`main` against `nixos`**, and the tag is a history anchor rather
 than a source of files. The wallpapers dominate `main`'s count (369 of the 659), which is why
@@ -285,12 +290,16 @@ this repo. Recording the order so it does not get improvised:
 2. **Decide the 16 tail areas first.** Each one is either a port or a struck-through decision.
    What gets ported closes here; what gets dropped gets a line saying why, because "it is in the
    old branch" stops being an answer the day the old branch is gone.
-3. **The refs to retire**, once the tail is decided: the `arch` and `main` branches, and the
-   `nix-flake-skeleton` tag, which points at a commit whose whole content is the pivot doc.
+3. **The refs that were retired** on 12/10/2026: only the old `main`, after `arch` caught up with
+   it. `arch` STAYS as the browsable Arch branch, under the same `history` ruleset as `main`. The
+   `nix-flake-skeleton` tag, which points at a commit whose whole content is the pivot doc, was
+   left alone.
 4. **The tag to KEEP**, and this is the one that must not be swept up with the rest:
-   `archive/pre-nix-2026-07-16` is the only ref holding the 493 pre-Nix commits. Deleting it
-   loses them, since the branches it hangs off are the ones being deleted. If the branches go,
-   that tag is the last anchor, and a tag is enough to keep the objects alive.
+   `archive/pre-nix-2026-07-16` is the only ref holding the 493 pre-Nix commits. It is NOT the
+   last anchor of the Arch tree, though, which this page claimed until 12/10/2026: it forks off
+   `main` at `2ccecf9`, and the 4 commits after that (the netextender NAT gateway among them)
+   lived only on `main`. That is why `archive/arch-final` was tagged on the old `main` tip
+   (`ecbaa32`) before it was deleted, and `arch` was fast-forwarded to the same commit.
 5. **The restic archive is a separate question** and it is already answered in
    [arch-linux.md](arch-linux.md): the offsite copy is the only copy, it passed
    `check --read-data`, and it is what the `/mnt/arch-antigo` mount reads. Retiring the git refs

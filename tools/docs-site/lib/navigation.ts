@@ -218,6 +218,7 @@ export const navigation: NavItem[] = [
               { title: "July", doc: "history/2026/07-july.md" },
               { title: "August", doc: "history/2026/08-august.md" },
               { title: "September", doc: "history/2026/09-september.md" },
+              { title: "October", doc: "history/2026/10-october.md" },
             ],
           },
         ],

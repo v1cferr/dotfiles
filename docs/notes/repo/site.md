@@ -181,13 +181,13 @@ that no longer exists, which is the check working.)
 | Target | Becomes |
 | --- | --- |
 | a page inside `docs/` | its site URL, from `lib/urls.ts` |
-| a path that escapes `docs/` | `.../blob/nixos/<path>` |
+| a path that escapes `docs/` | `.../blob/main/<path>` |
 | a folder with a README | that folder's page |
-| a folder without one | `.../tree/nixos/<path>` |
+| a folder without one | `.../tree/main/<path>` |
 
 **The repo and the branch are READ from `tools/docs-site/site.json`**, not written in the plugin as
 well: that would be a second owner of a value whose staleness breaks 140 links at once, which is
-rule 11. Which branch it is matters, because `main` here is a separate orphan history and a blob
+rule 11. Which branch it is matters, because `arch` here is a separate orphan history and a blob
 URL built from it is a 404 for every path. The canary workflow reads the same file to know which
 URLs are its to check.
 

@@ -7,11 +7,17 @@ settings, so a rebuilt repo (or a fork) can get them back, and the files under
 ## The `history` ruleset
 
 [`.github/rulesets/history.json`](../../../.github/rulesets/history.json), created on 27/09/2026.
-It blocks **deletion** and **force-push** on `nixos`, `main` and `arch`.
+It blocks **deletion** and **force-push** on `main` and `arch`.
 
-**Why these three and not only `nixos`**: `main` and `arch` are ORPHAN histories of the machines
-before NixOS, and a deleted orphan branch is gone for good, since nothing else points at its
-commits. They receive no pushes, so the rule costs nothing there.
+**Why `arch` too and not only `main`**: `arch` is the ORPHAN history of the machine before NixOS,
+and a deleted orphan branch is gone for good, since only the `archive/arch-final` tag points at
+the same commits. It receives no pushes, so the rule costs nothing there.
+
+**The rename, 12/10/2026.** `nixos` became `main`, and the old Arch `main` was folded into `arch`
+(a fast-forward of 2 commits) and tagged `archive/arch-final` before it was deleted. The ruleset
+was disabled for that window, since it blocks the deletion it needed, and re-applied from this
+file right after. The `github-pages` environment's deployment branch policy names the branch
+too, so it moved from `nixos` to `main` in the same window.
 
 **No bypass actor, on purpose.** The only person who pushes here is the admin, so an admin bypass
 would be a rule that never applies to anyone. An emergency force-push means disabling the ruleset
@@ -19,7 +25,7 @@ first, which is a deliberate click in Settings instead of a flag typed by reflex
 
 **No required status check, and no required review.** Both are what a team template adds, and
 both break a solo repo: a required review has nobody to approve it, and a required check turns
-every direct push to `nixos` into a PR. The pre-commit hook already runs the same gate before the
+every direct push to `main` into a PR. The pre-commit hook already runs the same gate before the
 commit, and the CI re-runs it after the push.
 
 Applying a change to the file, with the ruleset found by its NAME, which is the file's own key:
@@ -30,7 +36,7 @@ gh api -X PUT "repos/v1cferr/dotfiles/rulesets/$id" --input .github/rulesets/his
 ```
 
 On a new repo the call is a `POST` to `repos/<owner>/<repo>/rulesets` instead. Check what a branch
-actually gets with `gh api repos/v1cferr/dotfiles/rules/branches/nixos`.
+actually gets with `gh api repos/v1cferr/dotfiles/rules/branches/main`.
 
 **The canary guards the drift.** Its `rulesets` job diffs every file in `.github/rulesets/` against
 what GitHub enforces, each Monday, and a mismatch reaches the phone like any canary failure. That

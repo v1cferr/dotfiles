@@ -2,5 +2,5 @@
   "name": "dotfiles",
   "description": "My declarative NixOS and home-manager system, module by module.",
   "repo": "github.com/v1cferr/dotfiles",
-  "branch": "nixos"
+  "branch": "main"
 }

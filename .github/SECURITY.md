@@ -1,7 +1,7 @@
 # Security policy
 
 This repository is the declarative configuration of one personal machine. It ships no library and
-no service anyone else runs, so there are no supported versions: only the `nixos` branch exists.
+no service anyone else runs, so there are no supported versions: only the `main` branch is live.
 
 ## Reporting a vulnerability
 

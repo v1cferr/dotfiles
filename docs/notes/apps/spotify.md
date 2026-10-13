@@ -36,6 +36,23 @@ grep -c no-zygote "$(nix eval --raw \
   '.#nixosConfigurations.ex-b560m-v5.config.home-manager.users.v1cferr.programs.spicetify.spicedSpotify')/bin/spotify"
 ```
 
+## A lock from another hostname kills it silently
+
+Measured 13/10/2026 on 1.2.95.453: Spotify exited 1 in ~200 ms with no window and no log, from
+the autostart AND from the terminal. `~/.cache/spotify/SingletonLock` still pointed at
+`nixos-kingston-677254`, from a session on 30/09 before the host was renamed to `ex-b560m-v5`.
+Chromium reclaims a lock from a dead PID on THIS host by itself, but a lock from ANOTHER host
+reads as "the profile is open on another computer", and CEF just exits with no dialog to show.
+
+`overlaySpotifyStaleLock` (`flake/overlays.nix`) wraps the package with a check: if the lock
+does not start with `$HOSTNAME-`, it deletes `Singleton{Lock,Cookie,Socket}` before the exec. It
+lives in the package for the same reason as the zygote flag, so the menu, the terminal and the
+autostart all get it. To clear it by hand, with Spotify closed:
+
+```bash
+rm ~/.cache/spotify/Singleton{Lock,Cookie,Socket}
+```
+
 ## `wayland` stays UNSET on purpose
 
 That conditional `fixupPhase` is the one thing that WOULD replace the phase, and it only applies

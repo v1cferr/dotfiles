@@ -31,6 +31,22 @@ let
     };
   };
 
+  # Spotify: drop a SingletonLock left by ANOTHER hostname, or CEF exits 1 in 200ms with no window
+  # after a host rename. PERMANENT, unlike the flag above: docs/notes/apps/spotify.md
+  overlaySpotifyStaleLock = _: prev: {
+    unstable = prev.unstable // {
+      spotify = prev.unstable.spotify.overrideAttrs (old: {
+        postFixup = (old.postFixup or "") + ''
+          wrapProgram $out/bin/spotify --run '
+            lock="''${XDG_CACHE_HOME:-$HOME/.cache}/spotify/SingletonLock"
+            if [[ -L $lock && $(${prev.coreutils}/bin/readlink "$lock") != "$HOSTNAME"-* ]]; then
+              ${prev.coreutils}/bin/rm -f "''${lock%Lock}"{Lock,Cookie,Socket}
+            fi'
+        '';
+      });
+    };
+  };
+
   # unstable's RECIPE with the SRC from pkgs/vscode. `import` and not callPackage, so the result
   # keeps nixpkgs' `.override` (modules/home/apps/vscode.nix passes commandLineArgs through it).
   overlayVscode = final: prev: {
@@ -179,6 +195,7 @@ in
   overlayUnstable
   overlayVscode # AFTER overlayUnstable: it patches that `unstable.vscode`
   overlaySpotifyNoZygote # same: bakes in the flag without which Spotify does not open
+  overlaySpotifyStaleLock # AFTER the flag: re-wraps that package to clear a foreign host's lock
   overlayBtopXe # temporary: Intel Xe GPU (Arc B580) until PR #1457 merges
   overlayOpenrgbArc # temporary: the Arc B580's RGB, until the merge requests land
   overlayLocalPkgs

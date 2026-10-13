@@ -164,6 +164,13 @@ place.
 It patches INSIDE `unstable`, hence after `overlayUnstable`, for the same reason as the vscode
 overlay: `unstable` is another import of nixpkgs.
 
+### Spotify's stale `SingletonLock`
+
+A SEPARATE overlay because it never leaves, while the zygote flag goes the day CEF stops crashing.
+It comes after that one and wraps the wrapper, so its check runs first and then execs into the
+`--no-zygote` one. What it guards against and how it was found:
+[`apps/spotify.md`](../apps/spotify.md).
+
 **REMOVE once Spotify opens again without the flag.** Testing that is running `spotify` without it.
 
 ### vscode: the tarball SRC over the unstable RECIPE

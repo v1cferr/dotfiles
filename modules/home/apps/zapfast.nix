@@ -3,7 +3,20 @@
 { pkgs, inputs, ... }:
 
 let
-  zapfast = inputs.zapfast.packages.${pkgs.stdenv.hostPlatform.system}.zapfast;
+  inherit (pkgs) removeReferencesTo stdenv;
+  # The cc the flake builds with: it follows nixpkgs-unstable, so it is the hoisted unstable one.
+  buildCc = pkgs.unstable.stdenv.cc;
+
+  zapfast = inputs.zapfast.packages.${stdenv.hostPlatform.system}.zapfast.overrideAttrs (old: {
+    # Upstream CI runs the suite; here it only added ~15 min of LTO build to every bump.
+    doCheck = false;
+    # The binary embeds the build's cc path as a string, which dragged gcc (+280 MiB) into the closure.
+    nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ removeReferencesTo ];
+    postFixup = (old.postFixup or "") + ''
+      find $out/bin -type f -exec remove-references-to -t ${buildCc} {} +
+    '';
+    disallowedReferences = [ buildCc ];
+  });
 in
 {
   home.packages = [ zapfast ];

@@ -9,7 +9,7 @@
 }:
 
 let
-  inherit (pkgs) btrfs-progs;
+  inherit (pkgs) btrfs-progs compsize;
 
   rootIsBtrfs = config.fileSystems ? "/" && config.fileSystems."/".fsType == "btrfs";
 
@@ -68,6 +68,9 @@ lib.mkIf rootIsBtrfs (
         interval = "monthly";
         fileSystems = lib.attrNames scrubTargets;
       };
+
+      # The real compression ratio per path (`sudo compsize -x /home`): `du` and `df` cannot see it.
+      environment.systemPackages = [ compsize ];
 
       # ERROR COUNTERS: the daily watchman between one monthly scrub and the next. They do not reset
       # themselves, so acknowledge with `btrfs device stats -z /` AFTER investigating.

@@ -79,6 +79,9 @@ in
       blender.enable = false;
       forge.enable = false; # a GNOME Shell extension
       vencord.enable = false; # Discord runs without Vencord
+      sxiv.enable = false; # an image viewer; Gwenview is the one here
+      xresources.enable = false; # only old X11 apps read ~/.Xresources, and xterm was the last one
+      gtk.flatpakSupport.enable = false; # no Flatpak here, so its override file would be dead
       # Colors only: mangohud.nix keeps its own transparency and font size.
       mangohud.opacity.enable = false;
       mangohud.fonts.enable = false;

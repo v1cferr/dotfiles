@@ -58,7 +58,7 @@ sections below this one are left as measured on 08/09, so read this table first.
 | zen-browser | Rewritten | A minimal palette theme on Zen's own variables, `modules/home/apps/zen/theme.nix`. `zen-sync` is the activation now. Refining it is an open item |
 | hypr: wallpaper rotation | Ported | The september wallpaper work, per monitor, from my own pools |
 | hypr: 3-minute idle dim | Dropped | Not used and not wanted. It lived in Arch's `idle-dim.sh`, a listener that zeroed the gamma at 180 s before the lock at 300 s |
-| hypr: lockscreen notification count | Still missing | `qs ipc call notif count` exists in `Notifs.qml`, but no hyprlock label reads it |
+| hypr: lockscreen notification count | Dropped | Not wanted. Arch's `lockscreen_notifs.sh` read it over IPC; the `notif count` IPC verb that waited for it in `Notifs.qml` went too, since nothing called it |
 | `bin/` | Closed | `vpn`, `wake-workstation` ported; `hypr-quick`'s wallpaper actions went with the rotation; `zen-sync` became the theme's activation |
 | `scripts/` | Closed | Arch by nature, as measured below |
 | homelab and the Caddy set | Open, as its own project | 7 vhosts declared now (`photos` and `memory` are new). The \*arr stack, open-webui, Homepage, FileBrowser, spendflow, `ap` and RustDesk are still absent |

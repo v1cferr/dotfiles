@@ -77,9 +77,5 @@ Singleton {
         function clear(): void {
             root.clearAll();
         }
-        // The history's count, for the lock screen (qs ipc call notif count).
-        function count(): string {
-            return "" + root.count;
-        }
     }
 }

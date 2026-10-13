@@ -4,10 +4,14 @@
   config,
   lib,
   osConfig,
+  pkgs,
+  inputs,
   ...
 }:
 
 let
+  inherit (pkgs) base16-schemes;
+
   cfg = config.my.theme;
 
   # The presets: hexes WITHOUT '#', 6 digits (each consumer formats them as it needs).
@@ -83,14 +87,58 @@ let
     };
   };
 
-  p = palettes.${cfg.name};
+  # ANY base16 scheme, as `base16:<file>` from base16-schemes (ls its share/themes). The 20 keys are
+  # DERIVED from the 16 slots, so the extras repeat a neighbor: sky and teal are the cyan, purple is
+  # the magenta. The curated presets above keep their exact hexes; a stock scheme may not match the
+  # official colors of the theme it is named after (decision 0012).
+  base16Prefix = "base16:";
+  curated = !(lib.hasPrefix base16Prefix cfg.name);
+  fromBase16 =
+    slug:
+    let
+      s =
+        (inputs.stylix.inputs.base16.lib { inherit pkgs lib; }).mkSchemeAttrs
+          "${base16-schemes}/share/themes/${slug}.yaml";
+    in
+    {
+      bg = s.base00;
+      surface = s.base01;
+      track = s.base02;
+      border = s.base03;
+      text = s.base05;
+      subtext = s.base04;
+      dim = s.base03;
+      accent = s.base0D;
+      blue = s.base0D;
+      cyan = s.base0C;
+      sky = s.base0C;
+      teal = s.base0C;
+      green = s.base0B;
+      yellow = s.base0A;
+      orange = s.base09;
+      red = s.base08;
+      magenta = s.base0E;
+      purple = s.base0E;
+      pink = s.base0F;
+      shadow = "000000";
+    };
+
+  p = if curated then palettes.${cfg.name} else fromBase16 (lib.removePrefix base16Prefix cfg.name);
 in
 {
   options.my.theme = {
     name = lib.mkOption {
-      type = lib.types.enum (lib.attrNames palettes);
+      type = lib.types.either (lib.types.enum (lib.attrNames palettes)) (
+        lib.types.strMatching "base16:[A-Za-z0-9_-]+"
+      );
       default = "tokyo-night";
-      description = "The active theme (the single source of colors). Changing it here recolors the whole desktop.";
+      description = "The active theme: a curated preset, or `base16:<scheme>` from base16-schemes. Changing it recolors the whole desktop.";
+    };
+    curated = lib.mkOption {
+      type = lib.types.bool;
+      readOnly = true;
+      default = curated;
+      description = "Whether the theme is a curated preset, so apps with an official per-preset theme (kitty, bat, btop) use it; a base16 scheme falls back to Stylix.";
     };
     palette = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;

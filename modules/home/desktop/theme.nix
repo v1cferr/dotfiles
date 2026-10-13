@@ -22,7 +22,7 @@ let
   p = config.my.theme.palette; # SSOT: modules/home/desktop/palette.nix (rule 11, decision 0001)
 
   # The theme is the Win11OS GEOMETRY recolored by the palette, so the name carries both.
-  kvantumTheme = "Win11OS-${config.my.theme.name}";
+  kvantumTheme = "Win11OS-${lib.replaceStrings [ ":" ] [ "-" ] config.my.theme.name}"; # a base16 name has a colon
 
   # The Win11OS hex -> palette key map: ONLY surfaces, text and the accent. The white and black
   # overlays stay untouched because they already adapt by OPACITY: docs/notes/desktop/theme.md

@@ -37,13 +37,14 @@ in
       src = tokyonight-nvim;
       file = "extras/sublime/tokyonight_night.tmTheme";
     };
-    config.theme = batThemes.${config.my.theme.name};
+    # A base16 scheme has no entry here: then Stylix's bat target paints it (stylix.nix).
+    config.theme = lib.mkIf config.my.theme.curated batThemes.${config.my.theme.name};
   };
   # btop REWRITES btop.conf on exit, so it is not a managed file (rule 14): only the theme key is
   # set, in place, and every other setting stays btop's. No file yet, a one-line seed it completes.
   home.activation.btopTheme = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     conf="${config.xdg.configHome}/btop/btop.conf"
-    line='color_theme = "${btopThemes.${config.my.theme.name}}"'
+    line='color_theme = "${btopThemes.${config.my.theme.name} or "TTY"}"'
     run mkdir -p "$(dirname "$conf")"
     if [ -f "$conf" ] && grep -q '^color_theme' "$conf"; then
       run sed -i "s|^color_theme = .*|$line|" "$conf"
@@ -58,7 +59,7 @@ in
     enableGitIntegration = true; # NOT the default: without this delta sits installed and idle
     options = {
       navigate = true; # `n`/`N` jumps between files inside the pager (a big diff becomes navigable)
-      syntax-theme = batThemes.${config.my.theme.name}; # delta reads bat's themes, so the same name
+      syntax-theme = config.programs.bat.config.theme; # delta reads bat's themes: the same one
       line-numbers = true; # a line column on both sides, so counting by hand inside the hunk goes away
       # side-by-side is OFF: at 1920x1080 two columns read worse than one here.
       # Per invocation it still works: `git diff --side-by-side`.

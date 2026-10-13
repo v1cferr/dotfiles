@@ -65,8 +65,11 @@ in
       # An official per-app theme beats a generic base16 one: base16 has no bright ANSI slots, so
       # Stylix painted kitty's color8 #292e42 (autosuggestions near invisible) and every bright
       # color the same as its normal one. Measured 13/10/2026.
-      kitty.enable = false; # kitty-themes' official scheme (shell/kitty.nix)
-      bat.enable = false; # folke's own tmTheme, which delta reuses (shell/cli.nix)
+      # A base16 scheme (my.theme.name = "base16:...") has no official theme, so Stylix takes over.
+      kitty.enable = !config.my.theme.curated; # kitty-themes' official scheme (shell/kitty.nix)
+      kitty.opacity.enable = false; # kitty.nix keeps its own opacity and font either way
+      kitty.fonts.enable = false;
+      bat.enable = !config.my.theme.curated; # folke's own tmTheme, which delta reuses (shell/cli.nix)
       spicetify.enable = false; # it swaps the text theme for a colors-only one (apps/spotify.nix)
       btop.enable = false; # btop rewrites btop.conf, so an activation sets its theme (rule 14)
       # Not installed here: these targets write their theme files whether the app exists or not.

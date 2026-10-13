@@ -1,6 +1,11 @@
 # kitty, Hyprland's default terminal, colored from my.theme.name through the table below.
 # The prompt is starship and the shell is zsh. No note: nothing here needs more than this.
-{ config, osConfig, ... }:
+{
+  config,
+  lib,
+  osConfig,
+  ...
+}:
 
 let
   # kitty-themes has names of its own, so the preset needs translating. A new preset with no
@@ -23,7 +28,8 @@ in
 
     # It follows my.theme.name; it used to be pinned and the terminal was the one thing that
     # did not recolor.
-    themeFile = kittyThemes.${config.my.theme.name};
+    # A base16 scheme has no entry here: then Stylix's kitty target paints it (stylix.nix).
+    themeFile = lib.mkIf config.my.theme.curated kittyThemes.${config.my.theme.name};
 
     # kitty injects helpers into the shell (jumping between prompts, opening output in the pager
     # and so on).

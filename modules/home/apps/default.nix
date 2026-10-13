@@ -18,6 +18,7 @@
     ./bottles.nix # Bottles: the package plus the library each bottle lists (through activation)
     ./spotify.nix # Spotify through spicetify (the theme, and the package the autostart reads)
     ./zen.nix # Zen: the browser plus the launch guard (a locked screen closes it)
+    ./zapfast.nix # ZapFast: native WhatsApp client, the browser tab stays as the fallback
     ./virt-manager.nix # the libvirt GUI (the daemon is in modules/nixos/services/libvirt.nix)
     ./crypto.nix # Stack Wallet plus Bisq 2: self-custody and P2P buying, both opened by hand
   ];

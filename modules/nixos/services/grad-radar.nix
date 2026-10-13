@@ -18,7 +18,7 @@ let
     ;
 
   # The working tree, not a store path (see the notes). Nix never reads it at eval time.
-  repo = "/home/v1cferr/Projects/GitHub/v1cferr/grad-radar";
+  repo = "${config.users.users.v1cferr.home}/Projects/GitHub/v1cferr/grad-radar";
   composeFile = "${repo}/docker-compose.dev.yml";
 
   # The same race as ./duo.nix: `after = docker.service` loses to socket activation.

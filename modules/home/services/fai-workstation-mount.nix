@@ -14,14 +14,14 @@ in
         type = "sftp";
         # host/user come from ws' SSOT (a workstation reachable only through the FAI VPN).
         inherit (ws) host user;
-        key_file = "/home/v1cferr/.ssh/id_ed25519"; # an existing key (state, so backup)
-        known_hosts_file = "/home/v1cferr/.ssh/known_hosts"; # the workstation is already trusted
+        key_file = "${config.home.homeDirectory}/.ssh/id_ed25519"; # an existing key (state, so backup)
+        known_hosts_file = "${config.home.homeDirectory}/.ssh/known_hosts"; # the workstation is already trusted
       };
       mounts."/" = {
         # "/" = the whole root: the user sees what they may read, and the rest is visible but closed.
         enable = true;
         autoMount = false; # it does NOT mount at boot; `vpn connect fai` brings it up (VPN-gated)
-        mountPoint = "/home/v1cferr/FAI-workstation";
+        mountPoint = "${config.home.homeDirectory}/FAI-workstation";
         options = {
           # "writes": READS stream through without piling up on disk; only what you write is cached.
           # Switch to "full" for faster reopening, at the cost of filling the cache.

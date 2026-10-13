@@ -11,7 +11,7 @@ Singleton {
     // The pure palette coming from Nix; the fallbacks are Tokyo Night (in case the file is missing).
     FileView {
         id: paletteFile
-        path: "/home/v1cferr/.config/theme/quickshell-colors.json"
+        path: Quickshell.env("HOME") + "/.config/theme/quickshell-colors.json"
         blockLoading: true // a SYNCHRONOUS read on the 1st access, so no color flash
         watchChanges: true
         onFileChanged: reload()
@@ -45,7 +45,7 @@ Singleton {
     // the current setup, in case the file is missing, the same pattern as the palette above.
     FileView {
         id: monitorsFile
-        path: "/home/v1cferr/.config/theme/monitors.json"
+        path: Quickshell.env("HOME") + "/.config/theme/monitors.json"
         blockLoading: true
         watchChanges: true
         onFileChanged: reload()

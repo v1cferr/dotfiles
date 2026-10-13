@@ -19,7 +19,7 @@ let
 
   # The working tree, not a store path: the same trade as ./grad-radar.nix, since this project
   # is still edited every week. Nix never reads it at eval time.
-  repo = "/home/v1cferr/Projects/GitHub/v1cferr/credit-radar";
+  repo = "${config.users.users.v1cferr.home}/Projects/GitHub/v1cferr/credit-radar";
   composeFile = "${repo}/docker-compose.yml";
 
   # The same race as ./duo.nix and ./grad-radar.nix: `after = docker.service` loses to socket

@@ -38,12 +38,12 @@ let
   places = [
     {
       title = "FAI Workstation";
-      path = "/home/v1cferr/FAI-workstation"; # rclone SFTP; it comes up with the FAI VPN
+      path = "${config.home.homeDirectory}/FAI-workstation"; # rclone SFTP; it comes up with the FAI VPN
       icon = "folder-remote";
     }
     {
       title = "Obsidian";
-      path = "/home/v1cferr/Dropbox/Obsidian"; # the notes vault (synced by Dropbox)
+      path = "${config.home.homeDirectory}/Dropbox/Obsidian"; # the notes vault (synced by Dropbox)
       icon = "folder-notes";
     }
     {

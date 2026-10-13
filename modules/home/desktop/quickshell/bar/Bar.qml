@@ -915,7 +915,7 @@ Scope {
     property var wConf: ({})
     FileView {
         id: weatherFile
-        path: "/home/v1cferr/.config/theme/weather.json"
+        path: Quickshell.env("HOME") + "/.config/theme/weather.json"
         watchChanges: true
         onFileChanged: reload()
         onLoaded: {

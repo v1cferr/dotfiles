@@ -1,6 +1,6 @@
 # THE CORE: Nix/flakes, the GC ceilings, the journal cap, nix-ld and the locale.
 # Why each ceiling is the number it is: docs/notes/repo/core.md
-{ ... }:
+{ config, ... }:
 
 {
   # ── Nix / flakes ─────────────────────────────────────────────────────────
@@ -18,7 +18,7 @@
   programs.nh = {
     enable = true;
     # SSOT of the repo path (rule 11): zsh.nix reads it through osConfig instead of repeating it.
-    flake = "/home/v1cferr/Projects/GitHub/v1cferr/dotfiles";
+    flake = "${config.users.users.v1cferr.home}/Projects/GitHub/v1cferr/dotfiles";
     clean = {
       enable = true; # weekly (Mon 00:00); nix.gc stays OFF, two collectors is rule 14
       extraArgs = "--keep 10 --keep-one"; # 10 = GRUB's menu; --keep-one spares each direnv devShell

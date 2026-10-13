@@ -330,15 +330,6 @@ finished work. What was closed is in the [august history](history/2026/08-august
         gives 0, which is FALSE, because an app registered under a unique name (`:1.82`) does not
         match. The authoritative source is the watcher's `RegisteredStatusNotifierItems`.
 
-- [ ] SSOT still pending: the HOME `/home/v1cferr` to `my.user.home`. RECOUNTED on 16/08/2026
-      and the item was understating it: **7 files** since restic.nix left on 24/09/2026, not
-      the 5 written here before
-      (dolphin.nix, Theme.qml, fai-workstation-mount.nix, modules/home/default.nix, plus
-      core.nix, drive-mount.nix and grad-radar.nix).
-      LOW priority on purpose: unlike font/color/connector, the path does not change when the
-      hardware changes. That is also why the count drifted unnoticed, and why `dead-config`
-      cannot catch this one: a literal is not a dead declaration, it is a missing one.
-
 - [ ] IMPERMANENCE on the Kingston: my idea (30/07), inspired by
       <https://github.com/Misterio77/Foundry>. An ephemeral root (tmpfs or a subvolume wiped at
       boot) plus an EXPLICIT list of what persists. It fits two things this repo already has:

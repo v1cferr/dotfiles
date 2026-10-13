@@ -1,6 +1,17 @@
 # History: october 2026
 
-6 entries. Index in [README.md](../README.md).
+7 entries. Index in [README.md](../README.md).
+
+- [x] The home path has one source, closing an item open since 16/08/2026 (13/10/2026). NixOS
+      modules read `config.users.users.v1cferr.home`, home-manager ones `config.home.homeDirectory`,
+      which the NixOS integration derives from it, so `modules/home/default.nix` stopped setting it.
+      • NOT A NEW OPTION. The item asked for `my.user.home`, but the source already existed and
+        three modules read it; a second one would have been rule 11 broken in the name of rule 11.
+      • QML TAKES `$HOME`. Quickshell's files are linked, not generated, so they read
+        `Quickshell.env("HOME")` instead of a Nix value.
+      • ONE LITERAL STAYS, ON PURPOSE: codex's `config.toml` is a mutable symlink that codex itself
+        writes its trusted project paths into, so it is state and not a value of ours.
+      • PROVED A NO-OP: both systems built, and the generated files differ only in store paths.
 
 - [x] The homelab tail is closed: none of the services Arch had and NixOS does not comes back
       (13/10/2026). That was the last open area of the Arch parity audit, so the migration is

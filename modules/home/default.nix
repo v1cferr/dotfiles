@@ -12,9 +12,6 @@
     ./network # remote hosts and network CLIs (the FAI workstation's SSOT plus wake-workstation)
   ];
 
-  home.username = "v1cferr";
-  home.homeDirectory = "/home/v1cferr";
-
   programs.home-manager.enable = true;
 
   # Fixed at the 1st switch: NEVER change it afterwards.

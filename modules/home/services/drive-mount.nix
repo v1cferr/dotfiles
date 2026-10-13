@@ -22,7 +22,7 @@ in
   options.my.drive = {
     local = lib.mkOption {
       type = lib.types.str;
-      default = "/home/v1cferr/Drive";
+      default = "${config.home.homeDirectory}/Drive";
       description = "The mountpoint. Also read by Dolphin's bookmark (SSOT, rule 11).";
     };
     remote = lib.mkOption {

@@ -140,3 +140,29 @@ stat -c %i ~/.cache                                # 256 = a subvolume root
 
 Then log out and back in, so apps reopen their caches in the new subvolume. Steam stays in `@home`
 on purpose: its library changes little between updates, and the games live on the Windows disk.
+
+## Checked against Akita's article
+
+[Akita, "always pick BTRFS, not EXT4"](https://akitaonrails.com/2026/10/12/usuarios-linux-sempre-escolham-btrfs-nao-ext4/)
+(12/10/2026), item by item, audited on 13/10/2026:
+
+| The article recommends | Here |
+| --- | --- |
+| `compress=zstd:1` | every subvolume but `@swap`, from disko's `btrfsOptions`; measure with `sudo compsize -x <path>` |
+| a monthly scrub, watch `device stats` | the NVMe AND the backup disk, plus a daily `device stats -c`, both with the alarm |
+| metadata DUP on a single disk | yes: `Metadata, DUP` and `System, DUP` (the mkfs default) |
+| balance only when unallocated runs low | better: the kernel's dynamic plus periodic reclaim does exactly that |
+| `chattr +C` before VM images and databases | Docker volumes, Jellyfin's SQLite, libvirt images |
+| snapshots with automatic retention | btrbk on `@home`, hourly `onchange`, `48h 7d 4w` ([btrbk](btrbk.md)) |
+| subvolumes to keep caches out of snapshots | `~/.cache`, above |
+| restic, with databases dumped first | yes, to the backup disk ([restic](restic.md)) |
+| reflinks and offline dedup | `cp` reflinks by default (coreutils 9+); `nix.optimise` dedups the store |
+
+Left out on purpose:
+
+- **Snapshots of `/`** (snapper, Timeshift): the NixOS generation list already is the system
+  rollback, and a snapshot of `@` would not even include `@nix` ([btrbk](btrbk.md#home-only)).
+- **bees or duperemove**: CPU and RAM around the clock for what `nix.optimise` already does on the
+  only place with real duplication.
+- **qgroups**: their accounting slows snapshot deletion and balance; `btrfs filesystem du` answers
+  the same question on demand ([disk-insight](disk-insight.md)).

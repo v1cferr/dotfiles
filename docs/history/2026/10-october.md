@@ -1,6 +1,14 @@
 # History: october 2026
 
-5 entries. Index in [README.md](../README.md).
+6 entries. Index in [README.md](../README.md).
+
+- [x] The homelab tail is closed: none of the services Arch had and NixOS does not comes back
+      (13/10/2026). That was the last open area of the Arch parity audit, so the migration is
+      DONE. Each service and what covers it now: [arch-parity-audit.md](../../arch-parity-audit.md).
+      • ONE BY ONE, NOT AS A BLOCK. Twelve services were weighed with an ID each (the \*arr stack,
+        open-webui, Homepage, FileBrowser, RustDesk, spendflow, `ap`), and every answer was no.
+      • THE PORTS WENT BACK TO THE POOL. The caddy port map "reserved" six numbers for them; a
+        reservation for a service that is not coming is a lie in the map, so it was removed.
 
 - [x] LibreWolf is on the palette, which closes the last theming item (13/10/2026). How and why:
       [notes/apps/librewolf.md](../../notes/apps/librewolf.md).

@@ -62,7 +62,7 @@ sections below this one are left as measured on 08/09, so read this table first.
 | hypr: lockscreen notification count | Dropped | Not wanted. Arch's `lockscreen_notifs.sh` read it over IPC; the `notif count` IPC verb that waited for it in `Notifs.qml` went too, since nothing called it |
 | `bin/` | Closed | `vpn`, `wake-workstation` ported; `hypr-quick`'s wallpaper actions went with the rotation; `zen-sync` became the theme's activation |
 | `scripts/` | Closed | Arch by nature, as measured below |
-| homelab and the Caddy set | Open, as its own project | 7 vhosts declared now (`photos` and `memory` are new). The \*arr stack, open-webui, Homepage, FileBrowser, spendflow, `ap` and RustDesk are still absent. Tracked in [open-items.md](open-items.md) |
+| homelab and the Caddy set | Dropped | Every absent service decided NOT to come back (13/10/2026): what covers each one is in the section below. The 9 vhosts declared now are the whole set |
 | polychromatic | Replaced | The OpenRGB service already in place for the Arc B580 DETECTS the Razer DeathAdder V2 (measured with `openrgb --client --list-devices`), so no openrazer GUI is needed. Setting the mouse's color from Nix would be new work, not a gap |
 | opencode | Dropped | Claude Code, codex and agy are declared already; a fourth agent CLI is not a gap |
 | lazydocker | Ported | `modules/nixos/services/docker.nix`, only where the engine is enabled. Ten containers run here, so a TUI over them earns its place |
@@ -85,6 +85,11 @@ The 16 areas in the last two rows are the whole of what is left, and none of the
 machine back: the desktop, the network, the boot, the backup, the secrets and the remote access
 are all on this side. What is left is a self-hosted stack, some comfort in the shell, and a
 handful of app configs.
+
+**Nothing is left since 13/10/2026.** Every one of those 16 areas now has a final verdict in the
+re-measured table above (ported, replaced, closed or dropped), the homelab being the last, so the
+migration is DONE. What stays open after it is ordinary work, such as refining the Zen theme, and
+lives in [open-items.md](open-items.md) like anything else.
 
 ## Area by area
 
@@ -150,7 +155,7 @@ Same job, a different tool, and each one has its reasoning already recorded:
 
 ### `main:homelab/` plus the Caddy subdomain set
 
-This is the biggest gap by far, and the only one that is a project rather than a chore. Arch
+This was the biggest gap by far, and the only one that would have been a project rather than a chore. Arch
 served **14 subdomains**; this branch declares **5**, and one of those (`pos`, GradRadar) is new
 and never existed over there.
 
@@ -160,27 +165,26 @@ and never existed over there.
 | `torrent` | 8080 | Yes, native ([`modules/nixos/services/qbittorrent.nix`](../modules/nixos/services/qbittorrent.nix)) |
 | `ai` | 11434 | Yes, `expose = "lan"` ([`modules/nixos/services/ollama.nix`](../modules/nixos/services/ollama.nix)) |
 | `duo` | 3010 | Yes ([`modules/nixos/services/duo.nix`](../modules/nixos/services/duo.nix)) |
-| `chat` | 3000 | No. open-webui |
-| `jellyseerr` | 5055 | No |
-| `prowlarr` | 9696 | No |
-| `radarr` | 7878 | No |
-| `sonarr` | 8989 | No |
-| `bazarr` | 6767 | No |
-| `spendflow` | 3001 | No |
-| `ap` | 3005 | No. ufscar-housing-radar (V1C-68) |
-| `dash` | 3003 | No. Homepage, plus its docker-socket-proxy |
-| `files` | 3004 | No. FileBrowser, and its fail2ban jail went with it |
+| `chat` | 3000 | Dropped. open-webui: Ollama stays in `ai`, and the chat I use is Claude and agy |
+| `jellyseerr` | 5055 | Dropped, with the whole \*arr stack: no media is fetched on a schedule anymore |
+| `prowlarr` | 9696 | Dropped (\*arr) |
+| `radarr` | 7878 | Dropped (\*arr) |
+| `sonarr` | 8989 | Dropped (\*arr) |
+| `bazarr` | 6767 | Dropped (\*arr) |
+| `spendflow` | 3001 | Dropped. My own project, not in use; it can come back like `credit` and `pos` if it is |
+| `ap` | 3005 | Dropped. ufscar-housing-radar (V1C-68), idle since 30/06/2026 |
+| `dash` | 3003 | Dropped. Homepage: the Quickshell dash is the status page now, and it needed the docker socket |
+| `files` | 3004 | Dropped. FileBrowser: Dolphin, SSH and rclone cover it, without files on the web |
 
-Two containers had no subdomain and are also absent: `flaresolverr` (the \*arr stack's captcha
-solver) and the RustDesk server (`hbbs`/`hbbr`).
+Two containers had no subdomain and were dropped too: `flaresolverr` (the \*arr stack's captcha
+solver, gone with the stack) and the RustDesk server (`hbbs`/`hbbr`), which Sunshine/Moonlight and
+RDP replace.
 
-The port table in [notes/network/caddy.md](notes/network/caddy.md) already RESERVES every one of
-those numbers, and [notes/services/jellyfin.md](notes/services/jellyfin.md) says the \*arr apps
-"come later, one module at a time", so this is a queue and not an oversight. The one thing to
-know before working it: the DNS records for `bazarr`, `prowlarr`, `radarr`, `sonarr`,
-`jellyseerr`, `spendflow`, `chat`, `dash` and `files` were REMOVED from the zone and from the
-router's dnsmasq during the august cleanup. The wildcard covers them again the moment a vhost
-exists, but a stale mental model of "the DNS is already there" is not true anymore.
+**Decided on 13/10/2026: none of them comes back.** Each one was weighed on its own (what it did,
+what covers it now, what it would expose), and the answer was the same for all. Their loopback ports
+were released from the map in [notes/network/caddy.md](notes/network/caddy.md). A service that does
+come back one day starts as a new project, with a free port and a vhost; the DNS records of the old
+ones were already removed in august, so nothing is waiting for it.
 
 ### `main:zsh/`
 

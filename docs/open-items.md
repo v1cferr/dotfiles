@@ -10,17 +10,6 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
-- [ ] The homelab services Arch had and NixOS does not, to be detailed before any is built (opened
-      13/10/2026). The last open area of [arch-parity-audit.md](arch-parity-audit.md): Arch served 14
-      subdomains, this machine declares 7 through `my.ingress`. Absent: the \*arr stack
-      (jellyseerr, prowlarr, radarr, sonarr, bazarr, plus flaresolverr), open-webui (`chat`),
-      Homepage (`dash`), FileBrowser (`files`), spendflow, `ap` (ufscar-housing-radar, V1C-68) and
-      the RustDesk server.
-      • DECIDE PER SERVICE FIRST, build after: each one is a native NixOS module or a container,
-        or simply not coming back. Nothing here is a port by default.
-      • THE DNS TRAP: those records were REMOVED from the zone and from the router's dnsmasq in the
-        august cleanup. The wildcard covers a new vhost, but "the DNS is already there" is stale.
-
 - [ ] Refine the Zen theme, by hand and at my own pace (opened 13/10/2026). The minimal one in
       `modules/home/apps/zen/theme.nix` recolors Zen through its own variables; what it does NOT
       do yet is the rest of the old Arch look (`archive/arch-final:zen-browser/userChrome.css`), which needed

@@ -7,7 +7,7 @@ the Arch Docker stack: isolated in the `jellyfin` user, with no container overhe
 
 The library lives in `/srv/media` (an SSD) and is shared through the `media` group: I manage the
 files, jellyfin reads them. `/srv/media` is created with setgid (the `2` in `2775`), so everything
-created inside inherits the group and jellyfin, the \*arr apps and I see the same files without
+created inside inherits the group and jellyfin, qbittorrent and I see the same files without
 fighting over permissions.
 
 The LIBRARIES themselves (what is a Movie, what is a Series) are configured in the web UI
@@ -71,7 +71,8 @@ If the TV ever fails to find the server again, `systemctl restart jellyfin` is t
 
 ## The rest of the old stack
 
-jellyseerr and the \*arr apps come later, one module at a time. qbittorrent is already migrated
+jellyseerr and the \*arr apps are NOT coming back (decided 13/10/2026, the reasons in
+[arch-parity-audit.md](../../arch-parity-audit.md)). qbittorrent is migrated
 (`modules/nixos/services/qbittorrent.nix`), in the same `media` group, writing to `/srv/media/torrents`,
 with the Web UI on 8080. Its save paths and categories are set in that Web UI: state again.
 The initial login is user `admin`, with a temporary password in `journalctl -u qbittorrent`.

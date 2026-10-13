@@ -7,11 +7,12 @@ settings, so a rebuilt repo (or a fork) can get them back, and the files under
 ## The `history` ruleset
 
 [`.github/rulesets/history.json`](../../../.github/rulesets/history.json), created on 27/09/2026.
-It blocks **deletion** and **force-push** on `main` and `arch`.
+It blocks **deletion** and **force-push** on `main`, the only branch left.
 
-**Why `arch` too and not only `main`**: `arch` is the ORPHAN history of the machine before NixOS,
-and a deleted orphan branch is gone for good, since only the `archive/arch-final` tag points at
-the same commits. It receives no pushes, so the rule costs nothing there.
+**Why only `main` now**: until 13/10/2026 it also guarded `arch`, the ORPHAN history of the
+machine before NixOS. Once every Arch area was ported or decided, `arch` was deleted, and the
+`archive/arch-final` tag (the same commit, `ecbaa32`) is what keeps those commits alive. A tag is
+not covered by this branch ruleset, so deleting it is the one step that would lose them.
 
 **The rename, 12/10/2026.** `nixos` became `main`, and the old Arch `main` was folded into `arch`
 (a fast-forward of 2 commits) and tagged `archive/arch-final` before it was deleted. The ruleset

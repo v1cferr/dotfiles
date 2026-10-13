@@ -21,7 +21,7 @@ quickshell. The scripts the binds call (`minimize-others`, `brightness-osd`) go
 to the PATH through `home.packages`, so the modules invoke them by NAME, which is what lets the
 `.lua` files stay static.
 
-The keybinds and window rules are at PARITY with the Arch/Kingston setup (the `arch` branch), with
+The keybinds and window rules are at PARITY with the Arch/Kingston setup (the Arch tree, tag `archive/arch-final`), with
 the tools adapted to the NixOS stack (rofi, dolphin, quickshell).
 
 Idleness and the lock screen live in [`lockscreen.md`](lockscreen.md).

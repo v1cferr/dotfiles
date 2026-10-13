@@ -122,7 +122,7 @@ closing the browser ever becomes annoying in practice.
 ## The theme: the palette on Zen's own variables
 
 `modules/home/apps/zen/theme.nix`. A rewrite and not a port of the Arch `userChrome.css`
-(`arch:zen-browser/userChrome.css`, 618 lines). That one painted element by element (`#urlbar`,
+(`archive/arch-final:zen-browser/userChrome.css`, 618 lines). That one painted element by element (`#urlbar`,
 `#identity-box`, `.searchmode-switcher`...) with the hexes typed by hand, so every Zen update that
 renamed an element broke a piece in silence, and the palette lived twice. Measured on Zen 1.23b
 (`zen-styles/zen-theme.css` inside `omni.ja`): the whole UI derives from `--zen-primary-color` and

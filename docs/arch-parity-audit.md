@@ -5,7 +5,8 @@ promoting `nixos` to the default branch and retiring the Arch refs.
 
 **Promoted on 12/10/2026.** `nixos` was renamed to `main`. The old Arch `main` was folded into
 `arch` and tagged `archive/arch-final`, so the `main:<path>` references below now resolve as
-`arch:<path>`. The tail of 16 areas was NOT decided first, on purpose: with the Arch tree still
+`archive/arch-final:<path>`. The `arch` branch itself was deleted on 13/10/2026, once the tail
+was decided; the tag is the same commit. The tail of 16 areas was NOT decided first, on purpose: with the Arch tree still
 one branch away, it stopped blocking the rename, and re-measuring it is its own task.
 
 This is not the same page as [arch-linux.md](arch-linux.md), and the difference matters: that
@@ -319,8 +320,8 @@ this repo. Recording the order so it does not get improvised:
 2. **Decide the 16 tail areas first.** Each one is either a port or a struck-through decision.
    What gets ported closes here; what gets dropped gets a line saying why, because "it is in the
    old branch" stops being an answer the day the old branch is gone.
-3. **The refs that were retired** on 12/10/2026: only the old `main`, after `arch` caught up with
-   it. `arch` STAYS as the browsable Arch branch, under the same `history` ruleset as `main`. The
+3. **The refs that were retired**: the old `main` on 12/10/2026, after `arch` caught up with it,
+   and `arch` itself on 13/10/2026, once the tail below was decided. The
    `nix-flake-skeleton` tag, which points at a commit whose whole content is the pivot doc, was
    left alone.
 4. **The tag to KEEP**, and this is the one that must not be swept up with the rest:

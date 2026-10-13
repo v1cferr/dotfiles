@@ -187,8 +187,8 @@ that no longer exists, which is the check working.)
 
 **The repo and the branch are READ from `tools/docs-site/site.json`**, not written in the plugin as
 well: that would be a second owner of a value whose staleness breaks 140 links at once, which is
-rule 11. Which branch it is matters, because `arch` here is a separate orphan history and a blob
-URL built from it is a 404 for every path. The canary workflow reads the same file to know which
+rule 11. Which branch it is matters, because a blob URL built from a branch that does not hold the
+path is a 404 for every path. The canary workflow reads the same file to know which
 URLs are its to check.
 
 **A fenced code block is skipped, and now for free.** The hook tracked fence openers line by line

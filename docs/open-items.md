@@ -23,7 +23,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
 
 - [ ] Refine the Zen theme, by hand and at my own pace (opened 13/10/2026). The minimal one in
       `modules/home/apps/zen/theme.nix` recolors Zen through its own variables; what it does NOT
-      do yet is the rest of the old Arch look (`arch:zen-browser/userChrome.css`), which needed
+      do yet is the rest of the old Arch look (`archive/arch-final:zen-browser/userChrome.css`), which needed
       cleaning anyway. How it works and how to flip to stock: [notes/apps/zen.md](notes/apps/zen.md).
       • THE RULE THAT KEEPS IT CLEAN: a variable first, a selector only when no variable reaches
         the element, and every color from `my.theme.palette`, never a typed hex.

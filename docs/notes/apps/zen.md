@@ -134,6 +134,11 @@ Two things the measurement decided:
 - **Every line is `!important`.** `userChrome.css` is a USER sheet, so it loses to Zen's author
   sheet, and the gradient generator writes `--zen-primary-color` and
   `--zen-main-browser-background` INLINE on `<html>` at runtime (`ZenGradientGenerator.mjs`).
+- **The background variables go on the background ELEMENTS too.** The generator writes
+  `--zen-main-browser-background` (and its `-toolbar` and `-old` twins) inline on
+  `#zen-browser-background` and `#zen-toolbar-background`, so a value on `:root` never reached
+  what is painted. The first version shipped like that: the variable read `#1a1b26` and the frame
+  painted Zen's `#131313`. The lab caught it by sampling pixels, which is what it is for.
 - **It links into the profile the guard finds** (`zen-guard profile`), since the profile dir is a
   random name Zen chose. That is the lookup's only owner, and an activation script that cannot
   find a profile does nothing instead of failing the switch. The Arch symlink there pointed at

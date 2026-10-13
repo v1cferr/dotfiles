@@ -27,10 +27,18 @@ let
   # about:config flip away, live, no rebuild.
   userChrome = writeText "userChrome.css" ''
     @media not -moz-pref("my.zen.stock-theme") {
-      :root {
-        --zen-primary-color: ${c "accent"} !important;
+      /* The gradient generator writes these INLINE on the two background elements themselves,
+         so a :root value alone never reaches what is painted (measured in the lab: #131313). */
+      :root,
+      #zen-browser-background,
+      #zen-toolbar-background {
         --zen-main-browser-background: ${c "bg"} !important;
         --zen-main-browser-background-toolbar: ${c "bg"} !important;
+        --zen-main-browser-background-old: ${c "bg"} !important;
+        --zen-main-browser-background-toolbar-old: ${c "bg"} !important;
+      }
+      :root {
+        --zen-primary-color: ${c "accent"} !important;
         --toolbox-textcolor: ${c "text"} !important;
         --zen-branding-dark: ${c "bg"} !important;
         --zen-themed-toolbar-bg-transparent: ${c "bg"} !important;

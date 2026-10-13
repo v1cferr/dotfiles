@@ -53,6 +53,10 @@ in
     # The apps it themes, moved over one at a time while autoEnable is off.
     targets = {
       gtk.enable = true; # adw-gtk3 plus a gtk.css in the palette; Adwaita gray before
+      mpv.enable = true; # the OSD and its progress bar
+      yazi.enable = true; # it had no theme at all
+      fzf.enable = true; # its picker colors; it ran on the terminal defaults
+      starship.enable = true; # the named colors resolve to the palette's exact hexes
     };
 
     fonts = {

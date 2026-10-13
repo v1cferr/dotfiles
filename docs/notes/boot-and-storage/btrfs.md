@@ -148,7 +148,7 @@ on purpose: its library changes little between updates, and the games live on th
 
 | The article recommends | Here |
 | --- | --- |
-| `compress=zstd:1` | every subvolume but `@swap`, from disko's `btrfsOptions`; measure with `sudo compsize -x <path>` |
+| `compress=zstd:1` | every subvolume but `@swap`, from disko's `btrfsOptions`; MEASURED below |
 | a monthly scrub, watch `device stats` | the NVMe AND the backup disk, plus a daily `device stats -c`, both with the alarm |
 | metadata DUP on a single disk | yes: `Metadata, DUP` and `System, DUP` (the mkfs default) |
 | balance only when unallocated runs low | better: the kernel's dynamic plus periodic reclaim does exactly that |
@@ -157,6 +157,11 @@ on purpose: its library changes little between updates, and the games live on th
 | subvolumes to keep caches out of snapshots | `~/.cache`, above |
 | restic, with databases dumped first | yes, to the backup disk ([restic](restic.md)) |
 | reflinks and offline dedup | `cp` reflinks by default (coreutils 9+); `nix.optimise` dedups the store |
+
+`sudo compsize -x /home /nix`, MEASURED on 13/10/2026: 253 GiB of data take 182 GiB on disk, so
+**28% (71 GiB) saved**, above the article's 15%. The zstd part alone goes from 101 GiB to 30 GiB
+(30%); the other 151 GiB are stored raw because btrfs gave up on them as incompressible (media,
+already-compressed archives), which is the heuristic doing its job, not a missed saving.
 
 Left out on purpose:
 

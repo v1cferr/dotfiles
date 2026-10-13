@@ -17,6 +17,14 @@ let
     catppuccin-mocha = "Catppuccin Mocha";
     gruvbox-dark = "gruvbox-dark";
   };
+
+  # btop's built-in theme per preset. It ships no Catppuccin, so that one takes "TTY", which draws
+  # with the terminal's 16 colors and therefore still follows kitty.
+  btopThemes = {
+    tokyo-night = "tokyo-night";
+    catppuccin-mocha = "TTY";
+    gruvbox-dark = "gruvbox_dark";
+  };
 in
 {
   programs.eza.enable = true; # a modern ls (icons plus git); the aliases are right below
@@ -30,6 +38,19 @@ in
     };
     config.theme = batThemes.${config.my.theme.name};
   };
+  # btop REWRITES btop.conf on exit, so it is not a managed file (rule 14): only the theme key is
+  # set, in place, and every other setting stays btop's. No file yet, a one-line seed it completes.
+  home.activation.btopTheme = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    conf="${config.xdg.configHome}/btop/btop.conf"
+    line='color_theme = "${btopThemes.${config.my.theme.name}}"'
+    run mkdir -p "$(dirname "$conf")"
+    if [ -f "$conf" ] && grep -q '^color_theme' "$conf"; then
+      run sed -i "s|^color_theme = .*|$line|" "$conf"
+    else
+      run sh -c 'printf "%s\n" "$1" >> "$2"' _ "$line" "$conf"
+    fi
+  '';
+
   # delta: the "bat of git diff". Reading a diff is the most repeated operation here.
   programs.delta = {
     enable = true;

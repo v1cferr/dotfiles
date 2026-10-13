@@ -34,12 +34,16 @@ rule 16 applies in full, so a note that stops being true is a bug.
 
 ## Conventions
 
-- **Grouped by SUBJECT, not by repo path.** A mirror of the tree was measured and rejected: 16 of
-  the 51 pages cross the `modules/nixos/` and `modules/home/` boundary (arch-legacy, claude-code, monitors, theme,
-  restic, vpn, fonts and others) and 19 reference two or more modules. They cross because the
-  ARTIFACT crosses, so a mirror would have to split a third of the pages or file them under a
-  half-truth. The folder answers "where would I go looking", which is the question a reader
-  actually has.
+- **Grouped by SUBJECT, not by repo path.** A mirror of the tree was measured and rejected: 30 of
+  the 93 pages name files on both sides of the `modules/nixos/` and `modules/home/` boundary
+  (arch-legacy, claude-code, monitors, theme, restic, vpn, fonts and others), and 58 name two or
+  more modules. They cross because the ARTIFACT crosses, so a mirror would have to split a third
+  of the pages or file them under a half-truth. The folder answers "where would I go looking",
+  which is the question a reader actually has.
+
+  The count is a module path written anywhere in the page (re-measured 13/10/2026; it was 16 of
+  51 on 16/08, the same third). Counting only the modules whose 2-line header points AT the page
+  gives 13 of 74 instead, but it misses theme, vpn and fonts, which plainly span both sides.
 - **The file name mirrors the module**, so `modules/nixos/services/caddy.nix` becomes
   `network/caddy.md`. When a page covers several modules it takes the name of the SUBJECT
   (`desktop-plumbing.md`, `apps-and-mime.md`).

@@ -89,13 +89,6 @@ finished work. What was closed is in the [august history](history/2026/08-august
         running both over the PUSHED RANGE, and it is only worth doing the day a second machine
         starts writing to this repo.
 
-- [ ] The page count in `docs/notes/README.md` has drifted (measured 23/08/2026). The Conventions
-      section says "16 of the 51 pages cross the `modules/nixos/` and `modules/home/` boundary", and there are 58
-      pages today. The number is not decoration, it is the measurement that REJECTED mirroring the
-      tree, so fixing it means recounting both halves (how many pages cross, how many reference two
-      or more modules) and not just editing the total. Left as an item instead of a blind edit,
-      because a re-measured number is worth something and a guessed one is worse than the stale one.
-
 - [~] The T480 before it leaves the house (opened 22/08/2026). It is my mother's machine, it goes
       to another city, and after that every mistake here costs a phone call instead of a minute.
       The Windows side lives in that machine's OWN repo; what is listed here is either this repo's

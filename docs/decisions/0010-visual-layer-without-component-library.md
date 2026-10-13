@@ -2,7 +2,7 @@
 
 The diagrams, steps and overview the docs needed are built from what the site already bundled, and nothing was added to the lockfile.
 
-- **Status**: accepted
+- **Status**: accepted; its Graph View deferral was met by [0013](0013-graph-view-with-one-dependency.md)
 - **Date**: 01/10/2026; it refines [0005](0005-fumadocs-for-the-site.md)
 
 ## Context

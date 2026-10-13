@@ -9,14 +9,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { listPages } from '../lib/page-tree.ts';
 import { SITE_ORIGIN } from '../lib/domain.ts';
+import { GRAPH_URL } from '../lib/graph.ts';
 import { docPathToUrl, docUrl, servedUrl } from '../lib/urls.ts';
 
 const ROOT = process.cwd();
 const DOCS = path.resolve(ROOT, '../../docs');
 const OUT = path.resolve(ROOT, 'out');
 
-// Next writes its own not-found route twice, and neither is a page of docs/.
-const NOT_A_PAGE = new Set(['/404', '/_not-found']);
+// Next writes its own not-found route twice, and the graph is a route of the app: none is a page of
+// docs/, so none of them is held to the rules a page is.
+const NOT_A_PAGE = new Set(['/404', '/_not-found', GRAPH_URL]);
 
 // A `rel` that describes the document instead of pulling a file in.
 const METADATA_REL = /\brel\s*=\s*"(canonical|alternate|author|me|license|prev|next)"/i;

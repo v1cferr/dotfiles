@@ -6,7 +6,8 @@ import { buttonVariants } from 'fumadocs-ui/components/ui/button';
 import Link from 'next/link';
 import { REPO_URL, SITE_DESCRIPTION } from '../lib/repo.ts';
 import { source } from '../lib/source.ts';
-import { docSlugs } from '../lib/urls.ts';
+import { GRAPH_URL } from '../lib/graph.ts';
+import { docSlugs, servedUrl } from '../lib/urls.ts';
 import site from '../site.json' with { type: 'json' };
 
 /** The URL of a page under docs/, and a FAILED build when it is gone, never a dead button. */
@@ -32,6 +33,7 @@ export function HomeHero() {
     { label: 'Start here', href: '#start-here', primary: true },
     { label: 'Architecture', href: pageUrl('notes/repo/flake.md') },
     { label: 'Disaster recovery', href: pageUrl('guides/disaster-recovery.md') },
+    { label: 'Graph', href: servedUrl(GRAPH_URL) },
     { label: 'GitHub', href: REPO_URL },
   ];
 

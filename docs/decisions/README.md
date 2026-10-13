@@ -24,3 +24,4 @@ Each record follows the same short shape, after [Michael Nygard's ADR](https://a
 | [0010](0010-visual-layer-without-component-library.md) | The site's visual layer adds no component library | accepted |
 | [0011](0011-local-disk-backup.md) | The backup goes to a local disk first | accepted |
 | [0012](0012-stylix-applies-the-palette.md) | Stylix applies the palette; the palette keeps the hexes | accepted, refines 0001 |
+| [0013](0013-graph-view-with-one-dependency.md) | The site's graph view takes one dependency | accepted, refines 0010 |

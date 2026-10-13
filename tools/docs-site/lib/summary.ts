@@ -8,7 +8,7 @@ const HEADING = /^#{1,6}\s/;
 const MAX_DESCRIPTION = 160;
 
 /** Lines that are PROSE: a fenced example is not, and neither is a heading. */
-function* prose(source: string): Generator<string> {
+export function* prose(source: string): Generator<string> {
   let fenced = false;
   for (const line of source.split('\n')) {
     if (FENCE.test(line)) {

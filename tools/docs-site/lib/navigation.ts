@@ -52,6 +52,7 @@ export const navigation: NavItem[] = [
       { title: "0010 No component library", doc: "decisions/0010-visual-layer-without-component-library.md" },
       { title: "0011 Local disk backup", doc: "decisions/0011-local-disk-backup.md" },
       { title: "0012 Stylix applies the palette", doc: "decisions/0012-stylix-applies-the-palette.md" },
+      { title: "0013 Graph view dependency", doc: "decisions/0013-graph-view-with-one-dependency.md" },
     ],
   },
   { title: "How the notes work", doc: "notes/README.md" },

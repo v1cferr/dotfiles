@@ -404,6 +404,14 @@ It is pointer events and a CSS transform, so nothing joined the lockfile (decisi
 the copy of the SVG exists only while the dialog is open, so a page still draws each diagram once.
 The dialog is named after the diagram's `accTitle`, which every diagram here carries anyway.
 
+**`/graph` is the map of the whole tree, since 13/10/2026.** `lib/graph.ts` reads every page and its
+relative links at BUILD time, the same resolution the link rewriter applies, and colors each page by
+its top-level nav section with the palette's hues. Hover lights a page's neighbors, a click opens
+it, the search flies to a page, and a section chip isolates one section. It is the one dependency
+the visual layer took ([decision 0013](../../decisions/0013-graph-view-with-one-dependency.md)),
+loaded by that page alone. `/graph` is a route of the app and not a page of `docs/`, so
+`finish-export.ts` lists it next to the 404 as a URL with no page behind it.
+
 **Steps are a GUIDE's numbered headings, and only a guide's.** Fumadocs' `remarkSteps` turns any
 `### 1. Title` into a step, and run over everything it would have turned the 23 cards of
 `rules.md` into a procedure, where the number is API and not an order. `remarkGuideSteps` in

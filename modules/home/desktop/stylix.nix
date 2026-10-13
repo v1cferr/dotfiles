@@ -24,7 +24,7 @@ in
 
   stylix = {
     enable = true;
-    autoEnable = false; # opt-in while the targets are moved over one at a time
+    autoEnable = true; # every app Stylix knows gets the palette; the exceptions are listed below
     polarity = "dark";
 
     # The palette mapped onto base16's slots. base16 has no room for sky, teal, purple, border or
@@ -50,13 +50,35 @@ in
       base0F = p.pink;
     };
 
-    # The apps it themes, moved over one at a time while autoEnable is off.
+    # OFF, each for a reason. Everything else Stylix has a target for follows the palette by default.
     targets = {
-      gtk.enable = true; # adw-gtk3 plus a gtk.css in the palette; Adwaita gray before
-      mpv.enable = true; # the OSD and its progress bar
-      yazi.enable = true; # it had no theme at all
-      fzf.enable = true; # its picker colors; it ran on the terminal defaults
-      starship.enable = true; # the named colors resolve to the palette's exact hexes
+      # Themed by this repo from the same palette, with keys base16 has no slot for.
+      hyprland.enable = false; # hyprland.lua is written by hand, outside home-manager
+      hyprlock.enable = false; # lockscreen.nix
+      hyprpaper.enable = false; # wallpaper.nix owns hyprpaper.conf (random photo per monitor)
+      qt.enable = false; # Kvantum, recolored from the palette (theme.nix)
+      kde.enable = false; # it would apply a Plasma look-and-feel; there is no Plasma here
+      gnome.enable = false; # no GNOME session; theme.nix owns the dconf interface keys (fonts, cursor)
+      rofi.enable = false; # four raw .rasi files, not programs.rofi
+      zen-browser.enable = false; # wrapped by hand, its theme measured in the lab (apps/zen/theme.nix)
+      vscode.enable = false; # settings.json is versioned in the repo (rule 14)
+      # An official per-app theme beats a generic base16 one: base16 has no bright ANSI slots, so
+      # Stylix painted kitty's color8 #292e42 (autosuggestions near invisible) and every bright
+      # color the same as its normal one. Measured 13/10/2026.
+      kitty.enable = false; # kitty-themes' official scheme (shell/kitty.nix)
+      bat.enable = false; # folke's own tmTheme, which delta reuses (shell/cli.nix)
+      spicetify.enable = false; # it swaps the text theme for a colors-only one (apps/spotify.nix)
+      btop.enable = false; # btop rewrites btop.conf, so an activation sets its theme (rule 14)
+      # Not installed here: these targets write their theme files whether the app exists or not.
+      blender.enable = false;
+      forge.enable = false; # a GNOME Shell extension
+      vencord.enable = false; # Discord runs without Vencord
+      # Colors only: mangohud.nix keeps its own transparency and font size.
+      mangohud.opacity.enable = false;
+      mangohud.fonts.enable = false;
+      # Fonts are decision 0002's: fonts.nix owns the packages and fontconfig's defaults.
+      font-packages.enable = false;
+      fontconfig.enable = false;
     };
 
     fonts = {

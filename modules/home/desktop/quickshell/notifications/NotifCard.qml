@@ -45,7 +45,7 @@ Rectangle {
         if (!card.notif)
             return "";
         const img = card.notif.image || "";
-        const m = img.match(/^image:\/\/icon\/(.+)$/);
+        const m = img.match(/^image:\/\/icon\/([^\/].*)$/);
         if (m)
             return m[1];
         const ai = card.notif.appIcon || "";
@@ -57,6 +57,11 @@ Rectangle {
         if (!card.notif)
             return "";
         const img = card.notif.image || "";
+        // The spec allows a bare path in image-path (ZapFast's avatars); Quickshell hands it over as
+        // an icon NAME, image://icon//home/..., so it never resolves in the theme.
+        const bare = img.match(/^(?:image:\/\/icon\/)?(\/.+)$/);
+        if (bare)
+            return "file://" + bare[1];
         if (img.startsWith("image://icon/"))
             return Quickshell.hasThemeIcon(card.wantedName) ? img : "";
         if (img !== "")

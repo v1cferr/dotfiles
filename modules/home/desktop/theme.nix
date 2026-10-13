@@ -1,4 +1,4 @@
-# THEME / DARK MODE plus the UI font. GTK follows color-scheme, Qt is 100% Kvantum (Dolphin).
+# THEME / DARK MODE plus the UI font. GTK follows color-scheme; Qt is qt6ct + Kvantum, KDE apps a color scheme.
 # The 2 vendored themes and the 3 build traps in the icons: docs/notes/desktop/theme.md
 {
   pkgs,
@@ -22,7 +22,7 @@ let
   p = config.my.theme.palette; # SSOT: modules/home/desktop/palette.nix (rule 11, decision 0001)
 
   # The theme is the Win11OS GEOMETRY recolored by the palette, so the name carries both.
-  kvantumTheme = "Win11OS-${lib.replaceStrings [ ":" ] [ "-" ] config.my.theme.name}"; # a base16 name has a colon
+  kvantumTheme = "Win11OS-${config.my.theme.slug}";
 
   # The Win11OS hex -> palette key map: ONLY surfaces, text and the accent. The white and black
   # overlays stay untouched because they already adapt by OPACITY: docs/notes/desktop/theme.md
@@ -63,6 +63,53 @@ let
     "edeff3" = "text"; # tooltip.text.color
   };
 
+  # The KDE COLOR SCHEME from the palette. KDE apps paint their views from KColorScheme and NOT
+  # from the Qt style, so under Kvantum alone Dolphin drew dark names on white rows. Outside
+  # Plasma only the app's own choice loads it (kdeglobals' is ignored): dolphin.nix selects it.
+  kdeColors =
+    let
+      rgb =
+        key:
+        lib.concatMapStringsSep "," (i: toString (lib.fromHexString (lib.substring i 2 p.${key}))) [
+          0
+          2
+          4
+        ];
+      base = {
+        BackgroundNormal = rgb "bg";
+        BackgroundAlternate = rgb "surface"; # the alternating row
+        DecorationFocus = rgb "accent";
+        DecorationHover = rgb "accent";
+        ForegroundNormal = rgb "text";
+        ForegroundActive = rgb "text";
+        ForegroundInactive = rgb "dim";
+        ForegroundLink = rgb "accent";
+        ForegroundVisited = rgb "magenta";
+        ForegroundNegative = rgb "red";
+        ForegroundNeutral = rgb "yellow";
+        ForegroundPositive = rgb "green";
+      };
+    in
+    lib.generators.toINI { } (
+      {
+        General.Name = config.my.theme.slug;
+      }
+      // lib.mapAttrs' (group: overrides: lib.nameValuePair "Colors:${group}" (base // overrides)) {
+        Window = { };
+        View = { };
+        Complementary = { };
+        Button.BackgroundNormal = rgb "track";
+        Header.BackgroundNormal = rgb "surface";
+        Tooltip.BackgroundNormal = rgb "surface";
+        # The same three steps as Zen's tabs: hover on surface, selected on track.
+        Selection = {
+          BackgroundNormal = rgb "track";
+          BackgroundAlternate = rgb "track";
+          ForegroundInactive = rgb "subtext";
+        };
+      }
+    );
+
   # ONLY the Kvantum folder of Win11OS-kde, pinned by commit. The /share/Kvantum layout is what
   # qt.kvantum.themes expects. An exception to "modules/home/ does not install": it is a theme asset.
   win11os-kvantum = stdenvNoCC.mkDerivation {
@@ -92,6 +139,13 @@ let
           )
         } \
         "$dir/${kvantumTheme}.kvconfig" "$dir/${kvantumTheme}.svg"
+
+      # OPAQUE, like every GTK app here: Win11OS draws the window translucent, which put the
+      # wallpaper behind Dolphin's file names (measured on screen, 13/10/2026).
+      sed -i \
+        -e 's/^translucent_windows=true$/translucent_windows=false/' \
+        -e 's/^blurring=true$/blurring=false/' \
+        "$dir/${kvantumTheme}.kvconfig"
 
       # The 2 keys Win11OS never sets. Unset does NOT mean unused: Kvantum takes them from Qt's
       # palette, which is the LIGHT default.
@@ -165,13 +219,28 @@ in
     };
   };
 
-  # Qt does NOT follow GTK under Hyprland. It is 100% Kvantum now, which takes over the palette
-  # AND the widgets, so the old gtk3-follow was dropped. GTK/Electron are unchanged.
+  # Qt: qt6ct as the platform theme and Kvantum as the style, the pairing Kvantum documents. With
+  # no platform theme Qt keeps its LIGHT default palette under the style. Measured: docs/notes/desktop/theme.md
   qt = {
     enable = true;
-    platformTheme.name = "kvantum"; # QT_QPA_PLATFORMTHEME=kvantum -> Kvantum sets the palette
+    platformTheme.name = "qtct"; # QT_QPA_PLATFORMTHEME=qt5ct, a key qt6ct answers to as well
     style.name = "kvantum"; # QT_STYLE_OVERRIDE=kvantum -> Kvantum draws the widgets
   };
+
+  # The palette comes from the Kvantum theme (custom_palette off), and the font from fontconfig
+  # (decision 0002). One text for both: Qt 5 and Qt 6 apps read their own file.
+  xdg.configFile = lib.genAttrs [ "qt5ct/qt5ct.conf" "qt6ct/qt6ct.conf" ] (_: {
+    text = lib.generators.toINI { } {
+      Appearance = {
+        custom_palette = false;
+        icon_theme = config.my.theme.iconTheme;
+        standard_dialogs = "default";
+        style = config.qt.style.name;
+      };
+    };
+  });
+
+  xdg.dataFile."color-schemes/${config.my.theme.slug}.colors".text = kdeColors;
 
   # It selects the recolored theme and copies it into ~/.config/Kvantum.
   qt.kvantum = {

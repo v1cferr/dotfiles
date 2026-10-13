@@ -206,9 +206,10 @@ need their guard back, or dwindle spits an error toast PER EVENT; see [`keybinds
 format, which falls back to XCursor when the theme has no hyprcursor variant. GTK apps pick the
 cursor up from gsettings, not from here.
 
-The Qt vars are pinned here even though the qt module already sets them as session vars, because on
-Wayland the session does not always load them, and pinning guarantees the dark look in apps opened
-by Hyprland. `QT_QPA_PLATFORM = "wayland;xcb"` makes Qt run natively with an xcb fallback:
+The Qt vars are set here even though the qt module already sets them as session vars, because on
+Wayland the session does not always load them. Their VALUES come from `hypr-colors.lua`, generated
+from `qt.*` in `theme.nix`, so the two can never disagree again (they did until 13/10/2026: the Lua
+pinned `gtk3`, see [theme](theme.md)). `QT_QPA_PLATFORM = "wayland;xcb"` makes Qt run natively with an xcb fallback:
 flameshot needs it to position the overlay and picker correctly.
 
 ### Autostart

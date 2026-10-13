@@ -137,6 +137,10 @@ in
     # A KConfigXT enum: write the choice's NAME, not the index.
     run "$kw" --file "$HOME/.config/dolphinrc" --group General --key ShowStatusBar FullWidth
 
+    # The palette's color scheme (theme.nix writes it). Outside Plasma only the app's own choice
+    # loads one; without it the file view is Breeze's, gray or light.
+    run "$kw" --file "$HOME/.config/dolphinrc" --group UiSettings --key ColorScheme ${config.my.theme.slug}
+
     # SingleClick was TRIED and REMOVED (07/08/2026): it is BEHAVIOR, not a pixel, and it lives in
     # kdeglobals, so it would change every KDE app. Do not reintroduce it.
 

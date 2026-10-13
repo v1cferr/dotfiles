@@ -25,7 +25,7 @@ that is GTK, mpv (OSD), yazi, fzf, starship, MangoHud (colors only) and gdu. Eac
 `stylix.nix` with its reason, in three groups:
 
 - **Themed here from the same palette**, with keys base16 has no slot for: Hyprland (Lua written
-  by hand), hyprlock, hyprpaper, Qt/Kvantum, rofi, Zen, VS Code (its settings.json is in the repo).
+  by hand), hyprlock, hyprpaper, Qt (Kvantum plus a KDE color scheme), rofi, Zen, VS Code (its settings.json is in the repo).
 - **An official per-app theme beats a generic base16 one**: kitty, bat (and delta through it),
   Spotify, btop. Measured for kitty: base16 has no bright ANSI slots, so Stylix painted color8
   `#292e42` (zsh autosuggestions near invisible) and every bright color the same as its normal one.
@@ -45,17 +45,33 @@ btop to `TTY`. Proved with `base16:dracula`: Quickshell, Hyprland, GTK, kitty, b
 fzf all followed. A stock scheme may not match the official colors of the theme it is named after;
 `tokyo-night-dark` does not (the table in decision 0012).
 
-Qt/KDE apps (Dolphin) do NOT follow GTK on their own under Hyprland. This used to follow GTK
-(`platformTheme gtk3` plus `adwaita-dark`); now Qt is 100% Kvantum for the Windows 11 theme in
-Dolphin. Kvantum takes over EVERYTHING in Qt (palette plus widgets), so the gtk3-follow was
-dropped. The GTK and Electron apps are unchanged.
+Qt/KDE apps (Dolphin) do NOT follow GTK on their own under Hyprland. Three layers put them on the
+palette, and each one was MEASURED missing on 13/10/2026 before it went in:
 
-`QT_QPA_PLATFORMTHEME=kvantum` makes Kvantum set the palette, `QT_STYLE_OVERRIDE=kvantum` makes it
-draw the widgets. **Measured on 13/10/2026, that is not what runs**: `hypr/lua/environment.lua` still
-sets `gtk3` and `adwaita-dark`, and Hyprland exports them, so Quickshell and flameshot run with
-`QT_QPA_PLATFORMTHEME=gtk3`. Switching to the declared `kvantum` on a headless sway drew Dolphin with
-white alternate rows, so it was NOT flipped blind; it is an open item. The engine's plugin (`qtstyleplugin-kvantum`) comes through the qt module itself,
-the same exception as `adwaita-qt`.
+| Layer | What it does | Without it |
+| --- | --- | --- |
+| `QT_STYLE_OVERRIDE=kvantum` | the recolored Win11OS theme draws the widgets | Qt's own Fusion look |
+| `QT_QPA_PLATFORMTHEME=qt5ct` (qt6ct answers to it) | hands Kvantum's palette to the app (`custom_palette=false`) | Qt keeps its LIGHT default palette: dark text on `#F0F0F0` rows |
+| the KDE color scheme `<slug>.colors`, selected in `dolphinrc` | KDE apps paint their views from KColorScheme, not from the style | Breeze's colors (Breeze Dark under gtk3, `#141618`) |
+
+The old declared value, `platformTheme.name = "kvantum"`, was never real: there is no `kvantum`
+platform theme plugin, so Qt silently used none. It never showed, because `hypr/lua/environment.lua`
+pinned `gtk3` and `adwaita-dark` over it; that pin is gone, and the Lua now reads the pair from the
+generated `hypr-colors.lua`, so `qt.*` in `theme.nix` is the only owner (rule 11).
+
+**The color scheme is chosen PER APP.** Outside Plasma, `kdeglobals [General] ColorScheme` is
+ignored (measured); only the app's own `[UiSettings] ColorScheme` loads it, so `dolphin.nix` sets
+Dolphin's. Another KDE app that shows Breeze colors needs the same one key in its own module.
+
+**The Kvantum theme is OPAQUE.** Win11OS ships `translucent_windows` and `blurring` on, which put the
+wallpaper behind Dolphin's file names on screen; the build turns both off, so Qt windows are as solid
+as the GTK ones.
+
+How it was measured, for the next time: a headless output (`hyprctl output create headless`) plus
+`grim -o`, out of sight. Close `dolphin --daemon` first: a new `dolphin` is handed to the running
+instance over D-Bus, and that instance keeps the environment it started with, so every variant
+measures the same process. The engine's plugin (`qtstyleplugin-kvantum`) and qt6ct come through the
+qt module itself, the same exception as `adwaita-qt`.
 
 ## Fonts and cursor
 

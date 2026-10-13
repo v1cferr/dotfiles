@@ -1,6 +1,15 @@
 # History: october 2026
 
-3 entries. Index in [README.md](../README.md).
+4 entries. Index in [README.md](../README.md).
+
+- [x] Qt is on the palette, closing the item the Stylix entry below left open (13/10/2026). The
+      layers and the measurements are in [notes/desktop/theme.md](../../notes/desktop/theme.md).
+      • THE DECLARED KVANTUM HAD NEVER RUN. `platformTheme.name = "kvantum"` names a plugin that
+        does not exist, and the Lua pinned `gtk3` over it anyway, so Dolphin wore Breeze Dark gray.
+      • THREE LAYERS, EACH MEASURED MISSING: qt6ct hands Kvantum's palette to the app, and a KDE
+        color scheme generated from the palette paints Dolphin's views, which ignore the style.
+      • A FALSE TRAIL FIRST. Every variant measured the same colors because `dolphin --daemon`
+        took each new window over D-Bus, with the environment it had started with.
 
 - [x] Stylix applies the palette to every app it knows, and the theme switches to any base16
       scheme (13/10/2026). Recorded as [decision 0012](../../decisions/0012-stylix-applies-the-palette.md);

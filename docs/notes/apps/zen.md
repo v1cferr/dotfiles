@@ -175,4 +175,14 @@ Marionette marks it as automated (`navigator.webdriver`). The lab still launches
 guarded package, so it does not open a way around the launch guard.
 
 Measured on 13/10/2026: the screenshot captures the whole window, sidebar included, while it
-sits on the hidden special workspace.
+sits on the hidden special workspace. Two limits, both measured the same day:
+
+- **Popups are not in it.** The suggestions panel, menus and the Glance are separate Wayland
+  surfaces, so `shot` misses them; `grim -o <monitor>` through the compositor gets them.
+- **Popups need focus.** Firefox closes a popup on a window with no focus, so for those the lab
+  has to be on screen: `hyprctl dispatch 'hl.dsp.workspace.toggle_special("zenlab")'` shows and
+  hides it. Typing goes through Marionette's `WebDriver:ElementSendKeys`; `gURLBar.search()`
+  alone does not open the panel.
+
+`InspectorUtils.getMatchingCSSRules(el)` in an `eval` is what names the rule behind a color,
+which is how the inline per-space copies and the `-moz-dialog` status bar were found.

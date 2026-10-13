@@ -120,6 +120,11 @@ let
       eval | css | shot) client "$@" ;;
       stop)
         client quit || true
+        # Zen writes its profile on the way out, so the cleanup waits for the process to be gone.
+        for _ in {1..40}; do
+          pgrep -f -- "--profile $dir" > /dev/null || break
+          sleep 0.25
+        done
         rm -rf "$dir" "$dir.log"
         ;;
       *)

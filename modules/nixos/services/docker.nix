@@ -1,11 +1,20 @@
 # DOCKER: the automatic PRUNE policy only; the ENGINE is turned on by the stacks that need it.
 # The 11 GB that had no ceiling, and the 2 options that: docs/notes/services/docker-prune.md
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
+  inherit (pkgs) lazydocker;
   docker = config.virtualisation.docker.package;
 in
 lib.mkIf config.virtualisation.docker.enable {
+  # Containers, logs, stats and exec in one TUI; it only exists where the engine does.
+  environment.systemPackages = [ lazydocker ];
+
   virtualisation.docker.autoPrune = {
     enable = true;
 

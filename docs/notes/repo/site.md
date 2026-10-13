@@ -396,6 +396,14 @@ is shiki's official theme for the same preset (`tokyo-night` today), so a fence 
 editor. A host's `my.theme.name` does not reach the site: it is public and built in CI, so it wears
 the default.
 
+**A diagram opens full screen, with zoom and pan, since 13/10/2026.** A wide flowchart scaled into
+the text column was drawn at a third of its size and unreadable, so `components/diagram-viewer.tsx`
+wraps every diagram: a click on it, or its expand button, opens a native `<dialog>` that fits the
+SVG to the screen, zooms with the wheel around the cursor, pans by dragging, and downloads the SVG.
+It is pointer events and a CSS transform, so nothing joined the lockfile (decision 0010 holds), and
+the copy of the SVG exists only while the dialog is open, so a page still draws each diagram once.
+The dialog is named after the diagram's `accTitle`, which every diagram here carries anyway.
+
 **Steps are a GUIDE's numbered headings, and only a guide's.** Fumadocs' `remarkSteps` turns any
 `### 1. Title` into a step, and run over everything it would have turned the 23 cards of
 `rules.md` into a procedure, where the number is API and not an order. `remarkGuideSteps` in

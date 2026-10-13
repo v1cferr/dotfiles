@@ -4,6 +4,7 @@
 // pinned in the lockfile, so no reader fetches a moving pointer: docs/notes/repo/site.md
 import { useTheme } from 'next-themes';
 import { use, useId, useSyncExternalStore } from 'react';
+import { DiagramViewer } from './diagram-viewer.tsx';
 
 export function Mermaid({ chart }: { chart: string }) {
   // `false` on the server and during hydration: mermaid measures text, so it needs a DOM.
@@ -84,13 +85,20 @@ function MermaidContent({ chart }: { chart: string }) {
     cachePromise(`${chart}-${resolvedTheme}`, () => mermaid.render(id.replace(/:/g, ''), chart)),
   );
 
+  // The diagram's accTitle names the full-screen view; every diagram in docs/ carries one.
+  const title = /^\s*accTitle:\s*(.+)$/m.exec(chart)?.[1]?.trim() ?? 'Diagram';
+
   return (
-    <div
-      className="fd-mermaid my-6 flex justify-center overflow-x-auto rounded-lg border bg-fd-card p-4"
-      ref={(container) => {
-        if (container) bindFunctions?.(container);
-      }}
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+    <div className="my-6">
+      <DiagramViewer svg={svg} title={title}>
+        <div
+          className="fd-mermaid flex justify-center overflow-x-auto rounded-lg border bg-fd-card p-4"
+          ref={(container) => {
+            if (container) bindFunctions?.(container);
+          }}
+          dangerouslySetInnerHTML={{ __html: svg }}
+        />
+      </DiagramViewer>
+    </div>
   );
 }

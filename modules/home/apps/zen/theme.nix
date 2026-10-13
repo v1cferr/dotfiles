@@ -37,15 +37,37 @@ let
         --zen-main-browser-background-old: ${c "bg"} !important;
         --zen-main-browser-background-toolbar-old: ${c "bg"} !important;
       }
-      :root {
+      /* Each space (zen-workspace) carries its own inline copy of these two, so the tab list
+         ignored :root until the space was listed too. */
+      :root,
+      zen-workspace {
         --zen-primary-color: ${c "accent"} !important;
         --toolbox-textcolor: ${c "text"} !important;
+      }
+      :root {
+        --tab-text-color-selected: ${c "text"} !important;
+        --input-color: ${c "text"} !important; /* the address bar; Zen still dims it to 70% at rest */
+        --zen-big-shadow: none !important; /* the page's 8px drop shadow, for a flat frame */
+        --arrowpanel-background: ${c "surface"} !important; /* menus and panels */
+        --arrowpanel-color: ${c "text"} !important;
+        --arrowpanel-border-color: ${c "border"} !important;
         --zen-branding-dark: ${c "bg"} !important;
         --zen-themed-toolbar-bg-transparent: ${c "bg"} !important;
         --zen-dialog-background: ${c "surface"} !important;
         --zen-urlbar-background: ${c "surface"} !important;
         --zen-colors-border: ${c "border"} !important;
         --zen-input-border-color: ${c "border"} !important;
+      }
+      /* The two that no variable reaches. The suggestions popup is a 15% white over a black
+         native backdrop; the hovered-link status bar is drawn in GTK's -moz-dialog. */
+      #urlbar .urlbar-background {
+        background: ${c "surface"} !important;
+        border-color: ${c "border"} !important;
+      }
+      #statuspanel-label {
+        background-color: ${c "surface"} !important;
+        border-color: ${c "border"} !important;
+        color: ${c "subtext"} !important;
       }
     }
   '';

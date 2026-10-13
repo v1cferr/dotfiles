@@ -2,6 +2,7 @@
 # The portal-only capture and what broke on the way: docs/notes/apps/flameshot.md
 {
   config,
+  lib,
   osConfig,
   pkgs,
   inputs,
@@ -22,6 +23,19 @@ let
   # The Quickshell package (a flake input), bound once because the path repeats below.
   qsPkg = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
   fs = unstable.flameshot; # v14
+
+  p = config.my.theme.palette; # SSOT: modules/home/desktop/palette.nix (rule 11, decision 0001)
+  # The pen's swatches, in hue order: the palette's accents, then its text for a neutral mark.
+  penColors = [
+    "red"
+    "orange"
+    "yellow"
+    "green"
+    "cyan"
+    "blue"
+    "magenta"
+    "text"
+  ];
 
   # flameshot-screenshot: the v14 picker only takes a CLICK, so this opens it and enters a submap,
   # but ONLY with 2+ monitors, which is when a picker exists at all. The watcher resets the submap.
@@ -111,7 +125,7 @@ let
       idx="$(hyprctl monitors -j | jq -r --arg t "$target" '
         ([ .[] | { name, id } ] | sort_by(.id) | map(.name) | index($t)) // empty')"
       if [ -z "$idx" ]; then
-        hyprctl notify -1 2000 "rgb(${config.my.theme.palette.red})" "$target is not connected" >/dev/null 2>&1 || true
+        hyprctl notify -1 2000 "rgb(${p.red})" "$target is not connected" >/dev/null 2>&1 || true
         exit 0
       fi
 
@@ -161,8 +175,9 @@ in
     saveAsFileExtension=.png
     contrastOpacity=128
     showHelp=false
-    drawColor=#ff0000
+    drawColor=#${p.red}
     drawThickness=3
-    uiColor=#${config.my.theme.palette.purple}
+    uiColor=#${p.purple}
+    userColors=picker, ${lib.concatMapStringsSep ", " (k: "#${p.${k}}") penColors}
   '';
 }

@@ -96,6 +96,10 @@ let
       }
 
       case "''${1:-}" in
+      profile)
+        # The lookup's only owner, so the theme's activation reads the same profile (rule 11).
+        profile_dir
+        ;;
       arm)
         profile=$(profile_dir) || {
           echo "<4>zen-guard: no Zen profile under ~/.zen, staying DISARMED"
@@ -136,7 +140,7 @@ let
         exit 1
         ;;
       *)
-        echo "usage: zen-guard arm|check" >&2
+        echo "usage: zen-guard arm|check|profile" >&2
         exit 2
         ;;
       esac
@@ -155,7 +159,15 @@ let
   };
 in
 {
+  imports = [ ./zen/theme.nix ];
+
   options.my.zen = {
+    guard = lib.mkOption {
+      type = lib.types.package;
+      default = guard;
+      readOnly = true;
+      description = "The guard script; `zen-guard profile` prints the default profile's directory.";
+    };
     package = lib.mkOption {
       type = lib.types.package;
       default = guarded;

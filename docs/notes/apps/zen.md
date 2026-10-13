@@ -1,7 +1,8 @@
 # Zen: the launch guard, and the NSS check that had to be written backwards
 
 `modules/home/apps/zen.nix`. The browser, plus a guard that closes it when the screen stays locked and asks
-for Zen's own primary password on the next launch.
+for Zen's own primary password on the next launch. Its theme is
+[the last section](#the-theme-the-palette-on-zens-own-variables).
 
 ## What this is NOT, and why that is the point
 
@@ -117,3 +118,34 @@ protect and switch off in `about:addons`.
 **Hiding the windows in a Hyprland special workspace** instead of closing Zen: no session loss and no
 preconditions at all, but the browser stays in RAM one `hyprctl dispatch` away. It is the fallback if
 closing the browser ever becomes annoying in practice.
+
+## The theme: the palette on Zen's own variables
+
+`modules/home/apps/zen/theme.nix`. A rewrite and not a port of the Arch `userChrome.css`
+(`arch:zen-browser/userChrome.css`, 618 lines). That one painted element by element (`#urlbar`,
+`#identity-box`, `.searchmode-switcher`...) with the hexes typed by hand, so every Zen update that
+renamed an element broke a piece in silence, and the palette lived twice. Measured on Zen 1.23b
+(`zen-styles/zen-theme.css` inside `omni.ja`): the whole UI derives from `--zen-primary-color` and
+`--zen-branding-dark` through `color-mix()`, so overriding about ten VARIABLES recolors it, and
+the colors come from `my.theme.palette`, the same source as kitty, rofi and Quickshell.
+
+Two things the measurement decided:
+
+- **Every line is `!important`.** `userChrome.css` is a USER sheet, so it loses to Zen's author
+  sheet, and the gradient generator writes `--zen-primary-color` and
+  `--zen-main-browser-background` INLINE on `<html>` at runtime (`ZenGradientGenerator.mjs`).
+- **It links into the profile the guard finds** (`zen-guard profile`), since the profile dir is a
+  random name Zen chose. That is the lookup's only owner, and an activation script that cannot
+  find a profile does nothing instead of failing the switch. The Arch symlink there pointed at
+  `~/dotfiles/zen-browser/`, a path gone since the cutover, so the old theme had been off since then.
+
+**Switching back to the stock theme, live:** in `about:config`, create `my.zen.stock-theme` as a
+Boolean and set it to `true`. The whole sheet sits under `@media not -moz-pref(...)`, the same
+query Zen's own CSS uses, so the flip applies at once and survives restarts (it lives in
+`prefs.js`). Deleting the pref, or setting it to `false`, brings the palette back. Uninstalling
+for good is removing `./zen/theme.nix` from the imports: the activation stops relinking, and the
+two dead symlinks are deleted by hand.
+
+`user.js` declares only `toolkit.legacyUserProfileCustomizations.stylesheets`, without which Gecko
+ignores the sheet. The Arch `user.js` also forced VA-API and DMABUF past Firefox's blocklist, but
+that was for the NVIDIA card; with the Arc those are a separate question and stay out.

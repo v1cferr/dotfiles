@@ -10,6 +10,16 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
+- [ ] Refine the Zen theme, by hand and at my own pace (opened 13/10/2026). The minimal one in
+      `modules/home/apps/zen/theme.nix` recolors Zen through its own variables; what it does NOT
+      do yet is the rest of the old Arch look (`arch:zen-browser/userChrome.css`), which needed
+      cleaning anyway. How it works and how to flip to stock: [notes/apps/zen.md](notes/apps/zen.md).
+      • THE RULE THAT KEEPS IT CLEAN: a variable first, a selector only when no variable reaches
+        the element, and every color from `my.theme.palette`, never a typed hex.
+      • THE TRAP: a user sheet loses to Zen's author sheet, so a new line without `!important`
+        looks like it did nothing. Iterate with the Browser Toolbox (`devtools.chrome.enabled`),
+        then move the result into the Nix file.
+
 - [ ] What the layout move left shared on purpose, to split the day a SECOND host exists (opened
       30/09/2026). [Decision 0009](decisions/0009-modules-hosts-tools-layout.md) made hosts pick
       their device modules; these four stayed where they are because splitting them now would

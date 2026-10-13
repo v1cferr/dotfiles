@@ -279,6 +279,18 @@ override when mermaid moves to a chevrotain that no longer pins 4.17.23 (13.x do
 lodash-es at all); check with `pnpm why lodash-es` inside `tools/docs-site/`, which should list only one
 version.
 
+**Two more overrides, since 13/10/2026, both for packages that ride in with `next`.** `pnpm audit`
+flagged them after the bump to `next` 16.4.0, which fixed its own advisories:
+
+- `source-map-js@<1.2.2` is forced to `1.2.2`, a patch inside 1.x, reached through `next > postcss`.
+  REMOVE it when `next` ships a postcss that already pulls 1.2.2 or later (`pnpm why source-map-js`).
+- `sharp` is REMOVED from the tree (`"-"`). It is `next`'s optional image optimizer, and this site
+  sets `images.unoptimized` because a static export cannot run it, so the package was dead weight
+  carrying a high advisory. If the site ever serves optimized images, the override goes first.
+
+Both run only at BUILD time, in the sandbox, so neither ever reached a reader; they leave because
+an audit that is never clean is an audit nobody reads.
+
 **No webfont, for the same reason.** Material linked Roboto from `fonts.gstatic.com` on every
 page; Fumadocs UI ships no default font at all, so there is nothing to turn off. The stack in
 `tools/docs-site/app/global.css` is `system-ui` for prose and JetBrains Mono for code, neither of them

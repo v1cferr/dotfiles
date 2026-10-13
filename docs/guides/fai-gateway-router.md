@@ -40,8 +40,8 @@ the tunnel itself:
 ip route show dev ppp0 | grep via | awk '{print $1}'
 ```
 
-**THIS PART IS ALREADY DONE** (verified 12/08/2026). The six routes exist as NAMED
-sections `fai_r1` through `fai_r6`, see
+**THIS PART IS ALREADY DONE** (verified 12/08/2026, reshaped 13/10/2026). The nine routes
+exist as NAMED sections `fai_r1` through `fai_r9`, see
 [`hosts/cudy-wr3000/uci/network.conf`](../../hosts/cudy-wr3000/uci/network.conf). They predate this guide and sat
 there for years with no effect, because they pointed at a `192.168.1.10` that did not
 forward: **the missing half was the PC's**, not this one.
@@ -67,30 +67,25 @@ for net in 192.168.90.0 192.168.100.0 192.168.110.0 192.168.130.0 192.168.223.0;
   sudo uci set network.fai_r$i.gateway='192.168.1.10'
   i=$((i+1))
 done
-sudo uci set network.fai_r6=route
-sudo uci set network.fai_r6.interface='lan'
-sudo uci set network.fai_r6.target='200.136.209.128'
-sudo uci set network.fai_r6.netmask='255.255.255.128'
-sudo uci set network.fai_r6.gateway='192.168.1.10'
+for host in 200.136.209.229 200.136.209.247 200.136.209.248 200.136.209.252; do
+  sudo uci set network.fai_r$i=route
+  sudo uci set network.fai_r$i.interface='lan'
+  sudo uci set network.fai_r$i.target="$host"
+  sudo uci set network.fai_r$i.netmask='255.255.255.255'
+  sudo uci set network.fai_r$i.gateway='192.168.1.10'
+  i=$((i+1))
+done
 sudo uci commit network
 sudo /etc/init.d/network reload   # <- asks for the password
 ```
 
-**And the exception that keeps the public site alive** (added 29/09/2026). The /25 above also
-holds `200.136.209.236`, the address of every public `*.fai.ufscar.br` name, and without this
-host route it dies with the VPN for the whole house. One `fai_pub*` section per entry of
-`faiPublicHosts` in [`modules/nixos/network/fai-gateway.nix`](../../modules/nixos/network/fai-gateway.nix), a /32 on
-`wan` with no gateway; why it exists is in
-[`../notes/network/network.md`](../notes/network/network.md):
-
-```sh
-sudo uci set network.fai_pub1=route
-sudo uci set network.fai_pub1.interface='wan'
-sudo uci set network.fai_pub1.target='200.136.209.236'
-sudo uci set network.fai_pub1.netmask='255.255.255.255'
-sudo uci commit network
-sudo /etc/init.d/network reload   # <- asks for the password
-```
+**The public /25 is NOT routed whole, on purpose** (13/10/2026). It also holds
+`200.136.209.236`, the address of every public `*.fai.ufscar.br` name, and sending the /25 here
+took that site down with the VPN for the whole house. The four /32s are `faiTunnelHosts` in
+[`modules/nixos/network/fai-gateway.nix`](../../modules/nixos/network/fai-gateway.nix), the
+hosts that only answer through the tunnel. Never fix this with an exception bound to `wan`: that
+was tried and it vanished on the first PPPoE reconnect. The whole story is in
+[`../notes/network/network.md`](../notes/network/network.md).
 
 ## Part 2: split-DNS for the FAI zones
 

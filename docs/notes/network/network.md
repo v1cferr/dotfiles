@@ -635,7 +635,7 @@ survives a card swap. REJECT and not DROP, on purpose: the ICMP net-unreachable 
 fail RIGHT AWAY with "no route to host" instead of hanging, which is the best possible for the
 hosts that only answer through the tunnel.
 
-### The public face bypasses the /25 through the WAN (29/09/2026)
+### The public face stays on the default route (29/09/2026, redone 13/10/2026)
 
 The note above used to say the site cannot work without the VPN, "measured: neither .236 nor
 .229 accepts a connection from outside". **Half of that was wrong, and the wrong half is the
@@ -648,22 +648,28 @@ Brazilian vantage (check-host.net `br1`, 29/09/2026) the split is clean:
 | `.229` workstation, `.248` fai-vm | refused |
 | `.247`, `.252` AD DNS | timed out |
 
-So the router's `fai_r6` (the whole /25 to this host) was taking `sistemas.fai.ufscar.br` down
-with the VPN for EVERY device in the house, this one included: this host's own packet goes out
-the default, the router hands it back, and the anti-loop REJECT kills it.
+So the router's old `fai_r6` (the whole /25 to this host) was taking `sistemas.fai.ufscar.br`
+down with the VPN for EVERY device in the house, this one included: this host's own packet goes
+out the default, the router hands it back, and the anti-loop REJECT kills it.
 
-The fix is a longest-prefix exception on the router, `fai_pub1`: `200.136.209.236/32` on
-interface `wan`, no gateway. It out-prefixes the /25, so the public face always leaves through
-`pppoe-wan`, and the rest of the /25 still goes through this host to the tunnel. With the VPN
-up nothing changes here: `ppp0` carries the /25 for this host's own traffic, since the IPCP
-installs it. The list lives in `faiPublicHosts` in `fai-gateway.nix`: `router-ssot` checks
-the `fai_pub*` routes against it as set equality, and `fai-routes-check` flags an entry the
-tunnel no longer carries, whose exception is then dead weight.
+**The first fix lasted eight days.** It was a longest-prefix exception, `fai_pub1`:
+`200.136.209.236/32` on interface `wan`, no gateway. A route bound to `wan` lives and dies with
+the PPPoE session, and when the session was rebuilt on 07/10/2026 (the router reboot plus the
+`ifup wan` of the Battle.net checkpoint) netifd did not put it back, while every route bound to
+`lan` survived. The /25 won again and the site timed out with no change anywhere in config.
 
-**Deleting `fai_r6` instead was rejected**: the router's own split-DNS for `fai2008.ufscar.br`
-asks `.252`/`.247`, which only answer through the tunnel, and so does anything at home that
-wants the workstation. A name that shows up at a NEW public address in the /25 needs one more
-entry, and the test is the same probe from Brazil, never one from abroad.
+**So the logic is inverted.** The router no longer sends the public /25 here at all: `fai_r6`
+through `fai_r9` are /32s on `lan` for the four hosts that only answer through the tunnel, the
+ones in the table above. Everything else in the /25 rides the default route, so the public face,
+and any public address FAI adds later, needs no entry and survives any reconnect. The private
+/24s keep their `fai_r1`..`fai_r5`. With the VPN up nothing changes for this host: the IPCP
+installs the whole /25 on `ppp0` for its own traffic.
+
+The price is an internal host in the /25 that is NOT listed: this host still reaches it through
+`ppp0`, the rest of the house does not. The list is `faiTunnelHosts` in `fai-gateway.nix`;
+`router-ssot` checks the `fai_r*` set against the private `faiSubnets` plus those /32s, and
+`fai-routes-check` flags an entry the tunnel no longer carries. Before adding one, probe it from
+Brazil, never from abroad.
 
 The static routes and the split DNS live in the router's UCI, and
 [`router.nix`](../../../modules/nixos/network/router.nix) refuses to push on purpose. The commands are in

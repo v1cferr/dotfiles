@@ -47,6 +47,8 @@ in
     };
 
     shellAliases = {
+      grep = "grep --color=auto"; # GNU grep colors nothing without it, and NixOS sets no alias
+
       # CAREFUL: `-d` deletes ALL old generations, so there is no rollback afterwards.
       gc = "sudo nix-collect-garbage -d";
 

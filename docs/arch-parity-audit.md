@@ -37,6 +37,35 @@ So the real comparison is **`main` against `nixos`**, and the tag is a history a
 than a source of files. The wallpapers dominate `main`'s count (369 of the 659), which is why
 the file totals say less than the area totals below.
 
+## Re-measured on 13/10/2026
+
+The same sweep, a month and the rename later. Of the 16 tail areas, most closed on their own while
+other work went by, and the rest were decided one by one with the Arch tree open in `arch`. The
+sections below this one are left as measured on 08/09, so read this table first.
+
+| Area | Now | Where, or why |
+| --- | --- | --- |
+| atuin | Ported | `programs.atuin` in `modules/home/shell/cli.nix`, on Ctrl+R |
+| easyeffects | Replaced | The speaker EQ is a PipeWire filter-chain in `modules/nixos/hardware/audio.nix` |
+| spicetify | Ported | `modules/home/apps/spotify.nix` |
+| nano | Ported, as a decision | `EDITOR=nano` in `zsh.nix`. Its syntax files come with nano 9.2; the Arch `.nanorc` only pulled a third-party set whose nixpkgs copy is from 2020 |
+| neovim | Dropped | Stock LazyVim boilerplate, nothing personal in it (see the corrected entry below) |
+| zsh | Mostly ported | Ctrl+arrows, double-Esc sudo, the YouTube aliases (`ytmix` is the shuffled playlist). Left: `fhome`/`froot`, fastfetch at startup, the small ones |
+| kitty | Closed | Only `cursor_shape beam` came back. The rest was kitty's own defaults (`wheel_scroll_multiplier 5.0`, `repaint_delay`, `input_delay`, `sync_to_monitor`, `disable_ligatures never`), and F8/F9/F10 were refused: they duplicate binds that exist and steal F9/F10 from htop and btop |
+| btop | Ported, and better | Arch ran `Default`; now `tokyo-night`, set in place because btop owns its file (rule 14). bat and delta followed in the same pass |
+| vlc | Nothing to port | `vlcrc` held one active line, `qt-privacy-ask=0` |
+| gh | Ported | `programs.gh` in `modules/home/shell/git.nix` |
+| zen-browser | Rewritten | A minimal palette theme on Zen's own variables, `modules/home/apps/zen/theme.nix`. `zen-sync` is the activation now. Refining it is an open item |
+| hypr: wallpaper rotation | Ported | The september wallpaper work, per monitor, from my own pools |
+| hypr: 3-minute idle dim | Dropped | Not used and not wanted. It lived in Arch's `idle-dim.sh`, a listener that zeroed the gamma at 180 s before the lock at 300 s |
+| hypr: lockscreen notification count | Still missing | `qs ipc call notif count` exists in `Notifs.qml`, but no hyprlock label reads it |
+| `bin/` | Closed | `vpn`, `wake-workstation` ported; `hypr-quick`'s wallpaper actions went with the rotation; `zen-sync` became the theme's activation |
+| `scripts/` | Closed | Arch by nature, as measured below |
+| homelab and the Caddy set | Open, as its own project | 7 vhosts declared now (`photos` and `memory` are new). The \*arr stack, open-webui, Homepage, FileBrowser, spendflow, `ap` and RustDesk are still absent |
+| polychromatic | Undecided | No openrazer daemon to drive it; the same missing layer as the OpenRGB item |
+| opencode | Undecided | Claude Code, codex and agy are declared already |
+| lazydocker | Undecided | One package, no config worth carrying |
+
 ## The verdict
 
 53 configuration areas on the Arch side, and the split is what a finished migration looks like

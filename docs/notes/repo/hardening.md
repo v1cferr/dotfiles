@@ -35,7 +35,7 @@ score reads 9.6 where the offline one reads 9.4):
 
 ## Who does not, and why
 
-- **`btrfs-alert-scrub`, `btrfs-alert-devstats`**: they reach the user's session (`runuser`, the
+- **`btrfs-alert-scrub-*`, `btrfs-alert-devstats`**: they reach the user's session (`runuser`, the
   D-Bus under `/run/user`) to raise the only alarm a failing disk gets. A restriction that broke
   them would fail in silence, which costs more than it saves.
 - **`openrgb-gpu`**: it needs the GPU's i2c bus.

@@ -18,13 +18,20 @@ breaking with a scrub unit pointing at a filesystem that has no checksums.
 Without a scrub the checksum only reports an error when you happen to read the rotten sector,
 which is to say on the day the file matters. On ext4 that did not even exist.
 
-ONE target is enough: a scrub is per FILESYSTEM, not per subvolume, so `/` already covers `@home`,
-`@nix`, `@persist` and `@log`, which are all the same `/dev/nvme0n1p2`.
+ONE target is enough for the NVMe: a scrub is per FILESYSTEM, not per subvolume, so `/` already
+covers `@home`, `@nix`, `@persist` and `@log`, which are all the same `/dev/nvme0n1p2`.
 
-The unit's name is DERIVED (`utils.escapeSystemdPath`), not written by hand: the autoScrub module
-names the unit with the escaped path (`/` becomes `-`, hence `btrfs-scrub--`), and deriving it
-means the `onFailure` follows if the target ever changes instead of pointing at a nonexistent
-unit.
+The SECOND target is the backup disk (`my.backup.mountPoint`, `/mnt/backup`), since 13/10/2026. It
+is btrfs too and holds the only other copy of the data, and the `check` after each restic run reads just 2%
+of the packs, so rot there would only show up on restore day. It is included only when restic is on
+AND that mount is btrfs, and the automount means the scrub's own access wakes the disk. Its alarm
+says something different from the NVMe's: the live data is fine, the BACKUP copy is what is
+damaged, and `restic check --read-data` tells which snapshots it touched.
+
+The unit names are DERIVED (`utils.escapeSystemdPath`), not written by hand: the autoScrub module
+names each unit with the escaped path (`/` becomes `-`, hence `btrfs-scrub--`, and `/mnt/backup`
+becomes `btrfs-scrub-mnt-backup`), and its alarm is `btrfs-alert-scrub-<same>`. Deriving them
+means the `onFailure` follows if a target ever changes instead of pointing at a nonexistent unit.
 
 `btrfs scrub start -B` exits non-zero when it finds an error, correctable or not, and it is that
 exit that becomes the alarm. BEFORE this, the scrub ran and failed silently, and a scrub nobody

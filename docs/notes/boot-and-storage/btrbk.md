@@ -30,7 +30,7 @@ flowchart LR
         HOME["@home"] -->|"hourly, onchange<br>48h 7d 4w"| SNAP["@snapshots<br>/.snapshots"]
     end
 
-    HOME -->|"restic, daily"| SEA["the Seagate, /mnt/backup<br>btrfs"]
+    HOME -->|"restic, daily"| SEA["the Seagate, /mnt/backup<br>btrfs, scrubbed monthly"]
     SEA -.-x|"restic copy, not yet"| OFF["offsite<br>NONE, decision 0008"]
 ```
 

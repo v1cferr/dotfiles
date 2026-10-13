@@ -1,4 +1,4 @@
-# MEDIA: Gwenview (KDE), Papers/Readest for documents, plus VLC and mpv.
+# MEDIA: Gwenview (KDE), Papers for documents, plus VLC and mpv.
 # ALWAYS the CANONICAL mimetype, never an alias: docs/notes/apps/apps-and-mime.md
 { pkgs, ... }:
 
@@ -7,7 +7,6 @@ let
   app = {
     gwenview = "org.kde.gwenview.desktop";
     papers = "org.gnome.Papers.desktop";
-    readest = "readest.desktop";
     vlc = "vlc.desktop";
   };
 
@@ -25,8 +24,9 @@ in
 {
   home.packages = with pkgs; [
     kdePackages.gwenview # an image viewer (KDE): basic editing plus thumbnails
-    papers # the PDF/CBZ reader (GNOME, GTK4/libadwaita, recolored by Stylix) plus annotations
-    readest # the EPUB reader (Tauri + Next.js); it opens PDFs too, by hand
+    # The ONE document reader (GTK4/libadwaita, recolored by Stylix). Its Nautilus extension
+    # dragged in Nautilus, gnome-user-share and apache-httpd; the file manager here is Dolphin.
+    (papers.override { supportNautilus = false; })
     kdePackages.kimageformats # format plugins for KDE apps: AVIF/HEIF/JXL/PSD/RAW
     kdePackages.qtimageformats # Qt plugins: WebP/TIFF/ICNS (it complements kimageformats)
     vlc # the do-everything GUI video player (it is the video default, further down)
@@ -69,7 +69,6 @@ in
       "image/vnd.adobe.photoshop" = app.gwenview; # .psd (through kimageformats)
       # Documents.
       "application/pdf" = app.papers;
-      "application/epub+zip" = app.readest; # Papers does not open EPUB
       "application/vnd.comicbook+zip" = app.papers; # .cbz
       # Video. mpv is left for opening by hand or from the CLI.
       "video/mp4" = app.vlc; # .mp4/.m4v

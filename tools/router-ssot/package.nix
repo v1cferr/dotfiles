@@ -124,7 +124,7 @@ writers.writePython3Bin "router-ssot"
 
         fai = read("modules/nixos/network/fai-gateway.nix")
         out["fai_subnets"] = nix_list(fai, "faiSubnets")
-        out["fai_public_hosts"] = nix_list(fai, "faiPublicHosts")
+        out["fai_tunnel_hosts"] = nix_list(fai, "faiTunnelHosts")
         ssh = re.search(r"ports\s*=\s*\[\s*(\d+)\s*\]", read("modules/nixos/network/network.nix"))
         out["ssh_port"] = ssh.group(1) if ssh else ""
         # THREE anchors, because two addresses no longer sit in a `HostName` literal. The T480's
@@ -223,37 +223,25 @@ writers.writePython3Bin "router-ssot"
 
 
     def check_fai_routes(d, conf):
-        """THEIR ranges arrive in the IPCP and can change, so the two lists have to agree."""
-        out = []
+        """The router sends this host THEIR private ranges plus the tunnel-only public hosts, never
+        the whole public /25: a route bound to wan dies with every PPPoE reconnect, so the public
+        site has to stay on the default route instead of on an exception to this list."""
+        if not d["fai_tunnel_hosts"]:
+            return [("fai", "could not read faiTunnelHosts",
+                     "an anchor moved: fix this checker, do not delete the check")]
+        want = {c for c in d["fai_subnets"] if ipaddress.ip_network(c).is_private}
+        want |= {f"{h}/32" for h in d["fai_tunnel_hosts"]}
+        out, got = [], set()
         for name, s in sorted(named(conf["network"], "fai_r").items()):
             target, mask = s.get("target", ""), s.get("netmask", "")
             if target and mask:
-                cidr = str(ipaddress.ip_network(f"{target}/{mask}", strict=False))
-                if cidr not in d["fai_subnets"]:
-                    out.append(("fai", f"{name} routes {cidr}, which faiSubnets does not list",
-                                "modules/nixos/network/fai-gateway.nix holds that list"))
-            if s.get("gateway") and s.get("gateway") != d["host_ip"]:
+                got.add(str(ipaddress.ip_network(f"{target}/{mask}", strict=False)))
+            if s.get("gateway") != d["host_ip"]:
                 out.append(("fai", f"{name} points at {s.get('gateway')}, not {d['host_ip']}",
                             "the gateway for the FAI ranges is this host, where nxBender runs"))
-        return out
-
-
-    def check_fai_public(d, conf):
-        """The public FAI hosts bypass the /25 above through the WAN, or the site dies with the VPN."""
-        want = set(d["fai_public_hosts"])
-        if not want:
-            return [("fai", "could not read faiPublicHosts",
-                     "an anchor moved: fix this checker, do not delete the check")]
-        out, got = [], set()
-        for name, s in sorted(named(conf["network"], "fai_pub").items()):
-            got.add(s.get("target", ""))
-            if s.get("netmask") != "255.255.255.255" or s.get("interface") != "wan" or s.get("gateway"):
-                out.append(("fai", f"{name} is not a gateway-less /32 on wan",
-                            "the host route has to out-prefix the /25 and leave through pppoe-wan"))
         if got != want:
-            out.append(("fai", f"fai_pub* routes {sorted(got)}, faiPublicHosts declares {sorted(want)}",
-                        "a missing one loops through this host with the VPN off; "
-                        "modules/nixos/network/fai-gateway.nix holds the list"))
+            out.append(("fai", f"fai_r* routes {sorted(got - want)} not declared, misses {sorted(want - got)}",
+                        "modules/nixos/network/fai-gateway.nix holds faiSubnets and faiTunnelHosts"))
         return out
 
 
@@ -345,7 +333,7 @@ writers.writePython3Bin "router-ssot"
 
 
     CHECKS = (check_subnets, check_moonlight_sources, check_moonlight_ports, check_moonlight_dest,
-              check_fai_routes, check_fai_public, check_ssh_port, check_split_dns, check_vpn_peers, check_no_vpn_dnat)
+              check_fai_routes, check_ssh_port, check_split_dns, check_vpn_peers, check_no_vpn_dnat)
 
 
     def main():

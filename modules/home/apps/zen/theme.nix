@@ -37,12 +37,16 @@ let
         --zen-main-browser-background-old: ${c "bg"} !important;
         --zen-main-browser-background-toolbar-old: ${c "bg"} !important;
       }
-      /* Each space (zen-workspace) carries its own inline copy of these two, so the tab list
+      /* Each space (zen-workspace) redefines these, inline or in its own rule, so the tab list
          ignored :root until the space was listed too. */
       :root,
       zen-workspace {
         --zen-primary-color: ${c "accent"} !important;
         --toolbox-textcolor: ${c "text"} !important;
+        /* Three steps from the palette: bg, then hover on surface, then selected on track. Zen's
+           own were 22% of the text color and a 7% gray, so hover outshone the selected tab. */
+        --tab-background-color-hover: ${c "surface"} !important;
+        --tab-background-color-selected: ${c "track"} !important;
       }
       :root {
         --tab-text-color-selected: ${c "text"} !important;

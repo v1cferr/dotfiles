@@ -270,16 +270,14 @@ so it is downloaded only by a reader who opens a page that draws something. That
 vendored tarball and the MkDocs template that loaded it, and for the same reason: Material fetched
 `unpkg.com/mermaid@11`, a moving pointer in somebody else's browser.
 
-**One override, and when it goes.** `tools/docs-site/package.json` forces `lodash-es@4.17.23` to
-`4.18.1` through `pnpm.overrides`. Mermaid 12.0.0 depends on chevrotain `~11.1.2`, and chevrotain
-pins lodash-es EXACTLY at 4.17.23, which carries GHSA-f23m-r3pf-42rh and GHSA-r5fr-rjxr-66jc
-(OpenSSF Scorecard found them on 27/09/2026). No bump could fix it, since that was already the
-newest mermaid. The jump is a patch inside 4.x, and the site built unchanged with it. REMOVE the
-override when mermaid moves to a chevrotain that no longer pins 4.17.23 (13.x does not depend on
-lodash-es at all); check with `pnpm why lodash-es` inside `tools/docs-site/`, which should list only one
-version.
+**The lodash-es override is GONE, since 13/10/2026.** `package.json` used to force
+`lodash-es@4.17.23` to `4.18.1`: mermaid 12.0.0 depended on chevrotain `~11.1.2`, which pinned
+lodash-es EXACTLY at 4.17.23, carrying GHSA-f23m-r3pf-42rh and GHSA-r5fr-rjxr-66jc (OpenSSF
+Scorecard found them on 27/09/2026). Mermaid 12.2.0 moved to chevrotain 13, which does not depend
+on lodash-es at all, so nothing asks for 4.17.23 any more: `pnpm why lodash-es` lists one version,
+4.18.1, with no override in place.
 
-**Two more overrides, since 13/10/2026, both for packages that ride in with `next`.** `pnpm audit`
+**Two overrides remain, since 13/10/2026, both for packages that ride in with `next`.** `pnpm audit`
 flagged them after the bump to `next` 16.4.0, which fixed its own advisories:
 
 - `source-map-js@<1.2.2` is forced to `1.2.2`, a patch inside 1.x, reached through `next > postcss`.

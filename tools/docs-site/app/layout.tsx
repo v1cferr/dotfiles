@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 import { baseOptions } from '../lib/layout.shared.tsx';
 import { SITE_ORIGIN } from '../lib/domain.ts';
 import { PALETTE_CSS } from '../lib/palette.ts';
-import { SITE_DESCRIPTION, SITE_NAME } from '../lib/repo.ts';
+import { SITE_AUTHOR, SITE_DESCRIPTION, SITE_NAME } from '../lib/repo.ts';
 import { tree } from '../lib/tree.ts';
 import './global.css';
 import { Provider } from './provider.tsx';
@@ -18,6 +18,7 @@ export const metadata: Metadata = {
   title: { default: SITE_NAME, template: `%s - ${SITE_NAME}` },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
+  authors: [{ name: SITE_AUTHOR.name, url: SITE_AUTHOR.url }],
   // The pages are public and meant to be found: that is the whole reason the tree became a site.
   robots: { index: true, follow: true },
   openGraph: {

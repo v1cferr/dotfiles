@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ForceGraphMethods, LinkObject, NodeObject } from 'react-force-graph-2d';
 import type { GraphLink, GraphNode } from '../lib/graph.ts';
+import { sectionHue } from '../lib/sections.ts';
 import { servedUrl } from '../lib/urls.ts';
 
 // Canvas and a DOM measure: it cannot render on the server, and only this page downloads it.
@@ -19,9 +20,6 @@ const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
 
 type Node = NodeObject<GraphNode>;
 type Link = LinkObject<GraphNode, GraphLink>;
-
-// One hue per section, in the sidebar's order; the palette's names, resolved from CSS at runtime.
-const HUES = ['blue', 'cyan', 'green', 'yellow', 'orange', 'red', 'magenta', 'purple', 'teal', 'sky', 'pink'];
 
 /** A CSS variable as the browser resolves it, which is what a canvas can paint with. */
 function cssVar(name: string): string {
@@ -77,7 +75,7 @@ export function GraphView({
     if (typeof document === 'undefined') return null;
     void resolvedTheme;
     return {
-      groups: Object.fromEntries(groups.map((g, i) => [g, cssVar(`--palette-${HUES[i % HUES.length]}`)])),
+      groups: Object.fromEntries(groups.map((g) => [g, cssVar(sectionHue(g))])),
       text: cssVar('--color-fd-foreground'),
       muted: cssVar('--color-fd-muted-foreground'),
       line: cssVar('--color-fd-border'),
@@ -154,7 +152,7 @@ export function GraphView({
               <span
                 className="size-2 rounded-full"
                 // The variable itself, not its value: the server renders it too, so they agree.
-                style={{ background: `var(--palette-${HUES[groups.indexOf(group) % HUES.length]})` }}
+                style={{ background: `var(${sectionHue(group)})` }}
               />
               {group}
             </button>

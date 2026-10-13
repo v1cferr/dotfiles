@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { REPO_URL, SITE_DESCRIPTION } from '../lib/repo.ts';
 import { source } from '../lib/source.ts';
 import { GRAPH_URL } from '../lib/graph.ts';
+import { sectionHue } from '../lib/sections.ts';
 import { docSlugs, servedUrl } from '../lib/urls.ts';
 import site from '../site.json' with { type: 'json' };
 
@@ -41,6 +42,16 @@ export function HomeHero() {
     <header className="not-prose flex flex-col gap-4 pb-2">
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{name}</h1>
       <p className="max-w-2xl text-lg text-fd-muted-foreground">{SITE_DESCRIPTION}</p>
+      <p className="text-sm text-fd-muted-foreground">
+        by{' '}
+        <a href={site.author.url} className="font-medium text-fd-foreground hover:text-fd-primary">
+          {site.author.name}
+        </a>{' '}
+        ·{' '}
+        <a href={`https://github.com/${site.author.handle}`} className="hover:text-fd-primary">
+          @{site.author.handle}
+        </a>
+      </p>
       <nav aria-label="Entry points" className="flex flex-wrap gap-2">
         {links.map((link) => (
           <Link
@@ -75,7 +86,8 @@ export function HomeSections({ tree }: { tree: PageTree.Root }) {
           return (
             <Card
               key={folder.$id ?? String(folder.name)}
-              icon={folder.icon}
+              // The section's own hue, the same one its pages wear on the graph.
+              icon={<span style={{ color: `var(${sectionHue(String(folder.name))})` }}>{folder.icon}</span>}
               title={folder.name}
               href={items[0]?.url}
               description={`${items.length} pages · ${names.join(', ')}${rest > 0 ? `, +${rest}` : ''}`}

@@ -412,6 +412,11 @@ the visual layer took ([decision 0013](../../decisions/0013-graph-view-with-one-
 loaded by that page alone. `/graph` is a route of the app and not a page of `docs/`, so
 `finish-export.ts` lists it next to the 404 as a URL with no page behind it.
 
+**A section has ONE hue, wherever it is drawn.** `lib/sections.ts` gives each top-level nav section
+a palette hue in the sidebar's order, and both the graph's dots and the home's card icons read it,
+so the two pages read as one system. The home also names its author, from `site.json`, the file
+that already owns the repo's identity.
+
 **Steps are a GUIDE's numbered headings, and only a guide's.** Fumadocs' `remarkSteps` turns any
 `### 1. Title` into a step, and run over everything it would have turned the 23 cards of
 `rules.md` into a procedure, where the number is API and not an order. `remarkGuideSteps` in

@@ -6,6 +6,7 @@ import { DOCS_ROOT } from './docs-root.ts';
 import { type NavItem, navigation } from './navigation.ts';
 import { listPages } from './page-tree.ts';
 import { prose, titleFromMarkdown } from './summary.ts';
+import { OVERVIEW, SECTIONS } from './sections.ts';
 import { PAGE_EXTENSION, docPathToUrl } from './urls.ts';
 
 /** Where the graph is published: the page and the export check both read it. */
@@ -23,7 +24,6 @@ export interface GraphLink {
   target: string;
 }
 
-const OVERVIEW = 'Overview';
 // A markdown link, `[text](target)`, with the target up to the first space or parenthesis.
 const LINK = /\]\(([^)\s]+)\)/g;
 
@@ -79,6 +79,5 @@ export function buildGraph(): { nodes: GraphNode[]; links: GraphLink[]; groups: 
   }
 
   // The order the sidebar shows them, so the legend reads like the nav.
-  const groups = [OVERVIEW, ...navigation.flatMap((item) => ('section' in item ? [item.section] : []))];
-  return { nodes: [...nodes.values()], links: [...links.values()], groups };
+  return { nodes: [...nodes.values()], links: [...links.values()], groups: SECTIONS };
 }

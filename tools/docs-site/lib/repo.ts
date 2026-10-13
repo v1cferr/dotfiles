@@ -7,3 +7,4 @@ export const TREE_BASE = `https://${site.repo}/tree/${site.branch}`;
 export const REPO_URL = `https://${site.repo}`;
 export const SITE_NAME = site.name;
 export const SITE_DESCRIPTION = site.description;
+export const SITE_AUTHOR = site.author;

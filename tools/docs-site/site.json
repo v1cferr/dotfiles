@@ -2,5 +2,10 @@
   "name": "dotfiles",
   "description": "My declarative NixOS and home-manager system, module by module.",
   "repo": "github.com/v1cferr/dotfiles",
-  "branch": "main"
+  "branch": "main",
+  "author": {
+    "name": "Victor Ferreira",
+    "handle": "v1cferr",
+    "url": "https://v1cferr.dev"
+  }
 }

@@ -35,6 +35,7 @@ in
       enable_audio_bell = false; # no beep; it uses a visual flash instead
       confirm_os_window_close = 0; # it closes the window without asking for confirmation
       window_padding_width = 8; # breathing room between the text and the border
+      cursor_shape = "beam"; # a bar: it marks where the text goes in, like the line editor
       cursor_blink_interval = 0; # a steady cursor (it does not blink)
       copy_on_select = "clipboard"; # selecting already copies to the clipboard
     };

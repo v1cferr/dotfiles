@@ -59,9 +59,9 @@ writers.writePython3Bin "dead-config"
             base = os.path.dirname(f)
             text = nix.get(f, "")
             blocks = re.findall(r"imports\s*=\s*\[(.*?)\]", text, re.S)
-            # The flake's own files are reached by a plain `import ./flake/x.nix`, not an imports list.
-            if f == "flake.nix" or f.startswith("flake/"):
-                blocks += re.findall(r"\bimport\s+(\.\.?/[A-Za-z0-9_./-]+)", text)
+            # A plain `import ./x.nix` reaches a file too: the flake's own files, and DATA files such
+            # as the palette presets, which a module and the docs site both read.
+            blocks += re.findall(r"\bimport\s+(\.\.?/[A-Za-z0-9_./-]+)", text)
             for block in blocks:
                 # `./x` and `../x` alike: a host reaches a shared module through `../../modules/…`,
                 # and the lookbehind keeps the `./` inside a `../` from matching a level too shallow.

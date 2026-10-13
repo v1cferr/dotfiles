@@ -8,6 +8,7 @@
 }:
 
 let
+  inherit (pkgs) fd;
   inherit (pkgs.vimPlugins) tokyonight-nvim;
 
   # bat's theme per preset, like kitty's table. Tokyo Night is not built into bat, so it comes from
@@ -73,7 +74,13 @@ in
   programs.zsh.initContent = lib.mkOrder 2000 ''
     eval "$(${pkgs.zoxide}/bin/zoxide init zsh --cmd cd)"
   '';
-  programs.fzf.enable = true; # a fuzzy finder: Ctrl+T (file), Alt+C (cd); atuin takes Ctrl+R below
+  programs.fzf = {
+    enable = true; # a fuzzy finder: Ctrl+T (file), Alt+C (cd); atuin takes Ctrl+R below
+    # fd instead of find: fast, and it skips hidden and .gitignored paths. These two widgets
+    # replace Arch's fhome/froot aliases, which ran `cd .` on Esc and walked all of `/`.
+    fileWidgetCommand = "${lib.getExe fd} --type f";
+    changeDirWidgetCommand = "${lib.getExe fd} --type d";
+  };
   # atuin: the history in SQLite, so Ctrl+R searches with exit code, duration and cwd per entry.
   # It WINS Ctrl+R from fzf by load order, and the archived config: docs/notes/repo/shell.md
   programs.atuin = {

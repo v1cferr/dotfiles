@@ -384,6 +384,18 @@ which the `hsl()` text of the token is not guaranteed to be. So the diagrams own
 change of preset recolors them. Mermaid's `radius` misses some shapes, and `global.css` rounds
 those.
 
+**The site wears the desktop's palette, since 13/10/2026.** The hexes come from
+`modules/home/desktop/palette-presets.nix`, the same data file `palette.nix` reads, so the site owns
+no color of its own (rule 11). The derivation writes the DEFAULT preset into `palette.json`, and
+`pnpm palette` writes the same file in a dev tree (`predev` runs it); it is gitignored, since it is
+an output. `lib/palette.ts` maps palette colors onto Fumadocs' roles and the layout writes them into
+the HTML as a `<style>`, so the theme costs no request and does not flash. Dark mode IS the palette;
+light mode keeps the neutral preset and takes only the accent, darkened in oklab, because no preset
+carries a light variant and inventing one would be a second palette. The code blocks' dark theme
+is shiki's official theme for the same preset (`tokyo-night` today), so a fence reads like the
+editor. A host's `my.theme.name` does not reach the site: it is public and built in CI, so it wears
+the default.
+
 **Steps are a GUIDE's numbered headings, and only a guide's.** Fumadocs' `remarkSteps` turns any
 `### 1. Title` into a step, and run over everything it would have turned the 23 cards of
 `rules.md` into a procedure, where the number is API and not an order. `remarkGuideSteps` in

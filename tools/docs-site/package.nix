@@ -7,6 +7,7 @@
   nodejs_24,
   pnpmConfigHook,
   unstable,
+  writeText,
 }:
 
 let
@@ -24,6 +25,15 @@ let
       ./pnpm-lock.yaml
     ];
   };
+  # The desktop's DEFAULT palette, from the same data file palette.nix reads (rule 11), written where
+  # `pnpm palette` writes it in a dev tree. A host's my.theme.name does not reach a public site.
+  presets = import ../../modules/home/desktop/palette-presets.nix;
+  palette = writeText "palette.json" (
+    builtins.toJSON {
+      name = presets.default;
+      colors = presets.presets.${presets.default};
+    }
+  );
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "docs-site";
@@ -48,6 +58,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
             ./.source
             ./out
             ./next-env.d.ts
+            ./palette.json
           ]
         )
       ))
@@ -79,6 +90,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   buildPhase = ''
     runHook preBuild
+    cp ${palette} tools/docs-site/palette.json
     pnpm --dir tools/docs-site build
     runHook postBuild
   '';

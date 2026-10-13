@@ -5,6 +5,7 @@ import { DocsLayout } from 'fumadocs-ui/layouts/docs';
 import type { ReactNode } from 'react';
 import { baseOptions } from '../lib/layout.shared.tsx';
 import { SITE_ORIGIN } from '../lib/domain.ts';
+import { PALETTE_CSS } from '../lib/palette.ts';
 import { SITE_DESCRIPTION, SITE_NAME } from '../lib/repo.ts';
 import { tree } from '../lib/tree.ts';
 import './global.css';
@@ -35,6 +36,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* The desktop's palette as CSS variables, written into the HTML: no request, no flash. */}
+        <style dangerouslySetInnerHTML={{ __html: PALETTE_CSS }} />
+      </head>
       <body className="flex min-h-screen flex-col">
         <Provider>
           {/* The sidebar wraps EVERY route, 404 included: the docs are the whole site. */}

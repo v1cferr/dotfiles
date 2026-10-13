@@ -9,6 +9,7 @@ import { type BundledLanguage, bundledLanguages } from 'shiki';
 import type { VFile } from 'vfile';
 import { DOCS_ROOT } from './lib/docs-root.ts';
 import { listPages } from './lib/page-tree.ts';
+import { CODE_THEME_DARK } from './lib/palette.ts';
 import { INDEX_FILE } from './lib/urls.ts';
 import { remarkDocTitle } from './plugins/remark-doc-title.ts';
 import { remarkRepoLinks } from './plugins/remark-repo-links.ts';
@@ -59,7 +60,12 @@ export default defineConfig({
     // PRELOADED, and this is reproducibility and not speed: shiki loads a grammar on first use,
     // and a language used by exactly one fence came out unhighlighted on some builds and not
     // others. `nix build --rebuild` is what caught it.
-    rehypeCodeOptions: { ...rehypeCodeDefaultOptions, langs: fenceLanguages(DOCS_ROOT) },
+    rehypeCodeOptions: {
+      ...rehypeCodeDefaultOptions,
+      langs: fenceLanguages(DOCS_ROOT),
+      // The dark code theme is the desktop's own preset, so a fence reads like the editor.
+      themes: { light: 'github-light', dark: CODE_THEME_DARK },
+    },
     // FIRST: the H1 leaves before anything renders it, and the link rewriting has to see the
     // targets exactly as the file wrote them.
     remarkPlugins: (plugins) => [

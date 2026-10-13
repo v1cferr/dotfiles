@@ -5,11 +5,14 @@
   "type": "module",
   "packageManager": "pnpm@10.34.5",
   "scripts": {
+    "palette": "nix eval --json --file ../../modules/home/desktop/palette-presets.nix --apply 'p: { name = p.default; colors = p.presets.${p.default}; }' > palette.json",
+    "predev": "pnpm palette",
     "dev": "next dev",
     "build": "next build && node scripts/finish-export.ts",
     "check:nav": "node scripts/check-navigation.ts",
     "lint": "oxlint",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "pretypecheck": "pnpm palette"
   },
   "dependencies": {
     "fumadocs-core": "16.15.13",

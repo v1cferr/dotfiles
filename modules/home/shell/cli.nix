@@ -1,17 +1,42 @@
 # The modern CLI toolkit. Each tool filled a REAL gap in a debugging session, not a list slot.
 # Which gap, and why difftastic was passed over: docs/notes/repo/shell.md
-{ pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
+let
+  inherit (pkgs.vimPlugins) tokyonight-nvim;
+
+  # bat's theme per preset, like kitty's table. Tokyo Night is not built into bat, so it comes from
+  # folke's own extras; the other two are. A preset with no entry BREAKS the eval on purpose.
+  batThemes = {
+    tokyo-night = "tokyonight_night";
+    catppuccin-mocha = "Catppuccin Mocha";
+    gruvbox-dark = "gruvbox-dark";
+  };
+in
 {
   programs.eza.enable = true; # a modern ls (icons plus git); the aliases are right below
   programs.eza.git = true; # a git status column in the listing
-  programs.bat.enable = true; # cat with syntax highlighting plus paging
+  # cat with syntax highlighting plus paging, in the desktop's palette instead of Monokai.
+  programs.bat = {
+    enable = true;
+    themes.tokyonight_night = {
+      src = tokyonight-nvim;
+      file = "extras/sublime/tokyonight_night.tmTheme";
+    };
+    config.theme = batThemes.${config.my.theme.name};
+  };
   # delta: the "bat of git diff". Reading a diff is the most repeated operation here.
   programs.delta = {
     enable = true;
     enableGitIntegration = true; # NOT the default: without this delta sits installed and idle
     options = {
       navigate = true; # `n`/`N` jumps between files inside the pager (a big diff becomes navigable)
+      syntax-theme = batThemes.${config.my.theme.name}; # delta reads bat's themes, so the same name
       line-numbers = true; # a line column on both sides, so counting by hand inside the hunk goes away
       # side-by-side is OFF: at 1920x1080 two columns read worse than one here.
       # Per invocation it still works: `git diff --side-by-side`.

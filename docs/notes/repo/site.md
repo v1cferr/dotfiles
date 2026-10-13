@@ -289,6 +289,11 @@ flagged them after the bump to `next` 16.4.0, which fixed its own advisories:
 Both run only at BUILD time, in the sandbox, so neither ever reached a reader; they leave because
 an audit that is never clean is an audit nobody reads.
 
+**TypeScript 7, the native compiler, since 13/10/2026.** The 7.x line is the Go port of `tsc`, and
+`next` 16.4.0 type-checks with it during `next build` with no configuration change. MEASURED in the
+derivation's log: the type check went from 2.8s on 5.9.3 to 0.92s. It only CHECKS: the JS a reader
+downloads is compiled by Next's SWC either way, so the published site did not change because of it.
+
 **No webfont, for the same reason.** Material linked Roboto from `fonts.gstatic.com` on every
 page; Fumadocs UI ships no default font at all, so there is nothing to turn off. The stack in
 `tools/docs-site/app/global.css` is `system-ui` for prose and JetBrains Mono for code, neither of them

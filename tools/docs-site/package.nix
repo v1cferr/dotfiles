@@ -80,7 +80,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     inherit pnpm;
     src = manifest;
     fetcherVersion = 3;
-    hash = "sha256-wlL+nRMucjWCiOsa6lhGuHLCpA2vCgdjgojYMhPU1Sk=";
+    hash = "sha256-ayA2tL9NnAxODglNDAiqq5sLUOpeofQpmjKjdo1WNA4=";
   };
   # Relative to the source root: the app lives in tools/, and docs/ stays at the repo's root.
   pnpmRoot = "tools/docs-site";

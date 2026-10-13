@@ -205,6 +205,10 @@ rewrites that file at runtime, so only that key is forced, idempotently, the sam
 rebuilding. Each preset carries the exact OFFICIAL hexes of its palette, stored WITHOUT the `#`
 and 6 digits long, so each consumer formats them as it needs.
 
+The presets themselves are plain DATA in `modules/home/desktop/palette-presets.nix`, with the default
+name beside them, since 13/10/2026. A data file and not a `let` inside the module because the docs
+site is built OUTSIDE home-manager and reads the same hexes: two copies would be rule 11 broken.
+
 The presets today are Tokyo Night (the Night variant), Catppuccin Mocha and Gruvbox Dark. The
 second and third exist to demonstrate that the switch really works; Gruvbox in particular is warm
 enough that a broken consumer is obvious at a glance.

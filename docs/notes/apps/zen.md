@@ -149,3 +149,25 @@ two dead symlinks are deleted by hand.
 `user.js` declares only `toolkit.legacyUserProfileCustomizations.stylesheets`, without which Gecko
 ignores the sheet. The Arch `user.js` also forced VA-API and DMABUF past Firefox's blocklist, but
 that was for the NVIDIA card; with the Arc those are a separate question and stay out.
+
+## The theme lab: measuring the theme instead of guessing
+
+`zen-theme-lab`, declared next to the theme. It starts a SECOND Zen on a throwaway profile under
+`$XDG_RUNTIME_DIR`, with the same generated `userChrome.css`, Marionette on port 2829 and the
+window moved to `special:zenlab`, so it never lands on the workspace in use. Verbs: `start [URL]`,
+`eval JS` (runs in the browser's CHROME context, so `getComputedStyle` reaches the UI), `css
+FILE` (injects one extra user sheet live, replacing the last; an empty file clears it), `shot
+OUT.png` and `stop`.
+
+**Why Marionette and not Mozilla's `firefox-devtools-mcp`**: the powers that matter are the same
+(the MCP drives Marionette underneath), but the MCP's screenshots cover the PAGE only, never the
+browser UI, which is the whole subject here; it would also mean packaging an npm server. The
+client is `zen/lab.py`, about 80 lines with no dependency: Marionette is `len:json` frames over TCP.
+
+**Why a second instance and never the real profile**: Mozilla's own advice for that MCP, and
+the same reasoning applies: whatever drives the browser reaches its cookies and passwords, and
+Marionette marks it as automated (`navigator.webdriver`). The lab still launches through the
+guarded package, so it does not open a way around the launch guard.
+
+Measured on 13/10/2026: the screenshot captures the whole window, sidebar included, while it
+sits on the hidden special workspace.

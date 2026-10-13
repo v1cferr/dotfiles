@@ -141,7 +141,7 @@ Two things the measurement decided:
 
 **Switching back to the stock theme, live:** in `about:config`, create `my.zen.stock-theme` as a
 Boolean and set it to `true`. The whole sheet sits under `@media not -moz-pref(...)`, the same
-query Zen's own CSS uses, so the flip applies at once and survives restarts (it lives in
+query Zen's own CSS uses, so the flip applies at once (measured on 13/10/2026, no restart) and survives restarts (it lives in
 `prefs.js`). Deleting the pref, or setting it to `false`, brings the palette back. Uninstalling
 for good is removing `./zen/theme.nix` from the imports: the activation stops relinking, and the
 two dead symlinks are deleted by hand.

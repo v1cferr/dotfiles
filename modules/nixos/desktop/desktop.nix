@@ -2,8 +2,14 @@
 # the monitors are HYPRLAND config, not the system's xkb: docs/notes/desktop/desktop.md
 { pkgs, ... }:
 
+let
+  inherit (pkgs) xterm;
+in
 {
   services.xserver.enable = true; # it enables LightDM (an X11 greeter) plus Xwayland
+  # xserver installs xterm by default. kitty is the terminal, and Dolphin's KIO fallback that used
+  # to land on xterm is pinned to kitty (docs/notes/apps/dolphin.md).
+  services.xserver.excludePackages = [ xterm ];
   services.xserver.displayManager.lightdm.enable = true;
   programs.hyprland.enable = true;
 

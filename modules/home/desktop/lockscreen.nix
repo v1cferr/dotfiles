@@ -235,7 +235,7 @@ in
         check_color = "${green} ${blue} 120deg"; # while checking the password
         fail_color = red; # a wrong password
         placeholder_text = ''<span foreground="##${palette.dim}">Digite a senha…</span>'';
-        fail_text = ''<span foreground="##f7768e">$PAMFAIL</span>'';
+        fail_text = ''<span foreground="##${palette.red}">$PAMFAIL</span>'';
         dots_spacing = 0.3;
         fade_on_empty = false;
         position = "0, -190";

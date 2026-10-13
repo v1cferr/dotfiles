@@ -50,7 +50,7 @@ sections below this one are left as measured on 08/09, so read this table first.
 | spicetify | Ported | `modules/home/apps/spotify.nix` |
 | nano | Ported, as a decision | `EDITOR=nano` in `zsh.nix`. Its syntax files come with nano 9.2; the Arch `.nanorc` only pulled a third-party set whose nixpkgs copy is from 2020 |
 | neovim | Dropped | Stock LazyVim boilerplate, nothing personal in it (see the corrected entry below) |
-| zsh | Mostly ported | Ctrl+arrows, double-Esc sudo, the YouTube aliases (`ytmix` is the shuffled playlist). Left: `fhome`/`froot`, fastfetch at startup, the small ones |
+| zsh | Closed | Ported: Ctrl+arrows, double-Esc sudo, the YouTube aliases (`ytmix` is the shuffled playlist), `grep --color=auto`. Replaced: `fhome`/`froot` by fzf's Alt+C and Ctrl+T through `fd` (the aliases ran `cd .` on Esc and walked all of `/`); the `ssh` TERM alias by `SetEnv TERM` per host in `ssh.nix`. Dropped: fastfetch at startup (measured: 0.09 s on a 0.12 s shell, and it would print in every VS Code and agent shell too; `fastfetch` is one command away) and `nrd`, since toolchains live in devShells |
 | kitty | Closed | Only `cursor_shape beam` came back. The rest was kitty's own defaults (`wheel_scroll_multiplier 5.0`, `repaint_delay`, `input_delay`, `sync_to_monitor`, `disable_ligatures never`), and F8/F9/F10 were refused: they duplicate binds that exist and steal F9/F10 from htop and btop |
 | btop | Ported, and better | Arch ran `Default`; now `tokyo-night`, set in place because btop owns its file (rule 14). bat and delta followed in the same pass |
 | vlc | Nothing to port | `vlcrc` held one active line, `qt-privacy-ask=0` |
@@ -61,10 +61,10 @@ sections below this one are left as measured on 08/09, so read this table first.
 | hypr: lockscreen notification count | Dropped | Not wanted. Arch's `lockscreen_notifs.sh` read it over IPC; the `notif count` IPC verb that waited for it in `Notifs.qml` went too, since nothing called it |
 | `bin/` | Closed | `vpn`, `wake-workstation` ported; `hypr-quick`'s wallpaper actions went with the rotation; `zen-sync` became the theme's activation |
 | `scripts/` | Closed | Arch by nature, as measured below |
-| homelab and the Caddy set | Open, as its own project | 7 vhosts declared now (`photos` and `memory` are new). The \*arr stack, open-webui, Homepage, FileBrowser, spendflow, `ap` and RustDesk are still absent |
-| polychromatic | Undecided | No openrazer daemon to drive it; the same missing layer as the OpenRGB item |
-| opencode | Undecided | Claude Code, codex and agy are declared already |
-| lazydocker | Undecided | One package, no config worth carrying |
+| homelab and the Caddy set | Open, as its own project | 7 vhosts declared now (`photos` and `memory` are new). The \*arr stack, open-webui, Homepage, FileBrowser, spendflow, `ap` and RustDesk are still absent. Tracked in [open-items.md](open-items.md) |
+| polychromatic | Replaced | The OpenRGB service already in place for the Arc B580 DETECTS the Razer DeathAdder V2 (measured with `openrgb --client --list-devices`), so no openrazer GUI is needed. Setting the mouse's color from Nix would be new work, not a gap |
+| opencode | Dropped | Claude Code, codex and agy are declared already; a fourth agent CLI is not a gap |
+| lazydocker | Ported | `modules/nixos/services/docker.nix`, only where the engine is enabled. Ten containers run here, so a TUI over them earns its place |
 
 ## The verdict
 

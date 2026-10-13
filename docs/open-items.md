@@ -10,6 +10,23 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
+- [ ] Qt is NOT on the palette, though the docs said it was (opened 13/10/2026). `theme.nix` declares
+      Kvantum, recolored from the palette, but `hypr/lua/environment.lua` sets
+      `QT_QPA_PLATFORMTHEME=gtk3` and `QT_STYLE_OVERRIDE=adwaita-dark`, and Hyprland exports both:
+      measured in Quickshell's and flameshot's environment. How it was found and why it was left:
+      [notes/desktop/theme.md](notes/desktop/theme.md).
+      • DO NOT FLIP IT BLIND. On a headless sway, Dolphin under the declared `kvantum` drew white
+        alternate rows, so the recolor itself needs a look before the env points at it.
+      • THE CLEAN END STATE: environment.lua reads the two values from the generated
+        `hypr-colors.lua`, so `theme.nix` stays their only owner (rule 11).
+
+- [ ] LibreWolf in the palette (opened 13/10/2026). Its profile is
+      `~/.config/librewolf/librewolf/4gzhcc7n.default`. Stylix's firefox-family target was measured
+      to bring only fonts and reader mode; colors need the Firefox Color extension through NUR.
+      • THE TWO ROADS: a static theme WebExtension generated from the palette and installed by policy
+        (Mozilla's supported theming API, so updates cannot break it), or a userChrome measured with
+        a lab like Zen's. Decide first whether LibreWolf earns either; it was last used 26/09/2026.
+
 - [ ] The homelab services Arch had and NixOS does not, to be detailed before any is built (opened
       13/10/2026). The last open area of [arch-parity-audit.md](arch-parity-audit.md): Arch served 14
       subdomains, this machine declares 7 through `my.ingress`. Absent: the \*arr stack

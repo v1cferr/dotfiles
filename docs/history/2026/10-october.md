@@ -1,6 +1,22 @@
 # History: october 2026
 
-2 entries. Index in [README.md](../README.md).
+3 entries. Index in [README.md](../README.md).
+
+- [x] Stylix applies the palette to every app it knows, and the theme switches to any base16
+      scheme (13/10/2026). Recorded as [decision 0012](../../decisions/0012-stylix-applies-the-palette.md);
+      the details are in [notes/desktop/theme.md](../../notes/desktop/theme.md).
+      • THE STOCK SCHEME WAS THE TRAP. `tokyo-night-dark.yaml` has the text as `#a9b1d6`, its "red"
+        is the text color and its "blue" a cyan. Fed from it, Stylix would have recolored the
+        desktop wrong, which is 0001's argument measured. So Stylix is fed FROM the palette.
+      • GTK WAS THE REAL GAIN. About nine GTK apps were stock Adwaita gray. One more trap there:
+        GTK reads the theme from dconf, and a key removed from Nix stays in dconf.
+      • KITTY WAS NOT MOVED, ON MEASUREMENT. base16 has no bright ANSI slots: Stylix painted color8
+        `#292e42`, which nearly hides zsh's autosuggestions. kitty, bat, btop and Spotify keep their
+        official themes, now fed from the palette where they were pinned by name.
+      • THE SWITCH WAS PROVED, not assumed: a build with `base16:dracula` moved Quickshell,
+        Hyprland, GTK, kitty, bat, Kvantum, Zen and fzf together, then went back.
+      • ONE FINDING LEFT OPEN: Qt runs on `gtk3`, not on the Kvantum palette the docs describe.
+        Flipping it drew Dolphin wrong, so it is an open item instead of a blind fix.
 
 - [x] The `arch` branch was deleted, and `main` is the only branch left (13/10/2026). Every Arch
       area was ported, replaced or dropped with its reason written in

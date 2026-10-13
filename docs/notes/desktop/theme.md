@@ -1,15 +1,49 @@
-# The theme: dark mode, Kvantum and the Windows 11 icons
+# The theme: dark mode, Stylix, Kvantum and the Windows 11 icons
 
-`modules/home/desktop/theme.nix`. Here we only CONFIGURE; the theme package (`gnome-themes-extra`, which
-brings Adwaita-dark) and the GTK portal live in `modules/nixos/`.
+`modules/home/desktop/theme.nix` and `modules/home/desktop/stylix.nix`. The palette that feeds both
+is `modules/home/desktop/palette.nix` ([decision 0001](../../decisions/0001-own-nix-palette.md)), and
+Stylix only APPLIES it ([decision 0012](../../decisions/0012-stylix-applies-the-palette.md)).
 
 ## Dark mode on Hyprland has two fronts
 
 1. `color-scheme = "prefer-dark"` is the signal read by GTK4/libadwaita apps AND forwarded by
    `xdg-desktop-portal-gtk` to the Electron/Chromium apps (VS Code, Chrome, Spotify, LibreWolf).
    It is what darkens most of them.
-2. `gtk-theme = "Adwaita-dark"` is for the old GTK3 apps, which do not follow the color-scheme on
-   their own. The theme is found through `XDG_DATA_DIRS`.
+2. `gtk-theme` names Stylix's `adw-gtk3`, recolored by a generated `gtk.css` (`window_bg_color`,
+   `accent_color` and the rest of libadwaita's named colors) in the palette. Until 13/10/2026 this
+   was stock `Adwaita-dark`, so pavucontrol, Seahorse, Bottles, Czkawka, virt-manager and Blueman
+   were gray. Measured on a headless sway: `#2d2d2d` before, `#1a1b26` after.
+
+**The trap**: GTK on Wayland reads the theme name from dconf, through the settings portal, and NOT
+from `settings.ini`. A key dropped from Nix also stays in dconf. So `gtk-theme` is still set, to
+`config.gtk.theme.name`, instead of being removed; removing it kept Adwaita-dark on screen.
+
+## Stylix: what it themes, and what it does not
+
+`autoEnable = true`: any app Stylix has a target for follows the palette when it is installed. Today
+that is GTK, mpv (OSD), yazi, fzf, starship, MangoHud (colors only) and gdu. Each exception is in
+`stylix.nix` with its reason, in three groups:
+
+- **Themed here from the same palette**, with keys base16 has no slot for: Hyprland (Lua written
+  by hand), hyprlock, hyprpaper, Qt/Kvantum, rofi, Zen, VS Code (its settings.json is in the repo).
+- **An official per-app theme beats a generic base16 one**: kitty, bat (and delta through it),
+  Spotify, btop. Measured for kitty: base16 has no bright ANSI slots, so Stylix painted color8
+  `#292e42` (zsh autosuggestions near invisible) and every bright color the same as its normal one.
+- **Not installed**: blender, forge, vencord, whose targets write files whether the app exists or
+  not.
+
+To exclude one more app: `stylix.targets.<name>.enable = false;` with the reason on the same line.
+To keep only its colors: `stylix.targets.<name>.{fonts,opacity}.enable = false;`, as MangoHud does.
+
+## Switching the theme
+
+`my.theme.name` takes a curated preset (`tokyo-night`, `catppuccin-mocha`, `gruvbox-dark`, with each
+theme's official hexes) or ANY base16 scheme as `base16:<file>`, from
+`${pkgs.base16-schemes}/share/themes/`. For a base16 scheme the 20 palette keys are derived from the
+16 slots (sky and teal repeat the cyan, purple the magenta), and kitty and bat fall back to Stylix,
+btop to `TTY`. Proved with `base16:dracula`: Quickshell, Hyprland, GTK, kitty, bat, Kvantum, Zen and
+fzf all followed. A stock scheme may not match the official colors of the theme it is named after;
+`tokyo-night-dark` does not (the table in decision 0012).
 
 Qt/KDE apps (Dolphin) do NOT follow GTK on their own under Hyprland. This used to follow GTK
 (`platformTheme gtk3` plus `adwaita-dark`); now Qt is 100% Kvantum for the Windows 11 theme in
@@ -17,7 +51,10 @@ Dolphin. Kvantum takes over EVERYTHING in Qt (palette plus widgets), so the gtk3
 dropped. The GTK and Electron apps are unchanged.
 
 `QT_QPA_PLATFORMTHEME=kvantum` makes Kvantum set the palette, `QT_STYLE_OVERRIDE=kvantum` makes it
-draw the widgets. The engine's plugin (`qtstyleplugin-kvantum`) comes through the qt module itself,
+draw the widgets. **Measured on 13/10/2026, that is not what runs**: `hypr/lua/environment.lua` still
+sets `gtk3` and `adwaita-dark`, and Hyprland exports them, so Quickshell and flameshot run with
+`QT_QPA_PLATFORMTHEME=gtk3`. Switching to the declared `kvantum` on a headless sway drew Dolphin with
+white alternate rows, so it was NOT flipped blind; it is an open item. The engine's plugin (`qtstyleplugin-kvantum`) comes through the qt module itself,
 the same exception as `adwaita-qt`.
 
 ## Fonts and cursor

@@ -68,7 +68,7 @@ in
 
   # The terminal editor for git, `systemctl edit` and visudo. Set ONCE here and NOT also as
   # git's core.editor, which would be a second owner of the same decision (rule 14).
-  home.sessionVariables.EDITOR = "vim";
+  home.sessionVariables.EDITOR = "nano";
 
   # 1500 and not the tail: mkOrder 2000 belongs to zoxide's init (see cli.nix).
   # Only the TWO bindings that were measured missing came back from the Arch shell; Home, End,

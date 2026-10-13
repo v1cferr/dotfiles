@@ -43,14 +43,14 @@ To check: `systemctl --user status hyprpolkitagent`.
 `home.sessionVariables.BROWSER` closes the case of the terminal apps (git, gh, the `xdg-open` CLI)
 that ignore mimeapps and read the env var instead.
 
-**Text and code go to VS Code.** Without those lines a double click fell into Okular, which claims
-`text/plain` and markdown in its `.desktop`, or into NOTHING, since json/csv/yaml/toml/py/js had no
+**Text and code go to VS Code.** Without those lines a double click fell into Okular (the reader back then), which
+claims `text/plain` and markdown in its `.desktop`, or into NOTHING, since json/csv/yaml/toml/py/js had no
 handler at all. One oddity worth keeping: `.ts` is `text/vnd.trolltech.linguist`, because
 shared-mime-info matches Qt Linguist and not TypeScript.
 
 ### `applications.menu`: without it, KDE apps open NOTHING on a double click
 
-KF6 apps (Dolphin, Gwenview, Okular, Ark) resolve "who opens this file" through
+KF6 apps (Dolphin, Gwenview, Ark) resolve "who opens this file" through
 `KApplicationTrader`, which reads the ksycoca index. And `kbuildsycoca` only discovers the
 `.desktop` files by walking the XDG menu (`applications.menu`), so without that file it indexes
 ZERO applications and the double click fails in silence, even with a perfectly fine

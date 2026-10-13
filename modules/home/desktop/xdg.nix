@@ -17,7 +17,7 @@ in
       "text/html" = zen;
       "application/xhtml+xml" = zen;
 
-      # Text/code to VS Code: without this a double click fell into Okular or into NOTHING.
+      # Text/code to VS Code: without this a double click fell into a document reader or into NOTHING.
       "text/plain" = code; # it also covers .nix/.ini/.conf/.env
       "text/markdown" = code;
       "text/x-log" = code;

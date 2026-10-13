@@ -1,4 +1,4 @@
-# MEDIA: the KDE Gear stack (Gwenview/Okular) plus VLC, already themed by Qt/Kvantum.
+# MEDIA: Gwenview (KDE), Papers/Readest for documents, plus VLC and mpv.
 # ALWAYS the CANONICAL mimetype, never an alias: docs/notes/apps/apps-and-mime.md
 { pkgs, ... }:
 
@@ -6,7 +6,8 @@ let
   # The apps' .desktop files, used only in the associations below.
   app = {
     gwenview = "org.kde.gwenview.desktop";
-    okular = "org.kde.okular.desktop";
+    papers = "org.gnome.Papers.desktop";
+    readest = "readest.desktop";
     vlc = "vlc.desktop";
   };
 
@@ -24,7 +25,8 @@ in
 {
   home.packages = with pkgs; [
     kdePackages.gwenview # an image viewer (KDE): basic editing plus thumbnails
-    kdePackages.okular # a document reader (KDE): PDF/EPUB/CBZ plus annotations
+    papers # the PDF/CBZ reader (GNOME, GTK4/libadwaita, recolored by Stylix) plus annotations
+    readest # the EPUB reader (Tauri + Next.js); it opens PDFs too, by hand
     kdePackages.kimageformats # format plugins for KDE apps: AVIF/HEIF/JXL/PSD/RAW
     kdePackages.qtimageformats # Qt plugins: WebP/TIFF/ICNS (it complements kimageformats)
     vlc # the do-everything GUI video player (it is the video default, further down)
@@ -66,9 +68,9 @@ in
       "image/vnd.microsoft.icon" = app.gwenview; # .ico (Qt reads it natively; the .desktop does not declare it)
       "image/vnd.adobe.photoshop" = app.gwenview; # .psd (through kimageformats)
       # Documents.
-      "application/pdf" = app.okular;
-      "application/epub+zip" = app.okular;
-      "application/vnd.comicbook+zip" = app.okular; # .cbz
+      "application/pdf" = app.papers;
+      "application/epub+zip" = app.readest; # Papers does not open EPUB
+      "application/vnd.comicbook+zip" = app.papers; # .cbz
       # Video. mpv is left for opening by hand or from the CLI.
       "video/mp4" = app.vlc; # .mp4/.m4v
       "video/x-matroska" = app.vlc; # .mkv

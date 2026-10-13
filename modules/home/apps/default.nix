@@ -4,7 +4,7 @@
 {
   imports = [
     ./dropbox.nix # the user's sync service (~/Dropbox: Obsidian plus docs)
-    ./media.nix # viewers (Gwenview/Okular) plus players (VLC/mpv) plus the default apps
+    ./media.nix # viewers (Gwenview/Papers/Readest) plus players (VLC/mpv) plus the default apps
     ./office.nix # ONLYOFFICE: the default for .docx/.xlsx/.pptx/ODF (the MS fonts are in modules/nixos/)
     ./dolphin.nix # Dolphin: the view mode always "Details" (through activation)
     ./recoll.nix # Recoll: search documents and code by content (an hourly index)

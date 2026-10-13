@@ -6,10 +6,15 @@ home-manager merges `defaultApplications` from EVERY module into a single `mimea
 these modules each declare only their own types and the result composes. `modules/home/desktop/xdg.nix`
 holds the browser plus text/code, and `modules/home/apps/curseforge.nix` holds the URL schemes.
 
-## Media: the KDE Gear stack
+## Media: Gwenview plus Papers and Readest
 
-Gwenview (images) and Okular (documents) because this system is already Qt/Kvantum plus Dolphin, so
-they come in themed for free and integrate with the file manager (open-with, thumbnails).
+Gwenview (images) because this system is already Qt/Kvantum plus Dolphin, so it comes in themed
+for free and integrates with the file manager (open-with, thumbnails).
+
+Documents left Okular for a more modern look. Papers (GNOME's GTK4/libadwaita reader) takes PDF and
+CBZ: Stylix already recolors libadwaita, so it follows the palette with no extra config. Readest
+(Tauri + Next.js) takes EPUB, which Papers does not open. JoPDF was considered and rejected: it is
+proprietary, from an unidentified vendor, ships only as a `.deb` and is not in nixpkgs.
 `kimageformats` plus `qtimageformats` give the modern formats (AVIF/HEIF/JXL/WebP/RAW/PSD).
 
 mpv is configured through its `programs.*` module, so it stays idiomatic: `hwdec = "auto-safe"`
@@ -48,7 +53,7 @@ fontconfig already sees them. There is NO need for the "copy the .ttf into
 [`fonts.md`](../hardware/fonts.md).
 
 **A trap**: OnlyOffice's `.desktop` claims 61 mimetypes, pdf, epub, `text/plain`, markdown and csv
-included. The explicit defaults in `media.nix` (Okular) and `xdg.nix` (VS Code) still win, but if
+included. The explicit defaults in `media.nix` (Papers/Readest) and `xdg.nix` (VS Code) still win, but if
 they ever disappear, OnlyOffice starts opening PDFs and `.txt` files.
 
 ## OpenAL: the mute-game fix

@@ -147,6 +147,12 @@ let
         -e 's/^blurring=true$/blurring=false/' \
         "$dir/${kvantumTheme}.kvconfig"
 
+      # A tool button with NO vertical padding. Dolphin sizes its free-space button to the font
+      # height, and Win11OS' 5+6 px frame plus 4 px text margin cut the text in half (measured).
+      sed -i \
+        -e '/^\[PanelButtonTool\]$/a text.margin=0\nframe.top=0\nframe.bottom=0' \
+        "$dir/${kvantumTheme}.kvconfig"
+
       # The 2 keys Win11OS never sets. Unset does NOT mean unused: Kvantum takes them from Qt's
       # palette, which is the LIGHT default.
       sed -i \

@@ -63,12 +63,19 @@ generated `hypr-colors.lua`, so `qt.*` in `theme.nix` is the only owner (rule 11
 ignored (measured); only the app's own `[UiSettings] ColorScheme` loads it, so `dolphin.nix` sets
 Dolphin's. Another KDE app that shows Breeze colors needs the same one key in its own module.
 
+**Dolphin's free-space text needs a tool button with no vertical padding.** Dolphin sizes that
+button to the font height, and Win11OS' frame (5+6 px) plus its 4 px text margin cut the text in
+half; the build zeroes the three in `[PanelButtonTool]`, measured as the smallest change that shows
+it whole.
+
 **The Kvantum theme is OPAQUE.** Win11OS ships `translucent_windows` and `blurring` on, which put the
 wallpaper behind Dolphin's file names on screen; the build turns both off, so Qt windows are as solid
 as the GTK ones.
 
 How it was measured, for the next time: a headless output (`hyprctl output create headless`) plus
-`grim -o`, out of sight. Close `dolphin --daemon` first: a new `dolphin` is handed to the running
+`grim -o`, out of sight. **It costs Quickshell**: after about twenty create/remove cycles the bar died
+with no line in its log (13/10/2026), so keep the cycles few and start it again with `qs` from a
+Hyprland exec. Close `dolphin --daemon` first: a new `dolphin` is handed to the running
 instance over D-Bus, and that instance keeps the environment it started with, so every variant
 measures the same process. The engine's plugin (`qtstyleplugin-kvantum`) and qt6ct come through the
 qt module itself, the same exception as `adwaita-qt`.

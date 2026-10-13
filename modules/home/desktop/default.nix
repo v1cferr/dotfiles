@@ -20,7 +20,7 @@
     ./keyring.nix # the "Login" keyring unlocked at start from a TPM-sealed password (autologin)
     ./lockscreen.nix # hyprlock (the lock screen) plus hypridle (idle: dim plus lock)
     ./quickshell.nix # the shell/bar/OSD/media plus NOTIFICATIONS in QML; hot-reload through mkOutOfStoreSymlink
-    ./theme.nix # dark mode (the prefer-dark color-scheme plus GTK Adwaita-dark)
+    ./theme.nix # dark mode (prefer-dark), icons, cursor, and Qt through the recolored Kvantum
     ./xdg.nix # the default browser (Zen) through xdg.mimeApps plus $BROWSER
   ];
 }

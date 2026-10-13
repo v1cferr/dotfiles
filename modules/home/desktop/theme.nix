@@ -14,7 +14,6 @@ let
   inherit (pkgs)
     bibata-cursors
     fetchFromGitHub
-    gnome-themes-extra
     gtk3
     stdenvNoCC
     ;
@@ -143,7 +142,9 @@ in
   # GTK apps read the UI font FROM HERE, not from fontconfig. The suffix is the size in pt.
   dconf.settings."org/gnome/desktop/interface" = {
     color-scheme = "prefer-dark";
-    gtk-theme = "Adwaita-dark";
+    # GTK on Wayland reads the theme HERE, through the settings portal, not from settings.ini, and a
+    # key dropped from Nix stays in dconf. So it names Stylix's theme instead of going away.
+    gtk-theme = config.gtk.theme.name;
     icon-theme = config.my.theme.iconTheme; # SSOT (the package in gtk below)
     font-name = "${osConfig.my.fonts.ui} 11";
     document-font-name = "${osConfig.my.fonts.ui} 11";
@@ -155,18 +156,13 @@ in
 
   # It writes ~/.config/gtk-3.0 and gtk-4.0. The packages are declared HERE (rule 4); the font
   # comes from modules/nixos/.
+  # The THEME and the font are Stylix's now (adw-gtk3 recolored by the palette, stylix.nix).
   gtk = {
     enable = true;
-    theme = {
-      name = "Adwaita-dark";
-      package = gnome-themes-extra; # it brings Adwaita-dark
-    };
     iconTheme = {
       name = config.my.theme.iconTheme; # SSOT: my.theme.iconTheme
       package = win11-icons; # the Windows 11 icons (Win11-dark); see the derivation in the let
     };
-    font.name = osConfig.my.fonts.ui; # SSOT: modules/nixos/desktop/fonts.nix
-    font.size = 11;
   };
 
   # Qt does NOT follow GTK under Hyprland. It is 100% Kvantum now, which takes over the palette

@@ -50,6 +50,11 @@ in
       base0F = p.pink;
     };
 
+    # The apps it themes, moved over one at a time while autoEnable is off.
+    targets = {
+      gtk.enable = true; # adw-gtk3 plus a gtk.css in the palette; Adwaita gray before
+    };
+
     fonts = {
       monospace = ui;
       sansSerif = ui;

@@ -5,17 +5,17 @@
 ## It is NOT a backup
 
 A snapshot lives on the SAME disk as the data. The Kingston dies, the snapshots die with it.
-What covered that was [restic](restic.md), daily and off-disk, and it is GONE since 24/09/2026:
-nothing covers a dead disk today, a risk taken knowingly in
-[decision 0008](../../decisions/0008-no-offsite-backup-yet.md). The two answered different
-questions, and only one of them is still asked:
+What covers that is [restic](restic.md), daily, onto the Seagate backup disk since 04/10/2026
+([decision 0011](../../decisions/0011-local-disk-backup.md)). An offsite copy is still open
+([decision 0008](../../decisions/0008-no-offsite-backup-yet.md)), so theft, fire or a surge that
+takes both disks is the remaining accepted risk. The two tools answer different questions:
 
 | | answers | cadence |
 | --- | --- | --- |
-| restic, retired 24/09/2026 | "the disk died / the house burned down" | was daily, off-disk, encrypted |
+| restic | "the NVMe died" | daily, other disk, encrypted |
 | btrbk | "I overwrote the file 20 minutes ago" | hourly, instant, local |
 
-restic alone left a hole of up to 24 h and a restore that took minutes. btrbk closes that hole
+restic alone leaves a hole of up to 24 h and a restore that takes minutes. btrbk closes that hole
 for ~zero cost, because a CoW snapshot copies nothing: it only starts taking space to the EXTENT
 that the original data diverges.
 
@@ -23,15 +23,15 @@ Where a copy of `@home` exists today, and where none does:
 
 ```mermaid
 flowchart LR
-    accTitle: What protects @home, as of 24/09/2026
-    accDescr: btrbk snapshots @home hourly into @snapshots on the same NVMe, keeping 48 hours, 7 days and 4 weeks. The daily restic backup was retired on 24/09/2026; its two old repositories sit frozen on the Seagate inside this machine. There is no offsite copy, by decision 0008.
+    accTitle: What protects @home, as of 13/10/2026
+    accDescr: btrbk snapshots @home hourly into @snapshots on the same NVMe, keeping 48 hours, 7 days and 4 weeks. restic copies it daily, encrypted, to the Seagate backup disk inside this machine. There is no offsite copy yet, by decision 0008.
 
-    subgraph nvme["the Kingston NVMe · ONE disk"]
+    subgraph nvme["the Kingston NVMe"]
         HOME["@home"] -->|"hourly, onchange<br>48h 7d 4w"| SNAP["@snapshots<br>/.snapshots"]
     end
 
-    HOME -.-x|"restic, daily<br>retired 24/09/2026"| OFF["offsite<br>NONE, decision 0008"]
-    SEA["the Seagate, inside this machine<br>two frozen restic repos, read-only history"]
+    HOME -->|"restic, daily"| SEA["the Seagate, /mnt/backup<br>btrfs"]
+    SEA -.-x|"restic copy, not yet"| OFF["offsite<br>NONE, decision 0008"]
 ```
 
 ## @home only

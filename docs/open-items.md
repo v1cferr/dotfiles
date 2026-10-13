@@ -10,13 +10,6 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
-- [ ] LibreWolf in the palette (opened 13/10/2026). Its profile is
-      `~/.config/librewolf/librewolf/4gzhcc7n.default`. Stylix's firefox-family target was measured
-      to bring only fonts and reader mode; colors need the Firefox Color extension through NUR.
-      • THE TWO ROADS: a static theme WebExtension generated from the palette and installed by policy
-        (Mozilla's supported theming API, so updates cannot break it), or a userChrome measured with
-        a lab like Zen's. Decide first whether LibreWolf earns either; it was last used 26/09/2026.
-
 - [ ] The homelab services Arch had and NixOS does not, to be detailed before any is built (opened
       13/10/2026). The last open area of [arch-parity-audit.md](arch-parity-audit.md): Arch served 14
       subdomains, this machine declares 7 through `my.ingress`. Absent: the \*arr stack

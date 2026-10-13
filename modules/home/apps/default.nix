@@ -16,6 +16,7 @@
     ./games-disk.nix # the games that live on the Windows disk, symlinked where each launcher looks
     ./android.nix # adb over wireless debugging, scrcpy and uad-ng, to inspect and clean the phone
     ./bottles.nix # Bottles: the package plus the library each bottle lists (through activation)
+    ./librewolf.nix # LibreWolf: the browser plus the palette on its frame
     ./spotify.nix # Spotify through spicetify (the theme, and the package the autostart reads)
     ./zen.nix # Zen: the browser plus the launch guard (a locked screen closes it)
     ./zapfast.nix # ZapFast: native WhatsApp client, the browser tab stays as the fallback

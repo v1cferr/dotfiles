@@ -5,7 +5,6 @@
 {
   home.packages = with pkgs; [
     # ── Browsers ──
-    librewolf # a hardened Firefox (privacy)
     # Chrome's DEV channel; nixpkgs only packages stable.
     inputs.browser-previews.packages.${stdenv.hostPlatform.system}.google-chrome-dev
 

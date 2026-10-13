@@ -1,6 +1,13 @@
 # History: october 2026
 
-4 entries. Index in [README.md](../README.md).
+5 entries. Index in [README.md](../README.md).
+
+- [x] LibreWolf is on the palette, which closes the last theming item (13/10/2026). How and why:
+      [notes/apps/librewolf.md](../../notes/apps/librewolf.md).
+      • NOT A THEME ADD-ON, ON PURPOSE. An unsigned one needs signature checks off for every add-on,
+        a bad trade in a privacy browser, so the frame is a userChrome instead.
+      • THE THEME API'S NAMES ARE DEAD IN 157. A sheet with every `--lwt-*` changed nothing; each
+        part's real variable was read with InspectorUtils in a throwaway profile, never the real one.
 
 - [x] Qt is on the palette, closing the item the Stylix entry below left open (13/10/2026). The
       layers and the measurements are in [notes/desktop/theme.md](../../notes/desktop/theme.md).

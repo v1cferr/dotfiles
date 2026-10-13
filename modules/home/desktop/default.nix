@@ -4,6 +4,7 @@
 {
   imports = [
     ./palette.nix # the SINGLE SOURCE of colors (my.theme.name); it generates the data for Quickshell/Hyprland
+    ./stylix.nix # Stylix APPLIES that palette to the apps it has targets for (GTK, kitty, bat...)
     ./monitors.nix # the SINGLE SOURCE of the connectors (my.monitors); it generates the data for Quickshell/Hyprland
     ./weather.nix # the SINGLE SOURCE of the coordinates plus the WMO -> pt-BR table (my.weather)
     ./glance-feed # the network cache (SQLite) behind the bar's weather, the band and the lock screen

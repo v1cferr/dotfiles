@@ -83,6 +83,7 @@ the hm-module, so that side never gets evaluated.
 | `minegrub-world-sel-theme` | a GRUB theme where each OS/generation becomes a Minecraft "world" with an icon and a description. The other theme by the same author (`minegrub-theme`, the main menu) was passed over: an entry becomes a button, with no icon per OS |
 | `quickshell` | a shell/bar in QML (outfoxxed), NOT in nixpkgs. See [`quickshell.md`](../desktop/quickshell.md) |
 | `browser-previews` | nixpkgs only packages Chrome stable; this maintained nix-community flake keeps `google-chrome-dev` fresh |
+| `stylix` | APPLIES `my.theme.palette` to every app it has a target for (GTK, kitty, bat, mpv, Spotify...). The palette stays the owner of the hexes, because the stock base16 Tokyo Night is not folke's. Pinned to `release-26.05`, the same release as the base, since Stylix warns on a mismatch. See [decision 0012](../../decisions/0012-stylix-applies-the-palette.md) |
 | `git-hooks.nix` | pre-commit managed by Nix, so the lint catches things BEFORE the commit instead of after the push. `cachix/git-hooks.nix` is the current name; the old `pre-commit-hooks.nix` repo redirects |
 
 ### claude-desktop

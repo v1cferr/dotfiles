@@ -2,7 +2,7 @@
 
 Every themed program reads one palette of my own, picked by one option, instead of nix-colors.
 
-- **Status**: accepted
+- **Status**: accepted, refined by [0012](0012-stylix-applies-the-palette.md) (Stylix applies it)
 - **Date**: 29/07/2026, first recorded; it was rule 9 until 30/09/2026
 
 ## Context

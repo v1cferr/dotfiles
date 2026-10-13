@@ -67,6 +67,13 @@
       inputs.nixpkgs.follows = "nixpkgs"; # dedup: the packages it uses come from MY pkgs anyway
     };
 
+    # Stylix: it APPLIES the palette to every app it knows; palette.nix keeps the hexes, because the
+    # stock base16 Tokyo Night is not folke's. Why: docs/decisions/0012-stylix-applies-the-palette.md
+    stylix = {
+      url = "github:nix-community/stylix/release-26.05";
+      inputs.nixpkgs.follows = "nixpkgs"; # dedup
+    };
+
     # Claude Desktop: not in nixpkgs. This flake repackages the OFFICIAL .deb (the nixpkgs pattern
     # for a vendored binary). The 2 alternatives that were passed over: docs/notes/repo/flake.md
     claude-desktop = {

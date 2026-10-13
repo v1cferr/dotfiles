@@ -117,3 +117,26 @@ Two honest warnings:
   pay for the risk.
 - nodatacow also turns the CHECKSUM off for those files. A conscious trade: Postgres has its own
   checksums, and Jellyfin's SQLite is rebuildable by scanning the library again.
+
+## `~/.cache` is its own subvolume
+
+A snapshot stops at a subvolume boundary, so a NESTED subvolume at `~/.cache` keeps btrbk's hourly
+`@home` snapshots from pinning the cache's churn for up to 4 weeks (14 GiB of nix, uv, recoll,
+Spotify, Chrome and pnpm caches, MEASURED on 13/10/2026). restic already excluded it; this is the
+same decision applied to the snapshots. It is the article's "subvolumes for caches" (Akita,
+12/10/2026).
+
+The tmpfiles `v` rule makes `~/.cache` be BORN a subvolume for every normal user on a fresh
+install. It does nothing to a path that already exists, so an existing one is converted ONCE, by
+hand, as the user (no sudo: a user can create a subvolume inside a directory it owns):
+
+```bash
+btrfs subvolume create ~/.cache.new && chmod 700 ~/.cache.new
+cp -a --reflink=always ~/.cache/. ~/.cache.new/   # shares extents: instant, no extra space
+mv -T ~/.cache ~/.cache.old && mv -T ~/.cache.new ~/.cache
+rm -rf ~/.cache.old
+stat -c %i ~/.cache                                # 256 = a subvolume root
+```
+
+Then log out and back in, so apps reopen their caches in the new subvolume. Steam stays in `@home`
+on purpose: its library changes little between updates, and the games live on the Windows disk.

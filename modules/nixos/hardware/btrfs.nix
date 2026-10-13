@@ -36,6 +36,13 @@ let
       "the BACKUP copy is damaged (the live data on the NVMe is fine). Run 'sudo restic check --read-data' on the repo, and replace the disk if the errors grow";
   };
 
+  # A NESTED subvolume per ~/.cache: a snapshot stops at a subvolume boundary, so btrbk's hourly
+  # @home snapshots no longer pin the cache's churn. `v` only acts on a path that does not exist
+  # yet; an existing ~/.cache is converted once, by hand (the notes).
+  cacheSubvolumes = lib.mapAttrsToList (name: u: "v ${u.home}/.cache 0700 ${name} ${u.group} -") (
+    lib.filterAttrs (_: u: u.isNormalUser) config.users.users
+  );
+
   # The unit names are DERIVED, not typed: if a scrub target changes, its onFailure follows.
   escape = utils.escapeSystemdPath;
 
@@ -138,7 +145,8 @@ lib.mkIf rootIsBtrfs (
       systemd.tmpfiles.rules = [
         "h /var/lib/docker/volumes - - - - +C" # container volumes (duo's Postgres lives here)
         "h /var/lib/jellyfin/data  - - - - +C" # the Jellyfin library's SQLite
-      ];
+      ]
+      ++ cacheSubvolumes;
     }
   ]
 )

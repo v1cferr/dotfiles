@@ -28,14 +28,14 @@ score reads 9.6 where the offline one reads 9.4):
 
 | Unit | What it does | Before | After |
 | --- | --- | ---: | ---: |
-| `btrfs-device-stats` | reads the I/O error counters | 9.4 | 5.3 |
+| `btrfs-device-stats-*` | reads the I/O error counters | 9.4 | 5.3 |
 | `btrfs-reclaim-tuning` | writes the reclaim knobs in `/sys` | 9.4 | 5.3 |
 | `docker-volume-prune` | talks to the docker socket | 9.4 | 5.3 |
 | `logid-reapply` | restarts logid over D-Bus | 9.4 | 5.3 |
 
 ## Who does not, and why
 
-- **`btrfs-alert-scrub-*`, `btrfs-alert-devstats`**: they reach the user's session (`runuser`, the
+- **`btrfs-alert-scrub-*`, `btrfs-alert-devstats-*`**: they reach the user's session (`runuser`, the
   D-Bus under `/run/user`) to raise the only alarm a failing disk gets. A restriction that broke
   them would fail in silence, which costs more than it saves.
 - **`openrgb-gpu`**: it needs the GPU's i2c bus.

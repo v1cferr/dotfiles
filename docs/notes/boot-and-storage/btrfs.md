@@ -67,6 +67,12 @@ counter is different from zero.
 A counter does not reset itself. After investigating, acknowledge it with
 `sudo btrfs device stats -z /`, otherwise the alarm correctly repeats every day.
 
+The backup disk gets its own daily check since 13/10/2026 (`btrfs-device-stats-mnt-backup`):
+it is an old HDD with worn mechanics ([disk health](../hardware/smart.md)), the kind that starts
+failing between one monthly scrub and the next. `RequiresMountsFor` mounts it BEFORE the unit's
+sandbox is built, because an automount triggered from inside a private mount namespace would not
+be the host's mount. Waking the disk once a day costs nothing new: restic already does it nightly.
+
 `LogLevelMax = "warning"` so the daily unit does not log "Starting/Finished" forever (the bb8690c
 lesson).
 

@@ -24,6 +24,9 @@ in
 
   stylix = {
     enable = true;
+    # Its HM module would set nixpkgs.overlays, which clashes with useGlobalPkgs and is an eval
+    # warning (the CI aborts on warnings). Imported through NixOS it switches this off by itself.
+    overlays.enable = false;
     autoEnable = true; # every app Stylix knows gets the palette; the exceptions are listed below
     polarity = "dark";
 

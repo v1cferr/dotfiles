@@ -3,6 +3,7 @@
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Notifications
+import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -74,6 +75,10 @@ Rectangle {
         return "";
     }
     property string fallbackIcon: ""
+    // A real picture (not a theme icon) gets rounded: a circle for a chat message, as a contact
+    // photo (category im.*), and soft corners for the rest (a cover, a screenshot).
+    readonly property bool isPicture: card.themeIcon !== "" && card.notif && (card.notif.image || "") !== "" && !(/^image:\/\/icon\/[^\/]/.test(card.notif.image))
+    readonly property bool isChat: card.notif && card.notif.hints && ("" + (card.notif.hints.category || "")).startsWith("im.")
     readonly property string iconSource: card.themeIcon !== "" ? card.themeIcon : card.fallbackIcon
 
     // The breeze fallback when the current theme does not have the icon (async; a direct argv,
@@ -136,21 +141,28 @@ Rectangle {
             Layout.alignment: Qt.AlignTop
             implicitWidth: 36
             implicitHeight: 36
-            Image {
-                id: nimg
+            ClippingRectangle {
+                id: nclip
                 anchors.fill: parent
                 // it disappears (falling back to the bell) if the source is empty OR fails to
                 // load, which avoids Qt's magenta/black "broken image" checkerboard.
                 visible: card.iconSource !== "" && nimg.status !== Image.Error
-                source: card.iconSource
-                asynchronous: true
-                fillMode: Image.PreserveAspectFit
-                sourceSize.width: 36
-                sourceSize.height: 36
+                color: "transparent"
+                radius: card.isPicture ? (card.isChat ? width / 2 : 8) : 0
+                Image {
+                    id: nimg
+                    anchors.fill: parent
+                    source: card.iconSource
+                    asynchronous: true
+                    // a picture fills the shape (crop); an icon keeps its whole outline (fit)
+                    fillMode: card.isPicture ? Image.PreserveAspectCrop : Image.PreserveAspectFit
+                    sourceSize.width: 36
+                    sourceSize.height: 36
+                }
             }
             Text {
                 anchors.centerIn: parent
-                visible: !nimg.visible
+                visible: !nclip.visible
                 text: "󰂚"
                 color: card.notif ? card.urgColor(card.notif.urgency) : Theme.colAccent
                 font.family: Theme.uiFont

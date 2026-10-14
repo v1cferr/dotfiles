@@ -71,6 +71,11 @@ the session went with it in silence. Now the package carries the `Homepage` poli
 `about:policies` shows it. A policy writes the DEFAULT branch, so `prefs.js` never gets the line,
 which is why the old `grep` precondition had to go.
 
+The same policy file installs Vicinae's add-on (`ExtensionSettings`, `firefox@vicinae.com`,
+`normal_installed` from AMO's `latest.xpi`), so tab search survives a new profile. It is the signed
+AMO build, so signature checks stay as they are, and AMO keeps it updated. Why it is there:
+[`vicinae.md`](../desktop/vicinae.md#the-browser).
+
 ## Killing precisely, because `pgrep -f` is wider than it looks
 
 SIGTERM is Firefox's clean quit: it writes `sessionstore` and exits, the same path a logout takes.

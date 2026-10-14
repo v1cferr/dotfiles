@@ -32,9 +32,16 @@ let
   zen = import "${inputs.zen-browser}/wrap-zen.nix" wrapFirefox (
     inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.beta-unwrapped.override
       {
-        extraPolicies.Homepage = {
-          StartPage = "previous-session";
-          Locked = true;
+        extraPolicies = {
+          Homepage = {
+            StartPage = "previous-session";
+            Locked = true;
+          };
+          # Vicinae's tab search (docs/notes/desktop/vicinae.md): the signed AMO build, kept current by AMO.
+          ExtensionSettings."firefox@vicinae.com" = {
+            installation_mode = "normal_installed";
+            install_url = "https://addons.mozilla.org/firefox/downloads/latest/vicinae/latest.xpi";
+          };
         };
       }
   ) { icon = "zen-browser"; };

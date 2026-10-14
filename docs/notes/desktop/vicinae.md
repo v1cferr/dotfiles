@@ -240,10 +240,17 @@ To turn it on:
 The Vicinae add-on (`firefox@vicinae.com`, signed, on AMO) talks to the server through native
 messaging. The nixpkgs build writes the host manifest itself at every start, into
 `~/.mozilla/native-messaging-hosts/` and, because `~/.zen` exists, into
-`~/.zen/native-messaging-hosts/`. Nothing in Zen's policies or signature checks changes: the add-on
-is installed by hand from AMO inside Zen, once. The manifests were there after the first start on
-13/10/2026, pointing at the store's `vicinae-browser-link`; they are rewritten at every start, so a
-version bump repoints them. Tabs showing up in Vicinae once the add-on is in is NOT verified yet.
+`~/.zen/native-messaging-hosts/`. The manifests were there after the first start on 13/10/2026,
+pointing at the store's `vicinae-browser-link`; they are rewritten at every start, so a version
+bump repoints them.
+
+The add-on itself comes from Zen's `ExtensionSettings` policy (`modules/home/apps/zen.nix`), added on
+14/10/2026: `normal_installed` from AMO's `latest.xpi`, so it is the signed AMO build (signature
+checks unchanged), AMO keeps it current, and it can still be disabled in `about:addons`. Its only
+permissions are `tabs` and `nativeMessaging` (AMO API, 1.0.0). It gives tab search, focus and close
+from Vicinae's root, and turns a tab into a shortcut. Upstream also suggests granting "Run on sites
+with restrictions" by hand in `about:addons`; no policy key covers that per-add-on choice, and tab
+listing does not need it. Tabs showing up in Vicinae is NOT verified yet.
 
 ## Debugging
 

@@ -37,9 +37,12 @@ Quickshell, hyprlock and the `vpn` CLI. The binds for those are unchanged.
 ## How it is installed
 
 Home Manager's own `programs.vicinae` module (release-26.05) with `pkgs.unstable.vicinae`, because
-26.05 ships 0.23 and the features below need 0.29. The binary comes from cache.nixos.org, so there
-is no Vicinae flake input and no extra substituter. Upstream's flake was the alternative: one
-version newer, but it wants its own nixpkgs plus vicinae.cachix.org, or a local Qt build per bump.
+26.05 ships 0.23 and the features below need 0.29. There is no Vicinae flake input and no extra
+substituter. Upstream's flake was the alternative: one version newer, but it wants its own nixpkgs
+plus vicinae.cachix.org. Since 14/10/2026 the package carries a one-line patch (see
+[the theme](#the-theme)), so it is built here instead of coming from cache.nixos.org: 9 min 16 s on
+ex-b560m-v5 (12 threads, 14/10/2026), Qt dev outputs fetched from the cache, on every unstable bump
+that touches it.
 
 The unit is Home Manager's (`vicinae server`, `Restart=always`, wanted by
 `graphical-session.target`), extended with the repo's session conventions: `ConditionEnvironment =
@@ -122,9 +125,14 @@ directory with a `CACHEDIR.TAG` (0.29.0's `entry-filter.cpp`). The index lives i
 `themes.palette` is generated from `my.theme.palette`, so a `my.theme.name` switch plus a rebuild
 recolors it like every other consumer, and both the dark and the light slot point at it. Stylix's
 own Vicinae target is off: its base16 mapping has no slot for `border`. The built-in commands draw
-their icon on a tile filled with one of the `accents` (Clipboard red, Files orange...), hardcoded
-per command; at full strength those were loud blocks next to the Win11 app icons, so the accents
-are the palette's colors at 20 % opacity, which leaves soft tinted chips under a light glyph. The font is `my.fonts.ui`
+their line icon on a tile filled with one of the `accents` (Clipboard red, Files orange...),
+hardcoded per command. No theme key reaches the tile alone: the same `accents` color the alert's
+warning icon and confirm button, syntax highlighting, script ANSI output and extension tags, so
+dimming them (20 % here until 14/10/2026) dimmed all of those too. The accents are therefore the
+palette's colors at full strength, and a `postPatch` empties the return in `resolveBackgroundTint`
+(`image-stream.cpp`), so the built-in icons render as bare line glyphs in the text color, like the
+[script icons](#script-commands). `--replace-fail` breaks the build if an upstream bump moves that
+line: then adjust or drop the substitution. The font is `my.fonts.ui`
 and the icons are `my.theme.iconTheme`. The frame follows Vicinae's own clipboard screenshot, the
 look I asked for on 14/10/2026: a 1 px outline at half strength instead of the 2 px accent ring,
 and dividers in `track`, one step above the surface, so the panes separate without lines that
@@ -138,7 +146,7 @@ draw the eye.
 | `main_window.border` (1 px) | `border` at 50 % opacity |
 | `core.border` (the dividers), `input.border` | `track` |
 | `list.item.selection.background` | `track` |
-| `accents.*` | the palette's named colors at 20 % opacity |
+| `accents.*` | the palette's named colors |
 | `text.danger`, `text.success` | `red`, `green`, solid |
 
 ## Shortcuts

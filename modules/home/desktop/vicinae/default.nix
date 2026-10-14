@@ -87,7 +87,14 @@ in
 
   programs.vicinae = {
     enable = true;
-    package = pkgs.unstable.vicinae; # 0.29 against 26.05's 0.23
+    # 0.29 against 26.05's 0.23, patched so built-in icons are bare line glyphs (no accent tile),
+    # like the Nerd Font script icons. --replace-fail breaks the build if upstream moves the line.
+    package = pkgs.unstable.vicinae.overrideAttrs (old: {
+      postPatch = (old.postPatch or "") + ''
+        substituteInPlace src/server/src/ui/image/image-stream.cpp \
+          --replace-fail "if (c.isValid() && c.alpha() > 0) return c;" ""
+      '';
+    });
     systemd = {
       enable = true;
       target = "graphical-session.target";
@@ -117,23 +124,17 @@ in
           opacity = 0.5;
         };
         settings_window.border = c "border";
-        # The accents paint the built-in icons' tiles: at 20% they read as soft chips, not blocks.
-        accents =
-          lib.genAttrs
-            [
-              "blue"
-              "green"
-              "magenta"
-              "orange"
-              "purple"
-              "red"
-              "yellow"
-              "cyan"
-            ]
-            (k: {
-              name = c k;
-              opacity = 0.2;
-            });
+        # Full strength: they color alerts, syntax, script ANSI output and tags (the tiles are patched out).
+        accents = lib.genAttrs [
+          "blue"
+          "green"
+          "magenta"
+          "orange"
+          "purple"
+          "red"
+          "yellow"
+          "cyan"
+        ] c;
         text = {
           default = c "text";
           muted = c "subtext";

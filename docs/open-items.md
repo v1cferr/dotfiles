@@ -429,20 +429,24 @@ finished work. What was closed is in the [august history](history/2026/08-august
         shows them at "top level 256", which is `@` itself. `/persist` also still has
         `neededForBoot = false`, and it has to be true before the wipe lands.
 
-- [ ] Turn off every LED on every piece of hardware in AFK mode. Nothing is declared for this
-      yet (`dead-config` confirms there is no OpenRGB anywhere in the tree).
+- [ ] Turn off every LED on every piece of hardware in AFK mode. The GPU's LEDs are declared and
+      applied AT BOOT (`my.rgb.color`, default `000000`); what is still open is the AFK trigger
+      and every device that is not the GPU.
       • THE BLOCKER IS GONE (19/09/2026). The Steel Legend B580's RGB is reachable, and it
         took no reverse engineering in the end: the LED sits behind the card's AMC at 0x36 on
         the GPU's OWN internal I2C bus, not on the chipset SMBus, and it answers the protocol
         that OpenRGB's ASRock GPU controller already implements for the Radeon Steel Legend
-        cards. The patch is written, built and tested on the card, and drives the three zones
-        (logo, fans, ARGB header) independently. It lives in `~/Projects/Codeberg/OpenRGB`
-        and is waiting to be submitted upstream.
-      • WHAT REMAINS is packaging, not discovery: nixpkgs ships openrgb 1.0rc3, too old to
-        even contain the ASRock GPU controller, so `services.hardware.openrgb` only becomes
-        useful through an overlay carrying master plus the patches. That overlay is a debt
-        that is born the day the merge request lands and dies the day nixpkgs catches up,
-        which is the argument for deciding it separately. The fans stay uncontrollable.
+        cards. Upstream took it, the packaging debt is declared as an overlay carrying master
+        plus the four patches, and the colour is applied by a boot service. The whole story,
+        including when that overlay dies: `docs/notes/hardware/gpu-rgb.md`.
+      • THE FANS LEFT THIS ITEM (14/10/2026), and the line here that said they stay
+        uncontrollable was wrong the moment it was written down as permanent. They are
+        controllable, over a path that has nothing to do with the LEDs: the PCODE mailbox,
+        through a patched `xe`, plus the board's own NCT6798D for the other two. Measured on
+        the card, 0 to 3926 RPM: `docs/notes/hardware/fans.md`.
+      • WHAT IS STILL TRUE is that this takes TWO programs, OpenRGB for the light and
+        CoolerControl for the air, because no single one speaks both i2c LEDs and hwmon fans.
+        One program for both was the original hope and it is not on offer.
 
 - [~] Passwordless remote maintenance on the router and on the switch (OpenWrt).
       • ROUTER, done: SSH was already key-based (`ssh v1cferr@192.168.1.1` runs in BatchMode),

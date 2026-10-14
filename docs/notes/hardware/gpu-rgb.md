@@ -5,8 +5,9 @@
 card, and [`pkgs/openrgb/`](../../../pkgs/openrgb/) holds the four patches it applies. All of it is
 temporary by design: the section at the end says exactly when to delete it.
 
-The card's fans are a separate story. Their LEDs are controlled here, their SPEED is not
-controllable at all, and the reason is in [`gpu.md`](gpu.md).
+The card's fans are a separate story, and it is a different page: their LEDs are controlled here,
+their SPEED is controlled through a patched `xe` and the PCODE mailbox, in
+[`fans.md`](fans.md). The two paths share nothing but the card.
 
 ## The LED is not where anyone assumed it was
 

@@ -205,8 +205,9 @@ The Vicinae add-on (`firefox@vicinae.com`, signed, on AMO) talks to the server t
 messaging. The nixpkgs build writes the host manifest itself at every start, into
 `~/.mozilla/native-messaging-hosts/` and, because `~/.zen` exists, into
 `~/.zen/native-messaging-hosts/`. Nothing in Zen's policies or signature checks changes: the add-on
-is installed by hand from AMO inside Zen, once. Whether Zen's wrapper reads that manifest is in the
-runtime checks below.
+is installed by hand from AMO inside Zen, once. The manifests were there after the first start on
+13/10/2026, pointing at the store's `vicinae-browser-link`; they are rewritten at every start, so a
+version bump repoints them. Tabs showing up in Vicinae once the add-on is in is NOT verified yet.
 
 ## Debugging
 
@@ -220,3 +221,34 @@ vicinae cmd ls --json                # every indexed command, scripts and extens
 The state lives in `~/.local/share/vicinae/` (the clipboard database and blobs, `vicinae.db`,
 `metadata.json` with the visit counts, `snippets/`, `shortcuts/`, the extensions and the scripts)
 and the file index in `~/.cache/vicinae/`.
+
+Two upstream quirks seen on 0.29.0, both harmless here:
+
+- `Circular import detected for <overrides>.json, ignoring` at every start. `load()` recurses into
+  the override file, which then finds itself in its own override list; the top-level merge already
+  happened, which the encrypted databases prove.
+- `vicinae close` hangs when the window open is a `dmenu` session (the cheatsheet). Nothing here
+  calls it; Esc and the binds close it fine.
+
+## Runtime checks (13/10/2026, right after the switch)
+
+Measured on this machine (ex-b560m-v5, Hyprland 0.55.4, Vicinae 0.29.0), with my session in use:
+
+| Check | Result |
+| --- | --- |
+| `vicinae toggle` x10, open / close | 10 of 10 worked; open 11-21 ms in 8 runs and about 1 s twice; close 15-30 ms, once 940 ms |
+| memory, PSS | server 248 MiB, extension runtime (node) 73 MiB, file indexer 86 MiB, data-control 2 MiB |
+| idle CPU, 60 s | 66 ms, 0.11 % of one core |
+| first index | `~/Projects` in 66 s, 1493 directories watched; the cgroup held 696 MiB of reclaimable file cache after it |
+| encryption | `clipboard.db` and `vicinae.db` no longer start with the SQLite header |
+| image history | a PNG copied by a process that then exited was recorded and still pasted (wl-clip-persist) |
+| passwords | an offer with `x-kde-passwordManagerHint` was logged "Ignored password clipboard selection" |
+| commands | `vicinae cmd ls` lists the 13 scripts and the four extensions' commands |
+| cheatsheet | opened from the real `keybinds-cheatsheet` and exited 0 |
+| theme | Tokyo Night background and accent, JetBrains Mono and the Win11 icons, by screenshot |
+
+Not compared with rofi: rofi was not running as a server, so there is no fair "lighter" number,
+and this note does not claim one. Still to check by hand: the calculator and file search typed in
+the window, each script command run once (the VPN ones need the network), `clipboard-push
+workstation` with the VPN up, the Zen guard with the real dialog after a lock, the GitHub
+extension once the token exists, and the browser add-on.

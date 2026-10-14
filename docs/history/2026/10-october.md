@@ -1,7 +1,22 @@
 # History: october 2026
 
-7 entries. Index in [README.md](../README.md).
+8 entries. Index in [README.md](../README.md).
 
+- [x] Vicinae replaced rofi and cliphist: one launcher for apps, files, the calculator, the
+      clipboard history, my commands and four extensions (13/10/2026). How and why:
+      [notes/desktop/vicinae.md](../../notes/desktop/vicinae.md).
+      • SETTINGS STAY WRITABLE. Home Manager's `settings` would make `settings.json` a read-only
+        store link, so the declared keys ride `VICINAE_OVERRIDES` on the unit and win over it.
+      • ENCRYPTED HISTORY, NO INPUT SERVER. `encrypt_sensitive_data` is off by default on Linux and
+        is on here; the uinput helper that pastes and expands snippets is a keyboard-reading
+        capability binary, so selecting copies instead.
+      • NOTHING REIMPLEMENTED. `clipboard-push`, the cheatsheet's parser and the `vpn` CLI stay;
+        the Zen guard's prompt moved to `zenity --password` with every fail-closed exit intact.
+      • TWO EXTENSIONS NEEDED A LOCK PATCH: dbus-next's optional `usocket` pins a node-gyp that
+        dies on Node 24, which is why upstream's own flake skips them.
+      • MEASURED ON 13/10/2026, this machine, right after the switch: open 11-21 ms in 8 of 10
+        toggles (two outliers near 1 s), idle CPU 0.11 % of a core over 60 s, PSS about 410 MiB
+        across the four processes, first index of `~/Projects` in 66 s.
 - [x] The home path has one source, closing an item open since 16/08/2026 (13/10/2026). NixOS
       modules read `config.users.users.v1cferr.home`, home-manager ones `config.home.homeDirectory`,
       which the NixOS integration derives from it, so `modules/home/default.nix` stopped setting it.

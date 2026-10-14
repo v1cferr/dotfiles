@@ -165,7 +165,7 @@ does not have, so every key above is a `hl.bind` in `keybinds.lua`, and there is
 
 Vicinae's [shortcuts](https://docs.vicinae.com/shortcuts) are URL templates with arguments, opened
 in a chosen app. `shortcuts.nix` declares them, each opened in Zen by its desktop id `zen-beta`
-with its site's favicon as icon: **Search Google**, **Search YouTube** and **Search Nix packages**
+with its site's favicon as icon: **Search Google**, **Search YouTube**, **Search my GitHub repos** (my profile's repository tab filtered by the query) and **Search Nix packages**
 (search.nixos.org on the channel this system builds from, `system.nixos.release`; the `nix`
 extension searches the same index inside Vicinae). A shortcut with exactly one argument can be a
 fallback, and Google is first in `fallbacks`: typing anything that matches nothing offers it at the

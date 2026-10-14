@@ -23,6 +23,10 @@ let
   shortcuts = [
     google
     (mk "youtube" "Search YouTube" "youtube.com" "https://www.youtube.com/results?search_query={query}")
+    # My own repositories: the profile's repository tab, filtered by name.
+    (mk "github" "Search my GitHub repos" "github.com"
+      "https://github.com/v1cferr?tab=repositories&q={query}"
+    )
     # The channel this system builds from, so a hit is a package it can actually install.
     (mk "nixpkgs" "Search Nix packages" "search.nixos.org"
       "https://search.nixos.org/packages?channel=${osConfig.system.nixos.release}&query={query}"

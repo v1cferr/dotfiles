@@ -76,9 +76,12 @@ game comes from the bottle's `mangohud: true` toggle in Bottles; this module onl
 overlay that one injects. Since the bottle maps `$HOME`, the overlay reads this conf normally. The
 show/hide toggle is Shift(right)+F12.
 
-**Caveats of the `xe` driver on the Arc B580**: `gpu_power` and `gpu_fan` will probably be EMPTY,
-since the Arc does not expose power or fan through hwmon today (checked). They are left on: they
-break nothing, and they start showing up if a future kernel exposes them. `gpu_mem_temp` is in the
-same category, the sensor exists but can stay empty.
+**Caveats of the `xe` driver on the Arc B580**: `gpu_power` will probably be EMPTY, because the
+card exposes no INSTANTANEOUS power through hwmon, only the energy counters (`energy1_input`,
+`energy2_input`) and the cap. A reader that wants watts has to derive them from two energy
+readings, which is what the bar does and MangoHud does not. `gpu_fan` is a different case and an
+older claim here was wrong: `fan1_input` does exist and the bar reads it, so the figure should
+appear, reading zero whenever the card is in its zero RPM idle. `gpu_mem_temp` is fine, the
+sensor exists. The ones left on break nothing either way.
 
 `cpu_power` does work here, through RAPL on the i5-11400.

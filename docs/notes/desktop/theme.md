@@ -25,7 +25,7 @@ that is GTK, mpv (OSD), yazi, fzf, starship, MangoHud (colors only) and gdu. Eac
 `stylix.nix` with its reason, in three groups:
 
 - **Themed here from the same palette**, with keys base16 has no slot for: Hyprland (Lua written
-  by hand), hyprlock, hyprpaper, Qt (Kvantum plus a KDE color scheme), rofi, Zen, VS Code (its settings.json is in the repo).
+  by hand), hyprlock, hyprpaper, Qt (Kvantum plus a KDE color scheme), Vicinae, Zen, VS Code (its settings.json is in the repo).
 - **An official per-app theme beats a generic base16 one**: kitty, bat (and delta through it),
   Spotify, btop. Measured for kitty: base16 has no bright ANSI slots, so Stylix painted color8
   `#292e42` (zsh autosuggestions near invisible) and every bright color the same as its normal one.
@@ -215,7 +215,7 @@ enough that a broken consumer is obvious at a glance.
 
 There are two kinds of consumer:
 
-- **Nix consumers** (rofi, lockscreen, flameshot, the Kvantum theme) read
+- **Nix consumers** (Vicinae, lockscreen, flameshot, the Kvantum theme) read
   `config.my.theme.palette.<color>` directly.
 - **Hot-reload consumers** (Quickshell in QML, Hyprland in Lua) read DATA FILES generated into
   `~/.config/theme/`, because Nix cannot write inside the symlinked `quickshell/` and `hypr/` trees.

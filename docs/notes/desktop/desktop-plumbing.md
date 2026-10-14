@@ -1,4 +1,4 @@
-# Desktop plumbing: the polkit agent, XDG associations, the wallpaper, rofi
+# Desktop plumbing: the polkit agent, XDG associations, the wallpaper, the cheatsheet
 
 Small modules whose reasoning is longer than their config.
 
@@ -58,7 +58,7 @@ ZERO applications and the double click fails in silence, even with a perfectly f
 
 Plasma would bring its own (`plasma-applications.menu`), but here the session is Hyprland, so it
 has to be declared. A flat menu (`<All/>`) because the only consumer is the ksycoca index, not a
-launcher with categories: rofi reads the `.desktop` files directly. If Plasma ever comes in, it
+launcher with categories: Vicinae reads the `.desktop` files directly. If Plasma ever comes in, it
 uses the `XDG_MENU_PREFIX=plasma-` prefix and ignores this file, so there is no conflict.
 
 ## The wallpaper

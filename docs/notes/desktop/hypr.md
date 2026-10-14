@@ -22,7 +22,7 @@ to the PATH through `home.packages`, so the modules invoke them by NAME, which i
 `.lua` files stay static.
 
 The keybinds and window rules are at PARITY with the Arch/Kingston setup (the Arch tree, tag `archive/arch-final`), with
-the tools adapted to the NixOS stack (rofi, dolphin, quickshell).
+the tools adapted to the NixOS stack (Vicinae, dolphin, quickshell).
 
 Idleness and the lock screen live in [`lockscreen.md`](lockscreen.md).
 
@@ -229,8 +229,8 @@ It does four things:
 3. Starts Quickshell.
 4. Starts `wl-clip-persist`, which keeps a copy alive after the source app closes. On Wayland the
    clipboard's owner is the app, so without it a Flameshot image disappears when flameshot exits
-   and Ctrl+V pastes nothing. It pairs with cliphist, which is now a declarative service and is no
-   longer launched here.
+   and Ctrl+V pastes nothing. The HISTORY is Vicinae's, a `--user` service not launched here
+   ([vicinae.md](vicinae.md)).
 
 ### Window rules
 

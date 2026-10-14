@@ -115,7 +115,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [autostart](desktop/autostart.md) | what opens at login, and Spotify's 4145 restarts |
 | [hyprsunset](desktop/hyprsunset.md) | the blue light curve, and why 13 profiles |
 | [backlight](desktop/backlight.md) | DDC/CI on both panels, the 10000 K that faked a broken filter |
-| [desktop-plumbing](desktop/desktop-plumbing.md) | the polkit agent, XDG associations, the wallpaper, rofi |
+| [desktop-plumbing](desktop/desktop-plumbing.md) | the polkit agent, XDG associations, the wallpaper, the cheatsheet, clipboard-push |
 | [vicinae](desktop/vicinae.md) | the launcher, the clipboard history, the command palette |
 
 ### apps

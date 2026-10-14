@@ -9,11 +9,11 @@ the font's PACKAGE is system level (rule 4), so the name and the package stay to
 fontconfig below also needs the name, and a system module cannot read a home-manager option.
 
 The USER consumers read it through `osConfig`, the same pattern as `my.services`: GTK and Qt
-(`modules/home/desktop/theme.nix`), kitty, hyprlock, rofi and Quickshell's JSON.
+(`modules/home/desktop/theme.nix`), kitty, hyprlock, Vicinae and Quickshell's JSON.
 
 Switching fonts is 1 line (`my.fonts.ui`) plus the corresponding package in the list.
 
-The SIZE stays with each consumer: 11pt in GTK, 12pt in kitty/rofi, and the lockscreen varies per
+The SIZE stays with each consumer: 11pt in GTK, 12pt in kitty, Vicinae's own default (10.5pt), and the lockscreen varies per
 widget. That is context, not theme.
 
 Note that keeping a MONO font in the UI is a deliberate choice, not an accident; see the memory

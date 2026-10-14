@@ -167,7 +167,17 @@ directory Vicinae scans and watches. They call the existing CLIs by name, the sa
 | System | NixOS rebuild: `needsConfirmation`, then a visible kitty running `rebuild`, so nh's sudo prompt and the log stay in front of me |
 | Links | FAI Dashboard, GitHub, dotfiles on GitHub, dotfiles in VS Code |
 
-To add one, add an entry to the list in `scripts.nix` (`name`, `title`, `group`, optional `mode`
+**Their icons are JetBrainsMono Nerd Font glyphs**, the UI font, cut out at build time as SVGs in
+the palette's `text` color (fonttools, one `runCommand` per glyph) and named in the header with
+`@vicinae.icon <store path>`. They are looked up by glyph NAME (`md-lock_outline`, `linux-nixos`),
+so a name the font does not have fails the build instead of showing a blank. The `_outline`
+variants are used where Material Design has one, to match the thin strokes of Vicinae's own icons.
+Only my scripts can do this: the built-in commands' icons are SVGs compiled into Vicinae, and it
+only accepts a text glyph as an icon when the glyph is in its Unicode/emoji table, which the Nerd
+Font private-use range is not. Replacing those would mean patching Vicinae and building it locally
+on every bump, so they stay.
+
+To add one, add an entry to the list in `scripts.nix` (`name`, `title`, `group`, `glyph`, optional `mode`
 and `confirm`). `vicinae script check <file>` validates a header; it prints nothing for a good one
 and the error for a bad one, and it exits 0 either way, so read its output. All thirteen passed on
 13/10/2026.

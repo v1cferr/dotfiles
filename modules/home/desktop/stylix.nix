@@ -63,6 +63,7 @@ in
       kde.enable = false; # it would apply a Plasma look-and-feel; there is no Plasma here
       gnome.enable = false; # no GNOME session; theme.nix owns the dconf interface keys (fonts, cursor)
       rofi.enable = false; # four raw .rasi files, not programs.rofi
+      vicinae.enable = false; # desktop/vicinae: its theme needs border, which base16 lacks
       zen-browser.enable = false; # wrapped by hand, its theme measured in the lab (apps/zen/theme.nix)
       vscode.enable = false; # settings.json is versioned in the repo (rule 14)
       # An official per-app theme beats a generic base16 one: base16 has no bright ANSI slots, so

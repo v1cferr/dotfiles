@@ -13,6 +13,7 @@
     ./hypr.nix # ~/.config/hypr/hyprland.conf (ABNT2 plus monitors plus keybinds)
     ./clipboard.nix # cliphist (the history) plus rofi (a picker with an image/type preview); Tokyo Night
     ./launcher.nix # the app launcher (rofi drun: icons plus recency plus Tokyo Night)
+    ./vicinae # the launcher (SUPER+Q) plus command palette, themed from the palette
     ./cheatsheet.nix # SUPER+H: the keybind list in rofi, GENERATED from keybinds.lua at runtime
     ./wallpaper.nix # hyprpaper: a random DARK photo per monitor, one pool per orientation
     ./backlight.nix # DDC/CI: both panels held at one declared brightness and white point

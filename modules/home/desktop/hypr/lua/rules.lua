@@ -32,3 +32,6 @@ hl.window_rule({
   no_shadow = true,
   rounding = 0,
 })
+
+-- Vicinae's layer surface: no open/close animation, so the toggle feels instant.
+hl.layer_rule({ match = { namespace = "^vicinae$" }, no_anim = true })

@@ -121,6 +121,7 @@ export const navigation: NavItem[] = [
       { title: "hyprsunset", doc: "notes/desktop/hyprsunset.md" },
       { title: "Backlight", doc: "notes/desktop/backlight.md" },
       { title: "Desktop plumbing", doc: "notes/desktop/desktop-plumbing.md" },
+      { title: "Vicinae", doc: "notes/desktop/vicinae.md" },
     ],
   },
   {

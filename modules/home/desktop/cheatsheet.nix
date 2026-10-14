@@ -1,23 +1,18 @@
-# A keybind cheatsheet in rofi (SUPER+H), GENERATED from keybinds.lua at runtime so it can never
-# drift. The awk parser's rules and why not SUPER+/: docs/notes/desktop/desktop-plumbing.md
-{
-  pkgs,
-  config,
-  osConfig,
-  ...
-}:
+# A keybind cheatsheet in Vicinae's dmenu (SUPER+H), GENERATED from keybinds.lua at runtime so it
+# can never drift. The awk parser's rules and why not SUPER+/: docs/notes/desktop/desktop-plumbing.md
+{ config, pkgs, ... }:
 
 let
   # Rule 19: everything this module reaches for, named once. deadnix fails the build on an
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
     gawk
-    rofi
+    libnotify
     writeShellApplication
     writeText
     ;
 
-  palette = config.my.theme.palette; # the active theme's colors (modules/home/desktop/palette.nix)
+  vicinae = config.programs.vicinae.package;
 
   # The parser. Its rules, and the 2 details that broke earlier versions, are in the notes.
   parser = writeText "keybinds-cheatsheet.awk" ''
@@ -78,62 +73,29 @@ let
     name = "keybinds-cheatsheet";
     runtimeInputs = [
       gawk
-      rofi
+      libnotify
+      vicinae
     ];
     text = ''
       src="$HOME/.config/hypr/lua/keybinds.lua"
-      # It fails LOUDLY if the symlink is gone: an empty list would lie by saying there are no binds.
-      if [ ! -r "$src" ]; then
-        rofi -e "keybinds-cheatsheet: could not read $src" -theme cheatsheet
+      # It fails LOUDLY: an empty list would lie by saying there are no binds.
+      fail() {
+        notify-send -u critical -a Keybinds "keybinds-cheatsheet" "$1"
+        echo "$1" >&2
         exit 1
-      fi
+      }
+      [ -r "$src" ] || fail "could not read $src"
+      rows="$(awk -f ${parser} "$src")" || fail "the parser failed on $src"
+      [ -n "$rows" ] || fail "the parser found no binds in $src"
+      # dmenu exits non-zero on Esc too, so a dead server is checked first and named.
+      vicinae ping >/dev/null 2>&1 || fail "the Vicinae server is not running (systemctl --user status vicinae)"
       # It only displays: the choice is discarded, since this is a reference, not an action runner.
-      awk -f ${parser} "$src" | rofi -dmenu -i -p "󰌌 Keybinds" -theme cheatsheet > /dev/null
+      printf '%s\n' "$rows" |
+        vicinae dmenu -n Keybinds -p "Filter shortcuts" -s "{count} binds" --no-quick-look >/dev/null ||
+        true
     '';
   };
 in
 {
   home.packages = [ cheatsheet ];
-
-  # An explicit `font`, or rofi falls back to "mono 12". Do NOT comment inside a .rasi with '#':
-  # there '#' opens a color literal and breaks the parse.
-  xdg.configFile."rofi/cheatsheet.rasi".text = ''
-    configuration {
-      show-icons: false;
-      matching:   "fuzzy";
-      font:       "${osConfig.my.fonts.ui} 11";
-    }
-    * {
-      tn-bg:     #${palette.bg};
-      tn-bg-alt: #${palette.surface};
-      tn-fg:     #${palette.text};
-      tn-muted:  #${palette.dim};
-      tn-blue:   #${palette.blue};
-      background-color: transparent;
-      text-color:       @tn-fg;
-    }
-    window {
-      width:            900px;
-      background-color: @tn-bg;
-      border:           2px;
-      border-color:     @tn-blue;
-      border-radius:    12px;
-      padding:          14px;
-    }
-    mainbox { spacing: 12px; children: [ inputbar, listview ]; }
-    inputbar {
-      background-color: @tn-bg-alt;
-      border-radius:    8px;
-      padding:          10px 14px;
-      spacing:          8px;
-      children:         [ prompt, entry ];
-    }
-    prompt { text-color: @tn-blue; }
-    entry  { placeholder: "Filter by key or action…"; placeholder-color: @tn-muted; }
-    listview { lines: 20; columns: 1; scrollbar: true; spacing: 2px; }
-    scrollbar { handle-color: @tn-blue; handle-width: 4px; }
-    element { padding: 4px 10px; border-radius: 6px; }
-    element normal.normal   { background-color: transparent; text-color: @tn-fg; }
-    element selected.normal { background-color: @tn-blue;     text-color: @tn-bg; }
-  '';
 }

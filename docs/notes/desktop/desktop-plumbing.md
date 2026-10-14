@@ -155,7 +155,8 @@ The options are in
 
 ## The keybind cheatsheet
 
-`modules/home/desktop/cheatsheet.nix`. A rofi list of ALL the Hyprland binds, on SUPER+H.
+`modules/home/desktop/cheatsheet.nix`. A filterable list of ALL the Hyprland binds, on SUPER+H,
+shown in `vicinae dmenu` (rofi until 13/10/2026).
 
 **GENERATED from `keybinds.lua` at RUNTIME, never written by hand**: a duplicated list would become
 a lie on the first new bind. The file it reads is `~/.config/hypr/lua/keybinds.lua`, which is a
@@ -165,9 +166,6 @@ rebuild.
 **Why SUPER+H and not SUPER+/**: Moonlight does NOT send the ABNT2 "/ ?" key (bug #1789, the same
 reason as the ScrollLock remap in `keybinds.lua`), so SUPER+/ would die over remote access. H is
 free and gets through on any path.
-
-The rofi package comes from `launcher.nix`; do not redeclare it, since it is the same tool for the
-launcher, the clipboard and here.
 
 ### The awk parser's rules
 
@@ -188,13 +186,12 @@ Two details that broke earlier versions and are therefore explicit:
 `short()` cuts only at the first `". "` and never at `": "`, since groups like "Mouse: move /
 resize the window" would become the useless "Mouse".
 
-The script fails LOUDLY if the symlink disappears, because an empty cheatsheet would lie by saying
-"there are no binds". And it only DISPLAYS: the choice is discarded, since it is a reference and
-not an action runner.
-
-Two rasi notes: an explicit `font` is needed or rofi falls back to "mono 12", and `my.fonts.ui` is
-also the system monospace so the columns line up. Do NOT comment inside a `.rasi` with `#`: there
-`#` opens a color literal and breaks the parse.
+The script fails LOUDLY, with a critical notification, in three cases: the symlink is gone, the
+parser printed nothing, or the Vicinae server is down. An empty cheatsheet would lie by saying
+"there are no binds", and `dmenu` exits non-zero on Esc too, so a dead server is checked first with
+`vicinae ping` instead of being guessed from the exit code. It only DISPLAYS: the choice is
+discarded, since it is a reference and not an action runner. The columns line up because Vicinae's
+font is `my.fonts.ui`, which is monospace.
 
 ## The clipboard
 
@@ -274,4 +271,5 @@ feature: an UNFOCUSED window gets no selection offer, so `get_clipboard_string()
 even kitty's own `paste_from_clipboard` pastes nothing.
 
 **The launcher** on SUPER+Q is Vicinae: [vicinae.md](vicinae.md). SUPER+R is still rofi's `run`
-mode (`launcher.nix`), themed from `my.theme` with the same two `.rasi` caveats as the cheatsheet.
+mode (`launcher.nix`), themed from `my.theme`. An explicit `font` is required there, and `#` inside a
+`.rasi` opens a color literal rather than a comment.

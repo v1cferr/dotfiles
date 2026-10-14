@@ -76,6 +76,7 @@ What is declared, and why:
 | `launcher_window.layer_shell.keyboard_interactivity` | `on_demand` | `exclusive` breaks popup mouse handling on Hyprland |
 | `providers.calculator.preferences.backend` | `qalculate` | libqalculate: units, currencies, the GTK Qalculate! engine |
 | `search_files_in_root`, `fallbacks` | `true`, `files:search` | files show up in the main search |
+| `launcher_window.size`, `font.normal.size` | 1000x620, 11.5 | the 770x480 default felt small on a 1440p panel |
 
 ## The clipboard
 
@@ -112,7 +113,10 @@ directory with a `CACHEDIR.TAG` (0.29.0's `entry-filter.cpp`). The index lives i
 
 `themes.palette` is generated from `my.theme.palette`, so a `my.theme.name` switch plus a rebuild
 recolors it like every other consumer, and both the dark and the light slot point at it. Stylix's
-own Vicinae target is off: its base16 mapping has no slot for `border`. The font is `my.fonts.ui`
+own Vicinae target is off: its base16 mapping has no slot for `border`. The built-in commands draw
+their icon on a tile filled with one of the `accents` (Clipboard red, Files orange...), hardcoded
+per command; at full strength those were loud blocks next to the Win11 app icons, so the accents
+are the palette's colors at 20 % opacity, which leaves soft tinted chips under a light glyph. The font is `my.fonts.ui`
 and the icons are `my.theme.iconTheme`.
 
 | Vicinae key | Palette key |
@@ -122,7 +126,8 @@ and the icons are `my.theme.iconTheme`.
 | `core.accent`, `main_window.border`, `input.border_focus` | `accent` |
 | `core.border`, `input.border` | `border` |
 | `list.item.selection.background` | `track` |
-| `accents.*`, `text.danger`, `text.success` | the palette's named colors |
+| `accents.*` | the palette's named colors at 20 % opacity |
+| `text.danger`, `text.success` | `red`, `green`, solid |
 
 ## Shortcuts
 

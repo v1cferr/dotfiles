@@ -29,7 +29,10 @@ let
       search_files_in_root = true;
       escape_key_behavior = "close_window";
       encrypt_sensitive_data = true; # off by default on Linux; the key lives in the keyring
-      font.normal.family = osConfig.my.fonts.ui;
+      font.normal = {
+        family = osConfig.my.fonts.ui;
+        size = 11.5;
+      };
       # Both slots, so a light portal preference never swaps in Vicinae's stock theme.
       theme = rec {
         dark = {
@@ -42,6 +45,10 @@ let
         # exclusive grabs the keyboard and breaks popup mouse handling on Hyprland
         layer_shell.keyboard_interactivity = "on_demand";
         client_side_decorations.border_width = 2;
+        size = {
+          width = 1000;
+          height = 620;
+        };
       };
       favorites = [ "clipboard:history" ];
       fallbacks = [ "files:search" ];
@@ -106,16 +113,23 @@ in
         };
         main_window.border = c "accent";
         settings_window.border = c "border";
-        accents = {
-          blue = c "blue";
-          green = c "green";
-          magenta = c "magenta";
-          orange = c "orange";
-          purple = c "purple";
-          red = c "red";
-          yellow = c "yellow";
-          cyan = c "cyan";
-        };
+        # The accents paint the built-in icons' tiles: at 20% they read as soft chips, not blocks.
+        accents =
+          lib.genAttrs
+            [
+              "blue"
+              "green"
+              "magenta"
+              "orange"
+              "purple"
+              "red"
+              "yellow"
+              "cyan"
+            ]
+            (k: {
+              name = c k;
+              opacity = 0.2;
+            });
         text = {
           default = c "text";
           muted = c "subtext";

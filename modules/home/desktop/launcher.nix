@@ -1,11 +1,18 @@
-# LAUNCHER: rofi `drun` with icons and recency, themed from my.theme; rofi comes from clipboard.nix,
-# the binds from keybinds.lua (SUPER+Q / SUPER+R). No note: nothing here needs more than this.
-{ config, osConfig, ... }:
+# LAUNCHER: rofi's `run` mode (SUPER+R), themed from my.theme, until Vicinae covers it.
+# No note: nothing here needs more than this.
+{
+  config,
+  osConfig,
+  pkgs,
+  ...
+}:
 
 let
   palette = config.my.theme.palette; # the active theme's colors (modules/home/desktop/palette.nix)
 in
 {
+  home.packages = [ pkgs.rofi ];
+
   # An explicit `font`, or rofi falls back to "mono 12". Do NOT comment inside a .rasi with '#':
   # there '#' opens a color literal and breaks the parse.
   xdg.configFile."rofi/launcher.rasi".text = ''

@@ -166,7 +166,7 @@ rebuild.
 reason as the ScrollLock remap in `keybinds.lua`), so SUPER+/ would die over remote access. H is
 free and gets through on any path.
 
-The rofi package comes from `clipboard.nix`; do not redeclare it, since it is the same tool for the
+The rofi package comes from `launcher.nix`; do not redeclare it, since it is the same tool for the
 launcher, the clipboard and here.
 
 ### The awk parser's rules
@@ -196,30 +196,16 @@ Two rasi notes: an explicit `font` is needed or rofi falls back to "mono 12", an
 also the system monospace so the columns line up. Do NOT comment inside a `.rasi` with `#`: there
 `#` opens a color literal and breaks the parse.
 
-## The clipboard and the launcher
+## The clipboard
 
-`modules/home/desktop/clipboard.nix` and `launcher.nix`. Both are rofi, and the rofi PACKAGE is declared
-once, in `clipboard.nix`. Do not redeclare it: it is the same tool for the launcher, the clipboard
-and the cheatsheet.
-
-**The clipboard** is cliphist storing text, images and URIs through its declarative service
-(`allowImages` also brings up the image watcher on top of the text one), with rofi `-show-icons` as
-the picker. It replaced the old wofi picker, which was text only. The bind is SUPER+SHIFT+V.
-
-Migrated from Arch (`cliphist-rofi-img.sh`) WITH an improvement: besides the image thumbnail,
-copied files (a `file://…` URI) now get an ICON for their type (zip, video, pdf) resolved by the
-active icon theme. Rules 1 and 3: idiomatic and declarative.
-
-`clipboard-menu` does one pass (list, rofi, decode, copy) and builds the rofi entry as
-`line\0icon\x1f<icon>` per item, in three cases:
-
-- a binary image gets decoded into a cache directory once and used as a THUMBNAIL;
-- a `file://` URI gets a NAMED freedesktop icon derived from the extension;
-- anything else gets the text icon.
+The clipboard HISTORY is Vicinae's since 13/10/2026 (SUPER+SHIFT+V), which replaced cliphist and
+its rofi picker: [vicinae.md](vicinae.md). What stays here is what Vicinae does not do: putting the
+clipboard on another machine. `wl-clip-persist` also stays, because Vicinae records the history but
+does not take over the selection when the app that copied it closes.
 
 ### clipboard-push: the clipboard onto a remote host
 
-`clipboard-push [host|local]` (SUPER+ALT+V, and the destination defaults to `workstation`) sends
+`modules/home/desktop/clipboard-push.nix`. `clipboard-push [host|local]` (SUPER+ALT+V, and the destination defaults to `workstation`) sends
 what is in the clipboard over scp and leaves the ABSOLUTE REMOTE PATH in the clipboard. With `local`
 it skips the network and drops the file in `~/.cache/clipboard-push` instead, which is the half the
 kitten below uses when the window is not an ssh. It exists for one
@@ -244,7 +230,8 @@ newline pasted into a TUI SUBMITS the prompt instead of typing into it.
 
 It costs one handshake and not two, because the `workstation` block in `modules/home/shell/ssh.nix` sets
 `ControlMaster auto`: the scp reuses the master the ssh above opened. And the image is not lost when
-the path takes its place in the clipboard, since cliphist still holds it, one SUPER+SHIFT+V away.
+the path takes its place in the clipboard, since Vicinae's history still holds it, one SUPER+SHIFT+V
+away.
 
 ### ctrl+shift+v decides, and the kitten is how
 
@@ -286,11 +273,5 @@ unchanged; an image in a window running `ssh workstation` arrived on the worksta
 feature: an UNFOCUSED window gets no selection offer, so `get_clipboard_string()` there is empty and
 even kitty's own `paste_from_clipboard` pastes nothing.
 
-**The launcher** is rofi `drun` with icons, sorted by most and recently used (rofi's history is on
-by default: it shows the recent ones when it opens and filters fuzzily as you type). SUPER+Q is
-apps, SUPER+R is binaries.
-
-Both themes take their colors from `my.theme`, the single palette, so they recolor along when a
-preset is switched, and their `icon-theme` comes from `my.theme.iconTheme`, the same one as the
-system. The two `.rasi` caveats from the cheatsheet apply here as well: an explicit `font` is
-required, and `#` inside a `.rasi` opens a color literal rather than a comment.
+**The launcher** on SUPER+Q is Vicinae: [vicinae.md](vicinae.md). SUPER+R is still rofi's `run`
+mode (`launcher.nix`), themed from `my.theme` with the same two `.rasi` caveats as the cheatsheet.

@@ -11,7 +11,7 @@
     ./autostart.nix # the PANEL of what opens at login (my.autostart): Discord/Spotify
     ./polkit-agent.nix # the password dialog for a graphical app that needs authorization
     ./hypr.nix # ~/.config/hypr/hyprland.conf (ABNT2 plus monitors plus keybinds)
-    ./clipboard.nix # cliphist (the history) plus rofi (a picker with an image/type preview); Tokyo Night
+    ./clipboard-push.nix # the clipboard's image/file to a host over scp, its path left in the clipboard
     ./launcher.nix # the app launcher (rofi drun: icons plus recency plus Tokyo Night)
     ./vicinae # the launcher (SUPER+Q) plus command palette, themed from the palette
     ./cheatsheet.nix # SUPER+H: the keybind list in rofi, GENERATED from keybinds.lua at runtime

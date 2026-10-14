@@ -38,9 +38,8 @@ hl.bind(mainMod .. " + L",         hl.dsp.exec_cmd("loginctl lock-session"))    
 hl.bind("Scroll_Lock",         hl.dsp.send_shortcut({ mods = 0,       key = "code:97", window = "activewindow" }))  -- "/"
 hl.bind("SHIFT + Scroll_Lock", hl.dsp.send_shortcut({ mods = "SHIFT", key = "code:97", window = "activewindow" }))  -- "?" (Shift+/)
 
--- clipboard: cliphist's history in rofi, with an image thumbnail and an icon per file type.
--- The script and the theme are in modules/home/desktop/clipboard.nix.
-hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("clipboard-menu"))
+-- clipboard: Vicinae's history (text, images, pins; desktop/vicinae), and clipboard-push.
+hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("vicinae vicinae://launch/clipboard/history"))  -- clipboard history
 hl.bind(mainMod .. " + ALT + V",   hl.dsp.exec_cmd("clipboard-push"))  -- scp it to the workstation and copy the REMOTE path (an image for a TUI over ssh)
 
 -- VPN: SUPER+N = UFSCar (GlobalProtect), SHIFT+N = FAI (nxBender), CTRL+N disconnects all.

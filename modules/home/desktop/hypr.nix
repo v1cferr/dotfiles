@@ -187,7 +187,7 @@ in
     minimizeOthers # SUPER+M: minimizes the other windows (the Lua calls it by name)
     brightnessOsd # brightness through hyprsunset's gamma (SUPER+Vol; called by name)
     wl-clipboard # wl-copy/wl-paste (used by wl-clip-persist and by hand)
-    wl-clip-persist # keeps the copy alive after the app closes (cliphist is in clipboard.nix)
+    wl-clip-persist # keeps the copy alive after the app closes; Vicinae only records history
     pamixer
     playerctl
     pavucontrol

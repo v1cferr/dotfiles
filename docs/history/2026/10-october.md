@@ -17,6 +17,9 @@
       • MEASURED ON 13/10/2026, this machine, right after the switch: open 11-21 ms in 8 of 10
         toggles (two outliers near 1 s), idle CPU 0.11 % of a core over 60 s, PSS about 410 MiB
         across the four processes, first index of `~/Projects` in 66 s.
+      • THE OLD HISTORY CAME ALONG (14/10/2026): 468 of cliphist's 500 entries replayed into
+        Vicinae, 32 secret-looking texts left out, then `~/.cache/cliphist` (272 MB) and rofi's
+        caches deleted once I had checked the port.
 - [x] The home path has one source, closing an item open since 16/08/2026 (13/10/2026). NixOS
       modules read `config.users.users.v1cferr.home`, home-manager ones `config.home.homeDirectory`,
       which the NixOS integration derives from it, so `modules/home/default.nix` stopped setting it.

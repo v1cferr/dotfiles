@@ -95,8 +95,16 @@ What is declared, and why:
   dropped. 0.29.0 has no per-app ignore list yet (`ignoredApps` exists only on main).
 - **Images**: kept and previewed. Pinning and tagging (Ctrl+E) are built in.
 
-cliphist's old database in `~/.cache/cliphist` was left on disk, untouched: removing a package is
-not permission to delete its data. Delete it by hand when it is no longer wanted.
+**The cliphist history was ported, then deleted (13-14/10/2026).** Vicinae has no import, so a COPY
+of cliphist's db was replayed through the clipboard, oldest first, with `wl-copy` and a 0.25 s pause
+per entry for the watcher to record it. Of 500 entries, 468 went in (405 texts, 56 PNGs, 7 copied
+files); 32 texts were skipped because they looked like secrets (a single 16-64 character token, or
+a `password`, `secret`, `token` or `senha` followed by `:` or `=`), since cliphist never filtered
+passwords and these would have stayed searchable for 30 more days. Every ported entry carries the
+import date, not its original one. After I checked old entries in SUPER+SHIFT+V,
+`~/.cache/cliphist` (272 MB: a 64 MB bbolt db that never shrinks plus 208 MB of thumbnails, most
+of them orphans) and rofi's three cache files were deleted. A package leaving is not permission to
+delete its data; my explicit go-ahead was.
 
 ## File search
 

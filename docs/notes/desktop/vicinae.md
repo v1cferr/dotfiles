@@ -125,14 +125,18 @@ own Vicinae target is off: its base16 mapping has no slot for `border`. The buil
 their icon on a tile filled with one of the `accents` (Clipboard red, Files orange...), hardcoded
 per command; at full strength those were loud blocks next to the Win11 app icons, so the accents
 are the palette's colors at 20 % opacity, which leaves soft tinted chips under a light glyph. The font is `my.fonts.ui`
-and the icons are `my.theme.iconTheme`.
+and the icons are `my.theme.iconTheme`. The frame follows Vicinae's own clipboard screenshot, the
+look I asked for on 14/10/2026: a 1 px outline at half strength instead of the 2 px accent ring,
+and dividers in `track`, one step above the surface, so the panes separate without lines that
+draw the eye.
 
 | Vicinae key | Palette key |
 | --- | --- |
 | `core.background`, `core.secondary_background` | `bg`, `surface` |
 | `core.foreground`, `text.muted`, `text.placeholder` | `text`, `subtext`, `dim` |
-| `core.accent`, `main_window.border`, `input.border_focus` | `accent` |
-| `core.border`, `input.border` | `border` |
+| `core.accent`, `input.border_focus` | `accent` |
+| `main_window.border` (1 px) | `border` at 50 % opacity |
+| `core.border` (the dividers), `input.border` | `track` |
 | `list.item.selection.background` | `track` |
 | `accents.*` | the palette's named colors at 20 % opacity |
 | `text.danger`, `text.success` | `red`, `green`, solid |

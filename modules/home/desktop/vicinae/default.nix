@@ -44,7 +44,7 @@ let
       launcher_window = {
         # exclusive grabs the keyboard and breaks popup mouse handling on Hyprland
         layer_shell.keyboard_interactivity = "on_demand";
-        client_side_decorations.border_width = 2;
+        client_side_decorations.border_width = 1;
         size = {
           width = 1000;
           height = 620;
@@ -107,11 +107,15 @@ in
           background = c "bg";
           foreground = c "text";
           secondary_background = c "surface";
-          border = c "border";
+          border = c "track"; # the dividers: a step above the surface, barely there
           accent = c "accent";
           accent_foreground = c "bg";
         };
-        main_window.border = c "accent";
+        # A 1 px outline at half strength frames it without the accent ring it used to have.
+        main_window.border = {
+          name = c "border";
+          opacity = 0.5;
+        };
         settings_window.border = c "border";
         # The accents paint the built-in icons' tiles: at 20% they read as soft chips, not blocks.
         accents =
@@ -146,7 +150,7 @@ in
           };
         };
         input = {
-          border = c "border";
+          border = c "track";
           border_focus = c "accent";
           border_error = c "red";
         };

@@ -70,7 +70,8 @@ What is declared, and why:
 | `favicon_service` | `none` | no favicon lookups through a third party for every URL |
 | `input_server.enabled` | `false` | see above |
 | `tray.enabled` | `false` | the bar's tray has no use for it |
-| `close_on_focus_loss`, `pop_to_root_on_close` | `true` | it behaves like a launcher, not a window |
+| `close_on_focus_loss` | `false` | see below: `true` closed it within 92 ms of opening |
+| `pop_to_root_on_close` | `true` | it reopens on the search, not on the last view |
 | `escape_key_behavior` | `close_window` | Esc closes, like rofi did |
 | `launcher_window.layer_shell.keyboard_interactivity` | `on_demand` | `exclusive` breaks popup mouse handling on Hyprland |
 | `providers.calculator.preferences.backend` | `qalculate` | libqalculate: units, currencies, the GTK Qalculate! engine |
@@ -221,6 +222,13 @@ vicinae cmd ls --json                # every indexed command, scripts and extens
 The state lives in `~/.local/share/vicinae/` (the clipboard database and blobs, `vicinae.db`,
 `metadata.json` with the visit counts, `snippets/`, `shortcuts/`, the extensions and the scripts)
 and the file index in `~/.cache/vicinae/`.
+
+**Why it does not close when focus leaves.** With `close_on_focus_loss = true`, SUPER+Q showed the
+window for a blink and it was gone: on 13/10/2026 Hyprland's event socket showed `openlayer>>vicinae`
+then `closelayer>>vicinae` 92 ms later, with the active window never leaving Zen. The server gets a
+focus-out right after the layer maps and obeys it. `exclusive` keyboard interactivity did not help
+(gone in 157 ms); only `false` keeps it open, which is also upstream's default. Esc, SUPER+Q again,
+or running an entry closes it.
 
 Two upstream quirks seen on 0.29.0, both harmless here:
 

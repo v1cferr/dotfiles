@@ -23,7 +23,8 @@ let
       favicon_service = "none"; # no third-party favicon lookups
       input_server.enabled = false; # no uinput helper: select copies, nothing types for me
       tray.enabled = false; # Quickshell's tray has no use for it
-      close_on_focus_loss = true;
+      # Hyprland hands it a focus-out right after it maps, so this closed it within 92 ms (measured).
+      close_on_focus_loss = false;
       pop_to_root_on_close = true;
       search_files_in_root = true;
       escape_key_behavior = "close_window";

@@ -21,4 +21,19 @@
       patch = ../../../pkgs/xe-fan-control/fan-control-168027.patch;
     }
   ];
+
+  # The board's Super I/O chip, a Nuvoton NCT6798D at 0x2e. The kernel ships the driver but
+  # autoloads nothing for it, which is why `sensors` saw no motherboard fan at all before this
+  # line: not an absent sensor, an unbound one. It binds with no ACPI resource conflict on this
+  # board, so none of the usual `acpi_enforce_resources=lax` advice applies here.
+  boot.kernelModules = [ "nct6775" ];
+
+  # ONE interface for all three fans, which is the point: CoolerControl speaks plain hwmon, so
+  # the GPU's new `pwm1` and the board's two headers are the same kind of thing to it. LACT was
+  # the earlier pick and covers the GPU alone, which stopped making sense the moment the board
+  # turned out to have controllable headers of its own.
+  #
+  # NO CURVE IS DECLARED HERE, on purpose. A curve is app state: CoolerControl owns its own
+  # config, and writing it from the closure would take the GUI's edits away from it.
+  programs.coolercontrol.enable = true;
 }

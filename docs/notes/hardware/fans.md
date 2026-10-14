@@ -87,6 +87,44 @@ about 1100 RPM and read as a failure. The same command held for 60 seconds reach
 reading of a fan that was already coasting is not a baseline either, which is how an earlier test
 here compared 0 against 1313 and declared success for the wrong reason.
 
+## The board has two more, and nothing was reading them
+
+The GPU was never the whole story. This board carries a **Nuvoton NCT6798D** at `0x2e`, and the
+kernel has had the driver all along. It just never loads it, so `sensors` showed no motherboard fan
+at all. One `boot.kernelModules` entry later it binds, with no ACPI resource conflict, and seven
+tachometers plus six PWM channels appear.
+
+What is actually connected, measured on 14/10/2026 by driving each channel to 100%:
+
+| Channel | Low duty | Full duty | Verdict |
+| --- | --- | --- | --- |
+| `xe` `pwm1` (GPU) | 0 RPM | 3926 RPM | controllable |
+| `nct6798` `pwm1` | ~290 RPM | ~1070 RPM | controllable, the CPU's |
+| `nct6798` `pwm2` | ~563 RPM | ~1909 RPM | controllable, a chassis header |
+| `nct6798` `pwm4`, `pwm5`, `pwm6`, `pwm7` | nothing responded | | empty |
+| `nct6798` `fan3` | no PWM channel at all | | empty |
+
+`pwm1` is the CPU's because of how it behaves rather than how it is numbered: under a full load on
+all twelve threads it went from 285 to 930 RPM within five seconds of the load starting, while
+`pwm2` drifted up 22% over a minute. The empty channels were each driven to full duty and listened
+to, which is the only way to catch a three pin fan that spins with no tachometer wire to report it.
+
+**`nct6798` `pwm1` has a broken tachometer.** It reported 29347 RPM and 28125 RPM at a fixed duty,
+which is not noise in a reading script, it is impossible. Control responds correctly; the reading
+is what lies. Expect a nonsense CPU fan figure in any panel that trusts it.
+
+## Why CoolerControl and not LACT
+
+LACT is the GPU tool and would have covered the Arc alone. Once the board turned out to have two
+controllable headers, one interface for three fans beat two interfaces for three fans.
+CoolerControl speaks plain hwmon, so it picks up the GPU's new `pwm1` and the board's channels
+without knowing anything special about either.
+
+The curve itself is NOT declared in the module. It is app state and belongs to CoolerControl's own
+config, the same reasoning that keeps `services.lact.settings` empty in setups that use LACT: a
+config written from the closure becomes a read only symlink and the GUI quietly loses the ability
+to save.
+
 ## When this leaves
 
 The patch costs a LOCAL KERNEL BUILD on every bump, with no binary cache, about an hour on this

@@ -247,11 +247,15 @@ override file, rendered by sops-nix into `/run/secrets/rendered/vicinae-github.j
 0400) and appended to `VICINAE_OVERRIDES`. The store only ever holds sops's placeholder (checked
 by evaluating the template on 13/10/2026).
 
-Until the token exists the template is not declared and the extension asks for it in its own form.
-To turn it on:
+The token is in the vault since 14/10/2026 (classic, the five scopes below). GitHub has no API to
+create a personal access token, so `gh` cannot mint one; reusing `gh`'s own OAuth token was
+rejected, because it carries `delete_repo` and dies silently on a `gh` re-login. Without the key
+the template is not declared and the extension asks for the token in its own form. To set it up
+again (or rotate it):
 
-1. Create a classic token at GitHub, scopes `repo`, `notifications`, `project`, `read:org`,
-   `read:user`, and save it in Bitwarden as **Vicinae GitHub Token**.
+1. Create a classic token at
+   `https://github.com/settings/tokens/new?description=Vicinae&scopes=repo,notifications,project,read:org,read:user`
+   and save it in Bitwarden as **Vicinae GitHub Token**, in the password field of a Login item.
 2. Add `"vicinae_github_token": "Vicinae GitHub Token"` to `secrets/bitwarden-secrets.json`.
 3. `sync-secrets`, then `rebuild`. `modules/nixos/core/secrets.nix` declares the template once the
    key exists in both places, and the Vicinae unit restarts with it.

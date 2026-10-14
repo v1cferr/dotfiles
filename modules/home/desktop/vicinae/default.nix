@@ -2,6 +2,7 @@
 # Why it replaced rofi and cliphist, and every setting: docs/notes/desktop/vicinae.md
 {
   config,
+  lib,
   osConfig,
   pkgs,
   ...
@@ -65,9 +66,16 @@ let
       };
     }
   );
+
+  # The GitHub extension's token: a sops-nix render in /run/secrets, never the store (rule 12).
+  # It exists only once the token is in the vault (modules/nixos/core/secrets.nix).
+  githubToken = osConfig.sops.templates."vicinae-github.json".path or null;
 in
 {
-  imports = [ ./scripts.nix ];
+  imports = [
+    ./extensions.nix
+    ./scripts.nix
+  ];
 
   programs.vicinae = {
     enable = true;
@@ -157,7 +165,9 @@ in
       X-Restart-Triggers = [ "${overrides}" ];
     };
     Service = {
-      Environment = [ "VICINAE_OVERRIDES=${overrides}" ];
+      Environment = [
+        "VICINAE_OVERRIDES=${overrides}${lib.optionalString (githubToken != null) ":${githubToken}"}"
+      ];
       Slice = "session.slice";
       TimeoutStopSec = 5;
     };

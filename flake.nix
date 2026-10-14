@@ -95,6 +95,13 @@
       flake = false;
     };
 
+    # Vicinae's official extensions (TypeScript sources), built by modules/home/desktop/vicinae.
+    # flake = false: its flake would pull a second nixpkgs; HM's mkExtension builds them instead.
+    vicinae-extensions = {
+      url = "github:vicinaehq/extensions";
+      flake = false;
+    };
+
     # git-hooks.nix: it makes the lint catch things BEFORE the commit, not after the push. The HOOKS
     # are in `checks` below and the installer shellHook is in devShells.
     git-hooks = {

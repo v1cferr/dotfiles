@@ -1,6 +1,11 @@
 # SECRETS: Bitwarden is the source of truth, sops-nix is the vault, the repo holds none (rule 12).
 # The index, the two recipients and who can read what: docs/notes/repo/secrets.md
-{ pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   # Rule 19: everything this module reaches for, named once. deadnix fails the build on an
@@ -96,6 +101,19 @@ in
         mode = "0400";
       }; # user-readable: read_api only, for the glance band's CI page (glance-feed)
     };
+
+  # The Vicinae GitHub extension's token, as a settings override the --user server merges at start
+  # (modules/home/desktop/vicinae). Inert until the index and the vault both hold the key.
+  sops.templates = lib.optionalAttrs (config.sops.secrets ? vicinae_github_token) {
+    "vicinae-github.json" = {
+      owner = "v1cferr";
+      mode = "0400";
+      content = builtins.toJSON {
+        providers."@knoopx/github".preferences.personalAccessToken =
+          config.sops.placeholder.vicinae_github_token;
+      };
+    };
+  };
 
   environment.systemPackages = [ sync-secrets ];
 }

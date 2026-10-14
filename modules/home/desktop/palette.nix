@@ -87,7 +87,7 @@ in
     iconTheme = lib.mkOption {
       type = lib.types.str;
       default = "Win11-dark";
-      description = "The icon theme (SSOT). Read by theme.nix (dconf/GTK/kdeglobals) and by the rofi themes.";
+      description = "The icon theme (SSOT). Read by theme.nix (dconf/GTK/kdeglobals) and by Vicinae.";
     };
     # The cursor: the same reasoning. The package (bibata-cursors) lives in theme.nix.
     cursor = {

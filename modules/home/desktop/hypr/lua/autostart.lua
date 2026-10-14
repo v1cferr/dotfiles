@@ -8,6 +8,6 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("systemctl --user start hyprlock.service")
   hl.exec_cmd("qs") -- Quickshell (bar/OSD/media). The QML config is in modules/home/desktop/quickshell/ (hot-reload).
   -- A persistent clipboard: on Wayland the app OWNS the copy, so without this a Flameshot image
-  -- dies with flameshot. cliphist's watcher is a declarative service now, not launched here.
+  -- dies with flameshot. The HISTORY is Vicinae's (a --user service), not launched here.
   hl.exec_cmd("wl-clip-persist --clipboard regular")
 end)

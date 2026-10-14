@@ -13,7 +13,7 @@
     ./hypr.nix # ~/.config/hypr/hyprland.conf (ABNT2 plus monitors plus keybinds)
     ./clipboard-push.nix # the clipboard's image/file to a host over scp, its path left in the clipboard
     ./vicinae # the launcher (SUPER+Q) plus command palette, themed from the palette
-    ./cheatsheet.nix # SUPER+H: the keybind list in rofi, GENERATED from keybinds.lua at runtime
+    ./cheatsheet.nix # SUPER+H: the keybind list in Vicinae, GENERATED from keybinds.lua at runtime
     ./wallpaper.nix # hyprpaper: a random DARK photo per monitor, one pool per orientation
     ./backlight.nix # DDC/CI: both panels held at one declared brightness and white point
     ./hyprsunset.nix # the blue light filter (a systemd service plus profiles by time of day)

@@ -30,6 +30,14 @@ certutil -K -d sql:<profile> -f /dev/stdin
 The password arrives on stdin, so it is never written anywhere. One password, no new secret, and
 turning it on protects the saved logins at the same time.
 
+**The prompt is `zenity --password`** (a rofi `-password` field until 13/10/2026, when rofi left
+for Vicinae). It prints only the password on stdout, straight into a shell variable, and Cancel, Esc,
+a closed window or a timeout all exit non-zero, which keeps Zen closed. Three tries, then the launch
+is refused. Not Vicinae: a searchable launcher with a clipboard history is the wrong place to type
+a password. MEASURED on 13/10/2026 against a throwaway NSS db: right, wrong then right, three wrong,
+cancel, empty, no `profiles.ini` and an empty db each behaved as before (only the right password
+clears the flag).
+
 ## The NSS trap: no password means EVERY password
 
 With no primary password set, NSS authenticates with the empty one and **ignores whatever it is
@@ -127,7 +135,7 @@ closing the browser ever becomes annoying in practice.
 renamed an element broke a piece in silence, and the palette lived twice. Measured on Zen 1.23b
 (`zen-styles/zen-theme.css` inside `omni.ja`): the whole UI derives from `--zen-primary-color` and
 `--zen-branding-dark` through `color-mix()`, so overriding about ten VARIABLES recolors it, and
-the colors come from `my.theme.palette`, the same source as kitty, rofi and Quickshell.
+the colors come from `my.theme.palette`, the same source as kitty, Vicinae and Quickshell.
 
 Two things the measurement decided:
 

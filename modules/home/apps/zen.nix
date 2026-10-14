@@ -3,7 +3,6 @@
 {
   config,
   lib,
-  osConfig,
   pkgs,
   inputs,
   ...
@@ -20,13 +19,11 @@ let
     makeWrapper
     nssTools
     procps
-    rofi
     symlinkJoin
     wrapFirefox
     writeShellApplication
+    zenity
     ;
-
-  palette = config.my.theme.palette; # the single source (modules/home/desktop/palette.nix)
 
   # The policy pins session restore in the package itself: prefs.js and Settings cannot drop the
   # tabs on a cold start (an update, a logout, the guard below). It goes on the UNWRAPPED build and
@@ -56,7 +53,7 @@ let
       gnugrep
       nssTools
       procps
-      rofi
+      zenity
     ];
     text = ''
       flag=${lib.escapeShellArg armedFlag}
@@ -124,18 +121,19 @@ let
       check)
         [ -e "$flag" ] || exit 0
         profile=$(profile_dir) || {
-          rofi -e "Zen guard: no profile under ~/.zen."
+          zenity --error --title "Zen" --text "Zen guard: no profile under ~/.zen." || true
           exit 1
         }
-        prompt="󰌾 Zen"
+        prompt="Zen's primary password"
         for _ in 1 2 3; do
-          pass=$(rofi -dmenu -password -l 0 -p "$prompt" -theme zen-guard < /dev/null) || exit 1
+          # Cancel, Esc or a closed window all exit non-zero, and that keeps Zen closed.
+          pass=$(zenity --password --title "$prompt" < /dev/null) || exit 1
           [ -n "$pass" ] || exit 1
           if nss_accepts "$profile" "$pass"; then
             rm -f "$flag"
             exit 0
           fi
-          prompt="󰌾 Zen (wrong password)"
+          prompt="Wrong password: Zen's primary password"
         done
         exit 1
         ;;
@@ -147,7 +145,7 @@ let
     '';
   };
 
-  # The desktop entry's `Exec=zen-beta` is PATH-relative, so wrapping the binary covers rofi,
+  # The desktop entry's `Exec=zen-beta` is PATH-relative, so wrapping the binary covers the launcher,
   # xdg-open, $BROWSER and Dropbox's relink in one place.
   guarded = symlinkJoin {
     name = "zen-beta-guarded";
@@ -210,37 +208,5 @@ in
       };
       Install.WantedBy = [ "hyprlock.service" ];
     };
-
-    # The prompt: the launcher's look with no list, since the only widget is the password field.
-    xdg.configFile."rofi/zen-guard.rasi".text = ''
-      configuration { font: "${osConfig.my.fonts.ui} 12"; }
-      * {
-        tn-bg:     #${palette.bg};
-        tn-bg-alt: #${palette.surface};
-        tn-fg:     #${palette.text};
-        tn-muted:  #${palette.dim};
-        tn-blue:   #${palette.blue};
-        background-color: transparent;
-        text-color:       @tn-fg;
-      }
-      window {
-        width:            420px;
-        background-color: @tn-bg;
-        border:           2px;
-        border-color:     @tn-blue;
-        border-radius:    12px;
-        padding:          14px;
-      }
-      mainbox { children: [ inputbar ]; }
-      inputbar {
-        background-color: @tn-bg-alt;
-        border-radius:    8px;
-        padding:          10px 14px;
-        spacing:          10px;
-        children:         [ prompt, entry ];
-      }
-      prompt { text-color: @tn-blue; }
-      entry  { placeholder: "primary password…"; placeholder-color: @tn-muted; }
-    '';
   };
 }

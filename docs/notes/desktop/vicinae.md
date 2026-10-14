@@ -164,10 +164,12 @@ does not have, so every key above is a `hl.bind` in `keybinds.lua`, and there is
 ## URL shortcuts
 
 Vicinae's [shortcuts](https://docs.vicinae.com/shortcuts) are URL templates with arguments, opened
-in a chosen app. `shortcuts.nix` declares them; today it is one, **Search Google**
-(`https://www.google.com/search?q={query}`, opened in Zen by its desktop id `zen-beta`, with
-Google's favicon as icon). A shortcut with exactly one argument can be a fallback, so it is also
-first in `fallbacks`: typing anything that matches nothing offers it at the bottom.
+in a chosen app. `shortcuts.nix` declares them, each opened in Zen by its desktop id `zen-beta`
+with its site's favicon as icon: **Search Google**, **Search YouTube** and **Search Nix packages**
+(search.nixos.org on the channel this system builds from, `system.nixos.release`; the `nix`
+extension searches the same index inside Vicinae). A shortcut with exactly one argument can be a
+fallback, and Google is first in `fallbacks`: typing anything that matches nothing offers it at the
+bottom. Only Google, because a list of three sites under every miss is noise.
 
 0.29.0 keeps them in `~/.local/share/vicinae/shortcuts/shortcuts.json` and REWRITES that file on
 every open (the counters, `shortcut-db.cpp`), and only reads it at start. So it cannot be a store

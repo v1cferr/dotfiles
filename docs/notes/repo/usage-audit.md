@@ -15,10 +15,16 @@ output is a list to argue with, and the decision to delete is a commit, like any
 | Column | Source | What it catches |
 | --- | --- | --- |
 | Last typed | atuin's `history.db` (dated, since 09/09/2026) plus `~/.zsh_history` | a CLI I type |
-| Launched | rofi's `rofi3.druncache`, a count per `.desktop` | a GUI I open from the launcher |
+| Launched | Vicinae's `~/.local/share/vicinae/metadata.json`, `visit_count` per `applications:<id>` | a GUI I open from the launcher |
 | Wired by `config` | the binary named in a `.lua`/`.qml`/`.json`, or `/bin/<name>` or `getExe <name>` in a `.nix` | a keybind, a bar widget, a unit, an editor setting |
 | Wired by `module` | an enabled `programs.<name>` in home-manager | shell integrations, used without typing the name |
 | Wired by `mime` | `xdg.mimeApps.defaultApplications` | what a double click in Dolphin opens |
+
+**The launch counts restarted on 13/10/2026**, when Vicinae replaced rofi: rofi's drun cache is
+left on disk but never read, since stale counts from a launcher that is gone would read as current
+use. With no `metadata.json` (Vicinae not run yet, or the file unreadable) the column says `n/a`
+and stderr says why, instead of an empty cell that looks like "never opened". The format was read
+from 0.29.0's `visit-tracker.cpp`, so a Vicinae bump that changes it shows up as `n/a`, not as zeros.
 
 **A zsh alias counts for its target**: `ls` in the history is a use of `eza`, since the alias table
 is read from the evaluated config and not from the text.

@@ -19,7 +19,7 @@ writers.writePython3Bin "usage-audit"
     HOME = os.path.expanduser("~")
     ATUIN = f"{HOME}/.local/share/atuin/history.db"
     ZSH = f"{HOME}/.zsh_history"
-    DRUN = f"{HOME}/.cache/rofi3.druncache"
+    VISITS = f"{HOME}/.local/share/vicinae/metadata.json"
     HOST = subprocess.run(["hostname"], capture_output=True, text=True).stdout.strip()
     USER = os.environ.get("USER", "v1cferr")
 
@@ -68,10 +68,14 @@ writers.writePython3Bin "usage-audit"
 
 
     def launches():
-        """rofi's drun cache: `<count> <file>.desktop` per line."""
-        if not os.path.exists(DRUN):
-            return {}
-        return {name.removesuffix(".desktop"): int(n) for n, name in (ln.split(" ", 1) for ln in open(DRUN).read().split("\n") if " " in ln)}
+        """Vicinae's visit tracker: `visited."applications:<desktop id>".visit_count`. None = no data."""
+        try:
+            visited = json.load(open(VISITS)).get("visited", {})
+        except (OSError, ValueError) as err:
+            print(f"usage-audit: no launch counts ({err})", file=sys.stderr)
+            return None
+        return {k.removeprefix("applications:"): v.get("visit_count", 0)
+                for k, v in visited.items() if k.startswith("applications:")}
 
 
     def wiring():
@@ -90,7 +94,8 @@ writers.writePython3Bin "usage-audit"
 
     def main():
         extra = sys.argv[1:]  # e.g. the CI's --override-input for the private input
-        history, drun, is_wired, cfg = shell_history(), launches(), wiring(), config(extra)
+        history, visits, is_wired, cfg = shell_history(), launches(), wiring(), config(extra)
+        drun = visits or {}
         # An alias typed is its target used: `ls` in the history is a use of eza.
         for alias, target in cfg["aliases"].items():
             if alias in history:
@@ -115,11 +120,11 @@ writers.writePython3Bin "usage-audit"
 
         # No trace at all first, then the oldest dated use: the top of the list is the question.
         rows.sort(key=lambda r: (bool(r[2] or r[3] or r[4]), r[1]))
-        print("| App | Last typed | Launched (rofi) | Wired by |")
+        print("| App | Last typed | Launched (Vicinae) | Wired by |")
         print("| --- | --- | ---: | --- |")
         for name, last, typed, opened, by in rows:
             when = datetime.date.fromtimestamp(last).isoformat() if last else ("undated" if typed else "")
-            shown = str(opened) if opened else ""
+            shown = str(opened) if opened else ("" if visits is not None else "n/a")
             print(f"| {name} | {when} | {shown} | {by} |")
         quiet = [r[0] for r in rows if not (r[2] or r[3] or r[4])]
         print(f"\n{len(rows)} apps, {len(quiet)} with no trace: {', '.join(quiet) or 'none'}")

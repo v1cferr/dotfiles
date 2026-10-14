@@ -70,7 +70,7 @@ What is declared, and why:
 | Setting | Value | Why |
 | --- | --- | --- |
 | `telemetry.system_info` | `false` | no report of my machine to anyone |
-| `favicon_service` | `none` | no favicon lookups through a third party for every URL |
+| `favicon_service` | `google` | tab and shortcut icons; see [the browser](#the-browser) for what leaves |
 | `input_server.enabled` | `false` | see above |
 | `tray.enabled` | `false` | the bar's tray has no use for it |
 | `close_on_focus_loss` | `false` | see below: `true` closed it within 92 ms of opening |
@@ -250,7 +250,14 @@ checks unchanged), AMO keeps it current, and it can still be disabled in `about:
 permissions are `tabs` and `nativeMessaging` (AMO API, 1.0.0). It gives tab search, focus and close
 from Vicinae's root, and turns a tab into a shortcut. Upstream also suggests granting "Run on sites
 with restrictions" by hand in `about:addons`; no policy key covers that per-add-on choice, and tab
-listing does not need it. Tabs showing up in Vicinae is NOT verified yet.
+listing does not need it. Tabs showed up in Vicinae on 14/10/2026, once the add-on was connected.
+
+Their icons were the generic window glyph at first: the add-on sends no favicon, and the server
+(`BrowserTab::icon` in `browser-extension-service.hpp`, 0.29.0) asks the `favicon_service` for the
+tab's HOST, which was `none`. It is `google` since 14/10/2026: the host only (never the path or the
+query) goes to `google.com/s2/favicons`, once per domain, and the PNG is cached in
+`~/.local/share/vicinae/favicon/`. Twenty (the default, a small independent service) was the other
+choice; Google covers more domains. A domain it does not know falls back to the window glyph.
 
 ## Debugging
 

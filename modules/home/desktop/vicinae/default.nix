@@ -20,7 +20,7 @@ let
   overrides = writeText "vicinae-overrides.json" (
     builtins.toJSON {
       telemetry.system_info = false;
-      favicon_service = "none"; # no third-party favicon lookups
+      favicon_service = "google"; # tab and shortcut icons: only the host leaves, once, then a disk cache
       input_server.enabled = false; # no uinput helper: select copies, nothing types for me
       tray.enabled = false; # Quickshell's tray has no use for it
       # Hyprland hands it a focus-out right after it maps, so this closed it within 92 ms (measured).

@@ -11,6 +11,7 @@ in
     (modulesPath + "/installer/scan/not-detected.nix")
     ../../modules/nixos/hardware/intel-arc-b580.nix # the video driver: an Intel Arc B580 (xe plus Mesa, no CUDA)
     ../../modules/nixos/hardware/arc-b580-rgb.nix # the GPU's LEDs through a patched OpenRGB (my.rgb.color)
+    ../../modules/nixos/hardware/fan-control.nix # the fans: a patched `xe` gives the GPU's card a pwm1
     ../../modules/nixos/hardware/mx-master-3s.nix # a Logitech MX Master 3S through logiops (gestures, DPI)
     ../../modules/nixos/hardware/deathadder-v2.nix # a Razer DeathAdder V2: hidraw for the user, no driver
   ];

@@ -67,6 +67,8 @@ let
   );
 in
 {
+  imports = [ ./scripts.nix ];
+
   programs.vicinae = {
     enable = true;
     package = pkgs.unstable.vicinae; # 0.29 against 26.05's 0.23

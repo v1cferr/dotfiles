@@ -270,6 +270,4 @@ unchanged; an image in a window running `ssh workstation` arrived on the worksta
 feature: an UNFOCUSED window gets no selection offer, so `get_clipboard_string()` there is empty and
 even kitty's own `paste_from_clipboard` pastes nothing.
 
-**The launcher** on SUPER+Q is Vicinae: [vicinae.md](vicinae.md). SUPER+R is still rofi's `run`
-mode (`launcher.nix`), themed from `my.theme`. An explicit `font` is required there, and `#` inside a
-`.rasi` opens a color literal rather than a comment.
+**The launcher** on SUPER+Q is Vicinae: [vicinae.md](vicinae.md).

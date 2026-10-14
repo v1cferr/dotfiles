@@ -9,14 +9,12 @@ local mainMod = "SUPER"
 local terminal       = "kitty"            -- SUPER+RETURN
 local terminalWithAi = "kitty claude"     -- SUPER+BACKSPACE (Claude Code in the terminal)
 local launcherApps   = "vicinae toggle"   -- SUPER+Q (apps, files, calculator, scripts; desktop/vicinae)
-local launcherRun    = "rofi -show run -theme launcher"  -- SUPER+R (binaries on the PATH)
 local fileManager    = "dolphin"          -- SUPER+E [it used to be thunar]
 local sound          = "pavucontrol"      -- SUPER+S (the audio mixer)
 local bluetooth      = "blueman-manager"  -- SUPER+B
 
 -- The main apps and actions
 hl.bind(mainMod .. " + Q",         hl.dsp.exec_cmd(launcherApps))                 -- launcher (Vicinae)
-hl.bind(mainMod .. " + R",         hl.dsp.exec_cmd(launcherRun))                  -- launcher (run)
 hl.bind(mainMod .. " + RETURN",    hl.dsp.exec_cmd(terminal))                     -- terminal
 hl.bind(mainMod .. " + BACKSPACE", hl.dsp.exec_cmd(terminalWithAi))               -- terminal with AI (Claude Code)
 hl.bind(mainMod .. " + E",         hl.dsp.exec_cmd(fileManager))                  -- files (Dolphin)

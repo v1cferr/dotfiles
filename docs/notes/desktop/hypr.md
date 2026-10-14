@@ -111,10 +111,9 @@ reload. The `sleep 0.4` lets Hyprland settle the hotplug before the reload.
 ## What is in `home.packages` here
 
 The Hyprland SESSION tools the Lua invokes, with app and config in home (rule 4): the three scripts
-above, plus `wl-clipboard` and `wl-clip-persist` as the clipboard's base (the cliphist history and
-the rofi picker live in `clipboard.nix`), `pamixer` and `playerctl` for the media keys, and
-`pavucontrol` as the mixer on SUPER+S. The launcher is rofi, in `launcher.nix`, the same tool as
-the clipboard picker.
+above, plus `wl-clipboard` and `wl-clip-persist` as the clipboard's base (the history is Vicinae's,
+[vicinae.md](vicinae.md)), `pamixer` and `playerctl` for the media keys, and `pavucontrol` as the
+mixer on SUPER+S. The launcher is Vicinae too, in `desktop/vicinae/`.
 
 ## The Lua modules
 

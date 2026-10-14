@@ -78,7 +78,7 @@ What is declared, and why:
 | `escape_key_behavior` | `close_window` | Esc closes, like rofi did |
 | `launcher_window.layer_shell.keyboard_interactivity` | `on_demand` | `exclusive` breaks popup mouse handling on Hyprland |
 | `providers.calculator.preferences.backend` | `qalculate` | libqalculate: units, currencies, the GTK Qalculate! engine |
-| `search_files_in_root`, `fallbacks` | `true`, `files:search` | files show up in the main search |
+| `search_files_in_root`, `fallbacks` | `true`, `shortcuts:dotfiles-google` then `files:search` | files show up in the main search; a query that matches nothing offers Google |
 | `launcher_window.size`, `font.normal.size` | 1000x620, 11.5 | the 770x480 default felt small on a 1440p panel |
 
 ## The clipboard
@@ -160,6 +160,25 @@ draw the eye.
 
 Vicinae binds nothing globally itself: on Hyprland its global shortcuts need a protocol Hyprland
 does not have, so every key above is a `hl.bind` in `keybinds.lua`, and there is nothing to overlap.
+
+## URL shortcuts
+
+Vicinae's [shortcuts](https://docs.vicinae.com/shortcuts) are URL templates with arguments, opened
+in a chosen app. `shortcuts.nix` declares them; today it is one, **Search Google**
+(`https://www.google.com/search?q={query}`, opened in Zen by its desktop id `zen-beta`, with
+Google's favicon as icon). A shortcut with exactly one argument can be a fallback, so it is also
+first in `fallbacks`: typing anything that matches nothing offers it at the bottom.
+
+0.29.0 keeps them in `~/.local/share/vicinae/shortcuts/shortcuts.json` and REWRITES that file on
+every open (the counters, `shortcut-db.cpp`), and only reads it at start. So it cannot be a store
+link: a Home Manager activation step merges the declared entries in by their fixed ids, keeping
+their counters, and leaves the ones made in the GUI alone. It runs before `reloadSystemd`, and the
+declared JSON is in the unit's `X-Restart-Triggers`, so a change restarts the server onto the merged
+file. A shortcut deleted in the GUI comes back at the next switch; remove it here instead.
+
+Caveat, from `expandShortcut` in `shortcut-actions.hpp`: the argument is pasted into the URL
+WITHOUT percent-encoding. Spaces are fine (the browser encodes them), but a `+`, `&` or `#` in the
+query changes what Google receives (`c++` arrives as `c` and two spaces).
 
 ## Script commands
 

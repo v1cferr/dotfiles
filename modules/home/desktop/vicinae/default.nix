@@ -51,7 +51,7 @@ let
         };
       };
       favorites = [ "clipboard:history" ];
-      fallbacks = [ "files:search" ];
+      inherit (config.my.vicinae) fallbacks;
       providers = {
         calculator.preferences.backend = "qalculate";
         clipboard.preferences = {
@@ -83,9 +83,19 @@ in
   imports = [
     ./extensions.nix
     ./scripts.nix
+    ./shortcuts.nix
   ];
 
-  programs.vicinae = {
+  # What the root search offers when nothing matches, in order (shortcuts.nix puts its own first).
+  options.my.vicinae.fallbacks = lib.mkOption {
+    type = lib.types.listOf lib.types.str;
+    default = [ ];
+    description = "Vicinae fallback entrypoints, as provider:id.";
+  };
+
+  config.my.vicinae.fallbacks = lib.mkAfter [ "files:search" ];
+
+  config.programs.vicinae = {
     enable = true;
     # 0.29 against 26.05's 0.23, patched so built-in icons are bare line glyphs (no accent tile),
     # like the Nerd Font script icons. --replace-fail breaks the build if upstream moves the line.
@@ -179,7 +189,7 @@ in
   };
 
   # The HM unit plus the repo's session conventions (polkit-agent.nix) and the overrides.
-  systemd.user.services.vicinae = {
+  config.systemd.user.services.vicinae = {
     Unit = {
       ConditionEnvironment = "WAYLAND_DISPLAY";
       X-Restart-Triggers = [ "${overrides}" ];

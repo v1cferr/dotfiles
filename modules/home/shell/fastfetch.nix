@@ -1,4 +1,4 @@
-# fastfetch as a boxed key column (System / Desktop / Hardware), plus `fetch`, the spinning 3D logo.
+# fastfetch, as a boxed key column split into System / Desktop / Hardware, Catnap style.
 # The terminal field uses {process-name}, and owfetch mirrors it: docs/notes/network/network.md
 { lib, pkgs, ... }:
 
@@ -42,7 +42,7 @@ in
       logo = {
         source = "NixOS";
         type = "builtin";
-        padding.top = 1;
+        padding.top = 3; # the logo is 20 rows and the box about 26, so 3 centers it
       };
       display = {
         separator = " ";
@@ -51,10 +51,10 @@ in
 
       modules = [
         (header "╭" "╮" "system")
-        (row "34" "" "os" "os" { })
-        (row "34" "" "kernel" "kernel" { })
+        (row "34" "󱄅" "os" "os" { })
+        (row "34" "󰌽" "kernel" "kernel" { })
         (row "34" "󰏖" "packages" "packages" { })
-        (row "34" "" "gen" "command" {
+        (row "34" "󰋚" "gen" "command" {
           # The profile LINK's own mtime (stat without -L): following it lands on the store, at epoch 1.
           text = ''
             l=$(readlink /nix/var/nix/profiles/system); n=''${l#system-}
@@ -66,31 +66,31 @@ in
           # The birth time of / is the Kingston install, not the first NixOS one (history is in git).
           text = "echo $(( ($(${date} +%s) - $(${stat} -c %W /)) / 86400 )) days";
         })
-        (row "34" "" "shell" "shell" { })
+        (row "34" "󱆃" "shell" "shell" { })
 
         (header "├" "┤" "desktop")
-        (row "35" "" "wm" "wm" { })
+        (row "35" "󰖯" "wm" "wm" { })
         (row "35" "󰍹" "display" "display" { })
-        (row "35" "" "terminal" "terminal" {
+        (row "35" "󰞷" "terminal" "terminal" {
           # {?version}…{?} = a conditional block: with no version detected, no loose space is left.
           format = "{process-name}{?version} {version}{?}";
         })
-        (row "35" "" "font" "terminalfont" { })
-        (row "35" "󰉼" "theme" "theme" { })
+        (row "35" "󰛖" "font" "terminalfont" { })
+        (row "35" "󰏘" "theme" "theme" { })
 
         (header "├" "┤" "hardware")
         (row "36" "󰻠" "cpu" "cpu" { })
         (row "36" "󰢮" "gpu" "gpu" { format = "{name} ({driver})"; })
-        (row "36" "" "vulkan" "vulkan" { })
-        (row "36" "" "memory" "memory" { })
-        (row "36" "󰾴" "swap" "swap" { })
+        (row "36" "󰆧" "vulkan" "vulkan" { format = "{api-version}"; })
+        (row "36" "󰍛" "memory" "memory" { })
+        (row "36" "󰓡" "swap" "swap" { })
         (row "36" "󰋊" "disk" "disk" { folders = "/"; })
-        (row "36" "󰩟" "local ip" "localip" { format = "{ipv4} ({ifname})"; })
+        (row "36" "󰩠" "local ip" "localip" { format = "{ipv4} ({ifname})"; })
         # A network call: the timeout keeps an offline fetch from hanging on it.
         (row "36" "󰖟" "public ip" "publicip" { timeout = 1000; })
 
         (header "├" "┤" "palette")
-        (row "37" "" "colors" "colors" { symbol = "circle"; })
+        (row "37" "󰉦" "colors" "colors" { symbol = "circle"; })
         {
           type = "custom";
           key = "╰${line 13}╯";
@@ -99,31 +99,11 @@ in
     };
   };
 
-  # areofyl/fetch reads the logo from fastfetch and gathers its own, thinner info. Out: `ip` lists
-  # every docker and libvirt bridge, `gpu` calls the B580 integrated and `packages` counts 271.
-  home.packages = [ unstable.fetch ];
-  xdg.configFile."fetch/config".text = ''
-    os
-    kernel
-    uptime
-    shell
-    wm
-    terminal
-    cpu
-    memory
-    disk
-    colors
-
-    label_color=blue
-    shading_mode=sextants
-    box=1
-  '';
-
   # In kitty (local, or over SSH from it, since the bytes travel inline) the real snowflake image
   # replaces the ASCII logo. KITTY_WINDOW_ID is what kitty exports; TERM is often overridden.
   programs.zsh.siteFunctions.fastfetch = ''
     if [[ -n $KITTY_WINDOW_ID || $TERM == xterm-kitty ]]; then
-      command fastfetch --logo-type kitty --logo ${snowflake} --logo-width 30 --logo-height 15 "$@"
+      command fastfetch --logo-type kitty --logo ${snowflake} --logo-width 40 --logo-height 20 "$@"
     else
       command fastfetch "$@"
     fi

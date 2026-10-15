@@ -1,6 +1,11 @@
 # The git CONFIG (~/.gitconfig): identity, preferences and gh as the credential helper. The binary
 # is modules/nixos/'s (systemPackages). No note: the settings below are the whole story.
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  osConfig,
+  ...
+}:
 
 {
   # gh lives HERE and not in packages.nix, because this module already depends on it: it is the
@@ -87,6 +92,20 @@
       tag.sort = "version:refname"; # v1.10 after v1.9
       column.ui = "auto";
       help.autocorrect = "prompt";
+      # Patches and replies to kernel lists go out through Gmail. The app password is NOT here:
+      # the credential helper below hands it over from sops, so `git send-email` never prompts.
+      sendemail = {
+        smtpServer = "smtp.gmail.com";
+        smtpServerPort = 587;
+        smtpEncryption = "tls";
+        smtpUser = "dev.victorferreira@gmail.com";
+      };
+    }
+    # Inert until the vault holds `gmail_app_password`; without it git just asks for the password.
+    // lib.optionalAttrs (osConfig.sops.secrets ? gmail_app_password) {
+      # Answers only `get`: a credential helper is also called to store and erase, and must not.
+      credential."smtp://smtp.gmail.com:587".helper =
+        "!f() { [ \"$1\" = get ] && echo \"password=$(cat ${osConfig.sops.secrets.gmail_app_password.path})\"; }; f";
     };
   };
 }

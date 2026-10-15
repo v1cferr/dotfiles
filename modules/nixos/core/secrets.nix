@@ -100,6 +100,12 @@ in
         owner = "v1cferr";
         mode = "0400";
       }; # user-readable: read_api only, for the glance band's CI page (glance-feed)
+    }
+    // lib.optionalAttrs (builtins.elem "gmail_app_password" sopsKeys) {
+      gmail_app_password = {
+        owner = "v1cferr";
+        mode = "0400";
+      }; # user-readable: `git send-email` runs as the user and reads it through a credential helper
     };
 
   # The Vicinae GitHub extension's token, as a settings override the --user server merges at start

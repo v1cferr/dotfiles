@@ -60,6 +60,7 @@ Most secrets are root-only. These are not, and each has a reason:
 | `rclone_gdrive_conf` | v1cferr 0400 | the `~/Drive` mount is a `--user` service and has to read it without sudo |
 | `restic_password`, `restic_password_arch_kingston` | v1cferr 0400 | `restic mount` is only browsable by WHOEVER MOUNTED IT |
 | `deepl_api_key`, `ntfy_topic` | v1cferr 0400 | consumed by user tooling and `--user` timers |
+| `gmail_app_password` | v1cferr 0400 | `git send-email` runs as the user; a credential helper in `modules/home/shell/git.nix` reads it |
 
 The restic one is the least obvious and the most defensible: a FUSE mount is private by default,
 which this config already proved inside out, since restic as ROOT could not even `lstat` the

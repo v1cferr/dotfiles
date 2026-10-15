@@ -47,6 +47,19 @@
 
   # en-US by preference; pt_BR is generated only for the lockscreen clock's LC_TIME (rule 17).
   time.timeZone = "America/Sao_Paulo";
+  # chrony with NTS against NTP.br (Brazilian legal time, cesium + GPS stratum 1); replaces timesyncd.
+  services.chrony = {
+    enable = true;
+    enableNTS = true;
+    servers = [
+      "a.st1.ntp.br"
+      "b.st1.ntp.br"
+      "c.st1.ntp.br"
+      "d.st1.ntp.br"
+      "gps.jd.ntp.br"
+      "gps.ce.ntp.br"
+    ];
+  };
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.supportedLocales = [
     "en_US.UTF-8/UTF-8"

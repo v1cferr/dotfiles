@@ -1,0 +1,2044 @@
+diff --git a/drivers/gpu/drm/xe/xe_pcode.c b/drivers/gpu/drm/xe/xe_pcode.c
+index ccc3bdeed6bb..7386113e60b3 100644
+--- a/drivers/gpu/drm/xe/xe_pcode.c
++++ b/drivers/gpu/drm/xe/xe_pcode.c
+@@ -147,6 +147,17 @@ int xe_pcode_read(struct xe_tile *tile, u32 mbox, u32 *val, u32 *val1)
+ 	return err;
+ }
+ 
++int xe_pcode_read_timeout(struct xe_tile *tile, u32 mbox, u32 *val, u32 *val1, u32 timeout_ms)
++{
++	int err;
++
++	mutex_lock(&tile->pcode.lock);
++	err = pcode_mailbox_rw(tile, mbox, val, val1, timeout_ms, true, false);
++	mutex_unlock(&tile->pcode.lock);
++
++	return err;
++}
++
+ static int pcode_try_request(struct xe_tile *tile, u32 mbox,
+ 			     u32 request, u32 reply_mask, u32 reply,
+ 			     u32 *status, bool atomic, int timeout_us, bool locked)
+diff --git a/drivers/gpu/drm/xe/xe_pcode.h b/drivers/gpu/drm/xe/xe_pcode.h
+index 8fb3e4ba13a6..c9647c5f305e 100644
+--- a/drivers/gpu/drm/xe/xe_pcode.h
++++ b/drivers/gpu/drm/xe/xe_pcode.h
+@@ -24,6 +24,7 @@ int xe_pcode_ready(struct xe_device *xe, bool locked);
+ int xe_pcode_init_min_freq_table(struct xe_tile *tile, u32 min_gt_freq,
+ 				 u32 max_gt_freq);
+ int xe_pcode_read(struct xe_tile *tile, u32 mbox, u32 *val, u32 *val1);
++int xe_pcode_read_timeout(struct xe_tile *tile, u32 mbox, u32 *val, u32 *val1, u32 timeout_ms);
+ int xe_pcode_write_timeout(struct xe_tile *tile, u32 mbox, u32 val,
+ 			   int timeout_ms);
+ int xe_pcode_write64_timeout(struct xe_tile *tile, u32 mbox, u32 data0,
+diff --git a/drivers/gpu/drm/xe/xe_hwmon.c b/drivers/gpu/drm/xe/xe_hwmon.c
+index de3f2aeffc3f..0a416e3e7b8c 100644
+--- a/drivers/gpu/drm/xe/xe_hwmon.c
++++ b/drivers/gpu/drm/xe/xe_hwmon.c
+@@ -20,6 +20,7 @@
+ #include "xe_pcode_api.h"
+ #include "xe_sriov.h"
+ #include "xe_pm.h"
++#include "xe_printk.h"
+ #include "xe_vsec.h"
+ #include "regs/xe_pmt.h"
+ 
+@@ -122,14 +123,50 @@ struct xe_hwmon_energy_info {
+ 	long accum_energy;
+ };
+ 
++enum fan_table_type {
++	/** @STOCK_FAN_TABLE: firmware-provided fan table */
++	STOCK_FAN_TABLE,
++	/** @USER_FAN_TABLE: user fan table written through sysfs */
++	USER_FAN_TABLE,
++	/** @FAN_TABLE_MAX: number of fan table slots tracked per fan */
++	FAN_TABLE_MAX,
++};
++
++/* Maximum number of fan control points supported by each fan */
++#define MAX_FAN_CONTROL_POINTS	(10)
++
++/* Fan control point index: bit31 selects fan table type; bits30:0 control point index */
++#define FCP_INDEX(FAN_TABLE_TYPE, POINT_NUM) (((FAN_TABLE_TYPE) << 31) | \
++						((POINT_NUM) & REG_GENMASK(30, 0)))
++
++/* PCODE operations timeout for fan control commands */
++#define XE_PCODE_FAN_CONTROL_TIMEOUT_MS	(10)
++
+ /**
+- * struct xe_hwmon_fan_info - to cache previous fan reading
++ * struct xe_hwmon_fan_info - cached fan telemetry and control state
++ *
++ * Each fan keeps the latest tachometer sampling state along with two fan
++ * tables: the stock table discovered from firmware and the user table managed
++ * by hwmon sysfs writes.
+  */
+ struct xe_hwmon_fan_info {
+ 	/** @reg_val_prev: previous fan reg val */
+ 	u32 reg_val_prev;
+ 	/** @time_prev: previous timestamp */
+ 	u64 time_prev;
++	/** @fan_table: fan control tables */
++	struct fan_table {
++		/** @fan_control_point_count: number of supported fan control points */
++		u8 fan_control_point_count;
++		struct fan_control_point {
++			/** @temp: temperature in degree celsius */
++			u8 temp;
++			/** @speed: fan speed in percentage */
++			u8 speed;
++		} fcp[MAX_FAN_CONTROL_POINTS];
++	} fan_table[FAN_TABLE_MAX];
++	/** @min_pwm: minimum fan PWM */
++	u32 min_pwm;
+ };
+ 
+ /**
+@@ -168,6 +205,8 @@ struct xe_hwmon {
+ 	int scl_shift_time;
+ 	/** @ei: Energy info for energyN_input */
+ 	struct xe_hwmon_energy_info ei[CHANNEL_MAX];
++	/** @num_fans: number of fans available */
++	u8 num_fans;
+ 	/** @fi: Fan info for fanN_input */
+ 	struct xe_hwmon_fan_info fi[FAN_MAX];
+ 	/** @boot_power_limit_read: is boot power limits read */
+@@ -856,17 +895,100 @@ static int xe_hwmon_pcode_write_i1(const struct xe_hwmon *hwmon, u32 uval)
+ 			      (uval & POWER_SETUP_I1_DATA_MASK));
+ }
+ 
+-static int xe_hwmon_pcode_read_fan_control(const struct xe_hwmon *hwmon, u32 subcmd, u32 *uval)
++static int xe_hwmon_pcode_read_fan_control(const struct xe_hwmon *hwmon, u32 subcmd, u8 fan_num,
++					   u32 *uval)
+ {
+ 	struct xe_tile *root_tile = xe_device_get_root_tile(hwmon->xe);
++	return xe_pcode_read_timeout(root_tile, PCODE_MBOX(FAN_SPEED_CONTROL, subcmd, fan_num),
++				     uval, NULL, XE_PCODE_FAN_CONTROL_TIMEOUT_MS);
++}
++
++static int xe_hwmon_get_num_fans(const struct xe_hwmon *hwmon, u32 *num_fans)
++{
++	u32 fan_mask = 0;
++	int ret;
+ 
+ 	/* Platforms that don't return correct value */
+-	if (hwmon->xe->info.platform == XE_DG2 && subcmd == FSC_READ_NUM_FANS) {
+-		*uval = 2;
++	if (hwmon->xe->info.platform == XE_DG2) {
++		*num_fans = 2;
+ 		return 0;
+ 	}
+ 
+-	return xe_pcode_read(root_tile, PCODE_MBOX(FAN_SPEED_CONTROL, subcmd, 0), uval, NULL);
++	ret = xe_hwmon_pcode_read_fan_control(hwmon, FSC_READ_NUM_FANS, 0, &fan_mask);
++	if (ret) {
++		xe_warn(hwmon->xe, "failed to read number of fans, ret=%d\n", ret);
++		return ret;
++	}
++
++	*num_fans = min_t(u32, hweight32(fan_mask), FAN_MAX);
++
++	return 0;
++}
++
++static int xe_hwmon_read_fan_control_info(struct xe_hwmon *hwmon)
++{
++	struct xe_tile *root_tile = xe_device_get_root_tile(hwmon->xe);
++	int point;
++	int fan;
++	int ret;
++
++	for (fan = 0; fan < hwmon->num_fans; fan++) {
++		u32 stock_fcp_count = 0;
++
++		struct xe_hwmon_fan_info *fi = &hwmon->fi[fan];
++
++		ret = xe_hwmon_pcode_read_fan_control(hwmon,
++						      FSC_READ_STOCK_FAN_CONTROL_POINTS,
++						      fan, &stock_fcp_count);
++		if (ret) {
++			xe_err(hwmon->xe,
++			       "failed to read fan %d stock control point count, ret=%d\n",
++			       fan, ret);
++			return ret;
++		}
++		fi->fan_table[STOCK_FAN_TABLE].fan_control_point_count =
++				min_t(u8, stock_fcp_count, MAX_FAN_CONTROL_POINTS);
++
++		xe_dbg(hwmon->xe, "fan %d stock points %u\n", fan,
++		       fi->fan_table[STOCK_FAN_TABLE].fan_control_point_count);
++
++		/* Dump the stock fan control points for debugging purposes. */
++		for (point = 0; point < fi->fan_table[STOCK_FAN_TABLE].fan_control_point_count;
++		     point++) {
++			u32 fcp = 0;
++
++			fcp = FCP_INDEX(STOCK_FAN_TABLE, point);
++			ret = xe_pcode_read_timeout(root_tile,
++						    PCODE_MBOX(FAN_SPEED_CONTROL,
++							       FSC_READ_FAN_TABLE, fan),
++						    &fcp, NULL, XE_PCODE_FAN_CONTROL_TIMEOUT_MS);
++			if (ret) {
++				xe_err(hwmon->xe, "failed to read fan %d stock point %d, ret=%d\n",
++				       fan, point, ret);
++				continue;
++			}
++
++			/* Cache the stock fan control points in local structure for later use. */
++			fi->fan_table[STOCK_FAN_TABLE].fcp[point].temp =
++						REG_FIELD_GET(FAN_CONTROL_POINT_TEMP_MASK, fcp);
++			fi->fan_table[STOCK_FAN_TABLE].fcp[point].speed =
++						REG_FIELD_GET(FAN_CONTROL_POINT_SPEED_MASK, fcp);
++			xe_dbg(hwmon->xe, "fan %d stock point %d: temp %u C, speed %u %%\n",
++			       fan, point, fi->fan_table[STOCK_FAN_TABLE].fcp[point].temp,
++			       fi->fan_table[STOCK_FAN_TABLE].fcp[point].speed);
++		}
++
++		/* Read minimum fan PWM */
++		ret = xe_hwmon_pcode_read_fan_control(hwmon, FSC_READ_FAN_MIN_PWM, fan,
++						      &fi->min_pwm);
++		if (ret) {
++			xe_err(hwmon->xe, "failed to read fan %d min PWM, ret=%d\n", fan, ret);
++			continue;
++		}
++
++		xe_dbg(hwmon->xe, "fan %d min PWM %u\n", fan, fi->min_pwm);
++	}
++	return 0;
+ }
+ 
+ static int xe_hwmon_power_curr_crit_read(struct xe_hwmon *hwmon, int channel,
+@@ -1279,17 +1401,12 @@ xe_hwmon_energy_read(struct xe_hwmon *hwmon, u32 attr, int channel, long *val)
+ static umode_t
+ xe_hwmon_fan_is_visible(struct xe_hwmon *hwmon, u32 attr, int channel)
+ {
+-	u32 uval = 0;
+-
+ 	if (!hwmon->xe->info.has_fan_control)
+ 		return 0;
+ 
+ 	switch (attr) {
+ 	case hwmon_fan_input:
+-		if (xe_hwmon_pcode_read_fan_control(hwmon, FSC_READ_NUM_FANS, &uval))
+-			return 0;
+-
+-		return channel < uval ? 0444 : 0;
++		return channel < hwmon->num_fans ? 0444 : 0;
+ 	default:
+ 		return 0;
+ 	}
+@@ -1476,6 +1593,7 @@ xe_hwmon_get_preregistration_info(struct xe_hwmon *hwmon)
+ 	u64 val_sku_unit = 0;
+ 	int channel;
+ 	struct xe_reg pkg_power_sku_unit;
++	u32 num_fans = 0;
+ 
+ 	if (hwmon->xe->info.has_mbx_power_limits) {
+ 		/* Check if GPU firmware support mailbox power limits commands. */
+@@ -1531,10 +1649,21 @@ xe_hwmon_get_preregistration_info(struct xe_hwmon *hwmon)
+ 		if (xe_hwmon_is_visible(hwmon, hwmon_energy, hwmon_energy_input, channel))
+ 			xe_hwmon_energy_get(hwmon, channel, &energy);
+ 
+-	/* Initialize 'struct xe_hwmon_fan_info' with initial fan register reading. */
+-	for (channel = 0; channel < FAN_MAX; channel++)
+-		if (xe_hwmon_is_visible(hwmon, hwmon_fan, hwmon_fan_input, channel))
+-			xe_hwmon_fan_input_read(hwmon, channel, &fan_speed);
++	if (hwmon->xe->info.has_fan_control) {
++		xe_hwmon_get_num_fans(hwmon, &num_fans);
++
++		xe_info(hwmon->xe, "Number of fans detected: %u\n", num_fans);
++		hwmon->num_fans = num_fans;
++
++		/* Initialize 'struct xe_hwmon_fan_info' with initial fan register reading. */
++		for (channel = 0; channel < hwmon->num_fans; channel++)
++			if (xe_hwmon_is_visible(hwmon, hwmon_fan, hwmon_fan_input, channel))
++				xe_hwmon_fan_input_read(hwmon, channel, &fan_speed);
++
++		/* Fan control tables initialization */
++		if (xe_hwmon_read_fan_control_info(hwmon))
++			xe_warn(hwmon->xe, "Fan control tables are not available\n");
++	}
+ 
+ 	if (hwmon->xe->info.has_mbx_thermal_info && xe_hwmon_pcode_read_thermal_info(hwmon))
+ 		drm_warn(&hwmon->xe->drm, "Thermal mailbox not supported by card firmware\n");
+diff --git a/drivers/gpu/drm/xe/xe_pcode_api.h b/drivers/gpu/drm/xe/xe_pcode_api.h
+index 94575c476e3d..669010f1e2d0 100644
+--- a/drivers/gpu/drm/xe/xe_pcode_api.h
++++ b/drivers/gpu/drm/xe/xe_pcode_api.h
+@@ -85,6 +85,11 @@
+ 
+ #define   FAN_SPEED_CONTROL			0x7D
+ #define     FSC_READ_NUM_FANS			0x4
++#define     FSC_READ_STOCK_FAN_CONTROL_POINTS	0x5
++#define     FSC_READ_FAN_TABLE			0x7
++#define     FAN_CONTROL_POINT_TEMP_MASK		REG_GENMASK(7, 0)
++#define     FAN_CONTROL_POINT_SPEED_MASK	REG_GENMASK(15, 8)
++#define     FSC_READ_FAN_MIN_PWM		0x8
+ 
+ #define PCODE_SCRATCH(x)		XE_REG(0x138320 + ((x) * 4))
+ /* PCODE_SCRATCH0 */
+diff --git a/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon b/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
+index 0da739d9a816..ec0b94d76e22 100644
+--- a/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
++++ b/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
+@@ -266,6 +266,14 @@ Description:	RO. Fan 3 speed in RPM.
+ 
+ 		Only supported for particular Intel Xe graphics platforms.
+ 
++What:           /sys/bus/pci/drivers/xe/.../hwmon/hwmon<i>/fan[1-3]_max
++Date:           July 2026
++KernelVersion:  7.2
++Contact:        intel-xe@lists.freedesktop.org
++Description:    RO. Maximum fan speed in RPM for each fan channel.
++
++                Only supported for particular Intel Xe graphics platforms.
++
+ What:		/sys/bus/pci/drivers/xe/.../hwmon/hwmon<i>/power1_cap
+ Date:		May 2025
+ KernelVersion:	6.15
+diff --git a/drivers/gpu/drm/xe/xe_hwmon.c b/drivers/gpu/drm/xe/xe_hwmon.c
+index 0a416e3e7b8c..769f4d1da83e 100644
+--- a/drivers/gpu/drm/xe/xe_hwmon.c
++++ b/drivers/gpu/drm/xe/xe_hwmon.c
+@@ -165,6 +165,8 @@ struct xe_hwmon_fan_info {
+ 			u8 speed;
+ 		} fcp[MAX_FAN_CONTROL_POINTS];
+ 	} fan_table[FAN_TABLE_MAX];
++		/** @max_rps: maximum fan RPS */
++		u32 max_rps;
+ 	/** @min_pwm: minimum fan PWM */
+ 	u32 min_pwm;
+ };
+@@ -799,7 +801,8 @@ static const struct hwmon_channel_info * const hwmon_info[] = {
+ 	HWMON_CHANNEL_INFO(curr, HWMON_C_LABEL, HWMON_C_CRIT | HWMON_C_LABEL),
+ 	HWMON_CHANNEL_INFO(in, HWMON_I_INPUT | HWMON_I_LABEL, HWMON_I_INPUT | HWMON_I_LABEL),
+ 	HWMON_CHANNEL_INFO(energy, HWMON_E_INPUT | HWMON_E_LABEL, HWMON_E_INPUT | HWMON_E_LABEL),
+-	HWMON_CHANNEL_INFO(fan, HWMON_F_INPUT, HWMON_F_INPUT, HWMON_F_INPUT),
++	HWMON_CHANNEL_INFO(fan, HWMON_F_INPUT | HWMON_F_MAX, HWMON_F_INPUT | HWMON_F_MAX,
++			   HWMON_F_INPUT | HWMON_F_MAX),
+ 	NULL
+ };
+ 
+@@ -987,6 +990,14 @@ static int xe_hwmon_read_fan_control_info(struct xe_hwmon *hwmon)
+ 		}
+ 
+ 		xe_dbg(hwmon->xe, "fan %d min PWM %u\n", fan, fi->min_pwm);
++
++		/* Read max fan RPS*/
++		ret = xe_hwmon_pcode_read_fan_control(hwmon, FSC_READ_MAX_FAN_RPS, fan,
++						      &fi->max_rps);
++		if (ret)
++			xe_warn(hwmon->xe, "failed to read fan %d max RPS, ret=%d\n", fan, ret);
++		else
++			xe_dbg(hwmon->xe, "fan %d max RPS %u\n", fan, fi->max_rps);
+ 	}
+ 	return 0;
+ }
+@@ -1406,6 +1417,7 @@ xe_hwmon_fan_is_visible(struct xe_hwmon *hwmon, u32 attr, int channel)
+ 
+ 	switch (attr) {
+ 	case hwmon_fan_input:
++	case hwmon_fan_max:
+ 		return channel < hwmon->num_fans ? 0444 : 0;
+ 	default:
+ 		return 0;
+@@ -1457,6 +1469,10 @@ xe_hwmon_fan_read(struct xe_hwmon *hwmon, u32 attr, int channel, long *val)
+ 	switch (attr) {
+ 	case hwmon_fan_input:
+ 		return xe_hwmon_fan_input_read(hwmon, channel, val);
++	case hwmon_fan_max:
++		/* Convert RPS to RPM */
++		*val = (long)hwmon->fi[channel].max_rps * 60;
++		return 0;
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+diff --git a/drivers/gpu/drm/xe/xe_pcode_api.h b/drivers/gpu/drm/xe/xe_pcode_api.h
+index 669010f1e2d0..419ab4f416fa 100644
+--- a/drivers/gpu/drm/xe/xe_pcode_api.h
++++ b/drivers/gpu/drm/xe/xe_pcode_api.h
+@@ -84,6 +84,7 @@
+ #define     PCODE_MBOX_DOMAIN_HBM		0x2
+ 
+ #define   FAN_SPEED_CONTROL			0x7D
++#define     FSC_READ_MAX_FAN_RPS        0x3
+ #define     FSC_READ_NUM_FANS			0x4
+ #define     FSC_READ_STOCK_FAN_CONTROL_POINTS	0x5
+ #define     FSC_READ_FAN_TABLE			0x7
+diff --git a/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon b/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
+index ec0b94d76e22..7383898890aa 100644
+--- a/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
++++ b/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
+@@ -321,3 +321,12 @@ Description:	RW. Package burst power limit interval (Tau in PL2/Tau) in
+ 		milliseconds over which sustained power is averaged.
+ 
+ 		Only supported for particular Intel Xe graphics platforms.
++
++What:           /sys/bus/pci/drivers/xe/.../hwmon/hwmon<i>/pwm[1-3]
++Date:           July 2026
++KernelVersion:  7.2
++Contact:        intel-xe@lists.freedesktop.org
++Description:    RW. Target fan PWM duty value in the range 0..255. 0 is zero
++                fan speed and 255 is 100% fan speed.
++
++                Only supported for particular Intel Xe graphics platforms.
+diff --git a/drivers/gpu/drm/xe/xe_hwmon.c b/drivers/gpu/drm/xe/xe_hwmon.c
+index 769f4d1da83e..d3379727b1a9 100644
+--- a/drivers/gpu/drm/xe/xe_hwmon.c
++++ b/drivers/gpu/drm/xe/xe_hwmon.c
+@@ -803,6 +803,7 @@ static const struct hwmon_channel_info * const hwmon_info[] = {
+ 	HWMON_CHANNEL_INFO(energy, HWMON_E_INPUT | HWMON_E_LABEL, HWMON_E_INPUT | HWMON_E_LABEL),
+ 	HWMON_CHANNEL_INFO(fan, HWMON_F_INPUT | HWMON_F_MAX, HWMON_F_INPUT | HWMON_F_MAX,
+ 			   HWMON_F_INPUT | HWMON_F_MAX),
++	HWMON_CHANNEL_INFO(pwm, HWMON_PWM_INPUT, HWMON_PWM_INPUT, HWMON_PWM_INPUT),
+ 	NULL
+ };
+ 
+@@ -928,6 +929,158 @@ static int xe_hwmon_get_num_fans(const struct xe_hwmon *hwmon, u32 *num_fans)
+ 	return 0;
+ }
+ 
++static int xe_hwmon_get_fan_point_count(struct xe_hwmon *hwmon, u8 fan, u32 *point_count,
++					int table_type)
++{
++	int ret;
++
++	ret = xe_hwmon_pcode_read_fan_control(hwmon,
++					      (table_type == USER_FAN_TABLE) ?
++					      FSC_READ_USER_FAN_CONTROL_POINTS :
++					      FSC_READ_STOCK_FAN_CONTROL_POINTS,
++					      fan, point_count);
++	if (ret) {
++		xe_err(hwmon->xe, "failed to read fan %d %s point count, ret=%d\n", fan,
++		       (table_type == USER_FAN_TABLE) ? "user" : "stock", ret);
++		return ret;
++	}
++
++	xe_dbg(hwmon->xe, "fan %d %s point count read as %u\n", fan,
++	       (table_type == USER_FAN_TABLE) ? "user" : "stock", *point_count);
++
++	return 0;
++}
++
++static int xe_hwmon_write_user_fan_point(struct xe_hwmon *hwmon, u8 fan, u8 point, u8 temp,
++					 u8 speed)
++{
++	struct xe_tile *root_tile = xe_device_get_root_tile(hwmon->xe);
++	u16 user_fcp_raw = FIELD_PREP(FAN_CONTROL_POINT_TEMP_MASK, temp) |
++			 FIELD_PREP(FAN_CONTROL_POINT_SPEED_MASK, speed);
++	int ret;
++
++	ret = xe_pcode_write_timeout(root_tile,
++				     PCODE_MBOX(FAN_SPEED_CONTROL, FSC_WRITE_FAN_TABLE, fan),
++				    (u32)user_fcp_raw, XE_PCODE_FAN_CONTROL_TIMEOUT_MS);
++	if (ret)
++		xe_dbg(hwmon->xe,
++		       "failed to write fan %d user point %d temp %u, speed %u %%, ret=%d\n",
++		       fan, point, temp, speed, ret);
++
++	return ret;
++}
++
++static int xe_hwmon_activate_user_fan_table(struct xe_hwmon *hwmon, u8 fan,
++					    bool is_full_speed, enum fan_table_type table_source)
++{
++	struct xe_tile *root_tile = xe_device_get_root_tile(hwmon->xe);
++	struct xe_hwmon_fan_info *fi = &hwmon->fi[fan];
++	u32 point_count;
++	int ret;
++	int point;
++	struct fan_table *source_table = &fi->fan_table[table_source];
++
++	xe_dbg(hwmon->xe, "activating fan %d user table from %s table\n", fan,
++	       (table_source == USER_FAN_TABLE) ? "user" : "stock");
++
++	point_count = source_table->fan_control_point_count;
++
++	if (!point_count) {
++		xe_err(hwmon->xe,
++		       "fan %d %s table point count is 0, cannot activate user table\n", fan,
++		       (table_source == USER_FAN_TABLE) ? "user" : "stock");
++		return -ENODATA;
++	}
++
++	for (point = 0; point < point_count; point++) {
++		u8 temp = source_table->fcp[point].temp;
++		u8 speed = is_full_speed ? 100 : max_t(u8, source_table->fcp[point].speed,
++					    min_t(u32, fi->min_pwm, U8_MAX));
++
++		ret = xe_hwmon_write_user_fan_point(hwmon, fan, point, temp, speed);
++		if (ret)
++			return ret;
++
++		if (table_source == STOCK_FAN_TABLE) {
++			/* Update user table cache with stock table values */
++			fi->fan_table[USER_FAN_TABLE].fcp[point].temp = temp;
++			fi->fan_table[USER_FAN_TABLE].fcp[point].speed = speed;
++		}
++		if (is_full_speed)
++			fi->fan_table[USER_FAN_TABLE].fcp[point].speed = speed;
++	}
++
++	ret = xe_pcode_write_timeout(root_tile,
++				     PCODE_MBOX(FAN_SPEED_CONTROL,
++						FSC_WRITE_NUM_FAN_CONTROL_POINTS, fan),
++				     point_count, XE_PCODE_FAN_CONTROL_TIMEOUT_MS);
++	if (ret) {
++		xe_dbg(hwmon->xe, "failed to write fan %d user table, ret=%d\n", fan, ret);
++		return ret;
++	}
++
++	/* Verify if all the user points are set */
++	ret = xe_hwmon_get_fan_point_count(hwmon, fan, &point_count, USER_FAN_TABLE);
++	if (ret) {
++		xe_err(hwmon->xe,
++		       "failed to read fan %d user table point count, ret=%d\n", fan, ret);
++		return ret;
++	}
++	if (point_count != source_table->fan_control_point_count) {
++		xe_err(hwmon->xe, "fan %d user table point count mismatch, expected %u, got %u\n",
++		       fan, source_table->fan_control_point_count, point_count);
++		return -EIO;
++	}
++
++	fi->fan_table[USER_FAN_TABLE].fan_control_point_count = point_count;
++
++	return 0;
++}
++
++static int xe_hwmon_set_user_fan_pwm(struct xe_hwmon *hwmon, u8 fan, u8 pwm)
++{
++	struct xe_tile *root_tile = xe_device_get_root_tile(hwmon->xe);
++	struct xe_hwmon_fan_info *fi = &hwmon->fi[fan];
++	u32 point_count = fi->fan_table[USER_FAN_TABLE].fan_control_point_count;
++	u8 clamped_pwm;
++	int ret;
++	int point;
++
++	/* Read user table fan point count, if it is not set, activate the user table */
++	ret = xe_hwmon_get_fan_point_count(hwmon, fan, &point_count, USER_FAN_TABLE);
++	if (ret)
++		return ret;
++
++	if (!point_count) {
++		xe_dbg(hwmon->xe, "fan %d user table not set, activating it\n", fan);
++		ret = xe_hwmon_activate_user_fan_table(hwmon, fan, false, STOCK_FAN_TABLE);
++		if (ret)
++			return ret;
++	}
++
++	pwm = DIV_ROUND_CLOSEST(pwm * 100, U8_MAX);
++	clamped_pwm = max_t(u8, pwm, min_t(u32, fi->min_pwm, U8_MAX));
++
++	for (point = 0; point < point_count; point++) {
++		u8 temp = fi->fan_table[USER_FAN_TABLE].fcp[point].temp;
++
++		ret = xe_hwmon_write_user_fan_point(hwmon, fan, point, temp, clamped_pwm);
++		if (ret)
++			return ret;
++
++		fi->fan_table[USER_FAN_TABLE].fcp[point].speed = clamped_pwm;
++	}
++
++	ret = xe_pcode_write(root_tile,
++			     PCODE_MBOX(FAN_SPEED_CONTROL, FSC_WRITE_NUM_FAN_CONTROL_POINTS, fan),
++			     point_count);
++	if (ret) {
++		xe_dbg(hwmon->xe, "failed to update fan %d user table count, ret=%d\n", fan, ret);
++		return ret;
++	}
++	return 0;
++}
++
+ static int xe_hwmon_read_fan_control_info(struct xe_hwmon *hwmon)
+ {
+ 	struct xe_tile *root_tile = xe_device_get_root_tile(hwmon->xe);
+@@ -1424,6 +1577,20 @@ xe_hwmon_fan_is_visible(struct xe_hwmon *hwmon, u32 attr, int channel)
+ 	}
+ }
+ 
++static umode_t
++xe_hwmon_pwm_is_visible(struct xe_hwmon *hwmon, u32 attr, int channel)
++{
++	if (!hwmon->xe->info.has_fan_control || channel >= hwmon->num_fans)
++		return 0;
++
++	switch (attr) {
++	case hwmon_pwm_input:
++		return 0644;
++	default:
++		return 0;
++	}
++}
++
+ static int
+ xe_hwmon_fan_input_read(struct xe_hwmon *hwmon, int channel, long *val)
+ {
+@@ -1478,6 +1645,62 @@ xe_hwmon_fan_read(struct xe_hwmon *hwmon, u32 attr, int channel, long *val)
+ 	}
+ }
+ 
++static int
++xe_hwmon_pwm_read(struct xe_hwmon *hwmon, u32 attr, int channel, long *val)
++{
++	struct xe_hwmon_fan_info *fi;
++	int ret = 0;
++
++	if (channel < 0 || channel >= FAN_MAX)
++		return -EINVAL;
++
++	fi = &hwmon->fi[channel];
++
++	switch (attr) {
++	case hwmon_pwm_input:
++		/* Check if user fan table is set else activate it.*/
++		if (!fi->fan_table[USER_FAN_TABLE].fan_control_point_count) {
++			xe_dbg(hwmon->xe, "fan %d user table not set, activating it\n", channel);
++			ret = xe_hwmon_activate_user_fan_table(hwmon, channel, false,
++							       STOCK_FAN_TABLE);
++			if (ret)
++				return ret;
++		}
++		*val = DIV_ROUND_CLOSEST(fi->fan_table[USER_FAN_TABLE].fcp[0].speed *
++						U8_MAX,	100);
++		return 0;
++	default:
++		return -EOPNOTSUPP;
++	}
++}
++
++static int
++xe_hwmon_pwm_write(struct xe_hwmon *hwmon, u32 attr, int channel, long val)
++{
++	int ret = 0;
++
++	if (channel < 0 || channel >= FAN_MAX)
++		return -EINVAL;
++
++	mutex_lock(&hwmon->hwmon_lock);
++
++	switch (attr) {
++	case hwmon_pwm_input:
++		if (val < 0 || val > U8_MAX) {
++			ret = -EINVAL;
++			break;
++		}
++		ret = xe_hwmon_set_user_fan_pwm(hwmon, channel, (u8)val);
++		break;
++	default:
++		ret = -EOPNOTSUPP;
++		break;
++	}
++	mutex_unlock(&hwmon->hwmon_lock);
++
++	return ret;
++}
++
+ static umode_t
+ xe_hwmon_is_visible(const void *drvdata, enum hwmon_sensor_types type,
+ 		    u32 attr, int channel)
+@@ -1504,6 +1727,9 @@ xe_hwmon_is_visible(const void *drvdata, enum hwmon_sensor_types type,
+ 	case hwmon_fan:
+ 		ret = xe_hwmon_fan_is_visible(hwmon, attr, channel);
+ 		break;
++	case hwmon_pwm:
++		ret = xe_hwmon_pwm_is_visible(hwmon, attr, channel);
++		break;
+ 	default:
+ 		ret = 0;
+ 		break;
+@@ -1533,6 +1759,8 @@ xe_hwmon_read(struct device *dev, enum hwmon_sensor_types type, u32 attr,
+ 		return xe_hwmon_energy_read(hwmon, attr, channel, val);
+ 	case hwmon_fan:
+ 		return xe_hwmon_fan_read(hwmon, attr, channel, val);
++	case hwmon_pwm:
++		return xe_hwmon_pwm_read(hwmon, attr, channel, val);
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+@@ -1551,6 +1779,8 @@ xe_hwmon_write(struct device *dev, enum hwmon_sensor_types type, u32 attr,
+ 		return xe_hwmon_power_write(hwmon, attr, channel, val);
+ 	case hwmon_curr:
+ 		return xe_hwmon_curr_write(hwmon, attr, channel, val);
++	case hwmon_pwm:
++		return xe_hwmon_pwm_write(hwmon, attr, channel, val);
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+diff --git a/drivers/gpu/drm/xe/xe_pcode_api.h b/drivers/gpu/drm/xe/xe_pcode_api.h
+index 419ab4f416fa..5c5fdc650a97 100644
+--- a/drivers/gpu/drm/xe/xe_pcode_api.h
++++ b/drivers/gpu/drm/xe/xe_pcode_api.h
+@@ -84,9 +84,12 @@
+ #define     PCODE_MBOX_DOMAIN_HBM		0x2
+ 
+ #define   FAN_SPEED_CONTROL			0x7D
++#define     FSC_WRITE_NUM_FAN_CONTROL_POINTS	0x0
++#define     FSC_WRITE_FAN_TABLE			0x1
+ #define     FSC_READ_MAX_FAN_RPS        0x3
+ #define     FSC_READ_NUM_FANS			0x4
+ #define     FSC_READ_STOCK_FAN_CONTROL_POINTS	0x5
++#define     FSC_READ_USER_FAN_CONTROL_POINTS	0x6
+ #define     FSC_READ_FAN_TABLE			0x7
+ #define     FAN_CONTROL_POINT_TEMP_MASK		REG_GENMASK(7, 0)
+ #define     FAN_CONTROL_POINT_SPEED_MASK	REG_GENMASK(15, 8)
+diff --git a/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon b/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
+index 7383898890aa..effc7d38ce1f 100644
+--- a/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
++++ b/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
+@@ -330,3 +330,14 @@ Description:    RW. Target fan PWM duty value in the range 0..255. 0 is zero
+                 fan speed and 255 is 100% fan speed.
+ 
+                 Only supported for particular Intel Xe graphics platforms.
++
++What:          /sys/bus/pci/drivers/xe/.../hwmon/hwmon<i>/pwm[1-3]_enable
++Date:          July 2026
++KernelVersion: 7.2
++Contact:       intel-xe@lists.freedesktop.org
++Description:   RW. Fan control mode selector.
++
++               Use value 0 to run fans at full speed. Use value 1 to enable
++               user table control and value 2 to use firmware default behavior.
++
++               Only supported for particular Intel Xe graphics platforms.
+diff --git a/drivers/gpu/drm/xe/xe_hwmon.c b/drivers/gpu/drm/xe/xe_hwmon.c
+index d3379727b1a9..fa9dbadd5fd6 100644
+--- a/drivers/gpu/drm/xe/xe_hwmon.c
++++ b/drivers/gpu/drm/xe/xe_hwmon.c
+@@ -123,6 +123,15 @@ struct xe_hwmon_energy_info {
+ 	long accum_energy;
+ };
+ 
++enum xe_fan_pwm_enable_mode {
++	/** @XE_FAN_PWM_FULL_SPEED: force all user table points to full speed */
++	XE_FAN_PWM_FULL_SPEED = 0,
++	/** @XE_FAN_PWM_MANUAL_USER_TABLE: use the driver-managed user table */
++	XE_FAN_PWM_MANUAL_USER_TABLE = 1,
++	/** @XE_FAN_PWM_AUTO_STOCK_TABLE: use the firmware stock table */
++	XE_FAN_PWM_AUTO_STOCK_TABLE = 2,
++};
++
+ enum fan_table_type {
+ 	/** @STOCK_FAN_TABLE: firmware-provided fan table */
+ 	STOCK_FAN_TABLE,
+@@ -169,6 +178,10 @@ struct xe_hwmon_fan_info {
+ 		u32 max_rps;
+ 	/** @min_pwm: minimum fan PWM */
+ 	u32 min_pwm;
++	/** @pwm_enable_mode: current xe_fan_pwm_enable_mode */
++	u8 pwm_enable_mode;
++	/** @is_full_speed: flag indicating if fan is in full speed */
++	bool is_full_speed;
+ };
+ 
+ /**
+@@ -803,7 +816,9 @@ static const struct hwmon_channel_info * const hwmon_info[] = {
+ 	HWMON_CHANNEL_INFO(energy, HWMON_E_INPUT | HWMON_E_LABEL, HWMON_E_INPUT | HWMON_E_LABEL),
+ 	HWMON_CHANNEL_INFO(fan, HWMON_F_INPUT | HWMON_F_MAX, HWMON_F_INPUT | HWMON_F_MAX,
+ 			   HWMON_F_INPUT | HWMON_F_MAX),
+-	HWMON_CHANNEL_INFO(pwm, HWMON_PWM_INPUT, HWMON_PWM_INPUT, HWMON_PWM_INPUT),
++	HWMON_CHANNEL_INFO(pwm, HWMON_PWM_INPUT | HWMON_PWM_ENABLE,
++			   HWMON_PWM_INPUT | HWMON_PWM_ENABLE,
++			   HWMON_PWM_INPUT | HWMON_PWM_ENABLE),
+ 	NULL
+ };
+ 
+@@ -1033,7 +1048,8 @@ static int xe_hwmon_activate_user_fan_table(struct xe_hwmon *hwmon, u8 fan,
+ 	}
+ 
+ 	fi->fan_table[USER_FAN_TABLE].fan_control_point_count = point_count;
+-
++	fi->pwm_enable_mode = XE_FAN_PWM_MANUAL_USER_TABLE;
++	fi->is_full_speed = is_full_speed;
+ 	return 0;
+ }
+ 
+@@ -1046,6 +1062,11 @@ static int xe_hwmon_set_user_fan_pwm(struct xe_hwmon *hwmon, u8 fan, u8 pwm)
+ 	int ret;
+ 	int point;
+ 
++	if (fi->pwm_enable_mode == XE_FAN_PWM_AUTO_STOCK_TABLE) {
++		xe_dbg(hwmon->xe, "fan %d manual table is not active, cannot set pwm\n", fan);
++		return -EINVAL;
++	}
++
+ 	/* Read user table fan point count, if it is not set, activate the user table */
+ 	ret = xe_hwmon_get_fan_point_count(hwmon, fan, &point_count, USER_FAN_TABLE);
+ 	if (ret)
+@@ -1078,6 +1099,9 @@ static int xe_hwmon_set_user_fan_pwm(struct xe_hwmon *hwmon, u8 fan, u8 pwm)
+ 		xe_dbg(hwmon->xe, "failed to update fan %d user table count, ret=%d\n", fan, ret);
+ 		return ret;
+ 	}
++
++	fi->pwm_enable_mode = XE_FAN_PWM_MANUAL_USER_TABLE;
++	fi->is_full_speed = false;
+ 	return 0;
+ }
+ 
+@@ -1134,6 +1158,9 @@ static int xe_hwmon_read_fan_control_info(struct xe_hwmon *hwmon)
+ 			       fi->fan_table[STOCK_FAN_TABLE].fcp[point].speed);
+ 		}
+ 
++		/* Set PWM enable mode to automatic i.e stock table in use. */
++		fi->pwm_enable_mode = XE_FAN_PWM_AUTO_STOCK_TABLE;
++
+ 		/* Read minimum fan PWM */
+ 		ret = xe_hwmon_pcode_read_fan_control(hwmon, FSC_READ_FAN_MIN_PWM, fan,
+ 						      &fi->min_pwm);
+@@ -1585,6 +1612,7 @@ xe_hwmon_pwm_is_visible(struct xe_hwmon *hwmon, u32 attr, int channel)
+ 
+ 	switch (attr) {
+ 	case hwmon_pwm_input:
++	case hwmon_pwm_enable:
+ 		return 0644;
+ 	default:
+ 		return 0;
+@@ -1669,6 +1697,9 @@ xe_hwmon_pwm_read(struct xe_hwmon *hwmon, u32 attr, int channel, long *val)
+ 		*val = DIV_ROUND_CLOSEST(fi->fan_table[USER_FAN_TABLE].fcp[0].speed *
+ 						U8_MAX,	100);
+ 		return 0;
++	case hwmon_pwm_enable:
++			*val = fi->is_full_speed ? XE_FAN_PWM_FULL_SPEED : fi->pwm_enable_mode;
++		return 0;
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+@@ -1677,11 +1708,15 @@ xe_hwmon_pwm_read(struct xe_hwmon *hwmon, u32 attr, int channel, long *val)
+ static int
+ xe_hwmon_pwm_write(struct xe_hwmon *hwmon, u32 attr, int channel, long val)
+ {
++	struct xe_tile *root_tile = xe_device_get_root_tile(hwmon->xe);
++	struct xe_hwmon_fan_info *fi;
+ 	int ret = 0;
+ 
+ 	if (channel < 0 || channel >= FAN_MAX)
+ 		return -EINVAL;
+ 
++	fi = &hwmon->fi[channel];
++
+ 	mutex_lock(&hwmon->hwmon_lock);
+ 
+ 	switch (attr) {
+@@ -1692,10 +1727,62 @@ xe_hwmon_pwm_write(struct xe_hwmon *hwmon, u32 attr, int channel, long val)
+ 		}
+ 		ret = xe_hwmon_set_user_fan_pwm(hwmon, channel, (u8)val);
+ 		break;
++	case hwmon_pwm_enable:
++		if (val == XE_FAN_PWM_FULL_SPEED) {
++			/* Set fans at full speed. */
++			ret = xe_hwmon_activate_user_fan_table(hwmon, channel, true,
++							       STOCK_FAN_TABLE);
++			if (ret) {
++				xe_warn(hwmon->xe,
++					"full speed enable for fan %d failed, ret=%d\n",
++					channel, ret);
++			}
++		} else if (val == XE_FAN_PWM_MANUAL_USER_TABLE) {
++			/*
++			 * Manual fan speed control using user fan table.
++			 * If user fan table is not programmed, it would be initialized with
++			 * clamped stock points which allows manual control with some
++			 * default points.
++			 */
++			ret = xe_hwmon_activate_user_fan_table(hwmon, channel, false,
++							       USER_FAN_TABLE);
++			if (ret) {
++				xe_warn(hwmon->xe,
++					"failed to activate user fan table for fan %d, ret=%d\n",
++					channel, ret);
++			}
++		} else if (val == XE_FAN_PWM_AUTO_STOCK_TABLE) {
++			/* Switch to stock table specifying the user points to 0. */
++			ret = xe_pcode_write_timeout(root_tile,
++						     PCODE_MBOX(FAN_SPEED_CONTROL,
++								FSC_WRITE_NUM_FAN_CONTROL_POINTS,
++								channel),
++						      0, XE_PCODE_FAN_CONTROL_TIMEOUT_MS);
++			if (ret) {
++				xe_warn(hwmon->xe,
++					"failed to disable user fan table for fan %d, ret=%d\n",
++					channel, ret);
++				break;
++			}
++			xe_dbg(hwmon->xe,
++			       "automatic control enabled for fan %d using stock table\n",
++			       channel);
++			       ret = 0;
++		} else {
++			ret = -EINVAL;
++		}
++		break;
+ 	default:
+ 		ret = -EOPNOTSUPP;
+ 		break;
+ 	}
++
++	/* Update PWM enable mode and full speed status if no error occurred */
++	if (!ret && attr == hwmon_pwm_enable) {
++		fi->pwm_enable_mode = val;
++		fi->is_full_speed = (val == XE_FAN_PWM_FULL_SPEED);
++	}
++
+ 	mutex_unlock(&hwmon->hwmon_lock);
+ 
+ 	return ret;
+diff --git a/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon b/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
+index effc7d38ce1f..68cc6b99e8a5 100644
+--- a/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
++++ b/Documentation/ABI/testing/sysfs-driver-intel-xe-hwmon
+@@ -341,3 +341,19 @@ Description:   RW. Fan control mode selector.
+                user table control and value 2 to use firmware default behavior.
+ 
+                Only supported for particular Intel Xe graphics platforms.
++
++What:          /sys/bus/pci/drivers/xe/.../hwmon/hwmon<i>/pwm[1-3]_auto_point[1-10]_temp
++Date:          June 2026
++KernelVersion: 7.2
++Contact:       intel-xe@lists.freedesktop.org
++Description:   RW. Temperature in millidegree Celsius for each fan curve point.
++
++               Only supported for particular Intel Xe graphics platforms.
++
++What:          /sys/bus/pci/drivers/xe/.../hwmon/hwmon<i>/pwm[1-3]_auto_point[1-10]_pwm
++Date:          June 2026
++KernelVersion: 7.2
++Contact:       intel-xe@lists.freedesktop.org
++Description:   RW. PWM duty value (0..255) for each fan curve point.
++
++               Only supported for particular Intel Xe graphics platforms.
+diff --git a/drivers/gpu/drm/xe/xe_hwmon.c b/drivers/gpu/drm/xe/xe_hwmon.c
+index fa9dbadd5fd6..a3ed139ad446 100644
+--- a/drivers/gpu/drm/xe/xe_hwmon.c
++++ b/drivers/gpu/drm/xe/xe_hwmon.c
+@@ -173,6 +173,10 @@ struct xe_hwmon_fan_info {
+ 			/** @speed: fan speed in percentage */
+ 			u8 speed;
+ 		} fcp[MAX_FAN_CONTROL_POINTS];
++		/** @last_point_temp_valid: last user temperature point was written */
++		bool last_point_temp_valid;
++		/** @last_point_speed_valid: last user PWM point was written */
++		bool last_point_speed_valid;
+ 	} fan_table[FAN_TABLE_MAX];
+ 		/** @max_rps: maximum fan RPS */
+ 		u32 max_rps;
+@@ -779,8 +783,11 @@ static const struct attribute_group hwmon_attrgroup = {
+ 	.is_visible = xe_hwmon_attributes_visible,
+ };
+ 
++static const struct attribute_group hwmon_curve_attrgroup;
++
+ static const struct attribute_group *hwmon_groups[] = {
+ 	&hwmon_attrgroup,
++	&hwmon_curve_attrgroup,
+ 	NULL
+ };
+ 
+@@ -945,7 +952,7 @@ static int xe_hwmon_get_num_fans(const struct xe_hwmon *hwmon, u32 *num_fans)
+ }
+ 
+ static int xe_hwmon_get_fan_point_count(struct xe_hwmon *hwmon, u8 fan, u32 *point_count,
+-					int table_type)
++					enum fan_table_type table_type)
+ {
+ 	int ret;
+ 
+@@ -960,6 +967,16 @@ static int xe_hwmon_get_fan_point_count(struct xe_hwmon *hwmon, u8 fan, u32 *poi
+ 		return ret;
+ 	}
+ 
++	xe_dbg(hwmon->xe, "fan %d %s point count read as %u\n", fan,
++	       (table_type == USER_FAN_TABLE) ? "user" : "stock", *point_count);
++
++	if (*point_count > MAX_FAN_CONTROL_POINTS) {
++		xe_err(hwmon->xe, "fan %d %s point count %u exceeds max %u\n", fan,
++		       (table_type == USER_FAN_TABLE) ? "user" : "stock", *point_count,
++		       MAX_FAN_CONTROL_POINTS);
++		return -EINVAL;
++	}
++
+ 	xe_dbg(hwmon->xe, "fan %d %s point count read as %u\n", fan,
+ 	       (table_type == USER_FAN_TABLE) ? "user" : "stock", *point_count);
+ 
+@@ -985,6 +1002,60 @@ static int xe_hwmon_write_user_fan_point(struct xe_hwmon *hwmon, u8 fan, u8 poin
+ 	return ret;
+ }
+ 
++static int xe_hwmon_commit_user_fan_table(struct xe_hwmon *hwmon, u8 fan)
++{
++	struct xe_hwmon_fan_info *fi = &hwmon->fi[fan];
++	struct xe_tile *root_tile = xe_device_get_root_tile(hwmon->xe);
++	u32 point_count = fi->fan_table[USER_FAN_TABLE].fan_control_point_count;
++	int point;
++	int ret;
++
++	if (!point_count)
++		return -ENODATA;
++
++	for (point = 0; point < point_count; point++) {
++		u8 temp = fi->fan_table[USER_FAN_TABLE].fcp[point].temp;
++		u8 speed = fi->fan_table[USER_FAN_TABLE].fcp[point].speed;
++
++		/* Ensure fan control points are strictly increasing order */
++		if (point > 0) {
++			u8 prev_temp = fi->fan_table[USER_FAN_TABLE].fcp[point - 1].temp;
++			u8 prev_speed = fi->fan_table[USER_FAN_TABLE].fcp[point - 1].speed;
++
++			if (temp < prev_temp || speed < prev_speed) {
++				drm_dbg(&hwmon->xe->drm,
++					"fan %d invalid user point previous value > current %d: %u/%u prev=%u/%u\n",
++					fan, point, temp, speed, prev_temp, prev_speed);
++				return -EINVAL;
++			}
++		}
++
++		drm_dbg(&hwmon->xe->drm,
++			"committing fan %d user point %d temp %u, speed %u %%\n",
++			fan, point, temp, speed);
++		ret = xe_hwmon_write_user_fan_point(hwmon, fan, point, temp, speed);
++		if (ret)
++			return ret;
++	}
++
++	drm_dbg(&hwmon->xe->drm,
++		"committing fan %d user table with %d points\n", fan, point_count);
++	ret = xe_pcode_write_timeout(root_tile, PCODE_MBOX(FAN_SPEED_CONTROL,
++							   FSC_WRITE_NUM_FAN_CONTROL_POINTS,
++							   fan),
++				     point_count, XE_PCODE_FAN_CONTROL_TIMEOUT_MS);
++	if (ret) {
++		drm_dbg(&hwmon->xe->drm,
++			"failed to update fan %d user table count, ret=%d\n", fan, ret);
++		return ret;
++	}
++
++	fi->pwm_enable_mode = XE_FAN_PWM_MANUAL_USER_TABLE;
++	fi->is_full_speed = false;
++
++	return 0;
++}
++
+ static int xe_hwmon_activate_user_fan_table(struct xe_hwmon *hwmon, u8 fan,
+ 					    bool is_full_speed, enum fan_table_type table_source)
+ {
+@@ -1105,6 +1176,633 @@ static int xe_hwmon_set_user_fan_pwm(struct xe_hwmon *hwmon, u8 fan, u8 pwm)
+ 	return 0;
+ }
+ 
++#define XE_CURVE_IDX(fan, point)	(((fan) << 8) | (point))
++#define XE_CURVE_FAN(idx)		((u8)(((idx) >> 8) & 0xff))
++#define XE_CURVE_POINT(idx)		((u8)((idx) & 0xff))
++
++static int
++xe_hwmon_decode_curve_index(u32 index, u8 *fan, u8 *point)
++{
++	u8 local_fan = XE_CURVE_FAN(index);
++	u8 local_point = XE_CURVE_POINT(index);
++
++	if (local_fan >= FAN_MAX || local_point >= MAX_FAN_CONTROL_POINTS)
++		return -EINVAL;
++
++	*fan = local_fan;
++	*point = local_point;
++
++	return 0;
++}
++
++static inline enum fan_table_type xe_hwmon_get_active_fan_table(struct xe_hwmon *hwmon, u8 fan)
++{
++	if (hwmon->fi[fan].pwm_enable_mode == XE_FAN_PWM_AUTO_STOCK_TABLE)
++		return STOCK_FAN_TABLE;
++	else
++		return USER_FAN_TABLE;
++}
++
++static ssize_t
++xe_hwmon_pwm_auto_point_temp_show(struct device *dev,
++				  struct device_attribute *attr, char *buf)
++{
++	struct sensor_device_attribute *sattr = to_sensor_dev_attr(attr);
++	struct xe_hwmon *hwmon = dev_get_drvdata(dev);
++	struct xe_hwmon_fan_info *fi;
++	u32 point_count;
++	u8 fan;
++	u8 point;
++	u8 temp;
++	int ret;
++	enum fan_table_type active_table;
++
++	ret = xe_hwmon_decode_curve_index(sattr->index, &fan, &point);
++	if (ret)
++		return ret;
++
++	fi = &hwmon->fi[fan];
++	active_table = xe_hwmon_get_active_fan_table(hwmon, fan);
++
++	guard(xe_pm_runtime)(hwmon->xe);
++
++	mutex_lock(&hwmon->hwmon_lock);
++
++	fi = &hwmon->fi[fan];
++
++	ret = xe_hwmon_get_fan_point_count(hwmon, fan, &point_count, active_table);
++	if (ret)
++		goto unlock;
++
++	if (point >= point_count) {
++		ret = -EINVAL;
++		goto unlock;
++	}
++
++	temp = fi->fan_table[active_table].fcp[point].temp;
++	ret = sysfs_emit(buf, "%u\n", temp * MILLIDEGREE_PER_DEGREE);
++
++unlock:
++	mutex_unlock(&hwmon->hwmon_lock);
++
++	return ret;
++}
++
++static int xe_hwmon_update_user_fan_point(struct xe_hwmon *hwmon, u8 fan, u32 point,
++					  u32 point_count, u8 temp, u8 pwm)
++{
++	struct xe_hwmon_fan_info *fi = &hwmon->fi[fan];
++	int ret;
++
++	if (temp) {
++		fi->fan_table[USER_FAN_TABLE].fcp[point].temp = temp;
++		if (point == (point_count - 1))
++			fi->fan_table[USER_FAN_TABLE].last_point_temp_valid = true;
++	} else {
++		fi->fan_table[USER_FAN_TABLE].fcp[point].speed = pwm;
++		if (point == (point_count - 1))
++			fi->fan_table[USER_FAN_TABLE].last_point_speed_valid = true;
++	}
++
++	/* Cache intermediate points and commit once the last point arrives. */
++	if (point == (point_count - 1) &&
++	    fi->fan_table[USER_FAN_TABLE].last_point_temp_valid &&
++	    fi->fan_table[USER_FAN_TABLE].last_point_speed_valid) {
++		ret = xe_hwmon_commit_user_fan_table(hwmon, fan);
++		if (ret)
++			return ret;
++		fi->fan_table[USER_FAN_TABLE].last_point_temp_valid = false;
++		fi->fan_table[USER_FAN_TABLE].last_point_speed_valid = false;
++	}
++	return 0;
++}
++
++static int xe_hwmon_get_u8_from_sysfs(long val, bool is_temp, u8 *out)
++{
++	long hw_val;
++
++	if (is_temp)
++		hw_val = DIV_ROUND_CLOSEST(val, MILLIDEGREE_PER_DEGREE);
++	else
++		hw_val = DIV_ROUND_CLOSEST(val * 100, U8_MAX);
++
++	if (hw_val < 0 || hw_val > U8_MAX)
++		return -EINVAL;
++
++	*out = hw_val;
++
++	return 0;
++}
++
++static ssize_t
++xe_hwmon_pwm_auto_point_temp_store(struct device *dev,
++				   struct device_attribute *attr,
++				   const char *buf, size_t count)
++{
++	struct sensor_device_attribute *sattr = to_sensor_dev_attr(attr);
++	struct xe_hwmon *hwmon = dev_get_drvdata(dev);
++	struct xe_hwmon_fan_info *fi;
++	u8 fan;
++	u8 point;
++	u32 point_count;
++	u8 temp;
++	long val;
++	int ret;
++
++	ret = xe_hwmon_decode_curve_index(sattr->index, &fan, &point);
++	if (ret)
++		return ret;
++
++	fi = &hwmon->fi[fan];
++
++	if (fi->pwm_enable_mode != XE_FAN_PWM_MANUAL_USER_TABLE) {
++		drm_err(&hwmon->xe->drm,
++			"pwm%d_enable not in manual mode; cannot update temp point %d\n",
++			fan, point);
++		return -EINVAL;
++	}
++
++	ret = kstrtol(buf, 10, &val);
++	if (ret)
++		return ret;
++
++	ret = xe_hwmon_get_u8_from_sysfs(val, true, &temp);
++	if (ret)
++		return ret;
++
++	guard(xe_pm_runtime)(hwmon->xe);
++
++	mutex_lock(&hwmon->hwmon_lock);
++
++	ret = xe_hwmon_get_fan_point_count(hwmon, fan, &point_count, USER_FAN_TABLE);
++	if (ret)
++		goto unlock;
++
++	if (point >= point_count) {
++		ret = -EINVAL;
++		goto unlock;
++	}
++
++	drm_dbg(&hwmon->xe->drm,
++		"updating fan %d point %d temp to %u, pwm %u\n", fan, point,
++		temp, fi->fan_table[USER_FAN_TABLE].fcp[point].speed);
++	ret = xe_hwmon_update_user_fan_point(hwmon, fan, point, point_count, temp, 0);
++
++unlock:
++	mutex_unlock(&hwmon->hwmon_lock);
++
++	return ret ? ret : count;
++}
++
++static ssize_t
++xe_hwmon_pwm_auto_point_pwm_show(struct device *dev,
++				 struct device_attribute *attr,
++				 char *buf)
++{
++	struct sensor_device_attribute *sattr = to_sensor_dev_attr(attr);
++	struct xe_hwmon *hwmon = dev_get_drvdata(dev);
++	struct xe_hwmon_fan_info *fi;
++	u8 fan;
++	u8 point;
++	u32 point_count;
++	int ret;
++	enum fan_table_type active_table;
++
++	ret = xe_hwmon_decode_curve_index(sattr->index, &fan, &point);
++	if (ret)
++		return ret;
++
++	fi = &hwmon->fi[fan];
++	active_table = xe_hwmon_get_active_fan_table(hwmon, fan);
++
++	guard(xe_pm_runtime)(hwmon->xe);
++
++	mutex_lock(&hwmon->hwmon_lock);
++
++	ret = xe_hwmon_get_fan_point_count(hwmon, fan, &point_count, active_table);
++	if (ret)
++		goto unlock;
++
++	if (point >= point_count) {
++		ret = -EINVAL;
++		goto unlock;
++	}
++
++	ret = sysfs_emit(buf, "%u\n",
++			 DIV_ROUND_CLOSEST(fi->fan_table[active_table].fcp[point].speed * U8_MAX,
++					   100));
++
++unlock:
++	mutex_unlock(&hwmon->hwmon_lock);
++
++	return ret;
++}
++
++static ssize_t
++xe_hwmon_pwm_auto_point_pwm_store(struct device *dev,
++				  struct device_attribute *attr,
++				  const char *buf, size_t count)
++{
++	struct sensor_device_attribute *sattr = to_sensor_dev_attr(attr);
++	struct xe_hwmon *hwmon = dev_get_drvdata(dev);
++	struct xe_hwmon_fan_info *fi;
++	u32 point_count;
++	long val;
++	u8 point;
++	u8 fan;
++	u8 pwm;
++	int ret;
++
++	ret = xe_hwmon_decode_curve_index(sattr->index, &fan, &point);
++	if (ret)
++		return ret;
++
++	fi = &hwmon->fi[fan];
++
++	if (fi->pwm_enable_mode != XE_FAN_PWM_MANUAL_USER_TABLE) {
++		drm_err(&hwmon->xe->drm,
++			"pwm%d_enable is not in manual user mode, cannot update pwm point %d\n",
++			fan, point);
++		return -EINVAL;
++	}
++
++	ret = kstrtol(buf, 10, &val);
++	if (ret)
++		return ret;
++
++	ret = xe_hwmon_get_u8_from_sysfs(val, false, &pwm);
++	if (ret)
++		return ret;
++
++	guard(xe_pm_runtime)(hwmon->xe);
++
++	mutex_lock(&hwmon->hwmon_lock);
++
++	ret = xe_hwmon_get_fan_point_count(hwmon, fan, &point_count, USER_FAN_TABLE);
++	if (ret)
++		goto unlock;
++
++	if (point >= point_count) {
++		ret = -EINVAL;
++		goto unlock;
++	}
++
++	pwm = max_t(u8, pwm, fi->min_pwm);
++
++	drm_dbg(&hwmon->xe->drm, "updating fan %d point %d pwm to %u\n",
++		fan, point, pwm);
++	ret = xe_hwmon_update_user_fan_point(hwmon, fan, point, point_count, 0, pwm);
++
++unlock:
++	mutex_unlock(&hwmon->hwmon_lock);
++
++	return ret ? ret : count;
++}
++
++static SENSOR_DEVICE_ATTR(pwm1_auto_point1_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(0, 0));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point1_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(0, 0));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point2_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(0, 1));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point2_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(0, 1));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point3_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(0, 2));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point3_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(0, 2));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point4_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(0, 3));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point4_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(0, 3));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point5_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(0, 4));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point5_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(0, 4));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point6_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(0, 5));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point6_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(0, 5));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point7_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(0, 6));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point7_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(0, 6));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point8_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(0, 7));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point8_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(0, 7));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point9_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(0, 8));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point9_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(0, 8));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point10_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(0, 9));
++static SENSOR_DEVICE_ATTR(pwm1_auto_point10_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(0, 9));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point1_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(1, 0));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point1_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(1, 0));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point2_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(1, 1));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point2_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(1, 1));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point3_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(1, 2));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point3_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(1, 2));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point4_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(1, 3));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point4_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(1, 3));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point5_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(1, 4));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point5_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(1, 4));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point6_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(1, 5));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point6_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(1, 5));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point7_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(1, 6));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point7_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(1, 6));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point8_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(1, 7));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point8_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(1, 7));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point9_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(1, 8));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point9_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(1, 8));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point10_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(1, 9));
++static SENSOR_DEVICE_ATTR(pwm2_auto_point10_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(1, 9));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point1_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(2, 0));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point1_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(2, 0));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point2_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(2, 1));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point2_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(2, 1));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point3_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(2, 2));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point3_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(2, 2));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point4_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(2, 3));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point4_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(2, 3));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point5_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(2, 4));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point5_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(2, 4));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point6_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(2, 5));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point6_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(2, 5));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point7_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(2, 6));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point7_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(2, 6));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point8_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(2, 7));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point8_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(2, 7));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point9_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(2, 8));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point9_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(2, 8));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point10_temp, 0644,
++			  xe_hwmon_pwm_auto_point_temp_show,
++			  xe_hwmon_pwm_auto_point_temp_store,
++			  XE_CURVE_IDX(2, 9));
++static SENSOR_DEVICE_ATTR(pwm3_auto_point10_pwm, 0644,
++			  xe_hwmon_pwm_auto_point_pwm_show,
++			  xe_hwmon_pwm_auto_point_pwm_store,
++			  XE_CURVE_IDX(2, 9));
++
++static struct attribute *hwmon_curve_attributes[] = {
++	&sensor_dev_attr_pwm1_auto_point1_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point2_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point3_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point4_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point5_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point6_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point7_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point8_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point9_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point10_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point1_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point2_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point3_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point4_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point5_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point6_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point7_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point8_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point9_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm1_auto_point10_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point1_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point2_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point3_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point4_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point5_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point6_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point7_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point8_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point9_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point10_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point1_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point2_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point3_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point4_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point5_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point6_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point7_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point8_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point9_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm2_auto_point10_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point1_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point2_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point3_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point4_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point5_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point6_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point7_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point8_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point9_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point10_temp.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point1_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point2_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point3_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point4_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point5_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point6_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point7_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point8_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point9_pwm.dev_attr.attr,
++	&sensor_dev_attr_pwm3_auto_point10_pwm.dev_attr.attr,
++	NULL
++};
++
++static umode_t xe_hwmon_curve_attributes_visible(struct kobject *kobj,
++						 struct attribute *attr, int index)
++{
++	struct device *dev = kobj_to_dev(kobj);
++	struct xe_hwmon *hwmon = dev_get_drvdata(dev);
++
++	/* Temp/PWM pairs for each point. */
++	u32 attrs_per_fan = 2 * MAX_FAN_CONTROL_POINTS;
++	u32 fan = index / attrs_per_fan;
++	u32 local = index % attrs_per_fan;
++	u32 point_count;
++
++	if (!hwmon->xe->info.has_fan_control)
++		return 0;
++
++	if (fan >= hwmon->num_fans)
++		return 0;
++
++	point_count = max(hwmon->fi[fan].fan_table[USER_FAN_TABLE].fan_control_point_count,
++			  hwmon->fi[fan].fan_table[STOCK_FAN_TABLE].fan_control_point_count);
++
++	if (!point_count)
++		return 0;
++
++	if (local < MAX_FAN_CONTROL_POINTS)
++		return (local + 1) <= point_count ? attr->mode : 0;
++
++	if (local < (2 * MAX_FAN_CONTROL_POINTS))
++		return (local - MAX_FAN_CONTROL_POINTS + 1) <= point_count ?
++			attr->mode : 0;
++
++	return 0;
++}
++
++static const struct attribute_group hwmon_curve_attrgroup = {
++	.attrs = hwmon_curve_attributes,
++	.is_visible = xe_hwmon_curve_attributes_visible,
++};
++
+ static int xe_hwmon_read_fan_control_info(struct xe_hwmon *hwmon)
+ {
+ 	struct xe_tile *root_tile = xe_device_get_root_tile(hwmon->xe);
+diff --git a/drivers/gpu/drm/xe/xe_hwmon.c b/drivers/gpu/drm/xe/xe_hwmon.c
+index a3ed139ad446..770f07fb6511 100644
+--- a/drivers/gpu/drm/xe/xe_hwmon.c
++++ b/drivers/gpu/drm/xe/xe_hwmon.c
+@@ -123,6 +123,49 @@ struct xe_hwmon_energy_info {
+ 	long accum_energy;
+ };
+ 
++/**
++ * DOC: Xe fan control
++ *
++ * Xe fan control is exposed through the hwmon pwm and fan interfaces when the
++ * platform advertises PCODE-backed fan management support.
++ *
++ * The implementation tracks two fan tables per fan:
++ *
++ * - A stock table read from firmware through PCODE.
++ * - A user table cached in the driver and programmed back through PCODE.
++ *
++ * The pwmN_enable sysfs mode selects how those tables are used:
++ *
++ * - ``XE_FAN_PWM_AUTO_STOCK_TABLE`` restores automatic control using the stock
++ *   firmware table.
++ * - ``XE_FAN_PWM_MANUAL_USER_TABLE`` enables the user table for manual control.
++ * - ``XE_FAN_PWM_FULL_SPEED`` reuses the user table path but programs every
++ *   point to 100 percent duty cycle as a full-speed override.
++ *
++ * The fan-control sysfs files are:
++ *
++ * - ``fanN_input`` reports the measured fan speed in RPM.
++ * - ``fanN_max`` reports the maximum supported fan speed in RPM.
++ * - ``pwmN`` reads or sets the manual PWM duty cycle in the hwmon 0..255
++ *   range. Manual writes are accepted only while ``pwmN_enable`` is set to
++ *   ``XE_FAN_PWM_MANUAL_USER_TABLE``.
++ * - ``pwmN_enable`` selects stock automatic mode, manual user-table mode, or
++ *   full-speed override.
++ * - ``pwmN_auto_pointM_temp`` exposes the temperature threshold for user-table
++ *   point ``M`` in millidegrees Celsius.
++ * - ``pwmN_auto_pointM_pwm`` exposes the PWM value for user-table point ``M``
++ *   in the hwmon 0..255 range.
++ *
++ * Writes to pwmN_auto_pointM_temp and pwmN_auto_pointM_pwm update the cached
++ * user table entries. The driver commits the full user table once the last
++ * point has both temperature and PWM values, which keeps intermediate sysfs
++ * writes from pushing partially updated curves to firmware.
++ *
++ * Writes to pwmN provide a constant manual duty cycle by rewriting every point
++ * in the active user table to the same PWM value, clamped against the minimum
++ * duty cycle reported by firmware for that fan.
++ */
++
+ enum xe_fan_pwm_enable_mode {
+ 	/** @XE_FAN_PWM_FULL_SPEED: force all user table points to full speed */
+ 	XE_FAN_PWM_FULL_SPEED = 0,
+diff --git a/drivers/gpu/drm/xe/xe_hwmon.c b/drivers/gpu/drm/xe/xe_hwmon.c
+index 770f07fb6511..65f356c741f5 100644
+--- a/drivers/gpu/drm/xe/xe_hwmon.c
++++ b/drivers/gpu/drm/xe/xe_hwmon.c
+@@ -229,6 +229,8 @@ struct xe_hwmon_fan_info {
+ 	u8 pwm_enable_mode;
+ 	/** @is_full_speed: flag indicating if fan is in full speed */
+ 	bool is_full_speed;
++	/** @restore_user_table: restore user fan table on next resume */
++	bool restore_user_table;
+ };
+ 
+ /**
+@@ -2785,4 +2787,135 @@ int xe_hwmon_register(struct xe_device *xe)
+ 
+ 	return 0;
+ }
++
++/**
++ * xe_hwmon_suspend - Save hwmon state before suspend
++ * @xe: xe device instance
++ *
++ * Save any hwmon runtime state that must survive PM suspend transitions.
++ */
++void xe_hwmon_suspend(struct xe_device *xe)
++{
++	struct xe_hwmon *hwmon = xe->hwmon;
++	struct xe_tile *root_tile;
++	int fan;
++
++	if (!hwmon || !xe->info.has_fan_control)
++		return;
++
++	/*
++	 * User fan-table restore is limited to d3cold flows, so skip snapshot
++	 * work when d3cold is not allowed for this device.
++	 */
++	if (!xe->d3cold.allowed) {
++		xe_dbg(xe, "d3cold not allowed, skipping fan user-table snapshot\n");
++		return;
++	}
++
++	root_tile = xe_device_get_root_tile(hwmon->xe);
++
++	mutex_lock(&hwmon->hwmon_lock);
++
++	for (fan = 0; fan < hwmon->num_fans; fan++) {
++		struct xe_hwmon_fan_info *fi = &hwmon->fi[fan];
++		u32 point_count;
++		int ret;
++
++		/*
++		 * Record whether this fan was using the user table
++		 * so resume can restore it if firmware state is reset.
++		 */
++		fi->restore_user_table = (fi->pwm_enable_mode != XE_FAN_PWM_AUTO_STOCK_TABLE);
++
++		xe_dbg(hwmon->xe, "fan %d user table restore flag set to %d\n", fan,
++		       fi->restore_user_table);
++
++		if (!fi->restore_user_table)
++			continue;
++
++		ret = xe_hwmon_get_fan_point_count(hwmon, fan, &point_count, USER_FAN_TABLE);
++		if (ret || !point_count) {
++			xe_warn(hwmon->xe,
++				"fan %d point count read before suspend failed, ret=%d, val =%u\n",
++				fan, ret, point_count);
++			continue;
++		}
++
++		fi->fan_table[USER_FAN_TABLE].fan_control_point_count =
++			min_t(u32, point_count, MAX_FAN_CONTROL_POINTS);
++
++		for (int point = 0; point < fi->fan_table[USER_FAN_TABLE].fan_control_point_count;
++		     point++) {
++			u32 fcp = FCP_INDEX(USER_FAN_TABLE, point);
++
++			ret = xe_pcode_read_timeout(root_tile,
++						    PCODE_MBOX(FAN_SPEED_CONTROL,
++							       FSC_READ_FAN_TABLE, fan),
++						    &fcp, NULL,
++						    XE_PCODE_FAN_CONTROL_TIMEOUT_MS);
++			if (ret) {
++				xe_warn(hwmon->xe,
++					"fan %d user point %d before suspend failed, ret=%d\n",
++					fan, point, ret);
++				continue;
++			}
++
++			fi->fan_table[USER_FAN_TABLE].fcp[point].temp =
++				REG_FIELD_GET(FAN_CONTROL_POINT_TEMP_MASK, fcp);
++			fi->fan_table[USER_FAN_TABLE].fcp[point].speed =
++				REG_FIELD_GET(FAN_CONTROL_POINT_SPEED_MASK, fcp);
++		}
++		xe_dbg(hwmon->xe,
++		       "fan %d user table snapshot taken before suspend, point_count=%u\n", fan,
++		       fi->fan_table[USER_FAN_TABLE].fan_control_point_count);
++	}
++
++	mutex_unlock(&hwmon->hwmon_lock);
++}
++
++/**
++ * xe_hwmon_resume - Restore hwmon state after resume
++ * @xe: xe device instance
++ *
++ * Restore any hwmon runtime state that was saved across suspend.
++ */
++void xe_hwmon_resume(struct xe_device *xe)
++{
++	struct xe_hwmon *hwmon = xe->hwmon;
++	int fan;
++
++	if (!hwmon || !xe->info.has_fan_control)
++		return;
++
++	if (!xe->d3cold.allowed) {
++		xe_dbg(xe, "d3cold not allowed, skipping fan user-table restore\n");
++		return;
++	}
++
++	mutex_lock(&hwmon->hwmon_lock);
++
++	for (fan = 0; fan < hwmon->num_fans; fan++) {
++		struct xe_hwmon_fan_info *fi = &hwmon->fi[fan];
++		int ret;
++
++		if (!fi->restore_user_table) {
++			xe_dbg(xe, "fan %d user table restore not required\n", fan);
++			continue;
++		}
++
++		/* Re-program cached user-table settings for fans active before suspend. */
++		ret = xe_hwmon_activate_user_fan_table(hwmon, fan,
++						       fi->is_full_speed,
++						       USER_FAN_TABLE);
++		if (ret)
++			xe_warn(xe, "failed to restore fan %d user table after resume, ret=%d\n",
++				fan, ret);
++
++		xe_dbg(xe, "fan %d user table restored\n", fan);
++		fi->restore_user_table = false;
++	}
++
++	mutex_unlock(&hwmon->hwmon_lock);
++}
++
+ MODULE_IMPORT_NS("INTEL_PMT_TELEMETRY");
+diff --git a/drivers/gpu/drm/xe/xe_hwmon.h b/drivers/gpu/drm/xe/xe_hwmon.h
+index d02c1bfe8c0a..6c6f30208508 100644
+--- a/drivers/gpu/drm/xe/xe_hwmon.h
++++ b/drivers/gpu/drm/xe/xe_hwmon.h
+@@ -12,8 +12,12 @@ struct xe_device;
+ 
+ #if IS_REACHABLE(CONFIG_HWMON)
+ int xe_hwmon_register(struct xe_device *xe);
++void xe_hwmon_suspend(struct xe_device *xe);
++void xe_hwmon_resume(struct xe_device *xe);
+ #else
+ static inline int xe_hwmon_register(struct xe_device *xe) { return 0; };
++static inline void xe_hwmon_suspend(struct xe_device *xe) {}
++static inline void xe_hwmon_resume(struct xe_device *xe) {}
+ #endif
+ 
+ #endif /* _XE_HWMON_H_ */
+diff --git a/drivers/gpu/drm/xe/xe_pm.c b/drivers/gpu/drm/xe/xe_pm.c
+index 99562f691080..23a78fa4a71e 100644
+--- a/drivers/gpu/drm/xe/xe_pm.c
++++ b/drivers/gpu/drm/xe/xe_pm.c
+@@ -23,6 +23,7 @@
+ #include "xe_i2c.h"
+ #include "xe_irq.h"
+ #include "xe_late_bind_fw.h"
++#include "xe_hwmon.h"
+ #include "xe_pcode.h"
+ #include "xe_printk.h"
+ #include "xe_pxp.h"
+@@ -189,6 +190,8 @@ int xe_pm_suspend(struct xe_device *xe)
+ 	for_each_gt(gt, xe, id)
+ 		xe_gt_suspend_prepare(gt);
+ 
++	xe_hwmon_suspend(xe);
++
+ 	xe_display_pm_suspend(xe);
+ 
+ 	/* FIXME: Super racey... */
+@@ -290,6 +293,8 @@ int xe_pm_resume(struct xe_device *xe)
+ 
+ 	xe_late_bind_fw_load(&xe->late_bind);
+ 
++	xe_hwmon_resume(xe);
++
+ 	drm_dbg(&xe->drm, "Device resumed\n");
+ 	xe_pm_block_end_signalling();
+ 	return 0;
+@@ -615,6 +620,8 @@ int xe_pm_runtime_suspend(struct xe_device *xe)
+ 	if (err)
+ 		goto out;
+ 
++	xe_hwmon_suspend(xe);
++
+ 	/*
+ 	 * Applying lock for entire list op as xe_ttm_bo_destroy and xe_bo_move_notify
+ 	 * also checks and deletes bo entry from user fault list.
+@@ -724,6 +731,8 @@ int xe_pm_runtime_resume(struct xe_device *xe)
+ 
+ 	xe_pxp_pm_resume(xe->pxp);
+ 
++	xe_hwmon_resume(xe);
++
+ 	if (IS_VF_CCS_READY(xe))
+ 		xe_sriov_vf_ccs_register_context(xe);
+ 
+diff --git a/drivers/gpu/drm/xe/xe_hwmon.c b/drivers/gpu/drm/xe/xe_hwmon.c
+index 65f356c741f5..518ba4438de4 100644
+--- a/drivers/gpu/drm/xe/xe_hwmon.c
++++ b/drivers/gpu/drm/xe/xe_hwmon.c
+@@ -1848,7 +1848,7 @@ static const struct attribute_group hwmon_curve_attrgroup = {
+ 	.is_visible = xe_hwmon_curve_attributes_visible,
+ };
+ 
+-static int xe_hwmon_read_fan_control_info(struct xe_hwmon *hwmon)
++static int xe_hwmon_read_fan_control_info(struct xe_hwmon *hwmon, bool is_init)
+ {
+ 	struct xe_tile *root_tile = xe_device_get_root_tile(hwmon->xe);
+ 	int point;
+@@ -1901,8 +1901,13 @@ static int xe_hwmon_read_fan_control_info(struct xe_hwmon *hwmon)
+ 			       fi->fan_table[STOCK_FAN_TABLE].fcp[point].speed);
+ 		}
+ 
+-		/* Set PWM enable mode to automatic i.e stock table in use. */
+-		fi->pwm_enable_mode = XE_FAN_PWM_AUTO_STOCK_TABLE;
++		/*
++		 * Set PWM enable mode to automatic i.e stock table in use, only during init.
++		 * For late binding, the mode is already set by the user and should not be
++		 * overridden.
++		 */
++		if (is_init)
++			fi->pwm_enable_mode = XE_FAN_PWM_AUTO_STOCK_TABLE;
+ 
+ 		/* Read minimum fan PWM */
+ 		ret = xe_hwmon_pcode_read_fan_control(hwmon, FSC_READ_FAN_MIN_PWM, fan,
+@@ -2737,7 +2742,7 @@ xe_hwmon_get_preregistration_info(struct xe_hwmon *hwmon)
+ 				xe_hwmon_fan_input_read(hwmon, channel, &fan_speed);
+ 
+ 		/* Fan control tables initialization */
+-		if (xe_hwmon_read_fan_control_info(hwmon))
++		if (xe_hwmon_read_fan_control_info(hwmon, true))
+ 			xe_warn(hwmon->xe, "Fan control tables are not available\n");
+ 	}
+ 
+@@ -2918,4 +2923,41 @@ void xe_hwmon_resume(struct xe_device *xe)
+ 	mutex_unlock(&hwmon->hwmon_lock);
+ }
+ 
++/**
++ * xe_hwmon_fan_update_post_lb - Update fan info after late binding
++ * @xe: xe device instance
++ *
++ * This function reads the number of fans and their stock table after late binding.
++ */
++void xe_hwmon_fan_update_post_lb(struct xe_device *xe)
++{
++	struct xe_hwmon *hwmon = xe->hwmon;
++	int fan;
++	int num_fans;
++
++	if (!hwmon || !xe->info.has_fan_control)
++		return;
++
++	mutex_lock(&hwmon->hwmon_lock);
++
++	/* Read number of fans */
++	if (xe_hwmon_get_num_fans(hwmon, &num_fans)) {
++		xe_warn(hwmon->xe, "Failed to read number of fans after LB\n");
++		goto unlock;
++	}
++	hwmon->num_fans = num_fans;
++	xe_dbg(hwmon->xe, "Number of fans detected after LB: %u\n", hwmon->num_fans);
++
++	/* Read stock table */
++	for (fan = 0; fan < hwmon->num_fans; fan++) {
++		if (xe_hwmon_read_fan_control_info(hwmon, false)) {
++			xe_warn(hwmon->xe, "Failed to read fan %d stock table after LB\n", fan);
++			continue;
++		}
++	}
++
++unlock:
++	mutex_unlock(&hwmon->hwmon_lock);
++}
++
+ MODULE_IMPORT_NS("INTEL_PMT_TELEMETRY");
+diff --git a/drivers/gpu/drm/xe/xe_hwmon.h b/drivers/gpu/drm/xe/xe_hwmon.h
+index 6c6f30208508..7198d7a4a1be 100644
+--- a/drivers/gpu/drm/xe/xe_hwmon.h
++++ b/drivers/gpu/drm/xe/xe_hwmon.h
+@@ -14,10 +14,12 @@ struct xe_device;
+ int xe_hwmon_register(struct xe_device *xe);
+ void xe_hwmon_suspend(struct xe_device *xe);
+ void xe_hwmon_resume(struct xe_device *xe);
++void xe_hwmon_fan_update_post_lb(struct xe_device *xe);
+ #else
+ static inline int xe_hwmon_register(struct xe_device *xe) { return 0; };
+ static inline void xe_hwmon_suspend(struct xe_device *xe) {}
+ static inline void xe_hwmon_resume(struct xe_device *xe) {}
++static inline void xe_hwmon_fan_update_post_lb(struct xe_device *xe) {}
+ #endif
+ 
+ #endif /* _XE_HWMON_H_ */
+diff --git a/drivers/gpu/drm/xe/xe_late_bind_fw.c b/drivers/gpu/drm/xe/xe_late_bind_fw.c
+index 768442ca7da6..34295418ef50 100644
+--- a/drivers/gpu/drm/xe/xe_late_bind_fw.c
++++ b/drivers/gpu/drm/xe/xe_late_bind_fw.c
+@@ -13,6 +13,7 @@
+ #include <drm/drm_print.h>
+ 
+ #include "xe_device.h"
++#include "xe_hwmon.h"
+ #include "xe_late_bind_fw.h"
+ #include "xe_pcode.h"
+ #include "xe_pcode_api.h"
+@@ -252,6 +253,8 @@ static void xe_late_bind_work(struct work_struct *work)
+ 	if (!ret) {
+ 		drm_dbg(&xe->drm, "Load %s firmware successful\n",
+ 			fw_id_to_name[lbfw->id]);
++		if (fw_id_to_name[lbfw->id] == XE_LB_FW_FAN_CONTROL)
++			xe_hwmon_fan_update_post_lb(late_bind_to_xe(late_bind));
+ 		goto out;
+ 	}
+ 

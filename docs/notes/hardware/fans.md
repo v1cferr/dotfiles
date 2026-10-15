@@ -28,8 +28,9 @@ it at all.
 
 ## What the manual path actually is
 
-Intel has a patch series in review, **168027** (`drm/xe/hwmon`, Karthik Poosa), which adds `pwm1`,
-`pwm1_enable` and `pwm1_auto_point[1-10]_{temp,pwm}` and programs them over the **PCODE mailbox**,
+Intel has a patch series in review, **"Add fan control support"** (`drm/xe/hwmon`, Karthik Poosa),
+which adds `pwm1`, `pwm1_enable` and `pwm1_auto_point[1-10]_{temp,pwm}` and programs them over the
+**PCODE mailbox**,
 not over firmware. Two commands do all of it: `FSC_WRITE_FAN_TABLE` writes one point as
 `temp | speed << 8`, and `FSC_WRITE_NUM_FAN_CONTROL_POINTS` commits the table by declaring how many
 points it has. Committing ZERO points is how the card is handed back to its own stock curve.
@@ -47,9 +48,22 @@ wrote it: the driver converts it with `pwm = (pwm * 100) / U8_MAX`, flattens eve
 table to that one value, and commits. Writing `200` therefore reads back as `199`, which is the
 round trip through percent and not a bug.
 
+## Which revision this repo carries, and how it was checked
+
+**v2, 9 patches, 17/07/2026**, taken from the intel-xe list itself. That is not where the first
+file came from: it came from a third party, was named after the patchwork series number, and
+turned out to be **v1** (5 patches, 07/06/2026), confirmed by diffing it against both revisions
+(561 of its 562 lines matched v1). v2 is what is under review, and it adds suspend and resume
+preservation of the user table plus a refresh after late binding, neither of which v1 had.
+
+lore.kernel.org's web archive sits behind an anti-bot proof of work, so the series was pulled over
+lore's **NNTP** service instead (`nntp.lore.kernel.org`, group `org.freedesktop.lists.intel-xe`),
+which indexes the same mail and is not gated. The cover letter is
+`<20260717041757.2759084-1-karthik.poosa@intel.com>`; the patches are `-2` to `-10` of the same id.
+
 ## The question this card answered
 
-The series was confirmed only on an **Arc Pro B60** (`8086:e211`, BMG G31). This machine has a
+The series had been reported on an **Arc Pro B60** (`8086:e211`, BMG G31). This machine has a
 consumer **B580** (`8086:e20b`, BMG G21), and no public test of the consumer silicon existed. The
 open question was narrow: does the consumer part's PCODE accept `FAN_SPEED_CONTROL` at all?
 
@@ -76,7 +90,16 @@ package temp         35 C -> 31 C          vram 38 C -> 34 C
 The temperature falling is the part that does not depend on trusting the tachometer. The card
 obeys across the full range, from a stopped fan to 3926 RPM.
 
-## Two things that will mislead you later
+Those numbers are v1's. **Retested on v2** the same evening, with the same result: the identical
+stock table, a fan held at 0 RPM, and full speed reaching 3805 RPM in six seconds and holding around
+3870 for the minute, while the package fell from 51 C to 35 C and the vram from 56 C to 40 C.
+
+## Three things that will mislead you later
+
+**`pwm1_auto_point*_pwm` show the ACTIVE table, not the stock one.** With CoolerControl holding
+`pwm1_enable=1`, every point reads back as the daemon's current flat duty, which at idle is 0. That
+looks exactly like a stock table the card refused to report, and it fooled a test here. Stop the
+daemon and set `pwm1_enable=2` before reading the stock curve.
 
 **`fan1_max` is a lie, and harmlessly so.** The card declares 3600 RPM and the fan reached 3926,
 which is 109% of the declared maximum. Anything that computes a percentage from `fan1_max` will go
@@ -127,8 +150,16 @@ to save.
 
 ## When this leaves
 
-The patch costs a LOCAL KERNEL BUILD on every bump, with no binary cache, about an hour on this
-machine. It is worth that only until the series lands.
+The patch costs a LOCAL KERNEL BUILD on every bump, with no binary cache: measured at 58 minutes
+on this i5-11400 against a NixOS config of about 7200 modules. It is worth that only until the
+series lands.
+
+It is also why the kernel stays on `linuxPackages_latest` and not `_testing` (decided 14/10/2026).
+`_testing` moves with every release candidate, roughly weekly, and `drm/xe` churns enough that each
+rc can stop the series from applying: an hour of build per week plus a manual rebase whenever it
+breaks, to run a kernel two or three weeks before `_latest` picks it up anyway. Once the series is in
+mainline the patch goes, the binary cache comes back, a kernel costs minutes, and that trade is
+worth revisiting.
 
 Delete [`pkgs/xe-fan-control/`](../../../pkgs/xe-fan-control/) and the `boot.kernelPatches` block in
 the module when `pwm1` shows up under the GPU's hwmon WITHOUT the patch. That is the whole test:

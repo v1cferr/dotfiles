@@ -3,22 +3,28 @@
 { ... }:
 
 {
-  # WITHOUT THIS THE GPU HAS NO FAN CONTROL AT ALL. Intel's series 168027 for `drm/xe/hwmon`
-  # adds `pwm1`, `pwm1_enable` and a ten point curve, and programs it over the PCODE mailbox.
-  # The series is in review and NOT in mainline, so it costs a local kernel build on every
-  # bump, with no binary cache, which is about an hour on this machine.
+  # WITHOUT THIS THE GPU HAS NO FAN CONTROL AT ALL. Karthik Poosa's "Add fan control support"
+  # for `drm/xe/hwmon` adds `pwm1`, `pwm1_enable` and a ten point curve, and programs them over
+  # the PCODE mailbox. The series is in review and NOT in mainline, so it costs a local kernel
+  # build on every bump, with no binary cache, which is about an hour on this machine.
   #
-  # It is here because the card answered a question nobody had published an answer to: the
-  # series is confirmed only on an Arc Pro B60 (`8086:e211`), and this is a consumer B580
-  # (`8086:e20b`). MEASURED on 14/10/2026: the fan sat at 0 RPM, took the command, and held
-  # 3926 RPM while the package temperature fell from 35 C to 31 C.
+  # THIS IS v2 (9 patches, 17/07/2026), taken from the intel-xe list itself. The file that was
+  # here before came from a third party, was named after the patchwork series, and turned out to
+  # be v1 (5 patches, 07/06/2026): verified by diffing it against both revisions, 561 of 562
+  # lines matching v1. v2 is what is under review, and it adds suspend/resume preservation of the
+  # user table plus a late binding refresh that v1 never had.
+  #
+  # It is here because the card answered a question nobody had published an answer to: the series
+  # is reported working on an Arc Pro B60 (`8086:e211`), and this is a consumer B580
+  # (`8086:e20b`). MEASURED on 14/10/2026 with v1: the fan sat at 0 RPM, took the command, and
+  # held 3926 RPM while the package temperature fell from 35 C to 31 C.
   #
   # REMOVE when the series reaches the channel's kernel. That is the only thing that makes the
   # local build unnecessary, and the attributes appearing without the patch is the signal.
   boot.kernelPatches = [
     {
       name = "xe-fan-control";
-      patch = ../../../pkgs/xe-fan-control/fan-control-168027.patch;
+      patch = ../../../pkgs/xe-fan-control/fan-control-v2.patch;
     }
   ];
 

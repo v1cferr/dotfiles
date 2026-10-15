@@ -19,13 +19,26 @@ let
     app = "zen-beta";
   };
 
+  # GitHub ORs repeated user: qualifiers, so one search covers all of them.
+  githubOwners = lib.concatMapStringsSep "+" (u: "user:${u}") [
+    "v1cferr"
+    "victor-ferreira-fai-ufscar" # the FAI account
+    "drakko2002"
+  ];
+
   google = mk "google" "Search Google" "google.com" "https://www.google.com/search?q={query}";
   shortcuts = [
     google
     (mk "youtube" "Search YouTube" "youtube.com" "https://www.youtube.com/results?search_query={query}")
-    # My own repositories: the profile's repository tab, filtered by name.
+    # Every account I work in, with the private repos the logged-in session can read; fork:true
+    # because search leaves forks out by default.
     (mk "github" "Search my GitHub repos" "github.com"
-      "https://github.com/v1cferr?tab=repositories&q={query}"
+      "https://github.com/search?q={query}+${githubOwners}+fork:true&type=repositories"
+    )
+    # FAI's GitLab: answers only through the FAI VPN. The gitlab.com icon, so the internal host
+    # name never goes to the favicon service.
+    (mk "fai-gitlab" "Search FAI GitLab projects" "gitlab.com"
+      "https://git.sup.fai.ufscar.br/search?search={query}&scope=projects"
     )
     # The channel this system builds from, so a hit is a package it can actually install.
     (mk "nixpkgs" "Search Nix packages" "search.nixos.org"

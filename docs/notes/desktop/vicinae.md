@@ -186,11 +186,24 @@ does not have, so every key above is a `hl.bind` in `keybinds.lua`, and there is
 
 Vicinae's [shortcuts](https://docs.vicinae.com/shortcuts) are URL templates with arguments, opened
 in a chosen app. `shortcuts.nix` declares them, each opened in Zen by its desktop id `zen-beta`
-with its site's favicon as icon: **Search Google**, **Search YouTube**, **Search my GitHub repos** (my profile's repository tab filtered by the query) and **Search Nix packages**
-(search.nixos.org on the channel this system builds from, `system.nixos.release`; the `nix`
-extension searches the same index inside Vicinae). A shortcut with exactly one argument can be a
-fallback, and Google is first in `fallbacks`: typing anything that matches nothing offers it at the
-bottom. Only Google, because a list of three sites under every miss is noise.
+with its site's favicon as icon:
+
+- **Search Google** and **Search YouTube**.
+- **Search my GitHub repos**: one repository search over `v1cferr`, `victor-ferreira-fai-ufscar`
+  (the FAI account) and `drakko2002`, since GitHub ORs repeated `user:` qualifiers, plus `fork:true`
+  because search leaves forks out by default. It lists the private repos the logged-in session can
+  read: on 15/10/2026, 88 repos, 25 of them private (20 mine, 5 of the FAI account, where `v1cferr`
+  is a collaborator).
+- **Search FAI GitLab projects**: `git.sup.fai.ufscar.br`'s project search, which lists the private
+  projects of the session logged in there. It only answers through the FAI VPN
+  ([its note](../network/vpn.md)); without it the page does not load. Its icon is gitlab.com's, so the
+  internal host name is never sent to the favicon service.
+- **Search Nix packages**: search.nixos.org on the channel this system builds from,
+  `system.nixos.release` (the `nix` extension searches the same index inside Vicinae).
+
+A shortcut with exactly one argument can be a fallback, and Google is first in `fallbacks`: typing
+anything that matches nothing offers it at the bottom. Only Google, because a list of five sites
+under every miss is noise.
 
 0.29.0 keeps them in `~/.local/share/vicinae/shortcuts/shortcuts.json` and REWRITES that file on
 every open (the counters, `shortcut-db.cpp`), and only reads it at start. So it cannot be a store

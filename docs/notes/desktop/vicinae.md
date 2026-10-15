@@ -40,7 +40,8 @@ Home Manager's own `programs.vicinae` module (release-26.05) with `pkgs.unstable
 26.05 ships 0.23 and the features below need 0.29. There is no Vicinae flake input and no extra
 substituter. Upstream's flake was the alternative: one version newer, but it wants its own nixpkgs
 plus vicinae.cachix.org. Since 14/10/2026 the package carries two patches, a one-line one for the
-icons (see [the theme](#the-theme)) and the thumbnail backend (see [File search](#file-search)), so it is built here instead of coming from cache.nixos.org: 9 min 16 s on
+icons (see [the theme](#the-theme)) and the thumbnail backend (see [File search](#file-search)),
+plus the pinned `pactl` (see [Extensions](#extensions)) since 15/10/2026, so it is built here instead of coming from cache.nixos.org: 9 min 16 s on
 ex-b560m-v5 (12 threads, 14/10/2026), Qt dev outputs fetched from the cache, on every unstable bump
 that touches it.
 
@@ -258,13 +259,15 @@ hash edit.
 | systemd | list, start, stop and restart units | none |
 | bluetooth | power, scan, connect, battery | none; Blueman stays as the BlueZ pairing agent, which the extension does not register |
 | github | issues, PRs, workflow runs, repo search | a personal access token |
-| player-pilot | every MPRIS player in a grid with its track, plus Resume, Pause, Next and Previous as root commands | none |
 | pulseaudio | output and input devices (default, mute, volume in 5% steps or exact), per-app playback and recording streams, card profiles | none |
 | repositories (mine) | my GitHub accounts and FAI's GitLab in one list | the GitHub token above, FAI's `read_api` token |
 
 Not installed: everything the desktop already does (power profiles, wifi) and anything without a
 clear use. Audio was on that list until 15/10/2026: the bar and pavucontrol (SUPER+S) cover it, but
-from the launcher it takes typing a word instead of reaching for the mouse. Each extension is a TypeScript build to keep working, so a few with a reason
+from the launcher it takes typing a word instead of reaching for the mouse. Media needs no
+extension: Vicinae's built-in `media` group already has Play / Pause, Next and Previous Track, Now
+Playing (over MPRIS on D-Bus), Turn Volume Up/Down, Set Volume to 0/25/50/75/100% and Toggle Mute.
+player-pilot was installed for an hour and dropped for that reason; it had no play/pause toggle. Each extension is a TypeScript build to keep working, so a few with a reason
 beat twenty because they exist.
 
 **systemd and bluetooth drop `usocket` from their lock.** dbus-next lists it as an OPTIONAL native
@@ -274,11 +277,13 @@ was tried and also drops esbuild's platform binary, so only `usocket` goes, thro
 `packageLock` handed to `importNpmLock`. The system and session buses are path sockets, so the
 abstract-socket branch is never taken.
 
-**player-pilot and pulseaudio run their CLI by bare name** (`playerctl`, `pactl`), so a
-`substituteInPlace` in `postPatch` swaps in the store path and neither depends on what is on the
-service's PATH. `pactl` comes from `pkgs.pulseaudio` used only as a client: PipeWire's
-pipewire-pulse answers it (`Server Name: PulseAudio (on PipeWire 1.6.6)`), and nothing enables
-the PulseAudio daemon. `--replace-fail` breaks the build if upstream renames either call.
+**pactl is pinned twice, by store path.** The built-in volume commands look it up on PATH once at
+startup (`QStandardPaths::findExecutable("pactl")`), and with nothing providing it they toasted
+"Failed to set volume" while the journal said `pactl not found, audio control will not work`. The
+pulseaudio extension runs it by bare name too. So the package's `postPatch` and the extension's
+each swap in `pkgs.pulseaudio`'s `pactl`, used only as a client: PipeWire's pipewire-pulse answers
+it (`Server Name: PulseAudio (on PipeWire 1.6.6)`), and nothing enables the PulseAudio daemon.
+`--replace-fail` breaks the build if upstream moves either call.
 
 To add one, put its folder name in the list; if its tsconfig extends the repo root or it needs a
 native module, see how upstream's `flake.nix` builds it first.

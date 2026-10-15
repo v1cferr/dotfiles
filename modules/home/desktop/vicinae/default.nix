@@ -13,6 +13,7 @@ let
     app2unit
     ffmpegthumbnailer
     poppler-utils
+    pulseaudio
     writeText
     ;
 
@@ -119,7 +120,8 @@ in
     # 0.29 against 26.05's 0.23, patched so built-in icons are bare line glyphs (no accent tile),
     # like the Nerd Font script icons. --replace-fail breaks the build if upstream moves the line.
     # Also patched with a Linux backend for its FileThumbnail images (macOS-only upstream), so the
-    # file search previews PDFs and videos through the shared ~/.cache/thumbnails.
+    # file search previews PDFs and videos through the shared ~/.cache/thumbnails. The built-in
+    # volume commands look pactl up on PATH, where it is not; pinned (PipeWire answers it).
     package = pkgs.unstable.vicinae.overrideAttrs (old: {
       patches = (old.patches or [ ]) ++ [ ./file-thumbnails.patch ];
       postPatch = (old.postPatch or "") + ''
@@ -128,6 +130,8 @@ in
         substituteInPlace src/server/src/ui/image/xdg-file-thumbnail-loader.cpp \
           --replace-fail '"ffmpegthumbnailer";' '"${lib.getExe ffmpegthumbnailer}";' \
           --replace-fail '"pdftoppm";' '"${lib.getExe' poppler-utils "pdftoppm"}";'
+        substituteInPlace src/server/src/services/audio-control/pactl/pactl-audio-control.cpp \
+          --replace-fail 'QStandardPaths::findExecutable("pactl").toStdString()' '"${lib.getExe' pulseaudio "pactl"}"'
       '';
     });
     systemd = {

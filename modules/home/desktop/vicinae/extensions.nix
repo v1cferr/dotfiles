@@ -1,4 +1,4 @@
-# Vicinae extensions: four from the pinned vicinaehq/extensions input, built offline from their
+# Vicinae extensions: six from the pinned vicinaehq/extensions input, built offline from their
 # lockfiles, and my own ./repositories. Why these, and how the tokens arrive: docs/notes/desktop/vicinae.md
 {
   config,
@@ -9,7 +9,7 @@
 }:
 
 let
-  inherit (pkgs) importNpmLock;
+  inherit (pkgs) importNpmLock playerctl pulseaudio;
 
   src = name: "${inputs.vicinae-extensions}/extensions/${name}";
 
@@ -50,6 +50,21 @@ in
     (mk "systemd" (withoutUsocket "systemd")) # list, start, stop and restart units
     (mk "bluetooth" (withoutUsocket "bluetooth")) # power, scan, connect; Blueman stays as the pairing agent
     (mk "github" { }) # issues, PRs, workflow runs; its token rides VICINAE_OVERRIDES (default.nix)
+    # Media and volume. Both shell out to a CLI by bare name; pinned here so neither rides PATH.
+    (mk "player-pilot" {
+      postPatch = ''
+        substituteInPlace src/utils/playerctl.ts \
+          --replace-fail '`playerctl ' '`${lib.getExe playerctl} ' \
+          --replace-fail '"playerctl --list-all"' '"${lib.getExe playerctl} --list-all"'
+      '';
+    })
+    (mk "pulseaudio" {
+      # pactl from pulseaudio only as the client: PipeWire's pipewire-pulse is the server.
+      postPatch = ''
+        substituteInPlace src/pactl.ts \
+          --replace-fail '?? "pactl"' '?? "${lib.getExe' pulseaudio "pactl"}"'
+      '';
+    })
     # Mine, not from the input: my GitHub accounts and FAI's GitLab in one list.
     (config.lib.vicinae.mkExtension {
       name = "repositories";

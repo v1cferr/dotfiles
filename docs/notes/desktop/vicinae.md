@@ -258,10 +258,13 @@ hash edit.
 | systemd | list, start, stop and restart units | none |
 | bluetooth | power, scan, connect, battery | none; Blueman stays as the BlueZ pairing agent, which the extension does not register |
 | github | issues, PRs, workflow runs, repo search | a personal access token |
+| player-pilot | every MPRIS player in a grid with its track, plus Resume, Pause, Next and Previous as root commands | none |
+| pulseaudio | output and input devices (default, mute, volume in 5% steps or exact), per-app playback and recording streams, card profiles | none |
 | repositories (mine) | my GitHub accounts and FAI's GitLab in one list | the GitHub token above, FAI's `read_api` token |
 
-Not installed: everything the desktop already does (audio, power profiles, wifi) and anything
-without a clear use. Each extension is a TypeScript build to keep working, so a few with a reason
+Not installed: everything the desktop already does (power profiles, wifi) and anything without a
+clear use. Audio was on that list until 15/10/2026: the bar and pavucontrol (SUPER+S) cover it, but
+from the launcher it takes typing a word instead of reaching for the mouse. Each extension is a TypeScript build to keep working, so a few with a reason
 beat twenty because they exist.
 
 **systemd and bluetooth drop `usocket` from their lock.** dbus-next lists it as an OPTIONAL native
@@ -270,6 +273,12 @@ never invoked"); upstream's own flake skips these two extensions for that reason
 was tried and also drops esbuild's platform binary, so only `usocket` goes, through a patched
 `packageLock` handed to `importNpmLock`. The system and session buses are path sockets, so the
 abstract-socket branch is never taken.
+
+**player-pilot and pulseaudio run their CLI by bare name** (`playerctl`, `pactl`), so a
+`substituteInPlace` in `postPatch` swaps in the store path and neither depends on what is on the
+service's PATH. `pactl` comes from `pkgs.pulseaudio` used only as a client: PipeWire's
+pipewire-pulse answers it (`Server Name: PulseAudio (on PipeWire 1.6.6)`), and nothing enables
+the PulseAudio daemon. `--replace-fail` breaks the build if upstream renames either call.
 
 To add one, put its folder name in the list; if its tsconfig extends the repo root or it needs a
 native module, see how upstream's `flake.nix` builds it first.

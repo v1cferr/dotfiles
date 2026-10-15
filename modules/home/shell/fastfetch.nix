@@ -1,4 +1,4 @@
-# fastfetch, as a boxed key column split into System / Desktop / Hardware, Catnap style.
+# fastfetch as a boxed key column (System / Desktop / Hardware), plus `fetch`, the spinning 3D logo.
 # The terminal field uses {process-name}, and owfetch mirrors it: docs/notes/network/network.md
 { lib, pkgs, ... }:
 
@@ -98,6 +98,26 @@ in
       ];
     };
   };
+
+  # areofyl/fetch reads the logo from fastfetch and gathers its own, thinner info. Out: `ip` lists
+  # every docker and libvirt bridge, `gpu` calls the B580 integrated and `packages` counts 271.
+  home.packages = [ unstable.fetch ];
+  xdg.configFile."fetch/config".text = ''
+    os
+    kernel
+    uptime
+    shell
+    wm
+    terminal
+    cpu
+    memory
+    disk
+    colors
+
+    label_color=blue
+    shading_mode=sextants
+    box=1
+  '';
 
   # In kitty (local, or over SSH from it, since the bytes travel inline) the real snowflake image
   # replaces the ASCII logo. KITTY_WINDOW_ID is what kitty exports; TERM is often overridden.

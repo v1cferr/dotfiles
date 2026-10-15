@@ -19,27 +19,10 @@ let
     app = "zen-beta";
   };
 
-  # GitHub ORs repeated user: qualifiers, so one search covers all of them.
-  githubOwners = lib.concatMapStringsSep "+" (u: "user:${u}") [
-    "v1cferr"
-    "victor-ferreira-fai-ufscar" # the FAI account
-    "drakko2002"
-  ];
-
   google = mk "google" "Search Google" "google.com" "https://www.google.com/search?q={query}";
   shortcuts = [
     google
     (mk "youtube" "Search YouTube" "youtube.com" "https://www.youtube.com/results?search_query={query}")
-    # Every account I work in, with the private repos the logged-in session can read; fork:true
-    # because search leaves forks out by default.
-    (mk "github" "Search my GitHub repos" "github.com"
-      "https://github.com/search?q={query}+${githubOwners}+fork:true&type=repositories"
-    )
-    # FAI's GitLab: answers only through the FAI VPN. The gitlab.com icon, so the internal host
-    # name never goes to the favicon service.
-    (mk "fai-gitlab" "Search FAI GitLab projects" "gitlab.com"
-      "https://git.sup.fai.ufscar.br/search?search={query}&scope=projects"
-    )
     # The channel this system builds from, so a hit is a package it can actually install.
     (mk "nixpkgs" "Search Nix packages" "search.nixos.org"
       "https://search.nixos.org/packages?channel=${osConfig.system.nixos.release}&query={query}"
@@ -53,7 +36,8 @@ in
   my.vicinae.fallbacks = [ "shortcuts:${google.id}" ];
 
   # Vicinae rewrites shortcuts.json on every open (the counters), so it cannot be a read-only link.
-  # Declared entries replace their namesakes and keep their counters; GUI-made ones are untouched.
+  # Every dotfiles-* entry is replaced by the declared set (so one removed here goes away too), the
+  # counters carried over by id; GUI-made ones are untouched.
   # Before reloadSystemd, so the restart the trigger below causes reads the merged file.
   home.activation.vicinaeShortcuts =
     lib.hm.dag.entryBetween [ "reloadSystemd" ] [ "writeBoundary" ]
@@ -64,8 +48,7 @@ in
         tmp=$(mktemp)
         { cat "$f" 2>/dev/null || echo "[]"; } | ${lib.getExe jq} --slurpfile want ${declared} --argjson now "$now" '
           (map({ key: .id, value: . }) | from_entries) as $old
-          | ($want[0] | map(.id)) as $ids
-          | map(select(.id as $i | $ids | index($i) | not))
+          | map(select(.id | startswith("dotfiles-") | not))
             + ($want[0] | map(. + {
                 openCount: ($old[.id].openCount // 0),
                 createdAt: ($old[.id].createdAt // $now),

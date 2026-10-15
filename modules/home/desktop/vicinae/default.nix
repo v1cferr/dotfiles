@@ -60,6 +60,18 @@ let
           preserveTagged = true; # pinned and tagged entries survive the eviction
           evictionThreshold = "2592000"; # 30 days
         };
+        # The local Repositories extension (./repositories): these accounts in this order, then FAI's
+        # GitLab. Its GitHub token rides the sops render below; the GitLab one is read from its file.
+        "@v1cferr/repositories".preferences = {
+          githubOwners = lib.concatStringsSep "," [
+            "v1cferr"
+            "victor-ferreira-fai-ufscar" # the FAI account
+            "drakko2002" # my brother's
+          ];
+          gitlabUrl = "https://git.sup.fai.ufscar.br"; # only through the FAI VPN
+          gitlabTitle = "FAI GitLab";
+          gitlabTokenFile = osConfig.sops.secrets.fai_gitlab_token.path or "";
+        };
         # Named folders only, so dotfiles (keys, browser profiles, caches) never reach the index.
         files.preferences.indexingPaths = map (d: "${home}/${d}") [
           "Desktop"

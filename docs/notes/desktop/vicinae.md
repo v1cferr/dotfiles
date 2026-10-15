@@ -189,28 +189,21 @@ in a chosen app. `shortcuts.nix` declares them, each opened in Zen by its deskto
 with its site's favicon as icon:
 
 - **Search Google** and **Search YouTube**.
-- **Search my GitHub repos**: one repository search over `v1cferr`, `victor-ferreira-fai-ufscar`
-  (the FAI account) and `drakko2002`, since GitHub ORs repeated `user:` qualifiers, plus `fork:true`
-  because search leaves forks out by default. It lists the private repos the logged-in session can
-  read: on 15/10/2026, 88 repos, 25 of them private (20 mine, 5 of the FAI account, where `v1cferr`
-  is a collaborator).
-- **Search FAI GitLab projects**: `git.sup.fai.ufscar.br`'s project search, which lists the private
-  projects of the session logged in there. It only answers through the FAI VPN
-  ([its note](../network/vpn.md)); without it the page does not load. Its icon is gitlab.com's, so the
-  internal host name is never sent to the favicon service.
 - **Search Nix packages**: search.nixos.org on the channel this system builds from,
   `system.nixos.release` (the `nix` extension searches the same index inside Vicinae).
 
 A shortcut with exactly one argument can be a fallback, and Google is first in `fallbacks`: typing
-anything that matches nothing offers it at the bottom. Only Google, because a list of five sites
-under every miss is noise.
+anything that matches nothing offers it at the bottom. Only Google, because a list of three sites
+under every miss is noise. The GitHub and GitLab searches were here for a day; the
+[Repositories](#repositories) extension replaced them with a list.
 
 0.29.0 keeps them in `~/.local/share/vicinae/shortcuts/shortcuts.json` and REWRITES that file on
 every open (the counters, `shortcut-db.cpp`), and only reads it at start. So it cannot be a store
 link: a Home Manager activation step merges the declared entries in by their fixed ids, keeping
 their counters, and leaves the ones made in the GUI alone. It runs before `reloadSystemd`, and the
 declared JSON is in the unit's `X-Restart-Triggers`, so a change restarts the server onto the merged
-file. A shortcut deleted in the GUI comes back at the next switch; remove it here instead.
+file. Every `dotfiles-*` id is owned by the declaration: one removed here is removed from the file
+too. A shortcut deleted in the GUI comes back at the next switch; remove it here instead.
 
 Caveat, from `expandShortcut` in `shortcut-actions.hpp`: the argument is pasted into the URL
 WITHOUT percent-encoding. Spaces are fine (the browser encodes them), but a `+`, `&` or `#` in the
@@ -258,9 +251,10 @@ hash edit.
 | systemd | list, start, stop and restart units | none |
 | bluetooth | power, scan, connect, battery | none; Blueman stays as the BlueZ pairing agent, which the extension does not register |
 | github | issues, PRs, workflow runs, repo search | a personal access token |
+| repositories (mine) | my GitHub accounts and FAI's GitLab in one list | the GitHub token above, FAI's `read_api` token |
 
 Not installed: everything the desktop already does (audio, power profiles, wifi) and anything
-without a clear use. Each extension is a TypeScript build to keep working, so four with a reason
+without a clear use. Each extension is a TypeScript build to keep working, so a few with a reason
 beat twenty because they exist.
 
 **systemd and bluetooth drop `usocket` from their lock.** dbus-next lists it as an OPTIONAL native
@@ -273,9 +267,36 @@ abstract-socket branch is never taken.
 To add one, put its folder name in the list; if its tsconfig extends the repo root or it needs a
 native module, see how upstream's `flake.nix` builds it first.
 
+### Repositories
+
+`modules/home/desktop/vicinae/repositories/` is my own extension (15/10/2026), built by the same
+`mkExtension` from the folder. One command lists, filtered as I type and grouped by account:
+
+- the GitHub accounts in `githubOwners`, in that order: `v1cferr`, `victor-ferreira-fai-ufscar`
+  (the FAI account) and `drakko2002` (my brother's). It merges `/user/repos` (what the token can
+  read, the private repos included) with each account's `/users/<login>/repos`, because the GitHub
+  extension's own "My Repositories" lists only repos I own or collaborate on, which left out six of
+  my brother's.
+- the projects I am a member of on FAI's GitLab, through its API with the `fai_gitlab_token`
+  (`read_api`, the glance band's), read from `/run/secrets` by path so it never sits in the settings.
+
+On 15/10/2026 that is 66 + 14 + 8 on GitHub (25 private) and 25 on GitLab. Enter opens the repo,
+and the actions copy the SSH clone URL or the URL, or refresh (Ctrl+R). The last list is cached, so
+it opens at once and refreshes behind; without the FAI VPN the GitLab part keeps its cached entries
+and a toast says it could not refresh.
+
+Its preferences are overrides in `default.nix` (provider `@v1cferr/repositories`), and its GitHub
+token is the same sops render as below. To change the list, edit `githubOwners` there. The
+`assets/icon.png` is the Nerd Font repo glyph in the accent color, and the one PNG `.gitignore`
+lets through: an untracked file is not in the flake's source, so without the exception the build
+had an empty `assets/`. To work on it: `npm install` in a copy of the folder, `npx tsc --noEmit`,
+and the lock goes back here. Do not run `vici build` in place, it installs into
+`~/.local/share/vicinae/extensions/` beside Home Manager's links.
+
 ### The GitHub token
 
-The extension's `personalAccessToken` is a password preference. Vicinae reads the merged config
+The extension's `personalAccessToken` is a password preference (the Repositories extension's
+`githubToken` rides the same file). Vicinae reads the merged config
 before its own database for those (`root-item-manager.cpp`), so the token arrives as one more
 override file, rendered by sops-nix into `/run/secrets/rendered/vicinae-github.json` (owner me,
 0400) and appended to `VICINAE_OVERRIDES`. The store only ever holds sops's placeholder (checked

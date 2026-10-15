@@ -114,9 +114,12 @@ in
     "vicinae-github.json" = {
       owner = "v1cferr";
       mode = "0400";
+      # The same token for both: the GitHub extension and the local Repositories one.
       content = builtins.toJSON {
-        providers."@knoopx/github".preferences.personalAccessToken =
-          config.sops.placeholder.vicinae_github_token;
+        providers = {
+          "@knoopx/github".preferences.personalAccessToken = config.sops.placeholder.vicinae_github_token;
+          "@v1cferr/repositories".preferences.githubToken = config.sops.placeholder.vicinae_github_token;
+        };
       };
     };
   };

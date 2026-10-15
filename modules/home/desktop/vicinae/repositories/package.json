@@ -1,0 +1,74 @@
+{
+  "$schema": "https://raw.githubusercontent.com/vicinaehq/vicinae/refs/heads/main/extra/schemas/extension.json",
+  "name": "repositories",
+  "title": "Repositories",
+  "description": "List the repositories of chosen GitHub accounts and of a GitLab instance, to open or clone",
+  "categories": [
+    "Developer Tools"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "Linux"
+  ],
+  "author": "v1cferr",
+  "icon": "icon.png",
+  "commands": [
+    {
+      "name": "repositories",
+      "title": "Repositories",
+      "description": "Every repository of the configured GitHub accounts and GitLab projects, filtered as you type",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "githubToken",
+      "title": "GitHub Token",
+      "description": "Personal access token with the repo scope, for the private repositories.",
+      "type": "password",
+      "required": false
+    },
+    {
+      "name": "githubOwners",
+      "title": "GitHub Accounts",
+      "description": "Comma-separated logins whose repositories are listed, in this order.",
+      "type": "textfield",
+      "required": false
+    },
+    {
+      "name": "gitlabUrl",
+      "title": "GitLab URL",
+      "description": "Base URL of the GitLab instance; empty skips GitLab.",
+      "type": "textfield",
+      "required": false
+    },
+    {
+      "name": "gitlabTitle",
+      "title": "GitLab Section Title",
+      "description": "Section title for the GitLab projects.",
+      "type": "textfield",
+      "default": "GitLab",
+      "required": false
+    },
+    {
+      "name": "gitlabTokenFile",
+      "title": "GitLab Token File",
+      "description": "Path of a file holding a read_api token, so the token never sits in the settings.",
+      "type": "textfield",
+      "required": false
+    }
+  ],
+  "scripts": {
+    "build": "vici build",
+    "dev": "vici develop",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vicinae/api": "^0.29.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "19.1.17",
+    "typescript": "5.9.2"
+  }
+}

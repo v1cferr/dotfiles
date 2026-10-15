@@ -1,5 +1,5 @@
-# Vicinae extensions from the pinned vicinaehq/extensions input, built offline from their lockfiles.
-# Why these four, and how the GitHub token arrives: docs/notes/desktop/vicinae.md
+# Vicinae extensions: four from the pinned vicinaehq/extensions input, built offline from their
+# lockfiles, and my own ./repositories. Why these, and how the tokens arrive: docs/notes/desktop/vicinae.md
 {
   config,
   inputs,
@@ -50,5 +50,10 @@ in
     (mk "systemd" (withoutUsocket "systemd")) # list, start, stop and restart units
     (mk "bluetooth" (withoutUsocket "bluetooth")) # power, scan, connect; Blueman stays as the pairing agent
     (mk "github" { }) # issues, PRs, workflow runs; its token rides VICINAE_OVERRIDES (default.nix)
+    # Mine, not from the input: my GitHub accounts and FAI's GitLab in one list.
+    (config.lib.vicinae.mkExtension {
+      name = "repositories";
+      src = ./repositories;
+    })
   ];
 }

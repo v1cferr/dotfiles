@@ -5,6 +5,7 @@
 let
   zen = "zen-beta.desktop";
   code = "code.desktop"; # VS Code (installed in modules/home/packages.nix)
+  dolphin = "org.kde.dolphin.desktop"; # the file manager (installed in modules/home/apps/dolphin.nix)
 in
 {
   xdg.mimeApps = {
@@ -16,6 +17,9 @@ in
       "x-scheme-handler/unknown" = zen; # the fallback for an unknown scheme
       "text/html" = zen;
       "application/xhtml+xml" = zen;
+
+      # Folders to Dolphin: without this, `xdg-open <dir>` fell back to VS Code, which claims it too.
+      "inode/directory" = dolphin;
 
       # Text/code to VS Code: without this a double click fell into a document reader or into NOTHING.
       "text/plain" = code; # it also covers .nix/.ini/.conf/.env

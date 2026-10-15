@@ -106,6 +106,38 @@ in
         };
       }
     ];
+
+    # Turning the G1500 on makes it the default sink, as if picked in pavucontrol (SUPER+S).
+    wireplumber.extraScripts."custom/speaker-default.lua" = ''
+      SimpleEventHook {
+        name = "custom/speaker-default",
+        interests = {
+          EventInterest {
+            Constraint { "event.type", "=", "node-added" },
+            Constraint { "media.class", "=", "Audio/Sink" },
+            Constraint { "node.name", "=", "${speaker}" },
+          },
+        },
+        execute = function (event)
+          local om = event:get_source ():call ("get-object-manager", "metadata")
+          local metadata = om:lookup { Constraint { "metadata.name", "=", "default" } }
+          if metadata then
+            metadata:set (0, "default.configured.audio.sink", "Spa:String:JSON",
+                Json.Object { ["name"] = "${speaker}" }:to_string ())
+          end
+        end
+      }:register ()
+    '';
+    wireplumber.extraConfig."90-speaker-default" = {
+      "wireplumber.components" = [
+        {
+          name = "custom/speaker-default.lua";
+          type = "script/lua";
+          provides = "custom.speaker-default";
+        }
+      ];
+      "wireplumber.profiles".main."custom.speaker-default" = "required";
+    };
   };
 
   # No text-to-speech daemon (graphical-desktop turns it on); drop this line if Discord /tts or a screen reader is ever needed.

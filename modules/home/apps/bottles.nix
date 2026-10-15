@@ -17,6 +17,7 @@ let
     gawk
     gnugrep
     gnused
+    icoextract
     jq
     writeShellApplication
     ;
@@ -135,6 +136,38 @@ let
       } >> "$lib"
     '';
   };
+  # A launcher entry's id: "Assassin's Creed" becomes assassins-creed.
+  slug =
+    name:
+    lib.concatStringsSep "-" (
+      lib.filter (s: lib.isString s && s != "") (
+        builtins.split "[^a-z0-9]+" (lib.toLower (lib.replaceStrings [ "'" ] [ "" ] name))
+      )
+    );
+
+  # Where Bottles' own "Add Desktop Entry" puts a program's icon, so both write the same file.
+  iconOf = name: p: "${bottlesDir}/${p.dir}/icons/${name}.png";
+
+  # What each launcher entry runs. `bottles-cli run -b` wants the NAME the bottle shows, which is
+  # not its directory ("Battle.net" lives in Battlenet), so it is read from bottle.yml at launch.
+  # The slug keeps quoting out of the .desktop Exec line.
+  launch = writeShellApplication {
+    name = "bottles-launch";
+    runtimeInputs = [ gnused ];
+    text = ''
+      case "''${1:-}" in
+      ${lib.concatStrings (
+        lib.mapAttrsToList (name: p: ''
+          ${slug name}) dir=${lib.escapeShellArg p.dir} program=${lib.escapeShellArg name} ;;
+        '') config.my.games.library
+      )}
+        *) echo "bottles-launch: unknown program '$1'" >&2; exit 64 ;;
+      esac
+      yml="${bottlesDir}/$dir/bottle.yml"
+      [ -f "$yml" ] || { echo "bottles-launch: no bottle at $yml" >&2; exit 1; }
+      exec ${bottlesApp}/bin/bottles-cli run -b "$(sed -n 's/^Name: //p' "$yml")" -p "$program"
+    '';
+  };
 in
 {
   options.my.games.library = lib.mkOption {
@@ -156,6 +189,11 @@ in
             default = "";
             description = "The command line the launcher needs, empty when the exe is enough.";
           };
+          icon = lib.mkOption {
+            type = lib.types.nullOr lib.types.str;
+            default = null;
+            description = "The .exe whose icon the launcher entry shows, when `path` is not the game's.";
+          };
         };
       }
     );
@@ -174,6 +212,7 @@ in
       # Through Battle.net and NOT its own launcher, which is the route already proven here.
       "Hearthstone" = inBottle battlenet battleNetExe // {
         arguments = ''--exec="launch WTCG" --no-proxy-server --disable-features=CriticalClientHint --enable-features=UserAgentClientHint'';
+        icon = (inGame "Hearthstone" "Hearthstone.exe").path; # not Battle.net's
       };
 
       # Battle.net's own shim. If it fails under Wine, the fallback is Hearthstone's route with the
@@ -190,6 +229,18 @@ in
       # a Steam login with, and going straight to the exe skips a login that cannot succeed.
       "Victoria 3" = inGame "Victoria 3" "binaries/victoria3.exe";
     };
+
+    # Each program in the app launcher (Vicinae), started the way the Library tab starts it.
+    xdg.desktopEntries = lib.mapAttrs' (
+      name: p:
+      lib.nameValuePair "bottles-${slug name}" {
+        inherit name;
+        exec = "${lib.getExe launch} ${slug name}";
+        icon = iconOf name p;
+        comment = "Launch ${name} using Bottles";
+        categories = [ "Game" ];
+      }
+    ) config.my.games.library;
 
     # ADDED, NEVER WRITTEN: Bottles rewrites bottle.yml on every change, so managing the file here
     # would be a second owner (rule 14). Same shape as dolphinPlaces: insert only what is missing.
@@ -208,6 +259,14 @@ in
           # THE LIBRARY IS A SEPARATE FILE from the bottle's program list, and this is the half
           # that puts the tile in the Library tab. Idempotent, so it runs unconditionally.
           run ${lib.getExe libraryAdd} ${lib.escapeShellArg p.dir} ${lib.escapeShellArg name}
+          # The launcher entry's icon, pulled out of the exe once. BEST EFFORT: with the Windows
+          # disk unmounted the entry just shows a generic icon until the next rebuild.
+          exe=${lib.escapeShellArg (if p.icon != null then p.icon else p.path)}
+          png=${lib.escapeShellArg (iconOf name p)}
+          if [ -f "$yml" ] && [ -f "$exe" ] && [ ! -s "$png" ]; then
+            run mkdir -p "$(dirname "$png")"
+            run ${icoextract}/bin/exe-thumbnailer -s 256 "$exe" "$png" || run rm -f "$png"
+          fi
         '') config.my.games.library
       )
     );

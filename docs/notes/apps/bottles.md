@@ -132,6 +132,27 @@ library entry aimed at a path that does not exist.
 `inBottle` is the escape hatch for a program that is not a game's own exe, which is Battle.net
 and Hearthstone.
 
+## In the app launcher
+
+Every `my.games.library` program also gets a launcher entry (`xdg.desktopEntries`,
+`bottles-<slug>.desktop`, category Game), so SUPER+Q finds "Hearthstone" and starts it without
+opening Bottles. The entry runs `bottles-launch <slug>`, which reads the bottle's NAME out of
+`bottle.yml` (the trap above) and execs `bottles-cli run -b <name> -p <program>`. That is the same
+program the Library tab starts, with the arguments and the dxvk/vkd3d switches stored there:
+`run -p` keeps the program's arguments unless `--args-replace` is passed. The slug, and not the name, is what
+the `.desktop` Exec line carries, so an apostrophe never needs desktop-spec quoting. Vicinae
+launches it through `app2unit`, so the game and its wineserver get their own scope.
+
+The icon is pulled out of the exe by `exe-thumbnailer` (icoextract, what Bottles uses) at
+activation, once, into `bottles/<dir>/icons/<program>.png`: the path Bottles' own "Add Desktop
+Entry" writes, so the two share it. Hearthstone runs Battle.net's exe, so its entry says
+`icon = Hearthstone.exe`. It is BEST EFFORT: with the Windows disk unmounted there is no exe to
+read, the entry shows a generic icon, and the next rebuild fills it in. To redo an icon, delete
+the PNG and rebuild.
+
+Diablo IV is a program in the Battle.net bottle (added from the GUI) but not in the module, and
+its folder is gone from the prefix, so it has no launcher entry.
+
 ## A leftover that will confuse the next reader
 
 `~/.local/share/bottles/bottles/` holds SIX directories and Bottles lists FIVE. `Battle.net` (with

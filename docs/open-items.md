@@ -530,8 +530,6 @@ finished work. What was closed is in the [august history](history/2026/08-august
       because what I want fresh already comes through `unstable.*` and through the direct
       upstream inputs.
 
-- [ ] Add the current public IP to Fastfetch?
-
 - [ ] The webcam's ONE remaining test, and it is a cable (opened 04/09/2026). The viewer and the
       diagnosis are declared and the camera is recognized, but it does not stream: it fails at the
       UVC probe control with `-71` and reboots itself, and the measurements that rule out the

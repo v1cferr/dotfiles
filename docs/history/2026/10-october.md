@@ -1,6 +1,6 @@
 # History: october 2026
 
-8 entries. Index in [README.md](../README.md).
+9 entries. Index in [README.md](../README.md).
 
 - [x] Vicinae replaced rofi and cliphist: one launcher for apps, files, the calculator, the
       clipboard history, my commands and four extensions (13/10/2026). How and why:
@@ -101,3 +101,10 @@
         also the one that proved them.
       • THE 16-AREA TAIL DID NOT BLOCK IT. The audit had it as a precondition; with the Arch tree
         one branch away it is a lookup and not a loss, so it stays a separate task.
+
+- [x] Fastfetch grew the public IP, plus the NixOS generation, the system age, the GPU driver and
+      the Vulkan version (15/10/2026), in `modules/home/shell/fastfetch.nix`.
+      • THE PUBLIC IP HAS A 1 S TIMEOUT. It is the only network call in the fetch, and without the
+        cap an offline machine waits on it; the whole fetch measured 0.34 s with it online.
+      • THE GENERATION DATE IS THE LINK'S OWN MTIME. `stat` without `-L`: following the profile
+        link lands on the store, where every mtime is epoch 1.

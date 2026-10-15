@@ -4,9 +4,13 @@
 
 let
   inherit (pkgs)
+    coreutils
     nixos-icons
     unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
     ;
+
+  date = lib.getExe' coreutils "date";
+  stat = lib.getExe' coreutils "stat";
 
   snowflake = "${nixos-icons}/share/icons/hicolor/256x256/apps/nix-snowflake.png";
 
@@ -50,7 +54,18 @@ in
         (row "34" "" "os" "os" { })
         (row "34" "" "kernel" "kernel" { })
         (row "34" "󰏖" "packages" "packages" { })
+        (row "34" "" "gen" "command" {
+          # The profile LINK's own mtime (stat without -L): following it lands on the store, at epoch 1.
+          text = ''
+            l=$(readlink /nix/var/nix/profiles/system); n=''${l#system-}
+            echo "#''${n%-link} ($(${date} -d @$(${stat} -c %Y /nix/var/nix/profiles/$l) +%F))"
+          '';
+        })
         (row "34" "󰅐" "uptime" "uptime" { })
+        (row "34" "󰃭" "age" "command" {
+          # The birth time of / is the Kingston install, not the first NixOS one (history is in git).
+          text = "echo $(( ($(${date} +%s) - $(${stat} -c %W /)) / 86400 )) days";
+        })
         (row "34" "" "shell" "shell" { })
 
         (header "├" "┤" "desktop")
@@ -65,11 +80,14 @@ in
 
         (header "├" "┤" "hardware")
         (row "36" "󰻠" "cpu" "cpu" { })
-        (row "36" "󰢮" "gpu" "gpu" { })
+        (row "36" "󰢮" "gpu" "gpu" { format = "{name} ({driver})"; })
+        (row "36" "" "vulkan" "vulkan" { })
         (row "36" "" "memory" "memory" { })
         (row "36" "󰾴" "swap" "swap" { })
         (row "36" "󰋊" "disk" "disk" { folders = "/"; })
         (row "36" "󰩟" "local ip" "localip" { format = "{ipv4} ({ifname})"; })
+        # A network call: the timeout keeps an offline fetch from hanging on it.
+        (row "36" "󰖟" "public ip" "publicip" { timeout = 1000; })
 
         (header "├" "┤" "palette")
         (row "37" "" "colors" "colors" { symbol = "circle"; })

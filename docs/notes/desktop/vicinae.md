@@ -49,6 +49,13 @@ The unit is Home Manager's (`vicinae server`, `Restart=always`, wanted by
 WAYLAND_DISPLAY` and `Slice = session.slice`, the same as `polkit-agent.nix`. It is the only
 starter (rule 15): nothing in `autostart.lua` launches it.
 
+Apps it launches go through `app2unit --` (`applications.preferences.launchPrefix`), so each one
+gets its own `app-Hyprland-<name>-<random>.scope` under `app.slice`. Without it they were children
+in `vicinae.service`'s cgroup (seen on 15/10/2026: Zen and VS Code there). Nothing died on a
+restart, since the unit kills only the main process, but their memory counted as Vicinae's and
+`systemctl --user status vicinae` listed every Zen tab. Left empty, the prefix is auto-detected only
+under uwsm, which this session (LightDM, plain Hyprland) does not run.
+
 No `vicinae-input-server`. Pasting straight into the focused app and snippet keyword expansion
 both need it, and it is a capability binary (`cap_dac_override`) that reads every keyboard and
 writes to `/dev/uinput`. That is a keylogger-shaped privilege for a convenience, so selecting an

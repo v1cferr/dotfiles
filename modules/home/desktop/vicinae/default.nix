@@ -9,7 +9,12 @@
 }:
 
 let
-  inherit (pkgs) ffmpegthumbnailer poppler-utils writeText;
+  inherit (pkgs)
+    app2unit
+    ffmpegthumbnailer
+    poppler-utils
+    writeText
+    ;
 
   p = config.my.theme.palette;
   c = name: "#${p.${name}}";
@@ -53,6 +58,8 @@ let
       favorites = [ "clipboard:history" ];
       inherit (config.my.vicinae) fallbacks;
       providers = {
+        # Each app in its own app-*.scope under app.slice, not in vicinae.service's cgroup.
+        applications.preferences.launchPrefix = "${lib.getExe app2unit} --";
         calculator.preferences.backend = "qalculate";
         clipboard.preferences = {
           monitoring = true;

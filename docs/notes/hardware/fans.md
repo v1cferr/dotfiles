@@ -161,6 +161,11 @@ breaks, to run a kernel two or three weeks before `_latest` picks it up anyway. 
 mainline the patch goes, the binary cache comes back, a kernel costs minutes, and that trade is
 worth revisiting.
 
+Until then the patch has a switch, `my.fans.gpuControl` in the host's `hardware.nix`. Setting it to
+`false` drops the patch, so the kernel comes from the binary cache again. The card goes back to its
+own stock curve, zero RPM included, and the board's two fans stay under CoolerControl. CoolerControl
+just loses the GPU channel. Flip it back when manual control is worth the hour.
+
 Delete [`pkgs/xe-fan-control/`](../../../pkgs/xe-fan-control/) and the `boot.kernelPatches` block in
 the module when `pwm1` shows up under the GPU's hwmon WITHOUT the patch. That is the whole test:
 

@@ -10,8 +10,9 @@
 {
   imports = [ inputs.minegrub-world-sel-theme.nixosModules.default ];
 
-  # A MAINLINE KERNEL (7.1.x), because the Arc's `xe` driver LIVES in the kernel and this is the
-  # only driver lever that does not cross channels. Prefer `boot`, but `switch` is safe: the notes.
+  # The newest RELEASED mainline, because the Arc's `xe` driver LIVES in the kernel and this is the
+  # only driver lever that does not cross channels. Not `_testing`: while the fan patch exists every
+  # bump is an hour's local build (docs/notes/hardware/fans.md). Prefer `boot`; `switch` is safe.
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   boot.loader.efi.canTouchEfiVariables = true;

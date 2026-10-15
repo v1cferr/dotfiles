@@ -20,7 +20,7 @@ in
 
   # The GPU fan's kernel patch: true = manual control, but every kernel bump is an hour's local
   # build; false = the cached kernel, and the card runs its stock curve. The board's fans stay either way.
-  my.fans.gpuControl = true;
+  my.fans.gpuControl = false;
 
   # MONITORS: the SSOT of the connector names, read by Nix, Lua and QML. Declared (with no
   # default, on purpose) in modules/nixos/desktop/monitors.nix.

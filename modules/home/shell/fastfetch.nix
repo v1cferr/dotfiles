@@ -16,7 +16,7 @@ let
 
   # Each section is its own box: a 13-cell key column ("icon label") and a value column of `value`
   # cells. Nix measures bytes, so widths are computed on the ASCII parts only, never on glyphs.
-  value = 42;
+  value = 46;
   pad = n: s: s + lib.concatStrings (lib.replicate (n - lib.stringLength s) " ");
   line = n: lib.concatStrings (lib.replicate n "─");
   edge = left: mid: right: keyPart: {
@@ -91,8 +91,15 @@ in
         close
 
         (open "hardware")
-        (row "36" "󰻠" "cpu" "cpu" { format = "{name} ({cores-logical})"; })
-        (row "36" "󰢮" "gpu" "gpu" { format = "{name} ({driver})"; })
+        # temp reads coretemp's package and xe's pkg sensor, the same ones `sensors` shows.
+        (row "36" "󰻠" "cpu" "cpu" {
+          temp = true;
+          format = "{name} · {temperature}";
+        })
+        (row "36" "󰢮" "gpu" "gpu" {
+          temp = true;
+          format = "{name} ({driver}) · {temperature}";
+        })
         (row "36" "󰆧" "vulkan" "vulkan" { format = "{api-version}"; })
         (row "36" "󰍛" "memory" "memory" { })
         (row "36" "󰓡" "swap" "swap" { })

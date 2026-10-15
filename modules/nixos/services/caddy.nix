@@ -94,7 +94,7 @@ lib.mkIf (enabled && config.my.services.caddy) {
     # and not only when the version changes.
     package = pkgs.caddy.withPlugins {
       plugins = [ "github.com/caddy-dns/cloudflare@v0.2.4" ];
-      hash = "sha256-dQvk6ezY6TQ1J7PjhCXnThF/SqVgPwBO8/RXzHCY+js=";
+      hash = "sha256-xRJ5evsAJ2akg47j3Bt6YDXJOgX88B/rKNP50KSVyNY=";
     };
 
     # Secrets through the environment, never in /nix/store (rule 12): the Caddyfile holds only

@@ -9,7 +9,7 @@
 }:
 
 let
-  inherit (pkgs) writeText;
+  inherit (pkgs) ffmpegthumbnailer poppler-utils writeText;
 
   p = config.my.theme.palette;
   c = name: "#${p.${name}}";
@@ -99,10 +99,16 @@ in
     enable = true;
     # 0.29 against 26.05's 0.23, patched so built-in icons are bare line glyphs (no accent tile),
     # like the Nerd Font script icons. --replace-fail breaks the build if upstream moves the line.
+    # Also patched with a Linux backend for its FileThumbnail images (macOS-only upstream), so the
+    # file search previews PDFs and videos through the shared ~/.cache/thumbnails.
     package = pkgs.unstable.vicinae.overrideAttrs (old: {
+      patches = (old.patches or [ ]) ++ [ ./file-thumbnails.patch ];
       postPatch = (old.postPatch or "") + ''
         substituteInPlace src/server/src/ui/image/image-stream.cpp \
           --replace-fail "if (c.isValid() && c.alpha() > 0) return c;" ""
+        substituteInPlace src/server/src/ui/image/xdg-file-thumbnail-loader.cpp \
+          --replace-fail '"ffmpegthumbnailer";' '"${lib.getExe ffmpegthumbnailer}";' \
+          --replace-fail '"pdftoppm";' '"${lib.getExe' poppler-utils "pdftoppm"}";'
       '';
     });
     systemd = {

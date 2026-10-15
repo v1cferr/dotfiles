@@ -1,0 +1,289 @@
+diff -ruN a/src/server/CMakeLists.txt b/src/server/CMakeLists.txt
+--- a/src/server/CMakeLists.txt
++++ b/src/server/CMakeLists.txt
+@@ -926,6 +926,8 @@
+ 
+ if (UNIX AND NOT APPLE)
+ 	list(APPEND SRCS
++		src/ui/image/xdg-file-thumbnail-loader.hpp
++		src/ui/image/xdg-file-thumbnail-loader.cpp
+ 		src/services/clipboard/gnome/gnome-clipboard-server.hpp
+ 		src/services/clipboard/gnome/gnome-clipboard-server.cpp
+ 		src/services/app-service/xdg/xdg-app-database.hpp
+diff -ruN a/src/server/src/ui/image/image-stream.cpp b/src/server/src/ui/image/image-stream.cpp
+--- a/src/server/src/ui/image/image-stream.cpp
++++ b/src/server/src/ui/image/image-stream.cpp
+@@ -11,6 +11,9 @@
+ #ifdef Q_OS_WIN
+ #include "ui/image/win-file-icon-loader.hpp"
+ #endif
++#if defined(Q_OS_UNIX) && !defined(Q_OS_MACOS)
++#include "ui/image/xdg-file-thumbnail-loader.hpp"
++#endif
+ #include <QBuffer>
+ #include <QCache>
+ #include <QFileInfo>
+@@ -234,6 +237,18 @@
+     runInPool([name, size = renderSize]() { return renderMacFileIcon(name, size); }, m_fg);
+     break;
+ #endif
++#if defined(Q_OS_UNIX) && !defined(Q_OS_MACOS)
++  case ImageURLType::FileThumbnail:
++    handleStaticFuture(QtConcurrent::run(&xdgThumbnailPool(),
++                                         [name, renderSize, bg = m_bg, size = m_size, mask = m_mask,
++                                          canceled]() -> QImage {
++                                           if (canceled->load(std::memory_order_relaxed)) return {};
++                                           QImage img = renderXdgFileThumbnail(name, renderSize);
++                                           ImageRendering::applyPostTransforms(img, QColor(), bg, size, mask);
++                                           return img;
++                                         }));
++    break;
++#endif
+ #ifdef Q_OS_WIN
+   case ImageURLType::WinShellIcon:
+     runInPool([name, size = renderSize]() { return renderWinShellIcon(name, size); }, m_fg);
+diff -ruN a/src/server/src/ui/image/xdg-file-thumbnail-loader.cpp b/src/server/src/ui/image/xdg-file-thumbnail-loader.cpp
+--- a/src/server/src/ui/image/xdg-file-thumbnail-loader.cpp
++++ b/src/server/src/ui/image/xdg-file-thumbnail-loader.cpp
+@@ -0,0 +1,184 @@
++#include "ui/image/xdg-file-thumbnail-loader.hpp"
++#include "ui/image/image-renderer.hpp"
++#include <QCryptographicHash>
++#include <QDir>
++#include <QFile>
++#include <QFileInfo>
++#include <QImageReader>
++#include <QMimeDatabase>
++#include <QProcess>
++#include <QSaveFile>
++#include <QStandardPaths>
++#include <QTemporaryDir>
++#include <QUrl>
++#include <algorithm>
++#include <array>
++#include <mutex>
++
++// Generators are looked up in PATH; packagers may replace these with absolute paths.
++static constexpr auto FFMPEGTHUMBNAILER_BIN = "ffmpegthumbnailer";
++static constexpr auto PDFTOPPM_BIN = "pdftoppm";
++
++namespace {
++
++constexpr int GENERATOR_TIMEOUT_MS = 10000;
++constexpr auto FAIL_DIR = "fail/vicinae";
++
++struct Flavor {
++  const char *dir;
++  int pixels;
++};
++
++// The spec's size directories, smallest first.
++constexpr std::array<Flavor, 4> FLAVORS{{{"normal", 128}, {"large", 256}, {"x-large", 512}, {"xx-large", 1024}}};
++
++enum class Generator { None, Video, Pdf };
++
++Generator generatorFor(const QMimeType &mime) {
++  if (mime.name().startsWith(QStringLiteral("video/"))) return Generator::Video;
++  if (mime.inherits(QStringLiteral("application/pdf"))) return Generator::Pdf;
++  return Generator::None;
++}
++
++QString cacheRoot() {
++  return QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation) + QStringLiteral("/thumbnails");
++}
++
++// Valid means it was made from the file's current version (Thumb::MTime matches).
++bool isValidEntry(const QString &thumbPath, const QString &uri, const QString &mtime) {
++  QImageReader reader(thumbPath);
++  if (!reader.canRead()) return false;
++  if (reader.text(QStringLiteral("Thumb::MTime")) != mtime) return false;
++  auto const storedUri = reader.text(QStringLiteral("Thumb::URI"));
++  return storedUri.isEmpty() || storedUri == uri;
++}
++
++QImage loadScaled(const QString &thumbPath, const QSize &size) {
++  QFile file(thumbPath);
++  if (!file.open(QIODevice::ReadOnly)) return {};
++  return ImageRendering::decodeImageData(&file, size);
++}
++
++bool ensurePrivateDir(const QString &dir) {
++  if (!QDir().mkpath(dir)) return false;
++  QFile::setPermissions(dir, QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
++  return true;
++}
++
++// Writes the image with the spec's metadata, atomically and readable by the owner only.
++bool storeEntry(QImage image, const QString &thumbPath, const QString &uri, const QString &mtime) {
++  if (!ensurePrivateDir(QFileInfo(thumbPath).absolutePath())) return false;
++  image.setText(QStringLiteral("Thumb::URI"), uri);
++  image.setText(QStringLiteral("Thumb::MTime"), mtime);
++  image.setText(QStringLiteral("Software"), QStringLiteral("Vicinae"));
++  QSaveFile out(thumbPath);
++  if (!out.open(QIODevice::WriteOnly) || !image.save(&out, "PNG") || !out.commit()) return false;
++  QFile::setPermissions(thumbPath, QFile::ReadOwner | QFile::WriteOwner);
++  return true;
++}
++
++QImage runGenerator(Generator generator, const QString &path, int pixels) {
++  QTemporaryDir tmp;
++  if (!tmp.isValid()) return {};
++
++  QString program;
++  QStringList args;
++  QString output;
++  auto const px = QString::number(pixels);
++
++  switch (generator) {
++  case Generator::Video:
++    program = QStandardPaths::findExecutable(QString::fromLatin1(FFMPEGTHUMBNAILER_BIN));
++    output = tmp.filePath(QStringLiteral("thumb.png"));
++    args = {QStringLiteral("-i"), path, QStringLiteral("-o"), output, QStringLiteral("-s"), px};
++    break;
++  case Generator::Pdf:
++    program = QStandardPaths::findExecutable(QString::fromLatin1(PDFTOPPM_BIN));
++    output = tmp.filePath(QStringLiteral("thumb.png"));
++    args = {QStringLiteral("-png"), QStringLiteral("-singlefile"), QStringLiteral("-f"), QStringLiteral("1"),
++            QStringLiteral("-l"),   QStringLiteral("1"),           QStringLiteral("-scale-to"), px,
++            path,                   tmp.filePath(QStringLiteral("thumb"))};
++    break;
++  case Generator::None:
++    return {};
++  }
++  if (program.isEmpty()) return {};
++
++  QProcess proc;
++  proc.setProcessChannelMode(QProcess::MergedChannels);
++  proc.setStandardInputFile(QProcess::nullDevice());
++  proc.start(program, args);
++  if (!proc.waitForFinished(GENERATOR_TIMEOUT_MS)) {
++    proc.kill();
++    proc.waitForFinished();
++    return {};
++  }
++  if (proc.exitStatus() != QProcess::NormalExit || proc.exitCode() != 0) return {};
++
++  QImage image(output);
++  if (!image.isNull() && std::max(image.width(), image.height()) > pixels)
++    image = image.scaled(pixels, pixels, Qt::KeepAspectRatio, Qt::SmoothTransformation);
++  return image;
++}
++
++} // namespace
++
++bool xdgFileThumbnailSupported(const QMimeType &mime) { return generatorFor(mime) != Generator::None; }
++
++QThreadPool &xdgThumbnailPool() {
++  static QThreadPool pool;
++  static std::once_flag flag;
++  std::call_once(flag, []() { pool.setMaxThreadCount(2); });
++  return pool;
++}
++
++QImage renderXdgFileThumbnail(const QString &path, const QSize &size) {
++  QFileInfo const info(path);
++  if (!info.isFile() || !info.isReadable()) return {};
++
++  auto const root = cacheRoot();
++  auto const absolute = info.absoluteFilePath();
++  if (absolute.startsWith(root + QLatin1Char('/'))) return {}; // never thumbnail a thumbnail
++
++  auto const uri = QString::fromUtf8(QUrl::fromLocalFile(absolute).toEncoded());
++  auto const name =
++      QString::fromLatin1(QCryptographicHash::hash(uri.toUtf8(), QCryptographicHash::Md5).toHex()) +
++      QStringLiteral(".png");
++  auto const mtime = QString::number(info.lastModified().toSecsSinceEpoch());
++
++  // The smallest flavor that covers the request, else the largest.
++  int const want = std::max(size.width(), size.height());
++  auto target = std::ranges::find_if(FLAVORS, [want](const Flavor &f) { return f.pixels >= want; });
++  if (target == FLAVORS.end()) target = FLAVORS.end() - 1;
++
++  // Any valid entry, preferring the covering flavors, then the next smaller ones.
++  for (auto it = target; it != FLAVORS.end(); ++it) {
++    auto const thumbPath = root + QLatin1Char('/') + QLatin1String(it->dir) + QLatin1Char('/') + name;
++    if (isValidEntry(thumbPath, uri, mtime)) return loadScaled(thumbPath, size);
++  }
++  for (auto it = target; it != FLAVORS.begin();) {
++    --it;
++    auto const thumbPath = root + QLatin1Char('/') + QLatin1String(it->dir) + QLatin1Char('/') + name;
++    if (isValidEntry(thumbPath, uri, mtime)) return loadScaled(thumbPath, size);
++  }
++
++  // A recorded failure for this version of the file: do not retry it on every selection.
++  auto const failPath = root + QLatin1Char('/') + QLatin1String(FAIL_DIR) + QLatin1Char('/') + name;
++  if (isValidEntry(failPath, uri, mtime)) return {};
++
++  auto const generator = generatorFor(QMimeDatabase().mimeTypeForFile(absolute));
++  if (generator == Generator::None) return {};
++
++  QImage image = runGenerator(generator, absolute, target->pixels);
++  if (image.isNull()) {
++    QImage marker(1, 1, QImage::Format_ARGB32);
++    marker.fill(Qt::transparent);
++    storeEntry(marker, failPath, uri, mtime);
++    return {};
++  }
++
++  storeEntry(image, root + QLatin1Char('/') + QLatin1String(target->dir) + QLatin1Char('/') + name, uri, mtime);
++  if (size.isValid() && std::max(image.width(), image.height()) > want)
++    image = image.scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
++  return image;
++}
+diff -ruN a/src/server/src/ui/image/xdg-file-thumbnail-loader.hpp b/src/server/src/ui/image/xdg-file-thumbnail-loader.hpp
+--- a/src/server/src/ui/image/xdg-file-thumbnail-loader.hpp
++++ b/src/server/src/ui/image/xdg-file-thumbnail-loader.hpp
+@@ -0,0 +1,17 @@
++#pragma once
++
++#include <QImage>
++#include <QMimeType>
++#include <QSize>
++#include <QString>
++#include <QThreadPool>
++
++// Whether renderXdgFileThumbnail can produce a thumbnail for this type.
++bool xdgFileThumbnailSupported(const QMimeType &mime);
++
++// Reads the freedesktop thumbnail cache (~/.cache/thumbnails), generating and storing the entry on a
++// miss, so other applications reuse it. Blocking: run it on xdgThumbnailPool(), never on the GUI thread.
++QImage renderXdgFileThumbnail(const QString &path, const QSize &size);
++
++// Kept apart from the decoding pool, so a slow generator never stalls icon rendering.
++QThreadPool &xdgThumbnailPool();
+diff -ruN a/src/server/src/ui/views/view-utils.cpp b/src/server/src/ui/views/view-utils.cpp
+--- a/src/server/src/ui/views/view-utils.cpp
++++ b/src/server/src/ui/views/view-utils.cpp
+@@ -3,12 +3,23 @@
+ #include "theme/theme-file.hpp"
+ #include "utils/utils.hpp"
+ #include <QFile>
++#if defined(Q_OS_UNIX) && !defined(Q_OS_MACOS)
++#include "ui/image/xdg-file-thumbnail-loader.hpp"
++#endif
+ #include <qcontainerfwd.h>
+ #include <cstddef>
+ #include <ranges>
+ 
+ namespace qml {
+ 
++static bool hasFileThumbnail(const QMimeType &mime) {
++#if defined(Q_OS_UNIX) && !defined(Q_OS_MACOS)
++  return xdgFileThumbnailSupported(mime);
++#else
++  return false;
++#endif
++}
++
+ FilePreviewContent resolveFilePreview(const std::filesystem::path &path, QMimeDatabase &mimeDb) {
+   FilePreviewContent result;
+   auto qpath = QString::fromStdString(path.string());
+@@ -23,6 +34,8 @@
+       static constexpr qint64 MAX_DISPLAY = 10 * 1024;
+       result.textContent = QString::fromUtf8(file.read(MAX_DISPLAY));
+     }
++  } else if (hasFileThumbnail(mime)) {
++    result.imageSource = imageSourceFor(ImageURL::fileThumbnail(path).withFallback(ImageURL::fileIcon(path)));
+   } else {
+     result.imageSource = imageSourceFor(ImageURL::fileIcon(path));
+   }

@@ -39,8 +39,8 @@ Quickshell, hyprlock and the `vpn` CLI. The binds for those are unchanged.
 Home Manager's own `programs.vicinae` module (release-26.05) with `pkgs.unstable.vicinae`, because
 26.05 ships 0.23 and the features below need 0.29. There is no Vicinae flake input and no extra
 substituter. Upstream's flake was the alternative: one version newer, but it wants its own nixpkgs
-plus vicinae.cachix.org. Since 14/10/2026 the package carries a one-line patch (see
-[the theme](#the-theme)), so it is built here instead of coming from cache.nixos.org: 9 min 16 s on
+plus vicinae.cachix.org. Since 14/10/2026 the package carries two patches, a one-line one for the
+icons (see [the theme](#the-theme)) and the thumbnail backend (see [File search](#file-search)), so it is built here instead of coming from cache.nixos.org: 9 min 16 s on
 ex-b560m-v5 (12 threads, 14/10/2026), Qt dev outputs fetched from the cache, on every unstable bump
 that touches it.
 
@@ -119,6 +119,27 @@ misses the next dot directory with a key in it; an allow list cannot. The dot di
 folders the indexer already skips `.git`, `node_modules`, `.venv`, `__pycache__`, `.cache` and any
 directory with a `CACHEDIR.TAG` (0.29.0's `entry-filter.cpp`). The index lives in
 `~/.cache/vicinae/file-indexer/`.
+
+### Previews
+
+Stock 0.29 previews only images and text: everything else gets its file-type icon. Upstream has
+an image type for this, `FileThumbnail`, but only a macOS backend (Quick Look); on Linux it fell
+through to the fallback. `file-thumbnails.patch` (14/10/2026) adds the Linux backend, on the
+[freedesktop thumbnail spec](https://specifications.freedesktop.org/thumbnail-spec/latest/):
+
+- A valid entry in `~/.cache/thumbnails/{normal,large,x-large,xx-large}` (name = MD5 of the file
+  URI, `Thumb::MTime` equal to the file's) is used as is. Dolphin writes the same cache, so what
+  it already previewed shows up with no work.
+- On a miss it generates one: `ffmpegthumbnailer` for `video/*`, `pdftoppm` (first page) for PDF,
+  as Nix store paths substituted in `postPatch`. It stores the result in the cache (0600, atomic),
+  where Dolphin reuses it, and a failure goes to `fail/vicinae/` so a broken file is not retried
+  on every selection.
+- It runs on its own 2-thread pool with a 10 s timeout per file, so a slow generator never holds
+  up icon rendering; the preview fills in when it finishes, or falls back to the file-type icon.
+
+Office documents still get the icon: a generator for them means LibreOffice. The patch is meant
+to go upstream as the Linux side of
+[issue #2079](https://github.com/vicinaehq/vicinae/issues/2079); once it lands, drop it here.
 
 ## The theme
 

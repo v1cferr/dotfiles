@@ -14,20 +14,28 @@ let
 
   snowflake = "${nixos-icons}/share/icons/hicolor/256x256/apps/nix-snowflake.png";
 
-  # The key column is 15 cells: "│ " + icon + " " + a 9-cell label + " │". Nix measures bytes,
-  # so the padding is computed on the ASCII label only, never on the glyphs.
+  # Each section is its own box: a 13-cell key column ("icon label") and a value column of `value`
+  # cells. Nix measures bytes, so widths are computed on the ASCII parts only, never on glyphs.
+  value = 42;
   pad = n: s: s + lib.concatStrings (lib.replicate (n - lib.stringLength s) " ");
   line = n: lib.concatStrings (lib.replicate n "─");
-  header = left: right: title: {
+  edge = left: mid: right: keyPart: {
     type = "custom";
-    key = "${left}─ {#1}${title}{#keys} ${line (10 - lib.stringLength title)}${right}";
+    key = "${left}${keyPart}${mid}${line (value + 2)}${right}";
   };
+  open = title: edge "╭" "┬" "╮" "─ {#1}${title}{#keys} ${line (10 - lib.stringLength title)}";
+  close = edge "╰" "┴" "╯" (line 13);
+
+  # fastfetch has no line suffix, so the right border is drawn from the key: save the cursor (ESC 7),
+  # jump over the value column, print the border, restore (ESC 8), and the value prints in between.
+  esc = builtins.fromJSON ''"\u001b"'';
+  rightBorder = "${esc}7${esc}[${toString (value + 2)}C│${esc}8";
   # color is an ANSI number, so the rows follow the terminal's theme preset instead of fixed hex.
   row =
     color: icon: label: type: extra:
     {
       inherit type;
-      key = "│ {#${color}}${icon} ${pad 9 label}{#keys} │";
+      key = "│ {#${color}}${icon} ${pad 9 label}{#keys} │${rightBorder}";
     }
     // extra;
 in
@@ -42,7 +50,7 @@ in
       logo = {
         source = "NixOS";
         type = "builtin";
-        padding.top = 3; # the logo is 20 rows and the box about 26, so 3 centers it
+        padding.top = 5; # the logo is 20 rows and the boxes about 30, so 5 centers it
       };
       display = {
         separator = " ";
@@ -50,7 +58,7 @@ in
       };
 
       modules = [
-        (header "╭" "╮" "system")
+        (open "system")
         (row "34" "󱄅" "os" "os" { })
         (row "34" "󰌽" "kernel" "kernel" { })
         (row "34" "󰏖" "packages" "packages" { })
@@ -67,19 +75,23 @@ in
           text = "echo $(( ($(${date} +%s) - $(${stat} -c %W /)) / 86400 )) days";
         })
         (row "34" "󱆃" "shell" "shell" { })
+        close
 
-        (header "├" "┤" "desktop")
+        (open "desktop")
         (row "35" "󰖯" "wm" "wm" { })
-        (row "35" "󰍹" "display" "display" { })
+        (row "35" "󰍹" "display" "display" { format = "{width}x{height} @ {refresh-rate} Hz, {inch}\""; })
         (row "35" "󰞷" "terminal" "terminal" {
           # {?version}…{?} = a conditional block: with no version detected, no loose space is left.
           format = "{process-name}{?version} {version}{?}";
         })
         (row "35" "󰛖" "font" "terminalfont" { })
-        (row "35" "󰏘" "theme" "theme" { })
+        # Qt and GTK on one line overflow the box, so each gets its own, like the two displays.
+        (row "35" "󰏘" "theme" "theme" { format = "{theme1}"; })
+        (row "35" "󰏘" "theme" "theme" { format = "{theme2}"; })
+        close
 
-        (header "├" "┤" "hardware")
-        (row "36" "󰻠" "cpu" "cpu" { })
+        (open "hardware")
+        (row "36" "󰻠" "cpu" "cpu" { format = "{name} ({cores-logical})"; })
         (row "36" "󰢮" "gpu" "gpu" { format = "{name} ({driver})"; })
         (row "36" "󰆧" "vulkan" "vulkan" { format = "{api-version}"; })
         (row "36" "󰍛" "memory" "memory" { })
@@ -88,13 +100,11 @@ in
         (row "36" "󰩠" "local ip" "localip" { format = "{ipv4} ({ifname})"; })
         # A network call: the timeout keeps an offline fetch from hanging on it.
         (row "36" "󰖟" "public ip" "publicip" { timeout = 1000; })
+        close
 
-        (header "├" "┤" "palette")
+        (open "palette")
         (row "37" "󰉦" "colors" "colors" { symbol = "circle"; })
-        {
-          type = "custom";
-          key = "╰${line 13}╯";
-        }
+        close
       ];
     };
   };

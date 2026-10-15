@@ -1,5 +1,5 @@
 # nxBender: FOSS client for the SonicWall SSL VPN (FAI), replacing the proprietary netExtender.
-# What its 3 patches fix: docs/notes/repo/version-bumps.md
+# What its 4 patches fix: docs/notes/repo/version-bumps.md
 {
   lib,
   python3Packages,
@@ -28,7 +28,7 @@ python3Packages.buildPythonApplication {
   ];
   nativeBuildInputs = [ makeWrapper ];
 
-  # Three upstream fixes; each one is explained in the note.
+  # Four upstream fixes; each one is explained in the note.
   postPatch = ''
     substituteInPlace nxbender/sslconn.py \
       --replace-fail "self.s = ssl.wrap_socket(sock)" \
@@ -36,6 +36,9 @@ python3Packages.buildPythonApplication {
     # pppd 2.5+ has no 'nomp' (it answers "unrecognized option"), and it was redundant anyway.
     substituteInPlace nxbender/ppp.py \
       --replace-fail "'nomp'," "# 'nomp' removed: pppd 2.5+ has no multilink (the option does not exist)"
+    # 2 missed echoes (~20 s) killed a healthy tunnel on any blip; 6 tolerates about a minute.
+    substituteInPlace nxbender/ppp.py \
+      --replace-fail "'lcp-echo-failure',  '2'," "'lcp-echo-failure',  '6',"
     # SPLIT-TUNNEL: drops FAI's 0.0.0.0/0 so only their subnets go through the tunnel.
     substituteInPlace nxbender/nx.py \
       --replace-fail "for route in set(self.routes):" \
@@ -50,7 +53,7 @@ python3Packages.buildPythonApplication {
   '';
 
   # buildPythonApplication brings a default nix-update, and vendored-bump must NOT run it: the
-  # src is a pinned commit carrying 3 patches, so a bump is a human reading the diff.
+  # src is a pinned commit carrying 4 patches, so a bump is a human reading the diff.
   passthru.updateScript = null;
 
   meta = {

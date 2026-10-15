@@ -471,7 +471,7 @@ derivations»: it EVALUATES the host and stops there. Measured before this line,
 "running 1 flake checks..." and the only thing built was pre-commit.
 
 The difference matters because what is fragile here is not evaluation, it is PACKAGING: nxbender's
-3 patches, vscode's recipe over a newer tarball and the `wrapProgram` over claude-desktop's `.deb` are assumptions
+4 patches, vscode's recipe over a newer tarball and the `wrapProgram` over claude-desktop's `.deb` are assumptions
 about someone else's tree. None of them breaks at eval, they break at BUILD, AFTER a
 `nix flake update`. And `upgrade` is `update && nh os switch`, so the breakage landed in the middle
 of the switch.

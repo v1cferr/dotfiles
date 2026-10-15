@@ -41,7 +41,7 @@ The contract differs from nixpkgs' on one point: the runner passes the repo path
 A list or attrset `updateScript` is a `throw` at eval time, never a silent skip.
 
 **`nxbender` opts out with `updateScript = null`.** `buildPythonApplication` brings a default
-`nix-update` on its own, and its src is a pinned commit carrying 3 patches: a bump there is a human
+`nix-update` on its own, and its src is a pinned commit carrying 4 patches: a bump there is a human
 reading the diff, not a script.
 
 ## The layout every vendored package follows
@@ -171,7 +171,7 @@ pins either: a release edited after the fact stops the bump instead of moving th
   the file must come back byte-identical to the committed one. All four passed it on 26/09/2026,
   and stack-wallet on 10/10/2026, starting from the `0` placeholder.
 
-## nxBender's three patches
+## nxBender's four patches
 
 Not a bump script, but the same "vendored upstream that needs fixing" family, and
 [`pkgs/nxbender/package.nix`](../../../pkgs/nxbender/package.nix) points here.
@@ -187,3 +187,7 @@ Not a bump script, but the same "vendored upstream that needs fixing" family, an
    through the tunnel. The patch filters the `/0` out of `setup_routes`, so only FAI's internal
    subnets go through the VPN and the rest keeps going over the LAN. On teardown `ppp0` goes down
    and the kernel cleans up.
+4. **`lcp-echo-failure` from 2 to 6.** Upstream hardcodes an echo every 10 s and gives up after
+   2 misses, so about 20 s of packet loss made pppd declare a healthy tunnel dead
+   (`No response to 2 echo-requests`, seen on 15/10/2026 after a 226 min session). Six misses
+   tolerate about a minute, which is still well inside ssh's own `ServerAlive` window.

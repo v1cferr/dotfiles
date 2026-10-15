@@ -259,6 +259,7 @@ hash edit.
 | systemd | list, start, stop and restart units | none |
 | bluetooth | power, scan, connect, battery | none; Blueman stays as the BlueZ pairing agent, which the extension does not register |
 | github | issues, PRs, workflow runs, repo search | a personal access token |
+| vscode-recents | VS Code's File > Open Recent list (folders, files, SSH remotes); Enter opens it in VS Code | none |
 | pulseaudio | output and input devices (default, mute, volume in 5% steps or exact), per-app playback and recording streams, card profiles | none |
 | repositories (mine) | my GitHub accounts and FAI's GitLab in one list | the GitHub token above, FAI's `read_api` token |
 
@@ -276,6 +277,13 @@ never invoked"); upstream's own flake skips these two extensions for that reason
 was tried and also drops esbuild's platform binary, so only `usocket` goes, through a patched
 `packageLock` handed to `importNpmLock`. The system and session buses are path sockets, so the
 abstract-socket branch is never taken.
+
+**vscode-recents reads `~/.vscode-shared/sharedStorage/state.vscdb`**, where VS Code 1.142 keeps
+`history.recentlyOpenedPathsList` (59 entries on 15/10/2026); the old
+`~/.config/Code/User/globalStorage/state.vscdb` no longer has the key. It reads the file with
+sql.js (WebAssembly, no native build), which skips the `-wal` beside it, so a folder opened a
+moment ago can be missing until VS Code checkpoints. It runs `code` from PATH, which the profile
+provides. Opening the dotfiles themselves is the `dotfiles-code` script, not this.
 
 **pactl is pinned twice, by store path.** The built-in volume commands look it up on PATH once at
 startup (`QStandardPaths::findExecutable("pactl")`), and with nothing providing it they toasted

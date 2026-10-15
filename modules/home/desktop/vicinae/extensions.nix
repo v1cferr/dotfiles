@@ -1,4 +1,4 @@
-# Vicinae extensions: five from the pinned vicinaehq/extensions input, built offline from their
+# Vicinae extensions: six from the pinned vicinaehq/extensions input, built offline from their
 # lockfiles, and my own ./repositories. Why these, and how the tokens arrive: docs/notes/desktop/vicinae.md
 {
   config,
@@ -50,6 +50,7 @@ in
     (mk "systemd" (withoutUsocket "systemd")) # list, start, stop and restart units
     (mk "bluetooth" (withoutUsocket "bluetooth")) # power, scan, connect; Blueman stays as the pairing agent
     (mk "github" { }) # issues, PRs, workflow runs; its token rides VICINAE_OVERRIDES (default.nix)
+    (mk "vscode-recents" { }) # VS Code's File > Open Recent list, read from its state.vscdb
     # Audio devices and per-app volume. It runs pactl by bare name, so it is pinned here; pactl
     # comes from pulseaudio only as the client, PipeWire's pipewire-pulse is the server.
     (mk "pulseaudio" {

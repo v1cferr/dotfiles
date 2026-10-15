@@ -5,6 +5,7 @@ import {
   Color,
   getPreferenceValues,
   Icon,
+  Image,
   Keyboard,
   List,
   showToast,
@@ -32,22 +33,41 @@ type Repo = {
   description: string;
   url: string;
   sshUrl: string;
-  isPrivate: boolean;
+  // The account or group the repository lives under, and its avatar.
+  owner: string;
+  ownerUrl: string;
+  ownerAvatar: string;
+  visibility: string;
+  access: string; // my role on it, from the token's permissions
   isFork: boolean;
   isArchived: boolean;
+  language: string;
+  defaultBranch: string;
+  stars: number;
+  forks: number;
+  topics: string[];
+  createdAt: string;
   updatedAt: string;
 };
 
 type GithubRepo = {
   full_name: string;
   name: string;
-  owner: { login: string };
+  owner: { login: string; html_url: string; avatar_url: string };
   description: string | null;
   html_url: string;
   ssh_url: string;
+  visibility?: string;
   private: boolean;
   fork: boolean;
   archived: boolean;
+  language: string | null;
+  default_branch: string;
+  stargazers_count: number;
+  forks_count: number;
+  topics?: string[];
+  permissions?: { admin?: boolean; maintain?: boolean; push?: boolean; triage?: boolean };
+  created_at: string;
   pushed_at: string | null;
   updated_at: string;
 };
@@ -60,20 +80,48 @@ type GitlabProject = {
   web_url: string;
   ssh_url_to_repo: string;
   visibility: string;
+  namespace: { full_path: string; web_url: string; avatar_url: string | null };
   forked_from_project?: unknown;
   archived?: boolean;
+  default_branch?: string | null;
+  star_count: number;
+  forks_count: number;
+  topics?: string[];
+  permissions?: {
+    project_access: { access_level: number } | null;
+    group_access: { access_level: number } | null;
+  };
+  created_at: string;
   last_activity_at: string;
 };
 
 const cache = new Cache();
-const CACHE_KEY = "repos-v1";
+const CACHE_KEY = "repos-v2";
+const DETAIL_KEY = "show-detail";
 
 const prefs = getPreferenceValues<Preferences>();
 const owners = (prefs.githubOwners ?? "")
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean);
+const gitlabBase = (prefs.gitlabUrl ?? "").replace(/\/+$/, "");
 const gitlabTitle = prefs.gitlabTitle || "GitLab";
+
+const PLATFORM: Record<Source, { title: string; icon: Image.ImageLike }> = {
+  github: { title: "GitHub", icon: { source: Icon.Github, tintColor: Color.PrimaryText } },
+  gitlab: { title: "GitLab", icon: { source: Icon.Gitlab, tintColor: Color.Orange } },
+};
+
+// GitLab's access levels, as its UI names them.
+const GITLAB_ROLES: Record<number, string> = {
+  5: "Minimal access",
+  10: "Guest",
+  15: "Planner",
+  20: "Reporter",
+  30: "Developer",
+  40: "Maintainer",
+  50: "Owner",
+};
 
 // Follows the RFC 8288 Link header GitHub paginates with.
 function nextLink(header: string | null): string | null {
@@ -97,6 +145,15 @@ async function githubPages(url: string): Promise<GithubRepo[]> {
   return out;
 }
 
+function githubAccess(p: GithubRepo["permissions"]): string {
+  if (!p) return "";
+  if (p.admin) return "Admin";
+  if (p.maintain) return "Maintain";
+  if (p.push) return "Write";
+  if (p.triage) return "Triage";
+  return "Read";
+}
+
 // What the token can read (the private repos, mine or shared with me) plus each account's public
 // ones, which also covers accounts I am not a collaborator of.
 async function fetchGithub(): Promise<Repo[]> {
@@ -112,6 +169,9 @@ async function fetchGithub(): Promise<Repo[]> {
   for (const r of lists.flat()) {
     const owner = r.owner.login;
     if (wanted.size > 0 && !wanted.has(owner.toLowerCase())) continue;
+    // The token's copy carries my permissions; a public listing seen first must not hide them.
+    const seen = byName.get(r.full_name.toLowerCase());
+    if (seen?.access) continue;
     byName.set(r.full_name.toLowerCase(), {
       id: `github:${r.full_name}`,
       source: "github",
@@ -121,28 +181,47 @@ async function fetchGithub(): Promise<Repo[]> {
       description: r.description ?? "",
       url: r.html_url,
       sshUrl: r.ssh_url,
-      isPrivate: r.private,
+      owner,
+      ownerUrl: r.owner.html_url,
+      ownerAvatar: r.owner.avatar_url,
+      visibility: r.visibility ?? (r.private ? "private" : "public"),
+      access: githubAccess(r.permissions),
       isFork: r.fork,
       isArchived: r.archived,
+      language: r.language ?? "",
+      defaultBranch: r.default_branch,
+      stars: r.stargazers_count,
+      forks: r.forks_count,
+      topics: r.topics ?? [],
+      createdAt: r.created_at,
       updatedAt: r.pushed_at ?? r.updated_at,
     });
   }
   return [...byName.values()];
 }
 
+// GitLab hands back avatars as instance-relative paths when they are uploads.
+function absolute(url: string | null): string {
+  if (!url) return "";
+  return url.startsWith("/") ? `${gitlabBase}${url}` : url;
+}
+
 async function fetchGitlab(): Promise<Repo[]> {
-  const base = (prefs.gitlabUrl ?? "").replace(/\/+$/, "");
-  if (!base) return [];
+  if (!gitlabBase) return [];
   const headers: Record<string, string> = {};
   if (prefs.gitlabTokenFile) headers["PRIVATE-TOKEN"] = readFileSync(prefs.gitlabTokenFile, "utf8").trim();
   const out: Repo[] = [];
   for (let page: string | null = "1"; page; ) {
     const res: Response = await fetch(
-      `${base}/api/v4/projects?membership=true&order_by=last_activity_at&per_page=100&page=${page}`,
+      `${gitlabBase}/api/v4/projects?membership=true&order_by=last_activity_at&per_page=100&page=${page}`,
       { headers, signal: AbortSignal.timeout(8000) },
     );
     if (!res.ok) throw new Error(`GitLab ${res.status}`);
     for (const p of (await res.json()) as GitlabProject[]) {
+      const level = Math.max(
+        p.permissions?.project_access?.access_level ?? 0,
+        p.permissions?.group_access?.access_level ?? 0,
+      );
       out.push({
         id: `gitlab:${p.id}`,
         source: "gitlab",
@@ -152,9 +231,19 @@ async function fetchGitlab(): Promise<Repo[]> {
         description: p.description ?? "",
         url: p.web_url,
         sshUrl: p.ssh_url_to_repo,
-        isPrivate: p.visibility !== "public",
+        owner: p.namespace.full_path,
+        ownerUrl: p.namespace.web_url,
+        ownerAvatar: absolute(p.namespace.avatar_url),
+        visibility: p.visibility,
+        access: GITLAB_ROLES[level] ?? "",
         isFork: Boolean(p.forked_from_project),
         isArchived: Boolean(p.archived),
+        language: "",
+        defaultBranch: p.default_branch ?? "",
+        stars: p.star_count,
+        forks: p.forks_count,
+        topics: p.topics ?? [],
+        createdAt: p.created_at,
         updatedAt: p.last_activity_at,
       });
     }
@@ -182,6 +271,62 @@ function ago(iso: string): string {
   return "just now";
 }
 
+const day = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" });
+
+function avatar(r: Repo): Image.ImageLike {
+  if (!r.ownerAvatar) return { source: Icon.Person, tintColor: Color.SecondaryText };
+  return { source: r.ownerAvatar, fallback: Icon.Person, mask: Image.Mask.Circle };
+}
+
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+function Detail({ repo: r }: { repo: Repo }) {
+  const isPublic = r.visibility === "public";
+  return (
+    <List.Item.Detail
+      markdown={`## ${r.fullName}\n\n${r.description || "_No description._"}`}
+      metadata={
+        <List.Item.Detail.Metadata>
+          <List.Item.Detail.Metadata.Label
+            title="Platform"
+            text={r.source === "gitlab" ? `GitLab · ${new URL(gitlabBase).host}` : "GitHub"}
+            icon={PLATFORM[r.source].icon}
+          />
+          <List.Item.Detail.Metadata.Label title="Owner" text={r.owner} icon={avatar(r)} />
+          {r.access ? <List.Item.Detail.Metadata.Label title="My access" text={r.access} icon={Icon.Person} /> : null}
+          <List.Item.Detail.Metadata.TagList title="Visibility">
+            <List.Item.Detail.Metadata.TagList.Item
+              text={capitalize(r.visibility)}
+              icon={isPublic ? Icon.LockUnlocked : Icon.Lock}
+              color={isPublic ? Color.Green : Color.Yellow}
+            />
+            {r.isArchived ? <List.Item.Detail.Metadata.TagList.Item text="Archived" color={Color.Orange} /> : null}
+            {r.isFork ? <List.Item.Detail.Metadata.TagList.Item text="Fork" color={Color.Purple} /> : null}
+          </List.Item.Detail.Metadata.TagList>
+          <List.Item.Detail.Metadata.Separator />
+          {r.language ? <List.Item.Detail.Metadata.Label title="Language" text={r.language} icon={Icon.Code} /> : null}
+          {r.defaultBranch ? (
+            <List.Item.Detail.Metadata.Label title="Default branch" text={r.defaultBranch} icon={Icon.Tag} />
+          ) : null}
+          <List.Item.Detail.Metadata.Label title="Stars" text={String(r.stars)} icon={Icon.Star} />
+          <List.Item.Detail.Metadata.Label title="Forks" text={String(r.forks)} />
+          {r.topics.length > 0 ? (
+            <List.Item.Detail.Metadata.TagList title="Topics">
+              {r.topics.map((t) => (
+                <List.Item.Detail.Metadata.TagList.Item key={t} text={t} color={Color.Blue} />
+              ))}
+            </List.Item.Detail.Metadata.TagList>
+          ) : null}
+          <List.Item.Detail.Metadata.Separator />
+          <List.Item.Detail.Metadata.Label title="Last activity" text={`${ago(r.updatedAt)}`} />
+          <List.Item.Detail.Metadata.Label title="Created" text={day.format(new Date(r.createdAt))} />
+          <List.Item.Detail.Metadata.Link title="Link" target={r.url} text={r.url.replace(/^https:\/\//, "")} />
+        </List.Item.Detail.Metadata>
+      }
+    />
+  );
+}
+
 function readCache(): Repo[] {
   try {
     return JSON.parse(cache.get(CACHE_KEY) ?? "[]") as Repo[];
@@ -194,6 +339,7 @@ export default function Repositories() {
   const [repos, setRepos] = useState<Repo[]>(readCache);
   const [isLoading, setIsLoading] = useState(true);
   const [reloads, setReloads] = useState(0);
+  const [showDetail, setShowDetail] = useState(() => cache.get(DETAIL_KEY) !== "false");
 
   // Shows the cached list at once, then refreshes it. A source that fails (GitLab without the
   // VPN) keeps its cached entries and says so in a toast.
@@ -230,6 +376,12 @@ export default function Repositories() {
     };
   }, [reloads]);
 
+  const toggleDetail = () =>
+    setShowDetail((shown) => {
+      cache.set(DETAIL_KEY, String(!shown));
+      return !shown;
+    });
+
   const order = [...owners, gitlabTitle];
   const sections = [...new Set(repos.map((r) => r.section))].sort((a, b) => {
     const ia = order.indexOf(a);
@@ -238,46 +390,70 @@ export default function Repositories() {
   });
 
   return (
-    <List isLoading={isLoading} searchBarPlaceholder="Filter repositories by name...">
-      {sections.map((section) => (
-        <List.Section key={section} title={section}>
-          {repos
-            .filter((r) => r.section === section)
-            .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-            .map((r) => (
-              <List.Item
-                key={r.id}
-                id={r.id}
-                title={r.name}
-                subtitle={r.description}
-                keywords={[r.fullName]}
-                icon={r.isPrivate ? Icon.Lock : Icon.Book}
-                accessories={[
-                  ...(r.isArchived ? [{ tag: { value: "archived", color: Color.Orange } }] : []),
-                  ...(r.isFork ? [{ tag: { value: "fork", color: Color.Purple } }] : []),
-                  { text: { value: ago(r.updatedAt), color: Color.SecondaryText }, tooltip: r.updatedAt },
-                ]}
-                actions={
-                  <ActionPanel>
-                    <Action.OpenInBrowser title="Open in Browser" url={r.url} />
-                    <Action.CopyToClipboard title="Copy SSH Clone URL" content={r.sshUrl} />
-                    <Action.CopyToClipboard
-                      title="Copy URL"
-                      content={r.url}
-                      shortcut={Keyboard.Shortcut.Common.Copy}
-                    />
-                    <Action
-                      title="Refresh"
-                      icon={Icon.ArrowClockwise}
-                      shortcut={Keyboard.Shortcut.Common.Refresh}
-                      onAction={() => setReloads((n) => n + 1)}
-                    />
-                  </ActionPanel>
-                }
-              />
-            ))}
-        </List.Section>
-      ))}
+    <List isLoading={isLoading} isShowingDetail={showDetail} searchBarPlaceholder="Filter repositories by name...">
+      {sections.map((section) => {
+        const items = repos.filter((r) => r.section === section);
+        return (
+          <List.Section
+            key={section}
+            title={section}
+            subtitle={`${PLATFORM[items[0].source].title} · ${items.length}`}
+          >
+            {items
+              .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+              .map((r) => (
+                <List.Item
+                  key={r.id}
+                  id={r.id}
+                  title={r.name}
+                  subtitle={showDetail ? undefined : r.description}
+                  keywords={[r.fullName, r.owner, PLATFORM[r.source].title]}
+                  icon={PLATFORM[r.source].icon}
+                  detail={<Detail repo={r} />}
+                  accessories={[
+                    ...(r.visibility !== "public" ? [{ icon: Icon.Lock, tooltip: capitalize(r.visibility) }] : []),
+                    ...(showDetail
+                      ? []
+                      : [
+                          ...(r.isArchived ? [{ tag: { value: "archived", color: Color.Orange } }] : []),
+                          ...(r.isFork ? [{ tag: { value: "fork", color: Color.Purple } }] : []),
+                          { text: { value: ago(r.updatedAt), color: Color.SecondaryText }, tooltip: r.updatedAt },
+                        ]),
+                    { icon: avatar(r), tooltip: r.owner },
+                  ]}
+                  actions={
+                    <ActionPanel>
+                      <Action.OpenInBrowser title="Open in Browser" url={r.url} />
+                      <Action.CopyToClipboard title="Copy SSH Clone URL" content={r.sshUrl} />
+                      <Action.CopyToClipboard
+                        title="Copy URL"
+                        content={r.url}
+                        shortcut={Keyboard.Shortcut.Common.Copy}
+                      />
+                      <Action.OpenInBrowser
+                        title={`Open ${r.owner} in Browser`}
+                        url={r.ownerUrl}
+                        icon={Icon.Person}
+                      />
+                      <Action
+                        title={showDetail ? "Hide Details" : "Show Details"}
+                        icon={Icon.AppWindowSidebarRight}
+                        shortcut={{ modifiers: ["ctrl"], key: "d" }}
+                        onAction={toggleDetail}
+                      />
+                      <Action
+                        title="Refresh"
+                        icon={Icon.ArrowClockwise}
+                        shortcut={Keyboard.Shortcut.Common.Refresh}
+                        onAction={() => setReloads((n) => n + 1)}
+                      />
+                    </ActionPanel>
+                  }
+                />
+              ))}
+          </List.Section>
+        );
+      })}
     </List>
   );
 }

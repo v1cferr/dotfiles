@@ -287,10 +287,17 @@ native module, see how upstream's `flake.nix` builds it first.
 - the projects I am a member of on FAI's GitLab, through its API with the `fai_gitlab_token`
   (`read_api`, the glance band's), read from `/run/secrets` by path so it never sits in the settings.
 
-On 15/10/2026 that is 66 + 14 + 8 on GitHub (25 private) and 25 on GitLab. Enter opens the repo,
-and the actions copy the SSH clone URL or the URL, or refresh (Ctrl+R). The last list is cached, so
-it opens at once and refreshes behind; without the FAI VPN the GitLab part keeps its cached entries
-and a toast says it could not refresh.
+On 15/10/2026 that is 66 + 14 + 8 on GitHub (25 private) and 25 on GitLab. Each row shows where it
+lives at a glance: the platform's icon on the left (GitHub in the text color, GitLab in orange), a
+lock when it is not public, and the owner's avatar on the right (the account, or the GitLab group
+or user). A side panel, on by default and toggled with Ctrl+D (remembered), holds the rest: owner,
+my access (GitHub's Admin/Write/Read from the token's `permissions`, GitLab's role from the larger
+of project and group access), visibility, archived and fork, language, default branch, stars,
+forks, topics, last activity and creation date. Enter opens the repo, and the actions copy the SSH
+clone URL or the URL, open the owner's page, or refresh (Ctrl+R). The last list is cached, so it
+opens at once and refreshes behind; without the FAI VPN the GitLab part keeps its cached entries
+and a toast says it could not refresh. GitLab has no language in its project list, so that row is
+GitHub only.
 
 Its preferences are overrides in `default.nix` (provider `@v1cferr/repositories`), and its GitHub
 token is the same sops render as below. To change the list, edit `githubOwners` there. The

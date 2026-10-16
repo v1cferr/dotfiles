@@ -57,7 +57,11 @@ let
 
       up() { ping -c1 -W2 "$host" >/dev/null 2>&1; }
 
-      if up; then echo "the workstation is already up ($host)"; exit 0; fi
+      # --test sends to a machine that is ON, to watch the packet land with tcpdump over there.
+      test_mode=0
+      [ "''${1:-}" = "--test" ] && test_mode=1
+
+      if [ "$test_mode" = 0 ] && up; then echo "the workstation is already up ($host)"; exit 0; fi
 
       # With no tunnel there is no route to FAI, and failing here with the right cause avoids ghosts.
       if [ -z "$(ip -o link show type ppp)" ]; then
@@ -81,6 +85,9 @@ let
       # 2) unicast (warm ARP) and 3) a directed broadcast, which a router usually drops (RFC 2644)
       python3 ${senderLocal} && echo "  ok: unicast plus a directed broadcast through the tunnel"
 
+      # A machine that is on always answers, so waiting would only print a false "IT WOKE UP".
+      if [ "$test_mode" = 1 ]; then echo "test mode: sent, check the tcpdump on the workstation"; exit 0; fi
+
       echo -n "waiting for the host to answer (up to 120s)"
       for _ in $(seq 1 40); do
         if up; then echo; echo "IT WOKE UP: $host is answering."; exit 0; fi
@@ -96,7 +103,7 @@ let
 in
 {
   # THE RECEIVING SIDE IS NOT DECLARABLE FROM HERE (somebody else's Ubuntu). Arming WoL there is a
-  # manual netplan step, and it is measured as NOT armed: docs/notes/network/fai-workstation.md
+  # manual netplan step, measured as armed on 16/10/2026: docs/notes/network/fai-workstation.md
   options.my.fai.workstation = {
     host = lib.mkOption {
       type = lib.types.str;

@@ -79,6 +79,23 @@ To persist it: that machine uses NETPLAN plus systemd-networkd, NOT NetworkManag
 `wakeonlan: true` and run `sudo netplan apply`. It usually also requires "Wake on LAN/PCIe" TURNED
 ON in the BIOS/UEFI.
 
-**The measured state (jul/2026)**: `/sys/class/net/enp7s0/device/power/wakeup = disabled`, so it is
-almost certainly NOT armed. There is no confirming it from here: ethtool's Wake-on fields require
-root, and without it the read gives "netlink error: Operation not permitted".
+**The measured state (16/10/2026): ARMED and persistent.** `sudo ethtool enp7s0` gives
+`Supports Wake-on: pg` and `Wake-on: g`, and the netplan file carries `wakeonlan: true` (the
+`00-installer-config.yaml.bak-prewol` next to it is the copy from before arming it, 16/06).
+
+**Do not read `/sys/class/net/enp7s0/device/power/wakeup` as proof.** It says `disabled` with WoL
+armed, and that misread is what made the july note call it "NOT armed". Only ethtool counts, and its
+Wake-on fields need root ("netlink error: Operation not permitted" without it), so the read has to
+be done by hand on the workstation.
+
+**Checking the path while the machine is on:** plain `wake-workstation` quits early when the host
+answers, so `--test` sends anyway and skips the wait. Watch it land on the workstation:
+
+```sh
+sudo tcpdump -ni enp7s0 'udp and (port 9 or port 7)'   # on the workstation
+wake-workstation --test                                 # here
+```
+
+That proves the packet reaches the NIC over L2. It does NOT prove a wake from S5: with ErP/Deep
+Sleep on in the BIOS the NIC loses power when the machine is off, and only a real power-off test
+answers that.

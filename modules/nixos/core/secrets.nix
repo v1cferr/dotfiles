@@ -14,6 +14,7 @@ let
     bitwarden-cli
     git
     jq
+    pinentry-qt
     sops
     writeShellApplication
     ;
@@ -110,19 +111,33 @@ in
 
   # The Vicinae GitHub extension's token, as a settings override the --user server merges at start
   # (modules/home/desktop/vicinae). Inert until the index and the vault both hold the key.
-  sops.templates = lib.optionalAttrs (config.sops.secrets ? vicinae_github_token) {
-    "vicinae-github.json" = {
-      owner = "v1cferr";
-      mode = "0400";
-      # The same token for both: the GitHub extension and the local Repositories one.
-      content = builtins.toJSON {
-        providers = {
-          "@knoopx/github".preferences.personalAccessToken = config.sops.placeholder.vicinae_github_token;
-          "@v1cferr/repositories".preferences.githubToken = config.sops.placeholder.vicinae_github_token;
+  sops.templates =
+    lib.optionalAttrs (config.sops.secrets ? vicinae_github_token) {
+      "vicinae-github.json" = {
+        owner = "v1cferr";
+        mode = "0400";
+        # The same token for both: the GitHub extension and the local Repositories one.
+        content = builtins.toJSON {
+          providers = {
+            "@knoopx/github".preferences.personalAccessToken = config.sops.placeholder.vicinae_github_token;
+            "@v1cferr/repositories".preferences.githubToken = config.sops.placeholder.vicinae_github_token;
+          };
+        };
+      };
+    }
+    # rbw's config, for Vicinae's Bitwarden extension: only the email is private, and the repo is
+    # public. Linked from ~/.config/rbw by modules/home/desktop/vicinae/bitwarden.nix.
+    // lib.optionalAttrs (config.sops.secrets ? rbw_email) {
+      "rbw-config.json" = {
+        owner = "v1cferr";
+        mode = "0400";
+        content = builtins.toJSON {
+          email = config.sops.placeholder.rbw_email;
+          lock_timeout = 3600; # an hour idle, then the agent forgets the keys
+          pinentry = lib.getExe pinentry-qt;
         };
       };
     };
-  };
 
   environment.systemPackages = [ sync-secrets ];
 }

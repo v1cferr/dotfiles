@@ -14,6 +14,7 @@ let
     ffmpegthumbnailer
     poppler-utils
     pulseaudio
+    rbw
     writeText
     ;
 
@@ -77,6 +78,10 @@ let
           defaultModel = "qwen3.5:latest";
           targetLanguage = "English";
         };
+        "@bl4zee1g/bitwarden" = {
+          preferences.rbwPath = lib.getExe rbw;
+          entrypoints.browse-vault.alias = "bw";
+        };
         "@leiserfg/ssh".preferences.terminal = "kitty ssh"; # it runs `<terminal> <host>`
         "@c4n4m1/zoxide-recent-directories".preferences = {
           application = "code";
@@ -121,6 +126,7 @@ let
 in
 {
   imports = [
+    ./bitwarden.nix
     ./extensions.nix
     ./scripts.nix
     ./shortcuts.nix

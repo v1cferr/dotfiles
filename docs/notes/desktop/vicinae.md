@@ -189,6 +189,7 @@ draw the eye.
 | SUPER+R | Repositories |
 | SUPER+K | VS Code's recent projects |
 | SUPER+SHIFT+E | the emoji picker |
+| SUPER+SHIFT+P | the Bitwarden vault |
 
 Vicinae binds nothing globally itself: on Hyprland its global shortcuts need `ext-hotkey-v1`, a
 protocol Hyprland has not merged, so every key above is a `hl.bind` in `keybinds.lua`, and there is
@@ -198,7 +199,7 @@ nothing to overlap. A key for one command is a deeplink, `vicinae
 
 **Aliases and favorites** are overrides in `default.nix`. An alias puts its command first as soon
 as the search starts with it, above any score: `rep` (Repositories), `rec` (VS Code recents),
-`dot` (the dotfiles in VS Code), `vol` (output devices). The favorites, shown on the empty root, are
+`dot` (the dotfiles in VS Code), `vol` (output devices), `bw` (the Bitwarden vault). The favorites, shown on the empty root, are
 the clipboard history, Repositories and VS Code recents.
 
 ## URL shortcuts
@@ -276,6 +277,7 @@ hash edit.
 | systemd | list, start, stop and restart units | none |
 | bluetooth | power, scan, connect, battery | none; Blueman stays as the BlueZ pairing agent, which the extension does not register |
 | github | issues, PRs, workflow runs, repo search | a personal access token |
+| bitwarden | search the vault and copy a password, username, TOTP or URL, through `rbw` | my Bitwarden account, unlocked by `rbw` (below) |
 | ssh | the hosts of `~/.ssh/config` (`ssh.nix`), opened as `kitty ssh <host>` | none; the keys are the agent's |
 | zoxide-recent-directories | zoxide's directories by frecency; Enter opens VS Code, the alternative action Dolphin | none |
 | timer | timers in plain words ("25m Pomodoro"), each a transient `systemd-run --user` timer that ends in `notify-send` | none |
@@ -379,6 +381,36 @@ lets through: an untracked file is not in the flake's source, so without the exc
 had an empty `assets/`. To work on it: `npm install` in a copy of the folder, `npx tsc --noEmit`,
 and the lock goes back here. Do not run `vici build` in place, it installs into
 `~/.local/share/vicinae/extensions/` beside Home Manager's links.
+
+### Bitwarden
+
+`bitwarden.nix` (16/10/2026). The extension drives `rbw`, an unofficial Bitwarden CLI whose agent
+(`rbw-agent`) holds the decrypted keys in memory while unlocked, the price of a vault searchable
+from SUPER+SHIFT+P. The official `bw` CLI and the desktop app stay as they were; `sync-secrets`
+still uses `bw`.
+
+- **Unlock.** The extension shows "Press Enter to unlock" and runs `rbw unlock`, which opens
+  pinentry-qt for the master password. After `lock_timeout` (3600 s) idle the agent forgets the
+  keys and the next search asks again.
+- **Copy, not paste.** Copies go out with `concealed: true`, and Vicinae drops a concealed
+  selection from its history (`clipboard-mime.cpp`), so a password never lands in SUPER+SHIFT+V.
+  The Paste actions need `vicinae-input-server`, which is off on purpose, so they do nothing here.
+- **The config is a sops render.** rbw needs the account email in `~/.config/rbw/config.json`,
+  and the repo is public, so the file is `sops.templates."rbw-config.json"` in
+  `modules/nixos/core/secrets.nix` (owner me, 0400: email, `lock_timeout`, pinentry-qt's store
+  path), linked into place by `mkOutOfStoreSymlink`. rbw only reads that file; the device id and
+  the encrypted local copy of the vault live in `~/.local/share/rbw` and `~/.cache/rbw`.
+
+Setting it up, once:
+
+1. In Bitwarden, a Login item named **Bitwarden Email** with the account email in the password
+   field, the same shape as **Caddy ACME Email**.
+2. Add `"rbw_email": "Bitwarden Email"` to `secrets/bitwarden-secrets.json` (not before:
+   `dead-config` refuses an index entry with no value in `secrets.yaml`).
+3. `sync-secrets`, then `rebuild`: the template appears and so does the link.
+4. `rbw login` in a terminal (pinentry asks for the master password, and the 2FA code if the
+   account has one). If bitwarden.com refuses the login as an unknown client, `rbw register` with
+   the account's personal API key (Settings, Security, Keys) and then `rbw login` again.
 
 ### The GitHub token
 

@@ -1,4 +1,4 @@
-# Vicinae extensions: eleven from the pinned vicinaehq/extensions input, built offline from their
+# Vicinae extensions: twelve from the pinned vicinaehq/extensions input, built offline from their
 # lockfiles, and my own ./repositories. Why these, and how the tokens arrive: docs/notes/desktop/vicinae.md
 {
   config,
@@ -59,6 +59,7 @@ in
     (mk "systemd" (withoutUsocket "systemd")) # list, start, stop and restart units
     (mk "bluetooth" (withoutUsocket "bluetooth")) # power, scan, connect; Blueman stays as the pairing agent
     (mk "github" { }) # issues, PRs, workflow runs; its token rides VICINAE_OVERRIDES (default.nix)
+    (mk "bitwarden" { }) # the vault through rbw (bitwarden.nix); copies are concealed from history
     (mk "ssh" { }) # the hosts of ~/.ssh/config (ssh.nix), opened in kitty
     # zoxide's directories, opened in VS Code (Dolphin as the alternative); zoxide pinned by path.
     (mk "zoxide-recent-directories" {

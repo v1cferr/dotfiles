@@ -44,6 +44,7 @@ hl.bind(mainMod .. " + ALT + V",   hl.dsp.exec_cmd("clipboard-push"))  -- scp it
 hl.bind(mainMod .. " + R",         hl.dsp.exec_cmd("vicinae 'vicinae://launch/@v1cferr/repositories/repositories?toggle=true'"))  -- my repositories (GitHub + FAI GitLab)
 hl.bind(mainMod .. " + K",         hl.dsp.exec_cmd("vicinae 'vicinae://launch/@ShyAssassin/vscode-recents/open-recents?toggle=true'"))  -- VS Code's recent projects
 hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("vicinae 'vicinae://launch/core/search-emojis?toggle=true'"))  -- emoji picker
+hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("vicinae 'vicinae://launch/@bl4zee1g/bitwarden/browse-vault?toggle=true'"))  -- Bitwarden vault (rbw)
 
 -- VPN: SUPER+N = UFSCar (GlobalProtect), SHIFT+N = FAI (nxBender), CTRL+N disconnects all.
 -- On-demand systemd services (modules/nixos/network/vpn.nix); the `vpn` CLI needs no password (polkit).

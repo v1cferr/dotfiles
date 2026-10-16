@@ -30,3 +30,9 @@ somebody else's FUSE, root cannot `lstat` it, and the VPS has its own backup.
 picked), while Go's SSH library inside rclone offers ECDSA first and then refuses the handshake with
 `knownhosts: key mismatch`, even though the host is the same. `host_key_algorithms = "ssh-ed25519"`
 pins it to the key that is on file.
+
+**A write into a root-owned directory LOOKS like it worked.** With `vfs-cache-mode = "writes"` the
+write lands in the local cache first, so `touch ~/VPS/etc/x` succeeds and the file even shows up in
+the listing. The upload is what fails (`Update Create failed: permission denied` in
+`journalctl --user -u 'rclone-mount:.@vps'`), and rclone keeps retrying it. The file never reaches
+the VPS; deleting it from `~/VPS` drops it from the cache. Measured on 16/10/2026.

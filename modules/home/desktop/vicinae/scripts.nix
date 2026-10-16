@@ -145,6 +145,14 @@ let
       text = "loginctl lock-session";
     }
     {
+      name = "away-screen";
+      glyph = "md-moon_waning_crescent";
+      title = "Away screen";
+      group = "Desktop";
+      # A beat later, so the Enter that launched this is released before the screen starts listening.
+      text = "setsid -f sh -c 'sleep 0.5; qs ipc call away on'";
+    }
+    {
       name = "keybinds";
       glyph = "md-keyboard_outline";
       title = "Show keybind cheatsheet";

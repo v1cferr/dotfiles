@@ -8,6 +8,7 @@ import "root:/notifications"
 import "root:/osd"
 import "root:/media"
 import "root:/caption"
+import "root:/away"
 
 ShellRoot {
     id: root
@@ -27,4 +28,7 @@ ShellRoot {
     // Quickshell owns org.freedesktop.Notifications: the daemon is Notifs.qml and the UI is
     // Notifications.qml. The bar's bell reads Notifs.count/dnd.
     Notifications {}
+
+    // The away screen: black plus dark LEDs, Enter to leave. The state is Away.qml.
+    AwayScreen {}
 }

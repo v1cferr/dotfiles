@@ -31,3 +31,30 @@ Two ways to really cut the panels were ruled out:
   ([`sunshine.md`](../network/sunshine.md)).
 
 So the screens stay on and show black, which is what the user asked for anyway.
+
+## Black is a Quickshell overlay that holds the keyboard
+
+[`Away.qml`](../../../modules/home/desktop/quickshell/Away.qml) keeps the state and the IPC
+(`qs ipc call away on|off|toggle`), and
+[`away/AwayScreen.qml`](../../../modules/home/desktop/quickshell/away/AwayScreen.qml) draws one
+black layer per monitor on the `overlay` layer, over the bar. Entering also turns do not disturb
+on (a toast would light the screen up) and runs `rgb-lights off`; leaving restores the previous
+DND and runs `rgb-lights on`.
+
+Three details carry the design:
+
+- **Exclusive keyboard focus.** Every key lands on the overlay and is dropped, so a cat on the
+  keyboard types nothing into the agent's terminal. Only Enter is handled, and it leaves. The
+  mouse does nothing, and the cursor is blanked.
+- **An idle inhibitor.** hypridle's 5-min lock would otherwise draw hyprlock over the black and
+  light the room. The overlay holds a Wayland idle inhibitor while it is up, which hypridle
+  honours (its `ignore_dbus_inhibit` only covers D-Bus). The idle clock starts over on Enter, so
+  walking away again still locks.
+- **No lock of its own.** Enter alone brings the desktop back, by choice. If the room is not
+  trusted, lock first (SUPER+L) and then go away.
+
+It is reached from the moon pill next to the tray (it only turns the screen on, since the overlay
+covers it) and from "Away screen" in Vicinae, which waits half a second so the Enter that launched
+it is released before the overlay starts listening.
+
+A Quickshell restart while away drops the overlay but not the LEDs: `rgb-lights on` fixes them.

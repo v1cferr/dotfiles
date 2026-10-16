@@ -864,6 +864,11 @@ Scope {
                 title: "Idle: " + (root.hypridleOn ? "on" : "off"),
                 lines: [root.hypridleOn ? "hypridle runs its idle timeouts" : "hypridle is stopped: nothing happens on idle", "Click: turn it " + (root.hypridleOn ? "off" : "on")]
             };
+        if (key === "away")
+            return {
+                title: "Away screen",
+                lines: ["Black screens and dark LEDs, the PC keeps working", "Click: go away", "Enter: come back"]
+            };
         if (key === "tray" && root.hintTray) {
             const t = root.hintTray;
             const desc = (t.tooltipDescription || "").replace(/<[^>]*>/g, "").trim();
@@ -2051,7 +2056,7 @@ Scope {
                     }
                 }
 
-                // RIGHT: temp, usage, vpn, network, audio, hypridle, the tray
+                // RIGHT: temp, usage, vpn, network, audio, hypridle, away, the tray
                 Group {
                     visible: !bar.compact
                     anchors.right: parent.right
@@ -2121,6 +2126,17 @@ Scope {
                         accent: root.hypridleOn ? Theme.colGreen : Theme.colRed
                         onHoveredChanged: root.hoverHint("idle", idlePill, barContent, bar.screen, hovered)
                         onClicked: root.launch(["sh", "-c", "systemctl --user is-active --quiet hypridle.service && systemctl --user stop hypridle.service || systemctl --user start hypridle.service"])
+                    }
+                    Pill {
+                        // The away screen (Away.qml): it covers the bar too, so this only ever turns it on.
+                        id: awayPill
+                        icon: "󰽥"
+                        accent: Theme.colLavender
+                        onHoveredChanged: root.hoverHint("away", awayPill, barContent, bar.screen, hovered)
+                        onClicked: {
+                            root.hintVisible = false;
+                            Away.enter();
+                        }
                     }
                     // The system tray (StatusNotifier), one background for the group. Left=activate,
                     // middle=secondaryActivate, scroll, right=the native menu.

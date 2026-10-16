@@ -421,10 +421,13 @@ in
   # kills every TCP on the old one; `rotated` lets ssh.nix drop the dead masters at once.
   systemd.tmpfiles.rules = [ "d /run/vpn-fai 0755 root root -" ];
   environment.etc."ppp/ip-up".source = writeShellScript "ppp-ip-up" ''
+    # pppd runs this under umask 077, and a 0600 `rotated` cannot be watched by MY systemd (inotify
+    # needs read access), so the path unit fired once and never again. umask covers a fresh /run,
+    # chmod a file that already exists.
+    umask 022
     prev=$(${coreutils}/bin/cat /run/vpn-fai/ip 2>/dev/null || true)
     echo "$4" > /run/vpn-fai/ip
     if [ "$prev" != "$4" ]; then ${coreutils}/bin/touch /run/vpn-fai/rotated; fi
-    # pppd runs this under umask 077, and a umask would not fix a file that already exists.
     ${coreutils}/bin/chmod 0644 /run/vpn-fai/ip /run/vpn-fai/rotated
   '';
 

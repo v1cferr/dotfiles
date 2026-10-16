@@ -50,7 +50,18 @@ in
     (mk "systemd" (withoutUsocket "systemd")) # list, start, stop and restart units
     (mk "bluetooth" (withoutUsocket "bluetooth")) # power, scan, connect; Blueman stays as the pairing agent
     (mk "github" { }) # issues, PRs, workflow runs; its token rides VICINAE_OVERRIDES (default.nix)
-    (mk "vscode-recents" { }) # VS Code's File > Open Recent list, read from its state.vscdb
+    # VS Code's File > Open Recent list, read from its state.vscdb. Patched twice: no existsSync
+    # per entry, which hung the whole list on an unreachable ~/FAI-workstation mount (entries show
+    # unchecked, as VS Code shows them); and no "Remove from Recents", which rewrote the database
+    # VS Code holds open in WAL mode.
+    (mk "vscode-recents" {
+      postPatch = ''
+        substituteInPlace src/helpers.ts \
+          --replace-fail 'return existsSync(projectPath);' 'return true;'
+        substituteInPlace src/components/ProjectActions.tsx \
+          --replace-fail '{onRemove && (' '{false && onRemove && ('
+      '';
+    })
     # Audio devices and per-app volume. It runs pactl by bare name, so it is pinned here; pactl
     # comes from pulseaudio only as the client, PipeWire's pipewire-pulse is the server.
     (mk "pulseaudio" {

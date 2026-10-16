@@ -285,6 +285,14 @@ sql.js (WebAssembly, no native build), which skips the `-wal` beside it, so a fo
 moment ago can be missing until VS Code checkpoints. It runs `code` from PATH, which the profile
 provides. Opening the dotfiles themselves is the `dotfiles-code` script, not this.
 
+Two patches, both `--replace-fail`. **No existence check per entry**: upstream calls `existsSync`
+on every local path, and on 16/10/2026 the list never loaded because several entries live under
+`~/FAI-workstation`, the rclone mount, while the workstation was unreachable through an
+apparently up VPN. A `stat` there sits in D state until rclone gives up (minutes), and a sync call
+freezes the extension's event loop with it. Entries now show unchecked, which is what VS Code's own
+Open Recent does. **No "Remove from Recents"**: it rewrote `state.vscdb` from an in-memory copy
+while VS Code holds the file open in WAL mode, which can drop or corrupt VS Code's own writes.
+
 **pactl is pinned twice, by store path.** The built-in volume commands look it up on PATH once at
 startup (`QStandardPaths::findExecutable("pactl")`), and with nothing providing it they toasted
 "Failed to set volume" while the journal said `pactl not found, audio control will not work`. The

@@ -238,7 +238,12 @@ directory Vicinae scans and watches. They call the existing CLIs by name, the sa
 | Group | Commands |
 | --- | --- |
 | VPN | Connect FAI, Connect UFSCar, Disconnect (`vpn connect`/`disconnect`, compact mode shows its answer) |
-| Desktop | SSH: FAI workstation (kitty), Restart Quickshell, Shuffle wallpapers, Lock session, Show keybind cheatsheet |
+| Desktop | SSH: FAI workstation (kitty), Restart Quickshell, Shuffle wallpapers, Lock session, Away screen, Show keybind cheatsheet, RGB lights on/off (`rgb-lights`), Reload Hyprland |
+| Screenshot | Select an area (`flameshot gui`), Main monitor, Second monitor (`flameshot-screen <monitor>`, to the clipboard), each 0.3 s after the window closes so Vicinae is not in the shot |
+| Night light | Toggle, Natural colors, 3000K, 2000K: the same commands SUPER+F9 and its modifiers run |
+| Notifications | Toggle do not disturb, Clear (`qs ipc call notif dnd`/`clear`) |
+| Hosts | Wake the FAI workstation, RDP: T480; both in a kitty that stays open, since they talk back (freerdp asks for the password there) |
+| Downloads | Download a MEGA link: an argument field for the link, then `mega-dl` in kitty |
 | System | NixOS rebuild: `needsConfirmation`, then a visible kitty running `rebuild`, so nh's sudo prompt and the log stay in front of me |
 | Links | FAI Dashboard, GitHub, dotfiles on GitHub, dotfiles in VS Code |
 
@@ -252,10 +257,11 @@ only accepts a text glyph as an icon when the glyph is in its Unicode/emoji tabl
 Font private-use range is not. Replacing those would mean patching Vicinae and building it locally
 on every bump, so they stay.
 
-To add one, add an entry to the list in `scripts.nix` (`name`, `title`, `group`, `glyph`, optional `mode`
-and `confirm`). `vicinae script check <file>` validates a header; it prints nothing for a good one
-and the error for a bad one, and it exits 0 either way, so read its output. All thirteen passed on
-13/10/2026.
+To add one, add an entry to the list in `scripts.nix` (`name`, `title`, `group`, `glyph`, optional `mode`,
+`confirm` and `arguments`, a list of placeholders that become `@vicinae.argumentN` text fields and
+reach the script as `$1`, `$2`...). `vicinae script check <file>` validates a header; it prints nothing for a good one
+and the error for a bad one, and it exits 0 either way, so read its output. All 29 passed on
+16/10/2026.
 
 ## Extensions
 

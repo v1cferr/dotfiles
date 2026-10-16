@@ -66,6 +66,7 @@ let
       glyph,
       mode ? "silent",
       confirm ? false,
+      arguments ? [ ], # placeholders of text arguments, passed to the script as $1, $2...
       text,
     }:
     writeShellApplication {
@@ -81,9 +82,35 @@ let
         # @vicinae.packageName ${group}
         # @vicinae.icon ${icon glyph}
         ${lib.optionalString confirm "# @vicinae.needsConfirmation true"}
+        ${lib.concatImapStrings (
+          i: placeholder:
+          "# @vicinae.argument${toString i} ${
+            builtins.toJSON {
+              type = "text";
+              inherit placeholder;
+            }
+          }\n"
+        ) arguments}
         ${text}
       '';
     };
+
+  # Launched a beat after the window closes, so it is not in the capture or holding the focus.
+  later = cmd: "setsid -f sh -c ${lib.escapeShellArg "sleep 0.3; ${cmd}"}";
+
+  # A CLI that talks back, in a kitty that stays open to show the answer.
+  inKitty = title: cmd: "setsid -f kitty --hold --title ${lib.escapeShellArg title} ${cmd}";
+
+  # The same four states SUPER+F9 and its modifiers set (keybinds.lua).
+  sunset = name: title: glyph: text: {
+    inherit
+      name
+      title
+      glyph
+      text
+      ;
+    group = "Night light";
+  };
 
   openUrl = name: title: glyph: url: {
     inherit name title glyph;
@@ -159,6 +186,101 @@ let
       group = "Desktop";
       # Detached, so the cheatsheet's dmenu opens after this command's window has closed.
       text = "setsid -f keybinds-cheatsheet";
+    }
+    {
+      name = "screenshot-area";
+      glyph = "md-selection_drag";
+      title = "Screenshot: select an area";
+      group = "Screenshot";
+      text = later "flameshot gui";
+    }
+    {
+      name = "screenshot-main";
+      glyph = "md-monitor_screenshot";
+      title = "Screenshot: main monitor";
+      group = "Screenshot";
+      text = later "flameshot-screen ${osConfig.my.monitors.primary}";
+    }
+    {
+      name = "screenshot-second";
+      glyph = "md-monitor_screenshot";
+      title = "Screenshot: second monitor";
+      group = "Screenshot";
+      text = later "flameshot-screen ${osConfig.my.monitors.secondary}";
+    }
+    (sunset "night-light-toggle" "Toggle night light" "md-theme_light_dark" ''
+      if systemctl --user is-active --quiet hyprsunset; then
+        systemctl --user stop hyprsunset
+      else
+        systemctl --user start hyprsunset
+      fi
+    '')
+    (sunset "night-light-off" "Night light: natural colors" "md-weather_sunny"
+      "hyprctl hyprsunset identity"
+    )
+    (sunset "night-light-3000" "Night light: 3000K" "md-weather_night"
+      "hyprctl hyprsunset temperature 3000"
+    )
+    (sunset "night-light-2000" "Night light: 2000K" "md-moon_waning_crescent"
+      "hyprctl hyprsunset temperature 2000"
+    )
+    {
+      name = "notifications-dnd";
+      glyph = "md-bell_off_outline";
+      title = "Toggle do not disturb";
+      group = "Notifications";
+      text = "qs ipc call notif dnd";
+    }
+    {
+      name = "notifications-clear";
+      glyph = "md-notification_clear_all";
+      title = "Clear notifications";
+      group = "Notifications";
+      text = "qs ipc call notif clear";
+    }
+    {
+      name = "rgb-on";
+      glyph = "md-led_on";
+      title = "RGB lights on";
+      group = "Desktop";
+      text = "rgb-lights on";
+    }
+    {
+      name = "rgb-off";
+      glyph = "md-led_off";
+      title = "RGB lights off";
+      group = "Desktop";
+      text = "rgb-lights off";
+    }
+    {
+      name = "reload-hyprland";
+      glyph = "md-reload";
+      title = "Reload Hyprland";
+      group = "Desktop";
+      text = "hyprctl reload";
+    }
+    {
+      name = "wake-workstation";
+      glyph = "md-power";
+      title = "Wake the FAI workstation";
+      group = "Hosts";
+      text = inKitty "Wake workstation" "wake-workstation";
+    }
+    {
+      # freerdp asks for the password on its terminal.
+      name = "t480";
+      glyph = "md-remote_desktop";
+      title = "RDP: T480";
+      group = "Hosts";
+      text = inKitty "T480" "t480";
+    }
+    {
+      name = "mega-dl";
+      glyph = "md-download";
+      title = "Download a MEGA link";
+      group = "Downloads";
+      arguments = [ "MEGA link" ];
+      text = inKitty "mega-dl" ''mega-dl "$1"'';
     }
     {
       # A visible terminal: nh's sudo prompt and the build log stay in front of me.

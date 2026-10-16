@@ -36,6 +36,17 @@ AND 7, because an old NIC sometimes only listens on 7.
 It checks for a `ppp` link first, because with no tunnel there is no route to FAI, and failing
 there with the right cause avoids chasing ghosts. Then it waits up to 120 s for a ping.
 
+## `ws`: a shell that outlives the tunnel
+
+The SonicWall resets the VPN every 30 min to 3 h ([vpn.md](vpn.md)), and the reconnect usually
+brings a new IP, so no TCP session survives it. Nothing on this side prevents that, so the work
+lives in a tmux ON the workstation (tmux 3.6 is already installed there, and running it changes no
+config) and `ws [session]` reattaches to it in a loop: ssh's own failure (exit 255) means the
+tunnel dropped, so it waits 3 s and reattaches; a detach or an `exit` returns anything else and
+ends the loop. Combined with the master drop on IP rotation, it is back about as soon as the
+tunnel is. mosh would roam across the IP change by itself, but it needs `mosh-server` installed
+over there, and that machine is not mine to configure.
+
 ## The mount
 
 `~/FAI-workstation` is the workstation's whole root over rclone SFTP with a VFS cache, so it shows

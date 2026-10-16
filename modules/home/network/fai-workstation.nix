@@ -1,5 +1,5 @@
 # The FAI workstation: the host's SSOT (rule 11, at the lowest level that needs it) plus
-# `wake-workstation`. Why 3 WoL paths and why python: docs/notes/network/fai-workstation.md
+# `wake-workstation` and `ws`. Why 3 WoL paths and why python: docs/notes/network/fai-workstation.md
 {
   config,
   lib,
@@ -11,6 +11,7 @@ let
   # Rule 19: everything this module reaches for, named once. deadnix fails the build on an
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
+    coreutils
     iproute2
     iputils
     openssh
@@ -101,6 +102,35 @@ let
       exit 1
     '';
   };
+
+  # A shell on the workstation that OUTLIVES the tunnel: the SonicWall resets the VPN every
+  # 30 min to 3 h, so the work lives in a tmux there and this reattaches until I leave it.
+  wsCli = writeShellApplication {
+    name = "ws";
+    runtimeInputs = [
+      openssh
+      iproute2
+      coreutils
+    ];
+    text = ''
+      session=''${1:-main}
+
+      if [ -z "$(ip -o link show type ppp)" ]; then
+        echo "the FAI VPN is down, run 'vpn connect fai' first." >&2
+        exit 1
+      fi
+
+      while :; do
+        # 255 is ssh's OWN failure (the tunnel went away); anything else came from the remote side,
+        # a detach or an `exit`, and means I am done.
+        rc=0
+        ssh -t workstation tmux new-session -A -s "$session" || rc=$?
+        if [ "$rc" -ne 255 ]; then exit "$rc"; fi
+        echo "lost the workstation; reattaching to tmux '$session' in 3s (Ctrl+C quits)..." >&2
+        sleep 3
+      done
+    '';
+  };
 in
 {
   # THE RECEIVING SIDE IS NOT DECLARABLE FROM HERE (somebody else's Ubuntu). Arming WoL there is a
@@ -128,5 +158,8 @@ in
     };
   };
 
-  config.home.packages = [ wakeCli ];
+  config.home.packages = [
+    wakeCli
+    wsCli
+  ];
 }

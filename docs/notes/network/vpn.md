@@ -193,6 +193,22 @@ The `~/FAI-workstation` rclone mount comes up and goes down WITH the FAI VPN
 started with `--no-block` so it does not wait on the tunnel; the service retries until the host is
 reachable.
 
+## The SonicWall resets the session, and the reconnect changes the IP
+
+Measured over 7 days to 16/10/2026: **86 drops**, nearly all `ERROR Connection reset by peer` on
+nxBender's control connection, with LCP echoes answering normally right up to it. So it is the
+appliance closing the session (every 30 min to 3 h), not loss on this side, and no client setting
+prevents it. The restart counter does reset (each drop restarts at "counter is at 1"), so the
+tunnel is back in 10 to 40 s.
+
+What hurts is the IP: the pool hands out `192.168.50.1` to `.9`, and most reconnects draw a
+different one. Every TCP on the old address is dead, ssh included, but a multiplexed master only
+notices after ServerAlive (15 s x 8 = 2 min), and until then VS Code and every new `ssh workstation`
+hang on it. So pppd's `/etc/ppp/ip-up` (in `vpn.nix`) writes the IP to `/run/vpn-fai/ip` and,
+when it changed, touches `/run/vpn-fai/rotated`; a user path unit in
+[`ssh.nix`](../../../modules/home/shell/ssh.nix) reacts with `ssh -O exit` on every host carrying
+a master. When the same IP comes back, nothing is touched, because those sessions can survive.
+
 ## Removed on 30/07: the `menu` subcommand
 
 It opened a loose rofi in the middle of the screen. The UI is now a popover ANCHORED to the bar

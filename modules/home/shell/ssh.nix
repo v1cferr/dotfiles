@@ -1,8 +1,17 @@
 # The SSH client config. The private key is state, so it comes from the backup (rule 6).
 # Every timeout here is sized to VS Code's 17s budget: docs/notes/network/ssh.md
-{ config, osConfig, ... }:
+{
+  config,
+  osConfig,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
+  # Rule 19: everything this module reaches for, named once.
+  inherit (pkgs) openssh writeShellScript;
+
   ws = config.my.fai.workstation; # SSOT: modules/home/network/fai-workstation.nix (rule 11)
   t480 = config.my.t480; # SSOT: modules/home/network/t480.nix, shared with the `t480` RDP wrapper
   # My brother's PC. One address, DUAL BOOT, so three blocks here share it (rule 11 inside the file).
@@ -22,6 +31,12 @@ let
     ConnectionAttempts = 2; # a freshly raised VPN usually refuses the 1st attempt
   };
   # A master stuck in a tunnel that died? `ssh -O exit workstation` kills the socket right away.
+
+  # The hosts riding the FAI tunnel are exactly the ones with a master (faiResilience). Each
+  # entry is a home-manager DAG node, so its options sit under `.data`.
+  faiHosts = lib.attrNames (
+    lib.filterAttrs (_: h: h.data ? ControlMaster) config.programs.ssh.settings
+  );
 in
 {
   programs.ssh = {
@@ -114,6 +129,26 @@ in
           TERM = "xterm-256color";
         };
       };
+    };
+  };
+
+  # When the FAI tunnel comes back on a NEW IP (vpn.nix touches the file from pppd's ip-up), every
+  # master on the old one is dead but would only notice after ServerAlive's 2 min, holding VS Code
+  # and every new `ssh` hostage. Dropping them now makes the next connection open a fresh one.
+  systemd.user.paths.ssh-fai-rotate = {
+    Unit.Description = "Watches the FAI tunnel for a new IP";
+    Path.PathModified = "/run/vpn-fai/rotated";
+    Install.WantedBy = [ "default.target" ];
+  };
+  systemd.user.services.ssh-fai-rotate = {
+    Unit.Description = "Drops the ssh masters left on the old FAI tunnel IP";
+    Service = {
+      Type = "oneshot";
+      ExecStart = writeShellScript "ssh-fai-rotate" ''
+        for h in ${lib.escapeShellArgs faiHosts}; do
+          ${openssh}/bin/ssh -O exit "$h" 2>/dev/null || true # no master is the common case
+        done
+      '';
     };
   };
 }

@@ -416,6 +416,16 @@ in
     startLimitIntervalSec = 0;
   };
 
+  # pppd (here only nxBender's) runs this on every tunnel up, with the local IP as $4. The SonicWall
+  # resets the session every 30 min to 3 h and the reconnect usually draws a NEW pool IP, which
+  # kills every TCP on the old one; `rotated` lets ssh.nix drop the dead masters at once.
+  systemd.tmpfiles.rules = [ "d /run/vpn-fai 0755 root root -" ];
+  environment.etc."ppp/ip-up".source = writeShellScript "ppp-ip-up" ''
+    prev=$(${coreutils}/bin/cat /run/vpn-fai/ip 2>/dev/null || true)
+    echo "$4" > /run/vpn-fai/ip
+    if [ "$prev" != "$4" ]; then ${coreutils}/bin/touch /run/vpn-fai/rotated; fi
+  '';
+
   # polkit: lets the user start and stop ONLY the vpn-* services without a password (so the
   # bind works with no prompt). Any other unit still requires authentication.
   security.polkit.extraConfig = ''

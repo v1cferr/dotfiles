@@ -70,8 +70,8 @@ let
       fi
 
       echo "sending a magic packet to ${ws.mac}..."
-      # 1) The RELAY is the only path that wakes a machine off FOR A WHILE (a real L2 broadcast); the
-      #    other two need a warm ARP/CAM cache. The script goes in through the remote python's stdin.
+      # 1) The RELAY wakes a machine off FOR A WHILE (a real L2 broadcast); the script goes in
+      #    through the remote python's stdin.
       # Print ssh's OWN error: a guessed cause once blamed the host key for an unauthorized key.
       if relay_err="$(ssh -o BatchMode=yes -o ConnectTimeout=8 fai-vm python3 - < ${senderRelay} 2>&1 >/dev/null)"; then
         echo "  ok: an L2 broadcast through the fai-vm"
@@ -82,7 +82,8 @@ let
           *"Host key verification failed"*) echo "  its host key is unknown or changed: run 'ssh fai-vm' once and check the fingerprint" ;;
         esac
       fi
-      # 2) unicast (warm ARP) and 3) a directed broadcast, which a router usually drops (RFC 2644)
+      # 2) unicast (warm ARP only) and 3) a directed broadcast, which the FAI gateway turns into an
+      #    L2 broadcast (measured): the fallback when the fai-vm is down
       python3 ${senderLocal} && echo "  ok: unicast plus a directed broadcast through the tunnel"
 
       # A machine that is on always answers, so waiting would only print a false "IT WOKE UP".

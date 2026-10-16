@@ -21,13 +21,17 @@ AND 7, because an old NIC sometimes only listens on 7.
 
 `wake-workstation` tries three paths, in this order:
 
-1. **A relay through the fai-vm.** The only path that wakes a machine that has been off FOR A
-   WHILE, because it broadcasts on the L2 segment; the other two depend on a warm ARP/CAM cache.
+1. **A relay through the fai-vm.** It broadcasts on the L2 segment, so it wakes a machine that has
+   been off FOR A WHILE.
    The script goes through the remote `python3`'s STDIN, so there is nothing to install on the
    other side. It needs YOUR key authorized on the fai-vm (`ssh-copy-id`); when the relay fails
    the script prints ssh's own error, because guessing the cause once sent me after the host key.
 2. **Unicast through the tunnel**, which works while the router's ARP is still warm.
-3. **A directed broadcast to the /25**, which a router usually drops (RFC 2644).
+3. **A directed broadcast to the /25.** A router usually drops these (RFC 2644), but the FAI
+   gateway forwards it as an L2 broadcast (measured 16/10/2026, `tcpdump -e` on the workstation:
+   `2e:b8:ed:8f:67:90 > ff:ff:ff:ff:ff:ff`). So this path does not need a warm cache either, and
+   it is the fallback that still wakes the machine when the fai-vm is down. A gateway policy
+   change can take it away without notice, which is why the relay stays first.
 
 It checks for a `ppp` link first, because with no tunnel there is no route to FAI, and failing
 there with the right cause avoids chasing ghosts. Then it waits up to 120 s for a ping.

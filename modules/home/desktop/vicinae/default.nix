@@ -71,6 +71,11 @@ let
         # Each app in its own app-*.scope under app.slice, not in vicinae.service's cgroup.
         applications.preferences.launchPrefix = "${lib.getExe app2unit} --";
         calculator.preferences.backend = "qalculate";
+        "@leiserfg/ssh".preferences.terminal = "kitty ssh"; # it runs `<terminal> <host>`
+        "@c4n4m1/zoxide-recent-directories".preferences = {
+          application = "code";
+          alternativeApplication = "org.kde.dolphin";
+        };
         clipboard.preferences = {
           monitoring = true;
           ignorePasswords = true; # drops x-kde-passwordManagerHint offers (KeePassXC, Bitwarden)

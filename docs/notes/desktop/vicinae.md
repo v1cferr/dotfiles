@@ -276,6 +276,10 @@ hash edit.
 | systemd | list, start, stop and restart units | none |
 | bluetooth | power, scan, connect, battery | none; Blueman stays as the BlueZ pairing agent, which the extension does not register |
 | github | issues, PRs, workflow runs, repo search | a personal access token |
+| ssh | the hosts of `~/.ssh/config` (`ssh.nix`), opened as `kitty ssh <host>` | none; the keys are the agent's |
+| zoxide-recent-directories | zoxide's directories by frecency; Enter opens VS Code, the alternative action Dolphin | none |
+| timer | timers in plain words ("25m Pomodoro"), each a transient `systemd-run --user` timer that ends in `notify-send` | none |
+| reminders | one-off and recurring reminders in plain English ("call the dentist tomorrow at 10"), with Complete and Snooze buttons on the notification | none |
 | vscode-recents | VS Code's File > Open Recent list (folders, files, SSH remotes); Enter opens it in VS Code | none |
 | pulseaudio | output and input devices (default, mute, volume in 5% steps or exact), per-app playback and recording streams, card profiles | none |
 | repositories (mine) | my GitHub accounts and FAI's GitLab in one list | the GitHub token above, FAI's `read_api` token |
@@ -294,6 +298,20 @@ never invoked"); upstream's own flake skips these two extensions for that reason
 was tried and also drops esbuild's platform binary, so only `usocket` goes, through a patched
 `packageLock` handed to `importNpmLock`. The system and session buses are path sockets, so the
 abstract-socket branch is never taken.
+
+**What these four need.** zoxide is pinned by store path in `postPatch`, like `pactl` below.
+timer and reminders need `notify-send`, which nothing installed until 16/10/2026: `libnotify` goes
+on the profile from `extensions.nix`, because timer's call runs inside a transient unit through
+`bash -c`, on the user manager's PATH, where a store path patched into the bundle would not reach.
+reminders keeps its state in its own support folder and schedules transient units, so nothing lands
+in `~/.config/systemd/user`; its Complete and Snooze buttons work because Quickshell's notification
+server declares `actionsSupported`. ssh reads the generated `~/.ssh/config` and runs its
+`terminal` preference followed by the host, hence `kitty ssh`.
+
+Considered on 16/10/2026 and left out: otp (TOTP secrets in a second store beside Bitwarden),
+kde-connect (LocalSend is the phone path here), hypr (the cheatsheet covers keybinds),
+process-manager and port-killer (`btop` and `ss`/`kill` in a terminal do it), protondb-search and
+it-tools (a browser search away).
 
 **vscode-recents reads `~/.vscode-shared/sharedStorage/state.vscdb`**, where VS Code 1.142 keeps
 `history.recentlyOpenedPathsList` (59 entries on 15/10/2026); the old

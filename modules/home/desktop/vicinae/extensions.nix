@@ -1,4 +1,4 @@
-# Vicinae extensions: six from the pinned vicinaehq/extensions input, built offline from their
+# Vicinae extensions: ten from the pinned vicinaehq/extensions input, built offline from their
 # lockfiles, and my own ./repositories. Why these, and how the tokens arrive: docs/notes/desktop/vicinae.md
 {
   config,
@@ -9,7 +9,12 @@
 }:
 
 let
-  inherit (pkgs) importNpmLock pulseaudio;
+  inherit (pkgs)
+    importNpmLock
+    libnotify
+    pulseaudio
+    zoxide
+    ;
 
   src = name: "${inputs.vicinae-extensions}/extensions/${name}";
 
@@ -45,11 +50,25 @@ let
     };
 in
 {
+  # notify-send for timer and reminders: timer's runs inside a transient unit, so it has to be on
+  # the user manager's PATH, which a store path in the bundle would not change.
+  home.packages = [ libnotify ];
+
   programs.vicinae.extensions = [
     (mk "nix" { }) # nixpkgs packages and options, Home Manager options
     (mk "systemd" (withoutUsocket "systemd")) # list, start, stop and restart units
     (mk "bluetooth" (withoutUsocket "bluetooth")) # power, scan, connect; Blueman stays as the pairing agent
     (mk "github" { }) # issues, PRs, workflow runs; its token rides VICINAE_OVERRIDES (default.nix)
+    (mk "ssh" { }) # the hosts of ~/.ssh/config (ssh.nix), opened in kitty
+    # zoxide's directories, opened in VS Code (Dolphin as the alternative); zoxide pinned by path.
+    (mk "zoxide-recent-directories" {
+      postPatch = ''
+        substituteInPlace src/recent-directories.tsx \
+          --replace-fail 'execa("zoxide",' 'execa("${lib.getExe zoxide}",'
+      '';
+    })
+    (mk "timer" { }) # "25m Pomodoro": a transient systemd timer that ends in a notification
+    (mk "reminders" { }) # natural-language reminders, also transient units, with Complete/Snooze
     # VS Code's File > Open Recent list, read from its state.vscdb. Patched twice: no existsSync
     # per entry, which hung the whole list on an unreachable ~/FAI-workstation mount (entries show
     # unchecked, as VS Code shows them); and no "Remove from Recents", which rewrote the database

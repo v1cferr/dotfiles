@@ -555,11 +555,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1792162894,
-        "narHash": "sha256-cRE3mHSf7VqiOqhfl5sqOAa9UMc22suMxhbr2w69sjc=",
+        "lastModified": 1792168561,
+        "narHash": "sha256-NWz/InCB24jfEMGPOG/l7UiNf7uAzSGIKXYXOMaqiZg=",
         "owner": "v1cferr",
         "repo": "signal-sift",
-        "rev": "1cb139e3489c913936092771a75da25b4bcc3201",
+        "rev": "b6082d6f31e56ff76bf25e417e05c69615ba2e5c",
         "type": "github"
       },
       "original": {

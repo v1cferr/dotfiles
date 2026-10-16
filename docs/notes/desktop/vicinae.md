@@ -247,6 +247,7 @@ directory Vicinae scans and watches. They call the existing CLIs by name, the sa
 | Downloads | Download a MEGA link: an argument field for the link, then `mega-dl` in kitty |
 | System | NixOS rebuild: `needsConfirmation`, then a visible kitty running `rebuild`, so nh's sudo prompt and the log stay in front of me |
 | Links | FAI Dashboard, GitHub, dotfiles on GitHub, dotfiles in VS Code |
+| Services | one per `my.ingress` entry with a `launcher`, opening `https://<name>.<domain>`: GradRadar, Jellyfin, Immich, qBittorrent, Duolingo streak, CreditRadar ([caddy.md](../network/caddy.md)). The `lan` ones only answer at home or over WireGuard |
 
 **Their icons are JetBrainsMono Nerd Font glyphs**, the UI font, cut out at build time as SVGs in
 the palette's `text` color (fonttools, one `runCommand` per glyph) and named in the header with
@@ -261,7 +262,7 @@ on every bump, so they stay.
 To add one, add an entry to the list in `scripts.nix` (`name`, `title`, `group`, `glyph`, optional `mode`,
 `confirm` and `arguments`, a list of placeholders that become `@vicinae.argumentN` text fields and
 reach the script as `$1`, `$2`...). `vicinae script check <file>` validates a header; it prints nothing for a good one
-and the error for a bad one, and it exits 0 either way, so read its output. All 29 passed on
+and the error for a bad one, and it exits 0 either way, so read its output. All 35 passed on
 16/10/2026.
 
 ## Extensions

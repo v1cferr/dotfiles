@@ -42,6 +42,12 @@ Access at the edge", and cloudflared delivers straight to the upstream, never to
 would put the same service on the router's forwarded 443 with no Access in front, which is exactly
 the way around the gate the tunnel exists to close ([tunnel](tunnel.md)).
 
+**The same entries feed the launcher.** An entry with `launcher = { title; glyph; }` becomes a
+Vicinae script that opens `https://<name>.<domain>` ([vicinae.md](../desktop/vicinae.md)), so a new
+service with a web UI shows up in SUPER+Q with no second edit. APIs, the webhook and MCP endpoints
+leave it null, and an assertion refuses it on a `tunnel` entry, whose Access gate has no browser
+login.
+
 **Concatenation and not interpolation** when emitting `{$VAR}`: `"{$" + v + "}"` is the only
 unambiguous form, because `$${v}` in a Nix string is a SYNTAX ERROR, not an escape. It bit once:
 the first generated file came out with a literal `{$${v}}`, which would become an empty hash at

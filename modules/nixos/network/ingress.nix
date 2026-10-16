@@ -59,13 +59,43 @@
             default = "";
             description = "Why this service exists and why this reach; it goes as a comment into the generated Caddyfile.";
           };
+
+          # A web UI worth opening from Vicinae; null for an API, a webhook or an MCP endpoint.
+          launcher = lib.mkOption {
+            type = lib.types.nullOr (
+              lib.types.submodule {
+                options = {
+                  title = lib.mkOption {
+                    type = lib.types.str;
+                    description = "The name the launcher shows.";
+                  };
+                  glyph = lib.mkOption {
+                    type = lib.types.str;
+                    default = "md-web";
+                    description = "A JetBrainsMono Nerd Font glyph name for its icon.";
+                  };
+                };
+              }
+            );
+            default = null;
+            description = "An entry in Vicinae that opens https://<name>.<domain> (modules/home/desktop/vicinae/scripts.nix).";
+          };
         };
       }
     );
   };
   # Caddy owns `auth`, `routes` and `proxyConfig`; on a tunnel entry they would be dead config (rule 16).
-  config.assertions = lib.mapAttrsToList (name: s: {
-    assertion = s.expose != "tunnel" || (s.auth == { } && s.routes == { } && s.proxyConfig == "");
-    message = "my.ingress.${name}: a `tunnel` entry maps one hostname to one port; `auth`, `routes` and `proxyConfig` are Caddy's and would be ignored.";
-  }) config.my.ingress;
+  config.assertions = lib.concatLists (
+    lib.mapAttrsToList (name: s: [
+      {
+        assertion = s.expose != "tunnel" || (s.auth == { } && s.routes == { } && s.proxyConfig == "");
+        message = "my.ingress.${name}: a `tunnel` entry maps one hostname to one port; `auth`, `routes` and `proxyConfig` are Caddy's and would be ignored.";
+      }
+      # Access has no browser login on a tunnel name, so a launcher entry there opens an error page.
+      {
+        assertion = s.expose != "tunnel" || s.launcher == null;
+        message = "my.ingress.${name}: a `tunnel` entry sits behind Access with no browser login; it cannot have a `launcher`.";
+      }
+    ]) config.my.ingress
+  );
 }

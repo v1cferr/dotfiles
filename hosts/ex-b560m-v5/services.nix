@@ -46,6 +46,8 @@
         "/api/*" = 8006;
       }; # FastAPI; the prefix is NOT stripped, so the same URL holds inside the container
       expose = "public";
+      launcher.title = "GradRadar";
+      launcher.glyph = "md-school_outline";
       # NO basic_auth: the login belongs to the app (F2). Until then the page shows only public
       # dates and no personal data. Anything per candidate needs the app's login FIRST.
       comment = "GradRadar (V1C-72), shared with JP and César. Open: auth will come in the app itself (F2).";
@@ -54,18 +56,24 @@
     jellyfin = {
       upstream = 8096;
       expose = "public";
+      launcher.title = "Jellyfin";
+      launcher.glyph = "md-play_box_multiple_outline";
       comment = "It has its own login; exposed at the same level as on Arch. The upstream is on loopback (the native service listens on 0.0.0.0).";
     };
 
     photos = {
       upstream = 2283;
       expose = "public";
+      launcher.title = "Immich";
+      launcher.glyph = "md-image_multiple_outline";
       comment = "Immich, the ARCHIVE next to Google Photos: its own login, the same criterion as jellyfin, so the archive is viewable from anywhere.";
     };
 
     torrent = {
       upstream = 8080;
       expose = "public";
+      launcher.title = "qBittorrent";
+      launcher.glyph = "md-download_network_outline";
       comment = "qBittorrent: its own login, the same criterion as jellyfin.";
     };
 
@@ -73,6 +81,8 @@
       upstream = 3010;
       proxyConfig = "flush_interval -1"; # SSE (/api/events) with no buffering
       expose = "lan";
+      launcher.title = "Duolingo streak";
+      launcher.glyph = "md-owl";
       comment = "duo-streak-daemon (V1C-71). It exposes details of the automation, so it never leaves the house.";
     };
 
@@ -101,6 +111,8 @@
         "/health" = 8007;
       };
       expose = "lan";
+      launcher.title = "CreditRadar";
+      launcher.glyph = "md-credit_card_outline";
       # The SAME criterion as `ai`, and for a heavier reason: CreditRadar has NO auth of its
       # own, and what it accumulates is a CPF, debts, credit scores and SCR exposure. It is
       # the most sensitive service on this panel, so `lan` is the ONLY protection and

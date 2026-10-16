@@ -118,194 +118,207 @@ let
     text = "xdg-open ${lib.escapeShellArg url}";
   };
 
-  scripts = map mkScript [
-    {
-      name = "vpn-fai";
-      glyph = "md-shield_lock_outline";
-      title = "Connect FAI VPN";
-      group = "VPN";
-      mode = "compact";
-      text = "vpn connect fai";
+  # Every my.ingress entry with a `launcher`: a new self-hosted service shows up with no edit here.
+  services = lib.mapAttrsToList (
+    name: s:
+    openUrl "service-${name}" s.launcher.title s.launcher.glyph
+      "https://${name}.${osConfig.my.net.domain}"
+    // {
+      group = "Services";
     }
-    {
-      name = "vpn-ufscar";
-      glyph = "md-shield_lock_outline";
-      title = "Connect UFSCar VPN";
-      group = "VPN";
-      mode = "compact";
-      text = "vpn connect ufscar";
-    }
-    {
-      name = "vpn-disconnect";
-      glyph = "md-lan_disconnect";
-      title = "Disconnect VPN";
-      group = "VPN";
-      mode = "compact";
-      text = "vpn disconnect all";
-    }
-    {
-      name = "ssh-workstation";
-      glyph = "md-console_line";
-      title = "SSH: FAI workstation";
-      group = "Desktop";
-      text = "setsid -f kitty ssh workstation";
-    }
-    {
-      name = "restart-quickshell";
-      glyph = "md-restart";
-      title = "Restart Quickshell";
-      group = "Desktop";
-      text = "qs-restart";
-    }
-    {
-      name = "shuffle-wallpapers";
-      glyph = "md-image_multiple_outline";
-      title = "Shuffle wallpapers";
-      group = "Desktop";
-      text = "wallpaper-shuffle both";
-    }
-    {
-      name = "lock-session";
-      glyph = "md-lock_outline";
-      title = "Lock session";
-      group = "Desktop";
-      text = "loginctl lock-session";
-    }
-    {
-      name = "away-screen";
-      glyph = "md-moon_waning_crescent";
-      title = "Away screen";
-      group = "Desktop";
-      # A beat later, so the Enter that launched this is released before the screen starts listening.
-      text = "setsid -f sh -c 'sleep 0.5; qs ipc call away on'";
-    }
-    {
-      name = "keybinds";
-      glyph = "md-keyboard_outline";
-      title = "Show keybind cheatsheet";
-      group = "Desktop";
-      # Detached, so the cheatsheet's dmenu opens after this command's window has closed.
-      text = "setsid -f keybinds-cheatsheet";
-    }
-    {
-      name = "screenshot-area";
-      glyph = "md-selection_drag";
-      title = "Screenshot: select an area";
-      group = "Screenshot";
-      text = later "flameshot gui";
-    }
-    {
-      name = "screenshot-main";
-      glyph = "md-monitor_screenshot";
-      title = "Screenshot: main monitor";
-      group = "Screenshot";
-      text = later "flameshot-screen ${osConfig.my.monitors.primary}";
-    }
-    {
-      name = "screenshot-second";
-      glyph = "md-monitor_screenshot";
-      title = "Screenshot: second monitor";
-      group = "Screenshot";
-      text = later "flameshot-screen ${osConfig.my.monitors.secondary}";
-    }
-    (sunset "night-light-toggle" "Toggle night light" "md-theme_light_dark" ''
-      if systemctl --user is-active --quiet hyprsunset; then
-        systemctl --user stop hyprsunset
-      else
-        systemctl --user start hyprsunset
-      fi
-    '')
-    (sunset "night-light-off" "Night light: natural colors" "md-weather_sunny"
-      "hyprctl hyprsunset identity"
-    )
-    (sunset "night-light-3000" "Night light: 3000K" "md-weather_night"
-      "hyprctl hyprsunset temperature 3000"
-    )
-    (sunset "night-light-2000" "Night light: 2000K" "md-moon_waning_crescent"
-      "hyprctl hyprsunset temperature 2000"
-    )
-    {
-      name = "notifications-dnd";
-      glyph = "md-bell_off_outline";
-      title = "Toggle do not disturb";
-      group = "Notifications";
-      text = "qs ipc call notif dnd";
-    }
-    {
-      name = "notifications-clear";
-      glyph = "md-notification_clear_all";
-      title = "Clear notifications";
-      group = "Notifications";
-      text = "qs ipc call notif clear";
-    }
-    {
-      name = "rgb-on";
-      glyph = "md-led_on";
-      title = "RGB lights on";
-      group = "Desktop";
-      text = "rgb-lights on";
-    }
-    {
-      name = "rgb-off";
-      glyph = "md-led_off";
-      title = "RGB lights off";
-      group = "Desktop";
-      text = "rgb-lights off";
-    }
-    {
-      name = "reload-hyprland";
-      glyph = "md-reload";
-      title = "Reload Hyprland";
-      group = "Desktop";
-      text = "hyprctl reload";
-    }
-    {
-      name = "wake-workstation";
-      glyph = "md-power";
-      title = "Wake the FAI workstation";
-      group = "Hosts";
-      text = inKitty "Wake workstation" "wake-workstation";
-    }
-    {
-      # freerdp asks for the password on its terminal.
-      name = "t480";
-      glyph = "md-remote_desktop";
-      title = "RDP: T480";
-      group = "Hosts";
-      text = inKitty "T480" "t480";
-    }
-    {
-      name = "mega-dl";
-      glyph = "md-download";
-      title = "Download a MEGA link";
-      group = "Downloads";
-      arguments = [ "MEGA link" ];
-      text = inKitty "mega-dl" ''mega-dl "$1"'';
-    }
-    {
-      # A visible terminal: nh's sudo prompt and the build log stay in front of me.
-      name = "nixos-rebuild";
-      glyph = "linux-nixos";
-      title = "NixOS rebuild (switch)";
-      group = "System";
-      confirm = true;
-      text = "setsid -f kitty --hold --title 'NixOS rebuild' zsh -ic rebuild";
-    }
-    {
-      name = "dotfiles-code";
-      glyph = "md-microsoft_visual_studio_code";
-      title = "Open dotfiles in VS Code";
-      group = "Links";
-      text = "setsid -f code ${lib.escapeShellArg repo}";
-    }
-    (openUrl "fai-dashboard" "Open FAI Dashboard" "md-view_dashboard_outline"
-      "https://dashboard.sup.fai.ufscar.br"
-    )
-    (openUrl "github" "Open GitHub" "md-github" "https://github.com/v1cferr")
-    (openUrl "dotfiles-github" "Open dotfiles on GitHub" "md-github"
-      "https://github.com/v1cferr/dotfiles"
-    )
-  ];
+  ) (lib.filterAttrs (_: s: s.launcher != null) osConfig.my.ingress);
+
+  scripts = map mkScript (
+    services
+    ++ [
+      {
+        name = "vpn-fai";
+        glyph = "md-shield_lock_outline";
+        title = "Connect FAI VPN";
+        group = "VPN";
+        mode = "compact";
+        text = "vpn connect fai";
+      }
+      {
+        name = "vpn-ufscar";
+        glyph = "md-shield_lock_outline";
+        title = "Connect UFSCar VPN";
+        group = "VPN";
+        mode = "compact";
+        text = "vpn connect ufscar";
+      }
+      {
+        name = "vpn-disconnect";
+        glyph = "md-lan_disconnect";
+        title = "Disconnect VPN";
+        group = "VPN";
+        mode = "compact";
+        text = "vpn disconnect all";
+      }
+      {
+        name = "ssh-workstation";
+        glyph = "md-console_line";
+        title = "SSH: FAI workstation";
+        group = "Desktop";
+        text = "setsid -f kitty ssh workstation";
+      }
+      {
+        name = "restart-quickshell";
+        glyph = "md-restart";
+        title = "Restart Quickshell";
+        group = "Desktop";
+        text = "qs-restart";
+      }
+      {
+        name = "shuffle-wallpapers";
+        glyph = "md-image_multiple_outline";
+        title = "Shuffle wallpapers";
+        group = "Desktop";
+        text = "wallpaper-shuffle both";
+      }
+      {
+        name = "lock-session";
+        glyph = "md-lock_outline";
+        title = "Lock session";
+        group = "Desktop";
+        text = "loginctl lock-session";
+      }
+      {
+        name = "away-screen";
+        glyph = "md-moon_waning_crescent";
+        title = "Away screen";
+        group = "Desktop";
+        # A beat later, so the Enter that launched this is released before the screen starts listening.
+        text = "setsid -f sh -c 'sleep 0.5; qs ipc call away on'";
+      }
+      {
+        name = "keybinds";
+        glyph = "md-keyboard_outline";
+        title = "Show keybind cheatsheet";
+        group = "Desktop";
+        # Detached, so the cheatsheet's dmenu opens after this command's window has closed.
+        text = "setsid -f keybinds-cheatsheet";
+      }
+      {
+        name = "screenshot-area";
+        glyph = "md-selection_drag";
+        title = "Screenshot: select an area";
+        group = "Screenshot";
+        text = later "flameshot gui";
+      }
+      {
+        name = "screenshot-main";
+        glyph = "md-monitor_screenshot";
+        title = "Screenshot: main monitor";
+        group = "Screenshot";
+        text = later "flameshot-screen ${osConfig.my.monitors.primary}";
+      }
+      {
+        name = "screenshot-second";
+        glyph = "md-monitor_screenshot";
+        title = "Screenshot: second monitor";
+        group = "Screenshot";
+        text = later "flameshot-screen ${osConfig.my.monitors.secondary}";
+      }
+      (sunset "night-light-toggle" "Toggle night light" "md-theme_light_dark" ''
+        if systemctl --user is-active --quiet hyprsunset; then
+          systemctl --user stop hyprsunset
+        else
+          systemctl --user start hyprsunset
+        fi
+      '')
+      (sunset "night-light-off" "Night light: natural colors" "md-weather_sunny"
+        "hyprctl hyprsunset identity"
+      )
+      (sunset "night-light-3000" "Night light: 3000K" "md-weather_night"
+        "hyprctl hyprsunset temperature 3000"
+      )
+      (sunset "night-light-2000" "Night light: 2000K" "md-moon_waning_crescent"
+        "hyprctl hyprsunset temperature 2000"
+      )
+      {
+        name = "notifications-dnd";
+        glyph = "md-bell_off_outline";
+        title = "Toggle do not disturb";
+        group = "Notifications";
+        text = "qs ipc call notif dnd";
+      }
+      {
+        name = "notifications-clear";
+        glyph = "md-notification_clear_all";
+        title = "Clear notifications";
+        group = "Notifications";
+        text = "qs ipc call notif clear";
+      }
+      {
+        name = "rgb-on";
+        glyph = "md-led_on";
+        title = "RGB lights on";
+        group = "Desktop";
+        text = "rgb-lights on";
+      }
+      {
+        name = "rgb-off";
+        glyph = "md-led_off";
+        title = "RGB lights off";
+        group = "Desktop";
+        text = "rgb-lights off";
+      }
+      {
+        name = "reload-hyprland";
+        glyph = "md-reload";
+        title = "Reload Hyprland";
+        group = "Desktop";
+        text = "hyprctl reload";
+      }
+      {
+        name = "wake-workstation";
+        glyph = "md-power";
+        title = "Wake the FAI workstation";
+        group = "Hosts";
+        text = inKitty "Wake workstation" "wake-workstation";
+      }
+      {
+        # freerdp asks for the password on its terminal.
+        name = "t480";
+        glyph = "md-remote_desktop";
+        title = "RDP: T480";
+        group = "Hosts";
+        text = inKitty "T480" "t480";
+      }
+      {
+        name = "mega-dl";
+        glyph = "md-download";
+        title = "Download a MEGA link";
+        group = "Downloads";
+        arguments = [ "MEGA link" ];
+        text = inKitty "mega-dl" ''mega-dl "$1"'';
+      }
+      {
+        # A visible terminal: nh's sudo prompt and the build log stay in front of me.
+        name = "nixos-rebuild";
+        glyph = "linux-nixos";
+        title = "NixOS rebuild (switch)";
+        group = "System";
+        confirm = true;
+        text = "setsid -f kitty --hold --title 'NixOS rebuild' zsh -ic rebuild";
+      }
+      {
+        name = "dotfiles-code";
+        glyph = "md-microsoft_visual_studio_code";
+        title = "Open dotfiles in VS Code";
+        group = "Links";
+        text = "setsid -f code ${lib.escapeShellArg repo}";
+      }
+      (openUrl "fai-dashboard" "Open FAI Dashboard" "md-view_dashboard_outline"
+        "https://dashboard.sup.fai.ufscar.br"
+      )
+      (openUrl "github" "Open GitHub" "md-github" "https://github.com/v1cferr")
+      (openUrl "dotfiles-github" "Open dotfiles on GitHub" "md-github"
+        "https://github.com/v1cferr/dotfiles"
+      )
+    ]
+  );
 in
 {
   # One link per script in the default scripts dir, which Vicinae scans and watches.

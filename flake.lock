@@ -397,6 +397,22 @@
         "type": "github"
       }
     },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1787736819,
+        "narHash": "sha256-cV5xEJJK3BvhU8rEd4mC9UsmDi5qscv/kzGPhBRC5WA=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "9fbb54b33e91ee4ca368e35a78e0613c720600b3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nur": {
       "inputs": {
         "flake-parts": [
@@ -503,6 +519,7 @@
         "pyproject-build-systems": "pyproject-build-systems",
         "pyproject-nix": "pyproject-nix",
         "quickshell": "quickshell",
+        "signal-sift": "signal-sift",
         "sops-nix": "sops-nix",
         "spicetify-nix": "spicetify-nix",
         "stylix": "stylix",
@@ -530,6 +547,24 @@
       "original": {
         "owner": "oxalica",
         "repo": "rust-overlay",
+        "type": "github"
+      }
+    },
+    "signal-sift": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_2"
+      },
+      "locked": {
+        "lastModified": 1792162894,
+        "narHash": "sha256-cRE3mHSf7VqiOqhfl5sqOAa9UMc22suMxhbr2w69sjc=",
+        "owner": "v1cferr",
+        "repo": "signal-sift",
+        "rev": "1cb139e3489c913936092771a75da25b4bcc3201",
+        "type": "github"
+      },
+      "original": {
+        "owner": "v1cferr",
+        "repo": "signal-sift",
         "type": "github"
       }
     },

@@ -53,6 +53,10 @@
       flake = false;
     };
 
+    # SignalSift: my content intelligence daemon, its own public repo; here it is only DEPLOY. No follows:
+    # its package and Vulkan engines must be the benchmarked ones from ITS lock. docs/notes/services/signalsift.md
+    signal-sift.url = "github:v1cferr/signal-sift";
+
     # A GRUB theme where each OS/generation is a Minecraft "world" with its own icon. The author's
     # OTHER theme was passed over: there an entry is just a button, with no icon per OS.
     minegrub-world-sel-theme = {

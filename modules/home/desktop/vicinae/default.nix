@@ -56,9 +56,18 @@ let
           height = 620;
         };
       };
-      favorites = [ "clipboard:history" ];
+      favorites = [
+        "clipboard:history"
+        "@v1cferr/repositories:repositories"
+        "@ShyAssassin/vscode-recents:open-recents"
+      ];
       inherit (config.my.vicinae) fallbacks;
       providers = {
+        # Aliases: typing one ranks its command first, above any score, so "rep" + Enter opens it.
+        scripts.entrypoints.dotfiles-code.alias = "dot";
+        "@v1cferr/repositories".entrypoints.repositories.alias = "rep";
+        "@ShyAssassin/vscode-recents".entrypoints.open-recents.alias = "rec";
+        "@rastsislaux/pulseaudio".entrypoints.outputDevices.alias = "vol";
         # Each app in its own app-*.scope under app.slice, not in vicinae.service's cgroup.
         applications.preferences.launchPrefix = "${lib.getExe app2unit} --";
         calculator.preferences.backend = "qalculate";

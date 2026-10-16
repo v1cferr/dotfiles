@@ -186,9 +186,20 @@ draw the eye.
 | SUPER+SHIFT+V | the clipboard history, directly |
 | SUPER+H | the keybind cheatsheet |
 | SUPER+ALT+V | `clipboard-push` (unchanged) |
+| SUPER+R | Repositories |
+| SUPER+K | VS Code's recent projects |
+| SUPER+SHIFT+E | the emoji picker |
 
-Vicinae binds nothing globally itself: on Hyprland its global shortcuts need a protocol Hyprland
-does not have, so every key above is a `hl.bind` in `keybinds.lua`, and there is nothing to overlap.
+Vicinae binds nothing globally itself: on Hyprland its global shortcuts need `ext-hotkey-v1`, a
+protocol Hyprland has not merged, so every key above is a `hl.bind` in `keybinds.lua`, and there is
+nothing to overlap. A key for one command is a deeplink, `vicinae
+'vicinae://launch/<provider>/<entrypoint>?toggle=true'` (an extension's provider is its
+`@author/name`); `toggle` closes the window when it is already open, so the same key dismisses it.
+
+**Aliases and favorites** are overrides in `default.nix`. An alias puts its command first as soon
+as the search starts with it, above any score: `rep` (Repositories), `rec` (VS Code recents),
+`dot` (the dotfiles in VS Code), `vol` (output devices). The favorites, shown on the empty root, are
+the clipboard history, Repositories and VS Code recents.
 
 ## URL shortcuts
 

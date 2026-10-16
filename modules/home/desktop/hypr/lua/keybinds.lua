@@ -40,6 +40,11 @@ hl.bind("SHIFT + Scroll_Lock", hl.dsp.send_shortcut({ mods = "SHIFT", key = "cod
 hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("vicinae vicinae://launch/clipboard/history"))  -- clipboard history
 hl.bind(mainMod .. " + ALT + V",   hl.dsp.exec_cmd("clipboard-push"))  -- scp it to the workstation and copy the REMOTE path (an image for a TUI over ssh)
 
+-- Straight into one Vicinae command; `toggle` closes it when it is already open.
+hl.bind(mainMod .. " + R",         hl.dsp.exec_cmd("vicinae 'vicinae://launch/@v1cferr/repositories/repositories?toggle=true'"))  -- my repositories (GitHub + FAI GitLab)
+hl.bind(mainMod .. " + K",         hl.dsp.exec_cmd("vicinae 'vicinae://launch/@ShyAssassin/vscode-recents/open-recents?toggle=true'"))  -- VS Code's recent projects
+hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("vicinae 'vicinae://launch/core/search-emojis?toggle=true'"))  -- emoji picker
+
 -- VPN: SUPER+N = UFSCar (GlobalProtect), SHIFT+N = FAI (nxBender), CTRL+N disconnects all.
 -- On-demand systemd services (modules/nixos/network/vpn.nix); the `vpn` CLI needs no password (polkit).
 hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd("vpn connect ufscar"))

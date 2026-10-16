@@ -79,6 +79,11 @@ let
       path = osConfig.my.phoneSync.local; # SSOT: modules/nixos/services/phone-sync.nix (rule 11)
       icon = "folder-pictures";
     }
+    {
+      title = "VPS";
+      path = "${config.home.homeDirectory}/VPS"; # rclone SFTP to the KingHost VPS' root, mounted at login
+      icon = "folder-remote";
+    }
   ];
 
   # One XBEL file per place. KDE's <ID> comes from the INDEX, so it is unique with no magic

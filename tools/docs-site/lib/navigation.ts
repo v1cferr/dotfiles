@@ -102,6 +102,7 @@ export const navigation: NavItem[] = [
       { title: "Caddy", doc: "notes/network/caddy.md" },
       { title: "Tunnel", doc: "notes/network/tunnel.md" },
       { title: "FAI workstation", doc: "notes/network/fai-workstation.md" },
+      { title: "VPS mount", doc: "notes/network/vps-mount.md" },
     ],
   },
   {

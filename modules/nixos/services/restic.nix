@@ -267,6 +267,7 @@ in
         exclude = [
           # Somebody else's FUSE: root cannot lstat it, restic exits 3 and the prune never runs.
           "${home}/FAI-workstation"
+          "${home}/VPS"
           "${home}/Drive"
 
           "${home}/.cache"

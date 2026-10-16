@@ -47,6 +47,12 @@ where it stopped. Tested on this machine.
   socks5**: the `h` makes the proxy resolve the DNS, since with plain socks5 the query goes out in
   the clear, and the `SafeSocks` in `modules/nixos/network/tor.nix` would refuse the connection anyway.
 
+**Tor is on demand.** `tor.service` exists but boot never starts it (`modules/nixos/network/tor.nix`):
+`--tor` raises it when it is down, waits for the circuit, and stops it on exit, but ONLY if that run
+raised it, so a Tor started by hand (`tor-on`) stays up. A polkit rule lets this user start and stop
+that one unit with no password. It has no card on the dash because "inactive" is its normal state;
+the bar's purple badge is what shows it up.
+
 The Tor circuit probe is NOT a safety net: megadl with `--proxy` does not fall back to a direct
 connection. It is there to know WHERE it goes out (the exit IP) and to fail with the right cause
 when the daemon is down, instead of with a curl error from megatools.

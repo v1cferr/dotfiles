@@ -251,8 +251,8 @@ router forwards to (`modules/nixos/network/fai-gateway.nix` is exactly that shap
 - **`services.tor` with SOCKS on localhost, used per application: ALREADY DONE, and this entry
   first said otherwise.** [`modules/nixos/network/tor.nix`](../modules/nixos/network/tor.nix) has been there all along,
   client only, `ClientOnly` and `SafeSocks` locking the role, enabled through `my.services.tor` on
-  `nixos-kingston`, with `mega-tor` as the consumer. Verified running on 13/09/2026: `tor.service`
-  active, listening on `127.0.0.1:9050`. So the cheapest option was never open, it was shipped, and
+  `nixos-kingston`, with `mega-dl --tor` as the consumer. Verified running on 13/09/2026: `tor.service`
+  active, listening on `127.0.0.1:9050`; on demand (not started at boot) since 16/10/2026. So the cheapest option was never open, it was shipped, and
   the terrain to understand is what sits ABOVE it.
 - **An onion service in front of sshd.** The only one that is a SECURITY gain and not just a
   privacy one, and the reason it is worth writing down: it would let the 2222 DNAT leave the WAN

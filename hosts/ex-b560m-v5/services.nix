@@ -15,7 +15,7 @@
     credit-radar = true; # CreditRadar at boot, reachable from home only (V1C-76)
     sunshine = true; # screen streaming for Moonlight
     qbittorrent = true; # the torrent client
-    tor = true; # a local SOCKS5 at 127.0.0.1:9050 (client only; the consumer is `mega-tor`)
+    tor = true; # a local SOCKS5 at 127.0.0.1:9050, ON DEMAND (client only; raised by `mega-dl --tor`)
     restic = true; # the daily backup to the local disk (my.backup.device, in hardware.nix)
     btrbk = true; # local @home snapshots (hourly); since 24/09/2026 the ONLY automatic copy
     dropbox = true; # ~/Dropbox syncing

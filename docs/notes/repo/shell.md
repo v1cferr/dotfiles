@@ -74,13 +74,14 @@ when the intent is freeing the maximum; for plain hygiene, `--delete-older-than 
 as much and PRESERVES the emergency exit. The automatic weekly GC does use `--delete-older-than
 30d`.
 
-## `tor-on` / `tor-off` last until the next boot
+## `tor-on` / `tor-off`: Tor is on demand
 
-They start and stop `tor.service` and nothing more, so the unit stays ENABLED and Tor is back
-after a reboot. Turning it off for good is `tor = false` in the host's services panel plus a
-rebuild. Neither crypto app depends on it (each brings its own Tor, see
-[crypto](../apps/crypto.md)); the only consumer is `mega-tor`. The bar's purple badge follows
-within the 5 s poll ([bar](../desktop/bar.md)).
+Since 16/10/2026 boot never starts `tor.service`, so it is down unless something asks for it.
+`mega-dl --tor` raises it and stops it on exit ([mega](../apps/mega.md)); `tor-on` / `tor-off`
+are the manual switch, with no sudo (a polkit rule covers that one unit). Removing it entirely is
+`tor = false` in the host's services panel plus a rebuild. Neither crypto app depends on it (each
+brings its own Tor, see [crypto](../apps/crypto.md)). The bar's purple badge follows within the
+5 s poll ([bar](../desktop/bar.md)).
 
 ## `backup-browse` has no sudo, and that is the point
 

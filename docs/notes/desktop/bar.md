@@ -221,11 +221,13 @@ the hover one and the click one, show Tor's STATE below the VPN rows (`TorRows.q
   owner tells them apart.
 
 The click popover adds a **Turn on / Turn off** button on the System Tor row only. It runs a
-plain `systemctl start|stop tor.service`, so the polkit agent asks for the password every time: a
-rule granting it silently was considered and NOT added (10/10/2026), since a button that weakens
-the auth for a root service is a bigger change than the convenience it buys. Until the next boot,
-like `tor-on`/`tor-off` ([shell](../repo/shell.md)); the unit stays enabled. The popover does not
-auto-close while the dialog is up. Bisq's Tor has no button: closing Bisq is what stops it.
+plain `systemctl start|stop tor.service`. On 10/10/2026 a polkit rule granting it silently was
+rejected (a button is not worth weakening auth on a root service); on 16/10 Tor became ON DEMAND
+and the rule went in after all, because `mega-dl --tor` has to stop it UNATTENDED at the end of a
+download that can take hours, where a password prompt would just hang. The rule covers
+`tor.service` alone, and that unit is a client-only SOCKS on loopback
+([tor.nix](../../../modules/nixos/network/tor.nix)). Boot never starts it, so it stays off until
+something asks. Bisq's Tor has no button: closing Bisq is what stops it.
 
 Stack Wallet gets no row: its Tor is a library inside the app's process, with no process or
 service to observe from outside, so a row would be a guess. Its own indicator is the truth.

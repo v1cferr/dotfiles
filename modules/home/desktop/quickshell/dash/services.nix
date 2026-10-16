@@ -69,10 +69,6 @@ let
       label = "ci-webhook";
       system = [ "webhook.service" ];
     };
-    tor = {
-      label = "tor";
-      system = [ "tor.service" ];
-    };
     libvirt = {
       label = "libvirt";
       system = [ "libvirtd.service" ];

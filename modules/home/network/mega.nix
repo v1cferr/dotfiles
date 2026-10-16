@@ -13,6 +13,7 @@ let
     coreutils
     curl
     megatools
+    systemd
     writeShellApplication
     ;
 
@@ -25,12 +26,23 @@ let
       megatools
       curl
       coreutils
+      systemd # systemctl, to raise Tor on demand
     ];
     text = ''
       dest='${destDefault}'
       proxy=""
       tor=0
       maxHours=48
+      startedTor=0
+      log=""
+
+      # ONE exit trap for both: the temp log, and the Tor this run raised (never one it found up).
+      # shellcheck disable=SC2329 # invoked by the trap below
+      cleanup() {
+        if [ -n "$log" ]; then rm -f "$log"; fi
+        if [ "$startedTor" = 1 ]; then systemctl stop tor || true; fi
+      }
+      trap cleanup EXIT
 
       while [ $# -gt 0 ]; do
         case "$1" in
@@ -59,13 +71,31 @@ let
           exit 2
         fi
         proxy='${torSocks}'
+        # Tor is ON DEMAND (modules/nixos/network/tor.nix): raise it here and take it down on exit,
+        # but only if THIS run raised it, so a Tor someone else is using stays up.
+        if ! systemctl is-active --quiet tor; then
+          echo "raising tor (on demand)..."
+          if ! systemctl start tor; then
+            echo "could not start tor.service (my.services.tor in hosts/<host>/services.nix?)" >&2
+            exit 1
+          fi
+          startedTor=1
+        fi
         # Not a safety net (megadl does not fall back to direct): it is to know WHERE it goes out and
-        # to fail with the right cause when tor is down.
+        # to fail with the right cause when tor is down. Retried because a fresh daemon needs ~10-30s
+        # to bootstrap a circuit.
         echo "checking the Tor circuit..."
-        if ! probe=$(curl -sS --max-time 60 --socks5-hostname 127.0.0.1:9050 \
-                       https://check.torproject.org/api/ip); then
-          echo "the SOCKS at 127.0.0.1:9050 did not answer, is tor up?" >&2
-          echo "  systemctl status tor  (and my.services.tor in the host panel, hosts/<host>/services.nix)" >&2
+        probe=""
+        for _ in 1 2 3 4 5 6; do
+          if probe=$(curl -sS --max-time 30 --socks5-hostname 127.0.0.1:9050 \
+                       https://check.torproject.org/api/ip 2>/dev/null); then
+            break
+          fi
+          probe=""
+          sleep 5
+        done
+        if [ -z "$probe" ]; then
+          echo "the SOCKS at 127.0.0.1:9050 did not answer: journalctl -u tor" >&2
           exit 1
         fi
         case "$probe" in
@@ -79,7 +109,6 @@ let
 
       mkdir -p "$dest"
       log=$(mktemp)
-      trap 'rm -f "$log"' EXIT
 
       # How much partial exists, which is what shows the waiting is paying off. `|| true` and not
       # `|| echo 0`: with no partial, `du -c` prints "0 total" AND errors, so it would print twice.

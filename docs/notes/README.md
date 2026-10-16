@@ -111,6 +111,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [dash](desktop/dash.md) | the glance band on the standing monitor: vitals, month, CI pages |
 | [glance-feed](desktop/glance-feed.md) | the SQLite network cache: fetch only what changed, paint from disk at boot |
 | [lockscreen](desktop/lockscreen.md) | hyprlock and hypridle, and the three hardware lessons |
+| [away](desktop/away.md) | a black screen and dark LEDs while an agent works, and why not DDC or DPMS |
 | [weather](desktop/weather.md) | one source for the bar and the lock, and the icon-by-regex trap |
 | [theme](desktop/theme.md) | dark mode, Kvantum, the Win11 icons, the palette SSOT |
 | [autostart](desktop/autostart.md) | what opens at login, and Spotify's 4145 restarts |

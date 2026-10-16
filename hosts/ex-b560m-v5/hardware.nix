@@ -14,7 +14,24 @@ in
     ../../modules/nixos/hardware/fan-control.nix # the fans: a patched `xe`, the board's NCT6798D, CoolerControl over both
     ../../modules/nixos/hardware/mx-master-3s.nix # a Logitech MX Master 3S through logiops (gestures, DPI)
     ../../modules/nixos/hardware/deathadder-v2.nix # a Razer DeathAdder V2: hidraw for the user, no driver
+    ../../modules/nixos/hardware/peripheral-rgb.nix # the keyboard's and the mouse's LEDs (my.rgb.peripherals)
   ];
+
+  # The keyboard (a Redragon Magic Wand Pro, which OpenRGB sees as EVision) and the mouse as they
+  # ship, and dark for the away screen. The EVision has no `Off`, so black Static is its dark.
+  my.rgb.peripherals = {
+    "EVision Keyboard 0C45:5004" = {
+      on.mode = "Spectrum Cycle";
+      off = {
+        mode = "Static";
+        color = "000000";
+      };
+    };
+    "Razer Deathadder V2" = {
+      on.mode = "Spectrum Cycle";
+      off.mode = "Off";
+    };
+  };
 
   hardware.cpu.intel.updateMicrocode = true; # an Intel CPU on this board
 

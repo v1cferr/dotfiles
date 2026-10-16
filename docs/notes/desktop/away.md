@@ -46,6 +46,14 @@ Three details carry the design:
 - **Exclusive keyboard focus.** Every key lands on the overlay and is dropped, so a cat on the
   keyboard types nothing into the agent's terminal. Only Enter is handled, and it leaves. The
   mouse does nothing, and the cursor is blanked.
+- **Enter also lives in a Hyprland submap.** Turning BOTH monitors off at their buttons drops
+  both DisplayPort links, Quickshell falls back to a placeholder screen and recreates the
+  overlay when they return, and the recreated windows came back WITHOUT keyboard focus: Enter
+  went nowhere (16/10/2026). So entering also switches Hyprland to the `away` submap
+  (`keybinds.lua`), where Enter is a compositor bind that needs no focus. The bind resets the
+  submap itself, so a dead Quickshell cannot strand the keyboard in it. The QML handler stays
+  for the normal case. `wtype -k Return` reaches the QML handler but NOT the bind (its virtual
+  keyboard does not match Hyprland binds), so the bind is only provable with a real key.
 - **An idle inhibitor.** hypridle's 5-min lock would otherwise draw hyprlock over the black and
   light the room. The overlay holds a Wayland idle inhibitor while it is up, which hypridle
   honours (its `ignore_dbus_inhibit` only covers D-Bus). The idle clock starts over on Enter, so

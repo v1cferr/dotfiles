@@ -155,6 +155,15 @@ hl.define_submap("screenshot", function()
   hl.bind("escape", hl.dsp.exec_cmd("flameshot-cancel"))        -- cancel plus leave the submap
 end)
 
+-- The away screen (quickshell/Away.qml) enters this submap, so Enter reaches the compositor even
+-- when the overlay lost the keyboard: both monitors off at the button recreates it unfocused.
+-- It resets the submap itself, so a dead Quickshell can never strand the keyboard here.
+hl.define_submap("away", function()
+  local leave = hl.dsp.exec_cmd("qs ipc call away off; hyprctl dispatch 'hl.dsp.submap(\"reset\")'")
+  hl.bind("RETURN",   leave) -- back
+  hl.bind("KP_Enter", leave) -- back, from the numpad
+end)
+
 -- The blue light filter. The service already changes temperature by time of day; these are
 -- one-off MANUAL overrides, held until the schedule's next profile takes over.
 hl.bind(mainMod .. " + F9",         hl.dsp.exec_cmd("systemctl --user is-active --quiet hyprsunset && systemctl --user stop hyprsunset || systemctl --user start hyprsunset")) -- toggle the service

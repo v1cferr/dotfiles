@@ -1,5 +1,7 @@
-// The away screen's windows: a black overlay on every monitor that takes the keyboard, so only
-// Enter gets through, and it closes them. The state is Away.qml. docs/notes/desktop/away.md
+// The away screen's windows: a black overlay on every monitor that swallows the keyboard. Enter
+// leaves from here AND from the `away` submap in keybinds.lua, which still hears it when monitors
+// switched off at the button recreate these windows without focus. The state is Away.qml.
+// docs/notes/desktop/away.md
 import Quickshell
 import Quickshell.Wayland
 import QtQuick
@@ -24,7 +26,7 @@ Scope {
             color: "black"
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.namespace: "away"
-            // Exclusive: every other key lands here and dies, so nothing types into the agent's terminal.
+            // Exclusive: every key lands here and dies, so nothing types into the agent's terminal.
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
             // A Wayland inhibitor, which hypridle honours: the 5-min lock would draw hyprlock over the

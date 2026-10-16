@@ -103,3 +103,7 @@ wake-workstation --test                                 # here
 That proves the packet reaches the NIC over L2. It does NOT prove a wake from S5: with ErP/Deep
 Sleep on in the BIOS the NIC loses power when the machine is off, and only a real power-off test
 answers that.
+
+**The power-off test (16/10/2026): it WAKES.** With the machine off in S5, `wake-workstation`
+booted it (up at 16:00:52, answering ping about 33 s after the send), so the BIOS keeps the NIC
+powered. All three paths go out together, so which one did the waking is not known.

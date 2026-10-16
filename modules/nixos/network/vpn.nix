@@ -421,6 +421,7 @@ in
   # kills every TCP on the old one; `rotated` lets ssh.nix drop the dead masters at once.
   systemd.tmpfiles.rules = [ "d /run/vpn-fai 0755 root root -" ];
   environment.etc."ppp/ip-up".source = writeShellScript "ppp-ip-up" ''
+    umask 022 # pppd runs this under 077; the IP is no secret and `cat` from my user should read it
     prev=$(${coreutils}/bin/cat /run/vpn-fai/ip 2>/dev/null || true)
     echo "$4" > /run/vpn-fai/ip
     if [ "$prev" != "$4" ]; then ${coreutils}/bin/touch /run/vpn-fai/rotated; fi

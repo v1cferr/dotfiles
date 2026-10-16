@@ -71,6 +71,12 @@ let
         # Each app in its own app-*.scope under app.slice, not in vicinae.service's cgroup.
         applications.preferences.launchPrefix = "${lib.getExe app2unit} --";
         calculator.preferences.backend = "qalculate";
+        # qwen3.5, not upstream's translategemma (not pulled here) nor qwen3:4b (it thinks regardless).
+        "@AdityaZxxx/ollama-wordsmith".preferences = {
+          ollamaUrl = "http://localhost:11434";
+          defaultModel = "qwen3.5:latest";
+          targetLanguage = "English";
+        };
         "@leiserfg/ssh".preferences.terminal = "kitty ssh"; # it runs `<terminal> <host>`
         "@c4n4m1/zoxide-recent-directories".preferences = {
           application = "code";

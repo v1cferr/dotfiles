@@ -1,4 +1,4 @@
-# Vicinae extensions: ten from the pinned vicinaehq/extensions input, built offline from their
+# Vicinae extensions: eleven from the pinned vicinaehq/extensions input, built offline from their
 # lockfiles, and my own ./repositories. Why these, and how the tokens arrive: docs/notes/desktop/vicinae.md
 {
   config,
@@ -69,6 +69,14 @@ in
     })
     (mk "timer" { }) # "25m Pomodoro": a transient systemd timer that ends in a notification
     (mk "reminders" { }) # natural-language reminders, also transient units, with Complete/Snooze
+    # Translate, summarize, explain with the local Ollama. `think: false`, or qwen3.5 reasons first
+    # and a one-line translation takes seconds more.
+    (mk "ollama-wordsmith" {
+      postPatch = ''
+        substituteInPlace src/services/ollama.ts \
+          --replace-fail 'JSON.stringify({ model, messages, stream })' 'JSON.stringify({ model, messages, stream, think: false })'
+      '';
+    })
     # VS Code's File > Open Recent list, read from its state.vscdb. Patched twice: no existsSync
     # per entry, which hung the whole list on an unreachable ~/FAI-workstation mount (entries show
     # unchecked, as VS Code shows them); and no "Remove from Recents", which rewrote the database

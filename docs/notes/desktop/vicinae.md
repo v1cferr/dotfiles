@@ -280,6 +280,7 @@ hash edit.
 | zoxide-recent-directories | zoxide's directories by frecency; Enter opens VS Code, the alternative action Dolphin | none |
 | timer | timers in plain words ("25m Pomodoro"), each a transient `systemd-run --user` timer that ends in `notify-send` | none |
 | reminders | one-off and recurring reminders in plain English ("call the dentist tomorrow at 10"), with Complete and Snooze buttons on the notification | none |
+| ollama-wordsmith | Translate, Summarize, Explain, Enhance and Dictionary with the local Ollama: type or paste the text in the search bar | none; Ollama on localhost |
 | vscode-recents | VS Code's File > Open Recent list (folders, files, SSH remotes); Enter opens it in VS Code | none |
 | pulseaudio | output and input devices (default, mute, volume in 5% steps or exact), per-app playback and recording streams, card profiles | none |
 | repositories (mine) | my GitHub accounts and FAI's GitLab in one list | the GitHub token above, FAI's `read_api` token |
@@ -307,6 +308,13 @@ reminders keeps its state in its own support folder and schedules transient unit
 in `~/.config/systemd/user`; its Complete and Snooze buttons work because Quickshell's notification
 server declares `actionsSupported`. ssh reads the generated `~/.ssh/config` and runs its
 `terminal` preference followed by the host, hence `kitty ssh`.
+
+**ollama-wordsmith runs `qwen3.5:latest` with thinking off.** Upstream's default model,
+`translategemma`, is not pulled here. Measured on 16/10/2026 on a short PT→EN sentence:
+`qwen3:4b` reasons before answering whatever the request says (22 s, and with `think: false` the
+reasoning lands IN the reply), while `qwen3.5` with `think: false` answered with the bare
+translation in 6 s. The extension sends no `think` field, so `postPatch` adds `think: false` to
+its `/api/chat` body. Target language English; change `targetLanguage` in `default.nix`.
 
 Considered on 16/10/2026 and left out: otp (TOTP secrets in a second store beside Bitwarden),
 kde-connect (LocalSend is the phone path here), hypr (the cheatsheet covers keybinds),

@@ -148,8 +148,9 @@ change with nothing broken to fix.
 
 **What changed in the cells.** The time grew to its own line (96 design px, about 72 on screen) for
 reading from the chair, the weekday and the date under it; today's weather sits centered in the rest
-of the card and the media line at its foot. RAM and TEMP draw the 2-minute history the bar already
-keeps (`memHist`, `tempHist`), so no reading was added. NET's value is a step smaller (28 design px)
+of the card and the media line at its foot. RAM and TEMP briefly drew their 2-minute history and lost it the same day: they
+barely move, and on the zero-based scale the sparkline keeps on purpose their history was a flat
+slab that said nothing. NET's value is a step smaller (28 design px)
 so `↓ 977 KB/s` stays whole in a 172 px tile. Every tile is aligned to the top, so the six labels
 share one line. The sparklines are one canvas each since the same day
 ([motion.md](motion.md#measured-cost-and-what-was-not-measured)).

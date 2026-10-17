@@ -629,9 +629,6 @@ PanelWindow {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top // every label on one line across the row
-                // RAM and TEMP already keep 2 minutes of history in the Bar: shown, no new reading.
-                series: dash.host.memHist
-                seriesTop: 100
                 label: "RAM"
                 number: dash.host.memPct
                 unit: "%"
@@ -695,8 +692,6 @@ PanelWindow {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top // every label on one line across the row
-                series: dash.host.tempHist
-                seriesTop: 100
                 label: "TEMP"
                 number: dash.host.tempMax
                 unit: "°C"

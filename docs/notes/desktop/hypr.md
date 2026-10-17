@@ -174,10 +174,9 @@ Three `misc` settings worth keeping:
   `render_unfocused` rule (a game on a workspace that is off screen). It is 30 and not the default
   15 because 15 measured JITTERY; the table is in "Window rules" below.
 
-The custom beziers go through `hl.curve` (hyprlang's old `bezier=`); "default" and "linear" are
-Hyprland's built-ins and the four others are ours. In `hl.animation`, `leaf` is the animation's
-name, `speed` is the duration (lower is faster), `bezier` is the curve and `style` is the
-variation.
+The animations (two beziers and one spring through `hl.curve`, the tree of `hl.animation` leaves,
+and the `my.theme.motion` switch that turns them off) have their own note,
+[motion.md](motion.md), shared with Quickshell's half of the same motion language.
 
 ### Monitors
 

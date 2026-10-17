@@ -59,29 +59,29 @@ hl.config({
 })
 
 -- ── Animations ──────────────────────────────────────────────────────────────
--- Animations. Custom beziers through hl.curve; "default" and "linear" are built in.
-hl.curve("easeOutQuint",   { type = "bezier", points = { { 0.23, 1 },    { 0.32, 1 }   } })
-hl.curve("easeInOutCubic", { type = "bezier", points = { { 0.65, 0.05 }, { 0.36, 1 }   } })
-hl.curve("almostLinear",   { type = "bezier", points = { { 0.5, 0.5 },   { 0.75, 1.0 } } })
-hl.curve("quick",          { type = "bezier", points = { { 0.15, 0 },    { 0.1, 1 }    } })
+-- Smooth and Subtle: a spring for what MOVES, a short ease-out for opacity and color, exits
+-- shorter than entrances. Every value and what it replaced: docs/notes/desktop/motion.md
+hl.curve("easeOutQuint", { type = "bezier", points = { { 0.23, 1 },  { 0.32, 1 }   } })
+hl.curve("almostLinear", { type = "bezier", points = { { 0.5, 0.5 }, { 0.75, 1.0 } } })
+-- Near-critical (zeta 0.93): 90% at ~130 ms, settled by ~310 ms, sub-pixel overshoot. A spring
+-- IGNORES `speed`. The key is `dampening` on 0.56; main renamed it and still reads the old one.
+hl.curve("settle", { type = "spring", mass = 1, stiffness = 700, dampening = 49 })
 
-hl.config({ animations = { enabled = true } })
+-- my.theme.motion = "off" drops them all; the default fallback covers a file not rebuilt yet.
+hl.config({ animations = { enabled = (C.motion or "subtle") ~= "off" } })
 
--- leaf = the name, speed = the duration (lower is faster), bezier = the curve, style = the
--- variation.
-hl.animation({ leaf = "global",        enabled = true, speed = 10,   bezier = "default" })
-hl.animation({ leaf = "border",        enabled = true, speed = 5.39, bezier = "easeOutQuint" })
-hl.animation({ leaf = "windows",       enabled = true, speed = 4.79, bezier = "easeOutQuint" })
-hl.animation({ leaf = "windowsIn",     enabled = true, speed = 4.1,  bezier = "easeOutQuint", style = "popin 87%" })
-hl.animation({ leaf = "windowsOut",    enabled = true, speed = 1.49, bezier = "linear",       style = "popin 87%" })
-hl.animation({ leaf = "fadeIn",        enabled = true, speed = 1.73, bezier = "almostLinear" })
-hl.animation({ leaf = "fadeOut",       enabled = true, speed = 1.46, bezier = "almostLinear" })
-hl.animation({ leaf = "fade",          enabled = true, speed = 3.03, bezier = "quick" })
-hl.animation({ leaf = "layers",        enabled = true, speed = 3.81, bezier = "easeOutQuint" })
-hl.animation({ leaf = "layersIn",      enabled = true, speed = 4,    bezier = "easeOutQuint", style = "fade" })
-hl.animation({ leaf = "layersOut",     enabled = true, speed = 1.5,  bezier = "linear",       style = "fade" })
-hl.animation({ leaf = "fadeLayersIn",  enabled = true, speed = 1.79, bezier = "almostLinear" })
-hl.animation({ leaf = "fadeLayersOut", enabled = true, speed = 1.39, bezier = "almostLinear" })
-hl.animation({ leaf = "workspaces",    enabled = true, speed = 1.94, bezier = "almostLinear", style = "fade" })
-hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 1.21, bezier = "almostLinear", style = "fade" })
-hl.animation({ leaf = "workspacesOut", enabled = true, speed = 1.94, bezier = "almostLinear", style = "fade" })
+-- leaf = the name, speed = deciseconds (1 = 100 ms), bezier/spring = the curve, style = the variation.
+hl.animation({ leaf = "global",           enabled = true, speed = 10,  bezier = "default" })
+hl.animation({ leaf = "windows",          enabled = true, speed = 3,   spring = "settle" }) -- windowsMove inherits it
+hl.animation({ leaf = "windowsIn",        enabled = true, speed = 2.2, bezier = "easeOutQuint", style = "popin 97%" })
+hl.animation({ leaf = "windowsOut",       enabled = true, speed = 1.3, bezier = "almostLinear", style = "popin 97%" })
+hl.animation({ leaf = "fade",             enabled = true, speed = 2,   bezier = "almostLinear" }) -- focus, dim, shadow, popups
+hl.animation({ leaf = "fadeIn",           enabled = true, speed = 1.8, bezier = "almostLinear" })
+hl.animation({ leaf = "fadeOut",          enabled = true, speed = 1.2, bezier = "almostLinear" })
+hl.animation({ leaf = "border",           enabled = true, speed = 2,   bezier = "easeOutQuint" })
+hl.animation({ leaf = "layers",           enabled = true, speed = 1.6, bezier = "easeOutQuint", style = "fade" })
+hl.animation({ leaf = "layersOut",        enabled = true, speed = 1,   bezier = "almostLinear", style = "fade" })
+hl.animation({ leaf = "fadeLayersIn",     enabled = true, speed = 1.5, bezier = "easeOutQuint" })
+hl.animation({ leaf = "fadeLayersOut",    enabled = true, speed = 1,   bezier = "almostLinear" })
+hl.animation({ leaf = "workspaces",       enabled = true, speed = 2,   spring = "settle", style = "slidefade 8%" })
+hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 1.8, bezier = "easeOutQuint", style = "fade" })

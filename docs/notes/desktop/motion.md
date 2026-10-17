@@ -30,3 +30,89 @@ hot-reload consumers already read (`~/.config/theme/hypr-colors.lua` and
 
 There is deliberately no third, "expressive" profile: the brief was subtle, and a profile nobody
 uses is dead config (rule 16).
+
+## Hyprland
+
+Three curves, and every leaf names one of them:
+
+| Curve | Definition | Used for |
+| --- | --- | --- |
+| `settle` | spring, mass 1, stiffness 700, dampening 49 | what MOVES: `windows` (and `windowsMove` through it), `workspaces` |
+| `easeOutQuint` | bezier (0.23, 1), (0.32, 1) | entrances: `windowsIn`, `border`, `layers`, `fadeLayersIn`, `specialWorkspace` |
+| `almostLinear` | bezier (0.5, 0.5), (0.75, 1) | opacity and exits: `fade`, `fadeIn`, `fadeOut`, `windowsOut`, `layersOut`, `fadeLayersOut` |
+
+| Leaf | Before (until 17/10/2026) | Now |
+| --- | --- | --- |
+| `windows` / `windowsMove` | 479 ms easeOutQuint | `settle` spring (~310 ms to rest) |
+| `windowsIn` | 410 ms, `popin 87%` | 220 ms easeOutQuint, `popin 97%` |
+| `windowsOut` | 149 ms linear, `popin 87%` | 130 ms almostLinear, `popin 97%` |
+| `fade` (focus, dim, shadow, popups) | 303 ms `quick` | 200 ms almostLinear |
+| `fadeIn` / `fadeOut` | 173 / 146 ms | 180 / 120 ms |
+| `border` | 539 ms | 200 ms easeOutQuint |
+| `layers` (in) / `layersOut` | 400 / 150 ms, `fade` | 160 / 100 ms, `fade` |
+| `fadeLayersIn` / `fadeLayersOut` | 179 / 139 ms almostLinear | 150 ms easeOutQuint / 100 ms almostLinear |
+| `workspaces` | 121 to 194 ms almostLinear, `fade` | `settle` spring, `slidefade 8%` |
+| `specialWorkspace` | (inherited `fade`) | 180 ms easeOutQuint, `fade`, pinned so the slide does not reach it |
+
+**Why a spring only for space.** A Hyprland spring IGNORES `speed`: its duration comes out of the
+physics (`hyprutils/src/animation/Spring.cpp`), and a retarget keeps the velocity it had. That is
+exactly what the scrolling tape wants, where SUPER+scroll can fire a second column jump before the
+first one landed: a bezier restarts at zero velocity and stutters, the spring bends. For an opacity there
+is nothing to retarget, so a plain curve with a known duration is the honest choice.
+
+**Why these spring numbers.** The damping ratio is `c / (2 * sqrt(k * m))`; 49 / (2 * sqrt(700))
+is 0.93, just under critical. Integrated with the same model hyprutils uses (180 Hz steps, its
+0.001 value and velocity epsilons), REASONED and not measured on screen, on 17/10/2026:
+
+| Spring | zeta | 90% | 99% | at rest | overshoot |
+| --- | --- | --- | --- | --- | --- |
+| upstream example `easy` (238 / 24.2) | 0.78 | 194 ms | 450 ms | 650 ms | 1.85% |
+| critical (500 / 44.7) | 1.00 | 178 ms | 333 ms | 567 ms | 0 |
+| **`settle` (700 / 49)** | **0.93** | **133 ms** | **206 ms** | **306 ms** | **0.06%** |
+
+Exactly critical looks right on paper and wrong on a compositor: its tail is exponential, so the
+window is visibly "still arriving" for half a second and Hyprland keeps drawing frames until the
+epsilon is met. A touch under critical reaches rest in half the time, and 0.06% of a 2560 px
+workspace slide is 1.5 px, below what the eye resolves at that speed. The upstream example spring
+at 0.78 overshoots almost 2%, which on a window edge IS the rubber band the brief rules out.
+
+**The `dampening` trap.** The wiki and Hyprland's main branch spell the field `damping`, but the
+pinned 0.56.2 reads only `dampening` and rejects a spring without it. Main renamed it on
+29/08/2026 (#15993) and still falls back to `dampening`, so the old spelling is the one that works
+on both sides of the next bump.
+
+**The popin is 97%, not 87%.** Hyprland's popin scales from the center, and on a 2560 px column
+87% means the edges travel 166 px each, a zoom you notice. 97% is 38 px: the window settles into
+place instead of arriving from somewhere.
+
+**Workspaces slide 8%.** `slidefade 8%` moves the outgoing and incoming workspace 8% of the
+monitor's width (205 px on the primary) while they cross-fade, enough to say which way you went
+and nowhere near a full-screen slide, which on an infinite tape would compete with the tape's own
+horizontal motion. The direction follows the workspace id.
+
+**Measured, 17/10/2026, on the ASUS at 180 Hz** (scratch scripts, `/proc/<pid>/stat` utime plus
+stime over the run, old block restored from git for the comparison):
+
+| Test | Old curves | New curves |
+| --- | --- | --- |
+| 30 workspace switches 120 ms apart (3 runs) | 13.4 to 13.7% of a core | 13.4 to 14.1% |
+| 6 kitty open and close cycles on an empty workspace (2 runs) | 7.2 to 7.6% | 6.8 to 7.2% |
+
+The same within noise: the spring's longer settle tail is not a cost. Every run ended on the
+workspace it started on with no window left behind. What these numbers cannot say is how it LOOKS;
+there is no frame-pacing tool in the repo, and no dropped-frame count was taken.
+
+### What is left alone
+
+- **Flameshot's overlay** keeps `no_anim` (`rules.lua`): a frozen screenshot must not zoom in.
+- **Games and Picture-in-Picture** have no animation rule of their own and none was added. A
+  fullscreen toggle runs through `windowsMove`, so it now settles on the spring instead of a
+  479 ms bezier. `render_unfocused` and `render_unfocused_fps` are untouched.
+- **The lock screen** is a session lock, not a layer, and no animation leaf touches it.
+- **No `borderangle` loop**: the wiki's own warning applies (it renders every frame forever).
+- **`zoomFactor` and `monitorAdded`** keep the `global` default; nothing here uses them.
+
+### Turning it off
+
+With `my.theme.motion = "off"` the module sets `animations.enabled = false`, the one switch
+Hyprland has for all of it. Every leaf stays declared, so going back is the same option.

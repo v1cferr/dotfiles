@@ -154,9 +154,10 @@ want, so they are not written. The `dwindle` block left along with the layout.
 
 Three `misc` settings worth keeping:
 
-- **`vrr = 2`** (G-Sync only in fullscreen games). The LG UltraGear is G-Sync Compatible, and on
-  the Arc (`xe`) the freeze NVIDIA used to give on the lockscreen does NOT reproduce, which is why
-  the always-on `vrr = 1` was vetoed back on Arch. 2 is safe.
+- **`vrr = 1`** (VRR always on, both panels), since 17/10/2026: games in a window or borderless get
+  it too, not only fullscreen ones. Always-on was vetoed back on Arch for the lockscreen freeze
+  NVIDIA gave, which does NOT reproduce on the Arc (`xe`). If a panel flickers on the desktop, the
+  fallback is `vrr = 2` (fullscreen only), which works since 0.56.2. The history of 2:
   **2 never fired on 0.55.4** (measured 17/10/2026 with vkcube, XWayland and native alike): the
   scrolling layout answered a fullscreen request with `FULLSCREEN_REQUEST_HANDLED_BY_LAYOUT`, which
   cleared the workspace's fullscreen flag that `ensureVRR` checks. Fixed in 0.56.2 (#15660), which

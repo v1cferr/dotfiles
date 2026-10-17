@@ -45,9 +45,9 @@ hl.config({
   misc = {
     force_default_wallpaper = 0,  -- without the default anime wallpaper
     disable_hyprland_logo = true, -- without the background logo (we use our own wallpaper)
-    -- vrr=2: G-Sync in fullscreen games only. On the Arc's xe the lockscreen freeze NVIDIA gave
-    -- does NOT reproduce, which is why always-on vrr=1 was vetoed on Arch. See the notes.
-    vrr = 2,
+    -- vrr=1: VRR always on, windowed games included. The lockscreen freeze that vetoed it under
+    -- NVIDIA does NOT reproduce on the Arc's xe. See the notes.
+    vrr = 1,
     -- A safety net against a lockout: relaunching hyprlock from a TTY REATTACHES the locked
     -- session instead of refusing, so there is no `sudo reboot` to escape an orphaned lock.
     allow_session_lock_restore = true,

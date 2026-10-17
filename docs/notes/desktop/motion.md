@@ -260,3 +260,43 @@ Two places animated because a VALUE changed, not because I did anything, and bot
 What still eases on a value, deliberately: meters and progress bars (`motionSlow`, a bar sliding
 300 ms is a shape changing, not text moving) and the OSD (`motionFast`, 90 ms, so a held volume key
 never lags its bar). Clocks and every text reading change in place.
+
+## Measured cost, and what was not measured
+
+Idle, 30 s windows of `/proc/<pid>/stat` on 17/10/2026, the session at rest on its usual windows:
+
+| | Before | After |
+| --- | --- | --- |
+| Quickshell | 18.6% of a core | 17.4 to 18.3% |
+| Hyprland | 9.1% | 8.4 to 8.6% |
+
+No change, and no new process: everything here is configuration of the compositor and the shell
+that were already running. The idle Quickshell figure is NOT animation: with the weather ambient
+loops stopped it still read 14.4%, so most of it is the bar's own polling, a separate subject.
+(The RSS figures moved with the many hot reloads of the test session and say nothing about this
+change.)
+
+Not measured, and not claimed: frame pacing and dropped frames (there is no tool for it in the repo,
+and Hyprland's debug overlay was not used), GPU load, and how any of this LOOKS. The curves and
+durations above were chosen from the numbers and checked for errors live; the visual judgment is
+mine to make at the desk, and every value is one line to tune.
+
+## Rejected
+
+- **A spring everywhere.** An opacity has nothing to retarget, and a spring's duration is not
+  something a token can name.
+- **Exactly critical damping** for `settle`: the exponential tail keeps the compositor animating
+  for ~570 ms to move a window 99% of the way in 333 ms.
+- **The upstream example spring** (`easy`, zeta 0.78): a 1.85% overshoot is a visible bounce on a
+  window edge.
+- **Hyprland's `slide` for popovers and the launcher**: it always travels from the monitor's edge.
+- **`popin` for Vicinae**: the brief allowed minimal or no scale; none is the safer of the two.
+- **Plugins** (hyprfocus, hyprtrails) and any animation library: nothing here needed one.
+- **An "expressive" profile**: nobody asked for it, and it would be dead config.
+
+## Applying
+
+Hyprland's Lua and Quickshell's QML are hot-reloaded from the repo, so the curves, the tokens and
+every QML change were already live when they were committed. `my.theme.motion` lives in the
+generated files, which change only with a `rebuild`; until then both consumers fall back to
+`subtle`. Nothing here needs a new session.

@@ -16,6 +16,9 @@ hl.window_rule({ match = { title = "^(Picture-in-Picture)$" }, opacity = "1.0" }
 -- workspace comes back, because an invisible surface gets no frame callback. render_unfocused keeps
 -- it drawing at misc.render_unfocused_fps. Measured: docs/notes/desktop/hypr.md
 hl.window_rule({ match = { class = "^(hearthstone\\.exe)$" }, render_unfocused = true })
+-- Overwatch: opens tiled at 2550x1396 while it renders 2560x1440, and a frozen loop on a hidden
+-- workspace stops answering the server ("lost connection"). Fullscreen plus the same keepalive.
+hl.window_rule({ match = { class = "^(overwatch\\.exe)$" }, fullscreen = true, render_unfocused = true })
 
 -- Flameshot v14: the overlay ASKS for fullscreen and suppressing it left it 17 px low, under the
 -- bar's reserved area. float plus center is for the PICKER only. Every flag: docs/notes/desktop/hypr.md

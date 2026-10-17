@@ -263,6 +263,10 @@ window: `Hearthstone.exe` becomes `hearthstone.exe`. Another game that crawls is
 class, and only one that crawls: a D3D9 game through wined3d keeps its loop running off screen
 (measured on the Ascension client, 56% of a core), so the rule would pay 30 fps of GPU for nothing.
 
+Overwatch (DX11 through DXVK) is the second class, added on 17/10/2026 together with `fullscreen`:
+it opened TILED at 2550x1396 while rendering 2560x1440, on a workspace that was off screen during
+its first load since July, and the game reported a lost connection to the server.
+
 An upstream hole worth knowing (hyprwm/Hyprland#12463): a window rendering unfocused still leans on
 its MONITOR having a reason to draw, so on a completely static screen it can fall under the ceiling.
 There is nothing to configure, and it did not show up in the measurement above.

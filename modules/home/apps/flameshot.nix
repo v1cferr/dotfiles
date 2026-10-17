@@ -14,11 +14,12 @@ let
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
     coreutils
-    hyprland
     jq
     unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
     writeShellApplication
     ;
+  # hyprctl from the RUNNING compositor (unstable), never the stable 0.55 a bare pkgs.hyprland is.
+  hyprland = osConfig.programs.hyprland.package;
 
   # The Quickshell package (a flake input), bound once because the path repeats below.
   qsPkg = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;

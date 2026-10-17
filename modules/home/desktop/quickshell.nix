@@ -13,10 +13,11 @@ let
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
     coreutils
-    hyprland
     systemd
     writeShellApplication
     ;
+  # hyprctl from the RUNNING compositor (unstable), never the stable 0.55 a bare pkgs.hyprland is.
+  hyprland = osConfig.programs.hyprland.package;
   inherit (pkgs.kdePackages) plasma-workspace; # xembedsniproxy lives in this one
 
   # The Quickshell package (a flake input), bound once because the path repeats in every consumer.

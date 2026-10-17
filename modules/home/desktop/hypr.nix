@@ -14,7 +14,6 @@ let
   inherit (pkgs)
     coreutils
     findutils
-    hyprland
     jq
     pamixer
     pavucontrol
@@ -25,6 +24,8 @@ let
     wl-clipboard
     writeShellApplication
     ;
+  # hyprctl from the RUNNING compositor (unstable), never the stable 0.55 a bare pkgs.hyprland is.
+  hyprland = osConfig.programs.hyprland.package;
 
   # The Quickshell package (a flake input), bound once because the path repeats in every consumer.
   qsPkg = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;

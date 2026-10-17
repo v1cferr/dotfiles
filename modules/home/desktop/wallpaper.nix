@@ -12,10 +12,11 @@ let
   # Rule 19: everything this module reaches for, named once.
   inherit (pkgs)
     coreutils
-    hyprland
     nixos-artwork
     writeShellApplication
     ;
+  # hyprctl from the RUNNING compositor (unstable), never the stable 0.55 a bare pkgs.hyprland is.
+  hyprland = osConfig.programs.hyprland.package;
 
   art = nixos-artwork.wallpapers;
 

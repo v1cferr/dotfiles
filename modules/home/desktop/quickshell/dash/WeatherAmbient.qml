@@ -1,6 +1,5 @@
-// The weather, ALIVE behind today's glyph: drops falling while it rains, a slow glow while the sun
-// is out, nothing otherwise. Cheap by design (a few rectangles, no shader), because the band
-// already repaints every frame for the horizon. Why only these two: docs/notes/desktop/dash.md
+// The weather behind today's glyph: drops while it rains, a glow while the sun is out, nothing
+// otherwise. It MOVES for 8 s when that sky begins, then holds still: docs/notes/desktop/dash.md
 import QtQuick
 import "root:/"
 
@@ -14,6 +13,19 @@ Item {
     readonly property bool raining: (amb.code >= 51 && amb.code <= 67) || (amb.code >= 80 && amb.code <= 82) || amb.code >= 95
     readonly property bool sunny: amb.day && (amb.code === 0 || amb.code === 1)
 
+    // A loop that never stops kept the whole band repainting every frame (measured: docs/notes/
+    // desktop/dash.md). The motion now plays when the sky changes, and what it leaves is the cue.
+    readonly property bool playing: !Theme.motionReduced && !settle.done && (amb.raining || amb.sunny)
+    Timer {
+        id: settle
+        property bool done: false
+        interval: 8000
+        running: (amb.raining || amb.sunny) && !settle.done
+        onTriggered: settle.done = true
+    }
+    onRainingChanged: settle.done = false
+    onSunnyChanged: settle.done = false
+
     // ── Sun: a soft disc that breathes, behind the glyph ──
     Rectangle {
         anchors.centerIn: parent
@@ -22,9 +34,9 @@ Item {
         radius: 42
         visible: amb.sunny
         color: Theme.colYellow
-        opacity: 0.0
+        opacity: 0.12 // the still glow, mid-breath
         SequentialAnimation on opacity {
-            running: amb.sunny && !Theme.motionReduced
+            running: amb.sunny && amb.playing
             loops: Animation.Infinite
             NumberAnimation {
                 from: 0.06
@@ -40,7 +52,7 @@ Item {
             }
         }
         SequentialAnimation on scale {
-            running: amb.sunny && !Theme.motionReduced
+            running: amb.sunny && amb.playing
             loops: Animation.Infinite
             NumberAnimation {
                 from: 0.92
@@ -72,10 +84,11 @@ Item {
                 color: Theme.colSky
                 opacity: 0.45
                 x: 8 + (index * 37) % (amb.width - 16)
-                y: -height
+                // Still, each drop rests at its own height, so the picture reads as rain.
+                y: (index * 29) % Math.max(1, amb.height - 12)
                 rotation: 12
                 NumberAnimation on y {
-                    running: amb.raining && !Theme.motionReduced
+                    running: amb.raining && amb.playing
                     loops: Animation.Infinite
                     from: -12 - (index * 11) % 40
                     to: amb.height

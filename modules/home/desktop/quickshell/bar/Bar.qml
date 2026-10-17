@@ -1816,8 +1816,9 @@ Scope {
         implicitWidth: Math.max(24, wlbl.implicitWidth + 14)
         implicitHeight: 22
         radius: 8
-        color: wsbtn.active ? Theme.colWsActiveBg : (wsArea.containsMouse ? Theme.colPillHoverBg : Theme.colPillBg)
-        border.color: wsbtn.active ? Theme.colWsActiveBorder : (wsArea.containsMouse ? Theme.colHoverBorder : Theme.colPillBorder)
+        // Active, the button is see-through and the strip's sliding pill shows under it.
+        color: wsbtn.active ? "transparent" : (wsArea.containsMouse ? Theme.colPillHoverBg : Theme.colPillBg)
+        border.color: wsbtn.active ? "transparent" : (wsArea.containsMouse ? Theme.colHoverBorder : Theme.colPillBorder)
         border.width: 1
         Behavior on color {
             ColorAnimation {
@@ -1830,6 +1831,12 @@ Scope {
             anchors.centerIn: parent
             text: wsbtn.active ? "󰮯" : root.wsIcon(wsbtn.wsid)
             color: wsbtn.active ? Theme.colBgSolid : Theme.colWsInactive
+            // In step with the pill, so the glyph is never dark on dark while the pill is still on its way.
+            Behavior on color {
+                ColorAnimation {
+                    duration: Theme.motionNormal
+                }
+            }
             font.family: Theme.uiFont
             font.pixelSize: 13
             font.bold: wsbtn.active
@@ -1970,13 +1977,60 @@ Scope {
                     PowerMenu {
                         visible: bar.modelData && bar.modelData.name === Theme.primaryMonitor
                     }
-                    Repeater {
-                        model: root.wsModelFor(bar.modelData ? bar.modelData.name : "")
-                        WsBtn {
-                            wsid: modelData
-                            active: root.wsActive[bar.modelData.name] === modelData
-                            exists: root.wsExist[modelData] === true
-                            activity: root.wsActivity[modelData] === true
+                    // The ACTIVE workspace is ONE pill that slides to the button, so a switch reads
+                    // as a move instead of one button fading out while another fades in.
+                    Item {
+                        id: wsStrip
+                        readonly property var ids: root.wsModelFor(bar.modelData ? bar.modelData.name : "")
+                        // wsRep.count is read so the binding wakes up once the buttons exist.
+                        readonly property Item act: {
+                            const i = wsRep.count > 0 && bar.modelData ? wsStrip.ids.indexOf(root.wsActive[bar.modelData.name]) : -1;
+                            return i >= 0 ? wsRep.itemAt(i) : null;
+                        }
+                        property bool placed: false // no slide in from x = 0 on the first frame
+                        implicitWidth: wsRow.implicitWidth
+                        implicitHeight: wsRow.implicitHeight
+
+                        Rectangle {
+                            id: wsInd
+                            visible: wsStrip.act !== null
+                            x: wsStrip.act ? wsStrip.act.x : 0
+                            width: wsStrip.act ? wsStrip.act.width : 0
+                            height: wsStrip.act ? wsStrip.act.height : 0
+                            radius: 8
+                            color: Theme.colWsActiveBg
+                            border.color: Theme.colWsActiveBorder
+                            border.width: 1
+                            onVisibleChanged: if (visible)
+                                Qt.callLater(() => wsStrip.placed = true)
+                            Behavior on x {
+                                enabled: wsStrip.placed
+                                NumberAnimation {
+                                    duration: Theme.motionNormal
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+                            Behavior on width {
+                                enabled: wsStrip.placed
+                                NumberAnimation {
+                                    duration: Theme.motionNormal
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+                        }
+                        Row {
+                            id: wsRow
+                            spacing: 4 // the Group's own spacing, which these buttons had before
+                            Repeater {
+                                id: wsRep
+                                model: wsStrip.ids
+                                WsBtn {
+                                    wsid: modelData
+                                    active: root.wsActive[bar.modelData.name] === modelData
+                                    exists: root.wsExist[modelData] === true
+                                    activity: root.wsActivity[modelData] === true
+                                }
+                            }
                         }
                     }
                     Pill {

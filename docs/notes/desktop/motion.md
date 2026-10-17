@@ -210,3 +210,19 @@ as a zoom instead of a drop.
 
 Tested on 17/10/2026 through `qs ipc call mpris toggle` with a temporary log in `PopIn`: one 180 ms
 run per show, none on hide, ending at y = 0.
+
+### The workspace indicator
+
+Until 17/10/2026 every workspace button painted its own "active" fill, so a switch was two
+cross-fades in two places. Now the active state is ONE pill, under the buttons, that eases to the
+active button's `x` and `width` in 180 ms (`motionNormal`, OutCubic); the active button turns
+see-through and its glyph's color follows over the same 180 ms, so it is never dark on dark while
+the pill is on its way. A Behavior restarts from where the pill IS, so hammering SUPER+1..4 moves
+it toward the latest target instead of queuing slides.
+
+The first placement does not slide (`placed` flips one event loop after the pill first appears,
+otherwise it would fly in from x = 0 at startup), and when the active workspace is not one of this
+bar's buttons (a workspace from the other monitor) the pill simply hides, which is what no button
+being active looked like before. No size in the bar changes: the strip is exactly the old row of
+buttons, with the Group's 4 px spacing. Traced on 17/10/2026 with a temporary log while switching
+1, 3, 2: the pill's target followed each switch, and the first frame did not slide.

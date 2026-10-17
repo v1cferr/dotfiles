@@ -114,8 +114,8 @@ in
 
   # WHAT GITHUB PAGES SERVES: the site plus the stats under /stats and the source previews under
   # /_source, joined here and not inside docs-site, whose src stays fenced to docs/ so a modules/
-  # commit does not rebuild it. The revision pins the previews' GitHub links to THIS commit, and
-  # is null on a dirty tree: docs/notes/repo/site-sources.md
+  # commit does not rebuild it. The revision pins the previews' GitHub links to THIS commit; it is
+  # null on a dirty tree or under --override-input, so CI writes it: docs/notes/repo/site-sources.md
   pages =
     let
       revision = pkgs.writeText "revision.json" (builtins.toJSON { rev = self.rev or null; });

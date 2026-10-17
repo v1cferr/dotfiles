@@ -60,10 +60,15 @@ jobs:
 
       # The store path is read-only and the upload tars what it is given, so it gets a writable
       # copy instead of the symlink.
+      # The previews' GitHub links point at THIS commit. Nix cannot say which one it is here: the
+      # input override drops `self.rev`, so the commit the run already knows is written instead.
       - name: Stage the site
+        env:
+          REV: ${{ github.sha }}
         run: |
           cp -rL result site
           chmod -R u+w site
+          printf '{"rev":"%s"}' "$REV" > site/_source/revision.json
 
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:

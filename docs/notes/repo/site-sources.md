@@ -95,7 +95,11 @@ derivation, and `pages` joins it under `/_source/`, the same way it already join
   source) both live there.
 - **No git in the sandbox, and none needed.** The snapshot is the flake source itself, which is
   exactly the commit being built. The revision for GitHub links comes from `self.rev` in `pages`,
-  written to `/_source/revision.json`, and is `null` on a dirty tree.
+  written to `/_source/revision.json`, and is `null` on a dirty tree. It is ALSO `null` under
+  `--override-input`, which the CI needs for the private input: Nix drops `rev` from `self` when an
+  input is overridden, even on a clean checkout (found on the first deploy, 17/10/2026). So the
+  workflow writes the commit it already knows, `github.sha`, into the staged copy, and the browser
+  falls back to the branch whenever the file says `null`.
 - **`check-sources.ts` runs in `pages`**, the first place both halves exist: nothing under
   `/_source/` the index did not publish, nothing it lists missing, every manifest well formed, every
   section id real.

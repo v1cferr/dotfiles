@@ -11,7 +11,13 @@ in
   # to land on xterm is pinned to kitty (docs/notes/apps/dolphin.md).
   services.xserver.excludePackages = [ xterm ];
   services.xserver.displayManager.lightdm.enable = true;
-  programs.hyprland.enable = true;
+  # Unstable ON PURPOSE: the compositor tracks the latest RELEASE (not upstream main). 26.05 froze
+  # on 0.55.4, whose scrolling fullscreen kept misc.vrr = 2 from ever firing. The portal follows it.
+  programs.hyprland = {
+    enable = true;
+    package = pkgs.unstable.hyprland;
+    portalPackage = pkgs.unstable.xdg-desktop-portal-hyprland;
+  };
 
   # AUTOLOGIN, and it is not laziness: Sunshine captures a LIVE session, so with nobody logged in
   # there is nothing to stream. The security trade and the mitigation are in the notes.

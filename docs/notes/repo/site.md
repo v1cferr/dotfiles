@@ -380,7 +380,7 @@ Fumadocs wants a `title` for every page, and the obvious answer is a `---` block
 92 files. That was REJECTED: a `title:` next to an `# H1` is two owners of one string (rule 14),
 and the drift it invites is a page whose tab says one thing and whose heading says another.
 
-`tools/docs-site/lib/title.ts` reads the first H1 instead, and the collection's schema is handed the raw
+`tools/docs-site/lib/summary.ts` reads the first H1 instead, and the collection's schema is handed the raw
 source before the markdown is compiled, which is where that can happen. A page with no H1 fails
 the build rather than getting a made-up name. The H1 is then taken OUT of the rendered body, since
 the layout renders the title itself, and `docs/` gains not one byte.

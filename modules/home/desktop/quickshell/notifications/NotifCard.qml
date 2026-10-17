@@ -91,7 +91,36 @@ Rectangle {
         iconFinder.command = ["find", "/usr/share/icons/breeze-dark/apps", "/usr/share/icons/breeze/apps", "(", "-name", n + ".svg", "-o", "-name", n + ".png", ")", "-print", "-quit"];
         iconFinder.running = true;
     }
-    Component.onCompleted: card.resolveFallback()
+    Component.onCompleted: {
+        card.resolveFallback();
+        if (card.isPopup && card.notif && card.notif === Notifs.fresh) {
+            Notifs.fresh = null;
+            arrive.start();
+        }
+    }
+    // A toast joining others settles 8 px down into its slot while it fades in; no bounce.
+    transform: Translate {
+        id: slot
+    }
+    ParallelAnimation {
+        id: arrive
+        NumberAnimation {
+            target: slot
+            property: "y"
+            from: -8
+            to: 0
+            duration: Theme.motionNormal
+            easing.type: Easing.OutCubic
+        }
+        NumberAnimation {
+            target: card
+            property: "opacity"
+            from: 0
+            to: 1
+            duration: Theme.motionNormal
+            easing.type: Easing.OutCubic
+        }
+    }
     Process {
         id: iconFinder
         stdout: StdioCollector {

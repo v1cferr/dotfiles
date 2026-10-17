@@ -14,6 +14,9 @@ Singleton {
     property bool centerVisible: false
     // The toasts currently on screen (Notification objects; alive because they stay tracked).
     property var popups: []
+    // The toast that just JOINED others: its card plays the entrance once. The Repeater rebuilds
+    // every card on each change, so a flag on the list is the only way to tell the new one.
+    property var fresh: null
 
     // The history = the notifications tracked by the server (an UntypedObjectModel).
     readonly property var history: server.trackedNotifications
@@ -61,8 +64,10 @@ Singleton {
             // tracked = true keeps the object alive and puts it in the history.
             n.tracked = true;
             // A toast only shows up with DND off (Critical pierces DND).
-            if (!root.dnd || n.urgency === NotificationUrgency.Critical)
+            if (!root.dnd || n.urgency === NotificationUrgency.Critical) {
+                root.fresh = root.popups.length > 0 ? n : null; // the 1st is a new layer Hyprland fades
                 root.popups = root.popups.concat([n]);
+            }
         }
     }
 

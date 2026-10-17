@@ -226,3 +226,22 @@ bar's buttons (a workspace from the other monitor) the pill simply hides, which 
 being active looked like before. No size in the bar changes: the strip is exactly the old row of
 buttons, with the Group's 4 px spacing. Traced on 17/10/2026 with a temporary log while switching
 1, 3, 2: the pill's target followed each switch, and the first frame did not slide.
+
+### Notifications
+
+The FIRST toast is a new layer, and Hyprland's layer fade is its entrance. A toast that JOINS others
+on screen used to appear in place with nothing at all; it now settles 8 px down into its slot while
+it fades in (180 ms, `motionNormal`, OutCubic). Leaving is the compositor's 100 ms layer fade for
+the last toast, and an instant removal for one among several, which keeps the column from
+shuffling while you read it.
+
+**Why a flag and not "animate on create".** The toast list is a JS array, reassigned on every
+arrival and dismissal, so the Repeater REBUILDS every card each time. An entrance on
+`Component.onCompleted` alone would replay on every card whenever anything changed. `Notifs.fresh`
+names the one toast that just joined, its card plays and clears it, and every rebuilt card stays
+still. Traced on 17/10/2026 with three `notify-send` in a row: card 2 played when it joined card 1,
+card 3 when it joined both, and the rebuilt cards did not (the test toasts were closed by id
+through D-Bus afterwards). Dismissal, actions and the auto-dismiss timers are untouched.
+
+A known oddity this does not change: since every card is rebuilt, each existing toast's
+auto-dismiss timer restarts when a new one arrives (observed in the code, 17/10/2026).

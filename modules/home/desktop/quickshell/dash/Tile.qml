@@ -15,18 +15,10 @@ Item {
     property string hint: ""
     property real frac: 0
     property color barColor: Theme.colAccent
-    // A NUMBER rolls to its new value instead of jumping; `value` stays for what cannot roll (NET).
+    // A NUMBER with a unit; `value` stays for what is preformatted (NET). It no longer rolls:
+    // telemetry text holds still and the bar carries the change. docs/notes/desktop/dash.md
     property real number: NaN
     property string unit: ""
-    property real shown: 0
-    Behavior on shown {
-        NumberAnimation {
-            duration: Theme.ms(650)
-            easing.type: Easing.OutCubic
-        }
-    }
-    onNumberChanged: if (!isNaN(tile.number))
-        tile.shown = tile.number
     // Past its limit the value breathes until it is back, so a hot tile is seen from the corner of an eye.
     property bool alert: false
     // An optional history drawn beside the value (the CPU's last 2 minutes).
@@ -62,7 +54,7 @@ Item {
             spacing: 10
             Text {
                 Layout.fillWidth: !tile.series
-                text: isNaN(tile.number) ? tile.value : Math.round(tile.shown) + tile.unit
+                text: isNaN(tile.number) ? tile.value : Math.round(tile.number) + tile.unit
                 color: tile.barColor
                 SequentialAnimation on opacity {
                     running: tile.alert

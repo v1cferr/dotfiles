@@ -183,13 +183,17 @@ Item {
         duration: Theme.ms(1100)
         easing.type: Easing.OutCubic
     }
+    property bool drawn: false // the first real draw-in happened
     function replay() {
         if (chart.width <= 0 || chart.n < 2)
             return;
+        chart.drawn = true;
         canvas.requestPaint();
         drawIn.restart();
     }
-    onHoursChanged: chart.replay()
+    // New data on screen REPAINTS in place; only the first data draws in. Replaying on every feed
+    // refresh made the chart re-animate every few minutes while nobody asked.
+    onHoursChanged: chart.drawn ? canvas.requestPaint() : chart.replay()
     onWidthChanged: chart.replay()
     onHeightChanged: canvas.requestPaint()
     // Shown again: the page draws itself in each time it comes around.

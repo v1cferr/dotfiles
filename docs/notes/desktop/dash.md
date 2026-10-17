@@ -201,7 +201,7 @@ their shapes, so the pill, its popover, the month grid and the weather page did 
 **The ambient layer (`WeatherAmbient.qml`)** lives behind today's glyph: drops falling while it
 rains, a slow breathing glow while the sun is out, and NOTHING for clouds, fog or night, because
 motion that never stops stops meaning anything. It is a handful of rectangles and no shader, since
-the band already repaints often (rolling numbers, the services strip).
+the band already repaints often (the services strip). It stops with `my.theme.motion = "off"`.
 
 **The week (in the month grid)** is the band's signature: today and the seven days after it carry
 their own forecast INSIDE their cells, the number lifted to make room for the sky glyph, the max in
@@ -215,9 +215,12 @@ blue rain, neutral otherwise.
 
 Chosen on 07/10/2026 as "ambient", and every piece of it carries a meaning:
 
-- **Numbers roll.** CPU, RAM, DISK, GPU and TEMP ease to their new value over 650 ms (`Tile.number`)
-  instead of jumping. NET does not: its unit flips between KB/s and MB/s, and a rolling number
-  across a unit change reads as a wrong number.
+- **~~Numbers roll.~~** Reversed on 17/10/2026. CPU, RAM, DISK, GPU and TEMP used to ease to their
+  new value over 650 ms (`Tile.number`); with readings every few seconds a digit was rolling a third
+  of the time, in the corner of the eye, on a band meant to stay calm while I work. The text now
+  changes in place and the bar under it still eases (300 ms), so the change is shown by a shape and
+  not by moving digits. NET never rolled: its unit flips between KB/s and MB/s. Why the whole
+  desktop moved this way: [motion.md](motion.md).
 - **A tile past its limit breathes** (CPU, RAM or DISK at 90% and up, the GPU at 90% of its power
   cap, a critical temperature) until it is back, so a hot tile is seen out of the corner of an eye.
   `alwaysRunToEnd` lets the last pulse finish instead of freezing half faded.
@@ -225,7 +228,9 @@ Chosen on 07/10/2026 as "ambient", and every piece of it carries a meaning:
   exits the other way (`offsetOf`, 56 px over 420 ms, under the existing fade), so the column reads
   as a strip of pages and not as a flicker. A wrap from the last page to the first slides forward.
 - **The weather** draws its 12-hour curve in, and rains or shines behind today's glyph
-  (`WeatherAmbient.qml`, above).
+  (`WeatherAmbient.qml`, above). The draw-in plays on the first data and when the page comes
+  around, and NOT on a feed refresh: until 17/10/2026 `onHoursChanged` replayed it, so the chart
+  re-animated every few minutes on its own. A refresh now repaints in place.
 
 ## The services strip
 

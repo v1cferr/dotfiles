@@ -245,3 +245,18 @@ through D-Bus afterwards). Dismissal, actions and the auto-dismiss timers are un
 
 A known oddity this does not change: since every card is rebuilt, each existing toast's
 auto-dismiss timer restarts when a new one arrives (observed in the code, 17/10/2026).
+
+### Data holds still
+
+Two places animated because a VALUE changed, not because I did anything, and both stopped on
+17/10/2026 ([dash.md](dash.md#motion) has the detail):
+
+- **The glance band's tiles** rolled their digits for 650 ms on every reading. The digits now change
+  in place; the bar under them still eases over `motionSlow`, so a change is still visible, as a
+  shape.
+- **The 24-hour weather chart** replayed its 1.1 s draw-in on every feed refresh. It now draws in
+  on the first data and when its page comes around, and a refresh repaints in place.
+
+What still eases on a value, deliberately: meters and progress bars (`motionSlow`, a bar sliding
+300 ms is a shape changing, not text moving) and the OSD (`motionFast`, 90 ms, so a held volume key
+never lags its bar). Clocks and every text reading change in place.

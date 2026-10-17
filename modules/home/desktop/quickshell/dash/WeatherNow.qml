@@ -80,6 +80,7 @@ ColumnLayout {
                     }
                     // An INMET alert in force right now rides on the condition line: no extra height, never missed.
                     Rectangle {
+                        id: alertChip
                         readonly property var al: Inmet.activeNow.length ? Inmet.activeNow[0] : null
                         readonly property color tone: al ? Inmet.color(al.severity) : Theme.colYellow
                         visible: !!al
@@ -98,8 +99,9 @@ ColumnLayout {
                             font.pixelSize: 13
                             font.bold: true
                         }
+                        // By id: inside an animation `parent` is not the chip, and it ran forever with no alert.
                         SequentialAnimation on opacity {
-                            running: parent.visible
+                            running: alertChip.visible
                             loops: Animation.Infinite
                             alwaysRunToEnd: true
                             NumberAnimation {

@@ -24,6 +24,7 @@ PanelWindow {
     implicitHeight: 470
     color: "transparent"
     PopCard {
+        shown: calPop.visible
         id: card
         onHoveredChanged: calPop.bar.calPopHovered = card.hovered
 

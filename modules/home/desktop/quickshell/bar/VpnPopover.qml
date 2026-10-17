@@ -4,6 +4,7 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
+import "root:/widgets"
 
 PanelWindow {
     id: vpnPop
@@ -40,6 +41,14 @@ PanelWindow {
         color: Theme.colBg
         border.color: Theme.colBorder
         border.width: 1
+
+        transform: Translate {
+            id: drop
+        }
+        PopIn {
+            target: drop
+            shown: vpnPop.visible
+        }
 
         HoverHandler {
             id: popHover

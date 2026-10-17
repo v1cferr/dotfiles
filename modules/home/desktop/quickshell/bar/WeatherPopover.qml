@@ -26,6 +26,7 @@ PanelWindow {
     color: "transparent"
 
     PopCard {
+        shown: wPop.visible
         id: card
         onHoveredChanged: wPop.bar.wPopHovered = card.hovered
 

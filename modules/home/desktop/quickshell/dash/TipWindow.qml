@@ -54,6 +54,7 @@ PanelWindow {
     implicitHeight: card.implicitHeight
 
     PopCard {
+        shown: tw.visible
         id: card
         pad: 10
         gap: 4

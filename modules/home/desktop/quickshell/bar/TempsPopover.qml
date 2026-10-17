@@ -45,6 +45,7 @@ PanelWindow {
     }
 
     PopCard {
+        shown: pop.visible
         id: card
         onHoveredChanged: pop.bar.metricPopHovered = card.hovered
 

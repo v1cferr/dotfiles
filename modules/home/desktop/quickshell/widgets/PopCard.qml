@@ -10,6 +10,7 @@ Rectangle {
     property alias hovered: hover.hovered
     property int pad: 14
     property int gap: 10
+    property bool shown: false // bind it to the window's visible: the entrance replays on each show
 
     anchors.fill: parent
     implicitWidth: col.implicitWidth + card.pad * 2
@@ -18,6 +19,14 @@ Rectangle {
     color: Theme.colBg
     border.color: Theme.colBorder
     border.width: 1
+
+    transform: Translate {
+        id: drop
+    }
+    PopIn {
+        target: drop
+        shown: card.shown
+    }
 
     HoverHandler {
         id: hover

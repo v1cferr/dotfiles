@@ -32,6 +32,7 @@ PanelWindow {
     }
 
     PopCard {
+        shown: statsPop.visible
         id: card
         onHoveredChanged: statsPop.bar.vpnStatsPopHovered = card.hovered
 

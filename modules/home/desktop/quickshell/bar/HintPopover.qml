@@ -27,6 +27,7 @@ PanelWindow {
     color: "transparent"
 
     PopCard {
+        shown: hintPop.visible
         id: card
         pad: 12
         gap: 6

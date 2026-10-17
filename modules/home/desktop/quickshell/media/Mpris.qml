@@ -6,6 +6,7 @@ import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
+import "root:/widgets"
 
 Scope {
     id: root
@@ -128,6 +129,14 @@ Scope {
             color: Theme.colBg
             border.color: Theme.colBorder
             border.width: 1
+
+            transform: Translate {
+                id: drop
+            }
+            PopIn {
+                target: drop
+                shown: panel.visible
+            }
 
             HoverHandler {
                 id: panelHover

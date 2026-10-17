@@ -56,6 +56,14 @@ Pill {
             border.color: Theme.colBorder
             border.width: 1
 
+            transform: Translate {
+                id: drop
+            }
+            PopIn {
+                target: drop
+                shown: menu.visible
+            }
+
             HoverHandler {
                 id: menuHover
             }

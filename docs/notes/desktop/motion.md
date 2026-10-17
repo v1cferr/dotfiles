@@ -185,3 +185,28 @@ removing their motion would remove the signal.
 Tested on 17/10/2026 by a probe in `shell.qml` against the live shell: `subtle` resolved to
 90/120/180/300 and `off` to 0 everywhere, with no QML error on either reload (the probe and the
 forced fallback were reverted).
+
+### Popovers
+
+A popover is two motions from two owners, on purpose. Hyprland fades the LAYER (`fadeLayersIn`,
+150 ms; out in 100 ms), and `widgets/PopIn.qml` drops the CARD 6 px out of the bar in 180 ms
+(`motionNormal`, OutCubic) on a `Translate`. The compositor cannot do the second part: a layer's
+`slide` always travels from the monitor's edge, and its `popin` scales from the center, which reads
+as a zoom instead of a drop.
+
+- **Once per show.** `PopIn` restarts when `shown` turns true and never otherwise, so a popover whose
+  content changes while it is open (the hint following the pointer from pill to pill, a meter
+  updating) does not move. `PopCard` takes `shown` from each popover's window, bound explicitly: the
+  attached `QsWindow.window` was still null when the card completed (logged on 17/10/2026), so it is
+  not trusted to carry the visibility.
+- **Nothing waits for it.** It is a transform, so the card is laid out, hoverable and clickable from
+  the first frame; the translate only moves where it is painted for 180 ms.
+- **The top 6 px are clipped while it drops**, since the window is exactly the card's size. That is
+  the look: the card comes out from under the 4 px gap below the bar, and the layer is still fading
+  in while it happens.
+- **Who has it**: the eight `PopCard` popovers (calendar, weather, usage, temps, net, VPN stats, the
+  hint, the glance band's tips), plus the VPN panel, the power menu and the media panel. `TrayMenu`
+  does NOT: a context menu should be there when the click lands, so it gets the layer fade only.
+
+Tested on 17/10/2026 through `qs ipc call mpris toggle` with a temporary log in `PopIn`: one 180 ms
+run per show, none on hide, ending at y = 0.

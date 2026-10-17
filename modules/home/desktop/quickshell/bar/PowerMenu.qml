@@ -1,7 +1,8 @@
-// A taskbar-style Start button: the NixOS logo, opening lock/log out/suspend/reboot/shut down.
-// No sudo (logind authorizes an active session). The lock's history: docs/notes/desktop/bar.md
+// A taskbar-style Start button: the official NixOS logo, opening lock/log out/suspend/reboot/shut
+// down. No sudo (logind authorizes an active session). The lock's history: docs/notes/desktop/bar.md
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -9,8 +10,11 @@ import "root:/widgets"
 
 Pill {
     id: powerBtn
-    icon: ""      // nf-linux-nixos (the NixOS logo)
+    // nixos-artwork's snowflake, installed by nixos-icons into hicolor; the glyph only if it is missing.
+    image: Quickshell.iconPath("nix-snowflake", true)
+    icon: "" // nf-linux-nixos
     accent: Theme.colSapphire
+    selected: powerBtn.menuOpen
     property bool menuOpen: false
     onClicked: powerBtn.menuOpen = !powerBtn.menuOpen
 
@@ -27,15 +31,17 @@ Pill {
         id: menu
         visible: powerBtn.menuOpen
         screen: Theme.screenPrimary
+        WlrLayershell.namespace: "qs-panel"
         anchors {
             top: true
             left: true
         }
+        // Placed from the screen's edge, under the bar, flush with the left cluster.
+        exclusionMode: ExclusionMode.Ignore
         margins {
-            top: 4 // = Hyprland's gaps_out: it aligns the popover with the top of the windows (barExclusiveZone 30 already added)
-            left: 8
+            top: Theme.bandTop
+            left: Theme.barTop
         }
-        exclusiveZone: 0
         color: "transparent"
         implicitWidth: 210
         implicitHeight: menuCard.implicitHeight
@@ -47,14 +53,11 @@ Pill {
             onTriggered: powerBtn.menuOpen = false
         }
 
-        Rectangle {
+        GlassSurface {
             id: menuCard
             anchors.fill: parent
             implicitHeight: col.implicitHeight + 20
-            radius: 12
-            color: Theme.colBg
-            border.color: Theme.colBorder
-            border.width: 1
+            level: "pop"
 
             transform: Translate {
                 id: drop

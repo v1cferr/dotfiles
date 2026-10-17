@@ -1,5 +1,5 @@
-// The bar's reusable pill. Its OWN file (reuse, plus the root id resolves in handlers, which an
-// inline component does not guarantee on this Qt). The colors come from Theme.
+// The bar's control: a FLAT segment inside a glass cluster, so it has no edge of its own and a hover
+// is a neutral fill. Its OWN file, since an inline component's handlers lose the root id on this Qt.
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -7,15 +7,21 @@ import "root:/"
 Rectangle {
     id: pill
     property string icon: ""
+    // A vector icon in place of the glyph (the NixOS logo); `icon` stays the fallback if it fails.
+    property url image: ""
     property string label: ""
     // Secondary text in the SAME pill, AFTER the label on purpose: the label is the main information
     // and owns the left edge, where the eye enters the pill.
     property string sub: ""
     property color accent: Theme.colText
+    property color labelColor: pill.accent
+    property bool bold: false
     // A second state in its OWN color, last in the row (the VPN pill's Tor), so it never borrows the accent.
     property string badge: ""
     property color badgeColor: Theme.colDim
     property int maxWidth: 0
+    // Pinned: its panel is open by a click, so the control stays lit while the pointer is elsewhere.
+    property bool selected: false
     signal clicked
     signal rightClicked
     signal scrolledUp
@@ -23,60 +29,68 @@ Rectangle {
     property alias hovered: area.containsMouse
     property bool italic: false
 
-    implicitWidth: (pill.maxWidth > 0) ? Math.min(prow.implicitWidth + 22, pill.maxWidth) : prow.implicitWidth + 22
-    implicitHeight: 22
-    radius: 8
-    color: area.containsMouse ? Theme.colPillHoverBg : Theme.colPillBg
-    border.color: area.containsMouse ? Theme.colHoverBorder : Theme.colPillBorder
-    border.width: 1
+    readonly property int padX: Theme.sp2
+    readonly property bool imageOk: pill.image != "" && img.status === Image.Ready
+    implicitWidth: (pill.maxWidth > 0) ? Math.min(prow.implicitWidth + 2 * pill.padX, pill.maxWidth) : prow.implicitWidth + 2 * pill.padX
+    implicitHeight: Theme.barControl
+    radius: Theme.radiusControl
+    color: area.pressed ? Theme.colPressFill : (area.containsMouse ? Theme.colHoverFill : (pill.selected ? Theme.colSelectFill : "transparent"))
     Behavior on color {
         ColorAnimation {
             duration: Theme.motionHover
-            easing.type: Easing.InOutQuad
-        }
-    }
-    Behavior on border.color {
-        ColorAnimation {
-            duration: Theme.motionHover
+            easing.type: Easing.OutQuad
         }
     }
 
+    // Centered, so a pill given a fixed slot (the clock's symmetric neighbors) keeps its content in the middle.
     RowLayout {
         id: prow
-        anchors.fill: parent
-        anchors.leftMargin: 11
-        anchors.rightMargin: 11
-        spacing: 5
+        anchors.verticalCenter: parent.verticalCenter
+        x: Math.max(pill.padX, Math.round((pill.width - prow.implicitWidth) / 2))
+        width: Math.min(prow.implicitWidth, pill.width - 2 * pill.padX)
+        spacing: Theme.sp1
+        Image {
+            id: img
+            visible: pill.imageOk
+            source: pill.image
+            sourceSize.width: 16
+            sourceSize.height: 16
+            Layout.preferredWidth: 16
+            Layout.preferredHeight: 16
+            fillMode: Image.PreserveAspectFit
+            smooth: true
+        }
         Text {
-            visible: pill.icon !== ""
+            visible: pill.icon !== "" && !pill.imageOk
             text: pill.icon
             color: pill.accent
             font.family: Theme.uiFont
-            font.pixelSize: 13
+            font.pixelSize: Theme.fontLabel
         }
         Text {
             visible: pill.label !== ""
             Layout.fillWidth: pill.maxWidth > 0
             text: pill.label
-            color: pill.accent
+            color: pill.labelColor
             font.family: Theme.uiFont
-            font.pixelSize: 11
+            font.pixelSize: pill.bold ? Theme.fontBody : Theme.fontSmall
+            font.bold: pill.bold
             font.italic: pill.italic
             elide: Text.ElideRight
         }
         Text {
             visible: pill.sub !== ""
             text: pill.sub
-            color: Theme.colDim
+            color: Theme.colSubtext
             font.family: Theme.uiFont
-            font.pixelSize: 11
+            font.pixelSize: Theme.fontSmall
         }
         Text {
             visible: pill.badge !== ""
             text: pill.badge
             color: pill.badgeColor
             font.family: Theme.uiFont
-            font.pixelSize: 12
+            font.pixelSize: Theme.fontBody
         }
     }
     MouseArea {

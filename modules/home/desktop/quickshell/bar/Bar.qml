@@ -1792,97 +1792,6 @@ Scope {
         return t;
     }
 
-    // ===== The reusable pill =====
-    // The pill/chip was extracted into widgets/Pill.qml (import "root:/widgets").
-
-    component Group: Item {
-        default property alias content: groupRow.data
-        implicitWidth: groupRow.implicitWidth
-        implicitHeight: 26
-        RowLayout {
-            id: groupRow
-            anchors.centerIn: parent
-            spacing: 4 // the gap between each group's pills/widgets (left/center/right)
-        }
-    }
-
-    // ===== The workspace button =====
-    component WsBtn: Rectangle {
-        id: wsbtn
-        property int wsid: 0
-        property bool active: false
-        property bool exists: false
-        property bool activity: false
-
-        implicitWidth: Math.max(24, wlbl.implicitWidth + 14)
-        implicitHeight: 22
-        radius: 8
-        // Active, the button is see-through and the strip's sliding pill shows under it.
-        color: wsbtn.active ? "transparent" : (wsArea.containsMouse ? Theme.colPillHoverBg : Theme.colPillBg)
-        border.color: wsbtn.active ? "transparent" : (wsArea.containsMouse ? Theme.colHoverBorder : Theme.colPillBorder)
-        border.width: 1
-        Behavior on color {
-            ColorAnimation {
-                duration: Theme.motionHover
-            }
-        }
-
-        Text {
-            id: wlbl
-            anchors.centerIn: parent
-            text: wsbtn.active ? "󰮯" : root.wsIcon(wsbtn.wsid)
-            color: wsbtn.active ? Theme.colBgSolid : Theme.colWsInactive
-            // In step with the pill, so the glyph is never dark on dark while the pill is still on its way.
-            Behavior on color {
-                ColorAnimation {
-                    duration: Theme.motionNormal
-                }
-            }
-            font.family: Theme.uiFont
-            font.pixelSize: 13
-            font.bold: wsbtn.active
-        }
-        // the badge: something opened or went urgent on that ws while I was on another
-        Rectangle {
-            visible: wsbtn.activity && !wsbtn.active
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.rightMargin: 2
-            anchors.topMargin: 2
-            width: 7
-            height: 7
-            radius: 3.5
-            color: Theme.colPeach
-            border.color: Theme.colBgSolid
-            border.width: 1
-            SequentialAnimation on opacity {
-                running: wsbtn.activity && !wsbtn.active
-                loops: Animation.Infinite
-                NumberAnimation {
-                    from: 1
-                    to: 0.35
-                    duration: 700
-                    easing.type: Easing.InOutQuad
-                }
-                NumberAnimation {
-                    from: 0.35
-                    to: 1
-                    duration: 700
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        }
-        MouseArea {
-            id: wsArea
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            hoverEnabled: true
-            // The 0.55 Lua syntax made `dispatch` a shortcut, so the old 3-arg form blows up in the parser
-            // and the click died silently. `hl.dsp.workspace` is a TABLE; what switches is focus.
-            onClicked: root.launch(["hyprctl", "dispatch", "hl.dsp.focus({ workspace = " + wsbtn.wsid + " })"])
-        }
-    }
-
     // ===== The weather popover, the view is in bar/WeatherPopover.qml =====
     WeatherPopover {
         bar: root
@@ -1972,70 +1881,20 @@ Scope {
                 id: barContent
                 anchors.fill: parent
 
-                // LEFT: the launcher plus the workspaces (of that monitor) plus the title plus Spotify
-                Group {
+                // LEFT, workspace and context: the NixOS button (main monitor only, where its menu
+                // opens), this monitor's workspaces, then the focused window's title.
+                Cluster {
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
-                    // A taskbar-style "Start" button, only on the main monitor, which is
-                    // where the power popover opens.
                     PowerMenu {
                         visible: bar.modelData && bar.modelData.name === Theme.primaryMonitor
                     }
-                    // The ACTIVE workspace is ONE pill that slides to the button, so a switch reads
-                    // as a move instead of one button fading out while another fades in.
-                    Item {
-                        id: wsStrip
-                        readonly property var ids: root.wsModelFor(bar.modelData ? bar.modelData.name : "")
-                        // wsRep.count is read so the binding wakes up once the buttons exist.
-                        readonly property Item act: {
-                            const i = wsRep.count > 0 && bar.modelData ? wsStrip.ids.indexOf(root.wsActive[bar.modelData.name]) : -1;
-                            return i >= 0 ? wsRep.itemAt(i) : null;
-                        }
-                        property bool placed: false // no slide in from x = 0 on the first frame
-                        implicitWidth: wsRow.implicitWidth
-                        implicitHeight: wsRow.implicitHeight
-
-                        Rectangle {
-                            id: wsInd
-                            visible: wsStrip.act !== null
-                            x: wsStrip.act ? wsStrip.act.x : 0
-                            width: wsStrip.act ? wsStrip.act.width : 0
-                            height: wsStrip.act ? wsStrip.act.height : 0
-                            radius: 8
-                            color: Theme.colWsActiveBg
-                            border.color: Theme.colWsActiveBorder
-                            border.width: 1
-                            onVisibleChanged: if (visible)
-                                Qt.callLater(() => wsStrip.placed = true)
-                            Behavior on x {
-                                enabled: wsStrip.placed
-                                NumberAnimation {
-                                    duration: Theme.motionNormal
-                                    easing.type: Easing.OutCubic
-                                }
-                            }
-                            Behavior on width {
-                                enabled: wsStrip.placed
-                                NumberAnimation {
-                                    duration: Theme.motionNormal
-                                    easing.type: Easing.OutCubic
-                                }
-                            }
-                        }
-                        Row {
-                            id: wsRow
-                            spacing: 4 // the Group's own spacing, which these buttons had before
-                            Repeater {
-                                id: wsRep
-                                model: wsStrip.ids
-                                WsBtn {
-                                    wsid: modelData
-                                    active: root.wsActive[bar.modelData.name] === modelData
-                                    exists: root.wsExist[modelData] === true
-                                    activity: root.wsActivity[modelData] === true
-                                }
-                            }
-                        }
+                    WorkspaceStrip {
+                        host: root
+                        monitor: bar.modelData ? bar.modelData.name : ""
+                    }
+                    Divider {
+                        visible: winPill.visible
                     }
                     Pill {
                         id: winPill
@@ -2046,33 +1905,21 @@ Scope {
                         maxWidth: Math.round(bar.width * 0.13)
                         onHoveredChanged: root.hoverHint("win", winPill, barContent, bar.screen, hovered)
                     }
-                    Pill {
-                        id: spPill
-                        visible: root.spHasPlayer && !bar.compact
-                        icon: "󰝚"
-                        label: root.spText
-                        accent: root.spColor
-                        maxWidth: 240
-                        onHoveredChanged: root.hoverHint("spotify", spPill, barContent, bar.screen, hovered)
-                        onClicked: {
-                            root.hintVisible = false;
-                            root.launch(["qs", "ipc", "call", "mpris", "toggle"]);
-                        }
-                        onRightClicked: root.launch(["playerctl", "--player=spotify", "play-pause"])
-                        onScrolledUp: root.launch(["playerctl", "--player=spotify", "next"])
-                        onScrolledDown: root.launch(["playerctl", "--player=spotify", "previous"])
-                    }
                 }
 
-                // CENTER: the weather plus the clock plus the notifications (always at the screen's center)
-                Group {
+                // CENTER, time and ambient: the weather and the date in two slots of EQUAL width around
+                // the time, so the TIME itself sits on the screen's center, not just the cluster.
+                Cluster {
+                    id: centerCluster
+                    visible: !bar.compact
                     anchors.centerIn: parent
+                    readonly property int side: Math.max(weatherPill.implicitWidth, datePill.implicitWidth)
                     Pill {
                         id: weatherPill
-                        visible: root.wHas && !bar.compact
-                        icon: root.weatherIcon(root.wCode, root.isDayNow())
-                        label: root.wTemp + "°C"
-                        accent: Theme.colSapphire
+                        Layout.preferredWidth: centerCluster.side
+                        icon: root.wHas ? root.weatherIcon(root.wCode, root.isDayNow()) : "󰖐"
+                        label: root.wHas ? root.wTemp + "°C" : "--°C"
+                        accent: root.wHas ? Theme.colSapphire : Theme.colDim
                         onHoveredChanged: {
                             root.wPillHovered = hovered;
                             if (hovered)
@@ -2082,43 +1929,53 @@ Scope {
                     }
                     Pill {
                         id: clockPill
-                        visible: !bar.compact
-                        icon: "󰥔"
                         label: root.timeStr
-                        sub: root.dateStr
-                        accent: Theme.colMauve
+                        labelColor: Theme.colText
+                        bold: true
                         onHoveredChanged: {
-                            if (hovered) {
+                            root.calPillHovered = hovered;
+                            if (hovered)
                                 root.anchorPopover(clockPill, barContent, bar.screen);
-                                root.calPillHovered = true;
-                            } else {
-                                root.calPillHovered = false;
-                            }
                         }
                     }
                     Pill {
-                        id: notifPill
-                        visible: !bar.compact
-                        // the || covers the singleton's init instant on a reload
-                        icon: Notifs.barIcon || "󰂜"
-                        // the count when there are notifications; an adaptive color:
-                        // dim when empty, peach when there are some, red under DND.
-                        label: Notifs.count > 0 ? "" + Notifs.count : ""
-                        accent: Notifs.dnd ? Theme.colRed : (Notifs.count > 0 ? Theme.colPeach : Theme.colDim)
-                        onHoveredChanged: root.hoverHint("notifs", notifPill, barContent, bar.screen, hovered)
-                        onClicked: {
-                            root.hintVisible = false;
-                            Notifs.toggleCenter();
+                        id: datePill
+                        Layout.preferredWidth: centerCluster.side
+                        label: root.dateStr
+                        labelColor: Theme.colSubtext
+                        onHoveredChanged: {
+                            root.calPillHovered = hovered;
+                            if (hovered)
+                                root.anchorPopover(clockPill, barContent, bar.screen);
                         }
-                        onRightClicked: Notifs.toggleDnd()
                     }
                 }
 
-                // RIGHT: temp, usage, vpn, network, audio, hypridle, away, the tray
-                Group {
+                // RIGHT, system and controls, grouped by meaning with a hairline between groups: media,
+                // the machine, the links, sound, the session, then the tray.
+                Cluster {
                     visible: !bar.compact
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
+                    Pill {
+                        id: spPill
+                        visible: root.spHasPlayer
+                        icon: "󰝚"
+                        label: root.spText
+                        accent: root.spColor
+                        maxWidth: 220
+                        onHoveredChanged: root.hoverHint("spotify", spPill, barContent, bar.screen, hovered)
+                        onClicked: {
+                            root.hintVisible = false;
+                            root.launch(["qs", "ipc", "call", "mpris", "toggle"]);
+                        }
+                        onRightClicked: root.launch(["playerctl", "--player=spotify", "play-pause"])
+                        onScrolledUp: root.launch(["playerctl", "--player=spotify", "next"])
+                        onScrolledDown: root.launch(["playerctl", "--player=spotify", "previous"])
+                    }
+                    Divider {
+                        visible: spPill.visible
+                    }
                     Pill {
                         id: tempPill
                         icon: "󰔏"
@@ -2133,6 +1990,7 @@ Scope {
                         accent: root.stateColor(root.cpuPct, Theme.colYellow)
                         onHoveredChanged: hovered ? root.showMetric("usage", usagePill, barContent, bar.screen) : root.unhoverMetric()
                     }
+                    Divider {}
                     Pill {
                         // VPN: click opens the actions popover, HOVER shows the statistics, right click drops everything.
                         // Information on hover, ACTION on click; it docs/notes/desktop/bar.md
@@ -2141,9 +1999,10 @@ Scope {
                         label: root.vpnConnected ? root.vpnName : ""
                         accent: root.vpnConnected ? Theme.colGreen : Theme.colDim
                         // Tor rides along in its own purple: a VPN and Tor can be up at once.
-                        badge: (root.torSystem || root.torBisq) ? "\uf371" + (root.torBisq ? " Bisq" : "") : ""
+                        badge: (root.torSystem || root.torBisq) ? "" + (root.torBisq ? " Bisq" : "") : ""
                         badgeColor: Theme.colLavender
                         maxWidth: 190
+                        selected: root.vpnPopVisible
                         onHoveredChanged: {
                             root.vpnPillHovered = hovered;
                             if (hovered)
@@ -2167,6 +2026,7 @@ Scope {
                         onHoveredChanged: hovered ? root.showMetric("net", netPill, barContent, bar.screen) : root.unhoverMetric()
                         onClicked: root.launch(["nm-connection-editor"])
                     }
+                    Divider {}
                     Pill {
                         id: volPill
                         icon: root.volIcon()
@@ -2177,6 +2037,21 @@ Scope {
                         onRightClicked: root.launch(["pavucontrol"])
                         onScrolledUp: root.setVol(0.05)
                         onScrolledDown: root.setVol(-0.05)
+                    }
+                    Divider {}
+                    Pill {
+                        id: notifPill
+                        // the || covers the singleton's init instant on a reload
+                        icon: Notifs.barIcon || "󰂜"
+                        // the count when there are notifications; dim when empty, peach with some, red under DND.
+                        label: Notifs.count > 0 ? "" + Notifs.count : ""
+                        accent: Notifs.dnd ? Theme.colRed : (Notifs.count > 0 ? Theme.colPeach : Theme.colDim)
+                        onHoveredChanged: root.hoverHint("notifs", notifPill, barContent, bar.screen, hovered)
+                        onClicked: {
+                            root.hintVisible = false;
+                            Notifs.toggleCenter();
+                        }
+                        onRightClicked: Notifs.toggleDnd()
                     }
                     Pill {
                         id: idlePill
@@ -2196,98 +2071,95 @@ Scope {
                             Away.enter();
                         }
                     }
-                    // The system tray (StatusNotifier), one background for the group. Left=activate,
-                    // middle=secondaryActivate, scroll, right=the native menu.
-                    Rectangle {
+                    Divider {
                         visible: root.trayCount > 0
-                        implicitHeight: 22
-                        implicitWidth: trayRow.implicitWidth + 14
-                        radius: 8
-                        color: Theme.colPillBg
-                        border.color: Theme.colPillBorder
-                        border.width: 1
-                        RowLayout {
-                            id: trayRow
-                            anchors.centerIn: parent
-                            spacing: 7
-                            Repeater {
-                                model: SystemTray.items
-                                Item {
-                                    id: trayDel
-                                    implicitWidth: 20
-                                    implicitHeight: 22
-                                    // Some SNIs (Dropbox) publish image://icon/<name>?path=<dir> in a theme the provider does not
-                                    // resolve, so we find the real file in <dir> and point at file://.
-                                    readonly property string rawIcon: "" + modelData.icon
-                                    readonly property bool isPathIcon: /^image:\/\/icon\/[^?]+\?path=/.test(trayDel.rawIcon)
-                                    property string resolvedIcon: ""
-                                    function resolveTrayIcon() {
-                                        trayDel.resolvedIcon = "";
-                                        const m = trayDel.rawIcon.match(/^image:\/\/icon\/([^?]+)\?path=(.+)$/);
-                                        if (m) {
-                                            iconFinder.command = ["find", m[2], "-name", m[1] + ".png", "-print", "-quit"];
-                                            iconFinder.running = true;
-                                        }
-                                    }
-                                    onRawIconChanged: trayDel.resolveTrayIcon()
-                                    Component.onCompleted: trayDel.resolveTrayIcon()
-                                    Process {
-                                        id: iconFinder
-                                        stdout: StdioCollector {
-                                            onStreamFinished: {
-                                                const p = text.trim();
-                                                if (p)
-                                                    trayDel.resolvedIcon = "file://" + p;
-                                            }
-                                        }
-                                    }
-                                    Image {
-                                        anchors.centerIn: parent
-                                        // path icons: it only shows after resolving to file:// (which avoids the broken load)
-                                        source: trayDel.isPathIcon ? trayDel.resolvedIcon : trayDel.rawIcon
-                                        sourceSize.width: 16
-                                        sourceSize.height: 16
-                                        width: 16
-                                        height: 16
-                                        opacity: modelData.status === 0 ? 0.55 : 1
-                                    }
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        cursorShape: Qt.PointingHandCursor
-                                        hoverEnabled: true
-                                        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
-                                        onContainsMouseChanged: {
-                                            if (containsMouse)
-                                                root.hintTray = modelData;
-                                            root.hoverHint("tray", trayDel, barContent, bar.screen, containsMouse);
-                                        }
-                                        onClicked: m => {
-                                            root.hintVisible = false;
-                                            if (m.button === Qt.LeftButton)
-                                                modelData.activate();
-                                            else if (m.button === Qt.MiddleButton)
-                                                modelData.secondaryActivate();
-                                            else if (modelData.hasMenu) {
-                                                // A native SNI gets our themed menu. It is a LAYER SURFACE (Hyprland#6682 breaks a PopupWindow's
-                                                // input region), docs/notes/desktop/quickshell.md
-                                                const pt = trayDel.mapToItem(barContent, 0, trayDel.height);
-                                                trayCtxMenu.openAt(modelData.menu, bar, pt.x + bar.margins.left);
-                                            } else {
-                                                // xembedsniproxy icons have NO DBusMenu, and display() refuses them, so we fire the SNI's own
-                                                // ContextMenu() through a helper and the app draws its menu at the cursor.
-                                                root.launch(["tray-native-menu", "" + modelData.id]);
-                                            }
-                                        }
-                                        onWheel: w => modelData.scroll(w.angleDelta.y, false)
+                    }
+                    // The system tray (StatusNotifier), sharing the cluster. Left=activate,
+                    // middle=secondaryActivate, scroll, right=the native menu.
+                    Repeater {
+                        model: SystemTray.items
+                        Rectangle {
+                            id: trayDel
+                            implicitWidth: Theme.barControl
+                            implicitHeight: Theme.barControl
+                            radius: Theme.radiusControl
+                            color: trayArea.containsMouse ? Theme.colHoverFill : "transparent"
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Theme.motionHover
+                                }
+                            }
+                            // Some SNIs (Dropbox) publish image://icon/<name>?path=<dir> in a theme the provider does not
+                            // resolve, so we find the real file in <dir> and point at file://.
+                            readonly property string rawIcon: "" + modelData.icon
+                            readonly property bool isPathIcon: /^image:\/\/icon\/[^?]+\?path=/.test(trayDel.rawIcon)
+                            property string resolvedIcon: ""
+                            function resolveTrayIcon() {
+                                trayDel.resolvedIcon = "";
+                                const m = trayDel.rawIcon.match(/^image:\/\/icon\/([^?]+)\?path=(.+)$/);
+                                if (m) {
+                                    iconFinder.command = ["find", m[2], "-name", m[1] + ".png", "-print", "-quit"];
+                                    iconFinder.running = true;
+                                }
+                            }
+                            onRawIconChanged: trayDel.resolveTrayIcon()
+                            Component.onCompleted: trayDel.resolveTrayIcon()
+                            Process {
+                                id: iconFinder
+                                stdout: StdioCollector {
+                                    onStreamFinished: {
+                                        const p = text.trim();
+                                        if (p)
+                                            trayDel.resolvedIcon = "file://" + p;
                                     }
                                 }
                             }
+                            Image {
+                                anchors.centerIn: parent
+                                // path icons: it only shows after resolving to file:// (which avoids the broken load)
+                                source: trayDel.isPathIcon ? trayDel.resolvedIcon : trayDel.rawIcon
+                                sourceSize.width: 16
+                                sourceSize.height: 16
+                                width: 16
+                                height: 16
+                                opacity: modelData.status === 0 ? 0.55 : 1
+                            }
+                            MouseArea {
+                                id: trayArea
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                hoverEnabled: true
+                                acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+                                onContainsMouseChanged: {
+                                    if (containsMouse)
+                                        root.hintTray = modelData;
+                                    root.hoverHint("tray", trayDel, barContent, bar.screen, containsMouse);
+                                }
+                                onClicked: m => {
+                                    root.hintVisible = false;
+                                    if (m.button === Qt.LeftButton)
+                                        modelData.activate();
+                                    else if (m.button === Qt.MiddleButton)
+                                        modelData.secondaryActivate();
+                                    else if (modelData.hasMenu) {
+                                        // A native SNI gets our themed menu. It is a LAYER SURFACE (Hyprland#6682 breaks a PopupWindow's
+                                        // input region), docs/notes/desktop/quickshell.md
+                                        const pt = trayDel.mapToItem(barContent, 0, trayDel.height);
+                                        trayCtxMenu.openAt(modelData.menu, bar, pt.x + bar.margins.left);
+                                    } else {
+                                        // xembedsniproxy icons have NO DBusMenu, and display() refuses them, so we fire the SNI's own
+                                        // ContextMenu() through a helper and the app draws its menu at the cursor.
+                                        root.launch(["tray-native-menu", "" + modelData.id]);
+                                    }
+                                }
+                                onWheel: w => modelData.scroll(w.angleDelta.y, false)
+                            }
                         }
-                        // A single shared instance of the context menu: opening it on one icon
-                        // switches or closes another's (which avoids stacking several menus).
-                        TrayMenu {
-                            id: trayCtxMenu
-                        }
+                    }
+                    // A single shared instance of the context menu: opening it on one icon
+                    // switches or closes another's (which avoids stacking several menus).
+                    TrayMenu {
+                        id: trayCtxMenu
                     }
                 }
             }

@@ -164,6 +164,11 @@ Durations live in `Theme.qml` as tokens, one per MEANING, and a consumer never h
 | `motionSlow` | 300 ms | a value settling | meters, the media progress bar, the CPU cores |
 | `ms(d)` | `d` | a one-off that still obeys `off` | the glance band's own choreography (below) |
 
+`Theme.hoverIntent` (200 ms) sits next to them and is NOT a motion token: it is how long the pointer
+rests on a bar pill before its panel opens ([bar.md](bar.md#contextual-expansion-one-panel-at-a-time-17102026)),
+a threshold for intent rather than an animation, so `off` leaves it alone. The 300 ms close slack
+of the panels is the same kind of number.
+
 All of them are `NumberAnimation`/`ColorAnimation` with an ease-out, deliberately. Qt's
 `SpringAnimation` was weighed for the moving parts and rejected: it is tuned by `spring`/`damping`
 values with no duration, which is the opposite of what a token needs, and nothing in the shell is
@@ -177,8 +182,8 @@ own and not when I act, and folding them into the shell's tokens would retune a 
 ### Off in Quickshell
 
 `my.theme.motion = "off"` reaches `Theme.motionReduced`, and every token and `ms()` returns 0, so
-each Behavior jumps straight to its value. The decorative loop (`WeatherAmbient`'s sun and rain)
-stops. What does NOT stop is a pulse that is a status: the workspace activity badge, a running CI
+each Behavior jumps straight to its value. The decorative motion (`WeatherAmbient`'s sun and rain,
+which since 17/10/2026 plays for 8 s and holds still in any profile) does not play at all. What does NOT stop is a pulse that is a status: the workspace activity badge, a running CI
 job, a failing service, a tile past its limit, an INMET alert. Those carry information, and
 removing their motion would remove the signal.
 
@@ -213,7 +218,8 @@ run per show, none on hide, ending at y = 0.
 
 ### The workspace indicator
 
-Until 17/10/2026 every workspace button painted its own "active" fill, so a switch was two
+`bar/WorkspaceStrip.qml` since the floating clusters (17/10/2026), unchanged in behavior. Until
+17/10/2026 every workspace button painted its own "active" fill, so a switch was two
 cross-fades in two places. Now the active state is ONE pill, under the buttons, that eases to the
 active button's `x` and `width` in 180 ms (`motionNormal`, OutCubic); the active button turns
 see-through and its glyph's color follows over the same 180 ms, so it is never dark on dark while
@@ -271,10 +277,47 @@ Idle, 30 s windows of `/proc/<pid>/stat` on 17/10/2026, the session at rest on i
 | Hyprland | 9.1% | 8.4 to 8.6% |
 
 No change, and no new process: everything here is configuration of the compositor and the shell
-that were already running. The idle Quickshell figure is NOT animation: with the weather ambient
-loops stopped it still read 14.4%, so most of it is the bar's own polling, a separate subject.
-(The RSS figures moved with the many hot reloads of the test session and say nothing about this
-change.)
+that were already running. (The RSS figures moved with the many hot reloads of the test session and
+say nothing about this change.)
+
+**A correction worth keeping (17/10/2026, the same day).** This section used to conclude that the
+idle Quickshell figure was "NOT animation" but the bar's polling, because stopping the weather
+ambient left it at 14.4%. That was WRONG, and the reason is instructive: the cost WAS an animation,
+an invisible one. The INMET alert chip's pulse was gated on `parent.visible`, and inside an
+animation `parent` is not the chip but its always-visible row, so the pulse ran with no alert on
+screen and kept the band drawing every frame. Stopping the ambient could not show it, since the pulse
+alone was enough to keep the frames coming.
+
+### The Adaptive Glass redesign, measured (17/10/2026)
+
+Two methods, because the live session cannot run two configs side by side without doubling the bars:
+
+**A/B in a headless sway** (software rendering, a 2560x1440 and a 1080x1920 output, each tree
+started fresh, 25 s to settle, then 20 s windows of `/proc/<pid>/stat`). Software rendering makes
+every repainted pixel cost CPU, so it exaggerates repaints; it is the right tool for comparing them.
+
+| Tree | Quickshell |
+| --- | --- |
+| before the redesign (57af8649) | 57 to 66% of a core |
+| the redesign, before the two fixes below | 71 to 81% |
+| the new bar on the old band | 57 to 66% (the bar costs nothing) |
+| the old Repeater sparkline put back | 76 to 85% (the canvas one is cheaper) |
+| the alert pulse stopped | 17% |
+| final, rain forced, the ambient looping | 72 to 83% |
+| final, rain forced, the ambient settling | 16% |
+| **final** | **16%** |
+
+RSS was 495 to 508 MB in every run, old and new alike (software buffers dominate it there).
+
+**Live, on this machine** (GPU rendering, the usual 30 s windows, the session at rest; the "before"
+was the 2 h old process, the "after" a fresh one with the fixes hot-reloaded):
+
+| | Before | After |
+| --- | --- | --- |
+| Quickshell | 18.7 to 20.2% of a core, 152 MB | 5.8 to 7.2%, 161 MB |
+| Hyprland, with the new layer blur | about 18% | 15.8 to 17.8% |
+
+The blur on the shell's layers did not show up in Hyprland's CPU; GPU time was not measured.
 
 Not measured, and not claimed: frame pacing and dropped frames (there is no tool for it in the repo,
 and Hyprland's debug overlay was not used), GPU load, and how any of this LOOKS. The curves and

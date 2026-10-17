@@ -1,6 +1,6 @@
 # History: october 2026
 
-9 entries. Index in [README.md](../README.md).
+10 entries. Index in [README.md](../README.md).
 
 - [x] Vicinae replaced rofi and cliphist: one launcher for apps, files, the calculator, the
       clipboard history, my commands and four extensions (13/10/2026). How and why:
@@ -108,3 +108,19 @@
         cap an offline machine waits on it; the whole fetch measured 0.34 s with it online.
       • THE GENERATION DATE IS THE LINK'S OWN MTIME. `stat` without `-L`: following the profile
         link lands on the store, where every mtime is epoch 1.
+
+- [x] The shell became Tokyo Night Adaptive Glass: three floating glass clusters on the bar, a 35%
+      bento band on the standing LG, one design system for both (17/10/2026). How and why:
+      [theme.md](../../notes/desktop/theme.md#tokyo-night-adaptive-glass-the-shells-design-system),
+      [bar.md](../../notes/desktop/bar.md#floating-clusters-17102026) and
+      [dash.md](../../notes/desktop/dash.md#the-bento-grid-17102026).
+      • ONE PANEL AT A TIME. Four hover machines became one coordinator: hover opens after 200 ms,
+        a click pins, a click outside or Escape closes, tested with a virtual pointer and keyboard.
+      • THE OFFICIAL LOGO. The power button draws nixos-artwork's snowflake from `nixos-icons`.
+      • PIXEL-ALIGNED, CHECKED. The band's 18 card edges were found on their computed pixels in a
+        screenshot, and the LG reserves exactly 672 px (`my.dash.share = 0.35`, never above 0.40).
+      • THE BAR NOW OWNS THE BAND'S STRIP, because two zones stack in map order and a re-created
+        band once pushed the bar under itself.
+      • THE IDLE COST WAS AN INVISIBLE ANIMATION. The INMET alert pulse ran with no alert, gated on
+        the wrong `parent`; with it and a looping rain fixed, Quickshell idles at 5.8 to 7.2% of a
+        core, from 18.7 to 20.2%, measured live and A/B in a headless sway.

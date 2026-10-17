@@ -6,6 +6,87 @@ Quickshell. It is loaded by `shell.qml` (`Bar {}`), and the popovers live in fil
 It shows: the workspaces per monitor plus the title, the clock, cpu/ram/disk/temp, the GPU, audio
 (Pipewire), Spotify (Mpris), the network, the VPN, the weather, the tray, notifications.
 
+## Floating clusters (17/10/2026)
+
+The bar is three glass clusters over the wallpaper (`bar/Cluster.qml`, on the shared
+`GlassSurface`), not a row of bordered pills. Each cluster groups by MEANING:
+
+| Cluster | Holds |
+| --- | --- |
+| Left, workspace and context | the NixOS button (main monitor only), this monitor's workspaces (`WorkspaceStrip.qml`), the focused window's title |
+| Center, time and ambient | the weather, the time, the date |
+| Right, system and controls | media, then temperature and CPU, then VPN and network, then volume, then notifications, hypridle and away, then the tray |
+
+Inside a cluster a control (`widgets/Pill.qml`) is FLAT: no border of its own, a neutral fill on
+hover (the text color at 8%, so the accent stays free to mean "active"), a fill on press and an
+accent fill while its panel is pinned. A hairline (`widgets/Divider.qml`) separates the groups of the
+right cluster, and it is the only edge left between controls. Twelve borders became three outlines,
+which is what lets the wallpaper read as a picture between them. The geometry and the glass are
+tokens: [theme.md](theme.md#tokyo-night-adaptive-glass-the-shells-design-system).
+
+**What moved, and nothing was removed.** The notification bell and the media pill moved to the
+right cluster, the tray now shares that cluster instead of having a background of its own, and every
+handler, scroll and right-click is the one it was. A workspace that EXISTS (has windows) now reads
+in `subtext` and an empty one in `dim`, which the old buttons did not distinguish.
+
+**The time sits on the screen's exact center**, not just the cluster's: the weather and the date get
+slots of EQUAL width on either side of it (the wider of the two), so the cluster is symmetric around
+the time and `anchors.centerIn` puts the time itself on the center. Measured on 17/10/2026: the
+calendar, hung from the time, opened at x = 820 with 920 px, so its center is 1280, the middle of the
+2560 px panel.
+
+### Numbers that hold still
+
+The temperature, the CPU, the two network rates and the volume are padded to a fixed number of
+columns (`tab()` in `Bar.qml`); the font is mono, so the pill keeps its width. Before, `431K`
+becoming `1.3M` or `9%` becoming `41%` moved every control to their left every 2 s, since the right
+cluster is anchored to the edge. Measured on 17/10/2026: the cluster's left edge sat on the same
+pixel across six captures 2 s apart while the rates changed.
+
+## Contextual expansion: one panel at a time (17/10/2026)
+
+Every panel the bar opens on hover (weather, calendar, temperature, usage, network, VPN statistics)
+goes through ONE coordinator in `Bar.qml` and one window type, `bar/BarPanel.qml`. It replaced four
+separate hover machines that each kept their own "pill hovered", "popover hovered" and close timer.
+
+| Gesture | What it does |
+| --- | --- |
+| Hover | after 200 ms of rest (`Theme.hoverIntent`) the panel opens; a pointer only crossing the bar opens nothing |
+| Hover a neighbor | its panel takes over at once, with no new wait |
+| Leave | 300 ms of slack to cross the gap into the panel, then it closes |
+| Click | PINS it: it stays without the pointer, and its pill stays lit |
+| Click again, click outside, Escape | closes the pinned panel |
+| Click another pill | switches the pin to that panel |
+| Scroll | unchanged (volume, media) |
+
+**One panel at a time.** A pin closes the VPN actions menu, the power menu and any hint; opening the
+power menu, the VPN menu or the media panel closes a pin; a hovered panel hands over to a hint the
+moment the pointer reaches a pill with no panel. Two panels can never draw over each other.
+
+**Click outside, and Escape, without stealing the keyboard.** A pinned panel holds a
+`HyprlandFocusGrab` whose whitelist includes the bar window it hangs from, which is why a click on
+another pill SWITCHES panels instead of only closing (outside the whitelist the grab clears and the
+panel closes). The panel asks for the keyboard (`OnDemand`) ONLY while pinned, so a hovered panel
+never takes it from the window under it, and the grab is what delivers Escape. This is the same
+layer-surface pattern as the tray menu, for the same Hyprland #6682 reason
+([quickshell.md](quickshell.md#traymenu-why-a-layer-surface-and-not-a-popupwindow)).
+
+**Placed from the screen's edge.** Every bar panel uses `exclusionMode: Ignore` with its top at
+`Theme.bandTop` (the bar's 4 px gap, its 30 px, and 4 px more), so it lands the same 4 px under the
+bar on both monitors; relying on the reserved zone would drop it under the whole glance band on the
+standing monitor, whose bar reserves the band's strip ([dash.md](dash.md)). The media panel follows
+the rule too, hung under its pill through `qs ipc call mpris toggleAt <x>`.
+
+**Two clicks changed meaning**, and both old actions moved to the right click: the weather's
+forecast site (it was the left click) and the network's `nm-connection-editor` (same).
+
+**Tested on 17/10/2026** with a virtual pointer and keyboard (`wlrctl` and `wtype` from nixpkgs, not
+installed), reading the mapped `qs-panel` layers after each step: nothing at 80 ms of hover and the
+panel at 500 ms; the neighbor's panel at 80 ms; closed 500 ms after leaving; pinned and still there
+600 ms after the pointer left; closed by Escape; switched by a click on another pill; closed by a
+second click; closed by a click on the glance band; the volume hint shown 100 ms after leaving the
+weather's panel; the power menu closing a pin.
+
 ## Hiding the bar (the IPC handler)
 
 It exists because of Flameshot's overlay: on Hyprland a normal WINDOW never covers a `top` layer,
@@ -22,28 +103,35 @@ calls the function. The same trap is documented in `shell.qml`, in the vpn `IpcH
 
 ## The compact bar on a narrow panel
 
-The three Groups are ANCHORED (`left`, `centerIn`, `right`), and anchors in QML do not push, they
+The three clusters are ANCHORED (`left`, `centerIn`, `right`), and anchors in QML do not push, they
 let things overlap. On the 2560 px panel that never shows; on the secondary standing on its pivot,
-1080 px wide, the right group alone (7 pills plus the tray) lands on top of the centered clock.
+1080 px wide, the right cluster alone lands on top of the centered time.
 
 `compact` reads the panel's own WIDTH and not "is this the secondary", so rotating the monitor back
 restores the full bar with no config change (rule 3). The threshold is 1600 px, which is what the
 full set needs in the WORST case: the left group reaches around 620 px with a long title and
 Spotify playing, and the centered group starts at `(width - 280) / 2`, so below that they touch.
 
-What stays on a compact panel is what a support screen actually needs: the workspaces, the window
-title and the clock. What goes is either duplicated from the main bar or system state that belongs
-in ONE place: Spotify, the weather, the notification counter and the whole right group. It is the
-same split the Quickshell and Waybar communities land on for a secondary bar.
+What stays on a compact panel is what a support screen actually needs: the workspaces and the window
+title, in the left cluster; the time is the glance band's, right under it. What goes is either
+duplicated from the main bar or system state that belongs in ONE place: the center and the right
+clusters. It is the same split the Quickshell and Waybar communities land on for a secondary bar.
+
+**On the standing monitor the bar reserves the band's strip too.** Its `exclusiveZone` there is the
+whole top share minus its own 4 px gap, and the band draws inside that strip ignoring other zones.
+Before 17/10/2026 each reserved its own zone, and layer-shell stacks zones in the order the layers
+MAP: renaming the layers re-created them, the band mapped first and the bar landed UNDER it.
 
 The title's `maxWidth` is a SHARE of the panel (13%) instead of the old 340 px literal, so it
 shrinks with the bar instead of being the thing that causes the collision.
 
 ## The clock
 
-The time AND the date are ALWAYS visible, in the same pill. It used to be a toggle on click: one or
-the other, and to see the date you had to click twice, there and back. The time comes first and the
-date goes into the Pill's `sub`, in a discreet color. A hierarchy, not a separation.
+The time AND the date are ALWAYS visible, side by side in the center cluster. It used to be a toggle
+on click: one or the other, and to see the date you had to click twice, there and back. The time is
+bold in `text`, the date regular in `subtext`: a hierarchy, not a separation. Since 17/10/2026 they
+are two controls around which the cluster is symmetric (above), and both open the same calendar,
+hung from the time so it never jumps between them.
 
 The weekday comes from a local `dowAbbr` and NOT from Qt's `"ddd"`, because Qt's format depends on
 the PROCESS' locale, so "sáb" would become "Sat" if the bar came up with no `LC_TIME`. There is no
@@ -471,6 +559,13 @@ draws its own menu at the cursor.
 A taskbar-style "Start button": the NixOS logo in the bar's top left corner, opening lock, log out,
 suspend, reboot and shut down. No sudo: poweroff/reboot/suspend go through systemd-logind, where an
 active session is authorized with no password, and logging out goes through uwsm.
+
+**The logo is the official one** since 17/10/2026: `nix-snowflake`, the two-blue snowflake from
+[nixos-artwork](https://github.com/NixOS/nixos-artwork), which the `nixos-icons` package installs
+into the hicolor theme on every NixOS system. The button resolves it with
+`Quickshell.iconPath("nix-snowflake", true)` and draws the SVG at 16 px, keeping its geometry and
+colors; the Nerd Font glyph (`U+F313`) is only the fallback when the icon cannot be found. A copy of
+the SVG in the repo was rejected: the system already ships the source of truth.
 
 **The lock brings hyprlock up DIRECTLY** (the unit from `lockscreen.nix`) and only then marks the
 `LockedHint`. `loginctl lock-session` on its own did NOT lock: it only emits the Lock signal, and

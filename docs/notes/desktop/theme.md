@@ -237,6 +237,94 @@ there: it moved to `modules/nixos/desktop/monitors.nix` on 04/08/2026 because Su
   variant), otherwise the theme silently falls back.
 - **`cursor.name` and `cursor.size`**, same reasoning; the package (`bibata-cursors`) lives in
   `theme.nix`. The size is global here, not per context.
+- **`motion`** (`subtle` or `off`): the desktop's motion profile, read by Hyprland and Quickshell
+  through the same two files. [`motion.md`](motion.md).
+- **`glass`** (`soft` or `solid`): how see-through the shell's surfaces are, also read by both. The
+  next section is the whole system.
 
 The UI FONT deliberately does NOT live here: it is `my.fonts.ui`, in `modules/nixos/desktop/fonts.nix`,
 next to its package (rule 4).
+
+## Tokyo Night Adaptive Glass: the shell's design system
+
+Chosen on 17/10/2026 for the bar, the glance band and every panel: floating glass clusters over the
+astronomy wallpapers, a bento grid on the standing monitor, one geometry and one material. The COLORS
+stay the palette above; what this adds is presentation, and it lives in `Theme.qml` as tokens, so a
+component never holds a size, an opacity or a duration of its own (rule 11).
+
+### The tokens
+
+| Group | Tokens | Values |
+| --- | --- | --- |
+| Spacing, a 4 px grid | `sp1` `sp2` `sp3` `sp4` `sp6` | 4, 8, 12, 16, 24 |
+| Radii, concentric | `radiusControl`, `radiusSurface` | 8, and 8 + `sp1` = 12 |
+| The bar | `barHeight`, `barControl`, `barTop` | 30, 30 - 2 x 4 = 22, 4 |
+| Type (px, all mono) | `fontMicro` `fontSmall` `fontBody` `fontLabel` `fontTitle` | 10, 11, 12, 13, 14 |
+| Glass | `colSurfaceBar`, `colSurfaceCard`, `colSurfacePop` | the palette's bg at 90%, 92%, 96% |
+| Edges | `colEdge`, `colSheen`, `hairline` | border at 55%, text at 6%, 1 px |
+| States | `colHoverFill`, `colPressFill`, `colSelectFill`, `opacityDisabled` | text at 8% and 14%, accent at 18%, 0.4 |
+| Motion | `motionHover` `motionNormal` `motionSlow`, `hoverIntent` | [motion.md](motion.md); the intent is 200 ms |
+
+**Concentric radii** are why the numbers pair up: a bar cluster is 30 px tall and holds 22 px
+controls with 4 px around them, so a control's 8 px corner plus the 4 px padding is the cluster's
+12 px corner, and the two curves run parallel. A panel and a band card use the same 12.
+
+**Mono everywhere** is also the tabular-figures answer: JetBrains Mono gives every digit the same
+advance, so a number padded to a fixed count of columns never changes width
+([bar.md](bar.md#numbers-that-hold-still)).
+
+### The three glass levels
+
+One component paints all of them, `widgets/GlassSurface.qml`: the palette's bg at the level's
+opacity, a hairline edge, and a 1 px sheen along the top edge inset past the corners, which is what
+makes a surface read as a pane over the photo instead of a hole cut in it. There is no drop shadow:
+Hyprland draws none for layers, and a shadow painted in QML would need a margin of transparent
+window around every card for no gain in legibility.
+
+| Level | Opacity | Used by | Why that much |
+| --- | --- | --- | --- |
+| `bar` | 90% | the bar's three clusters | short labels, glanced at, the most photo can show through |
+| `card` | 92% | the band's bento cards | read from the chair for a while, with fine print on the pages |
+| `pop` | 96% | every panel, menu, the OSD, the notification center | dense text, read the longest |
+
+**Contrast, computed** on 17/10/2026 (WCAG 2 relative luminance, the surface composited over the two
+extremes a space photo puts behind it: black sky, and a galaxy core that Hyprland's blur, at
+`brightness = 0.8`, turns from white into `#cccccc`):
+
+| Text color | bar over black | bar over a bright core | panel over a bright core | solid |
+| --- | --- | --- | --- | --- |
+| `text` | 10.9 | 8.5 | 9.8 | 10.6 |
+| `subtext` | 8.3 | 6.5 | 7.5 | 8.1 |
+| `accent` | 7.0 | 5.4 | 6.3 | 6.8 |
+| `red` | 6.6 | 5.2 | 6.0 | 6.5 |
+| `dim` | 2.8 | 2.2 | 2.5 | 2.8 |
+
+Everything that carries information stays above WCAG AA's 4.5 even over the brightest part of a
+photo. `dim` does not, and it does not on a SOLID Tokyo Night background either (2.8): it is the
+palette's own low-contrast step, so it is kept for decoration and for what a hover repeats. The bar's
+date, which used to be `dim`, is `subtext` now for that reason. The fix for contrast is on the
+surface, never a darker wallpaper: the photo stays as it is.
+
+### The blur, and `solid`
+
+`appearance.lua` blurs exactly the shell's named layers, `qs-bar`, `qs-dash` and `qs-panel`, with
+the global `decoration.blur` settings, and `ignore_alpha = 0.5` keeps the blur off their transparent
+margins: the gaps between clusters and between bento cards show the photo sharp, and only what sits
+under glass is frosted. Every other Quickshell layer keeps the default `quickshell` namespace and is
+not blurred. No plugin is involved (HyprGlass and similar were ruled out by the brief); this is the
+native layer rule on the pinned Hyprland.
+
+`my.theme.glass = "solid"` paints all three levels opaque and drops the rule, so no blur is paid
+for. It is the fallback for a wallpaper where something still reads badly, or for a GPU that needs
+the frames; the design does not depend on the blur, only looks better with it. Tested on 17/10/2026
+by forcing the QML default: the cards turn opaque with the same geometry.
+
+### Tuning
+
+| To change | Where |
+| --- | --- |
+| How see-through a level is | `colSurfaceBar` / `colSurfaceCard` / `colSurfacePop` in `Theme.qml` (the hex byte) |
+| Glass off entirely | `my.theme.glass = "solid";` and a rebuild |
+| The blur's look | `decoration.blur` in `appearance.lua`, shared with the windows |
+| The band's height | `my.dash.share` ([dash.md](dash.md#the-share-35-by-default-never-above-40)) |
+| A duration | the `motion*` tokens ([motion.md](motion.md)) |

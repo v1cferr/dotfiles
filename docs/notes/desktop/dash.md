@@ -1,10 +1,10 @@
 # The glance band on the standing monitor
 
 `modules/home/desktop/quickshell/dash/`. Everything that belongs to the band lives in that one
-folder: the panel (`Dashboard.qml`), its pieces (`Tile.qml`, `ServiceStrip.qml`, `CiList.qml`), the CI
-feed (`Ci.qml`, which reads glance-feed's cache) and, under `scripts/`, the services meta script and
-the pipeline hook's store.
-that no window lands in it.
+folder: the panel (`Dashboard.qml`), its pieces (`BentoCard.qml`, `Tile.qml`, `ServiceStrip.qml`,
+`CiList.qml`), the CI feed (`Ci.qml`, which reads glance-feed's cache), its height (`band.nix`, the
+`my.dash.share` option) and, under `scripts/`, the services meta script and the pipeline hook's
+store.
 
 The band is a part of the Quickshell tree and not a Nix module of its own on purpose: the QML has to
 sit under the `mkOutOfStoreSymlink` that becomes `~/.config/quickshell`, or the `root:/` imports
@@ -12,8 +12,9 @@ and the hot reload stop working, and it reads every system number from the bar's
 
 **Why it exists.** A 27" panel on its pivot is 597 mm tall, so its top third sits ABOVE eye level
 for anyone sitting at the desk, while the ergonomic target is 0 to -30 degrees below the
-horizontal. A window up there is a neck problem, not a layout preference. The split is 30/70 on
-purpose: 576 px of band against 1344 px of work area on the 1920 px panel, at its native scale.
+horizontal. A window up there is a neck problem, not a layout preference. The split is 35/65 since
+17/10/2026 (30/70 before): 672 px of band against 1248 px of work area on the 1920 px panel, at its
+native scale ([the share](#the-share-35-by-default-never-above-40)).
 
 **It is drawn on a fixed canvas and scaled inside Quickshell.** The band was designed in the week
 the LG ran at `scale = 0.75` (1440x2560 logical), and every size in `dash/` is a pixel of that
@@ -32,18 +33,18 @@ reads `stage.width`.
 **How the space is taken: `exclusiveZone`, not a gap.** A workspace rule with
 `gaps_out = { top = N }` reserves the same strip, and it was the first attempt, but N would then
 have to be kept in sync BY HAND with the panel's height, and it only covers the workspaces it
-names. A layer surface declares its own height and Hyprland tiles below it, so ONE number governs
-both. That number subtracts the bar's own zone (`host.barExclusiveZone`) and the two 4 px margins,
-which is what makes the bar and the band together add up to the 30%.
+names. A layer surface declares its own zone and Hyprland tiles below it, so ONE number governs
+both: the share, reserved by the bar on this screen ([below](#the-share-35-by-default-never-above-40)).
 
 **What earns a place.** The top of a standing screen is for what is read in two seconds and never
 clicked: the time, the month, the machine's vitals and what is playing. Everything that takes
-a click stays in the 70%. The notification FEED is deliberately not there, only a bell with the
+a click stays in the work area. The notification FEED is deliberately not there, only a bell with the
 count: a feed in the eyeline is the opposite of a glance surface, so the centre opens on a click
 and nowhere else.
 
-**The vitals are tiles, not meter rows.** CPU, RAM, DISK, GPU, TEMP and NET sit in a 3x2 grid
-(`dash/Tile.qml`) with a 36 px value and one hint; load and uptime are in the CPU tile's tooltip.
+**The vitals are tiles, not meter rows.** CPU, RAM, DISK, GPU, TEMP and NET sit in one row of
+six bento cells since 17/10/2026, a 3x2 grid before (`dash/Tile.qml`), each with a 36 px value and one
+hint; load and uptime are in the CPU tile's tooltip.
 The first version reused the
 popovers' `MeterRow`, whose 10 to 12 px text is sized for a hover a hand away; on the band's
 canvas it was unreadable from the chair and left the left column half empty. GPU is power against its
@@ -60,15 +61,98 @@ number, and what the machine is RUNNING was nowhere. So the history moved INTO t
 sparkline beside its value (`Tile.series`), and the strip became the services carousel (below).
 `Horizon.qml` was deleted with it (rule 16).
 
-**The date block.** The clock shows HH:mm:ss, and BESIDE it the weekday spelled out over one short
-line (`11 out · W41`). It used to be three stacked lines; one row returned the height the services
-strip needed. The weekday is what a person wants off a clock; the full date, the ISO date and the
+**The date block.** The clock shows HH:mm:ss on a line of its own, and under it the weekday spelled
+out next to one short date (`11 out · W41`). From 11/10/2026 the weekday sat BESIDE the time, to
+return height to the services strip; the bento's own card has that height, so since 17/10/2026 the
+time is larger and the day goes back under it. The weekday is what a person wants off a clock; the full date, the ISO date and the
 uptime are in the tooltip of either. `isoWeek()` counts the week against the year its
 THURSDAY falls in, which is what puts 01/01 on week 53 of the year before when it lands on a Friday.
 
 **`host` is NOT a required property, and that is not sloppiness.** Quickshell's `Variants` creates
 the delegate with `modelData` as the only initial property, so a SECOND required property fails the
 creation with `failed to create variant with object` and the layer never appears at all.
+
+## The share: 35% by default, never above 40%
+
+`my.dash.share` (`dash/band.nix`) is the share of the standing screen's height the band takes, the
+bar INCLUDED: `0.35` by default, `0.30` for the compact profile. The option's type is
+`numbers.between 0.25 0.4`, so a share above 40% does not evaluate, and `Theme.qml` clamps the
+generated `~/.config/theme/dash.json` to the same range again, since a hand-edited file would
+otherwise get past the type. Above 40% the band would take the work area it exists to protect.
+
+```nix
+my.dash.share = 0.30; # the compact profile: the 576 px band of the old 30/70 split
+```
+
+The arithmetic, on the 1920 px LG: `round(1920 x 0.35)` = 672 px reserved from the top edge. The
+bar sits at y = 4 (30 px), the band at y = 38 (`Theme.bandTop`, the bar plus 4 px), so the band is
+672 - 38 = 634 px tall and its last row is y = 671. Windows start at 672 plus Hyprland's 4 px
+`gaps_out`. Measured on 17/10/2026: the monitor's `reserved` is `[0, 672, 0, 0]`, and the band's
+bottom border was found on row 671 of a screenshot. At 0.30 the same sum gives 576 and a 538 px
+band. Until the next rebuild writes `dash.json`, Theme falls back to 0.35 and logs that the file is
+missing.
+
+**One owner for the strip.** The BAR reserves it: on a screen where the band shows, its
+`exclusiveZone` is the whole share minus its own 4 px gap, and the band draws inside that strip with
+`exclusionMode: Ignore`. Two layers that each reserve their own zone are stacked by Hyprland in the
+order they MAP, and on 17/10/2026 a re-created band mapped first and pushed the bar under itself.
+With one owner the order no longer matters, and nothing is reserved twice.
+
+## The bento grid (17/10/2026)
+
+The band was one big card with two columns inside. It is now a grid of glass cards (`BentoCard.qml`
+on the shared `GlassSurface`, [theme.md](theme.md#the-three-glass-levels)) with 8 px gutters, so the
+photo shows between the cells:
+
+```text
++--------------------------+ +--------------------------+
+| the time, the weekday    | | month / weather / network|
+| today's weather          | | / GitHub / FAI, rotating |
+| what is playing          | |                          |
++--------------------------+ +--------------------------+
++------+ +------+ +------+   +------+ +------+ +------+
+| CPU  | | RAM  | | DISK |   | GPU  | | TEMP | | NET  |
++------+ +------+ +------+   +------+ +------+ +------+
++-----------------------------------------------------+
+| the services carousel                               |
++-----------------------------------------------------+
+```
+
+**The geometry is computed, in whole pixels, from the window.** With W and H the band's size and
+g = 8 (`Theme.sp2`):
+
+| Cell | Rule | On the LG (1072 x 634) |
+| --- | --- | --- |
+| left column | `floor((W - g) / 2)` | 532 |
+| right column | `W - g - left`, so a spare pixel goes right | 532 |
+| tile | `floor((column - 2g) / 3)`, a column's spare pixels to its last tiles | 172 |
+| top row | `H - 104 - 100 - 2g`: whatever the share leaves | 414 |
+| vitals row | 104 | y 422 to 525 |
+| services row | 100 | y 534 to 633 |
+
+**Three tiles plus their two gutters are exactly one column**, so every vertical line in the grid is
+shared by the cells above and below it. Only the top row grows or shrinks with the share; the vitals
+and the services keep their height, so the compact profile takes the room from the pages, which have
+the most to spare.
+
+**Checked on a screenshot** (17/10/2026, a script scanning a row and a column for the cards' 1 px
+borders): all 12 vertical edges (4/175, 184/355, 364/535, 544/715, 724/895, 904/1075 in screen x)
+and all 6 horizontal ones (38/451, 460/563, 572/671) on the exact computed pixel.
+
+**Frames in pixels, content in design units.** A card's frame (position, size, radius, border) is
+in real pixels, so the hairlines land on whole pixels and stay crisp. Its CONTENT keeps the 1432
+design canvas described above, scaled by the same `k` inside the card, so nothing on the pages, the
+tiles or the services had to be re-sized. That is the incremental half of moving off the global
+transform: the chrome is in pixels now, and moving the content's ~250 sizes too would be a separate
+change with nothing broken to fix.
+
+**What changed in the cells.** The time grew to its own line (96 design px, about 72 on screen) for
+reading from the chair, the weekday and the date under it; today's weather sits centered in the rest
+of the card and the media line at its foot. RAM and TEMP draw the 2-minute history the bar already
+keeps (`memHist`, `tempHist`), so no reading was added. NET's value is a step smaller (28 design px)
+so `↓ 977 KB/s` stays whole in a 172 px tile. Every tile is aligned to the top, so the six labels
+share one line. The sparklines are one canvas each since the same day
+([motion.md](motion.md#measured-cost-and-what-was-not-measured)).
 
 ## The CI pages: the right column rotates
 
@@ -198,10 +282,13 @@ the hourly run with feels like, humidity and wind, and derives "now" from it, in
 minutes past the hour and re-deriving every 5 minutes. `wHourly`, `wDaily` and `wForecast` keep
 their shapes, so the pill, its popover, the month grid and the weather page did not change.
 
-**The ambient layer (`WeatherAmbient.qml`)** lives behind today's glyph: drops falling while it
-rains, a slow breathing glow while the sun is out, and NOTHING for clouds, fog or night, because
-motion that never stops stops meaning anything. It is a handful of rectangles and no shader, since
-the band already repaints often (the services strip). It stops with `my.theme.motion = "off"`.
+**The ambient layer (`WeatherAmbient.qml`)** lives behind today's glyph: drops while it rains, a
+glow while the sun is out, and NOTHING for clouds, fog or night. Since 17/10/2026 it MOVES for 8 s
+when that sky begins (the drops fall, the glow breathes) and then holds still, the drops resting at
+their own heights and the glow mid-breath, so the cue stays on screen without a loop. It used to
+loop for as long as it rained, and a loop keeps the whole band repainting every frame: measured in a
+headless sway with rain forced, 72 to 83% of a core looping against 16% settled, the same as no rain.
+With `my.theme.motion = "off"` only the still picture shows.
 
 **The week (in the month grid)** is the band's signature: today and the seven days after it carry
 their own forecast INSIDE their cells, the number lifted to make room for the sky glyph, the max in
@@ -227,8 +314,8 @@ Chosen on 07/10/2026 as "ambient", and every piece of it carries a meaning:
 - **Pages slide.** The page coming in enters from the side being moved toward and the one leaving
   exits the other way (`offsetOf`, 56 px over 420 ms, under the existing fade), so the column reads
   as a strip of pages and not as a flicker. A wrap from the last page to the first slides forward.
-- **The weather** draws its 12-hour curve in, and rains or shines behind today's glyph
-  (`WeatherAmbient.qml`, above). The draw-in plays on the first data and when the page comes
+- **The weather** draws its 12-hour curve in, and rains or shines behind today's glyph for 8 s
+  when that sky begins (`WeatherAmbient.qml`, above). The draw-in plays on the first data and when the page comes
   around, and NOT on a feed refresh: until 17/10/2026 `onHoursChanged` replayed it, so the chart
   re-animated every few minutes on its own. A refresh now repaints in place.
 

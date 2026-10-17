@@ -1271,6 +1271,11 @@ Scope {
         return s >= 1000 ? (s / 1000) + " Gb/s" : s + " Mb/s";
     }
 
+    // A live number padded to a fixed count of columns: the font is mono, so the pill keeps its width
+    // and its neighbors stop shifting every 2 s as the digits come and go.
+    function tab(v, n) {
+        return ("" + v).padStart(n, " ");
+    }
     function fmtRate(bps) {
         if (bps >= 1048576)
             return (bps / 1048576).toFixed(1) + "M";
@@ -1956,7 +1961,7 @@ Scope {
                     Pill {
                         id: tempPill
                         icon: "󰔏"
-                        label: root.tempMax + "°C"
+                        label: root.tab(root.tempMax, 2) + "°C"
                         accent: root.tempQuality.color
                         selected: root.pinned === "temp"
                         onHoveredChanged: root.hoverPanel("temp", tempPill, barContent, bar, hovered)
@@ -1965,7 +1970,7 @@ Scope {
                     Pill {
                         id: usagePill
                         icon: "󰓅"
-                        label: root.cpuPct + "%"
+                        label: root.tab(root.cpuPct, 3) + "%"
                         accent: root.stateColor(root.cpuPct, Theme.colYellow)
                         selected: root.pinned === "usage"
                         onHoveredChanged: root.hoverPanel("usage", usagePill, barContent, bar, hovered)
@@ -2000,7 +2005,7 @@ Scope {
                     Pill {
                         id: netPill
                         icon: "󰛳"
-                        label: "↓" + root.fmtRate(root.netMainRx) + " ↑" + root.fmtRate(root.netMainTx)
+                        label: "↓" + root.tab(root.fmtRate(root.netMainRx), 5) + " ↑" + root.tab(root.fmtRate(root.netMainTx), 5)
                         accent: root.netQuality.color
                         selected: root.pinned === "net"
                         onHoveredChanged: root.hoverPanel("net", netPill, barContent, bar, hovered)
@@ -2011,7 +2016,7 @@ Scope {
                     Pill {
                         id: volPill
                         icon: root.volIcon()
-                        label: Math.round(root.volume * 100) + "%"
+                        label: root.tab(Math.round(root.volume * 100), 3) + "%"
                         accent: root.sinkMuted ? Theme.colDim : Theme.colBlue
                         onHoveredChanged: root.hoverHint("vol", volPill, barContent, bar, hovered)
                         onClicked: root.toggleMute()

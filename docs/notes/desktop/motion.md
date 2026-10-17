@@ -116,3 +116,38 @@ there is no frame-pacing tool in the repo, and no dropped-frame count was taken.
 
 With `my.theme.motion = "off"` the module sets `animations.enabled = false`, the one switch
 Hyprland has for all of it. Every leaf stays declared, so going back is the same option.
+
+## Vicinae
+
+Until 17/10/2026 the launcher's layer carried `no_anim`, so SUPER+Q felt instant. It now carries
+`animation = "fade"`: no movement at all, 150 ms of easeOutQuint opacity in (`fadeLayersIn`) and
+100 ms out (`fadeLayersOut`). The style is pinned on the rule, not inherited, so a later change to
+`layers` can never make the launcher zoom.
+
+**Does the compositor even see the toggle?** Yes. `vicinae open` creates a layer surface named
+`vicinae` and `vicinae close` destroys it (`hyprctl layers` goes from nothing to one 1024x644 surface
+and back), so every toggle is a map and an unmap, and layer rules apply to it. Vicinae itself has
+no animation setting (`vicinae config default` has none), so this rule is the only lever.
+
+**Does the fade cost input latency?** No, by construction and by measurement. In 0.56.2
+`CLayerSurface::onMap()` hands keyboard focus to the layer BEFORE it applies the entrance
+animation, so the first keystroke reaches the search field on the first frame, whatever the
+opacity is. Measured on 17/10/2026, `vicinae open` to the layer listed by Hyprland, 8 opens each:
+
+| Rule | exec to mapped |
+| --- | --- |
+| `no_anim` (before) | 12 to 14 ms |
+| `animation = "fade"` | 12 to 14 ms |
+
+The fade starts on top of that, and easeOutQuint puts it past half opacity within roughly the
+first 20 ms, so the launcher reads as present on the same frame it would have before.
+
+**Rapid toggling.** 20 `vicinae toggle` calls back to back, then a check: the number of `vicinae`
+layers matched Vicinae's own `vicinae state open` every time, under both rules, and none was left
+behind after a close. A surface that unmaps mid-fade is drawn out of its last frame by Hyprland and
+is gone 100 ms later; it never takes input. One thing this test showed that is NOT ours: under
+that spam Vicinae's own IPC drops some toggles, so 20 toggles do not always end closed. It happened
+with `no_anim` too.
+
+**If it ever feels slower**, the revert is the one line in `rules.lua` back to `no_anim = true`;
+an instant launcher beats an animated one, and that was the condition this was accepted under.

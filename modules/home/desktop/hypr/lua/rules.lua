@@ -36,5 +36,6 @@ hl.window_rule({
   rounding = 0,
 })
 
--- Vicinae's layer surface: no open/close animation, so the toggle feels instant.
-hl.layer_rule({ match = { namespace = "^vicinae$" }, no_anim = true })
+-- Vicinae's layer surface: a fade and NO movement (150 ms in, 100 ms out). Pinned here so a later
+-- `layers` style cannot zoom the launcher; the measurements: docs/notes/desktop/motion.md
+hl.layer_rule({ match = { namespace = "^vicinae$" }, animation = "fade" })

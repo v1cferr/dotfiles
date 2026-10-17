@@ -5,30 +5,19 @@ import QtQuick.Layouts
 import "root:/"
 import "root:/widgets"
 
-PanelWindow {
+BarPanel {
     id: wPop
-    required property var bar
-    visible: bar.wPopVisible && bar.wHas
-    screen: bar.popScreen || bar.screenPrimary
-    anchors {
-        top: true
-        left: true
-    }
-    margins {
-        top: 4 // = Hyprland's gaps_out: it aligns the popover with the top of the windows (barExclusiveZone 30 already added)
-        left: bar.popLeft(wPop.implicitWidth)
-    }
-    exclusiveZone: 0
+    key: "weather"
+    ready: bar.wHas
     // The card fits the content (+28 = the 14*2 margins). With no fixed width there is no empty
     // space left on the right: the 7-day grid defines the width.
     implicitWidth: card.implicitWidth
     implicitHeight: card.implicitHeight
-    color: "transparent"
 
     PopCard {
         shown: wPop.visible
         id: card
-        onHoveredChanged: wPop.bar.wPopHovered = card.hovered
+        onHoveredChanged: wPop.bar.panelPopHovered = card.hovered
 
         ColumnLayout {
             id: wContent

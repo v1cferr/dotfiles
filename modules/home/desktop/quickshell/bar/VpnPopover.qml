@@ -1,6 +1,7 @@
 // The VPN ACTIONS popover (click): a row per VPN, "Disconnect all", then Tor's state. It replaced a loose rofi,
 // and it shares the Bar's single source. Why click and not hover: docs/notes/desktop/bar.md
 import Quickshell
+import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -12,15 +13,17 @@ PanelWindow {
 
     visible: bar.vpnPopVisible
     screen: bar.popScreen || bar.screenPrimary
+    WlrLayershell.namespace: "qs-panel"
     anchors {
         top: true
         left: true
     }
+    // Placed from the screen's edge, sp1 under the bar (the same rule as BarPanel).
+    exclusionMode: ExclusionMode.Ignore
     margins {
-        top: 4 // = Hyprland's gaps_out (the barExclusiveZone 30 is already discounted)
+        top: Theme.bandTop
         left: bar.popLeft(vpnPop.implicitWidth)
     }
-    exclusiveZone: 0
     implicitWidth: 300
     implicitHeight: card.implicitHeight
     color: "transparent"
@@ -33,14 +36,11 @@ PanelWindow {
         onTriggered: vpnPop.bar.vpnPopVisible = false
     }
 
-    Rectangle {
+    GlassSurface {
         id: card
         anchors.fill: parent
         implicitHeight: col.implicitHeight + 36
-        radius: 12
-        color: Theme.colBg
-        border.color: Theme.colBorder
-        border.width: 1
+        level: "pop"
 
         transform: Translate {
             id: drop

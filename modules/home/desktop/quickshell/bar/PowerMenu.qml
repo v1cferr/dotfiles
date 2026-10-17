@@ -16,7 +16,20 @@ Pill {
     accent: Theme.colSapphire
     selected: powerBtn.menuOpen
     property bool menuOpen: false
-    onClicked: powerBtn.menuOpen = !powerBtn.menuOpen
+    property var host: null // the Bar's Scope: one panel at a time across the whole bar
+    onClicked: {
+        const open = !powerBtn.menuOpen;
+        if (open && powerBtn.host)
+            powerBtn.host.closePanels();
+        powerBtn.menuOpen = open;
+    }
+    Connections {
+        target: powerBtn.host
+        function onPinnedChanged() {
+            if (powerBtn.host.pinned !== "")
+                powerBtn.menuOpen = false;
+        }
+    }
 
     Process {
         id: actionProc

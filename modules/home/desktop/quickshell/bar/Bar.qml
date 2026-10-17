@@ -787,31 +787,8 @@ Scope {
         }
         return out;
     }
-    // Statistics on HOVER, actions on CLICK, both anchored at the same point: this one hides while
-    // the menu is open, or they would draw on top of each other.
-    property bool vpnPillHovered: false
-    property bool vpnStatsPopHovered: false
-    property bool vpnStatsPopVisible: false
-    readonly property bool vpnStatsWanted: (root.vpnPillHovered || root.vpnStatsPopHovered) && !root.vpnPopVisible
-    onVpnStatsWantedChanged: {
-        if (root.vpnStatsWanted) {
-            vpnStatsCloseTimer.stop();
-            root.vpnStatsPopVisible = true;
-            vpnStatsProc.running = true; // a fresh sample when it opens
-        } else {
-            vpnStatsCloseTimer.restart();
-        }
-    }
-    // The same 300ms of slack as the other hover popovers: you can cross the gap between the
-    // pill and the panel without it closing in your face.
     Timer {
-        id: vpnStatsCloseTimer
-        interval: 300
-        onTriggered: if (!root.vpnStatsWanted)
-            root.vpnStatsPopVisible = false
-    }
-    Timer {
-        interval: root.vpnStatsPopVisible ? 3000 : 20000
+        interval: root.panelOpen === "vpn" ? 3000 : 20000
         running: root.vpnConnected
         repeat: true
         triggeredOnStart: true
@@ -830,9 +807,13 @@ Scope {
     property string hintKey: ""
     property bool hintVisible: false
     property var hintTray: null
-    function hoverHint(key, item, barContentItem, scr, on) {
+    function hoverHint(key, item, barContentItem, barWin, on) {
         if (on) {
-            root.anchorPopover(item, barContentItem, scr);
+            if (root.pinned !== "")
+                return; // a hint never draws over a pinned panel; a hovered one hands over at once
+            panelOpenTimer.stop();
+            root.panelShown = "";
+            root.anchorPopover(item, barContentItem, barWin);
             root.hintKey = key;
             root.hintVisible = true;
         } else if (root.hintKey === key) {
@@ -1051,27 +1032,6 @@ Scope {
             });
         root.wHourly = hours;
     }
-    // the weather popover's hover
-    property bool wPillHovered: false
-    property bool wPopHovered: false
-    property bool wPopVisible: false
-    onWPillHoveredChanged: root.updateWeatherPop()
-    onWPopHoveredChanged: root.updateWeatherPop()
-    function updateWeatherPop() {
-        if (root.wPillHovered || root.wPopHovered) {
-            wPopCloseTimer.stop();
-            root.wPopVisible = true;
-        } else {
-            wPopCloseTimer.restart();
-        }
-    }
-    Timer {
-        id: wPopCloseTimer
-        interval: 300
-        onTriggered: if (!root.wPillHovered && !root.wPopHovered)
-            root.wPopVisible = false
-    }
-
     // ===== Audio (Pipewire) =====
     PwObjectTracker {
         objects: Pipewire.defaultAudioSink ? [Pipewire.defaultAudioSink] : []
@@ -1323,21 +1283,91 @@ Scope {
     // 2nd diverging implementation.
     readonly property var screenPrimary: Theme.screenPrimary
     property var popScreen: null
+    property var popBar: null // the bar window the open panel hangs from (part of its focus grab)
     property real popCenterX: 0   // the anchored element's center, in the bar window's coordinates
     // mapToItem into a REAL Item (barContent) is reliable; only mapToItem(null) is not
-    function anchorPopover(pillItem, barContentItem, scr) {
+    function anchorPopover(pillItem, barContentItem, barWin) {
         if (pillItem && barContentItem) {
             const p = pillItem.mapToItem(barContentItem, 0, 0);
             root.popCenterX = p.x + pillItem.width / 2;
         }
-        if (scr)
-            root.popScreen = scr;
+        if (barWin) {
+            root.popBar = barWin;
+            root.popScreen = barWin.screen;
+        }
     }
-    // margin.left to center the popover under the element (+4 = the bar's margin.left)
+    // margin.left to center the popover under the element, clamped inside the screen by sp1
     function popLeft(popW) {
         const scr = root.popScreen || root.screenPrimary;
         const sw = scr ? scr.width : 1920;
-        return Math.round(Math.max(4, Math.min(root.popCenterX + 4 - popW / 2, sw - popW - 4)));
+        return Math.round(Math.max(Theme.barTop, Math.min(root.popCenterX + Theme.barTop - popW / 2, sw - popW - Theme.barTop)));
+    }
+
+    // ===== Contextual expansion: ONE coordinator for every panel the bar opens =====
+    // Hover rests `Theme.hoverIntent` before a panel opens (a sweep opens nothing) and a neighbor
+    // takes over at once; a click PINS it until a second click, a click outside or Escape. One
+    // panel at a time, so two can never draw over each other. The rules: docs/notes/desktop/bar.md
+    property string panelHover: "" // the pill under the pointer
+    property bool panelPopHovered: false // the pointer is on the open panel
+    property string panelShown: "" // opened by hover
+    property string pinned: "" // opened by a click
+    readonly property string panelOpen: root.pinned !== "" ? root.pinned : root.panelShown
+    function hoverPanel(key, item, barContentItem, barWin, on) {
+        if (!on) {
+            if (root.panelHover === key) {
+                root.panelHover = "";
+                panelOpenTimer.stop();
+                panelCloseTimer.restart();
+            }
+            return;
+        }
+        // A pinned panel owns the bar, and the VPN's stats yield to its own actions menu.
+        if (root.pinned !== "" || (key === "vpn" && root.vpnPopVisible))
+            return;
+        root.panelHover = key;
+        panelCloseTimer.stop();
+        root.anchorPopover(item, barContentItem, barWin);
+        if (root.panelShown !== "")
+            root.panelShown = key;
+        else
+            panelOpenTimer.restart();
+    }
+    function togglePanel(key, item, barContentItem, barWin) {
+        root.hintVisible = false;
+        root.vpnPopVisible = false;
+        panelOpenTimer.stop();
+        if (root.pinned === key) {
+            root.closePanels();
+            return;
+        }
+        root.anchorPopover(item, barContentItem, barWin);
+        root.panelShown = "";
+        root.pinned = key;
+    }
+    function closePanels() {
+        root.pinned = "";
+        root.panelShown = "";
+        root.panelHover = "";
+    }
+    onPanelPopHoveredChanged: root.panelPopHovered ? panelCloseTimer.stop() : panelCloseTimer.restart()
+    onPanelOpenChanged: {
+        if (root.panelOpen !== "")
+            root.hintVisible = false;
+        if (root.panelOpen === "vpn")
+            vpnStatsProc.running = true; // a fresh sample when it opens
+    }
+    Timer {
+        id: panelOpenTimer
+        interval: Theme.hoverIntent
+        onTriggered: if (root.panelHover !== "" && root.pinned === "")
+            root.panelShown = root.panelHover
+    }
+    // 300 ms of slack: the pointer can cross the gap between the pill and the panel.
+    Timer {
+        id: panelCloseTimer
+        interval: 300
+        onTriggered: if (root.panelHover === "" && !root.panelPopHovered)
+            root.panelShown = ""
     }
 
     // Holidays (nac/sp/sc), rechecked 08/08/2026. THIS LIST DOES NOT UPDATE ITSELF: the movable ones
@@ -1575,58 +1605,6 @@ Scope {
             return "tomorrow";
         return "in " + n + "d";
     }
-    // the calendar's hover-keep (the same as the weather one)
-    property bool calPillHovered: false
-    property bool calPopHovered: false
-    property bool calPopVisible: false
-    onCalPillHoveredChanged: root.updateCalPop()
-    onCalPopHoveredChanged: root.updateCalPop()
-    function updateCalPop() {
-        if (root.calPillHovered || root.calPopHovered) {
-            calPopCloseTimer.stop();
-            root.calPopVisible = true;
-        } else {
-            calPopCloseTimer.restart();
-        }
-    }
-    Timer {
-        id: calPopCloseTimer
-        interval: 300
-        onTriggered: if (!root.calPillHovered && !root.calPopHovered)
-            root.calPopVisible = false
-    }
-
-    // ===== The system panels' hover (temp / usage / net) =====
-    // The three share ONE hover state machine and one anchor: only one of them can be open, since
-    // the cursor is on a single pill.
-    property string metricShown: ""   // "temp" | "usage" | "net"
-    property bool metricHovering: false
-    property bool metricPopHovered: false
-    property bool metricPopVisible: false
-    function showMetric(which, pillItem, barContentItem, scr) {
-        root.metricShown = which;
-        root.metricHovering = true;
-        root.anchorPopover(pillItem, barContentItem, scr);
-        metricCloseTimer.stop();
-        root.metricPopVisible = true;
-    }
-    function unhoverMetric() {
-        root.metricHovering = false;
-        metricCloseTimer.restart();
-    }
-    onMetricPopHoveredChanged: {
-        if (root.metricPopHovered)
-            metricCloseTimer.stop();
-        else
-            metricCloseTimer.restart();
-    }
-    Timer {
-        id: metricCloseTimer
-        interval: 300
-        onTriggered: if (!root.metricHovering && !root.metricPopHovered)
-            root.metricPopVisible = false
-    }
-
     // ===== The polling timers =====
     // The system snapshot carries the CPU, the memory, the sensors, the GPU and the interfaces in
     // ONE fork, so what used to be four timers at 2/3/5 s is this one.
@@ -1668,7 +1646,7 @@ Scope {
     // same rule as the VPN probe.
     Timer {
         interval: 3000
-        running: root.metricPopVisible && root.metricShown === "usage"
+        running: root.panelOpen === "usage"
         repeat: true
         triggeredOnStart: true
         onTriggered: procsProc.running = true
@@ -1887,6 +1865,7 @@ Scope {
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
                     PowerMenu {
+                        host: root
                         visible: bar.modelData && bar.modelData.name === Theme.primaryMonitor
                     }
                     WorkspaceStrip {
@@ -1903,7 +1882,7 @@ Scope {
                         accent: Theme.colSky
                         italic: true
                         maxWidth: Math.round(bar.width * 0.13)
-                        onHoveredChanged: root.hoverHint("win", winPill, barContent, bar.screen, hovered)
+                        onHoveredChanged: root.hoverHint("win", winPill, barContent, bar, hovered)
                     }
                 }
 
@@ -1920,34 +1899,32 @@ Scope {
                         icon: root.wHas ? root.weatherIcon(root.wCode, root.isDayNow()) : "󰖐"
                         label: root.wHas ? root.wTemp + "°C" : "--°C"
                         accent: root.wHas ? Theme.colSapphire : Theme.colDim
-                        onHoveredChanged: {
-                            root.wPillHovered = hovered;
-                            if (hovered)
-                                root.anchorPopover(weatherPill, barContent, bar.screen);
-                        }
-                        onClicked: root.launch(["xdg-open", "https://www.msn.com/en-us/weather/forecast/in-S%C3%A3o-Carlos,S%C3%A3o-Paulo"])
+                        selected: root.pinned === "weather"
+                        onHoveredChanged: if (root.wHas)
+                            root.hoverPanel("weather", weatherPill, barContent, bar, hovered)
+                        onClicked: if (root.wHas)
+                            root.togglePanel("weather", weatherPill, barContent, bar)
+                        // The forecast site moved here when the click became the panel's pin.
+                        onRightClicked: root.launch(["xdg-open", "https://www.msn.com/en-us/weather/forecast/in-S%C3%A3o-Carlos,S%C3%A3o-Paulo"])
                     }
                     Pill {
                         id: clockPill
                         label: root.timeStr
                         labelColor: Theme.colText
                         bold: true
-                        onHoveredChanged: {
-                            root.calPillHovered = hovered;
-                            if (hovered)
-                                root.anchorPopover(clockPill, barContent, bar.screen);
-                        }
+                        selected: root.pinned === "cal"
+                        onHoveredChanged: root.hoverPanel("cal", clockPill, barContent, bar, hovered)
+                        onClicked: root.togglePanel("cal", clockPill, barContent, bar)
                     }
                     Pill {
                         id: datePill
                         Layout.preferredWidth: centerCluster.side
                         label: root.dateStr
                         labelColor: Theme.colSubtext
-                        onHoveredChanged: {
-                            root.calPillHovered = hovered;
-                            if (hovered)
-                                root.anchorPopover(clockPill, barContent, bar.screen);
-                        }
+                        selected: root.pinned === "cal"
+                        // The date opens the same calendar, hung from the time so it never jumps between them.
+                        onHoveredChanged: root.hoverPanel("cal", clockPill, barContent, bar, hovered)
+                        onClicked: root.togglePanel("cal", clockPill, barContent, bar)
                     }
                 }
 
@@ -1964,7 +1941,7 @@ Scope {
                         label: root.spText
                         accent: root.spColor
                         maxWidth: 220
-                        onHoveredChanged: root.hoverHint("spotify", spPill, barContent, bar.screen, hovered)
+                        onHoveredChanged: root.hoverHint("spotify", spPill, barContent, bar, hovered)
                         onClicked: {
                             root.hintVisible = false;
                             root.launch(["qs", "ipc", "call", "mpris", "toggle"]);
@@ -1981,14 +1958,18 @@ Scope {
                         icon: "󰔏"
                         label: root.tempMax + "°C"
                         accent: root.tempQuality.color
-                        onHoveredChanged: hovered ? root.showMetric("temp", tempPill, barContent, bar.screen) : root.unhoverMetric()
+                        selected: root.pinned === "temp"
+                        onHoveredChanged: root.hoverPanel("temp", tempPill, barContent, bar, hovered)
+                        onClicked: root.togglePanel("temp", tempPill, barContent, bar)
                     }
                     Pill {
                         id: usagePill
                         icon: "󰓅"
                         label: root.cpuPct + "%"
                         accent: root.stateColor(root.cpuPct, Theme.colYellow)
-                        onHoveredChanged: hovered ? root.showMetric("usage", usagePill, barContent, bar.screen) : root.unhoverMetric()
+                        selected: root.pinned === "usage"
+                        onHoveredChanged: root.hoverPanel("usage", usagePill, barContent, bar, hovered)
+                        onClicked: root.togglePanel("usage", usagePill, barContent, bar)
                     }
                     Divider {}
                     Pill {
@@ -2003,14 +1984,12 @@ Scope {
                         badgeColor: Theme.colLavender
                         maxWidth: 190
                         selected: root.vpnPopVisible
-                        onHoveredChanged: {
-                            root.vpnPillHovered = hovered;
-                            if (hovered)
-                                root.anchorPopover(vpnPill, barContent, bar.screen);
-                        }
+                        onHoveredChanged: root.hoverPanel("vpn", vpnPill, barContent, bar, hovered)
                         onClicked: {
-                            root.anchorPopover(vpnPill, barContent, bar.screen);
-                            root.vpnPopVisible = !root.vpnPopVisible;
+                            const open = !root.vpnPopVisible;
+                            root.closePanels(); // its actions menu is the one panel now
+                            root.anchorPopover(vpnPill, barContent, bar);
+                            root.vpnPopVisible = open;
                             if (root.vpnPopVisible) {
                                 vpnProc.running = true; // a fresh state when it opens
                                 torProc.running = true;
@@ -2023,8 +2002,10 @@ Scope {
                         icon: "󰛳"
                         label: "↓" + root.fmtRate(root.netMainRx) + " ↑" + root.fmtRate(root.netMainTx)
                         accent: root.netQuality.color
-                        onHoveredChanged: hovered ? root.showMetric("net", netPill, barContent, bar.screen) : root.unhoverMetric()
-                        onClicked: root.launch(["nm-connection-editor"])
+                        selected: root.pinned === "net"
+                        onHoveredChanged: root.hoverPanel("net", netPill, barContent, bar, hovered)
+                        onClicked: root.togglePanel("net", netPill, barContent, bar)
+                        onRightClicked: root.launch(["nm-connection-editor"]) // was the left click before the pin
                     }
                     Divider {}
                     Pill {
@@ -2032,7 +2013,7 @@ Scope {
                         icon: root.volIcon()
                         label: Math.round(root.volume * 100) + "%"
                         accent: root.sinkMuted ? Theme.colDim : Theme.colBlue
-                        onHoveredChanged: root.hoverHint("vol", volPill, barContent, bar.screen, hovered)
+                        onHoveredChanged: root.hoverHint("vol", volPill, barContent, bar, hovered)
                         onClicked: root.toggleMute()
                         onRightClicked: root.launch(["pavucontrol"])
                         onScrolledUp: root.setVol(0.05)
@@ -2046,7 +2027,7 @@ Scope {
                         // the count when there are notifications; dim when empty, peach with some, red under DND.
                         label: Notifs.count > 0 ? "" + Notifs.count : ""
                         accent: Notifs.dnd ? Theme.colRed : (Notifs.count > 0 ? Theme.colPeach : Theme.colDim)
-                        onHoveredChanged: root.hoverHint("notifs", notifPill, barContent, bar.screen, hovered)
+                        onHoveredChanged: root.hoverHint("notifs", notifPill, barContent, bar, hovered)
                         onClicked: {
                             root.hintVisible = false;
                             Notifs.toggleCenter();
@@ -2057,7 +2038,7 @@ Scope {
                         id: idlePill
                         icon: root.hypridleIcon
                         accent: root.hypridleOn ? Theme.colGreen : Theme.colRed
-                        onHoveredChanged: root.hoverHint("idle", idlePill, barContent, bar.screen, hovered)
+                        onHoveredChanged: root.hoverHint("idle", idlePill, barContent, bar, hovered)
                         onClicked: root.launch(["sh", "-c", "systemctl --user is-active --quiet hypridle.service && systemctl --user stop hypridle.service || systemctl --user start hypridle.service"])
                     }
                     Pill {
@@ -2065,7 +2046,7 @@ Scope {
                         id: awayPill
                         icon: "󰽥"
                         accent: Theme.colLavender
-                        onHoveredChanged: root.hoverHint("away", awayPill, barContent, bar.screen, hovered)
+                        onHoveredChanged: root.hoverHint("away", awayPill, barContent, bar, hovered)
                         onClicked: {
                             root.hintVisible = false;
                             Away.enter();
@@ -2133,7 +2114,7 @@ Scope {
                                 onContainsMouseChanged: {
                                     if (containsMouse)
                                         root.hintTray = modelData;
-                                    root.hoverHint("tray", trayDel, barContent, bar.screen, containsMouse);
+                                    root.hoverHint("tray", trayDel, barContent, bar, containsMouse);
                                 }
                                 onClicked: m => {
                                     root.hintVisible = false;

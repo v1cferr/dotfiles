@@ -6,27 +6,15 @@ import QtQuick.Layouts
 import "root:/"
 import "root:/widgets"
 
-PanelWindow {
+BarPanel {
     id: calPop
-    required property var bar
-    visible: bar.calPopVisible
-    screen: bar.popScreen || bar.screenPrimary
-    anchors {
-        top: true
-        left: true
-    }
-    margins {
-        top: 4 // = Hyprland's gaps_out: it aligns the popover with the top of the windows (barExclusiveZone 30 already added)
-        left: bar.popLeft(calPop.implicitWidth)
-    }
-    exclusiveZone: 0
+    key: "cal"
     implicitWidth: 920
     implicitHeight: 470
-    color: "transparent"
     PopCard {
         shown: calPop.visible
         id: card
-        onHoveredChanged: calPop.bar.calPopHovered = card.hovered
+        onHoveredChanged: calPop.bar.panelPopHovered = card.hovered
 
         RowLayout {
             Layout.fillWidth: true

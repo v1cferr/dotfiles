@@ -6,24 +6,12 @@ import QtQuick.Layouts
 import "root:/"
 import "root:/widgets"
 
-PanelWindow {
+BarPanel {
     id: pop
-    required property var bar
+    key: "temp"
 
-    visible: bar.metricPopVisible && bar.metricShown === "temp"
-    screen: bar.popScreen || bar.screenPrimary
-    anchors {
-        top: true
-        left: true
-    }
-    margins {
-        top: 4 // = Hyprland's gaps_out (the barExclusiveZone 30 is already discounted)
-        left: bar.popLeft(pop.implicitWidth)
-    }
-    exclusiveZone: 0
     implicitWidth: 380
     implicitHeight: card.implicitHeight
-    color: "transparent"
 
     // The window's extremes: a temperature that only matters when it PEAKED is invisible in an
     // average, and the peak is exactly what you open this panel to find.
@@ -47,7 +35,7 @@ PanelWindow {
     PopCard {
         shown: pop.visible
         id: card
-        onHoveredChanged: pop.bar.metricPopHovered = card.hovered
+        onHoveredChanged: pop.bar.panelPopHovered = card.hovered
 
         PopHeader {
             title: "Temperatures"

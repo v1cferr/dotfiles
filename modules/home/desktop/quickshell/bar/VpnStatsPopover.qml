@@ -6,24 +6,12 @@ import QtQuick.Layouts
 import "root:/"
 import "root:/widgets"
 
-PanelWindow {
+BarPanel {
     id: statsPop
-    required property var bar
+    key: "vpn"
 
-    visible: bar.vpnStatsPopVisible
-    screen: bar.popScreen || bar.screenPrimary
-    anchors {
-        top: true
-        left: true
-    }
-    margins {
-        top: 4 // = Hyprland's gaps_out (the barExclusiveZone 30 is already discounted)
-        left: bar.popLeft(statsPop.implicitWidth)
-    }
-    exclusiveZone: 0
     implicitWidth: 360
     implicitHeight: card.implicitHeight
-    color: "transparent"
 
     // ms with decimals only when they matter: "34 ms" reads better than "34.00 ms", and 0.8 ms
     // of jitter would become "1 ms" rounded.
@@ -34,7 +22,7 @@ PanelWindow {
     PopCard {
         shown: statsPop.visible
         id: card
-        onHoveredChanged: statsPop.bar.vpnStatsPopHovered = card.hovered
+        onHoveredChanged: statsPop.bar.panelPopHovered = card.hovered
 
         // With no tunnel up the hover still answers: no VPN, and Tor's state below.
         PopHeader {

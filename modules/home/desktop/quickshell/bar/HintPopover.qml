@@ -1,6 +1,7 @@
 // The HINT popover (hover) for the pills with no panel of their own: the state, then what each
 // button does. Content is a binding on the Bar, so it follows a scroll on the volume live.
 import Quickshell
+import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -13,15 +14,17 @@ PanelWindow {
 
     visible: bar.hintVisible && hintPop.h !== null
     screen: bar.popScreen || bar.screenPrimary
+    WlrLayershell.namespace: "qs-panel"
     anchors {
         top: true
         left: true
     }
+    // Placed from the screen's edge, sp1 under the bar (the same rule as BarPanel).
+    exclusionMode: ExclusionMode.Ignore
     margins {
-        top: 4 // = Hyprland's gaps_out (the barExclusiveZone 30 is already discounted)
+        top: Theme.bandTop
         left: bar.popLeft(hintPop.implicitWidth)
     }
-    exclusiveZone: 0
     implicitWidth: card.implicitWidth
     implicitHeight: card.implicitHeight
     color: "transparent"

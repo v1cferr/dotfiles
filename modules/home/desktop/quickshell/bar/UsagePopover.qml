@@ -6,24 +6,12 @@ import QtQuick.Layouts
 import "root:/"
 import "root:/widgets"
 
-PanelWindow {
+BarPanel {
     id: pop
-    required property var bar
+    key: "usage"
 
-    visible: bar.metricPopVisible && bar.metricShown === "usage"
-    screen: bar.popScreen || bar.screenPrimary
-    anchors {
-        top: true
-        left: true
-    }
-    margins {
-        top: 4 // = Hyprland's gaps_out (the barExclusiveZone 30 is already discounted)
-        left: bar.popLeft(pop.implicitWidth)
-    }
-    exclusiveZone: 0
     implicitWidth: 380
     implicitHeight: card.implicitHeight
-    color: "transparent"
 
     readonly property real gb: 1073741824
     function fmtGb(b) {
@@ -77,7 +65,7 @@ PanelWindow {
     PopCard {
         shown: pop.visible
         id: card
-        onHoveredChanged: pop.bar.metricPopHovered = card.hovered
+        onHoveredChanged: pop.bar.panelPopHovered = card.hovered
 
         PopHeader {
             title: "Usage"

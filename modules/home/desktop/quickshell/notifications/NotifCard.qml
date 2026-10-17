@@ -255,7 +255,7 @@ Rectangle {
                         color: actArea.containsMouse ? Theme.colHoverBg : "transparent"
                         Behavior on color {
                             ColorAnimation {
-                                duration: Theme.hoverAnim
+                                duration: Theme.motionHover
                                 easing.type: Easing.OutQuad
                             }
                         }

@@ -180,7 +180,7 @@ Item {
         property: "progress"
         from: 0
         to: 1
-        duration: 1100
+        duration: Theme.ms(1100)
         easing.type: Easing.OutCubic
     }
     function replay() {

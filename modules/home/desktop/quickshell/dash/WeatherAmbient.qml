@@ -24,7 +24,7 @@ Item {
         color: Theme.colYellow
         opacity: 0.0
         SequentialAnimation on opacity {
-            running: amb.sunny
+            running: amb.sunny && !Theme.motionReduced
             loops: Animation.Infinite
             NumberAnimation {
                 from: 0.06
@@ -40,7 +40,7 @@ Item {
             }
         }
         SequentialAnimation on scale {
-            running: amb.sunny
+            running: amb.sunny && !Theme.motionReduced
             loops: Animation.Infinite
             NumberAnimation {
                 from: 0.92
@@ -75,7 +75,7 @@ Item {
                 y: -height
                 rotation: 12
                 NumberAnimation on y {
-                    running: amb.raining
+                    running: amb.raining && !Theme.motionReduced
                     loops: Animation.Infinite
                     from: -12 - (index * 11) % 40
                     to: amb.height

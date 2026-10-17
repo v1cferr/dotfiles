@@ -115,7 +115,7 @@ PanelWindow {
             color: entry.hovered ? Theme.colMenuHoverBg : "transparent"
             Behavior on color {
                 ColorAnimation {
-                    duration: Theme.hoverAnim
+                    duration: Theme.motionHover
                     easing.type: Easing.OutQuad
                 }
             }
@@ -132,7 +132,7 @@ PanelWindow {
                 color: Theme.colAccent
                 Behavior on width {
                     NumberAnimation {
-                        duration: Theme.hoverAnim
+                        duration: Theme.motionHover
                         easing.type: Easing.OutQuad
                     }
                 }

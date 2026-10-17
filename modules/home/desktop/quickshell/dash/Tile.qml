@@ -21,7 +21,7 @@ Item {
     property real shown: 0
     Behavior on shown {
         NumberAnimation {
-            duration: 650
+            duration: Theme.ms(650)
             easing.type: Easing.OutCubic
         }
     }
@@ -110,7 +110,7 @@ Item {
                 color: tile.barColor
                 Behavior on width {
                     NumberAnimation {
-                        duration: 300
+                        duration: Theme.motionSlow
                         easing.type: Easing.OutCubic
                     }
                 }

@@ -72,7 +72,7 @@ PanelWindow {
                         property: "opacity"
                         from: 0
                         to: 1
-                        duration: 320
+                        duration: Theme.ms(320)
                         easing.type: Easing.OutQuad
                     }
                     NumberAnimation {
@@ -80,7 +80,7 @@ PanelWindow {
                         property: "y"
                         from: 18
                         to: 0
-                        duration: 560
+                        duration: Theme.ms(560)
                         easing.type: Easing.OutQuint
                     }
                 }
@@ -342,7 +342,7 @@ PanelWindow {
                                         color: on ? Theme.colAccent : Theme.colTrack
                                         Behavior on width {
                                             NumberAnimation {
-                                                duration: 200
+                                                duration: Theme.motionNormal
                                                 easing.type: Easing.OutCubic
                                             }
                                         }
@@ -376,12 +376,12 @@ PanelWindow {
 
                                 Behavior on color {
                                     ColorAnimation {
-                                        duration: Theme.hoverAnim
+                                        duration: Theme.motionHover
                                     }
                                 }
                                 Behavior on border.color {
                                     ColorAnimation {
-                                        duration: Theme.hoverAnim
+                                        duration: Theme.motionHover
                                     }
                                 }
 
@@ -428,7 +428,7 @@ PanelWindow {
                                     x: pages.offsetOf(0)
                                     Behavior on x {
                                         NumberAnimation {
-                                            duration: 420
+                                            duration: Theme.ms(420)
                                             easing.type: Easing.OutCubic
                                         }
                                     }
@@ -436,7 +436,7 @@ PanelWindow {
                                 visible: opacity > 0
                                 Behavior on opacity {
                                     NumberAnimation {
-                                        duration: 260
+                                        duration: Theme.ms(260)
                                     }
                                 }
 
@@ -538,14 +538,14 @@ PanelWindow {
                                 visible: opacity > 0
                                 Behavior on opacity {
                                     NumberAnimation {
-                                        duration: 260
+                                        duration: Theme.ms(260)
                                     }
                                 }
                                 transform: Translate {
                                     x: pages.offsetOf(3)
                                     Behavior on x {
                                         NumberAnimation {
-                                            duration: 420
+                                            duration: Theme.ms(420)
                                             easing.type: Easing.OutCubic
                                         }
                                     }
@@ -566,14 +566,14 @@ PanelWindow {
                                 visible: opacity > 0
                                 Behavior on opacity {
                                     NumberAnimation {
-                                        duration: 260
+                                        duration: Theme.ms(260)
                                     }
                                 }
                                 transform: Translate {
                                     x: pages.offsetOf(4)
                                     Behavior on x {
                                         NumberAnimation {
-                                            duration: 420
+                                            duration: Theme.ms(420)
                                             easing.type: Easing.OutCubic
                                         }
                                     }
@@ -589,7 +589,7 @@ PanelWindow {
                                     x: pages.offsetOf(1)
                                     Behavior on x {
                                         NumberAnimation {
-                                            duration: 420
+                                            duration: Theme.ms(420)
                                             easing.type: Easing.OutCubic
                                         }
                                     }
@@ -597,7 +597,7 @@ PanelWindow {
                                 visible: opacity > 0
                                 Behavior on opacity {
                                     NumberAnimation {
-                                        duration: 260
+                                        duration: Theme.ms(260)
                                     }
                                 }
                                 source: Ci.github
@@ -616,7 +616,7 @@ PanelWindow {
                                     x: pages.offsetOf(2)
                                     Behavior on x {
                                         NumberAnimation {
-                                            duration: 420
+                                            duration: Theme.ms(420)
                                             easing.type: Easing.OutCubic
                                         }
                                     }
@@ -624,7 +624,7 @@ PanelWindow {
                                 visible: opacity > 0
                                 Behavior on opacity {
                                     NumberAnimation {
-                                        duration: 260
+                                        duration: Theme.ms(260)
                                     }
                                 }
                                 source: Ci.gitlab

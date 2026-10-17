@@ -38,6 +38,7 @@ Singleton {
             property string pink: "#ff007c"
             property string uiFont: "JetBrainsMono Nerd Font" // it comes from my.fonts.ui
             property string shadow: "#0f0f0f"
+            property string motion: "subtle" // it comes from my.theme.motion
         }
     }
 
@@ -115,9 +116,15 @@ Singleton {
     // measured). The accent at 30% gives 1.77:1 AND changes hue. docs/notes/desktop/quickshell.md
     readonly property color colMenuHoverBg: aa(pal.accent, "4d"); // a menu row under the cursor
     readonly property color colMenuHoverBgDanger: aa(pal.red, "4d"); // the same, a destructive action
-    // 120ms and not the Pill's 200ms: in a MENU the cursor crosses several items and 200ms leaves 2-3
-    // lit at once.
-    readonly property int hoverAnim: 120;
+    // MOTION tokens, one per meaning, so a duration is never a literal in a consumer (rule 11).
+    // my.theme.motion = "off" zeroes them all; the design and the numbers: docs/notes/desktop/motion.md
+    readonly property bool motionReduced: pal.motion === "off"
+    function ms(d) { return theme.motionReduced ? 0 : d; } // a one-off duration that still obeys "off"
+    readonly property int motionFast: theme.ms(90) // a direct response to a key: the OSD's bars
+    // 120ms: in a MENU the cursor crosses several items, and 200ms left 2-3 of them lit at once.
+    readonly property int motionHover: theme.ms(120)
+    readonly property int motionNormal: theme.ms(180) // something appearing or moving: a popover, an indicator
+    readonly property int motionSlow: theme.ms(300) // a value settling: a meter, a progress bar
 
     // A panel narrower than this cannot hold the bar's full set, and it is where the glance band
     // takes over instead. Measured against the widest left group: docs/notes/desktop/bar.md

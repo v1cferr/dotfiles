@@ -130,9 +130,10 @@ gives 1.11:1 of contrast, which the eye does not catch. The accent at 30% gives 
 HUE, gray to blue, which is what sight perceives from a distance. It is not raised further so the
 item does not become a flat block of blue.
 
-**The hover transition is 120 ms in menus**, not the Pill's 200 ms: in a MENU the cursor crosses
-several items in a row, and 200 ms leaves a trail of 2-3 items lit at the same time. 120 ms still
-reads as a fade but keeps up with the cursor.
+**The hover transition is 120 ms everywhere** (`Theme.motionHover`). It started in menus, where the
+cursor crosses several items in a row and the Pill's old 200 ms left a trail of 2-3 items lit at the
+same time; on 17/10/2026 the pills and the workspace buttons joined it, so one hover feels like
+another. Every other duration is a `Theme.motion*` token too: [motion.md](motion.md).
 
 **The main monitor** falls back to the first available one. It USED to be a literal `"DP-1"`,
 written when no such connector existed here: it never matched and always fell into `s[0]`, so the

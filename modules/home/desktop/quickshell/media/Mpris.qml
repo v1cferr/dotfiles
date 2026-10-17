@@ -220,7 +220,7 @@ Scope {
                             color: Theme.colAccent
                             Behavior on width {
                                 NumberAnimation {
-                                    duration: 250
+                                    duration: Theme.motionSlow
                                 }
                             }
                         }
@@ -305,7 +305,7 @@ Scope {
         color: (area.containsMouse && btn.enabled) ? Theme.colHoverBgAccent : "transparent"
         Behavior on color {
             ColorAnimation {
-                duration: Theme.hoverAnim
+                duration: Theme.motionHover
                 easing.type: Easing.OutQuad
             }
         }

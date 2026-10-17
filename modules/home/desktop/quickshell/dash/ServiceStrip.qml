@@ -96,7 +96,7 @@ ColumnLayout {
                     color: on ? Theme.colAccent : Theme.colTrack
                     Behavior on width {
                         NumberAnimation {
-                            duration: 200
+                            duration: Theme.motionNormal
                             easing.type: Easing.OutCubic
                         }
                     }
@@ -127,7 +127,7 @@ ColumnLayout {
             x: -strip.page * viewport.width
             Behavior on x {
                 NumberAnimation {
-                    duration: 520
+                    duration: Theme.ms(520)
                     easing.type: Easing.OutCubic
                 }
             }

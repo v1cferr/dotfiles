@@ -112,7 +112,7 @@ there is no frame-pacing tool in the repo, and no dropped-frame count was taken.
 - **No `borderangle` loop**: the wiki's own warning applies (it renders every frame forever).
 - **`zoomFactor` and `monitorAdded`** keep the `global` default; nothing here uses them.
 
-### Turning it off
+### Off in Hyprland
 
 With `my.theme.motion = "off"` the module sets `animations.enabled = false`, the one switch
 Hyprland has for all of it. Every leaf stays declared, so going back is the same option.
@@ -151,3 +151,37 @@ with `no_anim` too.
 
 **If it ever feels slower**, the revert is the one line in `rules.lua` back to `no_anim = true`;
 an instant launcher beats an animated one, and that was the condition this was accepted under.
+
+## Quickshell
+
+Durations live in `Theme.qml` as tokens, one per MEANING, and a consumer never holds a literal:
+
+| Token | Value | Meaning | Used by |
+| --- | --- | --- | --- |
+| `motionFast` | 90 ms | a direct answer to a key | the OSD's volume and brightness bars |
+| `motionHover` | 120 ms | a hover's color or border | pills, workspace buttons, menu rows, notification buttons |
+| `motionNormal` | 180 ms | something appearing or moving | popovers, the workspace indicator, a toast, page dots |
+| `motionSlow` | 300 ms | a value settling | meters, the media progress bar, the CPU cores |
+| `ms(d)` | `d` | a one-off that still obeys `off` | the glance band's own choreography (below) |
+
+All of them are `NumberAnimation`/`ColorAnimation` with an ease-out, deliberately. Qt's
+`SpringAnimation` was weighed for the moving parts and rejected: it is tuned by `spring`/`damping`
+values with no duration, which is the opposite of what a token needs, and nothing in the shell is
+retargeted fast enough for velocity to matter. A Behavior already restarts from where the value IS.
+
+**The glance band keeps its own numbers** (the 320/560 ms entrance, 420 ms page slides, the
+520 ms services rail, the 1100 ms weather draw-in), wrapped in `Theme.ms()`: they were chosen as
+one choreography on 07/10/2026 ([dash.md](dash.md#motion)), they play when a page turns on its
+own and not when I act, and folding them into the shell's tokens would retune a design that works.
+
+### Off in Quickshell
+
+`my.theme.motion = "off"` reaches `Theme.motionReduced`, and every token and `ms()` returns 0, so
+each Behavior jumps straight to its value. The decorative loop (`WeatherAmbient`'s sun and rain)
+stops. What does NOT stop is a pulse that is a status: the workspace activity badge, a running CI
+job, a failing service, a tile past its limit, an INMET alert. Those carry information, and
+removing their motion would remove the signal.
+
+Tested on 17/10/2026 by a probe in `shell.qml` against the live shell: `subtle` resolved to
+90/120/180/300 and `off` to 0 everywhere, with no QML error on either reload (the probe and the
+forced fallback were reverted).

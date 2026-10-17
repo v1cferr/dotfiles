@@ -96,7 +96,7 @@ PanelWindow {
                         color: row.connected ? Theme.colGreen : Theme.colDim
                         Behavior on color {
                             ColorAnimation {
-                                duration: Theme.hoverAnim
+                                duration: Theme.motionHover
                             }
                         }
                     }
@@ -119,7 +119,7 @@ PanelWindow {
                         opacity: vpnPop.bar.vpnBusy ? 0.4 : 1
                         Behavior on color {
                             ColorAnimation {
-                                duration: Theme.hoverAnim
+                                duration: Theme.motionHover
                                 easing.type: Easing.OutQuad
                             }
                         }
@@ -163,7 +163,7 @@ PanelWindow {
                 color: allArea.containsMouse ? Theme.colMenuHoverBgDanger : "transparent"
                 Behavior on color {
                     ColorAnimation {
-                        duration: Theme.hoverAnim
+                        duration: Theme.motionHover
                         easing.type: Easing.OutQuad
                     }
                 }
@@ -176,7 +176,7 @@ PanelWindow {
                     font.pixelSize: 11
                     Behavior on color {
                         ColorAnimation {
-                            duration: Theme.hoverAnim
+                            duration: Theme.motionHover
                         }
                     }
                 }

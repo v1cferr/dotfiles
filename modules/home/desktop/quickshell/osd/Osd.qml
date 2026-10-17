@@ -210,7 +210,7 @@ Scope {
                             color: root.sinkMuted ? Theme.colDim : Theme.colAccent
                             Behavior on width {
                                 NumberAnimation {
-                                    duration: 90
+                                    duration: Theme.motionFast
                                 }
                             }
                         }
@@ -247,7 +247,7 @@ Scope {
                             color: Theme.colAccent
                             Behavior on width {
                                 NumberAnimation {
-                                    duration: 90
+                                    duration: Theme.motionFast
                                 }
                             }
                         }

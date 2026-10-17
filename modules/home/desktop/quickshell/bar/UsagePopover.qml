@@ -138,7 +138,7 @@ PanelWindow {
                         color: pop.bar.stateColor(core.modelData, Theme.colAccent)
                         Behavior on height {
                             NumberAnimation {
-                                duration: 300
+                                duration: Theme.motionSlow
                                 easing.type: Easing.OutCubic
                             }
                         }

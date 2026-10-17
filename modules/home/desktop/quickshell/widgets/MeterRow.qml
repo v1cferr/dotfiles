@@ -32,7 +32,7 @@ ColumnLayout {
             color: meter.barColor
             Behavior on width {
                 NumberAnimation {
-                    duration: 300
+                    duration: Theme.motionSlow
                     easing.type: Easing.OutCubic
                 }
             }

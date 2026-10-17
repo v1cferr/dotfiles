@@ -53,7 +53,8 @@ jobs:
       # run shows what was indexed without -L dumping every build: docs/notes/repo/site-sources.md
       - name: Source index summary
         run: |
-          sources=$(nix build .#docs-sources --override-input duo-streak-daemon path:./tools/ci/stub-duo --print-out-paths)
+          # --no-link, or the `result` the next steps publish is overwritten with the snapshot.
+          sources=$(nix build .#docs-sources --override-input duo-streak-daemon path:./tools/ci/stub-duo --no-link --print-out-paths)
           nix log "$sources" | sed -n '/^build-sources:/,/^  time:/p'
           nix log "$(readlink result)" | grep '^check-sources:'
 

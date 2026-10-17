@@ -31,6 +31,19 @@ let
     };
   };
 
+  # Spotify: nixpkgs' wrapper unsets DISPLAY under NIXOS_OZONE_WL but never picks Wayland, so CEF
+  # tries X11, finds nothing and exits 1 with no window. REMOVE when nixpkgs passes it: docs/notes/apps/spotify.md
+  overlaySpotifyWayland = _: prev: {
+    unstable = prev.unstable // {
+      spotify = prev.unstable.spotify.overrideAttrs (old: {
+        postFixup = (old.postFixup or "") + ''
+          wrapProgram $out/bin/spotify \
+            --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform=wayland}}"
+        '';
+      });
+    };
+  };
+
   # Spotify: drop a SingletonLock left by ANOTHER hostname, or CEF exits 1 in 200ms with no window
   # after a host rename. PERMANENT, unlike the flag above: docs/notes/apps/spotify.md
   overlaySpotifyStaleLock = _: prev: {
@@ -195,6 +208,7 @@ in
   overlayUnstable
   overlayVscode # AFTER overlayUnstable: it patches that `unstable.vscode`
   overlaySpotifyNoZygote # same: bakes in the flag without which Spotify does not open
+  overlaySpotifyWayland # same: without it NIXOS_OZONE_WL leaves Spotify with no display at all
   overlaySpotifyStaleLock # AFTER the flag: re-wraps that package to clear a foreign host's lock
   overlayBtopXe # temporary: Intel Xe GPU (Arc B580) until PR #1457 merges
   overlayOpenrgbArc # temporary: the Arc B580's RGB, until the merge requests land

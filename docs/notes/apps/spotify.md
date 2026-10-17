@@ -62,6 +62,20 @@ So leaving it alone keeps one owner for that decision AND keeps the fixup phase 
 `wayland = true` would hardcode the ozone flags here and drop the phase that carries
 `--no-zygote`, which is a lot of damage for a flag that is already set system-wide.
 
+## `NIXOS_OZONE_WL` alone leaves it with NO display
+
+Measured 16/10/2026 on 1.2.95.453: exit 1 in ~200 ms with no window and no log, the same symptom
+as the stale lock above, but with a clean lock and with an empty cache and config too. nixpkgs'
+wrapper runs `if NIXOS_OZONE_WL == 1; then unset DISPLAY`, yet adds no ozone flag, so CEF still
+picks X11, finds no `DISPLAY` and quits. strace shows it never connects to `wayland-1` nor to
+`/tmp/.X11-unix`. With `NIXOS_OZONE_WL` unset it opens under XWayland; with
+`--ozone-platform=wayland` it opens natively (window class `spotify`, lowercase).
+
+`overlaySpotifyWayland` (`flake/overlays.nix`) adds that flag only when both `NIXOS_OZONE_WL` and
+`WAYLAND_DISPLAY` are set, which is the exact condition under which nixpkgs drops `DISPLAY`. It is
+a wrapper flag and not the module's `wayland = true` for the reason in the section above. Remove
+it once nixpkgs' `linux.nix` passes an ozone flag next to that `unset DISPLAY`.
+
 ## The theme, and the check that comes for free
 
 `theme = spicePkgs.themes.text` with `colorScheme = "TokyoNight"`, which is exactly what the Arch

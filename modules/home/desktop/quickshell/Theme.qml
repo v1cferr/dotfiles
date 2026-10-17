@@ -58,6 +58,19 @@ Singleton {
         }
     }
 
+    // The glance band's height (my.dash.share, modules/home/desktop/quickshell/dash/band.nix).
+    FileView {
+        id: dashFile
+        path: Quickshell.env("HOME") + "/.config/theme/dash.json"
+        blockLoading: true
+        watchChanges: true
+        onFileChanged: reload()
+        JsonAdapter {
+            id: dashCfg
+            property real share: 0.35
+        }
+    }
+
     readonly property string primaryMonitor: mon.primary
     readonly property string secondaryMonitor: mon.secondary
 
@@ -146,7 +159,8 @@ Singleton {
     readonly property int barTop: sp1 // the bar's gap to the screen's top edge
     // The glance band: what share of a standing screen's height it takes, the bar INCLUDED. It starts
     // sp1 under the bar and ends where the windows' area begins. docs/notes/desktop/dash.md
-    readonly property real bandShare: 0.3
+    // Clamped here too: the option's type refuses more than 40%, and a hand-edited file must not get past it.
+    readonly property real bandShare: Math.max(0.25, Math.min(0.4, dashCfg.share))
     readonly property int bandTop: barTop + barHeight + sp1
     function bandReserve(screenHeight) { return Math.round(screenHeight * theme.bandShare); }
     // Type scale (px). Mono everywhere, so a changing number never moves its neighbors.

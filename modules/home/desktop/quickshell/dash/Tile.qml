@@ -24,6 +24,8 @@ Item {
     // An optional history drawn beside the value (the CPU's last 2 minutes).
     property var series: null
     property real seriesTop: 100
+    // The value's size: NET's preformatted reading is the widest, and gets a step down to stay whole.
+    property int valueSize: 36
 
     // Equal columns: a zero preferred width leaves fillWidth to split the row evenly.
     Layout.fillWidth: true
@@ -72,7 +74,7 @@ Item {
                     }
                 }
                 font.family: Theme.uiFont
-                font.pixelSize: 36
+                font.pixelSize: tile.valueSize
                 font.bold: true
                 font.letterSpacing: -1
                 elide: Text.ElideRight

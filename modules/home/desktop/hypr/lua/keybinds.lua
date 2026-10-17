@@ -74,9 +74,9 @@ hl.bind(mainMod .. " + period",         hl.dsp.layout("move +col"))       -- tap
 hl.bind(mainMod .. " + mouse_left",     hl.dsp.layout("move -col"))       -- thumbwheel left
 hl.bind(mainMod .. " + mouse_right",    hl.dsp.layout("move +col"))       -- thumbwheel right
 -- The VERTICAL wheel moves along the tape too (it used to switch workspaces, never used).
--- The direction was set BY HAND: scrolling DOWN advances toward the side you use most.
-hl.bind(mainMod .. " + mouse_down",     hl.dsp.layout("move -col"))       -- wheel down = forward
-hl.bind(mainMod .. " + mouse_up",       hl.dsp.layout("move +col"))       -- wheel up = back
+-- Like reading a page: scrolling DOWN goes right, UP goes left (flipped by hand 17/10/2026).
+hl.bind(mainMod .. " + mouse_down",     hl.dsp.layout("move +col"))       -- wheel down = tape right
+hl.bind(mainMod .. " + mouse_up",       hl.dsp.layout("move -col"))       -- wheel up = tape left
 -- Reordering and resizing columns. swapcol moves the WHOLE COLUMN and wraps; to move one
 -- window out of a stack, expel (SUPER+O) first.
 hl.bind(mainMod .. " + SHIFT + comma",  hl.dsp.layout("swapcol l"))       -- swap with the column on the left

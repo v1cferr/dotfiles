@@ -117,8 +117,8 @@ for smooth PIXEL scrolling, but for a COLUMN jump 3/s is plenty, all the more wi
 
 The VERTICAL wheel moves along the tape too. It used to switch workspaces, which was never used,
 since a workspace is always keyboard (SUPER+1-8 or TAB). With no SUPER the wheel behaves normally
-in the apps. The direction was set BY HAND, by testing: scrolling DOWN advances toward the side you
-use most.
+in the apps. Scrolling DOWN goes right and UP goes left, like reading a page. The first mapping
+was the opposite and was flipped by hand on 17/10/2026.
 
 ### Reordering, resizing and the view modes
 

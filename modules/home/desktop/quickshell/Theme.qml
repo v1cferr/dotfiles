@@ -39,6 +39,7 @@ Singleton {
             property string uiFont: "JetBrainsMono Nerd Font" // it comes from my.fonts.ui
             property string shadow: "#0f0f0f"
             property string motion: "subtle" // it comes from my.theme.motion
+            property string glass: "soft" // it comes from my.theme.glass
         }
     }
 
@@ -125,6 +126,43 @@ Singleton {
     readonly property int motionHover: theme.ms(120)
     readonly property int motionNormal: theme.ms(180) // something appearing or moving: a popover, an indicator
     readonly property int motionSlow: theme.ms(300) // a value settling: a meter, a progress bar
+    // How long the pointer rests on a pill before its panel opens: a sweep across the bar opens nothing.
+    readonly property int hoverIntent: 200
+
+    // ── Tokenized geometry: Tokyo Night Adaptive Glass. The system: docs/notes/desktop/theme.md ──
+    // Spacing on a 4 px grid, the only gaps and paddings a component may use.
+    readonly property int sp1: 4
+    readonly property int sp2: 8
+    readonly property int sp3: 12
+    readonly property int sp4: 16
+    readonly property int sp6: 24
+    readonly property int hairline: 1
+    // Concentric radii: a surface is a control plus sp1 of padding, so its corner is the control's plus sp1.
+    readonly property int radiusControl: 8
+    readonly property int radiusSurface: radiusControl + sp1
+    // The bar: a 30 px strip of floating clusters, each holding 22 px controls.
+    readonly property int barHeight: 30
+    readonly property int barControl: barHeight - 2 * sp1
+    // Type scale (px). Mono everywhere, so a changing number never moves its neighbors.
+    readonly property int fontMicro: 10 // a unit, a footnote
+    readonly property int fontSmall: 11 // a bar label, a metadata line
+    readonly property int fontBody: 12 // a panel row
+    readonly property int fontLabel: 13 // a glyph in the bar, a card title
+    readonly property int fontTitle: 14 // a panel title
+
+    // ── Glass: three levels of see-through, all from the palette's bg. `solid` is the fallback ──
+    readonly property bool glassSolid: pal.glass === "solid"
+    function glassBg(a) { return theme.aa(pal.bg, theme.glassSolid ? "ff" : a); }
+    readonly property color colSurfaceBar: theme.glassBg("e6") // 90%: a bar cluster
+    readonly property color colSurfaceCard: theme.glassBg("eb") // 92%: a glance band card
+    readonly property color colSurfacePop: theme.glassBg("f5") // 96%: a dense panel, read longest
+    readonly property color colEdge: aa(pal.border, "8c") // a surface's hairline
+    readonly property color colSheen: aa(pal.text, "0f") // the 1 px light along a surface's top edge
+    // States of a control on glass: a neutral fill, so the accent stays free to mean "active".
+    readonly property color colHoverFill: aa(pal.text, "14")
+    readonly property color colPressFill: aa(pal.text, "24")
+    readonly property color colSelectFill: aa(pal.accent, "2e")
+    readonly property real opacityDisabled: 0.4
 
     // A panel narrower than this cannot hold the bar's full set, and it is where the glance band
     // takes over instead. Measured against the widest left group: docs/notes/desktop/bar.md

@@ -111,6 +111,15 @@ in
       default = "subtle";
       description = "The desktop's motion profile: `subtle` is the tuned one, `off` drops every non-essential animation (status pulses stay). docs/notes/desktop/motion.md";
     };
+    # Glass: how see-through the shell's surfaces are, read by Quickshell and Hyprland like motion.
+    glass = lib.mkOption {
+      type = lib.types.enum [
+        "soft"
+        "solid"
+      ];
+      default = "soft";
+      description = "The shell's surfaces: `soft` is translucent over Hyprland's blur, `solid` is opaque with no blur (the fallback when contrast or the GPU asks for it). docs/notes/desktop/theme.md";
+    };
   };
   # The UI FONT is `my.fonts.ui`, in modules/nixos/desktop/fonts.nix, next to its package (rule 4).
 
@@ -123,7 +132,7 @@ in
       lib.mapAttrs (_: v: "#${v}") p
       // {
         uiFont = osConfig.my.fonts.ui;
-        inherit (cfg) motion;
+        inherit (cfg) motion glass;
       }
     );
 
@@ -139,6 +148,7 @@ in
       + "  qtPlatformTheme = \"${config.home.sessionVariables.QT_QPA_PLATFORMTHEME}\",\n"
       + "  qtStyle = \"${config.home.sessionVariables.QT_STYLE_OVERRIDE}\",\n"
       + "  motion = \"${cfg.motion}\",\n"
+      + "  glass = \"${cfg.glass}\",\n"
       + "}\n";
   };
 }

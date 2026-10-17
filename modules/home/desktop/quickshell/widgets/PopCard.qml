@@ -1,10 +1,10 @@
 // A popover's CARD: the glass, the radius, the border and the hover flag every hover panel needs.
-// It was copied into 5 files, 3 of them with the palette written as a literal (rule 11).
+// It sits on GlassSurface at the densest level, the one read the longest.
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
 
-Rectangle {
+GlassSurface {
     id: card
     default property alias content: col.data
     property alias hovered: hover.hovered
@@ -15,10 +15,7 @@ Rectangle {
     anchors.fill: parent
     implicitWidth: col.implicitWidth + card.pad * 2
     implicitHeight: col.implicitHeight + card.pad * 2
-    radius: 12
-    color: Theme.colBg
-    border.color: Theme.colBorder
-    border.width: 1
+    level: "pop"
 
     transform: Translate {
         id: drop

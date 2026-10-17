@@ -58,6 +58,12 @@ hl.config({
   },
 })
 
+-- The shell's glass (my.theme.glass): blur under Quickshell's named surfaces, and ignore_alpha keeps
+-- it off their transparent margins and gaps. `solid` paints opaque, so no blur is paid for.
+if (C.glass or "soft") ~= "solid" then
+  hl.layer_rule({ match = { namespace = "^qs-(bar|dash|panel)$" }, blur = true, ignore_alpha = 0.5 })
+end
+
 -- ── Animations ──────────────────────────────────────────────────────────────
 -- Smooth and Subtle: a spring for what MOVES, a short ease-out for opacity and color, exits
 -- shorter than entrances. Every value and what it replaced: docs/notes/desktop/motion.md

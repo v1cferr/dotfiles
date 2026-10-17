@@ -3,6 +3,7 @@
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import Quickshell.Wayland
 import Quickshell.Services.Pipewire
 import Quickshell.Services.Mpris
 import Quickshell.Services.SystemTray
@@ -1941,6 +1942,7 @@ Scope {
             id: bar
             required property var modelData
             screen: modelData
+            WlrLayershell.namespace: "qs-bar" // the glass blur rule matches it (appearance.lua)
 
             anchors {
                 top: true
@@ -1953,9 +1955,11 @@ Scope {
                 right: 4
                 bottom: 1
             }
-            implicitHeight: 30
+            implicitHeight: Theme.barHeight
             visible: !root.hidden
-            exclusiveZone: root.barExclusiveZone
+            // On a band screen the BAR reserves the whole top share and the band draws inside it,
+            // so the order the two layers map in can never stack the bar under the band.
+            exclusiveZone: bar.compact && bar.screen ? Theme.bandReserve(bar.screen.height) - Theme.barTop : root.barExclusiveZone
 
             // COMPACT: the three Groups are ANCHORED, so on a narrow panel they overlap instead
             // of pushing. Below the token's width only the essentials stay, and the band takes over.

@@ -25,13 +25,13 @@ PanelWindow {
     readonly property bool mine: Tips.shown && tw.t !== null && tw.inBand(tw.t)
 
     // The target's rect in the band window (native px, the stage's scale already applied), moved into
-    // screen coordinates: the band sits under the bar's zone, 4 px from the top and the left.
+    // screen coordinates: the band starts at Theme.bandTop, sp1 in from the left.
     readonly property point at: {
         if (!tw.mine)
             return Qt.point(0, 0);
         const p = tw.t.mapToItem(null, 0, tw.t.height);
-        const x = 4 + p.x;
-        const y = tw.band.host.barExclusiveZone + 4 + p.y + 6;
+        const x = Theme.barTop + p.x;
+        const y = Theme.bandTop + p.y + 6;
         const maxX = (tw.screen ? tw.screen.width : 1080) - tw.implicitWidth - 4;
         return Qt.point(Math.max(4, Math.min(x, maxX)), y);
     }

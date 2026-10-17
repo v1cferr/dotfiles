@@ -143,6 +143,12 @@ Singleton {
     // The bar: a 30 px strip of floating clusters, each holding 22 px controls.
     readonly property int barHeight: 30
     readonly property int barControl: barHeight - 2 * sp1
+    readonly property int barTop: sp1 // the bar's gap to the screen's top edge
+    // The glance band: what share of a standing screen's height it takes, the bar INCLUDED. It starts
+    // sp1 under the bar and ends where the windows' area begins. docs/notes/desktop/dash.md
+    readonly property real bandShare: 0.3
+    readonly property int bandTop: barTop + barHeight + sp1
+    function bandReserve(screenHeight) { return Math.round(screenHeight * theme.bandShare); }
     // Type scale (px). Mono everywhere, so a changing number never moves its neighbors.
     readonly property int fontMicro: 10 // a unit, a footnote
     readonly property int fontSmall: 11 // a bar label, a metadata line

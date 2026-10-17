@@ -1,6 +1,7 @@
 // The GLANCE band: the top 30% of a STANDING monitor, which is the part above eye level where a
 // window would only hurt the neck. What earns a place here, and why: docs/notes/desktop/dash.md
 import Quickshell
+import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -12,10 +13,11 @@ PanelWindow {
     property var host // the Bar's Scope: every number below is ALREADY collected there
 
     screen: modelData
+    WlrLayershell.namespace: "qs-dash" // the glass blur rule matches it (appearance.lua)
 
-    // 30% of the screen for the glance and 70% for the windows. The bar's own strip counts toward
-    // the 30%, so it comes off here along with this panel's top margin.
-    readonly property int band: Math.round((dash.screen ? dash.screen.height : 0) * 0.3) - dash.host.barExclusiveZone - 8
+    // The band fills the top share the BAR reserves on this screen (Bar.qml), from under the bar to
+    // where the windows begin. It ignores other zones, so it never depends on which layer mapped first.
+    readonly property int band: Theme.bandReserve(dash.screen ? dash.screen.height : 0) - Theme.bandTop
 
     anchors {
         top: true
@@ -23,12 +25,12 @@ PanelWindow {
         right: true
     }
     margins {
-        top: 4
-        left: 4
-        right: 4
+        top: Theme.bandTop
+        left: Theme.barTop
+        right: Theme.barTop
     }
+    exclusionMode: ExclusionMode.Ignore
     implicitHeight: dash.band
-    exclusiveZone: dash.band
     color: "transparent"
 
     // The band is DRAWN on a fixed canvas, the 1440 logical width it was designed at (scale 0.75)

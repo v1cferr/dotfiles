@@ -1948,8 +1948,10 @@ Scope {
                         maxWidth: 220
                         onHoveredChanged: root.hoverHint("spotify", spPill, barContent, bar, hovered)
                         onClicked: {
+                            root.closePanels();
                             root.hintVisible = false;
-                            root.launch(["qs", "ipc", "call", "mpris", "toggle"]);
+                            root.anchorPopover(spPill, barContent, bar);
+                            root.launch(["qs", "ipc", "call", "mpris", "toggleAt", "" + root.popLeft(360)]);
                         }
                         onRightClicked: root.launch(["playerctl", "--player=spotify", "play-pause"])
                         onScrolledUp: root.launch(["playerctl", "--player=spotify", "next"])

@@ -2,11 +2,13 @@
 // the mouse DPI. Volume/mic react to Pipewire; brightness and DPI are PUSHED through IPC.
 // docs/notes/desktop/quickshell.md
 import Quickshell
+import Quickshell.Wayland
 import Quickshell.Io
 import Quickshell.Services.Pipewire
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
+import "root:/widgets"
 
 Scope {
     id: root
@@ -140,6 +142,7 @@ Scope {
 
     PanelWindow {
         id: osd
+        WlrLayershell.namespace: "qs-panel"
         visible: root.shown
 
         screen: Theme.screenPrimary
@@ -156,12 +159,9 @@ Scope {
         implicitHeight: 64
         color: "transparent"
 
-        Rectangle {
+        GlassSurface {
             anchors.fill: parent
-            radius: 12
-            color: Theme.colBg
-            border.color: Theme.colBorder
-            border.width: 1
+            level: "pop"
 
             RowLayout {
                 anchors.fill: parent

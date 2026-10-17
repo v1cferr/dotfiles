@@ -1,10 +1,12 @@
 // The notifications' UI: toasts plus the center, reading the Notifs.qml service. The card and the
 // header button are separate FILES, since an inline component breaks scope in handlers.
 import Quickshell
+import Quickshell.Wayland
 import Quickshell.Services.Notifications
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
+import "root:/widgets"
 
 Scope {
     id: root
@@ -47,6 +49,7 @@ Scope {
     // notifications up to a ceiling, then scrolls). Toggled by the bell. =====
     PanelWindow {
         id: centerWin
+        WlrLayershell.namespace: "qs-panel"
         visible: Notifs.centerVisible
         screen: Theme.screenPrimary
         // only `top` means the layer shell centers it horizontally
@@ -69,14 +72,11 @@ Scope {
             onTriggered: Notifs.centerVisible = false
         }
 
-        Rectangle {
+        GlassSurface {
             id: centerCard
             anchors.fill: parent
             implicitHeight: centerCol.implicitHeight + 28
-            radius: 14
-            color: Theme.colBg
-            border.color: Theme.colBorder
-            border.width: 1
+            level: "pop"
 
             HoverHandler {
                 id: centerHover

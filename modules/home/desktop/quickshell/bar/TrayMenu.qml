@@ -1,13 +1,16 @@
 // The tray's context menu, themed: it renders the DBusMenu native SNIs expose. It is a LAYER
 // SURFACE and not a PopupWindow (Hyprland#6682, closed as not: docs/notes/desktop/quickshell.md
 import Quickshell
+import Quickshell.Wayland
 import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
+import "root:/widgets"
 
 PanelWindow {
     id: root
+    WlrLayershell.namespace: "qs-panel"
 
     // The QsMenuHandle of the root menu and of the open submenu (null = closed).
     property var menuHandle: null
@@ -207,14 +210,11 @@ PanelWindow {
         }
 
         // the main column
-        Rectangle {
+        GlassSurface {
             id: mainCol
             implicitWidth: Math.min(360, Math.max(160, mainList.implicitWidth + 16))
             implicitHeight: mainList.implicitHeight + 12
-            radius: 10
-            color: Theme.colBg
-            border.color: Theme.colBorder
-            border.width: 1
+            level: "pop"
 
             Column {
                 id: mainList
@@ -232,14 +232,11 @@ PanelWindow {
         }
 
         // the submenu's column (it appears on the right when one is open)
-        Rectangle {
+        GlassSurface {
             visible: root.submenuHandle !== null
             implicitWidth: visible ? Math.min(360, Math.max(160, subList.implicitWidth + 16)) : 0
             implicitHeight: subList.implicitHeight + 12
-            radius: 10
-            color: Theme.colBg
-            border.color: Theme.colBorder
-            border.width: 1
+            level: "pop"
 
             Column {
                 id: subList

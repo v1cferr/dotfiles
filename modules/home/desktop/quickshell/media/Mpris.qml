@@ -1,6 +1,7 @@
-// The media panel (Spotify), through the native Mpris service. `qs ipc call mpris toggle`.
-// Bottom/top-left on the main monitor, near the Spotify pill.
+// The media panel (Spotify), through the native Mpris service. `qs ipc call mpris toggle`, or
+// `toggleAt <x>` from the bar's media pill, which hangs it under the pill.
 import Quickshell
+import Quickshell.Wayland
 import Quickshell.Io
 import Quickshell.Services.Mpris
 import QtQuick
@@ -12,6 +13,7 @@ Scope {
     id: root
 
     property bool panelVisible: false
+    property int panelLeft: Theme.barTop // the screen x the bar asked for; the left edge otherwise
     property real positionNow: 0
 
     // It selects the Spotify player (the fallback: whichever is playing; otherwise the 1st)
@@ -62,6 +64,13 @@ Scope {
             if (root.panelVisible)
                 root.refreshPosition();
         }
+        // The bar's media pill: hung under the pill at screen x `x`, like every bar panel.
+        function toggleAt(x: int): void {
+            root.panelLeft = x;
+            root.panelVisible = !root.panelVisible;
+            if (root.panelVisible)
+                root.refreshPosition();
+        }
         // "open" and not "show" (show collides with the `qs ipc show` subcommand)
         function open(): void {
             root.panelVisible = true;
@@ -104,31 +113,29 @@ Scope {
 
     PanelWindow {
         id: panel
+        WlrLayershell.namespace: "qs-panel"
         visible: root.panelVisible
 
-        // Pinned on the main monitor (near the Spotify pill).
+        // On the main monitor, placed from the screen's edge sp1 under the bar (the same rule as BarPanel).
         screen: Theme.screenPrimary
 
         anchors {
             top: true
             left: true
         }
+        exclusionMode: ExclusionMode.Ignore
         margins {
-            top: 6
-            left: 8
+            top: Theme.bandTop
+            left: root.panelLeft
         }
 
-        exclusiveZone: 0
         implicitWidth: 360
         implicitHeight: content.implicitHeight + 28
         color: "transparent"
 
-        Rectangle {
+        GlassSurface {
             anchors.fill: parent
-            radius: 12
-            color: Theme.colBg
-            border.color: Theme.colBorder
-            border.width: 1
+            level: "pop"
 
             transform: Translate {
                 id: drop

@@ -170,6 +170,7 @@ let
     rules-index = final.callPackage ../tools/rules-index/package.nix { }; # it fails on a citation of no live rule
     docs-site = final.callPackage ../tools/docs-site/package.nix { }; # docs/ built into the static site
     docs-site-check = final.callPackage ../tools/docs-site/check.nix { }; # the same build, at push time
+    docs-sources = final.callPackage ../tools/docs-site/sources.nix { }; # the files the site previews
   };
   overlayLocalPkgs =
     final: _:

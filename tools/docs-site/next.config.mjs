@@ -9,7 +9,7 @@ const ROOT = process.cwd();
 const DOCS = path.resolve(ROOT, '../../docs');
 
 // What is GENERATED, so hashing the sources below does not hash the previous build.
-const GENERATED = new Set(['node_modules', '.next', '.source', 'out', 'next-env.d.ts', '.git']);
+const GENERATED = new Set(['node_modules', '.next', '.source', 'out', '_source', 'next-env.d.ts', '.git']);
 
 function sources(dir, found = []) {
   const entries = fs

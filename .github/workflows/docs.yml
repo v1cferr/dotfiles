@@ -49,6 +49,14 @@ jobs:
       - name: nix build .#pages
         run: nix build .#pages --override-input duo-streak-daemon path:./tools/ci/stub-duo
 
+      # The source previews' numbers, read back from the two build logs that printed them, so the
+      # run shows what was indexed without -L dumping every build: docs/notes/repo/site-sources.md
+      - name: Source index summary
+        run: |
+          sources=$(nix build .#docs-sources --override-input duo-streak-daemon path:./tools/ci/stub-duo --print-out-paths)
+          nix log "$sources" | sed -n '/^build-sources:/,/^  time:/p'
+          nix log "$(readlink result)" | grep '^check-sources:'
+
       # The store path is read-only and the upload tars what it is given, so it gets a writable
       # copy instead of the symlink.
       - name: Stage the site

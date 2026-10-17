@@ -47,10 +47,13 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       ../../docs
       (lib.fileset.difference ./. (
         lib.fileset.unions (
-          # The two derivations live beside the app and are not part of what it builds from.
+          # The derivations live beside the app and are not part of what it builds from, and
+          # neither are the source index's tests: sources.nix runs those.
           [
             ./package.nix
             ./check.nix
+            ./sources.nix
+            ./tests
           ]
           ++ map lib.fileset.maybeMissing [
             ./node_modules
@@ -59,6 +62,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
             ./out
             ./next-env.d.ts
             ./palette.json
+            ./public
           ]
         )
       ))

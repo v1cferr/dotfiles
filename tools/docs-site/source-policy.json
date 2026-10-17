@@ -1,0 +1,52 @@
+{
+  "$comment": "What the site may publish as source previews. ONE owner: sources.nix reads roots and extensions to fence the build, lib/source-policy.ts reads all of it. Why each entry: docs/notes/repo/site-sources.md",
+  "roots": ["modules", "hosts", "pkgs", "tools", "flake", "flake.nix", ".github/workflows"],
+  "extensions": {
+    "nix": "nix",
+    "lua": "lua",
+    "qml": "qml",
+    "sh": "bash",
+    "py": "python",
+    "ts": "typescript",
+    "tsx": "tsx",
+    "mjs": "javascript",
+    "js": "javascript",
+    "json": "json",
+    "jsonc": "jsonc",
+    "yaml": "yaml",
+    "yml": "yaml",
+    "toml": "toml",
+    "md": "markdown",
+    "css": "css",
+    "patch": "diff",
+    "sql": "sql"
+  },
+  "excludePrefixes": [
+    "secrets/",
+    "hosts/cudy-wr3000/uci/",
+    "tools/docs-site/node_modules/",
+    "tools/docs-site/.next/",
+    "tools/docs-site/.source/",
+    "tools/docs-site/out/",
+    "tools/docs-site/public/"
+  ],
+  "excludeSegments": ["node_modules", ".git", ".direnv", "result"],
+  "excludeNames": [
+    "secret",
+    "credential",
+    "passw",
+    "token",
+    "^\\.env",
+    "\\.env$",
+    "^id_(rsa|dsa|ecdsa|ed25519)",
+    "\\.(pem|key|p12|pfx|age|kdbx|gpg|asc)$",
+    "^\\.sops\\.ya?ml$",
+    "\\.lock$",
+    "^pnpm-lock\\.yaml$",
+    "^package-lock\\.json$",
+    "\\.min\\.js$"
+  ],
+  "categories": ["modules", "modules/home", "modules/nixos", "modules/home/*", "modules/nixos/*", "hosts", "pkgs", "tools", "flake"],
+  "maxBytes": 262144,
+  "maxModuleFiles": 60
+}

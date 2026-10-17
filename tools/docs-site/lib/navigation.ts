@@ -190,6 +190,7 @@ export const navigation: NavItem[] = [
       { title: "Prose style", doc: "notes/repo/prose-style.md" },
       { title: "VM boot", doc: "notes/repo/vm-boot.md" },
       { title: "Site", doc: "notes/repo/site.md" },
+      { title: "Site: source previews", doc: "notes/repo/site-sources.md" },
       { title: "GitHub settings", doc: "notes/repo/github-settings.md" },
       { title: "Eval metrics", doc: "notes/repo/eval-metrics.md" },
       { title: "Usage audit", doc: "notes/repo/usage-audit.md" },

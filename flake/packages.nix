@@ -32,6 +32,7 @@ in
     docs-links # ./tools: the build IS the script's flake8; the CHECK below runs it
     docs-site # ./tools: the static export, so the CHECK below proves the site builds
     docs-site-check # ./tools: the build IS the wrapper's shellcheck; the HOOK below runs it
+    docs-sources # ./tools: the previews' snapshot, and building it runs the indexer's tests
     prose-style # ./tools: same flake8 at build time; the HOOKS below run it, in two modes
     qml-syntax # ./tools: the build IS the wrapper's shellcheck; the HOOK below runs it
     data-syntax # ./tools: same flake8 at build time; the HOOK below runs it
@@ -111,13 +112,24 @@ in
       inherit (cfg.my.router) mirror;
     };
 
-  # WHAT GITHUB PAGES SERVES: the site plus the stats under /stats, joined here and not
-  # inside docs-site, whose src stays fenced to docs/ so a modules/ commit does not rebuild it.
-  pages = pkgs.runCommand "pages" { } ''
-    cp -r ${pkgs.docs-site} $out
-    chmod -R u+w $out
-    cp -r ${self.packages.${system}.repo-stats} $out/stats
-  '';
+  # WHAT GITHUB PAGES SERVES: the site plus the stats under /stats and the source previews under
+  # /_source, joined here and not inside docs-site, whose src stays fenced to docs/ so a modules/
+  # commit does not rebuild it. The revision pins the previews' GitHub links to THIS commit, and
+  # is null on a dirty tree: docs/notes/repo/site-sources.md
+  pages =
+    let
+      revision = pkgs.writeText "revision.json" (builtins.toJSON { rev = self.rev or null; });
+    in
+    pkgs.runCommand "pages" { nativeBuildInputs = [ pkgs.docs-site.nodejs ]; } ''
+      cp -r ${pkgs.docs-site} $out
+      chmod -R u+w $out
+      cp -r ${self.packages.${system}.repo-stats} $out/stats
+      cp -r ${pkgs.docs-sources} $out/_source
+      chmod -R u+w $out/_source
+      cp ${revision} $out/_source/revision.json
+      # The two halves were built apart, so this is where they are proven to agree.
+      node ${pkgs.docs-sources.src}/tools/docs-site/scripts/check-sources.ts $out
+    '';
 
   # THE STATE COMING BACK, from the installer: `nix run .#restore-state`. Built from the host so it
   # restores exactly what the backup takes: docs/guides/disaster-recovery.md

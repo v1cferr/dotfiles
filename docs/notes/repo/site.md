@@ -196,6 +196,9 @@ so an example showing a markdown link would not be rewritten into something the 
 mean. The plugin walks `link` nodes of the syntax tree, and the text inside a fence is not one, so
 the class of bug the hook had to defend against cannot occur.
 
+**It also marks what the source preview may open**, a blob link and a path-shaped code span, and
+changes no href in doing so. What reads those marks, and why: [`site-sources.md`](site-sources.md).
+
 ## Where it runs: Nix around a Node toolchain
 
 `tools/docs-site/package.nix` is the same shape it always was, with the interior swapped. Its `src` is a

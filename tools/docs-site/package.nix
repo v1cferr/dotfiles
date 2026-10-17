@@ -107,11 +107,11 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   dontFixup = true;
 
-  # The devShell and the nav gate reuse THESE, so the preview, the check and the build are one
-  # definition and cannot drift apart (rule 11).
+  # The devShell, the nav gate and docs-sources reuse THESE, so the preview, the check and the
+  # builds are one definition and cannot drift apart (rule 11).
   passthru = {
     nodejs = nodejs_24;
-    inherit pnpm;
+    inherit pnpm palette;
   };
 
   meta = {

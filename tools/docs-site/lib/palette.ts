@@ -50,10 +50,13 @@ export const PALETTE_CSS = [
 ].join('\n');
 
 // shiki ships an official theme for every curated preset; a base16 scheme falls back to GitHub's.
-const CODE_THEMES: Record<string, string> = {
+export const CODE_THEMES: Record<string, string> = {
   'tokyo-night': 'tokyo-night',
   'catppuccin-mocha': 'catppuccin-mocha',
   'gruvbox-dark': 'gruvbox-dark-medium',
 };
 
 export const CODE_THEME_DARK = CODE_THEMES[palette.name] ?? 'github-dark';
+// Light mode keeps the neutral preset (see above), so its code theme is GitHub's, for fences and
+// for the source preview alike.
+export const CODE_THEME_LIGHT = 'github-light';

@@ -33,3 +33,35 @@
   rx: 6px;
   ry: 6px;
 }
+
+/*
+  The source preview's two entrances, and nothing else that moves: a reader who asked the system
+  for less motion gets none. docs/notes/repo/site-sources.md
+*/
+@media (prefers-reduced-motion: no-preference) {
+  .source-sheet {
+    animation: source-sheet-in 160ms ease-out;
+  }
+  .source-drawer[open] {
+    animation: source-drawer-in 160ms ease-out;
+  }
+}
+
+@keyframes source-sheet-in {
+  from {
+    transform: translateX(1.5rem);
+    opacity: 0;
+  }
+}
+
+@keyframes source-drawer-in {
+  from {
+    transform: translateY(1.5rem);
+    opacity: 0;
+  }
+}
+
+/* A link the preview opens is dotted, so it reads apart from a link that leaves the page. */
+.prose a[data-source-preview] {
+  text-decoration-style: dotted;
+}

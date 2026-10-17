@@ -12,6 +12,7 @@
     "build": "next build && node scripts/finish-export.ts",
     "check:nav": "node scripts/check-navigation.ts",
     "test": "node --test 'tests/*.test.ts'",
+    "test:e2e": "node --test 'tests/e2e/*.e2e.ts'",
     "lint": "oxlint",
     "typecheck": "next typegen && tsc --noEmit",
     "pretypecheck": "pnpm palette"

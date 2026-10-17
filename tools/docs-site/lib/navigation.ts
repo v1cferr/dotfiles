@@ -53,6 +53,7 @@ export const navigation: NavItem[] = [
       { title: "0011 Local disk backup", doc: "decisions/0011-local-disk-backup.md" },
       { title: "0012 Stylix applies the palette", doc: "decisions/0012-stylix-applies-the-palette.md" },
       { title: "0013 Graph view dependency", doc: "decisions/0013-graph-view-with-one-dependency.md" },
+      { title: "0014 Source previews", doc: "decisions/0014-source-previews-from-a-build-snapshot.md" },
     ],
   },
   { title: "How the notes work", doc: "notes/README.md" },

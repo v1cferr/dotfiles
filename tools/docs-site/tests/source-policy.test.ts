@@ -161,7 +161,7 @@ describe('the manifest contract', () => {
       lines: 1,
       asset: '0123456789abcdef.txt',
     };
-    const manifest = { version: 1, page: 'a.md', files: [file], refs: {}, truncated: [] };
+    const manifest = { version: 1, page: 'a.md', files: [file], refs: {}, sections: {}, truncated: [] };
     assert.ok(isPageManifest(manifest));
     assert.ok(!isPageManifest({ ...manifest, files: [{ ...file, asset: '../../x.html' }] }));
     assert.ok(!isPageManifest({ ...manifest, files: [{ ...file, path: '../etc/passwd' }] }));

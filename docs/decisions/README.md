@@ -25,3 +25,4 @@ Each record follows the same short shape, after [Michael Nygard's ADR](https://a
 | [0011](0011-local-disk-backup.md) | The backup goes to a local disk first | accepted |
 | [0012](0012-stylix-applies-the-palette.md) | Stylix applies the palette; the palette keeps the hexes | accepted, refines 0001 |
 | [0013](0013-graph-view-with-one-dependency.md) | The site's graph view takes one dependency | accepted, refines 0010 |
+| [0014](0014-source-previews-from-a-build-snapshot.md) | The site previews source from a snapshot built beside it | accepted, refines 0005 and 0010 |

@@ -149,6 +149,8 @@ interface PageScan {
   /** Inline code that named a repo file outright. */
   exact: { token: string; path: string; section?: string }[];
   missing: string[];
+  /** Every heading's id to its text, in page order. */
+  titles: Map<string, string>;
 }
 
 /**
@@ -161,7 +163,7 @@ function scanPage(page: string, source: string, exists: (rel: string) => 'file' 
     extensions: [gfm()],
     mdastExtensions: [gfmFromMarkdown()],
   });
-  const scan: PageScan = { links: [], folders: [], tokens: [], exact: [], missing: [] };
+  const scan: PageScan = { links: [], folders: [], tokens: [], exact: [], missing: [], titles: new Map() };
   const definitions = new Map<string, string>();
   for (const node of tree.children) {
     if (node.type === 'definition') definitions.set((node as Definition).identifier, node.url);
@@ -196,8 +198,10 @@ function scanPage(page: string, source: string, exists: (rel: string) => 'file' 
     if (node.type === 'heading') {
       if (tree.children[titleIndex] === node) return;
       const last = (node as Heading).children.at(-1);
-      const custom = last?.type === 'text' ? HEADING_ID.exec(last.value)?.groups?.slug : undefined;
-      section = custom ?? slugger.slug(flatten(node));
+      const marker = last?.type === 'text' ? HEADING_ID.exec(last.value) : null;
+      const text = flatten(node);
+      section = marker?.groups?.slug ?? slugger.slug(text);
+      scan.titles.set(section, marker ? text.slice(0, text.length - marker[0].length) : text);
       return;
     }
     if (node.type === 'link') onLink(node.url);
@@ -359,6 +363,8 @@ export function buildSourceIndex(repoRoot: string): SourceIndex {
     }
 
     const list = related.list(files);
+    const cited = new Set(list.flatMap((f) => f.sections));
+    const sections = Object.fromEntries([...scan.titles].filter(([id]) => cited.has(id)));
     stats.pages++;
     if (list.length > 0) stats.pagesWithFiles++;
     for (const file of list) stats.relations[file.relation]++;
@@ -367,6 +373,7 @@ export function buildSourceIndex(repoRoot: string): SourceIndex {
       page,
       files: list,
       refs: Object.fromEntries(Object.entries(refs).toSorted(([a], [b]) => (a < b ? -1 : 1))),
+      sections,
       truncated,
     });
   }

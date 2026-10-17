@@ -42,9 +42,14 @@ stdenvNoCC.mkDerivation {
           ./package.json
           ./pnpm-lock.yaml
           ./source-policy.json
+          ./site.json
           ./lib
+          ./plugins
           ./scripts
           ./tests
+          # The tree's logic and the highlighter are plain TypeScript, so their tests run here.
+          ./components/source/tree.ts
+          ./components/source/highlighter.ts
         ])
         (
           lib.fileset.unions (
@@ -71,6 +76,8 @@ stdenvNoCC.mkDerivation {
 
   buildPhase = ''
     runHook preBuild
+    # The palette the site's code themes come from, which the highlighter's tests check against.
+    cp ${docs-site.palette} tools/docs-site/palette.json
     node tools/docs-site/scripts/build-sources.ts _source "$PWD"
     runHook postBuild
   '';

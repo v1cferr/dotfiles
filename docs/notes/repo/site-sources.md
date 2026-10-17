@@ -2,12 +2,13 @@
 
 A page here explains a module, and the module is somewhere else. This is what puts the files a page
 is about next to it on the site, in a tree, readable with highlighting without leaving the page.
-The site itself is [`site.md`](site.md); this note is the half that reads the rest of the repo.
+The site itself is [`site.md`](site.md); this note is the half that reads the rest of the repo, and
+why it is built this way is [decision 0014](../../decisions/0014-source-previews-from-a-build-snapshot.md).
 
 The indexer is `tools/docs-site/lib/source-index.ts`, the policy is
-`tools/docs-site/source-policy.json`, the derivation is `tools/docs-site/sources.nix`. Build it with
-`nix build .#docs-sources`; `pnpm --dir tools/docs-site sources` writes the same snapshot for
-`pnpm dev`.
+`tools/docs-site/source-policy.json`, the derivation is `tools/docs-site/sources.nix`, and the
+browser half lives in `tools/docs-site/components/source/`. Build the snapshot with
+`nix build .#docs-sources`; `pnpm --dir tools/docs-site dev` writes it first for a dev tree.
 
 ## Which files a page is about, and how sure the index is
 
@@ -102,22 +103,169 @@ derivation, and `pages` joins it under `/_source/`, the same way it already join
 The workflow prints the summary of both after the build, read back with `nix log`, so a run shows
 what was indexed without `-L` dumping every build log.
 
+## On the page: a tab beside the outline, and a sheet for the code
+
+**The right column is Fumadocs' own TOC slot.** `DocsPage` takes `slots.toc.main`, a documented
+extension point, and `components/source/side-panel.tsx` fills it with two tabs: the outline the
+column always had (Fumadocs' own `TOCItems` and `TOCItem`, the `clerk` style unchanged) and
+**Files**, the page's tree. The slot claims the column the way the default does, through the grid
+area `toc` and the `layout:` variant Fumadocs defines for exactly that. Nothing patches the DOM or
+reads an internal selector. The chosen tab is remembered for the next page.
+
+**The tree is real paths, folded to what the page cites.** Folders that lead to a `direct` or
+`declared` file open; a `module` file shows muted, in a folded folder, until it is asked for. A
+chain of single-child folders is one row (`modules/home/desktop`). A folder opened or closed by hand
+stays that way on the next page that shows it, for the whole visit. A filter narrows by name, and
+the line under the tree names the path of the row the reader is on.
+
+**Fumadocs' `<Files>` is the container, and `<Folder>` and `<File>` are not used.** In 16.17.2
+`Folder` keeps its open state to itself, so a choice could not outlive a page, and `File` is a
+`div` with no role, no selection and no keyboard. The rows are a WAI-ARIA tree view instead: a flat
+list with `aria-level`, one tab stop that moves, arrows to walk and fold, Enter or Space to open.
+The keyboard logic is a pure function in `tree.ts`, which is what lets node's test runner cover it.
+
+**The section on screen marks its files, and moves nothing.** A file cited under the heading the
+reader is on gets a dot in the tree, from the same active anchor the outline highlights with.
+Nothing is reordered and nothing opens: a selection only changes when the reader changes it.
+
+**The preview is a sheet on the right, not a dialog.** Opening a file leaves the page readable on
+the left and scrolled exactly where it was, with no navigation. The sheet shows the name, the
+path, the language and why the file is related, with the sections that cite it as links back into
+the page. Its buttons copy the path, copy the content (the bytes, not text scraped off the DOM),
+open the file on GitHub at the snapshot's own commit, and take the full width. It resizes from its
+edge with the mouse or the arrow keys, and the width is remembered. Esc closes it from anywhere but
+another dialog, and focus goes back to whatever opened it. The tree can show inside it too, so the
+reader can walk files without going back to the column.
+
+**A narrow screen gets a drawer and a full-width sheet.** Below `xl` the column is gone, so a
+`Files` button opens the same tree in a native `<dialog>`, which brings Esc, the focus trap and the
+backdrop for free, as the diagram viewer already does. The preview then takes the whole width,
+and the page under it keeps its scroll.
+
+**Two entrances move, and only with the reader's leave.** The sheet slides in and the drawer rises,
+160ms each, under `prefers-reduced-motion: no-preference`. With reduced motion asked for, nothing
+moves.
+
+**The deep link is `?source=<path>&line=<n>`**, written in place with `replaceState` as files open
+and close. It opens only a path the page's manifest lists, so a URL can ask for a file but never
+choose one, and the line is marked and scrolled to a third of the way down.
+
+## Links that open the preview, and stay links
+
+`remark-repo-links.ts` still writes every href it wrote before, which a test pins. It now also
+MARKS two things, and only marks them, since the site is built without the repo files:
+
+- a link it turned into a blob URL carries `data-source-path`, plus `data-source-line` for `#L12`;
+- an inline code span SHAPED like a path (a slash, or an extension) carries its text, unless it
+  sits inside a link or a heading, where an anchor of its own would nest inside another.
+
+In the browser, `a` and `code` in `components/mdx.tsx` act on a mark only when the page's manifest
+says the file is real. A marked link stays the same `<a href>` to GitHub: a plain click opens the
+preview, and a modified click, a middle click or "open in new tab" are the browser's, untouched.
+With no JS nothing changes at all, and the link opens the file on GitHub as it always did. A code
+span becomes a link ONLY when the index resolved its exact text (`autostart.lua` on the Hyprland
+page); `hyprctl reload` stays code. A link the preview can open is dotted, so it reads apart from
+one that leaves the page.
+
+## The highlighter: Fumadocs' code block, on a smaller shiki
+
+The code is drawn by Fumadocs' `DynamicCodeBlock`, so it wears the same shiki themes as a fence
+(the palette's own `tokyo-night`, GitHub's light theme), the same line numbers and the same
+`.highlighted` line style, with no renderer of its own. What changed is the highlighter under it.
+The component's default imports shiki's whole bundle, and that wrote **330 chunk files, 12 MiB**,
+into the export for grammars no page can ever ask for, measured on 17/10/2026.
+`components/source/highlighter.ts` builds shiki's core with the JavaScript regex engine (no WASM)
+and only the 16 grammars the policy can publish and the 5 themes the palette can name. A test fails
+when either list drifts from its owner, and when a grammar does not load.
+
 ## What it costs, measured on 17/10/2026
+
+The index, from the sandbox:
 
 | Measure | Value |
 | --- | --- |
-| index time, inside `build-sources.ts` | 1.8 to 2.0s |
-| `nix build .#docs-sources`, the store already fetched | 20.6s, most of it the offline install |
-| pages with related files | 122 of 134 |
-| relations | 651: 449 direct, 31 declared, 171 module |
-| files published | 312, 1.4 MiB |
-| manifests, all pages together | 156 KiB, one small file per page |
+| index time, inside `build-sources.ts` | 1.8 to 2.3s |
+| `nix build .#docs-sources --rebuild`, the store already fetched | 13.1s, byte-identical to the first build |
+| pages with related files | 123 of 135 |
+| relations | 691: 458 direct, 41 declared, 192 module |
+| files published | 323, 1.5 MiB |
+| manifests, all pages together | 183 KiB, one small file per page |
 | unresolved references | 10, all of them in `docs/history/`, a diary that names deleted files on purpose |
 
-The numbers above come from the sandbox. A dev tree reports more references "kept out by the
-policy", because there the files outside the fence exist and can be classified; inside the sandbox
-they do not exist at all.
+The site, against the build right before the browser half (`2e7c0caf`), on `/notes/desktop/hypr/`:
 
-**One drift it found on its first run**: `site.md` cited `tools/docs-site/lib/title.ts`, a file
-renamed to `summary.ts` long ago. `docs-links` did not see it because its prose-path pattern lists
-the `.nix`, `.sh` and similar extensions and not `.ts`.
+| Measure | Before | After |
+| --- | --- | --- |
+| JS a page loads up front, gzipped | 294.2 KiB | 302.7 KiB |
+| the page's HTML, gzipped | 35.1 KiB | 35.8 KiB |
+| chunk files in the export | 112, 6.3 MiB | 139, 7.5 MiB |
+| the whole published output | 62.2 MiB | 66.2 MiB, `/_source/` included |
+
+**What the first preview fetches**, in a headless Chromium: the page's manifest on load, and nothing
+else until a file opens. Then 64.4 KiB gzipped of JS (the viewer, shiki's core, the engine, one
+grammar, two themes) plus the file. A 250-line `.nix` was highlighted 0.5s after a deep-linked page
+started loading; `Bar.qml`, the largest file at 2292 lines, took 2.0s, shown as plain text until
+then. The numbers about the index come from the sandbox; a dev tree reports more references "kept
+out by the policy", because there the files outside the fence exist and can be classified.
+
+**One drift it found on its first run**: `site.md` cited `lib/title.ts`, renamed to `summary.ts`
+long ago. `docs-links` did not see it because its prose-path pattern lists the `.nix`, `.sh` and
+similar extensions and not `.ts`.
+
+## How it is tested
+
+- **In the build** (`checkPhase` of `docs-sources`, so `nix flake check`): the policy (traversal,
+  exclusions, credentials), the manifest contract, the indexer on fixture repos (references,
+  duplicates, direct against inferred, missing and excluded targets, symlinks, binaries, the size
+  cap, determinism), the real tree (Hyprland, Vicinae, Quickshell, Caddy, a page with no source),
+  the tree's keyboard and folding, what counts as a plain click, the deep link, the link rewriter's
+  hrefs and marks, and the highlighter's lists.
+- **At the join** (`check-sources.ts` in `pages`): the snapshot against the HTML.
+- **In a real browser, by hand**: `tests/e2e/sources.e2e.ts` drives a headless Chromium over the
+  DevTools protocol with node's own WebSocket, so it adds nothing to the lockfile. It covers the tree
+  (folding, filter, keyboard), opening and closing with the scroll kept and focus returned, a
+  modified click left to the browser, the deep link and a refused one, the section mark, a
+  navigation, the empty state, reduced motion, and the drawer and full-width sheet at 390px. It is
+  not in the build because a browser in the sandbox is not worth it:
+
+```sh
+nix build .#pages
+CHROMIUM=$(nix build --inputs-from . nixpkgs#chromium --no-link --print-out-paths)/bin/chromium \
+  SITE=$PWD/result pnpm --dir tools/docs-site test:e2e
+```
+
+It found one real bug before it passed: the path line under the tree was empty until a row had
+focus, so the first press grew the drawer, which sits at the bottom, by one line, and the release
+landed on another row. A finger would have done the same. The line's height is reserved now.
+
+## What was rejected
+
+| Option | Why not |
+| --- | --- |
+| building the previews inside `docs-site` | its src would have to take `modules/`, and every module commit would rebuild the site |
+| the GitHub API or an embed at read time | a third party in the reader's browser, which [rule 20](../../rules.md#20-the-docs-are-a-product) forbids, plus rate limits |
+| copying the repo into the export | publishes what no page shows, and what the policy exists to keep out |
+| relating files by name similarity | a guess shown as a fact; the index only relates what the markdown or the file says |
+| an override file for relations | rule 2's header already is one, and the gate already guards it |
+| Monaco or CodeMirror | an editor for a read-only view; the site's own code block already highlights, numbers and copies |
+| Fumadocs' `<Folder>` and `<File>` | uncontrolled and not keyboard-reachable in 16.17.2 (above) |
+| patching the TOC in the DOM | `slots.toc` is the documented way in |
+| shiki's full bundle | 330 chunk files nobody can request |
+
+## Extending it, and when it misbehaves
+
+- **A file is missing from a page**: cite it (a link or its repo path in backticks), or give it the
+  page in its header, which is what rule 2 asks for anyway.
+- **A language should be previewable**: add the extension to `source-policy.json` and the grammar to
+  `components/source/highlighter.ts`; the test fails until both are there.
+- **A file must never be published**: an entry in `excludePrefixes` or `excludeNames` of the policy.
+  Nothing else has to change, since the fence and the indexer both read it.
+- **`check-sources` names a section that does not exist**: the index slugged a heading differently
+  from Fumadocs, which means Fumadocs changed its slugger or the page uses heading syntax the index
+  does not read. Compare the id in the page's HTML with what `scanPage` produced for it.
+- **`build-sources` refuses a file as sensitive**: look at it first. A real credential leaves the
+  repo; a false match goes in `excludeNames`, and the file stays on GitHub only.
+- **The Files tab says the list could not be loaded in `pnpm dev`**: the snapshot is written by
+  `predev`, so a dev server started any other way has none; run `pnpm sources`.
+- **Chromium dies at once in the e2e run**: an `LD_LIBRARY_PATH` exported by the host session mixes
+  two glibcs; the harness drops it for the browser, so this only bites a browser started by hand.

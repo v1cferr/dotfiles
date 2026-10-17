@@ -108,6 +108,7 @@ describe('buildSourceIndex', () => {
     // github-slugger's numbering for a repeated heading, and the `[#id]` override Fumadocs honors.
     assert.deepEqual(hypr[0]!.sections, ['one', 'two', 'one-1', 'my-id']);
     assert.deepEqual(hypr[0]!.via, ['code', 'link']);
+    assert.deepEqual(a.sections, { one: 'One', two: 'Two', 'one-1': 'One', 'my-id': 'Custom' });
   });
 
   it('resolves a bare name only inside the page own modules, and only when it is unique', () => {
@@ -229,6 +230,7 @@ describe('buildSourceIndex', () => {
       page: 'a.md',
       files: [],
       refs: {},
+      sections: {},
       truncated: [],
     });
   });

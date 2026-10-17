@@ -39,6 +39,8 @@ export interface PageManifest {
   files: RelatedFile[];
   /** Inline code AS WRITTEN on the page, to the file it was resolved to. Nothing else is clickable. */
   refs: Record<string, string>;
+  /** The heading text of every section a file cites, in page order, so a preview can name them. */
+  sections: Record<string, string>;
   /** Module folders with more files than the cap: only the first ones are listed. */
   truncated: { dir: string; total: number }[];
 }
@@ -102,6 +104,8 @@ export function isPageManifest(value: unknown): value is PageManifest {
         (file.asset === null || ASSET.test(file.asset)),
     ) &&
     typeof manifest.refs === 'object' &&
-    manifest.refs !== null
+    manifest.refs !== null &&
+    typeof manifest.sections === 'object' &&
+    manifest.sections !== null
   );
 }

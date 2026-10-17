@@ -157,6 +157,12 @@ Three `misc` settings worth keeping:
 - **`vrr = 2`** (G-Sync only in fullscreen games). The LG UltraGear is G-Sync Compatible, and on
   the Arc (`xe`) the freeze NVIDIA used to give on the lockscreen does NOT reproduce, which is why
   the always-on `vrr = 1` was vetoed back on Arch. 2 is safe.
+  **But 2 never fires on 0.55.4** (measured 17/10/2026 with vkcube, XWayland and native alike): the
+  scrolling layout answers a fullscreen request with `FULLSCREEN_REQUEST_HANDLED_BY_LAYOUT`, and
+  `CCompositor::setWindowFullscreenInternal` then clears the workspace's `m_hasFullscreenWindow`,
+  which is exactly what `ensureVRR` checks for 2 and 3. So the ASUS carries a per-monitor `vrr = 1`
+  in monitors.lua and the LG stays on 2. Upstream fixed it in 0.56.2 (#15660, "bring back old
+  behavior of fs"); after that bump the per-monitor override goes away.
 - **`allow_session_lock_restore = true`**, a safety net against a lockout: if hyprlock dies during
   teardown, relaunching `hyprlock` from a TTY REATTACHES the locked session instead of refusing,
   which avoids a `sudo reboot` to escape an orphaned lock screen. It is the one path that produces

@@ -6,7 +6,9 @@
 local ok_M, M = pcall(dofile, os.getenv("HOME") .. "/.config/theme/monitors.lua")
 if not ok_M or type(M) ~= "table" then M = { primary = "DP-1", secondary = "DP-2" } end
 
-hl.monitor({ output = M.primary, mode = "2560x1440@180", position = "0x0", scale = 1 })
+-- vrr = 1 on the primary ALONE: misc.vrr = 2 never fires on 0.55.4, whose scrolling layout handles
+-- fullscreen itself and leaves the workspace flagged as not fullscreen. Fixed in 0.56.2 (#15660).
+hl.monitor({ output = M.primary, mode = "2560x1440@180", position = "0x0", scale = 1, vrr = 1 })
 
 -- NATIVE scale (0.75 was tried and reverted: the notes). Rotated it is 1080x1920 LOGICAL, so
 -- x = -1080 sets it on the left and y = -240 lines its middle up with the shorter primary.

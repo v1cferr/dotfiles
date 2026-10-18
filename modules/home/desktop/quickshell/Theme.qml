@@ -39,7 +39,7 @@ Singleton {
             property string uiFont: "JetBrainsMono Nerd Font" // it comes from my.fonts.ui
             property string shadow: "#0f0f0f"
             property string motion: "subtle" // it comes from my.theme.motion
-            property string glass: "soft" // it comes from my.theme.glass
+            property string glass: "perceptible" // it comes from my.theme.glass
             property int gapsOut: 12 // it comes from my.theme.gaps.outer
         }
     }
@@ -176,12 +176,18 @@ Singleton {
     readonly property int fontLabel: 13 // a glyph in the bar, a card title
     readonly property int fontTitle: 14 // a panel title
 
-    // ── Glass: three levels of see-through, all from the palette's bg. `solid` is the fallback ──
+    // ── Glass: three levels of see-through, in one of three profiles (my.theme.glass) ──
+    // perceptible: flat, 90/92/96%. clear-gradient: bg at the top easing into the palette's surface at
+    // the foot, 86->80 / 88->84 / 90 flat. solid: opaque. The contrast: docs/notes/desktop/theme.md
     readonly property bool glassSolid: pal.glass === "solid"
+    readonly property bool glassClear: pal.glass === "clear-gradient"
     function glassBg(a) { return theme.aa(pal.bg, theme.glassSolid ? "ff" : a); }
-    readonly property color colSurfaceBar: theme.glassBg("e6") // 90%: a bar cluster
-    readonly property color colSurfaceCard: theme.glassBg("eb") // 92%: a glance band card
-    readonly property color colSurfacePop: theme.glassBg("f5") // 96%: a dense panel, read longest
+    function glassFoot(a) { return theme.aa(pal.surface, theme.glassSolid ? "ff" : a); }
+    readonly property color colSurfaceBar: theme.glassBg(theme.glassClear ? "db" : "e6")
+    readonly property color colSurfaceBarFoot: theme.glassClear ? theme.glassFoot("cc") : theme.colSurfaceBar
+    readonly property color colSurfaceCard: theme.glassBg(theme.glassClear ? "e0" : "eb")
+    readonly property color colSurfaceCardFoot: theme.glassClear ? theme.glassFoot("d6") : theme.colSurfaceCard
+    readonly property color colSurfacePop: theme.glassBg(theme.glassClear ? "e6" : "f5") // dense text: never a gradient
     readonly property color colEdge: aa(pal.border, "8c") // a surface's hairline
     readonly property color colSheen: aa(pal.text, "0f") // the 1 px light along a surface's top edge
     readonly property color colBarCenter: theme.glassSolid ? pal.surface : aa(pal.surface, "f0") // the logo's compartment

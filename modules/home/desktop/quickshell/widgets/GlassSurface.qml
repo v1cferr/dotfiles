@@ -8,7 +8,19 @@ Rectangle {
     property string level: "card" // "bar" | "card" | "pop", the three opacities in Theme
 
     radius: Theme.radiusSurface
-    color: glass.level === "bar" ? Theme.colSurfaceBar : (glass.level === "pop" ? Theme.colSurfacePop : Theme.colSurfaceCard)
+    // Top to foot: the same color in the perceptible profile, a faint bg-to-surface ease in clear-gradient.
+    readonly property color shadeTop: glass.level === "bar" ? Theme.colSurfaceBar : (glass.level === "pop" ? Theme.colSurfacePop : Theme.colSurfaceCard)
+    readonly property color shadeFoot: glass.level === "bar" ? Theme.colSurfaceBarFoot : (glass.level === "pop" ? Theme.colSurfacePop : Theme.colSurfaceCardFoot)
+    gradient: Gradient {
+        GradientStop {
+            position: 0
+            color: glass.shadeTop
+        }
+        GradientStop {
+            position: 1
+            color: glass.shadeFoot
+        }
+    }
     border.width: Theme.hairline
     border.color: Theme.colEdge
 

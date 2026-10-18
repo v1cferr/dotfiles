@@ -1961,7 +1961,16 @@ Scope {
                 // ── The surface: one glass strip, a hairline at its foot ──
                 Rectangle {
                     anchors.fill: parent
-                    color: Theme.colSurfaceBar
+                    gradient: Gradient {
+                        GradientStop {
+                            position: 0
+                            color: Theme.colSurfaceBar
+                        }
+                        GradientStop {
+                            position: 1
+                            color: Theme.colSurfaceBarFoot
+                        }
+                    }
                 }
                 Rectangle {
                     anchors.left: parent.left

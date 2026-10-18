@@ -132,11 +132,12 @@ in
     # Glass: how see-through the shell's surfaces are, read by Quickshell and Hyprland like motion.
     glass = lib.mkOption {
       type = lib.types.enum [
-        "soft"
+        "perceptible"
+        "clear-gradient"
         "solid"
       ];
-      default = "soft";
-      description = "The shell's surfaces: `soft` is translucent over Hyprland's blur, `solid` is opaque with no blur (the fallback when contrast or the GPU asks for it). docs/notes/desktop/theme.md";
+      default = "perceptible";
+      description = "The glass profile, for the shell, HyprGlass and kitty at once: `perceptible` (the baseline, near-opaque), `clear-gradient` (more see-through, a faint Tokyo Night gradient), `solid` (opaque, no blur: the fallback). docs/notes/desktop/theme.md";
     };
   };
   # The UI FONT is `my.fonts.ui`, in modules/nixos/desktop/fonts.nix, next to its package (rule 4).

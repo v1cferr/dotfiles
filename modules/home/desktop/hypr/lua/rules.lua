@@ -2,6 +2,12 @@
 -- The Flameshot v14 rule is the subtle one: docs/notes/desktop/hypr.md
 
 hl.window_rule({ match = { class = ".*" }, opacity = "0.98 0.96" })
+-- clear-gradient: kitty's background_opacity (kitty.nix) is its ONLY reduction, so its text stays at
+-- 100% instead of being dimmed again by the 0.98 above. The composite: docs/notes/desktop/theme.md
+local C = dofile(os.getenv("HOME") .. "/.config/theme/hypr-colors.lua")
+if C.glass == "clear-gradient" then
+  hl.window_rule({ match = { class = "^(kitty)$" }, opacity = "1.0 override 1.0 override" })
+end
 -- A subtle transparency on everything (0.98 active / 0.96 inactive), then maximize suppressed,
 -- which behaves better under tiling.
 hl.window_rule({ match = { class = ".*" }, suppress_event = "maximize" })

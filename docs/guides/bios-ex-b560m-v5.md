@@ -94,13 +94,39 @@ The live values agree (read from efivarfs, 4-byte attribute header first; `Setup
 | --- | --- | --- | --- |
 | PCI Express Native Power Management | `Setup` 0x51 | 0 (Disabled) | 1 |
 | Native ASPM | `Setup` 0x52 | 0 (Disabled) | 1 (Enabled) |
-| PEG - ASPM (PEG 0) | `SaSetup` 0x52 | 0 (Disabled) | 2 (ASPM L1) |
-| PCH ASPM | `PchSetup` 0x113 | 0 (Disabled) | (L1) |
+| CPU PCIe Root Port 1 ASPM (the x16 slot, `00:01.0`) | `SaSetup` 0x35D | 0 (Disabled) | 2 (L1) |
+| PCH ASPM (left alone: the Realtek NIC lives there) | `PchSetup` 0x113 | 0 (Disabled) | unchanged |
 
-The only way to change them without a modified BIOS is writing those bytes, which the
-"Do NOT do" list below forbids. That rule stands until it is decided otherwise: the offsets are
-now known for 2803 (they still change with any other version), but a bad write to `Setup` on a
-board with no FlashBack is the risk the rule exists for, and the way back is a Clear CMOS.
+There are TWO `PEG - ASPM` questions. The form picks one by the CPU: `SaSetup` 0x52 is suppressed
+when `CpuSetupVolatileData` reads `0x670` (CPUID `A0671` masked, Rocket Lake), and `SaSetup`
+0x35D, the "PCI Express Root Port 1" page, is the one shown for this CPU. L1 Substates (0x361)
+stay off: a Battlemage card has been reported failing to boot with L1.1 enabled.
+
+### The exception: `bios-aspm` (decided 18/10/2026, review 18/01/2027)
+
+The "Do NOT do" rule against raw variables gets ONE exception, these three bytes, by decision on
+18/10/2026: the menus cannot reach them, the gain is the largest idle draw on the machine, and
+the risk is bounded by the checks below and a Clear CMOS. `hosts/ex-b560m-v5/bios-aspm.nix`
+installs `bios-aspm`:
+
+- `bios-aspm status` (no root): the three values, whether the kernel still logs the FADT line,
+  and as root the `00:01.0`/`01:00.0` link state.
+- `sudo bios-aspm apply`: refuses on any other board, any BIOS but 2803, a variable of another
+  size, attributes other than `07000000`, or a current value outside the option's valid set.
+  Then it backs both variables up to `/var/backup/bios-aspm/<date>/` with `SHA256SUMS` (inside
+  restic's paths), asks for `yes`, writes each variable in ONE write as efivarfs requires,
+  reads it back, and puts the backup back on any mismatch.
+- `sudo bios-aspm restore <dir>`: writes a verified backup back.
+
+TESTED before any write, 18/10/2026: the patch applied to copies of the live variables changed
+exactly positions 86 and 87 of `Setup` and 866 of `SaSetup` (0x51, 0x52 and 0x35D plus the
+4-byte header), sizes intact. Two traps it already avoids: `cp` cannot read efivarfs (`Illegal
+seek`), so it copies with `cat`; and `grep -q` after `journalctl` under `pipefail` reads a match
+as a miss.
+
+On the review date: if ASPM held with no `xe` resets or link errors, the exception stays and
+this paragraph gets the measured watts; if anything regressed, `restore` and drop the module.
+A BIOS update changes the offsets: `bios-aspm` then refuses, and the IFR has to be read again.
 
 The kernel log names the same cause before any `lspci`. On the boot of 18/10/2026:
 `ACPI FADT declares the system doesn't support PCIe ASPM, so disable it`, `FADT indicates ASPM is
@@ -135,7 +161,7 @@ even a working L1 will not bring the card down to single-monitor figures.
 
 - **Do NOT flash a modified BIOS** (a mod for hidden menus): this board has **no USB BIOS
   FlashBack**, so a brick becomes a job for an external SPI programmer (CH341A + clip).
-- **Do NOT edit the raw variables** (`AMITSESetup`, `CpuSetup` and friends, through
+- **Do NOT edit the raw variables** (except the three bytes of `bios-aspm` above) (`AMITSESetup`, `CpuSetup` and friends, through
   `setup_var`/`efivarfs` by offset): the offsets are undocumented and change per BIOS
   version, so the risk is corrupting or bricking it. The options that matter are already in
   F7 Advanced Mode.

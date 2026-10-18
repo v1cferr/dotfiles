@@ -7,6 +7,7 @@
     ./disko.nix # disko generates the Kingston's fileSystems (btrfs plus subvolumes)
     ./services.nix # THE PANEL: which optional services this machine turns on (my.services.*)
     ./hardware.nix # THIS machine's hardware: kernel modules, microcode, extra disks, monitors, devices
+    ./bios-aspm.nix # `bios-aspm`: the ASPM bytes this BIOS hides from its menus (an exception, see the guide)
   ];
 
   networking.hostName = "ex-b560m-v5";

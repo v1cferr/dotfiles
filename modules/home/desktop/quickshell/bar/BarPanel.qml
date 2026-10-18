@@ -13,6 +13,9 @@ PanelWindow {
     property bool ready: true // false while it has nothing to show (the weather before its first read)
     property string layerNamespace: "qs-panel" // the NixOS Center's is its own: a capture waits for it
     readonly property bool pinned: panel.bar.pinned === panel.key
+    // A key while pinned, offered to the panel first (the calendar's arrows); one it leaves
+    // unaccepted falls through, Escape closing.
+    signal keyPressed(var event)
 
     visible: panel.ready && panel.bar.panelOpen === panel.key
     screen: panel.bar.popScreen || panel.bar.screenPrimary
@@ -41,6 +44,12 @@ PanelWindow {
     }
     Item {
         focus: true
-        Keys.onEscapePressed: panel.bar.closePanels()
+        Keys.onPressed: event => {
+            panel.keyPressed(event);
+            if (!event.accepted && event.key === Qt.Key_Escape) {
+                panel.bar.closePanels();
+                event.accepted = true;
+            }
+        }
     }
 }

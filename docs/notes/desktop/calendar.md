@@ -180,6 +180,24 @@ observance); Carnaval's two records keep one outline and the corner dot.
 
 The band's month card reads the same data through `monthCells()` with the default filters.
 
+## The keyboard
+
+While the panel is PINNED (a click on the time or the date; a hover never takes the keyboard):
+
+| Key | Year view | Focused month |
+| --- | --- | --- |
+| ← → | the day before / after | the same, the month following the day |
+| ↑ ↓ | a week before / after | the same |
+| Page Up / Down | the year before / after | the month before / after |
+| Enter or Space | focus the selected day's month | |
+| Home | today | today |
+| Escape | close | back to the year |
+
+`BarPanel` offers each key to the panel first (`keyPressed`); one the panel leaves unaccepted falls
+through, Escape closing, so every other panel keeps its Escape. A day's step is computed at local
+noon, so it crosses months, years and 29/02 with no special case. Written on 18/10/2026 and not yet
+driven with real key presses: the test was stopped because a game was in fullscreen.
+
 ## Filters
 
 Two independent sets, `Holidays.filters`: WHERE (São Carlos, São Paulo, Brasil, International) and

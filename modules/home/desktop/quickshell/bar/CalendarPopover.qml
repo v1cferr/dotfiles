@@ -52,6 +52,45 @@ BarPanel {
         cal.focusMonth = m;
     }
 
+    // ── The keyboard, while pinned: the arrows move the selected day (a week up and down), crossing
+    // months and years; Page Up/Down step the year (the month, focused); Enter focuses the selected
+    // day's month; Home is today; Escape leaves the focused month first, then closes. ──
+    function moveDay(delta) {
+        const base = cal.selected.length === 10 ? cal.selected : cal.todayIso;
+        // Local noon: a day's arithmetic can never land on a DST edge.
+        const d = new Date(+base.slice(0, 4), +base.slice(5, 7) - 1, +base.slice(8, 10) + delta, 12);
+        const iso = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+        cal.viewYear = d.getFullYear() === cal.bar.calYear ? 0 : d.getFullYear();
+        cal.selected = iso;
+        if (cal.focusMonth > 0)
+            cal.focusMonth = d.getMonth() + 1;
+    }
+    onKeyPressed: event => {
+        const k = event.key;
+        let done = true;
+        if (k === Qt.Key_Left)
+            cal.moveDay(-1);
+        else if (k === Qt.Key_Right)
+            cal.moveDay(1);
+        else if (k === Qt.Key_Up)
+            cal.moveDay(-7);
+        else if (k === Qt.Key_Down)
+            cal.moveDay(7);
+        else if (k === Qt.Key_PageUp)
+            cal.focusMonth > 0 ? cal.stepMonth(-1) : cal.viewYear = cal.year - 1;
+        else if (k === Qt.Key_PageDown)
+            cal.focusMonth > 0 ? cal.stepMonth(1) : cal.viewYear = cal.year + 1;
+        else if (k === Qt.Key_Home)
+            cal.goToday();
+        else if ((k === Qt.Key_Return || k === Qt.Key_Enter || k === Qt.Key_Space) && cal.focusMonth === 0)
+            cal.focusOn(+(cal.selected || cal.todayIso).slice(5, 7), cal.selected || cal.todayIso);
+        else if (k === Qt.Key_Escape && cal.focusMonth > 0)
+            cal.focusMonth = 0;
+        else
+            done = false;
+        event.accepted = done;
+    }
+
     // ── Geometry from the screen: four columns where the width allows (the 2560 px panel), three
     // on a narrow one (the standing 1080 px), a cell never under 26 px; past the screen's height the
     // body scrolls instead of shrinking the type. ──

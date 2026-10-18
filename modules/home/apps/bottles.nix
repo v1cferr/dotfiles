@@ -216,8 +216,9 @@ in
       };
 
       # Battle.net's own shim. If it fails under Wine, the fallback is Hearthstone's route with the
-      # product code, and it is written down in the notes.
-      "Overwatch" = inGame "Overwatch" "Overwatch Launcher.exe" // {
+      # product code, and it is written down in the notes. `inBottle` and not `inGame`: it lives on
+      # the NVMe since 18/10, not on the games disk (games-disk.nix says why).
+      "Overwatch" = inBottle battlenet "Program Files (x86)/Overwatch/Overwatch Launcher.exe" // {
         arguments = "--productcode=pro";
       };
 

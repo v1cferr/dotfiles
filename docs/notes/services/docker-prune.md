@@ -80,6 +80,26 @@ after the last run, the build cache was back to 10.45 GB with 7.6 reclaimable: `
 `compose build` in its `ExecStartPre`, so every boot adds a layer and a weekly ceiling is really
 six days of refilling.
 
+## Only the cache unused for a week (`until=168h`, 18/10/2026)
+
+The daily bare prune had a cost the disk numbers did not show: it took the build cache the stacks
+were still using. MEASURED over the six boots of 16-18/10/2026 (`journalctl -b -N -u grad-radar -u
+credit-radar`): every boot that came AFTER a 04:30 prune rebuilt everything (`apt-get`, `pnpm
+install`, `uv sync`, `next build`, steps of 7 to 24 s, the three stacks in parallel, the units
+active 43 s and 62 s after starting), while every other boot was 28 `CACHED` steps in about 10 s.
+The prune freed 5.7 to 6.9 GB a day and the next boot wrote it back, so it was disk churn and boot
+CPU, not a ceiling.
+
+`flags = [ "--filter" "until=168h" ]` keeps what was used in the last 7 days. For the build cache
+BuildKit compares the filter against each record's LAST USE, so a layer a boot hits stays, and
+only the leftovers of real rebuilds age out. The filter also applies to stopped containers,
+dangling images and orphaned networks, which now wait a week too, harmlessly. Cost: the cache
+sits higher (23.06 GB on 18/10/2026, with 361 GB free); the measured 10.45 GB a week from
+30/08 is the order of growth to expect.
+
+Rollback: delete the `flags` line. To check it: the first boot after a 04:30 run should show
+`CACHED` steps, `journalctl -b -u grad-radar | grep -c CACHED`.
+
 `persistent` already comes `true` from the module and is NOT redeclared, but it matters here: this
 machine spends nights turned off, so a weekly small-hours timer without it would simply never run.
 

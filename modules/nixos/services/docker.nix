@@ -25,6 +25,12 @@ lib.mkIf config.virtualisation.docker.enable {
     # cache was back to 10.45 GB with 7.6 reclaimable. grad-radar runs `compose build` in its
     # ExecStartPre, which is to say on every boot, so a weekly ceiling is a week of refilling.
     dates = "*-*-* 04:30:00";
+    # Only what sat unused for a week: a bare prune wiped the live build cache, so the next boot
+    # rebuilt all three stacks (pnpm, uv, next build) instead of a 10 s all-CACHED pass.
+    flags = [
+      "--filter"
+      "until=168h"
+    ];
   };
 
   # THE GAP autoPrune cannot cover. `docker system prune` never touches volumes at all, and the

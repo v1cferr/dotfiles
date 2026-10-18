@@ -205,7 +205,7 @@ PanelWindow {
                     }
                     elide: Text.ElideRight
                     textFormat: Text.StyledText
-                    text: "<font color='" + ClaudeUsage.color(ClaudeUsage.session) + "'>✦ claude " + Math.round(ClaudeUsage.session.pct || 0) + "%</font>" + "<font color='" + Theme.colDim + "'>  ·  </font>" + "<font color='" + ClaudeUsage.color(ClaudeUsage.weekly) + "'>" + Math.round(ClaudeUsage.weekly.pct || 0) + "% wk</font>"
+                    text: "<font color='" + ClaudeUsage.color(ClaudeUsage.session) + "'>✦ claude " + Math.round(ClaudeUsage.session.pct || 0) + "%</font>" + "<font color='" + Theme.colDim + "'>  ·  </font>" + "<font color='" + ClaudeUsage.color(ClaudeUsage.weekly, Theme.colMauve) + "'>" + Math.round(ClaudeUsage.weekly.pct || 0) + "% wk</font>"
                     color: Theme.colSubtext
                     font.family: Theme.uiFont
                     font.pixelSize: 14

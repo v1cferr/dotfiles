@@ -44,14 +44,16 @@ Singleton {
             return Math.floor(s / 3600) + "h " + Math.floor(s % 3600 / 60) + "m";
         return Math.ceil(s / 60) + "m";
     }
-    function color(w) {
+    // The window's own color while normal (peach unless the caller names one), the ladder past it.
+    function color(w, normal) {
         if (w.severity === "critical" || w.pct >= 90)
             return Theme.colRed;
         if (w.severity === "warning" || w.pct >= 75)
             return Theme.colYellow;
-        return Theme.colPeach;
+        return normal || Theme.colPeach;
     }
     // The last 24 h as an evenly spaced series (one point per 15 min), each holding the last value.
+    // It starts at the first sample: hours before the feed knew anything are not zeros.
     function series(key) {
         const h = root.history;
         const out = [];
@@ -61,7 +63,8 @@ Singleton {
                 const x = h[j++][key];
                 v = x === null || x === undefined ? NaN : x;
             }
-            out.push(isNaN(v) ? 0 : v);
+            if (!isNaN(v))
+                out.push(v);
         }
         return out;
     }

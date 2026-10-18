@@ -14,6 +14,7 @@ ColumnLayout {
         property string label
         property var win
         property string resetText
+        property color tone: Theme.colPeach
         Layout.fillWidth: true
         implicitHeight: row.implicitHeight
         Tip {
@@ -37,7 +38,7 @@ ColumnLayout {
             Text {
                 Layout.preferredWidth: 90
                 text: isNaN(m.win.pct) ? "–" : Math.round(m.win.pct) + "%"
-                color: ClaudeUsage.color(m.win)
+                color: ClaudeUsage.color(m.win, m.tone)
                 font.family: Theme.uiFont
                 font.pixelSize: 34
                 font.bold: true
@@ -52,7 +53,7 @@ ColumnLayout {
                     width: parent.width * Math.max(0, Math.min(1, (m.win.pct || 0) / 100))
                     height: parent.height
                     radius: parent.radius
-                    color: ClaudeUsage.color(m.win)
+                    color: ClaudeUsage.color(m.win, m.tone)
                     Behavior on width {
                         NumberAnimation {
                             duration: Theme.motionSlow
@@ -94,6 +95,7 @@ ColumnLayout {
     Meter {
         visible: ClaudeUsage.ok
         label: "WEEKLY"
+        tone: Theme.colMauve
         win: ClaudeUsage.weekly
         resetText: ClaudeUsage.weekly.resets ? "resets in " + ClaudeUsage.left(ClaudeUsage.weekly.resets) : ""
     }

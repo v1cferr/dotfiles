@@ -302,7 +302,7 @@ through `hypr-colors.lua`) and kitty's `background_opacity` (`kitty.nix`).
 | Bar | 90% flat | the palette's bg at 86% at the top easing into its surface at 80% at the foot |
 | Band cards | 92% flat | 88% bg into 84% surface |
 | Panels, Center, toasts | 96% flat | 90% flat: dense text gets no gradient |
-| kitty | background 0.95, then the global 0.98 window opacity on top | background 0.85, exempt from the global rule |
+| kitty | background 0.95, then the global 0.98 window opacity on top | background 0.70, exempt from the global rule |
 | HyprGlass tint, panel tint | bg at 33%, at 50% | bg at 20%, at 30% |
 | HyprGlass brightness | 0.85 | 0.95 |
 | HyprGlass blur, window / bar / panel | 1.2 / 1.6 / 2.0 | 0.9 / 1.2 / 1.6 |
@@ -319,8 +319,8 @@ once: no shader, nothing that repaints on its own.
 
 **kitty's composite, on purpose.** In `perceptible` the background is 0.95 x 0.98 = 0.931 of the
 window opacity and the TEXT is dimmed to 0.98 with it. In `clear-gradient` kitty is exempt from the
-0.98 rule (`rules.lua`), so its `background_opacity` of 0.85 is the only reduction: the background is
-exactly 0.85 and the text stays at 100%, which is what keeps it sharp over a busier backdrop.
+0.98 rule (`rules.lua`), so its `background_opacity` of 0.70 is the only reduction: the background is
+exactly 0.70 and the text stays at 100%, which is what keeps it sharp over a busier backdrop.
 
 **Contrast, computed** on 18/10/2026 (the same method as above, over a galaxy core that the blur
 turns into `#cccccc`, without counting HyprGlass's own dimming, which only helps):
@@ -330,12 +330,27 @@ turns into `#cccccc`, without counting HyprGlass's own dimming, which only helps
 | bar top, 86% bg | 7.3 | 5.6 | 4.7 | 4.4 |
 | card top, 88% bg | 8.3 | 6.3 | 5.3 | 5.1 |
 | panel, 90% bg | 8.5 | 6.5 | 5.4 | 5.2 |
-| kitty background, 85% | 7.5 | 5.7 | 4.8 | 4.6 |
+| kitty background, 85% (the first value) | 7.5 | 5.7 | 4.8 | 4.6 |
+| kitty background, 70%, HyprGlass's dimming counted | 6.3 | 4.8 | 4.0 | 3.9 |
 
 The foot of the gradients is where it gets close: the bar's 80% surface foot leaves the accent near
 3.9 over the brightest part of a photo, which is why the gradient stops there and not at the 76%
 first considered (3.4). On this desk's usual dark wallpapers the backdrop is close to the palette's
 own bg, and every number is far higher.
+
+**kitty went from 0.85 to 0.70 on 18/10/2026**, to make the glass read. Measured live, kitty over
+bright colored stripes, transmission being the spread of the patch behind the glass over the bare
+backdrop's, and contrast read off the real text pixels:
+
+| kitty background | Transmission | Text contrast, mean / worst 5% |
+| --- | --- | --- |
+| 0.85 | 0.067 | 9.2 / 9.0 |
+| 0.70 (chosen) | 0.108 | 8.1 / 7.9 |
+| 0.55 | 0.16 | 7.1 / 6.8 |
+| 0.40 | 0.20 | 6.1 / 5.8 |
+
+The cost is the worst case in the table above: a white page right behind the terminal leaves the
+accent at about 4.0, under AA. Back to 0.85 is one line in `kitty.nix`.
 
 **What was measured live, and what was not.** The profile was applied with a `rebuild` and checked
 in the running shell: the bar at `#db1a1b26` easing to `#cc1f2335`, the cards `#e01a1b26` to

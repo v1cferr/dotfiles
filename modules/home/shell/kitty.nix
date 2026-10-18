@@ -36,9 +36,9 @@ in
     shellIntegration.mode = "enabled";
 
     settings = {
-      # The glass profile (my.theme.glass): clear-gradient shows the windows behind, and its kitty is
-      # exempt from the global window opacity, so this is the only reduction (rules.lua).
-      background_opacity = if config.my.theme.glass == "clear-gradient" then "0.85" else "0.95";
+      # The glass profile (my.theme.glass): clear-gradient shows the windows behind (0.70 measured at
+      # 8.1:1 text contrast, 7.9 at worst), and its kitty is exempt from the global opacity (rules.lua).
+      background_opacity = if config.my.theme.glass == "clear-gradient" then "0.70" else "0.95";
       scrollback_lines = 10000; # a generous scrollback history
       enable_audio_bell = false; # no beep; it uses a visual flash instead
       confirm_os_window_close = 0; # it closes the window without asking for confirmation

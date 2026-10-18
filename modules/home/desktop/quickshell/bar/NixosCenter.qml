@@ -64,6 +64,17 @@ BarPanel {
             keys: keys
         };
     }
+    Connections {
+        target: Notifs
+        function onGroupsRequested(open) {
+            const e = ({});
+            if (open)
+                for (const k of center.entryMap.keys)
+                    if (k.startsWith("g:"))
+                        e[k] = true;
+            center.expanded = e;
+        }
+    }
     function toggleGroup(k) {
         const e = Object.assign({}, center.expanded);
         e[k] = !e[k];

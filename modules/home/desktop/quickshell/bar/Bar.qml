@@ -45,6 +45,18 @@ Scope {
         function unhide(): void {
             root.hidden = false;
         }
+
+        // Open a panel PINNED, by its coordinator key, so a check needs no mouse: the operational
+        // ones on the standing monitor's bar, the rest on the main one, hung from the logo (its
+        // content and its glass, not its anchor under the pill). `close` closes whatever is open.
+        function panel(key: string): void {
+            root.openForTest(key);
+        }
+        function close(): void {
+            root.closePanels();
+            root.vpnPopVisible = false;
+            root.hideHint();
+        }
     }
 
     // The clock. timeStr keeps the seconds for the band's big clock (dash/Dashboard.qml); the bar
@@ -1472,6 +1484,20 @@ Scope {
         target: Notifs
         property: "centerOpen"
         value: root.pinned === "center"
+    }
+    function openForTest(key) {
+        const scr = key.startsWith("ops") ? Quickshell.screens.find(x => x.name === Theme.secondaryMonitor) : Theme.screenPrimary;
+        const b = scr ? root.bars[scr.name] : null;
+        if (!b)
+            return;
+        root.hideHint();
+        root.vpnPopVisible = false;
+        root.popBar = b;
+        root.popScreen = scr;
+        root.popCenterX = Math.floor(b.width / 2);
+        root.panelShown = "";
+        root.pinned = key;
+        root.hideMedia();
     }
     // A click on an operational alert in the standing monitor's bar: the band shows its detail.
     signal dashRequested(string what)

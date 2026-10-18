@@ -64,6 +64,8 @@ Singleton {
 
     // The Bar asks for this to open or close the Center (the IPC toggle comes through here too).
     signal centerToggleRequested
+    // Open or fold every group in the Center's history (IPC `expand`/`collapse`): a test needs no mouse.
+    signal groupsRequested(bool open)
 
     function removePopup(n) {
         root.popups = root.popups.filter(x => x !== n);
@@ -166,6 +168,12 @@ Singleton {
         }
         function clear(): void {
             root.clearAll();
+        }
+        function expand(): void {
+            root.groupsRequested(true);
+        }
+        function collapse(): void {
+            root.groupsRequested(false);
         }
     }
 }

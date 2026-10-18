@@ -157,6 +157,14 @@ panel at 500 ms; the neighbor's panel at 80 ms; closed 500 ms after leaving; pin
 second click; closed by a click on the glance band; the volume hint shown 100 ms after leaving the
 weather's panel; the power menu closing a pin.
 
+## Checking without a mouse (the IPC handler, 18/10/2026)
+
+`qs ipc call bar panel <key>` opens a panel PINNED by its coordinator key (`weather`, `cal`, `usage`,
+`net`, `temp`, `center`, and `ops-ci`, `ops-svc`, `ops` on the standing monitor's bar), hung from the
+logo; `qs ipc call bar close` closes whatever is open. It checks a panel's content and glass, not its
+anchor under the pill. `qs ipc call notif expand` and `collapse` open or fold every group in the
+NixOS Center's history. Never during a fullscreen game: a pinned panel takes a focus grab.
+
 ## Hiding the bar (the IPC handler)
 
 It exists because of Flameshot's overlay: on Hyprland a normal WINDOW never covers a `top` layer,

@@ -6,7 +6,6 @@ import Quickshell.Hyprland
 import Quickshell.Wayland
 import Quickshell.Services.Pipewire
 import Quickshell.Services.Mpris
-import Quickshell.Services.SystemTray
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -20,7 +19,9 @@ Scope {
     // It hides the bar on demand (IPC), because a normal window never covers a `top` layer and
     // Flameshot's frozen overlay would show a DUPLICATED bar. `visible:false` also frees the clicks.
     property bool hidden: false
-    readonly property int trayCount: SystemTray.items ? SystemTray.items.values.length : 0
+    // A screen wide enough for the full bar is up. Without one (the main monitor unplugged), the band
+    // screen's bar takes the tray, so it never disappears with the monitor that held it.
+    readonly property bool wideUp: Quickshell.screens.some(x => x.width >= Theme.compactWidth)
     readonly property string vpnBin: "vpn" // the CLI on the PATH (modules/nixos/network/vpn.nix)
 
     // The palette and the font come from the Theme singleton (Theme.colX / Theme.uiFont).
@@ -46,10 +47,13 @@ Scope {
         }
     }
 
-    // The clock: time AND date always visible in one pill, the date in `sub` (a hierarchy, not a
-    // toggle). The weekday is local, not Qt's "ddd", which follows the process locale.
+    // The clock. timeStr keeps the seconds for the band's big clock (dash/Dashboard.qml); the bar
+    // shows the minute and a short date beside the logo. Weekday and month come from local tables,
+    // not Qt's "ddd"/"MMM", which follow the process locale.
     property string dateStr: ""
     property string timeStr: ""
+    property string barTimeStr: ""
+    property string barDateStr: ""
     SystemClock {
         id: sysClock
         precision: SystemClock.Seconds
@@ -58,6 +62,9 @@ Scope {
         const d = sysClock.date;
         root.dateStr = root.dowAbbr[d.getDay()] + " " + Qt.formatDateTime(d, "dd/MM");
         root.timeStr = Qt.formatDateTime(d, "HH:mm:ss");
+        root.barTimeStr = Qt.formatDateTime(d, "HH:mm"); // the same string all minute: no change signal
+        const dow = root.dowAbbr[d.getDay()];
+        root.barDateStr = dow.charAt(0).toUpperCase() + dow.slice(1) + ", " + root.tab(d.getDate(), 2) + " " + root.monAbbr[d.getMonth()];
         const dk = Qt.formatDate(d, "yyyy-MM-dd");
         if (dk !== root.calDayKey) {
             root.calDayKey = dk;
@@ -1938,16 +1945,41 @@ Scope {
             readonly property bool compact: bar.width < Theme.compactWidth
             color: "transparent"
 
-            // The logo's compartment sits on the screen's EXACT center, whatever the halves hold: its x
-            // comes from the width alone. Each half gets what is left of its side, minus a divider.
+            // ── The geometry: every region from the screen's width and fixed tokens, never from content ──
+            // The logo's compartment sits on the screen's EXACT center: its x comes from the width alone.
             readonly property int centerX: Math.floor(bar.width / 2)
             readonly property int slotX: bar.centerX - Theme.barCenterWidth / 2
-            readonly property int halfRoom: bar.slotX - Theme.barSlant - Theme.sp2
-            // The title takes what the left half leaves after the workspaces, capped so it never reads as a banner.
-            readonly property int titleMax: Math.min(520, bar.halfRoom - leftRow.fixedWidth)
-            // The right half folds by priority when it would cross the center: media first, then the
-            // network's numbers and the VPN's name, then the weather. Nothing ever overlaps the logo.
-            readonly property int squeeze: rightRow.measure(0) <= bar.halfRoom ? 0 : (rightRow.measure(1) <= bar.halfRoom ? 1 : (rightRow.measure(2) <= bar.halfRoom ? 2 : 3))
+            // The full bar puts the time left of the compartment and the date right of it, each in a FIXED
+            // width measured from a template, so a new minute or day never moves anything.
+            readonly property int clockW: Math.ceil(tmClock.advanceWidth) + 2 * Theme.sp2
+            readonly property int dateW: Math.ceil(tmDate.advanceWidth) + 2 * Theme.sp2
+            readonly property int clockX: bar.slotX - Theme.barSlant - Theme.sp1 - bar.clockW
+            readonly property int dateX: bar.slotX + Theme.barCenterWidth + Theme.barSlant + Theme.sp1
+            // The center group's outer edges, its dividers included; the compact bar's is the compartment.
+            readonly property int centerLeft: bar.compact ? bar.slotX - Theme.barSlant : bar.clockX - Theme.sp1 - Theme.barSlant
+            readonly property int centerRight: bar.compact ? bar.slotX + Theme.barCenterWidth + Theme.barSlant : bar.dateX + bar.dateW + Theme.sp1 + Theme.barSlant
+            // What each side may fill: its edge margin and a gap before the center group.
+            readonly property int leftRoom: bar.centerLeft - 2 * Theme.sp2
+            readonly property int rightRoom: bar.width - bar.centerRight - 2 * Theme.sp2
+
+            // ── LEFT: workspaces, title, media. Shares from the room alone, never from the texts ──
+            // In order: media from 220 down to 120, media to its icon, then the title (a floor of 120,
+            // under which it hides). A song or a focus change can never flip a level.
+            readonly property int chevW: Theme.barSlant + 2 * Theme.sp2
+            readonly property int titleMin: 240
+            readonly property bool mediaHere: !bar.compact && root.spHasPlayer
+            readonly property int leftAvail: bar.leftRoom - leftRow.wsWidth - bar.chevW - (bar.mediaHere ? bar.chevW : 0)
+            readonly property int mediaIconW: Math.ceil(tmMediaIcon.advanceWidth) + 2 * Theme.sp2
+            readonly property int mediaW: !bar.mediaHere ? 0 : Math.max(bar.mediaIconW, Math.min(220, bar.leftAvail - bar.titleMin))
+            readonly property bool mediaIconOnly: bar.mediaHere && bar.mediaW < 120
+            readonly property int mediaUsed: !bar.mediaHere ? 0 : (bar.mediaIconOnly ? bar.mediaIconW : bar.mediaW)
+            readonly property int titleMax: Math.min(520, bar.leftAvail - bar.mediaUsed)
+
+            // ── RIGHT: the system and its tray. The tray is pinned to the edge; the rest folds by priority
+            // when it would cross the center: the network's numbers and the VPN's name, then the weather.
+            readonly property bool trayHere: !bar.compact || !root.wideUp
+            readonly property int trayW: bar.trayHere && tray.count > 0 ? tray.stableWidth + Theme.sp1 : 0
+            readonly property int squeeze: rightRow.measure(0) <= bar.rightRoom ? 0 : (rightRow.measure(1) <= bar.rightRoom ? 1 : 2)
 
             Component.onCompleted: root.registerBar(bar)
             Component.onDestruction: root.unregisterBar(bar)
@@ -1982,17 +2014,81 @@ Scope {
 
                 // ── The center: the official logo in its compartment, the NixOS Center on a click ──
                 LogoSlot {
+                    id: logoSlot
                     x: bar.slotX
                     host: root
                     barContent: barContent
                     barWindow: bar
                 }
+                // Templates for the fixed widths: a mono face, so every minute and every date is this wide.
+                TextMetrics {
+                    id: tmClock
+                    font.family: Theme.uiFont
+                    font.pixelSize: Theme.fontBody
+                    font.bold: true
+                    text: "00:00"
+                }
+                TextMetrics {
+                    id: tmDate
+                    font.family: Theme.uiFont
+                    font.pixelSize: Theme.fontSmall
+                    text: "Qua, 00 out"
+                }
+                // The time, the logo, the date: placed from the compartment's edges, never centered as a
+                // group, so the logo stays on the screen's center whatever the strings hold.
+                Chevron {
+                    visible: !bar.compact
+                    rising: false
+                    x: bar.clockX - Theme.sp1 - Theme.barSlant
+                }
+                Pill {
+                    id: clockPill
+                    visible: !bar.compact
+                    x: bar.clockX
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: bar.clockW
+                    label: root.barTimeStr
+                    labelColor: Theme.colText
+                    bold: true
+                    selected: root.pinned === "cal"
+                    // Both open the ONE calendar, hung from the logo, so it never jumps between them.
+                    onHoveredChanged: root.hoverPanel("cal", logoSlot, barContent, bar, hovered)
+                    onClicked: root.togglePanel("cal", logoSlot, barContent, bar)
+                }
+                Pill {
+                    id: datePill
+                    visible: !bar.compact
+                    x: bar.dateX
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: bar.dateW
+                    label: root.barDateStr
+                    labelColor: Theme.colSubtext
+                    selected: root.pinned === "cal"
+                    onHoveredChanged: root.hoverPanel("cal", logoSlot, barContent, bar, hovered)
+                    onClicked: root.togglePanel("cal", logoSlot, barContent, bar)
+                }
+                Chevron {
+                    visible: !bar.compact
+                    x: bar.dateX + bar.dateW + Theme.sp1
+                }
 
-                // ── LEFT: this monitor's workspaces, then the focused window's title ──
+                // ── LEFT: this monitor's workspaces, the focused window's title, then the media ──
+                TextMetrics {
+                    id: tmTitle
+                    font.family: Theme.uiFont
+                    font.pixelSize: Theme.fontSmall
+                    font.italic: true
+                    text: root.winTitle
+                }
+                TextMetrics {
+                    id: tmMediaIcon
+                    font.family: Theme.uiFont
+                    font.pixelSize: Theme.fontLabel
+                    text: "󰝚"
+                }
                 RowLayout {
                     id: leftRow
-                    // Everything the left half holds besides the title, so the title knows its room.
-                    readonly property int fixedWidth: wsStrip.implicitWidth + Theme.barSlant + 3 * Theme.sp2
+                    readonly property int wsWidth: wsStrip.implicitWidth
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.sp2
                     height: parent.height
@@ -2004,7 +2100,7 @@ Scope {
                     }
                     Chevron {
                         rising: false
-                        visible: winPill.visible
+                        visible: winPill.visible || spPill.visible
                     }
                     Pill {
                         id: winPill
@@ -2012,33 +2108,70 @@ Scope {
                         label: root.winTitle
                         accent: Theme.colSky
                         italic: true
+                        leftAligned: true
                         maxWidth: bar.titleMax
+                        // In 64 px steps from the text's own metrics, so a focus change rarely moves the media.
+                        Layout.preferredWidth: Math.min(bar.titleMax, Math.max(120, Math.ceil((tmTitle.advanceWidth + 2 * Theme.sp2 + 1) / 64) * 64))
                         onHoveredChanged: root.hoverHint("win", winPill, barContent, bar, hovered)
+                    }
+                    Chevron {
+                        rising: false
+                        visible: spPill.visible && winPill.visible
+                    }
+                    Pill {
+                        id: spPill
+                        visible: bar.mediaHere
+                        icon: "󰝚"
+                        label: bar.mediaIconOnly ? "" : root.spText
+                        accent: root.spColor
+                        maxWidth: bar.mediaUsed
+                        onHoveredChanged: root.hoverHint("spotify", spPill, barContent, bar, hovered)
+                        onClicked: {
+                            root.closePanels();
+                            root.hintVisible = false;
+                            root.anchorPopover(spPill, barContent, bar);
+                            root.launch(["qs", "ipc", "call", "mpris", "toggleAt", "" + root.popLeft(360)]);
+                        }
+                        onRightClicked: root.launch(["playerctl", "--player=spotify", "play-pause"])
+                        onScrolledUp: root.launch(["playerctl", "--player=spotify", "next"])
+                        onScrolledDown: root.launch(["playerctl", "--player=spotify", "previous"])
                     }
                 }
 
-                // ── RIGHT, compact screen: the operational alerts, nothing the band already shows ──
-                OpsIndicator {
-                    visible: bar.compact
+                // ── RIGHT EDGE: the tray, pinned there and growing left (also the band screen's, alone) ──
+                TrayStrip {
+                    id: tray
+                    visible: bar.trayHere
                     anchors.right: parent.right
                     anchors.rightMargin: Theme.sp2
                     anchors.verticalCenter: parent.verticalCenter
                     host: root
                     barContent: barContent
                     barWindow: bar
-                    maxWidth: bar.halfRoom
                 }
 
-                // ── RIGHT, full: media, the machine, the links, sound, the session, the tray, the time ──
+                // ── RIGHT, compact screen: the operational alerts, nothing the band already shows ──
+                OpsIndicator {
+                    visible: bar.compact
+                    anchors.right: parent.right
+                    anchors.rightMargin: Theme.sp2 + bar.trayW
+                    anchors.verticalCenter: parent.verticalCenter
+                    host: root
+                    barContent: barContent
+                    barWindow: bar
+                    maxWidth: bar.rightRoom - bar.trayW
+                }
+
+                // ── RIGHT, full: weather, the machine, the links, sound, the session; the tray after it ──
                 RowLayout {
                     id: rightRow
                     visible: !bar.compact
                     anchors.right: parent.right
-                    anchors.rightMargin: Theme.sp2
+                    anchors.rightMargin: Theme.sp2 + bar.trayW
                     height: parent.height
                     spacing: Theme.sp1
-                    // The row's width at a squeeze level, from the controls' own implicit widths, which do
-                    // not depend on what is visible: so the level never feeds back into itself.
+                    // The row's width at a squeeze level, the tray included, from the controls' own implicit
+                    // widths, which do not depend on what is visible: so the level never feeds back into itself.
                     TextMetrics {
                         id: tmNet
                         font.family: Theme.uiFont
@@ -2053,37 +2186,31 @@ Scope {
                     }
                     function measure(level) {
                         const sep = Theme.barSlant + 2 * Theme.sp1;
-                        let w = tempPill.implicitWidth + usagePill.implicitWidth + volPill.implicitWidth + idlePill.implicitWidth + awayPill.implicitWidth + clockPill.implicitWidth + datePill.implicitWidth + 5 * sep + 8 * Theme.sp1;
+                        let w = tempPill.implicitWidth + usagePill.implicitWidth + volPill.implicitWidth + idlePill.implicitWidth + awayPill.implicitWidth + 3 * sep + 6 * Theme.sp1;
                         // VPN and network change their own labels with the level, so they are measured in full
                         // from text metrics, never from the pills: that is what keeps this free of a loop.
-                        w += 2 * (Theme.barControl + Theme.sp1) + (level >= 2 ? 0 : tmNet.advanceWidth + tmVpn.advanceWidth + 2 * Theme.sp1);
-                        if (level < 1 && root.spHasPlayer)
-                            w += Math.min(220, spPill.implicitWidth) + sep;
-                        if (level < 3)
-                            w += weatherPill.implicitWidth;
-                        w += root.trayCount * (Theme.barControl + Theme.sp1) + (root.trayCount > 0 ? sep : 0);
+                        w += 2 * (Theme.barControl + Theme.sp1) + (level >= 1 ? 0 : tmNet.advanceWidth + tmVpn.advanceWidth + 2 * Theme.sp1);
+                        if (level < 2)
+                            w += weatherPill.implicitWidth + sep;
+                        w += bar.trayW + (bar.trayW > 0 ? sep : 0);
                         return w;
                     }
                     Pill {
-                        id: spPill
-                        visible: root.spHasPlayer && bar.squeeze < 1
-                        icon: "󰝚"
-                        label: root.spText
-                        accent: root.spColor
-                        maxWidth: 220
-                        onHoveredChanged: root.hoverHint("spotify", spPill, barContent, bar, hovered)
-                        onClicked: {
-                            root.closePanels();
-                            root.hintVisible = false;
-                            root.anchorPopover(spPill, barContent, bar);
-                            root.launch(["qs", "ipc", "call", "mpris", "toggleAt", "" + root.popLeft(360)]);
-                        }
-                        onRightClicked: root.launch(["playerctl", "--player=spotify", "play-pause"])
-                        onScrolledUp: root.launch(["playerctl", "--player=spotify", "next"])
-                        onScrolledDown: root.launch(["playerctl", "--player=spotify", "previous"])
+                        visible: bar.squeeze < 2
+                        id: weatherPill
+                        icon: root.wHas ? root.weatherIcon(root.wCode, root.isDayNow()) : "󰖐"
+                        label: root.wHas ? root.wTemp + "°C" : "--°C"
+                        accent: root.wHas ? Theme.colSapphire : Theme.colDim
+                        selected: root.pinned === "weather"
+                        onHoveredChanged: if (root.wHas)
+                            root.hoverPanel("weather", weatherPill, barContent, bar, hovered)
+                        onClicked: if (root.wHas)
+                            root.togglePanel("weather", weatherPill, barContent, bar)
+                        // The forecast site moved here when the click became the panel's pin.
+                        onRightClicked: root.launch(["xdg-open", "https://www.msn.com/en-us/weather/forecast/in-S%C3%A3o-Carlos,S%C3%A3o-Paulo"])
                     }
                     Chevron {
-                        visible: spPill.visible
+                        visible: weatherPill.visible
                     }
                     Pill {
                         id: tempPill
@@ -2109,10 +2236,10 @@ Scope {
                         // Information on hover, ACTION on click; it docs/notes/desktop/bar.md
                         id: vpnPill
                         icon: "󰦝"
-                        label: root.vpnConnected && bar.squeeze < 2 ? root.vpnName : ""
+                        label: root.vpnConnected && bar.squeeze < 1 ? root.vpnName : ""
                         accent: root.vpnConnected ? Theme.colGreen : Theme.colDim
                         // Tor rides along in its own purple: a VPN and Tor can be up at once.
-                        badge: (root.torSystem || root.torBisq) ? "" + (root.torBisq ? " Bisq" : "") : ""
+                        badge: (root.torSystem || root.torBisq) ? "" + (root.torBisq ? " Bisq" : "") : ""
                         badgeColor: Theme.colLavender
                         maxWidth: 190
                         selected: root.vpnPopVisible
@@ -2132,7 +2259,7 @@ Scope {
                     Pill {
                         id: netPill
                         icon: "󰛳"
-                        label: bar.squeeze >= 2 ? "" : "↓" + root.tab(root.fmtRate(root.netMainRx), 5) + " ↑" + root.tab(root.fmtRate(root.netMainTx), 5)
+                        label: bar.squeeze >= 1 ? "" : "↓" + root.tab(root.fmtRate(root.netMainRx), 5) + " ↑" + root.tab(root.fmtRate(root.netMainTx), 5)
                         accent: root.netQuality.color
                         selected: root.pinned === "net"
                         onHoveredChanged: root.hoverPanel("net", netPill, barContent, bar, hovered)
@@ -2171,125 +2298,7 @@ Scope {
                         }
                     }
                     Chevron {
-                        visible: root.trayCount > 0
-                    }
-                    Repeater {
-                        model: SystemTray.items
-                        Rectangle {
-                            id: trayDel
-                            implicitWidth: Theme.barControl
-                            implicitHeight: Theme.barControl
-                            radius: Theme.radiusControl
-                            color: trayArea.containsMouse ? Theme.colHoverFill : "transparent"
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: Theme.motionHover
-                                }
-                            }
-                            // Some SNIs (Dropbox) publish image://icon/<name>?path=<dir> in a theme the provider does not
-                            // resolve, so we find the real file in <dir> and point at file://.
-                            readonly property string rawIcon: "" + modelData.icon
-                            readonly property bool isPathIcon: /^image:\/\/icon\/[^?]+\?path=/.test(trayDel.rawIcon)
-                            property string resolvedIcon: ""
-                            function resolveTrayIcon() {
-                                trayDel.resolvedIcon = "";
-                                const m = trayDel.rawIcon.match(/^image:\/\/icon\/([^?]+)\?path=(.+)$/);
-                                if (m) {
-                                    iconFinder.command = ["find", m[2], "-name", m[1] + ".png", "-print", "-quit"];
-                                    iconFinder.running = true;
-                                }
-                            }
-                            onRawIconChanged: trayDel.resolveTrayIcon()
-                            Component.onCompleted: trayDel.resolveTrayIcon()
-                            Process {
-                                id: iconFinder
-                                stdout: StdioCollector {
-                                    onStreamFinished: {
-                                        const p = text.trim();
-                                        if (p)
-                                            trayDel.resolvedIcon = "file://" + p;
-                                    }
-                                }
-                            }
-                            Image {
-                                anchors.centerIn: parent
-                                // path icons: it only shows after resolving to file:// (which avoids the broken load)
-                                source: trayDel.isPathIcon ? trayDel.resolvedIcon : trayDel.rawIcon
-                                sourceSize.width: 16
-                                sourceSize.height: 16
-                                width: 16
-                                height: 16
-                                opacity: modelData.status === 0 ? 0.55 : 1
-                            }
-                            MouseArea {
-                                id: trayArea
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                hoverEnabled: true
-                                acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
-                                onContainsMouseChanged: {
-                                    if (containsMouse)
-                                        root.hintTray = modelData;
-                                    root.hoverHint("tray", trayDel, barContent, bar, containsMouse);
-                                }
-                                onClicked: m => {
-                                    root.hintVisible = false;
-                                    if (m.button === Qt.LeftButton)
-                                        modelData.activate();
-                                    else if (m.button === Qt.MiddleButton)
-                                        modelData.secondaryActivate();
-                                    else if (modelData.hasMenu) {
-                                        // A native SNI gets our themed menu. It is a LAYER SURFACE (Hyprland#6682 breaks a PopupWindow's
-                                        // input region), docs/notes/desktop/quickshell.md
-                                        const pt = trayDel.mapToItem(barContent, 0, trayDel.height);
-                                        trayCtxMenu.openAt(modelData.menu, bar, pt.x + bar.margins.left);
-                                    } else {
-                                        // xembedsniproxy icons have NO DBusMenu, and display() refuses them, so we fire the SNI's own
-                                        // ContextMenu() through a helper and the app draws its menu at the cursor.
-                                        root.launch(["tray-native-menu", "" + modelData.id]);
-                                    }
-                                }
-                                onWheel: w => modelData.scroll(w.angleDelta.y, false)
-                            }
-                        }
-                    }
-                    Chevron {}
-                    Pill {
-                        visible: bar.squeeze < 3
-                        id: weatherPill
-                        icon: root.wHas ? root.weatherIcon(root.wCode, root.isDayNow()) : "󰖐"
-                        label: root.wHas ? root.wTemp + "°C" : "--°C"
-                        accent: root.wHas ? Theme.colSapphire : Theme.colDim
-                        selected: root.pinned === "weather"
-                        onHoveredChanged: if (root.wHas)
-                            root.hoverPanel("weather", weatherPill, barContent, bar, hovered)
-                        onClicked: if (root.wHas)
-                            root.togglePanel("weather", weatherPill, barContent, bar)
-                        // The forecast site moved here when the click became the panel's pin.
-                        onRightClicked: root.launch(["xdg-open", "https://www.msn.com/en-us/weather/forecast/in-S%C3%A3o-Carlos,S%C3%A3o-Paulo"])
-                    }
-                    Pill {
-                        id: clockPill
-                        label: root.timeStr
-                        labelColor: Theme.colText
-                        bold: true
-                        selected: root.pinned === "cal"
-                        onHoveredChanged: root.hoverPanel("cal", clockPill, barContent, bar, hovered)
-                        onClicked: root.togglePanel("cal", clockPill, barContent, bar)
-                    }
-                    Pill {
-                        id: datePill
-                        label: root.dateStr
-                        labelColor: Theme.colSubtext
-                        selected: root.pinned === "cal"
-                        // The date opens the same calendar, hung from the time so it never jumps between them.
-                        onHoveredChanged: root.hoverPanel("cal", clockPill, barContent, bar, hovered)
-                        onClicked: root.togglePanel("cal", clockPill, barContent, bar)
-                    }
-                    // A single shared instance of the context menu: opening it on one icon
-                    // switches or closes another's (which avoids stacking several menus).
-                    TrayMenu {
-                        id: trayCtxMenu
+                        visible: bar.trayW > 0
                     }
                 }
             }

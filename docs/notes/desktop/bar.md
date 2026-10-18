@@ -23,18 +23,65 @@ clusters; the brief that replaced them asked for one connected surface, with the
 
 **The logo sits on the screen's EXACT center, and nothing beside it can move it.** Its compartment's
 x is `floor(width / 2) - 32`, computed from the bar's width alone, never from its neighbors: on the
-ASUS the logo's center is x 1280, on the LG x 540. The two halves are each capped at what is left
-of their side (`halfRoom`: the slot's x minus a divider and 8 px), so they can never reach it.
+ASUS the logo's center is x 1280, on the LG x 540. Each side is capped at what is left of it before
+the center group (`leftRoom`, `rightRoom`), so it can never reach it.
 
-**The halves fold by priority, never overlap.** The left half is the workspaces, then the title,
-whose `maxWidth` is the room left after the workspaces (at most 520 px), and which hides below 120
-px instead of becoming an unreadable stub; the hover hint shows the whole title. The right half on
-the main monitor is media, then temperature and CPU, then VPN and network, then volume, then
-hypridle and away, then the tray, then the weather and the clock. When it would cross the center it
-folds in order: media first, then the network's numbers and the VPN's name (icons stay, with their
-panels), then the weather. The level is decided from widths the folding itself cannot change (the
-controls' implicit widths, and `TextMetrics` for the two labels that shrink), which is what keeps it
-from feeding back into itself.
+## The distribution (18/10/2026)
+
+The main monitor reads `Workspaces, title, media | time, logo, date | system, tray`, and the standing
+monitor `Workspaces, title | logo | operational alerts`.
+
+**The center group is placed, never centered as a group.** The time and the date each get a FIXED
+width measured once from a template (`TextMetrics` over `00:00` bold and `Qua, 00 out`; the face is
+mono, so every minute and every date is that wide), and their x comes from the compartment's slanted
+edges: the time ends one `sp1` before the left slant, the date starts one `sp1` after the right one,
+each with a divider on its outer side. So the logo stays on the screen's center whatever the strings
+hold, and a new minute or day moves nothing. The group's outer edges (`centerLeft`, `centerRight`)
+are pure functions of the bar's width; each side's room is what lies between them and an 8 px edge
+margin, less an 8 px gap. On the compact bar the center group is the compartment alone.
+
+**The left side splits its room by rules that read the room alone, never a text.** With a player up
+the media takes up to 220 px, the title keeps at least 240; with less room the media shrinks toward
+120, then becomes its icon alone, and only then does the title give way, hiding under 120 px instead
+of becoming a stub. Without a player the media is gone, divider included, and the title gets its
+room. Since no level reads a song's or a title's text, a track change can never flip one. The
+title's own width comes from `TextMetrics` and is rounded UP to 64 px steps (its text left-aligned),
+so most focus changes do not move the media beside it. The hover hint keeps the full title.
+
+**The right side folds the same way it did, the tray protected.** `rightRow.measure(level)` no longer
+counts the time, the date or the media; it counts the weather, temperature and CPU, VPN and network,
+volume, hypridle and away, and the tray. Level 1 drops the network's numbers and the VPN's name (the
+icons and their panels stay), level 2 the weather. The tray is never folded.
+
+**The tray is pinned to the right edge** (`TrayStrip.qml`, its own file since this change): anchored
+8 px from the edge, growing left, and the rest of the right side anchored to ITS left edge with a
+width from the item count alone (`count` x 28 px plus the spacing), never from the delegates. So a
+throughput, a temperature or a VPN name changing width moves only what is left of it. No overflow
+menu was built: on the ASUS the right side has room for about a dozen more icons before even level 1,
+and an overflow nobody needs is code to keep.
+
+**Popovers.** The calendar, from the time or the date, hangs from the logo, so it opens centered on
+the screen and never jumps between the two; the media panel hangs from the media pill wherever it now
+is (`popLeft`, clamped to the screen), with no change to `Mpris.qml`. Every other panel kept its anchor.
+
+**The main monitor gone.** The standing monitor's bar shows the tray at its right edge, the alerts
+moving left of it, only while no screen is wide enough for the full bar (`wideUp`), so the tray never
+disappears with the monitor that held it, and is never shown twice.
+
+**Measured on 18/10/2026**, from captures of the live bars, before and after:
+
+| Check | Before | After |
+| --- | --- | --- |
+| The blue line under the logo, ASUS | 1257 to 1302, center 1280.0 | the same |
+| The same, LG | 517 to 562, center 540.0 | the same |
+| The last tray icon's right edge | 17 px from the ASUS edge (the clock was last) | 15 px: the 8 px margin plus 6 px inside the 28 px control |
+| Tray icons across six captures 2 s apart | | each on the same x (2402, 2435, 2468, 2499, 2530) |
+| The right group's left edge, same captures | | x 1892 every time |
+| `qs log` after the swap | | no binding loop, no error |
+
+Not verified by hand: a long song or title, no player at all, many tray icons, a monitor unplugged,
+and opening each popover from its new place; the rules above are what bound those, and they are the
+owner's to try at the desk.
 
 **The official logo** is `nix-snowflake`, the two-blue snowflake from
 [nixos-artwork](https://github.com/NixOS/nixos-artwork) that `nixos-icons` installs into hicolor on
@@ -124,7 +171,8 @@ keeps the logo at x 540 and holds:
 
 - **Left:** that monitor's workspaces, and the window title when it fits cleanly.
 - **Right:** the operational alerts (`OpsIndicator.qml`) and nothing else. No clock: the band right
-  under it shows the time at 72 px. Nothing the band's cards already show is repeated.
+  under it shows the time at 72 px. Nothing the band's cards already show is repeated. The one
+  exception is the tray, and only with no wide screen up ([the distribution](#the-distribution-18102026)).
 
 **On the standing monitor the bar reserves the band's strip too.** Its `exclusiveZone` there is the
 whole top share (672 px at 35%), and the band draws inside that strip ignoring other zones. Two
@@ -161,12 +209,14 @@ failing repos.
 
 ## The clock
 
-The time AND the date are ALWAYS visible, at the right end of the main monitor's bar, after the
-weather: the time bold in `text`, the date regular in `subtext`, a hierarchy and not a separation.
-It used to be a toggle on click, one or the other. It is NEVER at the center (the logo is) and never
-on the standing monitor (the band shows it). Both open the calendar, hung from the time.
+The time AND the date are ALWAYS visible, on each side of the logo on the main monitor (18/10/2026;
+before, at the right end after the weather): the time as `HH:mm` bold in `text`, the date as
+`Dom, 18 out` regular in `subtext`, a hierarchy and not a separation. The SECONDS left the bar but not
+the clock: `timeStr` keeps `HH:mm:ss` for the band's big clock, and the bar reads `barTimeStr`, which
+only changes once a minute. Never on the standing monitor (the band shows it). Both open the
+calendar, hung from the logo.
 
-The weekday comes from a local `dowAbbr` and NOT from Qt's `"ddd"`, because Qt's format depends on
+The weekday and the month come from local `dowAbbr` and `monAbbr`, NOT from Qt's `"ddd"`, because Qt's format depends on
 the PROCESS' locale, so "sáb" would become "Sat" if the bar came up with no `LC_TIME`. There is no
 year; whoever needs it has the calendar on hover.
 
@@ -568,7 +618,7 @@ thing is a binding and needs no event of its own.
 
 ## The tray
 
-A StatusNotifier tray with a single background for the icon group. It populates when `qs` is the
+A StatusNotifier tray (`TrayStrip.qml`), pinned to the main monitor's right edge. It populates when `qs` is the
 watcher, with Waybar gone. Left click activates, middle is `secondaryActivate`, scroll scrolls, and
 right opens the native menu.
 

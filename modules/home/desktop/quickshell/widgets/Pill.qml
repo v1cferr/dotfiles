@@ -28,6 +28,9 @@ Rectangle {
     signal scrolledDown
     property alias hovered: area.containsMouse
     property bool italic: false
+    // The content at the left edge instead of centered: a pill wider than its text (the focused
+    // window's title, sized in steps so its neighbors do not jump) reads from where it starts.
+    property bool leftAligned: false
 
     readonly property int padX: Theme.sp2
     readonly property bool imageOk: pill.image != "" && img.status === Image.Ready
@@ -46,7 +49,7 @@ Rectangle {
     RowLayout {
         id: prow
         anchors.verticalCenter: parent.verticalCenter
-        x: Math.max(pill.padX, Math.round((pill.width - prow.implicitWidth) / 2))
+        x: pill.leftAligned ? pill.padX : Math.max(pill.padX, Math.round((pill.width - prow.implicitWidth) / 2))
         width: Math.min(prow.implicitWidth, pill.width - 2 * pill.padX)
         spacing: Theme.sp1
         Image {

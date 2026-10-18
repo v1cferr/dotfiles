@@ -574,81 +574,17 @@ en-US prose, so translating the label to pt-BR would have turned every icon into
 in total silence. That trap, the 4-degree disagreement with the lock screen that motivated the
 SSOT, and the measured failure paths are in [`weather.md`](weather.md).
 
-## The holidays table (rechecked 08/08/2026)
+## The calendar
 
-The NAMES stay in pt-BR on purpose: they are the official names of Brazilian holidays, the same
-class of literal as the city's name. The chrome around them is en-US.
+Since 18/10/2026 the calendar is its own subject: the verified holiday registry, the year and month
+views, the filters and the source checks are in [calendar.md](calendar.md). What stays here is its
+contract with the bar: the time and the date open it, hung from the logo; `calYear`, `calTodayM`
+and `calTodayD` live in the Bar and roll over on the SystemClock's first beat after midnight
+(`updateClock()` against `calDayKey`), which the panel and the band's month card both follow.
 
-`scope` is `"nac" | "sp" | "sc"`. `off` is the offset in days from Easter SUNDAY (the movable
-dates); otherwise a fixed m/d. `fac` marks an optional public holiday, which does not guarantee a
-day off, so it stays discreet in the grid and OUT of "upcoming holidays".
-
-**THIS LIST DOES NOT UPDATE ITSELF, and it is the only part of the calendar that does not.** The
-MOVABLE ones derive from Easter and scale forever; the FIXED ones are LAW written by hand. A new
-law, or the city touching a holiday, leaves the grid wrong IN SILENCE. Review it when news of a new
-holiday shows up, not by the calendar: 2027 is already covered, because nothing here depends on the
-year.
-
-The legal bases:
-
-| Scope | Basis |
-| --- | --- |
-| `nac` | Law 662/1949, 6.802/1980 (Aparecida), 9.093/1995 (Good Friday), 14.759/2023 (Consciência Negra, national since 2024, NOT just SP anymore) |
-| `sp` | State law 9.497/1997 (Revolução Constitucionalista, july 9th) |
-| `sc` | Municipal law 7.502/1974 (Corpus Christi), Babilônia 15/08, the city's anniversary 04/11 |
-
-**Two traps the calendar websites fall into and this list does not:**
-
-1. CARNAVAL and CINZAS are neither a national NOR a municipal holiday in São Carlos. They are an
-   optional public holiday (state decree 70.273 plus the city hall), hence `fac: true`.
-2. CORPUS CHRISTI is a FEDERAL optional public holiday, but a MUNICIPAL holiday here (the law
-   above), which is why it goes in as `"sc"` and WITHOUT `fac`. In another city it would be `fac`.
-
-**The check**: the non-`fac` entries add up to 14, which is the number the city hall and the local
-press publish for São Carlos. If it ever diverges, that is a sign of a new law.
-
-## The grid's three signals (28/08/2026)
-
-A day cell encodes THREE independent facts, and each one owns a different signal, never one more
-color:
-
-| Signal | Meaning |
-| --- | --- |
-| A solid chip | A holiday, painted with its scope's color |
-| An outlined chip | An optional public holiday (`fac`), which stays discreet |
-| A ring plus a glow around the whole cell | TODAY |
-
-Today used to be a solid chip in `colAccent`, and it was NOT findable: `accent` and `blue` are the
-SAME hex in tokyo-night (`#7aa2f7`) and in catppuccin-mocha (`#89b4fa`), and `blue` is the `sp`
-scope, so today was pixel for pixel an SP holiday among the other 20 painted days. The fix is not a
-fourth color, which the next palette would collide with again, but a signal no chip uses.
-
-It also stopped OVERWRITING the holiday: the chip is always the holiday's, so 07/09 shows a red
-chip inside the ring and Carnaval keeps its outline.
-
-The CURRENT MONTH is the coarse signal, and it works at a different scale: a tinted panel with a
-border around the whole block, plus a pill behind the name. The eye lands on the block first and
-only then hunts for the ring inside it, which is why the accent on the name alone was not enough,
-being too close to `colText`. The panel's padding is what pushed the popover from 880 to 920 wide.
-
-## The calendar's year rollover
-
-`updateClock()` compares the `yyyy-MM-dd` against `calDayKey`, and on the SystemClock's first beat
-after midnight it rebuilds. It holds for 01/01 too: `calYear` changes and the whole popover (the
-header plus the 12 grids) reevaluates, with no rebuild and no restarting the shell.
-
-MEASURED on 08/08/2026 simulating the 31/12/2026 to 01/01/2027 rollover: a 2027 header, "today" on
-01/01, Carnaval painted on 08-09/02. If the machine crosses the rollover suspended, the resume
-falls into the same path.
-
-**DO NOT OPTIMIZE THIS INTO MUTATING THE OBJECTS IN PLACE.** The popover reads `calMap` through a
-binding (`Repeater { model: bar.monthCells(...) }`), and a QML binding only reevaluates when the
-PROPERTY is reassigned: writing inside the existing object (`calMap[k] = v`) emits no signal at
-all. The calendar would freeze IN SILENCE: nothing breaks, nothing logs, it just stops rolling the
-year over. Measured in headless qml: reassigning propagates, mutating does not.
-
-The calendar popover itself holds no state; `calMap`, `calUpcoming`, `monthCells` and the holidays
-live in the Bar and arrive by reference through `bar`, the same contract as the other popovers.
+**Reassign, never mutate.** A QML binding only reevaluates when the PROPERTY is reassigned: writing
+inside an existing object emits no signal, and the calendar would freeze in silence. The registry
+model keeps the rule: `Holidays.filters` is replaced on every toggle, and `calMap` is a binding.
 
 ## The workspace click, and the 0.55 dispatch trap
 

@@ -131,6 +131,112 @@ Carlos in 2026, the city's own count.
 not in the registry; Lei SP 9.497/1997 must be re-read when ALESP answers; every optional day of
 2027 waits for its acts, as they are published in December.
 
+## The panel
+
+`CalendarPopover.qml` opens on a hover of the time or the date, pins on a click, closes on Escape
+or a click outside: the bar's coordinator, unchanged. It is hung from the logo, so the time and the
+date open the same panel in the same place.
+
+| View | Holds |
+| --- | --- |
+| The year | the 12 months, the current one on a surface of its own; the upcoming events beside them |
+| A month | one month at about 140 x 87 px a cell, the events named inside; the selected day's detail beside it |
+
+A month's name, or any day, focuses that month (the day selected); `Year` goes back; `‹ ›` step a
+year in the year view and a month in the month view, across the year's turn; `Today` returns to
+today. The year chosen stays until another is chosen, across closes. The detail lists every event
+of the day after the filters, each with kind, scope, for whom, basis, status (`Verified · checked
+18/10/2026`, `Calculated date`, `Pending its annual act`), notes, and its sources: a click opens the
+official publication in the browser. A day whose events are all filtered out says how many hide.
+
+**Geometry from the screen, not its name.** Four columns where the room is 1200 px or more, three
+below; a cell from the month's width, never under 26 px wide or 24 px high, the digits at 12 px;
+past the screen's height the body scrolls and the header, the filters and the legend stay. Measured
+on 18/10/2026 through IPC, no cursor moved:
+
+| Screen | Panel | Grid | Cells |
+| --- | --- | --- | --- |
+| ASUS, 2560 x 1440 | 1320 x 790 at x 620 (centered on 1280) | 4 x 3, the upcoming list beside | about 30 x 27 px |
+| LG standing, 1080 x 1920 | 960 x 1557 | 3 x 4, the upcoming list below, the legend wrapped | about 31 x 28 px |
+
+## The grid
+
+A day carries independent signals, each its own shape, never one more color:
+
+| Signal | Means |
+| --- | --- |
+| a filled chip in the scope's color | a holiday for everyone |
+| an outlined chip | an optional day, or a holiday for a restricted group (Teachers' Day) |
+| a teal dot under the number | an observance |
+| a small corner dot | more than one event that day; the detail lists them |
+| a ring around the whole cell | today |
+| a neutral fill | the selected day |
+
+Scope colors are the bar's `scopeColor()`: red Brasil, blue São Paulo, mauve São Carlos, teal
+International. Today is a RING because a fill would collide: `accent` and `blue` are the same hex in
+Tokyo Night, so a filled today was pixel for pixel a São Paulo holiday. A day's main signal is its
+strongest event (a holiday for everyone, then a restricted one, then an optional day, then an
+observance); Carnaval's two records keep one outline and the corner dot.
+
+The band's month card reads the same data through `monthCells()` with the default filters.
+
+## Filters
+
+Two independent sets, `Holidays.filters`: WHERE (São Carlos, São Paulo, Brasil, International) and
+WHAT (holidays, optional days, observances). The defaults: the three places that hold in São Carlos,
+holidays and optional days; International and observances off, since the UN lists about 250 days.
+`Reset` appears when they differ. They drive the grid, the upcoming list and the detail at once,
+and last for the shell's session.
+
+## Offline, and what is computed when
+
+The panel reads `~/.config/theme/calendar.json`, which Nix built from the registry for 2024 to 2032;
+a year outside that range says it has no registry data. Nothing touches the network on open. The
+year's map is recomputed when the year, a filter or the file changes, never per frame; the day's
+turn moves `today` through the Bar's clock. After an edit to the registry, a `rebuild` writes the
+new file and the panel re-reads it by itself.
+
+## The source watch (GitHub Actions)
+
+`.github/workflows/holidays.yml`, Wednesdays, and by hand. It fingerprints the TEXT of each source
+the registry cites (`registry.py check-sources`, curl and openssl, the runner's own) and compares it
+with `registry/sources.lock.json`:
+
+- **unchanged:** nothing happens;
+- **changed, missing markers or unreachable:** ONE issue, opened or commented, with the table. The
+  registry is never edited: a page that changed may be a new act or a new menu, and only a person
+  reading it can tell.
+
+São Carlos' server omits its intermediate certificate: the fetch takes the issuer from the leaf's
+AIA field and verifies the chain with it, as a browser does, never skipping verification. Its
+portal page is fingerprinted only between `Relação de feriados` and `Portarias:`, so a new menu
+cannot raise an alarm, and losing the markers can. Planalto resets a connection for an unknown
+agent, so the agent is browser-shaped and still names the project.
+
+On 1 December the same workflow opens the next year's audit checklist. Validation on every push is
+the flake check `holiday-registry` (`nix flake check`, the CI's quality gate). After a review,
+refresh the lock with `registry.py check-sources registry --lock registry/sources.lock.json
+--update-lock`.
+
+## Tests, and what was not
+
+`modules/home/desktop/calendar/scripts/test_registry.py`, 20 tests, run by the flake check: the computus, Carnaval on 29/02/2028,
+a fixed 29/02 that never shifts, a range across the year's turn, the schema's refusals, every item
+of Portaria 2083/2025, the 14 general holidays, Good Friday's two sources, the two Corpus Christi
+records, the restricted Teachers' Day, a future optional day pending, Consciência Negra from 2024,
+observances only for the year read. Two consecutive source checks on 18/10/2026: nine unchanged,
+ALESP 503.
+
+Seen on screen on 18/10/2026: the year view (ASUS and LG), April focused with 03/04's detail and
+sources, May with International and observances on. Not tried by hand: the hover and click paths
+themselves (the IPC opens the same panel), a source link opening, and the day's turn at midnight.
+
+## Checking it without a mouse
+
+`qs ipc call bar panel cal` opens the year; `qs ipc call bar calendar 2026-04-03` focuses a day;
+`qs ipc call bar calendarFilter un` flips a filter (`reset` restores them); `qs ipc call bar panelOn
+cal DP-2` opens it on a named screen; `qs ipc call bar close` closes it.
+
 ## How to
 
 - **Add an event:** a record in `registry/holidays.json` with its rule, place, kind, applicability,
@@ -141,5 +247,7 @@ not in the registry; Lei SP 9.497/1997 must be re-read when ALESP answers; every
 - **Fix a source:** change its record, set `checked_at` and `check` to what really happened.
 - **A divergence:** record both sources and a `notes`; set `disputed` only when the answer itself
   changes. Never pick one in silence.
+- **A divergence that changes the answer** (two acts give different dates): `disputed`, both sources, and a
+  note; the detail shows it in the warning color until a person settles it.
 - **The UN list for a new year:** download the page and run
   `registry.py import-un page.html --year Y --checked YYYY-MM-DD > registry/observances-un.json`.

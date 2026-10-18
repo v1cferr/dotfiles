@@ -11,12 +11,18 @@ the band's bell and the power menu are gone; their functions are all here.
 | Part | Holds |
 | --- | --- |
 | Header | the title, a do-not-disturb toggle and a clear-all button, both as icons with a name |
-| Body | the history, newest first, scrolling past what the screen leaves (560 px at most) |
-| Footer | the six session actions, their commands exactly the old power menu's |
+| Notifications | the history, newest first and grouped, scrolling on its own past 480 px (less on a short screen) |
+| Hardware | CPU and GPU temperature, RAM, disk: four cards (v2.3) |
+| Screenshots | Main, Side, Both, and where the shot goes, always open (v2.3) |
+| Session | the six session actions, their commands exactly the old power menu's |
 
-**Do-not-disturb is an icon, never the word.** A bell when off, a struck bell in peach and a lit
-background when on. The icon's tooltip and its accessible name are the same sentence
-(`widgets/IconButton.qml`), so a control shown only as a glyph still says what it does. The state
+The history scrolls by itself, so however long it grows, the three sections below it stay in reach.
+
+**Do-not-disturb is an icon, never the word.** A bell when off, a struck bell in orange and a lit
+background when on. The icon's tip reads `Do Not Disturb / Enabled / Click to disable`, its title
+also the accessible name (`widgets/IconButton.qml` on `widgets/GlassTip.qml`, the shell's glass card,
+since Qt's native tooltip drew a light box off the theme), so a control shown only as a glyph still
+says what it does. The state
 **persists across restarts of the shell**: two keys in `Quickshell.statePath("notifs.json")`, read
 synchronously at startup so a notification in the first instant cannot slip past a saved DND. It is
 state, not configuration (rule 6), and it needed no daemon. Tested on 17/10/2026 through
@@ -55,11 +61,11 @@ every bar panel, with one difference: it opens on a CLICK only, never on hover.
 
 ## Screenshots (18/10/2026)
 
-A folded `Screenshot` line between the history and the session: one row while folded, so the panel
-does not grow; open, it holds three targets (Main, Side, Both) and a toggle for where the shot goes,
-the clipboard by default (as the keybinds do) or a PNG in `~/Pictures/Screenshots`, named
+A `SCREENSHOTS` section between the hardware and the session, ALWAYS open since v2.3 (it was a folded
+line): three targets (Main, Side, Both) and, beside the title, where the shot goes, the clipboard by
+default (as the keybinds do) or a PNG in `~/Pictures/Screenshots`, named
 `<date>_<time>_<target>-<connector>.png` (`..._all.png` for the whole layout). A monitor that is not
-connected greys its button out. It opens folded every time.
+connected greys its button out.
 
 A click closes the Center and runs `shell-screenshot <target> <copy|save>` (`flameshot.nix`), which
 reuses Flameshot and `my.monitors`: it waits for the Center's own layer, `qs-center`, to leave the
@@ -72,6 +78,52 @@ Tested on 18/10/2026: PNGs at native resolution, 2560x1440 (main), 1080x1920 (th
 fired the instant the Center closed showed no trace of it, 909 ms from close to file. Shared images
 are often scaled down by the app they are pasted into; the original file is the native one.
 
+## Hardware
+
+A row of four cards (v2.3): CPU and GPU temperature, RAM and disk use, each with what it is read from
+(`coretemp`, `xe`, the bytes used, the space free). It READS the bar's own snapshot (the `/proc` and
+hwmon read every 2 s, and `df` every 30 s): no read of its own. A sensor the machine does not publish
+shows `n/a` with `no sensor`, never a number. Colors follow the states catalog
+([theme.md](theme.md#states)): a temperature against ITS OWN ceiling (70% warning, 80% degraded, 90%
+critical), RAM 90%+ warning, the disk with the same rule as the bar's chip. A card opens its detail
+panel, still under the logo: the temperatures for CPU and GPU, CPU and memory for RAM and disk. That
+is where the temperature went when it left the bar; the band stays the full view.
+
+Measured on 18/10/2026: CPU 58°C from `coretemp`, GPU 50°C from `xe`, RAM 84%, disk 62% with
+361.7 GB free.
+
+## The history, grouped
+
+The list is a VIEW over the server's notifications, never a replacement: grouping removes nothing.
+Similar notifications fold into one card (`notifications/NotifGroup.qml`): the app, how many, the
+summary, and a tally of what they said (`2 × Capture saved · 1 × Capture aborted`). A click expands it
+into its members, each with its own time, text, actions and close; the ✕ on the group closes them all.
+
+**Similar, conservatively:** the same app AND the same summary, each within 5 min of the previous one.
+Never grouped: a critical notification, one with actions of its own, a chat message (category
+`im.*`). So a run of screenshots folds, while messages keep their sender and their reply buttons.
+
+**Stable delegates.** The model is a list of KEYS (`n:<id>`, or `g:<id>` keyed by the group's OLDEST
+member, which a newcomer never changes); a `ScriptModel` diffs strings by value, so an arrival adds
+one delegate and a growing group keeps its own, its content read live from a map.
+
+**Times.** The server keeps none, so `Notifs` records each arrival (`arrivedAt`, pruned when one
+leaves the history); a card shows `now`, `3 min`, `2 h`. One handed over by a hot reload gets the
+reload's time, the closest the shell can know.
+
+Tested on 18/10/2026: three `notify-send -a v23-test Screenshot` with two bodies became one group
+reading `3 events` and `2 × Capture saved · 1 × Capture aborted`, while a kitty notification with an
+action of its own stayed alone; the three were closed by id afterwards. Expanding a group was not
+tried by hand.
+
+## The cards
+
+`notifications/NotifCard.qml`, CONTEXTUAL GLASS: no frame per urgency any more. Hierarchy comes from
+type and spacing (the app and the time in small text, the summary bold, the body in `subtext`), the
+Center's cards are a faint inset on its glass, and a CRITICAL notification alone gets a 3 px red strip
+and a red summary. Normal and low read neutral: urgency is the only semantics freedesktop
+guarantees, so a green "success" would be a guess.
+
 ## The unseen dot
 
 A 6 px dot beside the logo, at a FIXED spot to the right of the SVG (never over it, never moving
@@ -82,7 +134,8 @@ that is only in the history never lights it, and neither does one carried over a
 ## The toasts
 
 `notifications/Notifications.qml`: top right of the main monitor (whichever screen is left when it
-is unplugged), 8 px under the bar and on the windows' 12 px outer gap, 380 px wide, 8 px apart.
+is unplugged), 8 px under the bar and on the windows' 12 px outer gap, 380 px wide, 8 px apart. A
+toast is the COMPACT card: a 28 px icon, the summary on one line and the body on two, never taller.
 
 - **Three at most.** A fourth pushes the oldest off the screen, never out of the history.
 - **None while the Center is open**, and opening it clears the ones on screen: the list already shows

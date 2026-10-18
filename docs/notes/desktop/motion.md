@@ -183,9 +183,10 @@ own and not when I act, and folding them into the shell's tokens would retune a 
 
 `my.theme.motion = "off"` reaches `Theme.motionReduced`, and every token and `ms()` returns 0, so
 each Behavior jumps straight to its value. The decorative motion (`WeatherAmbient`'s sun and rain,
-which since 17/10/2026 plays for 8 s and holds still in any profile) does not play at all. What does NOT stop is a pulse that is a status: the workspace activity badge, a running CI
+which since 17/10/2026 plays for 8 s and holds still in any profile) does not play at all. What does NOT stop is a pulse that is a status: a running CI
 job, a failing service, a tile past its limit, an INMET alert. Those carry information, and
-removing their motion would remove the signal.
+removing their motion would remove the signal. The workspace marks stopped pulsing on 18/10/2026:
+a steady dot says "a window opened there" as well, and a loop that never ends is not a signal.
 
 Tested on 17/10/2026 by a probe in `shell.qml` against the live shell: `subtle` resolved to
 90/120/180/300 and `off` to 0 everywhere, with no QML error on either reload (the probe and the

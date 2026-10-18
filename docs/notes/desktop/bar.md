@@ -28,14 +28,17 @@ the center group (`leftRoom`, `rightRoom`), so it can never reach it.
 
 ## The distribution (18/10/2026)
 
-The main monitor reads `Workspaces, title, media | time, logo, date | system, tray`, and the standing
-monitor `Workspaces, title | logo | operational alerts`.
+The main monitor reads `Workspaces, title, media | time, logo, date | weather, CPU, network, VPN,
+sound, idle and away, tray`, and the standing monitor `Workspaces, title | logo | operational chips`.
+Since 18/10/2026 (v2.3) the temperature is not on the bar: it is in the NixOS Center's hardware row,
+which opens the temperatures panel ([nixos-center.md](nixos-center.md#hardware)). The disk shows only
+when it needs a look (below).
 
-**The center group is placed, never centered as a group.** The time and the date each get a FIXED
-width measured once from a template (`TextMetrics` over `00:00` bold and `Qua, 00 out`; the face is
-mono, so every minute and every date is that wide), and their x comes from the compartment's slanted
-edges: the time ends one `sp1` before the left slant, the date starts one `sp1` after the right one,
-each with a divider on its outer side. So the logo stays on the screen's center whatever the strings
+**The center group is placed, never centered as a group.** The time (`HH:mm`) and the date (`dd/MM`)
+sit in two MIRRORED slots of ONE width, measured once from a template (`TextMetrics` over `00:00`, the
+same font, size and weight for both; the face is mono, so every minute and every date is that wide),
+and their x comes from the compartment's slanted edges: the time ends one `sp1` before the left
+slant, the date starts one `sp1` after the right one, each with a divider on its outer side. So the logo stays on the screen's center whatever the strings
 hold, and a new minute or day moves nothing. The group's outer edges (`centerLeft`, `centerRight`)
 are pure functions of the bar's width; each side's room is what lies between them and an 8 px edge
 margin, less an 8 px gap. On the compact bar the center group is the compartment alone.
@@ -64,6 +67,10 @@ and an overflow nobody needs is code to keep.
 the screen and never jumps between the two; the media panel hangs from the media pill wherever it now
 is (`popLeft`, clamped to the screen), with no change to `Mpris.qml`. Every other panel kept its anchor.
 
+**The disk, only when it needs a look.** A chip next to the CPU appears when the root filesystem is
+past 90% or under 20 GB free (warning), past 95% or under 5 GB free (critical), read from the `df`
+the bar already runs every 30 s; it opens the CPU and memory panel, which holds the disk detail.
+
 **The main monitor gone.** The standing monitor's bar shows the tray at its right edge, the alerts
 moving left of it, only while no screen is wide enough for the full bar (`wideUp`), so the tray never
 disappears with the monitor that held it, and is never shown twice.
@@ -78,6 +85,7 @@ disappears with the monitor that held it, and is never shown twice.
 | Tray icons across six captures 2 s apart | | each on the same x (2402, 2435, 2468, 2499, 2530) |
 | The right group's left edge, same captures | | x 1892 every time |
 | `qs log` after the swap | | no binding loop, no error |
+| v2.3, the time and the date (ink of `16:05` and `18/10`) | | 1193 to 1226 and 1333 to 1366: 53 px from the center inside, 87 outside, on both sides |
 
 Not verified by hand: a long song or title, no player at all, many tray icons, a monitor unplugged,
 and opening each popover from its new place; the rules above are what bound those, and they are the
@@ -163,6 +171,26 @@ for selecting a region at the top of the screen.
 **Do NOT name the handler "show"**: it collides with the `qs ipc show` subcommand and the CLI never
 calls the function. The same trap is documented in `shell.qml`, in the vpn `IpcHandler`.
 
+## The workspace rail (18/10/2026)
+
+`WorkspaceStrip.qml`, the ADAPTIVE WORKSPACE RAIL: each monitor's workspaces as two-digit numbers
+(`01` to `04` on the ASUS, `05` to `08` on the LG), every button one width measured from `00`, under
+the one sliding active pill that was already there.
+
+| State | Looks |
+| --- | --- |
+| active | dark bold number on the blue sliding pill |
+| occupied | bold `text` number, a 2 px rule under it |
+| empty | `dim` number at 70% |
+| a window opened there | a steady 5 px yellow dot (`colWarn`) |
+| a window there asked for attention | a steady 7 px orange dot with a ring (`colAlert`) |
+
+The two marks used to be one, and pulsed forever. They are now apart, since a window that merely
+opened is news and an urgency is a request (`wsActivity` from the window count, `wsUrgent` from
+Hyprland's `urgent` event), and steady: visiting the workspace clears both. A hover shows a tip with
+the window count and the windows' classes, from Hyprland's own toplevels, read only on hover. The
+click, the keybinds, the orphans of a gone secondary and the slide are unchanged.
+
 ## The standing monitor's bar: status first
 
 `compact` reads the panel's own WIDTH, below 1600 px, and not "is this the secondary", so rotating
@@ -180,45 +208,61 @@ layers that each reserve their own zone are stacked in the order they MAP, and o
 re-created band mapped first and pushed the bar under itself; with one owner the order cannot matter
 and nothing is reserved twice.
 
-### The operational alerts
+### Operational chips
 
-One label per SOURCE that needs a look, from the feeds the band already reads: no new polling, no
-API call of its own.
+One chip per SOURCE that needs a look, `CI · 2` and `SVC · 1`, from the feeds the band already reads:
+no new polling, no API call of its own. The verdict is computed ONCE, in `dash/Ops.qml`, which both
+the chips (`OpsIndicator.qml`) and their panel (`OpsPanel.qml`) read, so the two can never disagree.
+Each chip is a state icon, a short name and a count, in a width measured from `SVC · 00`, on the
+glass tinted by its state (`Pill.fill`).
 
-| Shows | Means |
-| --- | --- |
-| nothing but a dim check | every source answered and nothing is wrong |
-| `CI 2` in red | two current failures across GitHub and the FAI GitLab |
-| `CI` with a spinner, in the accent | nothing failing, and a run is in progress |
-| `CI ?` dim / peach | a forge never answered (unknown) / answers only with old data (stale) |
-| `SVC 1` peach / red | a service degraded / down |
-| `SVC ?` | the services meta script has not answered in two minutes |
-| `4 alerts` | the sources folded into one, when the room left is too small for both |
+| State | Chip | Means |
+| --- | --- | --- |
+| healthy | nothing but a dim check | every source answered and nothing is wrong |
+| failing | `󰅚 CI · 2` red | two current failures across GitHub and the FAI GitLab |
+| running | `󰑮 CI · 1` neutral | nothing failing, one run in progress |
+| degraded | `󰀪 SVC · 1` orange | a service with fewer units running than expected |
+| failing | `󰅚 SVC · 1` red | a service down |
+| stale | `󰥔 CI · 2` dim | a forge answering only with old data: the count is its LAST KNOWN one |
+| unknown | `󰋗 CI · ?` dim | a forge never read, or the services meta silent for two minutes |
+| folded | `OPS · 3` | both sources, in the worse state's colors, when the room is too small for two |
 
 **"Current" is the latest run of each workflow (or each GitLab ref).** glance-feed keeps only the
 newest run per workflow in its 7-day window, so a failure a later run fixed is already gone from the
 document, and only a failure that still stands is counted. A forge that never answered is unknown,
-not healthy; one that answers with its last good picture is stale. The FAI GitLab only counts once
-it has answered at least once, the same rule that keeps its page out of the band's rotation.
+not healthy; one that answers with its last good picture is stale, and its failures are reported as
+the last known state, never as the present. The FAI GitLab only counts once it has answered at least
+once, the same rule that keeps its page out of the band's rotation.
+
+**A hover opens the status panel** (`OpsPanel.qml`, keys `ops-ci`, `ops-svc`, `ops`), through the
+same coordinator as every bar panel: the verdict, a summary (`2 failing pipelines`), how fresh it is,
+then each forge with its failing runs (repo, workflow or ref, age) or the services not up
+(`running/expected`), then the actions. **Freshness is the feed's own time:** `checked_at` of the CI
+document, re-read from the cache (no network) each time the panel opens, and the services' `fetched`.
+A stale source says `last known state`; a missing one says `unavailable`.
 
 **A click shows the detail on the band:** CI turns the band's pages to the forge with a failure,
 SVC turns the services strip to its first page (trouble sorts first), and both rotations hold for
-30 s. The bar reaches the band through the Bar's `dashRequested` signal; the two already share that
-scope, so no navigation controller was needed. The hover hint names each source's state and the
-failing repos.
+30 s. The panel's `Show on dashboard` does the same; `Open details` appears only when a failing run
+has a URL, and opens it. The bar reaches the band through the Bar's `dashRequested` signal; the two
+already share that scope, so no navigation controller was needed.
+
+Tested on 18/10/2026 with the live feeds: the LG chip read `CI · 2` in red; hovering it opened the
+panel with `2 failing pipelines`, `CI updated now`, GitHub healthy and the FAI GitLab's two failing
+pipelines with their ages, and both actions.
 
 ## The clock
 
 The time AND the date are ALWAYS visible, on each side of the logo on the main monitor (18/10/2026;
-before, at the right end after the weather): the time as `HH:mm` bold in `text`, the date as
-`Dom, 18 out` regular in `subtext`, a hierarchy and not a separation. The SECONDS left the bar but not
+before, at the right end after the weather): `HH:mm` and `dd/MM`, the same font, size and weight in
+`text`, in mirrored slots (v2.3; the first version had `Dom, 18 out` in a lighter weight). The SECONDS left the bar but not
 the clock: `timeStr` keeps `HH:mm:ss` for the band's big clock, and the bar reads `barTimeStr`, which
 only changes once a minute. Never on the standing monitor (the band shows it). Both open the
 calendar, hung from the logo.
 
-The weekday and the month come from local `dowAbbr` and `monAbbr`, NOT from Qt's `"ddd"`, because Qt's format depends on
-the PROCESS' locale, so "sáb" would become "Sat" if the bar came up with no `LC_TIME`. There is no
-year; whoever needs it has the calendar on hover.
+Both are numeric, so no locale can change them; where a weekday or a month is spelled (the calendar,
+the band) it comes from local `dowAbbr` and `monAbbr`, NOT from Qt's `"ddd"`, which follows the
+PROCESS' locale. There is no year; whoever needs it has the calendar on hover.
 
 ## The system snapshot: one read per tick
 
@@ -369,6 +413,14 @@ panel of their own (weather, clock, temperature, usage, VPN, network) already di
 window title, Spotify, volume, hypridle, away, the operational alerts and each tray icon) get
 `HintPopover.qml`, a small card with the state and what each button does. The click keeps doing
 what it did, so a hover never fires an action.
+
+**Since v2.3 every hint has the same three lines and the same timing.** What it is (the title, in
+`text`), how it is now (`subtext`), what a click does (`dim`): `Volume / 62% · Speakers / Click to
+mute`. It waits `Theme.tipDelay` (300 ms) before showing, so a sweep across the bar shows nothing;
+once one is up, a neighbor takes over at once (a 120 ms grace covers the gap between two pills).
+Every click that opens something cancels a pending hint too (`hideHint()`), so none appears late.
+Inside a panel (the NixOS Center's icon buttons) the same card is `widgets/GlassTip.qml`, drawn in
+the panel's own window; Qt's native `ToolTip`, which drew a light box off the theme, is gone.
 
 The Bar stores a KEY (`hintKey`), not the text, and the popover binds to `hintFor(key)`. So the
 hint follows the state while it is open: scrolling the volume updates its percentage live. A click

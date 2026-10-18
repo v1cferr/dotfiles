@@ -266,6 +266,32 @@ component never holds a size, an opacity or a duration of its own (rule 11).
 | Edges | `colEdge`, `colSheen`, `hairline` | border at 55%, text at 6%, 1 px |
 | States | `colHoverFill`, `colPressFill`, `colSelectFill`, `opacityDisabled` | text at 8% and 14%, accent at 18%, 0.4 |
 | Motion | `motionHover` `motionNormal` `motionSlow`, `hoverIntent` | [motion.md](motion.md); the intent is 200 ms |
+| Semantics | `colOk` `colWarn` `colAlert` `colCrit` `colUnknown` | green, yellow, orange, red, dim: the states below |
+| Icons, tips | `iconBar`, `tipDelay`, `colSurfaceTip` | 16 px; 300 ms; bg at 95% for a tip drawn inside a panel |
+
+## States (18/10/2026)
+
+One catalog for every surface: the bar, the rail, the tips, the panels, the chips, the Center and the
+notifications. **A color stands for a condition someone can verify**, and something critical always
+carries a second signal (an icon, a word, a strip), never color alone.
+
+| State | Token | Where it shows | When |
+| --- | --- | --- | --- |
+| normal | `colText` for values, `colSubtext` for icons | every pill at rest | nothing to report |
+| hover | `colHoverFill` | any control under the pointer | |
+| active | `colWsActiveBg`, text in `colBgSolid` | the rail's sliding pill | the workspace on screen |
+| selected | `colSelectFill` | a pill whose panel is pinned, a toggle that is on | |
+| healthy | `colOk` | the VPN connected, a forge that answered clean, a quality probe that passed | only with evidence |
+| warning | `colWarn` | a new window on another workspace, a pegged CPU (90%+), RAM 90%+, disk 90%+ or under 20 GB free | attention, not a fault |
+| degraded | `colAlert` | a degraded service, an urgent workspace, DND on | something asks to be looked at |
+| critical | `colCrit` | a current CI failure, a service down, disk 95%+ or under 5 GB free, a critical notification | a confirmed failure |
+| unknown | `colUnknown` and a `?` or `󰋗` | a feed never read, a sensor missing (`n/a`), the VPN off by choice | no data is not health |
+| stale | `colUnknown` and the clock `󰥔` | a forge or the services answering only with old data | the last known state, said as such |
+| disabled | `opacityDisabled` (0.4) | a screenshot target whose monitor is gone, Clear with nothing to clear | |
+
+Rules the catalog encodes: green only with evidence; unknown and stale are never green; a VPN off by
+choice is neutral; a busy CPU is attention at most, never red; a notification's urgency is the only
+semantics freedesktop guarantees, so normal and low notifications read neutral.
 
 **Concentric radii** are why the numbers pair up: a control's 8 px corner plus 4 px of padding is a
 surface's 12 px corner, so the two curves run parallel, and a panel, a band card and (since the same

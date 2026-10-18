@@ -163,7 +163,7 @@ The month shares its column with two CI pages, one at a time: **month, GitHub Ac
 GitLab**, every 15 s, with dots on the header's right edge that say where the rotation is and jump
 on a click, flanked by `‹ ›` arrows (`PageArrow.qml`); the mouse wheel over the column steps the
 pages too. A CI alert clicked in the bar above turns to the forge with a failure and holds the
-rotation for 30 s ([bar.md](bar.md#the-operational-alerts)).
+rotation for 30 s ([bar.md](bar.md#operational-chips)).
 The pointer over the column HOLDS the page, because reading a row must not be a race against the
 timer. The clock and the vitals never rotate: they are what the band is for.
 

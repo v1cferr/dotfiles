@@ -47,6 +47,7 @@ PanelWindow {
         left: tw.at.x
     }
     WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.namespace: "qs-panel" // a PopCard like the bar's hints, so the same glass
     exclusionMode: ExclusionMode.Ignore
     mask: Region {}
     color: "transparent"

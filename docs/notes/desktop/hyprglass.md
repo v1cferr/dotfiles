@@ -87,22 +87,28 @@ that differ between `perceptible` and `clear-gradient`, both listed in
 
 | Preset | Used by | What it changes |
 | --- | --- | --- |
-| `window` | the terminal, floating windows | `xray = 0` (the windows behind stay visible: that is the depth), no self sampling, blur 1.2, refraction 0.3 kept to the rim (`refraction_spread = 0.2`), no lens dome, no chromatic aberration, specular 0.15, fresnel 0.2, the palette's bg as tint at about a third |
+| `window` | every window that is not opaque | `xray = 0` (the windows behind stay visible: that is the depth), no self sampling, blur 1.2, refraction 0.3 kept to the rim (`refraction_spread = 0.2`), no lens dome, no chromatic aberration, specular 0.15, fresnel 0.2, the palette's bg as tint at about a third |
 | `ui` | the bar, the band | more blur (1.6), almost no refraction (0.12), a thin edge, since text runs across the whole surface |
 | `panel` | panels, the NixOS Center, toasts | the most blur (2.0) and a darker tint, since they are read the longest |
 
-**Selective, never everywhere.** Window glass is OFF globally and turned on by tag for kitty and
-for floating windows; a browser or an editor at the global 0.98 opacity would gain nothing. Tagged
-off: Hearthstone, Overwatch, Steam games, Picture-in-Picture and Flameshot's overlay. Dolphin and
-the other Kvantum apps are opaque by design ([theme.md](theme.md)), so the plugin skips them
-(`skip_opaque_windows`). Layer glass covers `qs-bar`, `qs-dash`, `qs-panel` and `qs-center` at a 0.5 alpha mask,
-so the shell's transparent gaps get no glass.
+**Every window, except fullscreen and games** (since 18/10/2026; before, only kitty and floating
+windows had it, by tag). The global switch is on and the plugin skips what is opaque
+(`skip_opaque_windows`): Dolphin and the other Kvantum apps are opaque by design
+([theme.md](theme.md)). A browser or an editor sits at the global 0.98 opacity, so its glass is there
+but barely shows: Hyprland's window opacity fades the text along with the background, and only an
+app that draws its own translucent background (kitty) can show more without losing contrast. Tagged
+off: Hearthstone, Overwatch, Steam games, Picture-in-Picture and Flameshot's overlay. Layer glass
+covers `qs-bar`, `qs-dash` (the LG's band), `qs-panel` (panels, toasts, the OSD, the band's
+tooltips) and `qs-center` at a 0.5 alpha mask, so the shell's transparent gaps get no glass.
 
-**No rule on fullscreen**, and that was measured: `match = { fullscreen = 1 }` tagged EVERY window
-in the nested test, including a tiled one reporting `fullscreen: 0`. Run one variant per rule and
-only that one did it; the scrolling layout counts a lone column as fullscreen when it maps
-(`scrolling.fullscreen_on_one_column`). Opaque fullscreen content, a game or a video, is skipped by
-the plugin anyway.
+**Fullscreen is an event, not a rule**, and both rules were measured in the nested session on
+0.56.2. `match = { fullscreen = true }` also matches the MAXIMIZED state (1) a lone scrolling column
+has at map (`scrolling.fullscreen_on_one_column`), so it tagged nearly every window; `match = {
+fullscreen_state_internal = 2 }` caught only a real fullscreen, but its tag stayed after leaving it,
+through a focus change, a float toggle and a reload, so the window would lose its glass for good. So
+`glass.lua` listens to `window.fullscreen` and adds the static `hyprglass_disabled` tag at state 2,
+removing it otherwise. Removing the static tag leaves a game rule's dynamic one (`hyprglass_disabled*`)
+in place: measured on a window holding both.
 
 ## How it was verified without touching the session
 

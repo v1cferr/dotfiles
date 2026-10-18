@@ -25,8 +25,8 @@ local V = ({
 local solid = C.glass == "solid" -- opaque surfaces: nothing behind them to glass
 
 hg.config({
-  -- Windows get glass by TAG only (below): a browser or an editor at 0.98 opacity gains nothing.
-  enabled = false,
+  -- Every window, the plugin skipping what is opaque; true fullscreen and games opt out below.
+  enabled = not solid,
   default_theme = "dark",
   default_preset = "window",
   -- The shell's surfaces: glass where they are at least half opaque, never their transparent gaps.
@@ -68,11 +68,16 @@ hg.layer("qs-dash", { preset = "ui" })
 hg.layer("qs-panel", { preset = "panel" })
 hg.layer("qs-center", { preset = "panel" })
 
--- Where glass goes: the terminal and floating windows. Where it never does: the games,
--- Picture-in-Picture and Flameshot's frozen overlay (rules.lua keeps their other rules). No rule on
--- fullscreen: the scrolling layout counts a lone column as fullscreen, so it matched nearly every
--- window; opaque fullscreen content (a game, a video) is skipped by the plugin itself anyway.
-hl.window_rule({ match = { class = "^(kitty)$" }, tag = "+hyprglass_enabled" })
-hl.window_rule({ match = { float = 1 }, tag = "+hyprglass_enabled" })
+-- Where glass never goes: the games, Picture-in-Picture and Flameshot's frozen overlay (rules.lua
+-- keeps their other rules). The tag wins over the global switch.
 hl.window_rule({ match = { class = "^(hearthstone\\.exe|overwatch\\.exe|steam_app_.*)$" }, tag = "+hyprglass_disabled" })
 hl.window_rule({ match = { title = "^(Picture-in-Picture|flameshot)$" }, tag = "+hyprglass_disabled" })
+
+-- Nor on a TRUE fullscreen window (state 2), tagged on the way in and untagged on the way out. Not a
+-- rule: `fullscreen = true` also matches the maximized state a lone scrolling column has at map, and
+-- a rule's tag outlived the fullscreen (both measured on 0.56.2). Removing the static tag leaves a
+-- game rule's dynamic one alone.
+hl.on("window.fullscreen", function(w)
+  local sign = w.fullscreen == 2 and "+" or "-"
+  hl.dispatch(hl.dsp.window.tag({ tag = sign .. "hyprglass_disabled", window = "address:" .. w.address }))
+end)

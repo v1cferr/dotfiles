@@ -117,6 +117,20 @@ installs `bios-aspm`:
   restic's paths), asks for `yes`, writes each variable in ONE write as efivarfs requires,
   reads it back, and puts the backup back on any mismatch.
 - `sudo bios-aspm restore <dir>`: writes a verified backup back.
+- **The guard, a dead man's switch.** `apply` (or `sudo bios-aspm arm <dir>`) writes
+  `/var/lib/bios-aspm/pending` = this boot's `boot_id` plus the backup. The timer
+  `bios-aspm-guard` runs 10 min into every boot and, on a boot OTHER than the arming one,
+  restores that backup unless `sudo bios-aspm confirm` removed the file first. So a boot that
+  comes up with no screen and no SSH heals with a 10 min wait and a power cycle. The `boot_id`
+  matters: the arming boot's own timer has long elapsed and fires at once, and must not undo the
+  change before the reboot. A failure of the guard raises a `my.alert`. TESTED 18/10/2026 on
+  copies: same boot left it alone; a fake later `boot_id` restored the backup and cleared the
+  file; `confirm` left the guard idle.
+
+It does NOT cover a board that fails to POST, since Linux never runs. Before that jumper: the
+logo screen's `Del` then `F5` (Load Optimized Defaults) resets every setup variable, hidden ones
+included; and with no image from the B580, the board's own HDMI/DP (the i5-11400's iGPU) is
+where the firmware falls back.
 
 TESTED before any write, 18/10/2026: the patch applied to copies of the live variables changed
 exactly positions 86 and 87 of `Setup` and 866 of `SaSetup` (0x51, 0x52 and 0x35D plus the

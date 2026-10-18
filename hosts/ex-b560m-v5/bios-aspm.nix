@@ -1,6 +1,11 @@
 # `bios-aspm`: sets the ASPM options ASUS hides in THIS board's BIOS 2803 (3 bytes of setup variables).
 # The IFR evidence, the offsets, the exception and the way back: docs/guides/bios-ex-b560m-v5.md
-{ pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   inherit (pkgs)
@@ -33,6 +38,8 @@ let
       setup=Setup-ec87d643-eba4-4bb5-a1e5-3f3e36b20da9
       sa=SaSetup-72c5e28c-7783-43a1-8767-fad73fccafa4
       backups=/var/backup/bios-aspm
+      # The dead man's switch: "<boot_id> <backup dir>", armed by apply, cleared by confirm.
+      pending=/var/lib/bios-aspm/pending
 
       # name|variable|size with the 4-byte header|offset|wanted|allowed values
       fields=(
@@ -70,6 +77,9 @@ let
           echo "kernel: the FADT still says ASPM is unsupported (the BIOS controls it)"
         else
           echo "kernel: no FADT ASPM line (the OS controls ASPM)"
+        fi
+        if [ -f "$pending" ]; then
+          echo "guard: ARMED, restores $(cut -d' ' -f2 "$pending") 10 min into a later boot unless 'sudo bios-aspm confirm'"
         fi
         if [ "$(id -u)" = 0 ]; then
           lspci -vv -s 00:01.0 | grep -E 'LnkCap:|LnkCtl:' | sed 's/^/00:01.0 /'
@@ -131,9 +141,34 @@ let
         echo
         status
         echo
-        echo "bios-aspm: written. Reboot, then run 'sudo bios-aspm status'."
+        arm "$dir"
+        echo "bios-aspm: written. Reboot, then run 'sudo bios-aspm status' and 'sudo bios-aspm confirm'."
         echo "  Way back from Linux: sudo bios-aspm restore $dir"
         echo "  Way back if it does not POST: Clear CMOS (the CLRTC jumper), which restores the defaults."
+      }
+
+      arm() {
+        [ "$(id -u)" = 0 ] || die "run it with sudo"
+        (cd "$1" && sha256sum -c --quiet SHA256SUMS) || die "the backup in $1 does not match its checksums"
+        install -d -m 0700 "$(dirname "$pending")"
+        echo "$(cat /proc/sys/kernel/random/boot_id) $(realpath "$1")" >"$pending"
+        echo "bios-aspm: guard armed; a later boot restores $1 after 10 min unless you run 'sudo bios-aspm confirm'"
+      }
+
+      confirm() {
+        [ "$(id -u)" = 0 ] || die "run it with sudo"
+        rm -f "$pending"
+        echo "bios-aspm: confirmed, the guard is disarmed"
+      }
+
+      # Run by the timer: acts only on a boot OTHER than the one that armed it.
+      guard() {
+        [ -f "$pending" ] || exit 0
+        read -r armed dir <"$pending"
+        [ "$armed" != "$(cat /proc/sys/kernel/random/boot_id)" ] || exit 0
+        echo "bios-aspm: not confirmed 10 min into this boot, restoring $dir"
+        restore "$dir"
+        rm -f "$pending"
       }
 
       restore() {
@@ -152,12 +187,37 @@ let
       case "''${1:-status}" in
         status) status ;;
         apply) apply ;;
+        arm) arm "''${2:?usage: bios-aspm arm <backup dir>}" ;;
+        confirm) confirm ;;
+        guard) guard ;;
         restore) restore "''${2:-}" ;;
-        *) die "usage: bios-aspm [status|apply|restore <backup dir>]" ;;
+        *) die "usage: bios-aspm [status|apply|confirm|arm <dir>|restore <dir>]" ;;
       esac
     '';
   };
 in
 {
   environment.systemPackages = [ bios-aspm ];
+
+  # Ten minutes into each boot: an unconfirmed change from an EARLIER boot is written back, so a
+  # boot with no screen and no SSH heals with a wait and a power cycle.
+  systemd.services.bios-aspm-guard = {
+    description = "Restores the ASPM bytes unless the change was confirmed";
+    onFailure = [ "bios-aspm-guard-alert.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${lib.getExe bios-aspm} guard";
+    };
+  };
+  systemd.timers.bios-aspm-guard = {
+    wantedBy = [ "timers.target" ];
+    timerConfig.OnBootSec = "10min";
+  };
+  systemd.services.bios-aspm-guard-alert = {
+    description = "Alarm: the ASPM guard failed";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = ''${lib.getExe config.my.alert} bios-aspm dialog-warning "bios-aspm: the guard failed" "See 'journalctl -u bios-aspm-guard'. Restore by hand: sudo bios-aspm restore <backup dir>."'';
+    };
+  };
 }

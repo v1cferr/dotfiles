@@ -259,7 +259,12 @@ class SourceWatch(unittest.TestCase):
                 return SimpleNamespace(returncode=2, stdout=b"", stderr=b"untrusted issuer")
             raise AssertionError(f"Unexpected command: {command!r}")
 
-        with patch.object(r.subprocess, "run", side_effect=fake_run):
+        # The Nix build sandbox has no /etc/ssl/certs/ca-certificates.crt.
+        # The trust-anchor path is a fixture; the OpenSSL failure is what this test exercises.
+        with (
+            patch.object(r.subprocess, "run", side_effect=fake_run),
+            patch.object(r.Path, "exists", return_value=True),
+        ):
             with self.assertRaisesRegex(RuntimeError, "could not be verified"):
                 r.fetch("https://example.org/official")
         self.assertTrue(any(c[:2] == ["openssl", "verify"] for c in calls))

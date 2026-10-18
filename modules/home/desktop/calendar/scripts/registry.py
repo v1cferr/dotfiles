@@ -301,15 +301,30 @@ def fetch(url: str) -> bytes:
         raise RuntimeError("no AIA issuer URL")
     der = subprocess.run(["curl", "-sS", "--fail", "--max-time", "30", aia[1]], capture_output=True, check=True).stdout
     issuer = subprocess.run(["openssl", "x509", "-inform", "der"], input=der, capture_output=True, check=True).stdout
+    # The AIA certificate is UNTRUSTED. Verify the leaf, hostname and full chain
+    # against the SYSTEM roots before including this intermediate in curl's CA bundle.
     system = next((p for p in ("/etc/ssl/certs/ca-certificates.crt", "/etc/ssl/cert.pem") if Path(p).exists()), None)
-    with tempfile.NamedTemporaryFile("wb", suffix=".pem", delete=False) as f:
-        f.write(issuer + (Path(system).read_bytes() if system else b""))
-        bundle = f.name
-    r = subprocess.run(cmd + ["--cacert", bundle, url], capture_output=True)
-    Path(bundle).unlink(missing_ok=True)
-    if r.returncode != 0:
-        raise RuntimeError(f"curl exit {r.returncode} after AIA: {r.stderr.decode(errors='replace').strip()}")
-    return r.stdout
+    if system is None:
+        raise RuntimeError("no system CA bundle to verify the AIA intermediate")
+    with tempfile.TemporaryDirectory(prefix="holiday-aia-") as td:
+        leaf_path = Path(td) / "leaf.pem"
+        issuer_path = Path(td) / "issuer.pem"
+        bundle_path = Path(td) / "bundle.pem"
+        leaf_path.write_bytes(pem[0] + b"\n")
+        issuer_path.write_bytes(issuer)
+        verified = subprocess.run(
+            ["openssl", "verify", "-purpose", "sslserver", "-verify_hostname", host,
+             "-CAfile", system, "-untrusted", str(issuer_path), str(leaf_path)],
+            capture_output=True, timeout=30,
+        )
+        if verified.returncode != 0:
+            raise RuntimeError("AIA certificate chain could not be verified against system roots: "
+                               + verified.stderr.decode(errors="replace").strip()[:300])
+        bundle_path.write_bytes(issuer + Path(system).read_bytes())
+        r = subprocess.run(cmd + ["--cacert", str(bundle_path), url], capture_output=True, timeout=70)
+        if r.returncode != 0:
+            raise RuntimeError(f"curl exit {r.returncode} after verified AIA: {r.stderr.decode(errors='replace').strip()}")
+        return r.stdout
 
 
 def fingerprint(body: bytes, between: list[str] | None = None) -> str:
@@ -329,6 +344,11 @@ def fingerprint(body: bytes, between: list[str] | None = None) -> str:
             return "markers-missing"  # the page changed shape: a human must look
         t = t[i:j]
     return "sha256:" + hashlib.sha256(t.encode()).hexdigest()
+
+
+def review_needed(report: list[dict]) -> bool:
+    """New sources also require review before their fingerprint becomes trusted."""
+    return any(item["state"] in ("new", "changed", "unreachable") for item in report)
 
 
 def check_sources(reg: dict, lock: dict, today: str) -> tuple[dict, list[dict]]:
@@ -400,8 +420,8 @@ def main(argv: list[str]) -> int:
             a.report.write_text(text)
         if a.update_lock:
             a.lock.write_text(json.dumps(new, indent=2, sort_keys=True) + "\n")
-        # Exit 2 when a human must look: a change or an unreachable source. Nothing is rewritten.
-        return 2 if any(r["state"] in ("changed", "unreachable") for r in report) else 0
+        # Exit 2 for a new, changed or unreachable source. Nothing is rewritten.
+        return 2 if review_needed(report) else 0
     return 1
 
 

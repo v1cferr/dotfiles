@@ -7,6 +7,8 @@ import json
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
+from types import SimpleNamespace
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -202,6 +204,75 @@ class Build(unittest.TestCase):
         dates = [o["date"] for o in b["years"]["2026"]]
         self.assertEqual(dates, sorted(dates))
         json.dumps(b)
+
+
+class SourceWatch(unittest.TestCase):
+    def test_new_source_needs_review(self):
+        reg = {"sources": {"new": {"url": "https://example.org/official", "watch": True}}}
+        with patch.object(r, "fetch", return_value=b"<p>Official dates</p>"):
+            lock, report = r.check_sources(reg, {}, "2026-10-18")
+        self.assertEqual(report[0]["state"], "new")
+        self.assertIn("new", lock)
+        self.assertTrue(r.review_needed(report))
+
+    def test_unchanged_source_is_quiet(self):
+        body = b"<p>Official dates</p>"
+        reg = {"sources": {"official": {"url": "https://example.org/official", "watch": True}}}
+        prev = {"official": {"fingerprint": r.fingerprint(body), "seen_at": "2026-10-17"}}
+        with patch.object(r, "fetch", return_value=body):
+            lock, report = r.check_sources(reg, prev, "2026-10-18")
+        self.assertEqual(report[0]["state"], "unchanged")
+        self.assertEqual(lock["official"]["seen_at"], "2026-10-17")
+        self.assertFalse(r.review_needed(report))
+
+    def test_unreachable_keeps_previous_baseline(self):
+        reg = {"sources": {"official": {"url": "https://example.org/official", "watch": True}}}
+        prev = {"official": {"fingerprint": "sha256:baseline", "seen_at": "2026-10-17"}}
+        with patch.object(r, "fetch", side_effect=RuntimeError("timeout")):
+            lock, report = r.check_sources(reg, prev, "2026-10-18")
+        self.assertEqual(report[0]["state"], "unreachable")
+        self.assertEqual(lock, prev)
+        self.assertTrue(r.review_needed(report))
+
+    def test_aia_certificate_must_validate_before_curl_retry(self):
+        """Reject an untrusted AIA issuer without ever retrying using --cacert."""
+        calls = []
+        leaf = b"-----BEGIN CERTIFICATE-----\\nleaf\\n-----END CERTIFICATE-----"
+        issuer = b"-----BEGIN CERTIFICATE-----\\nissuer\\n-----END CERTIFICATE-----"
+
+        def fake_run(command, *args, **kwargs):
+            calls.append(command)
+            if command[0] == "curl" and "--cacert" not in command:
+                if "http://issuer.example/ca.der" in command:
+                    return SimpleNamespace(returncode=0, stdout=b"DER", stderr=b"")
+                return SimpleNamespace(returncode=60, stdout=b"", stderr=b"untrusted issuer")
+            if command[:2] == ["openssl", "s_client"]:
+                return SimpleNamespace(returncode=0, stdout=leaf, stderr=b"")
+            if command[:3] == ["openssl", "x509", "-noout"]:
+                return SimpleNamespace(returncode=0, stdout=b"CA Issuers - URI:http://issuer.example/ca.der", stderr=b"")
+            if command[:3] == ["openssl", "x509", "-inform"]:
+                return SimpleNamespace(returncode=0, stdout=issuer, stderr=b"")
+            if command[:2] == ["openssl", "verify"]:
+                self.assertIn("-verify_hostname", command)
+                self.assertIn("-untrusted", command)
+                self.assertIn("-CAfile", command)
+                return SimpleNamespace(returncode=2, stdout=b"", stderr=b"untrusted issuer")
+            raise AssertionError(f"Unexpected command: {command!r}")
+
+        # The Nix build sandbox has no /etc/ssl/certs/ca-certificates.crt.
+        # The trust-anchor path is a fixture; the OpenSSL failure is what this test exercises.
+        with (
+            patch.object(r.subprocess, "run", side_effect=fake_run),
+            patch.object(r.Path, "exists", return_value=True),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "could not be verified"):
+                r.fetch("https://example.org/official")
+        self.assertTrue(any(c[:2] == ["openssl", "verify"] for c in calls))
+        self.assertFalse(any("--cacert" in c for c in calls))
+
+    def test_review_needed_changed_source(self):
+        self.assertTrue(r.review_needed([{"state": "changed"}]))
+        self.assertFalse(r.review_needed([{"state": "unchanged"}]))
 
 
 if __name__ == "__main__":

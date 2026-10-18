@@ -34,10 +34,18 @@ BarPanel {
         cal.focusMonth = 0;
         cal.selected = cal.todayIso;
     }
+    // Keep the selected date within the viewed month, clamping e.g. Jan 31 to Feb 28.
+    function selectedDay() {
+        return cal.selected.length === 10 ? +cal.selected.slice(8, 10) : cal.bar.calTodayD;
+    }
+    function dateInMonth(year, month, preferredDay) {
+        const last = new Date(year, month, 0).getDate();
+        const day = Math.max(1, Math.min(last, preferredDay));
+        return year + "-" + ("0" + month).slice(-2) + "-" + ("0" + day).slice(-2);
+    }
     function focusOn(m, iso) {
+        cal.selected = iso || cal.dateInMonth(cal.year, m, cal.selectedDay());
         cal.focusMonth = m;
-        if (iso)
-            cal.selected = iso;
     }
     function stepMonth(dir) {
         let m = cal.focusMonth + dir, y = cal.year;
@@ -48,8 +56,15 @@ BarPanel {
             m = 1;
             y++;
         }
+        cal.selected = cal.dateInMonth(y, m, cal.selectedDay());
         cal.viewYear = y === cal.bar.calYear ? 0 : y;
         cal.focusMonth = m;
+    }
+    function stepYear(dir) {
+        const y = cal.year + dir;
+        const base = cal.selected.length === 10 ? cal.selected : cal.todayIso;
+        cal.selected = cal.dateInMonth(y, +base.slice(5, 7), cal.selectedDay());
+        cal.viewYear = y === cal.bar.calYear ? 0 : y;
     }
 
     // ── The keyboard, while pinned: the arrows move the selected day (a week up and down), crossing
@@ -77,9 +92,9 @@ BarPanel {
         else if (k === Qt.Key_Down)
             cal.moveDay(7);
         else if (k === Qt.Key_PageUp)
-            cal.focusMonth > 0 ? cal.stepMonth(-1) : cal.viewYear = cal.year - 1;
+            cal.focusMonth > 0 ? cal.stepMonth(-1) : cal.stepYear(-1);
         else if (k === Qt.Key_PageDown)
-            cal.focusMonth > 0 ? cal.stepMonth(1) : cal.viewYear = cal.year + 1;
+            cal.focusMonth > 0 ? cal.stepMonth(1) : cal.stepYear(1);
         else if (k === Qt.Key_Home)
             cal.goToday();
         else if ((k === Qt.Key_Return || k === Qt.Key_Enter || k === Qt.Key_Space) && cal.focusMonth === 0)
@@ -156,7 +171,7 @@ BarPanel {
             NavButton {
                 label: "‹"
                 name: cal.focusMonth > 0 ? "Previous month" : "Previous year"
-                onClicked: cal.focusMonth > 0 ? cal.stepMonth(-1) : cal.viewYear = cal.year - 1
+                onClicked: cal.focusMonth > 0 ? cal.stepMonth(-1) : cal.stepYear(-1)
             }
             NavButton {
                 label: "Today"
@@ -167,7 +182,7 @@ BarPanel {
             NavButton {
                 label: "›"
                 name: cal.focusMonth > 0 ? "Next month" : "Next year"
-                onClicked: cal.focusMonth > 0 ? cal.stepMonth(1) : cal.viewYear = cal.year + 1
+                onClicked: cal.focusMonth > 0 ? cal.stepMonth(1) : cal.stepYear(1)
             }
         }
 

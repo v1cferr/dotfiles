@@ -63,10 +63,13 @@ hg.preset("panel", {
   tint_color = tint(V.tintPanel),
 })
 
-hg.layer("qs-bar", { preset = "ui" })
-hg.layer("qs-dash", { preset = "window" }) -- the band: the windows' own glass, so the LG reads as one surface
-hg.layer("qs-panel", { preset = "panel" })
-hg.layer("qs-center", { preset = "panel" })
+-- clear-gradient puts every shell surface on the windows' own glass, so the whole desktop is one
+-- material; perceptible keeps the denser ui and panel presets.
+local layer = function(p) return C.glass == "clear-gradient" and "window" or p end
+hg.layer("qs-bar", { preset = layer("ui") })
+hg.layer("qs-dash", { preset = layer("ui") })
+hg.layer("qs-panel", { preset = layer("panel") })
+hg.layer("qs-center", { preset = layer("panel") })
 
 -- Where glass never goes: the games, Picture-in-Picture and Flameshot's frozen overlay (rules.lua
 -- keeps their other rules). The tag wins over the global switch.

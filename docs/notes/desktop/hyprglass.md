@@ -87,9 +87,9 @@ that differ between `perceptible` and `clear-gradient`, both listed in
 
 | Preset | Used by | What it changes |
 | --- | --- | --- |
-| `window` | every window that is not opaque, and the band (`qs-dash`) | `xray = 0` (the windows behind stay visible: that is the depth), no self sampling, blur 1.2, refraction 0.3 kept to the rim (`refraction_spread = 0.2`), no lens dome, no chromatic aberration, specular 0.15, fresnel 0.2, the palette's bg as tint at about a third |
-| `ui` | the bar | more blur (1.6), almost no refraction (0.12), a thin edge, since text runs across the whole surface |
-| `panel` | panels, the NixOS Center, toasts | the most blur (2.0) and a darker tint, since they are read the longest |
+| `window` | every window that is not opaque; under `clear-gradient`, every shell layer too, so the desktop is one material | `xray = 0` (the windows behind stay visible: that is the depth), no self sampling, blur 1.2, refraction 0.3 kept to the rim (`refraction_spread = 0.2`), no lens dome, no chromatic aberration, specular 0.15, fresnel 0.2, the palette's bg as tint at about a third |
+| `ui` | the bar and the band, under `perceptible` | more blur (1.6), almost no refraction (0.12), a thin edge, since text runs across the whole surface |
+| `panel` | panels, the NixOS Center, toasts, under `perceptible` | the most blur (2.0) and a darker tint, since they are read the longest |
 
 **Every window, except fullscreen and games** (since 18/10/2026; before, only kitty and floating
 windows had it, by tag). The global switch is on and the plugin skips what is opaque

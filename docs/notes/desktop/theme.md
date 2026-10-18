@@ -299,9 +299,9 @@ through `hypr-colors.lua`) and kitty's `background_opacity` (`kitty.nix`).
 
 | | `perceptible` (the default) | `clear-gradient` |
 | --- | --- | --- |
-| Bar | 90% flat | the palette's bg at 86% at the top easing into its surface at 80% at the foot |
+| Bar | 90% flat | the palette's bg at 70% at the top easing into its surface at 70% at the foot (it was 86% into 80%) |
 | Band cards | 92% flat | 70% bg into 70% surface, kitty's own opacity (18/10/2026; it was 88% into 84%) |
-| Panels, Center, toasts | 96% flat | 90% flat: dense text gets no gradient |
+| Panels, Center, toasts | 96% flat | 70% flat: dense text gets no gradient (it was 90%) |
 | kitty | background 0.95, then the global 0.98 window opacity on top | background 0.70, exempt from the global rule |
 | HyprGlass tint, panel tint | bg at 33%, at 50% | bg at 20%, at 30% |
 | HyprGlass brightness | 0.85 | 0.95 |
@@ -353,9 +353,12 @@ The cost is the worst case: computed, a white page right behind the terminal wou
 at about 4.0. Measured, it does better, since HyprGlass darkens more than that estimate assumed. Back
 to 0.85 is one line in `kitty.nix`.
 
-**The band went to the windows' recipe on 18/10/2026**, so the LG reads as one surface with the
-windows around it: its cards at kitty's 0.70 and its layer on HyprGlass's `window` preset instead of
-`ui`. Same opacity, same tint, same glass, so the kitty measurement below holds for the cards as it
+**Every shell surface went to the windows' recipe on 18/10/2026**, at the owner's request that the
+whole desktop read as one material: the band first, then the bar, the logo's compartment and the
+panels, all at kitty's 0.70 and on HyprGlass's `window` preset instead of `ui` and `panel`. Only
+under `clear-gradient`; `perceptible` keeps its denser numbers. The panels were the doubtful part:
+they open over anything, a white page included, and hold the most running text, and the measurement
+below is what says they still pass. Same opacity, same tint, same glass, so the kitty measurement below holds for the cards as it
 stands: text 7.3, the accent 4.7 over the brightest 5% of white stripes. The dim footnotes
 (`colDim`) were never meant to pass AA and pay the most for it.
 

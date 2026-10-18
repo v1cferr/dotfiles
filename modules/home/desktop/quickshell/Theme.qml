@@ -177,21 +177,21 @@ Singleton {
     readonly property int fontTitle: 14 // a panel title
 
     // ── Glass: three levels of see-through, in one of three profiles (my.theme.glass) ──
-    // perceptible: flat, 90/92/96%. clear-gradient: bg at the top easing into the palette's surface at
-    // the foot, 86->80 / 70->70 (the band: kitty's own 0.70, so it reads as a window) / 90 flat.
+    // perceptible: flat, 90/92/96%. clear-gradient: kitty's own 0.70 on all three, bg easing into the
+    // palette's surface on the bar and the cards, so every surface reads as one glass with the windows.
     // solid: opaque. The contrast: docs/notes/desktop/theme.md
     readonly property bool glassSolid: pal.glass === "solid"
     readonly property bool glassClear: pal.glass === "clear-gradient"
     function glassBg(a) { return theme.aa(pal.bg, theme.glassSolid ? "ff" : a); }
     function glassFoot(a) { return theme.aa(pal.surface, theme.glassSolid ? "ff" : a); }
-    readonly property color colSurfaceBar: theme.glassBg(theme.glassClear ? "db" : "e6")
-    readonly property color colSurfaceBarFoot: theme.glassClear ? theme.glassFoot("cc") : theme.colSurfaceBar
+    readonly property color colSurfaceBar: theme.glassBg(theme.glassClear ? "b3" : "e6")
+    readonly property color colSurfaceBarFoot: theme.glassClear ? theme.glassFoot("b3") : theme.colSurfaceBar
     readonly property color colSurfaceCard: theme.glassBg(theme.glassClear ? "b3" : "eb")
     readonly property color colSurfaceCardFoot: theme.glassClear ? theme.glassFoot("b3") : theme.colSurfaceCard
-    readonly property color colSurfacePop: theme.glassBg(theme.glassClear ? "e6" : "f5") // dense text: never a gradient
+    readonly property color colSurfacePop: theme.glassBg(theme.glassClear ? "b3" : "f5") // dense text: never a gradient
     readonly property color colEdge: aa(pal.border, "8c") // a surface's hairline
     readonly property color colSheen: aa(pal.text, "0f") // the 1 px light along a surface's top edge
-    readonly property color colBarCenter: theme.glassSolid ? pal.surface : aa(pal.surface, "f0") // the logo's compartment
+    readonly property color colBarCenter: theme.glassSolid ? pal.surface : aa(pal.surface, theme.glassClear ? "b3" : "f0") // the logo's compartment
     readonly property color colBarAccent: aa(pal.accent, "b3") // the thin blue under the logo
     // States of a control on glass: a neutral fill, so the accent stays free to mean "active".
     readonly property color colHoverFill: aa(pal.text, "14")

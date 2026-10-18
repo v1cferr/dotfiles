@@ -7,6 +7,7 @@ import json
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -202,6 +203,39 @@ class Build(unittest.TestCase):
         dates = [o["date"] for o in b["years"]["2026"]]
         self.assertEqual(dates, sorted(dates))
         json.dumps(b)
+
+
+class SourceWatch(unittest.TestCase):
+    def test_new_source_needs_review(self):
+        reg = {"sources": {"new": {"url": "https://example.org/official", "watch": True}}}
+        with patch.object(r, "fetch", return_value=b"<p>Official dates</p>"):
+            lock, report = r.check_sources(reg, {}, "2026-10-18")
+        self.assertEqual(report[0]["state"], "new")
+        self.assertIn("new", lock)
+        self.assertTrue(r.review_needed(report))
+
+    def test_unchanged_source_is_quiet(self):
+        body = b"<p>Official dates</p>"
+        reg = {"sources": {"official": {"url": "https://example.org/official", "watch": True}}}
+        prev = {"official": {"fingerprint": r.fingerprint(body), "seen_at": "2026-10-17"}}
+        with patch.object(r, "fetch", return_value=body):
+            lock, report = r.check_sources(reg, prev, "2026-10-18")
+        self.assertEqual(report[0]["state"], "unchanged")
+        self.assertEqual(lock["official"]["seen_at"], "2026-10-17")
+        self.assertFalse(r.review_needed(report))
+
+    def test_unreachable_keeps_previous_baseline(self):
+        reg = {"sources": {"official": {"url": "https://example.org/official", "watch": True}}}
+        prev = {"official": {"fingerprint": "sha256:baseline", "seen_at": "2026-10-17"}}
+        with patch.object(r, "fetch", side_effect=RuntimeError("timeout")):
+            lock, report = r.check_sources(reg, prev, "2026-10-18")
+        self.assertEqual(report[0]["state"], "unreachable")
+        self.assertEqual(lock, prev)
+        self.assertTrue(r.review_needed(report))
+
+    def test_review_needed_changed_source(self):
+        self.assertTrue(r.review_needed([{"state": "changed"}]))
+        self.assertFalse(r.review_needed([{"state": "unchanged"}]))
 
 
 if __name__ == "__main__":

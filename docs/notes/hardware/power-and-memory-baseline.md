@@ -75,12 +75,14 @@ by keeping the build cache a week: [docker-prune](../services/docker-prune.md).
   publishes `energy1` (`card`, the whole board) and `energy2` (`pkg`, the GPU package), readable
   without root. During Hearthstone: 86 W board, 60 W package, GT0 at 2850 MHz, 54 to 58 °C.
   The GT0 `min_freq` reads 1200 MHz with `power_profile` = `base`; not touched.
-- **PCIe ASPM**: kernel policy `default`. The per-link state needs `lspci -vv` as root: PENDING.
+- **PCIe ASPM**: kernel policy `default`; the per-link state is in the next item.
 - **GPU at idle** (MEASURED 18/10/2026 20:10, from the NixOS Center's card, game closed, two
   monitors lit): **45 W on the board**. That is high for an idle card and is the usual signature
   of a B580 whose link never reaches ASPM L1. It is the largest single idle draw found, and the
-  first thing to investigate, root-read first: `sudo lspci -vv | grep -B30 -i 'battlemage\|B580' |
-  grep -E 'LnkCap|LnkCtl'`, plus the board's BIOS option for native ASPM.
+  first thing to investigate. MEASURED the same evening with `lspci -vv` as root: the card and
+  its internal bridges have L1 enabled, but the CPU's PEG root port advertises `ASPM not
+  supported`, so the external link stays `ASPM Disabled`. A BIOS setting, not a kernel one:
+  [the BIOS guide](../../guides/bios-ex-b560m-v5.md#the-arcs-idle-power-aspm-on-the-cpu-link-18102026).
 - **Monitors**: ASUS XG27ACS 2560x1440 at 180 Hz, LG UltraGear 1920x1080 at 143.98 Hz rotated
   (`transform=1`), both VRR on. The LG offers 60 Hz at 1080p (`hyprctl monitors`).
 
@@ -101,4 +103,4 @@ by keeping the build cache a week: [docker-prune](../services/docker-prune.md).
   again after 5 min in a game. Only that number answers "how much did Eco save".
 - **CPU package power**: `sudo turbostat --quiet --show PkgWatt,CorWatt --interval 5`
   (`linuxPackages.turbostat`, not installed) or two root reads of `energy_uj`.
-- **ASPM**: `sudo lspci -vv -s <B580's bridge> | grep -E 'LnkCtl|ASPM'`, before any override.
+- **ASPM**: the BIOS change and the idle reading after it ([the BIOS guide](../../guides/bios-ex-b560m-v5.md)).

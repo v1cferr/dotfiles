@@ -25,6 +25,9 @@ Access: `Del` at POST, then `F7` (Advanced Mode).
 | Secure Boot → OS Type | Other OS | Boot → Secure Boot | recommended |
 | Fast Boot | Disabled | Boot | recommended |
 | Ai Overclock Tuner (XMP) | XMP I (3200 MT/s) | Ai Tweaker | confirmed (3200 MT/s) |
+| Native ASPM | Enabled | Advanced → Platform Misc Configuration | to try (18/10/2026) |
+| SA - PCI Express → PEG - ASPM | L1 (or ASPM L1 / Auto) | Advanced → Platform Misc Configuration | to try (18/10/2026) |
+| PCH - PCI Express → ASPM | L1 | Advanced → Platform Misc Configuration | optional, same visit |
 
 - **Confirmed (OS):** measured from Linux. CSM off (the Arc is UEFI-only and it booted),
   Above 4G + ReBAR active (a 16G VRAM BAR mapped above 4G, through `lspci`).
@@ -56,6 +59,39 @@ reinforcement.
   POST does not fail, so CSM is never turned back on. **It fixes the warm-reboot hang.**
 - `services.fwupd.enable = true` in `modules/nixos/hardware/hardware.nix`: it does NOT cover this board's
   BIOS (ASUS is outside LVFS); it serves SSD firmware and other components.
+
+## The Arc's idle power: ASPM on the CPU link (18/10/2026)
+
+The B580 drew **45 W on the board with the desktop idle** (its own `xe` sensor, read by the NixOS
+Center). The usual cause on Arc is a link that never enters ASPM L1, and `lspci -vv` (as root)
+showed exactly where it stops:
+
+| Link | `LnkCap` | `LnkCtl` |
+| --- | --- | --- |
+| CPU root port `00:01.0` (PEG, Gen4) → the card's bridge `01:00.0` (x8) | root port: **ASPM not supported**; card: L1 | **Disabled** |
+| The card's internal bridges → GPU `03:00.0` and its audio `04:00.0` | L1 | L1 Enabled |
+| CPU root port `00:06.0` → the Kingston NVMe | root port: not supported | Disabled |
+| PCH root port `00:1c.7` → the Realtek NIC | root port: not supported | Disabled |
+
+The card is ready; it is the CPU's PEG port that ADVERTISES no ASPM, and Linux honors the
+advertisement. So the fix is the firmware's, NOT a kernel parameter: `pcie_aspm=force` would
+enable a state the port says it does not have, which is how links hang. The options above are
+named as ASUS 500-series boards usually label them; if this BIOS words them differently, look
+under Platform Misc Configuration for the PEG and PCH ASPM entries.
+
+Checking it, after the BIOS change (read only):
+
+```sh
+P=$(nix build --no-link --print-out-paths nixpkgs#pciutils.out)
+sudo $P/bin/lspci -vv -s 00:01.0 | grep -E 'LnkCap|LnkCtl'   # wanted: ASPM L1 in both
+sudo $P/bin/lspci -vv -s 01:00.0 | grep LnkCtl               # wanted: ASPM L1 Enabled
+```
+
+Then read the board's idle watts again (the NixOS Center's GPU BOARD card, desktop idle, both
+monitors on), and watch a day of normal use and one game session for stutter, a black screen or
+an `xe` reset in `journalctl -k`. If anything regresses, set PEG - ASPM back to Disabled: that
+is the whole rollback. Two lit monitors at 180 Hz and 144 Hz keep the display engine busy, so
+even a working L1 will not bring the card down to single-monitor figures.
 
 ## Backup and restore
 

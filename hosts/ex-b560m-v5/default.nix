@@ -17,6 +17,9 @@
   # Perceptible Glass on this desk: the plugin is built for this host's Hyprland. How to turn it
   # back off, including from a TTY: docs/notes/desktop/hyprglass.md
   home-manager.users.v1cferr.my.hypr.hyprglass.enable = true;
+  # The glass profile on this desk: clear-gradient over the perceptible default. Delete the line to
+  # go back; every value it changes: docs/notes/desktop/theme.md
+  home-manager.users.v1cferr.my.theme.glass = "clear-gradient";
 
   # Fixed at the 1st install: NEVER change it afterwards. The same value as the old host because
   # it is the same release; the stateVersion follows the installation, not the disk.

@@ -45,7 +45,9 @@ History and memory are SHARED on purpose: each account's `projects/` is a symlin
 archive, so any account resumes the same conversations and reads the same memories. On Arch this
 was a `_claude_share_projects` function in `.zshrc`, imperative and running on every shell open;
 here it is a declared symlink (rule 3). One price to know: `ccusage` cannot separate cost per
-account, because it reads the shared archive.
+account, because it reads the shared archive. The per-subscription view, the server's own `/usage`
+numbers for the FAI account, is on the glance band instead (glance-feed's `claude_usage`,
+docs/notes/desktop/glance-feed.md).
 
 ## A wrapper, not an alias
 

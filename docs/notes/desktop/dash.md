@@ -430,7 +430,7 @@ paid.
 
 ## The network page
 
-A page of the rotation (month, WEATHER, NETWORK, GitHub, FAI), from glance-feed's `network`
+A page of the rotation (month, WEATHER, NETWORK, CLAUDE, GitHub, FAI), from glance-feed's `network`
 document (docs/notes/desktop/glance-feed.md), added on 08/10/2026 as the first visible piece of the
 threat-monitoring plan in docs/open-items.md, before any router change.
 
@@ -455,6 +455,23 @@ threat-monitoring plan in docs/open-items.md, before any router change.
 
 Until 11/10/2026 every one of those was spelled out, and the page ran past its column over the
 services strip; the trim below is what made it fit.
+
+## The Claude page
+
+Added on 18/10/2026: the FAI account's `/usage`, live, from glance-feed's `claude_usage` document
+(docs/notes/desktop/glance-feed.md) through the `ClaudeUsage.qml` singleton. The six tiles were
+already the machine's vitals, so it is split in two:
+
+- **A line in the clock card,** always in sight: `✦ claude 4% · 37% wk`, the session in peach and
+  the week in mauve, both turning yellow at 75% (or when the server says `warning`) and red at
+  90%. The resets are in its tooltip.
+- **The CLAUDE · FAI page** of the rotation (month, WEATHER, NETWORK, CLAUDE, GitHub, FAI):
+  the SESSION (5 h) and WEEKLY meters with "resets in", the per-model shares of the week (Fable),
+  the plan and whether extra usage is on, and the last 24 h as two graphs (week over session),
+  starting at the first sample instead of padding with zeros.
+
+A window whose reset time passed reads 0% until the feed brings the new one: the old number would
+be a lie. The countdowns tick every 30 s on the clock alone, with no re-read.
 
 ## Density and hover
 

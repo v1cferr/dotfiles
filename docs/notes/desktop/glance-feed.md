@@ -67,6 +67,25 @@ every run touches no network at all.
   blocks, threat contacts, DoH attempts, scans dropped, new devices, failed SSH logins and bans.
   An alert names the device and the threat, never a query history. Proven on 08/10/2026 by asking
   a TIF domain from this machine: blocked, stored and pushed within the minute.
+- **Claude usage (the FAI account's `/usage`):** every minute, `GET /api/oauth/usage` on
+  api.anthropic.com with the account's OAuth token from `~/.claude-fai/.credentials.json` (the
+  path comes from `my.claude.configDirs`, claude-code.nix). These are the numbers Claude Code's
+  `/usage` shows, per SUBSCRIPTION, which `ccusage` cannot give (docs/notes/apps/claude-code.md).
+  The endpoint is internal and undocumented, so every field is read as optional. The token goes
+  to curl through a header file in the run's private temp dir, never through argv, and never
+  into `http_cache`. A `claude_usage` table keeps one row per change for the 24 h graph (8 days).
+  - **Token renewal.** The token lives about 8 hours and only a RUNNING Claude Code renews it, so
+    without a session the source renews it itself, with the same endpoint and client id as Claude
+    Code 2.1.296 (`platform.claude.com/v1/oauth/token`). The refresh token ROTATES: renewing
+    under a live session would leave that session holding a dead one, and it would log out at its
+    own next renewal. So the renewal is skipped while any `.claude-wrapped`/`claude` process of
+    yours carries this account's `CLAUDE_CONFIG_DIR`. The variable alone proves nothing, because
+    every login shell exports it. Otherwise it renews 5 minutes before expiry
+    (`GLANCE_CLAUDE_REFRESH_MARGIN`), or once after a 401. It holds a `flock` on
+    `.credentials.json.glance.lock`, re-reads the file (whoever renewed in the meantime wins),
+    changes only `accessToken`, `refreshToken` and `expiresAt`, and swaps the file atomically,
+    still 0600. Checked on 18/10/2026 with a forced margin under an open session: skipped, file
+    byte-identical.
 - **Conditional GET everywhere a server allows it:** `http_cache` keeps each URL's `ETag` and body,
   so an unchanged resource answers `304` with no body. GitHub documents that a `304` to an
   authorized conditional request does not count against the rate limit.
@@ -98,3 +117,5 @@ bar and the lock screen share ONE weather fetch instead of two, and every decisi
   temperature from the same `weather` document (`my.glance.feed`, a read-only option, is how a
   module reaches the package). It used to call Open-Meteo on its own every 10 minutes; now the
   bar and the lock show the same run, and the lock costs no network at all.
+- **The glance band, Claude:** `claude_usage` (`dash/ClaudeUsage.qml`), as a page of the rotation
+  and a line in the clock card (docs/notes/desktop/dash.md).

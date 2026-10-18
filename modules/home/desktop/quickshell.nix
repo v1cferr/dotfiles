@@ -13,6 +13,7 @@ let
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
     coreutils
+    gawk
     systemd
     writeShellApplication
     ;
@@ -70,10 +71,20 @@ let
       qsPkg
       hyprland
       coreutils
+      gawk
     ];
     text = ''
+      # The PIDs BEFORE the kill: an instance that ignores `qs kill` must not end up running beside
+      # the new one (17/10/2026 it did, and every bar and band was doubled).
+      old="$(qs list --all 2>/dev/null | awk '/Process ID/ {print $3}')"
       qs kill >/dev/null 2>&1 || true # with no instance running, the kill fails and that is fine
-      sleep 0.3
+      gone() { for p in $old; do kill -0 "$p" 2>/dev/null && return 1; done; return 0; }
+      for _ in $(seq 30); do gone && break; sleep 0.1; done
+      if ! gone; then
+        for p in $old; do kill -TERM "$p" 2>/dev/null || true; done
+        for _ in $(seq 20); do gone && break; sleep 0.1; done
+      fi
+      gone || { echo "qs-restart: the old instance ($old) is still alive, not starting a second one" >&2; exit 1; }
       # `-i 0` finds the instance without the signature, so this also works over SSH.
       hyprctl -i 0 dispatch 'hl.dsp.exec_cmd("qs")'
     '';

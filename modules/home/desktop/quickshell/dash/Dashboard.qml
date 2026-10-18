@@ -194,6 +194,23 @@ PanelWindow {
                     Layout.fillHeight: true
                 }
 
+                // The Claude limits, always in sight; the page in the rotation has the detail.
+                Text {
+                    Layout.fillWidth: true
+                    Layout.bottomMargin: dash.host.spHasPlayer ? 8 : 0
+                    visible: ClaudeUsage.ok
+                    Tip {
+                        title: "Claude · FAI" + (ClaudeUsage.plan ? "  (" + ClaudeUsage.plan + ")" : "")
+                        lines: ["session resets in " + (ClaudeUsage.left(ClaudeUsage.session.resets) || "–"), "week resets in " + (ClaudeUsage.left(ClaudeUsage.weekly.resets) || "–")]
+                    }
+                    elide: Text.ElideRight
+                    textFormat: Text.StyledText
+                    text: "<font color='" + ClaudeUsage.color(ClaudeUsage.session) + "'>✦ claude " + Math.round(ClaudeUsage.session.pct || 0) + "%</font>" + "<font color='" + Theme.colDim + "'>  ·  </font>" + "<font color='" + ClaudeUsage.color(ClaudeUsage.weekly) + "'>" + Math.round(ClaudeUsage.weekly.pct || 0) + "% wk</font>"
+                    color: Theme.colSubtext
+                    font.family: Theme.uiFont
+                    font.pixelSize: 14
+                }
+
                 // What is playing, when something is, pinned to the card's foot.
                 RowLayout {
                     Layout.fillWidth: true
@@ -240,9 +257,9 @@ PanelWindow {
                 spacing: 10
 
                 // 0 = month, 1 = GitHub Actions, 2 = the FAI GitLab (only while it answers).
-                // Page ids are stable (3 = weather, 4 = network, in the order they were added); `order` is the rotation.
-                readonly property var order: Ci.gitlabShown ? [0, 3, 4, 1, 2] : [0, 3, 4, 1]
-                readonly property var titles: [(dash.host.monthNames[dash.host.calTodayM - 1] || "").toUpperCase() + "  " + dash.host.calYear, "GITHUB  ACTIONS", "FAI  ·  GITLAB", "WEATHER  ·  24 H", "NETWORK  ·  LAN"]
+                // Page ids are stable (3 = weather, 4 = network, 5 = Claude, in the order they were added); `order` is the rotation.
+                readonly property var order: Ci.gitlabShown ? [0, 3, 4, 5, 1, 2] : [0, 3, 4, 5, 1]
+                readonly property var titles: [(dash.host.monthNames[dash.host.calTodayM - 1] || "").toUpperCase() + "  " + dash.host.calYear, "GITHUB  ACTIONS", "FAI  ·  GITLAB", "WEATHER  ·  24 H", "NETWORK  ·  LAN", "CLAUDE  ·  FAI"]
                 property int page: 0
                 function step(d) {
                     const n = pages.order.length;
@@ -498,6 +515,28 @@ PanelWindow {
                         }
                         transform: Translate {
                             x: pages.offsetOf(4)
+                            Behavior on x {
+                                NumberAnimation {
+                                    duration: Theme.ms(420)
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+                        }
+                    }
+
+                    // The Claude page (ClaudePage.qml): the FAI account's /usage limits.
+                    ClaudePage {
+                        anchors.fill: parent
+                        anchors.topMargin: 6
+                        opacity: pages.page === 5 ? 1 : 0
+                        visible: opacity > 0
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: Theme.ms(260)
+                            }
+                        }
+                        transform: Translate {
+                            x: pages.offsetOf(5)
                             Behavior on x {
                                 NumberAnimation {
                                     duration: Theme.ms(420)

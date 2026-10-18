@@ -21,13 +21,11 @@ Access: `Del` at POST, then `F7` (Advanced Mode).
 | Launch CSM | Disabled | Boot → CSM | confirmed (OS) |
 | Above 4G Decoding | Enabled | Advanced → PCI Subsystem | confirmed (OS) |
 | Re-Size BAR Support | Enabled | Advanced → PCI Subsystem | confirmed (OS) |
-| Primary Display | PCIE | Advanced → System Agent / Graphics | recommended |
+| Primary Display | PCIE | Advanced → System Agent / Graphics | hidden in BIOS 2803 (see below) |
 | Secure Boot → OS Type | Other OS | Boot → Secure Boot | recommended |
 | Fast Boot | Disabled | Boot | recommended |
 | Ai Overclock Tuner (XMP) | XMP I (3200 MT/s) | Ai Tweaker | confirmed (3200 MT/s) |
-| Native ASPM | Enabled | Advanced → Platform Misc Configuration | to try (18/10/2026) |
-| SA - PCI Express → PEG - ASPM | L1 (or ASPM L1 / Auto) | Advanced → Platform Misc Configuration | to try (18/10/2026) |
-| PCH - PCI Express → ASPM | L1 | Advanced → Platform Misc Configuration | optional, same visit |
+| Native ASPM, PEG - ASPM, PCH ASPM | (wanted: Enabled, L1, L1) | NOT in the menus: hidden by ASUS | see below |
 
 - **Confirmed (OS):** measured from Linux. CSM off (the Arc is UEFI-only and it booted),
   Above 4G + ReBAR active (a 16G VRAM BAR mapped above 4G, through `lspci`).
@@ -75,9 +73,34 @@ showed exactly where it stops:
 
 The card is ready; it is the CPU's PEG port that ADVERTISES no ASPM, and Linux honors the
 advertisement. So the fix is the firmware's, NOT a kernel parameter: `pcie_aspm=force` would
-enable a state the port says it does not have, which is how links hang. The options above are
-named as ASUS 500-series boards usually label them; if this BIOS words them differently, look
-under Platform Misc Configuration for the PEG and PCH ASPM entries.
+enable a state the port says it does not have, which is how links hang.
+
+**The firmware has the options and hides them** (VERIFIED 18/10/2026 against BIOS 2803, the
+official `EX-B560M-V5-SI-2803.zip` from `dlcdnets.asus.com/pub/ASUS/mb/BIOS/`, unpacked with
+`uefiextract` and its Setup module (`899407D7-...`) read with `ifrextractor`, nothing written).
+The options exist in its forms: `PCI Express Native Power Management` and `Native ASPM` (Setup),
+`PEG - ASPM` with Disabled/Auto/L0s/L1/L0sL1 (SaSetup), the PCH `ASPM` (PchSetup). But in the
+`Advanced` form, the links to `Platform Misc Configuration`, `System Agent (SA) Configuration`,
+`PCH Configuration`, `Power & Performance`, `RC ACPI Settings` and `Thermal Configuration` all sit
+under `SuppressIf 1 == 1`, a condition that is always true. What stays visible is exactly the
+manual's list (CPU, PCH Storage, PCH-FW, PCI Subsystem, USB, Network Stack, NVMe, Onboard
+Devices, APM, SMART), so an Expedition board simply does not offer these knobs. The SA menu
+being hidden also means the `Primary Display` row above cannot be set from the menus either.
+
+The live values agree (read from efivarfs, 4-byte attribute header first; `Setup` is 2698 bytes
+= the IFR's 0xA86 plus 4, so the offsets match this BIOS):
+
+| Option | Variable + offset (BIOS 2803 only) | Value now | Wanted |
+| --- | --- | --- | --- |
+| PCI Express Native Power Management | `Setup` 0x51 | 0 (Disabled) | 1 |
+| Native ASPM | `Setup` 0x52 | 0 (Disabled) | 1 (Enabled) |
+| PEG - ASPM (PEG 0) | `SaSetup` 0x52 | 0 (Disabled) | 2 (ASPM L1) |
+| PCH ASPM | `PchSetup` 0x113 | 0 (Disabled) | (L1) |
+
+The only way to change them without a modified BIOS is writing those bytes, which the
+"Do NOT do" list below forbids. That rule stands until it is decided otherwise: the offsets are
+now known for 2803 (they still change with any other version), but a bad write to `Setup` on a
+board with no FlashBack is the risk the rule exists for, and the way back is a Clear CMOS.
 
 The kernel log names the same cause before any `lspci`. On the boot of 18/10/2026:
 `ACPI FADT declares the system doesn't support PCIe ASPM, so disable it`, `FADT indicates ASPM is

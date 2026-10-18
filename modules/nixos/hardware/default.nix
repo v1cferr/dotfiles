@@ -9,5 +9,6 @@
     ./btrfs.nix # the FS' integrity: scrub plus alarm, error counters, reclaim, TRIM
     ./oom.nix # earlyoom: it kills the biggest process before the out-of-RAM freeze (zram's companion)
     ./audio.nix # PipeWire plus rtkit
+    ./power.nix # power-profiles-daemon: the CPU profile behind Balanced/Gaming/Eco
   ];
 }

@@ -4,8 +4,9 @@ local home = os.getenv("HOME")
 local ok, P = pcall(dofile, home .. "/.config/theme/plugins.lua")
 local C = dofile(home .. "/.config/theme/hypr-colors.lua")
 
--- Once per process: a reload re-runs this file, and a second load of the same .so would only pause.
-if ok and P and P.hyprglass and not hl.plugin.hyprglass then
+-- EVERY pass declares it: Hyprland's plugin list is declarative, a pass that omits it unloads it, and
+-- a "load once" guard made load/unload alternate, one reload per pass, until the stack overflowed.
+if ok and P and P.hyprglass then
   hl.plugin.load(P.hyprglass)
 end
 if not hl.plugin.hyprglass then

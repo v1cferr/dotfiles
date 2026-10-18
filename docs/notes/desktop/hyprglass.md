@@ -39,11 +39,34 @@ package now (commit `e4d7538e`).
 `glass.lua` runs before `appearance.lua`. It reads `~/.config/theme/plugins.lua`, which the module
 generates with the plugin's path when it is on and `nil` when it is off, and:
 
-1. loads the plugin with `hl.plugin.load(path)`, only if Nix named it and it is not loaded yet (a
-   reload re-runs the file, and the guard keeps it to one load per process);
+1. declares the plugin with `hl.plugin.load(path)` on EVERY pass in which Nix names it (below: a
+   "load it only once" guard is what crashed the session on 17/10/2026);
 2. configures it ONLY inside `if hl.plugin.hyprglass then`, upstream's guard, so a missing or paused
    plugin skips the whole block instead of producing config errors;
 3. returns early when the plugin is absent, so the native blur stays in charge.
+
+**The plugin list is DECLARATIVE, and getting that wrong crashed the session.** On 17/10/2026, the
+`rebuild` that switched it on made Hyprland reload its config, and Hyprland died with SIGSEGV; the
+crash handler's restart died the same way, and `start-hyprland` came back on its recovery config
+(`recoverycfg.lua`, no binds, no rules). The core dump showed `reload` -> `postConfigReload` ->
+`handlePluginLoads` -> `reload` again, until the stack overflowed. Hyprland 0.56.2's
+`CPluginSystem::updateConfigPlugins` compares the plugins declared in THIS pass of the config with
+the ones it has: it loads what is new, UNLOADS what a pass no longer declares, and reloads the config
+when anything changed. The first `glass.lua` loaded the plugin only "if not loaded yet", so pass 1
+declared it (load, reload), pass 2 skipped it (unload, reload), pass 3 declared it again, forever.
+Every pass now declares it while Nix names it, so the list is the same on every pass and the second
+pass is a no-op.
+
+Why the earlier tests missed it: their test config called `hl.plugin.load` itself, unconditionally,
+before `glass.lua`, so the declared list never changed. The fix was tested with `glass.lua` ALONE
+as the live config runs it: the unfixed file reproduced the crash in the nested compositor (the same
+`handlePluginLoads` recursion in its core dump), and the fixed one came up with the plugin `active`,
+then survived five `hyprctl reload`s with one plugin loaded.
+
+**A crash that is NOT the plugin's:** a nested Hyprland killed with SIGTERM while windows are open
+segfaults in `CCompositor::cleanup` (unmapping a window), with or without the plugin; a nested run
+with no plugin at all did the same. Every nested test of the day ended that way, which is why a core
+dump at a nested test's teardown says nothing about HyprGlass.
 
 **The startup hang upstream warns about does not apply here.** A plugin load makes Hyprland run the
 whole Lua file once more during startup, and a top-level `os.execute`, `io.popen` or `hyprctl` then

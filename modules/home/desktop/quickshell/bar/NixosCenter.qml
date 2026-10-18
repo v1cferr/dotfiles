@@ -12,6 +12,7 @@ import "root:/notifications"
 BarPanel {
     id: center
     key: "center"
+    layerNamespace: "qs-center" // shell-screenshot waits for exactly this layer to leave the frame
 
     readonly property int sw: center.screen ? center.screen.width : 1920
     readonly property int sh: center.screen ? center.screen.height : 1080
@@ -41,7 +42,19 @@ BarPanel {
         interval: 4000
         onTriggered: center.armed = -1
     }
-    onVisibleChanged: center.armed = -1
+    onVisibleChanged: {
+        center.armed = -1;
+        center.shotsOpen = false; // it opens folded, so the panel never grows on its own
+    }
+
+    // ── Screenshots: shell-screenshot (flameshot.nix) waits for this panel to leave the frame ──
+    property bool shotsOpen: false
+    property bool shotSave: false // the clipboard first, as the keybinds do; a file on demand
+    readonly property bool primaryUp: Quickshell.screens.some(x => x.name === Theme.primaryMonitor)
+    function shoot(target) {
+        center.bar.closePanels();
+        Quickshell.execDetached(["shell-screenshot", target, center.shotSave ? "save" : "copy"]);
+    }
     readonly property var actions: [
         {
             icon: "󰌾",
@@ -143,6 +156,133 @@ BarPanel {
                 width: ListView.view.width
                 notif: modelData
                 isPopup: false
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: Theme.hairline
+            color: Theme.colEdge
+        }
+
+        // ── Screenshot: folded to one line; open, the three targets and where the shot goes ──
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Theme.sp2
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: Theme.barControl
+                radius: Theme.radiusControl
+                color: shotHead.containsMouse ? Theme.colHoverFill : "transparent"
+                Accessible.role: Accessible.Button
+                Accessible.name: center.shotsOpen ? "Hide the screenshot actions" : "Show the screenshot actions"
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.sp2
+                    anchors.rightMargin: Theme.sp2
+                    spacing: Theme.sp2
+                    Text {
+                        text: "󰹑"
+                        color: Theme.colSubtext
+                        font.family: Theme.uiFont
+                        font.pixelSize: 16
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: "Screenshot"
+                        color: Theme.colSubtext
+                        font.family: Theme.uiFont
+                        font.pixelSize: Theme.fontBody
+                    }
+                    Text {
+                        text: center.shotsOpen ? "󰅀" : "󰅂"
+                        color: Theme.colDim
+                        font.family: Theme.uiFont
+                        font.pixelSize: Theme.fontLabel
+                    }
+                }
+                MouseArea {
+                    id: shotHead
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: center.shotsOpen = !center.shotsOpen
+                }
+            }
+            IconButton {
+                visible: center.shotsOpen
+                glyph: center.shotSave ? "󰉉" : "󰅇"
+                tint: center.shotSave ? Theme.colAccent : Theme.colSubtext
+                active: center.shotSave
+                name: center.shotSave ? "Saving a PNG to ~/Pictures/Screenshots (click: copy instead)" : "Copying to the clipboard (click: save a PNG instead)"
+                onClicked: center.shotSave = !center.shotSave
+            }
+        }
+        RowLayout {
+            visible: center.shotsOpen
+            Layout.fillWidth: true
+            spacing: Theme.sp1
+            Repeater {
+                model: [
+                    {
+                        target: "primary",
+                        icon: "󰍹",
+                        label: "Main",
+                        name: Theme.primaryMonitor
+                    },
+                    {
+                        target: "secondary",
+                        icon: "󰍺",
+                        label: "Side",
+                        name: Theme.secondaryMonitor
+                    },
+                    {
+                        target: "all",
+                        icon: "󰹑",
+                        label: "Both",
+                        name: "the whole layout"
+                    }
+                ]
+                delegate: Rectangle {
+                    id: shot
+                    required property var modelData
+                    readonly property bool up: shot.modelData.target === "primary" ? center.primaryUp : (shot.modelData.target === "secondary" ? Theme.secondaryConnected : true)
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 0
+                    implicitHeight: 44
+                    radius: Theme.radiusControl
+                    enabled: shot.up
+                    opacity: shot.up ? 1 : Theme.opacityDisabled
+                    color: shotArea.containsMouse ? Theme.colHoverFill : "transparent"
+                    Accessible.role: Accessible.Button
+                    Accessible.name: "Screenshot of " + shot.modelData.name + (shot.up ? "" : ", not connected")
+                    ColumnLayout {
+                        anchors.centerIn: parent
+                        spacing: 2
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: shot.modelData.icon
+                            color: Theme.colText
+                            font.family: Theme.uiFont
+                            font.pixelSize: 16
+                        }
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: shot.modelData.label
+                            color: Theme.colSubtext
+                            font.family: Theme.uiFont
+                            font.pixelSize: Theme.fontSmall
+                        }
+                    }
+                    MouseArea {
+                        id: shotArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        enabled: shot.up
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: center.shoot(shot.modelData.target)
+                    }
+                }
             }
         }
 

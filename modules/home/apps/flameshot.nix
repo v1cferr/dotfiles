@@ -15,6 +15,7 @@ let
   inherit (pkgs)
     coreutils
     jq
+    libnotify
     unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
     writeShellApplication
     ;
@@ -134,6 +135,54 @@ let
     '';
   };
 
+  # shell-screenshot: the NixOS Center's capture. It waits for the Center to leave the frame, then
+  # shoots one monitor or the whole layout, to the clipboard or to a dated PNG: docs/notes/desktop/nixos-center.md
+  shellScreenshot = writeShellApplication {
+    name = "shell-screenshot";
+    runtimeInputs = [
+      fs
+      hyprland
+      jq
+      coreutils
+      libnotify
+    ];
+    text = ''
+      target="''${1:?usage: shell-screenshot primary|secondary|all [copy|save]}"
+      mode="''${2:-copy}"
+      case "$target" in
+        primary) name="${osConfig.my.monitors.primary}" ;;
+        secondary) name="${osConfig.my.monitors.secondary}" ;;
+        all) name="all" ;;
+        *) echo "unknown target: $target" >&2; exit 2 ;;
+      esac
+      fail() { notify-send -a Screenshot -u normal "Screenshot failed" "$1" || true; exit 1; }
+
+      # The Center closes before this runs: wait until its layer is gone (<=1 s), then past
+      # Hyprland's 100 ms layer fade, so the panel is never in the shot.
+      for _ in $(seq 20); do
+        hyprctl -j layers | jq -e 'any(.[].levels[][]; .namespace == "qs-center")' >/dev/null || break
+        sleep 0.05
+      done
+      sleep 0.15
+
+      dir="$HOME/Pictures/Screenshots"
+      mkdir -p "$dir"
+      if [ "$target" = all ]; then id=all; else id="$target-$name"; fi
+      file="$dir/$(date +%Y-%m-%d_%H-%M-%S)_$id.png"
+      if [ "$mode" = save ]; then out=(-p "$file"); else out=(-c); fi
+
+      if [ "$target" = all ]; then
+        flameshot full "''${out[@]}" || fail "flameshot could not capture the screens"
+      else
+        # The same derivation as flameshot-screen: the position among the ACTIVE monitors by id.
+        idx="$(hyprctl monitors -j | jq -r --arg t "$name" '
+          ([ .[] | { name, id } ] | sort_by(.id) | map(.name) | index($t)) // empty')"
+        [ -n "$idx" ] || fail "$name is not connected"
+        flameshot screen --number "$idx" "''${out[@]}" || fail "flameshot could not capture $name"
+      fi
+    '';
+  };
+
   # flameshot-cancel: Esc closes the picker and leaves the submap.
   flameshotCancel = writeShellApplication {
     name = "flameshot-cancel";
@@ -152,6 +201,7 @@ in
     flameshotPick
     flameshotScreen
     flameshotCancel
+    shellScreenshot
   ];
 
   # The screenshot aliases live next to the tool, not in zsh.nix (the eza/bat convention). They

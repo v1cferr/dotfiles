@@ -66,6 +66,7 @@ hg.preset("panel", {
 hg.layer("qs-bar", { preset = "ui" })
 hg.layer("qs-dash", { preset = "ui" })
 hg.layer("qs-panel", { preset = "panel" })
+hg.layer("qs-center", { preset = "panel" })
 
 -- Where glass goes: the terminal and floating windows. Where it never does: the games,
 -- Picture-in-Picture and Flameshot's frozen overlay (rules.lua keeps their other rules). No rule on

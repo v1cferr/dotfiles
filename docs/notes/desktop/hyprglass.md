@@ -78,21 +78,24 @@ to the shell's layers: HyprGlass takes them, and the plugin itself sets `noblur`
 glasses (`manage_window_blur`, its default). With it off, the native rule from
 [theme.md](theme.md#the-blur-and-solid) is back exactly as before.
 
-## Perceptible: the presets
+## The presets
 
-Three presets, all on upstream's `subtle`, all with documented options only:
+Three presets, all on upstream's `subtle`, all with documented options only. Their numbers come from
+the glass PROFILE (`my.theme.glass`): the `V` table at the top of `glass.lua` holds the only values
+that differ between `perceptible` and `clear-gradient`, both listed in
+[theme.md](theme.md#the-two-profiles-18102026). The values below are `perceptible`'s.
 
 | Preset | Used by | What it changes |
 | --- | --- | --- |
-| `perceptible` | the terminal, floating windows | `xray = 0` (the windows behind stay visible: that is the depth), no self sampling, blur 1.2, refraction 0.3 kept to the rim (`refraction_spread = 0.2`), no lens dome, no chromatic aberration, specular 0.15, fresnel 0.2, the palette's bg as tint at about a third |
-| `perceptible_ui` | the bar, the band | more blur (1.6), almost no refraction (0.12), a thin edge, since text runs across the whole surface |
-| `perceptible_panel` | panels, the NixOS Center, toasts | the most blur (2.0) and a darker tint, since they are read the longest |
+| `window` | the terminal, floating windows | `xray = 0` (the windows behind stay visible: that is the depth), no self sampling, blur 1.2, refraction 0.3 kept to the rim (`refraction_spread = 0.2`), no lens dome, no chromatic aberration, specular 0.15, fresnel 0.2, the palette's bg as tint at about a third |
+| `ui` | the bar, the band | more blur (1.6), almost no refraction (0.12), a thin edge, since text runs across the whole surface |
+| `panel` | panels, the NixOS Center, toasts | the most blur (2.0) and a darker tint, since they are read the longest |
 
 **Selective, never everywhere.** Window glass is OFF globally and turned on by tag for kitty and
 for floating windows; a browser or an editor at the global 0.98 opacity would gain nothing. Tagged
 off: Hearthstone, Overwatch, Steam games, Picture-in-Picture and Flameshot's overlay. Dolphin and
 the other Kvantum apps are opaque by design ([theme.md](theme.md)), so the plugin skips them
-(`skip_opaque_windows`). Layer glass covers `qs-bar`, `qs-dash` and `qs-panel` at a 0.5 alpha mask,
+(`skip_opaque_windows`). Layer glass covers `qs-bar`, `qs-dash`, `qs-panel` and `qs-center` at a 0.5 alpha mask,
 so the shell's transparent gaps get no glass.
 
 **No rule on fullscreen**, and that was measured: `match = { fullscreen = 1 }` tagged EVERY window

@@ -53,6 +53,25 @@ every bar panel, with one difference: it opens on a CLICK only, never on hover.
   hotplug closes the panel it was holding, so no invisible window is left with the keyboard.
 - **From the keyboard:** `qs ipc call notif toggle` opens it on the main monitor's logo.
 
+## Screenshots (18/10/2026)
+
+A folded `Screenshot` line between the history and the session: one row while folded, so the panel
+does not grow; open, it holds three targets (Main, Side, Both) and a toggle for where the shot goes,
+the clipboard by default (as the keybinds do) or a PNG in `~/Pictures/Screenshots`, named
+`<date>_<time>_<target>-<connector>.png` (`..._all.png` for the whole layout). A monitor that is not
+connected greys its button out. It opens folded every time.
+
+A click closes the Center and runs `shell-screenshot <target> <copy|save>` (`flameshot.nix`), which
+reuses Flameshot and `my.monitors`: it waits for the Center's own layer, `qs-center`, to leave the
+frame and for Hyprland's 100 ms layer fade, then shoots. The capture is Flameshot's, the same backend
+as `sc1`, `sc2` and `scfull`, and Flameshot's own notification is the success feedback; a failure
+(a monitor gone, Flameshot failing) is a notification too. No new daemon.
+
+Tested on 18/10/2026: PNGs at native resolution, 2560x1440 (main), 1080x1920 (the LG, rotated) and
+3640x1920 (the whole virtual layout); a copy left `image/png` 1080x1920 in the clipboard; and a shot
+fired the instant the Center closed showed no trace of it, 909 ms from close to file. Shared images
+are often scaled down by the app they are pasted into; the original file is the native one.
+
 ## The unseen dot
 
 A 6 px dot beside the logo, at a FIXED spot to the right of the SVG (never over it, never moving

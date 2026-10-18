@@ -68,6 +68,11 @@ hold is `--region`, which v14 ignores.
 | `sc1` | the main one (`my.monitors.primary`), to the clipboard |
 | `sc2` | the secondary (`my.monitors.secondary`), to the clipboard |
 
+The NixOS Center's Screenshot buttons run `shell-screenshot primary|secondary|all [copy|save]`, the
+same backend and the same `--number` derivation, after waiting for the Center to leave the frame;
+`save` writes a dated PNG to `~/Pictures/Screenshots`
+([nixos-center.md](../desktop/nixos-center.md#screenshots-18102026)).
+
 **`--number` is a Qt screen index and NOT a monitor name**, and it was a measured literal here until
 30/08/2026, guarded by nothing but a "if the layout changes, MEASURE AGAIN". It also broke with the
 TV disconnected: index 1 stops existing, so the alias pointing at it answered `Requested screen

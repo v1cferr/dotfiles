@@ -37,9 +37,16 @@ So the screens stay on and show black, which is what the user asked for anyway.
 [`Away.qml`](../../../modules/home/desktop/quickshell/Away.qml) keeps the state and the IPC
 (`qs ipc call away on|off|toggle`), and
 [`away/AwayScreen.qml`](../../../modules/home/desktop/quickshell/away/AwayScreen.qml) draws one
-black layer per monitor on the `overlay` layer, over the bar. Entering also turns do not disturb
-on (a toast would light the screen up) and runs `rgb-lights off`; leaving restores the previous
-DND and runs `rgb-lights on`.
+black layer per monitor on the `overlay` layer, over the bar. Entering also holds the toasts (a
+toast would light the screen up) and runs `rgb-lights off`; leaving releases the hold and runs
+`rgb-lights on`.
+
+**A hold, not the DND switch** (18/10/2026). The away screen used to write `Notifs.dnd` and restore
+it on the way out; when DND started persisting, `dnd` became read-only and both writes silently
+failed, so toasts reached the black screen. It now calls `Notifs.hold(true)` and `hold(false)`: a
+counted, temporary hold that is never saved, and the toasts obey DND OR a hold. The user's DND is
+never touched, so a crash mid-away cannot leave it stuck on. Critical notifications still pierce, as
+they pierce DND. Tested live: no toast while away, the saved DND unchanged, a toast again after.
 
 Three details carry the design:
 

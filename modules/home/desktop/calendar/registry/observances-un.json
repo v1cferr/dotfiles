@@ -1,0 +1,6849 @@
+{
+  "sources": {
+    "un-doc-a-res-73-161": {
+      "title": "A/RES/73/161",
+      "url": "https://undocs.org/en/A/RES/73/161",
+      "authority": "United Nations",
+      "document_id": "A/RES/73/161",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-73-25": {
+      "title": "A/RES/73/25",
+      "url": "https://undocs.org/en/A/RES/73/25",
+      "authority": "United Nations",
+      "document_id": "A/RES/73/25",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-77-327": {
+      "title": "A/RES/77/327",
+      "url": "https://www.undocs.org/A/RES/77/327",
+      "authority": "United Nations",
+      "document_id": "A/RES/77/327",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-60-7": {
+      "title": "A/RES/60/7",
+      "url": "https://undocs.org/en/A/RES/60/7",
+      "authority": "United Nations",
+      "document_id": "A/RES/60/7",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-79-269": {
+      "title": "A/RES/79/269",
+      "url": "https://docs.un.org/A/RES/79/269",
+      "authority": "United Nations",
+      "document_id": "A/RES/79/269",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-65-5": {
+      "title": "A/RES/65/5",
+      "url": "https://undocs.org/en/A/RES/65/5",
+      "authority": "United Nations",
+      "document_id": "A/RES/65/5",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-75-317": {
+      "title": "A/RES/75/317",
+      "url": "https://undocs.org/en/A/RES/75/317",
+      "authority": "United Nations",
+      "document_id": "A/RES/75/317",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-75-200": {
+      "title": "A/RES/75/200",
+      "url": "https://undocs.org/en/A/RES/75/200",
+      "authority": "United Nations",
+      "document_id": "A/RES/75/200",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-67-146": {
+      "title": "A/RES/67/146",
+      "url": "https://undocs.org/en/A/RES/67/146",
+      "authority": "United Nations",
+      "document_id": "A/RES/67/146",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-73-251": {
+      "title": "A/RES/73/251",
+      "url": "https://undocs.org/en/A/RES/73/251",
+      "authority": "United Nations",
+      "document_id": "A/RES/73/251",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-77-295": {
+      "title": "A/RES/77/295",
+      "url": "https://www.undocs.org/en/A/RES/77/295",
+      "authority": "United Nations",
+      "document_id": "A/RES/77/295",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-70-212": {
+      "title": "A/RES/70/212",
+      "url": "https://undocs.org/en/A/RES/70/212",
+      "authority": "United Nations",
+      "document_id": "A/RES/70/212",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-77-243": {
+      "title": "A/RES/77/243",
+      "url": "https://www.undocs.org/en/A/RES/77/243",
+      "authority": "United Nations",
+      "document_id": "A/RES/77/243",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-67-124": {
+      "title": "A/RES/67/124",
+      "url": "https://undocs.org/en/A/RES/67/124",
+      "authority": "United Nations",
+      "document_id": "A/RES/67/124",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-77-269": {
+      "title": "A/RES/77/269",
+      "url": "https://undocs.org/en/A/RES/77/269",
+      "authority": "United Nations",
+      "document_id": "A/RES/77/269",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-62-10": {
+      "title": "A/RES/62/10",
+      "url": "https://undocs.org/en/A/RES/62/10",
+      "authority": "United Nations",
+      "document_id": "A/RES/62/10",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-56-262": {
+      "title": "A/RES/56/262",
+      "url": "https://undocs.org/en/A/RES/56/262",
+      "authority": "United Nations",
+      "document_id": "A/RES/56/262",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-76-265": {
+      "title": "A/RES/76/265",
+      "url": "https://undocs.org/en/A/RES/76/265",
+      "authority": "United Nations",
+      "document_id": "A/RES/76/265",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-68-205": {
+      "title": "A/RES/68/205",
+      "url": "https://undocs.org/en/A/RES/68/205",
+      "authority": "United Nations",
+      "document_id": "A/RES/68/205",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-77-51": {
+      "title": "A/RES/77/51",
+      "url": "https://www.undocs.org/en/A/RES/77/51",
+      "authority": "United Nations",
+      "document_id": "A/RES/77/51",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-75-274": {
+      "title": "A/RES/75/274",
+      "url": "https://undocs.org/en/A/RES/75/274",
+      "authority": "United Nations",
+      "document_id": "A/RES/75/274",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-76-254": {
+      "title": "A/RES/76/254",
+      "url": "https://undocs.org/en/A/RES/76/254",
+      "authority": "United Nations",
+      "document_id": "A/RES/76/254",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-66-281": {
+      "title": "A/RES/66/281",
+      "url": "https://undocs.org/en/A/RES/66/281",
+      "authority": "United Nations",
+      "document_id": "A/RES/66/281",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-77-158": {
+      "title": "A/RES/77/158",
+      "url": "https://undocs.org/A/RES/77/158",
+      "authority": "United Nations",
+      "document_id": "A/RES/77/158",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-67-200": {
+      "title": "A/RES/67/200",
+      "url": "https://undocs.org/en/A/RES/67/200",
+      "authority": "United Nations",
+      "document_id": "A/RES/67/200",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-2142-xxi": {
+      "title": "A/RES/2142 (XXI)",
+      "url": "https://undocs.org/A/RES/2142 (XXI)",
+      "authority": "United Nations",
+      "document_id": "A/RES/2142 (XXI)",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-30-c-resolution-29": {
+      "title": "30 C/Resolution 29",
+      "url": "https://unesdoc.unesco.org/ark:/48223/pf0000118514.page=70",
+      "authority": "United Nations",
+      "document_id": "30 C/Resolution 29",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-64-253": {
+      "title": "A/RES/64/253",
+      "url": "https://undocs.org/en/A/RES/64/253",
+      "authority": "United Nations",
+      "document_id": "A/RES/64/253",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-66-149": {
+      "title": "A/RES/66/149",
+      "url": "https://undocs.org/en/A/RES/66/149",
+      "authority": "United Nations",
+      "document_id": "A/RES/66/149",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-47-193": {
+      "title": "A/RES/47/193",
+      "url": "https://undocs.org/en/A/RES/47/193",
+      "authority": "United Nations",
+      "document_id": "A/RES/47/193",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-wmo-ec-xii-res-6": {
+      "title": "WMO/EC-XII/Res.6",
+      "url": "https://library.wmo.int/viewer/32802?medianame=99_en_#page=66&amp;viewer=picture&amp;o=bookmarks&amp;n=0&amp;q=",
+      "authority": "United Nations",
+      "document_id": "WMO/EC-XII/Res.6",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-65-196": {
+      "title": "A/RES/65/196",
+      "url": "https://undocs.org/en/A/RES/67/200",
+      "authority": "United Nations",
+      "document_id": "A/RES/65/196",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-62-122": {
+      "title": "A/RES/62/122",
+      "url": "https://undocs.org/en/A/RES/62/122",
+      "authority": "United Nations",
+      "document_id": "A/RES/62/122",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-49-59": {
+      "title": "A/RES/49/59",
+      "url": "https://undocs.org/en/A/RES/49/59",
+      "authority": "United Nations",
+      "document_id": "A/RES/49/59",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-77-161": {
+      "title": "A/RES/77/161",
+      "url": "https://www.undocs.org/en/A/RES/77/161",
+      "authority": "United Nations",
+      "document_id": "A/RES/77/161",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-62-139": {
+      "title": "A/RES/62/139",
+      "url": "https://undocs.org/en/A/RES/62/139",
+      "authority": "United Nations",
+      "document_id": "A/RES/62/139",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-60-97": {
+      "title": "A/RES/60/97",
+      "url": "https://undocs.org/en/A/RES/60/97",
+      "authority": "United Nations",
+      "document_id": "A/RES/60/97",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-73-329": {
+      "title": "A/RES/73/329",
+      "url": "https://undocs.org/en/A/RES/73/329",
+      "authority": "United Nations",
+      "document_id": "A/RES/73/329",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-67-296": {
+      "title": "A/RES/67/296",
+      "url": "https://undocs.org/en/A/RES/67/296",
+      "authority": "United Nations",
+      "document_id": "A/RES/67/296",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-58-234": {
+      "title": "A/RES/58/234",
+      "url": "https://undocs.org/en/A/RES/58/234",
+      "authority": "United Nations",
+      "document_id": "A/RES/58/234",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-wha-a-2-res-35": {
+      "title": "WHA/A.2/Res.35",
+      "url": "https://apps.who.int/iris/bitstream/handle/10665/86099/WHA2.35_eng.pdf",
+      "authority": "United Nations",
+      "document_id": "WHA/A.2/Res.35",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-65-271": {
+      "title": "A/RES/65/271",
+      "url": "https://undocs.org/en/A/RES/65/271",
+      "authority": "United Nations",
+      "document_id": "A/RES/65/271",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-80-249": {
+      "title": "A/RES/80/249",
+      "url": "https://docs.un.org/en/A/RES/80/249",
+      "authority": "United Nations",
+      "document_id": "A/RES/80/249",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-71-284": {
+      "title": "A/RES/71/284",
+      "url": "https://undocs.org/en/A/RES/71/284",
+      "authority": "United Nations",
+      "document_id": "A/RES/71/284",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-63-278": {
+      "title": "A/RES/63/278",
+      "url": "https://undocs.org/en/A/RES/63/278",
+      "authority": "United Nations",
+      "document_id": "A/RES/63/278",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-28-c-resolution-3-18": {
+      "title": "28 C/Resolution 3.18",
+      "url": "https://unesdoc.unesco.org/ark:/48223/pf0000101803.page=56",
+      "authority": "United Nations",
+      "document_id": "28 C/Resolution 3.18",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-73-127": {
+      "title": "A/RES/73/127",
+      "url": "https://undocs.org/en/A/RES/73/127",
+      "authority": "United Nations",
+      "document_id": "A/RES/73/127",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-73-286": {
+      "title": "A/RES/73/286",
+      "url": "https://undocs.org/en/A/RES/73/286",
+      "authority": "United Nations",
+      "document_id": "A/RES/73/286",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-71-125": {
+      "title": "A/RES/71/125",
+      "url": "https://undocs.org/en/A/RES/71/125",
+      "authority": "United Nations",
+      "document_id": "A/RES/71/125",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-79-285": {
+      "title": "A/RES/79/285",
+      "url": "https://www.undocs.org/en/A/RES/79/285",
+      "authority": "United Nations",
+      "document_id": "A/RES/79/285",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-unesco-36-c-resolution-39": {
+      "title": "UNESCO 36 C/Resolution 39",
+      "url": "https://unesdoc.unesco.org/ark:/48223/pf0000215084.page=53",
+      "authority": "United Nations",
+      "document_id": "UNESCO 36 C/Resolution 39",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-54-115": {
+      "title": "A/RES/54/115",
+      "url": "https://undocs.org/en/A/RES/54/115",
+      "authority": "United Nations",
+      "document_id": "A/RES/54/115",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-71-124": {
+      "title": "A/RES/71/124",
+      "url": "https://undocs.org/en/A/RES/71/124",
+      "authority": "United Nations",
+      "document_id": "A/RES/71/124",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-unesco-26-c-resolution-4-3": {
+      "title": "UNESCO 26 C/Resolution 4.3",
+      "url": "https://unesdoc.unesco.org/ark:/48223/pf0000090448.page=76",
+      "authority": "United Nations",
+      "document_id": "UNESCO 26 C/Resolution 4.3",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-40-c-resolution-75": {
+      "title": "40 C/Resolution/75",
+      "url": "https://unesdoc.unesco.org/ark:/48223/pf0000371438",
+      "authority": "United Nations",
+      "document_id": "40 C/Resolution/75",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-59-26": {
+      "title": "A/RES/59/26",
+      "url": "https://undocs.org/en/A/RES/59/26",
+      "authority": "United Nations",
+      "document_id": "A/RES/59/26",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-75-262": {
+      "title": "A/RES/75/262",
+      "url": "https://undocs.org/en/A/RES/75/262",
+      "authority": "United Nations",
+      "document_id": "A/RES/75/262",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-76-256": {
+      "title": "A/RES/76/256",
+      "url": "https://undocs.org/en/A/RES/76/256",
+      "authority": "United Nations",
+      "document_id": "A/RES/76/256",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-47-237": {
+      "title": "A/RES/47/237",
+      "url": "https://undocs.org/en/A/RES/47/237",
+      "authority": "United Nations",
+      "document_id": "A/RES/47/237",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-72-130": {
+      "title": "A/RES/72/130",
+      "url": "https://undocs.org/en/A/RES/72/130",
+      "authority": "United Nations",
+      "document_id": "A/RES/72/130",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-39-c-resolution-16": {
+      "title": "39 C/Resolution 16",
+      "url": "https://unesdoc.unesco.org/ark:/48223/pf0000260889.page=34",
+      "authority": "United Nations",
+      "document_id": "39 C/Resolution 16",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-60-252": {
+      "title": "A/RES/60/252",
+      "url": "https://undocs.org/en/A/RES/60/252",
+      "authority": "United Nations",
+      "document_id": "A/RES/60/252",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-78-310": {
+      "title": "A/RES/78/310",
+      "url": "https://www.undocs.org/en/A/RES/78/310",
+      "authority": "United Nations",
+      "document_id": "A/RES/78/310",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-72-211": {
+      "title": "A/RES/72/211",
+      "url": "https://undocs.org/en/A/RES/72/211",
+      "authority": "United Nations",
+      "document_id": "A/RES/72/211",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-74-241": {
+      "title": "A/RES/74/241",
+      "url": "https://undocs.org/en/A/RES/74/241",
+      "authority": "United Nations",
+      "document_id": "A/RES/74/241",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-57-249": {
+      "title": "A/RES/57/249",
+      "url": "https://undocs.org/en/A/RES/57/249",
+      "authority": "United Nations",
+      "document_id": "A/RES/57/249",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-55-201": {
+      "title": "A/RES/55/201",
+      "url": "https://undocs.org/en/A/RES/55/201",
+      "authority": "United Nations",
+      "document_id": "A/RES/55/201",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-67-147": {
+      "title": "A/RES/67/147",
+      "url": "https://undocs.org/en/A/RES/67/147",
+      "authority": "United Nations",
+      "document_id": "A/RES/67/147",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-78-278": {
+      "title": "A/RES/78/278",
+      "url": "https://www.undocs.org/EN/A/RES/78/278",
+      "authority": "United Nations",
+      "document_id": "A/RES/78/278",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-78-281": {
+      "title": "A/RES/78/281",
+      "url": "https://www.undocs.org/EN/A/RES/78/281",
+      "authority": "United Nations",
+      "document_id": "A/RES/78/281",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-54-91": {
+      "title": "A/RES/54/91",
+      "url": "https://undocs.org/en/A/RES/54/91",
+      "authority": "United Nations",
+      "document_id": "A/RES/54/91",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-57-129": {
+      "title": "A/RES/57/129",
+      "url": "https://undocs.org/en/A/RES/57/129",
+      "authority": "United Nations",
+      "document_id": "A/RES/57/129",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-78-123": {
+      "title": "A/RES/78/123",
+      "url": "https://www.undocs.org/en/A/RES/78/123",
+      "authority": "United Nations",
+      "document_id": "A/RES/78/123",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-resolution-42-19": {
+      "title": "Resolution 42.19",
+      "url": "https://www.who.int/about/governance/world-health-assembly",
+      "authority": "United Nations",
+      "document_id": "Resolution 42.19",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-66-292": {
+      "title": "A/RES/66/292",
+      "url": "https://undocs.org/en/A/RES/66/292",
+      "authority": "United Nations",
+      "document_id": "A/RES/66/292",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-72-272": {
+      "title": "A/RES/72/272",
+      "url": "https://undocs.org/en/A/RES/72/272",
+      "authority": "United Nations",
+      "document_id": "A/RES/72/272",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-es-7-8": {
+      "title": "A/RES/ES-7/8",
+      "url": "https://undocs.org/en/A/RES/ES-7/8",
+      "authority": "United Nations",
+      "document_id": "A/RES/ES-7/8",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-2994-xxvii": {
+      "title": "A/RES/2994 (XXVII)",
+      "url": "https://undocs.org/en/A/RES/2994 (XXVII)",
+      "authority": "United Nations",
+      "document_id": "A/RES/2994 (XXVII)",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-72-72": {
+      "title": "A/RES/72/72",
+      "url": "https://undocs.org/en/A/RES/72/72",
+      "authority": "United Nations",
+      "document_id": "A/RES/72/72",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-73-250": {
+      "title": "A/RES/73/250",
+      "url": "https://undocs.org/en/A/RES/73/250",
+      "authority": "United Nations",
+      "document_id": "A/RES/73/250",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-63-111": {
+      "title": "A/RES/63/111",
+      "url": "https://undocs.org/en/A/RES/63/111",
+      "authority": "United Nations",
+      "document_id": "A/RES/63/111",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-78-286": {
+      "title": "A/RES/78/286",
+      "url": "https://www.undocs.org/EN/A/RES/78/286",
+      "authority": "United Nations",
+      "document_id": "A/RES/78/286",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-78-268": {
+      "title": "A/RES/78/268",
+      "url": "https://undocs.org/en/A/RES/78/268",
+      "authority": "United Nations",
+      "document_id": "A/RES/78/268",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-69-170": {
+      "title": "A/RES/69/170",
+      "url": "https://undocs.org/en/A/RES/69/170",
+      "authority": "United Nations",
+      "document_id": "A/RES/69/170",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-wha-resolution-58-13": {
+      "title": "WHA Resolution 58.13",
+      "url": "https://apps.who.int/gb/ebwha/pdf_files/WHA58/WHA58_13-en.pdf",
+      "authority": "United Nations",
+      "document_id": "WHA Resolution 58.13",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-66-127": {
+      "title": "A/RES/66/127",
+      "url": "https://undocs.org/en/A/RES/66/127",
+      "authority": "United Nations",
+      "document_id": "A/RES/66/127",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-72-281": {
+      "title": "A/RES/72/281",
+      "url": "https://undocs.org/en/A/RES/72/281",
+      "authority": "United Nations",
+      "document_id": "A/RES/72/281",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-49-115": {
+      "title": "A/RES/49/115",
+      "url": "https://undocs.org/en/A/RES/49/115",
+      "authority": "United Nations",
+      "document_id": "A/RES/49/115",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-71-246": {
+      "title": "A/RES/71/246",
+      "url": "https://undocs.org/en/A/RES/71/246",
+      "authority": "United Nations",
+      "document_id": "A/RES/71/246",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-75-309": {
+      "title": "A/RES/75/309",
+      "url": "https://undocs.org/en/A/RES/75/309",
+      "authority": "United Nations",
+      "document_id": "A/RES/75/309",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-69-293": {
+      "title": "A/RES/69/293",
+      "url": "https://undocs.org/en/A/RES/69/293",
+      "authority": "United Nations",
+      "document_id": "A/RES/69/293",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-55-76": {
+      "title": "A/RES/55/76",
+      "url": "https://undocs.org/en/A/RES/55/76",
+      "authority": "United Nations",
+      "document_id": "A/RES/55/76",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-69-131": {
+      "title": "A/RES/69/131",
+      "url": "https://undocs.org/en/A/RES/69/131",
+      "authority": "United Nations",
+      "document_id": "A/RES/69/131",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-73-300": {
+      "title": "A/RES/73/300",
+      "url": "https://undocs.org/en/A/RES/73/300",
+      "authority": "United Nations",
+      "document_id": "A/RES/73/300",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-57-277": {
+      "title": "A/RES/57/277",
+      "url": "https://undocs.org/en/A/RES/57/277",
+      "authority": "United Nations",
+      "document_id": "A/RES/57/277",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-65-189": {
+      "title": "A/RES/65/189",
+      "url": "https://undocs.org/en/A/RES/65/189",
+      "authority": "United Nations",
+      "document_id": "A/RES/65/189",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-76-269": {
+      "title": "A/RES/76/269",
+      "url": "https://undocs.org/en/A/RES/76/269",
+      "authority": "United Nations",
+      "document_id": "A/RES/76/269",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-stcw-conf-2-dc-4": {
+      "title": "STCW/CONF.2/DC/4",
+      "url": "https://www.un.org/sites/un2.un.org/files/dayoftheseafarer-res19.pdf",
+      "authority": "United Nations",
+      "document_id": "STCW/CONF.2/DC/4",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-42-112": {
+      "title": "A/RES/42/112",
+      "url": "https://undocs.org/en/A/RES/42/112",
+      "authority": "United Nations",
+      "document_id": "A/RES/42/112",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-52-149": {
+      "title": "A/RES/52/149",
+      "url": "https://undocs.org/en/A/RES/52/149",
+      "authority": "United Nations",
+      "document_id": "A/RES/52/149",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-79-294": {
+      "title": "A/RES/79/294",
+      "url": "https://www.undocs.org/A/RES/79/294",
+      "authority": "United Nations",
+      "document_id": "A/RES/79/294",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-71-279": {
+      "title": "A/RES/71/279",
+      "url": "https://undocs.org/en/A/RES/70/267",
+      "authority": "United Nations",
+      "document_id": "A/RES/71/279",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-71-90": {
+      "title": "A/RES/71/90",
+      "url": "https://undocs.org/en/A/RES/71/90",
+      "authority": "United Nations",
+      "document_id": "A/RES/71/90",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-72-278": {
+      "title": "A/RES/72/278",
+      "url": "https://undocs.org/en/A/RES/72/278",
+      "authority": "United Nations",
+      "document_id": "A/RES/72/278",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-47-90": {
+      "title": "A/RES/47/90",
+      "url": "https://undocs.org/en/A/RES/47/90",
+      "authority": "United Nations",
+      "document_id": "A/RES/47/90",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-78-326": {
+      "title": "A/RES/78/326",
+      "url": "https://docs.un.org/en/A/RES/78/326",
+      "authority": "United Nations",
+      "document_id": "A/RES/78/326",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-78-312": {
+      "title": "A/RES/78/312",
+      "url": "https://www.undocs.org/en/A/RES/78/312",
+      "authority": "United Nations",
+      "document_id": "A/RES/78/312",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-78-282": {
+      "title": "A/RES/78/282",
+      "url": "https://undocs.org/A/RES/78/282",
+      "authority": "United Nations",
+      "document_id": "A/RES/78/282",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-45-216": {
+      "title": "A/RES/45/216",
+      "url": "https://undocs.org/en/A/RES/45/216",
+      "authority": "United Nations",
+      "document_id": "A/RES/45/216",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-79-291": {
+      "title": "A/RES/79/291",
+      "url": "https://www.undocs.org/A/RES/79/291",
+      "authority": "United Nations",
+      "document_id": "A/RES/79/291",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-77-294": {
+      "title": "A/RES/77/294",
+      "url": "https://www.undocs.org/en/A/RES/77/294",
+      "authority": "United Nations",
+      "document_id": "A/RES/77/294",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-79-270": {
+      "title": "A/RES/79/270",
+      "url": "https://docs.un.org/A/RES/79/270",
+      "authority": "United Nations",
+      "document_id": "A/RES/79/270",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-69-145": {
+      "title": "A/RES/69/145",
+      "url": "https://undocs.org/en/A/RES/69/145",
+      "authority": "United Nations",
+      "document_id": "A/RES/69/145",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-64-13": {
+      "title": "A/RES/64/13",
+      "url": "https://undocs.org/en/A/RES/64/13",
+      "authority": "United Nations",
+      "document_id": "A/RES/64/13",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-74-22": {
+      "title": "A/RES/74/22",
+      "url": "https://undocs.org/en/A/RES/74/22",
+      "authority": "United Nations",
+      "document_id": "A/RES/74/22",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-76-76": {
+      "title": "A/RES/76/76",
+      "url": "https://undocs.org/en/A/RES/76/76",
+      "authority": "United Nations",
+      "document_id": "A/RES/76/76",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-78-323": {
+      "title": "A/RES/78/323",
+      "url": "https://www.undocs.org/en/A/RES/78/323",
+      "authority": "United Nations",
+      "document_id": "A/RES/78/323",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-75-273": {
+      "title": "A/RES/75/273",
+      "url": "https://undocs.org/en/a/res/75/273",
+      "authority": "United Nations",
+      "document_id": "A/RES/75/273",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-79-266": {
+      "title": "A/RES/79/266",
+      "url": "https://docs.un.org/A/RES/79/266",
+      "authority": "United Nations",
+      "document_id": "A/RES/79/266",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-65-275": {
+      "title": "A/RES/65/275",
+      "url": "https://undocs.org/en/A/RES/65/275",
+      "authority": "United Nations",
+      "document_id": "A/RES/65/275",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-68-192": {
+      "title": "A/RES/68/192",
+      "url": "https://undocs.org/en/A/RES/68/192",
+      "authority": "United Nations",
+      "document_id": "A/RES/68/192",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-79-l-108": {
+      "title": "A /79/L.108",
+      "url": "https://docs.un.org/en/A/79/L.108",
+      "authority": "United Nations",
+      "document_id": "A /79/L.108",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-49-214": {
+      "title": "A/RES/49/214",
+      "url": "https://undocs.org/en/A/RES/49/214",
+      "authority": "United Nations",
+      "document_id": "A/RES/49/214",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-77-316": {
+      "title": "A/RES/77/316",
+      "url": "https://www.undocs.org/en/A/RES/77/316",
+      "authority": "United Nations",
+      "document_id": "A/RES/77/316",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-54-120": {
+      "title": "A/RES/54/120",
+      "url": "https://undocs.org/en/A/RES/54/120",
+      "authority": "United Nations",
+      "document_id": "A/RES/54/120",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-63-139": {
+      "title": "A/RES/63/139",
+      "url": "https://undocs.org/en/A/RES/63/139",
+      "authority": "United Nations",
+      "document_id": "A/RES/63/139",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-72-165": {
+      "title": "A/RES/72/165",
+      "url": "https://undocs.org/en/A/RES/72/165",
+      "authority": "United Nations",
+      "document_id": "A/RES/72/165",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-73-296": {
+      "title": "A/RES/73/296",
+      "url": "https://undocs.org/en/A/RES/73/296",
+      "authority": "United Nations",
+      "document_id": "A/RES/73/296",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-29-c-resolution-40": {
+      "title": "29 C/Resolution 40",
+      "url": "https://unesdoc.unesco.org/ark:/48223/pf0000110220.page=72",
+      "authority": "United Nations",
+      "document_id": "29 C/Resolution 40",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-79-142": {
+      "title": "A/RES/79/142",
+      "url": "https://undocs.org/en/A/RES/79/142",
+      "authority": "United Nations",
+      "document_id": "A/RES/79/142",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-64-35": {
+      "title": "A/RES/64/35",
+      "url": "https://undocs.org/en/A/RES/64/35",
+      "authority": "United Nations",
+      "document_id": "A/RES/64/35",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-65-209": {
+      "title": "A/RES/65/209",
+      "url": "https://undocs.org/en/A/RES/65/209",
+      "authority": "United Nations",
+      "document_id": "A/RES/65/209",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-75-170": {
+      "title": "A/RES/75/170",
+      "url": "https://undocs.org/en/A/RES/75/170",
+      "authority": "United Nations",
+      "document_id": "A/RES/75/170",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-67-105": {
+      "title": "A/RES/67/105",
+      "url": "https://undocs.org/en/A/RES/67/105",
+      "authority": "United Nations",
+      "document_id": "A/RES/67/105",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-80-10": {
+      "title": "A/RES/80/10",
+      "url": "https://docs.un.org/en/A/RES/80/10",
+      "authority": "United Nations",
+      "document_id": "A/RES/80/10",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-74-212": {
+      "title": "A/RES/74/212",
+      "url": "https://undocs.org/en/A/RES/74/212",
+      "authority": "United Nations",
+      "document_id": "A/RES/74/212",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-77-241": {
+      "title": "A/RES/77/241",
+      "url": "https://www.undocs.org/en/A/RES/77/241",
+      "authority": "United Nations",
+      "document_id": "A/RES/77/241",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-78-12": {
+      "title": "A/RES/78/12",
+      "url": "https://undocs.org/en/a/res/78/12",
+      "authority": "United Nations",
+      "document_id": "A/RES/78/12",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-14-c-resolution-1-441": {
+      "title": "14 C/Resolution 1.441",
+      "url": "https://unesdoc.unesco.org/ark:/48223/pf0000114048.xml=https://www.unesco.org/ulis/cgi-bin/ulis.pl",
+      "authority": "United Nations",
+      "document_id": "14 C/Resolution 1.441",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-74-275": {
+      "title": "A/RES/74/275",
+      "url": "https://undocs.org/en/A/RES/74/275",
+      "authority": "United Nations",
+      "document_id": "A/RES/74/275",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-58-220": {
+      "title": "A/RES/58/220",
+      "url": "https://undocs.org/en/A/RES/58/220",
+      "authority": "United Nations",
+      "document_id": "A/RES/58/220",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-62-7": {
+      "title": "A/RES/62/7",
+      "url": "https://undocs.org/en/A/RES/62/7",
+      "authority": "United Nations",
+      "document_id": "A/RES/62/7",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-78-259": {
+      "title": "A/RES/78/259",
+      "url": "https://www.undocs.org/en/A/RES/78/259",
+      "authority": "United Nations",
+      "document_id": "A/RES/78/259",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-76-302": {
+      "title": "A/RES/76/302",
+      "url": "https://undocs.org/en/A/RES/76/302",
+      "authority": "United Nations",
+      "document_id": "A/RES/76/302",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-49-114": {
+      "title": "A/RES/49/114",
+      "url": "https://undocs.org/en/A/RES/49/114",
+      "authority": "United Nations",
+      "document_id": "A/RES/49/114",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-74-142": {
+      "title": "A/RES/74/142",
+      "url": "https://undocs.org/en/A/RES/74/142",
+      "authority": "United Nations",
+      "document_id": "A/RES/74/142",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-78-122": {
+      "title": "A/RES/78/122",
+      "url": "https://www.undocs.org/en/A/RES/78/122",
+      "authority": "United Nations",
+      "document_id": "A/RES/78/122",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-36-67": {
+      "title": "A/RES/36/67",
+      "url": "https://undocs.org/en/A/RES/36/67",
+      "authority": "United Nations",
+      "document_id": "A/RES/36/67",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-72-161": {
+      "title": "A/RES/72/161",
+      "url": "https://undocs.org/en/A/RES/72/161",
+      "authority": "United Nations",
+      "document_id": "A/RES/72/161",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-68-32": {
+      "title": "A/RES/68/32",
+      "url": "https://undocs.org/en/A/RES/68/32",
+      "authority": "United Nations",
+      "document_id": "A/RES/68/32",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-74-5": {
+      "title": "A/RES/74/5",
+      "url": "https://undocs.org/en/A/RES/74/5",
+      "authority": "United Nations",
+      "document_id": "A/RES/74/5",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-74-209": {
+      "title": "A/RES/74/209",
+      "url": "https://undocs.org/en/A/RES/74/209",
+      "authority": "United Nations",
+      "document_id": "A/RES/74/209",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-71-288": {
+      "title": "A/RES/71/288",
+      "url": "https://undocs.org/en/A/RES/71/288",
+      "authority": "United Nations",
+      "document_id": "A/RES/71/288",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-80-248": {
+      "title": "A/RES/80/248",
+      "url": "https://docs.un.org/en/A/RES/80/248",
+      "authority": "United Nations",
+      "document_id": "A/RES/80/248",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-45-106": {
+      "title": "A/RES/45/106",
+      "url": "https://undocs.org/en/A/RES/45/106",
+      "authority": "United Nations",
+      "document_id": "A/RES/45/106",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-61-271": {
+      "title": "A/RES/61/271",
+      "url": "https://undocs.org/en/A/RES/61/271",
+      "authority": "United Nations",
+      "document_id": "A/RES/61/271",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-54-68": {
+      "title": "A/RES/54/68",
+      "url": "https://undocs.org/en/A/RES/54/68",
+      "authority": "United Nations",
+      "document_id": "A/RES/54/68",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-40-202-a": {
+      "title": "A/RES/40/202 A",
+      "url": "https://undocs.org/en/A/RES/40/202",
+      "authority": "United Nations",
+      "document_id": "A/RES/40/202 A",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-27-c-inf-7": {
+      "title": "27 C/INF.7",
+      "url": "https://unesdoc.unesco.org/ark:/48223/pf0000095720.page=5",
+      "authority": "United Nations",
+      "document_id": "27 C/INF.7",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-75-318": {
+      "title": "A/RES/75/318",
+      "url": "https://undocs.org/en/A/RES/75/318",
+      "authority": "United Nations",
+      "document_id": "A/RES/75/318",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-66-170": {
+      "title": "A/RES/66/170",
+      "url": "https://undocs.org/en/A/RES/66/170",
+      "authority": "United Nations",
+      "document_id": "A/RES/66/170",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-64-200": {
+      "title": "A/RES/64/200",
+      "url": "https://undocs.org/en/A/RES/64/200",
+      "authority": "United Nations",
+      "document_id": "A/RES/64/200",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-62-136": {
+      "title": "A/RES/62/136",
+      "url": "https://undocs.org/en/A/RES/62/136",
+      "authority": "United Nations",
+      "document_id": "A/RES/62/136",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-35-70": {
+      "title": "A/RES/35/70",
+      "url": "https://undocs.org/en/A/RES/35/70",
+      "authority": "United Nations",
+      "document_id": "A/RES/35/70",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-47-196": {
+      "title": "A/RES/47/196",
+      "url": "https://undocs.org/en/A/RES/62/136",
+      "authority": "United Nations",
+      "document_id": "A/RES/47/196",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-79-143": {
+      "title": "A/RES/79/143",
+      "url": "https://undocs.org/en/A/RES/79/143",
+      "authority": "United Nations",
+      "document_id": "A/RES/79/143",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-s-10-2-p-102": {
+      "title": "A/RES/S-10/2 (p. 102)",
+      "url": "https://undocs.org/en/A/RES/S-10/2",
+      "authority": "United Nations",
+      "document_id": "A/RES/S-10/2 (p. 102)",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-168-ii": {
+      "title": "A/RES/168 (II)",
+      "url": "https://undocs.org/en/A/RES/168 (II)",
+      "authority": "United Nations",
+      "document_id": "A/RES/168 (II)",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-3038-xxvii": {
+      "title": "A/RES/3038 (XXVII)",
+      "url": "https://undocs.org/en/A/RES/3038 (XXVII)",
+      "authority": "United Nations",
+      "document_id": "A/RES/3038 (XXVII)",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-75-267": {
+      "title": "A/RES/75/267",
+      "url": "https://undocs.org/en/A/RES/75/267",
+      "authority": "United Nations",
+      "document_id": "A/RES/75/267",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-33-c-resolution-5": {
+      "title": "33/C/Resolution 5",
+      "url": "https://unesdoc.unesco.org/ark:/48223/pf0000142825.page=86",
+      "authority": "United Nations",
+      "document_id": "33/C/Resolution 5",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-77-317": {
+      "title": "A/RES/77/317",
+      "url": "https://www.undocs.org/en/A/RES/77/317",
+      "authority": "United Nations",
+      "document_id": "A/RES/77/317",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-68-239": {
+      "title": "A/RES/68/239",
+      "url": "https://undocs.org/en/A/RES/68/239",
+      "authority": "United Nations",
+      "document_id": "A/RES/68/239",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-68-163": {
+      "title": "A/RES/68/163",
+      "url": "https://undocs.org/en/A/RES/68/163",
+      "authority": "United Nations",
+      "document_id": "A/RES/68/163",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-70-203": {
+      "title": "A/RES/70/203",
+      "url": "https://undocs.org/en/A/RES/70/203",
+      "authority": "United Nations",
+      "document_id": "A/RES/70/203",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-56-4": {
+      "title": "A/RES/56/4",
+      "url": "https://undocs.org/en/A/RES/56/4",
+      "authority": "United Nations",
+      "document_id": "A/RES/56/4",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-43-61": {
+      "title": "A/RES/43/61",
+      "url": "https://undocs.org/en/A/RES/43/61",
+      "authority": "United Nations",
+      "document_id": "A/RES/43/61",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-unesco-31-c-resolution-20": {
+      "title": "UNESCO 31 C/Resolution 20",
+      "url": "https://unesdoc.unesco.org/ark:/48223/pf0000142825",
+      "authority": "United Nations",
+      "document_id": "UNESCO 31 C/Resolution 20",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-61-225": {
+      "title": "A/RES/61/225",
+      "url": "https://undocs.org/en/A/RES/61/225",
+      "authority": "United Nations",
+      "document_id": "A/RES/61/225",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-78-267": {
+      "title": "A/RES/78/267",
+      "url": "https://www.undocs.org/EN/A/RES/78/267",
+      "authority": "United Nations",
+      "document_id": "A/RES/78/267",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-60-5": {
+      "title": "A/RES/60/5",
+      "url": "https://undocs.org/en/A/RES/60/5",
+      "authority": "United Nations",
+      "document_id": "A/RES/60/5",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-28-c-resolution-5-61": {
+      "title": "28 C/Resolution 5.61",
+      "url": "https://unesdoc.unesco.org/ark:/48223/pf0000101803_eng#page=75",
+      "authority": "United Nations",
+      "document_id": "28 C/Resolution 5.61",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-77-8": {
+      "title": "A/RES/77/8",
+      "url": "https://undocs.org/en/A/RES/77/8",
+      "authority": "United Nations",
+      "document_id": "A/RES/77/8",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-33-c-resolution-37": {
+      "title": "33 C/Resolution 37",
+      "url": "https://unesdoc.unesco.org/ark:/48223/pf0000142825.page=86",
+      "authority": "United Nations",
+      "document_id": "33 C/Resolution 37",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-67-291": {
+      "title": "A/RES/67/291",
+      "url": "https://undocs.org/en/A/RES/67/291",
+      "authority": "United Nations",
+      "document_id": "A/RES/67/291",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-44-237": {
+      "title": "A/RES/44/237",
+      "url": "https://undocs.org/en/A/RES/44/237",
+      "authority": "United Nations",
+      "document_id": "A/RES/44/237",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-836-ix": {
+      "title": "A/RES/836(IX)",
+      "url": "https://undocs.org/en/A/RES/836(IX)",
+      "authority": "United Nations",
+      "document_id": "A/RES/836(IX)",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-51-205": {
+      "title": "A/RES/51/205",
+      "url": "https://undocs.org/en/A/RES/51/205",
+      "authority": "United Nations",
+      "document_id": "A/RES/51/205",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-78-313": {
+      "title": "A/RES/78/313",
+      "url": "https://www.undocs.org/en/A/RES/78/313",
+      "authority": "United Nations",
+      "document_id": "A/RES/78/313",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-54-134": {
+      "title": "A/RES/54/134",
+      "url": "https://undocs.org/en/A/RES/32/40",
+      "authority": "United Nations",
+      "document_id": "A/RES/54/134",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-77-286": {
+      "title": "A/RES/77/286",
+      "url": "https://www.undocs.org/en/A/RES/77/286",
+      "authority": "United Nations",
+      "document_id": "A/RES/77/286",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-32-40b": {
+      "title": "A/RES/32/40B",
+      "url": "https://undocs.org/en/A/RES/32/40",
+      "authority": "United Nations",
+      "document_id": "A/RES/32/40B",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-opcw-c-20-dec-10": {
+      "title": "OPCW C-20/DEC.10",
+      "url": "https://www.opcw.org/sites/default/files/documents/CSP/C-20/en/c20dec10_e_.pdf",
+      "authority": "United Nations",
+      "document_id": "OPCW C-20/DEC.10",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-317-iv": {
+      "title": "A/RES/317(IV)",
+      "url": "https://undocs.org/en/A/RES/317(IV)",
+      "authority": "United Nations",
+      "document_id": "A/RES/317(IV)",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-47-3": {
+      "title": "A/RES/47/3",
+      "url": "https://undocs.org/en/A/RES/47/3",
+      "authority": "United Nations",
+      "document_id": "A/RES/47/3",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-74-245": {
+      "title": "A/RES/74/245",
+      "url": "https://undocs.org/en/A/RES/74/245",
+      "authority": "United Nations",
+      "document_id": "A/RES/74/245",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-79-293": {
+      "title": "A/RES/79/293",
+      "url": "https://undocs.org/en/A/RES/79/293",
+      "authority": "United Nations",
+      "document_id": "A/RES/79/293",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-40-212": {
+      "title": "A/RES/40/212",
+      "url": "https://undocs.org/en/A/RES/40/212",
+      "authority": "United Nations",
+      "document_id": "A/RES/40/212",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-68-232": {
+      "title": "A/RES/68/232",
+      "url": "https://undocs.org/en/A/RES/68/232",
+      "authority": "United Nations",
+      "document_id": "A/RES/68/232",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-51-33": {
+      "title": "A/RES/51/33",
+      "url": "https://undocs.org/en/A/RES/51/33",
+      "authority": "United Nations",
+      "document_id": "A/RES/51/33",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-69-323": {
+      "title": "A/RES/69/323",
+      "url": "https://undocs.org/en/A/RES/423 (V)",
+      "authority": "United Nations",
+      "document_id": "A/RES/69/323",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-58-4": {
+      "title": "A/RES/58/4",
+      "url": "https://undocs.org/en/A/RES/58/4",
+      "authority": "United Nations",
+      "document_id": "A/RES/58/4",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-423-v": {
+      "title": "A/RES/423 (V)",
+      "url": "https://undocs.org/en/A/RES/423 (V)",
+      "authority": "United Nations",
+      "document_id": "A/RES/423 (V)",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-57-245": {
+      "title": "A/RES/57/245",
+      "url": "https://undocs.org/en/A/RES/57/245",
+      "authority": "United Nations",
+      "document_id": "A/RES/57/245",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-71-275": {
+      "title": "A/RES/71/275",
+      "url": "https://undocs.org/en/A/RES/71/275",
+      "authority": "United Nations",
+      "document_id": "A/RES/71/275",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-72-138": {
+      "title": "A/RES/72/138",
+      "url": "https://undocs.org/en/A/RES/72/138",
+      "authority": "United Nations",
+      "document_id": "A/RES/72/138",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-80-106": {
+      "title": "A/RES/80/106",
+      "url": "https://docs.un.org/A/RES/80/106",
+      "authority": "United Nations",
+      "document_id": "A/RES/80/106",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-55-93": {
+      "title": "A/RES/55/93",
+      "url": "https://undocs.org/en/A/RES/55/93",
+      "authority": "United Nations",
+      "document_id": "A/RES/55/93",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-60-209": {
+      "title": "A/RES/60/209",
+      "url": "https://undocs.org/en/A/RES/60/209",
+      "authority": "United Nations",
+      "document_id": "A/RES/60/209",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-79-137": {
+      "title": "A/RES/79/137",
+      "url": "https://undocs.un.org/en/A/RES/79/137",
+      "authority": "United Nations",
+      "document_id": "A/RES/79/137",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-77-324": {
+      "title": "A/RES/77/324",
+      "url": "https://www.undocs.org/A/RES/77/324",
+      "authority": "United Nations",
+      "document_id": "A/RES/77/324",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-79-243": {
+      "title": "A/RES/79/243",
+      "url": "https://docs.un.org/en/a/res/79/243",
+      "authority": "United Nations",
+      "document_id": "A/RES/79/243",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    },
+    "un-doc-a-res-75-27": {
+      "title": "A/RES/75/27",
+      "url": "https://undocs.org/en/A/RES/75/27",
+      "authority": "United Nations",
+      "document_id": "A/RES/75/27",
+      "checked_at": "2026-10-18",
+      "check": "listed",
+      "watch": false
+    }
+  },
+  "events": [
+    {
+      "id": "un-world-braille-day-2026-01-04",
+      "name": "World Braille Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-01-04"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-73-161"
+      ]
+    },
+    {
+      "id": "un-international-day-of-education-2026-01-24",
+      "name": "International Day of Education",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-01-24"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-73-25"
+      ]
+    },
+    {
+      "id": "un-international-day-of-clean-energy-2026-01-26",
+      "name": "International Day of Clean Energy",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-01-26"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-77-327"
+      ]
+    },
+    {
+      "id": "un-international-day-of-commemoration-in-memory-of-the-victims--2026-01-27",
+      "name": "International Day of Commemoration in Memory of the Victims of the Holocaust",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-01-27"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-60-7"
+      ]
+    },
+    {
+      "id": "un-international-day-of-peaceful-coexistence-2026-01-28",
+      "name": "International Day of Peaceful Coexistence",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-01-28"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-79-269"
+      ]
+    },
+    {
+      "id": "un-world-interfaith-harmony-week-1-7-february-2026-02-01",
+      "name": "World Interfaith Harmony Week, 1-7 February",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-02-01"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-65-5"
+      ]
+    },
+    {
+      "id": "un-world-wetlands-day-2026-02-02",
+      "name": "World Wetlands Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-02-02"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-75-317"
+      ]
+    },
+    {
+      "id": "un-international-day-of-human-fraternity-2026-02-04",
+      "name": "International Day of Human Fraternity",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-02-04"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-75-200"
+      ]
+    },
+    {
+      "id": "un-international-day-of-zero-tolerance-to-female-genital-mutila-2026-02-06",
+      "name": "International Day of Zero Tolerance to Female Genital Mutilation",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-02-06"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-67-146"
+      ]
+    },
+    {
+      "id": "un-world-pulses-day-fao-2026-02-10",
+      "name": "World Pulses Day [FAO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-02-10"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-73-251"
+      ]
+    },
+    {
+      "id": "un-international-day-of-the-arabian-leopard-2026-02-10",
+      "name": "International Day of the Arabian Leopard",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-02-10"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-77-295"
+      ]
+    },
+    {
+      "id": "un-international-day-of-women-and-girls-in-science-2026-02-11",
+      "name": "International Day of Women and Girls in Science",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-02-11"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-70-212"
+      ]
+    },
+    {
+      "id": "un-international-day-for-the-prevention-of-violent-extremism-as-2026-02-12",
+      "name": "International Day for the Prevention of Violent Extremism as and when Conducive to Terrorism",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-02-12"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-77-243"
+      ]
+    },
+    {
+      "id": "un-world-radio-day-2026-02-13",
+      "name": "World Radio Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-02-13"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-67-124"
+      ]
+    },
+    {
+      "id": "un-global-tourism-resilience-day-2026-02-17",
+      "name": "Global Tourism Resilience Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-02-17"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-77-269"
+      ]
+    },
+    {
+      "id": "un-world-day-of-social-justice-2026-02-20",
+      "name": "World Day of Social Justice",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-02-20"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-62-10"
+      ]
+    },
+    {
+      "id": "un-international-mother-language-day-2026-02-21",
+      "name": "International Mother Language Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-02-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-56-262"
+      ]
+    },
+    {
+      "id": "un-zero-discrimination-day-unaids-2026-03-01",
+      "name": "Zero Discrimination Day [UNAIDS]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-01"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-world-seagrass-day-2026-03-01",
+      "name": "World Seagrass Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-01"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-76-265"
+      ]
+    },
+    {
+      "id": "un-world-wildlife-day-2026-03-03",
+      "name": "World Wildlife Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-03"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-68-205"
+      ]
+    },
+    {
+      "id": "un-international-day-for-disarmament-and-non-proliferation-awar-2026-03-05",
+      "name": "International Day for Disarmament and Non-Proliferation Awareness",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-05"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-77-51"
+      ]
+    },
+    {
+      "id": "un-international-women-s-day-2026-03-08",
+      "name": "International Women's Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-08"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-day-of-women-judges-2026-03-10",
+      "name": "International Day of Women Judges",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-10"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-75-274"
+      ]
+    },
+    {
+      "id": "un-international-day-to-combat-islamophobia-2026-03-15",
+      "name": "International Day to Combat Islamophobia",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-15"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-76-254"
+      ]
+    },
+    {
+      "id": "un-international-day-of-happiness-2026-03-20",
+      "name": "International Day of Happiness",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-20"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-66-281"
+      ]
+    },
+    {
+      "id": "un-french-language-day-2026-03-20",
+      "name": "French Language Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-20"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-world-day-for-glaciers-2026-03-21",
+      "name": "World Day for Glaciers",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-77-158"
+      ]
+    },
+    {
+      "id": "un-international-day-of-forests-fao-2026-03-21",
+      "name": "International Day of Forests [FAO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-67-200"
+      ]
+    },
+    {
+      "id": "un-a-res-34-24-2026-03-21",
+      "name": "A/RES/34/24",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-day-for-the-elimination-of-racial-discriminati-2026-03-21",
+      "name": "International Day for the Elimination of Racial Discrimination",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-2142-xxi"
+      ]
+    },
+    {
+      "id": "un-world-poetry-day-unesco-2026-03-21",
+      "name": "World Poetry Day [UNESCO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-30-c-resolution-29"
+      ]
+    },
+    {
+      "id": "un-international-day-of-nowruz-2026-03-21",
+      "name": "International Day of Nowruz",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-64-253"
+      ]
+    },
+    {
+      "id": "un-world-down-syndrome-day-2026-03-21",
+      "name": "World Down Syndrome Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-66-149"
+      ]
+    },
+    {
+      "id": "un-world-water-day-2026-03-22",
+      "name": "World Water Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-22"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-47-193"
+      ]
+    },
+    {
+      "id": "un-world-meteorological-day-wmo-2026-03-23",
+      "name": "World Meteorological Day [WMO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-23"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-wmo-ec-xii-res-6"
+      ]
+    },
+    {
+      "id": "un-world-tuberculosis-day-who-2026-03-24",
+      "name": "World Tuberculosis Day [WHO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-24"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-day-for-the-right-to-the-truth-concerning-gros-2026-03-24",
+      "name": "International Day for the Right to the Truth concerning Gross Human Rights Violations and for the Dignity of Victims",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-24"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-65-196"
+      ]
+    },
+    {
+      "id": "un-international-day-of-remembrance-of-the-victims-of-slavery-a-2026-03-25",
+      "name": "International Day of Remembrance of the Victims of Slavery and the Transatlantic Slave Trade",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-25"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-62-122"
+      ]
+    },
+    {
+      "id": "un-international-day-of-solidarity-with-detained-and-missing-st-2026-03-25",
+      "name": "International Day of Solidarity with Detained and Missing Staff Members",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-25"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-49-59"
+      ]
+    },
+    {
+      "id": "un-international-day-of-zero-waste-2026-03-30",
+      "name": "International Day of Zero Waste",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-03-30"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-77-161"
+      ]
+    },
+    {
+      "id": "un-world-autism-awareness-day-2026-04-02",
+      "name": "World Autism Awareness Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-02"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-62-139"
+      ]
+    },
+    {
+      "id": "un-international-day-for-mine-awareness-and-assistance-in-mine--2026-04-04",
+      "name": "International Day for Mine Awareness and Assistance in Mine Action",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-04"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-60-97"
+      ]
+    },
+    {
+      "id": "un-international-day-of-conscience-2026-04-05",
+      "name": "International Day of Conscience",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-05"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-73-329"
+      ]
+    },
+    {
+      "id": "un-international-day-of-sport-for-development-and-peace-2026-04-06",
+      "name": "International Day of Sport for Development and Peace",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-06"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-67-296"
+      ]
+    },
+    {
+      "id": "un-international-day-of-reflection-on-the-1994-genocide-against-2026-04-07",
+      "name": "International Day of Reflection on the 1994 Genocide against the Tutsi in Rwanda",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-07"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-58-234"
+      ]
+    },
+    {
+      "id": "un-world-health-day-who-2026-04-07",
+      "name": "World Health Day [WHO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-07"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-wha-a-2-res-35"
+      ]
+    },
+    {
+      "id": "un-international-day-of-human-space-flight-2026-04-12",
+      "name": "International Day of Human Space Flight",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-12"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-65-271"
+      ]
+    },
+    {
+      "id": "un-world-chagas-disease-day-who-2026-04-14",
+      "name": "World Chagas Disease Day [WHO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-14"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-wellness-day-2026-04-15",
+      "name": "International Wellness Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-15"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-80-249"
+      ]
+    },
+    {
+      "id": "un-chinese-language-day-2026-04-20",
+      "name": "Chinese Language Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-20"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-world-creativity-and-innovation-day-2026-04-21",
+      "name": "World Creativity and Innovation Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-71-284"
+      ]
+    },
+    {
+      "id": "un-a-res-80-300-2026-04-22",
+      "name": "A/RES/80/300",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-22"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-mother-earth-day-2026-04-22",
+      "name": "International Mother Earth Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-22"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-63-278"
+      ]
+    },
+    {
+      "id": "un-international-girls-in-ict-day-itu-2026-04-23",
+      "name": "International Girls in ICT Day [ITU]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-23"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-world-book-and-copyright-day-unesco-2026-04-23",
+      "name": "World Book and Copyright Day [UNESCO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-23"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-28-c-resolution-3-18"
+      ]
+    },
+    {
+      "id": "un-english-language-day-2026-04-23",
+      "name": "English Language Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-23"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-spanish-language-day-2026-04-23",
+      "name": "Spanish Language Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-23"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-world-immunization-week-24-30-april-who-2026-04-24",
+      "name": "World Immunization Week, 24-30 April [WHO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-24"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-day-of-multilateralism-and-diplomacy-for-peace-2026-04-24",
+      "name": "International Day of Multilateralism and Diplomacy for Peace",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-24"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-73-127"
+      ]
+    },
+    {
+      "id": "un-world-malaria-day-who-2026-04-25",
+      "name": "World Malaria Day [WHO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-25"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-delegate-s-day-2026-04-25",
+      "name": "International Delegate’s Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-25"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-73-286"
+      ]
+    },
+    {
+      "id": "un-international-chernobyl-disaster-remembrance-day-2026-04-26",
+      "name": "International Chernobyl Disaster Remembrance Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-26"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-71-125"
+      ]
+    },
+    {
+      "id": "un-world-intellectual-property-day-wipo-2026-04-26",
+      "name": "World Intellectual Property Day [WIPO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-26"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-world-day-for-safety-and-health-at-work-2026-04-28",
+      "name": "World Day for Safety and Health at Work",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-28"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-day-in-memory-of-the-victims-of-earthquakes-2026-04-29",
+      "name": "International Day in Memory of the Victims of Earthquakes",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-29"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-79-285"
+      ]
+    },
+    {
+      "id": "un-international-jazz-day-2026-04-30",
+      "name": "International Jazz Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-30"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-unesco-36-c-resolution-39"
+      ]
+    },
+    {
+      "id": "un-vesak-the-day-of-the-full-moon-2026-05-01",
+      "name": "Vesak, the Day of the Full Moon",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-01"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-54-115"
+      ]
+    },
+    {
+      "id": "un-world-tuna-day-2026-05-02",
+      "name": "World Tuna Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-02"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-71-124"
+      ]
+    },
+    {
+      "id": "un-world-press-freedom-day-2026-05-03",
+      "name": "World Press Freedom Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-03"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-unesco-26-c-resolution-4-3"
+      ]
+    },
+    {
+      "id": "un-world-portuguese-language-day-unesco-2026-05-05",
+      "name": "World Portuguese Language Day [UNESCO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-05"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-40-c-resolution-75"
+      ]
+    },
+    {
+      "id": "un-time-of-remembrance-and-reconciliation-for-those-who-lost-th-2026-05-08",
+      "name": "Time of Remembrance and Reconciliation for Those Who Lost Their Lives During the Second World War",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-08"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-59-26"
+      ]
+    },
+    {
+      "id": "un-world-migratory-bird-day-unep-2026-05-09",
+      "name": "World Migratory Bird Day [UNEP]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-09"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-day-of-argania-2026-05-10",
+      "name": "International Day of Argania",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-10"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-75-262"
+      ]
+    },
+    {
+      "id": "un-international-day-of-plant-health-fao-2026-05-12",
+      "name": "International Day of Plant Health [FAO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-12"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-76-256"
+      ]
+    },
+    {
+      "id": "un-international-day-of-families-2026-05-15",
+      "name": "International Day of Families",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-15"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-47-237"
+      ]
+    },
+    {
+      "id": "un-international-day-of-living-together-in-peace-2026-05-16",
+      "name": "International Day of Living Together in Peace",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-16"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-72-130"
+      ]
+    },
+    {
+      "id": "un-international-day-of-light-unesco-2026-05-16",
+      "name": "International Day of Light [UNESCO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-16"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-39-c-resolution-16"
+      ]
+    },
+    {
+      "id": "un-world-telecommunication-and-information-society-day-2026-05-17",
+      "name": "World Telecommunication and Information Society Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-17"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-60-252"
+      ]
+    },
+    {
+      "id": "un-world-fair-play-day-2026-05-19",
+      "name": "World Fair Play Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-19"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-78-310"
+      ]
+    },
+    {
+      "id": "un-world-bee-day-fao-2026-05-20",
+      "name": "World Bee Day [FAO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-20"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-72-211"
+      ]
+    },
+    {
+      "id": "un-international-tea-day-fao-2026-05-21",
+      "name": "International Tea Day [FAO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-74-241"
+      ]
+    },
+    {
+      "id": "un-world-day-for-cultural-diversity-for-dialogue-and-developmen-2026-05-21",
+      "name": "World Day for Cultural Diversity for Dialogue and Development",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-57-249"
+      ]
+    },
+    {
+      "id": "un-international-day-for-biological-diversity-2026-05-22",
+      "name": "International Day for Biological Diversity",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-22"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-55-201"
+      ]
+    },
+    {
+      "id": "un-international-day-to-end-obstetric-fistula-2026-05-23",
+      "name": "International Day to End Obstetric Fistula",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-23"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-67-147"
+      ]
+    },
+    {
+      "id": "un-international-day-of-the-markhor-2026-05-24",
+      "name": "International Day of the Markhor",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-24"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-78-278"
+      ]
+    },
+    {
+      "id": "un-world-football-day-2026-05-25",
+      "name": "World Football Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-25"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-78-281"
+      ]
+    },
+    {
+      "id": "un-week-of-solidarity-with-the-peoples-of-non-self-governing-te-2026-05-25",
+      "name": "Week of Solidarity with the Peoples of Non-Self-Governing Territories, 25-31 May",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-25"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-54-91"
+      ]
+    },
+    {
+      "id": "un-international-day-of-un-peacekeepers-2026-05-29",
+      "name": "International Day of UN Peacekeepers",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-29"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-57-129"
+      ]
+    },
+    {
+      "id": "un-international-day-of-potato-fao-2026-05-30",
+      "name": "International Day of Potato [FAO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-30"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-78-123"
+      ]
+    },
+    {
+      "id": "un-world-no-tobacco-day-who-2026-05-31",
+      "name": "World No-Tobacco Day [WHO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-05-31"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-resolution-42-19"
+      ]
+    },
+    {
+      "id": "un-global-day-of-parents-2026-06-01",
+      "name": "Global Day of Parents",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-01"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-66-292"
+      ]
+    },
+    {
+      "id": "un-world-bicycle-day-2026-06-03",
+      "name": "World Bicycle Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-03"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-72-272"
+      ]
+    },
+    {
+      "id": "un-international-day-of-innocent-children-victims-of-aggression-2026-06-04",
+      "name": "International Day of Innocent Children Victims of Aggression",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-04"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-es-7-8"
+      ]
+    },
+    {
+      "id": "un-world-environment-day-2026-06-05",
+      "name": "World Environment Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-05"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-2994-xxvii"
+      ]
+    },
+    {
+      "id": "un-international-day-for-the-fight-against-illegal-unreported-a-2026-06-05",
+      "name": "International Day for the Fight against Illegal, Unreported and Unregulated Fishing",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-05"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-72-72"
+      ]
+    },
+    {
+      "id": "un-russian-language-day-2026-06-06",
+      "name": "Russian Language Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-06"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-world-food-safety-day-2026-06-07",
+      "name": "World Food Safety Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-07"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-73-250"
+      ]
+    },
+    {
+      "id": "un-world-oceans-day-2026-06-08",
+      "name": "World Oceans Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-08"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-63-111"
+      ]
+    },
+    {
+      "id": "un-international-day-for-dialogue-among-civilizations-2026-06-10",
+      "name": "International Day for Dialogue among Civilizations",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-10"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-78-286"
+      ]
+    },
+    {
+      "id": "un-international-day-of-play-2026-06-11",
+      "name": "International Day of Play",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-11"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-78-268"
+      ]
+    },
+    {
+      "id": "un-world-day-against-child-labour-2026-06-12",
+      "name": "World Day Against Child Labour",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-12"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-albinism-awareness-day-2026-06-13",
+      "name": "International Albinism Awareness Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-13"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-69-170"
+      ]
+    },
+    {
+      "id": "un-world-blood-donor-day-who-2026-06-14",
+      "name": "World Blood Donor Day [WHO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-14"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-wha-resolution-58-13"
+      ]
+    },
+    {
+      "id": "un-world-elder-abuse-awareness-day-2026-06-15",
+      "name": "World Elder Abuse Awareness Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-15"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-66-127"
+      ]
+    },
+    {
+      "id": "un-international-day-of-family-remittances-2026-06-16",
+      "name": "International Day of Family Remittances",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-16"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-72-281"
+      ]
+    },
+    {
+      "id": "un-world-day-to-combat-desertification-and-drought-2026-06-17",
+      "name": "World Day to Combat Desertification and Drought",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-17"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-49-115"
+      ]
+    },
+    {
+      "id": "un-sustainable-gastronomy-day-fao-2026-06-18",
+      "name": "Sustainable Gastronomy Day [FAO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-18"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-71-246"
+      ]
+    },
+    {
+      "id": "un-international-day-for-countering-hate-speech-2026-06-18",
+      "name": "International Day for Countering Hate Speech",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-18"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-75-309"
+      ]
+    },
+    {
+      "id": "un-international-day-for-the-elimination-of-sexual-violence-in--2026-06-19",
+      "name": "International Day for the Elimination of Sexual Violence in Conflict",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-19"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-69-293"
+      ]
+    },
+    {
+      "id": "un-world-refugee-day-2026-06-20",
+      "name": "World Refugee Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-20"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-55-76"
+      ]
+    },
+    {
+      "id": "un-international-day-of-yoga-2026-06-21",
+      "name": "International Day of Yoga",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-69-131"
+      ]
+    },
+    {
+      "id": "un-international-day-of-the-celebration-of-the-solstice-2026-06-21",
+      "name": "International Day of the Celebration of the Solstice",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-73-300"
+      ]
+    },
+    {
+      "id": "un-united-nations-public-service-day-2026-06-23",
+      "name": "United Nations Public Service Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-23"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-57-277"
+      ]
+    },
+    {
+      "id": "un-international-widows-day-2026-06-23",
+      "name": "International Widows' Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-23"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-65-189"
+      ]
+    },
+    {
+      "id": "un-international-day-of-women-in-diplomacy-2026-06-24",
+      "name": "International Day of Women in Diplomacy",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-24"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-76-269"
+      ]
+    },
+    {
+      "id": "un-day-of-the-seafarer-imo-2026-06-25",
+      "name": "Day of the Seafarer [IMO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-25"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-stcw-conf-2-dc-4"
+      ]
+    },
+    {
+      "id": "un-international-day-against-drug-abuse-and-illicit-trafficking-2026-06-26",
+      "name": "International Day against Drug Abuse and Illicit Trafficking",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-26"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-42-112"
+      ]
+    },
+    {
+      "id": "un-united-nations-international-day-in-support-of-victims-of-to-2026-06-26",
+      "name": "United Nations International Day in Support of Victims of Torture",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-26"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-52-149"
+      ]
+    },
+    {
+      "id": "un-international-day-of-deafblindness-2026-06-27",
+      "name": "International Day of Deafblindness",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-27"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-79-294"
+      ]
+    },
+    {
+      "id": "un-micro-small-and-medium-sized-enterprises-day-2026-06-27",
+      "name": "Micro-, Small and Medium-sized Enterprises Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-27"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-71-279"
+      ]
+    },
+    {
+      "id": "un-international-day-of-the-tropics-2026-06-29",
+      "name": "International Day of the Tropics",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-29"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-71-279"
+      ]
+    },
+    {
+      "id": "un-international-asteroid-day-2026-06-30",
+      "name": "International Asteroid Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-30"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-71-90"
+      ]
+    },
+    {
+      "id": "un-international-day-of-parliamentarism-2026-06-30",
+      "name": "International Day of Parliamentarism",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-30"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-72-278"
+      ]
+    },
+    {
+      "id": "un-international-day-of-cooperatives-2026-07-05",
+      "name": "International Day of Cooperatives",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-05"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-47-90"
+      ]
+    },
+    {
+      "id": "un-world-rural-development-day-2026-07-06",
+      "name": "World Rural Development Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-06"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-78-326"
+      ]
+    },
+    {
+      "id": "un-world-kiswahili-language-day-2026-07-07",
+      "name": "World Kiswahili Language Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-07"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-78-312"
+      ]
+    },
+    {
+      "id": "un-international-day-of-reflection-and-commemoration-of-the-199-2026-07-11",
+      "name": "International Day of Reflection and Commemoration of the 1995 Genocide in Srebrenica",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-11"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-78-282"
+      ]
+    },
+    {
+      "id": "un-world-population-day-2026-07-11",
+      "name": "World Population Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-11"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-45-216"
+      ]
+    },
+    {
+      "id": "un-world-horse-day-2026-07-11",
+      "name": "World Horse Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-11"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-79-291"
+      ]
+    },
+    {
+      "id": "un-international-day-of-combating-sand-and-dust-storms-2026-07-12",
+      "name": "International Day of Combating Sand and Dust Storms",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-12"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-77-294"
+      ]
+    },
+    {
+      "id": "un-international-day-of-hope-2026-07-12",
+      "name": "International Day of Hope",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-12"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-79-270"
+      ]
+    },
+    {
+      "id": "un-world-youth-skills-day-2026-07-15",
+      "name": "World Youth Skills Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-15"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-69-145"
+      ]
+    },
+    {
+      "id": "un-nelson-mandela-international-day-2026-07-18",
+      "name": "Nelson Mandela International Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-18"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-64-13"
+      ]
+    },
+    {
+      "id": "un-world-chess-day-2026-07-20",
+      "name": "World Chess Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-20"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-74-22"
+      ]
+    },
+    {
+      "id": "un-international-moon-day-2026-07-20",
+      "name": "International Moon Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-20"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-76-76"
+      ]
+    },
+    {
+      "id": "un-international-day-of-women-and-girls-of-african-descent-2026-07-25",
+      "name": "International Day of Women and Girls of African Descent",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-25"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-78-323"
+      ]
+    },
+    {
+      "id": "un-world-drowning-prevention-day-2026-07-25",
+      "name": "World Drowning Prevention Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-25"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-75-273"
+      ]
+    },
+    {
+      "id": "un-international-day-for-judicial-well-being-2026-07-25",
+      "name": "International Day for Judicial Well-being",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-25"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-79-266"
+      ]
+    },
+    {
+      "id": "un-world-hepatitis-day-who-2026-07-28",
+      "name": "World Hepatitis Day [WHO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-28"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-day-of-friendship-2026-07-30",
+      "name": "International Day of Friendship",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-30"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-65-275"
+      ]
+    },
+    {
+      "id": "un-world-day-against-trafficking-in-persons-2026-07-30",
+      "name": "World Day against Trafficking in Persons",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-30"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-68-192"
+      ]
+    },
+    {
+      "id": "un-world-breastfeeding-week-1-7-august-who-2026-08-01",
+      "name": "World Breastfeeding Week, 1-7 August [WHO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-08-01"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-day-of-awareness-of-the-special-development-ne-2026-08-06",
+      "name": "International Day of Awareness of the Special Development Needs and Challenges of Landlocked Developing Countries",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-08-06"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-79-l-108"
+      ]
+    },
+    {
+      "id": "un-international-day-of-the-world-s-indigenous-peoples-2026-08-09",
+      "name": "International Day of the World's Indigenous Peoples",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-08-09"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-49-214"
+      ]
+    },
+    {
+      "id": "un-world-steelpan-day-2026-08-11",
+      "name": "World Steelpan Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-08-11"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-77-316"
+      ]
+    },
+    {
+      "id": "un-international-youth-day-2026-08-12",
+      "name": "International Youth Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-08-12"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-54-120"
+      ]
+    },
+    {
+      "id": "un-world-humanitarian-day-2026-08-19",
+      "name": "World Humanitarian Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-08-19"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-63-139"
+      ]
+    },
+    {
+      "id": "un-international-day-of-remembrance-and-tribute-to-the-victims--2026-08-21",
+      "name": "International Day of Remembrance and Tribute to the Victims of Terrorism",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-08-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-72-165"
+      ]
+    },
+    {
+      "id": "un-international-day-commemorating-the-victims-of-acts-of-viole-2026-08-22",
+      "name": "International Day Commemorating the Victims of Acts of Violence Based on Religion or Belief",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-08-22"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-73-296"
+      ]
+    },
+    {
+      "id": "un-international-day-for-the-remembrance-of-the-slave-trade-and-2026-08-23",
+      "name": "International Day for the Remembrance of the Slave Trade and Its Abolition [UNESCO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-08-23"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-29-c-resolution-40"
+      ]
+    },
+    {
+      "id": "un-world-lake-day-2026-08-27",
+      "name": "World Lake Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-08-27"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-79-142"
+      ]
+    },
+    {
+      "id": "un-international-day-against-nuclear-tests-2026-08-29",
+      "name": "International Day against Nuclear Tests",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-08-29"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-64-35"
+      ]
+    },
+    {
+      "id": "un-international-day-of-the-victims-of-enforced-disappearances-2026-08-30",
+      "name": "International Day of the Victims of Enforced Disappearances",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-08-30"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-65-209"
+      ]
+    },
+    {
+      "id": "un-international-day-for-people-of-african-descent-2026-08-31",
+      "name": "International Day for People of African Descent",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-08-31"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-75-170"
+      ]
+    },
+    {
+      "id": "un-a-res-80-302-2026-08-31",
+      "name": "A/RES/80/302",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-08-31"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-day-of-charity-2026-09-05",
+      "name": "International Day of Charity",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-05"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-67-105"
+      ]
+    },
+    {
+      "id": "un-international-day-of-the-world-s-indigenous-women-and-girls-2026-09-05",
+      "name": "International Day of the World’s Indigenous Women and Girls",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-05"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-80-10"
+      ]
+    },
+    {
+      "id": "un-international-day-of-clean-air-for-blue-skies-unep-2026-09-07",
+      "name": "International Day of Clean Air for Blue Skies [UNEP]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-07"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-74-212"
+      ]
+    },
+    {
+      "id": "un-international-day-of-police-cooperation-2026-09-07",
+      "name": "International Day of Police Cooperation",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-07"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-77-241"
+      ]
+    },
+    {
+      "id": "un-world-duchenne-awareness-day-2026-09-07",
+      "name": "World Duchenne Awareness Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-07"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-78-12"
+      ]
+    },
+    {
+      "id": "un-international-literacy-day-unesco-2026-09-08",
+      "name": "International Literacy Day [UNESCO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-08"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-14-c-resolution-1-441"
+      ]
+    },
+    {
+      "id": "un-international-day-to-protect-education-from-attack-2026-09-09",
+      "name": "International Day to Protect Education from Attack",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-09"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-74-275"
+      ]
+    },
+    {
+      "id": "un-united-nations-day-for-south-south-cooperation-2026-09-12",
+      "name": "United Nations Day for South-South Cooperation",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-12"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-58-220"
+      ]
+    },
+    {
+      "id": "un-international-day-of-democracy-2026-09-15",
+      "name": "International Day of Democracy",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-15"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-62-7"
+      ]
+    },
+    {
+      "id": "un-international-day-of-science-technology-and-innovation-for-t-2026-09-16",
+      "name": "International Day of Science, Technology and Innovation for the South",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-16"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-78-259"
+      ]
+    },
+    {
+      "id": "un-international-day-for-interventional-cardiology-2026-09-16",
+      "name": "International Day for Interventional Cardiology",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-16"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-76-302"
+      ]
+    },
+    {
+      "id": "un-international-day-for-the-preservation-of-the-ozone-layer-2026-09-16",
+      "name": "International Day for the Preservation of the Ozone Layer",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-16"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-49-114"
+      ]
+    },
+    {
+      "id": "un-world-patient-safety-day-who-2026-09-17",
+      "name": "World Patient Safety Day [WHO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-17"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-equal-pay-day-2026-09-18",
+      "name": "International Equal Pay Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-18"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-74-142"
+      ]
+    },
+    {
+      "id": "un-world-cleanup-day-2026-09-20",
+      "name": "World Cleanup Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-20"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-78-122"
+      ]
+    },
+    {
+      "id": "un-international-day-of-peace-2026-09-21",
+      "name": "International Day of Peace",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-36-67"
+      ]
+    },
+    {
+      "id": "un-international-day-of-sign-languages-2026-09-23",
+      "name": "International Day of Sign Languages",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-23"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-72-161"
+      ]
+    },
+    {
+      "id": "un-world-maritime-day-2026-09-24",
+      "name": "World Maritime Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-24"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-day-for-the-total-elimination-of-nuclear-weapo-2026-09-26",
+      "name": "International Day for the Total Elimination of Nuclear Weapons",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-26"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-68-32"
+      ]
+    },
+    {
+      "id": "un-world-tourism-day-un-tourism-2026-09-27",
+      "name": "World Tourism Day [UN Tourism]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-27"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-day-for-universal-access-to-information-2026-09-28",
+      "name": "International Day for Universal Access to Information",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-28"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-74-5"
+      ]
+    },
+    {
+      "id": "un-international-day-of-awareness-of-food-loss-and-waste-fao-2026-09-29",
+      "name": "International Day of Awareness of Food Loss and Waste [FAO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-29"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-74-209"
+      ]
+    },
+    {
+      "id": "un-international-translation-day-2026-09-30",
+      "name": "International Translation Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-09-30"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-71-288"
+      ]
+    },
+    {
+      "id": "un-international-coffee-day-2026-10-01",
+      "name": "International Coffee Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-01"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-80-248"
+      ]
+    },
+    {
+      "id": "un-international-day-of-older-persons-2026-10-01",
+      "name": "International Day of Older Persons",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-01"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-45-106"
+      ]
+    },
+    {
+      "id": "un-international-day-of-non-violence-2026-10-02",
+      "name": "International Day of Non-Violence",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-02"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-61-271"
+      ]
+    },
+    {
+      "id": "un-world-space-week-4-10-october-2026-10-04",
+      "name": "World Space Week, 4-10 October",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-04"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-54-68"
+      ]
+    },
+    {
+      "id": "un-world-habitat-day-2026-10-06",
+      "name": "World Habitat Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-06"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-40-202-a"
+      ]
+    },
+    {
+      "id": "un-world-teachers-day-unesco-2026-10-05",
+      "name": "World Teachers’ Day [UNESCO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-05"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-27-c-inf-7"
+      ]
+    },
+    {
+      "id": "un-world-cotton-day-2026-10-07",
+      "name": "World Cotton Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-07"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-75-318"
+      ]
+    },
+    {
+      "id": "un-world-post-day-2026-10-09",
+      "name": "World Post Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-09"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-world-migratory-bird-day-unep-2026-10-09",
+      "name": "World Migratory Bird Day [UNEP]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-09"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-world-mental-health-day-who-2026-10-10",
+      "name": "World Mental Health Day [WHO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-10"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-day-of-the-girl-child-2026-10-11",
+      "name": "International Day of the Girl Child",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-11"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-66-170"
+      ]
+    },
+    {
+      "id": "un-international-day-for-disaster-risk-reduction-2026-10-13",
+      "name": "International Day for Disaster Risk Reduction",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-13"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-64-200"
+      ]
+    },
+    {
+      "id": "un-international-day-of-rural-women-2026-10-15",
+      "name": "International Day of Rural Women",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-15"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-62-136"
+      ]
+    },
+    {
+      "id": "un-world-food-day-fao-2026-10-16",
+      "name": "World Food Day [FAO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-16"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-35-70"
+      ]
+    },
+    {
+      "id": "un-international-day-for-the-eradication-of-poverty-2026-10-17",
+      "name": "International Day for the Eradication of Poverty",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-17"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-47-196"
+      ]
+    },
+    {
+      "id": "un-international-day-of-the-snow-leopard-2026-10-23",
+      "name": "International Day of the Snow Leopard",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-23"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-79-143"
+      ]
+    },
+    {
+      "id": "un-disarmament-week-24-30-october-2026-10-24",
+      "name": "Disarmament Week, 24-30 October",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-24"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-s-10-2-p-102"
+      ]
+    },
+    {
+      "id": "un-united-nations-day-2026-10-24",
+      "name": "United Nations Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-24"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-168-ii"
+      ]
+    },
+    {
+      "id": "un-world-development-information-day-2026-10-24",
+      "name": "World Development Information Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-24"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-3038-xxvii"
+      ]
+    },
+    {
+      "id": "un-global-media-and-information-literacy-week-24-31-october-2026-10-24",
+      "name": "Global Media and Information Literacy Week, 24-31 October",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-24"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-75-267"
+      ]
+    },
+    {
+      "id": "un-world-day-for-audiovisual-heritage-unesco-2026-10-27",
+      "name": "World Day for Audiovisual Heritage [UNESCO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-27"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-33-c-resolution-5"
+      ]
+    },
+    {
+      "id": "un-international-day-of-care-and-support-2026-10-29",
+      "name": "International Day of Care and Support",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-29"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-77-317"
+      ]
+    },
+    {
+      "id": "un-world-cities-day-2026-10-31",
+      "name": "World Cities Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-31"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-68-239"
+      ]
+    },
+    {
+      "id": "un-international-day-to-end-impunity-for-crimes-against-journal-2026-11-02",
+      "name": "International Day to End Impunity for Crimes against Journalists",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-02"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-68-163"
+      ]
+    },
+    {
+      "id": "un-world-tsunami-awareness-day-2026-11-05",
+      "name": "World Tsunami Awareness Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-05"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-70-203"
+      ]
+    },
+    {
+      "id": "un-international-day-for-preventing-the-exploitation-of-the-env-2026-11-06",
+      "name": "International Day for Preventing the Exploitation of the Environment in War and Armed Conflict",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-06"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-56-4"
+      ]
+    },
+    {
+      "id": "un-international-week-of-science-and-peace-9-15-november-2026-11-09",
+      "name": "International Week of Science and Peace, 9-15 November",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-09"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-43-61"
+      ]
+    },
+    {
+      "id": "un-world-science-day-for-peace-and-development-2026-11-10",
+      "name": "World Science Day for Peace and Development",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-10"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-unesco-31-c-resolution-20"
+      ]
+    },
+    {
+      "id": "un-world-diabetes-day-2026-11-14",
+      "name": "World Diabetes Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-14"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-61-225"
+      ]
+    },
+    {
+      "id": "un-international-day-for-the-prevention-of-and-fight-against-al-2026-11-15",
+      "name": "International Day for the Prevention of and Fight against All Forms of Transnational Organized Crime",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-15"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-78-267"
+      ]
+    },
+    {
+      "id": "un-world-day-of-remembrance-for-road-traffic-victims-2026-11-17",
+      "name": "World Day of Remembrance for Road Traffic Victims",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-17"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-60-5"
+      ]
+    },
+    {
+      "id": "un-a-res-80-174-2026-11-16",
+      "name": "A/RES/80/174",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-16"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-day-for-tolerance-unesco-2026-11-16",
+      "name": "International Day for Tolerance [UNESCO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-16"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-28-c-resolution-5-61"
+      ]
+    },
+    {
+      "id": "un-world-antimicrobial-resistance-awareness-week-18-24-november-2026-11-18",
+      "name": "World Antimicrobial Resistance Awareness Week, 18-24 November [WHO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-18"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-world-day-for-the-prevention-of-and-healing-from-child-sexua-2026-11-18",
+      "name": "World Day for the Prevention of and Healing from Child Sexual Exploitation, Abuse and Violence",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-18"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-77-8"
+      ]
+    },
+    {
+      "id": "un-world-philosophy-day-unesco-2026-11-21",
+      "name": "World Philosophy Day [UNESCO]",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-33-c-resolution-37"
+      ]
+    },
+    {
+      "id": "un-world-toilet-day-2026-11-19",
+      "name": "World Toilet Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-19"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-67-291"
+      ]
+    },
+    {
+      "id": "un-africa-industrialization-day-2026-11-20",
+      "name": "Africa Industrialization Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-20"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-44-237"
+      ]
+    },
+    {
+      "id": "un-world-children-s-day-2026-11-20",
+      "name": "World Children's Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-20"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-836-ix"
+      ]
+    },
+    {
+      "id": "un-world-television-day-2026-11-21",
+      "name": "World Television Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-51-205"
+      ]
+    },
+    {
+      "id": "un-world-conjoined-twins-day-2026-11-24",
+      "name": "World Conjoined Twins Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-24"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-78-313"
+      ]
+    },
+    {
+      "id": "un-international-day-for-the-elimination-of-violence-against-wo-2026-11-25",
+      "name": "International Day for the Elimination of Violence against Women",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-25"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-54-134"
+      ]
+    },
+    {
+      "id": "un-world-sustainable-transport-day-2026-11-26",
+      "name": "World Sustainable Transport Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-26"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-77-286"
+      ]
+    },
+    {
+      "id": "un-a-res-80-309-2026-11-27",
+      "name": "A/RES/80/309",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-27"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-day-of-solidarity-with-the-palestinian-people-2026-11-29",
+      "name": "International Day of Solidarity with the Palestinian People",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-29"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-32-40b"
+      ]
+    },
+    {
+      "id": "un-day-of-remembrance-for-all-victims-of-chemical-warfare-2026-11-30",
+      "name": "Day of Remembrance for all Victims of Chemical Warfare",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-30"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-opcw-c-20-dec-10"
+      ]
+    },
+    {
+      "id": "un-world-aids-day-2026-12-01",
+      "name": "World AIDS Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-01"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-day-for-the-abolition-of-slavery-2026-12-02",
+      "name": "International Day for the Abolition of Slavery",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-02"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-317-iv"
+      ]
+    },
+    {
+      "id": "un-international-day-of-persons-with-disabilities-2026-12-03",
+      "name": "International Day of Persons with Disabilities",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-03"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-47-3"
+      ]
+    },
+    {
+      "id": "un-international-day-of-banks-2026-12-04",
+      "name": "International Day of Banks",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-04"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-74-245"
+      ]
+    },
+    {
+      "id": "un-international-day-against-unilateral-coercive-measures-2026-12-04",
+      "name": "International Day Against Unilateral Coercive Measures",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-04"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-79-293"
+      ]
+    },
+    {
+      "id": "un-international-volunteer-day-for-economic-and-social-developm-2026-12-05",
+      "name": "International Volunteer Day for Economic and Social Development",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-05"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-40-212"
+      ]
+    },
+    {
+      "id": "un-world-soil-day-2026-12-05",
+      "name": "World Soil Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-05"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-68-232"
+      ]
+    },
+    {
+      "id": "un-international-civil-aviation-day-2026-12-07",
+      "name": "International Civil Aviation Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-07"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-51-33"
+      ]
+    },
+    {
+      "id": "un-international-day-of-commemoration-and-dignity-of-the-victim-2026-12-09",
+      "name": "International Day of Commemoration and Dignity of the Victims of the Crime of Genocide and of the Prevention of this Crime",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-09"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-69-323"
+      ]
+    },
+    {
+      "id": "un-international-anti-corruption-day-2026-12-09",
+      "name": "International Anti-Corruption Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-09"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-58-4"
+      ]
+    },
+    {
+      "id": "un-human-rights-day-2026-12-10",
+      "name": "Human Rights Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-10"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-423-v"
+      ]
+    },
+    {
+      "id": "un-international-mountain-day-2026-12-11",
+      "name": "International Mountain Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-11"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-57-245"
+      ]
+    },
+    {
+      "id": "un-international-day-of-neutrality-2026-12-12",
+      "name": "International Day of Neutrality",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-12"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-71-275"
+      ]
+    },
+    {
+      "id": "un-international-universal-health-coverage-day-2026-12-12",
+      "name": "International Universal Health Coverage Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-12"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-72-138"
+      ]
+    },
+    {
+      "id": "un-international-day-against-colonialism-in-all-its-forms-and-m-2026-12-14",
+      "name": "International Day against Colonialism in All its Forms and Manifestations",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-14"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-80-106"
+      ]
+    },
+    {
+      "id": "un-43-c-57-2026-12-15",
+      "name": "43 C/57",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-15"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-migrants-day-2026-12-18",
+      "name": "International Migrants Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-18"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-55-93"
+      ]
+    },
+    {
+      "id": "un-arabic-language-day-2026-12-18",
+      "name": "Arabic Language Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-18"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-a-res-80-301-2026-12-19",
+      "name": "A/RES/80/301",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-19"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances"
+      ]
+    },
+    {
+      "id": "un-international-human-solidarity-day-2026-12-20",
+      "name": "International Human Solidarity Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-20"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-60-209"
+      ]
+    },
+    {
+      "id": "un-world-meditation-day-2026-12-21",
+      "name": "World Meditation Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-79-137"
+      ]
+    },
+    {
+      "id": "un-world-basketball-day-2026-12-21",
+      "name": "World Basketball Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-21"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-77-324"
+      ]
+    },
+    {
+      "id": "un-international-anti-cybercrime-day-2026-12-24",
+      "name": "International Anti-Cybercrime Day",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-24"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-79-243"
+      ]
+    },
+    {
+      "id": "un-international-day-of-epidemic-preparedness-2026-12-27",
+      "name": "International Day of Epidemic Preparedness",
+      "jurisdiction": "UN",
+      "kind": "observance",
+      "applicability": [
+        "observance"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-27"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "UN observance, as listed for 2026",
+      "sources": [
+        "un-observances",
+        "un-doc-a-res-75-27"
+      ]
+    }
+  ]
+}

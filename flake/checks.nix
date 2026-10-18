@@ -200,6 +200,17 @@ in
         touch $out
       '';
 
+  # The holiday registry: its schema rules, the computus and the 2026 audit against the acts.
+  holiday-registry =
+    nixpkgs.legacyPackages.${system}.runCommand "check-holiday-registry"
+      { nativeBuildInputs = [ nixpkgs.legacyPackages.${system}.python3 ]; }
+      ''
+        cp -r ${../modules/home/desktop/calendar} cal && chmod -R +w cal && cd cal
+        python3 -I scripts/registry.py validate registry
+        python3 -I -m unittest discover -s scripts
+        touch $out
+      '';
+
   # It BUILDS what the repo packages, which `nix flake check` does NOT: it only EVALUATES a host.
   # What is fragile here is packaging, and that breaks at build. curseforge is out: the notes.
   packages = nixpkgs.legacyPackages.${system}.linkFarm "checks-repo-packages" (

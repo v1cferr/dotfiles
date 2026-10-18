@@ -1,0 +1,912 @@
+{
+  "schema_version": 1,
+  "jurisdictions": {
+    "BR": {
+      "label": "Brasil",
+      "level": "national"
+    },
+    "BR-SP": {
+      "label": "São Paulo",
+      "level": "state"
+    },
+    "BR-SP-SAO-CARLOS": {
+      "label": "São Carlos",
+      "level": "municipal"
+    },
+    "UN": {
+      "label": "International (UN)",
+      "level": "international"
+    }
+  },
+  "sources": {
+    "br-lei-662-1949": {
+      "title": "Lei nº 662, de 6 de abril de 1949 (redação da Lei nº 10.607/2002)",
+      "url": "https://www.planalto.gov.br/ccivil_03/leis/l0662.htm",
+      "authority": "Presidência da República",
+      "document_id": "Lei 662/1949",
+      "checked_at": "2026-10-18",
+      "check": "read",
+      "watch": true
+    },
+    "br-lei-6802-1980": {
+      "title": "Lei nº 6.802, de 30 de junho de 1980",
+      "url": "https://www.planalto.gov.br/ccivil_03/leis/l6802.htm",
+      "authority": "Presidência da República",
+      "document_id": "Lei 6.802/1980",
+      "checked_at": "2026-10-18",
+      "check": "read",
+      "watch": true
+    },
+    "br-lei-9093-1995": {
+      "title": "Lei nº 9.093, de 12 de setembro de 1995",
+      "url": "https://www.planalto.gov.br/ccivil_03/leis/l9093.htm",
+      "authority": "Presidência da República",
+      "document_id": "Lei 9.093/1995",
+      "checked_at": "2026-10-18",
+      "check": "read",
+      "watch": true
+    },
+    "br-lei-14759-2023": {
+      "title": "Lei nº 14.759, de 21 de dezembro de 2023",
+      "url": "https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2023/lei/l14759.htm",
+      "authority": "Presidência da República",
+      "document_id": "Lei 14.759/2023",
+      "checked_at": "2026-10-18",
+      "check": "read",
+      "watch": true
+    },
+    "br-portaria-mgi-11460-2025": {
+      "title": "Portaria MGI nº 11.460, de 29 de dezembro de 2025 (DOU de 30/12/2025, seção 1, p. 59)",
+      "url": "https://www.in.gov.br/web/dou/-/portaria-mgi-n-11.460-de-29-de-dezembro-de-2025-678388627",
+      "fetch_url": "https://legis.sigepe.gov.br/sigepe-bgp-ws-legis/legis-service/download/?id=0026440285-ALPDF%2F2025",
+      "authority": "Ministério da Gestão e da Inovação em Serviços Públicos",
+      "document_id": "Portaria MGI 11.460/2025",
+      "checked_at": "2026-10-18",
+      "check": "read",
+      "watch": true
+    },
+    "sp-lei-9497-1997": {
+      "title": "Lei estadual nº 9.497, de 5 de março de 1997",
+      "url": "https://www.al.sp.gov.br/repositorio/legislacao/lei/1997/lei-9497-05.03.1997.html",
+      "authority": "Assembleia Legislativa do Estado de São Paulo",
+      "document_id": "Lei SP 9.497/1997",
+      "checked_at": "2026-10-18",
+      "check": "unreachable",
+      "watch": true
+    },
+    "sc-lei-10257-1990": {
+      "title": "Lei Municipal nº 10.257, de 12 de janeiro de 1990 (feriados religiosos)",
+      "url": "https://www.saocarlos.sp.gov.br/images/stories/pdf/2014/expediente/lei10257-digital.pdf",
+      "authority": "Prefeitura Municipal de São Carlos",
+      "document_id": "Lei Municipal 10.257/1990",
+      "checked_at": "2026-10-18",
+      "check": "read",
+      "watch": true
+    },
+    "sc-portaria-2083-2025": {
+      "title": "Portaria nº 2083, de 15 de dezembro de 2025 (feriados e pontos facultativos de 2026)",
+      "url": "https://www.saocarlos.sp.gov.br/files/Portaria%202083_25.pdf",
+      "authority": "Prefeitura Municipal de São Carlos",
+      "document_id": "Portaria 2083/2025",
+      "checked_at": "2026-10-18",
+      "check": "read",
+      "watch": true
+    },
+    "sc-pagina-feriados": {
+      "title": "Feriados — Prefeitura Municipal de São Carlos",
+      "url": "https://www.saocarlos.sp.gov.br/index.php/conheca-sao-carlos/115443-feriados.html",
+      "authority": "Prefeitura Municipal de São Carlos",
+      "document_id": "institutional page",
+      "checked_at": "2026-10-18",
+      "check": "read",
+      "watch": true
+    },
+    "un-observances": {
+      "title": "United Nations — International Days and Weeks",
+      "url": "https://www.un.org/observances/list-days-weeks",
+      "authority": "United Nations",
+      "document_id": "list-days-weeks",
+      "checked_at": "2026-10-18",
+      "check": "read",
+      "watch": true
+    }
+  },
+  "events": [
+    {
+      "id": "br-confraternizacao",
+      "name": "Confraternização Universal",
+      "jurisdiction": "BR",
+      "kind": "civil_holiday",
+      "applicability": [
+        "general"
+      ],
+      "rule": {
+        "type": "fixed",
+        "month": 1,
+        "day": 1
+      },
+      "years": {
+        "from": 1949
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Lei 662/1949, art. 1º",
+      "sources": [
+        "br-lei-662-1949"
+      ]
+    },
+    {
+      "id": "br-tiradentes",
+      "name": "Tiradentes",
+      "jurisdiction": "BR",
+      "kind": "civil_holiday",
+      "applicability": [
+        "general"
+      ],
+      "rule": {
+        "type": "fixed",
+        "month": 4,
+        "day": 21
+      },
+      "years": {
+        "from": 1949
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Lei 662/1949, art. 1º",
+      "sources": [
+        "br-lei-662-1949"
+      ]
+    },
+    {
+      "id": "br-trabalho",
+      "name": "Dia Mundial do Trabalho",
+      "jurisdiction": "BR",
+      "kind": "civil_holiday",
+      "applicability": [
+        "general"
+      ],
+      "rule": {
+        "type": "fixed",
+        "month": 5,
+        "day": 1
+      },
+      "years": {
+        "from": 1949
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Lei 662/1949, art. 1º",
+      "sources": [
+        "br-lei-662-1949"
+      ]
+    },
+    {
+      "id": "br-independencia",
+      "name": "Independência do Brasil",
+      "jurisdiction": "BR",
+      "kind": "civil_holiday",
+      "applicability": [
+        "general"
+      ],
+      "rule": {
+        "type": "fixed",
+        "month": 9,
+        "day": 7
+      },
+      "years": {
+        "from": 1949
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Lei 662/1949, art. 1º",
+      "sources": [
+        "br-lei-662-1949"
+      ]
+    },
+    {
+      "id": "br-aparecida",
+      "name": "Nossa Senhora Aparecida",
+      "jurisdiction": "BR",
+      "kind": "civil_holiday",
+      "applicability": [
+        "general"
+      ],
+      "rule": {
+        "type": "fixed",
+        "month": 10,
+        "day": 12
+      },
+      "years": {
+        "from": 1980
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Lei 6.802/1980, art. 1º",
+      "sources": [
+        "br-lei-6802-1980"
+      ],
+      "notes": "Declared by federal law, so a civil holiday under Lei 9.093/1995, art. 1º, despite its religious theme."
+    },
+    {
+      "id": "br-finados",
+      "name": "Finados",
+      "jurisdiction": "BR",
+      "kind": "civil_holiday",
+      "applicability": [
+        "general"
+      ],
+      "rule": {
+        "type": "fixed",
+        "month": 11,
+        "day": 2
+      },
+      "years": {
+        "from": 2002
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Lei 662/1949, art. 1º, as worded by Lei 10.607/2002",
+      "sources": [
+        "br-lei-662-1949"
+      ]
+    },
+    {
+      "id": "br-republica",
+      "name": "Proclamação da República",
+      "jurisdiction": "BR",
+      "kind": "civil_holiday",
+      "applicability": [
+        "general"
+      ],
+      "rule": {
+        "type": "fixed",
+        "month": 11,
+        "day": 15
+      },
+      "years": {
+        "from": 1949
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Lei 662/1949, art. 1º",
+      "sources": [
+        "br-lei-662-1949"
+      ]
+    },
+    {
+      "id": "br-consciencia-negra",
+      "name": "Dia Nacional de Zumbi e da Consciência Negra",
+      "display": "Consciência Negra",
+      "jurisdiction": "BR",
+      "kind": "civil_holiday",
+      "applicability": [
+        "general"
+      ],
+      "rule": {
+        "type": "fixed",
+        "month": 11,
+        "day": 20
+      },
+      "years": {
+        "from": 2024
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Lei 14.759/2023, art. 1º",
+      "sources": [
+        "br-lei-14759-2023"
+      ],
+      "notes": "National since Lei 14.759/2023 (in force on publication, 21/12/2023); the first 20/11 was in 2024."
+    },
+    {
+      "id": "br-natal",
+      "name": "Natal",
+      "jurisdiction": "BR",
+      "kind": "civil_holiday",
+      "applicability": [
+        "general"
+      ],
+      "rule": {
+        "type": "fixed",
+        "month": 12,
+        "day": 25
+      },
+      "years": {
+        "from": 1949
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Lei 662/1949, art. 1º",
+      "sources": [
+        "br-lei-662-1949"
+      ]
+    },
+    {
+      "id": "sp-revolucao-constitucionalista",
+      "name": "Revolução Constitucionalista",
+      "jurisdiction": "BR-SP",
+      "kind": "civil_holiday",
+      "applicability": [
+        "general"
+      ],
+      "rule": {
+        "type": "fixed",
+        "month": 7,
+        "day": 9
+      },
+      "years": {
+        "from": 1997
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Lei estadual 9.497/1997 (the State's data magna, Lei 9.093/1995, art. 1º, II)",
+      "sources": [
+        "sp-lei-9497-1997",
+        "sc-portaria-2083-2025"
+      ],
+      "notes": "ALESP's page answered 503 on 18/10/2026; the date and its state nature were confirmed by the municipal Portaria 2083/2025, which lists it as a state holiday."
+    },
+    {
+      "id": "sc-paixao-de-cristo",
+      "name": "Paixão de Cristo",
+      "jurisdiction": "BR-SP-SAO-CARLOS",
+      "kind": "religious_holiday",
+      "applicability": [
+        "general"
+      ],
+      "rule": {
+        "type": "easter",
+        "offset": -2
+      },
+      "years": {
+        "from": 1990
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Lei Municipal 10.257/1990, art. 1º (Sexta-Feira da Paixão); Lei 9.093/1995, art. 2º",
+      "sources": [
+        "sc-lei-10257-1990",
+        "br-lei-9093-1995"
+      ],
+      "confirmed": {
+        "2026": {
+          "sources": [
+            "sc-portaria-2083-2025",
+            "br-portaria-mgi-11460-2025"
+          ]
+        }
+      },
+      "notes": "Naming divergence: Portaria MGI 11.460/2025 calls it a national holiday, but Lei 9.093/1995, art. 2º (which that portaria cites) defines it as a religious holiday declared in municipal law, and São Carlos declares it (Lei 10.257/1990). A holiday in São Carlos either way."
+    },
+    {
+      "id": "sc-corpus-christi",
+      "name": "Corpus Christi",
+      "jurisdiction": "BR-SP-SAO-CARLOS",
+      "kind": "religious_holiday",
+      "applicability": [
+        "general"
+      ],
+      "rule": {
+        "type": "easter",
+        "offset": 60
+      },
+      "years": {
+        "from": 1990
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Lei Municipal 10.257/1990, art. 1º",
+      "sources": [
+        "sc-lei-10257-1990"
+      ],
+      "confirmed": {
+        "2026": {
+          "sources": [
+            "sc-portaria-2083-2025"
+          ]
+        }
+      },
+      "notes": "The earlier note cited municipal Lei 7.502/1974 with no source found; Lei 10.257/1990 is the law in force, revoking Lei 10.219/1989 and contrary provisions."
+    },
+    {
+      "id": "sc-babilonia",
+      "name": "Nossa Senhora da Babilônia",
+      "jurisdiction": "BR-SP-SAO-CARLOS",
+      "kind": "religious_holiday",
+      "applicability": [
+        "general"
+      ],
+      "rule": {
+        "type": "fixed",
+        "month": 8,
+        "day": 15
+      },
+      "years": {
+        "from": 1990
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Lei Municipal 10.257/1990, art. 1º (15 de Agosto)",
+      "sources": [
+        "sc-lei-10257-1990",
+        "sc-portaria-2083-2025"
+      ]
+    },
+    {
+      "id": "sc-aniversario",
+      "name": "Aniversário de São Carlos",
+      "jurisdiction": "BR-SP-SAO-CARLOS",
+      "kind": "religious_holiday",
+      "applicability": [
+        "general"
+      ],
+      "rule": {
+        "type": "fixed",
+        "month": 11,
+        "day": 4
+      },
+      "years": {
+        "from": 1990
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Lei Municipal 10.257/1990, art. 1º (São Carlos Borromeu)",
+      "sources": [
+        "sc-lei-10257-1990",
+        "sc-portaria-2083-2025"
+      ],
+      "notes": "The law declares it as São Carlos Borromeu's day, the patron saint; Portaria 2083/2025 publishes it as the city's anniversary."
+    },
+    {
+      "id": "sc-dia-do-professor-2026",
+      "name": "Dia do Professor",
+      "jurisdiction": "BR-SP-SAO-CARLOS",
+      "kind": "civil_holiday",
+      "applicability": [
+        "municipal_education"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-15"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Portaria 2083/2025, art. 1º, XV",
+      "sources": [
+        "sc-portaria-2083-2025"
+      ],
+      "notes": "Only for the teachers and other education staff of the municipal school network. The underlying law was not found; the published year is what holds."
+    },
+    {
+      "id": "br-fed-carnaval-segunda",
+      "name": "Carnaval",
+      "jurisdiction": "BR",
+      "kind": "optional",
+      "applicability": [
+        "federal_admin"
+      ],
+      "rule": {
+        "type": "easter",
+        "offset": -48
+      },
+      "annual_act": true,
+      "confirmed": {
+        "2026": {
+          "sources": [
+            "br-portaria-mgi-11460-2025"
+          ]
+        }
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "The MGI annual portaria (2026: Portaria MGI 11.460/2025, art. 1º, II)",
+      "sources": [
+        "br-portaria-mgi-11460-2025"
+      ]
+    },
+    {
+      "id": "br-fed-carnaval-terca",
+      "name": "Carnaval",
+      "jurisdiction": "BR",
+      "kind": "optional",
+      "applicability": [
+        "federal_admin"
+      ],
+      "rule": {
+        "type": "easter",
+        "offset": -47
+      },
+      "annual_act": true,
+      "confirmed": {
+        "2026": {
+          "sources": [
+            "br-portaria-mgi-11460-2025"
+          ]
+        }
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "The MGI annual portaria (2026: Portaria MGI 11.460/2025, art. 1º, III)",
+      "sources": [
+        "br-portaria-mgi-11460-2025"
+      ]
+    },
+    {
+      "id": "br-fed-cinzas",
+      "name": "Quarta-Feira de Cinzas",
+      "jurisdiction": "BR",
+      "kind": "optional_partial",
+      "applicability": [
+        "federal_admin"
+      ],
+      "rule": {
+        "type": "easter",
+        "offset": -46
+      },
+      "annual_act": true,
+      "confirmed": {
+        "2026": {
+          "sources": [
+            "br-portaria-mgi-11460-2025"
+          ],
+          "partial": {
+            "until": "14:00"
+          }
+        }
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "The MGI annual portaria (2026: Portaria MGI 11.460/2025, art. 1º, IV)",
+      "sources": [
+        "br-portaria-mgi-11460-2025"
+      ]
+    },
+    {
+      "id": "br-fed-corpus-christi",
+      "name": "Corpus Christi",
+      "jurisdiction": "BR",
+      "kind": "optional",
+      "applicability": [
+        "federal_admin"
+      ],
+      "rule": {
+        "type": "easter",
+        "offset": 60
+      },
+      "annual_act": true,
+      "confirmed": {
+        "2026": {
+          "sources": [
+            "br-portaria-mgi-11460-2025"
+          ]
+        }
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "The MGI annual portaria (2026: Portaria MGI 11.460/2025, art. 1º, IX)",
+      "sources": [
+        "br-portaria-mgi-11460-2025"
+      ],
+      "notes": "A federal optional day; in São Carlos the same day is a municipal holiday (sc-corpus-christi)."
+    },
+    {
+      "id": "br-fed-2026-04-20",
+      "name": "Ponto facultativo",
+      "jurisdiction": "BR",
+      "kind": "optional",
+      "applicability": [
+        "federal_admin"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-20"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Portaria MGI 11.460/2025, art. 1º, VI",
+      "sources": [
+        "br-portaria-mgi-11460-2025"
+      ]
+    },
+    {
+      "id": "br-fed-2026-06-05",
+      "name": "Ponto facultativo",
+      "jurisdiction": "BR",
+      "kind": "optional",
+      "applicability": [
+        "federal_admin"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-05"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Portaria MGI 11.460/2025, art. 1º, X",
+      "sources": [
+        "br-portaria-mgi-11460-2025"
+      ]
+    },
+    {
+      "id": "br-fed-servidor-2026",
+      "name": "Dia do Servidor Público federal",
+      "jurisdiction": "BR",
+      "kind": "optional",
+      "applicability": [
+        "federal_admin"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-28"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Portaria MGI 11.460/2025, art. 1º, XIII",
+      "sources": [
+        "br-portaria-mgi-11460-2025"
+      ]
+    },
+    {
+      "id": "br-fed-vespera-natal-2026",
+      "name": "Véspera do Natal",
+      "jurisdiction": "BR",
+      "kind": "optional_partial",
+      "applicability": [
+        "federal_admin"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-24"
+      },
+      "partial": {
+        "after": "13:00"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Portaria MGI 11.460/2025, art. 1º, XVII",
+      "sources": [
+        "br-portaria-mgi-11460-2025"
+      ]
+    },
+    {
+      "id": "br-fed-vespera-ano-novo-2026",
+      "name": "Véspera do Ano Novo",
+      "jurisdiction": "BR",
+      "kind": "optional_partial",
+      "applicability": [
+        "federal_admin"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-31"
+      },
+      "partial": {
+        "after": "13:00"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Portaria MGI 11.460/2025, art. 1º, XIX",
+      "sources": [
+        "br-portaria-mgi-11460-2025"
+      ]
+    },
+    {
+      "id": "sc-mun-carnaval-segunda",
+      "name": "Carnaval",
+      "jurisdiction": "BR-SP-SAO-CARLOS",
+      "kind": "optional",
+      "applicability": [
+        "municipal_admin"
+      ],
+      "rule": {
+        "type": "easter",
+        "offset": -48
+      },
+      "annual_act": true,
+      "confirmed": {
+        "2026": {
+          "sources": [
+            "sc-portaria-2083-2025"
+          ]
+        }
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "The mayor's annual portaria (2026: Portaria 2083/2025, art. 1º, I)",
+      "sources": [
+        "sc-portaria-2083-2025"
+      ]
+    },
+    {
+      "id": "sc-mun-carnaval-terca",
+      "name": "Carnaval",
+      "jurisdiction": "BR-SP-SAO-CARLOS",
+      "kind": "optional",
+      "applicability": [
+        "municipal_admin"
+      ],
+      "rule": {
+        "type": "easter",
+        "offset": -47
+      },
+      "annual_act": true,
+      "confirmed": {
+        "2026": {
+          "sources": [
+            "sc-portaria-2083-2025"
+          ]
+        }
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "The mayor's annual portaria (2026: Portaria 2083/2025, art. 1º, II)",
+      "sources": [
+        "sc-portaria-2083-2025"
+      ]
+    },
+    {
+      "id": "sc-mun-cinzas",
+      "name": "Cinzas",
+      "jurisdiction": "BR-SP-SAO-CARLOS",
+      "kind": "optional_partial",
+      "applicability": [
+        "municipal_admin"
+      ],
+      "rule": {
+        "type": "easter",
+        "offset": -46
+      },
+      "annual_act": true,
+      "confirmed": {
+        "2026": {
+          "sources": [
+            "sc-portaria-2083-2025"
+          ],
+          "partial": {
+            "until": "12:00"
+          }
+        }
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "The mayor's annual portaria (2026: Portaria 2083/2025, art. 1º, III)",
+      "sources": [
+        "sc-portaria-2083-2025"
+      ]
+    },
+    {
+      "id": "sc-mun-2026-04-20",
+      "name": "Ponto facultativo",
+      "jurisdiction": "BR-SP-SAO-CARLOS",
+      "kind": "optional",
+      "applicability": [
+        "municipal_admin"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-04-20"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Portaria 2083/2025, art. 1º, V",
+      "sources": [
+        "sc-portaria-2083-2025"
+      ]
+    },
+    {
+      "id": "sc-mun-2026-06-05",
+      "name": "Ponto facultativo",
+      "jurisdiction": "BR-SP-SAO-CARLOS",
+      "kind": "optional",
+      "applicability": [
+        "municipal_admin"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-06-05"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Portaria 2083/2025, art. 1º, IX",
+      "sources": [
+        "sc-portaria-2083-2025"
+      ]
+    },
+    {
+      "id": "sc-mun-2026-07-10",
+      "name": "Ponto facultativo",
+      "jurisdiction": "BR-SP-SAO-CARLOS",
+      "kind": "optional",
+      "applicability": [
+        "municipal_admin"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-07-10"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Portaria 2083/2025, art. 1º, XI",
+      "sources": [
+        "sc-portaria-2083-2025"
+      ]
+    },
+    {
+      "id": "sc-mun-funcionario-publico-2026",
+      "name": "Dia do Funcionário Público",
+      "jurisdiction": "BR-SP-SAO-CARLOS",
+      "kind": "optional",
+      "applicability": [
+        "municipal_admin"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-10-28"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Portaria 2083/2025, art. 1º, XVI",
+      "sources": [
+        "sc-portaria-2083-2025"
+      ]
+    },
+    {
+      "id": "sc-mun-2026-11-03",
+      "name": "Ponto facultativo",
+      "jurisdiction": "BR-SP-SAO-CARLOS",
+      "kind": "optional",
+      "applicability": [
+        "municipal_admin"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-11-03"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Portaria 2083/2025, art. 1º, XVIII",
+      "sources": [
+        "sc-portaria-2083-2025"
+      ]
+    },
+    {
+      "id": "sc-mun-2026-12-24",
+      "name": "Ponto facultativo",
+      "jurisdiction": "BR-SP-SAO-CARLOS",
+      "kind": "optional",
+      "applicability": [
+        "municipal_admin"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-24"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Portaria 2083/2025, art. 1º, XXII",
+      "sources": [
+        "sc-portaria-2083-2025"
+      ]
+    },
+    {
+      "id": "sc-mun-2026-12-31",
+      "name": "Ponto facultativo",
+      "jurisdiction": "BR-SP-SAO-CARLOS",
+      "kind": "optional",
+      "applicability": [
+        "municipal_admin"
+      ],
+      "rule": {
+        "type": "date",
+        "date": "2026-12-31"
+      },
+      "status": "verified",
+      "verified_at": "2026-10-18",
+      "basis": "Portaria 2083/2025, art. 1º, XXIV",
+      "sources": [
+        "sc-portaria-2083-2025"
+      ]
+    }
+  ]
+}

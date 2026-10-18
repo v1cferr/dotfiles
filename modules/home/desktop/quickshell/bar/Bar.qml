@@ -111,7 +111,7 @@ Scope {
     // to read the CPU, the memory, the sensors, the GPU and the links: docs/notes/desktop/bar.md
     readonly property int sysInterval: 2000
     readonly property int histWindow: 60 // 60 samples at 2 s = the last 2 minutes
-    readonly property string sysCmd: "head -n 200 -v /proc/stat /proc/loadavg /proc/uptime /proc/meminfo /proc/diskstats /proc/net/dev /proc/pressure/cpu /proc/pressure/memory /proc/pressure/io /sys/class/hwmon/hwmon*/name /sys/class/hwmon/hwmon*/temp*_input /sys/class/hwmon/hwmon*/temp*_label /sys/class/hwmon/hwmon*/temp*_max /sys/class/hwmon/hwmon*/temp*_crit /sys/class/hwmon/hwmon*/fan*_input /sys/class/hwmon/hwmon*/energy*_input /sys/class/hwmon/hwmon*/power*_cap /sys/class/drm/card*/device/tile*/gt*/freq0/act_freq /sys/class/drm/card*/device/tile*/gt*/freq0/max_freq /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq 2>/dev/null || true"
+    readonly property string sysCmd: "head -n 200 -v /proc/stat /proc/loadavg /proc/uptime /proc/meminfo /proc/diskstats /proc/net/dev /proc/pressure/cpu /proc/pressure/memory /proc/pressure/io /sys/class/hwmon/hwmon*/name /sys/class/hwmon/hwmon*/temp*_input /sys/class/hwmon/hwmon*/temp*_label /sys/class/hwmon/hwmon*/temp*_max /sys/class/hwmon/hwmon*/temp*_crit /sys/class/hwmon/hwmon*/fan*_input /sys/class/hwmon/hwmon*/energy*_input /sys/class/hwmon/hwmon*/power*_cap /sys/class/drm/card*/device/tile*/gt*/freq0/act_freq /sys/class/drm/card*/device/tile*/gt*/freq0/max_freq /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq /sys/block/zram*/mm_stat /proc/swaps 2>/dev/null || true"
 
     // A history series is REASSIGNED, never mutated: writing inside the array emits no change
     // signal, the same trap the calendar's year rollover documents.
@@ -130,6 +130,7 @@ Scope {
         }
         root.parseCpu(sec["/proc/stat"] || "");
         root.parseMem(sec["/proc/meminfo"] || "");
+        root.parseSwap(sec);
         root.parseLoad(sec["/proc/loadavg"] || "", sec["/proc/uptime"] || "");
         root.parsePsi(sec);
         root.parseCpuFreq(sec);
@@ -289,6 +290,32 @@ Scope {
             root.memPct = Math.round(root.memUsed / root.memTotal * 100);
             root.memHist = root.pushed(root.memHist, root.memPct);
         }
+    }
+
+    // ===== Swap, split by tier: zram in RAM first, the NVMe file as the fallback =====
+    property real zramOrig: 0 // what the pages weigh uncompressed
+    property real zramUsed: 0 // the RAM zram really takes (mm_stat's mem_used_total)
+    property real diskSwapUsed: 0
+    function parseSwap(sec) {
+        let orig = 0, used = 0;
+        for (const path in sec) {
+            if (!/^\/sys\/block\/zram\d+\/mm_stat$/.test(path))
+                continue;
+            const f = (sec[path] || "").trim().split(/\s+/).map(Number);
+            orig += f[0] || 0;
+            used += f[2] || 0;
+        }
+        root.zramOrig = orig;
+        root.zramUsed = used;
+        // /proc/swaps is in KiB; anything that is not a zram device is the disk tier.
+        let disk = 0;
+        const lines = (sec["/proc/swaps"] || "").split("\n");
+        for (let i = 1; i < lines.length; i++) {
+            const p = lines[i].trim().split(/\s+/);
+            if (p.length >= 4 && p[0].indexOf("/dev/zram") !== 0)
+                disk += Number(p[3]) * 1024;
+        }
+        root.diskSwapUsed = disk;
     }
 
     // ===== Disk (the root filesystem plus its device's I/O) =====

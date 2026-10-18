@@ -13,6 +13,7 @@ the band's bell and the power menu are gone; their functions are all here.
 | Header | the title, a do-not-disturb toggle and a clear-all button, both as icons with a name |
 | Notifications | the history, newest first and grouped, scrolling on its own past 480 px (less on a short screen) |
 | Hardware | CPU and GPU temperature, RAM, disk: four cards (v2.3) |
+| Power | the Balanced/Gaming/Eco profile, what its last apply did, and five memory and GPU readings (18/10/2026) |
 | Screenshots | the two monitors by name (ASUS, LG), Both, and where the shot goes, always open (v2.3) |
 | Session | the six session actions, their commands exactly the old power menu's |
 
@@ -58,6 +59,36 @@ every bar panel, with one difference: it opens on a CLICK only, never on hover.
 - **A screen that leaves takes it along:** the bars register by screen name, and a bar destroyed by a
   hotplug closes the panel it was holding, so no invisible window is left with the keyboard.
 - **From the keyboard:** `qs ipc call notif toggle` opens it on the main monitor's logo.
+
+## Power (18/10/2026)
+
+`bar/PowerSection.qml`, between the hardware and the screenshots. The profiles themselves, what
+each one changes and why ppd owns them: [power](../hardware/power.md).
+
+- **Three buttons, Balanced, Gaming, Eco.** A click sets `PowerProfiles.profile` through
+  Quickshell's native binding (`Quickshell.Services.UPower`), so the shell asks power-profiles-
+  daemon over D-Bus and polkit decides; the shell holds no privilege and runs no command. The
+  active profile is the one ppd REPORTS, outlined in the accent. A switch ppd did not confirm
+  within 3 s turns the status line red (`ppd did not switch`), so a refusal is never silent.
+- **A hold says so**: while GameMode holds `performance`, a line reads `Held at Performance by
+  GameMode, until it ends`, and the pick underneath stays the one ppd returns to.
+- **The status line** is `power-profile-sync`'s last apply, from
+  `$XDG_RUNTIME_DIR/power-profile.json`: SignalSift's profile and the Ollama outcome, red when
+  either failed. It is read when the Center opens and 1.5 s after a profile change, never on a
+  timer. Without the file the buttons are greyed and the line reads `power-profiles-daemon not
+  running`, which is the state before the switch.
+- **Five readings**, all from the bar's own 2 s snapshot (no read of their own): available RAM,
+  zram's data and the RAM it really takes with the ratio (`/sys/block/zram*/mm_stat`), the NVMe
+  swap in use (`/proc/swaps`, any device that is not zram), memory pressure (`full avg10`, yellow
+  from 10%, red from 30%, the bar's own alert line), and the GPU BOARD watts from the `xe`
+  sensor, captioned `xe sensor, not the wall`. CPU watts are absent on purpose: RAPL is root-only
+  here, and a number the shell cannot read is not shown.
+
+The history's height budget grew from 360 to 520 px of reserved space for the new section.
+
+PENDING: a look at it with ppd running (after the switch); it was only checked to parse and to
+load into the live shell, where the buttons showed greyed with `power-profiles-daemon not
+running`.
 
 ## Screenshots (18/10/2026)
 

@@ -21,7 +21,7 @@ BarPanel {
     implicitHeight: card.implicitHeight
     // The list grows with the history up to what the screen leaves, then scrolls on its own, so the
     // hardware, the screenshots and the session below it always stay in reach.
-    readonly property int listMax: Math.max(160, Math.min(480, center.sh - Theme.bandTop - Theme.screenInset - 360))
+    readonly property int listMax: Math.max(160, Math.min(480, center.sh - Theme.bandTop - Theme.screenInset - 520))
 
     // ── The history as entries: one notification, or a GROUP of similar ones (a view; the server
     // keeps every notification). Similar = same app and summary, within 5 min of the previous one,
@@ -148,6 +148,8 @@ BarPanel {
     onVisibleChanged: {
         center.armed = -1;
         center.expanded = ({}); // groups open folded, every time
+        if (center.visible)
+            powerSection.refresh(); // the sync's state, read on open instead of polled
     }
 
     // ── Screenshots: shell-screenshot (flameshot.nix) waits for this panel to leave the frame ──
@@ -373,6 +375,19 @@ BarPanel {
                     }
                 }
             }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: Theme.hairline
+            color: Theme.colEdge
+        }
+
+        // ── Power: the ppd profile and the memory behind it (PowerSection.qml) ──
+        PowerSection {
+            id: powerSection
+            Layout.fillWidth: true
+            bar: center.bar
         }
 
         Rectangle {

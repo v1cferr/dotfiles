@@ -12,6 +12,15 @@ Singleton {
     // ===== State =====
     // DND survives a restart of the shell: a two-key file in Quickshell's own state dir, no daemon.
     readonly property bool dnd: saved.dnd
+    // A TEMPORARY hold (the away screen): quiet like DND while it lasts, never written to the saved
+    // preference, so a crash mid-hold cannot leave DND stuck on.
+    readonly property bool held: root.holders > 0
+    property int holders: 0
+    function hold(on) {
+        root.holders = Math.max(0, root.holders + (on ? 1 : -1));
+    }
+    // What the toasts obey: the user's DND or a hold.
+    readonly property bool quiet: root.dnd || root.held
     // The NixOS Center is open (bound by the Bar's coordinator): no toast competes with it.
     property bool centerOpen: false
     // The toasts on screen, newest last. Three at most: an older one leaves the screen, never the history.
@@ -110,8 +119,8 @@ Singleton {
                 root.unseen++;
                 root.unseenCritical = root.unseenCritical || critical;
             }
-            // A toast only with DND off and the Center closed; Critical pierces both.
-            if (critical || (!root.dnd && !root.centerOpen))
+            // A toast only when not quiet (DND or a hold) and the Center is closed; Critical pierces all.
+            if (critical || (!root.quiet && !root.centerOpen))
                 root.popups = root.popups.concat([n]).slice(-root.maxToasts);
             if (root.count > root.historyLimit)
                 root.trimHistory();

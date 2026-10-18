@@ -11,14 +11,11 @@ Singleton {
     id: root
 
     property bool active: false
-    // The DND from before, so leaving restores it instead of forcing it off.
-    property bool dndBefore: false
 
     function enter() {
         if (root.active)
             return;
-        root.dndBefore = Notifs.dnd;
-        Notifs.dnd = true; // a toast would light the screen up
+        Notifs.hold(true); // a toast would light the screen up; the saved DND is never touched
         root.active = true;
         Quickshell.execDetached(["hyprctl", "dispatch", 'hl.dsp.submap("away")']);
         Quickshell.execDetached(["rgb-lights", "off"]); // modules/nixos/hardware/peripheral-rgb.nix
@@ -29,7 +26,7 @@ Singleton {
             return;
         root.active = false;
         Quickshell.execDetached(["hyprctl", "dispatch", 'hl.dsp.submap("reset")']);
-        Notifs.dnd = root.dndBefore;
+        Notifs.hold(false);
         Quickshell.execDetached(["rgb-lights", "on"]);
     }
 

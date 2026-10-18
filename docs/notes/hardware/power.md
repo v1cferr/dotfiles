@@ -97,8 +97,18 @@ TESTED live after the switch, the same evening: `powerprofilesctl set power-save
 `power` and the sync recorded `eco (ok)`; starting `gamemode-performance` from the user manager
 was allowed by polkit, showed the hold (`performance`, `GameMode`) and EPP `performance` with
 SignalSift on `gaming`; stopping it returned to `power-saver`, NOT to balanced, with EPP `power`
-and SignalSift back on `eco`. A real game under `gamemoderun` is still to be watched, after a
-re-login puts the user in the `gamemode` group.
+and SignalSift back on `eco`.
+
+**A switch does NOT reload a running gamemoded.** It reads `/etc/gamemode.ini` at its own start,
+and NixOS restarts no user unit on activation. MEASURED on 18/10/2026: the instance from before the
+switch still had the old config, so `gamemoderun` raised the GOVERNOR to `performance` (EPP
+`performance` with ppd still reporting `balanced` and no hold), the exact second owner this setup
+removes. And it was allowed: polkit reads the group from `/etc/group`, so the new `gamemode`
+membership counts for the helpers before any re-login. After `systemctl --user restart
+gamemoded` (no game running), `gamemoderun sleep 8` gave the hold (`performance`, `GameMode`),
+governor still `powersave`, SignalSift `gaming`, and on exit `balanced` again, with no polkit
+error. So after a switch that touches `programs.gamemode`: restart gamemoded with no game open,
+or log in again.
 
 ## The LG at 60 Hz in Eco: an experiment, not wired
 

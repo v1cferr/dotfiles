@@ -76,6 +76,11 @@ by keeping the build cache a week: [docker-prune](../services/docker-prune.md).
   without root. During Hearthstone: 86 W board, 60 W package, GT0 at 2850 MHz, 54 to 58 °C.
   The GT0 `min_freq` reads 1200 MHz with `power_profile` = `base`; not touched.
 - **PCIe ASPM**: kernel policy `default`. The per-link state needs `lspci -vv` as root: PENDING.
+- **GPU at idle** (MEASURED 18/10/2026 20:10, from the NixOS Center's card, game closed, two
+  monitors lit): **45 W on the board**. That is high for an idle card and is the usual signature
+  of a B580 whose link never reaches ASPM L1. It is the largest single idle draw found, and the
+  first thing to investigate, root-read first: `sudo lspci -vv | grep -B30 -i 'battlemage\|B580' |
+  grep -E 'LnkCap|LnkCtl'`, plus the board's BIOS option for native ASPM.
 - **Monitors**: ASUS XG27ACS 2560x1440 at 180 Hz, LG UltraGear 1920x1080 at 143.98 Hz rotated
   (`transform=1`), both VRR on. The LG offers 60 Hz at 1080p (`hyprctl monitors`).
 

@@ -86,9 +86,10 @@ each one changes and why ppd owns them: [power](../hardware/power.md).
 
 The history's height budget grew from 360 to 520 px of reserved space for the new section.
 
-PENDING: a look at it with ppd running (after the switch); it was only checked to parse and to
-load into the live shell, where the buttons showed greyed with `power-profiles-daemon not
-running`.
+Checked on screen on 18/10/2026 with ppd running: Balanced outlined in the accent, the line
+reading `SignalSift balanced · Ollama kept`, and the five cards at 5.4 GB available, 5.1 GB of zram
+data in 1.4 GB, 3.0 GB on the NVMe, 0.0% pressure and 45 W on the GPU board with the desktop idle.
+The zram card's caption elides its ratio at 520 px; the full text is in its accessible name.
 
 ## Screenshots (18/10/2026)
 

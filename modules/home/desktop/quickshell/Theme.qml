@@ -56,6 +56,8 @@ Singleton {
             id: mon
             property string primary: "DP-2"
             property string secondary: "HDMI-A-3"
+            property string primaryName: "Main" // my.monitors.primaryName: a label, never for matching
+            property string secondaryName: "Side"
         }
     }
 
@@ -74,6 +76,8 @@ Singleton {
 
     readonly property string primaryMonitor: mon.primary
     readonly property string secondaryMonitor: mon.secondary
+    readonly property string primaryName: mon.primaryName
+    readonly property string secondaryName: mon.secondaryName
 
     // It applies an opacity (the hex byte "aa") to a "#rrggbb" color, giving "#aarrggbb".
     function aa(hex, a) { return "#" + a + hex.slice(1); }

@@ -13,7 +13,7 @@ the band's bell and the power menu are gone; their functions are all here.
 | Header | the title, a do-not-disturb toggle and a clear-all button, both as icons with a name |
 | Notifications | the history, newest first and grouped, scrolling on its own past 480 px (less on a short screen) |
 | Hardware | CPU and GPU temperature, RAM, disk: four cards (v2.3) |
-| Screenshots | Main, Side, Both, and where the shot goes, always open (v2.3) |
+| Screenshots | the two monitors by name (ASUS, LG), Both, and where the shot goes, always open (v2.3) |
 | Session | the six session actions, their commands exactly the old power menu's |
 
 The history scrolls by itself, so however long it grows, the three sections below it stay in reach.
@@ -62,7 +62,8 @@ every bar panel, with one difference: it opens on a CLICK only, never on hover.
 ## Screenshots (18/10/2026)
 
 A `SCREENSHOTS` section between the hardware and the session, ALWAYS open since v2.3 (it was a folded
-line): three targets (Main, Side, Both) and, beside the title, where the shot goes, the clipboard by
+line): three targets, the two monitors by their `my.monitors` names (`ASUS`, `LG`; `Main` and
+`Side` on a host that sets none) and Both, and, beside the title, where the shot goes, the clipboard by
 default (as the keybinds do) or a PNG in `~/Pictures/Screenshots`, named
 `<date>_<time>_<target>-<connector>.png` (`..._all.png` for the whole layout). A monitor that is not
 connected greys its button out.

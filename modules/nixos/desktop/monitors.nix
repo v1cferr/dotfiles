@@ -12,5 +12,16 @@
       type = lib.types.str;
       description = "The SECONDARY monitor's connector: on the left, workspaces 5 to 8. Set by the host.";
     };
+    # Human names for the shell's labels (the NixOS Center's screenshot targets), never for matching.
+    primaryName = lib.mkOption {
+      type = lib.types.str;
+      default = "Main";
+      description = "The main monitor's short name in the UI.";
+    };
+    secondaryName = lib.mkOption {
+      type = lib.types.str;
+      default = "Side";
+      description = "The secondary monitor's short name in the UI.";
+    };
   };
 }

@@ -38,3 +38,7 @@ With no default, the module REQUIRES the host to declare it. The value lives in
 
 The roles: `primary` is at origin 0x0 with workspaces 1 to 4; `secondary` is on the left with
 workspaces 5 to 8.
+
+**The names DO have a default** (18/10/2026): `primaryName` and `secondaryName` are labels for the
+shell (the NixOS Center's screenshot targets read `ASUS` and `LG` here), never used to match a
+monitor, so `Main` and `Side` are honest on any host. They reach QML through `monitors.json`.

@@ -44,6 +44,8 @@ in
   my.monitors = {
     primary = "DP-1"; # an ASUS ROG Strix XG27ACS, QHD (DisplayPort)
     secondary = "DP-2"; # an LG ULTRAGEAR, standing on its pivot (DisplayPort)
+    primaryName = "ASUS"; # the shell's labels (the NixOS Center's screenshot targets)
+    secondaryName = "LG";
   };
 
   # EXTRA MOUNTS (the root and /boot come from disko). By UUID, since sdX/nvmeX shuffle.

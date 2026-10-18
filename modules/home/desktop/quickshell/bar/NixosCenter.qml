@@ -407,13 +407,13 @@ BarPanel {
                     {
                         target: "primary",
                         icon: "󰍹",
-                        label: "Main",
+                        label: Theme.primaryName,
                         name: Theme.primaryMonitor
                     },
                     {
                         target: "secondary",
                         icon: "󰍺",
-                        label: "Side",
+                        label: Theme.secondaryName,
                         name: Theme.secondaryMonitor
                     },
                     {

@@ -18,5 +18,7 @@ in
   # Data for Quickshell: Theme.qml reads it through FileView plus JsonAdapter.
   home.file.".config/theme/monitors.json".text = builtins.toJSON {
     inherit (cfg) primary secondary;
+    primaryName = osConfig.my.monitors.primaryName;
+    secondaryName = osConfig.my.monitors.secondaryName;
   };
 }

@@ -79,9 +79,16 @@ enable a state the port says it does not have, which is how links hang. The opti
 named as ASUS 500-series boards usually label them; if this BIOS words them differently, look
 under Platform Misc Configuration for the PEG and PCH ASPM entries.
 
-Checking it, after the BIOS change (read only):
+The kernel log names the same cause before any `lspci`. On the boot of 18/10/2026:
+`ACPI FADT declares the system doesn't support PCIe ASPM, so disable it`, `FADT indicates ASPM is
+unsupported, using BIOS configuration`, and `r8169 ... can't disable ASPM; OS doesn't have ASPM
+control`. That FADT flag is what Native ASPM = Disabled publishes, so its absence is the first sign
+the BIOS change took.
+
+Checking it, after the BIOS change and a reboot (read only):
 
 ```sh
+journalctl -k -b | grep -iE 'FADT.*ASPM|OS now controls'      # wanted: no FADT line
 P=$(nix build --no-link --print-out-paths nixpkgs#pciutils.out)
 sudo $P/bin/lspci -vv -s 00:01.0 | grep -E 'LnkCap|LnkCtl'   # wanted: ASPM L1 in both
 sudo $P/bin/lspci -vv -s 01:00.0 | grep LnkCtl               # wanted: ASPM L1 Enabled

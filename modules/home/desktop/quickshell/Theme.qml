@@ -178,15 +178,16 @@ Singleton {
 
     // ── Glass: three levels of see-through, in one of three profiles (my.theme.glass) ──
     // perceptible: flat, 90/92/96%. clear-gradient: bg at the top easing into the palette's surface at
-    // the foot, 86->80 / 88->84 / 90 flat. solid: opaque. The contrast: docs/notes/desktop/theme.md
+    // the foot, 86->80 / 70->70 (the band: kitty's own 0.70, so it reads as a window) / 90 flat.
+    // solid: opaque. The contrast: docs/notes/desktop/theme.md
     readonly property bool glassSolid: pal.glass === "solid"
     readonly property bool glassClear: pal.glass === "clear-gradient"
     function glassBg(a) { return theme.aa(pal.bg, theme.glassSolid ? "ff" : a); }
     function glassFoot(a) { return theme.aa(pal.surface, theme.glassSolid ? "ff" : a); }
     readonly property color colSurfaceBar: theme.glassBg(theme.glassClear ? "db" : "e6")
     readonly property color colSurfaceBarFoot: theme.glassClear ? theme.glassFoot("cc") : theme.colSurfaceBar
-    readonly property color colSurfaceCard: theme.glassBg(theme.glassClear ? "e0" : "eb")
-    readonly property color colSurfaceCardFoot: theme.glassClear ? theme.glassFoot("d6") : theme.colSurfaceCard
+    readonly property color colSurfaceCard: theme.glassBg(theme.glassClear ? "b3" : "eb")
+    readonly property color colSurfaceCardFoot: theme.glassClear ? theme.glassFoot("b3") : theme.colSurfaceCard
     readonly property color colSurfacePop: theme.glassBg(theme.glassClear ? "e6" : "f5") // dense text: never a gradient
     readonly property color colEdge: aa(pal.border, "8c") // a surface's hairline
     readonly property color colSheen: aa(pal.text, "0f") // the 1 px light along a surface's top edge

@@ -300,7 +300,7 @@ through `hypr-colors.lua`) and kitty's `background_opacity` (`kitty.nix`).
 | | `perceptible` (the default) | `clear-gradient` |
 | --- | --- | --- |
 | Bar | 90% flat | the palette's bg at 86% at the top easing into its surface at 80% at the foot |
-| Band cards | 92% flat | 88% bg into 84% surface |
+| Band cards | 92% flat | 70% bg into 70% surface, kitty's own opacity (18/10/2026; it was 88% into 84%) |
 | Panels, Center, toasts | 96% flat | 90% flat: dense text gets no gradient |
 | kitty | background 0.95, then the global 0.98 window opacity on top | background 0.70, exempt from the global rule |
 | HyprGlass tint, panel tint | bg at 33%, at 50% | bg at 20%, at 30% |
@@ -328,7 +328,7 @@ turns into `#cccccc`, without counting HyprGlass's own dimming, which only helps
 | Surface, clear-gradient | `text` | `subtext` | `accent` | `red` |
 | --- | --- | --- | --- | --- |
 | bar top, 86% bg | 7.3 | 5.6 | 4.7 | 4.4 |
-| card top, 88% bg | 8.3 | 6.3 | 5.3 | 5.1 |
+| card top, 88% bg (before 18/10/2026) | 8.3 | 6.3 | 5.3 | 5.1 |
 | panel, 90% bg | 8.5 | 6.5 | 5.4 | 5.2 |
 | kitty background, 85% (the first value) | 7.5 | 5.7 | 4.8 | 4.6 |
 | kitty background, 70%, HyprGlass's dimming counted | 6.3 | 4.8 | 4.0 | 3.9 |
@@ -352,6 +352,12 @@ backdrop's, and contrast read off the real text pixels:
 The cost is the worst case: computed, a white page right behind the terminal would leave the accent
 at about 4.0. Measured, it does better, since HyprGlass darkens more than that estimate assumed. Back
 to 0.85 is one line in `kitty.nix`.
+
+**The band went to the windows' recipe on 18/10/2026**, so the LG reads as one surface with the
+windows around it: its cards at kitty's 0.70 and its layer on HyprGlass's `window` preset instead of
+`ui`. Same opacity, same tint, same glass, so the kitty measurement below holds for the cards as it
+stands: text 7.3, the accent 4.7 over the brightest 5% of white stripes. The dim footnotes
+(`colDim`) were never meant to pass AA and pay the most for it.
 
 **HyprGlass's own numbers were measured too, and left alone** (18/10/2026). In a nested Hyprland, a
 kitty at 0.70 floating over the same stripes, white included, one grim capture per variant of the

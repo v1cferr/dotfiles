@@ -64,7 +64,7 @@ hg.preset("panel", {
 })
 
 hg.layer("qs-bar", { preset = "ui" })
-hg.layer("qs-dash", { preset = "ui" })
+hg.layer("qs-dash", { preset = "window" }) -- the band: the windows' own glass, so the LG reads as one surface
 hg.layer("qs-panel", { preset = "panel" })
 hg.layer("qs-center", { preset = "panel" })
 

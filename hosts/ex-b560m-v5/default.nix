@@ -14,6 +14,10 @@
   # The router this machine manages (router-sync, `ssh router`): its facts live in its own folder.
   my.router = import ../cudy-wr3000;
 
+  # Perceptible Glass on this desk: the plugin is built for this host's Hyprland. How to turn it
+  # back off, including from a TTY: docs/notes/desktop/hyprglass.md
+  home-manager.users.v1cferr.my.hypr.hyprglass.enable = true;
+
   # Fixed at the 1st install: NEVER change it afterwards. The same value as the old host because
   # it is the same release; the stateVersion follows the installation, not the disk.
   system.stateVersion = "26.05";

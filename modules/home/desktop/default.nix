@@ -11,6 +11,7 @@
     ./autostart.nix # the PANEL of what opens at login (my.autostart): Discord/Spotify
     ./polkit-agent.nix # the password dialog for a graphical app that needs authorization
     ./hypr.nix # ~/.config/hypr/hyprland.conf (ABNT2 plus monitors plus keybinds)
+    ./hyprglass.nix # the Liquid Glass plugin, built for the session's Hyprland; off until my.hypr.hyprglass.enable
     ./clipboard-push.nix # the clipboard's image/file to a host over scp, its path left in the clipboard
     ./vicinae # the launcher (SUPER+Q) plus command palette, themed from the palette
     ./cheatsheet.nix # SUPER+H: the keybind list in Vicinae, GENERATED from keybinds.lua at runtime

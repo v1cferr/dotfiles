@@ -60,9 +60,9 @@ hl.config({
   },
 })
 
--- The shell's glass (my.theme.glass): blur under Quickshell's named surfaces, and ignore_alpha keeps
--- it off their transparent margins and gaps. `solid` paints opaque, so no blur is paid for.
-if (C.glass or "soft") ~= "solid" then
+-- The shell's glass (my.theme.glass): blur under Quickshell's named surfaces, ignore_alpha keeping it
+-- off their gaps. Not when HyprGlass took those layers (glass.lua): two blurs never stack.
+if (C.glass or "soft") ~= "solid" and not hl.plugin.hyprglass then
   hl.layer_rule({ match = { namespace = "^qs-(bar|dash|panel)$" }, blur = true, ignore_alpha = 0.5 })
 end
 

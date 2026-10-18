@@ -112,6 +112,7 @@ export const navigation: NavItem[] = [
     items: [
       { title: "Desktop", doc: "notes/desktop/desktop.md" },
       { title: "Hyprland", doc: "notes/desktop/hypr.md" },
+      { title: "HyprGlass", doc: "notes/desktop/hyprglass.md" },
       { title: "Keybinds", doc: "notes/desktop/keybinds.md" },
       { title: "Quickshell", doc: "notes/desktop/quickshell.md" },
       { title: "Bar", doc: "notes/desktop/bar.md" },

@@ -22,6 +22,8 @@ Rectangle {
     property int maxWidth: 0
     // Pinned: its panel is open by a click, so the control stays lit while the pointer is elsewhere.
     property bool selected: false
+    // A resting tint (an operational chip's state on glass); hover and press still read over it.
+    property color fill: "transparent"
     signal clicked
     signal rightClicked
     signal scrolledUp
@@ -37,7 +39,7 @@ Rectangle {
     implicitWidth: (pill.maxWidth > 0) ? Math.min(prow.implicitWidth + 2 * pill.padX, pill.maxWidth) : prow.implicitWidth + 2 * pill.padX
     implicitHeight: Theme.barControl
     radius: Theme.radiusControl
-    color: area.pressed ? Theme.colPressFill : (area.containsMouse ? Theme.colHoverFill : (pill.selected ? Theme.colSelectFill : "transparent"))
+    color: area.pressed ? Theme.colPressFill : (area.containsMouse ? Theme.colHoverFill : (pill.selected ? Theme.colSelectFill : pill.fill))
     Behavior on color {
         ColorAnimation {
             duration: Theme.motionHover

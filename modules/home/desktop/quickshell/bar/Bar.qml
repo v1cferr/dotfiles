@@ -869,8 +869,6 @@ Scope {
                 lines: [root.spArtist, root.spPlaying ? "Playing" : "Paused"].filter(l => l !== ""),
                 action: "Click for the player · right-click to " + (root.spPlaying ? "pause" : "play") + " · scroll to skip"
             };
-        if (key === "ops-ci" || key === "ops-svc" || key === "ops")
-            return root.opsHint(key);
         if (key === "vol")
             return {
                 title: "Volume",
@@ -930,36 +928,6 @@ Scope {
     }
     function wsLabel(id) {
         return (id < 10 ? "0" : "") + id;
-    }
-
-    // The operational alerts' hint: per source, what it is and what a click shows.
-    function opsHint(key) {
-        const lines = [];
-        const forge = (name, src, expected) => {
-            if (!expected && !src.ok)
-                return;
-            const runs = src.runs || [];
-            const f = runs.filter(r => r.state === "failure");
-            if (!Ci.loaded)
-                lines.push(name + ": not read yet");
-            else if (!src.ok && !src.stale)
-                lines.push(name + ": unknown (" + (src.error || "no answer") + ")");
-            else
-                lines.push(name + ": " + (f.length ? f.length + " failing (" + f.slice(0, 3).map(r => r.repo.split("/").pop() + " " + r.name).join(", ") + ")" : "no current failure") + (src.stale ? ", data from " + Ci.agoSec(src.staleSince) + " ago" : ""));
-        };
-        if (key !== "ops-svc") {
-            forge("GitHub", Ci.github, true);
-            forge("FAI GitLab", Ci.gitlab, Ci.gitlabShown);
-        }
-        if (key !== "ops-ci") {
-            const bad = (Services.meta || []).filter(s => s.state !== "up");
-            lines.push((Services.meta || []).length === 0 ? "Services: no data yet" : "Services: " + (bad.length ? bad.map(s => s.label || s.key + " " + s.state).join(", ") : "all up"));
-        }
-        return {
-            title: key === "ops-svc" ? "Services" : (key === "ops-ci" ? "CI" : "Operations"),
-            lines: lines,
-            action: "Click to show it on the dashboard"
-        };
     }
 
     // ===== Hypridle (toggle-hypridle.sh) =====
@@ -1957,6 +1925,19 @@ Scope {
     }
 
     // ===== The NixOS Center (the logo's panel): notifications, do-not-disturb and the session =====
+    // The standing monitor's operational chips open these on hover (bar/OpsIndicator.qml).
+    OpsPanel {
+        bar: root
+        key: "ops-ci"
+    }
+    OpsPanel {
+        bar: root
+        key: "ops-svc"
+    }
+    OpsPanel {
+        bar: root
+        key: "ops"
+    }
     NixosCenter {
         bar: root
     }

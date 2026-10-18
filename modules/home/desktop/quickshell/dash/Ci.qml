@@ -25,6 +25,12 @@ Singleton {
     // Off the VPN the FAI page shows its last good picture (stale); it only leaves the rotation when
     // there is none yet, instead of showing an error every 15 s.
     readonly property bool gitlabShown: root.loaded && (root.gitlab.ok || root.gitlab.error !== "unreachable")
+    // When the feed last asked the forges (s), as of the last cache read; refresh() re-reads the
+    // cache (no network), for a panel that shows "updated N min ago".
+    readonly property real checkedAt: ciFeed.checkedAt
+    function refresh() {
+        ciFeed.read();
+    }
     readonly property bool anyRunning: [].concat(root.github.runs || [], root.gitlab.runs || []).some(r => r.state === "running" || r.state === "queued")
 
     // The document comes from glance-feed's cache (ETags against GitHub and GitLab, every 1 to 2

@@ -15,5 +15,6 @@
     ./basic-memory.nix # the MCP memory server over ~/context, shared by Claude Code, codex and agy
     ./vm-boot-drill.nix # the weekly drill: it rebuilds the VM boot test and only speaks on failure
     ./signalsift.nix # my feed, transcript and local LLM daemon (its web UI on 127.0.0.1:7878)
+    ./power-profile.nix # the ppd profile's user-side effects: SignalSift's profile, idle Ollama models
   ];
 }

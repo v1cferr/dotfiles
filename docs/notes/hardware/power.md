@@ -1,13 +1,18 @@
 # Power profiles: Balanced, Gaming, Eco
 
 `modules/nixos/hardware/power.nix` (the daemon), `modules/nixos/gaming/steam.nix` (GameMode's
-hold). Three operating profiles with ONE owner of the state: power-profiles-daemon (ppd).
+hold), `modules/home/services/power-profile.nix` (the user-side effects). Three operating profiles
+with ONE owner of the state: power-profiles-daemon (ppd). Everything else FOLLOWS it.
 
-| Profile | ppd profile | CPU (intel_pstate EPP) |
-| --- | --- | --- |
-| Balanced (the default) | `balanced` | `balance_performance`, the kernel's own default |
-| Gaming | `performance` | `performance` |
-| Eco | `power-saver` | `power` |
+| Profile | ppd profile | CPU (intel_pstate EPP) | SignalSift | Ollama |
+| --- | --- | --- | --- | --- |
+| Balanced (the default) | `balanced` | `balance_performance`, the kernel default | `balanced` | its own 5 min keep-alive |
+| Gaming | `performance` | `performance` | `gaming` | idle models unloaded once |
+| Eco | `power-saver` | `power` | `eco` | idle models unloaded once |
+
+Kept in EVERY profile: the network, the tunnel, Caddy and every published service, Syncthing,
+Dropbox, the backups and their timers, Sunshine, audio. No profile suspends the machine, stops a
+service, or touches the monitors' power state.
 
 ## What the CPU offers (MEASURED 18/10/2026)
 
@@ -57,6 +62,59 @@ concurrent games share one hold. The unit `BindsTo=gamemoded.service`, so a cras
 ends the hold instead of leaving the CPU on `performance`. A manual pick during a game wins:
 ppd releases every hold when the user switches.
 
+## The user-side effects: `power-profile-sync`
+
+A user unit (`default.target`, so it works over SSH too) runs `gdbus monitor` on ppd's object and
+calls `power-profile-apply` on every `ActiveProfile` change and every time ppd (re)appears on the
+bus, which covers its own start. Event-driven, no polling. The apply, serialized by `flock`:
+
+- **SignalSift**: `signalsift profile set balanced|gaming|eco`, the app's own interface. `gaming`
+  keeps the API and light collection and stops transcription and inference; `eco` stops all
+  background work. The app kills a running heavy job with its process group and keeps what it
+  already transcribed (its `docs/benchmarks/whisper-arc-b580.md`), so nothing is lost. The
+  profile lives only until the daemon restarts, so `signalsift.service` gets an
+  `ExecStartPost=-power-profile-apply --signalsift-only` that re-applies it, retrying for 10 s
+  while the daemon comes up.
+- **Ollama**: in Gaming and Eco, every model in `/api/ps` gets `keep_alive: 0`, which frees its
+  VRAM as soon as any request in flight ends. It never blocks the API: Duo's next run simply
+  loads the model again. Its VRAM no longer competes with a game.
+
+The outcome of each apply lands in `$XDG_RUNTIME_DIR/power-profile.json` (profile, SignalSift
+result, Ollama result, time), which the NixOS Center reads, and in the journal:
+
+```sh
+journalctl --user -u power-profile-sync -b
+cat "$XDG_RUNTIME_DIR/power-profile.json"
+power-profile-apply                          # re-apply by hand, idempotent
+```
+
+TESTED on 18/10/2026 before any switch, with `powerprofilesctl` and `signalsift` stubbed and the
+real Ollama API: `power-saver` gave `eco (ok)` and `unloaded 0`; a refusing SignalSift was retried
+10 times and recorded as `failed: error: connection refused`; `--signalsift-only` kept the previous
+Ollama result. The real D-Bus path is PENDING until the switch.
+
+## The LG at 60 Hz in Eco: an experiment, not wired
+
+The LG offers 1920x1080 at 60 Hz (`hyprctl monitors`), and a lower refresh lowers the GPU's work
+for that output. It is NOT automated, because the repo's history with this panel is DisplayPort
+link loss, a panel DDC cannot wake, and black screens under Sunshine (see
+[monitors](monitors.md) and [away](../desktop/away.md)), and because Hyprland 0.55 killed `hyprctl
+keyword`, so a runtime mode change needs `hyprctl eval` on `hl.monitor`, untested here. The
+experiment, by hand, with nothing streaming:
+
+1. Read the board power for 60 s at 143.98 Hz (the command in
+   [the baseline](power-and-memory-baseline.md#pending)).
+2. Switch the LG to 60 Hz through the Lua API, keeping `transform=1` and its position, and read
+   the board power again for 60 s.
+3. Switch back and check `hyprctl monitors` shows 143.98 Hz, the same position and transform.
+
+Only a measured saving with a clean way back earns it a place in the Eco apply.
+
+## RGB
+
+Not part of any profile. The LEDs are already driven by OpenRGB profiles and the away mode, and
+the gain is too small to justify a second writer of their state.
+
 ## Rejected
 
 - **TLP, auto-cpufreq, tuned**: a laptop's battery policy, or a second owner of the same EPP.
@@ -81,6 +139,9 @@ systemctl --user status gamemode-performance
 ## Rollback
 
 - Everything: delete `./power.nix` from `modules/nixos/hardware/default.nix` and the
-  `custom.*`/`desiredgov` lines in `steam.nix`; EPP goes back to the kernel default.
+  `custom.*`/`desiredgov` lines in `steam.nix`; EPP goes back to the kernel default, and
+  `power-profile.nix` turns itself off (it is gated on ppd).
+- Only the side effects: delete `./power-profile.nix` from `modules/home/services/default.nix`.
+  SignalSift then stays on its config's profile and Ollama on its own keep-alive.
 - Stuck on `performance` after a game (should not happen): `systemctl --user stop
   gamemode-performance`, or pick a profile by hand, which drops every hold.

@@ -349,8 +349,25 @@ backdrop's, and contrast read off the real text pixels:
 | 0.55 | 0.16 | 7.1 / 6.8 |
 | 0.40 | 0.20 | 6.1 / 5.8 |
 
-The cost is the worst case in the table above: a white page right behind the terminal leaves the
-accent at about 4.0, under AA. Back to 0.85 is one line in `kitty.nix`.
+The cost is the worst case: computed, a white page right behind the terminal would leave the accent
+at about 4.0. Measured, it does better, since HyprGlass darkens more than that estimate assumed. Back
+to 0.85 is one line in `kitty.nix`.
+
+**HyprGlass's own numbers were measured too, and left alone** (18/10/2026). In a nested Hyprland, a
+kitty at 0.70 floating over the same stripes, white included, one grim capture per variant of the
+`window` preset; contrast as mean / the brightest 5% of what shows through:
+
+| Variant | Transmission | `text` | `subtext` | `accent` |
+| --- | --- | --- | --- | --- |
+| no HyprGlass, Hyprland's blur only | 0.272 | 6.3 / 3.9 | 4.8 / 3.0 | 4.0 / 2.5 |
+| current: tint 20%, brightness 0.95, blur 0.9 | 0.109 | 8.7 / 7.3 | 6.6 / 5.6 | 5.6 / 4.7 |
+| tint 13%, brightness 1.0 | 0.125 | 8.4 / 6.9 | 6.4 / 5.3 | 5.4 / 4.4 |
+| blur 0.6 | 0.114 | 8.7 / 7.2 | 6.6 / 5.5 | 5.6 / 4.6 |
+| tint 13%, brightness 1.0, blur 0.6 | 0.130 | 8.4 / 6.8 | 6.4 / 5.2 | 5.4 / 4.4 |
+
+The best variant buys 19% more transmission and takes the accent's worst case under AA (4.5), and
+less blur barely moves it: the glass's tint is what keeps text readable over a bright backdrop, so the
+current values stay. Without the plugin the stripes show the most, and the accent drops to 2.5.
 
 **What was measured live, and what was not.** The profile was applied with a `rebuild` and checked
 in the running shell: the bar at `#db1a1b26` easing to `#cc1f2335`, the cards `#e01a1b26` to

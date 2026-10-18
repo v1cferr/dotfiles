@@ -102,7 +102,9 @@ def occurrence_status(event: dict, year: int) -> tuple[str, list[str], dict | No
     """
     confirmed = event.get("confirmed", {}).get(str(year))
     if confirmed is not None:
-        return event["status"], confirmed.get("sources", event["sources"]), confirmed.get("partial")
+        # The law AND the year's act: one says it is a holiday, the other that it falls that day.
+        merged = list(dict.fromkeys(event["sources"] + confirmed.get("sources", [])))
+        return event["status"], merged, confirmed.get("partial")
     if event.get("annual_act"):
         return "pending", event["sources"], None
     if event["rule"]["type"] == "easter" and event["status"] == "verified":
@@ -249,7 +251,7 @@ def import_un(page: str, year: int, checked: str) -> dict:
             sources[sid] = {
                 "title": html.unescape(m["res"] or "").strip() or "UN document",
                 "url": m["doc"].replace("http://", "https://", 1),
-                "authority": "United Nations",
+                "authority": "UNESCO" if "UNESCO" in (m["res"] or "") or "unesco.org" in m["doc"] else "United Nations",
                 "document_id": html.unescape(m["res"] or "").strip() or m["doc"],
                 "checked_at": checked,
                 "check": "listed",

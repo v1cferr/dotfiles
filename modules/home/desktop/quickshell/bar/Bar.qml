@@ -52,6 +52,20 @@ Scope {
         function panel(key: string): void {
             root.openForTest(key);
         }
+        // The calendar focused on a day ("YYYY-MM-DD"): its month, the day selected, its detail.
+        function calendar(iso: string): void {
+            root.openForTest("cal");
+            calPopover.viewYear = +iso.slice(0, 4) === root.calYear ? 0 : +iso.slice(0, 4);
+            calPopover.focusOn(+iso.slice(5, 7), iso);
+        }
+        // Flip one calendar filter (sc, sp, br, un, holiday, optional, observance), or "reset".
+        function calendarFilter(key: string): void {
+            key === "reset" ? Holidays.resetFilters() : Holidays.toggle(key);
+        }
+        // The same on a named screen (the calendar's narrow layout on the standing monitor).
+        function panelOn(key: string, screen: string): void {
+            root.openForTest(key, screen);
+        }
         function close(): void {
             root.closePanels();
             root.vpnPopVisible = false;
@@ -1485,8 +1499,9 @@ Scope {
         property: "centerOpen"
         value: root.pinned === "center"
     }
-    function openForTest(key) {
-        const scr = key.startsWith("ops") ? Quickshell.screens.find(x => x.name === Theme.secondaryMonitor) : Theme.screenPrimary;
+    function openForTest(key, screenName) {
+        const name = screenName || (key.startsWith("ops") ? Theme.secondaryMonitor : "");
+        const scr = name ? Quickshell.screens.find(x => x.name === name) : Theme.screenPrimary;
         const b = scr ? root.bars[scr.name] : null;
         if (!b)
             return;
@@ -1522,186 +1537,32 @@ Scope {
             root.panelShown = ""
     }
 
-    // Holidays (nac/sp/sc), rechecked 08/08/2026. THIS LIST DOES NOT UPDATE ITSELF: the movable ones
-    // derive from Easter, the fixed ones are LAW by hand: docs/notes/desktop/bar.md
-    readonly property var holidayDefs: [
-        {
-            name: "Ano-Novo",
-            scope: "nac",
-            m: 1,
-            d: 1
-        },
-        {
-            name: "Carnaval (segunda)",
-            scope: "nac",
-            off: -48,
-            fac: true
-        },
-        {
-            name: "Carnaval (terça)",
-            scope: "nac",
-            off: -47,
-            fac: true
-        },
-        {
-            name: "Quarta-feira de Cinzas",
-            scope: "nac",
-            off: -46,
-            fac: true
-        },
-        {
-            name: "Sexta-feira Santa",
-            scope: "nac",
-            off: -2
-        },
-        {
-            name: "Tiradentes",
-            scope: "nac",
-            m: 4,
-            d: 21
-        },
-        {
-            name: "Dia do Trabalho",
-            scope: "nac",
-            m: 5,
-            d: 1
-        },
-        {
-            name: "Corpus Christi",
-            scope: "sc",
-            off: 60
-        },
-        {
-            name: "Revolução Constitucionalista",
-            scope: "sp",
-            m: 7,
-            d: 9
-        },
-        {
-            name: "N. Sra. da Babilônia",
-            scope: "sc",
-            m: 8,
-            d: 15
-        },
-        {
-            name: "Independência",
-            scope: "nac",
-            m: 9,
-            d: 7
-        },
-        {
-            name: "N. Sra. Aparecida",
-            scope: "nac",
-            m: 10,
-            d: 12
-        },
-        {
-            name: "Finados",
-            scope: "nac",
-            m: 11,
-            d: 2
-        },
-        {
-            name: "Aniversário de São Carlos",
-            scope: "sc",
-            m: 11,
-            d: 4
-        },
-        {
-            name: "Proclamação da República",
-            scope: "nac",
-            m: 11,
-            d: 15
-        },
-        {
-            name: "Consciência Negra",
-            scope: "nac",
-            m: 11,
-            d: 20
-        },
-        {
-            name: "Natal",
-            scope: "nac",
-            m: 12,
-            d: 25
-        }
-    ]
     readonly property var monthNames: ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
     readonly property var weekHeads: ["D", "S", "T", "Q", "Q", "S", "S"]
     readonly property var dowAbbr: ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"]
     readonly property var dowNames: ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"]
     readonly property var monAbbr: ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
-    function easterDate(y) {
-        const a = y % 19, b = Math.floor(y / 100), c = y % 100;
-        const dd = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
-        const g = Math.floor((b - f + 1) / 3);
-        const h = (19 * a + b - dd - g + 15) % 30;
-        const i = Math.floor(c / 4), k = c % 4;
-        const l = (32 + 2 * e + 2 * i - h - k) % 7;
-        const mm = Math.floor((a + 11 * h + 22 * l) / 451);
-        const month = Math.floor((h + l - 7 * mm + 114) / 31);
-        const day = ((h + l - 7 * mm + 114) % 31) + 1;
-        return new Date(y, month - 1, day);
-    }
-    function holidaysOfYear(y) {
-        const e = root.easterDate(y);
-        const defs = root.holidayDefs;
-        const out = [];
-        for (let i = 0; i < defs.length; i++) {
-            const def = defs[i];
-            const dt = (def.off !== undefined) ? new Date(y, e.getMonth(), e.getDate() + def.off) : new Date(y, def.m - 1, def.d);
-            out.push({
-                date: dt,
-                name: def.name,
-                scope: def.scope,
-                fac: def.fac === true
-            });
-        }
-        return out;
-    }
+    // The holidays come from the verified registry (Holidays.qml, docs/notes/desktop/calendar.md);
+    // a scope's color is the one signal the bar, the calendar and the band share.
     function scopeColor(scope) {
-        return scope === "nac" ? Theme.colRed : (scope === "sp" ? Theme.colBlue : Theme.colMauve);
-    }
-    function scopeLabel(scope) {
-        return scope === "nac" ? "National" : (scope === "sp" ? "SP state" : "São Carlos");
+        return scope === "br" ? Theme.colRed : (scope === "sp" ? Theme.colBlue : (scope === "sc" ? Theme.colMauve : Theme.colTeal));
     }
     // The calendar's state (recomputed only when the day turns)
     property int calYear: 0
     property int calTodayM: 0
     property int calTodayD: 0
     property int calTodayW: 0 // today's weekday, 0 = Sunday, for the spelled-out name
-    property var calMap: ({})
-    property var calUpcoming: []
+    // Today's year under the DEFAULT filters (the band's month card); the calendar panel keeps its
+    // own year and filters. A binding: it follows the day turning and a rebuilt registry.
+    readonly property var calMap: Holidays.mapFor(root.calYear, Holidays.defaults)
     property string calDayKey: ""
-    function buildCalMap(y) {
-        const map = ({});
-        const hs = root.holidaysOfYear(y);
-        for (let i = 0; i < hs.length; i++) {
-            const h = hs[i];
-            const key = (h.date.getMonth() + 1) * 100 + h.date.getDate();
-            if (!map[key])
-                map[key] = [];
-            map[key].push(h);
-        }
-        return map;
-    }
-    function computeUpcoming(now, n) {
-        const t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-        let all = root.holidaysOfYear(now.getFullYear()).concat(root.holidaysOfYear(now.getFullYear() + 1));
-        all = all.filter(h => !h.fac && h.date.getTime() >= t0);
-        all.sort((a, b) => a.date.getTime() - b.date.getTime());
-        return all.slice(0, n);
-    }
     // The year rolls over on the first SystemClock beat after midnight (measured across 2026-2027).
-    // DO NOT mutate calMap in place: a QML binding only reevaluates on REASSIGNMENT. See the notes.
     function refreshCalendar() {
         const d = sysClock.date;
         root.calYear = d.getFullYear();
         root.calTodayM = d.getMonth() + 1;
         root.calTodayD = d.getDate();
         root.calTodayW = d.getDay();
-        root.calMap = root.buildCalMap(root.calYear);
-        root.calUpcoming = root.computeUpcoming(d, 7);
     }
     // ISO-8601 week number: the week's THURSDAY decides the year it counts against, which is what
     // makes 01/01 land on week 53 of the year before when it falls on a Friday.
@@ -1725,37 +1586,20 @@ Scope {
             });
         const dim = new Date(root.calYear, m, 0).getDate();
         for (let d = 1; d <= dim; d++) {
-            const arr = root.calMap[m * 100 + d];
-            let hol = null;
-            if (arr && arr.length) {
-                hol = arr[0];
-                for (let j = 0; j < arr.length; j++)
-                    if (!arr[j].fac) {
-                        hol = arr[j];
-                        break;
-                    }
-            }
+            const o = Holidays.primary(root.calMap[("0" + m).slice(-2) + "-" + ("0" + d).slice(-2)]);
             cells.push({
                 d: d,
-                holiday: hol,
+                // The band's shape: a name, the scope's color, and `fac` for an outline instead of a fill.
+                holiday: o ? {
+                    name: o.display,
+                    scope: Holidays.scopeOf(o),
+                    // An outline for an optional day AND for a holiday that is not everyone's.
+                    fac: Holidays.classOf(o) !== "holiday" || o.applicability.indexOf("general") < 0
+                } : null,
                 today: (m === root.calTodayM && d === root.calTodayD)
             });
         }
         return cells;
-    }
-    function fmtHolidayDate(dt) {
-        const dd = ("0" + dt.getDate()).slice(-2);
-        return root.dowAbbr[dt.getDay()] + " " + dd + "/" + root.monAbbr[dt.getMonth()];
-    }
-    function daysUntilLabel(dt) {
-        const t0 = new Date(root.calYear, root.calTodayM - 1, root.calTodayD).getTime();
-        const h0 = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).getTime();
-        const n = Math.round((h0 - t0) / 86400000);
-        if (n <= 0)
-            return "today";
-        if (n === 1)
-            return "tomorrow";
-        return "in " + n + "d";
     }
     // ===== The polling timers =====
     // The system snapshot carries the CPU, the memory, the sensors, the GPU and the interfaces in
@@ -1937,6 +1781,7 @@ Scope {
 
     // ===== The calendar popover, the view is in bar/CalendarPopover.qml =====
     CalendarPopover {
+        id: calPopover
         bar: root
     }
 

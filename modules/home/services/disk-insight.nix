@@ -294,7 +294,6 @@ in
         # Every game listed at its REAL path on the Windows disk, never at the $HOME symlink. The
         # sampler resolves with `readlink -f`, so a process launched through the link reports the
         # NTFS path; the old path here would match nothing forever and read as "never played".
-        "${games}/Overwatch"
         "${games}/Hearthstone"
         "${games}/World of Warcraft"
         "${games}/Warcraft III"
@@ -303,7 +302,10 @@ in
         "${games}/Victoria 3"
         "${games}/Baldurs Gate 3"
 
-        # The only one still on the Kingston, on purpose: of its 7.9 GiB just 4.3 are the game, the
+        # Competitive, so on the Kingston on purpose since 18/10 (games-disk.nix says why).
+        "${config.home.homeDirectory}/.local/share/bottles/bottles/Battlenet/drive_c/Program Files (x86)/Overwatch"
+
+        # Steam's library also stays on the Kingston, on purpose: of its 7.9 GiB just 4.3 are the game, the
         # rest being the Steam Linux Runtime, which cannot leave Linux. Valve does not support an
         # NTFS library either, so moving 4 GiB would buy trouble.
         "${config.home.homeDirectory}/.local/share/Steam/steamapps/common"

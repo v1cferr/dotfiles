@@ -1,5 +1,7 @@
-// A notification card (toasts plus the center). Its OWN file because in an inline component the
-// root's id does not resolve in nested handlers, which broke dismiss and the actions.
+// A notification card (toasts plus the center), CONTEXTUAL GLASS: no frame, hierarchy by type and
+// spacing, a 3 px strip only for a critical one. The freedesktop urgency is the only semantics a
+// notification reliably carries, so normal and low read neutral: docs/notes/desktop/nixos-center.md
+// Its OWN file because in an inline component the root's id does not resolve in nested handlers.
 import Quickshell
 import Quickshell.Services.Notifications
 import Quickshell.Widgets
@@ -11,14 +13,9 @@ Rectangle {
     id: card
     property var notif
     property bool isPopup: false
-
-    function urgColor(u) {
-        if (u === NotificationUrgency.Critical)
-            return Theme.colRed;
-        if (u === NotificationUrgency.Low)
-            return Theme.colDim;
-        return Theme.colAccent;
-    }
+    readonly property bool critical: card.notif !== null && card.notif !== undefined && card.notif.urgency === NotificationUrgency.Critical
+    // A toast is the compact variant: a smaller icon and the body held to two lines.
+    readonly property bool compact: card.isPopup
 
     // The "default" action (the one that "activates"/focuses the app that notified) becomes a
     // little arrow at the top of the card; the other actions stay as text buttons.
@@ -106,12 +103,28 @@ Rectangle {
             easing.type: Easing.OutCubic
         }
     }
-    implicitHeight: cardRow.implicitHeight + 20
+    implicitHeight: cardRow.implicitHeight + 2 * (card.compact ? Theme.sp2 : Theme.sp3)
     radius: Theme.radiusSurface
-    // A toast is glass of its own; inside the Center a card is an inset on the panel's glass.
-    color: card.isPopup ? Theme.colSurfacePop : Theme.colHoverFill
-    border.color: card.notif ? card.urgColor(card.notif.urgency) : Theme.colEdge
-    border.width: Theme.hairline
+    // A toast is glass of its own; inside the Center a card is a faint inset on the panel's glass.
+    color: card.isPopup ? Theme.colSurfacePop : (cardHover.hovered ? Theme.colHoverFill : Qt.alpha(Theme.colText, 0.04))
+    Behavior on color {
+        ColorAnimation {
+            duration: Theme.motionHover
+        }
+    }
+    HoverHandler {
+        id: cardHover
+    }
+    // Critical only: the one urgency that means something, said by a strip AND the bold red summary.
+    Rectangle {
+        visible: card.critical
+        x: 0
+        y: Theme.sp2
+        width: 3
+        height: card.height - 2 * Theme.sp2
+        radius: 1.5
+        color: Theme.colCrit
+    }
 
     // The toast's auto-dismiss; Critical stays until an interaction.
     Timer {
@@ -138,13 +151,14 @@ Rectangle {
     RowLayout {
         id: cardRow
         anchors.fill: parent
-        anchors.margins: 10
-        spacing: 10
+        anchors.margins: card.compact ? Theme.sp2 : Theme.sp3
+        anchors.leftMargin: (card.compact ? Theme.sp2 : Theme.sp3) + (card.critical ? Theme.sp1 : 0)
+        spacing: Theme.sp3
 
         Item {
             Layout.alignment: Qt.AlignTop
-            implicitWidth: 36
-            implicitHeight: 36
+            implicitWidth: card.compact ? 28 : 32
+            implicitHeight: card.compact ? 28 : 32
             ClippingRectangle {
                 id: nclip
                 anchors.fill: parent
@@ -160,17 +174,17 @@ Rectangle {
                     asynchronous: true
                     // a picture fills the shape (crop); an icon keeps its whole outline (fit)
                     fillMode: card.isPicture ? Image.PreserveAspectCrop : Image.PreserveAspectFit
-                    sourceSize.width: 36
-                    sourceSize.height: 36
+                    sourceSize.width: 64
+                    sourceSize.height: 64
                 }
             }
             Text {
                 anchors.centerIn: parent
                 visible: !nclip.visible
                 text: "󰂚"
-                color: card.notif ? card.urgColor(card.notif.urgency) : Theme.colAccent
+                color: card.critical ? Theme.colCrit : Theme.colSubtext
                 font.family: Theme.uiFont
-                font.pixelSize: 22
+                font.pixelSize: card.compact ? 18 : 20
             }
         }
 
@@ -183,10 +197,18 @@ Rectangle {
                 Text {
                     Layout.fillWidth: true
                     text: card.notif ? card.notif.appName : ""
+                    color: Theme.colSubtext
+                    font.family: Theme.uiFont
+                    font.pixelSize: Theme.fontSmall
+                    elide: Text.ElideRight
+                }
+                // When it arrived; re-read each time the list repaints, which is enough for minutes.
+                Text {
+                    text: card.notif ? Notifs.agoText(card.notif) : ""
                     color: Theme.colDim
                     font.family: Theme.uiFont
-                    font.pixelSize: 10
-                    elide: Text.ElideRight
+                    font.pixelSize: Theme.fontMicro
+                    Layout.rightMargin: Theme.sp1
                 }
                 // The little arrow: it invokes the "default" action, focusing/opening the app that notified.
                 Text {
@@ -226,22 +248,25 @@ Rectangle {
                 visible: text !== ""
                 Layout.fillWidth: true
                 text: card.notif ? card.notif.summary : ""
-                color: Theme.colText
+                color: card.critical ? Theme.colCrit : Theme.colText
                 font.family: Theme.uiFont
-                font.pixelSize: 13
+                font.pixelSize: Theme.fontBody
                 font.bold: true
                 wrapMode: Text.WordWrap
+                maximumLineCount: card.compact ? 1 : 3
+                elide: Text.ElideRight
             }
             Text {
                 visible: text !== ""
                 Layout.fillWidth: true
                 text: card.notif ? card.notif.body : ""
-                color: Theme.colText
+                color: Theme.colSubtext
                 font.family: Theme.uiFont
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontSmall
                 textFormat: Text.StyledText
                 wrapMode: Text.WordWrap
-                opacity: 0.85
+                maximumLineCount: card.compact ? 2 : 6
+                elide: Text.ElideRight
             }
 
             RowLayout {
@@ -253,25 +278,23 @@ Rectangle {
                     model: card.extraActions
                     Rectangle {
                         required property var modelData
-                        implicitWidth: actLabel.implicitWidth + 18
+                        implicitWidth: actLabel.implicitWidth + 2 * Theme.sp3
                         implicitHeight: 24
-                        radius: 7
-                        color: actArea.containsMouse ? Theme.colHoverBg : "transparent"
+                        radius: Theme.radiusControl
+                        color: actArea.containsMouse ? Theme.colHoverFill : Qt.alpha(Theme.colText, 0.06)
                         Behavior on color {
                             ColorAnimation {
                                 duration: Theme.motionHover
                                 easing.type: Easing.OutQuad
                             }
                         }
-                        border.color: Theme.colBorder
-                        border.width: 1
                         Text {
                             id: actLabel
                             anchors.centerIn: parent
                             text: modelData.text
                             color: Theme.colText
                             font.family: Theme.uiFont
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSmall
                         }
                         MouseArea {
                             id: actArea

@@ -32,11 +32,35 @@ Singleton {
     property int unseen: 0
     property bool unseenCritical: false
 
+    // When each one arrived (ms, by notification id): the server keeps no time. One handed over by a
+    // hot reload gets the reload's time, the closest the shell can know.
+    property var arrivedAt: ({})
+    function ageOf(n) {
+        const t = n ? root.arrivedAt[n.id] : undefined;
+        return t === undefined ? -1 : Date.now() - t;
+    }
+    // "now", "3 min", "2 h", "4 d": the same words as the band's.
+    function agoText(n) {
+        const ms = root.ageOf(n);
+        if (ms < 0)
+            return "";
+        const s = ms / 1000;
+        return s < 60 ? "now" : (s < 3600 ? Math.floor(s / 60) + " min" : (s < 86400 ? Math.floor(s / 3600) + " h" : Math.floor(s / 86400) + " d"));
+    }
     // The history = the notifications tracked by the server (an UntypedObjectModel).
     readonly property var history: server.trackedNotifications
     readonly property int count: server.trackedNotifications ? server.trackedNotifications.values.length : 0
-    onCountChanged: if (root.unseen > root.count)
-        root.unseen = root.count
+    onCountChanged: {
+        if (root.unseen > root.count)
+            root.unseen = root.count;
+        // Forget the times of what left the history, so the map never outgrows it.
+        const live = ({});
+        for (const n of server.trackedNotifications.values)
+            if (root.arrivedAt[n.id] !== undefined)
+                live[n.id] = root.arrivedAt[n.id];
+        if (Object.keys(live).length !== Object.keys(root.arrivedAt).length)
+            root.arrivedAt = live;
+    }
 
     // The Bar asks for this to open or close the Center (the IPC toggle comes through here too).
     signal centerToggleRequested
@@ -111,6 +135,11 @@ Singleton {
         onNotification: function (n) {
             // tracked = true keeps the object alive and puts it in the history.
             n.tracked = true;
+            if (root.arrivedAt[n.id] === undefined) {
+                const m = Object.assign({}, root.arrivedAt);
+                m[n.id] = Date.now();
+                root.arrivedAt = m;
+            }
             // keepOnReload hands the old ones over again on a hot reload: history, not news.
             if (n.lastGeneration)
                 return;

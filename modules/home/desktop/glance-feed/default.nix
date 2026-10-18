@@ -19,6 +19,7 @@ let
     openssh
     sqlite
     systemd
+    util-linux
     writeShellApplication
     ;
 
@@ -35,6 +36,7 @@ let
       openssh # the network source asks the router over the LAN
       systemd # journalctl: the attacks on the exposed ports
       notify # the threats source's pushes to the phone (pkgs/notify, ntfy)
+      util-linux # flock: one Claude token renewal at a time
     ];
     # The place and the source of truth are my.weather's (weather.nix), never repeated here.
     runtimeEnv = {

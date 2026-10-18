@@ -626,6 +626,59 @@ threats() {
 # give them: it reads the shared session archive, so it is per machine, not per subscription.
 # The endpoint is internal and undocumented, so every field is optional.
 claude_api="https://api.anthropic.com/api/oauth/usage"
+# The token lives ~8 h and Claude Code renews it only while it runs. With no session open the feed
+# renews it with the same endpoint and client as Claude Code (2.1.296). The refresh token ROTATES,
+# so renewing under a live session would leave that session holding a dead one: then it is skipped.
+claude_token_url="https://platform.claude.com/v1/oauth/token"
+claude_client="9d1c250a-e61b-44d9-88ed-5944d1962f5e"
+
+claude_live() { # true while a Claude Code process of this account runs (every shell has the var)
+  local dir="${GLANCE_CLAUDE_CREDENTIALS%/*}" p
+  for p in /proc/[0-9]*; do
+    [ -O "$p" ] || continue
+    case "$(cat "$p/comm" 2>/dev/null)" in .claude-wrapped | claude) ;; *) continue ;; esac
+    tr '\0' '\n' <"$p/environ" 2>/dev/null | grep -qxF "CLAUDE_CONFIG_DIR=$dir" && return 0
+  done
+  return 1
+}
+
+# claude_renew [force]: renew when the token expires within GLANCE_CLAUDE_REFRESH_MARGIN seconds
+# (300), or now with "force" (after a 401). Under a lock, re-read first: whoever renewed in the
+# meantime wins. Only the three token fields change; the file is replaced atomically, still 0600.
+claude_renew() {
+  local cred="$GLANCE_CLAUDE_CREDENTIALS" exp token
+  read -r exp token < <(jq -r '.claudeAiOauth | "\((.expiresAt // 0) / 1000 | floor) \(.accessToken // "")"' "$cred")
+  [ "${1:-}" = force ] || [ "$((exp - now))" -lt "${GLANCE_CLAUDE_REFRESH_MARGIN:-300}" ] || return 0
+  if claude_live; then
+    echo "claude_usage: a Claude Code session is open; the renewal is its job" >&2
+    return 0
+  fi
+  (
+    flock -w 10 9 || exit 1
+    [ "$(jq -r '.claudeAiOauth.accessToken // ""' "$cred")" = "$token" ] || exit 0
+    jq --arg c "$claude_client" '.claudeAiOauth | {grant_type: "refresh_token", refresh_token: .refreshToken,
+      client_id: $c, scope: ((.scopes // []) | join(" "))}' "$cred" >"$work/claude.req" || exit 1
+    code="$(curl -sS -m 30 -H "Content-Type: application/json" --data @"$work/claude.req" \
+      -o "$work/claude.tok" -w '%{http_code}' "$claude_token_url" 2>/dev/null || echo 000)"
+    rm -f "$work/claude.req"
+    if [ "$code" != 200 ] || ! jq -e '.access_token' "$work/claude.tok" >/dev/null 2>&1; then
+      echo "claude_usage: token renewal answered $code" >&2
+      exit 1
+    fi
+    tmp="$(mktemp "${cred%/*}/.credentials.json.XXXXXX")" || exit 1
+    if jq --slurpfile t "$work/claude.tok" --argjson at "$(date +%s)" '.claudeAiOauth |= . + {
+        accessToken: $t[0].access_token, refreshToken: ($t[0].refresh_token // .refreshToken),
+        expiresAt: (($at + ($t[0].expires_in // 28800)) * 1000)}' "$cred" >"$tmp" && mv -f "$tmp" "$cred"; then
+      echo "claude_usage: token renewed" >&2
+    else
+      rm -f "$tmp"
+      exit 1
+    fi
+  ) 9>"$cred.glance.lock"
+  local rc=$?
+  rm -f "$work/claude.tok"
+  return "$rc"
+}
 
 claude_fetch() { # claude_fetch OUT -> the HTTP code; the token goes through a file, never argv
   printf 'Authorization: Bearer %s\n' "$(jq -r '.claudeAiOauth.accessToken // ""' "$GLANCE_CLAUDE_CREDENTIALS")" >"$work/claude.auth"
@@ -646,7 +699,14 @@ claude_usage() {
     return 0
   fi
   local code
+  if ! claude_renew; then
+    fail claude_usage "token renewal failed"
+    return 0
+  fi
   code="$(claude_fetch "$work/claude.raw")"
+  if [ "$code" = 401 ] && claude_renew force; then # revoked early: one renewal, one retry
+    code="$(claude_fetch "$work/claude.raw")"
+  fi
   if [ "$code" != 200 ]; then
     fail claude_usage "usage endpoint answered $code"
     return 0

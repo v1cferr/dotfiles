@@ -199,6 +199,17 @@ Singleton {
     readonly property color colSelectFill: aa(pal.accent, "2e")
     readonly property real opacityDisabled: 0.4
 
+    // ── States: one color per VERIFIABLE condition. The catalog: docs/notes/desktop/theme.md#states ──
+    readonly property color colOk: pal.green        // healthy, with evidence (a check passed, a link up)
+    readonly property color colWarn: pal.yellow     // attention: a new window elsewhere, a threshold near
+    readonly property color colAlert: pal.orange    // degraded, or something asking to be looked at
+    readonly property color colCrit: pal.red        // a confirmed failure
+    readonly property color colUnknown: pal.dim     // no data, stale data, or deliberately off
+    readonly property color colSurfaceTip: aa(pal.bg, "f2") // a tip drawn INSIDE a panel: no blur under it, so near opaque
+    // Icons and the hover delay shared by the bar, the panels and the tips.
+    readonly property int iconBar: 16
+    readonly property int tipDelay: 300
+
     // A panel narrower than this cannot hold the bar's full set, and it is where the glance band
     // takes over instead. Measured against the widest left group: docs/notes/desktop/bar.md
     readonly property int compactWidth: 1600;

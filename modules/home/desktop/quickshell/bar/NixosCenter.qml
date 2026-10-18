@@ -92,6 +92,12 @@ BarPanel {
         }
     ]
 
+    // The tips of the icon controls, over the card in this panel's own window.
+    GlassTip {
+        id: tips
+        anchors.fill: card
+    }
+
     PopCard {
         id: card
         shown: center.visible
@@ -113,16 +119,22 @@ BarPanel {
             }
             IconButton {
                 glyph: Notifs.dnd ? "󰂛" : "󰂚"
-                tint: Notifs.dnd ? Theme.colPeach : Theme.colSubtext
+                tint: Notifs.dnd ? Theme.colAlert : Theme.colSubtext
                 active: Notifs.dnd
-                name: Notifs.dnd ? "Do not disturb is on: toasts are held, critical ones still show" : "Do not disturb is off"
+                tips: tips
+                name: "Do Not Disturb"
+                stateText: Notifs.dnd ? "Enabled: toasts are held, critical ones still show" : "Disabled"
+                action: Notifs.dnd ? "Click to disable" : "Click to enable"
                 onClicked: Notifs.toggleDnd()
             }
             IconButton {
                 glyph: "󰎟"
                 tint: Theme.colSubtext
                 enabled: Notifs.count > 0
-                name: Notifs.count > 0 ? "Clear all " + Notifs.count + " notifications" : "Nothing to clear"
+                tips: tips
+                name: "Clear notifications"
+                stateText: Notifs.count > 0 ? Notifs.count + " in the history" : "Nothing to clear"
+                action: Notifs.count > 0 ? "Click to clear them all" : ""
                 onClicked: Notifs.clearAll()
             }
         }
@@ -214,7 +226,10 @@ BarPanel {
                 glyph: center.shotSave ? "󰉉" : "󰅇"
                 tint: center.shotSave ? Theme.colAccent : Theme.colSubtext
                 active: center.shotSave
-                name: center.shotSave ? "Saving a PNG to ~/Pictures/Screenshots (click: copy instead)" : "Copying to the clipboard (click: save a PNG instead)"
+                tips: tips
+                name: "Screenshot output"
+                stateText: center.shotSave ? "A PNG in ~/Pictures/Screenshots" : "The clipboard"
+                action: center.shotSave ? "Click to copy instead" : "Click to save a PNG instead"
                 onClicked: center.shotSave = !center.shotSave
             }
         }

@@ -1,7 +1,7 @@
-// A square glyph button with its own NAME: the accessible name and the tooltip are the same words,
-// so a control shown only as an icon still says what it does.
+// A square glyph button with its own NAME: the accessible name and the tip's title are the same
+// words, so a control shown only as an icon still says what it does. The tip is the panel's
+// GlassTip (`tips`), never Qt's native ToolTip, which drew a light box off the theme.
 import QtQuick
-import QtQuick.Controls
 import "root:/"
 
 Rectangle {
@@ -10,6 +10,9 @@ Rectangle {
     property color tint: Theme.colText
     property bool active: false // a toggle that is on
     property string name: ""
+    property string stateText: "" // the tip's second line: what it is now
+    property string action: ""    // the tip's third line: what a click does
+    property Item tips: null      // the panel's GlassTip
     signal clicked
 
     implicitWidth: Theme.barControl
@@ -25,16 +28,13 @@ Rectangle {
     Accessible.role: Accessible.Button
     Accessible.name: btn.name
     Accessible.checkable: btn.active
-    ToolTip.visible: area.containsMouse && btn.name !== ""
-    ToolTip.delay: Theme.hoverIntent
-    ToolTip.text: btn.name
 
     Text {
         anchors.centerIn: parent
         text: btn.glyph
         color: btn.tint
         font.family: Theme.uiFont
-        font.pixelSize: 16
+        font.pixelSize: Theme.iconBar
     }
     MouseArea {
         id: area
@@ -42,6 +42,8 @@ Rectangle {
         hoverEnabled: true
         enabled: btn.enabled
         cursorShape: Qt.PointingHandCursor
+        onContainsMouseChanged: if (btn.tips)
+            area.containsMouse ? btn.tips.show(btn, btn.name, btn.stateText, btn.action) : btn.tips.hide(btn)
         onClicked: btn.clicked()
     }
 }

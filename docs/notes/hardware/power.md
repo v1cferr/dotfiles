@@ -91,7 +91,14 @@ power-profile-apply                          # re-apply by hand, idempotent
 TESTED on 18/10/2026 before any switch, with `powerprofilesctl` and `signalsift` stubbed and the
 real Ollama API: `power-saver` gave `eco (ok)` and `unloaded 0`; a refusing SignalSift was retried
 10 times and recorded as `failed: error: connection refused`; `--signalsift-only` kept the previous
-Ollama result. The real D-Bus path is PENDING until the switch.
+Ollama result.
+
+TESTED live after the switch, the same evening: `powerprofilesctl set power-saver` moved EPP to
+`power` and the sync recorded `eco (ok)`; starting `gamemode-performance` from the user manager
+was allowed by polkit, showed the hold (`performance`, `GameMode`) and EPP `performance` with
+SignalSift on `gaming`; stopping it returned to `power-saver`, NOT to balanced, with EPP `power`
+and SignalSift back on `eco`. A real game under `gamemoderun` is still to be watched, after a
+re-login puts the user in the `gamemode` group.
 
 ## The LG at 60 Hz in Eco: an experiment, not wired
 

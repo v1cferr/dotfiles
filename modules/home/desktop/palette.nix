@@ -111,6 +111,24 @@ in
       default = "subtle";
       description = "The desktop's motion profile: `subtle` is the tuned one, `off` drops every non-essential animation (status pulses stay). docs/notes/desktop/motion.md";
     };
+    # The window geometry, read by Hyprland AND by the shell's insets (a band card lines up with a window).
+    gaps = {
+      inner = lib.mkOption {
+        type = lib.types.ints.between 0 32;
+        default = 8;
+        description = "Hyprland's gaps_in: half the space between two windows. docs/notes/desktop/hypr.md";
+      };
+      outer = lib.mkOption {
+        type = lib.types.ints.between 0 48;
+        default = 12;
+        description = "Hyprland's gaps_out, which is also where the shell's floating surfaces stop short of the screen's edge. docs/notes/desktop/hypr.md";
+      };
+    };
+    rounding = lib.mkOption {
+      type = lib.types.ints.between 0 32;
+      default = 12;
+      description = "The windows' corner radius, the same 12 px as the shell's surfaces. docs/notes/desktop/hypr.md";
+    };
     # Glass: how see-through the shell's surfaces are, read by Quickshell and Hyprland like motion.
     glass = lib.mkOption {
       type = lib.types.enum [
@@ -133,6 +151,7 @@ in
       // {
         uiFont = osConfig.my.fonts.ui;
         inherit (cfg) motion glass;
+        gapsOut = cfg.gaps.outer;
       }
     );
 
@@ -149,6 +168,9 @@ in
       + "  qtStyle = \"${config.home.sessionVariables.QT_STYLE_OVERRIDE}\",\n"
       + "  motion = \"${cfg.motion}\",\n"
       + "  glass = \"${cfg.glass}\",\n"
+      + "  gapsIn = ${toString cfg.gaps.inner},\n"
+      + "  gapsOut = ${toString cfg.gaps.outer},\n"
+      + "  rounding = ${toString cfg.rounding},\n"
       + "}\n";
   };
 }

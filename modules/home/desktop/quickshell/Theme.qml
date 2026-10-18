@@ -40,6 +40,7 @@ Singleton {
             property string shadow: "#0f0f0f"
             property string motion: "subtle" // it comes from my.theme.motion
             property string glass: "soft" // it comes from my.theme.glass
+            property int gapsOut: 12 // it comes from my.theme.gaps.outer
         }
     }
 
@@ -161,7 +162,7 @@ Singleton {
     readonly property int barCenterWidth: 64 // the logo's compartment, on the screen's exact center
     readonly property int barLogo: 22
     // Where floating things stop short of the screen's edge: Hyprland's gaps_out (appearance.lua).
-    readonly property int screenInset: sp3
+    readonly property int screenInset: pal.gapsOut
     // The glance band: what share of a standing screen's height it takes, the bar INCLUDED. It starts
     // sp1 under the bar and ends where the windows' area begins. docs/notes/desktop/dash.md
     // Clamped here too: the option's type refuses more than 40%, and a hand-edited file must not get past it.

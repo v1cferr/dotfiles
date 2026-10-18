@@ -8,8 +8,10 @@ local C = dofile(os.getenv("HOME") .. "/.config/theme/hypr-colors.lua")
 -- { colors={...}, angle=N }; the hyprlang string does not stick.
 hl.config({
   general = {
-    gaps_in = 3,
-    gaps_out = 4,
+    -- Balanced: windows breathe, and the wallpaper reads between them (my.theme.gaps; the fallbacks
+    -- cover a file not rebuilt yet). The outer gap is also the shell's inset: docs/notes/desktop/hypr.md
+    gaps_in = C.gapsIn or 8,
+    gaps_out = C.gapsOut or 12,
     border_size = 1,
     ["col.active_border"]   = { colors = { "rgba(" .. C.blue .. "55)", "rgba(" .. C.magenta .. "44)" }, angle = 45 },
     ["col.inactive_border"] = "rgba(" .. C.border .. "44)",
@@ -19,7 +21,7 @@ hl.config({
   },
   -- decoration. The windows' opacity is the global window_rule in rules.lua (0.98/0.96).
   decoration = {
-    rounding = 10,
+    rounding = C.rounding or 12, -- my.theme.rounding, the shell's surfaces' 12
     shadow = {
       enabled = true,
       range = 6,

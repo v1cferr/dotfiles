@@ -1,6 +1,6 @@
 # History: october 2026
 
-10 entries. Index in [README.md](../README.md).
+11 entries. Index in [README.md](../README.md).
 
 - [x] Vicinae replaced rofi and cliphist: one launcher for apps, files, the calculator, the
       clipboard history, my commands and four extensions (13/10/2026). How and why:
@@ -124,3 +124,19 @@
       • THE IDLE COST WAS AN INVISIBLE ANIMATION. The INMET alert pulse ran with no alert, gated on
         the wrong `parent`; with it and a looping rain fixed, Quickshell idles at 5.8 to 7.2% of a
         core, from 18.7 to 20.2%, measured live and A/B in a headless sway.
+
+- [x] Adaptive Glass v2, the same day: one continuous Powerline with the official NixOS logo on
+      each screen's exact center, the NixOS Center behind it, and HyprGlass packaged
+      (17/10/2026). How and why: [bar.md](../../notes/desktop/bar.md#the-powerline-17102026),
+      [nixos-center.md](../../notes/desktop/nixos-center.md) and
+      [hyprglass.md](../../notes/desktop/hyprglass.md).
+      • ONE PANEL FOR NOTIFICATIONS AND THE SESSION. The bell, the band's bell and the power menu
+        became the Center: history, DND that survives a restart, and the six actions, three of
+        them asking twice. Toasts cap at three and never cover the Center.
+      • THE LG'S BAR IS STATUS FIRST. No clock (the band has it), and `CI 2` / `SVC 1` / `CI ?`
+        from the feeds already read, counting only failures a later run has not fixed; a click
+        turns the band to the detail.
+      • HYPRGLASS IS BUILT FOR THE SESSION'S OWN HYPRLAND and verified in a nested compositor on
+        a temporary headless output, never in the live one; it stays off until switched on.
+      • ON THE WAY: hyprctl was the stable 0.55 against a 0.56 compositor, qs-restart could start
+        a second shell, and the toast and notification lists rebuilt every card on each change.

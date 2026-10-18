@@ -318,6 +318,46 @@ was the 2 h old process, the "after" a fresh one with the fixes hot-reloaded):
 
 The blur on the shell's layers did not show up in Hyprland's CPU; GPU time was not measured.
 
+### The Powerline and the NixOS Center, measured (17/10/2026, v2)
+
+Same two methods. **Headless A/B** of the tree before v2 (`d39efa32`) against v2, each started fresh
+twice, three 20 s windows per run, software rendering:
+
+| Tree | Quickshell CPU | RSS |
+| --- | --- | --- |
+| before v2 | 16.2 to 16.9% of a core | 453 to 492 MB |
+| v2 | 15.9 to 16.8% | 500 to 510 MB |
+
+The same CPU, and 20 to 45 MB more resident under software rendering, where every window buffer is
+in the process; not attributed further.
+
+**Live, on this machine** (the session at rest, 30 s windows; the "before" an hours-old process,
+the "after" a fresh one after `qs-restart` and 40 s to settle):
+
+| | Before v2 | After v2 |
+| --- | --- | --- |
+| Quickshell CPU | 5.9 to 6.4% of a core | 4.9 to 5.7% |
+| Quickshell child processes | 1 | 1 |
+| Quickshell RSS / PSS | 124 / 97 MB | 273 / 243 MB |
+
+The memory row is NOT a regression measured: a freshly started Quickshell sits near 270 MB and comes
+down over time (a fresh instance the same day read 276 MB and 112 MB an hour later), so a fresh
+process against an old one says nothing; the A/B above is the comparison. Hyprland's own CPU swung
+from 6 to 14% with what was on screen in both, so it is not claimed either way.
+
+**Interactions:**
+
+| Scenario | Method | Result |
+| --- | --- | --- |
+| open and close the NixOS Center | 20 cycles over IPC in the headless harness | about 5 cs of CPU (50 ms, software rendering) per cycle above idle |
+| a burst of notifications | 110 `notify-send` in 399 ms with DND on, live | 170 ms of Quickshell CPU, RSS unchanged, the history cap closing the oldest 11 |
+| a monitor plugged and unplugged | a headless output added and removed, live, the Center open on the main monitor | a bar created and destroyed with it, the Center untouched, nothing logged |
+
+**Not measured, and not claimed:** GPU time and frame pacing (no tool in the repo), a fullscreen
+game at 180 Hz with the shell running, overlapping translucent windows under HyprGlass (it is off,
+[hyprglass.md](hyprglass.md)), and a NixOS Center open on a monitor that is then unplugged (the test
+could not open it there; the code closes a panel whose bar is destroyed).
+
 Not measured, and not claimed: frame pacing and dropped frames (there is no tool for it in the repo,
 and Hyprland's debug overlay was not used), GPU load, and how any of this LOOKS. The curves and
 durations above were chosen from the numbers and checked for errors live; the visual judgment is

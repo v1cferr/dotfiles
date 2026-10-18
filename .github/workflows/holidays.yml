@@ -51,17 +51,22 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           title="Holiday registry: an official source needs review"
+          # Stable report text makes unchanged findings idempotent across runs.
           {
-            echo "The weekly check found a changed or unreachable source ($RUN_URL)."
+            echo "The weekly check found a new, changed or unreachable source."
             echo
             cat report.md
             echo
             echo "Nothing was changed. Read the source, update registry/holidays.json if the law"
-            echo "or the act changed, then refresh the lock with \`registry.py check-sources ... --update-lock\`."
+            echo 'or the act changed, then refresh the lock with `registry.py check-sources ... --update-lock`.'
           } > body.md
           n=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number')
           if [ -n "$n" ]; then
-            gh issue comment "$n" --body-file body.md
+            gh issue view "$n" --json body --jq '.body' > previous.md
+            if ! cmp -s previous.md body.md; then
+              gh issue edit "$n" --body-file body.md
+              gh issue comment "$n" --body "Source-watch findings changed. Run: $RUN_URL"
+            fi
           else
             gh issue create --title "$title" --body-file body.md
           fi

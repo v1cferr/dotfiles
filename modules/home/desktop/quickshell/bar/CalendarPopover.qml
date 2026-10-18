@@ -74,8 +74,11 @@ BarPanel {
 
     implicitWidth: cal.panelW
     implicitHeight: Math.min(card.implicitHeight, cal.availH)
-    onVisibleChanged: if (cal.visible && cal.selected === "")
-        cal.selected = cal.todayIso
+    onVisibleChanged: if (cal.visible) {
+        Holidays.refresh();
+        if (cal.selected === "")
+            cal.selected = cal.todayIso;
+    }
 
     PopCard {
         id: card

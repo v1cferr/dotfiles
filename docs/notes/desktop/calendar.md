@@ -194,7 +194,9 @@ The panel reads `~/.config/theme/calendar.json`, which Nix built from the regist
 a year outside that range says it has no registry data. Nothing touches the network on open. The
 year's map is recomputed when the year, a filter or the file changes, never per frame; the day's
 turn moves `today` through the Bar's clock. After an edit to the registry, a `rebuild` writes the
-new file and the panel re-reads it by itself.
+new file and the panel re-reads it on its next open. It re-reads on EVERY open on purpose: a rebuild
+swaps the symlink to a new store path, which the file watcher did not see on 18/10/2026, and a hot
+reload kept the old text, so the detail showed a source list from before the rebuild.
 
 ## The source watch (GitHub Actions)
 

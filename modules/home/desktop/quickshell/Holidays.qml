@@ -26,6 +26,13 @@ Singleton {
             }
         }
     }
+    // A rebuild swaps the SYMLINK to a new store path, which the watcher does not always see, and a
+    // hot reload keeps the FileView's old text: so the panel re-reads on every open (one small
+    // local file, no network), and once at start.
+    function refresh() {
+        file.reload();
+    }
+    Component.onCompleted: file.reload()
 
     // ── Filters: WHERE (scope) and WHAT (class), independent. The defaults: the three places that
     // hold in São Carlos, holidays and optional days; the UN's observances off, they are many. ──

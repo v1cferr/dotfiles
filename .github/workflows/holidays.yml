@@ -58,11 +58,13 @@ jobs:
             cat report.md
             echo
             echo "Nothing was changed. Read the source, update registry/holidays.json if the law"
-            echo 'or the act changed, then refresh the lock with `registry.py check-sources ... --update-lock`.'
+            echo "or the act changed, then refresh the lock with \`registry.py check-sources ... --update-lock\`."
           } > body.md
           n=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number')
           if [ -n "$n" ]; then
-            gh issue view "$n" --json body --jq '.body' > previous.md
+            # gh/jq add a newline even when the stored Markdown already ends with one.
+            # Normalize both reports so an unchanged issue never gets a weekly comment.
+            gh issue view "$n" --json body --jq '.body' | python3 -c 'import sys; print(sys.stdin.read().rstrip())' > previous.md
             if ! cmp -s previous.md body.md; then
               gh issue edit "$n" --body-file body.md
               gh issue comment "$n" --body "Source-watch findings changed. Run: $RUN_URL"

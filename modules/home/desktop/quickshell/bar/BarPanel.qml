@@ -30,10 +30,11 @@ PanelWindow {
     }
     color: "transparent"
 
-    // The bar is in the grab, so a click on another pill SWITCHES panels instead of only closing.
+    // EVERY bar is in the grab, so a click on another pill SWITCHES panels, and on the other
+    // monitor's bar MOVES it, instead of only closing (outside the grab the click is consumed).
     HyprlandFocusGrab {
         active: panel.visible && panel.pinned
-        windows: panel.bar.popBar ? [panel, panel.bar.popBar] : [panel]
+        windows: [panel].concat(Object.values(panel.bar.bars))
         onCleared: if (panel.pinned)
             panel.bar.closePanels()
     }

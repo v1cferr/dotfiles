@@ -1,7 +1,6 @@
 // A notification card (toasts plus the center). Its OWN file because in an inline component the
 // root's id does not resolve in nested handlers, which broke dismiss and the actions.
 import Quickshell
-import Quickshell.Io
 import Quickshell.Services.Notifications
 import Quickshell.Widgets
 import QtQuick
@@ -40,8 +39,8 @@ Rectangle {
         });
     }
 
-    // The notifying app's icon: the current theme first, then breeze ONLY in this card, then the bell.
-    // hasThemeIcon avoids the checkered placeholder the provider returns for a missing icon.
+    // The notifying app's icon from the current theme, else the bell. hasThemeIcon avoids the checkered
+    // placeholder the provider returns for a missing icon. Everything here is the sender's, so untrusted.
     readonly property string wantedName: {
         if (!card.notif)
             return "";
@@ -74,30 +73,16 @@ Rectangle {
             return Quickshell.hasThemeIcon(card.wantedName) ? Quickshell.iconPath(card.wantedName) : "";
         return "";
     }
-    property string fallbackIcon: ""
     // A real picture (not a theme icon) gets rounded: a circle for a chat message, as a contact
     // photo (category im.*), and soft corners for the rest (a cover, a screenshot).
     readonly property bool isPicture: card.themeIcon !== "" && card.notif && (card.notif.image || "") !== "" && !(/^image:\/\/icon\/[^\/]/.test(card.notif.image))
     readonly property bool isChat: card.notif && card.notif.hints && ("" + (card.notif.hints.category || "")).startsWith("im.")
-    readonly property string iconSource: card.themeIcon !== "" ? card.themeIcon : card.fallbackIcon
+    readonly property string iconSource: card.themeIcon
 
-    // The breeze fallback when the current theme does not have the icon (async; a direct argv,
-    // with no shell, and a sanitized name, since appName is untrusted content).
-    function resolveFallback() {
-        card.fallbackIcon = "";
-        const n = card.wantedName;
-        if (card.themeIcon !== "" || n === "" || !(/^[a-zA-Z0-9._-]+$/.test(n)))
-            return;
-        iconFinder.command = ["find", "/usr/share/icons/breeze-dark/apps", "/usr/share/icons/breeze/apps", "(", "-name", n + ".svg", "-o", "-name", n + ".png", ")", "-print", "-quit"];
-        iconFinder.running = true;
-    }
-    Component.onCompleted: {
-        card.resolveFallback();
-        if (card.isPopup && card.notif && card.notif === Notifs.fresh) {
-            Notifs.fresh = null;
-            arrive.start();
-        }
-    }
+    // A toast JOINING others settles into its slot; the first is a new layer, and Hyprland fades it.
+    // The toasts' ScriptModel keeps every other card alive, so only the newcomer is created.
+    Component.onCompleted: if (card.isPopup && Notifs.popups.length > 1)
+        arrive.start()
     // A toast joining others settles 8 px down into its slot while it fades in; no bounce.
     transform: Translate {
         id: slot
@@ -121,22 +106,12 @@ Rectangle {
             easing.type: Easing.OutCubic
         }
     }
-    Process {
-        id: iconFinder
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const p = text.trim();
-                if (p)
-                    card.fallbackIcon = "file://" + p;
-            }
-        }
-    }
-
     implicitHeight: cardRow.implicitHeight + 20
-    radius: 12
-    color: Theme.colCard
-    border.color: card.notif ? card.urgColor(card.notif.urgency) : Theme.colBorder
-    border.width: 1
+    radius: Theme.radiusSurface
+    // A toast is glass of its own; inside the Center a card is an inset on the panel's glass.
+    color: card.isPopup ? Theme.colSurfacePop : Theme.colHoverFill
+    border.color: card.notif ? card.urgColor(card.notif.urgency) : Theme.colEdge
+    border.width: Theme.hairline
 
     // The toast's auto-dismiss; Critical stays until an interaction.
     Timer {

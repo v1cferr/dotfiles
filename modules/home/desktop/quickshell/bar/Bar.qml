@@ -831,11 +831,8 @@ Scope {
                 title: root.spTitle || "Spotify",
                 lines: [root.spArtist, root.spPlaying ? "Playing" : "Paused", "Click: media panel", "Right-click: play/pause", "Scroll: next/previous track"].filter(l => l !== "")
             };
-        if (key === "notifs")
-            return {
-                title: "Notifications",
-                lines: [Notifs.count > 0 ? Notifs.count + " waiting" : "None waiting", Notifs.dnd ? "Do not disturb is ON" : "", "Click: notification center", "Right-click: do not disturb"].filter(l => l !== "")
-            };
+        if (key === "ops-ci" || key === "ops-svc" || key === "ops")
+            return root.opsHint(key);
         if (key === "vol")
             return {
                 title: "Volume " + Math.round(root.volume * 100) + "%" + (root.sinkMuted ? " (muted)" : ""),
@@ -860,6 +857,36 @@ Scope {
             };
         }
         return null;
+    }
+
+    // The operational alerts' hint: per source, what it is and what a click shows.
+    function opsHint(key) {
+        const lines = [];
+        const forge = (name, src, expected) => {
+            if (!expected && !src.ok)
+                return;
+            const runs = src.runs || [];
+            const f = runs.filter(r => r.state === "failure");
+            if (!Ci.loaded)
+                lines.push(name + ": not read yet");
+            else if (!src.ok && !src.stale)
+                lines.push(name + ": unknown (" + (src.error || "no answer") + ")");
+            else
+                lines.push(name + ": " + (f.length ? f.length + " failing (" + f.slice(0, 3).map(r => r.repo.split("/").pop() + " " + r.name).join(", ") + ")" : "no current failure") + (src.stale ? ", data from " + Ci.agoSec(src.staleSince) + " ago" : ""));
+        };
+        if (key !== "ops-svc") {
+            forge("GitHub", Ci.github, true);
+            forge("FAI GitLab", Ci.gitlab, Ci.gitlabShown);
+        }
+        if (key !== "ops-ci") {
+            const bad = (Services.meta || []).filter(s => s.state !== "up");
+            lines.push((Services.meta || []).length === 0 ? "Services: no data yet" : "Services: " + (bad.length ? bad.map(s => s.label || s.key + " " + s.state).join(", ") : "all up"));
+        }
+        lines.push("Click: show it on the band");
+        return {
+            title: key === "ops-svc" ? "Services" : (key === "ops-ci" ? "CI" : "Operations"),
+            lines: lines
+        };
     }
 
     // ===== Hypridle (toggle-hypridle.sh) =====
@@ -1341,19 +1368,72 @@ Scope {
         root.hintVisible = false;
         root.vpnPopVisible = false;
         panelOpenTimer.stop();
-        if (root.pinned === key) {
+        // The same pill again closes; the same panel from ANOTHER monitor's bar moves it there.
+        if (root.pinned === key && root.popBar === barWin) {
             root.closePanels();
             return;
         }
         root.anchorPopover(item, barContentItem, barWin);
         root.panelShown = "";
         root.pinned = key;
+        root.hideMedia();
+    }
+    // The media panel lives in shell.qml, outside this coordinator: a pin closes it over its IPC
+    // (a no-op when it is already closed), so the one-panel rule holds for it too.
+    function hideMedia() {
+        root.launch(["qs", "ipc", "call", "mpris", "hide"]);
     }
     function closePanels() {
         root.pinned = "";
         root.panelShown = "";
         root.panelHover = "";
     }
+
+    // The bar windows, by screen name: the IPC toggle opens the Center on the main monitor's bar, and
+    // a screen that leaves takes its open panel with it (no window left holding the keyboard).
+    property var bars: ({})
+    function registerBar(b) {
+        if (!b.screen)
+            return;
+        const m = Object.assign({}, root.bars);
+        m[b.screen.name] = b;
+        root.bars = m;
+    }
+    function unregisterBar(b) {
+        if (root.popBar === b)
+            root.closePanels();
+        const m = Object.assign({}, root.bars);
+        for (const k in m)
+            if (m[k] === b)
+                delete m[k];
+        root.bars = m;
+    }
+    // The NixOS Center from IPC (`qs ipc call notif toggle`): hung from the main monitor's logo.
+    Connections {
+        target: Notifs
+        function onCenterToggleRequested() {
+            const scr = Theme.screenPrimary;
+            const b = scr ? root.bars[scr.name] : null;
+            if (root.pinned === "center" || !b) {
+                root.closePanels();
+                return;
+            }
+            root.hintVisible = false;
+            root.vpnPopVisible = false;
+            root.popBar = b;
+            root.popScreen = scr;
+            root.popCenterX = Math.floor(b.width / 2);
+            root.pinned = "center";
+            root.hideMedia();
+        }
+    }
+    Binding {
+        target: Notifs
+        property: "centerOpen"
+        value: root.pinned === "center"
+    }
+    // A click on an operational alert in the standing monitor's bar: the band shows its detail.
+    signal dashRequested(string what)
     onPanelPopHoveredChanged: root.panelPopHovered ? panelCloseTimer.stop() : panelCloseTimer.restart()
     onPanelOpenChanged: {
         if (root.panelOpen !== "")
@@ -1810,6 +1890,11 @@ Scope {
         bar: root
     }
 
+    // ===== The NixOS Center (the logo's panel): notifications, do-not-disturb and the session =====
+    NixosCenter {
+        bar: root
+    }
+
     // ===== The hover hint, the view is in bar/HintPopover.qml =====
     HintPopover {
         bar: root
@@ -1836,27 +1921,36 @@ Scope {
             screen: modelData
             WlrLayershell.namespace: "qs-bar" // the glass blur rule matches it (appearance.lua)
 
+            // ONE continuous Powerline, edge to edge: no margin, no gap, the same surface end to end.
             anchors {
                 top: true
                 left: true
                 right: true
             }
-            margins {
-                top: 4
-                left: 4
-                right: 4
-                bottom: 1
-            }
             implicitHeight: Theme.barHeight
             visible: !root.hidden
             // On a band screen the BAR reserves the whole top share and the band draws inside it,
             // so the order the two layers map in can never stack the bar under the band.
-            exclusiveZone: bar.compact && bar.screen ? Theme.bandReserve(bar.screen.height) - Theme.barTop : root.barExclusiveZone
+            exclusiveZone: bar.compact && bar.screen ? Theme.bandReserve(bar.screen.height) : Theme.barHeight
 
-            // COMPACT: the three Groups are ANCHORED, so on a narrow panel they overlap instead
-            // of pushing. Below the token's width only the essentials stay, and the band takes over.
+            // COMPACT: a screen too narrow for the full set (the standing LG) keeps the workspaces and
+            // its context on the left and the operational alerts on the right; the band has the rest.
             readonly property bool compact: bar.width < Theme.compactWidth
             color: "transparent"
+
+            // The logo's compartment sits on the screen's EXACT center, whatever the halves hold: its x
+            // comes from the width alone. Each half gets what is left of its side, minus a divider.
+            readonly property int centerX: Math.floor(bar.width / 2)
+            readonly property int slotX: bar.centerX - Theme.barCenterWidth / 2
+            readonly property int halfRoom: bar.slotX - Theme.barSlant - Theme.sp2
+            // The title takes what the left half leaves after the workspaces, capped so it never reads as a banner.
+            readonly property int titleMax: Math.min(520, bar.halfRoom - leftRow.fixedWidth)
+            // The right half folds by priority when it would cross the center: media first, then the
+            // network's numbers and the VPN's name, then the weather. Nothing ever overlaps the logo.
+            readonly property int squeeze: rightRow.measure(0) <= bar.halfRoom ? 0 : (rightRow.measure(1) <= bar.halfRoom ? 1 : (rightRow.measure(2) <= bar.halfRoom ? 2 : 3))
+
+            Component.onCompleted: root.registerBar(bar)
+            Component.onDestruction: root.unregisterBar(bar)
 
             // A full-width Item used as the coordinate reference for the popovers (mapToItem
             // into a real Item is reliable; mapToItem(null) is not).
@@ -1864,84 +1958,106 @@ Scope {
                 id: barContent
                 anchors.fill: parent
 
-                // LEFT, workspace and context: the NixOS button (main monitor only, where its menu
-                // opens), this monitor's workspaces, then the focused window's title.
-                Cluster {
+                // ── The surface: one glass strip, a hairline at its foot ──
+                Rectangle {
+                    anchors.fill: parent
+                    color: Theme.colSurfaceBar
+                }
+                Rectangle {
                     anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    PowerMenu {
-                        host: root
-                        visible: bar.modelData && bar.modelData.name === Theme.primaryMonitor
-                    }
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    height: Theme.hairline
+                    color: Theme.colEdge
+                }
+
+                // ── The center: the official logo in its compartment, the NixOS Center on a click ──
+                LogoSlot {
+                    x: bar.slotX
+                    host: root
+                    barContent: barContent
+                    barWindow: bar
+                }
+
+                // ── LEFT: this monitor's workspaces, then the focused window's title ──
+                RowLayout {
+                    id: leftRow
+                    // Everything the left half holds besides the title, so the title knows its room.
+                    readonly property int fixedWidth: wsStrip.implicitWidth + Theme.barSlant + 3 * Theme.sp2
+                    anchors.left: parent.left
+                    anchors.leftMargin: Theme.sp2
+                    height: parent.height
+                    spacing: Theme.sp2
                     WorkspaceStrip {
+                        id: wsStrip
                         host: root
                         monitor: bar.modelData ? bar.modelData.name : ""
                     }
-                    Divider {
+                    Chevron {
+                        rising: false
                         visible: winPill.visible
                     }
                     Pill {
                         id: winPill
-                        visible: bar.modelData && bar.modelData.name === root.focusedMon && root.winTitle !== ""
+                        visible: bar.modelData && bar.modelData.name === root.focusedMon && root.winTitle !== "" && bar.titleMax >= 120
                         label: root.winTitle
                         accent: Theme.colSky
                         italic: true
-                        maxWidth: Math.round(bar.width * 0.13)
+                        maxWidth: bar.titleMax
                         onHoveredChanged: root.hoverHint("win", winPill, barContent, bar, hovered)
                     }
                 }
 
-                // CENTER, time and ambient: the weather and the date in two slots of EQUAL width around
-                // the time, so the TIME itself sits on the screen's center, not just the cluster.
-                Cluster {
-                    id: centerCluster
-                    visible: !bar.compact
-                    anchors.centerIn: parent
-                    readonly property int side: Math.max(weatherPill.implicitWidth, datePill.implicitWidth)
-                    Pill {
-                        id: weatherPill
-                        Layout.preferredWidth: centerCluster.side
-                        icon: root.wHas ? root.weatherIcon(root.wCode, root.isDayNow()) : "󰖐"
-                        label: root.wHas ? root.wTemp + "°C" : "--°C"
-                        accent: root.wHas ? Theme.colSapphire : Theme.colDim
-                        selected: root.pinned === "weather"
-                        onHoveredChanged: if (root.wHas)
-                            root.hoverPanel("weather", weatherPill, barContent, bar, hovered)
-                        onClicked: if (root.wHas)
-                            root.togglePanel("weather", weatherPill, barContent, bar)
-                        // The forecast site moved here when the click became the panel's pin.
-                        onRightClicked: root.launch(["xdg-open", "https://www.msn.com/en-us/weather/forecast/in-S%C3%A3o-Carlos,S%C3%A3o-Paulo"])
-                    }
-                    Pill {
-                        id: clockPill
-                        label: root.timeStr
-                        labelColor: Theme.colText
-                        bold: true
-                        selected: root.pinned === "cal"
-                        onHoveredChanged: root.hoverPanel("cal", clockPill, barContent, bar, hovered)
-                        onClicked: root.togglePanel("cal", clockPill, barContent, bar)
-                    }
-                    Pill {
-                        id: datePill
-                        Layout.preferredWidth: centerCluster.side
-                        label: root.dateStr
-                        labelColor: Theme.colSubtext
-                        selected: root.pinned === "cal"
-                        // The date opens the same calendar, hung from the time so it never jumps between them.
-                        onHoveredChanged: root.hoverPanel("cal", clockPill, barContent, bar, hovered)
-                        onClicked: root.togglePanel("cal", clockPill, barContent, bar)
-                    }
+                // ── RIGHT, compact screen: the operational alerts, nothing the band already shows ──
+                OpsIndicator {
+                    visible: bar.compact
+                    anchors.right: parent.right
+                    anchors.rightMargin: Theme.sp2
+                    anchors.verticalCenter: parent.verticalCenter
+                    host: root
+                    barContent: barContent
+                    barWindow: bar
+                    maxWidth: bar.halfRoom
                 }
 
-                // RIGHT, system and controls, grouped by meaning with a hairline between groups: media,
-                // the machine, the links, sound, the session, then the tray.
-                Cluster {
+                // ── RIGHT, full: media, the machine, the links, sound, the session, the tray, the time ──
+                RowLayout {
+                    id: rightRow
                     visible: !bar.compact
                     anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.rightMargin: Theme.sp2
+                    height: parent.height
+                    spacing: Theme.sp1
+                    // The row's width at a squeeze level, from the controls' own implicit widths, which do
+                    // not depend on what is visible: so the level never feeds back into itself.
+                    TextMetrics {
+                        id: tmNet
+                        font.family: Theme.uiFont
+                        font.pixelSize: Theme.fontSmall
+                        text: "↓" + root.tab(root.fmtRate(root.netMainRx), 5) + " ↑" + root.tab(root.fmtRate(root.netMainTx), 5)
+                    }
+                    TextMetrics {
+                        id: tmVpn
+                        font.family: Theme.uiFont
+                        font.pixelSize: Theme.fontSmall
+                        text: root.vpnConnected ? root.vpnName : ""
+                    }
+                    function measure(level) {
+                        const sep = Theme.barSlant + 2 * Theme.sp1;
+                        let w = tempPill.implicitWidth + usagePill.implicitWidth + volPill.implicitWidth + idlePill.implicitWidth + awayPill.implicitWidth + clockPill.implicitWidth + datePill.implicitWidth + 5 * sep + 8 * Theme.sp1;
+                        // VPN and network change their own labels with the level, so they are measured in full
+                        // from text metrics, never from the pills: that is what keeps this free of a loop.
+                        w += 2 * (Theme.barControl + Theme.sp1) + (level >= 2 ? 0 : tmNet.advanceWidth + tmVpn.advanceWidth + 2 * Theme.sp1);
+                        if (level < 1 && root.spHasPlayer)
+                            w += Math.min(220, spPill.implicitWidth) + sep;
+                        if (level < 3)
+                            w += weatherPill.implicitWidth;
+                        w += root.trayCount * (Theme.barControl + Theme.sp1) + (root.trayCount > 0 ? sep : 0);
+                        return w;
+                    }
                     Pill {
                         id: spPill
-                        visible: root.spHasPlayer
+                        visible: root.spHasPlayer && bar.squeeze < 1
                         icon: "󰝚"
                         label: root.spText
                         accent: root.spColor
@@ -1957,7 +2073,7 @@ Scope {
                         onScrolledUp: root.launch(["playerctl", "--player=spotify", "next"])
                         onScrolledDown: root.launch(["playerctl", "--player=spotify", "previous"])
                     }
-                    Divider {
+                    Chevron {
                         visible: spPill.visible
                     }
                     Pill {
@@ -1978,13 +2094,13 @@ Scope {
                         onHoveredChanged: root.hoverPanel("usage", usagePill, barContent, bar, hovered)
                         onClicked: root.togglePanel("usage", usagePill, barContent, bar)
                     }
-                    Divider {}
+                    Chevron {}
                     Pill {
                         // VPN: click opens the actions popover, HOVER shows the statistics, right click drops everything.
                         // Information on hover, ACTION on click; it docs/notes/desktop/bar.md
                         id: vpnPill
                         icon: "󰦝"
-                        label: root.vpnConnected ? root.vpnName : ""
+                        label: root.vpnConnected && bar.squeeze < 2 ? root.vpnName : ""
                         accent: root.vpnConnected ? Theme.colGreen : Theme.colDim
                         // Tor rides along in its own purple: a VPN and Tor can be up at once.
                         badge: (root.torSystem || root.torBisq) ? "" + (root.torBisq ? " Bisq" : "") : ""
@@ -2007,14 +2123,14 @@ Scope {
                     Pill {
                         id: netPill
                         icon: "󰛳"
-                        label: "↓" + root.tab(root.fmtRate(root.netMainRx), 5) + " ↑" + root.tab(root.fmtRate(root.netMainTx), 5)
+                        label: bar.squeeze >= 2 ? "" : "↓" + root.tab(root.fmtRate(root.netMainRx), 5) + " ↑" + root.tab(root.fmtRate(root.netMainTx), 5)
                         accent: root.netQuality.color
                         selected: root.pinned === "net"
                         onHoveredChanged: root.hoverPanel("net", netPill, barContent, bar, hovered)
                         onClicked: root.togglePanel("net", netPill, barContent, bar)
                         onRightClicked: root.launch(["nm-connection-editor"]) // was the left click before the pin
                     }
-                    Divider {}
+                    Chevron {}
                     Pill {
                         id: volPill
                         icon: root.volIcon()
@@ -2026,21 +2142,7 @@ Scope {
                         onScrolledUp: root.setVol(0.05)
                         onScrolledDown: root.setVol(-0.05)
                     }
-                    Divider {}
-                    Pill {
-                        id: notifPill
-                        // the || covers the singleton's init instant on a reload
-                        icon: Notifs.barIcon || "󰂜"
-                        // the count when there are notifications; dim when empty, peach with some, red under DND.
-                        label: Notifs.count > 0 ? "" + Notifs.count : ""
-                        accent: Notifs.dnd ? Theme.colRed : (Notifs.count > 0 ? Theme.colPeach : Theme.colDim)
-                        onHoveredChanged: root.hoverHint("notifs", notifPill, barContent, bar, hovered)
-                        onClicked: {
-                            root.hintVisible = false;
-                            Notifs.toggleCenter();
-                        }
-                        onRightClicked: Notifs.toggleDnd()
-                    }
+                    Chevron {}
                     Pill {
                         id: idlePill
                         icon: root.hypridleIcon
@@ -2059,11 +2161,9 @@ Scope {
                             Away.enter();
                         }
                     }
-                    Divider {
+                    Chevron {
                         visible: root.trayCount > 0
                     }
-                    // The system tray (StatusNotifier), sharing the cluster. Left=activate,
-                    // middle=secondaryActivate, scroll, right=the native menu.
                     Repeater {
                         model: SystemTray.items
                         Rectangle {
@@ -2143,6 +2243,39 @@ Scope {
                                 onWheel: w => modelData.scroll(w.angleDelta.y, false)
                             }
                         }
+                    }
+                    Chevron {}
+                    Pill {
+                        visible: bar.squeeze < 3
+                        id: weatherPill
+                        icon: root.wHas ? root.weatherIcon(root.wCode, root.isDayNow()) : "󰖐"
+                        label: root.wHas ? root.wTemp + "°C" : "--°C"
+                        accent: root.wHas ? Theme.colSapphire : Theme.colDim
+                        selected: root.pinned === "weather"
+                        onHoveredChanged: if (root.wHas)
+                            root.hoverPanel("weather", weatherPill, barContent, bar, hovered)
+                        onClicked: if (root.wHas)
+                            root.togglePanel("weather", weatherPill, barContent, bar)
+                        // The forecast site moved here when the click became the panel's pin.
+                        onRightClicked: root.launch(["xdg-open", "https://www.msn.com/en-us/weather/forecast/in-S%C3%A3o-Carlos,S%C3%A3o-Paulo"])
+                    }
+                    Pill {
+                        id: clockPill
+                        label: root.timeStr
+                        labelColor: Theme.colText
+                        bold: true
+                        selected: root.pinned === "cal"
+                        onHoveredChanged: root.hoverPanel("cal", clockPill, barContent, bar, hovered)
+                        onClicked: root.togglePanel("cal", clockPill, barContent, bar)
+                    }
+                    Pill {
+                        id: datePill
+                        label: root.dateStr
+                        labelColor: Theme.colSubtext
+                        selected: root.pinned === "cal"
+                        // The date opens the same calendar, hung from the time so it never jumps between them.
+                        onHoveredChanged: root.hoverPanel("cal", clockPill, barContent, bar, hovered)
+                        onClicked: root.togglePanel("cal", clockPill, barContent, bar)
                     }
                     // A single shared instance of the context menu: opening it on one icon
                     // switches or closes another's (which avoids stacking several menus).

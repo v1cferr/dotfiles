@@ -109,6 +109,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [keybinds](desktop/keybinds.md) | every bind, and why the cheatsheet is generated from them |
 | [quickshell](desktop/quickshell.md) | the shell in QML, and the 758 MiB XEmbed bridge |
 | [bar](desktop/bar.md) | the bar and its popovers, the VPN probe, the holiday table |
+| [nixos-center](desktop/nixos-center.md) | the logo's panel: notifications, do-not-disturb, the session, the toasts |
 | [dash](desktop/dash.md) | the glance band on the standing monitor: vitals, month, CI pages |
 | [glance-feed](desktop/glance-feed.md) | the SQLite network cache: fetch only what changed, paint from disk at boot |
 | [lockscreen](desktop/lockscreen.md) | hyprlock and hypridle, and the three hardware lessons |

@@ -1,185 +1,49 @@
-// The notifications' UI: toasts plus the center, reading the Notifs.qml service. The card and the
-// header button are separate FILES, since an inline component breaks scope in handlers.
+// The TOASTS, top right of the main monitor under the bar; the history lives in the NixOS Center
+// (bar/NixosCenter.qml). The card is NotifCard.qml: docs/notes/desktop/nixos-center.md
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Services.Notifications
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
-import "root:/widgets"
 
 Scope {
     id: root
 
-    // ===== Toasts, the main monitor's top right =====
     PanelWindow {
         id: popupWin
+        WlrLayershell.namespace: "qs-panel"
         visible: Notifs.popups.length > 0
+        // The main monitor, or whichever screen is left when it is unplugged (Theme's fallback).
         screen: Theme.screenPrimary
         anchors {
             top: true
             right: true
         }
+        // From the screen's edge: sp2 under the bar, and right on the windows' outer gap.
+        exclusionMode: ExclusionMode.Ignore
         margins {
-            top: 8
-            right: 8
+            top: Theme.bandTop
+            right: Theme.screenInset
         }
-        exclusiveZone: 0
         color: "transparent"
-        implicitWidth: 390
+        implicitWidth: 380
         implicitHeight: Math.max(1, popupCol.implicitHeight)
 
         ColumnLayout {
             id: popupCol
             anchors.fill: parent
-            spacing: 8
+            spacing: Theme.sp2
             Repeater {
-                model: Notifs.popups
+                // A ScriptModel DIFFS the array: an arrival creates one card and the others keep
+                // theirs (and their dismiss timers), where a plain array rebuilt every card.
+                model: ScriptModel {
+                    values: Notifs.popups
+                }
                 NotifCard {
                     required property var modelData
                     Layout.fillWidth: true
                     notif: modelData
                     isPopup: true
-                }
-            }
-        }
-    }
-
-    // ===== The center: a panel at the TOP CENTER, fitted to the content (it grows with the
-    // notifications up to a ceiling, then scrolls). Toggled by the bell. =====
-    PanelWindow {
-        id: centerWin
-        WlrLayershell.namespace: "qs-panel"
-        visible: Notifs.centerVisible
-        screen: Theme.screenPrimary
-        // only `top` means the layer shell centers it horizontally
-        anchors {
-            top: true
-        }
-        margins {
-            top: 8
-        }
-        exclusiveZone: 0
-        color: "transparent"
-        implicitWidth: 420
-        implicitHeight: centerCard.implicitHeight
-
-        // It disappears on its own after 5s; the counter pauses while the mouse is on the panel
-        // (and restarts from zero when the mouse leaves).
-        Timer {
-            running: Notifs.centerVisible && !centerHover.hovered
-            interval: 5000
-            onTriggered: Notifs.centerVisible = false
-        }
-
-        GlassSurface {
-            id: centerCard
-            anchors.fill: parent
-            implicitHeight: centerCol.implicitHeight + 28
-            level: "pop"
-
-            HoverHandler {
-                id: centerHover
-            }
-
-            ColumnLayout {
-                id: centerCol
-                anchors.fill: parent
-                anchors.margins: 14
-                spacing: 12
-
-                // The header: the title plus the count badge plus the actions
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 8
-                    Text {
-                        text: "󰂚"
-                        color: Theme.colAccent
-                        font.family: Theme.uiFont
-                        font.pixelSize: 16
-                    }
-                    Text {
-                        text: "Notifications"
-                        color: Theme.colText
-                        font.family: Theme.uiFont
-                        font.pixelSize: 14
-                        font.bold: true
-                    }
-                    Rectangle {
-                        visible: Notifs.count > 0
-                        implicitWidth: badge.implicitWidth + 12
-                        implicitHeight: 18
-                        radius: 9
-                        color: Theme.colAccent
-                        Text {
-                            id: badge
-                            anchors.centerIn: parent
-                            text: "" + Notifs.count
-                            color: Theme.colBgSolid
-                            font.family: Theme.uiFont
-                            font.pixelSize: 10
-                            font.bold: true
-                        }
-                    }
-                    Item {
-                        Layout.fillWidth: true
-                    }
-                    HeaderBtn {
-                        text: Notifs.dnd ? "󰂛 DND" : "󰂚 DND"
-                        active: Notifs.dnd
-                        onClicked: Notifs.toggleDnd()
-                    }
-                    HeaderBtn {
-                        text: "󰎟 Clear"
-                        enabled: Notifs.count > 0
-                        onClicked: Notifs.clearAll()
-                    }
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    implicitHeight: 1
-                    color: Theme.colBorder
-                    opacity: 0.5
-                }
-
-                // The empty state, compact and centered
-                ColumnLayout {
-                    visible: Notifs.count === 0
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.topMargin: 8
-                    Layout.bottomMargin: 8
-                    spacing: 6
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: "󰂜"
-                        color: Theme.colDim
-                        font.family: Theme.uiFont
-                        font.pixelSize: 32
-                    }
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: "No notifications"
-                        color: Theme.colDim
-                        font.family: Theme.uiFont
-                        font.pixelSize: 12
-                    }
-                }
-
-                // The list: it grows with the content up to 560px, then scrolls
-                ListView {
-                    visible: Notifs.count > 0
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: Math.min(contentHeight, 560)
-                    clip: true
-                    spacing: 8
-                    model: Notifs.history
-                    delegate: NotifCard {
-                        required property var modelData
-                        width: ListView.view.width
-                        notif: modelData
-                        isPopup: false
-                    }
                 }
             }
         }

@@ -153,15 +153,20 @@ Singleton {
     // Concentric radii: a surface is a control plus sp1 of padding, so its corner is the control's plus sp1.
     readonly property int radiusControl: 8
     readonly property int radiusSurface: radiusControl + sp1
-    // The bar: a 30 px strip of floating clusters, each holding 22 px controls.
-    readonly property int barHeight: 30
-    readonly property int barControl: barHeight - 2 * sp1
-    readonly property int barTop: sp1 // the bar's gap to the screen's top edge
+    // The bar: ONE continuous 40 px Powerline across the screen, edge to edge, holding 28 px controls.
+    readonly property int barHeight: 40
+    readonly property int barControl: barHeight - sp3
+    readonly property int barTop: 0 // flush with the screen's top edge
+    readonly property int barSlant: sp2 // how far a Powerline divider leans across the bar's height
+    readonly property int barCenterWidth: 64 // the logo's compartment, on the screen's exact center
+    readonly property int barLogo: 22
+    // Where floating things stop short of the screen's edge: Hyprland's gaps_out (appearance.lua).
+    readonly property int screenInset: sp3
     // The glance band: what share of a standing screen's height it takes, the bar INCLUDED. It starts
     // sp1 under the bar and ends where the windows' area begins. docs/notes/desktop/dash.md
     // Clamped here too: the option's type refuses more than 40%, and a hand-edited file must not get past it.
     readonly property real bandShare: Math.max(0.25, Math.min(0.4, dashCfg.share))
-    readonly property int bandTop: barTop + barHeight + sp1
+    readonly property int bandTop: barTop + barHeight + sp2
     function bandReserve(screenHeight) { return Math.round(screenHeight * theme.bandShare); }
     // Type scale (px). Mono everywhere, so a changing number never moves its neighbors.
     readonly property int fontMicro: 10 // a unit, a footnote
@@ -178,6 +183,8 @@ Singleton {
     readonly property color colSurfacePop: theme.glassBg("f5") // 96%: a dense panel, read longest
     readonly property color colEdge: aa(pal.border, "8c") // a surface's hairline
     readonly property color colSheen: aa(pal.text, "0f") // the 1 px light along a surface's top edge
+    readonly property color colBarCenter: theme.glassSolid ? pal.surface : aa(pal.surface, "f0") // the logo's compartment
+    readonly property color colBarAccent: aa(pal.accent, "b3") // the thin blue under the logo
     // States of a control on glass: a neutral fill, so the accent stays free to mean "active".
     readonly property color colHoverFill: aa(pal.text, "14")
     readonly property color colPressFill: aa(pal.text, "24")

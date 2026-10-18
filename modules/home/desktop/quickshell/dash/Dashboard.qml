@@ -26,8 +26,8 @@ PanelWindow {
     }
     margins {
         top: Theme.bandTop
-        left: Theme.barTop
-        right: Theme.barTop
+        left: Theme.screenInset
+        right: Theme.screenInset
     }
     exclusionMode: ExclusionMode.Ignore
     implicitHeight: dash.band
@@ -273,6 +273,10 @@ PanelWindow {
                         font.bold: true
                         font.letterSpacing: 4
                     }
+                    // The title on the left; where the rotation is sits on the right edge, flush with the card.
+                    Item {
+                        Layout.fillWidth: true
+                    }
                     // Where the rotation is: arrows to step, a dot to jump.
                     Row {
                         spacing: 6
@@ -311,56 +315,6 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             glyph: "›"
                             onClicked: pages.step(1)
-                        }
-                    }
-                    Item {
-                        Layout.fillWidth: true
-                    }
-                    // The feed stays CLOSED: the bell is a count and a way in, nothing else.
-                    Rectangle {
-                        implicitWidth: bell.implicitWidth + 18
-                        implicitHeight: 24
-                        radius: 12
-                        color: bellArea.containsMouse ? Theme.colHoverBgAccent : Theme.colGroupBg
-                        border.width: 1
-                        border.color: bellArea.containsMouse ? Theme.colHoverBorder : Theme.colPillBorder
-
-                        Behavior on color {
-                            ColorAnimation {
-                                duration: Theme.motionHover
-                            }
-                        }
-                        Behavior on border.color {
-                            ColorAnimation {
-                                duration: Theme.motionHover
-                            }
-                        }
-
-                        RowLayout {
-                            id: bell
-                            anchors.centerIn: parent
-                            spacing: 6
-                            Text {
-                                text: Notifs.barIcon || "󰂜"
-                                color: Notifs.dnd ? Theme.colRed : (Notifs.count > 0 ? Theme.colPeach : Theme.colDim)
-                                font.family: Theme.uiFont
-                                font.pixelSize: 13
-                            }
-                            Text {
-                                visible: Notifs.count > 0
-                                text: "" + Notifs.count
-                                color: Theme.colPeach
-                                font.family: Theme.uiFont
-                                font.pixelSize: 12
-                                font.bold: true
-                            }
-                        }
-                        MouseArea {
-                            id: bellArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.LeftButton | Qt.RightButton
-                            onClicked: mouse => mouse.button === Qt.RightButton ? Notifs.toggleDnd() : Notifs.toggleCenter()
                         }
                     }
                 }

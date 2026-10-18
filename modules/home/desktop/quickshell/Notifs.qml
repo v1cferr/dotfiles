@@ -1,6 +1,6 @@
 pragma Singleton
 // The notification service: Quickshell IS the org.freedesktop.Notifications daemon (it replaced
-// swaync). IPC: `qs ipc call notif toggle|dnd|clear`. The UI is Notifications.qml.
+// swaync). IPC: `qs ipc call notif toggle|dnd|clear`. The UI: docs/notes/desktop/nixos-center.md
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Notifications
@@ -10,27 +10,30 @@ Singleton {
     id: root
 
     // ===== State =====
-    property bool dnd: false
-    property bool centerVisible: false
-    // The toasts currently on screen (Notification objects; alive because they stay tracked).
+    // DND survives a restart of the shell: a two-key file in Quickshell's own state dir, no daemon.
+    readonly property bool dnd: saved.dnd
+    // The NixOS Center is open (bound by the Bar's coordinator): no toast competes with it.
+    property bool centerOpen: false
+    // The toasts on screen, newest last. Three at most: an older one leaves the screen, never the history.
+    readonly property int maxToasts: 3
     property var popups: []
-    // The toast that just JOINED others: its card plays the entrance once. The Repeater rebuilds
-    // every card on each change, so a flag on the list is the only way to tell the new one.
-    property var fresh: null
+    // How many notifications to keep; past it the oldest go, but never a critical or resident one.
+    readonly property int historyLimit: 100
+    // Arrived while the Center was closed, and not seen yet: the dot beside the logo.
+    property int unseen: 0
+    property bool unseenCritical: false
 
     // The history = the notifications tracked by the server (an UntypedObjectModel).
     readonly property var history: server.trackedNotifications
     readonly property int count: server.trackedNotifications ? server.trackedNotifications.values.length : 0
+    onCountChanged: if (root.unseen > root.count)
+        root.unseen = root.count
 
-    // The bell icon in the bar, the same glyphs swaync used.
-    readonly property string barIcon: root.dnd
-        ? (root.count > 0 ? "󰂛" : "󰪑")
-        : (root.count > 0 ? "󰂚" : "󰂜")
+    // The Bar asks for this to open or close the Center (the IPC toggle comes through here too).
+    signal centerToggleRequested
 
     function removePopup(n) {
-        root.popups = root.popups.filter(function (x) {
-            return x !== n;
-        });
+        root.popups = root.popups.filter(x => x !== n);
     }
     function dismiss(n) {
         root.removePopup(n);
@@ -42,12 +45,48 @@ Singleton {
         for (let i = 0; i < vals.length; i++)
             vals[i].dismiss();
         root.popups = [];
+        root.markSeen();
+    }
+    function markSeen() {
+        root.unseen = 0;
+        root.unseenCritical = false;
+    }
+    onCenterOpenChanged: if (root.centerOpen) {
+        root.markSeen();
+        root.popups = []; // what the Center shows needs no toast on top of it
     }
     function toggleCenter() {
-        root.centerVisible = !root.centerVisible;
+        root.centerToggleRequested();
     }
     function toggleDnd() {
-        root.dnd = !root.dnd;
+        saved.dnd = !saved.dnd;
+    }
+    // The oldest go first; critical and resident ones stay until they are dealt with.
+    function trimHistory() {
+        const vals = server.trackedNotifications.values;
+        let over = vals.length - root.historyLimit;
+        for (let i = 0; i < vals.length && over > 0; i++) {
+            const n = vals[i];
+            if (n.urgency === NotificationUrgency.Critical || n.resident)
+                continue;
+            n.dismiss();
+            over--;
+        }
+    }
+
+    FileView {
+        path: Quickshell.statePath("notifs.json")
+        blockLoading: true // the saved DND is in force before the first notification can arrive
+        watchChanges: false
+        onAdapterUpdated: writeAdapter()
+        onLoadFailed: error => {
+            if (error === FileViewError.FileNotFound)
+                writeAdapter();
+        }
+        JsonAdapter {
+            id: saved
+            property bool dnd: false
+        }
     }
 
     NotificationServer {
@@ -63,11 +102,19 @@ Singleton {
         onNotification: function (n) {
             // tracked = true keeps the object alive and puts it in the history.
             n.tracked = true;
-            // A toast only shows up with DND off (Critical pierces DND).
-            if (!root.dnd || n.urgency === NotificationUrgency.Critical) {
-                root.fresh = root.popups.length > 0 ? n : null; // the 1st is a new layer Hyprland fades
-                root.popups = root.popups.concat([n]);
+            // keepOnReload hands the old ones over again on a hot reload: history, not news.
+            if (n.lastGeneration)
+                return;
+            const critical = n.urgency === NotificationUrgency.Critical;
+            if (!root.centerOpen) {
+                root.unseen++;
+                root.unseenCritical = root.unseenCritical || critical;
             }
+            // A toast only with DND off and the Center closed; Critical pierces both.
+            if (critical || (!root.dnd && !root.centerOpen))
+                root.popups = root.popups.concat([n]).slice(-root.maxToasts);
+            if (root.count > root.historyLimit)
+                root.trimHistory();
         }
     }
 

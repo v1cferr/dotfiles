@@ -10,5 +10,7 @@
     webuiPort = 8080; # the web panel (the same as the old setup)
     user = "qbittorrent";
     group = "media"; # a shared group, so it writes into the /srv/media library
+    # Under systemd stdin is /dev/null, so the legal notice's "press Enter" read EOF and it quit at once.
+    extraArgs = [ "--confirm-legal-notice" ];
   };
 }

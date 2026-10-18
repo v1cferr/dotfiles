@@ -339,3 +339,23 @@ which is exactly what this note says a Wine prefix does not survive.
 The cost is that this repeats: every new Steam install lands in `@home` by default and pays the
 snapshot timeline above. Installing big games straight onto the Windows side, or moving them here
 right after the download, is the habit that avoids it.
+
+## The exception: competitive games stay on the NVMe
+
+Overwatch moved back to the Kingston on 18/10/2026 and left `my.games.linked`. Played from this
+disk, it stuttered mid-match. The SanDisk SSD PLUS is a DRAM-less SATA drive, and Overwatch
+streams assets during play, the random reads such a drive handles worst. A slower load screen is
+fine for a campaign. A hitch in a ranked fight isn't. So the rule is **competitive games live on
+the NVMe**, and everything else stays here.
+
+It is ONE copy, on Linux only: Windows can't read btrfs, and the user doesn't play it there.
+
+**Its folder is its own btrfs subvolume** (`btrfs subvolume create`, inode 256). The section on
+snapshots above names that as the structural answer, and here it applies: btrbk snapshots `@home`,
+a snapshot doesn't descend into a nested subvolume, so the 83 GiB never enter the `48h 7d 4w`
+window and a weekly patch doesn't pin a month of old CASC extents.
+
+**Rejected: the NVMe as a cache in front of this disk.** bcache, lvmcache, dm-cache and
+dm-writecache all require reformatting the partition under their own block layer, which Windows
+can't read. A cache over a volume Windows also writes is a coherency hazard on top of that.
+PrimoCache only helps Windows, and preloading into RAM can't hold 83 GiB in 16 GiB.

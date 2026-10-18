@@ -140,3 +140,9 @@
         a temporary headless output, never in the live one; it stays off until switched on.
       • ON THE WAY: hyprctl was the stable 0.55 against a 0.56 compositor, qs-restart could start
         a second shell, and the toast and notification lists rebuilt every card on each change.
+
+- [x] Overwatch back on the NVMe (18/10/2026): it stuttered mid-match from the DRAM-less SATA
+      disk, so competitive games now stay off `my.games.linked`. How and why:
+      [games-disk.md](../../notes/boot-and-storage/games-disk.md#the-exception-competitive-games-stay-on-the-nvme).
+      • ITS OWN SUBVOLUME, so the 83 GiB and every patch stay out of the btrbk snapshots.
+      • NO CACHE IN FRONT OF THE SANDISK. bcache and friends would reformat a disk Windows shares.

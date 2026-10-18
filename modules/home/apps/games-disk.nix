@@ -38,11 +38,11 @@ in
     # a Battle.net config, only the files. Relocating the game inside Battle.net would buy nothing
     # and cost a "locate the install" round through the UI.
     my.games.linked = {
-      # COPIED on 03/09, not deduplicated: these four had no counterpart on the Windows disk, or
-      # had a STALE one. Overwatch is the stale case, and it is why every one of these was checked
-      # file by file (path and size) after the rsync and not merely by total: its Windows copy read
-      # 74 GiB against 76 here and would have passed an eyeball, while 68.9 GiB of it differed.
-      ".local/share/bottles/bottles/Battlenet/drive_c/Program Files (x86)/Overwatch" = "Overwatch";
+      # COPIED on 03/09, not deduplicated, and checked file by file (path and size) after the rsync.
+      #
+      # COMPETITIVE GAMES ARE NOT LISTED HERE: they stay on the NVMe. Overwatch went back on
+      # 18/10, a real directory that is its own btrfs subvolume, because this DRAM-less SATA disk
+      # stuttered mid-match. Why: docs/notes/boot-and-storage/games-disk.md
       ".local/share/bottles/bottles/Battlenet/drive_c/Program Files (x86)/Hearthstone" = "Hearthstone";
 
       # COPIED on 08/10, same rsync and same path-and-size check: both had stayed in the prefix,

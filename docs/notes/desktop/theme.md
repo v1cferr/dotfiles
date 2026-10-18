@@ -247,8 +247,9 @@ next to its package (rule 4).
 
 ## Tokyo Night Adaptive Glass: the shell's design system
 
-Chosen on 17/10/2026 for the bar, the glance band and every panel: floating glass clusters over the
-astronomy wallpapers, a bento grid on the standing monitor, one geometry and one material. The COLORS
+Chosen on 17/10/2026 for the bar, the glance band and every panel, and refined the same day into
+v2: one continuous Powerline over the astronomy wallpapers, a bento grid on the standing monitor,
+one geometry and one material. The COLORS
 stay the palette above; what this adds is presentation, and it lives in `Theme.qml` as tokens, so a
 component never holds a size, an opacity or a duration of its own (rule 11).
 
@@ -258,16 +259,17 @@ component never holds a size, an opacity or a duration of its own (rule 11).
 | --- | --- | --- |
 | Spacing, a 4 px grid | `sp1` `sp2` `sp3` `sp4` `sp6` | 4, 8, 12, 16, 24 |
 | Radii, concentric | `radiusControl`, `radiusSurface` | 8, and 8 + `sp1` = 12 |
-| The bar | `barHeight`, `barControl`, `barTop` | 30, 30 - 2 x 4 = 22, 4 |
+| The bar | `barHeight`, `barControl`, `barTop`, `barSlant`, `barCenterWidth`, `barLogo` | 40, 40 - 12 = 28, 0, 8, 64, 22 |
+| Insets | `bandTop`, `screenInset` | the bar plus 8 = 48; `my.theme.gaps.outer` = 12 |
 | Type (px, all mono) | `fontMicro` `fontSmall` `fontBody` `fontLabel` `fontTitle` | 10, 11, 12, 13, 14 |
 | Glass | `colSurfaceBar`, `colSurfaceCard`, `colSurfacePop` | the palette's bg at 90%, 92%, 96% |
 | Edges | `colEdge`, `colSheen`, `hairline` | border at 55%, text at 6%, 1 px |
 | States | `colHoverFill`, `colPressFill`, `colSelectFill`, `opacityDisabled` | text at 8% and 14%, accent at 18%, 0.4 |
 | Motion | `motionHover` `motionNormal` `motionSlow`, `hoverIntent` | [motion.md](motion.md); the intent is 200 ms |
 
-**Concentric radii** are why the numbers pair up: a bar cluster is 30 px tall and holds 22 px
-controls with 4 px around them, so a control's 8 px corner plus the 4 px padding is the cluster's
-12 px corner, and the two curves run parallel. A panel and a band card use the same 12.
+**Concentric radii** are why the numbers pair up: a control's 8 px corner plus 4 px of padding is a
+surface's 12 px corner, so the two curves run parallel, and a panel, a band card and (since the same
+day) every window use the same 12 (`my.theme.rounding`).
 
 **Mono everywhere** is also the tabular-figures answer: JetBrains Mono gives every digit the same
 advance, so a number padded to a fixed count of columns never changes width
@@ -283,7 +285,7 @@ window around every card for no gain in legibility.
 
 | Level | Opacity | Used by | Why that much |
 | --- | --- | --- | --- |
-| `bar` | 90% | the bar's three clusters | short labels, glanced at, the most photo can show through |
+| `bar` | 90% | the Powerline | short labels, glanced at, the most photo can show through |
 | `card` | 92% | the band's bento cards | read from the chair for a while, with fine print on the pages |
 | `pop` | 96% | every panel, menu, the OSD, the notification center | dense text, read the longest |
 
@@ -309,7 +311,7 @@ surface, never a darker wallpaper: the photo stays as it is.
 
 `appearance.lua` blurs exactly the shell's named layers, `qs-bar`, `qs-dash` and `qs-panel`, with
 the global `decoration.blur` settings, and `ignore_alpha = 0.5` keeps the blur off their transparent
-margins: the gaps between clusters and between bento cards show the photo sharp, and only what sits
+margins: the gaps between bento cards show the photo sharp, and only what sits
 under glass is frosted. Every other Quickshell layer keeps the default `quickshell` namespace and is
 not blurred. No plugin is involved (HyprGlass and similar were ruled out by the brief); this is the
 native layer rule on the pinned Hyprland.
@@ -327,4 +329,6 @@ by forcing the QML default: the cards turn opaque with the same geometry.
 | Glass off entirely | `my.theme.glass = "solid";` and a rebuild |
 | The blur's look | `decoration.blur` in `appearance.lua`, shared with the windows |
 | The band's height | `my.dash.share` ([dash.md](dash.md#the-share-35-by-default-never-above-40)) |
+| Window gaps and corners | `my.theme.gaps.inner` / `.outer`, `my.theme.rounding` ([hypr.md](hypr.md#balanced-geometry)) |
+| Liquid Glass instead of the blur | `my.hypr.hyprglass.enable` ([hyprglass.md](hyprglass.md)) |
 | A duration | the `motion*` tokens ([motion.md](motion.md)) |

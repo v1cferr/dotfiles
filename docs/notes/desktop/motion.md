@@ -241,16 +241,15 @@ it fades in (180 ms, `motionNormal`, OutCubic). Leaving is the compositor's 100 
 the last toast, and an instant removal for one among several, which keeps the column from
 shuffling while you read it.
 
-**Why a flag and not "animate on create".** The toast list is a JS array, reassigned on every
-arrival and dismissal, so the Repeater REBUILDS every card each time. An entrance on
-`Component.onCompleted` alone would replay on every card whenever anything changed. `Notifs.fresh`
-names the one toast that just joined, its card plays and clears it, and every rebuilt card stays
-still. Traced on 17/10/2026 with three `notify-send` in a row: card 2 played when it joined card 1,
-card 3 when it joined both, and the rebuilt cards did not (the test toasts were closed by id
-through D-Bus afterwards). Dismissal, actions and the auto-dismiss timers are untouched.
+**Stable cards, so "animate on create" is enough** (since 17/10/2026). The toasts are a
+`ScriptModel`, which diffs the array: an arrival creates ONE card and every other card stays the
+object it was, so the entrance simply plays in `Component.onCompleted` when the new card is not the
+only one. Before, the toast list was a plain array reassigned on every change, the Repeater rebuilt
+every card, and a `Notifs.fresh` flag had to name the newcomer; it also restarted every toast's
+dismiss timer on each arrival. Both are gone ([nixos-center.md](nixos-center.md#the-toasts)).
 
-A known oddity this does not change: since every card is rebuilt, each existing toast's
-auto-dismiss timer restarts when a new one arrives (observed in the code, 17/10/2026).
+The NixOS Center enters like every bar panel: the layer fades in (Hyprland) while the card drops
+6 px out of the bar (`PopIn`, 180 ms). It has no exit animation of its own beyond the layer fade.
 
 ### Data holds still
 

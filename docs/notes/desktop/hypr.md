@@ -14,7 +14,7 @@ the `.conf`.
 
 `hyprland.lua` does NOT live in the store: it comes through `mkOutOfStoreSymlink` from the real
 files in the repo. The entrypoint only does a `dofile` of the modules in `~/.config/hypr/lua/*.lua`,
-one subject per file: monitors, appearance, input, keybinds, rules, autostart, environment.
+one subject per file: monitors, glass, appearance, input, keybinds, rules, autostart, environment.
 
 Editing any `.lua` plus `hyprctl reload` applies immediately, with NO rebuild. Same scheme as
 quickshell. The scripts the binds call (`minimize-others`, `brightness-osd`) go
@@ -125,6 +125,7 @@ comes late, so anything that aborts an earlier module leaves the session with no
 | --- | --- |
 | `environment` | `hl.env`: the cursor, the Qt theme, the Wayland platform |
 | `monitors` | `hl.monitor` plus `hl.workspace_rule` |
+| `glass` | HyprGlass, only when `my.hypr.hyprglass.enable` names it ([hyprglass.md](hyprglass.md)) |
 | `appearance` | general, decoration, animations |
 | `input` | the ABNT2 keyboard plus the mouse |
 | `autostart` | `hl.on("hyprland.start")` |
@@ -304,3 +305,23 @@ claimed to prevent belongs to the v13 flow: a flash is cosmetic, the 17 px were 
 It matches by TITLE, because on this box the flameshot window (both the picker and the overlay) has
 an EMPTY class and the title `flameshot`. With no `float` it falls into dwindle's tiling, born
 squeezed into half a screen, which is where the "bug" came from.
+
+## Balanced geometry
+
+Since 17/10/2026 windows get `gaps_in` 8, `gaps_out` 12 and `rounding` 12 (`appearance.lua`), so
+they breathe and the wallpaper reads between them, and their corner is the shell's 12 px. The values
+are `my.theme.gaps.inner`, `my.theme.gaps.outer` and `my.theme.rounding` (`palette.nix`), generated
+into `hypr-colors.lua` and, for the outer gap, into Quickshell's JSON: the band's cards, the toasts
+and the panels stop short of the screen's edge by the same 12 px, so they line up with the windows
+(rule 11). The Lua falls back to the same numbers until a rebuild.
+
+Measured on the live layout that day: the main monitor's windows' content at x 13, y 53 (12 of gap
+plus the 1 px border, under the 40 px bar); on the standing LG the first window of a column at local
+y 685 (672 + 12 + 1), two stacked windows 18 px apart (2 x 8 + 2 borders), and 13 px at every outer
+edge. The scrolling layout is untouched.
+
+## The plugin slot
+
+`glass.lua` loads before `appearance.lua` and only does anything when `my.hypr.hyprglass.enable`
+names the HyprGlass plugin; otherwise it returns at once. The whole story, versions and rollback:
+[hyprglass.md](hyprglass.md).

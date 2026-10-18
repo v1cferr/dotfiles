@@ -38,9 +38,9 @@ both: the share, reserved by the bar on this screen ([below](#the-share-35-by-de
 
 **What earns a place.** The top of a standing screen is for what is read in two seconds and never
 clicked: the time, the month, the machine's vitals and what is playing. Everything that takes
-a click stays in the work area. The notification FEED is deliberately not there, only a bell with the
-count: a feed in the eyeline is the opposite of a glance surface, so the centre opens on a click
-and nowhere else.
+a click stays in the work area. Notifications are deliberately not there at all: a feed in the eyeline
+is the opposite of a glance surface, and since 17/10/2026 they live behind the NixOS logo in the bar
+above ([nixos-center.md](nixos-center.md)), so the band's old bell went with the others.
 
 **The vitals are tiles, not meter rows.** CPU, RAM, DISK, GPU, TEMP and NET sit in one row of
 six bento cells since 17/10/2026, a 3x2 grid before (`dash/Tile.qml`), each with a 36 px value and one
@@ -85,11 +85,12 @@ my.dash.share = 0.30; # the compact profile: the 576 px band of the old 30/70 sp
 ```
 
 The arithmetic, on the 1920 px LG: `round(1920 x 0.35)` = 672 px reserved from the top edge. The
-bar sits at y = 4 (30 px), the band at y = 38 (`Theme.bandTop`, the bar plus 4 px), so the band is
-672 - 38 = 634 px tall and its last row is y = 671. Windows start at 672 plus Hyprland's 4 px
-`gaps_out`. Measured on 17/10/2026: the monitor's `reserved` is `[0, 672, 0, 0]`, and the band's
-bottom border was found on row 671 of a screenshot. At 0.30 the same sum gives 576 and a 538 px
-band. Until the next rebuild writes `dash.json`, Theme falls back to 0.35 and logs that the file is
+bar is the top 40 px (the continuous Powerline, flush with the edge), the band starts 8 px under it
+at y = 48 (`Theme.bandTop`), so the band is 672 - 48 = 624 px tall and its last row is y = 671.
+Windows start at 672 plus Hyprland's 12 px `gaps_out`, the same 12 px the band keeps from the sides,
+so its cards line up with the windows below. Measured on 17/10/2026: the monitor's `reserved` is
+`[0, 672, 0, 0]`, the band layer at y 48 with 624 px, and the first window's border at local y 684.
+At 0.30 the same sum gives 576 and a 528 px band. Until the next rebuild writes `dash.json`, Theme falls back to 0.35 and logs that the file is
 missing.
 
 **One owner for the strip.** The BAR reserves it: on a screen where the band shows, its
@@ -121,14 +122,14 @@ photo shows between the cells:
 **The geometry is computed, in whole pixels, from the window.** With W and H the band's size and
 g = 8 (`Theme.sp2`):
 
-| Cell | Rule | On the LG (1072 x 634) |
+| Cell | Rule | On the LG (1056 x 624) |
 | --- | --- | --- |
-| left column | `floor((W - g) / 2)` | 532 |
-| right column | `W - g - left`, so a spare pixel goes right | 532 |
-| tile | `floor((column - 2g) / 3)`, a column's spare pixels to its last tiles | 172 |
-| top row | `H - 104 - 100 - 2g`: whatever the share leaves | 414 |
-| vitals row | 104 | y 422 to 525 |
-| services row | 100 | y 534 to 633 |
+| left column | `floor((W - g) / 2)` | 524 |
+| right column | `W - g - left`, so a spare pixel goes right | 524 |
+| tile | `floor((column - 2g) / 3)`, a column's spare pixels to its last tiles | 169, 169, 170 |
+| top row | `H - 104 - 100 - 2g`: whatever the share leaves | 404 |
+| vitals row | 104 | y 412 to 515 |
+| services row | 100 | y 524 to 623 |
 
 **Three tiles plus their two gutters are exactly one column**, so every vertical line in the grid is
 shared by the cells above and below it. Only the top row grows or shrinks with the share; the vitals
@@ -136,8 +137,9 @@ and the services keep their height, so the compact profile takes the room from t
 the most to spare.
 
 **Checked on a screenshot** (17/10/2026, a script scanning a row and a column for the cards' 1 px
-borders): all 12 vertical edges (4/175, 184/355, 364/535, 544/715, 724/895, 904/1075 in screen x)
-and all 6 horizontal ones (38/451, 460/563, 572/671) on the exact computed pixel.
+borders, re-run after the 40 px bar): all 12 vertical edges (12/180, 189/357, 366/535, 544/712,
+721/889, 898/1067 in screen x) and all 6 horizontal ones (48/451, 460/563, 572/671) on the exact
+computed pixel.
 
 **Frames in pixels, content in design units.** A card's frame (position, size, radius, border) is
 in real pixels, so the hairlines land on whole pixels and stay crisp. Its CONTENT keeps the 1432
@@ -158,8 +160,10 @@ share one line. The sparklines are one canvas each since the same day
 ## The CI pages: the right column rotates
 
 The month shares its column with two CI pages, one at a time: **month, GitHub Actions, the FAI
-GitLab**, every 15 s, with dots beside the title that say where the rotation is and jump on a click,
-flanked by `‹ ›` arrows (`PageArrow.qml`); the mouse wheel over the column steps the pages too.
+GitLab**, every 15 s, with dots on the header's right edge that say where the rotation is and jump
+on a click, flanked by `‹ ›` arrows (`PageArrow.qml`); the mouse wheel over the column steps the
+pages too. A CI alert clicked in the bar above turns to the forge with a failure and holds the
+rotation for 30 s ([bar.md](bar.md#the-operational-alerts)).
 The pointer over the column HOLDS the page, because reading a row must not be a race against the
 timer. The clock and the vitals never rotate: they are what the band is for.
 

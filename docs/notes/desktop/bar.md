@@ -3,37 +3,48 @@
 `modules/home/desktop/quickshell/bar/`. The desktop's bar, the only one; Waybar left in the migration to
 Quickshell. It is loaded by `shell.qml` (`Bar {}`), and the popovers live in files next to it.
 
-It shows: the workspaces per monitor plus the title, the clock, cpu/ram/disk/temp, the GPU, audio
-(Pipewire), Spotify (Mpris), the network, the VPN, the weather, the tray, notifications.
+It shows: the workspaces per monitor plus the title, the NixOS logo (the way into notifications and
+the session, [nixos-center.md](nixos-center.md)), the clock, cpu/temp, audio (Pipewire), Spotify
+(Mpris), the network, the VPN and Tor, the weather, the tray, and on the standing monitor the
+operational alerts.
 
-## Floating clusters (17/10/2026)
+## The Powerline (17/10/2026)
 
-The bar is three glass clusters over the wallpaper (`bar/Cluster.qml`, on the shared
-`GlassSurface`), not a row of bordered pills. Each cluster groups by MEANING:
+The bar is ONE continuous 40 px glass strip across each monitor: no margin to the screen's edges, no
+transparent gap between sections, a hairline at its foot. Earlier the same day it was three floating
+clusters; the brief that replaced them asked for one connected surface, with the logo at its center.
 
-| Cluster | Holds |
+| Part | What it is |
 | --- | --- |
-| Left, workspace and context | the NixOS button (main monitor only), this monitor's workspaces (`WorkspaceStrip.qml`), the focused window's title |
-| Center, time and ambient | the weather, the time, the date |
-| Right, system and controls | media, then temperature and CPU, then VPN and network, then volume, then notifications, hypridle and away, then the tray |
+| The surface | `colSurfaceBar` edge to edge, a 1 px `colEdge` line under it |
+| Dividers | `Chevron.qml`: one 1 px diagonal across the bar's height, leaning `\` on the left half and `/` on the right, mirrored on the center |
+| The center | `LogoSlot.qml`: a 64 px compartment, a shade lighter, its edges the two mirrored diagonals, the official logo at 22 px and the one blue line on the bar under it |
+| Controls | `widgets/Pill.qml`, flat 28 px controls (hover fill, press fill, an accent fill while pinned) |
 
-Inside a cluster a control (`widgets/Pill.qml`) is FLAT: no border of its own, a neutral fill on
-hover (the text color at 8%, so the accent stays free to mean "active"), a fill on press and an
-accent fill while its panel is pinned. A hairline (`widgets/Divider.qml`) separates the groups of the
-right cluster, and it is the only edge left between controls. Twelve borders became three outlines,
-which is what lets the wallpaper read as a picture between them. The geometry and the glass are
-tokens: [theme.md](theme.md#tokyo-night-adaptive-glass-the-shells-design-system).
+**The logo sits on the screen's EXACT center, and nothing beside it can move it.** Its compartment's
+x is `floor(width / 2) - 32`, computed from the bar's width alone, never from its neighbors: on the
+ASUS the logo's center is x 1280, on the LG x 540. The two halves are each capped at what is left
+of their side (`halfRoom`: the slot's x minus a divider and 8 px), so they can never reach it.
 
-**What moved, and nothing was removed.** The notification bell and the media pill moved to the
-right cluster, the tray now shares that cluster instead of having a background of its own, and every
-handler, scroll and right-click is the one it was. A workspace that EXISTS (has windows) now reads
-in `subtext` and an empty one in `dim`, which the old buttons did not distinguish.
+**The halves fold by priority, never overlap.** The left half is the workspaces, then the title,
+whose `maxWidth` is the room left after the workspaces (at most 520 px), and which hides below 120
+px instead of becoming an unreadable stub; the hover hint shows the whole title. The right half on
+the main monitor is media, then temperature and CPU, then VPN and network, then volume, then
+hypridle and away, then the tray, then the weather and the clock. When it would cross the center it
+folds in order: media first, then the network's numbers and the VPN's name (icons stay, with their
+panels), then the weather. The level is decided from widths the folding itself cannot change (the
+controls' implicit widths, and `TextMetrics` for the two labels that shrink), which is what keeps it
+from feeding back into itself.
 
-**The time sits on the screen's exact center**, not just the cluster's: the weather and the date get
-slots of EQUAL width on either side of it (the wider of the two), so the cluster is symmetric around
-the time and `anchors.centerIn` puts the time itself on the center. Measured on 17/10/2026: the
-calendar, hung from the time, opened at x = 820 with 920 px, so its center is 1280, the middle of the
-2560 px panel.
+**The official logo** is `nix-snowflake`, the two-blue snowflake from
+[nixos-artwork](https://github.com/NixOS/nixos-artwork) that `nixos-icons` installs into hicolor on
+every NixOS system, resolved with `Quickshell.iconPath("nix-snowflake", true)` and drawn as a vector
+at its own aspect; the Nerd Font glyph (`U+F313`) is only the fallback. A copy of the SVG in the
+repo was rejected: the system already ships the source of truth, from the same Nix build.
+
+**Measured on 17/10/2026:** the bar layer at x 0 with the screen's full width and 40 px on both
+monitors; the ASUS reserving 40 px and the LG 672; the calendar and the NixOS Center opening
+centered on 1280; screenshots of both monitors show one continuous strip.
 
 ### Numbers that hold still
 
@@ -58,6 +69,10 @@ separate hover machines that each kept their own "pill hovered", "popover hovere
 | Click again, click outside, Escape | closes the pinned panel |
 | Click another pill | switches the pin to that panel |
 | Scroll | unchanged (volume, media) |
+
+The logo's panel, the NixOS Center, is in the same coordinator under the key `center`, and opens on a
+CLICK only ([nixos-center.md](nixos-center.md)). EVERY bar is in a pinned panel's focus grab, so a
+click on the other monitor's bar reaches it: the same panel moves there, another one switches.
 
 **One panel at a time.** A pin closes the VPN actions menu, the power menu and any hint; opening the
 power menu, the VPN menu or the media panel closes a pin; a hovered panel hands over to a hint the
@@ -101,37 +116,55 @@ for selecting a region at the top of the screen.
 **Do NOT name the handler "show"**: it collides with the `qs ipc show` subcommand and the CLI never
 calls the function. The same trap is documented in `shell.qml`, in the vpn `IpcHandler`.
 
-## The compact bar on a narrow panel
+## The standing monitor's bar: status first
 
-The three clusters are ANCHORED (`left`, `centerIn`, `right`), and anchors in QML do not push, they
-let things overlap. On the 2560 px panel that never shows; on the secondary standing on its pivot,
-1080 px wide, the right cluster alone lands on top of the centered time.
+`compact` reads the panel's own WIDTH, below 1600 px, and not "is this the secondary", so rotating
+the monitor back restores the full bar with no config change (rule 3). On the 1080 px LG the bar
+keeps the logo at x 540 and holds:
 
-`compact` reads the panel's own WIDTH and not "is this the secondary", so rotating the monitor back
-restores the full bar with no config change (rule 3). The threshold is 1600 px, which is what the
-full set needs in the WORST case: the left group reaches around 620 px with a long title and
-Spotify playing, and the centered group starts at `(width - 280) / 2`, so below that they touch.
-
-What stays on a compact panel is what a support screen actually needs: the workspaces and the window
-title, in the left cluster; the time is the glance band's, right under it. What goes is either
-duplicated from the main bar or system state that belongs in ONE place: the center and the right
-clusters. It is the same split the Quickshell and Waybar communities land on for a secondary bar.
+- **Left:** that monitor's workspaces, and the window title when it fits cleanly.
+- **Right:** the operational alerts (`OpsIndicator.qml`) and nothing else. No clock: the band right
+  under it shows the time at 72 px. Nothing the band's cards already show is repeated.
 
 **On the standing monitor the bar reserves the band's strip too.** Its `exclusiveZone` there is the
-whole top share minus its own 4 px gap, and the band draws inside that strip ignoring other zones.
-Before 17/10/2026 each reserved its own zone, and layer-shell stacks zones in the order the layers
-MAP: renaming the layers re-created them, the band mapped first and the bar landed UNDER it.
+whole top share (672 px at 35%), and the band draws inside that strip ignoring other zones. Two
+layers that each reserve their own zone are stacked in the order they MAP, and on 17/10/2026 a
+re-created band mapped first and pushed the bar under itself; with one owner the order cannot matter
+and nothing is reserved twice.
 
-The title's `maxWidth` is a SHARE of the panel (13%) instead of the old 340 px literal, so it
-shrinks with the bar instead of being the thing that causes the collision.
+### The operational alerts
+
+One label per SOURCE that needs a look, from the feeds the band already reads: no new polling, no
+API call of its own.
+
+| Shows | Means |
+| --- | --- |
+| nothing but a dim check | every source answered and nothing is wrong |
+| `CI 2` in red | two current failures across GitHub and the FAI GitLab |
+| `CI` with a spinner, in the accent | nothing failing, and a run is in progress |
+| `CI ?` dim / peach | a forge never answered (unknown) / answers only with old data (stale) |
+| `SVC 1` peach / red | a service degraded / down |
+| `SVC ?` | the services meta script has not answered in two minutes |
+| `4 alerts` | the sources folded into one, when the room left is too small for both |
+
+**"Current" is the latest run of each workflow (or each GitLab ref).** glance-feed keeps only the
+newest run per workflow in its 7-day window, so a failure a later run fixed is already gone from the
+document, and only a failure that still stands is counted. A forge that never answered is unknown,
+not healthy; one that answers with its last good picture is stale. The FAI GitLab only counts once
+it has answered at least once, the same rule that keeps its page out of the band's rotation.
+
+**A click shows the detail on the band:** CI turns the band's pages to the forge with a failure,
+SVC turns the services strip to its first page (trouble sorts first), and both rotations hold for
+30 s. The bar reaches the band through the Bar's `dashRequested` signal; the two already share that
+scope, so no navigation controller was needed. The hover hint names each source's state and the
+failing repos.
 
 ## The clock
 
-The time AND the date are ALWAYS visible, side by side in the center cluster. It used to be a toggle
-on click: one or the other, and to see the date you had to click twice, there and back. The time is
-bold in `text`, the date regular in `subtext`: a hierarchy, not a separation. Since 17/10/2026 they
-are two controls around which the cluster is symmetric (above), and both open the same calendar,
-hung from the time so it never jumps between them.
+The time AND the date are ALWAYS visible, at the right end of the main monitor's bar, after the
+weather: the time bold in `text`, the date regular in `subtext`, a hierarchy and not a separation.
+It used to be a toggle on click, one or the other. It is NEVER at the center (the logo is) and never
+on the standing monitor (the band shows it). Both open the calendar, hung from the time.
 
 The weekday comes from a local `dowAbbr` and NOT from Qt's `"ddd"`, because Qt's format depends on
 the PROCESS' locale, so "sáb" would become "Sat" if the bar came up with no `LC_TIME`. There is no
@@ -283,13 +316,13 @@ Right click on the pill is still the shortcut for taking everything down.
 
 Asked for on 10/10/2026: everything on the bar shows something under the cursor. The pills with a
 panel of their own (weather, clock, temperature, usage, VPN, network) already did; the rest (the
-window title, Spotify, notifications, volume, hypridle and each tray icon) get
+window title, Spotify, volume, hypridle, away, the operational alerts and each tray icon) get
 `HintPopover.qml`, a small card with the state and what each button does. The click keeps doing
 what it did, so a hover never fires an action.
 
 The Bar stores a KEY (`hintKey`), not the text, and the popover binds to `hintFor(key)`. So the
 hint follows the state while it is open: scrolling the volume updates its percentage live. A click
-that opens something (the media panel, the notification center, a tray menu) hides the hint first,
+that opens something (the media panel, the NixOS Center, a tray menu) hides the hint first,
 or the two would draw on top of each other. A tray icon's hint is its own SNI `tooltipTitle` and
 `tooltipDescription`, with the HTML some apps put there stripped.
 
@@ -554,18 +587,12 @@ because the proxy was not installed, so no icon like that ever came to exist. Qu
 `ContextMenu()` through the `tray-native-menu` helper: the proxy forwards the click and the app
 draws its own menu at the cursor.
 
-## The power menu
+## The session actions (the old power menu)
 
-A taskbar-style "Start button": the NixOS logo in the bar's top left corner, opening lock, log out,
-suspend, reboot and shut down. No sudo: poweroff/reboot/suspend go through systemd-logind, where an
-active session is authorized with no password, and logging out goes through uwsm.
-
-**The logo is the official one** since 17/10/2026: `nix-snowflake`, the two-blue snowflake from
-[nixos-artwork](https://github.com/NixOS/nixos-artwork), which the `nixos-icons` package installs
-into the hicolor theme on every NixOS system. The button resolves it with
-`Quickshell.iconPath("nix-snowflake", true)` and draws the SVG at 16 px, keeping its geometry and
-colors; the Nerd Font glyph (`U+F313`) is only the fallback when the icon cannot be found. A copy of
-the SVG in the repo was rejected: the system already ships the source of truth.
+Lock, darken, log out, suspend, reboot and shut down live in the NixOS Center's footer since
+17/10/2026 ([nixos-center.md](nixos-center.md)), with the commands they always had. No sudo:
+poweroff, reboot and suspend go through systemd-logind, where an active session is authorized with
+no password, and logging out is `loginctl terminate-user`, since LightDM starts a bare Hyprland.
 
 **The lock brings hyprlock up DIRECTLY** (the unit from `lockscreen.nix`) and only then marks the
 `LockedHint`. `loginctl lock-session` on its own did NOT lock: it only emits the Lock signal, and
@@ -573,7 +600,6 @@ what listened for it was hypridle, so with hypridle stopped by Sunshine's guard 
 silent no-op. The `start` is idempotent, so the `lock_cmd` hypridle fires on seeing the signal
 duplicates nothing. See [`lockscreen.md`](lockscreen.md).
 
-There is also a "darken the screen" action: gamma 0 through hyprsunset, **NEVER dpms**. It restores
-itself on mouse or keyboard movement (hypridle's on-resume) or when sliding the brightness. Useful
-for sleeping with no light in the room. The dpms prohibition is the same one from
-[`sunshine.md`](../network/sunshine.md).
+**Darken** is gamma 0 through hyprsunset, **NEVER dpms**. It restores itself on mouse or keyboard
+movement (hypridle's on-resume) or when sliding the brightness. Useful for sleeping with no light in
+the room. The dpms prohibition is the same one from [`sunshine.md`](../network/sunshine.md).

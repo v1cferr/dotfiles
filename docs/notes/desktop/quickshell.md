@@ -160,13 +160,14 @@ That is rule 16 in one commit. The VPN control now lives anchored to the bar.
 Quickshell IS the `org.freedesktop.Notifications` daemon, replacing swaync (the orphaned mako
 died). `Notifs.qml` is the singleton service holding the state (DND, live toasts, history) and
 exposing IPC (`qs ipc call notif toggle|dnd|clear`); `Notifications.qml` is the UI, toasts in the
-main monitor's top right corner plus the center toggled by the bar's bell.
+main monitor's top right corner, and the history in the NixOS Center behind the bar's logo
+([nixos-center.md](nixos-center.md)).
 
 **The card's app icon** arrives as `image://icon/<name>`. If it exists in the CURRENT theme
-(Win11-dark plus hicolor) it is used directly; otherwise the same name is tried in breeze (a
-complete theme), ONLY in this card, WITHOUT changing the system's theme. With none of that, it
-falls back to the bell. `hasThemeIcon` avoids the checkered placeholder the provider returns when
-the icon is not in the theme.
+(Win11-dark plus hicolor) it is used directly; otherwise the card shows the bell. `hasThemeIcon`
+avoids the checkered placeholder the provider returns when the icon is not in the theme. A breeze
+fallback that ran `find` in `/usr/share/icons` was removed on 17/10/2026: NixOS has no `/usr/share`
+and no breeze theme is installed here, so it spawned a process per card to find nothing.
 
 ### The OSD
 
@@ -191,9 +192,9 @@ bottom/top-left on the main monitor, near the Spotify pill.
 
 ### `Pill.qml`
 
-The bar's control. Since 17/10/2026 it is FLAT, a segment inside a glass cluster with no border of
-its own (a neutral fill on hover and press, an accent fill while its panel is pinned), and it can
-draw a vector `image` in place of the glyph, which is how the NixOS button shows the official logo. Its `sub` is secondary text in the SAME pill, after the label and in
+The bar's control. Since 17/10/2026 it is FLAT, 28 px on the Powerline with no border of its own (a
+neutral fill on hover and press, an accent fill while its panel is pinned), and it can draw a vector
+`image` in place of the glyph. Its `sub` is secondary text in the SAME pill, after the label and in
 a discreet color, for two pieces of data that travel together without becoming two pills (the date
 next to the time). It comes AFTER on purpose: the label is the main information and sits on the
 left edge, which is where the eye enters the pill, so `sub` does not compete for that spot.
@@ -201,8 +202,8 @@ left edge, which is where the eye enters the pill, so `sub` does not compete for
 ### `widgets/`: the shell's shared vocabulary
 
 Beyond the pill, the panels are built out of a handful of small files: `GlassSurface` (the one
-material every cluster, card and panel is painted with, since 17/10/2026), `Divider` (the hairline
-between groups inside a cluster), `PopCard` (a panel's card on GlassSurface, with its hover flag), `PopHeader` (title, verdict, hairline),
+material every card and panel is painted with, since 17/10/2026), `IconButton` (a glyph button whose
+tooltip and accessible name are the same words), `PopCard` (a panel's card on GlassSurface, with its hover flag), `PopHeader` (title, verdict, hairline),
 `Verdict` (the outlined chip that answers "is this fine?"), `StatRow` (label, context, value with
 the value column aligned), `MeterRow` (a StatRow plus its bar), `Sparkline` (the history graph, one Canvas since 17/10/2026 instead of a Repeater of 60 bars
 rebuilt on every sample) and

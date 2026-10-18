@@ -1,4 +1,4 @@
-# GLANCE-FEED: the desktop's network data (weather, INMET, CI) fetched only when it can have changed,
+# GLANCE-FEED: the desktop's network data (weather, INMET, CI, Claude usage) fetched only when it can have changed,
 # into one SQLite cache the bar, the glance band and the lock screen READ. docs/notes/desktop/glance-feed.md
 {
   config,
@@ -51,6 +51,8 @@ let
       GLANCE_ROUTER_UCI = ../../../../hosts/cudy-wr3000/uci;
       # The threats source: the router's syslog as router-log.nix keeps it (readable by wheel).
       GLANCE_ROUTER_LOG = "/var/log/router/router.log";
+      # The claude_usage source: the FAI account's OAuth token, where claude-code.nix keeps it.
+      GLANCE_CLAUDE_CREDENTIALS = "${config.my.claude.configDirs.fai}/.credentials.json";
     };
     text = builtins.readFile ./scripts/feed.sh;
   };

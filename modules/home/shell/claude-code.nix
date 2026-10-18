@@ -192,7 +192,15 @@ let
   };
 in
 {
-  home.packages = [
+  # Each account's CLAUDE_CONFIG_DIR, for whoever needs its files (glance-feed's /usage source).
+  options.my.claude.configDirs = lib.mkOption {
+    type = lib.types.attrsOf lib.types.str;
+    readOnly = true;
+    default = lib.mapAttrs (_: p: "${config.home.homeDirectory}/${p.dir}") profiles;
+    description = "Absolute CLAUDE_CONFIG_DIR per Claude account, keyed by profile name.";
+  };
+
+  config.home.packages = [
     # The package lives here because the app owns its config. Wrapped, never raw: two
     # bin/claude would collide at activation.
     claudeDefault
@@ -207,7 +215,7 @@ in
 
   # Per account: settings.json into the repo (config), projects/ into the shared archive
   # (state). Nix owns the links, the app owns what is inside them (rule 14).
-  home.file = lib.mkMerge (
+  config.home.file = lib.mkMerge (
     lib.mapAttrsToList (name: p: {
       "${p.dir}/settings.json".source =
         config.lib.file.mkOutOfStoreSymlink "${repo}/settings-${name}.json";
@@ -218,9 +226,9 @@ in
 
   # Plain `claude` becomes FAI. It only takes effect after a RELOGIN, never in a new terminal:
   # hm-session-vars.sh guards itself with an EXPORTED mark. Until then, the wrapper delivers.
-  home.sessionVariables.CLAUDE_CONFIG_DIR = defaultDir;
+  config.home.sessionVariables.CLAUDE_CONFIG_DIR = defaultDir;
 
-  programs.zsh.shellAliases = {
+  config.programs.zsh.shellAliases = {
     # A live monitor of the current block (tokens and cost), refreshing once a second.
     claude-usage = "watch -n 1 -c ccusage blocks --active --color";
     # A per-session table: how much each conversation consumed.

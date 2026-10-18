@@ -83,3 +83,11 @@ CREATE TABLE IF NOT EXISTS alerts (
   key  TEXT PRIMARY KEY, -- kind|client|target, or new-device|mac
   sent INTEGER NOT NULL
 );
+
+-- The Claude account's limits, one row per CHANGE (they move in whole percent), for the 24 h
+-- sparkline. 8 days, so a full weekly window always fits.
+CREATE TABLE IF NOT EXISTS claude_usage (
+  ts          INTEGER PRIMARY KEY,
+  session_pct REAL,
+  weekly_pct  REAL
+);

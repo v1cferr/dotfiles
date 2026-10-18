@@ -3,8 +3,9 @@
 # changed, into one SQLite cache (schema.sql). `glance-feed` (the timer, every minute) runs what is
 # due; `glance-feed read <name>` prints a source's document for the UI. Why: docs/notes/desktop/glance-feed.md
 # GLANCE_LAT, GLANCE_LON, GLANCE_MODEL, GLANCE_IBGE, GLANCE_SCHEMA, the GLANCE_GITLAB_* /
-# GLANCE_WEBHOOK_DIR of the CI source, GLANCE_ROUTER_UCI of the network source and GLANCE_ROUTER_LOG
-# of the threats source come from runtimeEnv (default.nix).
+# GLANCE_WEBHOOK_DIR of the CI source, GLANCE_ROUTER_UCI of the network source, GLANCE_ROUTER_LOG
+# of the threats source and GLANCE_CLAUDE_CREDENTIALS of the claude_usage source come from
+# runtimeEnv (default.nix).
 set -uo pipefail
 
 dir="${XDG_CACHE_HOME:-$HOME/.cache}/glance"
@@ -620,9 +621,72 @@ threats() {
   fi
 }
 
+# ── claude_usage: the Claude account's /usage (5 h session, weekly), every minute ──
+# The same numbers Claude Code's /usage shows, from the account's own OAuth token. ccusage cannot
+# give them: it reads the shared session archive, so it is per machine, not per subscription.
+# The endpoint is internal and undocumented, so every field is optional.
+claude_api="https://api.anthropic.com/api/oauth/usage"
+
+claude_fetch() { # claude_fetch OUT -> the HTTP code; the token goes through a file, never argv
+  printf 'Authorization: Bearer %s\n' "$(jq -r '.claudeAiOauth.accessToken // ""' "$GLANCE_CLAUDE_CREDENTIALS")" >"$work/claude.auth"
+  local code size
+  read -r code size < <(curl -sS -m 20 -H @"$work/claude.auth" -H "anthropic-beta: oauth-2025-04-20" \
+    -o "$1" -w '%{http_code} %{size_download}\n' "$claude_api" 2>/dev/null || echo "000 0")
+  rm -f "$work/claude.auth"
+  count anthropic "${size:-0}" 0
+  echo "$code"
+}
+
+claude_usage() {
+  due claude_usage || return 0
+  again claude_usage 60
+  if [ ! -r "$GLANCE_CLAUDE_CREDENTIALS" ]; then
+    jq -n '{ok: false, error: "no-credentials"}' >"$work/claude.doc"
+    put claude_usage "anthropic" "$work/claude.doc"
+    return 0
+  fi
+  local code
+  code="$(claude_fetch "$work/claude.raw")"
+  if [ "$code" != 200 ]; then
+    fail claude_usage "usage endpoint answered $code"
+    return 0
+  fi
+  local s w
+  read -r s w < <(jq -r '[(.five_hour.utilization // "NULL"), (.seven_day.utilization // "NULL")] | @tsv' "$work/claude.raw")
+  # A point only when a number moved, so the series stays small and the document stable.
+  sql "INSERT INTO claude_usage(ts, session_pct, weekly_pct) SELECT $now, $s, $w
+       WHERE NOT EXISTS (SELECT 1 FROM (SELECT session_pct, weekly_pct FROM claude_usage ORDER BY ts DESC LIMIT 1)
+                         WHERE session_pct IS $s AND weekly_pct IS $w);
+       DELETE FROM claude_usage WHERE ts < $((now - 8 * 86400));"
+  sqlite3 -batch -json -cmd '.timeout 5000' "$db" "
+    SELECT ts, session_pct AS s, weekly_pct AS w FROM claude_usage WHERE ts >= $((now - 86400))
+    UNION ALL SELECT * FROM (SELECT ts, session_pct, weekly_pct FROM claude_usage WHERE ts < $((now - 86400)) ORDER BY ts DESC LIMIT 1)
+    ORDER BY ts" </dev/null >"$work/claude.hist"
+  [ -s "$work/claude.hist" ] || echo '[]' >"$work/claude.hist"
+  if jq --slurpfile hist "$work/claude.hist" --slurpfile cred "$GLANCE_CLAUDE_CREDENTIALS" '
+    def epoch: if . == null then null else sub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") | fromdateiso8601 end;
+    def window($w; $kind): ((.limits // []) | map(select(.kind == $kind)) | .[0]) as $l
+      | {pct: ($l.percent // $w.utilization), resets: (($l.resets_at // $w.resets_at) | epoch), severity: ($l.severity // "normal")};
+    ($cred[0].claudeAiOauth // {}) as $o
+    | {ok: true, error: "",
+       plan: ([$o.subscriptionType, ($o.rateLimitTier // "" | sub("^default_claude_"; "") | gsub("_"; " "))] | map(select(. != null and . != "")) | join(" · ")),
+       session: window(.five_hour; "session"),
+       weekly: window(.seven_day; "weekly_all"),
+       scoped: [(.limits // [])[] | select(.kind == "weekly_scoped")
+                | {label: (.scope.model.display_name // .scope.surface // "scoped"), pct: .percent, severity}],
+       extra: {enabled: (.extra_usage.is_enabled // false), used: .extra_usage.used_credits,
+               limit: .extra_usage.monthly_limit, currency: (.extra_usage.currency // "USD")},
+       history: $hist[0]}' "$work/claude.raw" >"$work/claude.doc"; then
+    put claude_usage "anthropic" "$work/claude.doc"
+  else
+    fail claude_usage "usage document unreadable"
+  fi
+}
+
 weather
 inmet_forecast
 inmet_alerts
 ci
 network
 threats
+claude_usage

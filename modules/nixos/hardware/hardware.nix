@@ -4,7 +4,9 @@
 
 {
   hardware.enableRedistributableFirmware = true; # it includes the GPU's firmware (Intel Arc)
-  zramSwap.enable = true; # compressed swap in RAM (fast; priority 5, so it is used first)
+  # Compressed swap in RAM, priority 5 so it is used before the NVMe file. Defaults kept on purpose
+  # (zstd, 50%), measured at 3.6x: docs/notes/hardware/power-and-memory-baseline.md
+  zramSwap.enable = true;
 
   # THE ON-DISK SWAPFILE lives in the HOST, since it depends on the root's filesystem (btrfs needs
   # a NOCOW subvolume, made by disko). zram is disk-agnostic, which is why it stays here.

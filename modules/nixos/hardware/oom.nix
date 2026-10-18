@@ -5,10 +5,10 @@
 {
   services.earlyoom = {
     enable = true;
-    # earlyoom's tested defaults. The swap is 100% zram (it lives in RAM), so the RAM threshold is
-    # what carries the decision; if it still freezes, raise that one.
-    freeMemThreshold = 10; # free RAM < 10% -> a SIGTERM to the biggest process
-    freeSwapThreshold = 10; # and free swap (zram) < 10%
+    # earlyoom's defaults. BOTH must hold, and swap is zram PLUS the 16 GiB NVMe file, so the swap
+    # one decides: ~21.8 GiB swapped before a kill. Why kept, and the test: docs/notes/hardware/oom.md
+    freeMemThreshold = 10; # available RAM < 10% ...
+    freeSwapThreshold = 10; # ... AND free swap (zram + NVMe, 24 GiB) < 10% -> a SIGTERM
     enableNotifications = true; # it says on the desktop which process was killed and why
 
     # It matches `comm`, the KERNEL's field, truncated at 15 chars. `[.]?` and no `$` because the

@@ -66,7 +66,7 @@ ppd releases every hold when the user switches.
 - **ASPM overrides (`pcie_aspm=force`, `pcie_aspm.policy=powersupersave`)**: the B580 is known
   to idle high without ASPM L1 on some boards, but forcing it globally risks link instability
   on every PCIe device, and nothing here can read the link state without root (`lspci -vv` is
-  not installed). Measure first.
+  not installed). Measure first, see [the baseline](power-and-memory-baseline.md).
 
 ## Checking it
 

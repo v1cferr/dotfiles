@@ -12,6 +12,7 @@ ColumnLayout {
     readonly property var all: Services.list
     readonly property int pageCount: Math.max(1, Math.ceil(strip.all.length / strip.perPage))
     property int page: 0
+    property bool held: false // the band holds it on its trouble page after an alert was clicked
     onPageCountChanged: if (strip.page >= strip.pageCount)
         strip.page = 0
 
@@ -27,7 +28,7 @@ ColumnLayout {
     Timer {
         interval: 10000
         repeat: true
-        running: strip.visible && !hover.hovered && strip.pageCount > 1
+        running: strip.visible && !hover.hovered && !strip.held && strip.pageCount > 1
         onTriggered: strip.step(1)
     }
     WheelHandler {

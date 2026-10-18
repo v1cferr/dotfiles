@@ -65,6 +65,28 @@ PanelWindow {
         return x;
     }
 
+    // An alert clicked in this screen's bar (OpsIndicator.qml): turn to its detail and hold the
+    // rotations for 30 s, long enough to read it. The CI page with a failure wins over a quiet one.
+    Connections {
+        target: dash.host
+        function onDashRequested(what) {
+            if (what === "svc") {
+                svcStrip.page = 0; // trouble sorts first, so page one is what needs a look
+            } else {
+                const fails = src => (src.runs || []).some(r => r.state === "failure");
+                const gl = Ci.gitlabShown && (fails(Ci.gitlab) || !Ci.gitlab.ok || Ci.gitlab.stale);
+                const target = fails(Ci.github) || !gl ? 1 : 2;
+                pages.dir = target > pages.page ? 1 : -1;
+                pages.page = target;
+            }
+            focusHold.restart();
+        }
+    }
+    Timer {
+        id: focusHold
+        interval: 30000
+    }
+
     // The detail on hover: one card per band, fed by any `Tip` inside it (Tip.qml, Tips.qml).
     TipWindow {
         band: dash
@@ -251,7 +273,7 @@ PanelWindow {
                 Timer {
                     interval: 15000
                     repeat: true
-                    running: dash.visible && !pageHover.hovered && !ghList.detailOpen && !glList.detailOpen
+                    running: dash.visible && !pageHover.hovered && !ghList.detailOpen && !glList.detailOpen && !focusHold.running
                     onTriggered: pages.step(1)
                 }
                 // The wheel turns the pages too. No timer reset is needed: the pointer is over
@@ -688,7 +710,9 @@ PanelWindow {
             height: dash.stripH
 
             ServiceStrip {
+                id: svcStrip
                 anchors.fill: parent
+                held: focusHold.running
             }
         }
     }

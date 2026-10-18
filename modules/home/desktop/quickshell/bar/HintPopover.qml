@@ -1,5 +1,6 @@
-// The HINT popover (hover) for the pills with no panel of their own: the state, then what each
-// button does. Content is a binding on the Bar, so it follows a scroll on the volume live.
+// The HINT popover (hover) for the pills with no panel of their own: what it is, how it is now, what
+// a click does, in that order. The same card as the panels'. Content is a binding on the Bar, so
+// it follows a scroll on the volume live; it shows after Theme.tipDelay (Bar.qml's coordinator).
 import Quickshell
 import Quickshell.Wayland
 import QtQuick
@@ -32,16 +33,16 @@ PanelWindow {
     PopCard {
         shown: hintPop.visible
         id: card
-        pad: 12
-        gap: 6
+        pad: Theme.sp3
+        gap: Theme.sp1
 
         Text {
             Layout.maximumWidth: 320
             wrapMode: Text.WordWrap
             text: hintPop.h ? hintPop.h.title : ""
-            color: Theme.colAccent
+            color: Theme.colText
             font.family: Theme.uiFont
-            font.pixelSize: 12
+            font.pixelSize: Theme.fontBody
             font.bold: true
         }
         Repeater {
@@ -51,10 +52,20 @@ PanelWindow {
                 Layout.maximumWidth: 320
                 wrapMode: Text.WordWrap
                 text: modelData
-                color: Theme.colDim
+                color: Theme.colSubtext
                 font.family: Theme.uiFont
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontSmall
             }
+        }
+        Text {
+            visible: text !== ""
+            Layout.maximumWidth: 320
+            Layout.topMargin: 2
+            wrapMode: Text.WordWrap
+            text: hintPop.h && hintPop.h.action ? hintPop.h.action : ""
+            color: Theme.colDim
+            font.family: Theme.uiFont
+            font.pixelSize: Theme.fontSmall
         }
     }
 }

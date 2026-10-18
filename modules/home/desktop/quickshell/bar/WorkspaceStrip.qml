@@ -1,5 +1,7 @@
-// One monitor's workspaces: flat buttons under ONE sliding active pill, plus the activity badge.
-// The model (orphans of a gone secondary) and the 0.55 dispatch trap: docs/notes/desktop/bar.md
+// The ADAPTIVE WORKSPACE RAIL: one monitor's workspaces as two-digit numbers under ONE sliding
+// active pill. Three states by contrast (active, occupied, empty) and two marks, a new window and a
+// request for attention, neither pulsing. The rail, its model (orphans of a gone secondary) and the
+// 0.55 dispatch trap: docs/notes/desktop/bar.md
 import QtQuick
 import "root:/"
 
@@ -7,6 +9,8 @@ Item {
     id: strip
     required property var host // the Bar's Scope: the workspace state lives there
     property string monitor: ""
+    property var barContent: null
+    property var barWindow: null
 
     readonly property var ids: strip.host.wsModelFor(strip.monitor)
     // wsRep.count is read so the binding wakes up once the buttons exist.
@@ -56,9 +60,11 @@ Item {
                 required property int modelData
                 readonly property bool active: strip.host.wsActive[strip.monitor] === btn.modelData
                 readonly property bool exists: strip.host.wsExist[btn.modelData] === true
+                readonly property bool urgent: strip.host.wsUrgent[btn.modelData] === true
                 readonly property bool activity: strip.host.wsActivity[btn.modelData] === true
 
-                implicitWidth: Math.max(Theme.barControl + 2, glyph.implicitWidth + 2 * Theme.sp2)
+                // ONE width for every number, from a template: "01" and "08" never differ.
+                implicitWidth: Math.max(Theme.barControl, Math.ceil(tmNum.advanceWidth) + 2 * Theme.sp2)
                 implicitHeight: Theme.barControl
                 radius: Theme.radiusControl
                 // Active, the button is see-through and the sliding pill shows under it.
@@ -70,61 +76,74 @@ Item {
                 }
 
                 Text {
-                    id: glyph
+                    id: num
                     anchors.centerIn: parent
-                    text: btn.active ? "󰮯" : strip.host.wsIcon(btn.modelData)
-                    // A workspace with windows reads brighter than an empty one.
-                    color: btn.active ? Theme.colBgSolid : (btn.exists ? Theme.colWsInactive : Theme.colDim)
-                    // In step with the pill, so the glyph is never dark on dark while the pill is on its way.
+                    text: strip.host.wsLabel(btn.modelData)
+                    // Occupied reads clearly above empty; the active one sits dark on the blue pill.
+                    color: btn.active ? Theme.colBgSolid : (btn.exists ? Theme.colText : Theme.colDim)
+                    opacity: btn.active || btn.exists ? 1 : 0.7
+                    // In step with the pill, so the number is never dark on dark while the pill is on its way.
                     Behavior on color {
                         ColorAnimation {
                             duration: Theme.motionNormal
                         }
                     }
                     font.family: Theme.uiFont
-                    font.pixelSize: Theme.fontLabel
-                    font.bold: btn.active
+                    font.pixelSize: Theme.fontBody
+                    font.bold: btn.active || btn.exists
                 }
-                // The badge: something opened or went urgent on that ws while I was on another. A status
-                // pulse, so it stays on with motion off.
+                // Occupied and not active: a 2 px rule under the number, so the state is not color alone.
                 Rectangle {
-                    visible: btn.activity && !btn.active
+                    visible: btn.exists && !btn.active && !btn.activity && !btn.urgent
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 3
+                    width: 8
+                    height: 2
+                    radius: 1
+                    color: Theme.colDim
+                }
+                // The marks: a window opened here (yellow) or asked for attention (orange, larger). Steady,
+                // never pulsing; visiting the workspace clears them.
+                Rectangle {
+                    visible: (btn.activity || btn.urgent) && !btn.active
                     anchors.right: parent.right
                     anchors.top: parent.top
-                    anchors.rightMargin: 2
-                    anchors.topMargin: 2
-                    width: 7
-                    height: 7
-                    radius: 3.5
-                    color: Theme.colPeach
+                    anchors.rightMargin: btn.urgent ? 2 : 3
+                    anchors.topMargin: btn.urgent ? 2 : 3
+                    width: btn.urgent ? 7 : 5
+                    height: width
+                    radius: width / 2
+                    color: btn.urgent ? Theme.colAlert : Theme.colWarn
                     border.color: Theme.colBgSolid
-                    border.width: 1
-                    SequentialAnimation on opacity {
-                        running: btn.activity && !btn.active
-                        loops: Animation.Infinite
-                        NumberAnimation {
-                            from: 1
-                            to: 0.35
-                            duration: 700
-                            easing.type: Easing.InOutQuad
-                        }
-                        NumberAnimation {
-                            from: 0.35
-                            to: 1
-                            duration: 700
-                            easing.type: Easing.InOutQuad
-                        }
-                    }
+                    border.width: btn.urgent ? 1 : 0
                 }
+                Accessible.role: Accessible.Button
+                Accessible.name: "Workspace " + strip.host.wsLabel(btn.modelData) + (btn.active ? ", active" : (btn.exists ? ", occupied" : ", empty")) + (btn.urgent ? ", asks for attention" : (btn.activity ? ", new window" : ""))
                 MouseArea {
                     id: area
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     hoverEnabled: true
+                    onContainsMouseChanged: {
+                        if (containsMouse)
+                            strip.host.hintWs = btn.modelData;
+                        strip.host.hoverHint("ws", btn, strip.barContent, strip.barWindow, containsMouse);
+                    }
                     // `hl.dsp.workspace` is a TABLE; what switches is focus (0.55's Lua dispatch).
-                    onClicked: strip.host.launch(["hyprctl", "dispatch", "hl.dsp.focus({ workspace = " + btn.modelData + " })"])
+                    onClicked: {
+                        strip.host.hideHint();
+                        strip.host.launch(["hyprctl", "dispatch", "hl.dsp.focus({ workspace = " + btn.modelData + " })"]);
+                    }
                 }
             }
         }
+    }
+    TextMetrics {
+        id: tmNum
+        font.family: Theme.uiFont
+        font.pixelSize: Theme.fontBody
+        font.bold: true
+        text: "00"
     }
 }

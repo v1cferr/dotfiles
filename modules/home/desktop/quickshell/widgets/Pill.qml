@@ -68,7 +68,7 @@ Rectangle {
             text: pill.icon
             color: pill.accent
             font.family: Theme.uiFont
-            font.pixelSize: Theme.fontLabel
+            font.pixelSize: Theme.iconBar
         }
         Text {
             visible: pill.label !== ""
@@ -76,7 +76,7 @@ Rectangle {
             text: pill.label
             color: pill.labelColor
             font.family: Theme.uiFont
-            font.pixelSize: pill.bold ? Theme.fontBody : Theme.fontSmall
+            font.pixelSize: Theme.fontBody
             font.bold: pill.bold
             font.italic: pill.italic
             elide: Text.ElideRight

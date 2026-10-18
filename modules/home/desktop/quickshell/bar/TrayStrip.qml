@@ -80,7 +80,7 @@ RowLayout {
                     strip.host.hoverHint("tray", trayDel, strip.barContent, strip.barWindow, containsMouse);
                 }
                 onClicked: m => {
-                    strip.host.hintVisible = false;
+                    strip.host.hideHint();
                     if (m.button === Qt.LeftButton)
                         trayDel.modelData.activate();
                     else if (m.button === Qt.MiddleButton)

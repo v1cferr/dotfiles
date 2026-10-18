@@ -48,8 +48,7 @@ Scope {
     }
 
     // The clock. timeStr keeps the seconds for the band's big clock (dash/Dashboard.qml); the bar
-    // shows the minute and a short date beside the logo. Weekday and month come from local tables,
-    // not Qt's "ddd"/"MMM", which follow the process locale.
+    // shows HH:mm and dd/MM beside the logo, both numeric, so no locale can change them.
     property string dateStr: ""
     property string timeStr: ""
     property string barTimeStr: ""
@@ -63,8 +62,7 @@ Scope {
         root.dateStr = root.dowAbbr[d.getDay()] + " " + Qt.formatDateTime(d, "dd/MM");
         root.timeStr = Qt.formatDateTime(d, "HH:mm:ss");
         root.barTimeStr = Qt.formatDateTime(d, "HH:mm"); // the same string all minute: no change signal
-        const dow = root.dowAbbr[d.getDay()];
-        root.barDateStr = dow.charAt(0).toUpperCase() + dow.slice(1) + ", " + root.tab(d.getDate(), 2) + " " + root.monAbbr[d.getMonth()];
+        root.barDateStr = Qt.formatDate(d, "dd/MM");
         const dk = Qt.formatDate(d, "yyyy-MM-dd");
         if (dk !== root.calDayKey) {
             root.calDayKey = dk;
@@ -814,6 +812,16 @@ Scope {
     property string hintKey: ""
     property bool hintVisible: false
     property var hintTray: null
+    // A hint waits Theme.tipDelay before it shows, so a sweep across the bar opens nothing; once one is
+    // up, a neighbor takes over at once (the grace keeps it up across the gap between two pills).
+    property bool hintArmed: false
+    property int hintWs: 0 // the workspace a "ws" hint describes
+    function hideHint() {
+        root.hintArmed = false;
+        hintDelay.stop();
+        hintGrace.stop();
+        root.hintVisible = false;
+    }
     function hoverHint(key, item, barContentItem, barWin, on) {
         if (on) {
             if (root.pinned !== "")
@@ -822,48 +830,106 @@ Scope {
             root.panelShown = "";
             root.anchorPopover(item, barContentItem, barWin);
             root.hintKey = key;
-            root.hintVisible = true;
+            root.hintArmed = true;
+            hintGrace.stop();
+            if (!root.hintVisible)
+                hintDelay.restart();
         } else if (root.hintKey === key) {
-            root.hintVisible = false;
+            root.hintArmed = false;
+            hintDelay.stop();
+            hintGrace.restart();
         }
     }
+    Timer {
+        id: hintDelay
+        interval: Theme.tipDelay
+        onTriggered: if (root.hintArmed)
+            root.hintVisible = true
+    }
+    Timer {
+        id: hintGrace
+        interval: 120
+        onTriggered: if (!root.hintArmed)
+            root.hintVisible = false
+    }
+    // Every hint answers three things: what it is (title), how it is now (lines), what a click does
+    // (action). Short; a pill with a panel of its own has no hint, its panel is the answer.
     function hintFor(key) {
         if (key === "win")
             return {
                 title: root.rawTitle,
-                lines: ["The focused window"]
+                lines: ["The focused window"],
+                action: ""
             };
+        if (key === "ws")
+            return root.wsHint(root.hintWs);
         if (key === "spotify")
             return {
                 title: root.spTitle || "Spotify",
-                lines: [root.spArtist, root.spPlaying ? "Playing" : "Paused", "Click: media panel", "Right-click: play/pause", "Scroll: next/previous track"].filter(l => l !== "")
+                lines: [root.spArtist, root.spPlaying ? "Playing" : "Paused"].filter(l => l !== ""),
+                action: "Click for the player · right-click to " + (root.spPlaying ? "pause" : "play") + " · scroll to skip"
             };
         if (key === "ops-ci" || key === "ops-svc" || key === "ops")
             return root.opsHint(key);
         if (key === "vol")
             return {
-                title: "Volume " + Math.round(root.volume * 100) + "%" + (root.sinkMuted ? " (muted)" : ""),
-                lines: [root.sink ? (root.sink.description || root.sink.name || "") : "", "Click: mute", "Right-click: pavucontrol", "Scroll: \u00b15%"].filter(l => l !== "")
+                title: "Volume",
+                lines: [(root.sinkMuted ? "Muted" : Math.round(root.volume * 100) + "%") + (root.sink ? " · " + (root.sink.description || root.sink.name || "") : "")],
+                action: (root.sinkMuted ? "Click to unmute" : "Click to mute") + " · scroll ±5% · right-click for the mixer"
             };
         if (key === "idle")
             return {
-                title: "Idle: " + (root.hypridleOn ? "on" : "off"),
-                lines: [root.hypridleOn ? "hypridle runs its idle timeouts" : "hypridle is stopped: nothing happens on idle", "Click: turn it " + (root.hypridleOn ? "off" : "on")]
+                title: "Idle timeouts",
+                lines: [root.hypridleOn ? "Enabled: the screens lock and sleep on idle" : "Disabled: nothing happens on idle"],
+                action: root.hypridleOn ? "Click to disable" : "Click to enable"
             };
         if (key === "away")
             return {
                 title: "Away screen",
-                lines: ["Black screens and dark LEDs, the PC keeps working", "Click: go away", "Enter: come back"]
+                lines: ["Screens and LEDs dark, the PC keeps working"],
+                action: "Click to go away · Enter comes back"
+            };
+        if (key === "disk")
+            return {
+                title: "Disk " + root.diskPct + "% used",
+                lines: [root.fmtBytes(root.diskFree) + " free of " + root.fmtBytes(root.diskTotal) + (root.diskDev ? " · " + root.diskDev : "")],
+                action: "Click for the CPU and memory panel"
             };
         if (key === "tray" && root.hintTray) {
             const t = root.hintTray;
             const desc = (t.tooltipDescription || "").replace(/<[^>]*>/g, "").trim();
             return {
                 title: t.tooltipTitle || t.title || t.id || "",
-                lines: [desc, "Click: open", "Middle-click: secondary action", "Right-click: menu"].filter(l => l !== "")
+                lines: [desc].filter(l => l !== ""),
+                action: "Click to open · right-click for its menu"
             };
         }
         return null;
+    }
+    // A workspace: its number, how many windows, and which (Hyprland's own toplevels, read on hover).
+    function wsHint(id) {
+        const wins = (Hyprland.toplevels ? Hyprland.toplevels.values : []).filter(t => t.workspace && t.workspace.id === id);
+        const names = wins.map(t => {
+            const o = t.lastIpcObject || {};
+            return o.class || t.title || "";
+        }).filter(n => n !== "");
+        const n = root.wsWindows[id] || wins.length;
+        const lines = [n === 0 ? "Empty" : n + (n === 1 ? " window" : " windows")].concat(names.slice(0, 5));
+        if (names.length > 5)
+            lines.push("+" + (names.length - 5) + " more");
+        if (root.wsUrgent[id])
+            lines.push("A window asks for attention");
+        else if (root.wsActivity[id])
+            lines.push("A window opened here");
+        const active = Object.keys(root.wsActive).some(m => root.wsActive[m] === id);
+        return {
+            title: "Workspace " + root.wsLabel(id),
+            lines: lines,
+            action: active ? "" : "Click to switch"
+        };
+    }
+    function wsLabel(id) {
+        return (id < 10 ? "0" : "") + id;
     }
 
     // The operational alerts' hint: per source, what it is and what a click shows.
@@ -889,10 +955,10 @@ Scope {
             const bad = (Services.meta || []).filter(s => s.state !== "up");
             lines.push((Services.meta || []).length === 0 ? "Services: no data yet" : "Services: " + (bad.length ? bad.map(s => s.label || s.key + " " + s.state).join(", ") : "all up"));
         }
-        lines.push("Click: show it on the band");
         return {
             title: key === "ops-svc" ? "Services" : (key === "ops-ci" ? "CI" : "Operations"),
-            lines: lines
+            lines: lines,
+            action: "Click to show it on the dashboard"
         };
     }
 
@@ -1372,7 +1438,7 @@ Scope {
             panelOpenTimer.restart();
     }
     function togglePanel(key, item, barContentItem, barWin) {
-        root.hintVisible = false;
+        root.hideHint();
         root.vpnPopVisible = false;
         panelOpenTimer.stop();
         // The same pill again closes; the same panel from ANOTHER monitor's bar moves it there.
@@ -1425,7 +1491,7 @@ Scope {
                 root.closePanels();
                 return;
             }
-            root.hintVisible = false;
+            root.hideHint();
             root.vpnPopVisible = false;
             root.popBar = b;
             root.popScreen = scr;
@@ -1444,7 +1510,7 @@ Scope {
     onPanelPopHoveredChanged: root.panelPopHovered ? panelCloseTimer.stop() : panelCloseTimer.restart()
     onPanelOpenChanged: {
         if (root.panelOpen !== "")
-            root.hintVisible = false;
+            root.hideHint();
         if (root.panelOpen === "vpn")
             vpnStatsProc.running = true; // a fresh sample when it opens
     }
@@ -1748,21 +1814,9 @@ Scope {
     property var wsActive: ({})
     property var wsExist: ({})
     property var wsWindows: ({})   // the window count per ws (it detects a new window)
-    property var wsActivity: ({})  // something opened or went urgent on a background ws (the badge)
+    property var wsActivity: ({})  // a window opened on a background ws (the yellow mark)
+    property var wsUrgent: ({})    // a window on a background ws asked for attention (the orange mark)
     property string focusedMon: ""
-    readonly property var wsIcons: ({
-            1: "󰲠",
-            2: "󰲢",
-            3: "󰲤",
-            4: "󰲦",
-            5: "󰲨",
-            6: "󰲪",
-            7: "󰲬",
-            8: "󰲮"
-        })
-    function wsIcon(id) {
-        return root.wsIcons[id] || "󰊠";
-    }
     // The workspaces THIS bar shows: its monitor's own, plus the ORPHANS of a disconnected
     // secondary, which Hyprland gathers onto the primary and which had no button at all.
     function wsModelFor(monName) {
@@ -1810,6 +1864,11 @@ Scope {
             root.wsExist = ex;
             root.wsWindows = win;
             root.wsActivity = act;
+            if (root.wsUrgent[focusedWsId]) {
+                const urg = Object.assign({}, root.wsUrgent);
+                urg[focusedWsId] = false;
+                root.wsUrgent = urg;
+            }
         } catch (e) {}
     }
     Process {
@@ -1819,12 +1878,12 @@ Scope {
             onStreamFinished: root.parseHypr(text)
         }
     }
-    // it marks activity on an urgent ws (the "demands attention" case with no new window, a tab,
-    // say)
+    // An urgent ws (a window that asked for attention, a tab, say) is its OWN mark, apart from a
+    // window that merely opened: one is news, the other a request.
     function markUrgentActivity() {
         const wl = Hyprland.workspaces ? Hyprland.workspaces.values : [];
         const focusedWsId = root.wsActive[root.focusedMon];
-        const act = Object.assign({}, root.wsActivity);
+        const act = Object.assign({}, root.wsUrgent);
         let changed = false;
         for (let i = 0; i < wl.length; i++)
             if (wl[i].urgent === true && wl[i].id !== focusedWsId) {
@@ -1832,7 +1891,7 @@ Scope {
                 changed = true;
             }
         if (changed)
-            root.wsActivity = act;
+            root.wsUrgent = act;
     }
     Connections {
         target: Hyprland
@@ -1949,10 +2008,11 @@ Scope {
             // The logo's compartment sits on the screen's EXACT center: its x comes from the width alone.
             readonly property int centerX: Math.floor(bar.width / 2)
             readonly property int slotX: bar.centerX - Theme.barCenterWidth / 2
-            // The full bar puts the time left of the compartment and the date right of it, each in a FIXED
-            // width measured from a template, so a new minute or day never moves anything.
+            // The full bar puts the time left of the compartment and the date right of it, in two MIRRORED
+            // slots of one width measured from a template ("00:00" and "00/00" are both five mono
+            // columns), so the pair is symmetric about the logo and a new minute or day moves nothing.
             readonly property int clockW: Math.ceil(tmClock.advanceWidth) + 2 * Theme.sp2
-            readonly property int dateW: Math.ceil(tmDate.advanceWidth) + 2 * Theme.sp2
+            readonly property int dateW: bar.clockW
             readonly property int clockX: bar.slotX - Theme.barSlant - Theme.sp1 - bar.clockW
             readonly property int dateX: bar.slotX + Theme.barCenterWidth + Theme.barSlant + Theme.sp1
             // The center group's outer edges, its dividers included; the compact bar's is the compartment.
@@ -2028,12 +2088,6 @@ Scope {
                     font.bold: true
                     text: "00:00"
                 }
-                TextMetrics {
-                    id: tmDate
-                    font.family: Theme.uiFont
-                    font.pixelSize: Theme.fontSmall
-                    text: "Qua, 00 out"
-                }
                 // The time, the logo, the date: placed from the compartment's edges, never centered as a
                 // group, so the logo stays on the screen's center whatever the strings hold.
                 Chevron {
@@ -2062,7 +2116,8 @@ Scope {
                     anchors.verticalCenter: parent.verticalCenter
                     width: bar.dateW
                     label: root.barDateStr
-                    labelColor: Theme.colSubtext
+                    labelColor: Theme.colText
+                    bold: true
                     selected: root.pinned === "cal"
                     onHoveredChanged: root.hoverPanel("cal", logoSlot, barContent, bar, hovered)
                     onClicked: root.togglePanel("cal", logoSlot, barContent, bar)
@@ -2076,14 +2131,14 @@ Scope {
                 TextMetrics {
                     id: tmTitle
                     font.family: Theme.uiFont
-                    font.pixelSize: Theme.fontSmall
+                    font.pixelSize: Theme.fontBody
                     font.italic: true
                     text: root.winTitle
                 }
                 TextMetrics {
                     id: tmMediaIcon
                     font.family: Theme.uiFont
-                    font.pixelSize: Theme.fontLabel
+                    font.pixelSize: Theme.iconBar
                     text: "󰝚"
                 }
                 RowLayout {
@@ -2097,6 +2152,8 @@ Scope {
                         id: wsStrip
                         host: root
                         monitor: bar.modelData ? bar.modelData.name : ""
+                        barContent: barContent
+                        barWindow: bar
                     }
                     Chevron {
                         rising: false
@@ -2128,7 +2185,7 @@ Scope {
                         onHoveredChanged: root.hoverHint("spotify", spPill, barContent, bar, hovered)
                         onClicked: {
                             root.closePanels();
-                            root.hintVisible = false;
+                            root.hideHint();
                             root.anchorPopover(spPill, barContent, bar);
                             root.launch(["qs", "ipc", "call", "mpris", "toggleAt", "" + root.popLeft(360)]);
                         }
@@ -2162,7 +2219,8 @@ Scope {
                     maxWidth: bar.rightRoom - bar.trayW
                 }
 
-                // ── RIGHT, full: weather, the machine, the links, sound, the session; the tray after it ──
+                // ── RIGHT, full: weather, CPU, network, VPN, sound, the session; the tray after it ──
+                // Colors follow the states catalog (Theme.qml): neutral unless a condition is verifiable.
                 RowLayout {
                     id: rightRow
                     visible: !bar.compact
@@ -2175,18 +2233,20 @@ Scope {
                     TextMetrics {
                         id: tmNet
                         font.family: Theme.uiFont
-                        font.pixelSize: Theme.fontSmall
+                        font.pixelSize: Theme.fontBody
                         text: "↓" + root.tab(root.fmtRate(root.netMainRx), 5) + " ↑" + root.tab(root.fmtRate(root.netMainTx), 5)
                     }
                     TextMetrics {
                         id: tmVpn
                         font.family: Theme.uiFont
-                        font.pixelSize: Theme.fontSmall
+                        font.pixelSize: Theme.fontBody
                         text: root.vpnConnected ? root.vpnName : ""
                     }
                     function measure(level) {
                         const sep = Theme.barSlant + 2 * Theme.sp1;
-                        let w = tempPill.implicitWidth + usagePill.implicitWidth + volPill.implicitWidth + idlePill.implicitWidth + awayPill.implicitWidth + 3 * sep + 6 * Theme.sp1;
+                        let w = usagePill.implicitWidth + volPill.implicitWidth + idlePill.implicitWidth + awayPill.implicitWidth + 3 * sep + 5 * Theme.sp1;
+                        if (diskPill.visible)
+                            w += diskPill.implicitWidth + Theme.sp1;
                         // VPN and network change their own labels with the level, so they are measured in full
                         // from text metrics, never from the pills: that is what keeps this free of a loop.
                         w += 2 * (Theme.barControl + Theme.sp1) + (level >= 1 ? 0 : tmNet.advanceWidth + tmVpn.advanceWidth + 2 * Theme.sp1);
@@ -2200,7 +2260,8 @@ Scope {
                         id: weatherPill
                         icon: root.wHas ? root.weatherIcon(root.wCode, root.isDayNow()) : "󰖐"
                         label: root.wHas ? root.wTemp + "°C" : "--°C"
-                        accent: root.wHas ? Theme.colSapphire : Theme.colDim
+                        accent: root.wHas ? Theme.colSubtext : Theme.colUnknown
+                        labelColor: root.wHas ? Theme.colText : Theme.colUnknown
                         selected: root.pinned === "weather"
                         onHoveredChanged: if (root.wHas)
                             root.hoverPanel("weather", weatherPill, barContent, bar, hovered)
@@ -2213,31 +2274,49 @@ Scope {
                         visible: weatherPill.visible
                     }
                     Pill {
-                        id: tempPill
-                        icon: "󰔏"
-                        label: root.tab(root.tempMax, 2) + "°C"
-                        accent: root.tempQuality.color
-                        selected: root.pinned === "temp"
-                        onHoveredChanged: root.hoverPanel("temp", tempPill, barContent, bar, hovered)
-                        onClicked: root.togglePanel("temp", tempPill, barContent, bar)
-                    }
-                    Pill {
+                        // CPU use. A busy CPU is not a fault: it turns to attention only when pegged.
                         id: usagePill
                         icon: "󰓅"
                         label: root.tab(root.cpuPct, 3) + "%"
-                        accent: root.stateColor(root.cpuPct, Theme.colYellow)
+                        accent: root.cpuPct >= 90 ? Theme.colWarn : Theme.colSubtext
+                        labelColor: Theme.colText
                         selected: root.pinned === "usage"
                         onHoveredChanged: root.hoverPanel("usage", usagePill, barContent, bar, hovered)
                         onClicked: root.togglePanel("usage", usagePill, barContent, bar)
                     }
+                    Pill {
+                        // Storage, ONLY when it needs a look: the root filesystem past 90% or under 20 GB
+                        // free (attention), past 95% or under 5 GB (critical). df every 30 s is the source.
+                        id: diskPill
+                        readonly property bool crit: root.diskTotal > 0 && (root.diskPct >= 95 || root.diskFree < 5 * 1073741824)
+                        visible: root.diskTotal > 0 && (diskPill.crit || root.diskPct >= 90 || root.diskFree < 20 * 1073741824)
+                        icon: "󰋊"
+                        label: root.diskPct + "%"
+                        accent: diskPill.crit ? Theme.colCrit : Theme.colWarn
+                        labelColor: diskPill.accent
+                        onHoveredChanged: root.hoverHint("disk", diskPill, barContent, bar, hovered)
+                        onClicked: root.togglePanel("usage", diskPill, barContent, bar)
+                    }
                     Chevron {}
                     Pill {
+                        id: netPill
+                        icon: "󰛳"
+                        label: bar.squeeze >= 1 ? "" : "↓" + root.tab(root.fmtRate(root.netMainRx), 5) + " ↑" + root.tab(root.fmtRate(root.netMainTx), 5)
+                        accent: root.netQuality.color
+                        labelColor: Theme.colText
+                        selected: root.pinned === "net"
+                        onHoveredChanged: root.hoverPanel("net", netPill, barContent, bar, hovered)
+                        onClicked: root.togglePanel("net", netPill, barContent, bar)
+                        onRightClicked: root.launch(["nm-connection-editor"]) // was the left click before the pin
+                    }
+                    Pill {
                         // VPN: click opens the actions popover, HOVER shows the statistics, right click drops everything.
-                        // Information on hover, ACTION on click; it docs/notes/desktop/bar.md
+                        // Off by choice is neutral, never a failure. Information on hover, ACTION on click: docs/notes/desktop/bar.md
                         id: vpnPill
                         icon: "󰦝"
                         label: root.vpnConnected && bar.squeeze < 1 ? root.vpnName : ""
-                        accent: root.vpnConnected ? Theme.colGreen : Theme.colDim
+                        accent: root.vpnConnected ? Theme.colOk : Theme.colUnknown
+                        labelColor: Theme.colText
                         // Tor rides along in its own purple: a VPN and Tor can be up at once.
                         badge: (root.torSystem || root.torBisq) ? "" + (root.torBisq ? " Bisq" : "") : ""
                         badgeColor: Theme.colLavender
@@ -2256,22 +2335,13 @@ Scope {
                         }
                         onRightClicked: root.runVpn("disconnect", "all")
                     }
-                    Pill {
-                        id: netPill
-                        icon: "󰛳"
-                        label: bar.squeeze >= 1 ? "" : "↓" + root.tab(root.fmtRate(root.netMainRx), 5) + " ↑" + root.tab(root.fmtRate(root.netMainTx), 5)
-                        accent: root.netQuality.color
-                        selected: root.pinned === "net"
-                        onHoveredChanged: root.hoverPanel("net", netPill, barContent, bar, hovered)
-                        onClicked: root.togglePanel("net", netPill, barContent, bar)
-                        onRightClicked: root.launch(["nm-connection-editor"]) // was the left click before the pin
-                    }
                     Chevron {}
                     Pill {
                         id: volPill
                         icon: root.volIcon()
                         label: root.tab(Math.round(root.volume * 100), 3) + "%"
-                        accent: root.sinkMuted ? Theme.colDim : Theme.colBlue
+                        accent: root.sinkMuted ? Theme.colUnknown : Theme.colSubtext
+                        labelColor: root.sinkMuted ? Theme.colUnknown : Theme.colText
                         onHoveredChanged: root.hoverHint("vol", volPill, barContent, bar, hovered)
                         onClicked: root.toggleMute()
                         onRightClicked: root.launch(["pavucontrol"])
@@ -2280,9 +2350,10 @@ Scope {
                     }
                     Chevron {}
                     Pill {
+                        // hypridle: on is the normal state; off by choice is neutral, dimmed.
                         id: idlePill
                         icon: root.hypridleIcon
-                        accent: root.hypridleOn ? Theme.colGreen : Theme.colRed
+                        accent: root.hypridleOn ? Theme.colSubtext : Theme.colUnknown
                         onHoveredChanged: root.hoverHint("idle", idlePill, barContent, bar, hovered)
                         onClicked: root.launch(["sh", "-c", "systemctl --user is-active --quiet hypridle.service && systemctl --user stop hypridle.service || systemctl --user start hypridle.service"])
                     }
@@ -2290,10 +2361,10 @@ Scope {
                         // The away screen (Away.qml): it covers the bar too, so this only ever turns it on.
                         id: awayPill
                         icon: "󰽥"
-                        accent: Theme.colLavender
+                        accent: Theme.colSubtext
                         onHoveredChanged: root.hoverHint("away", awayPill, barContent, bar, hovered)
                         onClicked: {
-                            root.hintVisible = false;
+                            root.hideHint();
                             Away.enter();
                         }
                     }

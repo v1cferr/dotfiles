@@ -25,6 +25,12 @@ hl.window_rule({ match = { class = "^(hearthstone\\.exe)$" }, render_unfocused =
 -- Overwatch: opens tiled at 2550x1396 while it renders 2560x1440, and a frozen loop on a hidden
 -- workspace stops answering the server ("lost connection"). Fullscreen plus the same keepalive.
 hl.window_rule({ match = { class = "^(overwatch\\.exe)$" }, fullscreen = true, render_unfocused = true })
+-- Any FULLSCREEN game keeps the cursor on its own monitor: Wine/Bottles (`*.exe`), Proton
+-- (`steam_app_N`) and gamescope. Windowed and the launchers stay free, the LG is one flick away.
+hl.window_rule({
+  match = { class = "^(.*\\.exe|steam_app_\\d+|gamescope)$", fullscreen = true },
+  confine_pointer = true,
+})
 
 -- Flameshot v14: the overlay ASKS for fullscreen and suppressing it left it 17 px low, under the
 -- bar's reserved area. float plus center is for the PICKER only. Every flag: docs/notes/desktop/hypr.md

@@ -52,7 +52,7 @@ title's own width comes from `TextMetrics` and is rounded UP to 64 px steps (its
 so most focus changes do not move the media beside it. The hover hint keeps the full title.
 
 **The right side folds the same way it did, the tray protected.** `rightRow.measure(level)` no longer
-counts the time, the date or the media; it counts the weather, temperature and CPU, VPN and network,
+counts the time, the date or the media; it counts the weather, the CPU (and the disk when shown), network and VPN,
 volume, hypridle and away, and the tray. Level 1 drops the network's numbers and the VPN's name (the
 icons and their panels stay), level 2 the weather. The tray is never folded.
 

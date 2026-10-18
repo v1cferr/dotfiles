@@ -1,0 +1,95 @@
+# THE HOLIDAY SOURCES: once a week it re-reads the official publications the calendar's registry
+# cites and compares each text's fingerprint with the committed lock. It NEVER edits the registry:
+# a change or an unreachable source opens (or updates) one issue for a human to review. On 1
+# December it also opens the yearly audit, before the next year's acts. docs/notes/desktop/calendar.md
+name: holidays
+
+on:
+  schedule:
+    - cron: "23 10 * * 3" # Wednesdays 10:23 UTC: the sources
+    - cron: "41 11 1 12 *" # 1 December: the next year's audit
+  workflow_dispatch: # by hand from the Actions tab
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+
+jobs:
+  sources:
+    name: did an official source change
+    if: github.event.schedule != '41 11 1 12 *'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write # the review issue, the only thing this writes
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      # The runner's own python3, curl and openssl: the script needs nothing else. Exit 2 means
+      # "a human must look"; anything else non-zero is the script's own failure.
+      - name: fingerprint the sources
+        id: check
+        run: |
+          set +e
+          python3 -I modules/home/desktop/calendar/scripts/registry.py check-sources \
+            modules/home/desktop/calendar/registry \
+            --lock modules/home/desktop/calendar/registry/sources.lock.json \
+            --report report.md
+          code=$?
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          [ "$code" -eq 0 ] || [ "$code" -eq 2 ]
+
+      - name: open or update the review issue
+        if: steps.check.outputs.code == '2'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Holiday registry: an official source needs review"
+          {
+            echo "The weekly check found a changed or unreachable source ($RUN_URL)."
+            echo
+            cat report.md
+            echo
+            echo "Nothing was changed. Read the source, update registry/holidays.json if the law"
+            echo "or the act changed, then refresh the lock with \`registry.py check-sources ... --update-lock\`."
+          } > body.md
+          n=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number')
+          if [ -n "$n" ]; then
+            gh issue comment "$n" --body-file body.md
+          else
+            gh issue create --title "$title" --body-file body.md
+          fi
+
+  audit:
+    name: the next year's acts
+    if: github.event.schedule == '41 11 1 12 *'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: open the yearly audit issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          next=$(( $(date -u +%Y) + 1 ))
+          title="Holiday registry: audit the acts for $next"
+          cat > body.md <<EOF
+          Before $next starts, read and record its acts (docs/notes/desktop/calendar.md, "How to"):
+
+          - [ ] Portaria MGI of the federal holidays and optional days for $next (DOU, late December)
+          - [ ] São Carlos: the mayor's portaria of holidays and optional days for $next
+          - [ ] State of São Paulo: the optional days decree for $next, if wanted
+          - [ ] Each recurring optional day: add $next to \`confirmed\`, with its hours
+          - [ ] The bridge days of $next as dated records
+          - [ ] The UN list: \`registry.py import-un\` for $next
+          - [ ] Extend the audit test with the new acts' items
+          EOF
+          gh issue list --repo "$REPO" --state open --search "in:title \"$title\"" --json number --jq '.[0].number' | grep -q . \
+            || gh issue create --repo "$REPO" --title "$title" --body-file body.md

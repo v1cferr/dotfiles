@@ -99,7 +99,11 @@
       "document_id": "institutional page",
       "checked_at": "2026-10-18",
       "check": "read",
-      "watch": true
+      "watch": true,
+      "watch_between": [
+        "Relação de feriados",
+        "Portarias:"
+      ]
     },
     "un-observances": {
       "title": "United Nations — International Days and Weeks",

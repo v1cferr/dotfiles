@@ -277,7 +277,9 @@ def import_un(page: str, year: int, checked: str) -> dict:
 def fetch(url: str) -> bytes:
     """GET with curl. A server that omits its intermediate certificate (São Carlos does) gets it
     fetched from the leaf's AIA field, the way a browser does, and the chain is still verified."""
-    cmd = ["curl", "-sSL", "--fail", "--max-time", "60", "-A", "dotfiles-holiday-registry (+https://github.com/v1cferr/dotfiles)"]
+    # A browser-shaped agent that still names the project: Planalto resets a connection otherwise.
+    ua = "Mozilla/5.0 (compatible; dotfiles-holiday-registry; +https://github.com/v1cferr/dotfiles)"
+    cmd = ["curl", "-sSL", "--fail", "--max-time", "60", "-A", ua]
     r = subprocess.run(cmd + [url], capture_output=True)
     if r.returncode == 0:
         return r.stdout
@@ -308,9 +310,10 @@ def fetch(url: str) -> bytes:
     return r.stdout
 
 
-def fingerprint(body: bytes, url: str) -> str:
+def fingerprint(body: bytes, between: list[str] | None = None) -> str:
     """The TEXT's hash: markup, scripts and whitespace out, so a redesign of the page around the
-    same words does not read as a legal change. A PDF is hashed as bytes."""
+    same words does not read as a legal change; `between` narrows it to the stretch that holds the
+    data (a portal's menus change weekly). A PDF is hashed as bytes."""
     if body[:5] == b"%PDF-":
         return "sha256:" + hashlib.sha256(body).hexdigest()
     t = body.decode("utf-8", errors="replace")
@@ -318,6 +321,11 @@ def fingerprint(body: bytes, url: str) -> str:
     t = re.sub(r"(?s)<!--.*?-->", " ", t)
     t = html.unescape(re.sub(r"<[^>]+>", " ", t))
     t = re.sub(r"\s+", " ", t).strip()
+    if between:
+        i, j = t.find(between[0]), t.find(between[1])
+        if i < 0 or j <= i:
+            return "markers-missing"  # the page changed shape: a human must look
+        t = t[i:j]
     return "sha256:" + hashlib.sha256(t.encode()).hexdigest()
 
 
@@ -329,7 +337,7 @@ def check_sources(reg: dict, lock: dict, today: str) -> tuple[dict, list[dict]]:
         url = s.get("fetch_url", s["url"])
         before = lock.get(sid, {})
         try:
-            fp = fingerprint(fetch(url), url)
+            fp = fingerprint(fetch(url), s.get("watch_between"))
         except Exception as x:  # unreachable: report it, keep the last known fingerprint
             report.append({"source": sid, "state": "unreachable", "detail": str(x)[:300], "url": url})
             continue

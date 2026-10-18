@@ -1,0 +1,38 @@
+{
+  "br-lei-14759-2023": {
+    "fingerprint": "sha256:49695d95e0228f035d27f6e6f9de1ef705439d376d5df4bbc81f88645886dd2f",
+    "seen_at": "2026-10-18"
+  },
+  "br-lei-662-1949": {
+    "fingerprint": "sha256:6219877697e99c268f33dbc7cf1b454a2c8c2f7064fec3641ce63668badc9b1b",
+    "seen_at": "2026-10-18"
+  },
+  "br-lei-6802-1980": {
+    "fingerprint": "sha256:bb6021ad9e67e4721480918f3e5a2841e417b208b7bbf9fa905a547c37ae4445",
+    "seen_at": "2026-10-18"
+  },
+  "br-lei-9093-1995": {
+    "fingerprint": "sha256:71def0862b7c6785730622a41cec8644e4e70bedeb26a66a0663aeb574866455",
+    "seen_at": "2026-10-18"
+  },
+  "br-portaria-mgi-11460-2025": {
+    "fingerprint": "sha256:8b7067975976808a998a8919fddbf08442d8d7b55eaf588604f426ea6a040bf9",
+    "seen_at": "2026-10-18"
+  },
+  "sc-lei-10257-1990": {
+    "fingerprint": "sha256:803c3eac82ec42d7ea2979bc5e0a065f7080acbccb7a87d97bc72164f6538d41",
+    "seen_at": "2026-10-18"
+  },
+  "sc-pagina-feriados": {
+    "fingerprint": "sha256:53cd1e41f5cee3a8823cb7c51a0b1732f0e3882441538ff947ef803a0ec6410d",
+    "seen_at": "2026-10-18"
+  },
+  "sc-portaria-2083-2025": {
+    "fingerprint": "sha256:4efb7de5e8249b67cc35f6e3174a57df81f48c0aca21bbc9b471878381065e36",
+    "seen_at": "2026-10-18"
+  },
+  "un-observances": {
+    "fingerprint": "sha256:691f8792b0bdb8aa8e54e47b03f92da5e82df4680ddede2ca11342973d8af551",
+    "seen_at": "2026-10-18"
+  }
+}

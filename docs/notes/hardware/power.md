@@ -127,6 +127,39 @@ experiment, by hand, with nothing streaming:
 
 Only a measured saving with a clean way back earns it a place in the Eco apply.
 
+## The power log: what is measured, and what is not (19/10/2026)
+
+`modules/nixos/hardware/power-log.nix`. A root timer every minute appends one line to
+`/var/lib/power-log/YYYY-MM.csv`. It reads CUMULATIVE energy counters, so each line is the exact
+average over its interval and no burst between samples is lost. A first sample, a new boot or a
+gap over 10 min writes nothing (there is no interval to report).
+
+| Column | Source | Kind |
+| --- | --- | --- |
+| `cpu_package_w`, `cpu_cores_w` | RAPL `package-0` and `core` (root-only, which is why it runs as root) | measured |
+| `gpu_board_w` | `xe` hwmon `energy1` (`card`): the WHOLE B580 board | measured |
+| `gpu_chip_w` | `xe` hwmon `energy2` (`pkg`): the GPU package only | measured |
+| `measured_w` | CPU package + GPU board | a measured FLOOR, never the PC |
+| `wall_w` | empty: there is no meter | see below |
+| `gpu_render_idle_pct`, `gpu_media_idle_pct` | GT0/GT1 `idle_residency_ms`: the time in RC6 | context |
+| `cpu_busy_pct`, `profile`, `cpu_c`, `gpu_c`, `nvme_c` | `/proc/stat`, ppd, coretemp, `xe` pkg, NVMe | context |
+
+Checked on 19/10/2026 that this board has no other source: no PSU telemetry on USB, no UPS, no
+`/sys/class/power_supply`. The board, RAM, SSD, fans, the PSU's own loss and the monitors have no
+sensor. So the macro view needs ONE outlet meter with a local API (a smart plug with energy
+metering, read over the LAN); its reading becomes `wall_w`, and the unmeasured remainder is
+`wall_w - measured_w`. Until then the log is the micro view and a floor, and says so.
+
+```sh
+power-report        # the last 24 h: averages, kWh, by profile, by hour of the day
+power-report 168    # the last week
+```
+
+A trap for anyone measuring by hand: Claude Code's spinner and streaming output repaint the
+terminal, which wakes the GPU at the monitor's refresh rate. MEASURED 19/10/2026: render idle 0%
+and 50 W on the board while an agent ran its commands, 50% and 43 W a few minutes later. Idle
+readings belong to this log, taken while nobody is at the keyboard.
+
 ## RGB
 
 Not part of any profile. The LEDs are already driven by OpenRGB profiles and the away mode, and

@@ -10,5 +10,6 @@
     ./oom.nix # earlyoom: it kills the biggest process before the out-of-RAM freeze (zram's companion)
     ./audio.nix # PipeWire plus rtkit
     ./power.nix # power-profiles-daemon: the CPU profile behind Balanced/Gaming/Eco
+    ./power-log.nix # a CSV a minute of the measurable draw (CPU, GPU), read by `power-report`
   ];
 }

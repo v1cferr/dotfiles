@@ -993,7 +993,7 @@ Scope {
     }
     Process {
         id: hypridleProc
-        // hypridle runs as a systemd --user service (modules/home/desktop/lockscreen.nix).
+        // hypridle runs as a systemd --user service (modules/home/desktop/lockscreen/default.nix).
         command: ["sh", "-c", "systemctl --user is-active --quiet hypridle.service && echo on || echo off"]
         stdout: StdioCollector {
             onStreamFinished: root.parseHypridle(text)

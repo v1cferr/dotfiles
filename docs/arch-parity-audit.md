@@ -243,7 +243,7 @@ became either a `writeShellApplication` or a systemd timer. The two that did not
 
 One more, cosmetic: the lockscreen's notification COUNT label (`lockscreen_notifs.sh`, reading
 `qs ipc call notif count`) has no counterpart in
-[`modules/home/desktop/lockscreen.nix`](../modules/home/desktop/lockscreen.nix). The clock, date, user, quote
+[`modules/home/desktop/lockscreen/default.nix`](../modules/home/desktop/lockscreen/default.nix). The clock, date, user, quote
 and weather labels are all there, and the quotes got better (a ZenQuotes plus DeepL timer
 replaced the vendored TSV).
 

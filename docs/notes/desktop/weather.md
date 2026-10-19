@@ -2,7 +2,7 @@
 
 `modules/home/desktop/weather.nix` holds the SSOT (rule 11): the coordinates and the WMO code to pt-BR
 table. The two surfaces that draw weather read it, `modules/home/desktop/quickshell/bar/Bar.qml` and the
-lock screen's fetch in `modules/home/desktop/lockscreen.nix`.
+lock screen's fetch in `modules/home/desktop/lockscreen/default.nix`.
 
 ## Why the SSOT exists: they disagreed on screen
 

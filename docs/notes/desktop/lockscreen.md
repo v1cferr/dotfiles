@@ -1,6 +1,6 @@
 # The lock screen: hyprlock plus hypridle
 
-`modules/home/desktop/lockscreen.nix`. Ref: <https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/>
+`modules/home/desktop/lockscreen/default.nix`. Ref: <https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/>
 
 ## The philosophy: no loose `.sh` scripts
 

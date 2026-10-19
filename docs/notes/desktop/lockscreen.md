@@ -67,7 +67,7 @@ of the material.
 | --- | --- | --- |
 | `lockscreen-prepare.service` | after every unlock, 1 min after login, every 6 h; `Nice=19`, idle I/O, 1 GB cap | picks the next photos, renders every image the next lock can need, publishes `ready` |
 | `hyprlock.service` `ExecStartPre` (`lock-start.sh`) | on every lock, about 10 ms | chooses the layout, points the session at images that already exist |
-| `hyprlock.service` | while locked | draws the images and the labels, runs PAM |
+| `hyprlock.service` (`lockscreen-launch`) | while locked | finds the session's compositor, draws the images and the labels, runs PAM; on failure, an urgent push |
 | `lockscreen-media.service` (`media-bridge.sh`) | only inside a Media lock, `BindsTo=hyprlock.service` | rewrites the media card's text on every MPRIS event |
 | `lockscreen-weather.timer` | every 10 min | the weather card's markup, stamped with how long it is valid |
 | `lockscreen-quotes.timer` | daily | the ZenQuotes batch, translated by DeepL, as JSON |
@@ -425,6 +425,37 @@ type mine into a test). A re-created Hyprland output keeps its connector name (D
 the per-monitor widgets match; a headless one in sway did not, so the "new output" row is the
 catch-all, not the ASUS widgets. The real-session procedure is below.
 
+## When the lock cannot reach the compositor
+
+**The incident (found on 19/10/2026, in the journal).** In the boot of 18/10/2026 02:38 the boot lock
+worked, and then EVERY idle lock failed: at 02:57, 03:20, 03:38, 05:23 and 06:01 hypridle asked for
+the lock, `hyprlock.service` started, and hyprlock aborted in its constructor with `Couldn't connect
+to a wayland compositor` (5 core dumps). The screen stayed OPEN each time, and nothing said so. The
+unit takes `WAYLAND_DISPLAY` from the systemd user manager, and between 02:38 and 02:57 that value
+stopped pointing at the live compositor. The root cause was NOT found: a `switch` re-executed the
+user manager at 02:40, but the `switch` of 19/10 did the same and the lock kept working, so that
+alone does not explain it. What it showed is the design flaw: a lock that depends on one inherited
+variable, and fails in silence.
+
+**The fix is in two parts, and neither depends on finding the cause.**
+
+- **`lockscreen-launch` is the unit's `ExecStart`** (`modules/home/desktop/lockscreen/scripts/lock-launch.sh`). Before starting
+  hyprlock it asks `hyprctl instances` for the live Hyprland instances, keeps those whose socket
+  really exists, and locks the OLDEST one: the session's compositor is always older than a nested
+  test one, so a stray variable pointing at a live test compositor does not win either. A wrong
+  value is logged at warning priority with what was locked instead. With no Hyprland listed but a
+  live `WAYLAND_DISPLAY`, it keeps that; with nothing alive, it fails the unit.
+- **`OnFailure=lockscreen-lock-failed.service`** pushes an URGENT notification to the phone through
+  `notify` (ntfy): a bubble on the desktop would be useless, since a failed lock means nobody is
+  there. It also fires if hyprlock crashes mid-lock, which is just as worth knowing.
+
+**Tested.** `test_lock_launch.py` (8 cases: stale, missing, a live nested compositor, a dead
+instance, garbage from hyprctl, nothing alive) runs `--print` only, against fake instances and real
+sockets in a scratch directory, so hyprlock never starts; a test that really launched it would find
+the REAL session through `hyprctl` and lock it. Live and read-only on 19/10/2026, the built launcher
+answered `wayland-1` with `WAYLAND_DISPLAY=wayland-9`, with it unset, and with it right, starting
+nothing; one test push (labelled as a test, low priority) reached the phone through the same `notify`.
+
 ## Security model
 
 - Locking is `hyprlock.service`, one unit, idempotent through `ExecCondition`, outside hypridle's
@@ -463,12 +494,13 @@ power logger does not see the monitors anyway. The Eco hold and the profiles are
 
 ## Testing
 
-`nix build .#checks.x86_64-linux.lockscreen` runs 45 tests in the sandbox, against the spec JSON
+`nix build .#checks.x86_64-linux.lockscreen` runs 53 tests in the sandbox, against the spec JSON
 the desktop really uses (`my.lockscreen.spec`), with only synthetic images:
 
 | Suite | What it pins |
 | --- | --- |
 | `test_idle_gate.py` | the fullscreen-video policy |
+| `test_lock_launch.py` | the lock reaches the session's compositor with a stale, missing or hostile `WAYLAND_DISPLAY` |
 | Geometry | every layout fits its screen; Ambient is Media minus a card; rotation and scale |
 | Selection | orientation grades, empty pools, invalid files, portrait preferred, cover and focus |
 | Glass | the photo untouched outside the cards; AA over a white core; the floor over a dark sky; transmission; determinism |

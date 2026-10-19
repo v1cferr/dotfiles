@@ -225,6 +225,7 @@ in
           pkgs.bash
           pkgs.coreutils
           pkgs.gnused
+          pkgs.jq
         ];
         LOCKSCREEN_SPEC =
           self.nixosConfigurations.ex-b560m-v5.config.home-manager.users.v1cferr.my.lockscreen.spec;

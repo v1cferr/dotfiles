@@ -19,6 +19,7 @@ let
     hyprlock
     jq
     nixos-artwork
+    notify
     playerctl
     procps
     python3
@@ -233,6 +234,19 @@ let
       LOCK_TXT_NO_MEDIA = txt.noMedia;
     };
     text = builtins.readFile ./scripts/media-bridge.sh;
+  };
+
+  # hyprlock on the SESSION's compositor, even when the manager's WAYLAND_DISPLAY went stale
+  # (every idle lock failed that way on 18/10/2026, leaving the screen open).
+  lockLaunch = writeShellApplication {
+    name = "lockscreen-launch";
+    runtimeInputs = [
+      hyprland
+      hyprlock
+      jq
+      coreutils
+    ];
+    text = builtins.readFile ./scripts/lock-launch.sh;
   };
 
   # Binaries at absolute paths, so nothing depends on the PATH (rule 7).
@@ -515,6 +529,8 @@ in
         # With no graphical session there is nothing to lock, and the lock dies with it.
         PartOf = [ "graphical-session.target" ];
         After = [ "graphical-session.target" ];
+        # A lock that fails is a screen left OPEN: say so on the phone, since nobody is at the desk.
+        OnFailure = [ "lockscreen-lock-failed.service" ];
         # The media card's writer lives exactly as long as this lock; Wants, so it can never fail it.
         Wants = [ "lockscreen-media.service" ];
       };
@@ -526,11 +542,20 @@ in
         # The leading `-` makes it BEST EFFORT, and it only links files that already exist: the lock
         # never waits on a render, and never refuses to start over a wallpaper.
         ExecStartPre = "-${lib.getExe lockStart}";
-        ExecStart = "${hyprlock}/bin/hyprlock";
+        ExecStart = lib.getExe lockLaunch;
         # After the unlock, render the NEXT lock's images in the background.
         ExecStopPost = "-${systemctlBin} --user start --no-block lockscreen-prepare.service";
       };
       # NO Install/wantedBy ON PURPOSE: what locks is the click or the idle, never the boot.
+    };
+
+    # The alarm for a failed lock: urgent on the phone (ntfy), with where to look.
+    systemd.user.services.lockscreen-lock-failed = {
+      Unit.Description = "Pushes an alarm when the lock screen fails to start or crashes";
+      Service = {
+        Type = "oneshot";
+        ExecStart = "${lib.getExe notify} -p urgent -T lock \"Lock screen FAILED on %H\" \"hyprlock.service failed; the screen may be UNLOCKED. journalctl --user -u hyprlock\"";
+      };
     };
 
     # The media card's writer: only inside a Media lock, event-driven, gone with the unlock.

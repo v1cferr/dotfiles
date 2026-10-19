@@ -1,8 +1,6 @@
 # shellcheck shell=bash
-# The lock path's only preparation, in milliseconds: choose the layout and point the session at
-# images that ALREADY exist. Nothing here renders. docs/notes/desktop/lockscreen.md#the-cache
-#
-# Environment (set by Nix): LOCK_CACHE (…/lockscreen/v2), LOCK_FALLBACK (the build-time images).
+# The lock path's only step, ~10 ms: pick the layout and link images that ALREADY exist, never render.
+# LOCK_CACHE and LOCK_FALLBACK come from Nix: docs/notes/desktop/lockscreen.md#the-cache
 
 set +e # best effort through and through: a failure here must never cost the lock
 cache="$LOCK_CACHE"
@@ -10,9 +8,8 @@ fallback="$LOCK_FALLBACK"
 session="$cache/session"
 mkdir -p "$session"
 
-# Media when something is PLAYING as the lock begins; it stays for the whole lock session, since
-# switching would mean reloading the background.
-# A `case` and not `| grep -q`: under pipefail an early grep exit fails the pipe through SIGPIPE.
+# Media when something PLAYS as the lock begins, for the whole lock. A `case`, since under pipefail
+# an early `grep -q` exit fails the pipe through SIGPIPE.
 layout=ambient
 case $'\n'"$(timeout 0.5 playerctl --all-players status 2>/dev/null)"$'\n' in
 *$'\n'Playing$'\n'*) layout=media ;;

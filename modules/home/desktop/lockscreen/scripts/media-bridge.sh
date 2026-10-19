@@ -1,9 +1,6 @@
 # shellcheck shell=bash
-# The media card's text, rewritten on every MPRIS change while the screen is locked, never polled.
-# Lives only inside a Media lock (BindsTo hyprlock.service). docs/notes/desktop/lockscreen.md#media
-#
-# Environment (set by Nix): LOCK_CACHE, LOCK_TITLE_COLS, LOCK_ARTIST_COLS, LOCK_COL_SUBTEXT,
-# LOCK_TXT_NO_MEDIA. Needs a UTF-8 locale, so ${#s} counts characters.
+# The media card's text, rewritten on every MPRIS event while a Media lock lasts, never polled.
+# LOCK_* come from Nix; needs UTF-8: docs/notes/desktop/lockscreen.md#media-the-card-and-its-bridge
 
 out="$LOCK_CACHE/session/media"
 sep=$'\x1f' # a unit separator: no sane title holds one, unlike a tab

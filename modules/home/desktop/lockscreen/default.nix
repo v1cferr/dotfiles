@@ -213,6 +213,10 @@ let
     text = builtins.readFile ./scripts/label.sh;
   };
   labelBin = lib.getExe label;
+  # The clock, inlined (its last line), with hyprlang's `##` for every `#`.
+  clockCmd = lib.replaceStrings [ "#" ] [ "##" ] (
+    lib.last (lib.splitString "\n" (lib.removeSuffix "\n" (builtins.readFile ./scripts/clock.sh)))
+  );
 
   mediaBridge = writeShellApplication {
     name = "lockscreen-media-bridge";
@@ -276,9 +280,8 @@ let
     if [ -s "$tmp" ]; then ${coreutils}/bin/mv "$tmp" ${quotesJson}; else ${coreutils}/bin/rm -f "$tmp"; fi
   '';
 
-  # Weather: a 10-min timer turns glance-feed's cached forecast into the card's markup, stamped
-  # with how long it is valid; the label refuses it once stale.
-  # The case arms are GENERATED from the same attrset, so the lock and the bar never drift (rule 16).
+  # Weather: a 10-min timer turns glance-feed's forecast into the card's markup, stamped with how
+  # long it is valid. The case arms are GENERATED from the same attrset, so the lock and the bar never drift (rule 16).
   weatherCase = lib.concatStrings (
     lib.mapAttrsToList (
       code: text: "  ${code}) text=${lib.escapeShellArg text} ;;\n"
@@ -394,9 +397,8 @@ in
           }
         ];
 
-        # The field sits on its pre-rendered glass: a clear inside, a hairline that carries the state.
-        # 0.9.5 has no focus state (the keyboard is always grabbed): neutral at rest, blue while
-        # checking, red on failure, yellow with Caps Lock.
+        # On its pre-rendered glass: a clear inside, a hairline carrying the state. 0.9.5 has no focus
+        # state, so neutral at rest, blue checking, red failed, yellow with Caps Lock.
         input-field = {
           monitor = primary;
           size = "${toString (builtins.elemAt cards.auth.size 0)}, ${toString (builtins.elemAt cards.auth.size 1)}";
@@ -420,12 +422,13 @@ in
         };
 
         label = [
-          # The time, with seconds, from the system clock (chrony/NTS); builtins only.
+          # The time, with seconds, from the system clock (chrony/NTS). 995 and not 1000: hyprlock's
+          # timer runs ~0.7 ms long, and a period over 1 s MUST skip a second (measured in the notes).
           (
             textAt cards.clock 0 (-22)
             // {
               monitor = primary;
-              text = "cmd[update:1000] ${labelBin} clock";
+              text = "cmd[update:995] ${clockCmd}";
               color = c "text" "ff";
               font_size = pt.clock;
               font_family = "${font} Light";

@@ -1,9 +1,6 @@
 # shellcheck shell=bash
-# What hyprlock's labels print, from files other processes wrote. Builtins only, since a label runs
-# every few seconds while locked: no date, no cat, no stat. docs/notes/desktop/lockscreen.md#the-labels
-#
-# Environment (set by Nix): LOCK_CACHE, LOCK_PRIMARY (the main connector), and the LOCK_TXT_*
-# strings below; colors as LOCK_COL_* hexes without '#'.
+# What hyprlock's labels print, from files others wrote; builtins only, since they run while locked.
+# LOCK_* come from Nix: docs/notes/desktop/lockscreen.md#what-the-lock-runs-and-what-it-costs-per-tick
 
 session="$LOCK_CACHE/session"
 
@@ -14,16 +11,6 @@ slurp() {
 }
 
 case "${1:-}" in
-clock)
-  # Within 10 ms of the next second, wait for it: the 1000.5 ms timer would otherwise skip a
-  # second every ~33 min as its phase wraps (measured in the notes). External sleep, only then.
-  us=${EPOCHREALTIME#*.}
-  if ((10#$us > 990000)); then
-    printf -v wait '0.%06d' $((1002000 - 10#$us))
-    sleep "$wait"
-  fi
-  printf '%(%H:%M:%S)T' -1
-  ;;
 date)
   export LC_TIME=pt_BR.UTF-8
   printf -v d '%(%A, %d de %B de %Y  ·  Semana %V)T' -1
@@ -70,7 +57,7 @@ hint)
     "$LOCK_COL_BG" "$LOCK_COL_TEXT" "$LOCK_TXT_HINT"
   ;;
 *)
-  echo "usage: lockscreen-label clock|date|weather|media|quote|hint" >&2
+  echo "usage: lockscreen-label date|weather|media|quote|hint" >&2
   exit 2
   ;;
 esac

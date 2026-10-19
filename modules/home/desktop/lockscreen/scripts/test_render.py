@@ -1,8 +1,5 @@
-"""The renderer and the shell pieces against fixtures: geometry, selection, glass, cache, text, labels.
-
-Run by `nix build .#checks.x86_64-linux.lockscreen`; every image here is synthetic, so no binary
-enters git. LOCKSCREEN_SPEC points at the spec Nix generated, the real one the desktop uses.
-"""
+"""The renderer, the labels and the bridge against synthetic fixtures and the spec Nix generated
+(LOCKSCREEN_SPEC). Run by `nix build .#checks.x86_64-linux.lockscreen`."""
 
 import json
 import os
@@ -394,7 +391,10 @@ class Labels(unittest.TestCase):
         ).stdout
 
     def test_clock_format(self):
-        self.assertRegex(self.run_label("clock"), r"^\d\d:\d\d:\d\d$")
+        # The inlined command, run the way hyprlock runs it: `/bin/sh -c`, which is bash on NixOS.
+        cmd = (HERE / "clock.sh").read_text().rstrip("\n").split("\n")[-1]
+        out = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, check=True).stdout
+        self.assertRegex(out, r"^\d\d:\d\d:\d\d$")
 
     def test_weather_fresh_stale_missing(self):
         import time

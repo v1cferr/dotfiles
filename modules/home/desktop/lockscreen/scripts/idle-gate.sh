@@ -1,13 +1,6 @@
 # shellcheck shell=bash
-# The idle lock's gate. Only FULLSCREEN VIDEO holds it back: a true fullscreen window whose own
-# process owns an MPRIS name in Playing. Audio alone never does, and the hold is capped.
-# Policy and history: docs/notes/desktop/lockscreen.md#media-and-the-idle-lock
-#
-# Inputs come from the environment so the decision can be tested against fixtures:
-#   LOCKGATE_MAX_HOLD   seconds the lock may be held in total (set by Nix)
-#   LOCKGATE_POLL       seconds between checks (set by Nix)
-#   LOCKGATE_FIXTURES   a directory with `fullscreen` and `players` files instead of the live
-#                       session; `--decide` then prints hold/lock once and exits (the tests)
+# The idle lock's gate: only a fullscreen window whose own process PLAYS through MPRIS holds it, capped.
+# LOCKGATE_* come from Nix; LOCKGATE_FIXTURES swaps the session for test files. docs/notes/desktop/lockscreen.md#media-and-the-idle-lock
 
 # The PIDs of the windows in TRUE fullscreen (state 2). Maximized (1) is not a movie.
 fullscreen_pids() {

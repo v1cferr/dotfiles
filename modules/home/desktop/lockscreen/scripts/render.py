@@ -1,11 +1,5 @@
-"""Lockscreen v2: localized glass PRE-RENDERED over static wallpapers, one image per monitor and layout.
-
-Runs in the background (never on the lock path) and publishes a ready set the lock only links to.
-The design, the cache and the measurements: docs/notes/desktop/lockscreen.md
-
-  render.py prepare  --spec SPEC --cache DIR [--seed N]   pick, render, publish `ready`, collect
-  render.py fallback --spec SPEC --out DIR                build-time images from the packaged art
-"""
+"""Lockscreen v2: localized glass PRE-RENDERED over static wallpapers, never on the lock path.
+`prepare` renders and publishes the next set; `fallback` runs at build time. docs/notes/desktop/lockscreen.md"""
 
 import argparse
 import fcntl

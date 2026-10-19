@@ -17,6 +17,11 @@ in
       default = "-47.8909";
       description = "The longitude read by the bar and by the lock screen's fetch (São Carlos/SP).";
     };
+    place = lib.mkOption {
+      type = lib.types.str;
+      default = "São Carlos, SP";
+      description = "The coordinates' name as the lock screen's weather card shows it.";
+    };
     # INMET keys its forecasts and its alerts' municipality lists by the IBGE code, not by name:
     # "São Carlos" alone also matches São Carlos/SC (4216008).
     ibge = lib.mkOption {

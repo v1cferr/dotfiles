@@ -35,8 +35,8 @@ let
 
   # MY OWN photos, as STATE and not config (rule 6). One pool per
   # orientation: a 16:9 frame on the standing panel would keep 56% of its width.
-  poolWide = "${config.home.homeDirectory}/Pictures/wallpapers/wide";
-  poolTall = "${config.home.homeDirectory}/Pictures/wallpapers/tall";
+  poolWide = config.my.wallpaper.pools.wide;
+  poolTall = config.my.wallpaper.pools.tall;
 
   linkDir = "${config.xdg.cacheHome}/wallpaper";
   linkWide = "${linkDir}/wide";
@@ -134,19 +134,35 @@ let
   '';
 in
 {
-  services.hyprpaper.enable = true; # only the service/package; the config's content comes below
+  # The pools as options: the lock screen draws its main monitor's photo from the wide one too.
+  options.my.wallpaper.pools = {
+    wide = lib.mkOption {
+      type = lib.types.str;
+      default = "${config.home.homeDirectory}/Pictures/wallpapers/wide";
+      description = "The landscape photos, with their `<name>.json` captions, for the main monitor.";
+    };
+    tall = lib.mkOption {
+      type = lib.types.str;
+      default = "${config.home.homeDirectory}/Pictures/wallpapers/tall";
+      description = "The portrait photos for the standing monitor.";
+    };
+  };
 
-  home.packages = [ shuffle ]; # `wallpaper-shuffle` by hand, for a new photo without a rebuild
+  config = {
+    services.hyprpaper.enable = true; # only the service/package; the config's content comes below
 
-  xdg.configFile."hypr/hyprpaper.conf".text = ''
-    splash = false
-    ${wallpaperFor osConfig.my.monitors.primary linkWide}
-    ${wallpaperFor osConfig.my.monitors.secondary linkTall}
-  '';
+    home.packages = [ shuffle ]; # `wallpaper-shuffle` by hand, for a new photo without a rebuild
 
-  # The links have to exist BEFORE hyprpaper reads the config, both on a switch and on every start.
-  home.activation.wallpaperShuffle = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    run ${shuffle}/bin/wallpaper-shuffle
-  '';
-  systemd.user.services.hyprpaper.Service.ExecStartPre = "-${shuffle}/bin/wallpaper-shuffle";
+    xdg.configFile."hypr/hyprpaper.conf".text = ''
+      splash = false
+      ${wallpaperFor osConfig.my.monitors.primary linkWide}
+      ${wallpaperFor osConfig.my.monitors.secondary linkTall}
+    '';
+
+    # The links have to exist BEFORE hyprpaper reads the config, both on a switch and on every start.
+    home.activation.wallpaperShuffle = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      run ${shuffle}/bin/wallpaper-shuffle
+    '';
+    systemd.user.services.hyprpaper.Service.ExecStartPre = "-${shuffle}/bin/wallpaper-shuffle";
+  };
 }

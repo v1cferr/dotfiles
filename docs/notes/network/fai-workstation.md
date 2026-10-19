@@ -34,7 +34,7 @@ AND 7, because an old NIC sometimes only listens on 7.
    change can take it away without notice, which is why the relay stays first.
 
 It checks for a `ppp` link first, because with no tunnel there is no route to FAI, and failing
-there with the right cause avoids chasing ghosts. Then it waits up to 120 s for a ping.
+there with the right cause avoids chasing ghosts. Then it pings until a 120 s deadline.
 
 ## `ws`: a shell that outlives the tunnel
 
@@ -118,3 +118,40 @@ answers that.
 **The power-off test (16/10/2026): it WAKES.** With the machine off in S5, `wake-workstation`
 booted it (up at 16:00:52, answering ping about 33 s after the send), so the BIOS keeps the NIC
 powered. All three paths go out together, so which one did the waking is not known.
+
+**It does NOT wake after a power loss (17-19/10/2026).** The machine died abruptly on Saturday
+17/10 at about 14:18 and no magic packet brought it back; FAI's IT had to press the button on Monday.
+The relay was fine: the packet left the fai-vm's `eth0` as an L2 broadcast, but the workstation was
+missing from the fai-vm's ARP table (`FAILED`). `enp7s0` is an add-in AQC113 card whose WoL is armed
+by the `atlantic` driver on a clean shutdown, so after AC loss nothing arms it and only a button
+press (or the BIOS) boots the machine. The fix belongs to whoever runs the machine: **Restore AC
+Power Loss = Power On** in the BIOS (an ASUS TUF Z790-PLUS: Advanced, APM).
+
+## Debugging an outage without root
+
+The workstation runs a full monitoring stack (Prometheus with 1 year of retention, Loki, Grafana,
+blackbox, node and smartctl exporters) whose data survives a reboot, and that is what answered the
+Saturday question:
+
+- **Prometheus is on `127.0.0.1:9091`.** The 9090 there is something else and returns HTML. Query it
+  with a script piped over ssh (`ssh workstation python3 - < script.py`). It also holds the fai-vm's
+  node metrics (remote write), so it shows both machines.
+- **Trust Prometheus over the journal for the time of death.** journald syncs every 5 min, so a hard
+  stop loses the tail: the journal ended at 14:12:46 while every scrape target stopped at 14:18:30.
+- **The kernel log needs sudo** (`sudo journalctl -b -1 -k`). On 17/10 it ended with no panic, MCE or
+  watchdog, and the node metrics showed a healthy machine to the last sample (load 2 to 4, 50 to
+  73 °C, 40 GB free): a power cut, most likely. The fai-vm had rebooted at 13:06 the same afternoon.
+- **SMART without sudo:** `docker exec mon_smartctl_exporter smartctl -a /dev/nvme0` (`smartctl` is
+  not installed on the host). `Unsafe Shutdowns` was 15 on 19/10. It counts ANY unclean stop, a hang
+  plus a held power button too, so it tells clean from unclean, not power cut from hang.
+
+Two side findings from that day, both reported to IT rather than touched (it is not my machine):
+
+- **The 10 GbE card logs PCIe correctable errors**, about 17 per minute (`RxErr 932` within 55 min of
+  boot, `/sys/bus/pci/devices/0000:07:00.0/aer_dev_correctable`, readable without root). That is
+  signal integrity on its PCIe 4.0 x4 link: reseat the card or pin that slot to Gen3. Correctable
+  errors do not stop a machine, so this did not explain the outage.
+- **The FAI SSL-VPN went away on its own** on 19/10 from 08:54 to 09:23: pppd saw `Peer not
+  responding` mid-session, then `200.133.233.101:4433` stopped accepting connections from my network
+  AND from the VPS, while the firewall kept answering ping and the internal blackbox probes stayed
+  green. Nothing on my side causes that; only the SonicWall's own logs can.

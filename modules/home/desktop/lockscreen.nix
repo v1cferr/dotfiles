@@ -360,7 +360,7 @@ in
     # NO Install: hypridle's listener is the only trigger, the same as hyprlock above.
   };
 
-  # hypridle: it ONLY locks after 5 min, and not while media plays. NO dpms-off, which broke
+  # hypridle: after 5 min it locks (not while media plays) and holds Eco. NO dpms-off, which broke
   # moon/Sunshine (see the notes).
   services.hypridle = {
     enable = true;
@@ -382,6 +382,12 @@ in
           on-timeout = "${systemctlBin} --user start lockscreen-idle-lock.service";
           # Back at the keyboard cancels a lock that was still waiting for the media to end.
           on-resume = "${systemctlBin} --user stop lockscreen-idle-lock.service";
+        }
+        # 5 min away: the automatic Eco hold (modules/nixos/hardware/power.nix), skipped under a game.
+        {
+          timeout = 300;
+          on-timeout = "${systemctlBin} --user start power-idle-eco.service";
+          on-resume = "${systemctlBin} --user stop power-idle-eco.service";
         }
       ];
     };

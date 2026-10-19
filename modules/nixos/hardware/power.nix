@@ -1,6 +1,6 @@
 # POWER PROFILES: power-profiles-daemon owns the profile (Balanced/Gaming/Eco); CPU and GPU follow it.
-# Why ppd, the profile map, the GPU half and the rollback: docs/notes/hardware/power.md
-{ pkgs, ... }:
+# Why ppd, the profile map, the automatic holds and the rollback: docs/notes/hardware/power.md
+{ config, pkgs, ... }:
 
 let
   inherit (pkgs)
@@ -10,6 +10,8 @@ let
     power-profiles-daemon
     writeShellApplication
     ;
+  systemctl = "${config.systemd.package}/bin/systemctl";
+  ppctl = "${power-profiles-daemon}/bin/powerprofilesctl";
 
   # The GPU half of a profile, as root: xe's own power profile and its frequency floor per GT.
   gpuApply = writeShellApplication {
@@ -56,6 +58,16 @@ let
     '';
   };
 
+  # Never Eco over a game: any performance hold (GameMode, a game window) skips the idle hold.
+  noPerformanceHold = writeShellApplication {
+    name = "power-no-performance-hold";
+    runtimeInputs = [
+      gnugrep
+      power-profiles-daemon
+    ];
+    # No `grep -q`: an early exit SIGPIPEs powerprofilesctl, and pipefail inverts the answer.
+    text = "! powerprofilesctl list-holds | grep -E 'Profile:[[:space:]]+performance' >/dev/null";
+  };
 in
 {
   # The one owner of intel_pstate's EPP, over D-Bus behind polkit (the active session may switch).
@@ -70,6 +82,24 @@ in
       ExecStart = "${gpuWatch}/bin/power-profile-gpu-watch";
       Restart = "on-failure";
       RestartSec = 5;
+    };
+  };
+
+  # The AUTOMATIC holds, both released by ppd on exit or on a manual switch: Eco while I am away
+  # (started by hypridle), Gaming while a game window is open (started by Hyprland, rules.lua).
+  systemd.user.services.power-idle-eco = {
+    description = "Holds the power-saver profile while the session is idle";
+    partOf = [ "hypridle.service" ]; # a stopped hypridle (the Sunshine guard) ends it too
+    serviceConfig = {
+      ExecCondition = "${noPerformanceHold}/bin/power-no-performance-hold";
+      ExecStart = "${ppctl} launch --profile power-saver --reason Idle --appid idle ${coreutils}/bin/sleep infinity";
+    };
+  };
+  systemd.user.services.game-performance = {
+    description = "Holds the performance power profile while a game window is open";
+    serviceConfig = {
+      ExecStartPre = "-${systemctl} --user stop power-idle-eco.service";
+      ExecStart = "${ppctl} launch --profile performance --reason Game --appid game-window ${coreutils}/bin/sleep infinity";
     };
   };
 }

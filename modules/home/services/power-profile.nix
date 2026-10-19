@@ -13,6 +13,7 @@ let
     coreutils
     curl
     glib
+    gnugrep
     jq
     power-profiles-daemon
     util-linux
@@ -28,6 +29,7 @@ let
     runtimeInputs = [
       coreutils
       curl
+      gnugrep
       jq
       power-profiles-daemon
       util-linux
@@ -44,6 +46,11 @@ let
         power-saver) ss=eco ;;
         *) ss=balanced ;;
       esac
+      # The AUTOMATIC idle Eco leaves SignalSift working: the PC being free is its best hour.
+      # No `grep -q`, the pipefail trap: an early exit SIGPIPEs powerprofilesctl.
+      if [ "$ss" = eco ] && powerprofilesctl list-holds | grep -E 'Application ID:[[:space:]]+idle' >/dev/null; then
+        ss=balanced
+      fi
 
       ss_res=off
       ${lib.optionalString signalsift ''

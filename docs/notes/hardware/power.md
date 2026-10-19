@@ -1,14 +1,41 @@
 # Power profiles: Balanced, Gaming, Eco
 
-`modules/nixos/hardware/power.nix` (the daemon), `modules/nixos/gaming/steam.nix` (GameMode's
-hold), `modules/home/services/power-profile.nix` (the user-side effects). Three operating profiles
+`modules/nixos/hardware/power.nix` (the daemon, the GPU half, the automatic holds),
+`modules/nixos/gaming/steam.nix` (GameMode's hold), `modules/home/services/power-profile.nix`
+(the user-side effects), `modules/home/desktop/hypr/lua/rules.lua` (the game-window trigger). Three operating profiles
 with ONE owner of the state: power-profiles-daemon (ppd). Everything else FOLLOWS it.
 
-| Profile | ppd profile | CPU (intel_pstate EPP) | SignalSift | Ollama |
-| --- | --- | --- | --- | --- |
-| Balanced (the default) | `balanced` | `balance_performance`, the kernel default | `balanced` | its own 5 min keep-alive |
-| Gaming | `performance` | `performance` | `gaming` | idle models unloaded once |
-| Eco | `power-saver` | `power` | `eco` | idle models unloaded once |
+| Profile | ppd profile | CPU (intel_pstate EPP) | GPU (xe, both GTs) | SignalSift | Ollama |
+| --- | --- | --- | --- | --- | --- |
+| Balanced (the default) | `balanced` | `balance_performance`, the kernel default | `base`, the driver's floor | `balanced` | its own 5 min keep-alive |
+| Gaming | `performance` | `performance` | `base`, the driver's floor | `gaming` | idle models unloaded once |
+| Eco | `power-saver` | `power` | `power_saving`, floor at RPn (400 MHz) | `eco` (`balanced` when automatic) | idle models unloaded once |
+
+**Automatic by default** (19/10/2026). I never pick a profile: Balanced is the base, and two
+HOLDS move it, both released by ppd when their unit stops, when it crashes, or when I pick a
+profile by hand (a manual pick always wins).
+
+- **Away → Eco.** hypridle's 5 min listener starts the user unit `power-idle-eco`
+  (`powerprofilesctl launch --profile power-saver --reason Idle --appid idle`), and coming back
+  stops it. It is `PartOf=hypridle.service`, so the Sunshine guard, which stops hypridle while
+  streaming, ends it too. SignalSift stays on `balanced` under THIS Eco: the free PC is when its
+  heavy jobs should run. A manual Eco still pauses it.
+- **A game → Gaming**, by two independent triggers: GameMode (`gamemoderun`, or a Bottles
+  bottle with GameMode on) starts `gamemode-performance`; and Hyprland itself starts
+  `game-performance` while any game WINDOW is mapped (`rules.lua`: `*.exe`, `steam_app_N`,
+  `gamescope`, the confine rule's set, minus `battle.net.exe`, a launcher left open for hours).
+  So a Steam game without the launch option still gets Gaming.
+- **Never Eco over a game.** ppd lets a power-saver hold win over a performance one, so both
+  game units stop `power-idle-eco` before holding, and `power-idle-eco` has an `ExecCondition`
+  that skips it while any performance hold exists (a controller game with no keyboard input
+  goes idle in hypridle's eyes).
+
+The GPU half runs as root (`power-profile-gpu`, the same `gdbus monitor` pattern as the user
+sync): `/sys/class/drm/card0/device/tile0/gt{0,1}/freq0/power_profile` and `min_freq`. MEASURED
+18/10/2026, both GTs ship `power_profile` `base` with a floor of 1200 MHz while RPn is 400; the
+driver's floor is recorded once in `/var/lib/power-profile-gpu/` and restored outside Eco. The
+board's `power1_cap` (210 W) is not touched: a cap only bites under load, and Eco is for light
+use. The monitors are not touched either (see the LG experiment below).
 
 Kept in EVERY profile: the network, the tunnel, Caddy and every published service, Syncthing,
 Dropbox, the backups and their timers, Sunshine, audio. No profile suspends the machine, stops a
@@ -204,5 +231,11 @@ systemctl --user status gamemode-performance
   `power-profile.nix` turns itself off (it is gated on ppd).
 - Only the side effects: delete `./power-profile.nix` from `modules/home/services/default.nix`.
   SignalSift then stays on its config's profile and Ollama on its own keep-alive.
-- Stuck on `performance` after a game (should not happen): `systemctl --user stop
-  gamemode-performance`, or pick a profile by hand, which drops every hold.
+- Only the automatic mode: delete the `power-idle-eco` listener in `lockscreen.nix` and the
+  game-window block in `rules.lua`; GameMode's hold stays.
+- Only the GPU half: delete `systemd.services.power-profile-gpu` in `power.nix`, then
+  `echo base | sudo tee /sys/class/drm/card0/device/tile0/gt*/freq0/power_profile` and write the
+  floors saved in `/var/lib/power-profile-gpu/` back to `min_freq` (or reboot).
+- Stuck on `performance` or `power-saver` (should not happen): `powerprofilesctl list-holds`
+  names the unit; `systemctl --user stop gamemode-performance game-performance power-idle-eco`,
+  or pick a profile by hand, which drops every hold.

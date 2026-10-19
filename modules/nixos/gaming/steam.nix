@@ -33,7 +33,11 @@ in
     description = "Holds the performance power profile while GameMode is active";
     bindsTo = [ "gamemoded.service" ]; # a dead gamemoded never leaves the CPU boosted
     after = [ "gamemoded.service" ];
-    serviceConfig.ExecStart = "${power-profiles-daemon}/bin/powerprofilesctl launch --profile performance --reason GameMode --appid gamemode ${coreutils}/bin/sleep infinity";
+    serviceConfig = {
+      # A game ends the idle Eco hold: ppd would let power-saver win over performance.
+      ExecStartPre = "-${systemctl} --user stop power-idle-eco.service";
+      ExecStart = "${power-profiles-daemon}/bin/powerprofilesctl launch --profile performance --reason GameMode --appid gamemode ${coreutils}/bin/sleep infinity";
+    };
   };
 
   # NT sync primitives in the kernel: Proton 11/GE pick up /dev/ntsync on their own (beats fsync).

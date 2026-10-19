@@ -32,6 +32,34 @@ hl.window_rule({
   confine_pointer = true,
 })
 
+-- The Gaming profile while ANY game window is open, gamemoderun or not: the same set as the rule
+-- above, as a Lua test, since window queries match a class exactly. docs/notes/hardware/power.md
+local function is_game(class)
+  class = (class or ""):lower()
+  if class == "battle.net.exe" then
+    return false -- a launcher left open would hold Gaming for hours
+  end
+  return class:match("%.exe$") ~= nil or class:match("^steam_app_%d+$") ~= nil or class == "gamescope"
+end
+local gaming = nil -- unknown after a reload, so the first check always says it
+local function sync_game_hold()
+  local any = false
+  for _, w in ipairs(hl.get_windows()) do
+    if w.mapped and is_game(w.class) then
+      any = true
+      break
+    end
+  end
+  if any ~= gaming then
+    gaming = any
+    hl.exec_cmd("systemctl --user " .. (any and "start" or "stop") .. " game-performance.service")
+  end
+end
+for _, event in ipairs({ "window.open", "window.class", "window.destroy" }) do
+  hl.on(event, sync_game_hold)
+end
+sync_game_hold()
+
 -- Flameshot v14: the overlay ASKS for fullscreen and suppressing it left it 17 px low, under the
 -- bar's reserved area. float plus center is for the PICKER only. Every flag: docs/notes/desktop/hypr.md
 hl.window_rule({

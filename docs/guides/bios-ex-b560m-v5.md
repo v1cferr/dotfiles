@@ -127,6 +127,22 @@ installs `bios-aspm`:
   copies: same boot left it alone; a fake later `boot_id` restored the backup and cleared the
   file; `confirm` left the guard idle.
 
+- **The watch, while it runs** (`bios-aspm-watch`, a service following `journalctl -k -b -f`,
+  event-driven). It only judges the card's path: the root port `00:01.0`, the bridges `01:00.0`,
+  `02:01.0`, `02:02.0`, the GPU `03:00.0` and its audio `04:00.0`.
+  - An uncorrectable AER error, a `Link Down`, or the `xe` driver declaring the device wedged:
+    it writes the newest checksummed backup back at once and raises a `my.alert`. Nothing
+    changes until the next boot, which then runs without ASPM. To try again, `apply`.
+  - Corrected AER errors on that path: an alert at most every 10 min with the count. The
+    hardware recovered, but a steady stream means L1 is marginal on this link.
+  - An `xe` GT reset or a timed-out job: an alert with the `restore` command. A single one can
+    be a game's fault; repeated ones are the signal to roll back.
+  - At its start, if the bytes were seen applied before and are gone now (an F5, a Clear CMOS,
+    a BIOS update), it says ASPM is off again; the marker is `/var/lib/bios-aspm/enabled`.
+  TESTED 18/10/2026 on copies with fed kernel lines: the second corrected error within 10 min
+  stayed quiet, an error on the NVMe's port `00:06.0` was ignored, a fatal one on `00:01.0`
+  restored the backup and cleared the marker, and a lost-bytes start raised the alert.
+
 It does NOT cover a board that fails to POST, since Linux never runs. Before that jumper: the
 logo screen's `Del` then `F5` (Load Optimized Defaults) resets every setup variable, hidden ones
 included; and with no image from the B580, the board's own HDMI/DP (the i5-11400's iGPU) is

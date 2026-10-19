@@ -40,6 +40,8 @@ let
       backups=/var/backup/bios-aspm
       # The dead man's switch: "<boot_id> <backup dir>", armed by apply, cleared by confirm.
       pending=/var/lib/bios-aspm/pending
+      # Present while the bytes were last seen applied: their silent loss (F5, Clear CMOS) is news.
+      enabled=/var/lib/bios-aspm/enabled
 
       # name|variable|size with the 4-byte header|offset|wanted|allowed values
       fields=(
@@ -171,6 +173,67 @@ let
         rm -f "$pending"
       }
 
+      applied() {
+        for f in "''${fields[@]}"; do
+          IFS='|' read -r _ var _ off want _ <<<"$f"
+          [ "$(byte "$efi/$var" "$off")" = "$want" ] || return 1
+        done
+      }
+
+      # The newest backup whose checksums hold: the state right before the last apply.
+      newest_backup() {
+        found=""
+        for d in "$backups"/*/; do
+          [ -d "$d" ] && (cd "$d" && sha256sum -c --quiet SHA256SUMS >/dev/null 2>&1) && found="''${d%/}"
+        done
+        [ -n "$found" ] && echo "$found"
+      }
+
+      notify() {
+        echo "$1: $2"
+        [ -z "''${ALERT:-}" ] || "$ALERT" bios-aspm dialog-warning "$1" "$2" || true
+      }
+
+      # A failure on the card's path: write the original bytes back (they take effect next boot).
+      fatal() {
+        if applied && dir="$(newest_backup)" && (restore "$dir" >/dev/null); then
+          rm -f "$enabled"
+          notify "bios-aspm: PCIe/GPU failure, ASPM rolled back" "$1 | The original BIOS bytes are back ($dir); reboot to run without ASPM."
+        else
+          notify "bios-aspm: PCIe/GPU failure" "$1 | Nothing rolled back automatically; check 'sudo bios-aspm status'."
+        fi
+      }
+
+      # The kernel log since boot, event by event. The card's path is the root port, its bridges,
+      # the GPU and its HDMI audio; nothing else on the bus is judged here.
+      watch() {
+        install -d -m 0700 "$(dirname "$enabled")"
+        if applied; then
+          touch "$enabled"
+        elif [ -f "$enabled" ]; then
+          rm -f "$enabled"
+          notify "bios-aspm: ASPM is off again" "The BIOS variables lost the ASPM bytes (F5, Clear CMOS or a BIOS update). Run 'sudo bios-aspm status', then 'apply' if the BIOS is still $bios."
+        fi
+        gpu='0000:(00:01\.0|01:00\.0|02:0[12]\.0|03:00\.0|04:00\.0)'
+        bad='(AER: Uncorrected|severity=(Uncorrectable|Fatal)|Link Down|link down)'
+        last=-600
+        corrected=0
+        while IFS= read -r line; do
+          if { [[ $line =~ $gpu ]] && [[ $line =~ $bad ]]; } || [[ $line =~ xe\ 0000:03:00\.0.*wedged ]]; then
+            fatal "$line"
+          elif [[ $line =~ $gpu ]] && [[ $line =~ (AER: Corrected|severity=Corrected) ]]; then
+            corrected=$((corrected + 1))
+            if ((SECONDS - last >= 600)); then
+              notify "bios-aspm: corrected PCIe errors on the GPU link" "$corrected since the last alert, the latest: $line. The hardware recovered; a steady stream means ASPM is not stable here."
+              last=$SECONDS
+              corrected=0
+            fi
+          elif [[ $line =~ xe\ 0000:03:00\.0.*(reset started|Timedout job) ]]; then
+            notify "bios-aspm: the GPU reset itself" "$line | One reset can be a game; repeated ones with ASPM on: 'sudo bios-aspm restore $(newest_backup || echo '<dir>')'."
+          fi
+        done < <(if [ "''${1:-}" = --stdin ]; then cat; else journalctl -k -b -f -o cat; fi)
+      }
+
       restore() {
         [ "$(id -u)" = 0 ] || die "run it with sudo"
         dir="''${1:?usage: bios-aspm restore <backup dir>}"
@@ -190,8 +253,9 @@ let
         arm) arm "''${2:?usage: bios-aspm arm <backup dir>}" ;;
         confirm) confirm ;;
         guard) guard ;;
+        watch) watch "''${2:-}" ;;
         restore) restore "''${2:-}" ;;
-        *) die "usage: bios-aspm [status|apply|confirm|arm <dir>|restore <dir>]" ;;
+        *) die "usage: bios-aspm [status|apply|confirm|arm <dir>|restore <dir>|watch]" ;;
       esac
     '';
   };
@@ -212,6 +276,17 @@ in
   systemd.timers.bios-aspm-guard = {
     wantedBy = [ "timers.target" ];
     timerConfig.OnBootSec = "10min";
+  };
+  # Live: rolls the bytes back on a hard PCIe/GPU failure, warns on soft ones, and notices a reset BIOS.
+  systemd.services.bios-aspm-watch = {
+    description = "Watches the kernel log for PCIe and GPU failures while ASPM is on";
+    wantedBy = [ "multi-user.target" ];
+    environment.ALERT = lib.getExe config.my.alert;
+    serviceConfig = {
+      ExecStart = "${lib.getExe bios-aspm} watch";
+      Restart = "always";
+      RestartSec = 10;
+    };
   };
   systemd.services.bios-aspm-guard-alert = {
     description = "Alarm: the ASPM guard failed";

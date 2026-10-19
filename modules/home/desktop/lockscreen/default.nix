@@ -15,12 +15,13 @@ let
     bash
     coreutils
     curl
+    gnugrep
     hyprlock
     jq
     nixos-artwork
-    playerctl
     procps
     systemd
+    writeShellApplication
     writeShellScript
     ;
 
@@ -77,8 +78,6 @@ let
   systemctlBin = "${systemd}/bin/systemctl";
   shuf = "${coreutils}/bin/shuf";
   catBin = "${coreutils}/bin/cat";
-  sleepBin = "${coreutils}/bin/sleep";
-  playerctlBin = "${playerctl}/bin/playerctl"; # the media gate reads MPRIS through it
 
   # Quote: a daily timer fetches ~50 from ZenQuotes and batch-translates them through DeepL; the
   # lock only runs shuf. The layered fallbacks are in docs/notes/desktop/lockscreen.md
@@ -167,23 +166,23 @@ let
     ${coreutils}/bin/mv "$tmp" ${weatherCache}
   '';
 
-  # The idle lock GATED by media: any MPRIS player in Playing holds it back. It WAITS instead of
-  # skipping, because hypridle fires each timeout ONCE per idle cycle. Reasoning: the notes.
-  idleLock = writeShellScript "lockscreen-idle-lock" ''
-    playing() {
-      # A `case` and not `| grep -q`: with no pipe there is no SIGPIPE and no pipefail trap.
-      case "$(${playerctlBin} --all-players status 2>/dev/null)" in
-      *Playing*) return 0 ;;
-      *) return 1 ;;
-      esac
-    }
-    # Priority 5 (notice) ONCE, so the journal answers "why did the screen not lock" (rule 16).
-    if playing; then
-      echo "<5>media is playing, the idle lock waits for it to stop"
-      while playing; do ${sleepBin} 30; done
-    fi
-    ${loginctlBin} lock-session
-  '';
+  # The idle lock, held back ONLY by fullscreen video and never past a cap; audio no longer
+  # holds it. It WAITS instead of skipping, since hypridle fires each timeout ONCE. See the notes.
+  idleGate = writeShellApplication {
+    name = "lockscreen-idle-gate";
+    runtimeInputs = [
+      osConfig.programs.hyprland.package # hyprctl from the RUNNING compositor
+      jq
+      systemd # busctl and loginctl
+      coreutils
+      gnugrep
+    ];
+    runtimeEnv = {
+      LOCKGATE_MAX_HOLD = toString (3 * 3600); # 3 h: a long film, never a looping video forever
+      LOCKGATE_POLL = "30";
+    };
+    text = builtins.readFile ./scripts/idle-gate.sh;
+  };
 in
 {
   # hyprlock: the lock screen itself.
@@ -343,11 +342,11 @@ in
     # NO Install/wantedBy ON PURPOSE: what locks is the click or the idle, never the boot.
   };
 
-  # The idle lock deferred by media. A unit of its own because it has to OUTLIVE the `on-timeout`
+  # The idle lock deferred by fullscreen video. A unit of its own because it has to OUTLIVE the `on-timeout`
   # that fired it, sometimes by a whole movie, and rule 15 wants one declared owner.
   systemd.user.services.lockscreen-idle-lock = {
     Unit = {
-      Description = "Locks on idle, holding it back while media is playing";
+      Description = "Locks on idle, holding it back while fullscreen video plays";
       # A PENDING lock belongs to the daemon that scheduled it: the Sunshine guard stops hypridle
       # so the stream does not lock, and this has to die with it.
       PartOf = [ "hypridle.service" ];
@@ -355,12 +354,12 @@ in
     };
     Service = {
       Type = "simple"; # it stays alive while media plays and exits right after locking
-      ExecStart = "${idleLock}";
+      ExecStart = lib.getExe idleGate;
     };
     # NO Install: hypridle's listener is the only trigger, the same as hyprlock above.
   };
 
-  # hypridle: after 5 min it locks (not while media plays) and holds Eco. NO dpms-off, which broke
+  # hypridle: after 5 min it locks (not under fullscreen video) and holds Eco. NO dpms-off, which broke
   # moon/Sunshine (see the notes).
   services.hypridle = {
     enable = true;

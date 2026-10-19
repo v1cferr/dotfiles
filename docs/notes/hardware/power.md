@@ -155,6 +155,17 @@ power-report        # the last 24 h: averages, kWh, by profile, by hour of the d
 power-report 168    # the last week
 ```
 
+First readings, 19/10/2026 around noon, the desktop IN USE (Zen, VS Code, Discord, Spotify and an
+agent's terminal): CPU package 38 to 48 W at only 4 to 10% busy, the cores alone 25 to 33 W, the
+GPU board 43 to 48 W. The cores sat at 4.2 GHz and spent 57% of their idle time in C1, against
+18% each in the two deep states, under ~20 800 interrupts/s (14 000 of them local timers, ~1 200
+per core): apps waking the CPU, not a BIOS limit, since `CPU C-states` and `Package C State
+Limit` both read Auto (255) in `CpuSetup` and the deep states are in use. An A/B on the same use:
+three minutes of Eco gave a CPU package of 33 to 35 W (cores 19 to 21 W) at 7.7 to 8.3% busy,
+against 43 W (cores 29 W) for Balanced at 7%, so about 8 to 9 W or ~20% off the CPU, and nothing
+off the GPU, as expected from a profile that only moves EPP. The load drifted between minutes, so
+it is an indication, not a benchmark. The `profile` column is read at the END of each interval.
+
 A trap for anyone measuring by hand: Claude Code's spinner and streaming output repaint the
 terminal, which wakes the GPU at the monitor's refresh rate. MEASURED 19/10/2026: render idle 0%
 and 50 W on the board while an agent ran its commands, 50% and 43 W a few minutes later. Idle

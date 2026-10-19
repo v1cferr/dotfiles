@@ -57,7 +57,11 @@ so the fallback is defensive only.
 ## The failure paths, all measured (22/08/2026)
 
 The lock screen's fetch writes atomically (`.tmp` plus `mv`) and refuses to publish a bad read,
-because an EMPTY label on the lock screen reads as "the lock is broken":
+because an EMPTY label on the lock screen reads as "the lock is broken". Since lockscreen v2
+(19/10/2026) "the previous cache stays" has an expiry: the file carries the hour it is valid for and
+the forecast's age, and the card says "Clima indisponível" once the hour is over or the forecast is
+older than 12 h ([lockscreen.md](lockscreen.md#the-weather-card-and-when-it-refuses-to-show)).
+These rows were measured on the v1 label:
 
 | Input | Result |
 | --- | --- |
@@ -65,8 +69,8 @@ because an EMPTY label on the lock screen reads as "the lock is broken":
 | empty body, malformed JSON | the previous cache stays |
 | `temperature_2m` or `weather_code` null | the previous cache stays |
 | code 42 (not in the table) | `22°C`, with no condition |
-| code 0 | `Céu limpo, 22°C` |
-| -3.4 | `Nevando, -3°C` |
+| code 0 | `Céu limpo, 22°C` (v2: `22°C  Céu limpo`) |
+| -3.4 | `Nevando, -3°C` (v2: `-3°C  Nevando`) |
 
 Two details in that script that are easy to get wrong:
 
@@ -74,6 +78,7 @@ Two details in that script that are easy to get wrong:
   instead of a half-formed label. `weather_code` **0** survives it: only `null` and `false` are
   falsy in jq, so the `select` does not eat a clear sky.
 - **No trailing newline.** hyprlock renders the label raw and a `\n` becomes an empty second line.
+  In v2 the label script strips it, since the file now has three lines.
 
 The case arms are GENERATED from the same attrset the bar reads, so the lock screen and the bar
 cannot drift apart again.

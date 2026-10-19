@@ -10,6 +10,14 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
+- [ ] Verify lockscreen v2 on the REAL session (opened 19/10/2026). Built, tested in the sandbox
+      and in a headless sway, never yet shown on the physical panels: the steps are in
+      [notes/desktop/lockscreen.md](notes/desktop/lockscreen.md#the-first-lock-after-switching-step-by-step).
+      • WHAT ONLY THE DESK CAN SAY: the look on the ASUS and the rotated LG, a correct password,
+        Hyprland (not sway) on a DP unplug while locked, and GPU power while locked.
+      • THE TRAP: keep an SSH session open before the first lock, and never `pkill hyprlock` to
+        get out; relaunching hyprlock from a TTY reattaches to the lock.
+
 - [ ] Refine the Zen theme, by hand and at my own pace (opened 13/10/2026). The minimal one in
       `modules/home/apps/zen/theme.nix` recolors Zen through its own variables; what it does NOT
       do yet is the rest of the old Arch look (`archive/arch-final:zen-browser/userChrome.css`), which needed

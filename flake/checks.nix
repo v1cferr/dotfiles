@@ -211,18 +211,29 @@ in
         touch $out
       '';
 
-  # The lock screen's logic against fixtures: the idle gate's policy (docs/notes/desktop/lockscreen.md).
+  # The lock screen's logic against fixtures: the idle gate, the renderer against the spec the desktop
+  # really uses, the labels, the bridge. docs/notes/desktop/lockscreen.md#testing
   lockscreen =
-    nixpkgs.legacyPackages.${system}.runCommand "check-lockscreen"
+    let
+      pkgs = nixpkgs.legacyPackages.${system};
+      desktop = ../modules/home/desktop;
+    in
+    pkgs.runCommand "check-lockscreen"
       {
-        nativeBuildInputs = with nixpkgs.legacyPackages.${system}; [
-          python3
-          bash
-          coreutils
+        nativeBuildInputs = [
+          (pkgs.python3.withPackages (ps: [ ps.pillow ]))
+          pkgs.bash
+          pkgs.coreutils
+          pkgs.gnused
         ];
+        LOCKSCREEN_SPEC =
+          self.nixosConfigurations.ex-b560m-v5.config.home-manager.users.v1cferr.my.lockscreen.spec;
+        LOCKSCREEN_THEME_QML = "${desktop}/quickshell/Theme.qml";
+        LOCKSCREEN_GLASS_LUA = "${desktop}/hypr/lua/glass.lua";
+        LC_ALL = "C.UTF-8";
       }
       ''
-        cp -r ${../modules/home/desktop/lockscreen/scripts} scripts && chmod -R +w scripts
+        cp -r ${desktop}/lockscreen/scripts scripts && chmod -R +w scripts
         python3 -I -m unittest discover -s scripts
         touch $out
       '';

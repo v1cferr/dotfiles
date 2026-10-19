@@ -90,8 +90,10 @@ let
       # A machine that is on always answers, so waiting would only print a false "IT WOKE UP".
       if [ "$test_mode" = 1 ]; then echo "test mode: sent, check the tcpdump on the workstation"; exit 0; fi
 
+      # A deadline, not a count: each failed ping already eats its own 2s timeout.
       echo -n "waiting for the host to answer (up to 120s)"
-      for _ in $(seq 1 40); do
+      deadline=$((SECONDS + 120))
+      while [ "$SECONDS" -lt "$deadline" ]; do
         if up; then echo; echo "IT WOKE UP: $host is answering."; exit 0; fi
         echo -n "."; sleep 3
       done

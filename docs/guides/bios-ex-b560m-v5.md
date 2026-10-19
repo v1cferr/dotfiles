@@ -138,6 +138,14 @@ exactly positions 86 and 87 of `Setup` and 866 of `SaSetup` (0x51, 0x52 and 0x35
 seek`), so it copies with `cat`; and `grep -q` after `journalctl` under `pipefail` reads a match
 as a miss.
 
+APPLIED 18/10/2026 20:49, rebooted 21:05, confirmed 21:11. After the reboot the FADT line is
+gone, `_OSC` hands the OS `PCIeHotplug PME AER PCIeCapability LTR`, the root port's `LnkCap`
+reads `ASPM L1, Exit Latency L1 <16us` (it read `ASPM not supported`), and both ends of the
+card's link read `ASPM L1 Enabled`. No AER error and no `xe` reset in that boot. The idle watts
+are PENDING: the readings after the reboot (55, 53 and 50 W on the board) were taken with Zen
+redrawing all the time, the GT at 0 to 1% RC6, so they measure a busy GPU, not an idle one. The
+fair reading is the GPU BOARD card with the screen quiet and RC6 high.
+
 On the review date: if ASPM held with no `xe` resets or link errors, the exception stays and
 this paragraph gets the measured watts; if anything regressed, `restore` and drop the module.
 A BIOS update changes the offsets: `bios-aspm` then refuses, and the IFR has to be read again.

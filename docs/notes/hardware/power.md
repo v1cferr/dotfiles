@@ -9,7 +9,7 @@ with ONE owner of the state: power-profiles-daemon (ppd). Everything else FOLLOW
 | --- | --- | --- | --- | --- | --- |
 | Balanced (the default) | `balanced` | `balance_performance`, the kernel default | `base`, the driver's floor | `balanced` | its own 5 min keep-alive |
 | Gaming | `performance` | `performance` | `base`, the driver's floor | `gaming` | idle models unloaded once |
-| Eco | `power-saver` | `power` | `power_saving`, floor at RPn (400 MHz) | `eco` (`balanced` when automatic) | idle models unloaded once |
+| Eco | `power-saver` | `power` | `power_saving`, floor at RPn (400 MHz) | `eco` (`balanced` when automatic) | idle models unloaded once (manual Eco; the automatic one leaves its 5 min keep-alive) |
 
 **Automatic by default** (19/10/2026). I never pick a profile: Balanced is the base, and two
 HOLDS move it, both released by ppd when their unit stops, when it crashes, or when I pick a
@@ -29,6 +29,13 @@ profile by hand (a manual pick always wins).
   game units stop `power-idle-eco` before holding, and `power-idle-eco` has an `ExecCondition`
   that skips it while any performance hold exists (a controller game with no keyboard input
   goes idle in hypridle's eyes).
+
+TESTED live 19/10/2026 by starting the units by hand: `power-idle-eco` gave `power-saver`, both
+GTs `power_saving` at 400 MHz and SignalSift still `balanced`; `game-performance` on top stopped
+it, raised `performance`, put the GPU back on `base` at 1200 MHz and SignalSift on `gaming`; a
+second `power-idle-eco` under the game was skipped by its `ExecCondition`; stopping the game hold
+returned to `balanced` with no hold left. The real triggers (5 min away, a game window) are the
+same units started by hypridle and Hyprland.
 
 The GPU half runs as root (`power-profile-gpu`, the same `gdbus monitor` pattern as the user
 sync): `/sys/class/drm/card0/device/tile0/gt{0,1}/freq0/power_profile` and `min_freq`. MEASURED

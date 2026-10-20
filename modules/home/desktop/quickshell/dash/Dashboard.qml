@@ -124,8 +124,8 @@ PanelWindow {
             }
         }
 
-        // ── The two things to know at a glance: what the machine draws, and what Claude has left. The
-        // time is the bar's; the weather and the music have their own pills and page. ──
+        // ── At a glance: the time and the weather now, then what the machine draws. Claude has its
+        // own page in the rotation, so it is not repeated here. ──
         BentoCard {
             k: dash.k
             x: 0
@@ -138,18 +138,16 @@ PanelWindow {
                 anchors.fill: parent
                 spacing: Theme.sp4
 
-                EnergyPanel {
+                ClockWeather {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.preferredHeight: 1
+                    host: dash.host
                 }
                 Hairline {
                     Layout.fillWidth: true
                 }
-                ClaudePanel {
+                EnergyPanel {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    Layout.preferredHeight: 1
                 }
             }
         }

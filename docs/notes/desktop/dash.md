@@ -62,7 +62,7 @@ sparkline beside its value (`Tile.series`), and the strip became the services ca
 `Horizon.qml` was deleted with it (rule 16).
 
 **The date block, until 20/10/2026.** The band had its own clock (HH:mm:ss and the weekday) until
-energy and Claude took its card ([below](#the-left-card-energy-and-claude-20102026)): the bar
+energy and Claude took its card ([below](#the-left-card-the-time-the-weather-now-and-energy-v51-20102026)): the bar
 already shows the time on every screen, so a second clock was the band repeating the bar.
 `isoWeek()` stays, for the month page's week numbers.
 
@@ -146,7 +146,7 @@ tiles or the services had to be re-sized. That is the incremental half of moving
 transform: the chrome is in pixels now, and moving the content's ~250 sizes too would be a separate
 change with nothing broken to fix.
 
-**What changed in the cells** (17/10/2026; the left card changed again on 20/10). The time grew to its own line (96 design px, about 72 on screen) for
+**What changed in the cells** (17/10/2026; the left card changed again twice on 20/10, see below). The time grew to its own line (96 design px, about 72 on screen) for
 reading from the chair, the weekday and the date under it; today's weather sits centered in the rest
 of the card and the media line at its foot. RAM and TEMP briefly drew their 2-minute history and lost it the same day: they
 barely move, and on the zero-based scale the sparkline keeps on purpose their history was a flat
@@ -444,27 +444,26 @@ threat-monitoring plan in docs/open-items.md, before any router change.
 Until 11/10/2026 every one of those was spelled out, and the page ran past its column over the
 services strip; the trim below is what made it fit.
 
-## The left card: energy and Claude (20/10/2026)
+## The left card: the time, the weather now, and energy (v5.1, 20/10/2026)
 
-The two things worth knowing from the chair that no other surface showed for long: what the machine
-draws, and how much of the Claude limits is left. They replaced the band's clock, today's weather
-and the media line, each of which the bar already shows.
+The left card opens with what the chair asks first and closes with what no other surface keeps in
+view for long:
 
-- **ENERGY** (`EnergyPanel.qml`, data in `EnergyLog.qml`): the MEASURED CPU package plus GPU board
-  watts, their split, the power profile and the GPU's render idle, and the last 30 min as one bar a
-  minute on a zero-based scale (a minute with no sample is a hole, drawn as one). The footnote says
-  "CPU + GPU measured", never the PC's power: the board, RAM, disks, PSU and monitors have no
-  sensor, and a "PC power" number would be invented. It also shows the Eco rest baseline when there
-  is one. The data is `observe json energy` once a minute: the SAME adapter the lock screen's LG
-  card reads (docs/notes/desktop/lockscreen.md), so the two screens cannot disagree, and power-log
-  only writes once a minute anyway.
-- **CLAUDE CODE** (`ClaudePanel.qml`): the session and the week as two rings (`Ring.qml`, one canvas
-  each, repainted only when the value changes) with their resets under them, and the last 24 h
-  beside them. Every number, color and countdown is `ClaudeUsage.qml`'s, the same singleton the
-  page below uses; the panel computes nothing of its own.
+- **The clock and the weather now** (`ClockWeather.qml`): HH:MM:SS at 64 design px and the day
+  spelled out, from the bar's own clock (`timeStr`, no second timer); on the right, the sky's glyph,
+  the temperature and the condition from the bar's forecast (no second Open-Meteo request). The full
+  forecast stays on the WEATHER page of the rotation.
+- **ENERGY** (`EnergyPanel.qml`, data in `EnergyLog.qml`), kept as it was and given the rest of the
+  height: the MEASURED CPU package plus GPU board watts, their split, the power profile and the
+  GPU's render idle, and the last 30 min as one bar a minute on a zero-based scale (a minute with no
+  sample is a hole, drawn as one). The footnote says "CPU + GPU measured", never the PC's power: the
+  board, RAM, disks, PSU and monitors have no sensor. The data is `observe json energy` once a
+  minute: the SAME adapter the lock screen's LG card reads (docs/notes/desktop/lockscreen.md), so
+  the two screens cannot disagree.
 
-Each panel opens with its glyph and title in its own color (energy in peach, Claude in mauve), the
-same pairing the lock screen's LG cards use, and energy splits its total into CPU and GPU bars.
+Claude is NOT in this card any more: the persistent panel repeated the CLAUDE page of the rotation
+(the same numbers twice whenever that page was up), so it left with its `Ring.qml`, and the page
+kept every detail.
 
 Checked in a second Quickshell on a copy of the tree, inside a headless sway (1080x1920), before the
 live tree changed. NOT checked there: HyprGlass (sway has no plugin), so the material on the real
@@ -472,18 +471,14 @@ band is the same as every other card's.
 
 ## The Claude page
 
-Added on 18/10/2026: the FAI account's `/usage`, live, from glance-feed's `claude_usage` document
-(docs/notes/desktop/glance-feed.md) through the `ClaudeUsage.qml` singleton. The six tiles were
-already the machine's vitals, so it is split in two:
-
-- **The Claude panel of the left card** (since 20/10/2026; a one-line summary before it), always
-  in sight: SESSION and WEEK with their meters and "resets in", and the last 24 h as two graphs,
-  the session in peach and the week in mauve, both turning yellow at 75% (or when the server says
-  `warning`) and red at 90%.
-- **The CLAUDE · FAI page** of the rotation (month, WEATHER, NETWORK, CLAUDE, GitHub, FAI):
-  the SESSION (5 h) and WEEKLY meters with "resets in", the per-model shares of the week (Fable),
-  the plan and whether extra usage is on, and the last 24 h as two graphs (week over session),
-  starting at the first sample instead of padding with zeros.
+The FAI account's `/usage`, live, from glance-feed's `claude_usage` document
+(docs/notes/desktop/glance-feed.md) through the `ClaudeUsage.qml` singleton, as the CLAUDE · FAI
+page of the rotation (month, WEATHER, NETWORK, CLAUDE, GitHub, FAI): the SESSION (5 h) and WEEKLY
+meters with "resets in", the per-model shares of the week (Fable), the plan and whether extra usage
+is on, and the WEEK over its last 7 days as one held bar per hour on 0 to 100% (since v5.1; it was
+two 24 h graphs). The series starts at the first sample instead of padding with zeros, and the
+caption says "since" when the feed holds less than 7 days. The session is a current number, not a
+second graph. Both meters turn yellow at 75% (or when the server says `warning`) and red at 90%.
 
 A window whose reset time passed reads 0% until the feed brings the new one: the old number would
 be a lie. The countdowns tick every 30 s on the clock alone, with no re-read.

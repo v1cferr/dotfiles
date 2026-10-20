@@ -367,22 +367,34 @@ PROFILE = {"power-saver": "Eco", "balanced": "Balanced", "performance": "Gaming"
 
 SPARK_PT = 16  # the 24 h strips' size, the body's
 BODY_PT = 14  # the panel's running text: --cols counts columns at this size
-ICON = {"cpu": "󰻠", "ram": "󰍛", "swap": "󰓡", "gpu": "󰢮", "temp": "󰔏", "clock": "󰥔"}
-# Nerd Font circle slices, one eighth each, and the empty circle: a ring a label can draw.
-RINGS = ["󰝦", "󰪞", "󰪟", "󰪠", "󰪡", "󰪢", "󰪣", "󰪤", "󰪥"]
+# The lock's type (default.nix passes the same with --type): families for numbers, icons and charts.
+TYPE = {"display": "Geist", "data": "Geist Mono", "icons": "Material Symbols Rounded", "iconWeight": 300,
+        "chart": "Sparks Dot-line Thick,"}
+# Material Symbols' progress glyphs, by the share they stand for (the font has these six steps).
+RINGS = [(15, "clock_loader_10"), (30, "clock_loader_20"), (50, "clock_loader_40"), (70, "clock_loader_60"),
+         (85, "clock_loader_80"), (100, "clock_loader_90")]
 
 
-def ring_glyph(pct) -> str:
-    """The share as a circle in eighths; nothing read, or nothing used, is the empty circle."""
+def ring_glyph(pct) -> tuple:
+    """(icon, filled) for a share: nothing read or nothing used is the empty circle, a full one the
+    filled circle, and anything between the nearest progress step at or above it."""
     if pct is None or pct <= 0:
-        return RINGS[0]
-    return RINGS[min(8, max(1, int(-(-pct // 12.5))))]
+        return ("circle", False)
+    if pct >= 100:
+        return ("circle", True)
+    return (next(name for top, name in RINGS if pct <= top), False)
+
+
+def icon(name: str, pt: int, color: str, filled: bool = False) -> str:
+    """A Material Symbols ligature at the type's weight: the icon is as thin as the text beside it."""
+    axes = f'@wght={TYPE["iconWeight"]}' + (",FILL=1" if filled else "")
+    return f'<span font_desc="{TYPE["icons"]} {pt} {axes}" foreground="#{color}">{name}</span>'
 
 
 def hero(text: str, pt: int, color: str = "", weight: int = 200) -> str:
-    """The section's number: large and LIGHT, so size and not weight carries it."""
+    """The section's number in the display face: large and LIGHT, so size and not weight carries it."""
     fg = f' foreground="#{color}"' if color else ""
-    return f'<span size="{pt * 1024}" font_weight="{weight}"{fg}>{text}</span>'
+    return f'<span font_family="{TYPE["display"]}" size="{pt * 1024}" font_weight="{weight}"{fg}>{text}</span>'
 
 
 def caps(text: str, color: str) -> str:
@@ -458,11 +470,12 @@ def cards_claude(c: dict, pal: dict, now: float, cols: int = 30) -> dict:
 
     def half(cap, w, tone, hist):
         pct = w["pct"]
+        ring, full = ring_glyph(pct)
         reset = f'reinicia em {until(w["resets"], now)}' if w["resets"] else "sem janela aberta"
         if c["status"] == "stale":
             reset = "DESATUALIZADO · " + reset
         return "\n".join([
-            hero(ring_glyph(pct) + " ", 40, tone, 400) + hero("–" if pct is None else f"{round(pct)}%", 44),
+            icon(ring, 38, tone, full) + "  " + hero("–" if pct is None else f"{round(pct)}%", 44),
             caps(cap, sub),
             meta(reset, sub),
             spark(hist[-cols:], 100, tone, dim),
@@ -556,6 +569,7 @@ def main(argv=None) -> int:
     lp.add_argument("--cols", type=int, default=70, help="the panel's full width, in body columns")
     lp.add_argument("--half", type=int, default=30, help="a half's width, in body columns")
     lp.add_argument("--third", type=int, default=21, help="a third's width, in body columns")
+    lp.add_argument("--type", help="a JSON file with the lock's font families (TYPE)")
     lp.add_argument("--fast", type=int, default=30)
     lp.add_argument("--slow", type=int, default=60)
     lp.add_argument("--once", action="store_true")
@@ -571,6 +585,8 @@ def main(argv=None) -> int:
         json.dump(doc, sys.stdout)
         return 0
     pal = json.loads(Path(a.palette).read_text())
+    if a.type:
+        TYPE.update(json.loads(Path(a.type).read_text()))
     cols = {"full": a.cols, "half": a.half, "third": a.third}
     return lock_loop(Path(a.out), pal, cols, a.once, a.fast, a.slow)
 

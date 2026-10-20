@@ -36,9 +36,8 @@ let
   # Monitors: the SSOT is modules/nixos/desktop/monitors.nix (rule 11).
   inherit (osConfig.my.monitors) primary secondary;
 
-  # Colors from my.theme (palette.nix), the font from my.fonts.ui, the corner from my.theme.rounding.
+  # Colors from my.theme (palette.nix), the corner from my.theme.rounding.
   p = config.my.theme.palette;
-  font = osConfig.my.fonts.ui;
   motionOff = config.my.theme.motion == "off";
   geo = import ./geometry.nix { inherit (config.my.theme) rounding; };
   inherit (geo)
@@ -107,6 +106,7 @@ let
     iconWeight = 300;
     chart = "Sparks Dot-line Thick,"; # the comma ends the family: pango would read "Thick" as a weight
   };
+  typeFile = writeText "lockscreen-type.json" (builtins.toJSON type);
   # An icon by its ligature name, at the type's weight (a variable axis, `@wght`).
   icon =
     size: name:
@@ -299,6 +299,8 @@ let
       LOCK_ARTIST_COLS = toString (colsOf lg.half pt.body);
       LOCK_COL_SUBTEXT = p.subtext;
       LOCK_TXT_NO_MEDIA = txt.noMedia;
+      LOCK_ICON_FONT = "${type.icons} 16 @wght=${toString type.iconWeight}";
+      LOCK_TITLE_FONT = type.display;
     };
     text = builtins.readFile ./scripts/media-bridge.sh;
   };
@@ -368,11 +370,43 @@ let
       code: text: "  ${code}) text=${lib.escapeShellArg text} ;;\n"
     ) config.my.weather.conditions
   );
-  # The glyph per code, day and night, from the same table the bar reads (my.weather.icons).
+  # The sky per WMO code as a Material Symbols name, day and night: the lock's own table in the
+  # lock's icon font, over the SAME codes as my.weather.conditions (the bar keeps its Nerd glyphs).
+  weatherIcons =
+    let
+      same = name: {
+        day = name;
+        night = name;
+      };
+      sky = {
+        day = "partly_cloudy_day";
+        night = "partly_cloudy_night";
+      };
+    in
+    {
+      "0" = {
+        day = "clear_day";
+        night = "clear_night";
+      };
+      "1" = sky;
+      "2" = sky;
+      "3" = same "cloud";
+    }
+    // lib.genAttrs [ "45" "48" ] (_: same "foggy")
+    // lib.genAttrs [ "51" "53" "55" "61" ] (_: same "rainy_light")
+    // lib.genAttrs [ "63" "80" "81" ] (_: same "rainy")
+    // lib.genAttrs [ "65" "82" ] (_: same "rainy_heavy")
+    // lib.genAttrs [ "56" "57" "66" "67" ] (_: same "weather_mix")
+    // lib.genAttrs [ "71" "73" "75" "77" ] (_: same "weather_snowy")
+    // lib.genAttrs [ "85" "86" ] (_: same "cloudy_snowing")
+    // {
+      "95" = same "thunderstorm";
+    }
+    // lib.genAttrs [ "96" "99" ] (_: same "weather_hail");
   weatherIconCase = lib.concatStrings (
     lib.mapAttrsToList (
       code: v: "  ${code}) iday=${lib.escapeShellArg v.day}; inight=${lib.escapeShellArg v.night} ;;\n"
-    ) config.my.weather.icons
+    ) weatherIcons
   );
   # The SAME forecast the bar draws (one fetch per model run, glance-feed), read locally: the
   # current hour's sky and temperature, so the lock and the bar cannot disagree about the minute.
@@ -416,8 +450,8 @@ let
     extra="$day''${day:+''${now:+$'\n'}}$now"
     {
       ${coreutils}/bin/printf '%s\n%s\n' "$valid" "$1"
-      [ -z "$icon" ] || ${coreutils}/bin/printf '<span size="${toString (40 * 1024)}" foreground="#${p.sky}">%s </span>' "$icon"
-      ${coreutils}/bin/printf '<span size="${toString (44 * 1024)}" font_weight="200">%s°</span>' "$3"
+      [ -z "$icon" ] || ${coreutils}/bin/printf '<span font_desc="${type.icons} 40 @wght=${toString type.iconWeight}" foreground="#${p.sky}">%s</span>  ' "$icon"
+      ${coreutils}/bin/printf '<span font_family="${type.display}" size="${toString (44 * 1024)}" font_weight="200">%s°</span>' "$3"
       [ -z "$text" ] || ${coreutils}/bin/printf '\n%s' "$text"
       [ -z "$extra" ] || ${coreutils}/bin/printf '\n<span size="${toString (12 * 1024)}" foreground="#${p.subtext}">%s</span>' "$extra"
     } > "$tmp"
@@ -558,17 +592,17 @@ in
               halign = "left";
               valign = "center";
               text_align = "left";
-              font_family = font;
+              font_family = type.data;
             };
-            # A section's caption: tracked caps in its color, 44 px under the rule above it.
+            # A section's caption: its icon and tracked caps in its color, 44 px under the rule above it.
             caption =
-              s: x: tone: words:
+              s: x: tone: glyph: words:
               lgAt x (lg.y s 44)
               // {
-                text = ''<span letter_spacing="2048">${words}</span>'';
+                text = ''${icon 14 glyph}  <span letter_spacing="2048">${words}</span>'';
                 color = c tone "ff";
                 font_size = pt.title;
-                font_family = "${font} SemiBold";
+                font_family = "${type.data} SemiBold";
               };
             # A section's content, centered in what the caption leaves (from +72 to 32 px off the foot).
             mid = s: 20 + s.h / 2;
@@ -644,26 +678,26 @@ in
 
             # ── LG: what the machine is doing while I am away, on ONE panel. Captions are static; the rest
             # reads files the observe service and the bridges write (no network, no /proc walk here). ──
-            (caption energy lg.left "orange" "󱐋  ENERGIA")
+            (caption energy lg.left "orange" "bolt" "ENERGIA")
             (obs energy lg.left (mid energy) "energy" 60000)
-            (caption claude lg.left "magenta" "✦  CLAUDE CODE")
+            (caption claude lg.left "magenta" "auto_awesome" "CLAUDE CODE")
             (obs claude lg.left (mid claude) "claude-s" 60000)
             (obs claude lg.right (mid claude) "claude-w" 60000)
-            (caption system lg.left "blue" "󰍛  SISTEMA")
+            (caption system lg.left "blue" "memory" "SISTEMA")
             (obs system (third 0) 168 "sys-cpu" 30000)
             (obs system (third 1) 168 "sys-ram" 30000)
             (obs system (third 2) 168 "sys-gpu" 30000)
             (obs system lg.left 344 "apps" 30000)
-            (caption last lg.left "sky" "󰖐  CLIMA  ·  ${config.my.weather.place}")
+            (caption last lg.left "sky" "location_on" "CLIMA  ·  ${config.my.weather.place}")
             (body last lg.left (mid last) "${labelBin} weather" 60000)
             # The right half of the last row exists only in a Media lock: its caption asks the layout.
             (
               lgAt lg.right (lg.y last 44)
               // {
-                text = ''cmd[update:0] ${labelBin} mediacap '<span letter_spacing="2048">󰎈  MÍDIA</span>' '';
+                text = ''cmd[update:0] ${labelBin} mediacap '${icon 14 "music_note"}  <span letter_spacing="2048">MÍDIA</span>' '';
                 color = c "green" "ff";
                 font_size = pt.title;
-                font_family = "${font} SemiBold";
+                font_family = "${type.data} SemiBold";
               }
             )
             (body last lg.right (mid last) "${labelBin} media" 3000)
@@ -673,7 +707,7 @@ in
               text = "cmd[update:5000] ${labelBin} hint";
               color = c "text" "ff";
               font_size = pt.date;
-              font_family = font;
+              font_family = type.display;
               position = "0, -120";
               halign = "center";
               valign = "top";
@@ -740,7 +774,7 @@ in
       };
       Service = {
         Type = "simple";
-        ExecStart = "${lib.getExe observe} lock-loop --out ${session}/obs --palette ${paletteFile} --cols ${toString (colsOf lg.full pt.body)} --half ${toString (colsOf lg.half pt.body)} --third ${toString (colsOf lg.third pt.body)}";
+        ExecStart = "${lib.getExe observe} lock-loop --out ${session}/obs --palette ${paletteFile} --cols ${toString (colsOf lg.full pt.body)} --half ${toString (colsOf lg.half pt.body)} --third ${toString (colsOf lg.third pt.body)} --type ${typeFile}";
         Restart = "on-failure";
         RestartSec = 5;
         Nice = 10;

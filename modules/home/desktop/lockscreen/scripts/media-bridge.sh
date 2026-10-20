@@ -56,16 +56,16 @@ render() {
   if ((best < 0)) || [ -z "$b_title" ] || [ "$b_status" = Stopped ]; then
     markup="<span foreground=\"#$LOCK_COL_SUBTEXT\">$LOCK_TXT_NO_MEDIA</span>"
   else
-    glyph="󰐊"
-    [ "$b_status" = Playing ] || glyph="󰏤"
-    markup="<span size=\"$LOCK_TITLE_SIZE\" font_weight=\"300\">$(fit "$b_title" "$LOCK_TITLE_COLS")</span>"
+    glyph="play_arrow"
+    [ "$b_status" = Playing ] || glyph="pause"
+    markup="<span font_family=\"$LOCK_TITLE_FONT\" size=\"$LOCK_TITLE_SIZE\" font_weight=\"300\">$(fit "$b_title" "$LOCK_TITLE_COLS")</span>"
     if [ -n "$b_artist" ]; then
       markup+=$'\n'"<span foreground=\"#$LOCK_COL_SUBTEXT\">$(fit "$b_artist" "$LOCK_ARTIST_COLS")</span>"
     fi
     # Where it plays and in what state: the player's MPRIS name, never anything it says of itself.
     state="pausado"
     [ "$b_status" = Playing ] && state="tocando"
-    markup+=$'\n'"<span foreground=\"#$LOCK_COL_TONE\">$glyph</span> <span size=\"12288\" foreground=\"#$LOCK_COL_SUBTEXT\">$state · $(fit "${b_name%%.*}" 20)</span>"
+    markup+=$'\n'"<span font_desc=\"$LOCK_ICON_FONT\" foreground=\"#$LOCK_COL_TONE\">$glyph</span> <span size=\"12288\" foreground=\"#$LOCK_COL_SUBTEXT\">$state · $(fit "${b_name%%.*}" 20)</span>"
   fi
   # The bridge's PID first: the label hides the text once this process is gone.
   printf '%s\n%s' "$$" "$markup" > "$out.$$" && mv -f "$out.$$" "$out"

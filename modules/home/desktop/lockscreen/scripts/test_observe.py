@@ -227,15 +227,16 @@ class Markup(unittest.TestCase):
         self.assertIn("sem login", c["claude-s"])
         self.assertEqual(c["claude-w"], "")
 
-    def test_ring_is_eighths_and_empty_without_a_reading(self):
-        r = self.o.RINGS
-        self.assertEqual(self.o.ring_glyph(None), r[0])
-        self.assertEqual(self.o.ring_glyph(0), r[0])
-        self.assertEqual(self.o.ring_glyph(1), r[1])
-        self.assertEqual(self.o.ring_glyph(50), r[4])
-        self.assertEqual(self.o.ring_glyph(51), r[5])
-        self.assertEqual(self.o.ring_glyph(100), r[8])
-        self.assertEqual(self.o.ring_glyph(140), r[8])
+    def test_ring_steps_and_the_empty_and_full_circles(self):
+        g = self.o.ring_glyph
+        self.assertEqual(g(None), ("circle", False))
+        self.assertEqual(g(0), ("circle", False))
+        self.assertEqual(g(1), ("clock_loader_10", False))
+        self.assertEqual(g(50), ("clock_loader_40", False))
+        self.assertEqual(g(51), ("clock_loader_60", False))
+        self.assertEqual(g(99), ("clock_loader_90", False))
+        self.assertEqual(g(100), ("circle", True))
+        self.assertEqual(g(140), ("circle", True))
 
     def test_body_rows_fit_their_columns(self):
         import re

@@ -61,9 +61,10 @@ number, and what the machine is RUNNING was nowhere. So the history moved INTO t
 sparkline beside its value (`Tile.series`), and the strip became the services carousel (below).
 `Horizon.qml` was deleted with it (rule 16).
 
-**The date block, until 20/10/2026.** The band had its own clock (HH:mm:ss and the weekday) until
-energy and Claude took its card ([below](#the-left-card-the-time-the-weather-now-and-energy-v51-20102026)): the bar
-already shows the time on every screen, so a second clock was the band repeating the bar.
+**The date block.** The band's own clock (HH:mm:ss and the weekday) left on 20/10/2026 for energy and
+Claude, on the grounds that the bar already shows the time, and came back the same day in v5.1
+([below](#the-left-card-the-time-the-weather-now-and-energy-v51-20102026)): read from the chair, the
+band's large clock and the weather now were worth more than a Claude panel the rotation already had.
 `isoWeek()` stays, for the month page's week numbers.
 
 **`host` is NOT a required property, and that is not sloppiness.** Quickshell's `Variants` creates

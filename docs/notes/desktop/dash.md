@@ -458,8 +458,13 @@ and the media line, each of which the bar already shows.
   is one. The data is `observe json energy` once a minute: the SAME adapter the lock screen's LG
   card reads (docs/notes/desktop/lockscreen.md), so the two screens cannot disagree, and power-log
   only writes once a minute anyway.
-- **CLAUDE CODE** (`ClaudePanel.qml`): every number, color and countdown is `ClaudeUsage.qml`'s, the
-  same singleton the page below uses; the panel computes nothing of its own.
+- **CLAUDE CODE** (`ClaudePanel.qml`): the session and the week as two rings (`Ring.qml`, one canvas
+  each, repainted only when the value changes) with their resets under them, and the last 24 h
+  beside them. Every number, color and countdown is `ClaudeUsage.qml`'s, the same singleton the
+  page below uses; the panel computes nothing of its own.
+
+Each panel opens with its glyph and title in its own color (energy in peach, Claude in mauve), the
+same pairing the lock screen's LG cards use, and energy splits its total into CPU and GPU bars.
 
 Checked in a second Quickshell on a copy of the tree, inside a headless sway (1080x1920), before the
 live tree changed. NOT checked there: HyprGlass (sway has no plugin), so the material on the real

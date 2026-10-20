@@ -1,5 +1,5 @@
-// CLAUDE CODE, always in sight: the 5 h session and the week, with their resets and the last 24 h.
-// Every number and color is ClaudeUsage.qml's, so this and the page can never disagree. docs/notes/desktop/dash.md
+// CLAUDE CODE, always in sight: the 5 h session and the week as rings with their resets, and the last
+// 24 h. Every number and color is ClaudeUsage.qml's, so this and the page cannot disagree. docs/notes/desktop/dash.md
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -7,57 +7,11 @@ import "root:/widgets"
 
 ColumnLayout {
     id: panel
-    spacing: 6
-
-    component Limit: RowLayout {
-        id: lim
-        property string label
-        property var win
-        property color tone
-        Layout.fillWidth: true
-        spacing: 12
-        Text {
-            Layout.preferredWidth: 78
-            text: lim.label
-            color: Theme.colSubtext
-            font.family: Theme.uiFont
-            font.pixelSize: 13
-            font.bold: true
-            font.letterSpacing: 2
-        }
-        Text {
-            Layout.preferredWidth: 64
-            text: isNaN(lim.win.pct) ? "–" : Math.round(lim.win.pct) + "%"
-            color: ClaudeUsage.color(lim.win, lim.tone)
-            font.family: Theme.uiFont
-            font.pixelSize: 26
-            font.bold: true
-        }
-        Rectangle {
-            Layout.fillWidth: true
-            implicitHeight: 6
-            radius: 3
-            color: Theme.colTrack
-            Rectangle {
-                width: parent.width * Math.max(0, Math.min(1, (lim.win.pct || 0) / 100))
-                height: parent.height
-                radius: parent.radius
-                color: ClaudeUsage.color(lim.win, lim.tone)
-            }
-        }
-        Text {
-            Layout.preferredWidth: 92
-            horizontalAlignment: Text.AlignRight
-            text: lim.win.resets ? ClaudeUsage.left(lim.win.resets) : "–"
-            color: Theme.colDim
-            font.family: Theme.uiFont
-            font.pixelSize: 13
-        }
-    }
+    spacing: 8
 
     Text {
-        text: "CLAUDE CODE  ·  FAI"
-        color: Theme.colSubtext
+        text: "✦  CLAUDE CODE  ·  FAI"
+        color: Theme.colMauve
         font.family: Theme.uiFont
         font.pixelSize: 13
         font.bold: true
@@ -75,35 +29,67 @@ ColumnLayout {
         font.family: Theme.uiFont
         font.pixelSize: 13
     }
-    Limit {
-        visible: ClaudeUsage.ok
-        label: "SESSION"
-        win: ClaudeUsage.session
-        tone: Theme.colPeach
-    }
-    Limit {
-        visible: ClaudeUsage.ok
-        label: "WEEK"
-        win: ClaudeUsage.weekly
-        tone: Theme.colMauve
-    }
-    // The last 24 h, the week over the session, both 0 to 100: held values, never interpolated.
-    Sparkline {
+    RowLayout {
         visible: ClaudeUsage.ok
         Layout.fillWidth: true
         Layout.fillHeight: true
-        Layout.minimumHeight: 18
-        series: ClaudeUsage.series("w")
-        fill: Theme.colMauve
-        placeholder: "collecting…"
-    }
-    Sparkline {
-        visible: ClaudeUsage.ok
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        Layout.minimumHeight: 18
-        series: ClaudeUsage.series("s")
-        fill: Theme.colPeach
-        placeholder: ""
+        spacing: 20
+
+        Repeater {
+            model: [{
+                    win: ClaudeUsage.session,
+                    tone: Theme.colPeach,
+                    cap: "SESSION"
+                }, {
+                    win: ClaudeUsage.weekly,
+                    tone: Theme.colMauve,
+                    cap: "WEEK"
+                }]
+            delegate: ColumnLayout {
+                required property var modelData
+                spacing: 4
+                Ring {
+                    Layout.alignment: Qt.AlignHCenter
+                    value: modelData.win.pct
+                    tone: ClaudeUsage.color(modelData.win, modelData.tone)
+                    caption: modelData.cap
+                }
+                Text {
+                    Layout.alignment: Qt.AlignHCenter
+                    text: modelData.win.resets ? "resets in " + ClaudeUsage.left(modelData.win.resets) : "no window"
+                    color: Theme.colDim
+                    font.family: Theme.uiFont
+                    font.pixelSize: 12
+                }
+            }
+        }
+        // The last 24 h beside the rings: the week over the session, both 0 to 100, held, never interpolated.
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            spacing: 4
+            Text {
+                text: "LAST 24 H"
+                color: Theme.colDim
+                font.family: Theme.uiFont
+                font.pixelSize: 11
+                font.bold: true
+                font.letterSpacing: 3
+            }
+            Sparkline {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                series: ClaudeUsage.series("w")
+                fill: Theme.colMauve
+                placeholder: "collecting…"
+            }
+            Sparkline {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                series: ClaudeUsage.series("s")
+                fill: Theme.colPeach
+                placeholder: ""
+            }
+        }
     }
 }

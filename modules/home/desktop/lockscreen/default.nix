@@ -130,6 +130,13 @@ let
       rim = 0.28; # the optical rim: text-colored light, full at the top edge, gone by mid-height
       sheen = 0.06; # colSheen: text at 0x0f
       hairline = 1;
+      rule = 0.14; # the hairlines between a panel's sections: text at 0x24
+    };
+    # Editorial: text straight over the art, a feathered shade behind it, as dense as AA needs.
+    scrim = {
+      feather = 160;
+      alphaMin = 0.2;
+      alphaMax = 0.94;
     };
     # Glass+: a soft shadow under each card, light from above, and a whisper of lens at the rim.
     shadow = {

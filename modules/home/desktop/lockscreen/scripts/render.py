@@ -17,7 +17,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
 # Part of every cache key: bump it when the pixels this file draws change.
-RENDERER_VERSION = "3.0.0"
+RENDERER_VERSION = "4.0.0"
 
 # A photo is decoded through draft() at the screen's size, so a big one is not a bomb here.
 Image.MAX_IMAGE_PIXELS = 400_000_000
@@ -384,6 +384,13 @@ def glass_card(base: Image.Image, card: dict, spec: dict, seed: int) -> dict:
         body = dither(body, seed)
 
     over = body.convert("RGBA")
+    # Hairline rules splitting one panel into sections, card-relative (x0, y0, x1, y1).
+    if card.get("rules"):
+        layer = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(layer)
+        for rule in card["rules"]:
+            draw.line(tuple(rule), fill=(*text, round(255 * e.get("rule", 0))), width=e["hairline"])
+        over = Image.alpha_composite(over, layer)
     if card.get("edge", True):
         over = Image.alpha_composite(
             over,
@@ -399,6 +406,49 @@ def glass_card(base: Image.Image, card: dict, spec: dict, seed: int) -> dict:
     base.paste(over.convert("RGB"), (x0, t), rounded_mask((w, h), radius))
 
     worst = zone_luminance(base.crop((x0, t, r, b)), zones)
+    return {
+        "id": card["id"],
+        "rect": [x0, t, r, b],
+        "alpha": alpha,
+        "contrast": {
+            k: round(contrast(luminance(rgb(pal[k])), worst), 2)
+            for k in ("text", "subtext", "accent", "red", "dim")
+        },
+    }
+
+
+def scrim_card(base: Image.Image, card: dict, spec: dict, seed: int) -> dict:
+    """Editorial legibility: the photo darkened behind the text by a feathered shade, no surface of
+    its own. The same loop as the glass: denser only as far as the text zones need."""
+    pal, sc = spec["palette"], spec["scrim"]
+    x0, t, r, b = card_rect(card, base.size)
+    w, h = r - x0, b - t
+    # The shape grows past the text box before the blur, so the core is near full strength (~93%).
+    f = card.get("feather", sc["feather"])
+    g, m = f * 3 // 4, f * 3 // 4 + f * 3 // 2
+    box = (max(0, x0 - m), max(0, t - m), min(base.width, r + m), min(base.height, b + m))
+    mask = Image.new("L", (box[2] - box[0], box[3] - box[1]), 0)
+    ImageDraw.Draw(mask).rounded_rectangle(
+        (x0 - g - box[0], t - g - box[1], r + g - box[0] - 1, b + g - box[1] - 1), (min(w, h) + 2 * g) // 2, fill=255
+    )
+    mask = mask.filter(ImageFilter.GaussianBlur(f / 2))
+    region = base.crop(box)
+    shade = Image.new("RGB", region.size, rgb(pal["bg"]))
+    zones = [[x + x0 - box[0], y + t - box[1], zw, zh] for x, y, zw, zh in zones_of(card, (w, h))]
+    targets = card.get("contrast") or spec["contrast"]
+    floor = max(card.get("alpha", sc["alphaMin"]), sc["alphaMin"])
+    ceil = max(floor, sc["alphaMax"])
+    alpha, out = ceil, None
+    for i in range(max(0, round((ceil - floor) / 0.02)) + 1):
+        a = round(min(ceil, floor + 0.02 * i), 2)
+        out = Image.composite(shade, region, mask.point(lambda v, a=a: round(v * a)))
+        worst = zone_luminance(out, zones)
+        if all(contrast(luminance(rgb(pal[k])), worst) >= v * MARGIN for k, v in targets.items()):
+            alpha = a
+            break
+    base.paste(dither(out, seed), box[:2])
+
+    worst = zone_luminance(base.crop(box), zones)
     return {
         "id": card["id"],
         "rect": [x0, t, r, b],
@@ -445,7 +495,8 @@ def place_logo(base: Image.Image, mask: Image.Image, card: dict, lg: dict, color
 
 def compose(src: Image.Image, size: tuple, cards: list, spec: dict, focus: tuple, seed: int, logo=None):
     base = cover(src.convert("RGB"), size, focus)
-    report = [glass_card(base, c, spec, seed + i) for i, c in enumerate(cards)]
+    report = [(scrim_card if c.get("material") == "scrim" else glass_card)(base, c, spec, seed + i)
+              for i, c in enumerate(cards)]
     lg = spec.get("logo") or {}
     for c, rep in zip(cards, report):
         if logo is not None and c["id"] == lg.get("card"):
@@ -478,7 +529,7 @@ def cache_key(digest: str, spec: dict, role: str, layout: str, size: tuple, focu
         "palette": spec["palette"],
         "glass": spec["glass"],
         "edge": spec["edge"],
-        "material": {k: spec.get(k) for k in ("shadow", "highlight", "hue", "refraction", "rimBand")},
+        "material": {k: spec.get(k) for k in ("shadow", "highlight", "hue", "refraction", "rimBand", "scrim")},
         "contrast": spec["contrast"],
         "cards": spec["monitors"][role]["layouts"][layout],
         "size": list(size),

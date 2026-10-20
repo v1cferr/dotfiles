@@ -241,6 +241,38 @@ class Glass(unittest.TestCase):
         self.assertAlmostEqual(c, 10.6, 0)
 
 
+class Editorial(unittest.TestCase):
+    """The scrim (text straight over the art) and the panel's hairline rules, on synthetic cards."""
+
+    SCRIM = {"id": "s", "center": [0, 0], "size": [1000, 400], "radius": 0, "material": "scrim"}
+
+    def test_the_scrim_reaches_aa_over_a_bright_photo(self):
+        with tempfile.TemporaryDirectory() as d:
+            src = Image.open(photo(Path(d) / "b.png", (2560, 1440), bright=True))
+            _, report = R.compose(src, (2560, 1440), [self.SCRIM], SPEC, (0.5, 0.5), 3)
+        for key, need in SPEC["contrast"].items():
+            self.assertGreaterEqual(report[0]["contrast"][key], need, key)
+        self.assertGreater(report[0]["alpha"], SPEC["scrim"]["alphaMin"])
+
+    def test_the_scrim_darkens_without_blurring_and_fades_out(self):
+        src = stripes((2560, 1440))
+        out, _ = R.compose(src, (2560, 1440), [self.SCRIM], SPEC, (0.5, 0.5), 3)
+        # The stripes stay sharp under it: darker, never smeared into one gray.
+        a, b = out.getpixel((1280 - 20, 720)), out.getpixel((1280 + 20, 720))
+        self.assertNotEqual(a, b)
+        self.assertLess(sum(out.getpixel((1282, 720))), sum(src.getpixel((1282, 720))) + 3)
+        # Past the feather the photo is untouched.
+        self.assertEqual(out.getpixel((5, 5)), src.getpixel((5, 5)))
+
+    def test_rules_land_inside_the_panel(self):
+        card = {"id": "p", "center": [0, 0], "size": [800, 600], "radius": 20, "alpha": 0.6,
+                "rules": [[40, 300, 760, 300]]}
+        src = Image.new("RGB", (2560, 1440), (20, 20, 30))
+        out, _ = R.compose(src, (2560, 1440), [card], SPEC, (0.5, 0.5), 3)
+        x, y = 1280, 720  # card-relative y 300 on a card whose top is at 420
+        self.assertGreater(R.luminance(out.getpixel((x, y))), R.luminance(out.getpixel((x, y + 12))))
+
+
 class Profile(unittest.TestCase):
     """The glass numbers mirror the desktop's; a change on one side alone fails here (rule 11)."""
 

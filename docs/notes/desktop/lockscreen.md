@@ -3,22 +3,42 @@
 `modules/home/desktop/lockscreen/default.nix`, with its renderer and scripts in
 `modules/home/desktop/lockscreen/scripts/`. Ref: <https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/>
 
-## Lockscreen v2: Tokyo Night Adaptive Glass (19/10/2026)
+## Lockscreen v3: Tokyo Night Adaptive Glass+ (20/10/2026)
 
 The lock is a continuation of the desktop's glass (see [theme.md](theme.md#tokyo-night-adaptive-glass-the-shells-design-system)):
-the wallpaper stays sharp and visible, and only the regions under a card are frosted, tinted and
-given the same hairline and top sheen as `GlassSurface.qml`. Nothing moves except the fade in and
-out, and the clock.
+the wallpaper stays sharp and visible, and only the regions under a card are frosted. v3 keeps the
+v2 architecture below and changes what each monitor is FOR:
 
 | Monitor | What it shows | What it never shows |
 | --- | --- | --- |
-| ASUS (`my.monitors.primary`) | the time with seconds, the date, the password field and its feedback | weather, media, quotes, the user name |
-| LG (`my.monitors.secondary`) | weather, media (only in a Media lock), one quote per lock | the time, the date, a password field |
+| ASUS (`my.monitors.primary`) | my logo, name and handle; the time with seconds and the date; the password field; the quote of this lock | energy, Claude, the system, weather |
+| LG (`my.monitors.secondary`) | a 2 x 3 grid: energy, Claude Code, system, processes, weather, media | the time, the quote, my name, a password field |
 
-The two LG layouts are one stack anchored low in the portrait frame, quote at the bottom, weather
-over it, media on top. **Ambient** is that stack without its top card, so no label ever changes
-position between layouts, the hyprlock config is ONE file, and the photo keeps the upper half of
-the screen.
+**The ASUS** is four cards on ONE vertical axis, 32 px apart, an 800 px composition
+(`geometry.nix`): identity 384 x 160, clock 768 x 224, the field 480 x 80 (the field IS its card:
+hyprlock draws only its state hairline on the baked glass), quote 960 x 240. The logo is STATE,
+like the photos: `my.lockscreen.logo` points at my SVG outside git, the renderer rasterizes it with
+`rsvg-convert`, crops it to its INK (the emblem sits off-center in its viewBox), fits it into 68 px
+without distortion and recolors it in the palette's `text`. A missing or broken file renders the
+card without it, and the lock never depends on it. Name and handle are labels read from
+`programs.git.settings.user.name` and `home.username`, never typed again.
+
+**The LG** is a 2 x 3 grid from 184 px down, 56 px margins, 24 px gutters, 472 px columns, rows of
+368, 344 and 256 px; the lower 720 px stay photo. **Media** has all six; **Ambient** has no media
+card and widens the weather across the row instead of leaving an empty card. Every card keeps its
+position between the two, so the hyprlock config is still ONE file. What feeds it is in
+[the LG while locked](#the-lg-while-locked).
+
+**The material, Adaptive Glass+.** Three layers, all baked into the image before the lock: a
+frosted core (blur sigma 22, the profile's tint, the bg-to-surface ease, ±1 dither); an optical
+rim (the hairline, plus text-colored light at 16% that is full at the top edge and gone by
+mid-height, and a 6 px band where the frost is magnified by 0.6%, a lens that never touches text);
+and a soft highlight (5% light fading over the top third) with a soft shadow under the card (22%,
+sigma 14, 4 px down) that darkens the photo without blurring it. Each card has its own BASELINE
+opacity (identity 0.66, clock 0.72, field 0.84, quote 0.80, energy and Claude 0.74, system and
+processes 0.78, weather and media 0.72) and rises from there only as far as its TEXT zones need.
+The major radius is the desktop's 12 plus 4. Side by side with v2 on the same photos the difference
+is restrained on purpose: the depth is in the rim and the shadow, not in more blur or more tint.
 
 ### Why the glass is pre-rendered, and not HyprGlass
 
@@ -38,14 +58,15 @@ hyprlock only draws text and the field on top. The material is the desktop's, st
 5. ±1 level of seeded noise, so the 8-bit gradient does not band over a dark blur.
 
 **Adaptive opacity.** The profile gives a RANGE, not a number. For each card the renderer tries
-opacities from the floor up and keeps the first at which every text color on that card keeps WCAG
-AA (4.5, plus a 10% margin) over the brightest 5% of the COMPOSITED pixels, never an assumed
-background. A dark sky gets the floor, clearer than the desktop's 0.70; a bright nebula core gets
-denser glass, only as far as contrast needs. The wallpaper outside the cards is never darkened.
+opacities from the card's baseline up and keeps the first at which every text color on that card
+keeps WCAG AA (4.5, plus a 10% margin) over the brightest 5% of the COMPOSITED pixels inside the
+card's text zones (its inside past 24 px of padding unless the geometry names them), never an
+assumed background. A dark photo keeps the baseline; a bright print gets denser glass, only as far
+as contrast needs. The wallpaper outside the cards is never darkened, only shadowed under them.
 
 | Profile (`my.theme.glass`) | Opacity range | Gradient | Tint | Brightness | Blur sigma |
 | --- | --- | --- | --- | --- | --- |
-| `clear-gradient` (this desk) | 0.62 to 0.90 | bg into surface | 20% | 0.95 | 18 px |
+| `clear-gradient` (this desk) | each card's baseline to 0.92 | bg into surface | 20% | 0.95 | 22 px |
 | `perceptible` | 0.92 to 0.96 | flat | 33% | 0.85 | 24 px |
 | `solid` | 1.0 | none | none | none | none |
 
@@ -340,8 +361,21 @@ bg from a catch-all background instead of undefined pixels.
 
 | Monitor | Pools | Fallback |
 | --- | --- | --- |
-| ASUS | `my.wallpaper.pools.wide` (the Hubble collection, with captions) and `~/Pictures/lockscreen/` | `nixos-artwork` catppuccin-mocha |
+| ASUS | `~/Pictures/lockscreen/wide/`: Japanese landscape prints | `nixos-artwork` catppuccin-mocha |
 | LG | `~/Pictures/lockscreen/` (my portrait art, as in v1) | `nixos-artwork` waterfall, cropped |
+
+**Two collections, on purpose (20/10/2026).** The lock is Japanese and contemplative, the desktop is
+real galaxies, and until v3 the main monitor drew from the desktop's astronomy pool; now each has
+its own. The lock's landscape pool started with 16 prints from The Met's Open Access collection
+(Hiroshige's night rain, moon and snow views, Kyoto, Ōmi), public domain (CC0), chosen through its
+v1.1 search API by `isPublicDomain` and a measured aspect of 1.3 and up; each carries a sidecar with
+title, artist, date, credit line, the Met URL and the license. The desktop's wide pool
+(`my.wallpaper.pools.wide`) got 13 Hubble galaxies picked from ESA/Hubble's Top 100 by the page's
+own object type (M31, M51, M33, M104, M101, M82, M83, M106, NGC 1300, 1512, 1672, 7331, and NGC 5866
+in the tall pool), each with object, distance, constellation, telescope, instrument, filters,
+release date, credit and URL (CC BY 4.0), and the note that their colors are a filter composite.
+Their originals run to 196 Mpx, which hyprpaper would hold whole in RAM, so they were reduced to
+3840 px wide, and the sidecar keeps both resolutions. Downloaded once by hand, never by the lock.
 
 **The images are STATE, not config (rule 6).** No binary enters git, no URL can rot the build, and
 adding one is dropping a file in a folder; nothing is downloaded at lock time, or ever by the lock.
@@ -482,28 +516,38 @@ Measured on 19/10/2026 in the headless sway above (GL rendering, both outputs), 
 | one render of three images (cold) | 1.57 CPU-s once, after an unlock | 161 MB peak |
 | the same render, cache hit | 0.22 CPU-s | 47 MB peak |
 | a render from a 123 Mpx JPEG (Cosmic Cliffs) | 2.7 s wall | 159 MB peak |
+| **v3**, Media layout, labels included (20/10/2026) | 0.80 | 91 MB |
+| v3's observe collector, between rounds | 0.17 | 21 MB |
+| v3's render of the ASUS image (4 cards, logo) | 0.9 s wall, once after an unlock | 159 MB peak |
+| the GPU board, locked (v2, measured on the real desk 19/10/2026, 1 s energy samples) | 37.3 W, render idle 79.5% | |
+| the GPU board, the 3 min before that lock (desktop in use) | 46.0 W, render idle 27.8% | |
 
 Memory is approximate: the machine was 10 GB into swap during the runs, and later readings of the
 idle test locks showed about half their pages swapped out (18 MB resident plus 18 MB in swap), so
 only the readings taken right after a start are listed.
 
 The difference is the LG's two extra cadences (media every 3 s, the hint every 5 s) and the two
-full-screen images; every number is under 1% of ONE core. NOT measured: GPU board power, GPU idle
-residency and wall power with the real monitors, since that needs the real session locked; the
-power logger does not see the monitors anyway. The Eco hold and the profiles are untouched.
+full-screen images; every number is under 1% of ONE core. The GPU board rows were read from the
+`xe` energy counter once a second during a real lock on 19/10/2026 (v2): locked, the board sat at
+37 W with the render engine idle 80% of the time, which is the B580's own floor with both panels on,
+not a cost of the lock. NOT measured: CPU package power while locked (its counter is root's), wall
+power and the monitors (no sensor), and v3 on the real desk. The Eco hold and the profiles are
+untouched.
 
 ## Testing
 
-`nix build .#checks.x86_64-linux.lockscreen` runs 53 tests in the sandbox, against the spec JSON
+`nix build .#checks.x86_64-linux.lockscreen` runs 81 tests in the sandbox, against the spec JSON
 the desktop really uses (`my.lockscreen.spec`), with only synthetic images:
 
 | Suite | What it pins |
 | --- | --- |
 | `test_idle_gate.py` | the fullscreen-video policy |
 | `test_lock_launch.py` | the lock reaches the session's compositor with a stale, missing or hostile `WAYLAND_DISPLAY` |
-| Geometry | every layout fits its screen; Ambient is Media minus a card; rotation and scale |
+| Geometry | every layout fits its screen; the ASUS axis, its 32 px gaps and 800 px height; the LG grid; Ambient widens the weather and moves nothing; whole pixels; rotation and scale |
+| Logo | cropped to its ink, scaled without distortion, centered; missing or broken renders without it |
+| `test_observe.py` | energy units, holes and staleness, the comparable baseline; Claude resets, holes, errors, staleness; process deltas, PID reuse, app names without arguments; escaped markup |
 | Selection | orientation grades, empty pools, invalid files, portrait preferred, cover and focus |
-| Glass | the photo untouched outside the cards; AA over a white core; the floor over a dark sky; transmission; determinism |
+| Glass | the photo untouched outside the cards; AA over a white core; each card's baseline over a dark sky; the rim lit at the top; the shadow darkens without blurring; transmission; determinism |
 | Profile | the numbers still mirror `Theme.qml` and `glass.lua` |
 | Cache | the key moves with every input and only with content; atomic publish; corrupt assets; a full prepare with hits, collection, and a session kept through new sets |
 | Quotes, Labels, Bridge | wrapping, escaping, authors, stale weather, dead bridge, the hint, cut-before-escape |
@@ -511,13 +555,44 @@ the desktop really uses (`my.lockscreen.spec`), with only synthetic images:
 Every capture described in this note is a REAL hyprlock frame from the headless sway (`grim`),
 not a mockup, and not a capture of the real monitors.
 
+## The LG while locked
+
+**One adapter, two screens.** `observe` (`modules/home/desktop/lockscreen/scripts/observe.py`,
+stdlib only) reads the sources that already exist and adds none: power-log's CSV for energy,
+glance-feed's SQLite (read-only) for Claude, `/proc` and `/sys` for the system and the processes.
+Every snapshot carries its source, timestamp, age and status. `observe json energy` is what the
+glance band's energy panel runs too, so the lock and the desktop cannot disagree.
+
+**While locked**, `lockscreen-observe.service` (`BindsTo=hyprlock.service`, so it exists only for
+the lock) writes each card as ready markup every 30 s (system, processes) and 60 s (energy,
+Claude), headed by its PID and the time; the label shows a card only while that writer is alive and
+the card is under 3 minutes old, and "Sem dados no momento" otherwise. No label touches the
+network, walks `/proc` or reloads an image.
+
+| Card | Shows | Rules it keeps |
+| --- | --- | --- |
+| Energy | measured CPU + GPU W, the split, the profile, render idle, CPU busy, 30 min graph, the Eco rest baseline | labeled "CPU + GPU medido", never the PC's power; a missing minute is a dot, never a low bar; the baseline only from comparable minutes (Eco, CPU under 10%, render idle over 70%: 53 W, where Eco alone also caught streams at 72 W) |
+| Claude Code | session and week with resets, two 24 h graphs on 0 to 100% | a passed reset reads empty; values held hour to hour, never interpolated; missing is "–"; expired login and stale cache said in words |
+| System | CPU % (a /proc/stat delta), RAM used and available (from MemAvailable, cache is not "used"), swap, GPU board W, clock and render idle, temperatures | the `xe` driver has no GPU utilization percentage, so none is shown; a GPU in RC6 reads "clock em repouso", not a number |
+| Processes | the top 4 apps by CPU now and by memory | CPU from the tick delta of the same (pid, start time); apps grouped by systemd unit; memory as summed RSS, said so; only the unit or process name, never a command line, path or argument |
+| Weather | São Carlos, temperature, condition, the day's range, rain chance, feels-like | the same freshness rule as before; a missing field drops out |
+| Media | the playing track, artist, player and state | the bridge as before; no album art (it would need image reloads) |
+
+The graphs are Unicode blocks (`▁` to `█`) in JetBrains Mono at 16 pt inside a pango label, with
+absolute sizes: this pango ignores a percentage `size`. That is the reason the cards render as
+TEXT and not as images: an image that changes needs `reload_time`, which is lesson 2 above.
+
 ## Known limitations
 
 - **Unverified on the real session:** the look on the physical panels, Hyprland's handling of a
   DP unplug while locked, a correct password, GPU power. See the procedure below.
 - The clock's lag (0 to 1 s, sweeping) is hyprlock's free-running timer; v2 only removes the
   skipped second.
-- No refraction or specular: the glass is a static image.
+- No live refraction or specular: the glass is a static image, its lens is baked.
+- The LG's numbers move every 30 to 60 s, not live; no graph animates while locked.
+- Process memory is summed RSS, so an app with many processes reads high; PSS would need a read
+  of every process's smaps, which is not worth it every 30 s.
+- The Met scans include the paper margin: on a wide screen some prints show their border.
 - hyprlock has no focus state: the field is neutral at rest and blue only while checking.
 - A media change shows within 3 s, not instantly (the SIGUSR2 path is unsafe in 0.9.5).
 - The date label updates once a minute, so at midnight it may lag by up to 60 s.

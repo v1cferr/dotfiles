@@ -10,11 +10,13 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
-- [ ] Verify lockscreen v2 on the REAL session (opened 19/10/2026). Built, tested in the sandbox
-      and in a headless sway, never yet shown on the physical panels: the steps are in
+- [ ] Verify lockscreen v3 and the new glance band on the REAL desk (opened 19/10/2026, v3 on
+      20/10/2026). v2 was locked and unlocked for real (both layouts, a correct password, the
+      stale-environment fix); v3 was only seen in a headless sway. Steps:
       [notes/desktop/lockscreen.md](notes/desktop/lockscreen.md#the-first-lock-after-switching-step-by-step).
-      • WHAT ONLY THE DESK CAN SAY: the look on the ASUS and the rotated LG, a correct password,
-        Hyprland (not sway) on a DP unplug while locked, and GPU power while locked.
+      • WHAT ONLY THE DESK CAN SAY: the logo and the identity card on the ASUS, the LG grid read from
+        the chair, the band's energy and Claude panels on HyprGlass, Hyprland (not sway) on a DP
+        unplug while locked, and CPU package power while locked (its counter is root's).
       • THE TRAP: keep an SSH session open before the first lock, and never `pkill hyprlock` to
         get out; relaunching hyprlock from a TTY reattaches to the lock.
 

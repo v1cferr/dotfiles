@@ -147,11 +147,11 @@ let
       alphaMin = 0.2;
       alphaMax = 0.94;
     };
-    # Glass+: a soft shadow under each card, light from above, and a whisper of lens at the rim.
+    # Glass+: a soft, deep elevation under the panel, light from above, a whisper of lens at the rim.
     shadow = {
-      alpha = 0.3;
-      sigma = 14;
-      dy = 4;
+      alpha = 0.35;
+      sigma = 36;
+      dy = 14;
     };
     highlight = {
       alpha = 0.09;
@@ -478,11 +478,11 @@ let
 
   # hyprlock colors: "rgba(rrggbbaa)" from a palette key and an alpha byte.
   c = key: a: "rgba(${p.${key}}${a})";
-  # A soft shadow under text: the clearer glass keeps its legibility without a denser tint.
+  # A light shadow under the LG's text: the glass holds AA, this only lifts the type off it.
   shade = {
-    shadow_passes = 2;
-    shadow_size = 4;
-    shadow_color = c "shadow" "cc";
+    shadow_passes = 1;
+    shadow_size = 3;
+    shadow_color = c "shadow" "99";
     shadow_boost = 1.0;
   };
   # A label at a point inside a card, centered on it.
@@ -599,7 +599,7 @@ in
               s: x: tone: glyph: words:
               lgAt x (lg.y s 44)
               // {
-                text = ''${icon 14 glyph}  <span letter_spacing="2048">${words}</span>'';
+                text = ''${icon 16 glyph}  <span letter_spacing="2048">${words}</span>'';
                 color = c tone "ff";
                 font_size = pt.title;
                 font_family = "${type.data} SemiBold";
@@ -694,7 +694,7 @@ in
             (
               lgAt lg.right (lg.y last 44)
               // {
-                text = ''cmd[update:0] ${labelBin} mediacap '${icon 14 "music_note"}  <span letter_spacing="2048">MÍDIA</span>' '';
+                text = ''cmd[update:0] ${labelBin} mediacap '${icon 16 "music_note"}  <span letter_spacing="2048">MÍDIA</span>' '';
                 color = c "green" "ff";
                 font_size = pt.title;
                 font_family = "${type.data} SemiBold";

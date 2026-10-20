@@ -3,8 +3,12 @@
 { rounding }:
 
 let
-  card = id: x: y: w: h: {
-    inherit id;
+  # A lock card is a MAJOR surface: the desktop's corner plus sp1, one step up the concentric scale.
+  radius = rounding + 4;
+
+  # `alpha` is the card's baseline opacity; the renderer raises it only where contrast needs it.
+  card = id: x: y: w: h: alpha: {
+    inherit id alpha radius;
     center = [
       x
       y
@@ -13,27 +17,41 @@ let
       w
       h
     ];
-    radius = rounding;
   };
 
-  # The main monitor: the time and the password, one card and one smaller glass under it.
-  clock = card "clock" 0 (-60) 800 264;
-  auth = card "auth" 0 150 400 56;
+  # ── ASUS, 2560x1440: four cards on one axis, 32 px apart, an 800 px composition ──
+  identity = card "identity" 0 (-312) 384 160 0.66;
+  clock = card "clock" 0 (-88) 768 224 0.72;
+  auth = card "auth" 0 96 480 80 0.84;
+  quote = card "quote" 0 288 960 240 0.8;
 
-  # The standing monitor: a stack anchored low, so the photo keeps the upper half. Ambient is the
-  # same stack without its top card, so no label ever moves between the two layouts.
-  quote = card "quote" 0 520 760 200;
-  weather = card "weather" 0 322 760 148;
-  media = card "media" 0 160 760 128;
+  # ── LG, 1080x1920: a 2 x 3 grid from 184 px down, 56 px margins, 24 px gutters, 472 px columns ──
+  colL = -248; # 56 + 472 / 2 - 540
+  colR = 248;
+  energy = card "energy" colL (-592) 472 368 0.74; # rows: 184 + 368 / 2 - 960
+  claude = card "claude" colR (-592) 472 368 0.74;
+  system = card "system" colL (-212) 472 344 0.78; # 184 + 368 + 24 + 344 / 2 - 960
+  procs = card "procs" colR (-212) 472 344 0.78;
+  weather = card "weather" colL 112 472 256 0.72; # 184 + 368 + 24 + 344 + 24 + 256 / 2 - 960
+  media = card "media" colR 112 472 256 0.72;
+  # Ambient: no empty media card, the weather takes the whole row.
+  weatherWide = card "weather" 0 112 968 256 0.72;
 in
 {
+  inherit radius;
   cards = {
     inherit
+      identity
       clock
       auth
       quote
+      energy
+      claude
+      system
+      procs
       weather
       media
+      weatherWide
       ;
   };
 
@@ -44,8 +62,10 @@ in
         1440
       ]; # the declared logical size; the renderer prefers the live one
       layouts.main = [
+        identity
         clock
         auth
+        quote
       ];
     };
     secondary = {
@@ -55,20 +75,38 @@ in
       ]; # rotated: 1920x1080 on its side
       layouts = {
         ambient = [
-          weather
-          quote
+          energy
+          claude
+          system
+          procs
+          weatherWide
         ];
         media = [
-          media
+          energy
+          claude
+          system
+          procs
           weather
-          quote
+          media
         ];
       };
     };
   };
 
-  # A hyprlock `position` for a point inside a card: hyprlock's y grows UP from the center.
+  # A hyprlock `position` for a point inside a card, center anchored: hyprlock's y grows UP.
   at =
     c: dx: dy:
     "${toString (builtins.elemAt c.center 0 + dx)}, ${toString (-(builtins.elemAt c.center 1 + dy))}";
+
+  # The same point measured from the card's top-LEFT corner, for a label anchored on the left
+  # (halign left, valign top): needs the monitor's size.
+  atLeft =
+    size: c: dx: dy:
+    let
+      W = builtins.elemAt size 0;
+      H = builtins.elemAt size 1;
+      x = W / 2 + builtins.elemAt c.center 0 - builtins.elemAt c.size 0 / 2 + dx;
+      y = H / 2 + builtins.elemAt c.center 1 - builtins.elemAt c.size 1 / 2 + dy;
+    in
+    "${toString x}, ${toString (-y)}";
 }

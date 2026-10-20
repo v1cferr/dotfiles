@@ -18,6 +18,7 @@ let
     gnugrep
     hyprlock
     jq
+    librsvg
     nixos-artwork
     notify
     playerctl
@@ -40,15 +41,22 @@ let
   font = osConfig.my.fonts.ui;
   motionOff = config.my.theme.motion == "off";
   geo = import ./geometry.nix { inherit (config.my.theme) rounding; };
-  inherit (geo) cards at;
+  inherit (geo)
+    cards
+    at
+    atLeft
+    ;
+  lgSize = geo.monitors.secondary.size;
 
   # The packaged art, for an empty pool and for the build-time fallback (no binary in git).
   art = nixos-artwork.wallpapers;
   wallMain = "${art.catppuccin-mocha}/share/backgrounds/nixos/nixos-wallpaper-catppuccin-mocha.png";
   wallSecondary = "${art.waterfall}/share/backgrounds/nixos/nix-wallpaper-waterfall.png";
 
-  # MY OWN art, as STATE and not config (rule 6): each monitor draws the files that suit it.
+  # MY OWN art, as STATE and not config (rule 6): Japanese prints and photos, landscape for the
+  # main monitor in `wide/`, portrait for the standing one at the top. Never the desktop's astronomy.
   wallDir = "${config.home.homeDirectory}/Pictures/lockscreen";
+  wallWide = "${wallDir}/wide";
 
   cacheDir = "${config.xdg.cacheHome}/lockscreen";
   v2 = "${cacheDir}/v2"; # the renderer's cache, the ready set, the session links, the data files
@@ -62,12 +70,12 @@ let
     clear-gradient = {
       solid = false;
       gradient = true;
-      alphaMin = 0.62; # dark backdrops may go clearer than the desktop's 0.70...
-      alphaMax = 0.9; # ...and bright ones denser, only as far as contrast needs
+      alphaMin = 0.62; # the floor; each card starts at its own baseline (geometry.nix)...
+      alphaMax = 0.92; # ...and goes denser only as far as contrast needs
       tint = 0.2;
       brightness = 0.95;
       contrast = 0.95;
-      blurSigma = 18.0; # HyprGlass blur_strength 0.9, by eye: docs/notes/desktop/lockscreen.md
+      blurSigma = 22.0; # Glass+: a deeper frost than v2's 18, by eye: docs/notes/desktop/lockscreen.md
     };
     perceptible = {
       solid = false;
@@ -91,18 +99,23 @@ let
     };
   };
 
-  # Type sizes (pt; hyprlock renders at 96 dpi, so one JetBrains Mono column is 0.8 px per pt).
+  # Type sizes (pt). One JetBrains Mono column is 0.8 px per pt at 96 dpi; hyprlock rounds the size
+  # up, and a 12 pt column MEASURED 10 px on screen, so the columns are counted at 0.84 px per pt.
   pt = {
-    clock = 84;
+    clock = 88;
     date = 16;
-    weatherTitle = 12;
+    name = 17;
+    nick = 12;
+    quote = 17;
+    title = 10; # a card's caption on the LG
+    body = 14; # the LG cards' running text, read from the chair: 36 columns in a 472 px card
     weather = 20;
     media = 15;
     artist = 13;
-    quote = 14;
   };
   pad = 48; # a card's horizontal padding, each side
-  cols = size: card: builtins.floor ((builtins.elemAt card.size 0 - 2 * pad) / (0.8 * size));
+  cols = size: card: builtins.floor ((builtins.elemAt card.size 0 - 2 * pad) / (0.84 * size));
+  colsLg = size: card: builtins.floor ((builtins.elemAt card.size 0 - 48) / (0.84 * size)); # LG: 24 px insets
 
   # The ONE spec the renderer reads: palette, profile, geometry, pools, fallbacks (rule 11).
   aa = {
@@ -114,8 +127,30 @@ let
     glass = profiles.${config.my.theme.glass};
     edge = {
       edge = 0.55; # colEdge: border at 0x8c
+      rim = 0.16; # the optical rim: text-colored light, full at the top edge, gone by mid-height
       sheen = 0.06; # colSheen: text at 0x0f
       hairline = 1;
+    };
+    # Glass+: a soft shadow under each card, light from above, and a whisper of lens at the rim.
+    shadow = {
+      alpha = 0.22;
+      sigma = 14;
+      dy = 4;
+    };
+    highlight = {
+      alpha = 0.05;
+      depth = 0.35;
+    };
+    refraction = 6.0e-3;
+    rimBand = 6;
+    # The logo is STATE (my file, never in git): baked into the identity card, and simply left out
+    # if the file is missing, so it can never stand between me and the lock.
+    logo = {
+      path = config.my.lockscreen.logo;
+      size = 68;
+      card = "identity";
+      dy = -34;
+      color = "text";
     };
     contrast = aa;
     quotesFile = quotesJson;
@@ -131,13 +166,10 @@ let
       primary = {
         name = primary;
         inherit (geo.monitors.primary) size;
-        # The astronomy collection (with its captions) plus any landscape art in my lock folder.
-        pools = [
-          config.my.wallpaper.pools.wide
-          wallDir
-        ];
+        pools = [ wallWide ];
         fallback = wallMain;
         layouts.main = [
+          (cards.identity // { contrast = aa; })
           (cards.clock // { contrast = aa; })
           # hyprlock draws the field's own state border, so the glass under it has none baked in.
           (
@@ -149,6 +181,7 @@ let
               };
             }
           )
+          (cards.quote // { contrast = aa; })
         ];
       };
       secondary = {
@@ -172,6 +205,7 @@ let
     runtimeInputs = [
       python
       hyprland
+      librsvg # rsvg-convert: the logo's SVG, rasterized at render time
     ];
     text = ''exec python3 -I ${./scripts/render.py} "$@"'';
   };
@@ -190,10 +224,19 @@ let
     text = builtins.readFile ./scripts/lock-start.sh;
   };
 
+  # The observability adapter (docs/notes/desktop/lockscreen.md#the-lg-while-locked): stdlib only.
+  observe = writeShellApplication {
+    name = "lockscreen-observe";
+    runtimeInputs = [ python3 ];
+    text = ''exec python3 -I ${./scripts/observe.py} "$@"'';
+  };
+  paletteFile = writeText "lockscreen-palette.json" (builtins.toJSON p);
+
   # The strings on screen, pt-BR on purpose (the lock's language exception, see the notes).
   txt = {
     noWeather = "Clima indisponível";
     noMedia = "Nada tocando";
+    noData = "Sem dados no momento";
     hint = "Tela principal desconectada · digite a senha e pressione Enter";
   };
 
@@ -205,11 +248,15 @@ let
       LOCK_PRIMARY = primary;
       LOCK_WEATHER_MAX_AGE = toString (12 * 3600); # two missed model runs (ECMWF IFS: every 6 h)
       LOCK_COL_SUBTEXT = p.subtext;
+      LOCK_COL_DIM = p.dim;
+      LOCK_CAPTION_SIZE = toString (pt.title * 1024);
       LOCK_COL_TEXT = p.text;
       LOCK_COL_BG = p.bg;
       LOCK_TXT_NO_WEATHER = txt.noWeather;
       LOCK_TXT_NO_MEDIA = txt.noMedia;
       LOCK_TXT_HINT = txt.hint;
+      LOCK_TXT_NO_DATA = txt.noData;
+      LOCK_OBS_MAX_AGE = "180"; # three missed rounds of the slowest card
     };
     text = builtins.readFile ./scripts/label.sh;
   };
@@ -228,9 +275,11 @@ let
     runtimeEnv = {
       LOCK_CACHE = v2;
       LC_ALL = "C.UTF-8"; # ${#s} counts characters, not bytes
-      LOCK_TITLE_COLS = toString (cols pt.media cards.media - 3); # the state glyph and its gap
-      LOCK_ARTIST_COLS = toString (cols pt.artist cards.media);
+      LOCK_TITLE_COLS = toString (colsLg pt.media cards.media - 3); # the state glyph and its gap
+      LOCK_ARTIST_COLS = toString (colsLg pt.artist cards.media);
       LOCK_COL_SUBTEXT = p.subtext;
+      LOCK_COL_DIM = p.dim;
+      LOCK_CAPTION_SIZE = toString (pt.title * 1024); # absolute: pango here ignores a percentage
       LOCK_TXT_NO_MEDIA = txt.noMedia;
     };
     text = builtins.readFile ./scripts/media-bridge.sh;
@@ -308,11 +357,14 @@ let
     hour=$(${coreutils}/bin/date +%Y-%m-%dT%H:00)
     # ONE jq pass, and `select` drops the whole line if a field is missing: a partial read must not
     # become a label. weather_code 0 survives it, since only null/false are falsy in jq.
-    fields=$(${config.my.glance.feed}/bin/glance-feed read weather | ${jq}/bin/jq -r --arg h "$hour" '
-      (.updated_at) as $u | .json.hourly
+    # The day's extremes, rain chance and the hour's feels-like ride along; a missing one is "-".
+    fields=$(${config.my.glance.feed}/bin/glance-feed read weather | ${jq}/bin/jq -r --arg h "$hour" --arg d "''${hour%T*}" '
+      (.updated_at) as $u | .json as $j | $j.hourly
       | (.time | index($h)) as $i | select($i != null and $u != null)
       | select(.weather_code[$i] != null and .temperature_2m[$i] != null)
-      | "\($u) \(.weather_code[$i]) \(.temperature_2m[$i] | round)"' || true)
+      | (($j.daily.time // []) | index($d)) as $k
+      | def r(x): if x == null then "-" else (x | round | tostring) end;
+      "\($u) \(.weather_code[$i]) \(.temperature_2m[$i] | round) \(r(if $k == null then null else $j.daily.temperature_2m_max[$k] end)) \(r(if $k == null then null else $j.daily.temperature_2m_min[$k] end)) \(r(if $k == null then null else $j.daily.precipitation_probability_max[$k] end)) \(r(.apparent_temperature[$i]))"' || true)
     # No data: nothing is written, and the label turns the old file into "unavailable" on its own.
     [ -n "$fields" ] || exit 0
     set -- $fields
@@ -323,9 +375,18 @@ let
     # Valid for this hour plus the timer's 10 min and a margin, then the label stops trusting it.
     valid=$(( $(${coreutils}/bin/date -d "$hour" +%s) + 3600 + 900 ))
     tmp="${weatherFile}.tmp"
+    # Line 2 only with what was actually read: a "-" field drops out instead of becoming a number.
+    # Two short lines, so they fit the half-width card of the Media layout too.
+    day="" now=""
+    [ "$4" = - ] || day="máx $4°"
+    [ "$5" = - ] || day="''${day:+$day · }mín $5°"
+    [ "$6" = - ] || now="chuva $6%"
+    [ "$7" = - ] || now="''${now:+$now · }sensação $7°"
+    extra="$day''${day:+''${now:+$'\n'}}$now"
     {
       ${coreutils}/bin/printf '%s\n%s\n<b>%s°C</b>' "$valid" "$1" "$3"
       [ -z "$text" ] || ${coreutils}/bin/printf '  <span foreground="#${p.subtext}">%s</span>' "$text"
+      [ -z "$extra" ] || ${coreutils}/bin/printf '\n<span size="${toString (pt.body * 1024)}" foreground="#${p.subtext}">%s</span>' "$extra"
     } > "$tmp"
     ${coreutils}/bin/mv "$tmp" ${weatherFile}
   '';
@@ -360,6 +421,12 @@ let
 in
 {
   # The spec, readable by the flake's check, which runs the renderer's tests against THIS JSON.
+  options.my.lockscreen.logo = lib.mkOption {
+    type = lib.types.str;
+    default = "${config.home.homeDirectory}/.dropbox-hm/Dropbox/Obsidian/v1cferr/5-Planning/5.7-@v1cferr/5.7.1-Logo/As Profile Pic/SVG/1018x1018.svg";
+    description = "My logo's SVG, as STATE: read when the lock's images render, never copied into git. Missing means no logo, never no lock.";
+  };
+
   options.my.lockscreen.spec = lib.mkOption {
     type = lib.types.path;
     readOnly = true;
@@ -435,84 +502,130 @@ in
           valign = "center";
         };
 
-        label = [
-          # The time, with seconds, from the system clock (chrony/NTS). 995 and not 1000: hyprlock's
-          # timer runs ~0.7 ms long, and a period over 1 s MUST skip a second (measured in the notes).
-          (
-            textAt cards.clock 0 (-22)
-            // {
-              monitor = primary;
-              text = "cmd[update:995] ${clockCmd}";
+        label =
+          let
+            # A label at a point inside a card on the LG, from its top-left corner (left-aligned text).
+            lgText = card: dx: dy: {
+              monitor = secondary;
+              position = atLeft lgSize card dx dy;
+              halign = "left";
+              valign = "top";
+              text_align = "left";
+              font_family = font;
+            };
+            # A card's caption: small, dim, in the corner; the same 24 px inset as its text.
+            caption =
+              card: words:
+              lgText card 24 20
+              // {
+                text = words;
+                color = c "dim" "ff";
+                font_size = pt.title;
+              };
+            obs =
+              card: name: every:
+              lgText card 24 46
+              // {
+                text = "cmd[update:${toString every}] ${labelBin} obs ${name}";
+                color = c "text" "ff";
+                font_size = pt.body;
+              };
+          in
+          [
+            # ── ASUS: who, when, the way in, a thought. All on one axis. ──
+            (
+              textAt cards.identity 0 22
+              // {
+                monitor = primary;
+                text = config.programs.git.settings.user.name;
+                color = c "text" "ff";
+                font_size = pt.name;
+                font_family = "${font} SemiBold";
+              }
+            )
+            (
+              textAt cards.identity 0 52
+              // {
+                monitor = primary;
+                text = config.home.username;
+                color = c "subtext" "ff";
+                font_size = pt.nick;
+                font_family = font;
+              }
+            )
+            # The time, with seconds, from the system clock (chrony/NTS). 995 and not 1000: hyprlock's
+            # timer runs ~0.7 ms long, and a period over 1 s MUST skip a second (measured in the notes).
+            (
+              textAt cards.clock 0 (-17)
+              // {
+                monitor = primary;
+                text = "cmd[update:995] ${clockCmd}";
+                color = c "text" "ff";
+                font_size = pt.clock;
+                font_family = "${font} Light";
+              }
+            )
+            (
+              textAt cards.clock 0 80
+              // {
+                monitor = primary;
+                text = "cmd[update:60000] ${labelBin} date";
+                color = c "subtext" "ff";
+                font_size = pt.date;
+                font_family = font;
+              }
+            )
+            (
+              textAt cards.quote 0 0
+              // {
+                monitor = primary;
+                text = "cmd[update:0] ${labelBin} quote"; # once per surface: the quote of THIS lock
+                color = c "text" "ff";
+                font_size = pt.quote;
+                font_family = font;
+              }
+            )
+
+            # ── LG: what the machine is doing while I am away. Captions are static; the rest reads
+            # files the observe service and the bridges write (no network, no /proc walk here). ──
+            (caption cards.energy "ENERGIA")
+            (obs cards.energy "energy" 60000)
+            (caption cards.claude "CLAUDE CODE")
+            (obs cards.claude "claude" 60000)
+            (caption cards.system "SISTEMA")
+            (obs cards.system "system" 30000)
+            (caption cards.procs "PROCESSOS")
+            (obs cards.procs "procs" 30000)
+            (caption cards.weather "CLIMA  ·  ${config.my.weather.place}")
+            (
+              lgText cards.weather 24 50
+              // {
+                text = "cmd[update:60000] ${labelBin} weather";
+                color = c "text" "ff";
+                font_size = pt.weather;
+              }
+            )
+            (
+              lgText cards.media 24 20
+              // {
+                # Empty in Ambient, where there is no media card: its caption rides in the markup.
+                text = "cmd[update:3000] ${labelBin} media";
+                color = c "text" "ff";
+                font_size = pt.media;
+              }
+            )
+            # Every output: empty while the main monitor is connected, the way out when it is not.
+            {
+              monitor = "";
+              text = "cmd[update:5000] ${labelBin} hint";
               color = c "text" "ff";
-              font_size = pt.clock;
-              font_family = "${font} Light";
-            }
-          )
-          (
-            textAt cards.clock 0 78
-            // {
-              monitor = primary;
-              text = "cmd[update:60000] ${labelBin} date";
-              color = c "subtext" "ff";
               font_size = pt.date;
               font_family = font;
+              position = "0, -120";
+              halign = "center";
+              valign = "top";
             }
-          )
-          # The standing monitor: weather, media (Media layout only), the quote of this lock.
-          (
-            textAt cards.weather 0 (-28)
-            // {
-              monitor = secondary;
-              text = config.my.weather.place;
-              color = c "subtext" "ff";
-              font_size = pt.weatherTitle;
-              font_family = font;
-            }
-          )
-          (
-            textAt cards.weather 0 18
-            // {
-              monitor = secondary;
-              text = "cmd[update:60000] ${labelBin} weather";
-              color = c "text" "ff";
-              font_size = pt.weather;
-              font_family = font;
-            }
-          )
-          (
-            textAt cards.media 0 0
-            // {
-              monitor = secondary;
-              # A file the bridge rewrites on every MPRIS event, read here: SIGUSR2 is not used,
-              # its 0.9.5 handler runs label code inside the signal handler (see the notes).
-              text = "cmd[update:3000] ${labelBin} media";
-              color = c "text" "ff";
-              font_size = pt.media;
-              font_family = font;
-            }
-          )
-          (
-            textAt cards.quote 0 0
-            // {
-              monitor = secondary;
-              text = "cmd[update:0] ${labelBin} quote"; # once per surface: the quote of THIS lock
-              color = c "text" "ff";
-              font_size = pt.quote;
-              font_family = font;
-            }
-          )
-          # Every output: empty while the main monitor is connected, the way out when it is not.
-          {
-            monitor = "";
-            text = "cmd[update:5000] ${labelBin} hint";
-            color = c "text" "ff";
-            font_size = pt.date;
-            font_family = font;
-            position = "0, -120";
-            halign = "center";
-            valign = "top";
-          }
-        ];
+          ];
       };
     };
 
@@ -532,7 +645,10 @@ in
         # A lock that fails is a screen left OPEN: say so on the phone, since nobody is at the desk.
         OnFailure = [ "lockscreen-lock-failed.service" ];
         # The media card's writer lives exactly as long as this lock; Wants, so it can never fail it.
-        Wants = [ "lockscreen-media.service" ];
+        Wants = [
+          "lockscreen-media.service"
+          "lockscreen-observe.service"
+        ];
       };
       Service = {
         Type = "simple"; # it runs while the screen is locked and exits on unlock
@@ -559,6 +675,24 @@ in
     };
 
     # The media card's writer: only inside a Media lock, event-driven, gone with the unlock.
+    # The LG's data while locked: power-log, glance-feed's cache and /proc, read every 30 to 60 s
+    # and written as ready markup. Lives exactly as long as the lock; never a permanent daemon.
+    systemd.user.services.lockscreen-observe = {
+      Unit = {
+        Description = "Feeds the lock screen's observability cards while locked";
+        BindsTo = [ "hyprlock.service" ];
+        After = [ "hyprlock.service" ];
+      };
+      Service = {
+        Type = "simple";
+        ExecStart = "${lib.getExe observe} lock-loop --out ${session}/obs --palette ${paletteFile} --cols ${toString (colsLg pt.body cards.procs)}";
+        Restart = "on-failure";
+        RestartSec = 5;
+        Nice = 10;
+        MemoryMax = "96M";
+      };
+    };
+
     systemd.user.services.lockscreen-media = {
       Unit = {
         Description = "Feeds the lock screen's media card from MPRIS while locked";

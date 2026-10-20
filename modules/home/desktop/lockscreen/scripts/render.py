@@ -17,7 +17,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
 # Part of every cache key: bump it when the pixels this file draws change.
-RENDERER_VERSION = "2.0.0"
+RENDERER_VERSION = "3.0.0"
 
 # A photo is decoded through draft() at the screen's size, so a big one is not a bomb here.
 Image.MAX_IMAGE_PIXELS = 400_000_000
@@ -233,21 +233,62 @@ def rounded_mask(size: tuple, radius: int) -> Image.Image:
     return big.resize((w, h), Image.LANCZOS)
 
 
-def edges(size: tuple, radius: int, edge: tuple, sheen: tuple, hairline: int) -> Image.Image:
-    """The hairline edge and the 1 px light along the top, inset past the corners."""
+def edges(size: tuple, radius: int, edge: tuple, rim: tuple, sheen: tuple, hairline: int) -> Image.Image:
+    """The optical rim: a hairline, light that fades from the top edge to mid-height, and the 1 px
+    sheen along the top, inset past the corners. Drawn 4x and reduced, so the curves stay clean."""
     w, h = size
-    big = Image.new("RGBA", (w * SUPERSAMPLE, h * SUPERSAMPLE), (0, 0, 0, 0))
-    ImageDraw.Draw(big).rounded_rectangle(
-        (0, 0, w * SUPERSAMPLE - 1, h * SUPERSAMPLE - 1),
-        radius * SUPERSAMPLE,
-        outline=edge,
-        width=hairline * SUPERSAMPLE,
-    )
-    layer = big.resize((w, h), Image.LANCZOS)
+    s = SUPERSAMPLE
+    box = (0, 0, w * s - 1, h * s - 1)
+    big = Image.new("RGBA", (w * s, h * s), (0, 0, 0, 0))
+    ImageDraw.Draw(big).rounded_rectangle(box, radius * s, outline=edge, width=hairline * s)
+    # The lit rim: the same outline in the light color, faded by a vertical ramp.
+    lit = Image.new("RGBA", (w * s, h * s), (0, 0, 0, 0))
+    ImageDraw.Draw(lit).rounded_rectangle(box, radius * s, outline=rim, width=hairline * s)
+    ramp = Image.linear_gradient("L").resize((1, h * s)).point(lambda v: max(0, 255 - 2 * v))
+    lit.putalpha(Image.composite(lit.getchannel("A"), Image.new("L", lit.size, 0),
+                                 ramp.resize((w * s, h * s))))
+    layer = Image.alpha_composite(big, lit).resize((w, h), Image.LANCZOS)
     ImageDraw.Draw(layer).line(
         (radius, hairline, max(radius, w - radius - 1), hairline), fill=sheen, width=hairline
     )
     return layer
+
+
+def glow(size: tuple, color: tuple, alpha: float, depth: float) -> Image.Image:
+    """The soft highlight: light from above, strongest at the top edge and gone by `depth` of the height."""
+    w, h = size
+    stop = max(1, round(h * depth))
+    col = Image.new("L", (1, h), 0)
+    for y in range(stop):
+        col.putpixel((0, y), round(255 * alpha * (1 - y / stop) ** 2))
+    layer = Image.new("RGBA", (w, h), (*color, 0))
+    layer.putalpha(col.resize((w, h)))
+    return layer
+
+
+def refract(frosted: Image.Image, mask_inner: Image.Image, strength: float) -> Image.Image:
+    """The rim's lens: the frosted image magnified by `strength` around its center, used only in
+    the band between the edge and `mask_inner`. A whisper of depth, nothing that moves text."""
+    w, h = frosted.size
+    if strength <= 0:
+        return frosted
+    dw, dh = round(w * strength / 2), round(h * strength / 2)
+    lens = frosted.crop((dw, dh, w - dw, h - dh)).resize((w, h), Image.BICUBIC)
+    return Image.composite(frosted, lens, mask_inner)
+
+
+def shadow(base: Image.Image, rect: tuple, radius: int, color: tuple, alpha: float, sigma: float, dy: int):
+    """A soft shadow under a card, so it separates from the photo. Darkens, never blurs the photo."""
+    x0, y0, x1, y1 = rect
+    m = int(3 * sigma) + abs(dy) + 2
+    box = (max(0, x0 - m), max(0, y0 - m + dy), min(base.width, x1 + m), min(base.height, y1 + m + dy))
+    mask = Image.new("L", (box[2] - box[0], box[3] - box[1]), 0)
+    ImageDraw.Draw(mask).rounded_rectangle(
+        (x0 - box[0], y0 - box[1] + dy, x1 - box[0] - 1, y1 - box[1] - 1 + dy), radius, fill=round(255 * alpha)
+    )
+    mask = mask.filter(ImageFilter.GaussianBlur(sigma))
+    region = base.crop(box)
+    base.paste(Image.composite(Image.new("RGB", region.size, color), region, mask), box[:2])
 
 
 def dither(img: Image.Image, seed: int) -> Image.Image:
@@ -267,16 +308,40 @@ def frost(region: Image.Image, glass: dict, bg: tuple) -> Image.Image:
     return Image.blend(out, Image.new("RGB", out.size, bg), glass["tint"])
 
 
+def zones_of(card: dict, size: tuple) -> list:
+    """Where the card's TEXT sits, card-relative (x, y, w, h); the inside past the padding by default."""
+    w, h = size
+    pad = min(24, w // 4, h // 4)
+    return card.get("zones") or [[pad, pad, w - 2 * pad, h - 2 * pad]]
+
+
+def zone_luminance(img: Image.Image, zones: list) -> float:
+    """The worst (brightest 5%) luminance over the text zones together."""
+    worst = 0.0
+    for x, y, w, h in zones:
+        if w > 0 and h > 0:
+            worst = max(worst, bright_luminance(img.crop((x, y, x + w, y + h))))
+    return worst
+
+
 def glass_card(base: Image.Image, card: dict, spec: dict, seed: int) -> dict:
-    """Composite one card into `base` in place; returns what was chosen and measured."""
-    pal, glass = spec["palette"], spec["glass"]
-    bg, surface = rgb(pal["bg"]), rgb(pal["surface"])
+    """Composite one card into `base` in place; returns what was chosen and measured.
+    Adaptive Glass+: frosted core, optical rim, soft highlight. docs/notes/desktop/lockscreen.md"""
+    pal, glass, e = spec["palette"], spec["glass"], spec["edge"]
+    bg, surface, text = rgb(pal["bg"]), rgb(pal["surface"]), rgb(pal["text"])
     x0, t, r, b = card_rect(card, base.size)
     w, h = r - x0, b - t
     radius = min(card["radius"], h // 2)
+    zones = zones_of(card, (w, h))
 
+    sh = spec.get("shadow")
+    if sh and not glass["solid"] and card.get("edge", True):
+        shadow(base, (x0, t, r, b), radius, rgb(pal["shadow"]), sh["alpha"], sh["sigma"], sh["dy"])
+
+    hl = spec.get("highlight") or {"alpha": 0, "depth": 0.3}
+    light = glow((w, h), text, hl["alpha"], hl["depth"])
     if glass["solid"]:
-        body = Image.new("RGB", (w, h), bg)
+        body = Image.alpha_composite(Image.new("RGBA", (w, h), (*bg, 255)), light).convert("RGB")
         alpha = 1.0
     else:
         m = int(3 * glass["blurSigma"]) + 1
@@ -284,42 +349,50 @@ def glass_card(base: Image.Image, card: dict, spec: dict, seed: int) -> dict:
         frosted = frost(base.crop(box), glass, bg).crop(
             (x0 - box[0], t - box[1], x0 - box[0] + w, t - box[1] + h)
         )
-        # The lowest opacity in the profile's range at which every text color on this card keeps
-        # its target over the brightest 5% of the composited pixels.
+        band = spec.get("rimBand", 0)
+        if band and w > 2 * band and h > 2 * band:
+            inner = Image.new("L", (w, h), 0)
+            ImageDraw.Draw(inner).rounded_rectangle(
+                (band, band, w - band - 1, h - band - 1), max(0, radius - band), fill=255
+            )
+            frosted = refract(frosted, inner.filter(ImageFilter.GaussianBlur(band / 2)), spec.get("refraction", 0))
+        # The card's own baseline first, denser only as far as the text needs: the lowest opacity at
+        # which every text color keeps its target over the brightest 5% of the text ZONES.
         targets = card.get("contrast") or spec["contrast"]
-        steps = round((glass["alphaMax"] - glass["alphaMin"]) / 0.02)
+        floor = max(card.get("alpha", glass["alphaMin"]), glass["alphaMin"])
+        ceil = max(floor, glass["alphaMax"])
+        steps = max(0, round((ceil - floor) / 0.02))
+        foot = surface if glass["gradient"] else bg
         alpha, body = None, None
         for i in range(steps + 1):
-            a = round(glass["alphaMin"] + 0.02 * i, 2)
-            foot = surface if glass["gradient"] else bg
+            a = round(min(ceil, floor + 0.02 * i), 2)
             layer = gradient((w, h), (*bg, round(255 * a)), (*foot, round(255 * a)))
-            trial = Image.alpha_composite(frosted.convert("RGBA"), layer).convert("RGB")
-            worst = bright_luminance(trial)
+            trial = Image.alpha_composite(Image.alpha_composite(frosted.convert("RGBA"), layer), light)
+            trial = trial.convert("RGB")
+            worst = zone_luminance(trial, zones)
             if all(contrast(luminance(rgb(pal[k])), worst) >= v * MARGIN for k, v in targets.items()):
                 alpha, body = a, trial
                 break
         if body is None:
-            alpha, body = glass["alphaMax"], trial
+            alpha, body = ceil, trial
         body = dither(body, seed)
 
     over = body.convert("RGBA")
     if card.get("edge", True):
-        e = spec["edge"]
         over = Image.alpha_composite(
             over,
             edges(
                 (w, h),
                 radius,
                 (*rgb(pal["border"]), round(255 * e["edge"])),
-                (*rgb(pal["text"]), round(255 * e["sheen"])),
+                (*text, round(255 * e.get("rim", 0))),
+                (*text, round(255 * e["sheen"])),
                 e["hairline"],
             ),
         )
     base.paste(over.convert("RGB"), (x0, t), rounded_mask((w, h), radius))
 
-    # Measured inside the corners: what is left of them is the photo, not the glass.
-    inset = radius
-    worst = bright_luminance(base.crop((x0 + inset, t + inset, r - inset, b - inset)))
+    worst = zone_luminance(base.crop((x0, t, r, b)), zones)
     return {
         "id": card["id"],
         "rect": [x0, t, r, b],
@@ -331,9 +404,46 @@ def glass_card(base: Image.Image, card: dict, spec: dict, seed: int) -> dict:
     }
 
 
-def compose(src: Image.Image, size: tuple, cards: list, spec: dict, focus: tuple, seed: int):
+def load_logo(spec: dict):
+    """The logo as a coverage mask cropped to its INK (an emblem off-center in its viewBox is centered
+    by what is drawn), or None: it is decoration, and its absence must never stop a render."""
+    lg = spec.get("logo")
+    if not lg or not lg.get("path") or not Path(lg["path"]).is_file():
+        return None
+    try:
+        png = subprocess.run(
+            ["rsvg-convert", "-w", "1024", "-h", "1024", "--keep-aspect-ratio", lg["path"]],
+            capture_output=True, check=True, timeout=20,
+        ).stdout
+        from io import BytesIO
+        mask = Image.open(BytesIO(png)).convert("RGBA").getchannel("A")
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
+    box = mask.getbbox()
+    return mask.crop(box) if box else None
+
+
+def place_logo(base: Image.Image, mask: Image.Image, card: dict, lg: dict, color: tuple) -> list:
+    """Fit the logo into a `size` square without distortion, centered on the card's axis at `dy`
+    from its center, on whole pixels. Returns the rect it took (for the contrast zones)."""
+    s = lg["size"]
+    k = s / max(mask.size)
+    w, h = max(1, round(mask.width * k)), max(1, round(mask.height * k))
+    m = mask.resize((w, h), Image.LANCZOS)
+    cx = round(base.width / 2 + card["center"][0])
+    cy = round(base.height / 2 + card["center"][1] + lg["dy"])
+    x, y = cx - w // 2, cy - h // 2
+    base.paste(Image.new("RGB", (w, h), color), (x, y), m)
+    return [x, y, x + w, y + h]
+
+
+def compose(src: Image.Image, size: tuple, cards: list, spec: dict, focus: tuple, seed: int, logo=None):
     base = cover(src.convert("RGB"), size, focus)
     report = [glass_card(base, c, spec, seed + i) for i, c in enumerate(cards)]
+    lg = spec.get("logo") or {}
+    for c, rep in zip(cards, report):
+        if logo is not None and c["id"] == lg.get("card"):
+            rep["logo"] = place_logo(base, logo, c, lg, rgb(spec["palette"][lg.get("color", "text")]))
     return base, report
 
 
@@ -362,6 +472,7 @@ def cache_key(digest: str, spec: dict, role: str, layout: str, size: tuple, focu
         "palette": spec["palette"],
         "glass": spec["glass"],
         "edge": spec["edge"],
+        "material": {k: spec.get(k) for k in ("shadow", "highlight", "refraction", "rimBand")},
         "contrast": spec["contrast"],
         "cards": spec["monitors"][role]["layouts"][layout],
         "size": list(size),
@@ -474,7 +585,7 @@ def log(msg: str) -> None:
     print(msg, file=sys.stderr, flush=True)
 
 
-def render_role(spec, role, layouts, size, rng, files, assets, index, bad):
+def render_role(spec, role, layouts, size, rng, files, assets, index, bad, logo=None, logo_digest=""):
     """Render every layout of one monitor from ONE picked photo; {layout: asset path} or None."""
     for _ in range(5):
         src = pick(rng, files, size, bad)
@@ -485,13 +596,14 @@ def render_role(spec, role, layouts, size, rng, files, assets, index, bad):
             focus = focus_of(sidecar(src))
             out = {}
             for layout in layouts:
-                key = cache_key(digest, spec, role, layout, size, focus)
+                key = cache_key(digest + logo_digest, spec, role, layout, size, focus)
                 dest = assets / f"{key}.png"
                 if not valid_png(dest, size):
                     t0 = time.monotonic()
                     with open_for(src, size) as im:
                         img, report = compose(
-                            im, size, spec["monitors"][role]["layouts"][layout], spec, focus, int(key[:8], 16)
+                            im, size, spec["monitors"][role]["layouts"][layout], spec, focus,
+                            int(key[:8], 16), logo,
                         )
                     save_png(img, dest)
                     meta = {"source": str(src), "size": list(size), "cards": report,
@@ -561,6 +673,12 @@ def cmd_prepare(args) -> int:
             index = {}
         index = {k: v for k, v in index.items() if Path(k).exists()}
         assets, bad = cache / "assets", set()
+        logo = load_logo(spec)
+        logo_digest = ""
+        if logo is not None:
+            logo_digest = ":logo:" + file_digest(Path(spec["logo"]["path"]), index) + json.dumps(spec["logo"], sort_keys=True)
+        elif spec.get("logo"):
+            log(f"logo {spec['logo'].get('path')} is missing or unreadable; the cards render without it")
 
         set_id = f"{time.time_ns()}-{os.getpid()}"  # ns: two runs in one process and one second
         stage = cache / "sets" / f".{set_id}.tmp"
@@ -573,7 +691,8 @@ def cmd_prepare(args) -> int:
                 log(f"{role}: {'; '.join(problems)}; the fallback stays for it")
                 continue
             files = candidates(mon["pools"])
-            out, src = render_role(spec, role, mon["layouts"], size, rng, files, assets, index, bad)
+            out, src = render_role(spec, role, mon["layouts"], size, rng, files, assets, index, bad,
+                                   logo, logo_digest)
             if not out:
                 log(f"{role}: no usable photo in {mon['pools']}; the fallback stays for it")
                 continue

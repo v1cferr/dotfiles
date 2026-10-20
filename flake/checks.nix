@@ -212,7 +212,7 @@ in
       '';
 
   # The lock screen's logic against fixtures: the idle gate, the renderer against the spec the desktop
-  # really uses, the labels, the bridge. docs/notes/desktop/lockscreen.md#testing
+  # really uses, the observability adapter, the labels, the bridge. docs/notes/desktop/lockscreen.md#testing
   lockscreen =
     let
       pkgs = nixpkgs.legacyPackages.${system};
@@ -226,6 +226,7 @@ in
           pkgs.coreutils
           pkgs.gnused
           pkgs.jq
+          pkgs.librsvg # the logo test rasterizes a small SVG
         ];
         LOCKSCREEN_SPEC =
           self.nixosConfigurations.ex-b560m-v5.config.home-manager.users.v1cferr.my.lockscreen.spec;

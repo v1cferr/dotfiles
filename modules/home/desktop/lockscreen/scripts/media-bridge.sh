@@ -42,25 +42,31 @@ fit() { # $1 = text, $2 = columns; prints the markup-safe result
 # What is PLAYING first (Spotify ahead of the rest), then a paused Spotify, then anything. The bar
 # puts Spotify first even paused; a lock card answers "what is playing", so playing wins here.
 render() {
-  local name status title artist rank best=-1 b_status="" b_title="" b_artist="" markup glyph
+  local name status title artist rank best=-1 b_name="" b_status="" b_title="" b_artist="" markup glyph state
   while IFS="$sep" read -r name status title artist; do
     [ -n "$name" ] || continue
     rank=0
     case "${name,,}" in spotify*) rank=1 ;; esac
     if [ "$status" = Playing ]; then rank=$((rank + 2)); fi
-    if ((rank > best)); then best=$rank b_status=$status b_title=$title b_artist=$artist; fi
+    if ((rank > best)); then best=$rank b_name=$name b_status=$status b_title=$title b_artist=$artist; fi
   done < <(playerctl --all-players metadata \
     --format "{{playerName}}$sep{{status}}$sep{{xesam:title}}$sep{{artist}}" 2> /dev/null || true)
 
+  # The card's caption rides in the markup, so it disappears with the card in the Ambient layout.
+  markup="<span size=\"$LOCK_CAPTION_SIZE\" foreground=\"#$LOCK_COL_DIM\">MÍDIA</span>"$'\n'
   if ((best < 0)) || [ -z "$b_title" ] || [ "$b_status" = Stopped ]; then
-    markup="<span foreground=\"#$LOCK_COL_SUBTEXT\">$LOCK_TXT_NO_MEDIA</span>"
+    markup+="<span foreground=\"#$LOCK_COL_SUBTEXT\">$LOCK_TXT_NO_MEDIA</span>"
   else
     glyph="󰐊"
     [ "$b_status" = Playing ] || glyph="󰏤"
-    markup="$glyph  <b>$(fit "$b_title" "$LOCK_TITLE_COLS")</b>"
+    markup+="$glyph  <b>$(fit "$b_title" "$LOCK_TITLE_COLS")</b>"
     if [ -n "$b_artist" ]; then
       markup+=$'\n'"<span foreground=\"#$LOCK_COL_SUBTEXT\">$(fit "$b_artist" "$LOCK_ARTIST_COLS")</span>"
     fi
+    # Where it plays and in what state: the player's MPRIS name, never anything it says of itself.
+    state="pausado"
+    [ "$b_status" = Playing ] && state="tocando"
+    markup+=$'\n'"<span size=\"$LOCK_CAPTION_SIZE\" foreground=\"#$LOCK_COL_DIM\">$(fit "${b_name%%.*}" 20) · $state</span>"
   fi
   # The bridge's PID first: the label hides the text once this process is gone.
   printf '%s\n%s' "$$" "$markup" > "$out.$$" && mv -f "$out.$$" "$out"

@@ -62,12 +62,45 @@ class Geometry(unittest.TestCase):
         self.assertTrue(any("leaves" in p for p in problems))
         self.assertTrue(any("overlaps" in p for p in problems))
 
-    def test_ambient_is_media_without_its_top_card(self):
-        # The labels are static, so a card must never MOVE between the two layouts.
-        lay = SPEC["monitors"]["secondary"]["layouts"]
-        media = {c["id"]: c for c in lay["media"]}
-        for c in lay["ambient"]:
-            self.assertEqual(c, media[c["id"]])
+    def rects(self, role, layout):
+        mon = SPEC["monitors"][role]
+        return {c["id"]: R.card_rect(c, tuple(mon["size"])) for c in mon["layouts"][layout]}
+
+    def test_asus_four_cards_on_one_axis_32_px_apart(self):
+        r = self.rects("primary", "main")
+        order = ["identity", "clock", "auth", "quote"]
+        self.assertEqual(list(r), order)
+        for k in order:
+            x0, _, x1, _ = r[k]
+            self.assertEqual(x0 + x1, 2560, f"{k} is off the vertical axis")
+        for a, b in zip(order, order[1:]):
+            self.assertEqual(r[b][1] - r[a][3], 32, f"gap {a} -> {b}")
+        self.assertEqual(r["quote"][3] - r["identity"][1], 800)
+
+    def test_every_card_is_on_whole_pixels(self):
+        for role, mon in SPEC["monitors"].items():
+            for cards in mon["layouts"].values():
+                for c in cards:
+                    w, h = mon["size"]
+                    for v in (w / 2 + c["center"][0] - c["size"][0] / 2, h / 2 + c["center"][1] - c["size"][1] / 2):
+                        self.assertEqual(v, int(v), c["id"])
+
+    def test_lg_grid_two_columns_three_rows(self):
+        r = self.rects("secondary", "media")
+        self.assertEqual(r["energy"], (56, 184, 528, 552))
+        self.assertEqual(r["claude"], (552, 184, 1024, 552))
+        self.assertEqual(r["system"][1] - r["energy"][3], 24)
+        self.assertEqual(r["weather"][1] - r["system"][3], 24)
+        self.assertEqual(r["media"], (552, 944, 1024, 1200))
+        self.assertEqual(r["weather"][3], 1200)  # the lower ~40% of the photo stays free
+
+    def test_ambient_has_no_media_card_and_nothing_moves(self):
+        amb, med = self.rects("secondary", "ambient"), self.rects("secondary", "media")
+        self.assertNotIn("media", amb)
+        for k in ("energy", "claude", "system", "procs"):
+            self.assertEqual(amb[k], med[k])
+        # The weather takes the whole row, from the left column's edge to the right one's.
+        self.assertEqual(amb["weather"], (med["weather"][0], med["weather"][1], med["media"][2], med["media"][3]))
 
     def test_logical_size_rotates_and_scales(self):
         lg = {"width": 1920, "height": 1080, "transform": 1, "scale": 1}
@@ -150,12 +183,32 @@ class Glass(unittest.TestCase):
             # Over a near-white core the glass must have gone denser than its floor.
             self.assertGreater(card["alpha"], SPEC["glass"]["alphaMin"])
 
-    def test_dark_photo_keeps_the_clearest_glass(self):
+    def test_dark_photo_keeps_each_cards_baseline(self):
+        cards = {c["id"]: c for c in SPEC["monitors"]["primary"]["layouts"]["main"]}
         with tempfile.TemporaryDirectory() as d:
             src = Image.open(photo(Path(d) / "k.png", (2560, 1440)))
             _, report = self.compose(src)
         for card in report:
-            self.assertEqual(card["alpha"], SPEC["glass"]["alphaMin"], card["id"])
+            want = max(cards[card["id"]].get("alpha", 0), SPEC["glass"]["alphaMin"])
+            self.assertEqual(card["alpha"], want, card["id"])
+
+    def test_the_rim_is_lit_at_the_top_and_not_at_the_foot(self):
+        src = Image.new("RGB", (2560, 1440), (20, 20, 30))
+        out, report = self.compose(src)
+        x0, t, r, b = report[1]["rect"]  # the clock card
+        mid = (x0 + r) // 2
+        top = R.luminance(out.getpixel((mid, t)))
+        foot = R.luminance(out.getpixel((mid, b - 1)))
+        self.assertGreater(top, foot)
+
+    def test_the_shadow_darkens_without_blurring_the_photo(self):
+        src = stripes((2560, 1440))
+        out, report = self.compose(src)
+        x0, t, r, b = report[3]["rect"]  # under the quote card
+        below = (x0 + 40, b + 6)
+        self.assertLessEqual(sum(out.getpixel(below)), sum(src.getpixel(below)))
+        far = (5, 5)
+        self.assertEqual(out.getpixel(far), src.getpixel(far))
 
     def test_transmission_matches_the_desktop_measurement(self):
         # theme.md measured HyprGlass plus a 0.70 surface over stripes at 0.109: the photo must
@@ -372,7 +425,7 @@ class Labels(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def run_label(self, mode, primary="__none__"):
+    def run_label(self, mode, arg=None, primary="__none__"):
         env = dict(
             os.environ,
             LOCK_CACHE=str(self.cache),
@@ -384,9 +437,13 @@ class Labels(unittest.TestCase):
             LOCK_TXT_NO_WEATHER="NOWEATHER",
             LOCK_TXT_NO_MEDIA="NOMEDIA",
             LOCK_TXT_HINT="HINT",
+            LOCK_TXT_NO_DATA="NODATA",
+            LOCK_OBS_MAX_AGE="180",
+            LOCK_COL_DIM="565f89",
+            LOCK_CAPTION_SIZE="10240",
         )
         return subprocess.run(
-            ["bash", "-euo", "pipefail", str(HERE / "label.sh"), mode],
+            ["bash", "-euo", "pipefail", str(HERE / "label.sh"), mode] + ([arg] if arg else []),
             env=env, capture_output=True, text=True, check=True,
         ).stdout
 
@@ -428,8 +485,55 @@ class Labels(unittest.TestCase):
         (self.cache / "session" / "quote").write_text("<i>q</i>\nautor\n")
         self.assertEqual(self.run_label("quote"), "<i>q</i>\nautor")
 
+    def test_obs_card_only_from_a_live_and_fresh_writer(self):
+        import time
+
+        obs = self.cache / "session" / "obs"
+        obs.mkdir()
+        self.assertIn("NODATA", self.run_label("obs", "energy"))
+        (obs / "energy").write_text(f"{os.getpid()}\n{int(time.time())}\n<b>53 W</b>\n")
+        self.assertEqual(self.run_label("obs", "energy"), "<b>53 W</b>")
+        (obs / "energy").write_text(f"{os.getpid()}\n{int(time.time()) - 600}\n<b>53 W</b>")
+        self.assertIn("NODATA", self.run_label("obs", "energy"))  # stale
+        (obs / "energy").write_text(f"999999999\n{int(time.time())}\n<b>53 W</b>")
+        self.assertIn("NODATA", self.run_label("obs", "energy"))  # dead writer
+
     def test_hint_shows_only_without_the_primary(self):
         self.assertIn("HINT", self.run_label("hint", primary="__no_such_connector__"))
+
+
+class Logo(unittest.TestCase):
+    """The logo is decoration: centered by its INK, never distorted, and never a reason not to render."""
+
+    SVG = (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">'
+        '<rect x="10" y="5" width="60" height="30" fill="#000"/></svg>'
+    )
+
+    def test_missing_logo_is_none(self):
+        self.assertIsNone(R.load_logo({"logo": {"path": "/nonexistent.svg"}}))
+        self.assertIsNone(R.load_logo({}))
+
+    def test_cropped_to_ink_scaled_without_distortion_and_centered(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "l.svg"
+            p.write_text(self.SVG)
+            mask = R.load_logo({"logo": {"path": str(p)}})
+        self.assertIsNotNone(mask)
+        self.assertAlmostEqual(mask.width / mask.height, 2.0, delta=0.05)  # the ink, not the viewBox
+        base = Image.new("RGB", (400, 200))
+        card = {"center": [0, 0]}
+        x0, y0, x1, y1 = R.place_logo(base, mask, card, {"size": 60, "dy": 0}, (255, 255, 255))
+        self.assertEqual(x1 - x0, 60)
+        self.assertAlmostEqual((x1 - x0) / (y1 - y0), 2.0, delta=0.1)
+        self.assertLessEqual(abs((x0 + x1) / 2 - 200), 0.5)
+        self.assertLessEqual(abs((y0 + y1) / 2 - 100), 0.5)
+
+    def test_a_broken_svg_renders_without_logo(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "bad.svg"
+            p.write_text("<svg><unclosed")
+            self.assertIsNone(R.load_logo({"logo": {"path": str(p)}}))
 
 
 class Bridge(unittest.TestCase):

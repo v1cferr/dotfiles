@@ -478,9 +478,13 @@ class Labels(unittest.TestCase):
 
     def test_clock_format(self):
         # The inlined command, run the way hyprlock runs it: `/bin/sh -c`, which is bash on NixOS.
-        cmd = (HERE / "clock.sh").read_text().rstrip("\n").split("\n")[-1].replace("@ACCENT@", "7aa2f7")
+        cmd = (HERE / "clock.sh").read_text().rstrip("\n").split("\n")[-1]
+        for k, v in {"@ACCENT@": "7aa2f7", "@SECONDS@": "Geist Light 44", "@RISE@": "84000"}.items():
+            cmd = cmd.replace(k, v)
+        self.assertNotIn("@", cmd.replace("Geist Light 44", ""))  # every placeholder filled
         out = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, check=True).stdout
-        self.assertRegex(out, r'^\d\d:\d\d<span foreground="#7aa2f7">:\d\d</span>$')
+        self.assertRegex(out, r'^<span font_features="tnum">\d\d:\d\d</span>'
+                              r'<span font_desc="Geist Light 44" rise="84000" foreground="#7aa2f7"> \d\d</span>$')
 
     def test_weather_fresh_stale_missing(self):
         import time

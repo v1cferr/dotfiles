@@ -98,10 +98,25 @@ let
     };
   };
 
-  # Type sizes (pt). One JetBrains Mono column is 0.8 px per pt at 96 dpi; hyprlock rounds the size
-  # up, and a 12 pt column MEASURED 10 px on screen, so the columns are counted at 0.84 px per pt.
+  # The lock's TYPE (v5), never the desktop's: Geist for display and body, Geist Mono for data and
+  # labels, Material Symbols for icons at the text's weight, Sparks for charts. Fonts: fonts.nix.
+  type = {
+    display = "Geist";
+    data = "Geist Mono";
+    icons = "Material Symbols Rounded";
+    iconWeight = 300;
+    chart = "Sparks Dot-line Thick,"; # the comma ends the family: pango would read "Thick" as a weight
+  };
+  # An icon by its ligature name, at the type's weight (a variable axis, `@wght`).
+  icon =
+    size: name:
+    ''<span font_desc="${type.icons} ${toString size} @wght=${toString type.iconWeight}">${name}</span>'';
+
+  # Type sizes (pt). One mono column is 0.8 px per pt at 96 dpi; hyprlock rounds the size up, and a
+  # 12 pt column MEASURED 10 px on screen, so the columns are counted at 0.84 px per pt.
   pt = {
-    clock = 160; # editorial: the hero, in Thin
+    clock = 160; # editorial: HH:MM, the hero, in Thin
+    seconds = 44; # Light, in the accent, on the digits' cap line
     date = 14;
     name = 13; # caps, tracked
     nick = 12;
@@ -257,9 +272,17 @@ let
   };
   labelBin = lib.getExe label;
   # The clock, inlined (its last line), with hyprlang's `##` for every `#`.
-  clockCmd = lib.replaceStrings [ "#" "@ACCENT@" ] [ "##" p.accent ] (
-    lib.last (lib.splitString "\n" (lib.removeSuffix "\n" (builtins.readFile ./scripts/clock.sh)))
-  );
+  # The seconds ride on the cap line: Geist's caps are 0.71 em, so the rise is the gap between the two.
+  clockCmd =
+    lib.replaceStrings
+      [ "#" "@ACCENT@" "@SECONDS@" "@RISE@" ]
+      [
+        "##"
+        p.accent
+        "${type.display} Light ${toString pt.seconds}"
+        (toString (builtins.floor ((pt.clock - pt.seconds) * 0.71 * 1024)))
+      ]
+      (lib.last (lib.splitString "\n" (lib.removeSuffix "\n" (builtins.readFile ./scripts/clock.sh))));
 
   mediaBridge = writeShellApplication {
     name = "lockscreen-media-bridge";
@@ -429,15 +452,13 @@ let
     shadow_boost = 1.0;
   };
   # A label at a point inside a card, centered on it.
-  textAt =
-    card: dx: dy:
-    shade
-    // {
-      position = at card dx dy;
-      halign = "center";
-      valign = "center";
-      text_align = "center";
-    };
+  # On the ASUS no text shadow: the scrim already holds AA, and crisp type is the editorial look.
+  textAt = card: dx: dy: {
+    position = at card dx dy;
+    halign = "center";
+    valign = "center";
+    text_align = "center";
+  };
 in
 {
   # The spec, readable by the flake's check, which runs the renderer's tests against THIS JSON.
@@ -511,8 +532,8 @@ in
           fail_color = c "red" "ff";
           capslock_color = c "yellow" "ff";
           font_color = c "text" "ff";
-          font_family = font;
-          placeholder_text = "󰌾  senha";
+          font_family = type.data;
+          placeholder_text = "${icon 15 "lock"}  senha";
           fail_text = "$PAMFAIL"; # in `text`: the red is the hairline's, the shade is measured for text
           dots_size = 0.22;
           dots_spacing = 0.35;
@@ -574,7 +595,7 @@ in
                 text = ''<span letter_spacing="${toString (4 * 1024)}">${lib.toUpper config.programs.git.settings.user.name}</span>'';
                 color = c "text" "ff";
                 font_size = pt.name;
-                font_family = "${font} SemiBold";
+                font_family = "${type.data} SemiBold";
               }
             )
             (
@@ -584,19 +605,20 @@ in
                 text = config.home.username;
                 color = c "text" "ff";
                 font_size = pt.nick;
-                font_family = font;
+                font_family = type.data;
               }
             )
             # The time, with seconds, from the system clock (chrony/NTS). 995 and not 1000: hyprlock's
             # timer runs ~0.7 ms long, and a period over 1 s MUST skip a second (measured in the notes).
+            # Nudged right by half the seconds' width, so HH:MM itself sits on the axis.
             (
-              textAt cards.column 0 (-30)
+              textAt cards.column 44 (-30)
               // {
                 monitor = primary;
                 text = "cmd[update:995] ${clockCmd}";
                 color = c "text" "ff";
                 font_size = pt.clock;
-                font_family = "${font} Thin";
+                font_family = "${type.display} Thin";
               }
             )
             (
@@ -606,7 +628,7 @@ in
                 text = "cmd[update:60000] ${labelBin} date";
                 color = c "text" "ff";
                 font_size = pt.date;
-                font_family = font;
+                font_family = type.display;
               }
             )
             (
@@ -616,7 +638,7 @@ in
                 text = "cmd[update:0] ${labelBin} quote"; # once per surface: the quote of THIS lock
                 color = c "text" "ff";
                 font_size = pt.quote;
-                font_family = font;
+                font_family = type.display;
               }
             )
 

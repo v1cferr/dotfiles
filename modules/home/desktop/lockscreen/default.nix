@@ -44,9 +44,8 @@ let
   inherit (geo)
     cards
     at
-    atLeft
+    lg
     ;
-  lgSize = geo.monitors.secondary.size;
 
   # The packaged art, for an empty pool and for the build-time fallback (no binary in git).
   art = nixos-artwork.wallpapers;
@@ -107,13 +106,10 @@ let
     name = 13; # caps, tracked
     nick = 12;
     quote = 17;
-    title = 10; # a card's caption on the LG
-    body = 14; # the LG cards' running text, read from the chair: 36 columns in a 472 px card
-    weather = 20;
-    media = 15;
-    artist = 13;
+    title = 11; # a section's caption on the LG: tracked caps
+    body = 14; # the LG panel's running text, read from the chair: 70 columns across it
   };
-  colsLg = size: card: builtins.floor ((builtins.elemAt card.size 0 - 48) / (0.84 * size)); # LG: 24 px insets
+  colsOf = width: size: builtins.floor (width / (0.84 * size)); # how many columns a width holds
 
   # The ONE spec the renderer reads: palette, profile, geometry, pools, fallbacks (rule 11).
   aa = {
@@ -249,9 +245,6 @@ let
       LOCK_PRIMARY = primary;
       LOCK_WEATHER_MAX_AGE = toString (12 * 3600); # two missed model runs (ECMWF IFS: every 6 h)
       LOCK_COL_SUBTEXT = p.subtext;
-      LOCK_COL_DIM = p.dim;
-      LOCK_COL_GREEN = p.green;
-      LOCK_CAPTION_SIZE = toString (pt.title * 1024);
       LOCK_COL_TEXT = p.text;
       LOCK_COL_BG = p.bg;
       LOCK_TXT_NO_WEATHER = txt.noWeather;
@@ -277,13 +270,11 @@ let
     runtimeEnv = {
       LOCK_CACHE = v2;
       LC_ALL = "C.UTF-8"; # ${#s} counts characters, not bytes
-      LOCK_TITLE_COLS = toString (colsLg 18 cards.media); # the title at 18 pt, the line it leads
-      LOCK_TITLE_SIZE = toString (18 * 1024);
-      LOCK_COL_TONE = p.green; # the media card's color, as each LG card has one
-      LOCK_ARTIST_COLS = toString (colsLg pt.artist cards.media);
+      LOCK_TITLE_COLS = toString (colsOf lg.half 20); # the title at 20 pt, Light: the half's number tier
+      LOCK_TITLE_SIZE = toString (20 * 1024); # absolute: pango here ignores a percentage
+      LOCK_COL_TONE = p.green; # the media section's color, as each LG section has one
+      LOCK_ARTIST_COLS = toString (colsOf lg.half pt.body);
       LOCK_COL_SUBTEXT = p.subtext;
-      LOCK_COL_DIM = p.dim;
-      LOCK_CAPTION_SIZE = toString (pt.title * 1024); # absolute: pango here ignores a percentage
       LOCK_TXT_NO_MEDIA = txt.noMedia;
     };
     text = builtins.readFile ./scripts/media-bridge.sh;
@@ -402,10 +393,10 @@ let
     extra="$day''${day:+''${now:+$'\n'}}$now"
     {
       ${coreutils}/bin/printf '%s\n%s\n' "$valid" "$1"
-      [ -z "$icon" ] || ${coreutils}/bin/printf '<span size="${toString (28 * 1024)}" foreground="#${p.sky}">%s</span>  ' "$icon"
-      ${coreutils}/bin/printf '<b>%s°C</b>' "$3"
-      [ -z "$text" ] || ${coreutils}/bin/printf '  <span foreground="#${p.subtext}">%s</span>' "$text"
-      [ -z "$extra" ] || ${coreutils}/bin/printf '\n<span size="${toString (pt.body * 1024)}" foreground="#${p.subtext}">%s</span>' "$extra"
+      [ -z "$icon" ] || ${coreutils}/bin/printf '<span size="${toString (40 * 1024)}" foreground="#${p.sky}">%s </span>' "$icon"
+      ${coreutils}/bin/printf '<span size="${toString (44 * 1024)}" font_weight="200">%s°</span>' "$3"
+      [ -z "$text" ] || ${coreutils}/bin/printf '\n%s' "$text"
+      [ -z "$extra" ] || ${coreutils}/bin/printf '\n<span size="${toString (12 * 1024)}" foreground="#${p.subtext}">%s</span>' "$extra"
     } > "$tmp"
     ${coreutils}/bin/mv "$tmp" ${weatherFile}
   '';
@@ -533,33 +524,46 @@ in
 
         label =
           let
-            # A label at a point inside a card on the LG, from its top-left corner (left-aligned text).
-            lgText = card: dx: dy: {
+            inherit (lg.sections)
+              energy
+              claude
+              system
+              last
+              ;
+            # A label on the LG: x from the left edge, y from the center, the block centered on y.
+            lgAt = x: y: {
               monitor = secondary;
-              position = atLeft lgSize card dx dy;
+              position = geo.lgPos x y;
               halign = "left";
-              valign = "top";
+              valign = "center";
               text_align = "left";
               font_family = font;
             };
-            # A card's caption: its icon and title in the card's own color, small, in the corner.
+            # A section's caption: tracked caps in its color, 44 px under the rule above it.
             caption =
-              card: tone: words:
-              lgText card 24 20
+              s: x: tone: words:
+              lgAt x (lg.y s 44)
               // {
-                text = words;
+                text = ''<span letter_spacing="2048">${words}</span>'';
                 color = c tone "ff";
                 font_size = pt.title;
+                font_family = "${font} SemiBold";
               };
-            obs =
-              card: name: every:
-              lgText card 24 46
+            # A section's content, centered in what the caption leaves (from +72 to 32 px off the foot).
+            mid = s: 20 + s.h / 2;
+            body =
+              s: x: dy: cmd: every:
+              lgAt x (lg.y s dy)
               // shade
               // {
-                text = "cmd[update:${toString every}] ${labelBin} obs ${name}";
+                text = "cmd[update:${toString every}] ${cmd}";
                 color = c "text" "ff";
                 font_size = pt.body;
               };
+            obs =
+              s: x: dy: name: every:
+              body s x dy "${labelBin} obs ${name}" every;
+            third = builtins.elemAt lg.thirds;
           in
           [
             # ── ASUS: who, when, the way in; a thought at the foot. One axis, no boxes. ──
@@ -616,36 +620,31 @@ in
               }
             )
 
-            # ── LG: what the machine is doing while I am away. Captions are static; the rest reads
-            # files the observe service and the bridges write (no network, no /proc walk here). ──
-            (caption cards.energy "orange" "󱐋  ENERGIA")
-            (obs cards.energy "energy" 60000)
-            (caption cards.claude "magenta" "✦  CLAUDE CODE")
-            (obs cards.claude "claude" 60000)
-            (caption cards.system "blue" "󰍛  SISTEMA")
-            (obs cards.system "system" 30000)
-            (caption cards.procs "teal" "󰒋  PROCESSOS")
-            (obs cards.procs "procs" 30000)
-            (caption cards.weather "sky" "󰖐  CLIMA  ·  ${config.my.weather.place}")
+            # ── LG: what the machine is doing while I am away, on ONE panel. Captions are static; the rest
+            # reads files the observe service and the bridges write (no network, no /proc walk here). ──
+            (caption energy lg.left "orange" "󱐋  ENERGIA")
+            (obs energy lg.left (mid energy) "energy" 60000)
+            (caption claude lg.left "magenta" "✦  CLAUDE CODE")
+            (obs claude lg.left (mid claude) "claude-s" 60000)
+            (obs claude lg.right (mid claude) "claude-w" 60000)
+            (caption system lg.left "blue" "󰍛  SISTEMA")
+            (obs system (third 0) 168 "sys-cpu" 30000)
+            (obs system (third 1) 168 "sys-ram" 30000)
+            (obs system (third 2) 168 "sys-gpu" 30000)
+            (obs system lg.left 344 "apps" 30000)
+            (caption last lg.left "sky" "󰖐  CLIMA  ·  ${config.my.weather.place}")
+            (body last lg.left (mid last) "${labelBin} weather" 60000)
+            # The right half of the last row exists only in a Media lock: its caption asks the layout.
             (
-              lgText cards.weather 24 50
-              // shade
+              lgAt lg.right (lg.y last 44)
               // {
-                text = "cmd[update:60000] ${labelBin} weather";
-                color = c "text" "ff";
-                font_size = pt.weather;
+                text = ''cmd[update:0] ${labelBin} mediacap '<span letter_spacing="2048">󰎈  MÍDIA</span>' '';
+                color = c "green" "ff";
+                font_size = pt.title;
+                font_family = "${font} SemiBold";
               }
             )
-            (
-              lgText cards.media 24 20
-              // shade
-              // {
-                # Empty in Ambient, where there is no media card: its caption rides in the markup.
-                text = "cmd[update:3000] ${labelBin} media";
-                color = c "text" "ff";
-                font_size = pt.media;
-              }
-            )
+            (body last lg.right (mid last) "${labelBin} media" 3000)
             # Every output: empty while the main monitor is connected, the way out when it is not.
             {
               monitor = "";
@@ -719,7 +718,7 @@ in
       };
       Service = {
         Type = "simple";
-        ExecStart = "${lib.getExe observe} lock-loop --out ${session}/obs --palette ${paletteFile} --cols ${toString (colsLg pt.body cards.procs)}";
+        ExecStart = "${lib.getExe observe} lock-loop --out ${session}/obs --palette ${paletteFile} --cols ${toString (colsOf lg.full pt.body)} --half ${toString (colsOf lg.half pt.body)} --third ${toString (colsOf lg.third pt.body)}";
         Restart = "on-failure";
         RestartSec = 5;
         Nice = 10;

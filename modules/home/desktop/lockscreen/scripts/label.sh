@@ -45,9 +45,14 @@ media)
   if [[ $pid =~ ^[0-9]+$ ]] && kill -0 "$pid" 2> /dev/null; then
     out "$markup"
   else
-    printf '<span size="%s" foreground="#%s">󰎈  MÍDIA</span>\n<span foreground="#%s">%s</span>' \
-      "$LOCK_CAPTION_SIZE" "$LOCK_COL_GREEN" "$LOCK_COL_SUBTEXT" "$LOCK_TXT_NO_MEDIA"
+    printf '<span foreground="#%s">%s</span>' "$LOCK_COL_SUBTEXT" "$LOCK_TXT_NO_MEDIA"
   fi
+  ;;
+mediacap)
+  # $2, the media section's caption, only in the layout that has the section.
+  slurp "$session/layout"
+  [ "$REPLY" = media ] || exit 0
+  printf '%s' "${2:?}"
   ;;
 obs)
   # The observe service's cards: `pid`, `epoch`, markup. Shown only from a LIVE writer and while
@@ -78,7 +83,7 @@ hint)
     "$LOCK_COL_BG" "$LOCK_COL_TEXT" "$LOCK_TXT_HINT"
   ;;
 *)
-  echo "usage: lockscreen-label date|weather|media|obs <card>|quote|hint" >&2
+  echo "usage: lockscreen-label date|weather|media|mediacap <caption>|obs <card>|quote|hint" >&2
   exit 2
   ;;
 esac

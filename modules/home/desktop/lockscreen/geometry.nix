@@ -63,17 +63,54 @@ let
     ];
   };
 
-  # ── LG, 1080x1920: a 2 x 3 grid from 184 px down, 56 px margins, 24 px gutters, 472 px columns ──
-  colL = -248; # 56 + 472 / 2 - 540
-  colR = 248;
-  energy = card "energy" colL (-592) 472 368 0.56; # rows: 184 + 368 / 2 - 960
-  claude = card "claude" colR (-592) 472 368 0.56;
-  system = card "system" colL (-212) 472 344 0.58; # 184 + 368 + 24 + 344 / 2 - 960
-  procs = card "procs" colR (-212) 472 344 0.58;
-  weather = card "weather" colL 112 472 256 0.54; # 184 + 368 + 24 + 344 + 24 + 256 / 2 - 960
-  media = card "media" colR 112 472 256 0.54;
-  # Ambient: no empty media card, the weather takes the whole row.
-  weatherWide = card "weather" 0 112 968 256 0.54;
+  # ── LG, 1080x1920: ONE glass panel, 72 px from each side and 160 from the top and foot, split
+  # by hairlines into sections on the 8 px grid. Positions inside it are panel-relative. ──
+  panelW = 936;
+  panelH = 1600;
+  inset = 56; # the text's left edge and every rule's ends
+  sections = {
+    energy = {
+      top = 0;
+      h = 448;
+    };
+    claude = {
+      top = 448;
+      h = 384;
+    };
+    system = {
+      top = 832;
+      h = 448;
+    };
+    last = {
+      top = 1280;
+      h = 320;
+    };
+  };
+  hr = y: [
+    inset
+    y
+    (panelW - inset)
+    y
+  ];
+  rules = map (s: hr s.top) [
+    sections.claude
+    sections.system
+    sections.last
+  ];
+  # Media splits the last row: the weather on the left, the media on the right.
+  split = [
+    [
+      (panelW / 2)
+      (sections.last.top + 40)
+      (panelW / 2)
+      (panelH - 40)
+    ]
+  ];
+  panel = extra: card "panel" 0 0 panelW panelH 0.56 // { rules = rules ++ extra; };
+  lgW = 1080;
+  lgH = 1920;
+  px0 = (lgW - panelW) / 2; # the panel's left edge on the screen
+  col3 = (panelW - 2 * inset - 2 * 32) / 3; # three columns, 32 px gutters
 in
 {
   inherit radius;
@@ -81,15 +118,27 @@ in
     inherit
       column
       quote
-      energy
-      claude
-      system
-      procs
-      weather
-      media
-      weatherWide
       ;
+    panel = panel [ ];
   };
+
+  # Where the LG's text goes: x from the screen's LEFT edge, y from its CENTER (hyprlock halign
+  # left, valign center), and each section's top and height as the panel sees them.
+  lg = {
+    inherit sections;
+    left = px0 + inset;
+    right = px0 + panelW / 2 + inset; # the right half of a split row
+    thirds = map (i: px0 + inset + i * (col3 + 32)) [
+      0
+      1
+      2
+    ];
+    half = panelW / 2 - 2 * inset; # a half's text width
+    third = col3;
+    full = panelW - 2 * inset;
+    y = s: dy: s.top - panelH / 2 + dy;
+  };
+  lgPos = x: y: "${toString x}, ${toString (-y)}";
 
   monitors = {
     primary = {
@@ -104,25 +153,12 @@ in
     };
     secondary = {
       size = [
-        1080
-        1920
+        lgW
+        lgH
       ]; # rotated: 1920x1080 on its side
       layouts = {
-        ambient = [
-          energy
-          claude
-          system
-          procs
-          weatherWide
-        ];
-        media = [
-          energy
-          claude
-          system
-          procs
-          weather
-          media
-        ];
+        ambient = [ (panel [ ]) ];
+        media = [ (panel split) ];
       };
     };
   };
@@ -131,16 +167,4 @@ in
   at =
     c: dx: dy:
     "${toString (builtins.elemAt c.center 0 + dx)}, ${toString (-(builtins.elemAt c.center 1 + dy))}";
-
-  # The same point measured from the card's top-LEFT corner, for a label anchored on the left
-  # (halign left, valign top): needs the monitor's size.
-  atLeft =
-    size: c: dx: dy:
-    let
-      W = builtins.elemAt size 0;
-      H = builtins.elemAt size 1;
-      x = W / 2 + builtins.elemAt c.center 0 - builtins.elemAt c.size 0 / 2 + dx;
-      y = H / 2 + builtins.elemAt c.center 1 - builtins.elemAt c.size 1 / 2 + dy;
-    in
-    "${toString x}, ${toString (-y)}";
 }

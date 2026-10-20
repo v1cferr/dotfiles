@@ -328,12 +328,6 @@ def spark(series: list, top: float, color: str, hole: str) -> str:
     return f'<span foreground="#{color}">' + "".join(out) + "</span>"
 
 
-def big(text: str, pt: int, color: str = "") -> str:
-    """An ABSOLUTE size (1024ths of a point): pango here ignores a percentage `size`."""
-    fg = f' foreground="#{color}"' if color else ""
-    return f'<span size="{pt * 1024}"{fg}><b>{text}</b></span>'
-
-
 def ago(seconds) -> str:
     if seconds is None:
         return "–"
@@ -371,19 +365,44 @@ def fit(s: str, cols: int) -> str:
 PROFILE = {"power-saver": "Eco", "balanced": "Balanced", "performance": "Gaming"}
 
 
-SPARK_PT = 16  # the graphs' own size: 30 blocks at 16 pt are 403 px, inside a 424 px card
+SPARK_PT = 16  # the 24 h strips' size, the body's
+BODY_PT = 14  # the panel's running text: --cols counts columns at this size
 ICON = {"cpu": "󰻠", "ram": "󰍛", "swap": "󰓡", "gpu": "󰢮", "temp": "󰔏", "clock": "󰥔"}
+# Nerd Font circle slices, one eighth each, and the empty circle: a ring a label can draw.
+RINGS = ["󰝦", "󰪞", "󰪟", "󰪠", "󰪡", "󰪢", "󰪣", "󰪤", "󰪥"]
+
+
+def ring_glyph(pct) -> str:
+    """The share as a circle in eighths; nothing read, or nothing used, is the empty circle."""
+    if pct is None or pct <= 0:
+        return RINGS[0]
+    return RINGS[min(8, max(1, int(-(-pct // 12.5))))]
+
+
+def hero(text: str, pt: int, color: str = "", weight: int = 200) -> str:
+    """The section's number: large and LIGHT, so size and not weight carries it."""
+    fg = f' foreground="#{color}"' if color else ""
+    return f'<span size="{pt * 1024}" font_weight="{weight}"{fg}>{text}</span>'
+
+
+def caps(text: str, color: str) -> str:
+    """A small tracked label in caps: what the number above it is."""
+    return f'<span size="{11 * 1024}" letter_spacing="2048" foreground="#{color}"><b>{esc(text.upper())}</b></span>'
+
+
+def meta(text: str, color: str) -> str:
+    return f'<span size="{12 * 1024}" foreground="#{color}">{text}</span>'
 
 
 def meter(frac, cols: int, color: str, track: str) -> str:
-    """A thin bar, filled in the card's color over a dim track: a share you read without a number."""
+    """A thin bar, filled in the section's color over a dim track: a share you read without a number."""
     if frac is None:
         return f'<span foreground="#{track}">' + "━" * cols + "</span>"
     n = max(0, min(cols, round(frac * cols)))
     return f'<span foreground="#{color}">' + "━" * n + f'</span><span foreground="#{track}">' + "━" * (cols - n) + "</span>"
 
 
-def spark2(series: list, top: float, color: str, hole: str) -> str:
+def spark2(series: list, top: float, color: str, hole: str, pt: int = SPARK_PT) -> str:
     """Two rows of blocks, 16 levels on a ZERO-based scale; a hole is a dim dot on the floor."""
     up, down = [], []
     for v in series:
@@ -394,105 +413,105 @@ def spark2(series: list, top: float, color: str, hole: str) -> str:
         lvl = 0 if top <= 0 else max(1, min(16, round(v / top * 16)))
         down.append(BLOCKS[min(8, lvl) - 1])
         up.append(BLOCKS[lvl - 9] if lvl > 8 else " ")
-    sz = SPARK_PT * 1024
+    sz = pt * 1024
     return (f'<span size="{sz}" foreground="#{color}">' + "".join(up) + "</span>\n"
             f'<span size="{sz}" foreground="#{color}">' + "".join(down) + "</span>")
 
 
-def card_energy(e: dict, pal: dict, cols: int = 36) -> str:
+def card_energy(e: dict, pal: dict, cols: int = 70) -> str:
+    """The hero watts, the 30 min chart across the whole width, the CPU/GPU split, one meta line."""
     sub, dim, tone = pal["subtext"], pal["dim"], pal["orange"]
     if e["status"] == "missing" or e.get("measured_w") is None:
-        return f'<span foreground="#{sub}">Sem medições do power-log</span>'
-    top = max([v for v in e["history"] if v is not None] or [1])
+        return meta("Sem medições do power-log", sub)
+    peak = max([v for v in e["history"] if v is not None] or [1])
+    top = -(-peak // 25) * 25  # a round ceiling over the peak, so the bars read as levels, not a block
     tot = e["measured_w"] or 1
-    bar = cols - 14
-    base = f' · repouso Eco {e["baseline"]["median_w"]:.0f} W' if e["baseline"] else ""
-    stale = "DESATUALIZADO · " if e["status"] == "stale" else ""
+    half = cols // 2
+
+    def share(name, w):
+        head = f"{name}  {w:5.1f} W  "
+        return f'<span foreground="#{sub}">{head}</span>' + meter(w / tot, half - len(head) - 3, tone, dim)
+
+    when = ago(e["age"])
+    notes = ["30 min", f"0 a {top:.0f} W", f"pico {peak:.0f} W"]
+    if e["baseline"]:
+        notes.append(f'repouso Eco {e["baseline"]["median_w"]:.0f} W')
+    notes.append(PROFILE.get(e["profile"] or "", e["profile"] or "–"))
+    if e["status"] == "stale":
+        notes.insert(0, "DESATUALIZADO")
+    if when != "agora":
+        notes.append(when)
     return "\n".join([
-        big(f'{e["measured_w"]:.0f}', 30) + f'<span size="{16 * 1024}"> W</span>'
-        + f'<span foreground="#{sub}">   CPU + GPU medido</span>',
-        f'CPU {e["cpu_w"]:>6.1f} W   ' + meter(e["cpu_w"] / tot, bar, tone, dim),
-        f'GPU {e["gpu_w"]:>6.1f} W   ' + meter(e["gpu_w"] / tot, bar, tone, dim),
-        spark2(e["history"], top, tone, dim),
-        f'<span foreground="#{dim}">30 min · pico {top:.0f} W{base}</span>',
-        f'<span foreground="#{dim}">{stale}{PROFILE.get(e["profile"] or "", e["profile"] or "–")}'
-        f' · render ocioso {e["render_idle_pct"]:.0f}% · {ago(e["age"])}</span>',
+        hero(f'{e["measured_w"]:.0f}', 72) + hero(" W", 24, sub, 300) + "   " + meta("CPU + GPU medido", sub),
+        spark2(e["history"], top, tone, dim, cols * BODY_PT // 30),
+        share("CPU", e["cpu_w"]) + "   " + share("GPU", e["gpu_w"]),
+        meta(" · ".join(notes), sub),
     ])
 
 
-def card_claude(c: dict, pal: dict, now: float, cols: int = 36) -> str:
+def cards_claude(c: dict, pal: dict, now: float, cols: int = 30) -> dict:
+    """The 5 h session and the week, one half each: a ring, the share, its reset, the last 24 h."""
     sub, dim = pal["subtext"], pal["dim"]
     if c["status"] in ("missing", "error"):
         why = {"no-credentials": "sem login da conta FAI"}.get(c.get("error"), c.get("error") or "sem dados")
-        return f'<span foreground="#{sub}">{esc(why)}</span>'
+        return {"claude-s": meta(esc(why), sub), "claude-w": ""}
 
-    def block(label, w, tone, size):
-        pct = "–" if w["pct"] is None else f'{round(w["pct"])}%'
-        reset = f'reinicia em {until(w["resets"], now)}' if w["resets"] else ""
-        return [
-            f'<span foreground="#{sub}">{label}</span>' + " " * max(1, cols - len(label) - len(reset))
-            + f'<span foreground="#{dim}">{reset}</span>',
-            big(pct, size, tone),
-            meter(None if w["pct"] is None else w["pct"] / 100, cols, tone, dim),
-        ]
+    def half(cap, w, tone, hist):
+        pct = w["pct"]
+        reset = f'reinicia em {until(w["resets"], now)}' if w["resets"] else "sem janela aberta"
+        if c["status"] == "stale":
+            reset = "DESATUALIZADO · " + reset
+        return "\n".join([
+            hero(ring_glyph(pct) + " ", 40, tone, 400) + hero("–" if pct is None else f"{round(pct)}%", 44),
+            caps(cap, sub),
+            meta(reset, sub),
+            spark(hist[-cols:], 100, tone, dim),
+        ])
 
-    s, w = c["session"], c["weekly"]
-    stale = "DESATUALIZADO · " if c["status"] == "stale" else ""
-    return "\n".join(
-        block("sessão de 5 h", s, pal["orange"], 26)
-        + block("semana", w, pal["magenta"], 20)
-        + [
-            spark(c["history"]["w"], 100, pal["magenta"], dim),
-            spark(c["history"]["s"], 100, pal["orange"], dim),
-            f'<span foreground="#{dim}">{stale}24 h, 0 a 100% · {esc(c.get("plan") or "FAI")} · {ago(c["age"])}</span>',
-        ]
-    )
+    return {
+        "claude-s": half("sessão · 5 h", c["session"], pal["orange"], c["history"]["s"]),
+        "claude-w": half("semana", c["weekly"], pal["magenta"], c["history"]["w"]),
+    }
 
 
-def card_system(s: dict, e: dict, pal: dict, cols: int = 36) -> str:
+def cards_system(s: dict, e: dict, pal: dict, cols: int = 21) -> dict:
+    """CPU, RAM and GPU as three equal columns: the number, what it is, a meter, one note."""
     sub, dim, tone = pal["subtext"], pal["dim"], pal["blue"]
     m = s.get("mem") or {}
     g = s.get("gpu") or {}
     t = (e or {}).get("temps") or {}
     temp = lambda k: "–" if t.get(k) is None else f"{t[k]:.0f}°"  # noqa: E731
-    bar = cols - 17
+    bar = cols - 3
 
-    def row(icon, label, value, frac):
-        return f'<span foreground="#{tone}">{icon}</span> {label:<4} <b>{value:>8}</b>   ' + meter(frac, bar, tone, dim)
+    def col(value, cap, frac, note):
+        return "\n".join([hero(value, 36), caps(cap, sub), meter(frac, bar, tone, dim), meta(note, sub)])
 
     cpu = s.get("cpu_pct")
-    swap = s.get("swap")
     busy = None if g.get("render_idle_pct") is None else 100 - g["render_idle_pct"]
-    gf = "–" if g.get("freq_mhz") is None else ("em repouso" if g["freq_mhz"] == 0 else f'{g["freq_mhz"] / 1000:.2f} GHz')
-    lines = [
-        row(ICON["cpu"], "CPU", "–" if cpu is None else f"{cpu:.0f}%", None if cpu is None else cpu / 100),
-        row(ICON["ram"], "RAM", fmt_bytes(m.get("used")), m["used"] / m["total"] if m.get("total") else None),
-        row(ICON["swap"], "swap", fmt_bytes(swap["used"]) if swap else "–", swap["used"] / swap["total"] if swap else None),
-        row(ICON["gpu"], "GPU", "–" if g.get("board_w") is None else f'{g["board_w"]:.0f} W', None if busy is None else busy / 100),
-        f'<span foreground="#{dim}">RAM livre {fmt_bytes(m.get("available"))} · GPU {gf}</span>',
-        f'<span foreground="#{dim}">barra da GPU: render ativo {"–" if busy is None else f"{busy:.0f}%"}</span>',
-        f'<span foreground="#{tone}">{ICON["temp"]}</span> <span foreground="#{sub}">CPU {temp("cpu_c")} · GPU {temp("gpu_c")} · NVMe {temp("nvme_c")}</span>',
-    ]
-    return "\n".join(lines)
+    return {
+        "sys-cpu": col("–" if cpu is None else f"{cpu:.0f}%", "CPU", None if cpu is None else cpu / 100,
+                       f'{temp("cpu_c")} · NVMe {temp("nvme_c")}'),
+        "sys-ram": col(fmt_bytes(m.get("used")), "RAM", m["used"] / m["total"] if m.get("total") else None,
+                       f'livre {fmt_bytes(m.get("available"))}'),
+        "sys-gpu": col("–" if g.get("board_w") is None else f'{g["board_w"]:.0f} W', "GPU",
+                       None if busy is None else busy / 100,
+                       f'{temp("gpu_c")} · render {"–" if busy is None else f"{busy:.0f}%"}'),
+    }
 
 
-def card_procs(p: dict, pal: dict, cols: int) -> str:
-    sub, dim, tone = pal["subtext"], pal["dim"], pal["teal"]
-    name_w, val_w = 12, 8
+def card_apps(p: dict, pal: dict, cols: int = 70) -> str:
+    """The three apps using the most CPU now, grouped by app: a name, a meter, the share."""
+    sub, dim, tone = pal["subtext"], pal["dim"], pal["blue"]
+    name_w, val_w = 16, 7
     bar = cols - name_w - val_w - 2
-
-    def rows(items, fmt):
-        if not items:
-            return [f'<span foreground="#{dim}">–</span>']
-        topv = max(i["value"] for i in items) or 1
-        # Padded BEFORE escaping, so an `&` in a name never shifts the column.
-        return [esc(fit(i["name"], name_w).ljust(name_w)) + " " + meter(i["value"] / topv, bar, tone, dim)
-                + f'<span foreground="#{sub}">{fmt(i["value"]):>{val_w}}</span>' for i in items]
-
-    lines = [f'<span foreground="#{dim}">CPU agora, % de um núcleo</span>']
-    lines += rows(p["cpu"], lambda v: f"{v:.0f}%")
-    lines += [f'<span foreground="#{dim}">memória, RSS somado por app</span>']
-    lines += rows(p["mem"], fmt_bytes)
+    lines = [caps("mais CPU agora · % de um núcleo", sub)]
+    items = p["cpu"][:3]
+    if not items:
+        return "\n".join(lines + [meta("–", sub)])
+    topv = max(i["value"] for i in items) or 1
+    # Padded BEFORE escaping, so an `&` in a name never shifts the column.
+    lines += [esc(fit(i["name"], name_w).ljust(name_w)) + " " + meter(i["value"] / topv, bar, tone, dim)
+              + f'<span foreground="#{sub}">{f"{i['value']:.0f}%":>{val_w}}</span>' for i in items]
     return "\n".join(lines)
 
 
@@ -503,21 +522,23 @@ def write_card(out: Path, name: str, markup: str) -> None:
     os.replace(tmp, out / name)
 
 
-def lock_loop(out: Path, pal: dict, cols: int, once: bool, fast: int, slow: int) -> int:
+def lock_loop(out: Path, pal: dict, cols: dict, once: bool, fast: int, slow: int) -> int:
     out.mkdir(parents=True, exist_ok=True)
     prev = sample()
-    time.sleep(1.0)  # a first delta for CPU and processes, so the cards never open empty
+    time.sleep(1.0)  # a first delta for CPU and processes, so the sections never open empty
     last_slow, e = 0.0, None
     while True:
         cur = sample()
         now = time.time()
         if e is None or now - last_slow >= slow:
             e = energy(now)
-            write_card(out, "energy", card_energy(e, pal, cols))
-            write_card(out, "claude", card_claude(claude(now), pal, now, cols))
+            write_card(out, "energy", card_energy(e, pal, cols["full"]))
+            for name, markup in cards_claude(claude(now), pal, now, cols["half"]).items():
+                write_card(out, name, markup)
             last_slow = now
-        write_card(out, "system", card_system(system(prev, cur, now), e, pal, cols))
-        write_card(out, "procs", card_procs(procs(prev, cur), pal, cols))
+        for name, markup in cards_system(system(prev, cur, now), e, pal, cols["third"]).items():
+            write_card(out, name, markup)
+        write_card(out, "apps", card_apps(procs(prev, cur), pal, cols["full"]))
         prev = cur
         if once:
             return 0
@@ -532,7 +553,9 @@ def main(argv=None) -> int:
     lp = sub.add_parser("lock-loop")
     lp.add_argument("--out", required=True)
     lp.add_argument("--palette", required=True, help="a JSON file with the palette's hexes")
-    lp.add_argument("--cols", type=int, default=40)
+    lp.add_argument("--cols", type=int, default=70, help="the panel's full width, in body columns")
+    lp.add_argument("--half", type=int, default=30, help="a half's width, in body columns")
+    lp.add_argument("--third", type=int, default=21, help="a third's width, in body columns")
     lp.add_argument("--fast", type=int, default=30)
     lp.add_argument("--slow", type=int, default=60)
     lp.add_argument("--once", action="store_true")
@@ -548,7 +571,8 @@ def main(argv=None) -> int:
         json.dump(doc, sys.stdout)
         return 0
     pal = json.loads(Path(a.palette).read_text())
-    return lock_loop(Path(a.out), pal, a.cols, a.once, a.fast, a.slow)
+    cols = {"full": a.cols, "half": a.half, "third": a.third}
+    return lock_loop(Path(a.out), pal, cols, a.once, a.fast, a.slow)
 
 
 if __name__ == "__main__":

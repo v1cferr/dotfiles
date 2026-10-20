@@ -1,5 +1,5 @@
 # shellcheck shell=bash
-# The media card's text, rewritten on every MPRIS event while a Media lock lasts, never polled.
+# The media section's text, rewritten on every MPRIS event while a Media lock lasts, never polled.
 # LOCK_* come from Nix; needs UTF-8: docs/notes/desktop/lockscreen.md#media-the-card-and-its-bridge
 
 out="$LOCK_CACHE/session/media"
@@ -52,21 +52,20 @@ render() {
   done < <(playerctl --all-players metadata \
     --format "{{playerName}}$sep{{status}}$sep{{xesam:title}}$sep{{artist}}" 2> /dev/null || true)
 
-  # The card's caption rides in the markup, so it disappears with the card in the Ambient layout.
-  markup="<span size=\"$LOCK_CAPTION_SIZE\" foreground=\"#$LOCK_COL_TONE\">󰎈  MÍDIA</span>"$'\n'
+  # The caption is a label of its own (lockscreen-label mediacap); this is the section's content.
   if ((best < 0)) || [ -z "$b_title" ] || [ "$b_status" = Stopped ]; then
-    markup+="<span foreground=\"#$LOCK_COL_SUBTEXT\">$LOCK_TXT_NO_MEDIA</span>"
+    markup="<span foreground=\"#$LOCK_COL_SUBTEXT\">$LOCK_TXT_NO_MEDIA</span>"
   else
     glyph="󰐊"
     [ "$b_status" = Playing ] || glyph="󰏤"
-    markup+="<span size=\"$LOCK_TITLE_SIZE\"><b>$(fit "$b_title" "$LOCK_TITLE_COLS")</b></span>"
+    markup="<span size=\"$LOCK_TITLE_SIZE\" font_weight=\"300\">$(fit "$b_title" "$LOCK_TITLE_COLS")</span>"
     if [ -n "$b_artist" ]; then
       markup+=$'\n'"<span foreground=\"#$LOCK_COL_SUBTEXT\">$(fit "$b_artist" "$LOCK_ARTIST_COLS")</span>"
     fi
     # Where it plays and in what state: the player's MPRIS name, never anything it says of itself.
     state="pausado"
     [ "$b_status" = Playing ] && state="tocando"
-    markup+=$'\n'"<span foreground=\"#$LOCK_COL_TONE\">$glyph</span> <span foreground=\"#$LOCK_COL_DIM\">$state · $(fit "${b_name%%.*}" 20)</span>"
+    markup+=$'\n'"<span foreground=\"#$LOCK_COL_TONE\">$glyph</span> <span size=\"12288\" foreground=\"#$LOCK_COL_SUBTEXT\">$state · $(fit "${b_name%%.*}" 20)</span>"
   fi
   # The bridge's PID first: the label hides the text once this process is gone.
   printf '%s\n%s' "$$" "$markup" > "$out.$$" && mv -f "$out.$$" "$out"

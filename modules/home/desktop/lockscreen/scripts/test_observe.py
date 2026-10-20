@@ -189,7 +189,7 @@ class Procs(unittest.TestCase):
 
 class Markup(unittest.TestCase):
     PAL = {"text": "c0caf5", "subtext": "a9b1d6", "dim": "565f89", "orange": "ff9e64", "magenta": "bb9af7",
-           "blue": "7aa2f7", "teal": "73daca"}
+           "blue": "7aa2f7", "teal": "73daca", "sky": "7dcfff"}
 
     def setUp(self):
         self.o = load({})
@@ -216,15 +216,39 @@ class Markup(unittest.TestCase):
 
     def test_process_names_are_escaped_and_aligned(self):
         p = {"cpu": [{"name": "a&b<c>", "value": 5.0}], "mem": []}
-        out = self.o.card_procs(p, self.PAL, 36)
+        out = self.o.card_apps(p, self.PAL, 70)
         self.assertIn("a&amp;b&lt;c&gt;", out)
         self.assertNotIn("<c>", out)
 
-    def test_missing_energy_and_claude_cards_say_so(self):
+    def test_missing_energy_and_claude_sections_say_so(self):
         e = self.o.card_energy({"status": "missing", "history": [], "baseline": None}, self.PAL)
         self.assertIn("Sem medições", e)
-        c = self.o.card_claude({"status": "error", "error": "no-credentials"}, self.PAL, time.time())
-        self.assertIn("sem login", c)
+        c = self.o.cards_claude({"status": "error", "error": "no-credentials"}, self.PAL, time.time())
+        self.assertIn("sem login", c["claude-s"])
+        self.assertEqual(c["claude-w"], "")
+
+    def test_ring_is_eighths_and_empty_without_a_reading(self):
+        r = self.o.RINGS
+        self.assertEqual(self.o.ring_glyph(None), r[0])
+        self.assertEqual(self.o.ring_glyph(0), r[0])
+        self.assertEqual(self.o.ring_glyph(1), r[1])
+        self.assertEqual(self.o.ring_glyph(50), r[4])
+        self.assertEqual(self.o.ring_glyph(51), r[5])
+        self.assertEqual(self.o.ring_glyph(100), r[8])
+        self.assertEqual(self.o.ring_glyph(140), r[8])
+
+    def test_body_rows_fit_their_columns(self):
+        import re
+
+        bare = lambda m: re.sub(r"<[^>]+>", "", m).replace("&amp;", "&")  # noqa: E731
+        p = {"cpu": [{"name": "a-very-long-application-name", "value": 152.0}, {"name": "x", "value": 3.0}]}
+        for row in bare(self.o.card_apps(p, self.PAL, 70)).split("\n")[1:]:
+            self.assertLessEqual(len(row), 70)
+        s = {"cpu_pct": 18.0, "mem": {"used": 9.2 * 1024**3, "total": 32 * 1024**3, "available": 6 * 1024**3},
+             "gpu": {"board_w": 44.0, "render_idle_pct": 50.0}}
+        for markup in self.o.cards_system(s, {"temps": {"cpu_c": 46}}, self.PAL, 21).values():
+            meter_row = bare(markup).split("\n")[2]
+            self.assertLessEqual(len(meter_row), 21)
 
 
 if __name__ == "__main__":

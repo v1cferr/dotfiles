@@ -81,22 +81,19 @@ class Geometry(unittest.TestCase):
                     for v in (w / 2 + c["center"][0] - c["size"][0] / 2, h / 2 + c["center"][1] - c["size"][1] / 2):
                         self.assertEqual(v, int(v), c["id"])
 
-    def test_lg_grid_two_columns_three_rows(self):
-        r = self.rects("secondary", "media")
-        self.assertEqual(r["energy"], (56, 184, 528, 552))
-        self.assertEqual(r["claude"], (552, 184, 1024, 552))
-        self.assertEqual(r["system"][1] - r["energy"][3], 24)
-        self.assertEqual(r["weather"][1] - r["system"][3], 24)
-        self.assertEqual(r["media"], (552, 944, 1024, 1200))
-        self.assertEqual(r["weather"][3], 1200)  # the lower ~40% of the photo stays free
-
-    def test_ambient_has_no_media_card_and_nothing_moves(self):
-        amb, med = self.rects("secondary", "ambient"), self.rects("secondary", "media")
-        self.assertNotIn("media", amb)
-        for k in ("energy", "claude", "system", "procs"):
-            self.assertEqual(amb[k], med[k])
-        # The weather takes the whole row, from the left column's edge to the right one's.
-        self.assertEqual(amb["weather"], (med["weather"][0], med["weather"][1], med["media"][2], med["media"][3]))
+    def test_lg_is_one_centered_panel_split_by_rules(self):
+        amb, med = SPEC["monitors"]["secondary"]["layouts"]["ambient"], SPEC["monitors"]["secondary"]["layouts"]["media"]
+        for cards in (amb, med):
+            self.assertEqual([c["id"] for c in cards], ["panel"])
+            self.assertEqual(R.card_rect(cards[0], (1080, 1920)), (72, 160, 1008, 1760))
+            w, h = cards[0]["size"]
+            for x0, y0, x1, y1 in cards[0]["rules"]:
+                self.assertTrue(0 < x0 <= x1 < w and 0 < y0 <= y1 < h, "a rule leaves its panel")
+        # Media adds the one vertical rule that splits the last row; nothing else moves.
+        self.assertEqual(med[0]["rules"][: len(amb[0]["rules"])], amb[0]["rules"])
+        extra = med[0]["rules"][len(amb[0]["rules"]):]
+        self.assertEqual(len(extra), 1)
+        self.assertEqual(extra[0][0], extra[0][2])
 
     def test_logical_size_rotates_and_scales(self):
         lg = {"width": 1920, "height": 1080, "transform": 1, "scale": 1}
@@ -473,9 +470,6 @@ class Labels(unittest.TestCase):
             LOCK_TXT_HINT="HINT",
             LOCK_TXT_NO_DATA="NODATA",
             LOCK_OBS_MAX_AGE="180",
-            LOCK_COL_DIM="565f89",
-            LOCK_COL_GREEN="9ece6a",
-            LOCK_CAPTION_SIZE="10240",
         )
         return subprocess.run(
             ["bash", "-euo", "pipefail", str(HERE / "label.sh"), mode] + ([arg] if arg else []),
@@ -514,6 +508,11 @@ class Labels(unittest.TestCase):
         self.assertIn("NOMEDIA", self.run_label("media"))
         (s / "media").unlink()
         self.assertIn("NOMEDIA", self.run_label("media"))
+
+    def test_media_caption_only_in_the_media_layout(self):
+        self.assertEqual(self.run_label("mediacap", "CAP"), "")
+        (self.cache / "session" / "layout").write_text("media")
+        self.assertEqual(self.run_label("mediacap", "CAP"), "CAP")
 
     def test_quote_and_missing_quote(self):
         self.assertEqual(self.run_label("quote"), "")

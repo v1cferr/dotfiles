@@ -718,9 +718,11 @@ claude_usage() {
        WHERE NOT EXISTS (SELECT 1 FROM (SELECT session_pct, weekly_pct FROM claude_usage ORDER BY ts DESC LIMIT 1)
                          WHERE session_pct IS $s AND weekly_pct IS $w);
        DELETE FROM claude_usage WHERE ts < $((now - 8 * 86400));"
+  # The last 7 days (one weekly window) plus the last row before them, ONLY as the value the window
+  # opens with; never a point invented before the first sample. The table keeps 8 days.
   sqlite3 -batch -json -cmd '.timeout 5000' "$db" "
-    SELECT ts, session_pct AS s, weekly_pct AS w FROM claude_usage WHERE ts >= $((now - 86400))
-    UNION ALL SELECT * FROM (SELECT ts, session_pct, weekly_pct FROM claude_usage WHERE ts < $((now - 86400)) ORDER BY ts DESC LIMIT 1)
+    SELECT ts, session_pct AS s, weekly_pct AS w FROM claude_usage WHERE ts >= $((now - 7 * 86400))
+    UNION ALL SELECT * FROM (SELECT ts, session_pct, weekly_pct FROM claude_usage WHERE ts < $((now - 7 * 86400)) ORDER BY ts DESC LIMIT 1)
     ORDER BY ts" </dev/null >"$work/claude.hist"
   [ -s "$work/claude.hist" ] || echo '[]' >"$work/claude.hist"
   if jq --slurpfile hist "$work/claude.hist" --slurpfile cred "$GLANCE_CLAUDE_CREDENTIALS" '

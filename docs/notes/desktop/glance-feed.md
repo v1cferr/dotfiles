@@ -73,7 +73,8 @@ every run touches no network at all.
   `/usage` shows, per SUBSCRIPTION, which `ccusage` cannot give (docs/notes/apps/claude-code.md).
   The endpoint is internal and undocumented, so every field is read as optional. The token goes
   to curl through a header file in the run's private temp dir, never through argv, and never
-  into `http_cache`. A `claude_usage` table keeps one row per change for the 24 h graph (8 days).
+  into `http_cache`. A `claude_usage` table keeps one row per change (8 days); the document
+  carries the last 7 days plus the row before them, only as the value the week opens with.
   - **Token renewal.** The token lives about 8 hours and only a RUNNING Claude Code renews it, so
     without a session the source renews it itself, with the same endpoint and client id as Claude
     Code 2.1.296 (`platform.claude.com/v1/oauth/token`). The refresh token ROTATES: renewing

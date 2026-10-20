@@ -84,8 +84,8 @@ CREATE TABLE IF NOT EXISTS alerts (
   sent INTEGER NOT NULL
 );
 
--- The Claude account's limits, one row per CHANGE (they move in whole percent), for the 24 h
--- sparkline. 8 days, so a full weekly window always fits.
+-- The Claude account's limits, one row per CHANGE (they move in whole percent), for the 7-day
+-- history. 8 days, so a full weekly window plus its opening value always fits.
 CREATE TABLE IF NOT EXISTS claude_usage (
   ts          INTEGER PRIMARY KEY,
   session_pct REAL,

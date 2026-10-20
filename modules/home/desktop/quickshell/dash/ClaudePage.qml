@@ -1,5 +1,5 @@
 // The CLAUDE page of the rotating column: the FAI account's session and weekly limits with their
-// resets, the per-model shares, and the last 24 h. All from ClaudeUsage.qml: docs/notes/desktop/dash.md
+// resets, the per-model shares, and the week's last 7 days. All from ClaudeUsage.qml: docs/notes/desktop/dash.md
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -111,14 +111,16 @@ ColumnLayout {
         font.pixelSize: 14
     }
 
-    // The last 24 h: the week on top, the session under it (both on a 0 to 100 scale).
+    // The week's last 7 days, one bar per hour on a 0 to 100 scale, each holding its value: a weekly
+    // reset is the drop it was. The session is a current number above, not a second graph.
     ColumnLayout {
         visible: ClaudeUsage.ok
         Layout.fillWidth: true
         Layout.fillHeight: true
         spacing: 6
         Text {
-            text: "LAST 24 H"
+            readonly property bool full: ClaudeUsage.historyStart <= ClaudeUsage.now - 7 * 86400 + 3600
+            text: full ? "WEEK · LAST 7 DAYS" : "WEEK · SINCE " + Qt.formatDateTime(new Date(ClaudeUsage.historyStart * 1000), "dd/MM HH:mm")
             color: Theme.colDim
             font.family: Theme.uiFont
             font.pixelSize: 12
@@ -128,16 +130,9 @@ ColumnLayout {
         Sparkline {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            series: ClaudeUsage.series("w")
+            series: ClaudeUsage.series("w", 7 * 86400, 3600)
             fill: Theme.colMauve
             placeholder: "collecting…"
-        }
-        Sparkline {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            series: ClaudeUsage.series("s")
-            fill: Theme.colPeach
-            placeholder: ""
         }
     }
 }

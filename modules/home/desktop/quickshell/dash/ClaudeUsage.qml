@@ -52,13 +52,14 @@ Singleton {
             return Theme.colYellow;
         return normal || Theme.colPeach;
     }
-    // The last 24 h as an evenly spaced series (one point per 15 min), each holding the last value.
-    // It starts at the first sample: hours before the feed knew anything are not zeros.
-    function series(key) {
+    // The history as an evenly spaced series (one point per `step` over the last `span` seconds), each
+    // HOLDING the last value: a step chart, so a weekly reset reads as the drop it was. It starts at
+    // the first sample: hours before the feed knew anything are not zeros. The feed keeps 7 days.
+    function series(key, span, step) {
         const h = root.history;
         const out = [];
         let j = 0, v = NaN;
-        for (let t = root.now - 86400; t <= root.now; t += 900) {
+        for (let t = root.now - (span || 86400); t <= root.now; t += (step || 900)) {
             while (j < h.length && h[j].ts <= t) {
                 const x = h[j++][key];
                 v = x === null || x === undefined ? NaN : x;
@@ -68,6 +69,9 @@ Singleton {
         }
         return out;
     }
+
+    // When the history the series can show begins: 7 days ago, or the first sample if that is later.
+    readonly property real historyStart: root.history.length ? Math.max(root.now - 7 * 86400, root.history[0].ts) : root.now
 
     Feed {
         id: feed

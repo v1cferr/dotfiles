@@ -132,7 +132,6 @@ of the material.
 | `hyprlock.service` (`lockscreen-launch`) | while locked | finds the session's compositor, draws the images and the labels, runs PAM; on failure, an urgent push |
 | `lockscreen-media.service` (`media-bridge.sh`) | only inside a Media lock, `BindsTo=hyprlock.service` | rewrites the media card's text on every MPRIS event |
 | `lockscreen-weather.timer` | every 10 min | the weather card's markup, stamped with how long it is valid |
-| `lockscreen-quotes.timer` | daily | the ZenQuotes batch, translated by DeepL, as JSON |
 | `lockscreen-idle-lock.service` (`idle-gate.sh`) | when hypridle's 5 min fire | locks, unless fullscreen video is playing |
 
 The data flow, end to end:
@@ -184,7 +183,7 @@ date's spelled-out form.
 ## Language: a deliberate exception
 
 The system is en-US, and the LOCKSCREEN is full pt-BR: the spelled-out date, the weather, "Digite a
-senha…", "Nada tocando", the DeepL-translated quotes. That decision is recorded in the July history,
+senha…", "Nada tocando", the quotes in pt-BR (with the original under them). That decision is recorded in the July history,
 so those strings are NOT untranslated debt, they are the product.
 
 ## Hardware lessons, durable and independent of the GPU. Do NOT touch
@@ -299,20 +298,46 @@ written down. It is a decision now, not a leftover.
 
 ## The quote, one per lock
 
-The timer fetches a BATCH of ~50 from `zenquotes.io/api/quotes` (EN), filters it (non-empty,
-<= 200 chars, without the rate-limit placeholder) and TRANSLATES it to pt-BR through DeepL in a
-SINGLE batched request, with the key from `/run/secrets/deepl_api_key` (sops). The author stays in
-the original. The batch is written atomically as `v2/quotes.json`; with no key or DeepL down it is
-the ENGLISH batch, and a failed fetch keeps the previous one. Renewed once a day: ~50 quotes leaves
-plenty of room in DeepL's free quota of 500k characters a month.
+The quotes are a CURATED collection in the repo,
+`modules/home/desktop/lockscreen/quotes.json`, replacing the daily ZenQuotes batch that DeepL
+translated (generic self-help, weak attribution, no context, and a free tier that asks for a credit
+link). Four kinds, mixed:
 
-The renderer, not the lock, turns one quote into the card's text: escaped for pango, word-wrapped
-by monospace COLUMNS (East Asian wide characters count two) to at most 4 lines of the card's width,
-the next one drawn when a quote does not fit, and the author shown only when there is a real one
-("Unknown" and "Anonymous" are never printed as if they were names). It is chosen ONCE for the
-next lock and copied into the session at lock time, so it never changes while locked, and a
-monitor plugged mid-lock shows the same one. With no batch at all it is the built-in Alan Kay
-quote, so the card is never empty.
+| Kind | What | Shown as |
+| --- | --- | --- |
+| `stoic` | Marcus Aurelius, Seneca, Epictetus | a free pt-BR translation, the Greek or Latin under it |
+| `literature` | Machado de Assis, Fernando Pessoa and his heteronyms | the original Portuguese, once |
+| `haiku` | Bashō, Buson, Issa | a pt-BR translation in its 3 lines, the Japanese under it |
+| `computing` | Kay, Dijkstra, Knuth, Hopper, Brooks, Perlis… | a pt-BR translation, the English under it |
+
+**The sources policy.** An entry goes in only with a precise source (a work and its section, an
+EWD number, a paper or talk with its year), checked against a primary text (Perseus, Wikisource,
+Gutenberg, Arquivo Pessoa, the E.W. Dijkstra Archive) or Quote Investigator. A famous line whose
+earliest source is doubtful is left out on purpose: fewer real quotes beat many doubtful ones. The
+translations are free translations made for this collection, never a copied modern one. Each entry:
+
+```json
+{"id": "…", "kind": "stoic", "text": "pt-BR…", "original": "…", "lang": "grc",
+ "author": "Marco Aurélio", "source": "Meditações, IV.3", "year": "c. 170"}
+```
+
+**Choosing.** The renderer picks the next lock's quote at `prepare`, from what was not shown yet:
+the ids go to `~/.local/state/lockscreen/quotes-seen.json` (state, not cache), and the history
+resets only when everything was seen, never repeating the last one. A quote drawn by the 6 h timer
+for a set that is never shown still counts as seen. **Haiku sit beside the prints**: they are
+eligible only when the ASUS image has a sidecar with an `artist`, and then about one draw in three
+is a haiku (`haikuShare`). The quote is chosen ONCE for the lock and copied into the session at
+lock time, so it never changes while locked; with no usable collection it is the built-in Alan Kay
+quote, so the band is never empty.
+
+**The band** shows the text in italics at a 72-column measure (a haiku keeps its own lines, without
+quotation marks), the original smaller in `subtext`, and `author · source · year`, dropping the
+year and then the source before the credit would overflow. An entry that does not fit is skipped,
+and `test_render.py` fails if any entry in the collection does not fit or breaks the schema.
+
+**Adding a quote** is editing `quotes.json` and `! rebuild`; the test says if it breaks a rule.
+The DeepL key's declaration went with the old pipeline; the key itself is still in Bitwarden, to
+delete there if it has no other use.
 
 ## The weather card, and when it refuses to show
 
@@ -375,7 +400,7 @@ Everything under `$XDG_CACHE_HOME/lockscreen/v2/`:
 | `ready` | the renderer | a link to the newest complete set |
 | `session/` | `lock-start.sh`, the bridge | what THIS lock shows: `primary`, `secondary`, `quote`, `layout`, `media` |
 | `index.json` | the renderer | (size, mtime) to content hash, only to avoid re-hashing a big photo |
-| `weather`, `quotes.json` | the two timers | the cards' data |
+| `weather` | the weather timer | the weather card's data |
 
 **The key is content, not time:** sha256 over the renderer's version, the photo's CONTENT hash, the
 palette, the glass profile, the edge, the contrast targets, the layout's cards, the live size and
@@ -663,7 +688,7 @@ Nothing here locks the session by itself. After `! rebuild`:
 | cards misplaced | `hyprctl monitors`: the renderer uses the live size; a changed mode renders anew on the next unlock |
 | "Clima indisponível" | `systemctl --user status lockscreen-weather.timer`, then `glance-feed read weather` |
 | "Nada tocando" with music on | `systemctl --user status lockscreen-media`; it only runs when the lock began in Media |
-| an old quote every time | `systemctl --user status lockscreen-quotes`; `v2/quotes.json` |
+| the same quotes coming back | `~/.local/state/lockscreen/quotes-seen.json`: it resets only after the whole collection was shown |
 | the lock does not appear | `systemctl --user status hyprlock` and its `ExecCondition` (a hyprlock not born from the unit) |
 
 ## Rollback

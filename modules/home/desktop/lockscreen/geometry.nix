@@ -19,11 +19,49 @@ let
     ];
   };
 
-  # ── ASUS, 2560x1440: four cards on one axis, 32 px apart, an 800 px composition ──
-  identity = card "identity" 0 (-312) 384 160 0.5;
-  clock = card "clock" 0 (-88) 768 224 0.54;
-  auth = card "auth" 0 96 480 80 0.66;
-  quote = card "quote" 0 288 960 240 0.6;
+  # ── ASUS, 2560x1440: editorial, no cards. Two shaded zones on one axis: the column (logo, name,
+  # clock, date, field) and the quote's band at the foot. The art stays the protagonist. ──
+  # `zones` are where text sits (card-relative x y w h): the shade is measured there, not the box.
+  column = card "column" 0 (-160) 1280 600 0.2 // {
+    material = "scrim";
+    zones = [
+      [
+        500
+        96
+        280
+        56
+      ] # name, handle
+      [
+        100
+        190
+        1080
+        160
+      ] # clock digits
+      [
+        400
+        396
+        480
+        32
+      ] # date
+      [
+        430
+        490
+        420
+        60
+      ] # field
+    ];
+  };
+  quote = card "quote" 0 540 1600 200 0.2 // {
+    material = "scrim";
+    zones = [
+      [
+        280
+        30
+        1040
+        140
+      ]
+    ];
+  };
 
   # ── LG, 1080x1920: a 2 x 3 grid from 184 px down, 56 px margins, 24 px gutters, 472 px columns ──
   colL = -248; # 56 + 472 / 2 - 540
@@ -41,9 +79,7 @@ in
   inherit radius;
   cards = {
     inherit
-      identity
-      clock
-      auth
+      column
       quote
       energy
       claude
@@ -62,9 +98,7 @@ in
         1440
       ]; # the declared logical size; the renderer prefers the live one
       layouts.main = [
-        identity
-        clock
-        auth
+        column
         quote
       ];
     };

@@ -66,16 +66,12 @@ class Geometry(unittest.TestCase):
         mon = SPEC["monitors"][role]
         return {c["id"]: R.card_rect(c, tuple(mon["size"])) for c in mon["layouts"][layout]}
 
-    def test_asus_four_cards_on_one_axis_32_px_apart(self):
-        r = self.rects("primary", "main")
-        order = ["identity", "clock", "auth", "quote"]
-        self.assertEqual(list(r), order)
-        for k in order:
-            x0, _, x1, _ = r[k]
+    def test_asus_is_editorial_on_one_axis(self):
+        cards = SPEC["monitors"]["primary"]["layouts"]["main"]
+        self.assertEqual([c["id"] for c in cards], ["column", "quote"])
+        self.assertTrue(all(c["material"] == "scrim" for c in cards), "no card on the ASUS")
+        for k, (x0, _, x1, _) in self.rects("primary", "main").items():
             self.assertEqual(x0 + x1, 2560, f"{k} is off the vertical axis")
-        for a, b in zip(order, order[1:]):
-            self.assertEqual(r[b][1] - r[a][3], 32, f"gap {a} -> {b}")
-        self.assertEqual(r["quote"][3] - r["identity"][1], 800)
 
     def test_every_card_is_on_whole_pixels(self):
         for role, mon in SPEC["monitors"].items():
@@ -163,48 +159,54 @@ class Selection(unittest.TestCase):
 
 
 class Glass(unittest.TestCase):
-    def compose(self, src, role="primary", layout="main"):
+    def compose(self, src, role="secondary", layout="ambient"):
         mon = SPEC["monitors"][role]
         return R.compose(src, tuple(mon["size"]), mon["layouts"][layout], SPEC, (0.5, 0.5), 7)
 
     def test_outside_the_cards_the_photo_is_untouched(self):
         src = stripes((2560, 1440))
-        out, _ = self.compose(src)
+        out, _ = self.compose(src, "primary", "main")
         for xy in [(5, 5), (2550, 1430), (100, 700)]:
             self.assertEqual(out.getpixel(xy), src.getpixel(xy))
 
-    def test_contrast_holds_over_a_bright_core(self):
+    @staticmethod
+    def floor(card):
+        """The material's own floor: the scrim's or the glass's."""
+        return (SPEC["scrim"] if card.get("material") == "scrim" else SPEC["glass"])["alphaMin"]
+
+    def every_layout(self, bright):
         with tempfile.TemporaryDirectory() as d:
-            src = Image.open(photo(Path(d) / "b.png", (2560, 1440), bright=True))
-            _, report = self.compose(src)
-        for card in report:
-            for key, need in SPEC["contrast"].items():
-                self.assertGreaterEqual(card["contrast"][key], need, f"{card['id']} {key}")
-            # Over a near-white core the glass must have gone denser than its floor.
-            self.assertGreater(card["alpha"], SPEC["glass"]["alphaMin"])
+            for role, mon in SPEC["monitors"].items():
+                src = Image.open(photo(Path(d) / f"{role}.png", tuple(mon["size"]), bright=bright))
+                for layout, cards in mon["layouts"].items():
+                    yield cards, self.compose(src, role, layout)[1]
+
+    def test_contrast_holds_over_a_bright_core(self):
+        for cards, report in self.every_layout(True):
+            for card, rep in zip(cards, report):
+                for key, need in (card.get("contrast") or SPEC["contrast"]).items():
+                    self.assertGreaterEqual(rep["contrast"][key], need, f"{rep['id']} {key}")
+                # Over a near-white core the material must have gone denser than its floor.
+                self.assertGreater(rep["alpha"], self.floor(card))
 
     def test_dark_photo_keeps_each_cards_baseline(self):
-        cards = {c["id"]: c for c in SPEC["monitors"]["primary"]["layouts"]["main"]}
-        with tempfile.TemporaryDirectory() as d:
-            src = Image.open(photo(Path(d) / "k.png", (2560, 1440)))
-            _, report = self.compose(src)
-        for card in report:
-            want = max(cards[card["id"]].get("alpha", 0), SPEC["glass"]["alphaMin"])
-            self.assertEqual(card["alpha"], want, card["id"])
+        for cards, report in self.every_layout(False):
+            for card, rep in zip(cards, report):
+                self.assertEqual(rep["alpha"], max(card.get("alpha", 0), self.floor(card)), rep["id"])
 
     def test_the_rim_is_lit_at_the_top_and_not_at_the_foot(self):
-        src = Image.new("RGB", (2560, 1440), (20, 20, 30))
+        src = Image.new("RGB", (1080, 1920), (20, 20, 30))
         out, report = self.compose(src)
-        x0, t, r, b = report[1]["rect"]  # the clock card
+        x0, t, r, b = report[0]["rect"]
         mid = (x0 + r) // 2
         top = R.luminance(out.getpixel((mid, t)))
         foot = R.luminance(out.getpixel((mid, b - 1)))
         self.assertGreater(top, foot)
 
     def test_the_shadow_darkens_without_blurring_the_photo(self):
-        src = stripes((2560, 1440))
+        src = stripes((1080, 1920))
         out, report = self.compose(src)
-        x0, t, r, b = report[3]["rect"]  # under the quote card
+        x0, t, r, b = report[0]["rect"]
         below = (x0 + 40, b + 6)
         self.assertLessEqual(sum(out.getpixel(below)), sum(src.getpixel(below)))
         far = (5, 5)
@@ -213,7 +215,7 @@ class Glass(unittest.TestCase):
     def test_transmission_matches_the_desktop_measurement(self):
         # theme.md measured HyprGlass plus a 0.70 surface over stripes at 0.109: the photo must
         # still show through (glass, not a panel) and stay within reach of that material.
-        src = stripes((2560, 1440))
+        src = stripes((1080, 1920))
         out, report = self.compose(src)
         x0, t, r, b = report[0]["rect"]
         inner = (x0 + 40, t + 40, r - 40, b - 40)

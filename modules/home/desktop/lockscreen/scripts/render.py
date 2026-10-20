@@ -446,7 +446,8 @@ def scrim_card(base: Image.Image, card: dict, spec: dict, seed: int) -> dict:
         if all(contrast(luminance(rgb(pal[k])), worst) >= v * MARGIN for k, v in targets.items()):
             alpha = a
             break
-    base.paste(dither(out, seed), box[:2])
+    # Only where the shade reaches: past it, the photo stays bit for bit (no dither noise).
+    base.paste(dither(out, seed), box[:2], mask.point(lambda v: 255 if v else 0))
 
     worst = zone_luminance(base.crop(box), zones)
     return {

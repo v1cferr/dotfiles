@@ -102,9 +102,9 @@ let
   # Type sizes (pt). One JetBrains Mono column is 0.8 px per pt at 96 dpi; hyprlock rounds the size
   # up, and a 12 pt column MEASURED 10 px on screen, so the columns are counted at 0.84 px per pt.
   pt = {
-    clock = 88;
-    date = 16;
-    name = 17;
+    clock = 160; # editorial: the hero, in Thin
+    date = 14;
+    name = 13; # caps, tracked
     nick = 12;
     quote = 17;
     title = 10; # a card's caption on the LG
@@ -113,8 +113,6 @@ let
     media = 15;
     artist = 13;
   };
-  pad = 48; # a card's horizontal padding, each side
-  cols = size: card: builtins.floor ((builtins.elemAt card.size 0 - 2 * pad) / (0.84 * size));
   colsLg = size: card: builtins.floor ((builtins.elemAt card.size 0 - 48) / (0.84 * size)); # LG: 24 px insets
 
   # The ONE spec the renderer reads: palette, profile, geometry, pools, fallbacks (rule 11).
@@ -134,7 +132,7 @@ let
     };
     # Editorial: text straight over the art, a feathered shade behind it, as dense as AA needs.
     scrim = {
-      feather = 160;
+      feather = 220;
       alphaMin = 0.2;
       alphaMax = 0.94;
     };
@@ -155,20 +153,20 @@ let
     };
     refraction = 1.2e-2;
     rimBand = 6;
-    # The logo is STATE (my file, never in git): baked into the identity card, and simply left out
-    # if the file is missing, so it can never stand between me and the lock.
+    # The logo is STATE (my file, never in git): baked in at the head of the column, and simply left
+    # out if the file is missing, so it can never stand between me and the lock.
     logo = {
       path = config.my.lockscreen.logo;
       size = 68;
-      card = "identity";
-      dy = -34;
+      card = "column";
+      dy = -260;
       color = "text";
     };
     contrast = aa;
     quotesFile = quotesJson;
     quote = {
-      columns = cols pt.quote cards.quote;
-      lines = 4;
+      columns = 72; # a reading measure, not the band's width
+      lines = 3;
       fallback = {
         q = "A melhor forma de prever o futuro é inventá-lo.";
         a = "Alan Kay";
@@ -181,18 +179,8 @@ let
         pools = [ wallWide ];
         fallback = wallMain;
         layouts.main = [
-          (cards.identity // { contrast = aa; })
-          (cards.clock // { contrast = aa; })
-          # hyprlock draws the field's own state border, so the glass under it has none baked in.
-          (
-            cards.auth
-            // {
-              edge = false;
-              contrast = aa // {
-                red = 4.5;
-              };
-            }
-          )
+          # Every line of the column is in `text`, so only it needs AA: a lighter shade over bright paper.
+          (cards.column // { contrast.text = aa.text; })
           (cards.quote // { contrast = aa; })
         ];
       };
@@ -519,26 +507,26 @@ in
           }
         ];
 
-        # On its pre-rendered glass: a clear inside, a hairline carrying the state. 0.9.5 has no focus
+        # A faint pill over the shaded column, its hairline carrying the state. 0.9.5 has no focus
         # state, so neutral at rest, blue checking, red failed, yellow with Caps Lock.
         input-field = {
           monitor = primary;
-          size = "${toString (builtins.elemAt cards.auth.size 0)}, ${toString (builtins.elemAt cards.auth.size 1)}";
+          size = "420, 56";
           outline_thickness = 1;
-          rounding = cards.auth.radius;
+          rounding = -1;
           inner_color = "rgba(00000000)";
-          outer_color = c "border" "8c";
+          outer_color = c "text" "40";
           check_color = c "accent" "ff";
           fail_color = c "red" "ff";
           capslock_color = c "yellow" "ff";
           font_color = c "text" "ff";
           font_family = font;
-          placeholder_text = ''<span foreground="##${p.subtext}">󰌾  Digite a senha…</span>'';
-          fail_text = ''<span foreground="##${p.red}">$PAMFAIL</span>'';
+          placeholder_text = "󰌾  senha";
+          fail_text = "$PAMFAIL"; # in `text`: the red is the hairline's, the shade is measured for text
           dots_size = 0.22;
           dots_spacing = 0.35;
           fade_on_empty = false;
-          position = at cards.auth 0 0;
+          position = at cards.column 0 220;
           halign = "center";
           valign = "center";
         };
@@ -574,23 +562,23 @@ in
               };
           in
           [
-            # ── ASUS: who, when, the way in, a thought. All on one axis. ──
+            # ── ASUS: who, when, the way in; a thought at the foot. One axis, no boxes. ──
             (
-              textAt cards.identity 0 22
+              textAt cards.column 0 (-192)
               // {
                 monitor = primary;
-                text = config.programs.git.settings.user.name;
+                text = ''<span letter_spacing="${toString (4 * 1024)}">${lib.toUpper config.programs.git.settings.user.name}</span>'';
                 color = c "text" "ff";
                 font_size = pt.name;
                 font_family = "${font} SemiBold";
               }
             )
             (
-              textAt cards.identity 0 52
+              textAt cards.column 0 (-166)
               // {
                 monitor = primary;
                 text = config.home.username;
-                color = c "subtext" "ff";
+                color = c "text" "ff";
                 font_size = pt.nick;
                 font_family = font;
               }
@@ -598,33 +586,22 @@ in
             # The time, with seconds, from the system clock (chrony/NTS). 995 and not 1000: hyprlock's
             # timer runs ~0.7 ms long, and a period over 1 s MUST skip a second (measured in the notes).
             (
-              textAt cards.clock 0 (-17)
+              textAt cards.column 0 (-30)
               // {
                 monitor = primary;
                 text = "cmd[update:995] ${clockCmd}";
                 color = c "text" "ff";
                 font_size = pt.clock;
-                font_family = "${font} Light";
+                font_family = "${font} Thin";
               }
             )
             (
-              textAt cards.clock 0 80
+              textAt cards.column 0 110
               // {
                 monitor = primary;
-                text = "cmd[update:60000] ${labelBin} date ${p.accent}";
-                color = c "subtext" "ff";
+                text = "cmd[update:60000] ${labelBin} date";
+                color = c "text" "ff";
                 font_size = pt.date;
-                font_family = font;
-              }
-            )
-            # The quote card's mark: a large, quiet opening quote in the corner, saying what the card is.
-            (
-              textAt cards.quote (-440) (-82)
-              // {
-                monitor = primary;
-                text = "󰝗"; # the Nerd Font's open quote: the dingbat ❝ fell back to a tiny glyph
-                color = c "accent" "73";
-                font_size = 34;
                 font_family = font;
               }
             )

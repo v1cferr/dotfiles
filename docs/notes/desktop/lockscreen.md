@@ -3,18 +3,19 @@
 `modules/home/desktop/lockscreen/default.nix`, with its renderer and scripts in
 `modules/home/desktop/lockscreen/scripts/`. Ref: <https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/>
 
-## Lockscreen v5: an editorial ASUS, one panel on the LG, a modern type system (20/10/2026)
+## Lockscreen v5.1: an editorial ASUS, Bento cards on the LG, a modern type system (20/10/2026)
 
 v3 had the right content in the wrong shape: four ASUS cards of four widths stacked into a ragged
 silhouette that hid the print, and six LG cards of three heights that filled only the top 60% of
 the screen, each with an empty lower half, all in one font, one weight and nearly one size. v4 keeps
 the v2 architecture below and every guarantee (AA measured on the composited pixels, no fabricated
-number, no command line, lock-scoped services, art and logo as state) and changes the composition:
+number, no command line, lock-scoped services, art and logo as state) and changes the composition;
+v5 brought the type system and v5.1 (below) the Bento LG, the avatar and the one-size clock:
 
 | Monitor | What it shows | What it never shows |
 | --- | --- | --- |
-| ASUS (`my.monitors.primary`) | my logo, name and handle; the time with seconds and the date; the password field; the quote of this lock | energy, Claude, the system, weather |
-| LG (`my.monitors.secondary`) | one panel: energy, Claude Code, the system with its top apps, weather, and media in a Media lock | the time, the quote, my name, a password field |
+| ASUS (`my.monitors.primary`) | the time with seconds and the date; my logo in an avatar, name and handle, with the password field; the quote of this lock | energy, Claude, the system, weather |
+| LG (`my.monitors.secondary`) | six glass cards: energy, Claude Code, the system, processes, weather, and media in a Media lock | the time, the quote, my name, a password field |
 
 **One type system, and everything stays TEXT.** v5 replaced v4's all-JetBrains-Mono look with four
 families, picked from a bake-off rendered by the same pango 1.57 hyprlock uses. Lesson 2 (no image
@@ -25,7 +26,7 @@ reloads while locked) still holds: icons and charts are fonts, not pictures.
 | clock, numbers, body | Geist (Vercel, OFL; the face Nothing OS adopted) | a modern grotesque from Thin to Black; `font_features="tnum"` keeps the clock's digits from dancing |
 | labels and data | Geist Mono | the same design, aligned columns; caps tracked by 2 to 4 pt |
 | icons | Material Symbols Rounded (Google, Apache 2.0) | ligatures (`bolt`, `memory`) on a variable weight axis: `@wght=300` keeps an icon as thin as the number beside it; `clock_loader_*` are the Claude rings |
-| charts | Sparks Dot-line Thick (After the Flood, OFL, `pkgs/sparks-font`) | its `calt` turns `{30,60,90}` into a line chart drawn by the font |
+| charts | Sparks (After the Flood, OFL, `pkgs/sparks-font`): Dot-line Thick for energy, Bar Medium for Claude's week | its `calt` turns `{30,60,90}` into a chart drawn by the font; one point is 0.35 em (line) or 0.30 em (bars), measured |
 
 The families live in ONE `type` attrset in `default.nix`, which the labels read and `observe`
 receives as a JSON file (`--type`). They are installed system-wide by `fonts.nix` but never become
@@ -34,51 +35,62 @@ whose name ends in a weight word needs a trailing comma (`Sparks Dot-line Thick,
 "Thick" as a weight and falls back; and the icon axes go in the font description
 (`Material Symbols Rounded 16 @wght=300,FILL=1`).
 
-**The clock** is HH:MM in Geist Thin at 160 pt with tabular digits, and the seconds small (Geist
-Light 44 pt, in the accent) raised to the digits' cap line (0.71 em), the iOS and macOS lock
-hierarchy: the hour is the information, the seconds are the pulse. The label is nudged right by
-half the seconds' width, so HH:MM itself sits on the axis.
+**The clock** (v5.1) is HH:MM:SS at ONE size, Geist Thin 144 pt with tabular digits, the `:SS` in
+the accent at 85%: one string, centered as a whole, whose width never changes as the digits tick.
+v5's small raised seconds were the iOS hierarchy; the one-size clock reads as one instrument.
 
 Hierarchy comes from weight and size, not from boxes: a Thin hero, ExtraLight numbers (36 to
 44 pt), SemiBold caps labels at 11 to 13 pt, a 14 pt body and a 12 pt meta line. Color carries the
 section (energy orange, Claude violet, system blue, weather sky, media green) and appears only on
 its caption, its icon and its marks; text is `text` or `subtext`, never `dim`, which fails AA.
 
-**The ASUS is an editorial page, with no cards.** One axis over the art (`geometry.nix`): the logo,
-the name in tracked caps with the handle under it, the Thin clock with its seconds in the accent,
-the date, the field as a faint pill whose hairline carries the state (no text shadow anywhere on
-the ASUS: the scrim holds AA and crisp type reads cleaner), and the quote at the foot at
-a 72-column reading measure. Legibility comes from a **scrim** instead of glass: a feathered shade
-of the palette's `bg` behind the column and behind the quote, measured only on the text LINES (the
-geometry names them as zones), from 0.20 up to 0.94. Every line of the column is in `text`, so the
-column needs AA for one color only; that keeps the shade at 0.70 to 0.76 over the cream paper of the
-Met prints (measured 20/10/2026), where also requiring `subtext` asked for 0.92 and turned the print
-into a dark blob. The 160 pt seconds in the accent measure 3.2 to 3.4 against AA-large's 3.0. The
-logo is STATE: `my.lockscreen.logo` points at my SVG outside git, the renderer rasterizes it with
-`rsvg-convert`, crops it to its INK, fits it into 68 px and recolors it in `text`; a missing or
-broken file renders without it.
+**The ASUS is an editorial page on one axis** (`geometry.nix`). At the top, the clock and the date.
+Then who is unlocking, as ONE group: the logo in a 112 px glass circle (the SVG cropped to its ink
+and fitted into 72 px, recolored in `text`), 50 px above "Victor Ferreira" (Geist 20 pt) and
+"v1cferr", and under them the field, 480x70 on its own glass with the same 16 px corner hyprlock
+draws its hairline at (border at 85%, blue checking, red failed, yellow with Caps Lock) and a
+legible placeholder. At the foot, the quote on a quiet glass reading surface (1200x280, baseline
+0.40) at 21 pt, the original at 14 and the credit at 13. Legibility of the type over the art comes
+from a **scrim**: a feathered shade of the palette's `bg` behind the column, measured only on the
+text LINES (the geometry names them as zones), from 0.20 up to 0.94; every line there is `text`, so
+it needs AA for one color only and stays at 0.70 to 0.76 over the cream paper of the Met prints.
+Glass may sit on a scrim (it is a shade on the photo); two surfaces may not overlap. No text shadow
+on the ASUS. The logo is STATE (`my.lockscreen.logo`, my SVG outside git); a missing or broken file
+renders an empty avatar circle, and the lock never depends on it.
 
-**The LG is one glass panel, 936 x 1600, centered**, 72 px from each side and 160 px from the top
-and the foot. Hairlines (`text` at 14%, baked by the renderer) split it into sections on the 8 px
-grid: energy 448 px, Claude 384, the system 448, and a last row of 320 that the weather takes alone
-in Ambient and shares with the media in Media (a vertical rule appears only then). Every section
-has its caption 44 px under the rule above it and its content CENTERED in what the caption leaves,
-so no section has an empty foot. Text starts on one left edge, 56 px in.
+**The LG is six independent glass cards** on one grid: 72 px margins, 24 px gaps, rows from 184 px
+down, every edge on the 8 px grid, the lower ~460 px left to the print. Energy and Claude Code are
+full width (936x328), the system and the processes side by side (456x304), the weather and the
+media under them (456x240). Ambient has no media card: the weather takes the whole row (936x240)
+and splits into now and the day's context, instead of leaving an empty surface. Every card has the
+same header policy (a 16 pt Material icon at weight 300, two spaces, tracked 12 pt caps, in the
+card's color, 40 px from its top) and a 32 px inset.
 
 | Section | Hero | Then |
 | --- | --- | --- |
-| Energy | the measured watts, Geist Thin 72 pt, "CPU + GPU medido" beside it | the 30 min line chart across the whole width, on a round range around the data that the meta line prints ("75 a 125 W"; a line chart shows a trend, so its scale hugs the data), the CPU and GPU split as meters |
-| Claude Code | per half, a progress ring (`clock_loader_10` to `_90`, an empty circle for nothing read, a filled one at 100%) and the share | what it is, its reset, its last 24 h on 0 to 100% |
-| System | CPU %, RAM used and GPU board W as three equal columns | a meter each, one note (temperatures, free RAM, render active), then the three apps using the most CPU |
-| Weather | the sky's glyph and the temperature | the condition, the day's range, rain and feels-like |
+| Energy | the measured watts, Geist 56 pt, "CPU + GPU medidos" beside it | the 30 min line chart across the card, on a round range around the data that the meta line prints ("75 a 125 W"; a line shows a trend, so its scale hugs the data), "CPU package" and "GPU board" as meters, the Eco rest baseline and the profile |
+| Claude Code | the 5 h session and the weekly limit side by side, each a progress ring (`clock_loader_10` to `_90`; an empty circle for nothing read, a filled one at 100%), the share and its reset | ONE chart: the week's last 7 days as held 4 h bars on a true 0 to 100% scale, with "há 7 dias … agora" under it (or "coletando desde …" while the feed holds less), and the last reset, observed or inferred |
+| System | CPU %, RAM used, GPU render active %: a number in one mono column and a meter each | short caps names with their details in meta (temperatures, free RAM, GPU clock); never the GPU watts, which are the energy card's |
+| Processes | the three apps using the most CPU now and the three holding the most memory | grouped by app, names only |
+| Weather | the sky's glyph and the temperature | the condition, the day's range, rain, feels-like and "previsão das HH:MM" |
 | Media | the title, Light 20 pt | the artist, the state and the player |
 
-**The material** of the LG panel is v3's Adaptive Glass+, unchanged: a frosted core (blur sigma 28,
+**The material** of every LG card is Adaptive Glass+: a frosted core (blur sigma 22, so the print's
+shapes still read through,
 the profile's tint, 6% of the accent, the bg-to-surface ease, ±1 dither), an optical rim (the
 hairline plus text-colored light at 28% that fades by mid-height, and a 1.2% lens in a 6 px band
-that never touches text), a soft highlight, and an ELEVATION shadow (35%, sigma 36, 14 px down)
-rather than a tight rim. The panel's baseline is 0.56 and it rises only as far as its text needs;
-the LG's text keeps one light shadow pass.
+that never touches text), a soft highlight, and an ELEVATION shadow (35%, sigma 36, 14 px down).
+Each card's baseline is 0.72 and it rises only as far as its text needs; the LG's text keeps one
+light shadow pass.
+
+**Claude's week, end to end.** glance-feed's `claude_usage` table keeps one row per change for 8 days;
+its document carries the last 7 days plus the row before them, ONLY as the value the week opens
+with (docs/notes/desktop/glance-feed.md). `observe` folds that into 42 buckets of 4 h, each the last
+value known at its end (a step chart: a reset reads as the drop it was), None before the first
+sample (drawn as an invisible point of the same width, never a zero), clamped to 0 to 100%. A drop
+is a reset: "observed" when it spans the documented boundary (the next reset minus 7 days),
+"inferred" otherwise. The Quickshell CLAUDE page reads the same document through
+`ClaudeUsage.series("w", 7 days, 1 h)`, so the two screens cannot disagree.
 
 ### Why the glass is pre-rendered, and not HyprGlass
 
@@ -584,7 +596,10 @@ Measured on 19/10/2026 in the headless sway above (GL rendering, both outputs), 
 | a render from a 123 Mpx JPEG (Cosmic Cliffs) | 2.7 s wall | 159 MB peak |
 | **v3**, Media layout, labels included (20/10/2026) | 0.80 | 91 MB |
 | v4, Media layout, 20 labels, music paused (20/10/2026): hyprlock ITSELF only | 0.38 | 94 MB |
-| **v5**, Media layout, 20 labels: hyprlock itself + its label children | 0.38 + 0.62 = 1.00 | 93 MB |
+| v5, Media layout, 20 labels: hyprlock itself + its label children | 0.38 + 0.62 = 1.00 | 93 MB |
+| **v5.1**, Media layout, 25 labels (Bento, split weather): itself + children | 0.50 + 0.88 = 1.38 | 93 MB |
+| v5.1 render, ASUS (scrim, avatar with logo, field, quote) | 2.8 s wall, once after an unlock | 190 MB peak |
+| v5.1 render, LG Media (six cards) | 1.5 s wall | 149 MB peak |
 | v3's observe collector, between rounds | 0.17 | 21 MB |
 | v3's render of the ASUS image (4 cards, logo) | 0.9 s wall, once after an unlock | 159 MB peak |
 | the GPU board, locked (v2, measured on the real desk 19/10/2026, 1 s energy samples) | 37.3 W, render idle 79.5% | |
@@ -604,18 +619,18 @@ untouched.
 
 ## Testing
 
-`nix build .#checks.x86_64-linux.lockscreen` runs 90 tests in the sandbox, against the spec JSON
+`nix build .#checks.x86_64-linux.lockscreen` runs 100 tests in the sandbox, against the spec JSON
 the desktop really uses (`my.lockscreen.spec`), with only synthetic images:
 
 | Suite | What it pins |
 | --- | --- |
 | `test_idle_gate.py` | the fullscreen-video policy |
 | `test_lock_launch.py` | the lock reaches the session's compositor with a stale, missing or hostile `WAYLAND_DISPLAY` |
-| Geometry | every layout fits its screen; the ASUS is scrim only, on one axis; the LG is one centered panel, its rules inside it, Media adds only the vertical rule; whole pixels; rotation and scale |
+| Geometry | every layout fits its screen; glass may sit on a scrim, two surfaces never overlap; the ASUS on one axis, the avatar a true circle above the field, both inside the column; the LG's six cards at their exact rects on the 8 px grid, Ambient widening only the weather; whole pixels; rotation and scale |
 | Logo | cropped to its ink, scaled without distortion, centered; missing or broken renders without it |
 | `test_observe.py` | energy units, holes and staleness, the comparable baseline; Claude resets, holes, errors, staleness; process deltas, PID reuse, app names without arguments; escaped markup; the ring's steps; rows that fit their columns; the sparkline's scale, floor, clamping, holes as gaps and its width |
 | Selection | orientation grades, empty pools, invalid files, portrait preferred, cover and focus |
-| Editorial | the scrim reaches AA over a bright photo, darkens without blurring and fades to an untouched photo; rules land inside the panel |
+| Editorial | the scrim reaches AA over a bright photo, darkens without blurring and fades to an untouched photo |
 | Glass | the photo untouched outside the cards; AA over a white core; each card's baseline over a dark sky; the rim lit at the top; the shadow darkens without blurring; transmission; determinism |
 | Profile | the numbers still mirror `Theme.qml` and `glass.lua` |
 | Cache | the key moves with every input and only with content; atomic publish; corrupt assets; a full prepare with hits, collection, and a session kept through new sets |
@@ -655,7 +670,10 @@ TEXT and not as images: an image that changes needs `reload_time`, which is less
 ## Known limitations
 
 - **Unverified on the real session:** the look on the physical panels, Hyprland's handling of a
-  DP unplug while locked, a correct password, GPU power. See the procedure below.
+  DP unplug while locked, a correct password, GPU power. See the procedure below. v5.1's field
+  states past typing (checking, a wrong password, Caps Lock) are unverified too: in the headless
+  sway, `wtype` types into hyprlock (the dots appear) but its Enter arrives as a stray key event
+  that hyprlock refuses, so no password is ever submitted there.
 - The clock's lag (0 to 1 s, sweeping) is hyprlock's free-running timer; v2 only removes the
   skipped second.
 - No live refraction or specular: the glass is a static image, its lens is baked.
@@ -675,7 +693,8 @@ Nothing here locks the session by itself. After `! rebuild`:
    three `rendered` lines, or `the fallback stays` with the reason.
 2. Keep a way back open BEFORE the first lock: an SSH session from another machine, or know the
    TTY path below.
-3. `SUPER+L`. Check the ASUS (clock ticking, field), the LG (the panel), type the password, unlock.
+3. `SUPER+L`. Check the ASUS (clock ticking, avatar, field), the LG (the six cards), type a WRONG
+   password first (the red hairline and the PAM message), then the right one, and unlock.
 4. With music playing, lock again: the media half should appear and follow a track change.
 5. Optional, from SSH while locked: unplug the ASUS cable, read the hint on the LG, type the
    password, press Enter.

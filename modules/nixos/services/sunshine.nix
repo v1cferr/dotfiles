@@ -267,9 +267,9 @@ in
       # A host-side bitrate ceiling, so it holds for ANY client that pairs. 20000 is the de facto
       # rate made explicit, not an experiment. On the codec: docs/notes/network/sunshine.md
       max_bitrate = 20000; # Kbps
-      # Back to Sunshine's default: the 30 answered the DIRECT path, retired on 19/08/2026.
-      # The tunnel measured 0% loss twice (19/08 and 16/09), so the extra 10 only cost bitrate.
-      fec_percentage = 20;
+      # 40 for loss INSIDE the client's network (AS52888, up to ~24% at peak, 20/10/2026), which
+      # no bitrate cut avoids. Parity recovers it without a retransmit: docs/notes/network/sunshine.md
+      fec_percentage = 40;
       # Tolerates a transient hole. It only helps when the HOST gives up, and it is not free:
       # a dead client's session holds hypridle paused for longer.
       ping_timeout = 20000; # ms

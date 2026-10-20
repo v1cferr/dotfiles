@@ -409,6 +409,19 @@ firewalls deprioritize, so they indicate a good path rather than proving what th
 **If sessions start breaking up, this is the first number to put back**, and the second is
 `packet_size`.
 
+**And it went up to 40 on 20/10/2026**, because the caveat came true. `pc-trampo` streams broke up
+with the home side clean: 0% loss to 1.1.1.1 throughout, uplink idle, router CPU idle. A 2 s probe
+through the tunnel (10 pings of 1200 B) measured loss swinging from 0 to 30%, and `mtr` placed its
+start at the FIRST hop inside the UFSCar's AS52888 (`200.133.233.200`, 23%), carried to the client's
+public address. The hop that drops ICMP in transit (`100.127.11.29`, 16.7%) is rate limiting, since
+the hops after it show 0%.
+
+Bitrate is NOT the lever, and the per-minute averages are what proved it: 4 to 7% loss at ~50
+Mbit/s, then 18 to 24% at ~10 Mbit/s a minute later. Cutting the client to 10 Mbps did not move it.
+A loss nobody here controls is answered with parity, so the ceiling stays at 20000 and the client
+can stay around 15 Mbps to leave room for it. Measure it again before lowering it: the 30 already
+outlived its reason once.
+
 **`ping_timeout` above the 10 s default** tolerates a transient hole. It only helps when the HOST
 is the one giving up, and the logs cannot tell that from the client giving up. It is not free: a
 dead client's session holds hypridle paused for longer.

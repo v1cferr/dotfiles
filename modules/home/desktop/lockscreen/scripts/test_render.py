@@ -366,6 +366,7 @@ class Cache(unittest.TestCase):
         spec["monitors"]["primary"]["pools"] = [str(pools_wide)]
         spec["monitors"]["secondary"]["pools"] = [str(pools_tall)]
         spec["quotesFile"] = str(self.dir / "quotes.json")
+        spec["quotesSeen"] = str(self.dir / "state" / "seen.json")
         sp = self.dir / "spec.json"
         sp.write_text(json.dumps(spec))
         return R.main(["prepare", "--spec", str(sp), "--cache", str(cache), "--seed", str(seed)])
@@ -418,31 +419,73 @@ class Quotes(unittest.TestCase):
         self.assertEqual(R.columns("日本"), 4)
         self.assertEqual(R.columns("ação"), 4)
 
-    def test_markup_is_escaped_and_authors_only_when_real(self):
-        out = R.format_quote({"q": "a < b & c", "a": "Ada"}, 40, 4, "a9b1d6")
+    @staticmethod
+    def entry(i, kind="stoic", **kw):
+        return {"id": f"q{i}", "kind": kind, "text": f"Frase {i}.", "lang": "pt", "author": f"Autor {i}", **kw}
+
+    def test_markup_is_escaped_with_original_and_credit(self):
+        q = self.entry(1, kind="computing", text="a < b & c", original="x & y", lang="en", source="Notes",
+                       year="1843")
+        out = R.format_quote(q, SPEC)
         self.assertIn("a &lt; b &amp; c", out)
-        self.assertIn("Ada", out)
-        anon = R.format_quote({"q": "sem autor", "a": "Unknown"}, 40, 4, "a9b1d6")
-        self.assertNotIn("Unknown", anon)
-        self.assertIsNone(R.format_quote({"q": ""}, 40, 4, "x"))
-        self.assertIsNone(R.format_quote("nonsense", 40, 4, "x"))
+        self.assertIn("x &amp; y", out)
+        self.assertIn("Autor 1 · Notes · 1843", out)
+
+    def test_portuguese_shows_no_original_and_invalid_is_none(self):
+        self.assertNotIn("ORIG", R.format_quote(self.entry(1, original="ORIG"), SPEC))
+        self.assertIsNone(R.format_quote({"text": "sem id"}, SPEC))
+        self.assertIsNone(R.format_quote(self.entry(1, kind="spam"), SPEC))
+        self.assertIsNone(R.format_quote("nonsense", SPEC))
+
+    def test_haiku_keeps_its_three_lines_without_quotation_marks(self):
+        q = self.entry(1, kind="haiku", text="um\ndois\ntrês", original="古池や蛙飛び込む水の音", lang="ja")
+        out = R.format_quote(q, SPEC)
+        self.assertTrue(out.startswith("<i>um\ndois\ntrês</i>"))
+        self.assertNotIn("“", out)
+
+    def choose(self, items, haiku_ok, seen, seed):
+        with tempfile.TemporaryDirectory() as d:
+            spec = json.loads(json.dumps(SPEC))
+            spec["quotesFile"] = str(Path(d) / "q.json")
+            Path(spec["quotesFile"]).write_text(json.dumps(items))
+            return R.choose_quote(spec, random.Random(seed), haiku_ok, seen)
+
+    def test_no_repeat_until_everything_was_shown(self):
+        with tempfile.TemporaryDirectory() as d:
+            seen = Path(d) / "s" / "seen.json"
+            items = [self.entry(i) for i in range(3)]
+            shown = [self.choose(items, False, seen, i) for i in range(3)]
+            self.assertEqual(len(set(shown)), 3)
+            again = self.choose(items, False, seen, 9)  # all seen: the history resets...
+            self.assertNotEqual(again, shown[-1])  # ...but never repeats the last one
+            self.assertEqual(len(json.loads(seen.read_text())), 2)
+
+    def test_haiku_only_beside_a_print(self):
+        items = [self.entry(1, kind="haiku", text="a\nb\nc", lang="ja", original="あ"), self.entry(2)]
+        for seed in range(20):
+            self.assertIn("Frase 2.", self.choose(items, False, None, seed))
+        self.assertTrue(any("<i>a\nb\nc</i>" in self.choose(items, True, None, s) for s in range(20)))
 
     def test_choose_falls_back(self):
         with tempfile.TemporaryDirectory() as d:
-            p = Path(d) / "q.json"
-            p.write_text("{broken")
-            out = R.choose_quote(p, random.Random(1), SPEC)
-            self.assertIn(SPEC["quote"]["fallback"]["a"], out)
-            p.write_text(json.dumps([{"q": "x " * 300, "a": "Long"}, {"q": "Curta.", "a": "Real"}]))
-            out = R.choose_quote(p, random.Random(1), SPEC)
-            self.assertIn("Curta.", out)
+            spec = json.loads(json.dumps(SPEC))
+            spec["quotesFile"] = str(Path(d) / "q.json")
+            Path(spec["quotesFile"]).write_text("{broken")
+            out = R.choose_quote(spec, random.Random(1), True)
+            self.assertIn(SPEC["quote"]["fallback"]["author"], out)
 
-    def test_quote_fits_its_card(self):
-        q = SPEC["quote"]
-        out = R.choose_quote(Path("/nonexistent"), random.Random(1), SPEC)
-        text_lines = re.sub(r"<[^>]+>", "", out).split("\n")
-        self.assertLessEqual(len(text_lines), q["lines"] + 1)
-        self.assertTrue(all(R.columns(x) <= q["columns"] for x in text_lines))
+    def test_the_collection_is_valid_and_every_entry_fits(self):
+        items = json.loads(Path(SPEC["quotesFile"]).read_text())
+        ids = [q.get("id") for q in items]
+        self.assertEqual(len(ids), len(set(ids)), "duplicate ids")
+        for q in items:
+            self.assertTrue(R.valid_quote(q), q.get("id"))
+            if q["lang"] == "pt":
+                self.assertNotIn("original", q, q["id"])
+            if q["kind"] == "haiku":
+                self.assertEqual(len(q["text"].split("\n")), 3, q["id"])
+            self.assertNotIn("—", q["text"] + q.get("original", ""), q["id"])  # the repo's prose rule
+            self.assertIsNotNone(R.format_quote(q, SPEC), f"{q['id']} does not fit the band")
 
 
 class Labels(unittest.TestCase):

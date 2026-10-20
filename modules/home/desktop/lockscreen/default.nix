@@ -14,7 +14,6 @@ let
   inherit (pkgs)
     bash
     coreutils
-    curl
     gnugrep
     hyprlock
     jq
@@ -59,7 +58,6 @@ let
   cacheDir = "${config.xdg.cacheHome}/lockscreen";
   v2 = "${cacheDir}/v2"; # the renderer's cache, the ready set, the session links, the data files
   session = "${v2}/session";
-  quotesJson = "${v2}/quotes.json";
   weatherFile = "${v2}/weather";
 
   # The glass PROFILE's numbers, one row per my.theme.glass value. They MIRROR Theme.qml's card
@@ -174,13 +172,26 @@ let
       color = "text";
     };
     contrast = aa;
-    quotesFile = quotesJson;
+    # The quotes are CONTENT in the repo (curated, sourced); what was shown is STATE.
+    quotesFile = ./quotes.json;
+    quotesSeen = "${config.xdg.stateHome}/lockscreen/quotes-seen.json";
     quote = {
       columns = 72; # a reading measure, not the band's width
       lines = 3;
+      originalColumns = 94; # the original and the credit, smaller: the same measure in px
+      originalLines = 2;
+      originalSize = 13;
+      metaSize = 12;
+      haikuShare = 0.34; # beside a print, about one draw in three is a haiku
       fallback = {
-        q = "A melhor forma de prever o futuro é inventá-lo.";
-        a = "Alan Kay";
+        id = "kay-predict-the-future";
+        kind = "computing";
+        text = "A melhor forma de prever o futuro é inventá-lo.";
+        original = "The best way to predict the future is to invent it.";
+        lang = "en";
+        author = "Alan Kay";
+        source = "reunião no Xerox PARC";
+        year = "1971";
       };
     };
     monitors = {
@@ -322,46 +333,6 @@ let
   pidof = "${procps}/bin/pidof"; # the unit's ExecCondition: do not start a 2nd hyprlock
   loginctlBin = "${systemd}/bin/loginctl";
   systemctlBin = "${systemd}/bin/systemctl";
-
-  # Quote: a daily timer fetches ~50 from ZenQuotes and batch-translates them through DeepL into a
-  # JSON batch; the renderer wraps one per lock. The layered fallbacks are in the notes.
-  deeplKeyFile = "/run/secrets/deepl_api_key"; # sops (owner v1cferr); if absent, it stays EN
-  quotesFetch = writeShellScript "lockscreen-quotes-fetch" ''
-    ${coreutils}/bin/mkdir -p ${v2}
-    tmp="${quotesJson}.tmp"
-    ${coreutils}/bin/rm -f "$tmp"
-
-    # 1) A filtered EN batch into a compact array [{q,a}].
-    filtered="$(${curl}/bin/curl -s --max-time 15 'https://zenquotes.io/api/quotes' \
-      | ${jq}/bin/jq -c '[.[]
-          | select((.q | length) > 0 and (.q | length) <= 200 and .a != "zenquotes.io")
-          | {q, a}]' 2>/dev/null || true)"
-
-    # 2) With a batch and a DeepL key, translate the QUOTES in 1 request and recombine them with
-    #    the original author IN ORDER. A mismatch leaves it empty, so it falls back to EN.
-    translated=""
-    if [ -n "$filtered" ] && [ "$filtered" != "[]" ] && [ -r "${deeplKeyFile}" ]; then
-      key="$(${coreutils}/bin/cat "${deeplKeyFile}")"
-      payload="$(${coreutils}/bin/printf '%s' "$filtered" \
-        | ${jq}/bin/jq -c '{text: [.[].q], target_lang: "PT-BR", source_lang: "EN"}')"
-      resp="$(${curl}/bin/curl -s --max-time 30 \
-        -H "Authorization: DeepL-Auth-Key $key" -H 'Content-Type: application/json' \
-        -d "$payload" 'https://api-free.deepl.com/v2/translate' 2>/dev/null || true)"
-      translated="$(${jq}/bin/jq -cn --argjson f "$filtered" --argjson r "$resp" \
-        'if ($r.translations | type) == "array" and ($r.translations | length) == ($f | length)
-         then [range(0; ($f | length)) | {q: $r.translations[.].text, a: $f[.].a}]
-         else empty end' 2>/dev/null || true)"
-    fi
-
-    # 3) The translated batch if it worked, otherwise the EN one; published atomically, and the
-    #    previous batch stays when both failed. The renderer escapes and wraps.
-    if [ -n "$translated" ] && [ "$translated" != "null" ] && [ "$translated" != "[]" ]; then
-      ${coreutils}/bin/printf '%s' "$translated" > "$tmp"
-    elif [ -n "$filtered" ] && [ "$filtered" != "[]" ]; then
-      ${coreutils}/bin/printf '%s' "$filtered" > "$tmp"
-    fi
-    if [ -s "$tmp" ]; then ${coreutils}/bin/mv "$tmp" ${quotesJson}; else ${coreutils}/bin/rm -f "$tmp"; fi
-  '';
 
   # Weather: a 10-min timer turns glance-feed's forecast into the card's markup, stamped with how
   # long it is valid. The case arms are GENERATED from the same attrset, so the lock and the bar never drift (rule 16).
@@ -881,24 +852,6 @@ in
       Timer = {
         OnBootSec = "1min"; # the 1st fetch right after boot
         OnUnitActiveSec = "10min"; # and every 10 min afterwards
-        Persistent = true;
-      };
-      Install.WantedBy = [ "timers.target" ];
-    };
-
-    # Quotes: the ZenQuotes batch, as a oneshot plus a timer (it replaced the vendored TSV).
-    systemd.user.services.lockscreen-quotes = {
-      Unit.Description = "Refreshes the lock screen quote batch (ZenQuotes)";
-      Service = {
-        Type = "oneshot";
-        ExecStart = "${quotesFetch}";
-      };
-    };
-    systemd.user.timers.lockscreen-quotes = {
-      Unit.Description = "Renews the lock screen quote batch once a day";
-      Timer = {
-        OnBootSec = "1min"; # the 1st batch right after boot
-        OnUnitActiveSec = "1d"; # renews once a day: ~50 quotes leaves room in DeepL's free quota (500k/month)
         Persistent = true;
       };
       Install.WantedBy = [ "timers.target" ];

@@ -61,10 +61,6 @@ in
     (lib.mapAttrs (_key: _item: { }) syncedMap)
     // {
       v1cferr_password_hash.neededForUsers = true; # the password hash: it is needed early (the user)
-      deepl_api_key = {
-        owner = "v1cferr";
-        mode = "0400";
-      }; # user-readable: the lockscreen quote fetcher is a --user service
       # OUT of Bitwarden: it is MULTILINE and `sops set` writes single-line JSON.
       rclone_gdrive_conf = {
         owner = "v1cferr";

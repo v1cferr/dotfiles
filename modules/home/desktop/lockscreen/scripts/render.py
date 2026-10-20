@@ -577,7 +577,8 @@ def swap_link(target: str, link: Path) -> None:
 
 # ── Quotes ──────────────────────────────────────────────────────────────────────────────────
 
-UNATTRIBUTED = {"", "unknown", "anonymous", "anônimo", "desconhecido", "zenquotes.io"}
+KINDS = {"stoic", "literature", "haiku", "computing"}
+LANGS = {"pt", "la", "grc", "ja", "en"}
 
 
 def columns(text: str) -> int:
@@ -606,34 +607,78 @@ def wrap(text: str, width: int, max_lines: int):
     return lines if 0 < len(lines) <= max_lines else None
 
 
-def format_quote(q: dict, width: int, max_lines: int, author_color: str):
-    """Pango markup for one quote, wrapped; the author only when there is a real one."""
-    text = q.get("q") if isinstance(q, dict) else None
-    if not isinstance(text, str) or not text.strip():
+def wrap_verse(text: str, width: int, max_lines: int):
+    """Verse keeps its own breaks; each line must fit as it is (a poem is not re-flowed)."""
+    lines = [x.strip() for x in text.split("\n") if x.strip()]
+    if not lines or len(lines) > max_lines or any(columns(x) > width for x in lines):
         return None
-    lines = wrap(f"“{text.strip()}”", width, max_lines)
-    if not lines:
+    return lines
+
+
+def valid_quote(q) -> bool:
+    return (isinstance(q, dict) and all(isinstance(q.get(k), str) and q[k].strip() for k in ("id", "text", "author"))
+            and q.get("kind") in KINDS and q.get("lang") in LANGS)
+
+
+def format_quote(q: dict, spec: dict):
+    """Pango markup for one entry: the pt-BR text, the original small under it (not for a text
+    already in Portuguese), then `author · source · year`. None when it does not fit the band."""
+    if not valid_quote(q):
         return None
-    out = "<i>" + "\n".join(escape(x) for x in lines) + "</i>"
-    author = q.get("a") if isinstance(q.get("a"), str) else ""
-    if author.strip().lower() not in UNATTRIBUTED and columns(author) <= width:
-        out += f'\n<span foreground="#{author_color}">{escape(author.strip())}</span>'
+    c, sub = spec["quote"], spec["palette"]["subtext"]
+    text = q["text"].strip()
+    if q["kind"] == "haiku" or "\n" in text:
+        body = wrap_verse(text, c["columns"], c["lines"])
+    else:
+        body = wrap(f"“{text}”", c["columns"], c["lines"])
+    if not body:
+        return None
+    out = "<i>" + "\n".join(escape(x) for x in body) + "</i>"
+    original = q.get("original") if q["lang"] != "pt" else None
+    if isinstance(original, str) and original.strip():
+        orig = (wrap_verse if "\n" in original else wrap)(original.strip(), c["originalColumns"], c["originalLines"])
+        if not orig:
+            return None
+        out += f'\n<span size="{c["originalSize"] * 1024}" foreground="#{sub}">' + "\n".join(escape(x) for x in orig) + "</span>"
+    # The credit line drops the year, then the source, before it would overflow.
+    parts = [q["author"].strip()] + [q[k].strip() for k in ("source", "year") if isinstance(q.get(k), str) and q[k].strip()]
+    while len(parts) > 1 and columns(" · ".join(parts)) > c["originalColumns"]:
+        parts.pop()
+    out += f'\n<span size="{c["metaSize"] * 1024}" foreground="#{sub}">{escape(" · ".join(parts))}</span>'
     return out
 
 
-def choose_quote(path: Path, rng: random.Random, spec: dict) -> str:
-    q = spec["quote"]
+def load_json_list(path: Path) -> list:
     try:
-        batch = json.loads(path.read_text())
-        batch = batch if isinstance(batch, list) else []
+        data = json.loads(path.read_text())
+        return data if isinstance(data, list) else []
     except (OSError, ValueError):
-        batch = []
-    rng.shuffle(batch)
-    for item in batch:
-        out = format_quote(item, q["columns"], q["lines"], spec["palette"]["subtext"])
+        return []
+
+
+def choose_quote(spec: dict, rng: random.Random, haiku_ok: bool, seen_path=None) -> str:
+    """One entry the lock has not shown yet: haiku only beside a print (`haiku_ok`), about one draw
+    in three then; the history resets once everything was seen, never repeating the last one."""
+    pool = [q for q in load_json_list(Path(spec["quotesFile"])) if valid_quote(q)]
+    pool = [q for q in pool if haiku_ok or q["kind"] != "haiku"]
+    seen = [i for i in load_json_list(Path(seen_path)) if isinstance(i, str)] if seen_path else []
+    fresh = [q for q in pool if q["id"] not in seen]
+    if not fresh:
+        seen = seen[-1:]
+        fresh = [q for q in pool if q["id"] not in seen]
+    haiku = [q for q in fresh if q["kind"] == "haiku"]
+    rest = [q for q in fresh if q["kind"] != "haiku"]
+    rng.shuffle(haiku)
+    rng.shuffle(rest)
+    first = haiku if haiku and (not rest or rng.random() < spec["quote"]["haikuShare"]) else rest
+    for q in first + [q for q in haiku + rest if q not in first]:
+        out = format_quote(q, spec)
         if out:
+            if seen_path:
+                Path(seen_path).parent.mkdir(parents=True, exist_ok=True)
+                publish_file(lambda f: f.write(json.dumps(seen + [q["id"]]).encode()), Path(seen_path))
             return out
-    return format_quote(q["fallback"], q["columns"], q["lines"], spec["palette"]["subtext"])
+    return format_quote(spec["quote"]["fallback"], spec)
 
 
 # ── The two commands ────────────────────────────────────────────────────────────────────────
@@ -758,7 +803,9 @@ def cmd_prepare(args) -> int:
                 os.symlink(f"../../assets/{path.name}", stage / f"{role}-{layout}.png")
             manifest["monitors"][role] = {"source": str(src), "size": list(size),
                                           "live": role in live}
-        quote = choose_quote(Path(spec["quotesFile"]), rng, spec)
+        src = manifest["monitors"].get("primary", {}).get("source")
+        haiku_ok = bool(src and sidecar(Path(src)).get("artist"))  # a print, not a bare photo
+        quote = choose_quote(spec, rng, haiku_ok, spec.get("quotesSeen"))
         (stage / "quote").write_text(quote)
         (stage / "manifest.json").write_text(json.dumps(manifest, indent=1))
         final = cache / "sets" / set_id
@@ -785,10 +832,7 @@ def cmd_fallback(args) -> int:
                 img, rep = compose(im, size, cards, spec, (0.5, 0.5), 1000 + i)
                 img.save(out / f"{role}-{layout}.png", "PNG", compress_level=6)
                 report[f"{role}-{layout}"] = rep
-    (out / "quote").write_text(
-        format_quote(spec["quote"]["fallback"], spec["quote"]["columns"], spec["quote"]["lines"],
-                     spec["palette"]["subtext"])
-    )
+    (out / "quote").write_text(format_quote(spec["quote"]["fallback"], spec))
     (out / "report.json").write_text(json.dumps(report, indent=1))
     return 0
 

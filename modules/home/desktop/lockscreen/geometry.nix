@@ -51,14 +51,15 @@ let
       ] # field
     ];
   };
-  quote = card "quote" 0 540 1600 200 0.2 // {
+  # Up to 3 lines of text, 2 of the original and the credit: 240 px, its foot 80 px off the edge.
+  quote = card "quote" 0 520 1600 240 0.2 // {
     material = "scrim";
     zones = [
       [
-        280
-        30
-        1040
-        140
+        240
+        20
+        1120
+        200
       ]
     ];
   };

@@ -255,6 +255,7 @@ let
       LOCK_WEATHER_MAX_AGE = toString (12 * 3600); # two missed model runs (ECMWF IFS: every 6 h)
       LOCK_COL_SUBTEXT = p.subtext;
       LOCK_COL_DIM = p.dim;
+      LOCK_COL_GREEN = p.green;
       LOCK_CAPTION_SIZE = toString (pt.title * 1024);
       LOCK_COL_TEXT = p.text;
       LOCK_COL_BG = p.bg;
@@ -281,7 +282,9 @@ let
     runtimeEnv = {
       LOCK_CACHE = v2;
       LC_ALL = "C.UTF-8"; # ${#s} counts characters, not bytes
-      LOCK_TITLE_COLS = toString (colsLg pt.media cards.media - 3); # the state glyph and its gap
+      LOCK_TITLE_COLS = toString (colsLg 18 cards.media); # the title at 18 pt, the line it leads
+      LOCK_TITLE_SIZE = toString (18 * 1024);
+      LOCK_COL_TONE = p.green; # the media card's color, as each LG card has one
       LOCK_ARTIST_COLS = toString (colsLg pt.artist cards.media);
       LOCK_COL_SUBTEXT = p.subtext;
       LOCK_COL_DIM = p.dim;

@@ -53,20 +53,20 @@ render() {
     --format "{{playerName}}$sep{{status}}$sep{{xesam:title}}$sep{{artist}}" 2> /dev/null || true)
 
   # The card's caption rides in the markup, so it disappears with the card in the Ambient layout.
-  markup="<span size=\"$LOCK_CAPTION_SIZE\" foreground=\"#$LOCK_COL_DIM\">MÍDIA</span>"$'\n'
+  markup="<span size=\"$LOCK_CAPTION_SIZE\" foreground=\"#$LOCK_COL_TONE\">󰎈  MÍDIA</span>"$'\n'
   if ((best < 0)) || [ -z "$b_title" ] || [ "$b_status" = Stopped ]; then
     markup+="<span foreground=\"#$LOCK_COL_SUBTEXT\">$LOCK_TXT_NO_MEDIA</span>"
   else
     glyph="󰐊"
     [ "$b_status" = Playing ] || glyph="󰏤"
-    markup+="$glyph  <b>$(fit "$b_title" "$LOCK_TITLE_COLS")</b>"
+    markup+="<span size=\"$LOCK_TITLE_SIZE\"><b>$(fit "$b_title" "$LOCK_TITLE_COLS")</b></span>"
     if [ -n "$b_artist" ]; then
       markup+=$'\n'"<span foreground=\"#$LOCK_COL_SUBTEXT\">$(fit "$b_artist" "$LOCK_ARTIST_COLS")</span>"
     fi
     # Where it plays and in what state: the player's MPRIS name, never anything it says of itself.
     state="pausado"
     [ "$b_status" = Playing ] && state="tocando"
-    markup+=$'\n'"<span size=\"$LOCK_CAPTION_SIZE\" foreground=\"#$LOCK_COL_DIM\">$(fit "${b_name%%.*}" 20) · $state</span>"
+    markup+=$'\n'"<span foreground=\"#$LOCK_COL_TONE\">$glyph</span> <span foreground=\"#$LOCK_COL_DIM\">$state · $(fit "${b_name%%.*}" 20)</span>"
   fi
   # The bridge's PID first: the label hides the text once this process is gone.
   printf '%s\n%s' "$$" "$markup" > "$out.$$" && mv -f "$out.$$" "$out"

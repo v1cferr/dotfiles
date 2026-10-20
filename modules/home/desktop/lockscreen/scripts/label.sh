@@ -47,8 +47,8 @@ media)
   if [[ $pid =~ ^[0-9]+$ ]] && kill -0 "$pid" 2> /dev/null; then
     out "$markup"
   else
-    printf '<span size="%s" foreground="#%s">MÍDIA</span>\n<span foreground="#%s">%s</span>' \
-      "$LOCK_CAPTION_SIZE" "$LOCK_COL_DIM" "$LOCK_COL_SUBTEXT" "$LOCK_TXT_NO_MEDIA"
+    printf '<span size="%s" foreground="#%s">󰎈  MÍDIA</span>\n<span foreground="#%s">%s</span>' \
+      "$LOCK_CAPTION_SIZE" "$LOCK_COL_GREEN" "$LOCK_COL_SUBTEXT" "$LOCK_TXT_NO_MEDIA"
   fi
   ;;
 obs)

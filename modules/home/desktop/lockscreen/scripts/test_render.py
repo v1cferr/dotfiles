@@ -440,6 +440,7 @@ class Labels(unittest.TestCase):
             LOCK_TXT_NO_DATA="NODATA",
             LOCK_OBS_MAX_AGE="180",
             LOCK_COL_DIM="565f89",
+            LOCK_COL_GREEN="9ece6a",
             LOCK_CAPTION_SIZE="10240",
         )
         return subprocess.run(

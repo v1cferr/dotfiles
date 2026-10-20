@@ -38,7 +38,10 @@ let
   # Colors from my.theme (palette.nix), the corner from my.theme.rounding.
   p = config.my.theme.palette;
   motionOff = config.my.theme.motion == "off";
-  geo = import ./geometry.nix { inherit (config.my.theme) rounding; };
+  geo = import ./geometry.nix {
+    inherit lib;
+    inherit (config.my.theme) rounding;
+  };
   inherit (geo)
     cards
     at
@@ -71,7 +74,7 @@ let
       tint = 0.2;
       brightness = 0.95;
       contrast = 0.95;
-      blurSigma = 28.0; # Glass+: a deep frost, so a clear card still reads as glass: docs/notes/desktop/lockscreen.md
+      blurSigma = 22.0; # Bento cards: a frost that still shows the print's shapes: docs/notes/desktop/lockscreen.md
     };
     perceptible = {
       solid = false;
@@ -103,6 +106,9 @@ let
     icons = "Material Symbols Rounded";
     iconWeight = 300;
     chart = "Sparks Dot-line Thick,"; # the comma ends the family: pango would read "Thick" as a weight
+    chartEm = 0.35; # one data point's width in em, measured with pango 1.57
+    bars = "Sparks Bar Medium,"; # held values (Claude's week): bars, never a line across a reset
+    barsEm = 0.30;
   };
   typeFile = writeText "lockscreen-type.json" (builtins.toJSON type);
   # An icon by its ligature name, at the type's weight (a variable axis, `@wght`).
@@ -119,8 +125,8 @@ let
     name = 13; # caps, tracked
     nick = 12;
     quote = 17;
-    title = 11; # a section's caption on the LG: tracked caps
-    body = 14; # the LG panel's running text, read from the chair: 70 columns across it
+    title = 12; # a card's header on the LG: tracked caps
+    body = 15; # the LG cards' running text, read from the chair
   };
   colsOf = width: size: builtins.floor (width / (0.84 * size)); # how many columns a width holds
 
@@ -137,7 +143,6 @@ let
       rim = 0.28; # the optical rim: text-colored light, full at the top edge, gone by mid-height
       sheen = 0.06; # colSheen: text at 0x0f
       hairline = 1;
-      rule = 0.14; # the hairlines between a panel's sections: text at 0x24
     };
     # Editorial: text straight over the art, a feathered shade behind it, as dense as AA needs.
     scrim = {
@@ -272,6 +277,7 @@ let
       LOCK_PRIMARY = primary;
       LOCK_WEATHER_MAX_AGE = toString (12 * 3600); # two missed model runs (ECMWF IFS: every 6 h)
       LOCK_COL_SUBTEXT = p.subtext;
+      LOCK_META_SIZE = toString (13 * 1024); # a card's meta line, absolute: pango ignores a percentage
       LOCK_COL_TEXT = p.text;
       LOCK_COL_BG = p.bg;
       LOCK_TXT_NO_WEATHER = txt.noWeather;
@@ -305,10 +311,10 @@ let
     runtimeEnv = {
       LOCK_CACHE = v2;
       LC_ALL = "C.UTF-8"; # ${#s} counts characters, not bytes
-      LOCK_TITLE_COLS = toString (colsOf lg.half 20); # the title at 20 pt, Light: the half's number tier
+      LOCK_TITLE_COLS = toString (colsOf (lg.inner cards.media) 20); # the title at 20 pt, Light
       LOCK_TITLE_SIZE = toString (20 * 1024); # absolute: pango here ignores a percentage
       LOCK_COL_TONE = p.green; # the media section's color, as each LG section has one
-      LOCK_ARTIST_COLS = toString (colsOf lg.half pt.body);
+      LOCK_ARTIST_COLS = toString (colsOf (lg.inner cards.media) pt.body);
       LOCK_COL_SUBTEXT = p.subtext;
       LOCK_TXT_NO_MEDIA = txt.noMedia;
       LOCK_ICON_FONT = "${type.icons} 16 @wght=${toString type.iconWeight}";
@@ -425,7 +431,8 @@ let
       [ -z "$icon" ] || ${coreutils}/bin/printf '<span font_desc="${type.icons} 40 @wght=${toString type.iconWeight}" foreground="#${p.sky}">%s</span>  ' "$icon"
       ${coreutils}/bin/printf '<span font_family="${type.display}" size="${toString (44 * 1024)}" font_weight="200">%s°</span>' "$3"
       [ -z "$text" ] || ${coreutils}/bin/printf '\n%s' "$text"
-      [ -z "$extra" ] || ${coreutils}/bin/printf '\n<span size="${toString (12 * 1024)}" foreground="#${p.subtext}">%s</span>' "$extra"
+      # The day's context after a `--` line: the lock shows it under the now, or beside it.
+      [ -z "$extra" ] || ${coreutils}/bin/printf '\n--\n<span size="${toString (13 * 1024)}" foreground="#${p.subtext}">%s</span>' "$extra"
     } > "$tmp"
     ${coreutils}/bin/mv "$tmp" ${weatherFile}
   '';
@@ -551,36 +558,39 @@ in
 
         label =
           let
-            inherit (lg.sections)
+            inherit (cards)
               energy
               claude
               system
-              last
+              procs
+              weather
+              media
+              weatherWide
               ;
-            # A label on the LG: x from the left edge, y from the center, the block centered on y.
-            lgAt = x: y: {
+            # A label on the LG, `dx`/`dy` from a card's top-left corner; the block is centered on dy.
+            lgAt = card: dx: dy: {
               monitor = secondary;
-              position = geo.lgPos x y;
+              position = geo.lgPos (lg.x card dx) (lg.y card dy);
               halign = "left";
               valign = "center";
               text_align = "left";
               font_family = type.data;
             };
-            # A section's caption: its icon and tracked caps in its color, 44 px under the rule above it.
+            # Every card's header, one policy: a 16 pt icon at the type's weight, two spaces, tracked caps,
+            # in the card's color, 40 px from its top.
+            header = glyph: words: ''${icon 16 glyph}  <span letter_spacing="2048">${words}</span>'';
             caption =
-              s: x: tone: glyph: words:
-              lgAt x (lg.y s 44)
+              card: tone: glyph: words:
+              lgAt card lg.pad 40
               // {
-                text = ''${icon 16 glyph}  <span letter_spacing="2048">${words}</span>'';
+                text = header glyph words;
                 color = c tone "ff";
                 font_size = pt.title;
                 font_family = "${type.data} SemiBold";
               };
-            # A section's content, centered in what the caption leaves (from +72 to 32 px off the foot).
-            mid = s: 20 + s.h / 2;
             body =
-              s: x: dy: cmd: every:
-              lgAt x (lg.y s dy)
+              card: dx: dy: cmd: every:
+              lgAt card dx dy
               // shade
               // {
                 text = "cmd[update:${toString every}] ${cmd}";
@@ -588,9 +598,9 @@ in
                 font_size = pt.body;
               };
             obs =
-              s: x: dy: name: every:
-              body s x dy "${labelBin} obs ${name}" every;
-            third = builtins.elemAt lg.thirds;
+              card: dx: dy: name: every:
+              body card dx dy "${labelBin} obs ${name}" every;
+            half = lg.inner energy / 2 + lg.pad; # where the right half of a full-width card starts
           in
           [
             # ── ASUS: who, when, the way in; a thought at the foot. One axis, no boxes. ──
@@ -648,31 +658,34 @@ in
               }
             )
 
-            # ── LG: what the machine is doing while I am away, on ONE panel. Captions are static; the rest
-            # reads files the observe service and the bridges write (no network, no /proc walk here). ──
-            (caption energy lg.left "orange" "bolt" "ENERGIA")
-            (obs energy lg.left (mid energy) "energy" 60000)
-            (caption claude lg.left "magenta" "auto_awesome" "CLAUDE CODE")
-            (obs claude lg.left (mid claude) "claude-s" 60000)
-            (obs claude lg.right (mid claude) "claude-w" 60000)
-            (caption system lg.left "blue" "memory" "SISTEMA")
-            (obs system (third 0) 168 "sys-cpu" 30000)
-            (obs system (third 1) 168 "sys-ram" 30000)
-            (obs system (third 2) 168 "sys-gpu" 30000)
-            (obs system lg.left 344 "apps" 30000)
-            (caption last lg.left "sky" "location_on" "CLIMA  ·  ${config.my.weather.place}")
-            (body last lg.left (mid last) "${labelBin} weather" 60000)
-            # The right half of the last row exists only in a Media lock: its caption asks the layout.
+            # ── LG: what the machine is doing while I am away, one glass card per context. Headers are
+            # static; the rest reads files the observe service and the bridges write. ──
+            (caption energy "orange" "bolt" "ENERGIA")
+            (obs energy lg.pad 188 "energy" 60000)
+            (caption claude "magenta" "terminal" "CLAUDE CODE")
+            (obs claude lg.pad 124 "claude-s" 60000)
+            (obs claude half 124 "claude-w" 60000)
+            (obs claude lg.pad 254 "claude-h" 60000)
+            (caption system "blue" "memory" "SISTEMA")
+            (obs system lg.pad 182 "system" 30000)
+            (caption procs "teal" "leaderboard" "PROCESSOS")
+            (obs procs lg.pad 176 "apps" 30000)
+            # The weather card's header sits where both layouts put it; its body follows the layout.
+            (caption weather "sky" "cloud" "CLIMA  ·  ${config.my.weather.place}")
+            (body weather lg.pad 144 "${labelBin} weather all media" 60000)
+            (body weatherWide lg.pad 144 "${labelBin} weather now ambient" 60000)
+            (body weatherWide half 144 "${labelBin} weather day ambient" 60000)
+            # The media card exists only in a Media lock: its header asks the layout.
             (
-              lgAt lg.right (lg.y last 44)
+              lgAt media lg.pad 40
               // {
-                text = ''cmd[update:0] ${labelBin} mediacap '${icon 16 "music_note"}  <span letter_spacing="2048">MÍDIA</span>' '';
+                text = "cmd[update:0] ${labelBin} only media '${header "music_note" "MÍDIA"}'";
                 color = c "green" "ff";
                 font_size = pt.title;
                 font_family = "${type.data} SemiBold";
               }
             )
-            (body last lg.right (mid last) "${labelBin} media" 3000)
+            (body media lg.pad 144 "${labelBin} media" 3000)
             # Every output: empty while the main monitor is connected, the way out when it is not.
             {
               monitor = "";
@@ -746,7 +759,7 @@ in
       };
       Service = {
         Type = "simple";
-        ExecStart = "${lib.getExe observe} lock-loop --out ${session}/obs --palette ${paletteFile} --cols ${toString (colsOf lg.full pt.body)} --half ${toString (colsOf lg.half pt.body)} --third ${toString (colsOf lg.third pt.body)} --type ${typeFile}";
+        ExecStart = "${lib.getExe observe} lock-loop --out ${session}/obs --palette ${paletteFile} --cols ${toString (colsOf (lg.inner cards.energy) pt.body)} --half ${toString (colsOf (lg.inner cards.system) pt.body)} --type ${typeFile}";
         Restart = "on-failure";
         RestartSec = 5;
         Nice = 10;

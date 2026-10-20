@@ -2,6 +2,7 @@
 /proc, so every number on the LG card is checked against what its source really said."""
 
 import json
+import re
 import os
 import sqlite3
 import sys
@@ -117,15 +118,37 @@ class Claude(unittest.TestCase):
         c = self.o.claude(self.now)
         self.assertIsNone(c["session"]["pct"])
         self.assertIsNone(c["weekly"]["pct"])
-        self.assertEqual(c["history"]["s"], [None] * 24)
+        self.assertEqual(c["history"]["w"], [None] * self.o.WEEK_BUCKETS)
 
-    def test_history_steps_and_starts_at_the_first_sample(self):
-        h = [{"ts": self.now - 5 * 3600, "s": 10, "w": 40}, {"ts": self.now - 3600, "s": 30, "w": 45}]
-        self.put({"ok": True, "session": {"pct": 30}, "weekly": {"pct": 45}, "history": h})
-        s = self.o.claude(self.now)["history"]["s"]
-        self.assertEqual(s[:18], [None] * 18)  # before the first sample: holes, not zeros
-        self.assertEqual(s[18:22], [10.0] * 4)  # held, not interpolated
-        self.assertEqual(s[22:], [30.0, 30.0])
+    def test_week_holds_values_and_starts_at_the_first_sample(self):
+        day = 86400
+        h = [{"ts": self.now - 3 * day, "s": 5, "w": 40}, {"ts": self.now - day, "s": 9, "w": 55}]
+        self.put({"ok": True, "session": {"pct": 9}, "weekly": {"pct": 55}, "history": h})
+        w = self.o.claude(self.now)["history"]["w"]
+        n = self.o.WEEK_BUCKETS
+        self.assertEqual(len(w), n)
+        first = next(i for i, v in enumerate(w) if v is not None)
+        self.assertTrue(all(v is None for v in w[:first]))  # before the first sample: holes, not zeros
+        self.assertEqual(w[first], 40.0)
+        self.assertEqual(w[-1], 55.0)  # held to now, not interpolated
+        self.assertEqual(sorted(set(v for v in w if v is not None)), [40.0, 55.0])
+
+    def test_the_value_before_the_window_opens_it(self):
+        h = [{"ts": self.now - 9 * 86400, "s": 1, "w": 30}, {"ts": self.now - 86400, "s": 1, "w": 35}]
+        w = self.o.week_history(h, self.now, None)["w"]
+        self.assertEqual(w[0], 30.0)  # the boundary row is the value the week opens with
+
+    def test_resets_are_observed_on_the_boundary_and_inferred_elsewhere(self):
+        now, day = self.now, 86400
+        resets_at = now + 2 * day  # the documented boundary: 5 days ago
+        h = [{"ts": now - 6 * day, "w": 80}, {"ts": now - 4 * day, "w": 3},  # spans the boundary
+             {"ts": now - 2 * day, "w": 20}, {"ts": now - day, "w": 10}]  # a fall with no boundary
+        r = self.o.week_history(h, now, resets_at)["resets"]
+        self.assertEqual([x["observed"] for x in r], [True, False])
+
+    def test_values_are_clamped_to_a_true_percent(self):
+        w = self.o.week_history([{"ts": self.now - 3600, "w": 140}], self.now, None)["w"]
+        self.assertEqual(w[-1], 100.0)
 
     def test_expired_login_is_an_error_state(self):
         self.put({"ok": False, "error": "no-credentials"})
@@ -205,15 +228,16 @@ class Markup(unittest.TestCase):
 
     def test_a_hole_splits_the_line_and_is_never_a_zero(self):
         s = self.o.sparkline([10, None, None, 30, 40], 100, 400, "fff")
-        self.assertIn("{10}  {30,40}", s)
-        self.assertNotIn(",0", s)
+        self.assertIn('{10}<span alpha="1%">{0,0}</span>{30,40}', s)  # the hole keeps its width, unseen
+        visible = re.sub(r"<span alpha=\"1%\">[^<]*</span>", "", s)
+        self.assertNotIn(",0", visible)  # no zero is DRAWN for a hole
         self.assertNotIn("{}", self.o.sparkline([None, None], 100, 400, "fff"))
 
     def test_sparkline_size_spans_its_width(self):
         import re
 
         pt = int(re.search(r'font_desc="[^"]*, (\d+)"', self.o.sparkline([1] * 30, 10, 823, "f")).group(1))
-        width = pt * 96 / 72 * self.o.CHART_EM * 30
+        width = pt * 96 / 72 * self.o.TYPE["chartEm"] * 30
         self.assertTrue(780 <= width <= 823, width)
 
     def test_meter_keeps_its_width_and_says_missing(self):
@@ -226,7 +250,7 @@ class Markup(unittest.TestCase):
 
     def test_process_names_are_escaped_and_aligned(self):
         p = {"cpu": [{"name": "a&b<c>", "value": 5.0}], "mem": []}
-        out = self.o.card_apps(p, self.PAL, 70)
+        out = self.o.card_apps(p, self.PAL, 31)
         self.assertIn("a&amp;b&lt;c&gt;", out)
         self.assertNotIn("<c>", out)
 
@@ -252,14 +276,30 @@ class Markup(unittest.TestCase):
         import re
 
         bare = lambda m: re.sub(r"<[^>]+>", "", m).replace("&amp;", "&")  # noqa: E731
-        p = {"cpu": [{"name": "a-very-long-application-name", "value": 152.0}, {"name": "x", "value": 3.0}]}
-        for row in bare(self.o.card_apps(p, self.PAL, 70)).split("\n")[1:]:
-            self.assertLessEqual(len(row), 70)
-        s = {"cpu_pct": 18.0, "mem": {"used": 9.2 * 1024**3, "total": 32 * 1024**3, "available": 6 * 1024**3},
-             "gpu": {"board_w": 44.0, "render_idle_pct": 50.0}}
-        for markup in self.o.cards_system(s, {"temps": {"cpu_c": 46}}, self.PAL, 21).values():
-            meter_row = bare(markup).split("\n")[2]
-            self.assertLessEqual(len(meter_row), 21)
+        p = {"cpu": [{"name": "a-very-long-application-name", "value": 152.0}, {"name": "x", "value": 3.0}],
+             "mem": [{"name": "zen-beta", "value": 3 * 1024**3}]}
+        for row in bare(self.o.card_apps(p, self.PAL, 31)).split("\n"):
+            if "━" in row:
+                self.assertLessEqual(len(row), 31, row)
+        e = {"status": "ok", "measured_w": 87.0, "cpu_w": 42.4, "gpu_w": 45.0, "history": [80.0] * 30,
+             "baseline": {"median_w": 53.0}, "profile": "balanced", "age": 30}
+        share = bare(self.o.card_energy(e, self.PAL, 69)).split("\n")[2]
+        self.assertLessEqual(len(share), 69)
+
+    def test_system_never_repeats_the_gpu_watts(self):
+        s = {"cpu_pct": 18.0, "mem": {"used": 9.2 * 1024**3, "total": 16 * 1024**3, "available": 6 * 1024**3},
+             "gpu": {"board_w": 44.0, "render_idle_pct": 50.0, "freq_mhz": 1550}}
+        out = self.o.card_system(s, {"temps": {"cpu_c": 46}}, self.PAL, 31)
+        self.assertNotIn("44 W", out)
+        self.assertIn("render ativo", out)
+
+    def test_the_week_chart_is_bars_on_a_true_scale_with_its_axis(self):
+        c = {"status": "ok", "session": {"pct": 1, "resets": 0}, "weekly": {"pct": 56, "resets": 0}, "age": 30,
+             "history": {"w": [None] * 2 + [50.0] * 40, "resets": [], "start": time.time() - 8 * 86400}}
+        h = self.o.cards_claude(c, self.PAL, time.time())["claude-h"]
+        self.assertIn(self.o.TYPE["bars"], h)
+        self.assertIn("{50,", h)
+        self.assertIn("há 7 dias", h)
 
 
 if __name__ == "__main__":

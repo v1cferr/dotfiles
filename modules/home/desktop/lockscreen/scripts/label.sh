@@ -24,14 +24,29 @@ date)
   printf '<span letter_spacing="1024">%s</span>' "${d^}"
   ;;
 weather)
+  # $2: all | now | day (the file splits them at a `--` line); $3: the layout it belongs to, if any.
   # Line 1: valid until (epoch); line 2: when the forecast was fetched; then the markup.
+  if [ -n "${3:-}" ]; then
+    slurp "$session/layout"
+    [ "$REPLY" = "$3" ] || exit 0
+  fi
   slurp "$LOCK_CACHE/weather"
   valid="" fetched="" markup=""
   { read -r valid; read -r fetched; IFS= read -r -d "" markup; } <<< "$REPLY" || true
   if [[ $valid =~ ^[0-9]+$ && $fetched =~ ^[0-9]+$ ]] &&
     ((EPOCHSECONDS < valid && EPOCHSECONDS - fetched < LOCK_WEATHER_MAX_AGE)); then
-    out "$markup"
-  else
+    now="${markup%%$'\n'--$'\n'*}"
+    day="${markup#*$'\n'--$'\n'}"
+    [ "$day" != "$markup" ] || day=""
+    while [[ $day == *$'\n' ]]; do day="${day%$'\n'}"; done
+    printf -v at '%(%H:%M)T' "$fetched"
+    day+="${day:+$'\n'}<span size=\"$LOCK_META_SIZE\" foreground=\"#$LOCK_COL_SUBTEXT\">previsão das $at</span>"
+    case "${2:-all}" in
+    now) out "$now" ;;
+    day) out "$day" ;;
+    *) out "$now"$'\n'"$day" ;;
+    esac
+  elif [ "${2:-all}" != day ]; then
     printf '<span foreground="#%s">%s</span>' "$LOCK_COL_SUBTEXT" "$LOCK_TXT_NO_WEATHER"
   fi
   ;;
@@ -48,11 +63,11 @@ media)
     printf '<span foreground="#%s">%s</span>' "$LOCK_COL_SUBTEXT" "$LOCK_TXT_NO_MEDIA"
   fi
   ;;
-mediacap)
-  # $2, the media section's caption, only in the layout that has the section.
+only)
+  # $3, printed only in the layout $2 (a header whose card exists only there).
   slurp "$session/layout"
-  [ "$REPLY" = media ] || exit 0
-  printf '%s' "${2:?}"
+  [ "$REPLY" = "${2:?}" ] || exit 0
+  printf '%s' "${3:?}"
   ;;
 obs)
   # The observe service's cards: `pid`, `epoch`, markup. Shown only from a LIVE writer and while
@@ -83,7 +98,7 @@ hint)
     "$LOCK_COL_BG" "$LOCK_COL_TEXT" "$LOCK_TXT_HINT"
   ;;
 *)
-  echo "usage: lockscreen-label date|weather|media|mediacap <caption>|obs <card>|quote|hint" >&2
+  echo "usage: lockscreen-label date|weather [all|now|day] [layout]|media|only <layout> <markup>|obs <card>|quote|hint" >&2
   exit 2
   ;;
 esac

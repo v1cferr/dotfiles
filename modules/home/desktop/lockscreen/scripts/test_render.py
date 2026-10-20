@@ -81,19 +81,21 @@ class Geometry(unittest.TestCase):
                     for v in (w / 2 + c["center"][0] - c["size"][0] / 2, h / 2 + c["center"][1] - c["size"][1] / 2):
                         self.assertEqual(v, int(v), c["id"])
 
-    def test_lg_is_one_centered_panel_split_by_rules(self):
-        amb, med = SPEC["monitors"]["secondary"]["layouts"]["ambient"], SPEC["monitors"]["secondary"]["layouts"]["media"]
-        for cards in (amb, med):
-            self.assertEqual([c["id"] for c in cards], ["panel"])
-            self.assertEqual(R.card_rect(cards[0], (1080, 1920)), (72, 160, 1008, 1760))
-            w, h = cards[0]["size"]
-            for x0, y0, x1, y1 in cards[0]["rules"]:
-                self.assertTrue(0 < x0 <= x1 < w and 0 < y0 <= y1 < h, "a rule leaves its panel")
-        # Media adds the one vertical rule that splits the last row; nothing else moves.
-        self.assertEqual(med[0]["rules"][: len(amb[0]["rules"])], amb[0]["rules"])
-        extra = med[0]["rules"][len(amb[0]["rules"]):]
-        self.assertEqual(len(extra), 1)
-        self.assertEqual(extra[0][0], extra[0][2])
+    def test_lg_bento_cards_on_the_grid(self):
+        med, amb = self.rects("secondary", "media"), self.rects("secondary", "ambient")
+        self.assertEqual(med["energy"], (72, 184, 1008, 512))
+        self.assertEqual(med["claude"], (72, 536, 1008, 864))
+        self.assertEqual(med["system"], (72, 888, 528, 1192))
+        self.assertEqual(med["procs"], (552, 888, 1008, 1192))
+        self.assertEqual(med["weather"], (72, 1216, 528, 1456))
+        self.assertEqual(med["media"], (552, 1216, 1008, 1456))
+        for r in med.values():  # every edge on the 8 px grid
+            self.assertTrue(all(v % 8 == 0 for v in r), r)
+        # Ambient: no media card, the weather takes the row, nothing else moves.
+        self.assertNotIn("media", amb)
+        self.assertEqual(amb["weather"], (72, 1216, 1008, 1456))
+        for k in ("energy", "claude", "system", "procs"):
+            self.assertEqual(amb[k], med[k])
 
     def test_logical_size_rotates_and_scales(self):
         lg = {"width": 1920, "height": 1080, "transform": 1, "scale": 1}
@@ -262,14 +264,6 @@ class Editorial(unittest.TestCase):
         self.assertLess(sum(out.getpixel((1282, 720))), sum(src.getpixel((1282, 720))) + 3)
         # Past the feather the photo is untouched.
         self.assertEqual(out.getpixel((5, 5)), src.getpixel((5, 5)))
-
-    def test_rules_land_inside_the_panel(self):
-        card = {"id": "p", "center": [0, 0], "size": [800, 600], "radius": 20, "alpha": 0.6,
-                "rules": [[40, 300, 760, 300]]}
-        src = Image.new("RGB", (2560, 1440), (20, 20, 30))
-        out, _ = R.compose(src, (2560, 1440), [card], SPEC, (0.5, 0.5), 3)
-        x, y = 1280, 720  # card-relative y 300 on a card whose top is at 420
-        self.assertGreater(R.luminance(out.getpixel((x, y))), R.luminance(out.getpixel((x, y + 12))))
 
 
 class Profile(unittest.TestCase):
@@ -517,9 +511,11 @@ class Labels(unittest.TestCase):
             LOCK_TXT_HINT="HINT",
             LOCK_TXT_NO_DATA="NODATA",
             LOCK_OBS_MAX_AGE="180",
+            LOCK_META_SIZE="13312",
         )
         return subprocess.run(
-            ["bash", "-euo", "pipefail", str(HERE / "label.sh"), mode] + ([arg] if arg else []),
+            ["bash", "-euo", "pipefail", str(HERE / "label.sh"), mode]
+            + (arg if isinstance(arg, list) else [arg] if arg else []),
             env=env, capture_output=True, text=True, check=True,
         ).stdout
 
@@ -539,8 +535,13 @@ class Labels(unittest.TestCase):
         now = int(time.time())
         w = self.cache / "weather"
         self.assertIn("NOWEATHER", self.run_label("weather"))
-        w.write_text(f"{now + 600}\n{now - 3600}\n<b>21°C</b>")
-        self.assertEqual(self.run_label("weather"), "<b>21°C</b>")
+        w.write_text(f"{now + 600}\n{now - 3600}\n<b>21°C</b>\nNublado\n--\nmáx 26°\n")
+        out = self.run_label("weather")
+        self.assertTrue(out.startswith("<b>21°C</b>\nNublado\nmáx 26°\n"), out)
+        self.assertIn("previsão das", out)
+        self.assertEqual(self.run_label("weather", ["now"]), "<b>21°C</b>\nNublado")
+        self.assertTrue(self.run_label("weather", ["day"]).startswith("máx 26°\n"))
+        self.assertEqual(self.run_label("weather", ["now", "media"]), "")  # another layout: nothing
         w.write_text(f"{now - 1}\n{now - 3600}\n<b>21°C</b>")  # the hour it was for is over
         self.assertIn("NOWEATHER", self.run_label("weather"))
         w.write_text(f"{now + 600}\n{now - 50000}\n<b>21°C</b>")  # a forecast over 12 h old
@@ -560,10 +561,10 @@ class Labels(unittest.TestCase):
         (s / "media").unlink()
         self.assertIn("NOMEDIA", self.run_label("media"))
 
-    def test_media_caption_only_in_the_media_layout(self):
-        self.assertEqual(self.run_label("mediacap", "CAP"), "")
+    def test_only_prints_in_its_layout(self):
+        self.assertEqual(self.run_label("only", ["media", "CAP"]), "")
         (self.cache / "session" / "layout").write_text("media")
-        self.assertEqual(self.run_label("mediacap", "CAP"), "CAP")
+        self.assertEqual(self.run_label("only", ["media", "CAP"]), "CAP")
 
     def test_quote_and_missing_quote(self):
         self.assertEqual(self.run_label("quote"), "")

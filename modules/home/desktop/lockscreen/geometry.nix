@@ -1,6 +1,6 @@
 # The lock screen's ONE geometry model: every glass card per monitor and layout, read by the renderer
 # (as JSON) and by the hyprlock labels. Offsets are from the screen's CENTER, y down: docs/notes/desktop/lockscreen.md
-{ rounding }:
+{ lib, rounding }:
 
 let
   # A lock card is a MAJOR surface: the desktop's corner plus sp1, one step up the concentric scale.
@@ -64,54 +64,43 @@ let
     ];
   };
 
-  # ── LG, 1080x1920: ONE glass panel, 72 px from each side and 160 from the top and foot, split
-  # by hairlines into sections on the 8 px grid. Positions inside it are panel-relative. ──
-  panelW = 936;
-  panelH = 1600;
-  inset = 56; # the text's left edge and every rule's ends
-  sections = {
-    energy = {
-      top = 0;
-      h = 448;
-    };
-    claude = {
-      top = 448;
-      h = 384;
-    };
-    system = {
-      top = 832;
-      h = 448;
-    };
-    last = {
-      top = 1280;
-      h = 320;
-    };
-  };
-  hr = y: [
-    inset
-    y
-    (panelW - inset)
-    y
-  ];
-  rules = map (s: hr s.top) [
-    sections.claude
-    sections.system
-    sections.last
-  ];
-  # Media splits the last row: the weather on the left, the media on the right.
-  split = [
-    [
-      (panelW / 2)
-      (sections.last.top + 40)
-      (panelW / 2)
-      (panelH - 40)
-    ]
-  ];
-  panel = extra: card "panel" 0 0 panelW panelH 0.56 // { rules = rules ++ extra; };
+  # ── LG, 1080x1920: independent Bento cards, each its own glass, the art visible between them.
+  # 72 px margins, 24 px gaps, rows from 184 px down; the lower ~460 px stay the print. ──
   lgW = 1080;
   lgH = 1920;
-  px0 = (lgW - panelW) / 2; # the panel's left edge on the screen
-  col3 = (panelW - 2 * inset - 2 * 32) / 3; # three columns, 32 px gutters
+  margin = 72;
+  gap = 24;
+  fullW = lgW - 2 * margin; # 936
+  halfW = (fullW - gap) / 2; # 456
+  # Each row's top and height, top to bottom: energy, Claude, system + processes, weather + media.
+  rowH = [
+    328
+    328
+    304
+    240
+  ];
+  rowTop = i: builtins.foldl' (acc: h: acc + h + gap) 184 (lib.take i rowH);
+  lgCard =
+    id: col: row: w:
+    let
+      h = builtins.elemAt rowH row;
+      cx =
+        {
+          full = 0;
+          left = -(halfW + gap) / 2;
+          right = (halfW + gap) / 2;
+        }
+        .${col};
+    in
+    card id cx (rowTop row + h / 2 - lgH / 2) w h 0.72;
+  energy = lgCard "energy" "full" 0 fullW;
+  claude = lgCard "claude" "full" 1 fullW;
+  system = lgCard "system" "left" 2 halfW;
+  procs = lgCard "procs" "right" 2 halfW;
+  weather = lgCard "weather" "left" 3 halfW;
+  media = lgCard "media" "right" 3 halfW;
+  # Ambient has no media card: the weather takes the whole last row instead of an empty surface.
+  weatherWide = lgCard "weather" "full" 3 fullW;
 in
 {
   inherit radius;
@@ -120,24 +109,24 @@ in
       column
       quote
       ;
-    panel = panel [ ];
+    inherit
+      energy
+      claude
+      system
+      procs
+      weather
+      media
+      weatherWide
+      ;
   };
 
   # Where the LG's text goes: x from the screen's LEFT edge, y from its CENTER (hyprlock halign
-  # left, valign center), and each section's top and height as the panel sees them.
-  lg = {
-    inherit sections;
-    left = px0 + inset;
-    right = px0 + panelW / 2 + inset; # the right half of a split row
-    thirds = map (i: px0 + inset + i * (col3 + 32)) [
-      0
-      1
-      2
-    ];
-    half = panelW / 2 - 2 * inset; # a half's text width
-    third = col3;
-    full = panelW - 2 * inset;
-    y = s: dy: s.top - panelH / 2 + dy;
+  # left, valign center), both measured from a card's top-left corner; `pad` is every card's inset.
+  lg = rec {
+    pad = 32;
+    x = c: dx: lgW / 2 + builtins.elemAt c.center 0 - builtins.elemAt c.size 0 / 2 + dx;
+    y = c: dy: builtins.elemAt c.center 1 - builtins.elemAt c.size 1 / 2 + dy;
+    inner = c: builtins.elemAt c.size 0 - 2 * pad; # a card's text width
   };
   lgPos = x: y: "${toString x}, ${toString (-y)}";
 
@@ -158,8 +147,21 @@ in
         lgH
       ]; # rotated: 1920x1080 on its side
       layouts = {
-        ambient = [ (panel [ ]) ];
-        media = [ (panel split) ];
+        ambient = [
+          energy
+          claude
+          system
+          procs
+          weatherWide
+        ];
+        media = [
+          energy
+          claude
+          system
+          procs
+          weather
+          media
+        ];
       };
     };
   };

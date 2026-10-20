@@ -384,13 +384,6 @@ def glass_card(base: Image.Image, card: dict, spec: dict, seed: int) -> dict:
         body = dither(body, seed)
 
     over = body.convert("RGBA")
-    # Hairline rules splitting one panel into sections, card-relative (x0, y0, x1, y1).
-    if card.get("rules"):
-        layer = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-        draw = ImageDraw.Draw(layer)
-        for rule in card["rules"]:
-            draw.line(tuple(rule), fill=(*text, round(255 * e.get("rule", 0))), width=e["hairline"])
-        over = Image.alpha_composite(over, layer)
     if card.get("edge", True):
         over = Image.alpha_composite(
             over,

@@ -55,3 +55,10 @@ not have, so the appearance does not change, things merely stop being missing.
 Emoji goes at the END of each generic on purpose: at the end it never beats a text font, but it is
 reached directly instead of by luck in the queue. The `emoji` generic is set explicitly even
 though it is NixOS' default, because a silent default is not something to inherit.
+
+## The lock screen's own families
+
+`fonts.nix` also installs Geist and Geist Mono, Material Symbols and Sparks (packaged in
+`pkgs/sparks-font` from its OFL release). They exist for the lock screen only, which names them
+explicitly; none enters `defaultFonts`, so no app and no part of the desktop changes face. Why each
+one, and the pango details they need: [lockscreen.md](../desktop/lockscreen.md).

@@ -3,7 +3,7 @@
 `modules/home/desktop/lockscreen/default.nix`, with its renderer and scripts in
 `modules/home/desktop/lockscreen/scripts/`. Ref: <https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/>
 
-## Lockscreen v4: an editorial ASUS, one panel on the LG (20/10/2026)
+## Lockscreen v5: an editorial ASUS, one panel on the LG, a modern type system (20/10/2026)
 
 v3 had the right content in the wrong shape: four ASUS cards of four widths stacked into a ragged
 silhouette that hid the print, and six LG cards of three heights that filled only the top 60% of
@@ -16,15 +16,38 @@ number, no command line, lock-scoped services, art and logo as state) and change
 | ASUS (`my.monitors.primary`) | my logo, name and handle; the time with seconds and the date; the password field; the quote of this lock | energy, Claude, the system, weather |
 | LG (`my.monitors.secondary`) | one panel: energy, Claude Code, the system with its top apps, weather, and media in a Media lock | the time, the quote, my name, a password field |
 
-**One type system, JetBrains Mono only.** Hierarchy comes from weight and size, not from boxes: a
-Thin hero (the ASUS clock at 160 pt, the LG's watts at 72 pt), ExtraLight numbers (36 to 44 pt),
-SemiBold caps labels tracked by 2 to 4 pt at 11 to 13 pt, a 14 pt body and a 12 pt meta line.
-Color carries the section (energy orange, Claude violet, system blue, weather sky, media green) and
-appears only on its caption and its marks; text is `text` or `subtext`, never `dim`, which fails AA.
+**One type system, and everything stays TEXT.** v5 replaced v4's all-JetBrains-Mono look with four
+families, picked from a bake-off rendered by the same pango 1.57 hyprlock uses. Lesson 2 (no image
+reloads while locked) still holds: icons and charts are fonts, not pictures.
+
+| Role | Family | Why |
+| --- | --- | --- |
+| clock, numbers, body | Geist (Vercel, OFL; the face Nothing OS adopted) | a modern grotesque from Thin to Black; `font_features="tnum"` keeps the clock's digits from dancing |
+| labels and data | Geist Mono | the same design, aligned columns; caps tracked by 2 to 4 pt |
+| icons | Material Symbols Rounded (Google, Apache 2.0) | ligatures (`bolt`, `memory`) on a variable weight axis: `@wght=300` keeps an icon as thin as the number beside it; `clock_loader_*` are the Claude rings |
+| charts | Sparks Dot-line Thick (After the Flood, OFL, `pkgs/sparks-font`) | its `calt` turns `{30,60,90}` into a line chart drawn by the font |
+
+The families live in ONE `type` attrset in `default.nix`, which the labels read and `observe`
+receives as a JSON file (`--type`). They are installed system-wide by `fonts.nix` but never become
+a fontconfig default: the desktop's UI stays JetBrains Mono. Two pango details matter: a family
+whose name ends in a weight word needs a trailing comma (`Sparks Dot-line Thick,`), or pango reads
+"Thick" as a weight and falls back; and the icon axes go in the font description
+(`Material Symbols Rounded 16 @wght=300,FILL=1`).
+
+**The clock** is HH:MM in Geist Thin at 160 pt with tabular digits, and the seconds small (Geist
+Light 44 pt, in the accent) raised to the digits' cap line (0.71 em), the iOS and macOS lock
+hierarchy: the hour is the information, the seconds are the pulse. The label is nudged right by
+half the seconds' width, so HH:MM itself sits on the axis.
+
+Hierarchy comes from weight and size, not from boxes: a Thin hero, ExtraLight numbers (36 to
+44 pt), SemiBold caps labels at 11 to 13 pt, a 14 pt body and a 12 pt meta line. Color carries the
+section (energy orange, Claude violet, system blue, weather sky, media green) and appears only on
+its caption, its icon and its marks; text is `text` or `subtext`, never `dim`, which fails AA.
 
 **The ASUS is an editorial page, with no cards.** One axis over the art (`geometry.nix`): the logo,
 the name in tracked caps with the handle under it, the Thin clock with its seconds in the accent,
-the date, the field as a faint pill whose hairline carries the state, and the quote at the foot at
+the date, the field as a faint pill whose hairline carries the state (no text shadow anywhere on
+the ASUS: the scrim holds AA and crisp type reads cleaner), and the quote at the foot at
 a 72-column reading measure. Legibility comes from a **scrim** instead of glass: a feathered shade
 of the palette's `bg` behind the column and behind the quote, measured only on the text LINES (the
 geometry names them as zones), from 0.20 up to 0.94. Every line of the column is in `text`, so the
@@ -44,8 +67,8 @@ so no section has an empty foot. Text starts on one left edge, 56 px in.
 
 | Section | Hero | Then |
 | --- | --- | --- |
-| Energy | the measured watts, Thin 72 pt, "CPU + GPU medido" beside it | the 30 min chart across the whole width (two rows of blocks, 16 levels, on a round scale over the peak), the CPU and GPU split as meters, one meta line |
-| Claude Code | per half, a ring (Nerd Font circle slices, eighths) and the share | what it is, its reset, its last 24 h |
+| Energy | the measured watts, Geist Thin 72 pt, "CPU + GPU medido" beside it | the 30 min line chart across the whole width, on a round range around the data that the meta line prints ("75 a 125 W"; a line chart shows a trend, so its scale hugs the data), the CPU and GPU split as meters |
+| Claude Code | per half, a progress ring (`clock_loader_10` to `_90`, an empty circle for nothing read, a filled one at 100%) and the share | what it is, its reset, its last 24 h on 0 to 100% |
 | System | CPU %, RAM used and GPU board W as three equal columns | a meter each, one note (temperatures, free RAM, render active), then the three apps using the most CPU |
 | Weather | the sky's glyph and the temperature | the condition, the day's range, rain and feels-like |
 | Media | the title, Light 20 pt | the artist, the state and the player |
@@ -53,8 +76,9 @@ so no section has an empty foot. Text starts on one left edge, 56 px in.
 **The material** of the LG panel is v3's Adaptive Glass+, unchanged: a frosted core (blur sigma 28,
 the profile's tint, 6% of the accent, the bg-to-surface ease, ±1 dither), an optical rim (the
 hairline plus text-colored light at 28% that fades by mid-height, and a 1.2% lens in a 6 px band
-that never touches text), a soft highlight and a soft shadow. The panel's baseline is 0.56 and it
-rises only as far as its text needs.
+that never touches text), a soft highlight, and an ELEVATION shadow (35%, sigma 36, 14 px down)
+rather than a tight rim. The panel's baseline is 0.56 and it rises only as far as its text needs;
+the LG's text keeps one light shadow pass.
 
 ### Why the glass is pre-rendered, and not HyprGlass
 
@@ -534,7 +558,8 @@ Measured on 19/10/2026 in the headless sway above (GL rendering, both outputs), 
 | the same render, cache hit | 0.22 CPU-s | 47 MB peak |
 | a render from a 123 Mpx JPEG (Cosmic Cliffs) | 2.7 s wall | 159 MB peak |
 | **v3**, Media layout, labels included (20/10/2026) | 0.80 | 91 MB |
-| **v4**, Media layout, 20 labels, music paused (20/10/2026) | 0.38 | 94 MB |
+| v4, Media layout, 20 labels, music paused (20/10/2026): hyprlock ITSELF only | 0.38 | 94 MB |
+| **v5**, Media layout, 20 labels: hyprlock itself + its label children | 0.38 + 0.62 = 1.00 | 93 MB |
 | v3's observe collector, between rounds | 0.17 | 21 MB |
 | v3's render of the ASUS image (4 cards, logo) | 0.9 s wall, once after an unlock | 159 MB peak |
 | the GPU board, locked (v2, measured on the real desk 19/10/2026, 1 s energy samples) | 37.3 W, render idle 79.5% | |
@@ -554,7 +579,7 @@ untouched.
 
 ## Testing
 
-`nix build .#checks.x86_64-linux.lockscreen` runs 88 tests in the sandbox, against the spec JSON
+`nix build .#checks.x86_64-linux.lockscreen` runs 90 tests in the sandbox, against the spec JSON
 the desktop really uses (`my.lockscreen.spec`), with only synthetic images:
 
 | Suite | What it pins |
@@ -563,7 +588,7 @@ the desktop really uses (`my.lockscreen.spec`), with only synthetic images:
 | `test_lock_launch.py` | the lock reaches the session's compositor with a stale, missing or hostile `WAYLAND_DISPLAY` |
 | Geometry | every layout fits its screen; the ASUS is scrim only, on one axis; the LG is one centered panel, its rules inside it, Media adds only the vertical rule; whole pixels; rotation and scale |
 | Logo | cropped to its ink, scaled without distortion, centered; missing or broken renders without it |
-| `test_observe.py` | energy units, holes and staleness, the comparable baseline; Claude resets, holes, errors, staleness; process deltas, PID reuse, app names without arguments; escaped markup; the ring's eighths; rows that fit their columns |
+| `test_observe.py` | energy units, holes and staleness, the comparable baseline; Claude resets, holes, errors, staleness; process deltas, PID reuse, app names without arguments; escaped markup; the ring's steps; rows that fit their columns; the sparkline's scale, floor, clamping, holes as gaps and its width |
 | Selection | orientation grades, empty pools, invalid files, portrait preferred, cover and focus |
 | Editorial | the scrim reaches AA over a bright photo, darkens without blurring and fades to an untouched photo; rules land inside the panel |
 | Glass | the photo untouched outside the cards; AA over a white core; each card's baseline over a dark sky; the rim lit at the top; the shadow darkens without blurring; transmission; determinism |
@@ -597,8 +622,9 @@ network, walks `/proc` or reloads an image.
 | Weather | São Carlos, temperature, condition, the day's range, rain chance, feels-like | the same freshness rule as before; a missing field drops out |
 | Media | the playing track, artist, player and state | the bridge as before; no album art (it would need image reloads) |
 
-The graphs are Unicode blocks (`▁` to `█`) in JetBrains Mono inside a pango label (the energy chart
-at 32 pt, so 30 minutes span the panel; the 24 h strips at 16 pt), with absolute sizes: this pango ignores a percentage `size`. That is the reason the cards render as
+The charts are the Sparks font inside a pango label, sized so the points span their width (one
+data point is 0.35 em, measured): the energy chart across the panel, the 24 h strips across a half.
+Sizes are absolute: this pango ignores a percentage `size`. That is the reason the charts render as
 TEXT and not as images: an image that changes needs `reload_time`, which is lesson 2 above.
 
 ## Known limitations

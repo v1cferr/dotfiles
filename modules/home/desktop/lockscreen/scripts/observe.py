@@ -25,7 +25,6 @@ PAGE = os.sysconf("SC_PAGE_SIZE") if hasattr(os, "sysconf") else 4096
 
 POWER_STALE = 180  # power-log writes every minute: three missed samples is stale
 CLAUDE_STALE = 600  # glance-feed asks every minute: ten minutes without an answer is stale
-BLOCKS = "▁▂▃▄▅▆▇█"
 
 
 # ── Energy: power-log's CSV, never a second logger ─────────────────────────────────────────
@@ -316,18 +315,6 @@ def esc(s: str) -> str:
     return str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-def spark(series: list, top: float, color: str, hole: str) -> str:
-    """Block characters on a ZERO-based scale; a missing point is a dim dot, never a low bar."""
-    out = []
-    for v in series:
-        if v is None:
-            out.append(f'<span foreground="#{hole}">·</span>')
-        else:
-            i = 0 if top <= 0 else min(7, max(0, round(v / top * 7)))
-            out.append(BLOCKS[i])
-    return f'<span foreground="#{color}">' + "".join(out) + "</span>"
-
-
 def ago(seconds) -> str:
     if seconds is None:
         return "–"
@@ -365,7 +352,7 @@ def fit(s: str, cols: int) -> str:
 PROFILE = {"power-saver": "Eco", "balanced": "Balanced", "performance": "Gaming"}
 
 
-SPARK_PT = 16  # the 24 h strips' size, the body's
+CHART_EM = 0.35  # one Sparks data point is 0.35 em wide (measured with pango 1.57)
 BODY_PT = 14  # the panel's running text: --cols counts columns at this size
 # The lock's type (default.nix passes the same with --type): families for numbers, icons and charts.
 TYPE = {"display": "Geist", "data": "Geist Mono", "icons": "Material Symbols Rounded", "iconWeight": 300,
@@ -414,29 +401,31 @@ def meter(frac, cols: int, color: str, track: str) -> str:
     return f'<span foreground="#{color}">' + "━" * n + f'</span><span foreground="#{track}">' + "━" * (cols - n) + "</span>"
 
 
-def spark2(series: list, top: float, color: str, hole: str, pt: int = SPARK_PT) -> str:
-    """Two rows of blocks, 16 levels on a ZERO-based scale; a hole is a dim dot on the floor."""
-    up, down = [], []
-    for v in series:
+def sparkline(series: list, top: float, width_px: float, color: str, bottom: float = 0) -> str:
+    """A chart drawn by the Sparks font: its `calt` turns `{10,40,90}` into a line. Values from
+    `bottom` to `top` on its 0 to 100; a hole ends the line and leaves a gap, never a zero."""
+    pt = max(8, int(width_px / max(1, len(series)) / (CHART_EM * 96 / 72)))
+    out, run = "", []
+    for v in series + [None]:
         if v is None:
-            up.append(" ")
-            down.append(f'<span foreground="#{hole}">·</span>')
-            continue
-        lvl = 0 if top <= 0 else max(1, min(16, round(v / top * 16)))
-        down.append(BLOCKS[min(8, lvl) - 1])
-        up.append(BLOCKS[lvl - 9] if lvl > 8 else " ")
-    sz = pt * 1024
-    return (f'<span size="{sz}" foreground="#{color}">' + "".join(up) + "</span>\n"
-            f'<span size="{sz}" foreground="#{color}">' + "".join(down) + "</span>")
-
+            if run:
+                out += "{" + ",".join(run) + "}"
+                run = []
+            out += " "
+        else:
+            span = top - bottom
+            run.append(str(0 if span <= 0 else max(0, min(100, round((v - bottom) / span * 100)))))
+    return f'<span font_desc="{TYPE["chart"]} {pt}" foreground="#{color}">{out[:-1]}</span>'
 
 def card_energy(e: dict, pal: dict, cols: int = 70) -> str:
     """The hero watts, the 30 min chart across the whole width, the CPU/GPU split, one meta line."""
     sub, dim, tone = pal["subtext"], pal["dim"], pal["orange"]
     if e["status"] == "missing" or e.get("measured_w") is None:
         return meta("Sem medições do power-log", sub)
-    peak = max([v for v in e["history"] if v is not None] or [1])
-    top = -(-peak // 25) * 25  # a round ceiling over the peak, so the bars read as levels, not a block
+    seen = [v for v in e["history"] if v is not None] or [1]
+    peak = max(seen)
+    # A LINE chart, so the scale hugs the data (a round range around it) and is printed below it.
+    top, bottom = -(-peak // 25) * 25, min(seen) // 25 * 25
     tot = e["measured_w"] or 1
     half = cols // 2
 
@@ -445,7 +434,7 @@ def card_energy(e: dict, pal: dict, cols: int = 70) -> str:
         return f'<span foreground="#{sub}">{head}</span>' + meter(w / tot, half - len(head) - 3, tone, dim)
 
     when = ago(e["age"])
-    notes = ["30 min", f"0 a {top:.0f} W", f"pico {peak:.0f} W"]
+    notes = ["30 min", f"{bottom:.0f} a {top:.0f} W", f"pico {peak:.0f} W"]
     if e["baseline"]:
         notes.append(f'repouso Eco {e["baseline"]["median_w"]:.0f} W')
     notes.append(PROFILE.get(e["profile"] or "", e["profile"] or "–"))
@@ -455,7 +444,7 @@ def card_energy(e: dict, pal: dict, cols: int = 70) -> str:
         notes.append(when)
     return "\n".join([
         hero(f'{e["measured_w"]:.0f}', 72) + hero(" W", 24, sub, 300) + "   " + meta("CPU + GPU medido", sub),
-        spark2(e["history"], top, tone, dim, cols * BODY_PT // 30),
+        sparkline(e["history"], top, cols * BODY_PT * 0.84, tone, bottom),
         share("CPU", e["cpu_w"]) + "   " + share("GPU", e["gpu_w"]),
         meta(" · ".join(notes), sub),
     ])
@@ -463,7 +452,7 @@ def card_energy(e: dict, pal: dict, cols: int = 70) -> str:
 
 def cards_claude(c: dict, pal: dict, now: float, cols: int = 30) -> dict:
     """The 5 h session and the week, one half each: a ring, the share, its reset, the last 24 h."""
-    sub, dim = pal["subtext"], pal["dim"]
+    sub = pal["subtext"]
     if c["status"] in ("missing", "error"):
         why = {"no-credentials": "sem login da conta FAI"}.get(c.get("error"), c.get("error") or "sem dados")
         return {"claude-s": meta(esc(why), sub), "claude-w": ""}
@@ -478,7 +467,7 @@ def cards_claude(c: dict, pal: dict, now: float, cols: int = 30) -> dict:
             icon(ring, 38, tone, full) + "  " + hero("–" if pct is None else f"{round(pct)}%", 44),
             caps(cap, sub),
             meta(reset, sub),
-            spark(hist[-cols:], 100, tone, dim),
+            sparkline(hist[-24:], 100, cols * BODY_PT * 0.84, tone),
         ])
 
     return {

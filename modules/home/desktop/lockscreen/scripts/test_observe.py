@@ -194,10 +194,27 @@ class Markup(unittest.TestCase):
     def setUp(self):
         self.o = load({})
 
-    def test_spark_is_zero_based_and_holes_are_dots(self):
-        s = self.o.spark([0, 50, 100, None], 100, "fff", "000")
-        self.assertIn("▁▅█", s)
-        self.assertIn("·", s)
+    def test_sparkline_is_zero_based_and_clamped(self):
+        s = self.o.sparkline([0, 50, 125, 200], 125, 400, "fff")
+        self.assertIn("{0,40,100,100}", s)  # over the top is clamped, never past the chart
+        self.assertIn(self.o.TYPE["chart"], s)
+
+    def test_a_floor_rescales_and_never_goes_below(self):
+        s = self.o.sparkline([50, 75, 100, 40], 100, 400, "fff", bottom=50)
+        self.assertIn("{0,50,100,0}", s)
+
+    def test_a_hole_splits_the_line_and_is_never_a_zero(self):
+        s = self.o.sparkline([10, None, None, 30, 40], 100, 400, "fff")
+        self.assertIn("{10}  {30,40}", s)
+        self.assertNotIn(",0", s)
+        self.assertNotIn("{}", self.o.sparkline([None, None], 100, 400, "fff"))
+
+    def test_sparkline_size_spans_its_width(self):
+        import re
+
+        pt = int(re.search(r'font_desc="[^"]*, (\d+)"', self.o.sparkline([1] * 30, 10, 823, "f")).group(1))
+        width = pt * 96 / 72 * self.o.CHART_EM * 30
+        self.assertTrue(780 <= width <= 823, width)
 
     def test_meter_keeps_its_width_and_says_missing(self):
         import re
@@ -206,13 +223,6 @@ class Markup(unittest.TestCase):
         self.assertEqual(len(bare(self.o.meter(0.25, 20, "a", "b"))), 20)
         self.assertEqual(len(bare(self.o.meter(1.7, 20, "a", "b"))), 20)  # clamped, never wider
         self.assertNotIn('foreground="#a"', self.o.meter(None, 20, "a", "b"))  # no reading: track only
-
-    def test_two_row_chart_has_16_levels_and_dotted_holes(self):
-        import re
-
-        rows = [re.sub(r"<[^>]+>", "", r) for r in self.o.spark2([16, 8, 1, None], 16, "a", "b").split("\n")]
-        self.assertEqual(rows[0], "█   ")
-        self.assertEqual(rows[1], "██▁·")
 
     def test_process_names_are_escaped_and_aligned(self):
         p = {"cpu": [{"name": "a&b<c>", "value": 5.0}], "mem": []}

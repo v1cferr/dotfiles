@@ -639,7 +639,11 @@ def format_quote(q: dict, spec: dict):
         orig = (wrap_verse if "\n" in original else wrap)(original.strip(), c["originalColumns"], c["originalLines"])
         if not orig:
             return None
-        out += f'\n<span size="{c["originalSize"] * 1024}" foreground="#{sub}">' + "\n".join(escape(x) for x in orig) + "</span>"
+        # A script the display face lacks (polytonic Greek) gets a face that has it, not a fallback.
+        face = c.get("originalFonts", {}).get(q["lang"])
+        family = f' font_family="{face}"' if face else ""
+        out += (f'\n<span size="{c["originalSize"] * 1024}"{family} foreground="#{sub}">'
+                + "\n".join(escape(x) for x in orig) + "</span>")
     # The credit line drops the year, then the source, before it would overflow.
     parts = [q["author"].strip()] + [q[k].strip() for k in ("source", "year") if isinstance(q.get(k), str) and q[k].strip()]
     while len(parts) > 1 and columns(" · ".join(parts)) > c["originalColumns"]:

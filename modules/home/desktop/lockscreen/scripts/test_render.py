@@ -431,6 +431,10 @@ class Quotes(unittest.TestCase):
         self.assertIn("x &amp; y", out)
         self.assertIn("Autor 1 · Notes · 1843", out)
 
+    def test_greek_gets_a_face_that_has_it(self):
+        q = self.entry(1, original="ὁ κόσμος ἀλλοίωσις", lang="grc")
+        self.assertIn(f'font_family="{SPEC["quote"]["originalFonts"]["grc"]}"', R.format_quote(q, SPEC))
+
     def test_portuguese_shows_no_original_and_invalid_is_none(self):
         self.assertNotIn("ORIG", R.format_quote(self.entry(1, original="ORIG"), SPEC))
         self.assertIsNone(R.format_quote({"text": "sem id"}, SPEC))

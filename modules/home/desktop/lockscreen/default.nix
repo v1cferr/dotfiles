@@ -182,6 +182,7 @@ let
       originalLines = 2;
       originalSize = 13;
       metaSize = 12;
+      originalFonts.grc = "Noto Sans"; # Geist has no polytonic Greek; Noto Sans does (fonts.nix)
       haikuShare = 0.34; # beside a print, about one draw in three is a haiku
       fallback = {
         id = "kay-predict-the-future";

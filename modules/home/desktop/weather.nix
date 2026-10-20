@@ -39,6 +39,54 @@ in
     # The condition TEXT is pt-BR on purpose: it is the product, like the holidays' names, while
     # the chrome around it stays en-US (rule 2). The ICON is NOT here: only the bar draws one, so
     # the code -> glyph mapping lives in Bar.qml and is not duplicated.
+    # The glyph per WMO code, day and night, for the bar AND the lock screen (it lived in Bar.qml
+    # until 20/10/2026, when the lock needed it too: rule 11).
+    icons = lib.mkOption {
+      type = lib.types.attrsOf (lib.types.attrsOf lib.types.str);
+      description = "Open-Meteo's WMO weather code -> { day, night } Nerd Font glyph.";
+      default =
+        let
+          same = g: {
+            day = g;
+            night = g;
+          };
+          codes = list: g: lib.genAttrs (map toString list) (_: g);
+        in
+        {
+          "0" = {
+            day = "󰖙";
+            night = "󰖔";
+          };
+          "1" = {
+            day = "󰖙";
+            night = "󰖔";
+          };
+          "2" = {
+            day = "󰖕";
+            night = "󰼶";
+          };
+          "3" = same "󰖐";
+          "45" = same "󰖑";
+          "48" = same "󰖑";
+        }
+        // codes [
+          51
+          53
+          55
+          56
+          57
+          61
+          63
+          65
+          66
+          67
+          80
+          81
+          82
+        ] (same "󰖗")
+        // codes [ 71 73 75 77 85 86 ] (same "󰖘")
+        // codes [ 95 96 99 ] (same "󰖓");
+    };
     conditions = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;
       description = "Open-Meteo's WMO weather code -> the pt-BR status shown on screen.";
@@ -84,6 +132,7 @@ in
       ibge
       model
       conditions
+      icons
       ;
   };
 }

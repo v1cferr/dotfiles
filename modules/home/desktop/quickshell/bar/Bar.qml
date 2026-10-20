@@ -1053,6 +1053,11 @@ Scope {
     // The icon comes from the CODE, never from the label. It used to regex the en-US prose, so
     // translating the label would have turned EVERY icon into the default cloud, in silence.
     function weatherIcon(code, isDay) {
+        // The table is my.weather.icons (weather.nix), shared with the lock screen; the code below is
+        // only the fallback for a missing or older weather.json (rule 11).
+        const t = root.wConf.icons;
+        if (t && t[code])
+            return isDay ? t[code].day : t[code].night;
         const c = code;
         if (c === 0 || c === 1)
             return isDay ? "󰖙" : "󰖔";

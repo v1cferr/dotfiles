@@ -89,8 +89,10 @@ def check_layout(cards: list, size: tuple) -> list:
     for cid, (x0, y0, x1, y1) in rects:
         if x0 < 0 or y0 < 0 or x1 > size[0] or y1 > size[1]:
             problems.append(f"{cid} leaves the {size[0]}x{size[1]} screen")
-    for i, (a, ra) in enumerate(rects):
-        for bid, rb in rects[i + 1 :]:
+    # A scrim is a shade ON the photo, so glass may sit on it; two surfaces may not overlap.
+    solid = [(cid, r) for (cid, r), c in zip(rects, cards) if c.get("material") != "scrim"]
+    for i, (a, ra) in enumerate(solid):
+        for bid, rb in solid[i + 1 :]:
             if ra[0] < rb[2] and rb[0] < ra[2] and ra[1] < rb[3] and rb[1] < ra[3]:
                 problems.append(f"{a} overlaps {bid}")
     return problems

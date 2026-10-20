@@ -55,6 +55,11 @@ class Geometry(unittest.TestCase):
         card = {"id": "c", "center": [0, 0], "size": [100, 50]}
         self.assertEqual(R.card_rect(card, (1000, 500)), (450, 225, 550, 275))
 
+    def test_glass_may_sit_on_a_scrim(self):
+        shade = {"id": "s", "center": [0, 0], "size": [400, 400], "material": "scrim"}
+        glass = {"id": "g", "center": [0, 0], "size": [100, 100]}
+        self.assertEqual(R.check_layout([shade, glass], (1000, 1000)), [])
+
     def test_overflow_and_overlap_are_caught(self):
         a = {"id": "a", "center": [0, 0], "size": [400, 400]}
         b = {"id": "b", "center": [100, 0], "size": [400, 400]}
@@ -67,11 +72,19 @@ class Geometry(unittest.TestCase):
         return {c["id"]: R.card_rect(c, tuple(mon["size"])) for c in mon["layouts"][layout]}
 
     def test_asus_is_editorial_on_one_axis(self):
-        cards = SPEC["monitors"]["primary"]["layouts"]["main"]
-        self.assertEqual([c["id"] for c in cards], ["column", "quote"])
-        self.assertTrue(all(c["material"] == "scrim" for c in cards), "no card on the ASUS")
+        cards = {c["id"]: c for c in SPEC["monitors"]["primary"]["layouts"]["main"]}
+        self.assertEqual(list(cards), ["column", "avatar", "auth", "quote"])
+        self.assertEqual(cards["column"]["material"], "scrim")  # the type sits on the art, not a box
         for k, (x0, _, x1, _) in self.rects("primary", "main").items():
             self.assertEqual(x0 + x1, 2560, f"{k} is off the vertical axis")
+        # The avatar is a true circle: square, and its corner is half its side.
+        a = cards["avatar"]
+        self.assertEqual(a["size"][0], a["size"][1])
+        self.assertEqual(a["radius"] * 2, a["size"][0])
+        # Who is unlocking reads as one group: the avatar sits above the field, both inside the column.
+        r = self.rects("primary", "main")
+        self.assertLess(r["avatar"][3], r["auth"][1])
+        self.assertTrue(r["column"][1] <= r["avatar"][1] and r["auth"][3] <= r["column"][3])
 
     def test_every_card_is_on_whole_pixels(self):
         for role, mon in SPEC["monitors"].items():
@@ -521,13 +534,11 @@ class Labels(unittest.TestCase):
 
     def test_clock_format(self):
         # The inlined command, run the way hyprlock runs it: `/bin/sh -c`, which is bash on NixOS.
-        cmd = (HERE / "clock.sh").read_text().rstrip("\n").split("\n")[-1]
-        for k, v in {"@ACCENT@": "7aa2f7", "@SECONDS@": "Geist Light 44", "@RISE@": "84000"}.items():
-            cmd = cmd.replace(k, v)
-        self.assertNotIn("@", cmd.replace("Geist Light 44", ""))  # every placeholder filled
+        cmd = (HERE / "clock.sh").read_text().rstrip("\n").split("\n")[-1].replace("@ACCENT@", "7aa2f7")
+        self.assertNotIn("@", cmd)  # every placeholder filled
         out = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, check=True).stdout
-        self.assertRegex(out, r'^<span font_features="tnum">\d\d:\d\d</span>'
-                              r'<span font_desc="Geist Light 44" rise="84000" foreground="#7aa2f7"> \d\d</span>$')
+        self.assertRegex(out, r'^<span font_features="tnum">\d\d:\d\d<span foreground="#7aa2f7" alpha="85%">'
+                              r':\d\d</span></span>$')
 
     def test_weather_fresh_stale_missing(self):
         import time

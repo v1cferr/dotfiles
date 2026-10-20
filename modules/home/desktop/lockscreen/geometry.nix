@@ -19,50 +19,50 @@ let
     ];
   };
 
-  # ── ASUS, 2560x1440: editorial, no cards. Two shaded zones on one axis: the column (logo, name,
-  # clock, date, field) and the quote's band at the foot. The art stays the protagonist. ──
-  # `zones` are where text sits (card-relative x y w h): the shade is measured there, not the box.
-  column = card "column" 0 (-160) 1280 600 0.2 // {
-    material = "scrim";
-    zones = [
-      [
-        500
-        96
-        280
-        56
-      ] # name, handle
-      [
-        100
-        190
-        1080
-        160
-      ] # clock digits
-      [
-        400
-        396
-        480
-        32
-      ] # date
-      [
-        430
-        490
-        420
-        60
-      ] # field
-    ];
-  };
-  # Up to 3 lines of text, 2 of the original and the credit: 240 px, its foot 80 px off the edge.
-  quote = card "quote" 0 520 1600 240 0.2 // {
+  # ── ASUS, 2560x1440: editorial on one axis. The clock and date at the top; then who is
+  # unlocking, as ONE group (the avatar, name, handle and the field); the quote at the foot. The art
+  # stays the protagonist: a feathered scrim behind the type, small glass only where it holds
+  # something (the avatar, the field, the quote). ──
+  # `zones` are where text sits (card-relative x y w h): the scrim is measured there, not the box.
+  column = card "column" 0 (-215) 1280 590 0.2 // {
     material = "scrim";
     zones = [
       [
         240
-        20
-        1120
-        200
-      ]
+        8
+        800
+        140
+      ] # clock digits
+      [
+        400
+        174
+        480
+        30
+      ] # date
+      [
+        440
+        404
+        400
+        36
+      ] # name
+      [
+        520
+        440
+        240
+        24
+      ] # handle
     ];
   };
+  # The avatar: a 112 px glass circle with the logo in it, 50 px above the name.
+  avatar = card "avatar" 0 (-182) 112 112 0.6 // {
+    radius = 56;
+  };
+  # The field: hyprlock draws its state hairline on this glass, with the same corner.
+  auth = card "auth" 0 38 480 70 0.6 // {
+    edge = false;
+  };
+  # The quote on a quiet reading surface, its foot 182 px off the screen's edge.
+  quote = card "quote" 0 398 1200 280 0.4;
 
   # ── LG, 1080x1920: independent Bento cards, each its own glass, the art visible between them.
   # 72 px margins, 24 px gaps, rows from 184 px down; the lower ~460 px stay the print. ──
@@ -107,6 +107,8 @@ in
   cards = {
     inherit
       column
+      avatar
+      auth
       quote
       ;
     inherit
@@ -138,6 +140,8 @@ in
       ]; # the declared logical size; the renderer prefers the live one
       layouts.main = [
         column
+        avatar
+        auth
         quote
       ];
     };

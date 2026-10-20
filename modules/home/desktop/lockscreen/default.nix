@@ -119,12 +119,11 @@ let
   # Type sizes (pt). One mono column is 0.8 px per pt at 96 dpi; hyprlock rounds the size up, and a
   # 12 pt column MEASURED 10 px on screen, so the columns are counted at 0.84 px per pt.
   pt = {
-    clock = 160; # editorial: HH:MM, the hero, in Thin
-    seconds = 44; # Light, in the accent, on the digits' cap line
-    date = 14;
-    name = 13; # caps, tracked
-    nick = 12;
-    quote = 17;
+    clock = 144; # editorial: HH:MM:SS at ONE size, Thin, tabular, the seconds in a quieter blue
+    date = 15;
+    name = 20; # the identity group, under the avatar
+    nick = 13;
+    quote = 21;
     title = 12; # a card's header on the LG: tracked caps
     body = 15; # the LG cards' running text, read from the chair
   };
@@ -171,9 +170,9 @@ let
     # out if the file is missing, so it can never stand between me and the lock.
     logo = {
       path = config.my.lockscreen.logo;
-      size = 68;
-      card = "column";
-      dy = -260;
+      size = 72; # the emblem inside the 112 px avatar, by its ink
+      card = "avatar";
+      dy = 0;
       color = "text";
     };
     contrast = aa;
@@ -181,12 +180,12 @@ let
     quotesFile = ./quotes.json;
     quotesSeen = "${config.xdg.stateHome}/lockscreen/quotes-seen.json";
     quote = {
-      columns = 72; # a reading measure, not the band's width
-      lines = 3;
-      originalColumns = 94; # the original and the credit, smaller: the same measure in px
+      columns = 66; # the quote card's 1104 px at 21 pt: Geist is proportional, ~7% narrower than a mono count
+      lines = 4;
+      originalColumns = 93; # the original and the credit, smaller, on the same 1104 px
       originalLines = 2;
-      originalSize = 13;
-      metaSize = 12;
+      originalSize = 14;
+      metaSize = 13;
       originalFonts.grc = "Noto Sans"; # Geist has no polytonic Greek; Noto Sans does (fonts.nix)
       haikuShare = 0.34; # beside a print, about one draw in three is a haiku
       fallback = {
@@ -209,6 +208,16 @@ let
         layouts.main = [
           # Every line of the column is in `text`, so only it needs AA: a lighter shade over bright paper.
           (cards.column // { contrast.text = aa.text; })
+          (cards.avatar // { contrast.text = aa.text; }) # the logo is drawn in `text`
+          # The field's failure text and the red hairline sit on this glass.
+          (
+            cards.auth
+            // {
+              contrast = aa // {
+                red = 4.5;
+              };
+            }
+          )
           (cards.quote // { contrast = aa; })
         ];
       };
@@ -290,17 +299,9 @@ let
   };
   labelBin = lib.getExe label;
   # The clock, inlined (its last line), with hyprlang's `##` for every `#`.
-  # The seconds ride on the cap line: Geist's caps are 0.71 em, so the rise is the gap between the two.
-  clockCmd =
-    lib.replaceStrings
-      [ "#" "@ACCENT@" "@SECONDS@" "@RISE@" ]
-      [
-        "##"
-        p.accent
-        "${type.display} Light ${toString pt.seconds}"
-        (toString (builtins.floor ((pt.clock - pt.seconds) * 0.71 * 1024)))
-      ]
-      (lib.last (lib.splitString "\n" (lib.removeSuffix "\n" (builtins.readFile ./scripts/clock.sh))));
+  clockCmd = lib.replaceStrings [ "#" "@ACCENT@" ] [ "##" p.accent ] (
+    lib.last (lib.splitString "\n" (lib.removeSuffix "\n" (builtins.readFile ./scripts/clock.sh)))
+  );
 
   mediaBridge = writeShellApplication {
     name = "lockscreen-media-bridge";
@@ -536,22 +537,22 @@ in
         # state, so neutral at rest, blue checking, red failed, yellow with Caps Lock.
         input-field = {
           monitor = primary;
-          size = "420, 56";
+          size = "${toString (builtins.elemAt cards.auth.size 0)}, ${toString (builtins.elemAt cards.auth.size 1)}";
           outline_thickness = 1;
-          rounding = -1;
+          rounding = cards.auth.radius; # the glass under it has the same corner
           inner_color = "rgba(00000000)";
-          outer_color = c "text" "40";
+          outer_color = c "border" "d9";
           check_color = c "accent" "ff";
           fail_color = c "red" "ff";
           capslock_color = c "yellow" "ff";
           font_color = c "text" "ff";
           font_family = type.data;
-          placeholder_text = "${icon 15 "lock"}  senha";
+          placeholder_text = ''<span size="${toString (16 * 1024)}" foreground="##${p.subtext}">${icon 16 "lock"}  Digite sua senha</span>'';
           fail_text = "$PAMFAIL"; # in `text`: the red is the hairline's, the shade is measured for text
-          dots_size = 0.22;
+          dots_size = 0.25;
           dots_spacing = 0.35;
           fade_on_empty = false;
-          position = at cards.column 0 220;
+          position = at cards.auth 0 0;
           halign = "center";
           valign = "center";
         };
@@ -603,32 +604,12 @@ in
             half = lg.inner energy / 2 + lg.pad; # where the right half of a full-width card starts
           in
           [
-            # ── ASUS: who, when, the way in; a thought at the foot. One axis, no boxes. ──
-            (
-              textAt cards.column 0 (-192)
-              // {
-                monitor = primary;
-                text = ''<span letter_spacing="${toString (4 * 1024)}">${lib.toUpper config.programs.git.settings.user.name}</span>'';
-                color = c "text" "ff";
-                font_size = pt.name;
-                font_family = "${type.data} SemiBold";
-              }
-            )
-            (
-              textAt cards.column 0 (-166)
-              // {
-                monitor = primary;
-                text = config.home.username;
-                color = c "text" "ff";
-                font_size = pt.nick;
-                font_family = type.data;
-              }
-            )
+            # ── ASUS: the time on top; who is unlocking as ONE group with the field; a thought at the
+            # foot. One axis. Offsets are from the column's center (geometry.nix). ──
             # The time, with seconds, from the system clock (chrony/NTS). 995 and not 1000: hyprlock's
             # timer runs ~0.7 ms long, and a period over 1 s MUST skip a second (measured in the notes).
-            # Nudged right by half the seconds' width, so HH:MM itself sits on the axis.
             (
-              textAt cards.column 44 (-30)
+              textAt cards.column 0 (-217)
               // {
                 monitor = primary;
                 text = "cmd[update:995] ${clockCmd}";
@@ -638,13 +619,34 @@ in
               }
             )
             (
-              textAt cards.column 0 110
+              textAt cards.column 0 (-107)
               // {
                 monitor = primary;
                 text = "cmd[update:60000] ${labelBin} date";
                 color = c "text" "ff";
                 font_size = pt.date;
                 font_family = type.display;
+              }
+            )
+            # Under the avatar (its glass and logo are in the image): the name and the handle.
+            (
+              textAt cards.column 0 127
+              // {
+                monitor = primary;
+                text = config.programs.git.settings.user.name;
+                color = c "text" "ff";
+                font_size = pt.name;
+                font_family = type.display;
+              }
+            )
+            (
+              textAt cards.column 0 157
+              // {
+                monitor = primary;
+                text = config.home.username;
+                color = c "text" "ff";
+                font_size = pt.nick;
+                font_family = type.data;
               }
             )
             (

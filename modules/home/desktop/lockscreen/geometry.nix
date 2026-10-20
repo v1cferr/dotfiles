@@ -20,22 +20,22 @@ let
   };
 
   # ── ASUS, 2560x1440: four cards on one axis, 32 px apart, an 800 px composition ──
-  identity = card "identity" 0 (-312) 384 160 0.66;
-  clock = card "clock" 0 (-88) 768 224 0.72;
-  auth = card "auth" 0 96 480 80 0.84;
-  quote = card "quote" 0 288 960 240 0.8;
+  identity = card "identity" 0 (-312) 384 160 0.5;
+  clock = card "clock" 0 (-88) 768 224 0.54;
+  auth = card "auth" 0 96 480 80 0.66;
+  quote = card "quote" 0 288 960 240 0.6;
 
   # ── LG, 1080x1920: a 2 x 3 grid from 184 px down, 56 px margins, 24 px gutters, 472 px columns ──
   colL = -248; # 56 + 472 / 2 - 540
   colR = 248;
-  energy = card "energy" colL (-592) 472 368 0.74; # rows: 184 + 368 / 2 - 960
-  claude = card "claude" colR (-592) 472 368 0.74;
-  system = card "system" colL (-212) 472 344 0.78; # 184 + 368 + 24 + 344 / 2 - 960
-  procs = card "procs" colR (-212) 472 344 0.78;
-  weather = card "weather" colL 112 472 256 0.72; # 184 + 368 + 24 + 344 + 24 + 256 / 2 - 960
-  media = card "media" colR 112 472 256 0.72;
+  energy = card "energy" colL (-592) 472 368 0.56; # rows: 184 + 368 / 2 - 960
+  claude = card "claude" colR (-592) 472 368 0.56;
+  system = card "system" colL (-212) 472 344 0.58; # 184 + 368 + 24 + 344 / 2 - 960
+  procs = card "procs" colR (-212) 472 344 0.58;
+  weather = card "weather" colL 112 472 256 0.54; # 184 + 368 + 24 + 344 + 24 + 256 / 2 - 960
+  media = card "media" colR 112 472 256 0.54;
   # Ambient: no empty media card, the weather takes the whole row.
-  weatherWide = card "weather" 0 112 968 256 0.72;
+  weatherWide = card "weather" 0 112 968 256 0.54;
 in
 {
   inherit radius;

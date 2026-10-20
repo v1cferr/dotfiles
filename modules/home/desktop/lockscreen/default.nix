@@ -70,12 +70,12 @@ let
     clear-gradient = {
       solid = false;
       gradient = true;
-      alphaMin = 0.62; # the floor; each card starts at its own baseline (geometry.nix)...
+      alphaMin = 0.45; # the floor; each card starts at its own baseline (geometry.nix)...
       alphaMax = 0.92; # ...and goes denser only as far as contrast needs
       tint = 0.2;
       brightness = 0.95;
       contrast = 0.95;
-      blurSigma = 22.0; # Glass+: a deeper frost than v2's 18, by eye: docs/notes/desktop/lockscreen.md
+      blurSigma = 28.0; # Glass+: a deep frost, so a clear card still reads as glass: docs/notes/desktop/lockscreen.md
     };
     perceptible = {
       solid = false;
@@ -127,21 +127,26 @@ let
     glass = profiles.${config.my.theme.glass};
     edge = {
       edge = 0.55; # colEdge: border at 0x8c
-      rim = 0.16; # the optical rim: text-colored light, full at the top edge, gone by mid-height
+      rim = 0.28; # the optical rim: text-colored light, full at the top edge, gone by mid-height
       sheen = 0.06; # colSheen: text at 0x0f
       hairline = 1;
     };
     # Glass+: a soft shadow under each card, light from above, and a whisper of lens at the rim.
     shadow = {
-      alpha = 0.22;
+      alpha = 0.3;
       sigma = 14;
       dy = 4;
     };
     highlight = {
-      alpha = 0.05;
-      depth = 0.35;
+      alpha = 0.09;
+      depth = 0.45;
     };
-    refraction = 6.0e-3;
+    # The palette's accent breathed into the frost: Tokyo Night's blue, not a neutral gray glass.
+    hue = {
+      color = "accent";
+      alpha = 0.06;
+    };
+    refraction = 1.2e-2;
     rimBand = 6;
     # The logo is STATE (my file, never in git): baked into the identity card, and simply left out
     # if the file is missing, so it can never stand between me and the lock.
@@ -263,7 +268,7 @@ let
   };
   labelBin = lib.getExe label;
   # The clock, inlined (its last line), with hyprlang's `##` for every `#`.
-  clockCmd = lib.replaceStrings [ "#" ] [ "##" ] (
+  clockCmd = lib.replaceStrings [ "#" "@ACCENT@" ] [ "##" p.accent ] (
     lib.last (lib.splitString "\n" (lib.removeSuffix "\n" (builtins.readFile ./scripts/clock.sh)))
   );
 
@@ -351,6 +356,12 @@ let
       code: text: "  ${code}) text=${lib.escapeShellArg text} ;;\n"
     ) config.my.weather.conditions
   );
+  # The glyph per code, day and night, from the same table the bar reads (my.weather.icons).
+  weatherIconCase = lib.concatStrings (
+    lib.mapAttrsToList (
+      code: v: "  ${code}) iday=${lib.escapeShellArg v.day}; inight=${lib.escapeShellArg v.night} ;;\n"
+    ) config.my.weather.icons
+  );
   # The SAME forecast the bar draws (one fetch per model run, glance-feed), read locally: the
   # current hour's sky and temperature, so the lock and the bar cannot disagree about the minute.
   weatherFetch = writeShellScript "lockscreen-weather-fetch" ''
@@ -365,7 +376,7 @@ let
       | select(.weather_code[$i] != null and .temperature_2m[$i] != null)
       | (($j.daily.time // []) | index($d)) as $k
       | def r(x): if x == null then "-" else (x | round | tostring) end;
-      "\($u) \(.weather_code[$i]) \(.temperature_2m[$i] | round) \(r(if $k == null then null else $j.daily.temperature_2m_max[$k] end)) \(r(if $k == null then null else $j.daily.temperature_2m_min[$k] end)) \(r(if $k == null then null else $j.daily.precipitation_probability_max[$k] end)) \(r(.apparent_temperature[$i]))"' || true)
+      "\($u) \(.weather_code[$i]) \(.temperature_2m[$i] | round) \(r(if $k == null then null else $j.daily.temperature_2m_max[$k] end)) \(r(if $k == null then null else $j.daily.temperature_2m_min[$k] end)) \(r(if $k == null then null else $j.daily.precipitation_probability_max[$k] end)) \(r(.apparent_temperature[$i])) \(if .is_day[$i] == 0 then 0 else 1 end)"' || true)
     # No data: nothing is written, and the label turns the old file into "unavailable" on its own.
     [ -n "$fields" ] || exit 0
     set -- $fields
@@ -373,6 +384,13 @@ let
     case "$2" in
     ${weatherCase}  *) text="" ;;
     esac
+    # The sky as a glyph, by day or by night; an unknown code shows no glyph rather than a wrong one.
+    iday="" inight=""
+    case "$2" in
+    ${weatherIconCase}  *) ;;
+    esac
+    icon="$iday"
+    [ "$8" = 1 ] || icon="$inight"
     # Valid for this hour plus the timer's 10 min and a margin, then the label stops trusting it.
     valid=$(( $(${coreutils}/bin/date -d "$hour" +%s) + 3600 + 900 ))
     tmp="${weatherFile}.tmp"
@@ -385,7 +403,9 @@ let
     [ "$7" = - ] || now="''${now:+$now · }sensação $7°"
     extra="$day''${day:+''${now:+$'\n'}}$now"
     {
-      ${coreutils}/bin/printf '%s\n%s\n<b>%s°C</b>' "$valid" "$1" "$3"
+      ${coreutils}/bin/printf '%s\n%s\n' "$valid" "$1"
+      [ -z "$icon" ] || ${coreutils}/bin/printf '<span size="${toString (28 * 1024)}" foreground="#${p.sky}">%s</span>  ' "$icon"
+      ${coreutils}/bin/printf '<b>%s°C</b>' "$3"
       [ -z "$text" ] || ${coreutils}/bin/printf '  <span foreground="#${p.subtext}">%s</span>' "$text"
       [ -z "$extra" ] || ${coreutils}/bin/printf '\n<span size="${toString (pt.body * 1024)}" foreground="#${p.subtext}">%s</span>' "$extra"
     } > "$tmp"
@@ -412,13 +432,23 @@ let
 
   # hyprlock colors: "rgba(rrggbbaa)" from a palette key and an alpha byte.
   c = key: a: "rgba(${p.${key}}${a})";
-  # A label at a point inside a card, centered on it.
-  textAt = card: dx: dy: {
-    position = at card dx dy;
-    halign = "center";
-    valign = "center";
-    text_align = "center";
+  # A soft shadow under text: the clearer glass keeps its legibility without a denser tint.
+  shade = {
+    shadow_passes = 2;
+    shadow_size = 4;
+    shadow_color = c "shadow" "cc";
+    shadow_boost = 1.0;
   };
+  # A label at a point inside a card, centered on it.
+  textAt =
+    card: dx: dy:
+    shade
+    // {
+      position = at card dx dy;
+      halign = "center";
+      valign = "center";
+      text_align = "center";
+    };
 in
 {
   # The spec, readable by the flake's check, which runs the renderer's tests against THIS JSON.
@@ -493,7 +523,7 @@ in
           capslock_color = c "yellow" "ff";
           font_color = c "text" "ff";
           font_family = font;
-          placeholder_text = ''<span foreground="##${p.subtext}">Digite a senha…</span>'';
+          placeholder_text = ''<span foreground="##${p.subtext}">󰌾  Digite a senha…</span>'';
           fail_text = ''<span foreground="##${p.red}">$PAMFAIL</span>'';
           dots_size = 0.22;
           dots_spacing = 0.35;
@@ -514,18 +544,19 @@ in
               text_align = "left";
               font_family = font;
             };
-            # A card's caption: small, dim, in the corner; the same 24 px inset as its text.
+            # A card's caption: its icon and title in the card's own color, small, in the corner.
             caption =
-              card: words:
+              card: tone: words:
               lgText card 24 20
               // {
                 text = words;
-                color = c "dim" "ff";
+                color = c tone "ff";
                 font_size = pt.title;
               };
             obs =
               card: name: every:
               lgText card 24 46
+              // shade
               // {
                 text = "cmd[update:${toString every}] ${labelBin} obs ${name}";
                 color = c "text" "ff";
@@ -570,9 +601,20 @@ in
               textAt cards.clock 0 80
               // {
                 monitor = primary;
-                text = "cmd[update:60000] ${labelBin} date";
+                text = "cmd[update:60000] ${labelBin} date ${p.accent}";
                 color = c "subtext" "ff";
                 font_size = pt.date;
+                font_family = font;
+              }
+            )
+            # The quote card's mark: a large, quiet opening quote in the corner, saying what the card is.
+            (
+              textAt cards.quote (-440) (-82)
+              // {
+                monitor = primary;
+                text = "󰝗"; # the Nerd Font's open quote: the dingbat ❝ fell back to a tiny glyph
+                color = c "accent" "73";
+                font_size = 34;
                 font_family = font;
               }
             )
@@ -589,17 +631,18 @@ in
 
             # ── LG: what the machine is doing while I am away. Captions are static; the rest reads
             # files the observe service and the bridges write (no network, no /proc walk here). ──
-            (caption cards.energy "ENERGIA")
+            (caption cards.energy "orange" "󱐋  ENERGIA")
             (obs cards.energy "energy" 60000)
-            (caption cards.claude "CLAUDE CODE")
+            (caption cards.claude "magenta" "✦  CLAUDE CODE")
             (obs cards.claude "claude" 60000)
-            (caption cards.system "SISTEMA")
+            (caption cards.system "blue" "󰍛  SISTEMA")
             (obs cards.system "system" 30000)
-            (caption cards.procs "PROCESSOS")
+            (caption cards.procs "teal" "󰒋  PROCESSOS")
             (obs cards.procs "procs" 30000)
-            (caption cards.weather "CLIMA  ·  ${config.my.weather.place}")
+            (caption cards.weather "sky" "󰖐  CLIMA  ·  ${config.my.weather.place}")
             (
               lgText cards.weather 24 50
+              // shade
               // {
                 text = "cmd[update:60000] ${labelBin} weather";
                 color = c "text" "ff";
@@ -608,6 +651,7 @@ in
             )
             (
               lgText cards.media 24 20
+              // shade
               // {
                 # Empty in Ambient, where there is no media card: its caption rides in the markup.
                 text = "cmd[update:3000] ${labelBin} media";

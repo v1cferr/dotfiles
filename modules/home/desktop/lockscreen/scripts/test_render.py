@@ -449,9 +449,9 @@ class Labels(unittest.TestCase):
 
     def test_clock_format(self):
         # The inlined command, run the way hyprlock runs it: `/bin/sh -c`, which is bash on NixOS.
-        cmd = (HERE / "clock.sh").read_text().rstrip("\n").split("\n")[-1]
+        cmd = (HERE / "clock.sh").read_text().rstrip("\n").split("\n")[-1].replace("@ACCENT@", "7aa2f7")
         out = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, check=True).stdout
-        self.assertRegex(out, r"^\d\d:\d\d:\d\d$")
+        self.assertRegex(out, r'^\d\d:\d\d<span foreground="#7aa2f7">:\d\d</span>$')
 
     def test_weather_fresh_stale_missing(self):
         import time

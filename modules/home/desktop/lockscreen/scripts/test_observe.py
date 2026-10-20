@@ -188,7 +188,8 @@ class Procs(unittest.TestCase):
 
 
 class Markup(unittest.TestCase):
-    PAL = {"text": "c0caf5", "subtext": "a9b1d6", "dim": "565f89", "orange": "ff9e64", "magenta": "bb9af7"}
+    PAL = {"text": "c0caf5", "subtext": "a9b1d6", "dim": "565f89", "orange": "ff9e64", "magenta": "bb9af7",
+           "blue": "7aa2f7", "teal": "73daca"}
 
     def setUp(self):
         self.o = load({})
@@ -197,6 +198,21 @@ class Markup(unittest.TestCase):
         s = self.o.spark([0, 50, 100, None], 100, "fff", "000")
         self.assertIn("▁▅█", s)
         self.assertIn("·", s)
+
+    def test_meter_keeps_its_width_and_says_missing(self):
+        import re
+
+        bare = lambda m: re.sub(r"<[^>]+>", "", m)  # noqa: E731
+        self.assertEqual(len(bare(self.o.meter(0.25, 20, "a", "b"))), 20)
+        self.assertEqual(len(bare(self.o.meter(1.7, 20, "a", "b"))), 20)  # clamped, never wider
+        self.assertNotIn('foreground="#a"', self.o.meter(None, 20, "a", "b"))  # no reading: track only
+
+    def test_two_row_chart_has_16_levels_and_dotted_holes(self):
+        import re
+
+        rows = [re.sub(r"<[^>]+>", "", r) for r in self.o.spark2([16, 8, 1, None], 16, "a", "b").split("\n")]
+        self.assertEqual(rows[0], "█   ")
+        self.assertEqual(rows[1], "██▁·")
 
     def test_process_names_are_escaped_and_aligned(self):
         p = {"cpu": [{"name": "a&b<c>", "value": 5.0}], "mem": []}

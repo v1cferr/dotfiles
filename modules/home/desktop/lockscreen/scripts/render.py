@@ -300,12 +300,16 @@ def dither(img: Image.Image, seed: int) -> Image.Image:
     return Image.composite(img.point(lambda v: max(0, v - 1)), img, down)
 
 
-def frost(region: Image.Image, glass: dict, bg: tuple) -> Image.Image:
-    """HyprGlass's dark material, approximated: blur, its brightness and contrast, its bg tint."""
+def frost(region: Image.Image, glass: dict, bg: tuple, hue: tuple | None = None, hue_alpha: float = 0.0) -> Image.Image:
+    """HyprGlass's dark material, approximated: blur, its brightness and contrast, its bg tint, and
+    a breath of the palette's accent so the glass reads as Tokyo Night's and not as a gray."""
     out = region.filter(ImageFilter.GaussianBlur(glass["blurSigma"]))
     out = ImageEnhance.Brightness(out).enhance(glass["brightness"])
     out = ImageEnhance.Contrast(out).enhance(glass["contrast"])
-    return Image.blend(out, Image.new("RGB", out.size, bg), glass["tint"])
+    out = Image.blend(out, Image.new("RGB", out.size, bg), glass["tint"])
+    if hue and hue_alpha > 0:
+        out = Image.blend(out, Image.new("RGB", out.size, hue), hue_alpha)
+    return out
 
 
 def zones_of(card: dict, size: tuple) -> list:
@@ -346,7 +350,9 @@ def glass_card(base: Image.Image, card: dict, spec: dict, seed: int) -> dict:
     else:
         m = int(3 * glass["blurSigma"]) + 1
         box = (max(0, x0 - m), max(0, t - m), min(base.width, r + m), min(base.height, b + m))
-        frosted = frost(base.crop(box), glass, bg).crop(
+        hue = spec.get("hue") or {}
+        frosted = frost(base.crop(box), glass, bg, rgb(pal[hue["color"]]) if hue.get("color") else None,
+                        hue.get("alpha", 0)).crop(
             (x0 - box[0], t - box[1], x0 - box[0] + w, t - box[1] + h)
         )
         band = spec.get("rimBand", 0)
@@ -472,7 +478,7 @@ def cache_key(digest: str, spec: dict, role: str, layout: str, size: tuple, focu
         "palette": spec["palette"],
         "glass": spec["glass"],
         "edge": spec["edge"],
-        "material": {k: spec.get(k) for k in ("shadow", "highlight", "refraction", "rimBand")},
+        "material": {k: spec.get(k) for k in ("shadow", "highlight", "hue", "refraction", "rimBand")},
         "contrast": spec["contrast"],
         "cards": spec["monitors"][role]["layouts"][layout],
         "size": list(size),

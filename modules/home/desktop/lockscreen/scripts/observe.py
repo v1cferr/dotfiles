@@ -372,79 +372,122 @@ PROFILE = {"power-saver": "Eco", "balanced": "Balanced", "performance": "Gaming"
 
 
 SPARK_PT = 16  # the graphs' own size: 30 blocks at 16 pt are 403 px, inside a 424 px card
+ICON = {"cpu": "󰻠", "ram": "󰍛", "swap": "󰓡", "gpu": "󰢮", "temp": "󰔏", "clock": "󰥔"}
 
 
-def card_energy(e: dict, pal: dict) -> str:
-    sub, dim = pal["subtext"], pal["dim"]
+def meter(frac, cols: int, color: str, track: str) -> str:
+    """A thin bar, filled in the card's color over a dim track: a share you read without a number."""
+    if frac is None:
+        return f'<span foreground="#{track}">' + "━" * cols + "</span>"
+    n = max(0, min(cols, round(frac * cols)))
+    return f'<span foreground="#{color}">' + "━" * n + f'</span><span foreground="#{track}">' + "━" * (cols - n) + "</span>"
+
+
+def spark2(series: list, top: float, color: str, hole: str) -> str:
+    """Two rows of blocks, 16 levels on a ZERO-based scale; a hole is a dim dot on the floor."""
+    up, down = [], []
+    for v in series:
+        if v is None:
+            up.append(" ")
+            down.append(f'<span foreground="#{hole}">·</span>')
+            continue
+        lvl = 0 if top <= 0 else max(1, min(16, round(v / top * 16)))
+        down.append(BLOCKS[min(8, lvl) - 1])
+        up.append(BLOCKS[lvl - 9] if lvl > 8 else " ")
+    sz = SPARK_PT * 1024
+    return (f'<span size="{sz}" foreground="#{color}">' + "".join(up) + "</span>\n"
+            f'<span size="{sz}" foreground="#{color}">' + "".join(down) + "</span>")
+
+
+def card_energy(e: dict, pal: dict, cols: int = 36) -> str:
+    sub, dim, tone = pal["subtext"], pal["dim"], pal["orange"]
     if e["status"] == "missing" or e.get("measured_w") is None:
         return f'<span foreground="#{sub}">Sem medições do power-log</span>'
     top = max([v for v in e["history"] if v is not None] or [1])
-    base = f'repouso Eco {e["baseline"]["median_w"]:.0f} W · ' if e["baseline"] else ""
+    tot = e["measured_w"] or 1
+    bar = cols - 14
+    base = f' · repouso Eco {e["baseline"]["median_w"]:.0f} W' if e["baseline"] else ""
+    stale = "DESATUALIZADO · " if e["status"] == "stale" else ""
     return "\n".join([
-        big(f'{e["measured_w"]:.0f} W', 28),
-        f'<span foreground="#{sub}">CPU + GPU medido</span>',
-        f'CPU <b>{e["cpu_w"]:.1f} W</b>  ·  GPU <b>{e["gpu_w"]:.1f} W</b>',
-        f'<span foreground="#{sub}">perfil {PROFILE.get(e["profile"] or "", e["profile"] or "–")}</span>',
-        f'<span foreground="#{sub}">render ocioso {e["render_idle_pct"]:.0f}% · CPU {e["cpu_busy_pct"]:.0f}%</span>',
-        f'<span size="{SPARK_PT * 1024}">' + spark(e["history"], top, pal["orange"], dim) + "</span>",
-        f'<span foreground="#{dim}">30 min · 0 a {top:.0f} W</span>',
-        f'<span foreground="#{dim}">{base}' + ("DESATUALIZADO " if e["status"] == "stale" else "") + f'{ago(e["age"])}</span>',
+        big(f'{e["measured_w"]:.0f}', 30) + f'<span size="{16 * 1024}"> W</span>'
+        + f'<span foreground="#{sub}">   CPU + GPU medido</span>',
+        f'CPU {e["cpu_w"]:>6.1f} W   ' + meter(e["cpu_w"] / tot, bar, tone, dim),
+        f'GPU {e["gpu_w"]:>6.1f} W   ' + meter(e["gpu_w"] / tot, bar, tone, dim),
+        spark2(e["history"], top, tone, dim),
+        f'<span foreground="#{dim}">30 min · pico {top:.0f} W{base}</span>',
+        f'<span foreground="#{dim}">{stale}{PROFILE.get(e["profile"] or "", e["profile"] or "–")}'
+        f' · render ocioso {e["render_idle_pct"]:.0f}% · {ago(e["age"])}</span>',
     ])
 
 
-def card_claude(c: dict, pal: dict, now: float) -> str:
+def card_claude(c: dict, pal: dict, now: float, cols: int = 36) -> str:
     sub, dim = pal["subtext"], pal["dim"]
     if c["status"] in ("missing", "error"):
         why = {"no-credentials": "sem login da conta FAI"}.get(c.get("error"), c.get("error") or "sem dados")
         return f'<span foreground="#{sub}">{esc(why)}</span>'
 
-    def pct(w):
-        return "–" if w["pct"] is None else f'{round(w["pct"])}%'
+    def block(label, w, tone, size):
+        pct = "–" if w["pct"] is None else f'{round(w["pct"])}%'
+        reset = f'reinicia em {until(w["resets"], now)}' if w["resets"] else ""
+        return [
+            f'<span foreground="#{sub}">{label}</span>' + " " * max(1, cols - len(label) - len(reset))
+            + f'<span foreground="#{dim}">{reset}</span>',
+            big(pct, size, tone),
+            meter(None if w["pct"] is None else w["pct"] / 100, cols, tone, dim),
+        ]
 
     s, w = c["session"], c["weekly"]
-    return "\n".join([
-        big(pct(s), 28, pal["orange"]) + f'<span foreground="#{sub}">  sessão de 5 h</span>',
-        f'<span foreground="#{sub}">reinicia em {until(s["resets"], now) or "–"}</span>',
-        big(pct(w), 22, pal["magenta"]) + f'<span foreground="#{sub}">  semana</span>',
-        f'<span foreground="#{sub}">reinicia em {until(w["resets"], now) or "–"}</span>',
-        f'<span size="{SPARK_PT * 1024}">' + spark(c["history"]["s"], 100, pal["orange"], dim) + "</span>",
-        f'<span size="{SPARK_PT * 1024}">' + spark(c["history"]["w"], 100, pal["magenta"], dim) + "</span>",
-        f'<span foreground="#{dim}">24 h · 0 a 100% · FAI · ' + ("DESATUALIZADO " if c["status"] == "stale" else "")
-        + f'{ago(c["age"])}</span>',
-    ])
+    stale = "DESATUALIZADO · " if c["status"] == "stale" else ""
+    return "\n".join(
+        block("sessão de 5 h", s, pal["orange"], 26)
+        + block("semana", w, pal["magenta"], 20)
+        + [
+            spark(c["history"]["w"], 100, pal["magenta"], dim),
+            spark(c["history"]["s"], 100, pal["orange"], dim),
+            f'<span foreground="#{dim}">{stale}24 h, 0 a 100% · {esc(c.get("plan") or "FAI")} · {ago(c["age"])}</span>',
+        ]
+    )
 
 
-def card_system(s: dict, e: dict, pal: dict) -> str:
-    sub = pal["subtext"]
-    cpu = "–" if s.get("cpu_pct") is None else f'{s["cpu_pct"]:.0f}%'
+def card_system(s: dict, e: dict, pal: dict, cols: int = 36) -> str:
+    sub, dim, tone = pal["subtext"], pal["dim"], pal["blue"]
     m = s.get("mem") or {}
     g = s.get("gpu") or {}
     t = (e or {}).get("temps") or {}
-    temp = lambda k: "–" if t.get(k) is None else f"{t[k]:.0f}°C"  # noqa: E731
-    gw = "–" if g.get("board_w") is None else f'{g["board_w"]:.0f} W'
-    # act_freq reads 0 while the GPU sleeps in RC6: that is a state, not a missing number.
-    gf = "–" if g.get("freq_mhz") is None else ("clock em repouso" if g["freq_mhz"] == 0 else f'{g["freq_mhz"] / 1000:.2f} GHz')
-    gi = "–" if g.get("render_idle_pct") is None else f'{g["render_idle_pct"]:.0f}%'
-    swap = f' · swap {fmt_bytes(s["swap"]["used"])}' if s.get("swap") else ""
-    return "\n".join([
-        f'CPU <b>{cpu}</b><span foreground="#{sub}">  ·  {temp("cpu_c")}</span>',
-        f'RAM <b>{fmt_bytes(m.get("used"))}</b><span foreground="#{sub}"> em uso</span>',
-        f'<span foreground="#{sub}">{fmt_bytes(m.get("available"))} disponível{swap}</span>',
-        f'GPU <b>{gw}</b><span foreground="#{sub}">  ·  {gf}</span>',
-        f'<span foreground="#{sub}">render ocioso {gi} · {temp("gpu_c")}</span>',
-        f'<span foreground="#{sub}">NVMe {temp("nvme_c")}</span>',
-    ])
+    temp = lambda k: "–" if t.get(k) is None else f"{t[k]:.0f}°"  # noqa: E731
+    bar = cols - 17
+
+    def row(icon, label, value, frac):
+        return f'<span foreground="#{tone}">{icon}</span> {label:<4} <b>{value:>8}</b>   ' + meter(frac, bar, tone, dim)
+
+    cpu = s.get("cpu_pct")
+    swap = s.get("swap")
+    busy = None if g.get("render_idle_pct") is None else 100 - g["render_idle_pct"]
+    gf = "–" if g.get("freq_mhz") is None else ("em repouso" if g["freq_mhz"] == 0 else f'{g["freq_mhz"] / 1000:.2f} GHz')
+    lines = [
+        row(ICON["cpu"], "CPU", "–" if cpu is None else f"{cpu:.0f}%", None if cpu is None else cpu / 100),
+        row(ICON["ram"], "RAM", fmt_bytes(m.get("used")), m["used"] / m["total"] if m.get("total") else None),
+        row(ICON["swap"], "swap", fmt_bytes(swap["used"]) if swap else "–", swap["used"] / swap["total"] if swap else None),
+        row(ICON["gpu"], "GPU", "–" if g.get("board_w") is None else f'{g["board_w"]:.0f} W', None if busy is None else busy / 100),
+        f'<span foreground="#{dim}">RAM livre {fmt_bytes(m.get("available"))} · GPU {gf}</span>',
+        f'<span foreground="#{dim}">barra da GPU: render ativo {"–" if busy is None else f"{busy:.0f}%"}</span>',
+        f'<span foreground="#{tone}">{ICON["temp"]}</span> <span foreground="#{sub}">CPU {temp("cpu_c")} · GPU {temp("gpu_c")} · NVMe {temp("nvme_c")}</span>',
+    ]
+    return "\n".join(lines)
 
 
 def card_procs(p: dict, pal: dict, cols: int) -> str:
-    sub, dim = pal["subtext"], pal["dim"]
+    sub, dim, tone = pal["subtext"], pal["dim"], pal["teal"]
+    name_w, val_w = 12, 8
+    bar = cols - name_w - val_w - 2
 
     def rows(items, fmt):
         if not items:
             return [f'<span foreground="#{dim}">–</span>']
+        topv = max(i["value"] for i in items) or 1
         # Padded BEFORE escaping, so an `&` in a name never shifts the column.
-        return [esc(fit(i["name"], cols - 9).ljust(cols - 9)) + f'<span foreground="#{sub}">{fmt(i["value"]):>9}</span>'
-                for i in items]
+        return [esc(fit(i["name"], name_w).ljust(name_w)) + " " + meter(i["value"] / topv, bar, tone, dim)
+                + f'<span foreground="#{sub}">{fmt(i["value"]):>{val_w}}</span>' for i in items]
 
     lines = [f'<span foreground="#{dim}">CPU agora, % de um núcleo</span>']
     lines += rows(p["cpu"], lambda v: f"{v:.0f}%")
@@ -470,10 +513,10 @@ def lock_loop(out: Path, pal: dict, cols: int, once: bool, fast: int, slow: int)
         now = time.time()
         if e is None or now - last_slow >= slow:
             e = energy(now)
-            write_card(out, "energy", card_energy(e, pal))
-            write_card(out, "claude", card_claude(claude(now), pal, now))
+            write_card(out, "energy", card_energy(e, pal, cols))
+            write_card(out, "claude", card_claude(claude(now), pal, now, cols))
             last_slow = now
-        write_card(out, "system", card_system(system(prev, cur, now), e, pal))
+        write_card(out, "system", card_system(system(prev, cur, now), e, pal, cols))
         write_card(out, "procs", card_procs(procs(prev, cur), pal, cols))
         prev = cur
         if once:

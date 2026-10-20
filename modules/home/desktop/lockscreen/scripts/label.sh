@@ -19,8 +19,10 @@ out() {
 
 case "${1:-}" in
 date)
+  # $2: the palette's accent for the calendar glyph (optional).
   export LC_TIME=pt_BR.UTF-8
   printf -v d '%(%A, %d de %B de %Y  ·  Semana %V)T' -1
+  if [ -n "${2:-}" ]; then printf '<span foreground="#%s">󰃭</span>  ' "$2"; fi
   printf '%s' "${d^}"
   ;;
 weather)

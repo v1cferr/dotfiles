@@ -30,15 +30,25 @@ position between the two, so the hyprlock config is still ONE file. What feeds i
 [the LG while locked](#the-lg-while-locked).
 
 **The material, Adaptive Glass+.** Three layers, all baked into the image before the lock: a
-frosted core (blur sigma 22, the profile's tint, the bg-to-surface ease, ±1 dither); an optical
-rim (the hairline, plus text-colored light at 16% that is full at the top edge and gone by
-mid-height, and a 6 px band where the frost is magnified by 0.6%, a lens that never touches text);
-and a soft highlight (5% light fading over the top third) with a soft shadow under the card (22%,
-sigma 14, 4 px down) that darkens the photo without blurring it. Each card has its own BASELINE
-opacity (identity 0.66, clock 0.72, field 0.84, quote 0.80, energy and Claude 0.74, system and
-processes 0.78, weather and media 0.72) and rises from there only as far as its TEXT zones need.
-The major radius is the desktop's 12 plus 4. Side by side with v2 on the same photos the difference
-is restrained on purpose: the depth is in the rim and the shadow, not in more blur or more tint.
+frosted core (blur sigma 28, the profile's tint, 6% of the palette's accent so the glass is Tokyo
+Night's and not a gray, the bg-to-surface ease, ±1 dither); an optical rim (the hairline, plus
+text-colored light at 28% that is full at the top edge and gone by mid-height, and a 6 px band
+where the frost is magnified by 1.2%, a lens that never touches text); and a soft highlight (9%
+light fading over the top 45%) with a soft shadow under the card (30%, sigma 14, 4 px down) that
+darkens the photo without blurring it. Each card has its own BASELINE opacity, chosen CLEAR so the
+photo shows through (identity 0.50, clock 0.54, field 0.66, quote 0.60, energy and Claude 0.56,
+system and processes 0.58, weather and media 0.54), and rises from there only as far as its TEXT
+zones need; labels carry a soft shadow (2 passes, size 4) for the same reason. Measured on
+20/10/2026: over a dark print every card kept its baseline, over a bright one only the field
+(0.88, for the red failure text) and the quote (0.70) went denser. The major radius is the
+desktop's 12 plus 4.
+
+**The cards are rich, not lists.** Each LG card opens with its glyph and title in its own color
+(energy orange, Claude violet, system blue, processes teal, weather sky), every share is a thin
+meter (`━` in the card's color over a dim track), energy draws its 30 min in two rows of blocks (16
+levels), and the weather leads with its own glyph from `my.weather.icons`, the table the bar reads
+too. On the ASUS the seconds are in the accent (one instant feeds both fields), the date carries a
+calendar glyph, the field a lock, and the quote a quiet open-quote mark.
 
 ### Why the glass is pre-rendered, and not HyprGlass
 
@@ -66,7 +76,7 @@ as contrast needs. The wallpaper outside the cards is never darkened, only shado
 
 | Profile (`my.theme.glass`) | Opacity range | Gradient | Tint | Brightness | Blur sigma |
 | --- | --- | --- | --- | --- | --- |
-| `clear-gradient` (this desk) | each card's baseline to 0.92 | bg into surface | 20% | 0.95 | 22 px |
+| `clear-gradient` (this desk) | each card's baseline to 0.92 | bg into surface | 20%, plus 6% accent | 0.95 | 28 px |
 | `perceptible` | 0.92 to 0.96 | flat | 33% | 0.85 | 24 px |
 | `solid` | 1.0 | none | none | none | none |
 
@@ -536,7 +546,7 @@ untouched.
 
 ## Testing
 
-`nix build .#checks.x86_64-linux.lockscreen` runs 81 tests in the sandbox, against the spec JSON
+`nix build .#checks.x86_64-linux.lockscreen` runs 83 tests in the sandbox, against the spec JSON
 the desktop really uses (`my.lockscreen.spec`), with only synthetic images:
 
 | Suite | What it pins |

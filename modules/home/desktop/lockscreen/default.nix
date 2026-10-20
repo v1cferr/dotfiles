@@ -225,8 +225,9 @@ let
   };
 
   # The observability adapter (docs/notes/desktop/lockscreen.md#the-lg-while-locked): stdlib only.
+  # `observe json energy` is also what the glance band's energy panel runs (dash/EnergyLog.qml).
   observe = writeShellApplication {
-    name = "lockscreen-observe";
+    name = "observe";
     runtimeInputs = [ python3 ];
     text = ''exec python3 -I ${./scripts/observe.py} "$@"'';
   };
@@ -628,6 +629,8 @@ in
           ];
       };
     };
+
+    home.packages = [ observe ]; # on the PATH for the glance band, one adapter for both screens
 
     # The session links exist BEFORE the first lock after a switch, the same step the unit runs.
     home.activation.lockscreenSession = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

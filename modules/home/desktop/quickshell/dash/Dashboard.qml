@@ -5,6 +5,7 @@ import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
+import "root:/widgets"
 
 PanelWindow {
     id: dash
@@ -123,7 +124,8 @@ PanelWindow {
             }
         }
 
-        // ── Time and ambient: the clock, today's weather, and what is playing ──
+        // ── The two things to know at a glance: what the machine draws, and what Claude has left. The
+        // time is the bar's; the weather and the music have their own pills and page. ──
         BentoCard {
             k: dash.k
             x: 0
@@ -134,110 +136,20 @@ PanelWindow {
 
             ColumnLayout {
                 anchors.fill: parent
-                spacing: 0
+                spacing: Theme.sp4
 
-                // The time on a line of its own, at the size read from the chair, and the day under it: the
-                // weekday spelled out, then the short date. The full date, ISO date and uptime are on hover.
-                ColumnLayout {
-                    id: clockRow
-                    readonly property int week: dash.host.isoWeek(dash.host.calYear, dash.host.calTodayM, dash.host.calTodayD)
-                    readonly property string month: dash.host.monthNames[dash.host.calTodayM - 1] || ""
-                    readonly property string tipTitle: (dash.host.dowNames[dash.host.calTodayW] || "") + ", " + dash.host.calTodayD + " de " + clockRow.month.toLowerCase() + " de " + dash.host.calYear
-                    readonly property var tipLines: [dash.host.calYear + "-" + ("0" + dash.host.calTodayM).slice(-2) + "-" + ("0" + dash.host.calTodayD).slice(-2) + "  ·  ISO week " + clockRow.week, "up " + dash.host.fmtDur(dash.host.uptimeSec)]
+                EnergyPanel {
                     Layout.fillWidth: true
-                    spacing: 0
-                    Text {
-                        Tip {
-                            title: clockRow.tipTitle
-                            lines: clockRow.tipLines
-                        }
-                        text: dash.host.timeStr
-                        color: Theme.colText
-                        font.family: Theme.uiFont
-                        font.pixelSize: 96
-                        font.bold: true
-                        font.letterSpacing: -2
-                    }
-                    RowLayout {
-                        spacing: 16
-                        Text {
-                            text: dash.host.dowNames[dash.host.calTodayW] || ""
-                            color: Theme.colText
-                            font.family: Theme.uiFont
-                            font.pixelSize: 30
-                            font.letterSpacing: -1
-                        }
-                        Text {
-                            Layout.alignment: Qt.AlignBaseline
-                            Tip {
-                                title: clockRow.tipTitle
-                                lines: clockRow.tipLines
-                            }
-                            text: dash.host.calTodayD + " " + clockRow.month.slice(0, 3).toLowerCase() + "  ·  W" + clockRow.week
-                            color: Theme.colSubtext
-                            font.family: Theme.uiFont
-                            font.pixelSize: 20
-                            font.letterSpacing: 1
-                        }
-                    }
-                }
-
-                // Today's weather, centered in the room between the time and the card's foot.
-                Item {
                     Layout.fillHeight: true
+                    Layout.preferredHeight: 1
                 }
-                WeatherNow {
+                Hairline {
                     Layout.fillWidth: true
-                    host: dash.host
                 }
-                Item {
+                ClaudePanel {
+                    Layout.fillWidth: true
                     Layout.fillHeight: true
-                }
-
-                // The Claude limits, always in sight; the page in the rotation has the detail.
-                Text {
-                    Layout.fillWidth: true
-                    Layout.bottomMargin: dash.host.spHasPlayer ? 8 : 0
-                    visible: ClaudeUsage.ok
-                    Tip {
-                        title: "Claude · FAI" + (ClaudeUsage.plan ? "  (" + ClaudeUsage.plan + ")" : "")
-                        lines: ["session resets in " + (ClaudeUsage.left(ClaudeUsage.session.resets) || "–"), "week resets in " + (ClaudeUsage.left(ClaudeUsage.weekly.resets) || "–")]
-                    }
-                    elide: Text.ElideRight
-                    textFormat: Text.StyledText
-                    text: "<font color='" + ClaudeUsage.color(ClaudeUsage.session) + "'>✦ claude " + Math.round(ClaudeUsage.session.pct || 0) + "%</font>" + "<font color='" + Theme.colDim + "'>  ·  </font>" + "<font color='" + ClaudeUsage.color(ClaudeUsage.weekly, Theme.colMauve) + "'>" + Math.round(ClaudeUsage.weekly.pct || 0) + "% wk</font>"
-                    color: Theme.colSubtext
-                    font.family: Theme.uiFont
-                    font.pixelSize: 14
-                }
-
-                // What is playing, when something is, pinned to the card's foot.
-                RowLayout {
-                    Layout.fillWidth: true
-                    visible: dash.host.spHasPlayer
-                    spacing: 12
-
-                    Text {
-                        text: dash.host.spPlaying ? "󰐊" : "󰏤"
-                        color: dash.host.spColor
-                        font.family: Theme.uiFont
-                        font.pixelSize: 16
-                    }
-                    Text {
-                        Layout.fillWidth: true
-                        elide: Text.ElideRight
-                        text: dash.host.spTitle
-                        color: Theme.colText
-                        font.family: Theme.uiFont
-                        font.pixelSize: 14
-                    }
-                    Text {
-                        text: dash.host.spArtist
-                        color: Theme.colDim
-                        font.family: Theme.uiFont
-                        font.pixelSize: 13
-                        font.italic: true
-                    }
+                    Layout.preferredHeight: 1
                 }
             }
         }

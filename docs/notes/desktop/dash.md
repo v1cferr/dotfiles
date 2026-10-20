@@ -61,12 +61,10 @@ number, and what the machine is RUNNING was nowhere. So the history moved INTO t
 sparkline beside its value (`Tile.series`), and the strip became the services carousel (below).
 `Horizon.qml` was deleted with it (rule 16).
 
-**The date block.** The clock shows HH:mm:ss on a line of its own, and under it the weekday spelled
-out next to one short date (`11 out · W41`). From 11/10/2026 the weekday sat BESIDE the time, to
-return height to the services strip; the bento's own card has that height, so since 17/10/2026 the
-time is larger and the day goes back under it. The weekday is what a person wants off a clock; the full date, the ISO date and the
-uptime are in the tooltip of either. `isoWeek()` counts the week against the year its
-THURSDAY falls in, which is what puts 01/01 on week 53 of the year before when it lands on a Friday.
+**The date block, until 20/10/2026.** The band had its own clock (HH:mm:ss and the weekday) until
+energy and Claude took its card ([below](#the-left-card-energy-and-claude-20102026)): the bar
+already shows the time on every screen, so a second clock was the band repeating the bar.
+`isoWeek()` stays, for the month page's week numbers.
 
 **`host` is NOT a required property, and that is not sloppiness.** Quickshell's `Variants` creates
 the delegate with `modelData` as the only initial property, so a SECOND required property fails the
@@ -148,7 +146,7 @@ tiles or the services had to be re-sized. That is the incremental half of moving
 transform: the chrome is in pixels now, and moving the content's ~250 sizes too would be a separate
 change with nothing broken to fix.
 
-**What changed in the cells.** The time grew to its own line (96 design px, about 72 on screen) for
+**What changed in the cells** (17/10/2026; the left card changed again on 20/10). The time grew to its own line (96 design px, about 72 on screen) for
 reading from the chair, the weekday and the date under it; today's weather sits centered in the rest
 of the card and the media line at its foot. RAM and TEMP briefly drew their 2-minute history and lost it the same day: they
 barely move, and on the zero-based scale the sparkline keeps on purpose their history was a flat
@@ -261,19 +259,13 @@ Tested end to end on 06/10/2026 with the real binary and hook file (webhook 2.8.
 200 and a file in the run schema, wrong, empty or missing token 403, and the token absent from
 the verbose log.
 
-## The weather: now under the clock, the week on the month
+## The weather: the pill, the page and the week on the month
 
-The weather is split by TIME, like the rest of the band: what it is now sits with the clock, and
-what is coming sits on the calendar, where the days already are. A separate weather card (the
-usual answer, Caelestia's dashboard has one) would have repeated the week the month already shows.
-
-**Today (`WeatherNow.qml`)** fills what was an empty gap under the clock: the glyph and the
-temperature in large type, the pt-BR condition, then the day's max and min; feels like, humidity,
-wind and rain chance are in its tooltip. It used to carry a small 12-hour curve; that moved to the
-weather page, where a chart can be a chart. Its place went to ONE line for the day: sunrise and
-sunset, and the next hour of likely rain (40% and up) when there is one. The hours of daylight and
-a weaker chance of rain (from 20%, otherwise "dry for the next 24 h") are on hover. It answers
-"when does it get dark" and "will it rain today" without opening a page.
+The weather is split by TIME, like the rest of the band: what it is now is the bar's pill (and its
+popover), and what is coming sits on the calendar, where the days already are. A separate weather
+card (the usual answer, Caelestia's dashboard has one) would have repeated the week the month
+already shows. "Today" lived under the band's clock (`WeatherNow.qml`, with `WeatherAmbient.qml`
+behind its glyph) until 20/10/2026; both were deleted with that card (rule 16).
 
 **The model is pinned to ECMWF IFS.** Measured on 07/10/2026: Open-Meteo's `best_match` for São
 Carlos returned the ECMWF IFS 9 km run hour for hour (and its ensemble for the rain chance), with
@@ -287,13 +279,9 @@ the hourly run with feels like, humidity and wind, and derives "now" from it, in
 minutes past the hour and re-deriving every 5 minutes. `wHourly`, `wDaily` and `wForecast` keep
 their shapes, so the pill, its popover, the month grid and the weather page did not change.
 
-**The ambient layer (`WeatherAmbient.qml`)** lives behind today's glyph: drops while it rains, a
-glow while the sun is out, and NOTHING for clouds, fog or night. Since 17/10/2026 it MOVES for 8 s
-when that sky begins (the drops fall, the glow breathes) and then holds still, the drops resting at
-their own heights and the glow mid-breath, so the cue stays on screen without a loop. It used to
-loop for as long as it rained, and a loop keeps the whole band repainting every frame: measured in a
-headless sway with rain forced, 72 to 83% of a core looping against 16% settled, the same as no rain.
-With `my.theme.motion = "off"` only the still picture shows.
+**The ambient layer** (deleted on 20/10/2026 with the card it lived in) taught the rule that stays:
+a loop keeps the whole band repainting every frame, measured in a headless sway with rain forced at
+72 to 83% of a core looping against 16% settled. Nothing on the band animates without an end.
 
 **The week (in the month grid)** is the band's signature: today and the seven days after it carry
 their own forecast INSIDE their cells, the number lifted to make room for the sky glyph, the max in
@@ -456,15 +444,37 @@ threat-monitoring plan in docs/open-items.md, before any router change.
 Until 11/10/2026 every one of those was spelled out, and the page ran past its column over the
 services strip; the trim below is what made it fit.
 
+## The left card: energy and Claude (20/10/2026)
+
+The two things worth knowing from the chair that no other surface showed for long: what the machine
+draws, and how much of the Claude limits is left. They replaced the band's clock, today's weather
+and the media line, each of which the bar already shows.
+
+- **ENERGY** (`EnergyPanel.qml`, data in `EnergyLog.qml`): the MEASURED CPU package plus GPU board
+  watts, their split, the power profile and the GPU's render idle, and the last 30 min as one bar a
+  minute on a zero-based scale (a minute with no sample is a hole, drawn as one). The footnote says
+  "CPU + GPU measured", never the PC's power: the board, RAM, disks, PSU and monitors have no
+  sensor, and a "PC power" number would be invented. It also shows the Eco rest baseline when there
+  is one. The data is `observe json energy` once a minute: the SAME adapter the lock screen's LG
+  card reads (docs/notes/desktop/lockscreen.md), so the two screens cannot disagree, and power-log
+  only writes once a minute anyway.
+- **CLAUDE CODE** (`ClaudePanel.qml`): every number, color and countdown is `ClaudeUsage.qml`'s, the
+  same singleton the page below uses; the panel computes nothing of its own.
+
+Checked in a second Quickshell on a copy of the tree, inside a headless sway (1080x1920), before the
+live tree changed. NOT checked there: HyprGlass (sway has no plugin), so the material on the real
+band is the same as every other card's.
+
 ## The Claude page
 
 Added on 18/10/2026: the FAI account's `/usage`, live, from glance-feed's `claude_usage` document
 (docs/notes/desktop/glance-feed.md) through the `ClaudeUsage.qml` singleton. The six tiles were
 already the machine's vitals, so it is split in two:
 
-- **A line in the clock card,** always in sight: `✦ claude 4% · 37% wk`, the session in peach and
-  the week in mauve, both turning yellow at 75% (or when the server says `warning`) and red at
-  90%. The resets are in its tooltip.
+- **The Claude panel of the left card** (since 20/10/2026; a one-line summary before it), always
+  in sight: SESSION and WEEK with their meters and "resets in", and the last 24 h as two graphs,
+  the session in peach and the week in mauve, both turning yellow at 75% (or when the server says
+  `warning`) and red at 90%.
 - **The CLAUDE · FAI page** of the rotation (month, WEATHER, NETWORK, CLAUDE, GitHub, FAI):
   the SESSION (5 h) and WEEKLY meters with "resets in", the per-model shares of the week (Fable),
   the plan and whether extra usage is on, and the last 24 h as two graphs (week over session),

@@ -561,7 +561,7 @@ def card_apps(p: dict, pal: dict, cols: int = 31) -> str:
     grouped by app; only the unit or process name, never a command line or a path."""
     sub, dim, tone = pal["subtext"], pal["dim"], pal["teal"]
     name_w, val_w = 12, 7
-    bar = cols - name_w - val_w - 2
+    bar = cols - name_w - val_w - 3  # one space each side of the meter, always
 
     def rows(items, fmt):
         if not items:
@@ -569,7 +569,7 @@ def card_apps(p: dict, pal: dict, cols: int = 31) -> str:
         topv = max(i["value"] for i in items) or 1
         # Padded BEFORE escaping, so an `&` in a name never shifts the column.
         return [esc(fit(i["name"], name_w).ljust(name_w)) + " " + meter(i["value"] / topv, bar, tone, dim)
-                + f'<span foreground="#{sub}">{fmt(i["value"]):>{val_w}}</span>' for i in items[:3]]
+                + f'<span foreground="#{sub}"> {fmt(i["value"]):>{val_w}}</span>' for i in items[:3]]
 
     return "\n".join([caps("CPU agora · % de um núcleo", sub)] + rows(p["cpu"], lambda v: f"{v:.0f}%")
                      + [gap(12), caps("Memória · RSS por app", sub)] + rows(p["mem"], fmt_bytes))
@@ -582,19 +582,32 @@ def write_card(out: Path, name: str, markup: str) -> None:
     os.replace(tmp, out / name)
 
 
+CARDS = {"energy", "claude-s", "claude-w", "claude-h", "system", "apps"}
+
+
 def lock_loop(out: Path, pal: dict, cols: dict, once: bool, fast: int, slow: int) -> int:
     out.mkdir(parents=True, exist_ok=True)
+    for f in out.iterdir():  # a card an older version wrote is not data for this one
+        if f.name not in CARDS:
+            f.unlink(missing_ok=True)
+
+    def slow_cards(now):
+        e = energy(now)
+        write_card(out, "energy", card_energy(e, pal, cols["full"]))
+        for name, markup in cards_claude(claude(now), pal, now, cols["full"]).items():
+            write_card(out, name, markup)
+        return e
+
+    # Energy and Claude need no delta: written at once, so they are there for the labels' first reads.
     prev = sample()
-    time.sleep(1.0)  # a first delta for CPU and processes, so the cards never open empty
-    last_slow, e = 0.0, None
+    last_slow = time.time()
+    e = slow_cards(last_slow)
+    time.sleep(1.0)  # a first delta for CPU and processes, so those cards never open empty
     while True:
         cur = sample()
         now = time.time()
-        if e is None or now - last_slow >= slow:
-            e = energy(now)
-            write_card(out, "energy", card_energy(e, pal, cols["full"]))
-            for name, markup in cards_claude(claude(now), pal, now, cols["full"]).items():
-                write_card(out, name, markup)
+        if now - last_slow >= slow:
+            e = slow_cards(now)
             last_slow = now
         write_card(out, "system", card_system(system(prev, cur, now), e, pal, cols["half"]))
         write_card(out, "apps", card_apps(procs(prev, cur), pal, cols["half"]))

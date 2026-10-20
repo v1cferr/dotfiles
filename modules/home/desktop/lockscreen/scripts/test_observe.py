@@ -210,6 +210,18 @@ class Procs(unittest.TestCase):
         self.assertEqual(self.o._procs_raw(), {})
 
 
+class LockLoop(unittest.TestCase):
+    def test_once_writes_every_card_and_drops_a_stale_one(self):
+        with tempfile.TemporaryDirectory() as d:
+            o = load({"OBSERVE_POWER_DIR": d, "OBSERVE_GLANCE_DB": str(Path(d) / "none.db")})
+            out = Path(d) / "obs"
+            out.mkdir()
+            (out / "sys-cpu").write_text("old")
+            pal = dict(Markup.PAL, green="9ece6a", red="f7768e")
+            self.assertEqual(o.lock_loop(out, pal, {"full": 69, "half": 31}, True, 30, 60), 0)
+            self.assertEqual(sorted(f.name for f in out.iterdir()), sorted(o.CARDS))
+
+
 class Markup(unittest.TestCase):
     PAL = {"text": "c0caf5", "subtext": "a9b1d6", "dim": "565f89", "orange": "ff9e64", "magenta": "bb9af7",
            "blue": "7aa2f7", "teal": "73daca", "sky": "7dcfff"}

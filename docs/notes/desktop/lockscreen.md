@@ -176,6 +176,7 @@ fallback for that monitor instead of rendering something misplaced.
 | date | 60 s | `lockscreen-label date` | about 3.7 ms |
 | weather | 60 s | `lockscreen-label weather` | 4.0 ms |
 | media | 3 s | `lockscreen-label media`, empty in Ambient | 4.2 ms |
+| the six LG data cards | 5 s each | `lockscreen-label obs <card>`: the observe service starts WITH the lock and writes about 1 s in, after the labels' first read, so a slower re-read left them "Sem dados" for a whole 30 to 60 s round (found on the desk, 20/10/2026) | |
 | quote | once per surface | `lockscreen-label quote` | |
 | hint | 5 s, every output | `lockscreen-label hint`, empty while the ASUS is connected | 3.8 ms |
 
@@ -597,7 +598,8 @@ Measured on 19/10/2026 in the headless sway above (GL rendering, both outputs), 
 | **v3**, Media layout, labels included (20/10/2026) | 0.80 | 91 MB |
 | v4, Media layout, 20 labels, music paused (20/10/2026): hyprlock ITSELF only | 0.38 | 94 MB |
 | v5, Media layout, 20 labels: hyprlock itself + its label children | 0.38 + 0.62 = 1.00 | 93 MB |
-| **v5.1**, Media layout, 25 labels (Bento, split weather): itself + children | 0.50 + 0.88 = 1.38 | 93 MB |
+| v5.1, Media layout, 25 labels (Bento, split weather): itself + children | 0.50 + 0.88 = 1.38 | 93 MB |
+| **v5.1**, the cards re-read every 5 s (so they show seconds after the lock, not a round later) | 0.75 + 1.37 = 2.12 | 93 MB |
 | v5.1 render, ASUS (scrim, avatar with logo, field, quote) | 2.8 s wall, once after an unlock | 190 MB peak |
 | v5.1 render, LG Media (six cards) | 1.5 s wall | 149 MB peak |
 | v3's observe collector, between rounds | 0.17 | 21 MB |

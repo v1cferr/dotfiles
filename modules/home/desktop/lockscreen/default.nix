@@ -598,9 +598,12 @@ in
                 color = c "text" "ff";
                 font_size = pt.body;
               };
+            # The observe service starts WITH the lock and writes ~1 s later, after the first label
+            # read: so every card re-reads its file each 5 s (a builtin), or it would say "Sem dados"
+            # for a whole 30 to 60 s round. The data itself still moves every 30 to 60 s.
             obs =
-              card: dx: dy: name: every:
-              body card dx dy "${labelBin} obs ${name}" every;
+              card: dx: dy: name:
+              body card dx dy "${labelBin} obs ${name}" 5000;
             half = lg.inner energy / 2 + lg.pad; # where the right half of a full-width card starts
           in
           [
@@ -663,15 +666,15 @@ in
             # ── LG: what the machine is doing while I am away, one glass card per context. Headers are
             # static; the rest reads files the observe service and the bridges write. ──
             (caption energy "orange" "bolt" "ENERGIA")
-            (obs energy lg.pad 188 "energy" 60000)
+            (obs energy lg.pad 188 "energy")
             (caption claude "magenta" "terminal" "CLAUDE CODE")
-            (obs claude lg.pad 124 "claude-s" 60000)
-            (obs claude half 124 "claude-w" 60000)
-            (obs claude lg.pad 254 "claude-h" 60000)
+            (obs claude lg.pad 124 "claude-s")
+            (obs claude half 124 "claude-w")
+            (obs claude lg.pad 254 "claude-h")
             (caption system "blue" "memory" "SISTEMA")
-            (obs system lg.pad 182 "system" 30000)
+            (obs system lg.pad 182 "system")
             (caption procs "teal" "leaderboard" "PROCESSOS")
-            (obs procs lg.pad 176 "apps" 30000)
+            (obs procs lg.pad 176 "apps")
             # The weather card's header sits where both layouts put it; its body follows the layout.
             (caption weather "sky" "cloud" "CLIMA  ·  ${config.my.weather.place}")
             (body weather lg.pad 144 "${labelBin} weather all media" 60000)

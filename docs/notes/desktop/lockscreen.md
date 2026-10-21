@@ -217,12 +217,22 @@ in Noto Sans, which has it (Geist does not).
 | Monitor | Pool (`LOCK_POOL_*` in `default.nix`) | No usable file |
 | --- | --- | --- |
 | ASUS | `~/Pictures/lockscreen/wide/`: Japanese landscape prints | the palette's gradient |
-| LG | `~/Pictures/lockscreen/` (one level deep: my portrait art) | the palette's gradient |
+| LG | `~/Pictures/lockscreen/tall/`: Hiroshige's One Hundred Famous Views of Edo | the palette's gradient |
 
 **Two collections, on purpose (20/10/2026).** The lock is Japanese and contemplative, the desktop
 is real galaxies. The lock's landscape pool started with 16 prints from The Met's Open Access
 collection (Hiroshige's night rain, moon and snow views, Kyoto, Ōmi), public domain (CC0); each
 carries a sidecar with title, artist, date, credit line, the Met URL and the license.
+
+**The LG's pool (21/10/2026).** The user swapped the standing monitor's old art (illustrations,
+photos and loose ukiyo-e, now in `~/Pictures/lockscreen/archive/`, nothing deleted) for 47
+prints of Hiroshige's One Hundred Famous Views of Edo (1856 to 1858): a vertical series by nature,
+and the same hand as the ASUS's landscapes. The Met's API blocked most lookups behind its bot wall
+that day, so they came from Wikimedia Commons: the Library of Congress and Brooklyn Museum scans,
+42 public domain and 5 CC0, the largest portrait JPEG per print, at least 2400 px tall in the
+source. Each was reduced once to 2880 px tall (67 MB for all 47) and carries a sidecar with the
+title, series, artist, credit, the Commons page, the image URL, the license and the source's
+resolution. Downloaded by hand, once; never by the lock.
 
 **The images are STATE, not config (rule 6).** No binary enters git, and nothing is downloaded at
 lock time, or ever by the lock. Each lock draws a random file from its pool (symlinks followed),

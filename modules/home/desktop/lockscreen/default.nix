@@ -30,8 +30,8 @@ let
   # Colors from my.theme (palette.nix), for the fallback hyprlock.
   p = config.my.theme.palette;
 
-  # MY OWN art, as STATE and not config (rule 6): Japanese prints and photos, landscape for the
-  # main monitor in `wide/`, portrait for the standing one at the top. Never the desktop's astronomy.
+  # MY OWN art, as STATE and not config (rule 6): Japanese prints, landscape for the main monitor in
+  # `wide/`, portrait for the standing one in `tall/` (old art in `archive/`). Never the astronomy.
   wallDir = "${config.home.homeDirectory}/Pictures/lockscreen";
 
   # The Quickshell tree as a STORE snapshot: the lock never hot-reloads from the repo mid-lock, and
@@ -61,7 +61,7 @@ let
       LOCK_QML = "${qsTree}/lock.qml";
       LOCK_PAM_CONFIG = "quickshell-lock"; # modules/nixos/desktop/desktop.nix
       LOCK_POOL_PRIMARY = "${wallDir}/wide";
-      LOCK_POOL_SECONDARY = wallDir;
+      LOCK_POOL_SECONDARY = "${wallDir}/tall";
       # The quotes are CONTENT in the repo (curated, sourced); what was shown is STATE.
       LOCK_QUOTES = builtins.path {
         path = ./quotes.json;

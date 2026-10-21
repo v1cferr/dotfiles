@@ -163,8 +163,8 @@ BarPanel {
         {
             icon: "󰌾",
             label: "Lock",
-            // hyprlock's UNIT first, then the LockedHint: `loginctl lock-session` alone only EMITS the signal.
-            cmd: ["sh", "-c", "systemctl --user start hyprlock.service; loginctl lock-session"]
+            // The lock's UNIT first, then the LockedHint: `loginctl lock-session` alone only EMITS the signal.
+            cmd: ["sh", "-c", "systemctl --user start lockscreen.service; loginctl lock-session"]
         },
         {
             icon: "󰖔",

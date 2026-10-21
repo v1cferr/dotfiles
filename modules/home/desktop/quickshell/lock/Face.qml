@@ -37,6 +37,8 @@ Item {
     }
     Component {
         id: lg
-        LgFace {}
+        LgFace {
+            auth: face.auth
+        }
     }
 }

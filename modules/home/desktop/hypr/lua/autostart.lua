@@ -5,7 +5,7 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP && systemctl --user start hyprland-session.target")
   -- LOCKING at boot, through the UNIT and not a loose hyprlock: one owner, and two session-lock
   -- surfaces break the keyboard grab. The machine autologins so Sunshine can come up.
-  hl.exec_cmd("systemctl --user start hyprlock.service")
+  hl.exec_cmd("systemctl --user start lockscreen.service")
   hl.exec_cmd("qs") -- Quickshell (bar/OSD/media). The QML config is in modules/home/desktop/quickshell/ (hot-reload).
   -- A persistent clipboard: on Wayland the app OWNS the copy, so without this a Flameshot image
   -- dies with flameshot. The HISTORY is Vicinae's (a --user service), not launched here.

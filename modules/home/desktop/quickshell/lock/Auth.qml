@@ -38,7 +38,7 @@ Scope {
     function markSecure() {
         const p = Quickshell.env("LOCK_SECURE_FILE");
         if (p)
-            secureFile.setText(String(Date.now()));
+            secureFile.setText("secure");
     }
 
     PamContext {
@@ -60,6 +60,9 @@ Scope {
             auth.pending = "";
             auth.buffer = "";
             if (result === PamResult.Success) {
+                // The launcher reads this: an exit without it means the lock died locked.
+                if (Quickshell.env("LOCK_SECURE_FILE"))
+                    secureFile.setText("unlocked");
                 auth.unlocked();
             } else {
                 auth.fails += 1;

@@ -11,6 +11,7 @@ import "root:/data"
 Item {
     id: face
 
+    required property var auth
     readonly property color vermilion: "#c4342c"
     readonly property int margin: 72
     readonly property int gap: 24
@@ -25,6 +26,15 @@ Item {
         return null;
     }
     property var cpuHistory: []
+    // With the main monitor gone the field goes with it: this face says how to unlock and echoes the dots.
+    readonly property bool primaryGone: {
+        const want = Quickshell.env("LOCK_PRIMARY") || Theme.primaryMonitor;
+        const s = Quickshell.screens;
+        for (let i = 0; i < s.length; i++)
+            if (s[i].name === want)
+                return false;
+        return true;
+    }
 
     function fmtBytes(b) {
         return b >= 1e9 ? (b / 1073741824).toFixed(1).replace(".", ",") + " GB" : Math.round(b / 1048576) + " MB";
@@ -353,5 +363,19 @@ Item {
                 }
             }
         }
+    }
+
+    Text {
+        visible: face.primaryGone
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 96
+        horizontalAlignment: Text.AlignHCenter
+        text: face.auth.buffer.length ? "•".repeat(Math.min(24, face.auth.buffer.length)) : (face.auth.fails > 0 ? "senha incorreta" : "Tela principal desconectada · digite a senha e pressione Enter")
+        color: face.auth.fails > 0 && !face.auth.buffer.length ? face.vermilion : Theme.colText
+        font.family: "Geist"
+        font.pixelSize: 22
+        style: Text.Outline
+        styleColor: Qt.rgba(0, 0, 0, 0.5)
     }
 }

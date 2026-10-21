@@ -211,32 +211,23 @@ in
         touch $out
       '';
 
-  # The lock screen's logic against fixtures: the idle gate, the renderer against the spec the desktop
-  # really uses, the observability adapter, the labels, the bridge. docs/notes/desktop/lockscreen.md#testing
+  # The lock screen's shell logic against fixtures: the launcher (the session's compositor, the
+  # fallback to hyprlock) and the idle gate. docs/notes/desktop/lockscreen.md#testing
   lockscreen =
     let
       pkgs = nixpkgs.legacyPackages.${system};
-      desktop = ../modules/home/desktop;
     in
     pkgs.runCommand "check-lockscreen"
       {
         nativeBuildInputs = [
-          (pkgs.python3.withPackages (ps: [ ps.pillow ]))
           pkgs.bash
           pkgs.coreutils
-          pkgs.gnused
           pkgs.jq
-          pkgs.librsvg # the logo test rasterizes a small SVG
+          pkgs.socat # a live Wayland socket, faked
         ];
-        LOCKSCREEN_SPEC =
-          self.nixosConfigurations.ex-b560m-v5.config.home-manager.users.v1cferr.my.lockscreen.spec;
-        LOCKSCREEN_THEME_QML = "${desktop}/quickshell/Theme.qml";
-        LOCKSCREEN_GLASS_LUA = "${desktop}/hypr/lua/glass.lua";
-        LC_ALL = "C.UTF-8";
       }
       ''
-        cp -r ${desktop}/lockscreen/scripts scripts && chmod -R +w scripts
-        python3 -I -m unittest discover -s scripts
+        bash -euo pipefail ${../modules/home/desktop/lockscreen/scripts}/test.sh
         touch $out
       '';
 

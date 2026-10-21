@@ -204,16 +204,16 @@ in
     systemd.user.timers.zen-guard = {
       Unit = {
         Description = "Closes Zen once the screen has stayed locked";
-        # BindsTo and NOT PartOf: hyprlock EXITS on unlock, and PartOf only propagates an explicit
+        # BindsTo and NOT PartOf: the lock EXITS on unlock, and PartOf only propagates an explicit
         # stop, so the countdown would survive the unlock and kill Zen in my hands (measured).
-        BindsTo = [ "hyprlock.service" ];
-        After = [ "hyprlock.service" ];
+        BindsTo = [ "lockscreen.service" ];
+        After = [ "lockscreen.service" ];
       };
       Timer = {
         OnActiveSec = config.my.zen.grace;
         AccuracySec = "10s";
       };
-      Install.WantedBy = [ "hyprlock.service" ];
+      Install.WantedBy = [ "lockscreen.service" ];
     };
   };
 }

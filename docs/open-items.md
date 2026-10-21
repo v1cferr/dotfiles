@@ -10,9 +10,9 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
-- [ ] Verify lockscreen v5.1 and the glance band on the REAL desk (opened 19/10/2026, v5.1 on
-      20/10/2026). v2 was locked and unlocked for real (both layouts, a correct password, the
-      stale-environment fix); v3 to v5.1 were only seen in a headless sway (a wrong password
+- [ ] Verify lockscreen v5.2 and the glance band on the REAL desk (opened 19/10/2026, v5.2 on
+      21/10/2026). v2 was locked and unlocked for real (both layouts, a correct password, the
+      stale-environment fix); v3 to v5.2 were only seen in a headless sway (a wrong password
       could not be submitted there). Steps:
       [notes/desktop/lockscreen.md](notes/desktop/lockscreen.md#the-first-lock-after-switching-step-by-step).
       • WHAT ONLY THE DESK CAN SAY: the editorial ASUS over real prints (the scrim, the Thin clock),

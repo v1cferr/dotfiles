@@ -136,11 +136,18 @@ the same tone sits on the type itself.
 | Claude Code | session % and week % | the week, 4 h bars | when each resets |
 | Sistema | CPU % now | its last two minutes | RAM used, GPU temperature |
 | Processos | the top three apps by CPU now | none | "% de um núcleo" |
-| Clima, or Tocando | the temperature and the sky | none | max, min, rain, feels-like |
+| Clima (always) | the temperature and the sky now | the next 12 hours: temperature line over rain bars | max, min, rain, feels-like |
+| Tocando (only while playing) | the title, the artist | a vermilion progress line | none |
 
-Tocando replaces Clima while a player PLAYS (`Quickshell.Services.Mpris`, live), with the title,
-the artist and a vermilion progress line. The old bridge script and the once-per-lock layout choice
-are gone: the card follows the player while locked.
+The weather is ALWAYS on screen (21/10/2026): it used to give its place to Tocando whenever music
+played, and the user missed it. Tocando is a compact row under it, only while a player PLAYS
+(`Quickshell.Services.Mpris`, live). The old bridge script and the once-per-lock layout choice are
+gone: the card follows the player while locked.
+
+**Every chart reads out under the pointer**: a hairline and a dot at the nearest sample (the bar
+itself lit on bars) and a small label with its time and value, "19:47 · 86 W"; the weather reads
+hour by hour, "03h · 21°", and its rain bars "03h chuva · 40%". No click, nothing moves. The same
+readout lives in the band's charts ([dash.md](dash.md#charts-read-out-under-the-pointer-21102026)).
 
 **Loading is not "no data".** Until a card's source has answered once, its content stays hidden
 under a pulsing skeleton of the same shape (the hero, the chart, the context line; three rows for

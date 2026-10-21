@@ -240,6 +240,27 @@ in
         touch $out
       '';
 
+  # Quickshell's pure logic (the lock's quotes and ink, the energy and system math), run headless by
+  # Qt's own test runner: the files under test import only QtQml. docs/notes/desktop/lockscreen.md#testing
+  quickshell-logic =
+    let
+      pkgs = nixpkgs.legacyPackages.${system};
+    in
+    pkgs.runCommand "check-quickshell-logic"
+      {
+        nativeBuildInputs = [ pkgs.qt6.qtdeclarative ];
+        QML_IMPORT_PATH = "${pkgs.qt6.qtdeclarative}/lib/qt-6/qml"; # QtTest and QtQml, outside a Qt wrapper
+        FONTCONFIG_FILE = pkgs.makeFontsConf { fontDirectories = [ ]; }; # no fonts needed, only quiet
+        QT_QPA_PLATFORM = "offscreen";
+        LC_ALL = "C.UTF-8";
+      }
+      ''
+        export XDG_CACHE_HOME=$TMPDIR
+        cp -r ${../modules/home/desktop/quickshell} qs && chmod -R +w qs
+        qmltestrunner -input qs/tests
+        touch $out
+      '';
+
   # It BUILDS what the repo packages, which `nix flake check` does NOT: it only EVALUATES a host.
   # What is fragile here is packaging, and that breaks at build. curseforge is out: the notes.
   packages = nixpkgs.legacyPackages.${system}.linkFarm "checks-repo-packages" (

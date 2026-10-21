@@ -3,19 +3,19 @@
 `modules/home/desktop/lockscreen/default.nix`, with its renderer and scripts in
 `modules/home/desktop/lockscreen/scripts/`. Ref: <https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/>
 
-## Lockscreen v5.2: an ASUS inked to its print, glass Bento cards on the LG (21/10/2026)
+## Lockscreen v5.3: a cartouche and a seal on the ASUS, Liquid Glass on the LG (21/10/2026)
 
 v3 had the right content in the wrong shape: four ASUS cards of four widths stacked into a ragged
 silhouette that hid the print, and six LG cards of three heights that filled only the top 60% of
 the screen, each with an empty lower half, all in one font, one weight and nearly one size. v4 keeps
 the v2 architecture below and every guarantee (AA measured on the composited pixels, no fabricated
 number, no command line, lock-scoped services, art and logo as state) and changes the composition;
-v5 brought the type system, v5.1 the Bento LG and the one-size clock, and v5.2 (below) an ASUS
-without a broad scrim and a lighter LG glass:
+v5 brought the type system, v5.1 the Bento LG, v5.2 dropped the ASUS's broad scrim, and v5.3
+(below) set the ASUS in the prints' own language and pushed the LG toward Liquid Glass:
 
 | Monitor | What it shows | What it never shows |
 | --- | --- | --- |
-| ASUS (`my.monitors.primary`) | the time with seconds and the date; my logo (frameless), name and handle, with the password field; the quote of this lock | energy, Claude, the system, weather |
+| ASUS (`my.monitors.primary`) | a washi cartouche with the time, the date, my name and handle; my logo as a vermilion seal; the password field and the quote of this lock | energy, Claude, the system, weather |
 | LG (`my.monitors.secondary`) | six glass cards: energy, Claude Code, the system, processes, weather, and media in a Media lock | the time, the quote, my name, a password field |
 
 **One type system, and everything stays TEXT.** v5 replaced v4's all-JetBrains-Mono look with four
@@ -45,30 +45,30 @@ Hierarchy comes from weight and size, not from boxes: a Thin hero, ExtraLight nu
 section (energy orange, Claude violet, system blue, weather sky, media green) and appears only on
 its caption, its icon and its marks; text is `text` or `subtext`, never `dim`, which fails AA.
 
-**The ASUS is an editorial page on one axis** (`geometry.nix`). At the top, the clock and the date.
-Then who is unlocking, as ONE group: my logo, FRAMELESS (the SVG cropped to its ink and fitted into
-64 px, no circle, capsule or badge: a signature, not a user chip), 50 px above "Victor Ferreira"
-(Geist 20 pt) and "v1cferr", and under them the field, 480x70 on light glass with the same 16 px
-corner hyprlock draws its hairline at (quiet `text` at 20% at rest; blue checking, red failed,
-yellow with Caps Lock). At the foot, the quote on a light glass reading surface (1200x280,
-baseline 0.22) at 21 pt, the original at 14 and the credit at 13.
+**The ASUS speaks the prints' own language (v5.3).** A ukiyo-e sets its title on a cartouche (a
+narrow paper slip in a corner) and the artist's seal beside it; the lock does the same, so the type
+belongs to the print instead of floating over it. The cartouche (`slip`, 260x760, `geometry.nix`) is
+washi: the paper color at 93%, a seeded scatter of fibers and an inner rule, opaque enough that its
+DARK ink (the palette's `bg`) keeps AA on any print. On it, the time stacked HH / MM / SS (Geist
+Thin 100 pt, tabular, `line_height` 0.82, the seconds in Tokyo Night's dark indigo `border`), the
+weekday tracked over the day and month, and "Victor Ferreira" / "v1cferr". My logo is the seal
+(`seal`, 104 px): knocked out of a vermilion square in the paper's color, its ink pressed unevenly
+like a stamp, stamped over the cartouche's lower corner. The paper and the vermilion are the
+prints' colors, not the palette's, on purpose.
 
-**The ink follows the print (v5.2).** v4 to v5.1 kept the type light and darkened a broad column
-behind it (a scrim up to 0.94), which on the cream paper of the Met prints read as a dark band over
-the art. Now the renderer measures the print under each line of type (the geometry names the lines
-as zones, with WCAG's 3.0 for the large clock, name and logo and 4.5 for the date and handle) and
-picks the ink that reads better STRAIGHT on it: dark, the palette's `bg`, like sumi on paper, on a
-light print; light, `text`, on a dark one. Only a line that still falls short gets a halo of the
-opposite tone, soft (feather 70) and at most 0.5: paper mist (`f4efe4`) under dark ink, the
-palette's `bg` under light ink. On the three prints measured on 21/10/2026 all three took the dark
-ink, one needed no halo at all, the others 0.32 and 0.36. The choice rides with the set (`ink`,
-beside `quote`) into the session; the clock, the date, the name and the handle read it, and the
-seconds turn Tokyo Night's dark indigo (`border`) on a light print. The logo is drawn in the same
-ink, and its halo zone comes from the logo itself, so a missing logo leaves no shape behind. No text
-shadow on the ASUS: a dark shadow would blur a dark ink. The field and the quote stay light glass
-with light text, all of it `text` so they need AA for one color only. The logo is STATE
-(`my.lockscreen.logo`, my SVG outside git); a missing or broken file renders without it, and the
-lock never depends on it.
+**The side follows the print.** The cartouche and the seal are drawn on the left and mirrored to
+the right when that side holds less detail (edge energy, `side_of` in `render.py`), so they avoid
+the print's subject and its own title and seals; the choice rides with the set (`side`, beside
+`quote`) into the session, and each label of the cartouche exists once per side and prints only on
+the chosen one (the clock checks the file inline, the rest through `lockscreen-label onside`). The
+field (480x70) and the quote (1200x240, 20 pt, up to 3 lines) stay centered at the foot on light
+glass, all their type in `text`, so they need AA for one color only. The logo is STATE
+(`my.lockscreen.logo`, my SVG outside git); without it there is no seal at all (a blank seal would
+be a mark that says nothing), and the lock never depends on it.
+
+v5.2's answer (an ink chosen per print, dark sumi on light paper, with soft halos only where a line
+fell short) worked, but kept the type floating in the middle of the art; the cartouche replaced it,
+and its code (`halo_card`, the `ink` file) went with it.
 
 **The LG is six independent glass cards** on one grid: 72 px margins, 24 px gaps, rows from 184 px
 down, every edge on the 8 px grid, the lower ~460 px left to the print. Energy and Claude Code are
@@ -87,14 +87,18 @@ card's color, 40 px from its top) and a 32 px inset.
 | Weather | the sky's glyph and the temperature | the condition, the day's range, rain, feels-like and "previsão das HH:MM" |
 | Media | the title, Light 20 pt | the artist, the state and the player |
 
-**The material** of every LG card is Adaptive Glass+ in its v5.2 tuning: a light frost (blur sigma
-12, so the print's shapes read through as they do under HyprGlass's `blur_strength` 0.9; the tint at
-12%, plus 6% of the accent, the bg-to-surface ease, ±1 dither), an optical rim (the hairline plus
-text-colored light at 28% that fades by mid-height, a 1.2% lens in a 6 px band that never touches
-text) and a static FRESNEL (text-colored light along the whole inner edge, 10%, gone 14 px in, the
-plugin's `fresnel_strength` frozen), a soft highlight, and an elevation shadow (35%, sigma 36, 14 px
-down). Each card's baseline is 0.42 and it rises only as far as its text needs (0.44 to 0.48 over
-the ukiyo-e measured on 21/10/2026, where v5.1 sat at 0.72).
+**The material** of every LG card is Liquid Glass as far as a static image can take it (v5.3): a
+light frost (blur sigma 14) with VIBRANCY (saturation 1.6 of what shows through, as Apple's glass
+keeps the colors behind it), a tint of only 6% plus 6% of the accent, the bg-to-surface ease and
+±1 dither; 28 px corners; an optical rim (the hairline plus text-colored light at 36% fading by
+mid-height, a 1.2% lens in a 6 px band); a static fresnel (16%, gone 18 px in); a specular sweep
+from the top-left corner (10%, gone past the middle), which is part of the light the contrast is
+measured under; a highlight (12% over the top 35%) and an elevation shadow (35%, sigma 36, 14 px
+down). Each card's baseline is 0.36 and it rises only as far as its text needs (0.48 to 0.50 over
+the ukiyo-e measured on 21/10/2026).
+
+v5.2's Adaptive Glass+ (0.42, frost 12, no vibrancy, 16 px corners) came from this study, which
+v5.3 then pushed further toward the iOS 26 and macOS Tahoe widgets:
 
 It was chosen from a study on ONE print with the same live data, each variant captured with the
 real hyprlock labels on top:
@@ -136,8 +140,7 @@ hyprlock only draws text and the field on top. The material is the desktop's, st
 4. the hairline (`border` at 55%) and the 1 px sheen (`text` at 6%), with antialiased corners;
 5. ±1 level of seeded noise, so the 8-bit gradient does not band over a dark blur.
 
-**Adaptive opacity.** The profile gives a RANGE, not a number (the ASUS halos follow the same rule
-per line, up to 0.5). For each card the renderer tries
+**Adaptive opacity.** The profile gives a RANGE, not a number. For each glass card the renderer tries
 opacities from the card's baseline up and keeps the first at which every text color on that card
 keeps WCAG AA (4.5, plus a 10% margin) over the brightest AND the darkest 5% (so a dark ink is
 measured as honestly as a light one) of the COMPOSITED pixels inside the
@@ -629,8 +632,10 @@ Measured on 19/10/2026 in the headless sway above (GL rendering, both outputs), 
 | v5.1, Media layout, 25 labels (Bento, split weather): itself + children | 0.50 + 0.88 = 1.38 | 93 MB |
 | **v5.1**, the cards re-read every 5 s (so they show seconds after the lock, not a round later) | 0.75 + 1.37 = 2.12 | 93 MB |
 | v5.1 render, ASUS (scrim, avatar with logo, field, quote) | 2.8 s wall, once after an unlock | 190 MB peak |
-| **v5.2** render, ASUS (ink choice, halos per line, frameless logo, field, quote) | 2.3 s wall | 160 MB peak |
-| **v5.2** render, LG Media (six cards, lighter frost, fresnel) | 1.9 s wall | 144 MB peak |
+| v5.2 render, ASUS (ink choice, halos per line, frameless logo, field, quote) | 2.3 s wall | 160 MB peak |
+| **v5.3** render, ASUS (cartouche, seal, side choice, field, quote) | 2.2 s wall | 145 MB peak |
+| **v5.3** render, LG Media (vibrancy, specular, 28 px corners) | 3.4 s wall, once after an unlock | 144 MB peak |
+| v5.2 render, LG Media (six cards, lighter frost, fresnel) | 1.9 s wall | 144 MB peak |
 | v5.1 render, LG Media (six cards) | 1.5 s wall | 149 MB peak |
 | v3's observe collector, between rounds | 0.17 | 21 MB |
 | v3's render of the ASUS image (4 cards, logo) | 0.9 s wall, once after an unlock | 159 MB peak |
@@ -651,18 +656,18 @@ untouched.
 
 ## Testing
 
-`nix build .#checks.x86_64-linux.lockscreen` runs 103 tests in the sandbox, against the spec JSON
+`nix build .#checks.x86_64-linux.lockscreen` runs 105 tests in the sandbox, against the spec JSON
 the desktop really uses (`my.lockscreen.spec`), with only synthetic images:
 
 | Suite | What it pins |
 | --- | --- |
 | `test_idle_gate.py` | the fullscreen-video policy |
 | `test_lock_launch.py` | the lock reaches the session's compositor with a stale, missing or hostile `WAYLAND_DISPLAY` |
-| Geometry | every layout fits its screen; glass may sit on a halo, two surfaces never overlap; the ASUS on one axis with no avatar, the field inside the column; the LG's six cards at their exact rects on the 8 px grid, Ambient widening only the weather; whole pixels; rotation and scale |
+| Geometry | every layout fits its screen; a seal may be stamped over a surface, two others never overlap; the ASUS cartouche and seal sided together, the seal over the cartouche's corner, the field and quote on the axis; the LG's six cards at their exact rects on the 8 px grid, Ambient widening only the weather; whole pixels; rotation and scale |
 | Logo | cropped to its ink, scaled without distortion, centered; missing or broken renders without it |
 | `test_observe.py` | energy units, holes and staleness, the comparable baseline; Claude resets, holes, errors, staleness; process deltas, PID reuse, app names without arguments; escaped markup; the ring's steps; rows that fit their columns; the sparkline's scale, floor, clamping, holes as gaps and its width |
 | Selection | orientation grades, empty pools, invalid files, portrait preferred, cover and focus |
-| Editorial | dark ink on a light print with no halo and the print untouched; light ink on a dark one; a halo only where a line falls short, never past its reach, shading without blurring |
+| Cartouche | the washi holds dark ink at AA on a black and a white print; no logo, no seal (the print untouched); the seal vermilion with the logo knocked out and centered; the pair goes to the calmer side, a tie stays left; vibrancy keeps a gray gray and lifts a color; the specular lights the top-left only |
 | Glass | the photo untouched outside the cards; AA over a white core; each card's baseline over a dark sky; the rim lit at the top; the shadow darkens without blurring; transmission; determinism |
 | Profile | the numbers still mirror `Theme.qml` and `glass.lua` |
 | Cache | the key moves with every input and only with content; atomic publish; corrupt assets; a full prepare with hits, collection, and a session kept through new sets |
@@ -727,7 +732,7 @@ Nothing here locks the session by itself. After `! rebuild`:
    three `rendered` lines, or `the fallback stays` with the reason.
 2. Keep a way back open BEFORE the first lock: an SSH session from another machine, or know the
    TTY path below.
-3. `SUPER+L`. Check the ASUS (clock ticking, the ink against the print, field), the LG (the six cards), type a WRONG
+3. `SUPER+L`. Check the ASUS (clock ticking on the cartouche, the seal, the side), the LG (the six cards), type a WRONG
    password first (the red hairline and the PAM message), then the right one, and unlock.
 4. With music playing, lock again: the media half should appear and follow a track change.
 5. Optional, from SSH while locked: unplug the ASUS cable, read the hint on the LG, type the

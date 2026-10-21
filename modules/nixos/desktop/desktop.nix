@@ -59,4 +59,6 @@ in
   # hyprlock's PAM. WITHOUT this it does not unlock and it LOCKS YOU OUT. The package and config
   # are the user's (modules/home/desktop/lockscreen/default.nix); {} inherits the default login stack.
   security.pam.services.hyprlock = { };
+  # The QML lock's PAM (quickshell/lock/Auth.qml); hyprlock above stays as its fallback.
+  security.pam.services.quickshell-lock = { };
 }

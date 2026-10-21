@@ -40,6 +40,14 @@ Item {
         return true;
     }
 
+    // When each of n evenly spaced samples was taken, the last one now, for a chart's readout.
+    function timeLabels(n, stepS, fmt) {
+        const now = Date.now(), out = [];
+        for (let i = 0; i < n; i++)
+            out.push(Qt.locale("pt_BR").toString(new Date(now - (n - 1 - i) * stepS * 1000), fmt));
+        return out;
+    }
+
     function fmtBytes(b) {
         return b >= 1e9 ? (b / 1073741824).toFixed(1).replace(".", ",") + " GB" : Math.round(b / 1048576) + " MB";
     }
@@ -147,6 +155,8 @@ Item {
                 height: 84
                 series: Energy.history
                 color: face.vermilion
+                labels: face.timeLabels(Energy.history.length, 60, "HH:mm")
+                unit: " W"
             }
             Context {
                 x: energy.pad
@@ -199,6 +209,8 @@ Item {
                 scaleTop: 100
                 series: ClaudeUsage.series("w", 7 * 86400, 4 * 3600)
                 color: face.vermilion
+                labels: face.timeLabels(series.length, 4 * 3600, "ddd HH'h'")
+                unit: "%"
             }
             Context {
                 x: claude.pad
@@ -236,6 +248,8 @@ Item {
                     scaleTop: 100
                     series: face.cpuHistory
                     color: face.vermilion
+                    labels: face.timeLabels(face.cpuHistory.length, 2, "HH:mm:ss")
+                    unit: "%"
                 }
                 Context {
                     x: sys.pad
@@ -297,14 +311,15 @@ Item {
             }
         }
 
+        // Always on screen: the sky now, then the next 12 hours (the temperature as a line, the
+        // chance of rain as bars under it), each hour readable under the pointer.
         Card {
             id: weather
             loading: Weather.loading
-            shape: "hero"
-            visible: !face.player
+            shape: "hero-chart"
             backdrop: wall
             width: face.full
-            height: 240
+            height: 330
             tintAlpha: face.tintAlpha
             blur: face.glassBlur
             contentHalo: true
@@ -313,25 +328,66 @@ Item {
             Row {
                 x: weather.pad
                 y: weather.contentTop
-                spacing: 18
+                spacing: 16
                 Text {
                     text: Weather.icon
                     color: Theme.colText
                     font.family: "Material Symbols Rounded"
-                    font.pixelSize: 64
+                    font.pixelSize: 60
                     font.variableAxes: {
                         "wght": 300
                     }
                     anchors.verticalCenter: parent.verticalCenter
                 }
-                Hero {
-                    value: Weather.ok ? Weather.temp + "°" : "–"
-                }
-                Context {
-                    text: Weather.condition
-                    font.pixelSize: 24
-                    color: Theme.colText
+                Column {
                     anchors.verticalCenter: parent.verticalCenter
+                    Hero {
+                        value: Weather.ok ? Weather.temp + "°" : "–"
+                    }
+                    Context {
+                        text: Weather.condition
+                        color: Theme.colText
+                    }
+                }
+            }
+            Column {
+                x: weather.width - weather.pad - width
+                y: weather.contentTop + 6
+                width: 430
+                spacing: 4
+                Trace {
+                    width: parent.width
+                    height: 62
+                    series: Weather.next.map(h => h.temp)
+                    scaleBottom: Weather.ok ? Math.min.apply(null, Weather.next.map(h => h.temp)) - 3 : 0
+                    labels: Weather.next.map(h => h.label)
+                    unit: "°"
+                    color: face.vermilion
+                }
+                Trace {
+                    width: parent.width
+                    height: 22
+                    bars: true
+                    scaleTop: 100
+                    series: Weather.next.map(h => h.rain)
+                    labels: Weather.next.map(h => h.label + " chuva")
+                    unit: "%"
+                    color: Theme.colSubtext
+                }
+                Item {
+                    width: parent.width
+                    height: 18
+                    Repeater {
+                        model: Weather.next.length ? [0, 6, 12].filter(k => k < Weather.next.length) : []
+                        Text {
+                            required property int modelData
+                            x: Math.max(0, Math.min(parent.width - width, modelData / Math.max(1, Weather.next.length - 1) * parent.width - width / 2))
+                            text: Weather.next[modelData].label
+                            color: Theme.colSubtext
+                            font.family: "Geist"
+                            font.pixelSize: 14
+                        }
+                    }
                 }
             }
             Context {
@@ -342,33 +398,35 @@ Item {
             }
         }
 
+        // Only while something plays: one compact row, never in the weather's place.
         Card {
             id: media
             visible: !!face.player
             backdrop: wall
             width: face.full
-            height: 240
+            height: 150
             tintAlpha: face.tintAlpha
             blur: face.glassBlur
             contentHalo: true
             label: "Tocando"
             icon: "music_note"
-            Column {
+            Row {
                 x: media.pad
-                y: media.contentTop
+                y: media.contentTop - 6
                 width: media.contentWidth
-                spacing: 4
+                spacing: 14
                 Text {
-                    width: parent.width
+                    id: track
+                    width: Math.min(implicitWidth, media.contentWidth * 0.7)
                     text: face.player ? face.player.trackTitle : ""
                     color: Theme.colText
                     font.family: "Geist"
-                    font.weight: Font.Light
-                    font.pixelSize: 40
+                    font.pixelSize: 24
                     elide: Text.ElideRight
                 }
                 Context {
-                    width: parent.width
+                    width: media.contentWidth - track.width - 14
+                    anchors.baseline: track.baseline
                     text: face.player ? face.player.trackArtist : ""
                 }
             }

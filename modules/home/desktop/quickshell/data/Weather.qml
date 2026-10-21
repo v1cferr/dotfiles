@@ -20,6 +20,8 @@ Singleton {
     property real low: NaN
     property real rain: NaN // today's max chance, %
     property string issued: "" // the forecast run's hour, "HH:MM"
+    // The next 12 hours from now: [{label: "14h", temp, rain}], for the card's curve and its readout.
+    property var next: []
     readonly property string condition: {
         const t = root.conf.conditions;
         return t && t[root.code] !== undefined ? t[root.code] : "";
@@ -84,6 +86,14 @@ Singleton {
         root.temp = Math.round(at(hr.temperature_2m));
         root.feels = Math.round(at(hr.apparent_temperature));
         root.code = hr.weather_code[i];
+        const next = [];
+        for (let k = i; k < Math.min(hr.time.length, i + 13); k++)
+            next.push({
+                label: k === i ? "agora" : hr.time[k].slice(11, 13) + "h",
+                temp: hr.temperature_2m[k],
+                rain: hr.precipitation_probability ? hr.precipitation_probability[k] : NaN
+            });
+        root.next = next;
         const dy = data.daily;
         const d = dy && dy.time ? dy.time.indexOf(key.slice(0, 10)) : -1;
         if (d >= 0) {

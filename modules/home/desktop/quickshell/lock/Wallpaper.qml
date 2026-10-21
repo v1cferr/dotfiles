@@ -77,7 +77,7 @@ Item {
 
     Process {
         running: wall.pools.length > 0
-        command: ["find"].concat(wall.pools).concat(["-maxdepth", "1", "-type", "f", "(", "-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o", "-iname", "*.png", "-o", "-iname", "*.webp", ")"])
+        command: ["find", "-L"].concat(wall.pools).concat(["-maxdepth", "1", "-type", "f", "(", "-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o", "-iname", "*.png", "-o", "-iname", "*.webp", ")"])
         stdout: StdioCollector {
             onStreamFinished: {
                 const files = text.split("\n").filter(f => f);

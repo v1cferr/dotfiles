@@ -22,7 +22,7 @@ QtObject {
         return sorted.length ? sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] : 0;
     }
 
-    // One zone, {x, y, w, h} as fractions of the sample: the darkest and brightest 5% and how busy
+    // One zone, {x, y, w, h} as fractions of the sample: the darkest and brightest 2% and how busy
     // it is (mean luminance step to the right-hand neighbour).
     function stats(data, w, h, z) {
         const x0 = Math.max(0, Math.floor(z.x * w)), x1 = Math.min(w, Math.ceil((z.x + z.w) * w));
@@ -43,7 +43,7 @@ QtObject {
             }
         }
         ls.sort((a, b) => a - b);
-        return { lo: pct(ls, 0.05), hi: pct(ls, 0.95), detail: n ? edge / n : 0 };
+        return { lo: pct(ls, 0.02), hi: pct(ls, 0.98), detail: n ? edge / n : 0 };
     }
 
     // The mirror of a zone about the vertical axis.
@@ -66,13 +66,17 @@ QtObject {
         const dark = contrast(D, lo); // dark ink fails first on the darkest
         const ink = light >= dark ? "light" : "dark";
         const ratio = Math.max(light, dark);
+        // A margin over WCAG's number: a percentile of a reduced grab is not the single worst pixel.
+        const goal = target * 1.1;
         let shade = 0;
-        if (ratio < target) {
+        if (ratio < goal) {
             // Mix the worst background toward the opposite tone until the ink reaches the target.
             const worst = ink === "light" ? hi : lo;
             const tone = ink === "light" ? D : L;
-            const need = ink === "light" ? (L + 0.05) / target - 0.05 : target * (D + 0.05) - 0.05;
-            shade = Math.min(1, Math.max(0, (worst - need) / (worst - tone)));
+            const need = ink === "light" ? (L + 0.05) / goal - 0.05 : goal * (D + 0.05) - 0.05;
+            // Alpha blends in sRGB, not in linear light: solve the mix in the space it happens in.
+            const enc = l => l <= 0.0031308 ? 12.92 * l : 1.055 * Math.pow(l, 1 / 2.4) - 0.055;
+            shade = Math.min(1, Math.max(0, (enc(worst) - enc(need)) / (enc(worst) - enc(tone))));
         }
         return { side: side, ink: ink, ratio: Math.round(ratio * 100) / 100, shade: Math.round(shade * 100) / 100 };
     }

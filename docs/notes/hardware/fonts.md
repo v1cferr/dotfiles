@@ -58,7 +58,6 @@ though it is NixOS' default, because a silent default is not something to inheri
 
 ## The lock screen's own families
 
-`fonts.nix` also installs Geist and Geist Mono, Material Symbols and Sparks (packaged in
-`pkgs/sparks-font` from its OFL release). They exist for the lock screen only, which names them
-explicitly; none enters `defaultFonts`, so no app and no part of the desktop changes face. Why each
-one, and the pango details they need: [lockscreen.md](../desktop/lockscreen.md).
+`fonts.nix` also installs Geist and Geist Mono and Material Symbols. They exist for the lock screen
+only, which names them explicitly; none enters `defaultFonts`, so no app and no part of the desktop
+changes face. Why each one: [lockscreen.md](../desktop/lockscreen.md).

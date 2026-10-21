@@ -25,11 +25,10 @@
       # Microsoft's metrics, so OnlyOffice opens .docx/.xlsx without the pagination shifting.
       corefonts # Arial, Times New Roman, Courier New, Verdana… (Office 2003 and earlier)
       vista-fonts # Calibri, Cambria, Consolas… (the modern .docx uses Calibri by default)
-      # The LOCK SCREEN's type, never a UI default: display and data (Geist), icons with a weight axis
-      # (Material Symbols), and charts drawn by a font (Sparks). docs/notes/desktop/lockscreen.md
+      # The LOCK SCREEN's type, never a UI default: Geist, and icons with a weight axis (Material
+      # Symbols). docs/notes/desktop/lockscreen.md
       geist-font
       material-symbols
-      sparks-font
     ];
     fontconfig = {
       enable = true;

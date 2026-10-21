@@ -83,3 +83,20 @@ before any row matches, gets 23:30's level instead of falling back to daylight.
 45 on both is where they started, not a calibration: the ASUS is 350 nits typical and the LG 300,
 so matching the digit is not matching the photons. `level` in the module is what to turn when they
 stop matching by eye.
+
+## Low while the screen is locked
+
+Since 21/10/2026 the lamp follows the lock. On these LCD panels a darker image saves almost nothing:
+the backlight burns the same behind black. So when `lockscreen.service` starts it pulls in
+`backlight-locked.service` (its `WantedBy`), which drops both panels to `lockedLevel` (10); the
+unit `BindsTo` the lock, and its `ExecStop` runs `backlight-schedule force` the moment the lock
+exits, putting the curve's level for that hour back. `BindsTo` and not `PartOf` for the reason in
+[zen.md](../apps/zen.md): the lock ENDS by itself on unlock, and only `BindsTo` follows that.
+
+While the lock holds, a tick of the curve's timer would raise the panels again, so
+`backlight-schedule` exits early while `backlight-locked` is active; only the unlock's `force`
+bypasses that. The coupling lives in `backlight.nix`, as Zen's lives in `zen.nix`: the lock does not
+need to know about the panels. It changes brightness (VCP 0x10) only, the same call the curve makes
+every day; never the power state (0xD6), which takes the LG down until its physical button.
+
+NOT measured yet: the watts it saves (the panels have no sensor; a wall meter would tell).

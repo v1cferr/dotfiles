@@ -14,6 +14,7 @@ let
     coreutils
     ddcutil
     gawk
+    systemd
     writeShellApplication
     ;
 
@@ -24,6 +25,9 @@ let
   # The LAMP's level through the day. The same NUMBER is not the same LIGHT on both panels (350
   # nits against 300), so this is the knob to turn the day they stop matching by eye.
   dayLevel = 45; # what a moment with nothing declared before it falls back to
+  # While the screen is locked nobody reads it: both panels drop to this, and the curve takes them
+  # back on unlock. The real energy on these LCDs is the backlight, not the image (lockscreen.md).
+  lockedLevel = 10;
   levels = {
     "0:00" = 15; # the small hours: about a third of the day's light
     "6:00" = 25;
@@ -121,8 +125,12 @@ let
     runtimeInputs = [
       coreutils
       gawk
+      systemd # is-active: the lock holds the lamp low
     ];
     text = ''
+      # A locked screen holds the lamp at its own level; only the unlock (`force`) brings the curve back.
+      if [ "''${1:-}" != force ] && systemctl --user is-active --quiet backlight-locked.service; then exit 0; fi
+
       # The table is generated from hyprsunset's own times; the last row of the day is the default,
       # which is what makes the curve WRAP past midnight instead of falling back to daylight.
       now=$(( 10#$(date +%H) * 60 + 10#$(date +%M) ))
@@ -157,6 +165,24 @@ in
       ExecStart = "${schedule}/bin/backlight-schedule force";
     };
     Install.WantedBy = [ "graphical-session.target" ];
+  };
+
+  # The lamp follows the lock: low while it holds, the curve again the moment it ends. The coupling
+  # lives HERE, as Zen's does in zen.nix: the lock does not need to know about the panels.
+  systemd.user.services.backlight-locked = {
+    Unit = {
+      Description = "Both panels low while the screen is locked (DDC/CI)";
+      # BindsTo and NOT PartOf: the lock EXITS on unlock, and only BindsTo follows that (zen.md).
+      BindsTo = [ "lockscreen.service" ];
+      After = [ "lockscreen.service" ];
+    };
+    Service = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${sync}/bin/backlight-sync ${toString lockedLevel}";
+      ExecStop = "${schedule}/bin/backlight-schedule force";
+    };
+    Install.WantedBy = [ "lockscreen.service" ];
   };
 
   # One timer, one OnCalendar per moment of the day, GENERATED from the same list of times.

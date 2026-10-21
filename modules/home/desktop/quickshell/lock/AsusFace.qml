@@ -72,7 +72,7 @@ Item {
 
     SystemClock {
         id: clock
-        precision: SystemClock.Minutes
+        precision: SystemClock.Seconds
     }
 
     // BOKASHI, the printmaker's graded wash: a band of the paper's (or the indigo's) tone that
@@ -160,18 +160,40 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             anchors.verticalCenterOffset: -110
             spacing: 0
-            Text {
+            // HH over mm, and the seconds small beside the minutes, sitting on their baseline.
+            Row {
                 anchors.right: face.onRight ? parent.right : undefined
-                horizontalAlignment: face.onRight ? Text.AlignRight : Text.AlignLeft
-                text: Qt.formatTime(clock.date, "HH") + "\n" + Qt.formatTime(clock.date, "mm")
-                color: face.col
-                font.family: "Geist"
-                font.weight: Font.Light
-                font.pixelSize: 220
-                font.features: {
-                    "tnum": 1
+                spacing: 14
+                Text {
+                    id: hours
+                    horizontalAlignment: face.onRight ? Text.AlignRight : Text.AlignLeft
+                    text: Qt.formatTime(clock.date, "HH") + "\n" + Qt.formatTime(clock.date, "mm")
+                    color: face.col
+                    font.family: "Geist"
+                    font.weight: Font.Light
+                    font.pixelSize: 220
+                    font.features: {
+                        "tnum": 1
+                    }
+                    lineHeight: 0.84
                 }
-                lineHeight: 0.84
+                Text {
+                    // On the minutes' baseline: the first line's plus one line at the 0.84 leading.
+                    y: hours.baselineOffset + hoursMetrics.lineSpacing * hours.lineHeight - baselineOffset
+                    FontMetrics {
+                        id: hoursMetrics
+                        font: hours.font
+                    }
+                    text: Qt.formatTime(clock.date, "ss")
+                    color: face.col
+                    opacity: 0.7
+                    font.family: "Geist"
+                    font.weight: Font.Light
+                    font.pixelSize: 64
+                    font.features: {
+                        "tnum": 1
+                    }
+                }
             }
             Text {
                 anchors.right: face.onRight ? parent.right : undefined

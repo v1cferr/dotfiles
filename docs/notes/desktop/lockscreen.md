@@ -96,9 +96,11 @@ Enter" and echoes the dots, so the session is never stranded.
 
 ## The ASUS: type on the print
 
-- **The clock:** HH over mm in Geist Light 220 px, the date under it ("quarta, 21 de outubro"),
-  on the CALMER side of the print. Minute precision from `SystemClock`; the old per-second label
-  and its timer workaround went with hyprlock.
+- **The clock:** HH over mm in Geist Light 220 px, the seconds at 64 px beside the minutes on
+  their baseline (softer, 70%), the date under it ("quarta, 21 de outubro"), on the CALMER side of
+  the print. Second precision from `SystemClock`, which follows the system clock with no timer of
+  its own: hyprlock's skipped-second workaround (`update:995`) went with it. MEASURED on
+  21/10/2026 in the harness: 2.00% of a core with the seconds, against 1.93% with minutes only.
 - **The signature and the logo** (21/10/2026, the user's choice): under the date, as a Japanese
   print carries its artist's, my full name and `v1cferr` in the clock's ink, and beside them the
   logo, 56 px, in the same ink with no frame (`lock/Logo.qml`; the SVG's alpha masks the ink,

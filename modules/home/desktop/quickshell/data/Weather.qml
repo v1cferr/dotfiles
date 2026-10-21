@@ -9,7 +9,9 @@ import "root:/"
 Singleton {
     id: root
 
-    readonly property bool ok: !isNaN(root.temp)
+    // Never an old forecast shown as current: a run older than 12 h (two missed ECMWF IFS runs) is
+    // no forecast at all. docs/notes/desktop/weather.md#the-failure-paths
+    readonly property bool ok: !isNaN(root.temp) && feed.updatedAt > 0 && Date.now() / 1000 - feed.updatedAt < 12 * 3600
     property real temp: NaN
     property real feels: NaN
     property int code: -1

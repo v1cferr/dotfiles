@@ -640,7 +640,7 @@ Lock, darken, log out, suspend, reboot and shut down live in the NixOS Center's 
 poweroff, reboot and suspend go through systemd-logind, where an active session is authorized with
 no password, and logging out is `loginctl terminate-user`, since LightDM starts a bare Hyprland.
 
-**The lock brings hyprlock up DIRECTLY** (the unit from `lockscreen.nix`) and only then marks the
+**The lock brings the lock screen up DIRECTLY** (`lockscreen.service`) and only then marks the
 `LockedHint`. `loginctl lock-session` on its own did NOT lock: it only emits the Lock signal, and
 what listened for it was hypridle, so with hypridle stopped by Sunshine's guard the click became a
 silent no-op. The `start` is idempotent, so the `lock_cmd` hypridle fires on seeing the signal

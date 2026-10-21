@@ -10,16 +10,15 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
-- [ ] Verify lockscreen v5.3 and the glance band on the REAL desk (opened 19/10/2026, v5.3 on
-      21/10/2026). v2 was locked and unlocked for real (both layouts, a correct password, the
-      stale-environment fix); v3 to v5.3 were only seen in a headless sway (a wrong password
-      could not be submitted there). Steps:
+- [ ] Verify lockscreen v6 (the QML lock) and the glance band on the REAL desk (opened 19/10/2026,
+      v6 on 21/10/2026). v2 was locked and unlocked for real; v6 was only seen in a headless sway,
+      where a fake PAM unlocked it and a killed QML lock handed over to the fallback. Steps:
       [notes/desktop/lockscreen.md](notes/desktop/lockscreen.md#the-first-lock-after-switching-step-by-step).
-      • WHAT ONLY THE DESK CAN SAY: the editorial ASUS over real prints (the scrim, the Thin clock),
-        the LG panel read from the chair, the band's energy and Claude panels on HyprGlass, Hyprland (not sway) on a DP
+      • WHAT ONLY THE DESK CAN SAY: the type and the bokashi over real prints on the ASUS, the LG's
+        glass read from the chair, the real password and Caps Lock, the band's energy and Claude panels on HyprGlass, Hyprland (not sway) on a DP
         unplug while locked, and CPU package power while locked (its counter is root's).
-      • THE TRAP: keep an SSH session open before the first lock, and never `pkill hyprlock` to
-        get out; relaunching hyprlock from a TTY reattaches to the lock.
+      • THE TRAP: keep an SSH session open before the first lock. Killing the QML lock is safe (the
+        fallback takes over); killing the fallback hyprlock is not.
 
 - [ ] Refine the Zen theme, by hand and at my own pace (opened 13/10/2026). The minimal one in
       `modules/home/apps/zen/theme.nix` recolors Zen through its own variables; what it does NOT

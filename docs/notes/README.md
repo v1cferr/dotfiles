@@ -115,7 +115,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [nixos-center](desktop/nixos-center.md) | the logo's panel: notifications, do-not-disturb, the session, the toasts |
 | [dash](desktop/dash.md) | the glance band on the standing monitor: vitals, month, CI pages |
 | [glance-feed](desktop/glance-feed.md) | the SQLite network cache: fetch only what changed, paint from disk at boot |
-| [lockscreen](desktop/lockscreen.md) | hyprlock and hypridle, and the three hardware lessons |
+| [lockscreen](desktop/lockscreen.md) | the QML lock (Quickshell), hyprlock as its fallback, hypridle, and the hardware lessons |
 | [away](desktop/away.md) | a black screen and dark LEDs while an agent works, and why not DDC or DPMS |
 | [weather](desktop/weather.md) | one source for the bar and the lock, and the icon-by-regex trap |
 | [theme](desktop/theme.md) | dark mode, Kvantum, the Win11 icons, the palette SSOT |

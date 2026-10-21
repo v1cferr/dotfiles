@@ -167,10 +167,11 @@ Three `misc` settings worth keeping:
   Gotcha when testing: `hyprctl reload` keeps a monitor's ACTIVE rule (its `vrr` included) unless
   the mode, position or scale changes, so a removed per-monitor `vrr` lingers until a mode change or
   a new session. And on 0.56 `hyprctl monitors` reports the output's pending `adaptiveSync`.
-- **`allow_session_lock_restore = true`**, a safety net against a lockout: if hyprlock dies during
-  teardown, relaunching `hyprlock` from a TTY REATTACHES the locked session instead of refusing,
-  which avoids a `sudo reboot` to escape an orphaned lock screen. It is the one path that produces
-  a hyprlock NOT born from `hyprlock.service`, which is what the unit's `ExecCondition` covers.
+- **`allow_session_lock_restore = true`**, a safety net against a lockout: if the lock client dies,
+  a new one REATTACHES to the locked session instead of refusing, which avoids a `sudo reboot` to
+  escape an orphaned lock screen. The launcher relies on it (a QML lock that dies locked is replaced
+  by hyprlock), and so does the TTY rescue, whose hand-started hyprlock the unit's `ExecCondition`
+  covers.
 - **`render_unfocused_fps = 30`**, the GLOBAL ceiling for the windows that carry the
   `render_unfocused` rule (a game on a workspace that is off screen). It is 30 and not the default
   15 because 15 measured JITTERY; the table is in "Window rules" below.
@@ -229,9 +230,9 @@ It does four things:
 
 1. Imports the Wayland env and starts `hyprland-session.target`. Without this the `--user` services
    do NOT come up at login, since LightDM launches a bare Hyprland with no systemd integration.
-2. **Locks at boot**, through the UNIT and not a loose `hyprlock`. The machine logs itself in so
-   Sunshine can come up, but the session is born LOCKED, so Moonlight lands straight on hyprlock.
-   Going through `hyprlock.service` keeps ONE owner: a loose process would break systemd's
+2. **Locks at boot**, through the UNIT and not a loose lock. The machine logs itself in so
+   Sunshine can come up, but the session is born LOCKED, so Moonlight lands straight on the lock.
+   Going through `lockscreen.service` keeps ONE owner: a loose process would break systemd's
    idempotence, the idle lock would raise a SECOND session-lock surface on top, and two of them
    break the keyboard grab so the password field stops typing. The old `pidof ||` became the unit's
    `ExecCondition`.

@@ -10,10 +10,10 @@ true/false in the panel plus `rebuild`. It mirrors the idiom of `modules/nixos/s
 | --- | --- | --- |
 | `my.autostart` (here) | GUI apps with no service of their own: Discord, Spotify, LocalSend | LocalSend has a NixOS module, but only for the package and the firewall; what BRINGS IT UP is this panel |
 | `my.services.<n>` | real services with a module or daemon (dropbox, jellyfin, ollama, sunshine, restic) | keys in `modules/nixos/services/toggles.nix`, values in `hosts/<host>/services.nix` |
-| `hypr/lua/autostart.lua` | session infrastructure that NEEDS the compositor's `exec-once`: hyprlock, quickshell, wl-clip-persist | only the compositor knows the right moment |
+| `hypr/lua/autostart.lua` | session infrastructure that NEEDS the compositor's `exec-once`: the lock, quickshell, wl-clip-persist | only the compositor knows the right moment |
 
-hyprlock is the interesting case: the TRIGGER is still the `exec-once`, but hyprlock itself is a
-unit (`hyprlock.service`, see [`lockscreen.md`](lockscreen.md)), so boot, idle and the bar's button
+The lock is the interesting case: the TRIGGER is still the `exec-once`, but the lock itself is a
+unit (`lockscreen.service`, see [`lockscreen.md`](lockscreen.md)), so boot, idle and the bar's button
 all go through the same owner.
 
 ## Why a service and not `exec-once`

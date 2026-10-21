@@ -88,7 +88,8 @@ GUI, to manage or change the keyring's password.
 
 ## The lockscreen's PAM
 
-`security.pam.services.hyprlock = { }` exists so hyprlock can authenticate the user's password.
-WITHOUT it hyprlock does not unlock and it LOCKS YOU OUT. The package and config belong to the
+`security.pam.services.quickshell-lock = { }` exists so the QML lock can authenticate the user's
+password, and `security.pam.services.hyprlock = { }` so its fallback can. WITHOUT them the lock does
+not unlock and it LOCKS YOU OUT. The package and config belong to the
 user (`modules/home/desktop/lockscreen/default.nix`); here it is only the PAM service, which is system level. The
 empty attrset means it inherits the default login stack.

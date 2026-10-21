@@ -34,7 +34,7 @@ read `Confirm?` on the first click, and run on the second within 4 s; a reopened
 armed. Lock, darken and suspend run at once, since each is undone by coming back to the keyboard.
 
 **The commands are the power menu's, unchanged**, with the same reasons: the lock starts
-`hyprlock.service` before marking the `LockedHint` (`loginctl lock-session` alone only emits the
+`lockscreen.service` before marking the `LockedHint` (`loginctl lock-session` alone only emits the
 signal), darkening is gamma 0 through hyprsunset and never dpms, logging out is `loginctl
 terminate-user` because LightDM starts a bare Hyprland. The history of each is in
 [bar.md](bar.md#the-power-menu) and [lockscreen.md](lockscreen.md).

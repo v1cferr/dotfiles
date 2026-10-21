@@ -35,7 +35,7 @@ copying it only buys a second thing to forget.
 | Reproducibility | 3 declarative, 8 validate first, 13 the lock pins, 21 zero warnings |
 | Ownership | 11 one source of truth, 14 one owner per artifact, 15 one owner per automation |
 | State and secrets | 6 state is not declared, 12 secrets are a separate layer |
-| Hygiene | 2 short comments, 7 no loose scripts, 16 dead config leaves, 19 packages named once, 22 exceptions expire |
+| Hygiene | 2 short comments, 7 no loose scripts, 16 dead config leaves, 19 packages named once, 22 exceptions expire, 24 four languages |
 | Writing and docs | 17 en-US and how, 20 the docs are a product |
 | Working | 1 research first, 18 the agent contract is declared, 23 a claim carries its date |
 
@@ -364,3 +364,17 @@ does too.
 **Enforced by**: review.
 
 **Detail**: [eval-metrics](notes/repo/eval-metrics.md), whose budgets are the same idea as a check.
+
+## 24. Four languages, an exception only by host
+
+The repo **MUST** be written in Nix, Lua, QML and Shell, by that priority, Shell preferably inside
+a `.nix`. Another language **MAY** enter only where a host program imposes it (a kitty kitten, a
+Vicinae extension), inside its feature's folder, registered with a reason and a review date.
+
+**Why**: every language is a toolchain, a linter, a test runner and its own failure modes, paid at
+every return to a file; Nix, Lua and QML are imposed by what the desktop runs on, and Shell is the
+glue they all speak.
+
+**Enforced by**: review, against the registered exceptions.
+
+**Detail**: [the long form](notes/repo/languages.md).

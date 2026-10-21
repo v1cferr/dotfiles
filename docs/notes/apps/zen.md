@@ -89,13 +89,13 @@ before anything is signalled.
 
 ## The wiring, and where it deliberately does NOT live
 
-The countdown is a TIMER with `WantedBy=hyprlock.service` and `BindsTo=hyprlock.service`. Locking the
+The countdown is a TIMER with `WantedBy=lockscreen.service` and `BindsTo=lockscreen.service`. Locking the
 screen pulls it in, `OnActiveSec` counts the grace, and unlocking in time stops the timer and cancels
 the pending close. Coffee does not cost me the browser; walking away does.
 
 **`BindsTo` and not `PartOf`, and this one was measured, not read.** `PartOf` is what
 `lockscreen-idle-lock` uses and it was the obvious first choice here, but it only propagates an
-EXPLICIT stop. hyprlock is `Type=simple` and ENDS BY ITSELF when the screen is unlocked, and a unit
+EXPLICIT stop. The lock is `Type=simple` and ENDS BY ITSELF when the screen is unlocked, and a unit
 that exits on its own enqueues no stop job, so nothing reaches the timer. Two throwaway units proved
 it: parent exits on its own, `is-active` on the `PartOf` timer still says `active`. The countdown
 would have survived the unlock and closed Zen three minutes into me using it, which is the worst

@@ -2,7 +2,7 @@
 
 `modules/home/desktop/weather.nix` holds the SSOT (rule 11): the coordinates and the WMO code to pt-BR
 table. The two surfaces that draw weather read it, `modules/home/desktop/quickshell/bar/Bar.qml` and the
-lock screen's fetch in `modules/home/desktop/lockscreen/default.nix`.
+lock screen's `modules/home/desktop/quickshell/data/Weather.qml`, both from glance-feed's cache.
 
 ## Why the SSOT exists: they disagreed on screen
 
@@ -54,34 +54,17 @@ collapsing 61, 63 and 65 into one word throws away a distinction the source paid
 temperature ALONE, never an invented word. All 28 codes Open-Meteo actually emits are in the table,
 so the fallback is defensive only.
 
-## The failure paths, all measured (22/08/2026)
+## The failure paths
 
-The lock screen's fetch writes atomically (`.tmp` plus `mv`) and refuses to publish a bad read,
-because an EMPTY label on the lock screen reads as "the lock is broken". Since lockscreen v2
-(19/10/2026) "the previous cache stays" has an expiry: the file carries the hour it is valid for and
-the forecast's age, and the card says "Clima indisponível" once the hour is over or the forecast is
-older than 12 h ([lockscreen.md](lockscreen.md#the-weather-card-and-when-it-refuses-to-show)).
-These rows were measured on the v1 label:
+The lock screen reads glance-feed's cache through `data/Weather.qml` (since v6, 21/10/2026), so the
+failure paths are glance-feed's ([glance-feed.md](glance-feed.md)): a bad read never replaces the
+cached forecast. What the lock adds is FRESHNESS: a forecast run older than 12 h (two missed ECMWF
+IFS runs) is no forecast, and the card says "sem previsão no cache" instead of an old number. An
+unknown code shows the temperature with no condition, and the pt-BR words come from the same
+`weather.json` the bar reads, so the two cannot drift apart again.
 
-| Input | Result |
-| --- | --- |
-| host unreachable | the previous cache stays, no `.tmp` left behind |
-| empty body, malformed JSON | the previous cache stays |
-| `temperature_2m` or `weather_code` null | the previous cache stays |
-| code 42 (not in the table) | `22°C`, with no condition |
-| code 0 | `Céu limpo, 22°C` (v2: `22°C  Céu limpo`) |
-| -3.4 | `Nevando, -3°C` (v2: `-3°C  Nevando`) |
-
-Two details in that script that are easy to get wrong:
-
-- **One `jq` pass with `select`**, so a response missing either field produces NO line at all
-  instead of a half-formed label. `weather_code` **0** survives it: only `null` and `false` are
-  falsy in jq, so the `select` does not eat a clear sky.
-- **No trailing newline.** hyprlock renders the label raw and a `\n` becomes an empty second line.
-  In v2 the label script strips it, since the file now has three lines.
-
-The case arms are GENERATED from the same attrset the bar reads, so the lock screen and the bar
-cannot drift apart again.
+The v1 and v2 lock read a weather file a shell timer wrote; the measured failure rows of that
+script are in the history of this file (`git log -p docs/notes/desktop/weather.md`).
 
 ## The QML side reads a generated JSON
 

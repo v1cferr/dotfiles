@@ -61,7 +61,7 @@ Three details carry the design:
   submap itself, so a dead Quickshell cannot strand the keyboard in it. The QML handler stays
   for the normal case. `wtype -k Return` reaches the QML handler but NOT the bind (its virtual
   keyboard does not match Hyprland binds), so the bind is only provable with a real key.
-- **An idle inhibitor.** hypridle's 5-min lock would otherwise draw hyprlock over the black and
+- **An idle inhibitor.** hypridle's 5-min lock would otherwise draw the lock screen over the black and
   light the room. The overlay holds a Wayland idle inhibitor while it is up, which hypridle
   honours (its `ignore_dbus_inhibit` only covers D-Bus). The idle clock starts over on Enter, so
   walking away again still locks.

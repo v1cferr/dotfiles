@@ -174,7 +174,7 @@ at all.
   while held. Media play/pause/next/prev get `locked` only, since repeating makes no sense there.
 - SUPER+P (`pseudo`) is a dwindle thing and a no-op on scrolling, but it answers ok and raises no
   toast, so it stays harmless.
-- SUPER+L goes `loginctl` to logind to hypridle's `lock_cmd`, and never duplicates hyprlock. See
+- SUPER+L goes `loginctl` to logind to hypridle's `lock_cmd`, and never duplicates the lock. See
   [`lockscreen.md`](lockscreen.md).
 - The screenshot submap's `1`/`2` go by ROLE: 1 is the MAIN panel and 2 the secondary, the same
   numbering `sc1`/`sc2` and `wp1`/`wp2` use. See [`flameshot.md`](../apps/flameshot.md).

@@ -29,7 +29,7 @@ Scope {
             // Exclusive: every key lands here and dies, so nothing types into the agent's terminal.
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
-            // A Wayland inhibitor, which hypridle honours: the 5-min lock would draw hyprlock over the
+            // A Wayland inhibitor, which hypridle honours: the 5-min lock would draw the lock screen over the
             // black. The idle clock starts over on Enter, so leaving it alone still locks.
             IdleInhibitor {
                 window: win

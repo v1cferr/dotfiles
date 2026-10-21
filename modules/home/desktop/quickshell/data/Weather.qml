@@ -12,6 +12,7 @@ Singleton {
     // Never an old forecast shown as current: a run older than 12 h (two missed ECMWF IFS runs) is
     // no forecast at all. docs/notes/desktop/weather.md#the-failure-paths
     readonly property bool ok: !isNaN(root.temp) && feed.updatedAt > 0 && Date.now() / 1000 - feed.updatedAt < 12 * 3600
+    readonly property bool loading: feed.data === null // the cache not read yet, not "no forecast"
     property real temp: NaN
     property real feels: NaN
     property int code: -1

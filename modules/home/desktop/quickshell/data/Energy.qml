@@ -9,6 +9,7 @@ Singleton {
     id: root
 
     property var doc: ({})
+    readonly property bool loading: root.doc.status === undefined // nothing read yet, not "no data"
     readonly property bool ok: root.doc.status === "ok" || root.doc.status === "stale"
     readonly property bool stale: root.doc.status === "stale"
     readonly property real measured: root.num(root.doc.measured_w)

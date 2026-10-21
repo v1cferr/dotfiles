@@ -142,6 +142,13 @@ Tocando replaces Clima while a player PLAYS (`Quickshell.Services.Mpris`, live),
 the artist and a vermilion progress line. The old bridge script and the once-per-lock layout choice
 are gone: the card follows the player while locked.
 
+**Loading is not "no data".** Until a card's source has answered once, its content stays hidden
+under a pulsing skeleton of the same shape (the hero, the chart, the context line; three rows for
+Processos), and fades in when the data arrives. Each source says when it is still loading:
+`Energy.loading` (power-log not read yet), `ClaudeUsage.error === "loading"` and `Weather.loading`
+(glance-feed's cache not read yet), a CPU % that needs its second sample (2 s) and a process
+ranking that needs its second (5 s). Only after that does a missing source say so in words.
+
 **Real glass.** `LiquidGlass.qml` samples the print under the card (`ShaderEffectSource` on the
 region it covers), blurs it and carries its color through (`MultiEffect`: blur 1.0 of 64, saturation
 0.35, brightness -0.08), then a tint of the palette's bg, a top sheen, a hairline rim and a soft

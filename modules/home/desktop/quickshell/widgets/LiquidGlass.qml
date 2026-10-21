@@ -18,6 +18,7 @@ Item {
     property color tint: Theme.colBgSolid
     property real tintAlpha: 0.38 // raise it until the content reads; the caller measures
     default property alias content: inner.data
+    property real contentOpacity: 1 // what a caller fades (a card while its data loads), never the glass
     // Where the pane sits on the backdrop. A binding cannot see an ancestor move (a Column laying
     // its children out), so it is re-read after layout and on every change of size.
     property rect region: Qt.rect(0, 0, 0, 0)
@@ -102,5 +103,6 @@ Item {
     Item {
         id: inner
         anchors.fill: parent
+        opacity: glass.contentOpacity
     }
 }

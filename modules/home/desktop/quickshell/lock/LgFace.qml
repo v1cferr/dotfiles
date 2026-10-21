@@ -120,6 +120,7 @@ Item {
 
         Card {
             id: energy
+            loading: Energy.loading
             backdrop: wall
             width: face.full
             height: 300
@@ -151,6 +152,7 @@ Item {
 
         Card {
             id: claude
+            loading: ClaudeUsage.error === "loading"
             backdrop: wall
             width: face.full
             height: 300
@@ -202,6 +204,8 @@ Item {
             spacing: face.gap
             Card {
                 id: sys
+                loading: isNaN(System.cpuPct)
+                shape: "hero"
                 backdrop: wall
                 width: face.half
                 height: 300
@@ -232,6 +236,8 @@ Item {
             }
             Card {
                 id: procs
+                loading: System.topCpu.length === 0
+                shape: "list"
                 backdrop: wall
                 width: face.half
                 height: 300
@@ -281,6 +287,8 @@ Item {
 
         Card {
             id: weather
+            loading: Weather.loading
+            shape: "hero"
             visible: !face.player
             backdrop: wall
             width: face.full

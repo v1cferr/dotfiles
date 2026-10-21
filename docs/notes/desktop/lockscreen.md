@@ -150,12 +150,15 @@ Processos), and fades in when the data arrives. Each source says when it is stil
 ranking that needs its second (5 s). Only after that does a missing source say so in words.
 
 **Real glass.** `LiquidGlass.qml` samples the print under the card (`ShaderEffectSource` on the
-region it covers), blurs it and carries its color through (`MultiEffect`: blur 1.0 of 64, saturation
+region it covers), blurs it and carries its color through (`MultiEffect`: blur 0.6 of 64, saturation
 0.35, brightness -0.08), then a tint of the palette's bg, a top sheen, a hairline rim and a soft
-`RectangularShadow`. The tint is measured, not guessed: an `Ink` over the cards' area finds how much
-dark tint keeps light text AA on THIS print (at least 0.32). The region is re-read after layout,
-because a binding cannot see an ancestor (the Column) move its children. It samples an Item, not
-the compositor, so it works over the lock's own print, not over windows.
+`RectangularShadow`. The glass is CLEAR, the user's pick from a bake-off of four levels on
+21/10/2026: the tint is 0.6 of the shade an `Ink` over the cards' area measures (the dark tint
+that would keep light text AA on THIS print), over a 0.06 floor, so the print shows through; a
+dark halo on the card's content (`contentHalo`) holds the type where that thin tint alone would
+not. The region is re-read after layout, because a binding cannot see an ancestor (the Column)
+move its children. It samples an Item, not the compositor, so it works over the lock's own
+print, not over windows.
 
 **The numbers are honest.** Energy is the MEASURED CPU package plus GPU board, never "the PC's
 power"; a minute with no sample is a gap in the line, never a zero; RAM is used from

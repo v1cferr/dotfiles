@@ -19,6 +19,7 @@ Item {
     property real tintAlpha: 0.38 // raise it until the content reads; the caller measures
     default property alias content: inner.data
     property real contentOpacity: 1 // what a caller fades (a card while its data loads), never the glass
+    property bool contentHalo: false // a dark halo on the content, for a glass too thin to hold AA by its tint
     // Where the pane sits on the backdrop. A binding cannot see an ancestor move (a Column laying
     // its children out), so it is re-read after layout and on every change of size.
     property rect region: Qt.rect(0, 0, 0, 0)
@@ -104,5 +105,15 @@ Item {
         id: inner
         anchors.fill: parent
         opacity: glass.contentOpacity
+        layer.enabled: glass.contentHalo
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: "#000000"
+            shadowOpacity: 0.55
+            shadowBlur: 0.5
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: 1
+            blurMax: 24
+        }
     }
 }

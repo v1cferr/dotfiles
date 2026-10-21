@@ -17,7 +17,11 @@ Item {
     readonly property int gap: 24
     readonly property int full: face.width - 2 * face.margin
     readonly property int half: (face.full - face.gap) / 2
-    readonly property real tintAlpha: Math.max(0.32, Math.min(0.85, ink.result.shade + 0.08))
+    // A CLEAR glass (the user's pick from a bake-off of four, 21/10/2026): the print shows through a
+    // thin tint, 0.6 of the measured shade over a 0.06 floor, and a light blur; a dark halo on the
+    // type keeps it readable where the tint alone no longer would.
+    readonly property real tintAlpha: Math.max(0.06, Math.min(0.85, ink.result.shade * 0.6))
+    readonly property real glassBlur: 0.6
     readonly property var player: {
         const ps = Mpris.players.values;
         for (let i = 0; i < ps.length; i++)
@@ -125,6 +129,8 @@ Item {
             width: face.full
             height: 300
             tintAlpha: face.tintAlpha
+            blur: face.glassBlur
+            contentHalo: true
             label: "Energia"
             icon: "bolt"
             Hero {
@@ -157,6 +163,8 @@ Item {
             width: face.full
             height: 300
             tintAlpha: face.tintAlpha
+            blur: face.glassBlur
+            contentHalo: true
             label: "Claude Code"
             icon: "terminal"
             Row {
@@ -210,6 +218,8 @@ Item {
                 width: face.half
                 height: 300
                 tintAlpha: face.tintAlpha
+                blur: face.glassBlur
+                contentHalo: true
                 label: "Sistema"
                 icon: "memory"
                 Hero {
@@ -242,6 +252,8 @@ Item {
                 width: face.half
                 height: 300
                 tintAlpha: face.tintAlpha
+                blur: face.glassBlur
+                contentHalo: true
                 label: "Processos"
                 icon: "leaderboard"
                 Column {
@@ -294,6 +306,8 @@ Item {
             width: face.full
             height: 240
             tintAlpha: face.tintAlpha
+            blur: face.glassBlur
+            contentHalo: true
             label: "Clima"
             icon: "partly_cloudy_day"
             Row {
@@ -335,6 +349,8 @@ Item {
             width: face.full
             height: 240
             tintAlpha: face.tintAlpha
+            blur: face.glassBlur
+            contentHalo: true
             label: "Tocando"
             icon: "music_note"
             Column {

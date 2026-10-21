@@ -9,8 +9,7 @@ Item {
 
     required property var auth
     required property string screenName
-    readonly property bool primary: face.screenName === Theme.primaryMonitor || face.screenName === (Quickshell.env("LOCK_PRIMARY") || "")
-    readonly property string session: Quickshell.env("LOCK_SESSION") || ""
+    readonly property bool primary: face.screenName === (Quickshell.env("LOCK_PRIMARY") || Theme.primaryMonitor)
 
     focus: true
     Component.onCompleted: face.forceActiveFocus()
@@ -26,19 +25,18 @@ Item {
         event.accepted = true;
     }
 
-    Image {
+    Loader {
         anchors.fill: parent
-        source: face.session ? "file://" + face.session + (face.primary ? "/primary" : "/secondary") : ""
-        fillMode: Image.PreserveAspectCrop
-        asynchronous: false
-        cache: false
+        sourceComponent: face.primary ? asus : lg
     }
-
-    Text {
-        visible: face.primary
-        anchors.centerIn: parent
-        text: "•".repeat(face.auth.buffer.length) || (face.auth.busy ? "…" : "senha")
-        color: face.auth.fails > 0 ? Theme.colRed : Theme.colText
-        font.pixelSize: 40
+    Component {
+        id: asus
+        AsusFace {
+            auth: face.auth
+        }
+    }
+    Component {
+        id: lg
+        LgFace {}
     }
 }

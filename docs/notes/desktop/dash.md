@@ -512,3 +512,15 @@ chair, and the detail is there for the hand that asks.
   same object, but Quickshell returns a new JS wrapper for it, so `===` was always false and the
   card never opened. The stage now carries a `tipBand` property naming its band, and the walk stops
   there.
+
+## Charts read out under the pointer (21/10/2026)
+
+The user asked to interact with the charts, cleanly and usefully, unlocked as well as locked. Every
+`widgets/Sparkline.qml` (the energy panel, the Claude page, the tiles, the service cards and the
+bar's popovers) now reads out under the pointer: the bar under it stays lit, the others dim, and a
+small label shows its value, and its clock time when the caller says how far apart the samples are
+(`stepS`: 60 for energy, 3600 for the Claude week). The weather page's curve (`WeatherChart.qml`)
+does the same per hour: a hairline, a dot on the curve, and `HHh · temperature · rain`. Nothing
+moves and nothing needs a click; it is the same readout as the lock's charts
+([lockscreen.md](lockscreen.md)), in the band's own type. Unlike a `Tip`, it shows at once: a
+chart is read by sweeping the pointer along it, and a delay would break the sweep.

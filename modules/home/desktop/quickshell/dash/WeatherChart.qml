@@ -265,4 +265,58 @@ Item {
             }
         }
     }
+
+    // The readout under the pointer: the nearest hour gets a hairline, a dot on the curve and a small
+    // label with its hour, temperature and chance of rain.
+    property int hover: -1
+    MouseArea {
+        anchors.fill: parent
+        hoverEnabled: true
+        acceptedButtons: Qt.NoButton
+        enabled: chart.n >= 2
+        onPositionChanged: mouse => chart.hover = Math.max(0, Math.min(chart.n - 1, Math.round((mouse.x - chart.pad) / chart.step)))
+        onExited: chart.hover = -1
+    }
+    Rectangle {
+        visible: chart.hover >= 0
+        x: chart.hover >= 0 ? chart.xAt(chart.hover) : 0
+        y: chart.plotTop
+        width: 1
+        height: chart.plotH
+        color: Theme.colText
+        opacity: 0.35
+    }
+    Rectangle {
+        visible: chart.hover >= 0
+        width: 8
+        height: 8
+        radius: 4
+        color: chart.hover >= 0 ? WeatherSky.temp(chart.hours[chart.hover].temp) : "transparent"
+        border.width: 2
+        border.color: Theme.colText
+        x: chart.hover >= 0 ? chart.xAt(chart.hover) - 4 : 0
+        y: chart.hover >= 0 ? chart.yAt(chart.hours[chart.hover].temp) - 4 : 0
+    }
+    Rectangle {
+        id: tip
+        readonly property var h: chart.hover >= 0 ? chart.hours[chart.hover] : null
+        visible: !!tip.h
+        z: 2
+        radius: Theme.radiusControl
+        color: Theme.colSurfaceTip
+        border.width: Theme.hairline
+        border.color: Theme.colEdge
+        width: tipText.implicitWidth + 2 * Theme.sp2
+        height: tipText.implicitHeight + 2 * Theme.sp1
+        x: chart.hover >= 0 ? Math.max(0, Math.min(chart.width - width, chart.xAt(chart.hover) - width / 2)) : 0
+        y: chart.plotTop + chart.plotH - height - Theme.sp1 // at the foot: the curve and its dot stay clear
+        Text {
+            id: tipText
+            anchors.centerIn: parent
+            text: tip.h ? ("0" + tip.h.hour).slice(-2) + "h  ·  " + Math.round(tip.h.temp) + "°  ·  rain " + Math.round(tip.h.precip || 0) + "%" : ""
+            color: Theme.colText
+            font.family: Theme.uiFont
+            font.pixelSize: Theme.fontSmall
+        }
+    }
 }

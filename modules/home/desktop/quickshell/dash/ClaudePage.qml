@@ -131,6 +131,8 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
             series: ClaudeUsage.series("w", 7 * 86400, 3600)
+            stepS: 3600
+            unit: "%"
             fill: Theme.colMauve
             placeholder: "collecting…"
         }

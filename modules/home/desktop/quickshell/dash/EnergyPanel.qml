@@ -110,6 +110,8 @@ ColumnLayout {
         Layout.minimumHeight: 36
         series: Energy.history
         scaleTop: panel.scaleMax
+        stepS: 60
+        unit: " W"
         fill: Theme.colPeach
         placeholder: Energy.ok ? "collecting…" : "no power-log samples"
     }

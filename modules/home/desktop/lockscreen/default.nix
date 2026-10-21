@@ -287,7 +287,7 @@ let
   };
 
   # The observability adapter (docs/notes/desktop/lockscreen.md#the-lg-while-locked): stdlib only.
-  # `observe json energy` is also what the glance band's energy panel runs (dash/EnergyLog.qml).
+  # The band reads the same power-log CSV through quickshell/data/Energy.qml.
   observe = writeShellApplication {
     name = "observe";
     runtimeInputs = [ python3 ];

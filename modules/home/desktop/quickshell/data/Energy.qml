@@ -1,6 +1,6 @@
 pragma Singleton
-// The measured CPU + GPU watts from power-log, through the same adapter the lock screen reads
-// (`observe json energy`), once a minute: power-log writes once a minute. docs/notes/desktop/dash.md
+// The measured CPU + GPU watts from power-log, once a minute (power-log writes once a minute), for
+// the band and the lock. The math is EnergyMath.qml; this only reads. docs/notes/desktop/dash.md
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -34,20 +34,17 @@ Singleton {
         return v === null || v === undefined ? NaN : Number(v);
     }
 
+    EnergyMath {
+        id: math
+    }
+
+    // The last two monthly files (a week can straddle a month), 7 days of minutes at most.
     Process {
         id: proc
-        command: ["observe", "json", "energy"]
+        command: ["sh", "-c", "cd \"${POWER_LOG_DIR:-/var/lib/power-log}\" 2>/dev/null || exit 0; f=$(ls -1 -- *.csv 2>/dev/null | tail -n 2); [ -n \"$f\" ] || exit 0; for x in $f; do head -n 1 -- \"$x\"; tail -n 10080 -- \"$x\"; done"]
         running: true
         stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    root.doc = JSON.parse(text);
-                } catch (e) {
-                    root.doc = {
-                        status: "missing"
-                    };
-                }
-            }
+            onStreamFinished: root.doc = math.energy(text, Date.now() / 1000, 1800)
         }
     }
     Timer {

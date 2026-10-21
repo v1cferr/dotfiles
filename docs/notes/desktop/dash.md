@@ -454,13 +454,13 @@ view for long:
   spelled out, from the bar's own clock (`timeStr`, no second timer); on the right, the sky's glyph,
   the temperature and the condition from the bar's forecast (no second Open-Meteo request). The full
   forecast stays on the WEATHER page of the rotation.
-- **ENERGY** (`EnergyPanel.qml`, data in `EnergyLog.qml`), kept as it was and given the rest of the
+- **ENERGY** (`EnergyPanel.qml`, data in `data/Energy.qml`), kept as it was and given the rest of the
   height: the MEASURED CPU package plus GPU board watts, their split, the power profile and the
   GPU's render idle, and the last 30 min as one bar a minute on a zero-based scale (a minute with no
   sample is a hole, drawn as one). The footnote says "CPU + GPU measured", never the PC's power: the
-  board, RAM, disks, PSU and monitors have no sensor. The data is `observe json energy` once a
-  minute: the SAME adapter the lock screen's LG card reads (docs/notes/desktop/lockscreen.md), so
-  the two screens cannot disagree.
+  board, RAM, disks, PSU and monitors have no sensor. The data is power-log's CSV once a
+  minute, parsed by `data/EnergyMath.qml`: the SAME singleton the lock screen's LG card reads
+  (docs/notes/desktop/lockscreen.md), so the two screens cannot disagree.
 
 Claude is NOT in this card any more: the persistent panel repeated the CLAUDE page of the rotation
 (the same numbers twice whenever that page was up), so it left with its `Ring.qml`, and the page

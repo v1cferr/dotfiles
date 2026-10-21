@@ -16,6 +16,7 @@ Item {
     readonly property bool ready: img.status === Image.Ready
     readonly property bool failed: img.status === Image.Error || (wall.listed && wall.path === "")
     property bool listed: false
+    property real dim: 0.55 // the user's pick from four levels (21/10/2026): night, the type leaps
     readonly property var focal: {
         const f = wall.meta.focus;
         return Array.isArray(f) && f.length === 2 ? [Math.min(1, Math.max(0, f[0])), Math.min(1, Math.max(0, f[1]))] : [0.5, 0.5];
@@ -54,6 +55,13 @@ Item {
         mipmap: true
         onStatusChanged: if (status === Image.Ready)
             wall.shown()
+    }
+    // The print, dimmed for the type and the night. Inside the Wallpaper on purpose: the ink and the
+    // glass measure what is SHOWN, so their contrast already counts the dimming.
+    Rectangle {
+        anchors.fill: parent
+        color: "black"
+        opacity: wall.dim
     }
 
     FileView {

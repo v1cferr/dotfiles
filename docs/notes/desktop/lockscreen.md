@@ -241,6 +241,12 @@ skipping the last five shown on that monitor (`seen-primary.json`, `seen-seconda
 100 Mpx print never lands in memory at full size, and cropped around the sidecar's optional
 `"focus": [x, y]`.
 
+**Dimmed by 55% (21/10/2026)**, the user's pick from four levels in real captures: a black layer
+over the print inside `Wallpaper.qml`, so the ink and the glass measure what is SHOWN and their
+contrast already counts it (on the dimmed prints the ASUS's clock turns to the light ink by
+itself). It is for the type, and for the mood; on these LCD panels the energy is the backlight's,
+which the lamp lowers while locked ([backlight.md](backlight.md)).
+
 ## Locking cannot depend on hypridle
 
 Until 10/08/2026 the only path to locking was `loginctl lock-session`, which does NOT lock anything

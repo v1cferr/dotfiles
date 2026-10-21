@@ -68,6 +68,10 @@ let
         name = "lockscreen-quotes.json";
       };
       LOCK_STATE = "${config.xdg.stateHome}/lockscreen";
+      # The ASUS signature and seal: who I am from git's identity and the account, the logo as state.
+      LOCK_NAME = config.programs.git.settings.user.name;
+      LOCK_USER = config.home.username;
+      LOCK_LOGO = config.my.lockscreen.logo;
     };
     text = builtins.readFile ./scripts/lock-launch.sh;
   };
@@ -99,6 +103,12 @@ let
   c = key: a: "rgba(${p.${key}}${a})";
 in
 {
+  options.my.lockscreen.logo = lib.mkOption {
+    type = lib.types.str;
+    default = "${config.home.homeDirectory}/.dropbox-hm/Dropbox/Obsidian/v1cferr/5-Planning/5.7-@v1cferr/5.7.1-Logo/As Profile Pic/SVG/1018x1018.svg";
+    description = "My logo's SVG, as STATE: the lock's seal reads it at lock time, never copied into git. Missing means no seal, never no lock.";
+  };
+
   config = {
     # hyprlock: ONLY the fallback, plain on purpose (no labels, no images, nothing to fail): the
     # palette, the time and the field on every output, so it unlocks even with a monitor gone.

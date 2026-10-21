@@ -46,7 +46,7 @@ Item {
                 x: 0.05,
                 y: 0.12,
                 w: 0.2,
-                h: 0.56
+                h: 0.64
             }
         ]
         onMeasuredChanged: if (ink.measured)
@@ -181,6 +181,35 @@ Item {
                 font.family: "Geist"
                 font.weight: Font.Light
                 font.pixelSize: 30
+            }
+            // The signature and the seal, as a print carries its artist's: whose machine this is, in the
+            // same ink, under the date.
+            Row {
+                anchors.right: face.onRight ? parent.right : undefined
+                topPadding: 36
+                spacing: 18
+                Column {
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 2
+                    Text {
+                        anchors.right: face.onRight ? parent.right : undefined
+                        text: Quickshell.env("LOCK_NAME") || ""
+                        color: face.col
+                        font.family: "Geist"
+                        font.pixelSize: 26
+                    }
+                    Text {
+                        anchors.right: face.onRight ? parent.right : undefined
+                        text: Quickshell.env("LOCK_USER") || ""
+                        color: face.col
+                        opacity: 0.8
+                        font.family: "Geist Mono"
+                        font.pixelSize: 18
+                    }
+                }
+                Seal {
+                    anchors.verticalCenter: parent.verticalCenter
+                }
             }
         }
     }

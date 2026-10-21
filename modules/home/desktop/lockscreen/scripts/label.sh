@@ -17,11 +17,23 @@ out() {
   printf '%s' "$m"
 }
 
+# The ASUS ink's color into $REPLY: the session's `ink` file says dark or light (light if absent).
+ink_color() {
+  slurp "$session/ink"
+  if [ "${REPLY%%$'\n'*}" = dark ]; then REPLY="$LOCK_COL_INK_DARK"; else REPLY="$LOCK_COL_TEXT"; fi
+}
+
 case "${1:-}" in
 date)
   export LC_TIME=pt_BR.UTF-8
   printf -v d '%(%A  ·  %d de %B  ·  semana %V)T' -1
-  printf '<span letter_spacing="1024">%s</span>' "${d^}"
+  ink_color
+  printf '<span letter_spacing="1024" foreground="#%s">%s</span>' "$REPLY" "${d^}"
+  ;;
+ink)
+  # $2 in the ASUS print's ink: dark on a light print, light on a dark one (the renderer chose it).
+  ink_color
+  printf '<span foreground="#%s">%s</span>' "$REPLY" "${2:?}"
   ;;
 weather)
   # $2: all | now | day (the file splits them at a `--` line); $3: the layout it belongs to, if any.
@@ -98,7 +110,7 @@ hint)
     "$LOCK_COL_BG" "$LOCK_COL_TEXT" "$LOCK_TXT_HINT"
   ;;
 *)
-  echo "usage: lockscreen-label date|weather [all|now|day] [layout]|media|only <layout> <markup>|obs <card>|quote|hint" >&2
+  echo "usage: lockscreen-label date|ink <text>|weather [all|now|day] [layout]|media|only <layout> <markup>|obs <card>|quote|hint" >&2
   exit 2
   ;;
 esac

@@ -32,6 +32,10 @@ put "$(resolve "secondary-$layout")" secondary
 q="$cache/ready/quote"
 [ -s "$q" ] || q="$fallback/quote"
 cp -f "$q" "$session/.quote.$$" && mv -f "$session/.quote.$$" "$session/quote"
+# The ink the ASUS image was composed for (light or dark), so the type matches its own print.
+k="$cache/ready/ink"
+[ -s "$k" ] || k="$fallback/ink"
+cp -f "$k" "$session/.ink.$$" && mv -f "$session/.ink.$$" "$session/ink"
 printf '%s' "$layout" > "$session/.layout.$$" && mv -f "$session/.layout.$$" "$session/layout"
 rm -f "$session/media" # the bridge writes a fresh one; a stale track must not show
 exit 0

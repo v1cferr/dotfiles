@@ -69,8 +69,8 @@ let
     clear-gradient = {
       solid = false;
       gradient = true;
-      alphaMin = 0.45; # the floor; each card starts at its own baseline (geometry.nix)...
-      alphaMax = 0.92; # ...and goes denser only as far as contrast needs
+      alphaMin = 0.2; # the lightest base a card may have (each sets its own)...
+      alphaMax = 0.92; # ...and the most a text zone may be shaded on top of it, only as contrast needs
       tint = 0.2;
       brightness = 0.95;
       contrast = 0.95;
@@ -121,13 +121,24 @@ let
   pt = {
     clock = 144; # editorial: HH:MM:SS at ONE size, Thin, tabular, the seconds in a quieter blue
     date = 15;
-    name = 20; # the identity group, under the avatar
+    name = 20; # the identity group, under the logo
     nick = 13;
     quote = 21;
     title = 12; # a card's header on the LG: tracked caps
     body = 15; # the LG cards' running text, read from the chair
   };
   colsOf = width: size: builtins.floor (width / (0.84 * size)); # how many columns a width holds
+
+  # The LG cards' glass (v5.2), picked from a Crystal / Adaptive Glass+ / Frosted study on the same
+  # print and data: a light base and a light frost so the print reads through, contrast added only
+  # under the text (docs/notes/desktop/lockscreen.md). The ASUS field and quote share its frost.
+  lgMaterial = {
+    alpha = 0.42;
+    glass = {
+      blurSigma = 12.0;
+      tint = 0.12;
+    };
+  };
 
   # The ONE spec the renderer reads: palette, profile, geometry, pools, fallbacks (rule 11).
   aa = {
@@ -142,12 +153,17 @@ let
       rim = 0.28; # the optical rim: text-colored light, full at the top edge, gone by mid-height
       sheen = 0.06; # colSheen: text at 0x0f
       hairline = 1;
+      # HyprGlass's fresnel, static: light along the whole inner edge, gone 14 px in.
+      fresnel = {
+        alpha = 0.1;
+        width = 14;
+      };
     };
-    # Editorial: text straight over the art, a feathered shade behind it, as dense as AA needs.
-    scrim = {
-      feather = 220;
-      alphaMin = 0.2;
-      alphaMax = 0.94;
+    # Editorial (v5.2): a soft halo under each line of type on the ASUS, as dense as THAT line needs.
+    halo = {
+      feather = 70; # wide and soft: atmosphere under a line, never a shape of its own
+      max = 0.5; # with the ink chosen per print, a halo is the exception, and a gentle one
+      paper = "f4efe4"; # under DARK ink the halo lightens like mist on washi, not with a palette tint
     };
     # Glass+: a soft, deep elevation under the panel, light from above, a whisper of lens at the rim.
     shadow = {
@@ -170,9 +186,9 @@ let
     # out if the file is missing, so it can never stand between me and the lock.
     logo = {
       path = config.my.lockscreen.logo;
-      size = 72; # the emblem inside the 112 px avatar, by its ink
-      card = "avatar";
-      dy = 0;
+      size = 64; # frameless, by its ink, above the name: a signature, not a badge
+      card = "column";
+      dy = 33;
       color = "text";
     };
     contrast = aa;
@@ -207,23 +223,38 @@ let
         fallback = wallMain;
         layouts.main = [
           # Every line of the column is in `text`, so only it needs AA: a lighter shade over bright paper.
-          (cards.column // { contrast.text = aa.text; })
-          (cards.avatar // { contrast.text = aa.text; }) # the logo is drawn in `text`
+          # The ink follows the print (render.py); a halo of the opposite tone only where a line needs it.
+          (
+            cards.column
+            // {
+              contrast.text = aa.text;
+              inks = {
+                light = "text";
+                dark = "bg";
+              };
+            }
+          )
           # The field's failure text and the red hairline sit on this glass.
           (
             cards.auth
             // {
-              contrast = aa // {
-                red = 4.5;
-              };
+              inherit (lgMaterial) glass;
+              contrast.text = aa.text; # the placeholder, the dots and the PAM text are all `text`
             }
           )
-          (cards.quote // { contrast = aa; })
+          (
+            cards.quote
+            // {
+              inherit (lgMaterial) glass;
+              contrast.text = aa.text; # the quote, its original and its credit are all `text`
+            }
+          )
         ];
       };
       secondary = {
         name = secondary;
-        inherit (geo.monitors.secondary) size layouts;
+        inherit (geo.monitors.secondary) size;
+        layouts = lib.mapAttrs (_: map (c: c // lgMaterial)) geo.monitors.secondary.layouts;
         pools = [ wallDir ]; # the art I keep for the standing monitor, as in v1
         fallback = wallSecondary;
       };
@@ -289,6 +320,7 @@ let
       LOCK_META_SIZE = toString (13 * 1024); # a card's meta line, absolute: pango ignores a percentage
       LOCK_COL_TEXT = p.text;
       LOCK_COL_BG = p.bg;
+      LOCK_COL_INK_DARK = p.bg; # the ASUS type on a light print: Tokyo Night's own dark, as sumi
       LOCK_TXT_NO_WEATHER = txt.noWeather;
       LOCK_TXT_NO_MEDIA = txt.noMedia;
       LOCK_TXT_HINT = txt.hint;
@@ -299,9 +331,18 @@ let
   };
   labelBin = lib.getExe label;
   # The clock, inlined (its last line), with hyprlang's `##` for every `#`.
-  clockCmd = lib.replaceStrings [ "#" "@ACCENT@" ] [ "##" p.accent ] (
-    lib.last (lib.splitString "\n" (lib.removeSuffix "\n" (builtins.readFile ./scripts/clock.sh)))
-  );
+  clockCmd =
+    lib.replaceStrings
+      [ "#" "@ACCENT@" "@TEXT@" "@DARK@" "@DARKACCENT@" "@INK@" ]
+      [
+        "##"
+        p.accent
+        p.text
+        p.bg
+        p.border # the seconds on a light print: Tokyo Night's dark indigo, still a blue
+        "${session}/ink"
+      ]
+      (lib.last (lib.splitString "\n" (lib.removeSuffix "\n" (builtins.readFile ./scripts/clock.sh))));
 
   mediaBridge = writeShellApplication {
     name = "lockscreen-media-bridge";
@@ -465,8 +506,8 @@ let
     shadow_color = c "shadow" "99";
     shadow_boost = 1.0;
   };
-  # A label at a point inside a card, centered on it.
-  # On the ASUS no text shadow: the scrim already holds AA, and crisp type is the editorial look.
+  # A label at a point inside a card, centered on it. No text shadow on the ASUS: the ink follows the
+  # print, and a dark shadow under dark ink would only blur it.
   textAt = card: dx: dy: {
     position = at card dx dy;
     halign = "center";
@@ -541,13 +582,13 @@ in
           outline_thickness = 1;
           rounding = cards.auth.radius; # the glass under it has the same corner
           inner_color = "rgba(00000000)";
-          outer_color = c "border" "d9";
+          outer_color = c "text" "33"; # a quiet hairline at rest; the states below are the loud ones
           check_color = c "accent" "ff";
           fail_color = c "red" "ff";
           capslock_color = c "yellow" "ff";
           font_color = c "text" "ff";
           font_family = type.data;
-          placeholder_text = ''<span size="${toString (16 * 1024)}" foreground="##${p.subtext}">${icon 16 "lock"}  Digite sua senha</span>'';
+          placeholder_text = ''<span size="${toString (16 * 1024)}">${icon 16 "lock"}  Digite sua senha</span>''; # in `text`: one AA target, a lighter glass
           fail_text = "$PAMFAIL"; # in `text`: the red is the hairline's, the shade is measured for text
           dots_size = 0.25;
           dots_spacing = 0.35;
@@ -631,12 +672,12 @@ in
                 font_family = type.display;
               }
             )
-            # Under the avatar (its glass and logo are in the image): the name and the handle.
+            # Under the logo (frameless, drawn into the image): the name and the handle.
             (
               textAt cards.column 0 127
               // {
                 monitor = primary;
-                text = config.programs.git.settings.user.name;
+                text = "cmd[update:0] ${labelBin} ink ${lib.escapeShellArg config.programs.git.settings.user.name}";
                 color = c "text" "ff";
                 font_size = pt.name;
                 font_family = type.display;
@@ -646,7 +687,7 @@ in
               textAt cards.column 0 157
               // {
                 monitor = primary;
-                text = config.home.username;
+                text = "cmd[update:0] ${labelBin} ink ${config.home.username}";
                 color = c "text" "ff";
                 font_size = pt.nick;
                 font_family = type.data;

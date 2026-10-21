@@ -17,23 +17,25 @@ out() {
   printf '%s' "$m"
 }
 
-# The ASUS ink's color into $REPLY: the session's `ink` file says dark or light (light if absent).
-ink_color() {
-  slurp "$session/ink"
-  if [ "${REPLY%%$'\n'*}" = dark ]; then REPLY="$LOCK_COL_INK_DARK"; else REPLY="$LOCK_COL_TEXT"; fi
+# True when the cartouche is on side $1 (the session's `side` file; left if absent).
+on_side() {
+  slurp "$session/side"
+  [ "${REPLY%%$'\n'*}" = "$1" ] || { [ -z "$REPLY" ] && [ "$1" = left ]; }
 }
 
 case "${1:-}" in
 date)
+  # $2: the side this label belongs to; the weekday tracked over the day and month, in the ink.
+  on_side "${2:-left}" || exit 0
   export LC_TIME=pt_BR.UTF-8
-  printf -v d '%(%A  ·  %d de %B  ·  semana %V)T' -1
-  ink_color
-  printf '<span letter_spacing="1024" foreground="#%s">%s</span>' "$REPLY" "${d^}"
+  printf -v w '%(%A)T' -1
+  printf -v d '%(%d de %B)T' -1
+  printf '<span letter_spacing="2048">%s</span>\n%s' "$w" "$d"
   ;;
-ink)
-  # $2 in the ASUS print's ink: dark on a light print, light on a dark one (the renderer chose it).
-  ink_color
-  printf '<span foreground="#%s">%s</span>' "$REPLY" "${2:?}"
+onside)
+  # $3, printed only when the cartouche is on side $2.
+  on_side "${2:?}" || exit 0
+  printf '%s' "${3:?}"
   ;;
 weather)
   # $2: all | now | day (the file splits them at a `--` line); $3: the layout it belongs to, if any.
@@ -110,7 +112,7 @@ hint)
     "$LOCK_COL_BG" "$LOCK_COL_TEXT" "$LOCK_TXT_HINT"
   ;;
 *)
-  echo "usage: lockscreen-label date|ink <text>|weather [all|now|day] [layout]|media|only <layout> <markup>|obs <card>|quote|hint" >&2
+  echo "usage: lockscreen-label date <side>|onside <side> <text>|weather [all|now|day] [layout]|media|only <layout> <markup>|obs <card>|quote|hint" >&2
   exit 2
   ;;
 esac

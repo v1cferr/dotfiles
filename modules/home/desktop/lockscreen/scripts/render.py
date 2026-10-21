@@ -17,7 +17,7 @@ from pathlib import Path
 from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter
 
 # Part of every cache key: bump it when the pixels this file draws change.
-RENDERER_VERSION = "5.2.0"
+RENDERER_VERSION = "5.3.0"
 
 # A photo is decoded through draft() at the screen's size, so a big one is not a bomb here.
 Image.MAX_IMAGE_PIXELS = 400_000_000
@@ -94,8 +94,8 @@ def check_layout(cards: list, size: tuple) -> list:
     for cid, (x0, y0, x1, y1) in rects:
         if x0 < 0 or y0 < 0 or x1 > size[0] or y1 > size[1]:
             problems.append(f"{cid} leaves the {size[0]}x{size[1]} screen")
-    # A halo is a shade ON the photo, so glass may sit on it; two surfaces may not overlap.
-    solid = [(cid, r) for (cid, r), c in zip(rects, cards) if c.get("material") != "halo"]
+    # A seal is STAMPED over the cartouche's corner, as on a print; any two other surfaces may not overlap.
+    solid = [(cid, r) for (cid, r), c in zip(rects, cards) if c.get("material") != "hanko"]
     for i, (a, ra) in enumerate(solid):
         for bid, rb in solid[i + 1 :]:
             if ra[0] < rb[2] and rb[0] < ra[2] and ra[1] < rb[3] and rb[1] < ra[3]:
@@ -316,7 +316,8 @@ def frost(region: Image.Image, glass: dict, bg: tuple, hue: tuple | None = None,
     out = Image.blend(out, Image.new("RGB", out.size, bg), glass["tint"])
     if hue and hue_alpha > 0:
         out = Image.blend(out, Image.new("RGB", out.size, hue), hue_alpha)
-    return out
+    # Vibrancy, as Liquid Glass does it: what shows through keeps (and gains) its color.
+    return ImageEnhance.Color(out).enhance(glass.get("saturation", 1.0))
 
 
 def zones_of(card: dict, size: tuple) -> list:
@@ -335,23 +336,10 @@ def zone_luminance(img: Image.Image, zones: list) -> float:
     return worst
 
 
-def soft_mask(size: tuple, rect: tuple, feather: int) -> Image.Image:
-    """A feathered stadium over `rect` (x0, y0, x1, y1) on a `size` canvas, grown by 3/4 of the
-    feather before a Gaussian of half of it, so its core is near full strength (~93%)."""
-    g = feather * 3 // 4
-    x0, y0, x1, y1 = rect
-    mask = Image.new("L", size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle(
-        (x0 - g, y0 - g, x1 + g - 1, y1 + g - 1), (min(x1 - x0, y1 - y0) + 2 * g) // 2, fill=255
-    )
-    return mask.filter(ImageFilter.GaussianBlur(feather / 2)) if feather > 0 else mask
-
-
-def passes(img: Image.Image, zone: list, targets: dict, pal: dict, ink: str = "text") -> bool:
+def passes(img: Image.Image, zone: list, targets: dict, pal: dict) -> bool:
     """Every target color keeps its contrast over the zone's worst pixels, the brightest 5% AND the
-    darkest 5% (light or dark ink, the same rule); a zone may carry its own target for the `ink`
-    as a fifth element (WCAG: 3.0 for large text such as the clock, 4.5 otherwise)."""
-    own = {ink: zone[4]} if len(zone) > 4 else targets
+    darkest 5%; a zone may carry its own `text` target as a fifth element (WCAG: 3.0 for large text)."""
+    own = {"text": zone[4]} if len(zone) > 4 else targets
     x, y, w, h = zone[:4]
     patch = img.crop((x, y, x + w, y + h))
     hi, lo = _percentile(patch, 0.95), _percentile(patch, 0.05)
@@ -359,25 +347,15 @@ def passes(img: Image.Image, zone: list, targets: dict, pal: dict, ink: str = "t
                for k, v in own.items())
 
 
-def local_contrast(img: Image.Image, zones: list, color: tuple, feather: int, ceil: float, targets: dict,
-                   pal: dict, ink: str = "text"):
-    """Protect each line of text ON ITS OWN, straight on the print: a feathered shade of `color`
-    under that zone only, from nothing up to `ceil`, as dense as ITS text needs, so a bright patch
-    never darkens a whole column. Returns the image and the strongest shade used."""
-    shade = Image.new("RGB", img.size, color)
-    strongest = 0.0
-    for z in zones:
-        if passes(img, z, targets, pal, ink):
-            continue
-        mask = soft_mask(img.size, (z[0], z[1], z[0] + z[2], z[1] + z[3]), feather)
-        a, out = 0.0, img
-        for i in range(1, max(1, round(ceil / 0.02)) + 1):
-            a = round(min(ceil, 0.02 * i), 2)
-            out = Image.composite(shade, img, mask.point(lambda v, a=a: round(v * a)))
-            if passes(out, z, targets, pal, ink):
-                break
-        img, strongest = out, max(strongest, a)
-    return img, strongest
+def specular(size: tuple, radius: int, alpha: float) -> Image.Image:
+    """A soft specular sweep from the top-left corner, gone past the middle: light on a curved edge."""
+    w, h = size
+    n = 64
+    ramp = Image.new("L", (n, n))
+    ramp.putdata([round(255 * alpha * max(0.0, 1 - (x + y) / (1.1 * n)) ** 2) for y in range(n) for x in range(n)])
+    layer = Image.new("RGBA", size, (255, 255, 255, 0))
+    layer.putalpha(ImageChops.multiply(ramp.resize((w, h), Image.BICUBIC), rounded_mask(size, radius)))
+    return layer
 
 
 def fresnel(size: tuple, radius: int, color: tuple, alpha: float, width: int) -> Image.Image:
@@ -411,6 +389,8 @@ def glass_card(base: Image.Image, card: dict, spec: dict, seed: int) -> dict:
 
     hl = spec.get("highlight") or {"alpha": 0, "depth": 0.3}
     light = glow((w, h), text, hl["alpha"], hl["depth"])
+    if spec.get("specular"):  # part of the light the contrast is measured under, not added after it
+        light = Image.alpha_composite(light, specular((w, h), radius, spec["specular"]))
     if glass["solid"]:
         body = Image.alpha_composite(Image.new("RGBA", (w, h), (*bg, 255)), light).convert("RGB")
         alpha = 1.0
@@ -476,48 +456,73 @@ def glass_card(base: Image.Image, card: dict, spec: dict, seed: int) -> dict:
     }
 
 
-def ink_score(img: Image.Image, zones: list, color: tuple) -> float:
-    """How well an ink reads straight on the print: its worst contrast over every zone."""
-    out = []
-    for x, y, w, h, *_ in zones:
-        patch = img.crop((x, y, x + w, y + h))
-        L = luminance(color)
-        out.append(min(contrast(L, _percentile(patch, 0.95)), contrast(L, _percentile(patch, 0.05))))
-    return min(out) if out else 0.0
+def fibers(size: tuple, seed: int, density: float) -> Image.Image:
+    """Washi's fibers: a seeded scatter of short darker strokes, the same for the same seed."""
+    w, h = size
+    rng = random.Random(seed)
+    mask = Image.new("L", size, 0)
+    d = ImageDraw.Draw(mask)
+    for _ in range(int(w * h * density)):
+        x, y = rng.randrange(w), rng.randrange(h)
+        dx, dy = rng.randint(-9, 9), rng.randint(-3, 3)
+        d.line((x, y, x + dx, y + dy), fill=rng.randint(40, 110), width=1)
+    return mask.filter(ImageFilter.GaussianBlur(0.6))
 
 
-def halo_card(base: Image.Image, card: dict, spec: dict, seed: int) -> dict:
-    """Editorial legibility without a surface (v5.2). The INK follows the print: of the card's two
-    (`inks`: light, dark), the one that reads better straight on it, as sumi on paper or moonlight on
-    a night sky; then, only where a line still falls short, a soft halo of the opposite tone under
-    THAT line. The broad scrim it replaces darkened the whole column."""
-    pal, ha = spec["palette"], spec["halo"]
-    inks = card.get("inks") or {"light": "text", "dark": "bg"}
+def paper_card(base: Image.Image, card: dict, spec: dict, seed: int) -> dict:
+    """The cartouche (tanzaku), as the prints set their own titles: a washi slip with fibers and an
+    inner rule, opaque enough that its dark ink needs no help from the print under it."""
+    pal, pp = spec["palette"], spec["paper"]
     x0, t, r, b = card_rect(card, base.size)
     w, h = r - x0, b - t
-    f = card.get("feather", ha["feather"])
-    m = 2 * f
-    box = (max(0, x0 - m), max(0, t - m), min(base.width, r + m), min(base.height, b + m))
-    region = base.crop(box)
-    zones = [[z[0] + x0 - box[0], z[1] + t - box[1], *z[2:]] for z in zones_of(card, (w, h))]
-    scores = {name: ink_score(region, zones, rgb(pal[key])) for name, key in inks.items()}
-    ink = max(scores, key=scores.get)
-    key = inks[ink]
-    # Under dark ink the halo is PAPER (a neutral mist), not a palette tint that would color the print.
-    under = rgb(ha["paper"]) if ink == "dark" else rgb(pal[inks["dark"]])
-    targets = {key: v for v in (card.get("contrast") or spec["contrast"]).values()}
-    out, strongest = local_contrast(region, zones, under, f, ha["max"], targets, pal, key)
-    # Only where a halo reached: past it, the photo stays bit for bit (no dither noise).
-    touched = ImageChops.difference(out, region).convert("L").point(lambda v: 255 if v else 0)
-    base.paste(dither(out, seed), box[:2], touched)
-    return {
-        "id": card["id"],
-        "rect": [x0, t, r, b],
-        "alpha": 0.0,
-        "local": strongest,
-        "ink": ink,
-        "contrast": {key: round(ink_score(base.crop(box), zones, rgb(pal[key])), 2)},
-    }
+    radius = min(card.get("radius", 4), h // 2)
+    sh = spec.get("shadow")
+    if sh:
+        shadow(base, (x0, t, r, b), radius, rgb(pal["shadow"]), sh["alpha"] * 0.7, sh["sigma"] / 2, sh["dy"] // 2)
+    paper = rgb(pp["color"])
+    under = base.crop((x0, t, r, b))
+    slip = Image.blend(under, Image.new("RGB", (w, h), paper), pp["alpha"])
+    shade = tuple(round(c * 0.9) for c in paper)
+    slip = Image.composite(Image.new("RGB", (w, h), shade), slip, fibers((w, h), seed, pp["fibers"]))
+    ImageDraw.Draw(slip).rectangle((pp["rule"], pp["rule"], w - pp["rule"] - 1, h - pp["rule"] - 1),
+                                   outline=tuple(round(p * 0.65 + q * 0.35) for p, q in zip(paper, rgb(pal["bg"]))))
+    base.paste(dither(slip, seed), (x0, t), rounded_mask((w, h), radius))
+    worst = zone_luminance(base.crop((x0, t, r, b)), zones_of(card, (w, h)))
+    return {"id": card["id"], "rect": [x0, t, r, b], "alpha": pp["alpha"],
+            "contrast": {"bg": round(contrast(luminance(rgb(pal["bg"])), worst), 2)}}
+
+
+def hanko_card(base: Image.Image, card: dict, spec: dict, seed: int, logo) -> dict:
+    """My logo as the artist's seal: knocked out of a vermilion square, its ink uneven like a stamp.
+    No logo, no seal: a blank seal would be a mark that says nothing."""
+    x0, t, r, b = card_rect(card, base.size)
+    if logo is None:
+        return {"id": card["id"], "rect": [x0, t, r, b], "alpha": 0.0, "skipped": True}
+    hk, w, h = spec["hanko"], r - x0, b - t
+    seal = Image.new("RGB", (w, h), rgb(hk["color"]))
+    k = hk["logo"] / max(logo.size)
+    m = logo.resize((max(1, round(logo.width * k)), max(1, round(logo.height * k))), Image.LANCZOS)
+    seal.paste(Image.new("RGB", m.size, rgb(spec["paper"]["color"])), ((w - m.width) // 2, (h - m.height) // 2), m)
+    # The stamp's uneven ink: a seeded field of slightly lighter pressure, never holes.
+    rng = random.Random(seed)
+    press = Image.frombytes("L", (w, h), bytes(255 if rng.random() > 0.12 else 200 for _ in range(w * h)))
+    mask = ImageChops.multiply(rounded_mask((w, h), card.get("radius", 6)), press.filter(ImageFilter.GaussianBlur(0.8)))
+    base.paste(seal, (x0, t), mask)
+    return {"id": card["id"], "rect": [x0, t, r, b], "alpha": 1.0}
+
+
+def side_of(img: Image.Image, cards: list) -> str:
+    """Where the cartouche disturbs the print least: left, or the mirror on the right, by how much
+    detail (edges) each place holds. A tie stays left."""
+    gray = img.convert("L").filter(ImageFilter.FIND_EDGES)
+    def detail(sign):
+        total = 0.0
+        for c in cards:
+            x0, t, r, b = card_rect({**c, "center": [sign * c["center"][0], c["center"][1]]}, img.size)
+            patch = gray.crop((x0, t, r, b))
+            total += sum(patch.getdata()) / max(1, patch.width * patch.height)
+        return total
+    return "right" if detail(-1) < detail(1) * 0.9 else "left"
 
 
 def load_logo(spec: dict):
@@ -539,44 +544,24 @@ def load_logo(spec: dict):
     return mask.crop(box) if box else None
 
 
-def place_logo(base: Image.Image, mask: Image.Image, card: dict, lg: dict, color: tuple) -> list:
-    """Fit the logo into a `size` square without distortion, centered on the card's axis at `dy`
-    from its center, on whole pixels. Returns the rect it took (for the contrast zones)."""
-    s = lg["size"]
-    k = s / max(mask.size)
-    w, h = max(1, round(mask.width * k)), max(1, round(mask.height * k))
-    m = mask.resize((w, h), Image.LANCZOS)
-    cx = round(base.width / 2 + card["center"][0])
-    cy = round(base.height / 2 + card["center"][1] + lg["dy"])
-    x, y = cx - w // 2, cy - h // 2
-    base.paste(Image.new("RGB", (w, h), color), (x, y), m)
-    return [x, y, x + w, y + h]
-
-
-def logo_rect(mask: Image.Image, card: dict, lg: dict, size: tuple) -> list:
-    """Where place_logo will draw: (x0, y0, x1, y1) on the screen."""
-    k = lg["size"] / max(mask.size)
-    w, h = max(1, round(mask.width * k)), max(1, round(mask.height * k))
-    cx, cy = round(size[0] / 2 + card["center"][0]), round(size[1] / 2 + card["center"][1] + lg["dy"])
-    return [cx - w // 2, cy - h // 2, cx - w // 2 + w, cy - h // 2 + h]
-
-
 def compose(src: Image.Image, size: tuple, cards: list, spec: dict, focus: tuple, seed: int, logo=None):
     base = cover(src.convert("RGB"), size, focus)
-    lg = spec.get("logo") or {}
-    if logo is not None:  # the logo's halo exists only where a logo will be: it is a graphic (WCAG 3.0)
-        cards = [dict(c) for c in cards]
-        for c in cards:
-            if c["id"] == lg.get("card"):
-                x0, y0, x1, y1 = logo_rect(logo, c, lg, size)
-                left, top, *_ = card_rect(c, size)
-                c["zones"] = zones_of(c, tuple(c["size"])) + [[x0 - left, y0 - top, x1 - x0, y1 - y0, 3.0]]
-    report = [(halo_card if c.get("material") == "halo" else glass_card)(base, c, spec, seed + i)
-              for i, c in enumerate(cards)]
-    for c, rep in zip(cards, report):
-        if logo is not None and c["id"] == lg.get("card"):
-            ink = (c.get("inks") or {}).get(rep.get("ink"), lg.get("color", "text"))
-            rep["logo"] = place_logo(base, logo, c, lg, rgb(spec["palette"][ink]))
+    sided = [c for c in cards if c.get("sided")]
+    side = side_of(base, sided) if sided else None
+    if side == "right":  # the cartouche and its seal mirror across the axis, together
+        cards = [{**c, "center": [-c["center"][0], c["center"][1]]} if c.get("sided") else c for c in cards]
+    report = []
+    for i, c in enumerate(cards):
+        mat = c.get("material")
+        if mat == "paper":
+            rep = paper_card(base, c, spec, seed + i)
+        elif mat == "hanko":
+            rep = hanko_card(base, c, spec, seed + i, logo)
+        else:
+            rep = glass_card(base, c, spec, seed + i)
+        if c.get("sided"):
+            rep["side"] = side
+        report.append(rep)
     return base, report
 
 
@@ -605,7 +590,8 @@ def cache_key(digest: str, spec: dict, role: str, layout: str, size: tuple, focu
         "palette": spec["palette"],
         "glass": spec["glass"],
         "edge": spec["edge"],
-        "material": {k: spec.get(k) for k in ("shadow", "highlight", "hue", "refraction", "rimBand", "halo")},
+        "material": {k: spec.get(k) for k in ("shadow", "highlight", "hue", "refraction", "rimBand", "paper", "hanko",
+                                              "specular")},
         "contrast": spec["contrast"],
         "cards": spec["monitors"][role]["layouts"][layout],
         "size": list(size),
@@ -805,13 +791,13 @@ def render_role(spec, role, layouts, size, rng, files, assets, index, bad, logo=
     return None, None
 
 
-def ink_of(png: Path) -> str:
-    """The ink the ASUS image was composed for (its report beside the asset), light by default."""
+def side_of_set(png: Path) -> str:
+    """The side the ASUS image put its cartouche on (its report beside the asset), left by default."""
     try:
         meta = json.loads(png.resolve().with_suffix(".json").read_text())
-        return next((c["ink"] for c in meta["cards"] if "ink" in c), "light")
+        return next((c["side"] for c in meta["cards"] if c.get("side")), "left")
     except (OSError, ValueError, KeyError):
-        return "light"
+        return "left"
 
 
 def collect(cache: Path) -> None:
@@ -897,7 +883,7 @@ def cmd_prepare(args) -> int:
         haiku_ok = bool(src and sidecar(Path(src)).get("artist"))  # a print, not a bare photo
         quote = choose_quote(spec, rng, haiku_ok, spec.get("quotesSeen"))
         (stage / "quote").write_text(quote)
-        (stage / "ink").write_text(ink_of(stage / "primary-main.png"))
+        (stage / "side").write_text(side_of_set(stage / "primary-main.png"))
         (stage / "manifest.json").write_text(json.dumps(manifest, indent=1))
         final = cache / "sets" / set_id
         os.rename(stage, final)
@@ -924,8 +910,8 @@ def cmd_fallback(args) -> int:
                 img.save(out / f"{role}-{layout}.png", "PNG", compress_level=6)
                 report[f"{role}-{layout}"] = rep
     (out / "quote").write_text(format_quote(spec["quote"]["fallback"], spec))
-    inks = [c.get("ink") for c in report.get("primary-main", []) if c.get("ink")]
-    (out / "ink").write_text(inks[0] if inks else "light")
+    sides = [c["side"] for c in report.get("primary-main", []) if c.get("side")]
+    (out / "side").write_text(sides[0] if sides else "left")
     (out / "report.json").write_text(json.dumps(report, indent=1))
     return 0
 

@@ -19,49 +19,27 @@ let
     ];
   };
 
-  # ── ASUS, 2560x1440: editorial on one axis. The clock and date at the top; then who is
-  # unlocking, as ONE group (the logo, frameless, the name, the handle, the field); the quote at the
-  # foot. The art stays the protagonist: a soft halo under each LINE of type (v5.2, no broad scrim),
-  # light glass only where something sits on it (the field, the quote). ──
-  # `zones` are where text sits (card-relative x y w h, and its own contrast target if large:
-  # WCAG's 3.0 for large text, the card's 4.5 otherwise; the logo's zone comes from the logo itself).
-  column = card "column" 0 (-215) 1280 590 0 // {
-    material = "halo";
-    zones = [
-      [
-        240
-        8
-        800
-        140
-        3.0
-      ] # clock digits, 144 pt
-      [
-        400
-        174
-        480
-        30
-      ] # date
-      [
-        440
-        404
-        400
-        36
-        3.0
-      ] # name, 20 pt
-      [
-        520
-        440
-        240
-        24
-      ] # handle
-    ];
+  # ── ASUS, 2560x1440: the prints' own language. The time, the date and who I am sit on a washi
+  # cartouche (tanzaku) in a top corner, as a print sets its title, with my logo as the artist's
+  # seal stamped over its corner; the art keeps the middle. The field and the quote, on light glass,
+  # are centered at the foot. The cartouche and the seal are drawn on the LEFT and mirrored to the
+  # right when that side of the print is calmer (render.py `side_of`). ──
+  slip = card "slip" (-950) (-190) 260 760 0 // {
+    material = "paper";
+    radius = 4;
+    sided = true;
+  };
+  seal = card "seal" (-850) 180 104 104 0 // {
+    material = "hanko";
+    radius = 6;
+    sided = true;
   };
   # The field: hyprlock draws its state hairline on this glass, with the same corner.
-  auth = card "auth" 0 38 480 70 0.3 // {
+  auth = card "auth" 0 330 480 70 0.3 // {
     edge = false;
   };
-  # The quote on a light reading surface, its foot 182 px off the screen's edge.
-  quote = card "quote" 0 398 1200 280 0.22;
+  # The quote on a light reading surface, its foot 70 px off the screen's edge.
+  quote = card "quote" 0 530 1200 240 0.22;
 
   # ── LG, 1080x1920: independent Bento cards, each its own glass, the art visible between them.
   # 72 px margins, 24 px gaps, rows from 184 px down; the lower ~460 px stay the print. ──
@@ -105,7 +83,8 @@ in
   inherit radius;
   cards = {
     inherit
-      column
+      slip
+      seal
       auth
       quote
       ;
@@ -137,7 +116,8 @@ in
         1440
       ]; # the declared logical size; the renderer prefers the live one
       layouts.main = [
-        column
+        slip
+        seal
         auth
         quote
       ];

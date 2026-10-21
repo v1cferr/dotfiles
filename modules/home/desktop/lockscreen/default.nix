@@ -119,24 +119,26 @@ let
   # Type sizes (pt). One mono column is 0.8 px per pt at 96 dpi; hyprlock rounds the size up, and a
   # 12 pt column MEASURED 10 px on screen, so the columns are counted at 0.84 px per pt.
   pt = {
-    clock = 144; # editorial: HH:MM:SS at ONE size, Thin, tabular, the seconds in a quieter blue
+    clock = 100; # the cartouche's time, stacked HH / MM / SS, Thin, tabular
     date = 15;
-    name = 20; # the identity group, under the logo
+    name = 17;
     nick = 13;
-    quote = 21;
+    quote = 20;
     title = 12; # a card's header on the LG: tracked caps
     body = 15; # the LG cards' running text, read from the chair
   };
   colsOf = width: size: builtins.floor (width / (0.84 * size)); # how many columns a width holds
 
-  # The LG cards' glass (v5.2), picked from a Crystal / Adaptive Glass+ / Frosted study on the same
-  # print and data: a light base and a light frost so the print reads through, contrast added only
-  # under the text (docs/notes/desktop/lockscreen.md). The ASUS field and quote share its frost.
+  # The LG cards' glass (v5.3, Liquid Glass pushed further than v5.2's Adaptive Glass+): a light base,
+  # a light frost, vibrancy, round corners (docs/notes/desktop/lockscreen.md). The ASUS field and
+  # quote share its frost.
   lgMaterial = {
-    alpha = 0.42;
+    alpha = 0.36;
+    radius = 28;
     glass = {
-      blurSigma = 12.0;
-      tint = 0.12;
+      blurSigma = 14.0;
+      tint = 0.06;
+      saturation = 1.6; # what shows through keeps its color, as under Liquid Glass
     };
   };
 
@@ -150,21 +152,28 @@ let
     glass = profiles.${config.my.theme.glass};
     edge = {
       edge = 0.55; # colEdge: border at 0x8c
-      rim = 0.28; # the optical rim: text-colored light, full at the top edge, gone by mid-height
+      rim = 0.36; # the optical rim: text-colored light, full at the top edge, gone by mid-height
       sheen = 0.06; # colSheen: text at 0x0f
       hairline = 1;
-      # HyprGlass's fresnel, static: light along the whole inner edge, gone 14 px in.
+      # HyprGlass's fresnel, static: light along the whole inner edge, gone 18 px in.
       fresnel = {
-        alpha = 0.1;
-        width = 14;
+        alpha = 0.16;
+        width = 18;
       };
     };
-    # Editorial (v5.2): a soft halo under each line of type on the ASUS, as dense as THAT line needs.
-    halo = {
-      feather = 70; # wide and soft: atmosphere under a line, never a shape of its own
-      max = 0.5; # with the ink chosen per print, a halo is the exception, and a gentle one
-      paper = "f4efe4"; # under DARK ink the halo lightens like mist on washi, not with a palette tint
+    # The ASUS cartouche: washi, nearly opaque, with fibers and an inner rule, as the prints set their
+    # titles. Its colors are the prints' (paper, vermilion), not the palette's, on purpose.
+    paper = {
+      color = "f4efe4";
+      alpha = 0.93;
+      fibers = 1.2e-2; # strokes per pixel
+      rule = 8; # the inner rule's inset
     };
+    hanko = {
+      color = "c4342c"; # a seal's vermilion
+      logo = 68; # the logo knocked out of it, by its ink
+    };
+    specular = 0.1; # a soft sweep from the top-left of every glass card, gone past the middle
     # Glass+: a soft, deep elevation under the panel, light from above, a whisper of lens at the rim.
     shadow = {
       alpha = 0.35;
@@ -172,8 +181,8 @@ let
       dy = 14;
     };
     highlight = {
-      alpha = 0.09;
-      depth = 0.45;
+      alpha = 0.12;
+      depth = 0.35;
     };
     # The palette's accent breathed into the frost: Tokyo Night's blue, not a neutral gray glass.
     hue = {
@@ -182,22 +191,16 @@ let
     };
     refraction = 1.2e-2;
     rimBand = 6;
-    # The logo is STATE (my file, never in git): baked in at the head of the column, and simply left
-    # out if the file is missing, so it can never stand between me and the lock.
-    logo = {
-      path = config.my.lockscreen.logo;
-      size = 64; # frameless, by its ink, above the name: a signature, not a badge
-      card = "column";
-      dy = 33;
-      color = "text";
-    };
+    # The logo is STATE (my file, never in git): knocked out of the seal, and the seal simply left out
+    # if the file is missing, so it can never stand between me and the lock.
+    logo.path = config.my.lockscreen.logo;
     contrast = aa;
     # The quotes are CONTENT in the repo (curated, sourced); what was shown is STATE.
     quotesFile = ./quotes.json;
     quotesSeen = "${config.xdg.stateHome}/lockscreen/quotes-seen.json";
     quote = {
       columns = 66; # the quote card's 1104 px at 21 pt: Geist is proportional, ~7% narrower than a mono count
-      lines = 4;
+      lines = 3;
       originalColumns = 93; # the original and the credit, smaller, on the same 1104 px
       originalLines = 2;
       originalSize = 14;
@@ -222,18 +225,9 @@ let
         pools = [ wallWide ];
         fallback = wallMain;
         layouts.main = [
-          # Every line of the column is in `text`, so only it needs AA: a lighter shade over bright paper.
-          # The ink follows the print (render.py); a halo of the opposite tone only where a line needs it.
-          (
-            cards.column
-            // {
-              contrast.text = aa.text;
-              inks = {
-                light = "text";
-                dark = "bg";
-              };
-            }
-          )
+          # The cartouche carries dark ink (the palette's bg) on washi; the seal carries no text.
+          (cards.slip // { contrast.bg = aa.text; })
+          cards.seal
           # The field's failure text and the red hairline sit on this glass.
           (
             cards.auth
@@ -320,7 +314,6 @@ let
       LOCK_META_SIZE = toString (13 * 1024); # a card's meta line, absolute: pango ignores a percentage
       LOCK_COL_TEXT = p.text;
       LOCK_COL_BG = p.bg;
-      LOCK_COL_INK_DARK = p.bg; # the ASUS type on a light print: Tokyo Night's own dark, as sumi
       LOCK_TXT_NO_WEATHER = txt.noWeather;
       LOCK_TXT_NO_MEDIA = txt.noMedia;
       LOCK_TXT_HINT = txt.hint;
@@ -331,16 +324,17 @@ let
   };
   labelBin = lib.getExe label;
   # The clock, inlined (its last line), with hyprlang's `##` for every `#`.
-  clockCmd =
+  # One clock per side the cartouche can take; the one whose side the renderer did not pick prints
+  # nothing (the `side` file of the session).
+  clockFor =
+    side:
     lib.replaceStrings
-      [ "#" "@ACCENT@" "@TEXT@" "@DARK@" "@DARKACCENT@" "@INK@" ]
+      [ "#" "@SECONDS@" "@SIDE@" "@MYSIDE@" ]
       [
         "##"
-        p.accent
-        p.text
-        p.bg
-        p.border # the seconds on a light print: Tokyo Night's dark indigo, still a blue
-        "${session}/ink"
+        p.border # the seconds: Tokyo Night's dark indigo, still a blue, on washi
+        "${session}/side"
+        side
       ]
       (lib.last (lib.splitString "\n" (lib.removeSuffix "\n" (builtins.readFile ./scripts/clock.sh))));
 
@@ -506,8 +500,8 @@ let
     shadow_color = c "shadow" "99";
     shadow_boost = 1.0;
   };
-  # A label at a point inside a card, centered on it. No text shadow on the ASUS: the ink follows the
-  # print, and a dark shadow under dark ink would only blur it.
+  # A label at a point inside a card, centered on it. No text shadow on the ASUS: its type is ink on
+  # washi or text on glass, and a shadow would only blur it.
   textAt = card: dx: dy: {
     position = at card dx dy;
     halign = "center";
@@ -647,52 +641,75 @@ in
               body card dx dy "${labelBin} obs ${name}" 5000;
             half = lg.inner energy / 2 + lg.pad; # where the right half of a full-width card starts
           in
-          [
-            # ── ASUS: the time on top; who is unlocking as ONE group with the field; a thought at the
-            # foot. One axis. Offsets are from the column's center (geometry.nix). ──
-            # The time, with seconds, from the system clock (chrony/NTS). 995 and not 1000: hyprlock's
-            # timer runs ~0.7 ms long, and a period over 1 s MUST skip a second (measured in the notes).
+          # ── ASUS: the cartouche's type, once per side it can take (each label prints only on the side
+          # the renderer chose), and the quote under the field. Offsets are from the cartouche's center
+          # (geometry.nix); the time, with seconds, comes from the system clock (chrony/NTS), and
+          # 995 ms, not 1000, because hyprlock's timer runs ~0.7 ms long (measured in the notes).
+          lib.concatMap
             (
-              textAt cards.column 0 (-217)
-              // {
-                monitor = primary;
-                text = "cmd[update:995] ${clockCmd}";
-                color = c "text" "ff";
-                font_size = pt.clock;
-                font_family = "${type.display} Thin";
-              }
+              side:
+              let
+                slip =
+                  if side == "left" then
+                    cards.slip
+                  else
+                    cards.slip
+                    // {
+                      center = [
+                        (-(builtins.elemAt cards.slip.center 0))
+                        (builtins.elemAt cards.slip.center 1)
+                      ];
+                    };
+                ink = c "bg" "ff";
+              in
+              [
+                (
+                  textAt slip 0 (-170)
+                  // {
+                    monitor = primary;
+                    text = "cmd[update:995] ${clockFor side}";
+                    color = ink;
+                    font_size = pt.clock;
+                    font_family = "${type.display} Thin";
+                  }
+                )
+                (
+                  textAt slip 0 160
+                  // {
+                    monitor = primary;
+                    text = "cmd[update:60000] ${labelBin} date ${side}";
+                    color = ink;
+                    font_size = pt.date;
+                    font_family = type.data;
+                  }
+                )
+                (
+                  textAt slip 0 260
+                  // {
+                    monitor = primary;
+                    text = "cmd[update:0] ${labelBin} onside ${side} ${lib.escapeShellArg config.programs.git.settings.user.name}";
+                    color = ink;
+                    font_size = pt.name;
+                    font_family = type.display;
+                  }
+                )
+                (
+                  textAt slip 0 288
+                  // {
+                    monitor = primary;
+                    text = "cmd[update:0] ${labelBin} onside ${side} ${config.home.username}";
+                    color = ink;
+                    font_size = pt.nick;
+                    font_family = type.data;
+                  }
+                )
+              ]
             )
-            (
-              textAt cards.column 0 (-107)
-              // {
-                monitor = primary;
-                text = "cmd[update:60000] ${labelBin} date";
-                color = c "text" "ff";
-                font_size = pt.date;
-                font_family = type.display;
-              }
-            )
-            # Under the logo (frameless, drawn into the image): the name and the handle.
-            (
-              textAt cards.column 0 127
-              // {
-                monitor = primary;
-                text = "cmd[update:0] ${labelBin} ink ${lib.escapeShellArg config.programs.git.settings.user.name}";
-                color = c "text" "ff";
-                font_size = pt.name;
-                font_family = type.display;
-              }
-            )
-            (
-              textAt cards.column 0 157
-              // {
-                monitor = primary;
-                text = "cmd[update:0] ${labelBin} ink ${config.home.username}";
-                color = c "text" "ff";
-                font_size = pt.nick;
-                font_family = type.data;
-              }
-            )
+            [
+              "left"
+              "right"
+            ]
+          ++ [
             (
               textAt cards.quote 0 0
               // {

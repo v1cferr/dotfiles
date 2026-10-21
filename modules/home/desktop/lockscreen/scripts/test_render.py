@@ -55,10 +55,10 @@ class Geometry(unittest.TestCase):
         card = {"id": "c", "center": [0, 0], "size": [100, 50]}
         self.assertEqual(R.card_rect(card, (1000, 500)), (450, 225, 550, 275))
 
-    def test_glass_may_sit_on_a_halo(self):
-        shade = {"id": "s", "center": [0, 0], "size": [400, 400], "material": "halo"}
-        glass = {"id": "g", "center": [0, 0], "size": [100, 100]}
-        self.assertEqual(R.check_layout([shade, glass], (1000, 1000)), [])
+    def test_a_seal_may_be_stamped_over_a_surface(self):
+        slip = {"id": "s", "center": [0, 0], "size": [400, 400], "material": "paper"}
+        seal = {"id": "h", "center": [200, 200], "size": [100, 100], "material": "hanko"}
+        self.assertEqual(R.check_layout([slip, seal], (1000, 1000)), [])
 
     def test_overflow_and_overlap_are_caught(self):
         a = {"id": "a", "center": [0, 0], "size": [400, 400]}
@@ -71,15 +71,17 @@ class Geometry(unittest.TestCase):
         mon = SPEC["monitors"][role]
         return {c["id"]: R.card_rect(c, tuple(mon["size"])) for c in mon["layouts"][layout]}
 
-    def test_asus_is_editorial_on_one_axis(self):
+    def test_asus_cartouche_seal_field_and_quote(self):
         cards = {c["id"]: c for c in SPEC["monitors"]["primary"]["layouts"]["main"]}
-        self.assertEqual(list(cards), ["column", "auth", "quote"])  # no avatar: the logo is frameless
-        self.assertEqual(cards["column"]["material"], "halo")  # the type sits on the art, not a box
-        self.assertEqual(set(cards["column"]["inks"]), {"light", "dark"})
-        for k, (x0, _, x1, _) in self.rects("primary", "main").items():
-            self.assertEqual(x0 + x1, 2560, f"{k} is off the vertical axis")
+        self.assertEqual(list(cards), ["slip", "seal", "auth", "quote"])
+        self.assertEqual((cards["slip"]["material"], cards["seal"]["material"]), ("paper", "hanko"))
+        self.assertTrue(cards["slip"]["sided"] and cards["seal"]["sided"])  # they mirror together
         r = self.rects("primary", "main")
-        self.assertTrue(r["column"][1] <= r["auth"][1] and r["auth"][3] <= r["column"][3])
+        # The seal is stamped over the cartouche's lower corner, as on a print.
+        self.assertTrue(r["seal"][0] < r["slip"][2] < r["seal"][2] and r["seal"][1] < r["slip"][3] < r["seal"][3])
+        for k in ("auth", "quote"):  # the field and the quote stay on the axis
+            self.assertEqual(r[k][0] + r[k][2], 2560, k)
+        self.assertLess(r["auth"][3], r["quote"][1])
 
     def test_every_card_is_on_whole_pixels(self):
         for role, mon in SPEC["monitors"].items():
@@ -179,7 +181,7 @@ class Glass(unittest.TestCase):
     @staticmethod
     def floor(card):
         """The material's own floor: the scrim's or the glass's."""
-        return 0.0 if card.get("material") == "halo" else SPEC["glass"]["alphaMin"]
+        return SPEC["glass"]["alphaMin"]
 
     def every_layout(self, bright):
         with tempfile.TemporaryDirectory() as d:
@@ -191,8 +193,8 @@ class Glass(unittest.TestCase):
     def test_contrast_holds_over_a_bright_core(self):
         for cards, report in self.every_layout(True):
             for card, rep in zip(cards, report):
-                if card.get("material") == "halo":
-                    continue  # its ink and halo have their own tests (Editorial)
+                if card.get("material") in ("paper", "hanko"):
+                    continue  # the cartouche and the seal have their own tests (Cartouche)
                 for key, need in (card.get("contrast") or SPEC["contrast"]).items():
                     self.assertGreaterEqual(rep["contrast"][key], need, f"{rep['id']} {key}")
                 # Over a near-white core the material must have gone denser than its floor.
@@ -201,6 +203,8 @@ class Glass(unittest.TestCase):
     def test_dark_photo_keeps_each_cards_baseline(self):
         for cards, report in self.every_layout(False):
             for card, rep in zip(cards, report):
+                if card.get("material") in ("paper", "hanko"):
+                    continue
                 self.assertEqual(rep["alpha"], max(card.get("alpha", 0), self.floor(card)), rep["id"])
 
     def test_the_rim_is_lit_at_the_top_and_not_at_the_foot(self):
@@ -252,36 +256,59 @@ class Glass(unittest.TestCase):
         self.assertAlmostEqual(c, 10.6, 0)
 
 
-class Editorial(unittest.TestCase):
-    """The ASUS halo card: the ink follows the print, a halo only where a line still needs one."""
+class Cartouche(unittest.TestCase):
+    """The ASUS washi slip, the seal and the side the pair takes."""
 
-    CARD = {"id": "c", "center": [0, 0], "size": [1000, 400], "radius": 0, "material": "halo",
-            "inks": {"light": "text", "dark": "bg"}, "contrast": {"text": 4.5},
-            "zones": [[200, 100, 600, 80, 3.0], [300, 260, 400, 40]]}
+    SLIP = {"id": "slip", "center": [-950, -190], "size": [260, 760], "radius": 4, "material": "paper",
+            "sided": True}
+    SEAL = {"id": "seal", "center": [-850, 180], "size": [104, 104], "radius": 6, "material": "hanko",
+            "sided": True}
 
-    def compose(self, src):
-        return R.compose(src, src.size, [self.CARD], SPEC, (0.5, 0.5), 3)
+    def logo(self):
+        m = Image.new("L", (100, 100), 0)
+        ImageDraw.Draw(m).polygon([(0, 0), (100, 0), (50, 100)], fill=255)
+        return m
 
-    def test_dark_ink_on_a_light_print_needs_no_halo(self):
-        src = Image.new("RGB", (2560, 1440), (236, 226, 205))  # cream paper
-        out, rep = self.compose(src)
-        self.assertEqual(rep[0]["ink"], "dark")
-        self.assertEqual(rep[0]["local"], 0.0)
-        self.assertEqual(out.tobytes(), src.tobytes())  # the print is untouched
+    def test_the_slip_holds_dark_ink_at_aa_on_any_print(self):
+        for color in [(10, 10, 18), (250, 250, 250)]:
+            out, rep = R.compose(Image.new("RGB", (2560, 1440), color), (2560, 1440), [self.SLIP], SPEC, (0.5, 0.5), 3)
+            self.assertGreaterEqual(rep[0]["contrast"]["bg"], 4.5)
 
-    def test_light_ink_on_a_dark_print(self):
-        src = Image.new("RGB", (2560, 1440), (18, 22, 40))  # a night sky
-        _, rep = self.compose(src)
-        self.assertEqual(rep[0]["ink"], "light")
+    def test_no_logo_no_seal(self):
+        src = stripes((2560, 1440))
+        out, rep = R.compose(src, (2560, 1440), [self.SEAL], SPEC, (0.5, 0.5), 3, None)
+        self.assertTrue(rep[0]["skipped"])
+        self.assertEqual(out.tobytes(), R.cover(src, (2560, 1440), (0.5, 0.5)).tobytes())
 
-    def test_a_halo_only_where_a_line_falls_short_and_never_past_it(self):
-        src = stripes((2560, 1440))  # neither ink reads straight on bright colored stripes
-        out, rep = self.compose(src)
-        self.assertGreater(rep[0]["local"], 0)
-        self.assertLessEqual(rep[0]["local"], SPEC["halo"]["max"])
-        self.assertEqual(out.getpixel((5, 5)), src.getpixel((5, 5)))  # far away: bit for bit
-        a, b = out.getpixel((1280 - 20, 720 - 100)), out.getpixel((1280 + 20, 720 - 100))
-        self.assertNotEqual(a, b)  # under the halo the print is shaded, never blurred
+    def test_the_seal_is_vermilion_with_the_logo_knocked_out(self):
+        src = Image.new("RGB", (2560, 1440), (30, 60, 120))
+        out, _ = R.compose(src, (2560, 1440), [self.SEAL], SPEC, (0.5, 0.5), 3, self.logo())
+        x0, t, x1, b = R.card_rect(self.SEAL, (2560, 1440))
+        seal = out.crop((x0, t, x1, b))
+        colors = {c for _, c in seal.getcolors(1 << 20)}
+        self.assertTrue(any(c[0] > 150 and c[1] < 90 for c in colors), "no vermilion")
+        self.assertTrue(any(min(c) > 200 for c in colors), "no knocked-out logo")
+
+    def test_the_pair_goes_to_the_calmer_side(self):
+        busy_left = Image.new("RGB", (2560, 1440), (200, 190, 170))
+        ImageDraw.Draw(busy_left).rectangle((0, 0, 1280, 1440), fill=(0, 0, 0))
+        stripes_left = stripes((1280, 1440))
+        busy_left.paste(stripes_left, (0, 0))
+        _, rep = R.compose(busy_left, (2560, 1440), [self.SLIP, self.SEAL], SPEC, (0.5, 0.5), 3, self.logo())
+        self.assertEqual({r["side"] for r in rep}, {"right"})
+        self.assertGreater(rep[0]["rect"][0], 1280)  # mirrored across the axis
+        _, rep = R.compose(Image.new("RGB", (2560, 1440), (90, 90, 90)), (2560, 1440), [self.SLIP], SPEC,
+                           (0.5, 0.5), 3)
+        self.assertEqual(rep[0]["side"], "left")  # a tie stays left
+
+    def test_glass_has_vibrancy_and_a_specular(self):
+        gray = Image.new("RGB", (64, 64), (128, 128, 128))
+        colored = Image.new("RGB", (64, 64), (200, 60, 60))
+        g = dict(SPEC["glass"], saturation=1.6, blurSigma=0)
+        self.assertEqual(R.frost(gray, g, (26, 27, 38)).getpixel((0, 0))[0], R.frost(gray, dict(g, saturation=1.0), (26, 27, 38)).getpixel((0, 0))[0])
+        self.assertGreater(R.frost(colored, g, (26, 27, 38)).getpixel((0, 0))[0], R.frost(colored, dict(g, saturation=1.0), (26, 27, 38)).getpixel((0, 0))[0])
+        sp = R.specular((200, 100), 20, 0.1)
+        self.assertGreater(sp.getpixel((10, 10))[3], sp.getpixel((190, 90))[3])  # lit at the top-left only
 
 
 class Profile(unittest.TestCase):
@@ -394,7 +421,7 @@ class Cache(unittest.TestCase):
         names = sorted(p.name for p in ready.iterdir())
         self.assertEqual(
             names,
-            ["ink", "manifest.json", "primary-main.png", "quote", "secondary-ambient.png", "secondary-media.png"],
+            ["manifest.json", "primary-main.png", "quote", "secondary-ambient.png", "secondary-media.png", "side"],
         )
         first = {p.name: p.resolve() for p in ready.iterdir() if p.suffix == ".png"}
         mtimes = {n: p.stat().st_mtime_ns for n, p in first.items()}
@@ -417,8 +444,8 @@ class Cache(unittest.TestCase):
     def test_prepare_with_empty_pools_publishes_no_images(self):
         wide, tall, cache = self.dir / "w", self.dir / "t", self.dir / "cache"
         self.assertEqual(self.prepare(cache, wide, tall, 1), 0)
-        self.assertEqual(sorted(p.name for p in (cache / "ready").iterdir()), ["ink", "manifest.json", "quote"])
-        self.assertEqual((cache / "ready" / "ink").read_text(), "light")  # no image: the default ink
+        self.assertEqual(sorted(p.name for p in (cache / "ready").iterdir()), ["manifest.json", "quote", "side"])
+        self.assertEqual((cache / "ready" / "side").read_text(), "left")  # no image: the default side
 
 
 class Quotes(unittest.TestCase):
@@ -531,7 +558,6 @@ class Labels(unittest.TestCase):
             LOCK_TXT_NO_DATA="NODATA",
             LOCK_OBS_MAX_AGE="180",
             LOCK_META_SIZE="13312",
-            LOCK_COL_INK_DARK="1a1b26",
         )
         return subprocess.run(
             ["bash", "-euo", "pipefail", str(HERE / "label.sh"), mode]
@@ -539,25 +565,28 @@ class Labels(unittest.TestCase):
             env=env, capture_output=True, text=True, check=True,
         ).stdout
 
-    def test_clock_format_in_each_ink(self):
+    def test_clock_prints_only_on_its_side(self):
         # The inlined command, run the way hyprlock runs it: `/bin/sh -c`, which is bash on NixOS.
-        ink = self.cache / "session" / "ink"
-        cmd = (HERE / "clock.sh").read_text().rstrip("\n").split("\n")[-1]
-        for k, v in {"@ACCENT@": "7aa2f7", "@TEXT@": "c0caf5", "@DARK@": "1a1b26", "@DARKACCENT@": "414868",
-                     "@INK@": str(ink)}.items():
-            cmd = cmd.replace(k, v)
-        self.assertNotIn("@", cmd)  # every placeholder filled
-        run = lambda: subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, check=True).stdout  # noqa: E731
-        self.assertRegex(run(), r'^<span foreground="#c0caf5" font_features="tnum">\d\d:\d\d'
-                                r'<span foreground="#7aa2f7" alpha="85%">:\d\d</span></span>$')  # no ink file: light
-        ink.write_text("dark")
-        self.assertRegex(run(), r'^<span foreground="#1a1b26" font_features="tnum">\d\d:\d\d'
-                                r'<span foreground="#414868" alpha="85%">:\d\d</span></span>$')
+        side = self.cache / "session" / "side"
+        base = (HERE / "clock.sh").read_text().rstrip("\n").split("\n")[-1]
+        base = base.replace("@SECONDS@", "414868").replace("@SIDE@", str(side))
+        run = lambda me: subprocess.run(["bash", "-c", base.replace("@MYSIDE@", me)],  # noqa: E731
+                                        capture_output=True, text=True, check=False).stdout
+        self.assertNotIn("@", base.replace("@MYSIDE@", ""))
+        self.assertRegex(run("left"), r'^<span font_features="tnum" line_height="0.82">\d\d\n\d\d\n'
+                                      r'<span foreground="#414868">\d\d</span></span>$')  # no file: left
+        self.assertEqual(run("right"), "")
+        side.write_text("right")
+        self.assertEqual(run("left"), "")
+        self.assertTrue(run("right").startswith("<span"))
 
-    def test_ink_label_follows_the_session(self):
-        self.assertIn('foreground="#c0caf5"', self.run_label("ink", "Victor"))
-        (self.cache / "session" / "ink").write_text("dark")
-        self.assertEqual(self.run_label("ink", "Victor"), '<span foreground="#1a1b26">Victor</span>')
+    def test_onside_and_date_follow_the_session(self):
+        self.assertEqual(self.run_label("onside", ["left", "Victor"]), "Victor")
+        self.assertEqual(self.run_label("onside", ["right", "Victor"]), "")
+        (self.cache / "session" / "side").write_text("right")
+        self.assertEqual(self.run_label("onside", ["right", "Victor"]), "Victor")
+        self.assertEqual(self.run_label("date", ["left"]), "")
+        self.assertIn("letter_spacing", self.run_label("date", ["right"]))
 
     def test_weather_fresh_stale_missing(self):
         import time
@@ -637,13 +666,18 @@ class Logo(unittest.TestCase):
             mask = R.load_logo({"logo": {"path": str(p)}})
         self.assertIsNotNone(mask)
         self.assertAlmostEqual(mask.width / mask.height, 2.0, delta=0.05)  # the ink, not the viewBox
-        base = Image.new("RGB", (400, 200))
-        card = {"center": [0, 0]}
-        x0, y0, x1, y1 = R.place_logo(base, mask, card, {"size": 60, "dy": 0}, (255, 255, 255))
-        self.assertEqual(x1 - x0, 60)
-        self.assertAlmostEqual((x1 - x0) / (y1 - y0), 2.0, delta=0.1)
-        self.assertLessEqual(abs((x0 + x1) / 2 - 200), 0.5)
-        self.assertLessEqual(abs((y0 + y1) / 2 - 100), 0.5)
+        # Knocked out of the seal: its paper-colored ink is centered and keeps its 2:1 shape.
+        seal = {"id": "h", "center": [0, 0], "size": [104, 104], "radius": 6}
+        base = Image.new("RGB", (400, 200), (0, 0, 0))
+        R.hanko_card(base, seal, SPEC, 1, mask)
+        crop = base.crop(R.card_rect(seal, base.size))
+        paper = R.rgb(SPEC["paper"]["color"])
+        ink = Image.eval(crop, lambda v: 255 if v > 200 else 0).convert("L").point(lambda v: 255 if v == 255 else 0)
+        x0, y0, x1, y1 = ink.getbbox()
+        self.assertGreater(min(paper), 200)
+        self.assertAlmostEqual((x1 - x0) / (y1 - y0), 2.0, delta=0.15)
+        self.assertLessEqual(abs((x0 + x1) / 2 - 52), 1.0)
+        self.assertLessEqual(abs((y0 + y1) / 2 - 52), 1.0)
 
     def test_a_broken_svg_renders_without_logo(self):
         with tempfile.TemporaryDirectory() as d:

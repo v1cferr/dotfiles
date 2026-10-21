@@ -182,7 +182,7 @@ Item {
                 font.weight: Font.Light
                 font.pixelSize: 30
             }
-            // The signature and the seal, as a print carries its artist's: whose machine this is, in the
+            // The signature and the logo, as a print carries its artist's: whose machine this is, in the
             // same ink, under the date.
             Row {
                 anchors.right: face.onRight ? parent.right : undefined
@@ -207,8 +207,9 @@ Item {
                         font.pixelSize: 18
                     }
                 }
-                Seal {
+                Logo {
                     anchors.verticalCenter: parent.verticalCenter
+                    ink: face.col
                 }
             }
         }

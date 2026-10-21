@@ -40,6 +40,7 @@ lock has no Python left. See [languages.md](../repo/languages.md).
 | The lock | `quickshell/lock.qml` | `WlSessionLock`, one `Face` per output, quits after an unlock |
 | Auth | `quickshell/lock/Auth.qml` | the ONE password buffer and the PAM conversation, shared by every output |
 | Faces | `quickshell/lock/AsusFace.qml`, `LgFace.qml` | chosen by connector in `Face.qml`; keys from any output go to the buffer |
+| The seal | `quickshell/lock/Seal.qml`, `my.lockscreen.logo` | the logo cut out of a vermilion square, beside the signature |
 | The print | `quickshell/lock/Wallpaper.qml` | picks from the pools, decodes to cover the screen, crops at the sidecar's focus |
 | The ink | `quickshell/lock/Ink.qml`, `InkMath.qml` | the side, the ink and the shade, measured on the shown print |
 | The quote | `quickshell/lock/Quotes.qml`, `QuoteMath.qml` | the curated collection, no repeats, haiku beside prints |
@@ -98,6 +99,13 @@ Enter" and echoes the dots, so the session is never stranded.
 - **The clock:** HH over mm in Geist Light 220 px, the date under it ("quarta, 21 de outubro"),
   on the CALMER side of the print. Minute precision from `SystemClock`; the old per-second label
   and its timer workaround went with hyprlock.
+- **The signature and the seal** (21/10/2026, the user's choice): under the date, as a Japanese
+  print carries its artist's, my full name and `v1cferr` in the clock's ink, and beside them the
+  logo as a 64 px vermilion seal with the drawing cut out in the paper's tone (`lock/Seal.qml`;
+  the SVG's alpha is the mask, since colorization keeps black black). The name is git's
+  `user.name` and the handle the account's (`LOCK_NAME`, `LOCK_USER` from the launcher); the logo
+  is `my.lockscreen.logo`, a path to STATE (the SVG in Dropbox), never in git. No file, no seal;
+  the lock locks the same. The clock's ink zone covers the signature, so its AA and bokashi hold.
 - **The field:** no box. A hairline, the dots, a vermilion caret; "verificando…" while PAM runs;
   a failure shakes it; Caps Lock shows in vermilion under it (read from the keyboard LEDs in
   `/sys/class/leds`, polled only while locked).

@@ -2,7 +2,6 @@
 // screenshots and the session, in that order. It replaced the bell and the power menu:
 // docs/notes/desktop/nixos-center.md
 import Quickshell
-import Quickshell.Io
 import Quickshell.Services.Notifications
 import QtQuick
 import QtQuick.Layouts
@@ -124,29 +123,12 @@ BarPanel {
         ];
     }
 
-    // ── The session: the power menu's six actions, its commands unchanged ──
-    Process {
-        id: actionProc
-    }
-    property int armed: -1 // the destructive action waiting for its confirming click
-    function run(i, a) {
-        if (a.confirm && center.armed !== i) {
-            center.armed = i;
-            disarm.restart();
-            return;
-        }
-        center.armed = -1;
-        actionProc.command = a.cmd;
-        actionProc.running = true;
-        center.bar.closePanels();
-    }
-    Timer {
-        id: disarm
-        interval: 4000
-        onTriggered: center.armed = -1
+    // ── The session: the six actions live in Power.qml, which asks before the three that end it ──
+    function run(a) {
+        center.bar.closePanels(); // first, so the confirmation gets the keyboard
+        Power.request(a.key);
     }
     onVisibleChanged: {
-        center.armed = -1;
         center.expanded = ({}); // groups open folded, every time
         if (center.visible)
             powerSection.refresh(); // the sync's state, read on open instead of polled
@@ -159,43 +141,6 @@ BarPanel {
         center.bar.closePanels();
         Quickshell.execDetached(["shell-screenshot", target, center.shotSave ? "save" : "copy"]);
     }
-    readonly property var actions: [
-        {
-            icon: "󰌾",
-            label: "Lock",
-            // The lock's UNIT first, then the LockedHint: `loginctl lock-session` alone only EMITS the signal.
-            cmd: ["sh", "-c", "systemctl --user start lockscreen.service; loginctl lock-session"]
-        },
-        {
-            icon: "󰖔",
-            label: "Darken",
-            cmd: ["hyprctl", "hyprsunset", "gamma", "0"] // gamma 0 through hyprsunset, NEVER dpms; input restores it
-        },
-        {
-            icon: "󰗽",
-            label: "Log out",
-            cmd: ["sh", "-c", "loginctl terminate-user \"$USER\""], // LightDM launches a bare Hyprland (no uwsm)
-            confirm: true
-        },
-        {
-            icon: "󰒲",
-            label: "Suspend",
-            cmd: ["systemctl", "suspend"]
-        },
-        {
-            icon: "󰜉",
-            label: "Reboot",
-            cmd: ["systemctl", "reboot"],
-            confirm: true
-        },
-        {
-            icon: "󰐥",
-            label: "Shut down",
-            cmd: ["systemctl", "poweroff"],
-            confirm: true
-        }
-    ]
-
     // The tips of the icon controls, over the card in this panel's own window.
     GlassTip {
         id: tips
@@ -498,29 +443,27 @@ BarPanel {
             color: Theme.colEdge
         }
 
-        // ── Footer: the session, the three that end it ask for a second click ──
+        // ── Footer: the session; the three that end it are confirmed in power/PowerDialog.qml ──
         RowLayout {
             Layout.fillWidth: true
             spacing: Theme.sp1
             Repeater {
-                model: center.actions
+                model: Power.actions
                 delegate: Rectangle {
                     id: act
                     required property var modelData
-                    required property int index
-                    readonly property bool armed: center.armed === act.index
                     Layout.fillWidth: true
                     Layout.preferredWidth: 0
                     implicitHeight: 52
                     radius: Theme.radiusControl
-                    color: act.armed ? Theme.colMenuHoverBgDanger : (actArea.containsMouse ? (act.modelData.confirm ? Theme.colHoverBgDanger : Theme.colHoverFill) : "transparent")
+                    color: actArea.containsMouse ? (act.modelData.confirm ? Theme.colHoverBgDanger : Theme.colHoverFill) : "transparent"
                     Behavior on color {
                         ColorAnimation {
                             duration: Theme.motionHover
                         }
                     }
                     Accessible.role: Accessible.Button
-                    Accessible.name: act.armed ? "Confirm " + act.modelData.label : act.modelData.label
+                    Accessible.name: act.modelData.label
                     ColumnLayout {
                         anchors.centerIn: parent
                         spacing: 2
@@ -533,11 +476,10 @@ BarPanel {
                         }
                         Text {
                             Layout.alignment: Qt.AlignHCenter
-                            text: act.armed ? "Confirm?" : act.modelData.label
-                            color: act.armed ? Theme.colRed : Theme.colSubtext
+                            text: act.modelData.label
+                            color: Theme.colSubtext
                             font.family: Theme.uiFont
                             font.pixelSize: Theme.fontSmall
-                            font.bold: act.armed
                         }
                     }
                     MouseArea {
@@ -545,7 +487,7 @@ BarPanel {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: center.run(act.index, act.modelData)
+                        onClicked: center.run(act.modelData)
                     }
                 }
             }

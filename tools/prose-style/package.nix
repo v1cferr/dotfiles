@@ -21,10 +21,8 @@ writeShellApplication {
     # Every codepoint is an ESCAPE and this file stays pure ASCII on purpose: a checker that carries
     # the glyph it forbids is a checker that can flag itself the day the stripping rules change.
     dash=$'\u2014'
-    # EMOJI AS DECORATION, and the class is deliberately narrow: the pictographic planes, the three
-    # status markers (white heavy check, cross mark, warning sign) and VS16, which is what an emoji
-    # picker appends. The BMP symbols this repo quotes as LITERALS stay out: U+2713 from
-    # `sbctl status`, and the bare U+2764 the august history discusses.
+    # EMOJI AS DECORATION, narrow on purpose: the pictographic planes, three status markers and
+    # VS16. BMP symbols quoted as LITERALS (U+2713, U+2764) stay out: docs/notes/repo/prose-style.md
     emoji='[\x{1F000}-\x{1FAFF}\x{2705}\x{274C}\x{26A0}]|\x{FE0F}'
 
     # A code span and a quoted span are LITERALS. In a COMMENT any quoted span is one, which also

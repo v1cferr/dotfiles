@@ -15,10 +15,8 @@ writeShellApplication {
     taplo
   ];
   text = ''
-    # VS Code DOCUMENTS comments in its own settings and keybindings, and so does oxlint in its
-    # own config, so these four are JSONC in spite of the .json name. Every other .json here is
-    # read by a STRICT parser (Nix's fromJSON, an MCP client, Claude Code), and there a comment
-    # is a broken file and not a note.
+    # JSONC in spite of the .json name: VS Code and oxlint DOCUMENT comments in these. Every other
+    # .json has a STRICT reader (fromJSON, an MCP client), where a comment breaks the file.
     jsonc=" .vscode/settings.json modules/home/apps/vscode/settings.json modules/home/apps/vscode/keybindings.json tools/docs-site/.oxlintrc.json "
 
     strict=()

@@ -56,9 +56,8 @@ writeShellApplication {
       [[ -f "$target" ]] || broken+=("$f: pointer -> $target")
     done < <(rg --sort path --no-heading --with-filename -n -o "$pointer" -- "''${code[@]}")
 
-    # 2. A repo path quoted in prose, in docs that describe the PRESENT. A path in SOMEBODY ELSE'S
-    # repo is written `Repo:path/to/file`, which does not match. The retired roots (system, home,
-    # scripts, router) stay listed, so a path left behind by the layout move FAILS.
+    # 2. A repo path quoted in prose that describes the PRESENT (`Repo:path` is someone else's). The
+    # retired roots (system, home, scripts, router) stay listed, so a path left behind FAILS.
     roots='modules|hosts|pkgs|tools|secrets|ci|system|home|scripts|router'
     while IFS=: read -r f _ target; do
       checked=$((checked + 1))
@@ -97,9 +96,8 @@ writeShellApplication {
       done
     fi
 
-    # 4. Rule 2's header: a module in modules/nixos/ or modules/home/ opens with at most 2
-    # comment lines, holding its docs/ pointer or a plain "No note". An aggregator default.nix
-    # is exempt.
+    # 4. Rule 2's header: a module opens with at most 2 comment lines, holding its docs/ pointer
+    # or a plain "No note". An aggregator default.nix is exempt.
     for f in "''${modules[@]}"; do
       header=""
       lines=0

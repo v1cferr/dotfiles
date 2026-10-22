@@ -30,19 +30,15 @@ writeShellApplication {
       fi
     done < <(rg -n '^## [0-9]+\. |^\*\*Enforced by\*\*: ' "$rules")
 
-    # The history is a diary: a citation there is right about the day it was written, forever.
-    # A RETIRED rule may still be named where the text is about the past: a decision record, and
-    # a section holding a rule's long form, moved verbatim when the rule became a card.
+    # The history is a diary, right about its day forever; a RETIRED rule may still be named where
+    # the text is about the past (a decision, a rule's long form).
     files=()
     while IFS= read -r f; do
       [[ "$f" == docs/history/* || "$f" == "$rules" || ! -f "$f" ]] || files+=("$f")
     done < <(git ls-files)
 
-    # ONE pass, matches in line order: a past-section heading (`## The long form of rule N`, kept
-    # with its trailing space), any other `#` line, then each citation. `rule 11`, `rules 14 and
-    # 15`, `rules 1, 3 and 7`: every number in the run counts, and a number followed by `/` is a
-    # date (`rule 22, 29/09/2026`), so it ends the run. Inside backticks it is a quoted literal,
-    # the repo's standing exception (rule 17), so a backtick span is skipped whole.
+    # ONE pass in line order: a past-section heading (kept with its trailing space), any `#` line,
+    # each citation run; a backtick span is a literal, skipped whole: docs/notes/repo/rules-index.md
     # shellcheck disable=SC2016 # a PCRE, not shell: the backticks are literal
     pattern='^#+ (?=The (?:long form of rule|former rule) \d+)|^#|`[^`]*`(*SKIP)(*F)'
     pattern+='|\b[Rr]ules? \d{1,3}(?![\d/])(?:(?:, | and | or )\d{1,3}(?![\d/]))*'

@@ -42,7 +42,12 @@ PanelWindow {
         onCleared: if (panel.pinned)
             panel.bar.closePanels()
     }
+    // Back to the panel's own key handler, after a view inside it held the focus (the Center's confirm).
+    function takeKeys() {
+        keys.forceActiveFocus();
+    }
     Item {
+        id: keys
         focus: true
         Keys.onPressed: event => {
             panel.keyPressed(event);

@@ -9,7 +9,6 @@ import "root:/osd"
 import "root:/media"
 import "root:/caption"
 import "root:/away"
-import "root:/power"
 
 ShellRoot {
     id: root
@@ -32,7 +31,4 @@ ShellRoot {
 
     // The away screen: black plus dark LEDs, Enter to leave. The state is Away.qml.
     AwayScreen {}
-
-    // The session's confirmation, on the main monitor only. The state is Power.qml.
-    PowerDialog {}
 }

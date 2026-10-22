@@ -125,10 +125,28 @@ BarPanel {
 
     // ── The session: the six actions live in Power.qml, which asks before the three that end it ──
     function run(a) {
-        center.bar.closePanels(); // first, so the confirmation gets the keyboard
+        if (!a.confirm)
+            center.bar.closePanels(); // a safe action must not leave the panel over what it does
         Power.request(a.key);
     }
+    // While an action asks, failed or hands over, the card shows PowerConfirm instead of its sections.
+    readonly property bool asking: {
+        const a = Power.current, ph = Power.state.phase;
+        return !!a && (ph === "confirm" || ph === "error" || ph === "handoff" || (ph === "busy" && !!a.ends));
+    }
+    onAskingChanged: center.asking ? Qt.callLater(() => confirmView.focusDefault()) : center.takeKeys()
+    // A question or a failure while the Center is closed (a failed suspend, `qs ipc call power ask`).
+    Connections {
+        target: Power
+        function onAttention() {
+            if (!Notifs.centerOpen)
+                Notifs.toggleCenter();
+        }
+    }
     onVisibleChanged: {
+        // Closing the Center answers "no": a question is never left armed behind a closed panel.
+        if (!center.visible && (Power.state.phase === "confirm" || Power.state.phase === "error"))
+            Power.cancel();
         center.expanded = ({}); // groups open folded, every time
         if (center.visible) {
             powerSection.refresh(); // the sync's state, read on open instead of polled
@@ -156,355 +174,368 @@ BarPanel {
         gap: Theme.sp3
         onHoveredChanged: center.bar.panelPopHovered = card.hovered
 
-        // ── Header: the title, then do-not-disturb and clear as icons ──
-        RowLayout {
+        // ── The sections; the confirmation takes their place while an action asks ──
+        ColumnLayout {
             Layout.fillWidth: true
-            spacing: Theme.sp2
-            Text {
-                Layout.fillWidth: true
-                text: "NixOS Center"
-                color: Theme.colSubtext
-                font.family: Theme.uiFont
-                font.pixelSize: Theme.fontLabel
-                font.letterSpacing: 1
-            }
-            IconButton {
-                glyph: Notifs.dnd ? "󰂛" : "󰂚"
-                tint: Notifs.dnd ? Theme.colAlert : Theme.colSubtext
-                active: Notifs.dnd
-                tips: tips
-                name: "Do Not Disturb"
-                stateText: Notifs.dnd ? "Enabled: toasts are held, critical ones still show" : "Disabled"
-                action: Notifs.dnd ? "Click to disable" : "Click to enable"
-                onClicked: Notifs.toggleDnd()
-            }
-            IconButton {
-                glyph: "󰎟"
-                tint: Theme.colSubtext
-                enabled: Notifs.count > 0
-                tips: tips
-                name: "Clear notifications"
-                stateText: Notifs.count > 0 ? Notifs.count + " in the history" : "Nothing to clear"
-                action: Notifs.count > 0 ? "Click to clear them all" : ""
-                onClicked: Notifs.clearAll()
-            }
-        }
+            visible: !center.asking
+            spacing: Theme.sp3
 
-        // ── Body: the history, newest first, only the visible cards instantiated ──
-        Text {
-            visible: Notifs.count === 0
-            Layout.fillWidth: true
-            Layout.topMargin: Theme.sp2
-            Layout.bottomMargin: Theme.sp2
-            horizontalAlignment: Text.AlignHCenter
-            text: "No notifications"
-            color: Theme.colDim
-            font.family: Theme.uiFont
-            font.pixelSize: Theme.fontBody
-        }
-        ListView {
-            id: list
-            visible: Notifs.count > 0
-            Layout.fillWidth: true
-            Layout.preferredHeight: Math.min(list.contentHeight, center.listMax)
-            clip: true
-            spacing: Theme.sp2
-            boundsBehavior: Flickable.StopAtBounds
-            // Keys, newest first. A ScriptModel diffs them by value, so an arrival adds ONE delegate,
-            // and a group that grows keeps its own (its content is read live from entryMap).
-            model: ScriptModel {
-                values: center.entryMap.keys
+            // ── Header: the title, then do-not-disturb and clear as icons ──
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.sp2
+                Text {
+                    Layout.fillWidth: true
+                    text: "NixOS Center"
+                    color: Theme.colSubtext
+                    font.family: Theme.uiFont
+                    font.pixelSize: Theme.fontLabel
+                    font.letterSpacing: 1
+                }
+                IconButton {
+                    glyph: Notifs.dnd ? "󰂛" : "󰂚"
+                    tint: Notifs.dnd ? Theme.colAlert : Theme.colSubtext
+                    active: Notifs.dnd
+                    tips: tips
+                    name: "Do Not Disturb"
+                    stateText: Notifs.dnd ? "Enabled: toasts are held, critical ones still show" : "Disabled"
+                    action: Notifs.dnd ? "Click to disable" : "Click to enable"
+                    onClicked: Notifs.toggleDnd()
+                }
+                IconButton {
+                    glyph: "󰎟"
+                    tint: Theme.colSubtext
+                    enabled: Notifs.count > 0
+                    tips: tips
+                    name: "Clear notifications"
+                    stateText: Notifs.count > 0 ? Notifs.count + " in the history" : "Nothing to clear"
+                    action: Notifs.count > 0 ? "Click to clear them all" : ""
+                    onClicked: Notifs.clearAll()
+                }
             }
-            delegate: ColumnLayout {
-                id: ent
-                required property string modelData
-                width: ListView.view.width
-                readonly property var entry: center.entryMap.map[ent.modelData] || null
-                readonly property bool isGroup: ent.modelData.startsWith("g:")
-                readonly property bool open: center.expanded[ent.modelData] === true
-                spacing: Theme.sp1
-                NotifCard {
-                    visible: !ent.isGroup
-                    Layout.fillWidth: true
-                    notif: ent.entry && !ent.isGroup ? ent.entry.items[0] : null
-                    isPopup: false
+
+            // ── Body: the history, newest first, only the visible cards instantiated ──
+            Text {
+                visible: Notifs.count === 0
+                Layout.fillWidth: true
+                Layout.topMargin: Theme.sp2
+                Layout.bottomMargin: Theme.sp2
+                horizontalAlignment: Text.AlignHCenter
+                text: "No notifications"
+                color: Theme.colDim
+                font.family: Theme.uiFont
+                font.pixelSize: Theme.fontBody
+            }
+            ListView {
+                id: list
+                visible: Notifs.count > 0
+                Layout.fillWidth: true
+                Layout.preferredHeight: Math.min(list.contentHeight, center.listMax)
+                clip: true
+                spacing: Theme.sp2
+                boundsBehavior: Flickable.StopAtBounds
+                // Keys, newest first. A ScriptModel diffs them by value, so an arrival adds ONE delegate,
+                // and a group that grows keeps its own (its content is read live from entryMap).
+                model: ScriptModel {
+                    values: center.entryMap.keys
                 }
-                NotifGroup {
-                    visible: ent.isGroup
-                    Layout.fillWidth: true
-                    items: ent.entry && ent.isGroup ? ent.entry.items : []
-                    open: ent.open
-                    onToggled: center.toggleGroup(ent.modelData)
-                    onDismissAll: {
-                        for (const n of ent.entry.items.slice())
-                            Notifs.dismiss(n);
-                    }
-                }
-                // Expanded: each one as itself, with its own time, text, actions and close.
-                Repeater {
-                    model: ent.isGroup && ent.open && ent.entry ? ent.entry.items : []
-                    delegate: NotifCard {
-                        required property var modelData
+                delegate: ColumnLayout {
+                    id: ent
+                    required property string modelData
+                    width: ListView.view.width
+                    readonly property var entry: center.entryMap.map[ent.modelData] || null
+                    readonly property bool isGroup: ent.modelData.startsWith("g:")
+                    readonly property bool open: center.expanded[ent.modelData] === true
+                    spacing: Theme.sp1
+                    NotifCard {
+                        visible: !ent.isGroup
                         Layout.fillWidth: true
-                        Layout.leftMargin: Theme.sp4
-                        notif: modelData
+                        notif: ent.entry && !ent.isGroup ? ent.entry.items[0] : null
                         isPopup: false
                     }
-                }
-            }
-        }
-
-        // ── Hardware ──
-        Rectangle {
-            Layout.fillWidth: true
-            implicitHeight: Theme.hairline
-            color: Theme.colEdge
-        }
-        Text {
-            text: "HARDWARE"
-            color: Theme.colDim
-            font.family: Theme.uiFont
-            font.pixelSize: Theme.fontSmall
-            font.letterSpacing: 1
-        }
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Theme.sp2
-            Repeater {
-                model: center.hw
-                delegate: Rectangle {
-                    id: hwCard
-                    required property var modelData
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 0
-                    implicitHeight: hwCol.implicitHeight + 2 * Theme.sp2
-                    radius: Theme.radiusControl
-                    color: hwArea.containsMouse ? Theme.colHoverFill : Qt.alpha(Theme.colText, 0.04)
-                    Accessible.role: Accessible.Button
-                    Accessible.name: hwCard.modelData.label + " " + hwCard.modelData.value + ", " + hwCard.modelData.caption
-                    ColumnLayout {
-                        id: hwCol
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.margins: Theme.sp2
-                        spacing: 0
-                        Text {
-                            text: hwCard.modelData.label
-                            color: Theme.colDim
-                            font.family: Theme.uiFont
-                            font.pixelSize: Theme.fontMicro
-                            font.letterSpacing: 1
+                    NotifGroup {
+                        visible: ent.isGroup
+                        Layout.fillWidth: true
+                        items: ent.entry && ent.isGroup ? ent.entry.items : []
+                        open: ent.open
+                        onToggled: center.toggleGroup(ent.modelData)
+                        onDismissAll: {
+                            for (const n of ent.entry.items.slice())
+                                Notifs.dismiss(n);
                         }
-                        Text {
-                            text: hwCard.modelData.value
-                            color: hwCard.modelData.tone
-                            font.family: Theme.uiFont
-                            font.pixelSize: Theme.fontTitle
-                            font.bold: true
-                        }
-                        Text {
+                    }
+                    // Expanded: each one as itself, with its own time, text, actions and close.
+                    Repeater {
+                        model: ent.isGroup && ent.open && ent.entry ? ent.entry.items : []
+                        delegate: NotifCard {
+                            required property var modelData
                             Layout.fillWidth: true
-                            text: hwCard.modelData.caption
-                            color: Theme.colDim
-                            font.family: Theme.uiFont
-                            font.pixelSize: Theme.fontMicro
-                            elide: Text.ElideRight
+                            Layout.leftMargin: Theme.sp4
+                            notif: modelData
+                            isPopup: false
                         }
-                    }
-                    MouseArea {
-                        id: hwArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        // The detail panel, from the same bar and still under the logo (no new anchor).
-                        onClicked: center.bar.togglePanel(hwCard.modelData.panel, null, null, center.bar.popBar)
                     }
                 }
             }
-        }
 
-        Rectangle {
-            Layout.fillWidth: true
-            implicitHeight: Theme.hairline
-            color: Theme.colEdge
-        }
-
-        // ── Power: the ppd profile and the memory behind it (PowerSection.qml) ──
-        PowerSection {
-            id: powerSection
-            Layout.fillWidth: true
-            bar: center.bar
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            implicitHeight: Theme.hairline
-            color: Theme.colEdge
-        }
-
-        // ── Boot: what the boot chain could prove this boot (BootTrustSection.qml) ──
-        BootTrustSection {
-            id: bootSection
-            Layout.fillWidth: true
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            implicitHeight: Theme.hairline
-            color: Theme.colEdge
-        }
-
-        // ── Screenshots: always open, the three targets and where the shot goes ──
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Theme.sp2
-            Text {
+            // ── Hardware ──
+            Rectangle {
                 Layout.fillWidth: true
-                text: "SCREENSHOTS"
+                implicitHeight: Theme.hairline
+                color: Theme.colEdge
+            }
+            Text {
+                text: "HARDWARE"
                 color: Theme.colDim
                 font.family: Theme.uiFont
                 font.pixelSize: Theme.fontSmall
                 font.letterSpacing: 1
             }
-            Text {
-                text: center.shotSave ? "Save PNG" : "Clipboard"
-                color: Theme.colSubtext
-                font.family: Theme.uiFont
-                font.pixelSize: Theme.fontSmall
-            }
-            IconButton {
-                glyph: center.shotSave ? "󰉉" : "󰅇"
-                tint: center.shotSave ? Theme.colAccent : Theme.colSubtext
-                active: center.shotSave
-                tips: tips
-                name: "Screenshot output"
-                stateText: center.shotSave ? "A PNG in ~/Pictures/Screenshots" : "The clipboard"
-                action: center.shotSave ? "Click to copy instead" : "Click to save a PNG instead"
-                onClicked: center.shotSave = !center.shotSave
-            }
-        }
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Theme.sp1
-            Repeater {
-                model: [
-                    {
-                        target: "primary",
-                        icon: "󰍹",
-                        label: Theme.primaryName,
-                        name: Theme.primaryMonitor
-                    },
-                    {
-                        target: "secondary",
-                        icon: "󰍺",
-                        label: Theme.secondaryName,
-                        name: Theme.secondaryMonitor
-                    },
-                    {
-                        target: "all",
-                        icon: "󰹑",
-                        label: "Both",
-                        name: "the whole layout"
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.sp2
+                Repeater {
+                    model: center.hw
+                    delegate: Rectangle {
+                        id: hwCard
+                        required property var modelData
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 0
+                        implicitHeight: hwCol.implicitHeight + 2 * Theme.sp2
+                        radius: Theme.radiusControl
+                        color: hwArea.containsMouse ? Theme.colHoverFill : Qt.alpha(Theme.colText, 0.04)
+                        Accessible.role: Accessible.Button
+                        Accessible.name: hwCard.modelData.label + " " + hwCard.modelData.value + ", " + hwCard.modelData.caption
+                        ColumnLayout {
+                            id: hwCol
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.margins: Theme.sp2
+                            spacing: 0
+                            Text {
+                                text: hwCard.modelData.label
+                                color: Theme.colDim
+                                font.family: Theme.uiFont
+                                font.pixelSize: Theme.fontMicro
+                                font.letterSpacing: 1
+                            }
+                            Text {
+                                text: hwCard.modelData.value
+                                color: hwCard.modelData.tone
+                                font.family: Theme.uiFont
+                                font.pixelSize: Theme.fontTitle
+                                font.bold: true
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: hwCard.modelData.caption
+                                color: Theme.colDim
+                                font.family: Theme.uiFont
+                                font.pixelSize: Theme.fontMicro
+                                elide: Text.ElideRight
+                            }
+                        }
+                        MouseArea {
+                            id: hwArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            // The detail panel, from the same bar and still under the logo (no new anchor).
+                            onClicked: center.bar.togglePanel(hwCard.modelData.panel, null, null, center.bar.popBar)
+                        }
                     }
-                ]
-                delegate: Rectangle {
-                    id: shot
-                    required property var modelData
-                    readonly property bool up: shot.modelData.target === "primary" ? center.primaryUp : (shot.modelData.target === "secondary" ? Theme.secondaryConnected : true)
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: Theme.hairline
+                color: Theme.colEdge
+            }
+
+            // ── Power: the ppd profile and the memory behind it (PowerSection.qml) ──
+            PowerSection {
+                id: powerSection
+                Layout.fillWidth: true
+                bar: center.bar
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: Theme.hairline
+                color: Theme.colEdge
+            }
+
+            // ── Boot: what the boot chain could prove this boot (BootTrustSection.qml) ──
+            BootTrustSection {
+                id: bootSection
+                Layout.fillWidth: true
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: Theme.hairline
+                color: Theme.colEdge
+            }
+
+            // ── Screenshots: always open, the three targets and where the shot goes ──
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.sp2
+                Text {
                     Layout.fillWidth: true
-                    Layout.preferredWidth: 0
-                    implicitHeight: 44
-                    radius: Theme.radiusControl
-                    enabled: shot.up
-                    opacity: shot.up ? 1 : Theme.opacityDisabled
-                    color: shotArea.containsMouse ? Theme.colHoverFill : "transparent"
-                    Accessible.role: Accessible.Button
-                    Accessible.name: "Screenshot of " + shot.modelData.name + (shot.up ? "" : ", not connected")
-                    ColumnLayout {
-                        anchors.centerIn: parent
-                        spacing: 2
-                        Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: shot.modelData.icon
-                            color: Theme.colText
-                            font.family: Theme.uiFont
-                            font.pixelSize: 16
+                    text: "SCREENSHOTS"
+                    color: Theme.colDim
+                    font.family: Theme.uiFont
+                    font.pixelSize: Theme.fontSmall
+                    font.letterSpacing: 1
+                }
+                Text {
+                    text: center.shotSave ? "Save PNG" : "Clipboard"
+                    color: Theme.colSubtext
+                    font.family: Theme.uiFont
+                    font.pixelSize: Theme.fontSmall
+                }
+                IconButton {
+                    glyph: center.shotSave ? "󰉉" : "󰅇"
+                    tint: center.shotSave ? Theme.colAccent : Theme.colSubtext
+                    active: center.shotSave
+                    tips: tips
+                    name: "Screenshot output"
+                    stateText: center.shotSave ? "A PNG in ~/Pictures/Screenshots" : "The clipboard"
+                    action: center.shotSave ? "Click to copy instead" : "Click to save a PNG instead"
+                    onClicked: center.shotSave = !center.shotSave
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.sp1
+                Repeater {
+                    model: [
+                        {
+                            target: "primary",
+                            icon: "󰍹",
+                            label: Theme.primaryName,
+                            name: Theme.primaryMonitor
+                        },
+                        {
+                            target: "secondary",
+                            icon: "󰍺",
+                            label: Theme.secondaryName,
+                            name: Theme.secondaryMonitor
+                        },
+                        {
+                            target: "all",
+                            icon: "󰹑",
+                            label: "Both",
+                            name: "the whole layout"
                         }
-                        Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: shot.modelData.label
-                            color: Theme.colSubtext
-                            font.family: Theme.uiFont
-                            font.pixelSize: Theme.fontSmall
-                        }
-                    }
-                    MouseArea {
-                        id: shotArea
-                        anchors.fill: parent
-                        hoverEnabled: true
+                    ]
+                    delegate: Rectangle {
+                        id: shot
+                        required property var modelData
+                        readonly property bool up: shot.modelData.target === "primary" ? center.primaryUp : (shot.modelData.target === "secondary" ? Theme.secondaryConnected : true)
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 0
+                        implicitHeight: 44
+                        radius: Theme.radiusControl
                         enabled: shot.up
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: center.shoot(shot.modelData.target)
+                        opacity: shot.up ? 1 : Theme.opacityDisabled
+                        color: shotArea.containsMouse ? Theme.colHoverFill : "transparent"
+                        Accessible.role: Accessible.Button
+                        Accessible.name: "Screenshot of " + shot.modelData.name + (shot.up ? "" : ", not connected")
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            spacing: 2
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: shot.modelData.icon
+                                color: Theme.colText
+                                font.family: Theme.uiFont
+                                font.pixelSize: 16
+                            }
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: shot.modelData.label
+                                color: Theme.colSubtext
+                                font.family: Theme.uiFont
+                                font.pixelSize: Theme.fontSmall
+                            }
+                        }
+                        MouseArea {
+                            id: shotArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            enabled: shot.up
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: center.shoot(shot.modelData.target)
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: Theme.hairline
+                color: Theme.colEdge
+            }
+
+            // ── Footer: the session; the three that end it are confirmed in place (PowerConfirm.qml) ──
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.sp1
+                Repeater {
+                    model: Power.actions
+                    delegate: Rectangle {
+                        id: act
+                        required property var modelData
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 0
+                        implicitHeight: 52
+                        radius: Theme.radiusControl
+                        color: actArea.containsMouse ? (act.modelData.confirm ? Theme.colHoverBgDanger : Theme.colHoverFill) : "transparent"
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Theme.motionHover
+                            }
+                        }
+                        Accessible.role: Accessible.Button
+                        Accessible.name: act.modelData.label
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            spacing: 2
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: act.modelData.icon
+                                color: act.modelData.confirm ? Theme.colRed : Theme.colText
+                                font.family: Theme.uiFont
+                                font.pixelSize: 18
+                            }
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: act.modelData.label
+                                color: Theme.colSubtext
+                                font.family: Theme.uiFont
+                                font.pixelSize: Theme.fontSmall
+                            }
+                        }
+                        MouseArea {
+                            id: actArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: center.run(act.modelData)
+                        }
                     }
                 }
             }
         }
 
-        Rectangle {
+        PowerConfirm {
+            id: confirmView
             Layout.fillWidth: true
-            implicitHeight: Theme.hairline
-            color: Theme.colEdge
-        }
-
-        // ── Footer: the session; the three that end it are confirmed in power/PowerDialog.qml ──
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Theme.sp1
-            Repeater {
-                model: Power.actions
-                delegate: Rectangle {
-                    id: act
-                    required property var modelData
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 0
-                    implicitHeight: 52
-                    radius: Theme.radiusControl
-                    color: actArea.containsMouse ? (act.modelData.confirm ? Theme.colHoverBgDanger : Theme.colHoverFill) : "transparent"
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: Theme.motionHover
-                        }
-                    }
-                    Accessible.role: Accessible.Button
-                    Accessible.name: act.modelData.label
-                    ColumnLayout {
-                        anchors.centerIn: parent
-                        spacing: 2
-                        Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: act.modelData.icon
-                            color: act.modelData.confirm ? Theme.colRed : Theme.colText
-                            font.family: Theme.uiFont
-                            font.pixelSize: 18
-                        }
-                        Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: act.modelData.label
-                            color: Theme.colSubtext
-                            font.family: Theme.uiFont
-                            font.pixelSize: Theme.fontSmall
-                        }
-                    }
-                    MouseArea {
-                        id: actArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: center.run(act.modelData)
-                    }
-                }
-            }
+            visible: center.asking
         }
     }
 }

@@ -1,6 +1,6 @@
 pragma Singleton
 // The session actions' state: Lock, Darken, Log out, Suspend, Reboot, Shut down. One command at a
-// time, its exit code read, and the three that end the session asked first in power/PowerDialog.qml.
+// time, its exit code read, and the three that end the session asked first in bar/PowerConfirm.qml.
 // IPC: `qs ipc call power ask <key>`. The rules: docs/notes/desktop/nixos-center.md
 import Quickshell
 import Quickshell.Io
@@ -20,9 +20,15 @@ Singleton {
     // TEST ONLY, for a nested shell: "0" or "1" turns every command into `exit` with that code.
     readonly property string dryRun: Quickshell.env("QS_POWER_DRYRUN") || ""
 
+    // A question or a failure needs the Center: it opens itself when this fires and it was closed.
+    signal attention
+
     function send(ev) {
+        const prev = root.state.phase;
         const next = math.step(root.state, ev);
         root.state = next;
+        if (next.phase !== prev && (next.phase === "confirm" || next.phase === "error"))
+            root.attention();
         if (next.run) {
             const a = math.action(next.key);
             proc.command = root.dryRun !== "" ? ["sh", "-c", "sleep 0.4; exit " + Number(root.dryRun)] : a.cmd;

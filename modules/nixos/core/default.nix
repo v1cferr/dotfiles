@@ -4,7 +4,8 @@
 {
   imports = [
     ./core.nix # Nix/flakes, nixpkgs (unfree/insecure), nix-ld, locale/language
-    ./boot.nix # GRUB (UEFI) plus the minegrub theme plus Windows 11 in the menu through os-prober
+    ./boot.nix # the kernel, plus GRUB (UEFI) with the minegrub theme and Windows 11 pinned by UUID
+    ./boot-appearance.nix # the pre-boot palette (my.boot.theme) and the Plymouth splash (off by default)
     ./secureboot.nix # Secure Boot: our own keys (sbctl) and signing GRUB on every switch
     ./alert.nix # `my.alert`: the journal plus a critical bubble, for root units that must reach me
     ./hardening.nix # the systemd sandbox baseline for this repo's own root oneshots

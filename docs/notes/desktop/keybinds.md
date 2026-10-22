@@ -168,6 +168,15 @@ The reset used to be SHIFT+`code:19`, the physical 0 key. Binding that CONSUMED 
 on ABNT2 `)` is Shift+0, so there was no closing a parenthesis. SUPER+SHIFT+B steals no typing key
 at all.
 
+## SUPER alone opens the NixOS Center
+
+`SUPER + SUPER_L` with `{ release = true, click = true }`, the shape the 0.56 wiki gives for a
+modifier on its own. `release` waits for the key to come up, and `click` drops it when the mouse
+moved past `binds:drag_threshold`, so SUPER plus a window drag does not open the Center. What the
+wiki does NOT say is whether a release after a combination (SUPER+Q) or after the MX Master's
+thumbwheel (SUPER plus the horizontal wheel) still fires it; that was checked on the desk, not in
+the docs. If it ever misfires, the fallback is a plain combination on the same command.
+
 ## Small things worth not rediscovering
 
 - `locked = true` means the bind works with the screen locked; `repeating = true` means it repeats

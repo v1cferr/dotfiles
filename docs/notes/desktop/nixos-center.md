@@ -104,7 +104,33 @@ every bar panel, with one difference: it opens on a CLICK only, never on hover.
   it; Hyprland gives focus back when it closes. Tested with `wtype -k Escape`.
 - **A screen that leaves takes it along:** the bars register by screen name, and a bar destroyed by a
   hotplug closes the panel it was holding, so no invisible window is left with the keyboard.
-- **From the keyboard:** `qs ipc call notif toggle` opens it on the main monitor's logo.
+- **From the keyboard:** SUPER alone (22/10/2026), the Windows-key menu, runs `qs ipc call notif
+  toggle`, which opens it on the main monitor's logo. The bind fires on RELEASE and only as a
+  `click`, so SUPER plus a mouse drag does not open it ([keybinds](keybinds.md#super-alone-opens-the-nixos-center)).
+
+## Driving it from the keyboard (22/10/2026)
+
+Every control in the card carries a `widgets/KeyTarget.qml`: the header icons, each notification
+card and group, the four hardware cards, the three power profiles, the screenshot targets and the
+six session actions. One global bind opens the Center; inside it the keys are plain ones:
+
+| Key | Does |
+| --- | --- |
+| Tab, Shift+Tab, the arrows | walk the controls in reading order; from the panel an arrow starts at the first (Down) or the last (Up) |
+| Enter, Space | what a click does |
+| Delete, Backspace | dismisses the focused notification (a group: all of it) |
+| Escape | closes the Center from anywhere; inside a question it only answers no |
+
+**The arrows are linear**, like Tab, not a 2D grid: rows here have 1 to 6 items and change shape
+with the history, so "the item below" would be a guess, and a linear walk is predictable.
+**The ring shows only for the keyboard**: a click focuses nothing, and every open hands the focus
+back to the panel, so the Center never opens with a ring left from last time. Disabled controls
+(clear with no history, a target whose monitor is off) are skipped. Not covered: a notification
+scrolled out of the list's view is focused without scrolling to it.
+
+Tested on 22/10/2026 with the whole shell in a headless sway: Down lit the do-not-disturb bell,
+Up from the panel wrapped to Shut down, Enter asked, Escape answered no, Escape again closed it.
+Enter on a power profile was NOT pressed there: it talks to the real power-profiles-daemon.
 
 ## Power (18/10/2026)
 

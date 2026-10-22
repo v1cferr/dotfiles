@@ -1,230 +1,176 @@
 # dead-config: it fails when something is DECLARED and never used (rule 16, which only memory
 # enforced before). The checks and the review dates: docs/notes/repo/dead-config.md
-{ writers }:
+{
+  writeShellApplication,
+  ripgrep,
+  jq,
+  git,
+  coreutils,
+}:
 
-writers.writePython3Bin "dead-config"
-  {
-    libraries = [ ];
-    flakeIgnore = [ "E501" ]; # the repo's line length is 100, not flake8's 79
-  }
-  ''
-    """Fail when a module, an input, an option, a note or a secret is declared and never used."""
-    import datetime
-    import json
-    import os
-    import re
-    import subprocess
-    import sys
+writeShellApplication {
+  name = "dead-config";
+  runtimeInputs = [
+    ripgrep
+    jq
+    git
+    coreutils
+  ];
+  text = ''
+    export LC_ALL=C
+    root="''${DEAD_CONFIG_ROOT:-$(git rev-parse --show-toplevel)}"
+    cd "$root"
 
-    ROOT = os.environ.get("DEAD_CONFIG_ROOT") or subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        capture_output=True, text=True, check=True,
-    ).stdout.strip()
+    # A tracked exception needs a REASON and a REVIEW date (rule 22); the canary runs --expired
+    # weekly. Emptying this list is the goal, not growing it. Keyed by kind and BASENAME.
+    declare -A why=() by=()
+    # The frozen home repo on the Seagate is garbage without it: docs/notes/boot-and-storage/restic.md
+    why[secret:restic_password]="reads the frozen home repo on the Seagate" by[secret:restic_password]=2026-12-31
+    # A policy no module implements: the README's License section is its only way in.
+    why[note:docs/notes/repo/license.md]="the why of LICENSE, reached from the README" by[note:docs/notes/repo/license.md]=2027-09-29
 
-    # A tracked exception needs a REASON and a REVIEW date (rule 22); the canary runs --expired weekly.
-    # Emptying this list is the goal, not growing it.
-    ALLOWED = {
-        # The daily backup left on 24/09/2026 and this password did NOT: without it the
-        # frozen home repo on the Seagate is encrypted garbage. It goes back into use the
-        # day new storage arrives (docs/notes/boot-and-storage/restic.md).
-        "secret:restic_password": ("reads the frozen home repo on the Seagate", "2026-12-31"),
-        # A policy no module implements: the README's License section is its only way in.
-        "note:docs/notes/repo/license.md": ("the why of LICENSE, reached from the README", "2027-09-29"),
+    # Rule 22's clock half: an exception past its review date. It never runs in the gate.
+    if [[ "''${1:-}" == --expired ]]; then
+      # The `# review-by:` above each allowlist in .config/gitleaks.toml, keyed by its description.
+      if [[ -f .config/gitleaks.toml ]]; then
+        while IFS=$'\t' read -r date desc; do
+          why[gitleaks:$desc]=$desc by[gitleaks:$desc]=$date
+        done < <(rg -U -o -P -r $'$1\t$2' \
+          '# review-by: (\d{4}-\d{2}-\d{2})\n(?:#.*\n)*\[\[rules\.allowlists\]\]\ndescription = "([^"]+)"' \
+          .config/gitleaks.toml || true)
+      fi
+      today=$(date +%F)
+      late=0
+      while IFS= read -r key; do
+        if [[ "''${by[$key]}" < "$today" ]]; then
+          echo "dead-config: $key was due for review on ''${by[$key]} (''${why[$key]})" >&2
+          late=1
+        fi
+      done < <(printf '%s\n' "''${!by[@]}" | sort)
+      if ((late)); then
+        printf '\nDelete it, or move the date in a commit that says why.\n' >&2
+        exit 1
+      fi
+      echo "dead-config: ''${#by[@]} exceptions, none past its review date"
+      exit 0
+    fi
+
+    files=()
+    code=()
+    nix=()
+    while IFS= read -r f; do
+      [[ -f "$f" ]] || continue
+      files+=("$f")
+      case "$f" in *.nix | *.lua | *.qml | *.sh | *.toml | *.yaml | *.yml) code+=("$f") ;; esac
+      [[ "$f" != *.nix ]] || nix+=("$f")
+    done < <(git ls-files)
+
+    findings=()
+    allowed=()
+    flag() {
+      local key="$1:''${2##*/}"
+      if [[ -n "''${why[$key]:-}" ]]; then
+        allowed+=("dead-config: allowed $1 $2: ''${why[$key]} (review by ''${by[$key]})")
+      else
+        findings+=("$1: $2 ($3)")
+      fi
     }
 
-    CODE_EXT = (".nix", ".lua", ".qml", ".sh", ".toml", ".yaml", ".yml")
-
-
-    def tracked():
-        out = subprocess.run(
-            ["git", "-C", ROOT, "ls-files"],
-            capture_output=True, text=True, check=True,
-        ).stdout.split()
-        return [f for f in out if os.path.isfile(os.path.join(ROOT, f))]
-
-
-    def read(rel):
-        try:
-            return open(os.path.join(ROOT, rel), encoding="utf-8").read()
-        except (UnicodeDecodeError, OSError):
-            return ""
-
-
-    def check_modules(files, _code):
-        """A .nix under modules/, hosts/ or flake/ that nothing imports is a file nobody evaluates."""
-        nix = {f: read(f) for f in files if f.endswith(".nix")}
-
-        def imports_of(f):
-            found = []
-            base = os.path.dirname(f)
-            text = nix.get(f, "")
-            blocks = re.findall(r"imports\s*=\s*\[(.*?)\]", text, re.S)
-            # A plain `import ./x.nix` reaches a file too: the flake's own files, and DATA files such
-            # as the palette presets, which a module and the docs site both read.
-            blocks += re.findall(r"\bimport\s+(\.\.?/[A-Za-z0-9_./-]+)", text)
-            for block in blocks:
-                # `./x` and `../x` alike: a host reaches a shared module through `../../modules/…`,
-                # and the lookbehind keeps the `./` inside a `../` from matching a level too shallow.
-                for m in re.finditer(r"(?<![\w.])(\.\.?/[A-Za-z0-9_./-]+)", block):
-                    p = os.path.normpath(os.path.join(base, m.group(1)))
-                    for cand in (p + ".nix", os.path.join(p, "default.nix"), p):
-                        if cand in nix:
-                            found.append(cand)
-                            break
-            return found
-
-        roots = ["flake.nix", "modules/nixos/default.nix", "modules/home/default.nix"]
-        roots += [f for f in nix if f.startswith("hosts/")]
-        seen, stack = set(), list(roots)
-        while stack:
-            f = stack.pop()
-            if f in seen:
-                continue
-            seen.add(f)
-            stack.extend(imports_of(f))
+    # 1. A .nix under modules/, hosts/ or flake/ that nothing imports is a file nobody evaluates.
+    # The `imports` blocks and every `import ./x` become edges; jq resolves them and walks from the roots.
+    while IFS= read -r f; do
+      flag module "$f" "no \`imports\` reaches it"
+    done < <(rg --json -U -P 'imports\s*=\s*\[(?s:.*?)\]|\bimport\s+\.\.?/[A-Za-z0-9_./-]+' -- "''${nix[@]}" |
+      jq -nr --args '
+        ($ARGS.positional | map({(.): true}) | add) as $nix
+        | def norm: split("/") | reduce .[] as $s ([];
+            if $s == "." or $s == "" then . elif $s == ".." and length > 0 and .[-1] != ".." then .[:-1]
+            else . + [$s] end) | join("/");
+        # `./x` and `../x` alike; the lookbehind keeps the `./` inside a `../` from matching too shallow.
+        ([inputs | select(.type == "match") | .data.path.text as $f
+          | ($f | split("/") | .[:-1] | join("/")) as $base
+          | .data.submatches[].match.text
+          | scan("(?<![\\w.])(\\.\\.?/[A-Za-z0-9_./-]+)")[0]
+          | (if $base == "" then . else "\($base)/\(.)" end | norm) as $p
+          | [$p + ".nix", $p + "/default.nix", $p] | map(select($nix[.])) | first // empty
+          | {from: $f, to: .}] | group_by(.from) | map({(.[0].from): map(.to)}) | add // {}) as $edges
+        | (["flake.nix", "modules/nixos/default.nix", "modules/home/default.nix"]
+           + ($nix | keys | map(select(startswith("hosts/"))))) as $roots
+        | {seen: {}, stack: $roots}
+        | until(.stack | length == 0;
+            .stack[-1] as $f | .stack |= .[:-1]
+            | if .seen[$f] then . else .seen[$f] = true | .stack += ($edges[$f] // []) end)
+        | .seen as $seen
         # pkgs/ and tools/ are reached by callPackage in flake.nix, not by an `imports` list.
-        return [("module", f, "no `imports` reaches it")
-                for f in sorted(nix)
-                if f not in seen and not f.startswith(("pkgs/", "tools/")) and f != "flake.nix"]
+        | $nix | keys[] | select(($seen[.] | not) and (startswith("pkgs/") or startswith("tools/") | not) and . != "flake.nix")
+      ' "''${nix[@]}")
 
+    # 2. A flake input nothing consumes still gets fetched, locked and evaluated. The declaration
+    # block is cut out of flake.nix, so a name that appears ONLY there is never consumed.
+    flake=$(<flake.nix)
+    head=''${flake%%"inputs = {"*}
+    tail=''${flake#*"inputs = {"}
+    rest=$(mktemp)
+    trap 'rm -f "$rest"' EXIT
+    printf '%s\n%s' "$head" "''${tail#*$'\n  outputs ='}" >"$rest"
+    others=()
+    for f in "''${code[@]}"; do [[ "$f" == flake.nix ]] || others+=("$f"); done
+    while IFS= read -r name; do
+      rg -q -w -F -- "$name" "$rest" "''${others[@]}" || flag input "$name" "declared in flake.nix, consumed nowhere"
+    done < <(jq -r '.nodes[.root].inputs | keys[]' flake.lock)
 
-    def check_inputs(_files, code):
-        """A flake input nothing consumes still gets fetched, locked and evaluated."""
-        flake = read("flake.nix")
-        # The declaration block is where `<name>.url` lives, so a name that appears ONLY there is
-        # never consumed. Everything after `outputs` is real use, including a bare destructured
-        # argument (`nixpkgs-unstable`), which is why this cannot just grep for `inputs.<name>`.
-        decl = flake[flake.index("inputs = {"):flake.index("outputs")]
-        rest = code.replace(decl, "")
-        lock = json.loads(read("flake.lock"))
-        names = lock["nodes"][lock["root"]]["inputs"]
-        return [("input", n, "declared in flake.nix, consumed nowhere")
-                for n in sorted(names)
-                if not re.search(r"\b" + re.escape(n) + r"\b", rest)]
+    # 3. A `my.*` option nobody reads is an SSOT with no consumer, which rule 11 exists to avoid.
+    # A consumer may read the option itself or one of its children.
+    while IFS= read -r opt; do
+      rg -q -P "(config|osConfig)\\.my\\.''${opt//./\\.}\\b" -- "''${code[@]}" ||
+        flag option "my.$opt" "declared, never read through config/osConfig"
+    done < <(rg -U -o -P --no-filename -r '$1' 'options\.my\.([A-Za-z0-9_.]+)\s*=' -- "''${code[@]}" | sort -u)
 
-
-    def check_options(_files, code):
-        """A `my.*` option nobody reads is an SSOT with no consumer, which rule 11 exists to avoid."""
-        dead = []
-        for opt in sorted(set(re.findall(r"options\.my\.([A-Za-z0-9_.]+)\s*=", code))):
-            esc = re.escape(opt)
-            # A consumer may read the option itself or one of its children.
-            if not re.search(r"(config|osConfig)\.my\." + esc + r"\b", code):
-                dead.append(("option", "my." + opt, "declared, never read through config/osConfig"))
-        return dead
-
-
-    def check_notes(files, code):
-        """A note no module points at is unreachable: rule 2 made the pointer the only path in. The
-        other door is a rule card's Detail link, for a note that holds a rule's long form."""
-        cards = set(re.findall(r"\]\((notes/[^)#]+\.md)", read("docs/rules.md")))
-
-        def orphan(f):
-            if not f.startswith("docs/notes/") or not f.endswith(".md"):
-                return False
-            return os.path.basename(f) != "README.md" and f not in code and f.removeprefix("docs/") not in cards
-
-        return [("note", f, "no pointer from any module") for f in sorted(files) if orphan(f)]
-
-
-    def check_secrets(_files, code):
-        """A sops secret nothing consumes is a credential kept, re-encrypted and rotated for nobody."""
-        keys = re.findall(r"^([a-z0-9_]+):", read("secrets/secrets.yaml"), re.M)
-        dead = []
-        for k in sorted(set(keys)):
-            if k == "sops":  # sops' own metadata block, not a secret
-                continue
-            pats = [r"/run/secrets/" + k + r"\b",
-                    r"sops\.secrets\.?\W*" + k + r"\b",
-                    r"sops\.placeholder\." + k + r"\b"]
-            if not any(re.search(p, code) for p in pats):
-                dead.append(("secret", k, "in secrets.yaml, consumed nowhere"))
-        return dead
-
-
-    def check_secret_index(_files, _code):
-        """An index entry with no value in the vault breaks the BUILD, not the evaluation.
-
-        `modules/nixos/core/secrets.nix` turns every key of bitwarden-secrets.json into a
-        `sops.secrets.<name>`, so the index is a DECLARATION and the yaml is the VALUE. Deleting
-        from one side only gets you `sops-install-secrets: the key '<name>' cannot be found`, and
-        it surfaces at `nixos-rebuild`, which is a much slower loop than a pre-commit hook.
-        """
-        index = json.loads(read("secrets/bitwarden-secrets.json"))
-        vault = set(re.findall(r"^([a-z0-9_]+):", read("secrets/secrets.yaml"), re.M))
-        return [("secret-index", k, "in bitwarden-secrets.json, no value in secrets.yaml")
-                for k in sorted(index) if k not in vault]
-
-
-    # Build output and editor droppings that should never be committed. A .gitignore only stops
-    # what is not tracked YET: `scripts/__pycache__/router-sync.cpython-313.pyc` was committed
-    # before the rule existed, so it stayed tracked and invisible to the ignore file.
-    ARTIFACTS = re.compile(
-        r"(^|/)(__pycache__|\.direnv|node_modules|result(-.*)?)(/|$)"
-        r"|\.py[cod]$|\.(swp|swo|orig|rej|bak|tmp)$|(^|/)\.DS_Store$"
+    # 4. A note no module points at is unreachable: rule 2 made the pointer the only path in. The
+    # other door is a rule card's Detail link, for a note that holds a rule's long form.
+    notes=()
+    for f in "''${files[@]}"; do
+      [[ "$f" == docs/notes/*.md && "''${f##*/}" != README.md ]] && notes+=("$f")
+    done
+    declare -A reached=()
+    while IFS= read -r hit; do reached[$hit]=1; done < <(
+      rg -o -F --no-filename -f <(printf '%s\n' "''${notes[@]}") -- "''${code[@]}" || true
+      rg -o --no-filename -r 'docs/$1' '\]\((notes/[^)#]+\.md)' docs/rules.md || true
     )
+    for f in "''${notes[@]}"; do
+      [[ -n "''${reached[$f]:-}" ]] || flag note "$f" "no pointer from any module"
+    done
 
+    # 5. A sops secret nothing consumes is a credential kept, re-encrypted and rotated for nobody.
+    mapfile -t keys < <(rg -o -r '$1' '^([a-z0-9_]+):' secrets/secrets.yaml | sort -u)
+    for k in "''${keys[@]}"; do
+      [[ "$k" != sops ]] || continue # sops' own metadata block, not a secret
+      rg -q -U -P "/run/secrets/$k\\b|sops\\.secrets\\.?\\W*$k\\b|sops\\.placeholder\\.$k\\b" -- "''${code[@]}" ||
+        flag secret "$k" "in secrets.yaml, consumed nowhere"
+    done
 
-    def check_artifacts(files, _code):
-        """A tracked build artifact is dead by definition: it is regenerated, never read."""
-        return [("artifact", f, "build output or editor dropping, should not be tracked")
-                for f in sorted(files) if ARTIFACTS.search(f)]
+    # 6. An index entry with no value in the vault breaks the BUILD at `nixos-rebuild`, a much
+    # slower loop than this: secrets.nix makes every key of the index a `sops.secrets.<name>`.
+    declare -A vault=()
+    for k in "''${keys[@]}"; do vault[$k]=1; done
+    while IFS= read -r k; do
+      [[ -n "''${vault[$k]:-}" ]] || flag secret-index "$k" "in bitwarden-secrets.json, no value in secrets.yaml"
+    done < <(jq -r 'keys[]' secrets/bitwarden-secrets.json)
 
+    # 7. A tracked build artifact is dead by definition. A .gitignore only stops what is not
+    # tracked YET, which is how a .pyc once stayed committed and invisible to it.
+    while IFS= read -r f; do
+      flag artifact "$f" "build output or editor dropping, should not be tracked"
+    done < <(printf '%s\n' "''${files[@]}" | sort |
+      rg -P '(^|/)(__pycache__|\.direnv|node_modules|result(-.*)?)(/|$)|\.py[cod]$|\.(swp|swo|orig|rej|bak|tmp)$|(^|/)\.DS_Store$' || true)
 
-    CHECKS = (check_modules, check_inputs, check_options, check_notes, check_secrets,
-              check_secret_index, check_artifacts)
-
-
-    def gitleaks_dates():
-        """The `# review-by:` above each allowlist in .config/gitleaks.toml, keyed by its description."""
-        path = os.path.join(ROOT, ".config", "gitleaks.toml")
-        if not os.path.exists(path):
-            return {}
-        text = open(path).read()
-        pairs = re.findall(r"# review-by: (\d{4}-\d{2}-\d{2})\n(?:#.*\n)*\[\[rules\.allowlists\]\]\ndescription = \"([^\"]+)\"", text)
-        return {f"gitleaks:{desc}": (desc, by) for by, desc in pairs}
-
-
-    def expired():
-        """Rule 22's clock half: an exception past its review date. It never runs in the gate."""
-        today = datetime.date.today().isoformat()
-        every = {**ALLOWED, **gitleaks_dates()}
-        late = [(key, why, by) for key, (why, by) in sorted(every.items()) if by < today]
-        for key, why, by in late:
-            print(f"dead-config: {key} was due for review on {by} ({why})", file=sys.stderr)
-        if late:
-            print("\nDelete it, or move the date in a commit that says why.", file=sys.stderr)
-            return 1
-        print(f"dead-config: {len(every)} exceptions, none past its review date")
-        return 0
-
-
-    def main():
-        if sys.argv[1:] == ["--expired"]:
-            return expired()
-        files = tracked()
-        code = "\n".join(read(f) for f in files if f.endswith(CODE_EXT))
-
-        findings, allowed = [], []
-        for check in CHECKS:
-            for kind, name, why in check(files, code):
-                key = f"{kind}:{os.path.basename(name)}"
-                (allowed if key in ALLOWED else findings).append((kind, name, why, key))
-
-        for kind, name, _why, key in allowed:
-            why, by = ALLOWED[key]
-            print(f"dead-config: allowed {kind} {name}: {why} (review by {by})")
-
-        if findings:
-            print(f"\ndead-config: {len(findings)} declared and never used\n", file=sys.stderr)
-            for kind, name, why, _key in findings:
-                print(f"  {kind}: {name} ({why})", file=sys.stderr)
-            print("\nRemove it, or add it to ALLOWED with a reason and a review date.", file=sys.stderr)
-            return 1
-
-        print(f"dead-config: {len(CHECKS)} checks, nothing declared and unused")
-        return 0
-
-
-    sys.exit(main())
-  ''
+    ((''${#allowed[@]} == 0)) || printf '%s\n' "''${allowed[@]}"
+    if ((''${#findings[@]})); then
+      printf '\ndead-config: %d declared and never used\n\n' "''${#findings[@]}" >&2
+      printf '  %s\n' "''${findings[@]}" >&2
+      printf '\nRemove it, or add it to ALLOWED with a reason and a review date.\n' >&2
+      exit 1
+    fi
+    echo "dead-config: 7 checks, nothing declared and unused"
+  '';
+}

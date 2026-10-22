@@ -37,7 +37,7 @@ in
     prose-style # ./tools: the build IS the wrapper's shellcheck; the HOOKS below run it, in two modes
     qml-syntax # ./tools: the build IS the wrapper's shellcheck; the HOOK below runs it
     data-syntax # ./tools: the build IS the wrapper's shellcheck; the HOOK below runs it
-    dead-config # ./tools: same, and the CHECK below runs it too
+    dead-config # ./tools: the build IS the wrapper's shellcheck, and the CHECK below runs it too
     router-ssot # ./tools: same, and the CHECK below runs it too
     eval-metrics # ./tools: same flake8 at build time; the gate WORKFLOW runs it after the check
     usage-audit # ./tools: same flake8 at build time; I run it by hand, it reads my ~

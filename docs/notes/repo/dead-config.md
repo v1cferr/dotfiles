@@ -72,7 +72,9 @@ prototyped, produced a false positive, and was fixed before being written down:
   bare argument of `outputs` and used as `import nixpkgs-unstable`. The check subtracts the
   declaration block and then looks for the name ANYWHERE, which catches both forms. It also has to
   scan the whole tree and not just `flake.nix`, because `zen-browser` is consumed in
-  `modules/home/packages.nix` through `specialArgs`.
+  `modules/home/packages.nix` through `specialArgs`. The block ends at the `outputs =` attribute.
+  Until 22/10/2026 it ended at the first `outputs` in the FILE, which is a comment inside the
+  block ("exposing no Nix outputs"), so every input declared below that comment went unchecked.
 - **options**: "declared and used at most once" flagged four live options
   (`my.fai.workstation`, `my.disk`, `my.net.domain`, `my.ingress`), because a consumer reads a
   CHILD (`config.my.ingress.<svc>`) or reads it several times in one file. The check looks for a
@@ -86,6 +88,22 @@ prototyped, produced a false positive, and was fixed before being written down:
   a reach; before 30/09/2026 a `../` was resolved one level too shallow and read as unreached.
   `pkgs/` and `tools/` are deliberately exempt: they are reached by `callPackage` in `flake.nix`,
   not by an `imports` list.
+
+## Shell since 22/10/2026 (rule 24)
+
+The Python version left in phase A of [languages](languages.md). Each check is one or a few `rg`
+calls; the module graph is the one place with real logic, so `rg --json` hands every `imports`
+block and `import ./x` to ONE `jq` program that resolves the paths, normalizes them and walks
+from the roots. 0.4s on the tree.
+
+MEASURED against the Python version: the same output on the tree in both modes, and on a fixture
+with one case of each kind, the same findings plus ONE: an input declared below the comment the
+old cut stopped at, which only the shell version reports.
+
+A QUIRK kept as it was, for a separate decision: an exception is keyed by kind and BASENAME, so
+`note:docs/notes/repo/license.md` can never match a finding (that key would be `note:license.md`).
+The note is still not reported, but for another reason: this checker's own source holds the path,
+and a path inside the code is what counts as a pointer. The exception keeps itself alive.
 
 ## Two checks that were considered and REJECTED
 

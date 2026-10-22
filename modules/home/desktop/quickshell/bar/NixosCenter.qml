@@ -130,8 +130,10 @@ BarPanel {
     }
     onVisibleChanged: {
         center.expanded = ({}); // groups open folded, every time
-        if (center.visible)
+        if (center.visible) {
             powerSection.refresh(); // the sync's state, read on open instead of polled
+            bootSection.refresh(); // boot-trust's record, same rule
+        }
     }
 
     // ── Screenshots: shell-screenshot (flameshot.nix) waits for this panel to leave the frame ──
@@ -333,6 +335,18 @@ BarPanel {
             id: powerSection
             Layout.fillWidth: true
             bar: center.bar
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: Theme.hairline
+            color: Theme.colEdge
+        }
+
+        // ── Boot: what the boot chain could prove this boot (BootTrustSection.qml) ──
+        BootTrustSection {
+            id: bootSection
+            Layout.fillWidth: true
         }
 
         Rectangle {

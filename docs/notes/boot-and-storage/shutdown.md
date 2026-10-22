@@ -71,3 +71,21 @@ To check the effect without a stopwatch, the journal's two stamps:
 ```sh
 journalctl -b -1 -o short-precise | grep -E "Stopping User Manager|Journal stopped"
 ```
+
+## hyprshutdown: looked at, not adopted (22/10/2026)
+
+[hyprshutdown](https://wiki.hypr.land/0.56.0/Hypr-Ecosystem/hyprshutdown/) 0.1.1 (in the pinned
+nixpkgs and in unstable) opens a dialog, asks every window to close, then exits Hyprland; powering
+off is a `--post-cmd` that runs AFTER Hyprland is gone. Against what runs here:
+
+- **The autologin races it.** LightDM logs this session back in as soon as Hyprland exits, so a
+  `--post-cmd systemctl poweroff` would compete with a fresh session starting. The current path asks
+  logind first, and logind owns the order of the stop.
+- **It adds nothing to reboot and poweroff.** systemd already sends SIGTERM to every app and waits
+  up to the 5 s above; an app that saves on a close request but not on SIGTERM is the only gain,
+  and none is known here.
+- **Log out is where it could help**: a graceful close instead of `loginctl terminate-user`. That
+  needs the autologin race above tested first, so it stays an idea.
+
+So the session's actions stay on systemd and logind, and the NixOS Center's dialog
+([nixos-center](../desktop/nixos-center.md#the-session-dialog-22102026)) is the confirmation.

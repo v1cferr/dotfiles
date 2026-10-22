@@ -14,6 +14,7 @@ the band's bell and the power menu are gone; their functions are all here.
 | Notifications | the history, newest first and grouped, scrolling on its own past 480 px (less on a short screen) |
 | Hardware | CPU and GPU temperature, RAM, disk: four cards (v2.3) |
 | Power | the Balanced/Gaming/Eco profile, what its last apply did, and five memory and GPU readings (18/10/2026) |
+| Boot | Secure Boot, the loader and the integrity check, as `boot-trust` proved them (22/10/2026) |
 | Screenshots | the two monitors by name (ASUS, LG), Both, and where the shot goes, always open (v2.3) |
 | Session | the six session actions, their commands exactly the old power menu's |
 
@@ -29,15 +30,52 @@ synchronously at startup so a notification in the first instant cannot slip past
 state, not configuration (rule 6), and it needed no daemon. Tested on 17/10/2026 through
 `qs ipc call notif dnd`: the file went `false`, `true`, `false`.
 
-**The three actions that end the session ask twice.** Log out, reboot and shut down turn red and
-read `Confirm?` on the first click, and run on the second within 4 s; a reopened panel is never left
-armed. Lock, darken and suspend run at once, since each is undone by coming back to the keyboard.
+**The three actions that end the session ask first, in a dialog** (22/10/2026, replacing the
+second click). Log out, reboot and shut down close the Center and open ONE modal on the main monitor
+(`power/PowerDialog.qml`), over a dimmed screen: Cancel is focused, Escape or a click on the dim
+cancels, the arrows or Tab move between the buttons, Enter confirms. Lock, darken and suspend run at
+once, since each is undone by coming back to the keyboard. Details in [the dialog](#the-session-dialog-22102026).
 
-**The commands are the power menu's, unchanged**, with the same reasons: the lock starts
+**The commands are the power menu's, unchanged** (they live in `power/PowerMath.qml` now), with the same reasons: the lock starts
 `lockscreen.service` before marking the `LockedHint` (`loginctl lock-session` alone only emits the
 signal), darkening is gamma 0 through hyprsunset and never dpms, logging out is `loginctl
 terminate-user` because LightDM starts a bare Hyprland. The history of each is in
 [bar.md](bar.md#the-power-menu) and [lockscreen.md](lockscreen.md).
+
+## The session dialog (22/10/2026)
+
+`Power.qml` owns the six actions; the Center's footer and `qs ipc call power ask <key>` only request
+them. The rules it keeps:
+
+- **One command at a time.** The state machine is pure (`power/PowerMath.qml`, phases `idle`,
+  `confirm`, `busy`, `handoff`, `error`) and `quickshell/tests/tst_power.qml` covers it: a double
+  confirm never runs twice, a running command cannot be cancelled into a lie.
+- **The exit code is read.** The old footer fired the command and closed the panel. Now a non-zero
+  exit shows the command's last stderr line, so a poweroff held by a logind inhibitor or a suspend
+  that failed says so, in the same dialog, for any of the six.
+- **No fake progress.** When reboot or shut down is accepted the dialog says `Restarting` or
+  `Shutting down`, static, and the OS takes over. If nothing happened after 90 s (a delay
+  inhibitor), it turns into an error instead of waiting forever.
+- **One window, on the main monitor only**, layer Overlay, namespace `qs-dialog` (outside the blur
+  rule: a dim, not a frosted screen). Its keyboard is Exclusive only while it asks. A change of the
+  main monitor cancels it, so it never asks on a dark screen.
+- **Motion** is the design system's: Hyprland's layer fade and the card's `PopIn`, nothing new; the
+  buttons' color uses `Theme.ms()`, so `motion = off` turns it off.
+
+Tested on 22/10/2026 in a headless sway with `QS_POWER_DRYRUN` (every command becomes `exit 0` or
+`exit 1`, and the test copy also replaced the commands with `true`): Escape closed it, Right then
+Enter confirmed, a failure showed `Reboot failed (exit 1).` with Close focused, and success showed
+`Restarting`. Not yet seen on Hyprland itself, where the focus grab and the fade are the real ones.
+
+## Boot (22/10/2026)
+
+Three cards read from `/run/boot-trust.json` when the panel opens (`bar/BootTrustSection.qml`, the
+mapping in `data/BootTrustMath.qml`, tested by `tests/tst_boottrust.qml`). The file is written by a
+read-only root oneshot ([boot](../boot-and-storage/boot.md#what-boot-trust-records)), so the shell
+needs no privilege. Green needs evidence: Secure Boot on in USER mode, a loader that passes
+`sbverify` against our db key, and an enrolled config proven for THIS boot. Anything short of that
+is yellow, a failure is red, and no record is Unknown. Under GRUB the honest reading is `Partial`,
+`initrd not verified`.
 
 ## How it opens and closes
 

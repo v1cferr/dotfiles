@@ -61,6 +61,12 @@ The splash lives in the initrd and does not touch the bootloader, so it goes fir
    the lock screen up before the desktop, Sunshine reachable, `systemctl --failed` empty,
    `journalctl -b -u plymouth-start -u plymouth-quit` clean.
 
+**PASSED on 22/10/2026**: a warm reboot, a poweroff and a cold boot, the splash at boot and
+`Shutting down` at poweroff, no black screen, `systemctl --failed` empty. Plymouth showed at 1.1 s
+(in the initrd) and quit at 8.4 s, as LightDM started; the initrd grew 6.8 MiB and took 2.33 s
+against 3.2 s before, inside the usual spread. The first reboot showed no splash on the way down:
+it ran from the generation booted WITHOUT `splash` on the command line, so Plymouth stayed in text.
+
 Escape on the splash shows the text console. To boot once without it from GRUB, `e` on the entry
 and append `plymouth.enable=0`. Under Limine the editor is OFF (Secure Boot), so the way out there
 is an older generation or a rebuild with the flag off.

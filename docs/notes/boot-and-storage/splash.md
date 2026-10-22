@@ -43,8 +43,8 @@ honest percentage. `Shutting down` and `Restarting` as the title in those modes,
   the splash up. No extra unit here. Drilled in `vm-limine` (no LightDM there):
   `plymouth-quit.service` succeeded.
 - **The GPU**: `xe` is already in the initrd for early KMS ([intel-arc-b580](../../../modules/nixos/hardware/intel-arc-b580.nix)),
-  so the splash draws on the real driver, not on `simpledrm`. Seen in `vm-limine` on QEMU's VGA
-  (22/10/2026), not yet on the B580.
+  so the splash draws on the real driver, not on `simpledrm`. Seen on the B580 on 22/10/2026,
+  at boot and at poweroff, with no black screen (stage C1 of the migration).
 - **Two monitors**: the splash shows on both, but the LG's rotation is Hyprland's and does not
   exist yet at boot, so on the LG it is sideways. Expected, and only for those seconds.
 - **Diagnostics stay**: no `quiet` was added, `loglevel=4` stays, Escape switches to the text

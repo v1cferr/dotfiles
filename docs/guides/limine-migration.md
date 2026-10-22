@@ -44,8 +44,10 @@ kernel and initrd per kept generation, deduplicated by store path.
    sudo ln -sfn "$(readlink -f /run/current-system)" /nix/var/nix/gcroots/grub-fallback
    ```
 
-4. On Windows, `manage-bde -status C:`. If BitLocker is on, have the recovery key in hand: a
-   different boot path can change what it measured.
+4. BitLocker must be off: a different boot path can change what it measured. Checked on
+   22/10/2026 from Linux: the C: volume (`/dev/sdb3`, with `Windows/System32`) mounts through
+   `ntfs3` at `/mnt/windows`, and a BitLocker volume, even suspended, stays encrypted on disk and
+   never mounts as NTFS. So it is decrypted. From Windows, `manage-bde -status C:` says the same.
 5. A NixOS 26.05 USB stick that boots. It is NOT signed by this machine's db, so using it means
    turning Secure Boot off in the BIOS for that boot only ([bios-ex-b560m-v5](bios-ex-b560m-v5.md)).
 

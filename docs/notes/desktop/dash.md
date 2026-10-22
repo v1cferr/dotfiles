@@ -484,7 +484,7 @@ across the width; and when it renews, as the clock will show it ("renews 23:10 Â
 "Thu 00:00" another day). The models' shares, the plan and extra usage moved into the blocks' tip.
 Both meters turn yellow at 75% (or when the server says `warning`) and red at 90%.
 
-**The week as one picture** (`dash/ClaudeWeek.qml`): the share used as a STEP line (a running total:
+**The week as one picture** (`widgets/ClaudeWeek.qml`, shared with the lock): the share used as a STEP line (a running total:
 each reading holds until the next) across the limit's own week, from its last renewal to the next,
 so the line ends at now and the rest of the frame is the week still ahead. Guides at 50% and 100%,
 the days at each local midnight, a dotted line where the share dropped (a reset), the value now at

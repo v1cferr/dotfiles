@@ -22,6 +22,10 @@
   # go back; every value it changes: docs/notes/desktop/theme.md
   home-manager.users.v1cferr.my.theme.glass = "clear-gradient";
 
+  # The Windows ESP on the SanDisk, by GPT PARTUUID (stable across ports, unlike /dev/sdX). Read
+  # with `lsblk -o NAME,PARTUUID`; only Limine uses it, GRUB pins the filesystem UUID itself.
+  my.boot.windows.efiPartUuid = "8f36a7a5-a54c-4c78-9d3d-1202514df9be";
+
   # Fixed at the 1st install: NEVER change it afterwards. The same value as the old host because
   # it is the same release; the stateVersion follows the installation, not the disk.
   system.stateVersion = "26.05";

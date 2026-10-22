@@ -172,3 +172,7 @@ the module when `pwm1` shows up under the GPU's hwmon WITHOUT the patch. That is
 ```sh
 ls /sys/bus/pci/devices/0000:03:00.0/hwmon/hwmon*/ | grep pwm
 ```
+
+Checked against 7.3.0 on 21/10/2026, by reading its `xe_hwmon.c` and applying the patch to its
+source: mainline still has only the read-only `fan*_input`, no `pwm1`, and v2 still applies cleanly
+(one hunk at a 2-line offset). So the patch stays, behind its switch.

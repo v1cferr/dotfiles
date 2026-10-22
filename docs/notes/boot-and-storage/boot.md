@@ -76,15 +76,16 @@ ONCE. The 10-generation limit fits comfortably in the ESP's 1 GiB: today 13 MiB 
 ## What Secure Boot here gives you, and what it does not
 
 The firmware verifies GRUB (signed with this machine's key) and verifies Windows' `bootmgfw.efi`
-(signed by Microsoft). **GRUB then loads the kernel and initrd WITHOUT verifying anything**, and
-that is not an accident: it is the `--disable-shim-lock` in boot.nix, which is MANDATORY for the
-machine to boot. Without it GRUB demands the shim protocol, which does not exist here, and dies
-with `shim_lock protocol not found`, on NixOS as well as on Windows.
+(signed by Microsoft). **GRUB itself verifies nothing after that**, and that is not an accident:
+it is the `--disable-shim-lock` in boot.nix, which is MANDATORY for the machine to boot. Without it
+GRUB demands the shim protocol, which does not exist here, and dies with
+`shim_lock protocol not found`, on NixOS as well as on Windows.
 
-So this satisfies the firmware and Windows, and it blocks a bootloader swapped from outside. It
-does NOT block somebody who already has root and swaps the kernel. The whole chain would need
-shim (and then a kernel signed by Microsoft) or lanzaboote (and then no menu and no theme). There
-is no third door.
+The kernel is still checked, by the FIRMWARE: GRUB hands it to `LoadImage`, which demands a `db`
+signature, so `secureboot.nix` signs every kernel on each install (point 4 below). What stays
+unprotected is the INITRD, which never goes near `LoadImage`: somebody who already has root can
+swap it. Closing that would need shim (and then a kernel signed by Microsoft) or lanzaboote (and
+then no menu and no theme). There is no third door.
 
 ## Microsoft's certificates are mandatory
 
@@ -148,14 +149,14 @@ It is the FIRST item to declare when impermanence lands (see
 
 ## The mainline kernel
 
-`linuxPackages_latest` (7.1.x) instead of the release default (6.18.x). The reason is the VIDEO
+`linuxPackages_latest` instead of the release default (6.18.x). The reason is the VIDEO
 DRIVER: the Arc B580's `xe` lives in the kernel, so a new kernel means a new driver, and it is the
 only driver lever that does NOT require crossing channels, since `linuxPackages_latest` comes from
 26.05 itself. See [`gpu.md`](../hardware/gpu.md) for why the rest of the graphics stack stays on stable.
 
 It is safe here because there are zero out-of-tree modules (no zfs or virtualbox to version match)
-and this machine's Secure Boot signs GRUB, not the kernel, so changing kernels does not ask for a
-key re-enroll.
+and the signing hook signs whatever kernel lands in `/boot/kernels` with the key already in `db`,
+so changing kernels never asks for a key re-enroll.
 
 **PREFER `nixos-rebuild boot` plus a reboot** when changing kernel versions, but `switch` does NOT
 break it: NixOS keeps `/run/booted-system/kernel-modules` with the tree of the RUNNING kernel, so

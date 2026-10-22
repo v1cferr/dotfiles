@@ -47,11 +47,17 @@ writes, and is not counted.
 2,800 lines of Python and shell) left with the move to QML; the lock path has no Python now.
 [lockscreen.md](../desktop/lockscreen.md).
 
+**Done: phase A, the six pre-commit checkers (22/10/2026).** Each one is shell now (`rg`, `jq`,
+`sed`, and `biome`/`taplo` as parsers), one commit per checker, each MEASURED against the Python
+it replaced on the tree and on a fixture built to fire every check. MEASURED after it: 1,183 lines
+in `.py` files (unchanged) and about 520 in `writePython3` bodies (razer-dpi, eval-metrics,
+exposure-check, usage-audit), down from about 1,578 inline; heredocs outside a writer not counted.
+
 The rest, one phase at a time, each with its own plan when it starts:
 
 | Phase | What | How |
 | --- | --- | --- |
-| A | The pre-commit checkers written in inline Python: ~~`prose-style`~~, ~~`docs-links`~~, ~~`rules-index`~~, ~~`data-syntax`~~, ~~`dead-config`~~ (the five shell since 22/10/2026), `router-ssot` | shell with `jq` and `rg`, or a check at Nix evaluation time; one per commit, since they ARE the quality gate |
+| A | The pre-commit checkers written in inline Python: ~~`prose-style`~~, ~~`docs-links`~~, ~~`rules-index`~~, ~~`data-syntax`~~, ~~`dead-config`~~, ~~`router-ssot`~~ (DONE 22/10/2026: all six are shell) | shell with `jq` and `rg`, or a check at Nix evaluation time; one per commit, since they ARE the quality gate |
 | B | `modules/home/desktop/calendar/scripts/registry.py` and its test | validation and expansion in Nix, shell for `import-un` |
 | C | `router-sync.py`, `wol-send.py`, Sunshine's `statsPy`, Vicinae's icon heredoc, `usage-audit`, `exposure-check`, `eval-metrics`, `repo-stats` | shell (`socat` for the magic packet), or Nix |
 | C | `pkgs/razer-dpi` (ioctls on hidraw) | evaluated on its own: if shell cannot do it with dignity, it becomes an exception with a host-like reason |

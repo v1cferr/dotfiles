@@ -1,361 +1,195 @@
 # router-ssot: it fails when the router's mirrored UCI disagrees with the SSOT this repo declares.
-# Rule 11 asks for one owner per value, and the router is the one place Nix does not reach, so until
-# this existed the only guard was "keep it in sync by hand": docs/notes/repo/router-ssot.md
-{ writers, router }:
+# Rule 11 asks for one owner per value, and Nix does not reach the router: docs/notes/repo/router-ssot.md
+{
+  writeShellApplication,
+  ripgrep,
+  jq,
+  gnused,
+  git,
+  router,
+}:
 
-writers.writePython3Bin "router-ssot"
-  {
-    libraries = [ ];
-    flakeIgnore = [ "E501" ]; # the repo's line length is 100, not flake8's 79
-  }
-  ''
-    """Fail when the router's mirrored UCI disagrees with the SSOT declared in this repo."""
-    import ipaddress
-    import os
-    import re
-    import subprocess
-    import sys
+writeShellApplication {
+  name = "router-ssot";
+  # `$1` for rg -r and every `$name` of the jq program are literals in single quotes, on purpose.
+  excludeShellChecks = [ "SC2016" ];
+  runtimeInputs = [
+    ripgrep
+    jq
+    gnused
+    git
+  ];
+  text = ''
+    root="''${ROUTER_SSOT_ROOT:-$(git rev-parse --show-toplevel)}"
+    cd "$root"
+    mirror="${router.mirror}"
 
-    ROOT = os.environ.get("ROUTER_SSOT_ROOT") or subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        capture_output=True, text=True, check=True,
-    ).stdout.strip()
+    # The first match of a PCRE in a file, multiline, or nothing: an anchor that moved reads empty.
+    first() { rg -U -o -P -r "$3" "$1" "$2" 2>/dev/null | head -n1 || true; }
 
-    MIRROR = "${router.mirror}"
-    ROUTER = "${router.address}"
+    # The quoted strings of a Nix list literal, comments stripped FIRST: the prose next to
+    # moonlightSources quotes `the FAI range`, and reading it as an entry was the first false positive.
+    nix_list() {
+      rg -U -o -P -m1 "(?s)$2\\s*=\\s*\\[.*?\\];" "$1" 2>/dev/null |
+        sed -E 's/^(([^"#]|"([^"\\]|\\.)*")*)#.*/\1/' |
+        rg -o -r '$1' '"([^"]+)"' || true
+    }
 
+    # Every value this repo owns and the router repeats. ANCHORED, so a rename fails loudly instead
+    # of turning a check into a no-op that passes for the wrong reason.
+    subnets=$(rg -U -o -P -r $'$1\t$2' \
+      '(?s)(\w+Subnet)\s*=\s*lib\.mkOption\s*\{(?:(?!\};).)*?default\s*=\s*"([^"]+)"' \
+      modules/nixos/network/subnets.nix 2>/dev/null || true)
+    sunshine=modules/nixos/services/sunshine.nix
+    ssh=modules/home/shell/ssh.nix
+    # The host's LAN address has no option of its own: once in the tree, as the CSRF origin.
+    # THREE ssh anchors, since two addresses left their `HostName` literal: docs/notes/repo/router-ssot.md
+    hosts=$(
+      rg -o -r '$1' 'HostName\s*=\s*"([\d.]+)"' "$ssh" 2>/dev/null || true
+      first 'cesarHost\s*=\s*"([\d.]+)"' "$ssh" '$1'
+      first '(?s)host\s*=\s*lib\.mkOption\s*\{.*?default\s*=\s*"([\d.]+)"' modules/home/network/t480.nix '$1'
+      echo "${router.address}"
+    )
 
-    def read(rel):
-        try:
-            with open(os.path.join(ROOT, rel), encoding="utf-8") as fh:
-                return fh.read()
-        except OSError:
-            return ""
+    read_conf() { cat "$mirror/$1.conf" 2>/dev/null || true; }
 
+    out=$(mktemp)
+    trap 'rm -f "$out"' EXIT
+    jq -nr \
+      --arg network "$(read_conf network)" \
+      --arg firewall "$(read_conf firewall)" \
+      --arg dhcp "$(read_conf dhcp)" \
+      --arg subnets "$subnets" \
+      --arg base "$(first 'basePort\s*=\s*(\d+)' "$sunshine" '$1')" \
+      --arg sources "$(nix_list "$sunshine" moonlightSources)" \
+      --arg host "$(first 'csrf_allowed_origins\s*=\s*"https://([\d.]+):' "$sunshine" '$1')" \
+      --arg faiSubnets "$(nix_list modules/nixos/network/fai-gateway.nix faiSubnets)" \
+      --arg faiHosts "$(nix_list modules/nixos/network/fai-gateway.nix faiTunnelHosts)" \
+      --arg sshPort "$(first 'ports\s*=\s*\[\s*(\d+)\s*\]' modules/nixos/network/network.nix '$1')" \
+      --arg sshHosts "$hosts" \
+      --arg mirror "$mirror" '
+      def lines: split("\n") | map(select(length > 0));
+      # One mirrored config as {key: [values]}. A list option carries several quoted values.
+      def uci: lines | map(gsub("^\\s+|\\s+$"; "") | select(length > 0 and (startswith("#") | not) and contains("=")))
+        | map(index("=") as $i | {key: (.[:$i] | gsub("^\\s+|\\s+$"; "")), value: (.[$i + 1:] as $raw
+            | [$raw | scan("\u0027([^\u0027]*)\u0027")[0]] | if length > 0 then . else [$raw | gsub("^\\s+|\\s+$"; "")] end)})
+        | from_entries;
+      # The ANONYMOUS sections of one kind, {index: {option: value}}, in the order they appear.
+      def anon($kind): reduce (to_entries[] | (.key | capture("^\\w+\\.@" + $kind + "\\[(?<i>\\d+)\\]\\.(?<o>\\w+)$")) as $m
+        | {i: $m.i, o: $m.o, v: .value[0]}) as $e ({}; .[$e.i][$e.o] = $e.v);
+      def named($prefix): reduce (to_entries[] | (.key | capture("^\\w+\\.(?<n>" + $prefix + "\\w*)\\.(?<o>\\w+)$")) as $m
+        | {n: $m.n, o: $m.o, v: .value[0]}) as $e ({}; .[$e.n][$e.o] = $e.v);
+      # A rule typed by hand is born NAMED (firewall.ssh_cesar), so anonymous ones alone would hide it.
+      def sections($kind): . as $c | [anon($kind)[]] + [to_entries[] | select((.key | test("^\\w+\\.\\w+$")) and .value[0] == $kind)
+        | .key as $k | reduce ($c | to_entries[] | select(.key | startswith($k + "."))) as $o ({}; .[$o.key | split(".") | last] = $o.value[0])];
 
-    def uci(name):
-        """One mirrored config as {key: [values]}. A list option carries several quoted values."""
-        out = {}
-        for line in read(f"{MIRROR}/{name}.conf").splitlines():
-            line = line.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, _, raw = line.partition("=")
-            found = re.findall(r"'([^']*)'", raw)
-            out[key.strip()] = found or [raw.strip()]
-        return out
+      # IPv4 as integers. A non-IPv4 string is null, and null is inside nothing, like an IPv6 was.
+      def ip: if type == "string" and test("^\\d{1,3}(\\.\\d{1,3}){3}$") then split(".") | map(tonumber)
+        | if all(. <= 255) then .[0] * 16777216 + .[1] * 65536 + .[2] * 256 + .[3] else null end else null end;
+      def net: split("/") | {base: (.[0] | ip), len: ((.[1] // "32") | tonumber)};
+      def within($n): . != null and $n.base != null and (. / pow(2; 32 - $n.len) | floor) == ($n.base / pow(2; 32 - $n.len) | floor);
+      def dotted: [(. / 16777216 | floor) % 256, (. / 65536 | floor) % 256, (. / 256 | floor) % 256, . % 256] | map(tostring) | join(".");
+      def prefix: 32 - ((4294967296 - ip) | log2 | round);
+      # Python ipaddress is_private for IPv4: the network AND its broadcast inside one of these.
+      def private_ip: . as $i | any(("0.0.0.0/8", "10.0.0.0/8", "127.0.0.0/8", "169.254.0.0/16", "172.16.0.0/12",
+        "192.0.0.0/29", "192.0.0.170/31", "192.0.2.0/24", "192.168.0.0/16", "198.18.0.0/15", "198.51.100.0/24",
+        "203.0.113.0/24", "240.0.0.0/4", "255.255.255.255/32"); . as $r | $i | within($r | net));
+      def private: net | (.base | private_ip) and (.base + pow(2; 32 - .len) - 1 | private_ip);
+      # Python repr, so a message reads as it always did.
+      def py: if type == "array" then "[" + (map(py) | join(", ")) + "]" elif type == "string" then "\u0027\(.)\u0027"
+        elif . == null then "None" else tostring end;
+      def pair: "(\(.[0] | py), \(.[1] | py))";
+      def show: if . == null then "None" else tostring end;
 
+      ($network | uci) as $net | ($firewall | uci) as $fw | ($dhcp | uci) as $dh
+      | ($subnets | lines | map(split("\t") | {key: .[0], value: .[1]}) | from_entries) as $sub
+      | ($base | if . == "" then 0 else tonumber end) as $base
+      | ($sources | lines) as $sources | ($faiSubnets | lines) as $faiSubnets | ($faiHosts | lines) as $faiHosts
+      | ($sshHosts | lines | unique) as $sshHosts
+      | [$fw | sections("redirect")[] | select((.name // "") | startswith("Moonlight-"))] as $moon
+      | [$sub.lanSubnet, $sub.vpnSubnet | select(. != null) | net] as $ranges
 
-    def anon(conf, kind):
-        """The ANONYMOUS sections of one kind, as {index: {option: value}}."""
-        out = {}
-        for key, vals in conf.items():
-            m = re.match(r"\w+\.@" + kind + r"\[(\d+)\]\.(\w+)$", key)
-            if m:
-                out.setdefault(m.group(1), {})[m.group(2)] = vals[0]
-        return out
-
-
-    def named(conf, prefix):
-        """The NAMED sections whose name starts with prefix, as {name: {option: value}}."""
-        out = {}
-        for key, vals in conf.items():
-            m = re.match(r"\w+\.(" + prefix + r"\w*)\.(\w+)$", key)
-            if m:
-                out.setdefault(m.group(1), {})[m.group(2)] = vals[0]
-        return out
-
-
-    def sections(conf, kind):
-        """Every section of one kind, ANONYMOUS and NAMED. A rule typed by hand is born named
-        (firewall.ssh_cesar is one), so reading only the anonymous ones is how it hides."""
-        out = list(anon(conf, kind).values())
-        for key, vals in conf.items():
-            if re.match(r"\w+\.\w+$", key) and vals and vals[0] == kind:
-                out.append({k.rsplit(".", 1)[-1]: v[0]
-                            for k, v in conf.items() if k.startswith(key + ".")})
-        return out
-
-
-    def strip_comment(line):
-        """Drop a trailing Nix comment, ignoring a `#` that lives INSIDE a quoted string."""
-        out, quoted = [], False
-        for i, ch in enumerate(line):
-            if ch == '"' and (i == 0 or line[i - 1] != "\\"):
-                quoted = not quoted
-            if ch == "#" and not quoted:
-                break
-            out.append(ch)
-        return "".join(out)
-
-
-    def nix_list(text, name):
-        """The quoted strings of a Nix list literal, which is how the repo declares its blocks.
-        Comments are stripped FIRST: the prose next to moonlightSources quotes `the FAI range`, and
-        reading that as an entry is exactly the false positive this checker existed 5 minutes to find."""
-        m = re.search(name + r"\s*=\s*\[(.*?)\];", text, re.S)
-        if not m:
-            return []
-        body = "\n".join(strip_comment(line) for line in m.group(1).splitlines())
-        return re.findall(r'"([^"]+)"', body)
-
-
-    def declared():
-        """Every value this repo owns and the router repeats. ANCHORED, so a rename fails here
-        loudly instead of turning a check into a no-op that passes for the wrong reason."""
-        subnets = read("modules/nixos/network/subnets.nix")
-        sunshine = read("modules/nixos/services/sunshine.nix")
-
-        out = {"subnets": {}}
-        for name, body in re.findall(r"(\w+Subnet)\s*=\s*lib\.mkOption\s*\{(.*?)\};", subnets, re.S):
-            m = re.search(r'default\s*=\s*"([^"]+)"', body)
-            if m:
-                out["subnets"][name] = m.group(1)
-
-        base = re.search(r"basePort\s*=\s*(\d+)", sunshine)
-        out["base_port"] = int(base.group(1)) if base else 0
-        out["moonlight_sources"] = nix_list(sunshine, "moonlightSources")
-
-        # The host's own LAN address has no option of its own: it appears once in the Nix tree, as
-        # the CSRF origin, and 19 times in the mirror. That asymmetry is why it is checked and not
-        # generated, and the day it earns an option this anchor is the thing to move.
-        host = re.search(r'csrf_allowed_origins\s*=\s*"https://([\d.]+):', sunshine)
-        out["host_ip"] = host.group(1) if host else ""
-
-        fai = read("modules/nixos/network/fai-gateway.nix")
-        out["fai_subnets"] = nix_list(fai, "faiSubnets")
-        out["fai_tunnel_hosts"] = nix_list(fai, "faiTunnelHosts")
-        ssh = re.search(r"ports\s*=\s*\[\s*(\d+)\s*\]", read("modules/nixos/network/network.nix"))
-        out["ssh_port"] = ssh.group(1) if ssh else ""
-        # THREE anchors, because two addresses no longer sit in a `HostName` literal. The T480's
-        # went into an option the day the RDP wrapper became a second consumer, and the brother's
-        # became the `cesarHost` binding the day his DUAL BOOT needed a third block for the same
-        # address; both are rule 11 doing its job. Losing an anchor does not weaken the check
-        # quietly: the dns one starts reporting an answer "no host declares", which is how the
-        # cesar one was found, by this hook, in the very commit that moved it.
-        ssh_nix = read("modules/home/shell/ssh.nix")
-        hosts = set(re.findall(r'HostName\s*=\s*"([\d.]+)"', ssh_nix))
-        bound = re.search(r'cesarHost\s*=\s*"([\d.]+)"', ssh_nix)
-        if bound:
-            hosts.add(bound.group(1))
-        opt = re.search(r'host\s*=\s*lib\.mkOption\s*\{.*?default\s*=\s*"([\d.]+)"',
-                        read("modules/home/network/t480.nix"), re.S)
-        if opt:
-            hosts.add(opt.group(1))
-        # The router itself is reached over SSH too; its address comes from its data file now.
-        hosts.add(ROUTER)
-        out["ssh_hosts"] = hosts
-        return out
-
-
-    def check_mirror(_d, conf):
-        """A missing mirror would make every check below pass for the wrong reason."""
-        if "network.lan.ipaddr" not in conf["network"]:
-            return [("mirror", f"{MIRROR}/network.conf has no network.lan.ipaddr",
-                     "run `router-sync pull`: the mirror is missing or truncated")]
-        return []
-
-
-    def check_subnets(d, conf):
-        """The router's own addresses have to live inside the subnets the repo declares."""
-        out = []
-        for opt, key in (("lanSubnet", "network.lan.ipaddr"), ("vpnSubnet", "network.wg0.addresses")):
-            want, vals = d["subnets"].get(opt), conf["network"].get(key)
-            if not want or not vals:
-                out.append(("subnet", f"could not read {opt} or {key}",
-                            "an anchor moved: fix this checker, do not delete the check"))
-                continue
-            if ipaddress.ip_interface(vals[0]).ip not in ipaddress.ip_network(want):
-                out.append(("subnet", f"{key} is {vals[0]}, outside my.net.{opt} ({want})",
-                            "both describe the same network: align the router or the option"))
-        return out
-
-
-    def moonlight(conf):
-        """The Moonlight-* redirects, the hand kept mirror of moonlightSources."""
-        return [s for s in sections(conf["firewall"], "redirect")
-                if s.get("name", "").startswith("Moonlight-")]
-
-
-    def check_moonlight_sources(d, conf):
-        """SET EQUALITY, in both directions, and the empty case is the point now: the direct path was
-        retired on 19/08/2026, so the repo declares NO sources and the router must forward NOTHING.
-        A redirect that reappears on the device is drift the same way a missing one used to be."""
-        on_router = sorted({s.get("src_ip", "") for s in moonlight(conf)})
-        in_repo = sorted(d["moonlight_sources"])
-        if on_router != in_repo:
-            return [("moonlight", f"router src_ip is {on_router}, moonlightSources is {in_repo}",
-                     "the router forwards exactly what the repo declares: a redirect the repo does not know "
-                     "about is a port open to UFSCar, and one declared without the redirect is `Moonlight "
-                     "does not connect`")]
-        return []
-
-
-    def check_moonlight_ports(d, conf):
-        """The ports are DERIVED from one base in the module, so a redirect repeats a derivation.
-        With no source declared there is nothing to forward, so the expected set is EMPTY and any
-        port on the device is a finding."""
-        base = d["base_port"]
-        want = set() if not d["moonlight_sources"] else {
-            ("tcp", str(base - 5)), ("tcp", str(base)), ("tcp", str(base + 21)),
-            ("udp", f"{base + 9}-{base + 11}"),
-        }
-        got = {(s.get("proto", ""), s.get("src_dport", "").replace(":", "-")) for s in moonlight(conf)}
-        out = []
-        if got != want:
-            out.append(("moonlight", f"redirect ports are {sorted(got)}, basePort derives {sorted(want)}",
-                        "the offsets live in modules/nixos/services/sunshine.nix, and an EMPTY expectation means "
-                        "the direct path is retired, so the device should forward nothing"))
-        for s in moonlight(conf):
-            if s.get("src_dport", "") != s.get("dest_port", ""):
-                out.append(("moonlight", f"{s.get('name')} maps {s.get('src_dport')} to {s.get('dest_port')}",
-                            "Sunshine derives every port from one base, so a translated port breaks the client"))
-        return out
-
-
-    def check_moonlight_dest(d, conf):
-        """A redirect that survives a DHCP change by pointing at the wrong host answers nothing."""
-        bad = sorted(s.get("name", "") for s in moonlight(conf) if s.get("dest_ip") != d["host_ip"])
-        if bad:
-            return [("moonlight", f"these do not point at {d['host_ip']}: {bad}",
-                     "the host address is the CSRF origin in modules/nixos/services/sunshine.nix")]
-        return []
-
-
-    def check_fai_routes(d, conf):
-        """The router sends this host THEIR private ranges plus the tunnel-only public hosts, never
-        the whole public /25: a route bound to wan dies with every PPPoE reconnect, so the public
-        site has to stay on the default route instead of on an exception to this list."""
-        if not d["fai_tunnel_hosts"]:
-            return [("fai", "could not read faiTunnelHosts",
-                     "an anchor moved: fix this checker, do not delete the check")]
-        want = {c for c in d["fai_subnets"] if ipaddress.ip_network(c).is_private}
-        want |= {f"{h}/32" for h in d["fai_tunnel_hosts"]}
-        out, got = [], set()
-        for name, s in sorted(named(conf["network"], "fai_r").items()):
-            target, mask = s.get("target", ""), s.get("netmask", "")
-            if target and mask:
-                got.add(str(ipaddress.ip_network(f"{target}/{mask}", strict=False)))
-            if s.get("gateway") != d["host_ip"]:
-                out.append(("fai", f"{name} points at {s.get('gateway')}, not {d['host_ip']}",
-                            "the gateway for the FAI ranges is this host, where nxBender runs"))
-        if got != want:
-            out.append(("fai", f"fai_r* routes {sorted(got - want)} not declared, misses {sorted(want - got)}",
-                        "modules/nixos/network/fai-gateway.nix holds faiSubnets and faiTunnelHosts"))
-        return out
-
-
-    def check_ssh_port(d, conf):
-        """The exposed port is one number in two configs, and the repo owns it."""
-        port = d["ssh_port"]
-        hits = [s for s in anon(conf["firewall"], "redirect").values()
-                if s.get("dest_ip") == d["host_ip"] and s.get("dest_port") == port]
-        if not hits:
-            return [("ssh", f"no redirect sends {port} to {d['host_ip']}",
-                     "services.openssh.ports in modules/nixos/network/network.nix owns that number")]
-        return []
-
-
-    def home_ranges(d):
-        """The two ranges a local DNS answer can legitimately land in. The VPN one is in here since
-        22/08/2026: `t480` answers 10.10.10.6, an address that only exists inside the tunnel."""
-        out = []
-        for opt in ("lanSubnet", "vpnSubnet"):
-            if d["subnets"].get(opt):
-                out.append(ipaddress.ip_network(d["subnets"][opt]))
-        return out
-
-
-    def local_answers(conf):
-        """Every name the router answers from its own tables, as (what to print, the address).
-        TWO MECHANISMS, and reading only the first one is how the t480 entry stayed invisible: an
-        `address=` suffix override, and a `config domain` static record expanded by domain=lan."""
-        out = [(e, e.rsplit("/", 1)[-1])
-               for e in conf["dhcp"].get("dhcp.@dnsmasq[0].address", [])]
-        out += [(f"domain {s.get('name', '?')}", s.get("ip", ""))
-                for s in anon(conf["dhcp"], "domain").values()]
-        return out
-
-
-    def check_split_dns(d, conf):
-        """A split-DNS answer pointing at an address no host here claims is drift with no symptom
-        until somebody uses the name. It caught a poisoned anchor once already."""
-        ranges = home_ranges(d)
-        known = {d["host_ip"]} | {h for h in d["ssh_hosts"]
-                                  if any(ipaddress.ip_address(h) in r for r in ranges)}
-        out = []
-        for entry, ip in local_answers(conf):
-            try:
-                inside = any(ipaddress.ip_address(ip) in r for r in ranges)
-            except ValueError:
-                continue
-            if inside and ip not in known:
-                out.append(("dns", f"{entry} answers {ip}, which no host in this repo declares",
-                            "declare the host or fix the entry: a wrong split-DNS only breaks by name"))
-        return out
-
-
-    def check_vpn_peers(d, conf):
-        """A host declared at a TUNNEL address needs a peer to answer for it. ONE DIRECTION on
-        purpose: celular, pc-trampo and fai-workstation are peers with no ssh host, legitimately."""
-        vpn = d["subnets"].get("vpnSubnet")
-        if not vpn:
-            return []
-        allowed = {ip.split("/")[0]
-                   for s in anon(conf["network"], "wireguard_wg0").values()
-                   for ip in s.get("allowed_ips", "").split()}
-        out = []
-        for host in sorted(d["ssh_hosts"]):
-            if ipaddress.ip_address(host) in ipaddress.ip_network(vpn) and host not in allowed:
-                out.append(("peer", f"ssh.nix reaches {host}, and no wg0 peer holds that address",
-                            "the peer left the router or never landed: the name resolves and nothing "
-                            "answers, which reads as `the machine is off`"))
-        return out
-
-
-    def check_no_vpn_dnat(d, conf):
-        """Nothing is forwarded INTO the tunnel. A peer is off site by definition, one of them is my
-        mother's machine, and a DNAT there would publish its port with no gate at all."""
-        vpn = d["subnets"].get("vpnSubnet")
-        if not vpn:
-            return []
-        net, out = ipaddress.ip_network(vpn), []
-        for s in sections(conf["firewall"], "redirect"):
-            try:
-                inside = ipaddress.ip_address(s.get("dest_ip", "")) in net
-            except ValueError:
-                continue
-            if inside:
-                out.append(("dnat", f"{s.get('name', '?')} forwards to {s.get('dest_ip')}, a tunnel address",
-                            "the tunnel is the only door for a peer: the T480's own repo states that "
-                            "rule for the machine that leaves the house, and this is where it is checked"))
-        return out
-
-
-    CHECKS = (check_subnets, check_moonlight_sources, check_moonlight_ports, check_moonlight_dest,
-              check_fai_routes, check_ssh_port, check_split_dns, check_vpn_peers, check_no_vpn_dnat)
-
-
-    def main():
-        conf = {name: uci(name) for name in ("network", "firewall", "dhcp")}
-        d = declared()
-
-        # A stale mirror is reported ALONE: every other finding would be about the wrong file.
-        findings = check_mirror(d, conf) or [f for check in CHECKS for f in check(d, conf)]
-
-        if findings:
-            print(f"\nrouter-ssot: {len(findings)} disagreement(s) between this repo and the router\n",
-                  file=sys.stderr)
-            for kind, detail, fix in findings:
-                print(f"  {kind}: {detail}", file=sys.stderr)
-                print(f"    -> {fix}", file=sys.stderr)
-            print("\nThe mirror is READ-ONLY: fix the device with uci, then `router-sync pull`.",
-                  file=sys.stderr)
-            return 1
-
-        print(f"router-ssot: {len(CHECKS)} checks, the mirror agrees with the repo")
-        return 0
-
-
-    sys.exit(main())
-  ''
+      # A stale mirror is reported ALONE: every other finding would be about the wrong file.
+      | if ($net | has("network.lan.ipaddr") | not) then
+          [["mirror", "\($mirror)/network.conf has no network.lan.ipaddr", "run `router-sync pull`: the mirror is missing or truncated"]]
+        else [
+          # The router own addresses live inside the subnets the repo declares.
+          [(["lanSubnet", "network.lan.ipaddr"], ["vpnSubnet", "network.wg0.addresses"]) as [$opt, $key]
+            | $sub[$opt] as $want | $net[$key] as $vals
+            | if ($want | not) or ($vals | not) or ($vals | length == 0) then
+                ["subnet", "could not read \($opt) or \($key)", "an anchor moved: fix this checker, do not delete the check"]
+              elif ($vals[0] | split("/")[0] | ip | within($want | net)) | not then
+                ["subnet", "\($key) is \($vals[0]), outside my.net.\($opt) (\($want))", "both describe the same network: align the router or the option"]
+              else empty end],
+          # SET EQUALITY both ways: the repo declares NO sources since 19/08/2026, so the router forwards NOTHING.
+          (([$moon[] | .src_ip // ""] | unique) as $onRouter | ($sources | sort) as $inRepo
+            | if $onRouter != $inRepo then
+                [["moonlight", "router src_ip is \($onRouter | py), moonlightSources is \($inRepo | py)",
+                  "the router forwards exactly what the repo declares: a redirect the repo does not know about is a port open to UFSCar, and one declared without the redirect is `Moonlight does not connect`"]]
+              else [] end),
+          # The ports are DERIVED from one base in the module; no source declared means none expected.
+          ((if ($sources | length) == 0 then [] else [["tcp", "\($base - 5)"], ["tcp", "\($base)"], ["tcp", "\($base + 21)"], ["udp", "\($base + 9)-\($base + 11)"]] | unique end) as $want
+            | ([$moon[] | [.proto // "", (.src_dport // "" | gsub(":"; "-"))]] | unique) as $got
+            | if $got != $want then
+                [["moonlight", "redirect ports are [\($got | map(pair) | join(", "))], basePort derives [\($want | map(pair) | join(", "))]",
+                  "the offsets live in modules/nixos/services/sunshine.nix, and an EMPTY expectation means the direct path is retired, so the device should forward nothing"]]
+              else [] end),
+          [$moon[] | select((.src_dport // "") != (.dest_port // ""))
+            | ["moonlight", "\(.name | show) maps \(.src_dport | show) to \(.dest_port | show)", "Sunshine derives every port from one base, so a translated port breaks the client"]],
+          # A redirect that survives a DHCP change by pointing at the wrong host answers nothing.
+          (([$moon[] | select(.dest_ip != $host) | .name // ""] | sort) as $bad
+            | if ($bad | length) > 0 then
+                [["moonlight", "these do not point at \($host): \($bad | py)", "the host address is the CSRF origin in modules/nixos/services/sunshine.nix"]]
+              else [] end),
+          # THEIR private ranges plus the tunnel-only hosts, never the public /25: docs/notes/network/network.md
+          (if ($faiHosts | length) == 0 then
+              [["fai", "could not read faiTunnelHosts", "an anchor moved: fix this checker, do not delete the check"]]
+            else
+              ([$faiSubnets[] | select(private)] + [$faiHosts[] | "\(.)/32"] | unique) as $want
+              | ($net | named("fai_r") | to_entries | sort_by(.key)) as $routes
+              | ([$routes[] | .value | select((.target // "") != "" and (.netmask // "") != "")
+                  | (.netmask | prefix) as $p | ((.target | ip) / pow(2; 32 - $p) | floor) * pow(2; 32 - $p) | "\(dotted)/\($p)"] | unique) as $got
+              | [$routes[] | select(.value.gateway != $host)
+                  | ["fai", "\(.key) points at \(.value.gateway | show), not \($host)", "the gateway for the FAI ranges is this host, where nxBender runs"]]
+              + (if $got != $want then
+                  [["fai", "fai_r* routes \($got - $want | py) not declared, misses \($want - $got | py)", "modules/nixos/network/fai-gateway.nix holds faiSubnets and faiTunnelHosts"]]
+                else [] end)
+            end),
+          # The exposed port is one number in two configs, and the repo owns it.
+          (if [$fw | anon("redirect")[] | select(.dest_ip == $host and .dest_port == $sshPort)] | length == 0 then
+              [["ssh", "no redirect sends \($sshPort) to \($host)", "services.openssh.ports in modules/nixos/network/network.nix owns that number"]]
+            else [] end),
+          # A split-DNS answer at an address no host claims only breaks by name. TWO mechanisms: an
+          # `address=` override and a `config domain` record; reading only the first hid the t480.
+          (([$host] + [$sshHosts[] | select(ip as $i | any($ranges[]; . as $r | $i | within($r)))]) as $known
+            | [(($dh["dhcp.@dnsmasq[0].address"] // [])[] | [., (split("/") | last)]),
+                ($dh | anon("domain")[] | ["domain \(.name // "?")", (.ip // "")])
+              | select(.[1] as $a | ($a | ip) as $i | any($ranges[]; . as $r | $i | within($r)) and ($known | index([$a]) | not))
+              | ["dns", "\(.[0]) answers \(.[1]), which no host in this repo declares", "declare the host or fix the entry: a wrong split-DNS only breaks by name"]]),
+          # A host at a TUNNEL address needs a peer; ONE direction, since some peers have no ssh host.
+          (if $sub.vpnSubnet then ($sub.vpnSubnet | net) as $vpn
+              | ([$net | anon("wireguard_wg0")[] | .allowed_ips // "" | splits("\\s+") | select(length > 0) | split("/")[0]]) as $allowed
+              | [$sshHosts[] | . as $h | select((ip | within($vpn)) and ($allowed | index([$h]) | not))
+                  | ["peer", "ssh.nix reaches \(.), and no wg0 peer holds that address", "the peer left the router or never landed: the name resolves and nothing answers, which reads as `the machine is off`"]]
+            else [] end),
+          # Nothing is forwarded INTO the tunnel: a peer is off site, and a DNAT there has no gate.
+          (if $sub.vpnSubnet then ($sub.vpnSubnet | net) as $vpn
+              | [$fw | sections("redirect")[] | select(.dest_ip | ip | within($vpn))
+                  | ["dnat", "\(.name // "?") forwards to \(.dest_ip), a tunnel address", "the tunnel is the only door for a peer: the T480\u0027s own repo states that rule for the machine that leaves the house, and this is where it is checked"]]
+            else [] end)
+        ] | add
+        end
+      | if length > 0 then
+          "\nrouter-ssot: \(length) disagreement(s) between this repo and the router\n",
+          (.[] | "  \(.[0]): \(.[1])\n    -> \(.[2])"),
+          "\nThe mirror is READ-ONLY: fix the device with uci, then `router-sync pull`.",
+          "FAIL"
+        else "router-ssot: 9 checks, the mirror agrees with the repo" end
+    ' >"$out" || exit 2
+    if [[ "$(tail -n1 "$out")" == FAIL ]]; then
+      head -n -1 "$out" >&2
+      exit 1
+    fi
+    cat "$out"
+  '';
+}

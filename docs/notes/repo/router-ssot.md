@@ -158,3 +158,21 @@ A checker that only ever passes is decoration. Every check was verified in BOTH 
 
 The host address is the most expensive value to get wrong: changing it fires **9 findings across 4
 checks**, which is exactly the blast radius its 19 occurrences in the mirror predict.
+
+## Shell since 22/10/2026 (rule 24)
+
+The Python version left in phase A of [languages](languages.md), the last of the six checkers. The
+anchors are the same PCREs, read with `rg`; the three mirrored configs and the declared values go
+to ONE `jq` program that holds the nine checks. IPv4 is integer arithmetic there: a subnet test is
+a floor division by `2^(32 - prefix)`, a netmask's prefix is `32 - log2(2^32 - mask)`, and
+`is_private` is Python's own IPv4 list, applied to the network and its broadcast. The messages keep
+the Python `repr` of their lists, so a finding reads as it always did. 0.08s on the tree.
+
+MEASURED against the Python version: the same output on the tree; on a copy of the inputs with
+the mirror mutated to fire every check (11 findings: subnet, the four Moonlight ones, both FAI
+ones, ssh, both DNS mechanisms, peer, dnat), the same output byte for byte, IPv6 and empty
+`address=` entries skipped alike; and the same lone `mirror` finding with `network.conf` gone.
+
+ONE TRAP met on the way, worth knowing before editing the `jq`: `A + B as $x | C` binds `A + B`,
+so a chain of `+` with an `as` in the middle silently drops everything before it. Each check is
+its own parenthesized block in a list, joined by `add`, which is why the program has that shape.

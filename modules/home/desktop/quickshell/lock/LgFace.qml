@@ -8,6 +8,7 @@ import QtQuick
 import "root:/"
 import "root:/dash"
 import "root:/data"
+import "root:/widgets"
 
 Item {
     id: face
@@ -39,6 +40,13 @@ Item {
             if (s[i].name === want)
                 return false;
         return true;
+    }
+
+    // When a window renews, as the clock will show it: the hour today, the weekday and hour otherwise.
+    function renews(t) {
+        const d = new Date(t * 1000);
+        const today = d.toDateString() === new Date().toDateString();
+        return Qt.locale("pt_BR").toString(d, today ? "HH:mm" : "ddd HH:mm").replace(".", "");
     }
 
     // When each of n evenly spaced samples was taken, the last one now, for a chart's readout.
@@ -172,52 +180,60 @@ Item {
             loading: ClaudeUsage.error === "loading"
             backdrop: wall
             width: face.full
-            height: 300
+            height: 420
             tintAlpha: face.tintAlpha
             blur: face.glassBlur
             contentHalo: true
             label: "Claude Code"
             icon: "terminal"
+            // Each limit: its share, its name, when it renews. Then the week as one picture: the
+            // share used across the limit's own week, against the pace of spending it evenly.
             Row {
                 x: claude.pad
                 y: claude.contentTop
-                spacing: 40
-                Column {
-                    Hero {
-                        value: isNaN(ClaudeUsage.session.pct) ? "–" : Math.round(ClaudeUsage.session.pct)
-                        unit: "%"
-                    }
-                    Context {
-                        text: "sessão"
-                    }
-                }
-                Column {
-                    Hero {
-                        value: isNaN(ClaudeUsage.weekly.pct) ? "–" : Math.round(ClaudeUsage.weekly.pct)
-                        unit: "%"
-                    }
-                    Context {
-                        text: "semana"
+                spacing: 64
+                Repeater {
+                    model: [
+                        {
+                            win: ClaudeUsage.session,
+                            name: "sessão"
+                        },
+                        {
+                            win: ClaudeUsage.weekly,
+                            name: "semana"
+                        }
+                    ]
+                    Column {
+                        required property var modelData
+                        Hero {
+                            value: isNaN(modelData.win.pct) ? "–" : Math.round(modelData.win.pct)
+                            unit: "%"
+                        }
+                        Context {
+                            text: modelData.name + (modelData.win.resets ? "  ·  renova " + face.renews(modelData.win.resets) : "")
+                        }
                     }
                 }
             }
-            Trace {
-                x: claude.width - claude.pad - width
-                y: claude.contentTop + 8
-                width: 400
-                height: 84
-                bars: true
-                scaleTop: 100
-                series: ClaudeUsage.series("w", 7 * 86400, 4 * 3600)
-                color: face.vermilion
-                labels: face.timeLabels(series.length, 4 * 3600, "ddd HH'h'")
-                unit: "%"
-            }
-            Context {
-                x: claude.pad
-                y: claude.height - claude.pad - height
-                width: claude.contentWidth
-                text: ClaudeUsage.ok ? "sessão reinicia em " + (ClaudeUsage.left(ClaudeUsage.session.resets) || "–") + "  ·  semana em " + (ClaudeUsage.left(ClaudeUsage.weekly.resets) || "–") : "sem dados do Claude"
+            ClaudeWeek {
+                x: claude.pad - 6
+                y: claude.contentTop + 140
+                width: claude.contentWidth + 6
+                height: claude.height - y - claude.pad + 8
+                tone: face.vermilion
+                fontFamily: "Geist"
+                localeName: "pt_BR"
+                pace: true
+                tipStyle: "glass"
+                smallSize: 14
+                noteSize: 15
+                valueSize: 20
+                words: ({
+                        used: "usado",
+                        reset: "renovou",
+                        noData: "sem dados antes de",
+                        pace: "ritmo"
+                    })
             }
         }
 

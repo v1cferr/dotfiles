@@ -22,6 +22,10 @@ Item {
             pace: "pace"
         })
     property string tipStyle: "band" // "band" (the band's tip card) | "glass" (the lock's dark pill)
+    // Text sizes: the band reads at arm's length, the lock from the chair.
+    property int smallSize: Theme.fontMicro // the axis and the days
+    property int noteSize: Theme.fontSmall // the gap's note and the tip
+    property int valueSize: Theme.fontLabel // the value at the end of the line
     readonly property var loc: Qt.locale(week.localeName)
 
     readonly property real span: 7 * 86400
@@ -62,10 +66,10 @@ Item {
                 out.push(week.points[i].ts);
         return out;
     }
-    readonly property int axisW: 40 // the % labels
-    readonly property int daysH: 20 // the day labels
+    readonly property int axisW: week.smallSize * 4 // the % labels
+    readonly property int daysH: week.smallSize + 10 // the day labels
     readonly property real plotX: week.axisW
-    readonly property real plotW: week.width - week.axisW - 46 // room for the value at the end
+    readonly property real plotW: week.width - week.axisW - week.valueSize * 3.5 // room for the value at the end
     readonly property real plotH: week.height - week.daysH - 8
     property int hover: -1 // index into points
     property real hoverTs: 0
@@ -161,7 +165,7 @@ Item {
             text: modelData + "%"
             color: Theme.colDim
             font.family: week.fontFamily
-            font.pixelSize: Theme.fontMicro
+            font.pixelSize: week.smallSize
         }
     }
     // The days: a short name at each local midnight in the window.
@@ -189,7 +193,7 @@ Item {
                 text: week.loc.toString(new Date(modelData * 1000), "ddd").replace(".", "")
                 color: Theme.colDim
                 font.family: week.fontFamily
-                font.pixelSize: Theme.fontMicro
+                font.pixelSize: week.smallSize
             }
         }
     }
@@ -201,7 +205,7 @@ Item {
         text: week.words.pace
         color: Theme.colSubtext
         font.family: week.fontFamily
-        font.pixelSize: Theme.fontMicro
+        font.pixelSize: week.smallSize
         font.italic: true
     }
     // Before the first reading the week is unknown, not zero: said once, faintly, in that gap.
@@ -215,7 +219,7 @@ Item {
         text: week.words.noData + " " + week.loc.toString(new Date(first * 1000), "ddd HH:mm").replace(".", "")
         color: Theme.colDim
         font.family: week.fontFamily
-        font.pixelSize: Theme.fontSmall
+        font.pixelSize: week.noteSize
         font.italic: true
     }
     // The value now, at the end of the line.
@@ -226,7 +230,7 @@ Item {
         text: week.points.length ? Math.round(week.points[week.points.length - 1].w) + "%" : ""
         color: week.tone
         font.family: week.fontFamily
-        font.pixelSize: Theme.fontLabel
+        font.pixelSize: week.valueSize
         font.bold: true
     }
 
@@ -293,7 +297,7 @@ Item {
             }
             color: Theme.colText
             font.family: week.fontFamily
-            font.pixelSize: tip.glass ? 15 : Theme.fontSmall
+            font.pixelSize: week.noteSize
         }
     }
 }

@@ -136,7 +136,7 @@ the same tone sits on the type itself.
 | Card | Hero | Chart | Context |
 | --- | --- | --- | --- |
 | Energia | measured CPU + GPU watts | the last 30 min, a line | CPU, GPU, the peak |
-| Claude Code | session % and week % | the week, 4 h bars | when each resets |
+| Claude Code | session % and week %, each with when it renews | the week as a step line against its pace | none |
 | Sistema | CPU % now | its last two minutes | RAM used, GPU temperature |
 | Processos | the top three apps by CPU now, each with its icon | none | "% de um núcleo" |
 | Clima (always) | the temperature and the sky now | the next 12 hours: temperature line over rain bars | max, min, rain, feels-like |
@@ -169,6 +169,14 @@ dark halo on the card's content (`contentHalo`) holds the type where that thin t
 not. The region is re-read after layout, because a binding cannot see an ancestor (the Column)
 move its children. It samples an Item, not the compositor, so it works over the lock's own
 print, not over windows.
+
+**The Claude card reads its week against its pace** (21/10/2026): the two limits as heroes, each
+with its name and renewal ("semana · renova qui 00:00"), and under them the band's own
+`widgets/ClaudeWeek.qml` across the full width, in the lock's type, pt-BR and vermilion: the
+share used as a step line over the limit's own week, and a dashed PACE line from the last
+renewal (0%) to the next (100%), what even spending would show. Above it the week is being spent
+faster than it renews; below it, there is room. Under the pointer: "ter 15:33 · 54% usado · ritmo
+81%". It replaced 42 unlabelled 4-hour bars.
 
 **Each process wears its app's icon** (21/10/2026): the name from the cgroup goes through
 `DesktopEntries.heuristicLookup`, and the entry's icon through `Quickshell.iconPath`, as the

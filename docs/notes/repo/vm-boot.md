@@ -111,3 +111,34 @@ waiting for the root partition on a disko layout, disko issue #668).
 An oddity seen twice and NOT investigated: `nix-daemon` segfaults in `libnixstore` during the VM's
 boot, with no visible effect on anything the test asserts. Written down so the next reader knows it
 is known and not new.
+
+## vm-limine: the bootloader drill
+
+`nix build .#vm-limine` ([`flake/vm-limine.nix`](../../../flake/vm-limine.nix)) is the other half:
+it boots ONLY the boot modules (`boot.nix`, `limine.nix`, `boot-appearance.nix`, `boot-trust.nix`)
+under OVMF with `useBootLoader`, so the real `limine-install.py` writes a real ESP. Two machines:
+
+| Node | What it proves |
+| --- | --- |
+| `secure` | OVMF with Secure Boot on THROWAWAY keys generated inside the image (the machine's `/var/lib/sbctl` is never read): Limine boots signed, `LoaderInfo` names it, the config carries a hash on the initrd, the editor is off, Plymouth hands over, `boot-trust` reports every link proven, no unit fails; then one byte appended to the initrd makes Limine panic instead of booting |
+| `chain` | plain UEFI and a second disk whose ESP has a fixed PARTUUID and the UEFI shell as `bootmgfw.efi`: the `guid(...)` entry chainloads it |
+
+Measured on 22/10/2026, all seven subtests green. The screenshots it leaves in `result/` are the
+menu (with `Secure Boot` in Limine's top line on `secure`, without it on `chain`), the splash, the
+panic and the shell.
+
+The splash needs two test-only lines: a DRM driver in the initrd (`bochs`, standing in for the
+host's `xe`) and `plymouth.ignore-serial-consoles`, since the driver's `console=ttyS0` sends
+Plymouth to its text mode. With them the logo and the dots show at boot, `Shutting down` at
+poweroff, and a few kernel lines flash between the menu and the splash (no `quiet`, on purpose).
+
+Three traps it hit, kept so they are not hit again: a node with `secureBoot.enable` and no keys makes
+the image builder's VM die with "Virtual machine didn't produce an exit code" and no other output
+(the install exits 1 inside it); and Limine's menu is drawn on the framebuffer, not on the serial
+line the driver reads, so the script waits with OCR (`wait_for_text`), not `wait_for_console_text`;
+and the image builder's VM ran fine on the LTS kernel only, so the drill pins it (it tests the
+bootloader, not the kernel).
+
+DOES NOT PROVE: this machine's firmware, the B580, the real keys, Windows itself, or the ten
+generations (a test image has one). Those are the hardware gates of
+[the migration](../../guides/limine-migration.md).

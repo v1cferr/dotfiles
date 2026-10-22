@@ -1,7 +1,9 @@
 # boot and Secure Boot
 
 Modules: [`modules/nixos/core/boot.nix`](../../../modules/nixos/core/boot.nix),
-[`modules/nixos/core/secureboot.nix`](../../../modules/nixos/core/secureboot.nix)
+[`modules/nixos/core/secureboot.nix`](../../../modules/nixos/core/secureboot.nix),
+[`modules/nixos/core/limine.nix`](../../../modules/nixos/core/limine.nix),
+[`modules/nixos/core/boot-trust.nix`](../../../modules/nixos/core/boot-trust.nix)
 
 GRUB (UEFI) with the minegrub theme, in dualboot with Windows 11, signed with our own keys
 through sbctl. The two modules share one decision, so they share a page.
@@ -86,6 +88,75 @@ signature, so `secureboot.nix` signs every kernel on each install (point 4 below
 unprotected is the INITRD, which never goes near `LoadImage`: somebody who already has root can
 swap it. Closing that would need shim (and then a kernel signed by Microsoft) or lanzaboote (and
 then no menu and no theme). There is no third door.
+
+**CORRECTED on 22/10/2026**: there is a third door, Limine, which verifies the initrd without shim
+and still reaches Windows on the other ESP. It is the candidate below.
+
+## The Limine candidate (22/10/2026, proposed)
+
+[ADR 0015](../../decisions/0015-limine-over-grub.md) replaces GRUB with Limine; `my.boot.loader`
+keeps GRUB the default until [the migration](../../guides/limine-migration.md) passes on this
+hardware. The chain it builds, read in the pinned nixpkgs (`limine-install.py`) and Limine 12.5.2:
+
+```mermaid
+flowchart TD
+    accTitle: The Limine boot chain, and what verifies each step
+    accDescr: The firmware verifies Limine's binary against db. That binary carries the BLAKE2b hash of limine.conf, enrolled at install time, so a changed config makes Limine panic. The config carries a hash of every kernel and initrd and holds the command line, so each is checked before it is used. Windows is still chainloaded and verified by the firmware.
+
+    FW["UEFI firmware, Secure Boot on<br>db: this machine's key + Microsoft's"]
+    L["EFI/limine/BOOTX64.EFI<br>signed by sbctl, config hash enrolled inside"]
+    C["limine/limine.conf<br>its BLAKE2b must match the enrolled one"]
+    K["kernel + initrd<br>each path carries a BLAKE2b, checked on load"]
+    NIX["NixOS, with the command line from the verified config"]
+    WIN["bootmgfw.efi on the SanDisk's ESP<br>chainloaded by guid(PARTUUID), Microsoft-signed"]
+
+    FW -->|"verifies"| L
+    L -->|"hash check, panic on mismatch"| C
+    C -->|"hash check, panic on mismatch"| K
+    K --> NIX
+    C -->|"firmware LoadImage verifies"| WIN
+```
+
+What it keeps: the sbctl keys (`autoGenerateKeys` and `autoEnrollKeys` stay off), ten generations,
+the Windows entry. What it adds: the initrd and the command line are verified, and the editor is
+forced off, so nobody types `init=/bin/sh` at the menu. What it still does not stop: root on this
+machine, which holds the db key unencrypted (ADR 0006).
+
+**The menu's Secure Boot indicator is Limine's own.** With no custom branding, its top line reads
+`Limine 12.5.2 (x86-64, UEFI, Secure Boot)`, and the suffix is appended only when the FIRMWARE
+reports Secure Boot active (`common/menu.c`). That is why `limine.nix` sets no branding: a custom
+string would hide the one runtime fact the menu can show honestly.
+
+**The TPM.** Limine measures into PCRs 8 and 9 (`common/lib/tpm.h`). The keyring's seal uses PCR 7
+only ([desktop](../desktop/desktop.md)), and Limine is signed by the same db key GRUB is, so the
+seal is expected to survive; if it does not, the failure is soft (the keyring starts locked) and
+`keyring-tpm-seal` re-seals it.
+
+**Windows by PARTUUID, chainloaded.** `protocol: efi` with
+`path: guid(8f36a7a5-a54c-4c78-9d3d-1202514df9be):/EFI/Microsoft/Boot/bootmgfw.efi`, the GPT
+partition GUID of the SanDisk's ESP, stable across ports. `efi_boot_entry` was the other option: it
+sets BootNext and reboots, a POST more and a dependency on the NVRAM entry.
+
+### What boot-trust records
+
+A read-only root oneshot writes `/run/boot-trust.json` at boot and again whenever `limine.conf` or
+`grub.cfg` changes, and the NixOS Center reads it ([nixos-center](../desktop/nixos-center.md#boot-22102026)):
+
+| Field | Source | Values |
+| --- | --- | --- |
+| `secureBoot`, `setupMode` | the `SecureBoot` and `SetupMode` efivars | on/off, user/setup, or unknown |
+| `loader.running` | the Boot Loader Interface's `LoaderInfo` (Limine sets it, GRUB does not) | e.g. `Limine 12.5.2`, or unknown |
+| `loader.signed` | `sbverify --cert /var/lib/sbctl/keys/db/db.pem` on the installed binary | valid, invalid, missing, unknown |
+| `integrity` | the `b2sum` of `limine.conf` found inside `BOOTX64.EFI` | enrolled, mismatch, kernel-only (GRUB), unknown |
+| `thisBoot` | taken once at boot, kept by later runs | verified only when every row above holds |
+
+It also covers a gap in the installer: `limine-install.py` runs `sbctl sign` without checking its
+exit code, so an unsigned loader would only show up as a refused boot. `boot-trust` re-checks after
+every install and raises `my.alert` when the loader fails `sbverify`.
+
+Drilled on 22/10/2026 in `vm-limine` (OVMF, Secure Boot on throwaway keys): `LoaderInfo` read
+`Limine 12.5.2`, the initrd's path carried its hash, and `boot-trust` reported every field above
+as proven ([vm-boot](../repo/vm-boot.md#vm-limine-the-bootloader-drill)).
 
 ## Microsoft's certificates are mandatory
 

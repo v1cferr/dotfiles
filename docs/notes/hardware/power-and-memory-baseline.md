@@ -93,6 +93,29 @@ by keeping the build cache a week: [docker-prune](../services/docker-prune.md).
   cannot show CPU package watts, and does not pretend to.
 - Neither is wall power. The PC's real draw needs a meter at the outlet.
 
+## Kernel 7.3.0 against 7.2.10 (MEASURED 21/10/2026)
+
+Taken after the bump from 7.2.10 to 7.3.0 (nixpkgs `cd4ea8d`), 10 min after boot, with Zen, VS
+Code and Discord open and no game. So only what is comparable to the audit above is compared.
+
+| What | 7.2.10 | 7.3.0 |
+| --- | --- | --- |
+| Kernel start to `graphical.target` (journal timestamps) | 91.4, 91.6, 94.5 s (19 to 21/10) | 93.9 s |
+| GPU board idle, two monitors lit (`energy1` over 60 s) | 45 W (NixOS Center card) | 44.4 W |
+| GPU package idle (`energy2` over 60 s) | not taken | 26.2 W |
+| GT0 `min_freq`, `power_profile`, runtime PM | 1200 MHz, `base`, `active` | same |
+| swappiness, page-cluster, MGLRU, zswap | 60, 3, `0x0007`, `N` | same |
+| `intel_pstate`, governor, EPP, ASPM policy | active, `powersave`, `balance_performance`, `default` | same |
+| PSI memory `avg300` | 0.03 (loaded, 5 h) | 0.04 (10 min) |
+
+**Conclusion**: no regression and no measurable gain on this desktop. The idle draw did not move,
+which fits the cause above: it is the PEG root port's ASPM, a BIOS setting the kernel cannot
+reach. The 7.3 Btrfs and swap speedups are upstream claims, not measured here.
+
+The boot table above no longer describes a normal boot. Since 19/10 every boot reruns the
+`duo-stack` image build from `uv sync` on (13 to 14 `CACHED` steps, not 28), about 75 s of
+`multi-user.target` on 7.2.10 and 90 s on 7.3.0. The kernel is not the cause: it predates the bump.
+
 ## PENDING
 
 - **An idle baseline.** A game was running all through the audit. To take one: close the apps,

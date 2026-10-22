@@ -1,125 +1,127 @@
 # docs-links: it fails when a docs/ pointer does not resolve. Rule 16 says a stale note is a bug,
 # and until this existed nothing enforced it. What it checks: docs/notes/repo/link-checker.md
-{ writers }:
+{
+  writeShellApplication,
+  ripgrep,
+  git,
+  coreutils,
+}:
 
-writers.writePython3Bin "docs-links"
-  {
-    libraries = [ ];
-    flakeIgnore = [ "E501" ]; # the repo's line length is 100, not flake8's 79
-  }
-  ''
-    """Verify every docs/ pointer in this repo resolves to a file that exists."""
-    import os
-    import re
-    import subprocess
-    import sys
-
+writeShellApplication {
+  name = "docs-links";
+  runtimeInputs = [
+    ripgrep
+    git
+    coreutils
+  ];
+  text = ''
     # The repo root, so the check runs the same from any cwd and inside a nix build.
-    ROOT = os.environ.get("DOCS_LINKS_ROOT") or subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        capture_output=True, text=True, check=True,
-    ).stdout.strip()
+    root="''${DOCS_LINKS_ROOT:-$(git rev-parse --show-toplevel)}"
+    cd "$root"
 
-    CODE_EXT = (".nix", ".lua", ".qml", ".sh", ".toml", ".yaml", ".yml", ".ts", ".tsx", ".mjs")
+    declare -A known=()
+    code=()
+    markdown=()
+    prose=()
+    modules=()
+    while IFS= read -r f; do
+      [[ -f "$f" ]] || continue
+      known[$f]=1
+      case "$f" in
+        *.nix | *.lua | *.qml | *.sh | *.toml | *.yaml | *.yml | *.ts | *.tsx | *.mjs) code+=("$f") ;;
+        *.md)
+          markdown+=("$f")
+          # `docs/history/` is a diary: it names files deleted on purpose, and editing it to
+          # keep paths alive would stop it being evidence.
+          [[ "$f" == docs/history/* ]] || prose+=("$f")
+          ;;
+      esac
+      case "$f" in
+        */default.nix) ;;
+        modules/nixos/*.nix | modules/home/*.nix) modules+=("$f") ;;
+      esac
+    done < <(git ls-files)
 
-    # A bare `docs/...` path written inside code or prose, the form the 2-line headers use.
-    POINTER = re.compile(r"\bdocs/[A-Za-z0-9_./-]+\.md\b")
-    # A repo path inside backticks. The leading `(?<![:\w/])` keeps `Foundry:hosts/...` out, which
-    # is how a path in another repo is written so it does not read as one of ours. The retired roots
-    # (system, home, scripts, router) stay listed, so a path left behind by the layout move FAILS.
-    PROSEPATH = re.compile(
-        r"`(?<![:\w/])((?:modules|hosts|pkgs|tools|secrets|ci|system|home|scripts|router)"
-        r"/[A-Za-z0-9_./-]+\.(?:nix|sh|py|lua|qml|json|txt|conf|yaml))`"
-    )
+    broken=()
+    checked=0
+    # A bare `docs/...` path written inside code, the form the 2-line headers use.
+    pointer='\bdocs/[A-Za-z0-9_./-]+\.md\b'
+    # The same pattern for bash's own matcher, which has no \b: one rg per module costs a second.
+    inline='(^|[^[:alnum:]_])docs/[A-Za-z0-9_./-]+\.md([^[:alnum:]_]|$)'
 
-    # A markdown link. Only relative targets matter: http(s) and #anchors are out of scope.
-    MDLINK = re.compile(r"\]\(([^)\s#]+\.(?:md|nix|lua|qml|sh|toml|yaml|yml))(?:#[^)]*)?\)")
+    # 1. Bare docs/ pointers: CODE ONLY. A bare path inside markdown is PROSE, not a pointer:
+    # rules.md cites the OLD pt-BR name of a file it renamed, which is history and correct.
+    while IFS=: read -r f _ target; do
+      checked=$((checked + 1))
+      [[ -f "$target" ]] || broken+=("$f: pointer -> $target")
+    done < <(rg --sort path --no-heading --with-filename -n -o "$pointer" -- "''${code[@]}")
 
+    # 2. A repo path quoted in prose, in docs that describe the PRESENT. A path in SOMEBODY ELSE'S
+    # repo is written `Repo:path/to/file`, which does not match. The retired roots (system, home,
+    # scripts, router) stay listed, so a path left behind by the layout move FAILS.
+    roots='modules|hosts|pkgs|tools|secrets|ci|system|home|scripts|router'
+    while IFS=: read -r f _ target; do
+      checked=$((checked + 1))
+      [[ -f "$target" ]] || broken+=("$f: prose path -> $target")
+    done < <(rg --sort path --no-heading --with-filename -n -o \
+      -r '$1' "\`((?:$roots)/[A-Za-z0-9_./-]+\\.(?:nix|sh|py|lua|qml|json|txt|conf|yaml))\`" \
+      -- "''${prose[@]}")
 
-    def tracked():
-        out = subprocess.run(
-            ["git", "-C", ROOT, "ls-files"],
-            capture_output=True, text=True, check=True,
-        ).stdout.split()
-        return [f for f in out if os.path.isfile(os.path.join(ROOT, f))]
+    # 3. Relative markdown links, resolved against the file's own directory. Only relative
+    # targets matter: http(s) and #anchors are out of scope.
+    links=()
+    joined=()
+    while IFS=: read -r f _ target; do
+      case "$target" in http://* | https://* | mailto:*) continue ;; esac
+      links+=("$f:$target")
+      [[ "$f" == */* ]] && dir=''${f%/*} || dir=.
+      joined+=("$dir/$target")
+    done < <(rg --sort path --no-heading --with-filename -n -o \
+      -r '$1' '\]\(([^)\s#]+\.(?:md|nix|lua|qml|sh|toml|yaml|yml))(?:#[^)]*)?\)' \
+      -- "''${markdown[@]}")
+    if ((''${#joined[@]})); then
+      # ONE realpath for every link: -s keeps symlinks as written, -m allows a missing target.
+      mapfile -t resolved < <(realpath -sm --relative-to=. -- "''${joined[@]}")
+      for i in "''${!links[@]}"; do
+        f=''${links[$i]%%:*}
+        target=''${links[$i]#*:}
+        out=''${resolved[$i]}
+        checked=$((checked + 1))
+        if [[ ! -f "$out" ]]; then
+          broken+=("$f: link -> $target")
+        # A link LEAVING docs/ is published as a GitHub blob URL by the site's hook, and an
+        # untracked file is a 404 there while resolving fine here.
+        elif [[ "$out" != docs/* && -z "''${known[$out]:-}" ]]; then
+          broken+=("$f: untracked -> $target")
+        fi
+      done
+    fi
 
+    # 4. Rule 2's header: a module in modules/nixos/ or modules/home/ opens with at most 2
+    # comment lines, holding its docs/ pointer or a plain "No note". An aggregator default.nix
+    # is exempt.
+    for f in "''${modules[@]}"; do
+      header=""
+      lines=0
+      while IFS= read -r line; do
+        [[ "$line" == "#"* ]] || break
+        header+="$line"$'\n'
+        lines=$((lines + 1))
+      done <"$f"
+      checked=$((checked + 1))
+      if ((lines > 2)); then
+        broken+=("$f: header -> $lines lines, the cap is 2")
+      elif [[ ! "$header" =~ $inline && "$header" != *"No note"* ]]; then
+        broken+=("$f: header -> no docs/ pointer and no 'No note'")
+      fi
+    done
 
-    def main():
-        broken = []
-        checked = 0
-        files = tracked()
-        # The SAME list as a set: a link leaving docs/ is checked against it, not just the disk.
-        known = set(files)
-        for rel in files:
-            path = os.path.join(ROOT, rel)
-            try:
-                text = open(path, encoding="utf-8").read()
-            except (UnicodeDecodeError, OSError):
-                continue
+    if ((''${#broken[@]})); then
+      printf 'docs-links: %d broken of %d checked\n\n' "''${#broken[@]}" "$checked" >&2
+      printf '  %s\n' "''${broken[@]}" >&2
+      exit 1
+    fi
 
-            # 1. Bare docs/ pointers: CODE ONLY, which is where the 2-line headers put them.
-            # A bare path inside markdown is PROSE, not a pointer. Checking it would flag
-            # rules.md for citing the OLD pt-BR name of a file it renamed, which is history and
-            # correct. In markdown only a real `](target)` link counts, below.
-            if rel.endswith(CODE_EXT):
-                for target in POINTER.findall(text):
-                    # A placeholder like docs/notes/<module>.md documents the CONVENTION.
-                    if "<" in target or "*" in target:
-                        continue
-                    checked += 1
-                    if not os.path.isfile(os.path.join(ROOT, target)):
-                        broken.append((rel, target, "pointer"))
-
-            # 2. A repo path quoted in prose, in docs that describe the PRESENT. `docs/history/`
-            # is exempt: it is a diary, so it names files that were deleted on purpose, and
-            # editing it to keep paths alive would stop it being evidence. A path belonging to
-            # SOMEBODY ELSE'S repo is written `Repo:path/to/file`, which does not match here.
-            if rel.endswith(".md") and not rel.startswith("docs/history/"):
-                for target in PROSEPATH.findall(text):
-                    checked += 1
-                    if not os.path.isfile(os.path.join(ROOT, target)):
-                        broken.append((rel, target, "prose path"))
-
-            # 3. Relative markdown links, resolved against the file's own directory.
-            if rel.endswith(".md"):
-                base = os.path.dirname(path)
-                for target in MDLINK.findall(text):
-                    if target.startswith(("http://", "https://", "mailto:")):
-                        continue
-                    checked += 1
-                    resolved = os.path.normpath(os.path.join(base, target))
-                    if not os.path.isfile(resolved):
-                        broken.append((rel, target, "link"))
-                        continue
-                    # A link LEAVING docs/ is published as a GitHub blob URL by the site's
-                    # hook, and an untracked file is a 404 there while resolving fine here.
-                    out = os.path.relpath(resolved, ROOT)
-                    if not out.startswith("docs" + os.sep) and out not in known:
-                        broken.append((rel, target, "untracked"))
-
-            # 4. Rule 2's header: a module in modules/nixos/ or modules/home/ opens with at most 2 comment lines,
-            # holding its docs/ pointer or a plain "No note". An aggregator default.nix is exempt.
-            if rel.startswith(("modules/nixos/", "modules/home/")) and rel.endswith(".nix") and not rel.endswith("default.nix"):
-                header = []
-                for line in text.splitlines():
-                    if not line.startswith("#"):
-                        break
-                    header.append(line)
-                checked += 1
-                if len(header) > 2:
-                    broken.append((rel, f"{len(header)} lines, the cap is 2", "header"))
-                elif not POINTER.search("\n".join(header)) and "No note" not in "\n".join(header):
-                    broken.append((rel, "no docs/ pointer and no 'No note'", "header"))
-
-        if broken:
-            print(f"docs-links: {len(broken)} broken of {checked} checked\n", file=sys.stderr)
-            for rel, target, kind in broken:
-                print(f"  {rel}: {kind} -> {target}", file=sys.stderr)
-            return 1
-
-        print(f"docs-links: {checked} references, all resolve")
-        return 0
-
-
-    sys.exit(main())
-  ''
+    echo "docs-links: $checked references, all resolve"
+  '';
+}

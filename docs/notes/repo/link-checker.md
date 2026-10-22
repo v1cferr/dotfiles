@@ -88,15 +88,18 @@ Out of scope on purpose: `http(s)` targets (that is a network check, not a repo 
 rather than scanning it), and a placeholder like `docs/notes/<module>.md`, which documents the
 CONVENTION and names no file.
 
-## Why `writePython3Bin`
+## Why `writeShellApplication`
 
-The same reasoning as `writeShellApplication` in rule 7: the logic lives in the BUILD, and the
-build is what lints it. `writeShellApplication` gives shellcheck; `writePython3Bin` gives flake8,
-and it refused to build until the spacing was right, which is exactly the point of putting it
-there.
+The same reasoning as rule 7: the logic lives in the BUILD, and the build is what lints it, so
+shellcheck refuses a wrapper that would misbehave. Until 22/10/2026 it was `writePython3Bin` with
+flake8; it became shell in phase A of [languages](languages.md) (rule 24).
 
-`flakeIgnore = [ "E501" ]` because this repo's line length is 100 and flake8 defaults to 79. That
-is the only rule relaxed.
+What does the work is `rg`: one `-o` pass per check over the tracked files, `--sort path` so the
+order is the tree's, plus ONE `realpath -sm` call for every markdown link (`-s` keeps symlinks as
+written, the way the Python's `normpath` did). Nothing spawns a process per item, which is what
+keeps it at 0.14s; a first draft with an `rg` per module header took 1.2s. MEASURED against the
+Python version: the same 1809 references on the tree, and the same 7 findings of 18 on a fixture
+holding one case of each kind (pointer, prose path, link, untracked target, both header faults).
 
 ## The one thing to know before editing it
 

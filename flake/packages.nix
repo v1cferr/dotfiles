@@ -30,7 +30,7 @@ in
     curseforge-fix-perms # ./pkgs: same
     stack-wallet # ./pkgs: the official AppImage at a VERSIONED url, so unlike curseforge it stays in the check
     hyprglass # ./pkgs: built against the host's Hyprland, so the check proves the plugin still compiles for it
-    docs-links # ./tools: the build IS the script's flake8; the CHECK below runs it
+    docs-links # ./tools: the build IS the wrapper's shellcheck; the CHECK below runs it
     docs-site # ./tools: the static export, so the CHECK below proves the site builds
     docs-site-check # ./tools: the build IS the wrapper's shellcheck; the HOOK below runs it
     docs-sources # ./tools: the previews' snapshot, and building it runs the indexer's tests

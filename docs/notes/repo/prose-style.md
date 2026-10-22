@@ -69,11 +69,23 @@ and debugging that costs more than the escapes cost to read.
 - **en-US itself.** The half of rule 17 that matters most is not mechanical: no check here can tell
   Portuguese prose from English. That one stays with the reader.
 
-## The ALLOWED list
+## No exception list
 
-Empty, and keyed by `(path, line)` with a REASON string, so an exception lands in the diff instead
-of rotting in silence. Same contract as `dead-config`: if a finding is real, the fix is rewriting
-the sentence, not adding a line here.
+The Python version carried an `ALLOWED` table keyed by `(path, line)`, empty since the day it was
+written. It left with the move to shell (22/10/2026) under rule 16: a mechanism nobody uses is dead
+config. The contract stands without it: if a finding is real, the fix is rewriting the sentence.
+
+## Shell since 22/10/2026 (rule 24)
+
+The Python version left in phase A of [languages](languages.md). Only a line holding a banned
+glyph can fail, so `rg` finds those first (22 lines in 10 files on the day) and the full reading,
+fences, literals and the comment marker, runs on them alone; the literals are stripped by `sed`,
+whose `s///g` takes leftmost spans the way `re.sub` did. The whole tree takes 0.3s.
+
+MEASURED against the Python version on a fixture of every case above, in both modes: the same
+output, byte for byte. ONE number changed on the tree: the summary now counts the files of a
+prose-bearing KIND (markdown, or a language with a comment marker), 580 on the day, where the
+Python counted the files that yielded a line of prose, 552.
 
 ## The long form of rule 17
 

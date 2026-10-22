@@ -34,7 +34,7 @@ in
     docs-site # ./tools: the static export, so the CHECK below proves the site builds
     docs-site-check # ./tools: the build IS the wrapper's shellcheck; the HOOK below runs it
     docs-sources # ./tools: the previews' snapshot, and building it runs the indexer's tests
-    prose-style # ./tools: same flake8 at build time; the HOOKS below run it, in two modes
+    prose-style # ./tools: the build IS the wrapper's shellcheck; the HOOKS below run it, in two modes
     qml-syntax # ./tools: the build IS the wrapper's shellcheck; the HOOK below runs it
     data-syntax # ./tools: the build IS the wrapper's shellcheck; the HOOK below runs it
     dead-config # ./tools: same, and the CHECK below runs it too

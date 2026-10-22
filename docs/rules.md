@@ -367,17 +367,29 @@ does too.
 
 ## 24. Four languages for glue, Python for programs
 
-Configuration and glue **MUST** be written in Nix, Lua, QML and Shell, by that priority, Shell
-preferably inside a `.nix`. A PROGRAM (its own data structures, arithmetic past counting, a test
-suite, or about 100 lines of logic) **MAY** be Python, registered with a reason and a review date;
-a `jq` or `awk` script past a filter is such a program. Another language **MAY** enter only where a
-host program imposes it (a kitty kitten, a Vicinae extension), registered the same way.
+Python is the ONE language allowed past the four. Code **MUST** take the first step that fits:
+
+0. **No code**: a NixOS or home-manager option, or a packaged tool, already does it.
+1. **Nix**: data, validation or generation that can happen at evaluation or build.
+2. **The host's language**: Lua for Hyprland, QML for Quickshell, whatever an extension API imposes.
+3. **Shell**: GLUE, where each line runs another program and passes its output on. `jq`, `sed`,
+   `awk` and `rg` appear only as one-line filters.
+4. **Python**: a PROGRAM, shown by ANY of: structured state (maps, sets, graphs); math past
+   counting integers (dates, IPs, floats, number formatting); a format no one-line command reads
+   (binary, ioctl, a library API); edge cases that need a unit test; a filter that grew `def` or
+   `reduce`; or more than **100 lines of logic**, comments and blanks excluded. A basic job that
+   long gets simpler first, or goes back to step 0.
+5. **Never**: a program in `jq`, `awk`, `sed` or Perl, TypeScript for the repo's own tooling, or a
+   sixth language.
+
+Every Python file and every host-imposed language is registered with a reason and a review date.
 
 **Why**: every language is a toolchain, a linter and its own failure modes, paid at every return
 to a file. But porting PROGRAMS to shell traded one language for four dialects (bash, `jq`, PCRE,
 `sed`) and hid six bugs that passed in silence (measured 22/10/2026), so Python stays where it is
 the simpler tool.
 
-**Enforced by**: review, against the registered exceptions.
+**Enforced by**: review, against the registered exceptions and the debt table; `eval-metrics`
+warns on a file over its language's line budget.
 
 **Detail**: [the long form](notes/repo/languages.md).

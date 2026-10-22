@@ -108,7 +108,10 @@ Enter" and echoes the dots, so the session is never stranded.
   red the same day. The name is git's `user.name` and the handle the account's (`LOCK_NAME`,
   `LOCK_USER` from the launcher); the logo is `my.lockscreen.logo`, a path to STATE (the SVG in
   Dropbox), never in git. No file, no logo; the lock locks the same. The clock's ink zone covers
-  the signature, so its AA and bokashi hold.
+  the signature, so its AA and bokashi hold. The mask is a RAMP centered at half alpha
+  (`maskThresholdMin` 0.5, spread 1.0) over the SVG rasterized at 4x and mipmapped: MultiEffect's
+  default mask is a step that kept or dropped each pixel whole, which made the logo jagged and
+  closed the gaps between its strokes.
 - **The field:** no box. A hairline, the dots, a vermilion caret; "verificando…" while PAM runs;
   a failure shakes it; Caps Lock shows in vermilion under it (read from the keyboard LEDs in
   `/sys/class/leds`, polled only while locked).
@@ -135,7 +138,7 @@ the same tone sits on the type itself.
 | Energia | measured CPU + GPU watts | the last 30 min, a line | CPU, GPU, the peak |
 | Claude Code | session % and week % | the week, 4 h bars | when each resets |
 | Sistema | CPU % now | its last two minutes | RAM used, GPU temperature |
-| Processos | the top three apps by CPU now | none | "% de um núcleo" |
+| Processos | the top three apps by CPU now, each with its icon | none | "% de um núcleo" |
 | Clima (always) | the temperature and the sky now | the next 12 hours: temperature line over rain bars | max, min, rain, feels-like |
 | Tocando (only while playing) | the title, the artist | a vermilion progress line | none |
 
@@ -166,6 +169,12 @@ dark halo on the card's content (`contentHalo`) holds the type where that thin t
 not. The region is re-read after layout, because a binding cannot see an ancestor (the Column)
 move its children. It samples an Item, not the compositor, so it works over the lock's own
 print, not over windows.
+
+**Each process wears its app's icon** (21/10/2026): the name from the cgroup goes through
+`DesktopEntries.heuristicLookup`, and the entry's icon through `Quickshell.iconPath`, as the
+notifications do. The entries load asynchronously, so the lookup re-runs when they arrive. No
+`.desktop` (Hyprland, quickshell, sunshine): a neutral `deployed_code` glyph keeps the column
+aligned. An icon is only an icon; no command line ever leaves `/proc`.
 
 **The numbers are honest.** Energy is the MEASURED CPU package plus GPU board, never "the PC's
 power"; a minute with no sample is a gap in the line, never a zero; RAM is used from

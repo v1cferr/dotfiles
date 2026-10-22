@@ -3,6 +3,7 @@
 // charts. Música takes the last row while something plays, Clima otherwise.
 import Quickshell
 import Quickshell.Services.Mpris
+import Quickshell.Widgets
 import QtQuick
 import "root:/"
 import "root:/dash"
@@ -278,11 +279,39 @@ Item {
                     Repeater {
                         model: System.topCpu.slice(0, 3)
                         Item {
+                            id: proc
                             required property var modelData
+                            // The app's own icon from its .desktop entry; the entries load asynchronously, so the
+                            // lookup re-runs when they arrive. No entry (Hyprland, quickshell): a neutral glyph.
+                            readonly property string icon: {
+                                if (DesktopEntries.applications.values.length === 0)
+                                    return "";
+                                const e = DesktopEntries.heuristicLookup(proc.modelData.name);
+                                return e && e.icon && Quickshell.hasThemeIcon(e.icon) ? Quickshell.iconPath(e.icon) : "";
+                            }
                             width: parent.width
                             height: 30
+                            IconImage {
+                                id: appIcon
+                                visible: proc.icon !== ""
+                                anchors.verticalCenter: parent.verticalCenter
+                                implicitSize: 24
+                                source: proc.icon
+                            }
                             Text {
-                                width: parent.width - 90
+                                visible: proc.icon === ""
+                                anchors.centerIn: appIcon
+                                text: "deployed_code"
+                                color: Theme.colSubtext
+                                font.family: "Material Symbols Rounded"
+                                font.pixelSize: 22
+                                font.variableAxes: {
+                                    "wght": 300
+                                }
+                            }
+                            Text {
+                                x: 36
+                                width: parent.width - 36 - 90
                                 text: modelData.name
                                 color: Theme.colText
                                 font.family: "Geist"

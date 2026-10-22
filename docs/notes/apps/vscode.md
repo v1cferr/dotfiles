@@ -79,6 +79,44 @@ Two guards in the script:
   mirroring. It warns and exits 0: the `update` that calls this should not die because the mirror
   failed, but it should not lie in silence either.
 
+## Shell highlighting inside Nix strings
+
+nix-ide paints a `''...''` string as one flat string, so the shell inside a `writeShellApplication`
+reads as a wall of one color. Nothing ready does better for this repo, checked on 22/10/2026:
+nix-ide 0.5.13 has no embedded languages (its "embedded" is `${...}` only), and Better Nix Syntax
+paints shell only in `shellHook`, `buildPhase`, `installPhase`, `buildCommand` and `initContent`,
+never `text`, and replaces nix-ide's grammar instead of adding to it.
+
+So it is a local extension of two TextMate injection grammars, in `vscode/nix-embedded-shell/`:
+
+- `injection.json` opens a shell block on `text`, `script`, the systemd `pre`/`post` hooks, the
+  build phases and their hooks, `writeShellScript "name"`, and any string marked `/* bash */`. An
+  attribute PATH ending in `.text` (`xdg.configFile."x".text`) is excluded, since it holds a
+  config file and not a script.
+- `nix-in-shell.json` keeps Nix visible inside the shell: `${...}` is Nix interpolation, and
+  Nix's escapes (a tripled quote, two quotes before a backslash, and two quotes before `${`, which
+  hands `${` to the shell) read as escapes.
+
+**Only a multi-line string, by design.** The opening `''` must end its line and the closing `''`
+must start one, which is how every script here is written. That is what lets the block be a
+begin/while rule, the way markdown fences are: a line opening with the closing `''` ends the block
+AND drops every shell rule still open. A plain begin/end leaked the first time it was tried: a
+shell statement still open at the last line read the closing `''` as a quote, and the rest of the
+file turned into shell.
+
+**Known false positives**, three bare `text = ''` that hold no shell (`fastfetch.nix`,
+`deathadder-v2.nix`, `caddy.nix`): they paint as shell and still close where they should.
+
+**How it is delivered.** `home.file` links the folder into `~/.vscode/extensions/`, named from its
+own `package.json` (rule 11). VS Code registers an unknown folder there in `extensions.json` on its
+next scan (measured 22/10/2026 with a probe extension), so it needs no `.vsix` and no marketplace.
+`settingsSync.ignoredExtensions` keeps Sync from pushing an ID the other machines cannot install.
+
+MEASURED with `vscode-textmate` and `vscode-oniguruma`, the libraries VS Code paints with, over the
+real nix-ide and shell grammars: across the 200 `.nix` files, 3418 lines paint as shell, NO file
+ends inside a shell block, and NO line painted as shell lies outside a `''` string by nix-ide's own
+reading.
+
 ## The package
 
 The unstable recipe with the SRC swapped for the official tarball

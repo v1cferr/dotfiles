@@ -2,6 +2,7 @@
 # rewrites them (Settings Sync stays on). Why a mirror and not a source: docs/notes/apps/vscode.md
 {
   config,
+  lib,
   osConfig,
   pkgs,
   ...
@@ -18,6 +19,10 @@ let
 
   # The CLONED repo, from its SSOT programs.nh.flake (rule 11): the flake itself is in the store.
   repo = "${osConfig.programs.nh.flake}/modules/home/apps/vscode";
+
+  # Shell highlighting inside the Nix strings that hold shell, a local grammar injection. Its folder
+  # is named from its own manifest (rule 11), the layout VS Code registers: docs/notes/apps/vscode.md
+  embeddedShell = lib.importJSON ./vscode/nix-embedded-shell/package.json;
 
   code = unstable.vscode.override {
     commandLineArgs = "--password-store=gnome-libsecret";
@@ -71,4 +76,8 @@ in
   # mcp.json: the MCP servers VS Code's chat sees. A symlink for the same reason as the others,
   # and safe to version because the key is ${input:...}, not inline. See the notes before adding.
   xdg.configFile."Code/User/mcp.json".source = config.lib.file.mkOutOfStoreSymlink "${repo}/mcp.json";
+
+  # From the STORE, not mutable: a grammar edit takes a rebuild, and VS Code never writes here.
+  home.file.".vscode/extensions/${embeddedShell.publisher}.${embeddedShell.name}-${embeddedShell.version}".source =
+    ./vscode/nix-embedded-shell;
 }

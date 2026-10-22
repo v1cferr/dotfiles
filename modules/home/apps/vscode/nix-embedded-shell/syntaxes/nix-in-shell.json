@@ -1,0 +1,21 @@
+{
+  "scopeName": "nix.embedded-shell.nix-in-shell",
+  "injectionSelector": "L:meta.embedded.block.shellscript -meta.embedded.nix",
+  "patterns": [
+    {
+      "comment": "Nix's escapes: ''' is a quote, ''\\x an escape, and ''${ hands ${ to the SHELL.",
+      "match": "'''|''\\\\.|''(?=\\$)",
+      "name": "constant.character.escape.nix"
+    },
+    {
+      "comment": "${ is Nix's interpolation unless ''${ escaped it above.",
+      "begin": "(?<!'')\\$\\{",
+      "beginCaptures": { "0": { "name": "punctuation.section.embedded.begin.nix" } },
+      "end": "\\}",
+      "endCaptures": { "0": { "name": "punctuation.section.embedded.end.nix" } },
+      "name": "meta.embedded.nix",
+      "contentName": "source.nix",
+      "patterns": [{ "include": "source.nix" }]
+    }
+  ]
+}

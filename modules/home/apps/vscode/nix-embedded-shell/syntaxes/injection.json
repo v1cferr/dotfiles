@@ -1,0 +1,103 @@
+{
+  "scopeName": "nix.embedded-shell.injection",
+  "injectionSelector": "L:source.nix -comment -string -meta.embedded.block.shellscript",
+  "patterns": [
+    {
+      "include": "#by-attribute"
+    },
+    {
+      "include": "#by-builder"
+    },
+    {
+      "include": "#by-marker"
+    }
+  ],
+  "repository": {
+    "by-attribute": {
+      "comment": "Only a MULTI-LINE string: the opening '' ends its line and the closing '' starts one.",
+      "begin": "(?<![.\\w\"'-])(text|script|shellHook|buildCommand|(?:pre|post)(?:Start|Stop)|(?:unpack|patch|configure|build|check|install|fixup|installCheck|dist)Phase|(?:pre|post)(?:Unpack|Patch|Configure|Build|Check|Install|Fixup))\\s*(=)\\s*('')(?=\\s*$)",
+      "beginCaptures": {
+        "1": {
+          "name": "entity.other.attribute-name.single.nix"
+        },
+        "2": {
+          "name": "keyword.operator.bind.nix"
+        },
+        "3": {
+          "name": "punctuation.definition.string.other.start.nix"
+        }
+      },
+      "end": "''(?!['$\\\\])",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.other.end.nix"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#shell-lines"
+        }
+      ]
+    },
+    "by-builder": {
+      "comment": "Only a MULTI-LINE string: the opening '' ends its line and the closing '' starts one.",
+      "begin": "\\b(writeShellScript(?:Bin)?)\\s+(\"[^\"]*\")\\s*('')(?=\\s*$)",
+      "beginCaptures": {
+        "1": {
+          "name": "variable.other.nix"
+        },
+        "2": {
+          "name": "string.quoted.double.nix"
+        },
+        "3": {
+          "name": "punctuation.definition.string.other.start.nix"
+        }
+      },
+      "end": "''(?!['$\\\\])",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.other.end.nix"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#shell-lines"
+        }
+      ]
+    },
+    "by-marker": {
+      "comment": "Only a MULTI-LINE string: the opening '' ends its line and the closing '' starts one.",
+      "begin": "(/\\*\\s*(?:bash|sh|shell)\\s*\\*/)\\s*('')(?=\\s*$)",
+      "beginCaptures": {
+        "1": {
+          "name": "comment.block.nix"
+        },
+        "2": {
+          "name": "punctuation.definition.string.other.start.nix"
+        }
+      },
+      "end": "''(?!['$\\\\])",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.other.end.nix"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#shell-lines"
+        }
+      ]
+    },
+    "shell-lines": {
+      "comment": "begin/while, as markdown fences do: a line opening with the closing '' ends the block and drops every shell rule still open, so a shell construct cannot swallow the end.",
+      "begin": "^(?!\\s*''(?!['$\\\\]))",
+      "while": "^(?!\\s*''(?!['$\\\\]))",
+      "contentName": "meta.embedded.block.shellscript",
+      "patterns": [
+        {
+          "include": "source.shell"
+        }
+      ]
+    }
+  }
+}

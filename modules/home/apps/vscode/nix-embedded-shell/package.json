@@ -1,0 +1,35 @@
+{
+  "name": "nix-embedded-shell",
+  "displayName": "Nix embedded shell",
+  "description": "Shell highlighting inside the Nix strings that hold shell. Why: docs/notes/apps/vscode.md",
+  "publisher": "v1cferr",
+  "version": "0.1.0",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "grammars": [
+      {
+        "scopeName": "nix.embedded-shell.injection",
+        "path": "./syntaxes/injection.json",
+        "injectTo": [
+          "source.nix"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.shellscript": "shellscript"
+        }
+      },
+      {
+        "scopeName": "nix.embedded-shell.nix-in-shell",
+        "path": "./syntaxes/nix-in-shell.json",
+        "injectTo": [
+          "source.nix"
+        ]
+      }
+    ]
+  }
+}

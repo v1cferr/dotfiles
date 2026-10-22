@@ -36,7 +36,7 @@ in
     docs-sources # ./tools: the previews' snapshot, and building it runs the indexer's tests
     prose-style # ./tools: same flake8 at build time; the HOOKS below run it, in two modes
     qml-syntax # ./tools: the build IS the wrapper's shellcheck; the HOOK below runs it
-    data-syntax # ./tools: same flake8 at build time; the HOOK below runs it
+    data-syntax # ./tools: the build IS the wrapper's shellcheck; the HOOK below runs it
     dead-config # ./tools: same, and the CHECK below runs it too
     router-ssot # ./tools: same, and the CHECK below runs it too
     eval-metrics # ./tools: same flake8 at build time; the gate WORKFLOW runs it after the check

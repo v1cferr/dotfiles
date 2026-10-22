@@ -456,8 +456,12 @@ THE DIALECT IS THE WHOLE DESIGN, and getting it wrong in either direction makes 
 VS Code DOCUMENTS comments in its own `settings.json` and `keybindings.json`, so parsing those
 strictly would fail on three correct files and the hook would be turned off within a day. Parsing
 everything laxly would accept a comment in `.mcp.json`, which its reader rejects. So the checker
-parses each file in the dialect its CONSUMER accepts: json5 for the three VS Code paths and any
-`.jsonc`, `json.loads` for the rest, `tomllib` for TOML.
+parses each file in the dialect its CONSUMER accepts: JSONC for the VS Code paths, oxlint's config
+and any `.jsonc`, strict JSON for the rest, TOML for TOML. Since 22/10/2026 it is shell (rule 24):
+`jq` for strict JSON (exactly ONE value per file, since `jq empty` alone accepts `{}{}`), `biome`
+as a JSONC parser only (one rule enabled, so a parse error is the only other way to fail, and a
+duplicate key now fails too, which json5 let through), and `taplo lint --no-schema` for TOML. The
+same 36 files parse under both versions, measured before the swap.
 
 MEASURED both ways before committing, because a check that cannot fail is not a check: the 14 files
 in the tree parse; a truncated `.json` and an unterminated `.toml` both exit 1 with the parser's own

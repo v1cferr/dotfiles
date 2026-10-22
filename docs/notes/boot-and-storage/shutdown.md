@@ -87,5 +87,5 @@ off is a `--post-cmd` that runs AFTER Hyprland is gone. Against what runs here:
 - **Log out is where it could help**: a graceful close instead of `loginctl terminate-user`. That
   needs the autologin race above tested first, so it stays an idea.
 
-So the session's actions stay on systemd and logind, and the NixOS Center's dialog
-([nixos-center](../desktop/nixos-center.md#the-session-dialog-22102026)) is the confirmation.
+So the session's actions stay on systemd and logind, and the NixOS Center's confirmation
+([nixos-center](../desktop/nixos-center.md#the-confirmation-22102026)) asks first.

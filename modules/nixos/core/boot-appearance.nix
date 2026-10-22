@@ -15,7 +15,7 @@ in
   options.my.boot = {
     theme = lib.mkOption {
       type = lib.types.enum (lib.attrNames presets.presets);
-      default = presets.default;
+      inherit (presets) default;
       description = "The palette preset of the bootloader menu and the splash (the desktop's own file).";
     };
     themePackage = lib.mkOption {

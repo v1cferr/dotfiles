@@ -29,8 +29,9 @@ in
         backdrop = p.bg; # the same color around the canvas if the firmware picks another mode
         interface = {
           resolution = "1920x1080";
-          branding = "NixOS";
-          brandingColor = p.text;
+          # NO custom branding on purpose: Limine's own line appends ", Secure Boot)" only when the
+          # FIRMWARE reports it active (menu.c), the one runtime indicator this menu can honestly show.
+          brandingColor = p.dim;
           helpColor = p.dim;
           helpColorBright = p.accent;
         };

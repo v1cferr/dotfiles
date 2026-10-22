@@ -174,8 +174,10 @@ at all.
 modifier on its own. `release` waits for the key to come up, and `click` drops it when the mouse
 moved past `binds:drag_threshold`, so SUPER plus a window drag does not open the Center. What the
 wiki does NOT say is whether a release after a combination (SUPER+Q) or after the MX Master's
-thumbwheel (SUPER plus the horizontal wheel) still fires it. That is PENDING a check on the desk
-(22/10/2026); if it misfires, the fallback is a plain combination on the same command.
+thumbwheel (SUPER plus the horizontal wheel) still fires it. Checked on the desk on 22/10/2026:
+releasing SUPER after SUPER plus another key does NOT open the Center. The thumbwheel and a SUPER
+drag were not reported separately; if either misfires, the fallback is a plain combination on the
+same command.
 
 ## Small things worth not rediscovering
 

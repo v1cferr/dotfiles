@@ -474,12 +474,23 @@ band is the same as every other card's.
 
 The FAI account's `/usage`, live, from glance-feed's `claude_usage` document
 (docs/notes/desktop/glance-feed.md) through the `ClaudeUsage.qml` singleton, as the CLAUDE · FAI
-page of the rotation (month, WEATHER, NETWORK, CLAUDE, GitHub, FAI): the SESSION (5 h) and WEEKLY
-meters with "resets in", the per-model shares of the week (Fable), the plan and whether extra usage
-is on, and the WEEK over its last 7 days as one held bar per hour on 0 to 100% (since v5.1; it was
-two 24 h graphs). The series starts at the first sample instead of padding with zeros, and the
-caption says "since" when the feed holds less than 7 days. The session is a current number, not a
-second graph. Both meters turn yellow at 75% (or when the server says `warning`) and red at 90%.
+page of the rotation (month, WEATHER, NETWORK, CLAUDE, GitHub, FAI).
+
+**One clear block per limit (21/10/2026).** The user found the page confusing: two big percentages,
+their bars and "resets in" all on one line each, and a loose line of more percentages under them
+("Fable 0% · team · max 5x · extra usage off"). Now each limit is three lines: its name and period
+("Session · 5-hour window", "Week · 7-day limit") with the share on the right ("12% used"); the bar
+across the width; and when it renews, as the clock will show it ("renews 23:10 · in 1h 51m", or
+"Thu 00:00" another day). The models' shares, the plan and extra usage moved into the blocks' tip.
+Both meters turn yellow at 75% (or when the server says `warning`) and red at 90%.
+
+**The week as one picture** (`dash/ClaudeWeek.qml`): the share used as a STEP line (a running total:
+each reading holds until the next) across the limit's own week, from its last renewal to the next,
+so the line ends at now and the rest of the frame is the week still ahead. Guides at 50% and 100%,
+the days at each local midnight, a dotted line where the share dropped (a reset), the value now at
+the line's end, and "no data before …" in a gap the feed never saw (unknown is not zero). Under
+the pointer: the day, the hour and the share in force, "Tue 15:18 · 54% used". It replaced 168
+unlabelled hourly bars.
 
 A window whose reset time passed reads 0% until the feed brings the new one: the old number would
 be a lie. The countdowns tick every 30 s on the clock alone, with no re-read.

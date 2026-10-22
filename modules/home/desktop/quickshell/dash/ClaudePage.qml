@@ -1,5 +1,6 @@
-// The CLAUDE page of the rotating column: the FAI account's session and weekly limits with their
-// resets, the per-model shares, and the week's last 7 days. All from ClaudeUsage.qml: docs/notes/desktop/dash.md
+// The CLAUDE page of the rotating column: the FAI account's session and weekly limits, one clear
+// block each (what it is, how much is used, when it renews), and the week as one picture. The
+// per-model shares and the plan live in the blocks' tip. All from ClaudeUsage.qml: docs/notes/desktop/dash.md
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -9,40 +10,61 @@ ColumnLayout {
     id: page
     spacing: 18
 
+    // When a window renews, as the clock will show it: today's hour, or the weekday and the hour.
+    function renews(t) {
+        if (!t)
+            return "";
+        const d = new Date(t * 1000), now = new Date();
+        const sameDay = d.toDateString() === now.toDateString();
+        return "renews " + Qt.formatDateTime(d, sameDay ? "HH:mm" : "ddd HH:mm") + "  ·  in " + ClaudeUsage.left(t);
+    }
+    // What the tip adds: the models' shares of the week, the plan, extra usage.
+    readonly property var details: ClaudeUsage.scoped.map(s => s.label + " " + Math.round(s.pct || 0) + "% of the week").concat([ClaudeUsage.plan, ClaudeUsage.extra.enabled ? "extra usage on" : "extra usage off"].filter(x => x))
+
+    // One limit, three lines: what it is and how much is used; the bar; when it renews.
     component Meter: Item {
         id: m
         property string label
+        property string period
         property var win
-        property string resetText
         property color tone: Theme.colPeach
         Layout.fillWidth: true
-        implicitHeight: row.implicitHeight
+        implicitHeight: col.implicitHeight
         Tip {
             title: m.label.toLowerCase() + " limit"
-            lines: [m.win.resets ? "resets " + new Date(m.win.resets * 1000).toLocaleString(Qt.locale(), "ddd dd/MM HH:mm") : "no active window"]
+            lines: [m.win.resets ? "renews " + new Date(m.win.resets * 1000).toLocaleString(Qt.locale(), "ddd dd/MM HH:mm") : "no active window"].concat(page.details)
         }
-        RowLayout {
-            id: row
+        ColumnLayout {
+            id: col
             anchors.left: parent.left
             anchors.right: parent.right
-            spacing: 16
-            Text {
-                Layout.preferredWidth: 110
-                text: m.label
-                color: Theme.colSubtext
-                font.family: Theme.uiFont
-                font.pixelSize: 14
-                font.bold: true
-                font.letterSpacing: 3
-            }
-            Text {
-                Layout.preferredWidth: 90
-                text: isNaN(m.win.pct) ? "–" : Math.round(m.win.pct) + "%"
-                color: ClaudeUsage.color(m.win, m.tone)
-                font.family: Theme.uiFont
-                font.pixelSize: 34
-                font.bold: true
-                font.letterSpacing: -1
+            spacing: 6
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+                Text {
+                    text: m.label
+                    color: Theme.colText
+                    font.family: Theme.uiFont
+                    font.pixelSize: 15
+                    font.bold: true
+                }
+                Text {
+                    text: m.period
+                    color: Theme.colDim
+                    font.family: Theme.uiFont
+                    font.pixelSize: 13
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+                Text {
+                    text: isNaN(m.win.pct) ? "–" : Math.round(m.win.pct) + "% used"
+                    color: ClaudeUsage.color(m.win, m.tone)
+                    font.family: Theme.uiFont
+                    font.pixelSize: 22
+                    font.bold: true
+                }
             }
             Rectangle {
                 Layout.fillWidth: true
@@ -63,12 +85,10 @@ ColumnLayout {
                 }
             }
             Text {
-                Layout.preferredWidth: 150
-                horizontalAlignment: Text.AlignRight
-                text: m.resetText
-                color: Theme.colDim
+                text: m.win.resets ? page.renews(m.win.resets) : "idle: no window open"
+                color: Theme.colSubtext
                 font.family: Theme.uiFont
-                font.pixelSize: 14
+                font.pixelSize: 13
             }
         }
     }
@@ -88,53 +108,36 @@ ColumnLayout {
 
     Meter {
         visible: ClaudeUsage.ok
-        label: "SESSION"
+        label: "Session"
+        period: "5-hour window"
         win: ClaudeUsage.session
-        resetText: ClaudeUsage.session.resets ? "resets in " + ClaudeUsage.left(ClaudeUsage.session.resets) : "idle"
     }
     Meter {
         visible: ClaudeUsage.ok
-        label: "WEEKLY"
+        label: "Week"
+        period: "7-day limit"
         tone: Theme.colMauve
         win: ClaudeUsage.weekly
-        resetText: ClaudeUsage.weekly.resets ? "resets in " + ClaudeUsage.left(ClaudeUsage.weekly.resets) : ""
     }
 
-    // The per-model shares of the week and the plan, one quiet line.
-    Text {
-        visible: ClaudeUsage.ok
-        Layout.fillWidth: true
-        elide: Text.ElideRight
-        text: ClaudeUsage.scoped.map(s => s.label + " " + Math.round(s.pct || 0) + "%").concat([ClaudeUsage.plan, ClaudeUsage.extra.enabled ? "extra usage on" : "extra usage off"].filter(x => x)).join("  ·  ")
-        color: Theme.colSubtext
-        font.family: Theme.uiFont
-        font.pixelSize: 14
-    }
-
-    // The week's last 7 days, one bar per hour on a 0 to 100 scale, each holding its value: a weekly
-    // reset is the drop it was. The session is a current number above, not a second graph.
+    // The week as one picture: the share used as a step line across the limit's own week.
     ColumnLayout {
         visible: ClaudeUsage.ok
         Layout.fillWidth: true
         Layout.fillHeight: true
         spacing: 6
         Text {
-            readonly property bool full: ClaudeUsage.historyStart <= ClaudeUsage.now - 7 * 86400 + 3600
-            text: full ? "WEEK · LAST 7 DAYS" : "WEEK · SINCE " + Qt.formatDateTime(new Date(ClaudeUsage.historyStart * 1000), "dd/MM HH:mm")
+            text: "THIS WEEK · FROM ONE RENEWAL TO THE NEXT"
             color: Theme.colDim
             font.family: Theme.uiFont
             font.pixelSize: 12
             font.bold: true
             font.letterSpacing: 3
         }
-        Sparkline {
+        ClaudeWeek {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            series: ClaudeUsage.series("w", 7 * 86400, 3600)
-            stepS: 3600
-            unit: "%"
-            fill: Theme.colMauve
-            placeholder: "collecting…"
+            Layout.minimumHeight: 90
         }
     }
 }

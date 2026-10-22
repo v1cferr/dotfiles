@@ -85,8 +85,8 @@ in
         language = "system";
         files = "\\.(json|jsonc|toml)$";
       };
-      # The two loose .py (router-sync, kitty's smart-paste). `check` with no --fix, since a linter
-      # that rewrites Python is not a formatter; no cache, which two files never earn back.
+      # The loose .py that remain (rule 24). `check` with no --fix, since a linter that rewrites
+      # Python is not a formatter; no cache, which a handful of files never earn back.
       ruff = {
         enable = true;
         entry = "${nixpkgs.legacyPackages.${system}.ruff}/bin/ruff check --no-cache";

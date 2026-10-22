@@ -424,8 +424,10 @@ file. That is the ending markdownlint could not have: `.config/luarc.json` is pl
 "Diagnosis completed, no problems found" on all 8. The hook has `files = "\\.lua$"`, so a commit
 that touches no Lua does not pay for it.
 
-`ruff` covers `modules/nixos/network/router-sync.py`, the only loose `.py` in the repo and the one that WRITES to
-the router; the Python inside `pkgs/*.nix` already gets flake8 at build time through `writers`. The
+`ruff` covers the loose `.py` files that remain (rule 24 lists them in
+[languages](languages.md)); the Python inside `pkgs/*.nix` already gets flake8 at build time
+through `writers`. `router-sync.py`, the one that wrote to the repo from the router, became shell on
+22/10/2026. The
 entry is overridden to plain `check`, dropping the hook's default `--fix`: nixfmt rewriting layout
 is one thing, a linter rewriting Python at commit time is another. MEASURED: "All checks passed!".
 

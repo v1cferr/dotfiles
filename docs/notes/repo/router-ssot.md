@@ -176,3 +176,26 @@ ones, ssh, both DNS mechanisms, peer, dnat), the same output byte for byte, IPv6
 ONE TRAP met on the way, worth knowing before editing the `jq`: `A + B as $x | C` binds `A + B`,
 so a chain of `+` with an `as` in the middle silently drops everything before it. Each check is
 its own parenthesized block in a list, joined by `add`, which is why the program has that shape.
+
+## router-sync, the mirror's writer
+
+`router-sync` (in `modules/nixos/network/router.nix`) is what WRITES the mirror this checker reads.
+The router's config used to exist only on the device, 750 lines invisible to any review; this
+does not make it declarative, it makes it VERSIONED and its drift VISIBLE. `pull` brings the
+device's state over, `diff` exits 1 on drift, and NEITHER writes to the router: pushing needs
+commit-confirm, an open decision in [open-items](../../open-items.md).
+
+THE REDACTION IS FAIL-SAFE, and the direction matters. A leaf whose name CONTAINS a credential
+word (`private_key`, `preshared_key`, `password`, `passwd`, `psk`, `secret`, `token`, `key`) is
+redacted by default, so a secret a future package adds is born hidden. A SUBSTRING and never
+equality, because `rpcd_token` is not exactly `token` and adblock's API token once mirrored in the
+clear into this public repo. Released one by one, each measured against the mirror: `public_key`
+(WireGuard peers), `key_type` (uhttpd's certificate algorithm), `passwordauth` and
+`rootpasswordauth` (dropbear's switches, whose value is what gets audited). A value that is a PATH
+(`uhttpd.main.key`, `luci.flash_keep.passwd`) is a pointer, not a secret, and passes.
+
+Shell since 22/10/2026 (rule 24). MEASURED against the Python version: `diff` reported the 19
+configs in sync with the mirror the Python had pulled, which compares the new redacted export
+byte for byte; a `pull` into a scratch repo reproduced the mirror exactly. Two traps a shell port
+meets and this one handles: an `exit` inside `$(...)` leaves only the subshell, so every ssh goes
+into a variable first, and `ssh` inside a `while read` would swallow the loop's input, hence `-n`.

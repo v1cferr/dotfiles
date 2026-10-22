@@ -12,9 +12,14 @@ which had to move up because a system service needed it.
 
 ## Wake-on-LAN, and why three paths
 
-A magic packet is 6x `0xFF` plus 16x the MAC. It is sent from PYTHON and not nixpkgs'
-`wakeonlan`, which is Perl and drags Perl-Critic and Perl-Tidy into the build. It is also the SAME
-code that runs on the relay, where I cannot install anything.
+A magic packet is 6x `0xFF` plus 16x the MAC. Not nixpkgs' `wakeonlan`, which is Perl and drags
+Perl-Critic and Perl-Tidy into the build. Since 22/10/2026 (rule 24) the LOCAL paths send it with
+`socat`, the packet written as `printf` escapes at build time; MEASURED: the same 102 bytes as the
+old `bytes.fromhex`, received on loopback with `broadcast` set.
+
+THE RELAY STAYS PYTHON, as a registered exception ([languages](../repo/languages.md)): it runs ON
+the fai-vm, where I cannot install anything, and the only unprivileged broadcaster there is
+`python3` (its `nc` is OpenBSD's and `busybox nc` has no broadcast either, checked 22/10/2026).
 
 `SO_BROADCAST` is mandatory: without it the kernel refuses to send to a broadcast address. Ports 9
 AND 7, because an old NIC sometimes only listens on 7.

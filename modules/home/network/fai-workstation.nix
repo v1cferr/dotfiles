@@ -1,5 +1,5 @@
 # The FAI workstation: the host's SSOT (rule 11, at the lowest level that needs it) plus
-# `wake-workstation` and `ws`. Why 3 WoL paths and why python: docs/notes/network/fai-workstation.md
+# `wake-workstation` and `ws`; 3 WoL paths, a python relay: docs/notes/network/fai-workstation.md
 {
   config,
   lib,
@@ -15,7 +15,7 @@ let
     iproute2
     iputils
     openssh
-    python3
+    socat
     writeShellApplication
     writeText
     ;
@@ -23,32 +23,26 @@ let
   ws = config.my.fai.workstation;
   macHex = lib.toLower (lib.replaceStrings [ ":" "-" ] [ "" "" ] ws.mac);
 
-  # A magic packet, in python because nixpkgs' wakeonlan is Perl and it is also the code that
-  # runs on the relay. SO_BROADCAST is mandatory; ports 9 and 7, since an old NIC may want 7.
-  mkSender =
-    targets:
-    writeText "wol-send.py" ''
-      import socket
-      pkt = bytes.fromhex("ff" * 6 + "${macHex}" * 16)
-      s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-      s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-      for t in [${lib.concatMapStringsSep ", " (t: "\"${t}\"") targets}]:
-          for port in (9, 7):
-              s.sendto(pkt, (t, port))
-    '';
+  # The magic packet as printf escapes: 6 x ff, then the MAC 16 times. Ports 9 and 7, since an old
+  # NIC may want 7; SO_BROADCAST is mandatory, which is socat's `broadcast`.
+  macBytes = lib.concatMapStrings (i: "\\x${builtins.substring (i * 2) 2 macHex}") (lib.range 0 5);
+  packet = lib.concatStrings (lib.replicate 6 "\\xff" ++ lib.replicate 16 macBytes);
 
-  # Local: unicast through the tunnel plus a directed broadcast to the /25.
-  senderLocal = mkSender [
-    ws.host
-    ws.broadcast
-  ];
-  # The relay runs ON the fai-vm, on the same subnet, so it is a real L2 broadcast.
-  senderRelay = mkSender [ "255.255.255.255" ];
+  # The relay runs ON the fai-vm, a real L2 broadcast. Python because that host offers nothing else
+  # that broadcasts unprivileged (its nc is OpenBSD's), and it is not mine to change: rule 24.
+  senderRelay = writeText "wol-relay.py" ''
+    import socket
+    pkt = bytes.fromhex("ff" * 6 + "${macHex}" * 16)
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    for port in (9, 7):
+        s.sendto(pkt, ("255.255.255.255", port))
+  '';
 
   wakeCli = writeShellApplication {
     name = "wake-workstation";
     runtimeInputs = [
-      python3
+      socat
       iputils
       openssh
       iproute2
@@ -85,7 +79,11 @@ let
       fi
       # 2) unicast (warm ARP only) and 3) a directed broadcast, which the FAI gateway turns into an
       #    L2 broadcast (measured): the fallback when the fai-vm is down
-      python3 ${senderLocal} && echo "  ok: unicast plus a directed broadcast through the tunnel"
+      for target in '${ws.host}' '${ws.broadcast}'; do
+        for port in 9 7; do
+          printf '%b' '${packet}' | socat -u - "UDP-DATAGRAM:$target:$port,broadcast"
+        done
+      done && echo "  ok: unicast plus a directed broadcast through the tunnel"
 
       # A machine that is on always answers, so waiting would only print a false "IT WOKE UP".
       if [ "$test_mode" = 1 ]; then echo "test mode: sent, check the tcpdump on the workstation"; exit 0; fi

@@ -1,6 +1,11 @@
 # SECURE BOOT: our own keys through sbctl, signing GRUB AND every kernel on each switch.
 # The runbook, and what it does NOT protect: docs/notes/boot-and-storage/boot.md
-{ pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   # Rule 19: everything this module reaches for, named once. deadnix fails the build on an
@@ -46,6 +51,9 @@ in
   # The tool for the runbook above (create-keys / enroll-keys / status / verify).
   environment.systemPackages = [ sbctl ];
 
-  # It runs at the end of install-grub.sh, after the menu entries (grub.nix:837).
-  boot.loader.grub.extraInstallCommands = "${signGrub}/bin/grub-sbctl-sign";
+  # It runs at the end of install-grub.sh, after the menu entries (grub.nix:837). Limine signs
+  # its own binary through boot.loader.limine.secureBoot instead (limine.nix).
+  boot.loader.grub.extraInstallCommands = lib.mkIf (
+    config.my.boot.loader == "grub"
+  ) "${signGrub}/bin/grub-sbctl-sign";
 }

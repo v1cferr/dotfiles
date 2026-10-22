@@ -8,6 +8,7 @@
     ./boot-appearance.nix # the pre-boot palette (my.boot.theme) and the Plymouth splash (off by default)
     ./limine.nix # Limine with Secure Boot and an enrolled config: the candidate under my.boot.loader
     ./secureboot.nix # Secure Boot: our own keys (sbctl) and signing GRUB on every switch
+    ./boot-trust.nix # /run/boot-trust.json: Secure Boot, the signed loader and the enrolled hash, read-only
     ./alert.nix # `my.alert`: the journal plus a critical bubble, for root units that must reach me
     ./hardening.nix # the systemd sandbox baseline for this repo's own root oneshots
     ./shutdown.nix # the ceiling on systemd's wait when stopping a unit (the end of the 90 s "stop job")

@@ -210,6 +210,7 @@ Singleton {
     readonly property color colCrit: pal.red        // a confirmed failure
     readonly property color colUnknown: pal.dim     // no data, stale data, or deliberately off
     readonly property color colSurfaceTip: aa(pal.bg, "f2") // a tip drawn INSIDE a panel: no blur under it, so near opaque
+    readonly property color colScrim: aa(pal.shadow, "99") // a modal's dim: near black, so it reads on a dark desktop too
     // Icons and the hover delay shared by the bar, the panels and the tips.
     readonly property int iconBar: 16
     readonly property int tipDelay: 300

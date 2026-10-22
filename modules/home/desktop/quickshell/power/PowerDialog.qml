@@ -26,7 +26,7 @@ PanelWindow {
         right: true
     }
     exclusionMode: ExclusionMode.Ignore // over the bar too
-    color: Qt.alpha(Theme.colBgSolid, 0.55) // the dim; the fade is Hyprland's layer animation
+    color: Theme.colScrim // the dim; the fade is Hyprland's layer animation
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qs-dialog" // outside the blur rule on purpose: a dim, not a frosted screen
     // Exclusive while it asks: Escape and Enter must reach it whatever window had the focus.

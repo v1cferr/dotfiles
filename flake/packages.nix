@@ -41,7 +41,7 @@ in
     router-ssot # ./tools: same, and the CHECK below runs it too
     eval-metrics # ./tools: same flake8 at build time; the gate WORKFLOW runs it after the check
     usage-audit # ./tools: same flake8 at build time; I run it by hand, it reads my ~
-    rules-index # ./tools: same, and the CHECK below runs it too
+    rules-index # ./tools: the build IS the wrapper's shellcheck, and the CHECK below runs it too
     curseforge # ./pkgs: the official AppImage (outside the CHECK below, the why is there)
     btop # nixpkgs + the src from PR #1457 (Intel Xe GPU): here so the check COMPILES the fork
     ;

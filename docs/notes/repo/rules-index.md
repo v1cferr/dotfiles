@@ -34,3 +34,16 @@ one place the repo explains itself. Before the rewrite of the rules into cards, 
 
 MEASURED with a sentinel file citing, outside backticks, `rule 23 and rules 4, 99 or 2`: it
 reported 23 and 99, and passed 4 and 2.
+
+## Shell since 22/10/2026 (rule 24)
+
+The Python version left in phase A of [languages](languages.md). What does the work is ONE
+`rg -P -o` pass that prints, in line order, a marker for each `#` line (a past-section heading
+keeps its trailing space, so the two can be told apart) and each citation, skipping a backtick
+span whole with `(*SKIP)(*F)`. Bash only walks that output, so the run stays at 0.2s on the tree.
+`--sort path` keeps the order `git ls-files` gives, since `rg` otherwise searches in parallel.
+
+MEASURED against the Python version on the tree (the same summary line) and on a fixture of edge
+cases (dates, runs, backticks, past sections, decisions, history, `#` comments): the same findings, but one. In `` rule `x`96 `` the Python removed the span and then
+read a citation of 96 out of the joined text; the shell version skips the span in place and sees
+none, which is what the text says.

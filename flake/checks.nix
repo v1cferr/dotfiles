@@ -259,6 +259,8 @@ in
       removeAttrs self.packages.${system} [
         "curseforge" # a POINTER url: its hash rots on every release of theirs, the why is above
         "vm-boot" # a whole system closure plus a QEMU run: same reason toplevel stays out
+        "vm-limine" # two QEMU boots under OVMF: the same reason as vm-boot
+        "boot-candidate" # a whole system closure: the same reason toplevel stays out
         "disko-vm" # building it means building a 24 GiB image, and it is interactive anyway
       ]
     )

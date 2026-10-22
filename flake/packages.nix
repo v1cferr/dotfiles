@@ -157,4 +157,20 @@ in
       hostDir
       ;
   };
+
+  # THE BOOTLOADER CANDIDATE: this host with Limine and the splash, built and never installed.
+  # Activating it is a gated step of docs/guides/limine-migration.md, not a rebuild.
+  boot-candidate =
+    (host.extendModules {
+      modules = [
+        {
+          my.boot.loader = "limine";
+          my.boot.splash.enable = true;
+        }
+      ];
+    }).config.system.build.toplevel;
+
+  # THE LIMINE DRILL: the boot modules under OVMF Secure Boot on throwaway keys, plus a Windows
+  # chainload. A package for the same reason as vm-boot: docs/notes/repo/vm-boot.md
+  vm-limine = import ./vm-limine.nix { inherit inputs pkgs; };
 }

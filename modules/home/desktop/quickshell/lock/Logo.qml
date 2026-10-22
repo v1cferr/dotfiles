@@ -19,9 +19,10 @@ Item {
         id: logo
         anchors.fill: parent
         source: mark.source ? "file://" + mark.source : ""
-        sourceSize: Qt.size(112, 112) // twice the drawn size: crisp on the scaled-down edge
+        sourceSize: Qt.size(224, 224) // four times the drawn size, mipmapped down: a clean edge
         fillMode: Image.PreserveAspectFit
         smooth: true
+        mipmap: true
         visible: false
     }
     // Colorization would not do: it keeps the drawing's luminance, and black stays black.
@@ -31,11 +32,16 @@ Item {
         color: mark.ink
         visible: false
         layer.enabled: true
+        layer.smooth: true
     }
     MultiEffect {
         anchors.fill: parent
         source: fill
         maskEnabled: true
         maskSource: logo
+        // A ramp, not a step: the default threshold keeps or drops each pixel whole and loses the
+        // drawing's own antialiasing. Centered at half alpha and spread wide, the edge keeps its ramp.
+        maskThresholdMin: 0.5
+        maskSpreadAtMin: 1.0
     }
 }

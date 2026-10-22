@@ -54,11 +54,6 @@ LiquidGlass {
         }
     }
 
-    component Bone: Rectangle {
-        radius: 6
-        color: Qt.rgba(1, 1, 1, 0.10)
-    }
-
     // The skeleton: blocks where the hero, the chart and the context line will be.
     Item {
         id: skeleton
@@ -69,22 +64,6 @@ LiquidGlass {
 
         Item {
             anchors.fill: parent
-            SequentialAnimation on opacity {
-                running: skeleton.visible
-                loops: Animation.Infinite
-                NumberAnimation {
-                    from: 1
-                    to: 0.45
-                    duration: Theme.ms(700)
-                    easing.type: Easing.InOutSine
-                }
-                NumberAnimation {
-                    from: 0.45
-                    to: 1
-                    duration: Theme.ms(700)
-                    easing.type: Easing.InOutSine
-                }
-            }
 
             Bone {
                 visible: card.shape !== "list"

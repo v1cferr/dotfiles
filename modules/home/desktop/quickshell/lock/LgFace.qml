@@ -32,6 +32,8 @@ Item {
         return null;
     }
     property var cpuHistory: []
+    // The print shown and its ink measured: until then every card is a skeleton, its glass already there.
+    readonly property bool ready: ink.measured || wall.failed
     // With the main monitor gone the field goes with it: this face says how to unlock and echoes the dots.
     readonly property bool primaryGone: {
         const want = Quickshell.env("LOCK_PRIMARY") || Theme.primaryMonitor;
@@ -132,16 +134,10 @@ Item {
         x: face.margin
         anchors.verticalCenter: parent.verticalCenter
         spacing: face.gap
-        opacity: ink.measured || wall.failed ? 1 : 0
-        Behavior on opacity {
-            NumberAnimation {
-                duration: Theme.motionSlow
-            }
-        }
 
         Card {
             id: energy
-            loading: Energy.loading
+            loading: !face.ready || Energy.loading
             backdrop: wall
             width: face.full
             height: 300
@@ -177,7 +173,7 @@ Item {
 
         Card {
             id: claude
-            loading: ClaudeUsage.error === "loading"
+            loading: !face.ready || ClaudeUsage.error === "loading"
             backdrop: wall
             width: face.full
             height: 420
@@ -241,7 +237,7 @@ Item {
             spacing: face.gap
             Card {
                 id: sys
-                loading: isNaN(System.cpuPct)
+                loading: !face.ready || isNaN(System.cpuPct)
                 shape: "hero"
                 backdrop: wall
                 width: face.half
@@ -277,7 +273,7 @@ Item {
             }
             Card {
                 id: procs
-                loading: System.topCpu.length === 0
+                loading: !face.ready || System.topCpu.length === 0
                 shape: "list"
                 backdrop: wall
                 width: face.half
@@ -360,7 +356,7 @@ Item {
         // chance of rain as bars under it), each hour readable under the pointer.
         Card {
             id: weather
-            loading: Weather.loading
+            loading: !face.ready || Weather.loading
             shape: "hero-chart"
             backdrop: wall
             width: face.full
@@ -447,6 +443,8 @@ Item {
         Card {
             id: media
             visible: !!face.player
+            loading: !face.ready
+            shape: "hero"
             backdrop: wall
             width: face.full
             height: 150

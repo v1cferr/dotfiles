@@ -162,6 +162,7 @@ Item {
             spacing: 0
             // HH over mm, and the seconds small beside the minutes, sitting on their baseline.
             Row {
+                id: clockRow
                 anchors.right: face.onRight ? parent.right : undefined
                 spacing: 14
                 Text {
@@ -196,6 +197,7 @@ Item {
                 }
             }
             Text {
+                id: dateLine
                 anchors.right: face.onRight ? parent.right : undefined
                 topPadding: 28
                 text: Qt.locale("pt_BR").toString(clock.date, "dddd, d 'de' MMMM").replace("-feira", "")
@@ -207,6 +209,7 @@ Item {
             // The signature and the logo, as a print carries its artist's: whose machine this is, in the
             // same ink, under the date.
             Row {
+                id: signature
                 anchors.right: face.onRight ? parent.right : undefined
                 topPadding: 36
                 spacing: 18
@@ -328,6 +331,7 @@ Item {
 
         // The quote: the text, the original smaller, the credit. Hierarchy by size, one ink.
         Column {
+            id: quoteBlock
             anchors.horizontalCenter: parent.horizontalCenter
             y: face.height * 0.72 + 120
             width: 1100
@@ -364,6 +368,74 @@ Item {
                 font.family: "Geist"
                 font.pixelSize: 17
                 font.letterSpacing: 0.5
+            }
+        }
+    }
+
+    // The skeleton while the print decodes and its ink is measured: a block where each piece will be,
+    // on the real geometry of the (still hidden) type, so nothing pops in from nothing.
+    Item {
+        anchors.fill: parent
+        visible: opacity > 0
+        opacity: ink.measured || wall.failed ? 0 : 1
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Theme.motionSlow
+            }
+        }
+        Bone {
+            x: stack.x + clockRow.x + (face.onRight ? clockRow.width * 0.35 : 0)
+            y: stack.y + clockRow.y + 24
+            width: clockRow.width * 0.65
+            height: clockRow.height * 0.4
+        }
+        Bone {
+            x: stack.x + clockRow.x + (face.onRight ? clockRow.width * 0.35 : 0)
+            y: stack.y + clockRow.y + clockRow.height * 0.52
+            width: clockRow.width * 0.65
+            height: clockRow.height * 0.4
+        }
+        Bone {
+            x: stack.x + dateLine.x
+            y: stack.y + dateLine.y + 32
+            width: dateLine.width
+            height: 24
+        }
+        Bone {
+            x: stack.x + signature.x
+            y: stack.y + signature.y + 40
+            width: signature.width
+            height: signature.height - 40
+        }
+    }
+    Item {
+        anchors.fill: parent
+        visible: opacity > 0
+        opacity: footInk.measured || wall.failed ? 0 : 1
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Theme.motionSlow
+            }
+        }
+        Bone {
+            x: field.x
+            y: field.y + field.height - 4
+            width: field.width
+            height: 4
+        }
+        Column {
+            x: quoteBlock.x
+            y: quoteBlock.y + 4
+            width: quoteBlock.width
+            spacing: 14
+            Repeater {
+                model: [0.8, 0.6, 0.4]
+                Bone {
+                    required property real modelData
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: parent.width * modelData
+                    height: 20
+                }
             }
         }
     }

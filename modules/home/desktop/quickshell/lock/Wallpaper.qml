@@ -53,6 +53,13 @@ Item {
         cache: false
         smooth: true
         mipmap: true
+        opacity: status === Image.Ready ? 1 : 0
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Theme.ms(450)
+                easing.type: Easing.OutCubic
+            }
+        }
         onStatusChanged: if (status === Image.Ready)
             wall.shown()
     }

@@ -159,6 +159,14 @@ Processos), and fades in when the data arrives. Each source says when it is stil
 (glance-feed's cache not read yet), a CPU % that needs its second sample (2 s) and a process
 ranking that needs its second (5 s). Only after that does a missing source say so in words.
 
+**The lock itself loads the same way** (21/10/2026, the user's ask: loading for everything, the
+components as well as their data). The print fades in when decoded. Until it is shown and its ink
+measured, every LG card is already on screen as glass with its skeleton (`face.ready` joins each
+card's own `loading`), and the ASUS shows pulsing blocks (`lock/Bone.qml`) on the real geometry of
+the still hidden type: the clock, the date, the signature, the field's line and the quote. They
+fade out as the type fades in. In the harness the whole wait is under half a second; it is there
+for the slow decode of a big print, and so nothing ever pops in from nothing.
+
 **Real glass.** `LiquidGlass.qml` samples the print under the card (`ShaderEffectSource` on the
 region it covers), blurs it and carries its color through (`MultiEffect`: blur 0.6 of 64, saturation
 0.35, brightness -0.08), then a tint of the palette's bg, a top sheen, a hairline rim and a soft

@@ -60,6 +60,6 @@ The rest, one phase at a time, each with its own plan when it starts:
 | --- | --- | --- |
 | A | The pre-commit checkers written in inline Python: ~~`prose-style`~~, ~~`docs-links`~~, ~~`rules-index`~~, ~~`data-syntax`~~, ~~`dead-config`~~, ~~`router-ssot`~~ (DONE 22/10/2026: all six are shell) | shell with `jq` and `rg`, or a check at Nix evaluation time; one per commit, since they ARE the quality gate |
 | B | `modules/home/desktop/calendar/scripts/registry.py` and its test | validation and expansion in Nix, shell for `import-un` |
-| C | `router-sync.py`, ~~`wol-send.py`~~ (socat locally; the relay is an exception), ~~Sunshine's `statsPy`~~ (jq, 22/10/2026), Vicinae's icon heredoc, `usage-audit`, `exposure-check`, `eval-metrics`, `repo-stats` | shell (`socat` for the magic packet), or Nix |
+| C | ~~`zen/lab.py`~~ (bash Marionette client, 22/10/2026), `router-sync.py`, ~~`wol-send.py`~~ (socat locally; the relay is an exception), ~~Sunshine's `statsPy`~~ (jq, 22/10/2026), Vicinae's icon heredoc, `usage-audit`, `exposure-check`, `eval-metrics`, `repo-stats` | shell (`socat` for the magic packet), or Nix |
 | C | `pkgs/razer-dpi` (ioctls on hidraw) | evaluated on its own: if shell cannot do it with dignity, it becomes an exception with a host-like reason |
 | D | What only Python needed | the `ruff` hook, `python` in CodeQL's languages, the global `python3`/`uv` in `modules/nixos/packages.nix` if nothing else uses them |

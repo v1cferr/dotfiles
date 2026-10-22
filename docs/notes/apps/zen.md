@@ -180,7 +180,12 @@ OUT.png` and `stop`.
 **Why Marionette and not Mozilla's `firefox-devtools-mcp`**: the powers that matter are the same
 (the MCP drives Marionette underneath), but the MCP's screenshots cover the PAGE only, never the
 browser UI, which is the whole subject here; it would also mean packaging an npm server. The
-client is `zen/lab.py`, about 80 lines with no dependency: Marionette is `len:json` frames over TCP.
+client is `zen-lab-client` in `theme.nix`, bash with `jq`: Marionette is `len:json` frames over TCP,
+so a `/dev/tcp` descriptor, `read -d :` for the size and `read -N` for the body under `LC_ALL=C`
+(the prefix counts BYTES). It replaced `zen/lab.py` on 22/10/2026 (rule 24). MEASURED against it on
+a live lab: the same `eval` output (objects, nested arrays, `null`, non-ASCII), the same `css`
+answers, a byte-identical screenshot. One change: a script error prints the error as JSON where
+the Python printed a dict `repr`.
 
 **Why a second instance and never the real profile**: Mozilla's own advice for that MCP, and
 the same reasoning applies: whatever drives the browser reaches its cookies and passwords, and

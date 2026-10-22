@@ -12,7 +12,6 @@ let
     coreutils
     jq
     procps
-    python3
     writeShellApplication
     writeText
     ;
@@ -85,17 +84,84 @@ let
   # restyled live and photographed without touching the real profile (its cookies and passwords).
   # It loads the SAME generated sheet as production, and runs behind the same guard.
   labPort = "2829"; # not Marionette's 2828, so a stray session elsewhere cannot answer
+  # A dependency-free Marionette client in the browser's CHROME context: `len:json` frames over
+  # TCP. Why Marionette and not the DevTools MCP, and the lab's rules: docs/notes/apps/zen.md
+  labClient = writeShellApplication {
+    name = "zen-lab-client";
+    runtimeInputs = [
+      coreutils
+      jq
+    ];
+    text = ''
+      export LC_ALL=C # read -N counts BYTES, which is what the `len:` prefix counts
+
+      port=$1 verb=$2 arg=''${3:-}
+
+      # It loads ONE extra user sheet at a time, so a new `css` replaces the last instead of stacking.
+      inject='
+      const wu = window.windowUtils;
+      if (window.__zenLabSheet) {
+        try { wu.removeSheetUsingURIString(window.__zenLabSheet, wu.USER_SHEET); } catch (e) {}
+        window.__zenLabSheet = null;
+      }
+      if (arguments[0]) {
+        const uri = "data:text/css;charset=utf-8," + encodeURIComponent(arguments[0]);
+        wu.loadSheetUsingURIString(uri, wu.USER_SHEET);
+        window.__zenLabSheet = uri;
+      }
+      return Boolean(window.__zenLabSheet);
+      '
+
+      { exec 3<>"/dev/tcp/127.0.0.1/$port"; } 2>/dev/null || {
+        echo "nothing on port $port: run \`zen-theme-lab start\` first" >&2
+        exit 1
+      }
+      frame() { local size; IFS= read -r -d ':' size <&3; IFS= read -r -N "$size" reply <&3; }
+      id=0
+      # One command as [0, id, name, params]; the answer with the same id is [1, id, error, result].
+      cmd() {
+        local name=$1 params=''${2:-'{}'} data
+        id=$((id + 1))
+        data=$(jq -cn --argjson id "$id" --arg name "$name" --argjson params "$params" '[0, $id, $name, $params]')
+        printf '%s:%s' "''${#data}" "$data" >&3
+        while frame; do
+          [[ "$(jq '.[1]' <<<"$reply")" == "$id" ]] || continue
+          if [[ "$(jq -c '.[2]' <<<"$reply")" != null ]]; then
+            echo "$name: $(jq -c '.[2]' <<<"$reply")" >&2
+            exit 1
+          fi
+          result=$(jq -c '.[3]' <<<"$reply")
+          return
+        done
+      }
+      js() { cmd WebDriver:ExecuteScript "$(jq -cn --arg s "$1" '{script: $s, args: $ARGS.positional}' --args "''${@:2}")"; }
+
+      frame # the server's hello
+      cmd WebDriver:NewSession '{"capabilities": {}}'
+      cmd Marionette:SetContext '{"value": "chrome"}'
+      case "$verb" in
+      eval) js "$arg" && jq --indent 1 '.value' <<<"$result" ;;
+      css)
+        if [[ -z "$arg" || "$arg" == - ]]; then css=$(cat); else css=$(<"$arg"); fi
+        js "$inject" "$css"
+        [[ "$(jq '.value' <<<"$result")" == true ]] && echo injected || echo cleared
+        ;;
+      shot) cmd WebDriver:TakeScreenshot '{"full": false}' && jq -r '.value' <<<"$result" | base64 -d >"$arg" && echo "$arg" ;;
+      quit) (cmd Marionette:Quit '{"flags": ["eForceQuit"]}') 2>/dev/null || true ;; # it may close first
+      *) echo "unknown verb: $verb" >&2; exit 1 ;;
+      esac
+    '';
+  };
   lab = writeShellApplication {
     name = "zen-theme-lab";
     runtimeInputs = [
       coreutils
       jq
       procps
-      python3
     ];
     text = ''
       dir="''${XDG_RUNTIME_DIR:?}/zen-theme-lab"
-      client() { python3 ${./lab.py} ${labPort} "$@"; }
+      client() { ${lib.getExe labClient} ${labPort} "$@"; }
 
       case "''${1:-}" in
       start)

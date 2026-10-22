@@ -18,10 +18,10 @@
   # The Limine canvas. It must match boot.loader.limine.style.interface.resolution.
   width ? 1920,
   height ? 1080,
-  # Where the logo sits on the Limine canvas: Limine centers the menu tree itself, the logo
-  # goes in the band between the branding line and the tree.
-  logoSize ? 144,
-  logoTop ? 168,
+  # Where the logo sits on the Limine canvas: under Limine's three header rows (y 200 at 2x2)
+  # and above the tree, which starts near y 320 with ten generations. Measured in vm-limine.
+  logoSize ? 88,
+  logoTop ? 224,
 }:
 
 let

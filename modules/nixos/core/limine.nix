@@ -5,6 +5,7 @@
 let
   cfg = config.my.boot;
   p = cfg.themePackage.preset;
+  windows = config.my.boot.windows.efiPartUuid; # set by the host, null = no entry
 in
 {
   options.my.boot.windows.efiPartUuid = lib.mkOption {
@@ -68,11 +69,11 @@ in
 
       # CHAINLOAD, not efi_boot_entry: that one sets BootNext and reboots, so it depends on the NVRAM
       # entry and costs a POST. The firmware still verifies bootmgfw.efi against db (Microsoft CA).
-      extraEntries = lib.optionalString (cfg.windows.efiPartUuid != null) ''
+      extraEntries = lib.optionalString (windows != null) ''
         /Windows 11
             comment: Windows Boot Manager on its own disk
             protocol: efi
-            path: guid(${cfg.windows.efiPartUuid}):/EFI/Microsoft/Boot/bootmgfw.efi
+            path: guid(${windows}):/EFI/Microsoft/Boot/bootmgfw.efi
       '';
     };
   };

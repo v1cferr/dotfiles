@@ -30,11 +30,11 @@ synchronously at startup so a notification in the first instant cannot slip past
 state, not configuration (rule 6), and it needed no daemon. Tested on 17/10/2026 through
 `qs ipc call notif dnd`: the file went `false`, `true`, `false`.
 
-**The three actions that end the session ask first, in a dialog** (22/10/2026, replacing the
-second click). Log out, reboot and shut down close the Center and open ONE modal on the main monitor
-(`power/PowerDialog.qml`), over a dimmed screen: Cancel is focused, Escape or a click on the dim
-cancels, the arrows or Tab move between the buttons, Enter confirms. Lock, darken and suspend run at
-once, since each is undone by coming back to the keyboard. Details in [the dialog](#the-session-dialog-22102026).
+**The three actions that end the session ask first, in the card** (22/10/2026, replacing the
+second click). Log out, reboot and shut down turn the Center's own card into the question
+(`bar/PowerConfirm.qml`): Cancel is focused, Escape or closing the Center cancels, the arrows or Tab
+move between the buttons, Enter confirms. Lock, darken and suspend run at once, since each is undone
+by coming back to the keyboard. Details in [the confirmation](#the-confirmation-22102026).
 
 **The commands are the power menu's, unchanged** (they live in `power/PowerMath.qml` now), with the same reasons: the lock starts
 `lockscreen.service` before marking the `LockedHint` (`loginctl lock-session` alone only emits the
@@ -42,7 +42,7 @@ signal), darkening is gamma 0 through hyprsunset and never dpms, logging out is 
 terminate-user` because LightDM starts a bare Hyprland. The history of each is in
 [bar.md](bar.md#the-power-menu) and [lockscreen.md](lockscreen.md).
 
-## The session dialog (22/10/2026)
+## The confirmation (22/10/2026)
 
 `Power.qml` owns the six actions; the Center's footer and `qs ipc call power ask <key>` only request
 them. The rules it keeps:
@@ -52,20 +52,28 @@ them. The rules it keeps:
   confirm never runs twice, a running command cannot be cancelled into a lie.
 - **The exit code is read.** The old footer fired the command and closed the panel. Now a non-zero
   exit shows the command's last stderr line, so a poweroff held by a logind inhibitor or a suspend
-  that failed says so, in the same dialog, for any of the six.
-- **No fake progress.** When reboot or shut down is accepted the dialog says `Restarting` or
+  that failed says so, in the card, for any of the six.
+- **No fake progress.** When reboot or shut down is accepted the card says `Restarting` or
   `Shutting down`, static, and the OS takes over. If nothing happened after 90 s (a delay
   inhibitor), it turns into an error instead of waiting forever.
-- **One window, on the main monitor only**, layer Overlay, namespace `qs-dialog` (outside the blur
-  rule: a dim, not a frosted screen). Its keyboard is Exclusive only while it asks. A change of the
-  main monitor cancels it, so it never asks on a dark screen.
-- **Motion** is the design system's: Hyprland's layer fade and the card's `PopIn`, nothing new; the
-  buttons' color uses `Theme.ms()`, so `motion = off` turns it off.
+- **In the card, not over the desktop.** The first version was a separate window, centered and
+  dimmed on the main monitor. Seen live, the choice was the card itself: the question stays where
+  the click was, and there is no second window, scrim or keyboard grab to keep in step with the
+  Center's. Its keys are the panel's: Escape inside the question answers no and keeps the Center
+  open; the panel's own Escape handler gets the keyboard back after (`BarPanel.takeKeys`).
+- **Closing is a no.** A click outside or the logo closes the Center, and a closed Center cancels a
+  pending question. Nothing confirms by going away.
+- **It comes to you.** A question over IPC, or a failure of an action that closed the Center
+  (suspend), fires `Power.attention`, and the Center opens itself on the main monitor through the
+  same path as `qs ipc call notif toggle`.
+- **Motion** is the Center's own: no new animation; the buttons' color uses `Theme.ms()`.
 
-Tested on 22/10/2026 in a headless sway with `QS_POWER_DRYRUN` (every command becomes `exit 0` or
-`exit 1`, and the test copy also replaced the commands with `true`): Escape closed it, Right then
-Enter confirmed, a failure showed `Reboot failed (exit 1).` with Close focused, and success showed
-`Restarting`. Not yet seen on Hyprland itself, where the focus grab and the fade are the real ones.
+Tested on 22/10/2026 with the whole shell in a headless sway, `hyprctl` stubbed out and
+`QS_POWER_DRYRUN` set (every command becomes `exit 0` or `exit 1`, and the test copy also replaced
+the commands with `true`): the card turned into the question, Escape brought the sections back,
+Right then Enter confirmed, a failure showed `Shut down failed (exit 1).` with Close focused and
+Enter on it brought the sections back, a failed suspend opened the closed Center, and success
+showed `Restarting`. Not yet seen on Hyprland, where the focus grab is the real one.
 
 ## Boot (22/10/2026)
 

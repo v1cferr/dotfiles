@@ -329,6 +329,11 @@ It SHRANK on 08/08/2026 when Tailscale left. It used to cross-reference each ses
 events and path probes to answer "was this direct or did it fall into DERP?". With WireGuard there
 is no relay, so the question lost its object and those sections were removed instead of adapted.
 
+It is `journalctl -o json` into `jq` since 22/10/2026 (rule 24): the stamps are cut to the second,
+as the old `short-iso` ones were, and the median rounds a half to the even integer, as Python's
+`format` did. MEASURED on this host's journal over 7, 60 and 365 days (102 sessions): the same
+output as the Python version, line for line.
+
 ## Setup, once
 
 From the browser of any WireGuard peer: `https://192.168.1.10:47990`, create the admin user and

@@ -16,13 +16,12 @@ let
     findutils
     gawk
     iproute2
+    jq
     openssl
-    python3
     systemd
     util-linux
     writeShellApplication
     writeShellScript
-    writeText
     ;
 
   # Ports DERIVED from the base with Sunshine's own offsets (read from its web assets).
@@ -176,61 +175,42 @@ let
   };
   # Session QUALITY, because the Sunshine log says CLIENT DISCONNECTED for every cause.
   # It answered the 31/07 question: the duration distribution is BIMODAL.
-  statsPy = writeText "moonlight-stats.py" ''
-    import datetime, statistics, subprocess, sys
-
-    DAYS = sys.argv[1] if len(sys.argv) > 1 else "7"
-
-    def journal(*args):
-        cmd = ["journalctl", "--no-pager", "-o", "short-iso", "--since", f"-{DAYS} days", *args]
-        return subprocess.run(cmd, capture_output=True, text=True).stdout
-
-    def stamp(line):
-        try:
-            return datetime.datetime.fromisoformat(line.split()[0])
-        except (ValueError, IndexError):
-            return None
-
-    # CONNECTED/DISCONNECTED pairs. A session in progress is left out: no end, no duration.
-    sessions, start = [], None
-    for line in journal("--user", "-u", "sunshine.service").splitlines():
-        t = stamp(line)
-        if t is None:
-            continue
-        if "CLIENT CONNECTED" in line:
-            start = t
-        elif "CLIENT DISCONNECTED" in line and start:
-            sessions.append((start, t, (t - start).total_seconds()))
-            start = None
-
-    if not sessions:
-        print(f"no completed session in the last {DAYS} days.")
-        sys.exit(0)
-
-    print(f"=== Moonlight sessions, last {DAYS} days ===\n")
-    print(f"{'start':<15}{'duration':>10}")
-    short, long = [], []
-    for a, b, d in sessions:
-        (short if d < 120 else long).append(d)
-        mark = "  <-- short" if d < 120 else ""
-        print(f"{a.strftime('%m-%d %H:%M:%S'):<15}{d:>9.0f}s{mark}")
-
-    print(f"\n=== summary ===")
-    alld = sorted(d for _, _, d in sessions)
-    print(f"sessions: {len(alld)}   median: {statistics.median(alld):.0f}s   "
-          f"min: {alld[0]:.0f}s   max: {alld[-1]:.0f}s")
-    print(f"short (<120s): {len(short)}/{len(alld)}   long: {len(long)}/{len(alld)}")
-
-  '';
-
-  # The logic lives in the build (rule 7); python3 is explicit in runtimeInputs.
   moonlightStats = writeShellApplication {
     name = "moonlight-stats";
     runtimeInputs = [
-      python3
+      jq
       systemd
     ];
-    text = ''exec python3 ${statsPy} "$@"'';
+    text = ''
+      days="''${1:-7}"
+      # CONNECTED/DISCONNECTED pairs, at the SECOND like the old short-iso stamps; a session in
+      # progress has no end, so it is left out.
+      journalctl --user -u sunshine.service --no-pager -o json --since "-$days days" |
+        jq -rn --arg days "$days" '
+          def pad($n): tostring | (" " * ($n - length)) + .;
+          def fill($n): tostring | . + (" " * ($n - length));
+          # Python rounds a half to the EVEN integer, and a median of two seconds can be one.
+          def r: if . - floor == 0.5 then (if floor % 2 == 0 then floor else floor + 1 end) else round end;
+          [inputs | select(.MESSAGE | type == "string") | {t: (.__REALTIME_TIMESTAMP | tonumber / 1000000 | floor), m: .MESSAGE}]
+          | reduce .[] as $e ({s: [], start: null};
+              if ($e.m | contains("CLIENT CONNECTED")) then .start = $e.t
+              elif ($e.m | contains("CLIENT DISCONNECTED")) and .start != null then
+                .s += [{a: .start, d: ($e.t - .start)}] | .start = null
+              else . end)
+          | .s as $s
+          | if ($s | length) == 0 then "no completed session in the last \($days) days."
+            else
+              ($s | map(.d) | sort) as $all | ($all | length) as $n
+              | (if $n % 2 == 1 then $all[($n - 1) / 2] else ($all[$n / 2 - 1] + $all[$n / 2]) / 2 end) as $median
+              | ([$s[] | select(.d < 120)] | length) as $short
+              | "=== Moonlight sessions, last \($days) days ===\n",
+                "\("start" | fill(15))\("duration" | pad(10))",
+                ($s[] | "\(.a | strflocaltime("%m-%d %H:%M:%S") | fill(15))\(.d | pad(9))s\(if .d < 120 then "  <-- short" else "" end)"),
+                "\n=== summary ===",
+                "sessions: \($n)   median: \($median | r)s   min: \($all[0])s   max: \($all[-1])s",
+                "short (<120s): \($short)/\($n)   long: \($n - $short)/\($n)"
+            end'
+    '';
   };
 in
 {

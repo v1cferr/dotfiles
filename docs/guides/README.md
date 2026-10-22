@@ -20,6 +20,7 @@ in full and a guide that stopped working is a bug.
 | Guide | What you would come here asking |
 | --- | --- |
 | [bios-ex-b560m-v5](bios-ex-b560m-v5.md) | the board's desired BIOS state, which no `fwupd` here can read or write |
+| [limine-migration](limine-migration.md) | moving the real ESP from GRUB to Limine one gated boot at a time, and the way back |
 | [disaster-recovery](disaster-recovery.md) | the three drills that prove this repo still rebuilds the machine |
 | [router-hardening](router-hardening.md) | the audit of the one public-facing box Nix does not reach |
 | [fai-gateway-router](fai-gateway-router.md) | the half of the FAI gateway that lives on the router |

@@ -54,6 +54,7 @@ export const navigation: NavItem[] = [
       { title: "0012 Stylix applies the palette", doc: "decisions/0012-stylix-applies-the-palette.md" },
       { title: "0013 Graph view dependency", doc: "decisions/0013-graph-view-with-one-dependency.md" },
       { title: "0014 Source previews", doc: "decisions/0014-source-previews-from-a-build-snapshot.md" },
+      { title: "0015 Limine over GRUB", doc: "decisions/0015-limine-over-grub.md" },
     ],
   },
   { title: "How the notes work", doc: "notes/README.md" },
@@ -62,6 +63,7 @@ export const navigation: NavItem[] = [
     icon: "hard-drive",
     items: [
       { title: "Boot", doc: "notes/boot-and-storage/boot.md" },
+      { title: "Splash", doc: "notes/boot-and-storage/splash.md" },
       { title: "Disko", doc: "notes/boot-and-storage/disko.md" },
       { title: "Btrfs", doc: "notes/boot-and-storage/btrfs.md" },
       { title: "btrbk", doc: "notes/boot-and-storage/btrbk.md" },
@@ -212,6 +214,7 @@ export const navigation: NavItem[] = [
       { doc: "guides/README.md" },
       { title: "BIOS EX-B560M-V5", doc: "guides/bios-ex-b560m-v5.md" },
       { title: "Disaster recovery", doc: "guides/disaster-recovery.md" },
+      { title: "Limine migration", doc: "guides/limine-migration.md" },
       { title: "Router hardening", doc: "guides/router-hardening.md" },
       { title: "FAI gateway router", doc: "guides/fai-gateway-router.md" },
       { title: "Per-client DNS block", doc: "guides/per-client-dns-block.md" },

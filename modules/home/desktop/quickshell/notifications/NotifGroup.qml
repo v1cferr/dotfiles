@@ -6,6 +6,7 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
+import "root:/widgets"
 
 Rectangle {
     id: grp
@@ -168,5 +169,11 @@ Rectangle {
     // A click anywhere else on the card expands or folds it.
     TapHandler {
         onTapped: grp.toggled()
+    }
+
+    // Enter opens or folds the group, Delete dismisses all of it.
+    KeyTarget {
+        onActivated: grp.toggled()
+        onDeleted: grp.dismissAll()
     }
 }

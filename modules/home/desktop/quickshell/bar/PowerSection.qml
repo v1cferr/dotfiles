@@ -6,6 +6,7 @@ import Quickshell.Services.UPower
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
+import "root:/widgets"
 
 ColumnLayout {
     id: power
@@ -165,6 +166,9 @@ ColumnLayout {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: power.pick(prof.modelData)
+                }
+                KeyTarget {
+                    onActivated: power.pick(prof.modelData)
                 }
             }
         }

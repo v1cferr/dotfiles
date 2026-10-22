@@ -8,6 +8,7 @@ import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
+import "root:/widgets"
 
 Rectangle {
     id: card
@@ -146,6 +147,16 @@ Rectangle {
         anchors.fill: parent
         acceptedButtons: Qt.RightButton
         onClicked: Notifs.dismiss(card.notif)
+    }
+
+    // In the Center only: Enter opens what notified (the default action), Delete dismisses it.
+    KeyTarget {
+        activeFocusOnTab: !card.isPopup
+        onActivated: if (card.defaultAction) {
+            card.defaultAction.invoke();
+            Notifs.dismiss(card.notif);
+        }
+        onDeleted: Notifs.dismiss(card.notif)
     }
 
     RowLayout {

@@ -46,4 +46,8 @@ Rectangle {
             area.containsMouse ? btn.tips.show(btn, btn.name, btn.stateText, btn.action) : btn.tips.hide(btn)
         onClicked: btn.clicked()
     }
+    KeyTarget {
+        activeFocusOnTab: btn.enabled
+        onActivated: btn.clicked()
+    }
 }

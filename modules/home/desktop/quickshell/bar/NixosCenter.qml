@@ -143,7 +143,22 @@ BarPanel {
                 Notifs.toggleCenter();
         }
     }
+    // The keyboard: the panel holds it with nothing focused (no ring after a click); an arrow
+    // starts at the first control, Tab does by itself. Each control is a KeyTarget.
+    onKeyPressed: event => {
+        if (center.asking)
+            return;
+        if ([Qt.Key_Down, Qt.Key_Right].includes(event.key)) {
+            card.nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocusReason);
+            event.accepted = true;
+        } else if ([Qt.Key_Up, Qt.Key_Left].includes(event.key)) {
+            card.nextItemInFocusChain(false).forceActiveFocus(Qt.BacktabFocusReason);
+            event.accepted = true;
+        }
+    }
     onVisibleChanged: {
+        if (center.visible)
+            center.takeKeys(); // every open starts from the panel, never from the last control
         // Closing the Center answers "no": a question is never left armed behind a closed panel.
         if (!center.visible && (Power.state.phase === "confirm" || Power.state.phase === "error"))
             Power.cancel();
@@ -173,6 +188,13 @@ BarPanel {
         pad: Theme.sp4
         gap: Theme.sp3
         onHoveredChanged: center.bar.panelPopHovered = card.hovered
+        // Escape from a focused control bubbles up to here; the question answers it first (PowerConfirm).
+        Keys.onPressed: event => {
+            if (event.key === Qt.Key_Escape) {
+                center.bar.closePanels();
+                event.accepted = true;
+            }
+        }
 
         // ── The sections; the confirmation takes their place while an action asks ──
         ColumnLayout {
@@ -344,6 +366,9 @@ BarPanel {
                             // The detail panel, from the same bar and still under the logo (no new anchor).
                             onClicked: center.bar.togglePanel(hwCard.modelData.panel, null, null, center.bar.popBar)
                         }
+                        KeyTarget {
+                            onActivated: center.bar.togglePanel(hwCard.modelData.panel, null, null, center.bar.popBar)
+                        }
                     }
                 }
             }
@@ -471,6 +496,10 @@ BarPanel {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: center.shoot(shot.modelData.target)
                         }
+                        KeyTarget {
+                            activeFocusOnTab: shot.up
+                            onActivated: center.shoot(shot.modelData.target)
+                        }
                     }
                 }
             }
@@ -526,6 +555,9 @@ BarPanel {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: center.run(act.modelData)
+                        }
+                        KeyTarget {
+                            onActivated: center.run(act.modelData)
                         }
                     }
                 }

@@ -80,10 +80,6 @@ ColumnLayout {
         Row {
             spacing: 6
             visible: strip.pageCount > 1
-            PinToggle {
-                id: stripPin
-                anchors.verticalCenter: parent.verticalCenter
-            }
             PageArrow {
                 anchors.verticalCenter: parent.verticalCenter
                 glyph: "‹"
@@ -116,6 +112,10 @@ ColumnLayout {
                 anchors.verticalCenter: parent.verticalCenter
                 glyph: "›"
                 onClicked: strip.step(1)
+            }
+            PinToggle {
+                id: stripPin
+                anchors.verticalCenter: parent.verticalCenter
             }
         }
     }

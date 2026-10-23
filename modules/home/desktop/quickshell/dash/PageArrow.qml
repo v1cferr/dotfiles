@@ -2,14 +2,13 @@
 import QtQuick
 import "root:/"
 
-Text {
+GlyphText {
     id: arrow
     property string glyph: "›"
     signal clicked
 
     text: arrow.glyph
     color: area.containsMouse ? Theme.colAccent : Theme.colSubtext
-    font.family: Theme.uiFont
     font.pixelSize: 18
     font.bold: true
 

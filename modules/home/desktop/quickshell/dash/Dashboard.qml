@@ -226,13 +226,9 @@ PanelWindow {
                     Item {
                         Layout.fillWidth: true
                     }
-                    // Where the rotation is: arrows to step, a dot to jump, the pin to hold the page.
+                    // Where the rotation is: arrows to step, a dot to jump, the pin at the end to hold the page.
                     Row {
                         spacing: 6
-                        PinToggle {
-                            id: pagePin
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
                         PageArrow {
                             anchors.verticalCenter: parent.verticalCenter
                             glyph: "‹"
@@ -268,6 +264,10 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             glyph: "›"
                             onClicked: pages.step(1)
+                        }
+                        PinToggle {
+                            id: pagePin
+                            anchors.verticalCenter: parent.verticalCenter
                         }
                     }
                 }

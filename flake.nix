@@ -44,6 +44,10 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
+    # darling-lol: League's macOS client through Darling. NO follows: the store path is the runtime's
+    # readiness key, a new one asks for a 40-50 GB rebuild. docs/notes/apps/darling-lol.md
+    darling-lol.url = "github:lucannez64/darling-lol";
+
     # duo-streak-daemon: the app lives in ITS OWN repo; here it is only DEPLOY, pinned in the lock.
     # flake = false, since it is a plain code repo exposing no Nix outputs.
     duo-streak-daemon = {

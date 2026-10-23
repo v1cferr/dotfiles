@@ -111,6 +111,24 @@
         "type": "github"
       }
     },
+    "darling-lol": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1792757974,
+        "narHash": "sha256-g4OmEvWWPaPtnbUj4hcMwZshTUzCWs/zlpviAbUGqtI=",
+        "owner": "lucannez64",
+        "repo": "darling-lol",
+        "rev": "24276b91c68ff51868dd2289e14f4d1719916617",
+        "type": "github"
+      },
+      "original": {
+        "owner": "lucannez64",
+        "repo": "darling-lol",
+        "type": "github"
+      }
+    },
     "disko": {
       "inputs": {
         "nixpkgs": [
@@ -352,16 +370,16 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1792503283,
-        "narHash": "sha256-vhe2jyvRCgufWPqDuDq1S3t3ypE+ka46IFutV02xKso=",
-        "owner": "NixOS",
+        "lastModified": 1791956154,
+        "narHash": "sha256-jBYGPi4udQ9uo4KQp9m2J0546nJVQitG15gvZSaVVAs=",
+        "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "cd4ea8d57de16f4810bc5f14207bac45fbf19f67",
+        "rev": "55bfb4d7437bd4e09ab7cba58a43bd68eb310044",
         "type": "github"
       },
       "original": {
-        "owner": "NixOS",
-        "ref": "nixos-26.05",
+        "owner": "nixos",
+        "ref": "nixos-unstable",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -398,6 +416,22 @@
       }
     },
     "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1792503283,
+        "narHash": "sha256-vhe2jyvRCgufWPqDuDq1S3t3ypE+ka46IFutV02xKso=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "cd4ea8d57de16f4810bc5f14207bac45fbf19f67",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-26.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_3": {
       "locked": {
         "lastModified": 1787736819,
         "narHash": "sha256-cV5xEJJK3BvhU8rEd4mC9UsmDi5qscv/kzGPhBRC5WA=",
@@ -508,13 +542,14 @@
       "inputs": {
         "browser-previews": "browser-previews",
         "claude-desktop": "claude-desktop",
+        "darling-lol": "darling-lol",
         "disko": "disko",
         "duo-streak-daemon": "duo-streak-daemon",
         "git-hooks": "git-hooks",
         "home-manager": "home-manager",
         "mattpocock-skills": "mattpocock-skills",
         "minegrub-world-sel-theme": "minegrub-world-sel-theme",
-        "nixpkgs": "nixpkgs",
+        "nixpkgs": "nixpkgs_2",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "pyproject-build-systems": "pyproject-build-systems",
         "pyproject-nix": "pyproject-nix",
@@ -552,7 +587,7 @@
     },
     "signal-sift": {
       "inputs": {
-        "nixpkgs": "nixpkgs_2"
+        "nixpkgs": "nixpkgs_3"
       },
       "locked": {
         "lastModified": 1792168561,

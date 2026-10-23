@@ -164,7 +164,9 @@ on a click, flanked by `‹ ›` arrows (`PageArrow.qml`); the mouse wheel over 
 pages too. A CI alert clicked in the bar above turns to the forge with a failure and holds the
 rotation for 30 s ([bar.md](bar.md#operational-chips)).
 The pointer over the column HOLDS the page, because reading a row must not be a race against the
-timer. The clock and the vitals never rotate: they are what the band is for.
+timer. The pin left of the arrows (`PinToggle.qml`) holds it until the next click, for
+when one page is what to watch: lit while held, never saved, so a reload always rotates again. The
+arrows, dots, wheel and a clicked alert still turn the page, and the pin stays on the new one. The clock and the vitals never rotate: they are what the band is for.
 
 **One feed, one schema.** glance-feed's CI source (docs/notes/desktop/glance-feed.md) asks both
 forges and stores ONE document in which a run is `{repo, name, ref, state, event, created, url}`

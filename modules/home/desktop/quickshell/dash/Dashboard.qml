@@ -200,7 +200,7 @@ PanelWindow {
                 Timer {
                     interval: 15000
                     repeat: true
-                    running: dash.visible && !pageHover.hovered && !ghList.detailOpen && !glList.detailOpen && !focusHold.running
+                    running: dash.visible && !pagePin.pinned && !pageHover.hovered && !ghList.detailOpen && !glList.detailOpen && !focusHold.running
                     onTriggered: pages.step(1)
                 }
                 // The wheel turns the pages too. No timer reset is needed: the pointer is over
@@ -226,9 +226,13 @@ PanelWindow {
                     Item {
                         Layout.fillWidth: true
                     }
-                    // Where the rotation is: arrows to step, a dot to jump.
+                    // Where the rotation is: arrows to step, a dot to jump, the pin to hold the page.
                     Row {
                         spacing: 6
+                        PinToggle {
+                            id: pagePin
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                         PageArrow {
                             anchors.verticalCenter: parent.verticalCenter
                             glyph: "‹"
@@ -459,7 +463,7 @@ PanelWindow {
                     CiList {
                         id: ghList
                         anchors.fill: parent
-                        held: pageHover.hovered
+                        held: pageHover.hovered || pagePin.pinned
                         opacity: pages.page === 1 ? 1 : 0
                         transform: Translate {
                             x: pages.offsetOf(1)
@@ -486,7 +490,7 @@ PanelWindow {
                     CiList {
                         id: glList
                         anchors.fill: parent
-                        held: pageHover.hovered
+                        held: pageHover.hovered || pagePin.pinned
                         opacity: pages.page === 2 ? 1 : 0
                         transform: Translate {
                             x: pages.offsetOf(2)

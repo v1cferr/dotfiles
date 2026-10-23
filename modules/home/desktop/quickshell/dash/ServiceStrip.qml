@@ -25,12 +25,6 @@ ColumnLayout {
     HoverHandler {
         id: hover
     }
-    Timer {
-        interval: 10000
-        repeat: true
-        running: strip.visible && !stripPin.pinned && !hover.hovered && !strip.held && strip.pageCount > 1
-        onTriggered: strip.step(1)
-    }
     WheelHandler {
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         onWheel: event => strip.step(event.angleDelta.y > 0 ? -1 : 1)
@@ -42,6 +36,7 @@ ColumnLayout {
         spacing: 12
 
         Text {
+            id: stripTitle
             text: "SERVICES"
             color: Theme.colSubtext
             font.family: Theme.uiFont
@@ -77,46 +72,17 @@ ColumnLayout {
         Item {
             Layout.fillWidth: true
         }
-        Row {
-            spacing: 6
+        PageDots {
             visible: strip.pageCount > 1
-            PageArrow {
-                anchors.verticalCenter: parent.verticalCenter
-                glyph: "‹"
-                onClicked: strip.step(-1)
-            }
-            Repeater {
-                model: strip.pageCount
-                delegate: Rectangle {
-                    required property int index
-                    readonly property bool on: strip.page === index
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: on ? 18 : 7
-                    height: 7
-                    radius: 3.5
-                    color: on ? Theme.colAccent : Theme.colTrack
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: Theme.motionNormal
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-                    MouseArea {
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        onClicked: strip.page = parent.index
-                    }
-                }
-            }
-            PageArrow {
-                anchors.verticalCenter: parent.verticalCenter
-                glyph: "›"
-                onClicked: strip.step(1)
-            }
-            PinToggle {
-                id: stripPin
-                anchors.verticalCenter: parent.verticalCenter
-            }
+            order: Array.from({
+                length: strip.pageCount
+            }, (_, i) => i)
+            current: strip.page
+            title: stripTitle
+            interval: 10000
+            held: !strip.visible || hover.hovered || strip.held
+            onAdvance: strip.step(1)
+            onJump: id => strip.page = id
         }
     }
 

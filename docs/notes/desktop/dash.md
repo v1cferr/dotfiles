@@ -159,14 +159,27 @@ share one line. The sparklines are one canvas each since the same day
 ## The CI pages: the right column rotates
 
 The month shares its column with two CI pages, one at a time: **month, GitHub Actions, the FAI
-GitLab**, every 15 s, with dots on the header's right edge that say where the rotation is and jump
-on a click, flanked by `‹ ›` arrows (`PageArrow.qml`); the mouse wheel over the column steps the
-pages too. A CI alert clicked in the bar above turns to the forge with a failure and holds the
-rotation for 30 s ([bar.md](bar.md#operational-chips)).
+GitLab**, every 15 s, with dots on the header's right edge (`PageDots.qml`) that say where the
+rotation is and jump on a click; the mouse wheel over the column steps the pages too. A CI alert
+clicked in the bar above turns to the forge with a failure and holds the rotation for 30 s
+([bar.md](bar.md#operational-chips)).
 The pointer over the column HOLDS the page, because reading a row must not be a race against the
-timer. The pin after the arrows (`PinToggle.qml`) holds it until the next click, for
-when one page is what to watch: lit while held, never saved, so a reload always rotates again. The
-arrows, dots, wheel and a clicked alert still turn the page, and the pin stays on the new one. The clock and the vitals never rotate: they are what the band is for.
+timer.
+
+**The controls (22/10/2026), chosen in a bake-off.** The current dot is a pill that FILLS as its
+page's time runs out, so the header says when it will turn, and a pause closes the row: two bars
+while it turns, a play triangle in the accent while it holds, until the next click. The hold is
+never saved, so a reload always rotates again; dots, wheel and a clicked alert still turn the page
+while it holds. It replaced `‹ ›` arrows and a Nerd Font pin, which mixed three glyph styles and
+never sat on whole pixels. Two things made it pixel exact. The card scales its content by k (0.749
+on the LG), which put a 7 unit dot on 5.2 pixels, so `PageDots` undoes k and draws in REAL pixels
+(6 px dots, a 22 px pill, 2 x 8 px bars, 6 px gaps) snapped to the window's grid: the row ends
+where the title's ink starts on the other side, and it centers on the title's capitals, not on its
+line box. The fill moves a whole pixel at a time (every interval / 22 ms), one repaint per pixel
+instead of a frame per vsync. It beat a pill alone (click the pill to hold: no visible
+affordance), a capsule around arrows, dots and pause (heaviest), and the old row redrawn in vector.
+
+The clock and the vitals never rotate: they are what the band is for.
 
 **One feed, one schema.** glance-feed's CI source (docs/notes/desktop/glance-feed.md) asks both
 forges and stores ONE document in which a run is `{repo, name, ref, state, event, created, url}`
@@ -318,8 +331,8 @@ Chosen on 07/10/2026 as "ambient", and every piece of it carries a meaning:
 ## The services strip
 
 The bottom of the band shows what this machine RUNS and what each thing costs, three cards a
-page, turning every 10 s like the month column, held under the pointer or by its own pin, stepped by `‹ ›`, the
-dots or the wheel, sliding as one long strip. Trouble sorts first (down, then degraded), then the
+page, turning every 10 s like the month column, held under the pointer or by its own pause (the same `PageDots` as
+the column), stepped by the dots or the wheel, sliding as one long strip. Trouble sorts first (down, then degraded), then the
 heaviest, so a broken service is always on page one, and the header says `all 18 up` or
 `2 of 18 need a look`.
 

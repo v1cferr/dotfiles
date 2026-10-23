@@ -197,14 +197,8 @@ PanelWindow {
                 HoverHandler {
                     id: pageHover
                 }
-                Timer {
-                    interval: 15000
-                    repeat: true
-                    running: dash.visible && !pagePin.pinned && !pageHover.hovered && !ghList.detailOpen && !glList.detailOpen && !focusHold.running
-                    onTriggered: pages.step(1)
-                }
                 // The wheel turns the pages too. No timer reset is needed: the pointer is over
-                // the column, which already holds the rotation until it leaves.
+                // the column, which already holds the rotation until it leaves (PageDots below).
                 WheelHandler {
                     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                     onWheel: event => pages.step(event.angleDelta.y > 0 ? -1 : 1)
@@ -215,6 +209,7 @@ PanelWindow {
                     spacing: 10
 
                     Text {
+                        id: pageTitle
                         text: pages.titles[pages.page]
                         color: Theme.colText
                         font.family: Theme.uiFont
@@ -226,48 +221,17 @@ PanelWindow {
                     Item {
                         Layout.fillWidth: true
                     }
-                    // Where the rotation is: arrows to step, a dot to jump, the pin at the end to hold the page.
-                    Row {
-                        spacing: 6
-                        PageArrow {
-                            anchors.verticalCenter: parent.verticalCenter
-                            glyph: "‹"
-                            onClicked: pages.step(-1)
-                        }
-                        Repeater {
-                            model: pages.order
-                            delegate: Rectangle {
-                                required property int modelData
-                                readonly property bool on: pages.page === modelData
-                                anchors.verticalCenter: parent.verticalCenter
-                                width: on ? 18 : 7
-                                height: 7
-                                radius: 3.5
-                                color: on ? Theme.colAccent : Theme.colTrack
-                                Behavior on width {
-                                    NumberAnimation {
-                                        duration: Theme.motionNormal
-                                        easing.type: Easing.OutCubic
-                                    }
-                                }
-                                MouseArea {
-                                    anchors.fill: parent
-                                    anchors.margins: -4
-                                    onClicked: {
-                                        pages.dir = parent.modelData > pages.page ? 1 : -1;
-                                        pages.page = parent.modelData;
-                                    }
-                                }
-                            }
-                        }
-                        PageArrow {
-                            anchors.verticalCenter: parent.verticalCenter
-                            glyph: "›"
-                            onClicked: pages.step(1)
-                        }
-                        PinToggle {
-                            id: pagePin
-                            anchors.verticalCenter: parent.verticalCenter
+                    // Where the rotation is and when it turns, a dot to jump, the pause to hold the page.
+                    PageDots {
+                        id: pageDots
+                        order: pages.order
+                        title: pageTitle
+                        current: pages.page
+                        held: !dash.visible || pageHover.hovered || ghList.detailOpen || glList.detailOpen || focusHold.running
+                        onAdvance: pages.step(1)
+                        onJump: id => {
+                            pages.dir = id > pages.page ? 1 : -1;
+                            pages.page = id;
                         }
                     }
                 }
@@ -463,7 +427,7 @@ PanelWindow {
                     CiList {
                         id: ghList
                         anchors.fill: parent
-                        held: pageHover.hovered || pagePin.pinned
+                        held: pageHover.hovered || pageDots.paused
                         opacity: pages.page === 1 ? 1 : 0
                         transform: Translate {
                             x: pages.offsetOf(1)
@@ -490,7 +454,7 @@ PanelWindow {
                     CiList {
                         id: glList
                         anchors.fill: parent
-                        held: pageHover.hovered || pagePin.pinned
+                        held: pageHover.hovered || pageDots.paused
                         opacity: pages.page === 2 ? 1 : 0
                         transform: Translate {
                             x: pages.offsetOf(2)

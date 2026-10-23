@@ -934,6 +934,12 @@ Scope {
                 lines: [root.hypridleOn ? "Enabled: the screens lock and sleep on idle" : "Disabled: nothing happens on idle"],
                 action: root.hypridleOn ? "Click to disable" : "Click to enable"
             };
+        if (key === "lol")
+            return {
+                title: "League (Darling)",
+                lines: [({ off: "Not running", client: "Client open", hidden: "Running, no window", game: "In a match" })[root.lolState]],
+                action: ({ off: "Click to start", client: "Click for the client · right-click to shut Darling down", hidden: "Click to reopen (restarts Darling) · right-click to shut it down", game: "Stopping waits for the match to end" })[root.lolState]
+            };
         if (key === "away")
             return {
                 title: "Away screen",
@@ -997,6 +1003,17 @@ Scope {
         command: ["sh", "-c", "systemctl --user is-active --quiet hypridle.service && echo on || echo off"]
         stdout: StdioCollector {
             onStreamFinished: root.parseHypridle(text)
+        }
+    }
+
+    // ===== League through Darling (darling-lol.service, docs/notes/apps/darling-lol.md) =====
+    // off, client (a window shows), hidden (a client closed its window: only a restart reopens it) or game.
+    property string lolState: "off"
+    Process {
+        id: lolProc
+        command: ["sh", "-c", "systemctl --user is-active --quiet darling-lol.service || { echo off; exit; }; pgrep -f '[M]acOS/LeagueofLegends ' >/dev/null && { echo game; exit; }; hyprctl clients | grep -qE 'class: (LeagueClientUx|Riot Client)$' && echo client || echo hidden"]
+        stdout: StdioCollector {
+            onStreamFinished: root.lolState = text.trim() || "off"
         }
     }
 
@@ -1654,6 +1671,7 @@ Scope {
         onTriggered: {
             vpnProc.running = true;
             torProc.running = true;
+            lolProc.running = true;
         }
     }
     Timer {
@@ -2131,6 +2149,7 @@ Scope {
                         let w = usagePill.implicitWidth + volPill.implicitWidth + idlePill.implicitWidth + awayPill.implicitWidth + 3 * sep + 5 * Theme.sp1;
                         if (diskPill.visible)
                             w += diskPill.implicitWidth + Theme.sp1;
+                        w += lolPill.implicitWidth + Theme.sp1;
                         // VPN and network change their own labels with the level, so they are measured in full
                         // from text metrics, never from the pills: that is what keeps this free of a loop.
                         w += 2 * (Theme.barControl + Theme.sp1) + (level >= 1 ? 0 : tmNet.advanceWidth + tmVpn.advanceWidth + 2 * Theme.sp1);
@@ -2233,6 +2252,25 @@ Scope {
                         onScrolledDown: root.setVol(-0.05)
                     }
                     Chevron {}
+                    Pill {
+                        // darling-lol: the launcher, always there. A stop or restart mid-match is refused here.
+                        id: lolPill
+                        icon: "󰊴"
+                        accent: root.lolState === "game" ? Theme.colText : (root.lolState === "off" ? Theme.colUnknown : Theme.colSubtext)
+                        onHoveredChanged: root.hoverHint("lol", lolPill, barContent, bar, hovered)
+                        onClicked: {
+                            if (root.lolState === "off")
+                                root.launch(["systemctl", "--user", "start", "darling-lol.service"]);
+                            else if (root.lolState === "hidden")
+                                root.launch(["systemctl", "--user", "restart", "darling-lol.service"]);
+                            else if (root.lolState === "client")
+                                root.launch(["hyprctl", "dispatch", "focuswindow", "class:^(LeagueClientUx|Riot Client)$"]);
+                        }
+                        onRightClicked: {
+                            if (root.lolState === "client" || root.lolState === "hidden")
+                                root.launch(["systemctl", "--user", "stop", "darling-lol.service"]);
+                        }
+                    }
                     Pill {
                         // hypridle: on is the normal state; off by choice is neutral, dimmed.
                         id: idlePill

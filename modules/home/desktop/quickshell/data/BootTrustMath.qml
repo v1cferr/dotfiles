@@ -13,6 +13,19 @@ QtObject {
         };
     }
 
+    // What each card is about, for the tip: one sentence, no jargon left unexplained.
+    function explain(label) {
+        switch (label) {
+        case "SECURE BOOT":
+            return "The firmware starts only a loader signed by a key it trusts.";
+        case "LOADER":
+            return "The first program the firmware starts (GRUB or Limine), checked against our db key.";
+        case "INTEGRITY":
+            return "The initrd holds the drivers that run as root before the system; Limine checks its hash, GRUB does not.";
+        }
+        return "";
+    }
+
     function cards(t) {
         if (!t)
             return [card("SECURE BOOT", "Unknown", "unknown", "boot-trust has not run"), card("LOADER", "Unknown", "unknown", "no record"), card("INTEGRITY", "Unknown", "unknown", "no record")];

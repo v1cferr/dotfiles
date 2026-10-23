@@ -396,6 +396,7 @@ BarPanel {
             BootTrustSection {
                 id: bootSection
                 Layout.fillWidth: true
+                tips: tips
             }
 
             Rectangle {

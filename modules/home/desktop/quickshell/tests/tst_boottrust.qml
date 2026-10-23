@@ -69,6 +69,10 @@ TestCase {
             secureBoot: "off"
         })).tone, "crit");
     }
+    function test_every_card_explains_itself() {
+        for (const c of m.cards(null))
+            verify(m.explain(c.label).length > 20, c.label);
+    }
     function test_garbage_is_unknown() {
         const c = m.cards({
             secureBoot: "maybe"

@@ -85,6 +85,11 @@ needs no privilege. Green needs evidence: Secure Boot on in USER mode, a loader 
 is yellow, a failure is red, and no record is Unknown. Under GRUB the honest reading is `Partial`,
 `initrd not verified`.
 
+Each card explains itself on hover or keyboard focus, through the panel's glass tip, in one
+sentence from `BootTrustMath.explain` (22/10/2026): what Secure Boot, the loader and the initrd
+are, and why only Limine checks the initrd. The question it answers is "was this boot tampered
+with?", so the cards stay readable without the boot notes.
+
 ## How it opens and closes
 
 It is a `BarPanel` keyed `center` in the bar's coordinator

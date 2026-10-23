@@ -6,12 +6,14 @@ import QtQuick
 import QtQuick.Layouts
 import "root:/"
 import "root:/data"
+import "root:/widgets"
 
 ColumnLayout {
     id: boot
     spacing: Theme.sp2
 
     property var record: null
+    property Item tips: null // the panel's GlassTip: what each card is about, on hover or focus
     function refresh() {
         file.reload();
     }
@@ -56,9 +58,16 @@ ColumnLayout {
                 Layout.preferredWidth: 0
                 implicitHeight: col.implicitHeight + 2 * Theme.sp2
                 radius: Theme.radiusControl
-                color: Qt.alpha(Theme.colText, 0.04)
+                color: hover.hovered || key.focus ? Theme.colHoverFill : Qt.alpha(Theme.colText, 0.04)
+                readonly property bool showTip: hover.hovered || key.focus
+                onShowTipChanged: if (boot.tips)
+                    bootCard.showTip ? boot.tips.show(bootCard, bootCard.modelData.label, bootCard.modelData.value + ": " + bootCard.modelData.caption, math.explain(bootCard.modelData.label)) : boot.tips.hide(bootCard)
                 Accessible.role: Accessible.StaticText
                 Accessible.name: bootCard.modelData.label + " " + bootCard.modelData.value + ", " + bootCard.modelData.caption
+                Accessible.description: math.explain(bootCard.modelData.label)
+                HoverHandler {
+                    id: hover
+                }
                 ColumnLayout {
                     id: col
                     anchors.left: parent.left
@@ -88,6 +97,9 @@ ColumnLayout {
                         font.pixelSize: Theme.fontMicro
                         elide: Text.ElideRight
                     }
+                }
+                KeyTarget {
+                    id: key
                 }
             }
         }

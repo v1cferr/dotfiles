@@ -17,7 +17,7 @@ the boot; a curated preset does.
 | Output | What it is |
 | --- | --- |
 | `limine/wallpaper.png` | 1920x1080 in `bg`, the official NixOS logo (from `nixos-icons`) at 144 px, centered in the top third |
-| `share/plymouth/themes/nixos-minimal/` | a `two-step` theme: the logo, three dots, the per-mode title |
+| `share/plymouth/themes/nixos-minimal/` | a `script` theme: the logo, three dots, the per-mode title and the log pane |
 
 288 KiB in all (22/10/2026). The logo comes from the pinned nixpkgs, so nothing is fetched.
 
@@ -33,10 +33,33 @@ or font fails" asks.
 
 ## Plymouth
 
-The `two-step` plugin, the C one behind `spinner` and `bgrt`, chosen over a `script` theme because
-it centers on every head by itself and costs no interpreter. Three dots that brighten in turn, a
-1.2 s loop at Plymouth's 30 fps, and nothing moves: indeterminate on purpose, since boot has no
-honest percentage. `Shutting down` and `Restarting` as the title in those modes, nothing at boot.
+A `script` theme (`pkgs/boot-theme/nixos-minimal.script`, 22/10/2026), after a first version on the
+`two-step` plugin. Both draw the logo, three dots that brighten in turn (a loop, indeterminate on
+purpose, since boot has no honest percentage) and `Shutting down` or `Restarting` in those modes.
+The script adds what two-step cannot: a **pane with the last 8 lines systemd logged**, asked for so
+a boot or a shutdown can be read without leaving the splash.
+
+- **Where the lines come from.** systemd tells Plymouth only which units FINISHED starting
+  (`manager_send_unit_plymouth`, systemd 260): no failures, no stops, nothing at shutdown. A pane
+  fed by that alone would show only good news, so `plymouth-log` (boot) and
+  `plymouth-log-shutdown` (reboot, poweroff) run `journalctl --follow _PID=1` and pass each line
+  through `plymouth display-message`. Bookkeeping is dropped: skipped conditions, CPU accounting,
+  clean exits, signals.
+- **Colors by the verb**: Started, Finished, Reached, Mounted in green with a check; Stopping,
+  Stopped in yellow; Starting, Mounting dimmed; anything with `failed`/`Failed`/`error` in red; a
+  unit name (`foo.service`) in the accent. Older lines fade, long ones end in an ellipsis. The
+  font is the UI family's fixed-width cut (`JetBrainsMonoNerdFontMono`), so the columns line up.
+- **Centering**: the script plugin centers the smaller head inside the larger one
+  (`script-lib-sprite.c`), so everything is placed from the center and fits the 1080 p LG too.
+- **How each feeder ends.** At boot, when the splash goes `display-message` stops answering and
+  the loop exits 0. At shutdown, the final SIGTERM ends it. Neither orders anything after itself.
+- **Three traps vm-limine caught**, kept so they stay caught: `Conflicts=plymouth-quit` made
+  systemd drop the quit job and the boot wait forever; with `pipefail`, the closed pipe at the
+  normal end marked the unit failed; and `ConditionPathExists=/run/plymouth/pid` skipped the
+  shutdown feeder, since the shutdown splash keeps no pid file there (the script pings instead).
+- **Not proven**: the red line on screen. In the drill the failing unit's line comes in the last
+  half second before poweroff, after the last frame; the color rule is the same code as the green
+  and yellow lines that were seen.
 
 - **Handoff**: LightDM quits Plymouth itself when it takes the screen, and nixpkgs' `lightdm.nix`
   starts `plymouth-quit` as the display manager's `onFailure`, so a LightDM that dies never leaves

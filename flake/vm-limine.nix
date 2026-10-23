@@ -74,6 +74,17 @@ pkgs.testers.runNixOSTest {
       efi.OVMF = pkgs.OVMFFull.fd;
       efi.keepVariables = true;
     };
+    # TEST ONLY: a unit that takes 6 s to stop and fails doing it, so the shutdown pane has time
+    # on screen and a red line to show.
+    systemd.services.slow-stop = {
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = "${pkgs.coreutils}/bin/true";
+        ExecStop = "${pkgs.bash}/bin/sh -c 'sleep 6; exit 1'";
+      };
+    };
     # DISPOSABLE keys made inside the VM image, never the machine's (/var/lib/sbctl stays untouched).
     boot.loader.limine.secureBoot = {
       autoGenerateKeys = true;
@@ -140,24 +151,30 @@ pkgs.testers.runNixOSTest {
         assert t["integrity"] == "enrolled", t
         assert t["thisBoot"] == "verified", t
 
-    with subtest("No failed units"):
+    with subtest("The pane was fed at boot, and no unit failed"):
+        secure.succeed("systemctl show -p ExecMainStartTimestampMonotonic --value plymouth-log.service | grep -qv '^0$'")
         out = secure.succeed("systemctl list-units --state=failed --plain --no-legend --no-pager || true")
         assert not out.strip(), out
 
-    with subtest("Shutdown splash"):
+    with subtest("Shutdown splash, with the pane fed while slow-stop takes its 6 s and fails"):
         secure.execute("systemctl poweroff >/dev/null 2>&1 &")
         # The VM may be gone before the last frame: a shot that finds no VM ends the loop.
-        for i in range(6):
+        for i in range(16):
             try:
                 secure.screenshot(f"shutdown-{i:02d}")
             except Exception:
                 break
-            time.sleep(0.3)
+            time.sleep(0.5)
         secure.wait_for_shutdown()
 
     with subtest("A tampered initrd is refused, not booted"):
         secure.start()
         secure.wait_for_unit("multi-user.target")
+        # What the shutdown before this boot did with the pane, for the record.
+        print(secure.succeed(
+            "journalctl -b -1 --no-pager -o short-monotonic"
+            " -u plymouth-log-shutdown -u plymouth-poweroff | tail -n 20 || true"
+        ))
         secure.succeed("for f in /boot/limine/kernels/*initrd*; do printf x >> $f; done; sync")
         secure.shutdown()
         secure.start()

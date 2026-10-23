@@ -482,8 +482,9 @@ page of the rotation (month, WEATHER, NETWORK, CLAUDE, GitHub, FAI).
 their bars and "resets in" all on one line each, and a loose line of more percentages under them
 ("Fable 0% · team · max 5x · extra usage off"). Now each limit is three lines: its name and period
 ("Session · 5-hour window", "Week · 7-day limit") with the share on the right ("12% used"); the bar
-across the width; and when it renews, as the clock will show it ("renews 23:10 · in 1h 51m", or
-"Thu 00:00" another day). The models' shares, the plan and extra usage moved into the blocks' tip.
+across the width; and when it renews, the exact day and minute and the countdown down to the
+minute ("renews Fri 24/10 01:10 · in 4h 01m", "renews Thu 29/10 00:00 · in 6d 02h 51m"; 22/10/2026,
+the user wanted the exact moment, not "Thu" and "6d 2h"). The models' shares, the plan and extra usage moved into the blocks' tip.
 Both meters turn yellow at 75% (or when the server says `warning`) and red at 90%.
 
 **The week as one picture** (`widgets/ClaudeWeek.qml`, shared with the lock): the share used as a STEP line (a running total:

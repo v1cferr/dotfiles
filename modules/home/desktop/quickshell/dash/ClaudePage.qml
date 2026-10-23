@@ -10,13 +10,11 @@ ColumnLayout {
     id: page
     spacing: 18
 
-    // When a window renews, as the clock will show it: today's hour, or the weekday and the hour.
+    // When a window renews: the exact day and minute, and the countdown to it down to the minute.
     function renews(t) {
         if (!t)
             return "";
-        const d = new Date(t * 1000), now = new Date();
-        const sameDay = d.toDateString() === now.toDateString();
-        return "renews " + Qt.formatDateTime(d, sameDay ? "HH:mm" : "ddd HH:mm") + "  ·  in " + ClaudeUsage.left(t);
+        return "renews " + Qt.formatDateTime(new Date(t * 1000), "ddd dd/MM HH:mm") + "  ·  in " + ClaudeUsage.left(t);
     }
     // What the tip adds: the models' shares of the week, the plan, extra usage.
     readonly property var details: ClaudeUsage.scoped.map(s => s.label + " " + Math.round(s.pct || 0) + "% of the week").concat([ClaudeUsage.plan, ClaudeUsage.extra.enabled ? "extra usage on" : "extra usage off"].filter(x => x))

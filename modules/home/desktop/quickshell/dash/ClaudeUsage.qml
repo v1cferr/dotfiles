@@ -34,15 +34,17 @@ Singleton {
             severity: "normal"
         } : w;
     }
-    function left(t) { // seconds until t, as "3h 49m" or "3d 6h"
-        const s = Math.max(0, t - root.now);
+    function left(t) { // time until t down to the minute, as "3d 06h 49m", "3h 09m" or "9m"
         if (!t)
             return "";
-        if (s >= 86400)
-            return Math.floor(s / 86400) + "d " + Math.floor(s % 86400 / 3600) + "h";
-        if (s >= 3600)
-            return Math.floor(s / 3600) + "h " + Math.floor(s % 3600 / 60) + "m";
-        return Math.ceil(s / 60) + "m";
+        const m = Math.ceil(Math.max(0, t - root.now) / 60);
+        const d = Math.floor(m / 1440), h = Math.floor(m % 1440 / 60), min = m % 60;
+        const two = n => (n < 10 ? "0" : "") + n; // padded after the first unit, so the line keeps its width
+        if (d > 0)
+            return d + "d " + two(h) + "h " + two(min) + "m";
+        if (h > 0)
+            return h + "h " + two(min) + "m";
+        return min + "m";
     }
     // The window's own color while normal (peach unless the caller names one), the ladder past it.
     function color(w, normal) {

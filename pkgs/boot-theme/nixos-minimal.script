@@ -1,0 +1,198 @@
+# NixOS Minimal: the logo, three dots, the mode's title and the last lines systemd logged.
+# Colors are substituted by package.nix from the palette; why a script theme and where the lines come from:
+# docs/notes/boot-and-storage/splash.md
+
+Window.SetBackgroundTopColor(@bg@);
+Window.SetBackgroundBottomColor(@bg@);
+
+# Smaller heads are centered inside the largest one, so the center is the same on every monitor.
+global.cx = Window.GetX() + Window.GetWidth() / 2;
+global.cy = Window.GetY() + Window.GetHeight() / 2;
+global.font = "Mono 12";
+
+logo.image = Image("watermark.png");
+logo.sprite = Sprite(logo.image);
+logo.sprite.SetPosition(global.cx - logo.image.GetWidth() / 2, global.cy - 210, 10);
+
+# Three dots that brighten in turn: 36 frames, one every other refresh (refresh runs near 50 Hz).
+for (i = 0; i < 36; i++)
+  dots.frames[i] = Image("dot-" + i + ".png");
+dots.sprite = Sprite(dots.frames[0]);
+dots.sprite.SetPosition(global.cx - dots.frames[0].GetWidth() / 2, global.cy - 58, 10);
+global.tick = 0;
+
+fun refresh_callback()
+{
+  global.tick++;
+  global.dots.sprite.SetImage(global.dots.frames[Math.Int(global.tick / 2) % 36]);
+}
+Plymouth.SetRefreshFunction(refresh_callback);
+
+# The mode's title: nothing at boot, a word at reboot and poweroff.
+mode = Plymouth.GetMode();
+if (mode == "shutdown")
+  title.text = "Shutting down";
+else if (mode == "reboot")
+  title.text = "Restarting";
+else
+  title.text = "";
+if (title.text != "")
+{
+  title.image = Image.Text(title.text, @text@, 1, "Mono 14");
+  title.sprite = Sprite(title.image);
+  title.sprite.SetPosition(global.cx - title.image.GetWidth() / 2, global.cy - 30, 10);
+}
+
+# ── The log pane: the last 8 lines from systemd-plymouth-log, oldest faded ──────────────────
+global.maxlines = 8;
+global.count = 0;
+global.lineh = 22;
+global.panex = global.cx - 450;
+global.paney = global.cy + 10;
+global.maxchars = 96;
+# Created HERE, at the top: inside a function an assignment to an unknown name makes a local.
+global.pane.ready = 1;
+global.ask.ready = 1;
+
+fun first_word(t)
+{
+  for (k = 0; k < t.Length(); k++)
+    if (t.CharAt(k) == " ")
+      return t.SubString(0, k);
+  return t;
+}
+
+fun is_unit(w)
+{
+  suffixes[0] = ".service"; suffixes[1] = ".target"; suffixes[2] = ".mount";
+  suffixes[3] = ".socket"; suffixes[4] = ".slice"; suffixes[5] = ".scope";
+  suffixes[6] = ".path"; suffixes[7] = ".timer"; suffixes[8] = ".device"; suffixes[9] = ".swap";
+  for (k = 0; k < 10; k++)
+  {
+    s = suffixes[k];
+    if (w.Length() > s.Length() && w.SubString(w.Length() - s.Length(), w.Length()) == s)
+      return 1;
+  }
+  return 0;
+}
+
+fun contains(t, needle)
+{
+  n = needle.Length();
+  for (k = 0; k + n <= t.Length(); k++)
+    if (t.SubString(k, k + n) == needle)
+      return 1;
+  return 0;
+}
+
+# ok | fail | down | busy | plain, from the verb systemd starts its status lines with.
+fun kind_of(t, verb)
+{
+  if (verb == "Failed" || verb == "Dependency" || contains(t, "failed") || contains(t, "Failed") ||
+      contains(t, "error"))
+    return "fail";
+  if (verb == "Started" || verb == "Finished" || verb == "Reached" || verb == "Mounted" ||
+      verb == "Listening" || verb == "Created" || verb == "Activated" || verb == "Found")
+    return "ok";
+  if (verb == "Stopping" || verb == "Stopped" || verb == "Unmounted" || verb == "Unmounting" ||
+      verb == "Deactivated" || verb == "Removed" || verb == "Closed" || verb == "Killing")
+    return "down";
+  if (verb == "Starting" || verb == "Mounting" || verb == "Activating")
+    return "busy";
+  return "plain";
+}
+
+fun piece(slot, text, r, g, b, a, x, y)
+{
+  if (!global.pane.sprites[slot])
+    global.pane.sprites[slot] = Sprite();
+  image = Image.Text(text, r, g, b, a, global.font);
+  global.pane.sprites[slot].SetImage(image);
+  global.pane.sprites[slot].SetPosition(x, y, 20);
+  global.pane.sprites[slot].SetOpacity(1);
+  return image.GetWidth();
+}
+
+fun hide(slot)
+{
+  if (global.pane.sprites[slot])
+    global.pane.sprites[slot].SetOpacity(0);
+}
+
+fun draw_line(row, t)
+{
+  if (t.Length() > global.maxchars)
+    t = t.SubString(0, global.maxchars - 1) + "…";
+  # Older lines fade: the newest is full, the oldest a third.
+  a = 0.35 + 0.65 * (row + 1) / global.count;
+  y = global.paney + row * global.lineh;
+  x = global.panex;
+  verb = first_word(t);
+  kind = kind_of(t, verb);
+  base = row * 4;
+
+  if (kind == "ok") x += piece(base, "✓ ", @green@, a, x, y);
+  else if (kind == "fail") x += piece(base, "✗ ", @red@, a, x, y);
+  else if (kind == "down") x += piece(base, "– ", @yellow@, a, x, y);
+  else if (kind == "busy") x += piece(base, "• ", @dim@, a, x, y);
+  else x += piece(base, "  ", @dim@, a, x, y);
+
+  if (kind == "fail")
+  {
+    piece(base + 1, t, @red@, a, x, y);
+    hide(base + 2);
+    hide(base + 3);
+    return;
+  }
+
+  rest = t.SubString(verb.Length(), t.Length());
+  if (kind == "ok") x += piece(base + 1, verb, @green@, a, x, y);
+  else if (kind == "down") x += piece(base + 1, verb, @yellow@, a, x, y);
+  else x += piece(base + 1, verb, @subtext@, a, x, y);
+
+  # "Started foo.service - Description.": the unit in the accent, the rest in the body color.
+  unit = first_word(rest.SubString(1, rest.Length()));
+  if (rest.Length() > 1 && is_unit(unit))
+  {
+    x += piece(base + 2, " " + unit, @accent@, a, x, y);
+    rest = rest.SubString(unit.Length() + 1, rest.Length());
+  }
+  else
+    hide(base + 2);
+  piece(base + 3, rest, @subtext@, a, x, y);
+}
+
+fun message_callback(text)
+{
+  if (global.count < global.maxlines)
+    global.count++;
+  else
+    for (j = 0; j < global.maxlines - 1; j++)
+      global.pane.lines[j] = global.pane.lines[j + 1];
+  global.pane.lines[global.count - 1] = text;
+  for (j = 0; j < global.count; j++)
+    draw_line(j, global.pane.lines[j]);
+}
+Plymouth.SetDisplayMessageFunction(message_callback);
+
+# ── A password prompt, should one ever come (no disk is encrypted here): the prompt and bullets ──
+fun password_callback(prompt, bullets)
+{
+  dots_text = "";
+  for (k = 0; k < bullets; k++)
+    dots_text += "•";
+  global.ask.image = Image.Text(prompt + "  " + dots_text, @text@, 1, "Mono 14");
+  if (!global.ask.sprite)
+    global.ask.sprite = Sprite();
+  global.ask.sprite.SetImage(global.ask.image);
+  global.ask.sprite.SetPosition(global.cx - global.ask.image.GetWidth() / 2, global.cy - 30, 30);
+  global.ask.sprite.SetOpacity(1);
+}
+Plymouth.SetDisplayPasswordFunction(password_callback);
+
+fun normal_callback()
+{
+  if (global.ask.sprite)
+    global.ask.sprite.SetOpacity(0);
+}
+Plymouth.SetDisplayNormalFunction(normal_callback);

@@ -6,7 +6,6 @@
   imagemagick,
   librsvg,
   nixos-icons,
-  plymouth,
   # A preset from the desktop's own file (rule 11), never hexes copied here.
   preset ?
     let
@@ -32,7 +31,27 @@ let
     else
       "${nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
   tint = lib.optionalString (logoStyle == "accent") "-fill '#${preset.accent}' -colorize 100";
-  spinner = "${plymouth}/share/plymouth/themes/spinner";
+  # "r, g, b" in 0..1, as the script's Image.Text and Window take them.
+  rgb =
+    hex:
+    lib.concatMapStringsSep ", " (i: toString (lib.fromHexString (builtins.substring i 2 hex) / 255.0))
+      [
+        0
+        2
+        4
+      ];
+  colors = {
+    inherit (preset)
+      bg
+      text
+      subtext
+      dim
+      accent
+      green
+      red
+      yellow
+      ;
+  };
 in
 assert lib.assertOneOf "logoStyle" logoStyle [
   "official"
@@ -57,13 +76,13 @@ runCommand "boot-theme-${name}"
       logo-limine.png -gravity north -geometry +0+${toString logoTop} -composite \
       -strip $out/limine/wallpaper.png
 
-    # PLYMOUTH (two-step, the C plugin of spinner/bgrt): it centers per head on its own, and a
-    # looping throbber is indeterminate on purpose, since boot has no honest percentage.
+    # PLYMOUTH (a script theme): the logo, three dots, the mode's title and a pane with the last
+    # lines systemd logged, fed by systemd-plymouth-log. Why script, not two-step: the notes above.
     t=$out/share/plymouth/themes/${name}
     mkdir -p $t
     logo 128 $t/watermark.png
 
-    # Three dots, a 1.2 s wave at plymouth's 30 fps: one dot brightens at a time, nothing moves.
+    # Three dots, a 1.2 s wave: one dot brightens at a time, nothing moves.
     frames=36
     for f in $(seq 0 $((frames - 1))); do
       args=()
@@ -75,48 +94,20 @@ runCommand "boot-theme-${name}"
         cx=$((12 + d * 24))
         args+=(-fill "#${preset.accent}$a" -draw "circle $cx,8 $((cx + 4)),8")
       done
-      magick -size 72x16 xc:none "''${args[@]}" -strip \
-        "$t/throbber-$(printf %04d $((f + 1))).png"
+      magick -size 72x16 xc:none "''${args[@]}" -strip "$t/dot-$f.png"
     done
 
-    # The password dialog's assets, only so a prompt never renders without them (no LUKS here).
-    for a in bullet capslock entry keyboard keymap-render lock; do
-      cp ${spinner}/$a.png $t/
-    done
+    substitute ${./nixos-minimal.script} $t/${name}.script \
+      ${lib.concatStringsSep " " (lib.mapAttrsToList (k: v: "--subst-var-by ${k} '${rgb v}'") colors)}
 
     cat > $t/${name}.plymouth <<EOF
     [Plymouth Theme]
     Name=NixOS Minimal
-    Description=The NixOS logo and three dots on the desktop palette.
-    ModuleName=two-step
+    Description=The NixOS logo, three dots and systemd's last lines on the desktop palette.
+    ModuleName=script
 
-    [two-step]
-    Font=Sans 12
-    TitleFont=Sans 14
+    [script]
     ImageDir=$t
-    DialogHorizontalAlignment=.5
-    DialogVerticalAlignment=.62
-    WatermarkHorizontalAlignment=.5
-    WatermarkVerticalAlignment=.45
-    HorizontalAlignment=.5
-    VerticalAlignment=.62
-    TitleHorizontalAlignment=.5
-    TitleVerticalAlignment=.68
-    Transition=none
-    TransitionDuration=0.0
-    BackgroundStartColor=0x${preset.bg}
-    BackgroundEndColor=0x${preset.bg}
-    MessageBelowAnimation=true
-
-    [boot-up]
-    UseEndAnimation=false
-
-    [shutdown]
-    UseEndAnimation=false
-    Title=Shutting down
-
-    [reboot]
-    UseEndAnimation=false
-    Title=Restarting
+    ScriptFile=$t/${name}.script
     EOF
   ''

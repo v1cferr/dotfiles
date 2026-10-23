@@ -318,7 +318,7 @@ Chosen on 07/10/2026 as "ambient", and every piece of it carries a meaning:
 ## The services strip
 
 The bottom of the band shows what this machine RUNS and what each thing costs, three cards a
-page, turning every 10 s like the month column, held under the pointer, stepped by `‹ ›`, the
+page, turning every 10 s like the month column, held under the pointer or by its own pin, stepped by `‹ ›`, the
 dots or the wheel, sliding as one long strip. Trouble sorts first (down, then degraded), then the
 heaviest, so a broken service is always on page one, and the header says `all 18 up` or
 `2 of 18 need a look`.

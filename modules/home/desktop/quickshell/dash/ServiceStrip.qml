@@ -28,7 +28,7 @@ ColumnLayout {
     Timer {
         interval: 10000
         repeat: true
-        running: strip.visible && !hover.hovered && !strip.held && strip.pageCount > 1
+        running: strip.visible && !stripPin.pinned && !hover.hovered && !strip.held && strip.pageCount > 1
         onTriggered: strip.step(1)
     }
     WheelHandler {
@@ -80,6 +80,10 @@ ColumnLayout {
         Row {
             spacing: 6
             visible: strip.pageCount > 1
+            PinToggle {
+                id: stripPin
+                anchors.verticalCenter: parent.verticalCenter
+            }
             PageArrow {
                 anchors.verticalCenter: parent.verticalCenter
                 glyph: "‹"

@@ -21,7 +21,7 @@ from `settings.ini`. A key dropped from Nix also stays in dconf. So `gtk-theme` 
 ## Stylix: what it themes, and what it does not
 
 `autoEnable = true`: any app Stylix has a target for follows the palette when it is installed. Today
-that is GTK, mpv (OSD), yazi, fzf, starship, MangoHud (colors only) and gdu. Each exception is in
+that is GTK, mpv (OSD), yazi, fzf, starship and MangoHud (colors only). Each exception is in
 `stylix.nix` with its reason, in three groups:
 
 - **Themed here from the same palette**, with keys base16 has no slot for: Hyprland (Lua written

@@ -9,7 +9,7 @@
 }:
 
 let
-  inherit (pkgs) btrfs-progs compsize;
+  inherit (pkgs) btdu btrfs-progs compsize;
 
   rootIsBtrfs = config.fileSystems ? "/" && config.fileSystems."/".fsType == "btrfs";
 
@@ -123,7 +123,11 @@ lib.mkIf rootIsBtrfs (
       };
 
       # The real compression ratio per path (`sudo compsize -x /home`): `du` and `df` cannot see it.
-      environment.systemPackages = [ compsize ];
+      # btdu samples extents, so it also shows what only the SNAPSHOTS still hold (`sudo btdu /`).
+      environment.systemPackages = [
+        btdu
+        compsize
+      ];
 
       # AUTOMATIC BLOCK GROUP RECLAIM: a KERNEL feature since 6.11, and it replaces the old
       # `btrfs balance` cron. Why not bg_reclaim_threshold, and why data/metadata only: the notes.

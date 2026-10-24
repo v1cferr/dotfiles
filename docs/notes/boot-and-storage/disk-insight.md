@@ -67,6 +67,26 @@ have had. A path reading "not once since sampling began" one week in means one w
 
 A shell sitting inside a game folder counts as use. That is deliberate: a human is in there.
 
+## Which tool answers which question
+
+The sampler and the trend log are the slow, automatic half. When the disk is full NOW, these are
+the interactive half, and each one answers a different question:
+
+| Question | Tool | Why that one |
+| --- | --- | --- |
+| Why does `df` show more than any `du` adds up to? | `sudo btdu /` | samples EXTENTS, so it sees what only the btrbk snapshots still hold |
+| Which folder is it, and can I delete it right here? | `dua i ~` | parallel scan, mark-and-delete in the TUI |
+| A quick tree of the biggest things | `dust` | one static screen, no interaction |
+| The same, as a sunburst | `filelight` | the GUI, from Dolphin |
+| Which PACKAGE weighs the most? | `nix-tree /run/current-system` | closures, not folders |
+| What does compression really save? | `sudo compsize -x /home` | the only one that reads the compressed size |
+
+`btdu` is the one the others cannot replace. On 24/10/2026 the live tree added up to about
+670 GiB against 824 GiB used, and the likely home of the ~150 GiB gap is data rewritten inside
+`@home` (a VM image rewritten daily, game patches) that only the hourly snapshots still reference.
+That is an inference from `du` against `df`, which is exactly the question only `btdu` can settle:
+every `du`-based tool reports the live tree and is blind to snapshot-held extents by construction.
+
 ## The trend log
 
 Append-only, `Sun 05:30`, one line per path per run, after restic, `nix-optimise` and the docker

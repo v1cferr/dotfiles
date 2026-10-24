@@ -11,9 +11,9 @@
     dmidecode
     btop # a resource monitor (CPU/mem/disk/network) with a rich TUI; htop on steroids
     tree # it lists the directory tree in the terminal
-    gdu # a TUI disk usage analyzer (Go), ~5x faster than ncdu on a big disk (`sudo gdu -x /`)
+    dua # a TUI disk usage analyzer (Rust), parallel scan plus mark-and-delete (`dua i /`)
     kdePackages.filelight # a GUI disk usage analyzer (KDE, a sunburst chart); it integrates with Dolphin/Kvantum
-    # nix-tree answers "which PACKAGE weighs the most", which is a different question from gdu's.
+    # nix-tree answers "which PACKAGE weighs the most", which is a different question from dua's.
     nix-tree # it browses a derivation's closure by SIZE (`nix-tree /run/current-system`)
     jq # it processes/queries JSON in the terminal (used in the secrets flow with bw)
     openssl # generating passwords/keys (rand), TLS, and so on

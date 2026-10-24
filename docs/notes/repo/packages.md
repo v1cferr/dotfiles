@@ -91,7 +91,7 @@ zone command, since the whole help is Workers/Pages/KV/R2/AI. The DNS work here 
 PER REPO (`restic-home-gdrive`), so a repo with no service, like the Arch archive, was unreachable
 without a `nix shell`. A backup that requires gymnastics to read is half a backup.
 
-`nix-tree` answers a different question from `gdu`/`filelight`: those say which FOLDER weighs the
+`nix-tree` answers a different question from `dua`/`filelight`: those say which FOLDER weighs the
 most, this one says which PACKAGE does, and what each dependency drags in. It is how we measured
 that xembedsniproxy cost 429 MiB of qtwebengine.
 

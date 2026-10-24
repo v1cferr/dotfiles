@@ -123,6 +123,31 @@ than `unlistedGiB` (100) above what the list adds up to, the alarm says so and n
 `sudo btdu /`. MEASURED on the first run, 24/10: 163 GiB outside the list. Not all of it is
 snapshots (the swapfile and unlisted paths count too), which is why the line says "likely".
 
+## What churns gets its own subvolume
+
+The alarm says the disk is full. This is what stops the snapshots from making it full. btrbk
+snapshots `@home` every hour and keeps `48h 7d 4w`, so every extent a VM image or a game patch
+rewrites stays pinned for up to four weeks. The live tree never shows it, and on 24/10/2026 the
+gap between `df` and the listed paths was 163 GiB. A snapshot does not descend into a nested
+subvolume, so a path that is its own subvolume costs its live size and nothing more.
+
+`my.disk.subvolumes` (`modules/home/services/home-subvolumes.nix`) lists those paths: the Steam
+library, the macOS lab's VM state, `~/.darling` and the Overwatch folder that was made a subvolume
+by hand on 18/10. `~/.cache` predates this and stays a root tmpfiles `v` rule in `btrfs.nix`.
+
+- **The activation CREATES, never converts.** A missing path becomes a subvolume, as the user, so
+  the ownership is right. A root tmpfiles `v` would create missing PARENTS as root inside `$HOME`,
+  which is why the deep paths are not there. An existing plain directory only gets a warning on
+  `rebuild`, naming the command below.
+- **`convert-to-subvolume PATH`** converts in place with no sudo. It refuses while a process has a
+  file open under the path or something is mounted there (Darling's overlay). It then copies with
+  `cp -a --reflink=always`, which costs no space and fails loudly instead of falling back to a
+  real copy, and checks path and size per file. The swap leaves the original as `PATH.pre-subvol`.
+  Deleting that is the user's call, after the app opened. TESTED on 24/10 on a scratch directory:
+  the conversion, a second run doing nothing, and the refusal while a shell sat inside it.
+- **The old extents are still in the snapshots** taken before the conversion. The space comes back
+  as those age out, or at once with a purge, the same trade [games-disk.md](games-disk.md) measured.
+
 ## The cache expiry, and the two generic approaches that are both wrong here
 
 `~/.cache` was 9 GiB with no policy at all. What survived scrutiny was ONE command, because the two

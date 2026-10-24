@@ -79,8 +79,10 @@ tgosystems.togglebracketguides
 theqtcompany.qt-core
 theqtcompany.qt-qml
 tomoki1207.pdf
+unifiedjs.vscode-mdx
 upstash.context7-mcp
 usernamehw.errorlens
+v1cferr.nix-embedded-shell
 vmware.vscode-boot-dev-pack
 vmware.vscode-spring-boot
 vscjava.vscode-gradle

@@ -166,9 +166,20 @@ shadows), both under the same guard:
   which still opens that half. The order matters: the tab with the useful title goes left.
   Stacking the halves (the store's *Vertical Split Tab Groups*) was the runner-up; it shows both
   titles but doubles the height.
-- **The page gets a lit rim**, a 1px ring in `border` plus a short shadow. Stock Zen 1.23 draws
-  no shadow under the page at all, the frame leaves only ~20px before clipping one, and a black
-  shadow on a dark page next to a dark frame barely shows. The rim separates them on any page.
+- **The page gets the desktop's window shadow**: `0 0 2px` plus `0 0 6px` in the palette's
+  `shadow`, the CSS reading of Hyprland's `range 6`, `render_power 3`, no offset. Stock Zen 1.23
+  draws no shadow under the page at all, and the frame leaves only ~20px before clipping one, so
+  it has to be short and dense. A 1px rim in `border` came first (24/10) and lasted a day: inside
+  the window's own border it read as a frame in the frame.
+
+A second round the same day, against the real mods (above), settled the folders:
+
+- **A folder's children hang from a hairline** under the folder icon (`left: 19px`, the icon's
+  center), indented to 26px, like the tree guides of VS Code and Linear. Pairs inside a folder
+  drop their surface, so the guide alone does the grouping. Rejected: folders as small-caps
+  section titles (cleanest, but folder and children blur together) and the open folder as one
+  tinted tray (groups well, but adds a block of color). Only open folders get the guide; a
+  collapsed one still shows its loaded tabs, without it.
 
 **Switching back to the stock theme, live:** in `about:config`, create `my.zen.stock-theme` as a
 Boolean and set it to `true`. The whole sheet sits under `@media not -moz-pref(...)`, the same

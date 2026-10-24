@@ -106,10 +106,34 @@ let
       tab-group[split-view-group][hasactivetab] .tab-label {
         color: ${c "text"} !important;
       }
-      /* The page lifted off the frame by a lit rim: on a dark page a shadow alone vanishes, and
-         the frame leaves it only ~20px before clipping it. */
+      /* A folder's children hang from a hairline under its icon (VS Code / Linear tree guides),
+         and pairs inside it drop their surface so the guide alone does the grouping. */
+      zen-folder > .tab-group-container {
+        position: relative;
+      }
+      zen-folder:not([collapsed]) > .tab-group-container::before {
+        content: "";
+        position: absolute;
+        left: 19px; /* under the center of the folder icon */
+        top: 2px;
+        bottom: 4px;
+        width: 1px;
+        border-radius: 1px;
+        background: ${c "border"}99;
+      }
+      zen-folder > .tab-group-container > :is(tab, tab-group, zen-folder) {
+        margin-inline-start: 26px !important;
+      }
+      zen-folder > .tab-group-label-container .tab-group-label {
+        color: ${c "subtext"} !important;
+      }
+      zen-folder tab-group[split-view-group] .tab-group-container {
+        background: transparent !important;
+      }
+      /* The page lifted by the desktop's own window shadow (Hyprland: range 6, render_power 3,
+         no offset), so it reads as a window in the window and not as a frame in the frame. */
       #tabbrowser-tabbox #tabbrowser-tabpanels .browserSidebarContainer {
-        box-shadow: 0 0 0 1px ${c "border"}, 0 2px 10px #000000a0 !important;
+        box-shadow: 0 0 2px ${c "shadow"}cc, 0 0 6px ${c "shadow"}99 !important;
       }
     }
   '';

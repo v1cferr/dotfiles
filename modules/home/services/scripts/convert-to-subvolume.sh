@@ -37,6 +37,20 @@ for arg in "$@"; do
   [ -z "$busy" ] || die "a process is using $p ($busy); close it first"
 
   btrfs subvolume create "$new" >/dev/null
+  # A failure from here on removes the half-made copy; the original is never touched before the swap.
+  trap 'rm -rf -- "$new"' ERR
+
+  # The directories FIRST, carrying +C (nodatacow) where the original has it. cp does not copy that
+  # flag, and btrfs refuses to clone between a nodatacow file and a normal one. MEASURED on
+  # 24/10/2026: every file of a VM image directory failed with EINVAL until this was in place.
+  # A file only inherits +C from its directory when it is created, hence before the copy.
+  while IFS= read -r -d '' d; do
+    mkdir -p "$new/$d"
+    if lsattr -d "$p/$d" 2>/dev/null | cut -d' ' -f1 | grep -q C; then
+      chattr +C "$new/$d"
+    fi
+  done < <(cd "$p" && find . -type d -print0)
+
   # --reflink=always fails loudly instead of silently doubling the space with a real copy.
   cp -a --reflink=always "$p/." "$new/"
 
@@ -45,6 +59,7 @@ for arg in "$@"; do
   if ! cmp -s <(list "$p") <(list "$new"); then
     die "the copy does not match; $new is left for inspection and $p is untouched"
   fi
+  trap - ERR
 
   mv "$p" "$old"
   mv "$new" "$p"

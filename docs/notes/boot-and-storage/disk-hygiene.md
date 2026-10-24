@@ -131,14 +131,27 @@ rewrites stays pinned for up to four weeks. The live tree never shows it, and on
 gap between `df` and the listed paths was 163 GiB. A snapshot does not descend into a nested
 subvolume, so a path that is its own subvolume costs its live size and nothing more.
 
-`my.disk.subvolumes` (`modules/home/services/home-subvolumes.nix`) lists those paths: the Steam
-library, the macOS lab's VM state, `~/.darling` and the Overwatch folder that was made a subvolume
-by hand on 18/10. `~/.cache` predates this and stays a root tmpfiles `v` rule in `btrfs.nix`.
+`my.disk.subvolumes` (`modules/home/services/home-subvolumes.nix`) lists those paths: the whole
+Steam library (`steamapps`), the macOS lab's VM state and the Overwatch folder that was made a
+subvolume by hand on 18/10. `~/.cache` predates this and stays a root tmpfiles `v` rule in `btrfs.nix`.
+
+**A rename across a subvolume boundary fails with EXDEV,** and that decides where the line goes.
+The first version made `steamapps/common` the subvolume, but Steam downloads into
+`steamapps/downloading` and renames into `common`, so the boundary has to be at the library root.
+`~/.darling` is left out for the same reason: Darling's overlay keeps its workdir in
+`~/.darling.workdir`, next to it, and every copy-up renames from the workdir into the upper layer.
+Its 48 GiB stay in the snapshots, which is the price of a working League. The macOS lab qualifies
+because its tools write the images in place and never move a file into `state/`.
 
 - **The activation CREATES, never converts.** A missing path becomes a subvolume, as the user, so
   the ownership is right. A root tmpfiles `v` would create missing PARENTS as root inside `$HOME`,
   which is why the deep paths are not there. An existing plain directory only gets a warning on
   `rebuild`, naming the command below.
+- **The nodatacow flag has to be carried by hand.** The VM images are `+C`, and `cp` does not
+  copy that flag. btrfs refuses to clone between a nodatacow file and a normal one, so the first
+  real run (24/10) failed with EINVAL on every file of the VM directory. The script recreates the
+  directories with their `+C` before copying, so each file inherits it at creation. A `+C` FILE
+  in a directory without it still fails, loudly, and the half-made copy is removed.
 - **`convert-to-subvolume PATH`** converts in place with no sudo. It refuses while a process has a
   file open under the path or something is mounted there (Darling's overlay). It then copies with
   `cp -a --reflink=always`, which costs no space and fails loudly instead of falling back to a

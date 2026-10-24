@@ -12,6 +12,7 @@ let
   inherit (pkgs)
     btrfs-progs
     coreutils
+    e2fsprogs
     findutils
     gnugrep
     util-linux
@@ -25,6 +26,7 @@ let
     runtimeInputs = [
       btrfs-progs
       coreutils
+      e2fsprogs # lsattr/chattr: the +C flag has to be carried over by hand
       findutils
       gnugrep
       util-linux # findmnt
@@ -41,9 +43,12 @@ in
 
   config = {
     my.disk.subvolumes = [
-      ".local/share/Steam/steamapps/common" # the Steam library: a patch rewrites tens of GiB
+      # The WHOLE library and not `common`: Steam downloads into `steamapps/downloading` and renames
+      # into `common`, and a rename across a subvolume boundary fails with EXDEV.
+      ".local/share/Steam/steamapps"
       "Projects/Local/macos-arm64-lab/state" # the macOS lab VM images, rewritten every session
-      ".darling" # League of Legends through Darling, patched in place
+      # NOT ~/.darling, for the same EXDEV: Darling's overlay keeps its workdir in ~/.darling.workdir,
+      # outside it, and every copy-up renames from the workdir into the upper layer.
       ".local/share/bottles/bottles/Battlenet/drive_c/Program Files (x86)/Overwatch" # made by hand on 18/10
     ];
 

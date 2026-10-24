@@ -157,6 +157,19 @@ Two things the measurement decided:
   find a profile does nothing instead of failing the switch. The Arch symlink there pointed at
   `~/dotfiles/zen-browser/`, a path gone since the cutover, so the old theme had been off since then.
 
+Two additions chosen on 24/10/2026 in a bake-off of lab renders (four split layouts, five
+shadows), both under the same guard:
+
+- **A split pair reads as one entry**, the way Arc shows a split. Zen gives each half
+  `flex: 1 1 0%`, so a pinned Jira + ChatGPT pair showed `[V1C-95` and `V1C-95`: the key twice
+  and no summary. Now the first tab keeps the whole title and the others shrink to their icon,
+  which still opens that half. The order matters: the tab with the useful title goes left.
+  Stacking the halves (the store's *Vertical Split Tab Groups*) was the runner-up; it shows both
+  titles but doubles the height.
+- **The page gets a lit rim**, a 1px ring in `border` plus a short shadow. Stock Zen 1.23 draws
+  no shadow under the page at all, the frame leaves only ~20px before clipping one, and a black
+  shadow on a dark page next to a dark frame barely shows. The rim separates them on any page.
+
 **Switching back to the stock theme, live:** in `about:config`, create `my.zen.stock-theme` as a
 Boolean and set it to `true`. The whole sheet sits under `@media not -moz-pref(...)`, the same
 query Zen's own CSS uses, so the flip applies at once (measured on 13/10/2026, no restart) and survives restarts (it lives in

@@ -72,6 +72,45 @@ let
         border-color: ${c "border"} !important;
         color: ${c "subtext"} !important;
       }
+      /* A split pair reads as ONE entry, Arc's way: the first tab keeps the whole title and the
+         others shrink to their icon. Zen halves the width, which cut both titles to the key. */
+      tab-group[split-view-group] .tab-group-container {
+        background: ${c "surface"} !important;
+        border-radius: 10px !important;
+        padding: 2px !important;
+        gap: 2px;
+      }
+      tab-group[split-view-group] .tab-group-container > tab:first-of-type {
+        flex: 1 1 auto !important;
+      }
+      tab-group[split-view-group] .tab-group-container > tab:not(:first-of-type) {
+        flex: 0 0 32px !important;
+      }
+      tab-group[split-view-group] .tab-group-container > tab:not(:first-of-type) .tab-label-container {
+        display: none !important;
+      }
+      tab-group[split-view-group] .tab-group-container > tab::after {
+        display: none !important; /* Zen's | between the halves */
+      }
+      tab-group[split-view-group] .tabbrowser-tab .tab-background {
+        background: transparent !important;
+        border-radius: 8px !important;
+      }
+      /* On the pair's surface, the usual surface hover would not show, so both states use track. */
+      tab-group[split-view-group] .tabbrowser-tab:is(:hover, [visuallyselected]) .tab-background {
+        background: ${c "track"} !important;
+      }
+      tab-group[split-view-group] .tab-label {
+        color: ${c "subtext"} !important;
+      }
+      tab-group[split-view-group][hasactivetab] .tab-label {
+        color: ${c "text"} !important;
+      }
+      /* The page lifted off the frame by a lit rim: on a dark page a shadow alone vanishes, and
+         the frame leaves it only ~20px before clipping it. */
+      #tabbrowser-tabbox #tabbrowser-tabpanels .browserSidebarContainer {
+        box-shadow: 0 0 0 1px ${c "border"}, 0 2px 10px #000000a0 !important;
+      }
     }
   '';
 

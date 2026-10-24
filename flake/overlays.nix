@@ -155,6 +155,10 @@ let
     # Native WhatsApp client, the official release binary, built WHOLE from unstable: the session's
     # LD_LIBRARY_PATH carries unstable libs, and mixing glibcs aborts it. Only the bump's scope is ours.
     zapfast = final.unstable.callPackage ../pkgs/zapfast/package.nix { inherit (final) callPackage; };
+    # Native Spotify client, zapfast's sibling: the same binary layout, so the same unstable build.
+    spotifast = final.unstable.callPackage ../pkgs/spotifast/package.nix {
+      inherit (final) callPackage;
+    };
     razer-dpi = final.callPackage ../pkgs/razer-dpi/package.nix { }; # the Razer mouse's live DPI, over hidraw
     notify = final.callPackage ../pkgs/notify/package.nix { }; # the ntfy push, shared by the shell and sshd's PAM
     boot-theme = final.callPackage ../pkgs/boot-theme/package.nix { }; # Limine wallpaper plus Plymouth theme, one palette

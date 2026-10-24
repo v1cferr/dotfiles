@@ -32,6 +32,11 @@ SIGHUP and it stops Darling, game included. So the session starts it as `darling
   no terminal) or from the bar pill.
 - It stays up while a client does, and stops by itself once none is left. Upstream has no way to
   reopen a window into a live namespace, so "reopen" is a restart of the unit (the bar pill).
+- Output to `~/.local/state/darling-lol.log`, truncated per start, not the journal. With the
+  journal's socket as stdout the Riot Client's UI process aborted (SIGABRT, `exit code 6` in its
+  log) about 3 s in, the client found nothing left to show and quit, and the unit stopped after
+  20 s, twice in a row (23/10/2026). The same launcher with stdout on a file opened the window.
+  Upstream's `desktop-run.sh` writes to a file for the same menu-launch case.
 - `RCLOL_REGION`/`RCLOL_LOCALE`: the installer region is not remembered, and the launcher
   defaults to EUW.
 

@@ -24,6 +24,10 @@ in
         "RCLOL_REGION=BR"
         "RCLOL_LOCALE=pt_BR"
       ];
+      # A FILE, as upstream's desktop-run.sh does: with the journal's socket as stdout the Riot
+      # Client UI aborts at start and the unit quits after 20 s. docs/notes/apps/darling-lol.md
+      StandardOutput = "truncate:%S/darling-lol.log";
+      StandardError = "inherit";
       # SIGTERM to the launcher only: it shuts Darling down from inside its namespace.
       KillMode = "mixed";
       TimeoutStopSec = 120;

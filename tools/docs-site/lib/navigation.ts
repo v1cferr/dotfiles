@@ -146,6 +146,7 @@ export const navigation: NavItem[] = [
       { title: "VS Code", doc: "notes/apps/vscode.md" },
       { title: "Claude Code", doc: "notes/apps/claude-code.md" },
       { title: "Codex", doc: "notes/apps/codex.md" },
+      { title: "tmux", doc: "notes/apps/tmux.md" },
       { title: "Antigravity CLI", doc: "notes/apps/antigravity-cli.md" },
       { title: "basic-memory", doc: "notes/apps/basic-memory.md" },
       { title: "Azure MCP", doc: "notes/apps/azure-mcp.md" },

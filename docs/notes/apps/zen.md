@@ -177,8 +177,16 @@ query Zen's own CSS uses, so the flip applies at once (measured on 13/10/2026, n
 for good is removing `./zen/theme.nix` from the imports: the activation stops relinking, and the
 two dead symlinks are deleted by hand.
 
-`user.js` declares only `toolkit.legacyUserProfileCustomizations.stylesheets`, without which Gecko
-ignores the sheet. The Arch `user.js` also forced VA-API and DMABUF past Firefox's blocklist, but
+`user.js` declares `toolkit.legacyUserProfileCustomizations.stylesheets`, without which Gecko
+ignores the sheet, and one pref for a mod (below).
+
+**Two Zen mods live in the profile, NOT in the repo**: SuperPins and Ghost Tabs, installed
+through Zen's own mod UI in 03/2026 and compiled by Zen into `chrome/zen-themes.css`. Ghost Tabs
+grays out unloaded tabs. SuperPins drew the boxes around every pinned tab and pinned split pair,
+because its `uc.superpins.border` was `"pins"`; its rules only match `"pins"`, `"essentials"` and
+`"both"`, so `user.js` sets `"none"` and the boxes are gone on every start. The lab does not load
+the mods by itself: to see what the real profile shows, inject a copy of `zen-themes.css` with
+`zen-theme-lab css` (found 24/10/2026, after renders without it missed the boxes entirely). The Arch `user.js` also forced VA-API and DMABUF past Firefox's blocklist, but
 that was for the NVIDIA card; with the Arc those are a separate question and stay out.
 
 ## The theme lab: measuring the theme instead of guessing

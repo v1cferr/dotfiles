@@ -117,6 +117,9 @@ let
   # Only what the theme NEEDS: without it Gecko ignores chrome/userChrome.css altogether.
   userJs = writeText "user.js" ''
     user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
+    // SuperPins (a Zen mod installed in the profile) boxes every pin and pinned group for "pins",
+    // "essentials" or "both"; any other value matches none of its rules, so no boxes.
+    user_pref("uc.superpins.border", "none");
   '';
 
   # THE LAB: a SECOND Zen on a throwaway profile, with Marionette on, so the theme can be measured,

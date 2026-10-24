@@ -1,4 +1,4 @@
-// The media panel (Spotify), through the native Mpris service. `qs ipc call mpris toggle`, or
+// The media panel (Spotifast), through the native Mpris service. `qs ipc call mpris toggle`, or
 // `toggleAt <x>` from the bar's media pill, which hangs it under the pill.
 import Quickshell
 import Quickshell.Wayland
@@ -16,13 +16,13 @@ Scope {
     property int panelLeft: Theme.barTop // the screen x the bar asked for; the left edge otherwise
     property real positionNow: 0
 
-    // It selects the Spotify player (the fallback: whichever is playing; otherwise the 1st)
+    // It selects the Spotifast player (the fallback: whichever is playing; otherwise the 1st)
     readonly property var player: {
         const m = Mpris.players;
         const list = (m && m.values) ? m.values : [];
         for (let i = 0; i < list.length; i++) {
             const p = list[i];
-            if (p && (p.identity === "Spotify" || (p.dbusName || "").toLowerCase().indexOf("spotify") >= 0))
+            if (p && (p.identity === "Spotifast" || (p.dbusName || "").toLowerCase().indexOf("spotifast") >= 0))
                 return p;
         }
         for (let i = 0; i < list.length; i++)

@@ -916,9 +916,9 @@ Scope {
             };
         if (key === "ws")
             return root.wsHint(root.hintWs);
-        if (key === "spotify")
+        if (key === "music")
             return {
-                title: root.spTitle || "Spotify",
+                title: root.spTitle || "Spotifast",
                 lines: [root.spArtist, root.spPlaying ? "Playing" : "Paused"].filter(l => l !== ""),
                 action: "Click for the player · right-click to " + (root.spPlaying ? "pause" : "play") + " · scroll to skip"
             };
@@ -1201,13 +1201,13 @@ Scope {
             root.sink.audio.muted = !root.sink.audio.muted;
     }
 
-    // ===== Spotify (Mpris) =====
+    // ===== Spotifast (Mpris) =====
     readonly property var player: {
         const m = Mpris.players;
         const list = (m && m.values) ? m.values : [];
         for (let i = 0; i < list.length; i++) {
             const p = list[i];
-            if (p && (p.identity === "Spotify" || (p.dbusName || "").toLowerCase().indexOf("spotify") >= 0))
+            if (p && (p.identity === "Spotifast" || (p.dbusName || "").toLowerCase().indexOf("spotifast") >= 0))
                 return p;
         }
         for (let i = 0; i < list.length; i++)
@@ -1803,7 +1803,7 @@ Scope {
             return "󰺕 " + m[1];
         if ((m = t.match(/^(.*) - (fish|zsh|bash)$/)))
             return "󰆍 [" + m[1] + "]";
-        if ((m = t.match(/^(.*) - Spotify$/)))
+        if ((m = t.match(/^(.*) - Spotifast$/)))
             return "󰝚 " + m[1];
         if ((m = t.match(/^(.*) - (Code|Visual Studio Code)$/)))
             return "󰨞 " + m[1];
@@ -2085,16 +2085,16 @@ Scope {
                         label: bar.mediaIconOnly ? "" : root.spText
                         accent: root.spColor
                         maxWidth: bar.mediaUsed
-                        onHoveredChanged: root.hoverHint("spotify", spPill, barContent, bar, hovered)
+                        onHoveredChanged: root.hoverHint("music", spPill, barContent, bar, hovered)
                         onClicked: {
                             root.closePanels();
                             root.hideHint();
                             root.anchorPopover(spPill, barContent, bar);
                             root.launch(["qs", "ipc", "call", "mpris", "toggleAt", "" + root.popLeft(360)]);
                         }
-                        onRightClicked: root.launch(["playerctl", "--player=spotify", "play-pause"])
-                        onScrolledUp: root.launch(["playerctl", "--player=spotify", "next"])
-                        onScrolledDown: root.launch(["playerctl", "--player=spotify", "previous"])
+                        onRightClicked: root.launch(["playerctl", "--player=spotifast", "play-pause"])
+                        onScrolledUp: root.launch(["playerctl", "--player=spotifast", "next"])
+                        onScrolledDown: root.launch(["playerctl", "--player=spotifast", "previous"])
                     }
                 }
 

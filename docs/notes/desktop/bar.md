@@ -4,7 +4,7 @@
 Quickshell. It is loaded by `shell.qml` (`Bar {}`), and the popovers live in files next to it.
 
 It shows: the workspaces per monitor plus the title, the NixOS logo (the way into notifications and
-the session, [nixos-center.md](nixos-center.md)), the clock, cpu/temp, audio (Pipewire), Spotify
+the session, [nixos-center.md](nixos-center.md)), the clock, cpu/temp, audio (Pipewire), Spotifast
 (Mpris), the network, the VPN and Tor, the weather, the tray, and on the standing monitor the
 operational alerts.
 
@@ -426,7 +426,7 @@ Right click on the pill is still the shortcut for taking everything down.
 
 Asked for on 10/10/2026: everything on the bar shows something under the cursor. The pills with a
 panel of their own (weather, clock, temperature, usage, VPN, network) already did; the rest (the
-window title, Spotify, volume, hypridle, away, the operational alerts and each tray icon) get
+window title, Spotifast, volume, hypridle, away, the operational alerts and each tray icon) get
 `HintPopover.qml`, a small card with the state and what each button does. The click keeps doing
 what it did, so a hover never fires an action.
 

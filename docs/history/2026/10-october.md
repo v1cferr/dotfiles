@@ -1,6 +1,6 @@
 # History: october 2026
 
-11 entries. Index in [README.md](../README.md).
+12 entries. Index in [README.md](../README.md).
 
 - [x] Vicinae replaced rofi and cliphist: one launcher for apps, files, the calculator, the
       clipboard history, my commands and four extensions (13/10/2026). How and why:
@@ -146,3 +146,13 @@
       [games-disk.md](../../notes/boot-and-storage/games-disk.md#the-exception-competitive-games-stay-on-the-nvme).
       • ITS OWN SUBVOLUME, so the 83 GiB and every patch stay out of the btrbk snapshots.
       • NO CACHE IN FRONT OF THE SANDISK. bcache and friends would reformat a disk Windows shares.
+
+- [x] Spotifast replaced Spotify and spicetify (24/10/2026): a native client (Rust/egui +
+      librespot) instead of a whole CEF. How and why:
+      [spotifast.md](../../notes/apps/spotifast.md).
+      • THE RELEASE BINARY, LIKE ZAPFAST. Same author and framework, same libraries, so the same
+        `pkgs/` layout and bump; the upstream flake would compile Rust on every bump.
+      • THE COLORS STAYED, THE LOOK DID NOT. The theme is generated from `my.theme.palette` with the
+        old green accent, but Spotifast themes only colors, so spicetify's mono "text" look is gone.
+      • THREE OVERLAYS LEFT WITH IT: `--no-zygote`, the Wayland flag and the stale SingletonLock
+        existed only to make CEF open.

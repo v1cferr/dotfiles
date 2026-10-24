@@ -48,7 +48,7 @@ sections below this one are left as measured on 08/09, so read this table first.
 | --- | --- | --- |
 | atuin | Ported | `programs.atuin` in `modules/home/shell/cli.nix`, on Ctrl+R |
 | easyeffects | Replaced | The speaker EQ is a PipeWire filter-chain in `modules/nixos/hardware/audio.nix` |
-| spicetify | Ported | `modules/home/apps/spotify.nix` |
+| spicetify | Replaced | Spotify itself gave way to Spotifast, its colors from the palette, in `modules/home/apps/spotifast.nix` |
 | nano | Ported, as a decision | `EDITOR=nano` in `zsh.nix`. Its syntax files come with nano 9.2; the Arch `.nanorc` only pulled a third-party set whose nixpkgs copy is from 2020 |
 | neovim | Dropped | Stock LazyVim boilerplate, nothing personal in it (see the corrected entry below) |
 | zsh | Closed | Ported: Ctrl+arrows, double-Esc sudo, the YouTube aliases (`ytmix` is the shuffled playlist), `grep --color=auto`. Replaced: `fhome`/`froot` by fzf's Alt+C and Ctrl+T through `fd` (the aliases ran `cd .` on Esc and walked all of `/`); the `ssh` TERM alias by `SetEnv TERM` per host in `ssh.nix`. Dropped: fastfetch at startup (measured: 0.09 s on a 0.12 s shell, and it would print in every VS Code and agent shell too; `fastfetch` is one command away) and `nrd`, since toolchains live in devShells |

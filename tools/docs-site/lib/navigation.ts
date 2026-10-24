@@ -156,7 +156,6 @@ export const navigation: NavItem[] = [
       { title: "Bottles", doc: "notes/apps/bottles.md" },
       { title: "MEGA", doc: "notes/apps/mega.md" },
       { title: "LibreWolf", doc: "notes/apps/librewolf.md" },
-      { title: "Spotify", doc: "notes/apps/spotify.md" },
       { title: "Zen", doc: "notes/apps/zen.md" },
       { title: "ZapFast", doc: "notes/apps/zapfast.md" },
       { title: "Spotifast", doc: "notes/apps/spotifast.md" },

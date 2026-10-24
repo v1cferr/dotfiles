@@ -186,9 +186,9 @@ noise, not this QML's.
 
 ### `Mpris.qml`
 
-The media control panel (Spotify), modeled on the VPN panel, opened through
+The media control panel (Spotifast), modeled on the VPN panel, opened through
 `qs ipc call mpris toggle`. It uses the native `Quickshell.Services.Mpris` service and sits
-bottom/top-left on the main monitor, near the Spotify pill.
+bottom/top-left on the main monitor, near the Spotifast pill.
 
 ### `Pill.qml`
 

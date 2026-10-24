@@ -68,13 +68,6 @@
       inputs.nixpkgs.follows = "nixpkgs"; # dedup
     };
 
-    # spicetify: it BUILDS a patched Spotify derivation instead of mutating the store, which is
-    # the only reason this is declarable at all. Why THIS fork: docs/notes/apps/spotify.md
-    spicetify-nix = {
-      url = "github:Gerg-L/spicetify-nix";
-      inputs.nixpkgs.follows = "nixpkgs"; # dedup: the packages it uses come from MY pkgs anyway
-    };
-
     # Stylix: it APPLIES the palette to every app it knows; palette.nix keeps the hexes, because the
     # stock base16 Tokyo Night is not folke's. Why: docs/decisions/0012-stylix-applies-the-palette.md
     stylix = {

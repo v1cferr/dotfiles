@@ -7,7 +7,7 @@ Careful: in a Wayland session the keyboard and the monitors do NOT come from the
 xkb/xrandr. They are Hyprland config (`input.kb_layout` for ABNT2 and the `monitor=` lines for the
 arrangement and the primary). The system's xkb here only covers the greeter and Xwayland apps.
 
-`NIXOS_OZONE_WL = "1"` makes Electron/Chromium apps (vscode, spotify, chrome, claude-code) run
+`NIXOS_OZONE_WL = "1"` makes Electron/Chromium apps (vscode, chrome, claude-code) run
 natively on Wayland instead of Xwayland.
 
 ## Autologin, and why it is not laziness
@@ -30,7 +30,7 @@ locked right at boot, an `exec-once` of hyprlock in the autostart does it.
 added:
 
 - **portal-gtk** serves `org.freedesktop.appearance` (color-scheme), which is how Electron and
-  Chromium apps (vscode, chrome, spotify) go dark along with the system.
+  Chromium apps (vscode, chrome) go dark along with the system.
 - **portal-wlr** implements the Screenshot interface. portal-hyprland 1.3.12 only DECLARES it and
   then answers "Unknown method", which is why flameshot v14 gave "Unable to capture screen". It is
   the same portal that was on Arch: wlroots' screencopy. See [`flameshot.md`](../apps/flameshot.md).
@@ -41,7 +41,7 @@ ScreenCast and GlobalShortcuts, gtk for appearance and FileChooser).
 ## The keyring, and the autologin interaction
 
 gnome-keyring provides `org.freedesktop.secrets`, where apps store secrets: git through libsecret,
-NetworkManager, Chrome, Spotify, Dropbox.
+NetworkManager, Chrome, Spotifast, Dropbox.
 
 MIND THE AUTOLOGIN. `lightdm-autologin`'s PAM does NOT type a password, so `pam_gnome_keyring`
 NEVER receives an authtok, which means the auto-unlock does NOT come from PAM.

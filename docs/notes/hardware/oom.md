@@ -48,7 +48,7 @@ stays usable meanwhile.
 ## The prefer/avoid lists
 
 `--prefer` are the disposable gluttons, easy to reopen: chrome, chromium, firefox, librewolf, zen,
-electron, spotify, Discord. Editors (code, obsidian) are deliberately OUT, since losing unsaved
+electron, Discord. Editors (code, obsidian) are deliberately OUT, since losing unsaved
 work hurts more than a browser does.
 
 `--avoid` is the compositor and the shell (a frozen screen), audio, the session and SSH (no

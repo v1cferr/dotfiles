@@ -13,6 +13,7 @@ let
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
     discord
+    spotifast
     ;
 
   # The apps table: adding one is 1 entry here plus 1 line in the panel below.
@@ -27,14 +28,11 @@ let
       exec = "${osConfig.programs.localsend.package}/bin/localsend_app --hidden";
       desc = "file transfer over the LAN";
     };
-    spotify = {
-      # The SPICED package (rule 11), so the autostart cannot open an unthemed build the menu does
-      # not have. It carries --no-zygote through, since the overlay put it in postFixup.
-      exec = "${config.programs.spicetify.spicedSpotify}/bin/spotify";
+    spotifast = {
+      # `--start-hidden` = the tray only. Keep its own "start with computer" Off, which is a second
+      # owner (rule 15), the same as LocalSend's above.
+      exec = "${spotifast}/bin/spotifast --start-hidden";
       desc = "music";
-      # Exiting 1 is the NORMAL path here (it escapes into its own scope). Without this, on-failure
-      # restarts every 5s and the window reappears by itself.
-      successExit = "1";
     };
   };
 
@@ -48,7 +46,7 @@ in
     my.autostart = {
       discord = false; # chat/voice
       localsend = false; # the LAN file receiver, hidden in the tray
-      spotify = false; # music
+      spotifast = false; # music
     };
 
     # One --user service per enabled app, tied to the session, so nothing survives a logout.

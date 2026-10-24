@@ -73,7 +73,6 @@ in
       kitty.opacity.enable = false; # kitty.nix keeps its own opacity and font either way
       kitty.fonts.enable = false;
       bat.enable = !config.my.theme.curated; # folke's own tmTheme, which delta reuses (shell/cli.nix)
-      spicetify.enable = false; # it swaps the text theme for a colors-only one (apps/spotify.nix)
       btop.enable = false; # btop rewrites btop.conf, so an activation sets its theme (rule 14)
       # Not installed here: these targets write their theme files whether the app exists or not.
       blender.enable = false;

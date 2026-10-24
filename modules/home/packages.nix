@@ -20,7 +20,6 @@
 
     # ── Notes / media ──
     obsidian # Markdown notes (a local vault)
-    # Spotify owns its package in modules/home/apps/spotify.nix (spicetify builds the themed one).
     # The one that shows the image AND the UVC controls, which is what a flaky camera needs.
     guvcview # the webcam viewer; why mine does not stream yet: docs/notes/hardware/webcam.md
 

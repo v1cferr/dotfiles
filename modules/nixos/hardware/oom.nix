@@ -16,7 +16,7 @@
     extraArgs = [
       # PREFER: the disposable gluttons. Editors are OUT, since unsaved work hurts more than a tab.
       "--prefer"
-      "^(chrome|chromium|firefox|librewolf|zen|electron|spotify|Discord)"
+      "^(chrome|chromium|firefox|librewolf|zen|electron|Discord)"
       # AVOID: the compositor and shell (a frozen screen), audio, the session and SSH (no rescue).
       "--avoid"
       "^[.]?(Hyprland|quickshell|hyprlock|hypridle|hyprpaper|sshd|systemd|dbus-broker|pipewire|wireplumber)"

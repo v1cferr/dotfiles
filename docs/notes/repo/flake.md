@@ -36,7 +36,7 @@ flowchart LR
     U["nixpkgs-unstable, ONE hoisted instance<br>pkgs.unstable.name, picked per package"]
     F["upstream flakes<br>zen-browser · quickshell · browser-previews · ..."]
     V["./pkgs, vendored<br>in neither nixpkgs nor a flake, bumped by vendored-bump"]
-    P["patched builds<br>spotify · vscode · btop · claude-desktop"]
+    P["patched builds<br>vscode · btop · claude-desktop"]
     SYS["one system<br>NixOS and home-manager, from one drvPath"]
 
     S --> SYS
@@ -83,7 +83,7 @@ the hm-module, so that side never gets evaluated.
 | `minegrub-world-sel-theme` | a GRUB theme where each OS/generation becomes a Minecraft "world" with an icon and a description. The other theme by the same author (`minegrub-theme`, the main menu) was passed over: an entry becomes a button, with no icon per OS |
 | `quickshell` | a shell/bar in QML (outfoxxed), NOT in nixpkgs. See [`quickshell.md`](../desktop/quickshell.md) |
 | `browser-previews` | nixpkgs only packages Chrome stable; this maintained nix-community flake keeps `google-chrome-dev` fresh |
-| `stylix` | APPLIES `my.theme.palette` to every app it has a target for (GTK, kitty, bat, mpv, Spotify...). The palette stays the owner of the hexes, because the stock base16 Tokyo Night is not folke's. Pinned to `release-26.05`, the same release as the base, since Stylix warns on a mismatch. See [decision 0012](../../decisions/0012-stylix-applies-the-palette.md) |
+| `stylix` | APPLIES `my.theme.palette` to every app it has a target for (GTK, kitty, bat, mpv...). The palette stays the owner of the hexes, because the stock base16 Tokyo Night is not folke's. Pinned to `release-26.05`, the same release as the base, since Stylix warns on a mismatch. See [decision 0012](../../decisions/0012-stylix-applies-the-palette.md) |
 | `git-hooks.nix` | pre-commit managed by Nix, so the lint catches things BEFORE the commit instead of after the push. `cachix/git-hooks.nix` is the current name; the old `pre-commit-hooks.nix` repo redirects |
 
 ### claude-desktop
@@ -142,37 +142,6 @@ associates with evaluation OOM (discourse 1517): the cost shows up once the inst
 the stable base. That is what gives the choice per package.
 
 ## The three package overlays
-
-### Spotify's `--no-zygote`
-
-Without it the app does not open: its CEF aborts with "GPU process isn't usable. Goodbye." and dies
-of SIGTRAP in ~270 ms, with no window and no visible error. `--disable-gpu` and `--no-sandbox`
-change nothing; only this flag works around it. Measured 11/08/2026 on 1.2.92.147, and the earlier
-suspicion that it was the VERSION was wrong: 1.2.92 crashes just like 1.2.90.
-
-**WHY IN THE PACKAGE** and not in `autostart.nix`'s `exec`, which would be the shorter line:
-Spotify's `.desktop` uses `Exec=spotify`, a BARE name resolved through PATH. A flag only in the
-autostart would fix boot and leave the MENU crashing, with two places to keep in sync. Wrapping the
-package means every path that reaches the profile's `spotify` gets the flag. Rule 15, a single
-owner.
-
-`postFixup` and not `postInstall`, because the nixpkgs recipe does its own wrap in `installPhase`
-and `fixupPhase` runs AFTER, so wrapping earlier would wrap what does not exist yet.
-`$out/bin/spotify` is a symlink to `../share/spotify/spotify`; `wrapProgram` moves the symlink to
-`bin/.spotify-wrapped` (the relative target stays valid, same dir) and puts the wrapper in its
-place.
-
-It patches INSIDE `unstable`, hence after `overlayUnstable`, for the same reason as the vscode
-overlay: `unstable` is another import of nixpkgs.
-
-### Spotify's stale `SingletonLock`
-
-A SEPARATE overlay because it never leaves, while the zygote flag goes the day CEF stops crashing.
-It comes after that one and wraps the wrapper, so its check runs first and then execs into the
-`--no-zygote` one. What it guards against and how it was found:
-[`apps/spotify.md`](../apps/spotify.md).
-
-**REMOVE once Spotify opens again without the flag.** Testing that is running `spotify` without it.
 
 ### vscode: the tarball SRC over the unstable RECIPE
 

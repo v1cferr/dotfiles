@@ -143,8 +143,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [curseforge-fix-perms](apps/curseforge-fix-perms.md) | the `+x` the app loses, and why ELF magic and not names |
 | [bottles](apps/bottles.md) | the library declared without owning the prefix, and the name that is not the directory |
 | [mega](apps/mega.md) | megatools, the quota, and why the loop waits |
-| [spotify](apps/spotify.md) | the patched derivation, and the flag without which it does not open |
-| [spotifast](apps/spotifast.md) | the native Spotify client, and why the release binary |
+| [spotifast](apps/spotifast.md) | the native Spotify client, why the release binary, and the theme that must be a real file |
 | [apps-and-mime](apps/apps-and-mime.md) | media, office, MangoHud, OpenAL, and the CANONICAL mimetype |
 | [zen](apps/zen.md) | the launch guard, and the NSS check that had to be written backwards |
 | [crypto](apps/crypto.md) | Stack Wallet and Bisq 2, the threat model with no LUKS, and the first purchase |

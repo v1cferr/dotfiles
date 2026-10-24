@@ -7,7 +7,7 @@ Stylix only APPLIES it ([decision 0012](../../decisions/0012-stylix-applies-the-
 ## Dark mode on Hyprland has two fronts
 
 1. `color-scheme = "prefer-dark"` is the signal read by GTK4/libadwaita apps AND forwarded by
-   `xdg-desktop-portal-gtk` to the Electron/Chromium apps (VS Code, Chrome, Spotify, LibreWolf).
+   `xdg-desktop-portal-gtk` to the Electron/Chromium apps (VS Code, Chrome, LibreWolf).
    It is what darkens most of them.
 2. `gtk-theme` names Stylix's `adw-gtk3`, recolored by a generated `gtk.css` (`window_bg_color`,
    `accent_color` and the rest of libadwaita's named colors) in the palette. Until 13/10/2026 this
@@ -27,7 +27,7 @@ that is GTK, mpv (OSD), yazi, fzf, starship, MangoHud (colors only) and gdu. Eac
 - **Themed here from the same palette**, with keys base16 has no slot for: Hyprland (Lua written
   by hand), hyprlock, hyprpaper, Qt (Kvantum plus a KDE color scheme), Vicinae, Zen, VS Code (its settings.json is in the repo).
 - **An official per-app theme beats a generic base16 one**: kitty, bat (and delta through it),
-  Spotify, btop. Measured for kitty: base16 has no bright ANSI slots, so Stylix painted color8
+  btop. Measured for kitty: base16 has no bright ANSI slots, so Stylix painted color8
   `#292e42` (zsh autosuggestions near invisible) and every bright color the same as its normal one.
 - **Not installed**: blender, forge, vencord, whose targets write files whether the app exists or
   not.

@@ -8,7 +8,7 @@ true/false in the panel plus `rebuild`. It mirrors the idiom of `modules/nixos/s
 
 | Place | For what | Why separate |
 | --- | --- | --- |
-| `my.autostart` (here) | GUI apps with no service of their own: Discord, Spotify, LocalSend | LocalSend has a NixOS module, but only for the package and the firewall; what BRINGS IT UP is this panel |
+| `my.autostart` (here) | GUI apps with no service of their own: Discord, Spotifast, LocalSend | LocalSend has a NixOS module, but only for the package and the firewall; what BRINGS IT UP is this panel |
 | `my.services.<n>` | real services with a module or daemon (dropbox, jellyfin, ollama, sunshine, restic) | keys in `modules/nixos/services/toggles.nix`, values in `hosts/<host>/services.nix` |
 | `hypr/lua/autostart.lua` | session infrastructure that NEEDS the compositor's `exec-once`: the lock, quickshell, wl-clip-persist | only the compositor knows the right moment |
 
@@ -69,11 +69,9 @@ require walking to the PC to open the app.
   `pkgs.localsend`: if it ever becomes `unstable.localsend` in `modules/nixos/`, the autostart follows on
   its own. It is the Spotify trap solved by construction instead of by attention.
 
-**Spotify**: `unstable.*` has to MATCH `modules/home/packages.nix`, otherwise the autostart brings up the
-broken version from the base while the menu opens the good one. The `--no-zygote` flag that keeps
-the app standing does NOT come from here: it belongs to the PACKAGE, baked in by `flake.nix`'s
-`overlaySpotifyNoZygote`, so the menu (`Exec=spotify` through the PATH) gets the same flag as this
-autostart. A single owner, rule 15.
+**Spotifast**: `--start-hidden` leaves only the tray icon. The same warning as LocalSend applies:
+its own "start with computer" writes `~/.config/autostart/spotifast.desktop`, a second owner, so it
+stays Off in the app. It is a plain process, so it needs no `successExit`.
 
 ## Where the packages come from
 

@@ -19,3 +19,35 @@ dlopened list, which upstream's flake wraps too and ZapFast does not need.
 
 `spotifast-portable.txt` is left out of the tarball, because it turns on the in-app updater, which
 would try to rewrite the store. The `contrib/omarchy` hook is for another distro's theming.
+
+## The theme: colors only, and a real file
+
+`modules/home/apps/spotifast.nix` generates `~/.config/spotifast/themes/dotfiles.json` from
+`my.theme.palette`, mapped like the spicetify "text" scheme it replaced: the background, the
+surfaces and the green accent. It follows a `my.theme.name` switch on the next rebuild.
+
+- **Colors only.** Upstream's format sets colors and keeps the app's fonts, so the mono, TUI-like
+  look of spicetify's "text" theme did not come along. Accepted on 24/10/2026 for the RAM.
+- **A copy, not a link.** The app skips symlinks in its themes folder, so `home.file` cannot own
+  it; an activation installs the file instead, and the app notices the change on its own.
+- **Picked once, by hand.** The choice lives in the app's own `settings.json`, which it rewrites,
+  so it is not declared: Settings > Appearance > Theme > `dotfiles`. The fixed file name keeps that
+  pick valid across palette switches. Turn off "Colour from album art" for fixed colors on every
+  page.
+
+## Around it
+
+- **Media controls.** It registers MPRIS as `spotifast`, so `playerctl --player=spotifast`; the bar
+  pill and the media panel match that name (`modules/home/desktop/quickshell/`).
+- **Autostart.** The `spotifast` entry in `my.autostart` opens it with `--start-hidden`. Its own
+  "start with computer" stays Off, or it becomes a second owner
+  ([autostart.md](../desktop/autostart.md)).
+- **Sign-in.** The grants go to the Secret Service (gnome-keyring), so a locked keyring means
+  signing in again each session.
+
+## What it replaced
+
+The CEF client themed by spicetify (`spicetify-nix`), plus three overlays that existed only to
+make CEF open: `--no-zygote`, the Wayland flag and a cleaner for a stale `SingletonLock`. All gone
+on 24/10/2026. The 4145 restarts it caused in the autostart are kept as history in
+[autostart.md](../desktop/autostart.md).

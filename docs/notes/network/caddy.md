@@ -137,7 +137,7 @@ A new project picks a free one and WRITES IT DOWN here, otherwise the next colli
 | 3007 | CREDIT-RADAR (front) | 8007 | CREDIT-RADAR (api) |
 | 3010 | duo-web | 8010 | duo-api |
 | 8080 | qbittorrent | 8096 | jellyfin |
-| 11434 | ollama | | |
+| 8123 | home-assistant (host network, all interfaces) | 11434 | ollama |
 
 ## Turning it on, once
 

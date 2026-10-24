@@ -86,6 +86,17 @@
       comment = "duo-streak-daemon (V1C-71). It exposes details of the automation, so it never leaves the house.";
     };
 
+    # Home Assistant Container (github.com/v1cferr/home-automation), on host networking for
+    # discovery, so 8123 listens on every interface but the firewall keeps it closed: this vhost
+    # is the only way in from another device. It trusts 127.0.0.1 as its proxy (.storage/http).
+    home = {
+      upstream = 8123;
+      expose = "lan";
+      launcher.title = "Home Assistant";
+      launcher.glyph = "md-home_automation";
+      comment = "Home Assistant. It drives physical devices (a shower among them), so it never leaves the house.";
+    };
+
     # The ChatGPT connector's upstream (V1C-82). Basic Memory has NO auth of its own, so Access at the
     # edge is the only gate, and only the GENERAL server: the fai one never gets an entry.
     memory = {

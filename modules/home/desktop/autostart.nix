@@ -46,9 +46,9 @@ in
   config = {
     # THE PANEL: edit here to turn on/off what opens at login.
     my.autostart = {
-      discord = true; # chat/voice
-      localsend = true; # the LAN file receiver, hidden in the tray
-      spotify = true; # music
+      discord = false; # chat/voice
+      localsend = false; # the LAN file receiver, hidden in the tray
+      spotify = false; # music
     };
 
     # One --user service per enabled app, tied to the session, so nothing survives a logout.

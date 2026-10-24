@@ -53,8 +53,7 @@ flowchart LR
 Zen is NOT in nixpkgs, so this flake follows the upstream releases. "Always the latest version"
 means bumping with `nix flake update zen-browser`.
 
-**IT FOLLOWS THE UNSTABLE BASE**, and so does `zapfast` (its own flake builds on nixos-unstable;
-its rust-overlay rides along through that same follows, zero new nixpkgs in the lock). It said
+**IT FOLLOWS THE UNSTABLE BASE**. It said
 `follows = "nixpkgs"` (stable) until 15/08/2026, when a `nix flake update` broke the eval outright:
 
 ```text

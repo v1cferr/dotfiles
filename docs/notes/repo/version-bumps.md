@@ -6,7 +6,8 @@ Modules: [`tools/vendored-bump/package.nix`](../../../tools/vendored-bump/packag
 [`pkgs/curseforge/bump.nix`](../../../pkgs/curseforge/bump.nix),
 [`pkgs/codex/bump.nix`](../../../pkgs/codex/bump.nix),
 [`pkgs/antigravity-cli/bump.nix`](../../../pkgs/antigravity-cli/bump.nix),
-[`pkgs/stack-wallet/bump.nix`](../../../pkgs/stack-wallet/bump.nix)
+[`pkgs/stack-wallet/bump.nix`](../../../pkgs/stack-wallet/bump.nix),
+[`pkgs/zapfast/bump.nix`](../../../pkgs/zapfast/bump.nix)
 
 Every package that is in neither nixpkgs nor a flake follows ONE layout, and one runner keeps all
 of them on upstream's latest without anybody editing a hash by hand. They share a reason and differ

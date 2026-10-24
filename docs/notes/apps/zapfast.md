@@ -1,6 +1,6 @@
 # ZapFast: WhatsApp without a browser tab
 
-`modules/home/apps/zapfast.nix`, input `zapfast` in `flake.nix`. Upstream: <https://github.com/crmne/zapfast>.
+`modules/home/apps/zapfast.nix`, package [`pkgs/zapfast/`](../../../pkgs/zapfast/package.nix). Upstream: <https://github.com/crmne/zapfast>.
 
 ## Why it is here
 
@@ -30,10 +30,30 @@ Low, not zero. Accepted for the RAM and the startup time.
 - Never script or automate it. No bots, no bulk messages.
 - Open WhatsApp on the phone at least once every 14 days, or linked devices get logged out.
 - At the first warning from WhatsApp: unlink ZapFast (phone, Settings > Linked devices > ZapFast >
-  Log out) and go back to WhatsApp Web in Zen. To uninstall, drop the import and the input.
+  Log out) and go back to WhatsApp Web in Zen. To uninstall, drop the import and the
+  `pkgs/zapfast` package.
 
 ## Updating
 
-`nix flake update zapfast`. It builds from source (no binary cache), so the first rebuild after a
-bump compiles Rust for a few minutes. It follows `nixpkgs-unstable`, like zen, for the reason in
-[docs/notes/repo/flake.md](../repo/flake.md).
+`update`/`upgrade` does it: `zapfast-bump` (the package's `passthru.updateScript`, see
+[docs/notes/repo/version-bumps.md](../repo/version-bumps.md)) reads the tag from a HEAD on
+`/releases/latest` and the sha256 from the release's `checksums.txt`, so a no-op costs no download.
+
+## Why the release binary and not the flake
+
+It was the upstream flake (input `zapfast`, following `nixpkgs-unstable`) until 24/10/2026. That
+flake has no binary cache, and the follows would have missed one anyway, so EVERY bump compiled
+Rust: 8m44s of a 9m43s rebuild on 24/10. The `x86_64-unknown-linux-gnu` tarball needs nothing
+built. It links only `libpipewire`, `libasound`, `libstdc++` and glibc 2.39, so `autoPatchelfHook`
+covers it, and the Wayland, X11 and GL libraries it dlopens go on the wrapper's `LD_LIBRARY_PATH`,
+the same list upstream's flake wraps. The cost is trusting upstream's CI build instead of
+compiling the source.
+
+Two things are left out of the tarball. `zapfast-portable.txt` turns on the in-app updater, which
+would try to rewrite the store. The `contrib/omarchy` hook themes another distro.
+
+**It is built WHOLE from unstable** (`final.unstable.callPackage` in `flake/overlays.nix`), for
+the same reason the flake followed unstable. The session exports unstable's `alsa-lib` in
+`LD_LIBRARY_PATH`, so a binary on 26.05's glibc 2.42 dies on `GLIBC_2.43 not found`. Moving only
+glibc to unstable was worse: the wrapper's 26.05 Wayland/X11 libraries under glibc 2.44 aborted
+with `stack smashing detected`, even on `--version`. One nixpkgs for the whole package fixes both.

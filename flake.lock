@@ -560,29 +560,7 @@
         "stylix": "stylix",
         "uv2nix": "uv2nix",
         "vicinae-extensions": "vicinae-extensions",
-        "zapfast": "zapfast",
         "zen-browser": "zen-browser"
-      }
-    },
-    "rust-overlay": {
-      "inputs": {
-        "nixpkgs": [
-          "zapfast",
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1789977098,
-        "narHash": "sha256-fKY4BedarKx4aR0+UOHk65hhDW8pxFytFkaUi0VYDYk=",
-        "owner": "oxalica",
-        "repo": "rust-overlay",
-        "rev": "2776e42828203ec89511699c8dcdedec69ab98e1",
-        "type": "github"
-      },
-      "original": {
-        "owner": "oxalica",
-        "repo": "rust-overlay",
-        "type": "github"
       }
     },
     "signal-sift": {
@@ -823,27 +801,6 @@
       "original": {
         "owner": "vicinaehq",
         "repo": "extensions",
-        "type": "github"
-      }
-    },
-    "zapfast": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs-unstable"
-        ],
-        "rust-overlay": "rust-overlay"
-      },
-      "locked": {
-        "lastModified": 1792830602,
-        "narHash": "sha256-kkj9oikkNAxMlLC4zMJNPUqB/HQ47h+mmhowOBJoD1E=",
-        "owner": "crmne",
-        "repo": "zapfast",
-        "rev": "b0d54b6dd261fdb3c66630c73d328b5e45c165c8",
-        "type": "github"
-      },
-      "original": {
-        "owner": "crmne",
-        "repo": "zapfast",
         "type": "github"
       }
     },

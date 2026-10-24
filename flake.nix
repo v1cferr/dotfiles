@@ -29,19 +29,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Zen: not in nixpkgs. It follows the UNSTABLE base (zapfast below does too), because
-    # upstream started needing ffmpeg_9 and 26.05 stops at 7. The follows: docs/notes/repo/flake.md
+    # Zen: not in nixpkgs. It follows the UNSTABLE base, because upstream started needing ffmpeg_9
+    # and 26.05 stops at 7. The follows: docs/notes/repo/flake.md
     zen-browser = {
       url = "github:0xc000022070/zen-browser-flake";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
       inputs.home-manager.follows = "home-manager"; # dedup: keeps home-manager_2 out of the lock
-    };
-
-    # ZapFast: a native WhatsApp client (Rust/egui), not in nixpkgs. Unstable, like zen: its own
-    # flake builds on nixos-unstable with a recent rustc. The ban-risk trade-off: docs/notes/apps/zapfast.md
-    zapfast = {
-      url = "github:crmne/zapfast";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
     # darling-lol: League's macOS client through Darling. NO follows: the store path is the runtime's

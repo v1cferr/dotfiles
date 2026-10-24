@@ -1,6 +1,6 @@
 # MANGOHUD: the overlay's config only; the INJECTION comes from the bottle's `mangohud: true`.
 # What stays EMPTY on the Arc's xe driver: docs/notes/apps/apps-and-mime.md
-{ ... }:
+{ config, ... }:
 
 {
   programs.mangohud = {
@@ -57,6 +57,14 @@
 
       # The show/hide toggle.
       toggle_hud = "Shift_R+F12";
+
+      # Frametime logging: no output_folder means the toggle shows its red dot and writes nothing.
+      output_folder = "${config.home.homeDirectory}/.local/state/mangohud"; # where the CSVs land
+      log_interval = 0; # every frame, so 1%/0.1% lows and spikes are real
+      toggle_logging = "Shift_L+F2"; # start/stop a recording
     };
   };
+
+  # MangoHud does not create a missing output folder.
+  systemd.user.tmpfiles.rules = [ "d %h/.local/state/mangohud 0755 - - -" ];
 }

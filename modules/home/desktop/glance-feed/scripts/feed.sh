@@ -745,6 +745,42 @@ claude_usage() {
   fi
 }
 
+# ── disk: free space now, the heaviest paths and what grew, for the dash's DISK page ──
+# df is instant; the sizes come from disk-insight's WEEKLY trend log, never a du here. The list
+# of paths is my.disk.watchPaths (siblings), so a game nested under Steam is not counted twice.
+disk() {
+  due disk || return 0
+  again disk 600
+  local fs last=""
+  : >"$work/disk.fs"
+  for fs in "$GLANCE_DISK_ROOT" "$GLANCE_DISK_GAMES"; do
+    df --output=size,used,avail -B1 "$fs" 2>/dev/null | tail -n 1 |
+      awk -v m="$fs" 'NF == 3 { print m "\t" $1 "\t" $2 "\t" $3 }' >>"$work/disk.fs"
+  done
+  printf '%s\n' "$GLANCE_DISK_WATCH" >"$work/disk.watch"
+  : >"$work/disk.rows"
+  if [ -f "$GLANCE_DISK_TREND" ]; then
+    last="$(tail -n 1 "$GLANCE_DISK_TREND" | cut -f1)"
+    awk -F'\t' 'NR == FNR { w[$0] = 1; next } ($3 in w)' "$work/disk.watch" "$GLANCE_DISK_TREND" >"$work/disk.rows"
+  fi
+  awk -F'\t' -v d="$last" '$1 == d { print $2 "\t" $3 }' "$work/disk.rows" | sort -rn | head -n 8 >"$work/disk.top"
+  awk -v min=1 -f "$GLANCE_DISK_GROWTH" "$work/disk.rows" | sort -gr | head -n 5 >"$work/disk.grew"
+  if jq -n --arg date "$last" --arg home "$HOME" \
+    --argjson snapshots "$(find /.snapshots -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)" \
+    --rawfile fs "$work/disk.fs" --rawfile top "$work/disk.top" --rawfile grew "$work/disk.grew" '
+      def short: sub("^" + $home; "~");
+      def lines($s): $s | split("\n") | map(select(length > 0));
+      {snapshots: $snapshots, trend_date: $date,
+       filesystems: [lines($fs)[] | split("\t") | {mount: .[0], size: (.[1] | tonumber), used: (.[2] | tonumber), avail: (.[3] | tonumber)}],
+       top: [lines($top)[] | split("\t") | {path: (.[1] | short), gib: ((.[0] | tonumber) / 1024)}],
+       grew: [lines($grew)[] | capture("^\\s*(?<d>[-+0-9.]+) GiB  (?<p>.*)$") | {path: (.p | short), gib: (.d | tonumber)}]}
+    ' >"$work/disk.doc"; then
+    put disk "local" "$work/disk.doc"
+  else
+    fail disk "disk document unreadable"
+  fi
+}
+
 weather
 inmet_forecast
 inmet_alerts
@@ -752,3 +788,4 @@ ci
 network
 threats
 claude_usage
+disk

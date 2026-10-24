@@ -12,6 +12,7 @@ let
   inherit (pkgs)
     coreutils
     curl
+    findutils
     gawk
     gnugrep
     jq
@@ -33,6 +34,7 @@ let
       coreutils
       gnugrep
       gawk
+      findutils # the disk source counts the btrbk snapshots
       openssh # the network source asks the router over the LAN
       systemd # journalctl: the attacks on the exposed ports
       notify # the threats source's pushes to the phone (pkgs/notify, ntfy)
@@ -55,6 +57,12 @@ let
       GLANCE_ROUTER_LOG = "/var/log/router/router.log";
       # The claude_usage source: the FAI account's OAuth token, where claude-code.nix keeps it.
       GLANCE_CLAUDE_CREDENTIALS = "${config.my.claude.configDirs.fai}/.credentials.json";
+      # The disk source: every path and threshold is my.disk's (disk-hygiene / disk-insight).
+      GLANCE_DISK_ROOT = config.my.disk.filesystem;
+      GLANCE_DISK_GAMES = config.my.games.root;
+      GLANCE_DISK_TREND = config.my.disk.trendFile;
+      GLANCE_DISK_WATCH = lib.concatStringsSep "\n" config.my.disk.watchPaths;
+      GLANCE_DISK_GROWTH = ../../services/scripts/disk-growth.awk;
     };
     text = builtins.readFile ./scripts/feed.sh;
   };

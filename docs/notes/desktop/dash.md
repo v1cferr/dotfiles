@@ -434,7 +434,7 @@ paid.
 
 ## The network page
 
-A page of the rotation (month, WEATHER, NETWORK, CLAUDE, GitHub, FAI), from glance-feed's `network`
+A page of the rotation (month, WEATHER, NETWORK, DISK, CLAUDE, GitHub, FAI), from glance-feed's `network`
 document (docs/notes/desktop/glance-feed.md), added on 08/10/2026 as the first visible piece of the
 threat-monitoring plan in docs/open-items.md, before any router change.
 
@@ -489,7 +489,7 @@ band is the same as every other card's.
 
 The FAI account's `/usage`, live, from glance-feed's `claude_usage` document
 (docs/notes/desktop/glance-feed.md) through the `ClaudeUsage.qml` singleton, as the CLAUDE · FAI
-page of the rotation (month, WEATHER, NETWORK, CLAUDE, GitHub, FAI).
+page of the rotation (month, WEATHER, NETWORK, DISK, CLAUDE, GitHub, FAI).
 
 **One clear block per limit (21/10/2026).** The user found the page confusing: two big percentages,
 their bars and "resets in" all on one line each, and a loose line of more percentages under them
@@ -510,6 +510,22 @@ unlabelled hourly bars.
 
 A window whose reset time passed reads 0% until the feed brings the new one: the old number would
 be a lie. The countdowns tick every 30 s on the clock alone, with no re-read.
+
+## The disk page
+
+A page of the rotation (month, WEATHER, NETWORK, DISK, CLAUDE, GitHub, FAI), from glance-feed's
+`disk` document, added on 24/10/2026 after the NVMe reached 87% while the only alarm was a desktop
+bubble nobody read (docs/notes/boot-and-storage/disk-hygiene.md).
+
+- **One bar per disk,** the NVMe and the games disk, with the free space in GiB: what matters is
+  whether the next game or VM image fits. Green, peach past 75%, red past 90% like the DISK tile.
+- **Grew since:** the three biggest changes against the last weekly snapshot, ahead of the ranking,
+  because after a month the ranking says the same thing every time and the delta is what to act on.
+- **Heaviest:** the five biggest `watchPaths`, a bar each relative to the first. The header
+  carries the snapshot's date: the sizes are weekly (no `du` runs for a page), and an undated
+  25 GiB next to a VM that is now 101 GiB would read as a lie.
+- **The snapshot line:** how many btrbk snapshots exist, and `sudo btdu /` as the one tool that
+  shows what they hold, since no `du` can.
 
 ## Density and hover
 

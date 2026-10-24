@@ -167,9 +167,9 @@ PanelWindow {
                 spacing: 10
 
                 // 0 = month, 1 = GitHub Actions, 2 = the FAI GitLab (only while it answers).
-                // Page ids are stable (3 = weather, 4 = network, 5 = Claude, in the order they were added); `order` is the rotation.
-                readonly property var order: Ci.gitlabShown ? [0, 3, 4, 5, 1, 2] : [0, 3, 4, 5, 1]
-                readonly property var titles: [(dash.host.monthNames[dash.host.calTodayM - 1] || "").toUpperCase() + "  " + dash.host.calYear, "GITHUB  ACTIONS", "FAI  ·  GITLAB", "WEATHER  ·  24 H", "NETWORK  ·  LAN", "CLAUDE  ·  FAI"]
+                // Page ids are stable (3 = weather, 4 = network, 5 = Claude, 6 = disk, in the order they were added); `order` is the rotation.
+                readonly property var order: Ci.gitlabShown ? [0, 3, 4, 6, 5, 1, 2] : [0, 3, 4, 6, 5, 1]
+                readonly property var titles: [(dash.host.monthNames[dash.host.calTodayM - 1] || "").toUpperCase() + "  " + dash.host.calYear, "GITHUB  ACTIONS", "FAI  ·  GITLAB", "WEATHER  ·  24 H", "NETWORK  ·  LAN", "CLAUDE  ·  FAI", "DISK  ·  USAGE"]
                 property int page: 0
                 function step(d) {
                     const n = pages.order.length;
@@ -393,6 +393,28 @@ PanelWindow {
                         }
                         transform: Translate {
                             x: pages.offsetOf(4)
+                            Behavior on x {
+                                NumberAnimation {
+                                    duration: Theme.ms(420)
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+                        }
+                    }
+
+                    // The disk page (DiskPage.qml): how full each disk is, what grew, the heaviest paths.
+                    DiskPage {
+                        anchors.fill: parent
+                        anchors.topMargin: 6
+                        opacity: pages.page === 6 ? 1 : 0
+                        visible: opacity > 0
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: Theme.ms(260)
+                            }
+                        }
+                        transform: Translate {
+                            x: pages.offsetOf(6)
                             Behavior on x {
                                 NumberAnimation {
                                     duration: Theme.ms(420)

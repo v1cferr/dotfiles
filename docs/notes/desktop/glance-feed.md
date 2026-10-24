@@ -93,6 +93,11 @@ every run touches no network at all.
 - **A failure keeps the last document**, writes the reason to `feed.error`, and retries that source
   in 5 minutes instead of waiting for its full cycle.
 
+- **Disk (local, no network at all):** every 10 minutes, `df` of `/` and of the games disk, the
+  heaviest `my.disk.watchPaths` and their growth from disk-insight's weekly `trend.tsv` (the same
+  `disk-growth.awk` as `disk-report` and `disk-watch`), and the number of btrbk snapshots. It never
+  runs `du`, so the sizes are as old as the last Sunday snapshot, and the page says so.
+
 ## How the UI learns something is new
 
 `feed.updated_at` moves, and the file `~/.cache/glance/stamps/<name>` is rewritten, ONLY when a
@@ -120,3 +125,4 @@ bar and the lock screen share ONE weather fetch instead of two, and every decisi
   bar and the lock show the same run, and the lock costs no network at all.
 - **The glance band, Claude:** `claude_usage` (`dash/ClaudeUsage.qml`), as a page of the rotation
   and a line in the clock card (docs/notes/desktop/dash.md).
+- **The glance band, disk:** `disk` (`dash/DiskPage.qml`), a page of the rotation.

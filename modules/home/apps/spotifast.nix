@@ -9,7 +9,36 @@
 }:
 
 let
-  inherit (pkgs) soloist;
+  inherit (pkgs)
+    coreutils
+    libnotify
+    notify
+    soloist
+    writeShellApplication
+    ;
+
+  # A Soloist build dies 90 days after it is made, and its version IS that date (pkgs/soloist), so
+  # the deadline is known without asking the binary. Daily from 14 days out: desktop plus phone.
+  soloistExpiry = writeShellApplication {
+    name = "soloist-expiry";
+    runtimeInputs = [
+      coreutils
+      libnotify
+      notify
+    ];
+    text = ''
+      left=$(( ($(date -ud "${soloist.version} + 90 days" +%s) - $(date -u +%s)) / 86400 ))
+      echo "soloist ${soloist.version}: $left day(s) left"
+      [ "$left" -gt 14 ] && exit 0
+      if [ "$left" -le 0 ]; then
+        msg="The Soloist build EXPIRED, so there is no sound. Run update, then rebuild."
+      else
+        msg="The Soloist build expires in $left day(s). Run update, then rebuild."
+      fi
+      notify-send -a Soloist -u critical "Soloist is expiring" "$msg" || true
+      notify -p high -T warning "Soloist is expiring" "$msg" || true
+    '';
+  };
 
   # The API key's env file, rendered by sops (modules/nixos/core/secrets.nix). No key in the vault
   # yet = no receiver, instead of a unit that fails on every login.
@@ -72,5 +101,22 @@ in
       RestartPreventExitStatus = 10;
     };
     Install.WantedBy = [ "default.target" ];
+  };
+
+  # The nag that keeps the speaker alive: `update` bumps it, but only if somebody runs it in time.
+  systemd.user.services.soloist-expiry = lib.mkIf (soloistEnv != null) {
+    Unit.Description = "Warns before the Soloist build expires";
+    Service = {
+      Type = "oneshot";
+      ExecStart = lib.getExe soloistExpiry;
+    };
+  };
+  systemd.user.timers.soloist-expiry = lib.mkIf (soloistEnv != null) {
+    Unit.Description = "Daily Soloist expiry check";
+    Timer = {
+      OnCalendar = "10:00";
+      Persistent = true; # machine off at 10:00 means it checks on the next boot
+    };
+    Install.WantedBy = [ "timers.target" ];
   };
 }

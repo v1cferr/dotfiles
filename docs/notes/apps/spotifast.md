@@ -54,6 +54,11 @@ engine, so it plays. No Electron, no CEF.
   It links only glibc and libatomic and dlopens libpulse, which PipeWire answers.
 - **It EXPIRES.** A build stops 90 days after it is made, exiting 10. The unit does not restart
   on 10; `update` (its bump reads the URL's Last-Modified) plus a rebuild does.
+- **Nobody has to remember that.** The `soloist-expiry` timer runs daily at 10:00 (catching up
+  after a powered-off morning) and, from 14 days out, warns on the desktop and on the phone (ntfy).
+  The deadline is the version (the build date) plus 90 days; on 24/10/2026 it said 88, the same as
+  Soloist's own `client expires in 88 days`. It warns instead of updating on its own because an
+  unattended bump would commit and switch the system with nobody looking.
 - **The API key.** Generated once in the Spotify for Developers dashboard (Soloist API Key page,
   Premium only), stored in Bitwarden as `Spotify Soloist API Key`, then `sync-secrets` and a
   rebuild. It reaches the unit as `SOLOIST_API_KEY` through the `soloist.env` template, and systemd

@@ -5,7 +5,7 @@
 let
   inherit (pkgs) coreutils tmux writeShellApplication;
 
-  # `ct [claude args]`: Claude inside a tmux session named after the folder, joined if it exists.
+  # `ct [claude args]`: a NEW Claude in a tmux session named after the folder (`dotfiles`, `dotfiles-2`).
   claudeTmux = writeShellApplication {
     name = "ct";
     runtimeInputs = [
@@ -18,8 +18,31 @@ let
         exec claude "$@"
       fi
       # tmux refuses `.` and `:` in a session name, and folders like `v1cferr.dev` have them.
-      name=$(basename "$PWD" | tr '.:' '__')
-      exec tmux new-session -A -s "$name" claude "$@"
+      base=$(basename "$PWD" | tr '.:' '__')
+      name=$base
+      i=2
+      # The `=` makes the match exact; without it `dotfiles` would also match `dotfiles-2`.
+      while tmux has-session -t "=$name" 2>/dev/null; do
+        name="$base-$i"
+        i=$((i + 1))
+      done
+      exec tmux new-session -s "$name" claude "$@"
+    '';
+  };
+
+  # `ca`: join a running session, picked from tmux's own session list (the phone's startup command).
+  claudeAttach = writeShellApplication {
+    name = "ca";
+    runtimeInputs = [ tmux ];
+    text = ''
+      if ! tmux has-session 2>/dev/null; then
+        echo "no tmux session running; start one with ct" >&2
+        exit 1
+      fi
+      if [ -n "''${TMUX-}" ]; then
+        exec tmux choose-tree -s
+      fi
+      exec tmux attach \; choose-tree -s
     '';
   };
 in
@@ -41,5 +64,8 @@ in
     '';
   };
 
-  home.packages = [ claudeTmux ];
+  home.packages = [
+    claudeTmux
+    claudeAttach
+  ];
 }

@@ -9,11 +9,16 @@ terminals stay plain kitty, with kitty's own scrollback.
 
 ## How it is used
 
-- **On the PC**, `ct` in a project folder starts Claude inside a tmux session named after the
-  folder, or joins it if it already exists. Arguments pass through (`ct --resume`).
-- **On the phone**, the Termius host runs `tmux attach || tmux new -s main` as its startup
-  command, which joins the most recent session. `prefix + s` lists the others, and a tap picks one.
+- **`ct`** always starts a NEW Claude, in a tmux session named after the folder: `dotfiles` first,
+  then `dotfiles-2`, `dotfiles-3`, so two Claudes in one project never collide. Arguments pass
+  through (`ct --resume`).
+- **`ca`** joins a running one: it attaches and opens tmux's own session list (`choose-tree`),
+  picked with the arrows or a tap. The Termius host runs `ca` as its startup command.
 - **Both at once** is the point. Both clients see the same screen and both can type.
+
+Creating and joining were one command at first (`ct` joined the folder's session when it existed),
+which made a second Claude in the same folder impossible without typing tmux by hand. Split on
+24/10/2026.
 
 That Termius setting lives in the app, outside Nix (rule 3), and is recorded here as the one manual
 step.

@@ -1,14 +1,21 @@
 # stack-wallet-bump: Cypher Stack's latest Stack Wallet AppImage into source.json, without downloading it.
 # Why the API and not /releases/latest, and the two hashes it compares: docs/notes/repo/version-bumps.md
-{ mkVendoredBump }:
+{ mkVendoredBump, gh }:
 
 mkVendoredBump {
   pname = "stack-wallet";
+  runtimeInputs = [ gh ];
 
   # The repo also releases `mwebd-*` binaries, so the newest release is not always the wallet's.
   # Kept in $tmp, so `resolve` reads the SAME answer and cannot pair a version with another's hash.
+  # Authenticated through `gh` when logged in: the anonymous limit is 60/h per PUBLIC IP, shared
+  # with every device behind the router, and it ran dry on 24/10/2026 (403 mid-upgrade).
   latest = ''
-    curl -fsSL 'https://api.github.com/repos/cypherstack/stack_wallet/releases?per_page=20' |
+    auth=()
+    if token=$(gh auth token 2>/dev/null) && [ -n "$token" ]; then
+      auth=(-H "Authorization: Bearer $token")
+    fi
+    curl -fsSL "''${auth[@]}" 'https://api.github.com/repos/cypherstack/stack_wallet/releases?per_page=20' |
       jq -e '[.[] | select((.tag_name | startswith("build_")) and (.prerelease | not) and (.draft | not))][0]' \
         >"$tmp/release.json"
     jq -er '.assets[].name | capture("^sw-v(?<v>.+)-linux\\.AppImage$").v' "$tmp/release.json"

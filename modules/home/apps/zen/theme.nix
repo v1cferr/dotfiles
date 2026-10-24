@@ -72,22 +72,29 @@ let
         border-color: ${c "border"} !important;
         color: ${c "subtext"} !important;
       }
-      /* A split pair reads as ONE entry, Arc's way: the first tab keeps the whole title and the
-         others shrink to their icon. Zen halves the width, which cut both titles to the key. */
+      /* A split pair reads as ONE entry, Arc's way: one tab keeps the whole title and the others
+         shrink to their icon. Zen halves the width, which cut both titles to the key. */
       tab-group[split-view-group] .tab-group-container {
         background: ${c "surface"} !important;
         border-radius: 10px !important;
         padding: 2px !important;
         gap: 2px;
       }
-      tab-group[split-view-group] .tab-group-container > tab:first-of-type {
-        flex: 1 1 auto !important;
-      }
-      tab-group[split-view-group] .tab-group-container > tab:not(:first-of-type) {
+      tab-group[split-view-group] .tab-group-container > tab {
         flex: 0 0 32px !important;
       }
-      tab-group[split-view-group] .tab-group-container > tab:not(:first-of-type) .tab-label-container {
+      tab-group[split-view-group] .tab-group-container > tab .tab-label-container {
         display: none !important;
+      }
+      /* The title goes to the FOCUSED half of the open pair, so the row names the tab in use;
+         an idle pair keeps its first tab's title. */
+      tab-group[split-view-group]:not([hasactivetab]) .tab-group-container > tab:first-of-type,
+      tab-group[split-view-group][hasactivetab] .tab-group-container > tab[visuallyselected] {
+        flex: 1 1 auto !important;
+      }
+      tab-group[split-view-group]:not([hasactivetab]) .tab-group-container > tab:first-of-type .tab-label-container,
+      tab-group[split-view-group][hasactivetab] .tab-group-container > tab[visuallyselected] .tab-label-container {
+        display: flex !important;
       }
       tab-group[split-view-group] .tab-group-container > tab::after {
         display: none !important; /* Zen's | between the halves */
@@ -127,6 +134,38 @@ let
       zen-folder > .tab-group-label-container .tab-group-label {
         color: ${c "subtext"} !important;
       }
+      /* The guides on the way to the focused tab light up, so the tree says where it is. */
+      zen-folder:has(tab[visuallyselected]) > .tab-group-container::before {
+        background: ${c "accent"} !important;
+      }
+      /* A chevron in place of Zen's folder drawing (Linear / VS Code); a custom icon, the
+         drawing's .icon part, stays beside it. */
+      zen-folder > .tab-group-label-container .tab-group-folder-icon svg :is(.back, .front, .dots) {
+        display: none !important;
+      }
+      zen-folder > .tab-group-label-container .tab-group-folder-icon {
+        position: relative;
+      }
+      zen-folder > .tab-group-label-container .tab-group-folder-icon::before {
+        content: "";
+        position: absolute;
+        left: -2px;
+        top: 50%;
+        width: 12px;
+        height: 12px;
+        translate: 0 -50%;
+        opacity: 0.8;
+        transition: rotate 0.15s;
+        /* a background and not a mask: Gecko drew nothing for this data: SVG as a mask */
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6 3.5 10.5 8 6 12.5' fill='none' stroke='%23${p.subtext}' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+          center / contain no-repeat;
+      }
+      zen-folder:not([collapsed]) > .tab-group-label-container .tab-group-folder-icon::before {
+        rotate: 90deg;
+      }
+      zen-folder > .tab-group-label-container .tab-group-folder-icon svg .icon {
+        translate: 4px 0;
+      }
       zen-folder tab-group[split-view-group] .tab-group-container {
         background: transparent !important;
       }
@@ -134,6 +173,25 @@ let
          no offset), so it reads as a window in the window and not as a frame in the frame. */
       #tabbrowser-tabbox #tabbrowser-tabpanels .browserSidebarContainer {
         box-shadow: 0 0 2px ${c "shadow"}cc, 0 0 6px ${c "shadow"}99 !important;
+      }
+      /* The focused split pane wears the desktop's focus border (Hyprland's col.active_border:
+         1px, blue to magenta at 45deg) instead of Zen's 2px light outline, which next to a bare
+         pane read as a floating Glance. Zen already positions the panes, so ::after anchors. */
+      #tabbrowser-tabpanels[zen-split-view="true"] .browserSidebarContainer.deck-selected:not(.zen-glance-overlay) {
+        outline: none !important;
+      }
+      #tabbrowser-tabpanels[zen-split-view="true"] .browserSidebarContainer.deck-selected:not(.zen-glance-overlay)::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        padding: 1px;
+        border-radius: inherit;
+        pointer-events: none;
+        background: linear-gradient(45deg, ${c "blue"}cc, ${c "magenta"}aa);
+        mask:
+          linear-gradient(#000 0 0) content-box exclude,
+          linear-gradient(#000 0 0);
       }
     }
   '';
@@ -239,6 +297,8 @@ let
           echo 'user_pref("marionette.port", ${labPort});'
           echo 'user_pref("browser.shell.checkDefaultBrowser", false);'
           echo 'user_pref("zen.welcome-screen.seen", true);'
+          # A hidden workspace gets no frames, so Zen's sidebar animations froze half-way there.
+          echo 'user_pref("ui.prefersReducedMotion", 1);'
         } > "$dir/user.js"
         MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1 setsid ${config.my.zen.package}/bin/zen-beta \
           --profile "$dir" --no-remote --marionette --name zen-lab "''${2:-about:blank}" \

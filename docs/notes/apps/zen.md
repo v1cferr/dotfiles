@@ -181,6 +181,22 @@ A second round the same day, against the real mods (above), settled the folders:
   tinted tray (groups well, but adds a block of color). Only open folders get the guide; a
   collapsed one still shows its loaded tabs, without it.
 
+A third round, against a copy of the real tree (nested folders, custom icons, the ChatGPT half
+in focus), fixed what the first two left unclear:
+
+- **The title follows the focus.** In the open pair the focused half takes the title and the
+  other shrinks to its icon; an idle pair keeps its first tab's title. With the title always on
+  the left, focusing ChatGPT left the row naming Jira. Rejected: opening the active pair into
+  two lines (the list jumps in height) and only ringing the focused icon (still no name).
+- **The focused pane wears Hyprland's focus border**, 1px, `blue` to `magenta` at 45deg, drawn
+  as a masked `::after`. Zen's own mark is a 2px light outline on the focused pane only, and a
+  ringed pane beside a bare one read as a Glance, the floating link preview. Rejected: dimming
+  the other pane (hides the Jira being read) and a small bar on top (too quiet).
+- **Folders show a chevron, not Zen's drawing.** `svg .back`, `.front` and `.dots` are hidden; the
+  `.icon` part, where a custom folder icon lives, stays. The chevron is a `background` data SVG:
+  as a `mask`, Gecko drew nothing. The guides of the folders holding the focused tab turn
+  `accent`, so the tree points at it. Rejected: the drawing kept, gray and smaller.
+
 **Switching back to the stock theme, live:** in `about:config`, create `my.zen.stock-theme` as a
 Boolean and set it to `true`. The whole sheet sits under `@media not -moz-pref(...)`, the same
 query Zen's own CSS uses, so the flip applies at once (measured on 13/10/2026, no restart) and survives restarts (it lives in
@@ -233,6 +249,11 @@ sits on the hidden special workspace. Two limits, both measured the same day:
   has to be on screen: `hyprctl dispatch 'hl.dsp.workspace.toggle_special("zenlab")'` shows and
   hides it. Typing goes through Marionette's `WebDriver:ElementSendKeys`; `gURLBar.search()`
   alone does not open the panel.
+
+Two more, measured 24/10/2026. The hidden workspace gets no frames, so Zen's sidebar animations
+froze half-way (folders over the Essentials, collapsed folders still open); the lab now starts
+with `ui.prefersReducedMotion` on. And a `shot` can still show a stale paint after a state change,
+so when a picture and `getComputedStyle` disagree, the computed style is the truth.
 
 `InspectorUtils.getMatchingCSSRules(el)` in an `eval` is what names the rule behind a color,
 which is how the inline per-space copies and the `-moz-dialog` status bar were found.

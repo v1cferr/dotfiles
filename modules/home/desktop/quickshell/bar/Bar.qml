@@ -937,8 +937,8 @@ Scope {
         if (key === "lol")
             return {
                 title: "League (Darling)",
-                lines: [({ off: "Not running", client: "Client open", hidden: "Running, no window", game: "In a match" })[root.lolState]],
-                action: ({ off: "Click to start", client: "Click for the client · right-click to shut Darling down", hidden: "Click to reopen (restarts Darling) · right-click to shut it down", game: "Stopping waits for the match to end" })[root.lolState]
+                lines: [({ off: "Not running", starting: "Starting Darling", client: "Client open", hidden: "Running, no window", game: "In a match" })[root.lolState]],
+                action: ({ off: "Click to start", starting: "The client window is on its way", client: "Click for the client · right-click to shut Darling down", hidden: "Click to reopen (restarts Darling) · right-click to shut it down", game: "Stopping waits for the match to end" })[root.lolState]
             };
         if (key === "away")
             return {
@@ -1007,11 +1007,12 @@ Scope {
     }
 
     // ===== League through Darling (darling-lol.service, docs/notes/apps/darling-lol.md) =====
-    // off, client (a window shows), hidden (a client closed its window: only a restart reopens it) or game.
+    // off, starting (no window yet, 90 s), client, hidden (the client closed its window: only a restart
+    // reopens it) or game.
     property string lolState: "off"
     Process {
         id: lolProc
-        command: ["sh", "-c", "systemctl --user is-active --quiet darling-lol.service || { echo off; exit; }; pgrep -f '[M]acOS/LeagueofLegends ' >/dev/null && { echo game; exit; }; hyprctl clients | grep -qE 'class: (LeagueClientUx|Riot Client)$' && echo client || echo hidden"]
+        command: ["sh", "-c", "systemctl --user is-active --quiet darling-lol.service || { echo off; exit; }; pgrep -f '[M]acOS/LeagueofLegends ' >/dev/null && { echo game; exit; }; hyprctl clients | grep -qE 'class: (LeagueClientUx|Riot Client)$' && { echo client; exit; }; up=$(date -d \"$(systemctl --user show -P ActiveEnterTimestamp darling-lol.service)\" +%s); [ $(($(date +%s) - up)) -lt 90 ] && echo starting || echo hidden"]
         stdout: StdioCollector {
             onStreamFinished: root.lolState = text.trim() || "off"
         }

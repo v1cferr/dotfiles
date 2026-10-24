@@ -48,7 +48,8 @@ came from.
 ## The owner (rule 15)
 
 A `systemd --user` timer tied to `graphical-session`, because it needs the session: what delivers
-the notification is Quickshell, the `org.freedesktop.Notifications` daemon.
+the notification is Quickshell, the `org.freedesktop.Notifications` daemon. The same message also goes to
+the phone through `notify` (ntfy, `pkgs/notify`), see below.
 
 ## The panel
 
@@ -93,6 +94,34 @@ the alarm lists the biggest individual files under it.
 
 The `find` only runs in phase 2, for the same reason the `du` does: it is minutes of work that is
 only worth spending once the disk is actually short.
+
+### It drifted again, and the bubble was not enough
+
+On 24/10/2026 the disk was at 87% and the alarm HAD been firing, every 12 h, as a desktop bubble
+that nobody read. Two lessons, both fixed in the script:
+
+- **The list was blind again.** The macOS lab VM (101 GiB under `~/Projects`) and Darling (48 GiB)
+  were new, and `~/.darling` was not listed at all. The list was remeasured and grew those entries.
+  It must stay SIBLINGS ONLY: `du` drops a path nested under another one passed in the same run, so
+  adding `~/Projects/Local` next to `~/Projects` would have made it vanish without a trace.
+- **A bubble is not a channel.** The message now goes to the phone too, with `-p high` for warn and
+  `-p urgent` for crit. The 12 h anti-spam throttles both channels, and `notify` exits 0 when its
+  secret is missing, so the push can never take the alarm down.
+
+### It says what GREW
+
+After a month the ranking gives the same answer every time, so it stopped being news. The
+alarm now also lists the 3 biggest deltas between the live `du` and the last weekly snapshot in
+`trend.tsv` (`my.disk.trendFile`, owned by `disk-insight.nix`). The comparison is
+`scripts/disk-growth.awk`, the same file `disk-report` uses, so the two never disagree on what
+"grew" means. ONE `du` feeds both the ranking and the delta.
+
+### It points at btdu when `du` cannot explain `df`
+
+Space that only the btrbk snapshots still hold is invisible to every `du`. When `df` used is more
+than `unlistedGiB` (100) above what the list adds up to, the alarm says so and names
+`sudo btdu /`. MEASURED on the first run, 24/10: 163 GiB outside the list. Not all of it is
+snapshots (the swapfile and unlisted paths count too), which is why the line says "likely".
 
 ## The cache expiry, and the two generic approaches that are both wrong here
 

@@ -114,7 +114,7 @@ let
       snap() {
         # nice/ionice: a full du competes with the session, and this one runs unattended.
         nice -n 19 ionice -c 3 du -sx --block-size=1M "$@" 2>/dev/null \
-          | awk -F'\t' -v d="$stamp" '{ print d "\t" $1 "\t" $2 }' >> "$state/trend.tsv" || true
+          | awk -F'\t' -v d="$stamp" '{ print d "\t" $1 "\t" $2 }' >> ${lib.escapeShellArg cfg.trendFile} || true
       }
 
       snap ${watchArgs}
@@ -136,7 +136,7 @@ let
     text = ''
       state=${lib.escapeShellArg stateDir}
       last="$state/last-seen.tsv"
-      trend="$state/trend.tsv"
+      trend=${lib.escapeShellArg cfg.trendFile}
       now="$(date +%s)"
 
       echo "=== FREE SPACE ==="
@@ -184,20 +184,10 @@ let
       echo
 
       echo "=== GROWTH SINCE THE PREVIOUS SNAPSHOT ==="
-      if [ -f "$trend" ]; then
-        awk -F'\t' '
-          { v[$3 SUBSEP $1] = $2; p[$3] = 1; if (!($1 in ds)) { ds[$1] = 1; o[++n] = $1 } }
-          END {
-            if (n < 2) { print "  (a single snapshot so far, no delta yet)"; exit }
-            prev = o[n-1]; cur = o[n]
-            for (path in p) {
-              a = v[path SUBSEP cur]; b = v[path SUBSEP prev]
-              if (a == "" || b == "") continue
-              d = (a - b) / 1024
-              if (d > 0.5 || d < -0.5) printf "%+8.1f GiB  %s\n", d, path
-            }
-          }
-        ' "$trend" | sort -gr || true
+      if [ "$(cut -f1 "$trend" 2>/dev/null | sort -u | wc -l)" -ge 2 ]; then
+        awk -f ${./scripts/disk-growth.awk} "$trend" | sort -gr || true
+      elif [ -f "$trend" ]; then
+        echo "  (a single snapshot so far, no delta yet)"
       else
         echo "  (no trend log yet)"
       fi
@@ -220,6 +210,12 @@ let
 in
 {
   options.my.disk = {
+    trendFile = lib.mkOption {
+      type = lib.types.str;
+      default = "${stateDir}/trend.tsv";
+      readOnly = true;
+      description = "The weekly trend log (date, MiB, path), read by disk-watch for its growth line.";
+    };
     usagePaths = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       description = "The paths the /proc sampler watches, at GAME granularity, not bucket.";

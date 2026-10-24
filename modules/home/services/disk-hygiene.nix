@@ -16,6 +16,7 @@ let
     gawk
     gnused
     libnotify
+    notify
     trash-cli
     util-linux
     uv
@@ -33,6 +34,7 @@ let
       coreutils
       findutils
       libnotify
+      notify
       util-linux
       gnused
       gawk
@@ -67,17 +69,47 @@ let
             # phase 2: the EXPENSIVE sweep, only now. MiB so it sorts numerically; `|| true` because an
             # unreadable path cannot take the alarm down. `-F'\t'` and not the default split: du
             # separates with a TAB, and a path with spaces (every Windows game has them) loses its tail
-            # to whitespace splitting.
+            # to whitespace splitting. ONE du feeds both the ranking and the growth line below.
+            sizes="$(nice -n 19 ionice -c 3 du -sx --block-size=1M ${watchArgs} 2>/dev/null || true)"
+
             dirs="$(
-              nice -n 19 ionice -c 3 du -sx --block-size=1M ${watchArgs} 2>/dev/null \
+              printf '%s\n' "$sizes" \
                 | sort -rn \
                 | head -n ${toString cfg.topN} \
-                | awk -F'\t' -v home="$HOME" '{
+                | awk -F'\t' -v home="$HOME" 'NF == 2 {
                     path = $2
                     sub("^" home, "~", path)
                     printf "%6.1f GiB  %s\n", $1 / 1024, path
                   }' || true
             )"
+
+            # WHAT GREW: the ranking says what is big, which after a month is the same answer every
+            # time. The live sizes against the last weekly snapshot say what CHANGED, which is the
+            # thing to act on. Same awk as disk-report, so the two never disagree.
+            trend=${lib.escapeShellArg cfg.trendFile}
+            grew=""
+            if [ -f "$trend" ]; then
+              last_date="$(tail -n 1 "$trend" | cut -f1)"
+              grew="$(
+                {
+                  awk -F'\t' -v d="$last_date" '$1 == d' "$trend"
+                  printf '%s\n' "$sizes" | awk -F'\t' 'NF == 2 { print "now\t" $1 "\t" $2 }'
+                } | awk -v min=1 -f ${./scripts/disk-growth.awk} \
+                  | sort -gr \
+                  | head -n 3 \
+                  | sed "s|$HOME|~|" || true
+              )"
+            fi
+
+            # SNAPSHOT-HELD SPACE is invisible to every du above. When `df` used outruns what the
+            # list adds up to by a lot, the likeliest owner is data only the btrbk snapshots still
+            # reference, and btdu is the one tool that can show it.
+            used="$(df --output=used -BG ${lib.escapeShellArg cfg.filesystem} | tail -1 | tr -dc '0-9')"
+            listed="$(printf '%s\n' "$sizes" | awk -F'\t' '{ s += $1 } END { printf "%d", s / 1024 }')"
+            hint=""
+            if [ -n "$used" ] && [ "$((used - listed))" -gt ${toString cfg.unlistedGiB} ]; then
+              hint="$((used - listed)) GiB used is outside this list, likely held by snapshots: sudo btdu /"
+            fi
 
             # The directory ranking answers WHERE and stops there. MEASURED on 30/08: Downloads showed up
             # at 34.9 GiB and 17.4 of those were ONE .rar. The folder is not the thing you delete, so the
@@ -95,20 +127,34 @@ let
             )"
 
             body="$dirs"
+            if [ -n "$grew" ]; then
+              body="$body
+
+      Grew since $last_date:
+      $grew"
+            fi
             if [ -n "$files" ]; then
               body="$body
 
       Biggest files:
       $files"
             fi
+            if [ -n "$hint" ]; then
+              body="$body
+
+      $hint"
+            fi
 
             case "$sev" in
-              crit) urgency=critical; title="Disk critical, $free GiB free" ;;
-              *)    urgency=normal;   title="Disk low, $free GiB free" ;;
+              crit) urgency=critical; priority=urgent; title="Disk critical, $free GiB free" ;;
+              *)    urgency=normal;   priority=high;   title="Disk low, $free GiB free" ;;
             esac
 
             notify-send -a "Disk" -u "$urgency" -i drive-harddisk \
               "$title" "$body" || true
+            # The PHONE too: a desktop bubble at 125 GiB free went unseen while the disk filled. The
+            # anti-spam above already throttles both. `notify` exits 0 without its secret.
+            notify -p "$priority" -T floppy_disk "$title" "$body" || true
 
             printf '%s %s\n' "$sev" "$now" > "$state"
     '';
@@ -184,6 +230,11 @@ in
       default = 30;
       description = "Age in days for the trash to expire on its own.";
     };
+    unlistedGiB = lib.mkOption {
+      type = lib.types.int;
+      default = 100;
+      description = "Used space outside watchPaths beyond which the alarm points at btdu.";
+    };
     watchPaths = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       description = "The paths measured when the alarm fires (the usual heavy suspects).";
@@ -197,26 +248,29 @@ in
     my.disk = {
       warnFreeGiB = 150;
       critFreeGiB = 40;
-      # The weights REMEASURED on 03/09, after the games moved to the Windows disk
-      # (modules/home/apps/games-disk.nix). Deliberately not a full `du /`, which would add minutes and
-      # noise; a new consumer is 1 line here.
+      # The weights REMEASURED on 24/10/2026, when the disk hit 87% and this list was missing the
+      # VM and Darling that had filled it. Deliberately not a full `du /`, which would add minutes
+      # and noise; a new consumer is 1 line here. Siblings only: du drops a path nested under
+      # another one passed in the same run, so a child of a listed path would vanish silently.
       #
-      # `/mnt/windows/Games` is deliberately NOT in this list even though it now holds ~350 GiB.
-      # This ranking exists to explain why the ROOT filesystem is full, and a different disk in it
-      # would be an answer to a question nobody asked. The games disk is covered by the trend log
-      # and disk-report instead; that it has no ALARM is a known gap, written down in the note.
+      # `/mnt/windows/Games` is deliberately NOT in this list. This ranking exists to explain why
+      # the ROOT filesystem is full, and a different disk in it would be an answer to a question
+      # nobody asked. The games disk is covered by the trend log and disk-report instead.
       watchPaths = [
-        "/nix/store" # 46 GiB, handled by the GC (core.nix), not deletable by hand
-        "/srv/media" # 45 GiB, the Jellyfin library
-        "${config.home.homeDirectory}/Downloads" # 35 GiB, and it was 2.5 two months earlier
-        "${config.home.homeDirectory}/.config" # 27 GiB, which a config dir has no business being
-        "${config.home.homeDirectory}/Projects" # 18 GiB
-        "${config.home.homeDirectory}/.cache" # 8 GiB
-        "${config.home.homeDirectory}/.local/share/Steam" # 8 GiB, and 4.3 of those are the Linux runtime
-        "${config.home.homeDirectory}/.local/share/bottles" # 8.4 GiB: the Wine prefixes ALONE now, was 316
+        "/nix/store" # 156 GiB, handled by the GC (core.nix), not deletable by hand
+        "/srv/media" # 108 GiB, the Jellyfin library
+        "${config.home.homeDirectory}/Projects" # 127 GiB, 101 of them the macOS lab VM
+        "${config.home.homeDirectory}/.local/share/Steam" # 105 GiB, the library is in @home
+        "${config.home.homeDirectory}/.darling" # 40 GiB, League of Legends through Darling
+        "${config.home.homeDirectory}/Downloads" # 33 GiB
+        "${config.home.homeDirectory}/.config" # 28 GiB, which a config dir has no business being
+        "${config.home.homeDirectory}/.local/share/signalsift" # 20 GiB of local models
+        "${config.home.homeDirectory}/.cache" # 18 GiB
+        "${config.home.homeDirectory}/.local/share/bottles" # 17 GiB, the Wine prefixes
+        "${config.home.homeDirectory}/.local/share/darling-lol" # 8 GiB
         "${config.home.homeDirectory}/Documents" # 4.5 GiB
-        "${config.home.homeDirectory}/Games" # ~0: a symlink to the other disk, kept in case it refills
-        "${config.home.homeDirectory}/.local/share/Trash" # 0.1 GiB (it expires on its own, below)
+        "${config.home.homeDirectory}/Games" # 1.8 GiB
+        "${config.home.homeDirectory}/.local/share/Trash" # ~0 (it expires on its own, below)
       ];
     };
 

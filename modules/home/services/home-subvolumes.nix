@@ -18,7 +18,7 @@ let
     writeShellApplication
     ;
 
-  cfg = config.my.disk;
+  cfg = config.my.disk.subvolumes;
 
   convert = writeShellApplication {
     name = "convert-to-subvolume";
@@ -63,7 +63,7 @@ in
             warnEcho "$p is a plain directory, so the snapshots pin it: convert-to-subvolume ${lib.escapeShellArg rel}"
           fi
         fi
-      '') cfg.subvolumes
+      '') cfg
     );
   };
 }

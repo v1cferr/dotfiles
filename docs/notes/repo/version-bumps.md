@@ -24,6 +24,12 @@ Every one runs from the `update`/`upgrade` alias
 the latest" happens at rebuild time. Each is a NO-OP when already current, because they run
 on every `upgrade`.
 
+**`update` runs the runner with `nix run <repo>#vendored-bump`**, not a store path baked into the
+zsh function. Until 24/10/2026 it was baked in, and a fixed bump took THREE steps to reach the
+shell: `rebuild` to install it, then `exec zsh`, because zsh keeps an autoloaded function's body
+for the life of the shell. From the checkout, the next `update` already runs the fix, for ~5 s of
+eval.
+
 ## One runner, and the list is DERIVED
 
 Each bump is the `passthru.updateScript` of the package it bumps, the nixpkgs convention for "this

@@ -297,6 +297,7 @@ in
         "${games}/Assassin Creed Black Flag Resynced"
         "${games}/Victoria 3"
         "${games}/Baldurs Gate 3"
+        "${games}/AION2"
 
         # Competitive, so on the Kingston on purpose since 18/10 (games-disk.nix says why).
         "${config.home.homeDirectory}/.local/share/bottles/bottles/Battlenet/drive_c/Program Files (x86)/Overwatch"

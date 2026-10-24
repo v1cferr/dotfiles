@@ -78,6 +78,10 @@ in
       # knows, `@home`, on 06/10. The game folder alone; `compatdata` (the Proton prefix) stays on
       # btrfs for the same reason every bottle does.
       ".local/share/Steam/steamapps/common/Baldurs Gate 3" = "Baldurs Gate 3";
+
+      # COPIED on 24/10, the same trap as BG3: Steam put it into `@home` on 14/10. VERIFIED by path
+      # and size: 1278 files, 83.4 GiB, zero mismatches.
+      ".local/share/Steam/steamapps/common/AION2" = "AION2";
     };
 
     # SAVES ARE NOT UNDER `root`, which is why they need their own attrset: Paradox writes into

@@ -60,7 +60,15 @@ engine, so it plays. No Electron, no CEF.
   expands it into `--api-key`: the binary ignores the variable, despite what upstream's guide
   suggests (`Error: --api-key is required`, 24/10/2026). The unit does not exist until the vault
   holds the key.
-- **Checking it.** `systemctl --user status soloist`, then the hostname in spotifast's devices.
+- **Pairing is ONE time, from the phone.** Spotifast's own ZeroConf login reaches Soloist
+  (`zeroconf: received addUser`) and is ignored without a word, so the first login comes from the
+  official app on the phone instead. Its ZeroConf port is random per start and closed to the LAN,
+  so it is opened only for that minute (`iptables -I nixos-fw -p tcp --dport <port> -j
+  nixos-fw-accept`, then `-D`). The login lands in the StateDirectory and survives restarts
+  (measured 24/10/2026: `logged in as ...` again with no phone), so after that Soloist is a normal
+  device of the account and no inbound port is needed.
+- **Checking it.** `journalctl --user -u soloist` says `logged in as <user>`; then the hostname
+  in spotifast's devices.
 
 ## Around it
 

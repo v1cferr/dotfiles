@@ -26,6 +26,8 @@ writeShellApplication {
     declare -A why=() by=()
     # The frozen home repo on the Seagate is garbage without it: docs/notes/boot-and-storage/restic.md
     why[secret:restic_password]="reads the frozen home repo on the Seagate" by[secret:restic_password]=2026-12-31
+    # Its consumer is OUTSIDE this tree: the home-automation repo's tooling reads /run/secrets.
+    why[secret:home_assistant_token]="read by the home-automation repo, not by Nix" by[secret:home_assistant_token]=2027-04-30
     # A policy no module implements: the README's License section is its only way in.
     why[note:docs/notes/repo/license.md]="the why of LICENSE, reached from the README" by[note:docs/notes/repo/license.md]=2027-09-29
 

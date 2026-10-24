@@ -103,6 +103,12 @@ in
         owner = "v1cferr";
         mode = "0400";
       }; # user-readable: `git send-email` runs as the user and reads it through a credential helper
+    }
+    // lib.optionalAttrs (builtins.elem "home_assistant_token" sopsKeys) {
+      home_assistant_token = {
+        owner = "v1cferr";
+        mode = "0400";
+      }; # user-readable: the home-automation repo's tooling calls the Home Assistant API as the user
     };
 
   # The Vicinae GitHub extension's token, as a settings override the --user server merges at start

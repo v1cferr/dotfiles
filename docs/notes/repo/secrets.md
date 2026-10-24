@@ -62,6 +62,7 @@ Most secrets are root-only. These are not, and each has a reason:
 | `ntfy_topic` | v1cferr 0400 | consumed by user tooling and `--user` timers |
 | `gmail_app_password` | v1cferr 0400 | `git send-email` runs as the user; a credential helper in `modules/home/shell/git.nix` reads it |
 | `soloist_api_key` | v1cferr 0400, as the `soloist.env` template | Soloist is a `--user` service; the EnvironmentFile keeps it out of the store, and systemd expands it into `--api-key`, the only way the binary takes it |
+| `home_assistant_token` | v1cferr 0400 | a long-lived token for the Home Assistant API, used by the home-automation repo's tooling as the user; an admin token, so it never goes into a flag or an environment that `ps` shows |
 
 The restic one is the least obvious and the most defensible: a FUSE mount is private by default,
 which this config already proved inside out, since restic as ROOT could not even `lstat` the

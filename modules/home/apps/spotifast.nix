@@ -3,11 +3,18 @@
 {
   config,
   lib,
+  osConfig,
   pkgs,
   ...
 }:
 
 let
+  inherit (pkgs) soloist;
+
+  # The API key's env file, rendered by sops (modules/nixos/core/secrets.nix). No key in the vault
+  # yet = no receiver, instead of a unit that fails on every login.
+  soloistEnv = osConfig.sops.templates."soloist.env".path or null;
+
   p = lib.mapAttrs (_: v: "#${v}") config.my.theme.palette; # the single source (modules/home/desktop/palette.nix)
 
   # The app's palette format, mapped like the spicetify text scheme it replaces (green accent).
@@ -44,4 +51,25 @@ in
   home.activation.spotifastTheme = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     run install -Dm644 ${theme} "''${XDG_CONFIG_HOME:-$HOME/.config}/spotifast/themes/dotfiles.json"
   '';
+
+  # THE SPEAKER: Spotify refuses librespot the audio keys for many accounts, so spotifast plays
+  # through Soloist, Spotify's own Connect receiver, picked once in its device list.
+  systemd.user.services.soloist = lib.mkIf (soloistEnv != null) {
+    Unit = {
+      Description = "Soloist: this machine as a Spotify Connect speaker";
+      After = [ "pipewire-pulse.service" ];
+      Wants = [ "pipewire-pulse.service" ];
+    };
+    Service = {
+      ExecStart = "${lib.getExe soloist} --device-name ${osConfig.networking.hostName} --cache-size 1024";
+      EnvironmentFile = soloistEnv;
+      StateDirectory = "soloist"; # the device identity and session, so it stays paired
+      CacheDirectory = "soloist";
+      Restart = "on-failure";
+      RestartSec = 10;
+      # Exit 10 = an EXPIRED build (90 days): restarting cannot fix it, `update` plus a rebuild does.
+      RestartPreventExitStatus = 10;
+    };
+    Install.WantedBy = [ "default.target" ];
+  };
 }

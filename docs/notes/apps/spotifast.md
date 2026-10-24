@@ -35,6 +35,31 @@ surfaces and the green accent. It follows a `my.theme.name` switch on the next r
   pick valid across palette switches. Turn off "Colour from album art" for fixed colors on every
   page.
 
+## Playback goes through Soloist
+
+Spotify refuses `librespot` the audio key for many accounts, new AND old (the log says
+`error audio key 0 1`, then `Spotify refused the audio key`). Sign-in, the library and search all
+work; only the sound is refused, and nothing on this machine changes that. It is upstream's open
+[spotifast#283](https://github.com/crmne/spotifast/issues/283), on top of
+[librespot#1649](https://github.com/librespot-org/librespot/issues/1649). It hit this account on
+24/10/2026, on the first play.
+
+The way around it keeps spotifast as the app: [Soloist](https://github.com/spotify/soloist),
+Spotify's OFFICIAL headless Connect receiver, runs as a `--user` service
+(`modules/home/apps/spotifast.nix`) and shows up in spotifast's device list under the hostname.
+Spotifast picks it once and remembers the choice; Soloist gets its keys through Spotify's own
+engine, so it plays. No Electron, no CEF.
+
+- **Package.** [`pkgs/soloist/`](../../../pkgs/soloist/package.nix), the release binary, unfree.
+  It links only glibc and libatomic and dlopens libpulse, which PipeWire answers.
+- **It EXPIRES.** A build stops 90 days after it is made, exiting 10. The unit does not restart
+  on 10; `update` (its bump reads the URL's Last-Modified) plus a rebuild does.
+- **The API key.** Generated once in the Spotify for Developers dashboard (Soloist API Key page,
+  Premium only), stored in Bitwarden as `Spotify Soloist API Key`, then `sync-secrets` and a
+  rebuild. It reaches the unit as `SOLOIST_API_KEY` through the `soloist.env` template, and the
+  unit does not exist until the vault holds the key.
+- **Checking it.** `systemctl --user status soloist`, then the hostname in spotifast's devices.
+
 ## Around it
 
 - **Media controls.** It registers MPRIS as `spotifast`, so `playerctl --player=spotifast`; the bar

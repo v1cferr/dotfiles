@@ -133,6 +133,15 @@ in
           pinentry = lib.getExe pinentry-qt;
         };
       };
+    }
+    # Soloist's API key as an EnvironmentFile for its --user unit (modules/home/apps/spotifast.nix),
+    # never a flag, which `ps` would show to every user.
+    // lib.optionalAttrs (config.sops.secrets ? soloist_api_key) {
+      "soloist.env" = {
+        owner = "v1cferr";
+        mode = "0400";
+        content = "SOLOIST_API_KEY=${config.sops.placeholder.soloist_api_key}\n";
+      };
     };
 
   environment.systemPackages = [ sync-secrets ];

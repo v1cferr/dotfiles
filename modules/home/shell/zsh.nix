@@ -9,14 +9,19 @@
 
 let
   # Rule 19: everything this module reaches for, named once.
-  inherit (pkgs) vendored-bump;
+  inherit (pkgs) vendored-bump gh;
 
   # SSOT of the repo path (rule 11): programs.nh.flake, read here through osConfig.
   flake = osConfig.programs.nh.flake;
 
   # Composed, never written twice: `upgrade` IS `update && rebuild` by definition. The bumps go
   # BEFORE the lock (vscode's raises a versioned input), and `&&` stops a half-edited repo.
-  update = "${lib.getExe vendored-bump} ${flake} && nix flake update --flake ${flake} && vscode-extensions-dump ${flake}";
+  update = "${lib.getExe vendored-bump} ${flake} && ${lockUpdate} && vscode-extensions-dump ${flake}";
+
+  # ~20 GitHub inputs cost ~20 anonymous API calls per run, and that limit is 60/h per public IP:
+  # three upgrades ran it dry on 24/10/2026. gh's token goes in through NIX_CONFIG, in a subshell, so
+  # it reaches neither the store, nor `ps`, nor the shell; logged out, the update stays anonymous.
+  lockUpdate = ''( t=$(${lib.getExe gh} auth token 2>/dev/null) && export NIX_CONFIG="access-tokens = github.com=$t"; nix flake update --flake ${flake} )'';
 in
 {
   programs.zsh = {

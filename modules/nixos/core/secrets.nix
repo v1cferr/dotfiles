@@ -135,7 +135,7 @@ in
       };
     }
     # Soloist's API key as an EnvironmentFile for its --user unit (modules/home/apps/spotifast.nix),
-    # never a flag, which `ps` would show to every user.
+    # which systemd expands into --api-key: never in the store, never in the unit file.
     // lib.optionalAttrs (config.sops.secrets ? soloist_api_key) {
       "soloist.env" = {
         owner = "v1cferr";

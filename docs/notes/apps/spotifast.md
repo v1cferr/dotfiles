@@ -56,8 +56,10 @@ engine, so it plays. No Electron, no CEF.
   on 10; `update` (its bump reads the URL's Last-Modified) plus a rebuild does.
 - **The API key.** Generated once in the Spotify for Developers dashboard (Soloist API Key page,
   Premium only), stored in Bitwarden as `Spotify Soloist API Key`, then `sync-secrets` and a
-  rebuild. It reaches the unit as `SOLOIST_API_KEY` through the `soloist.env` template, and the
-  unit does not exist until the vault holds the key.
+  rebuild. It reaches the unit as `SOLOIST_API_KEY` through the `soloist.env` template, and systemd
+  expands it into `--api-key`: the binary ignores the variable, despite what upstream's guide
+  suggests (`Error: --api-key is required`, 24/10/2026). The unit does not exist until the vault
+  holds the key.
 - **Checking it.** `systemctl --user status soloist`, then the hostname in spotifast's devices.
 
 ## Around it

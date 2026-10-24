@@ -61,7 +61,8 @@ in
       Wants = [ "pipewire-pulse.service" ];
     };
     Service = {
-      ExecStart = "${lib.getExe soloist} --device-name ${osConfig.networking.hostName} --cache-size 1024";
+      # The binary ignores SOLOIST_API_KEY in its environment, so systemd expands it into the flag.
+      ExecStart = "${lib.getExe soloist} --device-name ${osConfig.networking.hostName} --cache-size 1024 --api-key \${SOLOIST_API_KEY}";
       EnvironmentFile = soloistEnv;
       StateDirectory = "soloist"; # the device identity and session, so it stays paired
       CacheDirectory = "soloist";

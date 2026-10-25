@@ -22,17 +22,13 @@ hl.window_rule({ match = { title = "^(Picture-in-Picture)$" }, opacity = "1.0" }
 -- workspace comes back, because an invisible surface gets no frame callback. render_unfocused keeps
 -- it drawing at misc.render_unfocused_fps. Measured: docs/notes/desktop/hypr.md
 hl.window_rule({ match = { class = "^(hearthstone\\.exe)$" }, render_unfocused = true })
--- League under Darling (darling-lol): the same crawl, measured at exactly 1 fps off screen. Its
--- X11 class is the process name, LeagueofLegends. docs/notes/desktop/hypr.md
-hl.window_rule({ match = { class = "^(LeagueofLegends)$" }, render_unfocused = true })
 -- Overwatch: opens tiled at 2550x1396 while it renders 2560x1440, and a frozen loop on a hidden
 -- workspace stops answering the server ("lost connection"). Fullscreen plus the same keepalive.
 hl.window_rule({ match = { class = "^(overwatch\\.exe)$" }, fullscreen = true, render_unfocused = true })
 -- Any FULLSCREEN game keeps the cursor on its own monitor: Wine/Bottles (`*.exe`), Proton
--- (`steam_app_N`), gamescope and Darling's League. Windowed and the launchers stay free, the LG
--- is one flick away.
+-- (`steam_app_N`) and gamescope. Windowed and the launchers stay free, the LG is one flick away.
 hl.window_rule({
-  match = { class = "^(.*\\.exe|steam_app_\\d+|gamescope|LeagueofLegends)$", fullscreen = true },
+  match = { class = "^(.*\\.exe|steam_app_\\d+|gamescope)$", fullscreen = true },
   confine_pointer = true,
 })
 
@@ -44,7 +40,6 @@ local function is_game(class)
     return false -- a launcher left open would hold Gaming for hours
   end
   return class:match("%.exe$") ~= nil or class:match("^steam_app_%d+$") ~= nil or class == "gamescope"
-    or class == "leagueoflegends"
 end
 local gaming = nil -- unknown after a reload, so the first check always says it
 local function sync_game_hold()

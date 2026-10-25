@@ -23,8 +23,7 @@ profile by hand (a manual pick always wins).
 - **A game → Gaming**, by two independent triggers: GameMode (`gamemoderun`, or a Bottles
   bottle with GameMode on) starts `gamemode-performance`; and Hyprland itself starts
   `game-performance` while any game WINDOW is mapped (`rules.lua`: `*.exe`, `steam_app_N`,
-  `gamescope`, `LeagueofLegends`, the confine rule's set, minus `battle.net.exe`, a launcher left
-  open for hours). So a Steam game without the launch option still gets Gaming.
+  `gamescope`, the confine rule's set, minus `battle.net.exe`, a launcher left open for hours). So a Steam game without the launch option still gets Gaming.
 - **Never Eco over a game.** ppd lets a power-saver hold win over a performance one, so both
   game units stop `power-idle-eco` before holding, and `power-idle-eco` has an `ExecCondition`
   that skips it while any performance hold exists (a controller game with no keyboard input

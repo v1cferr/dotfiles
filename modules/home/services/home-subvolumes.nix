@@ -47,8 +47,6 @@ in
       # into `common`, and a rename across a subvolume boundary fails with EXDEV.
       ".local/share/Steam/steamapps"
       "Projects/Local/macos-arm64-lab/state" # the macOS lab VM images, rewritten every session
-      # NOT ~/.darling, for the same EXDEV: Darling's overlay keeps its workdir in ~/.darling.workdir,
-      # outside it, and every copy-up renames from the workdir into the upper layer.
       ".local/share/bottles/bottles/Battlenet/drive_c/Program Files (x86)/Overwatch" # made by hand on 18/10
     ];
 

@@ -29,7 +29,7 @@ for arg in "$@"; do
   [ ! -e "$new" ] && [ ! -e "$old" ] || die "a leftover $new or $old exists; inspect it first"
 
   # BUSY means refuse: a VM writing its image or a game patching during the copy would make the
-  # two trees disagree, and a mount under it (Darling's overlay) would be copied as if it were data.
+  # two trees disagree, and an overlay mounted under it would be copied as if it were data.
   if findmnt -rn -o TARGET | grep -qF -- "$p/"; then
     die "something is mounted under $p; stop it first"
   fi

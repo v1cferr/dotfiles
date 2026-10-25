@@ -261,13 +261,11 @@ in
         "/srv/media" # 108 GiB, the Jellyfin library
         "${config.home.homeDirectory}/Projects" # 127 GiB, 101 of them the macOS lab VM
         "${config.home.homeDirectory}/.local/share/Steam" # 105 GiB, the library is in @home
-        "${config.home.homeDirectory}/.darling" # 40 GiB, League of Legends through Darling
         "${config.home.homeDirectory}/Downloads" # 33 GiB
         "${config.home.homeDirectory}/.config" # 28 GiB, which a config dir has no business being
         "${config.home.homeDirectory}/.local/share/signalsift" # 20 GiB of local models
         "${config.home.homeDirectory}/.cache" # 18 GiB
         "${config.home.homeDirectory}/.local/share/bottles" # 17 GiB, the Wine prefixes
-        "${config.home.homeDirectory}/.local/share/darling-lol" # 8 GiB
         "${config.home.homeDirectory}/Documents" # 4.5 GiB
         "${config.home.homeDirectory}/Games" # 1.8 GiB
         "${config.home.homeDirectory}/.local/share/Trash" # ~0 (it expires on its own, below)

@@ -138,9 +138,8 @@ subvolume by hand on 18/10. `~/.cache` predates this and stays a root tmpfiles `
 **A rename across a subvolume boundary fails with EXDEV,** and that decides where the line goes.
 The first version made `steamapps/common` the subvolume, but Steam downloads into
 `steamapps/downloading` and renames into `common`, so the boundary has to be at the library root.
-`~/.darling` is left out for the same reason: Darling's overlay keeps its workdir in
-`~/.darling.workdir`, next to it, and every copy-up renames from the workdir into the upper layer.
-Its 48 GiB stay in the snapshots, which is the price of a working League. The macOS lab qualifies
+An overlay whose workdir sits outside the path is ruled out the same way, since every copy-up
+renames from the workdir into the upper layer. The macOS lab qualifies
 because its tools write the images in place and never move a file into `state/`.
 
 - **The activation CREATES, never converts.** A missing path becomes a subvolume, as the user, so
@@ -153,7 +152,7 @@ because its tools write the images in place and never move a file into `state/`.
   directories with their `+C` before copying, so each file inherits it at creation. A `+C` FILE
   in a directory without it still fails, loudly, and the half-made copy is removed.
 - **`convert-to-subvolume PATH`** converts in place with no sudo. It refuses while a process has a
-  file open under the path or something is mounted there (Darling's overlay). It then copies with
+  file open under the path or something is mounted there. It then copies with
   `cp -a --reflink=always`, which costs no space and fails loudly instead of falling back to a
   real copy, and checks path and size per file. The swap leaves the original as `PATH.pre-subvol`.
   Deleting that is the user's call, after the app opened. TESTED on 24/10 on a scratch directory:

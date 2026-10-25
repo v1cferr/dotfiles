@@ -56,14 +56,6 @@ counts the time, the date or the media; it counts the weather, the CPU (and the 
 volume, hypridle and away, and the tray. Level 1 drops the network's numbers and the VPN's name (the
 icons and their panels stay), level 2 the weather. The tray is never folded.
 
-**The League pill** (`lolPill`) is the launcher, since Darling's clients publish no tray icon. It
-is always there, polled every 5 s with the VPN, in four states: off (dim, a click starts
-`darling-lol.service`), client (a click focuses it), hidden and game. Hidden is a unit running with
-no client window: the League client quits itself after a match, and nothing outside the namespace
-can open a window in it, so the click RESTARTS the unit. Every guest process is `mldr` to Linux, so
-the match is found by its command line (`pgrep -f '[M]acOS/LeagueofLegends '`), and a right-click
-stops the unit except in a match. Why it is a unit: [darling-lol](../apps/darling-lol.md).
-
 **The tray is pinned to the right edge** (`TrayStrip.qml`, its own file since this change): anchored
 8 px from the edge, growing left, and the rest of the right side anchored to ITS left edge with a
 width from the item count alone (`count` x 28 px plus the spacing), never from the delegates. So a

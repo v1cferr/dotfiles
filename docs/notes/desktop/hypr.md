@@ -273,12 +273,6 @@ window: `Hearthstone.exe` becomes `hearthstone.exe`. Another game that crawls is
 class, and only one that crawls: a D3D9 game through wined3d keeps its loop running off screen
 (measured on the Ascension client, 56% of a core), so the rule would pay 30 fps of GPU for nothing.
 
-League under Darling ([darling-lol](https://github.com/lucannez64/darling-lol)) crawls the same
-way: its `netstats.csv` read exactly 1.000 s per frame for the 40 s its workspace was off screen
-(23/10/2026), and about 175 fps on screen. Darling's AppKit sets the X11 class to the process name,
-so the game window is `LeagueofLegends`, while the clients are `LeagueClientUx` and `Riot Client`.
-The game also joins the fullscreen `confine_pointer` rule and the Gaming profile; the clients do not.
-
 Overwatch (DX11 through DXVK) is the second class, added on 17/10/2026 together with `fullscreen`:
 it opened TILED at 2550x1396 while rendering 2560x1440, on a workspace that was off screen during
 its first load since July, and the game reported a lost connection to the server.

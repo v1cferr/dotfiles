@@ -109,6 +109,12 @@ in
         owner = "v1cferr";
         mode = "0400";
       }; # user-readable: the home-automation repo's tooling calls the Home Assistant API as the user
+    }
+    // lib.optionalAttrs (builtins.elem "openrouter_api_key" sopsKeys) {
+      openrouter_api_key = {
+        owner = "v1cferr";
+        mode = "0400";
+      }; # user-readable: opencode runs as the user and reads it through `{file:}` in its config
     };
 
   # The Vicinae GitHub extension's token, as a settings override the --user server merges at start

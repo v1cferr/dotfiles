@@ -24,5 +24,10 @@ in
         url = osConfig.my.memory.servers.general.url;
       };
     };
+    # opencode expands `{file:}` at startup, so only the PATH reaches the store (rule 12).
+    # Inert until `sync-secrets` has put the key in the vault.
+    settings.provider = lib.mkIf (osConfig.sops.secrets ? openrouter_api_key) {
+      openrouter.options.apiKey = "{file:${osConfig.sops.secrets.openrouter_api_key.path}}";
+    };
   };
 }

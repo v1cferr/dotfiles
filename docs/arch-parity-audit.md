@@ -64,7 +64,7 @@ sections below this one are left as measured on 08/09, so read this table first.
 | `scripts/` | Closed | Arch by nature, as measured below |
 | homelab and the Caddy set | Dropped | Every absent service decided NOT to come back (13/10/2026): what covers each one is in the section below. The 9 vhosts declared now are the whole set |
 | polychromatic | Replaced | The OpenRGB service already in place for the Arc B580 DETECTS the Razer DeathAdder V2 (measured with `openrgb --client --list-devices`), so no openrazer GUI is needed. Setting the mouse's color from Nix would be new work, not a gap |
-| opencode | Dropped | Claude Code, codex and agy are declared already; a fourth agent CLI is not a gap |
+| opencode | Ported | `modules/home/shell/opencode.nix` (25/10/2026), from `pkgs.unstable`. The Arch MCP list was not carried over: it pointed at `/opt` and project-specific servers |
 | lazydocker | Ported | `modules/nixos/services/docker.nix`, only where the engine is enabled. Ten containers run here, so a TUI over them earns its place |
 
 ## The verdict

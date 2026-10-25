@@ -257,13 +257,12 @@ in
       # the ROOT filesystem is full, and a different disk in it would be an answer to a question
       # nobody asked. The games disk is covered by the trend log and disk-report instead.
       watchPaths = [
-        "/nix/store" # 156 GiB, handled by the GC (core.nix), not deletable by hand
+        "/nix/store" # 51 GiB after the 24/10 GC (156 before), handled by the GC (core.nix), not deletable by hand
         "/srv/media" # 108 GiB, the Jellyfin library
-        "${config.home.homeDirectory}/Projects" # 127 GiB, 101 of them the macOS lab VM
-        "${config.home.homeDirectory}/.local/share/Steam" # 105 GiB, the library is in @home
+        "${config.home.homeDirectory}/Projects" # 51 GiB, the macOS lab VM images deleted on 24/10
+        "${config.home.homeDirectory}/.local/share/Steam" # 21 GiB, the library is in @home (its own subvolume)
         "${config.home.homeDirectory}/Downloads" # 33 GiB
         "${config.home.homeDirectory}/.config" # 28 GiB, which a config dir has no business being
-        "${config.home.homeDirectory}/.local/share/signalsift" # 20 GiB of local models
         "${config.home.homeDirectory}/.cache" # 18 GiB
         "${config.home.homeDirectory}/.local/share/bottles" # 17 GiB, the Wine prefixes
         "${config.home.homeDirectory}/Documents" # 4.5 GiB

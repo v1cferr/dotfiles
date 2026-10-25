@@ -57,6 +57,8 @@ a boot or a shutdown can be read without leaving the splash.
   systemd drop the quit job and the boot wait forever; with `pipefail`, the closed pipe at the
   normal end marked the unit failed; and `ConditionPathExists=/run/plymouth/pid` skipped the
   shutdown feeder, since the shutdown splash keeps no pid file there (the script pings instead).
+- **Seen on the B580** on 25/10/2026: the pane showed under the logo at boot and at shutdown, both
+  feeders ending clean (`plymouth-log` Result=success).
 - **Not proven**: the red line on screen. In the drill the failing unit's line comes in the last
   half second before poweroff, after the last frame; the color rule is the same code as the green
   and yellow lines that were seen.

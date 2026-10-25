@@ -327,7 +327,7 @@ in
         # journal, and this one fires 6x/hour.
         LogLevelMax = "warning";
       };
-      Install.WantedBy = [ "graphical-session.target" ];
+      # No WantedBy: the timer's first pass (1 min in) is the start, not the login itself.
     };
 
     systemd.user.timers.disk-usage-sample = {

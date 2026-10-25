@@ -22,8 +22,8 @@ let
     writeShellApplication
     ;
 
-  # Unstable because stable's 63.2 sends no User-Agent: Cloudflare answers 403 and the app sits
-  # in offline mode. 67.x sets one and probes fallback URLs. The popup on every launch is noise.
+  # Unstable for good: Bottles moves faster than stable tracks it (stable's 63.2 sent no User-Agent,
+  # got 403 from Cloudflare and sat in offline mode). The popup on every launch is noise.
   bottlesApp = unstable.bottles.override { removeWarningPopup = true; };
 
   bottlesDir = "${config.home.homeDirectory}/.local/share/bottles/bottles";

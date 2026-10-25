@@ -11,7 +11,6 @@ let
 
   # Rule 19: what this module reaches for, named once.
   inherit (pkgs)
-    bottles
     coreutils
     curl
     gawk
@@ -19,11 +18,13 @@ let
     gnused
     icoextract
     jq
+    unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
     writeShellApplication
     ;
 
-  # The popup on every launch is noise; this override used to sit in modules/home/packages.nix.
-  bottlesApp = bottles.override { removeWarningPopup = true; };
+  # Unstable because stable's 63.2 sends no User-Agent: Cloudflare answers 403 and the app sits
+  # in offline mode. 67.x sets one and probes fallback URLs. The popup on every launch is noise.
+  bottlesApp = unstable.bottles.override { removeWarningPopup = true; };
 
   bottlesDir = "${config.home.homeDirectory}/.local/share/bottles/bottles";
 

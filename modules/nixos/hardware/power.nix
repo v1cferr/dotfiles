@@ -75,7 +75,8 @@ in
 
   systemd.services.power-profile-gpu = {
     description = "Applies the power profile to the GPU (xe power_profile, frequency floor)";
-    after = [ "power-profiles-daemon.service" ];
+    # No `after = ppd`: ppd's own unit sits After=multi-user.target, so that order is a cycle and
+    # systemd drops THIS job at boot. The watcher catches ppd appearing on the bus anyway.
     wants = [ "power-profiles-daemon.service" ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {

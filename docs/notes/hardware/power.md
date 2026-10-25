@@ -43,6 +43,11 @@ driver's floor is recorded once in `/var/lib/power-profile-gpu/` and restored ou
 board's `power1_cap` (210 W) is not touched: a cap only bites under load, and Eco is for light
 use. The monitors are not touched either (see the LG experiment below).
 
+The watcher is NOT ordered after ppd. ppd's upstream unit carries `After=multi-user.target`, so
+`after = power-profiles-daemon.service` on a unit wanted by `multi-user.target` closes a cycle,
+and systemd broke it by deleting this job: the GPU half silently never ran at boot (seen 25/10/2026).
+`gdbus monitor` already reacts to ppd taking its bus name, so the ordering bought nothing.
+
 Kept in EVERY profile: the network, the tunnel, Caddy and every published service, Syncthing,
 Dropbox, the backups and their timers, Sunshine, audio. No profile suspends the machine, stops a
 service, or touches the monitors' power state.

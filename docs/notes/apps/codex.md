@@ -162,6 +162,25 @@ matching what upstream published for no gain.
 install") and its `codex update` subcommand both want to overwrite the binary, which is in the
 read-only store. What updates Codex on this machine is `update`, the alias, like everything else.
 
+**The app-server daemon is off, and that is what keeps `bin/`-only working.** Since 0.164.0 the
+interactive TUI talks to a background `codex app-server` instead of running in its own process.
+On first launch it INSTALLS that daemon by copying the package it was started from into
+`~/.codex/packages/app-server-daemon/`, which needs `codex-package.json` and the two dropped
+directories next to the binary. With `bin/` alone it refuses, measured on 25/10/2026 in a clean
+`CODEX_HOME`:
+
+```text
+Error: this CLI has no complete local package; install a packaged Codex CLI or use the standalone installer
+```
+
+`codex exec` never touches the daemon, so only the TUI breaks, which makes it look like a
+config problem. Installing the full package would "fix" it the wrong way: the daemon would live
+outside the store and keep its own `auto-update-version`, the same updater as above with a way
+around the read-only store. So `config.toml` sets `[features] daemon_auto_start = false` (the TUI
+runs in process, same as `--no-daemon`) and `in_app_updates = false`. Both are real features
+listed by `codex features list`, and `-c features.daemon_auto_start=false` made the error go away
+in that same clean home. If a release drops the in-process path, the symptom is this error again.
+
 **A third-party flake was passed over.** There are several that track Codex upstream and would
 have cost one input instead of two files (`sadjow/codex-cli-nix` even rebuilds hourly). For a tool
 that holds the ChatGPT session and executes shell commands, the fetch goes straight to the

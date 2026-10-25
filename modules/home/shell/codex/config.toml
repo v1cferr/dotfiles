@@ -17,8 +17,14 @@ trust_level = "trusted"
 [projects."/home/v1cferr/Downloads"]
 trust_level = "trusted"
 
+# No app-server daemon: it copies itself out of the store into ~/.codex/packages and self-updates.
+[features]
+daemon_auto_start = false
+in_app_updates = false
+
 [tui]
 theme = "dracula"
+screen_reader_detection_done = true
 
 # The GENERAL memory server (modules/home/services/basic-memory.nix), never the FAI one. This mirror is
 # the one consumer that cannot read `my.memory.servers.general.url`, so the port is a literal.

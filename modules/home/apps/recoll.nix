@@ -1,6 +1,11 @@
 # Recoll: an index of documents and code, so a search finds a file by CONTENT (PDF, Office, text).
 # Why Recoll and not Baloo or yazi, and why each exclusion: docs/notes/apps/recoll.md
-{ config, pkgs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   inherit (pkgs) coreutils;
@@ -11,6 +16,11 @@ in
   # 0700: the index holds document text in clear, readable by this user only.
   systemd.user.services.recollindex.Service.ExecStartPre =
     "${coreutils}/bin/install -d -m 0700 ${cachedir}";
+  # Background work: it yields to anything interactive.
+  systemd.user.services.recollindex.Service.Nice = 19;
+  # No catch-up at login: the missed hour fired at second 7, 40 s of CPU and 5.4 GB while the
+  # bar loaded (25/10/2026). Hourly passes catch up on their own.
+  systemd.user.timers.recollindex.Timer.Persistent = lib.mkForce false;
 
   services.recoll = {
     enable = true; # recoll (Qt GUI), recollq (CLI) and the recollindex timer

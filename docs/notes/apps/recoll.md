@@ -56,5 +56,6 @@ The clean run after the fix: 16.5k files, 75k documents (zip members included), 
 - GUI: `recoll`. Words go in the box, the type filter narrows to PDF, text, office and so on.
 - Terminal: `recollq 'term'`.
 - The index runs hourly (`systemctl --user list-timers recollindex`) and only rereads changed
-  files. To refresh now: `systemctl --user start recollindex`.
+  files. To refresh now: `systemctl --user start recollindex`. It runs at `Nice=19` and skips the
+  missed-hour catch-up at login: that pass cost 40 s of CPU and 5.4 GB while the bar loaded.
 - Quick code search inside one repo is still faster with `S` in yazi or `rg`.

@@ -182,7 +182,6 @@ lib.mkIf (enabled && config.my.services.duo) {
       "network-online.target"
       "ollama.service"
     ];
-    wantedBy = [ "multi-user.target" ];
     path = [ docker ];
     # A change in a secret's VALUE alone does not move this hash: `systemctl restart duo-stack`.
     restartTriggers = [
@@ -209,5 +208,12 @@ lib.mkIf (enabled && config.my.services.duo) {
       ExecStart = "${dc} up -d --remove-orphans";
       ExecStop = "${dc} down";
     };
+  };
+
+  # A timer and not `wantedBy = multi-user`: the build competed with the desktop coming up and
+  # held multi-user.target for 2 min (and ppd behind it). Nothing here is urgent at boot.
+  systemd.timers.duo-stack = {
+    wantedBy = [ "timers.target" ];
+    timerConfig.OnBootSec = "2min";
   };
 }

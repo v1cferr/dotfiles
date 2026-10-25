@@ -60,7 +60,8 @@ The order does not matter here: Caddy resolves the most specific prefix first, s
 `compose up -d --wait` at boot, the same shape as `grad-radar.nix` and for the same reason: Caddy
 comes up on its own and so does Docker, but the containers do not, so without this the subdomain
 answers 502 until somebody runs compose by hand. `--wait` blocks on the healthchecks, so a green
-unit means the proxy actually has an upstream rather than a promise of one.
+unit means the proxy actually has an upstream rather than a promise of one. It starts 2 minutes
+after boot through a timer, like grad-radar, so the build never races the desktop.
 
 The three Docker traps are inherited unchanged from `duo.nix`, and each cost a debugging session
 somewhere in this tree already: `after = docker.service` loses to socket activation, so the unit

@@ -17,6 +17,14 @@ a daemon restart become orphans running with nobody asking. A `oneshot` with `Re
 gives the boot behavior without bringing that back, since what orders the start is the boot, not
 dockerd.
 
+## Why 2 minutes after boot and not at boot
+
+The unit is started by a timer (`OnBootSec = 2min`), not wanted by `multi-user.target`. MEASURED
+25/10/2026: this stack, CreditRadar and duo ran three `compose build` in parallel from second 13,
+exactly while Quickshell loaded the bar (11.6 s to `Configuration Loaded`), and duo held
+`multi-user.target` for 2 min, with ppd queued behind it. The desktop comes first; a 502 for the
+first two minutes after a boot costs nobody anything.
+
 ## Why the working-tree path and not a store path
 
 Unlike `duo.nix`, which consumes a flake input at a fixed commit, this one points at the

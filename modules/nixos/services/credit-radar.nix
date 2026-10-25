@@ -56,7 +56,6 @@ lib.mkIf config.my.services.credit-radar {
     ];
     requires = [ "docker.service" ];
     wants = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
     path = [ docker ];
 
     environment = {
@@ -86,6 +85,12 @@ lib.mkIf config.my.services.credit-radar {
       ExecStart = "${dc} up -d --remove-orphans --wait";
       ExecStop = "${dc} down";
     };
+  };
+
+  # Delayed past the desktop, the same as ./duo.nix: the build must not race the session.
+  systemd.timers.credit-radar = {
+    wantedBy = [ "timers.target" ];
+    timerConfig.OnBootSec = "2min";
   };
 
   # THE COLLECTOR. Up to here the historical series only grew when somebody fired an HTTP

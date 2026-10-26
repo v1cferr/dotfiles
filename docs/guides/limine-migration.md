@@ -50,6 +50,11 @@ kernel and initrd per kept generation, deduplicated by store path.
    never mounts as NTFS. So it is decrypted. From Windows, `manage-bde -status C:` says the same.
 5. A NixOS 26.05 USB stick that boots. It is NOT signed by this machine's db, so using it means
    turning Secure Boot off in the BIOS for that boot only ([bios-ex-b560m-v5](bios-ex-b560m-v5.md)).
+   Done on 26/10/2026: Ventoy 1.1.12 (GPT) on the 57 GB SanDisk 3.2Gen1 stick, holding
+   `nixos-minimal-26.05.12658.1f607aa79b63-x86_64-linux.iso`, its checksum checked on the stick.
+   Ventoy would also boot with Secure Boot on, through its shim, but only after enrolling its key
+   in MOK, which makes the machine trust anything Ventoy signs. Decline that screen; turn Secure
+   Boot off instead.
 
 ## C1: the splash, still on GRUB
 

@@ -350,5 +350,4 @@
   ], // local, not on the marketplace
   "chat.unifiedAgentsBar.enabled": true,
   "workbench.experimental.share.enabled": true,
-  "window.zoomLevel": -1,
 }

@@ -26,9 +26,13 @@
   # with `lsblk -o NAME,PARTUUID`; only Limine uses it, GRUB pins the filesystem UUID itself.
   my.boot.windows.efiPartUuid = "8f36a7a5-a54c-4c78-9d3d-1202514df9be";
 
-  # The Plymouth splash, still under GRUB: stage C1 of docs/guides/limine-migration.md. The way back
-  # is the previous generation in the GRUB menu, or deleting this line and `nh os boot`.
+  # The Plymouth splash: stage C1 of docs/guides/limine-migration.md. The way back is the previous
+  # generation in the boot menu, or deleting this line and `nh os boot`.
   my.boot.splash.enable = true;
+
+  # Limine, stage C2 of docs/guides/limine-migration.md: installed beside GRUB, first boot via
+  # BootNext only. The way back is "grub" here and `nh os boot`, with GRUB still in BootOrder.
+  my.boot.loader = "limine";
 
   # Fixed at the 1st install: NEVER change it afterwards. The same value as the old host because
   # it is the same release; the stateVersion follows the installation, not the disk.

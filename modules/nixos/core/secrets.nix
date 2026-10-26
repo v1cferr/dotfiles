@@ -114,7 +114,7 @@ in
       openrouter_api_key = {
         owner = "v1cferr";
         mode = "0400";
-      }; # user-readable: opencode runs as the user and reads it through `{file:}` in its config
+      }; # user-readable: opencode reads it through `{file:}`, the claude wrapper for the OpenRouter MCP
     };
 
   # The Vicinae GitHub extension's token, as a settings override the --user server merges at start

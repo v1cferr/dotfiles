@@ -79,6 +79,18 @@ let
     }
   );
 
+  # The OpenRouter MCP, the official endpoint. It offers OAuth, but that key dies in 7 days; the
+  # sops key as a Bearer is accepted too (measured 26/10/2026), so the Stitch pattern (rule 12).
+  openrouterMcp = writeText "mcp-openrouter.json" (
+    builtins.toJSON {
+      mcpServers.openrouter = {
+        type = "http";
+        url = "https://mcp.openrouter.ai/mcp";
+        headers.Authorization = "Bearer \${OPENROUTER_API_KEY}";
+      };
+    }
+  );
+
   # The FAI memory server (modules/home/services/basic-memory.nix). Keyed `basic-memory` so the permission
   # rules in settings-fai.json still match; it follows the service toggle, so no dead endpoint.
   faiMemory = lib.optional osConfig.my.services.basic-memory (
@@ -96,6 +108,7 @@ let
   shared = [
     vercelMcp
     gitlabMcp
+    openrouterMcp
   ];
 
   # The accounts' SSOT (rule 11): wrappers, menu, symlinks and MCP all come from here.
@@ -141,6 +154,13 @@ let
         if [ -r "$secret" ]; then
           STITCH_API_KEY="$(cat "$secret")"
           export STITCH_API_KEY
+        fi
+
+        # The same for the OpenRouter MCP's Bearer; absent, it answers 401 and only it is gone.
+        secret=/run/secrets/openrouter_api_key
+        if [ -r "$secret" ]; then
+          OPENROUTER_API_KEY="$(cat "$secret")"
+          export OPENROUTER_API_KEY
         fi
       ''
       + (

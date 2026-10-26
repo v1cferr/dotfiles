@@ -198,6 +198,29 @@ refused with a 403, which the client reports as credentials being rejected. That
 authentication problem and is not one, so it is written here: the fix is to belong to an enabled
 group, not to authenticate again.
 
+## The OpenRouter MCP takes the sops key, not its own OAuth
+
+`https://mcp.openrouter.ai/mcp` is OpenRouter's official remote server, HTTP, and it enters through
+`shared` like Vercel and GitLab. Its [docs](https://openrouter.ai/docs/guides/overview/mcp-server)
+only show OAuth: `claude mcp add` plus `claude mcp login`, and the token that comes back is an
+ordinary OpenRouter API key with a **7-day expiry** and a $10 spend cap. A login every week, on
+each account, is the kind of chore that ends with the server quietly disconnected.
+
+The server also accepts a plain API key as `Authorization: Bearer`, measured on 26/10/2026: without
+a header `initialize` answers 401, with the `openrouter_api_key` that opencode already uses it
+answers 200. So it follows the Stitch pattern instead: the JSON in the store carries
+`Bearer ${OPENROUTER_API_KEY}`, a REFERENCE, and the wrapper reads `/run/secrets/openrouter_api_key`
+into that variable for the claude process only (rule 12). Without the secret the server gets a 401
+and is the only thing missing; the session starts anyway.
+
+What this trades away is the OAuth key's $10 cap: the sops key has whatever limit was set on it in
+the OpenRouter dashboard, and `send-message` and `generate-image` are billable tools. The cap
+belongs on that key, not in this repo.
+
+This is the MCP only. Pointing Claude Code itself at OpenRouter (`ANTHROPIC_BASE_URL` and
+friends, the [integration guide](https://openrouter.ai/docs/cookbook/coding-agents/claude-code-integration))
+is not done: both accounts are Anthropic subscriptions, and the env would replace them.
+
 ## The system side: what has to be IMPOSED
 
 [`modules/nixos/services/claude-code.nix`](../../../modules/nixos/services/claude-code.nix) holds the three things

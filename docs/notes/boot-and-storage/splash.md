@@ -63,10 +63,13 @@ a boot or a shutdown can be read without leaving the splash.
   half second before poweroff, after the last frame; the color rule is the same code as the green
   and yellow lines that were seen.
 
-- **Handoff**: LightDM quits Plymouth itself when it takes the screen, and nixpkgs' `lightdm.nix`
-  starts `plymouth-quit` as the display manager's `onFailure`, so a LightDM that dies never leaves
-  the splash up. No extra unit here. Drilled in `vm-limine` (no LightDM there):
-  `plymouth-quit.service` succeeded.
+- **Handoff**: `plymouth-quit` ends the splash, and only then does LightDM start
+  (`display-manager` is ordered `After=plymouth-quit.service`). Without that order both ran at
+  once: on 26/10/2026 LightDM sent `deactivate` while plymouthd was already quitting, plymouthd
+  died with SIGSEGV in `on_deactivate` (`ply_device_manager_pause`) and `plymouth-start.service`
+  was left failed. The desktop came up anyway; it was a race, seen once in five boots. With the
+  order, LightDM finds no splash and leaves Plymouth alone. nixpkgs' `lightdm.nix` still starts
+  `plymouth-quit` as the display manager's `onFailure`.
 - **The GPU**: `xe` is already in the initrd for early KMS ([intel-arc-b580](../../../modules/nixos/hardware/intel-arc-b580.nix)),
   so the splash draws on the real driver, not on `simpledrm`. Seen on the B580 on 22/10/2026,
   at boot and at poweroff, with no black screen (stage C1 of the migration).

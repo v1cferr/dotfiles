@@ -92,6 +92,9 @@ in
       ];
     };
 
+    # LightDM also talks to plymouthd; racing plymouth-quit it crashed it (SIGSEGV in on_deactivate, 26/10/2026).
+    systemd.services.display-manager.after = [ "plymouth-quit.service" ];
+
     # At reboot and poweroff: from the shutdown splash until the final SIGTERM ends it.
     systemd.services.plymouth-log-shutdown = lib.recursiveUpdate feedUnit {
       description = "Show systemd's own lines on the shutdown splash";

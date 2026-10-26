@@ -16,9 +16,9 @@ hl.window_rule({
   match = { class = "^$", title = "^$", xwayland = 1, float = 1, fullscreen = 0 },
   suppress_event = "activate activatefocus",
 })
--- VS Code's custom dialogs (open link, confirmations) are a separate XWayland window, class `Code`
--- (the main one is `code`), born at whatever position Electron asks, even half off screen.
-hl.window_rule({ match = { class = "^(Code)$", title = "^(Visual Studio Code)$", float = 1 }, center = true })
+-- Every modal dialog opens centered, in any app: XWayland ones are otherwise born where the client
+-- asks, like VS Code's open-link dialog (class `Code`) landing half off screen at the top edge.
+hl.window_rule({ match = { modal = true }, center = true })
 -- Picture-in-Picture (a detached video) always 100% opaque.
 hl.window_rule({ match = { title = "^(Picture-in-Picture)$" }, opacity = "1.0" })
 -- Hearthstone: off screen the game CRAWLS to 1 fps and its render AND audio only catch up when the

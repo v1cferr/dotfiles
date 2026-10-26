@@ -19,6 +19,14 @@ hl.window_rule({
 -- Every modal dialog opens centered, in any app: XWayland ones are otherwise born where the client
 -- asks, like VS Code's open-link dialog (class `Code`) landing half off screen at the top edge.
 hl.window_rule({ match = { modal = true }, center = true })
+-- The portal's file chooser (Open Folder, Save As) asked for the whole monitor, 2568x1422 on a
+-- 1440p panel, so it read as a window covering everything instead of a dialog.
+hl.window_rule({
+  match = { class = "^(Xdg-desktop-portal-gtk)$" },
+  float = true,
+  size = "monitor_w*0.6 monitor_h*0.7",
+  center = true,
+})
 -- Picture-in-Picture (a detached video) always 100% opaque.
 hl.window_rule({ match = { title = "^(Picture-in-Picture)$" }, opacity = "1.0" })
 -- Hearthstone: off screen the game CRAWLS to 1 fps and its render AND audio only catch up when the

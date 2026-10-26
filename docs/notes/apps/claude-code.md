@@ -217,6 +217,19 @@ What this trades away is the OAuth key's $10 cap: the sops key has whatever limi
 the OpenRouter dashboard, and `send-message` and `generate-image` are billable tools. The cap
 belongs on that key, not in this repo.
 
+**Zero Data Retention is on for the whole account, at its strictest, and it lives in the
+dashboard.** Since 26/10/2026 every model group at <https://openrouter.ai/settings/privacy>
+(other, Anthropic, OpenAI, Google, SpaceXAI) is ZDR, with "Zero retention only" wherever the page
+offers a softer "Safety retention allowed", and every Data Training toggle is off. The
+[docs](https://openrouter.ai/docs/guides/features/zdr) expose no API for these toggles, and the
+setting is server-side for every client of the key (opencode, this MCP's `send-message`), so there
+is nothing to declare here; per-request `provider.zdr` would be a weaker copy that each client must
+remember. The price is deliberate: first-party Anthropic, OpenAI and AI Studio endpoints are gone
+(Claude still routes through Bedrock and Vertex), and since 18/10/2026 Google requires safety
+retention, so **Gemini is unavailable through OpenRouter on purpose**. A model that "vanished" is
+this setting, not a bug; Gemini comes from `agy` instead. The eligible set is at
+`https://openrouter.ai/api/v1/endpoints/zdr`.
+
 This is the MCP only. Pointing Claude Code itself at OpenRouter (`ANTHROPIC_BASE_URL` and
 friends, the [integration guide](https://openrouter.ai/docs/cookbook/coding-agents/claude-code-integration))
 is not done: both accounts are Anthropic subscriptions, and the env would replace them.

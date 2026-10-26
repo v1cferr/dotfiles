@@ -81,6 +81,11 @@ in
       sxiv.enable = false; # an image viewer; Gwenview is the one here
       xresources.enable = false; # only old X11 apps read ~/.Xresources, and xterm was the last one
       gtk.flatpakSupport.enable = false; # no Flatpak here, so its override file would be dead
+      # GTK3's client-side shadow is a transparent margin that Hyprland blurs and dims, which drew a
+      # thick dark frame around the portal's file chooser. Hyprland already draws border and shadow.
+      gtk.extraCss = ''
+        decoration, decoration:backdrop { box-shadow: none; margin: 0; }
+      '';
       # Colors only: mangohud.nix keeps its own transparency and font size.
       mangohud.opacity.enable = false;
       mangohud.fonts.enable = false;

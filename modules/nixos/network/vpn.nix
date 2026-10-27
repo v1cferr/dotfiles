@@ -15,6 +15,7 @@ let
     libnotify
     nxbender
     openconnect
+    openssh
     openssl
     systemd
     writeShellApplication
@@ -36,17 +37,29 @@ let
     "14:0f:b2:28:65:52:27:c4:13:13:1a:68:64:72:5d:84:5a:ba:8d:75"
   ];
 
+  # The portal is reached through an SSH forward on the VPS: the direct path loses 12-70% of its
+  # packets at UFSCar's edge (AS52888) and TCP-in-TCP turns that into resets, while home->VPS->portal
+  # measured 0% (2026-10-27). Note: docs/notes/network/vpn.md.
+  faiPortal = "200.133.233.101:4433";
+  faiRelayPort = 14433;
+
   # Pins whichever allowlisted cert the portal serves NOW; nxBender still enforces that pin, so a
   # cert swapped between this probe and the login fails closed.
   faiUp = writeShellScript "vpn-fai-up" ''
-    fp="$(echo | ${coreutils}/bin/timeout 10 ${openssl}/bin/openssl s_client -connect 200.133.233.101:4433 2>/dev/null \
+    # The relay starts first (Requires=), but its port opens only once ssh has logged in.
+    for _ in $(${coreutils}/bin/seq 1 15); do
+      (exec 3<>/dev/tcp/127.0.0.1/${toString faiRelayPort}) 2>/dev/null && break
+      ${coreutils}/bin/sleep 1
+    done
+    fp="$(echo | ${coreutils}/bin/timeout 10 ${openssl}/bin/openssl s_client -connect 127.0.0.1:${toString faiRelayPort} 2>/dev/null \
       | ${openssl}/bin/openssl x509 -noout -fingerprint -sha1 | ${coreutils}/bin/cut -d= -f2 | ${coreutils}/bin/tr 'A-F' 'a-f')"
     case "$fp" in
       ${builtins.concatStringsSep " | " faiFingerprints}) ;;
-      "") echo "no certificate from the portal (unreachable?)" >&2; exit 1 ;;
+      "") echo "no certificate from the portal (unreachable, or the VPS relay is down?)" >&2; exit 1 ;;
       *) echo "Fingerprints did not match: the portal serves $fp, which is not allowlisted" >&2; exit 1 ;;
     esac
-    exec ${nxbender}/bin/nxBender -c ${config.sops.templates."nxbender-fai.conf".path} -f "$fp"
+    exec ${nxbender}/bin/nxBender -c ${config.sops.templates."nxbender-fai.conf".path} \
+      -s 127.0.0.1 -P ${toString faiRelayPort} -f "$fp"
   '';
 
   # The `vpn` CLI: connect/disconnect, status-json (the pill), stats-json (the hover panel)
@@ -81,7 +94,7 @@ let
       # Per-VPN metadata: the unit plus the portal (host/port) that has to be up.
       vpn_meta() {
         case "$1" in
-          fai)    echo "vpn-fai.service 200.133.233.101 4433" ;;
+          fai)    echo "vpn-fai.service 127.0.0.1 ${toString faiRelayPort}" ;; # the portal, through the VPS relay
           ufscar) echo "vpn-ufscar.service acessoremoto-scl.ufscar.br 443" ;;
           *)      return 1 ;;
         esac
@@ -164,6 +177,9 @@ let
         if ! tcp_open 1.1.1.1 443 4; then
           verdict="NO INTERNET on this machine"
           detail="1.1.1.1:443 did not open, so the problem is your network, before the VPN"
+        elif [ "$id" = fai ] && ! systemctl is-active --quiet vpn-fai-relay.service; then
+          verdict="THE VPS RELAY IS DOWN, the FAI portal is not even tried"
+          detail="see: journalctl -u vpn-fai-relay (the VPS is unreachable, or my key was refused)"
         elif ! tcp_open "$host" "$port"; then
           verdict="THE VPN PORTAL IS DOWN, it is not your machine"
           detail="$host:$port refuses the connection and the internet from here is fine"
@@ -371,11 +387,9 @@ in
     };
   };
 
-  # Rendered by sops into /run/secrets/rendered, never the store. The fingerprint is NOT here:
-  # faiUp passes it with -f, which overrides the file.
+  # Rendered by sops into /run/secrets/rendered, never the store. Server, port and fingerprint are
+  # NOT here: faiUp passes them on the command line, which overrides the file.
   sops.templates."nxbender-fai.conf".content = ''
-    server = 200.133.233.101
-    port = 4433
     username = victor.ferreira
     domain = fai2008
     password = ${config.sops.placeholder.fai_vpn_password}
@@ -406,13 +420,35 @@ in
   systemd.services.vpn-fai = {
     description = "FAI VPN (SonicWall through nxBender)";
     wants = [ "network-online.target" ];
-    after = [ "network-online.target" ];
+    requires = [ "vpn-fai-relay.service" ];
+    after = [
+      "network-online.target"
+      "vpn-fai-relay.service"
+    ];
     restartIfChanged = false; # same: reconnecting the VPN is my decision, not a rebuild side effect
     serviceConfig = {
       Type = "simple";
       ExecStart = faiUp;
     }
     // vpnRestart;
+    startLimitIntervalSec = 0;
+  };
+
+  # The forward to the portal through the VPS, as ME: it reuses my key and the `vps` block of
+  # ssh.nix. PartOf: `vpn disconnect fai` takes it down too.
+  systemd.services.vpn-fai-relay = {
+    description = "SSH forward to the FAI portal through the VPS";
+    wants = [ "network-online.target" ];
+    after = [ "network-online.target" ];
+    partOf = [ "vpn-fai.service" ];
+    restartIfChanged = false;
+    serviceConfig = {
+      Type = "simple";
+      User = "v1cferr";
+      ExecStart = "${openssh}/bin/ssh -N -o BatchMode=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -L 127.0.0.1:${toString faiRelayPort}:${faiPortal} vps";
+      Restart = "always";
+      RestartSec = 5;
+    };
     startLimitIntervalSec = 0;
   };
 

@@ -209,6 +209,22 @@ when it changed, touches `/run/vpn-fai/rotated`; a user path unit in
 [`ssh.nix`](../../../modules/home/shell/ssh.nix) reacts with `ssh -O exit` on every host carrying
 a master. When the same IP comes back, nothing is touched, because those sessions can survive.
 
+## The portal is reached through the VPS
+
+On 21/10 and 27/10/2026 the resets came every few minutes, and `mtr` showed why: 0% loss across
+Algar and RNP, then 12% to 70% starting at UFSCar's edge (`200.133.233.200`, AS52888) and carried to
+the portal, while the VPS reached the same portal with 0% and 8 ms. The tunnel is PPP inside ONE
+TLS connection, so outer loss turns into stacked retransmits (pings of 4 to 8 s inside it) until
+the appliance gives up.
+
+So `vpn-fai-relay` holds `ssh -L 127.0.0.1:14433:200.133.233.101:4433 vps` and nxBender connects
+to that port (`-s`/`-P` override the sops file). Both legs measured clean (home to VPS 0% / 14 ms).
+The VPS needs nothing: its sshd allows forwarding by default. The fingerprint pin still holds,
+because the TLS session is end to end; the VPS only sees ciphertext. The relay runs as my user so
+it reuses my key and the `vps` block of `ssh.nix`, and `PartOf=` takes it down with the VPN. The
+trade: the FAI VPN now depends on the VPS being up, and `vpn diagnose fai` checks the relay first.
+To go back to the direct path, revert the commit that added the relay.
+
 ## Removed on 30/07: the `menu` subcommand
 
 It opened a loose rofi in the middle of the screen. The UI is now a popover ANCHORED to the bar

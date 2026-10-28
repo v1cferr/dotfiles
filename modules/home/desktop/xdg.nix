@@ -1,8 +1,9 @@
 # XDG: the default browser (Zen) plus the file associations. Nothing is INSTALLED here (rule 4).
 # Why applications.menu is mandatory for the KDE apps: docs/notes/desktop/desktop-plumbing.md
-{ ... }:
+{ config, ... }:
 
 let
+  home = config.home.homeDirectory;
   zen = "zen-beta.desktop";
   code = "code.desktop"; # VS Code (installed in modules/home/packages.nix)
   dolphin = "org.kde.dolphin.desktop"; # the file manager (installed in modules/home/apps/dolphin.nix)
@@ -47,6 +48,23 @@ in
       <Include><All/></Include>
     </Menu>
   '';
+
+  # The home's own folders: what impermanence will persist whole, instead of file by file.
+  xdg.userDirs = {
+    enable = true;
+    createDirectories = true;
+    desktop = "${home}/Desktop";
+    documents = "${home}/Documents";
+    download = "${home}/Downloads";
+    music = "${home}/Music";
+    pictures = "${home}/Pictures";
+    videos = "${home}/Videos";
+    templates = null; # never used, it only left an empty folder behind
+    publicShare = null;
+    extraConfig.PROJECTS = "${home}/Projects";
+  };
+  # The file existed before it was declared, written by xdg-user-dirs-update.
+  xdg.configFile."user-dirs.dirs".force = true;
 
   # Terminal apps (git, gh, xdg-open) read $BROWSER, not mimeapps.
   home.sessionVariables.BROWSER = "zen-beta";

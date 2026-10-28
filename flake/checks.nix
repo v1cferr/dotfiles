@@ -93,11 +93,13 @@ in
       };
       # EXTERNAL links, `.md` only. It needs NETWORK, so it can NEVER be part of the gate
       # (the build sandbox has none) and sits at the `manual` stage, run weekly by the CI.
+      # Excluded: loopback (a local service's UI) and the two gov sites that time out or serve a
+      # broken TLS chain to any checker, cited for people in docs/notes/desktop/calendar.md.
       lychee = {
         enable = true;
         stages = [ "manual" ];
         files = "\\.md$";
-        settings.flags = "--max-concurrency 6 --no-progress --scheme https --scheme http";
+        settings.flags = "--max-concurrency 6 --no-progress --scheme https --scheme http --exclude-loopback --exclude planalto.gov.br --exclude saocarlos.sp.gov.br";
       };
       # Rule 17's commit GRAMMAR, at the commit-msg stage. It is the only hook here that the
       # gate cannot run: `pre-commit run --all-files` has no message to look at.

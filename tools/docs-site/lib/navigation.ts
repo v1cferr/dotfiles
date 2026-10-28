@@ -73,6 +73,7 @@ export const navigation: NavItem[] = [
       { title: "Downloads tidy", doc: "notes/boot-and-storage/downloads-tidy.md" },
       { title: "Disk insight", doc: "notes/boot-and-storage/disk-insight.md" },
       { title: "Games disk", doc: "notes/boot-and-storage/games-disk.md" },
+      { title: "Impermanence", doc: "notes/boot-and-storage/impermanence.md" },
       { title: "Shutdown", doc: "notes/boot-and-storage/shutdown.md" },
     ],
   },

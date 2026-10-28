@@ -68,6 +68,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [disk-hygiene](boot-and-storage/disk-hygiene.md) | the space alarm that names the biggest consumers |
 | [downloads-tidy](boot-and-storage/downloads-tidy.md) | `~/Downloads` as an inbox, sorted by type every 30 min |
 | [disk-insight](boot-and-storage/disk-insight.md) | the size trend, the usage sampler, and why not atime |
+| [impermanence](boot-and-storage/impermanence.md) | the home persistence list written before the switch, and `persist-diff` |
 | [games-disk](boot-and-storage/games-disk.md) | one game install shared with Windows, and the `force` option that stays off |
 | [shutdown](boot-and-storage/shutdown.md) | why the machine takes that long to go down |
 

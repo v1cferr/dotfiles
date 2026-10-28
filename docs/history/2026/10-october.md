@@ -1,6 +1,6 @@
 # History: october 2026
 
-14 entries. Index in [README.md](../README.md).
+15 entries. Index in [README.md](../README.md).
 
 - [x] Vicinae replaced rofi and cliphist: one launcher for apps, files, the calculator, the
       clipboard history, my commands and four extensions (13/10/2026). How and why:
@@ -163,3 +163,10 @@
       • ONLY THE RE-DOWNLOADABLE IS TRASHED: installers and disk images, 30 days after sorting,
         to the trash and never `rm`, so 60 days to recover counting `trash-expire`.
       • NO PACKAGED TOOL. organize is not in nixpkgs, so the rules are Nix generating a shell `case`.
+- [x] The home's persistence list exists before impermanence does (28/10/2026): user folders
+      whole, hidden state by app, and `persist-diff` to show what a boot would wipe. Nothing is
+      switched on. How and why: [impermanence.md](../../notes/boot-and-storage/impermanence.md).
+      • NO FILE-BY-FILE TRIAGE. A 359-entry inventory was built and dropped the same day: the
+        folders are mine to keep tidy, the list only names app state.
+      • THE DIFF EARNED ITS KEEP ON ITS FIRST RUN: hand-written `acuttis-point*` user units that
+        no module declares would have vanished at the first wiped boot.

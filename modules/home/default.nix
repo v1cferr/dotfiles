@@ -4,6 +4,7 @@
 
 {
   imports = [
+    ./persistence.nix # what in ~ survives a boot under impermanence (not on yet) plus `persist-diff`
     ./packages.nix # the CENTRAL LIST of the user's apps/CLIs (it mirrors modules/nixos/packages.nix)
     ./shell # terminal, shell and dev CLI (zsh/starship/cli/kitty/git)
     ./desktop # Hyprland plus Wayland plus appearance (hypr/quickshell/lockscreen/theme/xdg…)

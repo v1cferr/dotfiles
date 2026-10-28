@@ -1,6 +1,6 @@
 # hyprsunset: the blue light curve
 
-`modules/home/desktop/hyprsunset.nix`. Docs: <https://wiki.hypr.land/Hypr-Ecosystem/hyprsunset/>
+`modules/home/desktop/hyprsunset.nix`. Docs: <https://wiki.hypr.land/hypr-ecosystem/user/hyprsunset/>
 
 It acts through the compositor's CTM (`hyprland-ctm-control-v1`), so it does NOT show up in a
 screenshot or a recording, which matters because Flameshot is used directly.

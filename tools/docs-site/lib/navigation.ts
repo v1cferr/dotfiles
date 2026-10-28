@@ -70,6 +70,7 @@ export const navigation: NavItem[] = [
       { title: "Restic", doc: "notes/boot-and-storage/restic.md" },
       { title: "Arch legacy", doc: "notes/boot-and-storage/arch-legacy.md" },
       { title: "Disk hygiene", doc: "notes/boot-and-storage/disk-hygiene.md" },
+      { title: "Downloads tidy", doc: "notes/boot-and-storage/downloads-tidy.md" },
       { title: "Disk insight", doc: "notes/boot-and-storage/disk-insight.md" },
       { title: "Games disk", doc: "notes/boot-and-storage/games-disk.md" },
       { title: "Shutdown", doc: "notes/boot-and-storage/shutdown.md" },

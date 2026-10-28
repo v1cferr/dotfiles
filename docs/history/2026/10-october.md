@@ -1,6 +1,6 @@
 # History: october 2026
 
-12 entries. Index in [README.md](../README.md).
+14 entries. Index in [README.md](../README.md).
 
 - [x] Vicinae replaced rofi and cliphist: one launcher for apps, files, the calculator, the
       clipboard history, my commands and four extensions (13/10/2026). How and why:
@@ -156,3 +156,10 @@
         old green accent, but Spotifast themes only colors, so spicetify's mono "text" look is gone.
       • THREE OVERLAYS LEFT WITH IT: `--no-zygote`, the Wayland flag and the stale SingletonLock
         existed only to make CEF open.
+- [x] `~/Downloads` became an inbox (28/10/2026): loose files that sat for an hour are sorted into
+      one folder per type every 30 min, inside `~/Downloads` itself. How and why:
+      [downloads-tidy.md](../../notes/boot-and-storage/downloads-tidy.md).
+      • THE HAND-MADE FOLDERS ARE NEVER TOUCHED. Only files loose at the root move.
+      • ONLY THE RE-DOWNLOADABLE IS TRASHED: installers and disk images, 30 days after sorting,
+        to the trash and never `rm`, so 60 days to recover counting `trash-expire`.
+      • NO PACKAGED TOOL. organize is not in nixpkgs, so the rules are Nix generating a shell `case`.

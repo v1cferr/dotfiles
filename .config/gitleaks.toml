@@ -4,6 +4,15 @@
 [extend]
 useDefault = true
 
+# A WireGuard private key, in wg-quick's form or OpenWrt UCI's. The defaults only catch it through
+# generic-api-key, an entropy guess; a key is 32 bytes of base64, so it gets an exact rule.
+[[rules]]
+id = "wireguard-private-key"
+description = "A WireGuard private key"
+regex = '''(?i)(?:PrivateKey\s*=\s*|private_key\s*=?\s*['"]?)([A-Za-z0-9+/]{42}[AEIMQUYcgkosw480]=)'''
+secretGroup = 1
+keywords = ["privatekey", "private_key"]
+
 # A public IPv4 is not a secret, it is a MAP: of this house, of someone else's network. So a new one
 # is a decision, taken in the diff, and never an accident found later.
 [[rules]]

@@ -270,7 +270,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
         NAT; LAN-side keeps the device but misses Wi-Fi. With TLS, metadata only (SNI, JA4, DNS).
       • PRIVACY: the DNS log is everyone's browsing; it never leaves this machine, is purged at 30
         days, and an alert carries the threat and the device, never the query history.
-      • SOURCES: banIP <https://github.com/openwrt/packages/blob/master/net/banip/files/README.md>,
+      • SOURCES: banIP <https://github.com/openwrt/packages/blob/master/net/banip/README.md>,
         HaGeZi <https://github.com/hagezi/dns-blocklists>, CrowdSec on OpenWrt
         <https://openwrt.org/docs/guide-user/services/crowdsec>, mirroring for an IDS on OpenWrt
         <https://forum.openwrt.org/t/can-you-port-mirror-on-openwrt-with-use-with-an-ids/121780>.

@@ -223,6 +223,16 @@ in
         arguments = "--productcode=pro";
       };
 
+      # The same shim as Overwatch. Warcraft III's code is in its .lnk; WoW wrote no .lnk, so its
+      # code is the key Battle.net.config gives the only installed flavour (`_forever_`).
+      "Warcraft III" = inGame "Warcraft III" "Warcraft III Launcher.exe" // {
+        arguments = "--productcode=w3";
+      };
+      "World of Warcraft" = inGame "World of Warcraft" "World of Warcraft Launcher.exe" // {
+        arguments = "--productcode=wowf";
+        icon = (inGame "World of Warcraft" "_forever_/Wow.exe").path;
+      };
+
       "Cities Skylines II" = inGame "Cities - Skylines II" "Cities2.exe";
       "Assassin's Creed Black Flag Resynced" =
         inGame "Assassin Creed Black Flag Resynced" "ACBlackFlag.exe";
@@ -230,6 +240,10 @@ in
       # `binaries/` and NOT `launcher/dowser.exe`: the Paradox launcher is what the repack replaced
       # a Steam login with, and going straight to the exe skips a login that cannot succeed.
       "Victoria 3" = inGame "Victoria 3" "binaries/victoria3.exe";
+
+      # Inside its own prefix (4.3 GiB of `@home`), never moved to the games disk. The GUI had
+      # added it as `valheim`, renamed in bottle.yml so this entry adopts it instead of a twin.
+      "Valheim" = inBottle "Valheim" "Valheim/valheim.exe";
     };
 
     # Each program in the app launcher (Vicinae), started the way the Library tab starts it.

@@ -109,6 +109,14 @@ inside the prefix, decoded from `drive_c/users/Public/Desktop`:
 | Cities Skylines II | `Cities2.exe` | the entry that was already there |
 | Black Flag Resynced | `ACBlackFlag.exe` | the entry that was already there |
 | Victoria 3 | `binaries/victoria3.exe` | the repack's own layout |
+| Warcraft III | `Warcraft III Launcher.exe --productcode=w3` | its shortcut in the prefix |
+| World of Warcraft | `World of Warcraft Launcher.exe --productcode=wowf` | `Battle.net.config`: no shortcut, and `wowf` (`_forever_`) is the only flavour installed |
+| Valheim | `Valheim/valheim.exe` in its own bottle | the entry the GUI had added as `valheim` |
+
+**Valheim was adopted, not added.** The GUI entry was named `valheim`, and the check is a
+case-sensitive `grep` (see the limits above), so declaring `Valheim` would have produced a twin.
+The `name:` of that one entry was renamed in `bottle.yml` on 28/10/2026, with Bottles closed, and
+the module took it from there.
 
 **Hearthstone goes through Battle.net and Overwatch does not**, which looks inconsistent and is
 not. Hearthstone's entry predates this module and it works, so it was transcribed rather than

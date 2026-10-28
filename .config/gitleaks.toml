@@ -14,7 +14,8 @@ regex = '''\b(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d
 keywords = ["."]
 
 # What is not public, or not an address: RFC 1918, loopback, CGNAT, link-local, multicast, the
-# three TEST-NETs the docs use as examples, and the all-zero and broadcast forms.
+# three TEST-NETs the docs use as examples, IETF protocol assignments, benchmarking, and the all-zero
+# and broadcast forms.
 [[rules.allowlists]]
 description = "not a public address"
 regexTarget = "match"
@@ -26,6 +27,8 @@ regexes = [
   '''^169\.254\.''',
   '''^2(?:2[4-9]|3\d|[45]\d)\.''',
   '''^(?:192\.0\.2|198\.51\.100|203\.0\.113)\.''',
+  '''^192\.0\.0\.''',
+  '''^198\.1[89]\.''',
 ]
 
 # review-by: 2027-09-29

@@ -55,6 +55,7 @@ export const navigation: NavItem[] = [
       { title: "0013 Graph view dependency", doc: "decisions/0013-graph-view-with-one-dependency.md" },
       { title: "0014 Source previews", doc: "decisions/0014-source-previews-from-a-build-snapshot.md" },
       { title: "0015 Limine over GRUB", doc: "decisions/0015-limine-over-grub.md" },
+      { title: "0016 Bitwarden is the secrets source", doc: "decisions/0016-bitwarden-is-the-secrets-source.md" },
     ],
   },
   { title: "How the notes work", doc: "notes/README.md" },

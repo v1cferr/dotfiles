@@ -76,6 +76,20 @@ has the original files.
 `sops set` with single-line JSON, which would break it. And unlike the restic password, the OAuth
 token is regenerable, so it does not need the vault.
 
+## Home secrets: the three kinds
+
+Decided in [ADR 0016](../../decisions/0016-bitwarden-is-the-secrets-source.md): Bitwarden is the
+single source for the home too, and the kind of secret decides where it lives.
+
+| Kind | Examples | Where it lives |
+| --- | --- | --- |
+| **config**: the machine needs the value | API tokens, VPN passwords, the Drive remote | Bitwarden, then this pipeline, then `/run/secrets` |
+| **session**: an app logs in and refreshes it | gh (in the keyring), vercel, azure, docker, browsers | the app's state, kept by `my.persist`; never copied into sops |
+| **cold**: recovery material nothing reads | the age key backup, recovery codes, old WireGuard and router configs | only in Bitwarden (secure note or attachment), no copy in `~` |
+
+`.google_authenticator` is the exception that stays a file: the PAM module rewrites it, so it
+cannot live in the read-only `/run/secrets`. Bitwarden keeps a copy as a cold secret.
+
 ## Editing by hand
 
 **The obvious command does NOT work**, and it was written down wrong in this repo until

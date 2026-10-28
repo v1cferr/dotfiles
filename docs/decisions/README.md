@@ -27,3 +27,4 @@ Each record follows the same short shape, after [Michael Nygard's ADR](https://a
 | [0013](0013-graph-view-with-one-dependency.md) | The site's graph view takes one dependency | accepted, refines 0010 |
 | [0014](0014-source-previews-from-a-build-snapshot.md) | The site previews source from a snapshot built beside it | accepted, refines 0005 and 0010 |
 | [0015](0015-limine-over-grub.md) | Limine replaces GRUB, so the initrd is verified too | proposed, would supersede 0007 |
+| [0016](0016-bitwarden-is-the-secrets-source.md) | Bitwarden is the single source of secrets, home included | accepted |

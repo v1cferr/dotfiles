@@ -1,0 +1,14 @@
+# osv-scanner: advisories in this lock that cannot be fixed yet, each with a reason and an expiry
+# (rule 22): docs/notes/repo/github-settings.md
+
+# basic-memory 0.24.1 caps litellm below 1.92, and both fixes are later. Both hit litellm's PROXY
+# server, which nothing here runs: basic-memory imports it as a library.
+[[IgnoredVulns]]
+id = "GHSA-7hp6-4w63-5g45"
+ignoreUntil = 2026-12-31
+reason = "LiteLLM proxy admin escalation; litellm is used as a library, capped <1.92 upstream"
+
+[[IgnoredVulns]]
+id = "GHSA-g5ff-637f-6q2m"
+ignoreUntil = 2026-12-31
+reason = "LiteLLM proxy file read via vertex_ai_credentials; litellm is used as a library, capped <1.92 upstream"

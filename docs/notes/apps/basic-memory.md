@@ -66,6 +66,11 @@ outright, with `Because there is no version of fastmcp==4.0.0b1`. The pre-releas
 choice, and declaring the tolerance in the file is what keeps `uv lock` reproducible from a clean
 clone.
 
+The same tolerance lets uv pick a BETA anywhere in the tree, so `constraint-dependencies` holds
+`logfire<6` (28/10/2026: `--upgrade-package logfire` took 6.0.0b8, while 5.x already allows the
+fixed OpenTelemetry). Two litellm advisories sit in `pkgs/basic-memory/osv-scanner.toml` until
+31/12/2026: both are in litellm's proxy server, and basic-memory caps litellm below the fix.
+
 Two sdists need a build-system fix, both in `pkgs/basic-memory/package.nix`: `pybars3` and `pymeta3` never
 declared `setuptools`, so uv refuses to guess it. Everything else installs from a wheel.
 

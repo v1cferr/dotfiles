@@ -2,9 +2,11 @@
 name = "basic-memory-env"
 version = "0.0.0"
 requires-python = ">=3.13,<3.14"
-dependencies = ["basic-memory==0.23.0"]
+dependencies = ["basic-memory==0.24.1"]
 
 [tool.uv]
 package = false
 # basic-memory pins fastmcp to a BETA, so the resolver has to be told pre-releases are fine.
 prerelease = "allow"
+# That tolerance would otherwise take logfire's 6.x BETA; 5.x already allows the fixed OpenTelemetry.
+constraint-dependencies = ["logfire<6"]

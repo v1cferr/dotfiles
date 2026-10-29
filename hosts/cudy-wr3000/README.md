@@ -55,9 +55,13 @@ whose deletion costs remote administration.
 
 ## What is NOT here
 
-**Secrets.** The seven credential values come out redacted (rule 12): the
-WireGuard private key, the PPPoE password, the two WiFi passwords, the LuCI
-login, the adblock API password and the etherwake one. The redaction is
+**Secrets.** Ten values come out redacted (rule 12): the WireGuard private
+key, the PPPoE password, the two WiFi passwords, the two DDNS Cloudflare
+tokens, the adblock-fast rpcd token, the etherwake password, and the LuCI and
+adblock-fast API logins (those two are `$p$` references to a system user, not
+secrets). The eight real ones live in Bitwarden, folder "cold secrets", as
+`router: <uci key>`, read live from the router on 28/10/2026
+([ADR 0016](../../docs/decisions/0016-bitwarden-is-the-secrets-source.md)). The redaction is
 *fail-safe*: it redacts by default everything whose name suggests a credential
 and only releases what it recognizes as public (`public_key`) or as a file path.
 

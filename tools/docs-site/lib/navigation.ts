@@ -183,6 +183,7 @@ export const navigation: NavItem[] = [
       { title: "Docker prune", doc: "notes/services/docker-prune.md" },
       { title: "phone-sync", doc: "notes/services/phone-sync.md" },
       { title: "libvirt", doc: "notes/services/libvirt.md" },
+      { title: "cockpit", doc: "notes/services/cockpit.md" },
     ],
   },
   {

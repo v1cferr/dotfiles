@@ -26,6 +26,7 @@
     basic-memory = true; # the MCP memory server over ~/context (Claude Code, codex and agy share it)
     cs2-backup = true; # an hourly mirror of the CS2 saves out of the Bottles prefix (NOT a backup)
     libvirt = true; # libvirt/KVM plus virt-manager (a disposable Windows 11 guest)
+    cockpit = true; # start/stop services from the browser at ops.v1cferr.dev (socket-activated)
   };
 
   # EXPOSURE: `expose` is "lan" (home plus WireGuard), "public" (internet, subject to `auth`) or
@@ -140,6 +141,16 @@
       upstream = config.services.webhook.port;
       expose = "tunnel";
       comment = "The FAI GitLab's Pipeline Hook (glance band). Access (service token `gitlab-webhook`) in front, X-Gitlab-Token behind.";
+    };
+  }
+  # Cockpit runs units as root once "administrative access" is on, so it never leaves the house.
+  // lib.optionalAttrs config.services.cockpit.enable {
+    ops = {
+      upstream = config.services.cockpit.port;
+      expose = "lan";
+      launcher.title = "Cockpit";
+      launcher.glyph = "md-console_network_outline";
+      comment = "Cockpit, start/stop of every service. Root-capable after sudo: `lan` only.";
     };
   };
 }

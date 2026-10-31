@@ -166,6 +166,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [docker-prune](services/docker-prune.md) | the 11 GB with no ceiling, and the two options that destroy data |
 | [phone-sync](services/phone-sync.md) | why Syncthing for the phone's photos, and the Revert button that deletes |
 | [libvirt](services/libvirt.md) | the KVM sandbox, and the three wiki steps that are wrong on 26.05 |
+| [cockpit](services/cockpit.md) | start/stop from the browser, and stop versus toggle |
 
 ### repo
 

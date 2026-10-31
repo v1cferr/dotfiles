@@ -26,5 +26,6 @@
     "basic-memory"
     "cs2-backup"
     "libvirt"
+    "cockpit"
   ] (n: lib.mkEnableOption n);
 }

@@ -55,6 +55,11 @@ let
       system = [ "qbittorrent.service" ];
       ingress = "torrent";
     };
+    cockpit = {
+      label = "cockpit";
+      system = [ "cockpit.socket" ]; # the service only exists while a browser is on the page
+      ingress = "ops";
+    };
     caddy = {
       label = "caddy";
       system = [ "caddy.service" ];

@@ -32,6 +32,11 @@ let
   };
   inherit (config.programs.kitty) font;
 
+  # Every module prints exactly one line (one row per display, a static font), so the boxes are as
+  # tall as the module list, and the logo is sized from that count instead of by hand.
+  rows = builtins.length config.programs.fastfetch.settings.modules;
+  asciiRows = 20; # the builtin NixOS logo
+
   snowflake = "${nixos-icons}/share/icons/hicolor/256x256/apps/nix-snowflake.png";
 
   # Each section is its own box: a 13-cell key column ("icon label") and a value column of `value`
@@ -70,7 +75,7 @@ in
       logo = {
         source = "NixOS";
         type = "builtin";
-        padding.top = 5; # the logo is 20 rows and the boxes about 30, so 5 centers it
+        padding.top = (rows - asciiRows) / 2; # centered beside the boxes
       };
       display = {
         separator = " ";
@@ -156,11 +161,12 @@ in
     };
   };
 
-  # In kitty (local, or over SSH from it, since the bytes travel inline) the real snowflake image
-  # replaces the ASCII logo. KITTY_WINDOW_ID is what kitty exports; TERM is often overridden.
+  # In kitty (local, or over SSH from it, since the bytes travel inline) the snowflake image replaces
+  # the ASCII logo at the boxes' exact height; with no width, fastfetch keeps it square.
+  # KITTY_WINDOW_ID is what kitty exports; TERM is often overridden.
   programs.zsh.siteFunctions.fastfetch = ''
     if [[ -n $KITTY_WINDOW_ID || $TERM == xterm-kitty ]]; then
-      command fastfetch --logo-type kitty --logo ${snowflake} --logo-width 40 --logo-height 20 "$@"
+      command fastfetch --logo-type kitty --logo ${snowflake} --logo-height ${toString rows} "$@"
     else
       command fastfetch "$@"
     fi

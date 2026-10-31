@@ -1,13 +1,15 @@
-"""Render the NixOS snowflake spinning around its vertical axis into terminal frames.
+"""Render the NixOS snowflake tumbling in 3D into ASCII frames, the way donut.c draws its torus.
 
-The logo becomes a slab with some thickness, splatted voxel by voxel into a z-buffer for each
-angle, then shaded per face (front, back, rim) and written as half-block cells: the upper pixel is
-the foreground of "▀" and the lower one its background, so a cell holds two square pixels.
+The logo becomes a solid slab: front and back faces plus a rim whose normals come from the
+outline. For each frame the solid rotates about two axes at once, every surface point is
+projected with perspective into a z-buffer, and its luminance against a fixed light picks a
+character from donut.c's ramp. The logo's own two blues tint the characters.
 
 usage: spin-frames.py <logo.png> <rows> <frames> <outdir>
-<outdir>/frames holds every frame separated by ASCII RS (0x1e), and <outdir>/first the front-facing
-one alone, for fastfetch to reserve the logo's space. Each frame is `rows` lines of exactly 2*rows
-cells, so drawing one over the previous erases it without clearing the screen.
+<outdir>/frames holds every frame separated by ASCII RS (0x1e), and <outdir>/first the first one
+alone, for fastfetch to reserve the logo's space. Each frame is `rows` lines of exactly 2*rows
+cells (a cell is about twice as tall as wide, so the logo stays round), which lets one frame be
+drawn over the previous without clearing the screen.
 """
 
 import math
@@ -15,90 +17,112 @@ import os
 import sys
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
 RS = "\x1e"
-SUPER = 2  # supersampling per output pixel, so the edges come out antialiased into coverage
-THICKNESS = 0.06  # of the logo's width: about 3 cells when seen edge-on
-LIGHT = np.array([-0.35, -0.45, 0.82])  # from the viewer's upper left
+RAMP = ".,-~:;=!*#$@"  # donut.c's, from dark to bright
+THICKNESS = 0.14  # half the slab's depth, in logo radii
+DISTANCE = 5.0  # viewer to the logo's center, in logo radii: mild perspective
+BEVEL = 6.0  # how much the faces round off toward the outline, so a face is a gradient, not one glyph
+LIGHT = np.array([0.0, 0.7, 0.7])  # from above and in front, like donut.c's (0, 1, -1)
 LIGHT = LIGHT / np.linalg.norm(LIGHT)
+TURNS_X, TURNS_Z = 2, 1  # whole turns per loop, so the last frame meets the first
 
 
-def load(path, size):
-    """The logo's colors and alpha mask at size x size."""
-    img = Image.open(path).convert("RGBA").resize((size, size), Image.LANCZOS)
+def surface(path, side):
+    """Surface points, their normals and their base colors, in logo radii."""
+    img = Image.open(path).convert("RGBA").resize((side, side), Image.LANCZOS)
     rgba = np.asarray(img, dtype=np.float32) / 255.0
-    return rgba[..., :3], rgba[..., 3] > 0.5
+    mask = rgba[..., 3] > 0.5
+    rgb = rgba[..., :3]
 
+    # The blurred alpha's gradient points inward from the outline: it rounds the faces off (a
+    # pillowed slab, the way the torus's curve shades donut.c) and gives the rim its normals.
+    blur = np.asarray(
+        Image.fromarray((mask * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(side / 60)),
+        dtype=np.float32,
+    )
+    gy, gx = np.gradient(blur / 255.0 * side / 60)
 
-def render(rgb, mask, theta, size):
-    """One angle into an RGB image plus coverage, both at size x size."""
     ys, xs = np.nonzero(mask)
-    base = rgb[ys, xs]
-    cx = (xs - size / 2 + 0.5).astype(np.float32)
-    cy = (ys - size / 2 + 0.5).astype(np.float32)
-    half = THICKNESS * size / 2
-    layers = max(2, int(round(THICKNESS * size)) + 1)
-    c, s = math.cos(theta), math.sin(theta)
+    x = (xs - side / 2 + 0.5) / (side / 2)
+    y = -(ys - side / 2 + 0.5) / (side / 2)
+    col = rgb[ys, xs]
+    n = len(x)
+    tilt_x, tilt_y = -gx[ys, xs] * BEVEL, gy[ys, xs] * BEVEL
+    front = np.stack([tilt_x, tilt_y, np.ones(n)], 1)
+    back = np.stack([tilt_x, tilt_y, -np.ones(n)], 1)
+    front /= np.linalg.norm(front, axis=1, keepdims=True)
+    back /= np.linalg.norm(back, axis=1, keepdims=True)
+    pts = [np.stack([x, y, np.full(n, THICKNESS)], 1), np.stack([x, y, np.full(n, -THICKNESS)], 1)]
+    nrm = [front, back]
+    cols = [col, col]
 
-    depth = np.full((size, size), -np.inf, dtype=np.float32)
-    color = np.zeros((size, size, 3), dtype=np.float32)
-    for i, z in enumerate(np.linspace(-half, half, layers)):
-        px = cx * c + z * s  # rotation about Y: x' = x cos + z sin, depth = -x sin + z cos
-        pz = -cx * s + z * c
-        if i == layers - 1:
-            normal = np.array([s, 0.0, c])  # front face
-        elif i == 0:
-            normal = np.array([-s, 0.0, -c])  # back face
-        else:
-            normal = None  # rim: only shows at the silhouette
-        if normal is not None:
-            shade = 0.30 + 0.70 * max(0.0, float(normal @ LIGHT))
-        else:
-            shade = 0.42
-        sx = np.clip(np.round(px + size / 2 - 0.5).astype(int), 0, size - 1)
-        sy = np.clip(np.round(cy + size / 2 - 0.5).astype(int), 0, size - 1)
-        # Nearest voxel wins: sort far to near, so later writes are the closer ones.
-        order = np.argsort(pz)
-        sx, sy, pz_o = sx[order], sy[order], pz[order]
-        closer = pz_o > depth[sy, sx]
-        sx, sy, pz_o = sx[closer], sy[closer], pz_o[closer]
-        depth[sy, sx] = pz_o
-        color[sy, sx] = base[order][closer] * shade
-    return color, np.isfinite(depth)
+    # The rim: outline pixels, facing outward.
+    edge = mask & ~np.asarray(Image.fromarray((mask * 255).astype(np.uint8)).filter(ImageFilter.MinFilter(3)), dtype=bool)
+    ey, ex = np.nonzero(edge)
+    en = np.stack([-gx[ey, ex], gy[ey, ex], np.zeros(len(ex))], 1)
+    en /= np.maximum(np.linalg.norm(en, axis=1, keepdims=True), 1e-6)
+    exn = (ex - side / 2 + 0.5) / (side / 2)
+    eyn = -(ey - side / 2 + 0.5) / (side / 2)
+    for z in np.linspace(-THICKNESS, THICKNESS, 9)[1:-1]:
+        pts.append(np.stack([exn, eyn, np.full(len(ex), z)], 1))
+        nrm.append(en)
+        cols.append(rgb[ey, ex])
+    return np.concatenate(pts), np.concatenate(nrm), np.concatenate(cols)
 
 
-def downsample(color, cover, factor):
-    """Average factor x factor blocks; a pixel is on when at least half of its block is."""
-    h, w = cover.shape
-    cov = cover.reshape(h // factor, factor, w // factor, factor).mean(axis=(1, 3))
-    col = (color * cover[..., None]).reshape(h // factor, factor, w // factor, factor, 3).sum(axis=(1, 3))
-    col = col / np.maximum(cov * factor * factor, 1e-6)[..., None]
-    return col, cov >= 0.5
+def rotation(a, b):
+    """About X by a, then about Z by b: donut.c's two angles."""
+    ca, sa, cb, sb = math.cos(a), math.sin(a), math.cos(b), math.sin(b)
+    rx = np.array([[1, 0, 0], [0, ca, -sa], [0, sa, ca]])
+    rz = np.array([[cb, -sb, 0], [sb, cb, 0], [0, 0, 1]])
+    return rz @ rx
 
 
-def encode(col, on):
-    """Half-block lines, emitting a color only when it changes."""
+def frame(pts, nrm, cols, rows, a, b):
+    """One frame as `rows` lines of 2*rows tinted characters."""
+    width = 2 * rows
+    r = rotation(a, b)
+    p, n = pts @ r.T, nrm @ r.T
+    ooz = 1.0 / (DISTANCE - p[:, 2])  # toward the viewer is +z
+    scale = (rows / 2 - 0.5) * (DISTANCE - 1.0)  # the nearest point still fits
+    sx = np.floor(width / 2 + 2 * scale * p[:, 0] * ooz).astype(int)
+    sy = np.floor(rows / 2 - scale * p[:, 1] * ooz).astype(int)
+    inside = (sx >= 0) & (sx < width) & (sy >= 0) & (sy < rows)
+    lum = n @ LIGHT
+
+    # The z-buffer, vectorized: sort by cell and then by 1/z, and keep each cell's last (nearest).
+    idx = np.nonzero(inside)[0]
+    cell = sy[idx] * width + sx[idx]
+    idx = idx[np.lexsort((ooz[idx], cell))]
+    cell = sy[idx] * width + sx[idx]
+    last = np.append(cell[1:] != cell[:-1], True)
+    idx, cell = idx[last], cell[last]
+
+    char = np.full(rows * width, -1)
+    tint = np.zeros((rows * width, 3))
+    char[cell] = np.clip((lum[idx] * len(RAMP)).astype(int), 0, len(RAMP) - 1)
+    tint[cell] = cols[idx]
+    return char.reshape(rows, width), tint.reshape(rows, width, 3)
+
+
+def encode(char, tint):
+    """Tinted lines, emitting a color only when it changes."""
     lines = []
-    for r in range(0, on.shape[0], 2):
-        out, fg, bg = [], None, None
-        for x in range(on.shape[1]):
-            top, bot = on[r, x], on[r + 1, x]
-            tc = tuple(int(v * 255) for v in col[r, x]) if top else None
-            bc = tuple(int(v * 255) for v in col[r + 1, x]) if bot else None
-            if top:
-                want_fg, want_bg, ch = tc, bc, "▀"
-            elif bot:
-                want_fg, want_bg, ch = bc, None, "▄"
-            else:
-                want_fg, want_bg, ch = fg, None, " "
-            if want_bg != bg:
-                out.append("\x1b[49m" if want_bg is None else "\x1b[48;2;%d;%d;%dm" % want_bg)
-                bg = want_bg
-            if want_fg != fg and ch != " ":
-                out.append("\x1b[38;2;%d;%d;%dm" % want_fg)
-                fg = want_fg
-            out.append(ch)
+    for y in range(char.shape[0]):
+        out, last = [], None
+        for x in range(char.shape[1]):
+            if char[y, x] < 0:
+                out.append(" ")
+                continue
+            # Two shades per hue are enough to read as the logo and keep the frames small.
+            c = tuple(int(round(v * 255 / 32) * 32) for v in tint[y, x])
+            c = tuple(min(255, v) for v in c)
+            if c != last:
+                out.append("\x1b[38;2;%d;%d;%dm" % c)
+                last = c
+            out.append(RAMP[char[y, x]])
         out.append("\x1b[0m")
         lines.append("".join(out))
     return "\n".join(lines)
@@ -106,13 +130,11 @@ def encode(col, on):
 
 def main():
     path, rows, frames, dest = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4]
-    side = 2 * rows  # pixels per side: 2 per cell vertically, 1 per cell horizontally
-    size = side * SUPER
-    rgb, mask = load(path, size)
+    pts, nrm, cols = surface(path, 8 * rows)  # dense enough to leave no holes when tilted
     out = []
-    for n in range(frames):
-        color, cover = render(rgb, mask, 2 * math.pi * n / frames, size)
-        out.append(encode(*downsample(color, cover, SUPER)))
+    for k in range(frames):
+        t = 2 * math.pi * k / frames
+        out.append(encode(*frame(pts, nrm, cols, rows, TURNS_X * t, TURNS_Z * t)))
     os.makedirs(dest, exist_ok=True)
     with open(os.path.join(dest, "frames"), "w", encoding="utf-8") as f:
         f.write(RS.join(out))

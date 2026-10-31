@@ -38,8 +38,8 @@ let
   # tall as the module list, and the logo is sized from that count instead of by hand.
   rows = builtins.length (mkModules boxed);
 
-  # The logo spinning in 3D, rendered at build time into `rows`-tall half-block frames, 2*rows
-  # cells wide (square); scripts/spin-frames.py says how. 72 frames make one turn at ~30 fps.
+  # The logo tumbling in 3D like donut.c, rendered at build time into `rows`-tall ASCII frames,
+  # 2*rows cells wide (square); scripts/spin-frames.py says how. 120 frames loop in ~4 s at 30 fps.
   spinWidth = 2 * rows;
   spin =
     runCommand "fastfetch-nixos-spin"
@@ -51,7 +51,7 @@ let
           ]))
         ];
       }
-      "python3 ${./scripts/spin-frames.py} ${nixos-icons}/share/icons/hicolor/1024x1024/apps/nix-snowflake.png ${toString rows} 72 $out";
+      "python3 ${./scripts/spin-frames.py} ${nixos-icons}/share/icons/hicolor/1024x1024/apps/nix-snowflake.png ${toString rows} 120 $out";
 
   # Each section is its own box: a 13-cell key column ("icon label") and a value column of `value`
   # cells. Nix measures bytes, so widths are computed on the ASCII parts only, never on glyphs.

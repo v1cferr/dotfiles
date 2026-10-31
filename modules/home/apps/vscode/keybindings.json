@@ -29,36 +29,21 @@
         "args": {
             "commands": [
                 "workbench.action.closeAllGroups",
-                {
-                    "command": "vscode.setEditorLayout",
-                    "args": {
-                        "orientation": 0,
-                        "groups": [
-                            { "size": 0.55 },
-                            { "size": 0.45, "groups": [{}, {}] }
-                        ]
-                    }
-                },
-                {
-                    "command": "workbench.action.createTerminalEditor",
-                    "args": { "location": { "viewColumn": 1 } }
-                },
+                // Each group is created and focused first, then the terminal opens IN it: a
+                // viewColumn target raced the layout and piled every terminal into one row
+                "workbench.action.createTerminalEditorSameGroup",
                 {
                     "command": "workbench.action.terminal.sendSequence",
                     "args": { "text": "claude\r" }
                 },
-                {
-                    "command": "workbench.action.createTerminalEditor",
-                    "args": { "location": { "viewColumn": 2 } }
-                },
+                "workbench.action.newGroupRight",
+                "workbench.action.createTerminalEditorSameGroup",
                 {
                     "command": "workbench.action.terminal.sendSequence",
                     "args": { "text": "claude-usage\r" }
                 },
-                {
-                    "command": "workbench.action.createTerminalEditor",
-                    "args": { "location": { "viewColumn": 3 } }
-                },
+                "workbench.action.newGroupBelow",
+                "workbench.action.createTerminalEditorSameGroup",
                 "workbench.action.focusFirstEditorGroup"
             ]
         }

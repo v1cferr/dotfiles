@@ -18,6 +18,14 @@ let
     writeText
     ;
 
+  # Every installed package by name: Qt keeps the icon theme it read at start, so a new app would
+  # show up iconless until the server restarts. Hashed, so the unit file stays one line.
+  installedApps = builtins.hashString "sha256" (
+    lib.concatMapStringsSep "\n" (pkg: pkg.name or "") (
+      config.home.packages ++ osConfig.environment.systemPackages
+    )
+  );
+
   p = config.my.theme.palette;
   c = name: "#${p.${name}}";
   home = config.home.homeDirectory;
@@ -247,7 +255,10 @@ in
   config.systemd.user.services.vicinae = {
     Unit = {
       ConditionEnvironment = "WAYLAND_DISPLAY";
-      X-Restart-Triggers = [ "${overrides}" ];
+      X-Restart-Triggers = [
+        "${overrides}"
+        installedApps
+      ];
     };
     Service = {
       Environment = [

@@ -38,6 +38,8 @@
   # decision about reach and not a formality.
   # The `basic-memory` tunnel (created 25/09/2026). Not a secret: it is the CNAME target.
   my.net.tunnel.id = "3376a3fe-8193-489d-9cb2-8132ff65d74b";
+  # The Beszel hub's key (paired 31/10/2026). Not a secret: it is the public half.
+  my.beszel.hubKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIARDFeWd3+wE9I66ofZNw+48A8B4QA4fdDA4QmZagW4b";
   # The M51's Syncthing Device ID (paired 07/10/2026). Not a secret: it is public key material.
   my.phoneSync.deviceId = "GEVX7TN-N65J2KA-ZZM3XF3-SVVMH6Y-5WQO6A6-ENGMBXI-MLFBX2V-H7XVAQV";
 

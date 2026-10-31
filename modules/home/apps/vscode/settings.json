@@ -301,6 +301,8 @@
   "workbench.editor.preventPinnedEditorClose": "keyboardAndMouse",
   // It keeps the pinned tabs on a separate row at the top, always fixed to the left
   "workbench.editor.pinnedTabsOnSeparateRow": true,
+  // A terminal in the editor area no longer locks its group (the default draws a lock on each)
+  "workbench.editor.autoLockGroups": { "terminalEditor": false },
   // It always reopens the last session's windows/folders (it goes back to where you stopped)
   "window.restoreWindows": "all",
   // Zoom for the WHOLE UI (Ctrl+= / Ctrl+- / Ctrl+0), not just the editor. The default

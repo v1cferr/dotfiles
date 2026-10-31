@@ -1,11 +1,18 @@
 # fastfetch, as a boxed key column split into System / Desktop / Hardware, Catnap style.
 # The terminal field uses {process-name}, and owfetch mirrors it: docs/notes/network/network.md
-{ lib, pkgs, ... }:
+{
+  config,
+  lib,
+  osConfig,
+  pkgs,
+  ...
+}:
 
 let
   inherit (pkgs)
     coreutils
     gawk
+    jq
     nixos-icons
     unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
     ;
@@ -13,6 +20,17 @@ let
   date = lib.getExe' coreutils "date";
   stat = lib.getExe' coreutils "stat";
   awk = lib.getExe gawk;
+
+  # The version of the binary on PATH, from its store path (…-vscode-1.143.1/bin/code): never the
+  # evaluated package, which can differ from what is installed, and never running the program.
+  storeVersion =
+    bin:
+    ''$(p=$(readlink -f "$(command -v ${bin})"); p=''${p#/nix/store/*-}; p=''${p%%/*}; echo "''${p##*-}")'';
+  # One row per connector, in my.monitors order (main first), since fastfetch cannot sort displays.
+  monitor = connector: {
+    text = ''hyprctl -i 0 -j monitors | ${lib.getExe jq} -r '.[] | select(.name == "${connector}") | "\(.model) · \(.width)x\(.height) @ \(.refreshRate | round) Hz"' '';
+  };
+  inherit (config.programs.kitty) font;
 
   snowflake = "${nixos-icons}/share/icons/hicolor/256x256/apps/nix-snowflake.png";
 
@@ -90,20 +108,29 @@ in
           # The birth time of / is the Kingston install, not the first NixOS one (history is in git).
           text = "echo $(( ($(${date} +%s) - $(${stat} -c %W /)) / 86400 )) days";
         })
-        (row "34" "󱆃" "shell" "shell" { })
         close
 
         (open "desktop")
         (row "35" "󰖯" "wm" "wm" { })
-        (row "35" "󰍹" "display" "display" { format = "{width}x{height} @ {refresh-rate} Hz, {inch}\""; })
+        (row "35" "󱂩" "bar" "command" { text = "echo quickshell ${storeVersion "quickshell"}"; })
+        (row "35" "󰍉" "launcher" "command" { text = "echo vicinae ${storeVersion "vicinae"}"; })
+        (row "35" "󰍹" "display" "command" (monitor osConfig.my.monitors.primary))
+        (row "35" "󰍹" "display" "command" (monitor osConfig.my.monitors.secondary))
         (row "35" "󰞷" "terminal" "terminal" {
           # {?version}…{?} = a conditional block: with no version detected, no loose space is left.
           format = "{process-name}{?version} {version}{?}";
         })
-        (row "35" "󰛖" "font" "terminalfont" { })
-        # Qt and GTK on one line overflow the box, so each gets its own, like the two displays.
+        (row "35" "󱆃" "shell" "command" {
+          text = "echo zsh ${storeVersion "zsh"} · starship ${storeVersion "starship"}";
+        })
+        (row "35" "󰨞" "editor" "command" { text = "echo VS Code ${storeVersion "code"}"; })
+        # kitty's declared font: terminalfont finds nothing outside kitty, which shifted the rows.
+        (row "35" "󰛖" "font" "custom" { format = "${font.name} (${toString font.size}pt)"; })
+        # Qt and GTK on one line overflow the box, so each gets its own.
         (row "35" "󰏘" "theme" "theme" { format = "{theme1}"; })
         (row "35" "󰏘" "theme" "theme" { format = "{theme2}"; })
+        (row "35" "󰋩" "icons" "icons" { })
+        (row "35" "󰆿" "cursor" "cursor" { })
         close
 
         (open "hardware")

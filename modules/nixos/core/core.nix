@@ -28,6 +28,11 @@
   # media, so 1 GiB left is already after the accident.
   nix.settings.min-free = 15 * 1024 * 1024 * 1024; # 15 GiB, the floor that triggers the GC
   nix.settings.max-free = 50 * 1024 * 1024 * 1024; # 50 GiB, the target to free when it triggers
+  # The FAI's cache for FAI Meet built from source: `extra-`, so cache.nixos.org stays first.
+  nix.settings.extra-substituters = [ "https://meet.sup.fai.ufscar.br/nix-cache" ];
+  nix.settings.extra-trusted-public-keys = [
+    "fai-meet-cache-1:QvxpDR+nysieV4rwF/1BI+yVSYXgWT5L5YCtz7Xc+tY="
+  ];
 
   # The journal's cap. The default is 10% of the FS, which here would be ~92 GiB, growing
   # legitimately with nothing raising a flag.

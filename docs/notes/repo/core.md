@@ -82,6 +82,19 @@ Builds max out the cores compiling, and yielding CPU and disk to the interactive
 keeps a rebuild from freezing the desktop or the Moonlight stream. With the machine idle the build
 uses everything normally, because idle only yields when something else wants it.
 
+## The FAI Meet cache
+
+The FAI Meetings repository builds FAI Meet from source and publishes the result, signed with
+`fai-meet-cache-1`, at `https://meet.sup.fai.ufscar.br/nix-cache` (its ADR 0020). Declared here, a
+`nix run` of that flake at the published commit downloads the app instead of compiling it. Only
+the cache and its public key come in, not the flake: that repository is private and only answers
+through the FAI VPN, so as an input it would break this repo's public CI and a restore from
+scratch. The installed app stays the AppImage, see [`fai-meet`](../apps/fai-meet.md).
+
+The `extra-` options append to the defaults, so cache.nixos.org is still asked first and this one
+only answers for paths only it has. An untrusted user cannot add a substituter from a flake's
+`nixConfig`, which is why it is declared system-wide.
+
 ## Locale
 
 The system is `en_US.UTF-8` by preference: output and errors in English make debugging easier.

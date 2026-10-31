@@ -5,12 +5,14 @@
 let
   inherit (pkgs)
     coreutils
+    gawk
     nixos-icons
     unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
     ;
 
   date = lib.getExe' coreutils "date";
   stat = lib.getExe' coreutils "stat";
+  awk = lib.getExe gawk;
 
   snowflake = "${nixos-icons}/share/icons/hicolor/256x256/apps/nix-snowflake.png";
 
@@ -58,10 +60,24 @@ in
       };
 
       modules = [
-        (open "system")
+        (open "nixos")
         (row "34" "󱄅" "os" "os" { })
         (row "34" "󰌽" "kernel" "kernel" { })
+        (row "34" "󰘬" "nixpkgs" "command" {
+          # nixos-version is <release>.<YYYYMMDD>.<rev> (<codename>): the pin's commit and date.
+          text = ''
+            v=$(nixos-version); v=''${v%% *}; d=''${v#*.*.}
+            echo "''${v##*.} ($(${date} -d "''${d%%.*}" +%F))"
+          '';
+        })
+        (row "34" "󰜗" "nix" "command" {
+          text = ''v=$(nix --version); echo "Nix ''${v##* }"'';
+        })
         (row "34" "󰏖" "packages" "packages" { })
+        (row "34" "󰆼" "closure" "command" {
+          # The current system's closure, from the store database: the fetch's slowest row (~0.5 s).
+          text = ''nix path-info -S /run/current-system | ${awk} '{ printf "%.2f GiB\n", $2 / 2^30 }' '';
+        })
         (row "34" "󰋚" "gen" "command" {
           # The profile LINK's own mtime (stat without -L): following it lands on the store, at epoch 1.
           text = ''

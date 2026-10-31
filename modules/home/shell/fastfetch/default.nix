@@ -14,6 +14,8 @@ let
     gawk
     jq
     nixos-icons
+    python3
+    runCommand
     unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
     ;
 
@@ -35,15 +37,26 @@ let
   # Every module prints exactly one line (one row per display, a static font), so the boxes are as
   # tall as the module list, and the logo is sized from that count instead of by hand.
   rows = builtins.length (mkModules boxed);
-  asciiRows = 20; # the builtin NixOS logo
 
-  snowflake = "${nixos-icons}/share/icons/hicolor/256x256/apps/nix-snowflake.png";
+  # The logo spinning in 3D, rendered at build time into `rows`-tall half-block frames, 2*rows
+  # cells wide (square); scripts/spin-frames.py says how. 72 frames make one turn at ~30 fps.
+  spinWidth = 2 * rows;
+  spin =
+    runCommand "fastfetch-nixos-spin"
+      {
+        nativeBuildInputs = [
+          (python3.withPackages (p: [
+            p.numpy
+            p.pillow
+          ]))
+        ];
+      }
+      "python3 ${./scripts/spin-frames.py} ${nixos-icons}/share/icons/hicolor/1024x1024/apps/nix-snowflake.png ${toString rows} 72 $out";
 
   # Each section is its own box: a 13-cell key column ("icon label") and a value column of `value`
   # cells. Nix measures bytes, so widths are computed on the ASCII parts only, never on glyphs.
   value = 46;
   boxWidth = value + 18; # "│ " + 11 + " │" + " " + value + " │"
-  asciiWidth = 47; # the builtin NixOS logo (43 cells) plus fastfetch's 4-cell padding
   pad = n: s: s + lib.concatStrings (lib.replicate (n - lib.stringLength s) " ");
   line = n: lib.concatStrings (lib.replicate n "─");
 
@@ -177,11 +190,7 @@ in
     settings = {
       # ASCII by default, so VS Code, SSH and the TTY get a clean logo; the kitty image is the
       # zsh wrapper's upgrade below.
-      logo = {
-        source = "NixOS";
-        type = "builtin";
-        padding.top = (rows - asciiRows) / 2; # centered beside the boxes
-      };
+      logo.type = "none"; # the spinning logo is the zsh wrapper's, only where it fits
       display = {
         separator = " ";
         color.keys = "90"; # the box itself in dim gray, so the icons and values stand out
@@ -200,34 +209,33 @@ in
     }
   );
 
-  # The layout follows the terminal: logo plus boxes, boxes alone, or the plain list. A logo taller
-  # than the window breaks fastfetch, which draws it first and then climbs back up to the boxes.
-  # In kitty (local, or over SSH from it, since the bytes travel inline) the snowflake image replaces
-  # the ASCII logo at the boxes' exact height; with no width, fastfetch keeps it square.
-  # KITTY_WINDOW_ID is what kitty exports (TERM is often overridden), and VS Code inherits it when
-  # launched from kitty, hence the TERM_PROGRAM check.
+  # The layout follows the terminal: spinning logo plus boxes, boxes alone, or the plain list. A
+  # logo taller than the window breaks fastfetch, which draws it first and then climbs back up.
+  # The first frame reserves the logo's space; then the frames redraw over it from the bottom of
+  # the output (ESC 7/8 save and restore the cursor) until a key, which goes on to the prompt.
   programs.zsh.siteFunctions.fastfetch = ''
     if (( COLUMNS < ${toString boxWidth} )); then
       command fastfetch -c ${config.xdg.configHome}/fastfetch/compact.jsonc "$@"
       return
     fi
-    local -a logo=(--logo-type none)
-    if (( LINES > ${toString rows} )); then
-      if [[ ( -n $KITTY_WINDOW_ID || $TERM == xterm-kitty ) && $TERM_PROGRAM != vscode ]]; then
-        # kitty answers CSI 16t with its cell size, which turns the square image's height into columns.
-        local reply
-        print -n '\e[16t' > /dev/tty
-        if read -rs -t 0.2 -d t reply < /dev/tty; then
-          reply=''${reply#*\[6;}
-          local -i h=''${reply%%;*} w=''${reply#*;}
-          if (( (${toString rows} * h + w - 1) / w + 4 + ${toString boxWidth} <= COLUMNS )); then
-            logo=(--logo-type kitty --logo ${snowflake} --logo-height ${toString rows} --logo-padding-top 0)
-          fi
-        fi
-      elif (( ${toString asciiWidth} + ${toString boxWidth} <= COLUMNS )); then
-        logo=()
-      fi
+    if (( $# || LINES <= ${toString rows} || COLUMNS < ${
+      toString (spinWidth + 5 + boxWidth)
+    } )) || [[ ! -t 0 || ! -t 1 ]]; then
+      command fastfetch "$@"
+      return
     fi
-    command fastfetch "''${logo[@]}" "$@"
+    command fastfetch --logo-type file-raw --logo ${spin}/first --logo-padding-top 0 \
+      --logo-width ${toString spinWidth} --logo-height ${toString rows}
+    setopt localoptions localtraps
+    local -a frames=("''${(@ps:\036:)"$(<${spin}/frames)"}")
+    local key i=1
+    trap 'print -n "\e[?25h"; return 130' INT
+    print -n '\e[?25l'
+    while ! read -sk 1 -t 0.033 key; do
+      print -nr -- $'\e7\e[${toString rows}A\r'"''${frames[i]}"$'\e8'
+      (( i = i % $#frames + 1 ))
+    done
+    print -n '\e[?25h'
+    [[ $key == [[:print:]] ]] && print -z -- "$key"
   '';
 }

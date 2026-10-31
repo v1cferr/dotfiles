@@ -38,6 +38,16 @@ So [`modules/home/apps/fai-meet.nix`](../../../modules/home/apps/fai-meet.nix) d
 association, and the package's `.desktop` gets `%u` on its `Exec`, which upstream's lacks, so the
 callback URL actually reaches the app.
 
+## The source build: `fai-meet-latest`
+
+The FAI Meetings repository also builds the app from source and publishes it to the FAI's binary
+cache (trusted in [`core.nix`](../../../modules/nixos/core/core.nix), see
+[core](../repo/core.md#the-fai-meet-cache)). `fai-meet-latest` asks the API which commit was
+published last (`/v1/desktop/latest`, field `nix.rev`) and runs that one, so it downloads in seconds
+instead of compiling. It never follows `main`: a commit not yet published is not in the cache, and
+the whole Rust build would run here. Reading the flake needs the FAI VPN and the SSH key on git.sup;
+the binary itself comes from the cache. Arguments after the name go to the app.
+
 ## Known noise in the log
 
 `libdconfsettings.so: undefined symbol: g_assertion_message_cmpint` comes from the session's

@@ -233,6 +233,16 @@ after the copy `hl.dsp.send_shortcut` sends Ctrl+Shift+V (VS Code's terminal pas
 ADDRESS, captured before the scp, for the same reason the kitten targets its own window. Any other
 window keeps the old behavior: push to `workstation`, no paste.
 
+**Ctrl+V does the same in that window**, through a Lua bind in `keybinds.lua` that is
+`non_consuming`: the key ALWAYS reaches the window as before, and the bind only adds work when the
+active window is VS Code with `[SSH:` in its title, a check that runs inside the compositor with no
+process spawned. There it runs `clipboard-push --image-only`, which exits quietly unless the
+clipboard holds an image, so text pastes stay VS Code's own and a copied path is never mistaken for
+a file to upload. A consuming bind with a `send_shortcut` passthrough was the alternative and was
+rejected: it would route the most used key of every app through the bind, and a mistake there
+breaks pasting everywhere. The price of non_consuming is that Claude Code also sees the Ctrl+V and
+finds no image on the workstation's clipboard; the path lands a moment later anyway.
+
 It costs one handshake and not two, because the `workstation` block in `modules/home/shell/ssh.nix` sets
 `ControlMaster auto`: the scp reuses the master the ssh above opened. And the image is not lost when
 the path takes its place in the clipboard, since Vicinae's history still holds it, one SUPER+SHIFT+V

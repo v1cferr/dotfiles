@@ -41,6 +41,14 @@ hl.bind("SHIFT + Scroll_Lock", hl.dsp.send_shortcut({ mods = "SHIFT", key = "cod
 -- clipboard: Vicinae's history (text, images, pins; desktop/vicinae), and clipboard-push.
 hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd("vicinae vicinae://launch/clipboard/history"))  -- clipboard history
 hl.bind(mainMod .. " + ALT + V",   hl.dsp.exec_cmd("clipboard-push"))  -- scp it to the workstation and copy the REMOTE path (an image for a TUI over ssh)
+-- Ctrl+V in a VS Code Remote-SSH window also sends an IMAGE up and pastes its remote path.
+-- non_consuming: every window still gets its own Ctrl+V. Why: docs/notes/desktop/desktop-plumbing.md
+hl.bind("CTRL + V", function()                                                    -- paste (an image into VS Code over SSH)
+  local w = hl.get_active_window()
+  if w and w.class == "code" and w.title:find("[SSH: ", 1, true) then
+    return hl.dispatch(hl.dsp.exec_cmd("clipboard-push --image-only"))
+  end
+end, { non_consuming = true })
 
 -- Straight into one Vicinae command; `toggle` closes it when it is already open.
 hl.bind(mainMod .. " + R",         hl.dsp.exec_cmd("vicinae 'vicinae://launch/@v1cferr/repositories/repositories?toggle=true'"))  -- my repositories (GitHub + FAI GitLab)

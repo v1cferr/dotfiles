@@ -40,6 +40,13 @@ let
       hyprland
     ];
     text = ''
+      # --image-only (Ctrl+V's bind in keybinds.lua): anything but an image is the window's own
+      # paste, already delivered, so this exits quietly instead of pushing a copied file.
+      if [ "''${1:-}" = --image-only ]; then
+        shift
+        wl-paste --list-types 2>/dev/null | grep -q '^image/' || exit 0
+      fi
+
       # With no argument, a focused VS Code Remote-SSH window names the host in its title
       # (`... [SSH: workstation] - Visual Studio Code`) and gets the path pasted for it.
       vscode=""

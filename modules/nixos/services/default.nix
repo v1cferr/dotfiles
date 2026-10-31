@@ -23,5 +23,6 @@
     ./phone-sync.nix # Syncthing: the phone's DCIM pulled into ~/Pictures/M51 (receive-only)
     ./libvirt.nix # the libvirt/KVM daemon (virt-manager, the GUI, is in modules/home/apps)
     ./cockpit.nix # the web console to start/stop units from the browser (ops.<domain>, LAN only)
+    ./beszel.nix # resource history per host and per container (stats.<domain>, LAN only)
   ];
 }

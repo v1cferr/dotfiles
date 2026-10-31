@@ -49,7 +49,7 @@ Left out on purpose:
 - No Docker plugin: the community `cockpit-docker` fork is not in nixpkgs. A container worth
   managing gets a module and a toggle instead, which Cockpit already drives.
 - The Metrics page shows live values only. History needs PCP, which nixpkgs dropped
-  (upstream archived).
+  (upstream archived). Beszel at `stats.<domain>` covers history.
 - Kernel dump is hidden through `/etc/cockpit/kdump.override.json`: its manifest only checks
   that `kexec` exists. Software updates, SELinux and Diagnostic reports hide themselves
   (their conditions fail on NixOS).

@@ -27,5 +27,6 @@
     "cs2-backup"
     "libvirt"
     "cockpit"
+    "beszel"
   ] (n: lib.mkEnableOption n);
 }

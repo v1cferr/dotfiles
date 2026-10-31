@@ -60,6 +60,15 @@ let
       system = [ "cockpit.socket" ]; # the service only exists while a browser is on the page
       ingress = "ops";
     };
+    beszel = {
+      label = "beszel";
+      # The agent only exists once my.beszel.hubKey is set; listing it earlier reads as "partial".
+      system = [
+        "beszel-hub.service"
+      ]
+      ++ lib.optional osConfig.services.beszel.agent.enable "beszel-agent.service";
+      ingress = "stats";
+    };
     caddy = {
       label = "caddy";
       system = [ "caddy.service" ];

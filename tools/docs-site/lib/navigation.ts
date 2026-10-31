@@ -184,6 +184,7 @@ export const navigation: NavItem[] = [
       { title: "phone-sync", doc: "notes/services/phone-sync.md" },
       { title: "libvirt", doc: "notes/services/libvirt.md" },
       { title: "cockpit", doc: "notes/services/cockpit.md" },
+      { title: "beszel", doc: "notes/services/beszel.md" },
     ],
   },
   {

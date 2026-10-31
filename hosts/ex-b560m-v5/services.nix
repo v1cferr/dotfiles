@@ -27,6 +27,7 @@
     cs2-backup = true; # an hourly mirror of the CS2 saves out of the Bottles prefix (NOT a backup)
     libvirt = true; # libvirt/KVM plus virt-manager (a disposable Windows 11 guest)
     cockpit = true; # start/stop services from the browser at ops.v1cferr.dev (socket-activated)
+    beszel = true; # resource history at stats.v1cferr.dev (the agent waits for my.beszel.hubKey)
   };
 
   # EXPOSURE: `expose` is "lan" (home plus WireGuard), "public" (internet, subject to `auth`) or
@@ -151,6 +152,15 @@
       launcher.title = "Cockpit";
       launcher.glyph = "md-console_network_outline";
       comment = "Cockpit, start/stop of every service. Root-capable after sudo: `lan` only.";
+    };
+  }
+  // lib.optionalAttrs config.services.beszel.hub.enable {
+    stats = {
+      upstream = config.services.beszel.hub.port;
+      expose = "lan";
+      launcher.title = "Beszel";
+      launcher.glyph = "md-chart_areaspline";
+      comment = "Beszel, resource history. It maps every container and unit on the host: `lan` only.";
     };
   };
 }

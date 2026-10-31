@@ -22,5 +22,6 @@
     ./spotifast.nix # Spotifast: native Spotify client, its colors from the palette
     ./virt-manager.nix # the libvirt GUI (the daemon is in modules/nixos/services/libvirt.nix)
     ./crypto.nix # Stack Wallet plus Bisq 2: self-custody and P2P buying, both opened by hand
+    ./fai-meet.nix # FAI Meet: the meeting recorder (./pkgs) plus its login scheme handler
   ];
 }

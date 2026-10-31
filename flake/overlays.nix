@@ -111,6 +111,7 @@ let
     curseforge = final.callPackage ../pkgs/curseforge/package.nix { }; # official modpack AppImage (unfree)
     curseforge-fix-perms = final.callPackage ../pkgs/curseforge-fix-perms/package.nix { }; # +x on what the app unpacks
     stack-wallet = final.callPackage ../pkgs/stack-wallet/package.nix { }; # multichain wallet, the official AppImage
+    fai-meet = final.callPackage ../pkgs/fai-meet/package.nix { }; # the FAI's meeting recorder, the official AppImage
     # Native WhatsApp client, the official release binary, built WHOLE from unstable: the session's
     # LD_LIBRARY_PATH carries unstable libs, and mixing glibcs aborts it. Only the bump's scope is ours.
     zapfast = final.unstable.callPackage ../pkgs/zapfast/package.nix { inherit (final) callPackage; };

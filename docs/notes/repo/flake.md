@@ -457,12 +457,13 @@ of the switch.
 drag in quickshell (Qt/C++). Only the packages this repo controls come in, which is where the
 patches can rot.
 
-**`curseforge` stays OUT, and it is the only exception**: its src is a POINTER URL
-(`curseforge-latest-linux.AppImage`, since Overwolf publishes no versioned URL), so on every release
-of theirs the pinned hash stops matching and the check would go RED for something that is not in
-this repo. Same pain as VS Code's `/latest/`, except there is no fixed URL to pick: the remedy is
-`curseforge-bump`, which runs on `update` and DOES enter the check (inside `vendored-bump`),
-because its shellcheck is stable. Testing the packaging is `nix build .#curseforge`, by hand.
+**`curseforge` and `fai-meet` stay OUT, the only two exceptions**: each src is a POINTER URL
+(`curseforge-latest-linux.AppImage` and `FAI-Meet.AppImage`, since neither upstream publishes a
+versioned URL), so on every release of theirs the pinned hash stops matching and the check would go
+RED for something that is not in this repo. Same pain as VS Code's `/latest/`, except there is no
+fixed URL to pick: the remedy is each one's `-bump`, which runs on `update` and DOES enter the check
+(inside `vendored-bump`), because its shellcheck is stable. Testing the packaging is
+`nix build .#curseforge` or `.#fai-meet`, by hand.
 
 ### Zero evaluation warnings: `abort-on-warn` (29/09/2026)
 

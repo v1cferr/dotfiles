@@ -43,6 +43,7 @@ in
     usage-audit # ./tools: same flake8 at build time; I run it by hand, it reads my ~
     rules-index # ./tools: the build IS the wrapper's shellcheck, and the CHECK below runs it too
     curseforge # ./pkgs: the official AppImage (outside the CHECK below, the why is there)
+    fai-meet # ./pkgs: the official AppImage at a POINTER url, so out of the CHECK like curseforge
     btop # nixpkgs + the src from PR #1457 (Intel Xe GPU): here so the check COMPILES the fork
     ;
   inherit (pkgs.unstable) vscode; # the unstable recipe with the SRC from the official tarball

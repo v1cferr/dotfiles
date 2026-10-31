@@ -157,6 +157,7 @@ export const navigation: NavItem[] = [
       { title: "Flameshot", doc: "notes/apps/flameshot.md" },
       { title: "CurseForge", doc: "notes/apps/curseforge.md" },
       { title: "CurseForge fix-perms", doc: "notes/apps/curseforge-fix-perms.md" },
+      { title: "FAI Meet", doc: "notes/apps/fai-meet.md" },
       { title: "Bottles", doc: "notes/apps/bottles.md" },
       { title: "MEGA", doc: "notes/apps/mega.md" },
       { title: "LibreWolf", doc: "notes/apps/librewolf.md" },

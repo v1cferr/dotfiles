@@ -143,6 +143,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [flameshot](apps/flameshot.md) | the v14 keyboard flow, and the duplicated bar |
 | [curseforge](apps/curseforge.md) | the repackaged AppImage, and why the schemes are declared |
 | [curseforge-fix-perms](apps/curseforge-fix-perms.md) | the `+x` the app loses, and why ELF magic and not names |
+| [fai-meet](apps/fai-meet.md) | the FAI's meeting recorder: the pointer AppImage and its login scheme |
 | [bottles](apps/bottles.md) | the library declared without owning the prefix, and the name that is not the directory |
 | [mega](apps/mega.md) | megatools, the quota, and why the loop waits |
 | [spotifast](apps/spotifast.md) | the native Spotify client, why the release binary, and the theme that must be a real file |

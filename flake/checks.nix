@@ -255,11 +255,12 @@ in
       '';
 
   # It BUILDS what the repo packages, which `nix flake check` does NOT: it only EVALUATES a host.
-  # What is fragile here is packaging, and that breaks at build. curseforge is out: the notes.
+  # What is fragile here is packaging, and that breaks at build. The pointer urls are out: the notes.
   packages = nixpkgs.legacyPackages.${system}.linkFarm "checks-repo-packages" (
     nixpkgs.lib.mapAttrsToList (name: path: { inherit name path; }) (
       removeAttrs self.packages.${system} [
         "curseforge" # a POINTER url: its hash rots on every release of theirs, the why is above
+        "fai-meet" # a POINTER url too, the same rot
         "vm-boot" # a whole system closure plus a QEMU run: same reason toplevel stays out
         "vm-limine" # two QEMU boots under OVMF: the same reason as vm-boot
         "boot-candidate" # a whole system closure: the same reason toplevel stays out

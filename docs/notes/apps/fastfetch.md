@@ -27,10 +27,10 @@ torus, and fastfetch cannot animate a logo, so every frame is rendered at build 
 
 - The official snowflake becomes a solid slab: front and back faces, rounded off toward the
   outline so each face is a gradient and not a single glyph, plus a rim facing outward.
-- It rotates about two axes at once (two turns about X for one about Z), so the 120th frame
-  meets the first and the loop has no seam.
+- It rotates about two axes at once at donut.c's pace (0.04 rad about X and 0.02 about Z per
+  frame), which makes two turns about X for one about Z in 314 frames: the loop has no seam.
 - Each surface point is projected with perspective into a z-buffer, and its brightness against a
-  fixed light picks a character from donut.c's ramp, `.,-~:;=!*#$@`. The logo's two blues tint
+  fixed light picks a character from donut.c's ramp, `.,-~:;=!*#$@`, with its `L*8` mapping. The logo's two blues tint
   the characters.
 - A frame is as tall as the boxes and twice as wide, since a cell is about twice as tall as wide.
 

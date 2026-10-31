@@ -39,7 +39,8 @@ let
   rows = builtins.length (mkModules boxed);
 
   # The logo tumbling in 3D like donut.c, rendered at build time into `rows`-tall ASCII frames,
-  # 2*rows cells wide (square); scripts/spin-frames.py says how. 120 frames loop in ~4 s at 30 fps.
+  # 2*rows cells wide (square); scripts/spin-frames.py says how. 314 frames step 0.04 rad about X,
+  # donut.c's own pace, and loop in ~10 s at 30 fps.
   spinWidth = 2 * rows;
   spin =
     runCommand "fastfetch-nixos-spin"
@@ -51,7 +52,7 @@ let
           ]))
         ];
       }
-      "python3 ${./scripts/spin-frames.py} ${nixos-icons}/share/icons/hicolor/1024x1024/apps/nix-snowflake.png ${toString rows} 120 $out";
+      "python3 ${./scripts/spin-frames.py} ${nixos-icons}/share/icons/hicolor/1024x1024/apps/nix-snowflake.png ${toString rows} 314 $out";
 
   # Each section is its own box: a 13-cell key column ("icon label") and a value column of `value`
   # cells. Nix measures bytes, so widths are computed on the ASCII parts only, never on glyphs.

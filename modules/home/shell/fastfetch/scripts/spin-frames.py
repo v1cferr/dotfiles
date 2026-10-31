@@ -102,7 +102,9 @@ def frame(pts, nrm, cols, rows, a, b):
 
     char = np.full(rows * width, -1)
     tint = np.zeros((rows * width, 3))
-    char[cell] = np.clip((lum[idx] * len(RAMP)).astype(int), 0, len(RAMP) - 1)
+    # donut.c's mapping: its light is (0, 1, -1) unnormalized, so L reaches sqrt(2) and L*8 tops
+    # out at 11.3, the ramp's last index. Ours is unit length, hence the sqrt(2) put back.
+    char[cell] = np.clip((lum[idx] * 8 * math.sqrt(2)).astype(int), 0, len(RAMP) - 1)
     tint[cell] = cols[idx]
     return char.reshape(rows, width), tint.reshape(rows, width, 3)
 

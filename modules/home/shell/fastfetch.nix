@@ -104,9 +104,6 @@ in
         (row "36" "󰍛" "memory" "memory" { })
         (row "36" "󰓡" "swap" "swap" { })
         (row "36" "󰋊" "disk" "disk" { folders = "/"; })
-        (row "36" "󰩠" "local ip" "localip" { format = "{ipv4} ({ifname})"; })
-        # A network call: the timeout keeps an offline fetch from hanging on it.
-        (row "36" "󰖟" "public ip" "publicip" { timeout = 1000; })
         close
 
         (open "palette")

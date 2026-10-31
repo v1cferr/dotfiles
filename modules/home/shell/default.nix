@@ -15,6 +15,6 @@
     ./git.nix # programs.git, hence ~/.gitconfig
     ./ssh.nix # ~/.ssh/config, hence the FAI hosts (workstation/fai-vm) through the VPN
     ./ntfy.nix # the `notify` command, a push to the phone (the ntfy topic comes from sops)
-    ./fastfetch.nix # ~/.config/fastfetch/config.jsonc (the system summary)
+    ./fastfetch # ~/.config/fastfetch/config.jsonc (the system summary)
   ];
 }

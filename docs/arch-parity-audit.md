@@ -117,7 +117,7 @@ does not read them as paths that should exist on this branch.
 | `main:kitty/` | [`modules/home/shell/kitty.nix`](../modules/home/shell/kitty.nix). Small deltas, below |
 | `main:starship/` | [`modules/home/shell/starship.nix`](../modules/home/shell/starship.nix) |
 | `main:git/` | [`modules/home/shell/git.nix`](../modules/home/shell/git.nix) |
-| `main:fastfetch/` | [`modules/home/shell/fastfetch.nix`](../modules/home/shell/fastfetch.nix) |
+| `main:fastfetch/` | [`modules/home/shell/fastfetch/`](../modules/home/shell/fastfetch/default.nix) |
 | `main:flameshot/` | [`modules/home/apps/flameshot.nix`](../modules/home/apps/flameshot.nix), with the `sc1`/`sc2` aliases by monitor NAME |
 | `main:mpv/` | `programs.mpv` in [`modules/home/apps/media.nix`](../modules/home/apps/media.nix) |
 | `main:uv/` | The package in [`modules/nixos/packages.nix`](../modules/nixos/packages.nix); the receipt is state (rule 6) |

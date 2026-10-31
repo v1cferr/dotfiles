@@ -758,7 +758,7 @@ need no password while `wg` does, which is worth knowing before writing a one li
 router with full flash cannot even write its config. This uses only BusyBox: zero installation cost.
 
 Pure ash, no bashisms: no arrays, no `[[ ]]`, no `${var^^}`. The field ORDER mirrors
-`modules/home/shell/fastfetch.nix` so the two read alike.
+`modules/home/shell/fastfetch/default.nix` so the two read alike.
 
 **A REAL ESC, and not the literal `\033` sequence**: the colors are passed as an ARGUMENT (`%s`) and
 not inside printf's format string. A format with a variable inside is shellcheck's SC2059, and its

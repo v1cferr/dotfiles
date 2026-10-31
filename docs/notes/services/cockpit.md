@@ -35,3 +35,21 @@ native units.
   page stays blank after login.
 - `LoginTo` stays `false` (the nixpkgs default): logging into other hosts is the surface of
   CVE-2026-4631 on versions before 360.
+
+## Plugins
+
+- `cockpit-machines`: the libvirt guests, so the Windows VM is started, stopped and used
+  (its console opens in the page) from the browser, the same "only run what I use" goal.
+- `cockpit-files`: a file browser, root-capable after sudo, for `/srv/media` and
+  `/srv/photos` from the phone.
+
+Left out on purpose:
+
+- `cockpit-podman` and `cockpit-zfs` are in nixpkgs, but this host runs Docker on btrfs.
+- No Docker plugin: the community `cockpit-docker` fork is not in nixpkgs. A container worth
+  managing gets a module and a toggle instead, which Cockpit already drives.
+- The Metrics page shows live values only. History needs PCP, which nixpkgs dropped
+  (upstream archived).
+- Kernel dump is hidden through `/etc/cockpit/kdump.override.json`: its manifest only checks
+  that `kexec` exists. Software updates, SELinux and Diagnostic reports hide themselves
+  (their conditions fail on NixOS).

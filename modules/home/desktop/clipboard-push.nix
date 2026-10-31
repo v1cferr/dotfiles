@@ -1,17 +1,20 @@
 # CLIPBOARD-PUSH: the clipboard's image or file scp'd to a host (or dropped locally), leaving its
 # PATH in the clipboard; SUPER+ALT+V and kitty's smart paste: docs/notes/desktop/desktop-plumbing.md
-{ pkgs, ... }:
+{ osConfig, pkgs, ... }:
 
 let
   inherit (pkgs)
     coreutils
     gnugrep
+    jq
     libnotify
     openssh
     wl-clipboard
     writeShellApplication
     writeText
     ;
+  # hyprctl from the RUNNING compositor (unstable), never the stable one a bare pkgs.hyprland is.
+  hyprland = osConfig.programs.hyprland.package;
 
   # What runs ON THE REMOTE, through its stdin (the same trick as `wake-workstation`, so there is
   # nothing to install over there): it creates the drop, prunes the week-old files and answers the
@@ -32,10 +35,22 @@ let
       openssh
       coreutils
       gnugrep
+      jq
       libnotify
+      hyprland
     ];
     text = ''
-      dest="''${1:-workstation}" # an ssh Host of ~/.ssh/config, or `local` for a drop on this machine
+      # With no argument, a focused VS Code Remote-SSH window names the host in its title
+      # (`... [SSH: workstation] - Visual Studio Code`) and gets the path pasted for it.
+      vscode=""
+      if [ -z "''${1:-}" ]; then
+        win="$(hyprctl activewindow -j 2>/dev/null || true)"
+        if [ "$(jq -r '.class // empty' <<<"$win" 2>/dev/null)" = code ]; then
+          host="$(jq -r '.title // empty' <<<"$win" | grep -oP '\[SSH: \K[^\]]+' || true)"
+          if [ -n "$host" ]; then vscode="$(jq -r '.address' <<<"$win")"; fi
+        fi
+      fi
+      dest="''${1:-''${host:-workstation}}" # an ssh Host of ~/.ssh/config, or `local` for a drop on this machine
 
       note() { notify-send -a Clipboard -i edit-paste "clipboard-push" "$1" 2>/dev/null || true; }
       fail() {
@@ -86,6 +101,10 @@ let
       # NO trailing newline: pasted into a TUI, one would SUBMIT the prompt instead of typing it.
       wl-copy "$dir/$name"
       echo "$dir/$name"
+      # VS Code's terminal paste, aimed at the window the key was pressed in, not the active one.
+      if [ -n "$vscode" ]; then
+        hyprctl dispatch "hl.dsp.send_shortcut({ mods = \"CTRL SHIFT\", key = \"code:55\", window = \"address:$vscode\" })" >/dev/null || true
+      fi
       note "$dest: $dir/$name"
     '';
   };

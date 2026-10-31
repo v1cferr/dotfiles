@@ -202,7 +202,7 @@ does not take over the selection when the app that copied it closes.
 
 ### clipboard-push: the clipboard onto a remote host
 
-`modules/home/desktop/clipboard-push.nix`. `clipboard-push [host|local]` (SUPER+ALT+V, and the destination defaults to `workstation`) sends
+`modules/home/desktop/clipboard-push.nix`. `clipboard-push [host|local]` (SUPER+ALT+V; with no argument the destination is a focused VS Code Remote-SSH host, else `workstation`) sends
 what is in the clipboard over scp and leaves the ABSOLUTE REMOTE PATH in the clipboard. With `local`
 it skips the network and drops the file in `~/.cache/clipboard-push` instead, which is the half the
 kitten below uses when the window is not an ssh. It exists for one
@@ -224,6 +224,14 @@ that is not mine, is the kind of mess nobody comes back to clean.
 
 **`wl-copy` gets the path with NO trailing newline**, and that is the detail the flow lives on: a
 newline pasted into a TUI SUBMITS the prompt instead of typing into it.
+
+**VS Code Remote-SSH gets the one-key flow from the compositor.** Its terminal has no hook that
+runs a LOCAL command, so nothing inside VS Code can reach this clipboard; Hyprland knows both the
+window and the clipboard. With no argument, `clipboard-push` reads `hyprctl activewindow`: a `code`
+window whose title carries `[SSH: <host>]` (VS Code's default title) becomes the destination, and
+after the copy `hl.dsp.send_shortcut` sends Ctrl+Shift+V (VS Code's terminal paste) to that window's
+ADDRESS, captured before the scp, for the same reason the kitten targets its own window. Any other
+window keeps the old behavior: push to `workstation`, no paste.
 
 It costs one handshake and not two, because the `workstation` block in `modules/home/shell/ssh.nix` sets
 `ControlMaster auto`: the scp reuses the master the ssh above opened. And the image is not lost when

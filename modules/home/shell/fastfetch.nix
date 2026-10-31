@@ -34,7 +34,7 @@ let
 
   # Every module prints exactly one line (one row per display, a static font), so the boxes are as
   # tall as the module list, and the logo is sized from that count instead of by hand.
-  rows = builtins.length config.programs.fastfetch.settings.modules;
+  rows = builtins.length (mkModules boxed);
   asciiRows = 20; # the builtin NixOS logo
 
   snowflake = "${nixos-icons}/share/icons/hicolor/256x256/apps/nix-snowflake.png";
@@ -42,27 +42,132 @@ let
   # Each section is its own box: a 13-cell key column ("icon label") and a value column of `value`
   # cells. Nix measures bytes, so widths are computed on the ASCII parts only, never on glyphs.
   value = 46;
+  boxWidth = value + 18; # "│ " + 11 + " │" + " " + value + " │"
+  asciiWidth = 47; # the builtin NixOS logo (43 cells) plus fastfetch's 4-cell padding
   pad = n: s: s + lib.concatStrings (lib.replicate (n - lib.stringLength s) " ");
   line = n: lib.concatStrings (lib.replicate n "─");
-  edge = left: mid: right: keyPart: {
-    type = "custom";
-    key = "${left}${keyPart}${mid}${line (value + 2)}${right}";
-  };
-  open = title: edge "╭" "┬" "╮" "─ {#1}${title}{#keys} ${line (10 - lib.stringLength title)}";
-  close = edge "╰" "┴" "╯" (line 13);
 
   # fastfetch has no line suffix, so the right border is drawn from the key: save the cursor (ESC 7),
   # jump over the value column, print the border, restore (ESC 8), and the value prints in between.
   esc = builtins.fromJSON ''"\u001b"'';
   rightBorder = "${esc}7${esc}[${toString (value + 2)}C│${esc}8";
-  # color is an ANSI number, so the rows follow the terminal's theme preset instead of fixed hex.
-  row =
-    color: icon: label: type: extra:
+
+  # The two drawing styles share one module list: boxed for a wide terminal, plain for a narrow one,
+  # where the boxes cannot fit. color is an ANSI number, so rows follow the theme preset.
+  boxed = rec {
+    edge = left: mid: right: keyPart: {
+      type = "custom";
+      key = "${left}${keyPart}${mid}${line (value + 2)}${right}";
+    };
+    open = title: edge "╭" "┬" "╮" "─ {#1}${title}{#keys} ${line (10 - lib.stringLength title)}";
+    close = edge "╰" "┴" "╯" (line 13);
+    row =
+      color: icon: label: type: extra:
+      {
+        inherit type;
+        key = "│ {#${color}}${icon} ${pad 9 label}{#keys} │${rightBorder}";
+      }
+      // extra;
+  };
+  plain = {
+    open = title: {
+      type = "custom";
+      key = "{#1}${title}";
+    };
+    close = "break";
+    row =
+      color: icon: label: type: extra:
+      {
+        inherit type;
+        key = "{#${color}}${icon} ${pad 9 label}{#keys}";
+      }
+      // extra;
+  };
+
+  mkModules =
     {
-      inherit type;
-      key = "│ {#${color}}${icon} ${pad 9 label}{#keys} │${rightBorder}";
-    }
-    // extra;
+      open,
+      close,
+      row,
+      ...
+    }:
+    [
+      (open "nixos")
+      (row "34" "󱄅" "os" "os" { })
+      (row "34" "󰌽" "kernel" "kernel" { })
+      (row "34" "󰘬" "nixpkgs" "command" {
+        # nixos-version is <release>.<YYYYMMDD>.<rev> (<codename>): the pin's commit and date.
+        text = ''
+          v=$(nixos-version); v=''${v%% *}; d=''${v#*.*.}
+          echo "''${v##*.} ($(${date} -d "''${d%%.*}" +%F))"
+        '';
+      })
+      (row "34" "󰜗" "nix" "command" {
+        text = ''v=$(nix --version); echo "Nix ''${v##* }"'';
+      })
+      (row "34" "󰏖" "packages" "packages" { })
+      (row "34" "󰆼" "closure" "command" {
+        # The current system's closure, from the store database: the fetch's slowest row (~0.5 s).
+        text = ''nix path-info -S /run/current-system | ${awk} '{ printf "%.2f GiB\n", $2 / 2^30 }' '';
+      })
+      (row "34" "󰋚" "gen" "command" {
+        # The profile LINK's own mtime (stat without -L): following it lands on the store, at epoch 1.
+        text = ''
+          l=$(readlink /nix/var/nix/profiles/system); n=''${l#system-}
+          echo "#''${n%-link} ($(${date} -d @$(${stat} -c %Y /nix/var/nix/profiles/$l) +%F))"
+        '';
+      })
+      (row "34" "󰅐" "uptime" "uptime" { })
+      (row "34" "󰃭" "age" "command" {
+        # The birth time of / is the Kingston install, not the first NixOS one (history is in git).
+        text = "echo $(( ($(${date} +%s) - $(${stat} -c %W /)) / 86400 )) days";
+      })
+      close
+
+      (open "desktop")
+      (row "35" "󰖯" "wm" "wm" { })
+      (row "35" "󱂩" "bar" "command" { text = "echo quickshell ${storeVersion "quickshell"}"; })
+      (row "35" "󰍉" "launcher" "command" { text = "echo vicinae ${storeVersion "vicinae"}"; })
+      (row "35" "󰍹" "display" "command" (monitor osConfig.my.monitors.primary))
+      (row "35" "󰍹" "display" "command" (monitor osConfig.my.monitors.secondary))
+      (row "35" "󰞷" "terminal" "terminal" {
+        # {?version}…{?} = a conditional block: with no version detected, no loose space is left.
+        format = "{process-name}{?version} {version}{?}";
+      })
+      (row "35" "󱆃" "shell" "command" {
+        text = "echo zsh ${storeVersion "zsh"} · starship ${storeVersion "starship"}";
+      })
+      (row "35" "󰨞" "editor" "command" { text = "echo VS Code ${storeVersion "code"}"; })
+      # kitty's declared font: terminalfont finds nothing outside kitty, which shifted the rows.
+      (row "35" "󰛖" "font" "custom" { format = "${font.name} (${toString font.size}pt)"; })
+      # Qt and GTK on one line overflow the box, so each gets its own.
+      (row "35" "󰏘" "theme" "theme" { format = "{theme1}"; })
+      (row "35" "󰏘" "theme" "theme" { format = "{theme2}"; })
+      (row "35" "󰋩" "icons" "icons" { })
+      (row "35" "󰆿" "cursor" "cursor" { })
+      close
+
+      (open "hardware")
+      # temp reads coretemp's package and xe's pkg sensor, the same ones `sensors` shows.
+      (row "36" "󰻠" "cpu" "cpu" {
+        temp = true;
+        format = "{name} · {temperature}";
+      })
+      (row "36" "󰢮" "gpu" "gpu" {
+        temp = true;
+        format = "{name} ({driver}) · {temperature}";
+      })
+      (row "36" "󰆧" "vulkan" "vulkan" { format = "{api-version}"; })
+      (row "36" "󰍛" "memory" "memory" { })
+      (row "36" "󰓡" "swap" "swap" { })
+      (row "36" "󰋊" "disk" "disk" { folders = "/"; })
+      close
+
+      (open "palette")
+      (row "37" "󰉦" "colors" "colors" { symbol = "circle"; })
+      close
+    ];
+
 in
 {
   programs.fastfetch = {
@@ -82,93 +187,47 @@ in
         color.keys = "90"; # the box itself in dim gray, so the icons and values stand out
       };
 
-      modules = [
-        (open "nixos")
-        (row "34" "󱄅" "os" "os" { })
-        (row "34" "󰌽" "kernel" "kernel" { })
-        (row "34" "󰘬" "nixpkgs" "command" {
-          # nixos-version is <release>.<YYYYMMDD>.<rev> (<codename>): the pin's commit and date.
-          text = ''
-            v=$(nixos-version); v=''${v%% *}; d=''${v#*.*.}
-            echo "''${v##*.} ($(${date} -d "''${d%%.*}" +%F))"
-          '';
-        })
-        (row "34" "󰜗" "nix" "command" {
-          text = ''v=$(nix --version); echo "Nix ''${v##* }"'';
-        })
-        (row "34" "󰏖" "packages" "packages" { })
-        (row "34" "󰆼" "closure" "command" {
-          # The current system's closure, from the store database: the fetch's slowest row (~0.5 s).
-          text = ''nix path-info -S /run/current-system | ${awk} '{ printf "%.2f GiB\n", $2 / 2^30 }' '';
-        })
-        (row "34" "󰋚" "gen" "command" {
-          # The profile LINK's own mtime (stat without -L): following it lands on the store, at epoch 1.
-          text = ''
-            l=$(readlink /nix/var/nix/profiles/system); n=''${l#system-}
-            echo "#''${n%-link} ($(${date} -d @$(${stat} -c %Y /nix/var/nix/profiles/$l) +%F))"
-          '';
-        })
-        (row "34" "󰅐" "uptime" "uptime" { })
-        (row "34" "󰃭" "age" "command" {
-          # The birth time of / is the Kingston install, not the first NixOS one (history is in git).
-          text = "echo $(( ($(${date} +%s) - $(${stat} -c %W /)) / 86400 )) days";
-        })
-        close
-
-        (open "desktop")
-        (row "35" "󰖯" "wm" "wm" { })
-        (row "35" "󱂩" "bar" "command" { text = "echo quickshell ${storeVersion "quickshell"}"; })
-        (row "35" "󰍉" "launcher" "command" { text = "echo vicinae ${storeVersion "vicinae"}"; })
-        (row "35" "󰍹" "display" "command" (monitor osConfig.my.monitors.primary))
-        (row "35" "󰍹" "display" "command" (monitor osConfig.my.monitors.secondary))
-        (row "35" "󰞷" "terminal" "terminal" {
-          # {?version}…{?} = a conditional block: with no version detected, no loose space is left.
-          format = "{process-name}{?version} {version}{?}";
-        })
-        (row "35" "󱆃" "shell" "command" {
-          text = "echo zsh ${storeVersion "zsh"} · starship ${storeVersion "starship"}";
-        })
-        (row "35" "󰨞" "editor" "command" { text = "echo VS Code ${storeVersion "code"}"; })
-        # kitty's declared font: terminalfont finds nothing outside kitty, which shifted the rows.
-        (row "35" "󰛖" "font" "custom" { format = "${font.name} (${toString font.size}pt)"; })
-        # Qt and GTK on one line overflow the box, so each gets its own.
-        (row "35" "󰏘" "theme" "theme" { format = "{theme1}"; })
-        (row "35" "󰏘" "theme" "theme" { format = "{theme2}"; })
-        (row "35" "󰋩" "icons" "icons" { })
-        (row "35" "󰆿" "cursor" "cursor" { })
-        close
-
-        (open "hardware")
-        # temp reads coretemp's package and xe's pkg sensor, the same ones `sensors` shows.
-        (row "36" "󰻠" "cpu" "cpu" {
-          temp = true;
-          format = "{name} · {temperature}";
-        })
-        (row "36" "󰢮" "gpu" "gpu" {
-          temp = true;
-          format = "{name} ({driver}) · {temperature}";
-        })
-        (row "36" "󰆧" "vulkan" "vulkan" { format = "{api-version}"; })
-        (row "36" "󰍛" "memory" "memory" { })
-        (row "36" "󰓡" "swap" "swap" { })
-        (row "36" "󰋊" "disk" "disk" { folders = "/"; })
-        close
-
-        (open "palette")
-        (row "37" "󰉦" "colors" "colors" { symbol = "circle"; })
-        close
-      ];
+      modules = mkModules boxed;
     };
   };
 
+  # The plain list for terminals too narrow for the boxes: same modules, no borders, no logo.
+  xdg.configFile."fastfetch/compact.jsonc".text = builtins.toJSON (
+    config.programs.fastfetch.settings
+    // {
+      logo.type = "none";
+      modules = mkModules plain;
+    }
+  );
+
+  # The layout follows the terminal: logo plus boxes, boxes alone, or the plain list. A logo taller
+  # than the window breaks fastfetch, which draws it first and then climbs back up to the boxes.
   # In kitty (local, or over SSH from it, since the bytes travel inline) the snowflake image replaces
   # the ASCII logo at the boxes' exact height; with no width, fastfetch keeps it square.
-  # KITTY_WINDOW_ID is what kitty exports; TERM is often overridden.
+  # KITTY_WINDOW_ID is what kitty exports (TERM is often overridden), and VS Code inherits it when
+  # launched from kitty, hence the TERM_PROGRAM check.
   programs.zsh.siteFunctions.fastfetch = ''
-    if [[ -n $KITTY_WINDOW_ID || $TERM == xterm-kitty ]]; then
-      command fastfetch --logo-type kitty --logo ${snowflake} --logo-height ${toString rows} "$@"
-    else
-      command fastfetch "$@"
+    if (( COLUMNS < ${toString boxWidth} )); then
+      command fastfetch -c ${config.xdg.configHome}/fastfetch/compact.jsonc "$@"
+      return
     fi
+    local -a logo=(--logo-type none)
+    if (( LINES > ${toString rows} )); then
+      if [[ ( -n $KITTY_WINDOW_ID || $TERM == xterm-kitty ) && $TERM_PROGRAM != vscode ]]; then
+        # kitty answers CSI 16t with its cell size, which turns the square image's height into columns.
+        local reply
+        print -n '\e[16t' > /dev/tty
+        if read -rs -t 0.2 -d t reply < /dev/tty; then
+          reply=''${reply#*\[6;}
+          local -i h=''${reply%%;*} w=''${reply#*;}
+          if (( (${toString rows} * h + w - 1) / w + 4 + ${toString boxWidth} <= COLUMNS )); then
+            logo=(--logo-type kitty --logo ${snowflake} --logo-height ${toString rows} --logo-padding-top 0)
+          fi
+        fi
+      elif (( ${toString asciiWidth} + ${toString boxWidth} <= COLUMNS )); then
+        logo=()
+      fi
+    fi
+    command fastfetch "''${logo[@]}" "$@"
   '';
 }

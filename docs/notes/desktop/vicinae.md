@@ -50,6 +50,13 @@ The unit is Home Manager's (`vicinae server`, `Restart=always`, wanted by
 WAYLAND_DISPLAY` and `Slice = session.slice`, the same as `polkit-agent.nix`. It is the only
 starter (rule 15): nothing in `autostart.lua` launches it.
 
+A switch that installs an app restarts it. The app list itself is live: the `.desktop` shows up in
+search on its own. Its icon does not, because Qt keeps the icon theme it read when the server
+started. FAI Meet came out iconless on 31/10/2026, with its PNG already in the hicolor
+`icon-theme.cache`, until a manual restart. So the names of every installed package (home plus
+system) go into `X-Restart-Triggers` as one hash: a new app, a removed one or a version bump
+changes the unit, and `sd-switch` restarts it. The apps it launched survive, see below.
+
 Apps it launches go through `app2unit --` (`applications.preferences.launchPrefix`), so each one
 gets its own `app-Hyprland-<name>-<random>.scope` under `app.slice`. Without it they were children
 in `vicinae.service`'s cgroup (seen on 15/10/2026: Zen and VS Code there). Nothing died on a

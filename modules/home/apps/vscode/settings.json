@@ -323,6 +323,8 @@
   // SAME version. Explicit here = it holds on both and does not depend on the draw. It is
   // `experimental`, so it may disappear.
   "workbench.experimental.modernUI": true,
+  // Source Control opens as a folder tree in every workspace, SSH included (the default is a flat list)
+  "scm.defaultViewMode": "tree",
   "gitlens.views.scm.grouped.views": {
     "commits": true,
     "branches": true,

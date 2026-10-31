@@ -1,4 +1,4 @@
-# fastfetch, as a boxed key column split into System / Desktop / Hardware, Catnap style.
+# fastfetch: boxed sections and a donut.c-style logo rendered at build time. Why: docs/notes/apps/fastfetch.md
 # The terminal field uses {process-name}, and owfetch mirrors it: docs/notes/network/network.md
 {
   config,

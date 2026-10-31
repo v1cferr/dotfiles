@@ -28,7 +28,7 @@
         "command": "runCommands",
         "args": {
             "commands": [
-                "workbench.action.closeAllEditorGroups",
+                "workbench.action.closeAllGroups",
                 {
                     "command": "vscode.setEditorLayout",
                     "args": {

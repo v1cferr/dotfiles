@@ -16,6 +16,9 @@ Item {
     property bool held: false // the owner's own holds: the pointer, an open detail, a clicked alert
     property Text title: null // the header's title: the row centers on its capitals, not its line box
     readonly property bool paused: pause.paused
+    function togglePause() {
+        pause.paused = !pause.paused;
+    }
     signal advance
     signal jump(int id)
 

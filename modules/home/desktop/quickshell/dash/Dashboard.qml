@@ -15,6 +15,9 @@ PanelWindow {
 
     screen: modelData
     WlrLayershell.namespace: "qs-dash" // the glass blur rule matches it (appearance.lua)
+    // A click on the band hands it the keyboard (until a click elsewhere), for the carousel keys below;
+    // without one, every key stays with the focused window.
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
     // The band fills the top share the BAR reserves on this screen (Bar.qml), from under the bar to
     // where the windows begin. It ignores other zones, so it never depends on which layer mapped first.
@@ -86,6 +89,30 @@ PanelWindow {
     Timer {
         id: focusHold
         interval: 30000
+    }
+
+    // The carousel keys: ← → turn the pages and Space holds or resumes them, on the strip while the
+    // pointer is over it and on the right-hand column otherwise.
+    Item {
+        focus: true
+        Keys.onPressed: event => {
+            const onStrip = svcStrip.hovered && svcStrip.pageCount > 1;
+            if (event.key === Qt.Key_Left || event.key === Qt.Key_Right) {
+                const d = event.key === Qt.Key_Right ? 1 : -1;
+                if (onStrip)
+                    svcStrip.step(d);
+                else
+                    pages.step(d);
+            } else if (event.key === Qt.Key_Space) {
+                if (onStrip)
+                    svcStrip.togglePause();
+                else
+                    pageDots.togglePause();
+            } else {
+                return;
+            }
+            event.accepted = true;
+        }
     }
 
     // The detail on hover: one card per band, fed by any `Tip` inside it (Tip.qml, Tips.qml).

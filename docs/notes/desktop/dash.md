@@ -166,6 +166,11 @@ clicked in the bar above turns to the forge with a failure and holds the rotatio
 The pointer over the column HOLDS the page, because reading a row must not be a race against the
 timer.
 
+**Keys (31/10/2026).** `←` `→` turn the pages and `Space` holds or resumes them, on the services
+strip while the pointer is over it and on this column otherwise. The band takes the keyboard only
+ON DEMAND (`WlrKeyboardFocus.OnDemand`, like the pinned bar): a click on it hands it the keys until
+a click elsewhere, so it never steals an arrow or a space from the focused window.
+
 **The controls (22/10/2026), chosen in a bake-off.** The current dot is a pill that FILLS as its
 page's time runs out, so the header says when it will turn, and a pause closes the row: two bars
 while it turns, a play triangle in the accent while it holds, until the next click. The hold is

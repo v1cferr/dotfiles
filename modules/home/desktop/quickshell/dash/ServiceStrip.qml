@@ -16,6 +16,10 @@ ColumnLayout {
     onPageCountChanged: if (strip.page >= strip.pageCount)
         strip.page = 0
 
+    readonly property bool hovered: hover.hovered // the band's keys turn this strip while the pointer is on it
+    function togglePause() {
+        stripDots.togglePause();
+    }
     function step(d) {
         strip.page = (strip.page + d + strip.pageCount) % strip.pageCount;
     }
@@ -73,6 +77,7 @@ ColumnLayout {
             Layout.fillWidth: true
         }
         PageDots {
+            id: stripDots
             visible: strip.pageCount > 1
             order: Array.from({
                 length: strip.pageCount

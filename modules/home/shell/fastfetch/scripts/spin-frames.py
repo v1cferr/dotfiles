@@ -3,7 +3,7 @@
 The logo becomes a solid slab: front and back faces plus a rim whose normals come from the
 outline. For each frame the solid rotates about two axes at once, every surface point is
 projected with perspective into a z-buffer, and its luminance against a fixed light picks a
-character from donut.c's ramp. The logo's own two blues tint the characters.
+character from donut.c's ramp. The characters take the brand guide's two blues.
 
 usage: spin-frames.py <logo.png> <rows> <frames> <outdir>
 <outdir>/frames holds every frame separated by ASCII RS (0x1e), and <outdir>/first the first one
@@ -26,6 +26,10 @@ DISTANCE = 5.0  # viewer to the logo's center, in logo radii: mild perspective
 BEVEL = 6.0  # how much the faces round off toward the outline, so a face is a gradient, not one glyph
 LIGHT = np.array([0.0, 0.7, 0.7])  # from above and in front, like donut.c's (0, 1, -1)
 LIGHT = LIGHT / np.linalg.norm(LIGHT)
+# The NixOS brand guide's signature blues (brand.nixos.org, Palette): the packaged PNG still carries
+# the older #5277c3 and #7ebae4, so each lambda is recolored by which of the two it is.
+AFGHANI_BLUE = np.array([0x4D, 0x6F, 0xB7]) / 255.0
+ARGENTINIAN_BLUE = np.array([0x5F, 0xB8, 0xF2]) / 255.0
 TURNS_X, TURNS_Z = 2, 1  # whole turns per loop, so the last frame meets the first
 
 
@@ -34,7 +38,8 @@ def surface(path, side):
     img = Image.open(path).convert("RGBA").resize((side, side), Image.LANCZOS)
     rgba = np.asarray(img, dtype=np.float32) / 255.0
     mask = rgba[..., 3] > 0.5
-    rgb = rgba[..., :3]
+    light = rgba[..., :3].mean(axis=-1) > 0.61  # between the old blues' means, 0.52 and 0.71
+    rgb = np.where(light[..., None], ARGENTINIAN_BLUE, AFGHANI_BLUE)
 
     # The blurred alpha's gradient points inward from the outline: it rounds the faces off (a
     # pillowed slab, the way the torus's curve shades donut.c) and gives the rim its normals.
@@ -118,9 +123,7 @@ def encode(char, tint):
             if char[y, x] < 0:
                 out.append(" ")
                 continue
-            # Two shades per hue are enough to read as the logo and keep the frames small.
-            c = tuple(int(round(v * 255 / 32) * 32) for v in tint[y, x])
-            c = tuple(min(255, v) for v in c)
+            c = tuple(int(round(v * 255)) for v in tint[y, x])
             if c != last:
                 out.append("\x1b[38;2;%d;%d;%dm" % c)
                 last = c

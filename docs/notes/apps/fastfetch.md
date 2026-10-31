@@ -30,8 +30,10 @@ torus, and fastfetch cannot animate a logo, so every frame is rendered at build 
 - It rotates about two axes at once at donut.c's pace (0.04 rad about X and 0.02 about Z per
   frame), which makes two turns about X for one about Z in 314 frames: the loop has no seam.
 - Each surface point is projected with perspective into a z-buffer, and its brightness against a
-  fixed light picks a character from donut.c's ramp, `.,-~:;=!*#$@`, with its `L*8` mapping. The logo's two blues tint
-  the characters.
+  fixed light picks a character from donut.c's ramp, `.,-~:;=!*#$@`, with its `L*8` mapping.
+- The characters take the [brand guide's](https://brand.nixos.org/documents/nixos-branding-guide.pdf)
+  signature blues, Afghani `#4d6fb7` and Argentinian `#5fb8f2`. The PNG in `nixos-icons` still
+  carries the older `#5277c3` and `#7ebae4`, so each lambda is recolored by which of the two it is.
 - A frame is as tall as the boxes and twice as wide, since a cell is about twice as tall as wide.
 
 The zsh wrapper prints the boxes with the first frame as the logo, so fastfetch reserves exactly

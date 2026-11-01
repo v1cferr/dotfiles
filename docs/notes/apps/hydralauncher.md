@@ -3,7 +3,7 @@
 Modules: [`pkgs/hydralauncher/package.nix`](../../../pkgs/hydralauncher/package.nix),
 [`modules/nixos/gaming/hydralauncher.nix`](../../../modules/nixos/gaming/hydralauncher.nix),
 [`modules/home/apps/hydralauncher.nix`](../../../modules/home/apps/hydralauncher.nix),
-[`modules/home/apps/hydralauncher/sources-sync.py`](../../../modules/home/apps/hydralauncher/sources-sync.py)
+[`modules/home/apps/hydralauncher/sync.py`](../../../modules/home/apps/hydralauncher/sync.py)
 
 [Hydra](https://github.com/hydralauncher/hydra) is a game launcher with its own BitTorrent client,
 an Electron app (MIT). The repo repackages the official AppImage, the same pattern as
@@ -58,7 +58,9 @@ option with more seeders, or a direct download over a torrent on a thin swarm.
 Hydra installs each game through `umu-run` (UMU-Proton plus the Steam Runtime, downloaded on the
 first install) into a Wine prefix of its own, `~/.config/hydralauncher/wine-prefixes/<steam id>`,
 and the installed game sits inside that prefix. The repacks it downloads go to the folder set in
-its settings, `~/Games/Hydra` here.
+its settings, `~/Games/Hydra` here. That folder is pinned by the same launch sync, as the
+`downloadsPath` of the `userPreferences` key: one changed in the app goes back on the next cold
+start, since a download outside the subvolume would land in the snapshots and the backup.
 
 Both are tens of GiB per game and re-obtainable, so both are out of the hourly @home snapshots
 (nested subvolumes, through `my.disk.subvolumes` in the home module) and out of the backup (the
@@ -89,18 +91,18 @@ Hydra keeps them in its LevelDB (`hydra-db`), under the `downloadSources` sublev
 (`!downloadSources!<id>`), and the id comes from its own API: adding a source is
 `POST /download-sources {url}` and storing the answer, removing one is deleting the key. Read
 from the app's source maps on 01/11/2026 (`add-download-source.ts`, `remove-download-source.ts`).
-`sources-sync.py` does exactly that, so the app sees sources it could have added itself, and on
+`sync.py` does exactly that, so the app sees sources it could have added itself, and on
 its next start its own `/download-sources/sync` refreshes their status and game counts.
 
 It runs from the wrapper the module puts around `hydralauncher`, before the app starts:
 
 - **The app open** holds LevelDB's LOCK. The sync skips, and a second launch only focuses the
   running window anyway, so the next cold start catches up.
-- **The catalog not answering** skips the whole sync before the DB is opened: an empty answer
-  must not read as "declare nothing" and wipe the list.
+- **The catalog not answering** skips the sources, asked before the DB is opened: an empty
+  answer must not read as "declare nothing" and wipe the list.
 - **One source failing** to register does not keep the others out; the run exits 1 and the
   wrapper sends a notification. The app opens either way.
-- **By hand**: `hydralauncher-sources`, with the app closed, prints what it added or removed.
+- **By hand**: `hydralauncher-sync`, with the app closed, prints what it added or removed.
 
 A status of `DEAD` on a source (DODI on 01/11/2026) is the server's verdict on that JSON, not a
 sync failure. The format is internal to Hydra, so a release that changes it breaks the sync

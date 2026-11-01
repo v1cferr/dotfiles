@@ -22,7 +22,7 @@ merged under it, measured in the built `policies.json`.
 The theme API's names, `--lwt-*`, `--toolbar-bgcolor`, `--arrowpanel-*`, are no longer read: a sheet
 setting all of them changed nothing on screen. What paints each part was read with
 `InspectorUtils.getMatchingCSSRules` in a throwaway profile under Marionette (the same client as
-Zen's lab, [`lab.py`](../../../modules/home/apps/zen/lab.py), on port 2830):
+Zen's lab, in [`theme.nix`](../../../modules/home/apps/zen/theme.nix), on port 2830):
 
 | Part | Variable | Palette |
 | --- | --- | --- |

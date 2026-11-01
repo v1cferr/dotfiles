@@ -67,6 +67,7 @@ writeShellApplication {
       --arg faiHosts "$(nix_list modules/nixos/network/fai-gateway.nix faiTunnelHosts)" \
       --arg sshPort "$(first 'ports\s*=\s*\[\s*(\d+)\s*\]' modules/nixos/network/network.nix '$1')" \
       --arg sshHosts "$hosts" \
+      --arg hydraPort "$(first 'torrentPort\s*=\s*(\d+)' modules/nixos/gaming/hydralauncher.nix '$1')" \
       --arg mirror "$mirror" '
       def lines: split("\n") | map(select(length > 0));
       # One mirrored config as {key: [values]}. A list option carries several quoted values.
@@ -159,6 +160,18 @@ writeShellApplication {
           (if [$fw | anon("redirect")[] | select(.dest_ip == $host and .dest_port == $sshPort)] | length == 0 then
               [["ssh", "no redirect sends \($sshPort) to \($host)", "services.openssh.ports in modules/nixos/network/network.nix owns that number"]]
             else [] end),
+          # The Hydra torrent port: forwarded on IPv4, accepted on IPv6, both TCP and UDP, or peers cannot dial in.
+          (if $hydraPort == "" then
+              [["hydra", "could not read torrentPort", "an anchor moved: fix this checker, do not delete the check"]]
+            else
+              def both: (.proto // "" | split(" ")) as $p | ($p | index("tcp")) and ($p | index("udp"));
+              (if [$fw | sections("redirect")[] | select(.dest_ip == $host and .src_dport == $hydraPort and .dest_port == $hydraPort and both)] | length == 0 then
+                  [["hydra", "no tcp+udp redirect sends \($hydraPort) to \($host)", "torrentPort in modules/nixos/gaming/hydralauncher.nix owns that number, and the app hard-codes it"]]
+                else [] end)
+              + (if [$fw | sections("rule")[] | select(.family == "ipv6" and .dest_port == $hydraPort and .target == "ACCEPT" and both)] | length == 0 then
+                  [["hydra", "no IPv6 rule accepts tcp+udp \($hydraPort) into the LAN", "the host has a public IPv6, and the router drops wan->lan by default"]]
+                else [] end)
+            end),
           # A split-DNS answer at an address no host claims only breaks by name. TWO mechanisms: an
           # `address=` override and a `config domain` record; reading only the first hid the t480.
           (([$host] + [$sshHosts[] | select(ip as $i | any($ranges[]; . as $r | $i | within($r)))]) as $known
@@ -184,7 +197,7 @@ writeShellApplication {
           (.[] | "  \(.[0]): \(.[1])\n    -> \(.[2])"),
           "\nThe mirror is READ-ONLY: fix the device with uci, then `router-sync pull`.",
           "FAIL"
-        else "router-ssot: 9 checks, the mirror agrees with the repo" end
+        else "router-ssot: 10 checks, the mirror agrees with the repo" end
     ' >"$out" || exit 2
     if [[ "$(tail -n1 "$out")" == FAIL ]]; then
       head -n -1 "$out" >&2

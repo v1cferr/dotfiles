@@ -19,7 +19,7 @@ three of them. The repo now declares zero Moonlight sources, so the contract rea
 forward nothing", and a redirect that comes back through LuCI without the repo is a finding instead
 of a surprise.
 
-## The nine checks
+## The ten checks
 
 | Check | What it compares | Why the drift is silent |
 | --- | --- | --- |
@@ -31,6 +31,7 @@ of a surprise.
 | ssh | that some redirect still sends `services.openssh.ports` to the host | the port is one number in two configs, and only the OUTSIDE notices |
 | dns | every answer the router gives from its own tables, `address=` override AND `config domain` record, against the hosts this repo declares, inside the LAN or inside the TUNNEL | a name pointing at a machine that is not there breaks only by name |
 | peer | every `ssh.nix` host at a tunnel address against the `allowed_ips` of the wg0 peers | the name resolves and nothing answers, which reads as "the machine is off" |
+| hydra | a tcp+udp redirect sending `torrentPort` to the host, and an IPv6 rule accepting it into the LAN | the app hard-codes the port, and a torrent that cannot be dialed still downloads, only slower |
 | dnat | every redirect's `dest_ip` against `vpnSubnet`, and the answer is always no | a port published for a machine that is off site, in somebody else's house, with no gate in front of it |
 
 ## What the t480 taught it (22/08/2026)

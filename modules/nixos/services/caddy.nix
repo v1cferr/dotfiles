@@ -136,7 +136,7 @@ lib.mkIf (enabled && config.my.services.caddy) {
     };
   };
 
-  # services.caddy has no openFirewall, so this is the repo's only allowedTCPPorts.
+  # services.caddy has no openFirewall, so the ports are opened by hand here.
   # 80 stays open for the redirect and for a possible HTTP-01 one day.
   networking.firewall.allowedTCPPorts = [
     80

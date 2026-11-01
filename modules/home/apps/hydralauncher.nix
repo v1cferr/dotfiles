@@ -50,8 +50,15 @@ let
     name = "hydralauncher-synced";
     paths = [ hydralauncher ];
     nativeBuildInputs = [ makeWrapper ];
+    # The app hard-codes PROTON_LOG=1 on every game, which turns on Wine's +unwind trace: 26 MiB/s
+    # into ~/steam-<id>.log under Cyberpunk. Proton only `setdefault`s the channels, so these win.
     postBuild = ''
-      wrapProgram $out/bin/hydralauncher --run '${lib.getExe sync} ||
+      wrapProgram $out/bin/hydralauncher \
+        --set-default WINEDEBUG -all \
+        --set-default DXVK_LOG_LEVEL none \
+        --set-default VKD3D_DEBUG none \
+        --set-default PROTON_LOG_DIR "${config.xdg.configHome}/hydralauncher/logs" \
+        --run '${lib.getExe sync} ||
         ${libnotify}/bin/notify-send -a Hydra Hydra "Settings not synced: run hydralauncher-sync"'
     '';
   };

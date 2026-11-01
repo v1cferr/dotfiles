@@ -77,6 +77,24 @@ runner, it always spawns `umu-run`. Redirecting that means a fake interpreter be
 Bottles' runners and takes the process away from Hydra, the thing its playtime and cloud saves
 watch. Bottles keeps what it already holds (Battle.net, CS2).
 
+## Proton's log is silenced in the wrapper
+
+Hydra spawns every game with `PROTON_LOG=1`, hard-coded (`umu.ts`), with no setting to turn it off.
+For Proton that means `WINEDEBUG=+timestamp,+pid,+tid,+seh,+unwind,...` plus DXVK and vkd3d at
+`info`/`warn`, all into `~/steam-<id>.log`. Under Cyberpunk 2077 on 01/11/2026 the `+unwind`
+trace alone wrote **26 MiB/s**: 3.9 GiB in the first minutes, eating disk, I/O and CPU from the
+game and landing in the @home snapshots.
+
+Proton only `setdefault`s those variables, so a value already in the environment wins. The
+wrapper sets `WINEDEBUG=-all`, `DXVK_LOG_LEVEL=none` and `VKD3D_DEBUG=none`, and moves the log
+that remains (a short header) to `~/.config/hydralauncher/logs` via `PROTON_LOG_DIR`. They are
+`--set-default`, so debugging a game is launching the app with the channels wanted, e.g.
+`WINEDEBUG=+seh hydralauncher`.
+
+A black screen on a first launch is not this: DX12 games compile their pipelines first
+(`vkd3d-proton: Pipeline ... does not exist` in the log, the game thread at several cores), and
+Cyberpunk sat on black for a few minutes before its menu.
+
 ## The internal self-updater does not work
 
 electron-updater swaps the AppImage file in place, and the store is read-only. Updating is

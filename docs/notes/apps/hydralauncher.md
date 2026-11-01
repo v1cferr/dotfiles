@@ -31,22 +31,25 @@ The AppImage bundles `umu-run`, which Hydra uses to start Windows games through 
 
 A peer that cannot dial in only downloads from the peers it dials itself, which on a thin swarm is
 most of the speed lost. Hydra's libtorrent (2.1, in `hydra-native`) listens on **5881**, TCP and
-UDP, hard-coded (`DEFAULT_TORRENT_PORT` in `torrent-client.ts`) with no setting to move it. Three
+UDP, hard-coded (`DEFAULT_TORRENT_PORT` in `torrent-client.ts`) with no setting to move it. Two
 places have to agree on that number:
 
 - **The host**: [`modules/nixos/gaming/hydralauncher.nix`](../../../modules/nixos/gaming/hydralauncher.nix)
   opens it in the NixOS firewall, to everyone, since peers come from anywhere.
-- **The router, IPv4**: the `hydra_torrent` redirect DNATs 5881 to the desktop. The router runs
-  no UPnP, so nothing opens it on the app's behalf.
-- **The router, IPv6**: the desktop has a public address, and the `hydra_torrent6` rule accepts
-  5881 from the WAN into the LAN. It names NO destination address on purpose: the kernel
-  announces the swarm from its temporary (privacy) address, which rotates, so a rule pinned to one
-  address would go stale within a day. Only this host listens on 5881, and its own firewall is the
-  second gate.
+- **The router**: the `hydra_torrent` redirect DNATs 5881 to the desktop. The router runs no UPnP,
+  so nothing opens it on the app's behalf. Measured on 01/11/2026 with a download running: 883 TCP
+  and 8105 UDP packets through that DNAT, a swarm that could not reach this host before.
 
-[`router-ssot`](../repo/router-ssot.md) fails when the router's mirror loses either rule or
-carries another number. Rollback on the device:
-`uci delete firewall.hydra_torrent; uci delete firewall.hydra_torrent6`, then commit and reload.
+**IPv4 only, measured.** The desktop has a public IPv6 and a `hydra_torrent6` rule accepted 5881
+into the LAN for a few hours on 01/11/2026, and its counters stayed at zero: Hydra's libtorrent
+binds 5881 on each IPv4 address only (`ss -lntu`: 192.168.1.10, lo, the Docker bridges, no IPv6
+socket). The rule opened a port nobody answers, so it was removed. If a release starts listening on
+IPv6, the rule comes back with NO destination address: the kernel announces the swarm from its
+temporary (privacy) address, which rotates, so a rule pinned to one address goes stale within a day.
+
+[`router-ssot`](../repo/router-ssot.md) fails when the router's mirror loses the redirect or
+carries another number. Rollback on the device: `uci delete firewall.hydra_torrent`, then commit
+and reload.
 
 Everything else about speed is already parallel: a torrent pulls from every peer at once, and a
 direct download (gofile and friends) is split into 8 ranges by the app. Those limits are

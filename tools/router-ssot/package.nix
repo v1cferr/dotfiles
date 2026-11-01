@@ -160,18 +160,13 @@ writeShellApplication {
           (if [$fw | anon("redirect")[] | select(.dest_ip == $host and .dest_port == $sshPort)] | length == 0 then
               [["ssh", "no redirect sends \($sshPort) to \($host)", "services.openssh.ports in modules/nixos/network/network.nix owns that number"]]
             else [] end),
-          # The Hydra torrent port: forwarded on IPv4, accepted on IPv6, both TCP and UDP, or peers cannot dial in.
+          # The Hydra torrent port, TCP and UDP, or peers cannot dial in. IPv4 only: the app binds no IPv6.
           (if $hydraPort == "" then
               [["hydra", "could not read torrentPort", "an anchor moved: fix this checker, do not delete the check"]]
-            else
-              def both: (.proto // "" | split(" ")) as $p | ($p | index("tcp")) and ($p | index("udp"));
-              (if [$fw | sections("redirect")[] | select(.dest_ip == $host and .src_dport == $hydraPort and .dest_port == $hydraPort and both)] | length == 0 then
-                  [["hydra", "no tcp+udp redirect sends \($hydraPort) to \($host)", "torrentPort in modules/nixos/gaming/hydralauncher.nix owns that number, and the app hard-codes it"]]
-                else [] end)
-              + (if [$fw | sections("rule")[] | select(.family == "ipv6" and .dest_port == $hydraPort and .target == "ACCEPT" and both)] | length == 0 then
-                  [["hydra", "no IPv6 rule accepts tcp+udp \($hydraPort) into the LAN", "the host has a public IPv6, and the router drops wan->lan by default"]]
-                else [] end)
-            end),
+            elif [$fw | sections("redirect")[] | select(.dest_ip == $host and .src_dport == $hydraPort and .dest_port == $hydraPort
+                and ((.proto // "" | split(" ")) as $p | ($p | index("tcp")) and ($p | index("udp"))))] | length == 0 then
+              [["hydra", "no tcp+udp redirect sends \($hydraPort) to \($host)", "torrentPort in modules/nixos/gaming/hydralauncher.nix owns that number, and the app hard-codes it"]]
+            else [] end),
           # A split-DNS answer at an address no host claims only breaks by name. TWO mechanisms: an
           # `address=` override and a `config domain` record; reading only the first hid the t480.
           (([$host] + [$sshHosts[] | select(ip as $i | any($ranges[]; . as $r | $i | within($r)))]) as $known

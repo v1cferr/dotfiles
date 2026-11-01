@@ -29,6 +29,7 @@ in
     vendored-bump # ./tools: same, and building it proves every updateScript still resolves
     curseforge-fix-perms # ./pkgs: same
     stack-wallet # ./pkgs: the official AppImage at a VERSIONED url, so unlike curseforge it stays in the check
+    hydralauncher # ./pkgs: the official AppImage at a VERSIONED url, like stack-wallet
     hyprglass # ./pkgs: built against the host's Hyprland, so the check proves the plugin still compiles for it
     docs-links # ./tools: the build IS the wrapper's shellcheck; the CHECK below runs it
     docs-site # ./tools: the static export, so the CHECK below proves the site builds

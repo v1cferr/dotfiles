@@ -9,7 +9,8 @@ Modules: [`tools/vendored-bump/package.nix`](../../../tools/vendored-bump/packag
 [`pkgs/stack-wallet/bump.nix`](../../../pkgs/stack-wallet/bump.nix),
 [`pkgs/zapfast/bump.nix`](../../../pkgs/zapfast/bump.nix),
 [`pkgs/spotifast/bump.nix`](../../../pkgs/spotifast/bump.nix),
-[`pkgs/soloist/bump.nix`](../../../pkgs/soloist/bump.nix)
+[`pkgs/soloist/bump.nix`](../../../pkgs/soloist/bump.nix),
+[`pkgs/hydralauncher/bump.nix`](../../../pkgs/hydralauncher/bump.nix)
 
 Every package that is in neither nixpkgs nor a flake follows ONE layout, and one runner keeps all
 of them on upstream's latest without anybody editing a hash by hand. They share a reason and differ

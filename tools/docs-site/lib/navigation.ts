@@ -158,6 +158,7 @@ export const navigation: NavItem[] = [
       { title: "CurseForge", doc: "notes/apps/curseforge.md" },
       { title: "CurseForge fix-perms", doc: "notes/apps/curseforge-fix-perms.md" },
       { title: "FAI Meet", doc: "notes/apps/fai-meet.md" },
+      { title: "Hydra Launcher", doc: "notes/apps/hydralauncher.md" },
       { title: "Bottles", doc: "notes/apps/bottles.md" },
       { title: "MEGA", doc: "notes/apps/mega.md" },
       { title: "LibreWolf", doc: "notes/apps/librewolf.md" },

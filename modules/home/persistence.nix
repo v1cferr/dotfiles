@@ -148,6 +148,7 @@ in
         ".local/state/Larian Studios"
         ".local/share/wenilla-rogue"
         ".config/CurseForge"
+        ".config/hydralauncher" # Hydra's library, login and download queue
         ".local/share/applications" # launchers Steam and Bottles create for games
         ".local/share/icons" # their icons
 

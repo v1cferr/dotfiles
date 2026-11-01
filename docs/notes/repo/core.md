@@ -91,9 +91,13 @@ the cache and its public key come in, not the flake: that repository is private 
 through the FAI VPN, so as an input it would break this repo's public CI and a restore from
 scratch. The installed app stays the AppImage, see [`fai-meet`](../apps/fai-meet.md).
 
-The `extra-` options append to the defaults, so cache.nixos.org is still asked first and this one
-only answers for paths only it has. An untrusted user cannot add a substituter from a flake's
-`nixConfig`, which is why it is declared system-wide.
+It is a **trusted** substituter, not a default one. Until 01/11/2026 it sat in
+`extra-substituters`, so every build asked it for every missing path, and the server only answers
+through the FAI VPN: with the VPN down, `rebuild` died on 15 s narinfo timeouts for paths that
+cache.nixos.org had all along. Now nothing queries it unless asked, and `fai-meet-latest` asks
+(`--option extra-substituters`), which an untrusted user may do only because the URL is listed in
+`extra-trusted-substituters`. That listing, and the key, are why it is still declared system-wide:
+an untrusted user cannot add a substituter from a flake's `nixConfig`.
 
 ## Locale
 

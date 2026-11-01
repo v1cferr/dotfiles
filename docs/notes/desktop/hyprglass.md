@@ -30,6 +30,13 @@ v0.10.0 also refuses to draw ("pauses") on a Hyprland it was not built for, inst
 release is a binary nobody pinned; both break rule 3. The derivation is in the flake, so the gate
 builds it and the lock pins it (rule 13).
 
+**The release follows the compositor, by a declared table.** `pkgs/hyprglass/package.nix` mirrors
+upstream's `commit_pins` as a map from Hyprland version to HyprGlass release, so an `update` that
+moves Hyprland also moves the plugin, and a Hyprland with no pair fails evaluation by name. Added
+01/11/2026, when the canary's check against the channel heads hit Hyprland 0.57.0: v0.10.0 no
+longer compiles there (`desktop/view/Window.hpp` moved), and v1.1.0 is upstream's pin for 0.57.0.
+v1.x only drops the `layers:namespace*` keys, which `glass.lua` never set.
+
 **The hyprctl skew found on the way.** The session runs the UNSTABLE Hyprland while four Home
 Manager modules took `hyprctl` from the stable `pkgs.hyprland`, 0.55.4. They take the session's
 package now (commit `e4d7538e`).

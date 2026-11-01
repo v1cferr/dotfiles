@@ -57,6 +57,13 @@ in
     sync # `hydralauncher-sources`: the same sync by hand, with the app closed
   ];
 
+  # The games churn and weigh tens of GiB, so neither the hourly @home snapshots nor the backup keep
+  # them: the per-game Wine prefixes (the installed games) and the downloads folder set in the app.
+  my.disk.subvolumes = [
+    ".config/hydralauncher/wine-prefixes"
+    "Games/Hydra"
+  ];
+
   # Merges with the associations from xdg.nix and media.nix. The login comes back through it.
   xdg.mimeApps.defaultApplications."x-scheme-handler/hydralauncher" = "hydralauncher.desktop";
 }

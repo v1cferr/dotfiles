@@ -53,6 +53,25 @@ direct download (gofile and friends) is split into 8 ranges by the app. Those li
 constants in the source, not settings. Past an open port, what adds speed for free is choosing the
 option with more seeders, or a direct download over a torrent on a thin swarm.
 
+## Where the games live
+
+Hydra installs each game through `umu-run` (UMU-Proton plus the Steam Runtime, downloaded on the
+first install) into a Wine prefix of its own, `~/.config/hydralauncher/wine-prefixes/<steam id>`,
+and the installed game sits inside that prefix. The repacks it downloads go to the folder set in
+its settings, `~/Games/Hydra` here.
+
+Both are tens of GiB per game and re-obtainable, so both are out of the hourly @home snapshots
+(nested subvolumes, through `my.disk.subvolumes` in the home module) and out of the backup (the
+prefixes through `my.backup.exclude` in the NixOS module, the downloads with the rest of
+`~/Games`). A prefix created before that is a plain directory, and the activation only warns about
+it: `convert-to-subvolume` is the deliberate way, as for any other path in that list.
+
+Why not hand the install to Bottles, considered on 01/11/2026: Hydra has no setting for another
+runner, it always spawns `umu-run`. Redirecting that means a fake interpreter behind
+`HYDRA_UMU_PYTHON` translating into `bottles-cli`, which trades Proton and its per-game fixes for
+Bottles' runners and takes the process away from Hydra, the thing its playtime and cloud saves
+watch. Bottles keeps what it already holds (Battle.net, CS2).
+
 ## The internal self-updater does not work
 
 electron-updater swaps the AppImage file in place, and the store is read-only. Updating is

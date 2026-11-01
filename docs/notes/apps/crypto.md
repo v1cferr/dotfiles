@@ -33,7 +33,7 @@ Compared on 10/10/2026 (rule 1).
   is configurable.
 - **Bisq 2 / Bisq Easy**: open source, P2P over Tor, no platform KYC, any payment method the two
   sides agree on (so Pix works), and built for exactly the first-time buyer: no security deposit,
-  no fee, no BSQ, a limit per trade of 6 to 600 USD equivalent ([Bisq Easy](https://bisq.wiki/Bisq_Easy)).
+  no fee, no BSQ, a limit per trade of 6 to 600 USD equivalent ([Bisq Easy](https://web.archive.org/web/20261014003500/https://bisq.wiki/Bisq_Easy)).
 
 | Rejected | Why |
 | --- | --- |
@@ -55,7 +55,7 @@ worth knowing which:
   upstream's GPG signature. It also swaps Bisq's bundled Tor binary for nixpkgs' Tor. The keys
   that recipe imports come from the same GitHub release, so on 10/10/2026 I cross-checked the
   signer against the copy on `bisq.network/pubkey/E222AA02.asc` (the one the
-  [Bisq 2 wiki](https://bisq.wiki/Bisq_2) says to import): both carry the primary key
+  [Bisq 2 wiki](https://web.archive.org/web/20261019161041/https://bisq.wiki/Bisq_2) says to import): both carry the primary key
   `B493 3191 06CC 3D1F 252E 19CB F806 F422 E222 AA02`, and the release's `signingkey.asc` names
   E222AA02 as its signer. **unstable and not stable**: stable had 2.1.10 and upstream was on
   2.1.13 (MEASURED 10/10/2026), and a trading client should carry the fixes.
@@ -179,7 +179,7 @@ arrive as one small output that costs a mining fee to spend later.
 2. Bisq Easy, market **BTC/BRL**, filter by payment method **Pix**, settlement **on-chain**
    (not Lightning).
 3. For each candidate seller, check:
-   - **reputation score** and how it was earned (the [reputation](https://bisq.wiki/Reputation)
+   - **reputation score** and how it was earned (the [reputation](https://web.archive.org/web/20251214101138/https://bisq.wiki/Reputation)
      page explains burned and bonded BSQ, account age); higher is safer;
    - **price**: the premium over the market price shown in the offer;
    - **amount range**: does it include my R$ amount;
@@ -262,8 +262,11 @@ upstream path; where it is stored is a decision for that day, not a default here
 
 - Stack Wallet: <https://github.com/cypherstack/stack_wallet> and its
   [releases](https://github.com/cypherstack/stack_wallet/releases)
-- Bisq 2: <https://github.com/bisq-network/bisq2>, [Bisq 2 wiki](https://bisq.wiki/Bisq_2)
-- Bisq Easy: [protocol and limits](https://bisq.wiki/Bisq_Easy), [reputation](https://bisq.wiki/Reputation)
+- Bisq 2: <https://github.com/bisq-network/bisq2>, [Bisq 2 wiki](https://web.archive.org/web/20261019161041/https://bisq.wiki/Bisq_2)
+- Bisq Easy: [protocol and limits](https://web.archive.org/web/20261014003500/https://bisq.wiki/Bisq_Easy), [reputation](https://web.archive.org/web/20251214101138/https://bisq.wiki/Reputation)
+
+The Bisq links are Wayback Machine snapshots: bisq.wiki stopped answering in late 10/2026, and a
+snapshot keeps the text this note cites.
 
 ## Tested versions
 

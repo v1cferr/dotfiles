@@ -8,7 +8,8 @@ Modules: [`modules/nixos/core/boot.nix`](../../../modules/nixos/core/boot.nix),
 Limine (UEFI), in dualboot with Windows 11, signed with our own keys through sbctl. The modules
 share one decision, so they share a page. The look of the menu and the splash: [splash](splash.md).
 
-What checks what, from power-on, read in the pinned nixpkgs (`limine-install.py`) and Limine 12.5.2:
+What checks what, from power-on, read in the pinned nixpkgs (`limine-install.py`) and Limine 12.5.2,
+and drilled again on 12.9.3:
 
 ```mermaid
 flowchart TD
@@ -51,10 +52,18 @@ The GRUB years left findings worth keeping (what made GRUB boot under Secure Boo
 theme's `--class` trap, os-prober finding a dead root): they are in this note as of `3147c47c`,
 `git show 3147c47c:docs/notes/boot-and-storage/boot.md`.
 
+## The version: layer 2
+
+`boot.loader.limine.package = pkgs.unstable.limine`: the newest release, 12.9.3 on 02/11/2026,
+against stable's 12.5.2, following the repo's three layers. The installer script stays stable's;
+it drives Limine through the config file and `enroll-config`, which held across 12.x. A bump is a
+bootloader change, so it goes through `nix build .#vm-limine` (all seven subtests, Secure Boot,
+the tampered initrd and the Windows chainload included) before `nh os boot`.
+
 ## The menu
 
 **The Secure Boot indicator is Limine's own.** With no custom branding, its top line reads
-`Limine 12.5.2 (x86-64, UEFI, Secure Boot)`, and the suffix is appended only when the FIRMWARE
+`Limine <version> (x86-64, UEFI, Secure Boot)`, and the suffix is appended only when the FIRMWARE
 reports Secure Boot active (`common/menu.c`). That is why `limine.nix` sets no branding: a custom
 string would hide the one runtime fact the menu can show honestly.
 
@@ -81,7 +90,7 @@ changes, and the NixOS Center reads it ([nixos-center](../desktop/nixos-center.m
 | Field | Source | Values |
 | --- | --- | --- |
 | `secureBoot`, `setupMode` | the `SecureBoot` and `SetupMode` efivars | on/off, user/setup, or unknown |
-| `loader.running` | the Boot Loader Interface's `LoaderInfo` (Limine sets it) | e.g. `Limine 12.5.2`, or unknown |
+| `loader.running` | the Boot Loader Interface's `LoaderInfo` (Limine sets it) | e.g. `Limine 12.9.3`, or unknown |
 | `loader.signed` | `sbverify --cert /var/lib/sbctl/keys/db/db.pem` on the installed binary | valid, invalid, missing, unknown |
 | `integrity` | the `b2sum` of `limine.conf` found inside `BOOTX64.EFI` | enrolled, mismatch, unknown |
 | `thisBoot` | taken once at boot, kept by later runs | verified only when every row above holds |

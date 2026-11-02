@@ -1,6 +1,11 @@
 # LIMINE: the bootloader, under Secure Boot with the EXISTING sbctl keys and an enrolled, hashed
 # config. The trust chain: docs/notes/boot-and-storage/boot.md
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   cfg = config.my.boot;
@@ -18,6 +23,7 @@ in
   config = {
     boot.loader.limine = {
       enable = true;
+      package = pkgs.unstable.limine; # layer 2: the newest release (12.9 vs stable's 12.5)
       maxGenerations = 10; # rollback depth without filling the 1 GiB ESP
 
       # Forces enrollConfig, validateChecksums, panicOnChecksumMismatch and the editor OFF. Key

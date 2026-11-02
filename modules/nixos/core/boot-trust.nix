@@ -50,30 +50,42 @@ let
       else
         binary="$(find /boot/EFI -maxdepth 2 -iname grubx64.efi -print -quit 2>/dev/null || true)"
       fi
-      signed=unknown
-      if [ -z "$binary" ] || [ ! -e "$binary" ]; then
-        signed=missing
-      elif [ -r /var/lib/sbctl/keys/db/db.pem ]; then
-        if sbverify --cert /var/lib/sbctl/keys/db/db.pem "$binary" >/dev/null 2>&1; then
-          signed=valid
-        else
-          signed=invalid
-        fi
-      fi
 
-      # Limine enrolls the BLAKE2b of limine.conf INTO its binary; the hash must be found there.
-      integrity=kernel-only # GRUB: the firmware checks the kernel, nothing checks the initrd
-      if [ "$configured" = limine ]; then
-        integrity=unknown
-        conf=/boot/limine/limine.conf
-        if [ -r "$conf" ] && [ -r "$binary" ]; then
-          if grep -qaF "$(b2sum "$conf" | cut -d' ' -f1)" "$binary"; then
-            integrity=enrolled
+      measure() {
+        signed=unknown
+        if [ -z "$binary" ] || [ ! -e "$binary" ]; then
+          signed=missing
+        elif [ -r /var/lib/sbctl/keys/db/db.pem ]; then
+          if sbverify --cert /var/lib/sbctl/keys/db/db.pem "$binary" >/dev/null 2>&1; then
+            signed=valid
           else
-            integrity=mismatch
+            signed=invalid
           fi
         fi
-      fi
+
+        # Limine enrolls the BLAKE2b of limine.conf INTO its binary; the hash must be found there.
+        integrity=kernel-only # GRUB: the firmware checks the kernel, nothing checks the initrd
+        if [ "$configured" = limine ]; then
+          integrity=unknown
+          conf=/boot/limine/limine.conf
+          if [ -r "$conf" ] && [ -r "$binary" ]; then
+            if grep -qaF "$(b2sum "$conf" | cut -d' ' -f1)" "$binary"; then
+              integrity=enrolled
+            else
+              integrity=mismatch
+            fi
+          fi
+        fi
+      }
+
+      # The path unit fires on limine.conf, BEFORE the installer copies, enrolls and signs the
+      # binary (a false alarm on 02/11/2026): a bad result is re-read until the install settles.
+      measure
+      for _ in 1 2 3 4 5 6; do
+        [ "$signed" = invalid ] || [ "$integrity" = mismatch ] || break
+        sleep 5
+        measure
+      done
 
       # THIS boot's evidence is taken once, at boot; a later run (after a switch) keeps it.
       if [ -r "$out" ]; then

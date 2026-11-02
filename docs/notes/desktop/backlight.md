@@ -89,9 +89,15 @@ stop matching by eye.
 Since 21/10/2026 the lamp follows the lock. On these LCD panels a darker image saves almost nothing:
 the backlight burns the same behind black. So when `lockscreen.service` starts it pulls in
 `backlight-locked.service` (its `WantedBy`), which drops both panels to `lockedLevel` (10); the
-unit `BindsTo` the lock, and its `ExecStop` runs `backlight-schedule force` the moment the lock
+unit `BindsTo` the lock, and its `ExecStopPost` runs `backlight-schedule force` the moment the lock
 exits, putting the curve's level for that hour back. `BindsTo` and not `PartOf` for the reason in
 [zen.md](../apps/zen.md): the lock ENDS by itself on unlock, and only `BindsTo` follows that.
+
+An unlock within the ~3 s DDC write (right after login, say) stops the unit while it is still
+starting. Until 02/11/2026 that killed `backlight-sync`, left the unit failed, and skipped
+`ExecStop`, which runs only for a unit that finished starting: the panels could stay low until the
+curve's next change. Now the write is `-`-prefixed, so the kill is not a failure, and the restore
+is `ExecStopPost`, which runs either way (both checked on throwaway user units).
 
 While the lock holds, a tick of the curve's timer would raise the panels again, so
 `backlight-schedule` exits early while `backlight-locked` is active; only the unlock's `force`

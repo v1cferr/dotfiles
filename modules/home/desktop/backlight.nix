@@ -179,8 +179,10 @@ in
     Service = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStart = "${sync}/bin/backlight-sync ${toString lockedLevel}";
-      ExecStop = "${schedule}/bin/backlight-schedule force";
+      # An unlock inside the ~3 s DDC write kills it: `-` keeps that from failing the unit, and
+      # ExecStopPost (unlike ExecStop) still runs after a start cut short, so the curve comes back.
+      ExecStart = "-${sync}/bin/backlight-sync ${toString lockedLevel}";
+      ExecStopPost = "${schedule}/bin/backlight-schedule force";
     };
     Install.WantedBy = [ "lockscreen.service" ];
   };

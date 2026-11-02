@@ -106,6 +106,19 @@ is an older generation or a rebuild with the flag off.
    - `systemd-analyze` now shows a `loader` time (Limine reports it); record it against GRUB's
 6. Promote: `sudo efibootmgr -o <limine>,<grub>,<windows>`. Later installs keep Limine's place.
 
+**PASSED on 02/11/2026.** The install on 26/10 created `Boot0001 Limine` and put it first, so
+GRUB went back in front and each test used BootNext: the current generation (`thisBoot:
+verified`, loader 5.95 s, mostly the 5 s menu), generation 362 from the group, and Windows 11
+from the menu. Promoted on 02/11; the first boot by BootOrder read `BootCurrent: 0001`,
+`thisBoot: verified`. What the week in between taught:
+
+- **GRUB's menu freezes when the loader changes.** Until the promotion every boot came from GRUB,
+  which kept starting generation 363 (26/10) while every `rebuild` went only to Limine. Promote
+  in the same sitting as the last test, not days later.
+- **boot-trust raised a false "NOT signed".** Its path unit fires on `limine.conf`, which the
+  installer writes before it copies, enrolls and signs the binary. It now re-reads a bad result
+  for up to 30 s; `sbverify` on the ESP read `Signature verification OK` all along.
+
 ## If it goes wrong
 
 | What you see | What to do |

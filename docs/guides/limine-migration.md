@@ -5,7 +5,7 @@ prove is this machine: the ASUS firmware, the Arc B580, two monitors and Windows
 This was the order, each gate with what had to be true before the next one.
 
 **DONE on 02/11/2026**: Limine is the loader and the `my.boot.loader` selector is gone (stage D).
-The page stays as the record and for the steps still ahead: removing the GRUB reserve (D2).
+GRUB's reserve left the ESP and the firmware the same day (D2). The page stays as the record.
 
 ## What changes on the ESP, and what does not
 
@@ -126,7 +126,7 @@ from the menu. Promoted on 02/11; the first boot by BootOrder read `BootCurrent:
 | The firmware refuses Limine (Secure Boot violation) | Reboot; without BootNext it is GRUB. Then `boot-trust` tells you why |
 | Limine panics on a hash mismatch | Reboot into GRUB (F8 for the firmware menu), or an older generation in Limine |
 | Windows does not chainload | F8 and pick Windows Boot Manager; the firmware entry was never touched |
-| Nothing boots | F8 and pick `NixOS-boot` (GRUB, while D2 has not run); else the USB stick (Secure Boot off for it), mount the root subvolume and `/boot`, `nixos-enter`, an older generation's `bin/switch-to-configuration boot`; or untar the ESP snapshot |
+| Nothing boots | an older generation in Limine's menu; else the USB stick (Secure Boot off for it), mount the root subvolume and `/boot`, `nixos-enter`, an older generation's `bin/switch-to-configuration boot`; or untar the ESP snapshot |
 
 Going back on purpose, after D: revert the stage D commit (it brings the selector back), set
 `my.boot.loader = "grub"`, `nixos-rebuild boot`, check GRUB boots, then
@@ -140,7 +140,8 @@ selector, the `boot-candidate` package and the GRUB branches of `boot-trust`. AD
 "superseded by 0015" and 0015 "accepted". The GRUB findings stay readable in git
 ([boot](../notes/boot-and-storage/boot.md#why-limine)).
 
-**D2, the reserve: after a few days of normal boots through Limine.** GRUB still sits on the ESP
+**D2, the reserve: DONE on 02/11/2026**, right after Limine 12.9.3 booted verified. The ESP went
+from 156 MiB to 70 MiB used; BootOrder is `Limine, Windows Boot Manager`. It was planned for after a few days of normal boots through Limine: GRUB still sits on the ESP
 and second in BootOrder, booting generation 363 (the `grub-fallback` GC root keeps it alive). It is
 the fastest way back while Limine is new, so it goes last, in one gated step:
 

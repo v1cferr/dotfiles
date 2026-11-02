@@ -82,8 +82,8 @@ mapping in `data/BootTrustMath.qml`, tested by `tests/tst_boottrust.qml`). The f
 read-only root oneshot ([boot](../boot-and-storage/boot.md#what-boot-trust-records)), so the shell
 needs no privilege. Green needs evidence: Secure Boot on in USER mode, a loader that passes
 `sbverify` against our db key, and an enrolled config proven for THIS boot. Anything short of that
-is yellow, a failure is red, and no record is Unknown. A boot from the GRUB fallback, while it
-still exists, reads `Enrolled` in yellow: the config is there, but nothing proves this boot used it.
+is yellow, a failure is red, and no record is Unknown. A boot that does not report its loader
+reads `Enrolled` in yellow: the config is there, but nothing proves this boot used it.
 
 Each card explains itself on hover or keyboard focus, through the panel's glass tip, in one
 sentence from `BootTrustMath.explain` (22/10/2026): what Secure Boot, the loader and the initrd

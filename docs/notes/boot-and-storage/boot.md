@@ -58,7 +58,8 @@ theme's `--class` trap, os-prober finding a dead root): they are in this note as
 against stable's 12.5.2, following the repo's three layers. The installer script stays stable's;
 it drives Limine through the config file and `enroll-config`, which held across 12.x. A bump is a
 bootloader change, so it goes through `nix build .#vm-limine` (all seven subtests, Secure Boot,
-the tampered initrd and the Windows chainload included) before `nh os boot`.
+the tampered initrd and the Windows chainload included) before `nh os boot`. 12.9.3 then booted
+this machine on 02/11/2026: `LoaderInfo` `Limine 12.9.3`, `thisBoot: verified`, no failed unit.
 
 ## The menu
 

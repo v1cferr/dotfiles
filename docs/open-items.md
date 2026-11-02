@@ -20,6 +20,15 @@ finished work. What was closed is in the [august history](history/2026/08-august
       • THE TRAP: keep an SSH session open before the first lock. Killing the QML lock is safe (the
         fallback takes over); killing the fallback hyprlock is not.
 
+- [ ] Power buttons on the lockscreen: restart, shut down and the rest (asked 02/11/2026). Builds
+      on v6, so after the item above. The session actions already live in `Power.qml` and
+      `power/PowerMath.qml` (one state machine, tested); the lock gets a VIEW of them, the same
+      confirm-in-place as the Center's card, never a second copy of the logic.
+      • THE DECISION TO MAKE FIRST: which actions a locked screen offers without the password.
+        Restart and shut down are what login screens offer; log out would end a session nobody
+        authenticated for.
+      • THE TRAP: the hyprlock fallback cannot show them, so they exist only while the QML lock is up.
+
 - [ ] Refine the Zen theme, by hand and at my own pace (opened 13/10/2026). The minimal one in
       `modules/home/apps/zen/theme.nix` recolors Zen through its own variables; what it does NOT
       do yet is the rest of the old Arch look (`archive/arch-final:zen-browser/userChrome.css`), which needed

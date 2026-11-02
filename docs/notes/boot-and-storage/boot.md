@@ -1,107 +1,19 @@
 # boot and Secure Boot
 
 Modules: [`modules/nixos/core/boot.nix`](../../../modules/nixos/core/boot.nix),
-[`modules/nixos/core/secureboot.nix`](../../../modules/nixos/core/secureboot.nix),
 [`modules/nixos/core/limine.nix`](../../../modules/nixos/core/limine.nix),
+[`modules/nixos/core/secureboot.nix`](../../../modules/nixos/core/secureboot.nix),
 [`modules/nixos/core/boot-trust.nix`](../../../modules/nixos/core/boot-trust.nix)
 
-GRUB (UEFI) with the minegrub theme, in dualboot with Windows 11, signed with our own keys
-through sbctl. The two modules share one decision, so they share a page.
+Limine (UEFI), in dualboot with Windows 11, signed with our own keys through sbctl. The modules
+share one decision, so they share a page. The look of the menu and the splash: [splash](splash.md).
 
-What checks what, from power-on, as the section on [what makes GRUB boot](#what-makes-grub-boot-with-secure-boot-on)
-measured it:
-
-```mermaid
-flowchart TD
-    accTitle: The boot chain, and what verifies each step
-    accDescr: The UEFI firmware with Secure Boot verifies GRUB against db, which holds this machine's key and Microsoft's. GRUB draws the menu and verifies nothing itself. A NixOS kernel goes back through the firmware's LoadImage and must be signed; the initrd is handed over by GRUB and is not verified. Windows is chainloaded from the SanDisk's own ESP and is verified as Microsoft-signed.
-
-    FW["UEFI firmware, Secure Boot on<br>db: this machine's key + Microsoft's"]
-    GRUB["grubx64.efi on the Kingston's ESP<br>signed by sbctl, every module embedded, tpm included"]
-    MENU["the minegrub menu<br>one entry per NixOS generation, plus Windows"]
-    K["the kernel<br>signed on every switch"]
-    I["the initrd<br>handed over by GRUB"]
-    NIX["NixOS"]
-    WIN["bootmgfw.efi on the SanDisk's ESP<br>Microsoft-signed"]
-
-    FW -->|"verifies"| GRUB
-    GRUB --> MENU
-    MENU -->|"LoadImage: the firmware verifies"| K
-    MENU -.->|"NOT verified"| I
-    K --> NIX
-    I --> NIX
-    MENU -->|"chainload: the firmware verifies"| WIN
-```
-
-## Why GRUB, and not the systemd-boot that was here until aug/2026
-
-Each system has ITS OWN ESP, on a separate disk: NixOS on the Kingston (`nvme0n1p1`, `/boot`) and
-Windows 11 on the SanDisk's ESP (label SYSTEM, UUID 904C-B9D0). The `sd*` LETTER SWAPS between
-boots, so identify that one by model, never by `sdX`.
-
-systemd-boot, on its own, lists only what is on its OWN ESP, so this machine's Windows would not
-show up and switching OS would become F8 at POST every time. GRUB reads both.
-
-**CORRECTED on 30/09/2026**: that is no longer a hard limit. NixOS has
-`boot.loader.systemd-boot.windows.<name>.efiDeviceHandle`, which boots Windows from another ESP
-through the EDK2 UEFI shell. GRUB stayed anyway, and why is
-[decision 0007](../../decisions/0007-grub-over-lanzaboote.md).
-
-That is also what rules out **lanzaboote**, the official Secure Boot path on NixOS, which is
-systemd-boot-only. The dualboot with a menu is worth more than an end-to-end verified chain, and
-the next section explains why that chain would not be complete here anyway.
-
-## The theme's icons match by `--class`, not by the entry's title
-
-It is the only real trap in boot.nix, and it fails SILENTLY, falling back to a generic icon with
-no text:
-
-| Class | Where it comes from |
-| --- | --- |
-| `nixos` | the default `entryOptions = "--class nixos --unrestricted"` |
-| `windows` | the `--class windows` written by hand in `extraEntries` |
-| `submenu` | old generations (`install-grub.pl` emits `--class submenu`) |
-
-Each `customIcons` name becomes the theme's `icons/<name>.png`, and the two lines of text are
-RENDERED INSIDE the PNG in the Minecraft font, so it is not GRUB text. That is why every
-generation shows the same description: they share the `nixos` class. A theme limitation, not a
-config error.
-
-## Kernels on the ESP
-
-They are copied automatically: `install-grub.pl:107` turns `copyKernels` on when `/boot` is on a
-different filesystem from `/nix/store`, which avoids depending on GRUB being able to read
-btrfs+zstd. The file is named by the store hash, so generations sharing a kernel occupy space
-ONCE. The 10-generation limit fits comfortably in the ESP's 1 GiB: today 13 MiB of kernel plus
-47 MiB of initrd per version.
-
-## What Secure Boot here gives you, and what it does not
-
-The firmware verifies GRUB (signed with this machine's key) and verifies Windows' `bootmgfw.efi`
-(signed by Microsoft). **GRUB itself verifies nothing after that**, and that is not an accident:
-it is the `--disable-shim-lock` in boot.nix, which is MANDATORY for the machine to boot. Without it
-GRUB demands the shim protocol, which does not exist here, and dies with
-`shim_lock protocol not found`, on NixOS as well as on Windows.
-
-The kernel is still checked, by the FIRMWARE: GRUB hands it to `LoadImage`, which demands a `db`
-signature, so `secureboot.nix` signs every kernel on each install (point 4 below). What stays
-unprotected is the INITRD, which never goes near `LoadImage`: somebody who already has root can
-swap it. Closing that would need shim (and then a kernel signed by Microsoft) or lanzaboote (and
-then no menu and no theme). There is no third door.
-
-**CORRECTED on 22/10/2026**: there is a third door, Limine, which verifies the initrd without shim
-and still reaches Windows on the other ESP. It is the candidate below.
-
-## The Limine candidate (22/10/2026, proposed)
-
-[ADR 0015](../../decisions/0015-limine-over-grub.md) replaces GRUB with Limine; `my.boot.loader`
-keeps GRUB the default until [the migration](../../guides/limine-migration.md) passes on this
-hardware. The chain it builds, read in the pinned nixpkgs (`limine-install.py`) and Limine 12.5.2:
+What checks what, from power-on, read in the pinned nixpkgs (`limine-install.py`) and Limine 12.5.2:
 
 ```mermaid
 flowchart TD
     accTitle: The Limine boot chain, and what verifies each step
-    accDescr: The firmware verifies Limine's binary against db. That binary carries the BLAKE2b hash of limine.conf, enrolled at install time, so a changed config makes Limine panic. The config carries a hash of every kernel and initrd and holds the command line, so each is checked before it is used. Windows is still chainloaded and verified by the firmware.
+    accDescr: The firmware verifies Limine's binary against db. That binary carries the BLAKE2b hash of limine.conf, enrolled at install time, so a changed config makes Limine panic. The config carries a hash of every kernel and initrd and holds the command line, so each is checked before it is used. Windows is chainloaded and verified by the firmware.
 
     FW["UEFI firmware, Secure Boot on<br>db: this machine's key + Microsoft's"]
     L["EFI/limine/BOOTX64.EFI<br>signed by sbctl, config hash enrolled inside"]
@@ -117,46 +29,72 @@ flowchart TD
     C -->|"firmware LoadImage verifies"| WIN
 ```
 
+## Why Limine
+
+Each system has ITS OWN ESP, on a separate disk: NixOS on the Kingston (`nvme0n1p1`, `/boot`) and
+Windows 11 on the SanDisk's ESP. The `sd*` LETTER SWAPS between boots, so identify that one by
+model or PARTUUID, never by `sdX`.
+
+The loader has to reach Windows on the other ESP AND verify what it boots. GRUB reached Windows but
+verified nothing after itself: the initrd went unchecked
+([decision 0007](../../decisions/0007-grub-over-lanzaboote.md), now superseded). lanzaboote verifies
+everything through a signed UKI, but is systemd-boot only. Limine does both without shim:
+[decision 0015](../../decisions/0015-limine-over-grub.md). It replaced GRUB on this machine on
+02/11/2026, after the gated migration in [limine-migration](../../guides/limine-migration.md).
+
 What it keeps: the sbctl keys (`autoGenerateKeys` and `autoEnrollKeys` stay off), ten generations,
 the Windows entry. What it adds: the initrd and the command line are verified, and the editor is
 forced off, so nobody types `init=/bin/sh` at the menu. What it still does not stop: root on this
-machine, which holds the db key unencrypted (ADR 0006).
+machine, which holds the db key unencrypted (ADR 0006), can sign anything.
 
-**The menu's Secure Boot indicator is Limine's own.** With no custom branding, its top line reads
+The GRUB years left findings worth keeping (what made GRUB boot under Secure Boot, the minegrub
+theme's `--class` trap, os-prober finding a dead root): they are in this note as of `3147c47c`,
+`git show 3147c47c:docs/notes/boot-and-storage/boot.md`.
+
+## The menu
+
+**The Secure Boot indicator is Limine's own.** With no custom branding, its top line reads
 `Limine 12.5.2 (x86-64, UEFI, Secure Boot)`, and the suffix is appended only when the FIRMWARE
 reports Secure Boot active (`common/menu.c`). That is why `limine.nix` sets no branding: a custom
 string would hide the one runtime fact the menu can show honestly.
 
-**The TPM.** Limine measures into PCRs 8 and 9 (`common/lib/tpm.h`). The keyring's seal uses PCR 7
-only ([desktop](../desktop/desktop.md)), and Limine is signed by the same db key GRUB is, so the
-seal is expected to survive; if it does not, the failure is soft (the keyring starts locked) and
-`keyring-tpm-seal` re-seals it.
+**Generations** sit under one group, the newest first; ten are kept (`maxGenerations`), the same
+count `nh clean` keeps ([core](../repo/core.md)). Limine copies each generation's kernel and initrd
+into `/boot/limine`, named by store hash, so generations that share them take the space once.
 
 **Windows by PARTUUID, chainloaded.** `protocol: efi` with
 `path: guid(8f36a7a5-a54c-4c78-9d3d-1202514df9be):/EFI/Microsoft/Boot/bootmgfw.efi`, the GPT
-partition GUID of the SanDisk's ESP, stable across ports. `efi_boot_entry` was the other option: it
-sets BootNext and reboots, a POST more and a dependency on the NVRAM entry.
+partition GUID of the SanDisk's ESP, set by the host as `my.boot.windows.efiPartUuid`.
+`efi_boot_entry` was the other option: it sets BootNext and reboots, a POST more and a dependency
+on the NVRAM entry. **The price, stated**: if Windows is reinstalled or moves disks, the PARTUUID
+changes and the entry fails at boot. It is a one-line edit; read it with `lsblk -o NAME,PARTUUID`.
 
-### What boot-trust records
+**The TPM.** Limine measures into PCRs 8 and 9 (`common/lib/tpm.h`). The keyring's seal uses PCR 7
+only ([desktop](../desktop/desktop.md)), so it survived the switch from GRUB; if it ever does not,
+the failure is soft (the keyring starts locked) and `keyring-tpm-seal` re-seals it.
 
-A read-only root oneshot writes `/run/boot-trust.json` at boot and again whenever `limine.conf` or
-`grub.cfg` changes, and the NixOS Center reads it ([nixos-center](../desktop/nixos-center.md#boot-22102026)):
+## What boot-trust records
+
+A read-only root oneshot writes `/run/boot-trust.json` at boot and again whenever `limine.conf`
+changes, and the NixOS Center reads it ([nixos-center](../desktop/nixos-center.md#boot-22102026)):
 
 | Field | Source | Values |
 | --- | --- | --- |
 | `secureBoot`, `setupMode` | the `SecureBoot` and `SetupMode` efivars | on/off, user/setup, or unknown |
-| `loader.running` | the Boot Loader Interface's `LoaderInfo` (Limine sets it, GRUB does not) | e.g. `Limine 12.5.2`, or unknown |
+| `loader.running` | the Boot Loader Interface's `LoaderInfo` (Limine sets it) | e.g. `Limine 12.5.2`, or unknown |
 | `loader.signed` | `sbverify --cert /var/lib/sbctl/keys/db/db.pem` on the installed binary | valid, invalid, missing, unknown |
-| `integrity` | the `b2sum` of `limine.conf` found inside `BOOTX64.EFI` | enrolled, mismatch, kernel-only (GRUB), unknown |
+| `integrity` | the `b2sum` of `limine.conf` found inside `BOOTX64.EFI` | enrolled, mismatch, unknown |
 | `thisBoot` | taken once at boot, kept by later runs | verified only when every row above holds |
 
 It also covers a gap in the installer: `limine-install.py` runs `sbctl sign` without checking its
 exit code, so an unsigned loader would only show up as a refused boot. `boot-trust` re-checks after
-every install and raises `my.alert` when the loader fails `sbverify`.
+every install and raises `my.alert` when the loader fails `sbverify`. The path unit fires on
+`limine.conf`, which the installer writes BEFORE it copies, enrolls and signs the binary, so a bad
+reading is re-read for up to 30 s before it counts (a false alarm on 02/11/2026 taught that).
 
-Drilled on 22/10/2026 in `vm-limine` (OVMF, Secure Boot on throwaway keys): `LoaderInfo` read
-`Limine 12.5.2`, the initrd's path carried its hash, and `boot-trust` reported every field above
-as proven ([vm-boot](../repo/vm-boot.md#vm-limine-the-bootloader-drill)).
+Drilled in `vm-limine` (OVMF, Secure Boot on throwaway keys) and proven on this machine on
+02/11/2026: `LoaderInfo` read `Limine 12.5.2` and every field above held
+([vm-boot](../repo/vm-boot.md#vm-limine-the-bootloader-drill)).
 
 ## Microsoft's certificates are mandatory
 
@@ -181,39 +119,24 @@ BIOS. None of this is automatable; what Nix automates is the signing.
    and BitLocker answers that by asking for the recovery key at boot, which nobody saved, because
    the account is local.
 1. `sudo sbctl create-keys` (creates `/var/lib/sbctl/keys`)
-2. `rebuild` (the hook signs GRUB)
+2. `rebuild` (Limine's installer signs its binary)
 3. BIOS (DEL): Secure Boot -> Key Management -> **Clear Secure Boot Keys**. Save and exit (F10).
    That puts the firmware in Setup Mode; the boot goes on as usual.
 4. `sudo sbctl enroll-keys -m` (with Microsoft's certificates). `sbctl status` should show
    Setup Mode: Disabled.
 5. BIOS: **Secure Boot -> Enabled** (OS Type: Windows UEFI mode). Reboot.
-6. Check: `sbctl status` and `sbctl verify`.
+6. Check: `sbctl status`, and `/run/boot-trust.json` reading `signed: valid`.
 
 **If the machine does not boot**, turn Secure Boot off in the BIOS. There is no bricking possible:
-the only thing the firmware refuses is the binary, and turning SB off gives it back.
-
-## Why the signing hook runs on every switch
-
-`grub-install` only rewrites `grubx64.efi` when something changes (the GRUB version, the ESP, the
-devices), and it is EXACTLY on that switch, the one you did not foresee, that a new unsigned
-binary goes to the ESP. With Secure Boot on, that is a machine that does not turn on, discovered
-on the next reboot and not on the rebuild that caused it.
-
-The hook globs the ESP instead of using the literal path, because the default `bootloaderId` is
-assembled by the module as distroName plus the ESP's mountpoint with `/` turned into `-` (giving
-`NixOS-boot`), and depending on that string is depending on a nixpkgs internal. Sweeping the ESP
-runs no risk of signing somebody else's binary, since the Windows ESP is ANOTHER disk.
-
-`sbctl sign` is idempotent (`cmd/sbctl/sign.go:88` returns 0 on an already signed file), so
-running it every switch is cheap and does not mask a real failure: any other error exits non-zero
-and `set -e` takes the activation down, which is what you want.
+the only thing the firmware refuses is the binary, and turning SB off gives it back. The recovery
+stick is in [limine-migration](../../guides/limine-migration.md).
 
 ## `/var/lib/sbctl` is critical state
 
 It is in the backup's identity set since 03/10/2026 ([restic](restic.md)), so a reinstall puts the
 SAME keys back and only `enroll-keys` runs again on new firmware. Losing the folder with no
-backup means the next switch does not sign GRUB, which means the machine does not boot with SB on.
-Recovery then: SB off in the BIOS, redo steps 1 to 5.
+backup means the next switch does not sign Limine, which means the machine does not boot with SB
+on. Recovery then: SB off in the BIOS, redo steps 1 to 5.
 
 It is the FIRST item to declare when impermanence lands (see
 [`../open-items.md`](../../open-items.md)), otherwise a reboot wipes the keys.
@@ -226,92 +149,14 @@ only driver lever that does NOT require crossing channels, since `linuxPackages_
 26.05 itself. See [`gpu.md`](../hardware/gpu.md) for why the rest of the graphics stack stays on stable.
 
 It is safe here because there are zero out-of-tree modules (no zfs or virtualbox to version match)
-and the signing hook signs whatever kernel lands in `/boot/kernels` with the key already in `db`,
-so changing kernels never asks for a key re-enroll.
+and Limine checks the kernel by the hash in its enrolled config, not by a signature, so changing
+kernels never asks for a key re-enroll.
 
 **PREFER `nixos-rebuild boot` plus a reboot** when changing kernel versions, but `switch` does NOT
 break it: NixOS keeps `/run/booted-system/kernel-modules` with the tree of the RUNNING kernel, so
 modprobe and udev keep resolving. Verified on 06/08/2026: a switch from 6.18.42 to 7.1.6 with zero
 failing services. The advantage of `boot` is only not restarting a service inside a generation
-whose kernel has not come up yet. Rollback is the previous generation in the GRUB menu.
-
-## os-prober is OFF, and Windows is pinned by UUID
-
-os-prober WORKED, finding the SanDisk's `bootmgfw.efi` on the first try, but it found TOO MUCH: the
-Seagate (ST9320423AS) still has the old NixOS root. Today that disk is only the restic destination,
-and the old system is still there because it cannot be formatted without losing the backups. The
-result was a third entry booting a dead system.
-
-Trading probing for a UUID solves that by CONSTRUCTION, and on top of it: the switch stops mounting
-somebody else's disk, which was the slowest step and the only one with a side effect, and the menu
-becomes genuinely declarative (rule 3) instead of depending on what a scan finds on that boot.
-
-**The price, stated**: if Windows is reinstalled or moves disks, the UUID changes and the entry
-breaks silently, disappearing from the menu. os-prober would adapt on its own. It is a ONE-line
-edit, and it is already on the radar, since the plan is to move Windows to a new NVMe. Check with
-`lsblk -o NAME,LABEL,UUID`.
-
-## What makes GRUB boot with Secure Boot on
-
-THREE things, each one learned by a boot dying in a different way. In none of them was the firmware
-the one refusing: it ACCEPTED the signed `grubx64.efi` every single time. What refuses is GRUB,
-against itself, and the three messages below are all GRUB strings, not UEFI ones.
-
-**1. `--modules=…`.** With Secure Boot active GRUB disables `insmod`, because that is code
-side-load. Since `grub-install` embeds only the minimum needed to find `/boot`, `normal` (the module
-that DRAWS THE MENU) came from the disk and was blocked, so it went straight to rescue, before any
-menu. Everything the boot needs has to be INSIDE the signed binary. The names were checked one by
-one against grub2_efi: all 47 exist.
-
-**2. `--disable-shim-lock`.** This is the non-obvious one, and embedding modules ALONE would not
-solve it: the menu would appear and then BOTH NixOS AND Windows would fail.
-
-In `kern/efi/sb.c`, `grub_shim_lock_verifier_setup()` only does NOT register the verifier in two
-cases: Secure Boot off, or the image carrying the `OBJ_TYPE_DISABLE_SHIM_LOCK` marker, which is
-what this flag embeds. Once registered, it covers `GRUB_FILE_TYPE_LINUX_KERNEL` and
-`GRUB_FILE_TYPE_EFI_CHAINLOADED_IMAGE`, and its `write` calls the shim protocol, which here DOES
-NOT EXIST, because we use no shim, so every boot dies in "shim_lock protocol not found".
-
-**3. `tpm` in the module list.** Flags 1 and 2 drew the menu and then killed BOTH entries with
-`error: verification requested but nobody cares`, measured on 30/08/2026. The chain of causes is
-worth reading in order, because the message names no file that is wrong:
-
-- `kern/efi/init.c:123` calls `grub_lockdown()` UNCONDITIONALLY when Secure Boot is on, and only
-  afterwards `grub_shim_lock_verifier_setup()`. Flag 2 skips the second one, never the first.
-- `kern/lockdown.c:55` registers a verifier that answers `GRUB_VERIFY_FLAGS_DEFER_AUTH` for
-  `LINUX_KERNEL`, `EFI_CHAINLOADED_IMAGE`, `GRUB_MODULE` and 14 other types. DEFER does not mean
-  "denied", it means "I do not verify this, somebody else has to".
-- `kern/verifiers.c:100` walks the registered verifiers. If one deferred and NOBODY else claimed the
-  file, line 118 fails with the message above. So the error is not a bad signature: it is a file
-  that needed an owner and had none.
-- `commands/tpm.c:33` is the owner. Its `init` returns `SINGLE_CHUNK`, neither SKIP nor DEFER, so
-  the loop STOPS there and the file goes through, hashed into PCR 9 along the way.
-
-Order helps instead of hurting: verifiers are pushed onto a list, and `tpm` loads with the modules,
-after `grub_efi_init`, so it sits in FRONT of the lockdown one and answers first.
-
-It has to be EMBEDDED, never loaded off `/boot`: lockdown defers on `GRUB_FILE_TYPE_GRUB_MODULE`
-too, so a `tpm.mod` on disk would need a verifier in order to load the verifier. And it only works
-because this machine has a TPM 2.0 (`MSFT0101`) whose TCG2 protocol the firmware publishes, which is
-exactly what `grub_tpm_present()` looks for. Turning the TPM off in the BIOS brings the error back.
-
-**4. The kernel signed, because GRUB does not load it.** Getting past the verifier only gets the
-file OPEN. On `x86_64-efi` the `linux` module is `loader/efi/linux.c` (Makefile.core.def), and line
-211 hands the buffer to the FIRMWARE's `LoadImage`, with `start_image` right after. Under Secure
-Boot that call validates the PE against `db` like any other image, and an unsigned kernel comes back
-as `error: cannot load image`. So `secureboot.nix` signs `/boot/kernels/*bzImage` on every switch,
-with no `-s`: the name carries the store hash, the GC deletes it, and recording it in sbctl's
-database would only pile up entries for files that no longer exist.
-
-**What the chain is worth, stated.** Better than the earlier note in this file claimed, and for a
-reason that is not GRUB's doing. `tpm` MEASURES and does not verify, and flag 2 is literally "do not
-verify anything after me", so GRUB itself checks nothing. But the kernel goes out through
-`LoadImage`, which puts the FIRMWARE back in the loop: swapping it for an unsigned one does not
-boot, and signing one demands the key in `db`. What stays unprotected is the INITRD, which GRUB
-hands over through its own protocol, without ever going near `LoadImage`, and which `sb.c:149` files
-under "does not affect secureboot state" even on the shim road. Whoever has root swaps the initrd,
-not the kernel. Closing that means a UKI (kernel plus initrd plus cmdline in ONE signed PE), which
-is lanzaboote, and then there is no menu and no theme.
+whose kernel has not come up yet. Rollback is the previous generation in the Limine menu.
 
 ## `/tmp` is wiped at every boot
 
@@ -327,17 +172,8 @@ The symptom to recognize: a single-instance Qt app that "does nothing" and exits
 trace=openat` shows the `EEXIST` on the lock. Not a tmpfs on purpose: a large build or download
 in `/tmp` would otherwise eat RAM.
 
-## Two smaller boot details
+## NTFS support
 
-**`gfxmode` is a list with a fallback**, not `"auto"`. `auto` lets GRUB choose by EDID, and here
-there is a TV on HDMI besides the monitor, so the wrong mode means a stretched theme or a menu on
-the powered-off screen. GRUB tries the list in order and only falls back to `auto` if the GOP does
-not offer 1080p.
-
-**NTFS support**: the `ntfs3` driver already ships in the kernel, but what `mount` looks for is the
-userspace helper `mount.ntfs-3g`, which only exists with `boot.supportedFilesystems`. Kept after the
-dualboot was done so the Windows disk can be read on demand. There is no permanent mount of it.
-
-The "old generations" submenu title is in en-US like the rest of the system UI (the pt-BR exception
-is only the lockscreen), and it overrides the theme's default text, which is a "Select To Enter"
-that does not say what is in there.
+The `ntfs3` driver already ships in the kernel, but what `mount` looks for is the userspace helper
+`mount.ntfs-3g`, which only exists with `boot.supportedFilesystems`. Kept after the dualboot was
+done so the Windows disk can be read on demand. There is no permanent mount of it.

@@ -69,7 +69,7 @@ build runs as the user and only the activation asks for a password.
 ## `gc` deletes ALL old generations
 
 `nix-collect-garbage -d` is not "clean the ancient ones", it is all of them. After running it
-there is no rollback to yesterday's generation and no entry for it in GRUB. That is what you want
+there is no rollback to yesterday's generation and no entry for it in the boot menu. That is what you want
 when the intent is freeing the maximum; for plain hygiene, `--delete-older-than 7d` cleans nearly
 as much and PRESERVES the emergency exit. The automatic weekly GC does use `--delete-older-than
 30d`.

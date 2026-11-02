@@ -3,8 +3,8 @@
 The bootloader moves from GRUB to Limine, keeping the sbctl keys, the dualboot and ten generations,
 because Limine's enrolled config verifies the kernel, the initrd and the command line.
 
-- **Status**: proposed: built and drilled in a VM, waiting for the hardware gates of
-  [the migration guide](../guides/limine-migration.md); supersedes 0007 only once those pass
+- **Status**: accepted on 02/11/2026, when the hardware gates of
+  [the migration guide](../guides/limine-migration.md) passed; supersedes 0007
 - **Date**: 22/10/2026
 
 ## Context
@@ -44,4 +44,5 @@ firmware's BootOrder until the hardware gates pass, as the recovery path.
   installer.
 - `limine-install.py` does not fail when `sbctl sign` fails. `boot-trust` re-checks the signature
   after every install and raises `my.alert`, so the failure is loud before the next boot.
-- MineGRUB, its flake input and the GRUB signer leave in a cleanup commit, only after the gates.
+- MineGRUB, its flake input and the GRUB signer left in the cleanup (stage D1, 02/11/2026); GRUB's
+  files on the ESP and its NVRAM entry go last, after some days of Limine (D2).

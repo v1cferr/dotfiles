@@ -2,7 +2,7 @@
 
 Dualboot keeps GRUB, its menu and its theme, and Secure Boot keeps covering the bootloader only.
 
-- **Status**: accepted
+- **Status**: superseded by [0015](0015-limine-over-grub.md) on 02/11/2026
 - **Date**: 30/09/2026, reaffirming the move to GRUB of August 2026
 
 ## Context

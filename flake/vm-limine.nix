@@ -36,7 +36,6 @@ let
 
   common = {
     imports = bootModules;
-    my.boot.loader = "limine";
     my.boot.splash.enable = true;
     my.boot.windows.efiPartUuid = windowsGuid;
     virtualisation = {

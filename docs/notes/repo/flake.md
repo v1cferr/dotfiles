@@ -80,7 +80,6 @@ the hm-module, so that side never gets evaluated.
 | Input | Why it exists |
 | --- | --- |
 | `duo-streak-daemon` | the app lives in ITS OWN repo; here it is only DEPLOY, the commit pinned in the lock and compose building from the store path. `flake = false`, since it is a plain code repo with no Nix outputs. It is PRIVATE, so `git+ssh`: it reuses the SSH key with no token in sops, `nix flake update` runs as the USER who has the key, and the rebuild as root reuses the already-pinned store path with no re-fetch |
-| `minegrub-world-sel-theme` | a GRUB theme where each OS/generation becomes a Minecraft "world" with an icon and a description. The other theme by the same author (`minegrub-theme`, the main menu) was passed over: an entry becomes a button, with no icon per OS |
 | `quickshell` | a shell/bar in QML (outfoxxed), NOT in nixpkgs. See [`quickshell.md`](../desktop/quickshell.md) |
 | `browser-previews` | nixpkgs only packages Chrome stable; this maintained nix-community flake keeps `google-chrome-dev` fresh |
 | `stylix` | APPLIES `my.theme.palette` to every app it has a target for (GTK, kitty, bat, mpv...). The palette stays the owner of the hexes, because the stock base16 Tokyo Night is not folke's. Pinned to `release-26.05`, the same release as the base, since Stylix warns on a mismatch. See [decision 0012](../../decisions/0012-stylix-applies-the-palette.md) |

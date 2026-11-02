@@ -76,7 +76,7 @@ a boot or a shutdown can be read without leaving the splash.
 - **Two monitors**: the splash shows on both, but the LG's rotation is Hyprland's and does not
   exist yet at boot, so on the LG it is sideways. Expected, and only for those seconds.
 - **Diagnostics stay**: no `quiet` was added, `loglevel=4` stays, Escape switches to the text
-  console. To boot once without it: `plymouth.enable=0` on the command line (GRUB's `e`; Limine's
-  editor is off under Secure Boot, so there it is an older generation or a rebuild).
+  console. To boot without it: Limine's editor is off under Secure Boot, so it is an older
+  generation from the menu or a rebuild with `my.boot.splash.enable` off.
 - **No added delay**: nothing waits for the animation; it is shown for exactly as long as boot or
   shutdown takes.

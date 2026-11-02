@@ -36,7 +36,7 @@ flowchart LR
 
 ## @home only
 
-The root is left out on purpose. On NixOS the system's rollback already IS the GRUB generation
+The root is left out on purpose. On NixOS the system's rollback already IS the boot menu's generation
 list, and a snapshot of `/` would not even take `/nix` (a separate subvolume, since a snapshot
 does not descend into a nested one). Noise with no gain.
 

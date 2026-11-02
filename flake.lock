@@ -330,26 +330,6 @@
         "type": "github"
       }
     },
-    "minegrub-world-sel-theme": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1792441379,
-        "narHash": "sha256-jOtdUki3Qjq7drbRTfxUqxDXIAk6uQGxRJLUVM5Ubv8=",
-        "owner": "Lxtharia",
-        "repo": "minegrub-world-sel-theme",
-        "rev": "55045f30796b3e993b40e7ab7e014c2e8512d436",
-        "type": "github"
-      },
-      "original": {
-        "owner": "Lxtharia",
-        "repo": "minegrub-world-sel-theme",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1792615934,
@@ -513,7 +493,6 @@
         "git-hooks": "git-hooks",
         "home-manager": "home-manager",
         "mattpocock-skills": "mattpocock-skills",
-        "minegrub-world-sel-theme": "minegrub-world-sel-theme",
         "nixpkgs": "nixpkgs",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "pyproject-build-systems": "pyproject-build-systems",

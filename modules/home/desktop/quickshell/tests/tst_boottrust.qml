@@ -36,19 +36,18 @@ TestCase {
             setupMode: "setup"
         })).tone, "warn");
     }
-    function test_grub_today_is_partial() {
+    function test_loader_that_does_not_report_itself() {
         const c = m.cards(full({
             loader: {
-                configured: "grub",
+                configured: "limine",
                 running: "unknown",
                 signed: "valid"
             },
-            integrity: "kernel-only",
             thisBoot: "unknown"
         }));
         compare(c[1].tone, "ok");
-        compare(c[1].caption, "grub, not self-reported");
-        compare(c[2].value, "Partial");
+        compare(c[1].caption, "limine, not self-reported");
+        compare(c[2].value, "Enrolled");
         compare(c[2].tone, "warn");
     }
     function test_enrolled_without_proof_of_this_boot() {

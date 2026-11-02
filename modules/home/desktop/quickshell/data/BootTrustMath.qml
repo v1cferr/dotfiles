@@ -19,9 +19,9 @@ QtObject {
         case "SECURE BOOT":
             return "The firmware starts only a loader signed by a key it trusts.";
         case "LOADER":
-            return "The first program the firmware starts (GRUB or Limine), checked against our db key.";
+            return "The first program the firmware starts (Limine), checked against our db key.";
         case "INTEGRITY":
-            return "The initrd holds the drivers that run as root before the system; Limine checks its hash, GRUB does not.";
+            return "The initrd holds the drivers that run as root before the system; Limine checks its hash against the enrolled config.";
         }
         return "";
     }
@@ -58,8 +58,6 @@ QtObject {
         switch (t.integrity) {
         case "enrolled":
             return t.thisBoot === "verified" ? card("INTEGRITY", "Verified", "ok", "kernel, initrd and cmdline") : card("INTEGRITY", "Enrolled", "warn", "this boot is not proven");
-        case "kernel-only":
-            return card("INTEGRITY", "Partial", "warn", "initrd not verified");
         case "mismatch":
             return card("INTEGRITY", "Mismatch", "crit", "config differs from the enrolled hash");
         }

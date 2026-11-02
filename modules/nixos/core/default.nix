@@ -4,10 +4,10 @@
 {
   imports = [
     ./core.nix # Nix/flakes, nixpkgs (unfree/insecure), nix-ld, locale/language
-    ./boot.nix # the kernel, plus GRUB (UEFI) with the minegrub theme and Windows 11 pinned by UUID
+    ./boot.nix # the kernel and the boot-time basics (EFI variables, NTFS, a clean /tmp)
     ./boot-appearance.nix # the pre-boot palette (my.boot.theme) and the Plymouth splash (off by default)
-    ./limine.nix # Limine with Secure Boot and an enrolled config: the candidate under my.boot.loader
-    ./secureboot.nix # Secure Boot: our own keys (sbctl) and signing GRUB on every switch
+    ./limine.nix # the bootloader: Limine with Secure Boot, an enrolled config and Windows 11 by PARTUUID
+    ./secureboot.nix # Secure Boot: our own keys, through sbctl
     ./boot-trust.nix # /run/boot-trust.json: Secure Boot, the signed loader and the enrolled hash, read-only
     ./alert.nix # `my.alert`: the journal plus a critical bubble, for root units that must reach me
     ./hardening.nix # the systemd sandbox baseline for this repo's own root oneshots

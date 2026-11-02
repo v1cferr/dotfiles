@@ -50,13 +50,6 @@
     # its package and Vulkan engines must be the benchmarked ones from ITS lock. docs/notes/services/signalsift.md
     signal-sift.url = "github:v1cferr/signal-sift";
 
-    # A GRUB theme where each OS/generation is a Minecraft "world" with its own icon. The author's
-    # OTHER theme was passed over: there an entry is just a button, with no icon per OS.
-    minegrub-world-sel-theme = {
-      url = "github:Lxtharia/minegrub-world-sel-theme";
-      inputs.nixpkgs.follows = "nixpkgs"; # dedup: does not pull a 2nd nixpkgs into the lock
-    };
-
     # Quickshell: a shell/bar in QML, not in nixpkgs. The QML lives in the repo and hot-reloads;
     # see docs/notes/desktop/quickshell.md
     quickshell = {

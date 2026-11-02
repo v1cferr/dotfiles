@@ -59,7 +59,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 
 | Page | What you would come here asking |
 | --- | --- |
-| [boot](boot-and-storage/boot.md) | why GRUB and not systemd-boot, and what Secure Boot here does NOT protect |
+| [boot](boot-and-storage/boot.md) | Limine, the Secure Boot trust chain, and what it does NOT protect |
 | [disko](boot-and-storage/disko.md) | the subvolume layout, and why the swapfile belongs to the host |
 | [btrfs](boot-and-storage/btrfs.md) | the scrub, the alarm, the reclaim, and why fstrim is off |
 | [btrbk](boot-and-storage/btrbk.md) | the local snapshots, which are NOT a backup |

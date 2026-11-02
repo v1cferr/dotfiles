@@ -32,10 +32,8 @@ finished work. What was closed is in the [august history](history/2026/08-august
 
 - [ ] What the layout move left shared on purpose, to split the day a SECOND host exists (opened
       30/09/2026). [Decision 0009](decisions/0009-modules-hosts-tools-layout.md) made hosts pick
-      their device modules; these four stayed where they are because splitting them now would
+      their device modules; these three stayed where they are because splitting them now would
       cut working modules for a machine that does not exist yet.
-      • THE WINDOWS ENTRY in `modules/nixos/core/boot.nix` pins this machine's Windows ESP by
-        UUID. It belongs in `hosts/ex-b560m-v5/`, as a `boot.loader.grub.extraEntries` of its own.
       • THE SPEAKER EQ in `modules/nixos/hardware/audio.nix` targets the Edifier G1500 by node
         name. It is inert without that speaker, so it costs nothing today; it becomes a device
         module the host imports, like the mice.
@@ -369,7 +367,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
         bug.
         `/var/lib/sbctl` IS FIRST ON THE LIST and the only one that makes the machine NOT
         BOOT if it is forgotten: those are the Secure Boot keys (see modules/nixos/core/secureboot.nix).
-        Without them the next switch does not sign GRUB, and with Secure Boot on the firmware
+        Without them the next switch does not sign Limine, and with Secure Boot on the firmware
         refuses the bootloader. Recovery = turn SB off in the BIOS + `sbctl create-keys` +
         `enroll-keys -m` again, with the BIOS in Setup Mode. Declare it BEFORE turning the
         ephemeral root on.
@@ -535,7 +533,7 @@ finished work. What was closed is in the [august history](history/2026/08-august
       their own. It only changes if the release notes say so, and together with the manual
       migration (pg_upgrade and the like).
       Use `nixos-rebuild boot` and NOT `switch`: it applies on the next boot and the 26.05
-      generation stays in minegrub as the emergency exit. And wait ~2 to 4 weeks after the
+      generation stays in Limine's menu as the emergency exit. And wait ~2 to 4 weeks after the
       release (the branch stabilizes as the backports arrive); the cost of waiting here is low,
       because what I want fresh already comes through `unstable.*` and through the direct
       upstream inputs.

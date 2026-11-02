@@ -18,7 +18,7 @@ Each record follows the same short shape, after [Michael Nygard's ADR](https://a
 | [0004](0004-mkdocs-for-the-site.md) | The site is built with MkDocs | superseded by 0005 |
 | [0005](0005-fumadocs-for-the-site.md) | The site is built with Fumadocs | accepted |
 | [0006](0006-no-disk-encryption.md) | The disks are not encrypted | accepted, review by 2027-09-30 |
-| [0007](0007-grub-over-lanzaboote.md) | GRUB stays, over lanzaboote | accepted |
+| [0007](0007-grub-over-lanzaboote.md) | GRUB stays, over lanzaboote | superseded by 0015 |
 | [0008](0008-no-offsite-backup-yet.md) | No offsite backup, for now | offsite: accepted risk, review by 2026-12-31; destination superseded by 0011 |
 | [0009](0009-modules-hosts-tools-layout.md) | Modules offer, hosts compose, tools maintain | accepted |
 | [0010](0010-visual-layer-without-component-library.md) | The site's visual layer adds no component library | accepted |
@@ -26,5 +26,5 @@ Each record follows the same short shape, after [Michael Nygard's ADR](https://a
 | [0012](0012-stylix-applies-the-palette.md) | Stylix applies the palette; the palette keeps the hexes | accepted, refines 0001 |
 | [0013](0013-graph-view-with-one-dependency.md) | The site's graph view takes one dependency | accepted, refines 0010 |
 | [0014](0014-source-previews-from-a-build-snapshot.md) | The site previews source from a snapshot built beside it | accepted, refines 0005 and 0010 |
-| [0015](0015-limine-over-grub.md) | Limine replaces GRUB, so the initrd is verified too | proposed, would supersede 0007 |
+| [0015](0015-limine-over-grub.md) | Limine replaces GRUB, so the initrd is verified too | accepted |
 | [0016](0016-bitwarden-is-the-secrets-source.md) | Bitwarden is the single source of secrets, home included | accepted |

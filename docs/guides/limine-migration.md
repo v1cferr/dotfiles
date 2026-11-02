@@ -1,11 +1,11 @@
 # Limine migration: GRUB to Limine on the real ESP, with GRUB kept as the way back
 
-[ADR 0015](../decisions/0015-limine-over-grub.md) is built and drilled in a VM. What a VM cannot
+[ADR 0015](../decisions/0015-limine-over-grub.md) was built and drilled in a VM. What a VM cannot
 prove is this machine: the ASUS firmware, the Arc B580, two monitors and Windows on the SanDisk.
-This is the order to do it in, each gate with what must be true before the next one.
+This was the order, each gate with what had to be true before the next one.
 
-**Nothing here runs from a rebuild by accident**: `my.boot.loader` defaults to `"grub"` and
-`my.boot.splash.enable` to `false`. Every step below is a commit you make on purpose.
+**DONE on 02/11/2026**: Limine is the loader and the `my.boot.loader` selector is gone (stage D).
+The page stays as the record and for the steps still ahead: removing the GRUB reserve (D2).
 
 ## What changes on the ESP, and what does not
 
@@ -126,13 +126,26 @@ from the menu. Promoted on 02/11; the first boot by BootOrder read `BootCurrent:
 | The firmware refuses Limine (Secure Boot violation) | Reboot; without BootNext it is GRUB. Then `boot-trust` tells you why |
 | Limine panics on a hash mismatch | Reboot into GRUB (F8 for the firmware menu), or an older generation in Limine |
 | Windows does not chainload | F8 and pick Windows Boot Manager; the firmware entry was never touched |
-| Nothing boots | USB stick (Secure Boot off for it), mount the root subvolume and `/boot`, `nixos-enter`, set `my.boot.loader = "grub"`, `nixos-rebuild boot`; or untar the ESP snapshot |
+| Nothing boots | F8 and pick `NixOS-boot` (GRUB, while D2 has not run); else the USB stick (Secure Boot off for it), mount the root subvolume and `/boot`, `nixos-enter`, an older generation's `bin/switch-to-configuration boot`; or untar the ESP snapshot |
 
-Going back on purpose: `my.boot.loader = "grub"`, `nixos-rebuild boot`, check GRUB boots, then
+Going back on purpose, after D: revert the stage D commit (it brings the selector back), set
+`my.boot.loader = "grub"`, `nixos-rebuild boot`, check GRUB boots, then
 `sudo efibootmgr -b <limine> -B`. The `limine/` and `EFI/limine/` directories can go after that.
 
 ## D: the cleanup, only after C2 passed
 
-Remove MineGRUB (the flake input and its lock entry), the GRUB branch of `modules/nixos/core/boot.nix`,
-the GRUB signer in `secureboot.nix`, the selector itself, and the `grub-fallback` GC root. ADR 0007
-becomes "superseded by 0015" and 0015 "accepted". Then the full gate again.
+**D1, the code: DONE on 02/11/2026.** Out: MineGRUB (the flake input and its lock entry), the GRUB
+branch of `modules/nixos/core/boot.nix`, the GRUB signer in `secureboot.nix`, the `my.boot.loader`
+selector, the `boot-candidate` package and the GRUB branches of `boot-trust`. ADR 0007 is
+"superseded by 0015" and 0015 "accepted". The GRUB findings stay readable in git
+([boot](../notes/boot-and-storage/boot.md#why-limine)).
+
+**D2, the reserve: after a few days of normal boots through Limine.** GRUB still sits on the ESP
+and second in BootOrder, booting generation 363 (the `grub-fallback` GC root keeps it alive). It is
+the fastest way back while Limine is new, so it goes last, in one gated step:
+
+1. `sudo efibootmgr -b 0000 -B` (the `NixOS-boot` entry; check the number first).
+2. `sudo rm -r /boot/EFI/NixOS-boot /boot/grub /boot/kernels /boot/theme /boot/converted-font.pf2`.
+3. `sudo rm /nix/var/nix/gcroots/grub-fallback`.
+
+After it, the way back from a broken Limine is an older generation in its own menu, or the stick.

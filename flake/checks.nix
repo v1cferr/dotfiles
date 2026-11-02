@@ -263,7 +263,6 @@ in
         "fai-meet" # a POINTER url too, the same rot
         "vm-boot" # a whole system closure plus a QEMU run: same reason toplevel stays out
         "vm-limine" # two QEMU boots under OVMF: the same reason as vm-boot
-        "boot-candidate" # a whole system closure: the same reason toplevel stays out
         "disko-vm" # building it means building a 24 GiB image, and it is interactive anyway
       ]
     )

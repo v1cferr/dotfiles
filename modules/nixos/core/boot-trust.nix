@@ -17,7 +17,6 @@ let
     writeShellApplication
     ;
 
-  cfg = config.my.boot;
   efiGlobal = "8be4df61-93ca-11d2-aa0d-00e098032b8c";
   efiLoader = "4a67b082-0a4c-41cf-b6c7-440b29bb8c4f"; # the Boot Loader Interface vendor GUID
 
@@ -32,24 +31,20 @@ let
     text = ''
       out=/run/boot-trust.json
       vars=/sys/firmware/efi/efivars
-      configured=${cfg.loader}
+      configured=limine
 
       # One byte after the 4 attribute bytes; a missing variable is UNKNOWN, never "off".
       byte() { [ -r "$vars/$1" ] && od -An -tu1 -j4 -N1 "$vars/$1" | tr -d ' ' || echo ""; }
       case "$(byte SecureBoot-${efiGlobal})" in 1) sb=on ;; 0) sb=off ;; *) sb=unknown ;; esac
       case "$(byte SetupMode-${efiGlobal})" in 0) setup=user ;; 1) setup=setup ;; *) setup=unknown ;; esac
 
-      # Only a loader that implements the Boot Loader Interface names itself; GRUB does not.
+      # Only a loader that implements the Boot Loader Interface names itself: Limine does, GRUB not.
       running=unknown
       if [ -r "$vars/LoaderInfo-${efiLoader}" ]; then
         running="$(tail -c +5 "$vars/LoaderInfo-${efiLoader}" | tr -d '\0')"
       fi
 
-      if [ "$configured" = limine ]; then
-        binary=/boot/efi/limine/BOOTX64.EFI
-      else
-        binary="$(find /boot/EFI -maxdepth 2 -iname grubx64.efi -print -quit 2>/dev/null || true)"
-      fi
+      binary=/boot/efi/limine/BOOTX64.EFI
 
       measure() {
         signed=unknown
@@ -64,16 +59,13 @@ let
         fi
 
         # Limine enrolls the BLAKE2b of limine.conf INTO its binary; the hash must be found there.
-        integrity=kernel-only # GRUB: the firmware checks the kernel, nothing checks the initrd
-        if [ "$configured" = limine ]; then
-          integrity=unknown
-          conf=/boot/limine/limine.conf
-          if [ -r "$conf" ] && [ -r "$binary" ]; then
-            if grep -qaF "$(b2sum "$conf" | cut -d' ' -f1)" "$binary"; then
-              integrity=enrolled
-            else
-              integrity=mismatch
-            fi
+        integrity=unknown
+        conf=/boot/limine/limine.conf
+        if [ -r "$conf" ] && [ -r "$binary" ]; then
+          if grep -qaF "$(b2sum "$conf" | cut -d' ' -f1)" "$binary"; then
+            integrity=enrolled
+          else
+            integrity=mismatch
           fi
         fi
       }
@@ -130,9 +122,6 @@ in
   # Re-run whenever an install rewrites the menu, so a silent signing failure surfaces at once.
   systemd.paths.boot-trust = {
     wantedBy = [ "multi-user.target" ];
-    pathConfig.PathChanged = [
-      "/boot/limine/limine.conf"
-      "/boot/grub/grub.cfg"
-    ];
+    pathConfig.PathChanged = [ "/boot/limine/limine.conf" ];
   };
 }

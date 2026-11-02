@@ -25,7 +25,7 @@ a day 30 days became 77 system generations, 45 GiB that a manual GC freed at onc
 further than a handful of generations, so the honest ceiling is a count, and
 `nix-collect-garbage` has no `--keep N`.
 
-- **10** matches `boot.loader.grub.configurationLimit` (`boot.nix`): every generation kept has a menu
+- **10** matches `boot.loader.limine.maxGenerations` (`limine.nix`): every generation kept has a menu
   entry, and no entry points at a collected one.
 - **`--keep-one`**: `nh clean all` also collects gcroots, the direnv ones included. Without it every
   project's devShell would be rebuilt after each run.

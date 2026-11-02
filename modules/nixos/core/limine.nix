@@ -1,5 +1,5 @@
-# LIMINE: the candidate bootloader, active only under my.boot.loader = "limine". Secure Boot with
-# the EXISTING sbctl keys and an enrolled, hashed config. The trust chain: docs/notes/boot-and-storage/boot.md
+# LIMINE: the bootloader, under Secure Boot with the EXISTING sbctl keys and an enrolled, hashed
+# config. The trust chain: docs/notes/boot-and-storage/boot.md
 { config, lib, ... }:
 
 let
@@ -15,10 +15,10 @@ in
     description = "GPT PARTUUID of the ESP holding Windows Boot Manager. Set by the host; null = no entry.";
   };
 
-  config = lib.mkIf (cfg.loader == "limine") {
+  config = {
     boot.loader.limine = {
       enable = true;
-      maxGenerations = 10; # the same rollback depth GRUB had
+      maxGenerations = 10; # rollback depth without filling the 1 GiB ESP
 
       # Forces enrollConfig, validateChecksums, panicOnChecksumMismatch and the editor OFF. Key
       # generation and enrollment stay OFF: the keys in /var/lib/sbctl are the ones in the firmware.

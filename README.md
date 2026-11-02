@@ -39,7 +39,7 @@
     cpu  = "Intel i5-11400";
     gpu  = "Intel Arc B580";                    # open xe driver, Mesa, no CUDA
     disk = "Kingston KC3000, btrfs subvolumes";
-    boot = "GRUB, dualboot with Windows 11, Secure Boot with my own keys";
+    boot = "Limine, dualboot with Windows 11, Secure Boot with my own keys";
   };
 
   desktop = [ "Hyprland (Lua config)" "Quickshell bar" "PipeWire" "TokyoNight, one palette" ];

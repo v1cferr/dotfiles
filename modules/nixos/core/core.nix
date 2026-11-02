@@ -21,7 +21,7 @@
     flake = "${config.users.users.v1cferr.home}/Projects/GitHub/v1cferr/dotfiles";
     clean = {
       enable = true; # weekly (Mon 00:00); nix.gc stays OFF, two collectors is rule 14
-      extraArgs = "--keep 10 --keep-one"; # 10 = GRUB's menu; --keep-one spares each direnv devShell
+      extraArgs = "--keep 10 --keep-one"; # 10 = Limine's menu; --keep-one spares each direnv devShell
     };
   };
   # Space-reactive GC. 15/50 GiB and not 1/5: the partition is shared with 506 GiB of games and

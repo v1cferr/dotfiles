@@ -82,8 +82,8 @@ prints a report. Read four things in it:
 - **zero failed units**, and nothing hidden under `@/home` (that section is a regression guard for
   the first-boot bug this VM found)
 
-It does NOT prove the bootloader: the VM boots the kernel directly, so GRUB, its Secure Boot
-signature and `os-prober` are outside it. That half lives in
+It does NOT prove the bootloader: the VM boots the kernel directly, so Limine and its Secure Boot
+signature are outside it. That half lives in
 [`boot.md`](../notes/boot-and-storage/boot.md) and in the BIOS.
 
 ## D3, yearly or before touching hardware: the secrets half

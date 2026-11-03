@@ -95,6 +95,41 @@ BarPanel {
         }
     }
 
+    // The address the internet sees, asked to the same anycast anchor as the probe. Only on open, at
+    // most once per 5 min or when the local address changes: it is one HTTPS request per family.
+    property var pub: ({})
+    property real pubAt: 0
+    property string pubKey: ""
+    readonly property string pubNow: (bar.netAddr[bar.netMain] || "") + "@" + bar.netGw
+    onVisibleChanged: if (pop.visible && !pubProc.running && (pop.pubKey !== pop.pubNow || Date.now() - pop.pubAt > 300000)) {
+        pop.pubKey = pop.pubNow;
+        pop.pubNext = {};
+        pubProc.running = true;
+    }
+    property var pubNext: ({})
+    Process {
+        id: pubProc
+        command: ["sh", "-c", "curl -4 -s -m 4 https://1.1.1.1/cdn-cgi/trace; echo; curl -6 -s -m 4 'https://[2606:4700:4700::1111]/cdn-cgi/trace'"]
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: line => {
+                const m = line.match(/^(ip|colo)=(.+)$/);
+                if (!m)
+                    return;
+                const n = Object.assign({}, pop.pubNext);
+                if (m[1] === "colo")
+                    n.colo = m[2];
+                else
+                    n[m[2].indexOf(":") >= 0 ? "v6" : "v4"] = m[2];
+                pop.pubNext = n;
+            }
+        }
+        onExited: {
+            pop.pub = pop.pubNext;
+            pop.pubAt = Date.now();
+        }
+    }
+
     component Caption: Text {
         color: Theme.colDim
         font.family: Theme.uiFont
@@ -106,6 +141,7 @@ BarPanel {
         property string label: ""
         property string hint: ""
         property string value: ""
+        property string sub: ""
         Layout.fillWidth: true
         Layout.preferredWidth: 1
         spacing: 1
@@ -122,6 +158,12 @@ BarPanel {
             font.pixelSize: Theme.fontBody
             font.bold: true
             elide: Text.ElideRight
+        }
+        Caption {
+            Layout.fillWidth: true
+            visible: fact.sub !== ""
+            text: fact.sub
+            elide: Text.ElideMiddle
         }
     }
 
@@ -255,6 +297,13 @@ BarPanel {
             Fact {
                 label: "Since boot"
                 value: "↓" + pop.bar.fmtBytes(pop.stats.rx || 0) + " ↑" + pop.bar.fmtBytes(pop.stats.tx || 0)
+            }
+            Fact {
+                Layout.columnSpan: 2
+                label: "Public"
+                hint: pubProc.running && !pop.pub.v4 ? "asking…" : (pop.pub.colo ? "seen by Cloudflare " + pop.pub.colo : "")
+                value: pop.pub.v4 || (pubProc.running ? "…" : "no answer")
+                sub: pop.pub.v6 || ""
             }
         }
         // Errors and drops only appear when they exist: a row pinned at zero teaches the eye to

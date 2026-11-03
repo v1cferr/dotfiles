@@ -414,6 +414,14 @@ name, the top five, and anything under 1 KB/s is left out, so "nothing moving" i
 an empty block. Without the wrapper the panel says "nethogs unavailable" instead of hiding the
 section.
 
+**The public address** (03/11/2026) is asked to `1.1.1.1/cdn-cgi/trace`, the same anycast anchor as
+the probe, once over IPv4 and once over IPv6; the answer also names the Cloudflare site that saw it
+(`GRU`), which is where the traffic actually leaves. The IPv4 is the router's WAN behind NAT and
+nothing local can know it; the IPv6 is this machine's own global address, shown in full on its own
+line because a 39-character address does not fit beside anything. It is asked ONLY when the panel
+opens, at most once per 5 minutes, and again at once if the local address or the gateway changed:
+a new network is a new public address.
+
 **The main interface comes from the DEFAULT ROUTE**, not from the literal `enp7s0` that used to be
 written into the parser. That is what "main" means, and it works on a machine that never saw this
 motherboard.

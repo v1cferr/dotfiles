@@ -14,9 +14,12 @@ finished work. What was closed is in the [august history](history/2026/08-august
       v6 on 21/10/2026). v2 was locked and unlocked for real; v6 was only seen in a headless sway,
       where a fake PAM unlocked it and a killed QML lock handed over to the fallback. Steps:
       [notes/desktop/lockscreen.md](notes/desktop/lockscreen.md#the-first-lock-after-switching-step-by-step).
+      • PROVEN by use (03/11/2026): the real password and Hyprland's lock, 35 of 35 unlocks; the
+        power while locked, measured from the power log (the lock's own CPU is 7.9% of a core,
+        4x the harness: [lockscreen](notes/desktop/lockscreen.md#power-and-performance)).
       • WHAT ONLY THE DESK CAN SAY: the type and the bokashi over real prints on the ASUS, the LG's
-        glass read from the chair, the real password and Caps Lock, the band's energy and Claude panels on HyprGlass, Hyprland (not sway) on a DP
-        unplug while locked, and CPU package power while locked (its counter is root's).
+        glass read from the chair, a wrong password and Caps Lock, the band's energy and Claude
+        panels on HyprGlass, a DP unplug while locked, and a killed QML lock handed to hyprlock.
       • THE TRAP: keep an SSH session open before the first lock. Killing the QML lock is safe (the
         fallback takes over); killing the fallback hyprlock is not.
 

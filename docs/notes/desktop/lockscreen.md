@@ -391,8 +391,20 @@ Measured on 21/10/2026 in the headless sway (GL on the B580's render node, both 
 | v5.1, hyprlock plus its label children (the last measured hyprlock) | 2.12 | 93 MB |
 
 The memory is Qt's and the two decoded prints, and only exists while locked: the process exits on
-unlock. NOT measured: GPU power while locked on the real desk (v2's lock sat at 37 W on the board
-with render idle 80%, the B580's floor with both panels on).
+unlock.
+
+**On the real desk**, 01/11 to 03/11/2026, the power log's minutes inside a lock (934 of them, the
+first 2 min of each lock left out) against the rest:
+
+| | CPU package | GPU board | busy CPU |
+| --- | --- | --- | --- |
+| locked | 18.8 W | 36.6 W | 7.6% |
+| unlocked | 52.4 W | 48.8 W | 14.2% |
+
+The GPU sits at the B580's floor with both panels on, the same 37 W v2's hyprlock had. The lock's
+OWN cost is higher than the harness said: a 4 h 26 min lock on 03/11 used 21 min of CPU, **7.9% of
+one core**, against 1.93% in the headless sway, with 236 to 325 MB at peak. The real panels' refresh
+rate is the likely difference: something still repaints every frame while locked. Not chased yet.
 
 ## Testing
 
@@ -411,9 +423,13 @@ fallback, a QML file that does not load replaced in 5 s. `wtype` loses the first
 
 ## Known limitations
 
-- **Unverified on the real desk:** the look on the physical panels, Hyprland's own lock handling
-  (the harness is sway), the real password, a DP unplug while locked, and Caps Lock on a real
-  keyboard. See the procedure below.
+- **Proven by daily use** since 30/10/2026: Hyprland's own lock handling and the real password, 35
+  locks and 35 PAM unlocks by the QML lock, none through the fallback. The one fallback in the
+  journal (30/10 18:27) was a `shutdown` while locked: the compositor died first, so hyprlock had
+  nothing to attach to. Expected; it is the shutdown order in [open-items](../../open-items.md).
+- **Unverified on the real desk:** the look on the physical panels, a wrong password, a DP unplug
+  while locked, Caps Lock on a real keyboard, and the fallback taking over a killed QML lock. See
+  the procedure below.
 - A pool's file is not checked for orientation or size any more: a landscape file in the LG's pool
   is cropped to portrait.
 - The glass blurs the lock's own print only; it cannot show windows (the lock hides them anyway).

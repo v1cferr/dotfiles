@@ -29,6 +29,22 @@ finished work. What was closed is in the [august history](history/2026/08-august
         authenticated for.
       • THE TRAP: the hyprlock fallback cannot show them, so they exist only while the QML lock is up.
 
+- [ ] Hyprland under UWSM, with greetd in place of LightDM (opened 03/11/2026). Every shutdown
+      crashes the session's Wayland clients: logind stops `session-N.scope` (Hyprland) BEFORE
+      `user@1000` (the scope is `After=user@1000.service`), so hyprpaper and hyprsunset abort, the
+      Hyprland portal segfaults and Sunshine exits 255, all in the first 30 ms. Cosmetic (no state
+      lost, they would be killed 0.1 s later), but they are the red lines on the shutdown splash.
+      • WHY NOT A HYPRLAND HOOK: in 0.56.2 `hyprland.shutdown` and `exec-shutdown` fire only from
+        the `exit` dispatcher; SIGTERM goes straight to `stopCompositor()` (`Compositor.cpp:92`).
+      • THE FIX: UWSM runs Hyprland as a `user@` service, so systemd stops the clients first.
+        greetd's `initial_session` replaces LightDM's autologin, which drops the X server that
+        `services.xserver.enable` brings up only for an unseen greeter, and runs once, so a log out
+        lands on tuigreet instead of racing a new autologin (what kept hyprshutdown out,
+        [shutdown](notes/boot-and-storage/shutdown.md)).
+      • WHAT HAS TO HOLD: the keyring (greetd's PAM plus the TPM seal), the Plymouth handoff (greetd
+        is `display-manager.service` too), Sunshine, the lockscreen, and PowerMath's log out
+        (`loginctl terminate-user`).
+
 - [ ] Refine the Zen theme, by hand and at my own pace (opened 13/10/2026). The minimal one in
       `modules/home/apps/zen/theme.nix` recolors Zen through its own variables; what it does NOT
       do yet is the rest of the old Arch look (`archive/arch-final:zen-browser/userChrome.css`), which needed

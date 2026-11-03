@@ -94,6 +94,29 @@ failure clears the buffer, shakes the field and says "senha incorreta"; the harn
 **With the ASUS unplugged** the LG says "Tela principal desconectada · digite a senha e pressione
 Enter" and echoes the dots, so the session is never stranded.
 
+## Restart and shut down from the lock (03/11/2026)
+
+"reiniciar · desligar" sits under the signature, in the clock column (`lock/PowerEntry.qml`). A
+click only asks: the field and the quote give way to "Desligar o computador?" with "cancelar" and
+the verb (`lock/PowerAsk.qml`). The state is `Power.qml`, the same machine as the NixOS Center's
+confirmation ([nixos-center](nixos-center.md)), so the commands and the failure path are one.
+
+- **Only these two, without the password**, as a login screen offers them. Log out would end a
+  session nobody authenticated for; lock, darken and suspend make no sense from here.
+- **Chosen from a bake-off** of real captures: the corner, under the signature, and two bare icons
+  at the foot. Under the signature won because its ink is the clock column's MEASURED one, so it
+  reads on every print. The verb is in that ink too, with the vermilion only as its underline:
+  vermilion type was weak on dark prints.
+- **The keys while it asks**: nothing types into the buffer, Escape answers "no". A click is the
+  only way to say yes, so a password typed in a hurry never confirms a shut down.
+- **polkit asks nothing**, checked with `pkcheck` on 03/11/2026: `reboot-multiple-sessions` is
+  `implicit active: yes` here, and a lock does not make the session inactive, so it works with an
+  SSH session open, from the lock's `user@` process as from the session's.
+- **A trap the prototype hit**: a `MouseArea` sized by its `Row` loops the layout, and Qt then
+  stops polishing the whole window, so the question never laid out. The area is the word's child.
+
+Only the ASUS face has them; with the ASUS unplugged, the LG still unlocks but cannot restart.
+
 ## The ASUS: type on the print
 
 - **The clock:** HH over mm in Geist Light 220 px, the seconds at 64 px beside the minutes on

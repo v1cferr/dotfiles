@@ -15,13 +15,12 @@ finished work. What was closed is in the [august history](history/2026/08-august
       floor, so it is CPU-side, likely something animating every frame at the panels' refresh.
       Find it with the QML profiler on a locked session before changing anything.
 
-- [ ] Power buttons on the lockscreen: restart, shut down and the rest (asked 02/11/2026). Builds
-      on v6, verified on the desk on 03/11/2026. The session actions already live in `Power.qml` and
-      `power/PowerMath.qml` (one state machine, tested); the lock gets a VIEW of them, the same
-      confirm-in-place as the Center's card, never a second copy of the logic.
-      • THE DECISION TO MAKE FIRST: which actions a locked screen offers without the password.
-        Restart and shut down are what login screens offer; log out would end a session nobody
-        authenticated for.
+- [ ] Power buttons on the lockscreen: click them on the desk (asked 02/11/2026, built 03/11/2026
+      in `c858e657`). "reiniciar · desligar" under the signature, the question in the field's place,
+      all on `Power.qml`: [lockscreen](notes/desktop/lockscreen.md#restart-and-shut-down-from-the-lock-03112026).
+      The harness proved the question, Escape and the ignored keys through the lock's IPC, but its
+      headless sway has no pointer, so no click was ever made.
+      • TO CLOSE: lock, click "desligar", then "cancelar"; then a real restart from the lock.
       • THE TRAP: the hyprlock fallback cannot show them, so they exist only while the QML lock is up.
 
 - [ ] Hyprland under UWSM, with greetd in place of LightDM (opened 03/11/2026). Every shutdown

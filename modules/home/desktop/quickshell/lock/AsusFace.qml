@@ -237,6 +237,15 @@ Item {
                     ink: face.col
                 }
             }
+            Item {
+                width: 1
+                height: 44
+            }
+            // Restart and shut down, without the password, as a login screen offers them.
+            PowerEntry {
+                anchors.right: face.onRight ? parent.right : undefined
+                ink: face.col
+            }
         }
     }
 
@@ -264,6 +273,7 @@ Item {
         // The field: no box, a hairline that the caret and a failure color in vermilion.
         Item {
             id: field
+            visible: Power.state.phase === "idle"
             width: 420
             height: 64
             anchors.horizontalCenter: parent.horizontalCenter
@@ -329,6 +339,13 @@ Item {
             }
         }
 
+        // A restart or a shut down asks here, in the field's place, and the quote steps aside.
+        PowerAsk {
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: face.height * 0.72 - 24
+            ink: face.footCol
+        }
+
         // The quote: the text, the original smaller, the credit. Hierarchy by size, one ink.
         Column {
             id: quoteBlock
@@ -336,7 +353,7 @@ Item {
             y: face.height * 0.72 + 120
             width: 1100
             spacing: 6
-            visible: !!quotes.quote
+            visible: !!quotes.quote && Power.state.phase === "idle"
             Text {
                 width: parent.width
                 horizontalAlignment: Text.AlignHCenter

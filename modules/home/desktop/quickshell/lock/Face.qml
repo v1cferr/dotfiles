@@ -14,7 +14,11 @@ Item {
     focus: true
     Component.onCompleted: face.forceActiveFocus()
     Keys.onPressed: event => {
-        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+        // While a restart or a shut down asks, keys never type: Escape answers "no", the rest wait.
+        if (Power.state.phase !== "idle") {
+            if (event.key === Qt.Key_Escape && (Power.state.phase === "confirm" || Power.state.phase === "error"))
+                Power.cancel();
+        } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
             face.auth.submit();
         else if (event.key === Qt.Key_Backspace)
             (event.modifiers & Qt.ControlModifier) ? face.auth.clear() : face.auth.erase();

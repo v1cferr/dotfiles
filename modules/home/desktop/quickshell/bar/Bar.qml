@@ -1286,6 +1286,15 @@ Scope {
     property real netMainTx: 0
     property var netRxHist: []
     property var netTxHist: []
+    property int netHotRun: 0
+    property int netColdRun: 0
+    property bool netBusy: false
+    // 512 KB/s: this desk idles between 60 KB/s and 1 MB/s (sync, the VPN, a stream), and 64 KB/s
+    // left the pill on its rates face all day.
+    readonly property real netBusyRate: 524288
+    // The pill's two faces: the rates while traffic moves, the latency while the link idles, because
+    // "↓ 12K ↑ 8K" at rest is noise and the latency is what says the link is fine.
+    readonly property string netPillText: root.netBusy ? "↓" + root.tab(root.fmtRate(root.netMainRx), 5) + " ↑" + root.tab(root.fmtRate(root.netMainTx), 5) : (root.netProbeStat && root.netProbeStat.answered > 0 ? root.tab(Math.round(root.netProbeStat.avg), 3) + " ms" : "")
     function parseNetDev(text) {
         const lines = text.split("\n");
         const cur = ({});
@@ -1321,6 +1330,15 @@ Scope {
                 root.netMainTx = txr;
                 root.netRxHist = root.pushed(root.netRxHist, rxr);
                 root.netTxHist = root.pushed(root.netTxHist, txr);
+                // Busy after 2 samples over the threshold, idle again after 5 under: the pill must
+                // not flicker between its two faces on every page load.
+                const hot = rxr >= root.netBusyRate || txr >= root.netBusyRate;
+                root.netHotRun = hot ? root.netHotRun + 1 : 0;
+                root.netColdRun = hot ? 0 : root.netColdRun + 1;
+                if (root.netHotRun >= 2)
+                    root.netBusy = true;
+                else if (root.netColdRun >= 5)
+                    root.netBusy = false;
             }
             if (rxr > 0 || txr > 0 || iface === root.netMain)
                 rates.push({
@@ -2118,7 +2136,7 @@ Scope {
                         id: tmNet
                         font.family: Theme.uiFont
                         font.pixelSize: Theme.fontBody
-                        text: "↓" + root.tab(root.fmtRate(root.netMainRx), 5) + " ↑" + root.tab(root.fmtRate(root.netMainTx), 5)
+                        text: root.netPillText
                     }
                     TextMetrics {
                         id: tmVpn
@@ -2185,7 +2203,7 @@ Scope {
                     Pill {
                         id: netPill
                         icon: "󰛳"
-                        label: bar.squeeze >= 1 ? "" : "↓" + root.tab(root.fmtRate(root.netMainRx), 5) + " ↑" + root.tab(root.fmtRate(root.netMainTx), 5)
+                        label: bar.squeeze >= 1 ? "" : root.netPillText
                         accent: root.netQuality.color
                         labelColor: Theme.colText
                         selected: root.pinned === "net"

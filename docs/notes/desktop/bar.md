@@ -109,6 +109,16 @@ becoming `1.3M` or `9%` becoming `41%` moved every control to their left every 2
 cluster is anchored to the edge. Measured on 17/10/2026: the cluster's left edge sat on the same
 pixel across six captures 2 s apart while the rates changed.
 
+### The network pill has two faces (03/11/2026)
+
+At rest the pill shows the link's latency (`12 ms`, from the same probe as the panel); while
+traffic moves it shows the two rates. A permanent `↓ 12K ↑ 8K` was noise most of the day, and at
+rest the question is "is the link fine", which the latency answers and the verdict colour of the
+icon confirms. It turns busy after 2 samples over 512 KB/s in either direction and idle after 5
+under (10 s), so a page load does not make it flicker. 64 KB/s was the first threshold and this
+desk idles between 60 KB/s and 1 MB/s (sync, the VPN, a stream), which pinned it on the rates face.
+Each face is padded on its own, and the row's width maths measures whichever is showing.
+
 ## Contextual expansion: one panel at a time (17/10/2026)
 
 Every panel the bar opens on hover (weather, calendar, temperature, usage, network, VPN statistics)

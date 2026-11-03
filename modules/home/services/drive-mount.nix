@@ -73,6 +73,8 @@ in
         # A safety net for a hung mount (the `-` ignores an already-unmounted one). It has to be NixOS'
         # setuid WRAPPER, since the package's fusermount3 has no privilege.
         ExecStopPost = "-/run/wrappers/bin/fusermount3 -uz ${cfg.local}";
+        # rclone unmounts cleanly on SIGTERM, then exits 143: not a failure.
+        SuccessExitStatus = 143;
 
         Restart = "on-failure";
         RestartSec = 10;

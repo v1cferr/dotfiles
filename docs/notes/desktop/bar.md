@@ -333,7 +333,7 @@ right next to it answered "is this fine, and since when". The three now speak th
 | --- | --- | --- | --- |
 | `UsagePopover.qml` | idle to stalling | the CPU over 2 min, plus one bar per thread | the CPU model, cores/threads, uptime |
 | `TempsPopover.qml` | cool to critical | the hottest sensor over 2 min | how many sensors, and from which chips |
-| `NetPopover.qml` | offline to steady | throughput mirrored over 2 min | the interface, its type, who manages it |
+| `NetPopover.qml` | offline to steady | throughput mirrored over 2 min (log), latency over 1 min | the interface, its type, who manages it |
 
 The window is 60 samples at one every 2 s, so two minutes, and it accumulates whether the panel is
 open or not, because the snapshot that feeds it runs anyway. Opening the panel costs nothing extra,
@@ -370,10 +370,29 @@ headline, and the hotter secondary sensor is detail and not an alarm.
 **The GPU fan says "stopped", not 0.** This card idles at zero RPM and only spins up under load, and
 a bare `0 rpm` reads as a dead fan.
 
-**Network.** The throughput graph is MIRRORED, download growing down from the top and upload up from
-the bottom, sharing ONE ceiling. Two scales would be prettier and would lie about which direction is
-bigger. The floor is 128 KB/s so an idle link is not a dramatic sawtooth, the same reasoning as the
-VPN graph's 60 ms floor.
+**Network.** The throughput graph is MIRRORED around one axis, download growing up and upload down,
+sharing ONE scale. Two scales would be prettier and would lie about which direction is bigger.
+
+The scale is LOGARITHMIC since 03/11/2026. On the linear one, a single 80 MB/s burst set the
+ceiling for the whole two minutes and every 12 KB/s sample came out as 0 px, so the graph was a flat
+line with one spike: it showed the burst and hid the link. A link idles at kilobytes and bursts at
+tens of megabytes, three or four orders apart, and a log axis gives both a readable height while
+keeping the order right. The axis is 1 KB/s (anything under it draws nothing), the ceiling is the
+next step of 1, 10, 100 or 1000 MB/s above the peak, never under 1 MB/s, and one labelled grid
+line per half (32 KB/s, or 1 MB/s once the ceiling climbs) says where the eye is. The legend says
+"log scale" because a log graph read as linear exaggerates small traffic. An area with a stroke
+replaced the bars: 60 two-pixel bars on a log axis read as noise, a curve reads as a level.
+
+Around the graph: the current rate in the direction's colour, the window's peak and the volume it
+moved (both from the samples already kept), and the hover gives both directions and the time of
+the sample. While the window is still filling after a reload the legend says so ("filling · 20s of
+2 min") instead of passing a short window off as the whole.
+
+**The latency is a graph too**, the probe's own 60 samples, drawn like the VPN's (linear from zero,
+60 ms floor, a lost packet as a full red bar), with the mean, the jitter and the loss in one line
+over it. Three rows of single numbers became one line and a shape. Link, address, gateway and the
+since-boot traffic went into a two-column grid of label-over-value: they are looked up, not
+compared, and the panel lost a third of its height.
 
 **The main interface comes from the DEFAULT ROUTE**, not from the literal `enp7s0` that used to be
 written into the parser. That is what "main" means, and it works on a machine that never saw this

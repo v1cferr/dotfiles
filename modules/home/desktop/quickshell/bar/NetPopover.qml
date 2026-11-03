@@ -1,5 +1,6 @@
-// The NETWORK panel (hover): the verdict, 2 minutes of throughput mirrored, the link's latency,
-// the address, the gateway and the other interfaces. The state lives in the Bar (bar.md).
+// The NETWORK panel (hover): the verdict, 2 minutes of throughput mirrored on a log scale, the
+// link's latency over time, the address and the other interfaces. The state
+// lives in the Bar (bar.md).
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -16,18 +17,68 @@ BarPanel {
     readonly property var link: bar.netLink[bar.netMain] || ({})
     readonly property var stats: bar.netStats[bar.netMain] || ({})
     readonly property var probe: bar.netProbeStat
-    // ONE ceiling for both halves, or the mirror lies: a 5 KB/s upload drawn as tall as a 5 MB/s
-    // download. The 128 KB/s floor keeps an idle link from becoming a sawtooth.
+    readonly property bool answered: !!pop.probe && pop.probe.answered > 0
+    readonly property real stepS: bar.sysInterval / 1000
+
+    // The window's peak and volume per direction, from the samples already kept: no new sampling.
+    function sum(a) {
+        let t = 0;
+        for (const v of a || [])
+            t += v;
+        return t;
+    }
+    function peak(a) {
+        let m = 0;
+        for (const v of a || [])
+            if (v > m)
+                m = v;
+        return m;
+    }
+    readonly property real peakRx: pop.peak(bar.netRxHist)
+    readonly property real peakTx: pop.peak(bar.netTxHist)
+    // ONE log scale for both halves, or the mirror lies about which direction is bigger. Log because
+    // a link idles at kilobytes and bursts at tens of megabytes: on a linear axis the burst flattens
+    // every other sample to nothing. The ceiling is the next step above the peak, never under 1 MB/s.
+    readonly property real logFloor: 1024
     readonly property real scaleTop: {
-        let mx = 0;
-        const a = pop.bar.netRxHist || [], b = pop.bar.netTxHist || [];
-        for (let i = 0; i < a.length; i++)
-            if (a[i] > mx)
-                mx = a[i];
-        for (let i = 0; i < b.length; i++)
-            if (b[i] > mx)
-                mx = b[i];
-        return Math.max(131072, mx * 1.15);
+        const mx = Math.max(pop.peakRx, pop.peakTx);
+        for (const t of [1, 10, 100, 1000])
+            if (mx <= t * 1048576)
+                return t * 1048576;
+        return 10000 * 1048576;
+    }
+    function rate(v) {
+        return pop.bar.fmtRate(v).replace(".0M", "M");
+    }
+
+    component Caption: Text {
+        color: Theme.colDim
+        font.family: Theme.uiFont
+        font.pixelSize: Theme.fontMicro
+    }
+    // One cell of the facts grid: a label over a value, the context in the label's line.
+    component Fact: ColumnLayout {
+        id: fact
+        property string label: ""
+        property string hint: ""
+        property string value: ""
+        Layout.fillWidth: true
+        Layout.preferredWidth: 1
+        spacing: 1
+        Caption {
+            Layout.fillWidth: true
+            text: fact.label + (fact.hint !== "" ? "  ·  " + fact.hint : "")
+            elide: Text.ElideRight
+        }
+        Text {
+            Layout.fillWidth: true
+            text: fact.value
+            color: Theme.colText
+            font.family: Theme.uiFont
+            font.pixelSize: Theme.fontBody
+            font.bold: true
+            elide: Text.ElideRight
+        }
     }
 
     PopCard {
@@ -41,104 +92,132 @@ BarPanel {
             verdictColor: pop.bar.netQuality.color
         }
 
-        // Mirrored: download grows down from the top, upload up from the bottom, so the two
-        // directions are read at a glance instead of two graphs you have to line up.
-        Sparkline {
+        // Throughput, mirrored around one axis: download grows up, upload down, the same log scale.
+        RowLayout {
             Layout.fillWidth: true
-            implicitHeight: 26
-            series: pop.bar.netRxHist
-            scaleTop: pop.scaleTop
-            fill: Theme.colTeal
-            downward: true
-            placeholder: "measuring…"
+            spacing: Theme.sp2
+            Text {
+                text: "↓" + pop.rate(pop.bar.netMainRx) + "/s"
+                color: Theme.colTeal
+                font.family: Theme.uiFont
+                font.pixelSize: Theme.fontLabel
+                font.bold: true
+            }
+            Text {
+                text: "↑" + pop.rate(pop.bar.netMainTx) + "/s"
+                color: Theme.colPeach
+                font.family: Theme.uiFont
+                font.pixelSize: Theme.fontLabel
+                font.bold: true
+            }
+            Item {
+                Layout.fillWidth: true
+            }
+            Caption {
+                text: "peak ↓" + pop.rate(pop.peakRx) + " ↑" + pop.rate(pop.peakTx)
+            }
         }
         Sparkline {
             Layout.fillWidth: true
-            implicitHeight: 26
-            series: pop.bar.netTxHist
+            implicitHeight: 80
+            series: pop.bar.netRxHist
+            series2: pop.bar.netTxHist
+            fill: Theme.colTeal
+            fill2: Theme.colPeach
+            style: "area"
+            scale: "log"
+            logFloor: pop.logFloor
             scaleTop: pop.scaleTop
-            fill: Theme.colPeach
-            placeholder: ""
+            // One line per half: more than that crowds a 40 px half once the ceiling climbs.
+            gridValues: pop.scaleTop > 1048576 ? [1048576] : [32768]
+            gridLabel: v => pop.rate(v)
+            stepS: pop.stepS
+            format: (rx, tx) => "↓" + pop.rate(rx) + "/s  ↑" + pop.rate(tx) + "/s"
+            placeholder: "measuring…"
         }
         RowLayout {
             Layout.fillWidth: true
-            spacing: 10
-            Text {
+            Caption {
                 Layout.fillWidth: true
-                text: "last " + Math.round((pop.bar.netRxHist || []).length * pop.bar.sysInterval / 1000) + "s · ↓ above, ↑ below"
-                color: Theme.colDim
-                font.family: Theme.uiFont
-                font.pixelSize: 9
+                readonly property int secs: Math.round((pop.bar.netRxHist || []).length * pop.stepS)
+                readonly property int full: Math.round(pop.bar.histWindow * pop.stepS)
+                text: (secs < full ? "filling · " + secs + "s of " + full / 60 + " min" : "last " + full / 60 + " min") + " · log scale"
             }
-            Text {
-                text: "top " + pop.bar.fmtRate(pop.scaleTop / 1.15) + "/s"
-                color: Theme.colDim
-                font.family: Theme.uiFont
-                font.pixelSize: 9
+            Caption {
+                text: "moved ↓" + pop.bar.fmtBytes(pop.sum(pop.bar.netRxHist) * pop.stepS) + " ↑" + pop.bar.fmtBytes(pop.sum(pop.bar.netTxHist) * pop.stepS)
             }
-        }
-
-        StatRow {
-            label: "Rate"
-            labelWidth: 62
-            value: "↓" + pop.bar.fmtRate(pop.bar.netMainRx) + "/s   ↑" + pop.bar.fmtRate(pop.bar.netMainTx) + "/s"
-        }
-        StatRow {
-            label: "Latency"
-            labelWidth: 62
-            hint: "probe " + pop.bar.netProbeTarget + " · 1 packet/s"
-            value: pop.probe && pop.probe.answered > 0 ? Math.round(pop.probe.avg) + " ms" : "no answer"
-            valueColor: pop.probe && pop.probe.answered > 0 ? Theme.colText : Theme.colRed
-        }
-        StatRow {
-            // The variation, not the mean: what freezes a call is the jitter.
-            label: "Jitter"
-            labelWidth: 62
-            hint: pop.probe && pop.probe.answered > 0 ? "min " + Math.round(pop.probe.min) + " · max " + Math.round(pop.probe.max) + " ms" : ""
-            value: pop.probe && pop.probe.answered > 0 ? pop.probe.mdev.toFixed(1) + " ms" : "—"
-            valueColor: pop.probe && pop.probe.mdev > 10 ? Theme.colPeach : Theme.colText
-        }
-        StatRow {
-            label: "Loss"
-            labelWidth: 62
-            hint: pop.probe && pop.probe.n > 0 ? pop.probe.lost + " of " + pop.probe.n + " packets" : ""
-            value: pop.probe && pop.probe.n > 0 ? pop.probe.loss.toFixed(pop.probe.loss > 0 && pop.probe.loss < 10 ? 1 : 0) + "%" : "—"
-            valueColor: pop.probe && pop.probe.loss > 0 ? (pop.probe.loss >= 20 ? Theme.colRed : Theme.colPeach) : Theme.colText
         }
 
         Hairline {
             Layout.topMargin: 2
         }
 
-        StatRow {
-            label: "Link"
-            labelWidth: 62
-            hint: (pop.link.duplex && pop.link.duplex !== "unknown" ? pop.link.duplex + " duplex · " : "") + "MTU " + (pop.link.mtu || "?")
-            value: pop.bar.netSpeed !== "" ? pop.bar.netSpeed : (pop.link.carrier === "1" ? "up" : "down")
+        // Latency over the probe's whole window: the mean alone hides a link that swings.
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Theme.sp2
+            Text {
+                text: pop.answered ? Math.round(pop.probe.avg) + " ms" : "no answer"
+                color: pop.answered ? Theme.colText : Theme.colRed
+                font.family: Theme.uiFont
+                font.pixelSize: Theme.fontLabel
+                font.bold: true
+            }
+            Caption {
+                Layout.fillWidth: true
+                text: "to " + pop.bar.netProbeTarget + " · 1 packet/s"
+                elide: Text.ElideRight
+            }
+            Caption {
+                // The variation, not the mean: what freezes a call is the jitter.
+                text: pop.answered ? "jitter " + pop.probe.mdev.toFixed(1) + " · loss " + pop.probe.lost + "/" + pop.probe.n : ""
+                color: pop.probe && pop.probe.loss > 0 ? (pop.probe.loss >= 20 ? Theme.colRed : Theme.colPeach) : (pop.probe && pop.probe.mdev > 10 ? Theme.colPeach : Theme.colDim)
+            }
         }
-        StatRow {
-            label: "Address"
-            labelWidth: 62
-            hint: pop.bar.netEthernet ? "ethernet" : "wifi"
-            value: pop.bar.netAddr[pop.bar.netMain] || "—"
+        Sparkline {
+            Layout.fillWidth: true
+            implicitHeight: 22
+            series: pop.bar.netProbeSeries
+            scaleTop: Math.max(60, (pop.probe ? pop.probe.max : 0) * 1.15)
+            fill: Theme.colAccent
+            stepS: 1
+            unit: " ms"
+            placeholder: "measuring…"
         }
-        StatRow {
-            label: "Gateway"
-            labelWidth: 62
-            value: pop.bar.netGw !== "" ? pop.bar.netGw : "—"
+
+        Hairline {
+            Layout.topMargin: 2
         }
-        StatRow {
-            label: "Traffic"
-            labelWidth: 62
-            hint: "since boot"
-            value: "↓" + pop.bar.fmtBytes(pop.stats.rx || 0) + "   ↑" + pop.bar.fmtBytes(pop.stats.tx || 0)
+
+        GridLayout {
+            Layout.fillWidth: true
+            columns: 2
+            columnSpacing: Theme.sp3
+            rowSpacing: Theme.sp2
+            Fact {
+                label: "Link"
+                hint: (pop.link.duplex && pop.link.duplex !== "unknown" ? pop.link.duplex + " · " : "") + "MTU " + (pop.link.mtu || "?")
+                value: pop.bar.netSpeed !== "" ? pop.bar.netSpeed : (pop.link.carrier === "1" ? "up" : "down")
+            }
+            Fact {
+                label: "Address"
+                hint: pop.bar.netEthernet ? "ethernet" : "wifi"
+                value: pop.bar.netAddr[pop.bar.netMain] || "—"
+            }
+            Fact {
+                label: "Gateway"
+                value: pop.bar.netGw !== "" ? pop.bar.netGw : "—"
+            }
+            Fact {
+                label: "Since boot"
+                value: "↓" + pop.bar.fmtBytes(pop.stats.rx || 0) + " ↑" + pop.bar.fmtBytes(pop.stats.tx || 0)
+            }
         }
         // Errors and drops only appear when they exist: a row pinned at zero teaches the eye to
         // skip it, and this is the one row that has to be noticed the day it moves.
         StatRow {
             visible: (pop.stats.rxErr || 0) + (pop.stats.txErr || 0) + (pop.stats.rxDrop || 0) + (pop.stats.txDrop || 0) > 0
             label: "Errors"
-            labelWidth: 62
             hint: "rx · tx"
             value: ((pop.stats.rxErr || 0) + (pop.stats.txErr || 0)) + " errors · " + ((pop.stats.rxDrop || 0) + (pop.stats.txDrop || 0)) + " drops"
             valueColor: Theme.colPeach
@@ -152,35 +231,11 @@ BarPanel {
         }
         Repeater {
             model: pop.others
-
-            delegate: RowLayout {
-                id: oth
+            delegate: StatRow {
                 required property var modelData
-
-                Layout.fillWidth: true
-                spacing: 10
-                Text {
-                    Layout.minimumWidth: 62
-                    text: oth.modelData.iface
-                    color: Theme.colDim
-                    font.family: Theme.uiFont
-                    font.pixelSize: 11
-                    elide: Text.ElideRight
-                }
-                Text {
-                    Layout.fillWidth: true
-                    text: pop.bar.netAddr[oth.modelData.iface] || ""
-                    color: Theme.colDim
-                    font.family: Theme.uiFont
-                    font.pixelSize: 10
-                    horizontalAlignment: Text.AlignRight
-                }
-                Text {
-                    text: "↓" + pop.bar.fmtRate(oth.modelData.rx) + "  ↑" + pop.bar.fmtRate(oth.modelData.tx)
-                    color: Theme.colText
-                    font.family: Theme.uiFont
-                    font.pixelSize: 11
-                }
+                label: modelData.iface
+                hint: pop.bar.netAddr[modelData.iface] || ""
+                value: "↓" + pop.rate(modelData.rx) + "  ↑" + pop.rate(modelData.tx)
             }
         }
 
@@ -188,12 +243,9 @@ BarPanel {
             Layout.topMargin: 2
         }
 
-        Text {
+        Caption {
             Layout.fillWidth: true
             text: pop.bar.netMain + " · " + ((pop.bar.netDevs[pop.bar.netMain] || {}).type || "?") + " · " + (pop.bar.netConnected ? "managed by NetworkManager" : "not managed")
-            color: Theme.colDim
-            font.family: Theme.uiFont
-            font.pixelSize: 10
             elide: Text.ElideRight
         }
     }

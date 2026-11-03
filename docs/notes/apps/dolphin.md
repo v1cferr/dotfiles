@@ -148,9 +148,11 @@ similarity, and clicking is BEHAVIOR, so it does not change a pixel. Worse: it l
 ## The Places panel
 
 **There are no custom sections.** KIO's groups (Places, Remote, Recent, Search For, Devices,
-Removable, Tags) are fixed, and every `file://` bookmark lands in "Places", rclone mounts
-included. So the `places` list's ORDER is the grouping: work, cloud, remote mounts, personal,
-system. Fake "── Section ──" bookmarks were rejected: they are clickable and point at nothing.
+Removable, Tags) are fixed, and the group comes from the URL's PROTOCOL: every `file://` bookmark
+lands in "Places", rclone mounts included. So the two remote hosts are `sftp://<ssh alias>/`
+places (KIO's sftp reads `~/.ssh/config`) and show under "Remote"; their rclone mounts stay for
+the terminal. Inside "Places" the list's ORDER is the grouping: work, cloud, personal, system.
+Fake "── Section ──" bookmarks were rejected: they are clickable and point at nothing.
 
 Adding a place is 1 line in the list, at the position it should show. The icon names were checked
 against breeze-icons 6.26.0 and Win11 (`places/22`); a name that does not exist breaks nothing, it

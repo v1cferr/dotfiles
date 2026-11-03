@@ -34,8 +34,10 @@ let
     fi
   '';
 
-  # FIXED PLACES, in the order the panel shows them. Dolphin has no custom sections (KIO's groups
-  # are fixed), so the ORDER is the grouping: work, cloud, remote mounts, personal, system.
+  # FIXED PLACES, in the order the panel shows them. Dolphin has no custom sections: KIO picks the
+  # group by the URL's PROTOCOL, so `file://` lands in "Places" and `sftp://` in "Remote". Inside
+  # Places the ORDER is the grouping: work, cloud, personal, system. A place is a local `path` or
+  # a remote `url`.
   places = [
     # Work
     {
@@ -66,15 +68,16 @@ let
       path = "${config.my.drive.local}/ICMC-USP Compartilhado"; # a Drive SHORTCUT to a shared folder
       icon = "folder-publicshare";
     }
-    # Remote mounts
+    # Remote: KIO's own sftp through the ~/.ssh/config aliases, so they show under "Remote". The
+    # rclone mounts (~/FAI-workstation, ~/VPS) stay for the terminal and the cache.
     {
       title = "FAI Workstation";
-      path = "${config.home.homeDirectory}/FAI-workstation"; # rclone SFTP; it comes up with the FAI VPN
+      url = "sftp://workstation/"; # needs the FAI VPN
       icon = "folder-remote";
     }
     {
       title = "VPS";
-      path = "${config.home.homeDirectory}/VPS"; # rclone SFTP to the KingHost VPS' root, mounted at login
+      url = "sftp://vps/"; # the KingHost VPS' root
       icon = "folder-remote";
     }
     # Personal
@@ -113,13 +116,13 @@ let
     "Tags"
   ];
 
-  # One XBEL file per place. The href is URL-encoded the way Dolphin writes it (a space is %20),
-  # so the activation's match by href finds a bookmark Dolphin wrote itself.
+  # One XBEL file per place. A path is URL-encoded the way Dolphin writes it (a space is %20), so
+  # the activation's match by href finds a bookmark Dolphin wrote itself.
   placeFiles = lib.imap0 (
     i: p:
     p
     // rec {
-      href = "file://${lib.replaceStrings [ " " ] [ "%20" ] p.path}";
+      href = p.url or "file://${lib.replaceStrings [ " " ] [ "%20" ] p.path}";
       file = writeText "dolphin-place-${toString i}.xbel" ''
         <bookmark href="${href}">
          <title>${p.title}</title>

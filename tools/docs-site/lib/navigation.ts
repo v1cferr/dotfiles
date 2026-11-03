@@ -155,6 +155,7 @@ export const navigation: NavItem[] = [
       { title: "basic-memory", doc: "notes/apps/basic-memory.md" },
       { title: "Azure MCP", doc: "notes/apps/azure-mcp.md" },
       { title: "Flameshot", doc: "notes/apps/flameshot.md" },
+      { title: "Screen recording", doc: "notes/apps/screenrec.md" },
       { title: "CurseForge", doc: "notes/apps/curseforge.md" },
       { title: "CurseForge fix-perms", doc: "notes/apps/curseforge-fix-perms.md" },
       { title: "FAI Meet", doc: "notes/apps/fai-meet.md" },

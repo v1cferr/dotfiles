@@ -141,6 +141,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [basic-memory](apps/basic-memory.md) | two memory servers split at the FAI boundary, uv2nix, and why HTTP and not stdio |
 | [azure-mcp](apps/azure-mcp.md) | the Azure MCP server, FAI only |
 | [flameshot](apps/flameshot.md) | the v14 keyboard flow, and the duplicated bar |
+| [screenrec](apps/screenrec.md) | recording a monitor or a region by keyboard, MP4 with GIF on demand, and why not the portal |
 | [curseforge](apps/curseforge.md) | the repackaged AppImage, and why the schemes are declared |
 | [curseforge-fix-perms](apps/curseforge-fix-perms.md) | the `+x` the app loses, and why ELF magic and not names |
 | [fai-meet](apps/fai-meet.md) | the FAI's meeting recorder: the pointer AppImage and its login scheme |

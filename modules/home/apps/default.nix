@@ -10,6 +10,7 @@
     ./recoll.nix # Recoll: search documents and code by content (an hourly index)
     ./vscode.nix # VS Code: the package plus versioned settings/keybindings (hot-reload through a symlink)
     ./flameshot.nix # ~/.config/flameshot/flameshot.ini (screenshots; the keybind is in hypr.nix)
+    ./screenrec.nix # screen recording: wl-screenrec plus the SUPER+SHIFT+R submap, GIF on demand
     ./mangohud.nix # the FPS/temps/usage overlay in games (a declarative config plus a toggle)
     ./openal.nix # ~/.config/alsoft.conf: it forces the pulse backend (sound in OpenAL/HashLink games)
     ./curseforge.nix # Minecraft modpacks: the package (./pkgs) plus the login scheme handler

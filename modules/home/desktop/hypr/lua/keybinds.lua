@@ -171,6 +171,18 @@ hl.define_submap("screenshot", function()
   hl.bind("escape", hl.dsp.exec_cmd("flameshot-cancel"))        -- cancel plus leave the submap
 end)
 
+-- Screen recording (wl-screenrec). SUPER+SHIFT+R starts AND stops: idle, it enters a submap where
+-- 1/2 pick the monitor and R a region; recording, it stops and offers the GIF. docs/notes/apps/screenrec.md
+hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("screenrec-toggle"))
+
+hl.define_submap("screenrec", function()
+  local leave = hl.dsp.exec_cmd("hyprctl dispatch 'hl.dsp.submap(\"reset\")'")
+  hl.bind("1",      hl.dsp.exec_cmd("screenrec-start primary"))   -- record the main one
+  hl.bind("2",      hl.dsp.exec_cmd("screenrec-start secondary")) -- record the secondary
+  hl.bind("R",      hl.dsp.exec_cmd("screenrec-start region"))    -- record a region (slurp)
+  hl.bind("escape", leave)                                        -- cancel
+end)
+
 -- The away screen (quickshell/Away.qml) enters this submap, so Enter reaches the compositor even
 -- when the overlay lost the keyboard: both monitors off at the button recreates it unfocused.
 -- It resets the submap itself, so a dead Quickshell can never strand the keyboard here.

@@ -72,6 +72,29 @@ To check the effect without a stopwatch, the journal's two stamps:
 journalctl -b -1 -o short-precise | grep -E "Stopping User Manager|Journal stopped"
 ```
 
+## Measured again: 17 s down to 7 s (02/11/2026)
+
+With the splash, the clock runs from `Show Plymouth Reboot Screen` (or `Power Off`) to `Journal
+stopped`. Six shutdowns from 27/10 to 02/11 took **16.6 to 18.1 s**, and 10 s of that was one
+container:
+
+```text
+grad-radar-backend-1: Container failed to exit within 10s of signal 15 - using the force
+```
+
+Its compose command was `sh -c "uv sync && uvicorn ..."`, so PID 1 was `sh`, which never forwards
+SIGTERM, and `down` waited out Docker's 10 s grace every time. `init: true` would not have helped:
+tini forwards to its child, which is still `sh`. The fix is `exec uvicorn` in the grad-radar repo
+(`684b1fd`): `compose stop backend` went from 10.2 s and exit 137 to 0.55 s and exit 0.
+
+The three shutdowns after it with the stack running took **6.8, 7.0 and 7.7 s**, no forced kill.
+What is left is the Docker daemon waiting on Home Assistant, which saves its state on the way
+out (about 5 s); no timeout was changed for it. To repeat the measurement on the last boot:
+
+```sh
+journalctl -b -1 -o short-precise | grep -E "Plymouth (Reboot|Power Off) Screen|using the force|Journal stopped"
+```
+
 ## hyprshutdown: looked at, not adopted (22/10/2026)
 
 [hyprshutdown](https://wiki.hypr.land/0.56.0/Hypr-Ecosystem/hyprshutdown/) 0.1.1 (in the pinned
@@ -85,7 +108,8 @@ off is a `--post-cmd` that runs AFTER Hyprland is gone. Against what runs here:
   up to the 5 s above; an app that saves on a close request but not on SIGTERM is the only gain,
   and none is known here.
 - **Log out is where it could help**: a graceful close instead of `loginctl terminate-user`. That
-  needs the autologin race above tested first, so it stays an idea.
+  needs the autologin race above tested first. Dropped on 02/11/2026: no app here is known to
+  lose anything on `terminate-user`.
 
 So the session's actions stay on systemd and logind, and the NixOS Center's confirmation
 ([nixos-center](../desktop/nixos-center.md#the-confirmation-22102026)) asks first.

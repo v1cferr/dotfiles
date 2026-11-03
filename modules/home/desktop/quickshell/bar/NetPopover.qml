@@ -1,7 +1,8 @@
 // The NETWORK panel (hover): the verdict, 2 minutes of throughput mirrored on a log scale, the
-// link's latency over time, the address and the other interfaces. The state
+// link's latency over time, the apps moving traffic, the address and the other interfaces. The state
 // lives in the Bar (bar.md).
 import Quickshell
+import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -49,6 +50,49 @@ BarPanel {
     }
     function rate(v) {
         return pop.bar.fmtRate(v).replace(".0M", "M");
+    }
+
+    // Who is moving the bytes: nethogs (a capability wrapper, never root) runs ONLY while the panel
+    // is open, and its trace mode prints one block per refresh, KB/s sent and received per program.
+    property var apps: []
+    property var appsNext: []
+    Process {
+        id: hogs
+        running: pop.visible && pop.bar.netMain !== ""
+        command: ["/run/wrappers/bin/nethogs", "-t", "-C", "-d", "2", pop.bar.netMain]
+        onRunningChanged: if (!running)
+            pop.apps = []
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: line => {
+                if (line.startsWith("Refreshing")) {
+                    const by = {};
+                    for (const a of pop.appsNext) {
+                        const k = a.name;
+                        by[k] = by[k] || {
+                            name: k,
+                            rx: 0,
+                            tx: 0
+                        };
+                        by[k].rx += a.rx;
+                        by[k].tx += a.tx;
+                    }
+                    pop.apps = Object.values(by).filter(a => a.rx + a.tx >= 1024).sort((a, b) => b.rx + b.tx - (a.rx + a.tx)).slice(0, 5);
+                    pop.appsNext = [];
+                    return;
+                }
+                const m = line.match(/^(.*)\/(\d+)\/(\d+)\t([0-9.]+)\t([0-9.]+)$/);
+                if (!m)
+                    return;
+                const path = m[1].split(" ")[0];
+                const name = m[2] === "0" ? "unattributed" : path.slice(path.lastIndexOf("/") + 1);
+                pop.appsNext = pop.appsNext.concat([{
+                        name: name,
+                        tx: Number(m[4]) * 1024,
+                        rx: Number(m[5]) * 1024
+                    }]);
+            }
+        }
     }
 
     component Caption: Text {
@@ -223,8 +267,24 @@ BarPanel {
             valueColor: Theme.colPeach
         }
 
-        // Everything else carrying traffic right now: the tunnel, the container bridges. It only
-        // lists what MOVED, so an idle bridge does not pad the panel.
+        // The apps moving traffic right now, and everything else carrying it: the tunnel, the
+        // container bridges. Both only list what MOVED, so idle entries do not pad the panel.
+        Hairline {
+            Layout.topMargin: 2
+        }
+        Caption {
+            text: hogs.running ? (pop.apps.length > 0 ? "apps" : "apps · nothing moving") : "apps · nethogs unavailable"
+        }
+        Repeater {
+            model: pop.apps
+            delegate: StatRow {
+                required property var modelData
+                label: modelData.name
+                labelWidth: 120
+                value: "↓" + pop.rate(modelData.rx) + "  ↑" + pop.rate(modelData.tx)
+            }
+        }
+
         Hairline {
             visible: pop.others.length > 0
             Layout.topMargin: 2

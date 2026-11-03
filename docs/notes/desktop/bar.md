@@ -394,6 +394,16 @@ over it. Three rows of single numbers became one line and a shape. Link, address
 since-boot traffic went into a two-column grid of label-over-value: they are looked up, not
 compared, and the panel lost a third of its height.
 
+**Which apps are moving the bytes** comes from `nethogs -t`, the one tool that maps a socket to its
+process per refresh. It needs to capture packets and to read every process's sockets, so it is a
+`security.wrappers` entry (`modules/nixos/network/nethogs.nix`) with exactly those four
+capabilities (`net_admin`, `net_raw`, `dac_read_search`, `sys_ptrace`), executable by `wheel`
+only, and never a root daemon. It runs ONLY while the panel is open (the Process is bound to the
+panel's `visible`), so the capture costs nothing the rest of the time. Rows are grouped by program
+name, the top five, and anything under 1 KB/s is left out, so "nothing moving" is an answer and not
+an empty block. Without the wrapper the panel says "nethogs unavailable" instead of hiding the
+section.
+
 **The main interface comes from the DEFAULT ROUTE**, not from the literal `enp7s0` that used to be
 written into the parser. That is what "main" means, and it works on a machine that never saw this
 motherboard.

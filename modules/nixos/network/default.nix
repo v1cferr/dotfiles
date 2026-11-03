@@ -7,6 +7,7 @@
     ./subnets.nix # THE INTERFACE: it declares my.net.{lan,vpn}Subnet (the SSOT of the home ranges)
     ./ingress.nix # THE INTERFACE: it declares my.ingress (the SSOT of who is exposed and how far)
     ./fai-gateway.nix # NAT plus forward: the home LAN goes out through the FAI VPN (the manual counterpart is in docs/guides/)
+    ./nethogs.nix # nethogs as a capability wrapper (wheel only): the network panel's per-app traffic
     ./localsend.nix # LocalSend: the package plus 53317 (TCP/UDP) opened ONLY to the home LAN
     ./network.nix # NetworkManager, the exposed SSH, fail2ban, dynamic DNS, no-sleep
     ./router.nix # `router-sync`: it mirrors the OpenWrt's UCI into the repo (visibility, not push)

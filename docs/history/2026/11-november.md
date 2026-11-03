@@ -1,6 +1,19 @@
 # History: november 2026
 
-2 entries. Index in [README.md](../README.md).
+3 entries. Index in [README.md](../README.md).
+
+- [x] The network pill and panel, readable again (03/11/2026; asked 03/11/2026). How and why:
+      [notes/desktop/bar.md](../../notes/desktop/bar.md#the-three-system-panels).
+      • THE GRAPH WAS LYING BY OMISSION: linear with one shared ceiling, a single 80 MB/s burst
+        drew two minutes of 12 KB/s as 0 px. Now a mirrored area on a LOG axis, same scale for
+        both directions, with the window's peak and volume and a formatted hover.
+      • A BAKE-OFF in an isolated Quickshell instance (old panel against burst, idle and download
+        on synthetic data) checked it before it touched the live shell.
+      • LATENCY BECAME A GRAPH (the probe's 60 samples), the link facts a two-column grid, and the
+        apps moving traffic come from nethogs, a wheel-only capability wrapper run only while the
+        panel is open.
+      • THE PILL HAS TWO FACES: latency at rest, rates over 512 KB/s. 64 KB/s was too low for
+        this desk, measured idling between 60 KB/s and 1 MB/s.
 
 - [x] Restart and shut down from the lockscreen (03/11/2026; asked 02/11/2026). Two icons under
       the signature; a click asks in the field's place. How and why:

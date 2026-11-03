@@ -11,7 +11,7 @@
 let
   # Rule 19: everything this module reaches for, named once. deadnix fails the build on an
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
-  inherit (pkgs) gnused writeText;
+  inherit (pkgs) gnused writeText xmlstarlet;
   inherit (pkgs.kdePackages) kconfig; # kwriteconfig6, the activation's only tool
 
   # `DolphinView::Mode` (dolphinview.h): 0 = Icons, 1 = Details, 2 = Compact. Named because the
@@ -34,39 +34,15 @@ let
     fi
   '';
 
-  # FIXED PLACES. Adding one is 1 line here; a wrong icon name only falls back to a generic one.
+  # FIXED PLACES, in the order the panel shows them. Dolphin has no custom sections (KIO's groups
+  # are fixed), so the ORDER is the grouping: work, cloud, remote mounts, personal, system.
   places = [
+    # Work
     {
-      title = "FAI Workstation";
-      path = "${config.home.homeDirectory}/FAI-workstation"; # rclone SFTP; it comes up with the FAI VPN
-      icon = "folder-remote";
+      title = "Projects";
+      path = "${config.home.homeDirectory}/Projects";
+      icon = "folder-code";
     }
-    {
-      title = "Obsidian";
-      path = "${config.home.homeDirectory}/Dropbox/Obsidian"; # the notes vault (synced by Dropbox)
-      icon = "folder-notes";
-    }
-    {
-      title = "Drive";
-      path = config.my.drive.local; # SSOT: modules/home/services/drive-mount.nix (rule 11)
-      icon = "folder-gdrive";
-    }
-    # Empty means NOT mounted, and that is information: a permanent mount of the HOME repo would
-    # hold a lock the daily prune needs for itself. See docs/notes/apps/dolphin.md
-    {
-      title = "Backup (snapshots)";
-      path = "/mnt/backup"; # the home repo on the Drive; read-only, one dir per snapshot
-      icon = "folder-tar";
-    }
-    # This one IS permanent since 11/08/2026, so an empty folder here is a real SYMPTOM. The
-    # pt-BR title stays: the bookmark is matched by PATH, so renaming it would only diverge.
-    {
-      title = "Arch antigo";
-      path = osConfig.my.archAntigo.local; # SSOT: modules/nixos/services/arch-legacy.nix (rule 11)
-      icon = "folder-locked";
-    }
-    # APPEND, never insert: the KDE <ID> below comes from the INDEX, so a new entry in the middle
-    # would collide with the id of a bookmark already written into the user's xbel.
     {
       title = "Context";
       path = config.my.memory.dir; # SSOT: modules/home/services/basic-memory.nix (rule 11)
@@ -75,32 +51,84 @@ let
       icon = "folder-database";
     }
     {
-      title = "M51";
-      path = osConfig.my.phoneSync.local; # SSOT: modules/nixos/services/phone-sync.nix (rule 11)
-      icon = "folder-pictures";
+      title = "Obsidian";
+      path = "${config.home.homeDirectory}/Dropbox/Obsidian"; # the notes vault (synced by Dropbox)
+      icon = "folder-notes";
+    }
+    # Cloud
+    {
+      title = "Drive";
+      path = config.my.drive.local; # SSOT: modules/home/services/drive-mount.nix (rule 11)
+      icon = "folder-gdrive";
+    }
+    {
+      title = "ICMC-USP";
+      path = "${config.my.drive.local}/ICMC-USP Compartilhado"; # a Drive SHORTCUT to a shared folder
+      icon = "folder-publicshare";
+    }
+    # Remote mounts
+    {
+      title = "FAI Workstation";
+      path = "${config.home.homeDirectory}/FAI-workstation"; # rclone SFTP; it comes up with the FAI VPN
+      icon = "folder-remote";
     }
     {
       title = "VPS";
       path = "${config.home.homeDirectory}/VPS"; # rclone SFTP to the KingHost VPS' root, mounted at login
       icon = "folder-remote";
     }
+    # Personal
+    {
+      title = "M51";
+      path = osConfig.my.phoneSync.local; # SSOT: modules/nixos/services/phone-sync.nix (rule 11)
+      icon = "folder-pictures";
+    }
+    {
+      title = "Games";
+      path = "${config.home.homeDirectory}/Games";
+      icon = "folder-games";
+    }
+    # System. Empty means NOT mounted, and that is information: a permanent mount of the HOME repo
+    # would hold a lock the daily prune needs for itself. See docs/notes/apps/dolphin.md
+    {
+      title = "Backup (snapshots)";
+      path = "/mnt/backup"; # the home repo on the Drive; read-only, one dir per snapshot
+      icon = "folder-tar";
+    }
+    # This one IS permanent since 11/08/2026, so an empty folder here is a real SYMPTOM.
+    {
+      title = "Arch antigo";
+      path = osConfig.my.archAntigo.local; # SSOT: modules/nixos/services/arch-legacy.nix (rule 11)
+      icon = "folder-locked";
+    }
   ];
 
-  # One XBEL file per place. KDE's <ID> comes from the INDEX, so it is unique with no magic
-  # number typed by hand.
+  # Every bookmark the activation writes carries this <ID> prefix, which is how it knows its own.
+  placeIdPrefix = "1784500000/";
+
+  # KIO's groups this setup never uses: Recent (Modified Today/Yesterday), Search For and Tags.
+  hiddenGroups = [
+    "RecentlySaved"
+    "SearchFor"
+    "Tags"
+  ];
+
+  # One XBEL file per place. The href is URL-encoded the way Dolphin writes it (a space is %20),
+  # so the activation's match by href finds a bookmark Dolphin wrote itself.
   placeFiles = lib.imap0 (
     i: p:
     p
-    // {
+    // rec {
+      href = "file://${lib.replaceStrings [ " " ] [ "%20" ] p.path}";
       file = writeText "dolphin-place-${toString i}.xbel" ''
-        <bookmark href="file://${p.path}">
+        <bookmark href="${href}">
          <title>${p.title}</title>
          <info>
           <metadata owner="http://freedesktop.org">
            <bookmark:icon name="${p.icon}"/>
           </metadata>
           <metadata owner="http://www.kde.org">
-           <ID>1784500000/${toString i}</ID>
+           <ID>${placeIdPrefix}${toString i}</ID>
            <isSystemItem>false</isSystemItem>
           </metadata>
          </info>
@@ -108,6 +136,15 @@ let
       '';
     }
   ) places;
+
+  # The `xmlstarlet ed` operations: delete ours (by ID prefix and by href), hide the groups.
+  placesEdit = lib.concatStringsSep " " (
+    [ "-d ${lib.escapeShellArg "/xbel/bookmark[info/metadata[starts-with(ID, '${placeIdPrefix}')]]"}" ]
+    ++ map (p: "-d ${lib.escapeShellArg "/xbel/bookmark[@href=\"${p.href}\"]"}") placeFiles
+    ++ map (
+      g: "-u ${lib.escapeShellArg "/xbel/info/metadata/GroupState-${g}-IsHidden"} -v true"
+    ) hiddenGroups
+  );
 in
 {
   # Dolphin plus the extras that enable features: kio-extras (SFTP/SMB/MTP) and the thumbnailers.
@@ -166,18 +203,24 @@ in
     run "$kw" --file "$HOME/.config/kdeglobals" --group General --key TerminalApplication kitty
   '';
 
-  # The Places bookmarks: inserted only if the PATH is not there yet, so Dolphin keeps writing to
-  # the file. Per place and not one guard for the list; and no `exit`, see the notes.
+  # The Places bookmarks, in the list's ORDER: drop every bookmark that is ours (by ID prefix) or
+  # points at one of our paths, then append the list. Dolphin keeps owning the rest of the file,
+  # and the file is only replaced when the result differs. See docs/notes/apps/dolphin.md
   home.activation.dolphinPlaces = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     xbel="$HOME/.local/share/user-places.xbel"
-    ${lib.concatMapStrings (p: ''
-      if [ -f "$xbel" ] && ! grep -qF '${p.path}' "$xbel"; then
-        tmp="$(mktemp)"
-        grep -v '</xbel>' "$xbel" > "$tmp"
-        cat ${p.file} >> "$tmp"
-        printf '</xbel>\n' >> "$tmp"
+    if [ -f "$xbel" ]; then
+      tmp="$(mktemp)"
+      # -P keeps Dolphin's formatting; a deletion leaves whitespace-only lines, filtered out
+      # together with `</xbel>` so the output is the same on every run.
+      ${xmlstarlet}/bin/xmlstarlet ed -P ${placesEdit} "$xbel" \
+        | grep -v -e '</xbel>' -e '^[[:space:]]*$' > "$tmp"
+      cat ${lib.concatMapStringsSep " " (p: "${p.file}") placeFiles} >> "$tmp"
+      printf '</xbel>\n' >> "$tmp"
+      if cmp -s "$tmp" "$xbel"; then
+        rm "$tmp"
+      else
         run mv "$tmp" "$xbel"
       fi
-    '') placeFiles}
+    fi
   '';
 }

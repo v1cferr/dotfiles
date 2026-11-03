@@ -9,12 +9,8 @@ prefs (window size and so on). Instead of managing the file, an activation scrip
 keys we want, idempotently, and leaves the rest mutable.
 
 The same reasoning applies to the Places panel: Dolphin rewrites `user-places.xbel` at runtime
-(mounting a disk, adding a place), so a symlink would fight it and freeze your places.
-
-**A new place is APPENDED to the list in the module, never inserted**, and that is not cosmetic:
-the KDE `<ID>` is built from the entry's INDEX, so an entry slipped into the middle would be
-written with an id that a bookmark already in my xbel is using. The insert itself is guarded by
-PATH, so the older bookmarks are never rewritten to make room.
+(mounting a disk, adding a place), so a symlink would fight it and freeze your places. The
+activation edits only the bookmarks it owns; see [The Places panel](#the-places-panel).
 
 **Check the icon at 22px before choosing it.** In the Win11 theme several `folder-*` names are
 SYMLINKS to action icons at that size: `folder-library` lands on an institution and `folder-book`
@@ -151,16 +147,33 @@ similarity, and clicking is BEHAVIOR, so it does not change a pixel. Worse: it l
 
 ## The Places panel
 
-Adding a place is 1 line in the `places` list. The icon names were checked against breeze-icons
-6.26.0 (`places/22`); a name that does not exist breaks nothing, it just falls back to a generic
-folder icon. Each bookmark gets its own XBEL file, and KDE's `<ID>` comes from the list INDEX, so
-it is unique with no magic number repeated by hand.
+**There are no custom sections.** KIO's groups (Places, Remote, Recent, Search For, Devices,
+Removable, Tags) are fixed, and every `file://` bookmark lands in "Places", rclone mounts
+included. So the `places` list's ORDER is the grouping: work, cloud, remote mounts, personal,
+system. Fake "── Section ──" bookmarks were rejected: they are clickable and point at nothing.
 
-The test is PER PLACE and matches by PATH, not against the whole list: with a single guard, a new
-place would never enter (the file would already have the old one) or the old ones would duplicate.
-There is no `exit` in the script on purpose, because home-manager's activation is a single script
-and an `exit` would abort everything after it. It also does not hardcode the disk entries, which
-are hardware specific, so it stays reproducible on any machine.
+Adding a place is 1 line in the list, at the position it should show. The icon names were checked
+against breeze-icons 6.26.0 and Win11 (`places/22`); a name that does not exist breaks nothing, it
+just falls back to a generic folder icon.
+
+**The activation owns its bookmarks and nothing else.** Each run, `xmlstarlet ed -P` deletes every
+bookmark whose `<ID>` starts with `1784500000/` (the prefix every generated bookmark carries) or
+whose `href` matches a listed path, then appends the list in order. So reordering, renaming or
+dropping a place takes effect on the next switch, a place added by hand in Dolphin and later
+declared is adopted instead of duplicated, and a place removed from the list leaves the panel
+with it. The system items (Home, Trash) and the disk entries, which are hardware specific, are
+never touched, so it stays reproducible on any machine.
+
+Details that keep it correct:
+
+- The `href` is URL-encoded the way Dolphin writes it (a space becomes `%20`); otherwise the match
+  misses a bookmark Dolphin wrote and the place shows twice.
+- `-P` keeps Dolphin's formatting, but a deletion leaves whitespace-only lines behind; they are
+  filtered out, so the output is byte-identical on every run and `cmp -s` skips the `mv`.
+- The same `ed` call sets `GroupState-{RecentlySaved,SearchFor,Tags}-IsHidden` to `true`: the
+  "Modified Today/Yesterday", search and tags groups are unused here.
+- There is no `exit` in the script on purpose, because home-manager's activation is a single
+  script and an `exit` would abort everything after it.
 
 Two of the places deserve their own note:
 
@@ -170,9 +183,7 @@ Two of the places deserve their own note:
   itself. Contrast with `/mnt/arch-antigo`, which IS permanent since 11/08/2026 because that repo
   is static and needs no lock; see [`arch-legacy.md`](../boot-and-storage/arch-legacy.md). There, an empty folder is a
   real SYMPTOM: `systemctl --user status arch-antigo-mount`.
-- **"Arch antigo"** keeps its pt-BR title on purpose. The bookmark is matched by PATH, so renaming
-  it would only affect a NEW insertion and would leave the declared title diverging from the one
-  already in `user-places.xbel`. It is the same runtime identifier as `/mnt/arch-antigo`.
+- **"Arch antigo"** keeps its pt-BR title: it is the same runtime identifier as `/mnt/arch-antigo`.
 
 ## The packages
 

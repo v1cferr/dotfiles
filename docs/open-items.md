@@ -10,22 +10,13 @@ AUDITED on 16/08/2026 against the actual tree, because this file had drifted the
 describes: six items were already DONE and still sitting here, and one was carrying 70 lines of
 finished work. What was closed is in the [august history](history/2026/08-august.md).
 
-- [ ] Verify lockscreen v6 (the QML lock) and the glance band on the REAL desk (opened 19/10/2026,
-      v6 on 21/10/2026). v2 was locked and unlocked for real; v6 was only seen in a headless sway,
-      where a fake PAM unlocked it and a killed QML lock handed over to the fallback. Steps:
-      [notes/desktop/lockscreen.md](notes/desktop/lockscreen.md#the-first-lock-after-switching-step-by-step).
-      • PROVEN by use (03/11/2026): the real password and Hyprland's lock, 35 of 35 unlocks; the
-        power while locked, measured from the power log (the lock's own CPU is 7.9% of a core,
-        4x the harness: [lockscreen](notes/desktop/lockscreen.md#power-and-performance)).
-      • WHAT ONLY THE DESK CAN SAY: the type and the bokashi over real prints on the ASUS, the LG's
-        glass read from the chair, a wrong password and Caps Lock, the band's energy and Claude
-        panels on HyprGlass, and a DP unplug while locked. The fallback was proven on 03/11/2026: a
-        killed QML lock handed to hyprlock in 0.14 s.
-      • THE TRAP: keep an SSH session open before the first lock. Killing the QML lock is safe (the
-        fallback takes over); killing the fallback hyprlock is not.
+- [ ] The lock repaints while idle (opened 03/11/2026). On the real panels the QML lock uses 7.9%
+      of a core over a 4 h lock, 4x the 1.93% measured in the headless sway; the GPU stays at its
+      floor, so it is CPU-side, likely something animating every frame at the panels' refresh.
+      Find it with the QML profiler on a locked session before changing anything.
 
 - [ ] Power buttons on the lockscreen: restart, shut down and the rest (asked 02/11/2026). Builds
-      on v6, so after the item above. The session actions already live in `Power.qml` and
+      on v6, verified on the desk on 03/11/2026. The session actions already live in `Power.qml` and
       `power/PowerMath.qml` (one state machine, tested); the lock gets a VIEW of them, the same
       confirm-in-place as the Center's card, never a second copy of the logic.
       • THE DECISION TO MAKE FIRST: which actions a locked screen offers without the password.

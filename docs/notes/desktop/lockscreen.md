@@ -427,9 +427,10 @@ fallback, a QML file that does not load replaced in 5 s. `wtype` loses the first
   locks and 35 PAM unlocks by the QML lock, none through the fallback. The one fallback in the
   journal (30/10 18:27) was a `shutdown` while locked: the compositor died first, so hyprlock had
   nothing to attach to. Expected; it is the shutdown order in [open-items](../../open-items.md).
+- **The fallback, proven on the desk** on 03/11/2026: the QML lock killed 10 s into a lock, hyprlock
+  drew its field 0.14 s later and unlocked with the real password.
 - **Unverified on the real desk:** the look on the physical panels, a wrong password, a DP unplug
-  while locked, Caps Lock on a real keyboard, and the fallback taking over a killed QML lock. See
-  the procedure below.
+  while locked, and Caps Lock on a real keyboard. See the procedure below.
 - A pool's file is not checked for orientation or size any more: a landscape file in the LG's pool
   is cropped to portrait.
 - The glass blurs the lock's own print only; it cannot show windows (the lock hides them anyway).

@@ -19,7 +19,8 @@ finished work. What was closed is in the [august history](history/2026/08-august
         4x the harness: [lockscreen](notes/desktop/lockscreen.md#power-and-performance)).
       • WHAT ONLY THE DESK CAN SAY: the type and the bokashi over real prints on the ASUS, the LG's
         glass read from the chair, a wrong password and Caps Lock, the band's energy and Claude
-        panels on HyprGlass, a DP unplug while locked, and a killed QML lock handed to hyprlock.
+        panels on HyprGlass, and a DP unplug while locked. The fallback was proven on 03/11/2026: a
+        killed QML lock handed to hyprlock in 0.14 s.
       • THE TRAP: keep an SSH session open before the first lock. Killing the QML lock is safe (the
         fallback takes over); killing the fallback hyprlock is not.
 

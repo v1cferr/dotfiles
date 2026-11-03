@@ -206,7 +206,8 @@ material every card and panel is painted with, since 17/10/2026), `IconButton` (
 tooltip and accessible name are the same words), `PopCard` (a panel's card on GlassSurface, with its hover flag), `PopHeader` (title, verdict, hairline),
 `Verdict` (the outlined chip that answers "is this fine?"), `StatRow` (label, context, value with
 the value column aligned), `MeterRow` (a StatRow plus its bar), `Sparkline` (the history graph, one Canvas since 17/10/2026 instead of a Repeater of 60 bars
-rebuilt on every sample) and
+rebuilt on every sample; since 03/11/2026 it also draws a mirrored second series, a log scale, an
+area style and grid lines, all opt-in, so the bar-style panels did not change) and
 `Hairline` (the separator).
 
 They are an EXTRACTION and not an invention: `VpnStatsPopover` already had all of them as inline

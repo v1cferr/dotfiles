@@ -96,8 +96,8 @@ Enter" and echoes the dots, so the session is never stranded.
 
 ## Restart and shut down from the lock (03/11/2026)
 
-"reiniciar · desligar" sits under the signature, in the clock column (`lock/PowerEntry.qml`). A
-click only asks: the field and the quote give way to "Desligar o computador?" with "cancelar" and
+Two icons sit under the signature, in the clock column (`lock/PowerEntry.qml`): the Center's
+restart and power glyphs, in the column's ink. A click only asks, in words: the field and the quote give way to "Desligar o computador?" with "cancelar" and
 the verb (`lock/PowerAsk.qml`). The state is `Power.qml`, the same machine as the NixOS Center's
 confirmation ([nixos-center](nixos-center.md)), so the commands and the failure path are one.
 
@@ -105,15 +105,16 @@ confirmation ([nixos-center](nixos-center.md)), so the commands and the failure 
   session nobody authenticated for; lock, darken and suspend make no sense from here.
 - **Chosen from a bake-off** of real captures: the corner, under the signature, and two bare icons
   at the foot. Under the signature won because its ink is the clock column's MEASURED one, so it
-  reads on every print. The verb is in that ink too, with the vermilion only as its underline:
-  vermilion type was weak on dark prints.
+  reads on every print. The words "reiniciar · desligar" became icons the same day, for a cleaner
+  column; the question names the action, so an icon alone never acts unread. The verb is in the ink
+  too, with the vermilion only as its underline: vermilion type was weak on dark prints.
 - **The keys while it asks**: nothing types into the buffer, Escape answers "no". A click is the
   only way to say yes, so a password typed in a hurry never confirms a shut down.
 - **polkit asks nothing**, checked with `pkcheck` on 03/11/2026: `reboot-multiple-sessions` is
   `implicit active: yes` here, and a lock does not make the session inactive, so it works with an
   SSH session open, from the lock's `user@` process as from the session's.
 - **A trap the prototype hit**: a `MouseArea` sized by its `Row` loops the layout, and Qt then
-  stops polishing the whole window, so the question never laid out. The area is the word's child.
+  stops polishing the whole window, so the question never laid out. The area is the glyph's child.
 
 Only the ASUS face has them; with the ASUS unplugged, the LG still unlocks but cannot restart.
 

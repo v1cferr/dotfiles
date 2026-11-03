@@ -16,11 +16,11 @@ finished work. What was closed is in the [august history](history/2026/08-august
       Find it with the QML profiler on a locked session before changing anything.
 
 - [ ] Power buttons on the lockscreen: click them on the desk (asked 02/11/2026, built 03/11/2026
-      in `c858e657`). "reiniciar · desligar" under the signature, the question in the field's place,
+      in `c858e657`). two icons under the signature, the question in the field's place,
       all on `Power.qml`: [lockscreen](notes/desktop/lockscreen.md#restart-and-shut-down-from-the-lock-03112026).
       The harness proved the question, Escape and the ignored keys through the lock's IPC, but its
       headless sway has no pointer, so no click was ever made.
-      • TO CLOSE: lock, click "desligar", then "cancelar"; then a real restart from the lock.
+      • TO CLOSE: lock, click the power icon, then "cancelar"; then a real restart from the lock.
       • THE TRAP: the hyprlock fallback cannot show them, so they exist only while the QML lock is up.
 
 - [ ] Hyprland under UWSM, with greetd in place of LightDM (opened 03/11/2026). Every shutdown

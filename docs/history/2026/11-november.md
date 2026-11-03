@@ -14,6 +14,9 @@
         panel is open.
       • THE PILL HAS TWO FACES: latency at rest, rates over 512 KB/s. 64 KB/s was too low for
         this desk, measured idling between 60 KB/s and 1 MB/s.
+      • THE PUBLIC ADDRESS, v4 and v6, from Cloudflare's trace on the probe's anchor, asked only
+        when the panel opens. The nethogs wrapper verified after the rebuild: it starts with the
+        panel and stops when it closes.
 
 - [x] Restart and shut down from the lockscreen (03/11/2026; asked 02/11/2026). Two icons under
       the signature; a click asks in the field's place. How and why:

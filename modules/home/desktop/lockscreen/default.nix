@@ -105,7 +105,7 @@ in
 {
   options.my.lockscreen.logo = lib.mkOption {
     type = lib.types.str;
-    default = "${config.home.homeDirectory}/.dropbox-hm/Dropbox/Obsidian/v1cferr/5-Planning/5.7-@v1cferr/5.7.1-Logo/As Profile Pic/SVG/1018x1018.svg";
+    default = "${config.home.homeDirectory}/.dropbox-hm/Dropbox/Obsidian/v1cferr/40-49_Life/46_Personal_Brand/46.01-Logo/As Profile Pic/SVG/1018x1018.svg";
     description = "My logo's SVG, as STATE: the lock's signature draws it at lock time, never copied into git. Missing means no logo, never no lock.";
   };
 

@@ -24,6 +24,7 @@ languages from its own place. So there is ONE list, `my.spellcheck.languages` in
 | --- | --- | --- |
 | hunspell dictionaries plus `DICPATH` | GTK (gspell, libspelling), Qt (Sonnet), Gecko | `modules/nixos/desktop/spellcheck.nix` |
 | `spellchecker.dictionary` pref | Zen, LibreWolf | `modules/home/apps/zen.nix`, `modules/home/apps/librewolf.nix` |
+| managed policy `SpellcheckLanguage` | Google Chrome (every channel) | `modules/nixos/desktop/spellcheck.nix` |
 
 ### hunspell dictionaries
 
@@ -43,3 +44,11 @@ DEFAULTS and not locked: the context menu can still toggle a language for the se
 
 A page that declares its own `lang` wins over the pref: Gecko checks that page in its language
 only. That is upstream behavior, not something a pref changes.
+
+### Chrome (managed policy)
+
+`programs.chromium` only writes policy JSON (`/etc/opt/chrome/policies/managed/extra.json`, read
+by every Chrome channel, dev included) and installs no browser. `SpellcheckLanguage` LOCKS the
+list, so a click in Settings cannot drop a language. Check: `chrome://policy`.
+
+Electron apps are Chromium inside, but they do NOT read this policy.

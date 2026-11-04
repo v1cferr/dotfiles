@@ -137,6 +137,7 @@ export const navigation: NavItem[] = [
       { title: "Backlight", doc: "notes/desktop/backlight.md" },
       { title: "Desktop plumbing", doc: "notes/desktop/desktop-plumbing.md" },
       { title: "Vicinae", doc: "notes/desktop/vicinae.md" },
+      { title: "Spellcheck", doc: "notes/desktop/spellcheck.md" },
     ],
   },
   {

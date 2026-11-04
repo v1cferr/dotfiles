@@ -126,6 +126,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [backlight](desktop/backlight.md) | DDC/CI on both panels, the 10000 K that faked a broken filter |
 | [desktop-plumbing](desktop/desktop-plumbing.md) | the polkit agent, XDG associations, the wallpaper, the cheatsheet, clipboard-push |
 | [vicinae](desktop/vicinae.md) | the launcher, the clipboard history, the command palette |
+| [spellcheck](desktop/spellcheck.md) | English and pt-BR in every app: one list, one layer per app family |
 
 ### apps
 

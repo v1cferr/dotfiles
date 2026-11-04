@@ -5,6 +5,7 @@ import Quickshell.Widgets
 import QtQuick
 import QtQuick.Effects
 import "root:/"
+import "root:/data"
 
 Item {
     id: app
@@ -15,11 +16,14 @@ Item {
     // Greyed toward the dim text, for an app that is not the subject (an inactive workspace's windows).
     property bool tinted: false
 
+    // The .desktop entry first; a Wine app has none, so then the icon Bottles extracted for it.
     readonly property string source: {
-        if (DesktopEntries.applications.values.length === 0)
-            return "";
-        const e = DesktopEntries.heuristicLookup(app.name);
-        return e && e.icon && Quickshell.hasThemeIcon(e.icon) ? Quickshell.iconPath(e.icon) : "";
+        if (DesktopEntries.applications.values.length > 0) {
+            const e = DesktopEntries.heuristicLookup(app.name);
+            if (e && e.icon && Quickshell.hasThemeIcon(e.icon))
+                return Quickshell.iconPath(e.icon);
+        }
+        return WineIcons.path(app.name);
     }
     implicitWidth: app.size
     implicitHeight: app.size

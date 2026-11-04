@@ -9,6 +9,7 @@ for _, mod in ipairs({
   "input",       -- the ABNT2 keyboard plus the mouse (flat accel, numlock)
   "autostart",   -- hl.on("hyprland.start"): systemd, quickshell, clipboard
   "rules",       -- hl.window_rule: opacity, PiP, Hearthstone, Flameshot
+  "vault",       -- sensitive apps hide after 5 min unfocused; the Quickshell prompt brings them back
   "keybinds",    -- every hl.bind
 }) do
   dofile(dir .. mod .. ".lua")

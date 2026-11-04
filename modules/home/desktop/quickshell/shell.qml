@@ -9,6 +9,7 @@ import "root:/osd"
 import "root:/media"
 import "root:/caption"
 import "root:/away"
+import "root:/vault"
 
 ShellRoot {
     id: root
@@ -31,4 +32,7 @@ ShellRoot {
 
     // The away screen: black plus dark LEDs, Enter to leave. The state is Away.qml.
     AwayScreen {}
+
+    // The app vault's password card, over the focused monitor. The state is Vault.qml.
+    VaultPrompt {}
 }

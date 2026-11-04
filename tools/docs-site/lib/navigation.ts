@@ -129,6 +129,7 @@ export const navigation: NavItem[] = [
       { title: "Glance feed", doc: "notes/desktop/glance-feed.md" },
       { title: "Lockscreen", doc: "notes/desktop/lockscreen.md" },
       { title: "Away screen", doc: "notes/desktop/away.md" },
+      { title: "App vault", doc: "notes/desktop/vault.md" },
       { title: "Weather", doc: "notes/desktop/weather.md" },
       { title: "Theme", doc: "notes/desktop/theme.md" },
       { title: "Motion", doc: "notes/desktop/motion.md" },

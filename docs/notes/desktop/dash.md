@@ -84,8 +84,8 @@ my.dash.share = 0.30; # the compact profile: the 576 px band of the old 30/70 sp
 ```
 
 The arithmetic, on the 1920 px LG: `round(1920 x 0.35)` = 672 px reserved from the top edge. The
-bar is the top 40 px (the continuous Powerline, flush with the edge), the band starts 8 px under it
-at y = 48 (`Theme.bandTop`), so the band is 672 - 48 = 624 px tall and its last row is y = 671.
+bar is the top 34 px (the glass cells, flush with the edge), the band starts 8 px under it
+at y = 42 (`Theme.bandTop`), so the band is 672 - 42 = 630 px tall and its last row is y = 671.
 Windows start at 672 plus Hyprland's 12 px `gaps_out`, the same 12 px the band keeps from the sides,
 so its cards line up with the windows below. Measured on 17/10/2026: the monitor's `reserved` is
 `[0, 672, 0, 0]`, the band layer at y 48 with 624 px, and the first window's border at local y 684.

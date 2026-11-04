@@ -127,7 +127,7 @@
 
 - [x] Adaptive Glass v2, the same day: one continuous Powerline with the official NixOS logo on
       each screen's exact center, the NixOS Center behind it, and HyprGlass packaged
-      (17/10/2026). How and why: [bar.md](../../notes/desktop/bar.md#the-powerline-17102026),
+      (17/10/2026). How and why: [bar.md](../../notes/desktop/bar.md#the-glass-cells-04112026),
       [nixos-center.md](../../notes/desktop/nixos-center.md) and
       [hyprglass.md](../../notes/desktop/hyprglass.md).
       • ONE PANEL FOR NOTIFICATIONS AND THE SESSION. The bell, the band's bell and the power menu

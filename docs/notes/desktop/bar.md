@@ -8,21 +8,55 @@ the session, [nixos-center.md](nixos-center.md)), the clock, cpu/temp, audio (Pi
 (Mpris), the network, the VPN and Tor, the weather, the tray, and on the standing monitor the
 operational alerts.
 
-## The Powerline (17/10/2026)
+## The glass cells (04/11/2026)
 
-The bar is ONE continuous 40 px glass strip across each monitor: no margin to the screen's edges, no
-transparent gap between sections, a hairline at its foot. Earlier the same day it was three floating
-clusters; the brief that replaced them asked for one connected surface, with the logo at its center.
+The bar is ONE frosted strip, 34 px tall, across each monitor, holding one slanted glass cell per
+module. Cells left of the logo lean `\`, cells right of it lean `/`, so two neighbors always leave a
+parallel 4 px slit and the whole bar mirrors about the logo. It replaced the 40 px Powerline (one
+surface cut by 1 px dividers) after a bake-off of real renders: the owner wanted it "modern and
+harmonious, symmetric and pixel perfect".
 
 | Part | What it is |
 | --- | --- |
-| The surface | `colSurfaceBar` edge to edge, a 1 px `colEdge` line under it |
-| Dividers | `Chevron.qml`: one 1 px diagonal across the bar's height, leaning `\` on the left half and `/` on the right, mirrored on the center |
-| The center | `LogoSlot.qml`: a 64 px compartment, a shade lighter, its edges the two mirrored diagonals, the official logo at 22 px and the one blue line on the bar under it |
-| Controls | `widgets/Pill.qml`, flat 28 px controls (hover fill, press fill, an accent fill while pinned) |
+| The surface | `colSurfaceBar` (the palette's surface at 72% over the blur), a 1 px `colSheen` row on top, a 1 px `colEdge` row at the foot |
+| A cell | `widgets/SlantCell.qml`: a parallelogram 24 px tall at y 5, leaning 8 px across it (an exact 1:3 slope) |
+| The center | `LogoSlot.qml`: the `\_/` compartment, rows 2 to 31 (3 px past the cells above and below), 72 px on the cells' top row, the 20 px logo with 5 px of air, and the 24 px accent line on the bar's foot under it |
+| Controls | `widgets/Pill.qml`, a `SlantCell` holding a glyph and a label |
+
+**Every number is an integer.** A cell's width is its content plus 16 px on each side, rounded up to
+4 px (`Theme.barCellWidth`), so a changing value rarely moves a neighbor. Fills sit on whole-pixel
+vertices and the 1 px edges half a pixel inside them, so the top and bottom rules are exactly one
+row (rows 5 and 28). The first and last cells start 12 px from the screen's edges (`barEdge`, the
+same as Hyprland's `gaps_out` and the band's inset), so the bar, the band's cards and the windows
+share one column.
+
+**Mirrored slants are parallel only across the compartment.** Two cells leaning toward each other
+would meet at the bottom; that is why the compartment's sides follow the cells' own lines, and why
+two mirrored buttons elsewhere need a small `\_/` gap (20 px at the top, 4 at the bottom), never a
+plain slit.
+
+### Cells
+
+The states (the set the bake-off called S1): neutral at rest and on hover, the accent only while a
+cell's panel is open.
+
+| State | Looks |
+| --- | --- |
+| rest | `colCellFill` and `colCellEdge`, the palette's text at 7% and 14% |
+| hover | the same, brighter (`colCellHoverFill`, `colCellHoverEdge`) |
+| open (`selected`) | `colCellOpenFill` and `colCellOpenEdge` (the accent) plus the 24 px accent line on the bar's foot, the same line the compartment has |
+| needs a look (`tint`) | the cell in that state's color at 16%, its edge at 50%: the CPU pegged, the disk, an operational chip |
+| off by choice (`off`) | a faded cell, content at 55%: muted, VPN down, hypridle off, no weather |
+
+**Measured on 04/11/2026**, from captures of the live bars: the accent line under the logo spans
+x 1268 to 1291 on the ASUS (center 1280.0) and 528 to 551 on the LG (center 540.0); the first cell
+starts at x 12 and the last ends 12 px from the ASUS's right edge; the bar layer is 34 px on both
+monitors, the ASUS reserving 34 px and the LG 672. In a shapes-only render the center's left half,
+mirrored, differs from its right half in 23 of 6,800 pixels, by at most 0.7 of 255 (antialiasing on
+the diagonals).
 
 **The logo sits on the screen's EXACT center, and nothing beside it can move it.** Its compartment's
-x is `floor(width / 2) - 32`, computed from the bar's width alone, never from its neighbors: on the
+x is `floor(width / 2) - 36`, computed from the bar's width alone, never from its neighbors: on the
 ASUS the logo's center is x 1280, on the LG x 540. Each side is capped at what is left of it before
 the center group (`leftRoom`, `rightRoom`), so it can never reach it.
 
@@ -35,18 +69,18 @@ which opens the temperatures panel ([nixos-center.md](nixos-center.md#hardware))
 when it needs a look (below).
 
 **The center group is placed, never centered as a group.** The time (`HH:mm`) and the date (`dd/MM`)
-sit in two MIRRORED slots of ONE width, measured once from a template (`TextMetrics` over `00:00`, the
+sit in two MIRRORED cells of ONE width, measured once from a template (`TextMetrics` over `00:00`, the
 same font, size and weight for both; the face is mono, so every minute and every date is that wide),
-and their x comes from the compartment's slanted edges: the time ends one `sp1` before the left
-slant, the date starts one `sp1` after the right one, each with a divider on its outer side. So the logo stays on the screen's center whatever the strings
-hold, and a new minute or day moves nothing. The group's outer edges (`centerLeft`, `centerRight`)
-are pure functions of the bar's width; each side's room is what lies between them and an 8 px edge
-margin, less an 8 px gap. On the compact bar the center group is the compartment alone.
+and their x comes from the compartment: the time's `\` cell ends one 4 px slit before it, the
+date's `/` cell starts one slit after it. So the logo stays on the screen's center whatever the
+strings hold, and a new minute or day moves nothing. The group's outer edges (`centerLeft`,
+`centerRight`) are pure functions of the bar's width; each side's room is what lies between them and
+the 12 px edge, less a 16 px gap. On the compact bar the center group is the compartment alone.
 
 **The left side splits its room by rules that read the room alone, never a text.** With a player up
 the media takes up to 220 px, the title keeps at least 240; with less room the media shrinks toward
 120, then becomes its icon alone, and only then does the title give way, hiding under 120 px instead
-of becoming a stub. Without a player the media is gone, divider included, and the title gets its
+of becoming a stub. Without a player the media cell is gone and the title gets its
 room. Since no level reads a song's or a title's text, a track change can never flip one. The
 title's own width comes from `TextMetrics` and is rounded UP to 64 px steps (its text left-aligned),
 so most focus changes do not move the media beside it. The hover hint keeps the full title.
@@ -57,8 +91,9 @@ volume, hypridle and away, and the tray. Level 1 drops the network's numbers and
 icons and their panels stay), level 2 the weather. The tray is never folded.
 
 **The tray is pinned to the right edge** (`TrayStrip.qml`, its own file since this change): anchored
-8 px from the edge, growing left, and the rest of the right side anchored to ITS left edge with a
-width from the item count alone (`count` x 28 px plus the spacing), never from the delegates. So a
+12 px from the edge in one `/` cell, growing left, and the rest of the right side anchored to ITS
+left edge with a width from the item count alone (`count` x 20 px icons, the spacing and 12 px of
+padding, on the 4 px module), never from the delegates. So a
 throughput, a temperature or a VPN name changing width moves only what is left of it. No overflow
 menu was built: on the ASUS the right side has room for about a dozen more icons before even level 1,
 and an overflow nobody needs is code to keep.
@@ -193,25 +228,33 @@ for selecting a region at the top of the screen.
 **Do NOT name the handler "show"**: it collides with the `qs ipc show` subcommand and the CLI never
 calls the function. The same trap is documented in `shell.qml`, in the vpn `IpcHandler`.
 
-## The workspace rail (18/10/2026)
+## The workspace rail (18/10/2026, glass cells 04/11/2026)
 
 `WorkspaceStrip.qml`, the ADAPTIVE WORKSPACE RAIL: each monitor's workspaces as two-digit numbers
-(`01` to `04` on the ASUS, `05` to `08` on the LG), every button one width measured from `00`, under
-the one sliding active pill that was already there.
+(`01` to `04` on the ASUS, `05` to `08` on the LG) in ONE `\` cell, every number one width measured
+from `00`, under one sliding inner `\` of the cell's own slope (18 px tall, a 6 px lean).
 
 | State | Looks |
 | --- | --- |
-| active | dark bold number on the blue sliding pill |
-| occupied | bold `text` number, a 2 px rule under it |
-| empty | `dim` number at 70% |
-| a window opened there | a steady 5 px yellow dot (`colWarn`) |
-| a window there asked for attention | a steady 7 px orange dot with a ring (`colAlert`) |
+| active | accent bold number on the sliding inner shape (the accent at 22%) |
+| occupied | bold `text` number, and its apps' icons on the full bar |
+| empty | `dim` number |
+| a window opened there | a steady 8 px yellow tick under the number (`colWarn`) |
+| a window there asked for attention | the active shape in `colCrit`, the number in red |
 
-The two marks used to be one, and pulsed forever. They are now apart, since a window that merely
-opened is news and an urgency is a request (`wsActivity` from the window count, `wsUrgent` from
-Hyprland's `urgent` event), and steady: visiting the workspace clears both. A hover shows a tip with
-the window count and the windows' classes, from Hyprland's own toplevels, read only on hover. The
-click, the keybinds, the orphans of a gone secondary and the slide are unchanged.
+**The apps.** On the full bar each number carries its apps' icons, one per window class in
+Hyprland's order (`wsApps` in `Bar.qml`, read from the toplevels' IPC object), up to three and then
+`+N`: full color on the active workspace, greyed on the others (`widgets/AppIcon.qml`, the same
+lookup the lock screen uses). A click on an icon focuses that app's window
+(`hl.dsp.focus({ window = "address:0x..." })`); a click elsewhere on the number switches workspace
+as before. The toplevels are refreshed at start and when a window opens, closes or moves, so the
+icons follow. The LG's compact bar keeps the numbers alone: its band has the room for the rest.
+
+The two marks used to be one, and pulsed forever. They are apart, since a window that merely opened
+is news and an urgency is a request (`wsActivity` from the window count, `wsUrgent` from Hyprland's
+`urgent` event), and steady: visiting the workspace clears both. A hover shows a tip with the window
+count and the windows' classes. The keybinds, the orphans of a gone secondary and the slide are
+unchanged.
 
 ## The standing monitor's bar: status first
 

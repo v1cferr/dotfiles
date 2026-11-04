@@ -192,8 +192,8 @@ bottom/top-left on the main monitor, near the Spotifast pill.
 
 ### `Pill.qml`
 
-The bar's control. Since 17/10/2026 it is FLAT, 28 px on the Powerline with no border of its own (a
-neutral fill on hover and press, an accent fill while its panel is pinned), and it can draw a vector
+The bar's control. Since 04/11/2026 it is a slanted glass cell (`SlantCell.qml`, 24 px on the 1:3
+grid; its states: [bar.md](bar.md#cells)), and it can draw a vector
 `image` in place of the glyph. Its `sub` is secondary text in the SAME pill, after the label and in
 a discreet color, for two pieces of data that travel together without becoming two pills (the date
 next to the time). It comes AFTER on purpose: the label is the main information and sits on the

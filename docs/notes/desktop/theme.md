@@ -259,10 +259,12 @@ component never holds a size, an opacity or a duration of its own (rule 11).
 | --- | --- | --- |
 | Spacing, a 4 px grid | `sp1` `sp2` `sp3` `sp4` `sp6` | 4, 8, 12, 16, 24 |
 | Radii, concentric | `radiusControl`, `radiusSurface` | 8, and 8 + `sp1` = 12 |
-| The bar | `barHeight`, `barControl`, `barTop`, `barSlant`, `barCenterWidth`, `barLogo` | 40, 40 - 12 = 28, 0, 8, 64, 22 |
-| Insets | `bandTop`, `screenInset` | the bar plus 8 = 48; `my.theme.gaps.outer` = 12 |
+| The bar | `barHeight`, `barTop`, `barCell`, `barCellY`, `barSlant`, `barGap`, `barPad`, `barEdge`, `barCenterWidth`, `barLogo` | 34, 0, 24, 5, 8 (1:3 over the cell), 4, 16, `screenInset` = 12, 72, 20 ([bar.md](bar.md#the-glass-cells-04112026)) |
+| Controls off the bar | `barControl` | 28 (a panel's icon button, a calendar arrow) |
+| Insets | `bandTop`, `screenInset` | the bar plus 8 = 42; `my.theme.gaps.outer` = 12 |
 | Type (px, all mono) | `fontMicro` `fontSmall` `fontBody` `fontLabel` `fontTitle` | 10, 11, 12, 13, 14 |
-| Glass | `colSurfaceBar`, `colSurfaceCard`, `colSurfacePop` | the palette's bg at 90%, 92%, 96% |
+| Glass | `colSurfaceBar`, `colSurfaceCard`, `colSurfacePop` | the palette's surface at 72% (the bar and the band); the bg at 92% and 96% |
+| Cells | `colCellFill` `colCellEdge`, the hover, press and open pairs, `colCompFill` `colCompEdge`, `colBarAccent` | text at 7% and 14%, brighter on hover, the accent at 16% and 50% when open, the compartment a step above, the accent line at 90% |
 | Edges | `colEdge`, `colSheen`, `hairline` | border at 55%, text at 6%, 1 px |
 | States | `colHoverFill`, `colPressFill`, `colSelectFill`, `opacityDisabled` | text at 8% and 14%, accent at 18%, 0.4 |
 | Motion | `motionHover` `motionNormal` `motionSlow`, `hoverIntent` | [motion.md](motion.md); the intent is 200 ms |
@@ -279,8 +281,8 @@ carries a second signal (an icon, a word, a strip), never color alone.
 | --- | --- | --- | --- |
 | normal | `colText` for values, `colSubtext` for icons | every pill at rest | nothing to report |
 | hover | `colHoverFill` | any control under the pointer | |
-| active | `colWsActiveBg`, text in `colBgSolid` | the rail's sliding pill | the workspace on screen |
-| selected | `colSelectFill` | a pill whose panel is pinned, a toggle that is on | |
+| active | the accent at 22%, the number in `colAccent` | the rail's sliding inner shape | the workspace on screen |
+| selected | `colCellOpenFill` and the 24 px accent line on a bar cell; `colSelectFill` elsewhere | a cell whose panel is open, a toggle that is on | |
 | healthy | `colOk` | the VPN connected, a forge that answered clean, a quality probe that passed | only with evidence |
 | warning | `colWarn` | a new window on another workspace, a pegged CPU (90%+), RAM 90%+, disk 90%+ or under 20 GB free | attention, not a fault |
 | degraded | `colAlert` | a degraded service, an urgent workspace, DND on | something asks to be looked at |
@@ -311,11 +313,12 @@ window around every card for no gain in legibility.
 
 | Level | Opacity | Used by | Why that much |
 | --- | --- | --- | --- |
-| `bar` | 90% | the Powerline | short labels, glanced at, the most photo can show through |
-| `card` | 92% | the band's bento cards | read from the chair for a while, with fine print on the pages |
+| `bar` | 72% (the surface) | the bar and, since 04/11/2026, the band's bento cards | short labels and glanceable cards, one glass on the standing screen |
+| `card` | 92% | the tray menu, the VPN panel, the media panel, the OSD | read for a while, with fine print |
 | `pop` | 96% | every panel, menu, the OSD, the notification center | dense text, read the longest |
 
-Those are the `perceptible` profile's numbers; the next section has the other profile's.
+Those are the `perceptible` profile's numbers; the next section has the other profile's. The `bar`
+level is the same in both since 04/11/2026.
 
 ### The two profiles (18/10/2026)
 
@@ -325,8 +328,7 @@ through `hypr-colors.lua`) and kitty's `background_opacity` (`kitty.nix`).
 
 | | `perceptible` (the default) | `clear-gradient` |
 | --- | --- | --- |
-| Bar | 90% flat | the palette's bg at 70% at the top easing into its surface at 70% at the foot (it was 86% into 80%) |
-| Band cards | 92% flat | 70% bg into 70% surface, kitty's own opacity (18/10/2026; it was 88% into 84%) |
+| Bar and band cards | the surface at 72%, flat (04/11/2026) | the same: one frost in both profiles (the bar was a bg-to-surface gradient at 70%, the cards too) |
 | Panels, Center, toasts | 96% flat | 70% flat: dense text gets no gradient (it was 90%) |
 | kitty | background 0.95, then the global 0.98 window opacity on top | background 0.70, exempt from the global rule |
 | HyprGlass tint, panel tint | bg at 33%, at 50% | bg at 20%, at 30% |

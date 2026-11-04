@@ -21,8 +21,10 @@ Item {
     property string style: "bars"
     property var gridValues: []
     property var gridLabel: null // v => text, drawn at the left of each grid line
+    // Dashed marks on the same scale, [{v, color, lower}]: lower puts it in the mirrored half.
+    property var refLines: []
     // The readout under the pointer: the nearest sample lit, a label with its value, and its time when
-    // the caller says how far apart the samples are (stepS seconds, the last one now). format(v, v2)
+    // the caller says how far apart the samples are (stepS seconds, the last one now). format(v, v2, i)
     // replaces the plain number.
     property real stepS: 0
     property string unit: ""
@@ -87,7 +89,9 @@ Item {
                     ctx.fillRect(0, y, w, 1);
                     if (spark.gridLabel) {
                         ctx.fillStyle = Theme.colDim;
-                        ctx.fillText(spark.gridLabel(g), 1, y < axis || !spark.mirrored ? y - 2 : y + Theme.fontMicro);
+                        // On the axis side of its line: an outer line near the edge keeps its label
+                        // inside, and two lines a decade apart never stack their labels.
+                        ctx.fillText(spark.gridLabel(g), 1, y < axis ? y + Theme.fontMicro : y - 2);
                     }
                 }
             }
@@ -146,6 +150,16 @@ Item {
                     ctx.fillRect(x0, dir < 0 ? axis - bh : axis, x1 - x0, bh);
                 }
             }
+            for (const r of spark.refLines || []) {
+                const d = Math.round(spark.frac(r.v) * room);
+                if (d <= 0)
+                    continue;
+                const y = spark.mirrored ? (r.lower ? axis + d : axis - d) : (spark.downward ? d : h - d);
+                ctx.globalAlpha = 0.8;
+                ctx.fillStyle = r.color;
+                for (let x = 0; x < w; x += 6)
+                    ctx.fillRect(x, Math.min(h - 1, Math.max(0, y)), 3, 1);
+            }
             if (spark.mirrored) {
                 ctx.globalAlpha = 1;
                 ctx.fillStyle = Theme.colEdge;
@@ -157,6 +171,7 @@ Item {
     onSeries2Changed: cv.requestPaint()
     onHoverChanged: cv.requestPaint()
     onScaleTopChanged: cv.requestPaint()
+    onRefLinesChanged: cv.requestPaint()
     onFillChanged: cv.requestPaint()
     onWidthChanged: cv.requestPaint()
     onHeightChanged: cv.requestPaint()
@@ -190,7 +205,7 @@ Item {
             text: {
                 const when = spark.stepS > 0 ? Qt.formatTime(new Date(Date.now() - (spark.count - 1 - spark.hover) * spark.stepS * 1000), spark.stepS >= 60 ? "HH:mm" : "HH:mm:ss") + "  ·  " : "";
                 if (spark.format)
-                    return when + spark.format(tip.v, tip.v2);
+                    return when + spark.format(tip.v, tip.v2, spark.hover);
                 return when + (spark.dead(tip.v) ? "no reading" : Number(tip.v).toFixed(spark.decimals) + spark.unit);
             }
             color: Theme.colText

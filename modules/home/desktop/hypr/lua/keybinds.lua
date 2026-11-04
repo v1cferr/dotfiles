@@ -32,6 +32,9 @@ hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("hyprctl reload"))           
 hl.bind(mainMod .. " + H",         hl.dsp.exec_cmd("keybinds-cheatsheet"))        -- help: the shortcut list
 -- lock: loginctl to logind to hypridle's lock_cmd; it never duplicates hyprlock.
 hl.bind(mainMod .. " + L",         hl.dsp.exec_cmd("loginctl lock-session"))      -- lock the screen
+-- The app vault (vault.lua): hide every sensitive app now, or ask the password for the hidden ones.
+hl.bind(mainMod .. " + CTRL + L",  hl.dsp.exec_cmd("qs ipc call vault lock"))     -- vault: hide the sensitive apps
+hl.bind(mainMod .. " + CTRL + V",  hl.dsp.exec_cmd("qs ipc call vault hidden"))   -- vault: unlock the hidden apps
 
 -- The "/" key over remote access: Moonlight does not send the ABNT2 "/ ?", so ScrollLock is
 -- remapped. `code:97` and NOT `slash`, because of xkb modifier: docs/notes/desktop/keybinds.md

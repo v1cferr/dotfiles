@@ -173,6 +173,9 @@ in
         # A hyprlock started by hand from a TTY (the rescue) owns the screen: never a second lock.
         # ExecCondition and not ExecStartPre: failing here SKIPS silently instead of marking failed.
         ExecCondition = "${bash}/bin/bash -c '! ${pidof} hyprlock'";
+        # The app vault (hypr/lua/vault.lua) hides every sensitive app first; "-" so a miss never
+        # keeps the screen from locking.
+        ExecStartPre = "-${hyprland}/bin/hyprctl eval 'vault.lock_all()'";
         ExecStart = lib.getExe lockLaunch;
       };
       # NO Install/wantedBy ON PURPOSE: what locks is the click, the idle or the boot's own line.

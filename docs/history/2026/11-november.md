@@ -1,6 +1,15 @@
 # History: november 2026
 
-3 entries. Index in [README.md](../README.md).
+4 entries. Index in [README.md](../README.md).
+
+- [x] ChatGPT desktop, the official Linux app (03/11/2026; asked 03/11/2026). How and why:
+      [notes/apps/chatgpt.md](../../notes/apps/chatgpt.md).
+      • OFFICIAL SINCE 11/08/2026: OpenAI ships a Linux build (preview), and nixpkgs-unstable
+        packages it. Stable lists it for Darwin only, which is why the first search said no.
+      • ALWAYS THE NEWEST: the channel trailed (26.1013 against OpenAI's 26.1029), so unstable's
+        recipe gets OpenAI's .deb from pkgs/chatgpt, kept current by `update` like VS Code.
+      • WHAT LOST: DMG ports, repack flakes, a web app and WinBoat, each for a reason in the note.
+      • ONE CODEX: the app launches pkgs/codex, the same CLI the terminal uses.
 
 - [x] The network pill and panel, readable again (03/11/2026; asked 03/11/2026). How and why:
       [notes/desktop/bar.md](../../notes/desktop/bar.md#the-three-system-panels).

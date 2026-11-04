@@ -2079,7 +2079,7 @@ Scope {
                         id: wsStrip
                         host: root
                         monitor: bar.modelData ? bar.modelData.name : ""
-                        withApps: !bar.compact
+                        maxApps: bar.compact ? 2 : 3
                         barContent: barContent
                         barWindow: bar
                     }

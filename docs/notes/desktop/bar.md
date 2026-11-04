@@ -242,13 +242,13 @@ from `00`, under one sliding inner `\` of the cell's own slope (18 px tall, a 6 
 | a window opened there | a steady 8 px yellow tick under the number (`colWarn`) |
 | a window there asked for attention | the active shape in `colCrit`, the number in red |
 
-**The apps.** On the full bar each number carries its apps' icons, one per window class in
-Hyprland's order (`wsApps` in `Bar.qml`, read from the toplevels' IPC object), up to three and then
-`+N`: full color on the active workspace, greyed on the others (`widgets/AppIcon.qml`, the same
+**The apps.** Each number carries its apps' icons, one per window class in
+Hyprland's order (`wsApps` in `Bar.qml`, read from the toplevels' IPC object), up to three (two on
+the LG's narrower bar) and then `+N`: full color on the active workspace, greyed on the others (`widgets/AppIcon.qml`, the same
 lookup the lock screen uses). A click on an icon focuses that app's window
 (`hl.dsp.focus({ window = "address:0x..." })`); a click elsewhere on the number switches workspace
 as before. The toplevels are refreshed at start and when a window opens, closes or moves, so the
-icons follow. The LG's compact bar keeps the numbers alone: its band has the room for the rest.
+icons follow.
 
 The two marks used to be one, and pulsed forever. They are apart, since a window that merely opened
 is news and an urgency is a request (`wsActivity` from the window count, `wsUrgent` from Hyprland's

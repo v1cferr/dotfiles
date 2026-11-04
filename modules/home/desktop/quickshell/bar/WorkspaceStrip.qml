@@ -1,7 +1,8 @@
 // The ADAPTIVE WORKSPACE RAIL: one monitor's workspaces in ONE "\" cell, the active one under a
 // sliding inner "\" of the same slope. Each number carries its apps' icons (one per app, up to 3,
-// then +N; a click focuses that window); occupied reads bright, empty dim; a new window is a yellow
-// tick under the number and a request for attention the active shape in red, neither pulsing.
+// 2 on the standing screen, then +N; a click focuses that window); occupied reads bright, empty dim;
+// a new window is a yellow tick under the number and a request for attention the active shape in
+// red, neither pulsing.
 // The rail, its model (orphans of a gone secondary) and the 0.55 dispatch trap: docs/notes/desktop/bar.md
 import QtQuick
 import QtQuick.Shapes
@@ -22,8 +23,8 @@ SlantCell {
         return i >= 0 ? wsRep.itemAt(i) : null;
     }
     property bool placed: false // no slide in from x = 0 on the first frame
-    // The icons need room the standing screen's compact bar does not have.
-    property bool withApps: true
+    // How many app icons a number carries before "+N": fewer on the standing screen's narrow bar.
+    property int maxApps: 3
     lean: -1
     implicitWidth: Math.ceil((wsRow.implicitWidth + 2 * Theme.sp2) / 4) * 4
 
@@ -96,9 +97,8 @@ SlantCell {
                 readonly property bool exists: strip.host.wsExist[btn.modelData] === true
                 readonly property bool urgent: strip.host.wsUrgent[btn.modelData] === true
                 readonly property bool activity: strip.host.wsActivity[btn.modelData] === true
-                // The apps, on the full bar only: the standing screen's band has the room for them.
-                readonly property var apps: strip.withApps ? strip.host.wsApps(btn.modelData) : []
-                readonly property var shown: btn.apps.slice(0, 3)
+                readonly property var apps: strip.host.wsApps(btn.modelData)
+                readonly property var shown: btn.apps.slice(0, strip.maxApps)
 
                 // The number from a template ("01" and "08" never differ), then its icons.
                 implicitWidth: Math.ceil((numBox.width + (btn.shown.length > 0 ? appRow.implicitWidth + Theme.sp1 : 0) + 2 * Theme.sp2) / 4) * 4

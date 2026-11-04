@@ -1901,7 +1901,7 @@ Scope {
             screen: modelData
             WlrLayershell.namespace: "qs-bar" // the glass blur rule matches it (appearance.lua)
 
-            // ONE continuous Powerline, edge to edge: no margin, no gap, the same surface end to end.
+            // ONE glass strip, edge to edge, holding a row of slanted cells mirrored about the logo.
             anchors {
                 top: true
                 left: true
@@ -1923,27 +1923,27 @@ Scope {
             readonly property int centerX: Math.floor(bar.width / 2)
             readonly property int slotX: bar.centerX - Theme.barCenterWidth / 2
             // The full bar puts the time left of the compartment and the date right of it, in two MIRRORED
-            // slots of one width measured from a template ("00:00" and "00/00" are both five mono
-            // columns), so the pair is symmetric about the logo and a new minute or day moves nothing.
-            readonly property int clockW: Math.ceil(tmClock.advanceWidth) + 2 * Theme.sp2
+            // cells of one width measured from a template ("00:00" and "00/00" are both five mono
+            // columns), one slit away, so the pair is symmetric about the logo and a new minute or day
+            // moves nothing.
+            readonly property int clockW: Theme.barCellWidth(Math.ceil(tmClock.advanceWidth))
             readonly property int dateW: bar.clockW
-            readonly property int clockX: bar.slotX - Theme.barSlant - Theme.sp1 - bar.clockW
-            readonly property int dateX: bar.slotX + Theme.barCenterWidth + Theme.barSlant + Theme.sp1
-            // The center group's outer edges, its dividers included; the compact bar's is the compartment.
-            readonly property int centerLeft: bar.compact ? bar.slotX - Theme.barSlant : bar.clockX - Theme.sp1 - Theme.barSlant
-            readonly property int centerRight: bar.compact ? bar.slotX + Theme.barCenterWidth + Theme.barSlant : bar.dateX + bar.dateW + Theme.sp1 + Theme.barSlant
+            readonly property int clockX: bar.slotX - Theme.barGap - bar.clockW
+            readonly property int dateX: bar.slotX + Theme.barCenterWidth + Theme.barGap
+            // The center group's outer edges; the compact bar's is the compartment (1 px wider at its top).
+            readonly property int centerLeft: bar.compact ? bar.slotX - 1 : bar.clockX
+            readonly property int centerRight: bar.compact ? bar.slotX + Theme.barCenterWidth + 1 : bar.dateX + bar.dateW
             // What each side may fill: its edge margin and a gap before the center group.
-            readonly property int leftRoom: bar.centerLeft - 2 * Theme.sp2
-            readonly property int rightRoom: bar.width - bar.centerRight - 2 * Theme.sp2
+            readonly property int leftRoom: bar.centerLeft - Theme.barEdge - Theme.sp4
+            readonly property int rightRoom: bar.width - bar.centerRight - Theme.barEdge - Theme.sp4
 
             // ── LEFT: workspaces, title, media. Shares from the room alone, never from the texts ──
             // In order: media from 220 down to 120, media to its icon, then the title (a floor of 120,
             // under which it hides). A song or a focus change can never flip a level.
-            readonly property int chevW: Theme.barSlant + 2 * Theme.sp2
             readonly property int titleMin: 240
             readonly property bool mediaHere: !bar.compact && root.spHasPlayer
-            readonly property int leftAvail: bar.leftRoom - leftRow.wsWidth - bar.chevW - (bar.mediaHere ? bar.chevW : 0)
-            readonly property int mediaIconW: Math.ceil(tmMediaIcon.advanceWidth) + 2 * Theme.sp2
+            readonly property int leftAvail: bar.leftRoom - leftRow.wsWidth - Theme.barGap - (bar.mediaHere ? Theme.barGap : 0)
+            readonly property int mediaIconW: Theme.barCellWidth(Math.ceil(tmMediaIcon.advanceWidth))
             readonly property int mediaW: !bar.mediaHere ? 0 : Math.max(bar.mediaIconW, Math.min(220, bar.leftAvail - bar.titleMin))
             readonly property bool mediaIconOnly: bar.mediaHere && bar.mediaW < 120
             readonly property int mediaUsed: !bar.mediaHere ? 0 : (bar.mediaIconOnly ? bar.mediaIconW : bar.mediaW)
@@ -1952,7 +1952,7 @@ Scope {
             // ── RIGHT: the system and its tray. The tray is pinned to the edge; the rest folds by priority
             // when it would cross the center: the network's numbers and the VPN's name, then the weather.
             readonly property bool trayHere: !bar.compact || !root.wideUp
-            readonly property int trayW: bar.trayHere && tray.count > 0 ? tray.stableWidth + Theme.sp1 : 0
+            readonly property int trayW: bar.trayHere && tray.count > 0 ? tray.stableWidth + Theme.barGap : 0
             readonly property int squeeze: rightRow.measure(0) <= bar.rightRoom ? 0 : (rightRow.measure(1) <= bar.rightRoom ? 1 : 2)
 
             Component.onCompleted: root.registerBar(bar)
@@ -1964,19 +1964,16 @@ Scope {
                 id: barContent
                 anchors.fill: parent
 
-                // ── The surface: one glass strip, a hairline at its foot ──
+                // ── The surface: one frosted strip, a sheen on its top row, a hairline at its foot ──
                 Rectangle {
                     anchors.fill: parent
-                    gradient: Gradient {
-                        GradientStop {
-                            position: 0
-                            color: Theme.colSurfaceBar
-                        }
-                        GradientStop {
-                            position: 1
-                            color: Theme.colSurfaceBarFoot
-                        }
-                    }
+                    color: Theme.colSurfaceBar
+                }
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: Theme.hairline
+                    color: Theme.colSheen
                 }
                 Rectangle {
                     anchors.left: parent.left
@@ -2004,14 +2001,10 @@ Scope {
                 }
                 // The time, the logo, the date: placed from the compartment's edges, never centered as a
                 // group, so the logo stays on the screen's center whatever the strings hold.
-                Chevron {
-                    visible: !bar.compact
-                    rising: false
-                    x: bar.clockX - Theme.sp1 - Theme.barSlant
-                }
                 Pill {
                     id: clockPill
                     visible: !bar.compact
+                    lean: -1
                     x: bar.clockX
                     anchors.verticalCenter: parent.verticalCenter
                     width: bar.clockW
@@ -2036,10 +2029,6 @@ Scope {
                     onHoveredChanged: root.hoverPanel("cal", logoSlot, barContent, bar, hovered)
                     onClicked: root.togglePanel("cal", logoSlot, barContent, bar)
                 }
-                Chevron {
-                    visible: !bar.compact
-                    x: bar.dateX + bar.dateW + Theme.sp1
-                }
 
                 // ── LEFT: this monitor's workspaces, the focused window's title, then the media ──
                 TextMetrics {
@@ -2059,9 +2048,9 @@ Scope {
                     id: leftRow
                     readonly property int wsWidth: wsStrip.implicitWidth
                     anchors.left: parent.left
-                    anchors.leftMargin: Theme.sp2
+                    anchors.leftMargin: Theme.barEdge
                     height: parent.height
-                    spacing: Theme.sp2
+                    spacing: Theme.barGap
                     WorkspaceStrip {
                         id: wsStrip
                         host: root
@@ -2069,12 +2058,9 @@ Scope {
                         barContent: barContent
                         barWindow: bar
                     }
-                    Chevron {
-                        rising: false
-                        visible: winPill.visible || spPill.visible
-                    }
                     Pill {
                         id: winPill
+                        lean: -1
                         visible: bar.modelData && bar.modelData.name === root.focusedMon && root.winTitle !== "" && bar.titleMax >= 120
                         label: root.winTitle
                         accent: Theme.colSky
@@ -2082,15 +2068,12 @@ Scope {
                         leftAligned: true
                         maxWidth: bar.titleMax
                         // In 64 px steps from the text's own metrics, so a focus change rarely moves the media.
-                        Layout.preferredWidth: Math.min(bar.titleMax, Math.max(120, Math.ceil((tmTitle.advanceWidth + 2 * Theme.sp2 + 1) / 64) * 64))
+                        Layout.preferredWidth: Math.min(bar.titleMax, Math.max(120, Math.ceil(Theme.barCellWidth(tmTitle.advanceWidth + 1) / 64) * 64))
                         onHoveredChanged: root.hoverHint("win", winPill, barContent, bar, hovered)
-                    }
-                    Chevron {
-                        rising: false
-                        visible: spPill.visible && winPill.visible
                     }
                     Pill {
                         id: spPill
+                        lean: -1
                         visible: bar.mediaHere
                         icon: "󰝚"
                         label: bar.mediaIconOnly ? "" : root.spText
@@ -2114,7 +2097,7 @@ Scope {
                     id: tray
                     visible: bar.trayHere
                     anchors.right: parent.right
-                    anchors.rightMargin: Theme.sp2
+                    anchors.rightMargin: Theme.barEdge
                     anchors.verticalCenter: parent.verticalCenter
                     host: root
                     barContent: barContent
@@ -2125,7 +2108,7 @@ Scope {
                 OpsIndicator {
                     visible: bar.compact
                     anchors.right: parent.right
-                    anchors.rightMargin: Theme.sp2 + bar.trayW
+                    anchors.rightMargin: Theme.barEdge + bar.trayW
                     anchors.verticalCenter: parent.verticalCenter
                     host: root
                     barContent: barContent
@@ -2139,9 +2122,9 @@ Scope {
                     id: rightRow
                     visible: !bar.compact
                     anchors.right: parent.right
-                    anchors.rightMargin: Theme.sp2 + bar.trayW
+                    anchors.rightMargin: Theme.barEdge + bar.trayW
                     height: parent.height
-                    spacing: Theme.sp1
+                    spacing: Theme.barGap
                     // The row's width at a squeeze level, the tray included, from the controls' own implicit
                     // widths, which do not depend on what is visible: so the level never feeds back into itself.
                     TextMetrics {
@@ -2163,17 +2146,23 @@ Scope {
                         text: root.vpnConnected ? root.vpnName : ""
                     }
                     function measure(level) {
-                        const sep = Theme.barSlant + 2 * Theme.sp1;
-                        let w = usagePill.implicitWidth + volPill.implicitWidth + idlePill.implicitWidth + awayPill.implicitWidth + 3 * sep + 5 * Theme.sp1;
-                        if (diskPill.visible)
-                            w += diskPill.implicitWidth + Theme.sp1;
+                        // Cells and one slit after each but the last; the tray's slit is inside trayW.
+                        let w = usagePill.implicitWidth + volPill.implicitWidth + idlePill.implicitWidth + awayPill.implicitWidth;
+                        let n = 4;
+                        if (diskPill.visible) {
+                            w += diskPill.implicitWidth;
+                            n++;
+                        }
                         // VPN and network change their own labels with the level, so they are measured in full
                         // from text metrics, never from the pills: that is what keeps this free of a loop.
-                        w += 2 * (Theme.barControl + Theme.sp1) + (level >= 1 ? 0 : tmNet.advanceWidth + (root.netBusy ? tmNetUnit.advanceWidth + Theme.sp1 : 0) + tmVpn.advanceWidth + 2 * Theme.sp1);
-                        if (level < 2)
-                            w += weatherPill.implicitWidth + sep;
-                        w += bar.trayW + (bar.trayW > 0 ? sep : 0);
-                        return w;
+                        const icon = Theme.iconBar;
+                        w += level >= 1 ? 2 * Theme.barCellWidth(icon) : Theme.barCellWidth(icon + Theme.sp1 + tmNet.advanceWidth + (root.netBusy ? tmNetUnit.advanceWidth + Theme.sp1 : 0)) + Theme.barCellWidth(icon + (tmVpn.advanceWidth > 0 ? Theme.sp1 + tmVpn.advanceWidth : 0));
+                        n += 2;
+                        if (level < 2) {
+                            w += weatherPill.implicitWidth;
+                            n++;
+                        }
+                        return w + (n - 1) * Theme.barGap + bar.trayW;
                     }
                     Pill {
                         visible: bar.squeeze < 2
@@ -2182,6 +2171,7 @@ Scope {
                         label: root.wHas ? root.wTemp + "°C" : "--°C"
                         accent: root.wHas ? Theme.colSubtext : Theme.colUnknown
                         labelColor: root.wHas ? Theme.colText : Theme.colUnknown
+                        off: !root.wHas
                         selected: root.pinned === "weather"
                         onHoveredChanged: if (root.wHas)
                             root.hoverPanel("weather", weatherPill, barContent, bar, hovered)
@@ -2190,9 +2180,6 @@ Scope {
                         // The forecast site moved here when the click became the panel's pin.
                         onRightClicked: root.launch(["xdg-open", "https://www.msn.com/en-us/weather/forecast/in-S%C3%A3o-Carlos,S%C3%A3o-Paulo"])
                     }
-                    Chevron {
-                        visible: weatherPill.visible
-                    }
                     Pill {
                         // CPU use. A busy CPU is not a fault: it turns to attention only when pegged.
                         id: usagePill
@@ -2200,6 +2187,7 @@ Scope {
                         label: root.tab(root.cpuPct, 3) + "%"
                         accent: root.cpuPct >= 90 ? Theme.colWarn : Theme.colSubtext
                         labelColor: Theme.colText
+                        tint: root.cpuPct >= 90 ? Theme.colWarn : "transparent"
                         selected: root.pinned === "usage"
                         onHoveredChanged: root.hoverPanel("usage", usagePill, barContent, bar, hovered)
                         onClicked: root.togglePanel("usage", usagePill, barContent, bar)
@@ -2214,10 +2202,10 @@ Scope {
                         label: root.diskPct + "%"
                         accent: diskPill.crit ? Theme.colCrit : Theme.colWarn
                         labelColor: diskPill.accent
+                        tint: diskPill.accent
                         onHoveredChanged: root.hoverHint("disk", diskPill, barContent, bar, hovered)
                         onClicked: root.togglePanel("usage", diskPill, barContent, bar)
                     }
-                    Chevron {}
                     Pill {
                         id: netPill
                         icon: "󰛳"
@@ -2238,6 +2226,7 @@ Scope {
                         label: root.vpnConnected && bar.squeeze < 1 ? root.vpnName : ""
                         accent: root.vpnConnected ? Theme.colOk : Theme.colUnknown
                         labelColor: Theme.colText
+                        off: !root.vpnConnected
                         // Tor rides along in its own purple: a VPN and Tor can be up at once.
                         badge: (root.torSystem || root.torBisq) ? "" + (root.torBisq ? " Bisq" : "") : ""
                         badgeColor: Theme.colLavender
@@ -2256,25 +2245,25 @@ Scope {
                         }
                         onRightClicked: root.runVpn("disconnect", "all")
                     }
-                    Chevron {}
                     Pill {
                         id: volPill
                         icon: root.volIcon()
                         label: root.tab(Math.round(root.volume * 100), 3) + "%"
                         accent: root.sinkMuted ? Theme.colUnknown : Theme.colSubtext
                         labelColor: root.sinkMuted ? Theme.colUnknown : Theme.colText
+                        off: root.sinkMuted
                         onHoveredChanged: root.hoverHint("vol", volPill, barContent, bar, hovered)
                         onClicked: root.toggleMute()
                         onRightClicked: root.launch(["pavucontrol"])
                         onScrolledUp: root.setVol(0.05)
                         onScrolledDown: root.setVol(-0.05)
                     }
-                    Chevron {}
                     Pill {
                         // hypridle: on is the normal state; off by choice is neutral, dimmed.
                         id: idlePill
                         icon: root.hypridleIcon
                         accent: root.hypridleOn ? Theme.colSubtext : Theme.colUnknown
+                        off: !root.hypridleOn
                         onHoveredChanged: root.hoverHint("idle", idlePill, barContent, bar, hovered)
                         onClicked: root.launch(["sh", "-c", "systemctl --user is-active --quiet hypridle.service && systemctl --user stop hypridle.service || systemctl --user start hypridle.service"])
                     }
@@ -2288,9 +2277,6 @@ Scope {
                             root.hideHint();
                             Away.enter();
                         }
-                    }
-                    Chevron {
-                        visible: bar.trayW > 0
                     }
                 }
             }

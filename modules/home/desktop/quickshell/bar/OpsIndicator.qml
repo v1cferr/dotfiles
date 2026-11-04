@@ -14,14 +14,14 @@ RowLayout {
     property var barWindow: null
     property int maxWidth: 400 // past it the chips fold into one "OPS · N"
 
-    spacing: Theme.sp1
+    spacing: Theme.barGap
 
     readonly property bool ciShown: Ops.needsLook(Ops.ci)
     readonly property bool svcShown: Ops.needsLook(Ops.svc)
     readonly property int alerts: (ops.ciShown ? Math.max(1, Ops.ci.count) : 0) + (ops.svcShown ? Math.max(1, Ops.svc.count) : 0)
     // The two chips' widths from a template, so a count changing never moves them, and the fold
     // decision never reads the chips it hides.
-    readonly property int chipW: Math.ceil(tmChip.advanceWidth) + Theme.iconBar + Theme.sp1 + 2 * Theme.sp2
+    readonly property int chipW: Theme.barCellWidth(Math.ceil(tmChip.advanceWidth) + Theme.iconBar + Theme.sp1)
     readonly property bool folded: ops.ciShown && ops.svcShown && 2 * ops.chipW + ops.spacing > ops.maxWidth
     // The worse of the two, for the folded chip.
     readonly property string worst: {
@@ -56,7 +56,7 @@ RowLayout {
         bold: true
         accent: Ops.tone(Ops.ci.state)
         labelColor: Ops.ci.state === "stale" || Ops.ci.state === "unknown" ? Theme.colSubtext : Ops.tone(Ops.ci.state)
-        fill: Qt.alpha(Ops.tone(Ops.ci.state), 0.14)
+        tint: Ops.tone(Ops.ci.state)
         selected: ops.host.panelOpen === "ops-ci"
         onHoveredChanged: ops.host.hoverPanel("ops-ci", ciPill, ops.barContent, ops.barWindow, hovered)
         onClicked: {
@@ -73,7 +73,7 @@ RowLayout {
         bold: true
         accent: Ops.tone(Ops.svc.state)
         labelColor: Ops.svc.state === "stale" || Ops.svc.state === "unknown" ? Theme.colSubtext : Ops.tone(Ops.svc.state)
-        fill: Qt.alpha(Ops.tone(Ops.svc.state), 0.14)
+        tint: Ops.tone(Ops.svc.state)
         selected: ops.host.panelOpen === "ops-svc"
         onHoveredChanged: ops.host.hoverPanel("ops-svc", svcPill, ops.barContent, ops.barWindow, hovered)
         onClicked: {
@@ -90,7 +90,7 @@ RowLayout {
         bold: true
         accent: Ops.tone(ops.worst)
         labelColor: Ops.tone(ops.worst)
-        fill: Qt.alpha(Ops.tone(ops.worst), 0.14)
+        tint: Ops.tone(ops.worst)
         selected: ops.host.panelOpen === "ops"
         onHoveredChanged: ops.host.hoverPanel("ops", foldPill, ops.barContent, ops.barWindow, hovered)
         onClicked: {

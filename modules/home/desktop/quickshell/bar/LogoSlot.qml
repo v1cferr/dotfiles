@@ -1,4 +1,4 @@
-// The Powerline's CENTER: the official NixOS logo in its compartment, on the screen's exact center,
+// The bar's CENTER: the official NixOS logo in its compartment, on the screen's exact center,
 // opening the NixOS Center. Its geometry never reads its neighbors: docs/notes/desktop/bar.md
 import Quickshell
 import QtQuick
@@ -15,38 +15,69 @@ Item {
     width: Theme.barCenterWidth
     height: Theme.barHeight
 
-    // The compartment: wider at the top by one slant on each side, so its edges are the two
-    // dividers mirrored ("\\_/"), and a shade lighter than the bar.
+    // The compartment, "\_/": 3 px taller than the cells above and below (rows 2 to 31), its sides on
+    // the cells' own 1:3 lines, so the slits to the time and the date stay parallel. Each side passes
+    // through the cells' top row (y 5) at x 0 and x width.
+    readonly property int rowTop: Theme.barCellY - 3
+    readonly property int rowBottom: Theme.barCellY + Theme.barCell + 3
+    readonly property real lt: -(Theme.barCellY - slot.rowTop) / 3 // the left side at the top row
+    readonly property real lb: (slot.rowBottom - Theme.barCellY) / 3 // and at the bottom row
+    readonly property color shade: slot.open ? Qt.alpha(Theme.colAccent, 0.18) : (area.containsMouse ? Theme.colCellHoverFill : Theme.colCompFill)
+    readonly property color rim: slot.open ? Qt.alpha(Theme.colAccent, 0.6) : (area.containsMouse ? Theme.colCellHoverEdge : Theme.colCompEdge)
     Shape {
-        x: -Theme.barSlant
-        width: slot.width + 2 * Theme.barSlant
-        height: slot.height
         preferredRendererType: Shape.CurveRenderer
         ShapePath {
-            fillColor: slot.open || area.containsMouse ? Theme.colSelectFill : Theme.colBarCenter
-            strokeColor: Theme.colEdge
+            strokeColor: "transparent"
+            fillColor: slot.shade
+            startX: slot.lt
+            startY: slot.rowTop
+            PathLine {
+                x: slot.width - slot.lt
+                y: slot.rowTop
+            }
+            PathLine {
+                x: slot.width - slot.lb
+                y: slot.rowBottom
+            }
+            PathLine {
+                x: slot.lb
+                y: slot.rowBottom
+            }
+            PathLine {
+                x: slot.lt
+                y: slot.rowTop
+            }
+        }
+        // The 1 px edge half a pixel inside the fill, as on every cell (SlantCell.qml).
+        ShapePath {
+            strokeColor: slot.rim
             strokeWidth: Theme.hairline
-            startX: 0
-            startY: 0
+            fillColor: "transparent"
+            startX: slot.lt + 0.5 / 3 + 0.527
+            startY: slot.rowTop + 0.5
             PathLine {
-                x: Theme.barSlant
-                y: slot.height
+                x: slot.width - slot.lt - 0.5 / 3 - 0.527
+                y: slot.rowTop + 0.5
             }
             PathLine {
-                x: Theme.barSlant + slot.width
-                y: slot.height
+                x: slot.width - slot.lb + 0.5 / 3 - 0.527
+                y: slot.rowBottom - 0.5
             }
             PathLine {
-                x: 2 * Theme.barSlant + slot.width
-                y: 0
+                x: slot.lb - 0.5 / 3 + 0.527
+                y: slot.rowBottom - 0.5
+            }
+            PathLine {
+                x: slot.lt + 0.5 / 3 + 0.527
+                y: slot.rowTop + 0.5
             }
         }
     }
-    // The one blue line on the bar, under the logo.
+    // The one accent line at rest: 24 px on the bar's foot, right under the compartment.
     Rectangle {
-        x: Theme.sp2
-        y: slot.height - 2
-        width: slot.width - 2 * Theme.sp2
+        x: (slot.width - 24) / 2
+        y: Theme.barHeight - 2
+        width: 24
         height: 2
         radius: 1
         color: Theme.colBarAccent
@@ -59,7 +90,7 @@ Item {
         id: logo
         visible: slot.logo !== ""
         x: (slot.width - Theme.barLogo) / 2
-        y: (slot.height - Theme.barLogo) / 2
+        y: slot.rowTop + 5 // 5 px of air above and below, inside rows 2 to 31
         width: Theme.barLogo
         height: Theme.barLogo
         source: slot.logo
@@ -82,7 +113,7 @@ Item {
     Rectangle {
         visible: Notifs.unseen > 0
         x: slot.width / 2 + Theme.barLogo / 2 + 3
-        y: Theme.sp2 + 1
+        y: slot.rowTop + 4
         width: 6
         height: 6
         radius: 3

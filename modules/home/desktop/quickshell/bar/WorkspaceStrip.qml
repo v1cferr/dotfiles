@@ -1,11 +1,13 @@
-// The ADAPTIVE WORKSPACE RAIL: one monitor's workspaces as two-digit numbers under ONE sliding
-// active pill. Three states by contrast (active, occupied, empty) and two marks, a new window and a
-// request for attention, neither pulsing. The rail, its model (orphans of a gone secondary) and the
-// 0.55 dispatch trap: docs/notes/desktop/bar.md
+// The ADAPTIVE WORKSPACE RAIL: one monitor's workspaces in ONE "\" cell, the active one under a
+// sliding inner "\" of the same slope. Occupied reads bright, empty dim; a new window is a yellow
+// tick under the number and a request for attention the active shape in red, neither pulsing.
+// The rail, its model (orphans of a gone secondary) and the 0.55 dispatch trap: docs/notes/desktop/bar.md
 import QtQuick
+import QtQuick.Shapes
 import "root:/"
+import "root:/widgets"
 
-Item {
+SlantCell {
     id: strip
     required property var host // the Bar's Scope: the workspace state lives there
     property string monitor: ""
@@ -19,18 +21,46 @@ Item {
         return i >= 0 ? wsRep.itemAt(i) : null;
     }
     property bool placed: false // no slide in from x = 0 on the first frame
-    implicitWidth: wsRow.implicitWidth
-    implicitHeight: Theme.barControl
+    lean: -1
+    implicitWidth: Math.ceil((wsRow.implicitWidth + 2 * Theme.sp2) / 4) * 4
 
-    // The ACTIVE workspace is ONE pill that eases to its button, so a switch reads as a move.
-    Rectangle {
+    // An inner "\" for a button: 18 px tall at y 3, a 6 px lean, the cell's own 1:3 slope.
+    component InnerSlant: Shape {
+        id: inner
+        property real w: 0
+        property color tone: Theme.colAccent
+        preferredRendererType: Shape.CurveRenderer
+        ShapePath {
+            strokeColor: "transparent"
+            fillColor: inner.tone
+            startX: 0
+            startY: 3
+            PathLine {
+                x: inner.w
+                y: 3
+            }
+            PathLine {
+                x: inner.w + 6
+                y: 21
+            }
+            PathLine {
+                x: 6
+                y: 21
+            }
+            PathLine {
+                x: 0
+                y: 3
+            }
+        }
+    }
+
+    // The ACTIVE workspace is ONE shape that eases to its button, so a switch reads as a move.
+    InnerSlant {
         id: ind
         visible: strip.act !== null
-        x: strip.act ? strip.act.x : 0
-        width: strip.act ? strip.act.width : 0
-        height: Theme.barControl
-        radius: Theme.radiusControl
-        color: Theme.colWsActiveBg
+        x: wsRow.x + (strip.act ? strip.act.x : 0)
+        w: strip.act ? strip.act.width : 0
+        tone: Qt.alpha(Theme.colAccent, 0.22)
         onVisibleChanged: if (visible)
             Qt.callLater(() => strip.placed = true)
         Behavior on x {
@@ -40,7 +70,7 @@ Item {
                 easing.type: Easing.OutCubic
             }
         }
-        Behavior on width {
+        Behavior on w {
             enabled: strip.placed
             NumberAnimation {
                 duration: Theme.motionNormal
@@ -51,11 +81,12 @@ Item {
 
     Row {
         id: wsRow
-        spacing: Theme.sp1
+        x: Theme.sp2 + strip.dx / 2
+        height: Theme.barCell
         Repeater {
             id: wsRep
             model: strip.ids
-            delegate: Rectangle {
+            delegate: Item {
                 id: btn
                 required property int modelData
                 readonly property bool active: strip.host.wsActive[strip.monitor] === btn.modelData
@@ -64,25 +95,26 @@ Item {
                 readonly property bool activity: strip.host.wsActivity[btn.modelData] === true
 
                 // ONE width for every number, from a template: "01" and "08" never differ.
-                implicitWidth: Math.max(Theme.barControl, Math.ceil(tmNum.advanceWidth) + 2 * Theme.sp2)
-                implicitHeight: Theme.barControl
-                radius: Theme.radiusControl
-                // Active, the button is see-through and the sliding pill shows under it.
-                color: !btn.active && area.containsMouse ? Theme.colHoverFill : "transparent"
-                Behavior on color {
-                    ColorAnimation {
-                        duration: Theme.motionHover
-                    }
-                }
+                implicitWidth: Math.ceil((tmNum.advanceWidth + 2 * Theme.sp2) / 4) * 4
+                implicitHeight: Theme.barCell
 
+                // Asking for attention: the active shape, in the alert color, until visited.
+                InnerSlant {
+                    visible: btn.urgent && !btn.active
+                    w: btn.width
+                    tone: Qt.alpha(Theme.colCrit, 0.22)
+                }
+                InnerSlant {
+                    visible: area.containsMouse && !btn.active && !btn.urgent
+                    w: btn.width
+                    tone: Theme.colHoverFill
+                }
                 Text {
                     id: num
                     anchors.centerIn: parent
+                    anchors.horizontalCenterOffset: 3 // the inner shape's center line
                     text: strip.host.wsLabel(btn.modelData)
-                    // Occupied reads clearly above empty; the active one sits dark on the blue pill.
-                    color: btn.active ? Theme.colBgSolid : (btn.exists ? Theme.colText : Theme.colDim)
-                    opacity: btn.active || btn.exists ? 1 : 0.7
-                    // In step with the pill, so the number is never dark on dark while the pill is on its way.
+                    color: btn.active ? Theme.colAccent : (btn.urgent ? Theme.colCrit : (btn.exists ? Theme.colText : Theme.colDim))
                     Behavior on color {
                         ColorAnimation {
                             duration: Theme.motionNormal
@@ -90,33 +122,17 @@ Item {
                     }
                     font.family: Theme.uiFont
                     font.pixelSize: Theme.fontBody
-                    font.bold: btn.active || btn.exists
+                    font.bold: btn.active || btn.exists || btn.urgent
                 }
-                // Occupied and not active: a 2 px rule under the number, so the state is not color alone.
+                // A window opened here: an 8 px yellow tick under the number. Visiting clears it.
                 Rectangle {
-                    visible: btn.exists && !btn.active && !btn.activity && !btn.urgent
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 3
+                    visible: btn.activity && !btn.active && !btn.urgent
+                    x: Math.round(num.x + (num.width - 8) / 2)
+                    y: 19
                     width: 8
                     height: 2
                     radius: 1
-                    color: Theme.colDim
-                }
-                // The marks: a window opened here (yellow) or asked for attention (orange, larger). Steady,
-                // never pulsing; visiting the workspace clears them.
-                Rectangle {
-                    visible: (btn.activity || btn.urgent) && !btn.active
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.rightMargin: btn.urgent ? 2 : 3
-                    anchors.topMargin: btn.urgent ? 2 : 3
-                    width: btn.urgent ? 7 : 5
-                    height: width
-                    radius: width / 2
-                    color: btn.urgent ? Theme.colAlert : Theme.colWarn
-                    border.color: Theme.colBgSolid
-                    border.width: btn.urgent ? 1 : 0
+                    color: Theme.colWarn
                 }
                 Accessible.role: Accessible.Button
                 Accessible.name: "Workspace " + strip.host.wsLabel(btn.modelData) + (btn.active ? ", active" : (btn.exists ? ", occupied" : ", empty")) + (btn.urgent ? ", asks for attention" : (btn.activity ? ", new window" : ""))

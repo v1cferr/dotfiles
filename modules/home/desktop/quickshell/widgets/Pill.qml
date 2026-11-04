@@ -1,10 +1,12 @@
-// The bar's control: a FLAT segment inside a glass cluster, so it has no edge of its own and a hover
-// is a neutral fill. Its OWN file, since an inline component's handlers lose the root id on this Qt.
+// The bar's control: one slanted glass cell (SlantCell) holding a glyph and a label. Its states, S1:
+// neutral at rest and on hover, the accent only while its panel is open, a tinted cell for a state
+// that needs a look. docs/notes/desktop/bar.md#cells. Its OWN file, since an inline component's
+// handlers lose the root id on this Qt.
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
 
-Rectangle {
+SlantCell {
     id: pill
     property string icon: ""
     // A vector icon in place of the glyph (the NixOS logo); `icon` stays the fallback if it fails.
@@ -22,8 +24,10 @@ Rectangle {
     property int maxWidth: 0
     // Pinned: its panel is open by a click, so the control stays lit while the pointer is elsewhere.
     property bool selected: false
-    // A resting tint (an operational chip's state on glass); hover and press still read over it.
-    property color fill: "transparent"
+    // A state that needs a look (attention, a failure): the whole cell takes its color, readable from afar.
+    property color tint: "transparent"
+    // Off by choice (muted, a VPN down on purpose): a faded cell, never a failure.
+    property bool off: false
     signal clicked
     signal rightClicked
     signal scrolledUp
@@ -34,26 +38,22 @@ Rectangle {
     // window's title, sized in steps so its neighbors do not jump) reads from where it starts.
     property bool leftAligned: false
 
-    readonly property int padX: Theme.sp2
+    readonly property bool tinted: pill.tint.a > 0
     readonly property bool imageOk: pill.image != "" && img.status === Image.Ready
-    implicitWidth: (pill.maxWidth > 0) ? Math.min(prow.implicitWidth + 2 * pill.padX, pill.maxWidth) : prow.implicitWidth + 2 * pill.padX
-    implicitHeight: Theme.barControl
-    radius: Theme.radiusControl
-    color: area.pressed ? Theme.colPressFill : (area.containsMouse ? Theme.colHoverFill : (pill.selected ? Theme.colSelectFill : pill.fill))
-    Behavior on color {
-        ColorAnimation {
-            duration: Theme.motionHover
-            easing.type: Easing.OutQuad
-        }
-    }
+    implicitWidth: (pill.maxWidth > 0) ? Math.min(Theme.barCellWidth(prow.implicitWidth), pill.maxWidth) : Theme.barCellWidth(prow.implicitWidth)
+    fill: area.pressed ? Theme.colCellPressFill : pill.selected ? Theme.colCellOpenFill : pill.tinted ? Qt.alpha(pill.tint, area.containsMouse ? 0.24 : 0.16) : area.containsMouse ? Theme.colCellHoverFill : pill.off ? Qt.alpha(Theme.colText, 0.04) : Theme.colCellFill
+    edge: pill.selected ? Theme.colCellOpenEdge : pill.tinted ? Qt.alpha(pill.tint, 0.5) : area.containsMouse ? Theme.colCellHoverEdge : pill.off ? Qt.alpha(Theme.colText, 0.1) : Theme.colCellEdge
+    marked: pill.selected
 
-    // Centered, so a pill given a fixed slot (the clock's symmetric neighbors) keeps its content in the middle.
+    // On the cell's center line (half a slant in from the top edge), whole pixels.
     RowLayout {
         id: prow
         anchors.verticalCenter: parent.verticalCenter
-        x: pill.leftAligned ? pill.padX : Math.max(pill.padX, Math.round((pill.width - prow.implicitWidth) / 2))
-        width: Math.min(prow.implicitWidth, pill.width - 2 * pill.padX)
+        // Never left of the padding: a clipped label (elided) starts at the pad, like a left-aligned one.
+        x: Math.round(pill.leftAligned ? Theme.barPad + pill.dx / 2 : Math.max(Theme.barPad, (pill.width - prow.implicitWidth) / 2) + pill.dx / 2)
+        width: Math.min(prow.implicitWidth, pill.width - 2 * Theme.barPad)
         spacing: Theme.sp1
+        opacity: pill.off ? 0.55 : 1
         Image {
             id: img
             visible: pill.imageOk

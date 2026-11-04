@@ -4,6 +4,7 @@
 // a new window is a yellow tick under the number and a request for attention the active shape in
 // red, neither pulsing.
 // The rail, its model (orphans of a gone secondary) and the 0.55 dispatch trap: docs/notes/desktop/bar.md
+import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Shapes
 import "root:/"
@@ -161,7 +162,48 @@ SlantCell {
                             name: appIcon.modelData.cls
                             size: 16
                             tinted: !btn.active
-                            // Above the button's own area: a click here focuses this app's window.
+                            readonly property var wins: appIcon.modelData.windows
+                            // Several windows of this app here: one 4 px slant per window under the icon, up to
+                            // three, on the cell's 1:3 (rows 21-22, inside the cell's bottom edge at row 23).
+                            Row {
+                                visible: appIcon.wins.length > 1
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                y: 21 - (Theme.barCell - 16) / 2
+                                spacing: 1
+                                Repeater {
+                                    model: Math.min(appIcon.wins.length, 3)
+                                    Shape {
+                                        width: 5
+                                        height: 2
+                                        preferredRendererType: Shape.CurveRenderer
+                                        ShapePath {
+                                            strokeColor: "transparent"
+                                            fillColor: btn.active ? Theme.colAccent : Theme.colSubtext
+                                            startX: 0
+                                            startY: 0
+                                            PathLine {
+                                                x: 4
+                                                y: 0
+                                            }
+                                            PathLine {
+                                                x: 4 + 2 / 3
+                                                y: 2
+                                            }
+                                            PathLine {
+                                                x: 2 / 3
+                                                y: 2
+                                            }
+                                            PathLine {
+                                                x: 0
+                                                y: 0
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            // Above the button's own area: a click here focuses this app's window, and with several
+                            // windows each click the NEXT one (from the focused one, wrapping); from elsewhere, the
+                            // most recently used.
                             MouseArea {
                                 anchors.fill: parent
                                 z: 1
@@ -170,7 +212,10 @@ SlantCell {
                                 // jumping to the window's center (cursor.no_warps is false everywhere else).
                                 onClicked: {
                                     strip.host.hideHint();
-                                    strip.host.launch(["hyprctl", "eval", "hl.config({ cursor = { no_warps = true } }); hl.dispatch(hl.dsp.focus({ window = \"address:" + appIcon.modelData.address + "\" })); hl.config({ cursor = { no_warps = false } })"]);
+                                    const fa = Hyprland.activeToplevel ? "" + Hyprland.activeToplevel.address : "";
+                                    const at = fa === "" ? -1 : appIcon.wins.indexOf(fa.indexOf("0x") === 0 ? fa : "0x" + fa);
+                                    const target = at >= 0 ? appIcon.wins[(at + 1) % appIcon.wins.length] : appIcon.modelData.recent;
+                                    strip.host.launch(["hyprctl", "eval", "hl.config({ cursor = { no_warps = true } }); hl.dispatch(hl.dsp.focus({ window = \"address:" + target + "\" })); hl.config({ cursor = { no_warps = false } })"]);
                                 }
                             }
                         }
@@ -185,7 +230,7 @@ SlantCell {
                     }
                 }
                 Accessible.role: Accessible.Button
-                Accessible.name: "Workspace " + strip.host.wsLabel(btn.modelData) + (btn.active ? ", active" : (btn.exists ? ", occupied" : ", empty")) + (btn.urgent ? ", asks for attention" : (btn.activity ? ", new window" : ""))
+                Accessible.name: "Workspace " + strip.host.wsLabel(btn.modelData) + (btn.active ? ", active" : (btn.exists ? ", occupied" : ", empty")) + (btn.urgent ? ", asks for attention" : (btn.activity ? ", new window" : "")) + btn.apps.map(a => ", " + a.cls + (a.windows.length > 1 ? " (" + a.windows.length + " windows)" : "")).join("")
                 MouseArea {
                     id: area
                     anchors.fill: parent

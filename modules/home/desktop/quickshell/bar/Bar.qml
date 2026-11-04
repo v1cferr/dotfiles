@@ -980,23 +980,37 @@ Scope {
             action: active ? "" : "Click to switch"
         };
     }
-    // A workspace's apps for the rail: one per class, in Hyprland's order, each with a window to focus.
+    // A workspace's apps for the rail: one per class, in Hyprland's order, each with ALL its windows
+    // there (addresses in that same stable order, and the most recently focused one).
     // It reads the toplevels' workspace and IPC object, so a binding on it follows a move or a refresh.
     function wsApps(id) {
         const out = [];
-        const seen = {};
+        const byCls = {};
         for (const t of (Hyprland.toplevels ? Hyprland.toplevels.values : [])) {
             if (!t.workspace || t.workspace.id !== id)
                 continue;
             const o = t.lastIpcObject || {};
             const cls = o.class || "";
-            if (cls === "" || seen[cls])
+            if (cls === "")
                 continue;
-            seen[cls] = true;
-            out.push({
-                cls: cls,
-                address: o.address || ("0x" + t.address)
-            });
+            const raw = o.address || ("" + t.address);
+            const addr = raw.indexOf("0x") === 0 ? raw : "0x" + raw;
+            const hist = o.focusHistoryID === undefined ? 1e9 : o.focusHistoryID;
+            let app = byCls[cls];
+            if (!app) {
+                app = byCls[cls] = {
+                    cls: cls,
+                    windows: [],
+                    recent: addr,
+                    recentHist: hist
+                };
+                out.push(app);
+            }
+            app.windows.push(addr);
+            if (hist < app.recentHist) {
+                app.recent = addr;
+                app.recentHist = hist;
+            }
         }
         return out;
     }

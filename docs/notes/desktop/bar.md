@@ -245,9 +245,13 @@ from `00`, under one sliding inner `\` of the cell's own slope (18 px tall, a 6 
 **The apps.** Each number carries its apps' icons, one per window class in
 Hyprland's order (`wsApps` in `Bar.qml`, read from the toplevels' IPC object), up to three (two on
 the LG's narrower bar) and then `+N`: full color on the active workspace, greyed on the others (`widgets/AppIcon.qml`, the same
-lookup the lock screen uses). A click on an icon focuses that app's window
-(`hl.dsp.focus({ window = "address:0x..." })`); a click elsewhere on the number switches workspace
-as before. The toplevels are refreshed at start and when a window opens, closes or moves, so the
+lookup the lock screen uses). An app with several windows there gets one 4 px slant per window
+under its icon, up to three, on the cell's 1:3 (accent on the active workspace, `subtext` on the
+others): no width, so a second window never moves the rail. A click on an icon focuses that app's
+window (`hl.dsp.focus({ window = "address:0x..." })`, with `cursor.no_warps` on for that one call so
+the pointer stays on the bar); with several, each click focuses the next one, wrapping, and from
+another app the most recently used (`focusHistoryID`). A click elsewhere on the number switches
+workspace as before. The toplevels are refreshed at start and when a window opens, closes or moves, so the
 icons follow.
 
 The two marks used to be one, and pulsed forever. They are apart, since a window that merely opened

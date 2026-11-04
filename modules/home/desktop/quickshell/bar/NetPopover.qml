@@ -1,6 +1,6 @@
-// The NETWORK panel (hover): the verdict, 2 minutes of throughput mirrored on a log scale, the
-// link's latency over time, the apps moving traffic, the address and the other interfaces. The state
-// lives in the Bar (bar.md).
+// The NETWORK panel (hover): the verdict, 2 minutes of throughput mirrored on a fixed log scale in
+// bits, the link's latency over time, the speed test, the apps moving traffic, the addresses and the
+// other interfaces. The state lives in the Bar (bar.md).
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -38,18 +38,23 @@ BarPanel {
     readonly property real peakRx: pop.peak(bar.netRxHist)
     readonly property real peakTx: pop.peak(bar.netTxHist)
     // ONE log scale for both halves, or the mirror lies about which direction is bigger. Log because
-    // a link idles at kilobytes and bursts at tens of megabytes: on a linear axis the burst flattens
-    // every other sample to nothing. The ceiling is the next step above the peak, never under 1 MB/s.
-    readonly property real logFloor: 1024
+    // a link idles at kilobits and bursts near the gigabit: on a linear axis the burst flattens every
+    // other sample to nothing. FIXED from 1 kb/s to the link, so a height always means the same rate
+    // (a floating ceiling made 5 Mb/s and 870 Mb/s look alike). Series are bytes/s, hence the /8.
+    readonly property real logFloor: 125
+    readonly property var last: speed.last
     readonly property real scaleTop: {
-        const mx = Math.max(pop.peakRx, pop.peakTx);
-        for (const t of [1, 10, 100, 1000])
-            if (mx <= t * 1048576)
-                return t * 1048576;
-        return 10000 * 1048576;
+        const link = Number(pop.link.speed || 0) > 0 ? Number(pop.link.speed) * 1e6 / 8 : 125e6;
+        return Math.max(link, pop.last ? Math.max(pop.last.down, pop.last.up) : 0);
     }
+    // "4.9 Mb/s": the unit spelled out in the panel, where there is room for it.
     function rate(v) {
-        return pop.bar.fmtRate(v).replace(".0M", "M");
+        const m = pop.bar.fmtBits(v).match(/^([0-9.]+)([kMG]?)$/);
+        return m ? m[1].replace(/\.0$/, "") + " " + m[2] + "b/s" : "";
+    }
+    // The share of the measured capacity, beside the live number.
+    function share(v, cap) {
+        return cap > 0 ? Math.round(v * 100 / cap) + "%" : "";
     }
 
     // Who is moving the bytes: nethogs (a capability wrapper, never root) runs ONLY while the panel
@@ -183,14 +188,14 @@ BarPanel {
             Layout.fillWidth: true
             spacing: Theme.sp2
             Text {
-                text: "↓" + pop.rate(pop.bar.netMainRx) + "/s"
+                text: "↓ " + pop.rate(pop.bar.netMainRx)
                 color: Theme.colTeal
                 font.family: Theme.uiFont
                 font.pixelSize: Theme.fontLabel
                 font.bold: true
             }
             Text {
-                text: "↑" + pop.rate(pop.bar.netMainTx) + "/s"
+                text: "↑ " + pop.rate(pop.bar.netMainTx)
                 color: Theme.colPeach
                 font.family: Theme.uiFont
                 font.pixelSize: Theme.fontLabel
@@ -200,7 +205,9 @@ BarPanel {
                 Layout.fillWidth: true
             }
             Caption {
-                text: "peak ↓" + pop.rate(pop.peakRx) + " ↑" + pop.rate(pop.peakTx)
+                // How much of the plan is in use: against the last speed test, not the port's 1 Gb/s.
+                visible: !!pop.last
+                text: pop.last ? "of plan ↓" + pop.share(pop.bar.netMainRx, pop.last.down) + " ↑" + pop.share(pop.bar.netMainTx, pop.last.up) : ""
             }
         }
         Sparkline {
@@ -215,10 +222,20 @@ BarPanel {
             logFloor: pop.logFloor
             scaleTop: pop.scaleTop
             // One line per half: more than that crowds a 40 px half once the ceiling climbs.
-            gridValues: pop.scaleTop > 1048576 ? [1048576] : [32768]
-            gridLabel: v => pop.rate(v)
+            // Decades like a dB meter: 1 Mb/s and 100 Mb/s, the same place every time.
+            gridValues: [125e3, 12.5e6]
+            gridLabel: v => pop.bar.fmtBits(v).replace(".0", "")
+            refLines: pop.last ? [{
+                    v: pop.last.down,
+                    color: Theme.colTeal,
+                    lower: false
+                }, {
+                    v: pop.last.up,
+                    color: Theme.colPeach,
+                    lower: true
+                }] : []
             stepS: pop.stepS
-            format: (rx, tx) => "↓" + pop.rate(rx) + "/s  ↑" + pop.rate(tx) + "/s"
+            format: (rx, tx) => "↓ " + pop.rate(rx) + "  ↑ " + pop.rate(tx)
             placeholder: "measuring…"
         }
         RowLayout {
@@ -227,10 +244,10 @@ BarPanel {
                 Layout.fillWidth: true
                 readonly property int secs: Math.round((pop.bar.netRxHist || []).length * pop.stepS)
                 readonly property int full: Math.round(pop.bar.histWindow * pop.stepS)
-                text: (secs < full ? "filling · " + secs + "s of " + full / 60 + " min" : "last " + full / 60 + " min") + " · log scale"
+                text: (secs < full ? "filling · " + secs + "s of " + full / 60 + " min" : "last " + full / 60 + " min") + " · log 1k to " + pop.bar.fmtBits(pop.scaleTop).replace(".0", "")
             }
             Caption {
-                text: "moved ↓" + pop.bar.fmtBytes(pop.sum(pop.bar.netRxHist) * pop.stepS) + " ↑" + pop.bar.fmtBytes(pop.sum(pop.bar.netTxHist) * pop.stepS)
+                text: "peak ↓" + pop.rate(pop.peakRx) + " ↑" + pop.rate(pop.peakTx)
             }
         }
 
@@ -251,7 +268,8 @@ BarPanel {
             }
             Caption {
                 Layout.fillWidth: true
-                text: "to " + pop.bar.netProbeTarget + " · 1 packet/s"
+                // IDLE latency past the ISP; the speed test below shows it under load.
+                text: "idle · " + pop.bar.netProbeTarget + (pop.pub.colo ? " " + pop.pub.colo : "")
                 elide: Text.ElideRight
             }
             Caption {
@@ -269,6 +287,15 @@ BarPanel {
             stepS: 1
             unit: " ms"
             placeholder: "measuring…"
+        }
+
+        Hairline {
+            Layout.topMargin: 2
+        }
+
+        SpeedTestSection {
+            id: speed
+            rate: v => pop.rate(v)
         }
 
         Hairline {
@@ -297,6 +324,7 @@ BarPanel {
             Fact {
                 label: "Since boot"
                 value: "↓" + pop.bar.fmtBytes(pop.stats.rx || 0) + " ↑" + pop.bar.fmtBytes(pop.stats.tx || 0)
+                sub: "last 2 min ↓" + pop.bar.fmtBytes(pop.sum(pop.bar.netRxHist) * pop.stepS) + " ↑" + pop.bar.fmtBytes(pop.sum(pop.bar.netTxHist) * pop.stepS)
             }
             Fact {
                 Layout.columnSpan: 2

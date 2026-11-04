@@ -391,15 +391,22 @@ The scale is LOGARITHMIC since 03/11/2026. On the linear one, a single 80 MB/s b
 ceiling for the whole two minutes and every 12 KB/s sample came out as 0 px, so the graph was a flat
 line with one spike: it showed the burst and hid the link. A link idles at kilobytes and bursts at
 tens of megabytes, three or four orders apart, and a log axis gives both a readable height while
-keeping the order right. The axis is 1 KB/s (anything under it draws nothing), the ceiling is the
-next step of 1, 10, 100 or 1000 MB/s above the peak, never under 1 MB/s, and one labelled grid
-line per half (32 KB/s, or 1 MB/s once the ceiling climbs) says where the eye is. The legend says
-"log scale" because a log graph read as linear exaggerates small traffic. An area with a stroke
+keeping the order right.
+
+The axis is FIXED since the second round (03/11/2026): 1 kb/s at the center line to the link at
+the edge (the port's 1 Gb/s, or the last speed test when that is higher). The first version put the
+ceiling one step above the window's peak, so it moved with every burst, and the user's capture
+showed the cost: ↓5 Mb/s and ↑870 Mb/s at nearly the same height, because each frame had its own
+scale. A fixed axis reads like a dB meter: two labelled grid lines (1M and 100M, the labels on the
+axis side so they never stack) are always in the same place, the eye learns the positions, and a
+dashed line per half marks the last measured capacity. The honest number is still beside the
+graph: the current rate and its share of the plan (`of plan ↓0% ↑88%`, against the speed test, not
+the port). An area with a stroke
 replaced the bars: 60 two-pixel bars on a log axis read as noise, a curve reads as a level.
 
-Around the graph: the current rate in the direction's colour, the window's peak and the volume it
-moved (both from the samples already kept), and the hover gives both directions and the time of
-the sample. While the window is still filling after a reload the legend says so ("filling · 20s of
+Around the graph: the current rate in the direction's colour, the window's peak, and the hover
+with both directions and the time of the sample. The volume the window moved went under "Since
+boot" in the facts grid, where the other byte counts are. While the window is still filling after a reload the legend says so ("filling · 20s of
 2 min") instead of passing a short window off as the whole.
 
 **The latency is a graph too**, the probe's own 60 samples, drawn like the VPN's (linear from zero,
@@ -442,6 +449,15 @@ the IDLE round trip to the internet past the ISP. Ookla's ping (7 ms) is to its 
 a few hops away, so it is lower and is not the same question. Ookla's loaded latency (17 ms while
 downloading) is the round trip while the link is saturated: when it climbs far above idle, the
 router is queueing (bufferbloat), which is what freezes a call during a download.
+
+**In the panel** (`bar/SpeedTestSection.qml`), under the probe's latency: the last result in the
+direction colours, its ping, its loaded latency per direction, loss and server, and the last 12 runs
+as bars with their date on hover. The loaded line turns peach when the test ADDED more than 30 ms
+over its own ping, the point where the bufferbloat tests stop grading a link as good. ▶ runs the
+same `net-speedtest --progress`, and while it runs the section becomes one bar of three thirds
+(latency, download, upload, so it never runs backwards) with the live rate, and the throughput
+graph above shows the saturation as it happens. ■ cancels. A run that finds the timer's test
+holding the lock says so instead of failing.
 
 **The main interface comes from the DEFAULT ROUTE**, not from the literal `enp7s0` that used to be
 written into the parser. That is what "main" means, and it works on a machine that never saw this

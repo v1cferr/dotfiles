@@ -1,5 +1,6 @@
 // The ADAPTIVE WORKSPACE RAIL: one monitor's workspaces in ONE "\" cell, the active one under a
-// sliding inner "\" of the same slope. Occupied reads bright, empty dim; a new window is a yellow
+// sliding inner "\" of the same slope. Each number carries its apps' icons (one per app, up to 3,
+// then +N; a click focuses that window); occupied reads bright, empty dim; a new window is a yellow
 // tick under the number and a request for attention the active shape in red, neither pulsing.
 // The rail, its model (orphans of a gone secondary) and the 0.55 dispatch trap: docs/notes/desktop/bar.md
 import QtQuick
@@ -21,6 +22,8 @@ SlantCell {
         return i >= 0 ? wsRep.itemAt(i) : null;
     }
     property bool placed: false // no slide in from x = 0 on the first frame
+    // The icons need room the standing screen's compact bar does not have.
+    property bool withApps: true
     lean: -1
     implicitWidth: Math.ceil((wsRow.implicitWidth + 2 * Theme.sp2) / 4) * 4
 
@@ -93,9 +96,12 @@ SlantCell {
                 readonly property bool exists: strip.host.wsExist[btn.modelData] === true
                 readonly property bool urgent: strip.host.wsUrgent[btn.modelData] === true
                 readonly property bool activity: strip.host.wsActivity[btn.modelData] === true
+                // The apps, on the full bar only: the standing screen's band has the room for them.
+                readonly property var apps: strip.withApps ? strip.host.wsApps(btn.modelData) : []
+                readonly property var shown: btn.apps.slice(0, 3)
 
-                // ONE width for every number, from a template: "01" and "08" never differ.
-                implicitWidth: Math.ceil((tmNum.advanceWidth + 2 * Theme.sp2) / 4) * 4
+                // The number from a template ("01" and "08" never differ), then its icons.
+                implicitWidth: Math.ceil((numBox.width + (btn.shown.length > 0 ? appRow.implicitWidth + Theme.sp1 : 0) + 2 * Theme.sp2) / 4) * 4
                 implicitHeight: Theme.barCell
 
                 // Asking for attention: the active shape, in the alert color, until visited.
@@ -109,10 +115,15 @@ SlantCell {
                     w: btn.width
                     tone: Theme.colHoverFill
                 }
+                Item {
+                    id: numBox
+                    x: Theme.sp2 + 3 // the inner shape's center line
+                    width: Math.ceil(tmNum.advanceWidth)
+                    height: Theme.barCell
+                }
                 Text {
                     id: num
-                    anchors.centerIn: parent
-                    anchors.horizontalCenterOffset: 3 // the inner shape's center line
+                    anchors.centerIn: numBox
                     text: strip.host.wsLabel(btn.modelData)
                     color: btn.active ? Theme.colAccent : (btn.urgent ? Theme.colCrit : (btn.exists ? Theme.colText : Theme.colDim))
                     Behavior on color {
@@ -133,6 +144,43 @@ SlantCell {
                     height: 2
                     radius: 1
                     color: Theme.colWarn
+                }
+                Row {
+                    id: appRow
+                    z: 1 // above the button's area, so an icon's own click wins
+                    visible: btn.shown.length > 0
+                    x: numBox.x + numBox.width + Theme.sp1
+                    height: Theme.barCell
+                    spacing: Theme.sp1
+                    Repeater {
+                        model: btn.shown
+                        AppIcon {
+                            id: appIcon
+                            required property var modelData
+                            anchors.verticalCenter: parent.verticalCenter
+                            name: appIcon.modelData.cls
+                            size: 16
+                            tinted: !btn.active
+                            // Above the button's own area: a click here focuses this app's window.
+                            MouseArea {
+                                anchors.fill: parent
+                                z: 1
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    strip.host.hideHint();
+                                    strip.host.launch(["hyprctl", "dispatch", "hl.dsp.focus({ window = \"address:" + appIcon.modelData.address + "\" })"]);
+                                }
+                            }
+                        }
+                    }
+                    Text {
+                        visible: btn.apps.length > btn.shown.length
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "+" + (btn.apps.length - btn.shown.length)
+                        color: Theme.colDim
+                        font.family: Theme.uiFont
+                        font.pixelSize: Theme.fontSmall
+                    }
                 }
                 Accessible.role: Accessible.Button
                 Accessible.name: "Workspace " + strip.host.wsLabel(btn.modelData) + (btn.active ? ", active" : (btn.exists ? ", occupied" : ", empty")) + (btn.urgent ? ", asks for attention" : (btn.activity ? ", new window" : ""))

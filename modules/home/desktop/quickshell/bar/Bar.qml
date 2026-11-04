@@ -104,6 +104,7 @@ Scope {
     Component.onCompleted: {
         root.updateClock();
         hyprProc.running = true;
+        Hyprland.refreshToplevels(); // the rail's icons need every window's class from the start
     }
 
     // ===== The system snapshot: ONE read of /proc and sysfs per tick =====
@@ -979,6 +980,26 @@ Scope {
             action: active ? "" : "Click to switch"
         };
     }
+    // A workspace's apps for the rail: one per class, in Hyprland's order, each with a window to focus.
+    // It reads the toplevels' workspace and IPC object, so a binding on it follows a move or a refresh.
+    function wsApps(id) {
+        const out = [];
+        const seen = {};
+        for (const t of (Hyprland.toplevels ? Hyprland.toplevels.values : [])) {
+            if (!t.workspace || t.workspace.id !== id)
+                continue;
+            const o = t.lastIpcObject || {};
+            const cls = o.class || "";
+            if (cls === "" || seen[cls])
+                continue;
+            seen[cls] = true;
+            out.push({
+                cls: cls,
+                address: o.address || ("0x" + t.address)
+            });
+        }
+        return out;
+    }
     function wsLabel(id) {
         return (id < 10 ? "0" : "") + id;
     }
@@ -1797,8 +1818,11 @@ Scope {
         target: Hyprland
         function onRawEvent(event) {
             const n = event.name;
-            if (n.indexOf("workspace") === 0 || n === "focusedmon" || n === "createworkspace" || n === "destroyworkspace" || n === "moveworkspace" || n === "openwindow" || n === "closewindow" || n === "urgent")
+            if (n.indexOf("workspace") === 0 || n === "focusedmon" || n === "createworkspace" || n === "destroyworkspace" || n === "moveworkspace" || n === "openwindow" || n === "closewindow" || n === "urgent" || n.indexOf("movewindow") === 0)
                 hyprProc.running = true;
+            // The rail's icons read each window's class from its IPC object: refresh it when windows change.
+            if (n === "openwindow" || n === "closewindow" || n.indexOf("movewindow") === 0)
+                Hyprland.refreshToplevels();
             if (n === "urgent")
                 root.markUrgentActivity();
         }
@@ -2055,6 +2079,7 @@ Scope {
                         id: wsStrip
                         host: root
                         monitor: bar.modelData ? bar.modelData.name : ""
+                        withApps: !bar.compact
                         barContent: barContent
                         barWindow: bar
                     }

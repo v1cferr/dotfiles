@@ -166,9 +166,11 @@ SlantCell {
                                 anchors.fill: parent
                                 z: 1
                                 cursorShape: Qt.PointingHandCursor
+                                // The focus with warps off for that one call: the cursor stays on the bar instead of
+                                // jumping to the window's center (cursor.no_warps is false everywhere else).
                                 onClicked: {
                                     strip.host.hideHint();
-                                    strip.host.launch(["hyprctl", "dispatch", "hl.dsp.focus({ window = \"address:" + appIcon.modelData.address + "\" })"]);
+                                    strip.host.launch(["hyprctl", "eval", "hl.config({ cursor = { no_warps = true } }); hl.dispatch(hl.dsp.focus({ window = \"address:" + appIcon.modelData.address + "\" })); hl.config({ cursor = { no_warps = false } })"]);
                                 }
                             }
                         }

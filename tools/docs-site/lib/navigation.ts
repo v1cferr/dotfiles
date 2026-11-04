@@ -152,6 +152,7 @@ export const navigation: NavItem[] = [
       { title: "Claude Code", doc: "notes/apps/claude-code.md" },
       { title: "Codex", doc: "notes/apps/codex.md" },
       { title: "ChatGPT", doc: "notes/apps/chatgpt.md" },
+      { title: "Gemini", doc: "notes/apps/gemini.md" },
       { title: "tmux", doc: "notes/apps/tmux.md" },
       { title: "fastfetch", doc: "notes/apps/fastfetch.md" },
       { title: "Antigravity CLI", doc: "notes/apps/antigravity-cli.md" },

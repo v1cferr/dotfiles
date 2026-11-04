@@ -57,7 +57,6 @@ different ids for the same app:
 | App | Classes |
 | --- | --- |
 | Discord | `discord`, `vesktop` |
-| WhatsApp (zapfast) | `zapfast` |
 | Telegram | `TelegramDesktop`, `org.telegram.desktop` |
 | ChatGPT | `chatgpt` |
 | Obsidian | `obsidian`, `md.Obsidian` |
@@ -87,6 +86,9 @@ is hot-reloaded, so `hyprctl reload` applies it with no rebuild.
 ## Apps that have their own lock
 
 Turn these on inside the app, in addition to the vault. They are app settings, not Nix:
+
+- **WhatsApp (zapfast)**: its own lock is enough, so it is NOT a vault app (removed 04/11/2026).
+  Two password prompts in a row for one app were noise.
 
 - **Telegram Desktop**: Settings > Privacy and Security > Local passcode, with auto-lock after
   5 minutes away. It locks the chats themselves, not just the window.

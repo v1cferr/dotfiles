@@ -5,7 +5,6 @@
 -- app name -> Lua patterns over the lowercased window class (X11 and Wayland ids differ).
 local APPS = {
   discord  = { "^discord$", "^vesktop$" },
-  zapfast  = { "^zapfast$" },
   telegram = { "^telegramdesktop$", "^org%.telegram%.desktop$" },
   chatgpt  = { "chatgpt" },
   obsidian = { "obsidian" },

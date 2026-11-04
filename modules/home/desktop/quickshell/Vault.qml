@@ -16,7 +16,6 @@ Singleton {
 
     readonly property var names: ({
             discord: "Discord",
-            zapfast: "WhatsApp",
             telegram: "Telegram",
             chatgpt: "ChatGPT",
             obsidian: "Obsidian",
@@ -25,7 +24,6 @@ Singleton {
         })
     readonly property var icons: ({
             discord: "forum",
-            zapfast: "chat",
             telegram: "send",
             chatgpt: "smart_toy",
             obsidian: "description",

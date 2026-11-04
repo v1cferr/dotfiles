@@ -24,6 +24,9 @@ Item {
     readonly property string source: {
         if (DesktopEntries.applications.values.length > 0) {
             const e = DesktopEntries.heuristicLookup(app.name);
+            // A web app's entry, written by Chrome, names its icon by absolute path, not by theme name.
+            if (e && e.icon && e.icon.startsWith("/"))
+                return "file://" + e.icon;
             if (e && e.icon && Quickshell.hasThemeIcon(e.icon))
                 return Quickshell.iconPath(e.icon);
         }

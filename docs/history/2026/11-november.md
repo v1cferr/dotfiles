@@ -19,6 +19,15 @@
       • WHAT LOST: DMG ports, repack flakes, a web app and WinBoat, each for a reason in the note.
       • ONE CODEX: the app launches pkgs/codex, the same CLI the terminal uses.
 
+- [ ] Network panel round 2: speed test, bits, a fixed axis (03/11/2026; asked 03/11/2026). How
+      and why: [notes/desktop/bar.md](../../notes/desktop/bar.md#the-speed-test-03112026).
+      • THE FLOATING CEILING HID THE DIRECTIONS: ↓5 Mb/s and ↑870 Mb/s drew alike. The log axis
+        is now fixed from 1 kb/s to the link, with decade lines and the measured capacity dashed.
+      • BITS, the plan's unit, in the pill and the panel; volumes stay in bytes.
+      • `net-speedtest`: Ookla behind a lock, a button with a live gauge and a 6 h timer, one
+        history. First runs: ↓927 ↑920 Mb/s, ping 7 ms, loaded 17 ms.
+      • OPEN: the button and the timer after the rebuild that puts the script on the PATH.
+
 - [x] The network pill and panel, readable again (03/11/2026; asked 03/11/2026). How and why:
       [notes/desktop/bar.md](../../notes/desktop/bar.md#the-three-system-panels).
       • THE GRAPH WAS LYING BY OMISSION: linear with one shared ceiling, a single 80 MB/s burst

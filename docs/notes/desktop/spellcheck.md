@@ -23,6 +23,7 @@ languages from its own place. So there is ONE list, `my.spellcheck.languages` in
 | Layer | Apps | Where |
 | --- | --- | --- |
 | hunspell dictionaries plus `DICPATH` | GTK (gspell, libspelling), Qt (Sonnet), Gecko | `modules/nixos/desktop/spellcheck.nix` |
+| `spellchecker.dictionary` pref | Zen, LibreWolf | `modules/home/apps/zen.nix`, `modules/home/apps/librewolf.nix` |
 
 ### hunspell dictionaries
 
@@ -32,3 +33,13 @@ libspelling) and Gecko both honor `DICPATH`. No `enchant.ordering` is declared: 
 already falls through to hunspell/nuspell for every language we use.
 
 Check: `enchant-lsmod-2 -list-dicts` lists `en_US` and `pt_BR`.
+
+### Gecko (Zen, LibreWolf)
+
+`spellchecker.dictionary` takes a comma-separated list (`en-US,pt-BR`) since Firefox 98, and the
+dictionaries themselves come from `DICPATH`. Zen gets it as a `Preferences` policy (the same
+`extraPolicies` block as the start page), LibreWolf as a `defaultPref` in `extraPrefs`. Both are
+DEFAULTS and not locked: the context menu can still toggle a language for the session.
+
+A page that declares its own `lang` wins over the pref: Gecko checks that page in its language
+only. That is upstream behavior, not something a pref changes.

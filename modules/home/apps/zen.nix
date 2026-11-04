@@ -5,6 +5,7 @@
   lib,
   pkgs,
   inputs,
+  osConfig,
   ...
 }:
 
@@ -36,6 +37,11 @@ let
           Homepage = {
             StartPage = "previous-session";
             Locked = true;
+          };
+          # Spellcheck in every SSOT language (docs/notes/desktop/spellcheck.md); the .dic files come from DICPATH.
+          Preferences."spellchecker.dictionary" = {
+            Value = lib.concatStringsSep "," osConfig.my.spellcheck.languages;
+            Status = "default";
           };
           # Vicinae's tab search (docs/notes/desktop/vicinae.md): the signed AMO build, kept current by AMO.
           ExtensionSettings."firefox@vicinae.com" = {

@@ -3,6 +3,7 @@
 {
   config,
   lib,
+  osConfig,
   pkgs,
   ...
 }:
@@ -13,10 +14,14 @@ let
   p = config.my.theme.palette; # SSOT: modules/home/desktop/palette.nix (rule 11, decision 0001)
   c = name: "#${p.${name}}";
 
-  # Without this pref Gecko ignores chrome/userChrome.css; a defaultPref in the package, so the
-  # profile carries no user.js of ours.
+  # Without the first pref Gecko ignores chrome/userChrome.css; the second spellchecks in every SSOT
+  # language (docs/notes/desktop/spellcheck.md). defaultPrefs in the package, so the profile
+  # carries no user.js of ours.
   package = librewolf.override {
-    extraPrefs = ''defaultPref("toolkit.legacyUserProfileCustomizations.stylesheets", true);'';
+    extraPrefs = ''
+      defaultPref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
+      defaultPref("spellchecker.dictionary", "${lib.concatStringsSep "," osConfig.my.spellcheck.languages}");
+    '';
   };
 
   # EVERY line `!important`, to win over the browser's author sheets. Each name was MEASURED in

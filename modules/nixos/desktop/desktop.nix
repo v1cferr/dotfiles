@@ -1,9 +1,38 @@
 # DESKTOP: Hyprland on Wayland, with LightDM as the greeter. In a Wayland session the keyboard and
 # the monitors are HYPRLAND config, not the system's xkb: docs/notes/desktop/desktop.md
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 let
-  inherit (pkgs) xterm;
+  inherit (pkgs)
+    xterm
+    pam
+    writeShellApplication
+    bitwarden-cli
+    jq
+    sops
+    ;
+  # The app vault's own password (NOT the login one): pam_exec hands the typed password on stdin,
+  # NUL-terminated, and this compares it with the sops secret. No secret yet means no unlock.
+  vaultCheck = writeShellApplication {
+    name = "vault-check";
+    text = ''
+      secret=/run/secrets/vault_password
+      [ -r "$secret" ] || exit 1
+      IFS= read -r -d "" typed || true
+      expected="$(< "$secret")"
+      [ -n "$expected" ] && [ "$typed" = "$expected" ]
+    '';
+  };
+  # `vault-passwd`: sets or changes that password (Bitwarden, sync-secrets, switch) in one go.
+  vaultPasswd = writeShellApplication {
+    name = "vault-passwd";
+    runtimeInputs = [
+      bitwarden-cli
+      jq
+      sops # sync-secrets wants it on PATH, outside the devShell too
+    ];
+    text = builtins.readFile ./scripts/vault-passwd.sh; # bash in its own file = shellcheck at build time
+  };
 in
 {
   services.xserver.enable = true; # it enables LightDM (an X11 greeter) plus Xwayland
@@ -61,4 +90,11 @@ in
   security.pam.services.hyprlock = { };
   # The QML lock's PAM (quickshell/lock/Auth.qml); hyprlock above stays as its fallback.
   security.pam.services.quickshell-lock = { };
+  # The app vault's card (quickshell/vault/VaultPrompt.qml): its own password, from Bitwarden through
+  # sops (vault_password). docs/notes/desktop/vault.md
+  environment.systemPackages = [ vaultPasswd ];
+  security.pam.services.quickshell-vault.text = ''
+    auth    required ${pam}/lib/security/pam_exec.so expose_authtok quiet ${lib.getExe vaultCheck}
+    account required ${pam}/lib/security/pam_permit.so
+  '';
 }

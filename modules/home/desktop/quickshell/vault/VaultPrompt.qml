@@ -1,6 +1,6 @@
 // The app vault's password card: centered on the FOCUSED monitor over a dim scrim, the keyboard
-// exclusive while it is up. It reuses the lock's PAM conversation (lock/Auth.qml, the
-// quickshell-lock service), so it is the same login password. Esc cancels and the apps stay hidden;
+// exclusive while it is up. It reuses the lock's PAM conversation (lock/Auth.qml) on its OWN
+// service, quickshell-vault, whose password is not the login one. Esc cancels and the apps stay hidden;
 // three misses in a row wait 30 s. The state is Vault.qml. docs/notes/desktop/vault.md
 import Quickshell
 import Quickshell.Hyprland
@@ -19,6 +19,7 @@ Scope {
 
     Auth {
         id: auth
+        service: "quickshell-vault"
         onUnlocked: {
             prompt.misses = 0;
             Vault.release();

@@ -115,6 +115,12 @@ in
         owner = "v1cferr";
         mode = "0400";
       }; # user-readable: opencode reads it through `{file:}`, the claude wrapper for the OpenRouter MCP
+    }
+    // lib.optionalAttrs (builtins.elem "vault_password" sopsKeys) {
+      vault_password = {
+        owner = "v1cferr";
+        mode = "0400";
+      }; # user-readable: the app vault's pam_exec check runs inside the user's Quickshell
     };
 
   # The Vicinae GitHub extension's token, as a settings override the --user server merges at start

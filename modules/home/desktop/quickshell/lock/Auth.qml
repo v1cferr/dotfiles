@@ -8,6 +8,8 @@ import QtQuick
 Scope {
     id: auth
 
+    // The PAM service: the lock's by default; the app vault's card asks for its own.
+    property string service: Quickshell.env("LOCK_PAM_CONFIG") || "quickshell-lock"
     property string buffer: ""
     property int fails: 0
     readonly property bool busy: pam.active
@@ -43,7 +45,7 @@ Scope {
 
     PamContext {
         id: pam
-        config: Quickshell.env("LOCK_PAM_CONFIG") || "quickshell-lock"
+        config: auth.service
         configDirectory: Quickshell.env("LOCK_PAM_DIR") || "/etc/pam.d"
         // One answer per attempt: a second prompt (a module asking for more) ends the attempt.
         onResponseRequiredChanged: {

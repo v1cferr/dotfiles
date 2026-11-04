@@ -32,7 +32,7 @@ Two halves, joined by IPC:
   (alt-tab, a stray dispatch) or a hidden app opening a new window puts it back in the vault and
   runs `qs ipc call vault ask <app>`. SUPER+CTRL+L hides them by hand without locking.
 - **The card** reuses the lock's [`lock/Auth.qml`](../../../modules/home/desktop/quickshell/lock/Auth.qml)
-  and so the `quickshell-lock` PAM service: the same password, with no second service to keep. It
+  on its OWN PAM service, `quickshell-vault`, so its password is NOT the login one (see below). It
   sits on the focused monitor only, over a dim scrim, with exclusive keyboard focus. Esc or a click
   outside cancels and the apps stay hidden. Three misses in a row wait 30 s.
 - **After `hyprctl reload`** the Lua table starts empty, so anything already in `special:vault`
@@ -56,6 +56,29 @@ different ids for the same app:
 
 Adding an app is one line in `APPS` (vault.lua) plus its name and icon in `Vault.qml`. The `.lua`
 is hot-reloaded, so `hyprctl reload` applies it with no rebuild.
+
+## The vault's own password
+
+A second password is the point: someone who learned the login one still stops at the apps.
+
+- **Where it lives**: the Bitwarden item `App Vault Password` (its password field), mapped to the
+  sops secret `vault_password` in `secrets/bitwarden-secrets.json` and readable by the user at
+  `/run/secrets/vault_password` ([`../repo/secrets.md`](../repo/secrets.md)).
+- **How it is checked**: `security.pam.services.quickshell-vault` in
+  [`modules/nixos/desktop/desktop.nix`](../../../modules/nixos/desktop/desktop.nix) is just
+  `pam_exec expose_authtok` running `vault-check`, which compares the typed password with that
+  file. nixpkgs has no `pam_pwdfile`, and `pam_exec` ships with linux-pam itself.
+- **Fails closed**: with no secret synced yet, every attempt is refused. The way out then is
+  `hyprctl eval 'vault.release("<app>")'` from a terminal.
+- **Setting or changing it**: run `vault-passwd`
+  ([`modules/nixos/desktop/scripts/vault-passwd.sh`](../../../modules/nixos/desktop/scripts/vault-passwd.sh)). It asks
+  for the new password twice, writes it IN BITWARDEN, then runs `sync-secrets` and the switch.
+  Before the first switch it is not installed yet: `nix develop -c bash` on the script does the
+  same. A hand edit of the sops file is undone by the next sync.
+
+Tested 04/11/2026 through a throwaway Quickshell `PamContext` on a temporary `pam.d`: the right
+password SUCCESS, a wrong one FAIL. The checker alone also refuses an empty password, a trailing
+space and a missing secret.
 
 ## Why only on lock (04/11/2026)
 

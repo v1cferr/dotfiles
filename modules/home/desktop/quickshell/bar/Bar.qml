@@ -958,14 +958,12 @@ Scope {
         }
         return null;
     }
-    // A workspace: its number, how many windows, and which (Hyprland's own toplevels, read on hover).
+    // A workspace: its number, how many windows, and which apps, each with its own count past one
+    // (the rail's slants stop at three, so the exact number lives here). Hyprland's toplevels, on hover.
     function wsHint(id) {
-        const wins = (Hyprland.toplevels ? Hyprland.toplevels.values : []).filter(t => t.workspace && t.workspace.id === id);
-        const names = wins.map(t => {
-            const o = t.lastIpcObject || {};
-            return o.class || t.title || "";
-        }).filter(n => n !== "");
-        const n = root.wsWindows[id] || wins.length;
+        const apps = root.wsApps(id);
+        const names = apps.map(a => a.windows.length > 1 ? a.cls + " · " + a.windows.length + " windows" : a.cls);
+        const n = root.wsWindows[id] || apps.reduce((s, a) => s + a.windows.length, 0);
         const lines = [n === 0 ? "Empty" : n + (n === 1 ? " window" : " windows")].concat(names.slice(0, 5));
         if (names.length > 5)
             lines.push("+" + (names.length - 5) + " more");

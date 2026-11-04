@@ -257,7 +257,8 @@ icons follow.
 The two marks used to be one, and pulsed forever. They are apart, since a window that merely opened
 is news and an urgency is a request (`wsActivity` from the window count, `wsUrgent` from Hyprland's
 `urgent` event), and steady: visiting the workspace clears both. A hover shows a tip with the window
-count and the windows' classes. The keybinds, the orphans of a gone secondary and the slide are
+count and each app, with its own count past one (`code · 5 windows`): the slants stop at three,
+so the exact number lives there. The keybinds, the orphans of a gone secondary and the slide are
 unchanged.
 
 ## The standing monitor's bar: status first

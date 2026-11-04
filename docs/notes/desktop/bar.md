@@ -112,11 +112,15 @@ pixel across six captures 2 s apart while the rates changed.
 ### The network pill has two faces (03/11/2026)
 
 At rest the pill shows the link's latency (`12 ms`, from the same probe as the panel); while
-traffic moves it shows the two rates. A permanent `↓ 12K ↑ 8K` was noise most of the day, and at
+traffic moves it shows the two rates, in BITS (`↓ 4.9M ↑ 869M b/s`, one unit for both). A permanent `↓ 12K ↑ 8K` was noise most of the day, and at
 rest the question is "is the link fine", which the latency answers and the verdict colour of the
-icon confirms. It turns busy after 2 samples over 512 KB/s in either direction and idle after 5
-under (10 s), so a page load does not make it flicker. 64 KB/s was the first threshold and this
-desk idles between 60 KB/s and 1 MB/s (sync, the VPN, a stream), which pinned it on the rates face.
+icon confirms. It turns busy after 2 samples over 4 Mb/s in either direction and idle after 5
+under (10 s), so a page load does not make it flicker. 0.5 Mb/s was the first threshold and this
+desk idles between 0.5 and 8 Mb/s (sync, the VPN, a stream), which pinned it on the rates face.
+
+Rates are bits per second, SI (`fmtBits` in `Bar.qml`), because the ISP plan and every speed test
+are written that way: `108.6M` in bytes had to be multiplied by 8 in the head to be compared with a
+"1 giga" plan. Volumes (moved, since boot) stay in bytes, which is how files are counted.
 Each face is padded on its own, and the row's width maths measures whichever is showing.
 
 ## Contextual expansion: one panel at a time (17/10/2026)

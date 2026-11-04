@@ -1289,12 +1289,12 @@ Scope {
     property int netHotRun: 0
     property int netColdRun: 0
     property bool netBusy: false
-    // 512 KB/s: this desk idles between 60 KB/s and 1 MB/s (sync, the VPN, a stream), and 64 KB/s
-    // left the pill on its rates face all day.
-    readonly property real netBusyRate: 524288
+    // 4 Mb/s (500 KB/s): this desk idles between 0.5 and 8 Mb/s (sync, the VPN, a stream), and
+    // 0.5 Mb/s left the pill on its rates face all day.
+    readonly property real netBusyRate: 500000
     // The pill's two faces: the rates while traffic moves, the latency while the link idles, because
     // "↓ 12K ↑ 8K" at rest is noise and the latency is what says the link is fine.
-    readonly property string netPillText: root.netBusy ? "↓" + root.tab(root.fmtRate(root.netMainRx), 5) + " ↑" + root.tab(root.fmtRate(root.netMainTx), 5) : (root.netProbeStat && root.netProbeStat.answered > 0 ? root.tab(Math.round(root.netProbeStat.avg), 3) + " ms" : "")
+    readonly property string netPillText: root.netBusy ? "↓" + root.tab(root.fmtBits(root.netMainRx), 5) + " ↑" + root.tab(root.fmtBits(root.netMainTx), 5) : (root.netProbeStat && root.netProbeStat.answered > 0 ? root.tab(Math.round(root.netProbeStat.avg), 3) + " ms" : "")
     function parseNetDev(text) {
         const lines = text.split("\n");
         const cur = ({});
@@ -1419,6 +1419,18 @@ Scope {
     // and its neighbors stop shifting every 2 s as the digits come and go.
     function tab(v, n) {
         return ("" + v).padStart(n, " ");
+    }
+    // A rate in BITS per second, SI like an ISP plan or a speed test ("4.9M", "869M", "1.2G"), from
+    // bytes per second. At most 4 columns, so the pill can pad it to a fixed width.
+    function fmtBits(Bps) {
+        const b = Bps * 8;
+        if (b >= 999.5e6)
+            return (b / 1e9).toFixed(b >= 9.95e9 ? 0 : 1) + "G";
+        if (b >= 999.5e3)
+            return b >= 9.95e6 ? Math.round(b / 1e6) + "M" : (b / 1e6).toFixed(1) + "M";
+        if (b >= 999.5)
+            return b >= 9950 ? Math.round(b / 1e3) + "k" : (b / 1e3).toFixed(1) + "k";
+        return Math.round(b) + "";
     }
     function fmtRate(bps) {
         if (bps >= 1048576)
@@ -2139,6 +2151,12 @@ Scope {
                         text: root.netPillText
                     }
                     TextMetrics {
+                        id: tmNetUnit
+                        font.family: Theme.uiFont
+                        font.pixelSize: Theme.fontSmall
+                        text: root.netBusy ? "b/s" : ""
+                    }
+                    TextMetrics {
                         id: tmVpn
                         font.family: Theme.uiFont
                         font.pixelSize: Theme.fontBody
@@ -2151,7 +2169,7 @@ Scope {
                             w += diskPill.implicitWidth + Theme.sp1;
                         // VPN and network change their own labels with the level, so they are measured in full
                         // from text metrics, never from the pills: that is what keeps this free of a loop.
-                        w += 2 * (Theme.barControl + Theme.sp1) + (level >= 1 ? 0 : tmNet.advanceWidth + tmVpn.advanceWidth + 2 * Theme.sp1);
+                        w += 2 * (Theme.barControl + Theme.sp1) + (level >= 1 ? 0 : tmNet.advanceWidth + (root.netBusy ? tmNetUnit.advanceWidth + Theme.sp1 : 0) + tmVpn.advanceWidth + 2 * Theme.sp1);
                         if (level < 2)
                             w += weatherPill.implicitWidth + sep;
                         w += bar.trayW + (bar.trayW > 0 ? sep : 0);
@@ -2204,6 +2222,7 @@ Scope {
                         id: netPill
                         icon: "󰛳"
                         label: bar.squeeze >= 1 ? "" : root.netPillText
+                        sub: bar.squeeze >= 1 || !root.netBusy ? "" : "b/s" // ONE unit for both rates
                         accent: root.netQuality.color
                         labelColor: Theme.colText
                         selected: root.pinned === "net"

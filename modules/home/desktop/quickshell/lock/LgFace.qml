@@ -3,7 +3,6 @@
 // charts. Música takes the last row while something plays, Clima otherwise.
 import Quickshell
 import Quickshell.Services.Mpris
-import Quickshell.Widgets
 import QtQuick
 import "root:/"
 import "root:/dash"
@@ -293,33 +292,13 @@ Item {
                         Item {
                             id: proc
                             required property var modelData
-                            // The app's own icon from its .desktop entry; the entries load asynchronously, so the
-                            // lookup re-runs when they arrive. No entry (Hyprland, quickshell): a neutral glyph.
-                            readonly property string icon: {
-                                if (DesktopEntries.applications.values.length === 0)
-                                    return "";
-                                const e = DesktopEntries.heuristicLookup(proc.modelData.name);
-                                return e && e.icon && Quickshell.hasThemeIcon(e.icon) ? Quickshell.iconPath(e.icon) : "";
-                            }
                             width: parent.width
                             height: 30
-                            IconImage {
-                                id: appIcon
-                                visible: proc.icon !== ""
+                            AppIcon {
                                 anchors.verticalCenter: parent.verticalCenter
-                                implicitSize: 24
-                                source: proc.icon
-                            }
-                            Text {
-                                visible: proc.icon === ""
-                                anchors.centerIn: appIcon
-                                text: "deployed_code"
-                                color: Theme.colSubtext
-                                font.family: "Material Symbols Rounded"
-                                font.pixelSize: 22
-                                font.variableAxes: {
-                                    "wght": 300
-                                }
+                                name: proc.modelData.name
+                                size: 24
+                                glyphSize: 22
                             }
                             Text {
                                 x: 36

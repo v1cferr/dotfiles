@@ -1,6 +1,16 @@
 # History: november 2026
 
-6 entries. Index in [README.md](../README.md).
+7 entries. Index in [README.md](../README.md).
+
+- [x] The bar as mirrored glass cells (04/11/2026; asked 04/11/2026). How and why:
+      [notes/desktop/bar.md](../../notes/desktop/bar.md#the-glass-cells-04112026).
+      • A BAKE-OFF OF SIX ROUNDS on real renders (four directions, the glass family, the center,
+        room for the logo, the cell states) picked it before anything touched the live shell.
+      • ONE INTEGER GRID: 34 px, 24 px cells on a 1:3 slant, 4 px slits, a 12 px edge shared with
+        the band and the windows; the center's left half mirrored differs from its right by 0.7/255.
+      • THE LOGO GETS AIR: its compartment 3 px past the cells, 5 px around the 20 px snowflake.
+      • THE RAIL SHOWS ITS APPS: icons per workspace, a click focuses that window.
+      • ONE FROST for the bar and the LG's band; the dividers and the 40 px Powerline are gone.
 
 - [x] Spellcheck in English and pt-BR in every app (03/11/2026; asked 03/11/2026). How and why:
       [notes/desktop/spellcheck.md](../../notes/desktop/spellcheck.md).

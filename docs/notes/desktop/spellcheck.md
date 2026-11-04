@@ -25,6 +25,7 @@ languages from its own place. So there is ONE list, `my.spellcheck.languages` in
 | hunspell dictionaries plus `DICPATH` | GTK (gspell, libspelling), Qt (Sonnet), Gecko | `modules/nixos/desktop/spellcheck.nix` |
 | `spellchecker.dictionary` pref | Zen, LibreWolf | `modules/home/apps/zen.nix`, `modules/home/apps/librewolf.nix` |
 | managed policy `SpellcheckLanguage` | Google Chrome (every channel) | `modules/nixos/desktop/spellcheck.nix` |
+| `spellcheck.dictionaries` seeded into `Preferences` | ChatGPT desktop | `modules/home/desktop/spellcheck/` |
 
 ### hunspell dictionaries
 
@@ -52,3 +53,24 @@ by every Chrome channel, dev included) and installs no browser. `SpellcheckLangu
 list, so a click in Settings cannot drop a language. Check: `chrome://policy`.
 
 Electron apps are Chromium inside, but they do NOT read this policy.
+
+### Electron apps with no language setting (ChatGPT)
+
+Electron ignores the Chrome policy, but it reads `spellcheck.dictionaries` from its `Preferences`
+at start and downloads the missing `.bdic` from Google's CDN by itself. `spellcheck-seed` writes
+the SSOT list there on every switch, for each file in `my.spellcheck.electronProfiles`.
+
+It SKIPS a running app, which would overwrite the file on exit. "Running" is the pid behind
+Chromium's `SingletonLock` and not the lock itself: ChatGPT leaves the lock behind even after a
+clean SIGTERM (measured). Once an app has the list it keeps it, so a skip only delays the seed to
+the next switch, or to `spellcheck-seed` by hand after closing the app.
+
+Measured 03/11/2026, seeding by hand with the apps closed:
+
+| App | Result |
+| --- | --- |
+| ChatGPT | kept the list, downloaded `pt-BR-3-0.bdic`, "talv" now suggests "talvez" |
+| Discord | downloaded `pt-BR`, then rewrote the list back to `en-US` from its own settings |
+
+Discord and Obsidian keep their own list, so they stay out of the seed: pick the languages in
+Discord's text box context menu and in Obsidian's settings.

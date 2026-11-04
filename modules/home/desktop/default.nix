@@ -23,6 +23,7 @@
     ./lockscreen # hyprlock (the lock screen) plus hypridle (idle: dim plus lock)
     ./quickshell.nix # the shell/bar/OSD/media plus NOTIFICATIONS in QML; hot-reload through mkOutOfStoreSymlink
     ./theme.nix # dark mode (prefer-dark), icons, cursor, and Qt through the recolored Kvantum
+    ./spellcheck # en-US plus pt-BR seeded into Electron apps with no language setting (the SSOT is in modules/nixos/)
     ./xdg.nix # the default browser (Zen) through xdg.mimeApps plus $BROWSER
   ];
 }

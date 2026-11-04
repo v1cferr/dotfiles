@@ -27,6 +27,11 @@ Two halves, joined by IPC:
 - **The session lock** hides every open vault app first: `lockscreen.service` runs
   `hyprctl eval 'vault.lock_all()'` as an `ExecStartPre` prefixed with `-`, so a failure there never
   keeps the screen from locking. Every lock goes through that unit: SUPER+L, the idle, the boot.
+- **Apps with no window are marked too.** Discord lives in the tray with its window closed, so
+  without this whoever unlocked the screen reopened it from the tray with no password. Now the
+  first window an app opens after a lock goes straight to the vault and asks. That mark lives only
+  in the Lua state, so a `hyprctl reload` while the screen is locked clears it for apps that have no
+  window.
 - **Hiding** moves every window of the app to `special:vault` with `follow = false`, after
   tagging it `vault_from_<workspace>`. The tag lives on the window, so it survives a
   `hyprctl reload` (the Lua state does not; measured 04/11/2026) and dies with it.

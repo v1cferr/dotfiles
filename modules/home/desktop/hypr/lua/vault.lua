@@ -103,15 +103,21 @@ function vault.release(app)
   if last then hl.dispatch(hl.dsp.focus({ window = "address:" .. last.address })) end
 end
 
--- Session lock (lockscreen.service's ExecStartPre) and SUPER+CTRL+L: every open vault app hides.
+-- Session lock (lockscreen.service's ExecStartPre) and SUPER+CTRL+L: every open vault app hides,
+-- and the closed ones are marked too, so one opened later (Discord from the tray) asks first.
 function vault.lock_all()
-  for app in pairs(APPS) do hide(app, false) end
+  for app in pairs(APPS) do
+    hide(app, false)
+    hidden[app] = true
+  end
 end
 
--- SUPER+CTRL+V: the hidden apps, space separated, for the prompt to offer.
+-- SUPER+CTRL+V: the hidden apps that have windows, space separated, for the prompt to offer.
 function vault.hidden()
   local names = {}
-  for app in pairs(hidden) do names[#names + 1] = app end
+  for app in pairs(hidden) do
+    if #windows_of(app) > 0 then names[#names + 1] = app end
+  end
   table.sort(names)
   return table.concat(names, " ")
 end

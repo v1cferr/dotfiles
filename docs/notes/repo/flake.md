@@ -140,7 +140,7 @@ associates with evaluation OOM (discourse 1517): the cost shows up once the inst
 `overlayUnstable` then exposes `pkgs.unstable.<package>` while the whole rest of the system stays on
 the stable base. That is what gives the choice per package.
 
-## The three package overlays
+## The four package overlays
 
 ### vscode: the tarball SRC over the unstable RECIPE
 
@@ -152,6 +152,13 @@ that do not exist.
 `overlayVscode` calls the package with `import` and NOT `callPackage`. `callPackage` would wrap the
 result in a fresh `.override` that only knows `pkgs/vscode/package.nix`'s own arguments, and
 `modules/home/apps/vscode.nix` passes `commandLineArgs` through `.override`, which has to reach nixpkgs'.
+
+### chatgpt: the same shape, for OpenAI's .deb
+
+`overlayChatgpt` is `overlayVscode` again: unstable's recipe, the src from
+[`pkgs/chatgpt/`](../../../pkgs/chatgpt/package.nix), `import` so `.override { codex }` still
+reaches nixpkgs. The recipe reads version and src from `passthru.source`, so that attrset is the
+whole override. Why the channel alone is not enough: [notes/apps/chatgpt.md](../apps/chatgpt.md).
 
 ### btop with Intel Xe support: TEMPORARY, with an expiry date
 

@@ -39,6 +39,19 @@ local function move(w, ws)
   hl.dispatch(hl.dsp.window.move({ workspace = ws, window = "address:" .. w.address, follow = false }))
 end
 
+-- Where a window was before the vault, kept as a tag ON the window: it survives `hyprctl reload`
+-- (Lua state does not) and dies with the window. Floating, size and fullscreen survive the move.
+local FROM = "vault_from_"
+local function tag(w, sign, ws)
+  hl.dispatch(hl.dsp.window.tag({ tag = sign .. FROM .. ws, window = "address:" .. w.address }))
+end
+local function origin_of(w)
+  local tags = type(w.tags) == "table" and w.tags or { w.tags }
+  for _, t in ipairs(tags) do
+    if type(t) == "string" and t:sub(1, #FROM) == FROM then return t:sub(#FROM + 1) end
+  end
+end
+
 -- Focusing a vaulted window OPENS the special on its monitor, and toggle_special only acts on the
 -- focused monitor: focus each one showing the vault, then close it.
 local function close_view()
@@ -58,7 +71,10 @@ local function hide(app, ask)
   if #wins == 0 then return end
   busy = true
   for _, w in ipairs(wins) do
-    if not (w.workspace and w.workspace.name == VAULT_WS) then move(w, VAULT_WS) end
+    if w.workspace and w.workspace.name ~= VAULT_WS then
+      if not origin_of(w) then tag(w, "+", w.workspace.name) end
+      move(w, VAULT_WS)
+    end
   end
   close_view()
   busy = false
@@ -69,15 +85,22 @@ local function hide(app, ask)
   end
 end
 
+-- Every window goes back to the workspace it left (the active one if it has no tag), and the one
+-- used last gets the focus, which takes you to it.
 function vault.release(app)
-  local ws = hl.get_active_workspace()
-  if not (hidden[app] and ws) then return end
-  local wins = windows_of(app)
+  if not hidden[app] then return end
+  local here = hl.get_active_workspace()
+  local wins, last = windows_of(app), nil
   busy = true
-  for _, w in ipairs(wins) do move(w, tostring(ws.id)) end
+  for _, w in ipairs(wins) do
+    local from = origin_of(w)
+    move(w, from or (here and here.name) or "1")
+    if from then tag(w, "-", from) end
+    if not last or w.focus_history_id < last.focus_history_id then last = w end
+  end
   busy = false
   hidden[app] = nil
-  if wins[1] then hl.dispatch(hl.dsp.focus({ window = "address:" .. wins[1].address })) end
+  if last then hl.dispatch(hl.dsp.focus({ window = "address:" .. last.address })) end
 end
 
 -- Session lock (lockscreen.service's ExecStartPre) and SUPER+CTRL+L: every open vault app hides.

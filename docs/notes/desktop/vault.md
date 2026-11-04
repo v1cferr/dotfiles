@@ -27,7 +27,14 @@ Two halves, joined by IPC:
 - **The session lock** hides every open vault app first: `lockscreen.service` runs
   `hyprctl eval 'vault.lock_all()'` as an `ExecStartPre` prefixed with `-`, so a failure there never
   keeps the screen from locking. Every lock goes through that unit: SUPER+L, the idle, the boot.
-- **Hiding** moves every window of the app to `special:vault` with `follow = false`.
+- **Hiding** moves every window of the app to `special:vault` with `follow = false`, after
+  tagging it `vault_from_<workspace>`. The tag lives on the window, so it survives a
+  `hyprctl reload` (the Lua state does not; measured 04/11/2026) and dies with it.
+- **Coming back** puts each window on the workspace in its tag and focuses the one used last.
+  Floating, position, size and fullscreen survive the round trip, and so does the monitor, because
+  `monitors.lua` pins each workspace to one (tested 04/11/2026 with a fullscreen window and a
+  floating one on the secondary monitor; the floating one may shift a few pixels). A window with no
+  tag lands on the active workspace.
 - **Getting them back.** SUPER+CTRL+V asks for everything hidden at once. Focusing a hidden window
   (alt-tab, a stray dispatch) or a hidden app opening a new window puts it back in the vault and
   runs `qs ipc call vault ask <app>`. SUPER+CTRL+L hides them by hand without locking.

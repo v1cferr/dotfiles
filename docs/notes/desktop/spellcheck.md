@@ -26,6 +26,7 @@ languages from its own place. So there is ONE list, `my.spellcheck.languages` in
 | `spellchecker.dictionary` pref | Zen, LibreWolf | `modules/home/apps/zen.nix`, `modules/home/apps/librewolf.nix` |
 | managed policy `SpellcheckLanguage` | Google Chrome (every channel) | `modules/nixos/desktop/spellcheck.nix` |
 | `spellcheck.dictionaries` seeded into `Preferences` | ChatGPT desktop | `modules/home/desktop/spellcheck/` |
+| `cSpell.language` | VS Code | `modules/home/apps/vscode/settings.json` |
 
 ### hunspell dictionaries
 
@@ -74,3 +75,20 @@ Measured 03/11/2026, seeding by hand with the apps closed:
 
 Discord and Obsidian keep their own list, so they stay out of the seed: pick the languages in
 Discord's text box context menu and in Obsidian's settings.
+
+### VS Code
+
+VS Code has no spellchecker of its own: it is the Code Spell Checker extension, and pt-BR is a
+second extension with the dictionary. Extensions come from Settings Sync, not from Nix, so only
+`cSpell.language` is versioned. Install once (Sync carries them to the other machines):
+`streetsidesoftware.code-spell-checker` and
+`streetsidesoftware.code-spell-checker-portuguese-brazilian`.
+
+## Left by hand
+
+| App | Why | Where to pick the languages |
+| --- | --- | --- |
+| Discord | rewrites `Preferences` from its own settings (measured) | right click in the text box |
+| Obsidian | same, and it already has both | Settings, Editor, Spellcheck languages |
+| Telegram | settings live in `tdata`, binary state (rule 6) | Settings, Advanced, Spell checker |
+| ONLYOFFICE | its own dictionaries, the language is per document | the status bar's language |

@@ -349,6 +349,9 @@
   "claudeCode.preferredLocation": "panel",
   "qt-core.showWelcomePageOnActivation": false,
   "editor.unicodeHighlight.invisibleCharacters": false,
+  // Code Spell Checker in English AND pt-BR (the pt-BR dictionary is its own extension, from Sync).
+  // The same pair as my.spellcheck.languages: docs/notes/desktop/spellcheck.md
+  "cSpell.language": "en,pt-BR",
   "settingsSync.ignoredExtensions": [
     "v1cferr.nix-embedded-shell"
   ], // local, not on the marketplace

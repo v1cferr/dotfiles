@@ -158,6 +158,15 @@ scrolling implements a real resize-drag (the left border keeps the right one sti
 camera; the right border keeps the left one fixed), and shrinking the column reveals its neighbor.
 The DRAG does not do that.
 
+## SUPER+N twice cycles that workspace's windows (04/11/2026)
+
+SUPER+1 to 8 still goes to the workspace. Pressed again while it is already the active one, it
+focuses that workspace's NEXT window, left to right on the tape (sorted by each window's `at`),
+wrapping, so holding the habit of "SUPER+4 to get to my VS Code" also reaches the second VS Code.
+A Lua function (`workspace_or_next` in `keybinds.lua`) and not a dispatcher, since it reads the
+active workspace and the windows first. Keyboard focus keeps the cursor warp; only the bar's icon
+click turns it off ([bar.md](bar.md#the-workspace-rail-18102026-glass-cells-04112026)).
+
 ## Brightness, and the parenthesis that stopped working
 
 There are no brightness keys on this keyboard, and no backlight on this desktop, so "brightness" is

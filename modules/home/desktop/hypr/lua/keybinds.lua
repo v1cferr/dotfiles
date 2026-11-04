@@ -113,9 +113,43 @@ hl.bind(mainMod .. " + SHIFT + G",      hl.dsp.layout("fit expand"))      -- exp
 hl.bind(mainMod .. " + F1", hl.dsp.focus({ monitor = M.primary }))
 hl.bind(mainMod .. " + F2", hl.dsp.focus({ monitor = M.secondary }))
 
--- Workspaces 1 to 8 (SUPER switches; SUPER+SHIFT moves the window). 1-4 primary, 5-8 secondary.
+-- A window's place on screen, for a left-to-right order on the tape (`at` is {x, y} or {x = , y = }).
+local function at_of(w)
+  local a = type(w.at) == "table" and w.at or {}
+  return a.x or a[1] or 0, a.y or a[2] or 0
+end
+
+-- SUPER+N goes to workspace N; pressed again while already there, it focuses that workspace's next
+-- window, left to right on the tape, wrapping.
+local function workspace_or_next(i)
+  return function()
+    local ws = hl.get_active_workspace()
+    if not (ws and ws.id == i) then
+      return hl.dispatch(hl.dsp.focus({ workspace = i }))
+    end
+    local list = {}
+    for _, w in ipairs(hl.get_windows()) do
+      if w.mapped and not w.hidden and w.workspace and w.workspace.id == i then list[#list + 1] = w end
+    end
+    if #list < 2 then return end
+    table.sort(list, function(a, b)
+      local ax, ay = at_of(a)
+      local bx, by = at_of(b)
+      if ax ~= bx then return ax < bx end
+      return ay < by
+    end)
+    local active = hl.get_active_window()
+    local nxt = list[1]
+    for k, w in ipairs(list) do
+      if active and w.address == active.address then nxt = list[k % #list + 1] end
+    end
+    return hl.dispatch(hl.dsp.focus({ window = "address:" .. nxt.address }))
+  end
+end
+
+-- Workspaces 1 to 8 (SUPER switches, then cycles its windows; SUPER+SHIFT moves the window). 1-4 primary, 5-8 secondary.
 for i = 1, 8 do
-  hl.bind(mainMod .. " + " .. i,         hl.dsp.focus({ workspace = i }))
+  hl.bind(mainMod .. " + " .. i,         workspace_or_next(i))
   hl.bind(mainMod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
 end
 

@@ -1,9 +1,9 @@
-# The app vault: sensitive apps ask for the password again
+# The app vault: sensitive apps ask for the password again after a lock
 
-The session lock already covers leaving the desk: hypridle locks after 5 minutes
-([`lockscreen.md`](lockscreen.md)). The vault is a smaller layer inside an unlocked session. A
-sensitive app that sat unfocused for 5 minutes disappears, and getting it back asks for the login
-password, the way Bitwarden's vault timeout or Android's App Lock behave.
+The session lock covers leaving the desk: hypridle locks after 5 minutes
+([`lockscreen.md`](lockscreen.md)). The vault is a second layer behind it. When the session locks,
+every sensitive app is hidden, so whoever gets past the lock screen still meets a password per
+app, the way Android's App Lock behaves. While the PC is in use nothing hides.
 
 ## What it is, and what it is not
 
@@ -21,33 +21,24 @@ Two halves, joined by IPC:
 
 | Part | File | Job |
 | --- | --- | --- |
-| The clock and the hiding | [`hypr/lua/vault.lua`](../../../modules/home/desktop/hypr/lua/vault.lua) | which classes count, the grace, moving windows to `special:vault` and back |
+| The hiding | [`hypr/lua/vault.lua`](../../../modules/home/desktop/hypr/lua/vault.lua) | which classes count, moving windows to `special:vault` and back |
 | The password card | [`quickshell/Vault.qml`](../../../modules/home/desktop/quickshell/Vault.qml), [`vault/VaultPrompt.qml`](../../../modules/home/desktop/quickshell/vault/VaultPrompt.qml) | which apps it asks for, the PAM conversation, calling `vault.release(app)` back |
 
-- **The clock.** `window.active` records when each vault app lost focus. A 30 s `hl.timer` hides
-  every app whose last focus is older than `GRACE` (300 s), even one still visible on the other
-  monitor. A background app that never had focus starts its clock when its window opens.
-- **Playing media keeps an app on screen.** A stream watched on the other monitor is in use with
-  no focus at all. `Vault.qml` watches the MPRIS players and pushes their desktop entries
-  (`"zen"`) to `vault.set_playing()` on every change; the grace skips those apps, and an app's
-  clock starts over when it stops playing, so a paused stream still gets the full 5 minutes. The
-  session lock hides it anyway: the screen is locked, and a hidden player keeps playing.
-- **Hiding** moves every window of the app to `special:vault` with `follow = false`.
-- **Reaching for it.** Focusing a hidden window (alt-tab, a stray dispatch) or a hidden app opening
-  a new window puts it back in the vault and runs `qs ipc call vault ask <app>`. SUPER+CTRL+V asks
-  for everything hidden at once, and SUPER+CTRL+L hides everything now.
-- **The session lock** hides every vault app first: `lockscreen.service` runs
+- **The session lock** hides every open vault app first: `lockscreen.service` runs
   `hyprctl eval 'vault.lock_all()'` as an `ExecStartPre` prefixed with `-`, so a failure there never
-  keeps the screen from locking.
+  keeps the screen from locking. Every lock goes through that unit: SUPER+L, the idle, the boot.
+- **Hiding** moves every window of the app to `special:vault` with `follow = false`.
+- **Getting them back.** SUPER+CTRL+V asks for everything hidden at once. Focusing a hidden window
+  (alt-tab, a stray dispatch) or a hidden app opening a new window puts it back in the vault and
+  runs `qs ipc call vault ask <app>`. SUPER+CTRL+L hides them by hand without locking.
 - **The card** reuses the lock's [`lock/Auth.qml`](../../../modules/home/desktop/quickshell/lock/Auth.qml)
   and so the `quickshell-lock` PAM service: the same password, with no second service to keep. It
   sits on the focused monitor only, over a dim scrim, with exclusive keyboard focus. Esc or a click
   outside cancels and the apps stay hidden. Three misses in a row wait 30 s.
-- **After `hyprctl reload`** the Lua tables start empty, so anything already in `special:vault`
-  counts as hidden again, every other open vault app restarts its clock, and the Lua asks
-  `qs ipc call vault sync` for who is playing.
-- **To see the state**: `hyprctl repl 'return vault.status()'` prints each open app as `hidden`,
-  `playing`, `focused` or `idle Ns`.
+- **After `hyprctl reload`** the Lua table starts empty, so anything already in `special:vault`
+  counts as hidden again.
+- **To see the state**: `hyprctl repl 'return vault.status()'` prints each open app as `hidden`
+  or `open`.
 
 ### The apps
 
@@ -66,6 +57,14 @@ different ids for the same app:
 Adding an app is one line in `APPS` (vault.lua) plus its name and icon in `Vault.qml`. The `.lua`
 is hot-reloaded, so `hyprctl reload` applies it with no rebuild.
 
+## Why only on lock (04/11/2026)
+
+The first version also hid an app after 5 minutes unfocused, like a password manager's vault
+timeout. In daily use it fought the person at the desk: a stream watched on the other monitor has
+no focus, so it vanished mid-video, and keeping it took an MPRIS bridge (Zen sets no Wayland idle
+inhibitor while it plays). The rule became the one asked for: lock only when nobody is using the
+PC, and the screen lock already decides that. The grace clock and the MPRIS bridge were removed.
+
 ## Pitfalls found while building it
 
 - **Focusing a window in a special workspace OPENS that special** on its monitor, so the hidden app
@@ -74,11 +73,11 @@ is hot-reloaded, so `hyprctl reload` applies it with no rebuild.
   vault (measured 03/11/2026: a bare toggle opened the vault on the other monitor instead).
 - **One reach fired two `window.active` events**, so the card was asked for twice. Asking is now
   debounced per app (2 s).
+- **A plain move out of the vault snaps back.** While an app counts as hidden, focusing any of its
+  windows re-hides it, so `hyprctl dispatch` moving it out does nothing visible. Only
+  `vault.release(app)` clears the mark.
 - **`hyprctl repl` answers `unknown request` when the Lua returns an empty string**, which is why
   `vault.hidden()` is read wrapped in brackets.
-- **Zen sets no Wayland idle inhibitor while it plays** (`inhibiting_idle` stayed `false` during a
-  Twitch stream, 04/11/2026), so Hyprland cannot tell a playing window apart. MPRIS can: the
-  player reports `DesktopEntry "zen"`, which the `^zen` pattern already matches.
 - **`misc.focus_on_activate` is off**, so clicking a hidden app in the launcher or tray only
   marks it urgent instead of focusing it. Urgency is NOT a trigger, because a Discord message marks
   it urgent too and the card would pop up on every message. SUPER+CTRL+V is the way back.
@@ -89,16 +88,15 @@ Turn these on inside the app, in addition to the vault. They are app settings, n
 
 - **WhatsApp (zapfast)**: its own lock is enough, so it is NOT a vault app (removed 04/11/2026).
   Two password prompts in a row for one app were noise.
-
 - **Telegram Desktop**: Settings > Privacy and Security > Local passcode, with auto-lock after
   5 minutes away. It locks the chats themselves, not just the window.
 - **Bitwarden**: Settings > Vault timeout. The rbw side already locks after an hour
   (`lock_timeout`, [`modules/nixos/core/secrets.nix`](../../../modules/nixos/core/secrets.nix)).
 - **Zen**: the primary password plus the Zen guard, which closes it a few minutes into a session
-  lock ([`../apps/zen.md`](../apps/zen.md)). The vault adds the unfocused case on top.
+  lock ([`../apps/zen.md`](../apps/zen.md)).
 
 ## Inspiration
 
 Android's App Lock and Samsung's Secure Folder (an app behind a PIN while the phone stays usable),
-iOS 18's "Require Face ID" per app, and the password managers' auto-lock on inactivity. This is
-the desktop version of those, minus their isolation: here the apps share the session.
+iOS 18's "Require Face ID" per app, and the password managers' auto-lock. This is the desktop
+version of those, minus their isolation: here the apps share the session.

@@ -119,7 +119,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [glance-feed](desktop/glance-feed.md) | the SQLite network cache: fetch only what changed, paint from disk at boot |
 | [lockscreen](desktop/lockscreen.md) | the QML lock (Quickshell), hyprlock as its fallback, hypridle, and the hardware lessons |
 | [away](desktop/away.md) | a black screen and dark LEDs while an agent works, and why not DDC or DPMS |
-| [vault](desktop/vault.md) | sensitive apps hide after 5 min unfocused and ask for the password again |
+| [vault](desktop/vault.md) | sensitive apps hide on session lock and ask for the password again after unlock |
 | [weather](desktop/weather.md) | one source for the bar and the lock, and the icon-by-regex trap |
 | [theme](desktop/theme.md) | dark mode, Kvantum, the Win11 icons, the palette SSOT |
 | [autostart](desktop/autostart.md) | what opens at login, and Spotify's 4145 restarts |

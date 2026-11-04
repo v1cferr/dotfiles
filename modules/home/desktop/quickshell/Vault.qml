@@ -1,11 +1,10 @@
 pragma Singleton
-// The app vault's prompt state: which hidden apps the password card is asking for. The hiding and
-// the grace clock live in hypr/lua/vault.lua; this side only asks and, on success, calls back
-// `vault.release(app)` there. IPC: `qs ipc call vault ask <app> | hidden | cancel | lock | sync`.
+// The app vault's prompt state: which hidden apps the password card is asking for. The hiding
+// lives in hypr/lua/vault.lua; this side only asks and, on success, calls back
+// `vault.release(app)` there. IPC: `qs ipc call vault ask <app> | hidden | cancel | lock`.
 // The window is vault/VaultPrompt.qml. docs/notes/desktop/vault.md
 import Quickshell
 import Quickshell.Io
-import Quickshell.Services.Mpris
 import QtQuick
 
 Singleton {
@@ -30,19 +29,6 @@ Singleton {
             zen: "public",
             librewolf: "public"
         })
-
-    // The desktop entries of the players playing right now ("zen"), which vault.lua keeps on screen.
-    // Zen sets no Wayland idle inhibitor while it plays, so MPRIS is the only one that knows.
-    readonly property string playing: {
-        const list = (Mpris.players && Mpris.players.values) ? Mpris.players.values : [];
-        return list.filter(p => p && p.isPlaying).map(p => (p.desktopEntry || "").toLowerCase()).filter(e => /^[a-z0-9._-]+$/.test(e)).sort().join(" ");
-    }
-    onPlayingChanged: root.sync()
-
-    function sync() {
-        const entries = root.playing.split(" ").filter(e => e !== "").map(e => `"${e}"`).join(",");
-        Quickshell.execDetached(["hyprctl", "eval", `vault.set_playing({${entries}})`]);
-    }
 
     // The names go into a Lua string, so only the vault.lua keys' shape gets through.
     function ask(list) {
@@ -82,9 +68,6 @@ Singleton {
         }
         function cancel(): void {
             root.cancel();
-        }
-        function sync(): void {
-            root.sync();
         }
         function lock(): void {
             root.cancel();

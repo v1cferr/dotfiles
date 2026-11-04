@@ -10,7 +10,7 @@ GlassSurface {
     property real k: 1 // design units to pixels, the band's one scale
     property int pad: Theme.sp3 // in pixels, like the frame
 
-    level: "card"
+    level: "bar" // the bar's own frost: the band reads as the bar's continuation
 
     // The content's box in design units: whatever is inside lays out as it always did.
     Item {

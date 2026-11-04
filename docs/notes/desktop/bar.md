@@ -422,6 +422,23 @@ line because a 39-character address does not fit beside anything. It is asked ON
 opens, at most once per 5 minutes, and again at once if the local address or the gateway changed:
 a new network is a new public address.
 
+### The speed test (03/11/2026)
+
+`net-speedtest` (`modules/home/services/net-speedtest.nix`) wraps Ookla's official CLI, which opens
+several connections at once and so measures a gigabit line right where `speedtest-cli` does not. The
+panel's button and a user timer every 6 h run the SAME script and append to the same
+`~/.local/state/net-speedtest/history.jsonl`, one trimmed line per run (bandwidth in bytes per
+second, as Ookla gives it). A `flock` makes the second of two overlapping runs answer
+`{"type":"busy"}` and leave, and a cancel stops Ookla by its PID, never by process group, because
+the caller can share ours. The test runs on the default route's interface, so the VPN never carries
+it.
+
+**Three latencies, three questions.** The probe's number (12 ms) is ICMP to 1.1.1.1 at 1 packet/s,
+the IDLE round trip to the internet past the ISP. Ookla's ping (7 ms) is to its chosen server, often
+a few hops away, so it is lower and is not the same question. Ookla's loaded latency (17 ms while
+downloading) is the round trip while the link is saturated: when it climbs far above idle, the
+router is queueing (bufferbloat), which is what freezes a call during a download.
+
 **The main interface comes from the DEFAULT ROUTE**, not from the literal `enp7s0` that used to be
 written into the parser. That is what "main" means, and it works on a machine that never saw this
 motherboard.

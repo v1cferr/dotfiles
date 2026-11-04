@@ -20,6 +20,7 @@ vault = vault or {}
 local last_seen = {} -- app -> os.time() it last lost focus (or was released)
 local hidden = {}    -- app -> true while its windows sit in the vault
 local current = nil  -- the app that holds focus now, if any
+local playing = {}   -- app -> true while one of its MPRIS players plays (Vault.qml pushes it)
 local busy = false   -- our own moves fire window.active too; ignore them
 
 local function app_of(w)
@@ -90,12 +91,39 @@ function vault.lock_all()
   for app in pairs(APPS) do hide(app, false) end
 end
 
--- SUPER+SHIFT+V: the hidden apps, space separated, for the prompt to offer.
+-- Vault.qml calls this whenever MPRIS playback changes, with the players' desktop entries ("zen").
+-- A playing app is being watched, not abandoned: the grace skips it, and its clock starts over when
+-- it stops, so a paused stream gets the full 5 minutes.
+function vault.set_playing(entries)
+  local now_playing = {}
+  for _, e in ipairs(entries) do
+    local app = app_of({ class = e })
+    if app then now_playing[app] = true end
+  end
+  for app in pairs(playing) do
+    if not now_playing[app] and last_seen[app] then last_seen[app] = os.time() end
+  end
+  playing = now_playing
+end
+
+-- SUPER+CTRL+V: the hidden apps, space separated, for the prompt to offer.
 function vault.hidden()
   local names = {}
   for app in pairs(hidden) do names[#names + 1] = app end
   table.sort(names)
   return table.concat(names, " ")
+end
+
+-- For a person at the terminal: `hyprctl repl 'return vault.status()'`.
+function vault.status()
+  local now, rows = os.time(), {}
+  for app in pairs(APPS) do
+    local state = hidden[app] and "hidden" or playing[app] and "playing"
+      or app == current and "focused" or last_seen[app] and ("idle " .. (now - last_seen[app]) .. "s")
+    if state then rows[#rows + 1] = app .. "=" .. state end
+  end
+  table.sort(rows)
+  return "[" .. table.concat(rows, " ") .. "]"
 end
 
 hl.on("window.active", function(w)
@@ -125,7 +153,7 @@ end)
 hl.timer(function()
   local now = os.time()
   for app in pairs(APPS) do
-    if app ~= current and not hidden[app] and last_seen[app] and now - last_seen[app] > GRACE then
+    if app ~= current and not hidden[app] and not playing[app] and last_seen[app] and now - last_seen[app] > GRACE then
       hide(app, false)
     end
   end
@@ -142,3 +170,5 @@ for _, w in ipairs(hl.get_windows()) do
     last_seen[app] = os.time()
   end
 end
+-- And who is playing, which the reload forgot: Vault.qml pushes it again.
+hl.exec_cmd("qs ipc call vault sync")

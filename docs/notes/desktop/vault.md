@@ -27,6 +27,11 @@ Two halves, joined by IPC:
 - **The clock.** `window.active` records when each vault app lost focus. A 30 s `hl.timer` hides
   every app whose last focus is older than `GRACE` (300 s), even one still visible on the other
   monitor. A background app that never had focus starts its clock when its window opens.
+- **Playing media keeps an app on screen.** A stream watched on the other monitor is in use with
+  no focus at all. `Vault.qml` watches the MPRIS players and pushes their desktop entries
+  (`"zen"`) to `vault.set_playing()` on every change; the grace skips those apps, and an app's
+  clock starts over when it stops playing, so a paused stream still gets the full 5 minutes. The
+  session lock hides it anyway: the screen is locked, and a hidden player keeps playing.
 - **Hiding** moves every window of the app to `special:vault` with `follow = false`.
 - **Reaching for it.** Focusing a hidden window (alt-tab, a stray dispatch) or a hidden app opening
   a new window puts it back in the vault and runs `qs ipc call vault ask <app>`. SUPER+CTRL+V asks
@@ -39,7 +44,10 @@ Two halves, joined by IPC:
   sits on the focused monitor only, over a dim scrim, with exclusive keyboard focus. Esc or a click
   outside cancels and the apps stay hidden. Three misses in a row wait 30 s.
 - **After `hyprctl reload`** the Lua tables start empty, so anything already in `special:vault`
-  counts as hidden again and every other open vault app restarts its clock.
+  counts as hidden again, every other open vault app restarts its clock, and the Lua asks
+  `qs ipc call vault sync` for who is playing.
+- **To see the state**: `hyprctl repl 'return vault.status()'` prints each open app as `hidden`,
+  `playing`, `focused` or `idle Ns`.
 
 ### The apps
 
@@ -69,6 +77,9 @@ is hot-reloaded, so `hyprctl reload` applies it with no rebuild.
   debounced per app (2 s).
 - **`hyprctl repl` answers `unknown request` when the Lua returns an empty string**, which is why
   `vault.hidden()` is read wrapped in brackets.
+- **Zen sets no Wayland idle inhibitor while it plays** (`inhibiting_idle` stayed `false` during a
+  Twitch stream, 04/11/2026), so Hyprland cannot tell a playing window apart. MPRIS can: the
+  player reports `DesktopEntry "zen"`, which the `^zen` pattern already matches.
 - **`misc.focus_on_activate` is off**, so clicking a hidden app in the launcher or tray only
   marks it urgent instead of focusing it. Urgency is NOT a trigger, because a Discord message marks
   it urgent too and the card would pop up on every message. SUPER+CTRL+V is the way back.

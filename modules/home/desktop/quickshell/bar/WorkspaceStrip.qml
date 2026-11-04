@@ -160,6 +160,7 @@ SlantCell {
                             required property var modelData
                             anchors.verticalCenter: parent.verticalCenter
                             name: appIcon.modelData.cls
+                            pid: appIcon.modelData.pid
                             size: 16
                             tinted: !btn.active
                             readonly property var wins: appIcon.modelData.windows

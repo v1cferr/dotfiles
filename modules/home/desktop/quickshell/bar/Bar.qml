@@ -998,6 +998,7 @@ Scope {
             if (!app) {
                 app = byCls[cls] = {
                     cls: cls,
+                    pid: o.pid || 0, // the first window's process: how a Steam game's icon is found
                     windows: [],
                     recent: addr,
                     recentHist: hist

@@ -245,8 +245,10 @@ from `00`, under one sliding inner `\` of the cell's own slope (18 px tall, a 6 
 **The apps.** Each number carries its apps' icons, one per window class in
 Hyprland's order (`wsApps` in `Bar.qml`, read from the toplevels' IPC object), up to three (two on
 the LG's narrower bar) and then `+N`: full color on the active workspace, greyed on the others (`widgets/AppIcon.qml`, the same
-lookup the lock screen uses; a Wine app has no .desktop entry, so `data/WineIcons.qml` falls back
-to the icon Bottles extracted, `<bottle>/icons/<Program>.png`, matched by the program's name and
+lookup the lock screen uses. A Steam game's class says nothing (`hl` for Northgard,
+`steam_app_<id>` under Proton), so `data/SteamIcons.qml` reads `SteamAppId` from the window's
+process, once per pid, and shows the `steam_icon_<id>` Steam installed. A Wine app has no .desktop
+entry, so `data/WineIcons.qml` falls back to the icon Bottles extracted, `<bottle>/icons/<Program>.png`, matched by the program's name and
 then by its executable in `bottle.yml`). An app with several windows there gets one 4 px slant per window
 under its icon, up to three, on the cell's 1:3 (accent on the active workspace, `subtext` on the
 others): no width, so a second window never moves the rail. A click on an icon focuses that app's

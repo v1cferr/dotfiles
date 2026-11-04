@@ -16,14 +16,18 @@ Item {
     // Greyed toward the dim text, for an app that is not the subject (an inactive workspace's windows).
     property bool tinted: false
 
-    // The .desktop entry first; a Wine app has none, so then the icon Bottles extracted for it.
+    // The window's process, when known: a Steam game is found by the app id in its environment.
+    property int pid: 0
+
+    // The .desktop entry first; then a Steam game's own icon; a Wine app has neither, so then the
+    // icon Bottles extracted for it.
     readonly property string source: {
         if (DesktopEntries.applications.values.length > 0) {
             const e = DesktopEntries.heuristicLookup(app.name);
             if (e && e.icon && Quickshell.hasThemeIcon(e.icon))
                 return Quickshell.iconPath(e.icon);
         }
-        return WineIcons.path(app.name);
+        return SteamIcons.path(app.name, app.pid) || WineIcons.path(app.name);
     }
     implicitWidth: app.size
     implicitHeight: app.size

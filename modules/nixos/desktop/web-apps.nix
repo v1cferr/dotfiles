@@ -4,7 +4,7 @@
 
 {
   # Merged with the spellcheck keys into the same /etc/opt/chrome/policies JSON. An installed app
-  # gets its own window class (crx_<id>), which a plain `--app=` window in a running Chrome does not.
+  # gets its own Wayland app_id (chrome-<id>-Default), which a plain `--app=` window does not.
   programs.chromium.extraOpts.WebAppInstallForceList = [
     {
       url = "https://gemini.google.com/app";

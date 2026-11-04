@@ -5,8 +5,12 @@
 {
   home.packages = with pkgs; [
     # ── Browsers ──
-    # Chrome's DEV channel; nixpkgs only packages stable.
-    inputs.browser-previews.packages.${stdenv.hostPlatform.system}.google-chrome-dev
+    # Chrome's DEV channel; nixpkgs only packages stable. Native Wayland, forced: 158 ignores the
+    # wrapper's --ozone-platform-hint=auto, and under XWayland a web app shares Chrome's class
+    # (docs/notes/apps/gemini.md).
+    (inputs.browser-previews.packages.${stdenv.hostPlatform.system}.google-chrome-dev.override {
+      commandLineArgs = "--ozone-platform=wayland";
+    })
 
     # ── Communication ──
     discord # it exposes the IPC socket Claude Code's Rich Presence needs

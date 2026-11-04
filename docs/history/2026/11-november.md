@@ -1,6 +1,6 @@
 # History: november 2026
 
-5 entries. Index in [README.md](../README.md).
+6 entries. Index in [README.md](../README.md).
 
 - [x] Spellcheck in English and pt-BR in every app (03/11/2026; asked 03/11/2026). How and why:
       [notes/desktop/spellcheck.md](../../notes/desktop/spellcheck.md).

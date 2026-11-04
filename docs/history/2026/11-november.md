@@ -1,6 +1,14 @@
 # History: november 2026
 
-4 entries. Index in [README.md](../README.md).
+5 entries. Index in [README.md](../README.md).
+
+- [x] Spellcheck in English and pt-BR in every app (03/11/2026; asked 03/11/2026). How and why:
+      [notes/desktop/spellcheck.md](../../notes/desktop/spellcheck.md).
+      • ONE LIST: `my.spellcheck.languages` is the SSOT, and each app family reads it its own way.
+      • SYSTEM: hunspell en_US and pt_BR plus `DICPATH`, for GTK, Qt and Gecko; the dir was empty.
+      • BROWSERS: Zen and LibreWolf by `spellchecker.dictionary`, Chrome by a locked policy.
+      • ELECTRON: ChatGPT gets the list seeded into its Preferences on every switch (it asked
+        "talv" for "tall"); Discord rewrites its own, so it stays by hand like Obsidian and Telegram.
 
 - [x] ChatGPT desktop, the official Linux app (03/11/2026; asked 03/11/2026). How and why:
       [notes/apps/chatgpt.md](../../notes/apps/chatgpt.md).

@@ -61,6 +61,7 @@ ms-vscode-remote.remote-ssh
 ms-vscode-remote.remote-ssh-edit
 ms-vscode-remote.remote-wsl
 ms-vscode.vscode-chat-customizations-evaluations
+nefrob.vscode-just-syntax
 neverdh.fah-meme
 njpwerner.autodocstring
 pmneo.tsimporter

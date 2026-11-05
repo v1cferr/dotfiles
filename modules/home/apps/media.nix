@@ -24,9 +24,9 @@ in
 {
   home.packages = with pkgs; [
     kdePackages.gwenview # an image viewer (KDE): basic editing plus thumbnails
-    # The ONE document reader (GTK4/libadwaita, recolored by Stylix). Its Nautilus extension
-    # dragged in Nautilus, gnome-user-share and apache-httpd; the file manager here is Dolphin.
-    (papers.override { supportNautilus = false; })
+    # The ONE document reader (GTK4/libadwaita, recolored by Stylix). Stock, so it comes from the
+    # cache: dropping its Nautilus extension cost a ~28 min local build on every nixpkgs bump.
+    papers
     kdePackages.kimageformats # format plugins for KDE apps: AVIF/HEIF/JXL/PSD/RAW
     kdePackages.qtimageformats # Qt plugins: WebP/TIFF/ICNS (it complements kimageformats)
     vlc # the do-everything GUI video player (it is the video default, further down)

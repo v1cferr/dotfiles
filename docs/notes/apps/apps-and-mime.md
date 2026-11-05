@@ -13,8 +13,10 @@ for free and integrates with the file manager (open-with, thumbnails).
 
 Documents left Okular for a more modern look. Papers (GNOME's GTK4/libadwaita reader) is the ONE
 reader, for PDF and CBZ: Stylix already recolors libadwaita, so it follows the palette with no extra
-config. It is built with `supportNautilus = false`, since its Nautilus extension pulled in Nautilus,
-`gnome-user-share` and `apache-httpd` on a Dolphin desktop. Papers does not open EPUB, and no EPUB
+config. It is the STOCK package, Nautilus extension included: until 05/11/2026 it was built with
+`supportNautilus = false` to keep Nautilus, `gnome-user-share` and `apache-httpd` off a Dolphin
+desktop, and that override missed the binary cache, a ~28 min local build on every nixpkgs bump.
+A few unused packages in the closure cost less than that. Papers does not open EPUB, and no EPUB
 default is declared, so OnlyOffice takes it (see the trap below). Readest (Tauri + Next.js) was
 tried as a second reader for EPUB and dropped: one reader on the machine, not two. JoPDF was considered and rejected: it is
 proprietary, from an unidentified vendor, ships only as a `.deb` and is not in nixpkgs.

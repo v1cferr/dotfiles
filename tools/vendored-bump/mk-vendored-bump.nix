@@ -28,9 +28,29 @@ writeShellApplication {
     file="$repo/pkgs/${pname}/source.json"
     current=$(jq -er .version "$file")
 
-    # A scratch dir for `latest`/`resolve`, cleaned on ANY exit so a package never has to.
+    # A scratch dir for `latest`/`resolve`, cleaned on ANY exit so a package never has to. An
+    # upstream that is UNREACHABLE (no VPN, no network) keeps the current version and exits 0: it
+    # is not a broken bump, and it must not take the whole `upgrade` down with it.
     tmp=$(mktemp -d)
-    trap 'rm -rf "$tmp"' EXIT
+    on_exit() {
+      rc=$?
+      if [ "$rc" -ne 0 ] && [ -e "$tmp/unreachable" ]; then
+        echo "${pname}-bump: upstream unreachable, kept $current." >&2
+        rc=0
+      fi
+      rm -rf "$tmp"
+      exit "$rc"
+    }
+    trap on_exit EXIT
+
+    # Every curl of `latest`/`resolve` goes through here: a dead host fails in seconds instead of
+    # the kernel's ~2 min SYN timeout, and only a connection failure counts as unreachable.
+    curl() {
+      local rc=0
+      command curl --connect-timeout 5 --max-time 300 "$@" || rc=$?
+      case "$rc" in 6 | 7 | 28) touch "$tmp/unreachable" ;; esac
+      return "$rc"
+    }
 
     # Two helpers for `resolve`: hash by downloading, or convert the hash upstream PUBLISHES.
     prefetch() { nix store prefetch-file --json --hash-type sha256 "$1" | jq -er .hash; }

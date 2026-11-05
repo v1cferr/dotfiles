@@ -82,6 +82,15 @@ Builds max out the cores compiling, and yielding CPU and disk to the interactive
 keeps a rebuild from freezing the desktop or the Moonlight stream. With the machine idle the build
 uses everything normally, because idle only yields when something else wants it.
 
+## Build parallelism is capped by memory, not cores
+
+Idle priority yields CPU, not RAM. Nix's default ran up to 12 builds at once, each free to use
+all 12 threads, and on 05/11/2026 a bump that rebuilt vicinae, openrgb and papers together held
+~5 GiB in `cc1plus` alone beside a Rust build, with 20 GiB pushed into swap on a 15 GiB machine.
+`max-jobs = 3` times `cores = 4` caps the total at the 12 threads: a big build still gets 4 of
+them, and nothing oversubscribes the memory. Downloads are not builds, so substitution keeps its
+own parallelism.
+
 ## The FAI Meet cache
 
 The FAI Meetings repository builds FAI Meet from source and publishes the result, signed with

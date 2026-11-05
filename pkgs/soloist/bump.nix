@@ -5,11 +5,12 @@
 mkVendoredBump {
   pname = "soloist";
 
-  # One unversioned URL, so the question is its Last-Modified, as a date: one HEAD, no download.
+  # One unversioned URL, so the question is its Last-Modified: one HEAD, no download. Date AND time,
+  # since Spotify republishes the same day (05/11/2026), and a bare date kept the stale hash.
   latest = ''
     lm=$(curl -fsSLI https://soloist-builds.spotifycdn.com/soloist_release_x86_64.tar.gz |
       awk 'tolower($1) == "last-modified:" { $1 = ""; print }' | tail -1)
-    date -ud "$lm" +%F
+    date -ud "$lm" +%F.%H%M%S
   '';
 
   # Nothing published to trust, so the hash comes from downloading the 13 MiB.

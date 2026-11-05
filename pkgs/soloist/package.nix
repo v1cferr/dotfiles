@@ -12,7 +12,7 @@
 
 let
   # version, url and hash: the ONLY file the bump writes. The URL never changes, so the version is
-  # the build's Last-Modified date, the same date `soloist --version` prints.
+  # the build's Last-Modified (date as `soloist --version` prints it, plus the time of day).
   source = lib.importJSON ./source.json;
 in
 stdenv.mkDerivation {

@@ -17,8 +17,9 @@ let
     writeShellApplication
     ;
 
-  # A Soloist build dies 90 days after it is made, and its version IS that date (pkgs/soloist), so
-  # the deadline is known without asking the binary. Daily from 14 days out: desktop plus phone.
+  # A Soloist build dies 90 days after it is made, and its version starts with that date
+  # (pkgs/soloist), so the deadline is known without asking the binary. Daily from 14 days out.
+  soloistBuilt = builtins.substring 0 10 soloist.version; # the version's YYYY-MM-DD head
   soloistExpiry = writeShellApplication {
     name = "soloist-expiry";
     runtimeInputs = [
@@ -27,7 +28,7 @@ let
       notify
     ];
     text = ''
-      left=$(( ($(date -ud "${soloist.version} + 90 days" +%s) - $(date -u +%s)) / 86400 ))
+      left=$(( ($(date -ud "${soloistBuilt} + 90 days" +%s) - $(date -u +%s)) / 86400 ))
       echo "soloist ${soloist.version}: $left day(s) left"
       [ "$left" -gt 14 ] && exit 0
       if [ "$left" -le 0 ]; then

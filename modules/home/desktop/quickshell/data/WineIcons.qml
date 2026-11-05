@@ -12,13 +12,18 @@ Singleton {
     // normalized key -> absolute path of the icon
     property var icons: ({})
     property double readAt: 0
+    // Game executables whose name is not the program's (the launcher spawns them): key -> program key
+    readonly property var aliases: ({
+            "wow": "worldofwarcraft"
+        })
 
     // "Battle.net.exe", "Battle.net", "Overwatch Launcher.exe" -> "battlenet", "battlenet", "overwatch"
     function key(s) {
         return ("" + s).toLowerCase().replace(/\.exe$/, "").replace(/ launcher$/, "").replace(/[^a-z0-9]/g, "");
     }
     function path(name) {
-        const k = wine.key(name);
+        const raw = wine.key(name);
+        const k = wine.aliases[raw] || raw;
         const p = wine.icons[k];
         if (p)
             return "file://" + p;

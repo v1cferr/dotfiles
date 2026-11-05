@@ -203,6 +203,7 @@ export const navigation: NavItem[] = [
       { title: "Shell", doc: "notes/repo/shell.md" },
       { title: "Secrets", doc: "notes/repo/secrets.md" },
       { title: "Version bumps", doc: "notes/repo/version-bumps.md" },
+      { title: "Nix cache", doc: "notes/repo/nix-cache.md" },
       { title: "Link checker", doc: "notes/repo/link-checker.md" },
       { title: "Dead config", doc: "notes/repo/dead-config.md" },
       { title: "Rules index", doc: "notes/repo/rules-index.md" },

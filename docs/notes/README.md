@@ -183,6 +183,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [shell](repo/shell.md) | zsh, the aliases, and the `NH_FLAKE` trap |
 | [secrets](repo/secrets.md) | sops-nix, Bitwarden, and the two recipients |
 | [version-bumps](repo/version-bumps.md) | the three-layer version strategy, and the four bump scripts |
+| [nix-cache](repo/nix-cache.md) | the private R2 cache CI fills nightly, so `upgrade` downloads instead of compiling |
 | [link-checker](repo/link-checker.md) | what keeps these pointers from rotting |
 | [dead-config](repo/dead-config.md) | what is declared and never used, and the seven checks |
 | [rules-index](repo/rules-index.md) | every `rule N` points at a live rule, and which rules a check enforces |

@@ -1,0 +1,82 @@
+# THE NIGHTLY UPDATE: bumps plus lock, the gate, then everything the host compiles goes into the
+# private R2 cache, so `upgrade` at home only downloads: docs/notes/repo/nix-cache.md
+name: cache
+
+on:
+  schedule:
+    - cron: "37 5 * * *" # daily 05:37 UTC (02:37 in Brazil), an odd minute to dodge the queue
+  workflow_dispatch: # it allows running by hand from the Actions tab
+
+# It commits the lock and the bumps back to main, so it is the one workflow that writes.
+permissions:
+  contents: write
+
+# No cancel-in-progress: a manual run must not kill a nightly one halfway through a push.
+concurrency:
+  group: ${{ github.workflow }}
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    env:
+      HOST: ex-b560m-v5
+    steps:
+      # The runner leaves ~14 GB free and the compiles' build closures need more: these SDKs are
+      # ~30 GB this job never uses.
+      - name: free the disk
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache
+          df -h /
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: cachix/install-nix-action@448cde739abec1eaf0646249e3d25bb8d9bc7702 # v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      # The same order as `update` at home: bumps BEFORE the lock. The private input stays out of
+      # the update, since its lock entry is the one thing this runner cannot fetch.
+      - name: bumps plus the lock
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          export NIX_CONFIG="access-tokens = github.com=$GH_TOKEN"
+          nix run .#vendored-bump --override-input duo-streak-daemon path:./tools/ci/stub-duo -- "$PWD"
+          mapfile -t inputs < <(jq -r '.nodes.root.inputs | keys[] | select(. != "duo-streak-daemon")' flake.lock)
+          nix flake update "${inputs[@]}"
+          git diff --stat
+
+      # The gate, exactly as nix.yml runs it: a lock that fails it never reaches main.
+      - name: nix flake check
+        run: nix flake check --option abort-on-warn true --override-input duo-streak-daemon path:./tools/ci/stub-duo
+
+      - name: build and push to the cache
+        env:
+          SIGNING_KEY: ${{ secrets.NIX_CACHE_SIGNING_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          key="$RUNNER_TEMP/nix-cache.key"
+          (umask 077; printf '%s' "$SIGNING_KEY" >"$key")
+          c=modules/nixos/core/nix-cache/cache.json
+          store="s3://$(jq -r .bucket $c)?endpoint=$(jq -r .endpoint $c)&region=auto&compression=zstd&parallel-compression=true&secret-key=$key"
+          tools/ci/cache-push.sh ".#nixosConfigurations.$HOST.config.system.build.toplevel" "$store" --override-input duo-streak-daemon path:./tools/ci/stub-duo
+
+      # Only after the gate AND every build passed: one commit per bumped package, then the lock,
+      # the same history `update` leaves at home.
+      - name: commit to main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for f in $(git diff --name-only -- 'pkgs/*/source.json'); do
+            p=$(basename "$(dirname "$f")")
+            old=$(git show "HEAD:$f" | jq -r .version)
+            git commit -q -m "chore($p): $old -> $(jq -r .version "$f")" -- "$f"
+          done
+          git diff --quiet -- flake.lock || git commit -q -m "chore(flake): update the lock" -- flake.lock
+          git push "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY" HEAD:main

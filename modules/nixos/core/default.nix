@@ -14,5 +14,6 @@
     ./shutdown.nix # the ceiling on systemd's wait when stopping a unit (the end of the 90 s "stop job")
     ./users.nix # zsh as the login shell plus the v1cferr account
     ./secrets.nix # the sops base plus the sops.secrets from Bitwarden plus the sync-secrets command
+    ./nix-cache # the own binary cache on R2: what CI builds nightly, read with a read-only key
   ];
 }

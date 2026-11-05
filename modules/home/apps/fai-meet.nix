@@ -1,5 +1,5 @@
-# FAI MEET, the user side (the package is pkgs/fai-meet/package.nix): the FAI's meeting recorder.
-# Why the scheme is declared here and not by the app: docs/notes/apps/fai-meet.md
+# FAI MEET, on demand only: the FAI's meeting recorder, never part of the system closure.
+# Why it is not installed: docs/notes/apps/fai-meet.md
 {
   pkgs,
   lib,
@@ -15,12 +15,6 @@ let
   cache = lib.head osConfig.nix.settings.extra-trusted-substituters;
 in
 {
-  home.packages = [ pkgs.fai-meet ]; # the official AppImage, repackaged (./pkgs), unfree
-
-  # Merges with the associations from xdg.nix and media.nix. The app's own xdg-mime call cannot
-  # write the store-managed mimeapps.list, so without this the login comes back to nothing.
-  xdg.mimeApps.defaultApplications."x-scheme-handler/fai-meet" = "fai-meet.desktop";
-
   # The source build at the commit `just publicar-nix` last published, so it always comes from the
   # FAI's cache, asked for HERE and nowhere else. Never the main branch: unpublished commits compile.
   programs.zsh.siteFunctions.fai-meet-latest = ''

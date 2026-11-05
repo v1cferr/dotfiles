@@ -1,58 +1,35 @@
 # fai-meet
 
-Module: [`pkgs/fai-meet/package.nix`](../../../pkgs/fai-meet/package.nix)
+Module: [`modules/home/apps/fai-meet.nix`](../../../modules/home/apps/fai-meet.nix)
 
 The FAI.UFSCar meeting recorder: it records the microphone and the system sound on separate
 tracks, and the server returns the transcript, the summary and the minutes as a Word file. Login
-is the FAI Microsoft account. It is a Tauri app (Rust plus WebKitGTK), distributed only as
-binaries from [the download page](https://meetings.sup.fai.ufscar.br/download/nixos), so the repo
-repackages the official AppImage, the same pattern as [`curseforge`](curseforge.md).
+is the FAI Microsoft account. It is a Tauri app (Rust plus WebKitGTK).
 
-## The pointer URL
+## On demand, never installed
 
-The only Linux download is `download/linux/FAI-Meet.AppImage`; the versioned spellings
-(`FAI-Meet-0.5.0.AppImage`, `0.5.0/FAI-Meet.AppImage`, `latest.json`) all answer 404, tested on
-31/10/2026. So, like curseforge, the hash in `source.json` pins the content, the fetch breaks on a
-cold store the day a new release lands, and the package stays OUT of the `packages` check.
+Run it with `fai-meet-latest`. Arguments after the name go to the app.
 
-[`fai-meet-bump`](../../../pkgs/fai-meet/bump.nix) pays that price on `update`. Asking "did it
-change?" costs one HEAD request: the server names the release in the `Content-Disposition`
-(`filename="FAI-Meet-0.5.0.AppImage"`), and only a new version pays the 84 MiB download.
+Until 05/11/2026 the repo installed the official AppImage, repackaged under `pkgs/fai-meet`. It
+came out because **the system must update without the FAI VPN**. Everything about the AppImage
+lives behind that VPN, starting with its only download URL, `meetings.sup.fai.ufscar.br`. A `gc`
+dropped the AppImage from the store, the next nixpkgs bump changed `appimageTools`, and the
+rebuild then had to download the AppImage again: off the VPN, the whole `upgrade` failed for an app
+that cannot work off the VPN anyway, since it talks to that same server. Pinning the AppImage in
+the closure would only have moved the dependency to the first fetch after every reinstall.
 
-## The internal self-updater does not work
+Going on demand costs one thing: the Microsoft login callback (`fai-meet://`) no longer has an
+installed `.desktop` to land on.
 
-The binary carries its own updater, which swaps the AppImage file in place. The store is
-read-only, so updating is `update`/`upgrade`, like everything else.
+## `fai-meet-latest`
 
-## The login scheme is declared, not registered
-
-The Microsoft login comes back through `fai-meet://`. The deep-link plugin tries to register
-itself at runtime through `xdg-mime`, which fails on startup because `~/.config/mimeapps.list` is
-managed by home-manager:
-
-```text
-/usr/bin/xdg-mime: line 1002: /nix/store/...-mimeapps.list.new: Read-only file system
-```
-
-So [`modules/home/apps/fai-meet.nix`](../../../modules/home/apps/fai-meet.nix) declares the
-association, and the package's `.desktop` gets `%u` on its `Exec`, which upstream's lacks, so the
-callback URL actually reaches the app.
-
-## The source build: `fai-meet-latest`
-
-The FAI Meetings repository also builds the app from source and publishes it to the FAI's binary
-cache (trusted in [`core.nix`](../../../modules/nixos/core/core.nix), see
+The FAI Meetings repository builds the app from source and publishes it to the FAI's binary cache
+(trusted in [`core.nix`](../../../modules/nixos/core/core.nix), see
 [core](../repo/core.md#the-fai-meet-cache)). `fai-meet-latest` asks the API which commit was
 published last (`/v1/desktop/latest`, field `nix.rev`) and runs that one, so it downloads in seconds
 instead of compiling. It never follows `main`: a commit not yet published is not in the cache, and
 the whole Rust build would run here. Reading the flake needs the FAI VPN and the SSH key on git.sup;
-the binary itself comes from the cache. Arguments after the name go to the app.
-
-## Known noise in the log
-
-`libdconfsettings.so: undefined symbol: g_assertion_message_cmpint` comes from the session's
-`GIO_EXTRA_MODULES`, built against a newer GLib than the one the AppImage bundles. GIO skips the
-module and the app runs; it is cosmetic.
+the binary itself comes from the cache.
 
 The keyring the login is stored in is the session's gnome-keyring, already on: see
 [`keyring.nix`](../../../modules/home/desktop/keyring.nix).

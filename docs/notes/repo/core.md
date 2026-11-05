@@ -89,7 +89,8 @@ The FAI Meetings repository builds FAI Meet from source and publishes the result
 `nix run` of that flake at the published commit downloads the app instead of compiling it. Only
 the cache and its public key come in, not the flake: that repository is private and only answers
 through the FAI VPN, so as an input it would break this repo's public CI and a restore from
-scratch. The installed app stays the AppImage, see [`fai-meet`](../apps/fai-meet.md).
+scratch. That `nix run` (`fai-meet-latest`) is the ONLY way the app runs here, see
+[`fai-meet`](../apps/fai-meet.md).
 
 It is a **trusted** substituter, not a default one. Until 01/11/2026 it sat in
 `extra-substituters`, so every build asked it for every missing path, and the server only answers

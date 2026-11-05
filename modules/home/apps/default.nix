@@ -25,6 +25,6 @@
     ./chatgpt.nix # ChatGPT: OpenAI's official Linux app (unstable), sharing the Codex CLI
     ./virt-manager.nix # the libvirt GUI (the daemon is in modules/nixos/services/libvirt.nix)
     ./crypto.nix # Stack Wallet plus Bisq 2: self-custody and P2P buying, both opened by hand
-    ./fai-meet.nix # FAI Meet: the meeting recorder (./pkgs) plus its login scheme handler
+    ./fai-meet.nix # FAI Meet: `fai-meet-latest`, the app on demand from the FAI's cache (VPN only)
   ];
 }

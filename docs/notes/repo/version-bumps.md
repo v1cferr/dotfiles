@@ -182,10 +182,14 @@ kernel's SYN retries, failed, and the `&&` chain cut everything after it. Two fi
   range and API reads). A connection failure (curl exit 6, 7 or 28) marks the upstream
   UNREACHABLE, and the bump exits 0 keeping the current version with a warning. An HTTP error or
   an implausible answer still fails, since those mean the bump itself broke.
+- **`fai-meet-bump` does not even try without the VPN.** No `ppp0` (the same signal
+  `fai-routes-check` reads) marks it unreachable before any request, so a normal `upgrade` off the
+  VPN pays nothing for it, and FAI Meet only moves when the VPN is up.
 - **The runner starts every bump at once** and prints each buffered output in name order after
   all of them finish; any failure still fails the run. Each bump writes only its own
   `source.json`, so they cannot step on each other. The phase went from the SUM of all upstreams
-  to the slowest one: 5 s for eleven bumps, four of them real version changes.
+  to the slowest one: 5 s for eleven bumps, four of them real version changes, and 1.4 s once
+  fai-meet stopped waiting on its 5 s timeout.
 
 ## Shared conventions
 

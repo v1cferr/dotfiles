@@ -1,5 +1,5 @@
 {
+  "account": "d1fa7657750714caefffaf68c51c46fc",
   "bucket": "nix-cache",
-  "endpoint": "d1fa7657750714caefffaf68c51c46fc.r2.cloudflarestorage.com",
   "keyName": "nix-cache.v1cferr.dev-1"
 }

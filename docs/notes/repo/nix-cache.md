@@ -63,14 +63,28 @@ answers everything it has.
 
 ## Setting it up, once
 
-1. In the Cloudflare dashboard, R2, Manage API tokens: two Account API tokens on the `nix-cache`
-   bucket, one with Object Read & Write and one with Object Read only.
-2. `export BW_SESSION=$(bw unlock --raw)`, then `nix-cache-setup <repo>`. It generates the signing
-   key, writes `nix-cache.pub`, and asks for the four token values without echo, sending them to
-   GitHub and Bitwarden.
-3. `git add` the `.pub`, `sync-secrets`, `rebuild`. The module stays inert until both the `.pub`
-   and the synced read key exist.
-4. Run the workflow by hand from the Actions tab once, and confirm a `rebuild` downloads from it.
+```sh
+export BW_SESSION=$(bw unlock --raw)
+nix-cache-setup ~/Projects/GitHub/v1cferr/dotfiles
+```
+
+[`nix-cache-setup`](../../../modules/nixos/core/nix-cache/scripts/setup.sh) does everything:
+
+1. Generates the signing key: `nix-cache.pub` into git, the private half into the GitHub secret and
+   Bitwarden ("Nix Cache Signing Key").
+2. MINTS the two R2 tokens through the API, each scoped to the one bucket. R2 needs no separate
+   S3 key: a token's `id` is the Access Key ID and the SHA-256 of its value is the Secret. The
+   read-write pair goes to GitHub, the read-only pair to Bitwarden ("Nix Cache R2 Read").
+3. Runs `sync-secrets` and stages the `.pub`, the index and `secrets.yaml`.
+
+Creating tokens needs a token allowed to create tokens, and that one has to come from the
+dashboard: the first run asks for it once (My Profile, API Tokens, template "Create Additional
+Tokens") and keeps it in Bitwarden as "Cloudflare API Token Creator", so a rotation reads it from
+there. Every value travels through stdin, the environment or a `/dev/fd` header, never argv, where
+`ps` would show it. Each step skips what already exists: replacing a key is a decision, not a
+rerun. After it: commit, `rebuild`, then run the workflow once by hand from the Actions tab.
+
+The module stays inert until both the `.pub` and the synced read key exist.
 
 ## No expiry, for now
 

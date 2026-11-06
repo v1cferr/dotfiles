@@ -1,74 +1,29 @@
-# WOW FOREVER ADD-ONS: a versioned list that instawow installs and keeps updated on a daily timer.
-# Why instawow, the CurseForge key and how to add one: docs/notes/apps/wow-addons.md
+# WOW FOREVER ADD-ONS: pkgs/wow-addons copied into the game's AddOns folder on every switch.
+# Why Nix and not an add-on manager, and how to add one: docs/notes/apps/wow-addons.md
 {
   config,
   lib,
   pkgs,
-  osConfig,
   ...
 }:
 
 let
   # Rule 19: everything this module reaches for, named once.
   inherit (pkgs)
-    unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
     bitwarden-cli
     git
     jq
+    rsync
     sops
-    util-linux
+    wow-addons
     writeShellApplication
     ;
 
-  # Layer 2: 26.05 ships 7.0.0, which predates the Forever flavour.
-  inherit (unstable) instawow;
+  addonDir = "${config.my.games.root}/World of Warcraft/_forever_/Interface/AddOns";
+  # What the last switch put there, so an add-on that leaves the list is removed too.
+  manifest = "${config.xdg.stateHome}/wow-addons/managed";
 
-  # The flavour is forced: 7.2.4 knows `forever_classic` but not the `_forever_` folder name.
-  profile = {
-    profile = "forever";
-    addon_dir = "${config.my.games.root}/World of Warcraft/_forever_/Interface/AddOns";
-    flavour_override = "forever_classic";
-  };
-
-  # GitHub releases need no key, so they install even before the CurseForge one exists.
-  githubAddons = [
-    "github:Questie/Questie" # quest helper (bundles QuestieDB)
-  ];
-
-  # Inert until the key is in the vault. NUMERIC ids: a personal key gets 403 on /mods/search,
-  # which is how instawow resolves a slug, while /mods/{id} answers. Leatrix Plus, Baganator and
-  # Auctionator are NOT here: their authors forbid API distribution (see the note).
-  curseAddons = [
-    "curse:1710286" # Layer-Swap: see and change your layer
-    "curse:13344" # BugGrabber: BugSack does nothing without it
-    "curse:6273" # BugSack: Lua error catcher
-  ];
-
-  cfKey = osConfig.sops.secrets.curseforge_api_key.path or null;
-
-  wow-addons = writeShellApplication {
-    name = "wow-addons";
-    runtimeInputs = [
-      instawow
-      util-linux
-    ];
-    text = ''
-      addons=(${lib.escapeShellArgs githubAddons})
-      ${lib.optionalString (cfKey != null) ''
-        if [ -r ${cfKey} ]; then
-          INSTAWOW_ACCESS_TOKENS_CFCORE=$(<${cfKey})
-          export INSTAWOW_ACCESS_TOKENS_CFCORE
-          addons+=(${lib.escapeShellArgs curseAddons})
-        fi
-      ''}
-      # instawow's progress bar dies without a TTY (prompt_toolkit), so a timer run gets a fake one.
-      run() { if [ -t 0 ]; then instawow "$@"; else script -qec "instawow $*" /dev/null; fi; }
-      # --replace adopts a copy that was unpacked by hand; an installed add-on is just skipped.
-      run -p forever install --replace "''${addons[@]}"
-      run -p forever update
-    '';
-  };
-  # `wow-addons-key`: the CurseForge key in one go (Bitwarden, index, sync-secrets, switch, install).
+  # `wow-addons-key`: the CurseForge key in one go (Bitwarden, index, sync-secrets, bump, switch).
   wow-addons-key = writeShellApplication {
     name = "wow-addons-key";
     runtimeInputs = [
@@ -81,32 +36,28 @@ let
   };
 in
 {
-  home.packages = [
-    instawow # manual use: `instawow -p forever list`
-    wow-addons
-    wow-addons-key
-  ];
+  home.packages = [ wow-addons-key ];
 
-  xdg.configFile = {
-    "instawow/config.json".text = builtins.toJSON { auto_update_check = false; }; # nix updates it
-    "instawow/profiles/forever/config.json".text = builtins.toJSON profile;
-  };
-
-  systemd.user.services.wow-addons = {
-    Unit.Description = "Install and update the WoW Forever add-ons";
-    Service = {
-      Type = "oneshot";
-      ExecStart = lib.getExe wow-addons;
-      Nice = 19;
-    };
-  };
-  systemd.user.timers.wow-addons = {
-    Unit.Description = "Daily WoW Forever add-on update";
-    Timer = {
-      OnCalendar = "daily";
-      Persistent = true;
-      RandomizedDelaySec = "1h";
-    };
-    Install.WantedBy = [ "timers.target" ];
-  };
+  # COPIES, not store symlinks: the folder is on NTFS and Windows plays from it too. Folders Nix
+  # never managed (anything installed by hand) are left alone.
+  home.activation.wowAddons = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    if [ ! -d ${lib.escapeShellArg addonDir} ]; then
+      echo "wow-addons: ${addonDir} is missing (Windows disk not mounted?), skipped." >&2
+    else
+      run mkdir -p ${lib.escapeShellArg (builtins.dirOf manifest)}
+      if [ -f ${lib.escapeShellArg manifest} ]; then
+        while IFS= read -r folder; do
+          if [ -n "$folder" ] && [ ! -e ${wow-addons}/"$folder" ]; then
+            run rm -rf ${lib.escapeShellArg addonDir}/"$folder"
+          fi
+        done < ${lib.escapeShellArg manifest}
+      fi
+      for dir in ${wow-addons}/*/; do
+        folder=$(basename "$dir")
+        run ${lib.getExe rsync} -rt --delete --no-perms --no-owner --no-group \
+          "$dir" ${lib.escapeShellArg addonDir}/"$folder"/
+      done
+      [ -v DRY_RUN ] || ls ${wow-addons} > ${lib.escapeShellArg manifest}
+    fi
+  '';
 }

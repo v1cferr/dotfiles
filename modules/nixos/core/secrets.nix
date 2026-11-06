@@ -120,7 +120,7 @@ in
       curseforge_api_key = {
         owner = "v1cferr";
         mode = "0400";
-      }; # user-readable: the wow-addons --user timer hands it to instawow
+      }; # user-readable: wow-addons-bump runs as the user from `update`
     }
     // lib.optionalAttrs (builtins.elem "vault_password" sopsKeys) {
       vault_password = {

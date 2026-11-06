@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Sets the CurseForge API key end to end: the Bitwarden item, the index line, sync-secrets, the
-# switch, then the add-on install. docs/notes/apps/wow-addons.md
+# Sets the CurseForge API key end to end: the Bitwarden item, the index line, sync-secrets, then
+# the add-on bump and the switch that copies them. docs/notes/apps/wow-addons.md
 set -euo pipefail
 
 key="curseforge_api_key"
@@ -56,6 +56,9 @@ if [ "$added" -eq 1 ]; then
   git commit -q -m "feat(wow-addons): index the CurseForge API key" -- "$map" secrets/secrets.yaml
 fi
 
+# The bump reads the key from /run/secrets, so it waits for the switch that puts it there.
 nh os switch "$repo"
-wow-addons
-echo "Done: the CurseForge add-ons are installed and the daily timer keeps them updated."
+nix run "$repo#vendored-bump" -- "$repo"
+nh os switch "$repo"
+echo "Done: the add-ons are pinned to their latest stable Forever release and installed."
+echo "Commit pkgs/wow-addons/sources.json if the bump moved anything."

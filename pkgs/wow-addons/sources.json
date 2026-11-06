@@ -218,5 +218,12 @@
     "version": "9225248",
     "url": "https://edge.forgecdn.net/files/9225/248/AutoSpellRanks-1.1.0-forever.zip",
     "hash": "sha256-KGTR4bTfeYU0N+L55GYWnALkzlI0dQaipNbz/m7t9Bw="
+  },
+  "prat": {
+    "source": "curseforge",
+    "projectId": 7473,
+    "version": "9437638",
+    "url": "https://edge.forgecdn.net/files/9437/638/Prat-3.0-3.9.116.zip",
+    "hash": "sha256-hXYz9raRpspd52WCYITzEXiBmclYh6pQoFAAJTNe5vo="
   }
 }

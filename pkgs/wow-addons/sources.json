@@ -145,5 +145,12 @@
     "version": "8984759",
     "url": "https://edge.forgecdn.net/files/8984/759/SimpleAddonManager-v1.67.zip",
     "hash": "sha256-axQ6w4Vh6rSVfr1t6FzB8D1QMEAAUOKpHkv/YpCG84Q="
+  },
+  "minimapbuttonbutton": {
+    "source": "curseforge",
+    "projectId": 446096,
+    "version": "9480602",
+    "url": "https://edge.forgecdn.net/files/9480/602/MinimapButtonButton-1.24.17.zip",
+    "hash": "sha256-MUp4jm8Z2o5F18oOhyNP1csiFbi+u3hB897jzV0OOr0="
   }
 }

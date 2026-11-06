@@ -83,13 +83,6 @@
     "url": "https://edge.forgecdn.net/files/9446/367/ForeverLootSparkles-v1.3.1-forever.zip",
     "hash": "sha256-7pUb4YsYdIazUXYxyVR6RLt3yhdZ3N/mKwrf13yb5nw="
   },
-  "node-sight": {
-    "source": "curseforge",
-    "projectId": 1731463,
-    "version": "9468981",
-    "url": "https://edge.forgecdn.net/files/9468/981/NodeSight-1.6.2.zip",
-    "hash": "sha256-SO7vN9tO3kYX0No1yTU3UeJQEWX35BN5CVzc8pE9SCs="
-  },
   "musca-auras": {
     "source": "curseforge",
     "projectId": 1713094,

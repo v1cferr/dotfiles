@@ -145,5 +145,12 @@
     "version": "r835",
     "url": "https://github.com/DeadlyBossMods/DBM-Vanilla/releases/download/r835/DBM-Vanilla_SoD-r835.zip",
     "hash": "sha256-ogy91/fr+60Ju1SXUN641f5/6CasSbPGAxgjj+uzg1g="
+  },
+  "simple-addon-manager": {
+    "source": "curseforge",
+    "projectId": 689213,
+    "version": "8984759",
+    "url": "https://edge.forgecdn.net/files/8984/759/SimpleAddonManager-v1.67.zip",
+    "hash": "sha256-axQ6w4Vh6rSVfr1t6FzB8D1QMEAAUOKpHkv/YpCG84Q="
   }
 }

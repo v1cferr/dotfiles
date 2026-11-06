@@ -63,6 +63,18 @@ Add `"<name>": { "source": "curseforge", "projectId": N, "version": "0", "url": 
 (or `"source": "github", "repo": "owner/repo"`) to `sources.json`, run `update`, then `rebuild`.
 The project id is on the add-on's CurseForge page, under Details.
 
+A repo that ships several things takes `"tagPrefix"`: the bump lists that line's TAGS
+(`/git/matching-refs/tags/<prefix>`), highest version first, and pins the first stable release
+among them. Tags and not the releases list, because spoken-wow publishes one release per build and
+its October voice packs had already fallen past the first 100 releases.
+
+## Spoken in pt-BR
+
+The client runs in pt-BR, and Spoken's pt-BR quest, zone and book voices exist only as GitHub
+releases of `rusty-key/spoken-wow` (CurseForge carries the English ones). No English pack is
+installed on purpose: a line with no pt-BR voice stays a subtitle instead of switching language.
+DialogueUI is the NPC dialogue of choice because Spoken has a narrator style made for it.
+
 ## Pitfalls
 
 - **The first key was wrong** and every call answered 403. A valid personal key answers `/mods/search`

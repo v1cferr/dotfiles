@@ -1,6 +1,6 @@
 # wow-addons
 
-Module: [`modules/home/apps/wow-addons.nix`](../../../modules/home/apps/wow-addons.nix)
+Module: [`modules/home/apps/wow-addons/default.nix`](../../../modules/home/apps/wow-addons/default.nix)
 
 The WoW Forever add-ons are a list in the module. `wow-addons` installs whatever is missing and
 updates the rest, and a daily `--user` timer runs it. Nothing is clicked in a GUI.
@@ -21,11 +21,12 @@ Forever interface (16001, or a `_Camelot`/`_Forever` TOC suffix).
 
 CurseForge's API needs a key, and instawow ships none on purpose (its README explains why). It is a
 personal key from <https://console.curseforge.com>, stored as the Bitwarden item
-"CurseForge API Key". Then `"curseforge_api_key": "CurseForge API Key"` goes into
-`secrets/bitwarden-secrets.json`, followed by `sync-secrets` and a rebuild
-([secrets](../repo/secrets.md)). The index line waits for the item because dead-config rejects an
-entry with no value. Until then, only the GitHub entries install; the CurseForge ones are skipped,
-not failed.
+"CurseForge API Key" and synced like any other secret ([secrets](../repo/secrets.md)).
+
+`wow-addons-key` does all of it in one go: it opens the console, reads the pasted key, writes the
+Bitwarden item, adds the index line, runs `sync-secrets`, commits the index, switches and installs.
+The index line waits for that run because dead-config rejects an entry with no value. Until then,
+only the GitHub entries install; the CurseForge ones are skipped, not failed.
 
 ## Adding an add-on
 

@@ -12,6 +12,10 @@ let
   # Rule 19: everything this module reaches for, named once.
   inherit (pkgs)
     unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
+    bitwarden-cli
+    git
+    jq
+    sops
     util-linux
     writeShellApplication
     ;
@@ -65,11 +69,23 @@ let
       run -p forever update
     '';
   };
+  # `wow-addons-key`: the CurseForge key in one go (Bitwarden, index, sync-secrets, switch, install).
+  wow-addons-key = writeShellApplication {
+    name = "wow-addons-key";
+    runtimeInputs = [
+      bitwarden-cli
+      git
+      jq
+      sops # sync-secrets wants it on PATH, outside the devShell too
+    ];
+    text = builtins.readFile ./scripts/wow-addons-key.sh; # bash in its own file = shellcheck at build time
+  };
 in
 {
   home.packages = [
     instawow # manual use: `instawow -p forever search <name>`
     wow-addons
+    wow-addons-key
   ];
 
   xdg.configFile = {

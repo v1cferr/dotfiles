@@ -121,9 +121,9 @@
   "social-diary": {
     "source": "curseforge",
     "projectId": 1733454,
-    "version": "9457140",
-    "url": "https://edge.forgecdn.net/files/9457/140/social_diary-v2.3.0.zip",
-    "hash": "sha256-B8j4gwew0t9a0FTa4MbnkI6bbVPbiVsR3fuxOj0nD28="
+    "version": "9483118",
+    "url": "https://edge.forgecdn.net/files/9483/118/social_diary-v2.4.0.zip",
+    "hash": "sha256-4/ZO9AG1e3O0yc0XiZoeMK3vmAlb+RamOnnw+zqJWos="
   },
   "happy-camper": {
     "source": "curseforge",
@@ -152,5 +152,50 @@
     "version": "9480602",
     "url": "https://edge.forgecdn.net/files/9480/602/MinimapButtonButton-1.24.17.zip",
     "hash": "sha256-MUp4jm8Z2o5F18oOhyNP1csiFbi+u3hB897jzV0OOr0="
+  },
+  "dialogueui": {
+    "source": "curseforge",
+    "projectId": 989270,
+    "version": "9451752",
+    "url": "https://edge.forgecdn.net/files/9451/752/DialogueUI-1.0.7-b.zip",
+    "hash": "sha256-OZa4qXkuAwqVltmQWqDwyL96/ddAszH1762sdbzR4KQ="
+  },
+  "spoken": {
+    "source": "curseforge",
+    "projectId": 1700375,
+    "version": "9455301",
+    "url": "https://edge.forgecdn.net/files/9455/301/Spoken-3.8.3.zip",
+    "hash": "sha256-s8ggNlvT9PMyQIUSC0vE3D0wp38wF+9sacRU+C4QHcc="
+  },
+  "spoken-quests-ptbr": {
+    "source": "github",
+    "repo": "rusty-key/spoken-wow",
+    "tagPrefix": "quests-audio-ptBR/",
+    "version": "quests-audio-ptBR/v0.0.3",
+    "url": "https://github.com/rusty-key/spoken-wow/releases/download/quests-audio-ptBR/v0.0.3/SpokenQuestsAudio_ptBR-0.0.3.zip",
+    "hash": "sha256-0RtW4DuSBdS+K+1SiBa1WwVSLnV+chs7WBxLzznkICs="
+  },
+  "spoken-zones-ptbr": {
+    "source": "github",
+    "repo": "rusty-key/spoken-wow",
+    "tagPrefix": "zones-audio-ptBR/",
+    "version": "zones-audio-ptBR/v2.0.0",
+    "url": "https://github.com/rusty-key/spoken-wow/releases/download/zones-audio-ptBR/v2.0.0/SpokenZonesAudio_ptBR-2.0.0.zip",
+    "hash": "sha256-0ISn65YmIwwoH87M5k1n4PEPc5E4iPcJov7tRBKUI6k="
+  },
+  "spoken-books-ptbr": {
+    "source": "github",
+    "repo": "rusty-key/spoken-wow",
+    "tagPrefix": "books-audio-ptBR/",
+    "version": "books-audio-ptBR/v2.0.0",
+    "url": "https://github.com/rusty-key/spoken-wow/releases/download/books-audio-ptBR/v2.0.0/SpokenBooksAudio_ptBR-2.0.0.zip",
+    "hash": "sha256-8+qW+dEMrKW0uzQ8/EwuveIsg9aYhuyHaol9xnmfYJ4="
+  },
+  "chat-translator": {
+    "source": "curseforge",
+    "projectId": 1726863,
+    "version": "9110585",
+    "url": "https://edge.forgecdn.net/files/9110/585/ChatTranslator-0.5.2.zip",
+    "hash": "sha256-1QWEG+jtCUfss6gcfGKEvWNgGvaGydBJibtf95W4rlE="
   }
 }

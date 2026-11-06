@@ -146,6 +146,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [screenrec](apps/screenrec.md) | recording a monitor or a region by keyboard, MP4 with GIF on demand, and why not the portal |
 | [curseforge](apps/curseforge.md) | the repackaged AppImage, and why the schemes are declared |
 | [curseforge-fix-perms](apps/curseforge-fix-perms.md) | the `+x` the app loses, and why ELF magic and not names |
+| [wow-addons](apps/wow-addons.md) | WoW Forever add-ons as a versioned list, instawow, and the CurseForge key |
 | [fai-meet](apps/fai-meet.md) | the FAI's meeting recorder, on demand only (`fai-meet-latest`), never installed |
 | [hydralauncher](apps/hydralauncher.md) | the game launcher on upstream's latest, its download sources declared, and its login scheme |
 | [bottles](apps/bottles.md) | the library declared without owning the prefix, and the name that is not the directory |

@@ -162,6 +162,7 @@ export const navigation: NavItem[] = [
       { title: "Screen recording", doc: "notes/apps/screenrec.md" },
       { title: "CurseForge", doc: "notes/apps/curseforge.md" },
       { title: "CurseForge fix-perms", doc: "notes/apps/curseforge-fix-perms.md" },
+      { title: "WoW add-ons", doc: "notes/apps/wow-addons.md" },
       { title: "FAI Meet", doc: "notes/apps/fai-meet.md" },
       { title: "Hydra Launcher", doc: "notes/apps/hydralauncher.md" },
       { title: "Bottles", doc: "notes/apps/bottles.md" },

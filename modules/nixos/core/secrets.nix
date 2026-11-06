@@ -116,6 +116,12 @@ in
         mode = "0400";
       }; # user-readable: opencode reads it through `{file:}`, the claude wrapper for the OpenRouter MCP
     }
+    // lib.optionalAttrs (builtins.elem "curseforge_api_key" sopsKeys) {
+      curseforge_api_key = {
+        owner = "v1cferr";
+        mode = "0400";
+      }; # user-readable: the wow-addons --user timer hands it to instawow
+    }
     // lib.optionalAttrs (builtins.elem "vault_password" sopsKeys) {
       vault_password = {
         owner = "v1cferr";

@@ -16,6 +16,7 @@
     ./curseforge.nix # Minecraft modpacks: the package (./pkgs) plus the login scheme handler
     ./hydralauncher.nix # Hydra: the game launcher (./pkgs) plus its hydralauncher:// scheme handler
     ./games-disk.nix # the games that live on the Windows disk, symlinked where each launcher looks
+    ./wow-addons.nix # WoW Forever add-ons: a versioned list, installed and updated daily by instawow
     ./android.nix # adb over wireless debugging, scrcpy and uad-ng, to inspect and clean the phone
     ./bottles.nix # Bottles: the package plus the library each bottle lists (through activation)
     ./librewolf.nix # LibreWolf: the browser plus the palette on its frame

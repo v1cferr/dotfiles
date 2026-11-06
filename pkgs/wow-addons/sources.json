@@ -225,5 +225,12 @@
     "version": "9437638",
     "url": "https://edge.forgecdn.net/files/9437/638/Prat-3.0-3.9.116.zip",
     "hash": "sha256-hXYz9raRpspd52WCYITzEXiBmclYh6pQoFAAJTNe5vo="
+  },
+  "angleur": {
+    "source": "curseforge",
+    "projectId": 893895,
+    "version": "9452551",
+    "url": "https://edge.forgecdn.net/files/9452/551/Angleur-2.9.79-Forever-SoftInteractFix.zip",
+    "hash": "sha256-FSyo6p2sk4kPuUHqa/ZAga8O4+9RTx1CDiVVxAqgf4w="
   }
 }

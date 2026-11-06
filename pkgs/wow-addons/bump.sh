@@ -47,8 +47,17 @@ cf_latest() {
 }
 
 # Prints {"version","url"} of a GitHub repo's latest release: its zip asset, never release.json.
+# With a tag prefix ($2), only that release line counts: spoken-wow ships the add-on and every
+# voice pack from one repo, each under its own `<line>/vX` tags.
 gh_latest() {
-  curl -fsS -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/$1/releases/latest" |
+  local api="https://api.github.com/repos/$1/releases"
+  if [ -z "$2" ]; then
+    curl -fsS -H 'Accept: application/vnd.github+json' "$api/latest"
+  else
+    curl -fsS -H 'Accept: application/vnd.github+json' "$api?per_page=100" |
+      jq -ce --arg p "$2" '[.[] | select((.draft | not) and (.prerelease | not)
+        and (.tag_name | startswith($p)))] | sort_by(.published_at) | last'
+  fi |
     jq -ce '{ version: .tag_name,
       url: ([.assets[] | select(.name | endswith(".zip")) | .browser_download_url] | first) }
       | select(.url != null)'
@@ -66,7 +75,7 @@ for name in $(jq -r 'keys[]' <<<"$new"); do
       fi
       latest=$(cf_latest "$(jq -r .projectId <<<"$entry")")
       ;;
-    github) latest=$(gh_latest "$(jq -r .repo <<<"$entry")") ;;
+    github) latest=$(gh_latest "$(jq -r .repo <<<"$entry")" "$(jq -r '.tagPrefix // ""' <<<"$entry")") ;;
     *)
       echo "wow-addons-bump: $name has an unknown source." >&2
       exit 1

@@ -87,4 +87,11 @@ DialogueUI is the NPC dialogue of choice because Spoken has a narrator style mad
 - **Angleur and Forever Loot Sparkles share `SoftTargetIconGameObject`.** Loot Sparkles needs it on
   for world-object glints; Angleur turns it off only if "Disable Soft Icon" (its Tiny tab) is
   checked, which defaults to off. Leave it off.
-- **The game reads add-ons at launch.** A switch while playing lands on the next start.
+- **`/reload` is enough.** Tested on 06/11/2026 with the game open: a switch, then `/reload`,
+  picked up NEW add-on folders too, not just changed files. No client restart needed.
+- **Required dependencies are checked at build**, from the TOC the Forever client loads. Run-time
+  ones are not: Baganator declared Syndicator OPTIONAL and still raised a Lua error without it.
+  After adding an add-on, `/reload` and read `WTF/Account/<id>/SavedVariables/!BugGrabber.lua`.
+- **Social Diary 2.3.0** errors in `UI/Style/Widgets.lua:152` when a tooltip line list comes back
+  EMPTY (`unpack(list[1])` on nil): its own guard only covers nil. Upstream bug, harmless (one
+  tooltip does not show).

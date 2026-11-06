@@ -61,6 +61,31 @@ stdenvNoCC.mkDerivation {
       echo "wow-addons: dropping $(basename "$dir"), no Forever TOC"
       rm -rf "$dir"
     done
+  ''
+  # A REQUIRED dependency missing from the list FAILS the build. Read from the TOC the Forever client
+  # loads (_Forever, then _Camelot, then the plain one); Blizzard_ modules ship with the game. It
+  # cannot catch a dependency enforced only at run time: Baganator listed Syndicator as OPTIONAL and
+  # then raised a Lua error without it, so a new add-on still gets one /reload with BugSack.
+  + ''
+    missing=0
+    for dir in "$out"/*/; do
+      name=$(basename "$dir")
+      toc=""
+      for candidate in "$dir$name"_Forever.toc "$dir$name"_Camelot.toc "$dir$name".toc; do
+        [ -f "$candidate" ] && { toc=$candidate; break; }
+      done
+      [ -n "$toc" ] || continue
+      deps=$(LC_ALL=C sed -nE "s/^($bom)?## *(RequiredDeps|Dependencies|Dep[A-Za-z0-9]*): *//Ip" "$toc" |
+        tr ',' '\n' | tr -d ' \r')
+      for dep in $deps; do
+        case "$dep" in Blizzard_*) continue ;; esac
+        if ! ls "$out" | grep -qixF "$dep"; then
+          echo "wow-addons: $name requires $dep, which is not in sources.json" >&2
+          missing=1
+        fi
+      done
+    done
+    [ "$missing" -eq 0 ]
   '';
 
   passthru.updateScript = callPackage ./bump.nix { };

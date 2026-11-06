@@ -72,8 +72,8 @@ end
 hl.curve("easeOutQuint", { type = "bezier", points = { { 0.23, 1 },  { 0.32, 1 }   } })
 hl.curve("almostLinear", { type = "bezier", points = { { 0.5, 0.5 }, { 0.75, 1.0 } } })
 -- Near-critical (zeta 0.93): 90% at ~130 ms, settled by ~310 ms, sub-pixel overshoot. A spring
--- IGNORES `speed`. The key is `dampening` on 0.56; main renamed it and still reads the old one.
-hl.curve("settle", { type = "spring", mass = 1, stiffness = 700, dampening = 49 })
+-- IGNORES `speed`. The key is `damping` since 0.57, which still reads the misspelled `dampening`.
+hl.curve("settle", { type = "spring", mass = 1, stiffness = 700, damping = 49 })
 
 -- my.theme.motion = "off" drops them all; the default fallback covers a file not rebuilt yet.
 hl.config({ animations = { enabled = (C.motion or "subtle") ~= "off" } })

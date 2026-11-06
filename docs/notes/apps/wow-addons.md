@@ -1,56 +1,72 @@
 # wow-addons
 
-Module: [`modules/home/apps/wow-addons/default.nix`](../../../modules/home/apps/wow-addons/default.nix)
+Modules: [`pkgs/wow-addons/`](../../../pkgs/wow-addons/package.nix),
+[`modules/home/apps/wow-addons/default.nix`](../../../modules/home/apps/wow-addons/default.nix)
 
-The WoW Forever add-ons are a list in the module. `wow-addons` installs whatever is missing and
-updates the rest, and a daily `--user` timer runs it. Nothing is clicked in a GUI.
+Every WoW Forever add-on is a pinned zip in
+[`sources.json`](../../../pkgs/wow-addons/sources.json), the single list of what is installed.
+The package unpacks them into one tree, and every switch copies that tree into
+`_forever_/Interface/AddOns`. `update` (and so `upgrade`) moves each one to its latest STABLE
+Forever release through the vendored-bump runner ([version-bumps](../repo/version-bumps.md)).
 
-## Why instawow
+## Why Nix and not an add-on manager
 
-It is a CLI, it is in nixpkgs, and it reads GitHub releases and CurseForge. The CurseForge app
-and WowUp are GUIs whose add-on list lives in their own state, not in the repo.
+Tried on 06/11/2026, in this order:
 
-The Forever flavour (`forever_classic`) exists since 7.2.x. Version 7.3.0 (23/10/2026) only taught
-it to RECOGNISE the `_forever_` folder, so the profile forces the flavour instead of waiting for
-nixpkgs. Stable 26.05 ships 7.0.0, which predates the flavour, hence `pkgs.unstable`.
+- **instawow** works for GitHub and CurseForge, but its state lives in its own database and it
+  cannot fetch an add-on whose author disabled API distribution. Leatrix Plus, Baganator,
+  Auctionator and DBM all did.
+- **The CurseForge app** can fetch everything, but its list is GUI state, not the repo.
+- **[nix-warcraft](https://github.com/raccube/nix-warcraft)** has the right idea (pinned zips, a
+  Home Manager module) but targets Retail through its own Proton wrapper, and packages none of
+  Questie, Layer-Swap, Leatrix Plus or Auctionator. This package borrows its CDN approach.
 
-Flavour matching is the compatibility check: instawow only picks a file whose TOC declares the
-Forever interface (16001, or a `_Camelot`/`_Forever` TOC suffix).
+## What "latest stable Forever" means
+
+For CurseForge, the bump asks `/v1/mods/{id}/files?gameVersionTypeId=88568` (88568 is "WoW
+Forever") and takes the newest file with `releaseType == 1`, so alphas and betas never land. The
+pinned version is the FILE id. For GitHub it takes `/releases/latest` and its zip asset. Questie,
+DBM, DBM-Vanilla and GatherMate2 come from GitHub because their official releases are there.
+
+## The CurseForge CDN decision
+
+Authors can set `allowModDistribution: false`, and then the API answers `downloadUrl: null`. The
+file is still public on the CDN at `edge.forgecdn.net/files/<id/1000>/<id%1000>/<fileName>`, and the
+bump builds that URL. It goes against those authors' opt-out (they lose the download credit), and
+the user chose it knowingly on 06/11/2026 to keep one source for every add-on.
+
+## Folders with no Forever TOC are dropped
+
+Upstream ships ONE zip for every flavour, so DBM brings its Midnight raid modules and GatherMate2
+its retail storage, which the game lists as incompatible. The build keeps a folder only if its TOC
+declares Forever: interface `160xx`, a `_Forever`/`_Camelot` TOC, or `AllowLoadGameType`. Pawn's TOC
+starts with a UTF-8 BOM, which is why the match allows `EF BB BF` before `##`. Two zips that ship
+the same folder fail the build instead of overwriting each other.
+
+## How it reaches the game
+
+`home.activation.wowAddons` rsyncs each folder into the AddOns directory. Copies, not store
+symlinks: the folder is on NTFS (`my.games.linked`, [games-disk](../boot-and-storage/games-disk.md))
+and Windows plays from it too. `~/.local/state/wow-addons/managed` remembers what the last switch
+put there, so an add-on that leaves the list is deleted, and folders Nix never managed stay.
 
 ## The CurseForge key
 
-CurseForge's API needs a key, and instawow ships none on purpose (its README explains why). It is a
-personal key from <https://console.curseforge.com>, stored as the Bitwarden item
-"CurseForge API Key" and synced like any other secret ([secrets](../repo/secrets.md)).
-
-`wow-addons-key` does all of it in one go: it opens the console, reads the pasted key, writes the
-Bitwarden item, adds the index line, runs `sync-secrets`, commits the index, switches and installs.
-The index line waits for that run because dead-config rejects an entry with no value. Until then,
-only the GitHub entries install; the CurseForge ones are skipped, not failed.
+The bump needs a personal key from <https://console.curseforge.com>, read from
+`/run/secrets/curseforge_api_key` ([secrets](../repo/secrets.md)). `wow-addons-key` sets it in one
+go: Bitwarden item, index line, `sync-secrets`, switch, bump, switch. Without the key the bump keeps
+the CurseForge pins and warns; the GitHub ones still move.
 
 ## Adding an add-on
 
-A CurseForge add-on goes in by its NUMERIC project id (the "Project ID" on its page), never by
-slug: see the pitfall below. Add it to `githubAddons` or `curseAddons`,
-rebuild, and run `wow-addons` (or wait for the timer). Removing a line does NOT uninstall it:
-`instawow -p forever remove <id>`.
+Add `"<name>": { "source": "curseforge", "projectId": N, "version": "0", "url": "", "hash": "" }`
+(or `"source": "github", "repo": "owner/repo"`) to `sources.json`, run `update`, then `rebuild`.
+The project id is on the add-on's CurseForge page, under Details.
 
 ## Pitfalls
 
-- **Some authors forbid the API.** Leatrix Plus (94855), Baganator (914482) and Auctionator (6124)
-  all have Forever files, but their projects carry `allowModDistribution: false`, so instawow
-  answers "package distribution is forbidden" with a valid key. No third-party manager can fetch
-  them, and none of the three publishes GitHub releases. They come from the CurseForge app, and
-  instawow leaves those folders alone.
-
-- **A personal key cannot search.** On 06/11/2026 the key answered 200 on `/games`, `/mods/{id}`
-  and `POST /mods`, and 403 ("API Key missing or invalid") on `/mods/search`. instawow resolves a
-  slug through that search and a numeric id through `/mods/{id}`, so slugs fail with a 403 that
-  reads like a wrong key, and `instawow search` does not work either.
-
-- **No TTY, no progress bar.** instawow's prompt_toolkit bar throws `EOFError` without a terminal.
-  The install still completes, but the timer runs it under `script` to keep the journal clean.
-- **A copy unpacked by hand** is "unreconciled" and instawow refuses to touch it, so the install
-  passes `--replace` to adopt it.
-- **The add-ons live on NTFS** (`my.games.linked`, [games-disk](../boot-and-storage/games-disk.md)).
-  That is fine for Lua files, and Windows sees the same add-ons.
+- **The first key was wrong** and every call answered 403. A valid personal key answers `/mods/search`
+  too, so a 403 there means the key, not a missing permission.
+- **`nix store prefetch-file` rejects `!`** in the name it derives from the URL
+  (`!BugGrabber-v12.1.1.zip`), so the bump passes `--name`.
+- **The game reads add-ons at launch.** A switch while playing lands on the next start.

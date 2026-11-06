@@ -11,7 +11,8 @@ Modules: [`tools/vendored-bump/package.nix`](../../../tools/vendored-bump/packag
 [`pkgs/zapfast/bump.nix`](../../../pkgs/zapfast/bump.nix),
 [`pkgs/spotifast/bump.nix`](../../../pkgs/spotifast/bump.nix),
 [`pkgs/soloist/bump.nix`](../../../pkgs/soloist/bump.nix),
-[`pkgs/hydralauncher/bump.nix`](../../../pkgs/hydralauncher/bump.nix)
+[`pkgs/hydralauncher/bump.nix`](../../../pkgs/hydralauncher/bump.nix),
+[`pkgs/wow-addons/bump.nix`](../../../pkgs/wow-addons/bump.nix)
 
 Every package that is in neither nixpkgs nor a flake follows ONE layout, and one runner keeps all
 of them on upstream's latest without anybody editing a hash by hand. They share a reason and differ
@@ -92,6 +93,7 @@ Start from the package closest in SHAPE, since `latest` and `resolve` are what d
 | a manifest per release | [`pkgs/antigravity-cli/`](../../../pkgs/antigravity-cli/bump.nix): `sri` on the published sha512 |
 | only a pointer url | [`pkgs/curseforge/`](../../../pkgs/curseforge/bump.nix): the version from somewhere cheap, `prefetch` |
 | a GitHub release among other release lines | [`pkgs/stack-wallet/`](../../../pkgs/stack-wallet/bump.nix): the API filtered by tag, `sri` on the asset digest |
+| many artifacts in one package | [`pkgs/wow-addons/`](../../../pkgs/wow-addons/bump.nix): NOT `mkVendoredBump`, which pins one version; its own `bump.sh` keeps the contract (`$1`, no-op, unreachable is 0) over `sources.json` ([wow-addons](../apps/wow-addons.md)) |
 
 1. Create `pkgs/<name>/` with the three files. `pname` in `bump.nix` MUST be the folder name,
    because that is how the skeleton finds `source.json`. Start `source.json` as the placeholder

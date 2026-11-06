@@ -11,7 +11,7 @@
     ./glance-feed # the network cache (SQLite) behind the bar's weather, the band and the lock screen
     ./autostart.nix # the PANEL of what opens at login (my.autostart): Discord/Spotifast
     ./polkit-agent.nix # the password dialog for a graphical app that needs authorization
-    ./hypr.nix # ~/.config/hypr/hyprland.conf (ABNT2 plus monitors plus keybinds)
+    ./hypr.nix # ~/.config/hypr/hyprland.lua (ABNT2 plus monitors plus keybinds)
     ./hyprglass.nix # the Liquid Glass plugin, built for the session's Hyprland; off until my.hypr.hyprglass.enable
     ./clipboard-push.nix # the clipboard's image/file to a host over scp, its path left in the clipboard
     ./vicinae # the launcher (SUPER+Q) plus command palette, themed from the palette

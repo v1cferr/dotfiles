@@ -34,13 +34,6 @@
     "url": "https://edge.forgecdn.net/files/9471/872/Leatrix_Plus-1.60.29-forever.zip",
     "hash": "sha256-Y1i3Idn4ev485YOhRzB+ZXWLtOv0n77hTE45CX3sbMM="
   },
-  "baganator": {
-    "source": "curseforge",
-    "projectId": 914482,
-    "version": "9473987",
-    "url": "https://edge.forgecdn.net/files/9473/987/Baganator-843.zip",
-    "hash": "sha256-TjsUc9voeAOlzHGtX9+elzVGmza15+BYAlZvCE4yPV0="
-  },
   "auctionator": {
     "source": "curseforge",
     "projectId": 6124,
@@ -197,5 +190,33 @@
     "version": "9110585",
     "url": "https://edge.forgecdn.net/files/9110/585/ChatTranslator-0.5.2.zip",
     "hash": "sha256-1QWEG+jtCUfss6gcfGKEvWNgGvaGydBJibtf95W4rlE="
+  },
+  "bagnon": {
+    "source": "curseforge",
+    "projectId": 1592,
+    "version": "9456775",
+    "url": "https://edge.forgecdn.net/files/9456/775/Bagnon-12.1.8.zip",
+    "hash": "sha256-l6QAPOo//TH5iru5FGOuPjSlGiP8xFPLrSVSpQKARI0="
+  },
+  "blizzmove": {
+    "source": "curseforge",
+    "projectId": 17809,
+    "version": "9456490",
+    "url": "https://edge.forgecdn.net/files/9456/490/BlizzMove-v3.8.7.zip",
+    "hash": "sha256-/FGeC9OgWPcFCxhbTsTRFvaitNNnD2LQ+ctJnGkMIGM="
+  },
+  "training-up": {
+    "source": "curseforge",
+    "projectId": 1716050,
+    "version": "9473220",
+    "url": "https://edge.forgecdn.net/files/9473/220/training-up-v0.18.0.zip",
+    "hash": "sha256-Kbqytg3D7IfBFkYk5uG9eTuqpANXvKE22sCM32kBOf0="
+  },
+  "auto-spell-ranks": {
+    "source": "curseforge",
+    "projectId": 1704071,
+    "version": "9225248",
+    "url": "https://edge.forgecdn.net/files/9225/248/AutoSpellRanks-1.1.0-forever.zip",
+    "hash": "sha256-KGTR4bTfeYU0N+L55GYWnALkzlI0dQaipNbz/m7t9Bw="
   }
 }

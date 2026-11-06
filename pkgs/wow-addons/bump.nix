@@ -2,6 +2,7 @@
 # Why one bump for many add-ons and how each source is asked: docs/notes/apps/wow-addons.md
 {
   writeShellApplication,
+  coreutils,
   curl,
   jq,
 }:
@@ -9,6 +10,7 @@
 writeShellApplication {
   name = "wow-addons-bump";
   runtimeInputs = [
+    coreutils # `sort -V`, for a tag line's highest version
     curl
     jq
   ];

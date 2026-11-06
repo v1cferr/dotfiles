@@ -50,17 +50,24 @@ cf_latest() {
 # With a tag prefix ($2), only that release line counts: spoken-wow ships the add-on and every
 # voice pack from one repo, each under its own `<line>/vX` tags.
 gh_latest() {
-  local api="https://api.github.com/repos/$1/releases"
+  local api="https://api.github.com/repos/$1" rel tag
   if [ -z "$2" ]; then
-    curl -fsS -H 'Accept: application/vnd.github+json' "$api/latest"
+    rel=$(curl -fsS -H 'Accept: application/vnd.github+json' "$api/releases/latest")
   else
-    curl -fsS -H 'Accept: application/vnd.github+json' "$api?per_page=100" |
-      jq -ce --arg p "$2" '[.[] | select((.draft | not) and (.prerelease | not)
-        and (.tag_name | startswith($p)))] | sort_by(.published_at) | last'
-  fi |
-    jq -ce '{ version: .tag_name,
-      url: ([.assets[] | select(.name | endswith(".zip")) | .browser_download_url] | first) }
-      | select(.url != null)'
+    # The TAGS of that line, highest version first: the releases list is paginated and busy
+    # (one release per add-on build), so an older pack line falls off its first page.
+    rel=""
+    while IFS= read -r tag; do
+      rel=$(curl -fsS -H 'Accept: application/vnd.github+json' \
+        "$api/releases/tags/$(jq -rn --arg t "$tag" '$t | @uri')") || continue
+      jq -e '(.draft | not) and (.prerelease | not)' <<<"$rel" >/dev/null && break
+      rel=""
+    done < <(curl -fsS -H 'Accept: application/vnd.github+json' "$api/git/matching-refs/tags/$2" |
+      jq -r '.[].ref | sub("^refs/tags/"; "")' | sort -rV)
+  fi
+  jq -ce '{ version: .tag_name,
+    url: ([.assets[] | select(.name | endswith(".zip")) | .browser_download_url] | first) }
+    | select(.url != null)' <<<"$rel"
 }
 
 new=$(<"$file")

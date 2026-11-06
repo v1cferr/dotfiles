@@ -1,0 +1,149 @@
+{
+  "questie": {
+    "source": "github",
+    "repo": "Questie/Questie",
+    "version": "bundle/v12.6.2+v1.0.11",
+    "url": "https://github.com/Questie/Questie/releases/download/bundle/v12.6.2%2Bv1.0.11/Questie-v12.6.2%2Bv1.0.11.zip",
+    "hash": "sha256-K6lNsjgivOjW94NwqtgCKe8Oga6Yj52bIIzgdf8GZTE="
+  },
+  "dbm": {
+    "source": "github",
+    "repo": "DeadlyBossMods/DeadlyBossMods",
+    "version": "12.1.19",
+    "url": "https://github.com/DeadlyBossMods/DeadlyBossMods/releases/download/12.1.19/DBM-Core-12.1.19.zip",
+    "hash": "sha256-ts5RS9DjZrV4gKuLg6EmZkXJ1MQhDDi67/uRqlDj21Q="
+  },
+  "gathermate2": {
+    "source": "github",
+    "repo": "Nevcairiel/GatherMate2",
+    "version": "1.52.5",
+    "url": "https://github.com/Nevcairiel/GatherMate2/releases/download/1.52.5/GatherMate2-1.52.5.zip",
+    "hash": "sha256-yOTlQOt0NZBbH3BNU3NiJ4yBL/7sINsgbDhHnoZwxGA="
+  },
+  "layer-swap": {
+    "source": "curseforge",
+    "projectId": 1710286,
+    "version": "9480699",
+    "url": "https://edge.forgecdn.net/files/9480/699/LayerSwap-1.14.3.zip",
+    "hash": "sha256-q+3y6k1fUdnKamTAesCd4xFK9F8M8X1rBwos3B7Y3XE="
+  },
+  "leatrix-plus": {
+    "source": "curseforge",
+    "projectId": 94855,
+    "version": "9471872",
+    "url": "https://edge.forgecdn.net/files/9471/872/Leatrix_Plus-1.60.29-forever.zip",
+    "hash": "sha256-Y1i3Idn4ev485YOhRzB+ZXWLtOv0n77hTE45CX3sbMM="
+  },
+  "baganator": {
+    "source": "curseforge",
+    "projectId": 914482,
+    "version": "9473987",
+    "url": "https://edge.forgecdn.net/files/9473/987/Baganator-843.zip",
+    "hash": "sha256-TjsUc9voeAOlzHGtX9+elzVGmza15+BYAlZvCE4yPV0="
+  },
+  "auctionator": {
+    "source": "curseforge",
+    "projectId": 6124,
+    "version": "9162359",
+    "url": "https://edge.forgecdn.net/files/9162/359/Auctionator-341.zip",
+    "hash": "sha256-MsSiqNJNRvT8JyXmLCVRcaYod4VM5vy9MnJzX23T5OI="
+  },
+  "bugsack": {
+    "source": "curseforge",
+    "projectId": 6273,
+    "version": "9336367",
+    "url": "https://edge.forgecdn.net/files/9336/367/BugSack-v12.1.9.zip",
+    "hash": "sha256-KzqW01K1/DUd/GJijqHHX+hsg3zFmWdFXhrEgqG5KsE="
+  },
+  "buggrabber": {
+    "source": "curseforge",
+    "projectId": 13344,
+    "version": "9277326",
+    "url": "https://edge.forgecdn.net/files/9277/326/!BugGrabber-v12.1.1.zip",
+    "hash": "sha256-HlPmXHL1JaRciVGr4GQV31sftS7CHjCXDBQWovvUolA="
+  },
+  "pawn": {
+    "source": "curseforge",
+    "projectId": 4646,
+    "version": "9410140",
+    "url": "https://edge.forgecdn.net/files/9410/140/Pawn-2.14.1-Forever.zip",
+    "hash": "sha256-ybAkqTzo2pAcNOzchJaaCsnBsvOGFtwKNqFuaZwN26s="
+  },
+  "openmap": {
+    "source": "curseforge",
+    "projectId": 1735937,
+    "version": "9299630",
+    "url": "https://edge.forgecdn.net/files/9299/630/OpenMap-v0.7.5-beta.zip",
+    "hash": "sha256-o16ztuJIhOQyneiFd+9pULTDRidKSTtNipyJHBY5W48="
+  },
+  "forever-loot-sparkles": {
+    "source": "curseforge",
+    "projectId": 1729017,
+    "version": "9446367",
+    "url": "https://edge.forgecdn.net/files/9446/367/ForeverLootSparkles-v1.3.1-forever.zip",
+    "hash": "sha256-7pUb4YsYdIazUXYxyVR6RLt3yhdZ3N/mKwrf13yb5nw="
+  },
+  "node-sight": {
+    "source": "curseforge",
+    "projectId": 1731463,
+    "version": "9468981",
+    "url": "https://edge.forgecdn.net/files/9468/981/NodeSight-1.6.2.zip",
+    "hash": "sha256-SO7vN9tO3kYX0No1yTU3UeJQEWX35BN5CVzc8pE9SCs="
+  },
+  "musca-auras": {
+    "source": "curseforge",
+    "projectId": 1713094,
+    "version": "9458233",
+    "url": "https://edge.forgecdn.net/files/9458/233/WeakAuras-v1.15.0-forever.zip",
+    "hash": "sha256-DfEzw8iazXIEIuBjTxyCmFMAazklLA/4SPu0TP0OF4s="
+  },
+  "needroll": {
+    "source": "curseforge",
+    "projectId": 1731901,
+    "version": "9475081",
+    "url": "https://edge.forgecdn.net/files/9475/81/NeedRoll-v1.0.3-forever.zip",
+    "hash": "sha256-NA9HT7GzeDRk2UK68w88a+Hll4GKbgmK342DWUbdhgs="
+  },
+  "glowing-bars": {
+    "source": "curseforge",
+    "projectId": 1754997,
+    "version": "9474667",
+    "url": "https://edge.forgecdn.net/files/9474/667/GlowingBars-2.6.0.zip",
+    "hash": "sha256-bBWqDHyuF/zIsnVsPK5g0hDQ4O8CYyPHcjSDmIr12/U="
+  },
+  "prettytooltip": {
+    "source": "curseforge",
+    "projectId": 1720719,
+    "version": "9298424",
+    "url": "https://edge.forgecdn.net/files/9298/424/PrettyTooltip-v1.3.7-forever.zip",
+    "hash": "sha256-I8Eno55wRgJOy5WM+4ruyvvjS2hl9CbidK/pybZjQFo="
+  },
+  "keep-or-toss": {
+    "source": "curseforge",
+    "projectId": 1737994,
+    "version": "9447565",
+    "url": "https://edge.forgecdn.net/files/9447/565/KeepOrToss-1.3.2.zip",
+    "hash": "sha256-b6kiZeNCb5FfOhqToBpDElQJo6ZpqRJS9qXXJerwXPE="
+  },
+  "social-diary": {
+    "source": "curseforge",
+    "projectId": 1733454,
+    "version": "9457140",
+    "url": "https://edge.forgecdn.net/files/9457/140/social_diary-v2.3.0.zip",
+    "hash": "sha256-B8j4gwew0t9a0FTa4MbnkI6bbVPbiVsR3fuxOj0nD28="
+  },
+  "happy-camper": {
+    "source": "curseforge",
+    "projectId": 1715557,
+    "version": "9428518",
+    "url": "https://edge.forgecdn.net/files/9428/518/HappyCamper-1.0.0.zip",
+    "hash": "sha256-kB5FSeExU8I5ZevH2pwusB12VJjPlMYkZpILTpE/qPs="
+  },
+  "dbm-vanilla": {
+    "source": "github",
+    "repo": "DeadlyBossMods/DBM-Vanilla",
+    "version": "r835",
+    "url": "https://github.com/DeadlyBossMods/DBM-Vanilla/releases/download/r835/DBM-Vanilla_SoD-r835.zip",
+    "hash": "sha256-ogy91/fr+60Ju1SXUN641f5/6CasSbPGAxgjj+uzg1g="
+  }
+}

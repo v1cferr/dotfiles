@@ -232,5 +232,19 @@
     "version": "9452551",
     "url": "https://edge.forgecdn.net/files/9452/551/Angleur-2.9.79-Forever-SoftInteractFix.zip",
     "hash": "sha256-FSyo6p2sk4kPuUHqa/ZAga8O4+9RTx1CDiVVxAqgf4w="
+  },
+  "battletext-forever": {
+    "source": "curseforge",
+    "projectId": 1722502,
+    "version": "9468705",
+    "url": "https://edge.forgecdn.net/files/9468/705/BattleTextForever-v1.15.0-forever.zip",
+    "hash": "sha256-L+aQG+zNySnhg86r428LVnlSQgsmZAbiUhJEs6609os="
+  },
+  "easy-experience-bar": {
+    "source": "curseforge",
+    "projectId": 1387290,
+    "version": "9423637",
+    "url": "https://edge.forgecdn.net/files/9423/637/EasyExperienceBar.zip",
+    "hash": "sha256-c23YQYrLkw/H2symulpsqfpTjPrRNHFleO7VKsA+QOs="
   }
 }

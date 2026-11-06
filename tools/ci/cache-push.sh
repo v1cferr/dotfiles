@@ -37,9 +37,9 @@ nix build --no-link --keep-going "${wanted[@]}" || status=$?
 
 # Push every output that exists now. --no-recursive: their references either come from
 # cache.nixos.org or are in this same list, so the closure would only re-upload nixpkgs.
+# The store resolves the outputs: `derivation show` leaves `path` out of fixed-output ones.
 mapfile -t built < <(
-  nix derivation show "${wanted[@]%^*}" |
-    jq -r '.derivations[].outputs[].path | "/nix/store/" + .' |
+  nix-store --query --outputs "${wanted[@]%^*}" |
     while read -r p; do [ -e "$p" ] && echo "$p"; done
 )
 echo "cache-push: pushing ${#built[@]} store paths"

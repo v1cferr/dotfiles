@@ -35,14 +35,13 @@ let
     "github:Questie/Questie" # quest helper (bundles QuestieDB)
   ];
 
-  # Inert until the key is in the vault (instawow answers "access token missing" without it).
+  # Inert until the key is in the vault. NUMERIC ids: a personal key gets 403 on /mods/search,
+  # which is how instawow resolves a slug, while /mods/{id} answers. Leatrix Plus, Baganator and
+  # Auctionator are NOT here: their authors forbid API distribution (see the note).
   curseAddons = [
-    "curse:layer" # Layer-Swap: see and change your layer
-    "curse:leatrix-plus-classic" # Leatrix Plus: its Forever file lives in the Classic project
-    "curse:baganator" # combined bags plus every character's inventory
-    "curse:auctionator" # auction house
-    "curse:bug-grabber" # BugSack's backend
-    "curse:bugsack" # Lua error catcher
+    "curse:1710286" # Layer-Swap: see and change your layer
+    "curse:13344" # BugGrabber: BugSack does nothing without it
+    "curse:6273" # BugSack: Lua error catcher
   ];
 
   cfKey = osConfig.sops.secrets.curseforge_api_key.path or null;
@@ -83,7 +82,7 @@ let
 in
 {
   home.packages = [
-    instawow # manual use: `instawow -p forever search <name>`
+    instawow # manual use: `instawow -p forever list`
     wow-addons
     wow-addons-key
   ];

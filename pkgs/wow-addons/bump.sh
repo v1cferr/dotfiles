@@ -46,23 +46,34 @@ cf_latest() {
           url: (.downloadUrl // "https://edge.forgecdn.net/files/\(.id / 1000 | floor)/\(.id % 1000)/\(.fileName | @uri)") }'
 }
 
+# GitHub allows 60 anonymous API calls an hour, and one tag line costs a call per tag: the gh login,
+# when there is one, lifts that to 5000.
+gh_token="${GITHUB_TOKEN:-}"
+if [ -z "$gh_token" ] && command -v gh >/dev/null; then gh_token=$(gh auth token 2>/dev/null || true); fi
+gh_api() {
+  if [ -n "$gh_token" ]; then
+    curl -fsS -H 'Accept: application/vnd.github+json' -H "Authorization: Bearer $gh_token" "$1"
+  else
+    curl -fsS -H 'Accept: application/vnd.github+json' "$1"
+  fi
+}
+
 # Prints {"version","url"} of a GitHub repo's latest release: its zip asset, never release.json.
 # With a tag prefix ($2), only that release line counts: spoken-wow ships the add-on and every
 # voice pack from one repo, each under its own `<line>/vX` tags.
 gh_latest() {
   local api="https://api.github.com/repos/$1" rel tag
   if [ -z "$2" ]; then
-    rel=$(curl -fsS -H 'Accept: application/vnd.github+json' "$api/releases/latest")
+    rel=$(gh_api "$api/releases/latest")
   else
     # The TAGS of that line, highest version first: the releases list is paginated and busy
     # (one release per add-on build), so an older pack line falls off its first page.
     rel=""
     while IFS= read -r tag; do
-      rel=$(curl -fsS -H 'Accept: application/vnd.github+json' \
-        "$api/releases/tags/$(jq -rn --arg t "$tag" '$t | @uri')") || continue
+      rel=$(gh_api "$api/releases/tags/$(jq -rn --arg t "$tag" '$t | @uri')") || continue
       jq -e '(.draft | not) and (.prerelease | not)' <<<"$rel" >/dev/null && break
       rel=""
-    done < <(curl -fsS -H 'Accept: application/vnd.github+json' "$api/git/matching-refs/tags/$2" |
+    done < <(gh_api "$api/git/matching-refs/tags/$2" |
       jq -r '.[].ref | sub("^refs/tags/"; "")' | sort -rV)
   fi
   jq -ce '{ version: .tag_name,

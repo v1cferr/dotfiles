@@ -47,7 +47,7 @@ def main(argv: Optional[Sequence[str]] = None, runner: Optional[Runner] = None) 
     sub = ap.add_subparsers(dest="command", required=True)
     sub.add_parser("doctor", help="check adb, the connection, the authorization and the spec")
     sub.add_parser("audit", help="the whole session in one go: connect (pairing if needed), doctor, "
-                   "inspect, diff, disconnect")
+                   "inspect, diff, plan and its dry run, disconnect")
     ins = sub.add_parser("inspect", help="a sanitized report of the device")
     ins.add_argument("--json", action="store_true")
     for name, text in (("diff", "every declared check, against the device"),
@@ -123,7 +123,13 @@ def audit(adb: Adb, spec: Spec, paths: tuple[Optional[str], Optional[str]], has_
         print("\n== inspect ==")
         _print_inspect(state.report(target, observed))
         print("\n== diff ==")
-        return _compare(spec, observed, has_overlay, False, False)
+        code = _compare(spec, observed, has_overlay, False, False)
+        if spec.managed:
+            print("\n== plan ==")
+            if plan.run(spec, observed, False) == 1:
+                print("\n== apply --dry-run ==")  # a fresh read, as a rehearsal requires
+                apply.dry_run(spec, state.observe(target, spec), None, False)
+        return code
     except AdbError as e:
         print(f"android-iac: {e}", file=sys.stderr)
         return ENV_ERROR

@@ -126,7 +126,8 @@ blocked, in which case nothing is saved. `diff` shows managed items as `managed 
 refuses a plan whose declaration digest, build fingerprint or operations no longer match a fresh
 read, rebuilds the commands from that read (never from the file), and writes the rehearsal mark
 (the plan's sha256 and the time, 0600) under `rehearsals/`. Exit 0 rehearsed, 1 refused, 2 no
-usable plan. `apply` without `--dry-run` is refused until 2c.
+usable plan. `apply` without `--dry-run` is refused until 2c. `audit` runs both after the diff
+when the host declares a `managed` block, the rehearsal on a second fresh read.
 
 **Delivery, one usable step per commit**: 2a `plan` (read-only); 2b `apply --dry-run`; 2c
 `apply` and `rollback` for settings, starting with harmless keys; 2d packages; 2e permissions.

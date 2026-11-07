@@ -13,8 +13,9 @@ from pathlib import Path
 from typing import Any
 
 import cli
-from adb import allowed_write
+from adb import Adb, allowed_write
 from fake import FakeAdb, healthy, isolate_overlay, spec_file
+from spec import parse
 from test_plan import TIMEOUT, spec_with
 
 
@@ -81,6 +82,15 @@ class DryRun(unittest.TestCase):
     def test_no_plan_or_no_dry_run_is_an_error(self) -> None:
         self.assertEqual(self.run_cli({**healthy(), TIMEOUT: "30000\n"}, "apply", "--dry-run")[0], 2)
         self.assertEqual(self.run_cli({**healthy(), TIMEOUT: "30000\n"}, "apply")[0], 2)
+
+    def test_audit_plans_and_rehearses_in_one_go(self) -> None:
+        fake = FakeAdb({**healthy(), TIMEOUT: "30000\n"})
+        with contextlib.redirect_stdout(io.StringIO()) as out, contextlib.redirect_stderr(io.StringIO()):
+            code = cli.audit(Adb(fake), parse(spec_with()), (self.spec, None), False, None, fake)
+        self.assertEqual(code, 1)  # the diff's code: managed drift
+        self.assertIn("== apply --dry-run ==", out.getvalue())
+        self.assertIn("rehearsed: 3 operations, nothing was run", out.getvalue())
+        self.assertEqual([c for c in fake.calls if allowed_write(c)], [])
 
 
 if __name__ == "__main__":

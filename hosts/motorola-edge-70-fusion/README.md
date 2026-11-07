@@ -14,7 +14,7 @@ read-only.
 ## Usage
 
 ```sh
-android-iac audit     # all of it in one go: connect (pair once), doctor, inspect, diff, disconnect
+android-iac audit     # all of it in one go: connect (pair once), doctor, inspect, diff, plan, dry run, disconnect
 android-iac doctor    # adb, the connection, the authorization, what can be read
 android-iac inspect   # a sanitized report; --json for the full one, kept OUT of the repo
 android-iac diff      # every declared check; exit 1 on drift, 3 on missing evidence

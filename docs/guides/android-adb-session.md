@@ -12,7 +12,8 @@ android-iac audit
 
 It finds the wireless debugging port by mDNS (or asks for the one on the phone's screen), pairs
 the first time (asking the pairing port and the six digit code, which goes to adb on stdin and is
-never printed), connects, runs `doctor`, `inspect` and `diff`, disconnects, and ends with the
+never printed), connects, runs `doctor`, `inspect`, `diff`, then `plan` and `apply --dry-run`
+(nothing is written to the phone), disconnects, and ends with the
 reminder for step 3. Its exit code is the diff's. A phone already attached over USB is used as is
 and left attached. The steps below are what it does, for when something fails half-way.
 

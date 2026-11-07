@@ -16,6 +16,7 @@ let
     coreutils
     fzf
     unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
+    uv
     writeShellApplication
     writeText
     ;
@@ -91,6 +92,32 @@ let
     }
   );
 
+  # The GitGuardian MCP in its documented "PAT env" stdio mode: the launcher reads the sops PAT
+  # itself, so the token reaches only this process, never the store or the claude wrapper's env.
+  gitguardianLauncher = writeShellApplication {
+    name = "gitguardian-mcp";
+    runtimeInputs = [ coreutils ];
+    text = ''
+      secret=/run/secrets/gitguardian_pat
+      if [ ! -r "$secret" ]; then
+        echo "gitguardian-mcp: $secret is missing; see docs/notes/apps/claude-code.md" >&2
+        exit 1
+      fi
+      GITGUARDIAN_PERSONAL_ACCESS_TOKEN="$(cat "$secret")"
+      export GITGUARDIAN_PERSONAL_ACCESS_TOKEN
+      export ENABLE_LOCAL_OAUTH=false GITGUARDIAN_URL=https://dashboard.gitguardian.com
+      exec ${lib.getExe' uv "uvx"} --from git+https://github.com/GitGuardian/ggmcp.git@v0.6.1 gg-mcp-server
+    '';
+  };
+  gitguardianMcp = writeText "mcp-gitguardian.json" (
+    builtins.toJSON {
+      mcpServers.gitguardian = {
+        type = "stdio";
+        command = lib.getExe gitguardianLauncher;
+      };
+    }
+  );
+
   # The FAI memory server (modules/home/services/basic-memory.nix). Keyed `basic-memory` so the permission
   # rules in settings-fai.json still match; it follows the service toggle, so no dead endpoint.
   faiMemory = lib.optional osConfig.my.services.basic-memory (
@@ -109,6 +136,7 @@ let
     vercelMcp
     gitlabMcp
     openrouterMcp
+    gitguardianMcp
   ];
 
   # The accounts' SSOT (rule 11): wrappers, menu, symlinks and MCP all come from here.

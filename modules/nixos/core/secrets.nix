@@ -122,6 +122,12 @@ in
         mode = "0400";
       }; # user-readable: wow-addons-bump runs as the user from `update`
     }
+    // lib.optionalAttrs (builtins.elem "gitguardian_pat" sopsKeys) {
+      gitguardian_pat = {
+        owner = "v1cferr";
+        mode = "0400";
+      }; # user-readable: the claude wrapper's gitguardian-mcp launcher runs as the user
+    }
     // lib.optionalAttrs (builtins.elem "vault_password" sopsKeys) {
       vault_password = {
         owner = "v1cferr";

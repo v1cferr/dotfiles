@@ -234,6 +234,22 @@ This is the MCP only. Pointing Claude Code itself at OpenRouter (`ANTHROPIC_BASE
 friends, the [integration guide](https://openrouter.ai/docs/cookbook/coding-agents/claude-code-integration))
 is not done: both accounts are Anthropic subscriptions, and the env would replace them.
 
+## The GitGuardian MCP runs locally on a sops PAT
+
+The [ggmcp](https://github.com/GitGuardian/ggmcp) README recommends the hosted
+`https://mcp.gitguardian.com/mcp` with OAuth, but the PATs that flow issues expire (30 days by
+default), the same weekly-chore trap as OpenRouter. So it runs in the README's **PAT env** stdio
+mode instead: `uvx` pinned to a release tag, `ENABLE_LOCAL_OAUTH=false`, and the token from
+`/run/secrets/gitguardian_pat`. Unlike Stitch and OpenRouter, the read happens in a dedicated
+`gitguardian-mcp` launcher and not in the claude wrapper, so the PAT lives in the MCP process only
+and never in the environment the session's shell commands inherit. Without the secret the launcher
+exits with a message, and only this server is missing.
+
+Setting or rotating the PAT is the usual secrets flow ([secrets](../repo/secrets.md)), with no
+dedicated command kept for a once-a-year step: store it as the password of the "GitGuardian PAT"
+Bitwarden item, make sure `gitguardian_pat` maps to that item in `secrets/bitwarden-secrets.json`,
+run `sync-secrets`, then switch. The PAT's scopes decide which tools the server exposes.
+
 ## The system side: what has to be IMPOSED
 
 [`modules/nixos/services/claude-code.nix`](../../../modules/nixos/services/claude-code.nix) holds the three things

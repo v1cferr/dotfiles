@@ -144,7 +144,7 @@ def run(spec: Spec, observed: Observed, as_json: bool) -> int:
         print(f"\n{spec.name}: {len(ops)} to change, {len(blocked)} blocked, "
               f"{sum(c.state == 'in-sync' for c in found)} in sync")
         if path:
-            print(f"saved: {path}  (nothing was run; applying is phase 2b/2c)")
+            print(f"saved: {path}  (nothing was run; rehearse it: `android-iac apply --dry-run`)")
         elif blocked:
             print("not saved: a plan with blocked items would be a guess")
     return 3 if blocked else 1 if ops else 0

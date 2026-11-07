@@ -20,6 +20,7 @@ android-iac inspect   # a sanitized report; --json for the full one, kept OUT of
 android-iac diff      # every declared check; exit 1 on drift, 3 on missing evidence
 android-iac verify    # only what is not in sync, for scripts
 android-iac plan      # what the `managed` block would change; saved under ~/.local/state, never run
+android-iac apply --dry-run  # re-reads, refuses a stale plan, prints the exact commands, runs none
 ```
 
 The session itself (pairing, authorizing, revoking afterwards) is

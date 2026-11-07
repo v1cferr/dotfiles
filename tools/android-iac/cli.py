@@ -9,6 +9,7 @@ import os
 import sys
 from typing import Any, Optional, Sequence
 
+import apply
 import compare
 import plan
 import session
@@ -55,6 +56,10 @@ def main(argv: Optional[Sequence[str]] = None, runner: Optional[Runner] = None) 
         p.add_argument("--json", action="store_true")
     pl = sub.add_parser("plan", help="the changes that would bring the managed items in line; saved, never run")
     pl.add_argument("--json", action="store_true")
+    apl = sub.add_parser("apply", help="rehearse a saved plan against a fresh read (only --dry-run for now)")
+    apl.add_argument("plan", nargs="?", help="the plan file (default: the latest saved plan)")
+    apl.add_argument("--dry-run", action="store_true", help="print the exact commands, run none")
+    apl.add_argument("--json", action="store_true")
     for p in (ins, *[sub.choices[n] for n in ("diff", "verify")]):
         p.add_argument("--permissions", action="store_true",
                        help="also read each third-party app's granted permissions (slower)")
@@ -69,6 +74,9 @@ def main(argv: Optional[Sequence[str]] = None, runner: Optional[Runner] = None) 
     except SpecError as e:
         print(f"android-iac: spec: {e}", file=sys.stderr)
         return ENV_ERROR
+    if args.command == "apply" and not args.dry_run:
+        print("android-iac: apply runs only with --dry-run until phase 2c", file=sys.stderr)
+        return ENV_ERROR
     if args.command == "audit":
         return audit(adb, spec, (args.spec, args.local), overlay is not None, args.transport_id, runner)
     try:
@@ -76,6 +84,8 @@ def main(argv: Optional[Sequence[str]] = None, runner: Optional[Runner] = None) 
         observed = state.observe(adb, spec, getattr(args, "permissions", False))
         if args.command == "plan":
             return plan.run(spec, observed, args.json)
+        if args.command == "apply":
+            return apply.dry_run(spec, observed, args.plan, args.json)
         if args.command == "inspect":
             report = state.report(adb, observed)
             if args.json:

@@ -1,6 +1,6 @@
 # Phone: a Motorola Edge 70 Fusion (stock Android)
 
-My main phone: Android 16 on a Snapdragon 7s Gen 3, the bootloader LOCKED and no root, because
+My main phone: Android 17 (API 37, read by the first audit on 07/11/2026) on a Snapdragon 7s Gen 3, the bootloader LOCKED and no root, because
 the banks, GOV.BR and Pix by tap (NFC) depend on a device that passes Play Integrity. Nix does
 not run on it and never will, so this folder is DATA, the way [`../cudy-wr3000/`](../cudy-wr3000/)
 is for the router.

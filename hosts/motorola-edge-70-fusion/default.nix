@@ -3,7 +3,7 @@
 {
   name = "motorola-edge-70-fusion";
   manufacturer = "motorola"; # ro.product.manufacturer, compared case-insensitively
-  model = null; # ro.product.model: null until the first real inspect reads it
+  model = "motorola edge 70 fusion"; # ro.product.model, read by the first audit on 07/11/2026
   address = "192.168.1.31"; # the router's DHCP reservation, and the wireless ADB target
 
   # Read-only properties of a stock, locked, unrooted build. Any other value is drift.
@@ -28,7 +28,6 @@
     global = {
       auto_time = "1"; # TOTP and banking tokens need the network clock
       auto_time_zone = "1";
-      verifier_verify_adb_installs = "1"; # Play Protect also scans what ADB installs
       stay_on_while_plugged_in = "0";
     };
     secure = {

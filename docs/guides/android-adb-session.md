@@ -44,8 +44,7 @@ android-iac inspect    # the summary; --json for the full report, never saved in
 android-iac diff; echo $?
 ```
 
-`doctor` prints `ro.product.model` while the spec declares none: on the first audit, copy it into
-`hosts/motorola-edge-70-fusion/default.nix` and commit it.
+`doctor` compares `ro.product.model` with the spec, and refuses a different phone.
 
 ## 3. Close the session
 

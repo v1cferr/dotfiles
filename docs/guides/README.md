@@ -23,6 +23,7 @@ in full and a guide that stopped working is a bug.
 | [limine-migration](limine-migration.md) | how the real ESP moved from GRUB to Limine, one gated boot at a time, and the way back |
 | [disaster-recovery](disaster-recovery.md) | the three drills that prove this repo still rebuilds the machine |
 | [router-hardening](router-hardening.md) | the audit of the one public-facing box Nix does not reach |
+| [android-adb-session](android-adb-session.md) | opening an ADB session on the phone for an audit, and closing it again |
 | [fai-gateway-router](fai-gateway-router.md) | the half of the FAI gateway that lives on the router |
 | [per-client-dns-block](per-client-dns-block.md) | blocking a domain for ONE machine, across its dual boot |
 | [wireguard-moonlight](wireguard-moonlight.md) | the tunnel MTU and Moonlight test, and why it cannot run from home |

@@ -1,0 +1,4 @@
+List of devices attached
+ZY22SYNTHETIC          device usb:1-4 product:synthetic model:edge_70_fusion device:synthetic transport_id:2
+192.168.1.30:37555     device product:m51 model:SM_M515F device:m51 transport_id:3
+

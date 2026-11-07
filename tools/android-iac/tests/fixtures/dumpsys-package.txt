@@ -1,0 +1,11 @@
+Packages:
+  Package [org.example.notes] (synthetic):
+    install permissions:
+      android.permission.INTERNET: granted=true
+    User 0: ceDataInode=1 installed=true hidden=false
+      gids=[3003]
+      runtime permissions:
+        android.permission.RECORD_AUDIO: granted=true, flags=[ USER_SET ]
+        android.permission.READ_SMS: granted=false, flags=[ USER_SET ]
+        android.permission.POST_NOTIFICATIONS: granted=true, flags=[ USER_SET ]
+      disabledComponents:

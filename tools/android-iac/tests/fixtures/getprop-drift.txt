@@ -1,0 +1,8 @@
+[ro.product.manufacturer]: [motorola]
+[ro.build.version.security_patch]: [2025-01-01]
+[ro.build.type]: [user]
+[ro.build.tags]: [release-keys]
+[ro.boot.verifiedbootstate]: [orange]
+[ro.boot.flash.locked]: [0]
+[ro.boot.vbmeta.device_state]: [unlocked]
+[ro.debuggable]: [0]

@@ -84,6 +84,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [mouse](hardware/mouse.md) | the MX Master, the boot race, and the gestures |
 | [razer](hardware/razer.md) | the DeathAdder's DPI OSD, and why openrazer does not build on 7.x |
 | [android](hardware/android.md) | pairing the phone over wireless ADB, and why SFTP could not clean it |
+| [android-iac](hardware/android-iac.md) | the phone's posture read over ADB: what it can see, the statuses, what never enters the repo |
 | [oom](hardware/oom.md) | earlyoom, and the three traps in its regex |
 | [power-and-memory-baseline](hardware/power-and-memory-baseline.md) | the 18/10/2026 audit: where the RAM goes, what was kept and why, what is still unmeasured |
 | [power](hardware/power.md) | Balanced, Gaming and Eco: power-profiles-daemon, and GameMode's hold |

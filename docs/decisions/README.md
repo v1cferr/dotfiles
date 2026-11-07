@@ -28,3 +28,4 @@ Each record follows the same short shape, after [Michael Nygard's ADR](https://a
 | [0014](0014-source-previews-from-a-build-snapshot.md) | The site previews source from a snapshot built beside it | accepted, refines 0005 and 0010 |
 | [0015](0015-limine-over-grub.md) | Limine replaces GRUB, so the initrd is verified too | accepted |
 | [0016](0016-bitwarden-is-the-secrets-source.md) | Bitwarden is the single source of secrets, home included | accepted |
+| [0017](0017-android-device-management.md) | The phone is audited over ADB, read-only, against a declared posture | accepted |

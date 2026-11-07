@@ -43,6 +43,7 @@ in
     eval-metrics # ./tools: same flake8 at build time; the gate WORKFLOW runs it after the check
     usage-audit # ./tools: same flake8 at build time; I run it by hand, it reads my ~
     hypr-bench # ./tools: flake8 and its unit tests at build time; I run it by hand, on the desk
+    android-iac # ./tools: flake8, mypy and the fixture tests at build; it reads the phone over ADB
     rules-index # ./tools: the build IS the wrapper's shellcheck, and the CHECK below runs it too
     curseforge # ./pkgs: the official AppImage (outside the CHECK below, the why is there)
     btop # nixpkgs + the src from PR #1457 (Intel Xe GPU): here so the check COMPILES the fork

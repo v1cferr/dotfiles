@@ -1,4 +1,4 @@
-# Android over ADB: wireless debugging to measure storage, trim caches and remove bloat.
+# Android over ADB: the read-only posture audit, plus measuring storage and trimming caches.
 # Pairing, the commands and why SFTP could not do this job: docs/notes/hardware/android.md
 { pkgs, ... }:
 
@@ -6,6 +6,7 @@ let
   # Rule 19: everything this module reaches for, named once. deadnix fails the build on an
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
+    android-iac
     android-tools
     scrcpy
     universal-android-debloater
@@ -15,6 +16,7 @@ in
   # User apps with no root need, hence home (rule 4): no `programs.adb` and no adbusers group,
   # since systemd grants USB access through uaccess and wireless debugging dials OUT to the phone.
   home.packages = [
+    android-iac # the phone's posture against hosts/motorola-edge-70-fusion, read-only
     android-tools # adb and fastboot
     scrcpy # the phone's screen mirrored and driven from here
     universal-android-debloater # uad-ng: a GUI over adb with a safety rating per package

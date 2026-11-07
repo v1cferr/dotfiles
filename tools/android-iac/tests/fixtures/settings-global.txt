@@ -1,0 +1,7 @@
+auto_time=1
+device_name=Someone's synthetic phone
+bluetooth_address=02:00:5E:10:00:02
+wifi_ssid=MyHomeNet
+adb_enabled=1
+some_flag=true
+=orphan

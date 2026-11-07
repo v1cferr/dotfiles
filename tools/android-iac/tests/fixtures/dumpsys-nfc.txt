@@ -1,0 +1,2 @@
+mState=on
+mIsZeroClickRequested=false

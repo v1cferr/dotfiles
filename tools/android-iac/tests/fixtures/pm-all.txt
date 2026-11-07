@@ -1,0 +1,10 @@
+package:com.android.nfc
+package:com.android.phone
+package:com.android.settings
+package:com.android.systemui
+package:com.android.vending
+package:com.google.android.gms
+package:com.google.android.gsf
+package:com.google.android.webview
+package:br.example.bank
+package:org.example.notes

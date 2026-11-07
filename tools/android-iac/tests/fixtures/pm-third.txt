@@ -1,0 +1,2 @@
+package:br.example.bank
+package:org.example.notes

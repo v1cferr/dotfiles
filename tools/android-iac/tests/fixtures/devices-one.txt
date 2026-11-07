@@ -1,0 +1,5 @@
+* daemon not running; starting now at tcp:5037
+* daemon started successfully
+List of devices attached
+192.168.1.31:40123     device product:synthetic model:edge_70_fusion device:synthetic transport_id:4
+

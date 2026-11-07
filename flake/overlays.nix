@@ -7,6 +7,8 @@ let
 
   # The router's facts, for the checkers that read its mirror (rule 11): hosts/cudy-wr3000.
   router = import ../hosts/cudy-wr3000;
+  # The phone's facts and posture, for the tool that audits it: hosts/motorola-edge-70-fusion.
+  android = import ../hosts/motorola-edge-70-fusion;
 
   # ONE unstable instance, hoisted OUT of the overlay on purpose: inside it the import would run
   # per pkgs instance AND per splice (pkgsi686Linux), which is the OOM everyone hits.
@@ -153,6 +155,7 @@ let
     eval-metrics = final.callPackage ../tools/eval-metrics/package.nix { }; # what evaluating each host costs
     usage-audit = final.callPackage ../tools/usage-audit/package.nix { }; # each app next to the traces of its use
     hypr-bench = final.callPackage ../tools/hypr-bench/package.nix { }; # A/B runs of the desktop's effects
+    android-iac = final.callPackage ../tools/android-iac/package.nix { device = android; }; # the phone, audited over ADB
     rules-index = final.callPackage ../tools/rules-index/package.nix { }; # it fails on a citation of no live rule
     docs-site = final.callPackage ../tools/docs-site/package.nix { }; # docs/ built into the static site
     docs-site-check = final.callPackage ../tools/docs-site/check.nix { }; # the same build, at push time

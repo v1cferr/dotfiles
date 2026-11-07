@@ -1,7 +1,8 @@
 # Android over ADB, wireless
 
 `modules/home/apps/android.nix`: `adb`, `scrcpy` and `uad-ng`, for looking inside the phone from
-this machine and cleaning it up.
+this machine and cleaning it up. The main phone's read-only posture audit is
+[android-iac](android-iac.md); the cleanup below is hand work and never part of it.
 
 ## Why ADB and not SFTP
 

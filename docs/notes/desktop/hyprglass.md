@@ -132,6 +132,12 @@ Inside it, a translucent kitty over colored rows and a floating translucent kitt
 | `hyprctl hyprglass stats` over 3 s | 1 window draw per frame for 181 frames, all 181 from the background cache, 0.299 glass Mpx per frame |
 | the live session after each run | one instance, DP-1 and DP-2 only, `no plugins loaded` |
 
+**Do not repeat this method on 0.57.** On 06/11/2026 a nested Hyprland 0.57.1 run the same way
+took the live session's units down when it exited: its shutdown runs
+`systemctl --user stop graphical-session.target` and unsets the session's variables in the user
+manager, which the nested one shares. The incident and the repair:
+[performance](performance.md#rejected).
+
 What this does NOT prove: how it looks at the desk on the real monitors (the nested output ran at
 its own scale), how it behaves on the rotated LG with the shell's layers, and what it costs on the
 GPU. Those need the owner's eyes and the procedure below.

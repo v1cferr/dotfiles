@@ -91,7 +91,7 @@ What is declared, and why:
 | `close_on_focus_loss` | `false` | see below: `true` closed it within 92 ms of opening |
 | `pop_to_root_on_close` | `true` | it reopens on the search, not on the last view |
 | `escape_key_behavior` | `close_window` | Esc closes, like rofi did |
-| `launcher_window.layer_shell.keyboard_interactivity` | `on_demand` | `exclusive` breaks popup mouse handling on Hyprland |
+| `launcher_window.layer_shell.keyboard_interactivity` | `exclusive` | see below: `on_demand` lost the keyboard whenever the mouse moved |
 | `providers.calculator.preferences.backend` | `qalculate` | libqalculate: units, currencies, the GTK Qalculate! engine |
 | `search_files_in_root`, `fallbacks` | `true`, `shortcuts:dotfiles-google` then `files:search` | files show up in the main search; a query that matches nothing offers Google |
 | `launcher_window.size`, `font.normal.size` | 1000x620, 11.5 | the 770x480 default felt small on a 1440p panel |
@@ -485,6 +485,17 @@ then `closelayer>>vicinae` 92 ms later, with the active window never leaving Zen
 focus-out right after the layer maps and obeys it. `exclusive` keyboard interactivity did not help
 (gone in 157 ms); only `false` keeps it open, which is also upstream's default. Esc, SUPER+Q again,
 or running an entry closes it.
+
+**Why the keyboard is exclusive.** With `on_demand`, SUPER+Q sometimes opened the launcher with
+the keyboard on the window behind it: typing and the arrows went nowhere. Hyprland 0.57.1's
+`mouseMoveUnified` (`src/managers/input/InputManager.cpp`) refocuses the window under the cursor on
+any motion past `follow_mouse_threshold` when `follow_mouse = 1`, and it only skips that when the
+focused layer is `exclusive` (`allowKeyboardRefocus`). So it depended on where the cursor sat: over
+the launcher it kept the keyboard, over a window the first nudge took it away (the MX Master's
+gesture button, which opens it, is a mouse in the hand). `exclusive` is also upstream's default.
+Its known cost: upstream warns that it breaks mouse handling in popups such as the action panel
+(Ctrl+K) on Hyprland; the keyboard drives them as before. A click outside no longer moves the focus
+either, so Esc or SUPER+Q closes it.
 
 Two upstream quirks seen on 0.29.0, both harmless here:
 

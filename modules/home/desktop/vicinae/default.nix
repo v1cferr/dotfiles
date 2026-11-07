@@ -57,8 +57,8 @@ let
         light = dark;
       };
       launcher_window = {
-        # exclusive grabs the keyboard and breaks popup mouse handling on Hyprland
-        layer_shell.keyboard_interactivity = "on_demand";
+        # exclusive: with follow_mouse = 1, on_demand lost the keyboard to any window the cursor moved over
+        layer_shell.keyboard_interactivity = "exclusive";
         client_side_decorations.border_width = 1;
         size = {
           width = 1000;

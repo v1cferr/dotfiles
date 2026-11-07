@@ -7,6 +7,7 @@
   makeWrapper,
   python3,
   android-tools,
+  avahi,
   device,
 }:
 
@@ -39,5 +40,10 @@ runCommand "android-iac"
     makeWrapper ${python3}/bin/python3 $out/bin/android-iac \
       --add-flags "-s $out/lib/android-iac/cli.py" \
       --set ANDROID_IAC_SPEC ${spec} \
-      --suffix PATH : ${android-tools}/bin
+      --suffix PATH : ${
+        lib.makeBinPath [
+          android-tools
+          avahi # avahi-browse finds the wireless debugging port: nixpkgs' adb is built without mDNS
+        ]
+      }
   ''

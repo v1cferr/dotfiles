@@ -12,6 +12,7 @@ NAMESPACES = frozenset({"global", "secure", "system"})
 PM_FILTERS = frozenset({"-d", "-e", "-s", "-3"})
 SETTING_KEY = re.compile(r"^[A-Za-z0-9_.]{1,128}$")
 PACKAGE = re.compile(r"^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)+$")
+ENDPOINT = re.compile(r"^\d{1,3}(\.\d{1,3}){3}:\d{1,5}$")
 TIMEOUT_S = 20
 
 
@@ -50,7 +51,7 @@ class Result:
     stderr: str
 
 
-Runner = Callable[[Sequence[str]], Result]
+Runner = Callable[..., Result]  # (args, input=None): input feeds stdin, so a secret stays off argv
 
 
 def allowed(args: Sequence[str]) -> bool:
@@ -72,16 +73,23 @@ def allowed(args: Sequence[str]) -> bool:
     return False
 
 
+def allowed_session(args: Sequence[str]) -> bool:
+    """The host-side session commands `audit` runs: they change what this computer's adb server
+    is connected to, never anything on the phone. The pairing code goes through stdin."""
+    a = list(args)
+    return len(a) == 2 and a[0] in ("connect", "disconnect", "pair") and bool(ENDPOINT.match(a[1]))
+
+
 def subprocess_runner(target: Sequence[str] = ()) -> Runner:
     """The real runner. `target` is `-s <serial>` or `-t <id>`, prepended after the check."""
     exe = shutil.which("adb")
 
-    def run(args: Sequence[str]) -> Result:
+    def run(args: Sequence[str], input: Optional[str] = None) -> Result:
         if exe is None:
             raise AdbMissing("adb is not on PATH: install android-tools (modules/home/apps/android.nix)")
         try:
             p = subprocess.run([exe, *target, *args], capture_output=True, text=True,
-                               timeout=TIMEOUT_S, check=False)
+                               timeout=TIMEOUT_S, check=False, input=input)
         except subprocess.TimeoutExpired as e:
             raise CommandFailed(f"adb {' '.join(args)} timed out after {TIMEOUT_S}s") from e
         return Result(p.returncode, p.stdout, p.stderr)
@@ -110,6 +118,15 @@ class Adb:
                 raise MultipleDevices("several devices: pick one with --serial or --transport-id")
             raise CommandFailed(f"adb {' '.join(args)} failed: {last}")
         return r.stdout
+
+    def session(self, *args: str, secret: Optional[str] = None) -> str:
+        """connect, disconnect or pair. adb answers these with exit 0 even on failure, so the
+        caller reads the text; the secret is never echoed back in an error."""
+        if not allowed_session(args):
+            raise Refused(f"refused, not a session command: adb {' '.join(args)}")
+        r = self._run(args, input=None if secret is None else secret + "\n")
+        text = (r.stdout + r.stderr).strip()
+        return text.replace(secret, "<redacted>") if secret else text
 
     def try_call(self, *args: str) -> Optional[str]:
         """The output, or None when the device would not answer this one read."""

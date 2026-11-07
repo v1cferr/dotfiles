@@ -25,7 +25,14 @@ account, the lock screen's strength, most vendor settings, or anything under `/d
 | `spec.py` | the host JSON plus the local overlay, validated |
 | `state.py` | device selection, the reads, the inspect report |
 | `compare.py` | declared against observed, one status per check |
+| `session.py` | `audit`'s connect, pair and disconnect, with their own allowlist of host-side commands |
 | `doctor.py`, `cli.py` | the commands |
+
+`audit` is the only command that changes anything, and only on THIS side: what the local adb
+server is connected to. `connect`, `disconnect` and `pair` pass a second allowlist (an
+`IPv4:port` argument and nothing else), and the pairing code travels on stdin, never in argv or
+in an error. nixpkgs' `android-tools` is built without mDNS (`unknown host service 'mdns:check'`,
+measured on 07/11/2026 with 35.0.2), so the port comes from `avahi-browse`, or from a prompt.
 
 The allowlist is the safety property: `settings put`, `pm disable-user`, `pm uninstall`, `reboot`,
 `su`, and an argument that could smuggle a second command into the remote shell are refused

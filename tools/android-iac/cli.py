@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import argparse
+import getpass
 import json
 import os
 import sys
 from typing import Any, Optional, Sequence
 
 import compare
+import session
 import state
-from adb import Adb, AdbError, Runner, subprocess_runner
+from adb import Adb, AdbError, NoDevice, Runner, subprocess_runner
 from doctor import doctor
 from spec import Spec, SpecError, load
 
@@ -42,6 +44,8 @@ def main(argv: Optional[Sequence[str]] = None, runner: Optional[Runner] = None) 
     ap.add_argument("--transport-id", help="which device, when several are attached (see doctor)")
     sub = ap.add_subparsers(dest="command", required=True)
     sub.add_parser("doctor", help="check adb, the connection, the authorization and the spec")
+    sub.add_parser("audit", help="the whole session in one go: connect (pairing if needed), doctor, "
+                   "inspect, diff, disconnect")
     ins = sub.add_parser("inspect", help="a sanitized report of the device")
     ins.add_argument("--json", action="store_true")
     for name, text in (("diff", "every declared check, against the device"),
@@ -62,6 +66,8 @@ def main(argv: Optional[Sequence[str]] = None, runner: Optional[Runner] = None) 
     except SpecError as e:
         print(f"android-iac: spec: {e}", file=sys.stderr)
         return ENV_ERROR
+    if args.command == "audit":
+        return audit(adb, spec, (args.spec, args.local), overlay is not None, args.transport_id, runner)
     try:
         state.select(adb, args.transport_id, "ANDROID_SERIAL" in os.environ)
         observed = state.observe(adb, spec, args.permissions)
@@ -76,6 +82,38 @@ def main(argv: Optional[Sequence[str]] = None, runner: Optional[Runner] = None) 
         print(f"android-iac: {e}", file=sys.stderr)
         return ENV_ERROR
     return _compare(spec, observed, overlay is not None, args.command == "verify", args.json)
+
+
+def _ask(prompt: str, secret: bool) -> str:
+    return getpass.getpass(prompt) if secret else input(prompt)
+
+
+def audit(adb: Adb, spec: Spec, paths: tuple[Optional[str], Optional[str]], has_overlay: bool, transport_id: Optional[str],
+          runner: Optional[Runner], ask: session.Ask = _ask, browse: session.Browse = session.avahi_browse) -> int:
+    """One command for a whole session. A device already attached is used and left attached."""
+    endpoint = None
+    try:
+        try:
+            state.select(adb, transport_id, "ANDROID_SERIAL" in os.environ)
+            target = adb
+        except NoDevice:
+            if spec.address is None:
+                raise
+            endpoint = session.open_session(adb, spec.address, ask, browse)
+            target = Adb(runner or subprocess_runner(["-s", endpoint]))
+        print("== doctor ==")
+        if doctor(target, *paths, None) == 2:
+            return ENV_ERROR
+        observed = state.observe(target, spec)
+        print("\n== inspect ==")
+        _print_inspect(state.report(target, observed))
+        print("\n== diff ==")
+        return _compare(spec, observed, has_overlay, False, False)
+    except AdbError as e:
+        print(f"android-iac: {e}", file=sys.stderr)
+        return ENV_ERROR
+    finally:
+        session.close_session(adb, endpoint)
 
 
 def _compare(spec: Spec, observed: state.Observed, has_overlay: bool, only_problems: bool, as_json: bool) -> int:

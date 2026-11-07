@@ -60,10 +60,12 @@ class FakeAdb:
     def __init__(self, answers: dict[tuple[str, ...], Answer]) -> None:
         self.answers = answers
         self.calls: list[tuple[str, ...]] = []
+        self.inputs: list[str | None] = []
 
-    def __call__(self, args: Sequence[str]) -> Result:
+    def __call__(self, args: Sequence[str], input: str | None = None) -> Result:
         key = tuple(args)
         self.calls.append(key)
+        self.inputs.append(input)
         answer = self.answers.get(key, Result(1, "", "error: unknown command for this fake"))
         if isinstance(answer, Exception):
             raise answer

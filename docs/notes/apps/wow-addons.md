@@ -92,6 +92,11 @@ DialogueUI is the NPC dialogue of choice because Spoken has a narrator style mad
 - **Required dependencies are checked at build**, from the TOC the Forever client loads. Run-time
   ones are not: Baganator declared Syndicator OPTIONAL and still raised a Lua error without it.
   After adding an add-on, `/reload` and read `WTF/Account/<id>/SavedVariables/!BugGrabber.lua`.
+- **Bagnon tainted Blizzard's own code** on 06/11/2026: with it loaded, opening Options threw
+  dozens of `attempt to compare a secret number value (execution tainted by 'Bagnon')` in
+  Blizzard_NamePlates, Blizzard_CombatText and Blizzard_TextStatusBar (Midnight's secret values,
+  which Forever inherits). Back to Baganator, this time WITH Syndicator, its run-time dependency.
+- **The "Fatality" shout is BugSack's error sound**, not a game event.
 - **Social Diary 2.3.0** errors in `UI/Style/Widgets.lua:152` when a tooltip line list comes back
   EMPTY (`unpack(list[1])` on nil): its own guard only covers nil. Upstream bug, harmless (one
   tooltip does not show).

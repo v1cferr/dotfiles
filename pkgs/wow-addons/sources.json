@@ -191,13 +191,6 @@
     "url": "https://edge.forgecdn.net/files/9110/585/ChatTranslator-0.5.2.zip",
     "hash": "sha256-1QWEG+jtCUfss6gcfGKEvWNgGvaGydBJibtf95W4rlE="
   },
-  "bagnon": {
-    "source": "curseforge",
-    "projectId": 1592,
-    "version": "9456775",
-    "url": "https://edge.forgecdn.net/files/9456/775/Bagnon-12.1.8.zip",
-    "hash": "sha256-l6QAPOo//TH5iru5FGOuPjSlGiP8xFPLrSVSpQKARI0="
-  },
   "blizzmove": {
     "source": "curseforge",
     "projectId": 17809,
@@ -246,5 +239,26 @@
     "version": "9423637",
     "url": "https://edge.forgecdn.net/files/9423/637/EasyExperienceBar.zip",
     "hash": "sha256-c23YQYrLkw/H2symulpsqfpTjPrRNHFleO7VKsA+QOs="
+  },
+  "baganator": {
+    "source": "curseforge",
+    "projectId": 914482,
+    "version": "9473987",
+    "url": "https://edge.forgecdn.net/files/9473/987/Baganator-843.zip",
+    "hash": "sha256-TjsUc9voeAOlzHGtX9+elzVGmza15+BYAlZvCE4yPV0="
+  },
+  "syndicator": {
+    "source": "curseforge",
+    "projectId": 988370,
+    "version": "9424031",
+    "url": "https://edge.forgecdn.net/files/9424/31/Syndicator-289.zip",
+    "hash": "sha256-M1dCqsqSKRTMhKBz+HKA7DJRAVjgttIjTGkKObj8WeQ="
+  },
+  "tomtom": {
+    "source": "curseforge",
+    "projectId": 18808,
+    "version": "9426121",
+    "url": "https://edge.forgecdn.net/files/9426/121/TomTom-v4.4.0-release.zip",
+    "hash": "sha256-eMGSoQ3/KERtzT4rZIS+4QNGyf/dDseD7a+HmmRoS8E="
   }
 }

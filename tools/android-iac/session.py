@@ -42,22 +42,23 @@ def _port(found: Optional[str], ask: Ask, prompt: str) -> str:
     if found:
         return found
     answer = ask(prompt, False).strip()
-    if not answer.isdigit():
-        raise AdbError(f"not a port: {answer!r}")
+    if not (answer.isdigit() and 0 < int(answer) < 65536):
+        raise AdbError(f"not a port: {answer!r} (the number after the colon in `IP address & Port`)")
     return answer
 
 
 def open_session(adb: Adb, address: str, ask: Ask, browse: Browse = avahi_browse) -> str:
     """Connect to `address` over wireless debugging and return the `ip:port` serial."""
     port = _port(discover(browse, "_adb-tls-connect._tcp", address), ask,
-                 "Wireless debugging on, then the port on its screen (IP address & Port): ")
+                 "Wireless debugging is on? Its port, the number after the colon in `IP address & Port`: ")
     endpoint = f"{address}:{port}"
     out = adb.session("connect", endpoint)
     if out.startswith(("connected to", "already connected")):
         return endpoint
     print(f"adb connect: {out}")
     print("Not paired yet: on the phone, Wireless debugging, Pair device with pairing code.")
-    pport = _port(discover(browse, "_adb-tls-pairing._tcp", address), ask, "Pairing port: ")
+    pport = _port(discover(browse, "_adb-tls-pairing._tcp", address), ask,
+                  "Pairing port, after the colon in the pairing dialog's `IP address & Port` (not the code): ")
     code = ask("Pairing code (six digits): ", True).strip()
     if not (code.isdigit() and len(code) == 6):
         raise AdbError("the pairing code is six digits")

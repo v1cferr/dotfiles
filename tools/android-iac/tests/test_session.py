@@ -87,7 +87,7 @@ class Audit(unittest.TestCase):
         self.assertFalse(any(c[0] == "disconnect" for c in phone.calls))
 
     def test_bad_answers_are_refused(self) -> None:
-        for answers in (["not-a-port"], ["40123", "41000", "12ab"]):
+        for answers in (["not-a-port"], ["40123", "612639"], ["40123", "41000", "12ab"]):
             code, _, err = self.audit(Phone(paired=False), answers)
             self.assertEqual(code, 2, answers)
 
@@ -112,6 +112,17 @@ class Session(unittest.TestCase):
             self.assertFalse(allowed_session(bad), bad)
             with self.assertRaises(Refused):
                 Adb(FakeAdb({})).session(*bad)
+
+    def test_ctrl_c_is_exit_130_without_a_traceback(self) -> None:
+        def interrupted(argv: object = None, runner: object = None) -> int:
+            raise KeyboardInterrupt
+        main, cli.main = cli.main, interrupted
+        try:
+            with contextlib.redirect_stderr(io.StringIO()) as err:
+                self.assertEqual(cli.run(), 130)
+        finally:
+            cli.main = main
+        self.assertIn("interrupted", err.getvalue())
 
     def test_cli_wires_audit(self) -> None:
         with contextlib.redirect_stdout(io.StringIO()) as out:

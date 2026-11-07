@@ -143,5 +143,14 @@ def _print_inspect(r: dict[str, Any]) -> None:
     print("It is personal: keep it out of the repo.")
 
 
+def run() -> int:
+    """The entry point: Ctrl-C ends with the shell's 130, not a traceback."""
+    try:
+        return main()
+    except KeyboardInterrupt:
+        print("\ninterrupted", file=sys.stderr)
+        return 130
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(run())

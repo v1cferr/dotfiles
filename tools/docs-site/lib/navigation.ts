@@ -133,6 +133,7 @@ export const navigation: NavItem[] = [
       { title: "Weather", doc: "notes/desktop/weather.md" },
       { title: "Theme", doc: "notes/desktop/theme.md" },
       { title: "Motion", doc: "notes/desktop/motion.md" },
+      { title: "Performance", doc: "notes/desktop/performance.md" },
       { title: "Autostart", doc: "notes/desktop/autostart.md" },
       { title: "hyprsunset", doc: "notes/desktop/hyprsunset.md" },
       { title: "Backlight", doc: "notes/desktop/backlight.md" },

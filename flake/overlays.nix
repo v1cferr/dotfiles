@@ -152,6 +152,7 @@ let
     router-ssot = final.callPackage ../tools/router-ssot/package.nix { inherit router; }; # it fails when the router's mirror diverges
     eval-metrics = final.callPackage ../tools/eval-metrics/package.nix { }; # what evaluating each host costs
     usage-audit = final.callPackage ../tools/usage-audit/package.nix { }; # each app next to the traces of its use
+    hypr-bench = final.callPackage ../tools/hypr-bench/package.nix { }; # A/B runs of the desktop's effects
     rules-index = final.callPackage ../tools/rules-index/package.nix { }; # it fails on a citation of no live rule
     docs-site = final.callPackage ../tools/docs-site/package.nix { }; # docs/ built into the static site
     docs-site-check = final.callPackage ../tools/docs-site/check.nix { }; # the same build, at push time

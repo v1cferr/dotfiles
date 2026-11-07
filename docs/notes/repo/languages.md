@@ -94,6 +94,7 @@ program in shell is neither.
 | `modules/home/desktop/calendar/scripts/registry.py` and its test    | Python     | program: date arithmetic, the computus, a test suite                                                           | 22/10/2027 |
 | `tools/repo-stats/render.py`                                        | Python     | program: it draws the README's SVGs                                                                            | 22/10/2027 |
 | `tools/eval-metrics/`                                               | Python     | program: evaluator stats, budgets, formatted tables                                                            | 22/10/2027 |
+| `tools/hypr-bench/`                                                 | Python     | program: counter deltas, means and deviations over rounds, a test suite                                        | 07/11/2027 |
 | `tools/usage-audit/`, `tools/exposure-check/`                       | Python     | programs: each about 110 lines of logic                                                                        | 22/10/2027 |
 | `pkgs/razer-dpi/`                                                   | Python     | program: ioctls on hidraw                                                                                      | 22/10/2027 |
 | `modules/home/desktop/vicinae/scripts.nix` (the icon heredoc)       | Python     | it draws a glyph through fontTools' pens, an API with no command-line form                                     | 22/10/2027 |

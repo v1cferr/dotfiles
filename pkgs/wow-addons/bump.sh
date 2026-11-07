@@ -35,13 +35,17 @@ prefetch() { nix store prefetch-file --json --hash-type sha256 --name addon.zip 
 cf_key=""
 [ -r "$key_file" ] && cf_key=$(<"$key_file")
 
-# Prints {"version","url"} of the newest stable Forever file of a CurseForge project. A file the
-# author keeps out of the API (downloadUrl null) is still on the public CDN, at a path built from
-# its id: the decision to fetch those anyway is in the note.
+# Prints {"version","url"} of the newest stable Forever file of a CurseForge project, or of the
+# newest stable-or-beta one when the entry's channel ($2) is "beta" (an add-on that only ships
+# betas). A file the author keeps out of the API (downloadUrl null) is still on the public CDN, at
+# a path built from its id: the decision to fetch those anyway is in the note.
 cf_latest() {
+  local max=1 # releaseType: 1 release, 2 beta, 3 alpha
+  [ "$2" = beta ] && max=2
   curl -fsS -H "x-api-key: $cf_key" -H 'Accept: application/json' \
     "$cf_api/mods/$1/files?gameVersionTypeId=$forever&pageSize=50" |
-    jq -ce '[.data[] | select(.releaseType == 1)] | sort_by(.fileDate) | last
+    jq -ce --argjson max "$max" '[.data[] | select(.releaseType <= $max)] | sort_by(.fileDate) | last
+      | select(. != null)
       | { version: (.id | tostring),
           url: (.downloadUrl // "https://edge.forgecdn.net/files/\(.id / 1000 | floor)/\(.id % 1000)/\(.fileName | @uri)") }'
 }
@@ -91,7 +95,7 @@ for name in $(jq -r 'keys[]' <<<"$new"); do
         echo "wow-addons-bump: no CurseForge key at $key_file, kept $name." >&2
         continue
       fi
-      latest=$(cf_latest "$(jq -r .projectId <<<"$entry")")
+      latest=$(cf_latest "$(jq -r .projectId <<<"$entry")" "$(jq -r '.channel // "stable"' <<<"$entry")")
       ;;
     github) latest=$(gh_latest "$(jq -r .repo <<<"$entry")" "$(jq -r '.tagPrefix // ""' <<<"$entry")") ;;
     *)

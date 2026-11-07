@@ -40,7 +40,13 @@ in
 
   # COPIES, not store symlinks: the folder is on NTFS and Windows plays from it too. Folders Nix
   # never managed (anything installed by hand) are left alone.
+  #
+  # The NTFS mount has `acl`, so it KEEPS unix modes, and rsync hands new files the store's
+  # read-only ones: removing Bagnon then failed with "Permission denied" (06/11/2026). `writable`
+  # gives the owner write back before any delete, and --chmod keeps new copies writable.
   home.activation.wowAddons = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    # Only what lacks it: a chmod -R over 2 GiB of NTFS on every switch would cost for nothing.
+    writable() { [ ! -e "$1" ] || run find "$1" ! -perm -u+w -exec chmod u+w {} +; }
     if [ ! -d ${lib.escapeShellArg addonDir} ]; then
       echo "wow-addons: ${addonDir} is missing (Windows disk not mounted?), skipped." >&2
     else
@@ -48,13 +54,15 @@ in
       if [ -f ${lib.escapeShellArg manifest} ]; then
         while IFS= read -r folder; do
           if [ -n "$folder" ] && [ ! -e ${wow-addons}/"$folder" ]; then
+            writable ${lib.escapeShellArg addonDir}/"$folder"
             run rm -rf ${lib.escapeShellArg addonDir}/"$folder"
           fi
         done < ${lib.escapeShellArg manifest}
       fi
       for dir in ${wow-addons}/*/; do
         folder=$(basename "$dir")
-        run ${lib.getExe rsync} -rt --delete --no-perms --no-owner --no-group \
+        writable ${lib.escapeShellArg addonDir}/"$folder"
+        run ${lib.getExe rsync} -rt --delete --no-perms --no-owner --no-group --chmod=Du+w,Fu+w \
           "$dir" ${lib.escapeShellArg addonDir}/"$folder"/
       done
       [ -v DRY_RUN ] || ls ${wow-addons} > ${lib.escapeShellArg manifest}

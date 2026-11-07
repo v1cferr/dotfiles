@@ -229,9 +229,9 @@
   "battletext-forever": {
     "source": "curseforge",
     "projectId": 1722502,
-    "version": "9468705",
-    "url": "https://edge.forgecdn.net/files/9468/705/BattleTextForever-v1.15.0-forever.zip",
-    "hash": "sha256-L+aQG+zNySnhg86r428LVnlSQgsmZAbiUhJEs6609os="
+    "version": "9485376",
+    "url": "https://edge.forgecdn.net/files/9485/376/BattleTextForever-v1.15.2-forever.zip",
+    "hash": "sha256-hd+t6AjIiHUpa/YQqIVWdC0DzHCUW8uC1z7lkD4aPJA="
   },
   "easy-experience-bar": {
     "source": "curseforge",
@@ -268,5 +268,12 @@
     "version": "9396675",
     "url": "https://edge.forgecdn.net/files/9396/675/Offhand-v2.1.2-beta.26.zip",
     "hash": "sha256-WZz8h5BsBDY2EZOHzCULJcJFfBziaxo2QobSqc7+CDM="
+  },
+  "dejunk": {
+    "source": "curseforge",
+    "projectId": 413260,
+    "version": "9446591",
+    "url": "https://edge.forgecdn.net/files/9446/591/Dejunk-3.5.1.zip",
+    "hash": "sha256-haLhhKmfzm+fWQLjtjuP15EKqXRRnZuSGPRaOE6gQ04="
   }
 }

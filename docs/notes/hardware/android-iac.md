@@ -69,6 +69,59 @@ device name, contacts, messages, and the list of apps I use. `inspect --json` ca
 and is personal: it goes to the terminal, never to a file in the tree. The tests use synthetic
 output only.
 
+## Phase 2: writing, designed on 07/11/2026
+
+The ADR fixes the contract; this is the design that meets it. What ADB can write without root is
+real (the shell user holds `WRITE_SECURE_SETTINGS`, and `pm` can disable packages and revoke
+permissions), so phase 2 uses exactly that and nothing past it.
+
+**Three policies per item.** `audit` (what exists: read and compare), `managed` (the tool may fix
+it), `manual` (only a person can). Managed items live in their own block of the host file:
+
+```nix
+managed = {
+  settings.global.stay_on_while_plugged_in = "0";
+  packagesDisabled = [ "com.vendor.bloat" ]; # pm disable-user --user 0
+  permissionsRevoked."org.example.app" = [ "android.permission.RECORD_AUDIO" ]; # pm revoke
+};
+```
+
+The spec refuses a managed key that is also audited or manual, a value that is not a number or a
+package/component name, and disabling anything in `mustBeEnabled` or in a floor written in the
+code (Play Services, the Play Store, NFC, the phone, SystemUI, Settings, WebView, the permission
+controller).
+
+**A second allowlist, for writes only**: `settings put` and (for rollback) `settings delete`,
+`pm disable-user --user 0` and `pm enable`, `pm revoke` and `pm grant`. Refused by construction:
+`pm uninstall`, `pm clear`, `reboot`, any reset or wipe, `su`, `fastboot`. Only values the
+sanitizer already lets through can be written, so the log is sanitized AND holds the exact
+previous value a rollback needs.
+
+**Four steps, never skipped:**
+
+1. `plan` reads the phone fresh and lists only the operations where observed differs from
+   declared (idempotent: an in-sync phone plans nothing). Each carries its before and after
+   values, whether it is reversible and whether it is sensitive. A managed item it cannot read
+   blocks the plan instead of being guessed. The plan is saved under
+   `$XDG_STATE_HOME/android-iac/plans/` (mode 0600, never in the repo) with the spec's digest and
+   the build fingerprint.
+2. `apply --dry-run <plan>` reads again, refuses a plan the phone has moved away from, prints the
+   exact commands, and marks the plan rehearsed.
+3. `apply <plan>` requires that rehearsal, of that plan, under 10 minutes old; asks a typed
+   confirmation for sensitive operations (`secure.*`, connectivity, permissions); runs one
+   operation at a time, re-reads each to verify, and stops at the first failure. Every step goes
+   to a JSONL journal under `$XDG_STATE_HOME/android-iac/journal/`.
+4. `rollback <journal>` undoes in reverse order, but only the operations whose current value is
+   still what `apply` left; one changed by hand since is skipped and reported as drift. A key that
+   did not exist before is removed with `settings delete`.
+
+What stays irreversible is simply not offered: uninstalling, clearing data, resetting. An OTA can
+still reset a value or rename a key, which the next `plan` shows.
+
+**Delivery, one usable step per commit**: 2a `plan` (read-only); 2b `apply --dry-run`; 2c
+`apply` and `rollback` for settings, starting with harmless keys; 2d packages; 2e permissions.
+Each with tests on a fake phone whose state changes when it is written to.
+
 ## Future research, not a plan
 
 A GSI, AOSP or a custom ROM (GrapheneOS does not support this phone) would make the device far

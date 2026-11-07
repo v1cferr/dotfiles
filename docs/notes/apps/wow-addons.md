@@ -28,6 +28,10 @@ Forever") and takes the newest file with `releaseType == 1`, so alphas and betas
 pinned version is the FILE id. For GitHub it takes `/releases/latest` and its zip asset. Questie,
 DBM, DBM-Vanilla and GatherMate2 come from GitHub because their official releases are there.
 
+The one exception is an entry with `"channel": "beta"`: it takes the newest file with
+`releaseType <= 2`, stable or beta. Offhand needs it because it has never shipped a stable file.
+Every other entry stays on stable only.
+
 ## The CurseForge CDN decision
 
 Authors can set `allowModDistribution: false`, and then the API answers `downloadUrl: null`. The
@@ -100,3 +104,8 @@ DialogueUI is the NPC dialogue of choice because Spoken has a narrator style mad
 - **Social Diary 2.3.0** errors in `UI/Style/Widgets.lua:152` when a tooltip line list comes back
   EMPTY (`unpack(list[1])` on nil): its own guard only covers nil. Upstream bug, harmless (one
   tooltip does not show).
+- **Offhand** (dual-monitor UI) is beta only and has two parts. Only the add-on is installed. The
+  Companion is a Windows exe that the upstream Linux guide calls experimental under Wine. Its guide
+  also lists mixed orientation and negative coordinates (the portrait LG at `-1080x-240`) as a
+  future goal. The window spanning both screens is tested by hand first: Windowed mode, a floating
+  WoW window in Hyprland, then `/offhand guide`. A Hyprland window rule comes only if that works.

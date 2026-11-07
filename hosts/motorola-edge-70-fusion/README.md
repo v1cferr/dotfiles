@@ -20,6 +20,7 @@ android-iac inspect   # a sanitized report; --json for the full one, kept OUT of
 android-iac diff      # every declared check; exit 1 on drift, 3 on missing evidence
 android-iac verify    # only what is not in sync, for scripts
 android-iac plan      # what the `managed` block would change; saved under ~/.local/state, never run
+android-iac apps      # the enabled third-party apps as the overlay; --save writes local.json
 android-iac apply --dry-run  # re-reads, refuses a stale plan, prints the exact commands, runs none
 ```
 
@@ -41,7 +42,8 @@ committed:
 { "mustBeInstalled": ["com.example.bank"] }
 ```
 
-Without it, `diff` says so instead of passing those checks.
+`android-iac apps --save` writes it from the phone: every enabled third-party app, the file's
+other keys kept, mode 0600. Without it, `diff` says so instead of passing those checks.
 
 **A mirror.** Unlike the router, the phone's state is not copied into git: an inspect report
 carries the app list, which is the private part.

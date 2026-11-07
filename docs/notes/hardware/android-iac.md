@@ -23,6 +23,7 @@ account, the lock screen's strength, most vendor settings, or anything under `/d
 | `parse.py` | adb's text output into data, tolerant of noise |
 | `sanitize.py` | fail-safe redaction: allowlisted properties, identity-shaped keys dropped, a final scrubber |
 | `spec.py` | the host JSON plus the local overlay, validated |
+| `apps.py` | `apps`: the phone's enabled third-party apps, written as the local overlay |
 | `state.py` | device selection, the reads, the inspect report |
 | `compare.py` | declared against observed, one status per check |
 | `managed.py`, `plan.py`, `apply.py` | phase 2: the managed block, validated, the plan and its rehearsal (read-only) |

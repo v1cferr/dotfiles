@@ -10,6 +10,7 @@ import sys
 from typing import Any, Optional, Sequence
 
 import apply
+import apps
 import compare
 import plan
 import session
@@ -54,6 +55,8 @@ def main(argv: Optional[Sequence[str]] = None, runner: Optional[Runner] = None) 
                        ("verify", "only what is not in sync, and an exit code for scripts")):
         p = sub.add_parser(name, help=text)
         p.add_argument("--json", action="store_true")
+    aps = sub.add_parser("apps", help="the enabled third-party apps as the local overlay's mustBeInstalled")
+    aps.add_argument("--save", action="store_true", help="write them to the local overlay (never the repo)")
     pl = sub.add_parser("plan", help="the changes that would bring the managed items in line; saved, never run")
     pl.add_argument("--json", action="store_true")
     apl = sub.add_parser("apply", help="rehearse a saved plan against a fresh read (only --dry-run for now)")
@@ -84,6 +87,8 @@ def main(argv: Optional[Sequence[str]] = None, runner: Optional[Runner] = None) 
         observed = state.observe(adb, spec, getattr(args, "permissions", False))
         if args.command == "plan":
             return plan.run(spec, observed, args.json)
+        if args.command == "apps":
+            return apps.run(observed, args.save, args.local)
         if args.command == "apply":
             return apply.dry_run(spec, observed, args.plan, args.json)
         if args.command == "inspect":

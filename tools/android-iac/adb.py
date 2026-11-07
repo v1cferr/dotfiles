@@ -12,6 +12,8 @@ NAMESPACES = frozenset({"global", "secure", "system"})
 PM_FILTERS = frozenset({"-d", "-e", "-s", "-3"})
 SETTING_KEY = re.compile(r"^[A-Za-z0-9_.]{1,128}$")
 PACKAGE = re.compile(r"^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)+$")
+PERMISSION = re.compile(r"^android\.permission\.[A-Z0-9_]{1,64}$")
+WRITE_VALUE = re.compile(r"^[A-Za-z0-9_.:/$-]{1,256}$")  # numbers and package/component names only
 ENDPOINT = re.compile(r"^\d{1,3}(\.\d{1,3}){3}:\d{1,5}$")
 TIMEOUT_S = 20
 
@@ -70,6 +72,21 @@ def allowed(args: Sequence[str]) -> bool:
         return a[3] in NAMESPACES
     if a[:3] == ["shell", "dumpsys", "package"] and len(a) == 4:
         return bool(PACKAGE.match(a[3]))
+    return False
+
+
+def allowed_write(args: Sequence[str]) -> bool:
+    """Phase 2's writes: each one reversible by another shape in this list. Nothing runs them yet;
+    `plan` only refuses an operation that could never pass here."""
+    a = list(args)
+    if a[:3] in (["shell", "settings", "put"], ["shell", "settings", "delete"]):
+        n = 6 if a[2] == "put" else 5
+        return (len(a) == n and a[3] in NAMESPACES and bool(SETTING_KEY.match(a[4]))
+                and (n == 5 or bool(WRITE_VALUE.match(a[5]))))
+    if a[:2] == ["shell", "pm"] and len(a) == 6 and a[2] in ("disable-user", "enable"):
+        return a[3:5] == ["--user", "0"] and bool(PACKAGE.match(a[5]))
+    if a[:2] == ["shell", "pm"] and len(a) == 5 and a[2] in ("revoke", "grant"):
+        return bool(PACKAGE.match(a[3])) and bool(PERMISSION.match(a[4]))
     return False
 
 

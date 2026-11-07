@@ -24,6 +24,7 @@ class Observed:
     disabled: Optional[set[str]] = None
     third_party: Optional[set[str]] = None
     permissions: Optional[dict[str, set[str]]] = None
+    managed_permissions: dict[str, set[str]] = field(default_factory=dict)  # only the packages read
 
 
 def select(adb: Adb, transport_id: Optional[str] = None, serial_set: bool = False) -> parse.Device:
@@ -62,7 +63,7 @@ def observe(adb: Adb, spec: Spec, with_permissions: bool = False) -> Observed:
     o.selinux = parse.selinux(adb.try_call("shell", "getenforce"))
     o.nfc = parse.nfc(adb.try_call("shell", "dumpsys", "nfc"))
     o.lock_disabled = parse.lock_disabled(adb.try_call("shell", "cmd", "lock_settings", "get-disabled"))
-    for ns, key in [*spec.settings, *spec.manual_settings]:
+    for ns, key in [*spec.settings, *spec.manual_settings, *spec.managed.settings]:
         out = adb.try_call("shell", "settings", "get", ns, key)
         if out is not None:
             o.settings[(ns, key)] = parse.setting(out)
@@ -72,6 +73,11 @@ def observe(adb: Adb, spec: Spec, with_permissions: bool = False) -> Observed:
         return None if out is None else parse.packages(out)
 
     o.installed, o.enabled, o.disabled, o.third_party = pkgs(), pkgs("-e"), pkgs("-d"), pkgs("-3")
+    for pkg in spec.managed.permissions_revoked:
+        if o.installed is not None and pkg in o.installed:
+            out = adb.try_call("shell", "dumpsys", "package", pkg)
+            if out is not None:
+                o.managed_permissions[pkg] = parse.granted_runtime(out)
     if with_permissions and o.third_party is not None:
         o.permissions = {}
         for pkg in sorted(o.third_party):

@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
 
+import managed as managed_block
 from adb import NAMESPACES, PACKAGE, SETTING_KEY
 
 
@@ -31,6 +33,8 @@ class Spec:
     must_be_enabled: list[str]
     flagged_permissions: list[str]
     must_be_installed: list[str] = field(default_factory=list)  # from the local overlay only
+    managed: managed_block.Managed = field(default_factory=managed_block.Managed)
+    digest: str = ""  # sha256 of the declaration, so a plan knows which spec it was made from
 
 
 def _str_or_none(v: Any, where: str) -> Optional[str]:
@@ -98,6 +102,11 @@ def parse(data: Any, local: Optional[Any] = None) -> Spec:
         if not isinstance(local, dict):
             raise SpecError("local overlay: expected a JSON object")
         installed = _packages(local.get("mustBeInstalled") or [], "local overlay mustBeInstalled")
+    try:
+        managed = managed_block.parse(data.get("managed"), set(settings) | set(manual),
+                                      (data.get("packages") or {}).get("mustBeEnabled") or [])
+    except ValueError as e:
+        raise SpecError(f"managed: {e}") from e
     return Spec(
         name=data["name"],
         manufacturer=_str_or_none(data.get("manufacturer"), "manufacturer"),
@@ -108,7 +117,8 @@ def parse(data: Any, local: Optional[Any] = None) -> Spec:
         settings=settings, manual_settings=manual,
         must_be_enabled=_packages((data.get("packages") or {}).get("mustBeEnabled") or [],
                                   "packages.mustBeEnabled"),
-        flagged_permissions=list(flagged), must_be_installed=installed)
+        flagged_permissions=list(flagged), must_be_installed=installed, managed=managed,
+        digest=hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest())
 
 
 def local_path() -> Path:

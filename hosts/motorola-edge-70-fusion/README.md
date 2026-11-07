@@ -19,6 +19,7 @@ android-iac doctor    # adb, the connection, the authorization, what can be read
 android-iac inspect   # a sanitized report; --json for the full one, kept OUT of the repo
 android-iac diff      # every declared check; exit 1 on drift, 3 on missing evidence
 android-iac verify    # only what is not in sync, for scripts
+android-iac plan      # what the `managed` block would change; saved under ~/.local/state, never run
 ```
 
 The session itself (pairing, authorizing, revoking afterwards) is

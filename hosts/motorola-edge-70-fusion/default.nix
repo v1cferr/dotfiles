@@ -28,7 +28,6 @@
     global = {
       auto_time = "1"; # TOTP and banking tokens need the network clock
       auto_time_zone = "1";
-      stay_on_while_plugged_in = "0";
     };
     secure = {
       enabled_accessibility_services = null; # the banking-malware vector: none expected
@@ -43,6 +42,9 @@
       development_settings_enabled = "0";
     };
   };
+
+  # What phase 2 may change itself, reversibly; `android-iac plan` lists it, nothing applies it yet.
+  managed.settings.global.stay_on_while_plugged_in = "0"; # a harmless first key: the screen sleeps
 
   # System packages whose disabled state breaks the phone, banking or NFC payments.
   packages.mustBeEnabled = [

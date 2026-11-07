@@ -10,6 +10,7 @@ import sys
 from typing import Any, Optional, Sequence
 
 import compare
+import plan
 import session
 import state
 from adb import Adb, AdbError, NoDevice, Runner, subprocess_runner
@@ -52,6 +53,8 @@ def main(argv: Optional[Sequence[str]] = None, runner: Optional[Runner] = None) 
                        ("verify", "only what is not in sync, and an exit code for scripts")):
         p = sub.add_parser(name, help=text)
         p.add_argument("--json", action="store_true")
+    pl = sub.add_parser("plan", help="the changes that would bring the managed items in line; saved, never run")
+    pl.add_argument("--json", action="store_true")
     for p in (ins, *[sub.choices[n] for n in ("diff", "verify")]):
         p.add_argument("--permissions", action="store_true",
                        help="also read each third-party app's granted permissions (slower)")
@@ -70,7 +73,9 @@ def main(argv: Optional[Sequence[str]] = None, runner: Optional[Runner] = None) 
         return audit(adb, spec, (args.spec, args.local), overlay is not None, args.transport_id, runner)
     try:
         state.select(adb, args.transport_id, "ANDROID_SERIAL" in os.environ)
-        observed = state.observe(adb, spec, args.permissions)
+        observed = state.observe(adb, spec, getattr(args, "permissions", False))
+        if args.command == "plan":
+            return plan.run(spec, observed, args.json)
         if args.command == "inspect":
             report = state.report(adb, observed)
             if args.json:

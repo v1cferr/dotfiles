@@ -7,6 +7,7 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Any, Optional
 
+import plan
 import sanitize
 from spec import Spec
 from state import Observed
@@ -116,6 +117,13 @@ def findings(spec: Spec, o: Observed, today: Optional[dt.date] = None) -> list[F
     out += _patch(spec, o, today or dt.date.today())
     out += _settings(spec, o)
     out += _packages(spec, o)
+    status = {"in-sync": Status.IN_SYNC, "change": Status.DRIFT, "blocked": Status.UNKNOWN}
+    for c in plan.checks(spec, o):
+        before = c.op.before
+        if c.op.kind == "settings-put":
+            before = sanitize.setting_value(c.op.target, before)
+        note = c.note or ("managed: `android-iac plan` lists the fix" if c.state == "change" else "")
+        out.append(Finding(status[c.state], f"managed {c.op.target}", before, c.op.after, note))
     if o.permissions is not None:
         for pkg, perms in sorted(o.permissions.items()):
             for perm in sorted(perms & set(spec.flagged_permissions)):

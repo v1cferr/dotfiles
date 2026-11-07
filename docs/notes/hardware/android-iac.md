@@ -25,6 +25,7 @@ account, the lock screen's strength, most vendor settings, or anything under `/d
 | `spec.py` | the host JSON plus the local overlay, validated |
 | `state.py` | device selection, the reads, the inspect report |
 | `compare.py` | declared against observed, one status per check |
+| `managed.py`, `plan.py` | phase 2: the managed block, validated, and the plan (read-only) |
 | `session.py` | `audit`'s connect, pair and disconnect, with their own allowlist of host-side commands |
 | `doctor.py`, `cli.py` | the commands |
 
@@ -117,6 +118,10 @@ previous value a rollback needs.
 
 What stays irreversible is simply not offered: uninstalling, clearing data, resetting. An OTA can
 still reset a value or rename a key, which the next `plan` shows.
+
+**Status**: 2a delivered on 07/11/2026: `plan` (`plan.py`, the block in `managed.py`, the write
+shapes in `adb.py`) exits 0 with nothing to change, 1 with a plan saved, 3 when something is
+blocked, in which case nothing is saved. `diff` shows managed items as `managed <target>`.
 
 **Delivery, one usable step per commit**: 2a `plan` (read-only); 2b `apply --dry-run`; 2c
 `apply` and `rollback` for settings, starting with harmless keys; 2d packages; 2e permissions.

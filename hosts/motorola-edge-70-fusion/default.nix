@@ -72,6 +72,40 @@
       "com.motorola.timeweatherwidget"
       "com.motorola.vzw.pco.extensions.pcoreceiver" # Verizon, a US carrier
       "com.motorola.wifi.motowifimetrics"
+      # Round two, picked on 08/11/2026 from UAD-ng's "Recommended" (Android Auto is "Advanced").
+      # Factory tests and diagnostics:
+      "android.autoinstalls.config.motorola.layout" # installs OEM apps at setup
+      "com.android.egg"
+      "com.android.traceur"
+      "com.motorola.android.nativedropboxagent" # Android logging, not the Dropbox app
+      "com.motorola.dciservice"
+      "com.motorola.hiddenmenuapp"
+      "com.motorola.motocit" # the factory test menu
+      "com.qti.qcc"
+      "com.qualcomm.qti.xrvd.service"
+      # Google's ad and personalization services (mainline ones may be refused, which is fine):
+      "com.android.providers.partnerbookmarks"
+      "com.google.android.adservices.api"
+      "com.google.android.federatedcompute"
+      "com.google.android.feedback"
+      "com.google.android.gms.location.history"
+      "com.google.android.ondevicepersonalization.services"
+      # US carriers:
+      "com.motorola.android.systemui.overlay.sprint"
+      "com.motorola.android.systemui.overlay.tmo"
+      "com.motorola.android.systemui.overlay.usc"
+      "com.motorola.android.systemui.overlay.vzw"
+      "com.motorola.contacts.preloadcontacts"
+      "com.motorola.easyprefix"
+      "com.motorola.nfwlocationattribution"
+      "com.motorola.omadm.service"
+      # Setup leftovers and extras, and the Google apps I do not use:
+      "com.google.ambient.streaming" # apps on a Chromebook
+      "com.google.android.apps.restore" # the setup's restore, done
+      "com.google.android.projection.gearhead" # Android Auto
+      "com.google.android.videos" # Google TV
+      "com.motorola.android.overlay.crystaltalkai"
+      "com.motorola.gesture" # the gesture tutorial
     ];
   };
 

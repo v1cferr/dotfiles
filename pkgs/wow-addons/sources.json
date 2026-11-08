@@ -289,5 +289,12 @@
     "version": "9480772",
     "url": "https://edge.forgecdn.net/files/9480/772/LFGForever.zip",
     "hash": "sha256-Oz975VLsemIj3DIY66MiinQxwHB2If+HeY/PHPyzuRg="
+  },
+  "lfg-bulletin-board": {
+    "source": "curseforge",
+    "projectId": 484920,
+    "version": "9487037",
+    "url": "https://edge.forgecdn.net/files/9487/37/LFGBulletinBoard-v3.57.zip",
+    "hash": "sha256-O3eypYP2VXTI9maq9YbB/pQAWVAI/3esXWzrDGKVa98="
   }
 }

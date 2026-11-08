@@ -10,6 +10,7 @@
     ./restic.nix # the daily restic backup to a local backup disk, plus the my.backup.* hooks
     ./btrbk.nix # hourly btrfs snapshots of @home (a local undo; it is NOT a backup)
     ./claude-code.nix # Claude Code's hooks (managed-settings in /etc) for the Discord Rich Presence
+    ./codex.nix # the Codex CLI's declared config as its system layer (/etc/codex/config.toml)
     ./jellyfin.nix # the Jellyfin media server (native, systemd, the library in /srv/media)
     ./immich.nix # Immich, a self-hosted Google Photos (native, systemd, the library in /srv/photos)
     ./qbittorrent.nix # the download client (a Web UI on 8080; it writes to /srv/media/torrents)

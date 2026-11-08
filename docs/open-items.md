@@ -96,9 +96,10 @@ finished work. What was closed is in the [august history](history/2026/08-august
         destructive tools are refused at the gateway. The FAI server is never exposed.
       • GEMINI WEB IS OUT FOR NOW: its custom MCP apps are limited to the US (checked
         25/09/2026), so Gemini reaches the memory through agy, locally.
-      • CODEX'S ENDPOINT IS A LITERAL in its versioned mirror (`modules/home/shell/codex/config.toml`),
-        the one consumer that cannot read `my.memory.servers.general.url`. A port change has to
-        touch it by hand until codex takes a generated fragment.
+      • CODEX'S ENDPOINT IS A LITERAL in its declared config (`modules/home/shell/codex/config.toml`),
+        the one consumer that cannot read `my.memory.servers.general.url`. Since 08/11/2026 that
+        file is installed as /etc/codex/config.toml, a store file Codex never writes, so it could
+        now be generated from Nix and read the option; until then a port change touches it by hand.
 
 - [ ] The one follow-up the gate's hardening left open (23/08/2026). The dependabot half was
       CLOSED the same day (see the august history); this is what stayed.

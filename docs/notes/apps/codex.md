@@ -3,7 +3,7 @@
 Modules: [`modules/home/shell/codex.nix`](../../../modules/home/shell/codex.nix),
 [`pkgs/codex/package.nix`](../../../pkgs/codex/package.nix)
 
-OpenAI's terminal agent. Two decisions: who owns `config.toml`, and where the binary comes from.
+OpenAI's terminal agent. Two decisions: who owns which `config.toml`, and where the binary comes from.
 
 ## Why `programs.codex.settings` is left empty
 
@@ -33,25 +33,36 @@ runtime setting for the two lines it declares. That is rule 14, one owner per ar
 
 The module's own guard is what makes leaving it empty work, and it is worth knowing: the file is
 declared under `lib.mkIf (mergedSettings != { })`, so with `settings` at its default the module
-generates NOTHING and the path stays free for the link below.
+generates NOTHING and the path stays a plain file Codex can write.
 
-## The contract instead: a mirror versioned in the repo
+## The contract: the declared layer in /etc, the rest is Codex's
 
-`mkOutOfStoreSymlink` to [`modules/home/shell/codex/config.toml`](../../../modules/home/shell/codex/config.toml),
-the same contract as [Claude Code's `settings.json`](claude-code.md) and VS Code's. Nix owns the
-LINK, Codex owns the CONTENT, and what Codex changes lands as a `git diff` instead of drifting
-where nobody can see it (rule 16).
+Codex reads its config in layers, lowest first: built-in defaults, the SYSTEM file
+`/etc/codex/config.toml`, the user's `~/.codex/config.toml`, a trusted project's
+`.codex/config.toml`, then `-c` flags. A higher layer overrides only the keys it sets, so tables
+merge (both `[mcp_servers.…]` sets apply). The binary names the system path itself
+(`/etc/codex/config.toml/etc/codex/requirements.toml` sits in its strings on 0.166.0), and
+OpenAI's docs list the same order.
 
-**This needed measuring and not assuming**, because it USED to be broken: openai/codex#6646
-reports the CLI replacing a symlinked `config.toml` with a regular file, and upstream first
-answered that it was "by design". It was fixed before the issue closed on 19/01/2026. Verified
-here on 0.147.0 with a `codex mcp add` through a symlink: the link kept its inode, stayed a
-symlink, and the new `[mcp_servers]` table appeared in the file at the OTHER end. If a future
-release regresses, the symptom is `~/.codex/config.toml` no longer being a symlink.
+So the repo owns the SYSTEM layer: [`modules/home/shell/codex/config.toml`](../../../modules/home/shell/codex/config.toml),
+installed read-only by [`modules/nixos/services/codex.nix`](../../../modules/nixos/services/codex.nix).
+`~/.codex/config.toml` is a plain local file that Codex and the ChatGPT app own, not versioned.
 
-**Comments survive too**, which they do NOT in Claude Code's JSON: the header of this config was
-still there after that write. Codex vendors `toml_edit` 0.24, a format-preserving TOML editor, so
-a write edits the value in place instead of re-serializing the document.
+**Why not the mirror any more.** Until 08/11/2026 `~/.codex/config.toml` was an
+`mkOutOfStoreSymlink` to the repo file, the same contract as [Claude Code's `settings.json`](claude-code.md),
+so every runtime write landed as a `git diff`. The ChatGPT app broke it: at launch it writes its
+`node_repl` MCP server, its plugin marketplaces and the plugins it enables into that file, with
+`/nix/store` paths tied to the app's version. Each app bump was a diff of machine state that no
+one decided, in a public repo. The symlink did keep working through writes (openai/codex#6646 was
+fixed before 19/01/2026, and `toml_edit` keeps comments); the problem was who writes, not how.
+
+What this costs, on purpose:
+
+- A key Codex persists (`/model`, `/theme`, a trusted folder) goes to the USER layer and wins
+  over the declared one, without a diff. To make a choice permanent, write it in the repo file
+  and delete the key from `~/.codex/config.toml`.
+- `codex doctor` lists only `~/.codex/config.toml` under `config.toml`; the effective values it
+  prints (model, `approval Never`) are what proves the system layer loaded.
 
 `~/.codex` also collects things that are NOT config and are not declared: `auth.json`, session
 transcripts, and the helper binaries Codex installs for its PATH aliases. All of it is state, so
@@ -92,8 +103,8 @@ policy rather than the file:
 sandbox   restricted fs + restricted network - approval Never
 ```
 
-That matters more than usual here, because Codex WRITES to this file: anything appended by hand
-after the app has added a `[projects.…]` or `[tui]` table is in that table, not at the root.
+The same trap waits in the user file, which Codex writes: anything appended by hand after it has
+added a `[projects.…]` or `[tui]` table is in that table, not at the root.
 
 ## Why the OFFICIAL binary and not nixpkgs
 

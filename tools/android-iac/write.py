@@ -70,15 +70,15 @@ def _run(adb: Adb, f: TextIO, action: str, op: plan.Op, argv: list[str], want: O
         adb.write(*argv)
     except AdbError as e:
         _log(f, action, op, "failed", str(e))
-        print(f"failed       {op.target}: {e}")
+        print(f"  FAILED   {op.describe()}: {e}")
         return False
     got = current(adb, op)
     if got != want:
         _log(f, action, op, "unverified", f"reads {got}")
-        print(f"unverified   {op.target}: reads {got or 'unset'}, want {want or 'unset'}")
+        print(f"  FAILED   {op.describe()}: unverified, reads {got or 'unset'}, want {want or 'unset'}")
         return False
     _log(f, action, op, "ok")
-    print(f"done         {op.target}: {want or 'unset'}")
+    print(f"  ok       {op.describe() if action == 'apply' else 'undone: ' + op.describe()}")
     return True
 
 
@@ -94,12 +94,13 @@ def run_apply(spec: Spec, o: Observed, adb: Adb, path: Optional[str], ask: Ask) 
     why, ops = apply.stale(spec, o, doc)
     not_ready = _rehearsed(p, sha, now)
     for reason in [*why, *([not_ready] if not_ready else [])]:
-        print(f"refused      {reason}")
+        print(f"refused: {reason}")
     if why or not_ready:
         return 1
+    print("apply will:")
     for op in ops:
-        print(f"will run     {op.target}: {op.before or 'unset'} -> {op.after}" + ("  sensitive" if op.sensitive else ""))
-    if ask(f'\nType "apply" to run these {len(ops)} operations on the phone: ').strip() != "apply":
+        print(f"  {op.describe()}")
+    if ask(f'\n{plan.tally(ops)}. Type "apply" to run it on the phone: ').strip() != "apply":
         print("nothing was run")
         return 1
     for op in (op for op in ops if op.sensitive):
@@ -113,7 +114,7 @@ def run_apply(spec: Spec, o: Observed, adb: Adb, path: Optional[str], ask: Ask) 
                 print(f"\nstopped; what ran is in the journal: android-iac rollback {name}")
                 return 1
     (plan.state_dir() / "rehearsals" / p.name).unlink(missing_ok=True)  # a plan runs once
-    print(f"\napplied {len(ops)}; undo with: android-iac rollback {name}")
+    print(f"\napplied: {plan.tally(ops)}.\nundo: android-iac rollback {name}")
     return 0
 
 
@@ -147,10 +148,10 @@ def run_rollback(adb: Adb, name: Optional[str], ask: Ask) -> int:
         got = current(adb, op)
         if got == op.after:
             todo.append(op)
-            print(f"will undo    {op.target}: {op.after} -> {op.before or 'unset'}")
+            print(f"  undo     {op.describe()}")
         else:
             skipped += 1
-            print(f"skipped      {op.target}: reads {got or 'unset'}, changed since apply; left as is")
+            print(f"  skip     {op.describe()}: changed since apply (reads {got or 'unset'}), left as is")
     if todo and ask(f'\nType "rollback" to undo these {len(todo)} operations: ').strip() != "rollback":
         print("nothing was run")
         return 1
@@ -158,5 +159,5 @@ def run_rollback(adb: Adb, name: Optional[str], ask: Ask) -> int:
         for op in todo:
             if not _run(adb, f, "rollback", op, op.undo(), op.before):
                 return 1
-    print(f"\nundone {len(todo)}, skipped {skipped}")
+    print(f"\nundone: {len(todo)}, skipped: {skipped}")
     return 1 if skipped else 0

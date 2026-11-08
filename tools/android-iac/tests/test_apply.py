@@ -43,9 +43,14 @@ class DryRun(unittest.TestCase):
         saved = self.planned()
         code, out = self.run_cli({**healthy(), TIMEOUT: "30000\n"}, "apply", "--dry-run")
         self.assertEqual(code, 0, out)
-        self.assertIn("would run    adb shell settings put system screen_off_timeout 60000", out)
-        self.assertIn("undo       adb shell settings put system screen_off_timeout 30000", out)
-        self.assertIn("nothing was run", out)
+        self.assertIn("  set      system.screen_off_timeout: 30000 -> 60000\n", out)
+        self.assertIn("  disable  org.example.notes\n", out)
+        self.assertIn("  revoke   RECORD_AUDIO from org.example.notes  [sensitive]", out)
+        self.assertNotIn("adb shell", out)  # the exact commands wait for --verbose
+        code, out = self.run_cli({**healthy(), TIMEOUT: "30000\n"}, "apply", "--dry-run", "--verbose")
+        self.assertIn("adb shell settings put system screen_off_timeout 60000", out)
+        self.assertIn("undo: adb shell settings put system screen_off_timeout 30000", out)
+        self.assertIn("Nothing was run", out)
         mark = self.state / "rehearsals" / saved.name
         self.assertEqual(stat.S_IMODE(mark.stat().st_mode), 0o600)
         self.assertEqual(len(json.loads(mark.read_text())["planSha256"]), 64)
@@ -56,6 +61,7 @@ class DryRun(unittest.TestCase):
             code, out = self.run_cli({**healthy(), TIMEOUT: value}, "apply", "--dry-run")
             self.assertEqual(code, 1, out)
             self.assertIn("not what the phone needs now", out)
+            self.assertIn("no longer fits", out)
         self.assertFalse((self.state / "rehearsals").exists())
 
     def test_a_changed_declaration_refuses(self) -> None:
@@ -89,7 +95,7 @@ class DryRun(unittest.TestCase):
             code = cli.audit(Adb(fake), parse(spec_with()), (self.spec, None), False, None, fake)
         self.assertEqual(code, 1)  # the diff's code: managed drift
         self.assertIn("== apply --dry-run ==", out.getvalue())
-        self.assertIn("rehearsed: 3 operations, nothing was run", out.getvalue())
+        self.assertIn("rehearsed: 1 setting to change, 1 package to disable, 1 permission to revoke.", out.getvalue())
         self.assertEqual([c for c in fake.calls if allowed_write(c)], [])
 
 

@@ -40,6 +40,17 @@ class Op:
             return ["shell", "pm", "disable-user", "--user", "0", self.target]
         return ["shell", "pm", "revoke", *self.target.split(" ", 1)]
 
+    def describe(self) -> str:
+        """One line a person reads: the change in words, not adb's argv (`--verbose` shows that)."""
+        if self.kind == "settings-put":
+            line = f"set      {self.target}: {self.before or 'unset'} -> {self.after}"
+        elif self.kind == "pm-disable":
+            line = f"disable  {self.target}"
+        else:
+            pkg, perm = self.target.split(" ", 1)
+            line = f"revoke   {perm.rsplit('.', 1)[-1]} from {pkg}"
+        return line + ("  [sensitive]" if self.sensitive else "")
+
     def undo(self) -> list[str]:
         """The reverse, so reversibility is proven when planning, not hoped for when applying."""
         if self.kind == "settings-put":
@@ -50,6 +61,15 @@ class Op:
         if self.kind == "pm-disable":
             return ["shell", "pm", "enable", "--user", "0", self.target]
         return ["shell", "pm", "grant", *self.target.split(" ", 1)]
+
+
+def tally(ops: list[Op]) -> str:
+    """`28 packages to disable, 1 setting to change`."""
+    kinds = (("settings-put", "setting", "to change"), ("pm-disable", "package", "to disable"),
+             ("pm-revoke", "permission", "to revoke"))
+    parts = [f"{n} {noun}{'s' if n > 1 else ''} {verb}" for kind, noun, verb in kinds
+             if (n := sum(op.kind == kind for op in ops))]
+    return ", ".join(parts) or "nothing to change"
 
 
 @dataclass(frozen=True)
@@ -137,14 +157,13 @@ def run(spec: Spec, observed: Observed, as_json: bool) -> int:
         if not spec.managed:
             print("nothing is managed: declare a `managed` block in the host file first")
         for c in blocked:
-            print(f"blocked      {c.op.target}  {c.note}")
-        for op, d in zip(ops, doc["ops"]):
-            flags = "sensitive" if op.sensitive else ""
-            print(f"{op.kind:<13}{op.target:<52} {d['before'] or 'unset'} -> {op.after}  {flags}".rstrip())
-        print(f"\n{spec.name}: {len(ops)} to change, {len(blocked)} blocked, "
-              f"{sum(c.state == 'in-sync' for c in found)} in sync")
+            print(f"  blocked  {c.op.target}: {c.note}")
+        for op in ops:
+            print(f"  {op.describe()}")
+        print(f"\n{spec.name}: {tally(ops)} ({sum(c.state == 'in-sync' for c in found)} in sync, "
+              f"{len(blocked)} blocked)")
         if path:
-            print(f"saved: {path}  (nothing was run; rehearse it: `android-iac apply --dry-run`)")
+            print(f"saved {path.name}, nothing was run.\nnext: android-iac apply --dry-run")
         elif blocked:
             print("not saved: a plan with blocked items would be a guess")
     return 3 if blocked else 1 if ops else 0

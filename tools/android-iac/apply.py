@@ -71,7 +71,7 @@ def rehearse(path: Path, sha: str, now: dt.datetime) -> Path:
     return out
 
 
-def dry_run(spec: Spec, o: Observed, path: Optional[str], as_json: bool) -> int:
+def dry_run(spec: Spec, o: Observed, path: Optional[str], as_json: bool, verbose: bool = False) -> int:
     """0 rehearsed, 1 refused (make a fresh plan), 2 no usable plan."""
     try:
         p = Path(path) if path else latest()
@@ -86,14 +86,17 @@ def dry_run(spec: Spec, o: Observed, path: Optional[str], as_json: bool) -> int:
         print(json.dumps(sanitize.deep_scrub({"plan": str(p), "rehearsed": str(mark) if mark else None,
                                               "refused": why, "commands": [] if why else commands}), indent=2))
         return 1 if why else 0
-    print(f"plan: {p}")
-    for reason in why:
-        print(f"refused      {reason}")
     if why:
-        print("not rehearsed: the phone or the declaration moved; make a fresh one with `android-iac plan`")
+        print(f"plan {p.stem} no longer fits:")
+        for reason in why:
+            print(f"  {reason}")
+        print("not rehearsed. Make a fresh one: android-iac plan")
         return 1
+    print(f"plan {p.stem} still fits the phone. apply would:")
     for op in ops:
-        flag = "  sensitive: apply will ask to type it" if op.sensitive else ""
-        print(f"would run    adb {shlex.join(op.argv())}{flag}\n  undo       adb {shlex.join(op.undo())}")
-    print(f"\nrehearsed: {len(ops)} operations, nothing was run ({mark})")
+        print(f"  {op.describe()}")
+        if verbose:
+            print(f"      adb {shlex.join(op.argv())}\n      undo: adb {shlex.join(op.undo())}")
+    print(f"\nrehearsed: {plan.tally(ops)}. Nothing was run; the rehearsal holds 10 minutes.")
+    print("next: android-iac apply" + ("" if verbose else "   (--verbose shows each adb command)"))
     return 0

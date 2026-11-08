@@ -21,7 +21,7 @@ android-iac diff      # every declared check; exit 1 on drift, 3 on missing evid
 android-iac verify    # only what is not in sync, for scripts
 android-iac plan      # what the `managed` block would change; saved under ~/.local/state, never run
 android-iac apps      # the enabled third-party apps as the overlay JSON (android-iac-seal seals them)
-android-iac apply --dry-run  # re-reads, refuses a stale plan, prints the exact commands, runs none
+android-iac apply --dry-run  # re-reads, refuses a stale plan, lists the changes (--verbose: the adb commands), runs none
 android-iac apply     # runs the rehearsed plan, asks first, verifies each step, journals it
 android-iac rollback  # undoes the last apply, skipping what was changed by hand since
 ```

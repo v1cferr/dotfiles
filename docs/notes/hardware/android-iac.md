@@ -120,7 +120,8 @@ previous value a rollback needs.
    `$XDG_STATE_HOME/android-iac/plans/` (mode 0600, never in the repo) with the spec's digest and
    the build fingerprint.
 2. `apply --dry-run <plan>` reads again, refuses a plan the phone has moved away from, prints the
-   exact commands, and marks the plan rehearsed.
+   changes one line each (`--verbose` adds each exact adb command and its undo), and marks the plan
+   rehearsed.
 3. `apply <plan>` requires that rehearsal, of that plan, under 10 minutes old; asks a typed
    confirmation for sensitive operations (`secure.*`, connectivity, permissions); runs one
    operation at a time, re-reads each to verify, and stops at the first failure. Every step goes

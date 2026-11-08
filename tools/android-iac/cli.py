@@ -71,6 +71,7 @@ def main(argv: Optional[Sequence[str]] = None, runner: Optional[Runner] = None) 
     apl.add_argument("plan", nargs="?", help="the plan file (default: the latest saved plan)")
     apl.add_argument("--dry-run", action="store_true", help="print the exact commands, run none")
     apl.add_argument("--json", action="store_true")
+    apl.add_argument("--verbose", action="store_true", help="with --dry-run: each exact adb command and its undo")
     sub.add_parser("rollback", help="undo what an apply did, newest first").add_argument(
         "journal", nargs="?", help="the journal (default: the latest)")
     for p in (ins, *[sub.choices[n] for n in ("diff", "verify")]):
@@ -97,7 +98,7 @@ def main(argv: Optional[Sequence[str]] = None, runner: Optional[Runner] = None) 
         if args.command == "apps":
             return apps.run(observed, args.save, args.local)
         if args.command == "apply" and args.dry_run:
-            return apply.dry_run(spec, observed, args.plan, args.json)
+            return apply.dry_run(spec, observed, args.plan, args.json, args.verbose)
         if args.command in ("apply", "rollback"):
             ask: write.Ask = functools.partial(_ask, secret=False)
             if args.command == "apply":

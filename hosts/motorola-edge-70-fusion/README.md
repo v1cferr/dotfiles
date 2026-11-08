@@ -70,14 +70,14 @@ unattended audit that pushes to the phone on drift (the note, "The weekly audit"
 
 ## Apps on top of stock
 
-The debloat (`managed.packagesDisabled`) took the factory extras out; what makes it feel like plain
-Android is two FOSS apps, chosen on 08/11/2026 and versioned in the sealed app list:
+The debloat (`managed.packagesDisabled`) took the factory extras out; the one app added on top,
+on 08/11/2026 and versioned in the sealed app list, is **Breezy Weather** (`org.breezyweather`,
+F-Droid's `freenet` build): forecast, nowcasting, air quality and widgets, replacing the Moto
+time/weather widget the debloat removed.
 
-- **Breezy Weather** (`org.breezyweather`, F-Droid's `freenet` build): forecast, nowcasting, air
-  quality and widgets, replacing the Moto time/weather widget the debloat removed.
-- **Lawnchair** (`app.lawnchair`, IzzyOnDroid): the Pixel launcher's look. It is a beta built on
-  Android 15's Launcher3 on an Android 17 phone, so the Moto launcher stays enabled as the
-  fallback: Settings, Apps, Default apps, Home app switches back.
+The Moto launcher stays the home app. Lawnchair was considered and left out: it is a beta built on
+Android 15's Launcher3 on an Android 17 phone, and a third-party home app loses the system's
+gesture-navigation and recents animations, which Motorola tunes for this hardware.
 
 Plain AOSP or GrapheneOS is out: both need an unlocked bootloader, which fails Play Integrity and
 with it the banks and Pix.

@@ -252,3 +252,19 @@ dropbox-hm status   # ONCE, after it leaves "Starting...", then authorize that U
 To verify, watch `instance1/sync_history.db` and `instance1/sync/`, never a second `status` before
 the link completes. And not the bare `instance1/` directory: it survives an unlink, so its
 presence proves nothing.
+
+## Third unlink, 08/11/2026: a second daemon from the launcher
+
+With the tray icon missing (the lost `DISPLAY`, see `docs/notes/desktop/hypr.md`), Dropbox was
+opened from the launcher. That ran the desktop entry's `dropbox start -i` with the REAL `HOME`, so
+a second daemon came up on the stale July state in `~/.dropbox` (an old binary, `/corruptdball`),
+next to the service's daemon and over the same files. It was stopped within minutes, and minutes
+later `instance1/hostkeys` was rewritten and the service's daemon asked for a relink.
+
+A suspect for the OPEN root cause above, not a proof: two clients with their own device identities
+on one free account. The rule either way: never start Dropbox from the launcher. The daemon is the
+service, and `dropbox-hm status` is the way to ask it anything.
+
+Checking the sync by hand: `~/Dropbox` is a symlink to `~/.dropbox-hm/Dropbox`, and `filestatus`
+answers `unwatched` through the symlink. Ask with the real path. A file dropped in there went
+`syncing`, then `up to date`, in 3 s, which is the end-to-end proof.

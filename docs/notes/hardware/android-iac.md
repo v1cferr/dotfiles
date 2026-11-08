@@ -54,8 +54,9 @@ Exit codes, the same for `diff` and `verify`: `0` all in sync, `1` any drift, `3
 something is unknown, manual or unsupported, `2` the environment blocks the run (no adb, no phone,
 not authorized, several phones, a broken spec).
 
-Two `manual` results are expected on every audit: the debugging toggles are ON while it runs, and
-the lock screen check can only prove the lock is not "None", since a swipe answers the same.
+One `manual` result is expected on every audit: the lock screen check can only prove the lock is
+not "None", since a swipe answers the same. Wireless debugging stays on by choice since 08/11/2026
+(the host README), so it is not declared; USB debugging is, held off.
 
 ## Security policy
 

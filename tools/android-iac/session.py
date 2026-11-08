@@ -13,8 +13,8 @@ Ask = Callable[[str, bool], str]  # (prompt, secret) -> answer
 Browse = Callable[[str], str]  # (service type) -> `avahi-browse -tpr` output
 
 CLOSE = """
-Close the session on the phone (docs/guides/android-adb-session.md):
-  Developer options, Revoke USB debugging authorizations, then Wireless debugging off."""
+Wireless debugging stays on (docs/guides/android-adb-session.md): on the phone, Developer options,
+  Revoke USB debugging authorizations when a computer that paired is no longer mine."""
 
 
 def avahi_browse(service: str) -> str:

@@ -66,7 +66,7 @@ class Audit(unittest.TestCase):
         self.assertEqual(code, 1)  # the healthy fixture carries one disabled package
         self.assertIn(("connect", "192.168.1.31:40123"), phone.calls)
         self.assertEqual(phone.calls[-1], ("disconnect", "192.168.1.31:40123"))
-        for section in ("== doctor ==", "== inspect ==", "== diff ==", "Revoke USB debugging"):
+        for section in ("== doctor ==", "== inspect ==", "== diff ==", "Revoke USB debugging authorizations"):
             self.assertIn(section, out)
 
     def test_pairs_with_the_code_on_stdin(self) -> None:
@@ -96,7 +96,7 @@ class Audit(unittest.TestCase):
         code, out, _ = self.audit(phone, [])
         self.assertEqual(code, 1)
         self.assertFalse(any(c[0] in ("connect", "disconnect") for c in phone.calls))
-        self.assertIn("Revoke USB debugging", out)
+        self.assertIn("Revoke USB debugging authorizations", out)
 
 
 class Session(unittest.TestCase):

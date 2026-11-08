@@ -34,14 +34,9 @@
     };
   };
 
-  # The same reads, but only a person can fix them: they are ON while an audit runs.
-  manualSettings = {
-    global = {
-      adb_enabled = "0";
-      adb_wifi_enabled = "0";
-      development_settings_enabled = "0";
-    };
-  };
+  # The same reads, but only a person can fix them. Wireless debugging (and so developer options)
+  # stays ON by my choice since 08/11/2026, so only USB debugging is held off: see the README.
+  manualSettings.global.adb_enabled = "0";
 
   # What phase 2 may change itself, reversibly; `android-iac plan` lists it, nothing applies it yet.
   managed.settings.global.stay_on_while_plugged_in = "0"; # a harmless first key: the screen sleeps

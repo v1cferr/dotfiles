@@ -51,6 +51,20 @@ those checks.
 **A mirror.** Unlike the router, the phone's state is not copied into git: an inspect report
 carries the app list, which is the private part.
 
+## Wireless debugging stays on
+
+My choice on 08/11/2026, against the ADR's first "temporary session": re-pairing for every audit
+cost more than it protected. What it means, so the choice stays informed:
+
+- Any computer that paired holds a full adb shell (install apps, grant permissions, read the
+  screen and logs). A compromised desk is a compromised phone; revoke the authorizations the day
+  a paired computer is no longer mine.
+- adbd listens on the WiFi network it was enabled on, and Android turns it off when the phone
+  leaves that network, so it is not open on someone else's WiFi.
+- Some banking and government apps refuse to run, or warn, with developer options on.
+
+USB debugging stays off, held by `diff` (`global.adb_enabled = 0`).
+
 ## The address
 
 `192.168.1.31`, a DHCP reservation on the router (`dhcp.edge_70_fusion`, added 07/11/2026). It is

@@ -49,10 +49,9 @@ android-iac diff; echo $?
 
 ## 3. Close the session
 
-1. Here: `adb disconnect` (wireless) or unplug the cable.
-2. On the phone, Developer options: **Revoke USB debugging authorizations**, then turn off
-   **Wireless debugging** and **USB debugging**.
-3. Optional: turn Developer options off altogether, at the top of that screen.
-
-`android-iac diff` reports the toggles as `manual` during every audit: that line is the reminder
-for this step, not a finding to fix while the session is open.
+1. Here: `adb disconnect` (wireless) or unplug the cable. `audit` does it on its own.
+2. Wireless debugging stays ON since 08/11/2026, a choice recorded in the
+   [host README](../../hosts/motorola-edge-70-fusion/README.md). USB debugging goes off after a
+   cable session (`diff` holds it at `0`).
+3. When a computer that paired is no longer mine, Developer options: **Revoke USB debugging
+   authorizations** (it revokes the wireless pairings too), then pair this desk again.

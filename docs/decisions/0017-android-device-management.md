@@ -45,9 +45,10 @@ What was compared and REJECTED:
   so "never writes" is structural, not a promise.
 - Every result is one of `in-sync`, `drift`, `unsupported`, `unknown` or `manual`, and a check
   without evidence is `unknown`, never `in-sync`.
-- ADB is a temporary session the person opens and closes on the phone. The tool never enables
-  anything there; `audit` only pairs and connects THIS computer's adb, through an allowlist of its
-  own, and disconnects at the end. Turning debugging off stays a human step.
+- ADB is a session the person opens on the phone. The tool never enables anything there; `audit`
+  only pairs and connects THIS computer's adb, through an allowlist of its own, and disconnects at
+  the end. Amended 08/11/2026: wireless debugging stays ON by the owner's choice instead of being
+  closed after each audit (the trade-off is in the host README); USB debugging stays off.
 
 ## Phase 2, designed but not built
 

@@ -13,7 +13,7 @@ TRAPS = (
     "wireless debugging: the connect port changes on every toggle, `adb connect <address>:<new port>`",
     "wireless debugging turns itself off when the phone leaves the WiFi network it was enabled on",
     "the fixed address is a reservation for a RANDOMIZED MAC: changing the network's privacy setting loses it",
-    "when done: Developer options, Revoke USB debugging authorizations, and turn both debugging toggles off",
+    "every paired computer keeps a full shell on the phone: revoke the authorizations of one no longer mine",
 )
 
 # One harmless read per capability the other commands rely on.

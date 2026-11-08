@@ -42,6 +42,31 @@ The app runs Codex through a CLI binary. The package's `codex` argument is overr
 so the wrapper's `CODEX_CLI_PATH` and the terminal use the same version and the same
 `~/.codex/config.toml`.
 
+## Daily chats: the tabbed web launcher
+
+"ChatGPT (tabs)" (`chatgpt-web`, same module) opens chatgpt.com in the guarded Zen on its own
+profile, `~/.local/share/chatgpt-web`. The app stays for Codex; plain chats live in browser tabs.
+
+Why, measured on 08/11/2026 with 26.1029:
+
+- The app is Electron (Chromium 156) on OpenAI's `owl` runtime: a 715 MB `app.asar`, a 329 MB
+  binary, and 22 processes holding about 1.6 GB RSS with a few chats open.
+- Long chats lag because the whole conversation stays in the DOM and is re-rendered as tokens
+  stream in; Codex, computer use and plugins load with it even when unused.
+- It has no tabs and OpenAI has not announced any. A browser gives tabs, session restore and
+  side-by-side windows for free, on the same subscription and history.
+
+How it fits the rest of the desktop:
+
+- `--name chatgpt-web` is the Wayland app_id, so `vault.lua` hides it on lock through its
+  `chatgpt` pattern, and it never matches `^zen`.
+- It runs through `my.zen.package`, so the launch guard still applies and closes it on a long lock.
+  This profile has NO primary password of its own: the chatgpt.com session cookie is protected
+  only by the guard and the vault, the same as the app's.
+- Extensions that virtualize long chats (render only the messages in view) fix most of the lag,
+  but they read every page on chatgpt.com. Install one by hand into this profile only after
+  auditing its source; none is declared here.
+
 ## Known limits (preview)
 
 - OpenAI tests only Ubuntu, Debian and Fedora.

@@ -12,3 +12,12 @@ hl.on("hyprland.start", function()
   -- dies with flameshot. The HISTORY is Vicinae's (a --user service), not launched here.
   hl.exec_cmd("wl-clip-persist --clipboard regular")
 end)
+
+-- The autostart panel's `hide = true` apps (no tray-only flag) leave a marker named after their PID:
+-- that PID's first window goes to special:minimized, unfocused. SUPER+CTRL+M shows it.
+local HIDE_DIR = (os.getenv("XDG_RUNTIME_DIR") or "") .. "/autostart-hide/"
+hl.on("window.open", function(w)
+  if w.pid and os.remove(HIDE_DIR .. tostring(w.pid)) then
+    hl.dispatch(hl.dsp.window.move({ workspace = "special:minimized", window = "address:" .. w.address, follow = false }))
+  end
+end)

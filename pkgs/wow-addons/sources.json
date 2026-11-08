@@ -289,5 +289,12 @@
     "version": "9511950",
     "url": "https://edge.forgecdn.net/files/9511/950/Mastercraft-v1.9.0.zip",
     "hash": "sha256-Z2xyNf/hK0rZkg8T1Kw97Ack3KnE9mCAE0EJrxRoOtY="
+  },
+  "polestar": {
+    "source": "curseforge",
+    "projectId": 1744437,
+    "version": "9510591",
+    "url": "https://edge.forgecdn.net/files/9510/591/Polestar-0.3.5.zip",
+    "hash": "sha256-75GE5l0e1re11DWLjgB9C75i+y08fnfjTZqYhTAW02w="
   }
 }

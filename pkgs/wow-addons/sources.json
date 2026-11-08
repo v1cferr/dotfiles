@@ -275,5 +275,19 @@
     "version": "9446591",
     "url": "https://edge.forgecdn.net/files/9446/591/Dejunk-3.5.1.zip",
     "hash": "sha256-haLhhKmfzm+fWQLjtjuP15EKqXRRnZuSGPRaOE6gQ04="
+  },
+  "wim": {
+    "source": "curseforge",
+    "projectId": 7474,
+    "version": "9504397",
+    "url": "https://edge.forgecdn.net/files/9504/397/WIM-3.19.4.zip",
+    "hash": "sha256-Pg2VKcH64cAjE50zOIh6HghBZf7GipAZYAe2YT9ZaIg="
+  },
+  "lfg-forever": {
+    "source": "curseforge",
+    "projectId": 1707849,
+    "version": "9480772",
+    "url": "https://edge.forgecdn.net/files/9480/772/LFGForever.zip",
+    "hash": "sha256-Oz975VLsemIj3DIY66MiinQxwHB2If+HeY/PHPyzuRg="
   }
 }

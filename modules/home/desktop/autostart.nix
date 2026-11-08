@@ -14,6 +14,7 @@ let
   inherit (pkgs)
     coreutils
     discord
+    procps
     spotifast
     writeShellScript
     zapfast
@@ -26,6 +27,12 @@ let
 
   # For an app with NO tray-only flag: leaves a marker named after its PID, and the hook in
   # hypr/lua/autostart.lua sends that PID's first window to special:minimized, unfocused.
+  # Exits 1 (systemd: "condition failed", a skip and not a failure) when the app is already up, so a
+  # second launch never hands off to the live instance, which would RAISE its window.
+  notRunning = writeShellScript "autostart-not-running" ''
+    ! ${procps}/bin/pgrep -u "$(${coreutils}/bin/id -u)" -x "$1" >/dev/null
+  '';
+
   hideMarker = writeShellScript "autostart-hide-marker" ''
     ${coreutils}/bin/mkdir -p "$XDG_RUNTIME_DIR/autostart-hide"
     ${coreutils}/bin/touch "$XDG_RUNTIME_DIR/autostart-hide/$MAINPID"
@@ -39,6 +46,7 @@ let
       # is hidden by the compositor. Bring it back with SUPER+CTRL+M or by launching it again.
       exec = "${chatgpt}/bin/chatgpt";
       desc = "ChatGPT and Codex";
+      proc = "ChatGPT";
       hide = true;
     };
     discord = {
@@ -46,6 +54,7 @@ let
       # startup Off, which is a second owner (rule 15).
       exec = "${discord}/bin/Discord --start-minimized";
       desc = "chat/voice";
+      proc = ".Discord-wrappe"; # the kernel's 15-char comm
     };
     localsend = {
       # `--hidden` = the tray icon only, which is what a RECEIVER needs. Do NOT also turn on the
@@ -64,6 +73,7 @@ let
       # store path (it dies on GC), a second owner (rule 15), so it stays Off in the app.
       exec = "${zapfast}/bin/zapfast --start-hidden";
       desc = "WhatsApp";
+      proc = ".zapfast-wrappe";
     };
   };
 
@@ -103,7 +113,11 @@ in
           ExecStart = app.exec;
           Restart = "on-failure";
           RestartSec = 5;
+          # Chromium apps move THEMSELVES into an app-<name>-<pid>.scope, so the unit empties out at
+          # once. Without this it reads inactive, and every rebuild's switch started it again.
+          RemainAfterExit = true;
         }
+        // lib.optionalAttrs (app ? proc) { ExecCondition = "${notRunning} ${app.proc}"; }
         // lib.optionalAttrs (app.hide or false) { ExecStartPost = "${hideMarker}"; }
         // lib.optionalAttrs (app ? successExit) { SuccessExitStatus = app.successExit; };
         Install.WantedBy = [ "graphical-session.target" ];

@@ -60,6 +60,18 @@ were already open, the second launch handed off to the live instance, and that i
 its window. `X-SwitchMethod = "keep-old"` keeps a changed unit's running process, so the new
 definition applies at the next login. A brand new unit is still started once by the switch.
 
+`keep-old` was not enough, and Discord kept jumping up on EVERY rebuild. The reason, measured:
+Chromium-based apps (Discord, ChatGPT) move their own process into an `app-<name>-<pid>.scope`,
+so the unit's cgroup empties within 2 s and the unit reads `inactive`. Home Manager's switch
+starts every inactive unit a target wants, so each rebuild launched a second instance, which
+handed off to the live one and raised its window. Two guards now:
+
+- `RemainAfterExit = true`: the unit stays `active (exited)` after the launch, so the switch has
+  nothing to start. Quitting the app by hand leaves it closed until the next login.
+- `ExecCondition` with `pgrep -x <comm>` per app (`proc` in the table, the kernel's 15-character
+  name, e.g. `.Discord-wrappe`): an app already running skips the launch as "condition failed",
+  which is a skip and not a failure.
+
 ## `hide = true`: background for an app with no tray flag
 
 The rule is that login opens NO window. Most apps have a tray-only flag. ChatGPT has neither a

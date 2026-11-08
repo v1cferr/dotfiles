@@ -240,13 +240,6 @@
     "url": "https://edge.forgecdn.net/files/9511/150/Syndicator-290.zip",
     "hash": "sha256-30dq+HLcQIjPSDVNMMBppYE2yObHIcLX565PFMnYGCs="
   },
-  "tomtom": {
-    "source": "curseforge",
-    "projectId": 18808,
-    "version": "9493883",
-    "url": "https://edge.forgecdn.net/files/9493/883/TomTom-v4.4.1-release.zip",
-    "hash": "sha256-aKk/jfpOzTyv4osJmbR+5i5l8AlrXlmC5nJbqDwQv/w="
-  },
   "offhand": {
     "source": "curseforge",
     "projectId": 1696140,

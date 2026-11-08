@@ -19,7 +19,9 @@ let
   # The apps table: adding one is 1 entry here plus 1 line in the panel below.
   apps = {
     discord = {
-      exec = "${discord}/bin/Discord";
+      # `--start-minimized` = the tray only, like the others. Keep the app's own "Open Discord" on
+      # startup Off, which is a second owner (rule 15).
+      exec = "${discord}/bin/Discord --start-minimized";
       desc = "chat/voice";
     };
     localsend = {
@@ -44,7 +46,7 @@ in
   config = {
     # THE PANEL: edit here to turn on/off what opens at login.
     my.autostart = {
-      discord = false; # chat/voice
+      discord = true; # chat/voice
       localsend = false; # the LAN file receiver, hidden in the tray
       spotifast = false; # music
     };

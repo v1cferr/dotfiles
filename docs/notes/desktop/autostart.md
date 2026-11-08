@@ -54,7 +54,9 @@ Two defenses came out of it:
 
 ## The per-app notes
 
-**Discord**: the binary is `Discord`, capitalized, which is what its own `.desktop` uses.
+**Discord**: the binary is `Discord`, capitalized, which is what its own `.desktop` uses. On since
+08/11/2026, with `--start-minimized` so it lands in the tray; its own "Open Discord" startup toggle
+stays Off for the same second-owner reason as LocalSend.
 
 **LocalSend**: `--hidden` comes up WITHOUT a window, only the tray icon, which is what makes sense
 for a receiver: LocalSend only RECEIVES a file if it is open, and sending from the phone cannot

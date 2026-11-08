@@ -82,9 +82,11 @@ class Cli(unittest.TestCase):
 
     def test_local_overlay_is_read_from_xdg(self) -> None:
         (self.tmp / "android-iac").mkdir()
-        (self.tmp / "android-iac" / "local.json").write_text(json.dumps({"mustBeInstalled": ["br.example.bank"]}))
+        (self.tmp / "android-iac" / "local.json").write_text(json.dumps({"mustBeInstalled": ["br.example.bank", "br.example.missing"]}))
         code, out, _ = self.run_cli("diff")
-        self.assertIn("app br.example.bank (local)", out)
+        self.assertIn("app br.example.missing (local)", out)  # a problem keeps its own row
+        self.assertNotIn("app br.example.bank (local)", out)  # the apps in line are one row
+        self.assertIn("apps (local)                                         1 of 2 enabled", out)
         self.assertNotIn("no local overlay", out)
         code, _, err = self.run_cli("--local", str(self.tmp / "nope.json"), "diff")
         self.assertEqual(code, 2)

@@ -31,7 +31,13 @@ def _table(fs: list[compare.Finding], only_problems: bool) -> str:
         d = f.as_dict()
         exp = "unset" if f.expected is None else d["expected"]
         obs = "unset" if f.observed is None and f.status is not compare.Status.UNKNOWN else d["observed"] or "?"
+        if f.status is compare.Status.IN_SYNC and f.check.endswith(" (local)"):
+            continue  # the apps in line are one row below; each app that is not gets its own
         lines.append(f"{f.status.value:<12} {d['check']:<52} {obs} (want {exp})" + (f"  {d['note']}" if f.note else ""))
+    apps = [f for f in fs if f.check.endswith(" (local)")]
+    ok = sum(f.status is compare.Status.IN_SYNC for f in apps)
+    if ok and not only_problems:
+        lines.append(f"{'in-sync':<12} {'apps (local)':<52} {ok} of {len(apps)} enabled (`--json` lists them)")
     return "\n".join(lines)
 
 

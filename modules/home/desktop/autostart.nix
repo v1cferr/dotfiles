@@ -14,6 +14,7 @@ let
   inherit (pkgs)
     discord
     spotifast
+    zapfast
     ;
 
   # The apps table: adding one is 1 entry here plus 1 line in the panel below.
@@ -36,6 +37,12 @@ let
       exec = "${spotifast}/bin/spotifast --start-hidden";
       desc = "music";
     };
+    zapfast = {
+      # `--start-hidden` = the tray only. Its own "start with system" writes a .desktop pinned to a
+      # store path (it dies on GC), a second owner (rule 15), so it stays Off in the app.
+      exec = "${zapfast}/bin/zapfast --start-hidden";
+      desc = "WhatsApp";
+    };
   };
 
   enabled = lib.filterAttrs (n: _: config.my.autostart.${n}) apps;
@@ -49,6 +56,7 @@ in
       discord = true; # chat/voice
       localsend = false; # the LAN file receiver, hidden in the tray
       spotifast = false; # music
+      zapfast = true; # WhatsApp, hidden in the tray
     };
 
     # One --user service per enabled app, tied to the session, so nothing survives a logout.

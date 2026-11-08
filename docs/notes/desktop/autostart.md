@@ -8,7 +8,7 @@ true/false in the panel plus `rebuild`. It mirrors the idiom of `modules/nixos/s
 
 | Place | For what | Why separate |
 | --- | --- | --- |
-| `my.autostart` (here) | GUI apps with no service of their own: Discord, Spotifast, LocalSend | LocalSend has a NixOS module, but only for the package and the firewall; what BRINGS IT UP is this panel |
+| `my.autostart` (here) | GUI apps with no service of their own: Discord, Spotifast, LocalSend, ZapFast | LocalSend has a NixOS module, but only for the package and the firewall; what BRINGS IT UP is this panel |
 | `my.services.<n>` | real services with a module or daemon (dropbox, jellyfin, ollama, sunshine, restic) | keys in `modules/nixos/services/toggles.nix`, values in `hosts/<host>/services.nix` |
 | `hypr/lua/autostart.lua` | session infrastructure that NEEDS the compositor's `exec-once`: the lock, quickshell, wl-clip-persist | only the compositor knows the right moment |
 
@@ -74,6 +74,11 @@ require walking to the PC to open the app.
 **Spotifast**: `--start-hidden` leaves only the tray icon. The same warning as LocalSend applies:
 its own "start with computer" writes `~/.config/autostart/spotifast.desktop`, a second owner, so it
 stays Off in the app. It is a plain process, so it needs no `successExit`.
+
+**ZapFast**: `--start-hidden`, the tray only. Its in-app "start with system" wrote
+`~/.config/autostart/zapfast.desktop` with an `Exec` pinned to one store path and pointing at
+`.zapfast-wrapped`, which skips the wrapper's `LD_LIBRARY_PATH` and dies on the next GC. Removed
+on 08/11/2026 when it moved here; keep that toggle Off.
 
 ## Where the packages come from
 

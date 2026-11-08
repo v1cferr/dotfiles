@@ -67,6 +67,7 @@ Most secrets are root-only. These are not, and each has a reason:
 | `curseforge_api_key` | v1cferr 0400 | `wow-addons-bump` runs as the user from `update` and reads it at run time, so it never reaches the store |
 | `gitguardian_pat` | v1cferr 0400 | the `gitguardian-mcp` launcher reads it as the user when Claude Code starts the GitGuardian MCP |
 | `vault_password` | v1cferr 0400 | the app vault's own password; its `pam_exec` check runs inside the user's Quickshell, not as root ([`vault.md`](../desktop/vault.md)) |
+| `android_iac_local` | v1cferr 0400 | android-iac's overlay, the phone's app list: linked into `~/.config` so the audit and I read it without sudo |
 
 The restic one is the least obvious and the most defensible: a FUSE mount is private by default,
 which this config already proved inside out, since restic as ROOT could not even `lstat` the
@@ -78,6 +79,11 @@ has the original files.
 `rclone_gdrive_conf` stays OUT of Bitwarden on purpose: it is MULTILINE and `sync-secrets` does a
 `sops set` with single-line JSON, which would break it. And unlike the restic password, the OAuth
 token is regenerable, so it does not need the vault.
+
+`android_iac_local` stays out of Bitwarden too: the phone is its source, read back by
+`android-iac-seal` (which runs `sops set` the way "Editing by hand" does), so a vault copy would
+only be a second list to drift. It is not a credential either: it is encrypted because the repo is
+public and the apps a person banks with are not.
 
 ## Home secrets: the three kinds
 

@@ -133,6 +133,12 @@ in
         owner = "v1cferr";
         mode = "0400";
       }; # user-readable: the app vault's pam_exec check runs inside the user's Quickshell
+    }
+    // lib.optionalAttrs (builtins.elem "android_iac_local" sopsKeys) {
+      android_iac_local = {
+        owner = "v1cferr";
+        mode = "0400";
+      }; # user-readable: android-iac's overlay, the phone's apps; sealed by android-iac-seal, not Bitwarden
     };
 
   # The Vicinae GitHub extension's token, as a settings override the --user server merges at start

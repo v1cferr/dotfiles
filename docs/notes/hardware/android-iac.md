@@ -23,7 +23,7 @@ account, the lock screen's strength, most vendor settings, or anything under `/d
 | `parse.py` | adb's text output into data, tolerant of noise |
 | `sanitize.py` | fail-safe redaction: allowlisted properties, identity-shaped keys dropped, a final scrubber |
 | `spec.py` | the host JSON plus the local overlay, validated |
-| `apps.py` | `apps`: the phone's enabled third-party apps, written as the local overlay |
+| `apps.py`, [`android-iac-seal`](../../../tools/android-iac/scripts/android-iac-seal.sh) | the phone's enabled third-party apps, sealed into sops as the overlay |
 | `state.py` | device selection, the reads, the inspect report |
 | `compare.py` | declared against observed, one status per check |
 | `managed.py`, `plan.py`, `apply.py` | phase 2: the managed block, validated, the plan and its rehearsal (read-only) |
@@ -67,7 +67,8 @@ the allowlist the ADR describes.
 ## What never enters the repo
 
 Serials, IMEI, MEID, the Android ID, MAC and Bluetooth addresses, SSIDs, account names, the
-device name, contacts, messages, and the list of apps I use. `inspect --json` carries the app list
+device name, contacts, messages, and the list of apps I use in plain text (it is sealed in sops,
+see the host README). `inspect --json` carries the app list
 and is personal: it goes to the terminal, never to a file in the tree. The tests use synthetic
 output only.
 

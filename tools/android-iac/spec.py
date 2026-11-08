@@ -1,4 +1,4 @@
-"""The declared state: the host's JSON (from Nix) plus the optional local, untracked overlay."""
+"""The declared state: the host's JSON (from Nix) plus the optional overlay (sealed in sops, linked into ~/.config)."""
 
 from __future__ import annotations
 

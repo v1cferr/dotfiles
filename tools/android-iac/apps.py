@@ -14,7 +14,7 @@ from state import Observed
 
 
 def run(o: Observed, save: bool, local: Optional[str]) -> int:
-    """0 done, 2 the package lists could not be read or the overlay is not a JSON object."""
+    """0 done, 2 the package lists could not be read, or the overlay is sealed or not a JSON object."""
     if o.third_party is None or o.enabled is None:
         print("android-iac: the package lists could not be read", file=sys.stderr)
         return 2
@@ -24,6 +24,9 @@ def run(o: Observed, save: bool, local: Optional[str]) -> int:
         print(json.dumps({"mustBeInstalled": apps}, indent=2))
         return 0
     path = Path(local) if local else spec.local_path()
+    if path.is_symlink():
+        print(f"android-iac: {path} is sealed in sops: update it with `android-iac-seal`", file=sys.stderr)
+        return 2
     current = json.loads(path.read_text()) if path.is_file() else {}
     if not isinstance(current, dict):
         print(f"android-iac: {path} is not a JSON object", file=sys.stderr)

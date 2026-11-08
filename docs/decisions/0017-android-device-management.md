@@ -36,8 +36,9 @@ What was compared and REJECTED:
 ## Decision
 
 - `hosts/motorola-edge-70-fusion/default.nix` is plain data: facts and a desired POSTURE. It is
-  not a NixOS host and is not in `nixosConfigurations`. Private items (third-party apps) live in
-  an untracked local file.
+  not a NixOS host and is not in `nixosConfigurations`. Private items (third-party apps) are
+  versioned encrypted in sops (amended 07/11/2026: an untracked local file at first, which left
+  state outside the repo that nothing could audit).
 - `tools/android-iac/` is a Python program (stdlib only, typed and tested at build, registered
   under [rule 24](../notes/repo/languages.md)) with four read-only commands: `doctor`, `inspect`,
   `diff`, `verify`. Every adb call passes an allowlist of read-only command shapes BEFORE it runs,

@@ -53,6 +53,15 @@ class Apps(unittest.TestCase):
         self.assertEqual(self.run_cli(answers, "apps", "--save")[0], 2)
         self.assertFalse(self.overlay.exists())
 
+    def test_a_sealed_overlay_is_not_overwritten(self) -> None:
+        self.overlay.parent.mkdir()
+        target = self.tmp / "sealed.json"
+        target.write_text(json.dumps({"mustBeInstalled": []}))
+        self.overlay.symlink_to(target)
+        self.assertEqual(self.run_cli(healthy(), "apps", "--save")[0], 2)
+        self.assertTrue(self.overlay.is_symlink())
+        self.assertEqual(json.loads(target.read_text()), {"mustBeInstalled": []})
+
 
 if __name__ == "__main__":
     unittest.main()

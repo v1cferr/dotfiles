@@ -20,7 +20,7 @@ android-iac inspect   # a sanitized report; --json for the full one, kept OUT of
 android-iac diff      # every declared check; exit 1 on drift, 3 on missing evidence
 android-iac verify    # only what is not in sync, for scripts
 android-iac plan      # what the `managed` block would change; saved under ~/.local/state, never run
-android-iac apps      # the enabled third-party apps as the overlay; --save writes local.json
+android-iac apps      # the enabled third-party apps as the overlay JSON (android-iac-seal seals them)
 android-iac apply --dry-run  # re-reads, refuses a stale plan, prints the exact commands, runs none
 ```
 
@@ -34,16 +34,19 @@ limits are [`docs/notes/hardware/android-iac.md`](../../docs/notes/hardware/andr
 **Anything that names me or the unit.** No serial, IMEI, Android ID, account, SSID or MAC:
 the tool never prints them, and its tests run on synthetic output.
 
-**My apps.** The repo is public, and the list of apps a person banks with is not. Third-party
-apps that must be present go in a LOCAL file, `$XDG_CONFIG_HOME/android-iac/local.json`, never
-committed:
+**My apps, in plain text.** The repo is public, and the list of apps a person banks with is not.
+The third-party apps that must be present are versioned ENCRYPTED instead, as the sops key
+`android_iac_local` in `secrets/secrets.yaml`, holding
 
 ```json
 { "mustBeInstalled": ["com.example.bank"] }
 ```
 
-`android-iac apps --save` writes it from the phone: every enabled third-party app, the file's
-other keys kept, mode 0600. Without it, `diff` says so instead of passing those checks.
+`android-iac-seal` pulls them from the phone, prints each app new and gone, asks, and seals; commit
+`secrets/secrets.yaml`, then `rebuild`, which links `~/.config/android-iac/local.json` to
+`/run/secrets/android_iac_local`. Reading that file needs no sudo, so the deployed list is always
+one `jq . ~/.config/android-iac/local.json` away. Without it, `diff` says so instead of passing
+those checks.
 
 **A mirror.** Unlike the router, the phone's state is not copied into git: an inspect report
 carries the app list, which is the private part.

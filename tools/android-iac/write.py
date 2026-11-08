@@ -65,25 +65,32 @@ def _rehearsed(path: Path, sha: str, now: dt.datetime) -> Optional[str]:
     return None
 
 
-def _run(adb: Adb, f: TextIO, action: str, op: plan.Op, argv: list[str], want: Optional[str]) -> bool:
+def _run(adb: Adb, f: TextIO, action: str, op: plan.Op, argv: list[str], want: Optional[str]) -> str:
+    """ok; refused (the phone said no and a re-read proves nothing moved: safe to go on); or failed."""
+    was = op.before if action == "apply" else op.after
     try:
         adb.write(*argv)
     except AdbError as e:
-        _log(f, action, op, "failed", str(e))
-        print(f"  FAILED   {op.describe()}: {e}")
-        return False
+        reason = str(e).rsplit("failed: ", 1)[-1]
+        if current(adb, op) == was:
+            _log(f, action, op, "refused", reason)
+            print(f"  REFUSED  {op.describe()}: {reason} (unchanged)")
+            return "refused"
+        _log(f, action, op, "failed", reason)
+        print(f"  FAILED   {op.describe()}: {reason}")
+        return "failed"
     got = current(adb, op)
     if got != want:
         _log(f, action, op, "unverified", f"reads {got}")
         print(f"  FAILED   {op.describe()}: unverified, reads {got or 'unset'}, want {want or 'unset'}")
-        return False
+        return "failed"
     _log(f, action, op, "ok")
     print(f"  ok       {op.describe() if action == 'apply' else 'undone: ' + op.describe()}")
-    return True
+    return "ok"
 
 
 def run_apply(spec: Spec, o: Observed, adb: Adb, path: Optional[str], ask: Ask) -> int:
-    """0 applied, 1 refused or stopped (the journal says where), 2 no usable plan."""
+    """0 applied, 1 not run, stopped, or some refused by the phone (the journal says which), 2 no plan."""
     now = dt.datetime.now().astimezone()
     try:
         p = Path(path) if path else apply.latest()
@@ -108,14 +115,22 @@ def run_apply(spec: Spec, o: Observed, adb: Adb, path: Optional[str], ask: Ask) 
             print("nothing was run")
             return 1
     name = f"{now.strftime('%Y%m%d-%H%M%S')}.jsonl"
+    refused = []
     with _journal(name) as f:
         for op in ops:
-            if not _run(adb, f, "apply", op, op.argv(), op.after):
+            result = _run(adb, f, "apply", op, op.argv(), op.after)
+            if result == "failed":
                 print(f"\nstopped; what ran is in the journal: android-iac rollback {name}")
                 return 1
+            if result == "refused":
+                refused.append(op)
     (plan.state_dir() / "rehearsals" / p.name).unlink(missing_ok=True)  # a plan runs once
-    print(f"\napplied: {plan.tally(ops)}.\nundo: android-iac rollback {name}")
-    return 0
+    done = [op for op in ops if op not in refused]
+    print(f"\napplied: {plan.tally(done)}.\nundo: android-iac rollback {name}")
+    if refused:
+        print(f"refused by the phone, so drop them from the host's `managed` block: "
+              f"{', '.join(op.target for op in refused)}")
+    return 1 if refused else 0
 
 
 def _applied(lines: list[dict[str, Any]]) -> list[plan.Op]:
@@ -157,7 +172,7 @@ def run_rollback(adb: Adb, name: Optional[str], ask: Ask) -> int:
         return 1
     with _journal(path.name) as f:
         for op in todo:
-            if not _run(adb, f, "rollback", op, op.undo(), op.before):
+            if _run(adb, f, "rollback", op, op.undo(), op.before) != "ok":
                 return 1
     print(f"\nundone: {len(todo)}, skipped: {skipped}")
     return 1 if skipped else 0

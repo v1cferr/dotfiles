@@ -145,7 +145,9 @@ rehearsal on a second fresh read.
 2c-2e delivered on 08/11/2026 (`write.py`, the only code that writes, through `Adb.write`):
 `apply [plan]` needs that plan's rehearsal under 10 minutes old and still fitting a fresh read,
 the word `apply` typed, and each sensitive target typed by name. It runs one operation at a time,
-re-reads it, and stops at the first that fails or does not read back as declared. Every step goes
+re-reads it, and stops at the first that fails or does not read back as declared. A write the
+phone refuses (`package is non-disable`) whose re-read shows nothing moved is journaled as
+`refused` and the run goes on; the end names them, to drop from the host. Every step goes
 to `journal/<time>.jsonl` (0600). `rollback [journal]` undoes newest first, skips what was changed
 by hand since, and journals in the same file. Settings and packages are tested on a fake phone
 whose state follows the writes; permission revokes share the path but are not exercised yet.

@@ -31,6 +31,7 @@ class Phone(FakeAdb):
     def __init__(self, answers: dict[tuple[str, ...], Any], refuse: Optional[str] = None) -> None:
         super().__init__(answers)
         self.refuse = refuse  # a target whose write the phone silently ignores
+        self.refuse_with_error = False  # when set, a scripted answer for a write wins
 
     def __call__(self, args: Sequence[str], input: Optional[str] = None) -> Result:
         a = tuple(args)
@@ -39,6 +40,8 @@ class Phone(FakeAdb):
         self.calls.append(a)
         if self.refuse and self.refuse in a:
             return Result(0, "", "")
+        if self.refuse_with_error and a in self.answers:
+            return super().__call__(args, input)
         if a[1] == "settings":
             self.answers[("shell", "settings", "get", a[3], a[4])] = (a[5] if a[2] == "put" else "null") + "\n"
         elif a[2] in ("disable-user", "enable"):
@@ -124,6 +127,20 @@ class Write(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("unverified", out)
         self.assertEqual([e["result"] for e in self.journal()], ["ok", "unverified"])
+
+    def test_a_package_the_phone_protects_is_skipped_not_fatal(self) -> None:
+        self.use({"packagesDisabled": ["org.example.notes", "br.example.bank"]})
+        phone = Phone(healthy())
+        phone.answers[("shell", "pm", "disable-user", "--user", "0", "org.example.notes")] = Result(
+            1, "", "Failure: package is non-disable")
+        self.rehearsed(phone)
+        phone.refuse_with_error = True
+        code, out = self.run_cli(phone, "apply", answers=["apply"])
+        self.assertEqual(code, 1)
+        self.assertIn("REFUSED  disable  org.example.notes: Failure: package is non-disable (unchanged)", out)
+        self.assertIn("drop them from the host's `managed` block: org.example.notes", out)
+        self.assertIn("package:br.example.bank", str(phone.answers[DISABLED]))  # it went on past the refusal
+        self.assertEqual([e["result"] for e in self.journal()], ["refused", "ok"])
 
     def test_rollback_leaves_what_was_changed_by_hand(self) -> None:
         self.use(SETTINGS_ONLY)

@@ -43,6 +43,7 @@
     settings.global.stay_on_while_plugged_in = "0"; # a harmless first key: the screen sleeps
     # Debloat, chosen on 08/11/2026: `pm disable-user`, undone by `android-iac rollback`. Factory
     # packages say nothing about me, so this list is public; the code refuses the protected floor.
+    # Checked against UAD-ng's list on 08/11/2026: all "Recommended" but the six it lacks (noted).
     packagesDisabled = [
       # Ads and app installers: they push "suggested" apps.
       "com.aura.oobe.motorola" # ironSource Aura, app picks at setup
@@ -51,13 +52,12 @@
       "com.facebook.services"
       "com.facebook.system"
       "com.motorola.demo" # the retail demo mode
-      "com.motorola.paks"
       "com.motorola.paks.notification"
-      "com.motorola.playautoinstallext" # Play Auto Install, promoted apps
-      "com.motorola.smartfeed"
+      "com.motorola.playautoinstallext" # Play Auto Install, promoted apps: not in UAD-ng
+      "com.motorola.smartfeed" # not in UAD-ng
       # Telemetry and Motorola/Lenovo extras: losing them only loses the feature.
-      "com.lenovo.qira" # Lenovo's AI assistant
-      "com.lenovo.qiracore"
+      "com.lenovo.qira" # Lenovo's AI assistant, new in 2026: not in UAD-ng
+      "com.lenovo.qiracore" # not in UAD-ng
       "com.motorola.android.fmradio"
       "com.motorola.appforecast"
       "com.motorola.attvowifi" # AT&T, a US carrier
@@ -66,10 +66,9 @@
       "com.motorola.genie" # Device Help
       "com.motorola.help"
       "com.motorola.help.extlog"
-      "com.motorola.journal"
       "com.motorola.lifetimedata"
       "com.motorola.livewallpaper3"
-      "com.motorola.migrateassist" # moving data from the old phone, done
+      "com.motorola.migrateassist" # moving data from the old phone, done: not in UAD-ng
       "com.motorola.motocare"
       "com.motorola.timeweatherwidget"
       "com.motorola.vzw.pco.extensions.pcoreceiver" # Verizon, a US carrier

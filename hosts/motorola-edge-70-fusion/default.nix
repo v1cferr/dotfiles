@@ -52,7 +52,6 @@
       "com.facebook.services"
       "com.facebook.system"
       "com.motorola.demo" # the retail demo mode
-      "com.motorola.paks.notification"
       "com.motorola.playautoinstallext" # Play Auto Install, promoted apps: not in UAD-ng
       "com.motorola.smartfeed" # not in UAD-ng
       # Telemetry and Motorola/Lenovo extras: losing them only loses the feature.

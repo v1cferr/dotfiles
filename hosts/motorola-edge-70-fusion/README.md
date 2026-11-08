@@ -68,6 +68,20 @@ cost more than it protected. What it means, so the choice stays informed:
 USB debugging stays off, held by `diff` (`global.adb_enabled = 0`). What staying on buys: a weekly
 unattended audit that pushes to the phone on drift (the note, "The weekly audit").
 
+## Apps on top of stock
+
+The debloat (`managed.packagesDisabled`) took the factory extras out; what makes it feel like plain
+Android is two FOSS apps, chosen on 08/11/2026 and versioned in the sealed app list:
+
+- **Breezy Weather** (`org.breezyweather`, F-Droid's `freenet` build): forecast, nowcasting, air
+  quality and widgets, replacing the Moto time/weather widget the debloat removed.
+- **Lawnchair** (`app.lawnchair`, IzzyOnDroid): the Pixel launcher's look. It is a beta built on
+  Android 15's Launcher3 on an Android 17 phone, so the Moto launcher stays enabled as the
+  fallback: Settings, Apps, Default apps, Home app switches back.
+
+Plain AOSP or GrapheneOS is out: both need an unlocked bootloader, which fails Play Integrity and
+with it the banks and Pix.
+
 ## The address
 
 `192.168.1.31`, a DHCP reservation on the router (`dhcp.edge_70_fusion`, added 07/11/2026). It is

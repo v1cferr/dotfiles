@@ -106,6 +106,17 @@
       "com.google.android.videos" # Google TV
       "com.motorola.android.overlay.crystaltalkai"
       "com.motorola.gesture" # the gesture tutorial
+      # Round three, picked on 08/11/2026: the Moto extras I do not use (the Moto gestures stay).
+      "com.android.theme.font.Exo2Regular"
+      "com.android.theme.font.RobotoSlabRegular"
+      "com.android.theme.font.RookeryRegular"
+      "com.android.theme.font.notoserifsource"
+      "com.android.theme.icon.pebble"
+      "com.android.theme.icon.round"
+      "com.google.ar.core" # ARCore, augmented reality
+      "com.motorola.aiservices" # Moto AI's models (com.motorola.aicore stays: the camera uses it)
+      "com.motorola.mobiledesktop.core" # Ready For, the phone on a PC or TV
+      "com.motorola.systemui.desk" # Ready For's desktop UI
     ];
   };
 

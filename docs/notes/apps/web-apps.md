@@ -17,13 +17,13 @@ ships for a service on this list, it replaces the entry.
 
 ## Why two engines
 
-| | `chrome` | `zen` |
-| --- | --- | --- |
-| How | `WebAppInstallForceList` policy installs a PWA | `<name>-web` launcher on its own profile |
-| Tabs | no, one window per app | yes, with session restore |
-| Login | the signed-in Chrome profile | its own, done once |
-| Wayland app_id | `chrome-<id>-Default` | `<name>-web` |
-| Launcher entry | written by Chrome (state) | declared by home-manager |
+|                | `chrome`                                       | `zen`                                    |
+| -------------- | ---------------------------------------------- | ---------------------------------------- |
+| How            | `WebAppInstallForceList` policy installs a PWA | `<name>-web` launcher on its own profile |
+| Tabs           | no, one window per app                         | yes, with session restore                |
+| Login          | the signed-in Chrome profile                   | its own, done once                       |
+| Wayland app_id | `chrome-<id>-Default`                          | `<name>-web`                             |
+| Launcher entry | written by Chrome (state)                      | declared by home-manager                 |
 
 Pick `chrome` when the account already lives in Chrome and one window is enough (Gemini). Pick
 `zen` when tabs matter (ChatGPT: several chats at once).

@@ -2,16 +2,16 @@
   "questie": {
     "source": "github",
     "repo": "Questie/Questie",
-    "version": "bundle/v12.6.2+v1.0.11",
-    "url": "https://github.com/Questie/Questie/releases/download/bundle/v12.6.2%2Bv1.0.11/Questie-v12.6.2%2Bv1.0.11.zip",
-    "hash": "sha256-K6lNsjgivOjW94NwqtgCKe8Oga6Yj52bIIzgdf8GZTE="
+    "version": "bundle/v12.6.4+v1.0.12",
+    "url": "https://github.com/Questie/Questie/releases/download/bundle/v12.6.4%2Bv1.0.12/Questie-v12.6.4%2Bv1.0.12.zip",
+    "hash": "sha256-R8mQWHlQyZd68uwaTxyc8EFLvkAOq87bikUJImyxvHY="
   },
   "dbm": {
     "source": "github",
     "repo": "DeadlyBossMods/DeadlyBossMods",
-    "version": "12.1.19",
-    "url": "https://github.com/DeadlyBossMods/DeadlyBossMods/releases/download/12.1.19/DBM-Core-12.1.19.zip",
-    "hash": "sha256-ts5RS9DjZrV4gKuLg6EmZkXJ1MQhDDi67/uRqlDj21Q="
+    "version": "12.1.20",
+    "url": "https://github.com/DeadlyBossMods/DeadlyBossMods/releases/download/12.1.20/DBM-Core-12.1.20.zip",
+    "hash": "sha256-d3gU7rYdQf8MAQ7BgZQAPe2vaVcJhKh+fvux6tFlw2s="
   },
   "gathermate2": {
     "source": "github",
@@ -23,9 +23,9 @@
   "layer-swap": {
     "source": "curseforge",
     "projectId": 1710286,
-    "version": "9480699",
-    "url": "https://edge.forgecdn.net/files/9480/699/LayerSwap-1.14.3.zip",
-    "hash": "sha256-q+3y6k1fUdnKamTAesCd4xFK9F8M8X1rBwos3B7Y3XE="
+    "version": "9508718",
+    "url": "https://edge.forgecdn.net/files/9508/718/LayerSwap-1.14.8.zip",
+    "hash": "sha256-vAd+vJ9+LnlEg06dQ7U9qQwIu9JbdvhJpAIdIAV4QuE="
   },
   "leatrix-plus": {
     "source": "curseforge",
@@ -37,9 +37,9 @@
   "auctionator": {
     "source": "curseforge",
     "projectId": 6124,
-    "version": "9162359",
-    "url": "https://edge.forgecdn.net/files/9162/359/Auctionator-341.zip",
-    "hash": "sha256-MsSiqNJNRvT8JyXmLCVRcaYod4VM5vy9MnJzX23T5OI="
+    "version": "9511151",
+    "url": "https://edge.forgecdn.net/files/9511/151/Auctionator-343.zip",
+    "hash": "sha256-12A0EXu56qb9DOUqYqxabss5DJ/rS++HRL9MXfwARmY="
   },
   "bugsack": {
     "source": "curseforge",
@@ -65,9 +65,9 @@
   "openmap": {
     "source": "curseforge",
     "projectId": 1735937,
-    "version": "9299630",
-    "url": "https://edge.forgecdn.net/files/9299/630/OpenMap-v0.7.5-beta.zip",
-    "hash": "sha256-o16ztuJIhOQyneiFd+9pULTDRidKSTtNipyJHBY5W48="
+    "version": "9506819",
+    "url": "https://edge.forgecdn.net/files/9506/819/OpenMap-v0.8.2-forever.zip",
+    "hash": "sha256-JuLKrKSREJkWKT7jRq5Gu8wSMagTENLz/FgTzDwtl58="
   },
   "forever-loot-sparkles": {
     "source": "curseforge",
@@ -79,16 +79,16 @@
   "musca-auras": {
     "source": "curseforge",
     "projectId": 1713094,
-    "version": "9458233",
-    "url": "https://edge.forgecdn.net/files/9458/233/WeakAuras-v1.15.0-forever.zip",
-    "hash": "sha256-DfEzw8iazXIEIuBjTxyCmFMAazklLA/4SPu0TP0OF4s="
+    "version": "9495588",
+    "url": "https://edge.forgecdn.net/files/9495/588/Musca-Auras-1.16.0.zip",
+    "hash": "sha256-IQf880qV2uXA/vWTSjL0nWTBeSX5hEPNJ1hGJl700X8="
   },
   "needroll": {
     "source": "curseforge",
     "projectId": 1731901,
-    "version": "9475081",
-    "url": "https://edge.forgecdn.net/files/9475/81/NeedRoll-v1.0.3-forever.zip",
-    "hash": "sha256-NA9HT7GzeDRk2UK68w88a+Hll4GKbgmK342DWUbdhgs="
+    "version": "9505914",
+    "url": "https://edge.forgecdn.net/files/9505/914/NeedRoll-v1.2.0-forever.zip",
+    "hash": "sha256-Msui5wpDt7nNxlioTiUss9Teqw1eDGJPZt0GITn7Nq8="
   },
   "glowing-bars": {
     "source": "curseforge",
@@ -100,23 +100,23 @@
   "prettytooltip": {
     "source": "curseforge",
     "projectId": 1720719,
-    "version": "9298424",
-    "url": "https://edge.forgecdn.net/files/9298/424/PrettyTooltip-v1.3.7-forever.zip",
-    "hash": "sha256-I8Eno55wRgJOy5WM+4ruyvvjS2hl9CbidK/pybZjQFo="
+    "version": "9488130",
+    "url": "https://edge.forgecdn.net/files/9488/130/PrettyTooltip-v1.3.8-forever.zip",
+    "hash": "sha256-XfuG7YYsfDE20QTbJ8KfBaUEgW9EY2b/RrB6i73Mmzg="
   },
   "keep-or-toss": {
     "source": "curseforge",
     "projectId": 1737994,
-    "version": "9447565",
-    "url": "https://edge.forgecdn.net/files/9447/565/KeepOrToss-1.3.2.zip",
-    "hash": "sha256-b6kiZeNCb5FfOhqToBpDElQJo6ZpqRJS9qXXJerwXPE="
+    "version": "9505061",
+    "url": "https://edge.forgecdn.net/files/9505/61/KeepOrToss-1.5.0.zip",
+    "hash": "sha256-zJ+1p5sbWBVCYoECbpy0wldHKTKpBnAh89SSbw9Z0NY="
   },
   "social-diary": {
     "source": "curseforge",
     "projectId": 1733454,
-    "version": "9483118",
-    "url": "https://edge.forgecdn.net/files/9483/118/social_diary-v2.4.0.zip",
-    "hash": "sha256-4/ZO9AG1e3O0yc0XiZoeMK3vmAlb+RamOnnw+zqJWos="
+    "version": "9510545",
+    "url": "https://edge.forgecdn.net/files/9510/545/social_diary-v3.0.1.zip",
+    "hash": "sha256-hG3IxYkSDgpTGYb2q+jZ0ML7LI4gD4t07NDds+ku0vE="
   },
   "happy-camper": {
     "source": "curseforge",
@@ -156,9 +156,9 @@
   "spoken": {
     "source": "curseforge",
     "projectId": 1700375,
-    "version": "9455301",
-    "url": "https://edge.forgecdn.net/files/9455/301/Spoken-3.8.3.zip",
-    "hash": "sha256-s8ggNlvT9PMyQIUSC0vE3D0wp38wF+9sacRU+C4QHcc="
+    "version": "9511069",
+    "url": "https://edge.forgecdn.net/files/9511/69/Spoken-3.8.4.zip",
+    "hash": "sha256-dGGS6+Gp3irTTRnIWIT5FhUyvztr1AC7eM2ttHj/PI0="
   },
   "spoken-quests-ptbr": {
     "source": "github",
@@ -194,16 +194,16 @@
   "blizzmove": {
     "source": "curseforge",
     "projectId": 17809,
-    "version": "9456490",
-    "url": "https://edge.forgecdn.net/files/9456/490/BlizzMove-v3.8.7.zip",
-    "hash": "sha256-/FGeC9OgWPcFCxhbTsTRFvaitNNnD2LQ+ctJnGkMIGM="
+    "version": "9492856",
+    "url": "https://edge.forgecdn.net/files/9492/856/BlizzMove-v3.8.8.zip",
+    "hash": "sha256-VUQEFw1301vaBrnfW+yH2qA2Gpw+uuODuVUrCsE45EE="
   },
   "training-up": {
     "source": "curseforge",
     "projectId": 1716050,
-    "version": "9473220",
-    "url": "https://edge.forgecdn.net/files/9473/220/training-up-v0.18.0.zip",
-    "hash": "sha256-Kbqytg3D7IfBFkYk5uG9eTuqpANXvKE22sCM32kBOf0="
+    "version": "9492919",
+    "url": "https://edge.forgecdn.net/files/9492/919/training-up-v0.18.1.zip",
+    "hash": "sha256-gHT5z2jRDOIUnM0kMOw4siVVI4xnFy3MrIAEIuqUA5A="
   },
   "auto-spell-ranks": {
     "source": "curseforge",
@@ -215,16 +215,16 @@
   "prat": {
     "source": "curseforge",
     "projectId": 7473,
-    "version": "9437638",
-    "url": "https://edge.forgecdn.net/files/9437/638/Prat-3.0-3.9.116.zip",
-    "hash": "sha256-hXYz9raRpspd52WCYITzEXiBmclYh6pQoFAAJTNe5vo="
+    "version": "9509040",
+    "url": "https://edge.forgecdn.net/files/9509/40/Prat-3.0-3.9.117.zip",
+    "hash": "sha256-1yuu+cmbsVg7Jpq9hQiLy5V9mg2MpXwyMUREKHUITbE="
   },
   "angleur": {
     "source": "curseforge",
     "projectId": 893895,
-    "version": "9452551",
-    "url": "https://edge.forgecdn.net/files/9452/551/Angleur-2.9.79-Forever-SoftInteractFix.zip",
-    "hash": "sha256-FSyo6p2sk4kPuUHqa/ZAga8O4+9RTx1CDiVVxAqgf4w="
+    "version": "9494010",
+    "url": "https://edge.forgecdn.net/files/9494/10/Angleur-2.9.8-AutoEquipFishingRod.zip",
+    "hash": "sha256-go22e6wkg+bekvjHQkmv8uSrIDcAISRJT9o5OLrCY8s="
   },
   "battletext-forever": {
     "source": "curseforge",
@@ -243,31 +243,31 @@
   "baganator": {
     "source": "curseforge",
     "projectId": 914482,
-    "version": "9473987",
-    "url": "https://edge.forgecdn.net/files/9473/987/Baganator-843.zip",
-    "hash": "sha256-TjsUc9voeAOlzHGtX9+elzVGmza15+BYAlZvCE4yPV0="
+    "version": "9512960",
+    "url": "https://edge.forgecdn.net/files/9512/960/Baganator-846.zip",
+    "hash": "sha256-GYDqTKOKyrLT4acjsAzme3lmNQ4VM1twChT5vGywgOg="
   },
   "syndicator": {
     "source": "curseforge",
     "projectId": 988370,
-    "version": "9424031",
-    "url": "https://edge.forgecdn.net/files/9424/31/Syndicator-289.zip",
-    "hash": "sha256-M1dCqsqSKRTMhKBz+HKA7DJRAVjgttIjTGkKObj8WeQ="
+    "version": "9511150",
+    "url": "https://edge.forgecdn.net/files/9511/150/Syndicator-290.zip",
+    "hash": "sha256-30dq+HLcQIjPSDVNMMBppYE2yObHIcLX565PFMnYGCs="
   },
   "tomtom": {
     "source": "curseforge",
     "projectId": 18808,
-    "version": "9426121",
-    "url": "https://edge.forgecdn.net/files/9426/121/TomTom-v4.4.0-release.zip",
-    "hash": "sha256-eMGSoQ3/KERtzT4rZIS+4QNGyf/dDseD7a+HmmRoS8E="
+    "version": "9493883",
+    "url": "https://edge.forgecdn.net/files/9493/883/TomTom-v4.4.1-release.zip",
+    "hash": "sha256-aKk/jfpOzTyv4osJmbR+5i5l8AlrXlmC5nJbqDwQv/w="
   },
   "offhand": {
     "source": "curseforge",
     "projectId": 1696140,
     "channel": "beta",
-    "version": "9396675",
-    "url": "https://edge.forgecdn.net/files/9396/675/Offhand-v2.1.2-beta.26.zip",
-    "hash": "sha256-WZz8h5BsBDY2EZOHzCULJcJFfBziaxo2QobSqc7+CDM="
+    "version": "9503604",
+    "url": "https://edge.forgecdn.net/files/9503/604/Offhand-v2.1.3-beta.27.zip",
+    "hash": "sha256-vJwRNhw2WKJJwcWTEImFSY6F+rUWYtvxQxwD1UjYZO8="
   },
   "dejunk": {
     "source": "curseforge",

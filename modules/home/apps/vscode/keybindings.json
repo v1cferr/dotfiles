@@ -22,6 +22,12 @@
         },
         "when": "terminalFocus"
     },
+    // New terminal in the focused terminal group: fallback for the "+" a two-row group loses
+    {
+        "key": "ctrl+shift+`",
+        "command": "workbench.action.createTerminalEditorSameGroup",
+        "when": "activeEditor == 'terminalEditor'"
+    },
     // The work layout: claude on the left, the usage watch top right, a plain shell bottom right
     {
         "key": "ctrl+alt+l",

@@ -172,7 +172,8 @@ pinned AND unpinned editors draws two tab rows, each with its own editor toolbar
 editor keeps the `+` dropdown in ONE slot (`_newDropdown`, a `MutableDisposable`), so the second
 toolbar asking for it disposes the first one's. Repro: pin a terminal, open a file unpinned in the
 same group, focus the terminal: the `+` is gone, while actions without a custom view item (split,
-Claude) stay. A group with a single row is fine.
+Claude) stay. A group with a single row is fine. Reported as
+[microsoft/vscode#346848](https://github.com/microsoft/vscode/issues/346848).
 
 The separate pinned row stays, and the fallback is the keyboard: `` ctrl+shift+` `` inside a
 terminal editor runs `workbench.action.createTerminalEditorSameGroup` (new terminal in THAT
